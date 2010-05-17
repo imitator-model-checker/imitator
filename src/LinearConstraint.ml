@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2010/03/04
- * Last modified: 2010/03/16
+ * Last modified: 2010/03/16 TEST TOTO
  *
  ****************************************************************)
 
