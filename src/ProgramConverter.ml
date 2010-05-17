@@ -237,15 +237,16 @@ let linear_constraint_of_convex_predicate index_of_variables convex_predicate =
 (*--------------------------------------------------*)
 let get_declared_variable_names variable_declarations =
 	(* Get all (possibly identical) names of variables in one variable declaration and add it to the computed triple (clocks, discrete, parameters) *)
-	let get_variables_in_variable_declaration (clocks, discrete, parameters) (var_type, list_of_names) =
+	let get_variables_in_variable_declaration (analogs,clocks, discrete, parameters) (var_type, list_of_names) =
 		match var_type with
-		| ParsingStructure.Var_type_clock -> (List.rev_append list_of_names clocks, discrete, parameters)
-		| ParsingStructure.Var_type_discrete -> (clocks, List.rev_append list_of_names discrete, parameters)
-		| ParsingStructure.Var_type_parameter -> (clocks, discrete, List.rev_append list_of_names parameters)
+		| ParsingStructure.Var_type_analog    -> (List.rev_append list_of_names analogs, clocks, discrete, parameters)
+		| ParsingStructure.Var_type_clock     -> (analogs, List.rev_append list_of_names clocks, discrete, parameters)
+		| ParsingStructure.Var_type_discrete  -> (analogs, clocks, List.rev_append list_of_names discrete, parameters)
+		| ParsingStructure.Var_type_parameter -> (analogs, clocks, discrete, List.rev_append list_of_names parameters)
 	in
-	let (clocks, discrete, parameters) = List.fold_left get_variables_in_variable_declaration ([], [], []) variable_declarations in
+	let (analogs, clocks, discrete, parameters) = List.fold_left get_variables_in_variable_declaration ([], [], [], []) variable_declarations in
 	(* Reverse lists *)
-	(List.rev clocks, List.rev discrete, List.rev parameters)
+	(List.rev analogs, List.rev clocks, List.rev discrete, List.rev parameters)
 
 
 (*--------------------------------------------------*)
@@ -268,7 +269,7 @@ let get_declared_synclabs_names =
 (*--------------------------------------------------*)
 (* Check that variable names are all different, return false otherwise; warns if a variable is defined twice as the same type *)
 (*--------------------------------------------------*)
-let check_variable_names clock_names discrete_names parameters_names =
+let check_variable_names analog_names clock_names discrete_names parameters_names =
 	(* Warn if a variable is defined twice as the same type *)
 	let warn_for_multiply_defined_variables list_of_variables =
 		(* Compute the multiply defined variables *)
@@ -276,6 +277,7 @@ let check_variable_names clock_names discrete_names parameters_names =
 		(* Print a warning for each of them *)
 		List.iter (fun variable_name -> print_warning ("Multiply-declared variable '" ^ variable_name ^"'")) multiply_defined_variables;
 	in
+	warn_for_multiply_defined_variables analog_names;
 	warn_for_multiply_defined_variables clock_names;
 	warn_for_multiply_defined_variables discrete_names;
 	warn_for_multiply_defined_variables parameters_names;
@@ -289,7 +291,10 @@ let check_variable_names clock_names discrete_names parameters_names =
 	let check1 = error_for_multiply_defined_variables clock_names discrete_names in
 	let check2 = error_for_multiply_defined_variables clock_names parameters_names in
 	let check3 = error_for_multiply_defined_variables discrete_names parameters_names in
-	check1 && check2 && check3
+	let check4 = error_for_multiply_defined_variables analog_names clock_names in
+	let check5 = error_for_multiply_defined_variables analog_names discrete_names in
+	let check6 = error_for_multiply_defined_variables analog_names parameters_names in
+	check1 && check2 && check3 && check4 && check5 && check6
 
 
 (*--------------------------------------------------*)
@@ -313,7 +318,7 @@ let all_locations_different =
 	(fun all_different (automaton_name, _, locations) ->
 		(* Get all the location names *)
 		let locations =
-			List.map (fun (location_name, _, _) -> location_name) locations in
+			List.map (fun (location_name, _, _, _) -> location_name) locations in
 		(* Look for multiply declared locations *)
 		let multiply_declared_locations = elements_existing_several_times locations in
 			List.iter (fun location_name -> print_error ("Several locations have name '" ^ location_name ^ "' in automaton '" ^ automaton_name ^ "'.")) multiply_declared_locations;
@@ -437,7 +442,7 @@ let synclab_used_everywhere automata synclab_name =
 			(* Only check if the synclab is declared here *)
 			if List.mem synclab_name sync_name_list then(
 				(* Check that at least one location contains the synclab *)
-				if not (List.exists (fun (_, _, transitions) ->
+				if not (List.exists (fun (_, _, _, transitions) ->
 					(* Check that at least one transition contains the synclab *)
 					List.exists (fun (_, _, sync, _) -> sync = (Sync synclab_name)) transitions
 				) locations ) then (
@@ -465,7 +470,7 @@ let check_automata index_of_variables type_of_variables variable_names index_of_
 			Not_found -> raise (InternalError ("Impossible to find the index of automaton '" ^ automaton_name ^ "'."))
 		in
 		(* Check each location *)
-		List.iter (fun (location_name, convex_predicate, transitions) ->
+		List.iter (fun (location_name, convex_predicate, flows, transitions) -> (***** FIXME: check flows *)
 			(* Check that the location_name exists (which is obvious) *)
 			if not (in_array location_name locations_per_automaton.(index)) then(
 				print_error ("The location '" ^ location_name ^ "' declared in automaton '" ^ automaton_name ^ "' does not exist.");
@@ -784,7 +789,7 @@ let make_locations_per_automaton index_of_automata automata =
 			(* Get the index of the automaton *)
 			let index = Hashtbl.find index_of_automata automaton_name in
 			(* Get the location names *)
-			let location_names = List.map (fun (location_name, _, _) -> location_name) transitions in
+			let location_names = List.map (fun (location_name, _, _, _) -> location_name) transitions in
 			(* Update the array *)
 			locations_per_automaton.(index) <- Array.of_list location_names
 		)
@@ -801,6 +806,8 @@ let make_automata index_of_automata index_of_locations labels index_of_labels re
 	let actions_per_automaton = Array.make (Hashtbl.length index_of_automata) [] in
 	(* Create an empty array for the actions of every location of every automaton *)
 	let actions_per_location = Array.make (Hashtbl.length index_of_automata) (Array.make 0 []) in
+        (* Create an empty array for the rate conditions *)
+	let flows = Array.make (Hashtbl.length index_of_automata) (Array.make 0 []) in
 	(* Create an empty array for the transitions *)
 	let transitions = Array.make (Hashtbl.length index_of_automata) (Array.make 0 []) in
 	(* Create an empty array for the invariants *)
@@ -821,9 +828,11 @@ let make_automata index_of_automata index_of_locations labels index_of_labels re
 		transitions.(automaton_index) <- Array.make nb_locations [];
 		(* Create the array of invariants for this automaton *)
 		invariants.(automaton_index) <- Array.make nb_locations [];
+                (* Create the array of rate conditions for this automaton *)
+		flows.(automaton_index) <- Array.make nb_locations [];
 		(* For each transition: *)
 		List.iter
-		(fun (location_name, invariant, parsed_transitions) ->
+		(fun (location_name, invariant, flow, parsed_transitions) -> (***** FIXME: need to do something about the flow here *)
 			(* Get the index of the location *)
 			let location_index = try (Hashtbl.find index_of_locations.(automaton_index) location_name) with Not_found -> raise (InternalError ("Impossible to find the index of location '" ^ location_name ^ "'.")) in
 			(* Create the list of actions for this location *)
@@ -903,7 +912,7 @@ let make_automata index_of_automata index_of_locations labels index_of_labels re
 	let actions_per_location = fun automaton_index location_index -> actions_per_location.(automaton_index).(location_index) in
 
 	(* Return all the structures in a functional representation *)
-	actions, action_names, action_types, actions_per_automaton, actions_per_location, invariants, transitions
+	actions, action_names, action_types, actions_per_automaton, actions_per_location, invariants, flows, transitions
 
 
 (*--------------------------------------------------*)
@@ -1079,7 +1088,7 @@ let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_
 	(* Get names *) 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Get the declared variable names *)
-	let clock_names, discrete_names, parameters_names = get_declared_variable_names parsed_variable_declarations in
+	let analog_names, clock_names, discrete_names, parameters_names = get_declared_variable_names parsed_variable_declarations in
 	(* Get the declared automata names *)
 	let declared_automata_names = get_declared_automata_names parsed_automata in
 	(* Get the declared synclabs names *)
@@ -1105,15 +1114,21 @@ let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_
 	(* Check the variable_declarations *) 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Check that all variable names are different (and print warnings for multiply-defined variables if same type) *)
-	let all_variables_different = check_variable_names clock_names discrete_names parameters_names in
+	let all_variables_different = check_variable_names analog_names clock_names discrete_names parameters_names in
 	(* Check that all automata names are different *)
 	let all_automata_different = check_declared_automata_names declared_automata_names in
 	
-	(* Keep every element only once in those 3 lists *)
+	(* Keep every element only once in those 4 lists *)
+	let analog_names = list_only_once analog_names in
 	let clock_names = list_only_once clock_names in
 	let discrete_names = list_only_once discrete_names in
 	let parameters_names = list_only_once parameters_names in
 	
+	(***** FIXME: abort here if analog variables declared *)
+	if not (list_empty analog_names) then 
+	  raise (InternalError "Analog variables are not supported yet.")
+	else () ;
+
 	(* Make only one list for all variables *)
 	let variable_names = list_append (list_append parameters_names clock_names) discrete_names in
 	
@@ -1324,7 +1339,7 @@ let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	print_message Debug_total ("*** Building automata...");
 	(* Get all the possible actions for every location of every automaton *)
-	let actions, action_names, action_types, actions_per_automaton, actions_per_location, invariants, transitions =
+	let actions, action_names, action_types, actions_per_automaton, actions_per_location, invariants, flows, transitions =
 		make_automata index_of_automata index_of_locations labels index_of_labels removed_synclab_names parsed_automata in
 	let nb_actions = List.length actions in
 
@@ -1335,6 +1350,8 @@ let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_
 	(* Convert the invariants *)
 	print_message Debug_total ("*** Building invariants...");
 	let invariants = convert_invariants index_of_variables invariants in
+        (* Convert the rate conditions *)
+	let flows = fun automaton_index location_index -> flows.(automaton_index).(location_index) in
 	(* Convert the transitions *)
 	print_message Debug_total ("*** Building transitions...");
 	let transitions = convert_transitions nb_actions index_of_variables type_of_variables transitions in

@@ -25,6 +25,7 @@ type sync_name = string
 (****************************************************************)
 (* Type of variable in declarations *)
 type var_type =
+	| Var_type_analog
 	| Var_type_clock
 	| Var_type_discrete
 	| Var_type_parameter
@@ -77,11 +78,13 @@ type update = variable_name * linear_expression
 
 type guard = convex_predicate
 
+type flow = variable_name * NumConst.t
+
 (* Transition = Guard * update * sync label * destination location *)
 type transition = guard * update list * sync * location_name
 
 (* Location = Name * Invariant * transitions *)
-type location = location_name * convex_predicate * transition list
+type location = location_name * convex_predicate * flow list * transition list
 
 type automaton = automaton_name * sync_name list * location list
 

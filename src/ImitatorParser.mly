@@ -33,7 +33,7 @@ let parse_error s =
 
 /* CT_ALL CT_ANALOG CT_ASAP CT_BACKWARD CT_CLDIFF CT_D  CT_ELSE CT_EMPTY  CT_ENDHIDE CT_ENDIF CT_ENDREACH CT_ENDWHILE CT_FORWARD CT_FREE CT_FROM  CT_HIDE CT_HULL CT_INTEGRATOR CT_ITERATE CT_NON_PARAMETERS CT_OMIT CT_POST CT_PRE CT_PRINT CT_PRINTS CT_PRINTSIZE CT_REACH  CT_STOPWATCH CT_THEN CT_TO CT_TRACE CT_USING  CT_WEAKDIFF CT_WEAKEQ CT_WEAKGE CT_WEAKLE  */
 
-%token CT_AND CT_AUTOMATON CT_CLOCK CT_DISCRETE CT_DO CT_END CT_ENDREACH CT_FALSE CT_FORWARD CT_FROM CT_GOTO CT_IF CT_INIT CT_INITIALLY CT_IN CT_LOC CT_LOCATIONS CT_NOT CT_OR CT_PARAMETER CT_PRINT CT_REACH CT_REGION CT_SYNC CT_SYNCLABS CT_TRUE CT_VAR CT_WAIT CT_WHEN CT_WHILE
+%token CT_AND CT_AUTOMATON CT_ANALOG CT_CLOCK CT_DISCRETE CT_DO CT_END CT_ENDREACH CT_FALSE CT_FORWARD CT_FROM CT_GOTO CT_IF CT_INIT CT_INITIALLY CT_IN CT_LOC CT_LOCATIONS CT_NOT CT_OR CT_PARAMETER CT_PRINT CT_REACH CT_REGION CT_SYNC CT_SYNCLABS CT_TRUE CT_VAR CT_WAIT CT_WHEN CT_WHILE
 
 %token EOF
 
@@ -96,6 +96,7 @@ var_list:
 /**********************************************/
 
 var_type:
+  | CT_ANALOG { Var_type_analog }
 	| CT_CLOCK { Var_type_clock }
 	| CT_DISCRETE { Var_type_discrete }
 	| CT_PARAMETER { Var_type_parameter }
@@ -170,8 +171,26 @@ locations:
 /**********************************************/
 
 location:
-	| CT_LOC NAME COLON CT_WHILE convex_predicate CT_WAIT LBRACE /* rate_info_list */ RBRACE transitions { $2, $5, $9 }
-	| CT_LOC NAME COLON CT_WHILE convex_predicate CT_WAIT transitions { $2, $5, $7 } /* les {rate_info_list} est inutile pour nous */
+  CT_LOC NAME COLON CT_WHILE convex_predicate CT_WAIT LBRACE rate_info_list RBRACE transitions { $2, $5, $8, $10 }
+;
+
+/**********************************************/
+rate_info_list:
+	rate_info_nonempty_list { $1 }
+	| { [] }
+;
+ 
+/**********************************************/
+
+rate_info_nonempty_list:
+     rate_info COMMA rate_info_nonempty_list { $1 :: $3 } 
+	|  rate_info { [$1] }
+;
+
+/**********************************************/
+
+rate_info:
+	NAME APOSTROPHE OP_EQ rational { $1, $4 }
 ;
 
 /**********************************************/

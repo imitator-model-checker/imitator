@@ -35,7 +35,7 @@ rule token = parse
 		token lexbuf }
 
 (* 	| "all"            { CT_ALL } *)
-(* 	| "analog"         { CT_ANALOG } *)
+ 	| "analog"         { CT_ANALOG } 
 	| "and"            { CT_AND }
 (* 	| "asap"           { CT_ASAP } *)
 	| "automaton"      { CT_AUTOMATON }
