@@ -1,0 +1,182 @@
+(*****************************************************************
+ *
+ *                     IMITATOR II
+ * 
+ * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
+ * Author:        Etienne Andre
+ * Created:       2010/03/04
+ * Last modified: 2010/03/09
+ *
+ ****************************************************************)
+
+(**************************************************)
+(* Type definition *)
+(**************************************************)
+
+(* type t *)
+
+type t =
+  | Mpq of Mpq.t
+
+
+(**************************************************)
+(* Functions *)
+(**************************************************)
+
+let get_mpq = function
+	| Mpq a -> a
+
+
+(**************************************************)
+(** {2 User Conversions} *)
+(**************************************************)
+
+let numconst_of_int i = Mpq (Mpq.of_int i)
+
+let numconst_of_frac i j = Mpq (Mpq.of_frac i j)
+
+let numconst_of_float f = (* Mpq (Mpq.of_float i) DOES NOT WORK WELL *)
+	(* Split the float in integer and fractional part *)
+	let (fractional, integer) = modf f in
+	let integer = int_of_float integer in
+	(* Case of an integer *)
+	if fractional = 0.0 then numconst_of_int integer
+	else(
+		let fractional = string_of_float fractional in
+		(* Remove the "0." in front of the fractional part *)
+		let fractional = String.sub fractional 2 (String.length fractional -2) in
+		(* Find the denominator *)
+		let denominator = int_of_string ("1" ^ (String.make (String.length fractional) '0')) in
+		let fractional = int_of_string fractional in
+		(* Create the fraction *)
+		 numconst_of_frac (integer * denominator + fractional) denominator
+	)
+
+let numconst_of_mpq m = Mpq m
+
+let mpq_of_numconst = get_mpq
+
+let string_of_numconst a = Mpq.to_string (get_mpq a)
+
+
+(**************************************************)
+(** {2 Constants} *)
+(**************************************************)
+
+let zero = numconst_of_int 0
+let one = numconst_of_int 1
+let minus_one = numconst_of_int (-1)
+
+
+(**************************************************)
+(** {2 Arithmetic Functions} *)
+(**************************************************)
+
+let arithmetic_gen op a b =
+	let a = get_mpq a in
+	let b = get_mpq b in
+	let result = Mpq.init () in
+	op result a b;
+	Mpq result
+
+let add =
+	arithmetic_gen Mpq.add
+
+let sub =
+	arithmetic_gen Mpq.sub
+
+let mul =
+	arithmetic_gen Mpq.mul
+
+let div =
+	arithmetic_gen Mpq.div
+
+let neg a =
+	let a = get_mpq a in
+	let result = Mpq.init () in
+	Mpq.neg result a;
+	Mpq result
+
+let abs a =
+	if Mpq.cmp (get_mpq a) (Mpq.of_int 0) >= 0 then a
+	else neg a
+
+(**************************************************)
+(** {2 Comparison Functions} *)
+(**************************************************)
+let comparison_gen op a b =
+	op (Mpq.cmp (get_mpq a) (get_mpq b)) 0
+	
+let equal a b =
+	Mpq.equal (get_mpq a) (get_mpq b)
+
+let neq a b =
+	not (equal a b)
+
+let l = comparison_gen (<)
+
+let le = comparison_gen (<=)
+
+let ge = comparison_gen (>=)
+
+let g = comparison_gen (>)
+
+
+(**************************************************)
+(* Tests *)
+(**************************************************)
+(*
+let a = NumConst.numconst_of_float 0.4 in
+let b = NumConst.numconst_of_frac 1 3 in
+let c = NumConst.numconst_of_int 2 in
+let d = NumConst.numconst_of_float 2.00 in
+let e = NumConst.numconst_of_frac 306 153 in
+
+print_string ("\n a = " ^ (NumConst.string_of_numconst a));
+print_string ("\n b = " ^ (NumConst.string_of_numconst b));
+print_string ("\n c = " ^ (NumConst.string_of_numconst c));
+print_string ("\n d = " ^ (NumConst.string_of_numconst d));
+print_string ("\n e = " ^ (NumConst.string_of_numconst e));
+
+print_string ("\n a + b = " ^ (NumConst.string_of_numconst (NumConst.add a b)));
+print_string ("\n a + c = " ^ (NumConst.string_of_numconst (NumConst.add a c)));
+print_string ("\n b + c = " ^ (NumConst.string_of_numconst (NumConst.add b c)));
+
+print_string ("\n a - b = " ^ (NumConst.string_of_numconst (NumConst.sub a b)));
+print_string ("\n a - c = " ^ (NumConst.string_of_numconst (NumConst.sub a c)));
+print_string ("\n b - c = " ^ (NumConst.string_of_numconst (NumConst.sub b c)));
+
+print_string ("\n a * b = " ^ (NumConst.string_of_numconst (NumConst.mul a b)));
+print_string ("\n a * c = " ^ (NumConst.string_of_numconst (NumConst.mul a c)));
+print_string ("\n b * c = " ^ (NumConst.string_of_numconst (NumConst.mul b c)));
+
+print_string ("\n a / b = " ^ (NumConst.string_of_numconst (NumConst.div a b)));
+print_string ("\n a / c = " ^ (NumConst.string_of_numconst (NumConst.div a c)));
+print_string ("\n b / c = " ^ (NumConst.string_of_numconst (NumConst.div b c)));
+
+print_string ("\n -a = " ^ (NumConst.string_of_numconst (NumConst.neg a)));
+print_string ("\n -b = " ^ (NumConst.string_of_numconst (NumConst.neg b)));
+print_string ("\n -c = " ^ (NumConst.string_of_numconst (NumConst.neg c)));
+
+print_string ("\n |a| = " ^ (NumConst.string_of_numconst (NumConst.abs a)));
+print_string ("\n |-a| = " ^ (NumConst.string_of_numconst (NumConst.abs (NumConst.neg a))));
+
+print_string ("\n a = b ? " ^ (string_of_bool (NumConst.equal a b)));
+print_string ("\n a <> b ? " ^ (string_of_bool (NumConst.neq a b)));
+print_string ("\n a < b ? " ^ (string_of_bool (NumConst.l a b)));
+print_string ("\n a <= b ? " ^ (string_of_bool (NumConst.le a b)));
+print_string ("\n a >= b ? " ^ (string_of_bool (NumConst.ge a b)));
+print_string ("\n a > b ? " ^ (string_of_bool (NumConst.g a b)));
+
+print_string ("\n d = e ? " ^ (string_of_bool (NumConst.equal d e)));
+print_string ("\n d <> e ? " ^ (string_of_bool (NumConst.neq d e)));
+print_string ("\n d < e ? " ^ (string_of_bool (NumConst.l d e)));
+print_string ("\n d <= e ? " ^ (string_of_bool (NumConst.le d e)));
+print_string ("\n d >= e ? " ^ (string_of_bool (NumConst.ge d e)));
+print_string ("\n d > e ? " ^ (string_of_bool (NumConst.g d e)));
+
+
+print_newline();
+
+exit 0;
+*)
