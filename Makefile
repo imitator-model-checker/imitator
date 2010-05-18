@@ -72,7 +72,7 @@ $(SRC)/%.ml: $(SRC)/%.mll
 
 
 test: compil 
-	cd test; make
+	cd test; make unit
 
 exe:
 
@@ -199,6 +199,7 @@ clean:
 	make rmuseless
 	rm -rf $(LEXERS:+=ml) $(PARSERS:+=mli) $(PARSERS:+=ml)
 	rm -rf $(TARGET)
+	cd test; make clean
 
 
 rmtpf:
