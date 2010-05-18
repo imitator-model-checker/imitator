@@ -16,6 +16,9 @@ OCAMLIB_PATH = /usr/lib/ocaml/extlib
 APRON_PATH = /import/kuehne/local/apron/lib
 OUNIT_PATH = /import/kuehne/local/ounit
 
+INCLUDE = -I $(SRC) -I $(OCAMLIB_PATH) -I $(APRON_PATH)
+LIBS = str.cma unix.cma extLib.cma bigarray.cma gmp.cma apron.cma polkaMPQ.cma
+
 # OCAML_PPL_PATH = /home/andre/Prog/local/lib/ppl
 # OCAML_GMP_PATH = /home/andre/Prog/local/lib/gmp
 # OCAML_GMP_PATH = /usr/lib/ocaml/gmp
@@ -34,39 +37,42 @@ PARSERS = $(SRC)/Pi0Parser.+ $(SRC)/Pi0CubeParser.+ $(SRC)/ImitatorParser.+
 
 TARGET = bin/IMITATOR
 
-all:
-	make compil
-	make rmtpf
-	make rmuseless
+all: compil
+
+compil: header parser $(FILES:+=cmo)
+	@ echo [LINK] $(TARGET)
+	@ ocamlc -o $(TARGET) $(INCLUDE) $(LIBS) $(FILES:+=cmo)
+
+header: $(FILESMLI:+=cmi)
+
+parser: $(PARSERS:+=ml) $(LEXERS:+=ml) header $(PARSERS:+=cmi)
+	
+$(SRC)/%.cmo: $(SRC)/%.ml
+	@ echo [OCAMLC] $<
+	@ ocamlc -c $(INCLUDE) $<	
+	
+$(SRC)/%.cmi: $(SRC)/%.mli
+	@ echo [OCAMLC] $<
+	@ ocamlc -c $(INCLUDE) $<
+
+$(SRC)/%.cmi: $(SRC)/%.mly
+	@ echo [YACC] $<
+	@ ocamlyacc $<
+	@ echo [OCAMLC] $(SRC)/$*.mli
+	@ ocamlc -c $(INCLUDE) $(SRC)/$*.mli
+
+$(SRC)/%.ml: $(SRC)/%.mly 
+	@ echo [YACC] $<
+	@ ocamlyacc $<
+	
+$(SRC)/%.ml: $(SRC)/%.mll 
+	@ echo [LEX] $<
+	@ ocamllex $< 
+	 
 
 
-header:
-	ocamlc -c -I $(SRC) -I $(OCAMLIB_PATH) -I $(APRON_PATH) $(FILESMLI:+=mli)
-
-
-parser:
-	ocamllex $(SRC)/Pi0Lexer.mll # generates $(LEXER).ml
-	ocamllex $(SRC)/Pi0CubeLexer.mll # generates $(LEXER).ml
-	ocamllex $(SRC)/ImitatorLexer.mll # generates $(LEXER).ml
-	ocamlyacc $(SRC)/Pi0Parser.mly # generates $(PARSER).ml and $(PARSER).mli
-	ocamlyacc $(SRC)/Pi0CubeParser.mly # generates $(PARSER).ml and $(PARSER).mli
-	ocamlyacc $(SRC)/ImitatorParser.mly # generates $(PARSER).ml and $(PARSER).mli
-	ocamlc -c -I $(SRC) $(PARSERS:+=mli)
-
-
-compil:
-	make header
-	make parser
-	ocamlc -c -I $(SRC) -I $(OCAMLIB_PATH) -I $(APRON_PATH) $(FILES:+=ml)
-	ocamlc -o $(TARGET) -I $(SRC) -I $(OCAMLIB_PATH) -I $(APRON_PATH) str.cma unix.cma extLib.cma bigarray.cma gmp.cma apron.cma polkaMPQ.cma $(FILES:+=cmo)
-
-
-test:
-	make compil
-	make rmtpf
-	make rmuseless
-	make exe
-
+test: compil 
+	cd test; make
 
 exe:
 
