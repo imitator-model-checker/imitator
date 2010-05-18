@@ -1,0 +1,58 @@
+--****************************************************--
+--****************************************************--
+--   Laboratoire Specification et Verification
+--
+--   Modeling of the circuit described in "Verification of timed circuits with symbolic delays" (Clariso -- Cortadella)
+--
+--   Etienne ANDRE and Laurent FRIBOURG
+--
+--   Created      : 2007/11
+--   Last modified: 2010/03/30
+--****************************************************--
+--****************************************************--
+
+
+(*
+(***** BAD ONE *****)
+	& tHI = 20
+	& tLO = 15
+	& tSetup = 10
+	& tHold = 15
+	& dG1_l = 1
+	& dG1_u = 1
+	& dG2_l = 8
+ 	& dG2_u = 10
+	& dG3_l = 5
+ 	& dG3_u = 6
+	& dG4_l = 3
+	& dG4_u = 5
+*)
+
+
+
+----- IJFCS -----
+-- 	& tHI    = 24
+-- 	& tLO    = 15
+-- 	& tSetup = 10
+-- 	& tHold  = 17
+-- 	& dG1_l  = 7
+-- 	& dG1_u  = 7
+-- 	& dG2_l  = 5
+-- 	& dG2_u  = 6
+-- 	& dG3_l  = 8
+-- 	& dG3_u  = 10
+-- 	& dG4_l  = 3
+-- 	& dG4_u  = 7
+
+	& tHI    = 24
+	& tLO    = 15
+	& tSetup = 10
+	& tHold  = 17
+	& dG1_l  = 7
+	& dG1_u  = 7
+	& dG2_l  = 5
+	& dG2_u  = 6
+	& dG3_l  = 8
+	& dG3_u  = 16.9
+	& dG4_l  = 3
+	& dG4_u  = 7.8

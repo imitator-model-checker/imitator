@@ -13,7 +13,8 @@
 # CONSTANTS
 OCAMLIB_PATH = /usr/lib/ocaml/extlib
 #APRON_PATH = /home/andre/local/lib
-APRON_PATH = /usr/local/misc/apron/lib
+APRON_PATH = /import/kuehne/local/apron/lib
+OUNIT_PATH = /import/kuehne/local/ounit
 
 # OCAML_PPL_PATH = /home/andre/Prog/local/lib/ppl
 # OCAML_GMP_PATH = /home/andre/Prog/local/lib/gmp
