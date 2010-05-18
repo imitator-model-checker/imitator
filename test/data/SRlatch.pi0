@@ -18,5 +18,7 @@
 	& dNor1_u	= 4
 	& dNor2_l	= 2
 	& dNor2_u	= 5
-	& t_R_down	= 11
-	& t_S_down	= 10
+	& t_down    = 10
+	
+--	& t_R_down	= 11
+--	& t_S_down	= 10

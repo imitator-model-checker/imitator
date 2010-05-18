@@ -16,9 +16,9 @@ COV_V0_FILES  = $(addprefix data/, $(addsuffix .v0, $(COV_TESTS)))
 COV_RESULTS   = $(addprefix log/, $(addsuffix .cov.log, $(COV_TESTS)))
 
 
-default all: clean_regr unit regression
+default all: unit regression
 
-regression: regr_inv regr_cov
+regression: clean_regr regr_inv regr_cov
 	@ echo '================================================'
 	@ if ( test -e fail ); then \
 	    echo [SUMM] There were failing test cases. ; fi
