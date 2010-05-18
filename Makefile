@@ -30,18 +30,25 @@ SRC = src
 .SUFFIXES : .cmo .cmi .ml .mli
 
 
-FILES =  $(SRC)/Global.+ $(SRC)/NumConst.+ $(SRC)/LinearConstraint.+ $(SRC)/Automaton.+ $(SRC)/Pi0Lexer.+ $(SRC)/Pi0Parser.+ $(SRC)/Pi0CubeLexer.+ $(SRC)/Pi0CubeParser.+ $(SRC)/ImitatorLexer.+ $(SRC)/ImitatorParser.+ $(SRC)/ImitatorPrinter.+ $(SRC)/ProgramConverter.+ $(SRC)/Graph.+ $(SRC)/IMITATOR.+
+MAIN = $(SRC)/IMITATOR.cmo
+FILES =  $(SRC)/Global.+ $(SRC)/NumConst.+ $(SRC)/LinearConstraint.+ $(SRC)/Automaton.+ $(SRC)/Pi0Lexer.+ $(SRC)/Pi0Parser.+ $(SRC)/Pi0CubeLexer.+ $(SRC)/Pi0CubeParser.+ $(SRC)/ImitatorLexer.+ $(SRC)/ImitatorParser.+ $(SRC)/ImitatorPrinter.+ $(SRC)/ProgramConverter.+ $(SRC)/Graph.+
+OBJS = $(FILES:+=cmo)
 FILESMLI = $(SRC)/Global.+ $(SRC)/NumConst.+ $(SRC)/LinearConstraint.+ $(SRC)/Automaton.+ $(SRC)/ParsingStructure.+ $(SRC)/AbstractImitatorFile.+ $(SRC)/ImitatorPrinter.+ $(SRC)/ProgramConverter.+ $(SRC)/Graph.+ 
 LEXERS = $(SRC)/Pi0Lexer.+ $(SRC)/Pi0CubeLexer.+ $(SRC)/ImitatorLexer.+
 PARSERS = $(SRC)/Pi0Parser.+ $(SRC)/Pi0CubeParser.+ $(SRC)/ImitatorParser.+
 
+IMILIB = lib/imitator.cma
 TARGET = bin/IMITATOR
 
 all: compil
 
-compil: header parser $(FILES:+=cmo)
+$(IMILIB): header parser $(OBJS)
+	@ echo [MKLIB] $@
+	@ ocamlc -a -o $@ $(OBJS)  
+
+compil: $(IMILIB) $(MAIN)
 	@ echo [LINK] $(TARGET)
-	@ ocamlc -o $(TARGET) $(INCLUDE) $(LIBS) $(FILES:+=cmo)
+	@ ocamlc -o $(TARGET) $(INCLUDE) $(LIBS) $(IMILIB) $(MAIN)
 
 header: $(FILESMLI:+=cmi)
 
@@ -198,7 +205,7 @@ clean:
 	make rmtpf
 	make rmuseless
 	rm -rf $(LEXERS:+=ml) $(PARSERS:+=mli) $(PARSERS:+=ml)
-	rm -rf $(TARGET)
+	rm -rf $(TARGET) $(IMILIB)
 	cd test; make clean
 
 

@@ -54,10 +54,9 @@ log/%.cov.log: data/%.imi data/%.v0
 OUNIT_PATH = /import/kuehne/local/ounit
 APRON_PATH = /import/kuehne/local/apron/lib
 EXTLIB_PATH = /usr/lib/ocaml/extlib
-INCLUDE = -I src -I ../src -I $(OUNIT_PATH) -I $(EXTLIB_PATH) -I $(APRON_PATH)
-LIBS = str.cma unix.cma extLib.cma bigarray.cma gmp.cma apron.cma polkaMPQ.cma oUnit.cma 
-IMI_OBJ = Global.cmo NumConst.cmo Automaton.cmo 
-
+INCLUDE = -I src -I ../src -I ../lib -I $(OUNIT_PATH) -I $(EXTLIB_PATH) -I $(APRON_PATH)
+LIBS = str.cma unix.cma extLib.cma bigarray.cma gmp.cma apron.cma polkaMPQ.cma oUnit.cma imitator.cma 
+ 
 UNIT_TESTS = ImitatorParser Automaton NumConst
 UNIT_SRC = $(addprefix src/test, $(addsuffix .ml, $(UNIT_TESTS))) 
 UNIT_CMI = $(addprefix src/test, $(addsuffix .cmi, $(UNIT_TESTS))) testSuite.cmi
@@ -68,7 +67,7 @@ unit: testsuite
 
 testsuite: $(UNIT_OBJ)
 	@ echo [LINK] testsuite
-	@ ocamlc -o testsuite $(INCLUDE) $(LIBS) $(IMI_OBJ) $(UNIT_OBJ)  
+	@ ocamlc -o testsuite $(INCLUDE) $(LIBS) $(UNIT_OBJ)  
 
 testSuite.cmo: $(UNIT_SRC)
 
