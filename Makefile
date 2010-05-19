@@ -10,14 +10,28 @@
 #  Ocaml version: 3.11.2
 ###############################################################
 
-# CONSTANTS
-OCAMLIB_PATH = /usr/lib/ocaml/extlib
-#APRON_PATH = /home/andre/local/lib
-APRON_PATH = /import/kuehne/local/apron/lib
-OUNIT_PATH = /import/kuehne/local/ounit
+# path variables
+ifndef EXTLIB_PATH
+  EXTLIB_PATH = /usr/lib/ocaml/extlib
+endif
+ifndef APRON_PATH
+  APRON_PATH = $(HOME)/local/apron/lib
+endif
+ifndef OUNIT_PATH
+  OUNIT_PATH = $(HOME)/local/ounit
+endif
 
-INCLUDE = -I $(SRC) -I $(OCAMLIB_PATH) -I $(APRON_PATH)
-LIBS = str.cma unix.cma extLib.cma bigarray.cma gmp.cma apron.cma polkaMPQ.cma
+# export paths for use in sub-makefiles
+export EXTLIB_PATH 
+export APRON_PATH 
+export OUNIT_PATH 
+
+#export APRON_PATH = /home/andre/local/lib
+
+INCLUDE = -I $(SRC) -I $(EXTLIB_PATH) -I $(APRON_PATH)
+
+# external libs for compiling imitator
+export LIBS = str.cma unix.cma extLib.cma bigarray.cma gmp.cma apron.cma polkaMPQ.cma
 
 # OCAML_PPL_PATH = /home/andre/Prog/local/lib/ppl
 # OCAML_GMP_PATH = /home/andre/Prog/local/lib/gmp
@@ -29,16 +43,26 @@ SRC = src
 .PREFIXES : +.
 .SUFFIXES : .cmo .cmi .ml .mli
 
-
+# main source
 MAIN = $(SRC)/IMITATOR.cmo
+
+# sources to compile
 FILES =  $(SRC)/Global.+ $(SRC)/NumConst.+ $(SRC)/LinearConstraint.+ $(SRC)/Automaton.+ $(SRC)/Pi0Lexer.+ $(SRC)/Pi0Parser.+ $(SRC)/Pi0CubeLexer.+ $(SRC)/Pi0CubeParser.+ $(SRC)/ImitatorLexer.+ $(SRC)/ImitatorParser.+ $(SRC)/ImitatorPrinter.+ $(SRC)/ProgramConverter.+ $(SRC)/Graph.+
 OBJS = $(FILES:+=cmo)
+
+# header files
 FILESMLI = $(SRC)/Global.+ $(SRC)/NumConst.+ $(SRC)/LinearConstraint.+ $(SRC)/Automaton.+ $(SRC)/ParsingStructure.+ $(SRC)/AbstractImitatorFile.+ $(SRC)/ImitatorPrinter.+ $(SRC)/ProgramConverter.+ $(SRC)/Graph.+ 
+
+# parsers and lexers 
 LEXERS = $(SRC)/Pi0Lexer.+ $(SRC)/Pi0CubeLexer.+ $(SRC)/ImitatorLexer.+
 PARSERS = $(SRC)/Pi0Parser.+ $(SRC)/Pi0CubeParser.+ $(SRC)/ImitatorParser.+
 
+# target library
 IMILIB = lib/imitator.cma
+
+# target executable
 TARGET = bin/IMITATOR
+
 
 all: compil
 

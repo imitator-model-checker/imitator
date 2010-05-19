@@ -51,11 +51,22 @@ log/%.cov.log: data/%.imi data/%.v0
 # ========================================================================
 # unit tests
 
-OUNIT_PATH = /import/kuehne/local/ounit
-APRON_PATH = /import/kuehne/local/apron/lib
-EXTLIB_PATH = /usr/lib/ocaml/extlib
+# check if paths are inherited from environment or parent makefile
+ifndef EXTLIB_PATH
+  EXTLIB_PATH = /usr/lib/ocaml/extlib
+endif
+ifndef APRON_PATH
+  APRON_PATH = $(HOME)/local/apron/lib
+endif
+ifndef OUNIT_PATH
+  OUNIT_PATH = $(HOME)/local/ounit
+endif
+ifndef LIBS
+  LIBS = str.cma unix.cma extLib.cma bigarray.cma gmp.cma apron.cma polkaMPQ.cma
+endif
+
 INCLUDE = -I src -I ../src -I ../lib -I $(OUNIT_PATH) -I $(EXTLIB_PATH) -I $(APRON_PATH)
-LIBS = str.cma unix.cma extLib.cma bigarray.cma gmp.cma apron.cma polkaMPQ.cma oUnit.cma imitator.cma 
+LIBS += oUnit.cma imitator.cma 
  
 UNIT_TESTS = ImitatorParser Automaton NumConst
 UNIT_SRC = $(addprefix src/test, $(addsuffix .ml, $(UNIT_TESTS))) 
