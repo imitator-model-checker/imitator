@@ -43,7 +43,7 @@ SRC = src
 .PREFIXES : +.
 .SUFFIXES : .cmo .cmi .ml .mli
 
-# main source
+# main object
 MAIN = $(SRC)/IMITATOR.cmo
 
 # sources to compile
@@ -238,7 +238,7 @@ rmtpf:
 
 
 rmuseless:
-	rm -rf $(FILES:+=cmo) $(FILES:+=cmi) $(FILES:+=o)
+	rm -rf $(FILES:+=cmo) $(FILES:+=cmi) $(FILES:+=o) $(MAIN) $(MAIN:.cmo=.cmi)
 	rm -rf $(FILESMLI:+=cmi)
 
 # ppl:
