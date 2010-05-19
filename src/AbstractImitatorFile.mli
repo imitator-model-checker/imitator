@@ -58,6 +58,7 @@ type pi0cube = (int * int) array
 (** Type of variable in declarations *)
 type var_type =
 	| Var_type_clock
+	| Var_type_analog
 	| Var_type_discrete
 	| Var_type_parameter
 
@@ -106,11 +107,16 @@ type abstract_program = {
 	(* Cardinality *)
 	nb_automata : int;
 	nb_actions : int;
+	nb_analogs : int;
 	nb_clocks : int;
 	nb_discrete : int;
 	nb_parameters : int;
 	nb_variables : int;
 	
+	(* The list of analog indexes *)
+	analogs : clock_index list;	
+	(* True for analogs, false otherwise *)
+	is_analog : variable_index -> bool;
 	(* The list of clock indexes *)
 	clocks : clock_index list;
 	(* True for clocks, false otherwise *)
@@ -122,12 +128,18 @@ type abstract_program = {
 	(* The list of parameter indexes *)
 	parameters : parameter_index list;
 	(* The non parameters (clocks and discrete) *)
+	non_parameters : variable_index list;
+	(* The non parameters (clocks and discrete) *)
 	clocks_and_discrete : variable_index list;
 	(* The function : variable_index -> variable name *)
 	variable_names : variable_index -> variable_name;
 	(* The type of variables *)
 	type_of_variables : variable_index -> var_type;
 	
+	(* Renamed clocks *)
+	renamed_analogs : variable_index list;
+	(* True for renamed clocks, false otherwise *)
+	is_renamed_analog : variable_index -> bool;	
 	(* Renamed clocks *)
 	renamed_clocks : variable_index list;
 	(* True for renamed clocks, false otherwise *)
@@ -138,6 +150,10 @@ type abstract_program = {
 	variable_of_prime : variable_index -> variable_index;
 	(* Parameter 'd' *)
 	d : variable_index;
+	(* Couples (x, x') for clock renamings *)
+	renamed_analogs_couples : (variable_index * variable_index) list;
+	(* Couples (x', x) for clock 'un'-renamings *)
+	unrenamed_analogs_couples : (variable_index * variable_index) list;
 	(* Couples (x, x') for clock renamings *)
 	renamed_clocks_couples : (variable_index * variable_index) list;
 	(* Couples (x', x) for clock 'un'-renamings *)
@@ -168,6 +184,8 @@ type abstract_program = {
 
 	(* The invariant for each automaton and each location *)
 	invariants : automaton_index -> location_index -> linear_constraint;
+	(* The rate condition for each automaton and each location *)
+	flows : automaton_index -> location_index -> variable_index -> NumConst.t;
 	(* The transitions for each automaton and each location and each action *)
 	transitions : automaton_index -> location_index -> action_index -> (transition list);
 

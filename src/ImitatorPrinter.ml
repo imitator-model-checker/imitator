@@ -20,6 +20,7 @@ open AbstractImitatorFile
 
 (* Convert a var_type into a string *)
 let string_of_var_type = function
+	| Var_type_analog -> "analog"
 	| Var_type_clock -> "clock"
 	| Var_type_discrete -> "discrete"
 	| Var_type_parameter -> "parameter"

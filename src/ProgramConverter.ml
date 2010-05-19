@@ -419,8 +419,28 @@ let check_update index_of_variables type_of_variables variable_names automaton_n
 		else true
 		(* Case of a parameter: forbidden! *)
 		| AbstractImitatorFile.Var_type_parameter -> print_error ("The variable '" ^ variable_name ^ "' is a parameter and can not be updated in automaton '" ^ automaton_name ^ "'."); false
+		| AbstractImitatorFile.Var_type_analog -> print_error ("The variable '" ^ variable_name ^ "' is an analog and can not be updated in automaton '" ^ automaton_name ^ "'."); false 
 	)
 
+(*--------------------------------------------------*)
+(* Check that a flow is well formed *)
+(*--------------------------------------------------*)
+let check_flow index_of_variables type_of_variables flow =
+  List.for_all (fun (variable_name, rate) ->
+		(* Get the index of the variable *)
+		let index, declared = try (Hashtbl.find index_of_variables variable_name, true)
+		with Not_found -> (
+			print_error ("The variable '" ^ variable_name ^ "' used in a rate condition was not declared."); 0, false
+		)	in
+		if not declared then false else (
+			(* Get the type of the variable *)
+			let type_of_variable = type_of_variables index in
+			if not (type_of_variable = AbstractImitatorFile.Var_type_analog) then (
+				print_error ("The variable '" ^ variable_name ^ "' used in a rate condition is not analog.");
+				false
+			) else true
+		)
+	) flow 
 
 (*--------------------------------------------------*)
 (* Check that a sync is well formed *)
@@ -470,7 +490,7 @@ let check_automata index_of_variables type_of_variables variable_names index_of_
 			Not_found -> raise (InternalError ("Impossible to find the index of automaton '" ^ automaton_name ^ "'."))
 		in
 		(* Check each location *)
-		List.iter (fun (location_name, convex_predicate, flows, transitions) -> (***** FIXME: check flows *)
+		List.iter (fun (location_name, convex_predicate, flow, transitions) -> (***** FIXME: check flows *)
 			(* Check that the location_name exists (which is obvious) *)
 			if not (in_array location_name locations_per_automaton.(index)) then(
 				print_error ("The location '" ^ location_name ^ "' declared in automaton '" ^ automaton_name ^ "' does not exist.");
@@ -479,6 +499,8 @@ let check_automata index_of_variables type_of_variables variable_names index_of_
 			(* Check the convex predicate *)
 			(* TODO: preciser quel automate et quelle location en cas d'erreur *)
 			if not (check_convex_predicate variable_names convex_predicate) then well_formed := false;
+			(* Check the rate condition *)
+			if not (check_flow index_of_variables type_of_variables flow) then well_formed := false;
 			(* Check transitions *)
 			List.iter (fun (convex_predicate, updates, sync, dest_location_name) ->
 				(* Check the convex predicate *)
@@ -830,9 +852,9 @@ let make_automata index_of_automata index_of_locations labels index_of_labels re
 		invariants.(automaton_index) <- Array.make nb_locations [];
                 (* Create the array of rate conditions for this automaton *)
 		flows.(automaton_index) <- Array.make nb_locations [];
-		(* For each transition: *)
+		(* For each location: *)
 		List.iter
-		(fun (location_name, invariant, flow, parsed_transitions) -> (***** FIXME: need to do something about the flow here *)
+		(fun (location_name, invariant, flow, parsed_transitions) -> 
 			(* Get the index of the location *)
 			let location_index = try (Hashtbl.find index_of_locations.(automaton_index) location_name) with Not_found -> raise (InternalError ("Impossible to find the index of location '" ^ location_name ^ "'.")) in
 			(* Create the list of actions for this location *)
@@ -874,6 +896,8 @@ let make_automata index_of_automata index_of_locations labels index_of_labels re
 			transitions.(automaton_index).(location_index) <- (List.rev list_of_transitions);
 			(* Update the array of invariants *)
 			invariants.(automaton_index).(location_index) <- invariant;
+			(* Update the array of (raw) rate conditions *)
+			flows.(automaton_index).(location_index) <- flow;
 		) locations;
 		(* Update the array of actions per automaton *)
 		let all_actions_for_this_automaton = Array.fold_left (fun list_of_all_actions list_of_actions ->
@@ -947,6 +971,35 @@ let convert_invariants index_of_variables invariants =
 	) invariants in
 	(* Functional representation *)
 	fun automaton_index location_index -> invariants.(automaton_index).(location_index)
+
+
+(*--------------------------------------------------*)
+(* Convert the rate conditions *)
+(*--------------------------------------------------*)
+(* Convert the structure: 'automaton_index -> location_index -> ParsingStructure.flow' into a structure: 'automaton_index -> location_index -> variable_index -> NumConst' *)
+let convert_flows nb_variables index_of_variables type_of_variables raw_flows =
+	(* Convert for each automaton *)
+	let flows = Array.map (
+		(* Convert for each location *)
+		Array.map (fun flow_list ->
+			(* build an array for all variables *)
+			let rates = Array.make nb_variables NumConst.zero in
+			(* paste defined rates into array *)			
+			List.iter (fun (variable_name, rate) -> 
+				let variable_index = Hashtbl.find index_of_variables variable_name in
+				rates.(variable_index) <- rate;
+				print_message Debug_standard ("rate for variable " ^ variable_name ^ ": " ^ (NumConst.string_of_numconst rate)) 
+			) flow_list;
+			(* insert default rate 1 for clocks *)
+			for i = 0 to (nb_variables - 1) do 
+				if (type_of_variables i) = AbstractImitatorFile.Var_type_clock then
+					rates.(i) <- NumConst.one
+			done;
+			rates
+		)		
+	) raw_flows in
+	(* Functional representation *)
+	fun automaton_index location_index variable_index -> flows.(automaton_index).(location_index).(variable_index)
 
 
 (*--------------------------------------------------*)
@@ -1130,11 +1183,12 @@ let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_
 	else () ;
 
 	(* Make only one list for all variables *)
-	let variable_names = list_append (list_append parameters_names clock_names) discrete_names in
+	let variable_names = list_append (list_append (list_append parameters_names analog_names) clock_names) discrete_names in
 	
 	(* Numbers *)
 	let nb_automata = List.length declared_automata_names in
 	let nb_labels = List.length synclabs_names in
+	let nb_analogs = List.length analog_names in
 	let nb_clocks = List.length clock_names in
 	let nb_discrete = List.length discrete_names in
 	let nb_parameters = List.length parameters_names in
@@ -1155,7 +1209,7 @@ let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	let nb_integer_variables = 0 in
 	(* 'nb_variables' represent the total number of variables, including renamings and 'd' (see below) *)
-	let nb_real_variables = 2 * nb_clocks  + 2 * nb_discrete + nb_parameters + 1 in
+	let nb_real_variables = 2 * (nb_analogs + nb_clocks  + nb_discrete) + nb_parameters + 1 in
 	LinearConstraint.set_manager nb_integer_variables nb_real_variables;
 
 
@@ -1193,12 +1247,20 @@ let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_
 		Hashtbl.add index_of_variables variables.(i) i;
 	done;
 	
+	let first_parameter_index = 0 in
+	let first_analog_index    = first_parameter_index + nb_parameters in
+	let first_clock_index     = first_analog_index + nb_analogs in
+	let first_discrete_index  = first_clock_index + nb_clocks in
+	
 	(* An array 'variable index -> AbstractImitatorFile.var_type' *)
-	let type_of_variables = Array.make nb_variables AbstractImitatorFile.Var_type_parameter in
-	for i = nb_parameters to nb_parameters + nb_clocks - 1 do
+	let type_of_variables = Array.make nb_variables AbstractImitatorFile.Var_type_parameter in	
+	for i = first_analog_index to first_clock_index - 1 do
+		type_of_variables.(i) <- AbstractImitatorFile.Var_type_analog;
+	done;
+	for i = first_clock_index to first_discrete_index - 1 do
 		type_of_variables.(i) <- AbstractImitatorFile.Var_type_clock;
 	done;
-	for i = nb_parameters + nb_clocks to nb_variables - 1 do
+	for i = first_discrete_index to nb_variables - 1 do
 		type_of_variables.(i) <- AbstractImitatorFile.Var_type_discrete;
 	done;
 	(* Functional representation *)
@@ -1206,14 +1268,14 @@ let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_
 
 
 	(* Create the lists of different variables *)
-	let parameters = list_of_interval 0 (nb_parameters - 1) in
-	let clocks = list_of_interval nb_parameters (nb_parameters + nb_clocks - 1) in
-	let discrete = list_of_interval (nb_parameters + nb_clocks) (nb_variables - 1) in
+	let parameters = list_of_interval first_parameter_index (first_analog_index - 1) in
+	let analogs    = list_of_interval first_analog_index (first_clock_index - 1) in
+	let clocks     = list_of_interval first_clock_index (first_discrete_index - 1) in
+	let discrete   = list_of_interval first_discrete_index (nb_variables - 1) in
 
-	(* Create the function is_clock *)
+	(* Create the type check functions *)
+	let is_analog = (fun variable_index -> try (type_of_variables variable_index = Var_type_analog) with Invalid_argument _ ->  false) in
 	let is_clock = (fun variable_index -> try (type_of_variables variable_index = Var_type_clock) with Invalid_argument _ ->  false) in
-	(*let is_clock = (fun variable_index -> variable_index >= nb_parameters && variable_index < nb_parameters + nb_clocks) in*)
-	(* Create the function is_discrete *)
 	let is_discrete = (fun variable_index -> try (type_of_variables variable_index = Var_type_discrete) with Invalid_argument _ ->  false) in
 		
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -1223,6 +1285,7 @@ let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_
 	print_message Debug_low (
 		(string_of_int nb_automata) ^ " automata, "
 		^ (string_of_int nb_labels) ^ " declared label" ^ (s_of_int nb_labels) ^ ", "
+		^ (string_of_int nb_analogs) ^ " analog variable" ^ (s_of_int nb_analogs) ^ ", "
 		^ (string_of_int nb_clocks) ^ " clock variable" ^ (s_of_int nb_clocks) ^ ", "
 		^ (string_of_int nb_discrete) ^ " discrete variable" ^ (s_of_int nb_discrete) ^ ", "
 		^ (string_of_int nb_parameters) ^ " parameter" ^ (s_of_int nb_parameters) ^ ", "
@@ -1350,8 +1413,11 @@ let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_
 	(* Convert the invariants *)
 	print_message Debug_total ("*** Building invariants...");
 	let invariants = convert_invariants index_of_variables invariants in
-        (* Convert the rate conditions *)
-	let flows = fun automaton_index location_index -> flows.(automaton_index).(location_index) in
+  
+	(* Convert the rate conditions *)
+	print_message Debug_total ("*** Building rate conditions...");
+	let flows = convert_flows nb_variables index_of_variables type_of_variables flows in
+	
 	(* Convert the transitions *)
 	print_message Debug_total ("*** Building transitions...");
 	let transitions = convert_transitions nb_actions index_of_variables type_of_variables transitions in
@@ -1360,7 +1426,7 @@ let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Set the number of discrete variables *) 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	let min_discrete_index = nb_parameters + nb_clocks in
+	let min_discrete_index = first_discrete_index in
 	let max_discrete_index = nb_variables - 1 in
 	Automaton.initialize nb_automata min_discrete_index max_discrete_index;
 
@@ -1377,33 +1443,35 @@ let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	print_message Debug_total ("*** Building renamed variables...");
 	(* The renamed variable indexes are set just after the current variables *)
-	let offset = nb_clocks + nb_discrete in
+	let offset = nb_analogs + nb_clocks + nb_discrete in
 	let prime_of_variable variable_index = variable_index + offset in
 	let variable_of_prime variable_index = variable_index - offset in
 
 	(* And d comes after *)
-	let d = nb_variables + nb_clocks in
+	let d = nb_variables + nb_analogs + nb_clocks in
 
 	(* Clocks: add the new indexes *)
-	let renamed_clocks = list_of_interval nb_variables (nb_variables + nb_clocks - 1) in
+	let renamed_analogs = list_of_interval nb_variables (nb_variables + nb_analogs - 1) in
+	let renamed_clocks = list_of_interval (nb_variables + nb_analogs) (d - 1) in
 
 	(* Discrete: add the new indexes *)
 (* 	let renamed_discrete = list_of_interval (nb_variables + nb_clocks) (nb_variables + nb_clocks + nb_discrete - 1) in *)
 
 	(* Create the function is_renamed_clock *)
-	let is_renamed_clock = (fun variable_index -> variable_index >= nb_variables && variable_index < nb_variables + nb_clocks) in
+	let is_renamed_analog = (fun variable_index -> variable_index >= nb_variables && variable_index < nb_variables + nb_analogs) in
+	let is_renamed_clock  = (fun variable_index -> variable_index >= nb_variables + nb_analogs && variable_index < d) in
 
 	(* Create the function is_renamed_discrete *)
 (* 	let is_renamed_discrete = (fun variable_index -> variable_index >= nb_variables + nb_clocks && variable_index < nb_variables + nb_clocks + nb_discrete) in *)
 
 	(* Create an array for all variable names with renamings *)
-	let array_of_variable_names = Array.make (nb_variables + nb_clocks + 1) "" in
+	let array_of_variable_names = Array.make (nb_variables + nb_analogs + nb_clocks + 1) "" in
 	(* Add normal names *)
 	for variable_index = 0 to nb_variables - 1 do
 		array_of_variable_names.(variable_index) <- variables.(variable_index);
 	done;
 	(* Add renamed clocks and discrete *)
-	for variable_index = nb_variables to nb_variables + nb_clocks - 1 do
+	for variable_index = nb_variables to d - 1 do
 		array_of_variable_names.(variable_index) <- variables.(variable_of_prime variable_index) ^ "_PRIME";
 	done;
 	(* Add 'd' *)
@@ -1412,12 +1480,15 @@ let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_
 
 	 (* Create the functional representation *)
 	let variable_names = fun i -> array_of_variable_names.(i) in
-	
-	(* Couples (x, x') for clock renamings *)
+
+	(* Couples (x, x') for renamings *)
+	let renamed_analogs_couples = List.map (fun index -> index, prime_of_variable index) analogs in
 	let renamed_clocks_couples = List.map (fun index -> index, prime_of_variable index) clocks in
-	(* Couples (x', x) for clock 'un'-renamings *)
-	let unrenamed_clocks_couples = List.map (fun index -> prime_of_variable index, index) clocks in
-	(* Couples (i, i') for discrete renamings *)
+	(* Couples (x', x) for 'un'-renamings *)
+	let unrenamed_analogs_couples = List.map (fun index -> prime_of_variable index, index) analogs in	
+	let unrenamed_clocks_couples = List.map (fun index -> prime_of_variable index, index) clocks in	
+
+		(* Couples (i, i') for discrete renamings *)
 (* 	let renamed_discrete_couples = List.map (fun index -> index, prime_of_variable index) discrete in *)
 	(* Couples (x', x) for clock 'un'-renamings *)
 (* 	let unrenamed_discrete_couples = List.map (fun index -> prime_of_variable index, index) discrete in *)
@@ -1537,11 +1608,16 @@ let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_
 	(* Cardinality *)
 	nb_automata = nb_automata;
 	nb_actions = nb_actions;
+	nb_analogs = nb_analogs;
 	nb_clocks = nb_clocks;
 	nb_discrete = nb_discrete;
 	nb_parameters = nb_parameters;
 	nb_variables = nb_variables;
-	
+
+	(* The list of analog indexes *)
+	analogs = analogs;
+	(* True for analogs, false otherwise *)
+	is_analog = is_analog;	
 	(* The list of clock indexes *)
 	clocks = clocks;
 	(* True for clocks, false otherwise *)
@@ -1552,6 +1628,8 @@ let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_
 	is_discrete = is_discrete;
 	(* The list of parameter indexes *)
 	parameters = parameters;
+	(* The non parameters *)
+	non_parameters = List.rev_append (List.rev_append discrete clocks) analogs;
 	(* The non parameters (clocks and discrete) *)
 	clocks_and_discrete = List.rev_append discrete clocks;
 	(* The function : variable_index -> variable name *)
@@ -1559,6 +1637,10 @@ let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_
 	(* The type of variables *)
 	type_of_variables = type_of_variables;
 
+	(* Renamed analogs *)
+	renamed_analogs = renamed_analogs;
+	(* True for renamed clocks, false otherwise *)
+	is_renamed_analog = is_renamed_analog;
 	(* Renamed clocks *)
 	renamed_clocks = renamed_clocks;
 	(* True for renamed clocks, false otherwise *)
@@ -1569,6 +1651,10 @@ let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_
 	variable_of_prime = variable_of_prime;
 	(* Parameter 'd' *)
 	d = d;
+	(* Couples (x, x') for clock renamings *)
+	renamed_analogs_couples = renamed_analogs_couples;
+	(* Couples (x', x) for clock 'un'-renamings *)
+	unrenamed_analogs_couples = unrenamed_analogs_couples;
 	(* Couples (x, x') for clock renamings *)
 	renamed_clocks_couples = renamed_clocks_couples;
 	(* Couples (x', x) for clock 'un'-renamings *)
@@ -1599,6 +1685,8 @@ let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_
 
 	(* The invariant for each automaton and each location *)
 	invariants = invariants;
+	(* The rate conditions for each automaton and each location *)
+	flows = flows;
 	(* The transitions for each automaton and each location and each action *)
 	transitions = transitions;
 
