@@ -1,8 +1,15 @@
 IMITATOR = ../bin/IMITATOR
 #IMITATOR = `which IMITATOR`
 
+LINE_DELIM = '-------------------------------------------------'
+
 # ========================================================================
 # test cases for regression tests
+# reachability
+REA_TESTS = flipflop tank
+REA_IMI_FILES = $(addprefix data/, $(addsuffix .imi, $(REA_TESTS)))
+REA_RESULTS   = $(addprefix log/, $(addsuffix .rea.log, $(REA_TESTS)))
+
 # inverse method:
 INV_TESTS = AndOr flipflop SRlatch spsmall latchValmem RCP csmacdPrism
 INV_IMI_FILES = $(addprefix data/, $(addsuffix .imi, $(INV_TESTS)))
@@ -18,8 +25,7 @@ COV_RESULTS   = $(addprefix log/, $(addsuffix .cov.log, $(COV_TESTS)))
 
 default all: unit regression
 
-regression: clean_regr regr_inv regr_cov
-	@ echo '================================================'
+regression: clean_regr regr_rea regr_inv regr_cov	
 	@ if ( test -e fail ); then \
 	    echo [SUMM] There were failing test cases. ; fi
 	@ if ( ! test -e fail ); then \
@@ -29,10 +35,21 @@ regression: clean_regr regr_inv regr_cov
 # ========================================================================
 # rules for regression tests
 
+regr_rea: $(REA_RESULTS)
+	@ echo $(LINE_DELIM)
+	
 regr_inv: $(INV_RESULTS)
+	@ echo $(LINE_DELIM)
 
 regr_cov: $(COV_RESULTS)
+	@ echo $(LINE_DELIM)
 
+log/%.rea.log: data/%.imi
+	@ echo [TEST] Testing reachability analysis for \'$*\' 
+	@ $(IMITATOR) data/$*.imi -mode reachability > $@
+	@ if ( ! fgrep -s "IMITATOR II successfully terminated" $@ > /dev/null ); then \
+	  echo [FAIL] Test did not terminate successfully. Check log file \'$@\' ; \
+	  touch fail; fi	  
 
 log/%.inv.log: data/%.imi data/%.pi0
 	@ echo [TEST] Testing inverse method for \'$*\' 
@@ -74,7 +91,9 @@ UNIT_CMI = $(addprefix src/test, $(addsuffix .cmi, $(UNIT_TESTS))) testSuite.cmi
 UNIT_OBJ = $(addprefix src/test, $(addsuffix .cmo, $(UNIT_TESTS))) testSuite.cmo
 
 unit: testsuite	
-	./testsuite	
+	@ ./testsuite
+	@ echo
+	@ echo $(LINE_DELIM)
 
 testsuite: $(UNIT_OBJ)
 	@ echo [LINK] testsuite
@@ -90,7 +109,7 @@ testSuite.cmo: $(UNIT_SRC)
 
 clean_regr:	
 	@ rm -f fail
-	@ rm -f $(INV_RESULTS) $(COV_RESULTS)
+	@ rm -f $(REA_RESULTS) $(INV_RESULTS) $(COV_RESULTS)
 	@ rm -f data/*.jpg data/*.states
 
 clean: clean_regr

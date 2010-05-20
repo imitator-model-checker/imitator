@@ -979,29 +979,35 @@ let convert_invariants index_of_variables invariants =
 (*--------------------------------------------------*)
 (* Convert the structure: 'automaton_index -> location_index -> ParsingStructure.flow' into a structure: 'automaton_index -> location_index -> variable_index -> NumConst' *)
 let convert_flows nb_variables index_of_variables type_of_variables raw_flows =
+	
 	(* Convert for each automaton *)
-	let flows = Array.map (
-		(* Convert for each location *)
-		Array.map (fun flow_list ->
-			(* build an array for all variables *)
-			let rates = Array.make nb_variables NumConst.zero in
-			(* paste defined rates into array *)			
+	let flows = Array.map ( fun rates_per_location ->
+		(* Convert for each location *)		
+		Array.map (fun rate_list ->
+			(* create hash table to store rates for each variable *)
+			let rates = Hashtbl.create 0 in
+			(* paste defined rates into hash table *)			
 			List.iter (fun (variable_name, rate) -> 
 				let variable_index = Hashtbl.find index_of_variables variable_name in
-				rates.(variable_index) <- rate;
+				Hashtbl.add rates variable_index rate;
 				print_message Debug_high ("set rate for analog variable " ^ variable_name ^ " to " ^ (NumConst.string_of_numconst rate)) 
-			) flow_list;
+			) rate_list;
 			(* insert default rate 1 for clocks *)
 			for i = 0 to (nb_variables - 1) do 
 				if (type_of_variables i) = AbstractImitatorFile.Var_type_clock then 					 
 					print_message Debug_high ("set rate for clock variable to 1");
-					rates.(i) <- NumConst.one
+					Hashtbl.add rates i NumConst.one
 			done;
 			rates
-		)
+		) rates_per_location;		
 	) raw_flows in
-	(* Functional representation *)
-	fun automaton_index location_index variable_index -> flows.(automaton_index).(location_index).(variable_index)
+	(* return Functional representation *)
+	fun automaton_index location_index variable_index -> (
+		try (
+			let rate = Hashtbl.find flows.(automaton_index).(location_index) variable_index in
+			Some rate
+		) with | Not_found -> None	
+  )
 
 
 (*--------------------------------------------------*)

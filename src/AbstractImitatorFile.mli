@@ -67,6 +67,9 @@ type action_type =
 	| Action_type_sync
 	| Action_type_nosync
 
+(** Rate conditions *)
+type rate_type = NumConst.t option
+
 (****************************************************************)
 (** State *)
 (****************************************************************)
@@ -185,7 +188,7 @@ type abstract_program = {
 	(* The invariant for each automaton and each location *)
 	invariants : automaton_index -> location_index -> linear_constraint;
 	(* The rate condition for each automaton and each location *)
-	flows : automaton_index -> location_index -> variable_index -> NumConst.t;
+	flows : automaton_index -> location_index -> variable_index -> rate_type;
 	(* The transitions for each automaton and each location and each action *)
 	transitions : automaton_index -> location_index -> action_index -> (transition list);
 
