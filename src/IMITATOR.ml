@@ -553,7 +553,7 @@ let post program pi0 reachability_graph orig_state_index =
 			print_message Debug_total (LinearConstraint.string_of_linear_constraint program.variable_names guards_without_discrete);
 		);
 
-		print_message Debug_total ("\nComputing clock updates X' = rho(X) + d");
+		print_message Debug_total ("\nComputing clock updates X' = rho(X) + d*r");
 		(* Compute X' = rho(X) + d for the variables appearing in updates *)
 		let not_appearing_in_updates = Array.make program.nb_variables true in
 		let updates = List.fold_left (fun list_of_updates current_updates ->
@@ -563,10 +563,13 @@ let post program pi0 reachability_graph orig_state_index =
 			(List.map (fun (variable_index, linear_term) ->
 				(* 'variable_index' appears in an updates *)
 				not_appearing_in_updates.(variable_index) <- false;
-				(* Consider cases for clocks *)
+				(* Find rate for variable *)
+(*				let rate = program.flows real_index location_index variable_index in*)
+				(* print_message Debug_standard ("\nFound rate " ^ (string_of_numconst rate)); *)
+				(* Consider cases for clocks *)				
 				match program.type_of_variables variable_index with
-				(* Clocks: Build rho(X) + d - X' = 0 *)
-				| Var_type_clock -> 
+				(* Clocks: Build rho(X) + d*r - X' = 0 *)
+				| Var_type_analog | Var_type_clock -> 
 				let xprime_lt = LinearConstraint.make_linear_term [
 					NumConst.minus_one, program.prime_of_variable variable_index;
 					NumConst.one, program.d
@@ -592,7 +595,7 @@ let post program pi0 reachability_graph orig_state_index =
 		Array.iteri (fun variable_index not_appearing -> 
 (* 			let is_discrete = program.is_discrete variable_index in *)
 			(**** TO OPTIMIZE : there are only clocks, here ! ****)
-			let is_clock = program.is_clock variable_index in
+			let is_clock = program.is_clock variable_index || program.is_analog variable_index in
 			(* Only consider clocks *)
 			if not_appearing && is_clock then(
 				(* Useful names *)

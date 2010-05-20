@@ -435,7 +435,8 @@ let check_flow index_of_variables type_of_variables flow =
 		if not declared then false else (
 			(* Get the type of the variable *)
 			let type_of_variable = type_of_variables index in
-			if not (type_of_variable = AbstractImitatorFile.Var_type_analog) then (
+			if not (type_of_variable = AbstractImitatorFile.Var_type_analog) &&
+				 not (type_of_variable = AbstractImitatorFile.Var_type_clock) then (
 				print_error ("The variable '" ^ variable_name ^ "' used in a rate condition is not analog.");
 				false
 			) else true
@@ -992,12 +993,12 @@ let convert_flows nb_variables index_of_variables type_of_variables raw_flows =
 			) flow_list;
 			(* insert default rate 1 for clocks *)
 			for i = 0 to (nb_variables - 1) do 
-				if (type_of_variables i) = AbstractImitatorFile.Var_type_clock then
+				if (type_of_variables i) = AbstractImitatorFile.Var_type_clock then 					 
 					print_message Debug_high ("set rate for clock variable to 1");
 					rates.(i) <- NumConst.one
 			done;
 			rates
-		)		
+		)
 	) raw_flows in
 	(* Functional representation *)
 	fun automaton_index location_index variable_index -> flows.(automaton_index).(location_index).(variable_index)
@@ -1171,10 +1172,12 @@ let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_
 	let all_variables_different = check_variable_names analog_names clock_names discrete_names parameters_names in
 	(* Check that all automata names are different *)
 	let all_automata_different = check_declared_automata_names declared_automata_names in
-	
-	(* Keep every element only once in those 4 lists *)
-	let analog_names = list_only_once analog_names in
+
+	(***** FIXME: For now, merge analogs into clocks *)
+			
+	(* Keep every element only once in those 4 lists *)	
 	let clock_names = list_only_once clock_names in
+	let analog_names = list_only_once analog_names in
 	let discrete_names = list_only_once discrete_names in
 	let parameters_names = list_only_once parameters_names in
 	
@@ -1268,6 +1271,9 @@ let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_
 	let analogs    = list_of_interval first_analog_index (first_clock_index - 1) in
 	let clocks     = list_of_interval first_clock_index (first_discrete_index - 1) in
 	let discrete   = list_of_interval first_discrete_index (nb_variables - 1) in
+
+	(* merged list of analog and clock variables *)
+	let analogs_and_clocks = list_append analogs clocks in
 
 	(* Create the type check functions *)
 	let is_analog = (fun variable_index -> try (type_of_variables variable_index = Var_type_analog) with Invalid_argument _ ->  false) in
@@ -1447,14 +1453,14 @@ let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_
 	let d = nb_variables + nb_analogs + nb_clocks in
 
 	(* Clocks: add the new indexes *)
-	let renamed_analogs = list_of_interval nb_variables (nb_variables + nb_analogs - 1) in
-	let renamed_clocks = list_of_interval (nb_variables + nb_analogs) (d - 1) in
+(*	let renamed_analogs = list_of_interval nb_variables (nb_variables + nb_analogs - 1) in *)
+	let renamed_clocks = list_of_interval nb_variables (d - 1) in
 
 	(* Discrete: add the new indexes *)
 (* 	let renamed_discrete = list_of_interval (nb_variables + nb_clocks) (nb_variables + nb_clocks + nb_discrete - 1) in *)
 
 	(* Create the function is_renamed_clock *)
-	let is_renamed_analog = (fun variable_index -> variable_index >= nb_variables && variable_index < nb_variables + nb_analogs) in
+(*	let is_renamed_analog = (fun variable_index -> variable_index >= nb_variables && variable_index < nb_variables + nb_analogs) in *)
 	let is_renamed_clock  = (fun variable_index -> variable_index >= nb_variables + nb_analogs && variable_index < d) in
 
 	(* Create the function is_renamed_discrete *)
@@ -1478,11 +1484,12 @@ let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_
 	let variable_names = fun i -> array_of_variable_names.(i) in
 
 	(* Couples (x, x') for renamings *)
-	let renamed_analogs_couples = List.map (fun index -> index, prime_of_variable index) analogs in
-	let renamed_clocks_couples = List.map (fun index -> index, prime_of_variable index) clocks in
+(*	let renamed_analogs_couples = List.map (fun index -> index, prime_of_variable index) analogs in *)
+	let renamed_clocks_couples = List.map (fun index -> index, prime_of_variable index) analogs_and_clocks in
+	
 	(* Couples (x', x) for 'un'-renamings *)
-	let unrenamed_analogs_couples = List.map (fun index -> prime_of_variable index, index) analogs in	
-	let unrenamed_clocks_couples = List.map (fun index -> prime_of_variable index, index) clocks in	
+	(* let unrenamed_analogs_couples = List.map (fun index -> prime_of_variable index, index) analogs in *)	
+	let unrenamed_clocks_couples = List.map (fun index -> prime_of_variable index, index) analogs_and_clocks in	
 
 		(* Couples (i, i') for discrete renamings *)
 (* 	let renamed_discrete_couples = List.map (fun index -> index, prime_of_variable index) discrete in *)
@@ -1604,18 +1611,18 @@ let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_
 	(* Cardinality *)
 	nb_automata = nb_automata;
 	nb_actions = nb_actions;
-	nb_analogs = nb_analogs;
-	nb_clocks = nb_clocks;
+	(* nb_analogs = nb_analogs; *)
+	nb_clocks = nb_clocks + nb_analogs;
 	nb_discrete = nb_discrete;
 	nb_parameters = nb_parameters;
 	nb_variables = nb_variables;
 
 	(* The list of analog indexes *)
-	analogs = analogs;
+	(* analogs = analogs; *)
+	(* The list of clock indexes *)
+	clocks = analogs_and_clocks;
 	(* True for analogs, false otherwise *)
 	is_analog = is_analog;	
-	(* The list of clock indexes *)
-	clocks = clocks;
 	(* True for clocks, false otherwise *)
 	is_clock = is_clock;
 	(* The list of discrete indexes *)
@@ -1625,18 +1632,18 @@ let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_
 	(* The list of parameter indexes *)
 	parameters = parameters;
 	(* The non parameters *)
-	non_parameters = List.rev_append (List.rev_append discrete clocks) analogs;
+	(* non_parameters = list_append analogs_and_clocks discrete; *) 
 	(* The non parameters (clocks and discrete) *)
-	clocks_and_discrete = List.rev_append discrete clocks;
+	clocks_and_discrete = list_append analogs_and_clocks discrete;
 	(* The function : variable_index -> variable name *)
 	variable_names = variable_names;
 	(* The type of variables *)
 	type_of_variables = type_of_variables;
 
 	(* Renamed analogs *)
-	renamed_analogs = renamed_analogs;
+	(* renamed_analogs = renamed_analogs; *)
 	(* True for renamed clocks, false otherwise *)
-	is_renamed_analog = is_renamed_analog;
+	(* is_renamed_analog = is_renamed_analog; *)
 	(* Renamed clocks *)
 	renamed_clocks = renamed_clocks;
 	(* True for renamed clocks, false otherwise *)
@@ -1648,9 +1655,9 @@ let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_
 	(* Parameter 'd' *)
 	d = d;
 	(* Couples (x, x') for clock renamings *)
-	renamed_analogs_couples = renamed_analogs_couples;
+	(* renamed_analogs_couples = renamed_analogs_couples; *)
 	(* Couples (x', x) for clock 'un'-renamings *)
-	unrenamed_analogs_couples = unrenamed_analogs_couples;
+	(* unrenamed_analogs_couples = unrenamed_analogs_couples; *)
 	(* Couples (x, x') for clock renamings *)
 	renamed_clocks_couples = renamed_clocks_couples;
 	(* Couples (x', x) for clock 'un'-renamings *)
