@@ -988,11 +988,12 @@ let convert_flows nb_variables index_of_variables type_of_variables raw_flows =
 			List.iter (fun (variable_name, rate) -> 
 				let variable_index = Hashtbl.find index_of_variables variable_name in
 				rates.(variable_index) <- rate;
-				print_message Debug_standard ("rate for variable " ^ variable_name ^ ": " ^ (NumConst.string_of_numconst rate)) 
+				print_message Debug_high ("set rate for analog variable " ^ variable_name ^ " to " ^ (NumConst.string_of_numconst rate)) 
 			) flow_list;
 			(* insert default rate 1 for clocks *)
 			for i = 0 to (nb_variables - 1) do 
 				if (type_of_variables i) = AbstractImitatorFile.Var_type_clock then
+					print_message Debug_high ("set rate for clock variable to 1");
 					rates.(i) <- NumConst.one
 			done;
 			rates
@@ -1177,11 +1178,6 @@ let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_
 	let discrete_names = list_only_once discrete_names in
 	let parameters_names = list_only_once parameters_names in
 	
-	(***** FIXME: abort here if analog variables declared *)
-	if not (list_empty analog_names) then 
-	  raise (InternalError "Analog variables are not supported yet.")
-	else () ;
-
 	(* Make only one list for all variables *)
 	let variable_names = list_append (list_append (list_append parameters_names analog_names) clock_names) discrete_names in
 	

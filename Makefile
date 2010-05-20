@@ -220,26 +220,25 @@ exe:
 # 	./IMITATOR Examples/flipflop-inverse.imi Examples/flipflop.pi0
 
 
-count:
-	make clean
-	python lineCounter.py
+count: clean
+	@ for f in src/*.ml src/*.mli; do wc -l $$f; done | sort -n -r -
+#	make clean
+#	python lineCounter.py
 
 
-clean:
-	make rmtpf
-	make rmuseless
-	rm -rf $(LEXERS:+=ml) $(PARSERS:+=mli) $(PARSERS:+=ml)
-	rm -rf $(TARGET) $(IMILIB)
-	cd test; make clean
+clean: rmtpf rmuseless
+	@rm -rf $(LEXERS:+=ml) $(PARSERS:+=mli) $(PARSERS:+=ml)
+	@rm -rf $(TARGET) $(IMILIB)
+	@cd test; make clean
 
 
 rmtpf:
-	rm -rf *~
+	@rm -rf *~
 
 
 rmuseless:
-	rm -rf $(FILES:+=cmo) $(FILES:+=cmi) $(FILES:+=o) $(MAIN) $(MAIN:.cmo=.cmi)
-	rm -rf $(FILESMLI:+=cmi)
+	@rm -rf $(FILES:+=cmo) $(FILES:+=cmi) $(FILES:+=o) $(MAIN) $(MAIN:.cmo=.cmi)
+	@rm -rf $(FILESMLI:+=cmi)
 
 # ppl:
 # 	ocamlc -I $(OCAML_GMP_PATH) -I $(OCAML_PPL_PATH) -c test1.ml

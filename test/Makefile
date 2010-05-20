@@ -4,7 +4,7 @@ IMITATOR = ../bin/IMITATOR
 # ========================================================================
 # test cases for regression tests
 # inverse method:
-INV_TESTS = AndOr flipflop SRlatch 
+INV_TESTS = AndOr flipflop SRlatch spsmall latchValmem RCP csmacdPrism
 INV_IMI_FILES = $(addprefix data/, $(addsuffix .imi, $(INV_TESTS)))
 INV_PI0_FILES = $(addprefix data/, $(addsuffix .pi0, $(INV_TESTS)))
 INV_RESULTS   = $(addprefix log/, $(addsuffix .inv.log, $(INV_TESTS)))
