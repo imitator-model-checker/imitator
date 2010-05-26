@@ -470,7 +470,7 @@ let post program pi0 reachability_graph orig_state_index =
 		(* Create a temporary hashtbl for discrete values *)
 		let updated_discrete = Hashtbl.create program.nb_discrete in
 		(* Update the location for the automata synchronized with 'action_index'; return the list of guards and updates *)
-		let guards_and_updates = Array.to_list (Array.mapi (fun local_index real_index ->
+		let guards_updates_flows = Array.to_list (Array.mapi (fun local_index real_index ->
 			(* Find its current index *)
 			let current_index = current_indexes.(local_index) in
 			(* Get the current location for this automaton *)
@@ -481,6 +481,8 @@ let post program pi0 reachability_graph orig_state_index =
 			let transition = List.nth transitions current_index in
 			(* Keep only the dest location *)
 			let guard, clock_updates, discrete_updates, dest_index = transition in
+			(***** FIXME: construct flows here *)
+			(* let flows = [] in *)
 			(* Update discrete *)
 			List.iter (fun (discrete_index, linear_term) ->
 				(* Compute its new value *)
@@ -505,7 +507,7 @@ let post program pi0 reachability_graph orig_state_index =
 			guard, clock_updates;
 		) real_indexes) in
 		(* Split the list of guards and updates *)
-		let guards, clock_updates = List.split guards_and_updates in
+		let guards, clock_updates = List.split guards_updates_flows in
 
 		(* Compute couples to update the discrete variables *)
 		let updated_discrete_couples = ref [] in
