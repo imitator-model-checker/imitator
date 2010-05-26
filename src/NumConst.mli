@@ -36,9 +36,9 @@ val minus_one : t
 val numconst_of_int : int -> t
 val numconst_of_float : float -> t
 val numconst_of_frac : int -> int -> t
-val numconst_of_mpq : Mpq.t -> t
+val numconst_of_mpq : Gmp.Q.t -> t
 
-val mpq_of_numconst : t -> Mpq.t
+val mpq_of_numconst : t -> Gmp.Q.t
 val string_of_numconst : t -> string
 
 

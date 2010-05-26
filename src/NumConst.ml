@@ -13,27 +13,31 @@
 (* Type definition *)
 (**************************************************)
 
+open Gmp.Q.Infixes
+
 (* type t *)
 
-type t =
-  | Mpq of Mpq.t
+(*type t =          *)
+(*  | Mpq of Gmp.Q.t*)
+type t = Gmp.Q.t
 
 
 (**************************************************)
 (* Functions *)
 (**************************************************)
 
-let get_mpq = function
-	| Mpq a -> a
+(*let get_mpq = function*)
+(*	| Mpq a -> a        *)
+let get_mpq a = a
 
 
 (**************************************************)
 (** {2 User Conversions} *)
 (**************************************************)
 
-let numconst_of_int i = Mpq (Mpq.of_int i)
+let numconst_of_int i = (Gmp.Q.from_int i)
 
-let numconst_of_frac i j = Mpq (Mpq.of_frac i j)
+let numconst_of_frac i j = (Gmp.Q.from_ints i j)
 
 let numconst_of_float f = (* Mpq (Mpq.of_float i) DOES NOT WORK WELL *)
 	(* Split the float in integer and fractional part *)
@@ -52,18 +56,19 @@ let numconst_of_float f = (* Mpq (Mpq.of_float i) DOES NOT WORK WELL *)
 		 numconst_of_frac (integer * denominator + fractional) denominator
 	)
 
-let numconst_of_mpq m = Mpq m
+let numconst_of_mpq m = m
 
 let mpq_of_numconst = get_mpq
 
-let string_of_numconst a = Mpq.to_string (get_mpq a)
+let string_of_numconst a = Gmp.Q.to_string (get_mpq a)
 
 
 (**************************************************)
 (** {2 Constants} *)
 (**************************************************)
 
-let zero = numconst_of_int 0
+let zero = Gmp.Q.zero
+(*let zero = numconst_of_int 0*)
 let one = numconst_of_int 1
 let minus_one = numconst_of_int (-1)
 
@@ -75,51 +80,56 @@ let minus_one = numconst_of_int (-1)
 let arithmetic_gen op a b =
 	let a = get_mpq a in
 	let b = get_mpq b in
-	let result = Mpq.init () in
+	let result = Gmp.Q.create () in
 	op result a b;
-	Mpq result
+	result
 
-let add =
-	arithmetic_gen Mpq.add
+let add = ( +/ ) 
+(*	arithmetic_gen Gmp.Q.add*)
 
-let sub =
-	arithmetic_gen Mpq.sub
+let sub = ( -/ ) 
+(*	arithmetic_gen Gmp.Q.sub*)
 
-let mul =
-	arithmetic_gen Mpq.mul
+let mul = ( */ ) 
+(*	arithmetic_gen Gmp.Q.mul*)
 
-let div =
-	arithmetic_gen Mpq.div
+let div = ( // ) 
+(*	arithmetic_gen Gmp.Q.div*)
 
-let neg a =
-	let a = get_mpq a in
-	let result = Mpq.init () in
-	Mpq.neg result a;
-	Mpq result
+let neg a = Gmp.Q.neg a	
+(*	let a = get_mpq a in           *)
+(*	let result = Gmp.Q.create () in*)
+(*	Gmp.Q.neg result a;            *)
+(*	Mpq result                     *)
 
 let abs a =
-	if Mpq.cmp (get_mpq a) (Mpq.of_int 0) >= 0 then a
+	if Gmp.Q.cmp (get_mpq a) (Gmp.Q.zero) >= 0 then a
 	else neg a
 
 (**************************************************)
 (** {2 Comparison Functions} *)
 (**************************************************)
 let comparison_gen op a b =
-	op (Mpq.cmp (get_mpq a) (get_mpq b)) 0
+	op (Gmp.Q.cmp (get_mpq a) (get_mpq b)) 0
 	
 let equal a b =
-	Mpq.equal (get_mpq a) (get_mpq b)
+	Gmp.Q.equal (get_mpq a) (get_mpq b)
 
 let neq a b =
 	not (equal a b)
 
-let l = comparison_gen (<)
+let l  = ( </ )
+let le = ( <=/ )
+let ge = ( >=/ )
+let g  = ( >/ )
 
-let le = comparison_gen (<=)
-
-let ge = comparison_gen (>=)
-
-let g = comparison_gen (>)
+(*let l = comparison_gen (<)  *)
+(*                            *)
+(*let le = comparison_gen (<=)*)
+(*                            *)
+(*let ge = comparison_gen (>=)*)
+(*                            *)
+(*let g = comparison_gen (>)  *)
 
 
 (**************************************************)
