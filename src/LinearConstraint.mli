@@ -9,6 +9,7 @@
  *
  ****************************************************************)
  
+
 (**************************************************)
 (** {2 Variables and coefficients} *)
 (**************************************************)
@@ -30,6 +31,8 @@ type linear_term
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
 (** {3 Creation} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+
+val normalize_linear_term : linear_term -> Ppl_ocaml.linear_expression * NumConst.t
 
 (** Create a linear term using a list of coef and variables, and a constant *)
 val make_linear_term : (coef * variable) list -> coef -> linear_term

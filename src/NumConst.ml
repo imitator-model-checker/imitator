@@ -30,14 +30,19 @@ type t = Gmp.Q.t
 (*	| Mpq a -> a        *)
 let get_mpq a = a
 
-
 (**************************************************)
 (** {2 User Conversions} *)
 (**************************************************)
 
+let get_num = Gmp.Q.get_num
+
+let get_den = Gmp.Q.get_den 
+
 let numconst_of_int i = (Gmp.Q.from_int i)
 
 let numconst_of_frac i j = (Gmp.Q.from_ints i j)
+
+let numconst_of_zfrac i j = (Gmp.Q.from_zs i j)
 
 let numconst_of_float f = (* Mpq (Mpq.of_float i) DOES NOT WORK WELL *)
 	(* Split the float in integer and fractional part *)
@@ -57,6 +62,8 @@ let numconst_of_float f = (* Mpq (Mpq.of_float i) DOES NOT WORK WELL *)
 	)
 
 let numconst_of_mpq m = m
+
+let numconst_of_mpz z = Gmp.Q.from_z z
 
 let mpq_of_numconst = get_mpq
 

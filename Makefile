@@ -20,18 +20,31 @@ endif
 ifndef OUNIT_PATH
   OUNIT_PATH = $(HOME)/local/ounit
 endif
+ifndef OCAML_PPL_PATH
+  OCAML_PPL_PATH = $(HOME)/local/lib/ppl
+endif 
+ifndef OCAML_GMP_PATH
+  OCAML_GMP_PATH = $(HOME)/local/lib
+endif
 
 # export paths for use in sub-makefiles
 export EXTLIB_PATH 
 export APRON_PATH 
 export OUNIT_PATH 
+export OCAML_PPL_PATH
+export OCAML_GMP_PATH
 
 #export APRON_PATH = /home/andre/local/lib
 
-INCLUDE = -I $(SRC) -I $(EXTLIB_PATH) -I $(APRON_PATH)
+#INCLUDE = -I $(SRC) -I $(EXTLIB_PATH) -I $(OCAML_PPL_PATH) -I $(OCAML_GMP_PATH) -I $(APRON_PATH)
+INCLUDE = -I $(SRC) -I $(EXTLIB_PATH) -I $(OCAML_PPL_PATH) -I $(OCAML_GMP_PATH)
 
 # external libs for compiling imitator
-export LIBS = str.cma unix.cma extLib.cma bigarray.cma gmp.cma apron.cma polkaMPQ.cma
+# export LIBS = str.cma unix.cma extLib.cma bigarray.cma gmp.cma apron.cma polkaMPQ.cma
+
+# external libs for compiling with PPL support
+export LIBS = -cclib -lpwl -cclib -lm -cclib -lgmpxx -cclib -lgmp -cclib -lppl \
+ str.cma unix.cma extLib.cma bigarray.cma gmp.cma ppl_ocaml.cma
 
 # OCAML_PPL_PATH = /home/andre/Prog/local/lib/ppl
 # OCAML_GMP_PATH = /home/andre/Prog/local/lib/gmp

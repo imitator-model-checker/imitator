@@ -72,8 +72,11 @@ log/%.cov.log: data/%.imi data/%.v0
 ifndef EXTLIB_PATH
   EXTLIB_PATH = /usr/lib/ocaml/extlib
 endif
-ifndef APRON_PATH
-  APRON_PATH = $(HOME)/local/apron/lib
+ifndef OCAML_PPL_PATH
+  OCAML_PPL_PATH = $(HOME)/local/lib/ppl
+endif 
+ifndef OCAML_GMP_PATH
+  OCAML_GMP_PATH = $(HOME)/local/lib
 endif
 ifndef OUNIT_PATH
   OUNIT_PATH = $(HOME)/local/ounit
@@ -81,8 +84,8 @@ endif
 ifndef LIBS
   LIBS = str.cma unix.cma extLib.cma bigarray.cma gmp.cma apron.cma polkaMPQ.cma
 endif
-
-INCLUDE = -I src -I ../src -I ../lib -I $(OUNIT_PATH) -I $(EXTLIB_PATH) -I $(APRON_PATH)
+ 
+INCLUDE = -I src -I ../src -I ../lib -I $(OUNIT_PATH) -I $(EXTLIB_PATH) -I $(OCAML_PPL_PATH) -I $(OCAML_GMP_PATH)
 LIBS += oUnit.cma imitator.cma 
  
 UNIT_TESTS = ImitatorParser Automaton NumConst
