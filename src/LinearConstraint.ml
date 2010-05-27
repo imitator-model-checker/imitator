@@ -101,6 +101,9 @@ let int_dim = ref 0
 (* The number of real dimensions *)
 let real_dim = ref 0
 
+(* Total number of dimensions *)
+let total_dim = ref 0
+
 
 
 (**************************************************)
@@ -628,9 +631,22 @@ let string_of_linear_inequality names linear_inequality =
 (** {3 Creation} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
 
+(** Create a false constraint *)
+let false_constraint () =	
+	ppl_new_NNC_Polyhedron_from_space_dimension !total_dim Empty
+(*	Abstract0.bottom manager !int_dim !real_dim*)
+
+(** Create a true constraint *)
+let true_constraint () = 
+	ppl_new_NNC_Polyhedron_from_space_dimension !total_dim Universe
+(*	Abstract0.top manager !int_dim !real_dim*)
+
 (** Create a linear constraint from a list of linear inequalities *)
 let make inequalities = 
-	ppl_new_NNC_Polyhedron_from_constraints inequalities
+	let poly = true_constraint () in
+	ppl_Polyhedron_add_constraints poly inequalities;
+	print_message Debug_high ("new poly with dim " ^ string_of_int (ppl_Polyhedron_space_dimension poly));
+  poly
 	
 	(* Call Apron *)
 (*	let linear_constraint =                                                             *)
@@ -641,20 +657,11 @@ let make inequalities =
 (*	(* Return it *)                                                                     *)
 (*	linear_constraint                                                                   *)
 
-(** Create a false constraint *)
-let false_constraint () =	
-	ppl_new_NNC_Polyhedron_from_space_dimension !int_dim Empty
-(*	Abstract0.bottom manager !int_dim !real_dim*)
-
-(** Create a true constraint *)
-let true_constraint () = 
-	ppl_new_NNC_Polyhedron_from_space_dimension !int_dim Universe
-(*	Abstract0.top manager !int_dim !real_dim*)
-
 (** Set the constraint manager *)
 let set_manager int_d real_d =
 	int_dim := int_d;
-	real_dim := real_d 
+	real_dim := real_d;
+	total_dim := int_d + real_d 
 
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
@@ -744,22 +751,48 @@ let intersection linear_constraints =
 	let joined_constraints = List.fold_left (fun plist poly ->
 		List.append plist (ppl_Polyhedron_get_constraints poly)
 	) [] linear_constraints in
-	ppl_new_NNC_Polyhedron_from_constraints joined_constraints
+	let poly = true_constraint () in
+	ppl_Polyhedron_add_constraints poly joined_constraints;
+	poly
 	
 (*	Abstract0.meet_array manager (Array.of_list linear_constraints)*)
 
 
 (** Eliminate (using existential quantification) a set of variables in a linear constraint *)
 let hide variables linear_constraint =
-	ppl_Polyhedron_remove_space_dimensions linear_constraint variables;
-	linear_constraint
+	List.iter (fun v -> 
+		print_message Debug_high ("hide v" ^ string_of_int v)
+	) variables;
+	let poly = ppl_new_NNC_Polyhedron_from_NNC_Polyhedron linear_constraint in
+	ppl_Polyhedron_unconstrain_space_dimensions poly variables;
+	poly
 	
 (*	Abstract0.forget_array manager linear_constraint (Array.of_list variables) false*)
 
 
 let rename_variables list_of_couples linear_constraint =
-	ppl_Polyhedron_map_space_dimensions linear_constraint list_of_couples;
-	linear_constraint
+	let ndim = ppl_Polyhedron_space_dimension linear_constraint in
+	print_message Debug_high ("mapping space dimensions, no. dimensions is " ^ string_of_int ndim);
+	(* copy polyhedron, ppl function has sideeffects *)
+	let poly = ppl_new_NNC_Polyhedron_from_NNC_Polyhedron linear_constraint in
+	(* complete list of pairs *)
+	let reverse_couples = List.map (fun (a,b) -> (b,a)) list_of_couples in
+	let joined_couples = List.rev_append list_of_couples reverse_couples in
+	let from, _  = List.split joined_couples in
+	let rec add_id list i = 
+		if i < 0 then list else
+			if not (List.mem i from) then
+				(i,i) :: add_id list (i-1)
+			else
+				add_id list (i-1)
+		in 
+	let complete_list = add_id joined_couples (!total_dim - 1) in
+	List.iter (fun (a, b) -> (
+		print_message Debug_high ("map v" ^ string_of_int a ^ " -> v" ^ string_of_int b);	
+	)) complete_list;
+	(* perfom the mapping *)
+	ppl_Polyhedron_map_space_dimensions poly complete_list;
+	poly
 
 (** 'rename_variables renaming_couples c' renames all variables according to the couples of the form (old, new) *)
 (*let rename_variables list_of_couples linear_constraint =                                             *)

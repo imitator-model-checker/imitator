@@ -69,7 +69,7 @@ let debug_mode_greater debug_mode =
 	(* Get the global debug mode *)
 	let global_debug_mode =
 	match !global_debug_mode with
-	| Debug_mode_not_set -> raise (InternalError ("The debug mode has already been set, impossible to access it."))
+	| Debug_mode_not_set -> raise (InternalError ("The debug mode has not been set, impossible to access it."))
 	| Debug_mode_set global_debug_mode -> global_debug_mode
 	in
 	(* Compare *)
