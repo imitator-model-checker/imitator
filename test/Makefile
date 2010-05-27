@@ -88,7 +88,7 @@ endif
 INCLUDE = -I src -I ../src -I ../lib -I $(OUNIT_PATH) -I $(EXTLIB_PATH) -I $(OCAML_PPL_PATH) -I $(OCAML_GMP_PATH)
 LIBS += oUnit.cma imitator.cma 
  
-UNIT_TESTS = ImitatorParser Automaton NumConst
+UNIT_TESTS = ImitatorParser Automaton NumConst LinearConstraint
 UNIT_SRC = $(addprefix src/test, $(addsuffix .ml, $(UNIT_TESTS))) 
 UNIT_CMI = $(addprefix src/test, $(addsuffix .cmi, $(UNIT_TESTS))) testSuite.cmi
 UNIT_OBJ = $(addprefix src/test, $(addsuffix .cmo, $(UNIT_TESTS))) testSuite.cmo

@@ -21,14 +21,17 @@ let location1_name = "aut0: loc0, aut1: loc2, k4 = 2, k5 = 0, k6 = 0"
 let location2_name = "aut0: loc3, aut1: loc2, k4 = 1, k5 = 0, k6 = 1"
 
 
-let test_locations _ = 
+let test_locations _ =
+	let build_location_name1 = (Automaton.string_of_location automata_names location_names discrete_names location1) in
+	let build_location_name2 = (Automaton.string_of_location automata_names location_names discrete_names location2) in
+	
+	print_string build_location_name1;
+	print_string build_location_name2;
+		  
 	assert_equal 
-		(Automaton.string_of_location automata_names location_names discrete_names location1)
-		location1_name;
+		build_location_name1 location1_name;
 	assert_equal 
-		(Automaton.string_of_location automata_names location_names discrete_names location2)
-		location2_name
-	 
+		build_location_name2 location2_name
 
 (** Build testsuite **)
 
