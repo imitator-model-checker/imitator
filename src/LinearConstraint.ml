@@ -248,10 +248,13 @@ let rec string_of_linear_term_ppl names linear_term =
 		| Times (z, rterm) -> (
 				let fstr = Gmp.Z.string_from z in
 				let tstr = string_of_linear_term_ppl names rterm in
-				match rterm with
-					| Coefficient _ -> fstr ^ "*" ^ tstr
-					| Variable    _ -> fstr ^ "*" ^ tstr
-					| _ -> fstr ^ " * (" ^ tstr ^ ")" ) 				
+				if (Gmp.Z.equal z (Gmp.Z.one)) then
+					tstr
+				else 
+					match rterm with
+						| Coefficient _ -> fstr ^ "*" ^ tstr
+						| Variable    _ -> fstr ^ "*" ^ tstr
+						| _ -> fstr ^ " * (" ^ tstr ^ ")" ) 				
 				
 
 (**************************************************)
@@ -341,7 +344,7 @@ let negate_wrt_pi0 pi0 linear_inequality =
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
 (** {3 Conversion} *)
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)				   	
 
 
 (** Convert a linear inequality into a string *)
@@ -442,6 +445,11 @@ let partition_pi0_compatible pi0 linear_constraint =
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
 (** {3 Conversion} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+
+(** PPL polyhedron *)
+let to_ppl_polyhedron x = x
+let from_ppl_polyhedron x = x
+
 
 (** String for the false constraint *)
 let string_of_false = "false"

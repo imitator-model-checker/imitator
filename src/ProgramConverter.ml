@@ -1423,8 +1423,8 @@ let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_
 	let invariants = convert_invariants index_of_variables invariants in
   
 	(* Convert the rate conditions *)
-	print_message Debug_total ("*** Building rate conditions...");
-	let flows = convert_flows nb_variables index_of_variables type_of_variables flows in
+(*	print_message Debug_total ("*** Building rate conditions...");                      *)
+(*	let flows = convert_flows nb_variables index_of_variables type_of_variables flows in*)
 	
 	(* Convert the transitions *)
 	print_message Debug_total ("*** Building transitions...");
@@ -1695,7 +1695,7 @@ let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_
 	(* The invariant for each automaton and each location *)
 	invariants = invariants;
 	(* The rate conditions for each automaton and each location *)
-	flows = flows;
+(*	flows = flows;*)
 	(* The transitions for each automaton and each location and each action *)
 	transitions = transitions;
 

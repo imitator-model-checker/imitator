@@ -1554,7 +1554,7 @@ print_message Debug_standard ("Program checked and converted " ^ (after_seconds 
 (**************************************************)
 (* Debug print: program *)
 (**************************************************)
-print_message Debug_total ("\nProgram:\n" ^ (ImitatorPrinter.string_of_program program) ^ "\n");
+(* print_message Debug_total ("\nProgram:\n" ^ (ImitatorPrinter.string_of_program program) ^ "\n"); *)
 
 
 (**************************************************)

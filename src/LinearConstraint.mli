@@ -176,6 +176,9 @@ val add_d : variable -> coef -> variable list -> linear_constraint -> linear_con
 (** {3 Conversion} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
 
+val from_ppl_polyhedron : Ppl_ocaml.polyhedron -> linear_constraint
+val to_ppl_polyhedron   : linear_constraint -> Ppl_ocaml.polyhedron
+
 (** Convert a linear constraint into a string *)
 val string_of_linear_constraint : (variable -> string) -> linear_constraint -> string
 
