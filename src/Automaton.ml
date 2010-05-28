@@ -45,6 +45,23 @@ type discrete = NumConst.t array
 
 type location = locations * discrete
 
+exception NotEqual
+
+let location_equal loc1 loc2 =
+	let (locs1, discr1) = loc1 in
+	let (locs2, discr2) = loc2 in
+	(* can use polymorphic = here *)
+	if not (locs1 = locs2) then false else (
+		if not ((Array.length discr1) = (Array.length discr2)) then false else (
+			try (
+				Array.iteri (fun i d1 -> 
+					if not (discr2.(i) = d1) then raise NotEqual
+				) discr1;
+				true
+			) with _ -> false
+			(* all entries equal *)			
+		) 
+	)
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
 (** {3 Automata} *)

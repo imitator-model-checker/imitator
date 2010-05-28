@@ -56,6 +56,8 @@ val all_p_constraints : abstract_program -> reachability_graph -> LinearConstrai
 (** Return the state_index of a state; raise Not_found if not found *)
 (* val find_state_index : reachability_graph -> AbstractImitatorFile.state -> state_index *)
 
+(** Check if two states are equal *)
+val states_equal: AbstractImitatorFile.state -> AbstractImitatorFile.state -> bool
 
 (****************************************************************)
 (** Actions on a graph *)

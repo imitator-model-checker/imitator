@@ -10,6 +10,12 @@
 #  Ocaml version: 3.11.2
 ###############################################################
 
+# flags for ocaml compiler
+OCAMLC_FLAGS = -g
+
+# ocaml compiler
+OCAMLC = ocamlc $(OCAMLC_FLAGS)
+
 # path variables
 ifndef EXTLIB_PATH
   EXTLIB_PATH = /usr/lib/ocaml/extlib
@@ -77,15 +83,16 @@ IMILIB = lib/imitator.cma
 TARGET = bin/IMITATOR
 
 
-all: compil
+default all: $(TARGET)
+
 
 $(IMILIB): header parser $(OBJS)
 	@ echo [MKLIB] $@
-	@ ocamlc -a -o $@ $(OBJS)  
+	@ $(OCAMLC) -a -o $@ $(OBJS)  
 
-compil: $(IMILIB) $(MAIN)
+$(TARGET): $(IMILIB) $(MAIN)
 	@ echo [LINK] $(TARGET)
-	@ ocamlc -o $(TARGET) $(INCLUDE) $(LIBS) $(IMILIB) $(MAIN)
+	@ $(OCAMLC) -o $(TARGET) $(INCLUDE) $(LIBS) $(IMILIB) $(MAIN)
 
 header: $(FILESMLI:+=cmi)
 
@@ -93,17 +100,17 @@ parser: $(PARSERS:+=ml) $(LEXERS:+=ml) header $(PARSERS:+=cmi)
 	
 $(SRC)/%.cmo: $(SRC)/%.ml
 	@ echo [OCAMLC] $<
-	@ ocamlc -c $(INCLUDE) $<	
+	@ $(OCAMLC) -c $(INCLUDE) $<	
 	
 $(SRC)/%.cmi: $(SRC)/%.mli
 	@ echo [OCAMLC] $<
-	@ ocamlc -c $(INCLUDE) $<
+	@ $(OCAMLC) -c $(INCLUDE) $<
 
 $(SRC)/%.cmi: $(SRC)/%.mly
 	@ echo [YACC] $<
 	@ ocamlyacc $<
 	@ echo [OCAMLC] $(SRC)/$*.mli
-	@ ocamlc -c $(INCLUDE) $(SRC)/$*.mli
+	@ $(OCAMLC) -c $(INCLUDE) $(SRC)/$*.mli
 
 $(SRC)/%.ml: $(SRC)/%.mly 
 	@ echo [YACC] $<
@@ -115,7 +122,7 @@ $(SRC)/%.ml: $(SRC)/%.mll
 	 
 
 
-test: compil 
+test: $(IMILIB) 
 	cd test; make unit
 
 exe:

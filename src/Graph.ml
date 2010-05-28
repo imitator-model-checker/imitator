@@ -86,6 +86,15 @@ let all_p_constraints program graph =
 	Hashtbl.find graph.states state*)
 
 
+(** Check if two states are equal *)
+let states_equal state1 state2 =
+	let (loc1, constr1) = state1 in
+	let (loc2, constr2) = state2 in
+	if not (Automaton.location_equal loc1 loc2) then false else (
+		LinearConstraint.is_equal constr1 constr2
+	)
+
+
 (****************************************************************)
 (** Actions on a graph *)
 (****************************************************************)
@@ -106,7 +115,7 @@ let add_state program graph new_state =
 		(* First try to find the exact state in the DynArray *)
 		try (
 			(* If the same state belongs to the graph *)
-			let state_index = DynArray.index_of (fun some_state -> new_state = some_state) graph.states in
+			let state_index = DynArray.index_of (fun some_state -> states_equal new_state some_state) graph.states in
 			(* Return state_index, false *)
 			state_index, false
 		) with Not_found -> (

@@ -32,6 +32,7 @@ type location_index = int
 type location_name = string
 type location
 
+val location_equal: location -> location -> bool
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
 (** {3 Automata} *)

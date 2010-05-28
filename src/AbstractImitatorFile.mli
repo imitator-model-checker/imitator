@@ -85,7 +85,6 @@ type rate_type = NumConst.t option
 (** State: location and constraint *)
 type state = location * linear_constraint
 
-
 (****************************************************************)
 (** Transition *)
 (****************************************************************)

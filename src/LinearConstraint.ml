@@ -110,51 +110,13 @@ let total_dim = ref 0
 (* Useful Functions *)
 (**************************************************)
 
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
-(* Conversions to Apron *)
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
-
-(* Convert a variable into a Apron dim *)
-(*let apron_dim_of_variable variable =*)
-(*	variable                          *)
-
-(* Convert a constant into a Apron coeff *)
-(*let apron_coeff_of_constant constant =              *)
-(*	Coeff.s_of_mpq (NumConst.mpq_of_numconst constant)*)
-
-
-(* Convert a constant into a Apron coeff option *)
-(*let apron_coeff_option_of_constant constant =       *)
-(*	if NumConst.equal constant NumConst.zero then None*)
-(*	else Some (apron_coeff_of_constant constant)      *)
-
-
-(* Convert a constant into a Apron (coeff, dim) *)
-(*let apron_coeff_dim_of_member (coef, variable) =              *)
-(*	apron_coeff_of_constant coef, apron_dim_of_variable variable*)
-
-
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
-(* Conversion from Apron *)
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
-
-(* Convert a Apron coeff into a constant *)
-(*let constant_of_apron_coeff coeff =                                                                                                               *)
-(*	match coeff with                                                                                                                                *)
-(*	| Coeff.Scalar s -> let constant =                                                                                                              *)
-(*		match s with                                                                                                                                  *)
-(*			| Scalar.Mpqf m -> NumConst.numconst_of_mpq (Mpqf.mpq m)                                                                                    *)
-(*			| Scalar.Float f -> NumConst.numconst_of_float f                                                                                            *)
-(*			| Scalar.Mpfrf m -> raise (InternalError "Expecting Apron to use only Mpqf in Scalar, in 'constant_of_apron_coeff' function. Given: Mpfrf.")*)
-(*			in constant                                                                                                                                 *)
-(*	| _ -> raise (InternalError "Expecting Apron to use only Scalar coeff in 'constant_of_apron_coeff' function.")                                  *)
-
-
-(* Convert a Apron dim into a variable  *)
-(*let variable_of_apron_dim dim =*)
-(*	dim                          *)
-
-
+(** check the dimensionality of a polyhedron *)
+let assert_dimensions poly =
+	let ndim = ppl_Polyhedron_space_dimension poly in
+	if not (ndim = !total_dim) then (
+		print_error ("Polyhedron has too few dimensions (" ^ (string_of_int ndim) ^ " / " ^ (string_of_int !total_dim) ^ ")");
+		raise (InternalError "Inconsistent polyhedron found")	
+	)			 	
 
 (**************************************************)
 (** {2 Linear terms} *)
@@ -175,80 +137,32 @@ let total_dim = ref 0
 let make_linear_term members coef =
 	List.fold_left (fun term head ->
 		let (c, v) = head in 
-		Pl ((Ti (c, Var v), term))) 
-	(Coef coef) members
+			if c = NumConst.one then
+				Pl (Var v, term)
+			else
+				Pl ((Ti (c, Var v), term))
+	)	(Coef coef) members
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
 (** {3 Functions} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
 
-(* Get the members from a linexpr *)
-(*let members_of_linexpr linexpr =                                                                                            *)
-(*	let members = ref [] in                                                                                                   *)
-(*		Linexpr0.iter (fun coeff dim ->                                                                                         *)
-(*			(* Add the member only if not null *)                                                                                 *)
-(*			let coef = constant_of_apron_coeff coeff in                                                                           *)
-(*			if NumConst.neq coef NumConst.zero then (                                                                             *)
-(*				(* Add the new member *)                                                                                            *)
-(*				members := (coef, variable_of_apron_dim dim) :: !members;                                                           *)
-(*			) else (                                                                                                              *)
-(*				(**** Exception to study the behavior of Apron ****)                                                                *)
-(*(* 				raise (InternalError ("A null coef was found for variable " ^ (string_of_int dim) ^ " in an Apron linexpr0.")) *)*)
-(*				(**** String to study the behavior of Apron ****)                                                                   *)
-(*(* 				print_string "$"; *)                                                                                             *)
-(*				()                                                                                                                  *)
-(*			);                                                                                                                    *)
-(*		) linexpr;                                                                                                              *)
-(*		(* Return the list *)                                                                                                   *)
-(*		!members                                                                                                                *)
-
-
-(* Get the constant from a linexpr *)
-(*let constant_of_linexpr linexpr =                    *)
-(*	constant_of_apron_coeff (Linexpr0.get_cst linexpr) *)
-
-
 (** Add two linear terms *)
 let add_linear_terms lt1 lt2 =
 	Pl (lt1, lt2)
-
-(*let add_linear_terms lt1 lt2 =                                       *)
-(*	(* Create an array of coef *)                                      *)
-(*	let coef_array = Array.make (!int_dim + !real_dim) NumConst.zero in*)
-(*	(* Get the members *)                                              *)
-(*	let members1 = members_of_linexpr lt1 in                           *)
-(*	let members2 = members_of_linexpr lt2 in                           *)
-(*	(* Get the constants *)                                            *)
-(*	let constant1 = constant_of_linexpr lt1 in                         *)
-(*	let constant2 = constant_of_linexpr lt2 in                         *)
-(*	(* Update the array *)                                             *)
-(*	let update_array = List.iter (fun (coef, dim) ->                   *)
-(*		coef_array.(dim) <- NumConst.add coef_array.(dim) coef;          *)
-(*	) in                                                               *)
-(*	update_array members1;                                             *)
-(*	update_array members2;                                             *)
-(*	(* Convert the array to members *)                                 *)
-(*	let members = ref [] in                                            *)
-(*	Array.iteri (fun dim coef ->                                       *)
-(*		if NumConst.neq coef NumConst.zero                               *)
-(*		then members := (coef, dim) :: !members                          *)
-(*	) coef_array;                                                      *)
-(*	(* Build the new linear term *)                                    *)
-(*	make_linear_term                                                   *)
-(*		!members                                                         *)
-(*		(NumConst.add constant1 constant2)                               *)
 
 
 (*--------------------------------------------------*)
 (* Evaluation *)
 (*--------------------------------------------------*)
 
+(** Evaluate a linear term with a function assigning a value to each variable. *)
 let rec evaluate_linear_term valuation_function linear_term =
 	match linear_term with
 		| Coef c -> c
 		| Var v -> (
 			  try valuation_function v 
-			  with _ -> raise(InternalError ("No constant value was found for variable " ^ (string_of_int v) ^ ", while trying to evaluate a linear term; this variable was probably not defined.")))
+			  with _ -> raise(InternalError ("No value was found for variable " ^ (string_of_int v) ^ ", while trying to evaluate a linear term; this variable was probably not defined.")))
 		| Pl (lterm, rterm) -> ( 
 				let lval = evaluate_linear_term valuation_function rterm in
 				let rval = evaluate_linear_term valuation_function lterm in
@@ -262,12 +176,13 @@ let rec evaluate_linear_term valuation_function linear_term =
 				NumConst.mul fac rval)
 
 
+(** Evaluate a linear term (PPL) with a function assigning a value to each variable. *)
 let rec evaluate_linear_term_ppl valuation_function linear_term =
 	match linear_term with
 		| Coefficient z -> NumConst.numconst_of_mpz z
 		| Variable v -> (
 			  try valuation_function v 
-			  with _ -> raise(InternalError ("No constant value was found for variable " ^ (string_of_int v) ^ ", while trying to evaluate a linear term; this variable was probably not defined.")))
+			  with _ -> raise(InternalError ("No value was found for variable " ^ (string_of_int v) ^ ", while trying to evaluate a linear term; this variable was probably not defined.")))
 	  | Unary_Plus t -> evaluate_linear_term_ppl valuation_function t
 		| Unary_Minus t -> NumConst.neg (evaluate_linear_term_ppl valuation_function t)
 		| Plus (lterm, rterm) -> (
@@ -282,34 +197,6 @@ let rec evaluate_linear_term_ppl valuation_function linear_term =
 				let rval = evaluate_linear_term_ppl valuation_function rterm in
 				NumConst.mul (NumConst.numconst_of_mpz z) rval)
 
-(* Evaluate a member w.r.t. pi0. (Raise InternalError if the value for the variable is not defined in pi0) *)
-(*let evaluate_member pi0 (coef, variable) =                                                                                                                                                 *)
-(*	let value =                                                                                                                                                                              *)
-(*		try pi0 variable                                                                                                                                                                       *)
-(*		with _ ->                                                                                                                                                                              *)
-(*			raise (InternalError ("No constant value was found for variable " ^ (string_of_int variable) ^ ", while trying to evaluate a linear term; this variable was probably not defined."));*)
-(*	in                                                                                                                                                                                       *)
-(*	NumConst.mul coef value                                                                                                                                                                  *)
-
-
-(* Evaluate a list of members and a constant w.r.t. pi0 *)
-(*let evaluate_members_and_constant pi0 (members, constant) =                                                                   *)
-(*	(* Evaluate the members *)                                                                                                  *)
-(*	NumConst.add                                                                                                                *)
-(*	(List.fold_left (fun current_value member -> NumConst.add current_value (evaluate_member pi0 member)) NumConst.zero members)*)
-(*	(* Add the constant *)                                                                                                      *)
-(*	constant                                                                                                                    *)
-
-
-(** Evaluate a linear term with a function assigning a value to each variable. *)
-(*let evaluate_linear_term valuation_function linear_term =             *)
-(*	(* Get the members *)                                               *)
-(*	let members = members_of_linexpr linear_term in                     *)
-(*	(* Get the constant *)                                              *)
-(*	let constant = constant_of_linexpr linear_term in                   *)
-(*	(* Evaluate *)                                                      *)
-(*	evaluate_members_and_constant valuation_function (members, constant)*)
-
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
 (** {3 Conversion to string} *)
@@ -318,55 +205,8 @@ let rec evaluate_linear_term_ppl valuation_function linear_term =
 let string_of_coef = NumConst.string_of_numconst
 let string_of_constant = NumConst.string_of_numconst
 
-(* Convert a member into a string using a name function *)
-(*let string_of_member names (coef, variable) =                                               *)
-(*	(* Case coef 1 *)                                                                         *)
-(*	if NumConst.equal coef NumConst.one then (names variable)                                 *)
-(*	(* Case coef -1 *)                                                                        *)
-(*	else if NumConst.equal coef (NumConst.numconst_of_int (-1)) then ("- " ^ (names variable))*)
-(*	(* Other case *)                                                                          *)
-(*	else ((string_of_coef coef) ^ " * " ^ (names variable))                                   *)
 
-
-
-
-(* Convert a list of members and a constant into a string *)
-(*let string_of_members_and_constant names members constant =      *)
-(*	match members with                                             *)
-(*	(* Case: empty list *)                                         *)
-(*	| [] -> string_of_constant constant                            *)
-(*	(* Case: non-empty list *)                                     *)
-(*	| first :: rest ->                                             *)
-(*		(* Convert the first *)                                      *)
-(*		(string_of_member names first)                               *)
-(*		(* Convert the rest *)                                       *)
-(*		^ (List.fold_left (fun the_string (coef, variable) ->        *)
-(*			the_string                                                 *)
-(*			(* Add the +/- *)                                          *)
-(*			 ^ (if NumConst.g coef NumConst.zero then " + " else " ")  *)
-(*			(* Convert the member *)                                   *)
-(*			 ^ (string_of_member names (coef, variable))               *)
-(*		) "" rest)                                                   *)
-(*		(* Convert the constant *)                                   *)
-(*		^ (if NumConst.neq constant NumConst.zero then(              *)
-(*			(* Add the +/- *)                                          *)
-(*			 (if NumConst.g constant NumConst.zero then " + " else " ")*)
-(*			^ (string_of_constant constant)                            *)
-(*			) else ""                                                  *)
-(*		)                                                            *)
-
-
-(** Convert a linear term into a string *)
-(*let string_of_linear_term names linear_term =          *)
-(*(*	(* Old debug *)                                    *)
-(*	Linexpr0.print names Format.std_formatter linexpr;*) *)
-(*	(* Get the constant *)                               *)
-(*	let constant = constant_of_linexpr linear_term in    *)
-(*	(* Get the list of members *)                        *)
-(*	let members = members_of_linexpr linear_term in      *)
-(*	(* Convert to string *)                              *)
-(*	string_of_members_and_constant names members constant*)
-	
+(** Convert a linear term into a string *)	
 let rec string_of_linear_term names linear_term =
 	match linear_term with
 		| Coef c -> string_of_coef c
@@ -382,8 +222,13 @@ let rec string_of_linear_term names linear_term =
 		| Ti (fac, rterm) -> (
 				let fstr = string_of_coef fac in
 				let tstr = string_of_linear_term names rterm in
-				fstr ^ " * (" ^ tstr ^ ")" )
-				
+				match rterm with
+					| Coef _ -> fstr ^ "*" ^ tstr
+					| Var  _ -> fstr ^ "*" ^ tstr
+					| _ -> fstr ^ " * (" ^ tstr ^ ")" ) 				
+
+
+(** Convert a linear term (PPL) into a string *)								
 let rec string_of_linear_term_ppl names linear_term =
 	match linear_term with
 		| Coefficient z -> Gmp.Z.string_from z
@@ -403,7 +248,10 @@ let rec string_of_linear_term_ppl names linear_term =
 		| Times (z, rterm) -> (
 				let fstr = Gmp.Z.string_from z in
 				let tstr = string_of_linear_term_ppl names rterm in
-				fstr ^ " * (" ^ tstr ^ ")" )
+				match rterm with
+					| Coefficient _ -> fstr ^ "*" ^ tstr
+					| Variable    _ -> fstr ^ "*" ^ tstr
+					| _ -> fstr ^ " * (" ^ tstr ^ ")" ) 				
 				
 
 (**************************************************)
@@ -416,37 +264,11 @@ let rec string_of_linear_term_ppl names linear_term =
 (* Functions *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
 
-(* Convert an 'op' into a string *)
-(*let string_of_op = function*)
-(*	| Op_g -> ">"            *)
-(*	| Op_ge -> ">="          *)
-(*	| Op_eq -> "="           *)
-
-(* Convert an Apron Lincons0.typ into a Constraint.op *)
-(*let op_of_apron_typ = function                                                       *)
-(*	| Lincons0.SUP -> Op_g                                                             *)
-(*	| Lincons0.SUPEQ -> Op_ge                                                          *)
-(*	| Lincons0.EQ -> Op_eq                                                             *)
-(*	| _ -> raise (InternalError "Non standard operator in 'op_of_apron_typ' function.")*)
-
-(* Convert a Constraint.op into a Apron Lincons0.typ *)
-(*let apron_typ_of_op = function*)
-(*	| Op_g -> Lincons0.SUP      *)
-(*	| Op_ge -> Lincons0.SUPEQ   *)
-(*	| Op_eq -> Lincons0.EQ      *)
-
-(* Convert an op into a NumConst comparison function *)
-(*let numconst_op_of_op = function*)
-(*	| Op_g -> NumConst.g          *)
-(*	| Op_ge -> NumConst.ge        *)
-(*	| Op_eq -> NumConst.equal     *)
-
-
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
 (** {3 Creation} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
 
-(** Create a linear inequality using linear term and an operator *)
+(** Create a linear inequality using a linear term and an operator *)
 let make_linear_inequality linear_term op =
 	let ppl_term, r = normalize_linear_term linear_term in
 	let p = NumConst.get_num r in
@@ -457,9 +279,6 @@ let make_linear_inequality linear_term op =
 		| Op_ge -> Greater_Or_Equal (lin_term, zero_term)
 		| Op_eq -> Equal (lin_term, zero_term)
 	
-	(* Make the Lincons0 *)
-  (*	Lincons0.make linear_term (apron_typ_of_op op)*)
-
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
 (** {3 Functions} *)
@@ -496,21 +315,10 @@ let evaluate_linear_inequality valuation_function linear_inequality =
 (*--------------------------------------------------*)
 
 (** Check if a linear inequality is pi0-compatible *)
-(*let is_pi0_compatible_inequality pi0 linear_inequality =*)
-(*	(* Get the linexpr *)                                 *)
-(*	let linexpr = linear_inequality.linexpr0 in           *)
-(*	(* Get the operator *)                                *)
-(*	let op = op_of_apron_typ linear_inequality.typ in     *)
-(*	(* Evaluate the members and constant *)               *)
-(*	let value = evaluate_linear_term pi0 linexpr in       *)
-(*	(* Compare to the operator *)                         *)
-(*	let op = numconst_op_of_op op in                      *)
-(*	(* Compare *)                                         *)
-(*	op value NumConst.zero                                *)
-
 let is_pi0_compatible_inequality pi0 linear_inequality =
 	evaluate_linear_inequality pi0 linear_inequality
 
+(** Negate a linear inequality; for an equality, perform the pi0-compatible negation *)
 let negate_wrt_pi0 pi0 linear_inequality = 
 	match linear_inequality with
 		| Less_Than (lterm, rterm) -> Greater_Or_Equal (lterm, rterm)
@@ -530,45 +338,13 @@ let negate_wrt_pi0 pi0 linear_inequality =
 				)
 			)
 
-(** Negate a linear inequality; for an equality, perform the pi0-compatible negation *)
-(**** TO OPTIMIZE : should find proper Apron functions to do this (?) *)
-(*let negate_wrt_pi0 pi0 linear_inequality =                                                                         *)
-(*	(* Negation function for members and constant *)                                                                 *)
-(*	let negate_linear_term members constant =                                                                        *)
-(*		make_linear_term                                                                                               *)
-(*		(List.map (fun (coef, variable) -> NumConst.neg coef, variable) members)                                       *)
-(*		(NumConst.neg constant)                                                                                        *)
-(*	in                                                                                                               *)
-(*	(* Get the linexpr *)                                                                                            *)
-(*	let linexpr = linear_inequality.linexpr0 in                                                                      *)
-(*	(* Get the operator *)                                                                                           *)
-(*	let op = op_of_apron_typ linear_inequality.typ in                                                                *)
-(*	(* Get the members *)                                                                                            *)
-(*	let members = members_of_linexpr linexpr in                                                                      *)
-(*	(* Get the constant *)                                                                                           *)
-(*	let constant = constant_of_linexpr linexpr in                                                                    *)
-(*	(* Negation depends on the operator *)                                                                           *)
-(*	match op with                                                                                                    *)
-(*		(* Standard ops: easy *)                                                                                       *)
-(*		| Op_ge -> make_linear_inequality (negate_linear_term members constant) Op_g                                   *)
-(*		| Op_g -> make_linear_inequality (negate_linear_term members constant) Op_ge                                   *)
-(*		(* Equality: consider two cases *)                                                                             *)
-(*		| Op_eq ->                                                                                                     *)
-(*			let value = evaluate_members_and_constant pi0 (members, constant) in                                         *)
-(*			(* Case value > 0 *)                                                                                         *)
-(*			if NumConst.g value NumConst.zero then make_linear_inequality (make_linear_term members constant) Op_g       *)
-(*			(* Case value < 0 *)                                                                                         *)
-(*			else if NumConst.l value NumConst.zero then make_linear_inequality (negate_linear_term members constant) Op_g*)
-(*			else (                                                                                                       *)
-(*				raise (InternalError "Trying to negate an equality already true w.r.t. pi0")                               *)
-(*			)                                                                                                            *)
-
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
 (** {3 Conversion} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
 
 
+(** Convert a linear inequality into a string *)
 let string_of_linear_inequality names linear_inequality =
 	match linear_inequality with
 		| Less_Than (lterm, rterm) -> (
@@ -592,35 +368,6 @@ let string_of_linear_inequality names linear_inequality =
 				let rstr = string_of_linear_term_ppl names rterm in
 				lstr ^ " >= " ^ rstr )
 	
-	
-(** Convert a linear inequality into a string *)
-(*let string_of_linear_inequality names linear_inequality =                                                             *)
-(*	(* Old debug *)                                                                                                     *)
-(*(* 	Lincons0.print names Format.std_formatter linear_inequality; *)                                                  *)
-(*	(* Get the linexpr *)                                                                                               *)
-(*	let linexpr = linear_inequality.linexpr0 in                                                                         *)
-(*	(* Get the operator *)                                                                                              *)
-(*	let op = op_of_apron_typ linear_inequality.typ in                                                                   *)
-(*	(* Get the members *)                                                                                               *)
-(*	let members = members_of_linexpr linexpr in                                                                         *)
-(*	(* Get the constant *)                                                                                              *)
-(*	let constant = constant_of_linexpr linexpr in                                                                       *)
-(*	(* Partition the positive and negative members *)                                                                   *)
-(*	let positive_members, negative_members =                                                                            *)
-(*		List.partition (fun (coef, variable) -> NumConst.g coef NumConst.zero) members in                                 *)
-(*	(* Invert the negatives *)                                                                                          *)
-(*	let inverted_negative_members = List.map (fun (coef, variable) -> (NumConst.neg coef, variable)) negative_members in*)
-(*	(* Create the constant *)                                                                                           *)
-(*	let left_constant, right_constant =                                                                                 *)
-(*		if NumConst.g constant NumConst.zero then constant, NumConst.zero else NumConst.zero, NumConst.neg constant in    *)
-(*	(* Left *)                                                                                                          *)
-(*	(string_of_members_and_constant names positive_members left_constant)                                               *)
-(*	(* op *)                                                                                                            *)
-(*	^ " " ^ (string_of_op op) ^ " "                                                                                     *)
-(*	(* Right *)                                                                                                         *)
-(*	^ (string_of_members_and_constant names inverted_negative_members right_constant)                                   *)
-
-
 
 (**************************************************)
 (** {2 Linear Constraints} *)
@@ -634,29 +381,18 @@ let string_of_linear_inequality names linear_inequality =
 (** Create a false constraint *)
 let false_constraint () =	
 	ppl_new_NNC_Polyhedron_from_space_dimension !total_dim Empty
-(*	Abstract0.bottom manager !int_dim !real_dim*)
 
 (** Create a true constraint *)
 let true_constraint () = 
 	ppl_new_NNC_Polyhedron_from_space_dimension !total_dim Universe
-(*	Abstract0.top manager !int_dim !real_dim*)
 
 (** Create a linear constraint from a list of linear inequalities *)
 let make inequalities = 
 	let poly = true_constraint () in
 	ppl_Polyhedron_add_constraints poly inequalities;
-	print_message Debug_high ("new poly with dim " ^ string_of_int (ppl_Polyhedron_space_dimension poly));
+	assert_dimensions poly;
   poly
 	
-	(* Call Apron *)
-(*	let linear_constraint =                                                             *)
-(*		Abstract0.of_lincons_array manager !int_dim !real_dim (Array.of_list inequalities)*)
-(*	in                                                                                  *)
-(*	(* Minimize it *)                                                                   *)
-(*(* 	Abstract0.minimize manager linear_constraint; *)                                 *)
-(*	(* Return it *)                                                                     *)
-(*	linear_constraint                                                                   *)
-
 (** Set the constraint manager *)
 let set_manager int_d real_d =
 	int_dim := int_d;
@@ -670,22 +406,18 @@ let set_manager int_d real_d =
 
 (** Check if a constraint is false *)
 let is_false = ppl_Polyhedron_is_empty
-(*let is_false = Abstract0.is_bottom manager*)
 
 (** Check if a constraint is true *)
 let is_true = ppl_Polyhedron_is_universe
-(*let is_true = Abstract0.is_top manager*)
 
 (** Check if a constraint is satisfiable *)
 let is_satisfiable = fun c -> not (is_false c)
 
 (** Check if 2 constraints are equal *)
 let is_equal = ppl_Polyhedron_equals_Polyhedron
-(*let is_equal = Abstract0.is_eq manager*)
 
 (** Check if a constraint is included in another one *)
 let is_leq = ppl_Polyhedron_contains_Polyhedron
-(*let is_leq = Abstract0.is_leq manager*)
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
 (** {3 Pi0-compatibility} *)
@@ -695,7 +427,6 @@ let is_leq = ppl_Polyhedron_contains_Polyhedron
 let is_pi0_compatible pi0 linear_constraint =
 	(* Get a list of linear inequalities *)
 	let list_of_inequalities = ppl_Polyhedron_get_constraints linear_constraint in
-(*	let list_of_inequalities = Array.to_list (Abstract0.to_lincons_array manager linear_constraint) in*)
 	(* Check the pi0-compatibility for all *)
 	List.for_all (is_pi0_compatible_inequality pi0) list_of_inequalities
 
@@ -704,7 +435,6 @@ let is_pi0_compatible pi0 linear_constraint =
 let partition_pi0_compatible pi0 linear_constraint =
 	(* Get a list of linear inequalities *)
 	let list_of_inequalities = ppl_Polyhedron_get_constraints linear_constraint in
-(*	let list_of_inequalities = Array.to_list (Abstract0.to_lincons_array manager linear_constraint) in*)
 	(* Partition *)
 	List.partition (is_pi0_compatible_inequality pi0) list_of_inequalities
 
@@ -723,8 +453,6 @@ let string_of_true = "true"
 
 (** Convert a linear constraint into a string *)
 let string_of_linear_constraint names linear_constraint =
-	(* Old debug *)
-(* 	Abstract0.print names Format.std_formatter linear_constraint; *)
 	(* First check if true *)
 	if is_true linear_constraint then string_of_true
 	(* Then check if false *)
@@ -733,8 +461,6 @@ let string_of_linear_constraint names linear_constraint =
 	(* Get an array of linear inequalities *)
 	let list_of_inequalities = ppl_Polyhedron_get_constraints linear_constraint in
 	let array_of_inequalities = Array.of_list list_of_inequalities in
-(*	let array_of_inequalities = Abstract0.to_lincons_array manager linear_constraint in*)
-	(* Convert them to a string *)
 	"  " ^
 	(string_of_array_of_string_with_sep
 		"\n& "
@@ -747,38 +473,41 @@ let string_of_linear_constraint names linear_constraint =
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
 
 (** Performs the intersection of a list of linear constraints *)
+(**** FIXME: there must be a smarter way to do this *)
 let intersection linear_constraints =
+	(* get the constraints from polyhedra and put them in one list *)
 	let joined_constraints = List.fold_left (fun plist poly ->
 		List.append plist (ppl_Polyhedron_get_constraints poly)
 	) [] linear_constraints in
+	(* construct a new polyhedron *)
 	let poly = true_constraint () in
 	ppl_Polyhedron_add_constraints poly joined_constraints;
 	poly
 	
-(*	Abstract0.meet_array manager (Array.of_list linear_constraints)*)
-
 
 (** Eliminate (using existential quantification) a set of variables in a linear constraint *)
 let hide variables linear_constraint =
-	List.iter (fun v -> 
-		print_message Debug_high ("hide v" ^ string_of_int v)
-	) variables;
+	(* debug output *)
+	if debug_mode_greater Debug_total then (
+		List.iter (fun v ->	print_message Debug_high ("hide v" ^ string_of_int v)) variables;
+	);
+	(* copy polyhedron, as PPL function has sideeffects *)
 	let poly = ppl_new_NNC_Polyhedron_from_NNC_Polyhedron linear_constraint in
 	ppl_Polyhedron_unconstrain_space_dimensions poly variables;
+	assert_dimensions poly;
 	poly
 	
-(*	Abstract0.forget_array manager linear_constraint (Array.of_list variables) false*)
 
-
+(** rename variables in a constraint *)
 let rename_variables list_of_couples linear_constraint =
-	let ndim = ppl_Polyhedron_space_dimension linear_constraint in
-	print_message Debug_high ("mapping space dimensions, no. dimensions is " ^ string_of_int ndim);
-	(* copy polyhedron, ppl function has sideeffects *)
+	(* copy polyhedron, as ppl function has sideeffects *)
 	let poly = ppl_new_NNC_Polyhedron_from_NNC_Polyhedron linear_constraint in
-	(* complete list of pairs *)
+	(* add reverse mapping *)
 	let reverse_couples = List.map (fun (a,b) -> (b,a)) list_of_couples in
 	let joined_couples = List.rev_append list_of_couples reverse_couples in
+	(* find all dimensions that will be mapped *)
 	let from, _  = List.split joined_couples in
+	(* add identity pairs (x,x) for remaining dimensions *) 
 	let rec add_id list i = 
 		if i < 0 then list else
 			if not (List.mem i from) then
@@ -787,27 +516,16 @@ let rename_variables list_of_couples linear_constraint =
 				add_id list (i-1)
 		in 
 	let complete_list = add_id joined_couples (!total_dim - 1) in
-	List.iter (fun (a, b) -> (
-		print_message Debug_high ("map v" ^ string_of_int a ^ " -> v" ^ string_of_int b);	
-	)) complete_list;
+  (* debug output *)
+	if debug_mode_greater Debug_high then (
+		let ndim = ppl_Polyhedron_space_dimension poly in
+		print_message Debug_high ("mapping space dimensions, no. dimensions is " ^ string_of_int ndim);
+		List.iter (fun (a,b) -> (print_message Debug_high ("map v" ^ string_of_int a ^ " -> v" ^ string_of_int b))) complete_list;
+	);
 	(* perfom the mapping *)
 	ppl_Polyhedron_map_space_dimensions poly complete_list;
+	assert_dimensions poly;
 	poly
-
-(** 'rename_variables renaming_couples c' renames all variables according to the couples of the form (old, new) *)
-(*let rename_variables list_of_couples linear_constraint =                                             *)
-(*	(* Split the couples *)                                                                            *)
-(*	let old_list, new_list = List.split list_of_couples in                                             *)
-(*	(* Build the array of dimensions *)                                                                *)
-(*	let array_of_dim = Array.of_list old_list in                                                       *)
-(*	(* Build the array of linear expressions *)                                                        *)
-(*	let array_of_linexpr = Array.of_list (                                                             *)
-(*		List.map                                                                                         *)
-(*		(fun variable -> Linexpr0.of_list None [apron_coeff_dim_of_member (NumConst.one, variable)] None)*)
-(*		new_list                                                                                         *)
-(*	) in                                                                                               *)
-(*	(* Make a substitution *)                                                                          *)
-(*	Abstract0.substitute_linexpr_array manager linear_constraint array_of_dim array_of_linexpr None    *)
 				
 				
 (** substitutes all variables in a linear term.
@@ -859,7 +577,7 @@ let add_d d coef variable_list linear_constraint =
 	let p = NumConst.get_num coef in
 	let q = NumConst.get_den coef in
 	if (q <>! Gmp.Z.one) then
-		raise (InternalError "Only integer coefficients supported in add_d");
+		raise (InternalError "Only integer coefficients supported yet in add_d");
 	(* build the substitution function *)	
 	let coef_d = Times (p, Variable d) in
 	let sub = fun v -> (
@@ -868,22 +586,16 @@ let add_d d coef variable_list linear_constraint =
 		else
 			Variable v
 		) in
+	(* get the constraints from polyhedron *)
 	let constraint_list = ppl_Polyhedron_get_constraints linear_constraint in
-	let new_constraints = List.map (fun ineq -> substitute_variables sub ineq) constraint_list in 
-	ppl_new_NNC_Polyhedron_from_constraints new_constraints
-
-(*	(* Build the array of dimensions *)                                                                                                     *)
-(*	let array_of_dim = Array.of_list variable_list in                                                                                       *)
-(*	(* Build the array of linear expressions *)                                                                                             *)
-(*	let array_of_linexpr = Array.of_list (                                                                                                  *)
-(*		List.map                                                                                                                              *)
-(*		(fun variable -> Linexpr0.of_list None [apron_coeff_dim_of_member (coef, d); apron_coeff_dim_of_member (NumConst.one, variable)] None)*)
-(*		variable_list                                                                                                                         *)
-(*	) in                                                                                                                                    *)
-(*	(* Make a substitution *)                                                                                                               *)
-(*	Abstract0.substitute_linexpr_array manager linear_constraint array_of_dim array_of_linexpr None                                         *)
-
-
+	(* perform the substitution for each constraint *)
+	let new_constraints = List.map (fun ineq -> substitute_variables sub ineq) constraint_list in
+	(* build a new polyhedron *)
+	let poly = true_constraint () in
+	ppl_Polyhedron_add_constraints poly new_constraints; 	
+	assert_dimensions poly;
+	poly
+	
 
 (*
 
