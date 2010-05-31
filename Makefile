@@ -11,7 +11,8 @@
 ###############################################################
 
 # flags for ocaml compiler
-OCAMLC_FLAGS = -g
+# OCAMLC_FLAGS = -g
+OCAMLC_FLAGS = 
 
 # ocaml compiler
 OCAMLC = ocamlc $(OCAMLC_FLAGS)
@@ -98,6 +99,10 @@ header: $(FILESMLI:+=cmi)
 
 parser: $(PARSERS:+=ml) $(LEXERS:+=ml) header $(PARSERS:+=cmi)
 	
+$(SRC)/%.cmo: $(SRC)/%.ml $(SRC)/%.mli
+	@ echo [OCAMLC] $<
+	@ $(OCAMLC) -c $(INCLUDE) $<	
+
 $(SRC)/%.cmo: $(SRC)/%.ml
 	@ echo [OCAMLC] $<
 	@ $(OCAMLC) -c $(INCLUDE) $<	
@@ -120,6 +125,10 @@ $(SRC)/%.ml: $(SRC)/%.mll
 	@ echo [LEX] $<
 	@ ocamllex $< 
 	 
+# dependencies
+.depend:
+	@ echo [OCAMLDEP]
+	@ ocamldep -I $(SRC) $(SRC)/*.ml $(SRC)/*.mli > .depend 
 
 
 test: $(IMILIB) 
@@ -249,6 +258,7 @@ count: clean
 clean: rmtpf rmuseless
 	@rm -rf $(LEXERS:+=ml) $(PARSERS:+=mli) $(PARSERS:+=ml)
 	@rm -rf $(TARGET) $(IMILIB)
+	@rm -rf .depend
 	@cd test; make clean
 
 
@@ -273,3 +283,4 @@ rmuseless:
 # 	OCAMLRUNPARAM='l=1M' ocamlc -o test2.cmo -c -I $(OCAML_GMP_PATH) -I $(OCAML_PPL_PATH)  gmp.cma ppl_ocaml.cma -ccopt -g test2.ml
 # 	OCAMLRUNPARAM='l=1M' ocamlc -o TEST2 -I $(OCAML_GMP_PATH) -I $(OCAML_PPL_PATH)  gmp.cma ppl_ocaml.cma -ccopt -g test2.cmo
 
+include .depend
