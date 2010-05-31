@@ -8,9 +8,14 @@ Note: In case of problem, please read this INSTALL file carefully before reporti
 
 0. Install the required components and libraries, i.e.:
 	* OCaml (the version used to develop IMITATOR II is 3.11.2)
-	* The APRON numerical abstract domain library, and its interface with OCaml
 	* The OCaml ExtLib library (Extended Standard Library for Objective Caml)
+	* The GMP library Ocaml interface (http://www-verimag.imag.fr/~monniaux/download/mlgmp.tar.gz)
+	* The PPL library, including its Ocaml interface (http://www.cs.unipr.it/ppl/)
+
+   Optional components (for testing purposes)
 	* dot (module of graphviz)
+	* The Ocaml unit test module (http://www.xs4all.nl/~mmzeeman/ocaml/)
+
 
 Note that 'dot', used to generate graphical outputs, is not necessary if you run IMITATOR II using the '-no-dot' option.
 
@@ -25,10 +30,14 @@ The above libraries will probably require themselves several other libraries, in
 1. Extract the files from the archive to an installation directory, say <IMITATOR_II_install_dir>.
 
 2. Open the Makefile and update:
-	* OCAMLIB_PATH
-	* APRON_PATH
+	* EXTLIB_PATH : path to Ocaml ExtLib
+	* OCAML_PPL_PATH : path to the PPL Ocaml interface
+	* OCAML_GMP_PATH : path to the GMP Ocaml interface
 
-If you installed the required libraries in directories that are not searched by default by the compiler and/or linking tools, then, like with other libraries, you may need to set up some environment variables such as C_INCLUDE_PATH (to find headers), LIBRARY_PATH (to find libraries), and if the shared library has been installed, LD_LIBRARY_PATH (before execution) or LD_RUN_PATH (before linking); this list is not exhaustive and some environment variables may be specific to your system.
+  Optionally, set 
+	* OUNIT_PATH : path to the Ocaml unit test module
+
+If you installed the required libraries in directories that are not searched by default by the compiler and/or linking tools, then, like with other libraries, you may need to set up some environment variables such as C_INCLUDE_PATH (to find headers), LIBRARY_PATH (to find libraries); this list is not exhaustive and some environment variables may be specific to your system.
 
 3. Type "make all".
 
