@@ -1,12 +1,14 @@
 IMITATOR = ../bin/IMITATOR
 #IMITATOR = `which IMITATOR`
 
+IMITATOR_MISC_OPTIONS = -no-dot -no-log
+
 LINE_DELIM = '-------------------------------------------------'
 
 # ========================================================================
 # test cases for regression tests
 # reachability
-REA_TESTS = flipflop tank
+REA_TESTS = flipflop 
 REA_IMI_FILES = $(addprefix data/, $(addsuffix .imi, $(REA_TESTS)))
 REA_RESULTS   = $(addprefix log/, $(addsuffix .rea.log, $(REA_TESTS)))
 
@@ -46,21 +48,21 @@ regr_cov: $(COV_RESULTS)
 
 log/%.rea.log: data/%.imi
 	@ echo [TEST] Testing reachability analysis for \'$*\' 
-	@ $(IMITATOR) data/$*.imi -mode reachability > $@
+	@ $(IMITATOR) data/$*.imi -mode reachability $(IMITATOR_MISC_OPTIONS) > $@
 	@ if ( ! fgrep -s "IMITATOR II successfully terminated" $@ > /dev/null ); then \
 	  echo [FAIL] Test did not terminate successfully. Check log file \'$@\' ; \
 	  touch fail; fi	  
 
 log/%.inv.log: data/%.imi data/%.pi0
 	@ echo [TEST] Testing inverse method for \'$*\' 
-	@ $(IMITATOR) data/$*.imi data/$*.pi0 -mode inversemethod > $@
+	@ $(IMITATOR) data/$*.imi data/$*.pi0 -mode inversemethod $(IMITATOR_MISC_OPTIONS) > $@
 	@ if ( ! fgrep -s "IMITATOR II successfully terminated" $@ > /dev/null ); then \
 	  echo [FAIL] Test did not terminate successfully. Check log file \'$@\' ; \
 	  touch fail; fi	  
 
 log/%.cov.log: data/%.imi data/%.v0
 	@ echo [TEST] Testing cartography for \'$*\' 
-	@ $(IMITATOR) data/$*.imi data/$*.v0 -mode cover > $@
+	@ $(IMITATOR) data/$*.imi data/$*.v0 -mode cover $(IMITATOR_MISC_OPTIONS) > $@
 	@ if ( ! fgrep -s "IMITATOR II successfully terminated" $@ > /dev/null ); then \
 	  echo [FAIL] Test did not terminate successfully. Check log file \'$@\' ; \
 	  touch fail; fi
@@ -82,7 +84,8 @@ ifndef OUNIT_PATH
   OUNIT_PATH = $(HOME)/local/ounit
 endif
 ifndef LIBS
-  LIBS = str.cma unix.cma extLib.cma bigarray.cma gmp.cma apron.cma polkaMPQ.cma
+  LIBS = -cclib -lpwl -cclib -lm -cclib -lgmpxx -cclib -lgmp -cclib -lppl \
+     str.cma unix.cma extLib.cma bigarray.cma gmp.cma ppl_ocaml.cma
 endif
  
 INCLUDE = -I src -I ../src -I ../lib -I $(OUNIT_PATH) -I $(EXTLIB_PATH) -I $(OCAML_PPL_PATH) -I $(OCAML_GMP_PATH)
@@ -108,6 +111,10 @@ testSuite.cmo: $(UNIT_SRC)
 	@ echo [OCAMLC] $<
 	@ ocamlc -c $(INCLUDE) $<
 
+.depend:
+	@ echo [OCAMLDEP]
+	@ ocamldep -I ../src -I src src/*.ml > .depend
+
 # ========================================================================	
 
 clean_regr:	
@@ -116,5 +123,8 @@ clean_regr:
 	@ rm -f data/*.jpg data/*.states
 
 clean: clean_regr
-	@ rm -f $(UNIT_OBJ) $(UNIT_CMI)
+	@ rm -f $(UNIT_OBJ) $(UNIT_CMI)	
 	@ rm -f testsuite
+	@ rm -f .depend
+
+include .depend

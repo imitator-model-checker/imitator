@@ -1,0 +1,1485 @@
+------------------------------ Description du systeme -------------------------------
+----------                                                                 ----------
+----------                                                                 ----------
+-------------------------------------------------------------------------------------
+
+--      Definition des variables du modele: horloges, discretes, parametres        --
+--                                                                                 --
+-------------------------------------------------------------------------------------
+
+var
+	t,
+	x_reg_mux_output, x_B1_reg_mux_output, x_B2_reg_mux_output,
+	x_passa,
+	x_reg_mem_point,
+	x_rowa,
+	x_d_int_h,
+	x_d_inta,
+	x_ema,
+	x_row,
+	x_welb,
+	x_wela,
+	x_net45a,
+	x_net13f,
+	x_net13e,
+	x_net13d,
+	x_net13a,
+	x_reg_latch_a,
+	x_reg_latchwen,
+	x_reg_latchd,
+	x_en_latchd,
+	x_en_latcha,
+	x_en_latchwen,
+	x_a_h,
+	x_wen_h,
+	x_d_h,
+	x_q_0	: clock;
+
+	d_0,
+	a_0,
+	wen,
+	ck,
+	net27, B1_reg_mux_output, B2_reg_mux_output, i_B_reg_mux_output,
+	passa,
+	pass,
+	rowa,
+	d_int_h,
+	d_inta,
+	ema,
+	row,
+	welb,
+	wela,
+	net45a,
+	net13f,
+	net13e,
+	net13d,
+	net13a,
+	net39,
+	net45,
+	d_int,
+	en_latchd,
+	en_latcha,
+	en_latchwen,
+	a_h,
+	wen_h,
+	d_h,
+	q_0
+	: discrete;
+
+	delta0_1_reg_mux_output, delta1_1_reg_mux_output,
+	delta0_2_reg_mux_output, delta1_2_reg_mux_output,
+	delta0_reg_mux_output, delta1_reg_mux_output,
+	delta0_passa, delta1_passa,
+	delta0_1_reg_mem_point, delta1_1_reg_mem_point,
+	delta0_reg_mem_point, delta1_reg_mem_point,
+	delta0_rowa, delta1_rowa,
+	delta0_d_int_h, delta1_d_int_h,
+	delta0_d_inta, delta1_d_inta,
+	delta0_ema, delta1_ema,
+	delta0_row, delta1_row,
+	delta0_welb, delta1_welb,
+	delta0_wela, delta1_wela,
+	delta0_net45a, delta1_net45a,
+	delta0_net13f, delta1_net13f,
+	delta0_net13e, delta1_net13e,
+	delta0_net13d, delta1_net13d,
+	delta0_net13a, delta1_net13a,
+	delta0_1_reg_latch_a, delta1_1_reg_latch_a,
+	delta0_reg_latch_a, delta1_reg_latch_a,
+	delta0_1_reg_latchwen, delta1_1_reg_latchwen,
+	delta0_reg_latchwen, delta1_reg_latchwen,
+	delta0_1_reg_latchd, delta1_1_reg_latchd,
+	delta0_reg_latchd, delta1_reg_latchd,
+	delta0_en_latchd, delta1_en_latchd,
+	delta0_en_latcha, delta1_en_latcha,
+	delta0_en_latchwen, delta1_en_latchwen,
+	delta0_a_h, delta1_a_h,
+	delta0_wen_h, delta1_wen_h,
+	delta0_d_h, delta1_d_h,
+	delta0_q_0, delta1_q_0	: parameter;
+
+-- 		les automates de l'environnement qui definent les signaux d'entree		  --
+--                                                                                 --
+-------------------------------------------------------------------------------------
+
+automaton env_nd_signals
+
+synclabs: ck_up, ck_down,
+          wen_up, wen_down,
+          a_0_up, a_0_down,
+          d_0_up, d_0_down ;
+initially env_nd_signals_0 ;
+
+loc env_nd_signals_0 : while t <= 0 wait{}
+	when t = 0 sync ck_up do {ck'=1} goto env_nd_signals_1;
+
+loc env_nd_signals_1 : while t <= 13 wait{}
+	when t = 13 sync d_0_up do {d_0'=1} goto env_nd_signals_2;
+
+loc env_nd_signals_2 : while t <= 72 wait{}
+	when t = 72 sync ck_down do {ck'=0} goto env_nd_signals_3;
+
+loc env_nd_signals_3 : while t <= 188 wait{}
+	when t = 188 sync wen_down do {wen'=0} goto env_nd_signals_4;
+
+loc env_nd_signals_4 : while t <= 242 wait{}
+	when t = 242 sync ck_up do {ck'=1} goto env_nd_signals_5;
+
+loc env_nd_signals_5 : while t <= 255 wait{}
+	when t = 255 sync d_0_down do {d_0'=0} goto env_nd_signals_6;
+
+loc env_nd_signals_6 : while t <= 314 wait{}
+	when t = 314 sync ck_down do {ck'=0} goto env_nd_signals_7;
+
+loc env_nd_signals_7 : while t <= 412 wait{}
+	when t = 412 sync a_0_up do {a_0'=1} goto env_nd_signals_8;
+
+loc env_nd_signals_8 : while t <= 484 wait{}
+	when t = 484 sync ck_up do {ck'=1} goto env_nd_signals_9;
+
+loc env_nd_signals_9 : while t <= 497 wait{}
+	when t = 497 sync d_0_up do {d_0'=1} goto env_nd_signals_10;
+
+loc env_nd_signals_10 : while t <= 556 wait{}
+	when t = 556 sync ck_down do {ck'=0} goto env_nd_signals_11;
+
+loc env_nd_signals_11 : while t <= 654 wait{}
+	when t = 654 sync a_0_down do {a_0'=0} goto env_nd_signals_12;
+
+loc env_nd_signals_12 : while t <= 672 wait{}
+	when t = 672 sync wen_up do {wen'=1} goto env_nd_signals_13;
+
+loc env_nd_signals_13 : while t <= 726 wait{}
+	when t = 726 sync ck_up do {ck'=1} goto env_nd_signals_14;
+
+loc env_nd_signals_14 : while t <= 798 wait{}
+	when t = 798 sync ck_down do {ck'=0} goto env_nd_signals_15;
+
+loc env_nd_signals_15 : while t <= 896 wait{}
+	when t = 896 sync a_0_up do {a_0'=1} goto env_nd_signals_16;
+
+loc env_nd_signals_16 : while t <= 968 wait{}
+	when t = 968 sync ck_up do {ck'=1} goto env_nd_signals_17;
+
+loc env_nd_signals_17 : while t <= 1040 wait{}
+	when t = 1040 sync ck_down do {ck'=0} goto env_nd_signals_end;
+
+loc env_nd_signals_end : while True wait{}
+	when True goto env_nd_signals_end;
+end
+
+-- les automates qui definent tous les signaux auxilieres et les signaux de sortie --
+--                                                                                 --
+-------------------------------------------------------------------------------------
+
+-- les automates qui definent le signal net27:
+----------------------------------------------
+
+automaton B1_reg_mux_output
+
+synclabs: wela_up, wela_down, net13d_up, net13d_down, B1_reg_mux_output_up, B1_reg_mux_output_down;
+initially l_s0_B1_reg_mux_output ;
+
+loc l_s0_B1_reg_mux_output : while True wait {}
+	when  wela = 0  sync wela_down goto l_s0_B1_reg_mux_output;
+	when  wela = 1  sync wela_up goto l_s0_B1_reg_mux_output;
+	when  wela = 1-0   & net13d = 1 sync wela_down goto l_s0_B1_reg_mux_output;
+	when  wela = 1-1   & net13d = 1 sync wela_up goto l_s0_B1_reg_mux_output;
+	when i_B_reg_mux_output = 0 & wela = 1-0   & net13d = 0 sync wela_down do{ x_B1_reg_mux_output' = 0, i_B_reg_mux_output' = 1 } goto l_s1_B1_reg_mux_output;
+	when i_B_reg_mux_output = 0 & wela = 1-1   & net13d = 0 sync wela_up do{ x_B1_reg_mux_output' = 0, i_B_reg_mux_output' = 1 } goto l_s1_B1_reg_mux_output;
+	when  net13d = 0  sync net13d_down goto l_s0_B1_reg_mux_output;
+	when  net13d = 1  sync net13d_up goto l_s0_B1_reg_mux_output;
+	when  net13d = 1-0   & wela = 1 sync net13d_down goto l_s0_B1_reg_mux_output;
+	when  net13d = 1-1   & wela = 1 sync net13d_up goto l_s0_B1_reg_mux_output;
+	when i_B_reg_mux_output = 0 & net13d = 1-0   & wela = 0 sync net13d_down do{ x_B1_reg_mux_output' = 0, i_B_reg_mux_output' = 1 } goto l_s1_B1_reg_mux_output;
+	when i_B_reg_mux_output = 0 & net13d = 1-1   & wela = 0 sync net13d_up do{ x_B1_reg_mux_output' = 0, i_B_reg_mux_output' = 1 } goto l_s1_B1_reg_mux_output;
+
+loc l_s1_B1_reg_mux_output : while x_B1_reg_mux_output <= 0 wait {}
+	when  x_B1_reg_mux_output = 0 & B1_reg_mux_output = 1-0  sync B1_reg_mux_output_down do{ B1_reg_mux_output' = 1-B1_reg_mux_output, i_B_reg_mux_output' = 0 } goto l_s0_B1_reg_mux_output;
+	when  x_B1_reg_mux_output = 0 & B1_reg_mux_output = 1-1  sync B1_reg_mux_output_up do{ B1_reg_mux_output' = 1-B1_reg_mux_output, i_B_reg_mux_output' = 0 } goto l_s0_B1_reg_mux_output;
+
+end
+
+automaton B2_reg_mux_output
+
+synclabs: wela_up, wela_down, rowa_up, rowa_down, net13d_up, net13d_down, B2_reg_mux_output_up, B2_reg_mux_output_down;
+initially l_s0_B2_reg_mux_output ;
+
+loc l_s0_B2_reg_mux_output : while True wait {}
+	when  wela = 0  sync wela_down goto l_s0_B2_reg_mux_output;
+	when  wela = 1  sync wela_up goto l_s0_B2_reg_mux_output;
+	when  wela = 1-0   & net13d = 0  & rowa = 0 sync wela_down goto l_s0_B2_reg_mux_output;
+	when  wela = 1-0   & net13d = 1 sync wela_down goto l_s0_B2_reg_mux_output;
+	when  wela = 1-1   & net13d = 0  & rowa = 0 sync wela_up goto l_s0_B2_reg_mux_output;
+	when  wela = 1-1   & net13d = 1 sync wela_up goto l_s0_B2_reg_mux_output;
+	when i_B_reg_mux_output = 0 & wela = 1-0   & net13d = 0  & rowa = 1 sync wela_down do{ x_B2_reg_mux_output' = 0, i_B_reg_mux_output' = 1 } goto l_s1_B2_reg_mux_output;
+	when i_B_reg_mux_output = 0 & wela = 1-1   & net13d = 0  & rowa = 1 sync wela_up do{ x_B2_reg_mux_output' = 0, i_B_reg_mux_output' = 1 } goto l_s1_B2_reg_mux_output;
+	when  rowa = 0  sync rowa_down goto l_s0_B2_reg_mux_output;
+	when  rowa = 1  sync rowa_up goto l_s0_B2_reg_mux_output;
+	when  rowa = 1-0   & net13d = 0  & wela = 0 sync rowa_down goto l_s0_B2_reg_mux_output;
+	when  rowa = 1-0   & net13d = 1 sync rowa_down goto l_s0_B2_reg_mux_output;
+	when  rowa = 1-1   & net13d = 0  & wela = 0 sync rowa_up goto l_s0_B2_reg_mux_output;
+	when  rowa = 1-1   & net13d = 1 sync rowa_up goto l_s0_B2_reg_mux_output;
+	when i_B_reg_mux_output = 0 & rowa = 1-0   & net13d = 0  & wela = 1 sync rowa_down do{ x_B2_reg_mux_output' = 0, i_B_reg_mux_output' = 1 } goto l_s1_B2_reg_mux_output;
+	when i_B_reg_mux_output = 0 & rowa = 1-1   & net13d = 0  & wela = 1 sync rowa_up do{ x_B2_reg_mux_output' = 0, i_B_reg_mux_output' = 1 } goto l_s1_B2_reg_mux_output;
+	when  net13d = 0  sync net13d_down goto l_s0_B2_reg_mux_output;
+	when  net13d = 1  sync net13d_up goto l_s0_B2_reg_mux_output;
+	when  net13d = 1-0   & wela = 0 sync net13d_down goto l_s0_B2_reg_mux_output;
+	when  net13d = 1-0   & wela = 1  & rowa = 0 sync net13d_down goto l_s0_B2_reg_mux_output;
+	when  net13d = 1-1   & wela = 0 sync net13d_up goto l_s0_B2_reg_mux_output;
+	when  net13d = 1-1   & wela = 1  & rowa = 0 sync net13d_up goto l_s0_B2_reg_mux_output;
+	when i_B_reg_mux_output = 0 & net13d = 1-0   & wela = 1  & rowa = 1 sync net13d_down do{ x_B2_reg_mux_output' = 0, i_B_reg_mux_output' = 1 } goto l_s1_B2_reg_mux_output;
+	when i_B_reg_mux_output = 0 & net13d = 1-1   & wela = 1  & rowa = 1 sync net13d_up do{ x_B2_reg_mux_output' = 0, i_B_reg_mux_output' = 1 } goto l_s1_B2_reg_mux_output;
+
+loc l_s1_B2_reg_mux_output : while x_B2_reg_mux_output <= 0 wait {}
+	when  x_B2_reg_mux_output = 0 & B2_reg_mux_output = 1-0  sync B2_reg_mux_output_down do{ B2_reg_mux_output' = 1-B2_reg_mux_output, i_B_reg_mux_output' = 0 } goto l_s0_B2_reg_mux_output;
+	when  x_B2_reg_mux_output = 0 & B2_reg_mux_output = 1-1  sync B2_reg_mux_output_up do{ B2_reg_mux_output' = 1-B2_reg_mux_output, i_B_reg_mux_output' = 0 } goto l_s0_B2_reg_mux_output;
+
+end
+
+automaton P_reg_mux_output 
+ 
+synclabs: B1_reg_mux_output_up, B1_reg_mux_output_down, B2_reg_mux_output_up, B2_reg_mux_output_down, passa_up, passa_down, d_inta_up, d_inta_down, net27_up, net27_down ;
+initially l_s_P_reg_mux_output;
+ 
+loc l_x0_P_reg_mux_output : while x_reg_mux_output <= delta0_reg_mux_output  wait {}
+
+-- les transitions sensibles aux changements des signaux d'entrees e1, ... , e5 :
+-- cas B1 = 1 : 
+	when  B1_reg_mux_output = 1 sync passa_down goto l_x0_P_reg_mux_output;
+	when  B1_reg_mux_output = 1 sync passa_up goto l_x0_P_reg_mux_output;
+	when  B1_reg_mux_output = 1 & d_inta = 0  sync d_inta_down goto l_x0_P_reg_mux_output;
+	when B1_reg_mux_output = 1 & d_inta = 1-1 sync d_inta_up do{ x_reg_mux_output'=0 } goto l_x1_P_reg_mux_output;
+
+-- cas B1 = 0 & B2 = 1 : 
+	when  B1_reg_mux_output = 0 & B2_reg_mux_output = 1 & passa = 0  sync passa_down goto l_x0_P_reg_mux_output;
+	when B1_reg_mux_output = 0 & B2_reg_mux_output = 1 & passa = 1-1 sync passa_up do{ x_reg_mux_output'=0 } goto l_x1_P_reg_mux_output;
+	when  B1_reg_mux_output = 0 & B2_reg_mux_output = 1 sync d_inta_down goto l_x0_P_reg_mux_output;
+	when  B1_reg_mux_output = 0 & B2_reg_mux_output = 1 sync d_inta_up goto l_x0_P_reg_mux_output;
+
+-- les transitions synchronisés avec le signal de sortie s :
+	when B1_reg_mux_output = 1 &  x_reg_mux_output = delta0_1_reg_mux_output sync net27_down do {net27' = 0} goto l_f_P_reg_mux_output;
+	when B1_reg_mux_output = 0 & B2_reg_mux_output = 1 &  x_reg_mux_output = delta0_2_reg_mux_output sync net27_down do {net27' = 0} goto l_f_P_reg_mux_output;
+
+-- les transitions sensibles aux changements des signaux B1, ... , B2 :
+-- cas B1 = 1 : 
+	when B1_reg_mux_output = 1 sync B2_reg_mux_output_down goto l_x0_P_reg_mux_output;
+	when B1_reg_mux_output = 1 sync B2_reg_mux_output_up goto l_x0_P_reg_mux_output;
+	when B1_reg_mux_output = 1 & B2_reg_mux_output = 1   & d_inta = 0  & passa = 0 sync B1_reg_mux_output_down goto l_x0_P_reg_mux_output;
+	when B1_reg_mux_output = 1 & B2_reg_mux_output = 1   & d_inta = 0  & passa = 1 sync B1_reg_mux_output_down do{ x_reg_mux_output'=0 } goto l_x1_P_reg_mux_output;
+	when B1_reg_mux_output = 1 & B2_reg_mux_output = 0 sync B1_reg_mux_output_down goto l_s_P_reg_mux_output;
+
+-- cas B1 = 0 & B2 = 1 : 
+	when B1_reg_mux_output = 0 & B2_reg_mux_output = 1   & passa = 0  & d_inta = 0 sync B1_reg_mux_output_up goto l_x0_P_reg_mux_output;
+	when B1_reg_mux_output = 0 & B2_reg_mux_output = 1   & passa = 0  & d_inta = 1 sync B1_reg_mux_output_up do{ x_reg_mux_output'=0 } goto l_x1_P_reg_mux_output;
+	when B1_reg_mux_output = 0 & B2_reg_mux_output = 1 sync B2_reg_mux_output_down goto l_s_P_reg_mux_output;
+
+loc l_x1_P_reg_mux_output : while x_reg_mux_output <= delta1_reg_mux_output  wait {}
+
+-- les transitions sensibles aux changements des signaux d'entrees e1, ... , e5 :
+-- cas B1 = 1 : 
+	when  B1_reg_mux_output = 1 sync passa_down goto l_x1_P_reg_mux_output;
+	when  B1_reg_mux_output = 1 sync passa_up goto l_x1_P_reg_mux_output;
+	when  B1_reg_mux_output = 1 & d_inta = 1  sync d_inta_up goto l_x1_P_reg_mux_output;
+	when B1_reg_mux_output = 1 & d_inta = 1-0 sync d_inta_down do{ x_reg_mux_output'=0 } goto l_x0_P_reg_mux_output;
+
+-- cas B1 = 0 & B2 = 1 : 
+	when  B1_reg_mux_output = 0 & B2_reg_mux_output = 1 & passa = 1  sync passa_up goto l_x1_P_reg_mux_output;
+	when B1_reg_mux_output = 0 & B2_reg_mux_output = 1 & passa = 1-0 sync passa_down do{ x_reg_mux_output'=0 } goto l_x0_P_reg_mux_output;
+	when  B1_reg_mux_output = 0 & B2_reg_mux_output = 1 sync d_inta_down goto l_x1_P_reg_mux_output;
+	when  B1_reg_mux_output = 0 & B2_reg_mux_output = 1 sync d_inta_up goto l_x1_P_reg_mux_output;
+
+-- les transitions synchronisés avec le signal de sortie s :
+	when B1_reg_mux_output = 1 &  x_reg_mux_output = delta1_1_reg_mux_output sync net27_up do {net27' = 1} goto l_f_P_reg_mux_output;
+	when B1_reg_mux_output = 0 & B2_reg_mux_output = 1 &  x_reg_mux_output = delta1_2_reg_mux_output sync net27_up do {net27' = 1} goto l_f_P_reg_mux_output;
+
+-- les transitions sensibles aux changements des signaux B1, ... , B2 :
+-- cas B1 = 1 : 
+	when B1_reg_mux_output = 1 sync B2_reg_mux_output_down goto l_x1_P_reg_mux_output;
+	when B1_reg_mux_output = 1 sync B2_reg_mux_output_up goto l_x1_P_reg_mux_output;
+	when B1_reg_mux_output = 1 & B2_reg_mux_output = 1   & d_inta = 1  & passa = 1 sync B1_reg_mux_output_down goto l_x1_P_reg_mux_output;
+	when B1_reg_mux_output = 1 & B2_reg_mux_output = 1   & d_inta = 1  & passa = 0 sync B1_reg_mux_output_down do{ x_reg_mux_output'=0 } goto l_x0_P_reg_mux_output;
+	when B1_reg_mux_output = 1 & B2_reg_mux_output = 0 sync B1_reg_mux_output_down goto l_s_P_reg_mux_output;
+
+-- cas B1 = 0 & B2 = 1 : 
+	when B1_reg_mux_output = 0 & B2_reg_mux_output = 1   & passa = 1  & d_inta = 1 sync B1_reg_mux_output_up goto l_x1_P_reg_mux_output;
+	when B1_reg_mux_output = 0 & B2_reg_mux_output = 1   & passa = 1  & d_inta = 0 sync B1_reg_mux_output_up do{ x_reg_mux_output'=0 } goto l_x0_P_reg_mux_output;
+	when B1_reg_mux_output = 0 & B2_reg_mux_output = 1 sync B2_reg_mux_output_down goto l_s_P_reg_mux_output;
+
+loc l_f_P_reg_mux_output : while True wait {}
+
+-- les transitions sensibles aux changements des signaux d'entrees e1, ... , e5 du process:
+-- cas B1 = 1 : 
+	when  B1_reg_mux_output = 1 sync passa_down goto l_f_P_reg_mux_output;
+	when  B1_reg_mux_output = 1 sync passa_up goto l_f_P_reg_mux_output;
+	when  B1_reg_mux_output = 1 & d_inta = 0  sync d_inta_down goto l_f_P_reg_mux_output;
+	when  B1_reg_mux_output = 1 & d_inta = 1  sync d_inta_up goto l_f_P_reg_mux_output;
+	when B1_reg_mux_output = 1 & d_inta = 1-0 sync d_inta_down do{ x_reg_mux_output'=0 } goto l_x0_P_reg_mux_output;
+	when B1_reg_mux_output = 1 & d_inta = 1-1 sync d_inta_up do{ x_reg_mux_output'=0 } goto l_x1_P_reg_mux_output;
+
+-- cas B1 = 0 & B2 = 1 : 
+	when  B1_reg_mux_output = 0 & B2_reg_mux_output = 1 & passa = 0  sync passa_down goto l_f_P_reg_mux_output;
+	when  B1_reg_mux_output = 0 & B2_reg_mux_output = 1 & passa = 1  sync passa_up goto l_f_P_reg_mux_output;
+	when B1_reg_mux_output = 0 & B2_reg_mux_output = 1 & passa = 1-0 sync passa_down do{ x_reg_mux_output'=0 } goto l_x0_P_reg_mux_output;
+	when B1_reg_mux_output = 0 & B2_reg_mux_output = 1 & passa = 1-1 sync passa_up do{ x_reg_mux_output'=0 } goto l_x1_P_reg_mux_output;
+	when  B1_reg_mux_output = 0 & B2_reg_mux_output = 1 sync d_inta_down goto l_f_P_reg_mux_output;
+	when  B1_reg_mux_output = 0 & B2_reg_mux_output = 1 sync d_inta_up goto l_f_P_reg_mux_output;
+
+-- les transitions sensibles aux changements des signaux B1, ... , B2 :
+-- cas B1 = 1 : 
+	when B1_reg_mux_output = 1 sync B2_reg_mux_output_down goto l_f_P_reg_mux_output;
+	when B1_reg_mux_output = 1 sync B2_reg_mux_output_up goto l_f_P_reg_mux_output;
+	when B1_reg_mux_output = 1 & B2_reg_mux_output = 1   & d_inta = 0  & passa = 0 sync B1_reg_mux_output_down goto l_f_P_reg_mux_output;
+	when B1_reg_mux_output = 1 & B2_reg_mux_output = 1   & d_inta = 1  & passa = 1 sync B1_reg_mux_output_down goto l_f_P_reg_mux_output;
+	when B1_reg_mux_output = 1 & B2_reg_mux_output = 1   & d_inta = 0  & passa = 1 sync B1_reg_mux_output_down do{ x_reg_mux_output'=0 } goto l_x1_P_reg_mux_output;
+	when B1_reg_mux_output = 1 & B2_reg_mux_output = 1   & d_inta = 1  & passa = 0 sync B1_reg_mux_output_down do{ x_reg_mux_output'=0 } goto l_x0_P_reg_mux_output;
+	when B1_reg_mux_output = 1 & B2_reg_mux_output = 0 sync B1_reg_mux_output_down goto l_s_P_reg_mux_output;
+
+-- cas B1 = 0 & B2 = 1 : 
+	when B1_reg_mux_output = 0 & B2_reg_mux_output = 1   & passa = 0  & d_inta = 0 sync B1_reg_mux_output_up goto l_f_P_reg_mux_output;
+	when B1_reg_mux_output = 0 & B2_reg_mux_output = 1   & passa = 1  & d_inta = 1 sync B1_reg_mux_output_up goto l_f_P_reg_mux_output;
+	when B1_reg_mux_output = 0 & B2_reg_mux_output = 1   & passa = 0  & d_inta = 1 sync B1_reg_mux_output_up do{ x_reg_mux_output'=0 } goto l_x1_P_reg_mux_output;
+	when B1_reg_mux_output = 0 & B2_reg_mux_output = 1   & passa = 1  & d_inta = 0 sync B1_reg_mux_output_up do{ x_reg_mux_output'=0 } goto l_x0_P_reg_mux_output;
+	when B1_reg_mux_output = 0 & B2_reg_mux_output = 1 sync B2_reg_mux_output_down goto l_s_P_reg_mux_output;
+
+loc l_s_P_reg_mux_output : while True wait {}
+
+-- les transitions sensibles aux changements des signaux d'entrees e1, ... , e5 du process:
+	when  True  sync passa_down goto l_s_P_reg_mux_output;
+	when  True  sync passa_up goto l_s_P_reg_mux_output;
+	when  True  sync d_inta_down goto l_s_P_reg_mux_output;
+	when  True  sync d_inta_up goto l_s_P_reg_mux_output;
+
+-- les transitions sensibles aux changements des signaux B1, ... , B2 du process:
+	when net27 = 0   & d_inta = 0 sync B1_reg_mux_output_up goto l_f_P_reg_mux_output;
+	when net27 = 1   & d_inta = 1 sync B1_reg_mux_output_up goto l_f_P_reg_mux_output;
+	when net27 = 0   & d_inta = 1 sync B1_reg_mux_output_up do{ x_reg_mux_output'=0 } goto l_x1_P_reg_mux_output;
+	when net27 = 1   & d_inta = 0 sync B1_reg_mux_output_up do{ x_reg_mux_output'=0 } goto l_x0_P_reg_mux_output;
+	when net27 = 0   & passa = 0 sync B2_reg_mux_output_up goto l_f_P_reg_mux_output;
+	when net27 = 1   & passa = 1 sync B2_reg_mux_output_up goto l_f_P_reg_mux_output;
+	when net27 = 0   & passa = 1 sync B2_reg_mux_output_up do{ x_reg_mux_output'=0 } goto l_x1_P_reg_mux_output;
+	when net27 = 1   & passa = 0 sync B2_reg_mux_output_up do{ x_reg_mux_output'=0 } goto l_x0_P_reg_mux_output;
+
+end
+
+-- les automates qui definent le signal passa:
+----------------------------------------------
+
+automaton Ass_passa
+
+synclabs: pass_up, pass_down, passa_up, passa_down;
+initially l_f_passa ;
+
+loc l_x0_passa : while x_passa <= delta0_passa wait {}
+
+	when  pass = 0  sync pass_down goto l_x0_passa;
+	when pass = 1-1 sync pass_up do{ x_passa'=0 } goto l_x1_passa;
+
+	when  x_passa = delta0_passa sync passa_down do {passa' = 0} goto l_f_passa;
+
+loc l_x1_passa : while x_passa <= delta1_passa wait {}
+
+	when  pass = 1  sync pass_up goto l_x1_passa;
+	when pass = 1-0 sync pass_down do{ x_passa'=0 } goto l_x0_passa;
+
+	when  x_passa = delta1_passa sync passa_up do {passa' = 1} goto l_f_passa;
+
+loc l_f_passa : while True wait {}
+
+	when  pass = 0  sync pass_down goto l_f_passa;
+	when  pass = 1  sync pass_up goto l_f_passa;
+	when pass = 1-0 sync pass_down do{ x_passa'=0 } goto l_x0_passa;
+	when pass = 1-1 sync pass_up do{ x_passa'=0 } goto l_x1_passa;
+
+end
+
+-- les automates qui definent le signal pass:
+---------------------------------------------
+
+automaton P_reg_mem_point 
+ 
+synclabs: ema_up, ema_down, d_int_h_up, d_int_h_down, pass_up, pass_down ;
+initially l_s_P_reg_mem_point;
+ 
+loc l_x0_P_reg_mem_point : while x_reg_mem_point <= delta0_reg_mem_point  wait {}
+
+-- les transitions sensibles aux changements des signaux d'entrees e1, ... , e2 :
+-- cas B1 = 1 : 
+	when  ema = 1 & d_int_h = 0  sync d_int_h_down goto l_x0_P_reg_mem_point;
+	when ema = 1 & d_int_h = 1-1 sync d_int_h_up do{ x_reg_mem_point'=0 } goto l_x1_P_reg_mem_point;
+
+-- les transitions synchronisés avec le signal de sortie s :
+	when ema = 1 &  x_reg_mem_point = delta0_1_reg_mem_point sync pass_down do {pass' = 0} goto l_f_P_reg_mem_point;
+
+-- les transitions sensibles aux changements des signaux B1, ... , B1 :
+-- cas B1 = 1 : 
+	when ema = 1 sync ema_down goto l_s_P_reg_mem_point;
+
+loc l_x1_P_reg_mem_point : while x_reg_mem_point <= delta1_reg_mem_point  wait {}
+
+-- les transitions sensibles aux changements des signaux d'entrees e1, ... , e2 :
+-- cas B1 = 1 : 
+	when  ema = 1 & d_int_h = 1  sync d_int_h_up goto l_x1_P_reg_mem_point;
+	when ema = 1 & d_int_h = 1-0 sync d_int_h_down do{ x_reg_mem_point'=0 } goto l_x0_P_reg_mem_point;
+
+-- les transitions synchronisés avec le signal de sortie s :
+	when ema = 1 &  x_reg_mem_point = delta1_1_reg_mem_point sync pass_up do {pass' = 1} goto l_f_P_reg_mem_point;
+
+-- les transitions sensibles aux changements des signaux B1, ... , B1 :
+-- cas B1 = 1 : 
+	when ema = 1 sync ema_down goto l_s_P_reg_mem_point;
+
+loc l_f_P_reg_mem_point : while True wait {}
+
+-- les transitions sensibles aux changements des signaux d'entrees e1, ... , e2 du process:
+-- cas B1 = 1 : 
+	when  ema = 1 & d_int_h = 0  sync d_int_h_down goto l_f_P_reg_mem_point;
+	when  ema = 1 & d_int_h = 1  sync d_int_h_up goto l_f_P_reg_mem_point;
+	when ema = 1 & d_int_h = 1-0 sync d_int_h_down do{ x_reg_mem_point'=0 } goto l_x0_P_reg_mem_point;
+	when ema = 1 & d_int_h = 1-1 sync d_int_h_up do{ x_reg_mem_point'=0 } goto l_x1_P_reg_mem_point;
+
+-- les transitions sensibles aux changements des signaux B1, ... , B1 :
+-- cas B1 = 1 : 
+	when ema = 1 sync ema_down goto l_s_P_reg_mem_point;
+
+loc l_s_P_reg_mem_point : while True wait {}
+
+-- les transitions sensibles aux changements des signaux d'entrees e1, ... , e2 du process:
+	when  True  sync d_int_h_down goto l_s_P_reg_mem_point;
+	when  True  sync d_int_h_up goto l_s_P_reg_mem_point;
+
+-- les transitions sensibles aux changements des signaux B1, ... , B1 du process:
+	when pass = 0   & d_int_h = 0 sync ema_up goto l_f_P_reg_mem_point;
+	when pass = 1   & d_int_h = 1 sync ema_up goto l_f_P_reg_mem_point;
+	when pass = 0   & d_int_h = 1 sync ema_up do{ x_reg_mem_point'=0 } goto l_x1_P_reg_mem_point;
+	when pass = 1   & d_int_h = 0 sync ema_up do{ x_reg_mem_point'=0 } goto l_x0_P_reg_mem_point;
+
+end
+
+-- les automates qui definent le signal rowa:
+---------------------------------------------
+
+automaton Ass_rowa
+
+synclabs: net13f_up, net13f_down, net39_up, net39_down, rowa_up, rowa_down;
+initially l_f_rowa ;
+
+loc l_x0_rowa : while x_rowa <= delta0_rowa wait {}
+
+	when  net13f = 0  sync net13f_down goto l_x0_rowa;
+	when net13f = 1-1   & net39 = 0 sync net13f_up do{ x_rowa'=0 } goto l_x1_rowa;
+	when  net39 = 0  sync net39_down goto l_x0_rowa;
+	when net39 = 1-1   & net13f = 0 sync net39_up do{ x_rowa'=0 } goto l_x1_rowa;
+
+	when  x_rowa = delta0_rowa sync rowa_down do {rowa' = 0} goto l_f_rowa;
+
+loc l_x1_rowa : while x_rowa <= delta1_rowa wait {}
+
+	when  net13f = 0  sync net13f_down goto l_x1_rowa;
+	when  net13f = 1  sync net13f_up goto l_x1_rowa;
+	when  net13f = 1-0   & net39 = 1 sync net13f_down goto l_x1_rowa;
+	when  net13f = 1-1   & net39 = 1 sync net13f_up goto l_x1_rowa;
+	when net13f = 1-0   & net39 = 0 sync net13f_down do{ x_rowa'=0 } goto l_x0_rowa;
+	when  net39 = 0  sync net39_down goto l_x1_rowa;
+	when  net39 = 1  sync net39_up goto l_x1_rowa;
+	when  net39 = 1-0   & net13f = 1 sync net39_down goto l_x1_rowa;
+	when  net39 = 1-1   & net13f = 1 sync net39_up goto l_x1_rowa;
+	when net39 = 1-0   & net13f = 0 sync net39_down do{ x_rowa'=0 } goto l_x0_rowa;
+
+	when  x_rowa = delta1_rowa sync rowa_up do {rowa' = 1} goto l_f_rowa;
+
+loc l_f_rowa : while True wait {}
+
+	when  net13f = 0  sync net13f_down goto l_f_rowa;
+	when  net13f = 1  sync net13f_up goto l_f_rowa;
+	when  net13f = 1-0   & net39 = 1 sync net13f_down goto l_f_rowa;
+	when  net13f = 1-1   & net39 = 1 sync net13f_up goto l_f_rowa;
+	when net13f = 1-0   & net39 = 0 sync net13f_down do{ x_rowa'=0 } goto l_x0_rowa;
+	when net13f = 1-1   & net39 = 0 sync net13f_up do{ x_rowa'=0 } goto l_x1_rowa;
+	when  net39 = 0  sync net39_down goto l_f_rowa;
+	when  net39 = 1  sync net39_up goto l_f_rowa;
+	when  net39 = 1-0   & net13f = 1 sync net39_down goto l_f_rowa;
+	when  net39 = 1-1   & net13f = 1 sync net39_up goto l_f_rowa;
+	when net39 = 1-0   & net13f = 0 sync net39_down do{ x_rowa'=0 } goto l_x0_rowa;
+	when net39 = 1-1   & net13f = 0 sync net39_up do{ x_rowa'=0 } goto l_x1_rowa;
+
+end
+
+-- les automates qui definent le signal d_int_h:
+------------------------------------------------
+
+automaton Ass_d_int_h
+
+synclabs: d_int_up, d_int_down, d_int_h_up, d_int_h_down;
+initially l_f_d_int_h ;
+
+loc l_x0_d_int_h : while x_d_int_h <= delta0_d_int_h wait {}
+
+	when  d_int = 0  sync d_int_down goto l_x0_d_int_h;
+	when d_int = 1-1 sync d_int_up do{ x_d_int_h'=0 } goto l_x1_d_int_h;
+
+	when  x_d_int_h = delta0_d_int_h sync d_int_h_down do {d_int_h' = 0} goto l_f_d_int_h;
+
+loc l_x1_d_int_h : while x_d_int_h <= delta1_d_int_h wait {}
+
+	when  d_int = 1  sync d_int_up goto l_x1_d_int_h;
+	when d_int = 1-0 sync d_int_down do{ x_d_int_h'=0 } goto l_x0_d_int_h;
+
+	when  x_d_int_h = delta1_d_int_h sync d_int_h_up do {d_int_h' = 1} goto l_f_d_int_h;
+
+loc l_f_d_int_h : while True wait {}
+
+	when  d_int = 0  sync d_int_down goto l_f_d_int_h;
+	when  d_int = 1  sync d_int_up goto l_f_d_int_h;
+	when d_int = 1-0 sync d_int_down do{ x_d_int_h'=0 } goto l_x0_d_int_h;
+	when d_int = 1-1 sync d_int_up do{ x_d_int_h'=0 } goto l_x1_d_int_h;
+
+end
+
+-- les automates qui definent le signal d_inta:
+-----------------------------------------------
+
+automaton Ass_d_inta
+
+synclabs: d_int_up, d_int_down, d_inta_up, d_inta_down;
+initially l_f_d_inta ;
+
+loc l_x0_d_inta : while x_d_inta <= delta0_d_inta wait {}
+
+	when  d_int = 0  sync d_int_down goto l_x0_d_inta;
+	when d_int = 1-1 sync d_int_up do{ x_d_inta'=0 } goto l_x1_d_inta;
+
+	when  x_d_inta = delta0_d_inta sync d_inta_down do {d_inta' = 0} goto l_f_d_inta;
+
+loc l_x1_d_inta : while x_d_inta <= delta1_d_inta wait {}
+
+	when  d_int = 1  sync d_int_up goto l_x1_d_inta;
+	when d_int = 1-0 sync d_int_down do{ x_d_inta'=0 } goto l_x0_d_inta;
+
+	when  x_d_inta = delta1_d_inta sync d_inta_up do {d_inta' = 1} goto l_f_d_inta;
+
+loc l_f_d_inta : while True wait {}
+
+	when  d_int = 0  sync d_int_down goto l_f_d_inta;
+	when  d_int = 1  sync d_int_up goto l_f_d_inta;
+	when d_int = 1-0 sync d_int_down do{ x_d_inta'=0 } goto l_x0_d_inta;
+	when d_int = 1-1 sync d_int_up do{ x_d_inta'=0 } goto l_x1_d_inta;
+
+end
+
+-- les automates qui definent le signal ema:
+--------------------------------------------
+
+automaton Ass_ema
+
+synclabs: welb_up, welb_down, net13e_up, net13e_down, row_up, row_down, ema_up, ema_down;
+initially l_f_ema ;
+
+loc l_x0_ema : while x_ema <= delta0_ema wait {}
+
+	when  welb = 0  sync welb_down goto l_x0_ema;
+	when  welb = 1  sync welb_up goto l_x0_ema;
+	when  welb = 1-0   & net13e = 0  & row = 1 sync welb_down goto l_x0_ema;
+	when  welb = 1-0   & net13e = 1 sync welb_down goto l_x0_ema;
+	when  welb = 1-1   & net13e = 0  & row = 1 sync welb_up goto l_x0_ema;
+	when  welb = 1-1   & net13e = 1 sync welb_up goto l_x0_ema;
+	when welb = 1-0   & net13e = 0  & row = 0 sync welb_down do{ x_ema'=0 } goto l_x1_ema;
+	when  net13e = 0  sync net13e_down goto l_x0_ema;
+	when  net13e = 1  sync net13e_up goto l_x0_ema;
+	when  net13e = 1-0   & welb = 0  & row = 1 sync net13e_down goto l_x0_ema;
+	when  net13e = 1-0   & welb = 1 sync net13e_down goto l_x0_ema;
+	when  net13e = 1-1   & welb = 0  & row = 1 sync net13e_up goto l_x0_ema;
+	when  net13e = 1-1   & welb = 1 sync net13e_up goto l_x0_ema;
+	when net13e = 1-0   & welb = 0  & row = 0 sync net13e_down do{ x_ema'=0 } goto l_x1_ema;
+	when  row = 0  sync row_down goto l_x0_ema;
+	when  row = 1  sync row_up goto l_x0_ema;
+	when  row = 1-0   & welb = 0  & net13e = 1 sync row_down goto l_x0_ema;
+	when  row = 1-0   & welb = 1 sync row_down goto l_x0_ema;
+	when  row = 1-1   & welb = 0  & net13e = 1 sync row_up goto l_x0_ema;
+	when  row = 1-1   & welb = 1 sync row_up goto l_x0_ema;
+	when row = 1-0   & welb = 0  & net13e = 0 sync row_down do{ x_ema'=0 } goto l_x1_ema;
+
+	when  x_ema = delta0_ema sync ema_down do {ema' = 0} goto l_f_ema;
+
+loc l_x1_ema : while x_ema <= delta1_ema wait {}
+
+	when  welb = 0  sync welb_down goto l_x1_ema;
+	when welb = 1-1   & net13e = 0  & row = 0 sync welb_up do{ x_ema'=0 } goto l_x0_ema;
+	when  net13e = 0  sync net13e_down goto l_x1_ema;
+	when net13e = 1-1   & welb = 0  & row = 0 sync net13e_up do{ x_ema'=0 } goto l_x0_ema;
+	when  row = 0  sync row_down goto l_x1_ema;
+	when row = 1-1   & welb = 0  & net13e = 0 sync row_up do{ x_ema'=0 } goto l_x0_ema;
+
+	when  x_ema = delta1_ema sync ema_up do {ema' = 1} goto l_f_ema;
+
+loc l_f_ema : while True wait {}
+
+	when  welb = 0  sync welb_down goto l_f_ema;
+	when  welb = 1  sync welb_up goto l_f_ema;
+	when  welb = 1-0   & net13e = 0  & row = 1 sync welb_down goto l_f_ema;
+	when  welb = 1-0   & net13e = 1 sync welb_down goto l_f_ema;
+	when  welb = 1-1   & net13e = 0  & row = 1 sync welb_up goto l_f_ema;
+	when  welb = 1-1   & net13e = 1 sync welb_up goto l_f_ema;
+	when welb = 1-0   & net13e = 0  & row = 0 sync welb_down do{ x_ema'=0 } goto l_x1_ema;
+	when welb = 1-1   & net13e = 0  & row = 0 sync welb_up do{ x_ema'=0 } goto l_x0_ema;
+	when  net13e = 0  sync net13e_down goto l_f_ema;
+	when  net13e = 1  sync net13e_up goto l_f_ema;
+	when  net13e = 1-0   & welb = 0  & row = 1 sync net13e_down goto l_f_ema;
+	when  net13e = 1-0   & welb = 1 sync net13e_down goto l_f_ema;
+	when  net13e = 1-1   & welb = 0  & row = 1 sync net13e_up goto l_f_ema;
+	when  net13e = 1-1   & welb = 1 sync net13e_up goto l_f_ema;
+	when net13e = 1-0   & welb = 0  & row = 0 sync net13e_down do{ x_ema'=0 } goto l_x1_ema;
+	when net13e = 1-1   & welb = 0  & row = 0 sync net13e_up do{ x_ema'=0 } goto l_x0_ema;
+	when  row = 0  sync row_down goto l_f_ema;
+	when  row = 1  sync row_up goto l_f_ema;
+	when  row = 1-0   & welb = 0  & net13e = 1 sync row_down goto l_f_ema;
+	when  row = 1-0   & welb = 1 sync row_down goto l_f_ema;
+	when  row = 1-1   & welb = 0  & net13e = 1 sync row_up goto l_f_ema;
+	when  row = 1-1   & welb = 1 sync row_up goto l_f_ema;
+	when row = 1-0   & welb = 0  & net13e = 0 sync row_down do{ x_ema'=0 } goto l_x1_ema;
+	when row = 1-1   & welb = 0  & net13e = 0 sync row_up do{ x_ema'=0 } goto l_x0_ema;
+
+end
+
+-- les automates qui definent le signal row:
+--------------------------------------------
+
+automaton Ass_row
+
+synclabs: net13f_up, net13f_down, net39_up, net39_down, row_up, row_down;
+initially l_f_row ;
+
+loc l_x0_row : while x_row <= delta0_row wait {}
+
+	when  net13f = 0  sync net13f_down goto l_x0_row;
+	when net13f = 1-1   & net39 = 0 sync net13f_up do{ x_row'=0 } goto l_x1_row;
+	when  net39 = 0  sync net39_down goto l_x0_row;
+	when net39 = 1-1   & net13f = 0 sync net39_up do{ x_row'=0 } goto l_x1_row;
+
+	when  x_row = delta0_row sync row_down do {row' = 0} goto l_f_row;
+
+loc l_x1_row : while x_row <= delta1_row wait {}
+
+	when  net13f = 0  sync net13f_down goto l_x1_row;
+	when  net13f = 1  sync net13f_up goto l_x1_row;
+	when  net13f = 1-0   & net39 = 1 sync net13f_down goto l_x1_row;
+	when  net13f = 1-1   & net39 = 1 sync net13f_up goto l_x1_row;
+	when net13f = 1-0   & net39 = 0 sync net13f_down do{ x_row'=0 } goto l_x0_row;
+	when  net39 = 0  sync net39_down goto l_x1_row;
+	when  net39 = 1  sync net39_up goto l_x1_row;
+	when  net39 = 1-0   & net13f = 1 sync net39_down goto l_x1_row;
+	when  net39 = 1-1   & net13f = 1 sync net39_up goto l_x1_row;
+	when net39 = 1-0   & net13f = 0 sync net39_down do{ x_row'=0 } goto l_x0_row;
+
+	when  x_row = delta1_row sync row_up do {row' = 1} goto l_f_row;
+
+loc l_f_row : while True wait {}
+
+	when  net13f = 0  sync net13f_down goto l_f_row;
+	when  net13f = 1  sync net13f_up goto l_f_row;
+	when  net13f = 1-0   & net39 = 1 sync net13f_down goto l_f_row;
+	when  net13f = 1-1   & net39 = 1 sync net13f_up goto l_f_row;
+	when net13f = 1-0   & net39 = 0 sync net13f_down do{ x_row'=0 } goto l_x0_row;
+	when net13f = 1-1   & net39 = 0 sync net13f_up do{ x_row'=0 } goto l_x1_row;
+	when  net39 = 0  sync net39_down goto l_f_row;
+	when  net39 = 1  sync net39_up goto l_f_row;
+	when  net39 = 1-0   & net13f = 1 sync net39_down goto l_f_row;
+	when  net39 = 1-1   & net13f = 1 sync net39_up goto l_f_row;
+	when net39 = 1-0   & net13f = 0 sync net39_down do{ x_row'=0 } goto l_x0_row;
+	when net39 = 1-1   & net13f = 0 sync net39_up do{ x_row'=0 } goto l_x1_row;
+
+end
+
+-- les automates qui definent le signal welb:
+---------------------------------------------
+
+automaton Ass_welb
+
+synclabs: net45a_up, net45a_down, net13a_up, net13a_down, welb_up, welb_down;
+initially l_f_welb ;
+
+loc l_x0_welb : while x_welb <= delta0_welb wait {}
+
+	when  net45a = 0  sync net45a_down goto l_x0_welb;
+	when net45a = 1-1   & net13a = 0 sync net45a_up do{ x_welb'=0 } goto l_x1_welb;
+	when  net13a = 0  sync net13a_down goto l_x0_welb;
+	when net13a = 1-1   & net45a = 0 sync net13a_up do{ x_welb'=0 } goto l_x1_welb;
+
+	when  x_welb = delta0_welb sync welb_down do {welb' = 0} goto l_f_welb;
+
+loc l_x1_welb : while x_welb <= delta1_welb wait {}
+
+	when  net45a = 0  sync net45a_down goto l_x1_welb;
+	when  net45a = 1  sync net45a_up goto l_x1_welb;
+	when  net45a = 1-0   & net13a = 1 sync net45a_down goto l_x1_welb;
+	when  net45a = 1-1   & net13a = 1 sync net45a_up goto l_x1_welb;
+	when net45a = 1-0   & net13a = 0 sync net45a_down do{ x_welb'=0 } goto l_x0_welb;
+	when  net13a = 0  sync net13a_down goto l_x1_welb;
+	when  net13a = 1  sync net13a_up goto l_x1_welb;
+	when  net13a = 1-0   & net45a = 1 sync net13a_down goto l_x1_welb;
+	when  net13a = 1-1   & net45a = 1 sync net13a_up goto l_x1_welb;
+	when net13a = 1-0   & net45a = 0 sync net13a_down do{ x_welb'=0 } goto l_x0_welb;
+
+	when  x_welb = delta1_welb sync welb_up do {welb' = 1} goto l_f_welb;
+
+loc l_f_welb : while True wait {}
+
+	when  net45a = 0  sync net45a_down goto l_f_welb;
+	when  net45a = 1  sync net45a_up goto l_f_welb;
+	when  net45a = 1-0   & net13a = 1 sync net45a_down goto l_f_welb;
+	when  net45a = 1-1   & net13a = 1 sync net45a_up goto l_f_welb;
+	when net45a = 1-0   & net13a = 0 sync net45a_down do{ x_welb'=0 } goto l_x0_welb;
+	when net45a = 1-1   & net13a = 0 sync net45a_up do{ x_welb'=0 } goto l_x1_welb;
+	when  net13a = 0  sync net13a_down goto l_f_welb;
+	when  net13a = 1  sync net13a_up goto l_f_welb;
+	when  net13a = 1-0   & net45a = 1 sync net13a_down goto l_f_welb;
+	when  net13a = 1-1   & net45a = 1 sync net13a_up goto l_f_welb;
+	when net13a = 1-0   & net45a = 0 sync net13a_down do{ x_welb'=0 } goto l_x0_welb;
+	when net13a = 1-1   & net45a = 0 sync net13a_up do{ x_welb'=0 } goto l_x1_welb;
+
+end
+
+-- les automates qui definent le signal wela:
+---------------------------------------------
+
+automaton Ass_wela
+
+synclabs: net45a_up, net45a_down, net13a_up, net13a_down, wela_up, wela_down;
+initially l_f_wela ;
+
+loc l_x0_wela : while x_wela <= delta0_wela wait {}
+
+	when  net45a = 0  sync net45a_down goto l_x0_wela;
+	when net45a = 1-1   & net13a = 0 sync net45a_up do{ x_wela'=0 } goto l_x1_wela;
+	when  net13a = 0  sync net13a_down goto l_x0_wela;
+	when net13a = 1-1   & net45a = 0 sync net13a_up do{ x_wela'=0 } goto l_x1_wela;
+
+	when  x_wela = delta0_wela sync wela_down do {wela' = 0} goto l_f_wela;
+
+loc l_x1_wela : while x_wela <= delta1_wela wait {}
+
+	when  net45a = 0  sync net45a_down goto l_x1_wela;
+	when  net45a = 1  sync net45a_up goto l_x1_wela;
+	when  net45a = 1-0   & net13a = 1 sync net45a_down goto l_x1_wela;
+	when  net45a = 1-1   & net13a = 1 sync net45a_up goto l_x1_wela;
+	when net45a = 1-0   & net13a = 0 sync net45a_down do{ x_wela'=0 } goto l_x0_wela;
+	when  net13a = 0  sync net13a_down goto l_x1_wela;
+	when  net13a = 1  sync net13a_up goto l_x1_wela;
+	when  net13a = 1-0   & net45a = 1 sync net13a_down goto l_x1_wela;
+	when  net13a = 1-1   & net45a = 1 sync net13a_up goto l_x1_wela;
+	when net13a = 1-0   & net45a = 0 sync net13a_down do{ x_wela'=0 } goto l_x0_wela;
+
+	when  x_wela = delta1_wela sync wela_up do {wela' = 1} goto l_f_wela;
+
+loc l_f_wela : while True wait {}
+
+	when  net45a = 0  sync net45a_down goto l_f_wela;
+	when  net45a = 1  sync net45a_up goto l_f_wela;
+	when  net45a = 1-0   & net13a = 1 sync net45a_down goto l_f_wela;
+	when  net45a = 1-1   & net13a = 1 sync net45a_up goto l_f_wela;
+	when net45a = 1-0   & net13a = 0 sync net45a_down do{ x_wela'=0 } goto l_x0_wela;
+	when net45a = 1-1   & net13a = 0 sync net45a_up do{ x_wela'=0 } goto l_x1_wela;
+	when  net13a = 0  sync net13a_down goto l_f_wela;
+	when  net13a = 1  sync net13a_up goto l_f_wela;
+	when  net13a = 1-0   & net45a = 1 sync net13a_down goto l_f_wela;
+	when  net13a = 1-1   & net45a = 1 sync net13a_up goto l_f_wela;
+	when net13a = 1-0   & net45a = 0 sync net13a_down do{ x_wela'=0 } goto l_x0_wela;
+	when net13a = 1-1   & net45a = 0 sync net13a_up do{ x_wela'=0 } goto l_x1_wela;
+
+end
+
+-- les automates qui definent le signal net45a:
+-----------------------------------------------
+
+automaton Ass_net45a
+
+synclabs: net45_up, net45_down, net45a_up, net45a_down;
+initially l_f_net45a ;
+
+loc l_x0_net45a : while x_net45a <= delta0_net45a wait {}
+
+	when  net45 = 0  sync net45_down goto l_x0_net45a;
+	when net45 = 1-1 sync net45_up do{ x_net45a'=0 } goto l_x1_net45a;
+
+	when  x_net45a = delta0_net45a sync net45a_down do {net45a' = 0} goto l_f_net45a;
+
+loc l_x1_net45a : while x_net45a <= delta1_net45a wait {}
+
+	when  net45 = 1  sync net45_up goto l_x1_net45a;
+	when net45 = 1-0 sync net45_down do{ x_net45a'=0 } goto l_x0_net45a;
+
+	when  x_net45a = delta1_net45a sync net45a_up do {net45a' = 1} goto l_f_net45a;
+
+loc l_f_net45a : while True wait {}
+
+	when  net45 = 0  sync net45_down goto l_f_net45a;
+	when  net45 = 1  sync net45_up goto l_f_net45a;
+	when net45 = 1-0 sync net45_down do{ x_net45a'=0 } goto l_x0_net45a;
+	when net45 = 1-1 sync net45_up do{ x_net45a'=0 } goto l_x1_net45a;
+
+end
+
+-- les automates qui definent le signal net13f:
+-----------------------------------------------
+
+automaton Ass_net13f
+
+synclabs: ck_up, ck_down, net13f_up, net13f_down;
+initially l_f_net13f ;
+
+loc l_x0_net13f : while x_net13f <= delta0_net13f wait {}
+
+	when  ck = 1  sync ck_up goto l_x0_net13f;
+	when ck = 1-0 sync ck_down do{ x_net13f'=0 } goto l_x1_net13f;
+
+	when  x_net13f = delta0_net13f sync net13f_down do {net13f' = 0} goto l_f_net13f;
+
+loc l_x1_net13f : while x_net13f <= delta1_net13f wait {}
+
+	when  ck = 0  sync ck_down goto l_x1_net13f;
+	when ck = 1-1 sync ck_up do{ x_net13f'=0 } goto l_x0_net13f;
+
+	when  x_net13f = delta1_net13f sync net13f_up do {net13f' = 1} goto l_f_net13f;
+
+loc l_f_net13f : while True wait {}
+
+	when  ck = 0  sync ck_down goto l_f_net13f;
+	when  ck = 1  sync ck_up goto l_f_net13f;
+	when ck = 1-0 sync ck_down do{ x_net13f'=0 } goto l_x1_net13f;
+	when ck = 1-1 sync ck_up do{ x_net13f'=0 } goto l_x0_net13f;
+
+end
+
+-- les automates qui definent le signal net13e:
+-----------------------------------------------
+
+automaton Ass_net13e
+
+synclabs: ck_up, ck_down, net13e_up, net13e_down;
+initially l_f_net13e ;
+
+loc l_x0_net13e : while x_net13e <= delta0_net13e wait {}
+
+	when  ck = 1  sync ck_up goto l_x0_net13e;
+	when ck = 1-0 sync ck_down do{ x_net13e'=0 } goto l_x1_net13e;
+
+	when  x_net13e = delta0_net13e sync net13e_down do {net13e' = 0} goto l_f_net13e;
+
+loc l_x1_net13e : while x_net13e <= delta1_net13e wait {}
+
+	when  ck = 0  sync ck_down goto l_x1_net13e;
+	when ck = 1-1 sync ck_up do{ x_net13e'=0 } goto l_x0_net13e;
+
+	when  x_net13e = delta1_net13e sync net13e_up do {net13e' = 1} goto l_f_net13e;
+
+loc l_f_net13e : while True wait {}
+
+	when  ck = 0  sync ck_down goto l_f_net13e;
+	when  ck = 1  sync ck_up goto l_f_net13e;
+	when ck = 1-0 sync ck_down do{ x_net13e'=0 } goto l_x1_net13e;
+	when ck = 1-1 sync ck_up do{ x_net13e'=0 } goto l_x0_net13e;
+
+end
+
+-- les automates qui definent le signal net13d:
+-----------------------------------------------
+
+automaton Ass_net13d
+
+synclabs: ck_up, ck_down, net13d_up, net13d_down;
+initially l_f_net13d ;
+
+loc l_x0_net13d : while x_net13d <= delta0_net13d wait {}
+
+	when  ck = 1  sync ck_up goto l_x0_net13d;
+	when ck = 1-0 sync ck_down do{ x_net13d'=0 } goto l_x1_net13d;
+
+	when  x_net13d = delta0_net13d sync net13d_down do {net13d' = 0} goto l_f_net13d;
+
+loc l_x1_net13d : while x_net13d <= delta1_net13d wait {}
+
+	when  ck = 0  sync ck_down goto l_x1_net13d;
+	when ck = 1-1 sync ck_up do{ x_net13d'=0 } goto l_x0_net13d;
+
+	when  x_net13d = delta1_net13d sync net13d_up do {net13d' = 1} goto l_f_net13d;
+
+loc l_f_net13d : while True wait {}
+
+	when  ck = 0  sync ck_down goto l_f_net13d;
+	when  ck = 1  sync ck_up goto l_f_net13d;
+	when ck = 1-0 sync ck_down do{ x_net13d'=0 } goto l_x1_net13d;
+	when ck = 1-1 sync ck_up do{ x_net13d'=0 } goto l_x0_net13d;
+
+end
+
+-- les automates qui definent le signal net13a:
+-----------------------------------------------
+
+automaton Ass_net13a
+
+synclabs: ck_up, ck_down, net13a_up, net13a_down;
+initially l_f_net13a ;
+
+loc l_x0_net13a : while x_net13a <= delta0_net13a wait {}
+
+	when  ck = 1  sync ck_up goto l_x0_net13a;
+	when ck = 1-0 sync ck_down do{ x_net13a'=0 } goto l_x1_net13a;
+
+	when  x_net13a = delta0_net13a sync net13a_down do {net13a' = 0} goto l_f_net13a;
+
+loc l_x1_net13a : while x_net13a <= delta1_net13a wait {}
+
+	when  ck = 0  sync ck_down goto l_x1_net13a;
+	when ck = 1-1 sync ck_up do{ x_net13a'=0 } goto l_x0_net13a;
+
+	when  x_net13a = delta1_net13a sync net13a_up do {net13a' = 1} goto l_f_net13a;
+
+loc l_f_net13a : while True wait {}
+
+	when  ck = 0  sync ck_down goto l_f_net13a;
+	when  ck = 1  sync ck_up goto l_f_net13a;
+	when ck = 1-0 sync ck_down do{ x_net13a'=0 } goto l_x1_net13a;
+	when ck = 1-1 sync ck_up do{ x_net13a'=0 } goto l_x0_net13a;
+
+end
+
+-- les automates qui definent le signal net39:
+----------------------------------------------
+
+automaton P_reg_latch_a 
+ 
+synclabs: en_latcha_up, en_latcha_down, a_h_up, a_h_down, net39_up, net39_down ;
+initially l_f_P_reg_latch_a;
+ 
+loc l_x0_P_reg_latch_a : while x_reg_latch_a <= delta0_reg_latch_a  wait {}
+
+-- les transitions sensibles aux changements des signaux d'entrees e1, ... , e2 :
+-- cas B1 = 1 : 
+	when  en_latcha = 1 & a_h = 0  sync a_h_down goto l_x0_P_reg_latch_a;
+	when en_latcha = 1 & a_h = 1-1 sync a_h_up do{ x_reg_latch_a'=0 } goto l_x1_P_reg_latch_a;
+
+-- les transitions synchronisés avec le signal de sortie s :
+	when en_latcha = 1 &  x_reg_latch_a = delta0_1_reg_latch_a sync net39_down do {net39' = 0} goto l_f_P_reg_latch_a;
+
+-- les transitions sensibles aux changements des signaux B1, ... , B1 :
+-- cas B1 = 1 : 
+	when en_latcha = 1 sync en_latcha_down goto l_s_P_reg_latch_a;
+
+loc l_x1_P_reg_latch_a : while x_reg_latch_a <= delta1_reg_latch_a  wait {}
+
+-- les transitions sensibles aux changements des signaux d'entrees e1, ... , e2 :
+-- cas B1 = 1 : 
+	when  en_latcha = 1 & a_h = 1  sync a_h_up goto l_x1_P_reg_latch_a;
+	when en_latcha = 1 & a_h = 1-0 sync a_h_down do{ x_reg_latch_a'=0 } goto l_x0_P_reg_latch_a;
+
+-- les transitions synchronisés avec le signal de sortie s :
+	when en_latcha = 1 &  x_reg_latch_a = delta1_1_reg_latch_a sync net39_up do {net39' = 1} goto l_f_P_reg_latch_a;
+
+-- les transitions sensibles aux changements des signaux B1, ... , B1 :
+-- cas B1 = 1 : 
+	when en_latcha = 1 sync en_latcha_down goto l_s_P_reg_latch_a;
+
+loc l_f_P_reg_latch_a : while True wait {}
+
+-- les transitions sensibles aux changements des signaux d'entrees e1, ... , e2 du process:
+-- cas B1 = 1 : 
+	when  en_latcha = 1 & a_h = 0  sync a_h_down goto l_f_P_reg_latch_a;
+	when  en_latcha = 1 & a_h = 1  sync a_h_up goto l_f_P_reg_latch_a;
+	when en_latcha = 1 & a_h = 1-0 sync a_h_down do{ x_reg_latch_a'=0 } goto l_x0_P_reg_latch_a;
+	when en_latcha = 1 & a_h = 1-1 sync a_h_up do{ x_reg_latch_a'=0 } goto l_x1_P_reg_latch_a;
+
+-- les transitions sensibles aux changements des signaux B1, ... , B1 :
+-- cas B1 = 1 : 
+	when en_latcha = 1 sync en_latcha_down goto l_s_P_reg_latch_a;
+
+loc l_s_P_reg_latch_a : while True wait {}
+
+-- les transitions sensibles aux changements des signaux d'entrees e1, ... , e2 du process:
+	when  True  sync a_h_down goto l_s_P_reg_latch_a;
+	when  True  sync a_h_up goto l_s_P_reg_latch_a;
+
+-- les transitions sensibles aux changements des signaux B1, ... , B1 du process:
+	when net39 = 0   & a_h = 0 sync en_latcha_up goto l_f_P_reg_latch_a;
+	when net39 = 1   & a_h = 1 sync en_latcha_up goto l_f_P_reg_latch_a;
+	when net39 = 0   & a_h = 1 sync en_latcha_up do{ x_reg_latch_a'=0 } goto l_x1_P_reg_latch_a;
+	when net39 = 1   & a_h = 0 sync en_latcha_up do{ x_reg_latch_a'=0 } goto l_x0_P_reg_latch_a;
+
+end
+
+-- les automates qui definent le signal net45:
+----------------------------------------------
+
+automaton P_reg_latchwen 
+ 
+synclabs: en_latchwen_up, en_latchwen_down, wen_h_up, wen_h_down, net45_up, net45_down ;
+initially l_f_P_reg_latchwen;
+ 
+loc l_x0_P_reg_latchwen : while x_reg_latchwen <= delta0_reg_latchwen  wait {}
+
+-- les transitions sensibles aux changements des signaux d'entrees e1, ... , e2 :
+-- cas B1 = 1 : 
+	when  en_latchwen = 1 & wen_h = 0  sync wen_h_down goto l_x0_P_reg_latchwen;
+	when en_latchwen = 1 & wen_h = 1-1 sync wen_h_up do{ x_reg_latchwen'=0 } goto l_x1_P_reg_latchwen;
+
+-- les transitions synchronisés avec le signal de sortie s :
+	when en_latchwen = 1 &  x_reg_latchwen = delta0_1_reg_latchwen sync net45_down do {net45' = 0} goto l_f_P_reg_latchwen;
+
+-- les transitions sensibles aux changements des signaux B1, ... , B1 :
+-- cas B1 = 1 : 
+	when en_latchwen = 1 sync en_latchwen_down goto l_s_P_reg_latchwen;
+
+loc l_x1_P_reg_latchwen : while x_reg_latchwen <= delta1_reg_latchwen  wait {}
+
+-- les transitions sensibles aux changements des signaux d'entrees e1, ... , e2 :
+-- cas B1 = 1 : 
+	when  en_latchwen = 1 & wen_h = 1  sync wen_h_up goto l_x1_P_reg_latchwen;
+	when en_latchwen = 1 & wen_h = 1-0 sync wen_h_down do{ x_reg_latchwen'=0 } goto l_x0_P_reg_latchwen;
+
+-- les transitions synchronisés avec le signal de sortie s :
+	when en_latchwen = 1 &  x_reg_latchwen = delta1_1_reg_latchwen sync net45_up do {net45' = 1} goto l_f_P_reg_latchwen;
+
+-- les transitions sensibles aux changements des signaux B1, ... , B1 :
+-- cas B1 = 1 : 
+	when en_latchwen = 1 sync en_latchwen_down goto l_s_P_reg_latchwen;
+
+loc l_f_P_reg_latchwen : while True wait {}
+
+-- les transitions sensibles aux changements des signaux d'entrees e1, ... , e2 du process:
+-- cas B1 = 1 : 
+	when  en_latchwen = 1 & wen_h = 0  sync wen_h_down goto l_f_P_reg_latchwen;
+	when  en_latchwen = 1 & wen_h = 1  sync wen_h_up goto l_f_P_reg_latchwen;
+	when en_latchwen = 1 & wen_h = 1-0 sync wen_h_down do{ x_reg_latchwen'=0 } goto l_x0_P_reg_latchwen;
+	when en_latchwen = 1 & wen_h = 1-1 sync wen_h_up do{ x_reg_latchwen'=0 } goto l_x1_P_reg_latchwen;
+
+-- les transitions sensibles aux changements des signaux B1, ... , B1 :
+-- cas B1 = 1 : 
+	when en_latchwen = 1 sync en_latchwen_down goto l_s_P_reg_latchwen;
+
+loc l_s_P_reg_latchwen : while True wait {}
+
+-- les transitions sensibles aux changements des signaux d'entrees e1, ... , e2 du process:
+	when  True  sync wen_h_down goto l_s_P_reg_latchwen;
+	when  True  sync wen_h_up goto l_s_P_reg_latchwen;
+
+-- les transitions sensibles aux changements des signaux B1, ... , B1 du process:
+	when net45 = 0   & wen_h = 0 sync en_latchwen_up goto l_f_P_reg_latchwen;
+	when net45 = 1   & wen_h = 1 sync en_latchwen_up goto l_f_P_reg_latchwen;
+	when net45 = 0   & wen_h = 1 sync en_latchwen_up do{ x_reg_latchwen'=0 } goto l_x1_P_reg_latchwen;
+	when net45 = 1   & wen_h = 0 sync en_latchwen_up do{ x_reg_latchwen'=0 } goto l_x0_P_reg_latchwen;
+
+end
+
+-- les automates qui definent le signal d_int:
+----------------------------------------------
+
+automaton P_reg_latchd 
+ 
+synclabs: en_latchd_up, en_latchd_down, d_h_up, d_h_down, d_int_up, d_int_down ;
+initially l_f_P_reg_latchd;
+ 
+loc l_x0_P_reg_latchd : while x_reg_latchd <= delta0_reg_latchd  wait {}
+
+-- les transitions sensibles aux changements des signaux d'entrees e1, ... , e2 :
+-- cas B1 = 1 : 
+	when  en_latchd = 1 & d_h = 0  sync d_h_down goto l_x0_P_reg_latchd;
+	when en_latchd = 1 & d_h = 1-1 sync d_h_up do{ x_reg_latchd'=0 } goto l_x1_P_reg_latchd;
+
+-- les transitions synchronisés avec le signal de sortie s :
+	when en_latchd = 1 &  x_reg_latchd = delta0_1_reg_latchd sync d_int_down do {d_int' = 0} goto l_f_P_reg_latchd;
+
+-- les transitions sensibles aux changements des signaux B1, ... , B1 :
+-- cas B1 = 1 : 
+	when en_latchd = 1 sync en_latchd_down goto l_s_P_reg_latchd;
+
+loc l_x1_P_reg_latchd : while x_reg_latchd <= delta1_reg_latchd  wait {}
+
+-- les transitions sensibles aux changements des signaux d'entrees e1, ... , e2 :
+-- cas B1 = 1 : 
+	when  en_latchd = 1 & d_h = 1  sync d_h_up goto l_x1_P_reg_latchd;
+	when en_latchd = 1 & d_h = 1-0 sync d_h_down do{ x_reg_latchd'=0 } goto l_x0_P_reg_latchd;
+
+-- les transitions synchronisés avec le signal de sortie s :
+	when en_latchd = 1 &  x_reg_latchd = delta1_1_reg_latchd sync d_int_up do {d_int' = 1} goto l_f_P_reg_latchd;
+
+-- les transitions sensibles aux changements des signaux B1, ... , B1 :
+-- cas B1 = 1 : 
+	when en_latchd = 1 sync en_latchd_down goto l_s_P_reg_latchd;
+
+loc l_f_P_reg_latchd : while True wait {}
+
+-- les transitions sensibles aux changements des signaux d'entrees e1, ... , e2 du process:
+-- cas B1 = 1 : 
+	when  en_latchd = 1 & d_h = 0  sync d_h_down goto l_f_P_reg_latchd;
+	when  en_latchd = 1 & d_h = 1  sync d_h_up goto l_f_P_reg_latchd;
+	when en_latchd = 1 & d_h = 1-0 sync d_h_down do{ x_reg_latchd'=0 } goto l_x0_P_reg_latchd;
+	when en_latchd = 1 & d_h = 1-1 sync d_h_up do{ x_reg_latchd'=0 } goto l_x1_P_reg_latchd;
+
+-- les transitions sensibles aux changements des signaux B1, ... , B1 :
+-- cas B1 = 1 : 
+	when en_latchd = 1 sync en_latchd_down goto l_s_P_reg_latchd;
+
+loc l_s_P_reg_latchd : while True wait {}
+
+-- les transitions sensibles aux changements des signaux d'entrees e1, ... , e2 du process:
+	when  True  sync d_h_down goto l_s_P_reg_latchd;
+	when  True  sync d_h_up goto l_s_P_reg_latchd;
+
+-- les transitions sensibles aux changements des signaux B1, ... , B1 du process:
+	when d_int = 0   & d_h = 0 sync en_latchd_up goto l_f_P_reg_latchd;
+	when d_int = 1   & d_h = 1 sync en_latchd_up goto l_f_P_reg_latchd;
+	when d_int = 0   & d_h = 1 sync en_latchd_up do{ x_reg_latchd'=0 } goto l_x1_P_reg_latchd;
+	when d_int = 1   & d_h = 0 sync en_latchd_up do{ x_reg_latchd'=0 } goto l_x0_P_reg_latchd;
+
+end
+
+-- les automates qui definent le signal en_latchd:
+--------------------------------------------------
+
+automaton Ass_en_latchd
+
+synclabs: ck_up, ck_down, en_latchd_up, en_latchd_down;
+initially l_f_en_latchd ;
+
+loc l_x0_en_latchd : while x_en_latchd <= delta0_en_latchd wait {}
+
+	when  ck = 1  sync ck_up goto l_x0_en_latchd;
+	when ck = 1-0 sync ck_down do{ x_en_latchd'=0 } goto l_x1_en_latchd;
+
+	when  x_en_latchd = delta0_en_latchd sync en_latchd_down do {en_latchd' = 0} goto l_f_en_latchd;
+
+loc l_x1_en_latchd : while x_en_latchd <= delta1_en_latchd wait {}
+
+	when  ck = 0  sync ck_down goto l_x1_en_latchd;
+	when ck = 1-1 sync ck_up do{ x_en_latchd'=0 } goto l_x0_en_latchd;
+
+	when  x_en_latchd = delta1_en_latchd sync en_latchd_up do {en_latchd' = 1} goto l_f_en_latchd;
+
+loc l_f_en_latchd : while True wait {}
+
+	when  ck = 0  sync ck_down goto l_f_en_latchd;
+	when  ck = 1  sync ck_up goto l_f_en_latchd;
+	when ck = 1-0 sync ck_down do{ x_en_latchd'=0 } goto l_x1_en_latchd;
+	when ck = 1-1 sync ck_up do{ x_en_latchd'=0 } goto l_x0_en_latchd;
+
+end
+
+-- les automates qui definent le signal en_latcha:
+--------------------------------------------------
+
+automaton Ass_en_latcha
+
+synclabs: ck_up, ck_down, en_latcha_up, en_latcha_down;
+initially l_f_en_latcha ;
+
+loc l_x0_en_latcha : while x_en_latcha <= delta0_en_latcha wait {}
+
+	when  ck = 1  sync ck_up goto l_x0_en_latcha;
+	when ck = 1-0 sync ck_down do{ x_en_latcha'=0 } goto l_x1_en_latcha;
+
+	when  x_en_latcha = delta0_en_latcha sync en_latcha_down do {en_latcha' = 0} goto l_f_en_latcha;
+
+loc l_x1_en_latcha : while x_en_latcha <= delta1_en_latcha wait {}
+
+	when  ck = 0  sync ck_down goto l_x1_en_latcha;
+	when ck = 1-1 sync ck_up do{ x_en_latcha'=0 } goto l_x0_en_latcha;
+
+	when  x_en_latcha = delta1_en_latcha sync en_latcha_up do {en_latcha' = 1} goto l_f_en_latcha;
+
+loc l_f_en_latcha : while True wait {}
+
+	when  ck = 0  sync ck_down goto l_f_en_latcha;
+	when  ck = 1  sync ck_up goto l_f_en_latcha;
+	when ck = 1-0 sync ck_down do{ x_en_latcha'=0 } goto l_x1_en_latcha;
+	when ck = 1-1 sync ck_up do{ x_en_latcha'=0 } goto l_x0_en_latcha;
+
+end
+
+-- les automates qui definent le signal en_latchwen:
+----------------------------------------------------
+
+automaton Ass_en_latchwen
+
+synclabs: ck_up, ck_down, en_latchwen_up, en_latchwen_down;
+initially l_f_en_latchwen ;
+
+loc l_x0_en_latchwen : while x_en_latchwen <= delta0_en_latchwen wait {}
+
+	when  ck = 1  sync ck_up goto l_x0_en_latchwen;
+	when ck = 1-0 sync ck_down do{ x_en_latchwen'=0 } goto l_x1_en_latchwen;
+
+	when  x_en_latchwen = delta0_en_latchwen sync en_latchwen_down do {en_latchwen' = 0} goto l_f_en_latchwen;
+
+loc l_x1_en_latchwen : while x_en_latchwen <= delta1_en_latchwen wait {}
+
+	when  ck = 0  sync ck_down goto l_x1_en_latchwen;
+	when ck = 1-1 sync ck_up do{ x_en_latchwen'=0 } goto l_x0_en_latchwen;
+
+	when  x_en_latchwen = delta1_en_latchwen sync en_latchwen_up do {en_latchwen' = 1} goto l_f_en_latchwen;
+
+loc l_f_en_latchwen : while True wait {}
+
+	when  ck = 0  sync ck_down goto l_f_en_latchwen;
+	when  ck = 1  sync ck_up goto l_f_en_latchwen;
+	when ck = 1-0 sync ck_down do{ x_en_latchwen'=0 } goto l_x1_en_latchwen;
+	when ck = 1-1 sync ck_up do{ x_en_latchwen'=0 } goto l_x0_en_latchwen;
+
+end
+
+-- les automates qui definent le signal a_h:
+--------------------------------------------
+
+automaton Ass_a_h
+
+synclabs: a_0_up, a_0_down, a_h_up, a_h_down;
+initially l_f_a_h ;
+
+loc l_x0_a_h : while x_a_h <= delta0_a_h wait {}
+
+	when  a_0 = 0  sync a_0_down goto l_x0_a_h;
+	when a_0 = 1-1 sync a_0_up do{ x_a_h'=0 } goto l_x1_a_h;
+
+	when  x_a_h = delta0_a_h sync a_h_down do {a_h' = 0} goto l_f_a_h;
+
+loc l_x1_a_h : while x_a_h <= delta1_a_h wait {}
+
+	when  a_0 = 1  sync a_0_up goto l_x1_a_h;
+	when a_0 = 1-0 sync a_0_down do{ x_a_h'=0 } goto l_x0_a_h;
+
+	when  x_a_h = delta1_a_h sync a_h_up do {a_h' = 1} goto l_f_a_h;
+
+loc l_f_a_h : while True wait {}
+
+	when  a_0 = 0  sync a_0_down goto l_f_a_h;
+	when  a_0 = 1  sync a_0_up goto l_f_a_h;
+	when a_0 = 1-0 sync a_0_down do{ x_a_h'=0 } goto l_x0_a_h;
+	when a_0 = 1-1 sync a_0_up do{ x_a_h'=0 } goto l_x1_a_h;
+
+end
+
+-- les automates qui definent le signal wen_h:
+----------------------------------------------
+
+automaton Ass_wen_h
+
+synclabs: wen_up, wen_down, wen_h_up, wen_h_down;
+initially l_f_wen_h ;
+
+loc l_x0_wen_h : while x_wen_h <= delta0_wen_h wait {}
+
+	when  wen = 0  sync wen_down goto l_x0_wen_h;
+	when wen = 1-1 sync wen_up do{ x_wen_h'=0 } goto l_x1_wen_h;
+
+	when  x_wen_h = delta0_wen_h sync wen_h_down do {wen_h' = 0} goto l_f_wen_h;
+
+loc l_x1_wen_h : while x_wen_h <= delta1_wen_h wait {}
+
+	when  wen = 1  sync wen_up goto l_x1_wen_h;
+	when wen = 1-0 sync wen_down do{ x_wen_h'=0 } goto l_x0_wen_h;
+
+	when  x_wen_h = delta1_wen_h sync wen_h_up do {wen_h' = 1} goto l_f_wen_h;
+
+loc l_f_wen_h : while True wait {}
+
+	when  wen = 0  sync wen_down goto l_f_wen_h;
+	when  wen = 1  sync wen_up goto l_f_wen_h;
+	when wen = 1-0 sync wen_down do{ x_wen_h'=0 } goto l_x0_wen_h;
+	when wen = 1-1 sync wen_up do{ x_wen_h'=0 } goto l_x1_wen_h;
+
+end
+
+-- les automates qui definent le signal d_h:
+--------------------------------------------
+
+automaton Ass_d_h
+
+synclabs: d_0_up, d_0_down, d_h_up, d_h_down;
+initially l_f_d_h ;
+
+loc l_x0_d_h : while x_d_h <= delta0_d_h wait {}
+
+	when  d_0 = 0  sync d_0_down goto l_x0_d_h;
+	when d_0 = 1-1 sync d_0_up do{ x_d_h'=0 } goto l_x1_d_h;
+
+	when  x_d_h = delta0_d_h sync d_h_down do {d_h' = 0} goto l_f_d_h;
+
+loc l_x1_d_h : while x_d_h <= delta1_d_h wait {}
+
+	when  d_0 = 1  sync d_0_up goto l_x1_d_h;
+	when d_0 = 1-0 sync d_0_down do{ x_d_h'=0 } goto l_x0_d_h;
+
+	when  x_d_h = delta1_d_h sync d_h_up do {d_h' = 1} goto l_f_d_h;
+
+loc l_f_d_h : while True wait {}
+
+	when  d_0 = 0  sync d_0_down goto l_f_d_h;
+	when  d_0 = 1  sync d_0_up goto l_f_d_h;
+	when d_0 = 1-0 sync d_0_down do{ x_d_h'=0 } goto l_x0_d_h;
+	when d_0 = 1-1 sync d_0_up do{ x_d_h'=0 } goto l_x1_d_h;
+
+end
+
+-- les automates qui definent le signal q_0:
+--------------------------------------------
+
+automaton Ass_q_0
+
+synclabs: net27_up, net27_down, q_0_up, q_0_down;
+initially l_f_q_0 ;
+
+loc l_x0_q_0 : while x_q_0 <= delta0_q_0 wait {}
+
+	when  net27 = 0  sync net27_down goto l_x0_q_0;
+	when net27 = 1-1 sync net27_up do{ x_q_0'=0 } goto l_x1_q_0;
+
+	when  x_q_0 = delta0_q_0 sync q_0_down do {q_0' = 0} goto l_f_q_0;
+
+loc l_x1_q_0 : while x_q_0 <= delta1_q_0 wait {}
+
+	when  net27 = 1  sync net27_up goto l_x1_q_0;
+	when net27 = 1-0 sync net27_down do{ x_q_0'=0 } goto l_x0_q_0;
+
+	when  x_q_0 = delta1_q_0 sync q_0_up do {q_0' = 1} goto l_f_q_0;
+
+loc l_f_q_0 : while True wait {}
+
+	when  net27 = 0  sync net27_down goto l_f_q_0;
+	when  net27 = 1  sync net27_up goto l_f_q_0;
+	when net27 = 1-0 sync net27_down do{ x_q_0'=0 } goto l_x0_q_0;
+	when net27 = 1-1 sync net27_up do{ x_q_0'=0 } goto l_x1_q_0;
+
+end
+
+-------------------------------- Commandes d'analyse --------------------------------:
+----------                                                                 ----------:
+----------                                                                 ----------:
+-------------------------------------------------------------------------------------:
+
+init :=
+	loc[env_nd_signals] = env_nd_signals_0 &
+	loc[B1_reg_mux_output] = l_s0_B1_reg_mux_output & loc[B2_reg_mux_output] = l_s0_B2_reg_mux_output & loc[P_reg_mux_output] = l_s_P_reg_mux_output &
+	loc[Ass_passa] = l_f_passa &
+	loc[P_reg_mem_point] = l_s_P_reg_mem_point &
+	loc[Ass_rowa] = l_f_rowa &
+	loc[Ass_d_int_h] = l_f_d_int_h &
+	loc[Ass_d_inta] = l_f_d_inta &
+	loc[Ass_ema] = l_f_ema &
+	loc[Ass_row] = l_f_row &
+	loc[Ass_welb] = l_f_welb &
+	loc[Ass_wela] = l_f_wela &
+	loc[Ass_net45a] = l_f_net45a &
+	loc[Ass_net13f] = l_f_net13f &
+	loc[Ass_net13e] = l_f_net13e &
+	loc[Ass_net13d] = l_f_net13d &
+	loc[Ass_net13a] = l_f_net13a &
+	loc[P_reg_latch_a] = l_f_P_reg_latch_a &
+	loc[P_reg_latchwen] = l_f_P_reg_latchwen &
+	loc[P_reg_latchd] = l_f_P_reg_latchd &
+	loc[Ass_en_latchd] = l_f_en_latchd &
+	loc[Ass_en_latcha] = l_f_en_latcha &
+	loc[Ass_en_latchwen] = l_f_en_latchwen &
+	loc[Ass_a_h] = l_f_a_h &
+	loc[Ass_wen_h] = l_f_wen_h &
+	loc[Ass_d_h] = l_f_d_h &
+	loc[Ass_q_0] = l_f_q_0 &
+
+	t = 0 &
+	x_reg_mux_output = 0 & x_B1_reg_mux_output = 0 & x_B2_reg_mux_output = 0 &
+	x_passa = 0 &
+	x_reg_mem_point = 0 &
+	x_rowa = 0 &
+	x_d_int_h = 0 &
+	x_d_inta = 0 &
+	x_ema = 0 &
+	x_row = 0 &
+	x_welb = 0 &
+	x_wela = 0 &
+	x_net45a = 0 &
+	x_net13f = 0 &
+	x_net13e = 0 &
+	x_net13d = 0 &
+	x_net13a = 0 &
+	x_reg_latch_a = 0 &
+	x_reg_latchwen = 0 &
+	x_reg_latchd = 0 &
+	x_en_latchd = 0 &
+	x_en_latcha = 0 &
+	x_en_latchwen = 0 &
+	x_a_h = 0 &
+	x_wen_h = 0 &
+	x_d_h = 0 &
+	x_q_0 = 0 &
+
+	d_0 = 0 &
+	a_0 = 0 &
+	wen = 1 &
+	ck = 0 &
+	B1_reg_mux_output = 0 & B2_reg_mux_output = 0 & i_B_reg_mux_output = 0 & net27 = 0 &
+	passa = 0 &
+	pass = 0 &
+	rowa = 1 &
+	d_int_h = 0 &
+	d_inta = 0 &
+	ema = 0 &
+	row = 1 &
+	welb = 1 &
+	wela = 1 &
+	net45a = 1 &
+	net13f = 1 &
+	net13e = 1 &
+	net13d = 1 &
+	net13a = 1 &
+	net39 = 0 &
+	net45 = 1 &
+	d_int = 0 &
+	en_latchd = 1 &
+	en_latcha = 1 &
+	en_latchwen = 1 &
+	a_h = 0 &
+	wen_h = 1 &
+	d_h = 0 &
+	q_0 = 0 
+-- 	&
+
+-- 	delta0_1_reg_mux_output = 0 & delta1_1_reg_mux_output = 0 &
+-- 	delta0_2_reg_mux_output = 0 & delta1_2_reg_mux_output = 0 &
+-- 	delta0_reg_mux_output = 0 & delta1_reg_mux_output = 0 &
+-- 
+-- 	delta0_passa = 10 & delta1_passa = 14 &
+-- 
+-- 	delta0_1_reg_mem_point = 17 & delta1_1_reg_mem_point = 17 &
+-- 	delta0_reg_mem_point = 17 & delta1_reg_mem_point = 17 &
+-- 
+-- 	delta0_rowa = 55 & delta1_rowa = 51 &
+-- 	delta0_d_int_h = 26 & delta1_d_int_h = 26 &
+-- 	delta0_d_inta = 63 & delta1_d_inta = 61 &
+-- 	delta0_ema = 0 & delta1_ema = 0 &
+-- 	delta0_row = 0 & delta1_row = 0 &
+-- 	delta0_welb = 0 & delta1_welb = 0 &
+-- 	delta0_wela = 42 & delta1_wela = 0 &
+-- 	delta0_net45a = 0 & delta1_net45a = 24 &
+-- 
+-- 	delta0_net13f = 62 & delta1_net13f = 82 &
+-- 	delta0_net13e = 4 & delta1_net13e = 8 &
+-- 	delta0_net13d = 56 & delta1_net13d = 50 &
+-- 	delta0_net13a = 47 & delta1_net13a = 64 &
+-- 
+-- 	delta0_1_reg_latch_a = 89 & delta1_1_reg_latch_a = 79 &
+-- 	delta0_reg_latch_a = 89 & delta1_reg_latch_a = 79 &
+-- 
+-- 	delta0_1_reg_latchwen = 36 & delta1_1_reg_latchwen = 35 &
+-- 	delta0_reg_latchwen = 36 & delta1_reg_latchwen = 35 &
+-- 
+-- 	delta0_1_reg_latchd = 58 & delta1_1_reg_latchd = 60 &
+-- 	delta0_reg_latchd = 58 & delta1_reg_latchd = 60 &
+-- 
+-- 	delta0_en_latchd = 47 & delta1_en_latchd = 74 &
+-- 	delta0_en_latcha = 26 & delta1_en_latcha = 44 &
+-- 	delta0_en_latchwen = 5 & delta1_en_latchwen = 12 &
+-- 
+-- 	delta0_a_h = 9 & delta1_a_h = 14 &
+-- 	delta0_wen_h = 23 & delta1_wen_h = 23 &
+-- 	delta0_d_h =140 & delta1_d_h = 197 &
+-- 
+-- 	delta0_q_0 = 52 & delta1_q_0 = 47
+;
+
