@@ -586,29 +586,49 @@ let substitute_variables sub linear_inequality =
 
 (** 'add_d d coef variables c' adds a variable 'coef * d' to any variable in 'variables' *)
 (***** FIXME: This is probably very expensive and stupid *)
+(*let add_d d coef variable_list linear_constraint =                                             *)
+(*	let p = NumConst.get_num coef in                                                             *)
+(*	let q = NumConst.get_den coef in                                                             *)
+(*	if (q <>! Gmp.Z.one) then                                                                    *)
+(*		raise (InternalError "Only integer coefficients supported yet in add_d");                  *)
+(*	(* build the substitution function *)	                                                      *)
+(*	let coef_d = Times (p, Variable d) in                                                        *)
+(*	let sub = fun v -> (                                                                         *)
+(*		if List.mem v variable_list then                                                           *)
+(*			Plus (Variable v, coef_d)                                                                *)
+(*		else                                                                                       *)
+(*			Variable v                                                                               *)
+(*		) in                                                                                       *)
+(*	(* get the constraints from polyhedron *)                                                    *)
+(*	let constraint_list = ppl_Polyhedron_get_constraints linear_constraint in                    *)
+(*	(* perform the substitution for each constraint *)                                           *)
+(*	let new_constraints = List.map (fun ineq -> substitute_variables sub ineq) constraint_list in*)
+(*	(* build a new polyhedron *)                                                                 *)
+(*	let poly = true_constraint () in                                                             *)
+(*	ppl_Polyhedron_add_constraints poly new_constraints; 	                                      *)
+(*	assert_dimensions poly;                                                                      *)
+(*	poly                                                                                         *)
+
+
+let split_q r = 
+	let p = NumConst.get_num r in
+	let q = NumConst.get_den r in
+	p, q
+
 let add_d d coef variable_list linear_constraint =
-	let p = NumConst.get_num coef in
-	let q = NumConst.get_den coef in
-	if (q <>! Gmp.Z.one) then
-		raise (InternalError "Only integer coefficients supported yet in add_d");
-	(* build the substitution function *)	
-	let coef_d = Times (p, Variable d) in
-	let sub = fun v -> (
-		if List.mem v variable_list then
-			Plus (Variable v, coef_d)
-		else
-			Variable v
-		) in
-	(* get the constraints from polyhedron *)
-	let constraint_list = ppl_Polyhedron_get_constraints linear_constraint in
-	(* perform the substitution for each constraint *)
-	let new_constraints = List.map (fun ineq -> substitute_variables sub ineq) constraint_list in
-	(* build a new polyhedron *)
-	let poly = true_constraint () in
-	ppl_Polyhedron_add_constraints poly new_constraints; 	
-	assert_dimensions poly;
-	poly
-	
+	(* get numerator and denominator of rational coefficient *)
+	let p, q = split_q coef in 
+	(* function for building the affine translation of a variable: v -> v + coef*d *)
+	let affine_translation = fun v -> Plus (Times (q, Variable v), Times (p, Variable d)) in
+	(* copy linear constraint, as PPL functions have side effects *)	
+	let result_poly = ppl_new_NNC_Polyhedron_from_NNC_Polyhedron linear_constraint in
+	(* perform the affine translations *)
+	List.iter (fun v -> 
+		ppl_Polyhedron_affine_preimage result_poly v (affine_translation v) q
+	) variable_list;
+	assert_dimensions result_poly;
+	result_poly
+
 
 (*
 
