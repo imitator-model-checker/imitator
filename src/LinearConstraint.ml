@@ -446,10 +446,20 @@ let partition_pi0_compatible pi0 linear_constraint =
 (** {3 Conversion} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
 
-(** PPL polyhedron *)
+(** convert to PPL polyhedron *)
 let to_ppl_polyhedron x = x
+
+(** construct from PPL polyhedron *)
 let from_ppl_polyhedron x = x
 
+(** convert to PPL constraints *)
+let to_ppl_constraints x = ppl_Polyhedron_get_constraints x
+
+(** construct from PPL constraints *)
+let from_ppl_constraints constraints =
+	let poly = true_constraint () in
+	ppl_Polyhedron_add_constraints poly constraints;
+	poly
 
 (** String for the false constraint *)
 let string_of_false = "false"
@@ -481,17 +491,12 @@ let string_of_linear_constraint names linear_constraint =
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
 
 (** Performs the intersection of a list of linear constraints *)
-(**** FIXME: there must be a smarter way to do this *)
 let intersection linear_constraints =
-	(* get the constraints from polyhedra and put them in one list *)
-	let joined_constraints = List.fold_left (fun plist poly ->
-		List.append plist (ppl_Polyhedron_get_constraints poly)
-	) [] linear_constraints in
-	(* construct a new polyhedron *)
-	let poly = true_constraint () in
-	ppl_Polyhedron_add_constraints poly joined_constraints;
-	poly
-	
+	let result_poly = true_constraint () in
+	List.iter (fun poly -> ppl_Polyhedron_intersection_assign result_poly poly) linear_constraints;
+	assert_dimensions result_poly;
+	result_poly	
+
 
 (** Eliminate (using existential quantification) a set of variables in a linear constraint *)
 let hide variables linear_constraint =
