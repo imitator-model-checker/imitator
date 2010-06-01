@@ -97,6 +97,34 @@ val list_only_once : 'a list -> 'a list
 (** Filter the elements appearing several times in the list *)
 val elements_existing_several_times : 'a list -> 'a list
 
+(****************************************************************)
+(** Variable sets *)
+(****************************************************************)
+
+type variable_index = int
+type clock_index = variable_index
+type parameter_index = variable_index
+type discrete_index = variable_index
+type variable_name = string
+type value = NumConst.t
+
+module VariableSet : 
+	sig
+		type elt = variable_index 
+		type t	
+		val empty: t
+		val is_empty: t -> bool
+		val mem: elt -> t -> bool
+		val add: elt -> t -> t	
+		val union: t -> t -> t
+		val inter: t -> t -> t
+		val diff: t -> t -> t
+		val elements: t -> elt list
+		val filter: (elt -> bool) -> t -> t
+		val iter: (elt -> unit) -> t -> unit
+		val for_all: (elt -> bool) -> t -> bool
+		val fold: (elt -> 'a -> 'a) -> t -> 'a -> 'a
+	end
 
 (****************************************************************)
 (** Useful functions on arrays *)

@@ -44,12 +44,25 @@ exception InvalidPi0
 exception False_exception
 
 
+(****************************************************************)
+(** Global variables for conversion *)
+(****************************************************************)
+
+let index_of_variables = ref (Hashtbl.create 16)
+let glob_variable_names = ref (Array.make 0 "")
+let glob_nb_variables = ref 0
+let glob_prime_offset = ref 0
+
+let prime_of_variable v = v + !glob_prime_offset
+let unprime_variable v = v - !glob_prime_offset
+let is_primed_variable v = v >= !glob_nb_variables
+
 (*--------------------------------------------------*)
 (* Convert a ParsingStructure.linear_expression into an array of coef and constant *)
 (*--------------------------------------------------*)
-let array_of_coef_of_linear_expression index_of_variables linear_expression =
+let array_of_coef_of_linear_expression linear_expression =
 	(* Create an array of coef *)
-	let array_of_coef = Array.make (Hashtbl.length index_of_variables) NumConst.zero in
+	let array_of_coef = Array.make (!glob_prime_offset + !glob_nb_variables) NumConst.zero in
 	(* Create a zero constant *)
 	let constant = ref NumConst.zero in
 	
@@ -58,13 +71,22 @@ let array_of_coef_of_linear_expression index_of_variables linear_expression =
 		(* Case constant -> update the constant with the coef *)
 		| Constant c -> constant := NumConst.add !constant (NumConst.mul c mul_coef);
 		(* Case variables -> update the array with the coef  *)
-		| Variable (coef, variable_name) ->
-		try(
-			(* Find the variable_index *)
-			let variable_index = Hashtbl.find index_of_variables variable_name in
-			(* Update the variable with its coef *)
-			array_of_coef.(variable_index) <- NumConst.add array_of_coef.(variable_index) (NumConst.mul coef mul_coef);
-		) with Not_found -> raise (InternalError ("Impossible to find the index of variable '" ^ variable_name ^ "' although it was checked before."))
+		| Variable (coef, variable_name) -> ( 
+			try(
+				(* Find the variable_index *)
+				let variable_index = Hashtbl.find !index_of_variables variable_name in
+				(* Update the variable with its coef *)
+				array_of_coef.(variable_index) <- NumConst.add array_of_coef.(variable_index) (NumConst.mul coef mul_coef);
+			) with Not_found -> raise (InternalError ("Impossible to find the index of variable '" ^ variable_name ^ "' although it was checked before.")))
+		| PrimedVariable (coef, variable_name) -> (
+			try(
+				(* Find the variable_index *)
+				let variable_index = Hashtbl.find !index_of_variables variable_name in
+				let primed_index = prime_of_variable variable_index in
+				(* Update the variable with its coef *)
+				array_of_coef.(primed_index) <- NumConst.add array_of_coef.(primed_index) (NumConst.mul coef mul_coef);
+			) with Not_found -> raise (InternalError ("Impossible to find the index of variable '" ^ variable_name ^ "' although it was checked before.")))
+			
 	in
 
 	(* Internal function to update the array for a linear expression *)
@@ -107,8 +129,8 @@ let linear_term_of_array (array_of_coef, constant) =
 (*--------------------------------------------------*)
 (* Direct conversion of a ParsingStructure.linear_expression into a Linear_term.linear_term *)
 (*--------------------------------------------------*)
-let linear_term_of_linear_expression index_of_variables linear_expression =
-	let array_of_coef, constant = array_of_coef_of_linear_expression index_of_variables linear_expression in
+let linear_term_of_linear_expression linear_expression =
+	let array_of_coef, constant = array_of_coef_of_linear_expression linear_expression in
 	linear_term_of_array (array_of_coef, constant)
 
 
@@ -130,10 +152,10 @@ let sub_array array1 array2 =
 (*--------------------------------------------------*)
 (* Convert a ParsingStructure.linear_constraint into a Constraint.linear_inequality *)
 (*--------------------------------------------------*)
-let linear_inequality_of_linear_constraint index_of_variables (le1, relop, le2) =
+let linear_inequality_of_linear_constraint (le1, relop, le2) =
 	(* Get the array of variables and constant associated to the linear terms *)
-	let array1, constant1 = array_of_coef_of_linear_expression index_of_variables le1 in
-	let array2, constant2 = array_of_coef_of_linear_expression index_of_variables le2 in
+	let array1, constant1 = array_of_coef_of_linear_expression le1 in
+	let array2, constant2 = array_of_coef_of_linear_expression le2 in
 	(* Consider the operator *)
 	match relop with
 	(* a < b <=> b - a > 0 *)
@@ -206,7 +228,7 @@ let linear_inequality_of_linear_constraint index_of_variables (le1, relop, le2) 
 (* let i = ref 0 *)
 
 
-let linear_constraint_of_convex_predicate index_of_variables convex_predicate =
+let linear_constraint_of_convex_predicate convex_predicate =
 	try(
 	
 	
@@ -221,7 +243,7 @@ let linear_constraint_of_convex_predicate index_of_variables convex_predicate =
 		match linear_inequality with
 		| True_constraint -> linear_inequalities
 		| False_constraint -> raise False_exception
-		| Linear_constraint (le1, relop, le2) -> (linear_inequality_of_linear_constraint index_of_variables (le1, relop, le2)) :: linear_inequalities
+		| Linear_constraint (le1, relop, le2) -> (linear_inequality_of_linear_constraint (le1, relop, le2)) :: linear_inequalities
 	) [] convex_predicate
 	in LinearConstraint.make linear_inequalities
 	(* Stop if any false constraint is found *)
@@ -335,6 +357,9 @@ let check_linear_term variable_names = function
 	| Variable (_, variable_name) -> if not (List.mem variable_name variable_names) then(
 		print_error ("The variable '" ^ variable_name ^ "' used in the program was not declared."); false
 		) else true
+	| PrimedVariable (_, variable_name) -> if not (List.mem variable_name variable_names) then(
+		print_error ("The variable '" ^ variable_name ^ "' used in the program was not declared."); false
+		) else true
 
 (*--------------------------------------------------*)
 (* Check that all variables are defined in a linear_expression *)
@@ -371,77 +396,78 @@ let check_convex_predicate variable_names =
 (*--------------------------------------------------*)
 (* Check that a linear expression contains only discrete variables and constants *)
 (*--------------------------------------------------*)
-let only_discrete_in_linear_term index_of_variables type_of_variables = function
+let only_discrete_in_linear_term type_of_variables = function
 	| Constant _ -> true
 	| Variable (_, variable_name) ->
-		let variable_index = Hashtbl.find index_of_variables variable_name in
+		let variable_index = Hashtbl.find !index_of_variables variable_name in
 		type_of_variables variable_index = Var_type_discrete
+	| PrimedVariable (_, _) -> false
 
-let rec only_discrete_in_linear_expression index_of_variables type_of_variables = function
+let rec only_discrete_in_linear_expression type_of_variables = function
 	| Linear_term linear_term ->
-		only_discrete_in_linear_term index_of_variables type_of_variables  linear_term
+		only_discrete_in_linear_term type_of_variables  linear_term
 	| Linear_plus_expression (linear_expression, linear_term) ->
-		only_discrete_in_linear_expression index_of_variables type_of_variables linear_expression
-		&& only_discrete_in_linear_term index_of_variables type_of_variables linear_term
+		only_discrete_in_linear_expression type_of_variables linear_expression
+		&& only_discrete_in_linear_term type_of_variables linear_term
 	| Linear_minus_expression (linear_expression, linear_term) ->
-	only_discrete_in_linear_expression index_of_variables type_of_variables linear_expression
-	&& only_discrete_in_linear_term index_of_variables type_of_variables linear_term
+	only_discrete_in_linear_expression type_of_variables linear_expression
+	&& only_discrete_in_linear_term type_of_variables linear_term
 
 (*--------------------------------------------------*)
 (* Check that an update is well formed *)
 (*--------------------------------------------------*)
-let check_update index_of_variables type_of_variables variable_names automaton_name (variable_name, linear_expression) =
-	(* Get the index of the variable *)
-	let index, declared = try (Hashtbl.find index_of_variables variable_name, true)
-		with Not_found -> (
-			print_error ("The variable '" ^ variable_name ^ "' used in an update in automaton '" ^ automaton_name ^ "' was not declared."); 0, false
-		)
-	in
-	if not declared then false else(
-		(* Get the type of the variable *)
-		let type_of_variable = try (type_of_variables index)
-			with Invalid_argument comment -> (
-			raise (InternalError ("The variable '" ^ variable_name ^ "' was not found in '" ^ automaton_name ^ "', although this was checked before. OCaml says: " ^ comment ^ "."))
-		) in
-		match type_of_variable with
-		(* Case of a clock: allow only 0 as an update *)
-		| AbstractImitatorFile.Var_type_clock ->
-			let result =
-			match linear_expression with
-			| Linear_term (Constant constant) ->
-				if NumConst.equal constant NumConst.zero then true
-				else (print_error ("The variable '" ^ variable_name ^ "' is a clock and can only be reset to 0 in automaton '" ^ automaton_name ^ "'."); false)
-			| _ -> print_error ("The variable '" ^ variable_name ^ "' is a clock and can only be reset to 0 in automaton '" ^ automaton_name ^ "'."); false
-			in result
-		(* Case of a discrete var.: allow only a linear combinations of constants and discrete *)
-		| AbstractImitatorFile.Var_type_discrete -> let result = only_discrete_in_linear_expression index_of_variables type_of_variables linear_expression in
-		if not result then (print_error ("The variable '" ^ variable_name ^ "' is a discrete and its update can only be a linear combination of constants and discrete variables in automaton '" ^ automaton_name ^ "'."); false)
-		else true
-		(* Case of a parameter: forbidden! *)
-		| AbstractImitatorFile.Var_type_parameter -> print_error ("The variable '" ^ variable_name ^ "' is a parameter and can not be updated in automaton '" ^ automaton_name ^ "'."); false
-		| AbstractImitatorFile.Var_type_analog -> print_error ("The variable '" ^ variable_name ^ "' is an analog and can not be updated in automaton '" ^ automaton_name ^ "'."); false 
-	)
+(*let check_update type_of_variables variable_names automaton_name (variable_name, linear_expression) =                                                                                                                        *)
+(*	(* Get the index of the variable *)                                                                                                                                                                                        *)
+(*	let index, declared = try (Hashtbl.find !index_of_variables variable_name, true)                                                                                                                                           *)
+(*		with Not_found -> (                                                                                                                                                                                                      *)
+(*			print_error ("The variable '" ^ variable_name ^ "' used in an update in automaton '" ^ automaton_name ^ "' was not declared."); 0, false                                                                               *)
+(*		)                                                                                                                                                                                                                        *)
+(*	in                                                                                                                                                                                                                         *)
+(*	if not declared then false else(                                                                                                                                                                                           *)
+(*		(* Get the type of the variable *)                                                                                                                                                                                       *)
+(*		let type_of_variable = try (type_of_variables index)                                                                                                                                                                     *)
+(*			with Invalid_argument comment -> (                                                                                                                                                                                     *)
+(*			raise (InternalError ("The variable '" ^ variable_name ^ "' was not found in '" ^ automaton_name ^ "', although this was checked before. OCaml says: " ^ comment ^ "."))                                               *)
+(*		) in                                                                                                                                                                                                                     *)
+(*		match type_of_variable with                                                                                                                                                                                              *)
+(*		(* Case of a clock: allow only 0 as an update *)                                                                                                                                                                         *)
+(*		| AbstractImitatorFile.Var_type_clock ->                                                                                                                                                                                 *)
+(*			let result =                                                                                                                                                                                                           *)
+(*			match linear_expression with                                                                                                                                                                                           *)
+(*			| Linear_term (Constant constant) ->                                                                                                                                                                                   *)
+(*				if NumConst.equal constant NumConst.zero then true                                                                                                                                                                   *)
+(*				else (print_error ("The variable '" ^ variable_name ^ "' is a clock and can only be reset to 0 in automaton '" ^ automaton_name ^ "'."); false)                                                                      *)
+(*			| _ -> print_error ("The variable '" ^ variable_name ^ "' is a clock and can only be reset to 0 in automaton '" ^ automaton_name ^ "'."); false                                                                        *)
+(*			in result                                                                                                                                                                                                              *)
+(*		(* Case of a discrete var.: allow only a linear combinations of constants and discrete *)                                                                                                                                *)
+(*		| AbstractImitatorFile.Var_type_discrete -> let result = only_discrete_in_linear_expression type_of_variables linear_expression in                                                                                       *)
+(*		if not result then (print_error ("The variable '" ^ variable_name ^ "' is a discrete and its update can only be a linear combination of constants and discrete variables in automaton '" ^ automaton_name ^ "'."); false)*)
+(*		else true                                                                                                                                                                                                                *)
+(*		(* Case of a parameter: forbidden! *)                                                                                                                                                                                    *)
+(*		| AbstractImitatorFile.Var_type_parameter -> print_error ("The variable '" ^ variable_name ^ "' is a parameter and can not be updated in automaton '" ^ automaton_name ^ "'."); false                                    *)
+(*		| AbstractImitatorFile.Var_type_analog -> print_error ("The variable '" ^ variable_name ^ "' is an analog and can not be updated in automaton '" ^ automaton_name ^ "'."); false                                         *)
+(*	)                                                                                                                                                                                                                          *)
 
 (*--------------------------------------------------*)
 (* Check that a flow is well formed *)
 (*--------------------------------------------------*)
-let check_flow index_of_variables type_of_variables flow =
-  List.for_all (fun (variable_name, rate) ->
-		(* Get the index of the variable *)
-		let index, declared = try (Hashtbl.find index_of_variables variable_name, true)
-		with Not_found -> (
-			print_error ("The variable '" ^ variable_name ^ "' used in a rate condition was not declared."); 0, false
-		)	in
-		if not declared then false else (
-			(* Get the type of the variable *)
-			let type_of_variable = type_of_variables index in
-			if not (type_of_variable = AbstractImitatorFile.Var_type_analog) &&
-				 not (type_of_variable = AbstractImitatorFile.Var_type_clock) then (
-				print_error ("The variable '" ^ variable_name ^ "' used in a rate condition is not analog.");
-				false
-			) else true
-		)
-	) flow 
+(*let check_flow type_of_variables flow =                                                                        *)
+(*  List.for_all (fun (variable_name, rate) ->                                                                   *)
+(*		(* Get the index of the variable *)                                                                        *)
+(*		let index, declared = try (Hashtbl.find !index_of_variables variable_name, true)                           *)
+(*		with Not_found -> (                                                                                        *)
+(*			print_error ("The variable '" ^ variable_name ^ "' used in a rate condition was not declared."); 0, false*)
+(*		)	in                                                                                                      *)
+(*		if not declared then false else (                                                                          *)
+(*			(* Get the type of the variable *)                                                                       *)
+(*			let type_of_variable = type_of_variables index in                                                        *)
+(*			if not (type_of_variable = AbstractImitatorFile.Var_type_analog) &&                                      *)
+(*				 not (type_of_variable = AbstractImitatorFile.Var_type_clock) then (                                   *)
+(*				print_error ("The variable '" ^ variable_name ^ "' used in a rate condition is not analog.");          *)
+(*				false                                                                                                  *)
+(*			) else true                                                                                              *)
+(*		)                                                                                                          *)
+(*	) flow                                                                                                       *)
 
 (*--------------------------------------------------*)
 (* Check that a sync is well formed *)
@@ -481,7 +507,7 @@ let synclab_used_everywhere automata synclab_name =
 (*--------------------------------------------------*)
 (* Check that the automata are well-formed *)
 (*--------------------------------------------------*)
-let check_automata index_of_variables type_of_variables variable_names index_of_automata locations_per_automaton automata =
+let check_automata type_of_variables variable_names index_of_automata locations_per_automaton automata =
 	let well_formed = ref true in
 
 	(* Check each automaton *)
@@ -501,13 +527,14 @@ let check_automata index_of_variables type_of_variables variable_names index_of_
 			(* TODO: preciser quel automate et quelle location en cas d'erreur *)
 			if not (check_convex_predicate variable_names convex_predicate) then well_formed := false;
 			(* Check the rate condition *)
-			if not (check_flow index_of_variables type_of_variables flow) then well_formed := false;
+(*			if not (check_flow type_of_variables flow) then well_formed := false;*)
 			(* Check transitions *)
 			List.iter (fun (convex_predicate, updates, sync, dest_location_name) ->
 				(* Check the convex predicate *)
 				if not (check_convex_predicate variable_names convex_predicate) then well_formed := false;
 				(* Check the updates *)
-				List.iter (fun update -> if not (check_update index_of_variables type_of_variables variable_names automaton_name update) then well_formed := false) updates;
+				(***** FIXME : replaced list of simple updates by a convex_predicate *)
+(*				List.iter (fun update -> if not (check_update index_of_variables type_of_variables variable_names automaton_name update) then well_formed := false) updates;*)
 				(* Check the sync *)
 				if not (check_sync sync_name_list automaton_name sync) then well_formed := false;
 				(* Check that the destination location exists for this automaton *)
@@ -525,7 +552,7 @@ let check_automata index_of_variables type_of_variables variable_names index_of_
 (*--------------------------------------------------*)
 (* Check that the init_definition are well-formed *)
 (*--------------------------------------------------*)
-let check_init discrete variable_names index_of_variables type_of_variables automata automata_names index_of_automata locations_per_automaton init_definition =
+let check_init discrete variable_names type_of_variables automata automata_names index_of_automata locations_per_automaton init_definition =
 	let well_formed = ref true in
 	(* Check that (automaton / location / variable) names exist in each predicate *)
 	List.iter (function
@@ -610,7 +637,7 @@ let check_init discrete variable_names index_of_variables type_of_variables auto
 			let is_discrete =
 			try (
 				(* Get the variable index *)
-				let variable_index =  Hashtbl.find index_of_variables variable_name in
+				let variable_index =  Hashtbl.find !index_of_variables variable_name in
 				(* Keep if this is a discrete *)
 				type_of_variables variable_index = Var_type_discrete
 			(* If not existing : false *)
@@ -641,7 +668,7 @@ let check_init discrete variable_names index_of_variables type_of_variables auto
 					NumConst.zero
 				in
 				(* Get the variable index *)
-				let discret_index =  Hashtbl.find index_of_variables discrete_name in
+				let discret_index =  Hashtbl.find !index_of_variables discrete_name in
 				(* Check if it was already declared *)
 				if Hashtbl.mem init_values_for_discrete discret_index then(
 					print_error ("The discrete variable '" ^ discrete_name ^ "' is given an initial value several times in the init definition.");
@@ -829,7 +856,7 @@ let make_automata index_of_automata index_of_locations labels index_of_labels re
 	let actions_per_automaton = Array.make (Hashtbl.length index_of_automata) [] in
 	(* Create an empty array for the actions of every location of every automaton *)
 	let actions_per_location = Array.make (Hashtbl.length index_of_automata) (Array.make 0 []) in
-        (* Create an empty array for the rate conditions *)
+  (* Create an empty array for the rate conditions *)
 	let flows = Array.make (Hashtbl.length index_of_automata) (Array.make 0 []) in
 	(* Create an empty array for the transitions *)
 	let transitions = Array.make (Hashtbl.length index_of_automata) (Array.make 0 []) in
@@ -851,7 +878,7 @@ let make_automata index_of_automata index_of_locations labels index_of_labels re
 		transitions.(automaton_index) <- Array.make nb_locations [];
 		(* Create the array of invariants for this automaton *)
 		invariants.(automaton_index) <- Array.make nb_locations [];
-                (* Create the array of rate conditions for this automaton *)
+    (* Create the array of rate conditions for this automaton *)
 		flows.(automaton_index) <- Array.make nb_locations [];
 		(* For each location: *)
 		List.iter
@@ -968,7 +995,7 @@ let convert_invariants index_of_variables invariants =
 	(* Convert for each automaton *)
 	let invariants = Array.map (
 		(* Convert for each location *)
-		Array.map (linear_constraint_of_convex_predicate index_of_variables)
+		Array.map (linear_constraint_of_convex_predicate)
 	) invariants in
 	(* Functional representation *)
 	fun automaton_index location_index -> invariants.(automaton_index).(location_index)
@@ -978,43 +1005,105 @@ let convert_invariants index_of_variables invariants =
 (* Convert the rate conditions *)
 (*--------------------------------------------------*)
 (* Convert the structure: 'automaton_index -> location_index -> ParsingStructure.flow' into a structure: 'automaton_index -> location_index -> variable_index -> NumConst' *)
-let convert_flows nb_variables index_of_variables type_of_variables raw_flows =
+(*let convert_flows nb_variables index_of_variables type_of_variables raw_flows =                                                  *)
+(*	                                                                                                                               *)
+(*	(* Convert for each automaton *)                                                                                               *)
+(*	let flows = Array.map ( fun rates_per_location ->                                                                              *)
+(*		(* Convert for each location *)		                                                                                          *)
+(*		Array.map (fun rate_list ->                                                                                                  *)
+(*			(* create hash table to store rates for each variable *)                                                                   *)
+(*			let rates = Hashtbl.create 0 in                                                                                            *)
+(*			(* paste defined rates into hash table *)			                                                                            *)
+(*			List.iter (fun (variable_name, rate) ->                                                                                    *)
+(*				let variable_index = Hashtbl.find index_of_variables variable_name in                                                    *)
+(*				Hashtbl.add rates variable_index rate;                                                                                   *)
+(*				print_message Debug_high ("set rate for analog variable " ^ variable_name ^ " to " ^ (NumConst.string_of_numconst rate)) *)
+(*			) rate_list;                                                                                                               *)
+(*			(* insert default rate 1 for clocks *)                                                                                     *)
+(*			for i = 0 to (nb_variables - 1) do                                                                                         *)
+(*				if (type_of_variables i) = AbstractImitatorFile.Var_type_clock then 					                                           *)
+(*					print_message Debug_high ("set rate for clock variable to 1");                                                         *)
+(*					Hashtbl.add rates i NumConst.one                                                                                       *)
+(*			done;                                                                                                                      *)
+(*			rates                                                                                                                      *)
+(*		) rates_per_location;		                                                                                                    *)
+(*	) raw_flows in                                                                                                                 *)
+(*	(* return Functional representation *)                                                                                         *)
+(*	fun automaton_index location_index variable_index -> (                                                                         *)
+(*		try (                                                                                                                        *)
+(*			let rate = Hashtbl.find flows.(automaton_index).(location_index) variable_index in                                         *)
+(*			Some rate                                                                                                                  *)
+(*		) with | Not_found -> None	                                                                                                 *)
+(*  )                                                                                                                              *)
+
+
+
+
+(*--------------------------------------------------*)
+(* Convert an update *)
+(*--------------------------------------------------*)
+
+(* construct a discrete update (discrete_index, linear_term) from a linear_constraint *)
+let try_discrete_update type_of_variables linear_constr =
+	(* construct a dummy value if the constraint is not a discrete update *)
+	let no_return_value = ((0, LinearConstraint.make_linear_term [] NumConst.zero), false) in
+	match linear_constr with
+		| Linear_constraint (Linear_term (PrimedVariable (c, v)), OP_EQ, expr) -> (
+				let var_index = Hashtbl.find !index_of_variables v in
+				if not ((type_of_variables var_index) = Var_type_discrete) ||
+				   not (NumConst.equal c NumConst.one) then
+					no_return_value
+				else
+					((var_index, linear_term_of_linear_expression expr), true)
+			)
+		| _ -> no_return_value
+
+
+(* Convert the structure: ParsingStructure.convex_predicate to ((VariableSet, linear_constraint) discrete_update list) *) 
+let convert_update type_of_variables update =
+	let discrete_updates = ref [] in
+	let continuous_updates = ref [] in
+	(* for each linear_constraint in the update convex predicate *)
+	List.iter (fun lin_constr -> 
+		let (discrete_update, ok) = try_discrete_update type_of_variables lin_constr in
+		if ok then
+			(* was a discrete update -> put into list *)
+		  discrete_updates := discrete_update :: !discrete_updates
+		else (
+			(* convert to a linear constraint *)
+			match lin_constr with
+				| True_constraint -> ()
+				| False_constraint -> raise False_exception  
+				| Linear_constraint (lexpr, op, rexpr) -> 
+						let ineq = linear_inequality_of_linear_constraint (lexpr, op, rexpr) in
+						continuous_updates := ineq :: !continuous_updates 	
+		) 			
+  ) update;
+	(* fuse all inequalities to one constraint for continuous updates *)
+	let update_constraint = LinearConstraint.make !continuous_updates in
+	(* get support variables for creating the update set *)
+	let support = LinearConstraint.support update_constraint in
+	(* consider only primed (= updated) variables *)
+	let primes = VariableSet.filter (is_primed_variable) support in
+	(* convert to normal variables *)
+	let updated = VariableSet.fold (fun pv varset -> 
+		VariableSet.add (unprime_variable pv) varset
+	) primes VariableSet.empty in
+	(* check variables in support *)
+	VariableSet.iter (fun var -> 
+		match type_of_variables var with
+			| Var_type_discrete -> print_error "illegal discrete update"
+			| Var_type_parameter -> print_error "illegal parameter update"
+			| _ -> ()
+	) updated;
+	(* return the converted data structures *)
+	((updated, update_constraint), !discrete_updates)
 	
-	(* Convert for each automaton *)
-	let flows = Array.map ( fun rates_per_location ->
-		(* Convert for each location *)		
-		Array.map (fun rate_list ->
-			(* create hash table to store rates for each variable *)
-			let rates = Hashtbl.create 0 in
-			(* paste defined rates into hash table *)			
-			List.iter (fun (variable_name, rate) -> 
-				let variable_index = Hashtbl.find index_of_variables variable_name in
-				Hashtbl.add rates variable_index rate;
-				print_message Debug_high ("set rate for analog variable " ^ variable_name ^ " to " ^ (NumConst.string_of_numconst rate)) 
-			) rate_list;
-			(* insert default rate 1 for clocks *)
-			for i = 0 to (nb_variables - 1) do 
-				if (type_of_variables i) = AbstractImitatorFile.Var_type_clock then 					 
-					print_message Debug_high ("set rate for clock variable to 1");
-					Hashtbl.add rates i NumConst.one
-			done;
-			rates
-		) rates_per_location;		
-	) raw_flows in
-	(* return Functional representation *)
-	fun automaton_index location_index variable_index -> (
-		try (
-			let rate = Hashtbl.find flows.(automaton_index).(location_index) variable_index in
-			Some rate
-		) with | Not_found -> None	
-  )
-
-
 (*--------------------------------------------------*)
 (* Convert the transitions *)
 (*--------------------------------------------------*)
 (* Convert the structure: 'automaton_index -> location_index -> list of (action_index, guard, resets, dest_state)' into a structure: 'automaton_index -> location_index -> action_index -> list of (guard, resets, dest_state)' *)
-let convert_transitions nb_actions index_of_variables type_of_variables transitions =
+let convert_transitions nb_actions type_of_variables transitions =
 	(* Create the empty array *)
 	let array_of_transitions = Array.make (Array.length transitions) (Array.make 0 (Array.make 0 [])) in
 	(* Iterate on automata *)
@@ -1027,23 +1116,15 @@ let convert_transitions nb_actions index_of_variables type_of_variables transiti
 			(* Set the array for this location *)
 			array_of_transitions.(automaton_index).(location_index) <- Array.make nb_actions [];
 			(* Iterate on transitions *)
-			List.iter (fun (action_index, guard, updates, dest_location_index) ->
+			List.iter (fun (action_index, guard, update, dest_location_index) ->
 				(* Convert the guard *)
-				let converted_guard = linear_constraint_of_convex_predicate index_of_variables guard in
-
+				let converted_guard = linear_constraint_of_convex_predicate guard in
 				(* Convert the updates *)
-				let converted_updates = List.map (fun (variable_name, linear_expression) ->
-					let variable_index = Hashtbl.find index_of_variables variable_name in
-					let linear_term = linear_term_of_linear_expression index_of_variables linear_expression in
-					(variable_index, linear_term)
-				) updates in
-				(* Split between the clock and discrete updates *)
-				let clock_updates, discrete_updates = List.partition (fun (variable_index, linear_term) ->
-					type_of_variables variable_index = Var_type_clock
-				) converted_updates in
-
+				let converted_updates = convert_update type_of_variables update in
+				(* Split between the continuous and discrete updates *)
+				let continuous_updates, discrete_updates = converted_updates in
 				(* Update the transition *)
-				array_of_transitions.(automaton_index).(location_index).(action_index) <- (converted_guard, clock_updates, discrete_updates, dest_location_index) :: array_of_transitions.(automaton_index).(location_index).(action_index);
+				array_of_transitions.(automaton_index).(location_index).(action_index) <- (converted_guard, continuous_updates, discrete_updates, dest_location_index) :: array_of_transitions.(automaton_index).(location_index).(action_index);
 
 			) transitions_for_this_location;
 		) transitions_for_this_automaton;
@@ -1055,7 +1136,7 @@ let convert_transitions nb_actions index_of_variables type_of_variables transiti
 (*--------------------------------------------------*)
 (* Create the initial state *)
 (*--------------------------------------------------*)
-let make_initial_state index_of_automata locations_per_automaton index_of_locations index_of_variables type_of_variables init_discrete init_definition =
+let make_initial_state index_of_automata locations_per_automaton index_of_locations type_of_variables init_discrete init_definition =
 	(* Get the location initialisations and the constraint *)
 	let loc_assignments, linear_predicates = List.partition (function
 		| Loc_assignment _ -> true
@@ -1083,7 +1164,7 @@ let make_initial_state index_of_automata locations_per_automaton index_of_locati
 			let is_discrete =
 			try (
 				(* Get the variable index *)
-				let variable_index =  Hashtbl.find index_of_variables variable_name in
+				let variable_index =  Hashtbl.find !index_of_variables variable_name in
 				(* Keep if this is a discrete *)
 				type_of_variables variable_index = Var_type_discrete
 			(* If not existing : false *)
@@ -1098,7 +1179,7 @@ let make_initial_state index_of_automata locations_per_automaton index_of_locati
 		| Linear_predicate lp -> lp
 		| _ -> raise (InternalError "Something else than a Linear_predicate was found in a Linear_predicate list.")
 	) other_inequalities in
-	let initial_constraint = linear_constraint_of_convex_predicate index_of_variables convex_predicate in
+	let initial_constraint = linear_constraint_of_convex_predicate convex_predicate in
 	(* Return the initial state *)
 	initial_location, initial_constraint
 
@@ -1119,10 +1200,10 @@ let make_pi0 parsed_pi0 variables nb_parameters =
 	done;
 	pi0
 
-let make_pi0cube parsed_pi0cube index_of_variables nb_parameters =
+let make_pi0cube parsed_pi0cube nb_parameters =
 	let pi0cube = Array.make nb_parameters (0, 0) in
 	List.iter (fun (variable_name, a, b) ->
-		let variable_index = try Hashtbl.find index_of_variables variable_name
+		let variable_index = try Hashtbl.find !index_of_variables variable_name
 			with Not_found ->
 			raise (InternalError ("The variable name '" ^ variable_name ^ "' was not found in the list of variables although checks should have been performed before."))
 		in
@@ -1168,8 +1249,6 @@ let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_
 		) synclabs_names
 	) in
 	
-(* 	List.iter (fun sync -> print_string ("\n BLUBLU sync " ^ sync)) synclabs_names; *)
-
 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Check the variable_declarations *) 
@@ -1222,34 +1301,12 @@ let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_
 	(* Construct the arrays *) 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	
-	(* The list of automata *)
-	let automata = list_of_interval 0 (nb_automata - 1) in
-	
-	(* The array of automata names ; index -> automaton name *)
-	let array_of_automata_names = Array.of_list declared_automata_names in
-	(* A (constant) hash table 'automaton name -> index' *)
-	let index_of_automata = Hashtbl.create nb_automata in
-	for i = 0 to nb_automata - 1 do
-		Hashtbl.add index_of_automata array_of_automata_names.(i) i;
-	done;
-	
-	(* Functional version *)
-	let automata_names = fun automaton_index -> array_of_automata_names.(automaton_index) in
-	
-	(* The array of labels ; index -> label name *)
-	let labels = Array.of_list synclabs_names in
-	(* A (constant) hash table 'label name -> index' *)
-	let index_of_labels = Hashtbl.create nb_labels in
-	for i = 0 to nb_labels - 1 do
-		Hashtbl.add index_of_labels labels.(i) i;
-	done;
-	
 	(* The array of variables names ; index -> variable name *)
 	let variables = Array.of_list variable_names in
 	(* A (constant) hash table 'variable name -> index' *)
-	let index_of_variables = Hashtbl.create nb_variables in
+	index_of_variables := Hashtbl.create nb_variables;
 	for i = 0 to nb_variables - 1 do
-		Hashtbl.add index_of_variables variables.(i) i;
+		Hashtbl.add !index_of_variables variables.(i) i;
 	done;
 	
 	let first_parameter_index = 0 in
@@ -1271,7 +1328,6 @@ let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_
 	(* Functional representation *)
 	let type_of_variables = fun variable_index -> type_of_variables.(variable_index) in
 
-
 	(* Create the lists of different variables *)
 	let parameters = list_of_interval first_parameter_index (first_analog_index - 1) in
 	let analogs    = list_of_interval first_analog_index (first_clock_index - 1) in
@@ -1280,12 +1336,98 @@ let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_
 
 	(* merged list of analog and clock variables *)
 	let analogs_and_clocks = list_append analogs clocks in
+	
+	(* create a set of all continuous variables *)
+	let continuous = List.fold_left (fun set var -> 
+		VariableSet.add var set
+	) VariableSet.empty analogs_and_clocks in
 
 	(* Create the type check functions *)
 	let is_analog = (fun variable_index -> try (type_of_variables variable_index = Var_type_analog) with Invalid_argument _ ->  false) in
 	let is_clock = (fun variable_index -> try (type_of_variables variable_index = Var_type_clock) with Invalid_argument _ ->  false) in
 	let is_discrete = (fun variable_index -> try (type_of_variables variable_index = Var_type_discrete) with Invalid_argument _ ->  false) in
-		
+
+	(* Add more variables to allow renaming *) 
+
+	print_message Debug_total ("*** Building renamed variables...");
+	(* The renamed variable indexes are set just after the current variables *)	
+	let offset = nb_analogs + nb_clocks + nb_discrete in
+	let prime_of_variable variable_index = variable_index + offset in
+	let variable_of_prime variable_index = variable_index - offset in
+
+	(* set global variables for use in other functions *)
+	glob_nb_variables := nb_variables;
+	glob_prime_offset := offset;
+
+	(* And d comes after *)
+	let d = nb_variables + nb_analogs + nb_clocks in
+
+	(* Clocks: add the new indexes *)
+	let renamed_clocks = list_of_interval nb_variables (d - 1) in
+
+	(* Create the function is_renamed_clock *)
+	let is_renamed_clock  = (fun variable_index -> variable_index >= nb_variables + nb_analogs && variable_index < d) in
+
+	(* Create an array for all variable names with renamings *)
+	let array_of_variable_names = Array.make (nb_variables + nb_analogs + nb_clocks + 1) "" in
+	(* Add normal names *)
+	for variable_index = 0 to nb_variables - 1 do
+		array_of_variable_names.(variable_index) <- variables.(variable_index);
+	done;
+	(* Add renamed clocks and discrete *)
+	for variable_index = nb_variables to d - 1 do
+		array_of_variable_names.(variable_index) <- variables.(variable_of_prime variable_index) ^ "_PRIME";
+	done;
+	(* Add 'd' *)
+	(**** TO DO: should avoid the declaration of 'd' as a variable name (to do later, and only important in debug mode...) *)
+	array_of_variable_names.(d) <- "d";
+
+	(* save the list for later use *)
+	let variable_name_list = variable_names in
+
+	(* Create the functional representation *)
+	let variable_names = fun i -> array_of_variable_names.(i) in
+	
+	(* set gloabl reference *)
+	glob_variable_names := array_of_variable_names;
+
+	(* Couples (x, x') for renamings *)
+	let renamed_clocks_couples = List.map (fun index -> index, prime_of_variable index) analogs_and_clocks in
+	
+	(* Couples (x', x) for 'un'-renamings *)	
+	let unrenamed_clocks_couples = List.map (fun index -> prime_of_variable index, index) analogs_and_clocks in	
+
+	(* Variables *)
+	print_message Debug_high ("\n*** Variables with renamings:");
+	for i = 0 to d do
+		print_message Debug_high ("  "
+			^ (string_of_int i) ^ " : " ^ (variable_names i)
+			^ (if is_renamed_clock i then " (renamed clock)" else "")
+		);
+	done;
+
+		(* The list of automata *)
+	let automata = list_of_interval 0 (nb_automata - 1) in
+	
+	(* The array of automata names ; index -> automaton name *)
+	let array_of_automata_names = Array.of_list declared_automata_names in
+	(* A (constant) hash table 'automaton name -> index' *)
+	let index_of_automata = Hashtbl.create nb_automata in
+	for i = 0 to nb_automata - 1 do
+		Hashtbl.add index_of_automata array_of_automata_names.(i) i;
+	done;
+	
+	(* Functional version *)
+	let automata_names = fun automaton_index -> array_of_automata_names.(automaton_index) in
+	
+	(* The array of labels ; index -> label name *)
+	let labels = Array.of_list synclabs_names in
+	(* A (constant) hash table 'label name -> index' *)
+	let index_of_labels = Hashtbl.create nb_labels in
+	for i = 0 to nb_labels - 1 do
+		Hashtbl.add index_of_labels labels.(i) i;
+	done;	
+						
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Debug prints *)
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -1313,7 +1455,6 @@ let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_
 	Array.iteri (fun i e ->
 		print_message Debug_high ((string_of_int i) ^ " -> " ^ e ^ " : " ^ (string_of_var_type (type_of_variables i)))
 	) variables;
-
 	
 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -1361,7 +1502,7 @@ let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_
 	(* Check the automata *) 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	print_message Debug_total ("*** Checking automata...");
-	if not (check_automata index_of_variables type_of_variables variable_names index_of_automata array_of_location_names parsed_automata) then raise InvalidProgram;
+	if not (check_automata type_of_variables variable_name_list index_of_automata array_of_location_names parsed_automata) then raise InvalidProgram;
 
 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -1370,7 +1511,7 @@ let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_
 	print_message Debug_total ("*** Checking init definition...");
 	(* Get couples for the initialisation of the discrete variables, and check the init definition *)
 	let init_discrete_couples, well_formed_init =
-		check_init discrete variable_names index_of_variables type_of_variables automata automata_names index_of_automata array_of_location_names parsed_init_definition in
+		check_init discrete variable_name_list type_of_variables automata automata_names index_of_automata array_of_location_names parsed_init_definition in
 	if not well_formed_init then raise InvalidProgram;
 
 
@@ -1396,7 +1537,7 @@ let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_
 			(* Verification of the pi_0 *)
 			if not (check_pi0cube parsed_pi0cube parameters_names) then raise InvalidPi0;
 			(* Construction of the pi_0 *)
-			let pi0cube = make_pi0cube parsed_pi0cube index_of_variables nb_parameters in
+			let pi0cube = make_pi0cube parsed_pi0cube nb_parameters in
 			(* Return the pair *)
 			Array.make 0 NumConst.zero, pi0cube
 	in
@@ -1428,7 +1569,7 @@ let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_
 	
 	(* Convert the transitions *)
 	print_message Debug_total ("*** Building transitions...");
-	let transitions = convert_transitions nb_actions index_of_variables type_of_variables transitions in
+	let transitions = convert_transitions nb_actions type_of_variables transitions in
 
 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -1443,73 +1584,8 @@ let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_
 	(* Construct the initial state *) 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	print_message Debug_total ("*** Building initial state...");
-	let initial_state = make_initial_state index_of_automata array_of_location_names index_of_locations index_of_variables type_of_variables init_discrete_couples parsed_init_definition in
+	let initial_state = make_initial_state index_of_automata array_of_location_names index_of_locations type_of_variables init_discrete_couples parsed_init_definition in
 
-
-	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Add more variables to allow renaming *) 
-	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	print_message Debug_total ("*** Building renamed variables...");
-	(* The renamed variable indexes are set just after the current variables *)
-	let offset = nb_analogs + nb_clocks + nb_discrete in
-	let prime_of_variable variable_index = variable_index + offset in
-	let variable_of_prime variable_index = variable_index - offset in
-
-	(* And d comes after *)
-	let d = nb_variables + nb_analogs + nb_clocks in
-
-	(* Clocks: add the new indexes *)
-(*	let renamed_analogs = list_of_interval nb_variables (nb_variables + nb_analogs - 1) in *)
-	let renamed_clocks = list_of_interval nb_variables (d - 1) in
-
-	(* Discrete: add the new indexes *)
-(* 	let renamed_discrete = list_of_interval (nb_variables + nb_clocks) (nb_variables + nb_clocks + nb_discrete - 1) in *)
-
-	(* Create the function is_renamed_clock *)
-(*	let is_renamed_analog = (fun variable_index -> variable_index >= nb_variables && variable_index < nb_variables + nb_analogs) in *)
-	let is_renamed_clock  = (fun variable_index -> variable_index >= nb_variables + nb_analogs && variable_index < d) in
-
-	(* Create the function is_renamed_discrete *)
-(* 	let is_renamed_discrete = (fun variable_index -> variable_index >= nb_variables + nb_clocks && variable_index < nb_variables + nb_clocks + nb_discrete) in *)
-
-	(* Create an array for all variable names with renamings *)
-	let array_of_variable_names = Array.make (nb_variables + nb_analogs + nb_clocks + 1) "" in
-	(* Add normal names *)
-	for variable_index = 0 to nb_variables - 1 do
-		array_of_variable_names.(variable_index) <- variables.(variable_index);
-	done;
-	(* Add renamed clocks and discrete *)
-	for variable_index = nb_variables to d - 1 do
-		array_of_variable_names.(variable_index) <- variables.(variable_of_prime variable_index) ^ "_PRIME";
-	done;
-	(* Add 'd' *)
-	(**** TO DO: should avoid the declaration of 'd' as a variable name (to do later, and only important in debug mode...) *)
-	array_of_variable_names.(d) <- "d";
-
-	 (* Create the functional representation *)
-	let variable_names = fun i -> array_of_variable_names.(i) in
-
-	(* Couples (x, x') for renamings *)
-(*	let renamed_analogs_couples = List.map (fun index -> index, prime_of_variable index) analogs in *)
-	let renamed_clocks_couples = List.map (fun index -> index, prime_of_variable index) analogs_and_clocks in
-	
-	(* Couples (x', x) for 'un'-renamings *)
-	(* let unrenamed_analogs_couples = List.map (fun index -> prime_of_variable index, index) analogs in *)	
-	let unrenamed_clocks_couples = List.map (fun index -> prime_of_variable index, index) analogs_and_clocks in	
-
-		(* Couples (i, i') for discrete renamings *)
-(* 	let renamed_discrete_couples = List.map (fun index -> index, prime_of_variable index) discrete in *)
-	(* Couples (x', x) for clock 'un'-renamings *)
-(* 	let unrenamed_discrete_couples = List.map (fun index -> prime_of_variable index, index) discrete in *)
-
-	(* Variables *)
-	print_message Debug_high ("\n*** Variables with renamings:");
-	for i = 0 to d do
-		print_message Debug_high ("  "
-			^ (string_of_int i) ^ " : " ^ (variable_names i)
-			^ (if is_renamed_clock i then " (renamed clock)" else "")
-		);
-	done;
 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Useful (static) constraints *) 
@@ -1622,6 +1698,8 @@ let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_
 	nb_discrete = nb_discrete;
 	nb_parameters = nb_parameters;
 	nb_variables = nb_variables;
+
+	continuous = continuous;
 
 	(* The list of analog indexes *)
 	(* analogs = analogs; *)

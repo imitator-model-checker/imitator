@@ -115,6 +115,9 @@ type linear_constraint
 (** Create a linear constraint from a list of linear inequalities *)
 val make : linear_inequality list -> linear_constraint
 
+(** Create a linear constraint x = y & ... for a list of variable pairs (x, y) *) 
+val make_equalities : (variable * variable) list -> linear_constraint
+
 (** 'set_manager int_dim real_dim' sets the constraint manager by giving the number of dimensions. *)
 val set_manager : int -> int -> unit
 
@@ -158,6 +161,9 @@ val partition_pi0_compatible : (variable -> coef) -> linear_constraint -> (linea
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
 (** {3 Functions} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+
+(** returns a list of variables occuring in a linear constraint *)
+val support : linear_constraint -> Global.VariableSet.t
 
 (** Performs the intersection of a list of linear constraints *)
 val intersection : linear_constraint list -> linear_constraint

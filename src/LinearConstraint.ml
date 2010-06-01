@@ -396,6 +396,13 @@ let make inequalities =
 	assert_dimensions poly;
   poly
 	
+(** Create a linear constraint x = y & ... for a list of variable pairs (x, y) *) 
+let make_equalities variable_pairs =
+	let equalities = List.map (fun (x, y) -> 
+		Equal (Variable x, Variable y)
+	) variable_pairs in
+	make equalities
+	
 (** Set the constraint manager *)
 let set_manager int_d real_d =
 	int_dim := int_d;
@@ -490,6 +497,35 @@ let string_of_linear_constraint names linear_constraint =
 (** {3 Functions} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
 
+let rec term_support term =
+	match term with
+		| Coefficient _ -> VariableSet.empty
+		| Variable v -> VariableSet.add v VariableSet.empty
+		| Unary_Plus t -> term_support t
+		| Unary_Minus t -> term_support t
+		| Plus  (lterm, rterm) -> VariableSet.union (term_support lterm) (term_support rterm)
+		| Minus (lterm, rterm) -> VariableSet.union (term_support lterm) (term_support rterm)
+		| Times (z, rterm) -> term_support rterm
+
+
+let inequality_support ineq =
+	match ineq with
+		| Less_Than (lterm, rterm) -> VariableSet.union (term_support lterm) (term_support rterm)
+		| Less_Or_Equal (lterm, rterm) -> VariableSet.union (term_support lterm) (term_support rterm)
+		| Equal (lterm, rterm) -> VariableSet.union (term_support lterm) (term_support rterm)
+		| Greater_Than (lterm, rterm) -> VariableSet.union (term_support lterm) (term_support rterm)
+		| Greater_Or_Equal (lterm, rterm) -> VariableSet.union (term_support lterm) (term_support rterm)
+
+
+(** returns a list of variables occuring in a linear constraint *)
+let support linear_constraint = 
+	let constr_list = ppl_Polyhedron_get_constraints linear_constraint in
+	List.fold_left (fun varset constr -> 
+		VariableSet.union varset (inequality_support constr)
+	) VariableSet.empty constr_list
+	
+
+
 (** Performs the intersection of a list of linear constraints *)
 let intersection linear_constraints =
 	let result_poly = true_constraint () in
@@ -502,7 +538,7 @@ let intersection linear_constraints =
 let hide variables linear_constraint =
 	(* debug output *)
 	if debug_mode_greater Debug_total then (
-		List.iter (fun v ->	print_message Debug_high ("hide v" ^ string_of_int v)) variables;
+		List.iter (fun v ->	print_message Debug_total ("hide v" ^ string_of_int v)) variables;
 	);
 	(* copy polyhedron, as PPL function has sideeffects *)
 	let poly = ppl_new_NNC_Polyhedron_from_NNC_Polyhedron linear_constraint in
@@ -530,9 +566,9 @@ let rename_variables list_of_couples linear_constraint =
 		in 
 	let complete_list = add_id joined_couples (!total_dim - 1) in
   (* debug output *)
-	if debug_mode_greater Debug_high then (
+	if debug_mode_greater Debug_total then (
 		let ndim = ppl_Polyhedron_space_dimension poly in
-		print_message Debug_high ("mapping space dimensions, no. dimensions is " ^ string_of_int ndim);
+		print_message Debug_total ("mapping space dimensions, no. dimensions is " ^ string_of_int ndim);
 		List.iter (fun (a,b) -> (print_message Debug_high ("map v" ^ string_of_int a ^ " -> v" ^ string_of_int b))) complete_list;
 	);
 	(* perfom the mapping *)

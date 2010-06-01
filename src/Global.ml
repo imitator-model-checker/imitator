@@ -203,6 +203,23 @@ let elements_existing_several_times l =
 	in
 	List.rev (elements_existing_several_times_rec [] l)
 
+(****************************************************************)
+(** Variable sets *)
+(****************************************************************)
+
+type variable_index = int
+type clock_index = variable_index
+type parameter_index = variable_index
+type discrete_index = variable_index
+type variable_name = string
+type value = NumConst.t
+
+module VarKey = struct 
+	type t = variable_index
+	let compare = compare
+end 
+
+module VariableSet = Set.Make(VarKey)
 
 (****************************************************************)
 (** Useful functions on arrays *)

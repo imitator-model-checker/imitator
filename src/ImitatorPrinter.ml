@@ -88,8 +88,8 @@ let string_of_sync program action_index =
 	| Action_type_nosync -> " (* sync " ^ (program.action_names action_index) ^ "*) "
 
 
-(* Convert a list of updates into a string *)
-let string_of_updates program updates =
+(* Convert a list of discrete updates into a string *)
+let string_of_discrete_updates program updates =
 	string_of_list_of_string_with_sep ", " (List.map (fun (variable_index, linear_term) ->
 		(* Convert the variable name *)
 		(program.variable_names variable_index)
@@ -98,15 +98,20 @@ let string_of_updates program updates =
 		^ (LinearConstraint.string_of_linear_term program.variable_names linear_term)
 	) updates)
 
+(* Convert an update into a string *)
+let string_of_update program update =
+	  let (_, update_constr) = update in
+		LinearConstraint.string_of_linear_constraint program.variable_names update_constr
 
 (* Convert a transition of a location into a string *)
-let string_of_transition program automaton_index action_index (guard, clock_updates, discrete_updates, destination_location) =
+let string_of_transition program automaton_index action_index (guard, update, discrete_updates, destination_location) =
 	"\n\t" ^ "when "
 	(* Convert the guard *)
 	^ (LinearConstraint.string_of_linear_constraint program.variable_names guard)
 	(* Convert the updates *)
 	^ " do {"
-	^ (string_of_updates program (list_append clock_updates discrete_updates))
+	^ (string_of_update program update)
+	^ (string_of_discrete_updates program discrete_updates)
 	^ "} "
 	(* Convert the sync *)
 	^ (string_of_sync program action_index)

@@ -23,7 +23,7 @@ open Automaton
 (** Environment *)
 (****************************************************************)
 
-(** Mode for IMITATOR *)
+(** Mode for IMITATOR *) 
 type imitator_mode =
 	(** Classical parametric reachability analysis *)
 	| Reachability_analysis
@@ -45,9 +45,8 @@ type action_name = string
 (****************************************************************)
 (** Pi 0 *)
 (****************************************************************)
-(* type pi0 = NumConst.t array *)
-type pi0 = variable_index -> NumConst.t
 
+type pi0 = variable_index -> NumConst.t
 type pi0cube = (int * int) array
 
 
@@ -68,26 +67,20 @@ type action_type =
 	| Action_type_nosync
 
 (** Rate conditions *)
-type rate_type = NumConst.t option
+type rate_type
 
 (****************************************************************)
 (** State *)
 (****************************************************************)
-
-(** Location (control state): array automaton_index -> location_index *)
-(* type location = location_index array *)
-
-(** Discrete variables (control state): array automaton_index -> location_index *)
-(* type discrete_values = variable_index array *)
-
-(* type control_state = location  *)
 
 (** State: location and constraint *)
 type state = location * linear_constraint
 
 (****************************************************************)
 (** Transition *)
-(****************************************************************)
+(****************************************************************) 
+
+type update = VariableSet.t * linear_constraint
 
 (** update: variable_index := linear_term *)
 type clock_update = clock_index * linear_term
@@ -99,12 +92,12 @@ type discrete_update = discrete_index * linear_term
 type guard = linear_constraint
 
 (** Transition: guard, updates, destination location *)
-type transition = guard * clock_update list * discrete_update list * location_index
+type transition = guard * update * discrete_update list * location_index
 
 
 (****************************************************************)
 (** The abstract program *)
-(************************List.rev_append (List.rev_append discrete clocks) analogs;****************************************)
+(****************************************************************)
 type abstract_program = {
 	(* Cardinality *)
 	nb_automata : int;
@@ -114,6 +107,9 @@ type abstract_program = {
 	nb_discrete : int;
 	nb_parameters : int;
 	nb_variables : int;
+	
+	(* a set of all unprimed continuous variables *)
+	continuous : VariableSet.t;
 	
 	(* The list of analog indexes *)
 	(* analogs : clock_index list; *)	
@@ -210,5 +206,6 @@ type abstract_program = {
 	(* The name of the program *)
 	program_name : string;
 }
+
 
 

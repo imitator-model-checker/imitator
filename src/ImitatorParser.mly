@@ -230,21 +230,8 @@ updates:
 /**********************************************/
 
 update_list:
-	update_nonempty_list { $1 }
+	upd_convex_predicate { $1 }
 	| { [] }
-;
-
-/**********************************************/
-
-update_nonempty_list:
-	update COMMA update_nonempty_list { $1 :: $3}
-	| update { [$1] }
-;
-
-/**********************************************/
-
-update:
-	NAME APOSTROPHE OP_EQ linear_expression { ($1, $4) }
 ;
 
 /**********************************************/
@@ -263,10 +250,25 @@ convex_predicate:
 	| linear_constraint { [$1] }
 ;
 
+ext_convex_predicate:
+	ext_linear_constraint AMPERSAND ext_convex_predicate { $1 :: $3 }
+	| ext_linear_constraint { [$1] }
+;
+
+upd_convex_predicate:
+	ext_linear_constraint COMMA upd_convex_predicate { $1 :: $3 }
+	| ext_linear_constraint { [$1] }
+;
+
+
 linear_constraint:
 	linear_expression relop linear_expression { Linear_constraint ($1, $2, $3) }
 	| CT_TRUE { True_constraint }
 	| CT_FALSE { False_constraint }
+;
+
+ext_linear_constraint:
+	ext_linear_expression relop ext_linear_expression { Linear_constraint ($1, $2, $3) }
 ;
 
 relop:
@@ -283,14 +285,29 @@ linear_expression:
 	| linear_expression OP_MINUS linear_term { Linear_minus_expression ($1, $3) } /* linear_term a la deuxieme place */
 ;
 
+ext_linear_expression:
+	ext_linear_term { Linear_term $1 }
+	| ext_linear_expression OP_PLUS ext_linear_term { Linear_plus_expression ($1, $3) }
+	| ext_linear_expression OP_MINUS ext_linear_term { Linear_minus_expression ($1, $3) } /* linear_term a la deuxieme place */
+;
+
 linear_term:
 	rational { Constant $1 }
 	| rational NAME { Variable ($1, $2) }
 	| rational OP_MUL NAME { Variable ($1, $3) }
 	| NAME { Variable (NumConst.one, $1) }
-// 	| LPAREN linear_expression RPAREN { $2 }
 	| LPAREN linear_term RPAREN { $2 }
 ;
+
+ext_linear_term:
+	rational { Constant $1 }
+	| rational NAME APOSTROPHE { PrimedVariable ($1, $2) }
+	| rational NAME { Variable ($1, $2) }
+	| rational OP_MUL NAME APOSTROPHE { PrimedVariable ($1, $3) }
+	| rational OP_MUL NAME { Variable ($1, $3) }
+	| NAME APOSTROPHE { PrimedVariable (NumConst.one, $1) }	
+	| NAME { Variable (NumConst.one, $1) }
+	| LPAREN linear_term RPAREN { $2 }
 
 rational:
 	integer { $1 }

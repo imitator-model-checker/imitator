@@ -555,73 +555,92 @@ let post program pi0 reachability_graph orig_state_index =
 			print_message Debug_total (LinearConstraint.string_of_linear_constraint program.variable_names guards_without_discrete);
 		);
 
-		print_message Debug_total ("\nComputing clock updates X' = rho(X) + d*r");
+		(* Compute X' = rho(X) *)
+		print_message Debug_total ("\nComputing clock updates X' = rho(X) + d");
+		let (updated_vars, update_constrs) = List.split clock_updates in
+		(* get the union of updated variables for all current transitions *)
+		let all_updated_vars = 
+			List.fold_left (fun new_vars all_vars -> 
+				VariableSet.union new_vars all_vars
+			) VariableSet.empty updated_vars in
+		(* add stable constraints for non-updated variables *)
+		let non_updated_vars = VariableSet.elements (
+			VariableSet.diff program.continuous all_updated_vars
+		) in
+		let stable_pairs = List.map (fun v -> (program.prime_of_variable v, v)) non_updated_vars in 
+		let stable_constr = LinearConstraint.make_equalities stable_pairs in
+		(* compute the updated valus after the transition *)
+		let trans_updates = LinearConstraint.intersection (stable_constr :: update_constrs) in
+		(* let time elapse *)
+		let updates = LinearConstraint.add_d program.d NumConst.minus_one program.renamed_clocks trans_updates in
+		 
+			
 		(* Compute X' = rho(X) + d for the variables appearing in updates *)
-		let not_appearing_in_updates = Array.make program.nb_variables true in
-		let updates = List.fold_left (fun list_of_updates current_updates ->
-			(**** OPTIMIZED: Order does not matter ****)
-			List.rev_append
-			list_of_updates
-			(List.map (fun (variable_index, linear_term) ->
-				(* 'variable_index' appears in an updates *)
-				not_appearing_in_updates.(variable_index) <- false;
-				(* Find rate for variable *)
-(*				let rate = program.flows real_index location_index variable_index in*)
-				(* print_message Debug_standard ("\nFound rate " ^ (string_of_numconst rate)); *)
-				(* Consider cases for clocks *)				
-				match program.type_of_variables variable_index with
-				(* Clocks: Build rho(X) + d*r - X' = 0 *)
-				| Var_type_analog | Var_type_clock -> 
-				let xprime_lt = LinearConstraint.make_linear_term [
-					NumConst.minus_one, program.prime_of_variable variable_index;
-					NumConst.one, program.d
-				] NumConst.zero in
-				LinearConstraint.make_linear_inequality
-					(LinearConstraint.add_linear_terms xprime_lt linear_term)
-					LinearConstraint.Op_eq
-				| _ -> raise (InternalError "Only clocks can be updated.")
-			) current_updates
-		)) [] clock_updates in
-		(* Create the constraint *)
-		let updates = LinearConstraint.make updates in
+(*		let not_appearing_in_updates = Array.make program.nb_variables true in               *)
+(*		let updates = List.fold_left (fun list_of_updates current_updates ->                 *)
+(*			(**** OPTIMIZED: Order does not matter ****)                                       *)
+(*			List.rev_append                                                                    *)
+(*			list_of_updates                                                                    *)
+(*			(List.map (fun (variable_index, linear_term) ->                                    *)
+(*				(* 'variable_index' appears in an updates *)                                     *)
+(*				not_appearing_in_updates.(variable_index) <- false;                              *)
+(*				(* Find rate for variable *)                                                     *)
+(*(*				let rate = program.flows real_index location_index variable_index in*)         *)
+(*				(* print_message Debug_standard ("\nFound rate " ^ (string_of_numconst rate)); *)*)
+(*				(* Consider cases for clocks *)				                                          *)
+(*				match program.type_of_variables variable_index with                              *)
+(*				(* Clocks: Build rho(X) + d*r - X' = 0 *)                                        *)
+(*				| Var_type_analog | Var_type_clock ->                                            *)
+(*				let xprime_lt = LinearConstraint.make_linear_term [                              *)
+(*					NumConst.minus_one, program.prime_of_variable variable_index;                  *)
+(*					NumConst.one, program.d                                                        *)
+(*				] NumConst.zero in                                                               *)
+(*				LinearConstraint.make_linear_inequality                                          *)
+(*					(LinearConstraint.add_linear_terms xprime_lt linear_term)                      *)
+(*					LinearConstraint.Op_eq                                                         *)
+(*				| _ -> raise (InternalError "Only clocks can be updated.")                       *)
+(*			) current_updates                                                                  *)
+(*		)) [] clock_updates in                                                               *)
+(*		(* Create the constraint *)                                                          *)
+(*		let updates = LinearConstraint.make updates in                                       *)
 		(* Debug print *)
 		if debug_mode_greater Debug_total then(
 			print_message Debug_total (LinearConstraint.string_of_linear_constraint program.variable_names updates);
 		);
 
-		(* Compute X' = X + d for the clocks NOT appearing in updates *)
-		print_message Debug_total ("\nComputing X' = X + d for non-updated clocks");
-		(**** BAD PROG ****)
-		(* List of inequalities *)
-		let non_updated = ref [] in
-		Array.iteri (fun variable_index not_appearing -> 
-(* 			let is_discrete = program.is_discrete variable_index in *)
-			(**** TO OPTIMIZE : there are only clocks, here ! ****)
-			let is_clock = program.is_clock variable_index || program.is_analog variable_index in
-			(* Only consider clocks *)
-			if not_appearing && is_clock then(
-				(* Useful names *)
-				let x = NumConst.one, variable_index in
-				let x_prime = NumConst.minus_one, program.prime_of_variable variable_index in
-				(* Build the inequality *)
-				let members =
-					(* Build the inequality X + d - X' = 0 *)
-					[x ; (NumConst.one, program.d) ; x_prime]
-				in 
-				let new_inequality = LinearConstraint.make_linear_inequality
-					(LinearConstraint.make_linear_term members NumConst.zero)
-					LinearConstraint.Op_eq
-				in
-				(* Add it to the list *)
-				non_updated := new_inequality :: !non_updated;
-			);
-		) not_appearing_in_updates;
-		(* Create the constraint *)
-		let non_updated = LinearConstraint.make !non_updated in
-		(* Debug print *)
-		if debug_mode_greater Debug_total then(
-			print_message Debug_total (LinearConstraint.string_of_linear_constraint program.variable_names non_updated);
-		);
+(*		(* Compute X' = X + d for the clocks NOT appearing in updates *)                                              *)
+(*		print_message Debug_total ("\nComputing X' = X + d for non-updated clocks");                                  *)
+(*		(**** BAD PROG ****)                                                                                          *)
+(*		(* List of inequalities *)                                                                                    *)
+(*		let non_updated = ref [] in                                                                                   *)
+(*		Array.iteri (fun variable_index not_appearing ->                                                              *)
+(*(* 			let is_discrete = program.is_discrete variable_index in *)                                               *)
+(*			(**** TO OPTIMIZE : there are only clocks, here ! ****)                                                     *)
+(*			let is_clock = program.is_clock variable_index || program.is_analog variable_index in                       *)
+(*			(* Only consider clocks *)                                                                                  *)
+(*			if not_appearing && is_clock then(                                                                          *)
+(*				(* Useful names *)                                                                                        *)
+(*				let x = NumConst.one, variable_index in                                                                   *)
+(*				let x_prime = NumConst.minus_one, program.prime_of_variable variable_index in                             *)
+(*				(* Build the inequality *)                                                                                *)
+(*				let members =                                                                                             *)
+(*					(* Build the inequality X + d - X' = 0 *)                                                               *)
+(*					[x ; (NumConst.one, program.d) ; x_prime]                                                               *)
+(*				in                                                                                                        *)
+(*				let new_inequality = LinearConstraint.make_linear_inequality                                              *)
+(*					(LinearConstraint.make_linear_term members NumConst.zero)                                               *)
+(*					LinearConstraint.Op_eq                                                                                  *)
+(*				in                                                                                                        *)
+(*				(* Add it to the list *)                                                                                  *)
+(*				non_updated := new_inequality :: !non_updated;                                                            *)
+(*			);                                                                                                          *)
+(*		) not_appearing_in_updates;                                                                                   *)
+(*		(* Create the constraint *)                                                                                   *)
+(*		let non_updated = LinearConstraint.make !non_updated in                                                       *)
+(*		(* Debug print *)                                                                                             *)
+(*		if debug_mode_greater Debug_total then(                                                                       *)
+(*			print_message Debug_total (LinearConstraint.string_of_linear_constraint program.variable_names non_updated);*)
+(*		);                                                                                                            *)
 
 		(* Compute the invariant in the destination location *)
 		print_message Debug_total ("\nComputing invariant I_q(X) ");
@@ -632,7 +651,7 @@ let post program pi0 reachability_graph orig_state_index =
 			if not (LinearConstraint.is_satisfiable invariant) then
 				print_message Debug_total ("This constraint is NOT satisfiable.");
 		);
-		(* Compute the invariant after time elapsing *)
+		(* Compute the invariant before time elapsing *)
 		print_message Debug_total ("Computing invariant I_q(X') ");
 		let renamed_invariant = LinearConstraint.rename_variables program.renamed_clocks_couples invariant in
 		(* Debug print *)
@@ -641,7 +660,7 @@ let post program pi0 reachability_graph orig_state_index =
 			if not (LinearConstraint.is_satisfiable renamed_invariant) then
 				print_message Debug_total ("This constraint is NOT satisfiable.");
 		);
-		(* Compute the invariant before time elapsing *)
+		(* Compute the invariant after time elapsing *)
 		print_message Debug_total ("\nComputing invariant I_q(X' - d) ");
 		let renamed_invariant_before_time_elapsing = LinearConstraint.add_d program.d NumConst.minus_one program.renamed_clocks renamed_invariant in
 		(* Debug print *)
@@ -665,10 +684,9 @@ let post program pi0 reachability_graph orig_state_index =
 		let new_full_constraint = LinearConstraint.intersection
 			[
 				orig_constraint ();
-				updates;
-				non_updated;
-				renamed_invariant_before_time_elapsing;
+				updates;				
 				renamed_invariant;
+				renamed_invariant_before_time_elapsing;
 				program.positive_d;
 				discrete_constraint;
 				guards_without_discrete
@@ -1550,12 +1568,12 @@ try (
 print_message Debug_standard ("Program checked and converted " ^ (after_seconds ()) ^ ".\n");
 
 
-
 (**************************************************)
 (* Debug print: program *)
 (**************************************************)
-(* print_message Debug_total ("\nProgram:\n" ^ (ImitatorPrinter.string_of_program program) ^ "\n"); *)
-
+if debug_mode_greater Debug_total then (
+	print_message Debug_total ("\nProgram:\n" ^ (ImitatorPrinter.string_of_program program) ^ "\n")
+ );
 
 (**************************************************)
 (* Initial state *)

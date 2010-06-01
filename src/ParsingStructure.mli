@@ -49,6 +49,7 @@ type relop = OP_L | OP_LEQ | OP_EQ | OP_GEQ | OP_G
 type linear_term =
 	| Constant of  NumConst.t
 	| Variable of  NumConst.t * variable_name
+	| PrimedVariable of NumConst.t * variable_name
 
 
 type linear_expression =
@@ -74,14 +75,14 @@ type sync =
 	| Sync of sync_name
 	| NoSync
 
-type update = variable_name * linear_expression
+type update = convex_predicate
 
 type guard = convex_predicate
 
 type flow = variable_name * NumConst.t
 
 (* Transition = Guard * update * sync label * destination location *)
-type transition = guard * update list * sync * location_name
+type transition = guard * update * sync * location_name
 
 (* Location = Name * Invariant * transitions *)
 type location = location_name * convex_predicate * flow list * transition list

@@ -9,25 +9,16 @@
  *
  ****************************************************************)
  
+open Global
 
 (**************************************************)
 (** {2 Types} *)
 (**************************************************)
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
-(** {3 Variables} *)
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
-
-type variable_index = int
-type clock_index = variable_index
-type parameter_index = variable_index
-type discrete_index = variable_index
-type variable_name = string
-type value = NumConst.t
-
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
 (** {3 Locations} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+
 type location_index = int
 type location_name = string
 type location
@@ -40,11 +31,6 @@ val location_equal: location -> location -> bool
 
 type automaton_index = int
 type automaton_name = string
-
-
-
-
-
 
 (**************************************************)
 (** {2 Locations} *)
