@@ -168,6 +168,9 @@ val support : linear_constraint -> Global.VariableSet.t
 (** Performs the intersection of a list of linear constraints *)
 val intersection : linear_constraint list -> linear_constraint
 
+(** Let time elapse according to a domain of derivatives *)
+val time_elapse : linear_constraint -> linear_constraint -> linear_constraint
+
 (** Eliminate (using existential quantification) a set of variables in a linear constraint *)
 val hide : variable list -> linear_constraint -> linear_constraint
 

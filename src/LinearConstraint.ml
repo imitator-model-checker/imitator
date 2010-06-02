@@ -534,12 +534,16 @@ let intersection linear_constraints =
 	result_poly	
 
 
+(** Let time elapse according to a domain of derivatives *)
+let time_elapse linear_constraint deriv_domain =
+	let poly = ppl_new_NNC_Polyhedron_from_NNC_Polyhedron linear_constraint in
+	ppl_Polyhedron_time_elapse_assign poly deriv_domain;
+	assert_dimensions poly;
+	poly
+
+
 (** Eliminate (using existential quantification) a set of variables in a linear constraint *)
 let hide variables linear_constraint =
-	(* debug output *)
-	if debug_mode_greater Debug_total then (
-		List.iter (fun v ->	print_message Debug_total ("hide v" ^ string_of_int v)) variables;
-	);
 	(* copy polyhedron, as PPL function has sideeffects *)
 	let poly = ppl_new_NNC_Polyhedron_from_NNC_Polyhedron linear_constraint in
 	ppl_Polyhedron_unconstrain_space_dimensions poly variables;
@@ -565,13 +569,7 @@ let rename_variables list_of_couples linear_constraint =
 				add_id list (i-1)
 		in 
 	let complete_list = add_id joined_couples (!total_dim - 1) in
-  (* debug output *)
-	if debug_mode_greater Debug_total then (
-		let ndim = ppl_Polyhedron_space_dimension poly in
-		print_message Debug_total ("mapping space dimensions, no. dimensions is " ^ string_of_int ndim);
-		List.iter (fun (a,b) -> (print_message Debug_high ("map v" ^ string_of_int a ^ " -> v" ^ string_of_int b))) complete_list;
-	);
-	(* perfom the mapping *)
+  (* perfom the mapping *)
 	ppl_Polyhedron_map_space_dimensions poly complete_list;
 	assert_dimensions poly;
 	poly

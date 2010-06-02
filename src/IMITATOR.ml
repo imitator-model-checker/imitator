@@ -19,6 +19,7 @@ open Arg
 open ImitatorPrinter
 open Graph
 
+open Ppl_ocaml
 
 (**************************************************
 
@@ -556,7 +557,7 @@ let post program pi0 reachability_graph orig_state_index =
 		);
 
 		(* Compute X' = rho(X) *)
-		print_message Debug_total ("\nComputing clock updates X' = rho(X) + d");
+		print_message Debug_total ("\nComputing clock updates X' = rho(X)");
 		let (updated_vars, update_constrs) = List.split clock_updates in
 		(* get the union of updated variables for all current transitions *)
 		let all_updated_vars = 
@@ -570,9 +571,9 @@ let post program pi0 reachability_graph orig_state_index =
 		let stable_pairs = List.map (fun v -> (program.prime_of_variable v, v)) non_updated_vars in 
 		let stable_constr = LinearConstraint.make_equalities stable_pairs in
 		(* compute the updated valus after the transition *)
-		let trans_updates = LinearConstraint.intersection (stable_constr :: update_constrs) in
+		let updates = LinearConstraint.intersection (stable_constr :: update_constrs) in
 		(* let time elapse *)
-		let updates = LinearConstraint.add_d program.d NumConst.minus_one program.renamed_clocks trans_updates in
+		(* let updates = LinearConstraint.add_d program.d NumConst.minus_one program.renamed_clocks trans_updates in *)
 		 
 			
 		(* Compute X' = rho(X) + d for the variables appearing in updates *)
@@ -651,7 +652,7 @@ let post program pi0 reachability_graph orig_state_index =
 			if not (LinearConstraint.is_satisfiable invariant) then
 				print_message Debug_total ("This constraint is NOT satisfiable.");
 		);
-		(* Compute the invariant before time elapsing *)
+		(* Compute the invariant after time elapsing *)
 		print_message Debug_total ("Computing invariant I_q(X') ");
 		let renamed_invariant = LinearConstraint.rename_variables program.renamed_clocks_couples invariant in
 		(* Debug print *)
@@ -660,15 +661,15 @@ let post program pi0 reachability_graph orig_state_index =
 			if not (LinearConstraint.is_satisfiable renamed_invariant) then
 				print_message Debug_total ("This constraint is NOT satisfiable.");
 		);
-		(* Compute the invariant after time elapsing *)
-		print_message Debug_total ("\nComputing invariant I_q(X' - d) ");
-		let renamed_invariant_before_time_elapsing = LinearConstraint.add_d program.d NumConst.minus_one program.renamed_clocks renamed_invariant in
-		(* Debug print *)
-		if debug_mode_greater Debug_total then(
-			print_message Debug_total (LinearConstraint.string_of_linear_constraint program.variable_names renamed_invariant_before_time_elapsing);
-			if not (LinearConstraint.is_satisfiable renamed_invariant_before_time_elapsing) then
-				print_message Debug_total ("This constraint is NOT satisfiable.");
-		);
+		(* Compute the invariant before time elapsing *)
+(*		print_message Debug_total ("\nComputing invariant I_q(X' - d) ");                                                                           *)
+(*		let renamed_invariant_before_time_elapsing = LinearConstraint.add_d program.d NumConst.minus_one program.renamed_clocks renamed_invariant in*)
+(*		(* Debug print *)                                                                                                                           *)
+(*		if debug_mode_greater Debug_total then(                                                                                                     *)
+(*			print_message Debug_total (LinearConstraint.string_of_linear_constraint program.variable_names renamed_invariant_before_time_elapsing);   *)
+(*			if not (LinearConstraint.is_satisfiable renamed_invariant_before_time_elapsing) then                                                      *)
+(*				print_message Debug_total ("This constraint is NOT satisfiable.");                                                                      *)
+(*		);                                                                                                                                          *)
 
 		(* Compute the equalities for the discrete variables *)
 		print_message Debug_total ("\nComputing equalities for discrete variables");
@@ -680,14 +681,14 @@ let post program pi0 reachability_graph orig_state_index =
 		print_message Debug_total (LinearConstraint.string_of_linear_constraint program.variable_names discrete_constraint);
 	
 		(* Perform the intersection *)
-		print_message Debug_total ("\nPerforming intersection of C(X) and g(X) and X' = rho(X) + d and I_q(X' - d) and I_q(X') ");
+		print_message Debug_total ("\nPerforming intersection of C(X) and g(X) and X' = rho(X) and I_q(X') ");
 		let new_full_constraint = LinearConstraint.intersection
 			[
 				orig_constraint ();
 				updates;				
 				renamed_invariant;
-				renamed_invariant_before_time_elapsing;
-				program.positive_d;
+(*				renamed_invariant_before_time_elapsing;*)
+(*				program.positive_d;*)
 				discrete_constraint;
 				guards_without_discrete
 			] in
@@ -718,10 +719,33 @@ let post program pi0 reachability_graph orig_state_index =
 			if not (LinearConstraint.is_satisfiable final_constraint) then
 				print_message Debug_total ("This constraint is NOT satisfiable.");
 		);
+		
+		(* let time elapse *)
+		print_message Debug_total ("\nLet time elapse");
+		let clock_deriv = List.map (fun v -> Equal (Variable v, Coefficient Gmp.Z.one)) program.clocks in
+		let stable_deriv = List.map (fun v -> Equal (Variable v, Coefficient Gmp.Z.zero)) (List.rev_append program.discrete program.parameters) in
+		let deriv_constraints = List.rev_append clock_deriv stable_deriv in
+		let deriv = LinearConstraint.from_ppl_constraints deriv_constraints in
+		let elapsed_constraint = LinearConstraint.time_elapse final_constraint deriv in 
+		if debug_mode_greater Debug_total then(
+			print_message Debug_total (LinearConstraint.string_of_linear_constraint program.variable_names elapsed_constraint);
+			if not (LinearConstraint.is_satisfiable elapsed_constraint) then
+				print_message Debug_total ("This constraint is NOT satisfiable.");
+		);
+
+		(* add invariant *)
+		print_message Debug_total ("\nIntersect with invariant I(X)");
+		let final_constraint = LinearConstraint.intersection [
+			elapsed_constraint;
+			invariant	
+		] in
 
 		(* Check the satisfiability *)
-		if not (LinearConstraint.is_satisfiable final_constraint) then(
-			print_message Debug_high ("\nThis constraint is not satisfiable.");
+		if debug_mode_greater Debug_total then(
+			print_message Debug_total (LinearConstraint.string_of_linear_constraint program.variable_names final_constraint);
+		);
+		if not (LinearConstraint.is_satisfiable final_constraint) then(			
+				print_message Debug_high ("\nThis constraint is not satisfiable.");
 		) else (
 
 		(* Branching between 2 algorithms here *)
