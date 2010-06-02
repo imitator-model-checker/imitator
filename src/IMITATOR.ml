@@ -619,7 +619,7 @@ let post program pi0 reachability_graph orig_state_index =
 
 		(* Hide 'X' and 'd' *)
 		print_message Debug_total ("\nHide 'X' and discrete in C(X) ^ g(X) ^ X' = rho(X) ^ I_q(X')");
-		let full_constraint_hidden = LinearConstraint.hide (program.d :: program.clocks_and_discrete) new_full_constraint in
+		let full_constraint_hidden = LinearConstraint.hide program.clocks_and_discrete new_full_constraint in
 		(* Debug print *)
 		if debug_mode_greater Debug_total then(
 			print_message Debug_total (LinearConstraint.string_of_linear_constraint program.variable_names full_constraint_hidden);

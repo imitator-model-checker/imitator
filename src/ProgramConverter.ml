@@ -1292,8 +1292,8 @@ let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_
 	(* Set the LinearConstraint manager *) 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	let nb_integer_variables = 0 in
-	(* 'nb_variables' represent the total number of variables, including renamings and 'd' (see below) *)
-	let nb_real_variables = 2 * (nb_analogs + nb_clocks  + nb_discrete) + nb_parameters + 1 in
+	(* 'nb_variables' represent the total number of variables, including renamings (see below) *)
+	let nb_real_variables = 2 * (nb_analogs + nb_clocks  + nb_discrete) + nb_parameters in
 	LinearConstraint.set_manager nb_integer_variables nb_real_variables;
 
 
@@ -1360,13 +1360,14 @@ let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_
 	glob_prime_offset := offset;
 
 	(* And d comes after *)
-	let d = nb_variables + nb_analogs + nb_clocks in
+(*	let d = nb_variables + nb_analogs + nb_clocks in*)
 
 	(* Clocks: add the new indexes *)
-	let renamed_clocks = list_of_interval nb_variables (d - 1) in
+	let renamed_clocks = list_of_interval nb_variables (nb_variables + nb_analogs + nb_clocks - 1) in
 
 	(* Create the function is_renamed_clock *)
-	let is_renamed_clock  = (fun variable_index -> variable_index >= nb_variables + nb_analogs && variable_index < d) in
+	let is_renamed_clock  = (fun variable_index -> variable_index >= nb_variables && 
+																								 variable_index < nb_variables + nb_analogs + nb_clocks) in
 
 	(* Create an array for all variable names with renamings *)
 	let array_of_variable_names = Array.make (nb_variables + nb_analogs + nb_clocks + 1) "" in
@@ -1375,12 +1376,12 @@ let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_
 		array_of_variable_names.(variable_index) <- variables.(variable_index);
 	done;
 	(* Add renamed clocks and discrete *)
-	for variable_index = nb_variables to d - 1 do
+	for variable_index = nb_variables to nb_variables + nb_analogs + nb_clocks - 1 do
 		array_of_variable_names.(variable_index) <- variables.(variable_of_prime variable_index) ^ "_PRIME";
 	done;
 	(* Add 'd' *)
 	(**** TO DO: should avoid the declaration of 'd' as a variable name (to do later, and only important in debug mode...) *)
-	array_of_variable_names.(d) <- "d";
+(*	array_of_variable_names.(d) <- "d";*)
 
 	(* save the list for later use *)
 	let variable_name_list = variable_names in
@@ -1399,7 +1400,7 @@ let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_
 
 	(* Variables *)
 	print_message Debug_high ("\n*** Variables with renamings:");
-	for i = 0 to d do
+	for i = 0 to nb_variables + nb_analogs + nb_clocks do
 		print_message Debug_high ("  "
 			^ (string_of_int i) ^ " : " ^ (variable_names i)
 			^ (if is_renamed_clock i then " (renamed clock)" else "")
@@ -1606,17 +1607,17 @@ let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_
 		) clocks
 	in*)
 	(* Compute the inequality d >= 0 *)
-	let positive_d = LinearConstraint.make_linear_inequality
-		(LinearConstraint.make_linear_term [
-			(NumConst.one, d);
-			] NumConst.zero
-		)
-		LinearConstraint.Op_ge
-	in
-	(* Time elapsing constraint *)
-	let positive_d = LinearConstraint.make [positive_d] in (* :: time_elapsing_inequalities) in*)
-
-	print_message Debug_total (LinearConstraint.string_of_linear_constraint variable_names positive_d);
+(*	let positive_d = LinearConstraint.make_linear_inequality                                           *)
+(*		(LinearConstraint.make_linear_term [                                                             *)
+(*			(NumConst.one, d);                                                                             *)
+(*			] NumConst.zero                                                                                *)
+(*		)                                                                                                *)
+(*		LinearConstraint.Op_ge                                                                           *)
+(*	in                                                                                                 *)
+(*	(* Time elapsing constraint *)                                                                     *)
+(*	let positive_d = LinearConstraint.make [positive_d] in (* :: time_elapsing_inequalities) in*)      *)
+(*                                                                                                     *)
+(*	print_message Debug_total (LinearConstraint.string_of_linear_constraint variable_names positive_d);*)
 
 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -1737,7 +1738,7 @@ let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_
 	(* Get the normal equivalent of a 'prime' variable *)
 	variable_of_prime = variable_of_prime;
 	(* Parameter 'd' *)
-	d = d;
+(*	d = d;*)
 	(* Couples (x, x') for clock renamings *)
 	(* renamed_analogs_couples = renamed_analogs_couples; *)
 	(* Couples (x', x) for clock 'un'-renamings *)
@@ -1778,7 +1779,7 @@ let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_
 	transitions = transitions;
 
 	(* Time elapsing constraint : d >= 0 *)
-	positive_d = positive_d;
+(*	positive_d = positive_d;*)
 
 	(* Init : the initial state *)
 	init = initial_state;

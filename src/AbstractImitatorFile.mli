@@ -147,7 +147,7 @@ type abstract_program = {
 	(* Get the normal equivalent of a 'prime' variable *)
 	variable_of_prime : variable_index -> variable_index;
 	(* Parameter 'd' *)
-	d : variable_index;
+	(* d : variable_index; *)
 	(* Couples (x, x') for clock renamings *)
 	(* renamed_analogs_couples : (variable_index * variable_index) list; *)
 	(* Couples (x', x) for clock 'un'-renamings *)
@@ -188,7 +188,7 @@ type abstract_program = {
 	transitions : automaton_index -> location_index -> action_index -> (transition list);
 
 	(* Time elapsing constraint : d >= 0 *)
-	positive_d : linear_constraint;
+	(* positive_d : linear_constraint; *)
 
 	(* Init : the initial state *)
 	init : state;
