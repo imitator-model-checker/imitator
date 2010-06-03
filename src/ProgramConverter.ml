@@ -1096,8 +1096,12 @@ let convert_update type_of_variables update =
 			| Var_type_parameter -> print_error "illegal parameter update"
 			| _ -> ()
 	) updated;
-	(* return the converted data structures *)
-	((updated, update_constraint), !discrete_updates)
+	if (VariableSet.is_empty updated) then 
+		(* empty clock updates *)
+		(None, !discrete_updates)
+	else
+	  (* return the converted data structures *)
+	  (Some (updated, update_constraint), !discrete_updates)
 	
 (*--------------------------------------------------*)
 (* Convert the transitions *)

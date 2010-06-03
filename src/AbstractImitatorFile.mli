@@ -80,7 +80,7 @@ type state = location * linear_constraint
 (** Transition *)
 (****************************************************************) 
 
-type update = VariableSet.t * linear_constraint
+type update = (VariableSet.t * linear_constraint) option
 
 (** update: variable_index := linear_term *)
 type clock_update = clock_index * linear_term

@@ -533,6 +533,11 @@ let intersection linear_constraints =
 	assert_dimensions result_poly;
 	result_poly	
 
+(** Performs the intersection of a list of linear constraints *)
+let intersection_assign constr linear_constraints =
+	List.iter (fun poly -> ppl_Polyhedron_intersection_assign constr poly) linear_constraints;
+	assert_dimensions constr
+
 
 (** Let time elapse according to a domain of derivatives *)
 let time_elapse linear_constraint deriv_domain =
@@ -541,6 +546,12 @@ let time_elapse linear_constraint deriv_domain =
 	assert_dimensions poly;
 	poly
 
+
+(** Same function with sideeffects *)
+let time_elapse_assign linear_constraint deriv_domain =
+	ppl_Polyhedron_time_elapse_assign linear_constraint deriv_domain;
+	assert_dimensions linear_constraint
+	
 
 (** Eliminate (using existential quantification) a set of variables in a linear constraint *)
 let hide variables linear_constraint =

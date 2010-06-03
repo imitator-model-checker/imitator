@@ -228,15 +228,15 @@ let generate_graph program pi0 reachability_graph dot_file_name states_file_name
 (* Compute the invariant associated to a location *)
 (*--------------------------------------------------*)
 let compute_invariant program location =
-	let invariants = List.map (fun automaton_index ->
+	let invariant = LinearConstraint.true_constraint () in
+	List.iter (fun automaton_index -> 
 		(* Get the current location *)
 		let location_index = Automaton.get_location location automaton_index in
 		(* Compute the invariant *)
-		program.invariants automaton_index location_index
-	) program.automata in
-	(* Perform the intersection *)
-	LinearConstraint.intersection invariants
-
+		LinearConstraint.intersection_assign invariant [program.invariants automaton_index location_index]
+	) program.automata;
+	invariant	
+	
 
 (*--------------------------------------------------*)
 (* Create a fresh constraint of the form 'D = d' for any discrete variable D with value d *)
@@ -299,14 +299,14 @@ let create_initial_state program =
 	(* let time elapse *)
 	print_message Debug_high ("Let time elapse");
 	let deriv = build_derivatives program in
-	let elapsed_constraint = LinearConstraint.time_elapse full_constraint deriv in
+	LinearConstraint.time_elapse_assign full_constraint deriv;
 	(* Debug *)
-	print_message Debug_total (LinearConstraint.string_of_linear_constraint program.variable_names elapsed_constraint);	
+	print_message Debug_total (LinearConstraint.string_of_linear_constraint program.variable_names full_constraint);	
 
 	(* add invariant after time elapsing *)
 	print_message Debug_high ("Intersect with invariant after time elapsing");
 	let full_constraint = LinearConstraint.intersection [
-		elapsed_constraint;
+		full_constraint;
 		invariant
 	] in
 	(* Debug *)
@@ -559,7 +559,13 @@ let post program pi0 reachability_graph orig_state_index =
 
 		(* Compute X' = rho(X) *)
 		print_message Debug_total ("\nComputing clock updates X' = rho(X)");
-		let (updated_vars, update_constrs) = List.split clock_updates in
+		(* get only the updates where something is updated *)
+		let valid_clock_updates = List.fold_left (fun updates update ->  
+			match update with
+				| None -> updates
+				| Some (s, c) -> (s, c) :: updates
+		) [] clock_updates in
+		let (updated_vars, update_constrs) = List.split valid_clock_updates in
 		(* get the union of updated variables for all current transitions *)
 		let all_updated_vars = 
 			List.fold_left (fun new_vars all_vars -> 
@@ -648,17 +654,17 @@ let post program pi0 reachability_graph orig_state_index =
 		(* let time elapse *)
 		print_message Debug_total ("\nLet time elapse");
 		let deriv = build_derivatives program in
-		let elapsed_constraint = LinearConstraint.time_elapse final_constraint deriv in 
+		LinearConstraint.time_elapse_assign final_constraint deriv; 
 		if debug_mode_greater Debug_total then(
-			print_message Debug_total (LinearConstraint.string_of_linear_constraint program.variable_names elapsed_constraint);
-			if not (LinearConstraint.is_satisfiable elapsed_constraint) then
+			print_message Debug_total (LinearConstraint.string_of_linear_constraint program.variable_names final_constraint);
+			if not (LinearConstraint.is_satisfiable final_constraint) then
 				print_message Debug_total ("This constraint is NOT satisfiable.");
 		);
 
 		(* add invariant *)
 		print_message Debug_total ("\nIntersect with invariant I(X)");
 		let final_constraint_without_K = LinearConstraint.intersection [
-			elapsed_constraint;
+			final_constraint;
 			invariant	
 		] in
 		(* Debug *)
@@ -1532,7 +1538,6 @@ try (
 
 Gc.major ();
 print_message Debug_standard ("Program checked and converted " ^ (after_seconds ()) ^ ".\n");
-
 
 (**************************************************)
 (* Debug print: program *)

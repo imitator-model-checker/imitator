@@ -100,8 +100,10 @@ let string_of_discrete_updates program updates =
 
 (* Convert an update into a string *)
 let string_of_update program update =
-	  let (_, update_constr) = update in
-		LinearConstraint.string_of_linear_constraint program.variable_names update_constr
+		match update with
+			| None -> ""
+			| Some (_, update_constr) ->  
+					LinearConstraint.string_of_linear_constraint program.variable_names update_constr
 
 (* Convert a transition of a location into a string *)
 let string_of_transition program automaton_index action_index (guard, update, discrete_updates, destination_location) =
