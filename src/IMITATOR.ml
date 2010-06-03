@@ -663,25 +663,25 @@ let post program pi0 reachability_graph orig_state_index =
 
 		(* add invariant *)
 		print_message Debug_total ("\nIntersect with invariant I(X)");
-		let final_constraint_without_K = LinearConstraint.intersection [
+		let final_constraint = LinearConstraint.intersection [
 			final_constraint;
 			invariant	
 		] in
 		(* Debug *)
 		if debug_mode_greater Debug_total then(
-			print_message Debug_total (LinearConstraint.string_of_linear_constraint program.variable_names final_constraint_without_K);
+			print_message Debug_total (LinearConstraint.string_of_linear_constraint program.variable_names final_constraint);
 		);
 		
-		print_message Debug_total ("\nIntersect with K");		
-		(* add shared constraint for satisfiability test *)
-		let final_constraint = LinearConstraint.intersection [
-			final_constraint_without_K;
-			Graph.get_shared_constraint reachability_graph
-		] in
-		(* Debug *)
-		if debug_mode_greater Debug_total then(
-			print_message Debug_total (LinearConstraint.string_of_linear_constraint program.variable_names final_constraint);		
-		);
+(*		print_message Debug_total ("\nIntersect with K");		                                                                  *)
+(*		(* add shared constraint for satisfiability test *)                                                                    *)
+(*		let final_constraint = LinearConstraint.intersection [                                                                 *)
+(*			final_constraint_without_K;                                                                                          *)
+(*			Graph.get_shared_constraint reachability_graph                                                                       *)
+(*		] in                                                                                                                   *)
+(*		(* Debug *)                                                                                                            *)
+(*		if debug_mode_greater Debug_total then(                                                                                *)
+(*			print_message Debug_total (LinearConstraint.string_of_linear_constraint program.variable_names final_constraint);		*)
+(*		);                                                                                                                     *)
 
 		(* Check the satisfiability *)
 		if not (LinearConstraint.is_satisfiable final_constraint) then(			
@@ -741,10 +741,6 @@ let post program pi0 reachability_graph orig_state_index =
 (* 				print_string (Graph.dot_of_graph program reachability_graph); *)
 				print_message Debug_medium ("\nUpdating all the previous states.\n");
 				Graph.add_inequality_to_states reachability_graph negated_inequality;
-				if debug_mode_greater Debug_total then (
-					print_message Debug_total ("\nNew global constraint K:");
-					print_message Debug_total ("\n" ^ (LinearConstraint.string_of_linear_constraint program.variable_names (Graph.get_shared_constraint reachability_graph))); 								
-				);
 				
 				(**** TO DO: remove this stupid check ****)
 				(* For all state: *)
@@ -771,7 +767,7 @@ let post program pi0 reachability_graph orig_state_index =
 				(*------------------------------------------------*)
 				(* Create the state *)
 				(*------------------------------------------------*)
-				let new_state = location, final_constraint_without_K in
+				let new_state = location, final_constraint in
 
 				(* Debug print *)
 				if debug_mode_greater Debug_total then(
@@ -945,7 +941,7 @@ let post_star program pi0 init_state =
 		(* Get all the constraints *)
 		let all_constraints = Graph.all_p_constraints program reachability_graph in
 		(* Perform the intersection *)
-		let intersection = LinearConstraint.intersection ((Graph.get_shared_constraint reachability_graph) :: all_constraints) in
+		let intersection = LinearConstraint.intersection all_constraints in
 		(* Print the result :-) *)
 		print_message Debug_standard ("\nFinal constraint K0 :");
 		print_message Debug_standard (LinearConstraint.string_of_linear_constraint program.variable_names intersection);

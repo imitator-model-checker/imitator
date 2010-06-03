@@ -29,7 +29,7 @@ type reachability_graph = {
 	transitions_table : ((state_index * AbstractImitatorFile.action_index), state_index) Hashtbl.t;
 	
 	(** A constraint shared by all states *)
-	mutable shared_constraint : LinearConstraint.linear_constraint;
+(*	mutable shared_constraint : LinearConstraint.linear_constraint;*)
 }
 
 
@@ -51,12 +51,12 @@ let make guessed_nb_transitions =
 	(* Create a hashtable for the graph *)
 	let transitions_table = Hashtbl.create guessed_nb_transitions in
 	(* initialize shared constraint with true *)
-	let shared_constraint = LinearConstraint.true_constraint () in
+(*	let shared_constraint = LinearConstraint.true_constraint () in*)
 	(* Create the graph *)
 	{
 		states = states;
 		transitions_table = transitions_table;
-		shared_constraint = shared_constraint;
+(*		shared_constraint = shared_constraint;*)
 	}
 
 
@@ -73,8 +73,8 @@ let get_state graph state_index =
 	DynArray.get graph.states state_index 
 
 (** Returns the shared constraint for all states *)
-let get_shared_constraint graph =
-	graph.shared_constraint
+(*let get_shared_constraint graph =*)
+(*	graph.shared_constraint        *)
 
 (** Return the list of all constraints on the parameters associated to the states of a graph *)
 let all_p_constraints program graph =
@@ -133,20 +133,19 @@ let add_state program graph new_state =
 				if program.inclusion then LinearConstraint.is_leq
 				else LinearConstraint.is_equal
 			in
-			(* Then test the equality of ALL the states found *)
-			let k = graph.shared_constraint in
+			(* Then test the equality of ALL the states found *)			
 			let result =
 			try(
 				(* Consider the locations and the constraint *)
 				let new_location, new_constraint = new_state in
 				(* add K to new constraint *)
-				let new_constraint = LinearConstraint.intersection [new_constraint; k] in
+(*				let new_constraint = LinearConstraint.intersection [new_constraint; k] in*)
 				(* Iterate on the states *)
 				DynArray.iteri (fun state_index (loc, constr) ->
 					(* First check the equality on locations *)
 					if loc = new_location then (
 						(* Now check the equality of constraints *)
-						if equality new_constraint (LinearConstraint.intersection [constr; k]) then (
+						if equality new_constraint constr then (
 						(* Then the state is equal *)
 						raise (Found state_index))
 					);
@@ -172,19 +171,20 @@ let add_transition reachability_graph (orig_state_index, action_index, dest_stat
 (** Add an inequality to all the states of the graph *)
 let add_inequality_to_states graph inequality =
 	let constraint_to_add = LinearConstraint.make [inequality] in
-	graph.shared_constraint <- LinearConstraint.intersection[
-		graph.shared_constraint;
-		constraint_to_add
-	]
-	
 	(* For all state: *)
-(*	for state_index = 0 to (DynArray.length graph.states) - 1 do        *)
-(*		 DynArray.set graph.states state_index (                          *)
-(*			let (loc, const) = DynArray.get graph.states state_index in     *)
-(*			(* Perform the intersection *)                                  *)
-(*			loc, (LinearConstraint.intersection [constraint_to_add; const] )*)
-(*		)                                                                 *)
-(*	done                                                                *)
+	for state_index = 0 to (DynArray.length graph.states) - 1 do
+		 DynArray.set graph.states state_index (
+			let (loc, const) = DynArray.get graph.states state_index in
+			(* Perform the intersection *)
+			loc, (LinearConstraint.intersection [constraint_to_add; const] )
+		)
+	done
+
+(*		graph.shared_constraint <- LinearConstraint.intersection[*)
+(*		graph.shared_constraint;                                 *)
+(*		constraint_to_add                                        *)
+(*	]                                                          *)
+	
 
 
 
