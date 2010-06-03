@@ -305,11 +305,17 @@ let create_initial_state program =
 
 	(* add invariant after time elapsing *)
 	print_message Debug_high ("Intersect with invariant after time elapsing");
-	let final_constraint = LinearConstraint.intersection [
+	let full_constraint = LinearConstraint.intersection [
 		elapsed_constraint;
 		invariant
 	] in
-			
+	(* Debug *)
+	print_message Debug_total (LinearConstraint.string_of_linear_constraint program.variable_names full_constraint);	
+	
+	(* Hide discrete *)
+	print_message Debug_high ("Hide discrete");
+	let final_constraint = LinearConstraint.hide program.discrete full_constraint in
+				
 	(* Debug *)
 	print_message Debug_total (LinearConstraint.string_of_linear_constraint program.variable_names final_constraint);
 	(* Return the initial state *)
@@ -605,6 +611,7 @@ let post program pi0 reachability_graph orig_state_index =
 		let new_full_constraint = LinearConstraint.intersection
 			[
 				orig_constraint ();
+(*				Graph.get_shared_constraint reachability_graph;*)
 				updates;				
 				renamed_invariant;
 				discrete_constraint;
@@ -650,15 +657,27 @@ let post program pi0 reachability_graph orig_state_index =
 
 		(* add invariant *)
 		print_message Debug_total ("\nIntersect with invariant I(X)");
-		let final_constraint = LinearConstraint.intersection [
+		let final_constraint_without_K = LinearConstraint.intersection [
 			elapsed_constraint;
 			invariant	
 		] in
+		(* Debug *)
+		if debug_mode_greater Debug_total then(
+			print_message Debug_total (LinearConstraint.string_of_linear_constraint program.variable_names final_constraint_without_K);
+		);
+		
+		print_message Debug_total ("\nIntersect with K");		
+		(* add shared constraint for satisfiability test *)
+		let final_constraint = LinearConstraint.intersection [
+			final_constraint_without_K;
+			Graph.get_shared_constraint reachability_graph
+		] in
+		(* Debug *)
+		if debug_mode_greater Debug_total then(
+			print_message Debug_total (LinearConstraint.string_of_linear_constraint program.variable_names final_constraint);		
+		);
 
 		(* Check the satisfiability *)
-		if debug_mode_greater Debug_total then(
-			print_message Debug_total (LinearConstraint.string_of_linear_constraint program.variable_names final_constraint);
-		);
 		if not (LinearConstraint.is_satisfiable final_constraint) then(			
 				print_message Debug_high ("\nThis constraint is not satisfiable.");
 		) else (
@@ -678,6 +697,7 @@ let post program pi0 reachability_graph orig_state_index =
 			if debug_mode_greater Debug_high then(
 				print_message Debug_high (LinearConstraint.string_of_linear_constraint program.variable_names p_constraint);
 			);
+			
 			(* Check the pi0-compatibility *)
 			let compatible, incompatible = LinearConstraint.partition_pi0_compatible pi0 p_constraint in
 			let is_pi0_incompatible = incompatible != [] in
@@ -715,6 +735,11 @@ let post program pi0 reachability_graph orig_state_index =
 (* 				print_string (Graph.dot_of_graph program reachability_graph); *)
 				print_message Debug_medium ("\nUpdating all the previous states.\n");
 				Graph.add_inequality_to_states reachability_graph negated_inequality;
+				if debug_mode_greater Debug_total then (
+					print_message Debug_total ("\nNew global constraint K:");
+					print_message Debug_total ("\n" ^ (LinearConstraint.string_of_linear_constraint program.variable_names (Graph.get_shared_constraint reachability_graph))); 								
+				);
+				
 				(**** TO DO: remove this stupid check ****)
 				(* For all state: *)
 (*				for state_index = 0 to (DynArray.length reachability_graph.states) - 1 do
@@ -740,7 +765,7 @@ let post program pi0 reachability_graph orig_state_index =
 				(*------------------------------------------------*)
 				(* Create the state *)
 				(*------------------------------------------------*)
-				let new_state = location, final_constraint in
+				let new_state = location, final_constraint_without_K in
 
 				(* Debug print *)
 				if debug_mode_greater Debug_total then(
@@ -914,7 +939,7 @@ let post_star program pi0 init_state =
 		(* Get all the constraints *)
 		let all_constraints = Graph.all_p_constraints program reachability_graph in
 		(* Perform the intersection *)
-		let intersection = LinearConstraint.intersection all_constraints in
+		let intersection = LinearConstraint.intersection ((Graph.get_shared_constraint reachability_graph) :: all_constraints) in
 		(* Print the result :-) *)
 		print_message Debug_standard ("\nFinal constraint K0 :");
 		print_message Debug_standard (LinearConstraint.string_of_linear_constraint program.variable_names intersection);
@@ -1487,6 +1512,7 @@ let pi0_parsed, pi0cube_parsed =
 		| _ -> [], parser_lexer Pi0CubeParser.main Pi0CubeLexer.token !pi0file
 in
 
+Gc.major ();
 print_message Debug_standard ("\nParsing done " ^ (after_seconds ()) ^ ".");
 
 
@@ -1504,6 +1530,7 @@ try (
 	| InternalError e -> (print_error ("Internal error: " ^ e ^ "\nPlease insult the developers."); abort_program (); exit 0)
 	in
 
+Gc.major ();
 print_message Debug_standard ("Program checked and converted " ^ (after_seconds ()) ^ ".\n");
 
 

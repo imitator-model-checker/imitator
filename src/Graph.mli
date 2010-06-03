@@ -27,6 +27,9 @@ type reachability_graph = {
 
 	(** A hashtable '(state_index, action_index)' -> 'dest_state_index' *)
 	transitions_table : ((state_index * AbstractImitatorFile.action_index), state_index) Hashtbl.t;
+	
+	(** A constraint shared by all states *)
+	mutable shared_constraint : LinearConstraint.linear_constraint;
 }
 
 (****************************************************************)
@@ -46,6 +49,9 @@ val nb_states : reachability_graph -> int
 
 (** Return the state of a state_index *)
 val get_state : reachability_graph -> int -> AbstractImitatorFile.state
+
+(** Returns the shared constraint for all states *)
+val get_shared_constraint : reachability_graph -> LinearConstraint.linear_constraint
 
 (** Return the list of all constraints on the parameters associated to the states of a graph *)
 val all_p_constraints : abstract_program -> reachability_graph -> LinearConstraint.linear_constraint list
