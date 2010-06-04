@@ -236,7 +236,26 @@ let compute_invariant program location =
 		LinearConstraint.intersection_assign invariant [program.invariants automaton_index location_index]
 	) program.automata;
 	invariant	
+
 	
+(*--------------------------------------------------*)
+(* Instantiate the flow for a given location        *)
+(*--------------------------------------------------*)
+let compute_flow program location =
+	let flow = LinearConstraint.true_constraint () in
+	List.iter (fun automaton_index -> 
+		(* Get the current location *)
+		let location_index = Automaton.get_location location automaton_index in
+		(* Compute the flow *)
+		let loc_flow = program.analog_flows automaton_index location_index in
+		match loc_flow with
+			| None -> ()
+			| Some constr -> LinearConstraint.intersection_assign flow [constr] 
+	) program.automata;
+	(* Add standard flow for parameters, discrete and clocks *)
+	LinearConstraint.intersection_assign flow [program.standard_flow];
+	flow
+			
 
 (*--------------------------------------------------*)
 (* Create a fresh constraint of the form 'D = d' for any discrete variable D with value d *)
@@ -288,7 +307,7 @@ let create_initial_state program =
 	
 	(* let time elapse *)
 	print_message Debug_high ("Let time elapse");
-	let deriv = program.standard_flow in
+	let deriv = compute_flow program initial_location in
 	LinearConstraint.time_elapse_assign full_constraint deriv;
 	(* Debug *)
 	print_message Debug_total (LinearConstraint.string_of_linear_constraint program.variable_names full_constraint);	
@@ -464,7 +483,7 @@ let post program pi0 reachability_graph orig_state_index =
 		(* Create a temporary hashtbl for discrete values *)
 		let updated_discrete = Hashtbl.create program.nb_discrete in
 		(* Update the location for the automata synchronized with 'action_index'; return the list of guards and updates *)
-		let guards_updates_flows = Array.to_list (Array.mapi (fun local_index real_index ->
+		let guards_and_updates = Array.to_list (Array.mapi (fun local_index real_index ->
 			(* Find its current index *)
 			let current_index = current_indexes.(local_index) in
 			(* Get the current location for this automaton *)
@@ -475,8 +494,6 @@ let post program pi0 reachability_graph orig_state_index =
 			let transition = List.nth transitions current_index in
 			(* Keep only the dest location *)
 			let guard, clock_updates, discrete_updates, dest_index = transition in
-			(***** FIXME: construct flows here *)
-			(* let flows = [] in *)
 			(* Update discrete *)
 			List.iter (fun (discrete_index, linear_term) ->
 				(* Compute its new value *)
@@ -501,7 +518,7 @@ let post program pi0 reachability_graph orig_state_index =
 			guard, clock_updates;
 		) real_indexes) in
 		(* Split the list of guards and updates *)
-		let guards, clock_updates = List.split guards_updates_flows in
+		let guards, clock_updates = List.split guards_and_updates in
 
 		(* Compute couples to update the discrete variables *)
 		let updated_discrete_couples = ref [] in
@@ -658,7 +675,7 @@ let post program pi0 reachability_graph orig_state_index =
 			
 			(* let time elapse *)
 			print_message Debug_total ("\nLet time elapse");
-			let deriv = program.standard_flow  in
+			let deriv = compute_flow program location in
 			LinearConstraint.time_elapse_assign final_constraint deriv; 
 			if debug_mode_greater Debug_total then(
 				print_message Debug_total (LinearConstraint.string_of_linear_constraint program.variable_names final_constraint);

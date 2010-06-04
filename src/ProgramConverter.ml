@@ -1034,31 +1034,31 @@ let convert_flow type_of_variables constr =
 
 (* convert the rate conditions *)
 let convert_flows type_of_variables raw_flows =
-	(* For each automaton *)
-	let flows = Array.map (fun raw_flows_per_location -> 
-		(* For each location *)
-		Array.map (fun predicate -> 
-			if predicate = [] then
-				(* no flow condition in this location *)
-				None
-		  else (
-				(* iterate over linear constraints *)
-				let flows = ref [] in
-				List.iter (fun lin_constr -> 
-					match lin_constr with
-						| True_constraint -> ()
-						| False_constraint -> raise False_exception  
-						| Linear_constraint (lexpr, op, rexpr) -> 
-								let ineq = convert_flow type_of_variables (lexpr, op, rexpr) in
-								flows := ineq :: !flows
-				) predicate;
-				(* construct linear constraint from collected inequalities *)
-				let flow = LinearConstraint.make !flows in
-				print_message Debug_standard ("converted flow:" ^ (LinearConstraint.string_of_linear_constraint (fun i -> !glob_variable_names.(i)) flow));
-				Some flow
-		  )
-		) raw_flows_per_location
-	) raw_flows in
+	let convert_location = (fun predicate -> 
+		if predicate = [] then
+			(* no flow condition in this location *)
+			None
+	  else (
+			(* iterate over linear constraints *)
+			let flows = ref [] in
+			List.iter (fun lin_constr -> 
+				match lin_constr with
+					| True_constraint -> ()
+					| False_constraint -> raise False_exception  
+					| Linear_constraint (lexpr, op, rexpr) -> 
+							let ineq = convert_flow type_of_variables (lexpr, op, rexpr) in
+							flows := ineq :: !flows
+			) predicate;
+			(* construct linear constraint from collected inequalities *)
+			let flow = LinearConstraint.make !flows in			
+			if debug_mode_greater Debug_total then (
+				print_message Debug_total ("converted flow:" ^ (LinearConstraint.string_of_linear_constraint (fun i -> !glob_variable_names.(i)) flow))
+			);
+			Some flow
+	  )
+	) in	
+	let convert_automaton = Array.map convert_location in
+	let flows = Array.map convert_automaton raw_flows in
 	flows
 	
 
@@ -1591,14 +1591,15 @@ let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_
 	print_message Debug_total ("*** Building invariants...");
 	let invariants = convert_invariants index_of_variables invariants in
   	
-	(* Convert the rate conditions *)
+  print_message Debug_total ("*** Building flow conditions...");		
+	(* Convert the flow conditions *)
 	let standard_flow = construct_standard_flow parameters discrete clocks in
 	let analog_flows = 
 		if nb_analogs = 0 then(
 			 (* Return empty flow for all automata and locations *)
 			 fun _ _ -> None
 		) else (
-			 (* Convert the annotated rate conditions *)
+			 (* Convert the annotated rate conditions *)			 
 			 let flow_table = convert_flows type_of_variables flows in
 			 fun aut_index loc_index -> flow_table.(aut_index).(loc_index) 
 		) in 
