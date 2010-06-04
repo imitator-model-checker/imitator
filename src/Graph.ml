@@ -103,6 +103,9 @@ let states_equal state1 state2 =
 		LinearConstraint.is_equal constr1 constr2
 	)
 
+(** Iterate over the reachable states *)
+let iter f graph =
+	DynArray.iter f graph.states
 
 (****************************************************************)
 (** Actions on a graph *)

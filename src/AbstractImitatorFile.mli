@@ -66,9 +66,6 @@ type action_type =
 	| Action_type_sync
 	| Action_type_nosync
 
-(** Rate conditions *)
-type rate_type
-
 (****************************************************************)
 (** State *)
 (****************************************************************)
@@ -182,8 +179,10 @@ type abstract_program = {
 
 	(* The invariant for each automaton and each location *)
 	invariants : automaton_index -> location_index -> linear_constraint;
-	(* The rate condition for each automaton and each location *)
-(*	flows : automaton_index -> location_index -> variable_index -> rate_type;*)
+	(* the standard flow constraint for paramters, discrete and clocks *) 
+	standard_flow : linear_constraint;
+	(* The rate conditions of analog variables for each automaton and each location *)
+	analog_flows : automaton_index -> location_index -> linear_constraint option;
 	(* The transitions for each automaton and each location and each action *)
 	transitions : automaton_index -> location_index -> action_index -> (transition list);
 

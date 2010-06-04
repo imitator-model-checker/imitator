@@ -256,16 +256,6 @@ let instantiate_discrete discrete_values =
 
 
 (*--------------------------------------------------*)
-(* build the derivative domain for clocks, discrete and parameters *)
-(*--------------------------------------------------*)
-let build_derivatives program =
-	let clock_deriv = List.map (fun v -> Equal (Variable v, Coefficient Gmp.Z.one)) program.clocks in
-	let stable_deriv = List.map (fun v -> Equal (Variable v, Coefficient Gmp.Z.zero)) (List.rev_append program.discrete program.parameters) in
-	let deriv_constraints = List.rev_append clock_deriv stable_deriv in
-	LinearConstraint.from_ppl_constraints deriv_constraints
-
-
-(*--------------------------------------------------*)
 (* Compute the initial state with the initial invariants and time elapsing *)
 (*--------------------------------------------------*)
 let create_initial_state program =
@@ -298,7 +288,7 @@ let create_initial_state program =
 	
 	(* let time elapse *)
 	print_message Debug_high ("Let time elapse");
-	let deriv = build_derivatives program in
+	let deriv = program.standard_flow in
 	LinearConstraint.time_elapse_assign full_constraint deriv;
 	(* Debug *)
 	print_message Debug_total (LinearConstraint.string_of_linear_constraint program.variable_names full_constraint);	
@@ -525,10 +515,8 @@ let post program pi0 reachability_graph orig_state_index =
 		(* Compute the constraint *)
 		(*------------------------------------------------*)
 		
-		(**** TO OPTIMIZE (?) : add an exception mechanism to avoid the global computation of the constraint if something is not satisfiable ****)
-		
 		(* Compute the next state for this transition *)
-		(* An Unsat_exception is raised at some points if the computed constraint is unsat *)
+		(* OPTIMIZED: An Unsat_exception is raised at some points if the computed constraint is unsat *)
 		let final_constraint = try (
 		
 			(* Debug *)
@@ -670,7 +658,7 @@ let post program pi0 reachability_graph orig_state_index =
 			
 			(* let time elapse *)
 			print_message Debug_total ("\nLet time elapse");
-			let deriv = build_derivatives program in
+			let deriv = program.standard_flow  in
 			LinearConstraint.time_elapse_assign final_constraint deriv; 
 			if debug_mode_greater Debug_total then(
 				print_message Debug_total (LinearConstraint.string_of_linear_constraint program.variable_names final_constraint);

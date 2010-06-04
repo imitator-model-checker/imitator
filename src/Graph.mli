@@ -65,6 +65,10 @@ val all_p_constraints : abstract_program -> reachability_graph -> LinearConstrai
 (** Check if two states are equal *)
 val states_equal: AbstractImitatorFile.state -> AbstractImitatorFile.state -> bool
 
+(** iterates over the reachable states of a graph *)
+val iter: (AbstractImitatorFile.state -> unit) -> reachability_graph -> unit
+
+
 (****************************************************************)
 (** Actions on a graph *)
 (****************************************************************)

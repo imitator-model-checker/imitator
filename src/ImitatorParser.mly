@@ -171,28 +171,15 @@ locations:
 /**********************************************/
 
 location:
-  CT_LOC NAME COLON CT_WHILE convex_predicate CT_WAIT LBRACE rate_info_list RBRACE transitions { $2, $5, $8, $10 }
+  CT_LOC NAME COLON CT_WHILE convex_predicate CT_WAIT LBRACE rate_info RBRACE transitions { $2, $5, $8, $10 }
 ;
 
 /**********************************************/
-rate_info_list:
-	rate_info_nonempty_list { $1 }
+rate_info:
+	ext_convex_predicate { $1 }
 	| { [] }
 ;
  
-/**********************************************/
-
-rate_info_nonempty_list:
-     rate_info COMMA rate_info_nonempty_list { $1 :: $3 } 
-	|  rate_info { [$1] }
-;
-
-/**********************************************/
-
-rate_info:
-	NAME APOSTROPHE OP_EQ rational { $1, $4 }
-;
-
 /**********************************************/
 
 transitions:

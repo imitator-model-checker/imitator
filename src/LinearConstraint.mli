@@ -165,6 +165,9 @@ val partition_pi0_compatible : (variable -> coef) -> linear_constraint -> (linea
 (** returns a list of variables occuring in a linear constraint *)
 val support : linear_constraint -> Global.VariableSet.t
 
+(** returns a list of variables occuring in a linear inequality *)
+val inequality_support : linear_inequality -> Global.VariableSet.t
+
 (** Performs the intersection of a list of linear constraints *)
 val intersection : linear_constraint list -> linear_constraint
 
@@ -179,6 +182,9 @@ val time_elapse_assign : linear_constraint -> linear_constraint -> unit
 
 (** Eliminate (using existential quantification) a set of variables in a linear constraint *)
 val hide : variable list -> linear_constraint -> linear_constraint
+
+(** Substitutes all variables in a linear inequality *)
+val substitute_variables: (variable -> Ppl_ocaml.linear_expression) -> linear_inequality -> linear_inequality
 
 (** 'rename_variables renaming_couples c' renames all variables according to the couples of the form (old, new) *)
 val rename_variables : (variable * variable) list -> linear_constraint -> linear_constraint

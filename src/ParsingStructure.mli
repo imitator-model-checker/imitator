@@ -79,13 +79,13 @@ type update = convex_predicate
 
 type guard = convex_predicate
 
-type flow = variable_name * NumConst.t
+(*type flow = variable_name * NumConst.t*)
 
 (* Transition = Guard * update * sync label * destination location *)
 type transition = guard * update * sync * location_name
 
-(* Location = Name * Invariant * transitions *)
-type location = location_name * convex_predicate * flow list * transition list
+(* Location = Name * Invariant * Flow * transitions *)
+type location = location_name * convex_predicate * convex_predicate * transition list
 
 type automaton = automaton_name * sync_name list * location list
 

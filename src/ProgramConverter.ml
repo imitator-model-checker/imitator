@@ -1004,40 +1004,63 @@ let convert_invariants index_of_variables invariants =
 (*--------------------------------------------------*)
 (* Convert the rate conditions *)
 (*--------------------------------------------------*)
-(* Convert the structure: 'automaton_index -> location_index -> ParsingStructure.flow' into a structure: 'automaton_index -> location_index -> variable_index -> NumConst' *)
-(*let convert_flows nb_variables index_of_variables type_of_variables raw_flows =                                                  *)
-(*	                                                                                                                               *)
-(*	(* Convert for each automaton *)                                                                                               *)
-(*	let flows = Array.map ( fun rates_per_location ->                                                                              *)
-(*		(* Convert for each location *)		                                                                                          *)
-(*		Array.map (fun rate_list ->                                                                                                  *)
-(*			(* create hash table to store rates for each variable *)                                                                   *)
-(*			let rates = Hashtbl.create 0 in                                                                                            *)
-(*			(* paste defined rates into hash table *)			                                                                            *)
-(*			List.iter (fun (variable_name, rate) ->                                                                                    *)
-(*				let variable_index = Hashtbl.find index_of_variables variable_name in                                                    *)
-(*				Hashtbl.add rates variable_index rate;                                                                                   *)
-(*				print_message Debug_high ("set rate for analog variable " ^ variable_name ^ " to " ^ (NumConst.string_of_numconst rate)) *)
-(*			) rate_list;                                                                                                               *)
-(*			(* insert default rate 1 for clocks *)                                                                                     *)
-(*			for i = 0 to (nb_variables - 1) do                                                                                         *)
-(*				if (type_of_variables i) = AbstractImitatorFile.Var_type_clock then 					                                           *)
-(*					print_message Debug_high ("set rate for clock variable to 1");                                                         *)
-(*					Hashtbl.add rates i NumConst.one                                                                                       *)
-(*			done;                                                                                                                      *)
-(*			rates                                                                                                                      *)
-(*		) rates_per_location;		                                                                                                    *)
-(*	) raw_flows in                                                                                                                 *)
-(*	(* return Functional representation *)                                                                                         *)
-(*	fun automaton_index location_index variable_index -> (                                                                         *)
-(*		try (                                                                                                                        *)
-(*			let rate = Hashtbl.find flows.(automaton_index).(location_index) variable_index in                                         *)
-(*			Some rate                                                                                                                  *)
-(*		) with | Not_found -> None	                                                                                                 *)
-(*  )                                                                                                                              *)
+
+(* construct the standard flow for paramters, discrete and clocks *)
+let construct_standard_flow parameters discrete clocks =
+	let set_var = fun c v -> Ppl_ocaml.Equal (Ppl_ocaml.Variable v, Ppl_ocaml.Coefficient c) in
+	let clock_deriv = List.map (set_var Gmp.Z.one) clocks in
+	let stable_deriv = List.map (set_var Gmp.Z.zero) (List.rev_append discrete parameters) in
+	let deriv_constraints = List.rev_append clock_deriv stable_deriv in
+	LinearConstraint.from_ppl_constraints deriv_constraints
 
 
+(* check and convert a linear constraint to a rate condition *)
+let convert_flow type_of_variables constr =
+	let ineq = linear_inequality_of_linear_constraint constr in
+	let support = LinearConstraint.inequality_support ineq in
+	(* check that only primed analogs are in the support *)
+	VariableSet.iter (fun v -> 
+		let x = unprime_variable v in
+	  if x < 0 || (type_of_variables x) <> Var_type_analog then(
+			print_error "Variable in rate condition is not analog";
+			abort_program ()
+		)
+	) support;
+	(* replace primed variables by unprimed variables *)
+	let unprime = fun v -> Ppl_ocaml.Variable (unprime_variable v) in
+	let unprimed_ineq = LinearConstraint.substitute_variables unprime ineq in
+	unprimed_ineq
 
+
+(* convert the rate conditions *)
+let convert_flows type_of_variables raw_flows =
+	(* For each automaton *)
+	let flows = Array.map (fun raw_flows_per_location -> 
+		(* For each location *)
+		Array.map (fun predicate -> 
+			if predicate = [] then
+				(* no flow condition in this location *)
+				None
+		  else (
+				(* iterate over linear constraints *)
+				let flows = ref [] in
+				List.iter (fun lin_constr -> 
+					match lin_constr with
+						| True_constraint -> ()
+						| False_constraint -> raise False_exception  
+						| Linear_constraint (lexpr, op, rexpr) -> 
+								let ineq = convert_flow type_of_variables (lexpr, op, rexpr) in
+								flows := ineq :: !flows
+				) predicate;
+				(* construct linear constraint from collected inequalities *)
+				let flow = LinearConstraint.make !flows in
+				print_message Debug_standard ("converted flow:" ^ (LinearConstraint.string_of_linear_constraint (fun i -> !glob_variable_names.(i)) flow));
+				Some flow
+		  )
+		) raw_flows_per_location
+	) raw_flows in
+	flows
+	
 
 (*--------------------------------------------------*)
 (* Convert an update *)
@@ -1567,10 +1590,18 @@ let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_
 	(* Convert the invariants *)
 	print_message Debug_total ("*** Building invariants...");
 	let invariants = convert_invariants index_of_variables invariants in
-  
+  	
 	(* Convert the rate conditions *)
-(*	print_message Debug_total ("*** Building rate conditions...");                      *)
-(*	let flows = convert_flows nb_variables index_of_variables type_of_variables flows in*)
+	let standard_flow = construct_standard_flow parameters discrete clocks in
+	let analog_flows = 
+		if nb_analogs = 0 then(
+			 (* Return empty flow for all automata and locations *)
+			 fun _ _ -> None
+		) else (
+			 (* Convert the annotated rate conditions *)
+			 let flow_table = convert_flows type_of_variables flows in
+			 fun aut_index loc_index -> flow_table.(aut_index).(loc_index) 
+		) in 
 	
 	(* Convert the transitions *)
 	print_message Debug_total ("*** Building transitions...");
@@ -1590,38 +1621,6 @@ let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	print_message Debug_total ("*** Building initial state...");
 	let initial_state = make_initial_state index_of_automata array_of_location_names index_of_locations type_of_variables init_discrete_couples parsed_init_definition in
-
-
-	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Useful (static) constraints *) 
-	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	print_message Debug_total ("\n*** Computing constraint d >= 0 :");
-(*	(* Compute the equalities X' = X + d *)
-	let time_elapsing_inequalities =
-		List.map (fun clock_index -> 
-			(* X + d - X' = 0 *)
-			LinearConstraint.make_linear_inequality
-				(LinearConstraint.make_linear_term [
-					(NumConst.one, clock_index);
-					(NumConst.minus_one, prime_of_variable clock_index);
-					(NumConst.one, d);
-					] NumConst.zero
-				)
-				LinearConstraint.Op_eq
-		) clocks
-	in*)
-	(* Compute the inequality d >= 0 *)
-(*	let positive_d = LinearConstraint.make_linear_inequality                                           *)
-(*		(LinearConstraint.make_linear_term [                                                             *)
-(*			(NumConst.one, d);                                                                             *)
-(*			] NumConst.zero                                                                                *)
-(*		)                                                                                                *)
-(*		LinearConstraint.Op_ge                                                                           *)
-(*	in                                                                                                 *)
-(*	(* Time elapsing constraint *)                                                                     *)
-(*	let positive_d = LinearConstraint.make [positive_d] in (* :: time_elapsing_inequalities) in*)      *)
-(*                                                                                                     *)
-(*	print_message Debug_total (LinearConstraint.string_of_linear_constraint variable_names positive_d);*)
 
 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -1777,8 +1776,10 @@ let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_
 
 	(* The invariant for each automaton and each location *)
 	invariants = invariants;
+	(* The standard flow for parameters, discrete and clocks *)
+	standard_flow = standard_flow;
 	(* The rate conditions for each automaton and each location *)
-(*	flows = flows;*)
+	analog_flows = analog_flows;
 	(* The transitions for each automaton and each location and each action *)
 	transitions = transitions;
 
