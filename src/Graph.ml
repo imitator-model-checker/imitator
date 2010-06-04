@@ -157,8 +157,7 @@ let add_state program graph new_state =
 				(* Return state_index, true *)
 				new_state_index, true
 			(* Return the state index *)
-			) with Found state_index -> state_index, false in
-			Gc.minor ();
+			) with Found state_index -> state_index, false in			
 			result
 		)
 	)
