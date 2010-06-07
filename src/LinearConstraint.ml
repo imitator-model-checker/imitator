@@ -52,6 +52,13 @@ type linear_inequality = Ppl.linear_constraint
 (*type linear_constraint = Polka.strict Polka.t Abstract0.t *)
 type linear_constraint = Ppl.polyhedron
 
+(* split a rational number into numerator and denominator *)
+let split_q r = 
+	let p = NumConst.get_num r in
+	let q = NumConst.get_den r in
+	p, q
+
+
 (* In order to convert a linear_term (with rational coefficients) *)
 (* to the corresponding PPL data structure, it is normalized such *)
 (* that the only non-rational coefficient is outside the term:    *)
@@ -287,31 +294,47 @@ let make_linear_inequality linear_term op =
 (** {3 Functions} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
 
+(** split a linear inequality into its two terms and the operator *)
+let split_linear_inequality = function
+	| Less_Than (lterm, rterm) -> lterm, rterm, Less_Than_RS
+	| Less_Or_Equal (lterm, rterm) -> lterm, rterm, Less_Or_Equal_RS
+	| Equal (lterm, rterm) -> lterm, rterm, Equal_RS
+	| Greater_Than (lterm, rterm) -> lterm, rterm, Greater_Than_RS
+	| Greater_Or_Equal (lterm, rterm) -> lterm, rterm, Greater_Or_Equal_RS
+	
+(** build a linear inequality from two terms and an operator *)
+let build_linear_inequality lterm rterm op = 
+	match op with
+		| Less_Than_RS -> Less_Than (lterm, rterm)
+		| Less_Or_Equal_RS -> Less_Or_Equal (lterm, rterm)
+		| Equal_RS -> Equal (lterm, rterm)
+		| Greater_Than_RS -> Greater_Than (lterm, rterm)
+		| Greater_Or_Equal_RS -> Greater_Or_Equal (lterm, rterm)
+
+(** get the NumConst operator for a ppl relation symbol *)
+let relop_from_rs = function
+	| Less_Than_RS -> NumConst.l
+	| Less_Or_Equal_RS -> NumConst.le
+	| Equal_RS -> NumConst.equal
+	| Greater_Than_RS -> NumConst.g
+	| Greater_Or_Equal_RS -> NumConst.ge
+
+(** inverts a relation symbol, where '=' maps to '=' *)
+let invert_rs = function
+	| Less_Than_RS -> Greater_Than_RS
+	| Less_Or_Equal_RS -> Greater_Or_Equal_RS 
+	| Equal_RS -> Equal_RS
+	| Greater_Than_RS -> Less_Than_RS
+	| Greater_Or_Equal_RS -> Less_Or_Equal_RS 
 
 (** evaluate a linear inequality for a given valuation *)
 let evaluate_linear_inequality valuation_function linear_inequality =
-	match linear_inequality with 
-		| Less_Than (lterm, rterm) -> (
-				let lval = evaluate_linear_term_ppl valuation_function lterm in
-				let rval = evaluate_linear_term_ppl valuation_function rterm in
-				NumConst.l lval rval )
-		| Less_Or_Equal (lterm, rterm) -> (
-				let lval = evaluate_linear_term_ppl valuation_function lterm in
-				let rval = evaluate_linear_term_ppl valuation_function rterm in
-				NumConst.le lval rval )
-		| Equal (lterm, rterm) -> (
-				let lval = evaluate_linear_term_ppl valuation_function lterm in
-				let rval = evaluate_linear_term_ppl valuation_function rterm in
-				NumConst.equal lval rval )
-		| Greater_Than (lterm, rterm) -> (
-				let lval = evaluate_linear_term_ppl valuation_function lterm in
-				let rval = evaluate_linear_term_ppl valuation_function rterm in
-				NumConst.g lval rval )
-		| Greater_Or_Equal (lterm, rterm) -> (
-				let lval = evaluate_linear_term_ppl valuation_function lterm in
-				let rval = evaluate_linear_term_ppl valuation_function rterm in
-				NumConst.ge lval rval )
-
+	let lterm, rterm, op = split_linear_inequality linear_inequality in
+	(* evaluate both terms *)
+	let lval = evaluate_linear_term_ppl valuation_function lterm in
+	let rval = evaluate_linear_term_ppl valuation_function rterm in
+	(* compare according to the relation symbol *)
+	(relop_from_rs op) lval rval	
 
 (*--------------------------------------------------*)
 (* Pi0-compatibility *)
@@ -347,30 +370,81 @@ let negate_wrt_pi0 pi0 linear_inequality =
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)				   	
 
 
+let is_zero_coef = function
+	| Coefficient c -> c =! Gmp.Z.zero
+	| _ -> false
+
+
+(** build a sum of two expressions; respects the case where one of the 
+	  operands is zero *)
+let compact_sum lexpr rexpr =
+	if is_zero_coef lexpr then (
+		rexpr
+  ) else (
+		if is_zero_coef rexpr then (
+			lexpr
+		) else (
+			Plus (lexpr, rexpr)
+		))
+
+(** splits an expression into positive and negative part for pretty printing;
+ 	  an expression a-b is mapped to (a, b) *) 
+let rec sign_split_expression = function
+	| Coefficient c ->
+		if c <! Gmp.Z.zero then (
+			(Coefficient Gmp.Z.zero, Coefficient (Gmp.Z.neg c))
+		) else (
+			(Coefficient c, Coefficient Gmp.Z.zero)
+		)
+	| Variable v -> (Variable v, Coefficient Gmp.Z.zero)
+	| Unary_Plus expr -> sign_split_expression expr
+	| Unary_Minus expr ->
+		let pos, neg = sign_split_expression expr in (neg, pos)
+	| Plus (lexpr, rexpr) -> 
+		let lpos, lneg = sign_split_expression lexpr in
+		let rpos, rneg = sign_split_expression rexpr in
+		let new_pos = compact_sum lpos rpos in 
+		let new_neg = compact_sum lneg rneg in 
+		(new_pos, new_neg)
+	| Minus (lexpr, rexpr) -> 
+		sign_split_expression (Plus (lexpr, Unary_Minus rexpr))
+	| Times (c, expr) -> 
+		let pos, neg = sign_split_expression expr in
+		let invert = c <! Gmp.Z.zero in
+		let new_c = if invert then Gmp.Z.neg c else c in
+		if new_c =! Gmp.Z.one then (
+			if invert then (neg, pos) else (pos, neg)
+		) else (
+			let new_pos = if is_zero_coef pos then Coefficient Gmp.Z.zero else Times (new_c, pos) in
+			let new_neg = if is_zero_coef neg then Coefficient Gmp.Z.zero else Times (new_c, neg) in
+			if invert then (new_neg, new_pos) else (new_pos, new_neg)
+		)			
+
+
+(** normalize an inequality for pretty printing; *)
+(** the expressions are rearranged such that only posistive coefficients occur *)
+let normalize_inequality ineq = 
+	let lterm, rterm, op = split_linear_inequality ineq in
+	let lpos, lneg = sign_split_expression lterm in
+	let rpos, rneg = sign_split_expression rterm in
+	let lnew = compact_sum lpos rneg in
+	let rnew = compact_sum rpos lneg in
+	build_linear_inequality lnew rnew op
+
+
 (** Convert a linear inequality into a string *)
 let string_of_linear_inequality names linear_inequality =
-	match linear_inequality with
-		| Less_Than (lterm, rterm) -> (
-				let lstr = string_of_linear_term_ppl names lterm in
-				let rstr = string_of_linear_term_ppl names rterm in
-				lstr ^ " < " ^ rstr )
-		| Less_Or_Equal (lterm, rterm) -> (
-				let lstr = string_of_linear_term_ppl names lterm in
-				let rstr = string_of_linear_term_ppl names rterm in
-				lstr ^ " <= " ^ rstr )
-		| Equal (lterm, rterm) -> (
-				let lstr = string_of_linear_term_ppl names lterm in
-				let rstr = string_of_linear_term_ppl names rterm in
-				lstr ^ " = " ^ rstr )
-		| Greater_Than (lterm, rterm) -> (
-				let lstr = string_of_linear_term_ppl names lterm in
-				let rstr = string_of_linear_term_ppl names rterm in
-				lstr ^ " > " ^ rstr )
-		| Greater_Or_Equal (lterm, rterm) -> (
-				let lstr = string_of_linear_term_ppl names lterm in
-				let rstr = string_of_linear_term_ppl names rterm in
-				lstr ^ " >= " ^ rstr )
-	
+	let normal_ineq = normalize_inequality linear_inequality in
+	let lterm, rterm, op = split_linear_inequality normal_ineq in
+	let lstr = string_of_linear_term_ppl names lterm in
+	let rstr = string_of_linear_term_ppl names rterm in	
+	let opstr = match op with
+		| Less_Than_RS -> " < "
+		| Less_Or_Equal_RS -> " <= "
+		| Equal_RS -> " = "
+		| Greater_Than_RS -> " > "
+		| Greater_Or_Equal_RS -> " >= " in
+	lstr ^ opstr ^ rstr
 
 (**************************************************)
 (** {2 Linear Constraints} *)
@@ -402,6 +476,30 @@ let make_equalities variable_pairs =
 		Equal (Variable x, Variable y)
 	) variable_pairs in
 	make equalities
+	
+(** Create a linear constraint x = c & ... for list of variables and constants *)
+let make_set_variables value_pairs =
+	let equalities = List.map (fun (v, c) -> 
+		let p, q = split_q c in
+		if q =! Gmp.Z.one then
+			Equal (Variable v, Coefficient p)
+		else
+			Equal (Times (q, Variable v), Coefficient p)
+	) value_pairs in
+	make equalities
+	
+(** Create a linear constraint x = c & y = c ... for list of variables and a constant *)	
+let make_set_all_variables variables c =
+	let p, q = split_q c in
+	let build_equality =
+		if q =! Gmp.Z.one then
+			fun v -> Equal (Variable v, Coefficient p)
+		else
+			fun v -> Equal (Times (q, Variable v), Coefficient p)
+		in	
+	let equalities = List.map build_equality variables in
+	make equalities
+	
 	
 (** Set the constraint manager *)
 let set_manager int_d real_d =
@@ -509,12 +607,8 @@ let rec term_support term =
 
 
 let inequality_support ineq =
-	match ineq with
-		| Less_Than (lterm, rterm) -> VariableSet.union (term_support lterm) (term_support rterm)
-		| Less_Or_Equal (lterm, rterm) -> VariableSet.union (term_support lterm) (term_support rterm)
-		| Equal (lterm, rterm) -> VariableSet.union (term_support lterm) (term_support rterm)
-		| Greater_Than (lterm, rterm) -> VariableSet.union (term_support lterm) (term_support rterm)
-		| Greater_Or_Equal (lterm, rterm) -> VariableSet.union (term_support lterm) (term_support rterm)
+	let lterm, rterm, _ = split_linear_inequality ineq in
+	VariableSet.union (term_support lterm) (term_support rterm)
 
 
 (** returns a list of variables occuring in a linear constraint *)
@@ -545,7 +639,6 @@ let time_elapse linear_constraint deriv_domain =
 	ppl_Polyhedron_time_elapse_assign poly deriv_domain;
 	assert_dimensions poly;
 	poly
-
 
 (** Same function with sideeffects *)
 let time_elapse_assign linear_constraint deriv_domain =
@@ -606,74 +699,11 @@ let rec substitute_variables_in_term sub linear_term =
 		
 (** substitutes all variables in a linear inequality *)
 let substitute_variables sub linear_inequality =
-	match linear_inequality with
-		| Less_Than (lterm, rterm) -> (
-				let lsub = substitute_variables_in_term sub lterm in
-				let rsub = substitute_variables_in_term sub rterm in
-				Less_Than (lsub, rsub))
-		| Less_Or_Equal (lterm, rterm) -> (
-				let lsub = substitute_variables_in_term sub lterm in
-				let rsub = substitute_variables_in_term sub rterm in
-				Less_Or_Equal (lsub, rsub))
-		| Equal (lterm, rterm) -> (
-				let lsub = substitute_variables_in_term sub lterm in
-				let rsub = substitute_variables_in_term sub rterm in
-				Equal (lsub, rsub))
-		| Greater_Than (lterm, rterm) -> (
-				let lsub = substitute_variables_in_term sub lterm in
-				let rsub = substitute_variables_in_term sub rterm in
-				Greater_Than (lsub, rsub))
-		| Greater_Or_Equal (lterm, rterm) -> (
-				let lsub = substitute_variables_in_term sub lterm in
-				let rsub = substitute_variables_in_term sub rterm in
-				Greater_Or_Equal (lsub, rsub))
+	let lterm, rterm, op = split_linear_inequality linear_inequality in
+	let lsub = substitute_variables_in_term sub lterm in
+	let rsub = substitute_variables_in_term sub rterm in
+	build_linear_inequality lsub rsub op
 		
-
-(** 'add_d d coef variables c' adds a variable 'coef * d' to any variable in 'variables' *)
-(***** FIXME: This is probably very expensive and stupid *)
-(*let add_d d coef variable_list linear_constraint =                                             *)
-(*	let p = NumConst.get_num coef in                                                             *)
-(*	let q = NumConst.get_den coef in                                                             *)
-(*	if (q <>! Gmp.Z.one) then                                                                    *)
-(*		raise (InternalError "Only integer coefficients supported yet in add_d");                  *)
-(*	(* build the substitution function *)	                                                      *)
-(*	let coef_d = Times (p, Variable d) in                                                        *)
-(*	let sub = fun v -> (                                                                         *)
-(*		if List.mem v variable_list then                                                           *)
-(*			Plus (Variable v, coef_d)                                                                *)
-(*		else                                                                                       *)
-(*			Variable v                                                                               *)
-(*		) in                                                                                       *)
-(*	(* get the constraints from polyhedron *)                                                    *)
-(*	let constraint_list = ppl_Polyhedron_get_constraints linear_constraint in                    *)
-(*	(* perform the substitution for each constraint *)                                           *)
-(*	let new_constraints = List.map (fun ineq -> substitute_variables sub ineq) constraint_list in*)
-(*	(* build a new polyhedron *)                                                                 *)
-(*	let poly = true_constraint () in                                                             *)
-(*	ppl_Polyhedron_add_constraints poly new_constraints; 	                                      *)
-(*	assert_dimensions poly;                                                                      *)
-(*	poly                                                                                         *)
-
-
-let split_q r = 
-	let p = NumConst.get_num r in
-	let q = NumConst.get_den r in
-	p, q
-
-let add_d d coef variable_list linear_constraint =
-	(* get numerator and denominator of rational coefficient *)
-	let p, q = split_q coef in 
-	(* function for building the affine translation of a variable: v -> v + coef*d *)
-	let affine_translation = fun v -> Plus (Times (q, Variable v), Times (p, Variable d)) in
-	(* copy linear constraint, as PPL functions have side effects *)	
-	let result_poly = ppl_new_NNC_Polyhedron_from_NNC_Polyhedron linear_constraint in
-	(* perform the affine translations *)
-	List.iter (fun v -> 
-		ppl_Polyhedron_affine_preimage result_poly v (affine_translation v) q
-	) variable_list;
-	assert_dimensions result_poly;
-	result_poly
-
 
 (*
 

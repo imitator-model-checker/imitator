@@ -118,6 +118,12 @@ val make : linear_inequality list -> linear_constraint
 (** Create a linear constraint x = y & ... for a list of variable pairs (x, y) *) 
 val make_equalities : (variable * variable) list -> linear_constraint
 
+(** Create a linear constraint x = c & ... for a list of variables and constants *)
+val make_set_variables : (variable * NumConst.t) list -> linear_constraint
+
+(** Creates a linear constraint x = c & y = c & ... for a list of variables and a constant *)
+val make_set_all_variables : variable list -> NumConst.t -> linear_constraint
+
 (** 'set_manager int_dim real_dim' sets the constraint manager by giving the number of dimensions. *)
 val set_manager : int -> int -> unit
 
@@ -188,9 +194,6 @@ val substitute_variables: (variable -> Ppl_ocaml.linear_expression) -> linear_in
 
 (** 'rename_variables renaming_couples c' renames all variables according to the couples of the form (old, new) *)
 val rename_variables : (variable * variable) list -> linear_constraint -> linear_constraint
-
-(** 'add_d d coef variables c' adds a variable 'coef * d' to any variable in 'variables' *)
-val add_d : variable -> coef -> variable list -> linear_constraint -> linear_constraint
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
 (** {3 Conversion} *)

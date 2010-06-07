@@ -1007,11 +1007,9 @@ let convert_invariants index_of_variables invariants =
 
 (* construct the standard flow for paramters, discrete and clocks *)
 let construct_standard_flow parameters discrete clocks =
-	let set_var = fun c v -> Ppl_ocaml.Equal (Ppl_ocaml.Variable v, Ppl_ocaml.Coefficient c) in
-	let clock_deriv = List.map (set_var Gmp.Z.one) clocks in
-	let stable_deriv = List.map (set_var Gmp.Z.zero) (List.rev_append discrete parameters) in
-	let deriv_constraints = List.rev_append clock_deriv stable_deriv in
-	LinearConstraint.from_ppl_constraints deriv_constraints
+	let clock_deriv = LinearConstraint.make_set_all_variables clocks NumConst.one in
+	let stable_deriv = LinearConstraint.make_set_all_variables (List.rev_append discrete parameters) NumConst.zero in
+	LinearConstraint.intersection [clock_deriv; stable_deriv]
 
 
 (* check and convert a linear constraint to a rate condition *)

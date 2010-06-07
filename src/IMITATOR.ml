@@ -148,22 +148,6 @@ let write_to_file file_name file_content =
 	close_out oc;
 	()
 
-	(*let oc = try (
-		open_out file_name) with
-		Sys_error message -> (print_error ("Impossible to create file '" ^ file_name ^ "'. System says: " ^ message); abort_program(); raise (InternalError ""););
-	in
-	(* Write file *)
-	try (output_string oc file_content;) with
-		Sys_error message -> (print_error ("Impossible to write into file '" ^ file_name ^ "'. System says: " ^ message); abort_program(););
-	(* Flush ! *)
-	flush oc;
-	(* Close channel *)
-	try (close_out oc;) with
-		Sys_error message -> (print_error ("Impossible to close channel corresponding to file '" ^ file_name ^ "'. System says: " ^ message); abort_program(););
-	()*)
-	
-
-
 
 (**************************************************)
 (* Pi0 function *)
@@ -754,21 +738,8 @@ let post program pi0 reachability_graph orig_state_index =
 				print_message Debug_standard ("  " ^ (LinearConstraint.string_of_linear_inequality program.variable_names negated_inequality));
 
 				(* Update the previous states (including the 'new_states' and the 'orig_state') *)
-(* 				print_string (Graph.dot_of_graph program reachability_graph); *)
 				print_message Debug_medium ("\nUpdating all the previous states.\n");
-				Graph.add_inequality_to_states reachability_graph negated_inequality;
-				
-				(**** TO DO: remove this stupid check ****)
-				(* For all state: *)
-(*				for state_index = 0 to (DynArray.length reachability_graph.states) - 1 do
-					let (loc, const) = DynArray.get reachability_graph.states state_index in 
-					if not (ConstraintSolver.is_satisfiable program const) then (
-						print_error (string_of_state program (loc, const));
-						raise (InternalError "A state is pi0-incompatible after update");
-					)else (
-						print_message Debug_medium ("State " ^ (string_of_int state_index) ^ " still pi0-compatible.");
-					);
-				done;*)
+				Graph.add_inequality_to_states reachability_graph negated_inequality;				
 				
 				(* If pi-incompatible *)
 				false
