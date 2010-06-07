@@ -68,6 +68,9 @@ let no_log = ref false
 (* No graphical output using dot *)
 let no_dot = ref false
 
+(* No 2d plot output of reachable states *)
+let option_plot = ref false
+
 (* Program prefix for log files *)
 let program_prefix = ref ""
 
@@ -759,7 +762,7 @@ let post program pi0 reachability_graph orig_state_index =
 				(* Debug print *)
 				if debug_mode_greater Debug_total then(
 					print_message Debug_total ("Consider the state \n" ^ (string_of_state program new_state));
-				);
+				);								 								 
 
 				(*------------------------------------------------*)
 				(* Add this new state *)
@@ -1334,6 +1337,8 @@ and speclist = [
 	("-no-dot", Set no_dot, " No graphical output using 'dot'. Default: false.");
 
 	("-no-log", Set no_log, " No generation of log files. Default: false.");
+	
+	("-plot", Set option_plot, " Generate 2D plot of rechable states projected on the first two variables. Default: false.");
 
 	("-no-random", Set no_random, " No random selection of the pi0-incompatible inequality (select the first found). Default: false.");
 	
@@ -1439,6 +1444,8 @@ if !no_dot then
 if !no_log then
 	print_message Debug_medium ("No log mode.");
 
+if !option_plot then
+	print_message Debug_medium ("Plot mode on.");
 
 (* Print the mode *)
 let message = match !imitator_mode with
@@ -1570,6 +1577,15 @@ match !imitator_mode with
 		let reachability_graph, k0, _, _ =
 			post_star program pi0 init_state_after_time_elapsing
 		in
+		
+		(* Plot all reachable states projected on the first two variables *)
+		if !option_plot then (
+			print_message Debug_high "Plotting reachable states";
+			let plot_file_name = (!program_prefix ^ ".plot") in
+			let plot = Graph.plot_graph reachability_graph in
+			write_to_file plot_file_name plot;
+		);
+		
 		(* Generate the DOT graph *)
 		print_message Debug_high "Generating the dot graph";
 		let dot_file_name = (!program_prefix ^ ".dot") in

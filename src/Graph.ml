@@ -188,7 +188,10 @@ let add_inequality_to_states graph inequality =
 (*	]                                                          *)
 	
 
-
+let plot_graph graph = 
+	DynArray.fold_left (
+		fun s (_, constr) -> s ^ (LinearConstraint.plot_2d constr) ^ "\n"
+	) "" graph.states
 
 (****************************************************************)
 (** Interaction with dot *)

@@ -565,7 +565,89 @@ let from_ppl_constraints constraints =
 	let poly = true_constraint () in
 	ppl_Polyhedron_add_constraints poly constraints;
 	poly
+	
 
+let unit_vector i =
+ 	fun j -> if i = j then NumConst.one else NumConst.zero
+
+(* converts a generator to a 2d point wrt. the first two variables *)
+let point_of_generator = function
+	| Point (expr, c) -> 
+			let x, y = 
+				(evaluate_linear_term_ppl (unit_vector 0) expr,
+				 evaluate_linear_term_ppl (unit_vector 1) expr) in
+			let q = NumConst.numconst_of_mpz c in
+			let xf = Gmp.Q.to_float (NumConst.mpq_of_numconst (NumConst.div x q)) in
+			let yf = Gmp.Q.to_float (NumConst.mpq_of_numconst (NumConst.div y q)) in
+			Some (xf, yf)
+	| _ -> None
+
+(* comparison function for 2d points; used for sorting points *)
+(* counter-clockwise wrt. a given center point (cx, cy) *)
+let compare_points (cx, cy) (ax, ay) (bx, by) =
+	let area = (ax -. cx) *. (by -. cy) -. (ay -. cy) *. (bx -. cx) in
+	if area > 0.0 then 1 else
+		if area = 0.0 then 0 else
+			-1
+
+(* converts a linear_constraint to a set of 2d points wrt. the first two variables *)
+let shape_of_poly linear_constraint =
+	let poly = ppl_new_NNC_Polyhedron_from_NNC_Polyhedron linear_constraint in
+	(* project to first two variables *)
+	ppl_Polyhedron_remove_higher_space_dimensions poly 2;
+	let generators = ppl_Polyhedron_get_generators poly in
+	(* collect points for the generators *)
+	let points = List.fold_left (fun ps gen ->
+		let p = point_of_generator gen in 
+		match p with
+			| None -> ps
+			| Some point -> point :: ps
+	) [] generators in
+	(* if points are present, sort them counter-clockwise *)
+	match points with
+		| p :: ps -> 
+			let compare = compare_points p in
+			List.sort compare points
+		| _ -> points
+	
+(*let plot_generator dimensions generator =                         *)
+(*	match generator with                                            *)
+(*		| Point (expr, c) ->                                          *)
+(*			let coordinates = List.map (fun d ->                        *)
+(*				evaluate_linear_term_ppl (unit_vector d) expr             *)
+(*			) dimensions in                                             *)
+(*			let q = NumConst.numconst_of_mpz c in                       *)
+(*			List.fold_left (fun str x ->                                *)
+(*				let coord = NumConst.div x q in                           *)
+(*				let f = Gmp.Q.to_float (NumConst.mpq_of_numconst coord) in*)
+(*				str ^ " " ^ (string_of_float f)                           *)
+(*			) "" coordinates                                            *)
+(*		| _ -> "" 			                                              *)
+	
+(*let plot_poly dimensions linear_constraint =                                *)
+(*	let poly = ppl_new_NNC_Polyhedron_from_NNC_Polyhedron linear_constraint in*)
+(*	let remove = ref [] in                                                    *)
+(*	for i = 0 to !total_dim - 1 do                                            *)
+(*		if not (List.mem i dimensions) then                                     *)
+(*			remove := i :: !remove		                                            *)
+(*	done;                                                                     *)
+(*	ppl_Polyhedron_remove_space_dimensions poly !remove;                      *)
+(*	let generators = ppl_Polyhedron_get_generators poly in                    *)
+(*	let array_of_generators = Array.of_list generators in                     *)
+(*	let str = 		                                                            *)
+(*		(string_of_array_of_string_with_sep                                     *)
+(*			"\n"                                                                  *)
+(*			(Array.map (plot_generator dimensions) array_of_generators)           *)
+(*		) in                                                                    *)
+(*  str                                                                       *)
+
+(* returns a string with 2d points of the given constraint *)
+let plot_2d linear_constraint =
+	let shape = shape_of_poly linear_constraint in
+	List.fold_left (fun s (x, y) -> 
+		s ^ (string_of_float x) ^ " " ^ (string_of_float y) ^ "\n"
+	) "" shape	
+	
 (** String for the false constraint *)
 let string_of_false = "false"
 
