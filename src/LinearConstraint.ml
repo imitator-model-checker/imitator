@@ -782,8 +782,18 @@ let substitute_variables sub linear_inequality =
 	let lsub = substitute_variables_in_term sub lterm in
 	let rsub = substitute_variables_in_term sub rterm in
 	build_linear_inequality lsub rsub op
-		
-
+	
+	
+(** substitutes all variables in a linear constraint *)			
+let substitute sub linear_constraint =
+	let inequalities = ppl_Polyhedron_get_constraints linear_constraint in
+	let new_inequalities =
+		List.map (substitute_variables sub) inequalities in
+	let poly = true_constraint () in
+	ppl_Polyhedron_add_constraints poly new_inequalities;
+	assert_dimensions poly;
+	poly
+	
 (*
 
 let of_int = NumConst.numconst_of_int;;

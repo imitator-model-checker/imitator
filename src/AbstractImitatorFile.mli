@@ -99,7 +99,6 @@ type abstract_program = {
 	(* Cardinality *)
 	nb_automata : int;
 	nb_actions : int;
-	(* nb_analogs : int; *)
 	nb_clocks : int;
 	nb_discrete : int;
 	nb_parameters : int;
@@ -108,8 +107,6 @@ type abstract_program = {
 	(* a set of all unprimed continuous variables *)
 	continuous : VariableSet.t;
 	
-	(* The list of analog indexes *)
-	(* analogs : clock_index list; *)	
 	(* True for analogs, false otherwise *)
 	is_analog : variable_index -> bool;
 	(* The list of clock indexes *)
@@ -123,18 +120,12 @@ type abstract_program = {
 	(* The list of parameter indexes *)
 	parameters : parameter_index list;
 	(* The non parameters (clocks and discrete) *)
-	(* non_parameters : variable_index list; *)
-	(* The non parameters (clocks and discrete) *)
 	clocks_and_discrete : variable_index list;
 	(* The function : variable_index -> variable name *)
 	variable_names : variable_index -> variable_name;
 	(* The type of variables *)
 	type_of_variables : variable_index -> var_type;
 	
-	(* Renamed clocks *)
-	(* renamed_analogs : variable_index list; *)
-	(* True for renamed clocks, false otherwise *)
-	(* is_renamed_analog : variable_index -> bool; *)	
 	(* Renamed clocks *)
 	renamed_clocks : variable_index list;
 	(* True for renamed clocks, false otherwise *)
@@ -143,12 +134,6 @@ type abstract_program = {
 	prime_of_variable : variable_index -> variable_index;
 	(* Get the normal equivalent of a 'prime' variable *)
 	variable_of_prime : variable_index -> variable_index;
-	(* Parameter 'd' *)
-	(* d : variable_index; *)
-	(* Couples (x, x') for clock renamings *)
-	(* renamed_analogs_couples : (variable_index * variable_index) list; *)
-	(* Couples (x', x) for clock 'un'-renamings *)
-	(* unrenamed_analogs_couples : (variable_index * variable_index) list; *)
 	(* Couples (x, x') for clock renamings *)
 	renamed_clocks_couples : (variable_index * variable_index) list;
 	(* Couples (x', x) for clock 'un'-renamings *)
@@ -185,9 +170,6 @@ type abstract_program = {
 	analog_flows : automaton_index -> location_index -> linear_constraint option;
 	(* The transitions for each automaton and each location and each action *)
 	transitions : automaton_index -> location_index -> action_index -> (transition list);
-
-	(* Time elapsing constraint : d >= 0 *)
-	(* positive_d : linear_constraint; *)
 
 	(* Init : the initial state *)
 	init : state;

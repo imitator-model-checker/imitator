@@ -78,7 +78,15 @@ let string_of_initially program automaton_index =
 let string_of_invariant program automaton_index location_index =
 	"while "
 	^ (LinearConstraint.string_of_linear_constraint program.variable_names (program.invariants automaton_index location_index))
-	^ " wait"
+	^ " wait {"
+	^ (LinearConstraint.string_of_linear_constraint program.variable_names program.standard_flow)
+	^ (
+		let flow = program.analog_flows automaton_index location_index in
+		match flow with 
+			| Some f -> " & " ^ (LinearConstraint.string_of_linear_constraint program.variable_names f)
+			| None -> ""
+		) 
+	^ "}"
 
 
 (* Convert a sync into a string *)

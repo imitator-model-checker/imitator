@@ -1536,6 +1536,9 @@ if debug_mode_greater Debug_total then (
 	print_message Debug_total ("\nProgram:\n" ^ (ImitatorPrinter.string_of_program program) ^ "\n")
  );
 
+(*print_message Debug_standard (ImitatorPrinter.string_of_program program);*)
+(*let inv_program = ProgramInverter.invert program in                      *)
+
 (**************************************************)
 (* Initial state *)
 (**************************************************)

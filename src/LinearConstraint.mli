@@ -192,6 +192,9 @@ val hide : variable list -> linear_constraint -> linear_constraint
 (** Substitutes all variables in a linear inequality *)
 val substitute_variables: (variable -> Ppl_ocaml.linear_expression) -> linear_inequality -> linear_inequality
 
+(** Substitutes all variables in a linear constraint *)
+val substitute: (variable -> Ppl_ocaml.linear_expression) -> linear_constraint -> linear_constraint 
+
 (** 'rename_variables renaming_couples c' renames all variables according to the couples of the form (old, new) *)
 val rename_variables : (variable * variable) list -> linear_constraint -> linear_constraint
 
