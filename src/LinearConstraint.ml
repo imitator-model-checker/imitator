@@ -111,8 +111,6 @@ let real_dim = ref 0
 (* Total number of dimensions *)
 let total_dim = ref 0
 
-
-
 (**************************************************)
 (* Useful Functions *)
 (**************************************************)
@@ -507,7 +505,7 @@ let set_manager int_d real_d =
 	real_dim := real_d;
 	total_dim := int_d + real_d 
 
-
+	
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
 (** {3 Tests} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
@@ -587,8 +585,7 @@ let point_of_generator = function
 let compare_points (cx, cy) (ax, ay) (bx, by) =
 	let area = (ax -. cx) *. (by -. cy) -. (ay -. cy) *. (bx -. cx) in
 	if area > 0.0 then 1 else
-		if area = 0.0 then 0 else
-			-1
+		if area = 0.0 then 0 else	-1
 
 (* converts a linear_constraint to a set of 2d points wrt. the first two variables *)
 let shape_of_poly linear_constraint =

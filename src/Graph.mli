@@ -24,6 +24,9 @@ type reachability_graph = {
 *)
 	(** An Array 'state_index' -> 'state' *)
 	states : AbstractImitatorFile.state DynArray.t;
+	
+	(** A hashtable to quickly find identical states *)
+	hash_table : (int, state_index) Hashtbl.t;
 
 	(** A hashtable '(state_index, action_index)' -> 'dest_state_index' *)
 	transitions_table : ((state_index * AbstractImitatorFile.action_index), state_index) Hashtbl.t;

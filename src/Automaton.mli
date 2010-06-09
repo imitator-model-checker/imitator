@@ -70,6 +70,8 @@ val get_location : location -> automaton_index -> location_index
 (** Get the value associated to some discrete variable *)
 val get_discrete_value : location -> discrete_index -> value
 
+(** Get a hash value for a location *)
+val hash_code : location -> int
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
 (** {3 Conversion} *)

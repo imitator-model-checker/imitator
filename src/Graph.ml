@@ -25,6 +25,9 @@ type reachability_graph = {
 	(** An Array 'state_index' -> 'state' *)
 	states : AbstractImitatorFile.state DynArray.t;
 
+	(** A hashtable to quickly find identical states *)
+	hash_table : (int, state_index) Hashtbl.t;
+
 	(** A hashtable '(state_index, action_index)' -> 'dest_state_index' *)
 	transitions_table : ((state_index * AbstractImitatorFile.action_index), state_index) Hashtbl.t;
 	
@@ -50,13 +53,13 @@ let make guessed_nb_transitions =
 	let states = DynArray.make initial_size in
 	(* Create a hashtable for the graph *)
 	let transitions_table = Hashtbl.create guessed_nb_transitions in
-	(* initialize shared constraint with true *)
-(*	let shared_constraint = LinearConstraint.true_constraint () in*)
+	(* Create an empty lookup table *)
+	let hash_table = Hashtbl.create initial_size in
 	(* Create the graph *)
 	{
 		states = states;
+		hash_table = hash_table;
 		transitions_table = transitions_table;
-(*		shared_constraint = shared_constraint;*)
 	}
 
 
@@ -94,15 +97,6 @@ let all_p_constraints program graph =
 (*let find_state_index graph state =
 	Hashtbl.find graph.states state*)
 
-
-(** Check if two states are equal *)
-let states_equal state1 state2 =
-	let (loc1, constr1) = state1 in
-	let (loc2, constr2) = state2 in
-	if not (Automaton.location_equal loc1 loc2) then false else (
-		LinearConstraint.is_equal constr1 constr2
-	)
-
 (** Iterate over the reachable states *)
 let iter f graph =
 	DynArray.iter f graph.states
@@ -112,58 +106,75 @@ let iter f graph =
 (****************************************************************)
 exception Found of state_index
 
-(** Add a state to a graph: return (state_index, added), where state_index is the index of the state, and 'added' is false if the state was already in the graph, true otherwise *)
-let add_state program graph new_state = 
-	(* IF ACYCLIC MODE : does not test anything *)
+(** compute a hash code for a state, depending only on the location *)
+let hash_code (location, _) =
+	Automaton.hash_code location
+	
+
+(** Check if two states are equal *)
+let states_equal state1 state2 =
+	let (loc1, constr1) = state1 in
+	let (loc2, constr2) = state2 in
+	if not (Automaton.location_equal loc1 loc2) then false else (
+		LinearConstraint.is_equal constr1 constr2
+	)
+
+
+(** Check if a state is included in another one*)
+let state_included state1 state2 =
+	let (loc1, constr1) = state1 in
+	let (loc2, constr2) = state2 in
+	if not (Automaton.location_equal loc1 loc2) then false else (
+		LinearConstraint.is_leq constr1 constr2
+	)
+
+
+(** perform the insertion of a new state in a graph *)
+let insert_state graph hash new_state =
+	let new_state_index = DynArray.length graph.states in
+	(* Add the state to the tables *)
+	DynArray.add graph.states new_state;
+	Hashtbl.add graph.hash_table hash new_state_index;
+	(* Return state_index *)
+	new_state_index
+
+
+(** Add a state to a graph, if it is not present yet *)
+let add_state program graph new_state =
+	(* compute hash value for the new state *)
+	let hash = hash_code new_state in
+	if debug_mode_greater Debug_total then (
+		print_message Debug_standard ("hash : " ^ (string_of_int hash));
+	); 
+	(* In acyclic mode: does not test anything *)
 	if program.acyclic then (
 		(* Since the state does NOT belong to the graph: find the state index *)
-		let new_state_index = DynArray.length graph.states in
-		(* Add the state to the table *)
-		DynArray.add graph.states new_state;
+		let new_state_index = insert_state graph hash new_state in
 		(* Return state_index, true *)
 		new_state_index, true
-	) else (
-	(* ELSE : *)
-		(* First try to find the exact state in the DynArray *)
+	) else (		
+		(* The check used for equality *)
+		let check_states = if program.inclusion then state_included else states_equal in				
 		try (
-			(* If the same state belongs to the graph *)
-			let state_index = DynArray.index_of (fun some_state -> states_equal new_state some_state) graph.states in
-			(* Return state_index, false *)
-			state_index, false
-		) with Not_found -> (
-			(* Define the equality *)
-			let equality =
-				if program.inclusion then LinearConstraint.is_leq
-				else LinearConstraint.is_equal
-			in
-			(* Then test the equality of ALL the states found *)			
-			let result =
-			try(
-				(* Consider the locations and the constraint *)
-				let new_location, new_constraint = new_state in
-				(* add K to new constraint *)
-(*				let new_constraint = LinearConstraint.intersection [new_constraint; k] in*)
-				(* Iterate on the states *)
-				DynArray.iteri (fun state_index (loc, constr) ->
-					(* First check the equality on locations *)
-					if loc = new_location then (
-						(* Now check the equality of constraints *)
-						if equality new_constraint constr then (
-						(* Then the state is equal *)
-						raise (Found state_index))
-					);
-				) graph.states;
-				(* Since the state does NOT belong to the graph: find the state index *)
-				let new_state_index = DynArray.length graph.states in
-				(* Add the state to the table *)
-				DynArray.add graph.states new_state;
-				(* Return state_index, true *)
-				new_state_index, true
-			(* Return the state index *)
-			) with Found state_index -> state_index, false in			
-			result
+			(* use hash table to find states with same locations (modulo hash collisions) *)
+			let old_states = Hashtbl.find_all graph.hash_table hash in
+			if debug_mode_greater Debug_total then (
+				let nb_old = List.length old_states in
+				print_message Debug_standard ("hashed list of length " ^ (string_of_int nb_old));
+			);
+			List.iter (fun index -> 
+				let state = get_state graph index in
+				if check_states state new_state then raise (Found index)
+			) old_states;
+			(* Not found -> insert state *)
+			let new_state_index = insert_state graph hash new_state in
+			(* Return state_index, true *)
+			new_state_index, true				
+		)	with Found state_index -> (								
+				state_index, false
 		)
 	)
+			
 
 (** Add a transition to the graph *)
 let add_transition reachability_graph (orig_state_index, action_index, dest_state_index) =
@@ -181,11 +192,6 @@ let add_inequality_to_states graph inequality =
 			loc, (LinearConstraint.intersection [constraint_to_add; const] )
 		)
 	done
-
-(*		graph.shared_constraint <- LinearConstraint.intersection[*)
-(*		graph.shared_constraint;                                 *)
-(*		constraint_to_add                                        *)
-(*	]                                                          *)
 	
 
 let plot_graph graph = 

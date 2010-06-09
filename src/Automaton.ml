@@ -95,6 +95,14 @@ let get_locations (locations, _) = locations
 
 let get_discrete (_, discrete) = discrete
 
+let hash_code location =
+	let locations, discrete = location in
+	let loc_hash = Array.fold_left (fun h loc -> 2*h + loc) 0 locations in
+	let discr_hash = Array.fold_left (fun h q -> 
+		2*h + (Gmp.Z.to_int (NumConst.get_num q))
+	) 0 discrete in
+	loc_hash + 3 * discr_hash
+
 (* Replace a discrete variable by its name, considering the offset *)
 let string_of_discrete names index =
 	names (index + !min_discrete_index)
