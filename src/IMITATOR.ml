@@ -80,7 +80,8 @@ let post_limit = ref None
 (* Time limit for the program *)
 let time_limit = ref None
 
-
+(* Reverse automaton for backward reachability *)
+let option_backward = ref false
 
 (**************************************************)
 (**************************************************)
@@ -1334,6 +1335,8 @@ and speclist = [
 
 	("-mode", String set_mode, " Mode for IMITATOR II. Use 'reachability' for a parametric reachability analysis (no pi0 needed). Use 'inversemethod' for the inverse method. For the behavioral cartography algorithm, use 'cover' to cover all the points within V0, or 'randomXX' where XX is a number to iterate randomly algorithm. Default: 'inversemethod'.");
 	
+	("-backward", Set option_backward, " Reverse automaton for backward reachability analysis. Default: 'false'.");
+	
 	("-no-dot", Set no_dot, " No graphical output using 'dot'. Default: false.");
 
 	("-no-log", Set no_log, " No generation of log files. Default: false.");
@@ -1432,6 +1435,9 @@ if !program_prefix = "" then
 if !inclusion then
 	print_message Debug_medium ("Considering inclusion mode.");
 
+if !option_backward then
+	print_message Debug_medium ("Invert automaton for backward reachability");
+
 if !sync_auto_detection then
 	print_message Debug_medium ("Auto-detection mode for sync actions.");
 
@@ -1529,15 +1535,22 @@ try (
 Gc.major ();
 print_message Debug_standard ("Program checked and converted " ^ (after_seconds ()) ^ ".\n");
 
+let program = if not !option_backward then program else (	
+	ProgramInverter.invert program 
+) in 
+
+if !option_backward then (
+	Gc.major ();
+	print_message Debug_standard ("Automata inverted " ^ (after_seconds ()) ^ ".\n");
+	print_message Debug_standard ("\nProgram:\n" ^ (ImitatorPrinter.string_of_program program) ^ "\n")				
+);
+
 (**************************************************)
 (* Debug print: program *)
 (**************************************************)
 if debug_mode_greater Debug_total then (
 	print_message Debug_total ("\nProgram:\n" ^ (ImitatorPrinter.string_of_program program) ^ "\n")
  );
-
-(*print_message Debug_standard (ImitatorPrinter.string_of_program program);*)
-(*let inv_program = ProgramInverter.invert program in                      *)
 
 (**************************************************)
 (* Initial state *)

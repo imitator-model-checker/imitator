@@ -79,7 +79,9 @@ let string_of_invariant program automaton_index location_index =
 	"while "
 	^ (LinearConstraint.string_of_linear_constraint program.variable_names (program.invariants automaton_index location_index))
 	^ " wait {"
-	^ (LinearConstraint.string_of_linear_constraint program.variable_names program.standard_flow)
+	^ (LinearConstraint.string_of_linear_constraint program.variable_names (
+			LinearConstraint.hide (List.append program.parameters program.discrete ) program.standard_flow		 
+		))
 	^ (
 		let flow = program.analog_flows automaton_index location_index in
 		match flow with 

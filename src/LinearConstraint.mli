@@ -25,7 +25,12 @@ type coef = NumConst.t
 (** {3 Type} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
 
-type linear_term
+type linear_term =
+	  Var of variable
+	| Coef of coef
+	| Pl of linear_term * linear_term
+	| Mi of linear_term * linear_term
+	| Ti of coef * linear_term
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
 (** {3 Creation} *)
