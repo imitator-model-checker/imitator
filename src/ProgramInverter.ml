@@ -67,44 +67,35 @@ let invert_constraint program constr =
 	
 	
 (* invert the update and guard for a transition *)
-let invert_guard_and_update program guard update =
-	(* swap variables X,X' in guard and compute its update set *)
-	let inv_guard, guard_update_set = invert_constraint program guard in
+let invert_update program update =
 	(* swap variables X,X' in jump relation and compute its update set *)
-	let inv_mu, mu_update_set = match update with
-		| None -> (
-				(* no update -> only use the inverted guard *)
-				(inv_guard, guard_update_set))
+	match update with
+		| None -> None
 		| Some (_, mu) -> (
 				(* invert mu and combine with inverted guard *)
-				let constr, update_set = invert_constraint program mu in
-				(LinearConstraint.intersection [inv_guard; constr], VariableSet.union guard_update_set update_set)
-	) in
-	(* need to separate guard, as the update set might be *)
-	(* empty although X variables are constrained in the  *)
-	(* obtained inverted predicate.                       *)
-	let projected_guard = LinearConstraint.hide program.renamed_clocks inv_mu in
-	let new_guard_and_update = if VariableSet.is_empty mu_update_set then (
-		(* return only guard *)
-		(projected_guard, None)
-	) else (
-		(* return guard and new update *)		
-		(projected_guard, Some (mu_update_set, inv_mu))
-	) in
-	new_guard_and_update
+				let inv_mu, update_set = invert_constraint program mu in
+				Some (update_set, inv_mu)
+	)
 	
 	
-(* invert one transition, returns a pair (loc, trans) with the new source location*)
+(* invert one transition, returns a pair (loc, trans) with the new source location *)
 (* and the converted transition  *)
 let invert_transition program new_dest transition =
 	(* get components, drop destination location *)
 	let guard, update, discr_updates, old_dest = transition in
 	(* invert discrete updates *)
-	let inv_discr_updates = Matrix.invert_updates program.discrete discr_updates in
+	print_message Debug_total "invert discrete updates";
+	let inv_discr_updates =
+		try (
+			Matrix.invert_updates program.discrete discr_updates
+		) with Matrix.Singular -> (
+			raise (InternalError ("discrete updates not reversible (" ^	(string_of_discrete_updates program discr_updates) ^ ")"))
+		) in 		
 	(* invert updates *)
-	let inv_guard, inv_update = invert_guard_and_update program guard update in
+	print_message Debug_total "invert clock updates";
+	let inv_update = invert_update program update in
 	(* assemble new transition *)
-	let inv_trans = (inv_guard, inv_update, inv_discr_updates, new_dest) in
+	let inv_trans = (guard, inv_update, inv_discr_updates, new_dest) in
 	(* return new source location and inverted transition *)
 	(old_dest, inv_trans)
 	
@@ -146,7 +137,7 @@ let invert_transitions program =
 	(trans_fun, action_fun)
 	
 
-(* debug bump *)
+(* debug dump *)
 let dump program = 
 	for aut_i = 0 to (program.nb_automata - 1) do (
 		let locations = program.locations_per_automaton aut_i in
@@ -184,10 +175,13 @@ let dump program =
 
 (* invert all automata in a program *)
 let invert program =
+	print_message Debug_high "invert standard flow";
 	let inv_standard_flow = invert_standard_flow program in
 	(* invert flow conditions *)
+	print_message Debug_high "invert analog flows";
 	let inv_analog_flows = invert_flows program in
 	(* invert transitions *)
+	print_message Debug_high "invert transitions"; 
 	let inv_transitions, new_actions_per_location = invert_transitions program in
 	
 	(* construct new structure *)

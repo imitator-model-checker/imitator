@@ -33,3 +33,5 @@ val string_of_pi0 : abstract_program -> pi0 -> string
 (* Convert a program into a string *)
 val string_of_program : abstract_program -> string
 
+(* Convert discrete updates into a string *)
+val string_of_discrete_updates : abstract_program -> discrete_update list -> string

@@ -14,6 +14,7 @@
 (**************************************************)
 
 open Gmp.Q.Infixes
+open Gmp.Z.Infixes
 
 (* type t *)
 
@@ -67,9 +68,6 @@ let numconst_of_mpz z = Gmp.Q.from_z z
 
 let mpq_of_numconst = get_mpq
 
-let string_of_numconst a = Gmp.Q.to_string (get_mpq a)
-
-
 (**************************************************)
 (** {2 Constants} *)
 (**************************************************)
@@ -78,6 +76,13 @@ let zero = Gmp.Q.zero
 (*let zero = numconst_of_int 0*)
 let one = numconst_of_int 1
 let minus_one = numconst_of_int (-1)
+
+let string_of_numconst a =
+	let q = get_den a in
+	if q =! Gmp.Z.one then  		
+		Gmp.Z.to_string (get_num a)
+	else
+		Gmp.Q.to_string (get_mpq a)
 
 
 (**************************************************)

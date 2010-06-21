@@ -1365,6 +1365,7 @@ let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_
 	(* create a set of all continuous variables *)
 	let continuous = List.fold_left (fun set var -> 
 		VariableSet.add var set
+(*	) VariableSet.empty clocks in*)
 	) VariableSet.empty analogs_and_clocks in
 
 	(* Create the type check functions *)
