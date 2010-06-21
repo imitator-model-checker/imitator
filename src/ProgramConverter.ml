@@ -1385,9 +1385,6 @@ let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_
 	glob_nb_variables := nb_variables;
 	glob_prime_offset := offset;
 
-	(* And d comes after *)
-(*	let d = nb_variables + nb_analogs + nb_clocks in*)
-
 	(* Clocks: add the new indexes *)
 	let renamed_clocks = list_of_interval nb_variables (nb_variables + nb_analogs + nb_clocks - 1) in
 
