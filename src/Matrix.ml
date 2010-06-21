@@ -1,14 +1,9 @@
 open Gmp
 open Gmp.Q.Infixes
 open LinearConstraint
-
+open Global
 
 let len = Array.length and aini = Array.init
-
-let print m mat = let i = len mat and j = len mat.(0) in
-print_string m; print_newline ();
-  for i = 0 to i-1 do for j = 0 to j-1 do print_float mat.(i).(j); print_char ' ' done;
-  print_newline () done
 
 (* gloabl reference to the offset for the first considered variable *)
 let var_offset = ref 0
@@ -16,6 +11,26 @@ let var_offset = ref 0
 let one = Q.from_int 1
 let zero = Q.zero
 let abs q = if (Q.sgn q < 0) then Q.neg q else q 
+
+let print mat vec =
+	let i = len mat and j = len mat.(0) in
+	print_newline ();
+  for i = 0 to i-1 do
+		for j = 0 to j-1 do
+			let x = mat.(i).(j) in
+			if x =/ one then
+				print_string "1"
+			else if x =/ zero then
+				print_string "0"
+			else ( 
+				print_string (Gmp.Q.to_string mat.(i).(j));
+			);
+			print_char ' '			
+		done;
+		print_string "    | ";
+		print_string (Gmp.Q.to_string vec.(i));
+  	print_newline ()
+	done
 
 let zero_vector = 
 	fun _ -> NumConst.zero 
@@ -27,18 +42,20 @@ let unit_matrix n =
 	done;
 	mat
 
-let negate_vector =	Array.map NumConst.neg
+let negate_vector =	Array.map Q.neg
 
 
 (* build the row of a nxn matrix from a linear term *)
 let make_row n term =
+	let const_coeff = LinearConstraint.evaluate_linear_term zero_vector term in
 	(* function for term evaluation, considers the offset to the first variable *)
   let unit_vector i = 
 		fun j -> if j = (i + !var_offset) then NumConst.one else NumConst.zero in
 	let row = Array.make n zero in
 	for i = 0 to (n-1) do
 		let a = LinearConstraint.evaluate_linear_term (unit_vector i) term in
-		let q = NumConst.mpq_of_numconst a in
+		let a_minus_const = NumConst.sub a const_coeff in
+		let q = NumConst.mpq_of_numconst a_minus_const in
 		row.(i) <- q
 	done;
 	row
@@ -47,15 +64,15 @@ let make_row n term =
 (* where an assignment is a pair of a variable index and a linear term *)
 let make n assignments =	
 	let mat = unit_matrix n in
-	let vec = Array.make n NumConst.zero in
+	let vec = Array.make n Gmp.Q.zero in
 	let insert_row = fun assignment -> (
 		(* build row *)
 		let v, term = assignment in
 		let row = make_row n term in
-		mat.(v) <- row;
+		mat.(v - !var_offset) <- row;
 		(* get constant offset *)
-		let coef = LinearConstraint.evaluate_linear_term zero_vector term in
-		vec.(v) <- coef
+		let coef = NumConst.mpq_of_numconst (LinearConstraint.evaluate_linear_term zero_vector term) in
+		vec.(v - !var_offset) <- coef
 	) in
 	List.iter insert_row assignments;	
 	(mat, vec) 
@@ -69,7 +86,7 @@ let make_term row coef =
 			let coef = (NumConst.numconst_of_mpq a, i + !var_offset) in
 			coefs := coef :: !coefs
 	) row;
-	LinearConstraint.make_linear_term !coefs coef
+	LinearConstraint.make_linear_term !coefs (NumConst.numconst_of_mpq coef)
 
 (* convert an affine mapping to a list of variable updates *)
 let make_updates mat vec =
@@ -81,7 +98,21 @@ let make_updates mat vec =
 		  updates := (i + !var_offset, update) :: !updates
 	) mat;
 	!updates
-	
+
+(* multiply a nxn matrix with a vector *)
+let mult mat vec =
+	let n = Array.length mat in
+	let new_vec = Array.make n Gmp.Q.zero in 
+	for i = 0 to n-1 do
+		let row = mat.(i) in
+		let sum = ref Gmp.Q.zero in
+		for j = 0 to n-1 do
+			sum := !sum +/ vec.(j) */ row.(j)
+		done;
+		new_vec.(i) <- !sum
+	done;
+	new_vec	
+			
 (* invert a matrix *)
 exception Singular
 let invert mat =
@@ -129,12 +160,23 @@ let invert_updates variables assignments =
 	if n = 0 then [] else (
 		(* set the offset to the first variable *)
 		var_offset := List.hd variables;
+		print_message Debug_total ("first discrete variable index: " ^ (string_of_int !var_offset));
+		print_message Debug_total ("number of discrete variables : " ^ (string_of_int n));
 		(* convert the assignments to an affine mapping (A,B) *)
+		print_message Debug_total "build affine mapping from update:";
 		let mat, vec = make n assignments in
+		if debug_mode_greater Debug_total then print mat vec;
 		(* invert the matrix A *)
+		print_message Debug_total "invert matrix";
 		let inv_mat = invert mat in
 		(* negate the vector B *)
-		let inv_vec = negate_vector vec in
+		let neg_vec = negate_vector vec in
+		(* multiply negated B with A^-1 *)
+		let inv_vec = mult inv_mat neg_vec in 		
 		(* convert the affine mapping (A',B') back to variable updates *)
+		if debug_mode_greater Debug_total then (
+			print_message Debug_total "inverse affine mapping:";
+			print inv_mat inv_vec
+		);
 		make_updates inv_mat inv_vec
 	)
