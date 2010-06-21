@@ -1111,8 +1111,8 @@ let try_discrete_update type_of_variables linear_constr =
 		| _ -> no_return_value
 
 
-(* Convert the structure: ParsingStructure.convex_predicate to ((VariableSet, linear_constraint) discrete_update list) *) 
-let convert_update type_of_variables update =
+(* Convert the structure: ParsingStructure.convex_predicate to (continuous_update, discrete_update list) *) 
+let convert_update type_of_variables local_variables update =
 	let discrete_updates = ref [] in
 	let continuous_updates = ref [] in
 	(* for each linear_constraint in the update convex predicate *)
@@ -1149,17 +1149,27 @@ let convert_update type_of_variables update =
 			| _ -> ()
 	) updated;
 	if (VariableSet.is_empty updated) then 
-		(* empty clock updates *)
-		(None, !discrete_updates)
+		(* keep clocks stable, analogs are free *)
+		(Clocks_stable, !discrete_updates)
 	else
+		(* add stable constraints for non-updated local clocks *)
+		let local_clocks = VariableSet.filter (fun v -> 
+			match type_of_variables v with
+				| Var_type_clock -> true
+				| _ -> false
+		) local_variables in
+		let non_updated_clocks = VariableSet.elements (VariableSet.diff local_clocks updated) in
+		let stable_clock_pairs = List.map (fun v -> (v, v + !glob_prime_offset)) non_updated_clocks in
+		let stable_constr = LinearConstraint.make_equalities stable_clock_pairs in
+		LinearConstraint.intersection_assign update_constraint [stable_constr];
 	  (* return the converted data structures *)
-	  (Some (updated, update_constraint), !discrete_updates)
+	  (Update update_constraint, !discrete_updates)
 	
 (*--------------------------------------------------*)
 (* Convert the transitions *)
 (*--------------------------------------------------*)
 (* Convert the structure: 'automaton_index -> location_index -> list of (action_index, guard, resets, dest_state)' into a structure: 'automaton_index -> location_index -> action_index -> list of (guard, resets, dest_state)' *)
-let convert_transitions nb_actions type_of_variables transitions =
+let convert_transitions nb_actions type_of_variables continuous_vars transitions =
 	(* Create the empty array *)
 	let array_of_transitions = Array.make (Array.length transitions) (Array.make 0 (Array.make 0 [])) in
 	(* Iterate on automata *)
@@ -1176,7 +1186,8 @@ let convert_transitions nb_actions type_of_variables transitions =
 				(* Convert the guard *)
 				let converted_guard = linear_constraint_of_convex_predicate guard in
 				(* Convert the updates *)
-				let converted_updates = convert_update type_of_variables update in
+				let local_vars = continuous_vars automaton_index in
+				let converted_updates = convert_update type_of_variables local_vars update in
 				(* Split between the continuous and discrete updates *)
 				let continuous_updates, discrete_updates = converted_updates in
 				(* Update the transition *)
@@ -1636,7 +1647,7 @@ let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_
 	
 	(* Convert the transitions *)
 	print_message Debug_total ("*** Building transitions...");
-	let transitions = convert_transitions nb_actions type_of_variables transitions in
+	let transitions = convert_transitions nb_actions type_of_variables continuous_per_automaton transitions in
 
 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)

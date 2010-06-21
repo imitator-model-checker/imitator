@@ -77,7 +77,11 @@ type state = location * linear_constraint
 (** Transition *)
 (****************************************************************) 
 
-type update = (VariableSet.t * linear_constraint) option
+type update = 
+	| All_free                    (* all variables unconstrained *)
+	| All_stable                  (* all variables keep their value x'=x *)
+	| Clocks_stable               (* all clocks stable, all analog unconstrained *)
+	| Update of linear_constraint
 
 (** update: variable_index := linear_term *)
 type clock_update = clock_index * linear_term

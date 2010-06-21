@@ -109,10 +109,29 @@ let string_of_discrete_updates program updates =
 	) updates)
 
 (* Convert an update into a string *)
-let string_of_update program update =
+let string_of_update program aut_index update =
 		match update with
-			| None -> ""
-			| Some (_, update_constr) ->  
+			| All_free -> ""
+			| All_stable -> (
+				let vars = program.continuous_per_automaton aut_index in
+				let stable_strings =
+					List.map (fun v -> 
+						let var_name = program.variable_names v in
+						var_name ^ "' = " ^ var_name 
+					) (VariableSet.elements vars) in
+				string_of_list_of_string_with_sep ", " stable_strings
+			)
+			| Clocks_stable -> (
+				let vars = VariableSet.elements (program.continuous_per_automaton aut_index) in
+				let clocks = List.filter program.is_clock vars in
+				let stable_strings =
+					List.map (fun v -> 
+						let var_name = program.variable_names v in
+						var_name ^ "' = " ^ var_name 
+					) clocks in
+				string_of_list_of_string_with_sep ", " stable_strings				
+				)
+			| Update update_constr ->  
 					LinearConstraint.string_of_linear_constraint program.variable_names update_constr
 
 (* Convert a transition of a location into a string *)
@@ -122,7 +141,7 @@ let string_of_transition program automaton_index action_index (guard, update, di
 	^ (LinearConstraint.string_of_linear_constraint program.variable_names guard)
 	(* Convert the updates *)
 	^ " do {"
-	^ (string_of_update program update)
+	^ (string_of_update program automaton_index update)
 	^ (string_of_discrete_updates program discrete_updates)
 	^ "} "
 	(* Convert the sync *)

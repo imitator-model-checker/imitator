@@ -245,26 +245,19 @@ let invert_flows program =
 (* invert a constraint and compute its update set *)
 let invert_constraint program constr =
 	(* swap X and X' in constraint *)
-	let inv_constr = LinearConstraint.rename_variables program.renamed_clocks_couples constr in
-	(* compute the support variables *)
-	let support = LinearConstraint.support inv_constr in
-	(* filter primed variables to obtain the update set *)
-	let update_set = VariableSet.filter program.is_renamed_clock support in
-	(* rename the variables in the update set *)
-	let renamed_update_set = VariableSet.fold (fun v set -> 
-		VariableSet.add (program.variable_of_prime v) set
-	) update_set VariableSet.empty in
-	(inv_constr, renamed_update_set)	
+	LinearConstraint.rename_variables program.renamed_clocks_couples constr	
 	
 	
 (* invert the update for a transition *)
 let invert_update program update =
 	(* swap variables X,X' in jump relation and compute its update set *)
 	match update with
-		| None -> None
-		| Some (_, mu) -> (
-				let inv_mu, update_set = invert_constraint program mu in
-				Some (update_set, inv_mu)
+		| All_free -> All_free
+		| All_stable -> All_stable
+		| Clocks_stable -> Clocks_stable
+		| Update mu -> (
+				let inv_mu = invert_constraint program mu in
+				Update inv_mu
 	)
 	
 	
@@ -350,10 +343,10 @@ let dump program =
 					print_message Debug_standard (
 						"     guard: " ^ (LinearConstraint.string_of_linear_constraint program.variable_names guard));
 					let upstr = match update with
-						| None -> "empty"
-						| Some (update_set, constr) -> (
-								VariableSet.fold (fun v str -> str ^ " " ^ (program.variable_names v)) update_set ""
-							)	in
+						| All_free -> "all free"
+						| All_stable -> "all stable"
+						| Clocks_stable -> "clocks stable"
+						| Update constr -> LinearConstraint.string_of_linear_constraint program.variable_names constr	in
 					print_message Debug_standard (
 						"     updated variables: " ^ upstr);
 						

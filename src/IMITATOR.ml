@@ -470,6 +470,8 @@ let post program pi0 reachability_graph orig_state_index =
 		let location = Automaton.copy_location original_location in
 		(* Create a temporary hashtbl for discrete values *)
 		let updated_discrete = Hashtbl.create program.nb_discrete in
+		(* Create a set to collect all local variables involved in the transition *)
+		let updated_continuous = ref VariableSet.empty in
 		(* Update the location for the automata synchronized with 'action_index'; return the list of guards and updates *)
 		let guards_and_updates = Array.to_list (Array.mapi (fun local_index real_index ->
 			(* Find its current index *)
@@ -482,6 +484,19 @@ let post program pi0 reachability_graph orig_state_index =
 			let transition = List.nth transitions current_index in
 			(* Keep only the dest location *)
 			let guard, clock_updates, discrete_updates, dest_index = transition in
+			(* Register the updated local variables for this automaton *)
+			let local_variables = program.continuous_per_automaton real_index in
+			let _ = match clock_updates with
+				  (* register variables to avoid adding stable constraints later *)
+				| All_free -> (updated_continuous := VariableSet.union !updated_continuous local_variables)
+				  (* all stable -> do nothing in order to add stable constraints later *)
+				| All_stable -> ()
+				  (* register only analog variables in order to add stable constraints for clocks later *)
+				| Clocks_stable -> (
+					  let clocks = VariableSet.filter program.is_analog local_variables in
+				    updated_continuous := VariableSet.union !updated_continuous clocks )
+					(* register variables to avoid adding stable constraints later *)
+				| Update _ -> (updated_continuous := VariableSet.union !updated_continuous local_variables) in
 			(* Update discrete *)
 			List.iter (fun (discrete_index, linear_term) ->
 				(* Compute its new value *)
@@ -565,22 +580,16 @@ let post program pi0 reachability_graph orig_state_index =
 	
 			(* Compute X' = rho(X) *)
 			print_message Debug_total ("\nComputing clock updates mu(X,X')");
-			(* get only the updates where something is updated *)
-			let valid_clock_updates = List.fold_left (fun updates update ->  
-				match update with
-					| None -> updates
-					| Some (s, c) -> (s, c) :: updates
-			) [] clock_updates in
-			let (updated_vars, update_constrs) = List.split valid_clock_updates in
-			(* get the union of updated variables for all current transitions *)
-			let all_updated_vars = 
-				List.fold_left (fun new_vars all_vars -> 
-					VariableSet.union new_vars all_vars
-				) VariableSet.empty updated_vars in
-			(* add stable constraints for non-updated variables *)
+ 		  (* get non-involved (thus stable) local variables *)
 			let non_updated_vars = VariableSet.elements (
-				VariableSet.diff program.continuous all_updated_vars
+				VariableSet.diff program.continuous !updated_continuous
 			) in
+			(* get only the updates where something is updated *)
+			let update_constrs = List.fold_left (fun updates update ->  
+				match update with					
+					| Update c -> c :: updates
+					| _ -> updates
+			) [] clock_updates in
 			let stable_pairs = List.map (fun v -> (program.prime_of_variable v, v)) non_updated_vars in 
 			let stable_constr = LinearConstraint.make_equalities stable_pairs in
 			(* compute the updated valus after the transition *)
