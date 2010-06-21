@@ -30,7 +30,7 @@ type var_type =
 	| Var_type_discrete
 	| Var_type_parameter
 
-type variable_declaration = var_type * variable_name list
+type variable_declaration = var_type * variable_name * automaton_name
 
 type variable_declarations = variable_declaration list
 

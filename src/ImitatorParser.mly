@@ -11,7 +11,10 @@
 %{
 open ParsingStructure;;
 open Global;;
-  
+		  
+(* global reference to collect all local variables in all automata *)
+(* as triples (type, varname, autname).                            *)
+let declarations = ref [];;	
   
 let parse_error s =
 	let symbol_start = symbol_start () in
@@ -55,10 +58,9 @@ let parse_error s =
 
 /**********************************************/
 main:
-	 automata_descriptions commands EOF
+	 automata commands EOF
 	{
-		let decl, automata = $1 in
-			decl, automata, $2
+		let automata = $1 in !declarations, automata, $2
 	}
 ;
 
@@ -66,14 +68,10 @@ main:
   MAIN DEFINITIONS
 ***********************************************/
 
-automata_descriptions:
-	declarations automata { $1, $2 }
-;
-
 /**********************************************/
 
 declarations:
-	CT_VAR var_lists { $2 }
+	CT_VAR var_lists { $2	}
 ;
 
 
@@ -82,7 +80,12 @@ declarations:
 /**********************************************/
 
 var_lists:
-	var_list COLON var_type SEMICOLON var_lists { (($3, $1) :: $5) }
+	var_list COLON var_type SEMICOLON var_lists {
+		let t = $3 in
+		let vars = $1 in
+		let decls = List.map (fun v -> (t, v)) vars in
+		List.append decls $5
+	}
 	| { [] }
 ;
 
@@ -116,16 +119,22 @@ automata:
 automaton:
 	CT_AUTOMATON NAME prolog locations CT_END
 	{
-		($2, $3, $4)
+		let aut_name = $2 in
+		let decls, labels = $3 in
+		(* tag declarations with automaton name for local variables *)
+		let ext_decls = List.map (fun (t, v) -> (t, v, aut_name)) decls in
+		(* store declarations in global list *)
+		declarations := List.append !declarations ext_decls; 		
+		(aut_name, labels, $4)
 	}
 ;
 
 /**********************************************/
 
 prolog:
-	| initialization sync_labels { $2 }
-	| sync_labels initialization { $1 }
-	| sync_labels { $1 } /* L'initialisation n'est pas prise en compte, et est donc facultative */
+	| declarations initialization sync_labels { $1, $3 }
+	| declarations sync_labels initialization { $1, $2 }
+	| declarations sync_labels { $1, $2 } /* L'initialisation n'est pas prise en compte, et est donc facultative */
 ;
 
 /**********************************************/

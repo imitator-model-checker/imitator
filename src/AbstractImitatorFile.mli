@@ -106,6 +106,8 @@ type abstract_program = {
 	
 	(* a set of all unprimed continuous variables *)
 	continuous : VariableSet.t;
+	(* local continuous variables for each automaton *)
+	continuous_per_automaton : automaton_index -> VariableSet.t;
 	
 	(* True for analogs, false otherwise *)
 	is_analog : variable_index -> bool;

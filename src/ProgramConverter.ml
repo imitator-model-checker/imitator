@@ -259,17 +259,48 @@ let linear_constraint_of_convex_predicate convex_predicate =
 (*--------------------------------------------------*)
 let get_declared_variable_names variable_declarations =
 	(* Get all (possibly identical) names of variables in one variable declaration and add it to the computed triple (clocks, discrete, parameters) *)
-	let get_variables_in_variable_declaration (analogs,clocks, discrete, parameters) (var_type, list_of_names) =
+	let get_variable_from_declaration (analogs,clocks, discrete, parameters) (var_type, var_name, _) =
 		match var_type with
-		| ParsingStructure.Var_type_analog    -> (List.rev_append list_of_names analogs, clocks, discrete, parameters)
-		| ParsingStructure.Var_type_clock     -> (analogs, List.rev_append list_of_names clocks, discrete, parameters)
-		| ParsingStructure.Var_type_discrete  -> (analogs, clocks, List.rev_append list_of_names discrete, parameters)
-		| ParsingStructure.Var_type_parameter -> (analogs, clocks, discrete, List.rev_append list_of_names parameters)
+		| ParsingStructure.Var_type_analog    -> (var_name::analogs, clocks, discrete, parameters)
+		| ParsingStructure.Var_type_clock     -> (analogs, var_name::clocks, discrete, parameters)
+		| ParsingStructure.Var_type_discrete  -> (analogs, clocks, var_name::discrete, parameters)
+		| ParsingStructure.Var_type_parameter -> (analogs, clocks, discrete, var_name::parameters)
 	in
-	let (analogs, clocks, discrete, parameters) = List.fold_left get_variables_in_variable_declaration ([], [], [], []) variable_declarations in
+	let (analogs, clocks, discrete, parameters) = List.fold_left get_variable_from_declaration ([], [], [], []) variable_declarations in
 	(* Reverse lists *)
 	(List.rev analogs, List.rev clocks, List.rev discrete, List.rev parameters)
 
+
+(*--------------------------------------------------*)
+(* Get all continuous variables per automaton index *)
+(*--------------------------------------------------*)
+let get_variables_per_automaton index_of_automata variable_declarations =
+	(* create empty index for variables *)
+	let vars_per_automaton = Hashtbl.create 0 in
+	(* anonymous function to insert a variable into the index *)
+	let make_index = fun (var_type, var_name, aut_name) -> (	
+		(* get index for automaton *)
+		let aut_index = Hashtbl.find index_of_automata aut_name in
+		(* get index for variable *)
+		let var_index = Hashtbl.find !index_of_variables var_name in
+		(* only register continuous variables here *)
+		match var_type with
+			| ParsingStructure.Var_type_analog 
+			| ParsingStructure.Var_type_clock -> (
+					print_message Debug_total ("register local cont. variable " ^ var_name ^ " for automaton " ^ aut_name);
+					(* find previously registered variables for this automaton *)
+					let var_set = try (Hashtbl.find vars_per_automaton aut_index) with Not_found -> VariableSet.empty in
+					(* store variable in table *)
+					Hashtbl.replace vars_per_automaton aut_index (VariableSet.add var_index var_set)				
+				)
+			| _ -> ()				
+	) in
+	(* create index from declarations *)
+	List.iter make_index variable_declarations;
+	(* return functional representation *)
+	fun aut_index -> (
+		try (Hashtbl.find vars_per_automaton aut_index) with Not_found -> VariableSet.empty
+	)
 
 (*--------------------------------------------------*)
 (* Get all (possibly identical) names of automata *)
@@ -1318,7 +1349,7 @@ let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	let nb_integer_variables = 0 in
 	(* 'nb_variables' represent the total number of variables, including renamings (see below) *)
-	let nb_real_variables = 2 * (nb_analogs + nb_clocks  + nb_discrete) + nb_parameters in
+	let nb_real_variables = 2 * (nb_analogs + nb_clocks) + nb_discrete + nb_parameters in
 	LinearConstraint.set_manager nb_integer_variables nb_real_variables;
 
 
@@ -1443,6 +1474,9 @@ let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_
 	
 	(* Functional version *)
 	let automata_names = fun automaton_index -> array_of_automata_names.(automaton_index) in
+	
+	(* create a table for local continuous variables per automaton *)
+	let continuous_per_automaton = get_variables_per_automaton index_of_automata parsed_variable_declarations in
 	
 	(* The array of labels ; index -> label name *)
 	let labels = Array.of_list synclabs_names in
@@ -1701,6 +1735,7 @@ let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_
 	nb_variables = nb_variables;
 
 	continuous = continuous;
+	continuous_per_automaton = continuous_per_automaton;
 
 	(* The list of analog indexes *)
 	(* analogs = analogs; *)
