@@ -361,7 +361,7 @@ let shuffle_dot_colors =
 
 
 (* Convert a graph to a dot file *)
-let dot_of_graph program pi0 reachability_graph =	
+let dot_of_graph program pi0 reachability_graph ~fancy =	
 	let states = reachability_graph.states in
 	let transitions = reachability_graph.transitions_table in
 	(* Create the array of dot colors *)
@@ -446,11 +446,30 @@ let dot_of_graph program pi0 reachability_graph =
 			in
 			(* Find the location color *)
 			let location_color = color location_index in
-			(* Create the command *)
-			string_colors := !string_colors
-				^ "\n  q_" ^ (string_of_int state_index)
-				^ "[color=" ^ location_color
-				^ ", style=filled];";
+			(* create node index *)
+			let node_index = "q_" ^ (string_of_int state_index) in
+
+			if fancy then (
+				(* create record label with location names *)			
+				let loc_names = List.map (fun aut_index -> 
+					let loc_index = Automaton.get_location location aut_index in
+					program.location_names aut_index loc_index
+				) program.automata in
+				let label = string_of_list_of_string_with_sep "|" loc_names in
+				(* Create the command *)
+				string_colors := !string_colors
+					^ "\n  " ^ node_index
+					^ "[fillcolor=" ^ location_color
+					^ ", style=filled, shape=Mrecord, label=\"" 
+					^ node_index ^ "|{" 
+					^ label ^ "}\"];";
+			) else (
+				(* Create the command *)
+				string_colors := !string_colors
+					^ "\n  " ^ node_index
+					^ "[color=" ^ location_color
+					^ ", style=filled];";				
+			)
 			) states;
 		!string_colors)
 		^ "\n}"

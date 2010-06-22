@@ -68,6 +68,9 @@ let no_log = ref false
 (* No graphical output using dot *)
 let no_dot = ref false
 
+(* Use fancy states in dot output *)
+let option_fancy = ref false
+
 (* 2d plot output of reachable states *)
 let option_plot = ref false
 
@@ -185,7 +188,7 @@ let random_pi0 program pi0 =
 let generate_graph program pi0 reachability_graph dot_file_name states_file_name gif_file_name =
 	(* Create the input file *)
 	print_message Debug_total ("Creating input file for dot...");
-	let dot_program, states = Graph.dot_of_graph program pi0 reachability_graph in
+	let dot_program, states = Graph.dot_of_graph program pi0 reachability_graph ~fancy:!option_fancy in
 	(* Write dot file *)
 	if not !no_dot then (
 		print_message Debug_total ("Writing to dot file...");
@@ -1349,6 +1352,8 @@ and speclist = [
 	("-no-dot", Set no_dot, " No graphical output using 'dot'. Default: false.");
 
 	("-no-log", Set no_log, " No generation of log files. Default: false.");
+	
+	("-fancy", Set option_fancy, " Generate detailed state information for dot output. Default: false.");
 	
 	("-plot", Set option_plot, " Generate 2D plot of rechable states projected on the first two variables. Default: false.");
 

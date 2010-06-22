@@ -92,5 +92,5 @@ val plot_graph : reachability_graph -> string
 (****************************************************************)
 
 (* Convert a graph to a dot file *)
-val dot_of_graph : AbstractImitatorFile.abstract_program -> AbstractImitatorFile.pi0 -> reachability_graph -> (string * string)
+val dot_of_graph : AbstractImitatorFile.abstract_program -> AbstractImitatorFile.pi0 -> reachability_graph -> fancy:bool -> (string * string)
 
