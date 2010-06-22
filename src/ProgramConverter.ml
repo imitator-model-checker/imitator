@@ -277,23 +277,36 @@ let get_declared_variable_names variable_declarations =
 let get_variables_per_automaton index_of_automata variable_declarations =
 	(* create empty index for variables *)
 	let vars_per_automaton = Hashtbl.create 0 in
-	(* anonymous function to insert a variable into the index *)
-	let make_index = fun (var_type, var_name, aut_name) -> (	
-		(* get index for automaton *)
-		let aut_index = Hashtbl.find index_of_automata aut_name in
-		(* get index for variable *)
-		let var_index = Hashtbl.find !index_of_variables var_name in
-		(* only register continuous variables here *)
-		match var_type with
-			| ParsingStructure.Var_type_analog 
-			| ParsingStructure.Var_type_clock -> (
-					print_message Debug_total ("register local cont. variable " ^ var_name ^ " for automaton " ^ aut_name);
-					(* find previously registered variables for this automaton *)
-					let var_set = try (Hashtbl.find vars_per_automaton aut_index) with Not_found -> VariableSet.empty in
-					(* store variable in table *)
-					Hashtbl.replace vars_per_automaton aut_index (VariableSet.add var_index var_set)				
-				)
-			| _ -> ()				
+	(* build function to insert a variable into the index *)
+	let make_index = fun (var_type, var_name, var_scope) -> (
+		match var_scope with
+		| Global -> (
+		  (* only discrete and parameters are admitted global *)
+			match var_type with
+				| ParsingStructure.Var_type_analog
+				| ParsingStructure.Var_type_clock -> (
+						print_error ("No global analog and clock variables permitted (variable " ^ var_name ^ ")");
+						raise InvalidProgram
+					)
+				| _ -> ()
+		  )
+		| Local aut_name -> (		
+			(* get index for automaton *)
+			let aut_index = Hashtbl.find index_of_automata aut_name in
+			(* get index for variable *)
+			let var_index = Hashtbl.find !index_of_variables var_name in
+			(* only register continuous variables here *)
+			match var_type with
+				| ParsingStructure.Var_type_analog 
+				| ParsingStructure.Var_type_clock -> (
+						print_message Debug_total ("register local cont. variable " ^ var_name ^ " for automaton " ^ aut_name);
+						(* find previously registered variables for this automaton *)
+						let var_set = try (Hashtbl.find vars_per_automaton aut_index) with Not_found -> VariableSet.empty in
+						(* store variable in table *)
+						Hashtbl.replace vars_per_automaton aut_index (VariableSet.add var_index var_set)				
+					)
+				| _ -> () (* do not register discrete and parameters as local variables *)
+			)				
 	) in
 	(* create index from declarations *)
 	List.iter make_index variable_declarations;

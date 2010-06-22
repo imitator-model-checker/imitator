@@ -13,7 +13,7 @@ open ParsingStructure;;
 open Global;;
 		  
 (* global reference to collect all local variables in all automata *)
-(* as triples (type, varname, autname).                            *)
+(* as triples (type, varname, scope).                              *)
 let declarations = ref [];;	
   
 let parse_error s =
@@ -58,9 +58,20 @@ let parse_error s =
 
 /**********************************************/
 main:
-	 automata commands EOF
+	 declarations automata commands EOF
 	{
-		let automata = $1 in !declarations, automata, $2
+		(* get declarations in header *)
+		let decls = $1 in
+		(* tag as global *)
+		let global_decls = List.map (fun (v,t) -> (v,t,Global)) decls in
+		(* store in declaration list *)
+		declarations := List.append !declarations global_decls;
+		(* parse automata *)
+		let automata = $2 in 
+		(* parse commands *)
+		let commands = $3 in
+		(* return global and local variables, automata and commands *)
+		!declarations, automata, commands
 	}
 ;
 
@@ -72,6 +83,7 @@ main:
 
 declarations:
 	CT_VAR var_lists { $2	}
+	| { [] }
 ;
 
 
@@ -121,8 +133,8 @@ automaton:
 	{
 		let aut_name = $2 in
 		let decls, labels = $3 in
-		(* tag declarations with automaton name for local variables *)
-		let ext_decls = List.map (fun (t, v) -> (t, v, aut_name)) decls in
+		(* tag declarations as local with automaton name *)
+		let ext_decls = List.map (fun (t, v) -> (t, v, Local aut_name)) decls in
 		(* store declarations in global list *)
 		declarations := List.append !declarations ext_decls; 		
 		(aut_name, labels, $4)
