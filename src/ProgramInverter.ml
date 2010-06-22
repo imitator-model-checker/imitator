@@ -246,24 +246,49 @@ let invert_flows program =
 let invert_constraint program constr =
 	(* swap X and X' in constraint *)
 	LinearConstraint.rename_variables program.renamed_clocks_couples constr	
+
+(* compute update set for a constraint *)
+let get_update_set program constr =
+	let support = LinearConstraint.support constr in
+	let primes = VariableSet.filter program.is_renamed_clock support in
+	let unprimed = VariableSet.fold (fun v vars -> 
+		VariableSet.add (program.variable_of_prime v) vars
+	) primes VariableSet.empty in
+	unprimed			 		
 	
 	
 (* invert the update for a transition *)
-let invert_update program update =
-	(* swap variables X,X' in jump relation and compute its update set *)
-	match update with
-		| All_free -> All_free
-		| All_stable -> All_stable
-		| Clocks_stable -> Clocks_stable
-		| Update mu -> (
-				let inv_mu = invert_constraint program mu in
-				Update inv_mu
-	)
+let invert_guard_and_update program local_vars guard update =
+	(* get all local clocks *)
+	let clocks = VariableSet.filter program.is_clock local_vars in 
+	(* build normalised constraint and update set *)
+	let mu = match update with
+		| All_free -> LinearConstraint.true_constraint ()
+		| All_stable -> (
+				let stable_pairs = List.map (fun v -> (v, program.prime_of_variable v)) (VariableSet.elements local_vars) in
+				LinearConstraint.make_equalities stable_pairs
+			)
+		| Clocks_stable -> (				
+				let stable_pairs = List.map (fun v -> (v, program.prime_of_variable v)) (VariableSet.elements clocks) in
+				LinearConstraint.make_equalities stable_pairs			
+			)
+		| Update mu -> mu in
+	(* combine with guard *)
+	let mu_and_guard = LinearConstraint.intersection [mu; guard] in
+	(* invert constraint *)
+	let inv_mu = invert_constraint program mu_and_guard in
+	(* compute new guard *)
+	let inv_guard = LinearConstraint.hide program.renamed_clocks inv_mu in
+	(* build new update *)
+	if LinearConstraint.is_true inv_mu then
+		(inv_guard, All_free)
+	else
+		(inv_guard, Update inv_mu)
 	
 	
 (* invert one transition, returns a pair (loc, trans) with the new source location *)
 (* and the converted transition  *)
-let invert_transition program new_dest transition =
+let invert_transition program local_vars new_dest transition =
 	(* get components, drop destination location *)
 	let guard, update, discr_updates, old_dest = transition in
 	(* invert discrete updates *)
@@ -276,9 +301,9 @@ let invert_transition program new_dest transition =
 		) in 		
 	(* invert updates *)
 	print_message Debug_total "invert clock updates";
-	let inv_update = invert_update program update in
+	let inv_guard, inv_update = invert_guard_and_update program local_vars guard update in
 	(* assemble new transition *)
-	let inv_trans = (guard, inv_update, inv_discr_updates, new_dest) in
+	let inv_trans = (inv_guard, inv_update, inv_discr_updates, new_dest) in
 	(* return new source location and inverted transition *)
 	(old_dest, inv_trans)
 	
@@ -297,6 +322,8 @@ let invert_transitions program =
 		let nb_actions = program.nb_actions in	
 		trans_array.(aut_index) <- Array.make_matrix nb_locations nb_actions [];
 		action_array.(aut_index) <- Array.make nb_locations [];
+		(* get local variables for this automaton *)
+		let local_vars = program.continuous_per_automaton aut_index in
 		(* for each location in this automaton *)
 		List.iter (fun loc_index ->
 			(* for each possible action *)
@@ -305,7 +332,7 @@ let invert_transitions program =
 				let transitions = program.transitions aut_index loc_index act_index in
 				(* invert transitions *)
 				List.iter (fun transition -> 
-					let new_source, inv_trans = invert_transition program loc_index transition in
+					let new_source, inv_trans = invert_transition program local_vars loc_index transition in
 					(* store new transition *)
 					trans_array.(aut_index).(new_source).(act_index) <- inv_trans :: trans_array.(aut_index).(new_source).(act_index);
 					(* register action *)
