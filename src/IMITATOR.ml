@@ -84,7 +84,7 @@ let post_limit = ref None
 let time_limit = ref None
 
 (* Reverse automaton for backward reachability *)
-let option_backward = ref false
+let option_pre = ref false
 
 (**************************************************)
 (**************************************************)
@@ -1347,7 +1347,7 @@ and speclist = [
 
 	("-mode", String set_mode, " Mode for IMITATOR II. Use 'reachability' for a parametric reachability analysis (no pi0 needed). Use 'inversemethod' for the inverse method. For the behavioral cartography algorithm, use 'cover' to cover all the points within V0, or 'randomXX' where XX is a number to iterate randomly algorithm. Default: 'inversemethod'.");
 	
-	("-backward", Set option_backward, " Reverse automaton for backward reachability analysis. Default: 'false'.");
+	("-pre", Set option_pre, " Reverse automata for backward reachability analysis. Default: 'false'.");
 	
 	("-no-dot", Set no_dot, " No graphical output using 'dot'. Default: false.");
 
@@ -1453,7 +1453,7 @@ if !program_prefix = "" then
 if !inclusion then
 	print_message Debug_medium ("Considering inclusion mode.");
 
-if !option_backward then
+if !option_pre then
 	print_message Debug_medium ("Invert automaton for backward reachability");
 
 if !sync_auto_detection then
@@ -1553,15 +1553,15 @@ try (
 Gc.major ();
 print_message Debug_standard ("Program checked and converted " ^ (after_seconds ()) ^ ".\n");
 
-let program = if not !option_backward then program else (
+let program = if not !option_pre then program else (
 	try (	
 		ProgramInverter.invert program
 	) with InternalError e -> (print_error e; abort_program (); exit 0) 
 ) in 
 
-if !option_backward then (
+if !option_pre then (
 	Gc.major ();
-	print_message Debug_standard ("Automata inverted " ^ (after_seconds ()) ^ ".\n");
+	print_message Debug_standard ("Automata reversed " ^ (after_seconds ()) ^ ".\n");
 	if debug_mode_greater Debug_high then print_message Debug_high ("\nProgram:\n" ^ (ImitatorPrinter.string_of_program program) ^ "\n")				
 );
 

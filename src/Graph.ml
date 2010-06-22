@@ -419,13 +419,21 @@ let dot_of_graph program pi0 reachability_graph ~fancy =
 		"\n\ndigraph G {"
 		(* Convert the transitions *)
 		^ (Hashtbl.fold (fun (orig_state_index, action_index) dest_state_index my_string ->
+			let is_nosync action =
+				String.length action >= 7 &&
+				String.sub action 0 7 = "nosync_" in
+			let action = program.action_names action_index in
+			let label = if is_nosync action then (
+				";"
+			) else (
+				" [label=\"" ^ action ^ "\"];"
+			) in
 			my_string
 			^ "\n  "
 			^ "q_" ^ (string_of_int orig_state_index)
 			^ " -> "
 			^ "q_" ^ (string_of_int dest_state_index)
-			^ " [label=\"" ^ (program.action_names action_index) ^ "\"];"
-
+			^ label
 		) transitions "")
 
 	(*	(* Add a nice color *)
