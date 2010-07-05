@@ -189,3 +189,5 @@ val string_of_false : string
 (** String for the true constraint *)
 val string_of_true : string
 
+(** Plot polyhedron corresponding to a convex constraint, projected on the two given variables *)
+val plot_2d : variable -> variable -> linear_constraint -> string
