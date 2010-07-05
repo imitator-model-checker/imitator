@@ -1125,7 +1125,10 @@ let cover_behavioral_cartography program pi0cube init_state =
 	print_message Debug_standard ("Average number of states     : " ^ (string_of_float nb_states) ^ "");
 	print_message Debug_standard ("Average number of transitions: " ^ (string_of_float nb_transitions) ^ "");
 	print_message Debug_standard ("**************************************************");
-	()
+
+	(* Return a list of the generated zones *)
+	let zones = DynArray.to_list results in
+	zones
 
 
 (** Behavioral cartography algorithm with random selection of a pi0 *)
@@ -1269,7 +1272,9 @@ let random_behavioral_cartography program pi0cube init_state nb =
 	print_message Debug_standard (string_of_list_of_string_with_sep ", " (List.map string_of_int (List.rev !interesting_interations)));
 	print_message Debug_standard ("**************************************************");
 
-	()
+	(* Return a list of generated zones *)
+	let zones = List.map (fun index -> results.(index)) !interesting_interations in
+	zones
 
 
 ;;
@@ -1595,7 +1600,7 @@ print_message Debug_medium ("\nInitial state after time-elapsing:\n" ^ (Imitator
 (* Execute IMITATOR II *)
 (**************************************************)
 
-let _ =
+let zones =
 match !imitator_mode with
 	(* Perform reachability analysis or inverse Method *)
 	| Reachability_analysis | Inverse_method ->
@@ -1608,6 +1613,7 @@ match !imitator_mode with
 		let states_file_name = (!program_prefix ^ ".states") in
 		let gif_file_name = (!program_prefix ^ "." ^ dot_extension) in
 		generate_graph program pi0 reachability_graph dot_file_name states_file_name gif_file_name;
+		[ k0 ]
 
 	| Random_cartography nb ->
 	(* Behavioral cartography algorithm with random iterations *)
@@ -1625,6 +1631,11 @@ in ();
 
 
 if !option_hello then (
+
+  List.iter (fun zone ->
+    print_message Debug_standard ("Zone: " ^ (LinearConstraint.string_of_linear_constraint program.variable_names zone) ^ "\n")
+  ) zones;
+
   Graphics.hello_world ()
 );
 
