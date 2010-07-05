@@ -76,6 +76,8 @@ let post_limit = ref None
 (* Time limit for the program *)
 let time_limit = ref None
 
+(* Call hello world before terminating *)
+let option_hello = ref false
 
 
 (**************************************************)
@@ -1376,6 +1378,8 @@ and speclist = [
 
 	("-with-parametric-log", Set with_parametric_log, " Adds the elimination of the clock variables in the constraints in the log files. Default: false.");
 
+        ("-hello", Set option_hello, " Print hello world message before terminating the program. Default: false.");
+
 	] in
 
 (* A function on any argument *)
@@ -1422,7 +1426,7 @@ set_debug_mode !global_debug_mode;
 
 (**************************************************)
 (**************************************************)
-(* Hello world! *)
+(* Print startup message *)
 (**************************************************)
 (**************************************************)
 print_message Debug_standard
@@ -1618,5 +1622,10 @@ in ();
 (* Bye bye! *)
 (**************************************************)
 (* flush stdout; *)
+
+
+if !option_hello then (
+  Graphics.hello_world ()
+);
 
 terminate_program()
