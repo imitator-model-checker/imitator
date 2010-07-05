@@ -420,7 +420,7 @@ let is_satisfiable = fun c -> not (is_false c)
 let is_equal = ppl_Polyhedron_equals_Polyhedron
 
 (** Check if a constraint is included in another one *)
-let is_leq = ppl_Polyhedron_contains_Polyhedron
+let is_leq x y = ppl_Polyhedron_contains_Polyhedron y x
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
 (** {3 Pi0-compatibility} *)
@@ -584,32 +584,6 @@ let substitute_variables sub linear_inequality =
 				Greater_Or_Equal (lsub, rsub))
 		
 
-(** 'add_d d coef variables c' adds a variable 'coef * d' to any variable in 'variables' *)
-(***** FIXME: This is probably very expensive and stupid *)
-(*let add_d d coef variable_list linear_constraint =                                             *)
-(*	let p = NumConst.get_num coef in                                                             *)
-(*	let q = NumConst.get_den coef in                                                             *)
-(*	if (q <>! Gmp.Z.one) then                                                                    *)
-(*		raise (InternalError "Only integer coefficients supported yet in add_d");                  *)
-(*	(* build the substitution function *)	                                                      *)
-(*	let coef_d = Times (p, Variable d) in                                                        *)
-(*	let sub = fun v -> (                                                                         *)
-(*		if List.mem v variable_list then                                                           *)
-(*			Plus (Variable v, coef_d)                                                                *)
-(*		else                                                                                       *)
-(*			Variable v                                                                               *)
-(*		) in                                                                                       *)
-(*	(* get the constraints from polyhedron *)                                                    *)
-(*	let constraint_list = ppl_Polyhedron_get_constraints linear_constraint in                    *)
-(*	(* perform the substitution for each constraint *)                                           *)
-(*	let new_constraints = List.map (fun ineq -> substitute_variables sub ineq) constraint_list in*)
-(*	(* build a new polyhedron *)                                                                 *)
-(*	let poly = true_constraint () in                                                             *)
-(*	ppl_Polyhedron_add_constraints poly new_constraints; 	                                      *)
-(*	assert_dimensions poly;                                                                      *)
-(*	poly                                                                                         *)
-
-
 let split_q r = 
 	let p = NumConst.get_num r in
 	let q = NumConst.get_den r in
@@ -630,162 +604,64 @@ let add_d d coef variable_list linear_constraint =
 	result_poly
 
 
-(*
-
-let of_int = NumConst.numconst_of_int;;
-let of_frac = NumConst.numconst_of_frac;;
-
-let names = fun i -> if i = 4 then "d" else ("x" ^ (string_of_int i));;
-let pi0 = [| 1; 2; 3; 4 |];;
-
-let pi0 = fun i -> (of_int pi0.(i));;
-
-let int_dim = 0;;
-let real_dim = 5;;
-
-LinearConstraint.set_manager int_dim real_dim;;
-
-let lt1 = LinearConstraint.make_linear_term [(of_int (-7), 1); (of_frac (-2) 2, 2); (of_int (0), 3); (of_int (-1), 1); (of_frac 132 64, 3); ] (of_frac (-4) 3);;
-let lt2 = LinearConstraint.make_linear_term [(of_int (-1), 2); (of_int (1), 3)] (of_frac (0) (1));;
-let lt3 = LinearConstraint.make_linear_term [] (of_frac (-137) (2046));;
-let lt4 = LinearConstraint.make_linear_term [] (of_frac (0) (9));;
-
-print_string ("\n lt1 := " ^ (LinearConstraint.string_of_linear_term names lt1));;
-print_string ("\n lt2 := " ^ (LinearConstraint.string_of_linear_term names lt2));;
-print_string ("\n lt3 := " ^ (LinearConstraint.string_of_linear_term names lt3));;
-print_string ("\n lt4 := " ^ (LinearConstraint.string_of_linear_term names lt4));;
-
-print_string ("\n lt1 + lt2 := " ^ (LinearConstraint.string_of_linear_term names (LinearConstraint.add_linear_terms lt1 lt2)));;
-print_string ("\n lt1 + lt2 + lt3 := " ^ (LinearConstraint.string_of_linear_term names (LinearConstraint.add_linear_terms (LinearConstraint.add_linear_terms lt1 lt2) lt3)));;
-
-let li1 = LinearConstraint.make_linear_inequality lt1 LinearConstraint.Op_g;;
-let li2 = LinearConstraint.make_linear_inequality lt2 LinearConstraint.Op_ge;;
-let li3 = LinearConstraint.make_linear_inequality lt3 LinearConstraint.Op_g;;
-let li4 = LinearConstraint.make_linear_inequality lt4 LinearConstraint.Op_ge;;
-
-print_string ("\n li1 := " ^ (LinearConstraint.string_of_linear_inequality names li1));;
-print_string ("\n li2 := " ^ (LinearConstraint.string_of_linear_inequality names li2));;
-print_string ("\n li3 := " ^ (LinearConstraint.string_of_linear_inequality names li3));;
-print_string ("\n li4 := " ^ (LinearConstraint.string_of_linear_inequality names li4));;
-
-print_string ("\n li1 is pi-compatible : " ^ (string_of_bool (LinearConstraint.is_pi0_compatible_inequality pi0 li1)));;
-print_string ("\n li2 is pi-compatible : " ^ (string_of_bool (LinearConstraint.is_pi0_compatible_inequality pi0 li2)));;
-print_string ("\n li3 is pi-compatible : " ^ (string_of_bool (LinearConstraint.is_pi0_compatible_inequality pi0 li3)));;
-print_string ("\n li4 is pi-compatible : " ^ (string_of_bool (LinearConstraint.is_pi0_compatible_inequality pi0 li4)));;
+let unit_vector i =
+ 	fun j -> if i = j then NumConst.one else NumConst.zero
 
 
-let negate = LinearConstraint.negate_wrt_pi0 pi0;;
-
-print_string ("\n neg li1 := " ^ (LinearConstraint.string_of_linear_inequality names (negate li1)));;
-print_string ("\n neg li2 := " ^ (LinearConstraint.string_of_linear_inequality names (negate li2)));;
-print_string ("\n neg li3 := " ^ (LinearConstraint.string_of_linear_inequality names (negate li3)));;
-print_string ("\n neg li4 := " ^ (LinearConstraint.string_of_linear_inequality names (negate li4)));;
-
-let lc1 = LinearConstraint.make [li1];;
-let lc2 = LinearConstraint.make [li2];;
-let lc3 = LinearConstraint.make [li3];;
-let lc4 = LinearConstraint.make [li4];;
-let lc12 = LinearConstraint.make [li1; li2];;
-
-print_string ("\n lc1 := " ^ (LinearConstraint.string_of_linear_constraint names lc1));;
-print_string ("\n lc2 := " ^ (LinearConstraint.string_of_linear_constraint names lc2));;
-print_string ("\n lc3 := " ^ (LinearConstraint.string_of_linear_constraint names lc3));;
-print_string ("\n lc4 := " ^ (LinearConstraint.string_of_linear_constraint names lc4));;
-print_string ("\n [li1 ; li2] := " ^ (LinearConstraint.string_of_linear_constraint names lc12));;
-
-print_string ("\n lc1 is pi-compatible : " ^ (string_of_bool (LinearConstraint.is_pi0_compatible pi0 lc1)));;
-print_string ("\n lc2 is pi-compatible : " ^ (string_of_bool (LinearConstraint.is_pi0_compatible pi0 lc2)));;
-print_string ("\n lc3 is pi-compatible : " ^ (string_of_bool (LinearConstraint.is_pi0_compatible pi0 lc3)));;
-print_string ("\n lc4 is pi-compatible : " ^ (string_of_bool (LinearConstraint.is_pi0_compatible pi0 lc4)));;
-print_string ("\n [li1 ; li2] is pi-compatible : " ^ (string_of_bool (LinearConstraint.is_pi0_compatible pi0 lc12)));;
-
-let lc1i2 = LinearConstraint.intersection [lc1 ; lc2] in
-print_string ("\n lc1 ^ lc2 = " ^ (LinearConstraint.string_of_linear_constraint names lc1i2));;
-print_string ("\n lc1 ^ lc3 = " ^ (LinearConstraint.string_of_linear_constraint names (LinearConstraint.intersection [lc1 ; lc3])));;
-
-print_string ("\n lc1 after elimination of x1 : " ^ (LinearConstraint.string_of_linear_constraint names (LinearConstraint.hide [1] lc1)));;
-
-print_string ("\n -------------------");;
-
-let lt1 = LinearConstraint.make_linear_term [(of_int 1, 3); (of_int (-1), 1)] (of_int 0);;
-let lt2 = LinearConstraint.make_linear_term [(of_int 1, 1); (of_int (-1), 2)] (of_int 0);;
-let li1 = LinearConstraint.make_linear_inequality lt1 LinearConstraint.Op_ge;;
-let li2 = LinearConstraint.make_linear_inequality lt2 LinearConstraint.Op_g;;
-let lc1 = LinearConstraint.make [li1];;
-let lc2 = LinearConstraint.make [li2];;
-print_string ("\n lc1 := " ^ (LinearConstraint.string_of_linear_constraint names lc1));;
-print_string ("\n lc2 := " ^ (LinearConstraint.string_of_linear_constraint names lc2));;
-
-let lc12 = LinearConstraint.intersection [lc1 ; lc2];;
-print_string ("\n lc1 ^ lc2 = " ^ (LinearConstraint.string_of_linear_constraint names lc12));;
-
-print_string ("\n lc1 ^ lc2 is pi-compatible : " ^ (string_of_bool (LinearConstraint.is_pi0_compatible pi0 lc12)));;
-
-let pi0comp, pi0incomp = LinearConstraint.partition_pi0_compatible pi0 lc12;;
-print_string ("\n Partition of the inequalities of lc1 ^ lc2 according to their pi0-compatibility:");;
-let print_inequalities = List.iter (fun i -> print_string ("\n    - " ^ (LinearConstraint.string_of_linear_inequality names i))) in
-print_string ("\n  - pi0-compatible:");
-print_inequalities pi0comp;
-print_string ("\n  - pi0-incompatible:");
-print_inequalities pi0incomp;;
-
-let lc3 = LinearConstraint.hide [1] lc12 in
-print_string ("\n (*1) lc1 ^ lc2 after elimination of x1 : " ^ (LinearConstraint.string_of_linear_constraint names lc3));;
-
-(* INCLUSION AND EQUALITY *)
-
-let lc4 = LinearConstraint.make [LinearConstraint.make_linear_inequality (LinearConstraint.make_linear_term [(of_int 1, 3); (of_int (-1), 2)] (of_int 0)) LinearConstraint.Op_ge] in
-print_string ("\n (*2) : " ^ (LinearConstraint.string_of_linear_constraint names lc4));;
-
-print_string ("\n (*1) = (*1) : " ^ (string_of_bool (LinearConstraint.is_equal lc3 lc3)));;
-print_string ("\n (*1) = (*2) : " ^ (string_of_bool (LinearConstraint.is_equal lc3 lc4)));;
-print_string ("\n (*1) <= (*2) : " ^ (string_of_bool (LinearConstraint.is_leq lc3 lc4)));;
-print_string ("\n (*1) >= (*2) : " ^ (string_of_bool (LinearConstraint.is_leq lc4 lc3)));;
+(* converts a generator to a 2d point wrt. the first two variables *)
+let point_of_generator = function
+	| Point (expr, c) -> 
+			let x, y = 
+				(evaluate_linear_term_ppl (unit_vector 0) expr,
+				 evaluate_linear_term_ppl (unit_vector 1) expr) in
+			let q = NumConst.numconst_of_mpz c in
+			let xf = Gmp.Q.to_float (NumConst.mpq_of_numconst (NumConst.div x q)) in
+			let yf = Gmp.Q.to_float (NumConst.mpq_of_numconst (NumConst.div y q)) in
+			Some (xf, yf)
+	| _ -> None
 
 
-(* VARIABLE RENAMINGS *)
-
-let renamed = LinearConstraint.rename_variables [(2, 3); (3, 2)] lc12 in
-print_string ("\n lc1 ^ lc2 after switching x2 and x3 " ^ (LinearConstraint.string_of_linear_constraint names renamed));;
-
-let with_d = LinearConstraint.add_d 4 (of_int 1) [1] lc12 in
-print_string ("\n lc1 ^ lc2 after adding 'd' " ^ (LinearConstraint.string_of_linear_constraint names with_d));;
-
-let with_d = LinearConstraint.add_d 4 (of_int 1) [1; 2] lc12 in
-print_string ("\n lc1 ^ lc2 after adding 'd' " ^ (LinearConstraint.string_of_linear_constraint names with_d));;
+(* comparison function for 2d points; used for sorting points *)
+(* counter-clockwise wrt. a given center point (cx, cy) *)
+let compare_points (cx, cy) (ax, ay) (bx, by) =
+	let area = (ax -. cx) *. (by -. cy) -. (ay -. cy) *. (bx -. cx) in
+	if area > 0.0 then 1 else
+		if area = 0.0 then 0 else	-1
 
 
+(* converts a linear_constraint to a set of 2d points wrt. the variables x,y *)
+let shape_of_poly x y linear_constraint =
+	let poly = ppl_new_NNC_Polyhedron_from_NNC_Polyhedron linear_constraint in
+	(* project on variables x,y *)
+	let remove = ref [] in
+	for i = 0 to !total_dim - 1 do
+		if i <> x && i <> y then
+			remove := i :: !remove
+	done;
+	ppl_Polyhedron_remove_space_dimensions poly !remove;	
+	let generators = ppl_Polyhedron_get_generators poly in
+	(* collect points for the generators *)
+	let points = List.fold_left (fun ps gen ->
+		let p = point_of_generator gen in 
+		match p with
+			| None -> ps
+			| Some point -> point :: ps
+	) [] generators in
+	(* swap coordinates if necessary *)
+	let points = if x < y then points else (
+		List.map (fun (x,y) -> (y,x)) points
+	) in
+	(* if points are present, sort them counter-clockwise *)
+	match points with
+		| p :: ps -> 
+			let compare = compare_points p in
+			List.sort compare points
+		| _ -> points
 
 
-(*(* APRON TESTS *)
-
-let manager = Polka.manager_alloc_strict () in
-
-let of_int = Coeff.s_of_int in
-let linexpr1 = Linexpr0.of_list None [(of_int (1), 0); (of_int (-2), 1); (of_int (3), 2);] (Some (of_int (2))) in
-let abstract1 = Abstract0.of_lincons_array manager int_dim real_dim [| Lincons0.make linexpr1 Lincons0.EQ|] in
-
-print_string ("\n Before test: ");
-Abstract0.print names Format.std_formatter abstract1;
-flush stdout;
-
-let linarray = [|
-(*	Linexpr0.of_list None [(of_int 1, 0);] (Some (of_int (-5)));
-	Linexpr0.of_list None [(of_int 1, 1);] (Some (of_int (-5)));*)
-(*	Linexpr0.of_list None [(of_int (1), 3);] (Some (of_int (0)));
-	Linexpr0.of_list None [(of_int (1), 3);] (Some (of_int (0)));*)
-	Linexpr0.of_list None [(of_int (1), 1);] (Some (of_int (0)));
-	Linexpr0.of_list None [(of_int (1), 0);] (Some (of_int (0)));
-	|] in
-let test = Abstract0.substitute_linexpr_array manager abstract1 [| 0 ; 1|] linarray None in
-
-print_string ("\n After test: ");
-Abstract0.print names Format.std_formatter test;
-flush stdout;;*)
-
-
-print_newline();;
-
-exit 0;;
-
-*)
+(* returns a string with 2d points of the given constraint *)
+let plot_2d x y linear_constraint =
+	let shape = shape_of_poly x y linear_constraint in
+	List.fold_left (fun s (x, y) -> 
+		s ^ (string_of_float x) ^ " " ^ (string_of_float y) ^ "\n"
+	) "" shape	
