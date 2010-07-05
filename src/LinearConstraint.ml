@@ -420,7 +420,7 @@ let is_satisfiable = fun c -> not (is_false c)
 let is_equal = ppl_Polyhedron_equals_Polyhedron
 
 (** Check if a constraint is included in another one *)
-let is_leq = ppl_Polyhedron_contains_Polyhedron
+let is_leq x y = ppl_Polyhedron_contains_Polyhedron y x
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
 (** {3 Pi0-compatibility} *)
