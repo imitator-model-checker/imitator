@@ -12,5 +12,8 @@
 (**************************************************)
 (* Functions *)
 (**************************************************)
+open LinearConstraint
 
 val hello_world : unit -> unit
+
+val cartography : linear_constraint list -> (int*int) array -> int -> string -> unit

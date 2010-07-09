@@ -18,6 +18,7 @@ open AbstractImitatorFile
 open Arg
 open ImitatorPrinter
 open Graph
+open Graphics
 
 
 (**************************************************
@@ -77,7 +78,7 @@ let post_limit = ref None
 let time_limit = ref None
 
 (* Call hello world before terminating *)
-let option_hello = ref false
+let option_hello = ref None
 
 
 (**************************************************)
@@ -1383,7 +1384,7 @@ and speclist = [
 
 	("-with-parametric-log", Set with_parametric_log, " Adds the elimination of the clock variables in the constraints in the log files. Default: false.");
 
-        ("-hello", Set option_hello, " Print hello world message before terminating the program. Default: false.");
+        ("-hello", Int (fun i -> option_hello := Some i), " Print hello world message before terminating the program. Default: no cartography.");
 
 	] in
 
@@ -1621,22 +1622,23 @@ match !imitator_mode with
 
 	| Cover_cartography ->
 	(* Behavioral cartography algorithm with full coverage *)
-		cover_behavioral_cartography program pi0cube init_state_after_time_elapsing;
+		cover_behavioral_cartography program pi0cube init_state_after_time_elapsing
+		
+in ();
+
+let _ =
+match !option_hello with 
+	|None -> print_message Debug_standard "No graph for the cartography."
+	|Some n -> (List.iter (fun zone -> 
+		     print_message Debug_standard ("Zone: " ^ (LinearConstraint.string_of_linear_constraint program.variable_names zone) ^ "\n")
+		               ) zones;
+  		     cartography zones pi0cube n (!program_prefix^"_cart")
+		   )
 in ();
 
 (**************************************************)
 (* Bye bye! *)
 (**************************************************)
 (* flush stdout; *)
-
-
-if !option_hello then (
-
-  List.iter (fun zone ->
-    print_message Debug_standard ("Zone: " ^ (LinearConstraint.string_of_linear_constraint program.variable_names zone) ^ "\n")
-  ) zones;
-
-  Graphics.hello_world ()
-);
 
 terminate_program()

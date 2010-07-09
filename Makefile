@@ -31,7 +31,7 @@ ifndef OCAML_PPL_PATH
   OCAML_PPL_PATH = $(HOME)/local/lib/ppl
 endif 
 ifndef OCAML_GMP_PATH
-  OCAML_GMP_PATH = $(HOME)/local/lib
+  OCAML_GMP_PATH = $(HOME)/local/mlgmp -I $(HOME)/local/lib
 endif
 
 # export paths for use in sub-makefiles
