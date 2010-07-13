@@ -68,7 +68,7 @@ type op =
 	| Op_ge
 	| Op_eq
 
-type linear_inequality
+type linear_inequality = Ppl_ocaml.linear_constraint
 
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
@@ -105,7 +105,7 @@ val string_of_linear_inequality : (variable -> string) -> linear_inequality -> s
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
 (** {3 Type} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
-type linear_constraint
+type linear_constraint = Ppl_ocaml.polyhedron
 
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
@@ -179,6 +179,11 @@ val from_ppl_polyhedron  : Ppl_ocaml.polyhedron -> linear_constraint
 val to_ppl_polyhedron    : linear_constraint -> Ppl_ocaml.polyhedron
 val from_ppl_constraints : Ppl_ocaml.constraint_system -> linear_constraint
 val to_ppl_constraints   : linear_constraint -> Ppl_ocaml.constraint_system
+val from_ppl_linear_constraint_list : Ppl_ocaml.linear_constraint list -> linear_inequality list
+val to_ppl_linear_constraint_list : linear_inequality list -> Ppl_ocaml.linear_constraint list
+val from_ppl_linear_constraint : Ppl_ocaml.linear_constraint -> linear_inequality
+val to_ppl_linear_constraint : linear_inequality -> Ppl_ocaml.linear_constraint
+
 
 (** Convert a linear constraint into a string *)
 val string_of_linear_constraint : (variable -> string) -> linear_constraint -> string

@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre, Ulrich Kuehne
  * Created:       2010/07/05
- * Last modified: 2010/07/05 
+ * Last modified: 2010/07/13 
  *
  ****************************************************************)
 
@@ -15,6 +15,8 @@
 
 open Global
 open LinearConstraint
+module Ppl = Ppl_ocaml
+open Ppl
 
 (**************************************************)
 (* Functions *)
@@ -22,8 +24,26 @@ open LinearConstraint
 
 let hello_world _ = print_message Debug_standard "Hello world!"
 
+(* transform a strict inequality into a not strict inequality *)
+let strict_to_not_strict_inequality inequality =
+	match inequality with
+		|Less_Than (x,y) -> Less_Or_Equal (x,y)
+		|Greater_Than (x,y) -> Greater_Or_Equal (x,y)
+		|_ -> inequality
+
 (* print the cartography which correspond to the list of constraint *)
 let cartography constraint_list pi0cube nb_variables_projected cartography_name =
+	(* replace strict inequalities *)
+	let new_constraint_list = ref [] in 
+	for i=0 to List.length constraint_list -1 do
+		let inequality_list = from_ppl_linear_constraint_list (ppl_Polyhedron_get_constraints (List.nth constraint_list i)) in 
+		let new_inequality_list = ref [] in
+		for j=0 to List.length inequality_list -1 do 
+			new_inequality_list := (strict_to_not_strict_inequality (List.nth inequality_list j))::!new_inequality_list;
+		done;
+		new_constraint_list := make !new_inequality_list::!new_constraint_list;
+	done;
+
 	(* Find indexes of the projected variables *)
 	let idx = DynArray.create () in 
 	let i = ref 0 in
@@ -45,7 +65,7 @@ let cartography constraint_list pi0cube nb_variables_projected cartography_name 
 	(* Keep only couple with diffrent values *)
 	couple_list := List.filter ( fun (a,b) -> a<>b) !couple_list;
 	for k=0 to List.length !couple_list -1 do 
-		print_message Debug_standard ((string_of_int (fst (List.nth !couple_list k)))^" et "^(string_of_int (snd (List.nth !couple_list k)))^"\n");
+		print_message Debug_standard ("Indices des variables projetees : "^(string_of_int (fst (List.nth !couple_list k)))^" et "^(string_of_int (snd (List.nth !couple_list k)))^"\n");
 	done;
 
 	(* make a cartography for each element of the couple_list *)
@@ -56,11 +76,11 @@ let cartography constraint_list pi0cube nb_variables_projected cartography_name 
 		(* Beginning of the script *)
 		let script_line = ref "graph -T ps -C "in
 		(* Create a new file for each constraint *)
-		for i=0 to List.length constraint_list-1 do
+		for i=0 to List.length !new_constraint_list-1 do
 			let file_name = cartography_name^"_file_constraint_"^(string_of_int k)^"_"^(string_of_int i)^".txt" in
 			let file_out = open_out file_name in
 			(* find the points satisfying the constraint *)
-			let s = plot_2d (fst (List.nth !couple_list k)) (snd (List.nth !couple_list k)) (List.nth constraint_list i) in
+			let s = plot_2d (fst (List.nth !couple_list k)) (snd (List.nth !couple_list k)) (from_ppl_polyhedron (List.nth !new_constraint_list i)) in
 			(* print in the file the coordinates of the points *)
 			output_string file_out s;
 			(* close the file and open it in a reading mode *)
@@ -79,7 +99,6 @@ let cartography constraint_list pi0cube nb_variables_projected cartography_name 
 		
 		(* File in which the cartography will be printed *)
 		let final_name = cartography_name^"_"^(string_of_int k)^".ps" in
-		let final_file = open_out final_name in
 		(* last part of the script *)	
 		script_line := !script_line^"> "^final_name;
 		(* write the script into a file *)
