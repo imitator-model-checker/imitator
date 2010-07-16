@@ -77,8 +77,8 @@ let post_limit = ref None
 (* Time limit for the program *)
 let time_limit = ref None
 
-(* Call hello world before terminating *)
-let option_hello = ref None
+(* Call cart world before terminating *)
+let option_cart = ref None
 
 
 (**************************************************)
@@ -1384,7 +1384,7 @@ and speclist = [
 
 	("-with-parametric-log", Set with_parametric_log, " Adds the elimination of the clock variables in the constraints in the log files. Default: false.");
 
-        ("-hello", Int (fun i -> option_hello := Some i), " Print hello world message before terminating the program. Default: no cartography.");
+        ("-cart", Int (fun i -> option_cart := Some i), " Print the cartography before terminating the program. Default: no cartography.");
 
 	] in
 
@@ -1627,10 +1627,10 @@ match !imitator_mode with
 in ();
 
 let _ =
-match !option_hello with 
+match !option_cart with 
 	|None -> print_message Debug_standard "No graph for the cartography."
-	|Some n -> (List.iter (fun zone -> 
-		     print_message Debug_standard ("Zone: " ^ (LinearConstraint.string_of_linear_constraint program.variable_names zone) ^ "\n")
+	|Some n -> (let i =ref 1 in List.iter (fun zone -> 
+		     print_message Debug_standard ("Zone "^(string_of_int !i)^" : " ^ (LinearConstraint.string_of_linear_constraint program.variable_names zone) ^ "\n"); i:=!i+1
 		               ) zones;
   		     cartography zones pi0cube n (!program_prefix^"_cart")
 		   )

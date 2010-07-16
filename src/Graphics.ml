@@ -31,6 +31,7 @@ let strict_to_not_strict_inequality inequality =
 		|Greater_Than (x,y) -> Greater_Or_Equal (x,y)
 		|_ -> inequality
 
+
 (* print the cartography which correspond to the list of constraint *)
 let cartography constraint_list pi0cube nb_variables_projected cartography_name =
 	(* replace strict inequalities *)
@@ -71,30 +72,54 @@ let cartography constraint_list pi0cube nb_variables_projected cartography_name 
 	(* make a cartography for each element of the couple_list *)
 	for k=0 to List.length !couple_list -1 do
 		(* Create a script that will print the cartography *)
-		let script_name = cartography_name^"_cart"^(string_of_int k)^".sh" in
+		let script_name = cartography_name^"_"^(string_of_int k)^".sh" in
 		let script = open_out script_name in
 		(* Beginning of the script *)
 		let script_line = ref "graph -T ps -C "in
+		(* find the maximum abscissa and ordinate for each constraint and store them in a list *)
+		let max_abs_list = ref [] in
+		let max_ord_list = ref [] in
+		for i=0 to List.length !new_constraint_list-1 do
+			let max_abs = ref 0. in
+			let max_ord = ref 0. in
+			let (points,ray) = shape_of_poly (fst (List.nth !couple_list k)) (snd (List.nth !couple_list k)) (from_ppl_polyhedron (List.nth !new_constraint_list i)) in
+			for j=0 to List.length points -1 do
+				if !max_abs < fst (List.nth points j) then max_abs := fst (List.nth points j);
+				if !max_ord < snd (List.nth points j) then max_ord := snd (List.nth points j);
+			done;
+			max_abs_list := !max_abs :: !max_abs_list;
+			max_ord_list := !max_ord :: !max_ord_list;
+		done;
+		(* find the maximum abscissa and ordinate of the lists *)
+		let max_abs = ref 0. in
+		for i=0 to List.length !max_abs_list -1 do
+			if !max_abs < List.nth !max_abs_list i then max_abs := List.nth !max_abs_list i;
+		done;
+		let max_ord = ref 0. in
+		for i=0 to List.length !max_ord_list -1 do
+			if !max_ord < List.nth !max_ord_list i then max_ord := List.nth !max_ord_list i;
+		done;
 		(* Create a new file for each constraint *)
 		for i=0 to List.length !new_constraint_list-1 do
-			let file_name = cartography_name^"_file_constraint_"^(string_of_int k)^"_"^(string_of_int i)^".txt" in
+			let file_name = cartography_name^"_points_"^(string_of_int k)^"_"^(string_of_int i)^".txt" in
 			let file_out = open_out file_name in
 			(* find the points satisfying the constraint *)
-			let s = plot_2d (fst (List.nth !couple_list k)) (snd (List.nth !couple_list k)) (from_ppl_polyhedron (List.nth !new_constraint_list i)) in
+			let s=plot_2d (fst (List.nth !couple_list k)) (snd (List.nth !couple_list k)) (from_ppl_polyhedron (List.nth !new_constraint_list i)) !max_abs !max_ord in
 			(* print in the file the coordinates of the points *)
-			output_string file_out s;
-			(* close the file and open it in a reading mode *)
-			close_out file_out;
+			output_string file_out (snd s);
+			(* close the file and open it in a reading mode to read the first line *)
+			close_out file_out;			
 			let file_in = open_in file_name in
-			(* read the first line of the file *)
 			let s2 = input_line file_in in
-			(* close the file and open it in a writting mode *)
+			(* close the file and open it in a writting mode to copy the whole string in it and ensure that the polygon is closed*)
+			close_in file_in;
 			let file_out_bis = open_out file_name in
-			(* copy the whole string in it, to ensure that the polygon is closed *)
-			output_string file_out_bis (s^s2);
+			output_string file_out_bis ((snd s)^s2);
 			close_out file_out_bis;
 			(* instructions to have the zones colored *)
-			script_line := !script_line^"-m "^(string_of_int((i mod 5)+1))^" -q 0.5 "^file_name^" "
+			if fst s = "p" 
+				then script_line := !script_line^"-m "^(string_of_int((i mod 5)+1))^" -q 0.7 "^file_name^" "
+				else script_line := !script_line^"-m "^(string_of_int((i mod 5)+1+20))^" -q 0.3 "^file_name^" "
 		done;
 		
 		(* File in which the cartography will be printed *)

@@ -194,5 +194,8 @@ val string_of_false : string
 (** String for the true constraint *)
 val string_of_true : string
 
+(** converts a linear_constraint to a set of 2d points wrt. the variables x,y *)
+val shape_of_poly : variable -> variable -> linear_constraint -> (float*float) list *(float*float) list
+
 (** Plot polyhedron corresponding to a convex constraint, projected on the two given variables *)
-val plot_2d : variable -> variable -> linear_constraint -> string
+val plot_2d : variable -> variable -> linear_constraint -> float -> float -> string*string
