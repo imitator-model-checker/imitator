@@ -198,4 +198,4 @@ val string_of_true : string
 val shape_of_poly : variable -> variable -> linear_constraint -> (float*float) list *(float*float) list
 
 (** Plot polyhedron corresponding to a convex constraint, projected on the two given variables *)
-val plot_2d : variable -> variable -> linear_constraint -> float -> float -> string*string
+val plot_2d : variable -> variable -> linear_constraint -> float -> float -> float -> float -> string*string
