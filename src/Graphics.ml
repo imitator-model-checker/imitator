@@ -22,8 +22,6 @@ open Ppl
 (* Functions *)
 (**************************************************)
 
-let hello_world _ = print_message Debug_standard "Hello world!"
-
 (* transform a strict inequality into a not strict inequality *)
 let strict_to_not_strict_inequality inequality =
 	match inequality with
@@ -144,10 +142,10 @@ let cartography constraint_list pi0cube nb_variables_projected cartography_name 
 			let file_out_bis = open_out file_name in
 			output_string file_out_bis ((snd s)^s2);
 			close_out file_out_bis;
-			(* instructions to have the zones colored *)
-			if fst s = "p" 
-				then script_line := !script_line^"-m "^(string_of_int((i mod 5)+1))^" -q 0.7 "^file_name^" "
-				else script_line := !script_line^"-m "^(string_of_int((i mod 5)+1+20))^" -q 0.3 "^file_name^" "
+			(* instructions to have the zones colored. If fst s = true then the zone is infinite *)
+			if fst s
+				then script_line := !script_line^"-m "^(string_of_int((i mod 5)+1+20))^" -q 0.3 "^file_name^" "
+				else script_line := !script_line^"-m "^(string_of_int((i mod 5)+1))^" -q 0.7 "^file_name^" "
 		done;
 		
 		(* File in which the cartography will be printed *)

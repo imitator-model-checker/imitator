@@ -14,8 +14,6 @@
 (**************************************************)
 open LinearConstraint
 
-val hello_world : unit -> unit
-
 val strict_to_not_strict_inequality : linear_inequality -> linear_inequality
 
 val cartography : linear_constraint list -> (int*int) array -> int -> string -> unit

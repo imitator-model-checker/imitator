@@ -615,6 +615,11 @@ let unit_vector i =
  	fun j -> if i = j then NumConst.one else NumConst.zero
 
 
+(* new type : Dot if the couple represent a Point and Vector if the couple represent a Ray *)
+type couple = Dot of float*float
+		|Vector of float*float
+		|None
+
 (* converts a generator to a 2d point wrt. the first two variables *)
 let point_of_generator = function
 	| Point (expr, c) -> 
@@ -624,14 +629,14 @@ let point_of_generator = function
 			let q = NumConst.numconst_of_mpz c in
 			let xf = Gmp.Q.to_float (NumConst.mpq_of_numconst (NumConst.div x q)) in
 			let yf = Gmp.Q.to_float (NumConst.mpq_of_numconst (NumConst.div y q)) in
-			Some ("p", (xf, yf))
+			Dot (xf, yf)
 	|Ray (expr) -> 
 			let x, y = 
 				(evaluate_linear_term_ppl (unit_vector 0) expr,
 				 evaluate_linear_term_ppl (unit_vector 1) expr) in
 			let xf = Gmp.Q.to_float (NumConst.mpq_of_numconst x) in
 			let yf = Gmp.Q.to_float (NumConst.mpq_of_numconst y) in
-			Some ("r", (xf, yf))
+			Vector (xf, yf)
 	| _ -> None
 
 
@@ -644,34 +649,32 @@ let compare_points (cx, cy) (ax, ay) (bx, by) =
 
 (* create a straight line from a point and a ray *)
 let make_straight_line_ray r p =
-	if fst r = "r" & fst p = "p" then (
-		let k = (fst (snd r))*.(snd (snd p)) -. ((snd (snd r))*.(fst (snd p))) in
-		(snd (snd r),(0.-.(fst (snd r))),k))
-	else (0.,0.,0.)
+	match (r,p) with
+		|(Vector (a,b),Dot (c,d)) -> (let k=((a*.d)-.(b*.c)) in (b,(0.-.a),k))
+		|_ -> (0.,0.,0.)
 
 
 (* create a straight line from two points having the same abscissa or ordinate *)
 let make_straight_line_points p1 p2 = 
-	if (fst p1) = (fst p2) & (fst p1 = "p") & (fst (snd p1))= (fst (snd p2)) 
-		(*then make_straight_line_ray ("r",(0.,1.)) p1 
-		else if (snd (snd p1))= (snd (snd p2)) then make_straight_line_ray ("r",(1.,0.)) p1*)
-		then (1.,0.,0.-.(fst (snd p1)))
-		else if (snd (snd p1))= (snd (snd p2)) then (0.,0.-.1.,(snd (snd p1)))
-	else (0.,0.,0.)
+	match (p1,p2) with
+		|(Dot (a,b),Dot (c,d)) when a=c -> (1.,0.,0.-.a)
+		|(Dot (a,b),Dot (c,d)) when b=d -> (0.,0.-.1.,b)
+		|_ -> (0.,0.,0.)
 
 (* find the intersection between two straight line *)
 let intersection_straight_line d1 d2 =
 	match (d1,d2) with
-		|((0.,0.,0.),(d,e,f)) -> ((0.),(0.))
-		|((a,b,c),(0.,0.,0.)) -> ((0.),(0.))
-		|((a,b,c),(d,e,f)) -> (if b <> 0. then ((((b*.f)-.(e*.c))/.((a*.e)-.(b*.d))),0.-.((c/.b)+.(((a*.b*.f)-.(a*.e*.c))/.((b*.a*.e)-.(b*.b*.d)))))
-						else if e<>0. then ((((b*.f)-.(e*.c))/.((a*.e)-.(b*.d))),0.-.((f/.e)+.(((d*.b*.f)-.(d*.e*.c))/.((e*.a*.e)-.(e*.b*.d)))))
-						else (0.,0.))
+		|((0.,0.,0.),(d,e,f)) -> Dot ((0.),(0.))
+		|((a,b,c),(0.,0.,0.)) -> Dot ((0.),(0.))
+		|((a,b,c),(d,e,f)) -> (if b <> 0. then Dot ((((b*.f)-.(e*.c))/.((a*.e)-.(b*.d))),0.-.((c/.b)+.(((a*.b*.f)-.(a*.e*.c))/.((b*.a*.e)-.(b*.b*.d)))))
+						else if e<>0. then Dot ((((b*.f)-.(e*.c))/.((a*.e)-.(b*.d))),0.-.((f/.e)+.(((d*.b*.f)-.(d*.e*.c))/.((e*.a*.e)-.(e*.b*.d)))))
+						else Dot (0.,0.))
 
 (* test if a point belong to a square line *)
 let point_on_line p min_abs min_ord max_abs max_ord =
-	if (min_abs <= (fst p)) & ((fst p) <= max_abs) & (min_ord <= (snd p)) & ((snd p) <= max_ord) then true
-	else false
+	match p with 
+		|Dot (a,b) when ((min_abs <= a) & (a <= max_abs) & (min_ord <= b) & (b <= max_ord)) -> true
+		|_ -> false
 
 
 (* convert a linear constraint into two lists, one containing the points and the other containing the ray *)
@@ -690,7 +693,7 @@ let shape_of_poly x y linear_constraint =
 		let p = point_of_generator gen in 
 		match p with
 			| None -> ps
-			| Some (a,(x,y)) when a="p" -> (x,y) :: ps
+			| Dot (x,y) -> (x,y) :: ps
 			|_-> ps
 	) [] generators in
 	(* collect ray for the generators *)
@@ -698,7 +701,7 @@ let shape_of_poly x y linear_constraint =
 		let p = point_of_generator gen in 
 		match p with
 			| None -> ps
-			| Some (a,(x,y)) when a="r" -> (x,y) :: ps
+			| Vector (x,y) -> (x,y) :: ps
 			|_-> ps
 	) [] generators in
 	(points, ray)
@@ -712,73 +715,73 @@ let generate_point x y linear_constraint min_abs min_ord max_abs max_ord =
 	for i=0 to List.length points -1 do 
 		for j=0 to List.length ray -1 do
 			match List.nth ray j with
-				|(u,v) when ((u>=0.) & (v>=0.)) -> point_list:=(max ((max_abs)*.(fst(List.nth ray j))) (fst (List.nth points i))  , max ((max_ord)*.(snd(List.nth ray j))) (snd (List.nth points i)))::!point_list
-				|(u,v) when ((u<0.) & (v>=0.)) -> point_list:=(min ((min_abs)*.(fst(List.nth ray j))) (fst (List.nth points i))  , max ((max_ord)*.(snd(List.nth ray j))) (snd (List.nth points i)))::!point_list
-				|(u,v) when ((u>=0.) & (v<0.)) -> point_list:=(max ((max_abs)*.(fst(List.nth ray j))) (fst (List.nth points i))  , min ((min_ord)*.(snd(List.nth ray j))) (snd (List.nth points i)))::!point_list
-				|(u,v) when ((u<0.) & (v<0.)) -> point_list:=(min ((min_abs)*.(fst(List.nth ray j))) (fst (List.nth points i))  , min ((min_ord)*.(snd(List.nth ray j))) (snd (List.nth points i)))::!point_list
+				|(u,v) when ((u>=0.) & (v>=0.)) -> point_list:=(max ((max_abs)*.(fst(List.nth ray j))) (fst (List.nth points i)) , max ((max_ord)*.(snd(List.nth ray j))) (snd (List.nth points i)))::!point_list
+				|(u,v) when ((u<0.) & (v>=0.)) -> point_list:=(min ((min_abs)*.(fst(List.nth ray j))) (fst (List.nth points i)) , max ((max_ord)*.(snd(List.nth ray j))) (snd (List.nth points i)))::!point_list
+				|(u,v) when ((u>=0.) & (v<0.)) -> point_list:=(max ((max_abs)*.(fst(List.nth ray j))) (fst (List.nth points i)) , min ((min_ord)*.(snd(List.nth ray j))) (snd (List.nth points i)))::!point_list
+				|(u,v) when ((u<0.) & (v<0.)) -> point_list:=(min ((min_abs)*.(fst(List.nth ray j))) (fst (List.nth points i)) , min ((min_ord)*.(snd(List.nth ray j))) (snd (List.nth points i)))::!point_list
 		done
 	done;
 	(* add a point if there is two ray that cross two differents borders *)
 	if List.length ray <> 0 then (
-		let add_point = ref (0,0) in
-		let high_border = make_straight_line_points ("p",(min_abs,max_ord)) ("p",(max_abs,max_ord)) in
-		let right_border = make_straight_line_points ("p",(max_abs,min_ord)) ("p",(max_abs,max_ord)) in
-		let low_border = make_straight_line_points ("p",(min_abs,min_ord)) ("p",(max_abs,min_ord)) in
-		let left_border = make_straight_line_points ("p",(min_abs,min_ord)) ("p",(min_abs,max_ord)) in
+		(* create a point that will say which point is to be added *)
+		let add_point = ref ("","") in
+		(* create a straight line for each side of the v0 space *)
+		let high_border = make_straight_line_points (Dot (min_abs,max_ord)) (Dot (max_abs,max_ord)) in
+		let right_border = make_straight_line_points (Dot (max_abs,min_ord)) (Dot (max_abs,max_ord)) in
+		let low_border = make_straight_line_points (Dot (min_abs,min_ord)) (Dot (max_abs,min_ord)) in
+		let left_border = make_straight_line_points (Dot (min_abs,min_ord)) (Dot (min_abs,max_ord)) in
 		let i = ref 0 in
+		(* lists in which the intersections points will be stored *)
 		let l1 = ref [] in
 		let l2 = ref [] in
 		let l3 = ref [] in
 		let l4 = ref [] in
-		while !i <= (List.length ray -1) & (!add_point = (0,0)) do 
+		while !i <= (List.length ray -1) & (!add_point = ("","")) do 
 			let j = ref 0 in
 			while !j <= (List.length points -1) do
-				(*print_message Debug_standard ("i : "^(string_of_int !i)^" , j : "^(string_of_int !j));*)
-				let straight_line = make_straight_line_ray ("r",(List.nth ray !i)) ("p",(List.nth points !j)) in
-				(*match high_border with |(a,b,c) -> print_message Debug_standard ("high border : "^(string_of_float a)^" "^(string_of_float b)^" "^(string_of_float c));
-				match right_border with |(a,b,c) -> print_message Debug_standard ("right border : "^(string_of_float a)^" "^(string_of_float b)^" "^(string_of_float c));
-				match straight_line with |(a,b,c) -> print_message Debug_standard ("straight line : "^(string_of_float a)^" "^(string_of_float b)^" "^(string_of_float c));*)
+				(* make the straight line to test from a point and a vector *)
+				let straight_line = make_straight_line_ray (Vector (fst (List.nth ray !i), snd (List.nth ray !i))) (Dot (fst (List.nth points !j),snd (List.nth points !j))) in
+				(* find the intersection between each v0 border and line to be checked *)
 				let k1 = intersection_straight_line high_border straight_line in
 				let k2 = intersection_straight_line right_border straight_line in
 				let k3 = intersection_straight_line low_border straight_line in
 				let k4 = intersection_straight_line left_border straight_line in
-				(*print_message Debug_standard ("k1 : "^(string_of_float (fst k1))^" "^(string_of_float (snd k1)));
-				print_message Debug_standard ("k2 : "^(string_of_float (fst k2))^" "^(string_of_float (snd k2)));
-				print_message Debug_standard ("k3 : "^(string_of_float (fst k3))^" "^(string_of_float (snd k3)));
-				print_message Debug_standard ("k4 : "^(string_of_float (fst k4))^" "^(string_of_float (snd k4)));
-				print_message Debug_standard (string_of_bool (point_on_line k1 min_abs min_ord max_abs max_ord));*)
+				(* store the intersection point into a list if it belongs to the v0 space *)
 				if (point_on_line k1 min_abs min_ord max_abs max_ord) then l1:=k1::!l1
 				else if (point_on_line k2 min_abs min_ord max_abs max_ord) then l2:=k2::!l2
 				else if (point_on_line k3 min_abs min_ord max_abs max_ord) then l3:=k3::!l3
 				else if (point_on_line k4 min_abs min_ord max_abs max_ord) then l4:=k4::!l4;
 				j:=!j+1
 			done;
-			if List.length !l1 <> 0 & List.length !l2 <> 0 then add_point:=(1,2)
-			else if List.length !l2 <> 0 & List.length !l3 <> 0 then add_point:=(2,3)
-			else if List.length !l3 <> 0 & List.length !l4 <> 0 then add_point:=(3,4)
-			else if List.length !l4 <> 0 & List.length !l4 <> 0 then add_point:=(4,1)
-			else if List.length !l1 <> 0 & List.length !l3 <> 0 then add_point:=(1,3)
-			else if List.length !l2 <> 0 & List.length !l4 <> 0 then add_point:=(2,4)
-			else if List.length !l3 <> 0 & List.length !l1 <> 0 then add_point:=(3,1)
-			else if List.length !l4 <> 0 & List.length !l2 <> 0 then add_point:=(4,2)
-			(*else if List.length !l1 <> 0 & List.length !l4 <> 0 then add_point:=(1,4)
-			else if List.length !l2 <> 0 & List.length !l1 <> 0 then add_point:=(2,1)
-			else if List.length !l3 <> 0 & List.length !l2 <> 0 then add_point:=(3,2)
-			else if List.length !l4 <> 0 & List.length !l3 <> 0 then add_point:=(4,3)*);
+			(* if two intersection points are on two consecutives border then mark it in add_point *)
+			if List.length !l1 <> 0 & List.length !l2 <> 0 then add_point:=("high_border","rigth_border")
+			else if List.length !l2 <> 0 & List.length !l3 <> 0 then add_point:=("right_border","low_border")
+			else if List.length !l3 <> 0 & List.length !l4 <> 0 then add_point:=("low_border","left_border")
+			else if List.length !l4 <> 0 & List.length !l4 <> 0 then add_point:=("left_border","high_border")
+			(* if two intersection points are on two opposite border then mark it in add_point *)
+			else if List.length !l1 <> 0 & List.length !l3 <> 0 then add_point:=("high_border","low_border")
+			else if List.length !l2 <> 0 & List.length !l4 <> 0 then add_point:=("rigth_border","left_border")
+			else if List.length !l3 <> 0 & List.length !l1 <> 0 then add_point:=("low_border","high_border")
+			else if List.length !l4 <> 0 & List.length !l2 <> 0 then add_point:=("left_border","rigth_border")
+			(*else if List.length !l1 <> 0 & List.length !l4 <> 0 then add_point:=("high_border","left_border")
+			else if List.length !l2 <> 0 & List.length !l1 <> 0 then add_point:=("rigth_border","high_border")
+			else if List.length !l3 <> 0 & List.length !l2 <> 0 then add_point:=("low_border","rigth_border")
+			else if List.length !l4 <> 0 & List.length !l3 <> 0 then add_point:=("left_border","low_border")*);
 			i:=!i+1
 		done;
-		if !add_point = (1,2) then point_list:=(max_abs,max_ord)::!point_list
-		else if !add_point = (2,3) then point_list:=(max_abs,min_ord)::!point_list
-		else if !add_point = (3,4) then point_list:=(min_abs,min_ord)::!point_list
-		else if !add_point = (4,1) then point_list:=(min_abs,max_ord)::!point_list
-		else if !add_point = (1,3) then point_list:=(max_abs,max_ord)::(max_abs,min_ord)::!point_list
-		else if !add_point = (2,4) then point_list:=(max_abs,min_ord)::(min_abs,min_ord)::!point_list
-		else if !add_point = (3,1) then point_list:=(min_abs,min_ord)::(min_abs,max_ord)::!point_list
-		else if !add_point = (4,2) then point_list:=(min_abs,max_ord)::(max_abs,max_ord)::!point_list
-		(*else if !add_point = (1,4) then point_list:=(max_abs,max_ord)::(max_abs,min_ord)::(min_abs,min_ord)::!point_list
-		else if !add_point = (2,1) then point_list:=(max_abs,min_ord)::(min_abs,min_ord)::(min_abs,max_ord)::!point_list
-		else if !add_point = (3,2) then point_list:=(min_abs,min_ord)::(min_abs,max_ord)::(max_abs,max_ord)::!point_list
-		else if !add_point = (4,3) then point_list:=(min_abs,max_ord)::(max_abs,max_ord)::(max_abs,min_ord)::!point_list*);
+		(* add the intersection points between the border specified by add_point to point_list *)
+		if !add_point = ("high_border","rigth_border") then point_list:=(max_abs,max_ord)::!point_list
+		else if !add_point = ("rigth_border","low_border") then point_list:=(max_abs,min_ord)::!point_list
+		else if !add_point = ("low_border","left_border") then point_list:=(min_abs,min_ord)::!point_list
+		else if !add_point = ("left_border","high_border") then point_list:=(min_abs,max_ord)::!point_list
+		else if !add_point = ("high_border","low_border") then point_list:=(max_abs,max_ord)::(max_abs,min_ord)::!point_list
+		else if !add_point = ("rigth_border","left_border") then point_list:=(max_abs,min_ord)::(min_abs,min_ord)::!point_list
+		else if !add_point = ("low_border","high_border") then point_list:=(min_abs,min_ord)::(min_abs,max_ord)::!point_list
+		else if !add_point = ("left_border","rigth_border") then point_list:=(min_abs,max_ord)::(max_abs,max_ord)::!point_list
+		(*else if !add_point = ("high_border","left_border") then point_list:=(max_abs,max_ord)::(max_abs,min_ord)::(min_abs,min_ord)::!point_list
+		else if !add_point = ("rigth_border","high_border") then point_list:=(max_abs,min_ord)::(min_abs,min_ord)::(min_abs,max_ord)::!point_list
+		else if !add_point = ("low_border","rigth_border") then point_list:=(min_abs,min_ord)::(min_abs,max_ord)::(max_abs,max_ord)::!point_list
+		else if !add_point = ("left_border","low_border") then point_list:=(min_abs,max_ord)::(max_abs,max_ord)::(max_abs,min_ord)::!point_list*);
 	);
 	(* swap coordinates if necessary *)
 	let point_list = if x < y then !point_list else (
@@ -788,12 +791,12 @@ let generate_point x y linear_constraint min_abs min_ord max_abs max_ord =
 	match (point_list, List.length ray) with
 		| ((p :: ps), 0) -> 
 			let compare = compare_points p in
-			("p",List.sort compare point_list)
+			(false,List.sort compare point_list)
 		| ((p :: ps), _) -> 
 			let compare = compare_points p in
-			("r",List.sort compare point_list)
-		| (_, 0) -> ("p",point_list;)
-		| (_, _) -> ("r", point_list)
+			(true,List.sort compare point_list)
+		| (_, 0) -> (false,point_list;)
+		| (_, _) -> (true, point_list)
 
 	
 (* returns a string which indicate if some points have been found from ray and a string with 2d points of the given constraint *)
