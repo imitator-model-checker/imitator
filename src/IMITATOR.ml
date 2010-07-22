@@ -633,7 +633,165 @@ let compute_new_constraint program orig_constraint orig_location dest_location g
 			final_constraint
 		) with Unsat_exception -> LinearConstraint.false_constraint ()
 		
-						
+		
+	
+(*------------------------------------------------*)
+(* Computes next combination of indices           *)
+(* current_indexes : combination                  *)
+(* max_indexes     : maximum indices              *)
+(*------------------------------------------------*)
+(* returns a boolean, indicating that the         *)
+(* new combination is valid (false if the old     *)
+(* combination was the last one)                  *)
+(*------------------------------------------------*)
+let next_combination combination max_indexes =
+	let len = Array.length combination in 
+	let valid_combination = ref true in 
+	let not_is_max = ref true in
+	let local_index = ref 0 in
+	while !not_is_max do
+		(* Look for the first index to be incremented *)
+		if combination.(!local_index) < max_indexes.(!local_index) then(
+			(* Increment this index *)
+			combination.(!local_index) <- combination.(!local_index) + 1;
+			(* Reset the smaller indexes to 0 *)
+			for i = 0 to !local_index - 1 do
+				combination.(i) <- 0;
+			done;
+			(* Stop the loop *)
+			not_is_max := false;
+		) else (
+			local_index := !local_index + 1;
+			if !local_index >= len then(
+				valid_combination := false;
+				not_is_max := false;
+			)
+		)
+	done; (* end while *)
+	!valid_combination
+
+
+
+(*-----------------------------------------------------*)
+(* Checks a new state for pi0-compatibility and        *)
+(* updates constraint K if incompatible state is found.*)
+(* pi0               : reference valuation             *)
+(* rechability_graph : current reachability graph      *)
+(* constr            : new state constraint            *)
+(*-----------------------------------------------------*)
+(* returns true iff the state is pi0-compatible        *)
+(*-----------------------------------------------------*)
+let inverse_method_check_constraint program pi0 reachability_graph constr =			
+	(* Hide non parameters (X) *)
+	print_message Debug_high ("\nHiding non parameters:");
+	let p_constraint = LinearConstraint.hide program.clocks_and_discrete constr in
+	(* Debug print *)
+	if debug_mode_greater Debug_high then(
+		print_message Debug_high (LinearConstraint.string_of_linear_constraint program.variable_names p_constraint);
+	);
+	(* Check the pi0-compatibility *)
+	let compatible, incompatible = LinearConstraint.partition_pi0_compatible pi0 p_constraint in
+	let is_pi0_incompatible = incompatible != [] in
+	
+	(* If pi0-incompatible: select an inequality *)
+	if is_pi0_incompatible then (
+		print_message Debug_low ("\nFound a pi0-incompatible state.");
+		(* Debug print *)
+		if debug_mode_greater Debug_medium then(
+			print_message Debug_medium ("\nThe following inequalities are pi0-incompatible:");
+			List.iter (fun inequality -> print_message Debug_medium (LinearConstraint.string_of_linear_inequality program.variable_names inequality)) incompatible;
+		);
+
+		let inequality =
+			(* If random selection: pick up a random inequality *)
+			if program.random then random_element incompatible
+			(* Else select the first one *)
+			else List.nth incompatible 0
+		in
+		(* Debug print *)
+		if debug_mode_greater  Debug_medium then(
+			print_message Debug_medium ("\nSelecting the following pi0-incompatible inequality:");
+			print_message Debug_medium (LinearConstraint.string_of_linear_inequality program.variable_names inequality);
+		);
+
+		(* Negate the inequality *)
+		let negated_inequality = LinearConstraint.negate_wrt_pi0 pi0 inequality in
+		(* Debug print *)
+		let randomly = if program.random then "randomly " else "" in
+		let among = if List.length incompatible > 1 then (" (" ^ randomly ^ "selected among " ^ (string_of_int (List.length incompatible)) ^ " inequalities)") else "" in
+		print_message Debug_standard ("  Adding the following inequality" ^ among ^ ":");
+		print_message Debug_standard ("  " ^ (LinearConstraint.string_of_linear_inequality program.variable_names negated_inequality));
+
+		(* Update the previous states (including the 'new_states' and the 'orig_state') *)
+		print_message Debug_medium ("\nUpdating all the previous states.\n");
+		Graph.add_inequality_to_states reachability_graph negated_inequality;
+		
+		(* If pi-incompatible *)
+		false
+		(* If pi-compatible *)
+	) else true
+
+
+
+(*-------------------------------------------------------*)
+(* Computes all possible transition combinations for the *)
+(* involved automata.                                    *)
+(* constr               : current state constraint       *)
+(* action index         : index of current action        *)
+(* automata             : involved automata              *)
+(* aut_table            : array of automata              *)
+(* max_indexes          : array of maximal trans. indices*)
+(* possible_transitions : array of transition indices    *)
+(*-------------------------------------------------------*)
+(* returns a bool, indicating iff at least one legal     *)
+(* combination exists.                                   *)
+(*-------------------------------------------------------*)
+let compute_transitions program location constr action_index automata aut_table max_indexes possible_transitions  =
+		(* Stop computation as soon as one automaton has no legal transition left. *)
+		let current_index = ref 0 in 
+		try (
+			List.iter (fun automaton_index ->
+				(* Tabulate the real index *)
+				aut_table.(!current_index) <- automaton_index;
+				(* Get the current location for this automaton *)
+				let location_index = Automaton.get_location location automaton_index in
+				(* Get transitions for this automaton *)
+				let transitions = program.transitions automaton_index location_index action_index in
+				(* Keep only possible transitions *)
+				let is_possible = fun trans -> (
+					let guard, _, _, _ = trans in
+					let constr_and_guard = LinearConstraint.intersection [constr; guard] in
+					let is_possible = LinearConstraint.is_satisfiable constr_and_guard in
+					if not is_possible then (
+						print_message Debug_medium "** early skip transition **"
+					);
+					is_possible
+				) in
+				let legal_transitions = ref [] in
+				let trans_index = ref 0 in
+				List.iter (fun trans -> 
+					if is_possible trans then(
+						legal_transitions := !trans_index :: !legal_transitions
+					);
+					trans_index := !trans_index + 1
+				) transitions;
+				(* Stop computation if no legal transition exists *)
+				if !legal_transitions = [] then (
+					print_message Debug_medium "*** early skip action ***";
+					raise Unsat_exception
+				);
+				(* Store possible transitions *)
+				possible_transitions.(!current_index) <- !legal_transitions;
+				(* Tabulate the number of transitions for this location *)
+				max_indexes.(!current_index) <-	List.length !legal_transitions - 1;
+				(* Increment the index *)
+				current_index := !current_index + 1;
+			) automata;
+			(* arrived here, so each automaton must have at least one legal transition *)
+			true		
+		) with Unsat_exception -> false
+
+
 
 (*--------------------------------------------------*)
 (* Compute the list of possible destination states w.r.t. to a reachability_graph, and update this graph; return the (really) new states *)
@@ -673,233 +831,112 @@ let post program pi0 reachability_graph orig_state_index =
 	(* FOR ALL ACTION DO: *)
 	List.iter (fun action_index ->
 
-	print_message Debug_medium ("\nComputing destination states for action '" ^ (program.action_names action_index) ^ "'");
-	(* Get the automata declaring the action *)
-	let automata_for_this_action = program.automata_per_action action_index in
-	let nb_automata_for_this_action = List.length automata_for_this_action in
-
-	(*------------------------------------------------*)
-	(* Compute the reachable states on the fly: i.e., all the possible transitions for all the automata belonging to 'automata' *)
-	(*------------------------------------------------*)
+		print_message Debug_medium ("\nComputing destination states for action '" ^ (program.action_names action_index) ^ "'");
+		(* Get the automata declaring the action *)
+		let automata_for_this_action = program.automata_per_action action_index in
+		let nb_automata_for_this_action = List.length automata_for_this_action in
 	
-	(* add discrete values to constraint *)
-	let discrete_values = List.map (fun discrete_index -> discrete_index, (Automaton.get_discrete_value original_location discrete_index)) program.discrete in
-	(* Convert to a constraint *)
-	let discrete_constr = instantiate_discrete discrete_values in
-	(* compute conjunction with current constraint *)
-	let orig_plus_discrete = LinearConstraint.intersection [orig_constraint (); discrete_constr] in
-	
-	(* Give a new index to those automata *)
-	let real_indexes = Array.make nb_automata_for_this_action 0 in
-	(* Keep an array of possible transition indices for each automaton *)
-	let possible_transitions = Array.make nb_automata_for_this_action [] in
-	(* Use an array of transition indices for the search (start with 0),*)
-	(* indicating the current index within the possible transitions for*)
-	(* each automaton *)
-	let current_indexes = Array.make nb_automata_for_this_action 0 in
-	(* Keep the maximum index of possible transitions for each automaton *)
-	let max_indexes = Array.make nb_automata_for_this_action 0 in
-	(* Array for the currently selected transition indices *)
-	let current_transitions = Array.make nb_automata_for_this_action 0 in
-	
-	(* Compute all possible transitions for the involved automata.*)
-	(* Stop computation as soon as one automaton has no legal transition left. *)
-	let current_index = ref 0 in
-	let legal_transitions_exist = 
-	try (
-		List.iter (fun automaton_index ->
-			(* Tabulate the real index *)
-			real_indexes.(!current_index) <- automaton_index;
-			(* Get the current location for this automaton *)
-			let location_index = Automaton.get_location original_location automaton_index in
-			(* Get transitions for this automaton *)
-			let transitions = program.transitions automaton_index location_index action_index in
-			(* Keep only possible transitions *)
-			let is_possible = fun trans -> (
-				let guard, _, _, _ = trans in
-				let constr_and_guard = LinearConstraint.intersection [orig_plus_discrete; guard] in
-				let is_possible = LinearConstraint.is_satisfiable constr_and_guard in
-				if not is_possible then (
-					print_message Debug_medium "** early skip transition **"
-				);
-				is_possible
-			) in
-			let legal_transitions = ref [] in
-			let trans_index = ref 0 in
-			List.iter (fun trans -> 
-				if is_possible trans then(
-					legal_transitions := !trans_index :: !legal_transitions
-				);
-				trans_index := !trans_index + 1
-			) transitions;
-			(* Stop computation if no legal transition exists *)
-			if !legal_transitions = [] then (
-				print_message Debug_medium "*** early skip action ***";
-				raise Unsat_exception
-			);
-			(* Store possible transitions *)
-			possible_transitions.(!current_index) <- !legal_transitions;
-			(* Tabulate the number of transitions for this location *)
-			max_indexes.(!current_index) <-	List.length !legal_transitions - 1;
-			(* Increment the index *)
-			current_index := !current_index + 1;
-		) automata_for_this_action;
-		(* arrived here, so each automaton must have at least one legal transition *)
-		true		
-	) with Unsat_exception -> false in
-
-	(* Debug: compute the number of combinations *)
-	if debug_mode_greater Debug_medium then(
-		let nb_combinations = Array.fold_left (fun sum max -> sum * (max + 1)) 1 max_indexes in
-		print_message Debug_medium ("I will consider " ^ (string_of_int nb_combinations) ^ " combination" ^ (s_of_int nb_combinations) ^ " for this state and this action\n");
-	);
-
-	(* Loop on all the transition combinations *)
-	let more_combinations = ref legal_transitions_exist in
-	while !more_combinations do
-		(* Debug *)
-		if debug_mode_greater Debug_total then (
-		let local_indexes = string_of_array_of_string_with_sep "\n\t" (
-		Array.mapi (fun local_index real_index ->
-			(string_of_int local_index) ^ " -> " ^ (string_of_int real_index) ^ " : " ^ (string_of_int current_indexes.(local_index)) ^ "; ";
-		) real_indexes) in
-		print_message Debug_total ("--- Consider the combination \n\t" ^ local_indexes);
-		);
-
-		(* build the current combination of transitions *)
-		for i=0 to Array.length current_transitions -1 do
-			current_transitions.(i) <- List.nth (possible_transitions.(i)) (current_indexes.(i))
-		done; 
-
-		(* Compute the new location for the current combination of transitions *)
-		let location, guards, clock_updates = compute_new_location program real_indexes current_transitions action_index original_location in
+		(*------------------------------------------------*)
+		(* Compute the reachable states on the fly: i.e., all the possible transitions for all the automata belonging to 'automata' *)
+		(*------------------------------------------------*)
 		
-		(* Compute the new constraint for the current transition *)
-		let final_constraint = compute_new_constraint program orig_constraint original_location location guards clock_updates in
-
-		(* Check the satisfiability *)
-		if not (LinearConstraint.is_satisfiable final_constraint) then(
-			print_message Debug_high ("\nThis constraint is not satisfiable.");
-		) else (
-
-		(* Branching between 2 algorithms here *)
-		let add_new_state =
-			if program.imitator_mode = Reachability_analysis then true
-			else (
-			(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
-			(* Algorithm InverseMethod: here! *)
-			(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
-			
-			(* Hide non parameters (X) *)
-			print_message Debug_high ("\nHiding non parameters:");
-			let p_constraint = LinearConstraint.hide program.clocks_and_discrete final_constraint in
-			(* Debug print *)
-			if debug_mode_greater Debug_high then(
-				print_message Debug_high (LinearConstraint.string_of_linear_constraint program.variable_names p_constraint);
+		(* add discrete values to constraint *)
+		let discrete_values = List.map (fun discrete_index -> discrete_index, (Automaton.get_discrete_value original_location discrete_index)) program.discrete in
+		(* Convert to a constraint *)
+		let discrete_constr = instantiate_discrete discrete_values in
+		(* compute conjunction with current constraint *)
+		let orig_plus_discrete = LinearConstraint.intersection [orig_constraint (); discrete_constr] in
+		
+		(* Give a new index to those automata *)
+		let real_indexes = Array.make nb_automata_for_this_action 0 in
+		(* Keep an array of possible transition indices for each automaton *)
+		let possible_transitions = Array.make nb_automata_for_this_action [] in
+		(* Use an array of transition indices for the search (start with 0),*)
+		(* indicating the current index within the possible transitions for*)
+		(* each automaton *)
+		let current_indexes = Array.make nb_automata_for_this_action 0 in
+		(* Keep the maximum index of possible transitions for each automaton *)
+		let max_indexes = Array.make nb_automata_for_this_action 0 in
+		(* Array for the currently selected transition indices *)
+		let current_transitions = Array.make nb_automata_for_this_action 0 in
+		
+		(* compute the possible combinations of transitions *)
+		let legal_transitions_exist = compute_transitions program original_location orig_plus_discrete action_index automata_for_this_action real_indexes max_indexes possible_transitions in 
+	
+		(* Debug: compute the number of combinations *)
+		if debug_mode_greater Debug_medium then(
+			let nb_combinations = Array.fold_left (fun sum max -> sum * (max + 1)) 1 max_indexes in
+			print_message Debug_medium ("I will consider " ^ (string_of_int nb_combinations) ^ " combination" ^ (s_of_int nb_combinations) ^ " for this state and this action\n");
+		);
+	
+		(* Loop on all the transition combinations *)
+		let more_combinations = ref legal_transitions_exist in
+		while !more_combinations do
+			(* Debug *)
+			if debug_mode_greater Debug_total then (
+			let local_indexes = string_of_array_of_string_with_sep "\n\t" (
+			Array.mapi (fun local_index real_index ->
+				(string_of_int local_index) ^ " -> " ^ (string_of_int real_index) ^ " : " ^ (string_of_int current_indexes.(local_index)) ^ "; ";
+			) real_indexes) in
+			print_message Debug_total ("--- Consider the combination \n\t" ^ local_indexes);
 			);
-			(* Check the pi0-compatibility *)
-			let compatible, incompatible = LinearConstraint.partition_pi0_compatible pi0 p_constraint in
-			let is_pi0_incompatible = incompatible != [] in
+	
+			(* build the current combination of transitions *)
+			for i=0 to Array.length current_transitions -1 do
+				current_transitions.(i) <- List.nth (possible_transitions.(i)) (current_indexes.(i))
+			done; 
+	
+			(* Compute the new location for the current combination of transitions *)
+			let location, guards, clock_updates = compute_new_location program real_indexes current_transitions action_index original_location in
 			
-			(* If pi0-incompatible: select an inequality *)
-			if is_pi0_incompatible then (
-				print_message Debug_low ("\nFound a pi0-incompatible state.");
-				(* Debug print *)
-				if debug_mode_greater Debug_medium then(
-					print_message Debug_medium ("\nThe following inequalities are pi0-incompatible:");
-					List.iter (fun inequality -> print_message Debug_medium (LinearConstraint.string_of_linear_inequality program.variable_names inequality)) incompatible;
-				);
-
-				let inequality =
-					(* If random selection: pick up a random inequality *)
-					if program.random then random_element incompatible
-					(* Else select the first one *)
-					else List.nth incompatible 0
-				in
-				(* Debug print *)
-				if debug_mode_greater  Debug_medium then(
-					print_message Debug_medium ("\nSelecting the following pi0-incompatible inequality:");
-					print_message Debug_medium (LinearConstraint.string_of_linear_inequality program.variable_names inequality);
-				);
-
-				(* Negate the inequality *)
-				let negated_inequality = LinearConstraint.negate_wrt_pi0 pi0 inequality in
-				(* Debug print *)
-				let randomly = if program.random then "randomly " else "" in
-				let among = if List.length incompatible > 1 then (" (" ^ randomly ^ "selected among " ^ (string_of_int (List.length incompatible)) ^ " inequalities)") else "" in
-				print_message Debug_standard ("  Adding the following inequality" ^ among ^ ":");
-				print_message Debug_standard ("  " ^ (LinearConstraint.string_of_linear_inequality program.variable_names negated_inequality));
-
-				(* Update the previous states (including the 'new_states' and the 'orig_state') *)
-				print_message Debug_medium ("\nUpdating all the previous states.\n");
-				Graph.add_inequality_to_states reachability_graph negated_inequality;
-				
-				(* If pi-incompatible *)
-				false
-				(* If pi-compatible *)
-				) else true
-			(*------------------------------------------------*)
-			(* End of algorithm inverse method *)
-			(*------------------------------------------------*)
-			) in
-			
-			if add_new_state then (
-				(*------------------------------------------------*)
-				(* Create the state *)
-				(*------------------------------------------------*)
-				let new_state = location, final_constraint in
-
-				(* Debug print *)
-				if debug_mode_greater Debug_total then(
-					print_message Debug_total ("Consider the state \n" ^ (string_of_state program new_state));
-				);
-
-				(*------------------------------------------------*)
-				(* Add this new state *)
-				(*------------------------------------------------*)
-				(* Try to add the state to the graph // with the p-constraint ????? *)
-				let new_state_index, added = Graph.add_state program reachability_graph new_state in
-				(* If this is really a new state *)
-				if added then (
-					(* Add the state_index to the list of new states *)
-					new_states := new_state_index :: !new_states;
-				);
-				(* Update the transitions *)
-				Graph.add_transition reachability_graph (orig_state_index, action_index, new_state_index);
-				(* Debug print *)
-				if debug_mode_greater Debug_high then (
-					let beginning_message = (if added then "NEW STATE" else "Old state") in
-					print_message Debug_high ("\n" ^ beginning_message ^ " reachable through action '" ^ (program.action_names action_index) ^ "': ");
-					print_message Debug_high (string_of_state program new_state);
-				);
-			); (* end if pi0 incompatible *)
-		); (* end if satisfiable *)
-
-		(*------------------------------------------------*)
-		(* Update the index *)
-		(*------------------------------------------------*)
-		let not_is_max = ref true in
-		let local_index = ref 0 in
-		while !not_is_max do
-			(* Look for the first automaton local index to be incremented *)
-			if current_indexes.(!local_index) < max_indexes.(!local_index) then(
-				(* Increment this index *)
-				current_indexes.(!local_index) <- current_indexes.(!local_index) + 1;
-				(* Reset the smaller indexes to 0 *)
-				for i = 0 to !local_index - 1 do
-					current_indexes.(i) <- 0;
-				done;
-				(* Stop the loop *)
-				not_is_max := false;
+			(* Compute the new constraint for the current transition *)
+			let final_constraint = compute_new_constraint program orig_constraint original_location location guards clock_updates in
+	
+			(* Check the satisfiability *)
+			if not (LinearConstraint.is_satisfiable final_constraint) then(
+				print_message Debug_high ("\nThis constraint is not satisfiable.");
 			) else (
-				local_index := !local_index + 1;
-				if !local_index >= nb_automata_for_this_action then(
-					more_combinations := false;
-					not_is_max := false;
-				)
-			)
-		done; (* end while *)
-	done; (* while more new states *)
+	
+			let add_new_state =
+				(* Branching between 2 algorithms here *)
+				if program.imitator_mode = Reachability_analysis then ( 
+					true
+				) else (
+					inverse_method_check_constraint program pi0 reachability_graph final_constraint
+				) in
+				
+				if add_new_state then (				
+					(* Create the state *)				
+					let new_state = location, final_constraint in
+	
+					(* Debug print *)
+					if debug_mode_greater Debug_total then(
+						print_message Debug_total ("Consider the state \n" ^ (string_of_state program new_state));
+					);
+					
+					(* Add this new state *)
+					(* Try to add the state to the graph // with the p-constraint ????? *)
+					let new_state_index, added = Graph.add_state program reachability_graph new_state in
+					(* If this is really a new state *)
+					if added then (
+						(* Add the state_index to the list of new states *)
+						new_states := new_state_index :: !new_states;
+					);
+					(* Update the transitions *)
+					Graph.add_transition reachability_graph (orig_state_index, action_index, new_state_index);
+					(* Debug print *)
+					if debug_mode_greater Debug_high then (
+						let beginning_message = (if added then "NEW STATE" else "Old state") in
+						print_message Debug_high ("\n" ^ beginning_message ^ " reachable through action '" ^ (program.action_names action_index) ^ "': ");
+						print_message Debug_high (string_of_state program new_state);
+					);
+				); (* end if pi0 incompatible *)
+			); (* end if satisfiable *)
+	
+			(* get the next combination *)
+			more_combinations := next_combination current_indexes max_indexes 		
+			
+		done; (* while more new states *)
 	) list_of_possible_actions;
 	
 	(* Return the list of (really) new states *)
