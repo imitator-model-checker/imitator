@@ -287,6 +287,23 @@ let make_linear_inequality linear_term op =
 (** {3 Functions} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
 
+(** split a linear inequality into its two terms and the operator *)
+let split_linear_inequality = function
+	| Less_Than (lterm, rterm) -> lterm, rterm, Less_Than_RS
+	| Less_Or_Equal (lterm, rterm) -> lterm, rterm, Less_Or_Equal_RS
+	| Equal (lterm, rterm) -> lterm, rterm, Equal_RS
+	| Greater_Than (lterm, rterm) -> lterm, rterm, Greater_Than_RS
+	| Greater_Or_Equal (lterm, rterm) -> lterm, rterm, Greater_Or_Equal_RS
+	
+(** build a linear inequality from two terms and an operator *)
+let build_linear_inequality lterm rterm op = 
+	match op with
+		| Less_Than_RS -> Less_Than (lterm, rterm)
+		| Less_Or_Equal_RS -> Less_Or_Equal (lterm, rterm)
+		| Equal_RS -> Equal (lterm, rterm)
+		| Greater_Than_RS -> Greater_Than (lterm, rterm)
+		| Greater_Or_Equal_RS -> Greater_Or_Equal (lterm, rterm)
+
 
 (** evaluate a linear inequality for a given valuation *)
 let evaluate_linear_inequality valuation_function linear_inequality =
@@ -348,29 +365,105 @@ let negate_wrt_pi0 pi0 linear_inequality =
 
 
 (** Convert a linear inequality into a string *)
+(*let string_of_linear_inequality names linear_inequality =  *)
+(*	match linear_inequality with                             *)
+(*		| Less_Than (lterm, rterm) -> (                        *)
+(*				let lstr = string_of_linear_term_ppl names lterm in*)
+(*				let rstr = string_of_linear_term_ppl names rterm in*)
+(*				lstr ^ " < " ^ rstr )                              *)
+(*		| Less_Or_Equal (lterm, rterm) -> (                    *)
+(*				let lstr = string_of_linear_term_ppl names lterm in*)
+(*				let rstr = string_of_linear_term_ppl names rterm in*)
+(*				lstr ^ " <= " ^ rstr )                             *)
+(*		| Equal (lterm, rterm) -> (                            *)
+(*				let lstr = string_of_linear_term_ppl names lterm in*)
+(*				let rstr = string_of_linear_term_ppl names rterm in*)
+(*				lstr ^ " = " ^ rstr )                              *)
+(*		| Greater_Than (lterm, rterm) -> (                     *)
+(*				let lstr = string_of_linear_term_ppl names lterm in*)
+(*				let rstr = string_of_linear_term_ppl names rterm in*)
+(*				lstr ^ " > " ^ rstr )                              *)
+(*		| Greater_Or_Equal (lterm, rterm) -> (                 *)
+(*				let lstr = string_of_linear_term_ppl names lterm in*)
+(*				let rstr = string_of_linear_term_ppl names rterm in*)
+(*				lstr ^ " >= " ^ rstr )                             *)
+
+let is_zero_coef = function
+	| Coefficient c -> c =! Gmp.Z.zero
+	| _ -> false
+
+
+(** build a sum of two expressions; respects the case where one of the 
+	  operands is zero *)
+let compact_sum lexpr rexpr =
+	if is_zero_coef lexpr then (
+		rexpr
+  ) else (
+		if is_zero_coef rexpr then (
+			lexpr
+		) else (
+			Plus (lexpr, rexpr)
+		))
+
+(** splits an expression into positive and negative part for pretty printing;
+ 	  an expression a-b is mapped to (a, b) *) 
+let rec sign_split_expression = function
+	| Coefficient c ->
+		if c <! Gmp.Z.zero then (
+			(Coefficient Gmp.Z.zero, Coefficient (Gmp.Z.neg c))
+		) else (
+			(Coefficient c, Coefficient Gmp.Z.zero)
+		)
+	| Variable v -> (Variable v, Coefficient Gmp.Z.zero)
+	| Unary_Plus expr -> sign_split_expression expr
+	| Unary_Minus expr ->
+		let pos, neg = sign_split_expression expr in (neg, pos)
+	| Plus (lexpr, rexpr) -> 
+		let lpos, lneg = sign_split_expression lexpr in
+		let rpos, rneg = sign_split_expression rexpr in
+		let new_pos = compact_sum lpos rpos in 
+		let new_neg = compact_sum lneg rneg in 
+		(new_pos, new_neg)
+	| Minus (lexpr, rexpr) -> 
+		sign_split_expression (Plus (lexpr, Unary_Minus rexpr))
+	| Times (c, expr) -> 
+		let pos, neg = sign_split_expression expr in
+		let invert = c <! Gmp.Z.zero in
+		let new_c = if invert then Gmp.Z.neg c else c in
+		if new_c =! Gmp.Z.one then (
+			if invert then (neg, pos) else (pos, neg)
+		) else (
+			let new_pos = if is_zero_coef pos then Coefficient Gmp.Z.zero else Times (new_c, pos) in
+			let new_neg = if is_zero_coef neg then Coefficient Gmp.Z.zero else Times (new_c, neg) in
+			if invert then (new_neg, new_pos) else (new_pos, new_neg)
+		)			
+
+
+(** normalize an inequality for pretty printing; *)
+(** the expressions are rearranged such that only posistive coefficients occur *)
+let normalize_inequality ineq = 
+	let lterm, rterm, op = split_linear_inequality ineq in
+	let lpos, lneg = sign_split_expression lterm in
+	let rpos, rneg = sign_split_expression rterm in
+	let lnew = compact_sum lpos rneg in
+	let rnew = compact_sum rpos lneg in
+	build_linear_inequality lnew rnew op
+
+
+(** Convert a linear inequality into a string *)
 let string_of_linear_inequality names linear_inequality =
-	match linear_inequality with
-		| Less_Than (lterm, rterm) -> (
-				let lstr = string_of_linear_term_ppl names lterm in
-				let rstr = string_of_linear_term_ppl names rterm in
-				lstr ^ " < " ^ rstr )
-		| Less_Or_Equal (lterm, rterm) -> (
-				let lstr = string_of_linear_term_ppl names lterm in
-				let rstr = string_of_linear_term_ppl names rterm in
-				lstr ^ " <= " ^ rstr )
-		| Equal (lterm, rterm) -> (
-				let lstr = string_of_linear_term_ppl names lterm in
-				let rstr = string_of_linear_term_ppl names rterm in
-				lstr ^ " = " ^ rstr )
-		| Greater_Than (lterm, rterm) -> (
-				let lstr = string_of_linear_term_ppl names lterm in
-				let rstr = string_of_linear_term_ppl names rterm in
-				lstr ^ " > " ^ rstr )
-		| Greater_Or_Equal (lterm, rterm) -> (
-				let lstr = string_of_linear_term_ppl names lterm in
-				let rstr = string_of_linear_term_ppl names rterm in
-				lstr ^ " >= " ^ rstr )
-	
+	let normal_ineq = normalize_inequality linear_inequality in
+	let lterm, rterm, op = split_linear_inequality normal_ineq in
+	let lstr = string_of_linear_term_ppl names lterm in
+	let rstr = string_of_linear_term_ppl names rterm in	
+	let opstr = match op with
+		| Less_Than_RS -> " < "
+		| Less_Or_Equal_RS -> " <= "
+		| Equal_RS -> " = "
+		| Greater_Than_RS -> " > "
+		| Greater_Or_Equal_RS -> " >= " in
+	lstr ^ opstr ^ rstr
+
 
 (**************************************************)
 (** {2 Linear Constraints} *)

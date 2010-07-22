@@ -897,7 +897,7 @@ let post program pi0 reachability_graph orig_state_index =
 				print_message Debug_high ("\nThis constraint is not satisfiable.");
 			) else (
 	
-			let add_new_state =
+				let add_new_state =
 				(* Branching between 2 algorithms here *)
 				if program.imitator_mode = Reachability_analysis then ( 
 					true
