@@ -373,56 +373,56 @@ let compute_possible_actions program original_location =
 (* returns the new location, the guards, the updates                *)
 (*------------------------------------------------------------------*)
 let compute_new_location program aut_table trans_table action_index original_location =
-		(* make a copy of the location *)		
-		let location = Automaton.copy_location original_location in
-		(* Create a temporary hashtbl for discrete values *)
-		let updated_discrete = Hashtbl.create program.nb_discrete in
-		(* Update the location for the automata synchronized with 'action_index'; return the list of guards and updates *)
-		let guards_and_updates = Array.to_list (Array.mapi (fun local_index real_index ->
-			(* Get the current location for this automaton *)
-			let location_index = Automaton.get_location original_location real_index in
-			(* Find the transitions for this automaton *)
+	(* make a copy of the location *)		
+	let location = Automaton.copy_location original_location in
+	(* Create a temporary hashtbl for discrete values *)
+	let updated_discrete = Hashtbl.create program.nb_discrete in
+	(* Update the location for the automata synchronized with 'action_index'; return the list of guards and updates *)
+	let guards_and_updates = Array.to_list (Array.mapi (fun local_index real_index ->
+		(* Get the current location for this automaton *)
+		let location_index = Automaton.get_location original_location real_index in
+		(* Find the transitions for this automaton *)
 			let transitions = program.transitions real_index location_index action_index in
   		(* Get the index of the examined transition for this automaton *)
-			let current_index = trans_table.(local_index) in
-			(* Keep the 'current_index'th transition *)
-			let transition = List.nth transitions current_index in
-			(* Keep only the dest location *)
-			let guard, clock_updates, discrete_updates, dest_index = transition in			
-			(* Update discrete *)
-			List.iter (fun (discrete_index, linear_term) ->
-				(* Compute its new value *)
-				let new_value = LinearConstraint.evaluate_linear_term (Automaton.get_discrete_value original_location) linear_term in
-				(* Check if already updated *)
-				if Hashtbl.mem updated_discrete discrete_index then (
-					(* Find its value *)
-					let previous_new_value = Hashtbl.find updated_discrete discrete_index in
-					(* Compare with the new one *)
-					if NumConst.neq previous_new_value new_value then (
-					(* If different: warning *)
-						print_warning ("The discrete variable '" ^ (program.variable_names discrete_index) ^ "' is updated several times with different values for the same synchronized action '" ^ (program.action_names action_index) ^ "'. The behavior of the system is now unspecified.");
-					);
-				) else (
-					(* Else keep it in memory for update *)
-					Hashtbl.add updated_discrete discrete_index new_value;
+		let current_index = trans_table.(local_index) in
+		(* Keep the 'current_index'th transition *)
+		let transition = List.nth transitions current_index in
+		(* Keep only the dest location *)
+		let guard, clock_updates, discrete_updates, dest_index = transition in			
+		(* Update discrete *)
+		List.iter (fun (discrete_index, linear_term) ->
+			(* Compute its new value *)
+			let new_value = LinearConstraint.evaluate_linear_term (Automaton.get_discrete_value original_location) linear_term in
+			(* Check if already updated *)
+			if Hashtbl.mem updated_discrete discrete_index then (
+				(* Find its value *)
+				let previous_new_value = Hashtbl.find updated_discrete discrete_index in
+				(* Compare with the new one *)
+				if NumConst.neq previous_new_value new_value then (
+				(* If different: warning *)
+					print_warning ("The discrete variable '" ^ (program.variable_names discrete_index) ^ "' is updated several times with different values for the same synchronized action '" ^ (program.action_names action_index) ^ "'. The behavior of the system is now unspecified.");
 				);
-			) discrete_updates;
-			(* Update the global location *)
-			Automaton.update_location_with [real_index, dest_index] [] location;
-			(* Keep the guard and updates *)
-			guard, clock_updates;
-		) aut_table) in
-		(* Split the list of guards and updates *)
-		let guards, clock_updates = List.split guards_and_updates in
-		(* Compute couples to update the discrete variables *)
-		let updated_discrete_couples = ref [] in
-		Hashtbl.iter (fun discrete_index discrete_value ->
-			updated_discrete_couples := (discrete_index, discrete_value) :: !updated_discrete_couples;
-		) updated_discrete;
+			) else (
+				(* Else keep it in memory for update *)
+				Hashtbl.add updated_discrete discrete_index new_value;
+			);
+		) discrete_updates;
 		(* Update the global location *)
-		Automaton.update_location_with [] !updated_discrete_couples location;
-	  (* return the new location, the guards, and the clock updates *)
-		(location, guards, clock_updates)
+		Automaton.update_location_with [real_index, dest_index] [] location;
+		(* Keep the guard and updates *)
+		guard, clock_updates;
+	) aut_table) in
+	(* Split the list of guards and updates *)
+	let guards, clock_updates = List.split guards_and_updates in
+	(* Compute couples to update the discrete variables *)
+	let updated_discrete_couples = ref [] in
+	Hashtbl.iter (fun discrete_index discrete_value ->
+		updated_discrete_couples := (discrete_index, discrete_value) :: !updated_discrete_couples;
+	) updated_discrete;
+	(* Update the global location *)
+	Automaton.update_location_with [] !updated_discrete_couples location;
+  (* return the new location, the guards, and the clock updates *)
+	(location, guards, clock_updates)
 	
 	
 	
@@ -434,68 +434,68 @@ let compute_new_location program aut_table trans_table action_index original_loc
 (* and the non-updated clocks                                 *)
 (*------------------------------------------------------------*)
 let compute_updates program clock_updates = 
-		(* keep track of variables that are not updated *)
-		let not_appearing_in_updates = Array.make program.nb_variables true in
-		(* Compute X' = rho(X) + d for the variables appearing in updates *)
-		let updates = List.fold_left (fun list_of_updates current_updates ->			
-			List.rev_append	list_of_updates
-			(List.map (fun (variable_index, linear_term) ->
-				(* 'variable_index' appears in an updates *)
-				not_appearing_in_updates.(variable_index) <- false;			
-				(* Consider cases for clocks *)				
-				match program.type_of_variables variable_index with
-				(* Clocks: Build rho(X) + d - X' = 0 *)
-				| Var_type_analog | Var_type_clock -> 
-				let xprime_lt = LinearConstraint.make_linear_term [
-					NumConst.minus_one, program.prime_of_variable variable_index;
-					NumConst.one, program.d
-				] NumConst.zero in
-				LinearConstraint.make_linear_inequality
-					(LinearConstraint.add_linear_terms xprime_lt linear_term)
-					LinearConstraint.Op_eq
-				| _ -> raise (InternalError "Only clocks can be updated.")
-			) current_updates
-		)) [] clock_updates in
-		(* Create the constraint *)
-		let updates = LinearConstraint.make updates in
-		(* Debug print *)
-		if debug_mode_greater Debug_total then(
-			print_message Debug_total (LinearConstraint.string_of_linear_constraint program.variable_names updates);
+	(* keep track of variables that are not updated *)
+	let not_appearing_in_updates = Array.make program.nb_variables true in
+	(* Compute X' = rho(X) + d for the variables appearing in updates *)
+	let updates = List.fold_left (fun list_of_updates current_updates ->			
+		List.rev_append	list_of_updates
+		(List.map (fun (variable_index, linear_term) ->
+			(* 'variable_index' appears in an updates *)
+			not_appearing_in_updates.(variable_index) <- false;			
+			(* Consider cases for clocks *)				
+			match program.type_of_variables variable_index with
+			(* Clocks: Build rho(X) + d - X' = 0 *)
+			| Var_type_analog | Var_type_clock -> 
+			let xprime_lt = LinearConstraint.make_linear_term [
+				NumConst.minus_one, program.prime_of_variable variable_index;
+				NumConst.one, program.d
+			] NumConst.zero in
+			LinearConstraint.make_linear_inequality
+				(LinearConstraint.add_linear_terms xprime_lt linear_term)
+				LinearConstraint.Op_eq
+			| _ -> raise (InternalError "Only clocks can be updated.")
+		) current_updates
+	)) [] clock_updates in
+	(* Create the constraint *)
+	let updates = LinearConstraint.make updates in
+	(* Debug print *)
+	if debug_mode_greater Debug_total then(
+		print_message Debug_total (LinearConstraint.string_of_linear_constraint program.variable_names updates);
+	);
+	(* Compute X' = X + d for the clocks NOT appearing in updates *)
+	print_message Debug_total ("\nComputing X' = X + d for non-updated clocks");
+	(**** BAD PROG ****)
+	(* List of inequalities *)
+	let non_updated = ref [] in
+	Array.iteri (fun variable_index not_appearing -> 
+		(**** TO OPTIMIZE : there are only clocks, here ! ****)
+		let is_clock = program.is_clock variable_index || program.is_analog variable_index in
+		(* Only consider clocks *)
+		if not_appearing && is_clock then(
+			(* Useful names *)
+			let x = NumConst.one, variable_index in
+			let x_prime = NumConst.minus_one, program.prime_of_variable variable_index in
+			(* Build the inequality *)
+			let members =
+				(* Build the inequality X + d - X' = 0 *)
+				[x ; (NumConst.one, program.d) ; x_prime]
+			in 
+			let new_inequality = LinearConstraint.make_linear_inequality
+				(LinearConstraint.make_linear_term members NumConst.zero)
+				LinearConstraint.Op_eq
+			in
+			(* Add it to the list *)
+			non_updated := new_inequality :: !non_updated;
 		);
-		(* Compute X' = X + d for the clocks NOT appearing in updates *)
-		print_message Debug_total ("\nComputing X' = X + d for non-updated clocks");
-		(**** BAD PROG ****)
-		(* List of inequalities *)
-		let non_updated = ref [] in
-		Array.iteri (fun variable_index not_appearing -> 
-			(**** TO OPTIMIZE : there are only clocks, here ! ****)
-			let is_clock = program.is_clock variable_index || program.is_analog variable_index in
-			(* Only consider clocks *)
-			if not_appearing && is_clock then(
-				(* Useful names *)
-				let x = NumConst.one, variable_index in
-				let x_prime = NumConst.minus_one, program.prime_of_variable variable_index in
-				(* Build the inequality *)
-				let members =
-					(* Build the inequality X + d - X' = 0 *)
-					[x ; (NumConst.one, program.d) ; x_prime]
-				in 
-				let new_inequality = LinearConstraint.make_linear_inequality
-					(LinearConstraint.make_linear_term members NumConst.zero)
-					LinearConstraint.Op_eq
-				in
-				(* Add it to the list *)
-				non_updated := new_inequality :: !non_updated;
-			);
-		) not_appearing_in_updates;
-		(* Create the constraint *)
-		let non_updated = LinearConstraint.make !non_updated in
-		(* Debug print *)
-		if debug_mode_greater Debug_total then(
-			print_message Debug_total (LinearConstraint.string_of_linear_constraint program.variable_names non_updated);
-		);
-		(* return both constraints *)
-		(updates, non_updated)	
+	) not_appearing_in_updates;
+	(* Create the constraint *)
+	let non_updated = LinearConstraint.make !non_updated in
+	(* Debug print *)
+	if debug_mode_greater Debug_total then(
+		print_message Debug_total (LinearConstraint.string_of_linear_constraint program.variable_names non_updated);
+	);
+	(* return both constraints *)
+	(updates, non_updated)	
 	
 	
 exception Unsat_exception
@@ -509,129 +509,129 @@ exception Unsat_exception
 (* clock_updates   : updated clock variables        *)
 (*--------------------------------------------------*)
 let compute_new_constraint program orig_constraint orig_location dest_location guards clock_updates =
-		(* the constraint is checked on the fly for satisfyability -> exception mechanism *)
-		try ( 
-			print_message Debug_total ("\nComputing equalities for discrete variables (previous values)");
-			(* Compute discrete values using the current (new) location *)
-			let discrete_values = List.map (fun discrete_index -> discrete_index, (Automaton.get_discrete_value orig_location discrete_index)) program.discrete in
-			(* Convert to a constraint *)
-			let previous_discrete_constraint = instantiate_discrete discrete_values in
-			(* Debug *)
-			print_message Debug_total (LinearConstraint.string_of_linear_constraint program.variable_names previous_discrete_constraint);
+	(* the constraint is checked on the fly for satisfyability -> exception mechanism *)
+	try ( 
+		print_message Debug_total ("\nComputing equalities for discrete variables (previous values)");
+		(* Compute discrete values using the current (new) location *)
+		let discrete_values = List.map (fun discrete_index -> discrete_index, (Automaton.get_discrete_value orig_location discrete_index)) program.discrete in
+		(* Convert to a constraint *)
+		let previous_discrete_constraint = instantiate_discrete discrete_values in
+		(* Debug *)
+		print_message Debug_total (LinearConstraint.string_of_linear_constraint program.variable_names previous_discrete_constraint);
+	
+		(* Debug *)
+		if debug_mode_greater Debug_total then(
+			print_message Debug_total ("\nComputing guards g(X)");
+			List.iter (fun guard -> 
+				print_message Debug_total (LinearConstraint.string_of_linear_constraint program.variable_names guard);
+			) guards;
+		);
+		print_message Debug_total ("\nComputing the guards and discrete");
+		(* Add the (old) value for discrete to the guards *)
+		let guards_and_discrete = LinearConstraint.intersection (previous_discrete_constraint :: guards) in
+		(* Debug print *)
+		if debug_mode_greater Debug_total then(
+			print_message Debug_total (LinearConstraint.string_of_linear_constraint program.variable_names guards_and_discrete);
+		);
+		(* check here for unsatisfiability *)
+		if not (LinearConstraint.is_satisfiable guards_and_discrete) then (
+			print_message Debug_high "skip transition";
+			raise Unsat_exception
+		);
 		
-			(* Debug *)
-			if debug_mode_greater Debug_total then(
-				print_message Debug_total ("\nComputing guards g(X)");
-				List.iter (fun guard -> 
-					print_message Debug_total (LinearConstraint.string_of_linear_constraint program.variable_names guard);
-				) guards;
-			);
-			print_message Debug_total ("\nComputing the guards and discrete");
-			(* Add the (old) value for discrete to the guards *)
-			let guards_and_discrete = LinearConstraint.intersection (previous_discrete_constraint :: guards) in
-			(* Debug print *)
-			if debug_mode_greater Debug_total then(
-				print_message Debug_total (LinearConstraint.string_of_linear_constraint program.variable_names guards_and_discrete);
-			);
-			(* check here for unsatisfiability *)
-			if not (LinearConstraint.is_satisfiable guards_and_discrete) then (
-				print_message Debug_high "skip transition";
-				raise Unsat_exception
-			);
-			
-			print_message Debug_total ("\nEliminate the discrete variables in g(X)");
-			(* Remove the discrete variables *)
-			let guards_without_discrete = LinearConstraint.hide program.discrete guards_and_discrete in
-			(* Debug print *)
-			if debug_mode_greater Debug_total then(
-				print_message Debug_total (LinearConstraint.string_of_linear_constraint program.variable_names guards_without_discrete);
-			);
-	
-			print_message Debug_total ("\nComputing clock updates X' = rho(X) + d");
-			let updates, non_updated = compute_updates program clock_updates in
-	
-			(* Compute the invariant in the destination location *)
-			print_message Debug_total ("\nComputing invariant I_q(X) ");
-			let invariant = compute_invariant program dest_location in
-			(* Debug print *)
-			if debug_mode_greater Debug_total then(
-				print_message Debug_total (LinearConstraint.string_of_linear_constraint program.variable_names invariant);
-				if not (LinearConstraint.is_satisfiable invariant) then
-					print_message Debug_total ("This constraint is NOT satisfiable.");
-			);
-			
-			(* Compute the invariant after time elapsing *)
-			print_message Debug_total ("Computing invariant I_q(X') ");
-			let renamed_invariant = LinearConstraint.rename_variables program.renamed_clocks_couples invariant in
-			(* Debug print *)
-			if debug_mode_greater Debug_total then(
-				print_message Debug_total (LinearConstraint.string_of_linear_constraint program.variable_names renamed_invariant);
-				if not (LinearConstraint.is_satisfiable renamed_invariant) then
-					print_message Debug_total ("This constraint is NOT satisfiable.");
-			);
-			
-			(* Compute the invariant before time elapsing *)
-			print_message Debug_total ("\nComputing invariant I_q(X' - d) ");
-			let renamed_invariant_before_time_elapsing = LinearConstraint.add_d program.d NumConst.minus_one program.renamed_clocks renamed_invariant in
-			(* Debug print *)
-			if debug_mode_greater Debug_total then(
-				print_message Debug_total (LinearConstraint.string_of_linear_constraint program.variable_names renamed_invariant_before_time_elapsing);
-				if not (LinearConstraint.is_satisfiable renamed_invariant_before_time_elapsing) then
-					print_message Debug_total ("This constraint is NOT satisfiable.");
-			);
-	
-			(* Compute the equalities for the discrete variables *)
-			print_message Debug_total ("\nComputing equalities for discrete variables");
-			(* Compute discrete values using the current (new) location *)
-			let discrete_values = List.map (fun discrete_index -> discrete_index, (Automaton.get_discrete_value dest_location discrete_index)) program.discrete in
-			(* Convert to a constraint *)
-			let discrete_constraint = instantiate_discrete discrete_values in
-			(* Debug *)
-			print_message Debug_total (LinearConstraint.string_of_linear_constraint program.variable_names discrete_constraint);
+		print_message Debug_total ("\nEliminate the discrete variables in g(X)");
+		(* Remove the discrete variables *)
+		let guards_without_discrete = LinearConstraint.hide program.discrete guards_and_discrete in
+		(* Debug print *)
+		if debug_mode_greater Debug_total then(
+			print_message Debug_total (LinearConstraint.string_of_linear_constraint program.variable_names guards_without_discrete);
+		);
+
+		print_message Debug_total ("\nComputing clock updates X' = rho(X) + d");
+		let updates, non_updated = compute_updates program clock_updates in
+
+		(* Compute the invariant in the destination location *)
+		print_message Debug_total ("\nComputing invariant I_q(X) ");
+		let invariant = compute_invariant program dest_location in
+		(* Debug print *)
+		if debug_mode_greater Debug_total then(
+			print_message Debug_total (LinearConstraint.string_of_linear_constraint program.variable_names invariant);
+			if not (LinearConstraint.is_satisfiable invariant) then
+				print_message Debug_total ("This constraint is NOT satisfiable.");
+		);
 		
-			(* Perform the intersection *)
-			print_message Debug_total ("\nPerforming intersection of C(X) and g(X) and X' = rho(X) + d and I_q(X' - d) and I_q(X') ");
-			let new_full_constraint = LinearConstraint.intersection
-				[
-					orig_constraint ();
-					updates;
-					non_updated;
-					renamed_invariant_before_time_elapsing;
-					renamed_invariant;
-					program.positive_d;
-					discrete_constraint;
-					guards_without_discrete
-				] in
-			(* Debug print *)
-			if debug_mode_greater Debug_total then(
-				print_message Debug_total (LinearConstraint.string_of_linear_constraint program.variable_names new_full_constraint);
-				if not (LinearConstraint.is_satisfiable new_full_constraint) then
-					print_message Debug_total ("This constraint is NOT satisfiable.");
-			);
+		(* Compute the invariant after time elapsing *)
+		print_message Debug_total ("Computing invariant I_q(X') ");
+		let renamed_invariant = LinearConstraint.rename_variables program.renamed_clocks_couples invariant in
+		(* Debug print *)
+		if debug_mode_greater Debug_total then(
+			print_message Debug_total (LinearConstraint.string_of_linear_constraint program.variable_names renamed_invariant);
+			if not (LinearConstraint.is_satisfiable renamed_invariant) then
+				print_message Debug_total ("This constraint is NOT satisfiable.");
+		);
+		
+		(* Compute the invariant before time elapsing *)
+		print_message Debug_total ("\nComputing invariant I_q(X' - d) ");
+		let renamed_invariant_before_time_elapsing = LinearConstraint.add_d program.d NumConst.minus_one program.renamed_clocks renamed_invariant in
+		(* Debug print *)
+		if debug_mode_greater Debug_total then(
+			print_message Debug_total (LinearConstraint.string_of_linear_constraint program.variable_names renamed_invariant_before_time_elapsing);
+			if not (LinearConstraint.is_satisfiable renamed_invariant_before_time_elapsing) then
+				print_message Debug_total ("This constraint is NOT satisfiable.");
+		);
+
+		(* Compute the equalities for the discrete variables *)
+		print_message Debug_total ("\nComputing equalities for discrete variables");
+		(* Compute discrete values using the current (new) location *)
+		let discrete_values = List.map (fun discrete_index -> discrete_index, (Automaton.get_discrete_value dest_location discrete_index)) program.discrete in
+		(* Convert to a constraint *)
+		let discrete_constraint = instantiate_discrete discrete_values in
+		(* Debug *)
+		print_message Debug_total (LinearConstraint.string_of_linear_constraint program.variable_names discrete_constraint);
 	
-			(* Hide 'X' and 'd' *)
-			print_message Debug_total ("\nHide 'X', discrete and 'd' in C(X) ^ g(X) ^ X' = rho(X) + d ^ I_q(X' - d) ^ I_q(X')");
-			let full_constraint_hidden = LinearConstraint.hide (program.d :: program.clocks_and_discrete) new_full_constraint in
-			(* Debug print *)
-			if debug_mode_greater Debug_total then(
-				print_message Debug_total (LinearConstraint.string_of_linear_constraint program.variable_names full_constraint_hidden);
-				if not (LinearConstraint.is_satisfiable full_constraint_hidden) then
-					print_message Debug_total ("This constraint is NOT satisfiable.");
-			);
-	
-			(* Rename X' -> X *)
-			print_message Debug_total ("\nRenaming X' into X:");
-			let final_constraint =
-				LinearConstraint.rename_variables program.unrenamed_clocks_couples full_constraint_hidden in
-			(* Debug print *)
-			if debug_mode_greater Debug_total then(
-				print_message Debug_total (LinearConstraint.string_of_linear_constraint program.variable_names final_constraint);
-				if not (LinearConstraint.is_satisfiable final_constraint) then
-					print_message Debug_total ("This constraint is NOT satisfiable.");
-			);
-			(* return the final constraint *)
-			final_constraint
-		) with Unsat_exception -> LinearConstraint.false_constraint ()
+		(* Perform the intersection *)
+		print_message Debug_total ("\nPerforming intersection of C(X) and g(X) and X' = rho(X) + d and I_q(X' - d) and I_q(X') ");
+		let new_full_constraint = LinearConstraint.intersection
+			[
+				orig_constraint ();
+				updates;
+				non_updated;
+				renamed_invariant_before_time_elapsing;
+				renamed_invariant;
+				program.positive_d;
+				discrete_constraint;
+				guards_without_discrete
+			] in
+		(* Debug print *)
+		if debug_mode_greater Debug_total then(
+			print_message Debug_total (LinearConstraint.string_of_linear_constraint program.variable_names new_full_constraint);
+			if not (LinearConstraint.is_satisfiable new_full_constraint) then
+				print_message Debug_total ("This constraint is NOT satisfiable.");
+		);
+
+		(* Hide 'X' and 'd' *)
+		print_message Debug_total ("\nHide 'X', discrete and 'd' in C(X) ^ g(X) ^ X' = rho(X) + d ^ I_q(X' - d) ^ I_q(X')");
+		let full_constraint_hidden = LinearConstraint.hide (program.d :: program.clocks_and_discrete) new_full_constraint in
+		(* Debug print *)
+		if debug_mode_greater Debug_total then(
+			print_message Debug_total (LinearConstraint.string_of_linear_constraint program.variable_names full_constraint_hidden);
+			if not (LinearConstraint.is_satisfiable full_constraint_hidden) then
+				print_message Debug_total ("This constraint is NOT satisfiable.");
+		);
+
+		(* Rename X' -> X *)
+		print_message Debug_total ("\nRenaming X' into X:");
+		let final_constraint =
+			LinearConstraint.rename_variables program.unrenamed_clocks_couples full_constraint_hidden in
+		(* Debug print *)
+		if debug_mode_greater Debug_total then(
+			print_message Debug_total (LinearConstraint.string_of_linear_constraint program.variable_names final_constraint);
+			if not (LinearConstraint.is_satisfiable final_constraint) then
+				print_message Debug_total ("This constraint is NOT satisfiable.");
+		);
+		(* return the final constraint *)
+		final_constraint
+	) with Unsat_exception -> LinearConstraint.false_constraint ()
 		
 		
 	
@@ -747,55 +747,58 @@ let inverse_method_check_constraint program pi0 reachability_graph constr =
 (* combination exists.                                   *)
 (*-------------------------------------------------------*)
 let compute_transitions program location constr action_index automata aut_table max_indexes possible_transitions  =
-		(* Stop computation as soon as one automaton has no legal transition left. *)
-		let current_index = ref 0 in 
-		try (
-			List.iter (fun automaton_index ->
-				(* Tabulate the real index *)
-				aut_table.(!current_index) <- automaton_index;
-				(* Get the current location for this automaton *)
-				let location_index = Automaton.get_location location automaton_index in
-				(* Get transitions for this automaton *)
-				let transitions = program.transitions automaton_index location_index action_index in
-				(* Keep only possible transitions *)
-				let is_possible = fun trans -> (
-					let guard, _, _, _ = trans in
-					let constr_and_guard = LinearConstraint.intersection [constr; guard] in
-					let is_possible = LinearConstraint.is_satisfiable constr_and_guard in
-					if not is_possible then (
-						print_message Debug_medium "** early skip transition **"
-					);
-					is_possible
-				) in
-				let legal_transitions = ref [] in
-				let trans_index = ref 0 in
-				List.iter (fun trans -> 
-					if is_possible trans then(
-						legal_transitions := !trans_index :: !legal_transitions
-					);
-					trans_index := !trans_index + 1
-				) transitions;
-				(* Stop computation if no legal transition exists *)
-				if !legal_transitions = [] then (
-					print_message Debug_medium "*** early skip action ***";
-					raise Unsat_exception
+	let current_index = ref 0 in 
+	(* Stop computation as soon as one automaton has no legal transition left. *)
+	try (
+		List.iter (fun automaton_index ->
+			(* Tabulate the real index *)
+			aut_table.(!current_index) <- automaton_index;
+			(* Get the current location for this automaton *)
+			let location_index = Automaton.get_location location automaton_index in
+			(* Get transitions for this automaton *)
+			let transitions = program.transitions automaton_index location_index action_index in
+			(* Keep only possible transitions *)
+			let is_possible = fun trans -> (
+				let guard, _, _, _ = trans in
+				let constr_and_guard = LinearConstraint.intersection [constr; guard] in
+				let is_possible = LinearConstraint.is_satisfiable constr_and_guard in
+				if not is_possible then (
+					print_message Debug_medium "** early skip transition **"
 				);
-				(* Store possible transitions *)
-				possible_transitions.(!current_index) <- !legal_transitions;
-				(* Tabulate the number of transitions for this location *)
-				max_indexes.(!current_index) <-	List.length !legal_transitions - 1;
-				(* Increment the index *)
-				current_index := !current_index + 1;
-			) automata;
-			(* arrived here, so each automaton must have at least one legal transition *)
-			true		
-		) with Unsat_exception -> false
+				is_possible
+			) in
+			let legal_transitions = ref [] in
+			let trans_index = ref 0 in
+			List.iter (fun trans -> 
+				if is_possible trans then(
+					legal_transitions := !trans_index :: !legal_transitions
+				);
+				trans_index := !trans_index + 1
+			) transitions;
+			(* Stop computation if no legal transition exists *)
+			if !legal_transitions = [] then (
+				print_message Debug_medium "*** early skip action ***";
+				raise Unsat_exception
+			);
+			(* Store possible transitions *)
+			possible_transitions.(!current_index) <- !legal_transitions;
+			(* Tabulate the number of transitions for this location *)
+			max_indexes.(!current_index) <-	List.length !legal_transitions - 1;
+			(* Increment the index *)
+			current_index := !current_index + 1;
+		) automata;
+		(* arrived here, so each automaton must have at least one legal transition *)
+		true		
+	) with Unsat_exception -> false
 
 
 
-(*--------------------------------------------------*)
-(* Compute the list of possible destination states w.r.t. to a reachability_graph, and update this graph; return the (really) new states *)
-(*--------------------------------------------------*)
+(*-----------------------------------------------------*)
+(* Compute the list of possible destination states     *)
+(* wrt. to a reachability_graph, and update this graph *)
+(*-----------------------------------------------------*)
+(* returns a list of (really) new states               *)
+(*-----------------------------------------------------*)
 let post program pi0 reachability_graph orig_state_index =
 	(* Original location: static *)
 	let original_location, _ = Graph.get_state reachability_graph orig_state_index in
@@ -943,9 +946,9 @@ let post program pi0 reachability_graph orig_state_index =
 	List.rev (!new_states)
 
 
-(*--------------------------------------------------*)
+(*---------------------------------------------------*)
 (* Compute the reachability graph from a given state *)
-(*--------------------------------------------------*)
+(*---------------------------------------------------*)
 let post_star program pi0 init_state =
 	(* Time counter *)
 	let counter = ref (Unix.gettimeofday()) in
