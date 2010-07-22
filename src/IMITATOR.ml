@@ -147,21 +147,6 @@ let write_to_file file_name file_content =
 	close_out oc;
 	()
 
-	(*let oc = try (
-		open_out file_name) with
-		Sys_error message -> (print_error ("Impossible to create file '" ^ file_name ^ "'. System says: " ^ message); abort_program(); raise (InternalError ""););
-	in
-	(* Write file *)
-	try (output_string oc file_content;) with
-		Sys_error message -> (print_error ("Impossible to write into file '" ^ file_name ^ "'. System says: " ^ message); abort_program(););
-	(* Flush ! *)
-	flush oc;
-	(* Close channel *)
-	try (close_out oc;) with
-		Sys_error message -> (print_error ("Impossible to close channel corresponding to file '" ^ file_name ^ "'. System says: " ^ message); abort_program(););
-	()*)
-	
-
 
 
 (**************************************************)
@@ -320,38 +305,14 @@ let create_initial_state program =
 	initial_location, final_constraint
 
 
-(*--------------------------------------------------*)
-(* Compute the list of possible destination states w.r.t. to a reachability_graph, and update this graph; return the (really) new states *)
-(*--------------------------------------------------*)
-let post program pi0 reachability_graph orig_state_index =
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
-	(* Get some variables *)
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
-	(* Original location: static *)
-	let original_location, _ = Graph.get_state reachability_graph orig_state_index in
-	(* Dynamic recuperation of the orig_constraint (can change!) *)
-	let orig_constraint () =
-		let _, orig_constraint = Graph.get_state reachability_graph orig_state_index in
-		orig_constraint
-	in
-	(* Shortcuts *)
-	let nb_actions = program.nb_actions in
 
-	(* Debug prints *)
-	if debug_mode_greater Debug_high then(
-		let orig_state = Graph.get_state reachability_graph orig_state_index in
-		let _, orig_constraint = orig_state in
-		let orig_constraint_projection = LinearConstraint.hide program.clocks_and_discrete orig_constraint in
-		print_message Debug_high ("Performing post from state:");
-		print_message Debug_high (string_of_state program orig_state);
-		print_message Debug_high ("\nThe projection of this constraint onto the parameters is:");
-		print_message Debug_high (LinearConstraint.string_of_linear_constraint program.variable_names orig_constraint_projection);
-	);
+(*--------------------------------------------------*)
+(* Compute a list of possible actions for a state   *)
+(*--------------------------------------------------*)
+let compute_possible_actions program original_location = 
 	(* Create a boolean array for the possible actions *)
-	let possible_actions = Array.make nb_actions false in
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+	let possible_actions = Array.make program.nb_actions false in
 	(* Fill it with all the possible actions per location *)
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
 	for automaton_index = 0 to program.nb_automata - 1 do
 		(* Get the current location for automaton_index *)
 		let location_index = Automaton.get_location original_location automaton_index in
@@ -369,7 +330,6 @@ let post program pi0 reachability_graph orig_state_index =
 			print_message Debug_total ("Adding action " ^ (program.action_names action_index) ^ " for automaton " ^ (program.automata_names automaton_index) ^ " with location " ^ (program.location_names automaton_index location_index) ^ ".");
 		) possible_actions_for_this_automaton;
 	done;
-
 	(* Debug print *)
 	if debug_mode_greater Debug_total then (
 		print_message Debug_total ("Possible actions for all the locations are:");
@@ -377,9 +337,8 @@ let post program pi0 reachability_graph orig_state_index =
 			if possible then (print_message Debug_total (" - " ^ (program.action_names action_index)));
 		) possible_actions;
 	);
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
-	(* Remove every action where an automaton can not take this action in its location although the action was declared for this automaton *)
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+	(* Remove every action where an automaton can not take this action in its *)
+	(*  location although the action was declared for this automaton          *)
 	let possible_actions = Array.mapi (fun action_index possible ->
 		(* If this action is not possible, then false *)
 		if not possible then false else(
@@ -400,89 +359,36 @@ let post program pi0 reachability_graph orig_state_index =
 		)
 	) possible_actions in
 	(* Make a list *)
-	let list_of_possible_actions = true_indexes possible_actions in
-	(* Debug print *)
-	if debug_mode_greater Debug_high then (
-		let actions_string = List.map (fun action_index -> program.action_names action_index) list_of_possible_actions in
-		print_message Debug_high ("Possible synchronized actions are: " ^ (string_of_list_of_string_with_sep ", " actions_string));
-	);
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
-	(* Update the reachability graph *)
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
-	(* List of new states *)
-	let new_states = ref [] in
+	true_indexes possible_actions
 
-	(* FOR ALL ACTION DO: *)
-	List.iter (fun action_index ->
 
-	print_message Debug_medium ("\nComputing destination states for action '" ^ (program.action_names action_index) ^ "'");
-	(* Get the automata declaring the action *)
-	let automata_for_this_action = program.automata_per_action action_index in
-	let nb_automata_for_this_action = List.length automata_for_this_action in
 
-	(*------------------------------------------------*)
-	(* Compute the reachable states on the fly: i.e., all the possible transitions for all the automata belonging to 'automata' *)
-	(*------------------------------------------------*)
-	
-	(* Give a new index to those automata *)
-	let real_indexes = Array.make nb_automata_for_this_action 0 in
-	(* Use an array of automata indexes for the search (start with 0) *)
-	let current_indexes = Array.make nb_automata_for_this_action 0 in
-	(* Compute the number of transitions for each of them *)
-	let max_indexes = Array.make nb_automata_for_this_action 0 in
-	(* Fill those arrays *)
-	let current_index = ref 0 in
-	List.iter (fun automaton_index ->
-		(* Tabulate the real index *)
-		real_indexes.(!current_index) <- automaton_index;
-		(* Get the current location for this automaton *)
-		let location_index = Automaton.get_location original_location automaton_index in
-		(* Tabulate the number of transitions for this location *)
-		max_indexes.(!current_index) <-
-			List.length (program.transitions automaton_index location_index action_index) - 1;
-		(* Increment the index *)
-		current_index := !current_index + 1;
-	) automata_for_this_action;
-
-	(* Debug: compute the number of combinations *)
-	if debug_mode_greater Debug_medium then(
-		let nb_combinations = Array.fold_left (fun sum max -> sum * (max + 1)) 1 max_indexes in
-		print_message Debug_medium ("I will consider " ^ (string_of_int nb_combinations) ^ " combination" ^ (s_of_int nb_combinations) ^ " for this state and this action\n");
-(* 		if nb_combinations > 10000 then exit(0); *)
-	);
-
-	(* Loop on all the transition combinations *)
-	let more_combinations = ref true in
-	while !more_combinations do
-		(* Debug *)
-		if debug_mode_greater Debug_total then (
-		let local_indexes = string_of_array_of_string_with_sep "\n\t" (
-		Array.mapi (fun local_index real_index ->
-			(string_of_int local_index) ^ " -> " ^ (string_of_int real_index) ^ " : " ^ (string_of_int current_indexes.(local_index)) ^ "; ";
-		) real_indexes) in
-		print_message Debug_total ("--- Consider the combination \n\t" ^ local_indexes);
-		);
-
-		(*------------------------------------------------*)
-		(* Compute the location *)
-		(*------------------------------------------------*)
+(*------------------------------------------------------------------*)
+(* Compute a new location for a given set of transitions            *)
+(* aut_table         : indices of involved automata                 *)
+(* trans_table       : indices of examined transition per automaton *)
+(* action_index      : index of current action                      *)
+(* original_location : the source location                          *)
+(*------------------------------------------------------------------*)
+(* returns the new location, the guards, the updates                *)
+(*------------------------------------------------------------------*)
+let compute_new_location program aut_table trans_table action_index original_location =
+		(* make a copy of the location *)		
 		let location = Automaton.copy_location original_location in
 		(* Create a temporary hashtbl for discrete values *)
 		let updated_discrete = Hashtbl.create program.nb_discrete in
 		(* Update the location for the automata synchronized with 'action_index'; return the list of guards and updates *)
-		let guards_updates_flows = Array.to_list (Array.mapi (fun local_index real_index ->
-			(* Find its current index *)
-			let current_index = current_indexes.(local_index) in
+		let guards_and_updates = Array.to_list (Array.mapi (fun local_index real_index ->
 			(* Get the current location for this automaton *)
 			let location_index = Automaton.get_location original_location real_index in
 			(* Find the transitions for this automaton *)
 			let transitions = program.transitions real_index location_index action_index in
+  		(* Get the index of the examined transition for this automaton *)
+			let current_index = trans_table.(local_index) in
 			(* Keep the 'current_index'th transition *)
 			let transition = List.nth transitions current_index in
 			(* Keep only the dest location *)
-			let guard, clock_updates, discrete_updates, dest_index = transition in
-			(***** FIXME: construct flows here *)
-			(* let flows = [] in *)
+			let guard, clock_updates, discrete_updates, dest_index = transition in			
 			(* Update discrete *)
 			List.iter (fun (discrete_index, linear_term) ->
 				(* Compute its new value *)
@@ -505,10 +411,9 @@ let post program pi0 reachability_graph orig_state_index =
 			Automaton.update_location_with [real_index, dest_index] [] location;
 			(* Keep the guard and updates *)
 			guard, clock_updates;
-		) real_indexes) in
+		) aut_table) in
 		(* Split the list of guards and updates *)
-		let guards, clock_updates = List.split guards_updates_flows in
-
+		let guards, clock_updates = List.split guards_and_updates in
 		(* Compute couples to update the discrete variables *)
 		let updated_discrete_couples = ref [] in
 		Hashtbl.iter (fun discrete_index discrete_value ->
@@ -516,61 +421,30 @@ let post program pi0 reachability_graph orig_state_index =
 		) updated_discrete;
 		(* Update the global location *)
 		Automaton.update_location_with [] !updated_discrete_couples location;
-		
-		(*------------------------------------------------*)
-		(* Compute the constraint *)
-		(*------------------------------------------------*)
-		
-		(**** TO OPTIMIZE (?) : add an exception mechanism to avoid the global computation of the constraint if something is not satisfiable ****)
-		
-		(* Debug *)
-		if debug_mode_greater Debug_total then(
-			print_message Debug_total ("\nComputing guards g(X)");
-			List.iter (fun guard -> 
-				print_message Debug_total (LinearConstraint.string_of_linear_constraint program.variable_names guard);
-			) guards;
-		);
-
-		print_message Debug_total ("\nComputing equalities for discrete variables (previous values)");
-		(* Compute discrete values using the current (new) location *)
-		let discrete_values = List.map (fun discrete_index -> discrete_index, (Automaton.get_discrete_value original_location discrete_index)) program.discrete in
-		(* Convert to a constraint *)
-		let previous_discrete_constraint = instantiate_discrete discrete_values in
-		(* Debug *)
-		print_message Debug_total (LinearConstraint.string_of_linear_constraint program.variable_names previous_discrete_constraint);
+	  (* return the new location, the guards, and the clock updates *)
+		(location, guards, clock_updates)
 	
-		print_message Debug_total ("\nComputing the guards and discrete");
-		(* Add the (old) value for discrete to the guards *)
-		let guards_and_discrete = LinearConstraint.intersection (previous_discrete_constraint :: guards) in
-		(* Debug print *)
-		if debug_mode_greater Debug_total then(
-			print_message Debug_total (LinearConstraint.string_of_linear_constraint program.variable_names guards_and_discrete);
-		);
-
-		print_message Debug_total ("\nEliminate the discrete variables in g(X)");
-		(* Remove the discrete variables *)
-		let guards_without_discrete = LinearConstraint.hide program.discrete guards_and_discrete in
-		(* Debug print *)
-		if debug_mode_greater Debug_total then(
-			print_message Debug_total (LinearConstraint.string_of_linear_constraint program.variable_names guards_without_discrete);
-		);
-
-		print_message Debug_total ("\nComputing clock updates X' = rho(X) + d*r");
-		(* Compute X' = rho(X) + d for the variables appearing in updates *)
+	
+	
+(*------------------------------------------------------------*)
+(* Compute the clock updates for a given transition           *)
+(* clock_updates: list of variables to be reset               *)
+(*------------------------------------------------------------*)
+(* returns a couple of constraints, representing the updated  *)
+(* and the non-updated clocks                                 *)
+(*------------------------------------------------------------*)
+let compute_updates program clock_updates = 
+		(* keep track of variables that are not updated *)
 		let not_appearing_in_updates = Array.make program.nb_variables true in
-		let updates = List.fold_left (fun list_of_updates current_updates ->
-			(**** OPTIMIZED: Order does not matter ****)
-			List.rev_append
-			list_of_updates
+		(* Compute X' = rho(X) + d for the variables appearing in updates *)
+		let updates = List.fold_left (fun list_of_updates current_updates ->			
+			List.rev_append	list_of_updates
 			(List.map (fun (variable_index, linear_term) ->
 				(* 'variable_index' appears in an updates *)
-				not_appearing_in_updates.(variable_index) <- false;
-				(* Find rate for variable *)
-(*				let rate = program.flows real_index location_index variable_index in*)
-				(* print_message Debug_standard ("\nFound rate " ^ (string_of_numconst rate)); *)
+				not_appearing_in_updates.(variable_index) <- false;			
 				(* Consider cases for clocks *)				
 				match program.type_of_variables variable_index with
-				(* Clocks: Build rho(X) + d*r - X' = 0 *)
+				(* Clocks: Build rho(X) + d - X' = 0 *)
 				| Var_type_analog | Var_type_clock -> 
 				let xprime_lt = LinearConstraint.make_linear_term [
 					NumConst.minus_one, program.prime_of_variable variable_index;
@@ -588,14 +462,12 @@ let post program pi0 reachability_graph orig_state_index =
 		if debug_mode_greater Debug_total then(
 			print_message Debug_total (LinearConstraint.string_of_linear_constraint program.variable_names updates);
 		);
-
 		(* Compute X' = X + d for the clocks NOT appearing in updates *)
 		print_message Debug_total ("\nComputing X' = X + d for non-updated clocks");
 		(**** BAD PROG ****)
 		(* List of inequalities *)
 		let non_updated = ref [] in
 		Array.iteri (fun variable_index not_appearing -> 
-(* 			let is_discrete = program.is_discrete variable_index in *)
 			(**** TO OPTIMIZE : there are only clocks, here ! ****)
 			let is_clock = program.is_clock variable_index || program.is_analog variable_index in
 			(* Only consider clocks *)
@@ -622,84 +494,288 @@ let post program pi0 reachability_graph orig_state_index =
 		if debug_mode_greater Debug_total then(
 			print_message Debug_total (LinearConstraint.string_of_linear_constraint program.variable_names non_updated);
 		);
-
-		(* Compute the invariant in the destination location *)
-		print_message Debug_total ("\nComputing invariant I_q(X) ");
-		let invariant = compute_invariant program location in
-		(* Debug print *)
-		if debug_mode_greater Debug_total then(
-			print_message Debug_total (LinearConstraint.string_of_linear_constraint program.variable_names invariant);
-			if not (LinearConstraint.is_satisfiable invariant) then
-				print_message Debug_total ("This constraint is NOT satisfiable.");
-		);
-		(* Compute the invariant after time elapsing *)
-		print_message Debug_total ("Computing invariant I_q(X') ");
-		let renamed_invariant = LinearConstraint.rename_variables program.renamed_clocks_couples invariant in
-		(* Debug print *)
-		if debug_mode_greater Debug_total then(
-			print_message Debug_total (LinearConstraint.string_of_linear_constraint program.variable_names renamed_invariant);
-			if not (LinearConstraint.is_satisfiable renamed_invariant) then
-				print_message Debug_total ("This constraint is NOT satisfiable.");
-		);
-		(* Compute the invariant before time elapsing *)
-		print_message Debug_total ("\nComputing invariant I_q(X' - d) ");
-		let renamed_invariant_before_time_elapsing = LinearConstraint.add_d program.d NumConst.minus_one program.renamed_clocks renamed_invariant in
-		(* Debug print *)
-		if debug_mode_greater Debug_total then(
-			print_message Debug_total (LinearConstraint.string_of_linear_constraint program.variable_names renamed_invariant_before_time_elapsing);
-			if not (LinearConstraint.is_satisfiable renamed_invariant_before_time_elapsing) then
-				print_message Debug_total ("This constraint is NOT satisfiable.");
-		);
-
-		(* Compute the equalities for the discrete variables *)
-		print_message Debug_total ("\nComputing equalities for discrete variables");
-		(* Compute discrete values using the current (new) location *)
-		let discrete_values = List.map (fun discrete_index -> discrete_index, (Automaton.get_discrete_value location discrete_index)) program.discrete in
-		(* Convert to a constraint *)
-		let discrete_constraint = instantiate_discrete discrete_values in
-		(* Debug *)
-		print_message Debug_total (LinearConstraint.string_of_linear_constraint program.variable_names discrete_constraint);
+		(* return both constraints *)
+		(updates, non_updated)	
 	
-		(* Perform the intersection *)
-		print_message Debug_total ("\nPerforming intersection of C(X) and g(X) and X' = rho(X) + d and I_q(X' - d) and I_q(X') ");
-		let new_full_constraint = LinearConstraint.intersection
-			[
-				orig_constraint ();
-				updates;
-				non_updated;
-				renamed_invariant_before_time_elapsing;
-				renamed_invariant;
-				program.positive_d;
-				discrete_constraint;
-				guards_without_discrete
-			] in
-		(* Debug print *)
-		if debug_mode_greater Debug_total then(
-			print_message Debug_total (LinearConstraint.string_of_linear_constraint program.variable_names new_full_constraint);
-			if not (LinearConstraint.is_satisfiable new_full_constraint) then
-				print_message Debug_total ("This constraint is NOT satisfiable.");
+	
+exception Unsat_exception
+	
+(*--------------------------------------------------*)	
+(* Compute the new constraint for a transition      *)
+(* orig_constraint : contraint in source location   *)
+(* orig_location   : source location                *)
+(* dest_location   : target location                *)
+(* guards          : guard constraints per automaton*)
+(* clock_updates   : updated clock variables        *)
+(*--------------------------------------------------*)
+let compute_new_constraint program orig_constraint orig_location dest_location guards clock_updates =
+		(* the constraint is checked on the fly for satisfyability -> exception mechanism *)
+		try ( 
+			print_message Debug_total ("\nComputing equalities for discrete variables (previous values)");
+			(* Compute discrete values using the current (new) location *)
+			let discrete_values = List.map (fun discrete_index -> discrete_index, (Automaton.get_discrete_value orig_location discrete_index)) program.discrete in
+			(* Convert to a constraint *)
+			let previous_discrete_constraint = instantiate_discrete discrete_values in
+			(* Debug *)
+			print_message Debug_total (LinearConstraint.string_of_linear_constraint program.variable_names previous_discrete_constraint);
+		
+			(* Debug *)
+			if debug_mode_greater Debug_total then(
+				print_message Debug_total ("\nComputing guards g(X)");
+				List.iter (fun guard -> 
+					print_message Debug_total (LinearConstraint.string_of_linear_constraint program.variable_names guard);
+				) guards;
+			);
+			print_message Debug_total ("\nComputing the guards and discrete");
+			(* Add the (old) value for discrete to the guards *)
+			let guards_and_discrete = LinearConstraint.intersection (previous_discrete_constraint :: guards) in
+			(* Debug print *)
+			if debug_mode_greater Debug_total then(
+				print_message Debug_total (LinearConstraint.string_of_linear_constraint program.variable_names guards_and_discrete);
+			);
+			(* check here for unsatisfiability *)
+			if not (LinearConstraint.is_satisfiable guards_and_discrete) then (
+				print_message Debug_high "skip transition";
+				raise Unsat_exception
+			);
+			
+			print_message Debug_total ("\nEliminate the discrete variables in g(X)");
+			(* Remove the discrete variables *)
+			let guards_without_discrete = LinearConstraint.hide program.discrete guards_and_discrete in
+			(* Debug print *)
+			if debug_mode_greater Debug_total then(
+				print_message Debug_total (LinearConstraint.string_of_linear_constraint program.variable_names guards_without_discrete);
+			);
+	
+			print_message Debug_total ("\nComputing clock updates X' = rho(X) + d");
+			let updates, non_updated = compute_updates program clock_updates in
+	
+			(* Compute the invariant in the destination location *)
+			print_message Debug_total ("\nComputing invariant I_q(X) ");
+			let invariant = compute_invariant program dest_location in
+			(* Debug print *)
+			if debug_mode_greater Debug_total then(
+				print_message Debug_total (LinearConstraint.string_of_linear_constraint program.variable_names invariant);
+				if not (LinearConstraint.is_satisfiable invariant) then
+					print_message Debug_total ("This constraint is NOT satisfiable.");
+			);
+			
+			(* Compute the invariant after time elapsing *)
+			print_message Debug_total ("Computing invariant I_q(X') ");
+			let renamed_invariant = LinearConstraint.rename_variables program.renamed_clocks_couples invariant in
+			(* Debug print *)
+			if debug_mode_greater Debug_total then(
+				print_message Debug_total (LinearConstraint.string_of_linear_constraint program.variable_names renamed_invariant);
+				if not (LinearConstraint.is_satisfiable renamed_invariant) then
+					print_message Debug_total ("This constraint is NOT satisfiable.");
+			);
+			
+			(* Compute the invariant before time elapsing *)
+			print_message Debug_total ("\nComputing invariant I_q(X' - d) ");
+			let renamed_invariant_before_time_elapsing = LinearConstraint.add_d program.d NumConst.minus_one program.renamed_clocks renamed_invariant in
+			(* Debug print *)
+			if debug_mode_greater Debug_total then(
+				print_message Debug_total (LinearConstraint.string_of_linear_constraint program.variable_names renamed_invariant_before_time_elapsing);
+				if not (LinearConstraint.is_satisfiable renamed_invariant_before_time_elapsing) then
+					print_message Debug_total ("This constraint is NOT satisfiable.");
+			);
+	
+			(* Compute the equalities for the discrete variables *)
+			print_message Debug_total ("\nComputing equalities for discrete variables");
+			(* Compute discrete values using the current (new) location *)
+			let discrete_values = List.map (fun discrete_index -> discrete_index, (Automaton.get_discrete_value dest_location discrete_index)) program.discrete in
+			(* Convert to a constraint *)
+			let discrete_constraint = instantiate_discrete discrete_values in
+			(* Debug *)
+			print_message Debug_total (LinearConstraint.string_of_linear_constraint program.variable_names discrete_constraint);
+		
+			(* Perform the intersection *)
+			print_message Debug_total ("\nPerforming intersection of C(X) and g(X) and X' = rho(X) + d and I_q(X' - d) and I_q(X') ");
+			let new_full_constraint = LinearConstraint.intersection
+				[
+					orig_constraint ();
+					updates;
+					non_updated;
+					renamed_invariant_before_time_elapsing;
+					renamed_invariant;
+					program.positive_d;
+					discrete_constraint;
+					guards_without_discrete
+				] in
+			(* Debug print *)
+			if debug_mode_greater Debug_total then(
+				print_message Debug_total (LinearConstraint.string_of_linear_constraint program.variable_names new_full_constraint);
+				if not (LinearConstraint.is_satisfiable new_full_constraint) then
+					print_message Debug_total ("This constraint is NOT satisfiable.");
+			);
+	
+			(* Hide 'X' and 'd' *)
+			print_message Debug_total ("\nHide 'X', discrete and 'd' in C(X) ^ g(X) ^ X' = rho(X) + d ^ I_q(X' - d) ^ I_q(X')");
+			let full_constraint_hidden = LinearConstraint.hide (program.d :: program.clocks_and_discrete) new_full_constraint in
+			(* Debug print *)
+			if debug_mode_greater Debug_total then(
+				print_message Debug_total (LinearConstraint.string_of_linear_constraint program.variable_names full_constraint_hidden);
+				if not (LinearConstraint.is_satisfiable full_constraint_hidden) then
+					print_message Debug_total ("This constraint is NOT satisfiable.");
+			);
+	
+			(* Rename X' -> X *)
+			print_message Debug_total ("\nRenaming X' into X:");
+			let final_constraint =
+				LinearConstraint.rename_variables program.unrenamed_clocks_couples full_constraint_hidden in
+			(* Debug print *)
+			if debug_mode_greater Debug_total then(
+				print_message Debug_total (LinearConstraint.string_of_linear_constraint program.variable_names final_constraint);
+				if not (LinearConstraint.is_satisfiable final_constraint) then
+					print_message Debug_total ("This constraint is NOT satisfiable.");
+			);
+			(* return the final constraint *)
+			final_constraint
+		) with Unsat_exception -> LinearConstraint.false_constraint ()
+		
+						
+
+(*--------------------------------------------------*)
+(* Compute the list of possible destination states w.r.t. to a reachability_graph, and update this graph; return the (really) new states *)
+(*--------------------------------------------------*)
+let post program pi0 reachability_graph orig_state_index =
+	(* Original location: static *)
+	let original_location, _ = Graph.get_state reachability_graph orig_state_index in
+	(* Dynamic version of the orig_constraint (can change!) *)
+	let orig_constraint () =
+		let _, orig_constraint = Graph.get_state reachability_graph orig_state_index in
+		orig_constraint
+	in
+
+	(* Debug prints *)
+	if debug_mode_greater Debug_high then(
+		let orig_state = Graph.get_state reachability_graph orig_state_index in
+		let _, orig_constraint = orig_state in
+		let orig_constraint_projection = LinearConstraint.hide program.clocks_and_discrete orig_constraint in
+		print_message Debug_high ("Performing post from state:");
+		print_message Debug_high (string_of_state program orig_state);
+		print_message Debug_high ("\nThe projection of this constraint onto the parameters is:");
+		print_message Debug_high (LinearConstraint.string_of_linear_constraint program.variable_names orig_constraint_projection);
+	);
+
+	(* get possible actions originating from current state *)
+	let list_of_possible_actions = compute_possible_actions program original_location in
+
+	(* Debug print *)
+	if debug_mode_greater Debug_high then (
+		let actions_string = List.map (fun action_index -> program.action_names action_index) list_of_possible_actions in
+		print_message Debug_high ("Possible synchronized actions are: " ^ (string_of_list_of_string_with_sep ", " actions_string));
+	);
+
+	(* build the list of new states *)
+	let new_states = ref [] in
+
+	(* FOR ALL ACTION DO: *)
+	List.iter (fun action_index ->
+
+	print_message Debug_medium ("\nComputing destination states for action '" ^ (program.action_names action_index) ^ "'");
+	(* Get the automata declaring the action *)
+	let automata_for_this_action = program.automata_per_action action_index in
+	let nb_automata_for_this_action = List.length automata_for_this_action in
+
+	(*------------------------------------------------*)
+	(* Compute the reachable states on the fly: i.e., all the possible transitions for all the automata belonging to 'automata' *)
+	(*------------------------------------------------*)
+	
+	(* add discrete values to constraint *)
+	let discrete_values = List.map (fun discrete_index -> discrete_index, (Automaton.get_discrete_value original_location discrete_index)) program.discrete in
+	(* Convert to a constraint *)
+	let discrete_constr = instantiate_discrete discrete_values in
+	(* compute conjunction with current constraint *)
+	let orig_plus_discrete = LinearConstraint.intersection [orig_constraint (); discrete_constr] in
+	
+	(* Give a new index to those automata *)
+	let real_indexes = Array.make nb_automata_for_this_action 0 in
+	(* Keep an array of possible transition indices for each automaton *)
+	let possible_transitions = Array.make nb_automata_for_this_action [] in
+	(* Use an array of transition indices for the search (start with 0),*)
+	(* indicating the current index within the possible transitions for*)
+	(* each automaton *)
+	let current_indexes = Array.make nb_automata_for_this_action 0 in
+	(* Keep the maximum index of possible transitions for each automaton *)
+	let max_indexes = Array.make nb_automata_for_this_action 0 in
+	(* Array for the currently selected transition indices *)
+	let current_transitions = Array.make nb_automata_for_this_action 0 in
+	
+	(* Compute all possible transitions for the involved automata.*)
+	(* Stop computation as soon as one automaton has no legal transition left. *)
+	let current_index = ref 0 in
+	let legal_transitions_exist = 
+	try (
+		List.iter (fun automaton_index ->
+			(* Tabulate the real index *)
+			real_indexes.(!current_index) <- automaton_index;
+			(* Get the current location for this automaton *)
+			let location_index = Automaton.get_location original_location automaton_index in
+			(* Get transitions for this automaton *)
+			let transitions = program.transitions automaton_index location_index action_index in
+			(* Keep only possible transitions *)
+			let is_possible = fun trans -> (
+				let guard, _, _, _ = trans in
+				let constr_and_guard = LinearConstraint.intersection [orig_plus_discrete; guard] in
+				let is_possible = LinearConstraint.is_satisfiable constr_and_guard in
+				if not is_possible then (
+					print_message Debug_medium "** early skip transition **"
+				);
+				is_possible
+			) in
+			let legal_transitions = ref [] in
+			let trans_index = ref 0 in
+			List.iter (fun trans -> 
+				if is_possible trans then(
+					legal_transitions := !trans_index :: !legal_transitions
+				);
+				trans_index := !trans_index + 1
+			) transitions;
+			(* Stop computation if no legal transition exists *)
+			if !legal_transitions = [] then (
+				print_message Debug_medium "*** early skip action ***";
+				raise Unsat_exception
+			);
+			(* Store possible transitions *)
+			possible_transitions.(!current_index) <- !legal_transitions;
+			(* Tabulate the number of transitions for this location *)
+			max_indexes.(!current_index) <-	List.length !legal_transitions - 1;
+			(* Increment the index *)
+			current_index := !current_index + 1;
+		) automata_for_this_action;
+		(* arrived here, so each automaton must have at least one legal transition *)
+		true		
+	) with Unsat_exception -> false in
+
+	(* Debug: compute the number of combinations *)
+	if debug_mode_greater Debug_medium then(
+		let nb_combinations = Array.fold_left (fun sum max -> sum * (max + 1)) 1 max_indexes in
+		print_message Debug_medium ("I will consider " ^ (string_of_int nb_combinations) ^ " combination" ^ (s_of_int nb_combinations) ^ " for this state and this action\n");
+	);
+
+	(* Loop on all the transition combinations *)
+	let more_combinations = ref legal_transitions_exist in
+	while !more_combinations do
+		(* Debug *)
+		if debug_mode_greater Debug_total then (
+		let local_indexes = string_of_array_of_string_with_sep "\n\t" (
+		Array.mapi (fun local_index real_index ->
+			(string_of_int local_index) ^ " -> " ^ (string_of_int real_index) ^ " : " ^ (string_of_int current_indexes.(local_index)) ^ "; ";
+		) real_indexes) in
+		print_message Debug_total ("--- Consider the combination \n\t" ^ local_indexes);
 		);
 
-		(* Hide 'X' and 'd' *)
-		print_message Debug_total ("\nHide 'X', discrete and 'd' in C(X) ^ g(X) ^ X' = rho(X) + d ^ I_q(X' - d) ^ I_q(X')");
-		let full_constraint_hidden = LinearConstraint.hide (program.d :: program.clocks_and_discrete) new_full_constraint in
-		(* Debug print *)
-		if debug_mode_greater Debug_total then(
-			print_message Debug_total (LinearConstraint.string_of_linear_constraint program.variable_names full_constraint_hidden);
-			if not (LinearConstraint.is_satisfiable full_constraint_hidden) then
-				print_message Debug_total ("This constraint is NOT satisfiable.");
-		);
+		(* build the current combination of transitions *)
+		for i=0 to Array.length current_transitions -1 do
+			current_transitions.(i) <- List.nth (possible_transitions.(i)) (current_indexes.(i))
+		done; 
 
-		(* Rename X' -> X *)
-		print_message Debug_total ("\nRenaming X' into X:");
-		let final_constraint =
-			LinearConstraint.rename_variables program.unrenamed_clocks_couples full_constraint_hidden in
-		(* Debug print *)
-		if debug_mode_greater Debug_total then(
-			print_message Debug_total (LinearConstraint.string_of_linear_constraint program.variable_names final_constraint);
-			if not (LinearConstraint.is_satisfiable final_constraint) then
-				print_message Debug_total ("This constraint is NOT satisfiable.");
-		);
+		(* Compute the new location for the current combination of transitions *)
+		let location, guards, clock_updates = compute_new_location program real_indexes current_transitions action_index original_location in
+		
+		(* Compute the new constraint for the current transition *)
+		let final_constraint = compute_new_constraint program orig_constraint original_location location guards clock_updates in
 
 		(* Check the satisfiability *)
 		if not (LinearConstraint.is_satisfiable final_constraint) then(
@@ -755,20 +831,8 @@ let post program pi0 reachability_graph orig_state_index =
 				print_message Debug_standard ("  " ^ (LinearConstraint.string_of_linear_inequality program.variable_names negated_inequality));
 
 				(* Update the previous states (including the 'new_states' and the 'orig_state') *)
-(* 				print_string (Graph.dot_of_graph program reachability_graph); *)
 				print_message Debug_medium ("\nUpdating all the previous states.\n");
 				Graph.add_inequality_to_states reachability_graph negated_inequality;
-				(**** TO DO: remove this stupid check ****)
-				(* For all state: *)
-(*				for state_index = 0 to (DynArray.length reachability_graph.states) - 1 do
-					let (loc, const) = DynArray.get reachability_graph.states state_index in 
-					if not (ConstraintSolver.is_satisfiable program const) then (
-						print_error (string_of_state program (loc, const));
-						raise (InternalError "A state is pi0-incompatible after update");
-					)else (
-						print_message Debug_medium ("State " ^ (string_of_int state_index) ^ " still pi0-compatible.");
-					);
-				done;*)
 				
 				(* If pi-incompatible *)
 				false
@@ -909,6 +973,10 @@ let post_star program pi0 init_state =
 			let beginning_message = if list_empty !newly_found_new_states then "\nFound no new state" else ("\nFound " ^ (string_of_int (List.length !newly_found_new_states)) ^ " new state" ^ (s_of_int (List.length !newly_found_new_states)) ^ "") in
 			print_message Debug_medium (beginning_message ^ " for post^" ^ (string_of_int (!nb_iterations)) ^ ".\n");
 		);
+		
+		(* Clean up a little *)
+		Gc.major ();
+		
 		(* Iterate *)
 		nb_iterations := !nb_iterations + 1;
 		(* Check if the limit has been reached *)
@@ -1202,29 +1270,6 @@ let random_behavioral_cartography program pi0cube init_state nb =
 
 				(* Add the pi0 *)
 				pi0_computed.(!i - 1) <- pi0;
-				(* Check if the constraint is equal to any computed constraint previously *)
-				(**** NO : impossible because, if the constraint is equal to a previous constraint, it means that pi0 \models K0, and therefore the inverse method would not have been called ****)
-
-(*				let found = ref false in
-				let j = ref 0 in
-				
-				while !j < (!i - 1) && not !found do
-					(**** TO DO : il faut iterer sur interesting_interations !! ****)
-					let equal =
-						let old_constraint = results.(!j) in
-						(* Check the equality of constraint *)
-						LinearConstraint.is_equal old_constraint k0
-					in
-					(* Update *)
-					if equal then (
-						print_message Debug_standard ("This constraint K" ^ (string_of_int !i) ^ " is equal to K" ^ (string_of_int (!j + 1)) ^ ".");
-						found := true;
-						raise (InternalError "SHOULD NEVER HAPPEN");
-					);
-					(* Increment j *)
-					j := !j + 1 ;
-				done;
-				if not !found then( *)
 
 				(* Print the constraint *)
 				print_message Debug_low ("Constraint K0 computed:");
@@ -1239,7 +1284,6 @@ let random_behavioral_cartography program pi0cube init_state nb =
 				interesting_interations := !i :: !interesting_interations;
 				(* Add the result *)
 				results.(!i - 1) <- k0;
-(* 				); *)
 			);
 		);
 		(* Stop if the time limit has been reached *)
@@ -1531,7 +1575,7 @@ let pi0_parsed, pi0cube_parsed =
 in
 
 print_message Debug_standard ("\nParsing done " ^ (after_seconds ()) ^ ".");
-
+Gc.major ();
 
 (**************************************************)
 (* Conversion to an abstract program *)
@@ -1548,7 +1592,7 @@ try (
 	in
 
 print_message Debug_standard ("Program checked and converted " ^ (after_seconds ()) ^ ".\n");
-
+Gc.major ();
 
 
 (**************************************************)
