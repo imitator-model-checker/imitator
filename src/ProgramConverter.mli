@@ -15,6 +15,7 @@
 (** Modules *)
 (****************************************************************)
 open Global
+open Options
 open AbstractImitatorFile
 
 (****************************************************************)
@@ -27,4 +28,4 @@ exception InvalidPi0
 (** Functions *)
 (****************************************************************)
 (* Convert the parsing structure into an abstract program *)
-val abstract_program_of_parsing_structure : ParsingStructure.parsing_structure ->  ParsingStructure.pi0 -> ParsingStructure.pi0cube -> bool -> bool -> bool -> bool -> bool -> imitator_mode -> string -> (abstract_program * pi0 * pi0cube)
+val abstract_program_of_parsing_structure : ParsingStructure.parsing_structure ->  ParsingStructure.pi0 -> ParsingStructure.pi0cube ->  imitator_options -> (abstract_program * pi0 * pi0cube)

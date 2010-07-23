@@ -24,6 +24,18 @@ exception ParsingError of (int * int)
 (** Debug modes *)
 (****************************************************************)
 
+(** Mode for IMITATOR *)
+type imitator_mode =
+	(** Classical parametric reachability analysis *)
+	| Reachability_analysis
+	(** Classical inverse method *)
+	| Inverse_method
+	(** Cover the whole cartography *)
+	| Cover_cartography
+	(** Randomly pick up values for a given number of iterations *)
+	| Random_cartography of int
+
+
 type debug_mode =
 	| Debug_error (* c'est quoi ca ? *)
 	| Debug_nodebug

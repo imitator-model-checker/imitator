@@ -31,6 +31,17 @@ exception ParsingError of (int * int)
 (** Debug modes *)
 (****************************************************************)
 
+(** Mode for IMITATOR *)
+type imitator_mode =
+	(** Classical parametric reachability analysis *)
+	| Reachability_analysis
+	(** Classical inverse method *)
+	| Inverse_method
+	(** Cover the whole cartography *)
+	| Cover_cartography
+	(** Randomly pick up values for a given number of iterations *)
+	| Random_cartography of int
+
 type debug_mode =
 	| Debug_error (* c'est quoi ca ? *)
 	| Debug_nodebug
@@ -55,14 +66,11 @@ type global_debug_mode_type =
 	| Debug_mode_not_set
 	| Debug_mode_set of debug_mode
 
-let global_debug_mode = ref Debug_mode_not_set
+(* set to standard by default *)
+let global_debug_mode = ref (Debug_mode_set Debug_standard)
 
 let timed_mode = ref false
 
-
-(*(* Return true if debug1 >= debug2, false otherwise *)
-let debug_mode_greater debug1 debug2 =
-	(level_of_debug debug1) >= (level_of_debug debug2)*)
 
 (* Return true if the global debug mode is greater than 'debug_mode', false otherwise *)
 let debug_mode_greater debug_mode =

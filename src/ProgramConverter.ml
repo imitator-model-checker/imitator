@@ -25,6 +25,7 @@
 (** Modules *)
 (****************************************************************)
 open Global
+open Options
 open ParsingStructure
 open AbstractImitatorFile
 open ImitatorPrinter
@@ -1134,7 +1135,7 @@ let make_pi0cube parsed_pi0cube index_of_variables nb_parameters =
 (*--------------------------------------------------*)
 (* Convert the parsing structure into an abstract program *)
 (*--------------------------------------------------*)
-let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_automata, parsed_init_definition) parsed_pi0 parsed_pi0cube acyclic sync_auto_detection inclusion_mode no_random with_parametric_log imitator_mode program_name =
+let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_automata, parsed_init_definition) parsed_pi0 parsed_pi0cube options =	
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Debug functions *) 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -1158,7 +1159,7 @@ let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Check the synclabs declarations *) 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	let synclabs_names, removed_synclab_names = if sync_auto_detection then synclabs_names, [] else (
+	let synclabs_names, removed_synclab_names = if options#sync_auto_detection then synclabs_names, [] else (
 		(* Keep only the synclabs which are used in ALL the automata where they are declared *)
 		List.partition (fun synclab_name -> if synclab_used_everywhere parsed_automata synclab_name then
 			(* If it is used everywhere: keep *)
@@ -1379,7 +1380,7 @@ let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 	let pi0, pi0cube =
-		match imitator_mode with
+		match options#imitator_mode with
 		| Reachability_analysis -> 
 			(* Return blank values *)
 			Array.make 0 NumConst.zero, Array.make 0 (0, 0)
@@ -1593,7 +1594,7 @@ let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_
 
 	(* Debut print: Pi0 *)
 	let _ =
-	match imitator_mode with
+	match options#imitator_mode with
 	| Reachability_analysis -> ()
 	| Inverse_method -> 
 		print_message Debug_medium ("\n*** Reference valuation pi0:");
@@ -1706,17 +1707,17 @@ let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_
 	init = initial_state;
 
 	(* Acyclic mode *)
-	acyclic = acyclic;
+	acyclic = options#acyclic;
 	(* Inclusion for the post operation *)
-	inclusion = inclusion_mode;
+	inclusion = options#inclusion;
 	(* Random selection of the pi0-incompatible inequality *)
-	random = not no_random;
+	random = not options#no_random;
 	(* Mode for IMITATOR *)
-	imitator_mode = imitator_mode;
+	imitator_mode = options#imitator_mode;
 	(* Mode with parametric constraints (clock elimination) in the log file *)
-	with_parametric_log = with_parametric_log;
+	with_parametric_log = options#with_parametric_log;
 	(* The name of the program *)
-	program_name = program_name;
+	program_name = options#file;
 
 	(* Nb of calls to HyTech *)
 (* 	nb_hytech_calls = ref 0; *)
