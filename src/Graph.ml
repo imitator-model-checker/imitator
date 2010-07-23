@@ -19,11 +19,11 @@ open AbstractImitatorFile
 type state_index = int
 
 type reachability_graph = {
-(*	(** A hashtable 'state' -> 'state_index' *)
-	states : (AbstractImitatorFile.state, state_index) Hashtbl.t;
-*)
 	(** An Array 'state_index' -> 'state' *)
 	states : AbstractImitatorFile.state DynArray.t;
+
+	(** A hashtable to quickly find identical states *)
+	hash_table : (int, state_index) Hashtbl.t;
 
 	(** A hashtable '(state_index, action_index)' -> 'dest_state_index' *)
 	transitions_table : ((state_index * AbstractImitatorFile.action_index), state_index) Hashtbl.t;
@@ -47,9 +47,12 @@ let make guessed_nb_transitions =
 	let states = DynArray.make initial_size in
 	(* Create a hashtable for the graph *)
 	let transitions_table = Hashtbl.create guessed_nb_transitions in
+	(* Create an empty lookup table *)
+	let hash_table = Hashtbl.create initial_size in
 	(* Create the graph *)
 	{
 		states = states;
+		hash_table = hash_table;
 		transitions_table = transitions_table;
 	}
 
@@ -66,7 +69,6 @@ let nb_states graph =
 let get_state graph state_index =
 	DynArray.get graph.states state_index 
 
-
 (** Return the list of all constraints on the parameters associated to the states of a graph *)
 let all_p_constraints program graph =
 	DynArray.fold_left
@@ -75,16 +77,19 @@ let all_p_constraints program graph =
 			p_constraint :: current_list)
 		[] graph.states
 
+(** Iterate over the reachable states *)
+let iter f graph =
+	DynArray.iter f graph.states
 
-(** Check if a state belongs to the graph *)
-(*let in_graph graph state =
-	Hashtbl.mem graph.states state*)
+(****************************************************************)
+(** Actions on a graph *)
+(****************************************************************)
+exception Found of state_index
 
-
-(** Return the state_index of a state; raise Not_found if not found *)
-(*let find_state_index graph state =
-	Hashtbl.find graph.states state*)
-
+(** compute a hash code for a state, depending only on the location *)
+let hash_code (location, _) =
+	Automaton.hash_code location
+	
 
 (** Check if two states are equal *)
 let states_equal state1 state2 =
@@ -95,61 +100,61 @@ let states_equal state1 state2 =
 	)
 
 
-(****************************************************************)
-(** Actions on a graph *)
-(****************************************************************)
-exception Found of state_index
+(** Check if a state is included in another one*)
+let state_included state1 state2 =
+	let (loc1, constr1) = state1 in
+	let (loc2, constr2) = state2 in
+	if not (Automaton.location_equal loc1 loc2) then false else (
+		LinearConstraint.is_leq constr1 constr2
+	)
 
-(** Add a state to a graph: return (state_index, added), where state_index is the index of the state, and 'added' is false if the state was already in the graph, true otherwise *)
-let add_state program graph new_state = 
-	(* IF ACYCLIC MODE : does not test anything *)
+
+(** perform the insertion of a new state in a graph *)
+let insert_state graph hash new_state =
+	let new_state_index = DynArray.length graph.states in
+	(* Add the state to the tables *)
+	DynArray.add graph.states new_state;
+	Hashtbl.add graph.hash_table hash new_state_index;
+	(* Return state_index *)
+	new_state_index
+
+
+(** Add a state to a graph, if it is not present yet *)
+let add_state program graph new_state =
+	(* compute hash value for the new state *)
+	let hash = hash_code new_state in
+	if debug_mode_greater Debug_total then (
+		print_message Debug_standard ("hash : " ^ (string_of_int hash));
+	); 
+	(* In acyclic mode: does not test anything *)
 	if program.acyclic then (
 		(* Since the state does NOT belong to the graph: find the state index *)
-		let new_state_index = DynArray.length graph.states in
-		(* Add the state to the table *)
-		DynArray.add graph.states new_state;
+		let new_state_index = insert_state graph hash new_state in
 		(* Return state_index, true *)
 		new_state_index, true
-	) else (
-	(* ELSE : *)
-		(* First try to find the exact state in the DynArray *)
+	) else (		
+		(* The check used for equality *)
+		let check_states = if program.inclusion then state_included else states_equal in				
 		try (
-			(* If the same state belongs to the graph *)
-			let state_index = DynArray.index_of (fun some_state -> states_equal new_state some_state) graph.states in
-			(* Return state_index, false *)
-			state_index, false
-		) with Not_found -> (
-			(* Define the equality *)
-			let equality =
-				if program.inclusion then LinearConstraint.is_leq
-				else LinearConstraint.is_equal
-			in
-			(* Then test the equality of ALL the states found *)
-			let result =
-			try(
-				(* Consider the locations and the constraint *)
-				let new_location, new_constraint = new_state in
-				(* Iterate on the states *)
-				DynArray.iteri (fun state_index (loc, constr) ->
-					(* First check the equality on locations *)
-					if loc = new_location then (
-						(* Now check the equality of constraints *)
-						if equality new_constraint constr then (
-						(* Then the state is equal *)
-						raise (Found state_index))
-					);
-				) graph.states;
-				(* Since the state does NOT belong to the graph: find the state index *)
-				let new_state_index = DynArray.length graph.states in
-				(* Add the state to the table *)
-				DynArray.add graph.states new_state;
-				(* Return state_index, true *)
-				new_state_index, true
-			(* Return the state index *)
-			) with Found state_index -> state_index, false
-			in result
+			(* use hash table to find states with same locations (modulo hash collisions) *)
+			let old_states = Hashtbl.find_all graph.hash_table hash in
+			if debug_mode_greater Debug_total then (
+				let nb_old = List.length old_states in
+				print_message Debug_standard ("hashed list of length " ^ (string_of_int nb_old));
+			);
+			List.iter (fun index -> 
+				let state = get_state graph index in
+				if check_states new_state state then raise (Found index)
+			) old_states;
+			(* Not found -> insert state *)
+			let new_state_index = insert_state graph hash new_state in
+			(* Return state_index, true *)
+			new_state_index, true				
+		)	with Found state_index -> (								
+				state_index, false
 		)
 	)
+			
 
 (** Add a transition to the graph *)
 let add_transition reachability_graph (orig_state_index, action_index, dest_state_index) =
@@ -158,22 +163,16 @@ let add_transition reachability_graph (orig_state_index, action_index, dest_stat
 
 (** Add an inequality to all the states of the graph *)
 let add_inequality_to_states graph inequality =
+	let constraint_to_add = LinearConstraint.make [inequality] in
 	(* For all state: *)
 	for state_index = 0 to (DynArray.length graph.states) - 1 do
 		 DynArray.set graph.states state_index (
-			let (loc, const) = DynArray.get graph.states state_index in 
-			(* Create a new constraint *)
-			let constraint_to_add = LinearConstraint.make [inequality] in
+			let (loc, const) = DynArray.get graph.states state_index in
 			(* Perform the intersection *)
 			loc, (LinearConstraint.intersection [constraint_to_add; const] )
-(*			match const with
-				| Constraint.LC_false -> loc, Constraint.LC_false
-(* 				| Constraint.LC_maybe inequalities -> loc, Constraint.LC_false *)
-				| Constraint.LC_maybe inequalities -> loc, Constraint.LC_maybe (inequality :: inequalities)*)
 		)
 	done
-
-
+	
 
 (****************************************************************)
 (** Interaction with dot *)
@@ -337,7 +336,7 @@ let shuffle_dot_colors =
 
 
 (* Convert a graph to a dot file *)
-let dot_of_graph program pi0 reachability_graph =	
+let dot_of_graph program pi0 reachability_graph ~fancy =	
 	let states = reachability_graph.states in
 	let transitions = reachability_graph.transitions_table in
 	(* Create the array of dot colors *)
@@ -395,13 +394,21 @@ let dot_of_graph program pi0 reachability_graph =
 		"\n\ndigraph G {"
 		(* Convert the transitions *)
 		^ (Hashtbl.fold (fun (orig_state_index, action_index) dest_state_index my_string ->
+			let is_nosync action =
+				String.length action >= 7 &&
+				String.sub action 0 7 = "nosync_" in
+			let action = program.action_names action_index in
+			let label = if is_nosync action then (
+				";"
+			) else (
+				" [label=\"" ^ action ^ "\"];"
+			) in
 			my_string
 			^ "\n  "
 			^ "q_" ^ (string_of_int orig_state_index)
 			^ " -> "
 			^ "q_" ^ (string_of_int dest_state_index)
-			^ " [label=\"" ^ (program.action_names action_index) ^ "\"];"
-
+			^ label
 		) transitions "")
 
 	(*	(* Add a nice color *)
@@ -422,11 +429,30 @@ let dot_of_graph program pi0 reachability_graph =
 			in
 			(* Find the location color *)
 			let location_color = color location_index in
-			(* Create the command *)
-			string_colors := !string_colors
-				^ "\n  q_" ^ (string_of_int state_index)
-				^ "[color=" ^ location_color
-				^ ", style=filled];";
+			(* create node index *)
+			let node_index = "q_" ^ (string_of_int state_index) in
+
+			if fancy then (
+				(* create record label with location names *)			
+				let loc_names = List.map (fun aut_index -> 
+					let loc_index = Automaton.get_location location aut_index in
+					program.location_names aut_index loc_index
+				) program.automata in
+				let label = string_of_list_of_string_with_sep "|" loc_names in
+				(* Create the command *)
+				string_colors := !string_colors
+					^ "\n  " ^ node_index
+					^ "[fillcolor=" ^ location_color
+					^ ", style=filled, shape=Mrecord, label=\"" 
+					^ node_index ^ "|{" 
+					^ label ^ "}\"];";
+			) else (
+				(* Create the command *)
+				string_colors := !string_colors
+					^ "\n  " ^ node_index
+					^ "[color=" ^ location_color
+					^ ", style=filled];";				
+			)
 			) states;
 		!string_colors)
 		^ "\n}"

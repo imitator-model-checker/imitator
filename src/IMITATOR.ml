@@ -166,7 +166,7 @@ let random_pi0 program pi0 =
 let generate_graph program pi0 reachability_graph dot_file_name states_file_name gif_file_name =
 	(* Create the input file *)
 	print_message Debug_total ("Creating input file for dot...");
-	let dot_program, states = Graph.dot_of_graph program pi0 reachability_graph in
+	let dot_program, states = Graph.dot_of_graph program pi0 reachability_graph ~fancy:options#fancy in
 	(* Write dot file *)
 	if not options#no_dot then (
 		print_message Debug_total ("Writing to dot file...");
