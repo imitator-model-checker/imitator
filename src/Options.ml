@@ -105,6 +105,7 @@ class imitator_options =
 				("-time-limit", Int (fun i -> time_limit := Some i), " Time limit in seconds. Warning: no guarantee that the program will stop exactly after the given amount of time. Default: no limit.");
 				("-timed", Set timed_mode, " Adds a timing information to each output of the program. Default: none.");
 				("-with-parametric-log", Set with_parametric_log, " Adds the elimination of the clock variables in the constraints in the log files. Default: false.");
+				("-version", Unit (fun _ -> print_version_string (); exit 0), " Print version string and exit.");
 			] in
 					
 			(* function for parsing arguments *)

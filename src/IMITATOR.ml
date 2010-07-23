@@ -483,10 +483,12 @@ options#parse;
 (* Hello world! *)
 (**************************************************)
 (**************************************************)
+
 print_message Debug_standard
-	( "**************************************************\n"
-	^ "*                   IMITATOR II                  *\n"
-	^ "*                                 Etienne ANDRE  *\n"
+	( "**************************************************");
+Printf.printf " *  IMITATOR %-36s *\n" version_string;	
+print_message Debug_standard
+	( "*                                 Etienne ANDRE  *\n"
 	^ "*                                   2009 - 2010  *\n"
 	^ "*     Laboratoire Specification et Verification  *\n"
 	^ "*                  ENS de Cachan & CNRS, France  *\n"
