@@ -59,7 +59,7 @@ SRC = src
 
 # FILES
 .PREFIXES : +.
-.SUFFIXES : .cmo .cmi .ml .mli .cmxo
+.SUFFIXES : .cmo .cmi .ml .mli .cmxo .cmx
 
 # main object
 MAIN = $(SRC)/IMITATOR.cmo
@@ -275,7 +275,7 @@ count: clean
 
 clean: rmtpf rmuseless
 	@rm -rf $(LEXERS:+=ml) $(PARSERS:+=mli) $(PARSERS:+=ml)
-	@rm -rf $(TARGET) $(IMILIB)
+	@rm -rf $(TARGET) $(IMILIB) $(TARGET_OPT) $(IMILIB_OPT)
 	@rm -rf .depend
 	@cd test; make clean
 
@@ -285,7 +285,7 @@ rmtpf:
 
 
 rmuseless:
-	@rm -rf $(FILES:+=cmo) $(FILES:+=cmi) $(FILES:+=o) $(MAIN) $(MAIN:.cmo=.cmi)
+	@rm -rf $(FILES:+=cmo) $(FILES:+=cmx) $(FILES:+=cmi) $(FILES:+=o) $(MAIN) $(MAIN:.cmo=.cmi) $(MAIN:.cmo=.cmx)
 	@rm -rf $(FILESMLI:+=cmi)
 
 include .depend
