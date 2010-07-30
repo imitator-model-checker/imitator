@@ -11,11 +11,12 @@
 ###############################################################
 
 # flags for ocaml compiler
-# OCAMLC_FLAGS = -g
-OCAMLC_FLAGS = 
+OCAMLC_FLAGS = -g
+#OCAMLC_FLAGS = 
 
 # ocaml compiler
 OCAMLC = ocamlc $(OCAMLC_FLAGS)
+OCAMLOPT = ocamlopt.opt $(OCAMLC_FLAGS) -compact 
 
 # path variables
 ifndef EXTLIB_PATH
@@ -49,9 +50,18 @@ INCLUDE = -I $(SRC) -I $(EXTLIB_PATH) -I $(OCAML_PPL_PATH) -I $(OCAML_GMP_PATH)
 # external libs for compiling imitator
 # export LIBS = str.cma unix.cma extLib.cma bigarray.cma gmp.cma apron.cma polkaMPQ.cma
 
+# native c libraries
+CLIBS = -cclib -lpwl -cclib -lm -cclib -lgmpxx -cclib -lgmp -cclib -lppl
+
+# ocaml lib files
+OLIBS = str.cma unix.cma extLib.cma bigarray.cma gmp.cma ppl_ocaml.cma 
+
+# native ocaml lib files
+OOLIBS = str.cmxa unix.cmxa extLib.cmxa bigarray.cmxa gmp.cmxa ppl_ocaml.cmxa
+
 # external libs for compiling with PPL support
-export LIBS = -cclib -lpwl -cclib -lm -cclib -lgmpxx -cclib -lgmp -cclib -lppl \
- str.cma unix.cma extLib.cma bigarray.cma gmp.cma ppl_ocaml.cma
+export LIBS = $(CLIBS) $(OLIBS)
+export OPTLIBS = $(CLIBS) $(OOLIBS) 
 
 # OCAML_PPL_PATH = /home/andre/Prog/local/lib/ppl
 # OCAML_GMP_PATH = /home/andre/Prog/local/lib/gmp
@@ -61,14 +71,16 @@ SRC = src
 
 # FILES
 .PREFIXES : +.
-.SUFFIXES : .cmo .cmi .ml .mli
+.SUFFIXES : .cmo .cmi .ml .mli .cmxo
 
 # main object
 MAIN = $(SRC)/IMITATOR.cmo
+MAIN_OPT = $(MAIN:.cmo=.cmx)
 
 # sources to compile
 FILES =  $(SRC)/Global.+ $(SRC)/Options.+ $(SRC)/NumConst.+ $(SRC)/LinearConstraint.+ $(SRC)/Automaton.+ $(SRC)/Pi0Lexer.+ $(SRC)/Pi0Parser.+ $(SRC)/Pi0CubeLexer.+ $(SRC)/Pi0CubeParser.+ $(SRC)/ImitatorLexer.+ $(SRC)/ImitatorParser.+ $(SRC)/ImitatorPrinter.+ $(SRC)/ProgramConverter.+ $(SRC)/Graph.+ $(SRC)/Reachability.+
 OBJS = $(FILES:+=cmo)
+OBJS_OPT = $(OBJS:.cmo=.cmx)
 
 # header files
 FILESMLI = $(SRC)/Global.+ $(SRC)/NumConst.+ $(SRC)/LinearConstraint.+ $(SRC)/Automaton.+ $(SRC)/ParsingStructure.+ $(SRC)/AbstractImitatorFile.+ $(SRC)/ImitatorPrinter.+ $(SRC)/ProgramConverter.+ $(SRC)/Graph.+ $(SRC)/Reachability.+
@@ -79,26 +91,38 @@ PARSERS = $(SRC)/Pi0Parser.+ $(SRC)/Pi0CubeParser.+ $(SRC)/ImitatorParser.+
 
 # target library
 IMILIB = lib/imitator.cma
+IMILIB_OPT = $(IMILIB:.cma=.cmxa)
 
 # target executable
 TARGET = bin/IMITATOR
+TARGET_OPT = bin/IMITATOR.opt
 
 
 default all: $(TARGET)
+opt: $(TARGET_OPT)
 
 
 $(IMILIB): header parser $(OBJS)
 	@ echo [MKLIB] $@
 	@ $(OCAMLC) -a -o $@ $(OBJS)  
 
+$(IMILIB_OPT): header parser $(OBJS_OPT)  
+	@ echo [MKLIB] $@
+	@ $(OCAMLOPT) -a -o $@ $(OBJS_OPT)
+
 $(TARGET): $(IMILIB) $(MAIN)
 	@ echo [LINK] $(TARGET)
 	@ $(OCAMLC) -o $(TARGET) $(INCLUDE) $(LIBS) $(IMILIB) $(MAIN)
 
+$(TARGET_OPT): $(IMILIB_OPT) $(MAIN_OPT)
+	@ echo [LINK] $(TARGET_OPT)
+	$(OCAMLOPT) -o $(TARGET_OPT) $(INCLUDE) $(OPTLIBS) $(IMILIB_OPT) $(MAIN_OPT)
+
+
 header: $(FILESMLI:+=cmi)
 
 parser: $(PARSERS:+=ml) $(LEXERS:+=ml) header $(PARSERS:+=cmi)
-	
+
 $(SRC)/%.cmo: $(SRC)/%.ml $(SRC)/%.mli
 	@ echo [OCAMLC] $<
 	@ $(OCAMLC) -c $(INCLUDE) $<	
@@ -106,7 +130,15 @@ $(SRC)/%.cmo: $(SRC)/%.ml $(SRC)/%.mli
 $(SRC)/%.cmo: $(SRC)/%.ml
 	@ echo [OCAMLC] $<
 	@ $(OCAMLC) -c $(INCLUDE) $<	
-	
+
+$(SRC)/%.cmx: $(SRC)/%.ml $(SRC)/%.mli
+	@ echo [OCAMLOPT] $<
+	@ $(OCAMLOPT) -c $(INCLUDE) $<	
+
+$(SRC)/%.cmx: $(SRC)/%.ml
+	@ echo [OCAMLOPT] $<
+	@ $(OCAMLOPT) -c $(INCLUDE) $<	
+
 $(SRC)/%.cmi: $(SRC)/%.mli
 	@ echo [OCAMLC] $<
 	@ $(OCAMLC) -c $(INCLUDE) $<
@@ -120,11 +152,11 @@ $(SRC)/%.cmi: $(SRC)/%.mly
 $(SRC)/%.ml: $(SRC)/%.mly 
 	@ echo [YACC] $<
 	@ ocamlyacc $<
-	
+
 $(SRC)/%.ml: $(SRC)/%.mll 
 	@ echo [LEX] $<
 	@ ocamllex $< 
-	 
+
 # dependencies
 .depend:
 	@ echo [OCAMLDEP]
