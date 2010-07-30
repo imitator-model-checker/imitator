@@ -6,34 +6,31 @@
 #
 #  Author:        Etienne Andre
 #  Created:       2009/09/07
-#  Last modified: 2010/05/07
+#  Last modified: 2010/07/30
 #  Ocaml version: 3.11.2
 ###############################################################
 
 # flags for ocaml compiler
-OCAMLC_FLAGS = -g
-#OCAMLC_FLAGS = 
+#OCAMLC_FLAGS = -g
+OCAMLC_FLAGS = 
 
 # ocaml compiler
 OCAMLC = ocamlc $(OCAMLC_FLAGS)
-OCAMLOPT = ocamlopt.opt $(OCAMLC_FLAGS) -compact 
+OCAMLOPT = ocamlopt.opt $(OCAMLC_FLAGS)
 
 # path variables
 ifndef EXTLIB_PATH
   EXTLIB_PATH = /usr/lib/ocaml/extlib
 endif
-ifndef APRON_PATH
-  APRON_PATH = $(HOME)/local/apron/lib
-endif
-ifndef OUNIT_PATH
-  OUNIT_PATH = $(HOME)/local/ounit
-endif
 ifndef OCAML_PPL_PATH
   OCAML_PPL_PATH = $(HOME)/local/lib/ppl
 endif 
 ifndef OCAML_GMP_PATH
-  OCAML_GMP_PATH = $(HOME)/local/mlgmp -I $(HOME)/local/lib
+  OCAML_GMP_PATH = $(HOME)/local/mlgmp
 endif
+ifndef CLIB_PATH
+  CLIB_PATH = $(HOME)/local/lib
+endif 
 
 # export paths for use in sub-makefiles
 export EXTLIB_PATH 
@@ -42,13 +39,7 @@ export OUNIT_PATH
 export OCAML_PPL_PATH
 export OCAML_GMP_PATH
 
-#export APRON_PATH = /home/andre/local/lib
-
-#INCLUDE = -I $(SRC) -I $(EXTLIB_PATH) -I $(OCAML_PPL_PATH) -I $(OCAML_GMP_PATH) -I $(APRON_PATH)
-INCLUDE = -I $(SRC) -I $(EXTLIB_PATH) -I $(OCAML_PPL_PATH) -I $(OCAML_GMP_PATH)
-
-# external libs for compiling imitator
-# export LIBS = str.cma unix.cma extLib.cma bigarray.cma gmp.cma apron.cma polkaMPQ.cma
+INCLUDE = -I $(SRC) -I $(EXTLIB_PATH) -I $(OCAML_PPL_PATH) -I $(OCAML_GMP_PATH) -I $(CLIB_PATH)
 
 # native c libraries
 CLIBS = -cclib -lpwl -cclib -lm -cclib -lgmpxx -cclib -lgmp -cclib -lppl
@@ -63,9 +54,6 @@ OOLIBS = str.cmxa unix.cmxa extLib.cmxa bigarray.cmxa gmp.cmxa ppl_ocaml.cmxa
 export LIBS = $(CLIBS) $(OLIBS)
 export OPTLIBS = $(CLIBS) $(OOLIBS) 
 
-# OCAML_PPL_PATH = /home/andre/Prog/local/lib/ppl
-# OCAML_GMP_PATH = /home/andre/Prog/local/lib/gmp
-# OCAML_GMP_PATH = /usr/lib/ocaml/gmp
 
 SRC = src
 
@@ -283,8 +271,6 @@ exe:
 
 count: clean
 	@ for f in src/*.ml src/*.mli; do wc -l $$f; done | sort -n -r -
-#	make clean
-#	python lineCounter.py
 
 
 clean: rmtpf rmuseless
@@ -301,18 +287,5 @@ rmtpf:
 rmuseless:
 	@rm -rf $(FILES:+=cmo) $(FILES:+=cmi) $(FILES:+=o) $(MAIN) $(MAIN:.cmo=.cmi)
 	@rm -rf $(FILESMLI:+=cmi)
-
-# ppl:
-# 	ocamlc -I $(OCAML_GMP_PATH) -I $(OCAML_PPL_PATH) -c test1.ml
-# # 	ocamlc -I +gmp libmlgmp.a -I $(OCAML_PPL_PATH) -o TEST ppl2.cmo
-# 	ocamlc -o TEST -I $(OCAML_GMP_PATH) -I $(OCAML_PPL_PATH)  gmp.cma ppl_ocaml.cma test1.cmo
-# # 	ocamlc -o TEST -I +gmp -I $(OCAML_PPL_PATH) -cclib -lppl -cclib -lm -cclib -lgmpxx -cclib -lgmp   ppl2.cmo
-# 	./TEST
-# #	-I $(OCAML_GMP_PATH)
-# # libppl_ocaml.a gmp.cma nums.cma str.cma unix.cma  libmlgmp.a libppl_ocaml.a gmp.cma 
-# 
-# ppl2:
-# 	OCAMLRUNPARAM='l=1M' ocamlc -o test2.cmo -c -I $(OCAML_GMP_PATH) -I $(OCAML_PPL_PATH)  gmp.cma ppl_ocaml.cma -ccopt -g test2.ml
-# 	OCAMLRUNPARAM='l=1M' ocamlc -o TEST2 -I $(OCAML_GMP_PATH) -I $(OCAML_PPL_PATH)  gmp.cma ppl_ocaml.cma -ccopt -g test2.cmo
 
 include .depend
