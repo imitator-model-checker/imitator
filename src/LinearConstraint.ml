@@ -364,30 +364,6 @@ let negate_wrt_pi0 pi0 linear_inequality =
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)				   	
 
 
-(** Convert a linear inequality into a string *)
-(*let string_of_linear_inequality names linear_inequality =  *)
-(*	match linear_inequality with                             *)
-(*		| Less_Than (lterm, rterm) -> (                        *)
-(*				let lstr = string_of_linear_term_ppl names lterm in*)
-(*				let rstr = string_of_linear_term_ppl names rterm in*)
-(*				lstr ^ " < " ^ rstr )                              *)
-(*		| Less_Or_Equal (lterm, rterm) -> (                    *)
-(*				let lstr = string_of_linear_term_ppl names lterm in*)
-(*				let rstr = string_of_linear_term_ppl names rterm in*)
-(*				lstr ^ " <= " ^ rstr )                             *)
-(*		| Equal (lterm, rterm) -> (                            *)
-(*				let lstr = string_of_linear_term_ppl names lterm in*)
-(*				let rstr = string_of_linear_term_ppl names rterm in*)
-(*				lstr ^ " = " ^ rstr )                              *)
-(*		| Greater_Than (lterm, rterm) -> (                     *)
-(*				let lstr = string_of_linear_term_ppl names lterm in*)
-(*				let rstr = string_of_linear_term_ppl names rterm in*)
-(*				lstr ^ " > " ^ rstr )                              *)
-(*		| Greater_Or_Equal (lterm, rterm) -> (                 *)
-(*				let lstr = string_of_linear_term_ppl names lterm in*)
-(*				let rstr = string_of_linear_term_ppl names rterm in*)
-(*				lstr ^ " >= " ^ rstr )                             *)
-
 let is_zero_coef = function
 	| Coefficient c -> c =! Gmp.Z.zero
 	| _ -> false
@@ -812,6 +788,7 @@ let generate_point x y linear_constraint min_abs min_ord max_abs max_ord =
 				|(u,v) when ((u<0.) & (v>=0.)) -> point_list:=(min ((min_abs)*.(fst(List.nth ray j))) (fst (List.nth points i)) , max ((max_ord)*.(snd(List.nth ray j))) (snd (List.nth points i)))::!point_list
 				|(u,v) when ((u>=0.) & (v<0.)) -> point_list:=(max ((max_abs)*.(fst(List.nth ray j))) (fst (List.nth points i)) , min ((min_ord)*.(snd(List.nth ray j))) (snd (List.nth points i)))::!point_list
 				|(u,v) when ((u<0.) & (v<0.)) -> point_list:=(min ((min_abs)*.(fst(List.nth ray j))) (fst (List.nth points i)) , min ((min_ord)*.(snd(List.nth ray j))) (snd (List.nth points i)))::!point_list
+				| _ -> ()
 		done
 	done;
 	(* add a point if there is two ray that cross two differents borders *)
