@@ -13,7 +13,8 @@
 (* Functions *)
 (**************************************************)
 open LinearConstraint
+open AbstractImitatorFile
 
 val strict_to_not_strict_inequality : linear_inequality -> linear_inequality
 
-val cartography : linear_constraint list -> (int*int) array -> int -> string -> unit
+val cartography : abstract_program ->  (int*int) array -> linear_constraint list ->  int -> string -> unit

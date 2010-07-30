@@ -17,6 +17,7 @@ open Global
 open LinearConstraint
 module Ppl = Ppl_ocaml
 open Ppl
+open AbstractImitatorFile
 
 (**************************************************)
 (* Functions *)
@@ -31,7 +32,7 @@ let strict_to_not_strict_inequality inequality =
 
 
 (* print the cartography which correspond to the list of constraint *)
-let cartography constraint_list pi0cube nb_variables_projected cartography_name =
+let cartography program pi0cube constraint_list nb_variables_projected cartography_name =
 	(* replace strict inequalities *)
 	let new_constraint_list = ref [] in 
 	for i=0 to List.length constraint_list -1 do
@@ -62,9 +63,9 @@ let cartography constraint_list pi0cube nb_variables_projected cartography_name 
 	done;
 
 	(* Keep only couple with diffrent values *)
-	couple_list := List.filter ( fun (a,b) -> a<>b) !couple_list;
+	couple_list := List.filter ( fun (a,b) -> a<>b) !couple_list;	
 	for k=0 to List.length !couple_list -1 do 
-		print_message Debug_standard ("Indexes of the projected variables : "^(string_of_int (fst (List.nth !couple_list k)))^" et "^(string_of_int (snd (List.nth !couple_list k)))^"\n");
+		print_message Debug_high ("Indices of the projected variables : "^(string_of_int (fst (List.nth !couple_list k)))^" et "^(string_of_int (snd (List.nth !couple_list k)))^"\n");
 	done;
 
 	(* make a cartography for each element of the couple_list *)
@@ -124,7 +125,7 @@ let cartography constraint_list pi0cube nb_variables_projected cartography_name 
 		min_ord := (min (min (float_of_int (fst (pi0cube.(snd (List.nth !couple_list k))))) (float_of_int (snd (pi0cube.(snd (List.nth !couple_list k)))))) !min_ord)-.1.;
 		max_abs := (max (max (float_of_int (fst (pi0cube.(fst (List.nth !couple_list k))))) (float_of_int (snd (pi0cube.(fst (List.nth !couple_list k)))))) !max_abs)+.1.;
 		max_ord := (max (max (float_of_int (fst (pi0cube.(snd (List.nth !couple_list k))))) (float_of_int (snd (pi0cube.(snd (List.nth !couple_list k)))))) !max_ord)+.1.;
-		print_message Debug_standard ((string_of_float !min_abs)^"  "^(string_of_float !min_ord));
+		(* print_message Debug_standard ((string_of_float !min_abs)^"  "^(string_of_float !min_ord)); *)
 		(* Create a new file for each constraint *)
 		for i=0 to List.length !new_constraint_list-1 do
 			let file_name = cartography_name^"_points_"^(string_of_int k)^"_"^(string_of_int i)^".txt" in
@@ -154,7 +155,11 @@ let cartography constraint_list pi0cube nb_variables_projected cartography_name 
 		script_line := !script_line^" -C -m 2 -q -1 "^file_v0_name^" > "^final_name;
 		(* write the script into a file *)
 		output_string script !script_line;
+		(* Debug output *)
+		let param_x, param_y = List.nth !couple_list k in
+		print_message Debug_standard ("Plot cartography projected on parameters " ^ (program.variable_names param_x) ^ ", " ^ (program.variable_names param_y)
+			^ " to file '" ^ final_name ^ "'"); 
 		(* execute the script *)
 		let execution = Sys.command !script_line in 
-		print_message Debug_standard ("Result of the cartography execution: exit code "^(string_of_int execution))
+		print_message Debug_high ("Result of the cartography execution: exit code "^(string_of_int execution))
 	done;

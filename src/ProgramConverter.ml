@@ -433,15 +433,10 @@ let check_flow index_of_variables type_of_variables flow =
 		with Not_found -> (
 			print_error ("The variable '" ^ variable_name ^ "' used in a rate condition was not declared."); 0, false
 		)	in
-		if not declared then false else (
-			(* Get the type of the variable *)
-			let type_of_variable = type_of_variables index in
-			if not (type_of_variable = AbstractImitatorFile.Var_type_analog) &&
-				 not (type_of_variable = AbstractImitatorFile.Var_type_clock) then (
-				print_error ("The variable '" ^ variable_name ^ "' used in a rate condition is not analog.");
-				false
-			) else true
-		)
+		if declared then (
+			print_error ("No user defined dynamics allowed in this version");
+		);
+		false
 	) flow 
 
 (*--------------------------------------------------*)
@@ -1151,6 +1146,11 @@ let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Get the declared variable names *)
 	let analog_names, clock_names, discrete_names, parameters_names = get_declared_variable_names parsed_variable_declarations in
+	(* Check that no analogs are declared *)
+	if analog_names <> [] then (
+		print_error "no analog variables supported in this version.";
+		raise InvalidProgram
+	);
 	(* Get the declared automata names *)
 	let declared_automata_names = get_declared_automata_names parsed_automata in
 	(* Get the declared synclabs names *)

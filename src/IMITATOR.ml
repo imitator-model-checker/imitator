@@ -679,13 +679,11 @@ in ();
 
 let _ =
 match options#cart with 
-	|None -> print_message Debug_standard "No graph for the cartography."
-	|Some n ->(print_message Debug_standard ("Cartography started " ^ (after_seconds ()) ^ "\n");
-		     let i =ref 1 in List.iter (fun zone -> 
-		     print_message Debug_standard ("Zone "^(string_of_int !i)^" : " ^ (LinearConstraint.string_of_linear_constraint program.variable_names zone) ^ "\n"); i:=!i+1
-		               ) zones;
-  		     cartography zones pi0cube n (options#program_prefix^"_cart")
-		   )
+	| None -> print_message Debug_medium "No graph for the cartography."
+	| Some n ->(
+			print_message Debug_standard ("Cartography started " ^ (after_seconds ()) ^ "\n");
+  		cartography program pi0cube zones n (options#program_prefix ^ "_cart")
+	 )
 in ();
 
 (**************************************************)
