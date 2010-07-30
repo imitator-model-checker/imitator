@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2009/09/07
- * Last modified: 2010/04/28
+ * Last modified: 2010/07/08
  *
  **************************************************)
 
@@ -19,6 +19,7 @@ open Arg
 open ImitatorPrinter
 open Graph
 open Options
+open Graphics
 
 
 (**************************************************
@@ -339,7 +340,10 @@ let cover_behavioral_cartography program pi0cube init_state =
 	print_message Debug_standard ("Average number of states     : " ^ (string_of_float nb_states) ^ "");
 	print_message Debug_standard ("Average number of transitions: " ^ (string_of_float nb_transitions) ^ "");
 	print_message Debug_standard ("**************************************************");
-	()
+
+	(* Return a list of the generated zones *)
+	let zones = DynArray.to_list results in
+	zones
 
 
 (** Behavioral cartography algorithm with random selection of a pi0 *)
@@ -459,7 +463,9 @@ let random_behavioral_cartography program pi0cube init_state nb =
 	print_message Debug_standard (string_of_list_of_string_with_sep ", " (List.map string_of_int (List.rev !interesting_interations)));
 	print_message Debug_standard ("**************************************************");
 
-	()
+	(* Return a list of generated zones *)
+	let zones = List.map (fun index -> results.(index)) !interesting_interations in
+	zones
 
 ;;
 
@@ -478,9 +484,10 @@ let random_behavioral_cartography program pi0cube init_state nb =
 options#parse;
 
 
+
 (**************************************************)
 (**************************************************)
-(* Hello world! *)
+(* Print startup message *)
 (**************************************************)
 (**************************************************)
 
@@ -645,7 +652,7 @@ print_message Debug_medium ("\nInitial state after time-elapsing:\n" ^ (Imitator
 (* Execute IMITATOR II *)
 (**************************************************)
 
-let _ =
+let zones =
 match options#imitator_mode with
 	(* Perform reachability analysis or inverse Method *)
 	| Reachability_analysis | Inverse_method ->
@@ -658,6 +665,7 @@ match options#imitator_mode with
 		let states_file_name = (options#program_prefix ^ ".states") in
 		let gif_file_name = (options#program_prefix ^ "." ^ dot_extension) in
 		generate_graph program pi0 reachability_graph dot_file_name states_file_name gif_file_name;
+		[ k0 ]
 
 	| Random_cartography nb ->
 	(* Behavioral cartography algorithm with random iterations *)
@@ -665,7 +673,19 @@ match options#imitator_mode with
 
 	| Cover_cartography ->
 	(* Behavioral cartography algorithm with full coverage *)
-		cover_behavioral_cartography program pi0cube init_state_after_time_elapsing;
+		cover_behavioral_cartography program pi0cube init_state_after_time_elapsing
+		
+in ();
+
+let _ =
+match options#cart with 
+	|None -> print_message Debug_standard "No graph for the cartography."
+	|Some n ->(print_message Debug_standard ("Cartography started " ^ (after_seconds ()) ^ "\n");
+		     let i =ref 1 in List.iter (fun zone -> 
+		     print_message Debug_standard ("Zone "^(string_of_int !i)^" : " ^ (LinearConstraint.string_of_linear_constraint program.variable_names zone) ^ "\n"); i:=!i+1
+		               ) zones;
+  		     cartography zones pi0cube n (options#program_prefix^"_cart")
+		   )
 in ();
 
 (**************************************************)

@@ -37,6 +37,8 @@ class imitator_options =
 		val mutable timed_mode = ref false
 		(* print parametric logs *)
 		val mutable with_parametric_log = ref false 
+		(* plot cartography *)
+		val mutable cart = ref None
 		
 		method nb_args = nb_args
 		method file = !file
@@ -54,6 +56,7 @@ class imitator_options =
 		method sync_auto_detection = !sync_auto_detection
 		method no_random = !no_random
 		method timed_mode = !timed_mode
+		method cart = !cart
 		
 		method parse =
 			let usage_msg = "Usage: IMITATOR program_file [pi0_file] [options]" in
@@ -102,6 +105,7 @@ class imitator_options =
 				("-mode", String set_mode, " Mode for IMITATOR II. Use 'reachability' for a parametric reachability analysis (no pi0 needed). Use 'inversemethod' for the inverse method. For the behavioral cartography algorithm, use 'cover' to cover all the points within V0, or 'randomXX' where XX is a number to iterate randomly algorithm. Default: 'inversemethod'.");
 				("-no-dot", Set no_dot, " No graphical output using 'dot'. Default: false.");
 				("-no-log", Set no_log, " No generation of log files. Default: false.");
+			        ("-cart", Int (fun i -> cart := Some i), " Print the cartography before terminating the program. Default: no cartography."); 
 				("-fancy", Set fancy, " Generate detailed state information for dot output. Default: false.");
 				("-no-random", Set no_random, " No random selection of the pi0-incompatible inequality (select the first found). Default: false.");
 				("-post-limit", Int (fun i -> post_limit := Some i), " Limits the depth of the Post exploration. Default: no limit.");

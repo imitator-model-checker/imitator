@@ -32,7 +32,7 @@ ifndef OCAML_PPL_PATH
   OCAML_PPL_PATH = $(HOME)/local/lib/ppl
 endif 
 ifndef OCAML_GMP_PATH
-  OCAML_GMP_PATH = $(HOME)/local/lib
+  OCAML_GMP_PATH = $(HOME)/local/mlgmp -I $(HOME)/local/lib
 endif
 
 # export paths for use in sub-makefiles
@@ -78,12 +78,12 @@ MAIN = $(SRC)/IMITATOR.cmo
 MAIN_OPT = $(MAIN:.cmo=.cmx)
 
 # sources to compile
-FILES =  $(SRC)/Global.+ $(SRC)/Options.+ $(SRC)/NumConst.+ $(SRC)/LinearConstraint.+ $(SRC)/Automaton.+ $(SRC)/Pi0Lexer.+ $(SRC)/Pi0Parser.+ $(SRC)/Pi0CubeLexer.+ $(SRC)/Pi0CubeParser.+ $(SRC)/ImitatorLexer.+ $(SRC)/ImitatorParser.+ $(SRC)/ImitatorPrinter.+ $(SRC)/ProgramConverter.+ $(SRC)/Graph.+ $(SRC)/Reachability.+
+FILES =  $(SRC)/Global.+ $(SRC)/Options.+ $(SRC)/NumConst.+ $(SRC)/LinearConstraint.+ $(SRC)/Automaton.+ $(SRC)/Pi0Lexer.+ $(SRC)/Pi0Parser.+ $(SRC)/Pi0CubeLexer.+ $(SRC)/Pi0CubeParser.+ $(SRC)/ImitatorLexer.+ $(SRC)/ImitatorParser.+ $(SRC)/ImitatorPrinter.+ $(SRC)/ProgramConverter.+ $(SRC)/Graph.+ $(SRC)/Graphics.+ $(SRC)/Reachability.+
 OBJS = $(FILES:+=cmo)
 OBJS_OPT = $(OBJS:.cmo=.cmx)
 
 # header files
-FILESMLI = $(SRC)/Global.+ $(SRC)/NumConst.+ $(SRC)/LinearConstraint.+ $(SRC)/Automaton.+ $(SRC)/ParsingStructure.+ $(SRC)/AbstractImitatorFile.+ $(SRC)/ImitatorPrinter.+ $(SRC)/ProgramConverter.+ $(SRC)/Graph.+ $(SRC)/Reachability.+
+FILESMLI = $(SRC)/Global.+ $(SRC)/NumConst.+ $(SRC)/LinearConstraint.+ $(SRC)/Automaton.+ $(SRC)/ParsingStructure.+ $(SRC)/AbstractImitatorFile.+ $(SRC)/ImitatorPrinter.+ $(SRC)/ProgramConverter.+ $(SRC)/Graph.+ $(SRC)/Graphics.+ $(SRC)/Reachability.+
 
 # parsers and lexers 
 LEXERS = $(SRC)/Pi0Lexer.+ $(SRC)/Pi0CubeLexer.+ $(SRC)/ImitatorLexer.+
