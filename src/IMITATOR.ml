@@ -1375,6 +1375,8 @@ and speclist = [
 	("-timed", Set timed_mode, " Adds a timing information to each output of the program. Default: none.");
 
 	("-with-parametric-log", Set with_parametric_log, " Adds the elimination of the clock variables in the constraints in the log files. Default: false.");
+	
+	("-version", Unit (fun _ -> print_version_string (); exit 0), " Print version string and exit.");
 
 	] in
 
@@ -1425,15 +1427,17 @@ set_debug_mode !global_debug_mode;
 (* Hello world! *)
 (**************************************************)
 (**************************************************)
+
 print_message Debug_standard
-	( "**************************************************\n"
-	^ "*                   IMITATOR II                  *\n"
-	^ "*                                 Etienne ANDRE  *\n"
+	( "**************************************************");
+Printf.printf " *  IMITATOR %-36s *\n" version_string;	
+print_message Debug_standard
+	( "*                                 Etienne ANDRE  *\n"
 	^ "*                                   2009 - 2010  *\n"
 	^ "*     Laboratoire Specification et Verification  *\n"
 	^ "*                  ENS de Cachan & CNRS, France  *\n"
 	^ "**************************************************");
-
+	
 
 (**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 (* Check compatibility between options *) 
