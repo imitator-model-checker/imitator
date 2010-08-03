@@ -10,11 +10,28 @@
 \usepackage[ruled,vlined]{algorithm2e}
 % \usepackage[lined,boxed]{algorithm2e}
 
+\usepackage{fancyheadings}
+
 \newcommand{\LinesNumbered}{\linesnumbered}
 \newcommand{\IncMargin}{\incmargin}
 \newcommand{\DecMargin}{\decmargin}
 
 \LinesNumbered
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% PDFTEX
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\usepackage[pdftex]{graphicx,color}
+
+\usepackage[pdftex,plainpages=false,bookmarksnumbered,
+  pdfdisplaydoctitle=true,bookmarks,breaklinks,
+  linktocpage,colorlinks,citecolor=blue,pdfstartview=FitH]{hyperref}
+
+\hypersetup{
+  pdftitle={IMITATOR User Manual},
+  pdfauthor={\'Etienne Andr\'e}%
+}
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -112,8 +129,8 @@
 \newcommand{\graphviz}{Graphviz}
 \newcommand{\hytech}{{\sc HyTech}}
 \newcommand{\imitator}{\textsc{Imitator}}
-\newcommand{\imitatordeux}{\textsc{Imitator}\,II}
-\newcommand{\imitatordeuxExec}{\code{IMITATOR2}}
+%%\newcommand{\imitatordeux}{\textsc{Imitator}\,II}
+\newcommand{\imitatorExec}{\code{IMITATOR}}
 \newcommand{\imperator}{\textsc{ImpRator}}
 \newcommand{\ocaml}{OCaml}
 \newcommand{\phaver}{PHAVer}
@@ -123,6 +140,8 @@
 \newcommand{\red}{RED}
 \newcommand{\uppaal}{\textsc{Uppaal}}
 
+% Current version
+\newcommand{\imitatorversion}{2.2}
 
 
 
@@ -188,7 +207,7 @@ and, automaton, clock, discrete, do, end, endreach, False, forward, from, goto, 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % Title Page
-\title{IMITATOR II User Manual}
+\title{IMITATOR User Manual\\{\Large Version \imitatorversion{}}}
 \author{\'Etienne Andr\'e}
 % \date{}
 
@@ -214,16 +233,23 @@ and, automaton, clock, discrete, do, end, endreach, False, forward, from, goto, 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{abstract}
-We present here the user manual of \imitatordeux{}, a tool implementing the ``inverse method'' in the framework of parametric timed automata:
+We present here the user manual of \imitator{}, a tool implementing the ``inverse method'' in the framework of parametric timed automata:
 given a reference valuation of the parameters, its generates a constraint such that the system behaves the same as under the reference valuation in terms of traces, i.e., alternating sequences of locations and actions.
 This is useful for safely relaxing some values of the reference valuation, and optimizing timing bounds of the system.
-Besides the inverse method, \imitatordeux{} also implements the ``behavioral cartography algorithm'', allowing to solve the following good parameters problem: find a set of valuations within a given rectangle for which the system behaves well.
+Besides the inverse method, \imitator{} also implements the ``behavioral cartography algorithm'', allowing to solve the following good parameters problem: find a set of valuations within a given rectangle for which the system behaves well.
 % New features and optimizations of the tool are presented, and various examples of asynchronous circuits and communication protocols are studied.
-We give here the installation requirements and the launching commands of \imitatordeux{}, as well as the source code of a toy example.
+We give here the installation requirements and the launching commands of \imitator{}, as well as the source code of a toy example.
 \end{abstract}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+\newpage
+\tableofcontents
+\newpage
+
+\pagestyle{fancyplain}
+
+\lhead{\fancyplain{}{\imitator{} \imitatorversion{} User Manual}}
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -264,21 +290,21 @@ When all the counterexamples have been eliminated, the resulting constraints des
 
 % The synthesis of constraints has been studied more specifically in the context of asynchronous circuits, in particular by Claris\'o and Cortadella (see, e.g.,~\cite{cc07}) using methods with approximations.
 
-The tool \imitatordeux{} presented in this paper is based on the {\em inverse method}~\cite{acef09}, which supposes given a ``good instantiation'' $\pi_0$ of the parameters that one wants to generalize.
-More precisely,  \imitatordeux{} generates a constraint $K_0$ on the parameters that corresponds to an infinite dense set of valuations such that, for all instantiation $\pi$ of parameters in this set, the behavior of the timed automaton $\A$ is {\em (time-abstract) equivalent} to the behavior of~$\A$ under~$\pi_0$, in the sense that they have the same trace sets.
+The tool \imitator{} presented in this paper is based on the {\em inverse method}~\cite{acef09}, which supposes given a ``good instantiation'' $\pi_0$ of the parameters that one wants to generalize.
+More precisely,  \imitator{} generates a constraint $K_0$ on the parameters that corresponds to an infinite dense set of valuations such that, for all instantiation $\pi$ of parameters in this set, the behavior of the timed automaton $\A$ is {\em (time-abstract) equivalent} to the behavior of~$\A$ under~$\pi_0$, in the sense that they have the same trace sets.
 This is useful to relax timing bounds, and gives a criterion of \emph{robustness}.
 
-Moreover, \imitatordeux{} implements the \emph{behavioral cartography algorithm}~\cite{af10}, which generates a constraint on the parameters (``tile'') by calling the inverse method for each integer point located within a given rectangle~$V_0$.
+Moreover, \imitator{} implements the \emph{behavioral cartography algorithm}~\cite{af10}, which generates a constraint on the parameters (``tile'') by calling the inverse method for each integer point located within a given rectangle~$V_0$.
 This algorithm allows us to partition the parametric space into a subset of ``good'' tiles (which correspond to ``good behaviors'') and a subset of ``bad'' ones.
 Often in practice, what is covered is not the {\em bounded} and {\em integer} subspace of the parameter rectangle, but two major extensions:
 first, not only the integer points but a major part of the dense set of {\em real-valued} points of the rectangle is covered by the tiles;
 second, the tiles are often unbounded w.r.t. several dimensions (hence are infinite), and cover most of the parametric space beyond~$V_0$, thus giving a solution to the good parameters problem.
 
-\imitatordeux{} is a new version of \imitator{}~\cite{and09}, a prototype written in \python{} implementing the inverse method, and calling the model checker \hytech{}~\cite{hhw97}.
-\imitatordeux{} has been entirely rewritten and is a now standalone tool, making use of the \apron{} library~\cite{jm09} and the Parma Polyhedra Library~\cite{bhz08}.
-Compared to \imitator{}, the computation timings of \imitatordeux{} have dramatically decreased.
-Moreover, \imitatordeux{} offers new features, such as the implementation of the behavioral cartography algorithm, the generation of the trace sets of the models, and a graphical output.
-We present in this paper the new features and optimizations of \imitatordeux{}, as well as a range of case studies.
+\imitator{} is a new version of \imitator{}~\cite{and09}, a prototype written in \python{} implementing the inverse method, and calling the model checker \hytech{}~\cite{hhw97}.
+\imitator{} has been entirely rewritten and is a now standalone tool, making use of the \apron{} library~\cite{jm09} and the Parma Polyhedra Library~\cite{bhz08}.
+Compared to \imitator{}, the computation timings of \imitator{} have dramatically decreased.
+Moreover, \imitator{} offers new features, such as the implementation of the behavioral cartography algorithm, the generation of the trace sets of the models, and a graphical output.
+We present in this paper the new features and optimizations of \imitator{}, as well as a range of case studies.
 
 This tool is being developed at LSV, ENS Cachan, France.
 The tool can be downloaded on its Web page\footnote{\url{http://www.lsv.ens-cachan.fr/~andre/IMITATOR2/}}, as well as a bunch of case studies.
@@ -287,13 +313,13 @@ The tool can be downloaded on its Web page\footnote{\url{http://www.lsv.ens-cach
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% \section{\imitatordeux{} in a Nutshell}
+% \section{\imitator{} in a Nutshell}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
 
-% The tool \imitatordeux{} is available on its Web page\footnote{\mbox{\url{http://www.lsv.ens-cachan.fr/~andre/IMITATOR2}}}.
+% The tool \imitator{} is available on its Web page\footnote{\mbox{\url{http://www.lsv.ens-cachan.fr/~andre/IMITATOR2}}}.
 % 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % \subsection{Principle}
@@ -458,18 +484,18 @@ We first recall the framework of Parametric Timed Automata,
 the inverse method algorithm and
 the behavioral cartography algorithm in Section~\ref{sec:preliminaries}.
 We also apply those two algorithms to the Root Contention Protocol.
-We then introduce \imitatordeux{} in Section~\ref{sec:implementation} and give details on its internal structure and its various features.
-We give in Section~\ref{sec:how} the most useful in order to install and use \imitatordeux{}.
-We present in Section~\ref{sec:example} a full example, and show the application of the inverse method and the behavioral cartography algorithm using \imitatordeux{}.
+We then introduce \imitator{} in Section~\ref{sec:implementation} and give details on its internal structure and its various features.
+We give in Section~\ref{sec:how} the most useful in order to install and use \imitator{}.
+We present in Section~\ref{sec:example} a full example, and show the application of the inverse method and the behavioral cartography algorithm using \imitator{}.
 % a range of case studies including hardware devices and unbounded communication protocols.
 We give final remarks in Section~\ref{sec:conclusion}.
-We also give in Appendix~\ref{app:source} the source code of the example, and in Appendix~\ref{app:grammar} the full grammar of \imitatordeux{}.
+We also give in Appendix~\ref{app:source} the source code of the example, and in Appendix~\ref{app:grammar} the full grammar of \imitator{}.
 
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Behavioral Cartography of Timed Automata} \label{sec:preliminaries}
+\section[Behavioral Cartography]{Behavioral Cartography of Timed Automata} \label{sec:preliminaries}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -714,7 +740,7 @@ $\forall s \in S , \exists s' \in S' $ s.t. $s = s'$.
 \paragraphe{Application to the Root Contention Protocol}
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-
 Applying the inverse method algorithm to the PTA modeling the Root Contention Protocol described in Section~\ref{ss:rcp} and the reference valuation $\pi_0$, the following constraints is generated
-by \imitatordeux{}
+by \imitator{}
 % after 20 iterations
 in 2.3 seconds: % (327 reachable states with 518 transitions):
 %    \rcpFMax \geq \rcpFMin
@@ -1054,7 +1080,7 @@ The two other parameters remain constant, as in $\pi_0$.
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%%
 
 
-The cartography computed by \imitatordeux{} is given in Figure~\ref{fig:cartography_rcp}.
+The cartography computed by \imitator{} is given in Figure~\ref{fig:cartography_rcp}.
 For the sake of clarity, we project onto $\rcpD$ and $\rcpSMin$.
 In each tile, the parameter $\rcpSMax$ is only bound by the implicit constraint $\rcpSMin \leq \rcpSMax$.
 
@@ -1062,9 +1088,9 @@ Note that tiles~1 and~6 are infinite towards dimension $\rcpSMin$, and all tiles
 Moreover, although all the integer points within $V_0$ are covered (from the algorithm), note that the real-valued part of $V_0$ is not fully covered, because there are some ``holes'' (real-valued zones without integer points) in the lower right corner.
 An example of point which not covered by the cartography is $\rcpD = 50$, $\rcpSMin = 140.4$ and $\rcpSMax = 141$.
 
-It can be shown that tiles 1 to 3 correspond to \emph{good} tiles, whereas the other tiles correspond to \emph{bad tiles}\footnote{Note that what \imitatordeux{} computes is a list of tiles as well as the associated trace sets.
+It can be shown that tiles 1 to 3 correspond to \emph{good} tiles, whereas the other tiles correspond to \emph{bad tiles}\footnote{Note that what \imitator{} computes is a list of tiles as well as the associated trace sets.
 We then use an external tool (here, \prism{}) in order to verify for each tile whether the considered property $\mathit{Prop}_1$ is satisfied or not.
-Note that this step could be easily integrated to \imitatordeux{} in automatic manner (see final remarks in Section~\ref{sec:conclusion}).}.
+Note that this step could be easily integrated to \imitator{} in automatic manner (see final remarks in Section~\ref{sec:conclusion}).}.
 As a consequence, the solution to the good parameters problem for this example corresponds to the parameter valuations included in tiles 1, 2 and 3.
 The corresponding constraint is the following one (recall that $\rcpFMin = 76$ and $\rcpFMax = 85$):
 $$ 2 * \rcpSMin > 3 * \rcpD + 170 \ \ \ \ \land \ \ \ \ \rcpD < 38 \ \ \ \ \land \ \ \ \ \rcpSMin \leq \rcpSMax$$
@@ -1085,7 +1111,7 @@ $$ 2 * \rcpSMin > 3 * \rcpD + 170 \ \ \ \ \land \ \ \ \ \rcpD < 38 \ \ \ \ \land
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{General Structure and Implementation} \label{sec:implementation}
+\section[Implementation]{General Structure and Implementation} \label{sec:implementation}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -1095,14 +1121,14 @@ $$ 2 * \rcpSMin > 3 * \rcpD + 170 \ \ \ \ \land \ \ \ \ \rcpD < 38 \ \ \ \ \land
 \subsection{Inputs and Outputs}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-The input syntax of \imitatordeux{} to describe the network of PTAs modeling the system is given in~\cite{imitator2_web}, and is very close to the \hytech{} syntax.
-Actually, all standard \hytech{} files describing only PTAs (and not more general systems like linear hybrid automata\cite{achh92}) can be analyzed directly by \imitatordeux{} with very minor changes\footnote{An interface to accept as well files given using the \phaver{} syntax is currently being implemented.}.
+The input syntax of \imitator{} to describe the network of PTAs modeling the system is given in~\cite{imitator2_web}, and is very close to the \hytech{} syntax.
+Actually, all standard \hytech{} files describing only PTAs (and not more general systems like linear hybrid automata\cite{achh92}) can be analyzed directly by \imitator{} with very minor changes\footnote{An interface to accept as well files given using the \phaver{} syntax is currently being implemented.}.
 
 
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
 \paragraphe{Inverse Method}
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
-When calling \imitatordeux{} to apply the inverse method algorithm, the tool takes as input two files, one describing the network of PTAs modeling the system, and the other describing the reference valuation.
+When calling \imitator{} to apply the inverse method algorithm, the tool takes as input two files, one describing the network of PTAs modeling the system, and the other describing the reference valuation.
 As depicted in Figure~\ref{fig:ioIM}, it synthesizes a constraint on the parameters solving the inverse problem, as well as the corresponding trace set under a graphical form.
 The description of all the parametric reachable states is also returned.
 
@@ -1121,7 +1147,7 @@ The description of all the parametric reachable states is also returned.
 \centering
 
 \begin{tikzpicture}
-    \node (imitator) [imitator] {\imitatordeux{}};
+    \node (imitator) [imitator] {\imitator{}};
 
     \path (imitator.162)+(-\blockdist,0) node (input1) [input] {PTA $\A$};
     \path (imitator.-162)+(-\blockdist,0) node (input2) [input] {Reference valuation $\pi_0$};
@@ -1136,7 +1162,7 @@ The description of all the parametric reachable states is also returned.
 
 }
 
-\caption{\imitatordeux{} inputs and outputs in inverse method mode}
+\caption{\imitator{} inputs and outputs in inverse method mode}
 \label{fig:ioIM}
 \end{figure}
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
@@ -1145,7 +1171,7 @@ The description of all the parametric reachable states is also returned.
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
 \paragraphe{Behavioral Cartography Algorithm}
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
-When calling \imitatordeux{} to apply the behavioral cartography algorithm, the tool takes as an input two files, one describing the network of PTAs modeling the system, and the other describing the reference rectangle, i.e., the bounds to consider for each parameter.
+When calling \imitator{} to apply the behavioral cartography algorithm, the tool takes as an input two files, one describing the network of PTAs modeling the system, and the other describing the reference rectangle, i.e., the bounds to consider for each parameter.
 As depicted in Figure~\ref{fig:ioBC}, it synthesizes a list of tiles, as well as the trace set corresponding to each tile under a graphical form.
 The description of all the parametric reachable states for each tile is also returned.
 
@@ -1164,7 +1190,7 @@ The description of all the parametric reachable states for each tile is also ret
 \centering
 
 \begin{tikzpicture}
-    \node (imitator) [imitator] {\imitatordeux{}};
+    \node (imitator) [imitator] {\imitator{}};
 
     \path (imitator.162)+(-\blockdist,0) node (input1) [input] {PTA $\A$};
     \path (imitator.-162)+(-\blockdist,0) node (input2) [input] {Reference rectangle $V_0$};
@@ -1179,7 +1205,7 @@ The description of all the parametric reachable states for each tile is also ret
 
 }
 
-\caption{\imitatordeux{} inputs and outputs in behavioral cartography mode}
+\caption{\imitator{} inputs and outputs in behavioral cartography mode}
 \label{fig:ioBC}
 \end{figure}
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
@@ -1193,13 +1219,13 @@ The description of all the parametric reachable states for each tile is also ret
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
 \paragraphe{Structure}
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
-Whereas \imitator{} was a prototype written in \python{} calling \hytech{} for the computation of the $\mathit{Post}$ operation, \imitatordeux{} is a standalone tool written in \ocaml{}.
+Whereas \imitator{} was a prototype written in \python{} calling \hytech{} for the computation of the $\mathit{Post}$ operation, \imitator{} is a standalone tool written in \ocaml{}.
 The $\mathit{Post}$ operation has been fully implemented, and the inverse method algorithm entirely rewritten.
-As depicted in Figure~\ref{fig:structure}, \imitatordeux{} makes use of an external library for manipulating convex polyhedra.
-Depending on the user's preference, \imitatordeux{} can call either the \polka{} library, available in the \apron{} library~\cite{jm09}, or the Parma Polyhedra Library (PPL)~\cite{bhz08}.
+As depicted in Figure~\ref{fig:structure}, \imitator{} makes use of an external library for manipulating convex polyhedra.
+Depending on the user's preference, \imitator{} can call either the \polka{} library, available in the \apron{} library~\cite{jm09}, or the Parma Polyhedra Library (PPL)~\cite{bhz08}.
 The trace sets are output under a graphical form using the \gdot{} module of the graph visualization software \graphviz{}.
 
-\imitatordeux{} contains about 9000 lines of code, and its development took about 6 man-months.
+\imitator{} contains about 9000 lines of code, and its development took about 6 man-months.
 
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
 \begin{figure}[ht!]
@@ -1228,7 +1254,7 @@ The trace sets are output under a graphical form using the \gdot{} module of the
 	\path[dot] (9, 6) -- (9, 4) -- (12, 4) -- (12, 6) -- cycle;
 
 	% Etiquettes
-	\node [etiquette] at (3.5, 5) {\imitatordeux{} (\ocaml{})};
+	\node [etiquette] at (3.5, 5) {\imitator{} (\ocaml{})};
 	\node [etiquette] at (1.5, 2.5) {\apron{}};
 	\node [etiquette] at (5.5, 2.5) {PPL};
 	\node [etiquette] at (1.5, 0.5) {\polka{}};
@@ -1247,7 +1273,7 @@ The trace sets are output under a graphical form using the \gdot{} module of the
 
 }
 
-\caption{\imitatordeux{} internal structure}
+\caption{\imitator{} internal structure}
 \label{fig:structure}
 \end{figure}
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
@@ -1256,14 +1282,14 @@ The trace sets are output under a graphical form using the \gdot{} module of the
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
 \paragraphe{Internal Representation}
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
-States are represented using a triple $(q, v, C)$ made of the current location~$q$ in each automaton, a value for each discrete variable\footnote{Discrete variables are syntactic sugar allowing to factorize several locations into a single one. In~\imitatordeux{}, discrete variables are integer variables that can be updated using constants or other discrete variables.}~$v$, and a constraint $C$ on the clocks and the parameters.
+States are represented using a triple $(q, v, C)$ made of the current location~$q$ in each automaton, a value for each discrete variable\footnote{Discrete variables are syntactic sugar allowing to factorize several locations into a single one. In~\imitator{}, discrete variables are integer variables that can be updated using constants or other discrete variables.}~$v$, and a constraint $C$ on the clocks and the parameters.
 In order to optimize the test of equality between a new computed state and the set of states computed previously, the states are stored in a hash table as follows:
 to a given key $(q, v)$ of the hash table, we associate a list of constraints $C_1, \dots, C_n$, corresponding to the $n$ states $(q, v, C_1)$, \dots, $(q, v, C_n)$.
 % the location and the value for the discrete variables represent the key, and the value corresponds to 
 
-Note that, unlike \hytech{}, \imitatordeux{} uses exact arithmetics with unlimited precision.
+Note that, unlike \hytech{}, \imitator{} uses exact arithmetics with unlimited precision.
 
-Contrarily to \hytech{} which performs an \emph{a\,priori} static composition of the automata, thus leading to a dramatical explosion of the number of locations, \imitatordeux{} performs an \emph{on-the-fly} composition of the automata.
+Contrarily to \hytech{} which performs an \emph{a\,priori} static composition of the automata, thus leading to a dramatical explosion of the number of locations, \imitator{} performs an \emph{on-the-fly} composition of the automata.
 This \emph{on-the-fly} composition allows to analyze bigger systems, and decrease drastically the computation time compared to \imitator{}. % (see Section~\ref{sec:experiments}).
 
 
@@ -1273,17 +1299,18 @@ This \emph{on-the-fly} composition allows to analyze bigger systems, and decreas
 \subsection{Features} \label{ss:features}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\imitatordeux{} includes the following features:
+\imitator{} (version \imitatorversion{}) includes the following features:
 
 \begin{itemize}
 	\item Reachability analysis: given a PTA~$\A$, compute the set of all the reachable states (as it is done in tools such as, e.g., \hytech{} and \phaver{});
 	\item Inverse method algorithm: given a PTA~$\A$ and a reference valuation~$\pi_0$, synthesize a constraint guaranteeing the same trace set as for $\A[\pi_0]$;
 	\item Behavioral cartography algorithm: given a PTA~$\A$ and a rectangular parameter domain~$V_0$, compute a list of tiles. Two different modes can be considered: (1) cover all the integer points of~$V_0$ or, (2) call a given number of times the inverse method on an integer point selected randomly within $V_0$ (which is interesting for rectangles containing a very big number of integer points but few different tiles);
 	\item Automatic generation of the trace sets, for the reachability analysis and for both algorithms $\IM$ and $\carto$;
-	\item Output of the trace sets under a graphical form.
+	\item Graphical output of the trace sets;
+        \item Graphical output of the behavioral cartography. 
 \end{itemize}
 
-As shown in Table~\ref{table:features}, all those features (except the inverse method) are new features which were not available in \imitator{}.
+As shown in Table~\ref{table:features}, all those features (except the inverse method) are new features which were not available in the original version \imitator{} 1.0.
 
 
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
@@ -1297,19 +1324,19 @@ As shown in Table~\ref{table:features}, all those features (except the inverse m
 	\hline
 	Tool & Inverse Method & Cartography & Computation of traces & Graphical output \\
 	\hline
-	\imitator{} & Yes & - & - & - \\
+	\imitator{} 1.0 & Yes & - & - & - \\
 	\hline
-	\imitatordeux{} & Yes & Yes & Yes & Yes\\
+	\imitator{} \imitatorversion{} & Yes & Yes & Yes & Yes\\
 	\hline
 \end{tabular}
 
 }
-\caption{Comparison of the features of \imitator{} and \imitatordeux{}}
+\caption{Comparison of the features of \imitator{} and \imitator{}}
 \label{table:features}
 \end{table}
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
 
-See Section~\ref{sss:options} for the list of options available when calling \imitatordeux{}.
+See Section~\ref{sss:options} for the list of options available when calling \imitator{}.
 
 
 
@@ -1317,7 +1344,7 @@ See Section~\ref{sss:options} for the list of options available when calling \im
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{How to Use \imitatordeux{}} \label{sec:how}
+\section{How to Use \imitator{}} \label{sec:how}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -1327,23 +1354,23 @@ See Section~\ref{sss:options} for the list of options available when calling \im
 
 See the installation files available on the website for the most up-to-date information.
 
-In short, \imitatordeux{} is written in \ocaml{}, and makes use of the following libraries:
+In short, \imitator{} is written in \ocaml{}, and makes use of the following libraries:
 
 \begin{itemize}
-	\item The APRON numerical abstract domain library~\cite{jm09}, and its interface with \ocaml{}
 	\item The OCaml ExtLib library (Extended Standard Library for Objective Caml)
 	\item The Parma Polyhedra Library (PPL)~\cite{bhz08}
+        \item The GNU Multiple Precision Arithmetic Library (GMP)
 \end{itemize}
 
-Various binaries are available on \imitatordeux{}'s Web page.
+Binaries and source code packages are available on \imitator{}'s Web page.
 
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{The \imitatordeux{} Input File}
+\subsection{The \imitator{} Input File}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-The syntax of the automata in \imitatordeux{} is similar to the syntax of the automata for \hytech{}.
+The syntax of the automata in \imitator{} is similar to the syntax of the automata for \hytech{}.
 % Beside the classical syntax of \hytech{}, the input file must follow a certain number of requirements, which are given below.
 
 
@@ -1379,10 +1406,10 @@ See Appendix~\ref{app:grammar}.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{Calling \imitatordeux}
+\subsection{Calling \imitator}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\imitatordeux{} can be used with three different modes:
+\imitator{} can be used with three different modes:
 
 \begin{enumerate}
 	\item Reachability analysis: given a PTA~$\A$, compute the whole set of reachable states from a given initial state.
@@ -1403,11 +1430,11 @@ We detail those three modes below.
 Given a PTA~$\A$, the reachability analysis computes the whole set of reachable states from a given initial state.
 The syntax in this case is the following one:
 
-\code{\imitatordeuxExec{} <input\_file> -mode reachability [options]}
+\code{\imitatorExec{} <input\_file> -mode reachability [options]}
 
 Note that there is no need to provide a $\pi_0$ or $V_0$ file in this case (if one is provided, it will be ignored).
 
-In this case, \imitatordeux{} outputs two files:
+In this case, \imitator{} outputs two files:
 
 \begin{itemize}
 	\item A file \code{<input\_file>.states} containing the set of all the reachable states, with their names and the associated constraint on the clocks and parameters.
@@ -1431,15 +1458,15 @@ Note that the location and the name of those two files can be changed using the 
 Given a PTA~$\A$ and a valuation~$\pi_0$ of the parameters, the inverse method compute a constraint $K_0$ on the parameters guaranteeing that, for any $\pi \models K_0$, the trace sets of $\A[\pi]$ and $\A[\pi_0]$ are the same~\cite{acef09}.
 The syntax in this case is the following one:
 
-\code{\imitatordeuxExec{} <input\_file> <pi0\_file> [-mode inversemethod] [options]}
+\code{\imitatorExec{} <input\_file> <pi0\_file> [-mode inversemethod] [options]}
 
 Note that the \code{-mode inversemethod} option is not necessary, since the default value for \code{-mode} is precisely \code{inversemethod}.
 
 Note that, unlike the algorithm given in~\cite{acef09}, at a given iteration, the $\pi_0$-incompatible state is selected deterministically, for efficiency reasons.
 However, the $\pi_0$-incompatible inequality within a $\pi_0$-incompatible state is selected randomly, unless the \code{-no-random} option is activated.
 
-In this case, \imitatordeux{} outputs the resulting constraint $K_0$ on the standard output.
-Moreover, \imitatordeux{} outputs the same two files as in the reachability analysis.
+In this case, \imitator{} outputs the resulting constraint $K_0$ on the standard output.
+Moreover, \imitator{} outputs the same two files as in the reachability analysis.
 
 
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
@@ -1451,11 +1478,11 @@ Two possible variants of the algorithm can be used:
 \begin{enumerate}
 	\item The standard variant covers all the integer points within $V_0$.
 	The syntax in this case is the following one:\\
-	\code{\imitatordeuxExec{} <input\_file> <V0\_file> [-mode cover] [options]}
+	\code{\imitatorExec{} <input\_file> <V0\_file> [-mode cover] [options]}
 
 	\item The alternative variant calls the inverse method a certain number of times on a random point $V_0$.
 	The syntax in this case is the following one:\\
-	\code{\imitatordeuxExec{} <input\_file> <V0\_file> [-mode randomX] [options]}\\
+	\code{\imitatorExec{} <input\_file> <V0\_file> [-mode randomX] [options]}\\
 	where \code{X} represents the number of random points to consider.
 	If a point has already been generated before, the inverse method is not called.
 	If a point belongs to one of the tiles computed before, the inverse method is not called neither.
@@ -1471,30 +1498,46 @@ Two possible variants of the algorithm can be used:
 \subsubsection{Options} \label{sss:options}
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
 
-The options available for \imitatordeux{} are explained in the following.
+The options available for \imitator{} are explained in the following.
 
 %------------------------------------------------------------
 \paragraph{\code{-acyclic} (default: \code{false})}
 %------------------------------------------------------------
 Does not test if a new state was already encountered.
-In a normal use, when \imitatordeux{} encounters a new state, it checks if it has been encountered before.
+In a normal use, when \imitator{} encounters a new state, it checks if it has been encountered before.
 This test may be time consuming for systems with a high number of reachable states.
 For acyclic systems, all traces pass only once by a given location.
 As a consquence, there are no cycles, so there should be no need to check if a given state has been encountered before.
 This is the main purpose of this option.
 
 However, be aware that, even for acyclic systems, several (different) traces can pass by the same state.
-In such a case, if the \code{-acyclic} option is activated, \imitatordeux{} will compute \emph{twice} the states after the state common to the two traces.
+In such a case, if the \code{-acyclic} option is activated, \imitator{} will compute \emph{twice} the states after the state common to the two traces.
 As a consequence, it is all but sure that activating this option will lead to an increase of speed.
 
-Note also that activating this option for non-acyclic systems may lead to an infinite loop in \imitatordeux{}.
+Note also that activating this option for non-acyclic systems may lead to an infinite loop in \imitator{}.
 
+%------------------------------------------------------------
+\paragraph{\code{-cart} (default: \code{off})}
+%------------------------------------------------------------
+
+After execution of the behavioral cartography, plots the generated
+zones as a \emph{PostScript} file. This option takes an integer which
+limits the number of generated plots, where each plot represents the
+projection of the parametric zones on two parameters. If the
+considered rectangle $v_0$ is spanned by two parameters only, then
+\code{-cart 1} will plot the projection of the generated zones on
+these two parameters. 
+
+This option makes use of the external utility \code{graph}, which is
+part of the \emph{GNU plotting utils}, available on most Linux
+platforms. The generated files will be located in the same directory
+as the source files, unless option \code{-log-prefix} is used.
 
 %------------------------------------------------------------
 \paragraph{\code{-debug} (default: \code{standard})}
 %------------------------------------------------------------
 
-Give some debugging information, that may also be useful to have more details on the way \imitatordeux{} works.
+Give some debugging information, that may also be useful to have more details on the way \imitator{} works.
 The admissible values for \code{-debug} are given below:
 
 \begin{tabular}{@{} l @{\ \ } l}
@@ -1506,12 +1549,18 @@ The admissible values for \code{-debug} are given below:
  \code{total} & Give really too much information\\
 \end{tabular}
 
+%------------------------------------------------------------
+\paragraph{\code{-fancy} (default: \code{false})}
+%------------------------------------------------------------
+
+In the graphical output of the reachable states (see option \code{-no-dot}), 
+provide detailed information on the local states of the composed automata.
 
 %------------------------------------------------------------
 \paragraph{\code{-inclusion} (default: \code{false})}
 %------------------------------------------------------------
 Consider an inclusion of region instead of the equality when performing the $\mathit{Post}$ operation.
-In other terms, when encountering a new state, \imitatordeux{} checks if the same state (same location and same constraint) has been encountered before and, if yes, does not consider this ``new'' state.
+In other terms, when encountering a new state, \imitator{} checks if the same state (same location and same constraint) has been encountered before and, if yes, does not consider this ``new'' state.
 However, when the \code{-inclusion} option is activated, it suffices that a previous state with the same location and a constraint \emph{greater or equal} to the constraint of the new state has been encountered to stop the analysis.
 This option corresponds to the way that, e.g., \hytech{} works, and suffices when one wants to check the \emph{non-reachability} of a given bad state.
 
@@ -1525,7 +1574,7 @@ Set the prefix for log (\code{.states}) and graphical (\code{.gif}) files.
 %------------------------------------------------------------
 \paragraph{\code{-mode} (default: \code{inversemethod})}
 %------------------------------------------------------------
-The mode for \imitatordeux{}.
+The mode for \imitator{}.
 
 \begin{tabular}{@{} l @{\ \ } l}
  \code{reachability} & Parametric reachability analysis  \\
@@ -1564,18 +1613,18 @@ In the cartography mode, this option gives a limit to \emph{each} call to the in
 %------------------------------------------------------------
 \paragraph{\code{-sync-auto-detect} (default: \code{false})}
 %------------------------------------------------------------
-\imitatordeux{} considers that all the automata declaring a given synchronization label must be able to synchronize all together, so that the synchronization can happen.
-By default, \imitatordeux{} considers that the synchronization labels declared in an automaton are those declared in the \code{synclabs} section.
+\imitator{} considers that all the automata declaring a given synchronization label must be able to synchronize all together, so that the synchronization can happen.
+By default, \imitator{} considers that the synchronization labels declared in an automaton are those declared in the \code{synclabs} section.
 Therefore, if a synchronization label is declared but never used in (at least) one automaton, this label will never be synchronized in the execution\footnote{In such a case, the synchronization label is actually completely removed before the execution, in order to optimize the execution, and the user is warned of this removal.}.
 
-The option \code{-sync-auto-detect} allows to detect automatically the synchronization labels in each automaton: the labels declared in the \code{synclabs} section are ignored, and the \imitatordeux{} considers that only the labels really used in an automaton are those considered to be declared.
+The option \code{-sync-auto-detect} allows to detect automatically the synchronization labels in each automaton: the labels declared in the \code{synclabs} section are ignored, and the \imitator{} considers that only the labels really used in an automaton are those considered to be declared.
 
 
 %------------------------------------------------------------
 \paragraph{\code{-time-limit <limit>} (default: \code{none})}
 %------------------------------------------------------------
 Try to limit the execution time (the value \code{<limit>} is given in seconds).
-Note that, in the current version of \imitatordeux{}, the test of time limit is performed at the end of an iteration only (i.e., at the end of a given $\mathit{Post}$ iteration).
+Note that, in the current version of \imitator{}, the test of time limit is performed at the end of an iteration only (i.e., at the end of a given $\mathit{Post}$ iteration).
 In the cartography mode, this option represents a \emph{global} time limit, not a limit for each call to the inverse method.
 
 
@@ -1598,22 +1647,22 @@ add the constraint on the parameters only (i.e., eliminate clock variables).
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
 
 %------------------------------------------------------------
-\paragraph{\code{\imitatordeuxExec{} flipflop.imi -mode reachability}}
+\paragraph{\code{\imitatorExec{} flipflop.imi -mode reachability}}
 %------------------------------------------------------------
 Computes a reachability analysis on the automata described in file \code{flipflop.imi}.
 Will generate files \code{flipflop.imi.states}, containing the description of the reachable states, and \code{flipflop.imi.gif} depicting the reachability graph.
 
 
 %------------------------------------------------------------
-\paragraph{\code{\imitatordeuxExec{} flipflop.imi flipflop.pi0}}
+\paragraph{\code{\imitatorExec{} flipflop.imi flipflop.pi0}}
 %------------------------------------------------------------
 Calls the inverse method on the automata described in file \code{flipflop.imi}, and the reference valuation $\pi_0$ given in file \code{flipflop.pi0}.
 The resulting constraint $K_0$ will be given on the standard output.
-Moreover, \imitatordeux{} will generate the file \code{flipflop.imi.states}, containing the description of the (parametric) states reachable under $K_0$, and the file \code{flipflop.imi.gif} depicting the reachability graph under any point $\pi \models K_0$.
+Moreover, \imitator{} will generate the file \code{flipflop.imi.states}, containing the description of the (parametric) states reachable under $K_0$, and the file \code{flipflop.imi.gif} depicting the reachability graph under any point $\pi \models K_0$.
 
 
 %------------------------------------------------------------
-\paragraph{\code{\imitatordeuxExec{} flipflop.imi flipflop.pi0 -no-dot -no-log}}
+\paragraph{\code{\imitatorExec{} flipflop.imi flipflop.pi0 -no-dot -no-log}}
 %------------------------------------------------------------
 Calls the inverse method on the automata described in file \code{flipflop.imi}, and the reference valuation given in file \code{flipflop.pi0}.
 The resulting constraint will be given on the standard output.
@@ -1621,16 +1670,16 @@ No file will be generated.
 
 
 %------------------------------------------------------------
-\paragraph{\code{\imitatordeuxExec{} flipflop.imi flipflop.pi0 -with-parametric-log}}
+\paragraph{\code{\imitatorExec{} flipflop.imi flipflop.pi0 -with-parametric-log}}
 %------------------------------------------------------------
 Calls the inverse method on the automata described in file \code{flipflop.imi}, and the reference valuation $\pi_0$ given in file \code{flipflop.pi0}.
 The resulting constraint $K_0$ will be given on the standard output.
-and \imitatordeux{} will generate the file \code{flipflop.imi.states}, containing the description of the (parametric) states reachable under $K_0$.
+and \imitator{} will generate the file \code{flipflop.imi.states}, containing the description of the (parametric) states reachable under $K_0$.
 Moveover, for any state in this file, both the constraint on the clocks and the parameters, and the constraint on the parameters will be given.
-\imitatordeux{} will also generate the file \code{flipflop.imi.gif} depicting the reachability graph under any point $\pi \models K_0$.
+\imitator{} will also generate the file \code{flipflop.imi.gif} depicting the reachability graph under any point $\pi \models K_0$.
 
 %------------------------------------------------------------
-\paragraph{\code{\imitatordeuxExec{} SRlatch.imi SRlatch.v0 -mode cover}}
+\paragraph{\code{\imitatorExec{} SRlatch.imi SRlatch.v0 -mode cover}}
 %------------------------------------------------------------
 Calls the behavioral cartography algorithm on the automata described in file \code{flipflop.imi}, and the rectangle $V_0$ given in file \code{SRlatch.v0}.
 The algorithm will cover (at least) all the integer points within $V_0$.
@@ -1639,7 +1688,7 @@ Given $n$ the number of generated tiles (i.e., the number of calls to the invers
 
 
 %------------------------------------------------------------
-\paragraph{\code{\imitatordeuxExec{} SRlatch.imi SRlatch.v0 -mode random100 -no-log}}
+\paragraph{\code{\imitatorExec{} SRlatch.imi SRlatch.v0 -mode random100 -no-log}}
 %------------------------------------------------------------
 Calls the behavioral cartography algorithm on the automata described in file \code{flipflop.imi}, and the rectangle $V_0$ given in file \code{SRlatch.v0}.
 The program will call the inverse method on 100 points randomly selected within $V_0$.
@@ -1738,9 +1787,9 @@ Moreover, the parameter $t^\downarrow$ corresponds to the time duration between 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 We first perform a reachability analysis.
-The launch command for \imitatordeux{} is the following one:
+The launch command for \imitator{} is the following one:
 
-\code{\imitatordeuxExec{} SRlatch.imi -mode reachability}
+\code{\imitatorExec{} SRlatch.imi -mode reachability}
 
 Considering this environment, the trace set of this system is given in Fig.~\ref{fig:sr_parametric}, where the states $q_i$, $i = 0, \dots, 6$ correspond to the following values for each signal:
 
@@ -1866,7 +1915,7 @@ Considering this environment, the trace set of this system is given in Fig.~\ref
 % 
 % Considering this environment and this reference valuation, the trace set is given in Fig.~\commentaire{to do}.
 % 
-% The constraint $K_0$ output by \imitatordeux{} is the following one:
+% The constraint $K_0$ output by \imitator{} is the following one:
 % 
 % \smallskip
 % 
@@ -1903,7 +1952,7 @@ Considering this environment, the trace set of this system is given in Fig.~\ref
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
-Using \imitatordeux{}, we now perform a behavioral cartography of this system.
+Using \imitator{}, we now perform a behavioral cartography of this system.
 We consider the following rectangle $V_0$ for the parameters:
 
 \smallskip
@@ -1922,12 +1971,12 @@ $ \delta_2 $ & $[0, 10]$ \\
 
 \smallskip
 
-The launch command for \imitatordeux{} is the following one:
+The launch command for \imitator{} is the following one:
 
-\code{\imitatordeuxExec{} SRlatch.imi SRlatch.v0 -mode cover}
+\code{\imitatorExec{} SRlatch.imi SRlatch.v0 -mode cover}
 
 We get the following six behavioral tiles.
-Note that the graphical outputs, automatically generated by~\imitatordeux{} in the \code{gif} format, were rewritten in \LaTeX{} in this document.
+Note that the graphical outputs, automatically generated by~\imitator{} in the \code{gif} format, were rewritten in \LaTeX{} in this document.
 
 
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
@@ -2314,7 +2363,7 @@ The source code of this example is available in Appendix~\ref{app:source}.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-The tool \imitatordeux{} allows us to solve the good parameters problem for timed automata by iterating the inverse method algorithm on the integer points of a given rectangular parameter domain~$V_0$.
+The tool \imitator{} allows us to solve the good parameters problem for timed automata by iterating the inverse method algorithm on the integer points of a given rectangular parameter domain~$V_0$.
 In practice, our cartography algorithm covers not only (most of) $V_0$ but also a significant part of the whole parametric space beyond~$V_0$.
 This is of interest to classify the behavior of the system into good or bad for dense and unbounded values of the parameters.
 
@@ -2323,7 +2372,7 @@ Our tool has been successfully applied to various examples of asynchronous circu
 Future works include:
 
 \begin{itemize}
-	\item an automatic generation of the cartography under a graphical form (so far, only the trace sets are automatically generated under a graphical form; the cartography itself is given under the form of a list of constraints);
+%%	\item an automatic generation of the cartography under a graphical form (so far, only the trace sets are automatically generated under a graphical form; the cartography itself is given under the form of a list of constraints);
 	\item an automatic verification of the property one wants to check, e.g., by using a tool such as \uppaal{}~\cite{lpy97};
 	\item a ``dynamic'' cartography, where the scale (so far, the integers) can be refined to fill the possible holes;
 	\item a backward analysis, i.e., considering a $\mathit{Pre}$ operation instead of $\mathit{Post}$ computation in Algorithm~\ref{algo:IM};
@@ -2341,11 +2390,11 @@ Future works include:
 \paragraph{Acknowledgments.}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-Emmanuelle~Encrenaz and Laurent~Fribourg have been great contributors of \imitatordeux{}, on a theoretical point of view, and to find applications both from the literature and real case studies.
+Emmanuelle~Encrenaz and Laurent~Fribourg have been great contributors of \imitator{}, on a theoretical point of view, and to find applications both from the literature and real case studies.
 Abdelrezzak~Bara provided several examples from the hardware literature.
 Jeremy~Sproston provided examples from the probabilistic community.
 Bertrand~Jeannet has been of great help on the installation part, and the linking with Apron~\cite{jm09}.
-Ulrich~K\"uhne started to improve \imitatordeux{}, and added the link with PPL.
+Ulrich~K\"uhne started to improve \imitator{}, and added the link with PPL.
 
 
 
@@ -2395,13 +2444,13 @@ Ulrich~K\"uhne started to improve \imitatordeux{}, and added the link with PPL.
 \subsection{Grammar of the Input File}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\imitatordeux{} input is described by the following grammar.
+\imitator{} input is described by the following grammar.
 Non-terminals appear within angled parentheses.
 A non-terminal followed by two colons is defined by the list of immediately following non-blank lines, each of which represents a legal expansion.
 Input characters of terminals appear in typewritter font.
 The meta symbol \emptystring{} denotes the empty string.
 
-The text \npec{in green} is not taken into account by \imitatordeux{}, but is allowed (or sometimes necessary) in order to allow the compatibility with \hytech{} files.
+The text \npec{in green} is not taken into account by \imitator{}, but is allowed (or sometimes necessary) in order to allow the compatibility with \hytech{} files.
 
 
 %------------------------------------------------------------
