@@ -64,74 +64,60 @@ let cartography program pi0cube constraint_list nb_variables_projected cartograp
 
 	(* Keep only couple with diffrent values *)
 	couple_list := List.filter ( fun (a,b) -> a<>b) !couple_list;	
-	for k=0 to List.length !couple_list -1 do 
-		print_message Debug_high ("Indices of the projected variables : "^(string_of_int (fst (List.nth !couple_list k)))^" et "^(string_of_int (snd (List.nth !couple_list k)))^"\n");
-	done;
 
 	(* make a cartography for each element of the couple_list *)
-	for k=0 to List.length !couple_list -1 do
+	let k = ref 0 in
+	List.iter (fun (x_param, y_param) -> 	
+		let x_name = program.variable_names x_param in
+		let y_name = program.variable_names y_param in
 		(* Create a script that will print the cartography *)
-		let script_name = cartography_name^"_"^(string_of_int k)^".sh" in
+		let script_name = cartography_name^"_"^(string_of_int !k)^".sh" in
 		let script = open_out script_name in
 		(* Find the V0 zone *)
-		let file_v0_name = cartography_name^"_v0_"^(string_of_int k)^".txt" in
+		let file_v0_name = cartography_name^"_v0_"^(string_of_int !k)^".txt" in
 		let file_zone = open_out file_v0_name in
-		let str_zone = ((string_of_float (float_of_int (fst (pi0cube.(fst (List.nth !couple_list k))))))^" "^(string_of_float (float_of_int (snd (pi0cube.(snd (List.nth !couple_list k))))))^"\n"^	(string_of_float (float_of_int (snd (pi0cube.(fst (List.nth !couple_list k))))))^" "^(string_of_float (float_of_int (snd (pi0cube.(snd (List.nth !couple_list k))))))^"\n"^	(string_of_float (float_of_int (snd (pi0cube.(fst (List.nth !couple_list k))))))^" "^(string_of_float (float_of_int (fst (pi0cube.(snd (List.nth !couple_list k))))))^"\n"^	(string_of_float (float_of_int (fst (pi0cube.(fst (List.nth !couple_list k))))))^" "^(string_of_float (float_of_int (fst (pi0cube.(snd (List.nth !couple_list k))))))^"\n"^	(string_of_float (float_of_int (fst (pi0cube.(fst (List.nth !couple_list k))))))^" "^(string_of_float (float_of_int (snd (pi0cube.(snd (List.nth !couple_list k))))))) in
+		let str_zone = ((string_of_float (float_of_int (fst (pi0cube.(x_param)))))^" "^(string_of_float (float_of_int (snd (pi0cube.(y_param)))))^"\n"^	(string_of_float (float_of_int (snd (pi0cube.(x_param)))))^" "^(string_of_float (float_of_int (snd (pi0cube.(y_param)))))^"\n"^	(string_of_float (float_of_int (snd (pi0cube.(x_param)))))^" "^(string_of_float (float_of_int (fst (pi0cube.(y_param)))))^"\n"^	(string_of_float (float_of_int (fst (pi0cube.(x_param)))))^" "^(string_of_float (float_of_int (fst (pi0cube.(y_param)))))^"\n"^	(string_of_float (float_of_int (fst (pi0cube.(x_param)))))^" "^(string_of_float (float_of_int (snd (pi0cube.(y_param)))))) in
 		output_string file_zone str_zone;
 		close_out file_zone;
 		(* Beginning of the script *)
-		let script_line = ref ("graph -T ps -C ") in
+		let script_line = ref ("graph -T ps -C -X \"" ^ x_name ^ "\" -Y \"" ^ y_name ^ "\" ") in
 		(* find the minimum and maximum abscissa and ordinate for each constraint and store them in a list *)
-		let min_abs_list = ref [] in
-		let min_ord_list = ref [] in
-		let max_abs_list = ref [] in
-		let max_ord_list = ref [] in
-		for i=0 to List.length !new_constraint_list-1 do
-			let (points,ray) = shape_of_poly (fst (List.nth !couple_list k)) (snd (List.nth !couple_list k)) (from_ppl_polyhedron (List.nth !new_constraint_list i)) in
-			let min_abs = ref (fst (List.nth points 0)) in
-			let min_ord = ref (snd (List.nth points 0)) in
-			let max_abs = ref (fst (List.nth points 0)) in
-			let max_ord = ref (snd (List.nth points 0)) in
-			for j=0 to List.length points -1 do
-				if !min_abs > fst (List.nth points j) then min_abs := fst (List.nth points j);
-				if !min_ord > snd (List.nth points j) then min_ord := snd (List.nth points j);
-				if !max_abs < fst (List.nth points j) then max_abs := fst (List.nth points j);
-				if !max_ord < snd (List.nth points j) then max_ord := snd (List.nth points j);
-			done;
-			min_abs_list := !min_abs :: !min_abs_list;
-			min_ord_list := !min_ord :: !min_ord_list;
-			max_abs_list := !max_abs :: !max_abs_list;
-			max_ord_list := !max_ord :: !max_ord_list;
-		done;
-		(* find the minmum and maximum abscissa and ordinate of the lists *)
-		let min_abs = ref (List.nth !min_abs_list 0) in
-		for i=0 to List.length !min_abs_list -1 do
-			if !min_abs > List.nth !min_abs_list i then min_abs := List.nth !min_abs_list i;
-		done;
-		let min_ord = ref (List.nth !min_ord_list 0) in
-		for i=0 to List.length !min_ord_list -1 do
-			if !min_ord > List.nth !min_ord_list i then min_ord := List.nth !min_ord_list i;
-		done;
-		let max_abs = ref (List.nth !max_abs_list 0) in
-		for i=0 to List.length !max_abs_list -1 do
-			if !max_abs < List.nth !max_abs_list i then max_abs := List.nth !max_abs_list i;
-		done;
-		let max_ord = ref (List.nth !max_ord_list 0) in
-		for i=0 to List.length !max_ord_list -1 do
-			if !max_ord < List.nth !max_ord_list i then max_ord := List.nth !max_ord_list i;
-		done;
-		(* find the minimum and maximum abscissa and ordinate between the v0 zone and the previous minimum and maximum *)
-		min_abs := (min (min (float_of_int (fst (pi0cube.(fst (List.nth !couple_list k))))) (float_of_int (snd (pi0cube.(fst (List.nth !couple_list k)))))) !min_abs)-.1.;
-		min_ord := (min (min (float_of_int (fst (pi0cube.(snd (List.nth !couple_list k))))) (float_of_int (snd (pi0cube.(snd (List.nth !couple_list k)))))) !min_ord)-.1.;
-		max_abs := (max (max (float_of_int (fst (pi0cube.(fst (List.nth !couple_list k))))) (float_of_int (snd (pi0cube.(fst (List.nth !couple_list k)))))) !max_abs)+.1.;
-		max_ord := (max (max (float_of_int (fst (pi0cube.(snd (List.nth !couple_list k))))) (float_of_int (snd (pi0cube.(snd (List.nth !couple_list k)))))) !max_ord)+.1.;
+		
+		(* get corners of v0 *)
+		let init_min_abs, init_max_abs = pi0cube.(x_param) in
+		let init_min_ord, init_max_ord = pi0cube.(y_param) in
+		(* convert to float *)
+		let init_min_abs = float_of_int init_min_abs in
+		let init_max_abs = float_of_int init_max_abs in
+		let init_min_ord = float_of_int init_min_ord in
+		let init_max_ord = float_of_int init_max_ord in
+		
+		(* find mininma and maxima for axes *)
+		let min_abs, max_abs, min_ord, max_ord =
+		List.fold_left (fun limits constr -> 
+			let points, _ = shape_of_poly x_param y_param (from_ppl_polyhedron constr) in			
+			List.fold_left (fun limits (x,y) ->
+				let current_min_abs, current_max_abs, current_min_ord, current_max_ord = limits in
+				let new_min_abs = min current_min_abs x in
+				let new_max_abs = max current_max_abs x in
+				let new_min_ord = min current_min_ord y in
+				let new_max_ord = max current_max_ord y in
+				(new_min_abs, new_max_abs, new_min_ord, new_max_ord) 
+			) limits points  		 
+		) (init_min_abs, init_max_abs, init_min_ord, init_max_ord) !new_constraint_list in
+		(* add a margin of 1 unit *)
+		let min_abs = min_abs -. 1.0 in
+		let max_abs = max_abs +. 1.0 in
+		let min_ord = min_ord -. 1.0 in
+		let max_ord = max_ord +. 1.0 in
+		
 		(* print_message Debug_standard ((string_of_float !min_abs)^"  "^(string_of_float !min_ord)); *)
 		(* Create a new file for each constraint *)
 		for i=0 to List.length !new_constraint_list-1 do
-			let file_name = cartography_name^"_points_"^(string_of_int k)^"_"^(string_of_int i)^".txt" in
+			let file_name = cartography_name^"_points_"^(string_of_int !k)^"_"^(string_of_int i)^".txt" in
 			let file_out = open_out file_name in
 			(* find the points satisfying the constraint *)
-			let s=plot_2d (fst (List.nth !couple_list k)) (snd (List.nth !couple_list k)) (from_ppl_polyhedron (List.nth !new_constraint_list i)) !min_abs !min_ord !max_abs !max_ord in
+			let s=plot_2d (x_param) (y_param) (from_ppl_polyhedron (List.nth !new_constraint_list i)) min_abs min_ord max_abs max_ord in
 			(* print in the file the coordinates of the points *)
 			output_string file_out (snd s);
 			(* close the file and open it in a reading mode to read the first line *)
@@ -150,16 +136,17 @@ let cartography program pi0cube constraint_list nb_variables_projected cartograp
 		done;
 		
 		(* File in which the cartography will be printed *)
-		let final_name = cartography_name^"_"^(string_of_int k)^".ps" in
+		let final_name = cartography_name^"_"^(string_of_int !k)^".ps" in
 		(* last part of the script *)	
 		script_line := !script_line^" -C -m 2 -q -1 "^file_v0_name^" > "^final_name;
 		(* write the script into a file *)
 		output_string script !script_line;
 		(* Debug output *)
-		let param_x, param_y = List.nth !couple_list k in
-		print_message Debug_standard ("Plot cartography projected on parameters " ^ (program.variable_names param_x) ^ ", " ^ (program.variable_names param_y)
+		print_message Debug_standard (
+			"Plot cartography projected on parameters " ^ x_name ^ ", " ^ y_name
 			^ " to file '" ^ final_name ^ "'"); 
 		(* execute the script *)
 		let execution = Sys.command !script_line in 
-		print_message Debug_high ("Result of the cartography execution: exit code "^(string_of_int execution))
-	done;
+		print_message Debug_high ("Result of the cartography execution: exit code "^(string_of_int execution));
+		k := !k + 1
+	) !couple_list

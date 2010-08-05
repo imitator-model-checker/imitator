@@ -776,6 +776,14 @@ let shape_of_poly x y linear_constraint =
 	(points, ray)
 
 
+type direction =
+	| Nowhere
+	| North
+	| South
+	| East
+	| West
+
+
 (* convert a linear constraint to a set of 2d points wrt. the variables x,y *)
 let generate_point x y linear_constraint min_abs min_ord max_abs max_ord =
 	let (points,ray) = shape_of_poly x y linear_constraint in
@@ -794,7 +802,7 @@ let generate_point x y linear_constraint min_abs min_ord max_abs max_ord =
 	(* add a point if there is two ray that cross two differents borders *)
 	if List.length ray <> 0 then (
 		(* create a point that will say which point is to be added *)
-		let add_point = ref ("","") in
+		let add_point = ref (Nowhere,Nowhere) in
 		(* create a straight line for each side of the v0 space *)
 		let high_border = make_straight_line_points (Dot (min_abs,max_ord)) (Dot (max_abs,max_ord)) in
 		let right_border = make_straight_line_points (Dot (max_abs,min_ord)) (Dot (max_abs,max_ord)) in
@@ -806,7 +814,7 @@ let generate_point x y linear_constraint min_abs min_ord max_abs max_ord =
 		let l2 = ref [] in
 		let l3 = ref [] in
 		let l4 = ref [] in
-		while !i <= (List.length ray -1) & (!add_point = ("","")) do 
+		while !i <= (List.length ray -1) & (!add_point = (Nowhere,Nowhere)) do 
 			let j = ref 0 in
 			while !j <= (List.length points -1) do
 				(* make the straight line to test from a point and a vector *)
@@ -824,34 +832,26 @@ let generate_point x y linear_constraint min_abs min_ord max_abs max_ord =
 				j:=!j+1
 			done;
 			(* if two intersection points are on two consecutives border then mark it in add_point *)
-			if List.length !l1 <> 0 & List.length !l2 <> 0 then add_point:=("high_border","rigth_border")
-			else if List.length !l2 <> 0 & List.length !l3 <> 0 then add_point:=("right_border","low_border")
-			else if List.length !l3 <> 0 & List.length !l4 <> 0 then add_point:=("low_border","left_border")
-			else if List.length !l4 <> 0 & List.length !l4 <> 0 then add_point:=("left_border","high_border")
+			if List.length !l1 <> 0 & List.length !l2 <> 0 then add_point:=(North,East)
+			else if List.length !l2 <> 0 & List.length !l3 <> 0 then add_point:=(East,South)
+			else if List.length !l3 <> 0 & List.length !l4 <> 0 then add_point:=(South,West)
+			else if List.length !l4 <> 0 & List.length !l4 <> 0 then add_point:=(West,North)
 			(* if two intersection points are on two opposite border then mark it in add_point *)
-			else if List.length !l1 <> 0 & List.length !l3 <> 0 then add_point:=("high_border","low_border")
-			else if List.length !l2 <> 0 & List.length !l4 <> 0 then add_point:=("rigth_border","left_border")
-			else if List.length !l3 <> 0 & List.length !l1 <> 0 then add_point:=("low_border","high_border")
-			else if List.length !l4 <> 0 & List.length !l2 <> 0 then add_point:=("left_border","rigth_border")
-			(*else if List.length !l1 <> 0 & List.length !l4 <> 0 then add_point:=("high_border","left_border")
-			else if List.length !l2 <> 0 & List.length !l1 <> 0 then add_point:=("rigth_border","high_border")
-			else if List.length !l3 <> 0 & List.length !l2 <> 0 then add_point:=("low_border","rigth_border")
-			else if List.length !l4 <> 0 & List.length !l3 <> 0 then add_point:=("left_border","low_border")*);
+			else if List.length !l1 <> 0 & List.length !l3 <> 0 then add_point:=(North,South)
+			else if List.length !l2 <> 0 & List.length !l4 <> 0 then add_point:=(East,West)
+			else if List.length !l3 <> 0 & List.length !l1 <> 0 then add_point:=(South,North)
+			else if List.length !l4 <> 0 & List.length !l2 <> 0 then add_point:=(West,East);
 			i:=!i+1
 		done;
 		(* add the intersection points between the border specified by add_point to point_list *)
-		if !add_point = ("high_border","rigth_border") then point_list:=(max_abs,max_ord)::!point_list
-		else if !add_point = ("rigth_border","low_border") then point_list:=(max_abs,min_ord)::!point_list
-		else if !add_point = ("low_border","left_border") then point_list:=(min_abs,min_ord)::!point_list
-		else if !add_point = ("left_border","high_border") then point_list:=(min_abs,max_ord)::!point_list
-		else if !add_point = ("high_border","low_border") then point_list:=(max_abs,max_ord)::(max_abs,min_ord)::!point_list
-		else if !add_point = ("rigth_border","left_border") then point_list:=(max_abs,min_ord)::(min_abs,min_ord)::!point_list
-		else if !add_point = ("low_border","high_border") then point_list:=(min_abs,min_ord)::(min_abs,max_ord)::!point_list
-		else if !add_point = ("left_border","rigth_border") then point_list:=(min_abs,max_ord)::(max_abs,max_ord)::!point_list
-		(*else if !add_point = ("high_border","left_border") then point_list:=(max_abs,max_ord)::(max_abs,min_ord)::(min_abs,min_ord)::!point_list
-		else if !add_point = ("rigth_border","high_border") then point_list:=(max_abs,min_ord)::(min_abs,min_ord)::(min_abs,max_ord)::!point_list
-		else if !add_point = ("low_border","rigth_border") then point_list:=(min_abs,min_ord)::(min_abs,max_ord)::(max_abs,max_ord)::!point_list
-		else if !add_point = ("left_border","low_border") then point_list:=(min_abs,max_ord)::(max_abs,max_ord)::(max_abs,min_ord)::!point_list*);
+		if !add_point = (North,East) then point_list:=(max_abs,max_ord)::!point_list
+		else if !add_point = (East,South) then point_list:=(max_abs,min_ord)::!point_list
+		else if !add_point = (South,West) then point_list:=(min_abs,min_ord)::!point_list
+		else if !add_point = (West,North) then point_list:=(min_abs,max_ord)::!point_list
+		else if !add_point = (North,South) then point_list:=(max_abs,max_ord)::(max_abs,min_ord)::!point_list
+		else if !add_point = (East,West) then point_list:=(max_abs,min_ord)::(min_abs,min_ord)::!point_list
+		else if !add_point = (South,North) then point_list:=(min_abs,min_ord)::(min_abs,max_ord)::!point_list
+		else if !add_point = (West,East) then point_list:=(min_abs,max_ord)::(max_abs,max_ord)::!point_list;
 	);
 	(* swap coordinates if necessary *)
 	let point_list = if x < y then !point_list else (
