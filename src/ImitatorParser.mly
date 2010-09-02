@@ -254,29 +254,49 @@ syn_label:
 ***********************************************/
 
 convex_predicate:
-	linear_constraint AMPERSAND convex_predicate { $1 :: $3 }
-	| linear_constraint { [$1] }
+	linear_constraint AMPERSAND convex_predicate { List.append $1 $3 }
+	| linear_constraint { $1 }
 ;
 
 ext_convex_predicate:
-	ext_linear_constraint AMPERSAND ext_convex_predicate { $1 :: $3 }
-	| ext_linear_constraint { [$1] }
+	ext_linear_constraint AMPERSAND ext_convex_predicate { List.append $1 $3 }
+	| ext_linear_constraint { $1 }
 ;
 
 upd_convex_predicate:
-	ext_linear_constraint COMMA upd_convex_predicate { $1 :: $3 }
-	| ext_linear_constraint { [$1] }
+	ext_linear_constraint COMMA upd_convex_predicate { List.append $1 $3 }
+	| ext_linear_constraint { $1 }
 ;
 
 
 linear_constraint:
-	linear_expression relop linear_expression { Linear_constraint ($1, $2, $3) }
-	| CT_TRUE { True_constraint }
-	| CT_FALSE { False_constraint }
+	linear_expression relop linear_expression { [ Linear_constraint ($1, $2, $3) ] }
+	| interval_expression { $1 }
+	| CT_TRUE  { [ True_constraint  ] }
+	| CT_FALSE { [ False_constraint ]}
 ;
 
 ext_linear_constraint:
-	ext_linear_expression relop ext_linear_expression { Linear_constraint ($1, $2, $3) }
+	ext_linear_expression relop ext_linear_expression { [ Linear_constraint ($1, $2, $3) ] }
+	| ext_interval_expression { $1 }
+;
+
+interval_expression:
+	linear_expression CT_IN LSQBRA rational COMMA rational RSQBRA {
+		[
+			Linear_constraint ($1, OP_GEQ, Linear_term(Constant $4));
+			Linear_constraint ($1, OP_LEQ, Linear_term(Constant $6))
+		]			
+	}
+;
+
+ext_interval_expression:
+	ext_linear_expression CT_IN LSQBRA rational COMMA rational RSQBRA {
+		[
+			Linear_constraint ($1, OP_GEQ, Linear_term(Constant $4));
+			Linear_constraint ($1, OP_LEQ, Linear_term(Constant $6))
+		]	
+	}
 ;
 
 relop:
@@ -358,13 +378,13 @@ init_definition:
 ;
 
 region_expression:
-	| state_predicate { [$1] }
+	| state_predicate { $1 }
 	| LPAREN region_expression RPAREN { $2 }
 	| region_expression AMPERSAND region_expression { $1 @ $3 }
 ;
 
 state_predicate:
-	| CT_LOC LSQBRA NAME RSQBRA OP_EQ NAME { Loc_assignment ($3, $6) }
-	| linear_constraint { Linear_predicate $1 }
+	| CT_LOC LSQBRA NAME RSQBRA OP_EQ NAME { [ Loc_assignment ($3, $6) ] }
+	| linear_constraint { List.map (fun x -> Linear_predicate x) $1 }
 ;
 

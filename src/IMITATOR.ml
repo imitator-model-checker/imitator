@@ -21,6 +21,9 @@ open Graph
 
 open Ppl_ocaml
 
+exception NotFound
+exception Found of int
+
 (**************************************************
 
 A FAIRE
@@ -73,6 +76,9 @@ let option_fancy = ref false
 
 (* 2d plot output of reachable states *)
 let option_plot = ref false
+
+let plot_vars_x = ref []
+let plot_vars_y = ref []
 
 (* Program prefix for log files *)
 let program_prefix = ref ""
@@ -1334,6 +1340,13 @@ and set_mode mode =
 		abort_program ();
 		exit(0);
 	);
+	
+and add_plot_x var_x =
+	plot_vars_x := var_x :: !plot_vars_x
+	
+and add_plot_y var_y =
+	plot_vars_y := var_y :: !plot_vars_y
+
 
 (* Options *)
 and speclist = [
@@ -1354,8 +1367,8 @@ and speclist = [
 	("-no-log", Set no_log, " No generation of log files. Default: false.");
 	
 	("-fancy", Set option_fancy, " Generate detailed state information for dot output. Default: false.");
-	
-	("-plot", Set option_plot, " Generate 2D plot of rechable states projected on the first two variables. Default: false.");
+
+	("-plot", Tuple [String add_plot_x; String add_plot_y], " Generate 2D plot of rechable states projected on the two given variables. Default: false.");
 
 	("-no-random", Set no_random, " No random selection of the pi0-incompatible inequality (select the first found). Default: false.");
 	
@@ -1408,7 +1421,6 @@ if !nb_args = 1 && (!imitator_mode != Reachability_analysis) then(
 );
 
 
-
 (**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 (* Debug mode *) 
 (**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -1449,6 +1461,8 @@ if !program_prefix = "" then
 (* Recall the arguments *)
 (**************************************************)
 
+(* combine plot lists *)
+let plotvar_list = List.combine !plot_vars_x !plot_vars_y in
 
 if !inclusion then
 	print_message Debug_medium ("Considering inclusion mode.");
@@ -1468,8 +1482,11 @@ if !no_dot then
 if !no_log then
 	print_message Debug_medium ("No log mode.");
 
-if !option_plot then
-	print_message Debug_medium ("Plot mode on.");
+if plotvar_list <> [] then
+	List.iter (fun (x, y) ->
+		print_message Debug_standard ("Plot variables " ^ x ^ ", " ^ y); 
+	) plotvar_list;
+	
 
 (* Print the mode *)
 let message = match !imitator_mode with
@@ -1602,6 +1619,7 @@ if not (LinearConstraint.is_satisfiable initial_constraint_after_time_elapsing) 
 print_message Debug_medium ("\nInitial state after time-elapsing:\n" ^ (ImitatorPrinter.string_of_state program init_state_after_time_elapsing) ^ "\n");
 
 
+
 (**************************************************)
 (* Execute IMITATOR II *)
 (**************************************************)
@@ -1609,19 +1627,39 @@ print_message Debug_medium ("\nInitial state after time-elapsing:\n" ^ (Imitator
 let _ =
 match !imitator_mode with
 	(* Perform reachability analysis or inverse Method *)
-	| Reachability_analysis | Inverse_method ->
+	| Reachability_analysis | Inverse_method -> 
 		let reachability_graph, k0, _, _ =
 			post_star program pi0 init_state_after_time_elapsing
 		in
 		
-		(* Plot all reachable states projected on the first two variables *)
-		if !option_plot then (
-			print_message Debug_high "Plotting reachable states";
-			let plot_file_name = (!program_prefix ^ ".plot") in
-			let plot = Graph.plot_graph reachability_graph in
-			write_to_file plot_file_name plot;
-		);
+		(* Plot all reachable states projected on the selected variables *)
+		let index_of x =
+			try (
+				for i = 0 to program.nb_variables do 
+				  if (program.variable_names i) = x then raise (Found i)
+				done;
+				raise NotFound				
+			) with
+				| Found i -> i in 
 		
+		let plot_pairs = List.fold_left (fun ps (x,y) -> 
+			try (
+				let xi = index_of x in
+				let yi = index_of y in
+				(xi, yi) :: ps
+			)	with NotFound -> ps
+		) [] plotvar_list in
+		
+		List.iter (fun (x,y) -> 
+			let x_name = program.variable_names x in
+			let y_name = program.variable_names y in
+			print_message Debug_standard (
+				"Plotting reachable states projected on variables " ^ x_name ^ ", " ^ y_name);
+			let plot_file_name = (!program_prefix ^ ".plot_" ^ x_name ^ "_" ^ y_name) in
+			let plot = Graph.plot_graph x y reachability_graph in
+			write_to_file plot_file_name plot;
+		) plot_pairs;
+
 		(* Generate the DOT graph *)
 		print_message Debug_high "Generating the dot graph";
 		let dot_file_name = (!program_prefix ^ ".dot") in
@@ -1636,7 +1674,8 @@ match !imitator_mode with
 	| Cover_cartography ->
 	(* Behavioral cartography algorithm with full coverage *)
 		cover_behavioral_cartography program pi0cube init_state_after_time_elapsing;
-in ();
+
+in ();		
 
 (**************************************************)
 (* Bye bye! *)

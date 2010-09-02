@@ -587,11 +587,23 @@ let compare_points (cx, cy) (ax, ay) (bx, by) =
 	if area > 0.0 then 1 else
 		if area = 0.0 then 0 else	-1
 
+
+(* Project on list of variables *)
+let project_to variables linear_constraint =
+	(* Find variables to remove *)
+	let to_remove = ref [] in
+	for i = 0 to !total_dim - 1 do
+		if not (List.mem i variables) then
+			to_remove := i :: !to_remove
+	done;	
+	ppl_Polyhedron_remove_space_dimensions linear_constraint !to_remove
+
+
 (* converts a linear_constraint to a set of 2d points wrt. the first two variables *)
-let shape_of_poly linear_constraint =
+let shape_of_poly x y linear_constraint =
 	let poly = ppl_new_NNC_Polyhedron_from_NNC_Polyhedron linear_constraint in
-	(* project to first two variables *)
-	ppl_Polyhedron_remove_higher_space_dimensions poly 2;
+	(* project to variables x,y *)
+	project_to [x; y] poly;
 	let generators = ppl_Polyhedron_get_generators poly in
 	(* collect points for the generators *)
 	let points = List.fold_left (fun ps gen ->
@@ -600,49 +612,34 @@ let shape_of_poly linear_constraint =
 			| None -> ps
 			| Some point -> point :: ps
 	) [] generators in
+	(* swap coordinates if necessary *)
+	let points = if x < y then points else (
+		List.map (fun (x,y) -> (y,x)) points
+	) in
 	(* if points are present, sort them counter-clockwise *)
-	match points with
+	let points = match points with
 		| p :: ps -> 
 			let compare = compare_points p in
 			List.sort compare points
-		| _ -> points
-	
-(*let plot_generator dimensions generator =                         *)
-(*	match generator with                                            *)
-(*		| Point (expr, c) ->                                          *)
-(*			let coordinates = List.map (fun d ->                        *)
-(*				evaluate_linear_term_ppl (unit_vector d) expr             *)
-(*			) dimensions in                                             *)
-(*			let q = NumConst.numconst_of_mpz c in                       *)
-(*			List.fold_left (fun str x ->                                *)
-(*				let coord = NumConst.div x q in                           *)
-(*				let f = Gmp.Q.to_float (NumConst.mpq_of_numconst coord) in*)
-(*				str ^ " " ^ (string_of_float f)                           *)
-(*			) "" coordinates                                            *)
-(*		| _ -> "" 			                                              *)
-	
-(*let plot_poly dimensions linear_constraint =                                *)
-(*	let poly = ppl_new_NNC_Polyhedron_from_NNC_Polyhedron linear_constraint in*)
-(*	let remove = ref [] in                                                    *)
-(*	for i = 0 to !total_dim - 1 do                                            *)
-(*		if not (List.mem i dimensions) then                                     *)
-(*			remove := i :: !remove		                                            *)
-(*	done;                                                                     *)
-(*	ppl_Polyhedron_remove_space_dimensions poly !remove;                      *)
-(*	let generators = ppl_Polyhedron_get_generators poly in                    *)
-(*	let array_of_generators = Array.of_list generators in                     *)
-(*	let str = 		                                                            *)
-(*		(string_of_array_of_string_with_sep                                     *)
-(*			"\n"                                                                  *)
-(*			(Array.map (plot_generator dimensions) array_of_generators)           *)
-(*		) in                                                                    *)
-(*  str                                                                       *)
+		| _ -> points in
+	(* eat up consecutive identical points *)
+  let head = List.hd points in
+	let tail = List.tl points in
+	let last = ref head in 
+	let points = head :: List.filter (fun p -> 
+		let unique = not (!last = p) in
+		last := p; unique
+	) tail in
+	(* close polygon *)
+	let points = List.append points [List.hd points] in
+	(* return points *)
+	points
 
 (* returns a string with 2d points of the given constraint *)
-let plot_2d linear_constraint =
-	let shape = shape_of_poly linear_constraint in
-	List.fold_left (fun s (x, y) -> 
-		s ^ (string_of_float x) ^ " " ^ (string_of_float y) ^ "\n"
+let plot_2d x y linear_constraint =
+	let shape = shape_of_poly x y linear_constraint in
+	List.fold_left (fun s (px, py) -> 
+		s ^ (string_of_float px) ^ " " ^ (string_of_float py) ^ "\n"
 	) "" shape	
 	
 (** String for the false constraint *)
@@ -732,6 +729,8 @@ let hide variables linear_constraint =
 	ppl_Polyhedron_unconstrain_space_dimensions poly variables;
 	assert_dimensions poly;
 	poly
+	
+	
 	
 
 (** rename variables in a constraint *)

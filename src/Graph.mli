@@ -11,6 +11,8 @@
 
 
 open AbstractImitatorFile
+open LinearConstraint
+
 (* open DynArray *)
 
 (****************************************************************)
@@ -85,7 +87,7 @@ val add_transition : reachability_graph -> (state_index * action_index * state_i
 (** Add an inequality to all the states of the graph *)
 val add_inequality_to_states : reachability_graph -> LinearConstraint.linear_inequality -> unit
 
-val plot_graph : reachability_graph -> string
+val plot_graph : variable -> variable -> reachability_graph -> string
 
 (****************************************************************)
 (** Interaction with dot *)
