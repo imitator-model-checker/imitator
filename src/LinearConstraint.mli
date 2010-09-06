@@ -83,6 +83,8 @@ type linear_inequality
 (** Create a linear inequality using linear term and an operator *)
 val make_linear_inequality : linear_term -> op -> linear_inequality
 
+(** Create a linear inequality from two terms and a ppl operator *)
+val make_linear_inequality_ppl : linear_term -> Ppl_ocaml.relation_symbol -> linear_term -> linear_inequality
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
 (** {3 Functions} *)

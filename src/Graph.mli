@@ -13,8 +13,6 @@
 open AbstractImitatorFile
 open LinearConstraint
 
-(* open DynArray *)
-
 (****************************************************************)
 (** Graph structure *)
 (****************************************************************)

@@ -75,8 +75,6 @@ let no_dot = ref false
 let option_fancy = ref false
 
 (* 2d plot output of reachable states *)
-let option_plot = ref false
-
 let plot_vars_x = ref []
 let plot_vars_y = ref []
 
@@ -192,29 +190,27 @@ let random_pi0 program pi0 =
 (**************************************************)
 (* Create a gif graph using dot *)
 let generate_graph program pi0 reachability_graph dot_file_name states_file_name gif_file_name =
-	(* Create the input file *)
-	print_message Debug_total ("Creating input file for dot...");
-	let dot_program, states = Graph.dot_of_graph program pi0 reachability_graph ~fancy:!option_fancy in
-	(* Write dot file *)
-	if not !no_dot then (
+	if not !no_log then (
+		(* Create the input file *)
+		print_message Debug_total ("Creating input file for dot...");
+		let dot_program, states = Graph.dot_of_graph program pi0 reachability_graph ~fancy:!option_fancy in
+		(* Write dot file *)
 		print_message Debug_total ("Writing to dot file...");
 		write_to_file dot_file_name dot_program;
-
-	(* Generate gif file using dot *)
+	
+		(* Generate gif file using dot *)
 		print_message Debug_total ("Calling dot...");
 		let command_result = Sys.command (dot_command ^ " -T" ^ dot_extension ^ " " ^ dot_file_name ^ " -o " ^ gif_file_name ^ "") in
 		print_message Debug_total ("Result of the 'dot' command: " ^ (string_of_int command_result));
 		(* Removing dot file *)
 		print_message Debug_total ("Removing dot file...");
 		Sys.remove dot_file_name;
-	);
-	(* Write states file *)
-	if not !no_log then (
+	
+		(* Write states file *)
 		print_message Debug_total ("Writing to file for file description...");
 		write_to_file states_file_name states;
-	);
-	()
-
+		()
+  )
 
 
 (**************************************************)
@@ -1303,6 +1299,10 @@ let timed_mode = ref false in
 let acyclic = ref false in
 (* Mode with parametric constraints (clock elimination) in the log file *)
 let with_parametric_log = ref false in
+(* limit plot area of variable *)
+let limit_var = ref "" in
+let limit_lower = ref "" in
+let plot_limits = Hashtbl.create 0 in
 
 (* Usage message *)
 let usage_msg = "Usage: IMITATOR program_file [pi0_file] [options]" in
@@ -1347,6 +1347,8 @@ and add_plot_x var_x =
 and add_plot_y var_y =
 	plot_vars_y := var_y :: !plot_vars_y
 
+and add_plot_limit upper =
+	Hashtbl.add plot_limits !limit_var (!limit_lower, upper)
 
 (* Options *)
 and speclist = [
@@ -1369,6 +1371,8 @@ and speclist = [
 	("-fancy", Set option_fancy, " Generate detailed state information for dot output. Default: false.");
 
 	("-plot", Tuple [String add_plot_x; String add_plot_y], " Generate 2D plot of rechable states projected on the two given variables. Default: false.");
+	
+	("-limits", Tuple [Set_string limit_var; Set_string limit_lower; String add_plot_limit], " Set limits of the displayed plot area for a variable. Default: automatic");
 
 	("-no-random", Set no_random, " No random selection of the pi0-incompatible inequality (select the first found). Default: false.");
 	
@@ -1650,6 +1654,7 @@ match !imitator_mode with
 			)	with NotFound -> ps
 		) [] plotvar_list in
 		
+		let i = ref 0 in
 		List.iter (fun (x,y) -> 
 			let x_name = program.variable_names x in
 			let y_name = program.variable_names y in
@@ -1658,6 +1663,24 @@ match !imitator_mode with
 			let plot_file_name = (!program_prefix ^ ".plot_" ^ x_name ^ "_" ^ y_name) in
 			let plot = Graph.plot_graph x y reachability_graph in
 			write_to_file plot_file_name plot;
+			let img_file_name = plot_file_name ^ ".png" in
+			let cmd = "graph -Tpng --bitmap-size 1600x1600 -B -C -q0.2"
+				^ " -m " ^ (string_of_int (!i + 1)) 
+				^ " -X \"" ^ x_name ^ "\""
+			  ^ " -Y \"" ^ y_name ^ "\" " 
+				^ (try (
+						let min, max = Hashtbl.find plot_limits x_name in
+						" -x " ^ min ^ " " ^ max
+						) with Not_found -> "")
+				^ (try (
+						let min, max = Hashtbl.find plot_limits y_name in
+						" -y " ^ min ^ " " ^ max
+						) with Not_found -> "")
+				^ " " ^ plot_file_name 
+				^ " > " ^ img_file_name in				
+			let result = Sys.command cmd in
+			print_message Debug_medium ("return value of system call: " ^ (string_of_int result));
+			i := (!i + 1) mod 5 
 		) plot_pairs;
 
 		(* Generate the DOT graph *)

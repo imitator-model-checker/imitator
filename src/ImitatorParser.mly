@@ -11,6 +11,7 @@
 %{
 open ParsingStructure;;
 open Global;;
+open NumConst;;
 		  
 (* global reference to collect all local variables in all automata *)
 (* as triples (type, varname, scope).                              *)
@@ -24,7 +25,8 @@ let parse_error s =
  
 %}
 
-%token <int> INT
+%token <NumConst.t> INT
+%token <string> FLOAT
 %token <string> NAME
 %token <string> STRING
 
@@ -339,6 +341,7 @@ ext_linear_term:
 
 rational:
 	integer { $1 }
+	| float { $1 }
 	| integer OP_DIV pos_integer { (NumConst.div $1 $3) }
 ;
 
@@ -348,9 +351,47 @@ integer:
 ;
 
 pos_integer:
-	INT { NumConst.numconst_of_int $1 }
+	INT { $1 }
 ;
 
+float:
+  pos_float { $1 }
+	| OP_MINUS pos_float { NumConst.neg $2 }  
+;
+
+pos_float:
+  FLOAT { 
+		let fstr = $1 in
+		let point = String.index fstr '.' in
+		(* get integer part *)
+		let f = if point = 0 then ref NumConst.zero else (
+			let istr = String.sub fstr 0 point in
+		  ref (NumConst.numconst_of_int (int_of_string istr))
+		) in		
+		(* add decimal fraction part *)
+		let numconst_of_char = function
+			| '0' -> NumConst.zero
+			| '1' -> NumConst.one
+			| '2' -> NumConst.numconst_of_int 2
+			| '3' -> NumConst.numconst_of_int 3
+			| '4' -> NumConst.numconst_of_int 4
+			| '5' -> NumConst.numconst_of_int 5
+			| '6' -> NumConst.numconst_of_int 6
+			| '7' -> NumConst.numconst_of_int 7
+			| '8' -> NumConst.numconst_of_int 8
+			| '9' -> NumConst.numconst_of_int 9
+			| _ ->  raise (ParsingError (0,0)) in
+		let ten = NumConst.numconst_of_int 10 in
+		let dec = ref (NumConst.numconst_of_frac 1 10) in
+		for i = point+1 to (String.length fstr) - 1 do
+			let c = fstr.[i] in
+			let d = numconst_of_char c in
+			f := NumConst.add !f (NumConst.mul !dec d);
+			dec := NumConst.div !dec ten 
+		done;		
+		!f
+	} 
+;
 
 /***********************************************
   ANALYSIS COMMANDS

@@ -325,6 +325,19 @@ let invert_rs = function
 	| Greater_Than_RS -> Less_Than_RS
 	| Greater_Or_Equal_RS -> Less_Or_Equal_RS 
 
+let make_linear_inequality_ppl lterm op rterm =
+	let ppl_lterm, cl = normalize_linear_term lterm in
+	let ppl_rterm, cr = normalize_linear_term rterm in
+	let pl = NumConst.get_num cl in
+	let ql = NumConst.get_den cl in
+	let pr = NumConst.get_num cr in
+	let qr = NumConst.get_den cr in
+	let sl = pl *! qr in
+	let sr = pr *! ql in
+	let new_lterm = Times (sl, ppl_lterm) in
+	let new_rterm = Times (sr, ppl_rterm) in
+	build_linear_inequality new_lterm new_rterm op
+
 (** evaluate a linear inequality for a given valuation *)
 let evaluate_linear_inequality valuation_function linear_inequality =
 	let lterm, rterm, op = split_linear_inequality linear_inequality in
@@ -523,7 +536,7 @@ let is_satisfiable = fun c -> not (is_false c)
 let is_equal = ppl_Polyhedron_equals_Polyhedron
 
 (** Check if a constraint is included in another one *)
-let is_leq = ppl_Polyhedron_contains_Polyhedron
+let is_leq x y  = ppl_Polyhedron_contains_Polyhedron y x
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
 (** {3 Pi0-compatibility} *)
@@ -568,9 +581,12 @@ let from_ppl_constraints constraints =
 let unit_vector i =
  	fun j -> if i = j then NumConst.one else NumConst.zero
 
-(* converts a generator to a 2d point wrt. the first two variables *)
-let point_of_generator = function
-	| Point (expr, c) -> 
+let simple_varnames i = "x" ^ (string_of_int i)
+
+(* converts a generator to a 2d point wrt. the two given variables *)
+let point_of_generator x y = function
+	| Closure_Point (expr, c) 
+	| Point (expr, c) ->  
 			let x, y = 
 				(evaluate_linear_term_ppl (unit_vector 0) expr,
 				 evaluate_linear_term_ppl (unit_vector 1) expr) in
@@ -578,16 +594,28 @@ let point_of_generator = function
 			let xf = Gmp.Q.to_float (NumConst.mpq_of_numconst (NumConst.div x q)) in
 			let yf = Gmp.Q.to_float (NumConst.mpq_of_numconst (NumConst.div y q)) in
 			Some (xf, yf)
-	| _ -> None
+	| _ -> 
+			print_message Debug_standard "No point";
+			None
 
 (* comparison function for 2d points; used for sorting points *)
 (* counter-clockwise wrt. a given center point (cx, cy) *)
 let compare_points (cx, cy) (ax, ay) (bx, by) =
 	let area = (ax -. cx) *. (by -. cy) -. (ay -. cy) *. (bx -. cx) in
-	if area > 0.0 then 1 else
-		if area = 0.0 then 0 else	-1
+	if area > 0.0 then 1 else	if area = 0.0 then 0 else	-1
 
-
+let center_point points =
+	match points with
+		| p :: ps -> 
+				let sumx, sumy =
+					List.fold_left (fun (sx, sy) (x, y) -> 
+						(sx +. x, sy +. y)
+					) (0.0, 0.0) points in
+				let len = float_of_int (List.length points) in
+				(sumx /. len, sumy /. len)
+		| _ -> (0.0, 0.0)
+					
+					
 (* Project on list of variables *)
 let project_to variables linear_constraint =
 	(* Find variables to remove *)
@@ -595,19 +623,34 @@ let project_to variables linear_constraint =
 	for i = 0 to !total_dim - 1 do
 		if not (List.mem i variables) then
 			to_remove := i :: !to_remove
-	done;	
+	done;		
 	ppl_Polyhedron_remove_space_dimensions linear_constraint !to_remove
 
 
+(* make constraint non-strict *)
+let non_strictify linear_constraint =
+	let constraint_list = ppl_Polyhedron_get_constraints linear_constraint in 
+	let new_constraints = List.map (fun ineq -> 
+		let lterm, rterm, op = split_linear_inequality ineq in
+		let newop = match op with
+			| Less_Than_RS -> Less_Or_Equal_RS
+			| Greater_Than_RS -> Greater_Or_Equal_RS
+			| _ -> op in
+		build_linear_inequality lterm rterm newop
+	) constraint_list in
+	make new_constraints
+	
+
 (* converts a linear_constraint to a set of 2d points wrt. the first two variables *)
 let shape_of_poly x y linear_constraint =
-	let poly = ppl_new_NNC_Polyhedron_from_NNC_Polyhedron linear_constraint in
+	(* copy constraint and replace strict operators by non-strict ones *)
+	let poly = ppl_new_NNC_Polyhedron_from_NNC_Polyhedron (non_strictify linear_constraint) in
 	(* project to variables x,y *)
 	project_to [x; y] poly;
 	let generators = ppl_Polyhedron_get_generators poly in
 	(* collect points for the generators *)
 	let points = List.fold_left (fun ps gen ->
-		let p = point_of_generator gen in 
+		let p = point_of_generator x y gen in 
 		match p with
 			| None -> ps
 			| Some point -> point :: ps
@@ -616,17 +659,14 @@ let shape_of_poly x y linear_constraint =
 	let points = if x < y then points else (
 		List.map (fun (x,y) -> (y,x)) points
 	) in
-	(* if points are present, sort them counter-clockwise *)
-	let points = match points with
-		| p :: ps -> 
-			let compare = compare_points p in
-			List.sort compare points
-		| _ -> points in
+	(* sort them counter-clockwise *)
+	let compare = compare_points (center_point points) in
+	let points = List.sort compare points in
 	(* eat up consecutive identical points *)
   let head = List.hd points in
 	let tail = List.tl points in
-	let last = ref head in 
-	let points = head :: List.filter (fun p -> 
+	let last = ref head in
+	let points = head :: List.filter (fun p ->
 		let unique = not (!last = p) in
 		last := p; unique
 	) tail in

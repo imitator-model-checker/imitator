@@ -164,7 +164,7 @@ let add_state program graph new_state =
 			);
 			List.iter (fun index -> 
 				let state = get_state graph index in
-				if check_states state new_state then raise (Found index)
+				if check_states new_state state then raise (Found index)
 			) old_states;
 			(* Not found -> insert state *)
 			let new_state_index = insert_state graph hash new_state in
