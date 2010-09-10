@@ -168,18 +168,16 @@ let random_pi0 program pi0 =
 	(* Create the pi0 *)
 	let random_pi0 = Array.make program.nb_parameters NumConst.zero in
 	(* Fill it *)
+	Random.self_init();
 	for i = 0 to program.nb_parameters - 1 do
 		let a, b = pi0.(i) in
 		(* Generate a random value in the interval *)
-		Random.self_init();
-		let random_value = Random.int (b - a + 1) + a in
+		let random_value = NumConst.random a b in
 		(* Debug *)
-		print_message Debug_medium ("Generating randomly value '" ^ (string_of_int random_value) ^ "' for parameter '" ^ (program.variable_names i) ^ "'.");
+		print_message Debug_medium ("Generating randomly value '" ^ (NumConst.string_of_numconst random_value) ^ "' for parameter '" ^ (program.variable_names i) ^ "'.");
 		(* Convert to a num *)
-		random_pi0.(i) <- NumConst.numconst_of_int random_value;
+		random_pi0.(i) <- random_value;
 	done;
-(*	(* Return the result as a function *)
-	fun parameter -> random_pi0.(parameter)*)
 	(* Return the result as an array *)
 	random_pi0
 
@@ -190,7 +188,7 @@ let random_pi0 program pi0 =
 (**************************************************)
 (* Create a gif graph using dot *)
 let generate_graph program pi0 reachability_graph dot_file_name states_file_name gif_file_name =
-	if not !no_log then (
+	if not !no_dot then (
 		(* Create the input file *)
 		print_message Debug_total ("Creating input file for dot...");
 		let dot_program, states = Graph.dot_of_graph program pi0 reachability_graph ~fancy:!option_fancy in
@@ -998,9 +996,8 @@ let cover_behavioral_cartography program pi0cube init_state =
 	let more_pi0 = ref true in
 	let limit_reached = ref false in
 	while !more_pi0 && not !limit_reached do
-		(* Convert the int array into a well-typed pi0 *)
-		let pi0_array = Array.map NumConst.numconst_of_int current_pi0 in
-		let pi0 = fun parameter -> pi0_array.(parameter) in
+		(* functional version of current pi0 *)
+		let pi0 = fun parameter -> current_pi0.(parameter) in
 		
 		(* Check that it does not belong to any constraint *)
 		if dynArray_exists (LinearConstraint.is_pi0_compatible pi0) results then (
@@ -1068,7 +1065,7 @@ let cover_behavioral_cartography program pi0cube init_state =
 			(* Try to increment the local index *)
 			if current_pi0.(!local_index) < max_bounds.(!local_index) then(
 				(* Increment this index *)
-				current_pi0.(!local_index) <- current_pi0.(!local_index) + 1;
+				current_pi0.(!local_index) <- NumConst.add current_pi0.(!local_index) NumConst.one;
 				(* Reset the smaller indexes to the low bound *)
 				for i = 0 to !local_index - 1 do
 					current_pi0.(i) <- min_bounds.(i);
@@ -1092,6 +1089,7 @@ let cover_behavioral_cartography program pi0cube init_state =
 			| None -> ()
 			| Some limit -> if (get_time()) > (float_of_int limit) then limit_reached := true;
 
+		Gc.major ()
 	done; (* while more pi0 *)
 
 	if !limit_reached && !more_pi0 then (
@@ -1191,29 +1189,6 @@ let random_behavioral_cartography program pi0cube init_state nb =
 
 				(* Add the pi0 *)
 				pi0_computed.(!i - 1) <- pi0;
-				(* Check if the constraint is equal to any computed constraint previously *)
-				(**** NO : impossible because, if the constraint is equal to a previous constraint, it means that pi0 \models K0, and therefore the inverse method would not have been called ****)
-
-(*				let found = ref false in
-				let j = ref 0 in
-				
-				while !j < (!i - 1) && not !found do
-					(**** TO DO : il faut iterer sur interesting_interations !! ****)
-					let equal =
-						let old_constraint = results.(!j) in
-						(* Check the equality of constraint *)
-						LinearConstraint.is_equal old_constraint k0
-					in
-					(* Update *)
-					if equal then (
-						print_message Debug_standard ("This constraint K" ^ (string_of_int !i) ^ " is equal to K" ^ (string_of_int (!j + 1)) ^ ".");
-						found := true;
-						raise (InternalError "SHOULD NEVER HAPPEN");
-					);
-					(* Increment j *)
-					j := !j + 1 ;
-				done;
-				if not !found then( *)
 
 				(* Print the constraint *)
 				print_message Debug_low ("Constraint K0 computed:");
@@ -1228,7 +1203,6 @@ let random_behavioral_cartography program pi0cube init_state nb =
 				interesting_interations := !i :: !interesting_interations;
 				(* Add the result *)
 				results.(!i - 1) <- k0;
-(* 				); *)
 			);
 		);
 		(* Stop if the time limit has been reached *)

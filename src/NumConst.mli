@@ -47,6 +47,8 @@ val string_of_numconst : t -> string
 val get_num : t -> Gmp.Z.t
 val get_den : t -> Gmp.Z.t
 
+val random : t -> t -> t
+
 (**************************************************)
 (** {2 Arithmetic Functions} *)
 (**************************************************)

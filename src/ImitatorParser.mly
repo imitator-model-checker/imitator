@@ -339,6 +339,7 @@ ext_linear_term:
 	| NAME { Variable (NumConst.one, $1) }
 	| LPAREN linear_term RPAREN { $2 }
 
+
 rational:
 	integer { $1 }
 	| float { $1 }

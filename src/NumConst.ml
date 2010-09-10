@@ -121,6 +121,12 @@ let abs a =
 	if Gmp.Q.cmp (get_mpq a) (Gmp.Q.zero) >= 0 then a
 	else neg a
 
+let random a b =
+	let range = sub b a in
+	let frnd  = Random.float 1.0 in
+	let qrnd  = Gmp.Q.from_float frnd in
+	add a (mul range qrnd)
+
 (**************************************************)
 (** {2 Comparison Functions} *)
 (**************************************************)

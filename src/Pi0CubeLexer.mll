@@ -34,8 +34,8 @@ rule token = parse
 
 
 	| ['a'-'z''A'-'Z']['a'-'z''A'-'Z''_''0'-'9']* as lxm { NAME lxm }
-(* 	| ['0'-'9']+'.'['0'-'9']+ as lxm { FLOAT(float_of_string lxm) } *)
-	| ['0'-'9']+ as lxm { INT(int_of_string lxm) }
+ 	| ['0'-'9']+'.'['0'-'9']+ as lxm { FLOAT lxm } 
+	| ['0'-'9']+ as lxm { INT(NumConst.numconst_of_string lxm) }
 
 	| '='              { OP_EQ }
 

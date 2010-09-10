@@ -47,7 +47,7 @@ type action_name = string
 (****************************************************************)
 
 type pi0 = variable_index -> NumConst.t
-type pi0cube = (int * int) array
+type pi0cube = (NumConst.t * NumConst.t) array
 
 
 (****************************************************************)

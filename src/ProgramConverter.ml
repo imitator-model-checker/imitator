@@ -819,9 +819,9 @@ let check_pi0cube pi0cube parameters_names =
 	(* Check that the intervals are not null *)
 	let all_intervals_ok = List.fold_left
 		(fun all_intervals_ok (variable_name, a, b) ->
-			if a <= b then all_intervals_ok
+			if NumConst.le a b then all_intervals_ok
 			else (
-				print_error ("The interval [" ^ (string_of_int a) ^ ", " ^ (string_of_int b) ^ "] is null for parameter '" ^ variable_name ^ "' in pi0cube.");
+				print_error ("The interval [" ^ (NumConst.string_of_numconst a) ^ ", " ^ (NumConst.string_of_numconst b) ^ "] is null for parameter '" ^ variable_name ^ "' in pi0cube.");
 				false
 			)
 		)
@@ -1281,7 +1281,7 @@ let make_pi0 parsed_pi0 variables nb_parameters =
 	pi0
 
 let make_pi0cube parsed_pi0cube nb_parameters =
-	let pi0cube = Array.make nb_parameters (0, 0) in
+	let pi0cube = Array.make nb_parameters (NumConst.zero, NumConst.zero) in
 	List.iter (fun (variable_name, a, b) ->
 		let variable_index = try Hashtbl.find !index_of_variables variable_name
 			with Not_found ->
@@ -1605,7 +1605,7 @@ let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_
 		match imitator_mode with
 		| Reachability_analysis -> 
 			(* Return blank values *)
-			Array.make 0 NumConst.zero, Array.make 0 (0, 0)
+			Array.make 0 NumConst.zero, Array.make 0 (NumConst.zero, NumConst.zero)
 		| Inverse_method -> 
 			print_message Debug_total ("*** Building reference valuation...");
 			(* Verification of the pi_0 *)
@@ -1613,7 +1613,7 @@ let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_
 			(* Construction of the pi_0 *)
 			let pi0 = make_pi0 parsed_pi0 variables nb_parameters in
 			(* Return the pair *)
-			pi0, Array.make 0 (0, 0)
+			pi0, Array.make 0 (NumConst.zero, NumConst.zero)
 		| _ -> 
 			print_message Debug_total ("*** Building reference rectangle...");
 			(* Verification of the pi_0 *)
@@ -1741,7 +1741,7 @@ let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_
 		print_message Debug_medium ("\n*** Reference rectangle V0:");
 		Array.iteri (fun i (a, b) ->
 			print_message Debug_medium (
-				variables.(i) ^ " : [" ^ (string_of_int a) ^ ", " ^ (string_of_int b) ^ "]"
+				variables.(i) ^ " : [" ^ (NumConst.string_of_numconst a) ^ ", " ^ (NumConst.string_of_numconst b) ^ "]"
 			)
 		) pi0cube
 	in
@@ -1761,8 +1761,6 @@ let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_
 	continuous = continuous;
 	continuous_per_automaton = continuous_per_automaton;
 
-	(* The list of analog indexes *)
-	(* analogs = analogs; *)
 	(* The list of clock indexes *)
 	clocks = analogs_and_clocks;
 	(* True for analogs, false otherwise *)
@@ -1775,8 +1773,6 @@ let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_
 	is_discrete = is_discrete;
 	(* The list of parameter indexes *)
 	parameters = parameters;
-	(* The non parameters *)
-	(* non_parameters = list_append analogs_and_clocks discrete; *) 
 	(* The non parameters (clocks and discrete) *)
 	clocks_and_discrete = list_append analogs_and_clocks discrete;
 	(* The function : variable_index -> variable name *)
@@ -1784,10 +1780,6 @@ let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_
 	(* The type of variables *)
 	type_of_variables = type_of_variables;
 
-	(* Renamed analogs *)
-	(* renamed_analogs = renamed_analogs; *)
-	(* True for renamed clocks, false otherwise *)
-	(* is_renamed_analog = is_renamed_analog; *)
 	(* Renamed clocks *)
 	renamed_clocks = renamed_clocks;
 	(* True for renamed clocks, false otherwise *)
@@ -1796,12 +1788,6 @@ let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_
 	prime_of_variable = prime_of_variable;
 	(* Get the normal equivalent of a 'prime' variable *)
 	variable_of_prime = variable_of_prime;
-	(* Parameter 'd' *)
-(*	d = d;*)
-	(* Couples (x, x') for clock renamings *)
-	(* renamed_analogs_couples = renamed_analogs_couples; *)
-	(* Couples (x', x) for clock 'un'-renamings *)
-	(* unrenamed_analogs_couples = unrenamed_analogs_couples; *)
 	(* Couples (x, x') for clock renamings *)
 	renamed_clocks_couples = renamed_clocks_couples;
 	(* Couples (x', x) for clock 'un'-renamings *)
@@ -1839,9 +1825,6 @@ let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_
 	(* The transitions for each automaton and each location and each action *)
 	transitions = transitions;
 
-	(* Time elapsing constraint : d >= 0 *)
-(*	positive_d = positive_d;*)
-
 	(* Init : the initial state *)
 	init = initial_state;
 
@@ -1857,9 +1840,6 @@ let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_
 	with_parametric_log = with_parametric_log;
 	(* The name of the program *)
 	program_name = program_name;
-
-	(* Nb of calls to HyTech *)
-(* 	nb_hytech_calls = ref 0; *)
 	}
 
 	,
