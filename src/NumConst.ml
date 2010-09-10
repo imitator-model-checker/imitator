@@ -71,6 +71,8 @@ let numconst_of_mpz z = Gmp.Q.from_z z
 
 let mpq_of_numconst = get_mpq
 
+let float_of_numconst = Gmp.Q.to_float
+
 (**************************************************)
 (** {2 Constants} *)
 (**************************************************)

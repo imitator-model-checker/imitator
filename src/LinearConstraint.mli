@@ -52,6 +52,8 @@ val add_linear_terms : linear_term -> linear_term -> linear_term
 (** Evaluate a linear term with a function assigning a value to each variable. *)
 val evaluate_linear_term : (variable -> coef) -> linear_term -> coef
 
+(** Evaluate a linear term (PPL) with a function assigning a value to each variable. *)
+val evaluate_linear_term_ppl : (variable -> coef) -> Ppl_ocaml.linear_expression -> coef
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
 (** {3 Conversion} *)
@@ -112,7 +114,7 @@ val string_of_linear_inequality : (variable -> string) -> linear_inequality -> s
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
 (** {3 Type} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
-type linear_constraint
+type linear_constraint = Ppl_ocaml.polyhedron
 
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
@@ -133,6 +135,8 @@ val make_set_all_variables : variable list -> NumConst.t -> linear_constraint
 
 (** 'set_manager int_dim real_dim' sets the constraint manager by giving the number of dimensions. *)
 val set_manager : int -> int -> unit
+
+val nb_dimensions : unit -> int
 
 (** Create a false constraint *)
 val false_constraint : unit -> linear_constraint
@@ -205,6 +209,10 @@ val substitute: (variable -> Ppl_ocaml.linear_expression) -> linear_constraint -
 (** 'rename_variables renaming_couples c' renames all variables according to the couples of the form (old, new) *)
 val rename_variables : (variable * variable) list -> linear_constraint -> linear_constraint
 
+val project_to : variable list -> linear_constraint -> unit
+
+val non_strictify : linear_constraint -> linear_constraint
+
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
 (** {3 Conversion} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
@@ -222,6 +230,3 @@ val string_of_false : string
 
 (** String for the true constraint *)
 val string_of_true : string
-
-(** Plot polyhedron corresponding to a convex constraint, projected onto the first two variables *)
-val plot_2d : variable -> variable -> linear_constraint -> string

@@ -277,14 +277,14 @@ let create_initial_state program =
 	(* Create the invariant *)
 	let invariant = compute_invariant program initial_location in
 	(* Debug *)
-	print_message Debug_total (LinearConstraint.string_of_linear_constraint program.variable_names invariant);
+	if debug_mode_greater Debug_total then print_message Debug_total (LinearConstraint.string_of_linear_constraint program.variable_names invariant);
 		
 	(* Compute constraint for assigning a (constant) value to discrete variables *)
 	print_message Debug_high ("Computing constraint for discrete variables");
 	let discrete_values = List.map (fun discrete_index -> discrete_index, (Automaton.get_discrete_value initial_location discrete_index)) program.discrete in
 	let discrete_constraint = instantiate_discrete discrete_values in
 	(* Debug *)
-	print_message Debug_total (LinearConstraint.string_of_linear_constraint program.variable_names discrete_constraint);
+	if debug_mode_greater Debug_total then print_message Debug_total (LinearConstraint.string_of_linear_constraint program.variable_names discrete_constraint);
 		
 	(* Perform intersection of all those constraints *)
 	print_message Debug_high ("Performing intersection of C0(X) and I_q0(X)");
@@ -294,14 +294,14 @@ let create_initial_state program =
     discrete_constraint
 	] in
 	(* Debug *)
-	print_message Debug_total (LinearConstraint.string_of_linear_constraint program.variable_names full_constraint);
+	if debug_mode_greater Debug_total then print_message Debug_total (LinearConstraint.string_of_linear_constraint program.variable_names full_constraint);
 	
 	(* let time elapse *)
 	print_message Debug_high ("Let time elapse");
 	let deriv = compute_flow program initial_location in
 	LinearConstraint.time_elapse_assign full_constraint deriv;
 	(* Debug *)
-	print_message Debug_total (LinearConstraint.string_of_linear_constraint program.variable_names full_constraint);	
+	if debug_mode_greater Debug_total then print_message Debug_total (LinearConstraint.string_of_linear_constraint program.variable_names full_constraint);	
 
 	(* add invariant after time elapsing *)
 	print_message Debug_high ("Intersect with invariant after time elapsing");
@@ -310,14 +310,14 @@ let create_initial_state program =
 		invariant
 	] in
 	(* Debug *)
-	print_message Debug_total (LinearConstraint.string_of_linear_constraint program.variable_names full_constraint);	
+	if debug_mode_greater Debug_total then print_message Debug_total (LinearConstraint.string_of_linear_constraint program.variable_names full_constraint);	
 	
 	(* Hide discrete *)
 	print_message Debug_high ("Hide discrete");
 	let final_constraint = LinearConstraint.hide program.discrete full_constraint in
 				
 	(* Debug *)
-	print_message Debug_total (LinearConstraint.string_of_linear_constraint program.variable_names final_constraint);
+	if debug_mode_greater Debug_total then print_message Debug_total (LinearConstraint.string_of_linear_constraint program.variable_names final_constraint);
 	(* Return the initial state *)
 	initial_location, final_constraint
 
@@ -1110,7 +1110,10 @@ let cover_behavioral_cartography program pi0cube init_state =
 	print_message Debug_standard ("Average number of states     : " ^ (string_of_float nb_states) ^ "");
 	print_message Debug_standard ("Average number of transitions: " ^ (string_of_float nb_transitions) ^ "");
 	print_message Debug_standard ("**************************************************");
-	()
+	
+	let zones = DynArray.to_list results in
+	Graphics.cartography program pi0cube zones 2 program.program_name
+
 
 
 (** Behavioral cartography algorithm with random selection of a pi0 *)

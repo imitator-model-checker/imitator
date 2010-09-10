@@ -196,7 +196,7 @@ let add_inequality_to_states graph inequality =
 
 let plot_graph x y graph = 
 	DynArray.fold_left (
-		fun s (_, constr) -> s ^ (LinearConstraint.plot_2d x y constr) ^ "\n"
+		fun s (_, constr) -> s ^ (Graphics.plot_2d x y constr) ^ "\n"
 	) "" graph.states
 
 (****************************************************************)
