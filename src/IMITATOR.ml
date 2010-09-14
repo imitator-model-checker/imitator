@@ -170,7 +170,7 @@ let random_pi0 program pi0 =
 	(* Fill it *)
 	Random.self_init();
 	for i = 0 to program.nb_parameters - 1 do
-		let a, b = pi0.(i) in
+		let a, b, _ = pi0.(i) in
 		(* Generate a random value in the interval *)
 		let random_value = NumConst.random a b in
 		(* Debug *)
@@ -968,8 +968,9 @@ let cover_behavioral_cartography program pi0cube init_state =
 	(* Dimension of the system *)
 	let dimension = Array.length pi0cube in
 	(* Min & max bounds for the parameters *)
-	let min_bounds = Array.map (fun (low, high) -> low) pi0cube in
-	let max_bounds = Array.map (fun (low, high) -> high) pi0cube in
+	let min_bounds = Array.map (fun (low, high, step) -> low) pi0cube in
+	let max_bounds = Array.map (fun (low, high, step) -> high) pi0cube in
+	let step_size  = Array.map (fun (low, high, step) -> step) pi0cube in
 	
 	(* Initial constraint of the program *)
 	let _, init_constraint = program.init in
@@ -1065,7 +1066,7 @@ let cover_behavioral_cartography program pi0cube init_state =
 			(* Try to increment the local index *)
 			if current_pi0.(!local_index) < max_bounds.(!local_index) then(
 				(* Increment this index *)
-				current_pi0.(!local_index) <- NumConst.add current_pi0.(!local_index) NumConst.one;
+				current_pi0.(!local_index) <- NumConst.add current_pi0.(!local_index) step_size.(!local_index);
 				(* Reset the smaller indexes to the low bound *)
 				for i = 0 to !local_index - 1 do
 					current_pi0.(i) <- min_bounds.(i);
@@ -1111,8 +1112,13 @@ let cover_behavioral_cartography program pi0cube init_state =
 	print_message Debug_standard ("Average number of transitions: " ^ (string_of_float nb_transitions) ^ "");
 	print_message Debug_standard ("**************************************************");
 	
+	(* plot the cartography *)
 	let zones = DynArray.to_list results in
-	Graphics.cartography program pi0cube zones 2 program.program_name
+	Graphics.cartography program pi0cube zones 2 program.program_name;
+	
+	(* compute coverage of v0 *)
+	let cov = 100.0 *. Graphics.coverage program pi0cube zones in
+	print_message Debug_standard ("coverage of v0 rectangle: " ^ (string_of_float cov) ^ " %")
 
 
 

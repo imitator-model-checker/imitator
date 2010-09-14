@@ -32,6 +32,7 @@ rule token = parse
 		comment_ocaml lexbuf;
 		token lexbuf }
 
+	| "step"           { CT_STEP }
 
 	| ['a'-'z''A'-'Z']['a'-'z''A'-'Z''_''0'-'9']* as lxm { NAME lxm }
  	| ['0'-'9']+'.'['0'-'9']+ as lxm { FLOAT lxm } 

@@ -795,7 +795,7 @@ let check_pi0 pi0 parameters_names =
 (*--------------------------------------------------*)
 let check_pi0cube pi0cube parameters_names =
 	(* Compute the list of variable names *)
-	let list_of_variables = List.map (fun (v, _, _) -> v) pi0cube in
+	let list_of_variables = List.map (fun (v, _, _, _) -> v) pi0cube in
 
 	(* Compute the multiply defined variables *)
 	let multiply_defined_variables = elements_existing_several_times list_of_variables in
@@ -818,7 +818,7 @@ let check_pi0cube pi0cube parameters_names =
 
 	(* Check that the intervals are not null *)
 	let all_intervals_ok = List.fold_left
-		(fun all_intervals_ok (variable_name, a, b) ->
+		(fun all_intervals_ok (variable_name, a, b, _) ->
 			if NumConst.le a b then all_intervals_ok
 			else (
 				print_error ("The interval [" ^ (NumConst.string_of_numconst a) ^ ", " ^ (NumConst.string_of_numconst b) ^ "] is null for parameter '" ^ variable_name ^ "' in pi0cube.");
@@ -1281,13 +1281,13 @@ let make_pi0 parsed_pi0 variables nb_parameters =
 	pi0
 
 let make_pi0cube parsed_pi0cube nb_parameters =
-	let pi0cube = Array.make nb_parameters (NumConst.zero, NumConst.zero) in
-	List.iter (fun (variable_name, a, b) ->
+	let pi0cube = Array.make nb_parameters (NumConst.zero, NumConst.zero, NumConst.one) in
+	List.iter (fun (variable_name, a, b, c) ->
 		let variable_index = try Hashtbl.find !index_of_variables variable_name
 			with Not_found ->
 			raise (InternalError ("The variable name '" ^ variable_name ^ "' was not found in the list of variables although checks should have been performed before."))
 		in
-		pi0cube.(variable_index) <- (a, b)
+		pi0cube.(variable_index) <- (a, b, c)
 	) parsed_pi0cube;
 	pi0cube
 
@@ -1605,7 +1605,7 @@ let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_
 		match imitator_mode with
 		| Reachability_analysis -> 
 			(* Return blank values *)
-			Array.make 0 NumConst.zero, Array.make 0 (NumConst.zero, NumConst.zero)
+			Array.make 0 NumConst.zero, Array.make 0 (NumConst.zero, NumConst.zero, NumConst.one)
 		| Inverse_method -> 
 			print_message Debug_total ("*** Building reference valuation...");
 			(* Verification of the pi_0 *)
@@ -1613,7 +1613,7 @@ let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_
 			(* Construction of the pi_0 *)
 			let pi0 = make_pi0 parsed_pi0 variables nb_parameters in
 			(* Return the pair *)
-			pi0, Array.make 0 (NumConst.zero, NumConst.zero)
+			pi0, Array.make 0 (NumConst.zero, NumConst.zero, NumConst.one)
 		| _ -> 
 			print_message Debug_total ("*** Building reference rectangle...");
 			(* Verification of the pi_0 *)
@@ -1739,9 +1739,9 @@ let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_
 		) parameters;
 	| _ -> 
 		print_message Debug_medium ("\n*** Reference rectangle V0:");
-		Array.iteri (fun i (a, b) ->
+		Array.iteri (fun i (a, b, c) ->
 			print_message Debug_medium (
-				variables.(i) ^ " : [" ^ (NumConst.string_of_numconst a) ^ ", " ^ (NumConst.string_of_numconst b) ^ "]"
+				variables.(i) ^ " : [" ^ (NumConst.string_of_numconst a) ^ ", " ^ (NumConst.string_of_numconst b) ^ "] step " ^ (NumConst.string_of_numconst c)
 			)
 		) pi0cube
 	in

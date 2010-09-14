@@ -271,6 +271,21 @@ let plot_2d x y linear_constraint =
 	) "" shape	
 
 
+let parameter_pairs pi0cube =
+	let parameters = ref [] in
+	for i=0 to Array.length pi0cube-1 do
+		let min, max, _ = pi0cube.(i) in
+		if NumConst.neq min max then parameters := i :: !parameters
+	done;
+	let rec make_pairs head tail =
+		match tail with
+			| [] -> []
+			| _ -> List.rev_append 
+				(List.map (fun b -> (head,b)) tail)
+				(make_pairs (List.hd tail) (List.tl tail)) in
+	make_pairs (List.hd !parameters) (List.tl !parameters)
+
+
 (* print the cartography which correspond to the list of constraint *)
 let cartography program pi0cube constraint_list nb_variables_projected cartography_name =
 	(* replace strict inequalities *)
@@ -282,7 +297,7 @@ let cartography program pi0cube constraint_list nb_variables_projected cartograp
 	let nb = ref 0 in
 	while !nb < nb_variables_projected && !i < (Array.length pi0cube) do
 		match pi0cube.(!i) with
-			| (x,y) when NumConst.neq x y -> (DynArray.insert idx !nb !i; nb := !nb + 1; i := !i + 1)
+			| (x,y,_) when NumConst.neq x y -> (DynArray.insert idx !nb !i; nb := !nb + 1; i := !i + 1)
 			|_-> i := !i + 1
 	done;
 
@@ -308,8 +323,8 @@ let cartography program pi0cube constraint_list nb_variables_projected cartograp
 		(* Find the V0 zone *)
 		let file_v0_name = cartography_name^"_v0_"^(string_of_int !k)^".txt" in
 		let file_zone = open_out file_v0_name in
-		let x_min, x_max = pi0cube.(x_param) in
-		let y_min, y_max = pi0cube.(y_param) in
+		let x_min, x_max, _ = pi0cube.(x_param) in
+		let y_min, y_max, _ = pi0cube.(y_param) in
 		let fstring numc = string_of_float (Gmp.Q.to_float (NumConst.mpq_of_numconst numc)) in
 		let str_zone = 
 				(fstring x_min)^" "^(fstring y_max)^"\n"
@@ -324,8 +339,8 @@ let cartography program pi0cube constraint_list nb_variables_projected cartograp
 		(* find the minimum and maximum abscissa and ordinate for each constraint and store them in a list *)
 
 		(* get corners of v0 *)
-		let init_min_abs, init_max_abs = pi0cube.(x_param) in
-		let init_min_ord, init_max_ord = pi0cube.(y_param) in
+		let init_min_abs, init_max_abs, _ = pi0cube.(x_param) in
+		let init_min_ord, init_max_ord, _ = pi0cube.(y_param) in
 		(* convert to float *)
 		let init_min_abs = NumConst.float_of_numconst init_min_abs in
 		let init_max_abs = NumConst.float_of_numconst init_max_abs in
@@ -387,3 +402,51 @@ let cartography program pi0cube constraint_list nb_variables_projected cartograp
 		print_message Debug_high ("Result of the cartography execution: exit code "^(string_of_int execution));
 		k := !k + 1
 	) !couple_list
+
+	
+(* Compute the area of a convex polyhedron, given as a sorted list of points *)
+let area_of_poly vertices = 
+	match vertices with
+		| (px, py) :: ps ->
+			let last_x = ref px in
+			let last_y = ref py in
+			let det = List.fold_left (fun s (x, y) -> 
+				let sum = s +. (!last_x *. y) -. (!last_y *. x) in
+				last_x := x;
+				last_y := y;
+				sum
+			) 0.0 ps in
+			det /. 2.0 
+		| _ -> 0.0
+			
+	
+let coverage program pi0cube constraint_list =
+	(* get the (first) pair of parameters for the analysis *)
+	let x_param, y_param = List.hd (parameter_pairs pi0cube) in
+	(* build a constraint representing the rectangle v0 *)
+	let x_min, x_max, _ = pi0cube.(x_param) in
+	let y_min, y_max, _ = pi0cube.(y_param) in
+	let inequalities = [
+		make_linear_inequality_ppl (Var x_param) Greater_Or_Equal_RS (Coef x_min);
+		make_linear_inequality_ppl (Var x_param) Less_Or_Equal_RS (Coef x_max);
+		make_linear_inequality_ppl (Var y_param) Greater_Or_Equal_RS (Coef y_min);
+		make_linear_inequality_ppl (Var y_param) Less_Or_Equal_RS (Coef y_max);
+	] in
+	let v0 = make inequalities in
+	(* intersect all zones with v0 *)
+	let trimmed_constraints = List.map (fun constr -> 
+		intersection [v0; constr]
+	) constraint_list in
+	(* get floating point vertices for zones *)
+	let shapes = List.map (fun constr -> 
+		poly_to_points x_param y_param constr
+	) trimmed_constraints in
+	(* get the area of v0 *)
+	let v0_shape = poly_to_points x_param y_param v0 in
+	let v0_area = area_of_poly v0_shape in
+	(* compute the area of the zones *)
+	let areas = List.map area_of_poly shapes in
+	(* sum it up *)
+	let area = List.fold_left (+.) 0.0 areas in
+	(* compute the ratio *)
+	area /. v0_area

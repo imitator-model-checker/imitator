@@ -20,7 +20,7 @@
 %token OP_PLUS OP_MINUS OP_MULT OP_DIV
 %token OP_EQ
 
-%token LPAREN RPAREN AMPERSAND DOUBLEDOT SEMICOLON
+%token LPAREN RPAREN AMPERSAND DOUBLEDOT CT_STEP SEMICOLON
 
 %token EOF
 
@@ -50,8 +50,9 @@ declarations:
 /**********************************************/
 
 declaration:
-	| ampersand NAME OP_EQ arithmetic_expr DOUBLEDOT arithmetic_expr { ($2, $4, $6) }
-	| ampersand NAME OP_EQ arithmetic_expr { ($2, $4, $4) }
+	| ampersand NAME OP_EQ arithmetic_expr DOUBLEDOT arithmetic_expr CT_STEP arithmetic_expr { ($2, $4, $6, $8) }
+	| ampersand NAME OP_EQ arithmetic_expr DOUBLEDOT arithmetic_expr { ($2, $4, $6, NumConst.one) }
+	| ampersand NAME OP_EQ arithmetic_expr { ($2, $4, $4, NumConst.one) }
 ;
 
 /**********************************************/
