@@ -60,21 +60,21 @@ let create_initial_state program =
 	(* Create the invariant *)
 	let invariant = compute_invariant program initial_location in
 	(* Debug *)
-	print_message Debug_total (LinearConstraint.string_of_linear_constraint program.variable_names invariant);
+	if debug_mode_greater Debug_total then print_message Debug_total (LinearConstraint.string_of_linear_constraint program.variable_names invariant);
 	
 	(* Compute the invariant after time elapsing I_q0(X') *)
 	print_message Debug_high ("Computing initial invariant after time-elapsing I_q0(X')");
 	let invariant_after_time_elapsing =
 		LinearConstraint.rename_variables program.renamed_clocks_couples invariant in
 	(* Debug *)
-	print_message Debug_total (LinearConstraint.string_of_linear_constraint program.variable_names invariant_after_time_elapsing);
+	if debug_mode_greater Debug_total then print_message Debug_total (LinearConstraint.string_of_linear_constraint program.variable_names invariant_after_time_elapsing);
 	
 	(* Compute constraint for assigning a (constant) value to discrete variables *)
 	print_message Debug_high ("Computing constraint for discrete variables");
 	let discrete_values = List.map (fun discrete_index -> discrete_index, (Automaton.get_discrete_value initial_location discrete_index)) program.discrete in
 	let discrete_constraint = instantiate_discrete discrete_values in
 	(* Debug *)
-	print_message Debug_total (LinearConstraint.string_of_linear_constraint program.variable_names discrete_constraint);
+	if debug_mode_greater Debug_total then print_message Debug_total (LinearConstraint.string_of_linear_constraint program.variable_names discrete_constraint);
 	
 	(* Compute the equalities X' = X + d *)
 	let time_elapsing_inequalities =
@@ -97,19 +97,19 @@ let create_initial_state program =
 	print_message Debug_high ("Performing intersection of C0(X) and I_q0(X) and X' = X + d and I_q0(X')");
 	let full_constraint = LinearConstraint.intersection [init_constraint ; invariant ; time_elapsing_constraint ; program.positive_d ; invariant_after_time_elapsing ; discrete_constraint] in
 	(* Debug *)
-	print_message Debug_total (LinearConstraint.string_of_linear_constraint program.variable_names full_constraint);
+	if debug_mode_greater Debug_total then print_message Debug_total (LinearConstraint.string_of_linear_constraint program.variable_names full_constraint);
 	
 	(* Hide 'X', 'Discrete' and 'd' *)
 	print_message Debug_high ("Hide clocks, discrete and 'd' in C0(X) ^ I_q0(X) ^ X' = X + d ^ I_q0(X')");
 	let full_constraint_hidden = LinearConstraint.hide (program.d :: program.clocks_and_discrete) full_constraint in
 	(* Debug *)
-	print_message Debug_total (LinearConstraint.string_of_linear_constraint program.variable_names full_constraint_hidden);
+	if debug_mode_greater Debug_total then print_message Debug_total (LinearConstraint.string_of_linear_constraint program.variable_names full_constraint_hidden);
 	(* Rename X' -> X *)
 	print_message Debug_high ("Renaming X' into X in C0(X) ^ I_q0(X) ^ X' = X + d ^ I_q0(X')");
 	let final_constraint =
 		LinearConstraint.rename_variables program.unrenamed_clocks_couples full_constraint_hidden in
 	(* Debug *)
-	print_message Debug_total (LinearConstraint.string_of_linear_constraint program.variable_names final_constraint);
+	if debug_mode_greater Debug_total then print_message Debug_total (LinearConstraint.string_of_linear_constraint program.variable_names final_constraint);
 	(* Return the initial state *)
 	initial_location, final_constraint
 
@@ -325,7 +325,7 @@ let compute_new_constraint program orig_constraint orig_location dest_location g
 		(* Convert to a constraint *)
 		let previous_discrete_constraint = instantiate_discrete discrete_values in
 		(* Debug *)
-		print_message Debug_total (LinearConstraint.string_of_linear_constraint program.variable_names previous_discrete_constraint);
+		if debug_mode_greater Debug_total then print_message Debug_total (LinearConstraint.string_of_linear_constraint program.variable_names previous_discrete_constraint);
 	
 		(* Debug *)
 		if debug_mode_greater Debug_total then(
@@ -395,7 +395,7 @@ let compute_new_constraint program orig_constraint orig_location dest_location g
 		(* Convert to a constraint *)
 		let discrete_constraint = instantiate_discrete discrete_values in
 		(* Debug *)
-		print_message Debug_total (LinearConstraint.string_of_linear_constraint program.variable_names discrete_constraint);
+		if debug_mode_greater Debug_total then print_message Debug_total (LinearConstraint.string_of_linear_constraint program.variable_names discrete_constraint);
 	
 		(* Perform the intersection *)
 		print_message Debug_total ("\nPerforming intersection of C(X) and g(X) and X' = rho(X) + d and I_q(X' - d) and I_q(X') ");
