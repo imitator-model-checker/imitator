@@ -64,45 +64,83 @@ let convert_generator = function
 			let yf = Gmp.Q.to_float (NumConst.mpq_of_numconst y) in
 			FG_Ray (xf, yf)
 	| _ -> FG_None
+	
+
+(* cosine of the angle between the x-axis and the *)
+(* vector from (x0, y0) to (x,y)                  *)			
+let cosine (x0, y0) (x, y) =
+	if x0 = x && y0 = y then 1. else
+		let vx = x -. x0 in
+		let vy = y -. y0 in
+		let len = sqrt (vx *. vx +. vy *. vy) in
+		vx /. len 
+					
+(* compare two points wrt. their angle to the x-axis *)					
+let cosine_compare p0 p1 p2 =
+	let cmp = (cosine p0 p2) -. (cosine p0 p1) in
+	if cmp > 0. then 1 else
+		if cmp < 0. then -1 else 0
+
+type alignment_type = 
+	| Left_turn
+	| Right_turn
+	| Collinear
+
+let alignment (x1, y1) (x2, y2) (x3, y3) =
+	let cmp = (x2 -. x1) *. (y3 -. y1) -. (y2 -. y1) *. (x3 -. x1) in
+	if cmp > 0. then Left_turn else
+		if cmp < 0. then Right_turn else Collinear
+	
+(* returns true if p1 is closer to p0 than p2 to p0 *)
+let dist_leq (x0, y0) (x1, y1) (x2, y2) =
+	let d1 = (x1 -. x0)*.(x1 -. x0) +. (y1 -. y0)*.(y1 -. y0) in
+	let d2 = (x2 -. x0)*.(x2 -. x0) +. (y2 -. y0)*.(y2 -. y0) in
+	d1 <= d2
 
 
-
-(* comparison function for 2d points; used for sorting points *)
-(* counter-clockwise wrt. a given center point (cx, cy) *)
-let compare_points (cx, cy) (ax, ay) (bx, by) =
-	let area = (ax -. cx) *. (by -. cy) -. (ay -. cy) *. (bx -. cx) in
-	if area > 0.0 then 1 else	if area = 0.0 then 0 else	-1
-
-let center_point points =
-	match points with
-		| p :: ps -> 
-				let sumx, sumy =
-					List.fold_left (fun (sx, sy) (x, y) -> 
-						(sx +. x, sy +. y)
-					) (0.0, 0.0) points in
-				let len = float_of_int (List.length points) in
-				(sumx /. len, sumy /. len)
-		| _ -> (0.0, 0.0)
-			
-
-(* normalize a set of points (sort counter-clockwise, remove duplicates, close polygon) *)
-let normalize_points points =
-	(* sort counter-clockwise *)
-	let compare = compare_points (center_point points) in
-	let points = List.sort compare points in
-	(* eat up consecutive identical points *)
-  let head = List.hd points in
-	let tail = List.tl points in
-	let last = ref head in
-	let points = head :: List.filter (fun p ->
-		let unique = not (!last = p) in
-		last := p; unique
-	) tail in
+(* build the convex hull for a list of points *)
+let graham_hull points =
+	(* remove duplicate points *)
+	let points = list_only_once points in
+	(* find the lowest leftmost point *)
+	let p0 = List.fold_left (fun (x0, y0) (x, y) -> 
+		if y < y0 || (y = y0 && x < x0) then (x, y) else (x0, y0)
+	) (List.hd points) (List.tl points)	in
+	(* sort the list wrt. to the angle to p0 *)
+	let points = List.sort (cosine_compare p0) points in
+	(* iterate on points, discard points that induce a right-turn *)
+	let rec make_hull p1 p2 hull rest =
+		if rest = [] then
+			p2 :: p1 :: hull
+		else (
+			let p3 = List.hd rest in
+			match alignment p1 p2 p3 with
+				| Left_turn  ->
+						(* store first point, move on *) 
+						make_hull p2 p3 (p1 :: hull) (List.tl rest)				
+				| Right_turn ->
+						(* discard middle point, go on or backtrack *) 
+						if hull = [] then 
+							make_hull p1 p3 hull (List.tl rest)
+						else
+							(* backtrack to detect long "inward bended" point sequences *)
+							make_hull (List.hd hull) p1 (List.tl hull) rest
+				| Collinear  ->
+					(* discard closest point, go on *) 
+					if dist_leq p1 p2 p3 then 
+						make_hull p1 p3 hull (List.tl rest)
+					else
+						make_hull p1 p2 hull (List.tl rest)
+		)	in		 
 	(* close polygon *)
 	let points = List.append points [List.hd points] in
-	(* return points *)
-	points					
-		
+	(* build hull *)
+	match points with
+		| p1 :: p2 :: rest ->
+			(* first two points must be on hull *)
+			make_hull p1 p2 [] rest
+		| _ -> points
+	
 						
 (* converts a linear_constraint to a set of 2d points wrt. the first two variables *)
 let poly_to_points x y linear_constraint =
@@ -122,7 +160,8 @@ let poly_to_points x y linear_constraint =
 	let points = if x < y then points else (
 		List.map (fun (x,y) -> (y,x)) points
 	) in
-	normalize_points points
+	graham_hull points
+
 	
 	
 (* create a straight line from a point and a ray *)
@@ -256,7 +295,7 @@ let points_of_zone x y linear_constraint min_abs min_ord max_abs max_ord =
 		List.map (fun (x,y) -> (y,x)) !point_list
 	) in
 	let is_infinite = (List.length ray) > 0 in
-	(is_infinite, normalize_points point_list)
+	(is_infinite, graham_hull point_list)
 
 
 (**************************************************)
@@ -334,10 +373,9 @@ let cartography program pi0cube constraint_list nb_variables_projected cartograp
 			^	(fstring x_min)^" "^(fstring y_max)^"\n" in
 		output_string file_zone str_zone;
 		close_out file_zone;
+		
 		(* Beginning of the script *)
 		let script_line = ref ("graph -T ps -C -X \"" ^ x_name ^ "\" -Y \"" ^ y_name ^ "\" ") in
-		(* find the minimum and maximum abscissa and ordinate for each constraint and store them in a list *)
-
 		(* get corners of v0 *)
 		let init_min_abs, init_max_abs, _ = pi0cube.(x_param) in
 		let init_min_ord, init_max_ord, _ = pi0cube.(y_param) in
@@ -376,21 +414,21 @@ let cartography program pi0cube constraint_list nb_variables_projected cartograp
 				s ^ (string_of_float px) ^ " " ^ (string_of_float py) ^ "\n"
 			) "" vertices in
 			(* write to file *)
-			let file_name = cartography_name^"_points_"^(string_of_int !k)^"_"^(string_of_int i)^".txt" in
+			let file_name = cartography_name^".zone_"^(string_of_int !k)^"_"^(string_of_int i) in
 			let file_out = open_out file_name in			
 			output_string file_out s;
 			close_out file_out;
 			(* instructions to have the zones colored. If fst s = true then the zone is infinite *)
-			if is_infinite then
-				script_line := !script_line^"-m "^(string_of_int((i mod 5)+1+20))^" -q 0.3 "^file_name^" "
-			else
-				script_line := !script_line^"-m "^(string_of_int((i mod 5)+1))^" -q 0.7 "^file_name^" "
+			if is_infinite
+				then script_line := !script_line ^ "-m " ^ (string_of_int((i mod 5)+1+20))^ " -q 0.3 "
+				else script_line := !script_line ^ "-m " ^ (string_of_int((i mod 5)+1))   ^ " -q 0.7 "; 
+			script_line := !script_line ^ file_name ^ " ";	
 		done;
 
 		(* File in which the cartography will be printed *)
-		let final_name = cartography_name^"_"^(string_of_int !k)^".ps" in
+		let final_name = cartography_name^".cart_"^(string_of_int !k)^".ps" in
 		(* last part of the script *)
-		script_line := !script_line^" -C -m 2 -q -1 "^file_v0_name^" > "^final_name;
+		script_line := !script_line^" -C -m 2 -q -1 -W 0.0035 "^file_v0_name^" > "^final_name;
 		(* write the script into a file *)
 		output_string script !script_line;
 		(* Debug output *)

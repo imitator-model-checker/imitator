@@ -305,10 +305,8 @@ let create_initial_state program =
 
 	(* add invariant after time elapsing *)
 	print_message Debug_high ("Intersect with invariant after time elapsing");
-	let full_constraint = LinearConstraint.intersection [
-		full_constraint;
-		invariant
-	] in
+	LinearConstraint.intersection_assign full_constraint [invariant];
+	
 	(* Debug *)
 	if debug_mode_greater Debug_total then print_message Debug_total (LinearConstraint.string_of_linear_constraint program.variable_names full_constraint);	
 	
@@ -685,10 +683,7 @@ let post program pi0 reachability_graph orig_state_index =
 	
 			(* add invariant *)
 			print_message Debug_total ("\nIntersect with invariant I(X)");
-			let final_constraint = LinearConstraint.intersection [
-				final_constraint;
-				invariant	
-			] in
+			LinearConstraint.intersection_assign final_constraint [invariant];
 			(* Debug *)
 			if debug_mode_greater Debug_total then(
 				print_message Debug_total (LinearConstraint.string_of_linear_constraint program.variable_names final_constraint);
@@ -1114,7 +1109,7 @@ let cover_behavioral_cartography program pi0cube init_state =
 	
 	(* plot the cartography *)
 	let zones = DynArray.to_list results in
-	Graphics.cartography program pi0cube zones 2 program.program_name;
+	Graphics.cartography program pi0cube zones 2 !program_prefix;
 	
 	(* compute coverage of v0 *)
 	let cov = 100.0 *. Graphics.coverage program pi0cube zones in
