@@ -256,7 +256,7 @@ let cover_behavioral_cartography program pi0cube init_state =
 			if not (debug_mode_greater Debug_medium) then
 				set_debug_mode Debug_nodebug;
 			(* Compute the post and the constraint *)
-			let graph, k0, nb_iterations, counter = Reachability.post_star program options pi0 init_state in
+			let graph, nb_iterations, counter = Reachability.post_star program options pi0 init_state in
 			(* Get the debug mode back *)
 			set_debug_mode global_debug_mode;
 			(* Update the counters *)
@@ -271,22 +271,24 @@ let cover_behavioral_cartography program pi0cube init_state =
 				^ " with "
 				^ (string_of_int (Hashtbl.length (graph.transitions_table))) ^ " transition" ^ (s_of_int (Hashtbl.length (graph.transitions_table))) ^ ".");
 			
-			(* Add the pi0 and the constraint *)
+			(* Generate the dot graph *)			
+			let radical = options#program_prefix ^ "_" ^ (string_of_int !current_iteration) in
+			let dot_file_name = (radical ^ ".dot") in
+			let states_file_name = (radical ^ ".states") in
+			let gif_file_name = (radical ^ "." ^ dot_extension) in
+			generate_graph program pi0 graph dot_file_name states_file_name gif_file_name;
+			
+			(* compute k0 *)
+			let k0 = Graph.compute_k0_destructive program graph in
+			
+			(* Add the pi0 and the computed constraint *)
 			DynArray.add pi0_computed pi0;
 			DynArray.add results k0;
-
+			
 			(* Print the constraint *)
 			print_message Debug_low ("Constraint K0 computed:");
 			print_message Debug_standard (LinearConstraint.string_of_linear_constraint program.variable_names k0);
 
-			(* Generate the dot graph (only if K0 <> false) *)
-			if LinearConstraint.is_satisfiable k0 then (
-				let radical = options#program_prefix ^ "_" ^ (string_of_int !current_iteration) in
-				let dot_file_name = (radical ^ ".dot") in
-				let states_file_name = (radical ^ ".states") in
-				let gif_file_name = (radical ^ "." ^ dot_extension) in
-				generate_graph program pi0 graph dot_file_name states_file_name gif_file_name;
-			);
 		); (* else if new pi0 *)
 
 		(* Find the next pi0 *)
@@ -409,7 +411,7 @@ let random_behavioral_cartography program pi0cube init_state nb =
 					set_debug_mode Debug_nodebug;
 				);
 				(* Compute the post *)
-				let graph, k0, nb_iterations, counter = Reachability.post_star program options pi0_functional init_state in
+				let graph, nb_iterations, counter = Reachability.post_star program options pi0_functional init_state in
 				(* Get the debug mode back *)
 				set_debug_mode global_debug_mode;
 				print_message Debug_standard (
@@ -423,9 +425,6 @@ let random_behavioral_cartography program pi0cube init_state nb =
 				(* Add the pi0 *)
 				pi0_computed.(!i - 1) <- pi0;
 
-				(* Print the constraint *)
-				print_message Debug_low ("Constraint K0 computed:");
-				print_message Debug_standard (LinearConstraint.string_of_linear_constraint program.variable_names k0);
 				(* Generate the dot graph *)
 				let radical = options#program_prefix ^ "_" ^ (string_of_int !i) in
 				let dot_file_name = (radical ^ ".dot") in
@@ -434,6 +433,14 @@ let random_behavioral_cartography program pi0cube init_state nb =
 				generate_graph program pi0_functional graph dot_file_name states_file_name gif_file_name;
 				(* Add the index to the interesting list *)
 				interesting_interations := !i :: !interesting_interations;
+
+				(* compute k0 *)
+				let k0 = Graph.compute_k0_destructive program graph in
+												
+				(* Print the constraint *)
+				print_message Debug_low ("Constraint K0 computed:");
+				print_message Debug_standard (LinearConstraint.string_of_linear_constraint program.variable_names k0);
+
 				(* Add the result *)
 				results.(!i - 1) <- k0;
 			);
@@ -656,7 +663,7 @@ let zones =
 match options#imitator_mode with
 	(* Perform reachability analysis or inverse Method *)
 	| Reachability_analysis | Inverse_method ->
-		let reachability_graph, k0, _, _ =
+		let reachability_graph, _, _ =
 			Reachability.post_star program options pi0 init_state_after_time_elapsing
 		in
 		(* Generate the DOT graph *)
@@ -665,7 +672,15 @@ match options#imitator_mode with
 		let states_file_name = (options#program_prefix ^ ".states") in
 		let gif_file_name = (options#program_prefix ^ "." ^ dot_extension) in
 		generate_graph program pi0 reachability_graph dot_file_name states_file_name gif_file_name;
-		[ k0 ]
+		
+		if options#imitator_mode = Inverse_method then (
+			(* compute k0 *)	
+			let k0 = Graph.compute_k0_destructive program reachability_graph in
+			(* print it *)
+			print_message Debug_standard ("\nFinal constraint K0 :");                                                                   
+			print_message Debug_standard (LinearConstraint.string_of_linear_constraint program.variable_names k0);            		
+		);
+		[ ]
 
 	| Random_cartography nb ->
 	(* Behavioral cartography algorithm with random iterations *)

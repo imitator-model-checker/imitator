@@ -159,14 +159,26 @@ val partition_pi0_compatible : (variable -> coef) -> linear_constraint -> (linea
 (** {3 Functions} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
 
+(** makes a copy of a constraint *)
+val copy : linear_constraint -> linear_constraint
+
 (** Performs the intersection of a list of linear constraints *)
 val intersection : linear_constraint list -> linear_constraint
+
+(** Performs the intersection of a list of linear constraints with sideeffect *)
+val intersection_assign : linear_constraint -> linear_constraint list -> unit
 
 (** Eliminate (using existential quantification) a set of variables in a linear constraint *)
 val hide : variable list -> linear_constraint -> linear_constraint
 
+(** Eliminate (using existential quantification) a set of variables in a linear constraint, with side effects *)
+val hide_assign : variable list -> linear_constraint -> unit
+
 (** 'rename_variables renaming_couples c' renames all variables according to the couples of the form (old, new) *)
 val rename_variables : (variable * variable) list -> linear_constraint -> linear_constraint
+
+(** 'rename_variables renaming_couples c' renames all variables according to the couples of the form (old, new), with side effects *)
+val rename_variables_assign : (variable * variable) list -> linear_constraint -> unit
 
 (** 'add_d d coef variables c' adds a variable 'coef * d' to any variable in 'variables' *)
 val add_d : variable -> coef -> variable list -> linear_constraint -> linear_constraint

@@ -566,12 +566,20 @@ let string_of_linear_constraint names linear_constraint =
 (** {3 Functions} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
 
+let copy linear_constraint =
+	ppl_new_NNC_Polyhedron_from_NNC_Polyhedron linear_constraint
+
 (** Performs the intersection of a list of linear constraints *)
 let intersection linear_constraints =
 	let result_poly = true_constraint () in
 	List.iter (fun poly -> ppl_Polyhedron_intersection_assign result_poly poly) linear_constraints;
 	assert_dimensions result_poly;
 	result_poly	
+	
+(** same function, with side effects *)
+let intersection_assign linear_constraint constrs =
+	List.iter (fun poly -> ppl_Polyhedron_intersection_assign linear_constraint poly) constrs;
+	assert_dimensions linear_constraint
 
 
 (** Eliminate (using existential quantification) a set of variables in a linear constraint *)
@@ -586,6 +594,16 @@ let hide variables linear_constraint =
 	assert_dimensions poly;
 	poly
 	
+	
+(** Eliminate a set of variables, side effects version *)
+let hide_assign variables linear_constraint =
+	(* debug output *)
+	if debug_mode_greater Debug_total then (
+		List.iter (fun v ->	print_message Debug_high ("hide v" ^ string_of_int v)) variables;
+	);
+	ppl_Polyhedron_unconstrain_space_dimensions linear_constraint variables;
+	assert_dimensions linear_constraint
+
 
 (** rename variables in a constraint *)
 let rename_variables list_of_couples linear_constraint =
@@ -615,6 +633,33 @@ let rename_variables list_of_couples linear_constraint =
 	ppl_Polyhedron_map_space_dimensions poly complete_list;
 	assert_dimensions poly;
 	poly
+
+				
+(** rename variables in a constraint, with side effects *)
+let rename_variables_assign list_of_couples linear_constraint =
+	(* add reverse mapping *)
+	let reverse_couples = List.map (fun (a,b) -> (b,a)) list_of_couples in
+	let joined_couples = List.rev_append list_of_couples reverse_couples in
+	(* find all dimensions that will be mapped *)
+	let from, _  = List.split joined_couples in
+	(* add identity pairs (x,x) for remaining dimensions *) 
+	let rec add_id list i = 
+		if i < 0 then list else
+			if not (List.mem i from) then
+				(i,i) :: add_id list (i-1)
+			else
+				add_id list (i-1)
+		in 
+	let complete_list = add_id joined_couples (!total_dim - 1) in
+  (* debug output *)
+	if debug_mode_greater Debug_high then (
+		let ndim = ppl_Polyhedron_space_dimension linear_constraint in
+		print_message Debug_high ("mapping space dimensions, no. dimensions is " ^ string_of_int ndim);
+		List.iter (fun (a,b) -> (print_message Debug_high ("map v" ^ string_of_int a ^ " -> v" ^ string_of_int b))) complete_list;
+	);
+	(* perfom the mapping *)
+	ppl_Polyhedron_map_space_dimensions linear_constraint complete_list;
+	assert_dimensions linear_constraint
 				
 				
 (** substitutes all variables in a linear term.

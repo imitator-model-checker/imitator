@@ -50,6 +50,8 @@ val get_state : reachability_graph -> int -> AbstractImitatorFile.state
 (** Return the list of all constraints on the parameters associated to the states of a graph *)
 val all_p_constraints : abstract_program -> reachability_graph -> LinearConstraint.linear_constraint list
 
+val compute_k0_destructive : abstract_program -> reachability_graph -> LinearConstraint.linear_constraint
+
 (** Check if a state belongs to the graph *)
 (* val in_graph : reachability_graph -> AbstractImitatorFile.state -> bool *)
 

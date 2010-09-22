@@ -76,10 +76,20 @@ let all_p_constraints program graph =
 			let p_constraint = LinearConstraint.hide program.clocks_and_discrete linear_constraint in
 			p_constraint :: current_list)
 		[] graph.states
-
+		
 (** Iterate over the reachable states *)
 let iter f graph =
 	DynArray.iter f graph.states
+	
+(** Compute the intersection of all parameter constraints, DESTRUCTIVE!!! *)
+let compute_k0_destructive program graph =
+	let k0 = LinearConstraint.true_constraint () in
+	iter (fun (_, constr) -> 
+		LinearConstraint.hide_assign program.clocks_and_discrete constr;
+		LinearConstraint.intersection_assign k0 [constr]
+	) graph;
+	k0
+	
 
 (****************************************************************)
 (** Actions on a graph *)
@@ -166,11 +176,15 @@ let add_inequality_to_states graph inequality =
 	let constraint_to_add = LinearConstraint.make [inequality] in
 	(* For all state: *)
 	for state_index = 0 to (DynArray.length graph.states) - 1 do
-		 DynArray.set graph.states state_index (
-			let (loc, const) = DynArray.get graph.states state_index in
-			(* Perform the intersection *)
-			loc, (LinearConstraint.intersection [constraint_to_add; const] )
-		)
+		 (* experimental: *)
+		 let _, constr = DynArray.get graph.states state_index in
+		 LinearConstraint.intersection_assign constr [constraint_to_add] 
+		
+(*		 DynArray.set graph.states state_index (                          *)
+(*			let (loc, const) = DynArray.get graph.states state_index in     *)
+(*			(* Perform the intersection *)                                  *)
+(*			loc, (LinearConstraint.intersection [constraint_to_add; const] )*)
+(*		)                                                                 *)
 	done
 	
 

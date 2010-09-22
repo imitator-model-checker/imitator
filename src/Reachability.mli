@@ -19,5 +19,5 @@ val create_initial_state : abstract_program -> state
 val post : abstract_program -> pi0 -> reachability_graph -> state_index -> state_index list
 
 val post_star : abstract_program -> imitator_options -> pi0 -> state -> 
-					 		 reachability_graph * linear_constraint * int * float
+					 		 reachability_graph * int * float
 	
