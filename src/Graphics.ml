@@ -36,7 +36,7 @@ let cartography program pi0cube constraint_list nb_variables_projected cartograp
 	(* replace strict inequalities *)
 	let new_constraint_list = ref [] in 
 	for i=0 to List.length constraint_list -1 do
-		let inequality_list = from_ppl_linear_constraint_list (ppl_Polyhedron_get_constraints (List.nth constraint_list i)) in 
+		let inequality_list = ppl_Polyhedron_get_constraints (List.nth constraint_list i) in 
 		let new_inequality_list = ref [] in
 		for j=0 to List.length inequality_list -1 do 
 			new_inequality_list := (strict_to_not_strict_inequality (List.nth inequality_list j))::!new_inequality_list;
@@ -95,7 +95,7 @@ let cartography program pi0cube constraint_list nb_variables_projected cartograp
 		(* find mininma and maxima for axes *)
 		let min_abs, max_abs, min_ord, max_ord =
 		List.fold_left (fun limits constr -> 
-			let points, _ = shape_of_poly x_param y_param (from_ppl_polyhedron constr) in			
+			let points, _ = shape_of_poly x_param y_param constr in			
 			List.fold_left (fun limits (x,y) ->
 				let current_min_abs, current_max_abs, current_min_ord, current_max_ord = limits in
 				let new_min_abs = min current_min_abs x in
@@ -117,7 +117,7 @@ let cartography program pi0cube constraint_list nb_variables_projected cartograp
 			let file_name = cartography_name^"_points_"^(string_of_int !k)^"_"^(string_of_int i)^".txt" in
 			let file_out = open_out file_name in
 			(* find the points satisfying the constraint *)
-			let s=plot_2d (x_param) (y_param) (from_ppl_polyhedron (List.nth !new_constraint_list i)) min_abs min_ord max_abs max_ord in
+			let s=plot_2d (x_param) (y_param) (List.nth !new_constraint_list i) min_abs min_ord max_abs max_ord in
 			(* print in the file the coordinates of the points *)
 			output_string file_out (snd s);
 			(* close the file and open it in a reading mode to read the first line *)

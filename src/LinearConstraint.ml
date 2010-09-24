@@ -515,28 +515,6 @@ let partition_pi0_compatible pi0 linear_constraint =
 (** {3 Conversion} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
 
-(** convert to PPL polyhedron *)
-let to_ppl_polyhedron x = x
-
-(** construct from PPL polyhedron *)
-let from_ppl_polyhedron x = x
-
-(** convert to PPL constraints *)
-let to_ppl_constraints x = ppl_Polyhedron_get_constraints x
-
-(** construct from PPL constraints *)
-let from_ppl_constraints constraints =
-	let poly = true_constraint () in
-	ppl_Polyhedron_add_constraints poly constraints;
-	poly
-
-let from_ppl_linear_constraint_list x = x
-let to_ppl_linear_constraint_list x = x
-
-let from_ppl_linear_constraint x = x
-let to_ppl_linear_constraint x = x
-
-
 (** String for the false constraint *)
 let string_of_false = "false"
 
