@@ -90,6 +90,9 @@ let time_limit = ref None
 (* Reverse automaton for backward reachability *)
 let option_pre = ref false
 
+(* constraint K *)
+let global_k = ref (LinearConstraint.true_constraint ())
+
 (**************************************************)
 (**************************************************)
 (* FUNCTIONS *)
@@ -748,6 +751,9 @@ let post program pi0 reachability_graph orig_state_index =
 				print_message Debug_standard ("  Adding the following inequality" ^ among ^ ":");
 				print_message Debug_standard ("  " ^ (LinearConstraint.string_of_linear_inequality program.variable_names negated_inequality));
 
+				(* store new inequality in global constraint k *)
+				global_k := LinearConstraint.intersection [!global_k; LinearConstraint.make [negated_inequality]];
+
 				(* Update the previous states (including the 'new_states' and the 'orig_state') *)
 				print_message Debug_medium ("\nUpdating all the previous states.\n");
 				Graph.add_inequality_to_states reachability_graph negated_inequality;				
@@ -847,6 +853,9 @@ let post_star program pi0 init_state =
 	(* Add the initial state to the reachable states *)
 	let init_state_index, _ = Graph.add_state program reachability_graph init_state in
 
+	(* initialize global constraint K *)
+	global_k := LinearConstraint.true_constraint ();
+	
 	(*--------------------------------------------------*)
 	(* Perform the post^* *)
 	(*--------------------------------------------------*)
@@ -941,12 +950,20 @@ let post_star program pi0 init_state =
 		(* Perform the intersection *)
 		let intersection = LinearConstraint.intersection all_constraints in
 		(* Print the result :-) *)
+		print_message Debug_standard ("\nFinal constraint K  :");
+		print_message Debug_standard (LinearConstraint.string_of_linear_constraint program.variable_names !global_k);
 		print_message Debug_standard ("\nFinal constraint K0 :");
 		print_message Debug_standard (LinearConstraint.string_of_linear_constraint program.variable_names intersection);
 		print_message Debug_standard ("\nAlgorithm InverseMethod finished after " ^ (string_of_seconds (time_from !counter)) ^ ".");
 		(* Return the result *)
 		intersection
 	) in
+	
+	(* debug for last states *)
+(*	let last_states = Graph.last_states program reachability_graph in       *)
+(*	List.iter (fun state ->                                                 *)
+(*		print_message Debug_standard ("last state q_" ^ (string_of_int state))*)
+(*	) last_states;                                                          *)
 
 	(*--------------------------------------------------*)
 	(* Return the result *)
@@ -1269,6 +1286,8 @@ let no_random = ref false in
 let global_debug_mode = ref Debug_standard in
 (* Consider the inclusion of region; default: false *)
 let inclusion = ref false in
+(* Return the union of constraints in last states; default: false *)
+let union = ref false in
 (* Mode for IMITATOR *)
 let imitator_mode = ref Inverse_method in
 (* Timed mode *)
@@ -1335,6 +1354,8 @@ and speclist = [
 	("-debug", String set_debug_mode_ref, " Print more or less debug information. Can be set to 'nodebug', 'standard', 'low', 'medium', 'high', 'total'. Default: 'standard'");
 	
 	("-inclusion", Set inclusion, " Consider an inclusion of region instead of the equality when performing the Post operation. Default: 'false'");
+
+	("-union", Set union, " Return the constraint obtained as the union of last reachable states. Default: 'false'");
 
 	("-log-prefix", Set_string program_prefix, " Sets the prefix for log files. Default: [program_file].");
 
@@ -1542,7 +1563,14 @@ print_message Debug_standard ("\nParsing done " ^ (after_seconds ()) ^ ".");
 let program, pi0, pi0cube = 
 try (
 	ProgramConverter.abstract_program_of_parsing_structure
-		parsing_structure pi0_parsed pi0cube_parsed !acyclic !sync_auto_detection !inclusion !no_random  !with_parametric_log !imitator_mode !file
+		parsing_structure pi0_parsed pi0cube_parsed 
+			~acyclic:!acyclic 
+			~sync_auto_detection:!sync_auto_detection
+			~inclusion_mode:!inclusion
+			~union_mode:!union
+			~no_random:!no_random
+			~with_parametric_log:!with_parametric_log			
+			!imitator_mode !file
 ) with 
 	| ProgramConverter.InvalidProgram -> (print_error ("The input program contains errors. Please check it again."); abort_program (); exit 0)
 	| ProgramConverter.InvalidPi0 -> (print_error ("The input pi_0 file contains errors. Please check it again."); abort_program (); exit 0)

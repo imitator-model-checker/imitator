@@ -184,6 +184,8 @@ type abstract_program = {
 	acyclic : bool;
 	(* Inclusion for the post operation *)
 	inclusion : bool;
+	(* Return union of last states *)
+	union : bool;
 	(* Random selection of the pi0-incompatible inequality *)
 	random : bool;
 	(* Mode for IMITATOR *)

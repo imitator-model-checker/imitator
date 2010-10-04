@@ -102,12 +102,14 @@ let dist_leq (x0, y0) (x1, y1) (x2, y2) =
 let graham_hull points =
 	(* remove duplicate points *)
 	let points = list_only_once points in
-	(* find the lowest leftmost point *)
+	(* find the lowest leftmost point and remove it from the list *)
 	let p0 = List.fold_left (fun (x0, y0) (x, y) -> 
 		if y < y0 || (y = y0 && x < x0) then (x, y) else (x0, y0)
 	) (List.hd points) (List.tl points)	in
 	(* sort the list wrt. to the angle to p0 *)
-	let points = List.sort (cosine_compare p0) points in
+	let points = List.sort (cosine_compare p0) (List.filter ((<>) p0) points) in
+	(* move pivot point to head of the list *)
+	let points =  p0 :: points in
 	(* iterate on points, discard points that induce a right-turn *)
 	let rec make_hull p1 p2 hull rest =
 		if rest = [] then
@@ -454,7 +456,8 @@ let area_of_poly vertices =
 				last_y := y;
 				sum
 			) 0.0 ps in
-			det /. 2.0 
+			let area = det /. 2.0 in
+			if area > 0. then area else 0. -. area 
 		| _ -> 0.0
 			
 	
@@ -476,12 +479,14 @@ let coverage program pi0cube constraint_list =
 		intersection [v0; constr]
 	) constraint_list in
 	(* get floating point vertices for zones *)
-	let shapes = List.map (fun constr -> 
+	let shapes = List.map (fun constr ->
+		if not (LinearConstraint.is_satisfiable constr) then [] else
 		poly_to_points x_param y_param constr
 	) trimmed_constraints in
 	(* get the area of v0 *)
-	let v0_shape = poly_to_points x_param y_param v0 in
-	let v0_area = area_of_poly v0_shape in
+	let v0_area = 
+		((NumConst.float_of_numconst x_max) -. (NumConst.float_of_numconst x_min)) *. 
+		((NumConst.float_of_numconst y_max) -. (NumConst.float_of_numconst y_min)) in
 	(* compute the area of the zones *)
 	let areas = List.map area_of_poly shapes in
 	(* sum it up *)

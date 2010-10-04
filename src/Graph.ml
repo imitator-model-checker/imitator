@@ -88,6 +88,46 @@ let all_p_constraints program graph =
 		[] graph.states
 
 
+let last_states program graph =
+	(* list to keep last states *)
+	let last_states = ref [] in
+	(* hash table to keep DFS indices of the states *)
+	let dfs_table = Hashtbl.create 0 in
+	(* functional version for lookup *)
+	let already_seen node = Hashtbl.mem dfs_table node in
+	(* successor function *)
+	let successors node = 
+		List.fold_left (fun succs action_index -> 
+			try (
+				let succ = Hashtbl.find_all graph.transitions_table (node, action_index) in
+				List.rev_append succ succs 
+			) with Not_found -> succs
+		) [] program.actions in
+	(* function to detect cycles *)
+	let rec cycle_detect node prefix =
+		let succs = successors node in
+		if succs = [] then
+			(* last node on finite path *)
+			last_states := node :: !last_states
+		else (
+			(* insert node in dfs table *)
+			Hashtbl.add dfs_table node true;
+			(* go on with successors *)
+			List.iter (fun succ -> 
+				(* successor in current path prefix (or self-cycle)? *)
+				if succ = node || List.mem succ prefix then
+					(* found cycle *)
+					last_states := succ :: !last_states
+				else if not (already_seen succ) then
+					cycle_detect succ (node :: prefix)					
+			) succs;
+		) in
+	(* start cycle detection with initial state *)
+	cycle_detect 0 [];
+	(* return collected last states *)
+	!last_states
+		 
+
 (** Check if a state belongs to the graph *)
 (*let in_graph graph state =
 	Hashtbl.mem graph.states state*)

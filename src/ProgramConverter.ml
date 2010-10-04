@@ -1295,7 +1295,7 @@ let make_pi0cube parsed_pi0cube nb_parameters =
 (*--------------------------------------------------*)
 (* Convert the parsing structure into an abstract program *)
 (*--------------------------------------------------*)
-let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_automata, parsed_init_definition) parsed_pi0 parsed_pi0cube acyclic sync_auto_detection inclusion_mode no_random with_parametric_log imitator_mode program_name =
+let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_automata, parsed_init_definition) parsed_pi0 parsed_pi0cube ~acyclic:acyclic ~sync_auto_detection:sync_auto_detection ~inclusion_mode:inclusion_mode ~union_mode:union_mode ~no_random:no_random ~with_parametric_log:with_parametric_log imitator_mode program_name =
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Debug functions *) 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -1832,6 +1832,8 @@ let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_
 	acyclic = acyclic;
 	(* Inclusion for the post operation *)
 	inclusion = inclusion_mode;
+	(* Return union of last states *)
+	union = union_mode;
 	(* Random selection of the pi0-incompatible inequality *)
 	random = not no_random;
 	(* Mode for IMITATOR *)
