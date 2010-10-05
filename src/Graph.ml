@@ -141,6 +141,40 @@ let last_states program graph =
 let iter f graph =
 	DynArray.iter f graph.states
 
+exception Satisfied
+
+(** Checks if a state exists that satisfies a given predicate *)
+let exists_state p graph =
+		try (
+			iter (fun s -> 
+				if p s then raise Satisfied
+			) graph;
+			false
+		) with Satisfied -> true
+
+(** Checks if all states satisfy a given predicate *)
+let forall_state p graph =
+		try (
+			iter (fun s -> 
+				if not (p s) then raise Satisfied
+			) graph;
+			true
+		) with Satisfied -> false		
+									
+(** Check if bad states are reachable *)
+let is_bad program graph =
+	(* get bad state pairs from program *)
+	let bad_states = program.bad in
+	(* if no bad state specified, then must be good *)
+	if bad_states = [] then false else (
+		let is_bad_state = fun (location, _) -> 
+			List.for_all (fun (aut_index, loc_index) -> 
+				loc_index = Automaton.get_location location aut_index
+			) bad_states in
+		exists_state is_bad_state graph
+	) 
+		
+
 (****************************************************************)
 (** Actions on a graph *)
 (****************************************************************)

@@ -108,13 +108,13 @@ type state_predicate =
 
 
 type init_definition = state_predicate list
-
+type bad_definition  = state_predicate list
 
 (****************************************************************)
 (** Input program *)
 (****************************************************************)
 
-type parsing_structure = variable_declarations * automata * init_definition
+type parsing_structure = variable_declarations * automata * init_definition * bad_definition
 
 (****************************************************************)
 (** Input pi0 *)

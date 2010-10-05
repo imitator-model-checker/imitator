@@ -71,8 +71,17 @@ val states_equal: AbstractImitatorFile.state -> AbstractImitatorFile.state -> bo
 (** iterates over the reachable states of a graph *)
 val iter: (AbstractImitatorFile.state -> unit) -> reachability_graph -> unit
 
+(** test if a state exists satisfying predicate s *)
+val exists_state: (AbstractImitatorFile.state -> bool) -> reachability_graph -> bool
+
+(** test if all states satisfy predicate s *)
+val forall_state: (AbstractImitatorFile.state -> bool) -> reachability_graph -> bool
+
 (** find all "last" states on finite or infinite runs *)
 val last_states: abstract_program -> reachability_graph -> int list 
+
+(** check if bad states are reached *)
+val is_bad: abstract_program -> reachability_graph -> bool
 
 (****************************************************************)
 (** Actions on a graph *)
