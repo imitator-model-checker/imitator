@@ -667,8 +667,11 @@ let hide variables linear_constraint =
 	assert_dimensions poly;
 	poly
 	
-	
-	
+(** Eliminate (using existential quantification) a set of variables in a linear constraint *)
+let hide_assign variables linear_constraint =
+	ppl_Polyhedron_unconstrain_space_dimensions linear_constraint variables;
+	assert_dimensions linear_constraint
+		
 
 (** rename variables in a constraint *)
 let rename_variables list_of_couples linear_constraint =
@@ -692,7 +695,28 @@ let rename_variables list_of_couples linear_constraint =
 	ppl_Polyhedron_map_space_dimensions poly complete_list;
 	assert_dimensions poly;
 	poly
+
 				
+(** rename variables in a constraint *)
+let rename_variables_assign list_of_couples linear_constraint =
+	(* add reverse mapping *)
+	let reverse_couples = List.map (fun (a,b) -> (b,a)) list_of_couples in
+	let joined_couples = List.rev_append list_of_couples reverse_couples in
+	(* find all dimensions that will be mapped *)
+	let from, _  = List.split joined_couples in
+	(* add identity pairs (x,x) for remaining dimensions *) 
+	let rec add_id list i = 
+		if i < 0 then list else
+			if not (List.mem i from) then
+				(i,i) :: add_id list (i-1)
+			else
+				add_id list (i-1)
+		in 
+	let complete_list = add_id joined_couples (!total_dim - 1) in
+  (* perfom the mapping *)
+	ppl_Polyhedron_map_space_dimensions linear_constraint complete_list;
+	assert_dimensions linear_constraint
+												
 				
 (** substitutes all variables in a linear term.
 		The substitution is given as a function sub: var -> linear_term *)

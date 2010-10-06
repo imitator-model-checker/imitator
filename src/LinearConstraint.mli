@@ -200,6 +200,9 @@ val time_elapse_assign : linear_constraint -> linear_constraint -> unit
 (** Eliminate (using existential quantification) a set of variables in a linear constraint *)
 val hide : variable list -> linear_constraint -> linear_constraint
 
+(** Eliminate (using existential quantification) a set of variables in a linear constraint *)
+val hide_assign : variable list -> linear_constraint -> unit
+
 (** Substitutes all variables in a linear inequality *)
 val substitute_variables: (variable -> Ppl_ocaml.linear_expression) -> linear_inequality -> linear_inequality
 
@@ -208,6 +211,9 @@ val substitute: (variable -> Ppl_ocaml.linear_expression) -> linear_constraint -
 
 (** 'rename_variables renaming_couples c' renames all variables according to the couples of the form (old, new) *)
 val rename_variables : (variable * variable) list -> linear_constraint -> linear_constraint
+
+(** 'rename_variables renaming_couples c' renames all variables according to the couples of the form (old, new) *)
+val rename_variables_assign : (variable * variable) list -> linear_constraint -> unit
 
 val project_to : variable list -> linear_constraint -> unit
 
