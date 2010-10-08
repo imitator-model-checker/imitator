@@ -705,4 +705,6 @@ in ();
 (* Bye bye! *)
 (**************************************************)
 
+Reachability.print_stats ();
+
 terminate_program()

@@ -20,7 +20,6 @@ open AbstractImitatorFile
 
 (* Convert a var_type into a string *)
 let string_of_var_type = function
-	| Var_type_analog -> "analog"
 	| Var_type_clock -> "clock"
 	| Var_type_discrete -> "discrete"
 	| Var_type_parameter -> "parameter"
@@ -88,6 +87,14 @@ let string_of_sync program action_index =
 	| Action_type_nosync -> " (* sync " ^ (program.action_names action_index) ^ "*) "
 
 
+
+let string_of_clock_updates program clock_updates =
+	string_of_list_of_string_with_sep ", " (List.map (fun variable_index ->
+		(program.variable_names variable_index)
+		^ "' = 0"
+	) clock_updates)
+	
+	
 (* Convert a list of updates into a string *)
 let string_of_updates program updates =
 	string_of_list_of_string_with_sep ", " (List.map (fun (variable_index, linear_term) ->
@@ -106,7 +113,8 @@ let string_of_transition program automaton_index action_index (guard, clock_upda
 	^ (LinearConstraint.string_of_linear_constraint program.variable_names guard)
 	(* Convert the updates *)
 	^ " do {"
-	^ (string_of_updates program (list_append clock_updates discrete_updates))
+	^ (string_of_clock_updates program clock_updates)
+	^ (string_of_updates program discrete_updates)
 	^ "} "
 	(* Convert the sync *)
 	^ (string_of_sync program action_index)

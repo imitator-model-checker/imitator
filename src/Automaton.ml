@@ -90,9 +90,15 @@ let nb_automata = ref 0
 (** Useful functions *)
 (**************************************************)
 
-let get_locations (locations, _) = locations
+let get_locations (locations, _) =	locations
 
 let get_discrete (_, discrete) = discrete
+
+let location_hash_code location =
+	let locations = get_locations location in
+	Array.fold_left (fun h loc -> 
+		7919 * h + loc
+	) 0 locations
 
 let hash_code location =
 	let locations, discrete = location in

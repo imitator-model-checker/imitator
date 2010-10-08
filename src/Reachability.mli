@@ -21,3 +21,4 @@ val post : abstract_program -> pi0 -> reachability_graph -> state_index -> state
 val post_star : abstract_program -> imitator_options -> pi0 -> state -> 
 					 		 reachability_graph * int * float
 	
+val print_stats: unit -> unit

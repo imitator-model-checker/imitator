@@ -47,7 +47,6 @@ type pi0cube = (int * int) array
 (** Type of variable in declarations *)
 type var_type =
 	| Var_type_clock
-	| Var_type_analog
 	| Var_type_discrete
 	| Var_type_parameter
 
@@ -56,20 +55,9 @@ type action_type =
 	| Action_type_sync
 	| Action_type_nosync
 
-(** Rate conditions *)
-type rate_type = NumConst.t option
-
 (****************************************************************)
 (** State *)
 (****************************************************************)
-
-(** Location (control state): array automaton_index -> location_index *)
-(* type location = location_index array *)
-
-(** Discrete variables (control state): array automaton_index -> location_index *)
-(* type discrete_values = variable_index array *)
-
-(* type control_state = location  *)
 
 (** State: location and constraint *)
 type state = location * linear_constraint
@@ -79,7 +67,7 @@ type state = location * linear_constraint
 (****************************************************************)
 
 (** update: variable_index := linear_term *)
-type clock_update = clock_index * linear_term
+type clock_update = clock_index 
 
 (** update: variable_index := linear_term *)
 type discrete_update = discrete_index * linear_term
@@ -103,8 +91,6 @@ type abstract_program = {
 	nb_parameters : int;
 	nb_variables : int;
 	
-	(* True for analogs, false otherwise *)
-	is_analog : variable_index -> bool;
 	(* The list of clock indexes *)
 	clocks : clock_index list;
 	(* True for clocks, false otherwise *)
