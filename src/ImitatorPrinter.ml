@@ -136,6 +136,7 @@ let string_of_transitions program automaton_index location_index =
 			List.map (string_of_transition program automaton_index action_index) transitions
 			)
 		) (program.actions_per_location automaton_index location_index)
+		  (*test*)
 	)
 
 
