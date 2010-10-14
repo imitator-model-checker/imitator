@@ -89,7 +89,61 @@ let compute_k0_destructive program graph =
 		LinearConstraint.intersection_assign k0 [constr]
 	) graph;
 	k0
-	
+
+(* state struct for constructing set type *)
+module State = struct
+	type t = int
+	let compare = compare
+end
+
+(* set of states for efficient lookup *)
+module StateSet = Set.Make(State)
+
+(** find all "last" states on finite or infinite runs *)
+(* Uses a depth first search on the reachability graph. The *)
+(* prefix of the current DFS path is kept during the search *)
+(* in order to detect cycles. *) 
+let last_states program graph =
+	(* list to keep the resulting last states *)
+	let last_states = ref [] in
+	(* Table to keep all states already visited during DFS *)
+	let dfs_table = ref StateSet.empty in
+	(* functional version for lookup *)
+	let already_seen node = StateSet.mem node !dfs_table in
+	(* function to find all successors of a state *)
+	let successors node = 
+		List.fold_left (fun succs action_index -> 
+			try (
+				let succ = Hashtbl.find_all graph.transitions_table (node, action_index) in
+				List.rev_append succ succs 
+			) with Not_found -> succs
+		) [] program.actions in
+	(* function to find all last states *)
+	let rec cycle_detect node prefix =
+		(* get all successors of current node *)
+		let succs = successors node in
+		if succs = [] then
+			(* no successors -> last node on finite path *)
+			last_states := node :: !last_states
+		else (
+			(* insert node in DFS table *)
+			dfs_table := StateSet.add node !dfs_table;
+			(* go on with successors *)
+			List.iter (fun succ -> 
+				(* successor in current path prefix (or self-cycle)? *)
+				if succ = node || StateSet.mem succ prefix then
+					(* found cycle *)
+					last_states := succ :: !last_states
+				else if not (already_seen succ) then
+					(* go on recursively on newly found node *)
+					cycle_detect succ (StateSet.add node prefix)					
+			) succs;
+		) in
+	(* start cycle detection with initial state *)
+	cycle_detect 0 StateSet.empty;
+	(* return collected last states *)
+	!last_states
+
 
 (****************************************************************)
 (** Actions on a graph *)

@@ -906,25 +906,6 @@ let post_star program options pi0 init_state =
 		^ " with "
 		^ (string_of_int (Hashtbl.length (reachability_graph.transitions_table))) ^ " transition" ^ (s_of_int (Hashtbl.length (reachability_graph.transitions_table))) ^ ".");
 
-	(*--------------------------------------------------*)
-	(* Perform the intersection of all inequalities *)
-	(*--------------------------------------------------*)
-(*	let final_k0 =                                    *)
-(*		if program.imitator_mode = Reachability_analysis*)
-(*		then (LinearConstraint.true_constraint ())      *)
-(*		else(                                           *)
-(*		(* Get all the constraints *)                                              *)
-(*		let all_constraints = Graph.all_p_constraints program reachability_graph in*)
-(*		(* Perform the intersection *)                                             *)
-(*		let intersection = LinearConstraint.intersection all_constraints in        *)
-(*		(* Print the result :-) *)                                                 *)
-(*		print_message Debug_standard ("\nFinal constraint K0 :");                                                                   *)
-(*		print_message Debug_standard (LinearConstraint.string_of_linear_constraint program.variable_names intersection);            *)
-(*		print_message Debug_standard ("\nAlgorithm InverseMethod finished after " ^ (string_of_seconds (time_from !counter)) ^ ".");*)
-(*		(* Return the result *)                                                                                                     *)
-(*		intersection                                                                                                                *)
-(*		Graph.compute_k0_destructive program reachability_graph*)
-(*	) in                                                     *)
 
 	(*--------------------------------------------------*)
 	(* Return the result *)
