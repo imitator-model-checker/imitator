@@ -12,7 +12,7 @@
 
 # flags for ocaml compiler
 #OCAMLC_FLAGS = -g
-OCAMLC_FLAGS = 
+OCAMLC_FLAGS = -annot
 
 # ocaml compiler
 OCAMLC = ocamlc $(OCAMLC_FLAGS)
@@ -287,6 +287,7 @@ clean: rmtpf rmuseless
 	@rm -rf $(ML_LEXERS) $(ML_PARSERS) $(MLI_PARSERS) $(PARSER_INTERF)
 	@rm -rf $(TARGET) $(IMILIB) $(TARGET_OPT) $(IMILIB_OPT)
 	@rm -rf .depend
+	@rm $(SRC)/*.annot
 	@cd test; make clean
 
 
