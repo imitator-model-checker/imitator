@@ -34,10 +34,9 @@ endif
 
 # export paths for use in sub-makefiles
 export EXTLIB_PATH 
-export APRON_PATH 
-export OUNIT_PATH 
 export OCAML_PPL_PATH
 export OCAML_GMP_PATH
+export CLIB_PATH
 
 INCLUDE = -I $(SRC) -I $(EXTLIB_PATH) -I $(OCAML_PPL_PATH) -I $(OCAML_GMP_PATH) -I $(CLIB_PATH)
 
@@ -57,25 +56,36 @@ export OPTLIBS = $(CLIBS) $(OOLIBS)
 
 SRC = src
 
-# FILES
-.PREFIXES : +.
-.SUFFIXES : .cmo .cmi .ml .mli .cmxo .cmx
 
 # main object
 MAIN = $(SRC)/IMITATOR.cmo
 MAIN_OPT = $(MAIN:.cmo=.cmx)
 
 # sources to compile
-FILES =  $(SRC)/Global.+ $(SRC)/Options.+ $(SRC)/NumConst.+ $(SRC)/LinearConstraint.+ $(SRC)/Automaton.+ $(SRC)/Pi0Lexer.+ $(SRC)/Pi0Parser.+ $(SRC)/Pi0CubeLexer.+ $(SRC)/Pi0CubeParser.+ $(SRC)/ImitatorLexer.+ $(SRC)/ImitatorParser.+ $(SRC)/ImitatorPrinter.+ $(SRC)/ProgramConverter.+ $(SRC)/Graph.+ $(SRC)/Graphics.+ $(SRC)/Reachability.+
-OBJS = $(FILES:+=cmo)
-OBJS_OPT = $(OBJS:.cmo=.cmx)
+MODULES = Global Options NumConst LinearConstraint Automaton  \
+          Cache Pi0Lexer Pi0Parser Pi0CubeLexer Pi0CubeParser \
+          ImitatorLexer ImitatorParser ImitatorPrinter        \
+          ProgramConverter Graph Graphics Reachability           
 
-# header files
-FILESMLI = $(SRC)/Global.+ $(SRC)/NumConst.+ $(SRC)/LinearConstraint.+ $(SRC)/Automaton.+ $(SRC)/ParsingStructure.+ $(SRC)/AbstractImitatorFile.+ $(SRC)/ImitatorPrinter.+ $(SRC)/ProgramConverter.+ $(SRC)/Graph.+ $(SRC)/Graphics.+ $(SRC)/Reachability.+
+HEADERS = Global NumConst LinearConstraint Automaton Cache      \
+          ParsingStructure AbstractImitatorFile ImitatorPrinter \
+          ProgramConverter Graph Graphics Reachability           
+
+ML_FILES  = $(addprefix $(SRC)/, $(addsuffix .ml, $(MODULES)))
+MLI_FILES = $(addprefix $(SRC)/, $(addsuffix .mli, $(HEADERS)))
+
+INTERF   = $(MLI_FILES:.mli=.cmi)
+OBJS     = $(ML_FILES:.ml=.cmo)
+OBJS_OPT = $(ML_FILES:.ml=.cmx)
 
 # parsers and lexers 
-LEXERS = $(SRC)/Pi0Lexer.+ $(SRC)/Pi0CubeLexer.+ $(SRC)/ImitatorLexer.+
-PARSERS = $(SRC)/Pi0Parser.+ $(SRC)/Pi0CubeParser.+ $(SRC)/ImitatorParser.+
+LEXERS = Pi0Lexer Pi0CubeLexer ImitatorLexer
+PARSERS = Pi0Parser Pi0CubeParser ImitatorParser
+
+ML_LEXERS = $(addprefix $(SRC)/, $(addsuffix .ml, $(LEXERS)))
+ML_PARSERS = $(addprefix $(SRC)/, $(addsuffix .ml, $(PARSERS)))
+MLI_PARSERS = $(ML_PARSERS:.ml=.mli)
+PARSER_INTERF = $(ML_PARSERS:.ml=.cmi)
 
 # target library
 IMILIB = lib/imitator.cma
@@ -107,9 +117,9 @@ $(TARGET_OPT): $(IMILIB_OPT) $(MAIN_OPT)
 	$(OCAMLOPT) -o $(TARGET_OPT) $(INCLUDE) $(OPTLIBS) $(IMILIB_OPT) $(MAIN_OPT)
 
 
-header: $(FILESMLI:+=cmi)
+header: $(INTERF)
 
-parser: $(PARSERS:+=ml) $(LEXERS:+=ml) header $(PARSERS:+=cmi)
+parser: $(ML_PARSERS) $(ML_LEXERS) header $(PARSER_INTERF)
 
 $(SRC)/%.cmo: $(SRC)/%.ml $(SRC)/%.mli
 	@ echo [OCAMLC] $<
@@ -274,7 +284,7 @@ count: clean
 
 
 clean: rmtpf rmuseless
-	@rm -rf $(LEXERS:+=ml) $(PARSERS:+=mli) $(PARSERS:+=ml)
+	@rm -rf $(ML_LEXERS) $(ML_PARSERS) $(MLI_PARSERS) $(PARSER_INTERF)
 	@rm -rf $(TARGET) $(IMILIB) $(TARGET_OPT) $(IMILIB_OPT)
 	@rm -rf .depend
 	@cd test; make clean
@@ -285,7 +295,6 @@ rmtpf:
 
 
 rmuseless:
-	@rm -rf $(FILES:+=cmo) $(FILES:+=cmx) $(FILES:+=cmi) $(FILES:+=o) $(MAIN) $(MAIN:.cmo=.cmi) $(MAIN:.cmo=.cmx)
-	@rm -rf $(FILESMLI:+=cmi)
+	@rm -rf $(OBJS) $(OBJS_OPT) $(INTERF) $(MAIN) $(MAIN:.cmo=.cmi) $(MAIN:.cmo=.cmx)
 
 include .depend
