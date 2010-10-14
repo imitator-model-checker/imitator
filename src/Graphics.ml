@@ -32,7 +32,7 @@ let strict_to_not_strict_inequality inequality =
 
 
 (* print the cartography which correspond to the list of constraint *)
-let cartography program pi0cube constraint_list nb_variables_projected cartography_name =
+let cartography program pi0cube constraint_list cartography_name =
 	(* replace strict inequalities *)
 	let new_constraint_list = ref [] in 
 	for i=0 to List.length constraint_list -1 do
@@ -44,37 +44,27 @@ let cartography program pi0cube constraint_list nb_variables_projected cartograp
 		new_constraint_list := make !new_inequality_list::!new_constraint_list;
 	done;
 
-	(* Find indexes of the projected variables *)
-	let idx = DynArray.create () in 
-	let i = ref 0 in
-	let nb = ref 0 in
-	while !nb < nb_variables_projected && !i < (Array.length pi0cube) do
-		match pi0cube.(!i) with 
-			|(x,y) when x<>y -> (DynArray.insert idx !nb !i; nb := !nb + 1; i := !i + 1)
-			|_-> i := !i + 1
-	done;
+	(* find indices of first two variables with a parameter range *)
+	let range_params = ref [] in
+	Array.iteri (fun index (a,b) -> 
+		if a <> b then range_params := index :: !range_params
+	) pi0cube;
+	range_params := List.rev !range_params;
 
-	(* create an Array with all couple possible *)
-	let couple_list = ref [] in
-	for i=0 to DynArray.length idx -1 do
-		for j=i to DynArray.length idx -1 do
-			couple_list := (DynArray.get idx i,DynArray.get idx j)::!couple_list;
-		done
-	done;
+	if (List.length !range_params) < 2 then
+		print_error "Could not plot cartography (region of interest has too few dimensions)"
+	else ( 
 
-	(* Keep only couple with diffrent values *)
-	couple_list := List.filter ( fun (a,b) -> a<>b) !couple_list;	
-
-	(* make a cartography for each element of the couple_list *)
-	let k = ref 0 in
-	List.iter (fun (x_param, y_param) -> 	
+		let x_param = List.nth !range_params 0 in
+		let y_param = List.nth !range_params 1 in
+	
 		let x_name = program.variable_names x_param in
 		let y_name = program.variable_names y_param in
 		(* Create a script that will print the cartography *)
-		let script_name = cartography_name^"_"^(string_of_int !k)^".sh" in
+		let script_name = cartography_name ^ ".sh" in
 		let script = open_out script_name in
 		(* Find the V0 zone *)
-		let file_v0_name = cartography_name^"_v0_"^(string_of_int !k)^".txt" in
+		let file_v0_name = cartography_name^"_v0.txt" in
 		let file_zone = open_out file_v0_name in
 		let str_zone = ((string_of_float (float_of_int (fst (pi0cube.(x_param)))))^" "^(string_of_float (float_of_int (snd (pi0cube.(y_param)))))^"\n"^	(string_of_float (float_of_int (snd (pi0cube.(x_param)))))^" "^(string_of_float (float_of_int (snd (pi0cube.(y_param)))))^"\n"^	(string_of_float (float_of_int (snd (pi0cube.(x_param)))))^" "^(string_of_float (float_of_int (fst (pi0cube.(y_param)))))^"\n"^	(string_of_float (float_of_int (fst (pi0cube.(x_param)))))^" "^(string_of_float (float_of_int (fst (pi0cube.(y_param)))))^"\n"^	(string_of_float (float_of_int (fst (pi0cube.(x_param)))))^" "^(string_of_float (float_of_int (snd (pi0cube.(y_param)))))) in
 		output_string file_zone str_zone;
@@ -114,7 +104,7 @@ let cartography program pi0cube constraint_list nb_variables_projected cartograp
 		(* print_message Debug_standard ((string_of_float !min_abs)^"  "^(string_of_float !min_ord)); *)
 		(* Create a new file for each constraint *)
 		for i=0 to List.length !new_constraint_list-1 do
-			let file_name = cartography_name^"_points_"^(string_of_int !k)^"_"^(string_of_int i)^".txt" in
+			let file_name = cartography_name^"_points_"^(string_of_int i)^".txt" in
 			let file_out = open_out file_name in
 			(* find the points satisfying the constraint *)
 			let s=plot_2d (x_param) (y_param) (List.nth !new_constraint_list i) min_abs min_ord max_abs max_ord in
@@ -136,7 +126,7 @@ let cartography program pi0cube constraint_list nb_variables_projected cartograp
 		done;
 		
 		(* File in which the cartography will be printed *)
-		let final_name = cartography_name^"_"^(string_of_int !k)^".ps" in
+		let final_name = cartography_name^".ps" in
 		(* last part of the script *)	
 		script_line := !script_line^" -C -m 2 -q -1 "^file_v0_name^" > "^final_name;
 		(* write the script into a file *)
@@ -147,6 +137,5 @@ let cartography program pi0cube constraint_list nb_variables_projected cartograp
 			^ " to file '" ^ final_name ^ "'"); 
 		(* execute the script *)
 		let execution = Sys.command !script_line in 
-		print_message Debug_high ("Result of the cartography execution: exit code "^(string_of_int execution));
-		k := !k + 1
-	) !couple_list
+		print_message Debug_high ("Result of the cartography execution: exit code "^(string_of_int execution))
+	)

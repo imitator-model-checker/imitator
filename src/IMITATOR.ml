@@ -693,18 +693,16 @@ match options#imitator_mode with
 in ();
 
 let _ =
-match options#cart with 
-	| None -> print_message Debug_medium "No graph for the cartography."
-	| Some n ->(
-			print_message Debug_standard ("Cartography started " ^ (after_seconds ()) ^ "\n");
-  		cartography program pi0cube zones n (options#program_prefix ^ "_cart")
-	 )
+if options#cart then (
+	print_message Debug_standard ("Cartography started " ^ (after_seconds ()) ^ "\n");
+	cartography program pi0cube zones (options#program_prefix ^ "_cart")
+)
 in ();
 
 (**************************************************)
 (* Bye bye! *)
 (**************************************************)
 
-Reachability.print_stats ();
+if debug_mode_greater Debug_low then Reachability.print_stats ();
 
 terminate_program()

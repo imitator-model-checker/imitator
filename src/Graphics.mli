@@ -17,4 +17,4 @@ open AbstractImitatorFile
 
 val strict_to_not_strict_inequality : linear_inequality -> linear_inequality
 
-val cartography : abstract_program ->  (int*int) array -> linear_constraint list ->  int -> string -> unit
+val cartography : abstract_program ->  (int*int) array -> linear_constraint list ->  string -> unit
