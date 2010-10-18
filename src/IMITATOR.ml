@@ -221,35 +221,68 @@ let generate_graph program pi0 reachability_graph dot_file_name states_file_name
 (*--------------------------------------------------*)
 (* Compute the invariant associated to a location *)
 (*--------------------------------------------------*)
-let compute_invariant program location =
-	let invariant = LinearConstraint.true_constraint () in
-	List.iter (fun automaton_index -> 
-		(* Get the current location *)
-		let location_index = Automaton.get_location location automaton_index in
-		(* Compute the invariant *)
-		LinearConstraint.intersection_assign invariant [program.invariants automaton_index location_index]
-	) program.automata;
-	invariant	
 
+(* experimental: computed table for invariants *)
+let max_computed_invs = 200
+let nb_computed_invs = ref 0
+let computed_invs = ref (Hashtbl.create 0)
+
+
+let compute_invariant program location =
+	(* lookup in hash table *)
+	try (
+		Hashtbl.find !computed_invs location 
+	) with Not_found -> (
+		let invariant = LinearConstraint.true_constraint () in
+		List.iter (fun automaton_index -> 
+			(* Get the current location *)
+			let location_index = Automaton.get_location location automaton_index in
+			(* Compute the invariant *)
+			LinearConstraint.intersection_assign invariant [program.invariants automaton_index location_index]
+		) program.automata;
+		(* store in computed table *)
+		if !nb_computed_invs < max_computed_invs then (
+			Hashtbl.add !computed_invs location invariant;
+			nb_computed_invs := !nb_computed_invs + 1
+		);
+		invariant
+	)	
+
+
+(* experimental: computed table for flows *)
+let max_computed_flows = 200
+let nb_computed_flows = ref 0
+let computed_flows = ref (Hashtbl.create 0)
 	
 (*--------------------------------------------------*)
 (* Instantiate the flow for a given location        *)
 (*--------------------------------------------------*)
 let compute_flow program location =
-	let flow = LinearConstraint.true_constraint () in
-	List.iter (fun automaton_index -> 
-		(* Get the current location *)
-		let location_index = Automaton.get_location location automaton_index in
-		(* Compute the flow *)
-		let loc_flow = program.analog_flows automaton_index location_index in
-		match loc_flow with
-			| None -> ()
-			| Some constr -> LinearConstraint.intersection_assign flow [constr] 
-	) program.automata;
-	(* Add standard flow for parameters, discrete and clocks *)
-	LinearConstraint.intersection_assign flow [program.standard_flow];
-	flow
-			
+	(* lookup in hash table *)	
+	try (
+		Hashtbl.find !computed_flows location
+	) with Not_found -> (
+	  (* build flow *)
+		let flow = LinearConstraint.true_constraint () in
+		List.iter (fun automaton_index -> 
+			(* Get the current location *)
+			let location_index = Automaton.get_location location automaton_index in
+			(* Compute the flow *)
+			let loc_flow = program.analog_flows automaton_index location_index in
+			match loc_flow with
+				| None -> ()
+				| Some constr -> LinearConstraint.intersection_assign flow [constr] 
+		) program.automata;
+		(* Add standard flow for parameters, discrete and clocks *)
+		LinearConstraint.intersection_assign flow [program.standard_flow];
+		(* Add flow to hash table *)
+		if !nb_computed_flows < max_computed_flows then (
+		  Hashtbl.add !computed_flows location flow;
+			nb_computed_flows := !nb_computed_flows + 1	
+		);
+		flow
+  )
+	
 
 (*--------------------------------------------------*)
 (* Create a fresh constraint of the form 'D = d' for any discrete variable D with value d *)
@@ -568,11 +601,6 @@ let post program pi0 reachability_graph orig_state_index =
 			if debug_mode_greater Debug_total then(
 				print_message Debug_total (LinearConstraint.string_of_linear_constraint program.variable_names new_constraint);
 			);
-			(* check if guard is satisfiable *)
-			if not (LinearConstraint.is_satisfiable new_constraint) then (
-				print_message Debug_total "guards not satisfiable -> skip transition";
-				raise Unsat_exception
-			);
 	
 			print_message Debug_total ("\nEliminate the discrete variables in g(X)");
 			(* Remove the discrete variables *)
@@ -650,7 +678,7 @@ let post program pi0 reachability_graph orig_state_index =
 			);
 			(* Check satisfiability *)
 			if not (LinearConstraint.is_satisfiable new_constraint) then (
-				print_message Debug_total "invariant before time elapse is unsat -> skip transition";
+				print_message Debug_high "invariant before time elapse is unsat -> skip transition";
 				raise Unsat_exception
 			);				
 	
@@ -847,6 +875,7 @@ let post_star program pi0 init_state =
 	let guessed_nb_states = 10 * (nb_actions + nb_automata + nb_variables) in 
 	let guessed_nb_transitions = guessed_nb_states * nb_actions in 
 	print_message Debug_total ("I guess I will reach about " ^ (string_of_int guessed_nb_states) ^ " states with " ^ (string_of_int guessed_nb_transitions) ^ " transitions.");
+	let guessed_nb_transitions = min guessed_nb_transitions 1000 in
 	(* Create the reachability graph *)
 	let reachability_graph = Graph.make guessed_nb_transitions in
 	
@@ -1711,6 +1740,13 @@ match !imitator_mode with
 		let states_file_name = (!program_prefix ^ ".states") in
 		let gif_file_name = (!program_prefix ^ "." ^ dot_extension) in
 		generate_graph program pi0 reachability_graph dot_file_name states_file_name gif_file_name;
+		
+(*		let g = Graph.shrink program reachability_graph in                            *)
+(*		let dot_file_name = (!program_prefix ^ ".shrink.dot") in                      *)
+(*		let states_file_name = (!program_prefix ^ ".shrink.states") in                *)
+(*		let gif_file_name = (!program_prefix ^ ".shrink." ^ dot_extension) in         *)
+(*		generate_graph program pi0 g dot_file_name states_file_name gif_file_name;		*)
+(*		();                                                                           *)
 
 	| Random_cartography nb ->
 	(* Behavioral cartography algorithm with random iterations *)

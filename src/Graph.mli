@@ -83,6 +83,8 @@ val last_states: abstract_program -> reachability_graph -> int list
 (** check if bad states are reached *)
 val is_bad: abstract_program -> reachability_graph -> bool
 
+
+val shrink: abstract_program -> reachability_graph -> reachability_graph
 (****************************************************************)
 (** Actions on a graph *)
 (****************************************************************)

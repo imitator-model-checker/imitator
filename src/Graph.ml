@@ -88,14 +88,27 @@ let all_p_constraints program graph =
 		[] graph.states
 
 
+(* state struct for constructing set type *)
+module State = struct
+	type t = int
+	let compare = compare
+end
+
+(* set of states for efficient lookup *)
+module StateSet = Set.Make(State)
+
+(** find all "last" states on finite or infinite runs *)
+(* Uses a depth first search on the reachability graph. The *)
+(* prefix of the current DFS path is kept during the search *)
+(* in order to detect cycles. *) 
 let last_states program graph =
-	(* list to keep last states *)
+	(* list to keep the resulting last states *)
 	let last_states = ref [] in
-	(* hash table to keep DFS indices of the states *)
-	let dfs_table = Hashtbl.create 0 in
+	(* Table to keep all states already visited during DFS *)
+	let dfs_table = ref StateSet.empty in
 	(* functional version for lookup *)
-	let already_seen node = Hashtbl.mem dfs_table node in
-	(* successor function *)
+	let already_seen node = StateSet.mem node !dfs_table in
+	(* function to find all successors of a state *)
 	let successors node = 
 		List.fold_left (fun succs action_index -> 
 			try (
@@ -103,40 +116,32 @@ let last_states program graph =
 				List.rev_append succ succs 
 			) with Not_found -> succs
 		) [] program.actions in
-	(* function to detect cycles *)
+	(* function to find all last states *)
 	let rec cycle_detect node prefix =
+		(* get all successors of current node *)
 		let succs = successors node in
 		if succs = [] then
-			(* last node on finite path *)
+			(* no successors -> last node on finite path *)
 			last_states := node :: !last_states
 		else (
-			(* insert node in dfs table *)
-			Hashtbl.add dfs_table node true;
+			(* insert node in DFS table *)
+			dfs_table := StateSet.add node !dfs_table;
 			(* go on with successors *)
 			List.iter (fun succ -> 
 				(* successor in current path prefix (or self-cycle)? *)
-				if succ = node || List.mem succ prefix then
+				if succ = node || StateSet.mem succ prefix then
 					(* found cycle *)
 					last_states := succ :: !last_states
 				else if not (already_seen succ) then
-					cycle_detect succ (node :: prefix)					
+					(* go on recursively on newly found node *)
+					cycle_detect succ (StateSet.add node prefix)					
 			) succs;
 		) in
 	(* start cycle detection with initial state *)
-	cycle_detect 0 [];
+	cycle_detect 0 StateSet.empty;
 	(* return collected last states *)
 	!last_states
 		 
-
-(** Check if a state belongs to the graph *)
-(*let in_graph graph state =
-	Hashtbl.mem graph.states state*)
-
-
-(** Return the state_index of a state; raise Not_found if not found *)
-(*let find_state_index graph state =
-	Hashtbl.find graph.states state*)
-
 (** Iterate over the reachable states *)
 let iter f graph =
 	DynArray.iter f graph.states
@@ -173,6 +178,8 @@ let is_bad program graph =
 			) bad_states in
 		exists_state is_bad_state graph
 	) 
+		
+		
 		
 
 (****************************************************************)
@@ -253,6 +260,97 @@ let add_state program graph new_state =
 (** Add a transition to the graph *)
 let add_transition reachability_graph (orig_state_index, action_index, dest_state_index) =
 	Hashtbl.add reachability_graph.transitions_table (orig_state_index, action_index) dest_state_index
+
+
+(** shrink the graph by removing tau transitions *)
+let shrink program graph =
+	(* new graph *)
+	let g = make 0 in
+	(* index of tau transition *)
+	let tau = ref (-1) in
+	List.iter (fun action_index -> 
+		let action_name = program.action_names action_index in
+		if action_name = "tau" then tau := action_index 		
+	) program.actions;
+	let tau = !tau in
+	if tau = -1 then
+		g
+	else (
+		(* build reverse transition table for bidirectional traversal *)
+		let rev_transitions_table = Hashtbl.create (Hashtbl.length graph.transitions_table) in
+		Hashtbl.iter (fun (src, action) dest -> 
+			Hashtbl.add rev_transitions_table (dest, action) src
+		) graph.transitions_table;
+		(* table for mapping nodes to new nodes *)
+		let node_map = Hashtbl.create 0 in
+		(* function to find all non-tau successors of a state *)
+		let successors node = 
+			List.fold_left (fun succs action_index ->
+				if action_index = tau then
+					succs 
+				else try (
+					let succ = Hashtbl.find_all graph.transitions_table (node, action_index) in
+					List.rev_append (List.map (fun succ -> (succ, action_index)) succ) succs 
+				) with Not_found -> succs
+			) [] program.actions in	
+		(* get tau successors of a node *)
+		let tau_successors node = 
+			try (
+				Hashtbl.find_all graph.transitions_table (node, tau)
+			) with Not_found -> [] in
+		(* get tau predecessors *)
+		let tau_predecessors node =
+			try (
+				Hashtbl.find_all rev_transitions_table (node, tau)
+			) with Not_found -> [] in
+		(* collect transitive tau closure *)
+		let rec tau_closure node closure =
+			let tsucc = tau_successors node in
+			let fwd_cls = List.fold_left (fun closure succ -> 
+				if StateSet.mem succ closure then
+					closure
+				else
+					let rcl = tau_closure succ (StateSet.add succ closure) in 
+					StateSet.union closure rcl					
+			) closure tsucc in
+			let tpred = tau_predecessors node in
+			List.fold_left (fun closure pred -> 
+				if StateSet.mem pred closure then
+					closure
+				else
+					let rcl = tau_closure pred (StateSet.add pred closure) in 
+					StateSet.union closure rcl									
+			) (StateSet.union closure fwd_cls) tpred in 
+		(* build new graph *)	
+		let rec shrink_node node =
+			(* already mapped to a new node? *)
+			if Hashtbl.mem node_map node then
+				Hashtbl.find node_map node
+			else (
+				(* build a new node *)
+				let state = get_state graph node in
+				let new_node = insert_state g (hash_code state) state in				
+				let siblings = tau_closure node (StateSet.singleton node) in
+				(* register new node *)
+				StateSet.iter (fun node -> 
+					Hashtbl.add node_map node new_node;	
+				) siblings;
+				(* construct successors *)				
+				let succs = List.flatten (List.map successors (StateSet.elements siblings)) in
+				let new_succs = List.map (fun (succ, action_index) -> 
+					let new_succ = shrink_node succ in
+					(new_succ, action_index)
+				) succs in
+				(* insert new transitions *)
+				List.iter (fun (new_succ, action_index) -> 
+					add_transition g (new_node, action_index, new_succ);
+					print_message Debug_standard ((string_of_int new_node) ^ " --> " ^ (string_of_int new_succ))
+				) new_succs;
+				new_node
+			) in
+		shrink_node 0;
+		g
+	)
 
 
 (** Add an inequality to all the states of the graph *)
