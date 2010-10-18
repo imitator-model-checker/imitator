@@ -520,9 +520,6 @@ if options#imitator_mode = Reachability_analysis && options#nb_args = 2 then
 (* Recall the arguments *)
 (**************************************************)
 
-if options#test then
-	print_message ("You've been successful");
-
 if options#inclusion then
 	print_message Debug_medium ("Considering inclusion mode.");
 
@@ -696,16 +693,18 @@ match options#imitator_mode with
 in ();
 
 let _ =
-if options#cart then (
-	print_message Debug_standard ("Cartography started " ^ (after_seconds ()) ^ "\n");
-	cartography program pi0cube zones (options#program_prefix ^ "_cart")
-)
+match options#cart with 
+	| None -> print_message Debug_medium "No graph for the cartography."
+	| Some n ->(
+			print_message Debug_standard ("Cartography started " ^ (after_seconds ()) ^ "\n");
+  		cartography program pi0cube zones n (options#program_prefix ^ "_cart")
+	 )
 in ();
 
 (**************************************************)
 (* Bye bye! *)
 (**************************************************)
 
-if debug_mode_greater Debug_low then Reachability.print_stats ();
+Reachability.print_stats ();
 
 terminate_program()
