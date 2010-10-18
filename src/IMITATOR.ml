@@ -520,6 +520,8 @@ if options#imitator_mode = Reachability_analysis && options#nb_args = 2 then
 (* Recall the arguments *)
 (**************************************************)
 
+if options#test then
+	print_message ("You've been successful");
 
 if options#inclusion then
 	print_message Debug_medium ("Considering inclusion mode.");
@@ -681,6 +683,7 @@ match options#imitator_mode with
 			print_message Debug_standard (LinearConstraint.string_of_linear_constraint program.variable_names k0);            		
 		);
 		[ ]
+
 
 	| Random_cartography nb ->
 	(* Behavioral cartography algorithm with random iterations *)
