@@ -39,6 +39,8 @@ class imitator_options =
 		val mutable with_parametric_log = ref false 
 		(* plot cartography *)
 		val mutable cart = ref false
+		(*On-the-fly intersection*)
+		val mutable dynamic = ref false
 		
 		method nb_args = nb_args
 		method file = !file
@@ -57,6 +59,7 @@ class imitator_options =
 		method no_random = !no_random
 		method timed_mode = !timed_mode
 		method cart = !cart
+		method dynamic = !dynamic
 		
 		method parse =
 			let usage_msg = "Usage: IMITATOR program_file [pi0_file] [options]" in
@@ -114,6 +117,7 @@ class imitator_options =
 				("-timed", Set timed_mode, " Adds a timing information to each output of the program. Default: none.");
 				("-with-parametric-log", Set with_parametric_log, " Adds the elimination of the clock variables in the constraints in the log files. Default: false.");
 				("-version", Unit (fun _ -> print_version_string (); exit 0), " Print version string and exit.");
+				("-dynamic", Set dynamic, "Perform the on-the-fly intersection. Currently : Does not work. Defaut : 'false'");
 			] in
 					
 			(* function for parsing arguments *)
