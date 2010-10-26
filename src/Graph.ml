@@ -233,12 +233,6 @@ let add_inequality_to_states graph inequality =
 		 (* experimental: *)
 		 let _, constr = DynArray.get graph.states state_index in
 		 LinearConstraint.intersection_assign constr [constraint_to_add] 
-		
-(*		 DynArray.set graph.states state_index (                          *)
-(*			let (loc, const) = DynArray.get graph.states state_index in     *)
-(*			(* Perform the intersection *)                                  *)
-(*			loc, (LinearConstraint.intersection [constraint_to_add; const] )*)
-(*		)                                                                 *)
 	done
 	
 
