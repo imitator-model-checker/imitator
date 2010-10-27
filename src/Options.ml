@@ -27,6 +27,8 @@ class imitator_options =
 		val mutable acyclic = ref false 
 		(* inclusion mode *)
 		val mutable inclusion = ref false
+  	(* union mode *)
+		val mutable union = ref false
 		(* prefix for output files *)
 		val mutable program_prefix = ref ""
 		(* do not use random values *)
@@ -39,8 +41,14 @@ class imitator_options =
 		val mutable with_parametric_log = ref false 
 		(* plot cartography *)
 		val mutable cart = ref false
-		(*On-the-fly intersection*)
+		(* pre-image *)
+		val mutable pre = ref false
+		(* On-the-fly intersection*)
 		val mutable dynamic = ref false
+		(* variables to plot *)
+		val mutable plot_vars = ref []
+		(* limits for plots *)
+		val mutable plot_limits = ref (Hashtbl.create 0)
 		
 		method nb_args = nb_args
 		method file = !file
@@ -54,15 +62,25 @@ class imitator_options =
 		method program_prefix = !program_prefix
 		method imitator_mode = !imitator_mode
 		method inclusion = !inclusion
+		method union = !union
 		method acyclic = !acyclic
 		method sync_auto_detection = !sync_auto_detection
 		method no_random = !no_random
 		method timed_mode = !timed_mode
 		method cart = !cart
+		method pre = !pre
 		method dynamic = !dynamic
+		method plot_vars = !plot_vars
+		method plot_limits = !plot_limits
 		
 		method parse =
 			let usage_msg = "Usage: IMITATOR program_file [pi0_file] [options]" in
+			
+			(* auxiliary variables *)
+			let plot_vars_x = ref [] in
+			let plot_vars_y = ref [] in
+			let limit_var = ref "" in
+			let limit_lower = ref "" in
 			
 			(* Get the debug mode *)
 			let rec set_debug_mode_ref debug_mode =
@@ -99,16 +117,29 @@ class imitator_options =
 					exit(0);
 				)
 
+			and add_plot_x var_x =
+				plot_vars_x := var_x :: !plot_vars_x
+
+			and add_plot_y var_y =
+				plot_vars_y := var_y :: !plot_vars_y
+
+			and add_plot_limit upper =
+				Hashtbl.add !plot_limits !limit_var (!limit_lower, upper)								
+
 			(* Options *)
 			and speclist = [
 				("-acyclic", Set acyclic, " Does not test if a new state was already encountered. To be set ONLY if the system is acyclic. Default: 'false'");		
 				("-debug", String set_debug_mode_ref, " Print more or less debug information. Can be set to 'nodebug', 'standard', 'low', 'medium', 'high', 'total'. Default: 'standard'");
 				("-inclusion", Set inclusion, " Consider an inclusion of region instead of the equality when performing the Post operation. Default: 'false'");
+				("-union", Set union, " Consider last states for deriving constraint K. Default: 'false'");
 				("-log-prefix", Set_string program_prefix, " Sets the prefix for log files. Default: [program_file].");
 				("-mode", String set_mode, " Mode for IMITATOR II. Use 'reachability' for a parametric reachability analysis (no pi0 needed). Use 'inversemethod' for the inverse method. For the behavioral cartography algorithm, use 'cover' to cover all the points within V0, or 'randomXX' where XX is a number to iterate randomly algorithm. Default: 'inversemethod'.");
+				("-pre", Set pre, " Use pre-image instead of post-image computation. Default: false.");
 				("-no-dot", Set no_dot, " No graphical output using 'dot'. Default: false.");
 				("-no-log", Set no_log, " No generation of log files. Default: false.");
-				("-cart", Set cart, " Plot cartography before terminating the program. Uses the first two parameters with ranges. Default: false."); 
+				("-cart", Set cart, " Plot cartography before terminating the program. Uses the first two parameters with ranges. Default: false.");
+				("-plot", Tuple [String add_plot_x; String add_plot_y], " Generate 2D plot of rechable states projected on the two given variables. Default: false.");
+				("-limits", Tuple [Set_string limit_var; Set_string limit_lower; String add_plot_limit], " Set limits of the displayed plot area for a variable. Default: automatic");
 				("-fancy", Set fancy, " Generate detailed state information for dot output. Default: false.");
 				("-no-random", Set no_random, " No random selection of the pi0-incompatible inequality (select the first found). Default: false.");
 				("-post-limit", Int (fun i -> post_limit := Some i), " Limits the depth of the Post exploration. Default: no limit.");
@@ -139,7 +170,14 @@ class imitator_options =
 			) in
 
 			let usage_msg = "Usage: IMITATOR program_file [pi0_file] [options]" in
+			
+			(* set default debug level *)
+			set_debug_mode Debug_standard;
+			
 			Arg.parse speclist anon_fun usage_msg;
+
+		  (* merge plot variables *)
+			plot_vars := List.combine !plot_vars_x !plot_vars_y;
 
 			(* Case no file *)
 			if nb_args < 1 then(

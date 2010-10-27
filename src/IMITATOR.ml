@@ -18,6 +18,7 @@ open AbstractImitatorFile
 open Arg
 open ImitatorPrinter
 open Graph
+open Options
 
 open Ppl_ocaml
 
@@ -65,30 +66,8 @@ let dot_extension = "jpg"
 (**************************************************)
 (**************************************************)
 
-(* No log at all *)
-let no_log = ref false
-
-(* No graphical output using dot *)
-let no_dot = ref false
-
-(* Use fancy states in dot output *)
-let option_fancy = ref false
-
-(* 2d plot output of reachable states *)
-let plot_vars_x = ref []
-let plot_vars_y = ref []
-
-(* Program prefix for log files *)
-let program_prefix = ref ""
-
-(* Limit for the iterations in the post operation *)
-let post_limit = ref None
-
-(* Time limit for the program *)
-let time_limit = ref None
-
-(* Reverse automaton for backward reachability *)
-let option_pre = ref false
+(* object with command line options *)
+let options = new imitator_options
 
 (* constraint K *)
 let global_k = ref (LinearConstraint.true_constraint ())
@@ -191,10 +170,10 @@ let random_pi0 program pi0 =
 (**************************************************)
 (* Create a gif graph using dot *)
 let generate_graph program pi0 reachability_graph dot_file_name states_file_name gif_file_name =
-	if not !no_dot then (
+	if not options#no_dot then (
 		(* Create the input file *)
 		print_message Debug_total ("Creating input file for dot...");
-		let dot_program, states = Graph.dot_of_graph program pi0 reachability_graph ~fancy:!option_fancy in
+		let dot_program, states = Graph.dot_of_graph program pi0 reachability_graph ~fancy:options#fancy in
 		(* Write dot file *)
 		print_message Debug_total ("Writing to dot file...");
 		write_to_file dot_file_name dot_program;
@@ -956,24 +935,24 @@ let post_star program pi0 init_state =
 		(* Iterate *)
 		nb_iterations := !nb_iterations + 1;
 		(* Check if the limit has been reached *)
-		match !post_limit with
+		match options#post_limit with
 			| None -> ()
 			| Some limit -> if !nb_iterations > limit then limit_reached := true;
 		(* No time limit in cartography (because would not stop the global program *)
 (* 		if program.imitator_mode = Reachability_analysis || program.imitator_mode = Inverse_method then (  *)
-		match !time_limit with
+		match options#time_limit with
 			| None -> ()
 			| Some limit -> if (get_time()) > (float_of_int limit) then limit_reached := true;
 (* 		) *)
 	done;
 
 	if !limit_reached && not (list_empty !newly_found_new_states) then(
-		match !post_limit with
+		match options#post_limit with
 			| None -> ()
 			| Some limit -> if !nb_iterations > limit then print_warning (
 				"The limit number of iterations (" ^ (string_of_int limit) ^ ") has been reached. Post^* now stops, although there were still " ^ (string_of_int (List.length !newly_found_new_states)) ^ " state" ^ (s_of_int (List.length !newly_found_new_states)) ^ " to explore at this iteration."
 			);
-		match !time_limit with
+		match options#time_limit with
 			| None -> ()
 			| Some limit -> if (get_time()) > (float_of_int limit) then print_warning (
 				"The time limit (" ^ (string_of_int limit) ^ " second" ^ (s_of_int limit) ^ ") has been reached. Post^* now stops, although there were still " ^ (string_of_int (List.length !newly_found_new_states)) ^ " state" ^ (s_of_int (List.length !newly_found_new_states)) ^ " to explore at this iteration."
@@ -1132,7 +1111,7 @@ let cover_behavioral_cartography program pi0cube init_state =
 
 			(* Generate the dot graph (only if K0 <> false) *)
 			if LinearConstraint.is_satisfiable (List.hd k0) then (
-				let radical = !program_prefix ^ "_" ^ (string_of_int !current_iteration) in
+				let radical = options#program_prefix ^ "_" ^ (string_of_int !current_iteration) in
 				let dot_file_name = (radical ^ ".dot") in
 				let states_file_name = (radical ^ ".states") in
 				let gif_file_name = (radical ^ "." ^ dot_extension) in
@@ -1167,7 +1146,7 @@ let cover_behavioral_cartography program pi0cube init_state =
 		done; (* while not is max *)
 		
 		(* Stop if the time limit has been reached *)
-		match !time_limit with
+		match options#time_limit with
 			| None -> ()
 			| Some limit -> if (get_time()) > (float_of_int limit) then limit_reached := true;
 
@@ -1175,7 +1154,7 @@ let cover_behavioral_cartography program pi0cube init_state =
 	done; (* while more pi0 *)
 
 	if !limit_reached && !more_pi0 then (
-		match !time_limit with
+		match options#time_limit with
 			| None -> ()
 			| Some limit -> if (get_time()) > (float_of_int limit) then print_warning (
 				"The time limit (" ^ (string_of_int limit) ^ " second" ^ (s_of_int limit) ^ ") has been reached. The behavioral cartography algorithm now stops, although the cartography has not been covered yet."
@@ -1195,7 +1174,7 @@ let cover_behavioral_cartography program pi0cube init_state =
 	
 	(* plot the cartography *)
 	let zones = DynArray.to_list results in
-	Graphics.cartography program pi0cube zones 2 !program_prefix;
+	Graphics.cartography program pi0cube zones 2 options#program_prefix;
 	
 	(* compute coverage of v0 *)
 	let cov = 100.0 *. Graphics.coverage program pi0cube zones in
@@ -1284,7 +1263,7 @@ let random_behavioral_cartography program pi0cube init_state nb =
 				print_message Debug_low ("Constraint K0 computed:");
 				List.iter (fun k0 -> print_message Debug_standard (LinearConstraint.string_of_linear_constraint program.variable_names k0)) k0;
 				(* Generate the dot graph *)
-				let radical = !program_prefix ^ "_" ^ (string_of_int !i) in
+				let radical = options#program_prefix ^ "_" ^ (string_of_int !i) in
 				let dot_file_name = (radical ^ ".dot") in
 				let states_file_name = (radical ^ ".states") in
 				let gif_file_name = (radical ^ "." ^ dot_extension) in
@@ -1297,7 +1276,7 @@ let random_behavioral_cartography program pi0cube init_state nb =
 		);
 		(* Stop if the time limit has been reached *)
 		let _ =
-		match !time_limit with
+		match options#time_limit with
 			| None -> ()
 			| Some limit -> if (get_time()) > (float_of_int limit) then limit_reached := true;
 		in
@@ -1307,7 +1286,7 @@ let random_behavioral_cartography program pi0cube init_state nb =
 	done;
 
 	if !limit_reached && !i <= nb then (
-		match !time_limit with
+		match options#time_limit with
 			| None -> ()
 			| Some limit -> if (get_time()) > (float_of_int limit) then print_warning (
 				"The time limit (" ^ (string_of_int limit) ^ " second" ^ (s_of_int limit) ^ ") has been reached. The behavioral cartography algorithm now stops, although the cartography has not been covered yet."
@@ -1337,149 +1316,7 @@ let random_behavioral_cartography program pi0cube init_state nb =
 (**************************************************)
 (* Get the arguments *)
 (**************************************************)
-(* Count the number of arguments *)
-let nb_args = ref 0 in
-
-(* Name of the main file *)
-let file = ref "" in
-(* Name of the pi0 file *)
-let pi0file = ref "" in
-(* Name of the pi0 cube file *)
-(* let pi0cubefile = ref "" in *)
-
-(* Auto-detection of the sync actions *)
-let sync_auto_detection = ref false in
-(* No random selection of the pi0-incompatible inequality *)
-let no_random = ref false in
-(* Default debug mode: standard *)
-let global_debug_mode = ref Debug_standard in
-(* Consider the inclusion of region; default: false *)
-let inclusion = ref false in
-(* Return the union of constraints in last states; default: false *)
-let union = ref false in
-(* Mode for IMITATOR *)
-let imitator_mode = ref Inverse_method in
-(* Timed mode *)
-let timed_mode = ref false in
-(* Acyclic mode *)
-let acyclic = ref false in
-(* Mode with parametric constraints (clock elimination) in the log file *)
-let with_parametric_log = ref false in
-(* limit plot area of variable *)
-let limit_var = ref "" in
-let limit_lower = ref "" in
-let plot_limits = Hashtbl.create 0 in
-
-(* Usage message *)
-let usage_msg = "Usage: IMITATOR program_file [pi0_file] [options]" in
-
-(* Get the debug mode *)
-let rec set_debug_mode_ref debug_mode =
-	global_debug_mode := try debug_mode_of_string debug_mode
-		with Not_found ->
-			print_error ("The debug mode '" ^ debug_mode ^ "' is not valid.");
-			Arg.usage speclist usage_msg;
-			abort_program ();
-			exit(0);
-
-(* Get the mode *)
-and set_mode mode =
-	(* Case: 'reachability' *)
-	if mode = "reachability" then 
-		imitator_mode := Reachability_analysis
-	(* Case: inverse method *)
-	else if mode = "inversemethod" then 
-		imitator_mode := Inverse_method
-	(* Case: cover *)
-	else if mode = "cover" then 
-		imitator_mode := Cover_cartography
-	(* Case: number of iterations *)
-	else try (
-		(* Find the 'random' string *)
-		if not (String.sub mode 0 6 = "random") then raise (Failure "toto");
-		(* Find the number *)
-		let number = String.sub mode 6 (String.length mode - 6) in
-		imitator_mode := (Random_cartography (int_of_string number))
-	) with _ -> (
-		print_error ("The mode '" ^ mode ^ "' is not valid.");
-		Arg.usage speclist usage_msg;
-		abort_program ();
-		exit(0);
-	);
-	
-and add_plot_x var_x =
-	plot_vars_x := var_x :: !plot_vars_x
-	
-and add_plot_y var_y =
-	plot_vars_y := var_y :: !plot_vars_y
-
-and add_plot_limit upper =
-	Hashtbl.add plot_limits !limit_var (!limit_lower, upper)
-
-(* Options *)
-and speclist = [
-	("-acyclic", Set acyclic, " Does not test if a new state was already encountered. To be set ONLY if the system is acyclic. Default: 'false'");
-	("-debug", String set_debug_mode_ref, " Print more or less debug information. Can be set to 'nodebug', 'standard', 'low', 'medium', 'high', 'total'. Default: 'standard'");
-	("-inclusion", Set inclusion, " Consider an inclusion of region instead of the equality when performing the Post operation. Default: 'false'");
-	("-union", Set union, " Return the constraint obtained as the union of last reachable states. Default: 'false'");
-	("-log-prefix", Set_string program_prefix, " Sets the prefix for log files. Default: [program_file].");
-	("-mode", String set_mode, " Mode for IMITATOR II. Use 'reachability' for a parametric reachability analysis (no pi0 needed). Use 'inversemethod' for the inverse method. For the behavioral cartography algorithm, use 'cover' to cover all the points within V0, or 'randomXX' where XX is a number to iterate randomly algorithm. Default: 'inversemethod'.");
-	("-pre", Set option_pre, " Reverse automata for backward reachability analysis. Default: 'false'.");
-	("-no-dot", Set no_dot, " No graphical output using 'dot'. Default: false.");
-	("-no-log", Set no_log, " No generation of log files. Default: false.");
-	("-fancy", Set option_fancy, " Generate detailed state information for dot output. Default: false.");
-	("-plot", Tuple [String add_plot_x; String add_plot_y], " Generate 2D plot of rechable states projected on the two given variables. Default: false.");
-	("-limits", Tuple [Set_string limit_var; Set_string limit_lower; String add_plot_limit], " Set limits of the displayed plot area for a variable. Default: automatic");
-	("-no-random", Set no_random, " No random selection of the pi0-incompatible inequality (select the first found). Default: false.");
-	("-post-limit", Int (fun i -> post_limit := Some i), " Limits the depth of the Post exploration. Default: no limit.");
-	("-sync-auto-detect", Set sync_auto_detection, " Detect automatically the synchronized actions in each automaton. Default: false (consider the actions declared by the user)");
-	("-time-limit", Int (fun i -> time_limit := Some i), " Time limit in seconds. Warning: no guarantee that the program will stop exactly after the given amount of time. Default: no limit.");
-	("-timed", Set timed_mode, " Adds a timing information to each output of the program. Default: none.");
-	("-with-parametric-log", Set with_parametric_log, " Adds the elimination of the clock variables in the constraints in the log files. Default: false.");
-	("-version", Unit (fun _ -> print_version_string (); exit 0), " Print version string and exit.");
-
-	] in
-
-(* A function on any argument *)
-let anon_fun = (fun arg ->
-	(* If 1st argument: main file *)
-	if !nb_args = 0 then(
-		nb_args := !nb_args + 1;
-		file := arg;
-	)
-	(* If 2nd argument: pi0 file *)
-	else if !nb_args = 1 then(
-		nb_args := !nb_args + 1;
-		pi0file := arg;
-	)
-	(* If more than one argument : warns *)
-	else (
-		print_warning ("The program argument '" ^ arg ^ "' will be ignored.");
-	)
-) in
-
-(* Parse the arguments *)
-Arg.parse speclist anon_fun usage_msg;
-
-(* Case no file *)
-if !nb_args < 1 then(
-	print_error ("Please give a source file name.");
-	Arg.usage speclist usage_msg;
-	abort_program (); exit(0)
-);
-(* Case no pi0 file *)
-if !nb_args = 1 && (!imitator_mode != Reachability_analysis) then(
-	print_error ("Please give a reference valuation file name.");
-	Arg.usage speclist usage_msg;
-	abort_program (); exit(0)
-);
-
-
-(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-(* Debug mode *) 
-(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-set_debug_mode !global_debug_mode;
-
+options#parse;
 
 (**************************************************)
 (**************************************************)
@@ -1498,52 +1335,36 @@ print_message Debug_standard
 	^ "**************************************************");
 
 
-(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-(* Check compatibility between options *) 
-(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-if !imitator_mode = Reachability_analysis && !nb_args = 2 then
-	print_warning ("The pi0 file " ^ !pi0file ^ " will be ignored since this is a reachability analysis.");
-
-(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-(* Update the program prefix if not set *)
-(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-if !program_prefix = "" then
-	program_prefix := !file;
-
-
 (**************************************************)
 (* Recall the arguments *)
 (**************************************************)
 
-(* combine plot lists *)
-let plotvar_list = List.combine !plot_vars_x !plot_vars_y in
-
-if !inclusion then
+if options#inclusion then
 	print_message Debug_medium ("Considering inclusion mode.");
 
-if !option_pre then
+if options#pre then
 	print_message Debug_medium ("Invert automaton for backward reachability");
 
-if !sync_auto_detection then
+if options#sync_auto_detection then
 	print_message Debug_medium ("Auto-detection mode for sync actions.");
 
-if !no_random then
+if options#no_random then
 	print_message Debug_medium ("No random selection for pi0-incompatible inequalities.");
 
-if !no_dot then
+if options#no_dot then
 	print_message Debug_medium ("No graphical output.");
 
-if !no_log then
+if options#no_log then
 	print_message Debug_medium ("No log mode.");
 
-if plotvar_list <> [] then
+if options#plot_vars <> [] then
 	List.iter (fun (x, y) ->
 		print_message Debug_standard ("Plot variables " ^ x ^ ", " ^ y); 
-	) plotvar_list;
+	) options#plot_vars;
 	
 
 (* Print the mode *)
-let message = match !imitator_mode with
+let message = match options#imitator_mode with
 	| Reachability_analysis -> "parametric reachability analysis"
 	| Inverse_method -> "inverse method"
 	| Cover_cartography -> "behavioral cartography algorithm with full coverage"
@@ -1552,14 +1373,14 @@ in print_message Debug_standard ("Mode: " ^ message ^ ".");
 
 (* LIMIT OF POST *)
 let _ =
-match !post_limit with
+match options#post_limit with
 	| None -> print_message Debug_medium "Considering no limit for the depth of the Post operation."
 	| Some limit -> print_warning ("Considering a limit of " ^ (string_of_int limit) ^ " for the depth of the Post operation.")
 in ();
 
 (* TIME LIMIT *)
 let _ =
-match !time_limit with
+match options#time_limit with
 	| None -> print_message Debug_medium "Considering no time limit."
 	| Some limit -> print_warning ("The program will try to stop after " ^ (string_of_int limit) ^ " seconds.")
 in ();
@@ -1568,7 +1389,7 @@ in ();
 (**************************************************)
 (* Timed mode *)
 (**************************************************)
-if !timed_mode then (
+if options#timed_mode then (
 	(* Debug *)
 	print_message Debug_standard ("Timed mode is on.");
 	(* Set the timed mode *)
@@ -1583,24 +1404,24 @@ if !timed_mode then (
 (**************************************************)
 
 (* Parsing the main program *)
-print_message Debug_low ("Considering file " ^ !file ^ ".");
-let parsing_structure = parser_lexer ImitatorParser.main ImitatorLexer.token !file in 
+print_message Debug_low ("Considering file " ^ options#file ^ ".");
+let parsing_structure = parser_lexer ImitatorParser.main ImitatorLexer.token options#file in 
 
-print_message Debug_medium ("Considering program prefix " ^ !program_prefix ^ ".");
+print_message Debug_medium ("Considering program prefix " ^ options#program_prefix ^ ".");
 
-if !imitator_mode != Reachability_analysis then
-	print_message Debug_low ("Considering reference valuation in file " ^ !pi0file ^ ".");
+if options#imitator_mode != Reachability_analysis then
+	print_message Debug_low ("Considering reference valuation in file " ^ options#pi0file ^ ".");
 
 (* Pi0 Parsing *)
 let pi0_parsed, pi0cube_parsed =
 	(* Depending on which operation we are performing *)
-	match !imitator_mode with
+	match options#imitator_mode with
 		(* If reachability: no pi0 *)
 		| Reachability_analysis -> [], []
 		(* Inverse method : pi0 *)
-		| Inverse_method -> parser_lexer Pi0Parser.main Pi0Lexer.token !pi0file, []
+		| Inverse_method -> parser_lexer Pi0Parser.main Pi0Lexer.token options#pi0file, []
 		(* Cartography : pi0cube *)
-		| _ -> [], parser_lexer Pi0CubeParser.main Pi0CubeLexer.token !pi0file
+		| _ -> [], parser_lexer Pi0CubeParser.main Pi0CubeLexer.token options#pi0file
 in
 
 Gc.major ();
@@ -1615,13 +1436,13 @@ let program, pi0, pi0cube =
 try (
 	ProgramConverter.abstract_program_of_parsing_structure
 		parsing_structure pi0_parsed pi0cube_parsed 
-			~acyclic:!acyclic 
-			~sync_auto_detection:!sync_auto_detection
-			~inclusion_mode:!inclusion
-			~union_mode:!union
-			~no_random:!no_random
-			~with_parametric_log:!with_parametric_log			
-			!imitator_mode !file
+			~acyclic:options#acyclic 
+			~sync_auto_detection:options#sync_auto_detection
+			~inclusion_mode:options#inclusion
+			~union_mode:options#union
+			~no_random:options#no_random
+			~with_parametric_log:options#with_parametric_log			
+			options#imitator_mode options#file
 ) with 
 	| ProgramConverter.InvalidProgram -> (print_error ("The input program contains errors. Please check it again."); abort_program (); exit 0)
 	| ProgramConverter.InvalidPi0 -> (print_error ("The input pi_0 file contains errors. Please check it again."); abort_program (); exit 0)
@@ -1631,13 +1452,13 @@ try (
 Gc.major ();
 print_message Debug_standard ("Program checked and converted " ^ (after_seconds ()) ^ ".\n");
 
-let program = if not !option_pre then program else (
+let program = if not options#pre then program else (
 	try (	
 		ProgramInverter.invert program
 	) with InternalError e -> (print_error e; abort_program (); exit 0) 
 ) in 
 
-if !option_pre then (
+if options#pre then (
 	Gc.major ();
 	print_message Debug_standard ("Automata reversed " ^ (after_seconds ()) ^ ".\n");
 	if debug_mode_greater Debug_high then print_message Debug_high ("\nProgram:\n" ^ (ImitatorPrinter.string_of_program program) ^ "\n")				
@@ -1686,7 +1507,7 @@ print_message Debug_medium ("\nInitial state after time-elapsing:\n" ^ (Imitator
 (**************************************************)
 
 let _ =
-match !imitator_mode with
+match options#imitator_mode with
 	(* Perform reachability analysis or inverse Method *)
 	| Reachability_analysis | Inverse_method -> 
 		let reachability_graph, k0, _, _ =
@@ -1709,7 +1530,7 @@ match !imitator_mode with
 				let yi = index_of y in
 				(xi, yi) :: ps
 			)	with NotFound -> ps
-		) [] plotvar_list in
+		) [] options#plot_vars in
 		
 		let i = ref 0 in
 		List.iter (fun (x,y) -> 
@@ -1717,7 +1538,7 @@ match !imitator_mode with
 			let y_name = program.variable_names y in
 			print_message Debug_standard (
 				"Plotting reachable states projected on variables " ^ x_name ^ ", " ^ y_name);
-			let plot_file_name = (!program_prefix ^ ".plot_" ^ x_name ^ "_" ^ y_name) in
+			let plot_file_name = (options#program_prefix ^ ".plot_" ^ x_name ^ "_" ^ y_name) in
 			let plot = Graph.plot_graph x y reachability_graph in
 			write_to_file plot_file_name plot;
 			let img_file_name = plot_file_name ^ ".png" in
@@ -1726,11 +1547,11 @@ match !imitator_mode with
 				^ " -X \"" ^ x_name ^ "\""
 			  ^ " -Y \"" ^ y_name ^ "\" " 
 				^ (try (
-						let min, max = Hashtbl.find plot_limits x_name in
+						let min, max = Hashtbl.find options#plot_limits x_name in
 						" -x " ^ min ^ " " ^ max
 						) with Not_found -> "")
 				^ (try (
-						let min, max = Hashtbl.find plot_limits y_name in
+						let min, max = Hashtbl.find options#plot_limits y_name in
 						" -y " ^ min ^ " " ^ max
 						) with Not_found -> "")
 				^ " " ^ plot_file_name 
@@ -1742,9 +1563,9 @@ match !imitator_mode with
 
 		(* Generate the DOT graph *)
 		print_message Debug_high "Generating the dot graph";
-		let dot_file_name = (!program_prefix ^ ".dot") in
-		let states_file_name = (!program_prefix ^ ".states") in
-		let gif_file_name = (!program_prefix ^ "." ^ dot_extension) in
+		let dot_file_name = (options#program_prefix ^ ".dot") in
+		let states_file_name = (options#program_prefix ^ ".states") in
+		let gif_file_name = (options#program_prefix ^ "." ^ dot_extension) in
 		generate_graph program pi0 reachability_graph dot_file_name states_file_name gif_file_name;
 		
 (*		let g = Graph.shrink program reachability_graph in                            *)

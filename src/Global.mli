@@ -24,6 +24,17 @@ exception InternalError of string
 (** Parsing exception: starting position of the error symbol, ending position of the error symbol *)
 exception ParsingError of (int * int)
 
+(** Mode for IMITATOR *) 
+type imitator_mode =
+	(** Classical parametric reachability analysis *)
+	| Reachability_analysis
+	(** Classical inverse method *)
+	| Inverse_method
+	(** Cover the whole cartography *)
+	| Cover_cartography
+	(** Randomly pick up values for a given number of iterations *)
+	| Random_cartography of int
+
 
 
 (****************************************************************)
