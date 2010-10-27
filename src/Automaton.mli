@@ -64,6 +64,9 @@ val copy_location : location -> location
 (** {3 Access} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
 
+(** Get array of locations *)
+val get_locations : location -> location_index array
+
 (** Get the location associated to some automaton *)
 val get_location : location -> automaton_index -> location_index
 

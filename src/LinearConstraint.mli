@@ -179,6 +179,9 @@ val partition_pi0_compatible : (variable -> coef) -> linear_constraint -> (linea
 (** {3 Functions} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
 
+(** copy *)
+val copy : linear_constraint -> linear_constraint
+
 (** returns a list of variables occuring in a linear constraint *)
 val support : linear_constraint -> Global.VariableSet.t
 

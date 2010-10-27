@@ -468,6 +468,12 @@ let string_of_linear_inequality names linear_inequality =
 (** {3 Creation} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
 
+let copy constr =
+	let poly = ppl_new_NNC_Polyhedron_from_NNC_Polyhedron constr in
+	assert_dimensions poly;
+  poly
+	 
+
 (** Create a false constraint *)
 let false_constraint () =	
 	ppl_new_NNC_Polyhedron_from_space_dimension !total_dim Empty
