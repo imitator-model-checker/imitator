@@ -1089,14 +1089,16 @@ let convert_flow type_of_variables constr =
 	VariableSet.iter (fun v -> 
 		let x = unprime_variable v in
 	  if x < 0 || (type_of_variables x) <> Var_type_analog then(
-			print_error "Variable in rate condition is not analog";
+			print_error "Variable in rate condition is not analog or non-rectangular rate";
 			abort_program ()
 		)
 	) support;
+	ineq
+	
 	(* replace primed variables by unprimed variables *)
-	let unprime = fun v -> Ppl_ocaml.Variable (unprime_variable v) in
-	let unprimed_ineq = LinearConstraint.substitute_variables unprime ineq in
-	unprimed_ineq
+(*	let unprime = fun v -> Ppl_ocaml.Variable (unprime_variable v) in        *)
+(*	let unprimed_ineq = LinearConstraint.substitute_variables unprime ineq in*)
+(*	unprimed_ineq                                                            *)
 
 
 (* convert the rate conditions *)
@@ -1104,7 +1106,7 @@ let convert_flows type_of_variables raw_flows =
 	let convert_location = (fun predicate -> 
 		if predicate = [] then
 			(* no flow condition in this location *)
-			None
+			Undefined
 	  else (
 			(* iterate over linear constraints *)
 			let flows = ref [] in
@@ -1121,7 +1123,7 @@ let convert_flows type_of_variables raw_flows =
 			if debug_mode_greater Debug_total then (
 				print_message Debug_total ("converted flow:" ^ (LinearConstraint.string_of_linear_constraint (fun i -> !glob_variable_names.(i)) flow))
 			);
-			Some flow
+			Rectangular flow
 	  )
 	) in	
 	let convert_automaton = Array.map convert_location in
@@ -1681,7 +1683,7 @@ let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_
 	let analog_flows = 
 		if nb_analogs = 0 then(
 			 (* Return empty flow for all automata and locations *)
-			 fun _ _ -> None
+			 fun _ _ -> Undefined
 		) else (
 			 (* Convert the annotated rate conditions *)			 
 			 let flow_table = convert_flows type_of_variables flows in

@@ -95,6 +95,12 @@ type guard = linear_constraint
 (** Transition: guard, updates, destination location *)
 type transition = guard * update * discrete_update list * location_index
 
+(** Activities describing the continuous flow conditions *)
+type activity =
+	| Undefined
+	| Rectangular of linear_constraint
+	| Affine of linear_constraint
+
 
 (****************************************************************)
 (** The abstract program *)
@@ -173,7 +179,7 @@ type abstract_program = {
 	(* the standard flow constraint for paramters, discrete and clocks *) 
 	standard_flow : linear_constraint;
 	(* The rate conditions of analog variables for each automaton and each location *)
-	analog_flows : automaton_index -> location_index -> linear_constraint option;
+	analog_flows : automaton_index -> location_index -> activity;
 	(* The transitions for each automaton and each location and each action *)
 	transitions : automaton_index -> location_index -> action_index -> (transition list);
 

@@ -84,9 +84,10 @@ let string_of_invariant program automaton_index location_index =
 		))
 	^ (
 		let flow = program.analog_flows automaton_index location_index in
-		match flow with 
-			| Some f -> " & " ^ (LinearConstraint.string_of_linear_constraint program.variable_names f)
-			| None -> ""
+		match flow with
+			| Affine f 
+			| Rectangular f -> " & " ^ (LinearConstraint.string_of_linear_constraint program.variable_names f)
+			| Undefined -> ""
 		) 
 	^ "}"
 

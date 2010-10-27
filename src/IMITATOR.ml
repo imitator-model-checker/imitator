@@ -263,24 +263,48 @@ let compute_flow program location =
 		Hashtbl.find !computed_flows location
 	) with Not_found -> (
 	  (* build flow *)
-		let flow = LinearConstraint.true_constraint () in
-		List.iter (fun automaton_index -> 
+		let init_flow = Rectangular (LinearConstraint.true_constraint ()) in
+		let flow = List.fold_left (fun flow automaton_index ->  
 			(* Get the current location *)
 			let location_index = Automaton.get_location location automaton_index in
 			(* Compute the flow *)
 			let loc_flow = program.analog_flows automaton_index location_index in
-			match loc_flow with
-				| None -> ()
-				| Some constr -> LinearConstraint.intersection_assign flow [constr] 
-		) program.automata;
-		(* Add standard flow for parameters, discrete and clocks *)
-		LinearConstraint.intersection_assign flow [program.standard_flow];
-		(* Add flow to hash table *)
-		if !nb_computed_flows < max_computed_flows then (
-		  Hashtbl.add !computed_flows location flow;
-			nb_computed_flows := !nb_computed_flows + 1	
-		);
-		flow
+			match flow with
+				| Undefined -> raise (InternalError "found undefined flow")
+				| Rectangular f -> (
+						match loc_flow with
+							| Undefined -> Rectangular f
+							| Rectangular lf -> 
+									LinearConstraint.intersection_assign f [lf];
+									Rectangular f
+							| Affine lf -> 
+									LinearConstraint.intersection_assign f [lf];
+									Affine f 
+					)
+				| Affine f -> (
+						match loc_flow with
+							| Undefined -> Affine f
+							| Rectangular lf 
+							| Affine lf -> 
+									LinearConstraint.intersection_assign f [lf];
+									Affine f 
+					)					
+		) init_flow program.automata in
+		match flow with
+			| Undefined -> raise (InternalError "undefined flow")
+			| Affine f -> raise (InternalError "affine dynamics not supported yet")
+			| Rectangular f -> (
+					(* rename variables to X space *)
+					LinearConstraint.rename_variables_assign program.unrenamed_clocks_couples f;
+					(* Add standard flow for parameters, discrete and clocks *)
+					LinearConstraint.intersection_assign f [program.standard_flow];
+					(* Add flow to hash table *)
+					if !nb_computed_flows < max_computed_flows then (
+					  Hashtbl.add !computed_flows location f;
+						nb_computed_flows := !nb_computed_flows + 1	
+					);
+					f
+				)
   )
 	
 
@@ -1395,41 +1419,23 @@ and add_plot_limit upper =
 (* Options *)
 and speclist = [
 	("-acyclic", Set acyclic, " Does not test if a new state was already encountered. To be set ONLY if the system is acyclic. Default: 'false'");
-
 	("-debug", String set_debug_mode_ref, " Print more or less debug information. Can be set to 'nodebug', 'standard', 'low', 'medium', 'high', 'total'. Default: 'standard'");
-	
 	("-inclusion", Set inclusion, " Consider an inclusion of region instead of the equality when performing the Post operation. Default: 'false'");
-
 	("-union", Set union, " Return the constraint obtained as the union of last reachable states. Default: 'false'");
-
 	("-log-prefix", Set_string program_prefix, " Sets the prefix for log files. Default: [program_file].");
-
 	("-mode", String set_mode, " Mode for IMITATOR II. Use 'reachability' for a parametric reachability analysis (no pi0 needed). Use 'inversemethod' for the inverse method. For the behavioral cartography algorithm, use 'cover' to cover all the points within V0, or 'randomXX' where XX is a number to iterate randomly algorithm. Default: 'inversemethod'.");
-	
 	("-pre", Set option_pre, " Reverse automata for backward reachability analysis. Default: 'false'.");
-	
 	("-no-dot", Set no_dot, " No graphical output using 'dot'. Default: false.");
-
 	("-no-log", Set no_log, " No generation of log files. Default: false.");
-	
 	("-fancy", Set option_fancy, " Generate detailed state information for dot output. Default: false.");
-
 	("-plot", Tuple [String add_plot_x; String add_plot_y], " Generate 2D plot of rechable states projected on the two given variables. Default: false.");
-	
 	("-limits", Tuple [Set_string limit_var; Set_string limit_lower; String add_plot_limit], " Set limits of the displayed plot area for a variable. Default: automatic");
-
 	("-no-random", Set no_random, " No random selection of the pi0-incompatible inequality (select the first found). Default: false.");
-	
 	("-post-limit", Int (fun i -> post_limit := Some i), " Limits the depth of the Post exploration. Default: no limit.");
-
 	("-sync-auto-detect", Set sync_auto_detection, " Detect automatically the synchronized actions in each automaton. Default: false (consider the actions declared by the user)");
-	
 	("-time-limit", Int (fun i -> time_limit := Some i), " Time limit in seconds. Warning: no guarantee that the program will stop exactly after the given amount of time. Default: no limit.");
-
 	("-timed", Set timed_mode, " Adds a timing information to each output of the program. Default: none.");
-
 	("-with-parametric-log", Set with_parametric_log, " Adds the elimination of the clock variables in the constraints in the log files. Default: false.");
-	
 	("-version", Unit (fun _ -> print_version_string (); exit 0), " Print version string and exit.");
 
 	] in

@@ -217,21 +217,21 @@ let invert_flows program =
 	let analogs = List.filter (program.is_analog) program.clocks in
 	if (analogs = []) then (
 		(* always return the empty flow *)
-		fun _ _ -> None
+		fun _ _ -> Undefined
 	) else (
 		(* create an empty array *)
-		let new_flow_array = Array.create program.nb_automata (Array.create 0 None) in
+		let new_flow_array = Array.create program.nb_automata (Array.create 0 Undefined) in
 		(* For each automaton *) 
 		for aut_index = 0 to (program.nb_automata - 1) do		
 			let locations = program.locations_per_automaton aut_index in
 			let nb_locations = List.length locations in
-			let flows = Array.create nb_locations None in
+			let flows = Array.create nb_locations Undefined in
 			(* For each location *)
 			List.iter (fun loc_index -> 
 				let flow = program.analog_flows aut_index loc_index in
 				let inv_flow = match flow with 
-					| Some constr -> Some (invert_flow analogs constr) 
-					| None -> None in
+					| Rectangular constr -> Rectangular (invert_flow analogs constr) 
+					| Undefined -> Undefined in
 				flows.(loc_index) <- inv_flow;
 			) locations;
 			(* store array *)
