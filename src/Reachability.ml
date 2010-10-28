@@ -248,8 +248,8 @@ let compute_new_location program aut_table trans_table action_index original_loc
 		(* Get the current location for this automaton *)
 		let location_index = Automaton.get_location original_location real_index in
 		(* Find the transitions for this automaton *)
-			let transitions = program.transitions real_index location_index action_index in
-  		(* Get the index of the examined transition for this automaton *)
+		let transitions = program.transitions real_index location_index action_index in
+  	(* Get the index of the examined transition for this automaton *)
 		let current_index = trans_table.(local_index) in
 		(* Keep the 'current_index'th transition *)
 		let transition = List.nth transitions current_index in

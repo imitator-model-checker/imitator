@@ -165,28 +165,29 @@ let random_pi0 program pi0 =
 (**************************************************)
 (* Create a gif graph using dot *)
 let generate_graph program pi0 reachability_graph dot_file_name states_file_name gif_file_name =
-	(* Create the input file *)
-	print_message Debug_total ("Creating input file for dot...");
-	let dot_program, states = Graph.dot_of_graph program pi0 reachability_graph ~fancy:options#fancy in
-	(* Write dot file *)
 	if not options#no_dot then (
+		(* Create the input file *)
+		print_message Debug_total ("Creating input file for dot...");
+		let dot_program, states = Graph.dot_of_graph program pi0 reachability_graph ~fancy:options#fancy in
+		(* Write dot file *)
 		print_message Debug_total ("Writing to dot file...");
 		write_to_file dot_file_name dot_program;
 
-	(* Generate gif file using dot *)
+		(* Generate gif file using dot *)
 		print_message Debug_total ("Calling dot...");
 		let command_result = Sys.command (dot_command ^ " -T" ^ dot_extension ^ " " ^ dot_file_name ^ " -o " ^ gif_file_name ^ "") in
 		print_message Debug_total ("Result of the 'dot' command: " ^ (string_of_int command_result));
 		(* Removing dot file *)
 		print_message Debug_total ("Removing dot file...");
 		Sys.remove dot_file_name;
-	);
-	(* Write states file *)
-	if not options#no_log then (
-		print_message Debug_total ("Writing to file for file description...");
-		write_to_file states_file_name states;
-	);
+		
+		(* Write states file *)
+		if not options#no_log then (
+			print_message Debug_total ("Writing to file for file description...");
+			write_to_file states_file_name states;
+		);
 	()
+	)
 
 
 (**************************************************)
