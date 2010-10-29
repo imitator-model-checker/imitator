@@ -518,7 +518,23 @@ let make_set_all_variables variables c =
 		in	
 	let equalities = List.map build_equality variables in
 	make equalities
+
+(** Creates a linear constraint x in [min, max] *)
+let make_interval (v, min, max) = 
+	let lower_bound = 
+		let p,q = split_q min in Greater_Or_Equal (Times (q, Variable v), Coefficient p) in
+	let upper_bound = 
+		let p,q = split_q max in Less_Or_Equal (Times (q, Variable v), Coefficient p) in
+	make [lower_bound; upper_bound]
 	
+(** Creates linear constraints x_i in [min_i, max_i] *)
+let make_box bounds =
+	let lower_bounds = List.map (fun (v, min, _) ->
+		let p,q = split_q min in Greater_Or_Equal (Times (q, Variable v), Coefficient p)) bounds in
+	let upper_bounds = List.map (fun (v, _, max) ->
+		let p,q = split_q max in Less_Or_Equal (Times (q, Variable v), Coefficient p)) bounds in
+	make (lower_bounds @ upper_bounds)
+
 	
 (** Set the constraint manager *)
 let set_manager int_d real_d =
@@ -638,6 +654,34 @@ let support linear_constraint =
 	) VariableSet.empty constr_list
 	
 
+(** returns the lower and upper bounds of a variable wrt. a constraint *)
+let bounds constr v =
+	let min_bound = ( 
+		let _, p, q, bounded = ppl_Polyhedron_minimize constr (Variable v) in
+		if bounded then
+			Some (NumConst.numconst_of_zfrac p q)
+		else
+			None
+	) in
+	let max_bound = ( 
+		let _, p, q, bounded = ppl_Polyhedron_maximize constr (Variable v) in
+		if bounded then
+			Some (NumConst.numconst_of_zfrac p q)
+		else
+			None
+	) in
+	(min_bound, max_bound)
+	
+
+(** convex hull *)
+let hull constraints =
+	match constraints with
+		| [] -> false_constraint ()
+		| c :: tail -> 
+			let hull = ppl_new_NNC_Polyhedron_from_NNC_Polyhedron c in
+			List.iter (ppl_Polyhedron_poly_hull_assign hull) tail;
+			hull
+			
 
 (** Performs the intersection of a list of linear constraints *)
 let intersection linear_constraints =

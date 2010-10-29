@@ -1075,31 +1075,29 @@ let convert_invariants index_of_variables invariants =
 (*--------------------------------------------------*)
 
 (* construct the standard flow for paramters, discrete and clocks *)
-let construct_standard_flow parameters discrete clocks =
-	let clock_deriv = LinearConstraint.make_set_all_variables clocks NumConst.one in
+let construct_standard_flow parameters discrete renamed_clocks =
+	let clock_deriv = LinearConstraint.make_set_all_variables renamed_clocks NumConst.one in
 	let stable_deriv = LinearConstraint.make_set_all_variables (List.rev_append discrete parameters) NumConst.zero in
 	LinearConstraint.intersection [clock_deriv; stable_deriv]
 
 
-(* check and convert a linear constraint to a rate condition *)
+(* check and convert a linear constraint to a rate condition.    *)
+(* returns a pair of the linear constraint and a bool indicating *)
+(* affine dynamics (= unprimed variables in rate condition)      *)
 let convert_flow type_of_variables constr =
 	let ineq = linear_inequality_of_linear_constraint constr in
 	let support = LinearConstraint.inequality_support ineq in
-	(* check that only primed analogs are in the support *)
-	VariableSet.iter (fun v -> 
-		let x = unprime_variable v in
-	  if x < 0 || (type_of_variables x) <> Var_type_analog then(
-			print_error "Variable in rate condition is not analog or non-rectangular rate";
+	let affine = ref false in
+	(* check that only analogs are in the support *)
+	VariableSet.iter (fun v ->
+	  if (type_of_variables v) <> Var_type_analog then(
+			print_error "Variable in rate condition is not analog";
 			abort_program ()
-		)
+		);
+		if (not (is_primed_variable v)) then affine := true			
 	) support;
-	ineq
+	(ineq, !affine)
 	
-	(* replace primed variables by unprimed variables *)
-(*	let unprime = fun v -> Ppl_ocaml.Variable (unprime_variable v) in        *)
-(*	let unprimed_ineq = LinearConstraint.substitute_variables unprime ineq in*)
-(*	unprimed_ineq                                                            *)
-
 
 (* convert the rate conditions *)
 let convert_flows type_of_variables raw_flows =
@@ -1110,20 +1108,25 @@ let convert_flows type_of_variables raw_flows =
 	  else (
 			(* iterate over linear constraints *)
 			let flows = ref [] in
+			let affine = ref false in
 			List.iter (fun lin_constr -> 
 				match lin_constr with
 					| True_constraint -> ()
 					| False_constraint -> raise False_exception  
 					| Linear_constraint (lexpr, op, rexpr) -> 
-							let ineq = convert_flow type_of_variables (lexpr, op, rexpr) in
-							flows := ineq :: !flows
+							let ineq, aff = convert_flow type_of_variables (lexpr, op, rexpr) in
+							flows := ineq :: !flows;
+							affine := !affine || aff
 			) predicate;
 			(* construct linear constraint from collected inequalities *)
 			let flow = LinearConstraint.make !flows in			
 			if debug_mode_greater Debug_total then (
 				print_message Debug_total ("converted flow:" ^ (LinearConstraint.string_of_linear_constraint (fun i -> !glob_variable_names.(i)) flow))
 			);
-			Rectangular flow
+			if !affine then
+				Affine flow
+			else
+				Rectangular flow
 	  )
 	) in	
 	let convert_automaton = Array.map convert_location in
@@ -1421,20 +1424,6 @@ let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_
 	let first_clock_index     = first_analog_index + nb_analogs in
 	let first_discrete_index  = first_clock_index + nb_clocks in
 	
-	(* An array 'variable index -> AbstractImitatorFile.var_type' *)
-	let type_of_variables = Array.make nb_variables AbstractImitatorFile.Var_type_parameter in	
-	for i = first_analog_index to first_clock_index - 1 do
-		type_of_variables.(i) <- AbstractImitatorFile.Var_type_analog;
-	done;
-	for i = first_clock_index to first_discrete_index - 1 do
-		type_of_variables.(i) <- AbstractImitatorFile.Var_type_clock;
-	done;
-	for i = first_discrete_index to nb_variables - 1 do
-		type_of_variables.(i) <- AbstractImitatorFile.Var_type_discrete;
-	done;
-	(* Functional representation *)
-	let type_of_variables = fun variable_index -> type_of_variables.(variable_index) in
-
 	(* Create the lists of different variables *)
 	let parameters = list_of_interval first_parameter_index (first_analog_index - 1) in
 	let analogs    = list_of_interval first_analog_index (first_clock_index - 1) in
@@ -1447,16 +1436,9 @@ let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_
 	(* create a set of all continuous variables *)
 	let continuous = List.fold_left (fun set var -> 
 		VariableSet.add var set
-(*	) VariableSet.empty clocks in*)
 	) VariableSet.empty analogs_and_clocks in
 
-	(* Create the type check functions *)
-	let is_analog = (fun variable_index -> try (type_of_variables variable_index = Var_type_analog) with Invalid_argument _ ->  false) in
-	let is_clock = (fun variable_index -> try (type_of_variables variable_index = Var_type_clock) with Invalid_argument _ ->  false) in
-	let is_discrete = (fun variable_index -> try (type_of_variables variable_index = Var_type_discrete) with Invalid_argument _ ->  false) in
-
 	(* Add more variables to allow renaming *) 
-
 	print_message Debug_total ("*** Building renamed variables...");
 	(* The renamed variable indexes are set just after the current variables *)	
 	let offset = nb_analogs + nb_clocks + nb_discrete in
@@ -1468,9 +1450,34 @@ let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_
 	glob_prime_offset := offset;
 
 	(* Clocks: add the new indexes *)
-	let renamed_clocks = list_of_interval nb_variables (nb_variables + nb_analogs + nb_clocks - 1) in
-
-	(* Create the function is_renamed_clock *)
+	let renamed_clocks = list_of_interval (nb_variables + nb_analogs) (nb_variables + nb_analogs + nb_clocks -1) in
+	let renamed_continuous = list_of_interval nb_variables (nb_variables + nb_analogs + nb_clocks - 1) in
+		
+	(* An array 'variable index -> AbstractImitatorFile.var_type' *)
+	let type_of_variables = Array.make (nb_variables + nb_analogs + nb_clocks) AbstractImitatorFile.Var_type_parameter in	
+	for i = first_analog_index to first_clock_index - 1 do
+		type_of_variables.(i) <- AbstractImitatorFile.Var_type_analog;
+	done;
+	for i = first_clock_index to first_discrete_index - 1 do
+		type_of_variables.(i) <- AbstractImitatorFile.Var_type_clock;
+	done;
+	for i = first_discrete_index to nb_variables - 1 do
+		type_of_variables.(i) <- AbstractImitatorFile.Var_type_discrete;
+	done;
+	for i = nb_variables to nb_variables + nb_analogs - 1 do
+		type_of_variables.(i) <- AbstractImitatorFile.Var_type_analog;
+	done;
+	for i = nb_variables + nb_analogs to nb_variables + nb_analogs + nb_clocks - 1 do
+		type_of_variables.(i) <- AbstractImitatorFile.Var_type_clock;
+	done;
+	
+	(* Functional representation *)
+	let type_of_variables = fun variable_index -> type_of_variables.(variable_index) in
+	
+	(* Create the type check functions *)
+	let is_analog = (fun variable_index -> try (type_of_variables variable_index = Var_type_analog) with Invalid_argument _ ->  false) in
+	let is_clock = (fun variable_index -> try (type_of_variables variable_index = Var_type_clock) with Invalid_argument _ ->  false) in
+	let is_discrete = (fun variable_index -> try (type_of_variables variable_index = Var_type_discrete) with Invalid_argument _ ->  false) in
 	let is_renamed_clock  = (fun variable_index -> variable_index >= nb_variables && 
 																								 variable_index < nb_variables + nb_analogs + nb_clocks) in
 
@@ -1484,9 +1491,6 @@ let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_
 	for variable_index = nb_variables to nb_variables + nb_analogs + nb_clocks - 1 do
 		array_of_variable_names.(variable_index) <- variables.(variable_of_prime variable_index) ^ "_PRIME";
 	done;
-	(* Add 'd' *)
-	(**** TO DO: should avoid the declaration of 'd' as a variable name (to do later, and only important in debug mode...) *)
-(*	array_of_variable_names.(d) <- "d";*)
 
 	(* save the list for later use *)
 	let variable_name_list = variable_names in
@@ -1679,7 +1683,7 @@ let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_
   	
   print_message Debug_total ("*** Building flow conditions...");		
 	(* Convert the flow conditions *)
-	let standard_flow = construct_standard_flow parameters discrete clocks in
+	let standard_flow = construct_standard_flow parameters discrete renamed_clocks in
 	let analog_flows = 
 		if nb_analogs = 0 then(
 			 (* Return empty flow for all automata and locations *)
@@ -1813,7 +1817,7 @@ let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_
 	type_of_variables = type_of_variables;
 
 	(* Renamed clocks *)
-	renamed_clocks = renamed_clocks;
+	renamed_clocks = renamed_continuous;
 	(* True for renamed clocks, false otherwise *)
 	is_renamed_clock = is_renamed_clock;
 	(* Get the 'prime' equivalent of a variable *)

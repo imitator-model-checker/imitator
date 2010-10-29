@@ -130,6 +130,12 @@ val make_equalities : (variable * variable) list -> linear_constraint
 (** Create a linear constraint x = c & ... for a list of variables and constants *)
 val make_set_variables : (variable * NumConst.t) list -> linear_constraint
 
+(** Creates a linear constraint x in [min, max] *)
+val make_interval : variable * NumConst.t * NumConst.t -> linear_constraint
+
+(** Creates linear constraints x_i in [min_i, max_i] *)
+val make_box : (variable * NumConst.t * NumConst.t) list -> linear_constraint
+
 (** Creates a linear constraint x = c & y = c & ... for a list of variables and a constant *)
 val make_set_all_variables : variable list -> NumConst.t -> linear_constraint
 
@@ -185,11 +191,17 @@ val copy : linear_constraint -> linear_constraint
 (** returns a list of variables occuring in a linear constraint *)
 val support : linear_constraint -> Global.VariableSet.t
 
+(** returns the lower and upper bounds of a variable wrt. a constraint *)
+val bounds : linear_constraint ->  variable -> NumConst.t option * NumConst.t option
+
 (** returns a list of variables occuring in a linear inequality *)
 val inequality_support : linear_inequality -> Global.VariableSet.t
 
 (** Performs the intersection of a list of linear constraints *)
 val intersection : linear_constraint list -> linear_constraint
+
+(** convex hull *)
+val hull : linear_constraint list -> linear_constraint
 
 (** Performs the intersection of a list of linear constraints *)
 val intersection_assign : linear_constraint -> linear_constraint list -> unit

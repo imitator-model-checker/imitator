@@ -119,15 +119,13 @@ let compute_flow program location =
 		) init_flow program.automata in
 		match flow with
 			| Undefined -> raise (InternalError "undefined flow")
-			| Affine f -> raise (InternalError "affine dynamics not supported yet")
+			| Affine f 
 			| Rectangular f -> (
-					(* rename variables to X space *)
-					LinearConstraint.rename_variables_assign program.unrenamed_clocks_couples f;
 					(* Add standard flow for parameters, discrete and clocks *)
-					LinearConstraint.intersection_assign f [program.standard_flow];
+					LinearConstraint.intersection_assign f [program.standard_flow];					
 					(* Store in cache *)
-					Cache.store flow_cache locations f;
-					f
+					Cache.store flow_cache locations flow;
+					flow
 				)
   )
 
@@ -149,6 +147,258 @@ let instantiate_discrete discrete_values =
 	LinearConstraint.make inequalities
 
 
+(*--------------------------------------------------*)
+(* get the affine dimensions of a flow              *)
+(*--------------------------------------------------*)
+let affine_dimensions program invariant flow =
+	(* find affine variables *)
+	let support = LinearConstraint.support flow in
+	let affine_vars = VariableSet.elements (
+		VariableSet.inter support (program.continuous) 
+	) in
+	(* determine lower and upper bounds for those variables *)
+	List.map (fun v ->
+		let a, b = LinearConstraint.bounds invariant v in
+		let min = match a with
+			| None -> raise (InternalError "cannot compute affine time elapse due to unbounded invariant")
+			| Some x -> x in
+		let max = match b with
+			| None -> raise (InternalError "cannot compute affine time elapse due to unbounded invariant")
+			| Some x -> x in
+		(v, min, max)
+	) affine_vars
+
+
+exception Last_item
+exception Unbounded
+
+
+let affine_time_elapse program invariant deriv constr = 
+	(* find affine dimensions *)
+	let affine_dim = affine_dimensions program invariant deriv in
+	let affine_vars = List.map (fun (v,_,_) -> v) affine_dim in
+	let n = List.length affine_dim in
+	List.iter (fun (v, min, max) -> 
+		print_message Debug_medium ("affine dimension: " ^ (program.variable_names v) ^ " in [" ^
+			(NumConst.string_of_numconst min) ^ ", " ^ (NumConst.string_of_numconst max) ^ "]")
+	) affine_dim;
+	
+	(* compute the spanned ranges for all dimensions *)
+	let p = match n with
+		| 1 -> 32
+		| 2 -> 16
+		| 3 -> 4
+		| _ -> 2 in		
+	let size_table = Hashtbl.create n in
+	List.iter (fun (v, min, max) -> 
+		let range = NumConst.sub max min in
+		Hashtbl.add size_table v (NumConst.div range (NumConst.numconst_of_int p))
+	) affine_dim; 
+
+	(* functions to iterate over all combinations of ints < p *)
+	let rec next_item = function
+		| [] -> raise Last_item
+		| i :: tail -> if i < p-1 then (i+1 :: tail) else (0 :: (next_item tail)) in
+	let rec init_item p =
+		if p <= 0 then [] else 0 :: (init_item (p-1)) in
+		
+	(* function to compute boundaries of a partition *)
+	let boundaries = List.map2 (fun (v, min, _) i ->
+		let p_size = Hashtbl.find size_table v in 
+		let p_min = NumConst.add min (NumConst.mul (NumConst.numconst_of_int i) p_size) in
+		let p_max = NumConst.add p_min p_size in
+		(v, p_min, p_max)
+	) affine_dim in
+	
+	(* compute the linearized/rectangularized flow for a partition *)
+	let rectangular_flow bounds =
+		(* bound affine dimensions for this partition *)
+		let p_invariant = LinearConstraint.make_box bounds in
+		(* add global invariant and affine flow *)
+		LinearConstraint.intersection_assign p_invariant [invariant; deriv; program.standard_flow];
+		(* existentially quantify affine dimensions *)
+		LinearConstraint.hide_assign affine_vars p_invariant;
+		(* map to X space *)
+		LinearConstraint.rename_variables_assign program.unrenamed_clocks_couples p_invariant;
+		p_invariant in
+
+	(* compute admissible neighbors of a partition, wrt. rectangular flow *)
+	let find_neighbors part flow =		
+		let min_flow, max_flow = List.split (List.map (LinearConstraint.bounds flow) affine_vars) in
+		let down = Array.of_list (List.map (fun x -> 
+			match x with 
+				| Some y -> NumConst.ge NumConst.zero y
+				| None -> true
+			) min_flow) in
+		let up   = Array.of_list (List.map (fun x -> 
+			match x with
+				| Some y -> NumConst.le NumConst.zero y
+				| None -> true
+			) max_flow) in
+		let nbs = ref [] in		
+		let rec build_neighbors hd tl v =
+			match tl with
+				| [] -> ()
+				| i :: rest ->
+						if (i > 0 && down.(v)) then nbs := (List.rev_append hd ((i-1) :: List.tl tl)) :: !nbs;
+						if (i < p-1 && up.(v)) then nbs := (List.rev_append hd ((i+1) :: List.tl tl)) :: !nbs;  
+						build_neighbors ((List.hd tl) :: hd) (List.tl tl) (v+1) in
+		build_neighbors [] part 0;
+		!nbs in 
+		
+	print_message Debug_low "Building partitions...";
+		
+	(* build the partitions *)
+	let rec power b ex = if ex <= 0 then 1 else b * (power b (ex-1)) in
+	let partitions = Hashtbl.create (power p n) in
+	let neighbors = Hashtbl.create (power p n) in
+	let _ = try (
+		(* start with [0; 0; ... 0] *)
+		let current_partition = ref (init_item n) in
+		while true do
+			(* compute lower and upper bounds for affine dimensions *)
+			let my_boundaries = boundaries !current_partition in
+			(* turn them into a rectangular box *)
+			let my_invariant = LinearConstraint.make_box my_boundaries in
+			(* strip variables from boundaries *)
+			let my_bounds = List.map (fun (_,x,y) -> (x,y)) my_boundaries in
+			(* add global invariant (there might be other variables involved) *)
+			LinearConstraint.intersection_assign my_invariant [invariant];
+			(* build the approximated flow for this partition *)
+			let my_flow = rectangular_flow my_boundaries in
+			(* find admissible neighbors *)
+			let nbs = find_neighbors !current_partition my_flow in
+			(* store partition and neighbors *)
+			Hashtbl.add partitions !current_partition (my_bounds, my_invariant, my_flow);
+			Hashtbl.add neighbors !current_partition nbs;
+			(* increase the index list *)
+			current_partition := next_item !current_partition
+	  done; ()
+	) with Last_item -> () in
+
+	(* queue with states to explore *)
+	let q = Queue.create () in
+	
+	print_message Debug_low "Determine initial partitions...";
+	
+	(* find initial partitions that intersect with the original constraint *)
+	Hashtbl.iter (fun index (_, inv, _) ->
+		let cut = LinearConstraint.intersection [inv; constr] in
+		if (LinearConstraint.is_satisfiable cut) then (
+			Queue.add (index, cut, index) q;
+		)
+	) partitions;
+	   		
+	let string_of_partition p = List.fold_left (^) "" (List.map string_of_int p) in 
+	
+	print_message Debug_low "Compute locally reachable partitions...";
+	
+	(* reachable local states *)
+	let states = Hashtbl.create (power p n) in
+	
+	(* function to check if a state s in partition p has already been visited *)
+	let visited p s =
+		try (
+			let p_states = Hashtbl.find_all states p in
+			List.exists (LinearConstraint.is_leq s) p_states		
+		) with Not_found -> false in
+		
+  (* function to compute bounds for a region, None for unbounded *)
+	let compute_bounds region =
+		let deopt = function
+			| Some x, Some y -> x, y
+			| _ -> raise Unbounded in
+		try (
+			Some (List.map deopt (List.map (LinearConstraint.bounds region) affine_vars))
+		) with Unbounded -> None in																					
+				
+	(* function to check if a region cuts a neighboring partition *)
+	let rec is_cutting p1 bounds1 p2 bounds2 =
+		match p1 with
+			| [] -> false
+			| i :: rest -> 
+					let j = List.hd p2 in
+					let min1, max1 = (List.hd bounds1) in
+					let min2, max2 = (List.hd bounds2) in
+					if i < j then (
+						NumConst.ge max1 min2
+					) else if i > j then (
+						NumConst.le min1 max2
+					) else (
+						is_cutting rest (List.tl bounds1) (List.tl p2) (List.tl bounds2)
+					)	in	
+																																																																																																																																																							
+	(* compute locally reachable states *)
+	while not (Queue.is_empty q) do
+		print_message Debug_total ((string_of_int (Queue.length q)) ^ " partitions in queue");
+		(* get top of the queue *)
+		let trg, constr, src = Queue.take q in
+		print_message Debug_total ("consider partition " ^ (string_of_partition trg));
+		(* get infos for target partition *)
+		let _, inv, flow = Hashtbl.find partitions trg in
+		(* do the time elapse *)
+		let elapsed = LinearConstraint.time_elapse constr flow in
+		(* limit to current partition *)
+		LinearConstraint.intersection_assign elapsed [inv];
+		(* already seen this one? *)
+		if not (visited trg elapsed) then (
+			(* register new state *)
+			Hashtbl.add states trg elapsed;
+			(* compute bounds for fast intersection *)
+			let trg_bounds = compute_bounds elapsed in 
+			(* explore neighboring partitions *)
+			let all_ns = Hashtbl.find neighbors trg in
+			let ns = match trg_bounds with
+				| Some bounds -> (
+					(* consider only neighbors that are cut by the computed region *)
+					List.filter (fun p -> 
+						let p_bounds, _, _ = Hashtbl.find partitions p in
+						is_cutting trg bounds p p_bounds 
+					) all_ns)
+				| None -> all_ns in
+			List.iter (fun nb ->
+				print_message Debug_total ("neighbor: " ^ (string_of_partition nb));
+				(* don't look back in anger *)
+				if nb <> src then (
+					(* get info of neighbor *)
+					let _, inv', _ = Hashtbl.find partitions nb in
+					(* get the intersecting region on the bounds *) 
+					let cut = LinearConstraint.intersection [elapsed; inv'] in
+					if LinearConstraint.is_satisfiable cut then (
+						(* add to queue *)
+						Queue.add (nb, cut, trg) q
+					)
+				) 
+			) ns;			
+		)		
+	done;
+	
+	print_message Debug_low "Compute convex hull...";
+	
+	(* return convex hull *)
+	let regions = Hashtbl.fold (fun _ s regions -> s :: regions) states [] in  
+	LinearConstraint.hull regions
+	
+	
+
+(*--------------------------------------------------*)
+(* Compute the time elapse for a location           *)
+(*--------------------------------------------------*)
+let compute_time_elapse program invariant flow constr =
+	let elapsed =
+	match flow with
+		| Undefined -> raise (InternalError "undefined flow")
+		| Rectangular deriv -> (
+			(* rename variables to X space *)
+			let x_deriv = LinearConstraint.rename_variables program.unrenamed_clocks_couples deriv in
+			LinearConstraint.time_elapse constr x_deriv
+			)
+		| Affine deriv -> (			
+			affine_time_elapse program invariant deriv constr
+		) in
+	elapsed
+		
+		
 
 (*--------------------------------------------------*)
 (* Compute the initial state with the initial invariants and time elapsing *)
@@ -184,7 +434,7 @@ let create_initial_state program =
 	(* let time elapse *)
 	print_message Debug_high ("Let time elapse");
 	let deriv = compute_flow program initial_location in
-	LinearConstraint.time_elapse_assign full_constraint deriv;
+	let full_constraint = compute_time_elapse program invariant deriv full_constraint in
 	(* Debug *)
 	if debug_mode_greater Debug_total then print_message Debug_total (LinearConstraint.string_of_linear_constraint program.variable_names full_constraint);	
 
@@ -368,6 +618,7 @@ let compute_updates program updated_continuous clock_updates =
 	let updates = stable_constr in
 	updates
 
+
 	
 (*--------------------------------------------------*)	
 (* Compute the new constraint for a transition      *)
@@ -492,7 +743,7 @@ let compute_new_constraint program orig_constraint orig_location dest_location g
 		(* let time elapse *)
 		print_message Debug_total ("\nLet time elapse");
 		let deriv = compute_flow program dest_location in
-		LinearConstraint.time_elapse_assign new_constraint deriv; 
+		let new_constraint = compute_time_elapse program invariant deriv new_constraint in 
 		if debug_mode_greater Debug_total then(
 			print_message Debug_total (LinearConstraint.string_of_linear_constraint program.variable_names new_constraint);
 			if not (LinearConstraint.is_satisfiable new_constraint) then
@@ -603,6 +854,9 @@ let inverse_method_check_constraint program pi0 reachability_graph constr =
 		(* Update the previous states (including the 'new_states' and the 'orig_state') *)
 		print_message Debug_medium ("\nUpdating all the previous states.\n");
 		Graph.add_inequality_to_states reachability_graph negated_inequality;
+		
+		(* update global K *)
+		LinearConstraint.intersection_assign !global_k [(LinearConstraint.make [negated_inequality])];
 		
 		(* If pi-incompatible *)
 		false
@@ -829,6 +1083,7 @@ let post program pi0 reachability_graph orig_state_index =
 	List.rev (!new_states)
 
 
+
 (*---------------------------------------------------*)
 (* Compute the reachability graph from a given state *)
 (*---------------------------------------------------*)
@@ -965,6 +1220,17 @@ let post_star program options pi0 init_state =
 		(* return only k0 as intersection of all p-constraints *)
 		[ final_k0 ]
 	in
+
+	(*--------------------------------------------------*)
+	(* Debug *)
+	(*--------------------------------------------------*)
+	print_message Debug_standard (
+		"\nFixpoint reached after "
+		^ (string_of_int (!nb_iterations)) ^ " iteration" ^ (s_of_int (!nb_iterations)) ^ ""
+		^ " in " ^ (string_of_seconds (time_from !counter)) ^ ": "
+		^ (string_of_int (Graph.nb_states reachability_graph)) ^ " reachable state" ^ (s_of_int (Graph.nb_states reachability_graph))
+		^ " with "
+		^ (string_of_int (Hashtbl.length (reachability_graph.transitions_table))) ^ " transition" ^ (s_of_int (Hashtbl.length (reachability_graph.transitions_table))) ^ ".");
 
 	(*--------------------------------------------------*)
 	(* Return the result *)
