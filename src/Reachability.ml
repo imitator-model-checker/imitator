@@ -37,6 +37,11 @@ let inv_cache = Cache.make loc_hash 200
 (* Cache for clock updates *)
 let upd_cache = Cache.make upd_hash 100
 
+(*K_prime*)
+let k_prime = ref ( LinearConstraint.true_constraint () )
+
+(* List of last states (of runs) : used for the union mode *)
+let slast = ref []
 
 (* Print statistics for cache usage *)
 let print_stats _ =
@@ -45,7 +50,7 @@ let print_stats _ =
 	print_message Debug_standard "clock update cache:";
 	Cache.print_stats upd_cache
 
-
+ 
 (*--------------------------------------------------*)
 (* Compute the invariant associated to a location   *)
 (*--------------------------------------------------*)
@@ -645,7 +650,7 @@ let compute_transitions program location constr action_index automata aut_table 
 (*-----------------------------------------------------*)
 (* returns a list of (really) new states               *)
 (*-----------------------------------------------------*)
-let post program pi0 reachability_graph orig_state_index =
+let post program options pi0 reachability_graph orig_state_index =
 	(* Original location: static *)
 	let original_location, _ = Graph.get_state reachability_graph orig_state_index in
 	(* Dynamic version of the orig_constraint (can change!) *)
@@ -761,20 +766,43 @@ let post program pi0 reachability_graph orig_state_index =
 					if add_new_state then (				
 						(* Create the state *)				
 						let new_state = location, final_constraint in
-		
+				  
 						(* Debug print *)
 						if debug_mode_greater Debug_total then(
 							print_message Debug_total ("Consider the state \n" ^ (string_of_state program new_state));
 						);
 						
+						
+						if options#dynamic then (
+						let p_constraint = LinearConstraint.hide program.clocks_and_discrete final_constraint in
+						k_prime := LinearConstraint.intersection [!k_prime ; p_constraint];
+						);
+						
 						(* Add this new state *)
 						(* Try to add the state to the graph // with the p-constraint ????? *)
-						let new_state_index, added = Graph.add_state program reachability_graph new_state in
+						let new_state_index, added = (
+						if options#dynamic then (
+						  Graph.add_state_dyn program reachability_graph new_state !k_prime
+						  )
+						  
+						  else (
+						    Graph.add_state program reachability_graph new_state 
+						  )
+						) in
 						(* If this is really a new state *)
 						if added then (
 							(* Add the state_index to the list of new states *)
 							new_states := new_state_index :: !new_states;
-						);
+						)
+						(* ELSE : add to SLAST if mode union *)
+						else (
+							if options#union then (
+								print_message Debug_low ("\nMode union: adding a looping state to SLast.");
+								(* Adding the state *)
+								slast := new_state_index :: !slast;
+							);
+						    );						
+						
 						(* Update the transitions *)
 						Graph.add_transition reachability_graph (orig_state_index, action_index, new_state_index);
 						(* Debug print *)
@@ -788,19 +816,31 @@ let post program pi0 reachability_graph orig_state_index =
 			);
 		
 			(* get the next combination *)
-			more_combinations := next_combination current_indexes max_indexes 		
+			more_combinations := next_combination current_indexes max_indexes;	
 			
 		done; (* while more new states *)
 	) list_of_possible_actions;
+	
+	(* If new_state is empty : the current state is a last state *)
+	if  options#union && list_empty (!new_states) then (
+		print_message Debug_low ("\nMode union: adding a state without successor to SLast.");
+		(* Adding the state *)
+		slast := orig_state_index :: !slast;
+	);
 	
 	(* Return the list of (really) new states *)
 	List.rev (!new_states)
 
 
+
 (*---------------------------------------------------*)
 (* Compute the reachability graph from a given state *)
 (*---------------------------------------------------*)
-let post_star program options pi0 init_state =	
+let post_star program options pi0 init_state = 
+	(*Initialisation of k_prime*)
+	k_prime := LinearConstraint.true_constraint ();
+	(*Initialization of slast : used in union mode only*)
+	slast := [];
 	(* Time counter *)
 	let counter = ref (Unix.gettimeofday()) in
 	(* copy init state, as it might be destroyed later *)
@@ -822,7 +862,7 @@ let post_star program options pi0 init_state =
 	
 	(* Add the initial state to the reachable states *)
 	let init_state_index, _ = Graph.add_state program reachability_graph init_state in
-
+	
 	(*--------------------------------------------------*)
 	(* Perform the post^* *)
 	(*--------------------------------------------------*)
@@ -848,7 +888,7 @@ let post_star program options pi0 init_state =
 			(* Count the states for debug purpose: *)
 			num_state := !num_state + 1;
 			(* Perform the post *)
-			let post = post program pi0 reachability_graph orig_state_index in
+			let post = post program options pi0 reachability_graph orig_state_index in
 			let new_states = post in
 			(* Debug *)
 			if debug_mode_greater Debug_medium then (
@@ -906,8 +946,39 @@ let post_star program options pi0 init_state =
 		^ " with "
 		^ (string_of_int (Hashtbl.length (reachability_graph.transitions_table))) ^ " transition" ^ (s_of_int (Hashtbl.length (reachability_graph.transitions_table))) ^ ".");
 
+	(*--------------------------------------------------*)
+	(* Computation of the returned constraint *)
+	(*--------------------------------------------------*)
+	let my_constraint =
+	(* Case: dynamic *)
+	if options#dynamic then (
+		Convex_constraint !k_prime
+	)else(
+	(* Case union : return the constraint on the parameters associated to slast*)
+		if options#union then (
+			let list_of_constraints =
+			List.map (fun state_index -> 
+			
+			
+				print_message Debug_standard ("\nOne state found.");
+					
+			
+				(* Get the constraint on clocks and parameters *)
+				let (_, current_constraint) =
+					Graph.get_state reachability_graph state_index
+				(* Eliminate clocks *)
+				in LinearConstraint.hide program.clocks_and_discrete current_constraint
+			) !slast
+			in Union_of_constraints list_of_constraints
+		)
+		else 
+		(* Case: classic : the returned constraint does not matter *)
+		Convex_constraint ( LinearConstraint.false_constraint () )
+	)
+	
+	in
 
 	(*--------------------------------------------------*)
 	(* Return the result *)
 	(*--------------------------------------------------*)
-	reachability_graph, !nb_iterations, !counter
+	my_constraint, reachability_graph, !nb_iterations, !counter
