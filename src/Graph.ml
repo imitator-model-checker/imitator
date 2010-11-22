@@ -86,7 +86,8 @@ let compute_k0_destructive program graph =
 	let k0 = LinearConstraint.true_constraint () in
 	iter (fun (_, constr) -> 
 		LinearConstraint.hide_assign program.clocks_and_discrete constr;
-		LinearConstraint.intersection_assign k0 [constr]
+		LinearConstraint.intersection_assign k0 [constr];
+
 	) graph;
 	k0
 
@@ -162,6 +163,16 @@ let states_equal state1 state2 =
 	if not (Automaton.location_equal loc1 loc2) then false else (
 		LinearConstraint.is_equal constr1 constr2
 	)
+	
+(*Check dynamically if two states are equal*)
+let states_equal_dyn state1 state2 constr=
+	let (loc1, constr1) = state1 in
+	let (loc2, constr2) = state2 in
+	if not (Automaton.location_equal loc1 loc2) then false else (
+		LinearConstraint.intersection_assign constr1  [constr];
+		LinearConstraint.intersection_assign constr2 [constr];
+		LinearConstraint.is_equal constr1 constr2
+	)
 
 
 (** Check if a state is included in another one*)
@@ -182,6 +193,41 @@ let insert_state graph hash new_state =
 	(* Return state_index *)
 	new_state_index
 
+(** Add a state to a graph, if it is not present yet with the on-the-fly intersection *)
+let add_state_dyn program graph new_state constr=
+	(* compute hash value for the new state *)
+	let hash = hash_code new_state in
+	if debug_mode_greater Debug_total then (
+		print_message Debug_standard ("hash : " ^ (string_of_int hash));
+	); 
+	(* In acyclic mode: does not test anything *)
+	if program.acyclic then (
+		(* Since the state does NOT belong to the graph: find the state index *)
+		let new_state_index = insert_state graph hash new_state in
+		(* Return state_index, true *)
+		new_state_index, true
+	) else (		
+		(* The check used for equality *)
+		let check_states = states_equal_dyn in				
+		try (
+			(* use hash table to find states with same locations (modulo hash collisions) *)
+			let old_states = Hashtbl.find_all graph.hash_table hash in
+			if debug_mode_greater Debug_total then (
+				let nb_old = List.length old_states in
+				print_message Debug_standard ("hashed list of length " ^ (string_of_int nb_old));
+			);
+			List.iter (fun index -> 
+				let state = get_state graph index in
+				if check_states new_state state constr then raise (Found index)
+			) old_states;
+			(* Not found -> insert state *)
+			let new_state_index = insert_state graph hash new_state in
+			(* Return state_index, true *)
+			new_state_index, true				
+		)	with Found state_index -> (								
+				state_index, false
+		)
+	)
 
 (** Add a state to a graph, if it is not present yet *)
 let add_state program graph new_state =
@@ -233,6 +279,12 @@ let add_inequality_to_states graph inequality =
 		 (* experimental: *)
 		 let _, constr = DynArray.get graph.states state_index in
 		 LinearConstraint.intersection_assign constr [constraint_to_add] 
+		
+(*		 DynArray.set graph.states state_index (                          *)
+(*			let (loc, const) = DynArray.get graph.states state_index in     *)
+(*			(* Perform the intersection *)                                  *)
+(*			loc, (LinearConstraint.intersection [constraint_to_add; const] )*)
+(*		)                                                                 *)
 	done
 	
 
