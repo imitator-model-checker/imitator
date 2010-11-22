@@ -41,6 +41,8 @@ class imitator_options =
 		val mutable cart = ref false
 		(*On-the-fly intersection*)
 		val mutable dynamic = ref false
+		(*Union of last states*)
+		val mutable union = ref false
 		
 		method nb_args = nb_args
 		method file = !file
@@ -60,6 +62,7 @@ class imitator_options =
 		method timed_mode = !timed_mode
 		method cart = !cart
 		method dynamic = !dynamic
+		method union = !union
 		
 		method parse =
 			let usage_msg = "Usage: IMITATOR program_file [pi0_file] [options]" in
@@ -103,7 +106,8 @@ class imitator_options =
 			and speclist = [
 				("-acyclic", Set acyclic, " Does not test if a new state was already encountered. To be set ONLY if the system is acyclic. Default: 'false'");		
 				("-debug", String set_debug_mode_ref, " Print more or less debug information. Can be set to 'nodebug', 'standard', 'low', 'medium', 'high', 'total'. Default: 'standard'");
-				("-inclusion", Set inclusion, " Consider an inclusion of region instead of the equality when performing the Post operation. Default: 'false'");
+				("-dynamic", Set dynamic, "Perform the on-the-fly intersection. Defaut : 'false'");
+				("-inclusion", Set inclusion, " Algorithm IMIncl : Consider an inclusion of region instead of the equality when performing the Post operation. Default: 'false'");
 				("-log-prefix", Set_string program_prefix, " Sets the prefix for log files. Default: [program_file].");
 				("-mode", String set_mode, " Mode for IMITATOR II. Use 'reachability' for a parametric reachability analysis (no pi0 needed). Use 'inversemethod' for the inverse method. For the behavioral cartography algorithm, use 'cover' to cover all the points within V0, or 'randomXX' where XX is a number to iterate randomly algorithm. Default: 'inversemethod'.");
 				("-no-dot", Set no_dot, " No graphical output using 'dot'. Default: false.");
@@ -117,7 +121,8 @@ class imitator_options =
 				("-timed", Set timed_mode, " Adds a timing information to each output of the program. Default: none.");
 				("-with-parametric-log", Set with_parametric_log, " Adds the elimination of the clock variables in the constraints in the log files. Default: false.");
 				("-version", Unit (fun _ -> print_version_string (); exit 0), " Print version string and exit.");
-				("-dynamic", Set dynamic, "Perform the on-the-fly intersection. Currently : Does not work. Defaut : 'false'");
+				("-union", Set union, " Algorithm IMUnion : Returns the union of the constraint on the parameters associated to the last state of each trace. Default: 'false'");
+
 			] in
 					
 			(* function for parsing arguments *)
