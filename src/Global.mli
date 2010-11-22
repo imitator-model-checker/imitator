@@ -31,18 +31,6 @@ exception ParsingError of (int * int)
 (** Debug modes *)
 (****************************************************************)
 
-(** Mode for IMITATOR *)
-type imitator_mode =
-	(** Classical parametric reachability analysis *)
-	| Reachability_analysis
-	(** Classical inverse method *)
-	| Inverse_method
-	(** Cover the whole cartography *)
-	| Cover_cartography
-	(** Randomly pick up values for a given number of iterations *)
-	| Random_cartography of int
-
-
 type debug_mode =
 	| Debug_error (* c'est quoi ca ? *)
 	| Debug_nodebug
@@ -64,6 +52,30 @@ val set_debug_mode : debug_mode -> unit
 
 (* Get the debug mode *)
 val get_debug_mode : unit -> debug_mode
+
+
+(****************************************************************)
+(** Global types *)
+(****************************************************************)
+
+(** Mode for IMITATOR *)
+type imitator_mode =
+	(** Classical parametric reachability analysis *)
+	| Reachability_analysis
+	(** Classical inverse method *)
+	| Inverse_method
+	(** Cover the whole cartography *)
+	| Cover_cartography
+	(** Randomly pick up values for a given number of iterations *)
+	| Random_cartography of int
+
+
+(** Constraint returned by the inverse method *)
+type returned_constraint =
+	(** Constraint under convex form *)
+	| Convex_constraint of LinearConstraint.linear_constraint
+	(** Disjunction of constraints *)
+	| Union_of_constraints of LinearConstraint.linear_constraint list
 
 
 (****************************************************************)
