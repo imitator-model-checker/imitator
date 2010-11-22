@@ -186,7 +186,7 @@ let affine_time_elapse program invariant deriv constr =
 	(* compute the spanned ranges for all dimensions *)
 	let p = match n with
 		| 1 -> 32
-		| 2 -> 16
+		| 2 -> 8
 		| 3 -> 4
 		| _ -> 2 in		
 	let size_table = Hashtbl.create n in
@@ -279,13 +279,43 @@ let affine_time_elapse program invariant deriv constr =
 	(* queue with states to explore *)
 	let q = Queue.create () in
 	
+  (* function to compute bounds for a region, None for unbounded *)
+	let compute_bounds region =
+		let deopt = function
+			| Some x, Some y -> x, y
+			| _ -> raise Unbounded in
+		try (
+			Some (List.map deopt (List.map (LinearConstraint.bounds region) affine_vars))
+		) with Unbounded -> None in																					
+
+	(* check if two bounding boxes intersect *)
+	let boxes_intersect bounds1 bounds2 =
+		let rec intersect bounds1 bounds2 =
+			match bounds1 with
+				| [] -> true
+				| (min1, max1) :: r1 -> 
+					let (min2, max2) = List.hd bounds2 in
+					if (NumConst.l max2 min1) or (NumConst.l max1 min2) then (
+						false
+					) else (
+						let r2 = List.tl bounds2 in
+						intersect r1 r2
+					) in
+		intersect bounds1 bounds2 in  							
+
 	print_message Debug_low "Determine initial partitions...";
 	
 	(* find initial partitions that intersect with the original constraint *)
-	Hashtbl.iter (fun index (_, inv, _) ->
-		let cut = LinearConstraint.intersection [inv; constr] in
-		if (LinearConstraint.is_satisfiable cut) then (
-			Queue.add (index, cut, index) q;
+	let orig_bounds = compute_bounds constr in 
+	Hashtbl.iter (fun index (bounds, inv, _) ->
+		let box_cut = match orig_bounds with
+			| None -> true
+			| Some o_bounds -> boxes_intersect o_bounds bounds in
+		if box_cut then (
+			let cut = LinearConstraint.intersection [inv; constr] in
+			if (LinearConstraint.is_satisfiable cut) then (
+				Queue.add (index, cut, index) q;
+			)
 		)
 	) partitions;
 	   		
@@ -302,16 +332,7 @@ let affine_time_elapse program invariant deriv constr =
 			let p_states = Hashtbl.find_all states p in
 			List.exists (LinearConstraint.is_leq s) p_states		
 		) with Not_found -> false in
-		
-  (* function to compute bounds for a region, None for unbounded *)
-	let compute_bounds region =
-		let deopt = function
-			| Some x, Some y -> x, y
-			| _ -> raise Unbounded in
-		try (
-			Some (List.map deopt (List.map (LinearConstraint.bounds region) affine_vars))
-		) with Unbounded -> None in																					
-				
+						
 	(* function to check if a region cuts a neighboring partition *)
 	let rec is_cutting p1 bounds1 p2 bounds2 =
 		match p1 with
@@ -327,7 +348,7 @@ let affine_time_elapse program invariant deriv constr =
 					) else (
 						is_cutting rest (List.tl bounds1) (List.tl p2) (List.tl bounds2)
 					)	in	
-																																																																																																																																																							
+																																																																																																																																																																																																																																																																																																										
 	(* compute locally reachable states *)
 	while not (Queue.is_empty q) do
 		print_message Debug_total ((string_of_int (Queue.length q)) ^ " partitions in queue");
@@ -373,11 +394,23 @@ let affine_time_elapse program invariant deriv constr =
 		)		
 	done;
 	
-	print_message Debug_low "Compute convex hull...";
-	
+	(* build a coarse overapproximation by taking all affected partitions *)
+(*	let affected_partitions = Hashtbl.fold (fun p _ ps -> *)
+(*		if List.mem p ps then	ps else p :: ps              *)
+(*	) states [] in                                        *)
+(*	let affected_invariants = List.map (fun p ->          *)
+(*		let _, inv, _ = Hashtbl.find partitions p in        *)
+(*		inv) affected_partitions in                         *)
+(*	print_message Debug_low ("Compute convex hull of " ^ (string_of_int (List.length affected_partitions)) ^ " partitions...");*)
+(*	LinearConstraint.hull affected_invariants                                                                                  *)
+			
 	(* return convex hull *)
-	let regions = Hashtbl.fold (fun _ s regions -> s :: regions) states [] in  
+	let regions = Hashtbl.fold (fun _ s regions -> s :: regions) states [] in
+(*	let boxed_regions = List.map (LinearConstraint.bounding_box (VariableSet.elements program.continuous)) regions in*)
+	print_message Debug_low ("Compute convex hull of " ^ (string_of_int (List.length regions)) ^ " local states...");
 	LinearConstraint.hull regions
+
+
 	
 	
 
@@ -743,7 +776,7 @@ let compute_new_constraint program orig_constraint orig_location dest_location g
 		(* let time elapse *)
 		print_message Debug_total ("\nLet time elapse");
 		let deriv = compute_flow program dest_location in
-		let new_constraint = compute_time_elapse program invariant deriv new_constraint in 
+		let new_constraint = compute_time_elapse program invariant deriv new_constraint in						 
 		if debug_mode_greater Debug_total then(
 			print_message Debug_total (LinearConstraint.string_of_linear_constraint program.variable_names new_constraint);
 			if not (LinearConstraint.is_satisfiable new_constraint) then
@@ -999,7 +1032,7 @@ let post program pi0 reachability_graph orig_state_index =
 		let legal_transitions_exist = compute_transitions program original_location orig_plus_discrete action_index automata_for_this_action real_indexes max_indexes possible_transitions in 
 	
 		(* Debug: compute the number of combinations *)
-		if debug_mode_greater Debug_medium then(
+		if legal_transitions_exist && (debug_mode_greater Debug_medium) then(
 			let nb_combinations = Array.fold_left (fun sum max -> sum * (max + 1)) 1 max_indexes in
 			print_message Debug_medium ("I will consider " ^ (string_of_int nb_combinations) ^ " combination" ^ (s_of_int nb_combinations) ^ " for this state and this action\n");
 		);
@@ -1189,37 +1222,11 @@ let post_star program options pi0 init_state =
 	(*--------------------------------------------------*)
 	(* Perform the intersection of all inequalities *)
 	(*--------------------------------------------------*)
-	let final_k0 =
-		if program.imitator_mode = Reachability_analysis
-		then (LinearConstraint.true_constraint ())
-		else(
-		(* Get all the constraints *)
-		let all_constraints = Graph.all_p_constraints program reachability_graph in
-		(* Perform the intersection *)
-		let intersection = LinearConstraint.intersection all_constraints in
-		(* Print the result :-) *)
+	if program.imitator_mode <> Reachability_analysis then (
 		print_message Debug_standard ("\nFinal constraint K  :");
 		print_message Debug_standard (LinearConstraint.string_of_linear_constraint program.variable_names !global_k);
-		print_message Debug_standard ("\nFinal constraint K0 :");
-		print_message Debug_standard (LinearConstraint.string_of_linear_constraint program.variable_names intersection);
-		print_message Debug_standard ("\nAlgorithm InverseMethod finished after " ^ (string_of_seconds (time_from !counter)) ^ ".");
-		(* Return the result *)
-		intersection
-	) in
+	);
 
-	let k0_list = if program.union then
-		(* build "disjunction" of last state p-constraints *)
-		let last_states = Graph.last_states program reachability_graph in
-		List.map (fun state_index ->
-			let _, constr = Graph.get_state reachability_graph state_index in
-			let p_constr = LinearConstraint.hide (List.rev_append program.discrete program.clocks) constr in
-			LinearConstraint.intersection_assign p_constr [!global_k];
-			p_constr
-		) last_states
-	else
-		(* return only k0 as intersection of all p-constraints *)
-		[ final_k0 ]
-	in
 
 	(*--------------------------------------------------*)
 	(* Debug *)
@@ -1235,4 +1242,4 @@ let post_star program options pi0 init_state =
 	(*--------------------------------------------------*)
 	(* Return the result *)
 	(*--------------------------------------------------*)
-	reachability_graph, k0_list, !nb_iterations, !counter
+	reachability_graph, !global_k, !nb_iterations, !counter

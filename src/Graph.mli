@@ -53,17 +53,11 @@ val nb_states : reachability_graph -> int
 (** Return the state of a state_index *)
 val get_state : reachability_graph -> int -> AbstractImitatorFile.state
 
-(** Returns the shared constraint for all states *)
-(*val get_shared_constraint : reachability_graph -> LinearConstraint.linear_constraint*)
-
 (** Return the list of all constraints on the parameters associated to the states of a graph *)
 val all_p_constraints : abstract_program -> reachability_graph -> LinearConstraint.linear_constraint list
 
-(** Check if a state belongs to the graph *)
-(* val in_graph : reachability_graph -> AbstractImitatorFile.state -> bool *)
-
-(** Return the state_index of a state; raise Not_found if not found *)
-(* val find_state_index : reachability_graph -> AbstractImitatorFile.state -> state_index *)
+(** Returns the intersection of all parameter constraints, thereby destroying all constraints *)
+val compute_k0_destructive : abstract_program -> reachability_graph -> LinearConstraint.linear_constraint
 
 (** Check if two states are equal *)
 val states_equal: AbstractImitatorFile.state -> AbstractImitatorFile.state -> bool

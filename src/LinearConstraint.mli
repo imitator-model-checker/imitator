@@ -234,6 +234,8 @@ val project_to : variable list -> linear_constraint -> unit
 
 val non_strictify : linear_constraint -> linear_constraint
 
+val bounding_box : variable list -> linear_constraint -> linear_constraint
+
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
 (** {3 Conversion} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)

@@ -75,10 +75,6 @@ let nb_states graph =
 let get_state graph state_index =
 	DynArray.get graph.states state_index 
 
-(** Returns the shared constraint for all states *)
-(*let get_shared_constraint graph =*)
-(*	graph.shared_constraint        *)
-
 (** Return the list of all constraints on the parameters associated to the states of a graph *)
 let all_p_constraints program graph =
 	DynArray.fold_left
@@ -87,6 +83,18 @@ let all_p_constraints program graph =
 			p_constraint :: current_list)
 		[] graph.states
 
+(** Iterate over the reachable states *)
+let iter f graph =
+	DynArray.iter f graph.states
+
+(** Compute the intersection of all parameter constraints, DESTRUCTIVE!!! *)
+let compute_k0_destructive program graph =
+	let k0 = LinearConstraint.true_constraint () in
+	iter (fun (_, constr) -> 
+		LinearConstraint.hide_assign program.clocks_and_discrete constr;
+		LinearConstraint.intersection_assign k0 [constr]
+	) graph;
+	k0
 
 (* state struct for constructing set type *)
 module State = struct

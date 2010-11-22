@@ -829,6 +829,29 @@ let non_strictify linear_constraint =
 	) constraint_list in
 	make new_constraints
 
+
+(** compute bounding box wrt. to a list of variables *)
+let bounding_box variables constr = 
+	let bounds = List.map (fun v -> (v, bounds constr v)) variables in
+	let cylinder = hide variables constr in
+	let boxify (v, (lbound, ubound)) =
+		 match lbound with
+			| Some min -> (
+					let lower_bound = 
+						let p,q = split_q min in Greater_Or_Equal (Times (q, Variable v), Coefficient p) in
+					intersection_assign cylinder [make [lower_bound]]
+				)
+			| None -> ();
+		 match ubound with
+			| Some max -> (
+					let upper_bound = 
+						let p,q = split_q max in Less_Or_Equal (Times (q, Variable v), Coefficient p) in
+					intersection_assign cylinder [make [upper_bound]]
+				)
+			| None -> () in
+	List.iter boxify bounds;
+	cylinder
+			
 (*
 
 let of_int = NumConst.numconst_of_int;;

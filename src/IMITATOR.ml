@@ -258,7 +258,7 @@ let cover_behavioral_cartography program pi0cube init_state =
 			if not (debug_mode_greater Debug_medium) then
 				set_debug_mode Debug_nodebug;
 			(* Compute the post and the constraint *)
-			let graph, k0, nb_iterations, counter = Reachability.post_star program options pi0 init_state in
+			let graph, k, nb_iterations, counter = Reachability.post_star program options pi0 init_state in
 			(* Get the debug mode back *)
 			set_debug_mode global_debug_mode;
 			(* Update the counters *)
@@ -272,6 +272,10 @@ let cover_behavioral_cartography program pi0cube init_state =
 				^ (string_of_int (Graph.nb_states graph)) ^ " reachable state" ^ (s_of_int (Graph.nb_states graph))
 				^ " with "
 				^ (string_of_int (Hashtbl.length (graph.transitions_table))) ^ " transition" ^ (s_of_int (Hashtbl.length (graph.transitions_table))) ^ ".");
+			
+			let k0 = Graph.compute_k0_destructive program graph in
+			LinearConstraint.intersection_assign k0 [k];
+			let k0 = [k0] in
 			
 			(* Add the pi0 and the constraint *)
 			DynArray.add pi0_computed pi0;
@@ -419,7 +423,7 @@ let random_behavioral_cartography program pi0cube init_state nb =
 					set_debug_mode Debug_nodebug;
 				);
 				(* Compute the post *)
-				let graph, k0, nb_iterations, counter = Reachability.post_star program options pi0_functional init_state in
+				let graph, k, nb_iterations, counter = Reachability.post_star program options pi0_functional init_state in
 				(* Get the debug mode back *)
 				set_debug_mode global_debug_mode;
 				print_message Debug_standard (
@@ -429,6 +433,10 @@ let random_behavioral_cartography program pi0cube init_state nb =
 					^ (string_of_int (Graph.nb_states graph)) ^ " reachable state" ^ (s_of_int (Graph.nb_states graph))
 					^ " with "
 					^ (string_of_int (Hashtbl.length (graph.transitions_table))) ^ " transition" ^ (s_of_int (Hashtbl.length (graph.transitions_table))) ^ ".");
+
+				let k0 = Graph.compute_k0_destructive program graph in
+				LinearConstraint.intersection_assign k0 [k];
+				let k0 = [k0] in
 
 				(* Add the pi0 *)
 				pi0_computed.(!i - 1) <- pi0;
@@ -684,7 +692,7 @@ let _ =
 match options#imitator_mode with
 	(* Perform reachability analysis or inverse Method *)
 	| Reachability_analysis | Inverse_method -> 
-		let reachability_graph, k0, _, _ =
+		let reachability_graph, k, _, _ =
 			Reachability.post_star program options pi0 init_state_after_time_elapsing
 		in
 		
@@ -741,6 +749,13 @@ match options#imitator_mode with
 		let states_file_name = (options#program_prefix ^ ".states") in
 		let gif_file_name = (options#program_prefix ^ "." ^ dot_extension) in
 		generate_graph program pi0 reachability_graph dot_file_name states_file_name gif_file_name;
+		
+		if options#imitator_mode = Inverse_method then (
+			let k0 = Graph.compute_k0_destructive program reachability_graph in
+			LinearConstraint.intersection_assign k0 [k];
+			print_message Debug_standard ("\nFinal constraint K0 :");
+			print_message Debug_standard (LinearConstraint.string_of_linear_constraint program.variable_names k0);
+		)
 		
 (*		let g = Graph.shrink program reachability_graph in                            *)
 (*		let dot_file_name = (!program_prefix ^ ".shrink.dot") in                      *)
