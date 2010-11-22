@@ -60,6 +60,9 @@ let numconst_of_float f = (* Mpq (Mpq.of_float i) DOES NOT WORK WELL *)
 		(* Create the fraction *)
 		 numconst_of_frac (integer * denominator + fractional) denominator
 	)
+	
+let numconst_of_string str =
+	Gmp.Q.from_z (Gmp.Z.from_string str)
 
 let numconst_of_mpq m = m
 

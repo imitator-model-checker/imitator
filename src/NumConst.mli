@@ -33,6 +33,7 @@ val minus_one : t
 (** {2 User Conversions} *)
 (**************************************************)
 
+val numconst_of_string : string -> t
 val numconst_of_int : int -> t
 val numconst_of_float : float -> t
 val numconst_of_frac : int -> int -> t
