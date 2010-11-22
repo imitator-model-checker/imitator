@@ -56,6 +56,9 @@ val compute_k0_destructive : abstract_program -> reachability_graph -> LinearCon
 (** Check if two states are equal *)
 val states_equal: AbstractImitatorFile.state -> AbstractImitatorFile.state -> bool
 
+(*Check dynamically if two states are equal*)
+val states_equal_dyn: AbstractImitatorFile.state -> AbstractImitatorFile.state -> LinearConstraint.linear_constraint -> bool
+
 (** find all "last" states on finite or infinite runs *)
 val last_states: abstract_program -> reachability_graph -> int list 
 
@@ -66,6 +69,9 @@ val last_states: abstract_program -> reachability_graph -> int list
 
 (** Add a state to a graph: return (state_index, added), where state_index is the index of the state, and 'added' is false if the state was already in the graph, true otherwise *)
 val add_state : AbstractImitatorFile.abstract_program -> reachability_graph -> state -> (state_index * bool)
+
+(**Add a state to a graph dynamically**)
+val add_state_dyn : AbstractImitatorFile.abstract_program -> reachability_graph -> state -> LinearConstraint.linear_constraint -> (state_index * bool)
 
 (** Add a transition to the graph *)
 val add_transition : reachability_graph -> (state_index * action_index * state_index) -> unit
