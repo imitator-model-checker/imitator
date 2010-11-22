@@ -55,7 +55,7 @@ TAGS POUR CHOSES A FAIRE
 
 let dot_command = "dot"
 let dot_extension = "jpg"
-let pas = NumConst.numconst_of_frac 1 4
+let pas = NumConst.numconst_of_frac 1 1
 
 (**************************************************)
 (**************************************************)
@@ -71,6 +71,18 @@ let options = new imitator_options
 (* FUNCTIONS *)
 (**************************************************)
 (**************************************************)
+(* String functions *)
+
+(** Convert a 'returned_constraint' to a 'string'*)
+
+let string_of_returned_constraint variable_names = function 
+	| Convex_constraint linear_constraint -> LinearConstraint.string_of_linear_constraint variable_names linear_constraint
+	(** Disjunction of constraints *)
+	| Union_of_constraints k_list -> string_of_list_of_string_with_sep "\n OR \n" (List.map (LinearConstraint.string_of_linear_constraint variable_names) k_list)
+
+
+
+
 
 
 (**************************************************)
@@ -195,6 +207,12 @@ let generate_graph program pi0 reachability_graph dot_file_name states_file_name
 (**************************************************)
 (* BEHAVIORAL CARTOGRAPHY ALGORITHM functions *)
 (**************************************************)
+(** Check if a pi_0 belongs to a 'returned_constraint'*)
+let pi0_in_returned_constraint pi0 = function
+	| Convex_constraint k -> LinearConstraint.is_pi0_compatible pi0 k
+	(** Disjunction of constraints *)
+	| Union_of_constraints k_list -> List.exists (LinearConstraint.is_pi0_compatible pi0) k_list
+
 
 (** Behavioral cartography algorithm with full coverage of V0 *)
 let cover_behavioral_cartography program pi0cube init_state =
@@ -234,7 +252,7 @@ let cover_behavioral_cartography program pi0cube init_state =
 		let pi0 = fun parameter -> pi0_array.(parameter) in
 		
 		(* Check that it does not belong to any constraint *)
-		if dynArray_exists (LinearConstraint.is_pi0_compatible pi0) results then (
+		if dynArray_exists (pi0_in_returned_constraint pi0) results then (
 			if debug_mode_greater Debug_medium then (
 				print_message Debug_medium "The following pi0 is already included in a constraint.";
 				print_message Debug_medium (string_of_pi0 program pi0);
@@ -283,12 +301,12 @@ let cover_behavioral_cartography program pi0cube init_state =
 			
 			(* compute k0 *)
 
-			let k0 =  if options#dynamic then (
-					match returned_constraint with
-					| Convex_constraint k_prime -> k_prime
+			let k0 =  if options#dynamic || options#union then ( returned_constraint )
+				else  match returned_constraint with 
+					| Convex_constraint _ -> Convex_constraint (Graph.compute_k0_destructive program graph)
 					| _ -> print_error ("Internal error when getting the result of post_star in cover: 'options#dynamic' is activated but the constraint returned is not convex (type 'Convex_constraint')."); abort_program (); exit(0)
-				)
-				else ( Graph.compute_k0_destructive program graph) in
+
+			in
 			(* Add the pi0 and the computed constraint *)
 			DynArray.add pi0_computed pi0;
 			DynArray.add results k0;
@@ -296,8 +314,9 @@ let cover_behavioral_cartography program pi0cube init_state =
 			(* Print the constraint *)
 			let bad_string = if Graph.is_bad program graph then "BAD." else "GOOD." in			
 			print_message Debug_low ("Constraint K0 computed:");
-			print_message Debug_standard (LinearConstraint.string_of_linear_constraint program.variable_names k0);
+			print_message Debug_standard (string_of_returned_constraint program.variable_names k0);
 			print_message Debug_standard ("This zone is " ^ bad_string);
+
 
 		); (* else if new pi0 *)
 
@@ -358,6 +377,8 @@ let cover_behavioral_cartography program pi0cube init_state =
 	zones
 
 
+
+
 (** Behavioral cartography algorithm with random selection of a pi0 *)
 let random_behavioral_cartography program pi0cube init_state nb =
 	(* Array for the pi0 *)
@@ -365,7 +386,7 @@ let random_behavioral_cartography program pi0cube init_state nb =
 	let pi0_computed = Array.make nb (random_pi0 program pi0cube) in
 	(* Array for the results *)
 	(***** TO OPTIMIZE: why create such a big array?! *****)
-	let results = Array.make nb (LinearConstraint.false_constraint ()) in
+	let results = Array.make nb (Convex_constraint (LinearConstraint.false_constraint ())) in
 	(* Index of the iterations where we really found different constraints *)
 	let interesting_interations = ref [] in
 	(* Debug mode *)
@@ -402,7 +423,7 @@ let random_behavioral_cartography program pi0cube init_state nb =
 			let pi0_functional = fun parameter -> pi0.(parameter) in
 
 			(* Check that it does not belong to any constraint *)
-			if array_exists (LinearConstraint.is_pi0_compatible pi0_functional) results then (
+			if array_exists (pi0_in_returned_constraint pi0_functional) results then (
 				print_message Debug_standard ("This pi" ^ (string_of_int !i) ^ " is already included in a constraint.");
 				print_message Debug_standard (string_of_pi0 program pi0_functional);
 				
@@ -421,7 +442,7 @@ let random_behavioral_cartography program pi0cube init_state nb =
 					set_debug_mode Debug_nodebug;
 				);
 				(* Compute the post *)
-				let _, graph, nb_iterations, counter = Reachability.post_star program options pi0_functional init_state in
+				let returned_constraint, graph, nb_iterations, counter = Reachability.post_star program options pi0_functional init_state in
 				(* Get the debug mode back *)
 				set_debug_mode global_debug_mode;
 				print_message Debug_standard (
@@ -445,11 +466,16 @@ let random_behavioral_cartography program pi0cube init_state nb =
 				interesting_interations := !i :: !interesting_interations;
 
 				(* compute k0 *)
-				let k0 = Graph.compute_k0_destructive program graph in
+				let k0 =  if options#dynamic || options#union then ( returned_constraint )
+				else  match returned_constraint with 
+					| Convex_constraint _ -> Convex_constraint (Graph.compute_k0_destructive program graph)
+					| _ -> print_error ("Internal error when getting the result of post_star in cover: 'options#dynamic' is activated but the constraint returned is not convex (type 'Convex_constraint')."); abort_program (); exit(0)
+
+				in
 												
 				(* Print the constraint *)
 				print_message Debug_low ("Constraint K0 computed:");
-				print_message Debug_standard (LinearConstraint.string_of_linear_constraint program.variable_names k0);
+				print_message Debug_standard (string_of_returned_constraint program.variable_names k0);
 
 				(* Add the result *)
 				results.(!i - 1) <- k0;
@@ -699,16 +725,10 @@ match options#imitator_mode with
 				print_message Debug_standard (LinearConstraint.string_of_linear_constraint program.variable_names k0);            		
 			) else (
 			(* Else (i.e., if union mode) *)
-				let list_of_constraints =
-				match returned_constraint with
-					| Union_of_constraints list_of_constraints -> list_of_constraints
-					| _ -> print_error ("Internal error when getting the result of post_star: 'options#union' is activated but the constraint returned is not a union of constraints (type 'Union_of_constraints')."); abort_program (); exit(0)
-				in
+
 				(* print it *)
 				print_message Debug_standard ("\nFinal constraint K0 under disjunctive form :");
-				List.iter (fun linear_constraint ->
-					print_message Debug_standard (" OR " ^ (LinearConstraint.string_of_linear_constraint program.variable_names linear_constraint));
-				) list_of_constraints;
+				print_message Debug_standard (string_of_returned_constraint program.variable_names returned_constraint);
 				
 			);
 		);

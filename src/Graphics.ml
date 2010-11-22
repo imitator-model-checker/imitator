@@ -32,17 +32,40 @@ let strict_to_not_strict_inequality inequality =
 
 
 (* print the cartography which correspond to the list of constraint *)
-let cartography program pi0cube constraint_list cartography_name =
-	(* replace strict inequalities *)
-	let new_constraint_list = ref [] in 
-	for i=0 to List.length constraint_list -1 do
-		let inequality_list = ppl_Polyhedron_get_constraints (List.nth constraint_list i) in 
-		let new_inequality_list = ref [] in
-		for j=0 to List.length inequality_list -1 do 
-			new_inequality_list := (strict_to_not_strict_inequality (List.nth inequality_list j))::!new_inequality_list;
+let cartography program pi0cube returned_constraint_list cartography_name =
+	(* Replace strict inequalities with large inequalities *)
+(* 	let new_constraint_list = ref [] in  *)
+
+	(* Local function to replace strict inequalities within a linear_constraint *)
+	let replace_strict_inequalities_in_k k =
+		(* Get the list of inequalities *)
+		let inequality_list = ppl_Polyhedron_get_constraints k in 
+		(* Replace inequelities and convert back to a linear_constraint *)
+			make (List.map strict_to_not_strict_inequality inequality_list)
+	in
+
+	(* For all returned_constraint *)
+	let new_returned_constraint_list = List.map (
+		fun returned_constraint -> match returned_constraint with
+			| Convex_constraint k -> Convex_constraint (replace_strict_inequalities_in_k k)
+			| Union_of_constraints list_of_k -> Union_of_constraints (List.map replace_strict_inequalities_in_k list_of_k)
+	) returned_constraint_list
+	in
+
+
+(*	(**** HORRIBLE IMPERATIVE (and not tail recursive) programming !!!!! ******)
+	(* For all returned_constraint *)
+	for k = 0 to List.length returned_constraint_list -1 do
+		(* For all linear_constraint *)
+		for i=0 to List.length constraint_list -1 do
+			let inequality_list = ppl_Polyhedron_get_constraints (List.nth constraint_list i) in 
+			let new_inequality_list = ref [] in
+			for j=0 to List.length inequality_list -1 do 
+				new_inequality_list := (strict_to_not_strict_inequality (List.nth inequality_list j))::!new_inequality_list;
+			done;
+			new_constraint_list := make !new_inequality_list::!new_constraint_list;
 		done;
-		new_constraint_list := make !new_inequality_list::!new_constraint_list;
-	done;
+	done;*)
 
 	(* find indices of first two variables with a parameter range *)
 	let range_params = ref [] in
@@ -76,13 +99,13 @@ let cartography program pi0cube constraint_list cartography_name =
 		(* get corners of v0 *)
 		let init_min_abs, init_max_abs = pi0cube.(x_param) in
 		let init_min_ord, init_max_ord = pi0cube.(y_param) in
-		(* convert to float *)
+(*		(* convert to float *)
 		let init_min_abs = float_of_int init_min_abs in
 		let init_max_abs = float_of_int init_max_abs in
 		let init_min_ord = float_of_int init_min_ord in
 		let init_max_ord = float_of_int init_max_ord in
 		
-		(* find mininma and maxima for axes *)
+		(* find mininma and maxima for axes (version Daphne) *)
 		let min_abs, max_abs, min_ord, max_ord =
 		List.fold_left (fun limits constr -> 
 			let points, _ = shape_of_poly x_param y_param constr in			
@@ -94,16 +117,38 @@ let cartography program pi0cube constraint_list cartography_name =
 				let new_max_ord = max current_max_ord y in
 				(new_min_abs, new_max_abs, new_min_ord, new_max_ord) 
 			) limits points  		 
-		) (init_min_abs, init_max_abs, init_min_ord, init_max_ord) !new_constraint_list in
-		(* add a margin of 1 unit *)
-		let min_abs = min_abs -. 1.0 in
-		let max_abs = max_abs +. 1.0 in
-		let min_ord = min_ord -. 1.0 in
-		let max_ord = max_ord +. 1.0 in
+		) (init_min_abs, init_max_abs, init_min_ord, init_max_ord) new_returned_constraint_list in*)
+
+		(* Find mininma and maxima for axes (version Etienne, who finds imperative here better ) *)
+		let min_abs = ref (float_of_int init_min_abs) in
+		let max_abs = ref (float_of_int init_max_abs) in
+		let min_ord = ref (float_of_int init_min_ord) in
+		let max_ord = ref (float_of_int init_max_ord) in
+		(* Update min / max for ONE linear_constraint *)
+		let update_min_max linear_constraint =
+			let points, _ = shape_of_poly x_param y_param linear_constraint in
+			List.iter (fun (x,y) ->
+				min_abs := min !min_abs x;
+				max_abs := max !max_abs x;
+				min_ord := min !min_ord y;
+				max_ord := max !max_ord y;
+			) points;
+		in
+		(* Update min / max for all returned constraint *)
+		List.iter (function
+			| Convex_constraint k -> update_min_max k
+			| Union_of_constraints list_of_k -> List.iter update_min_max list_of_k
+		) new_returned_constraint_list;
+
+		(* Add a margin of 1 unit *)
+		let min_abs = !min_abs -. 1.0 in
+		let max_abs = !max_abs +. 1.0 in
+		let min_ord = !min_ord -. 1.0 in
+		let max_ord = !max_ord +. 1.0 in
 		
 		(* print_message Debug_standard ((string_of_float !min_abs)^"  "^(string_of_float !min_ord)); *)
 		(* Create a new file for each constraint *)
-		for i=0 to List.length !new_constraint_list-1 do
+(*		for i=0 to List.length !new_constraint_list-1 do
 			let file_name = cartography_name^"_points_"^(string_of_int i)^".txt" in
 			let file_out = open_out file_name in
 			(* find the points satisfying the constraint *)
@@ -123,7 +168,45 @@ let cartography program pi0cube constraint_list cartography_name =
 			if fst s
 				then script_line := !script_line^"-m "^(string_of_int((i mod 5)+1+20))^" -q 0.3 "^file_name^" "
 				else script_line := !script_line^"-m "^(string_of_int((i mod 5)+1))^" -q 0.7 "^file_name^" "
-		done;
+		done;*)
+
+		(*** BAD PROG : bouh pas beau *)
+		let file_index = ref 0 in
+		let tile_index = ref 0 in
+		(* Creation of files (Daphne wrote this?) *)
+		let create_file_for_constraint k =
+			let file_name = cartography_name^"_points_"^(string_of_int !file_index) ^ ".txt" in
+			let file_out = open_out file_name in
+			(* find the points satisfying the constraint *)
+			let s=plot_2d (x_param) (y_param) k min_abs min_ord max_abs max_ord in
+			(* print in the file the coordinates of the points *)
+			output_string file_out (snd s);
+			(* close the file and open it in a reading mode to read the first line *)
+			close_out file_out;			
+			let file_in = open_in file_name in
+			let s2 = input_line file_in in
+			(* close the file and open it in a writting mode to copy the whole string in it and ensure that the polygon is closed*)
+			close_in file_in;
+			let file_out_bis = open_out file_name in
+			output_string file_out_bis ((snd s)^s2);
+			close_out file_out_bis;
+			(* instructions to have the zones colored. If fst s = true then the zone is infinite *)
+			if fst s
+				(*** TO DO : same color for one disjunctive tile *)
+				then script_line := !script_line^"-m "^(string_of_int(((!tile_index) mod 5)+1+20))^" -q 0.3 "^file_name^" "
+				else script_line := !script_line^"-m "^(string_of_int(((!tile_index) mod 5)+1))^" -q 0.7 "^file_name^" "
+			;
+			(* Increment the file index *)
+			file_index := !file_index + 1;
+		in
+
+		(* For all returned_constraint *)
+		List.iter (function
+			| Convex_constraint k -> tile_index := !tile_index + 1; create_file_for_constraint k
+			| Union_of_constraints list_of_k ->
+				List.iter (fun k -> tile_index := !tile_index + 1; create_file_for_constraint k) list_of_k
+		) new_returned_constraint_list;
+
 		
 		(* File in which the cartography will be printed *)
 		let final_name = cartography_name^".ps" in
