@@ -41,6 +41,7 @@ rule token = parse
 	| "automaton"      { CT_AUTOMATON }
 (* 	| "backward"       { CT_BACKWARD } *)
 (* 	| "cldiff"         { CT_CLDIFF } *)
+	| "bad"            { CT_BAD }
 	| "clock"          { CT_CLOCK }
 (*	| "d"              { CT_D }*)
 	| "discrete"       { CT_DISCRETE }

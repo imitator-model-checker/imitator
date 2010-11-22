@@ -671,6 +671,31 @@ let check_init discrete variable_names index_of_variables type_of_variables auto
 
 
 (*--------------------------------------------------*)
+(* Check the bad state declaration                  *)
+(*--------------------------------------------------*)
+let check_bad index_of_automata index_of_locations parsed_bad_definition =
+	(* convert to pairs of automata indices and location indices *)
+	let state_pairs = ref [] in
+	let well_formed = ref true in
+	List.iter (fun bad_def -> 
+		match bad_def with
+			| Loc_assignment (aut, loc) -> (
+					try (
+						let aut_index = Hashtbl.find index_of_automata aut in
+						let loc_index = Hashtbl.find index_of_locations.(aut_index) loc in
+						state_pairs := (aut_index, loc_index) :: !state_pairs
+					) with Not_found -> well_formed := false )					
+			| _ -> well_formed := false
+	) parsed_bad_definition;
+	(* check that each automaton index appears at most once *)
+	let rec unique = function
+		| [] -> true
+		| (i, _) :: tail -> (not (List.exists (fun (j, _) -> i=j) tail)) && unique tail in  
+	well_formed := !well_formed && unique !state_pairs;			
+	(!state_pairs, !well_formed)
+	
+
+(*--------------------------------------------------*)
 (* Check the pi0 w.r.t. the program parameters *)
 (*--------------------------------------------------*)
 let check_pi0 pi0 parameters_names =
@@ -1095,7 +1120,7 @@ let make_pi0cube parsed_pi0cube index_of_variables nb_parameters =
 (*--------------------------------------------------*)
 (* Convert the parsing structure into an abstract program *)
 (*--------------------------------------------------*)
-let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_automata, parsed_init_definition) parsed_pi0 parsed_pi0cube options =	
+let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_automata, parsed_init_definition, parsed_bad_definition) parsed_pi0 parsed_pi0cube options =	
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Debug functions *) 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -1327,6 +1352,11 @@ let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_
 	let init_discrete_couples, well_formed_init =
 		check_init discrete variable_names index_of_variables type_of_variables automata automata_names index_of_automata array_of_location_names parsed_init_definition in
 	if not well_formed_init then raise InvalidProgram;
+
+	(* check bad state definition *)
+	let bad_state_pairs, well_formed_bad =
+		check_bad index_of_automata index_of_locations parsed_bad_definition in
+	if not well_formed_bad then raise InvalidProgram;
 
 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -1611,6 +1641,8 @@ let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_
 
 	(* Init : the initial state *)
 	init = initial_state;
+	(* bad states *)
+	bad = bad_state_pairs;
 
 	(* Acyclic mode *)
 	acyclic = options#acyclic;

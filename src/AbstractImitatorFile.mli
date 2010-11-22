@@ -156,6 +156,8 @@ type abstract_program = {
 
 	(* Init : the initial state *)
 	init : state;
+	(* bad states *)
+	bad  : (automaton_index * location_index) list;
 
 	(* Acyclic mode *)
 	acyclic : bool;

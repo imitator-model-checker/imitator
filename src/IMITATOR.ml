@@ -294,9 +294,10 @@ let cover_behavioral_cartography program pi0cube init_state =
 			DynArray.add results k0;
 			
 			(* Print the constraint *)
+			let bad_string = if Graph.is_bad program graph then "BAD." else "GOOD." in			
 			print_message Debug_low ("Constraint K0 computed:");
-(*			print_message Debug_standard (LinearConstraint.string_of_linear_constraint program.variable_names k0);*)
 			print_message Debug_standard (LinearConstraint.string_of_linear_constraint program.variable_names k0);
+			print_message Debug_standard ("This zone is " ^ bad_string);
 
 		); (* else if new pi0 *)
 
