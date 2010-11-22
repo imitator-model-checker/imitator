@@ -55,7 +55,7 @@ TAGS POUR CHOSES A FAIRE
 
 let dot_command = "dot"
 let dot_extension = "jpg"
-
+let pas = NumConst.numconst_of_frac 1 4
 
 (**************************************************)
 (**************************************************)
@@ -166,6 +166,7 @@ let random_pi0 program pi0 =
 (* Create a gif graph using dot *)
 let generate_graph program pi0 reachability_graph dot_file_name states_file_name gif_file_name =
 	if not options#no_dot then (
+		
 		(* Create the input file *)
 		print_message Debug_total ("Creating input file for dot...");
 		let dot_program, states = Graph.dot_of_graph program pi0 reachability_graph ~fancy:options#fancy in
@@ -180,14 +181,15 @@ let generate_graph program pi0 reachability_graph dot_file_name states_file_name
 		(* Removing dot file *)
 		print_message Debug_total ("Removing dot file...");
 		Sys.remove dot_file_name;
-		
+			
 		(* Write states file *)
 		if not options#no_log then (
 			print_message Debug_total ("Writing to file for file description...");
 			write_to_file states_file_name states;
 		);
-	()
 	)
+
+
 
 
 (**************************************************)
@@ -199,8 +201,8 @@ let cover_behavioral_cartography program pi0cube init_state =
 	(* Dimension of the system *)
 	let dimension = Array.length pi0cube in
 	(* Min & max bounds for the parameters *)
-	let min_bounds = Array.map (fun (low, high) -> low) pi0cube in
-	let max_bounds = Array.map (fun (low, high) -> high) pi0cube in
+	let min_bounds = Array.map (fun (low, high) -> NumConst.numconst_of_int low) pi0cube in
+	let max_bounds = Array.map (fun (low, high) -> NumConst.numconst_of_int high) pi0cube in
 	
 	(* Initial constraint of the program *)
 	let _, init_constraint = program.init in
@@ -227,8 +229,8 @@ let cover_behavioral_cartography program pi0cube init_state =
 	let more_pi0 = ref true in
 	let limit_reached = ref false in
 	while !more_pi0 && not !limit_reached do
-		(* Convert the int array into a well-typed pi0 *)
-		let pi0_array = Array.map NumConst.numconst_of_int current_pi0 in
+		(* Copy the array current_pi0*)
+		let pi0_array = Array.copy current_pi0 in
 		let pi0 = fun parameter -> pi0_array.(parameter) in
 		
 		(* Check that it does not belong to any constraint *)
@@ -257,7 +259,7 @@ let cover_behavioral_cartography program pi0cube init_state =
 			if not (debug_mode_greater Debug_medium) then
 				set_debug_mode Debug_nodebug;
 			(* Compute the post and the constraint *)
-			let graph, nb_iterations, counter = Reachability.post_star program options pi0 init_state in
+			let returned_constraint, graph, nb_iterations, counter = Reachability.post_star program options pi0 init_state in
 			(* Get the debug mode back *)
 			set_debug_mode global_debug_mode;
 			(* Update the counters *)
@@ -280,14 +282,20 @@ let cover_behavioral_cartography program pi0cube init_state =
 			generate_graph program pi0 graph dot_file_name states_file_name gif_file_name;
 			
 			(* compute k0 *)
-			let k0 = Graph.compute_k0_destructive program graph in
-			
+
+			let k0 =  if options#dynamic then (
+					match returned_constraint with
+					| Convex_constraint k_prime -> k_prime
+					| _ -> print_error ("Internal error when getting the result of post_star in cover: 'options#dynamic' is activated but the constraint returned is not convex (type 'Convex_constraint')."); abort_program (); exit(0)
+				)
+				else ( Graph.compute_k0_destructive program graph) in
 			(* Add the pi0 and the computed constraint *)
 			DynArray.add pi0_computed pi0;
 			DynArray.add results k0;
 			
 			(* Print the constraint *)
 			print_message Debug_low ("Constraint K0 computed:");
+(*			print_message Debug_standard (LinearConstraint.string_of_linear_constraint program.variable_names k0);*)
 			print_message Debug_standard (LinearConstraint.string_of_linear_constraint program.variable_names k0);
 
 		); (* else if new pi0 *)
@@ -299,7 +307,7 @@ let cover_behavioral_cartography program pi0cube init_state =
 			(* Try to increment the local index *)
 			if current_pi0.(!local_index) < max_bounds.(!local_index) then(
 				(* Increment this index *)
-				current_pi0.(!local_index) <- current_pi0.(!local_index) + 1;
+				current_pi0.(!local_index) <- NumConst.add current_pi0.(!local_index) pas;
 				(* Reset the smaller indexes to the low bound *)
 				for i = 0 to !local_index - 1 do
 					current_pi0.(i) <- min_bounds.(i);
@@ -308,7 +316,7 @@ let cover_behavioral_cartography program pi0cube init_state =
 				not_is_max := false;
 			)
 			(* Else: try the next index *)
-			else (
+			else ( 
 				local_index := !local_index + 1;
 				(* If last index: the end! *)
 				if !local_index >= dimension then(
@@ -412,7 +420,7 @@ let random_behavioral_cartography program pi0cube init_state nb =
 					set_debug_mode Debug_nodebug;
 				);
 				(* Compute the post *)
-				let graph, nb_iterations, counter = Reachability.post_star program options pi0_functional init_state in
+				let _, graph, nb_iterations, counter = Reachability.post_star program options pi0_functional init_state in
 				(* Get the debug mode back *)
 				set_debug_mode global_debug_mode;
 				print_message Debug_standard (
@@ -663,7 +671,7 @@ let zones =
 match options#imitator_mode with
 	(* Perform reachability analysis or inverse Method *)
 	| Reachability_analysis | Inverse_method ->
-		let reachability_graph, _, _ =
+		let returned_constraint, reachability_graph, _, _ =
 			Reachability.post_star program options pi0 init_state_after_time_elapsing
 		in
 		(* Generate the DOT graph *)
@@ -673,12 +681,35 @@ match options#imitator_mode with
 		let gif_file_name = (options#program_prefix ^ "." ^ dot_extension) in
 		generate_graph program pi0 reachability_graph dot_file_name states_file_name gif_file_name;
 		
+		(* MODE INVERSE METHOD *)
 		if options#imitator_mode = Inverse_method then (
-			(* compute k0 *)	
-			let k0 = Graph.compute_k0_destructive program reachability_graph in
-			(* print it *)
-			print_message Debug_standard ("\nFinal constraint K0 :");                                                                   
-			print_message Debug_standard (LinearConstraint.string_of_linear_constraint program.variable_names k0);            		
+			(* If convex constraint (i.e., if no union mode) *)
+			if not options#union then(
+				(* compute k0 *)	
+				let k0 =  if options#dynamic then (
+					match returned_constraint with
+					| Convex_constraint k_prime -> k_prime
+					| _ -> print_error ("Internal error when getting the result of post_star: 'options#dynamic' is activated but the constraint returned is not convex (type 'Convex_constraint')."); abort_program (); exit(0)
+				)
+				else (Graph.compute_k0_destructive program reachability_graph )
+				in
+				(* print it *)
+				print_message Debug_standard ("\nFinal constraint K0 :");
+				print_message Debug_standard (LinearConstraint.string_of_linear_constraint program.variable_names k0);            		
+			) else (
+			(* Else (i.e., if union mode) *)
+				let list_of_constraints =
+				match returned_constraint with
+					| Union_of_constraints list_of_constraints -> list_of_constraints
+					| _ -> print_error ("Internal error when getting the result of post_star: 'options#union' is activated but the constraint returned is not a union of constraints (type 'Union_of_constraints')."); abort_program (); exit(0)
+				in
+				(* print it *)
+				print_message Debug_standard ("\nFinal constraint K0 under disjunctive form :");
+				List.iter (fun linear_constraint ->
+					print_message Debug_standard (" OR " ^ (LinearConstraint.string_of_linear_constraint program.variable_names linear_constraint));
+				) list_of_constraints;
+				
+			);
 		);
 		[ ]
 
@@ -706,6 +737,6 @@ in ();
 (* Bye bye! *)
 (**************************************************)
 
-Reachability.print_stats ();
+(* Reachability.print_stats (); *)
 
 terminate_program()
