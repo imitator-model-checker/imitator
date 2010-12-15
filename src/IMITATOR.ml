@@ -720,7 +720,6 @@ match options#imitator_mode with
 				)
 				else ( 
 						if options#pi_compatible then ( 
-							print_message Debug_standard ("I'm on trollacosta !");
 							let (_ , k_constraint) = get_state reachability_graph 0 in
 							(LinearConstraint.hide program.clocks_and_discrete k_constraint);
 						) else(Graph.compute_k0_destructive program reachability_graph)

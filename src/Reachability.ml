@@ -971,18 +971,8 @@ let post_star program options pi0 init_state =
 			) !slast
 			in Union_of_constraints list_of_constraints
 		)
-		else( 
-(*			(*Case just K : no pi_incompatible states can be reached*)
-			if options#pi_compatible then ( 
-							print_message Debug_standard ("I'm on trollacosta !");
-							let (_ , k_constraint) = get_state reachability_graph 0 in
-							Convex_constraint  (LinearConstraint.hide program.clocks_and_discrete k_constraint);
-							
-							)
-						else (
-							(* Case: classic : the returned constraint does not matter *)*)
-							Convex_constraint ( LinearConstraint.false_constraint () )
-(* 						     ) *)
+		else( 	(* Case: classic : the returned constraint does not matter *)*)
+			Convex_constraint ( LinearConstraint.false_constraint () )
 		)
 	)
 	in
