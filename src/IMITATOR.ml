@@ -718,7 +718,13 @@ match options#imitator_mode with
 					| Convex_constraint k_prime -> k_prime
 					| _ -> print_error ("Internal error when getting the result of post_star: 'options#dynamic' is activated but the constraint returned is not convex (type 'Convex_constraint')."); abort_program (); exit(0)
 				)
-				else (Graph.compute_k0_destructive program reachability_graph )
+				else ( 
+						if options#pi_compatible then ( 
+							print_message Debug_standard ("I'm on trollacosta !");
+							let (_ , k_constraint) = get_state reachability_graph 0 in
+							(LinearConstraint.hide program.clocks_and_discrete k_constraint);
+						) else(Graph.compute_k0_destructive program reachability_graph)
+					)
 				in
 				(* print it *)
 				print_message Debug_standard ("\nFinal constraint K0 :");

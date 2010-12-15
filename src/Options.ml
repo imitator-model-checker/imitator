@@ -43,6 +43,8 @@ class imitator_options =
 		val mutable dynamic = ref false
 		(*Union of last states*)
 		val mutable union = ref false
+		(*Returns contraint K*)
+		val mutable pi_compatible = ref false 
 		
 		method nb_args = nb_args
 		method file = !file
@@ -63,6 +65,7 @@ class imitator_options =
 		method cart = !cart
 		method dynamic = !dynamic
 		method union = !union
+		method pi_compatible = !pi_compatible
 		
 		method parse =
 			let usage_msg = "Usage: IMITATOR program_file [pi0_file] [options]" in
@@ -122,6 +125,7 @@ class imitator_options =
 				("-with-parametric-log", Set with_parametric_log, " Adds the elimination of the clock variables in the constraints in the log files. Default: false.");
 				("-version", Unit (fun _ -> print_version_string (); exit 0), " Print version string and exit.");
 				("-union", Set union, " Algorithm IMUnion : Returns the union of the constraint on the parameters associated to the last state of each trace. Default: 'false'");
+				("-pi_compatible", Set pi_compatible, "Algorithm lololo : Returns a constraint such that no pi_incompatible states can be reached");
 
 			] in
 					
