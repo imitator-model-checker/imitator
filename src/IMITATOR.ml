@@ -713,11 +713,14 @@ match options#imitator_mode with
 			(* If convex constraint (i.e., if no union mode) *)
 			if not options#union then(
 				(* compute k0 *)	
-				let k0 =  if options#dynamic then (
+				let k0 =  if options#dynamic then ( if options#pi_compatible then ( 
+							let (_ , k_constraint) = get_state reachability_graph 0 in
+							(LinearConstraint.hide program.clocks_and_discrete k_constraint);
+						) else(
 					match returned_constraint with
 					| Convex_constraint k_prime -> k_prime
 					| _ -> print_error ("Internal error when getting the result of post_star: 'options#dynamic' is activated but the constraint returned is not convex (type 'Convex_constraint')."); abort_program (); exit(0)
-				)
+				))
 				else ( 
 						if options#pi_compatible then ( 
 							let (_ , k_constraint) = get_state reachability_graph 0 in
