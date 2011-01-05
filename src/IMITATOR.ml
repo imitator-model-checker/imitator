@@ -225,6 +225,10 @@ let cover_behavioral_cartography program pi0cube init_state =
 	(* Debug mode *)
 	let global_debug_mode = get_debug_mode() in
 	
+	let v0_bounds = Array.to_list (Array.mapi (fun i (low, high, _) -> (i, low, high)) pi0cube) in
+	let v0_box = LinearConstraint.make_box v0_bounds in
+	let badlist = ref [] in
+	
 	(* Iterate on all the possible pi0 *)
 	let more_pi0 = ref true in
 	let limit_reached = ref false in
@@ -282,7 +286,9 @@ let cover_behavioral_cartography program pi0cube init_state =
 			List.iter (DynArray.add results) k0;
 
 			(* Print the constraint *)
-			let bad_string = if Graph.is_bad program graph then "bad" else "good" in			
+			let bad = Graph.is_bad program graph in
+			if bad then badlist := (DynArray.length results - 1) :: !badlist;
+			let bad_string = if bad then "bad" else "good" in			
 			print_message Debug_low ("Constraint K0 computed:");
 			print_message Debug_standard (bad_string ^ " zone");
 			List.iter (fun k0 -> print_message Debug_standard (LinearConstraint.string_of_linear_constraint program.variable_names k0)) k0;
@@ -297,6 +303,14 @@ let cover_behavioral_cartography program pi0cube init_state =
 			);
 		); (* else if new pi0 *)
 
+(*		let params = Array.to_list (Array.mapi (fun i _ -> i) pi0cube) in                                *)
+(*		let try_next_point = LinearConstraint.uncovered_point params v0_box (DynArray.to_list results) in*)
+(*		match try_next_point with                                                                        *)
+(*			| Some next_pi0 ->                                                                             *)
+(*				let new_pi0 = Array.of_list next_pi0 in                                                      *)
+(*				Array.iteri (fun i x -> current_pi0.(i) <- x) new_pi0;                                       *)
+(*			| None -> more_pi0 := false;                                                                   *)
+				
 		(* Find the next pi0 *)
 		let not_is_max = ref true in
 		let local_index = ref 0 in
@@ -352,7 +366,7 @@ let cover_behavioral_cartography program pi0cube init_state =
 	
 	(* plot the cartography *)
 	let zones = DynArray.to_list results in
-	Graphics.cartography program pi0cube zones 2 options#program_prefix;
+	Graphics.cartography program pi0cube zones !badlist 2 options#program_prefix;
 	
 	(* compute coverage of v0 *)
 	let cov = 100.0 *. Graphics.coverage program pi0cube zones in
@@ -670,7 +684,7 @@ if not (LinearConstraint.is_satisfiable init_constraint) then (
 );
 
 (* Get the initial state after time elapsing *)
-let init_state_after_time_elapsing = Reachability.create_initial_state program in
+let init_state_after_time_elapsing = Reachability.create_initial_state program options in
 let _, initial_constraint_after_time_elapsing = init_state_after_time_elapsing in
 (* Check the satisfiability *)
 if not (LinearConstraint.is_satisfiable initial_constraint_after_time_elapsing) then (

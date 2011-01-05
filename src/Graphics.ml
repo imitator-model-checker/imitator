@@ -328,7 +328,7 @@ let parameter_pairs pi0cube =
 
 
 (* print the cartography which correspond to the list of constraint *)
-let cartography program pi0cube constraint_list nb_variables_projected cartography_name =
+let cartography program pi0cube constraint_list badlist nb_variables_projected cartography_name =
 	(* replace strict inequalities *)
 	let new_constraint_list = List.map LinearConstraint.non_strictify constraint_list in
 
@@ -421,9 +421,11 @@ let cartography program pi0cube constraint_list nb_variables_projected cartograp
 			output_string file_out s;
 			close_out file_out;
 			(* instructions to have the zones colored. If fst s = true then the zone is infinite *)
+			let color = if (List.mem i badlist) then 1 else 2 in
+			let shade = (float_of_int (i mod 6) +. 2.0) *. 0.1 in  
 			if is_infinite
-				then script_line := !script_line ^ "-m " ^ (string_of_int((i mod 5)+1+20))^ " -q 0.3 "
-				else script_line := !script_line ^ "-m " ^ (string_of_int((i mod 5)+1))   ^ " -q 0.7 "; 
+				then script_line := !script_line ^ "-m " ^ (string_of_int(color + 20)) ^ " -q " ^ (string_of_float shade) ^ " " 
+				else script_line := !script_line ^ "-m " ^ (string_of_int(color)) ^ " -q " ^ (string_of_float shade) ^ " "; 
 			script_line := !script_line ^ file_name ^ " ";	
 		done;
 

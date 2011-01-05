@@ -49,7 +49,9 @@ class imitator_options =
 		val mutable plot_vars = ref []
 		(* limits for plots *)
 		val mutable plot_limits = ref (Hashtbl.create 0)
-		
+		(* number of partitions for affine variables *)
+		val mutable nb_part = ref 4;
+				
 		method nb_args = nb_args
 		method file = !file
 		method pi0file = !pi0file
@@ -72,6 +74,7 @@ class imitator_options =
 		method dynamic = !dynamic
 		method plot_vars = !plot_vars
 		method plot_limits = !plot_limits
+		method nb_partitions = !nb_part
 		
 		method parse =
 			let usage_msg = "Usage: IMITATOR program_file [pi0_file] [options]" in
@@ -140,6 +143,7 @@ class imitator_options =
 				("-cart", Set cart, " Plot cartography before terminating the program. Uses the first two parameters with ranges. Default: false.");
 				("-plot", Tuple [String add_plot_x; String add_plot_y], " Generate 2D plot of rechable states projected on the two given variables. Default: false.");
 				("-limits", Tuple [Set_string limit_var; Set_string limit_lower; String add_plot_limit], " Set limits of the displayed plot area for a variable. Default: automatic");
+				("-part", Int (fun i -> nb_part := i), " Number of partitions for each affine variable. Default: 4.");
 				("-fancy", Set fancy, " Generate detailed state information for dot output. Default: false.");
 				("-no-random", Set no_random, " No random selection of the pi0-incompatible inequality (select the first found). Default: false.");
 				("-post-limit", Int (fun i -> post_limit := Some i), " Limits the depth of the Post exploration. Default: no limit.");

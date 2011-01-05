@@ -173,7 +173,7 @@ exception Last_item
 exception Unbounded
 
 
-let affine_time_elapse program invariant deriv constr = 
+let affine_time_elapse program options invariant deriv constr = 
 	(* find affine dimensions *)
 	let affine_dim = affine_dimensions program invariant deriv in
 	let affine_vars = List.map (fun (v,_,_) -> v) affine_dim in
@@ -183,12 +183,15 @@ let affine_time_elapse program invariant deriv constr =
 			(NumConst.string_of_numconst min) ^ ", " ^ (NumConst.string_of_numconst max) ^ "]")
 	) affine_dim;
 	
+(*	let a,b = LinearConstraint.linear_system (program.renamed_clocks) (program.clocks) deriv in*)
+	
 	(* compute the spanned ranges for all dimensions *)
-	let p = match n with
-		| 1 -> 32
-		| 2 -> 8
-		| 3 -> 4
-		| _ -> 2 in		
+	let p = options#nb_partitions in 
+(*	match n with     *)
+(*		| 1 -> 32      *)
+(*		| 2 -> 16      *)
+(*		| 3 -> 4       *)
+(*		| _ -> 2 in		*)
 	let size_table = Hashtbl.create n in
 	List.iter (fun (v, min, max) -> 
 		let range = NumConst.sub max min in
@@ -220,6 +223,8 @@ let affine_time_elapse program invariant deriv constr =
 		LinearConstraint.hide_assign affine_vars p_invariant;
 		(* map to X space *)
 		LinearConstraint.rename_variables_assign program.unrenamed_clocks_couples p_invariant;
+		(* remove primed clocks *)
+		LinearConstraint.hide_assign program.renamed_clocks p_invariant;
 		p_invariant in
 
 	(* compute admissible neighbors of a partition, wrt. rectangular flow *)
@@ -393,20 +398,34 @@ let affine_time_elapse program invariant deriv constr =
 			) ns;			
 		)		
 	done;
-	
-	(* build a coarse overapproximation by taking all affected partitions *)
-(*	let affected_partitions = Hashtbl.fold (fun p _ ps -> *)
-(*		if List.mem p ps then	ps else p :: ps              *)
-(*	) states [] in                                        *)
-(*	let affected_invariants = List.map (fun p ->          *)
-(*		let _, inv, _ = Hashtbl.find partitions p in        *)
-(*		inv) affected_partitions in                         *)
-(*	print_message Debug_low ("Compute convex hull of " ^ (string_of_int (List.length affected_partitions)) ^ " partitions...");*)
-(*	LinearConstraint.hull affected_invariants                                                                                  *)
-			
+				
 	(* return convex hull *)
-	let regions = Hashtbl.fold (fun _ s regions -> s :: regions) states [] in
-(*	let boxed_regions = List.map (LinearConstraint.bounding_box (VariableSet.elements program.continuous)) regions in*)
+(*	let union = Ppl_ocaml.ppl_new_Pointset_Powerset_NNC_Polyhedron_from_NNC_Polyhedron (LinearConstraint.false_constraint ()) in*)
+(*	Hashtbl.iter (fun _ s -> Ppl_ocaml.ppl_Pointset_Powerset_NNC_Polyhedron_add_disjunct union s) states;                       *)
+(*                                                                                                                              *)
+(*	let nb_disjuncts = Ppl_ocaml.ppl_Pointset_Powerset_NNC_Polyhedron_size union in                                             *)
+(*	print_message Debug_standard ("disjuncts orig: " ^ (string_of_int nb_disjuncts));                                           *)
+(*	                                                                                                                            *)
+(*	Ppl_ocaml.ppl_Pointset_Powerset_NNC_Polyhedron_pairwise_reduce union;                                                       *)
+(*                                                                                                                              *)
+(*	let nb_disjuncts = Ppl_ocaml.ppl_Pointset_Powerset_NNC_Polyhedron_size union in                                             *)
+(*	print_message Debug_standard ("disjuncts opt : " ^ (string_of_int nb_disjuncts));                                           *)
+
+	let octagonalize constr = 
+		let octa = Ppl_ocaml.ppl_new_Octagonal_Shape_mpq_class_from_NNC_Polyhedron constr in
+		Ppl_ocaml.ppl_new_NNC_Polyhedron_from_Octagonal_Shape_mpq_class octa in
+		
+	let simplify_constr constr =
+		let bd = Ppl_ocaml.ppl_new_BD_Shape_mpq_class_from_NNC_Polyhedron constr in
+		Ppl_ocaml.ppl_new_NNC_Polyhedron_from_BD_Shape_mpq_class bd in
+				
+	(* octagonalize reachable states *)
+	let regions = Hashtbl.fold (fun _ s octas ->
+		s :: octas
+	) states [] in
+
+(*	let regions = Hashtbl.fold (fun _ s regions -> s :: regions) states [] in*)
+	
 	print_message Debug_low ("Compute convex hull of " ^ (string_of_int (List.length regions)) ^ " local states...");
 	LinearConstraint.hull regions
 
@@ -417,7 +436,7 @@ let affine_time_elapse program invariant deriv constr =
 (*--------------------------------------------------*)
 (* Compute the time elapse for a location           *)
 (*--------------------------------------------------*)
-let compute_time_elapse program invariant flow constr =
+let compute_time_elapse program options invariant flow constr =
 	let elapsed =
 	match flow with
 		| Undefined -> raise (InternalError "undefined flow")
@@ -427,7 +446,7 @@ let compute_time_elapse program invariant flow constr =
 			LinearConstraint.time_elapse constr x_deriv
 			)
 		| Affine deriv -> (			
-			affine_time_elapse program invariant deriv constr
+			affine_time_elapse program options invariant deriv constr
 		) in
 	elapsed
 		
@@ -436,7 +455,7 @@ let compute_time_elapse program invariant flow constr =
 (*--------------------------------------------------*)
 (* Compute the initial state with the initial invariants and time elapsing *)
 (*--------------------------------------------------*)
-let create_initial_state program =
+let create_initial_state program options =
 	(* Get the declared init state with initial constraint C_0(X) *)
 	let initial_location, init_constraint = program.init in
 	
@@ -467,7 +486,7 @@ let create_initial_state program =
 	(* let time elapse *)
 	print_message Debug_high ("Let time elapse");
 	let deriv = compute_flow program initial_location in
-	let full_constraint = compute_time_elapse program invariant deriv full_constraint in
+	let full_constraint = compute_time_elapse program options invariant deriv full_constraint in
 	(* Debug *)
 	if debug_mode_greater Debug_total then print_message Debug_total (LinearConstraint.string_of_linear_constraint program.variable_names full_constraint);	
 
@@ -661,7 +680,7 @@ let compute_updates program updated_continuous clock_updates =
 (* guards          : guard constraints per automaton*)
 (* clock_updates   : updated clock variables        *)
 (*--------------------------------------------------*)
-let compute_new_constraint program orig_constraint orig_location dest_location guards updated_continuous clock_updates =
+let compute_new_constraint program options orig_constraint orig_location dest_location guards updated_continuous clock_updates =
 	(* the constraint is checked on the fly for satisfyability -> exception mechanism *)
 	try ( 
 		print_message Debug_total ("\nComputing equalities for discrete variables (previous values)");
@@ -776,7 +795,7 @@ let compute_new_constraint program orig_constraint orig_location dest_location g
 		(* let time elapse *)
 		print_message Debug_total ("\nLet time elapse");
 		let deriv = compute_flow program dest_location in
-		let new_constraint = compute_time_elapse program invariant deriv new_constraint in						 
+		let new_constraint = compute_time_elapse program options invariant deriv new_constraint in						 
 		if debug_mode_greater Debug_total then(
 			print_message Debug_total (LinearConstraint.string_of_linear_constraint program.variable_names new_constraint);
 			if not (LinearConstraint.is_satisfiable new_constraint) then
@@ -964,7 +983,7 @@ let compute_transitions program location constr action_index automata aut_table 
 (*-----------------------------------------------------*)
 (* returns a list of (really) new states               *)
 (*-----------------------------------------------------*)
-let post program pi0 reachability_graph orig_state_index =
+let post program options pi0 reachability_graph orig_state_index =
 	(* Original location: static *)
 	let original_location, _ = Graph.get_state reachability_graph orig_state_index in
 	(* Dynamic version of the orig_constraint (can change!) *)
@@ -1058,7 +1077,7 @@ let post program pi0 reachability_graph orig_state_index =
 			let location, guards, updated_continuous, clock_updates = compute_new_location program real_indexes current_transitions action_index original_location in
 			
 			(* Compute the new constraint for the current transition *)
-			let new_constraint = compute_new_constraint program orig_constraint original_location location guards updated_continuous clock_updates in
+			let new_constraint = compute_new_constraint program options orig_constraint original_location location guards updated_continuous clock_updates in
 	
 			(* Check the satisfiability *)
 			match new_constraint with
@@ -1171,7 +1190,7 @@ let post_star program options pi0 init_state =
 			(* Count the states for debug purpose: *)
 			num_state := !num_state + 1;
 			(* Perform the post *)
-			let post = post program pi0 reachability_graph orig_state_index in
+			let post = post program options pi0 reachability_graph orig_state_index in
 			let new_states = post in
 			(* Debug *)
 			if debug_mode_greater Debug_medium then (
@@ -1233,7 +1252,7 @@ let post_star program options pi0 init_state =
 	(*--------------------------------------------------*)
 	print_message Debug_standard (
 		"\nFixpoint reached after "
-		^ (string_of_int (!nb_iterations)) ^ " iteration" ^ (s_of_int (!nb_iterations)) ^ ""
+		^ (string_of_int (!nb_iterations - 1)) ^ " iteration" ^ (s_of_int (!nb_iterations - 1)) ^ ""
 		^ " in " ^ (string_of_seconds (time_from !counter)) ^ ": "
 		^ (string_of_int (Graph.nb_states reachability_graph)) ^ " reachable state" ^ (s_of_int (Graph.nb_states reachability_graph))
 		^ " with "

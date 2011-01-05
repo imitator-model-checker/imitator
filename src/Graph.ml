@@ -610,9 +610,9 @@ let dot_of_graph program pi0 reachability_graph ~fancy =
 			) in
 			my_string
 			^ "\n  "
-			^ "q_" ^ (string_of_int orig_state_index)
+			^ "s" ^ (string_of_int orig_state_index)
 			^ " -> "
-			^ "q_" ^ (string_of_int dest_state_index)
+			^ "s" ^ (string_of_int dest_state_index)
 			^ label
 		) transitions "")
 
@@ -635,7 +635,7 @@ let dot_of_graph program pi0 reachability_graph ~fancy =
 			(* Find the location color *)
 			let location_color = color location_index in
 			(* create node index *)
-			let node_index = "q_" ^ (string_of_int state_index) in
+			let node_index = "s" ^ (string_of_int state_index) in
 
 			if fancy then (
 				(* create record label with location names *)			

@@ -236,6 +236,12 @@ val non_strictify : linear_constraint -> linear_constraint
 
 val bounding_box : variable list -> linear_constraint -> linear_constraint
 
+(** converts a linear constraint to a linear system Y = A*X + B,
+ 		given the domains of Y and X *)
+val linear_system : variable list -> variable list -> linear_constraint -> NumConst.t array array * NumConst.t array 
+
+val uncovered_point : variable list -> linear_constraint -> linear_constraint list -> (NumConst.t list) option
+
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
 (** {3 Conversion} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)

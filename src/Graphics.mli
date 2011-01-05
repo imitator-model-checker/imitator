@@ -20,7 +20,7 @@ open AbstractImitatorFile
 val plot_2d : variable -> variable -> linear_constraint -> string
 
 (** Plot the cartography *)
-val cartography : abstract_program ->  pi0cube -> linear_constraint list ->  int -> string -> unit
+val cartography : abstract_program ->  pi0cube -> linear_constraint list ->  int list->  int -> string -> unit
 
 (** Compute the coverage of the rectangle v0 by a list of zones (constraints) *)
 val coverage : abstract_program -> pi0cube -> linear_constraint list -> float

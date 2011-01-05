@@ -851,163 +851,114 @@ let bounding_box variables constr =
 			| None -> () in
 	List.iter boxify bounds;
 	cylinder
+
+
+let get_coefficients_term varlist term =
+	let zero_vec = fun x -> NumConst.zero in
+	let unit_vec v = fun x -> if v = x then NumConst.one else NumConst.zero in
+	let ccoef = evaluate_linear_term_ppl zero_vec term in
+	let vcoef = List.map (fun v -> 
+		let x = evaluate_linear_term_ppl (unit_vec v) term in
+		NumConst.sub x ccoef
+	) varlist in
+	(vcoef, ccoef) 
+
+
+let get_coefficients varlist ineq = 
+	let lterm, rterm, _ = split_linear_inequality ineq in
+	let lvcoef, lccoef = get_coefficients_term varlist lterm in
+	let rvcoef, rccoef = get_coefficients_term varlist rterm in
+	let vcoef = List.map2 (fun lc rc -> 
+		NumConst.sub rc lc	
+	) lvcoef rvcoef in
+	let ccoef = NumConst.sub rccoef lccoef in
+	(vcoef, ccoef)	
 			
-(*
-
-let of_int = NumConst.numconst_of_int;;
-let of_frac = NumConst.numconst_of_frac;;
-
-let names = fun i -> if i = 4 then "d" else ("x" ^ (string_of_int i));;
-let pi0 = [| 1; 2; 3; 4 |];;
-
-let pi0 = fun i -> (of_int pi0.(i));;
-
-let int_dim = 0;;
-let real_dim = 5;;
-
-LinearConstraint.set_manager int_dim real_dim;;
-
-let lt1 = LinearConstraint.make_linear_term [(of_int (-7), 1); (of_frac (-2) 2, 2); (of_int (0), 3); (of_int (-1), 1); (of_frac 132 64, 3); ] (of_frac (-4) 3);;
-let lt2 = LinearConstraint.make_linear_term [(of_int (-1), 2); (of_int (1), 3)] (of_frac (0) (1));;
-let lt3 = LinearConstraint.make_linear_term [] (of_frac (-137) (2046));;
-let lt4 = LinearConstraint.make_linear_term [] (of_frac (0) (9));;
-
-print_string ("\n lt1 := " ^ (LinearConstraint.string_of_linear_term names lt1));;
-print_string ("\n lt2 := " ^ (LinearConstraint.string_of_linear_term names lt2));;
-print_string ("\n lt3 := " ^ (LinearConstraint.string_of_linear_term names lt3));;
-print_string ("\n lt4 := " ^ (LinearConstraint.string_of_linear_term names lt4));;
-
-print_string ("\n lt1 + lt2 := " ^ (LinearConstraint.string_of_linear_term names (LinearConstraint.add_linear_terms lt1 lt2)));;
-print_string ("\n lt1 + lt2 + lt3 := " ^ (LinearConstraint.string_of_linear_term names (LinearConstraint.add_linear_terms (LinearConstraint.add_linear_terms lt1 lt2) lt3)));;
-
-let li1 = LinearConstraint.make_linear_inequality lt1 LinearConstraint.Op_g;;
-let li2 = LinearConstraint.make_linear_inequality lt2 LinearConstraint.Op_ge;;
-let li3 = LinearConstraint.make_linear_inequality lt3 LinearConstraint.Op_g;;
-let li4 = LinearConstraint.make_linear_inequality lt4 LinearConstraint.Op_ge;;
-
-print_string ("\n li1 := " ^ (LinearConstraint.string_of_linear_inequality names li1));;
-print_string ("\n li2 := " ^ (LinearConstraint.string_of_linear_inequality names li2));;
-print_string ("\n li3 := " ^ (LinearConstraint.string_of_linear_inequality names li3));;
-print_string ("\n li4 := " ^ (LinearConstraint.string_of_linear_inequality names li4));;
-
-print_string ("\n li1 is pi-compatible : " ^ (string_of_bool (LinearConstraint.is_pi0_compatible_inequality pi0 li1)));;
-print_string ("\n li2 is pi-compatible : " ^ (string_of_bool (LinearConstraint.is_pi0_compatible_inequality pi0 li2)));;
-print_string ("\n li3 is pi-compatible : " ^ (string_of_bool (LinearConstraint.is_pi0_compatible_inequality pi0 li3)));;
-print_string ("\n li4 is pi-compatible : " ^ (string_of_bool (LinearConstraint.is_pi0_compatible_inequality pi0 li4)));;
-
-
-let negate = LinearConstraint.negate_wrt_pi0 pi0;;
-
-print_string ("\n neg li1 := " ^ (LinearConstraint.string_of_linear_inequality names (negate li1)));;
-print_string ("\n neg li2 := " ^ (LinearConstraint.string_of_linear_inequality names (negate li2)));;
-print_string ("\n neg li3 := " ^ (LinearConstraint.string_of_linear_inequality names (negate li3)));;
-print_string ("\n neg li4 := " ^ (LinearConstraint.string_of_linear_inequality names (negate li4)));;
-
-let lc1 = LinearConstraint.make [li1];;
-let lc2 = LinearConstraint.make [li2];;
-let lc3 = LinearConstraint.make [li3];;
-let lc4 = LinearConstraint.make [li4];;
-let lc12 = LinearConstraint.make [li1; li2];;
-
-print_string ("\n lc1 := " ^ (LinearConstraint.string_of_linear_constraint names lc1));;
-print_string ("\n lc2 := " ^ (LinearConstraint.string_of_linear_constraint names lc2));;
-print_string ("\n lc3 := " ^ (LinearConstraint.string_of_linear_constraint names lc3));;
-print_string ("\n lc4 := " ^ (LinearConstraint.string_of_linear_constraint names lc4));;
-print_string ("\n [li1 ; li2] := " ^ (LinearConstraint.string_of_linear_constraint names lc12));;
-
-print_string ("\n lc1 is pi-compatible : " ^ (string_of_bool (LinearConstraint.is_pi0_compatible pi0 lc1)));;
-print_string ("\n lc2 is pi-compatible : " ^ (string_of_bool (LinearConstraint.is_pi0_compatible pi0 lc2)));;
-print_string ("\n lc3 is pi-compatible : " ^ (string_of_bool (LinearConstraint.is_pi0_compatible pi0 lc3)));;
-print_string ("\n lc4 is pi-compatible : " ^ (string_of_bool (LinearConstraint.is_pi0_compatible pi0 lc4)));;
-print_string ("\n [li1 ; li2] is pi-compatible : " ^ (string_of_bool (LinearConstraint.is_pi0_compatible pi0 lc12)));;
-
-let lc1i2 = LinearConstraint.intersection [lc1 ; lc2] in
-print_string ("\n lc1 ^ lc2 = " ^ (LinearConstraint.string_of_linear_constraint names lc1i2));;
-print_string ("\n lc1 ^ lc3 = " ^ (LinearConstraint.string_of_linear_constraint names (LinearConstraint.intersection [lc1 ; lc3])));;
-
-print_string ("\n lc1 after elimination of x1 : " ^ (LinearConstraint.string_of_linear_constraint names (LinearConstraint.hide [1] lc1)));;
-
-print_string ("\n -------------------");;
-
-let lt1 = LinearConstraint.make_linear_term [(of_int 1, 3); (of_int (-1), 1)] (of_int 0);;
-let lt2 = LinearConstraint.make_linear_term [(of_int 1, 1); (of_int (-1), 2)] (of_int 0);;
-let li1 = LinearConstraint.make_linear_inequality lt1 LinearConstraint.Op_ge;;
-let li2 = LinearConstraint.make_linear_inequality lt2 LinearConstraint.Op_g;;
-let lc1 = LinearConstraint.make [li1];;
-let lc2 = LinearConstraint.make [li2];;
-print_string ("\n lc1 := " ^ (LinearConstraint.string_of_linear_constraint names lc1));;
-print_string ("\n lc2 := " ^ (LinearConstraint.string_of_linear_constraint names lc2));;
-
-let lc12 = LinearConstraint.intersection [lc1 ; lc2];;
-print_string ("\n lc1 ^ lc2 = " ^ (LinearConstraint.string_of_linear_constraint names lc12));;
-
-print_string ("\n lc1 ^ lc2 is pi-compatible : " ^ (string_of_bool (LinearConstraint.is_pi0_compatible pi0 lc12)));;
-
-let pi0comp, pi0incomp = LinearConstraint.partition_pi0_compatible pi0 lc12;;
-print_string ("\n Partition of the inequalities of lc1 ^ lc2 according to their pi0-compatibility:");;
-let print_inequalities = List.iter (fun i -> print_string ("\n    - " ^ (LinearConstraint.string_of_linear_inequality names i))) in
-print_string ("\n  - pi0-compatible:");
-print_inequalities pi0comp;
-print_string ("\n  - pi0-incompatible:");
-print_inequalities pi0incomp;;
-
-let lc3 = LinearConstraint.hide [1] lc12 in
-print_string ("\n (*1) lc1 ^ lc2 after elimination of x1 : " ^ (LinearConstraint.string_of_linear_constraint names lc3));;
-
-(* INCLUSION AND EQUALITY *)
-
-let lc4 = LinearConstraint.make [LinearConstraint.make_linear_inequality (LinearConstraint.make_linear_term [(of_int 1, 3); (of_int (-1), 2)] (of_int 0)) LinearConstraint.Op_ge] in
-print_string ("\n (*2) : " ^ (LinearConstraint.string_of_linear_constraint names lc4));;
-
-print_string ("\n (*1) = (*1) : " ^ (string_of_bool (LinearConstraint.is_equal lc3 lc3)));;
-print_string ("\n (*1) = (*2) : " ^ (string_of_bool (LinearConstraint.is_equal lc3 lc4)));;
-print_string ("\n (*1) <= (*2) : " ^ (string_of_bool (LinearConstraint.is_leq lc3 lc4)));;
-print_string ("\n (*1) >= (*2) : " ^ (string_of_bool (LinearConstraint.is_leq lc4 lc3)));;
+			
+let linear_system y_domain x_domain constr =
+	(* size of matrix *)
+	let n = List.length y_domain in
+	if n <> (List.length x_domain) then raise (InternalError "size of domains differ");
+	(* build index maps for variable domains *)
+	let y_table = Hashtbl.create n in	
+	let i = ref 0 in
+	List.iter (fun vy -> 
+		Hashtbl.add y_table vy !i;
+		i := !i + 1
+	) y_domain;
+	let y_index = Hashtbl.find y_table in
+	(* build linear system *)
+	let a = Array.make_matrix n n NumConst.zero in
+	let b = Array.make n NumConst.zero in
+	(* function to find the defined variable *)
+	let get_nonzero_coefs coefs =
+		List.filter (fun (_, c) -> 
+			NumConst.neq c NumConst.zero
+		) (List.combine y_domain coefs) in
+	let simple_varnames = fun x -> "x" ^ (string_of_int x) in
+	(* get inequalities *)
+	let eqs = ppl_Polyhedron_get_constraints constr in
+	(* remove inequalities that do not refer to the selected domains *)
+	let eqs = List.filter (fun eq -> 
+		let sup = inequality_support eq in
+		VariableSet.exists (fun v -> List.mem v (List.rev_append x_domain y_domain)) sup		
+	) eqs in
+	List.iter (fun eq -> 
+		print_message Debug_standard (string_of_linear_inequality simple_varnames eq);
+		let x_coef, c = get_coefficients x_domain eq in
+		let y_coef, _ = get_coefficients y_domain eq in
+		(* get defined y variable *)
+		let nz = get_nonzero_coefs y_coef in
+		(* no transformations supported yet *)
+		if (List.length nz) <> 1 then raise (InternalError "malformed flow");
+		let y, yc = List.hd nz in
+		let yd = NumConst.neg yc in
+		(* store coefficients in matrix *)
+		let yi = y_index y in		
+		let i = ref 0 in
+		List.iter (fun xc -> 
+			a.(yi).(!i) <- NumConst.div xc yd;
+			i := !i + 1
+		) x_coef;
+		(* store constant coefficient in vector *)
+		b.(yi) <- NumConst.div c yd				
+	) eqs;
+	(* print debug *)
+	for i = 0 to n-1 do
+		let row = Array.fold_left (fun s c -> 
+			s ^ "\t" ^ (NumConst.string_of_numconst c)
+		) "" a.(i) in 
+		print_message Debug_standard (row ^ "\t| " ^ (NumConst.string_of_numconst b.(i)));
+	done;	
+	(* return matrix and vector *)
+	(a, b)
 
 
-(* VARIABLE RENAMINGS *)
-
-let renamed = LinearConstraint.rename_variables [(2, 3); (3, 2)] lc12 in
-print_string ("\n lc1 ^ lc2 after switching x2 and x3 " ^ (LinearConstraint.string_of_linear_constraint names renamed));;
-
-let with_d = LinearConstraint.add_d 4 (of_int 1) [1] lc12 in
-print_string ("\n lc1 ^ lc2 after adding 'd' " ^ (LinearConstraint.string_of_linear_constraint names with_d));;
-
-let with_d = LinearConstraint.add_d 4 (of_int 1) [1; 2] lc12 in
-print_string ("\n lc1 ^ lc2 after adding 'd' " ^ (LinearConstraint.string_of_linear_constraint names with_d));;
-
-
-
-
-(*(* APRON TESTS *)
-
-let manager = Polka.manager_alloc_strict () in
-
-let of_int = Coeff.s_of_int in
-let linexpr1 = Linexpr0.of_list None [(of_int (1), 0); (of_int (-2), 1); (of_int (3), 2);] (Some (of_int (2))) in
-let abstract1 = Abstract0.of_lincons_array manager int_dim real_dim [| Lincons0.make linexpr1 Lincons0.EQ|] in
-
-print_string ("\n Before test: ");
-Abstract0.print names Format.std_formatter abstract1;
-flush stdout;
-
-let linarray = [|
-(*	Linexpr0.of_list None [(of_int 1, 0);] (Some (of_int (-5)));
-	Linexpr0.of_list None [(of_int 1, 1);] (Some (of_int (-5)));*)
-(*	Linexpr0.of_list None [(of_int (1), 3);] (Some (of_int (0)));
-	Linexpr0.of_list None [(of_int (1), 3);] (Some (of_int (0)));*)
-	Linexpr0.of_list None [(of_int (1), 1);] (Some (of_int (0)));
-	Linexpr0.of_list None [(of_int (1), 0);] (Some (of_int (0)));
-	|] in
-let test = Abstract0.substitute_linexpr_array manager abstract1 [| 0 ; 1|] linarray None in
-
-print_string ("\n After test: ");
-Abstract0.print names Format.std_formatter test;
-flush stdout;;*)
-
-
-print_newline();;
-
-exit 0;;
-
-*)
+(** computes an uncovered point, if it exists *)
+let uncovered_point variables v0 zones =
+	(* convert to powersets *)
+	let universe = Ppl.ppl_new_Pointset_Powerset_NNC_Polyhedron_from_NNC_Polyhedron v0 in
+	let covered = Ppl.ppl_new_Pointset_Powerset_NNC_Polyhedron_from_NNC_Polyhedron (false_constraint ()) in
+	List.iter (Ppl.ppl_Pointset_Powerset_NNC_Polyhedron_add_disjunct covered) zones;
+	(* compute difference *)
+	let uncovered = universe in
+	Ppl.ppl_Pointset_Powerset_NNC_Polyhedron_difference_assign uncovered covered;
+	(* compute the sum expression of the involved variables *)
+	let sum = List.fold_left (fun sum v ->
+		Plus (sum, Variable v)
+	) (Coefficient Gmp.Z.zero) variables in
+	(* get feasible point *)
+	let feasible, _, _, _, generator = ppl_Pointset_Powerset_NNC_Polyhedron_maximize_with_point uncovered sum in
+	if not feasible then 
+		None
+	else
+		match generator with
+			| Point (term, q) -> (
+				let coefs, _ = get_coefficients_term variables term in
+				let coefs = List.map (fun c ->
+					NumConst.div c (NumConst.numconst_of_mpz q) 					
+				) coefs in
+				Some coefs
+			) 
+			| _ -> None 
+	
