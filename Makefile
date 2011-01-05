@@ -22,30 +22,30 @@ OCAMLOPT = ocamlopt.opt $(OCAMLC_FLAGS) -compact
 ifndef EXTLIB_PATH
   EXTLIB_PATH = /usr/lib/ocaml/extlib
 endif
-ifndef APRON_PATH
-  APRON_PATH = $(HOME)/local/apron/lib
-endif
 ifndef OUNIT_PATH
   OUNIT_PATH = $(HOME)/local/ounit
 endif
 ifndef OCAML_PPL_PATH
-  OCAML_PPL_PATH = $(HOME)/local/lib/ppl
+  OCAML_PPL_PATH = $(HOME)/local/ppl-11/lib/ppl
 endif 
 ifndef OCAML_GMP_PATH
-  OCAML_GMP_PATH = $(HOME)/local/lib
+  OCAML_GMP_PATH = $(HOME)/local/ppl-11/lib/mlgmp
+endif
+ifndef CLIB_PATH 
+  CLIB_PATH = $(HOME)/local/ppl-11/lib
 endif
 
 # export paths for use in sub-makefiles
 export EXTLIB_PATH 
-export APRON_PATH 
 export OUNIT_PATH 
 export OCAML_PPL_PATH
 export OCAML_GMP_PATH
+export CLIB_PATH
 
 #export APRON_PATH = /home/andre/local/lib
 
 #INCLUDE = -I $(SRC) -I $(EXTLIB_PATH) -I $(OCAML_PPL_PATH) -I $(OCAML_GMP_PATH) -I $(APRON_PATH)
-INCLUDE = -I $(SRC) -I $(EXTLIB_PATH) -I $(OCAML_PPL_PATH) -I $(OCAML_GMP_PATH)
+INCLUDE = -I $(SRC) -I $(EXTLIB_PATH) -I $(OCAML_PPL_PATH) -I $(OCAML_GMP_PATH) -I $(CLIB_PATH)
 
 # external libs for compiling imitator
 # export LIBS = str.cma unix.cma extLib.cma bigarray.cma gmp.cma apron.cma polkaMPQ.cma
@@ -78,12 +78,12 @@ MAIN = $(SRC)/IMITATOR.cmo
 MAIN_OPT = $(MAIN:.cmo=.cmx)
 
 # sources to compile
-FILES =  $(SRC)/Global.+ $(SRC)/NumConst.+ $(SRC)/LinearConstraint.+ $(SRC)/Automaton.+ $(SRC)/Pi0Lexer.+ $(SRC)/Pi0Parser.+ $(SRC)/Pi0CubeLexer.+ $(SRC)/Pi0CubeParser.+ $(SRC)/ImitatorLexer.+ $(SRC)/ImitatorParser.+ $(SRC)/ImitatorPrinter.+ $(SRC)/ProgramConverter.+ $(SRC)/ProgramInverter.+ $(SRC)/Graph.+
+FILES =  $(SRC)/Global.+ $(SRC)/Cache.+ $(SRC)/Options.+ $(SRC)/NumConst.+  $(SRC)/LinearConstraint.+ $(SRC)/Graphics.+ $(SRC)/Automaton.+ $(SRC)/Pi0Lexer.+ $(SRC)/Pi0Parser.+ $(SRC)/Pi0CubeLexer.+ $(SRC)/Pi0CubeParser.+ $(SRC)/ImitatorLexer.+ $(SRC)/ImitatorParser.+ $(SRC)/ImitatorPrinter.+ $(SRC)/ProgramConverter.+ $(SRC)/ProgramInverter.+ $(SRC)/Graph.+ $(SRC)/Reachability.+
 OBJS = $(FILES:+=cmo)
 OBJS_OPT = $(OBJS:.cmo=.cmx)
 
 # header files
-FILESMLI = $(SRC)/Global.+ $(SRC)/NumConst.+ $(SRC)/LinearConstraint.+ $(SRC)/Automaton.+ $(SRC)/ParsingStructure.+ $(SRC)/AbstractImitatorFile.+ $(SRC)/ImitatorPrinter.+ $(SRC)/ProgramConverter.+ $(SRC)/ProgramInverter.+ $(SRC)/Graph.+ 
+FILESMLI = $(SRC)/Global.+ $(SRC)/Cache.+ $(SRC)/NumConst.+ $(SRC)/LinearConstraint.+ $(SRC)/Graphics.+ $(SRC)/Automaton.+ $(SRC)/ParsingStructure.+ $(SRC)/AbstractImitatorFile.+ $(SRC)/ImitatorPrinter.+ $(SRC)/ProgramConverter.+ $(SRC)/ProgramInverter.+ $(SRC)/Graph.+ $(SRC)/Reachability.+ 
 
 # parsers and lexers 
 LEXERS = $(SRC)/Pi0Lexer.+ $(SRC)/Pi0CubeLexer.+ $(SRC)/ImitatorLexer.+
@@ -103,7 +103,7 @@ opt: $(TARGET_OPT)
 $(IMILIB): header parser $(OBJS)
 	@ echo [MKLIB] $@
 	@ $(OCAMLC) -a -o $@ $(OBJS)
-	
+
 $(IMILIB_OPT): header parser $(OBJS_OPT)  
 	@ echo [MKLIB] $@
 	@ $(OCAMLOPT) -a -o $@ $(OBJS_OPT)
@@ -114,12 +114,12 @@ $(TARGET): $(IMILIB) $(MAIN)
 
 $(TARGET_OPT): $(IMILIB_OPT) $(MAIN_OPT)
 	@ echo [LINK] $(TARGET_OPT)
-	$(OCAMLOPT) -o $(TARGET_OPT) $(INCLUDE) $(OPTLIBS) $(IMILIB_OPT) $(MAIN_OPT)
+	@ $(OCAMLOPT) -o $(TARGET_OPT) $(INCLUDE) $(OPTLIBS) $(IMILIB_OPT) $(MAIN_OPT)
 
 header: $(FILESMLI:+=cmi)
 
 parser: $(PARSERS:+=ml) $(LEXERS:+=ml) header $(PARSERS:+=cmi)
-	
+
 $(SRC)/%.cmo: $(SRC)/%.ml $(SRC)/%.mli
 	@ echo [OCAMLC] $<
 	@ $(OCAMLC) -c $(INCLUDE) $<	
@@ -135,7 +135,7 @@ $(SRC)/%.cmx: $(SRC)/%.ml $(SRC)/%.mli
 $(SRC)/%.cmx: $(SRC)/%.ml
 	@ echo [OCAMLOPT] $<
 	@ $(OCAMLOPT) -c $(INCLUDE) $<	
-	
+
 $(SRC)/%.cmi: $(SRC)/%.mli
 	@ echo [OCAMLC] $<
 	@ $(OCAMLC) -c $(INCLUDE) $<
@@ -144,16 +144,16 @@ $(SRC)/%.cmi: $(SRC)/%.mly
 	@ echo [YACC] $<
 	@ ocamlyacc $<
 	@ echo [OCAMLC] $(SRC)/$*.mli
-	@ $(OCAMLC) -c $(INCLUDE) $(SRC)/$*.mli
+	 $(OCAMLC) -c $(INCLUDE) $(SRC)/$*.mli
 
 $(SRC)/%.ml: $(SRC)/%.mly 
 	@ echo [YACC] $<
 	@ ocamlyacc $<
-	
+
 $(SRC)/%.ml: $(SRC)/%.mll 
 	@ echo [LEX] $<
 	@ ocamllex $< 
-	 
+
 # dependencies
 .depend:
 	@ echo [OCAMLDEP]
@@ -162,6 +162,10 @@ $(SRC)/%.ml: $(SRC)/%.mll
 
 test: $(IMILIB) 
 	cd test; make unit
+
+.PHONY : doc
+doc:
+	cd doc; make pdf
 
 exe:
 
@@ -296,7 +300,7 @@ rmtpf:
 
 
 rmuseless:
-	@rm -rf $(FILES:+=cmo) $(FILES:+=cmi) $(FILES:+=o) $(MAIN) $(MAIN:.cmo=.cmi)
+	@rm -rf $(FILES:+=cmx) $(FILES:+=cmo) $(FILES:+=cmi) $(FILES:+=o) $(MAIN) $(MAIN:.cmo=.cmi) $(MAIN:.cmo=.cmx)
 	@rm -rf $(FILESMLI:+=cmi)
 
 # ppl:
