@@ -20,16 +20,16 @@ OCAMLOPT = ocamlopt.opt $(OCAMLC_FLAGS)
 
 # path variables
 ifndef EXTLIB_PATH
-  EXTLIB_PATH = /usr/lib/ocaml/extlib
+  EXTLIB_PATH = $(HOME)/local/extlib
 endif
 ifndef OCAML_PPL_PATH
   OCAML_PPL_PATH = $(HOME)/local/lib/ppl
 endif 
 ifndef OCAML_GMP_PATH
-  OCAML_GMP_PATH = $(HOME)/local/mlgmp
+  OCAML_GMP_PATH = $(HOME)/local/lib
 endif
 ifndef CLIB_PATH
-  CLIB_PATH = $(HOME)/local/lib
+   CLIB_PATH = $(HOME)/local/lib -I /usr/lib
 endif 
 
 # export paths for use in sub-makefiles
