@@ -971,7 +971,7 @@ let post_star program options pi0 init_state =
 			) !slast
 			in Union_of_constraints list_of_constraints
 		)
-		else( 	(* Case: classic : the returned constraint does not matter *)*)
+		else( 	(* Case: classic : the returned constraint does not matter *)
 			Convex_constraint ( LinearConstraint.false_constraint () )
 		)
 	)
