@@ -624,6 +624,12 @@ match options#time_limit with
 in ();
 
 
+(* Verification of incompatibilities between options *)
+
+if options#imitator_mode =  Reachability_analysis && (options#union || options#pi_compatible) then
+	print_warning ("The program will be launched in reachability mode; options regarding to the variant of the inverse method will thus be ignored.");
+
+
 (**************************************************)
 (* Timed mode *)
 (**************************************************)
