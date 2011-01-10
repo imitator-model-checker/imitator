@@ -6,13 +6,13 @@
 #
 #  Author:        Etienne Andre
 #  Created:       2009/09/07
-#  Last modified: 2010/07/30
-#  Ocaml version: 3.11.2
+#  Last modified: 2011/01/10
+#  Ocaml version: 3.12.0
 ###############################################################
 
 # flags for ocaml compiler
 #OCAMLC_FLAGS = -g
-OCAMLC_FLAGS = -annot
+OCAMLC_FLAGS = 
 
 # ocaml compiler
 OCAMLC = ocamlc $(OCAMLC_FLAGS)
@@ -20,23 +20,26 @@ OCAMLOPT = ocamlopt.opt $(OCAMLC_FLAGS)
 
 # path variables
 ifndef EXTLIB_PATH
-  EXTLIB_PATH = $(HOME)/local/extlib
+  EXTLIB_PATH = /usr/lib/ocaml/extlib
 endif
 ifndef OCAML_PPL_PATH
-  OCAML_PPL_PATH = $(HOME)/local/lib/ppl
+#  OCAML_PPL_PATH = $(HOME)/local/lib/ppl
+  OCAML_PPL_PATH = /usr/lib/ppl
 endif 
 ifndef OCAML_GMP_PATH
-  OCAML_GMP_PATH = $(HOME)/local/lib
+ # OCAML_GMP_PATH = $(HOME)/local/mlgmp
+	OCAML_GMP_PATH = /usr/lib/ocaml/gmp/
 endif
 ifndef CLIB_PATH
-   CLIB_PATH = $(HOME)/local/lib -I /usr/lib
+  CLIB_PATH = /usr/lib -I /usr/local/lib
 endif 
 
 # export paths for use in sub-makefiles
 export EXTLIB_PATH 
+export APRON_PATH 
+export OUNIT_PATH 
 export OCAML_PPL_PATH
 export OCAML_GMP_PATH
-export CLIB_PATH
 
 INCLUDE = -I $(SRC) -I $(EXTLIB_PATH) -I $(OCAML_PPL_PATH) -I $(OCAML_GMP_PATH) -I $(CLIB_PATH)
 
@@ -56,36 +59,25 @@ export OPTLIBS = $(CLIBS) $(OOLIBS)
 
 SRC = src
 
+# FILES
+.PREFIXES : +.
+.SUFFIXES : .cmo .cmi .ml .mli .cmxo .cmx
 
 # main object
 MAIN = $(SRC)/IMITATOR.cmo
 MAIN_OPT = $(MAIN:.cmo=.cmx)
 
 # sources to compile
-MODULES = Global Options NumConst LinearConstraint Automaton  \
-          Cache Pi0Lexer Pi0Parser Pi0CubeLexer Pi0CubeParser \
-          ImitatorLexer ImitatorParser ImitatorPrinter        \
-          ProgramConverter Graph Graphics Reachability           
+FILES =  $(SRC)/Global.+ $(SRC)/Options.+ $(SRC)/NumConst.+ $(SRC)/LinearConstraint.+ $(SRC)/Cache.+ $(SRC)/Automaton.+ $(SRC)/Pi0Lexer.+ $(SRC)/Pi0Parser.+ $(SRC)/Pi0CubeLexer.+ $(SRC)/Pi0CubeParser.+ $(SRC)/ImitatorLexer.+ $(SRC)/ImitatorParser.+ $(SRC)/ImitatorPrinter.+ $(SRC)/ProgramConverter.+ $(SRC)/Graph.+ $(SRC)/Graphics.+ $(SRC)/Reachability.+
+OBJS = $(FILES:+=cmo)
+OBJS_OPT = $(OBJS:.cmo=.cmx)
 
-HEADERS = Global NumConst LinearConstraint Automaton Cache      \
-          ParsingStructure AbstractImitatorFile ImitatorPrinter \
-          ProgramConverter Graph Graphics Reachability           
-
-ML_FILES  = $(addprefix $(SRC)/, $(addsuffix .ml, $(MODULES)))
-MLI_FILES = $(addprefix $(SRC)/, $(addsuffix .mli, $(HEADERS)))
-
-INTERF   = $(MLI_FILES:.mli=.cmi)
-OBJS     = $(ML_FILES:.ml=.cmo)
-OBJS_OPT = $(ML_FILES:.ml=.cmx)
+# header files
+FILESMLI = $(SRC)/Global.+ $(SRC)/NumConst.+ $(SRC)/LinearConstraint.+ $(SRC)/Cache.+ $(SRC)/Automaton.+ $(SRC)/ParsingStructure.+ $(SRC)/AbstractImitatorFile.+ $(SRC)/ImitatorPrinter.+ $(SRC)/ProgramConverter.+ $(SRC)/Graph.+ $(SRC)/Graphics.+ $(SRC)/Reachability.+
 
 # parsers and lexers 
-LEXERS = Pi0Lexer Pi0CubeLexer ImitatorLexer
-PARSERS = Pi0Parser Pi0CubeParser ImitatorParser
-
-ML_LEXERS = $(addprefix $(SRC)/, $(addsuffix .ml, $(LEXERS)))
-ML_PARSERS = $(addprefix $(SRC)/, $(addsuffix .ml, $(PARSERS)))
-MLI_PARSERS = $(ML_PARSERS:.ml=.mli)
-PARSER_INTERF = $(ML_PARSERS:.ml=.cmi)
+LEXERS = $(SRC)/Pi0Lexer.+ $(SRC)/Pi0CubeLexer.+ $(SRC)/ImitatorLexer.+
+PARSERS = $(SRC)/Pi0Parser.+ $(SRC)/Pi0CubeParser.+ $(SRC)/ImitatorParser.+
 
 # target library
 IMILIB = lib/imitator.cma
@@ -117,9 +109,9 @@ $(TARGET_OPT): $(IMILIB_OPT) $(MAIN_OPT)
 	$(OCAMLOPT) -o $(TARGET_OPT) $(INCLUDE) $(OPTLIBS) $(IMILIB_OPT) $(MAIN_OPT)
 
 
-header: $(INTERF)
+header: $(FILESMLI:+=cmi)
 
-parser: $(ML_PARSERS) $(ML_LEXERS) header $(PARSER_INTERF)
+parser: $(PARSERS:+=ml) $(LEXERS:+=ml) header $(PARSERS:+=cmi)
 
 $(SRC)/%.cmo: $(SRC)/%.ml $(SRC)/%.mli
 	@ echo [OCAMLC] $<
@@ -284,10 +276,9 @@ count: clean
 
 
 clean: rmtpf rmuseless
-	@rm -rf $(ML_LEXERS) $(ML_PARSERS) $(MLI_PARSERS) $(PARSER_INTERF)
+	@rm -rf $(LEXERS:+=ml) $(PARSERS:+=mli) $(PARSERS:+=ml)
 	@rm -rf $(TARGET) $(IMILIB) $(TARGET_OPT) $(IMILIB_OPT)
 	@rm -rf .depend
-	@rm $(SRC)/*.annot
 	@cd test; make clean
 
 
@@ -296,6 +287,7 @@ rmtpf:
 
 
 rmuseless:
-	@rm -rf $(OBJS) $(OBJS_OPT) $(INTERF) $(MAIN) $(MAIN:.cmo=.cmi) $(MAIN:.cmo=.cmx)
+	@rm -rf $(FILES:+=cmo) $(FILES:+=cmx) $(FILES:+=cmi) $(FILES:+=o) $(MAIN) $(MAIN:.cmo=.cmi) $(MAIN:.cmo=.cmx)
+	@rm -rf $(FILESMLI:+=cmi)
 
 include .depend
