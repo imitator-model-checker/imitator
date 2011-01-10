@@ -556,14 +556,51 @@ if options#imitator_mode = Reachability_analysis && options#nb_args = 2 then
 (* Recall the arguments *)
 (**************************************************)
 
+(* Global mode *)
+let message = match options#imitator_mode with
+	| Reachability_analysis -> "parametric reachability analysis"
+	| Inverse_method -> "inverse method"
+	| Cover_cartography -> "behavioral cartography algorithm with full coverage"
+	| Random_cartography nb -> "behavioral cartography algorithm with " ^ (string_of_int nb) ^ " random iterations"
+in print_message Debug_standard ("Mode: " ^ message ^ ".");
+
+
+
+(* Variant of the inverse method *)
 if options#inclusion then
-	print_message Debug_medium ("Considering inclusion mode.");
+	print_message Debug_standard ("Considering Algorithm IMincl.")
+else
+	print_message Debug_medium ("No inclusion mode (default).");
+
+if options#union then
+	print_message Debug_standard ("Considering Algorithm IMunion.")
+else
+	print_message Debug_medium ("No union mode (default).");
+
+if options#pi_compatible then
+	print_message Debug_standard ("Considering Algorithm IMoriginal.")
+else
+	print_message Debug_medium ("No original IM mode (default).");
+
+(* Should add a warning in case of incompatible mode (IMoriginal incompatible with IMunion) *)
+
+
+
+
+(* Options *)
 
 if options#sync_auto_detection then
-	print_message Debug_medium ("Auto-detection mode for sync actions.");
+	print_message Debug_standard ("Auto-detection mode for sync actions.")
+else
+	print_message Debug_medium ("No auto-detection mode for sync actions (default).");
 
 if options#no_random then
-	print_message Debug_medium ("No random selection for pi0-incompatible inequalities.");
+	print_message Debug_standard ("No random selection for pi0-incompatible inequalities.")
+else
+	print_message Debug_medium ("Standard random selection for pi0-incompatible inequalities (default).");
+
+
+(* Output *)
 
 if options#no_dot then
 	print_message Debug_medium ("No graphical output.");
@@ -572,25 +609,17 @@ if options#no_log then
 	print_message Debug_medium ("No log mode.");
 
 
-(* Print the mode *)
-let message = match options#imitator_mode with
-	| Reachability_analysis -> "parametric reachability analysis"
-	| Inverse_method -> "inverse method"
-	| Cover_cartography -> "behavioral cartography algorithm with full coverage"
-	| Random_cartography nb -> "behavioral cartography algorithm with " ^ (string_of_int nb) ^ " random iterations"
-in print_message Debug_standard ("Mode: " ^ message ^ ".");
-
 (* LIMIT OF POST *)
 let _ =
 match options#post_limit with
-	| None -> print_message Debug_medium "Considering no limit for the depth of the Post operation."
+	| None -> print_message Debug_medium "Considering no limit for the depth of the Post operation (default)."
 	| Some limit -> print_warning ("Considering a limit of " ^ (string_of_int limit) ^ " for the depth of the Post operation.")
 in ();
 
 (* TIME LIMIT *)
 let _ =
 match options#time_limit with
-	| None -> print_message Debug_medium "Considering no time limit."
+	| None -> print_message Debug_medium "Considering no time limit (default)."
 	| Some limit -> print_warning ("The program will try to stop after " ^ (string_of_int limit) ^ " seconds.")
 in ();
 
@@ -604,7 +633,7 @@ if options#timed_mode then (
 	(* Set the timed mode *)
 	set_timed_mode ();
 ) else (
-	print_message Debug_low ("Timed mode is off.");
+	print_message Debug_medium ("Timed mode is off (default).");
 );
 
 
