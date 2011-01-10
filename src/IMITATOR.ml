@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2009/09/07
- * Last modified: 2010/07/08
+ * Last modified: 2011/01/10
  *
  **************************************************)
 
@@ -25,10 +25,8 @@ open Graphics
 (**************************************************
 
 A FAIRE
-[ ] rétablir l'appel à IMITATOR pour graphe d'accessibilité seulement
 [ ] rétablir l'appel à IMITATOR pour graphe d'accessibilité non temporisé seulement
 [ ] eviter les etats degeneres (avec "faux") : arrive dans le cas ou aucun etat n'est genere (init deja pas satisfiable) --> bouger le test de satisfiabilite dans le demarrage de InverseMethod ?
-[ ] probleme avec la variable D, non ?? (pas vraiment, juste pour l'affichage)
 
  OPTIMISATIONS A FAIRE POUR L'EXECUTION
 
@@ -56,6 +54,8 @@ TAGS POUR CHOSES A FAIRE
 let dot_command = "dot"
 let dot_extension = "jpg"
 let pas = NumConst.numconst_of_frac 1 1
+
+
 
 (**************************************************)
 (**************************************************)
