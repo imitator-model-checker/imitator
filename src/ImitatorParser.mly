@@ -16,11 +16,31 @@ open NumConst;;
 (* global reference to collect all local variables in all automata *)
 (* as triples (type, varname, scope).                              *)
 let declarations = ref [];;	
+
+(* global reference to constants defined in the header *)
+let constants = ref [];;
   
 let parse_error s =
 	let symbol_start = symbol_start () in
 	let symbol_end = symbol_end () in
 	raise (ParsingError (symbol_start, symbol_end))
+;;
+
+let check_constant name =
+	List.iter (fun (n,_) -> 
+		if n = name then ( 
+			print_string ("constant '" ^ n ^ "' already defined.\n");
+			parse_error "constant already defined"	
+		)
+	) !constants
+;;
+
+let get_constant name =
+	let rec get_const name clist =
+		match clist with
+			| [] -> None
+			| (n, c) :: rest -> if name = n then Some c else get_const name rest in
+	get_const name !constants
 ;;
  
 %}
@@ -38,7 +58,7 @@ let parse_error s =
 
 /* CT_ALL CT_ANALOG CT_ASAP CT_BACKWARD CT_CLDIFF CT_D  CT_ELSE CT_EMPTY  CT_ENDHIDE CT_ENDIF CT_ENDREACH CT_ENDWHILE CT_FORWARD CT_FREE CT_FROM  CT_HIDE CT_HULL CT_INTEGRATOR CT_ITERATE CT_NON_PARAMETERS CT_OMIT CT_POST CT_PRE CT_PRINT CT_PRINTS CT_PRINTSIZE CT_REACH  CT_STOPWATCH CT_THEN CT_TO CT_TRACE CT_USING  CT_WEAKDIFF CT_WEAKEQ CT_WEAKGE CT_WEAKLE  */
 
-%token CT_AND CT_AUTOMATON CT_ANALOG CT_BAD CT_CLOCK CT_DISCRETE CT_DO CT_END CT_ENDREACH CT_FALSE CT_FORWARD CT_FROM CT_GOTO CT_IF CT_INIT CT_INITIALLY CT_IN CT_LOC CT_LOCATIONS CT_NOT CT_OR CT_PARAMETER CT_PRINT CT_REACH CT_REGION CT_SYNC CT_SYNCLABS CT_TRUE CT_VAR CT_WAIT CT_WHEN CT_WHILE
+%token CT_AND CT_AUTOMATON CT_ANALOG CT_BAD CT_CLOCK CT_CONST CT_DISCRETE CT_DO CT_END CT_ENDREACH CT_FALSE CT_FORWARD CT_FROM CT_GOTO CT_IF CT_INIT CT_INITIALLY CT_IN CT_LOC CT_LOCATIONS CT_NOT CT_OR CT_PARAMETER CT_PRINT CT_REACH CT_REGION CT_SYNC CT_SYNCLABS CT_TRUE CT_VAR CT_WAIT CT_WHEN CT_WHILE
 
 %token EOF
 
@@ -60,18 +80,21 @@ let parse_error s =
 
 /**********************************************/
 main:
-	 declarations automata commands EOF
+	 const_declarations declarations automata commands EOF
 	{
+		(* store constants in header *)
+		$1;
+		List.iter (fun (n, c)  -> print_string ("const " ^ n ^ " = " ^ (NumConst.string_of_numconst c) ^ "\n")) !constants;
 		(* get declarations in header *)
-		let decls = $1 in
+		let decls = $2 in
 		(* tag as global *)
 		let global_decls = List.map (fun (v,t) -> (v,t,Global)) decls in
 		(* store in declaration list *)
 		declarations := List.append !declarations global_decls;
 		(* parse automata *)
-		let automata = $2 in 
+		let automata = $3 in 
 		(* parse commands *)
-		let init,bad = $3 in
+		let init,bad = $4 in
 		(* return global and local variables, automata and commands *)
 		!declarations, automata, init, bad
 	}
@@ -80,6 +103,41 @@ main:
 /***********************************************
   MAIN DEFINITIONS
 ***********************************************/
+
+/**********************************************/
+
+const_declarations:
+	| const_declarations const_decl {
+		 let (n,c) = $2 in
+			check_constant n;
+			constants := (n,c) :: !constants;
+			$1 } 
+	| { () }
+;
+
+const_decl:
+	CT_CONST NAME OP_EQ const_expr SEMICOLON { ($2, $4) }
+;
+
+const_expr:
+	| rational { $1 }
+	| const_id { $1 }
+	| const_expr OP_PLUS const_expr { NumConst.add $1 $3 }
+	| const_expr OP_MINUS const_expr { NumConst.sub $1 $3 }
+	| const_expr OP_MUL const_expr { NumConst.mul $1 $3 }
+	| const_expr OP_DIV const_expr { NumConst.div $1 $3 }
+	| LPAREN const_expr RPAREN { $2 }
+;
+
+const_id:
+	NAME { 
+		let name = $1 in
+		match get_constant name with
+		| None -> print_string ("Unknown constant '" ^ name ^ "'"); 
+							parse_error "Unknown constant"
+		| Some c -> c
+	} 
+;
 
 /**********************************************/
 
@@ -322,23 +380,74 @@ ext_linear_expression:
 ;
 
 linear_term:
-	rational { Constant $1 }
-	| rational NAME { Variable ($1, $2) }
-	| rational OP_MUL NAME { Variable ($1, $3) }
-	| NAME { Variable (NumConst.one, $1) }
+	| atom { $1 }
+	| atom OP_MUL atom { 
+		let a1 = $1 in
+		let a2 = $3 in
+		match (a1, a2) with
+			| (Constant x, Constant y) -> Constant (NumConst.mul x y)
+			| (Variable (x, v), Constant y) -> Variable ((NumConst.mul x y), v)
+			| (Constant x, Variable (y, v)) -> Variable ((NumConst.mul x y), v)
+			| _ -> parse_error "expression is not linear"
+	}
+	| atom OP_DIV atom {
+		let a1 = $1 in
+		let a2 = $3 in
+		match (a1, a2) with
+			| (Constant x, Constant y) -> Constant (NumConst.div x y)
+			| (Variable (x, v), Constant y) -> Variable ((NumConst.div x y), v)
+			| _ -> parse_error "expression is not linear"		
+	}
 	| LPAREN linear_term RPAREN { $2 }
 ;
 
-ext_linear_term:
-	rational { Constant $1 }
-	| rational NAME APOSTROPHE { PrimedVariable ($1, $2) }
-	| rational NAME { Variable ($1, $2) }
-	| rational OP_MUL NAME APOSTROPHE { PrimedVariable ($1, $3) }
-	| rational OP_MUL NAME { Variable ($1, $3) }
-	| NAME APOSTROPHE { PrimedVariable (NumConst.one, $1) }	
-	| NAME { Variable (NumConst.one, $1) }
-	| LPAREN linear_term RPAREN { $2 }
+atom:
+	| rational { Constant $1 }
+	| NAME {
+			let id = $1 in
+			let c = get_constant id in
+			match c with
+				| Some x -> Constant x
+				| None -> Variable (NumConst.one, $1) 
+		}
+;
 
+ext_linear_term:
+	| ext_atom { $1 }
+	| ext_atom OP_MUL ext_atom { 
+		let a1 = $1 in
+		let a2 = $3 in
+		match (a1, a2) with
+			| (Constant x, Constant y) -> Constant (NumConst.mul x y)
+			| (Variable (x, v), Constant y) -> Variable ((NumConst.mul x y), v)
+			| (Constant x, Variable (y, v)) -> Variable ((NumConst.mul x y), v)
+ 			| (PrimedVariable (x, v), Constant y) -> PrimedVariable ((NumConst.mul x y), v)
+			| (Constant x, PrimedVariable (y, v)) -> PrimedVariable ((NumConst.mul x y), v)
+			| _ -> parse_error "expression is not linear"
+	}
+	| ext_atom OP_DIV ext_atom {
+		let a1 = $1 in
+		let a2 = $3 in
+		match (a1, a2) with
+			| (Constant x, Constant y) -> Constant (NumConst.div x y)
+			| (Variable (x, v), Constant y) -> Variable ((NumConst.div x y), v)
+			| (PrimedVariable (x, v), Constant y) -> PrimedVariable ((NumConst.div x y), v)
+			| _ -> parse_error "expression is not linear"		
+	}
+	| LPAREN ext_linear_term RPAREN { $2 }
+;
+
+ext_atom:
+	| rational { Constant $1 }
+	| NAME {
+			let id = $1 in
+			let c = get_constant id in
+			match c with
+				| Some x -> Constant x
+				| None -> Variable (NumConst.one, $1) 
+		}
+	| NAME APOSTROPHE { PrimedVariable (NumConst.one, $1) }
+;
 
 rational:
 	integer { $1 }

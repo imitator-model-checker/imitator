@@ -43,6 +43,7 @@ rule token = parse
 (* 	| "cldiff"         { CT_CLDIFF } *)
 	| "bad"            { CT_BAD }
 	| "clock"          { CT_CLOCK }
+	| "const"          { CT_CONST }
 (*	| "d"              { CT_D }*)
 	| "discrete"       { CT_DISCRETE }
 	| "do"             { CT_DO }
