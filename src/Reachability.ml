@@ -213,6 +213,9 @@ let affine_time_elapse program options invariant deriv constr =
 		(v, p_min, p_max)
 	) affine_dim in
 	
+	(* add variable indices to bounds vector *)
+	let extended_bounds = List.map2 (fun v (min, max) -> (v,min,max)) affine_vars in  
+	
 	(* compute the linearized/rectangularized flow for a partition *)
 	let rectangular_flow bounds =
 		(* bound affine dimensions for this partition *)
@@ -252,34 +255,48 @@ let affine_time_elapse program options invariant deriv constr =
 		!nbs in 
 		
 	print_message Debug_low "Building partitions...";
-		
+				
+				
 	(* build the partitions *)
 	let rec power b ex = if ex <= 0 then 1 else b * (power b (ex-1)) in
 	let partitions = Hashtbl.create (power p n) in
-	let neighbors = Hashtbl.create (power p n) in
+	let info = Hashtbl.create (power p n) in
 	let _ = try (
 		(* start with [0; 0; ... 0] *)
 		let current_partition = ref (init_item n) in
 		while true do
 			(* compute lower and upper bounds for affine dimensions *)
 			let my_boundaries = boundaries !current_partition in
-			(* turn them into a rectangular box *)
-			let my_invariant = LinearConstraint.make_box my_boundaries in
 			(* strip variables from boundaries *)
 			let my_bounds = List.map (fun (_,x,y) -> (x,y)) my_boundaries in
+			(* store bounds in hash table *)
+			Hashtbl.add partitions !current_partition my_bounds;
+			(* increase the index list *)
+			current_partition := next_item !current_partition
+		done; ()
+	) with Last_item -> () in
+
+	(* complete the data for a partition, if it does not exist *)
+	let get_info item =                                   
+		try (
+			Hashtbl.find info item
+		) with Not_found -> (
+			let bounds = Hashtbl.find partitions item in
+			(* add variables to bounds *)
+			let my_boundaries = extended_bounds bounds in
+			(* turn them into a rectangular box *)
+			let my_invariant = LinearConstraint.make_box my_boundaries in
 			(* add global invariant (there might be other variables involved) *)
 			LinearConstraint.intersection_assign my_invariant [invariant];
 			(* build the approximated flow for this partition *)
 			let my_flow = rectangular_flow my_boundaries in
 			(* find admissible neighbors *)
-			let nbs = find_neighbors !current_partition my_flow in
-			(* store partition and neighbors *)
-			Hashtbl.add partitions !current_partition (my_bounds, my_invariant, my_flow);
-			Hashtbl.add neighbors !current_partition nbs;
-			(* increase the index list *)
-			current_partition := next_item !current_partition
-	  done; ()
-	) with Last_item -> () in
+			let nbs = find_neighbors item my_flow in
+			(* store partition info and neighbors *)
+			Hashtbl.add info item (nbs, my_invariant, my_flow);
+			(* return info *)
+			(nbs, my_invariant, my_flow)
+		) in
 
 	(* queue with states to explore *)
 	let q = Queue.create () in
@@ -312,11 +329,12 @@ let affine_time_elapse program options invariant deriv constr =
 	
 	(* find initial partitions that intersect with the original constraint *)
 	let orig_bounds = compute_bounds constr in 
-	Hashtbl.iter (fun index (bounds, inv, _) ->
+	Hashtbl.iter (fun index bounds ->
 		let box_cut = match orig_bounds with
 			| None -> true
 			| Some o_bounds -> boxes_intersect o_bounds bounds in
 		if box_cut then (
+			let _, inv, _ = get_info index in
 			let cut = LinearConstraint.intersection [inv; constr] in
 			if (LinearConstraint.is_satisfiable cut) then (
 				Queue.add (index, cut, index) q;
@@ -361,7 +379,7 @@ let affine_time_elapse program options invariant deriv constr =
 		let trg, constr, src = Queue.take q in
 		print_message Debug_total ("consider partition " ^ (string_of_partition trg));
 		(* get infos for target partition *)
-		let _, inv, flow = Hashtbl.find partitions trg in
+		let all_ns, inv, flow = get_info trg in
 		(* do the time elapse *)
 		let elapsed = LinearConstraint.time_elapse constr flow in
 		(* limit to current partition *)
@@ -373,12 +391,11 @@ let affine_time_elapse program options invariant deriv constr =
 			(* compute bounds for fast intersection *)
 			let trg_bounds = compute_bounds elapsed in 
 			(* explore neighboring partitions *)
-			let all_ns = Hashtbl.find neighbors trg in
 			let ns = match trg_bounds with
 				| Some bounds -> (
 					(* consider only neighbors that are cut by the computed region *)
 					List.filter (fun p -> 
-						let p_bounds, _, _ = Hashtbl.find partitions p in
+						let p_bounds = Hashtbl.find partitions p in
 						is_cutting trg bounds p p_bounds 
 					) all_ns)
 				| None -> all_ns in
@@ -387,7 +404,7 @@ let affine_time_elapse program options invariant deriv constr =
 				(* don't look back in anger *)
 				if nb <> src then (
 					(* get info of neighbor *)
-					let _, inv', _ = Hashtbl.find partitions nb in
+					let _, inv', _ = get_info nb in
 					(* get the intersecting region on the bounds *) 
 					let cut = LinearConstraint.intersection [elapsed; inv'] in
 					if LinearConstraint.is_satisfiable cut then (
