@@ -417,17 +417,6 @@ let affine_time_elapse program options invariant deriv constr =
 	done;
 				
 	(* return convex hull *)
-(*	let union = Ppl_ocaml.ppl_new_Pointset_Powerset_NNC_Polyhedron_from_NNC_Polyhedron (LinearConstraint.false_constraint ()) in*)
-(*	Hashtbl.iter (fun _ s -> Ppl_ocaml.ppl_Pointset_Powerset_NNC_Polyhedron_add_disjunct union s) states;                       *)
-(*                                                                                                                              *)
-(*	let nb_disjuncts = Ppl_ocaml.ppl_Pointset_Powerset_NNC_Polyhedron_size union in                                             *)
-(*	print_message Debug_standard ("disjuncts orig: " ^ (string_of_int nb_disjuncts));                                           *)
-(*	                                                                                                                            *)
-(*	Ppl_ocaml.ppl_Pointset_Powerset_NNC_Polyhedron_pairwise_reduce union;                                                       *)
-(*                                                                                                                              *)
-(*	let nb_disjuncts = Ppl_ocaml.ppl_Pointset_Powerset_NNC_Polyhedron_size union in                                             *)
-(*	print_message Debug_standard ("disjuncts opt : " ^ (string_of_int nb_disjuncts));                                           *)
-
 	let octagonalize constr = 
 		let octa = Ppl_ocaml.ppl_new_Octagonal_Shape_mpq_class_from_NNC_Polyhedron constr in
 		Ppl_ocaml.ppl_new_NNC_Polyhedron_from_Octagonal_Shape_mpq_class octa in

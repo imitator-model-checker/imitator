@@ -150,7 +150,7 @@ let poly_to_points x y linear_constraint =
 	let poly = ppl_new_NNC_Polyhedron_from_NNC_Polyhedron (to_ppl_polyhedron (non_strictify linear_constraint)) in
 	(* project to variables x,y *)
 	project_to [x; y] poly;
-	let generators = ppl_Polyhedron_get_generators poly in
+	let generators = ppl_Polyhedron_get_minimized_generators poly in
 	(* collect points for the generators *)
 	let points = List.fold_left (fun ps gen ->
 		let p = point_of_generator gen in 
