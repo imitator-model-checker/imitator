@@ -23,14 +23,14 @@ let constants = ref [];;
 let parse_error s =
 	let symbol_start = symbol_start () in
 	let symbol_end = symbol_end () in
+	print_error s;
 	raise (ParsingError (symbol_start, symbol_end))
 ;;
 
 let check_constant name =
 	List.iter (fun (n,_) -> 
 		if n = name then ( 
-			print_string ("constant '" ^ n ^ "' already defined.\n");
-			parse_error "constant already defined"	
+			parse_error ("constant '" ^ n ^ "' already defined")	
 		)
 	) !constants
 ;;
@@ -84,7 +84,7 @@ main:
 	{
 		(* store constants in header *)
 		$1;
-		List.iter (fun (n, c)  -> print_string ("const " ^ n ^ " = " ^ (NumConst.string_of_numconst c) ^ "\n")) !constants;
+		List.iter (fun (n, c)  -> print_message Debug_low ("const " ^ n ^ " = " ^ (NumConst.string_of_numconst c) ^ "\n")) !constants;
 		(* get declarations in header *)
 		let decls = $2 in
 		(* tag as global *)
@@ -133,8 +133,7 @@ const_id:
 	NAME { 
 		let name = $1 in
 		match get_constant name with
-		| None -> print_string ("Unknown constant '" ^ name ^ "'"); 
-							parse_error "Unknown constant"
+		| None -> parse_error ("Unknown constant '" ^ name ^ "'")
 		| Some c -> c
 	} 
 ;
@@ -490,7 +489,7 @@ pos_float:
 			| '7' -> NumConst.numconst_of_int 7
 			| '8' -> NumConst.numconst_of_int 8
 			| '9' -> NumConst.numconst_of_int 9
-			| _ ->  raise (ParsingError (0,0)) in
+			| _ ->  parse_error ("illegal floating point number") in
 		let ten = NumConst.numconst_of_int 10 in
 		let dec = ref (NumConst.numconst_of_frac 1 10) in
 		for i = point+1 to (String.length fstr) - 1 do

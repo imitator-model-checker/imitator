@@ -831,7 +831,7 @@ let compute_new_constraint program options orig_constraint orig_location dest_lo
 (* new combination is valid (false if the old     *)
 (* combination was the last one)                  *)
 (*------------------------------------------------*)
-let next_combination combination max_indexes =
+let next_combination combination max_indexes =	
 	let len = Array.length combination in 
 	let valid_combination = ref true in 
 	let not_is_max = ref true in
@@ -1067,11 +1067,11 @@ let post program options pi0 reachability_graph orig_state_index =
 		while !more_combinations do
 			(* Debug *)
 			if debug_mode_greater Debug_total then (
-			let local_indexes = string_of_array_of_string_with_sep "\n\t" (
-			Array.mapi (fun local_index real_index ->
-				(string_of_int local_index) ^ " -> " ^ (string_of_int real_index) ^ " : " ^ (string_of_int current_indexes.(local_index)) ^ "; ";
-			) real_indexes) in
-			print_message Debug_total ("--- Consider the combination \n\t" ^ local_indexes);
+				let local_indexes = string_of_array_of_string_with_sep "\n\t" (
+				Array.mapi (fun local_index real_index ->
+					(string_of_int local_index) ^ " -> " ^ (string_of_int real_index) ^ " : " ^ (string_of_int current_indexes.(local_index)) ^ "; ";
+				) real_indexes) in
+				print_message Debug_total ("--- Consider the combination \n\t" ^ local_indexes);
 			);
 	
 			(* build the current combination of transitions *)
@@ -1086,53 +1086,53 @@ let post program options pi0 reachability_graph orig_state_index =
 			let new_constraint = compute_new_constraint program options orig_constraint original_location location guards updated_continuous clock_updates in
 	
 			(* Check the satisfiability *)
-			match new_constraint with
-				| None -> 
-					print_message Debug_high ("\nThis constraint is not satisfiable.");	
-				| Some final_constraint ->(					
+			let _ = match new_constraint with
+				| Some final_constraint -> (					
 					if not (LinearConstraint.is_satisfiable final_constraint) then(
 						print_message Debug_high ("\nThis constraint is not satisfiable.");
 					) else (
 			
-					let add_new_state =
-					(* Branching between 2 algorithms here *)
-					if program.imitator_mode = Reachability_analysis then ( 
-						true
-					) else (
-						inverse_method_check_constraint program pi0 reachability_graph final_constraint
-					) in
-					
-					if add_new_state then (				
-						(* Create the state *)				
-						let new_state = location, final_constraint in
-		
-						(* Debug print *)
-						if debug_mode_greater Debug_total then(
-							print_message Debug_total ("Consider the state \n" ^ (string_of_state program new_state));
-						);
+						let add_new_state =
+						(* Branching between 2 algorithms here *)
+						if program.imitator_mode = Reachability_analysis then ( 
+							true
+						) else (
+							inverse_method_check_constraint program pi0 reachability_graph final_constraint
+						) in
 						
-						(* Add this new state *)
-						(* Try to add the state to the graph // with the p-constraint ????? *)
-						let new_state_index, added = Graph.add_state program reachability_graph new_state in
-						(* If this is really a new state *)
-						if added then (
-							(* Add the state_index to the list of new states *)
-							new_states := new_state_index :: !new_states;
-						);
-						(* Update the transitions *)
-						Graph.add_transition reachability_graph (orig_state_index, action_index, new_state_index);
-						(* Debug print *)
-						if debug_mode_greater Debug_high then (
-							let beginning_message = (if added then "NEW STATE" else "Old state") in
-							print_message Debug_high ("\n" ^ beginning_message ^ " reachable through action '" ^ (program.action_names action_index) ^ "': ");
-							print_message Debug_high (string_of_state program new_state);
-						);
-					); (* end if pi0 incompatible *)
-				); (* end if satisfiable *)
-			);
-		
+						if add_new_state then (				
+							(* Create the state *)				
+							let new_state = location, final_constraint in
+			
+							(* Debug print *)
+							if debug_mode_greater Debug_total then(
+								print_message Debug_total ("Consider the state \n" ^ (string_of_state program new_state));
+							);
+							
+							(* Add this new state *)
+							(* Try to add the state to the graph // with the p-constraint ????? *)
+							let new_state_index, added = Graph.add_state program reachability_graph new_state in
+							(* If this is really a new state *)
+							if added then (
+								(* Add the state_index to the list of new states *)
+								new_states := new_state_index :: !new_states;
+							);
+							(* Update the transitions *)
+							Graph.add_transition reachability_graph (orig_state_index, action_index, new_state_index);
+							(* Debug print *)
+							if debug_mode_greater Debug_high then (
+								let beginning_message = (if added then "NEW STATE" else "Old state") in
+								print_message Debug_high ("\n" ^ beginning_message ^ " reachable through action '" ^ (program.action_names action_index) ^ "': ");
+								print_message Debug_high (string_of_state program new_state);
+							);
+						); (* end if pi0 incompatible *)
+					); (* end if satisfiable *)	)
+				| None -> (
+					print_message Debug_standard ("\nThis constraint is not satisfiable.");
+				) in ();	
+			
 			(* get the next combination *)
-			more_combinations := next_combination current_indexes max_indexes 		
+			more_combinations := next_combination current_indexes max_indexes;	
 			
 		done; (* while more new states *)
 	) list_of_possible_actions;
