@@ -701,16 +701,9 @@ print_message Debug_medium ("\nInitial state after time-elapsing:\n" ^ (Imitator
 (**************************************************)
 (* Execute IMITATOR II *)
 (**************************************************)
-
-let _ =
-match options#imitator_mode with
-	(* Perform reachability analysis or inverse Method *)
-	| Reachability_analysis | Inverse_method -> 
-		let reachability_graph, k, _, _ =
-			Reachability.post_star program options pi0 init_state_after_time_elapsing
-		in
-		
-		(* Plot all reachable states projected on the selected variables *)
+	
+let make_plot reachability_graph =
+		(* reverse lookup function *) 
 		let index_of x =
 			try (
 				for i = 0 to program.nb_variables do 
@@ -719,7 +712,7 @@ match options#imitator_mode with
 				raise NotFound				
 			) with
 				| Found i -> i in 
-		
+		(* construct pairs of plot variables *)
 		let plot_pairs = List.fold_left (fun ps (x,y) -> 
 			try (
 				let xi = index_of x in
@@ -727,7 +720,7 @@ match options#imitator_mode with
 				(xi, yi) :: ps
 			)	with NotFound -> ps
 		) [] options#plot_vars in
-		
+		(* do the plotting *)
 		let i = ref 0 in
 		List.iter (fun (x,y) -> 
 			let x_name = program.variable_names x in
@@ -755,8 +748,21 @@ match options#imitator_mode with
 			let result = Sys.command cmd in
 			print_message Debug_medium ("return value of system call: " ^ (string_of_int result));
 			i := (!i + 1) mod 5 
-		) plot_pairs;
+		) plot_pairs in
 
+
+
+let _ =
+match options#imitator_mode with
+	(* Perform reachability analysis or inverse Method *)
+	| Reachability_analysis | Inverse_method -> 
+		let reachability_graph, k, _, _ =
+				Reachability.post_star program options pi0 init_state_after_time_elapsing
+		in
+				
+		(* Plot all reachable states projected on the selected variables *)
+		make_plot reachability_graph;
+	
 		(* Generate the DOT graph *)
 		print_message Debug_high "Generating the dot graph";
 		let dot_file_name = (options#program_prefix ^ ".dot") in
@@ -771,13 +777,6 @@ match options#imitator_mode with
 			print_message Debug_standard (LinearConstraint.string_of_linear_constraint program.variable_names k0);
 		)
 		
-(*		let g = Graph.shrink program reachability_graph in                            *)
-(*		let dot_file_name = (!program_prefix ^ ".shrink.dot") in                      *)
-(*		let states_file_name = (!program_prefix ^ ".shrink.states") in                *)
-(*		let gif_file_name = (!program_prefix ^ ".shrink." ^ dot_extension) in         *)
-(*		generate_graph program pi0 g dot_file_name states_file_name gif_file_name;		*)
-(*		();                                                                           *)
-
 	| Random_cartography nb ->
 	(* Behavioral cartography algorithm with random iterations *)
 		random_behavioral_cartography program pi0cube init_state_after_time_elapsing nb;

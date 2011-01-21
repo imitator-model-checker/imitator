@@ -1178,57 +1178,67 @@ let post_star program options pi0 init_state =
 	let nb_iterations = ref 1 in
 	let limit_reached = ref false in
 
-	(* Check if the list of new states is empty *)
-	while not (!limit_reached  || list_empty !newly_found_new_states) do
-		if debug_mode_greater Debug_standard then (
-			print_message Debug_low ("\n");
-			print_message Debug_standard ("Computing post^" ^ (string_of_int (!nb_iterations)) ^ "");
-			print_message Debug_low ("Number of recently found state" ^ (s_of_int (List.length !newly_found_new_states)) ^ ": " ^ (string_of_int (List.length !newly_found_new_states)) ^ ".");
-		);
-		(* Count the states for debug purpose: *)
-		let num_state = ref 0 in
-		(* Length of 'newly_found_new_states' for debug purpose *)
-		let nb_states = List.length !newly_found_new_states in
+	(* enable raising Break exception on interactive interrupt *)
+	Sys.catch_break true;		
 
-		let new_newly_found_new_states =
-		(* For each newly found state: *)
-		List.fold_left (fun new_newly_found_new_states orig_state_index ->
+	let _ = try (
+		(* Check if the list of new states is empty *)
+		while not (!limit_reached  || list_empty !newly_found_new_states) do
+			if debug_mode_greater Debug_standard then (
+				print_message Debug_low ("\n");
+				print_message Debug_standard ("Computing post^" ^ (string_of_int (!nb_iterations)) ^ "");
+				print_message Debug_low ("Number of recently found state" ^ (s_of_int (List.length !newly_found_new_states)) ^ ": " ^ (string_of_int (List.length !newly_found_new_states)) ^ ".");
+			);
 			(* Count the states for debug purpose: *)
-			num_state := !num_state + 1;
-			(* Perform the post *)
-			let post = post program options pi0 reachability_graph orig_state_index in
-			let new_states = post in
+			let num_state = ref 0 in
+			(* Length of 'newly_found_new_states' for debug purpose *)
+			let nb_states = List.length !newly_found_new_states in
+	
+			let new_newly_found_new_states =
+			(* For each newly found state: *)
+			List.fold_left (fun new_newly_found_new_states orig_state_index ->
+				(* Count the states for debug purpose: *)
+				num_state := !num_state + 1;
+				(* Perform the post *)
+				let post = post program options pi0 reachability_graph orig_state_index in
+				let new_states = post in
+				(* Debug *)
+				if debug_mode_greater Debug_medium then (
+					let beginning_message = if list_empty new_states then "Found no new state" else ("Found " ^ (string_of_int (List.length new_states)) ^ " new state" ^ (s_of_int (List.length new_states)) ^ "") in
+					print_message Debug_medium (beginning_message ^ " for the post of state " ^ (string_of_int !num_state) ^ " / " ^ (string_of_int nb_states) ^ " in post^" ^ (string_of_int (!nb_iterations)) ^ ".\n");
+				);
+	
+				(* Return the concatenation of the new states *)
+				(**** OPTIMIZED: do not care about order (else shoud consider 'list_append new_newly_found_new_states (List.rev new_states)') *)
+				List.rev_append new_newly_found_new_states new_states
+			) [] !newly_found_new_states in
+			(* Update the newly_found_new_states *)
+			newly_found_new_states := new_newly_found_new_states;
 			(* Debug *)
 			if debug_mode_greater Debug_medium then (
-				let beginning_message = if list_empty new_states then "Found no new state" else ("Found " ^ (string_of_int (List.length new_states)) ^ " new state" ^ (s_of_int (List.length new_states)) ^ "") in
-				print_message Debug_medium (beginning_message ^ " for the post of state " ^ (string_of_int !num_state) ^ " / " ^ (string_of_int nb_states) ^ " in post^" ^ (string_of_int (!nb_iterations)) ^ ".\n");
+				let beginning_message = if list_empty !newly_found_new_states then "\nFound no new state" else ("\nFound " ^ (string_of_int (List.length !newly_found_new_states)) ^ " new state" ^ (s_of_int (List.length !newly_found_new_states)) ^ "") in
+				print_message Debug_medium (beginning_message ^ " for post^" ^ (string_of_int (!nb_iterations)) ^ ".\n");
 			);
-
-			(* Return the concatenation of the new states *)
-			(**** OPTIMIZED: do not care about order (else shoud consider 'list_append new_newly_found_new_states (List.rev new_states)') *)
-			List.rev_append new_newly_found_new_states new_states
-		) [] !newly_found_new_states in
-		(* Update the newly_found_new_states *)
-		newly_found_new_states := new_newly_found_new_states;
-		(* Debug *)
-		if debug_mode_greater Debug_medium then (
-			let beginning_message = if list_empty !newly_found_new_states then "\nFound no new state" else ("\nFound " ^ (string_of_int (List.length !newly_found_new_states)) ^ " new state" ^ (s_of_int (List.length !newly_found_new_states)) ^ "") in
-			print_message Debug_medium (beginning_message ^ " for post^" ^ (string_of_int (!nb_iterations)) ^ ".\n");
-		);
-		
-		(* Clean up a little *)
-		Gc.major ();
-		
-		(* Iterate *)
-		nb_iterations := !nb_iterations + 1;
-		(* Check if the limit has been reached *)
-		match options#post_limit with
-			| None -> ()
-			| Some limit -> if !nb_iterations > limit then limit_reached := true;
-		match options#time_limit with
-			| None -> ()
-			| Some limit -> if (get_time()) > (float_of_int limit) then limit_reached := true;
-	done;
+			
+			(* Clean up a little *)
+			Gc.major ();
+			
+			(* Iterate *)
+			nb_iterations := !nb_iterations + 1;
+			(* Check if the limit has been reached *)
+			match options#post_limit with
+				| None -> ()
+				| Some limit -> if !nb_iterations > limit then limit_reached := true;
+			match options#time_limit with
+				| None -> ()
+				| Some limit -> if (get_time()) > (float_of_int limit) then limit_reached := true;
+		done;
+	) with Sys.Break -> (
+		print_warning ("Post^* was interrupted by the user. Analysis may be incomplete.");
+	) in
+	
+	(* disable raising Break exception on interactive interrupt *)
+	Sys.catch_break false;
 
 	if !limit_reached && not (list_empty !newly_found_new_states) then(
 		match options#post_limit with
