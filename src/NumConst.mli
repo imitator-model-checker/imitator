@@ -57,9 +57,11 @@ val random : t -> t -> t
 val add : t -> t -> t
 val sub : t -> t -> t
 val mul : t -> t -> t
+val pow : t -> t -> t
 val div : t -> t -> t
 val neg : t -> t
 val abs : t -> t
+
 
 (**************************************************)
 (** {2 Comparison Functions} *)

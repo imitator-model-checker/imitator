@@ -113,6 +113,18 @@ let mul = ( */ )
 let div = ( // ) 
 (*	arithmetic_gen Gmp.Q.div*)
 
+exception ArithmeticException of string
+
+let pow x y =
+	(* only for integer exponents *)
+	let p = get_num y in
+	let q = get_den y in
+	if q <>! Gmp.Z.one then raise (ArithmeticException "exponent is non-integer");
+	let e = Gmp.Z.abs p in
+	let rec power b ex =	if ex <=! Gmp.Z.zero then one else mul b (power b (ex -! Gmp.Z.one)) in
+	let res = power x e in
+	if y </ zero then div one res else res 
+
 let neg a = Gmp.Q.neg a	
 (*	let a = get_mpq a in           *)
 (*	let result = Gmp.Q.create () in*)
