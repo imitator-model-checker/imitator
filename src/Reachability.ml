@@ -34,13 +34,18 @@ let inv_cache = Cache.make loc_hash 200
 (* Cache for flows *)
 let flow_cache = Cache.make loc_hash 200
 
+(* Cache for partitions *)
+let part_cache = Cache.make loc_hash 200
+
 
 (* Print statistics for cache usage *)
 let print_stats _ =
 	print_message Debug_standard "invariant cache:"; 
 	Cache.print_stats inv_cache;
 	print_message Debug_standard "flow cache:";
-	Cache.print_stats flow_cache
+	Cache.print_stats flow_cache;
+	print_message Debug_standard "partition cache:";
+	Cache.print_stats part_cache
 
 
 (*--------------------------------------------------*)
@@ -173,7 +178,7 @@ exception Last_item
 exception Unbounded
 
 
-let affine_time_elapse program options invariant deriv constr = 
+let affine_time_elapse program options location invariant deriv constr = 
 	(* find affine dimensions *)
 	let affine_dim = affine_dimensions program invariant deriv in
 	let affine_vars = List.map (fun (v,_,_) -> v) affine_dim in
@@ -182,16 +187,9 @@ let affine_time_elapse program options invariant deriv constr =
 		print_message Debug_medium ("affine dimension: " ^ (program.variable_names v) ^ " in [" ^
 			(NumConst.string_of_numconst min) ^ ", " ^ (NumConst.string_of_numconst max) ^ "]")
 	) affine_dim;
-	
-(*	let a,b = LinearConstraint.linear_system (program.renamed_clocks) (program.clocks) deriv in*)
-	
+		
 	(* compute the spanned ranges for all dimensions *)
 	let p = options#nb_partitions in 
-(*	match n with     *)
-(*		| 1 -> 32      *)
-(*		| 2 -> 16      *)
-(*		| 3 -> 4       *)
-(*		| _ -> 2 in		*)
 	let size_table = Hashtbl.create n in
 	List.iter (fun (v, min, max) -> 
 		let range = NumConst.sub max min in
@@ -253,28 +251,40 @@ let affine_time_elapse program options invariant deriv constr =
 						build_neighbors ((List.hd tl) :: hd) (List.tl tl) (v+1) in
 		build_neighbors [] part 0;
 		!nbs in 
+	
+	(* power function *)	
+	let rec power b ex = if ex <= 0 then 1 else b * (power b (ex-1)) in
 		
 	print_message Debug_low "Building partitions...";
 				
-				
+	(* strip off discrete for caching scheme *)
+	let locations = Automaton.get_locations location in
+			
 	(* build the partitions *)
-	let rec power b ex = if ex <= 0 then 1 else b * (power b (ex-1)) in
-	let partitions = Hashtbl.create (power p n) in
-	let info = Hashtbl.create (power p n) in
-	let _ = try (
-		(* start with [0; 0; ... 0] *)
-		let current_partition = ref (init_item n) in
-		while true do
-			(* compute lower and upper bounds for affine dimensions *)
-			let my_boundaries = boundaries !current_partition in
-			(* strip variables from boundaries *)
-			let my_bounds = List.map (fun (_,x,y) -> (x,y)) my_boundaries in
-			(* store bounds in hash table *)
-			Hashtbl.add partitions !current_partition my_bounds;
-			(* increase the index list *)
-			current_partition := next_item !current_partition
-		done; ()
-	) with Last_item -> () in
+	let entry = Cache.find part_cache locations in
+	let partitions, info = match entry with
+		| Some (p,i) -> (
+			print_message Debug_medium "Found partition entry in cache.";
+			p, i)
+		| None -> (		
+			let partitions = Hashtbl.create (power p n) in
+			let info = Hashtbl.create (power p n) in
+			let _ = try (
+				(* start with [0; 0; ... 0] *)
+				let current_partition = ref (init_item n) in
+				while true do
+					(* compute lower and upper bounds for affine dimensions *)
+					let my_boundaries = boundaries !current_partition in
+					(* strip variables from boundaries *)
+					let my_bounds = List.map (fun (_,x,y) -> (x,y)) my_boundaries in
+					(* store bounds in hash table *)
+					Hashtbl.add partitions !current_partition my_bounds;
+					(* increase the index list *)
+					current_partition := next_item !current_partition
+				done; ()
+			) with Last_item -> () in
+			partitions, info
+		) in
 
 	(* complete the data for a partition, if it does not exist *)
 	let get_info item =                                   
@@ -328,7 +338,7 @@ let affine_time_elapse program options invariant deriv constr =
 	print_message Debug_low "Determine initial partitions...";
 	
 	(* find initial partitions that intersect with the original constraint *)
-	let orig_bounds = compute_bounds constr in 
+	let orig_bounds = compute_bounds constr in				
 	Hashtbl.iter (fun index bounds ->
 		let box_cut = match orig_bounds with
 			| None -> true
@@ -415,6 +425,9 @@ let affine_time_elapse program options invariant deriv constr =
 			) ns;			
 		)		
 	done;
+	
+	(* store partition info in cache *)
+	Cache.store part_cache locations (partitions, info);
 				
 	(* return convex hull *)
 	let octagonalize constr = 
@@ -442,7 +455,7 @@ let affine_time_elapse program options invariant deriv constr =
 (*--------------------------------------------------*)
 (* Compute the time elapse for a location           *)
 (*--------------------------------------------------*)
-let compute_time_elapse program options invariant flow constr =
+let compute_time_elapse program options location invariant flow constr =
 	let elapsed =
 	match flow with
 		| Undefined -> raise (InternalError "undefined flow")
@@ -452,7 +465,7 @@ let compute_time_elapse program options invariant flow constr =
 			LinearConstraint.time_elapse constr x_deriv
 			)
 		| Affine deriv -> (			
-			affine_time_elapse program options invariant deriv constr
+			affine_time_elapse program options location invariant deriv constr
 		) in
 	elapsed
 		
@@ -492,7 +505,7 @@ let create_initial_state program options =
 	(* let time elapse *)
 	print_message Debug_high ("Let time elapse");
 	let deriv = compute_flow program initial_location in
-	let full_constraint = compute_time_elapse program options invariant deriv full_constraint in
+	let full_constraint = compute_time_elapse program options initial_location invariant deriv full_constraint in
 	(* Debug *)
 	if debug_mode_greater Debug_total then print_message Debug_total (LinearConstraint.string_of_linear_constraint program.variable_names full_constraint);	
 
@@ -801,7 +814,7 @@ let compute_new_constraint program options orig_constraint orig_location dest_lo
 		(* let time elapse *)
 		print_message Debug_total ("\nLet time elapse");
 		let deriv = compute_flow program dest_location in
-		let new_constraint = compute_time_elapse program options invariant deriv new_constraint in						 
+		let new_constraint = compute_time_elapse program options dest_location invariant deriv new_constraint in						 
 		if debug_mode_greater Debug_total then(
 			print_message Debug_total (LinearConstraint.string_of_linear_constraint program.variable_names new_constraint);
 			if not (LinearConstraint.is_satisfiable new_constraint) then
@@ -1273,6 +1286,8 @@ let post_star program options pi0 init_state =
 		^ (string_of_int (Graph.nb_states reachability_graph)) ^ " reachable state" ^ (s_of_int (Graph.nb_states reachability_graph))
 		^ " with "
 		^ (string_of_int (Hashtbl.length (reachability_graph.transitions_table))) ^ " transition" ^ (s_of_int (Hashtbl.length (reachability_graph.transitions_table))) ^ ".");
+
+	if debug_mode_greater Debug_low then print_stats ();
 
 	(*--------------------------------------------------*)
 	(* Return the result *)
