@@ -15,6 +15,7 @@
 
 type t
 
+exception Arithmetic_exception of string
 
 (**************************************************)
 (* Functions *)

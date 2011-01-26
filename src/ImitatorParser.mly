@@ -130,7 +130,11 @@ const_expr:
 	| const_expr OP_MINUS const_expr { NumConst.sub $1 $3 }
 	| const_expr OP_MUL const_expr { NumConst.mul $1 $3 }
 	| const_expr OP_DIV const_expr { NumConst.div $1 $3 }
-	| const_expr OP_POW const_expr { NumConst.pow $1 $3 }
+	| const_expr OP_POW const_expr {
+			try (
+				NumConst.pow $1 $3
+			) with Arithmetic_exception e -> parse_error e 
+		}
 	| LPAREN const_expr RPAREN { $2 }
 ;
 
@@ -402,6 +406,15 @@ linear_term:
 			| (Variable (x, v), Constant y) -> Variable ((NumConst.div x y), v)
 			| _ -> parse_error "expression is not linear"		
 	}
+	| linear_term OP_POW linear_term {
+		let a1 = $1 in
+		let a2 = $3 in
+		match (a1, a2) with
+			| (Constant x, Constant y) -> (try (
+					Constant (NumConst.pow x y)
+				) with Arithmetic_exception e -> parse_error e) 
+			| _ -> parse_error "expression is not linear"
+	}
 	| LPAREN linear_term RPAREN { $2 }
 ;
 
@@ -438,6 +451,15 @@ ext_linear_term:
 			| (Variable (x, v), Constant y) -> Variable ((NumConst.div x y), v)
 			| (PrimedVariable (x, v), Constant y) -> PrimedVariable ((NumConst.div x y), v)
 			| _ -> parse_error "expression is not linear"		
+	}
+	| ext_linear_term OP_POW ext_linear_term {
+		let a1 = $1 in
+		let a2 = $3 in
+		match (a1, a2) with
+			| (Constant x, Constant y) -> (try (
+					Constant (NumConst.pow x y)
+				) with Arithmetic_exception e -> parse_error e) 
+			| _ -> parse_error "expression is not linear"
 	}
 	| LPAREN ext_linear_term RPAREN { $2 }
 ;

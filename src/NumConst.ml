@@ -22,6 +22,7 @@ open Gmp.Z.Infixes
 (*  | Mpq of Gmp.Q.t*)
 type t = Gmp.Q.t
 
+exception Arithmetic_exception of string
 
 (**************************************************)
 (* Functions *)
@@ -113,13 +114,12 @@ let mul = ( */ )
 let div = ( // ) 
 (*	arithmetic_gen Gmp.Q.div*)
 
-exception ArithmeticException of string
 
 let pow x y =
 	(* only for integer exponents *)
 	let p = get_num y in
 	let q = get_den y in
-	if q <>! Gmp.Z.one then raise (ArithmeticException "exponent is non-integer");
+	if q <>! Gmp.Z.one then raise (Arithmetic_exception "exponent is non-integer");
 	let e = Gmp.Z.abs p in
 	let rec power b ex =	if ex <=! Gmp.Z.zero then one else mul b (power b (ex -! Gmp.Z.one)) in
 	let res = power x e in
