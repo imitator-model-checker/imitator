@@ -698,10 +698,7 @@ print_message Debug_medium ("\nInitial state after time-elapsing:\n" ^ (Imitator
 
 
 
-(**************************************************)
-(* Execute IMITATOR II *)
-(**************************************************)
-	
+(* function for plotting reachable states *)	
 let make_plot reachability_graph =
 		(* reverse lookup function *) 
 		let index_of x =
@@ -751,6 +748,11 @@ let make_plot reachability_graph =
 		) plot_pairs in
 
 
+(**************************************************)
+(* Execute IMITATOR II *)
+(**************************************************)
+
+Sys.set_signal Sys.sigttou (Sys.Signal_handle (fun i -> print_message Debug_standard "Hello world!"));
 
 let _ =
 match options#imitator_mode with

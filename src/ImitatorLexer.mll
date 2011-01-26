@@ -114,6 +114,7 @@ rule token = parse
 	| '-'              { OP_MINUS }
 	| '*'              { OP_MUL }
 	| '/'              { OP_DIV }
+	| '^'              { OP_POW }
 
 	| '('              { LPAREN }
 	| ')'              { RPAREN }

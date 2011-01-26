@@ -50,7 +50,7 @@ let get_constant name =
 %token <string> NAME
 %token <string> STRING
 
-%token OP_PLUS OP_MINUS OP_MUL OP_DIV
+%token OP_PLUS OP_MINUS OP_MUL OP_DIV OP_POW
 %token OP_L OP_LEQ OP_EQ OP_GEQ OP_G OP_ASSIGN
 
 %token LPAREN RPAREN LBRACE RBRACE LSQBRA RSQBRA
@@ -63,16 +63,19 @@ let get_constant name =
 %token EOF
 
 /*%left OP_L OP_LEQ OP_EQ OP_GEQ OP_G*/
+%right SEMICOLON
+
 %left PIPE CT_OR        /* lowest precedence */
 %left AMPERSAND CT_AND  /* medium precedence */
-%nonassoc CT_NOT        /* highest precedence * /
+%nonassoc CT_NOT        /* highest precedence */
 
+%nonassoc OP_L OP_LEQ OP_EQ OP_GEQ OP_G OP_ASSIGN
 
-/* %left OP_PLUS OP_MINUS        /* lowest precedence */
-/*
-%left OP_DIV         /* medium precedence * /
-%nonassoc UMINUS        /* highest precedence * /
-*/
+%left OP_PLUS OP_MINUS /* lowest precedence */
+%left OP_DIV  OP_MUL   /* medium precedence */
+%left OP_POW           /* high precedence   */
+%nonassoc UMINUS       /* highest precedence */
+
 
 %start main             /* the entry point */
 %type <ParsingStructure.parsing_structure> main
@@ -84,7 +87,7 @@ main:
 	{
 		(* store constants in header *)
 		$1;
-		List.iter (fun (n, c)  -> print_message Debug_low ("const " ^ n ^ " = " ^ (NumConst.string_of_numconst c) ^ "\n")) !constants;
+		List.iter (fun (n, c)  -> print_message Debug_low ("const " ^ n ^ " = " ^ (NumConst.string_of_numconst c))) !constants;
 		(* get declarations in header *)
 		let decls = $2 in
 		(* tag as global *)
@@ -120,12 +123,14 @@ const_decl:
 ;
 
 const_expr:
-	| rational { $1 }
+	| integer { $1 }
+	| float { $1 }
 	| const_id { $1 }
 	| const_expr OP_PLUS const_expr { NumConst.add $1 $3 }
 	| const_expr OP_MINUS const_expr { NumConst.sub $1 $3 }
 	| const_expr OP_MUL const_expr { NumConst.mul $1 $3 }
 	| const_expr OP_DIV const_expr { NumConst.div $1 $3 }
+	| const_expr OP_POW const_expr { NumConst.pow $1 $3 }
 	| LPAREN const_expr RPAREN { $2 }
 ;
 
@@ -341,7 +346,7 @@ ext_linear_constraint:
 ;
 
 interval_expression:
-	linear_expression CT_IN LSQBRA rational COMMA rational RSQBRA {
+	linear_expression CT_IN LSQBRA const_expr COMMA const_expr RSQBRA {
 		[
 			Linear_constraint ($1, OP_GEQ, Linear_term(Constant $4));
 			Linear_constraint ($1, OP_LEQ, Linear_term(Constant $6))
@@ -350,7 +355,7 @@ interval_expression:
 ;
 
 ext_interval_expression:
-	ext_linear_expression CT_IN LSQBRA rational COMMA rational RSQBRA {
+	ext_linear_expression CT_IN LSQBRA const_expr COMMA const_expr RSQBRA {
 		[
 			Linear_constraint ($1, OP_GEQ, Linear_term(Constant $4));
 			Linear_constraint ($1, OP_LEQ, Linear_term(Constant $6))
@@ -380,7 +385,7 @@ ext_linear_expression:
 
 linear_term:
 	| atom { $1 }
-	| atom OP_MUL atom { 
+	| linear_term OP_MUL linear_term { 
 		let a1 = $1 in
 		let a2 = $3 in
 		match (a1, a2) with
@@ -389,7 +394,7 @@ linear_term:
 			| (Constant x, Variable (y, v)) -> Variable ((NumConst.mul x y), v)
 			| _ -> parse_error "expression is not linear"
 	}
-	| atom OP_DIV atom {
+	| linear_term OP_DIV linear_term {
 		let a1 = $1 in
 		let a2 = $3 in
 		match (a1, a2) with
@@ -401,7 +406,8 @@ linear_term:
 ;
 
 atom:
-	| rational { Constant $1 }
+	| integer { Constant $1 }
+	| float { Constant $1 }
 	| NAME {
 			let id = $1 in
 			let c = get_constant id in
@@ -413,7 +419,7 @@ atom:
 
 ext_linear_term:
 	| ext_atom { $1 }
-	| ext_atom OP_MUL ext_atom { 
+	| ext_linear_term OP_MUL ext_linear_term { 
 		let a1 = $1 in
 		let a2 = $3 in
 		match (a1, a2) with
@@ -424,7 +430,7 @@ ext_linear_term:
 			| (Constant x, PrimedVariable (y, v)) -> PrimedVariable ((NumConst.mul x y), v)
 			| _ -> parse_error "expression is not linear"
 	}
-	| ext_atom OP_DIV ext_atom {
+	| ext_linear_term OP_DIV ext_linear_term {
 		let a1 = $1 in
 		let a2 = $3 in
 		match (a1, a2) with
@@ -437,7 +443,8 @@ ext_linear_term:
 ;
 
 ext_atom:
-	| rational { Constant $1 }
+	| integer { Constant $1 }
+	| float { Constant $1 }
 	| NAME {
 			let id = $1 in
 			let c = get_constant id in
@@ -448,15 +455,9 @@ ext_atom:
 	| NAME APOSTROPHE { PrimedVariable (NumConst.one, $1) }
 ;
 
-rational:
-	integer { $1 }
-	| float { $1 }
-	| integer OP_DIV pos_integer { (NumConst.div $1 $3) }
-;
-
 integer:
 	pos_integer { $1 }
-	| OP_MINUS pos_integer { NumConst.neg $2 }
+	| OP_MINUS pos_integer %prec UMINUS { NumConst.neg $2 }
 ;
 
 pos_integer:
@@ -465,7 +466,7 @@ pos_integer:
 
 float:
   pos_float { $1 }
-	| OP_MINUS pos_float { NumConst.neg $2 }  
+	| OP_MINUS pos_float %prec UMINUS { NumConst.neg $2 }  
 ;
 
 pos_float:
