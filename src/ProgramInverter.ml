@@ -208,13 +208,14 @@ let invert_flow vars_to_invert flow =
 let invert_standard_flow program =
 	let flow = program.standard_flow in
 	let clocks = program.clocks in
-	invert_flow clocks flow
+	invert_flow program.renamed_clocks flow
 
 
 (* Invert the flows for analog variables *)
 let invert_flows program = 
 	(* get the variables to invert *)
 	let analogs = List.filter (program.is_analog) program.clocks in
+	let analogs_prime = List.map program.prime_of_variable analogs in
 	if (analogs = []) then (
 		(* always return the empty flow *)
 		fun _ _ -> Undefined
@@ -230,7 +231,8 @@ let invert_flows program =
 			List.iter (fun loc_index -> 
 				let flow = program.analog_flows aut_index loc_index in
 				let inv_flow = match flow with 
-					| Rectangular constr -> Rectangular (invert_flow analogs constr) 
+					| Rectangular constr -> Rectangular (invert_flow analogs_prime constr) 
+					| Affine constr -> Affine (invert_flow analogs_prime constr) 
 					| Undefined -> Undefined in
 				flows.(loc_index) <- inv_flow;
 			) locations;
