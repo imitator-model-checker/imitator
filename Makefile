@@ -78,12 +78,12 @@ MAIN = $(SRC)/IMITATOR.cmo
 MAIN_OPT = $(MAIN:.cmo=.cmx)
 
 # sources to compile
-FILES =  $(SRC)/Global.+ $(SRC)/Cache.+ $(SRC)/Options.+ $(SRC)/NumConst.+  $(SRC)/LinearConstraint.+ $(SRC)/Graphics.+ $(SRC)/Automaton.+ $(SRC)/Pi0Lexer.+ $(SRC)/Pi0Parser.+ $(SRC)/Pi0CubeLexer.+ $(SRC)/Pi0CubeParser.+ $(SRC)/ImitatorLexer.+ $(SRC)/ImitatorParser.+ $(SRC)/ImitatorPrinter.+ $(SRC)/ProgramConverter.+ $(SRC)/ProgramInverter.+ $(SRC)/Graph.+ $(SRC)/Reachability.+
+FILES =  $(SRC)/Global.+ $(SRC)/Cache.+ $(SRC)/Options.+ $(SRC)/NumConst.+  $(SRC)/LinearConstraint.+ $(SRC)/Program.+ $(SRC)/Graphics.+ $(SRC)/Automaton.+ $(SRC)/Pi0Lexer.+ $(SRC)/Pi0Parser.+ $(SRC)/Pi0CubeLexer.+ $(SRC)/Pi0CubeParser.+ $(SRC)/ImitatorLexer.+ $(SRC)/ImitatorParser.+ $(SRC)/ImitatorPrinter.+ $(SRC)/ProgramConverter.+ $(SRC)/ProgramInverter.+ $(SRC)/Graph.+ $(SRC)/Reachability.+ $(SRC)/PredicateAbstraction.+
 OBJS = $(FILES:+=cmo)
 OBJS_OPT = $(OBJS:.cmo=.cmx)
 
 # header files
-FILESMLI = $(SRC)/Global.+ $(SRC)/Cache.+ $(SRC)/NumConst.+ $(SRC)/LinearConstraint.+ $(SRC)/Graphics.+ $(SRC)/Automaton.+ $(SRC)/ParsingStructure.+ $(SRC)/AbstractImitatorFile.+ $(SRC)/ImitatorPrinter.+ $(SRC)/ProgramConverter.+ $(SRC)/ProgramInverter.+ $(SRC)/Graph.+ $(SRC)/Reachability.+ 
+FILESMLI = $(SRC)/Global.+ $(SRC)/Cache.+ $(SRC)/NumConst.+ $(SRC)/LinearConstraint.+ $(SRC)/Graphics.+ $(SRC)/Automaton.+ $(SRC)/ParsingStructure.+ $(SRC)/AbstractImitatorFile.+ $(SRC)/Program.+ $(SRC)/ImitatorPrinter.+ $(SRC)/ProgramConverter.+ $(SRC)/ProgramInverter.+ $(SRC)/Graph.+ $(SRC)/Reachability.+ $(SRC)/PredicateAbstraction.+ 
 
 # parsers and lexers 
 LEXERS = $(SRC)/Pi0Lexer.+ $(SRC)/Pi0CubeLexer.+ $(SRC)/ImitatorLexer.+
