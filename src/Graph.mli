@@ -54,10 +54,10 @@ val nb_states : reachability_graph -> int
 val get_state : reachability_graph -> int -> AbstractImitatorFile.state
 
 (** Return the list of all constraints on the parameters associated to the states of a graph *)
-val all_p_constraints : abstract_program -> reachability_graph -> LinearConstraint.linear_constraint list
+val all_p_constraints : reachability_graph -> LinearConstraint.linear_constraint list
 
 (** Returns the intersection of all parameter constraints, thereby destroying all constraints *)
-val compute_k0_destructive : abstract_program -> reachability_graph -> LinearConstraint.linear_constraint
+val compute_k0_destructive : reachability_graph -> LinearConstraint.linear_constraint
 
 (** Check if two states are equal *)
 val states_equal: AbstractImitatorFile.state -> AbstractImitatorFile.state -> bool
@@ -72,19 +72,18 @@ val exists_state: (AbstractImitatorFile.state -> bool) -> reachability_graph -> 
 val forall_state: (AbstractImitatorFile.state -> bool) -> reachability_graph -> bool
 
 (** find all "last" states on finite or infinite runs *)
-val last_states: abstract_program -> reachability_graph -> int list 
+val last_states: reachability_graph -> int list 
 
 (** check if bad states are reached *)
-val is_bad: abstract_program -> reachability_graph -> bool
+val is_bad: reachability_graph -> bool
 
 
-val shrink: abstract_program -> reachability_graph -> reachability_graph
 (****************************************************************)
 (** Actions on a graph *)
 (****************************************************************)
 
 (** Add a state to a graph: return (state_index, added), where state_index is the index of the state, and 'added' is false if the state was already in the graph, true otherwise *)
-val add_state : AbstractImitatorFile.abstract_program -> reachability_graph -> state -> (state_index * bool)
+val add_state : reachability_graph -> state -> (state_index * bool)
 
 (** Add a transition to the graph *)
 val add_transition : reachability_graph -> (state_index * action_index * state_index) -> unit
@@ -99,5 +98,5 @@ val plot_graph : variable -> variable -> reachability_graph -> string
 (****************************************************************)
 
 (* Convert a graph to a dot file *)
-val dot_of_graph : AbstractImitatorFile.abstract_program -> AbstractImitatorFile.pi0 -> reachability_graph -> fancy:bool -> (string * string)
+val dot_of_graph : reachability_graph -> (string * string)
 

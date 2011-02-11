@@ -166,11 +166,11 @@ let random_pi0 program pi0 =
 (* Functions to interact with Dot *)
 (**************************************************)
 (* Create a gif graph using dot *)
-let generate_graph program pi0 reachability_graph dot_file_name states_file_name gif_file_name =
+let generate_graph pi0 reachability_graph dot_file_name states_file_name gif_file_name =
 	if not options#no_dot then (
 		(* Create the input file *)
 		print_message Debug_total ("Creating input file for dot...");
-		let dot_program, states = Graph.dot_of_graph program pi0 reachability_graph ~fancy:options#fancy in
+		let dot_program, states = Graph.dot_of_graph reachability_graph in
 		(* Write dot file *)
 		print_message Debug_total ("Writing to dot file...");
 		write_to_file dot_file_name dot_program;
@@ -225,8 +225,6 @@ let cover_behavioral_cartography program pi0cube init_state =
 	(* Debug mode *)
 	let global_debug_mode = get_debug_mode() in
 	
-	let v0_bounds = Array.to_list (Array.mapi (fun i (low, high, _) -> (i, low, high)) pi0cube) in
-	let v0_box = LinearConstraint.make_box v0_bounds in
 	let badlist = ref [] in
 	
 	(* Iterate on all the possible pi0 *)
@@ -240,13 +238,13 @@ let cover_behavioral_cartography program pi0cube init_state =
 		if dynArray_exists (LinearConstraint.is_pi0_compatible pi0) results then (
 			if debug_mode_greater Debug_medium then (
 				print_message Debug_medium "The following pi0 is already included in a constraint.";
-				print_message Debug_medium (string_of_pi0 program pi0);
+				print_message Debug_medium (string_of_pi0 pi0);
 			);
 		(* Check that it satisfies the initial constraint *)
 		) else if not (LinearConstraint.is_pi0_compatible pi0 init_constraint) then (
 			if debug_mode_greater Debug_medium then (
 				print_message Debug_medium "The following pi0 does not satisfy the initial constraint of the program.";
-				print_message Debug_medium (string_of_pi0 program pi0);
+				print_message Debug_medium (string_of_pi0 pi0);
 			);
 		) else (
 			(* Iterate *)
@@ -256,13 +254,13 @@ let cover_behavioral_cartography program pi0cube init_state =
 			print_message Debug_standard ("\n**************************************************");
 			print_message Debug_standard ("BEHAVIORAL CARTOGRAPHY ALGORITHM: " ^ (string_of_int !current_iteration) ^ "");
 			print_message Debug_standard ("Considering the following pi" ^ (string_of_int !current_iteration));
-			print_message Debug_standard (string_of_pi0 program pi0);
+			print_message Debug_standard (string_of_pi0 pi0);
 			
 			(* Prevent the debug messages *)
 			if not (debug_mode_greater Debug_medium) then
 				set_debug_mode Debug_nodebug;
 			(* Compute the post and the constraint *)
-			let graph, k, nb_iterations, counter = Reachability.post_star program options pi0 init_state in
+			let graph, k, nb_iterations, counter = Reachability.post_star pi0 init_state in
 			(* Get the debug mode back *)
 			set_debug_mode global_debug_mode;
 			(* Update the counters *)
@@ -277,7 +275,7 @@ let cover_behavioral_cartography program pi0cube init_state =
 				^ " with "
 				^ (string_of_int (Hashtbl.length (graph.transitions_table))) ^ " transition" ^ (s_of_int (Hashtbl.length (graph.transitions_table))) ^ ".");
 			
-			let k0 = Graph.compute_k0_destructive program graph in
+			let k0 = Graph.compute_k0_destructive graph in
 			LinearConstraint.intersection_assign k0 [k];
 			let k0 = [k0] in
 			
@@ -286,7 +284,7 @@ let cover_behavioral_cartography program pi0cube init_state =
 			List.iter (DynArray.add results) k0;
 
 			(* Print the constraint *)
-			let bad = Graph.is_bad program graph in
+			let bad = Graph.is_bad graph in
 			if bad then badlist := (DynArray.length results - 1) :: !badlist;
 			let bad_string = if bad then "bad" else "good" in			
 			print_message Debug_low ("Constraint K0 computed:");
@@ -299,7 +297,7 @@ let cover_behavioral_cartography program pi0cube init_state =
 				let dot_file_name = (radical ^ ".dot") in
 				let states_file_name = (radical ^ ".states") in
 				let gif_file_name = (radical ^ "." ^ dot_extension) in
-				generate_graph program pi0 graph dot_file_name states_file_name gif_file_name;
+				generate_graph pi0 graph dot_file_name states_file_name gif_file_name;
 			);
 		); (* else if new pi0 *)
 
@@ -366,10 +364,10 @@ let cover_behavioral_cartography program pi0cube init_state =
 	
 	(* plot the cartography *)
 	let zones = DynArray.to_list results in
-	Graphics.cartography program pi0cube zones !badlist 2 options#program_prefix;
+	Graphics.cartography zones !badlist 2 options#program_prefix;
 	
 	(* compute coverage of v0 *)
-	let cov = 100.0 *. Graphics.coverage program pi0cube zones in
+	let cov = 100.0 *. Graphics.coverage zones in
 	print_message Debug_standard ("coverage of v0 rectangle: " ^ (string_of_float cov) ^ " %")
 
 
@@ -420,24 +418,24 @@ let random_behavioral_cartography program pi0cube init_state nb =
 			(* Check that it does not belong to any constraint *)
 			if array_exists (LinearConstraint.is_pi0_compatible pi0_functional) results then (
 				print_message Debug_standard ("This pi" ^ (string_of_int !i) ^ " is already included in a constraint.");
-				print_message Debug_standard (string_of_pi0 program pi0_functional);
+				print_message Debug_standard (string_of_pi0 pi0_functional);
 				
 			(* Check that it satisfies the initial constraint *)
 			) else if not (LinearConstraint.is_pi0_compatible pi0_functional init_constraint) then (
 				print_message Debug_standard ("This pi" ^ (string_of_int !i) ^ " does not satisfy the initial constraint of the program.");
-				print_message Debug_standard (string_of_pi0 program pi0_functional);
+				print_message Debug_standard (string_of_pi0 pi0_functional);
 				
 			) else (
 				(* Consider from here a brand new and correct pi0 *)
 				print_message Debug_standard ("Considering pi" ^ (string_of_int !i) ^ " :=");
-				print_message Debug_standard (string_of_pi0 program pi0_functional);
+				print_message Debug_standard (string_of_pi0 pi0_functional);
 
 				(* Prevent the messages if needed *)
 				if cut_messages then (
 					set_debug_mode Debug_nodebug;
 				);
 				(* Compute the post *)
-				let graph, k, nb_iterations, counter = Reachability.post_star program options pi0_functional init_state in
+				let graph, k, nb_iterations, counter = Reachability.post_star pi0_functional init_state in
 				(* Get the debug mode back *)
 				set_debug_mode global_debug_mode;
 				print_message Debug_standard (
@@ -448,7 +446,7 @@ let random_behavioral_cartography program pi0cube init_state nb =
 					^ " with "
 					^ (string_of_int (Hashtbl.length (graph.transitions_table))) ^ " transition" ^ (s_of_int (Hashtbl.length (graph.transitions_table))) ^ ".");
 
-				let k0 = Graph.compute_k0_destructive program graph in
+				let k0 = Graph.compute_k0_destructive graph in
 				LinearConstraint.intersection_assign k0 [k];
 				let k0 = [k0] in
 
@@ -463,7 +461,7 @@ let random_behavioral_cartography program pi0cube init_state nb =
 				let dot_file_name = (radical ^ ".dot") in
 				let states_file_name = (radical ^ ".states") in
 				let gif_file_name = (radical ^ "." ^ dot_extension) in
-				generate_graph program pi0_functional graph dot_file_name states_file_name gif_file_name;
+				generate_graph pi0_functional graph dot_file_name states_file_name gif_file_name;
 				(* Add the index to the interesting list *)
 				interesting_interations := !i :: !interesting_interations;
 				(* Add the result *)
@@ -601,7 +599,7 @@ if options#timed_mode then (
 
 (* Parsing the main program *)
 print_message Debug_low ("Considering file " ^ options#file ^ ".");
-let parsing_structure = parser_lexer ImitatorParser.main ImitatorLexer.token options#file in 
+let parsing_structure = parser_lexer ImitatorParser.main ImitatorLexer.token options#file in
 
 print_message Debug_medium ("Considering program prefix " ^ options#program_prefix ^ ".");
 
@@ -660,6 +658,13 @@ if options#pre then (
 	if debug_mode_greater Debug_high then print_message Debug_high ("\nProgram:\n" ^ (ImitatorPrinter.string_of_program program) ^ "\n")				
 );
 
+(* store global references *)
+Program.set_program program;
+Program.set_pi0 pi0;
+Program.set_pi0cube pi0cube;
+Program.set_options options;
+
+
 (**************************************************)
 (* Debug print: program *)
 (**************************************************)
@@ -673,7 +678,7 @@ if debug_mode_greater Debug_total then (
 
 let (init_loc, init_constraint) = program.init in
 (* Print the initial state *)
-print_message Debug_medium ("\nInitial state:\n" ^ (ImitatorPrinter.string_of_state program program.init) ^ "\n");
+print_message Debug_medium ("\nInitial state:\n" ^ (ImitatorPrinter.string_of_state program.init) ^ "\n");
 
 (* Check the satisfiability *)
 if not (LinearConstraint.is_satisfiable init_constraint) then (
@@ -684,7 +689,7 @@ if not (LinearConstraint.is_satisfiable init_constraint) then (
 );
 
 (* Get the initial state after time elapsing *)
-let init_state_after_time_elapsing = Reachability.create_initial_state program options in
+let init_state_after_time_elapsing = Reachability.create_initial_state () in
 let _, initial_constraint_after_time_elapsing = init_state_after_time_elapsing in
 (* Check the satisfiability *)
 if not (LinearConstraint.is_satisfiable initial_constraint_after_time_elapsing) then (
@@ -694,7 +699,7 @@ if not (LinearConstraint.is_satisfiable initial_constraint_after_time_elapsing) 
 	print_message Debug_total ("\nThe initial constraint of the program after time elapsing is satisfiable.");
 );
 (* Print the initial state after time elapsing *)
-print_message Debug_medium ("\nInitial state after time-elapsing:\n" ^ (ImitatorPrinter.string_of_state program init_state_after_time_elapsing) ^ "\n");
+print_message Debug_medium ("\nInitial state after time-elapsing:\n" ^ (ImitatorPrinter.string_of_state init_state_after_time_elapsing) ^ "\n");
 
 
 
@@ -752,6 +757,21 @@ let make_plot reachability_graph =
 (* Execute IMITATOR II *)
 (**************************************************)
 
+List.iter (fun ineq ->
+	print_message Debug_standard ("pred: " ^ (LinearConstraint.string_of_linear_inequality program.variable_names ineq))
+) program.predicates;
+
+let init_loc, _ = program.init in
+let astates = PredicateAbstraction.get_abstract_states program.predicates init_loc in
+List.iter (fun state -> 
+	print_message Debug_standard ("abstract state: " ^ 
+		(PredicateAbstraction.string_of_abstract_state state));
+	let concr = PredicateAbstraction.concretize program.predicates state in
+	print_message Debug_standard ("concrete state: " ^
+		(string_of_state concr));  
+) astates;
+
+
 Sys.set_signal Sys.sigttou (Sys.Signal_handle (fun i -> print_message Debug_standard "Hello world!"));
 
 let _ =
@@ -759,7 +779,7 @@ match options#imitator_mode with
 	(* Perform reachability analysis or inverse Method *)
 	| Reachability_analysis | Inverse_method -> 
 		let reachability_graph, k, _, _ =
-				Reachability.post_star program options pi0 init_state_after_time_elapsing
+				Reachability.post_star pi0 init_state_after_time_elapsing
 		in
 				
 		(* Plot all reachable states projected on the selected variables *)
@@ -770,10 +790,10 @@ match options#imitator_mode with
 		let dot_file_name = (options#program_prefix ^ ".dot") in
 		let states_file_name = (options#program_prefix ^ ".states") in
 		let gif_file_name = (options#program_prefix ^ "." ^ dot_extension) in
-		generate_graph program pi0 reachability_graph dot_file_name states_file_name gif_file_name;
+		generate_graph pi0 reachability_graph dot_file_name states_file_name gif_file_name;
 		
 		if options#imitator_mode = Inverse_method then (
-			let k0 = Graph.compute_k0_destructive program reachability_graph in
+			let k0 = Graph.compute_k0_destructive reachability_graph in
 			LinearConstraint.intersection_assign k0 [k];
 			print_message Debug_standard ("\nFinal constraint K0 :");
 			print_message Debug_standard (LinearConstraint.string_of_linear_constraint program.variable_names k0);

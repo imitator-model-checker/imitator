@@ -29,7 +29,6 @@ let string_of_var_type = function
 let string_of_header program =
 		"(**************************************************"
 	^ "\n" ^" * Program " ^ program.program_name
-(* 	^ "\n" ^" * Generated at time " ^ time? *)
 	^ "\n" ^" **************************************************)"
 
 (* Convert the initial variable declarations into a string *)
@@ -100,7 +99,8 @@ let string_of_sync program action_index =
 
 
 (* Convert a list of discrete updates into a string *)
-let string_of_discrete_updates program updates =
+let string_of_discrete_updates updates =
+	let program = Program.get_program () in
 	string_of_list_of_string_with_sep ", " (List.map (fun (variable_index, linear_term) ->
 		(* Convert the variable name *)
 		(program.variable_names variable_index)
@@ -143,7 +143,7 @@ let string_of_transition program automaton_index action_index (guard, update, di
 	(* Convert the updates *)
 	^ " do {"
 	^ (string_of_update program automaton_index update)
-	^ (string_of_discrete_updates program discrete_updates)
+	^ (string_of_discrete_updates discrete_updates)
 	^ "} "
 	(* Convert the sync *)
 	^ (string_of_sync program action_index)
@@ -221,7 +221,8 @@ let string_of_program program =
 	string_of_array_of_string_with_sep ", " string_array*)
 
 (* Convert a state into a string *)
-let string_of_state program (location, linear_constraint) =
+let string_of_state (location, linear_constraint) =
+	let program = Program.get_program () in
 	"" ^ (Automaton.string_of_location program.automata_names program.location_names program.variable_names location) ^ " ==> \n" ^ (LinearConstraint.string_of_linear_constraint program.variable_names linear_constraint) ^ "" 
 
 
@@ -229,7 +230,8 @@ let string_of_state program (location, linear_constraint) =
 (** Pi0 *)
 (**************************************************)
 (* Convert a pi0 into a string *)
-let string_of_pi0 program pi0 =
+let string_of_pi0 pi0 =
+	let program = Program.get_program () in
 	"  " ^ (
 	string_of_list_of_string_with_sep "\n& " (
 		List.map (fun parameter ->

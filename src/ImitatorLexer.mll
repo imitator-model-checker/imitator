@@ -74,6 +74,7 @@ rule token = parse
 (* 	| "omit"           { CT_OMIT } *)
 	| "or"             { CT_OR }
 	| "parameter"      { CT_PARAMETER }
+	| "predicates"     { CT_PREDICATES }
 (* 	| "post"           { CT_POST } *)
 (* 	| "pre"            { CT_PRE } *)
 	| "print"          { CT_PRINT }

@@ -95,6 +95,9 @@ val make_linear_inequality_ppl : linear_term -> Ppl_ocaml.relation_symbol -> lin
 (** Check if a linear inequality is pi0-compatible *)
 val is_pi0_compatible_inequality : (variable -> coef) -> linear_inequality -> bool
 
+(** Negate a linear inequality; for an equality, raise an exception *)
+val negate_inequality : linear_inequality -> linear_inequality
+
 (** Negate a linear inequality; for an equality, perform the pi0-compatible negation *)
 val negate_wrt_pi0 : (variable -> coef) -> linear_inequality -> linear_inequality
 

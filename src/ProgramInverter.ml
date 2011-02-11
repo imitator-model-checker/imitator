@@ -299,7 +299,7 @@ let invert_transition program local_vars new_dest transition =
 		try (
 			invert_discrete_updates program.discrete discr_updates
 		) with Singular -> (
-			raise (InternalError ("discrete updates not reversible (" ^	(string_of_discrete_updates program discr_updates) ^ ")"))
+			raise (InternalError ("discrete updates not reversible (" ^	(string_of_discrete_updates discr_updates) ^ ")"))
 		) in 		
 	(* invert updates *)
 	print_message Debug_total "invert clock updates";

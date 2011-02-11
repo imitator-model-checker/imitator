@@ -357,13 +357,20 @@ let evaluate_linear_inequality valuation_function linear_inequality =
 let is_pi0_compatible_inequality pi0 linear_inequality =
 	evaluate_linear_inequality pi0 linear_inequality
 
-(** Negate a linear inequality; for an equality, perform the pi0-compatible negation *)
-let negate_wrt_pi0 pi0 linear_inequality = 
-	match linear_inequality with
+(** Negate a linear inequality *)
+let negate_inequality ineq =
+	match ineq with
 		| Less_Than (lterm, rterm) -> Greater_Or_Equal (lterm, rterm)
 		| Less_Or_Equal (lterm, rterm) -> Greater_Than (lterm, rterm)
 		| Greater_Than (lterm, rterm) -> Less_Or_Equal (lterm, rterm)
 		| Greater_Or_Equal (lterm, rterm) -> Less_Than (lterm, rterm)
+		| Equal (lterm, rterm) -> (
+			raise (InternalError "cannot negate equality")
+		)
+	
+(** Negate a linear inequality; for an equality, perform the pi0-compatible negation *)
+let negate_wrt_pi0 pi0 linear_inequality = 
+	match linear_inequality with
 		| Equal (lterm, rterm) -> (
 				(* perform the negation compatible with pi0 *)
 				let lval = evaluate_linear_term_ppl pi0 lterm in
@@ -376,6 +383,7 @@ let negate_wrt_pi0 pi0 linear_inequality =
 					raise (InternalError "Trying to negate an equality already true w.r.t. pi0")
 				)
 			)
+		| _ -> negate_inequality linear_inequality
 
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)

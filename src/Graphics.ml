@@ -328,7 +328,10 @@ let parameter_pairs pi0cube =
 
 
 (* print the cartography which correspond to the list of constraint *)
-let cartography program pi0cube constraint_list badlist nb_variables_projected cartography_name =
+let cartography constraint_list badlist nb_variables_projected cartography_name =
+	let program = Program.get_program () in
+	let pi0cube = Program.get_pi0cube () in
+	
 	(* replace strict inequalities *)
 	let new_constraint_list = List.map LinearConstraint.non_strictify constraint_list in
 
@@ -463,7 +466,9 @@ let area_of_poly vertices =
 		| _ -> 0.0
 			
 	
-let coverage program pi0cube constraint_list =
+let coverage constraint_list =
+	let pi0cube = Program.get_pi0cube () in
+	
 	(* get the (first) pair of parameters for the analysis *)
 	let x_param, y_param = List.hd (parameter_pairs pi0cube) in
 	(* build a constraint representing the rectangle v0 *)

@@ -175,6 +175,8 @@ type abstract_program = {
 	init : state;
 	(* bad states *)
 	bad  : (automaton_index * location_index) list;
+	(* initial predicates for abstraction *)
+	predicates : linear_inequality list;
 
 	(* Acyclic mode *)
 	acyclic : bool;

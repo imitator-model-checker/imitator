@@ -114,7 +114,7 @@ type bad_definition  = state_predicate list
 (** Input program *)
 (****************************************************************)
 
-type parsing_structure = variable_declarations * automata * init_definition * bad_definition
+type parsing_structure = variable_declarations * automata * init_definition * bad_definition * linear_constraint list
 
 (****************************************************************)
 (** Input pi0 *)

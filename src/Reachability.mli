@@ -14,11 +14,10 @@ open Options
 open Graph
 open LinearConstraint
 
-val create_initial_state : abstract_program -> imitator_options -> state
+val create_initial_state : unit -> state
 
-val post : abstract_program -> imitator_options -> pi0 -> reachability_graph -> state_index -> state_index list
+val post : pi0 -> reachability_graph -> state_index -> state_index list
 
-val post_star : abstract_program -> imitator_options -> pi0 -> state -> 
-					 		 reachability_graph * linear_constraint * int * float
+val post_star : pi0 -> state -> reachability_graph * linear_constraint * int * float
 	
 val print_stats: unit -> unit

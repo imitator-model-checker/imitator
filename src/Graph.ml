@@ -76,7 +76,8 @@ let get_state graph state_index =
 	DynArray.get graph.states state_index 
 
 (** Return the list of all constraints on the parameters associated to the states of a graph *)
-let all_p_constraints program graph =
+let all_p_constraints graph =
+	let program = Program.get_program () in
 	DynArray.fold_left
 		(fun current_list (_, linear_constraint) ->
 			let p_constraint = LinearConstraint.hide program.clocks_and_discrete linear_constraint in
@@ -88,7 +89,8 @@ let iter f graph =
 	DynArray.iter f graph.states
 
 (** Compute the intersection of all parameter constraints, DESTRUCTIVE!!! *)
-let compute_k0_destructive program graph =
+let compute_k0_destructive graph =
+	let program = Program.get_program () in
 	let k0 = LinearConstraint.true_constraint () in
 	iter (fun (_, constr) -> 
 		LinearConstraint.hide_assign program.clocks_and_discrete constr;
@@ -109,7 +111,8 @@ module StateSet = Set.Make(State)
 (* Uses a depth first search on the reachability graph. The *)
 (* prefix of the current DFS path is kept during the search *)
 (* in order to detect cycles. *) 
-let last_states program graph =
+let last_states graph =
+	let program = Program.get_program () in
 	(* list to keep the resulting last states *)
 	let last_states = ref [] in
 	(* Table to keep all states already visited during DFS *)
@@ -175,7 +178,8 @@ let forall_state p graph =
 		) with Satisfied -> false		
 									
 (** Check if bad states are reachable *)
-let is_bad program graph =
+let is_bad graph =
+	let program = Program.get_program () in
 	(* get bad state pairs from program *)
 	let bad_states = program.bad in
 	(* if no bad state specified, then must be good *)
@@ -229,7 +233,8 @@ let insert_state graph hash new_state =
 
 
 (** Add a state to a graph, if it is not present yet *)
-let add_state program graph new_state =
+let add_state graph new_state =
+	let program = Program.get_program () in
 	(* compute hash value for the new state *)
 	let hash = hash_code new_state in
 	if debug_mode_greater Debug_total then (
@@ -268,97 +273,6 @@ let add_state program graph new_state =
 (** Add a transition to the graph *)
 let add_transition reachability_graph (orig_state_index, action_index, dest_state_index) =
 	Hashtbl.add reachability_graph.transitions_table (orig_state_index, action_index) dest_state_index
-
-
-(** shrink the graph by removing tau transitions *)
-let shrink program graph =
-	(* new graph *)
-	let g = make 0 in
-	(* index of tau transition *)
-	let tau = ref (-1) in
-	List.iter (fun action_index -> 
-		let action_name = program.action_names action_index in
-		if action_name = "tau" then tau := action_index 		
-	) program.actions;
-	let tau = !tau in
-	if tau = -1 then
-		g
-	else (
-		(* build reverse transition table for bidirectional traversal *)
-		let rev_transitions_table = Hashtbl.create (Hashtbl.length graph.transitions_table) in
-		Hashtbl.iter (fun (src, action) dest -> 
-			Hashtbl.add rev_transitions_table (dest, action) src
-		) graph.transitions_table;
-		(* table for mapping nodes to new nodes *)
-		let node_map = Hashtbl.create 0 in
-		(* function to find all non-tau successors of a state *)
-		let successors node = 
-			List.fold_left (fun succs action_index ->
-				if action_index = tau then
-					succs 
-				else try (
-					let succ = Hashtbl.find_all graph.transitions_table (node, action_index) in
-					List.rev_append (List.map (fun succ -> (succ, action_index)) succ) succs 
-				) with Not_found -> succs
-			) [] program.actions in	
-		(* get tau successors of a node *)
-		let tau_successors node = 
-			try (
-				Hashtbl.find_all graph.transitions_table (node, tau)
-			) with Not_found -> [] in
-		(* get tau predecessors *)
-		let tau_predecessors node =
-			try (
-				Hashtbl.find_all rev_transitions_table (node, tau)
-			) with Not_found -> [] in
-		(* collect transitive tau closure *)
-		let rec tau_closure node closure =
-			let tsucc = tau_successors node in
-			let fwd_cls = List.fold_left (fun closure succ -> 
-				if StateSet.mem succ closure then
-					closure
-				else
-					let rcl = tau_closure succ (StateSet.add succ closure) in 
-					StateSet.union closure rcl					
-			) closure tsucc in
-			let tpred = tau_predecessors node in
-			List.fold_left (fun closure pred -> 
-				if StateSet.mem pred closure then
-					closure
-				else
-					let rcl = tau_closure pred (StateSet.add pred closure) in 
-					StateSet.union closure rcl									
-			) (StateSet.union closure fwd_cls) tpred in 
-		(* build new graph *)	
-		let rec shrink_node node =
-			(* already mapped to a new node? *)
-			if Hashtbl.mem node_map node then
-				Hashtbl.find node_map node
-			else (
-				(* build a new node *)
-				let state = get_state graph node in
-				let new_node = insert_state g (hash_code state) state in				
-				let siblings = tau_closure node (StateSet.singleton node) in
-				(* register new node *)
-				StateSet.iter (fun node -> 
-					Hashtbl.add node_map node new_node;	
-				) siblings;
-				(* construct successors *)				
-				let succs = List.flatten (List.map successors (StateSet.elements siblings)) in
-				let new_succs = List.map (fun (succ, action_index) -> 
-					let new_succ = shrink_node succ in
-					(new_succ, action_index)
-				) succs in
-				(* insert new transitions *)
-				List.iter (fun (new_succ, action_index) -> 
-					add_transition g (new_node, action_index, new_succ);
-					print_message Debug_standard ((string_of_int new_node) ^ " --> " ^ (string_of_int new_succ))
-				) new_succs;
-				new_node
-			) in
-		shrink_node 0;
-		g
-	)
 
 
 (** Add an inequality to all the states of the graph *)
@@ -541,7 +455,12 @@ let shuffle_dot_colors =
 
 
 (* Convert a graph to a dot file *)
-let dot_of_graph program pi0 reachability_graph ~fancy =	
+let dot_of_graph reachability_graph =
+	let program = Program.get_program () in
+	let pi0     = Program.get_pi0 () in
+	let options = Program.get_options () in
+	let fancy   = options#fancy in 
+			
 	let states = reachability_graph.states in
 	let transitions = reachability_graph.transitions_table in
 	(* Create the array of dot colors *)
@@ -560,7 +479,7 @@ let dot_of_graph program pi0 reachability_graph ~fancy =
 		^ "\n * File automatically generated for file '" ^ program.program_name ^ "'"
 		^ (if program.imitator_mode = Reachability_analysis then "\n * Reachability analysis" else (
 			"\n * The following pi0 was considered:"
-			^ "\n" ^ (ImitatorPrinter.string_of_pi0 program pi0)
+			^ "\n" ^ (ImitatorPrinter.string_of_pi0 pi0)
 		))
 		^ "\n * " ^ (string_of_int (DynArray.length states)) ^ " states and "
 			^ (string_of_int (Hashtbl.length transitions)) ^ " transitions"
@@ -580,7 +499,7 @@ let dot_of_graph program pi0 reachability_graph ~fancy =
 			string_states := !string_states
 				(* Add the state *)
 				^ "\n\n\n  STATE " ^ (string_of_int state_index) ^ ":"
-				^ "\n  " ^ (ImitatorPrinter.string_of_state program state)
+				^ "\n  " ^ (ImitatorPrinter.string_of_state state)
 				(* Add the constraint with no clocks (option only) *)
 				^ (if program.with_parametric_log then (
 					(* Get the constraint *)

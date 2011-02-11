@@ -51,7 +51,8 @@ let print_stats _ =
 (*--------------------------------------------------*)
 (* Compute the invariant associated to a location   *)
 (*--------------------------------------------------*)
-let compute_plain_invariant program location =
+let compute_plain_invariant location =
+	let program = Program.get_program () in
   (* construct invariant *)
 	let invariants = List.map (fun automaton_index ->
 		(* Get the current location *)
@@ -64,10 +65,10 @@ let compute_plain_invariant program location =
 
 
 (*--------------------------------------------------*)
-(* Compute the invariant associated to a location,  *)
-(* including renaming and time elapse. Uses cache.  *)
+(* Compute the invariant associated to a location.  *)
+(* Uses cache.                                      *)
 (*--------------------------------------------------*)
-let compute_invariant program location =
+let compute_invariant location =
 	(* strip off discrete for caching scheme *)
 	let locations = Automaton.get_locations location in
 	(* check in cache *)
@@ -76,7 +77,7 @@ let compute_invariant program location =
 		| Some inv -> inv
 		| None -> (
 			(* build plain invariant *)
-			let invariant = compute_plain_invariant program location in
+			let invariant = compute_plain_invariant location in
 			(* Store in cache *)
 			Cache.store inv_cache locations invariant;
 			invariant
@@ -86,7 +87,8 @@ let compute_invariant program location =
 (*--------------------------------------------------*)
 (* Instantiate the flow for a given location        *)
 (*--------------------------------------------------*)
-let compute_flow program location =
+let compute_flow location =
+	let program = Program.get_program () in
 	(* strip off discrete for caching scheme *)
 	let locations = Automaton.get_locations location in
 	(* check in cache *)
@@ -155,7 +157,8 @@ let instantiate_discrete discrete_values =
 (*--------------------------------------------------*)
 (* get the affine dimensions of a flow              *)
 (*--------------------------------------------------*)
-let affine_dimensions program invariant flow =
+let affine_dimensions invariant flow =
+	let program = Program.get_program () in
 	(* find affine variables *)
 	let support = LinearConstraint.support flow in
 	let affine_vars = VariableSet.elements (
@@ -178,9 +181,12 @@ exception Last_item
 exception Unbounded
 
 
-let affine_time_elapse program options location invariant deriv constr = 
+let affine_time_elapse location invariant deriv constr =
+	let program = Program.get_program () in
+	let options = Program.get_options () in	
+	 
 	(* find affine dimensions *)
-	let affine_dim = affine_dimensions program invariant deriv in
+	let affine_dim = affine_dimensions invariant deriv in
 	let affine_vars = List.map (fun (v,_,_) -> v) affine_dim in
 	let n = List.length affine_dim in
 	List.iter (fun (v, min, max) -> 
@@ -213,7 +219,7 @@ let affine_time_elapse program options location invariant deriv constr =
 	
 	(* add variable indices to bounds vector *)
 	let extended_bounds = List.map2 (fun v (min, max) -> (v,min,max)) affine_vars in  
-	
+			
 	(* compute the linearized/rectangularized flow for a partition *)
 	let rectangular_flow bounds =
 		(* bound affine dimensions for this partition *)
@@ -225,7 +231,7 @@ let affine_time_elapse program options location invariant deriv constr =
 		(* map to X space *)
 		LinearConstraint.rename_variables_assign program.unrenamed_clocks_couples p_invariant;
 		(* remove primed clocks *)
-		LinearConstraint.hide_assign program.renamed_clocks p_invariant;
+		LinearConstraint.hide_assign program.renamed_clocks p_invariant;		
 		p_invariant in
 
 	(* compute admissible neighbors of a partition, wrt. rectangular flow *)
@@ -429,33 +435,32 @@ let affine_time_elapse program options location invariant deriv constr =
 	(* store partition info in cache *)
 	Cache.store part_cache locations (partitions, info);
 				
-	(* return convex hull *)
+	(* function to overapproximate a polyhedron by an octagon *)
 	let octagonalize constr = 
 		let octa = Ppl_ocaml.ppl_new_Octagonal_Shape_mpq_class_from_NNC_Polyhedron constr in
 		Ppl_ocaml.ppl_new_NNC_Polyhedron_from_Octagonal_Shape_mpq_class octa in
-		
+	
+	(* function to overapproximate a polyhedron by a bounded difference shape *)		
 	let simplify_constr constr =
 		let bd = Ppl_ocaml.ppl_new_BD_Shape_mpq_class_from_NNC_Polyhedron constr in
 		Ppl_ocaml.ppl_new_NNC_Polyhedron_from_BD_Shape_mpq_class bd in
 				
-	(* octagonalize reachable states *)
+	(* compute convex hull *)
 	let regions = Hashtbl.fold (fun _ s octas ->
 		s :: octas
 	) states [] in
-
-(*	let regions = Hashtbl.fold (fun _ s regions -> s :: regions) states [] in*)
 	
 	print_message Debug_low ("Compute convex hull of " ^ (string_of_int (List.length regions)) ^ " local states...");
 	LinearConstraint.hull regions
 
 
 	
-	
 
 (*--------------------------------------------------*)
 (* Compute the time elapse for a location           *)
 (*--------------------------------------------------*)
-let compute_time_elapse program options location invariant flow constr =
+let compute_time_elapse location invariant flow constr =
+	let program = Program.get_program () in
 	let elapsed =
 	match flow with
 		| Undefined -> raise (InternalError "undefined flow")
@@ -465,7 +470,7 @@ let compute_time_elapse program options location invariant flow constr =
 			LinearConstraint.time_elapse constr x_deriv
 			)
 		| Affine deriv -> (			
-			affine_time_elapse program options location invariant deriv constr
+			affine_time_elapse location invariant deriv constr
 		) in
 	elapsed
 		
@@ -474,14 +479,16 @@ let compute_time_elapse program options location invariant flow constr =
 (*--------------------------------------------------*)
 (* Compute the initial state with the initial invariants and time elapsing *)
 (*--------------------------------------------------*)
-let create_initial_state program options =
+let create_initial_state _ =
+	let program = Program.get_program () in
+	
 	(* Get the declared init state with initial constraint C_0(X) *)
 	let initial_location, init_constraint = program.init in
 	
 	(* Compute the invariants I_q0(X) for the initial locations *)
 	print_message Debug_high ("\nComputing initial invariant I_q0(X)");
 	(* Create the invariant *)
-	let invariant = compute_invariant program initial_location in
+	let invariant = compute_invariant initial_location in
 	(* Debug *)
 	if debug_mode_greater Debug_total then print_message Debug_total (LinearConstraint.string_of_linear_constraint program.variable_names invariant);
 		
@@ -504,8 +511,8 @@ let create_initial_state program options =
 	
 	(* let time elapse *)
 	print_message Debug_high ("Let time elapse");
-	let deriv = compute_flow program initial_location in
-	let full_constraint = compute_time_elapse program options initial_location invariant deriv full_constraint in
+	let deriv = compute_flow initial_location in
+	let full_constraint = compute_time_elapse initial_location invariant deriv full_constraint in
 	(* Debug *)
 	if debug_mode_greater Debug_total then print_message Debug_total (LinearConstraint.string_of_linear_constraint program.variable_names full_constraint);	
 
@@ -530,7 +537,8 @@ let create_initial_state program options =
 (*--------------------------------------------------*)
 (* Compute a list of possible actions for a state   *)
 (*--------------------------------------------------*)
-let compute_possible_actions program original_location = 
+let compute_possible_actions original_location =
+	let program = Program.get_program () in 
 	(* Create a boolean array for the possible actions *)
 	let possible_actions = Array.make program.nb_actions false in
 	(* Fill it with all the possible actions per location *)
@@ -593,7 +601,8 @@ let compute_possible_actions program original_location =
 (*------------------------------------------------------------------*)
 (* returns the new location, the guards, the updates                *)
 (*------------------------------------------------------------------*)
-let compute_new_location program aut_table trans_table action_index original_location =
+let compute_new_location aut_table trans_table action_index original_location =
+	let program = Program.get_program () in
   (* copy location *)
 	let location = Automaton.copy_location original_location in
 	(* Create a temporary hashtbl for discrete values *)
@@ -669,7 +678,8 @@ let compute_new_location program aut_table trans_table action_index original_loc
 (* returns a couple of constraints, representing the updated  *)
 (* and the non-updated clocks                                 *)
 (*------------------------------------------------------------*)
-let compute_updates program updated_continuous clock_updates =
+let compute_updates updated_continuous clock_updates =
+	let program = Program.get_program () in
 	(* Compute X' = rho(X) *)
 	print_message Debug_total ("\nComputing clock updates mu(X,X')");
  	(* get non-involved (thus stable) local variables *)
@@ -699,7 +709,8 @@ let compute_updates program updated_continuous clock_updates =
 (* guards          : guard constraints per automaton*)
 (* clock_updates   : updated clock variables        *)
 (*--------------------------------------------------*)
-let compute_new_constraint program options orig_constraint orig_location dest_location guards updated_continuous clock_updates =
+let compute_new_constraint orig_constraint orig_location dest_location guards updated_continuous clock_updates =
+	let program = Program.get_program () in
 	(* the constraint is checked on the fly for satisfyability -> exception mechanism *)
 	try ( 
 		print_message Debug_total ("\nComputing equalities for discrete variables (previous values)");
@@ -740,11 +751,11 @@ let compute_new_constraint program options orig_constraint orig_location dest_lo
 		);
 		
 		print_message Debug_total ("\nComputing clock updates X' = rho(X) + d");
-		let updates = compute_updates program updated_continuous clock_updates in
+		let updates = compute_updates updated_continuous clock_updates in
 
 		(* Compute the invariant in the destination location *)
 		print_message Debug_total ("\nComputing invariant I_q(X) ");
-		let invariant = compute_invariant program dest_location in
+		let invariant = compute_invariant dest_location in
 		(* Debug print *)
 		if debug_mode_greater Debug_total then(
 			print_message Debug_total (LinearConstraint.string_of_linear_constraint program.variable_names invariant);
@@ -813,8 +824,8 @@ let compute_new_constraint program options orig_constraint orig_location dest_lo
 		
 		(* let time elapse *)
 		print_message Debug_total ("\nLet time elapse");
-		let deriv = compute_flow program dest_location in
-		let new_constraint = compute_time_elapse program options dest_location invariant deriv new_constraint in						 
+		let deriv = compute_flow dest_location in
+		let new_constraint = compute_time_elapse dest_location invariant deriv new_constraint in						 
 		if debug_mode_greater Debug_total then(
 			print_message Debug_total (LinearConstraint.string_of_linear_constraint program.variable_names new_constraint);
 			if not (LinearConstraint.is_satisfiable new_constraint) then
@@ -881,7 +892,9 @@ let next_combination combination max_indexes =
 (*-----------------------------------------------------*)
 (* returns true iff the state is pi0-compatible        *)
 (*-----------------------------------------------------*)
-let inverse_method_check_constraint program pi0 reachability_graph constr =			
+let inverse_method_check_constraint pi0 reachability_graph constr =
+	let program = Program.get_program () in
+							
 	(* Hide non parameters (X) *)
 	print_message Debug_high ("\nHiding non parameters:");
 	let p_constraint = LinearConstraint.hide program.clocks_and_discrete constr in
@@ -949,7 +962,8 @@ let inverse_method_check_constraint program pi0 reachability_graph constr =
 (* returns a bool, indicating iff at least one legal     *)
 (* combination exists.                                   *)
 (*-------------------------------------------------------*)
-let compute_transitions program location constr action_index automata aut_table max_indexes possible_transitions  =
+let compute_transitions location constr action_index automata aut_table max_indexes possible_transitions  =
+	let program = Program.get_program () in
 	let current_index = ref 0 in 
 	(* Stop computation as soon as one automaton has no legal transition left. *)
 	try (
@@ -1002,7 +1016,9 @@ let compute_transitions program location constr action_index automata aut_table 
 (*-----------------------------------------------------*)
 (* returns a list of (really) new states               *)
 (*-----------------------------------------------------*)
-let post program options pi0 reachability_graph orig_state_index =
+let post pi0 reachability_graph orig_state_index =
+	let program = Program.get_program () in
+	
 	(* Original location: static *)
 	let original_location, _ = Graph.get_state reachability_graph orig_state_index in
 	(* Dynamic version of the orig_constraint (can change!) *)
@@ -1017,13 +1033,13 @@ let post program options pi0 reachability_graph orig_state_index =
 		let _, orig_constraint = orig_state in
 		let orig_constraint_projection = LinearConstraint.hide program.clocks_and_discrete orig_constraint in
 		print_message Debug_high ("Performing post from state:");
-		print_message Debug_high (string_of_state program orig_state);
+		print_message Debug_high (string_of_state orig_state);
 		print_message Debug_high ("\nThe projection of this constraint onto the parameters is:");
 		print_message Debug_high (LinearConstraint.string_of_linear_constraint program.variable_names orig_constraint_projection);
 	);
 
 	(* get possible actions originating from current state *)
-	let list_of_possible_actions = compute_possible_actions program original_location in
+	let list_of_possible_actions = compute_possible_actions original_location in
 
 	(* Debug print *)
 	if debug_mode_greater Debug_high then (
@@ -1067,7 +1083,7 @@ let post program options pi0 reachability_graph orig_state_index =
 		let current_transitions = Array.make nb_automata_for_this_action 0 in
 		
 		(* compute the possible combinations of transitions *)
-		let legal_transitions_exist = compute_transitions program original_location orig_plus_discrete action_index automata_for_this_action real_indexes max_indexes possible_transitions in 
+		let legal_transitions_exist = compute_transitions original_location orig_plus_discrete action_index automata_for_this_action real_indexes max_indexes possible_transitions in 
 	
 		(* Debug: compute the number of combinations *)
 		if legal_transitions_exist && (debug_mode_greater Debug_medium) then(
@@ -1093,10 +1109,10 @@ let post program options pi0 reachability_graph orig_state_index =
 			done; 
 	
 			(* Compute the new location for the current combination of transitions *)
-			let location, guards, updated_continuous, clock_updates = compute_new_location program real_indexes current_transitions action_index original_location in
+			let location, guards, updated_continuous, clock_updates = compute_new_location real_indexes current_transitions action_index original_location in
 			
 			(* Compute the new constraint for the current transition *)
-			let new_constraint = compute_new_constraint program options orig_constraint original_location location guards updated_continuous clock_updates in
+			let new_constraint = compute_new_constraint orig_constraint original_location location guards updated_continuous clock_updates in
 	
 			(* Check the satisfiability *)
 			let _ = match new_constraint with
@@ -1110,7 +1126,7 @@ let post program options pi0 reachability_graph orig_state_index =
 						if program.imitator_mode = Reachability_analysis then ( 
 							true
 						) else (
-							inverse_method_check_constraint program pi0 reachability_graph final_constraint
+							inverse_method_check_constraint pi0 reachability_graph final_constraint
 						) in
 						
 						if add_new_state then (				
@@ -1119,12 +1135,12 @@ let post program options pi0 reachability_graph orig_state_index =
 			
 							(* Debug print *)
 							if debug_mode_greater Debug_total then(
-								print_message Debug_total ("Consider the state \n" ^ (string_of_state program new_state));
+								print_message Debug_total ("Consider the state \n" ^ (string_of_state new_state));
 							);
 							
 							(* Add this new state *)
 							(* Try to add the state to the graph // with the p-constraint ????? *)
-							let new_state_index, added = Graph.add_state program reachability_graph new_state in
+							let new_state_index, added = Graph.add_state reachability_graph new_state in
 							(* If this is really a new state *)
 							if added then (
 								(* Add the state_index to the list of new states *)
@@ -1136,7 +1152,7 @@ let post program options pi0 reachability_graph orig_state_index =
 							if debug_mode_greater Debug_high then (
 								let beginning_message = (if added then "NEW STATE" else "Old state") in
 								print_message Debug_high ("\n" ^ beginning_message ^ " reachable through action '" ^ (program.action_names action_index) ^ "': ");
-								print_message Debug_high (string_of_state program new_state);
+								print_message Debug_high (string_of_state new_state);
 							);
 						); (* end if pi0 incompatible *)
 					); (* end if satisfiable *)	)
@@ -1158,7 +1174,10 @@ let post program options pi0 reachability_graph orig_state_index =
 (*---------------------------------------------------*)
 (* Compute the reachability graph from a given state *)
 (*---------------------------------------------------*)
-let post_star program options pi0 init_state =	
+let post_star pi0 init_state =
+	let program = Program.get_program () in
+	let options = Program.get_options () in
+			
 	(* Time counter *)
 	let counter = ref (Unix.gettimeofday()) in
 	(* copy init state, as it might be destroyed later *)
@@ -1170,7 +1189,7 @@ let post_star program options pi0 init_state =
 	let nb_automata = program.nb_automata in
 	(* Debut prints *)
 	print_message Debug_low ("Performing reachability analysis from state:");
-	print_message Debug_low (string_of_state program init_state);
+	print_message Debug_low (string_of_state init_state);
 	(* Guess the number of reachable states *)
 	let guessed_nb_states = 10 * (nb_actions + nb_automata + nb_variables) in 
 	let guessed_nb_transitions = guessed_nb_states * nb_actions in 
@@ -1179,7 +1198,7 @@ let post_star program options pi0 init_state =
 	let reachability_graph = Graph.make guessed_nb_transitions in
 	
 	(* Add the initial state to the reachable states *)
-	let init_state_index, _ = Graph.add_state program reachability_graph init_state in
+	let init_state_index, _ = Graph.add_state reachability_graph init_state in
 
 	(* initialize global constraint K *)
 	global_k := LinearConstraint.true_constraint ();
@@ -1213,7 +1232,7 @@ let post_star program options pi0 init_state =
 				(* Count the states for debug purpose: *)
 				num_state := !num_state + 1;
 				(* Perform the post *)
-				let post = post program options pi0 reachability_graph orig_state_index in
+				let post = post pi0 reachability_graph orig_state_index in
 				let new_states = post in
 				(* Debug *)
 				if debug_mode_greater Debug_medium then (
