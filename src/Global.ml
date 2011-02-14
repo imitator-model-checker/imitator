@@ -37,6 +37,8 @@ exception ParsingError of (int * int)
 type imitator_mode =
 	(** Classical parametric reachability analysis *)
 	| Reachability_analysis
+	(** Reachability using predicate abstraction *)
+	| AbstractReachability
 	(** Classical inverse method *)
 	| Inverse_method
 	(** Cover the whole cartography *)
@@ -77,10 +79,6 @@ let global_debug_mode = ref Debug_mode_not_set
 
 let timed_mode = ref false
 
-
-(*(* Return true if debug1 >= debug2, false otherwise *)
-let debug_mode_greater debug1 debug2 =
-	(level_of_debug debug1) >= (level_of_debug debug2)*)
 
 (* Return true if the global debug mode is greater than 'debug_mode', false otherwise *)
 let debug_mode_greater debug_mode =

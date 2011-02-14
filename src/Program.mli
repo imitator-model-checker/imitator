@@ -1,4 +1,5 @@
 open AbstractImitatorFile
+open Graph
 open Options
 
 val get_program: unit -> abstract_program
@@ -12,3 +13,10 @@ val set_pi0cube: pi0cube -> unit
 
 val get_options: unit -> imitator_options
 val set_options: imitator_options -> unit
+
+val get_reachability_graph: unit -> reachability_graph
+val set_reachability_graph: reachability_graph -> unit
+
+val get_abstract_reachability_graph: unit -> abstract_reachability_graph
+val set_abstract_reachability_graph: abstract_reachability_graph -> unit
+

@@ -233,6 +233,8 @@ let cover_behavioral_cartography program pi0cube init_state =
 	while !more_pi0 && not !limit_reached do
 		(* functional version of current pi0 *)
 		let pi0 = fun parameter -> current_pi0.(parameter) in
+		(* store in global table *)
+		Program.set_pi0 pi0;
 		
 		(* Check that it does not belong to any constraint *)
 		if dynArray_exists (LinearConstraint.is_pi0_compatible pi0) results then (
@@ -260,12 +262,12 @@ let cover_behavioral_cartography program pi0cube init_state =
 			if not (debug_mode_greater Debug_medium) then
 				set_debug_mode Debug_nodebug;
 			(* Compute the post and the constraint *)
-			let graph, k, nb_iterations, counter = Reachability.post_star pi0 init_state in
+			let graph, k, nb_iterations, counter = Reachability.post_star init_state in
 			(* Get the debug mode back *)
 			set_debug_mode global_debug_mode;
 			(* Update the counters *)
 			nb_states := !nb_states + (Graph.nb_states graph);
-			nb_transitions := !nb_transitions + (Hashtbl.length (graph.transitions_table));
+			nb_transitions := !nb_transitions + (Graph.nb_transitions graph);
 			(* Print message *)
 			print_message Debug_standard (
 				"\nK" ^ (string_of_int (!current_iteration)) ^ " computed using algorithm InverseMethod after "
@@ -273,7 +275,7 @@ let cover_behavioral_cartography program pi0cube init_state =
 				^ " in " ^ (string_of_seconds (time_from counter)) ^ ": "
 				^ (string_of_int (Graph.nb_states graph)) ^ " reachable state" ^ (s_of_int (Graph.nb_states graph))
 				^ " with "
-				^ (string_of_int (Hashtbl.length (graph.transitions_table))) ^ " transition" ^ (s_of_int (Hashtbl.length (graph.transitions_table))) ^ ".");
+				^ (string_of_int (Graph.nb_transitions graph)) ^ " transition" ^ (s_of_int (Graph.nb_transitions graph)) ^ ".");
 			
 			let k0 = Graph.compute_k0_destructive graph in
 			LinearConstraint.intersection_assign k0 [k];
@@ -414,6 +416,8 @@ let random_behavioral_cartography program pi0cube init_state nb =
 		) else (
 			(* Convert the pi0 to a functional representation *)
 			let pi0_functional = fun parameter -> pi0.(parameter) in
+			(* store in global table *)
+			Program.set_pi0 pi0_functional;
 
 			(* Check that it does not belong to any constraint *)
 			if array_exists (LinearConstraint.is_pi0_compatible pi0_functional) results then (
@@ -435,7 +439,7 @@ let random_behavioral_cartography program pi0cube init_state nb =
 					set_debug_mode Debug_nodebug;
 				);
 				(* Compute the post *)
-				let graph, k, nb_iterations, counter = Reachability.post_star pi0_functional init_state in
+				let graph, k, nb_iterations, counter = Reachability.post_star init_state in
 				(* Get the debug mode back *)
 				set_debug_mode global_debug_mode;
 				print_message Debug_standard (
@@ -444,7 +448,7 @@ let random_behavioral_cartography program pi0cube init_state nb =
 					^ " in " ^ (string_of_seconds (time_from counter)) ^ ": "
 					^ (string_of_int (Graph.nb_states graph)) ^ " reachable state" ^ (s_of_int (Graph.nb_states graph))
 					^ " with "
-					^ (string_of_int (Hashtbl.length (graph.transitions_table))) ^ " transition" ^ (s_of_int (Hashtbl.length (graph.transitions_table))) ^ ".");
+					^ (string_of_int (Graph.nb_transitions graph)) ^ " transition" ^ (s_of_int (Graph.nb_transitions graph)) ^ ".");
 
 				let k0 = Graph.compute_k0_destructive graph in
 				LinearConstraint.intersection_assign k0 [k];
@@ -766,20 +770,20 @@ let astates = PredicateAbstraction.get_abstract_states program.predicates init_l
 List.iter (fun state -> 
 	print_message Debug_standard ("abstract state: " ^ 
 		(PredicateAbstraction.string_of_abstract_state state));
-	let concr = PredicateAbstraction.concretize program.predicates state in
-	print_message Debug_standard ("concrete state: " ^
-		(string_of_state concr));  
+	let csucc = PredicateAbstraction.continuous_successors program.predicates state in
+	List.iter (fun s -> 
+		print_message Debug_standard ("  --> " ^ 
+			(PredicateAbstraction.string_of_abstract_state s));		
+	) csucc;	
 ) astates;
 
-
-Sys.set_signal Sys.sigttou (Sys.Signal_handle (fun i -> print_message Debug_standard "Hello world!"));
 
 let _ =
 match options#imitator_mode with
 	(* Perform reachability analysis or inverse Method *)
 	| Reachability_analysis | Inverse_method -> 
 		let reachability_graph, k, _, _ =
-				Reachability.post_star pi0 init_state_after_time_elapsing
+				Reachability.post_star init_state_after_time_elapsing
 		in
 				
 		(* Plot all reachable states projected on the selected variables *)
@@ -812,6 +816,5 @@ in ();
 (**************************************************)
 (* Bye bye! *)
 (**************************************************)
-(* flush stdout; *)
 
 terminate_program()

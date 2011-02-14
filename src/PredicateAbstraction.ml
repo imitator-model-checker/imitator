@@ -3,9 +3,6 @@ open LinearConstraint
 open Automaton
 open AbstractImitatorFile
 
-type abstract_state  = location * bool list
-type predicate = linear_inequality
-
 
 let string_of_signature =
 	List.fold_left (fun s p -> 
@@ -84,4 +81,20 @@ let get_abstract_states preds loc =
 			LinearConstraint.is_satisfiable inv
 		) invs
 	) 
+
+		
+(** compute continuous successors of an abstract state *)
+let continuous_successors preds astate =
+	let cstate = concretize	preds astate in
+	let elapse = Reachability.time_elapse cstate in
+	let loc, b = astate in
+	let astates = get_abstract_states preds loc in
+	List.filter (fun s -> 
+		let _, c = concretize preds s in
+		LinearConstraint.is_satisfiable (LinearConstraint.intersection [elapse; c])
+	) astates
+
+	
+
+
 

@@ -1,100 +1,86 @@
-(*****************************************************************
- *
- *                     IMITATOR II
- *
- * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
- * Author:        Etienne Andre
- * Created:       2009/12/08
- * Last modified: 2010/03/25
- *
- ****************************************************************)
-
-
-open AbstractImitatorFile
+open Global
 open LinearConstraint
+open Automaton
+open AbstractImitatorFile
 
-(****************************************************************)
-(** Graph structure *)
-(****************************************************************)
 type state_index = int
+type 's graph_state = Automaton.location * 's
+type 'l graph_transition = state_index * 'l * state_index
 
-type reachability_graph = {
-(*	(** A hashtable 'state' -> 'state_index' *)
-	states : (AbstractImitatorFile.state, state_index) Hashtbl.t;
-*)
-	(** An Array 'state_index' -> 'state' *)
-	states : AbstractImitatorFile.state DynArray.t;
-	
-	(** A hashtable to quickly find identical states *)
-	hash_table : (int, state_index) Hashtbl.t;
+(** The type of the reachability graph is parameterized over
+		the types of the constraints and the transition labels *)
+type ('s, 'l) t
 
-	(** A hashtable '(state_index, action_index)' -> 'dest_state_index' *)
-	transitions_table : ((state_index * AbstractImitatorFile.action_index), state_index) Hashtbl.t;
-	
-	(** A constraint shared by all states *)
-(*	mutable shared_constraint : LinearConstraint.linear_constraint;*)
-}
 
-(****************************************************************)
-(** Graph creation *)
-(****************************************************************)
+(** Construct a new graph, given the estimated number of nodes
+		and a predicate for testing if a constraint is included in 
+		another one *)
+val make: int -> ('s -> 's -> bool) -> ('s, 'l) t
 
-(** Create a fresh graph *)
-val make : int -> reachability_graph
 
+(** Type alias for symbolic reachabiliy graph *)
+type reachability_graph = (linear_constraint, action_index) t
+
+(** Type alias for abstract reachability graph *)
+type abstract_reachability_graph = (predicate list, abstract_label) t
+	 
 
 (****************************************************************)
-(** Interrogation on a graph *)
+(** Generic interface *)
 (****************************************************************)
 
 (** Return the number of states in a graph *)
-val nb_states : reachability_graph -> int
+val nb_states : ('s, 'l) t -> int
+
+(** Return the number of transitions in a graph *)
+val nb_transitions : ('s, 'l) t -> int
 
 (** Return the state of a state_index *)
-val get_state : reachability_graph -> int -> AbstractImitatorFile.state
-
-(** Return the list of all constraints on the parameters associated to the states of a graph *)
-val all_p_constraints : reachability_graph -> LinearConstraint.linear_constraint list
-
-(** Returns the intersection of all parameter constraints, thereby destroying all constraints *)
-val compute_k0_destructive : reachability_graph -> LinearConstraint.linear_constraint
+val get_state : ('s, 'l) t -> state_index -> 's graph_state
 
 (** iterates over the reachable states of a graph *)
-val iter: (AbstractImitatorFile.state -> unit) -> reachability_graph -> unit
+val iter: ('s graph_state -> unit) -> ('s, 'l) t -> unit
 
 (** test if a state exists satisfying predicate s *)
-val exists_state: (AbstractImitatorFile.state -> bool) -> reachability_graph -> bool
+val exists_state: ('s graph_state -> bool) -> ('s, 'l) t -> bool
 
 (** test if all states satisfy predicate s *)
-val forall_state: (AbstractImitatorFile.state -> bool) -> reachability_graph -> bool
+val forall_state: ('s graph_state -> bool) -> ('s, 'l) t -> bool
 
 (** find all "last" states on finite or infinite runs *)
-val last_states: reachability_graph -> int list 
+val last_states: ('s, 'l) t -> state_index list 
+
+(** Add a state to a graph: return (state_index, added), where state_index
+ is the index of the state, and 'added' is false if the state was already 
+ in the graph, true otherwise *)
+val add_state : ('s, 'l) t -> 's graph_state -> (state_index * bool)
+
+(** Add a transition to the graph *)
+val add_transition : ('s, 'l) t -> (state_index * 'l * state_index) -> unit
+
+(** Convert a reachability graph to a dot file *)
+(*val dot_of_graph : ('s, 'l) t -> (string * string)*)
+
+
+(****************************************************************)
+(** Specialized interface for reachability_graph *)
+(****************************************************************)
+
+(** Return the list of all constraints on the parameters associated to the states of a graph *)
+val all_p_constraints : reachability_graph -> linear_constraint list
+
+(** Returns the intersection of all parameter constraints, thereby destroying all constraints *)
+val compute_k0_destructive : reachability_graph -> linear_constraint
 
 (** check if bad states are reached *)
 val is_bad: reachability_graph -> bool
 
-
-(****************************************************************)
-(** Actions on a graph *)
-(****************************************************************)
-
-(** Add a state to a graph: return (state_index, added), where state_index is the index of the state, and 'added' is false if the state was already in the graph, true otherwise *)
-val add_state : reachability_graph -> state -> (state_index * bool)
-
-(** Add a transition to the graph *)
-val add_transition : reachability_graph -> (state_index * action_index * state_index) -> unit
-
 (** Add an inequality to all the states of the graph *)
-val add_inequality_to_states : reachability_graph -> LinearConstraint.linear_inequality -> unit
+val add_inequality_to_states : reachability_graph -> linear_inequality -> unit
 
 (** Plot reachable states projected to the given two variables *)
 val plot_graph : variable -> variable -> reachability_graph -> string
 
-(****************************************************************)
-(** Interaction with dot *)
-(****************************************************************)
-
-(** Convert a graph to a dot file *)
+(** Convert a reachability graph to a dot file *)
 val dot_of_graph : reachability_graph -> (string * string)
-
+ 

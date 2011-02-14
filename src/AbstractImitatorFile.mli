@@ -61,6 +61,15 @@ type action_type =
 (** State: location and constraint *)
 type state = location * linear_constraint
 
+type abstract_state  = location * bool list
+
+type abstract_label =
+	| Continuous
+	| Discrete of action_index
+
+type predicate = linear_inequality
+
+ 
 (****************************************************************)
 (** Transition *)
 (****************************************************************) 

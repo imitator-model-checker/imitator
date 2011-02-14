@@ -28,6 +28,8 @@ exception ParsingError of (int * int)
 type imitator_mode =
 	(** Classical parametric reachability analysis *)
 	| Reachability_analysis
+ 	(** Reachability using predicate abstraction *)
+	| AbstractReachability
 	(** Classical inverse method *)
 	| Inverse_method
 	(** Cover the whole cartography *)
