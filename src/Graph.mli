@@ -59,9 +59,6 @@ val all_p_constraints : reachability_graph -> LinearConstraint.linear_constraint
 (** Returns the intersection of all parameter constraints, thereby destroying all constraints *)
 val compute_k0_destructive : reachability_graph -> LinearConstraint.linear_constraint
 
-(** Check if two states are equal *)
-val states_equal: AbstractImitatorFile.state -> AbstractImitatorFile.state -> bool
-
 (** iterates over the reachable states of a graph *)
 val iter: (AbstractImitatorFile.state -> unit) -> reachability_graph -> unit
 
@@ -91,12 +88,13 @@ val add_transition : reachability_graph -> (state_index * action_index * state_i
 (** Add an inequality to all the states of the graph *)
 val add_inequality_to_states : reachability_graph -> LinearConstraint.linear_inequality -> unit
 
+(** Plot reachable states projected to the given two variables *)
 val plot_graph : variable -> variable -> reachability_graph -> string
 
 (****************************************************************)
 (** Interaction with dot *)
 (****************************************************************)
 
-(* Convert a graph to a dot file *)
+(** Convert a graph to a dot file *)
 val dot_of_graph : reachability_graph -> (string * string)
 
