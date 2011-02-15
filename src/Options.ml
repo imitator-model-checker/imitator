@@ -107,6 +107,8 @@ class imitator_options =
 				else if mode = "cover" then 
 					imitator_mode := Cover_cartography
 				(* Case: number of iterations *)
+				else if mode = "abstract_reach" then
+					imitator_mode := AbstractReachability
 				else try (
 					(* Find the 'random' string *)
 					if not (String.sub mode 0 6 = "random") then raise (Failure "toto");
@@ -191,7 +193,7 @@ class imitator_options =
 			);
 			
 			(* Case no pi0 file *)
-			if nb_args = 1 && (!imitator_mode != Reachability_analysis) then(
+			if nb_args = 1 && (!imitator_mode != Reachability_analysis && !imitator_mode != AbstractReachability) then(
 				print_error ("Please give a reference valuation file name.");
 				Arg.usage speclist usage_msg;
 				abort_program (); exit(0)

@@ -1650,6 +1650,7 @@ let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_
 
 	let pi0, pi0cube =
 		match imitator_mode with
+		| AbstractReachability
 		| Reachability_analysis -> 
 			(* Return blank values *)
 			Array.make 0 NumConst.zero, Array.make 0 (NumConst.zero, NumConst.zero, NumConst.one)
@@ -1776,6 +1777,7 @@ let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_
 	(* Debut print: Pi0 *)
 	let _ =
 	match imitator_mode with
+	| AbstractReachability
 	| Reachability_analysis -> ()
 	| Inverse_method -> 
 		print_message Debug_medium ("\n*** Reference valuation pi0:");

@@ -166,11 +166,11 @@ let random_pi0 program pi0 =
 (* Functions to interact with Dot *)
 (**************************************************)
 (* Create a gif graph using dot *)
-let generate_graph pi0 reachability_graph dot_file_name states_file_name gif_file_name =
+let generate_graph pi0 reachability_graph dottyfier dot_file_name states_file_name gif_file_name =
 	if not options#no_dot then (
 		(* Create the input file *)
 		print_message Debug_total ("Creating input file for dot...");
-		let dot_program, states = Graph.dot_of_graph reachability_graph in
+		let dot_program, states = dottyfier reachability_graph in
 		(* Write dot file *)
 		print_message Debug_total ("Writing to dot file...");
 		write_to_file dot_file_name dot_program;
@@ -262,7 +262,8 @@ let cover_behavioral_cartography program pi0cube init_state =
 			if not (debug_mode_greater Debug_medium) then
 				set_debug_mode Debug_nodebug;
 			(* Compute the post and the constraint *)
-			let graph, k, nb_iterations, counter = Reachability.post_star init_state in
+			let k, nb_iterations, counter = Reachability.post_star init_state in
+			let graph = Program.get_reachability_graph () in
 			(* Get the debug mode back *)
 			set_debug_mode global_debug_mode;
 			(* Update the counters *)
@@ -299,17 +300,9 @@ let cover_behavioral_cartography program pi0cube init_state =
 				let dot_file_name = (radical ^ ".dot") in
 				let states_file_name = (radical ^ ".states") in
 				let gif_file_name = (radical ^ "." ^ dot_extension) in
-				generate_graph pi0 graph dot_file_name states_file_name gif_file_name;
+				generate_graph pi0 graph Graph.dot_of_graph dot_file_name states_file_name gif_file_name;
 			);
 		); (* else if new pi0 *)
-
-(*		let params = Array.to_list (Array.mapi (fun i _ -> i) pi0cube) in                                *)
-(*		let try_next_point = LinearConstraint.uncovered_point params v0_box (DynArray.to_list results) in*)
-(*		match try_next_point with                                                                        *)
-(*			| Some next_pi0 ->                                                                             *)
-(*				let new_pi0 = Array.of_list next_pi0 in                                                      *)
-(*				Array.iteri (fun i x -> current_pi0.(i) <- x) new_pi0;                                       *)
-(*			| None -> more_pi0 := false;                                                                   *)
 				
 		(* Find the next pi0 *)
 		let not_is_max = ref true in
@@ -439,7 +432,8 @@ let random_behavioral_cartography program pi0cube init_state nb =
 					set_debug_mode Debug_nodebug;
 				);
 				(* Compute the post *)
-				let graph, k, nb_iterations, counter = Reachability.post_star init_state in
+				let k, nb_iterations, counter = Reachability.post_star init_state in
+				let graph = Program.get_reachability_graph () in
 				(* Get the debug mode back *)
 				set_debug_mode global_debug_mode;
 				print_message Debug_standard (
@@ -465,7 +459,7 @@ let random_behavioral_cartography program pi0cube init_state nb =
 				let dot_file_name = (radical ^ ".dot") in
 				let states_file_name = (radical ^ ".states") in
 				let gif_file_name = (radical ^ "." ^ dot_extension) in
-				generate_graph pi0_functional graph dot_file_name states_file_name gif_file_name;
+				generate_graph pi0_functional graph Graph.dot_of_graph dot_file_name states_file_name gif_file_name;
 				(* Add the index to the interesting list *)
 				interesting_interations := !i :: !interesting_interations;
 				(* Add the result *)
@@ -564,6 +558,7 @@ if options#plot_vars <> [] then
 (* Print the mode *)
 let message = match options#imitator_mode with
 	| Reachability_analysis -> "parametric reachability analysis"
+	| AbstractReachability -> "abstract reachability analysis"
 	| Inverse_method -> "inverse method"
 	| Cover_cartography -> "behavioral cartography algorithm with full coverage"
 	| Random_cartography nb -> "behavioral cartography algorithm with " ^ (string_of_int nb) ^ " random iterations"
@@ -607,7 +602,7 @@ let parsing_structure = parser_lexer ImitatorParser.main ImitatorLexer.token opt
 
 print_message Debug_medium ("Considering program prefix " ^ options#program_prefix ^ ".");
 
-if options#imitator_mode != Reachability_analysis then
+if options#imitator_mode != Reachability_analysis && options#imitator_mode != AbstractReachability then
 	print_message Debug_low ("Considering reference valuation in file " ^ options#pi0file ^ ".");
 
 (* Pi0 Parsing *)
@@ -615,6 +610,7 @@ let pi0_parsed, pi0cube_parsed =
 	(* Depending on which operation we are performing *)
 	match options#imitator_mode with
 		(* If reachability: no pi0 *)
+		| AbstractReachability
 		| Reachability_analysis -> [], []
 		(* Inverse method : pi0 *)
 		| Inverse_method -> parser_lexer Pi0Parser.main Pi0Lexer.token options#pi0file, []
@@ -761,32 +757,37 @@ let make_plot reachability_graph =
 (* Execute IMITATOR II *)
 (**************************************************)
 
-List.iter (fun ineq ->
-	print_message Debug_standard ("pred: " ^ (LinearConstraint.string_of_linear_inequality program.variable_names ineq))
-) program.predicates;
+if debug_mode_greater Debug_medium then
+	List.iter (fun ineq -> 
+		print_message Debug_medium ("pred: " ^ (LinearConstraint.string_of_linear_inequality program.variable_names ineq))
+	) program.predicates;
 
-let init_loc, _ = program.init in
-let astates = PredicateAbstraction.get_abstract_states program.predicates init_loc in
-List.iter (fun state -> 
-	print_message Debug_standard ("abstract state: " ^ 
-		(PredicateAbstraction.string_of_abstract_state state));
-	let csucc = PredicateAbstraction.continuous_successors program.predicates state in
-	List.iter (fun s -> 
-		print_message Debug_standard ("  --> " ^ 
-			(PredicateAbstraction.string_of_abstract_state s));		
-	) csucc;	
-) astates;
 
 
 let _ =
 match options#imitator_mode with
 	(* Perform reachability analysis or inverse Method *)
+	| AbstractReachability -> 
+		let _, _, _ =
+			Reachability.post_star init_state_after_time_elapsing
+		in 
+		let reachability_graph = Program.get_abstract_reachability_graph () in
+		
+		(* Generate the DOT graph *)
+		print_message Debug_high "Generating the dot graph";
+		let dot_file_name = (options#program_prefix ^ ".dot") in
+		let states_file_name = (options#program_prefix ^ ".states") in
+		let gif_file_name = (options#program_prefix ^ "." ^ dot_extension) in
+		generate_graph pi0 reachability_graph Graph.dot_of_abstract_graph dot_file_name states_file_name gif_file_name;
+
+ 		
 	| Reachability_analysis | Inverse_method -> 
-		let reachability_graph, k, _, _ =
-				Reachability.post_star init_state_after_time_elapsing
+		let k, _, _ =
+			Reachability.post_star init_state_after_time_elapsing
 		in
 				
 		(* Plot all reachable states projected on the selected variables *)
+		let reachability_graph = Program.get_reachability_graph () in
 		make_plot reachability_graph;
 	
 		(* Generate the DOT graph *)
@@ -794,7 +795,7 @@ match options#imitator_mode with
 		let dot_file_name = (options#program_prefix ^ ".dot") in
 		let states_file_name = (options#program_prefix ^ ".states") in
 		let gif_file_name = (options#program_prefix ^ "." ^ dot_extension) in
-		generate_graph pi0 reachability_graph dot_file_name states_file_name gif_file_name;
+		generate_graph pi0 reachability_graph Graph.dot_of_graph dot_file_name states_file_name gif_file_name;
 		
 		if options#imitator_mode = Inverse_method then (
 			let k0 = Graph.compute_k0_destructive reachability_graph in

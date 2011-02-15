@@ -23,7 +23,7 @@ type ('s, 'l) t = {
 type reachability_graph = (LinearConstraint.linear_constraint, AbstractImitatorFile.action_index) t
 
 (** Type alias for abstract reachability graph *)
-type abstract_reachability_graph = (predicate list, abstract_label) t
+type abstract_reachability_graph = (bool list, abstract_label) t
 
 
 
@@ -248,8 +248,59 @@ let dot_colors = [
 ]
 
 
+let concrete_state_printer =
+	ImitatorPrinter.string_of_state 
+	
+let abstract_state_printer = fun state -> 
+	let program = Program.get_program () in
+	ImitatorPrinter.string_of_state (PredicateAbstraction.concretize program.predicates state)
+	 
+let concrete_label_printer action_index =
+	let program = Program.get_program () in
+	let is_nosync action =
+	String.length action >= 7 &&
+	String.sub action 0 7 = "nosync_" in
+	let action = program.action_names action_index in
+	let label = if is_nosync action then (
+		";"
+	) else (
+		" [label=\"" ^ action ^ "\"];"
+	) in
+	label
+
+let abstract_label_printer label =
+	match label with
+		| Continuous -> " [label=\"C\"];"
+		| Discrete action_index ->
+				let program = Program.get_program () in
+				let is_nosync action =
+				String.length action >= 7 &&
+				String.sub action 0 7 = "nosync_" in
+				let action = program.action_names action_index in
+				let label = if is_nosync action then (
+					" [label'\"D\"];"
+				) else (
+					" [label=\"D:" ^ action ^ "\"];"
+				) in
+				label
+
+let concrete_constraint_printer = fun constr -> 
+	let program = Program.get_program () in
+	LinearConstraint.string_of_linear_constraint program.variable_names constr
+	
+let abstract_constraint_printer =
+	PredicateAbstraction.string_of_signature
+
+let concrete_projection = fun constr -> 
+	let program = Program.get_program () in
+	LinearConstraint.hide program.clocks constr
+	
+let abstract_projection s = s
+
+
+
 (* Convert a graph to a dot file *)
-let dot_of_graph reachability_graph =
+let make_dot_of_graph state_printer constraint_printer label_printer projection reachability_graph =
 	let program = Program.get_program () in
 	let pi0     = Program.get_pi0 () in
 	let options = Program.get_options () in
@@ -271,7 +322,7 @@ let dot_of_graph reachability_graph =
 		(* Header *)
 		"/***************************************************"
 		^ "\n * File automatically generated for file '" ^ program.program_name ^ "'"
-		^ (if program.imitator_mode = Reachability_analysis then "\n * Reachability analysis" else (
+		^ (if program.imitator_mode = Reachability_analysis || program.imitator_mode = AbstractReachability then "\n * Reachability analysis" else (
 			"\n * The following pi0 was considered:"
 			^ "\n" ^ (ImitatorPrinter.string_of_pi0 pi0)
 		))
@@ -280,7 +331,7 @@ let dot_of_graph reachability_graph =
 		^ "\n * Program terminated " ^ (after_seconds ())
 		^ "\n***************************************************/"
 	in
-	
+
 	let states_description =	
 		(* Give the state indexes in comments *)
 		  "\n\n/*"
@@ -293,15 +344,15 @@ let dot_of_graph reachability_graph =
 			string_states := !string_states
 				(* Add the state *)
 				^ "\n\n\n  STATE " ^ (string_of_int state_index) ^ ":"
-				^ "\n  " ^ (ImitatorPrinter.string_of_state state)
+				^ "\n  " ^ (state_printer state)
 				(* Add the constraint with no clocks (option only) *)
 				^ (if program.with_parametric_log then (
 					(* Get the constraint *)
 					let _, linear_constraint = state in
 					(* Eliminate clocks *)
-					let parametric_constraint = LinearConstraint.hide program.clocks linear_constraint in
+					let parametric_constraint = projection linear_constraint in
 					"\n\n  After clock elimination:"
-					^ "\n  " ^ (LinearConstraint.string_of_linear_constraint program.variable_names parametric_constraint);
+					^ "\n  " ^ (constraint_printer parametric_constraint);
 				) else "");
 			) states;
 		!string_states)
@@ -311,30 +362,17 @@ let dot_of_graph reachability_graph =
 	let dot_file =
 		"\n\ndigraph G {"
 		(* Convert the transitions *)
-		^ (Hashtbl.fold (fun orig_state_index (action_index, dest_state_index) my_string ->
-			let is_nosync action =
-				String.length action >= 7 &&
-				String.sub action 0 7 = "nosync_" in
-			let action = program.action_names action_index in
-			let label = if is_nosync action then (
-				";"
-			) else (
-				" [label=\"" ^ action ^ "\"];"
-			) in
+		^ (Hashtbl.fold (fun orig_state_index (label, dest_state_index) my_string ->			
 			my_string
 			^ "\n  "
 			^ "s" ^ (string_of_int orig_state_index)
 			^ " -> "
 			^ "s" ^ (string_of_int dest_state_index)
-			^ label
+			^ (label_printer label)
 		) transitions "")
 
-	(*	(* Add a nice color *)
-		^ "\n\n  q_0 [color=red, style=filled];"
-		^ "\n}"*)
 		(* Add nice colors *)
 		^ "\n" ^
-		(**** BAD PROG ****)
 		(let string_colors = ref "" in
 			DynArray.iteri (fun state_index (location, _) ->
 			(* Find the location index *)
@@ -380,3 +418,11 @@ let dot_of_graph reachability_graph =
 	header ^ dot_file,
 	(* Description of the states *)
 	header ^ states_description ^ dot_file
+
+
+let dot_of_graph =
+	make_dot_of_graph concrete_state_printer concrete_constraint_printer concrete_label_printer concrete_projection
+	
+let dot_of_abstract_graph =
+	make_dot_of_graph abstract_state_printer abstract_constraint_printer abstract_label_printer abstract_projection 
+ 

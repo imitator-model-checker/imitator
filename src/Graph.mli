@@ -22,7 +22,7 @@ val make: int -> ('s -> 's -> bool) -> ('s, 'l) t
 type reachability_graph = (linear_constraint, action_index) t
 
 (** Type alias for abstract reachability graph *)
-type abstract_reachability_graph = (predicate list, abstract_label) t
+type abstract_reachability_graph = (bool list, abstract_label) t
 	 
 
 (****************************************************************)
@@ -58,8 +58,6 @@ val add_state : ('s, 'l) t -> 's graph_state -> (state_index * bool)
 (** Add a transition to the graph *)
 val add_transition : ('s, 'l) t -> (state_index * 'l * state_index) -> unit
 
-(** Convert a reachability graph to a dot file *)
-(*val dot_of_graph : ('s, 'l) t -> (string * string)*)
 
 
 (****************************************************************)
@@ -83,4 +81,14 @@ val plot_graph : variable -> variable -> reachability_graph -> string
 
 (** Convert a reachability graph to a dot file *)
 val dot_of_graph : reachability_graph -> (string * string)
+
+
+
+(****************************************************************)
+(** Specialized interface for abstract_reachability_graph *)
+(****************************************************************)
+
+(** Convert a reachability graph to a dot file *)
+val dot_of_abstract_graph : abstract_reachability_graph -> (string * string)
+
  

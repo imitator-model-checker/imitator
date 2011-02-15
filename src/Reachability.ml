@@ -40,6 +40,34 @@ let flow_cache = Cache.make loc_hash 200
 (* Cache for partitions *)
 let part_cache = Cache.make loc_hash 200
 
+(* Queue for delayed evaluation during abstract reachability *)
+module StateKey = struct 
+	type t = state_index
+	let compare = compare
+end 
+
+module StateSet = Set.Make(StateKey)
+
+let delayed_set = ref StateSet.empty
+
+(* clear delayed set *)
+let clear_delayed_set _ =
+	delayed_set := StateSet.empty
+
+(* delay next continuous transition of a state *)
+let delay_state state = 
+	print_message Debug_low ("delay state " ^ string_of_int state);
+	delayed_set := StateSet.add state !delayed_set
+	
+(* check if a state is delayed *)
+let is_delayed state =
+	StateSet.mem state !delayed_set
+	
+(* remove a state from the delayed set *)
+let undelay_state state =
+	print_message Debug_low ("undelay state " ^ string_of_int state);
+	delayed_set := StateSet.remove state !delayed_set
+
 
 (* Print statistics for cache usage *)
 let print_stats _ =
@@ -452,14 +480,14 @@ let affine_time_elapse location invariant deriv constr =
 	Cache.store part_cache locations (partitions, info);
 				
 	(* function to overapproximate a polyhedron by an octagon *)
-	let octagonalize constr = 
-		let octa = Ppl_ocaml.ppl_new_Octagonal_Shape_mpq_class_from_NNC_Polyhedron constr in
-		Ppl_ocaml.ppl_new_NNC_Polyhedron_from_Octagonal_Shape_mpq_class octa in
-	
-	(* function to overapproximate a polyhedron by a bounded difference shape *)		
-	let simplify_constr constr =
-		let bd = Ppl_ocaml.ppl_new_BD_Shape_mpq_class_from_NNC_Polyhedron constr in
-		Ppl_ocaml.ppl_new_NNC_Polyhedron_from_BD_Shape_mpq_class bd in
+(*	let octagonalize constr =                                                             *)
+(*		let octa = Ppl_ocaml.ppl_new_Octagonal_Shape_mpq_class_from_NNC_Polyhedron constr in*)
+(*		Ppl_ocaml.ppl_new_NNC_Polyhedron_from_Octagonal_Shape_mpq_class octa in             *)
+(*	                                                                                      *)
+(*	(* function to overapproximate a polyhedron by a bounded difference shape *)		      *)
+(*	let simplify_constr constr =                                                          *)
+(*		let bd = Ppl_ocaml.ppl_new_BD_Shape_mpq_class_from_NNC_Polyhedron constr in         *)
+(*		Ppl_ocaml.ppl_new_NNC_Polyhedron_from_BD_Shape_mpq_class bd in                      *)
 				
 	(* compute convex hull *)
 	let regions = Hashtbl.fold (fun _ s octas ->
@@ -496,10 +524,14 @@ let compute_time_elapse location constr =
 	elapsed
 		
 
-(* public interface *)
-let time_elapse (loc, constr) =
-	compute_time_elapse loc constr
-						
+(** compute continuous successors of an abstract state *)
+let abstract_time_elapse preds astate =
+	let loc, c = PredicateAbstraction.concretize preds astate in
+	let elapse = compute_time_elapse loc c in
+	let loc, b = astate in
+	let astates = PredicateAbstraction.abstract preds (loc, elapse) in
+	astates
+
 
 (*--------------------------------------------------*)
 (* Compute the initial state with the initial invariants and time elapsing *)
@@ -534,18 +566,24 @@ let create_initial_state _ =
 	(* Debug *)
 	if debug_mode_greater Debug_total then print_message Debug_total (LinearConstraint.string_of_linear_constraint program.variable_names full_constraint);
 	
-	(* let time elapse *)
-	print_message Debug_high ("Let time elapse");
-	let full_constraint = compute_time_elapse initial_location full_constraint in
-	(* Debug *)
-	if debug_mode_greater Debug_total then print_message Debug_total (LinearConstraint.string_of_linear_constraint program.variable_names full_constraint);	
-
-	(* add invariant after time elapsing *)
-	print_message Debug_high ("Intersect with invariant after time elapsing");
-	LinearConstraint.intersection_assign full_constraint [invariant];
+	(* no time elapse for abstract reachability *)
+	let full_constraint = if program.imitator_mode <> AbstractReachability then (
+		(* let time elapse *)
+		print_message Debug_high ("Let time elapse");
+		let full_constraint = compute_time_elapse initial_location full_constraint in
+		(* Debug *)
+		if debug_mode_greater Debug_total then print_message Debug_total (LinearConstraint.string_of_linear_constraint program.variable_names full_constraint);	
 	
-	(* Debug *)
-	if debug_mode_greater Debug_total then print_message Debug_total (LinearConstraint.string_of_linear_constraint program.variable_names full_constraint);	
+		(* add invariant after time elapsing *)
+		print_message Debug_high ("Intersect with invariant after time elapsing");
+		LinearConstraint.intersection_assign full_constraint [invariant];
+		
+		(* Debug *)
+		if debug_mode_greater Debug_total then print_message Debug_total (LinearConstraint.string_of_linear_constraint program.variable_names full_constraint);
+		full_constraint
+	) else (
+		full_constraint
+	)	in
 	
 	(* Hide discrete *)
 	print_message Debug_high ("Hide discrete");
@@ -1024,7 +1062,44 @@ let add_transition src_index action_index new_state =
 		[]
 	)
 	
+	
+(*-------------------------------------------------------*)
+(* Try to add a transition to the abstract reachability  *)
+(* graph. Returns a list of new indices. Empy if all the *)
+(* states were already present in the graph.             *)
+(*-------------------------------------------------------*)
+let add_abstract_transition src_index action_index new_state =
+	let program = Program.get_program () in
+	let graph = Program.get_abstract_reachability_graph () in
 
+	(* compute abstract states corresponding to target state *)
+	let targets = PredicateAbstraction.abstract program.predicates new_state in
+	(* add states to the reachability graph, keep only new ones *)
+	let new_states = List.fold_left (fun new_states trg -> 
+		let new_index, this_new_state = Graph.add_state graph trg in
+		Graph.add_transition graph (src_index, Discrete action_index, new_index);
+		(* if a delayed node is hit by a discrete transition, remove it from the delayed queue *)
+		let was_delayed = is_delayed new_index in
+		if was_delayed then (
+			undelay_state new_index;
+		); 
+		if this_new_state || was_delayed then new_index :: new_states else new_states
+	) [] targets in
+	new_states
+	
+(*	(* compute continuous successors of new states *)                       *)
+(*	List.fold_left (fun new_states src_index ->                             *)
+(*		let src_state = Graph.get_state graph src_index in                    *)
+(*		let elapsed = abstract_time_elapse program.predicates src_state in    *)
+(*		let my_new_states = List.fold_left (fun my_new_states trg ->          *)
+(*			let new_index, this_new_state = Graph.add_state graph trg in        *)
+(*			Graph.add_transition graph (src_index, Continuous, new_index);      *)
+(*			if this_new_state then new_index :: my_new_states else my_new_states*)
+(*		) [] elapsed in                                                       *)
+(*		my_new_states @ new_states                                            *)
+(*	) new_states new_states                                                 *)
+	
+	
 
 (*-------------------------------------------------------*)
 (* Computes all possible transition combinations for the *)
@@ -1095,7 +1170,6 @@ let compute_transitions location constr action_index automata aut_table max_inde
 (*-----------------------------------------------------*)
 let post state_lookup orig_state_index =
 	let program = Program.get_program () in
-	let reachability_graph = Program.get_reachability_graph () in
 	
 	(* Original location: static *)
 	let original_location, _ = state_lookup orig_state_index in
@@ -1197,18 +1271,26 @@ let post state_lookup orig_state_index =
 			
 						let add_new_state =
 						(* Branching between 2 algorithms here *)
-						if program.imitator_mode = Reachability_analysis then ( 
+						if program.imitator_mode = Reachability_analysis ||
+							 program.imitator_mode = AbstractReachability then ( 
 							true
 						) else (							
 							inverse_method_check_constraint final_constraint
 						) in
 						
 						if add_new_state then (
-							(* Create the state *)				
+							(* Create the new concrete state *)				
 							let new_state = location, final_constraint in
-							let new_indices = add_transition orig_state_index action_index new_state in
-							new_states := new_indices @ !new_states;
-						); (* end if pi0 incompatible *)
+							if program.imitator_mode = AbstractReachability then (
+								(* Add all touched abstract states to reachability graph *)
+								let new_indices = add_abstract_transition orig_state_index action_index new_state in
+								new_states := new_indices @ !new_states;
+							) else (
+								(* Add new state to reachability graph *)
+								let new_indices = add_transition orig_state_index action_index new_state in
+								new_states := new_indices @ !new_states;
+							);
+						); 
 					); (* end if satisfiable *)	)
 				| None -> (
 					print_message Debug_standard ("\nThis constraint is not satisfiable.");
@@ -1219,6 +1301,29 @@ let post state_lookup orig_state_index =
 			
 		done; (* while more new states *)
 	) list_of_possible_actions;
+	
+	(* perform continuous transitions for abstract reachability *)
+	if program.imitator_mode = AbstractReachability then (
+		(* do not perform multiple continuous transitions for delayed states *)
+		if not (is_delayed orig_state_index) then (
+			let agraph = Program.get_abstract_reachability_graph () in
+			let state = state_lookup orig_state_index in
+			let astates = PredicateAbstraction.abstract program.predicates state in
+			if 1 <> List.length astates then raise (InternalError "Ambiguous abstract state");
+			let astate = List.hd astates in
+			let elapsed = abstract_time_elapse program.predicates astate in
+			List.iter (fun trg -> 
+				let new_index, this_new_state = Graph.add_state agraph trg in
+				Graph.add_transition agraph (orig_state_index, Continuous, new_index);
+				if this_new_state then (
+					(* register state for next discrete round *)					
+					new_states := new_index :: !new_states;
+					(* delay next continuous transition *)
+					delay_state new_index;
+				);
+			) elapsed;
+		);		
+	);
 	
 	(* Return the list of (really) new states *)
 	List.rev (!new_states)
@@ -1255,14 +1360,42 @@ let post_star init_state =
 		LinearConstraint.is_equal
 	) in
 		
-	(* Create the reachability graph *)
-	let reachability_graph = Graph.make guessed_nb_transitions inclusion_predicate in
-	
-	(* Add the initial state to the reachable states *)
-	let init_state_index, _ = Graph.add_state reachability_graph init_state in
-
-	(* store in global table *)
-	Program.set_reachability_graph reachability_graph;
+	let newly_found_new_states = ref [] in
+		
+	let lookup = 
+	if program.imitator_mode = AbstractReachability then (
+		print_message Debug_medium "computing abstract initial states";
+		(* Create the abstract reachability graph *)
+		let agraph = Graph.make guessed_nb_transitions (=) in
+		(* clear delayed queue *)
+		clear_delayed_set ();
+		(* get abstract initial states *)
+		let a_inits = PredicateAbstraction.abstract program.predicates init_state in
+		(* Add them to reachability graph *)
+		List.iter (fun a_init -> 
+			print_message Debug_medium ("abstract inital state: " ^ (PredicateAbstraction.string_of_abstract_state a_init));
+			let index, added = Graph.add_state agraph a_init in
+			(* initialize search list *)
+			if added then	newly_found_new_states := index :: !newly_found_new_states
+		) a_inits;
+		(* store in global table *)
+		Program.set_abstract_reachability_graph agraph;
+		(* build lookup function *)
+		let lookup = fun index -> 
+			PredicateAbstraction.concretize program.predicates (Graph.get_state agraph index) in
+		lookup
+	) else (	
+		(* Create the reachability graph *)
+		let reachability_graph = Graph.make guessed_nb_transitions inclusion_predicate in
+		(* Add the initial state to the reachable states *)
+		let init_state_index, _ = Graph.add_state reachability_graph init_state in
+		(* store in global table *)
+		Program.set_reachability_graph reachability_graph;
+		(* initialize search list *)
+		newly_found_new_states := init_state_index :: !newly_found_new_states;
+		(* build lookup function *)
+		Graph.get_state reachability_graph
+	) in
 
 	(* initialize global constraint K *)
 	global_k := LinearConstraint.true_constraint ();
@@ -1270,7 +1403,6 @@ let post_star init_state =
 	(*--------------------------------------------------*)
 	(* Perform the post^* *)
 	(*--------------------------------------------------*)
-	let newly_found_new_states = ref [init_state_index] in
 	let nb_iterations = ref 1 in
 	let limit_reached = ref false in
 
@@ -1296,7 +1428,6 @@ let post_star init_state =
 				(* Count the states for debug purpose: *)
 				num_state := !num_state + 1;
 				(* Perform the post *)
-				let lookup = Graph.get_state reachability_graph in
 				let post = post lookup orig_state_index in
 				let new_states = post in
 				(* Debug *)
@@ -1354,11 +1485,20 @@ let post_star init_state =
 	(*--------------------------------------------------*)
 	(* Perform the intersection of all inequalities *)
 	(*--------------------------------------------------*)
-	if program.imitator_mode <> Reachability_analysis then (
+	if program.imitator_mode <> Reachability_analysis && program.imitator_mode <> AbstractReachability then (
 		print_message Debug_standard ("\nFinal constraint K  :");
 		print_message Debug_standard (LinearConstraint.string_of_linear_constraint program.variable_names !global_k);
 	);
 
+
+	let nb_states, nb_transitions = 
+		if program.imitator_mode = AbstractReachability then (
+				let graph = Program.get_abstract_reachability_graph () in
+				Graph.nb_states graph, Graph.nb_transitions graph				
+ 		) else (
+				let graph = Program.get_reachability_graph () in
+				Graph.nb_states graph, Graph.nb_transitions graph
+		) in			
 
 	(*--------------------------------------------------*)
 	(* Debug *)
@@ -1367,13 +1507,13 @@ let post_star init_state =
 		"\nFixpoint reached after "
 		^ (string_of_int (!nb_iterations - 1)) ^ " iteration" ^ (s_of_int (!nb_iterations - 1)) ^ ""
 		^ " in " ^ (string_of_seconds (time_from !counter)) ^ ": "
-		^ (string_of_int (Graph.nb_states reachability_graph)) ^ " reachable state" ^ (s_of_int (Graph.nb_states reachability_graph))
+		^ (string_of_int nb_states) ^ " reachable state" ^ (s_of_int nb_states)
 		^ " with "
-		^ (string_of_int (Graph.nb_transitions reachability_graph)) ^ " transition" ^ (s_of_int (Graph.nb_transitions reachability_graph)) ^ ".");
+		^ (string_of_int nb_transitions) ^ " transition" ^ (s_of_int nb_transitions) ^ ".");
 
 	if debug_mode_greater Debug_low then print_stats ();
 
 	(*--------------------------------------------------*)
 	(* Return the result *)
 	(*--------------------------------------------------*)
-	reachability_graph, !global_k, !nb_iterations, !counter
+	!global_k, !nb_iterations, !counter

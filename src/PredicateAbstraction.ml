@@ -2,6 +2,7 @@ open Global
 open LinearConstraint
 open Automaton
 open AbstractImitatorFile
+open ImitatorPrinter
 
 
 let string_of_signature =
@@ -66,6 +67,23 @@ let concretize preds (loc, b) =
 	(loc, inv)
 	
 	
+(** converts a concrete state into a list of abstract states *)
+let abstract preds (loc, c) =
+	print_message Debug_total ("abstracting state: " ^ string_of_state (loc, c));
+	let combis = build_consistent_signatures preds in
+	(* combine signatures with constraint *)
+	let invs = List.map (fun b -> 
+		let _, inv = concretize preds (loc, b) in
+		(b, LinearConstraint.intersection [inv; c])
+	) combis in
+	(* discard inconsistent states *)
+	List.map (fun (b, _) -> (loc, b)) (
+		List.filter (fun (b, inv) -> 
+			LinearConstraint.is_satisfiable inv
+		) invs
+	) 
+	
+	
 (** get all consistent abstract states for a location,
     given a list of predicates *)
 let get_abstract_states preds loc = 
@@ -83,18 +101,4 @@ let get_abstract_states preds loc =
 	) 
 
 		
-(** compute continuous successors of an abstract state *)
-let continuous_successors preds astate =
-	let cstate = concretize	preds astate in
-	let elapse = Reachability.time_elapse cstate in
-	let loc, b = astate in
-	let astates = get_abstract_states preds loc in
-	List.filter (fun s -> 
-		let _, c = concretize preds s in
-		LinearConstraint.is_satisfiable (LinearConstraint.intersection [elapse; c])
-	) astates
-
-	
-
-
 
