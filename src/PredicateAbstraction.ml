@@ -16,21 +16,6 @@ let string_of_abstract_state (loc, b) =
 	(string_of_signature b) ^ "}"
 	
 
-(** build all possible predicate signatures *)
-let build_signatures preds = 
-	let n = List.length preds in
-	let rec combis n =
-		match n with
-			| 0 -> []
-			| 1 -> [[true]; [false]]
-			| _ -> 
-					let tail = combis (n - 1) in
-					List.rev_append 
-						(List.map (fun b -> true  :: b ) tail)
-						(List.map (fun b -> false :: b ) tail) in		
-  combis n	
-	
-
 (** converts the abstract signature (list of bool) into a linear constraint,
 	 	given the list of predicates *)
 let instantiate_predicates preds b =
@@ -39,16 +24,6 @@ let instantiate_predicates preds b =
 	) preds b in
 	LinearConstraint.make ineqs
 	
-	
-(** build all consistent predicate signatures *)
-let build_consistent_signatures preds =
-	(* build all signatures *)
-	let combis = build_signatures preds in
-	(* discard all unsatisfiable combinations *)
-	List.filter (fun b -> 
-		LinearConstraint.is_satisfiable (instantiate_predicates preds b)
-	) combis
-
 
 (** converts an abstract state into a concrete state *)
 let concretize preds (loc, b) =
@@ -67,38 +42,48 @@ let concretize preds (loc, b) =
 	(loc, inv)
 	
 	
+let add_predicate p constr phase =
+	let p = if phase then p else LinearConstraint.negate_inequality p in
+	let pconstr = LinearConstraint.make [p] in
+	LinearConstraint.intersection [constr; pconstr]
+	
+(* split state space recursively, discarding inconsistent regions *)
+let rec split_rec preds constr prefix =
+	if not (LinearConstraint.is_satisfiable constr) then [] else
+	match preds with
+		| [] -> [List.rev prefix]
+		| p :: tail -> (
+			let tsigs = split_rec tail (add_predicate p constr true ) (true  :: prefix) in
+			let nsigs = split_rec tail (add_predicate p constr false) (false :: prefix) in
+			tsigs @ nsigs
+		)	
+
+let split preds constr =
+	split_rec preds constr [] 
+	
+	
 (** converts a concrete state into a list of abstract states *)
 let abstract preds (loc, c) =
 	print_message Debug_total ("abstracting state: " ^ string_of_state (loc, c));
-	let combis = build_consistent_signatures preds in
-	(* combine signatures with constraint *)
-	let invs = List.map (fun b -> 
-		let _, inv = concretize preds (loc, b) in
-		(b, LinearConstraint.intersection [inv; c])
-	) combis in
-	(* discard inconsistent states *)
-	List.map (fun (b, _) -> (loc, b)) (
-		List.filter (fun (b, inv) -> 
-			LinearConstraint.is_satisfiable inv
-		) invs
-	) 
-	
+	(* get all consistent signatures *)
+	let signatures = split preds c in
+	(* combine with location *)
+	List.map (fun b -> (loc, b)) signatures
+		
 	
 (** get all consistent abstract states for a location,
     given a list of predicates *)
-let get_abstract_states preds loc = 
-	let combis = build_consistent_signatures preds in
-	(* combine signatures with invariant *)
-	let invs = List.map (fun b -> 
-		let _, inv = concretize preds (loc, b) in
-		(b, inv)
-	) combis in
-	(* discard inconsistent states *)
-	List.map (fun (b, _) -> (loc, b)) (
-		List.filter (fun (b, inv) -> 
-			LinearConstraint.is_satisfiable inv
-		) invs
-	) 
-
+let get_abstract_states preds loc =
+	let program = Program.get_program () in 
+	(* build invariant *)
+	let invariants =
+		List.map (fun aut_index ->
+			let loc_index = Automaton.get_location loc aut_index in  
+			program.invariants aut_index loc_index		
+		) program.automata in
+	let inv = LinearConstraint.intersection invariants in
+	(* get consistent abstract states *)
+	abstract preds (loc, inv)
+	
 		
 
