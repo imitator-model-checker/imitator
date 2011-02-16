@@ -287,7 +287,7 @@ let cover_behavioral_cartography program pi0cube init_state =
 			List.iter (DynArray.add results) k0;
 
 			(* Print the constraint *)
-			let bad = Graph.is_bad graph in
+			let bad = Graph.bad_states_reachable graph in
 			if bad then badlist := (DynArray.length results - 1) :: !badlist;
 			let bad_string = if bad then "bad" else "good" in			
 			print_message Debug_low ("Constraint K0 computed:");
@@ -772,6 +772,7 @@ match options#imitator_mode with
 			Reachability.post_star init_state_after_time_elapsing
 		in 
 		let reachability_graph = Program.get_abstract_reachability_graph () in
+		let path = Graph.get_counterexample reachability_graph [0] in
 		
 		(* Generate the DOT graph *)
 		print_message Debug_high "Generating the dot graph";

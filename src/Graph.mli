@@ -23,7 +23,13 @@ type reachability_graph = (linear_constraint, action_index) t
 
 (** Type alias for abstract reachability graph *)
 type abstract_reachability_graph = (bool list, abstract_label) t
-	 
+
+(** A path in a graph, represented by a list of pairs (state index, label) *)
+type 'l path = (state_index * 'l) list
+
+(** A path in an abstract reachability graph *)
+type abstract_path = abstract_label path
+
 
 (****************************************************************)
 (** Generic interface *)
@@ -38,8 +44,14 @@ val nb_transitions : ('s, 'l) t -> int
 (** Return the state of a state_index *)
 val get_state : ('s, 'l) t -> state_index -> 's graph_state
 
+(** Return all states satisfying a predicate *)
+val get_states : ('s, 'l) t -> ('s graph_state -> bool) -> state_index list
+
 (** iterates over the reachable states of a graph *)
 val iter: ('s graph_state -> unit) -> ('s, 'l) t -> unit
+
+(** fold the reachable states, no order is guaranteed *)
+val fold: ('a -> 's graph_state -> 'a) -> 'a -> ('s, 'l) t -> 'a
 
 (** test if a state exists satisfying predicate s *)
 val exists_state: ('s graph_state -> bool) -> ('s, 'l) t -> bool
@@ -49,6 +61,12 @@ val forall_state: ('s graph_state -> bool) -> ('s, 'l) t -> bool
 
 (** find all "last" states on finite or infinite runs *)
 val last_states: ('s, 'l) t -> state_index list 
+
+(** predicate which decides if a state is bad *)
+val is_bad : 's graph_state -> bool 
+
+(** check if bad states are reached *)
+val bad_states_reachable : ('s, 'l) t -> bool
 
 (** Add a state to a graph: return (state_index, added), where state_index
  is the index of the state, and 'added' is false if the state was already 
@@ -70,9 +88,6 @@ val all_p_constraints : reachability_graph -> linear_constraint list
 (** Returns the intersection of all parameter constraints, thereby destroying all constraints *)
 val compute_k0_destructive : reachability_graph -> linear_constraint
 
-(** check if bad states are reached *)
-val is_bad: reachability_graph -> bool
-
 (** Add an inequality to all the states of the graph *)
 val add_inequality_to_states : reachability_graph -> linear_inequality -> unit
 
@@ -90,5 +105,11 @@ val dot_of_graph : reachability_graph -> (string * string)
 
 (** Convert a reachability graph to a dot file *)
 val dot_of_abstract_graph : abstract_reachability_graph -> (string * string)
+
+(** Try to construct a path from any initial state to a target state *)
+val get_path : abstract_reachability_graph -> state_index list -> state_index -> abstract_path option
+
+(** Find a path from any initial state to a bad state *)
+val get_counterexample : abstract_reachability_graph -> state_index list -> abstract_path option
 
  

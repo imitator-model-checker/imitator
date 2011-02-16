@@ -4,6 +4,9 @@ open AbstractImitatorFile
 type state_index = int
 type 's graph_state = Automaton.location * 's
 type 'l graph_transition = state_index * 'l * state_index
+type 'l path = (state_index * 'l) list
+type abstract_path = abstract_label path
+
 
 type ('s, 'l) t = {
 	(** An Array 'state_index' -> 'state' *)
@@ -18,6 +21,7 @@ type ('s, 'l) t = {
 	(** A predicate for testing the inclusion of constraints *)
 	mutable included_in: 's -> 's -> bool
 }
+
 
 (** Type alias for symbolic reachabiliy graph *)
 type reachability_graph = (LinearConstraint.linear_constraint, AbstractImitatorFile.action_index) t
@@ -53,6 +57,19 @@ let get_state graph state_index =
 (** Iterate over the reachable states *)
 let iter f graph =
 	DynArray.iter f graph.states
+	
+(** Fold the reachable states *)
+let fold f a graph =
+	DynArray.fold_left f a graph.states
+
+(** Return all states satisfying a predicate *)
+let get_states graph p =
+	let states = ref [] in 
+	DynArray.iteri (fun index state -> 
+		if p state then	states := index :: !states
+	) graph.states;
+	!states
+
 
 (* state struct for constructing set type *)
 module State = struct
@@ -106,10 +123,7 @@ let last_states graph =
 	(* return collected last states *)
 	!last_states
 		 
-(** Iterate over the reachable states *)
-let iter f graph =
-	DynArray.iter f graph.states
-
+		
 exception Satisfied
 
 (** Checks if a state exists that satisfies a given predicate *)
@@ -207,19 +221,17 @@ let compute_k0_destructive graph =
 	k0
 
 
-(** Check if bad states are reachable *)
-let is_bad graph =
+(** Predicate which decides if a state is bad *)
+let is_bad = fun (location, _) ->
 	let program = Program.get_program () in
-	(* get bad state pairs from program *)
 	let bad_states = program.bad in
-	(* if no bad state specified, then must be good *)
-	if bad_states = [] then false else (
-		let is_bad_state = fun (location, _) -> 
-			List.for_all (fun (aut_index, loc_index) -> 
-				loc_index = Automaton.get_location location aut_index
-			) bad_states in
-		exists_state is_bad_state graph
-	)
+	List.for_all (fun (aut_index, loc_index) -> 
+		loc_index = Automaton.get_location location aut_index
+	) bad_states
+
+(** Check if bad states are reachable *)
+let bad_states_reachable graph=
+	 exists_state is_bad graph	
 	 
 
 (** Add an inequality to all the states of the graph *)
@@ -234,6 +246,91 @@ let add_inequality_to_states graph inequality =
 		)
 	done
 	
+
+let string_of_abstract_label = fun label -> 
+	match label with 
+		| Continuous -> "C"
+		| Discrete action_index -> (
+			let program = Program.get_program () in
+			let is_nosync action =
+				String.length action >= 7 &&
+				String.sub action 0 7 = "nosync_" in
+			let action = program.action_names action_index in
+			let label = if is_nosync action then (
+					"D"
+			) else (
+				"D:" ^ action
+			) in
+			label
+		)
+
+	
+(** Try to construct a path from an initial state to a state satisfying a predicate *)
+let my_get_path graph initial_states index_predicate =
+	(* Table to keep all states already visited during DFS *)
+	let dfs_table = ref StateSet.empty in
+	(* functional version for lookup *)
+	let already_seen node = StateSet.mem node !dfs_table in
+	(* function to find all successors of a state *)
+	let successors node = 
+		try (
+			Hashtbl.find_all graph.transitions_table node
+		) with Not_found -> [] in 
+	(* function to find all last states *)
+	let rec dfs node was_continuous =
+		(* insert node in DFS table *)
+		dfs_table := StateSet.add node !dfs_table;		
+		(* go on with successors *)
+		let rec dfs_list transitions =			
+			match transitions with
+				| [] -> None
+				| t :: tail -> (
+					let label, succ = t in
+					(* we are considering a continuous transition *)					
+					let is_continuous = (label = Continuous) in
+					if was_continuous && is_continuous then (
+						(* do not consider consecutive continuous transitions *)
+						dfs_list tail
+					) else if index_predicate succ then (
+						(* hit the target! *)
+						Some [(node,label)]
+					) else if already_seen succ then (
+						(* nothing to do here, go on with next *)
+						dfs_list tail
+					) else (						
+						(* recursive call *)
+						let my_path = dfs succ is_continuous in
+						match my_path with 
+							| None -> dfs_list tail
+							| Some path -> Some ((node, label) :: path)
+					)
+				) in
+		dfs_list (successors node) in
+	(* Try for each initial state, keep first solution *)
+	let path = List.fold_left (fun path init_state ->
+		match path with
+			| None -> dfs init_state false
+			| Some path -> Some path
+	) None initial_states in
+	(* debug output *)
+	(match path with
+		| Some path -> 
+				List.iter (fun (node, label) ->  
+					print_message Debug_standard ("s" ^ (string_of_int node) ^ 
+						" --|" ^ (string_of_abstract_label label) ^ "|--> ") 
+				) path;		
+		| None -> ());						
+	(* return path *)
+	path 
+	
+
+let get_path graph initial_states index =
+	my_get_path graph initial_states ((=) index)
+
+let get_counterexample graph initial_states =
+	let predicate = fun index -> is_bad (get_state graph index) in
+	my_get_path graph initial_states predicate
+
 
 let plot_graph x y graph = 
 	DynArray.fold_left (
@@ -269,20 +366,7 @@ let concrete_label_printer action_index =
 	label
 
 let abstract_label_printer label =
-	match label with
-		| Continuous -> " [label=\"C\"];"
-		| Discrete action_index ->
-				let program = Program.get_program () in
-				let is_nosync action =
-				String.length action >= 7 &&
-				String.sub action 0 7 = "nosync_" in
-				let action = program.action_names action_index in
-				let label = if is_nosync action then (
-					" [label'\"D\"];"
-				) else (
-					" [label=\"D:" ^ action ^ "\"];"
-				) in
-				label
+	" [label=\"" ^ (string_of_abstract_label label) ^ "\"];"
 
 let concrete_constraint_printer = fun constr -> 
 	let program = Program.get_program () in
