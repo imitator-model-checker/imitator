@@ -704,7 +704,7 @@ print_message Debug_medium ("\nInitial state after time-elapsing:\n" ^ (Imitator
 
 
 (* function for plotting reachable states *)	
-let make_plot reachability_graph =
+let make_plot reachability_graph plotter =
 		(* reverse lookup function *) 
 		let index_of x =
 			try (
@@ -730,7 +730,7 @@ let make_plot reachability_graph =
 			print_message Debug_standard (
 				"Plotting reachable states projected on variables " ^ x_name ^ ", " ^ y_name);
 			let plot_file_name = (options#program_prefix ^ ".plot_" ^ x_name ^ "_" ^ y_name) in
-			let plot = Graph.plot_graph x y reachability_graph in
+			let plot = plotter x y reachability_graph in
 			write_to_file plot_file_name plot;
 			let img_file_name = plot_file_name ^ ".png" in
 			let cmd = "graph -Tpng --bitmap-size 1600x1600 -B -C -q0.2"
@@ -767,20 +767,79 @@ if debug_mode_greater Debug_medium then
 let _ =
 match options#imitator_mode with
 	(* Perform reachability analysis or inverse Method *)
-	| AbstractReachability -> 
-		let _, _, _ =
-			Reachability.post_star init_state_after_time_elapsing
-		in 
-		let reachability_graph = Program.get_abstract_reachability_graph () in
-		let path = Graph.get_counterexample reachability_graph [0] in
+	| AbstractReachability ->
 		
+		let stop = ref false in
+		let nb_refinements = ref 0 in
+		while not !stop do 
+			let _, _, _ =
+				Reachability.post_star init_state_after_time_elapsing
+			in 
+			let reachability_graph = Program.get_abstract_reachability_graph () in
+			let path = Graph.get_counterexample reachability_graph in
+							
+			begin 
+				match path with
+				| None -> begin
+						(* no more counterexamples *)
+						print_message Debug_standard "System verified SUCCESSFULLY!\n";
+						stop := true
+					end
+				| Some path -> begin
+						let new_pred = Reachability.verify_path init_state_after_time_elapsing path in
+						match new_pred with
+							| None -> begin
+									(* true counterexample *)
+									print_message Debug_standard "System verification FAILED!\n";
+									stop := true						
+								end
+							| Some pred -> begin
+									(* next refinement step *)
+									nb_refinements := !nb_refinements + 1;
+									(* reached limit? *)
+									if match options#cegar_limit with
+										| None -> false
+										| Some limit -> limit < !nb_refinements
+									then begin
+										stop := true;
+										print_warning ("The limit number of refinements has been reached. CEGAR now stops. The analysis might be incomplete.")
+									end else begin 
+										let new_program = { program with predicates = pred :: (Program.get_program ()).predicates } in
+										Program.set_program new_program;
+									end
+								end;
+					end;
+			end;			
+		done;
+	
+		print_message Debug_standard "Final set of predicates:";
+		let program = Program.get_program () in
+		let i = ref 0 in
+		List.iter (fun p -> 
+			print_message Debug_standard ("p" ^ (string_of_int !i) ^ ": " ^ (LinearConstraint.string_of_linear_inequality program.variable_names p));
+			i := !i + 1		
+		) program.predicates;
+		
+		if program.nb_parameters > 0 then begin
+			let ainits = PredicateAbstraction.abstract program.predicates init_state_after_time_elapsing in
+			let cinits = List.map (PredicateAbstraction.concretize program.predicates) ainits in
+			List.iter (fun (_, constr) -> 
+				let p_constr = LinearConstraint.hide program.clocks constr in
+				print_message Debug_standard "Abstract initial state projected on parameters: ";
+				print_message Debug_standard (LinearConstraint.string_of_linear_constraint program.variable_names p_constr);
+			) cinits;
+		end;
+
 		(* Generate the DOT graph *)
 		print_message Debug_high "Generating the dot graph";
 		let dot_file_name = (options#program_prefix ^ ".dot") in
 		let states_file_name = (options#program_prefix ^ ".states") in
 		let gif_file_name = (options#program_prefix ^ "." ^ dot_extension) in
+		let reachability_graph = Program.get_abstract_reachability_graph () in
 		generate_graph pi0 reachability_graph Graph.dot_of_abstract_graph dot_file_name states_file_name gif_file_name;
 
+		(* Plot all reachable states projected on the selected variables *)
+		make_plot reachability_graph Graph.plot_abstract_graph;
  		
 	| Reachability_analysis | Inverse_method -> 
 		let k, _, _ =
@@ -789,7 +848,7 @@ match options#imitator_mode with
 				
 		(* Plot all reachable states projected on the selected variables *)
 		let reachability_graph = Program.get_reachability_graph () in
-		make_plot reachability_graph;
+		make_plot reachability_graph Graph.plot_graph;
 	
 		(* Generate the DOT graph *)
 		print_message Debug_high "Generating the dot graph";

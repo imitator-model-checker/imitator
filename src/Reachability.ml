@@ -263,13 +263,13 @@ let affine_time_elapse location invariant deriv constr =
 	
 	(* add variable indices to bounds vector *)
 	let extended_bounds = List.map2 (fun v (min, max) -> (v,min,max)) affine_vars in  
-			
+								
 	(* compute the linearized/rectangularized flow for a partition *)
 	let rectangular_flow bounds =
 		(* bound affine dimensions for this partition *)
 		let p_invariant = LinearConstraint.make_box bounds in
 		(* add global invariant and affine flow *)
-		LinearConstraint.intersection_assign p_invariant [invariant; deriv; program.standard_flow];
+		LinearConstraint.intersection_assign p_invariant [invariant; deriv];
 		(* existentially quantify affine dimensions *)
 		LinearConstraint.hide_assign affine_vars p_invariant;
 		(* map to X space *)
@@ -350,6 +350,9 @@ let affine_time_elapse location invariant deriv constr =
 			LinearConstraint.intersection_assign my_invariant [invariant];
 			(* build the approximated flow for this partition *)
 			let my_flow = rectangular_flow my_boundaries in
+			if not (LinearConstraint.is_satisfiable my_flow) then begin
+				print_message Debug_standard "empty flow.";
+			end;				
 			(* find admissible neighbors *)
 			let nbs = find_neighbors item my_flow in
 			(* store partition info and neighbors *)
@@ -465,12 +468,12 @@ let affine_time_elapse location invariant deriv constr =
 				if nb <> src then (
 					(* get info of neighbor *)
 					let _, inv', _ = get_info nb in
-					(* get the intersecting region on the bounds *) 
+					(* get the intersecting region on the bounds *)
 					let cut = LinearConstraint.intersection [elapsed; inv'] in
 					if LinearConstraint.is_satisfiable cut then (
 						(* add to queue *)
 						Queue.add (nb, cut, trg) q
-					)
+					);
 				) 
 			) ns;			
 		)		
@@ -479,35 +482,23 @@ let affine_time_elapse location invariant deriv constr =
 	(* store partition info in cache *)
 	Cache.store part_cache locations (partitions, info);
 				
-	(* function to overapproximate a polyhedron by an octagon *)
-(*	let octagonalize constr =                                                             *)
-(*		let octa = Ppl_ocaml.ppl_new_Octagonal_Shape_mpq_class_from_NNC_Polyhedron constr in*)
-(*		Ppl_ocaml.ppl_new_NNC_Polyhedron_from_Octagonal_Shape_mpq_class octa in             *)
-(*	                                                                                      *)
-(*	(* function to overapproximate a polyhedron by a bounded difference shape *)		      *)
-(*	let simplify_constr constr =                                                          *)
-(*		let bd = Ppl_ocaml.ppl_new_BD_Shape_mpq_class_from_NNC_Polyhedron constr in         *)
-(*		Ppl_ocaml.ppl_new_NNC_Polyhedron_from_BD_Shape_mpq_class bd in                      *)
-				
-	(* compute convex hull *)
+	(* get regions *)
 	let regions = Hashtbl.fold (fun _ s octas ->
 		s :: octas
 	) states [] in
 	
-	print_message Debug_low ("Compute convex hull of " ^ (string_of_int (List.length regions)) ^ " local states...");
-	LinearConstraint.hull regions
+	(* return all the regions *)
+	regions
 
-
-	
 
 (*--------------------------------------------------*)
 (* Compute the time elapse for a location, taking   *)
-(* into account the invariant of the location       *)
+(* into account the invariant of the location,      *)
+(* without aggregating the result(s).               *)
 (*--------------------------------------------------*)
-let compute_time_elapse location constr =
+let compute_time_elapse_set_with_flow location flow constr =
 	let program = Program.get_program () in
 	let invariant = compute_invariant location in
-	let flow = compute_flow location in 
 	let elapsed =
 	match flow with
 		| Undefined -> raise (InternalError "undefined flow")
@@ -516,20 +507,48 @@ let compute_time_elapse location constr =
 				let x_deriv = LinearConstraint.rename_variables program.unrenamed_clocks_couples deriv in
 				let elapsed = LinearConstraint.time_elapse constr x_deriv in
 				LinearConstraint.intersection_assign elapsed [invariant];
-				elapsed
+				[elapsed]
 			)
 		| Affine deriv -> (			
 				affine_time_elapse location invariant deriv constr
 			) in
 	elapsed
+
+	
+(*--------------------------------------------------*)
+(* Compute the time elapse for a location, taking   *)
+(* into account the invariant of the location,      *)
+(* without aggregating the result(s).               *)
+(*--------------------------------------------------*)
+let compute_time_elapse_set location constr =
+	let flow = compute_flow location in 
+	compute_time_elapse_set_with_flow location flow constr
 		
+
+(*--------------------------------------------------*)
+(* Compute the time elapse for a location, taking   *)
+(* into account the invariant of the location       *)
+(*--------------------------------------------------*)
+let compute_time_elapse location constr =
+	let regions = compute_time_elapse_set location constr in
+	if 1 = List.length regions then List.hd regions else 
+	begin
+		print_message Debug_low ("Compute convex hull of " ^ (string_of_int (List.length regions)) ^ " local states...");
+		LinearConstraint.hull regions
+	end
+		
+
 
 (** compute continuous successors of an abstract state *)
 let abstract_time_elapse preds astate =
 	let loc, c = PredicateAbstraction.concretize preds astate in
-	let elapse = compute_time_elapse loc c in
+	let elapse_set = compute_time_elapse_set loc c in
 	let loc, b = astate in
-	let astates = PredicateAbstraction.abstract preds (loc, elapse) in
+	(* collect abstract states for reached regions *)
+	let astates = List.fold_left (fun astates region -> 
+		let my_astates = PredicateAbstraction.abstract preds (loc, region) in
+		Global.list_union astates my_astates
+	) [] elapse_set in
 	astates
 
 
@@ -812,7 +831,7 @@ let compute_discrete_jump orig_constraint orig_location dest_location guards upd
 		print_message Debug_total (LinearConstraint.string_of_linear_constraint program.variable_names new_constraint);
 	);
 	
-	print_message Debug_total ("\nComputing clock updates X' = rho(X) + d");
+	print_message Debug_total ("\nComputing clock updates X' = rho(X)");
 	let updates = compute_updates updated_continuous clock_updates in
 
 	(* Compute the invariant in the destination location *)
@@ -849,7 +868,7 @@ let compute_discrete_jump orig_constraint orig_location dest_location guards upd
 	(* Perform the intersection *)
 	print_message Debug_total ("\nPerforming intersection of C(X) and g(X) and X' = rho(X) and I_q(X') ");
 	LinearConstraint.intersection_assign new_constraint	[
-		orig_constraint ();
+		orig_constraint;
 		updates;				
 		renamed_invariant;
 		discrete_constraint
@@ -1068,7 +1087,7 @@ let add_transition src_index action_index new_state =
 (* graph. Returns a list of new indices. Empy if all the *)
 (* states were already present in the graph.             *)
 (*-------------------------------------------------------*)
-let add_abstract_transition src_index action_index new_state =
+let add_abstract_transition src_index action_index trans_list new_state =
 	let program = Program.get_program () in
 	let graph = Program.get_abstract_reachability_graph () in
 
@@ -1077,7 +1096,7 @@ let add_abstract_transition src_index action_index new_state =
 	(* add states to the reachability graph, keep only new ones *)
 	let new_states = List.fold_left (fun new_states trg -> 
 		let new_index, this_new_state = Graph.add_state graph trg in
-		Graph.add_transition graph (src_index, Discrete action_index, new_index);
+		Graph.add_transition graph (src_index, Discrete (action_index, trans_list), new_index);
 		(* if a delayed node is hit by a discrete transition, remove it from the delayed queue *)
 		let was_delayed = is_delayed new_index in
 		if was_delayed then (
@@ -1086,19 +1105,7 @@ let add_abstract_transition src_index action_index new_state =
 		if this_new_state || was_delayed then new_index :: new_states else new_states
 	) [] targets in
 	new_states
-	
-(*	(* compute continuous successors of new states *)                       *)
-(*	List.fold_left (fun new_states src_index ->                             *)
-(*		let src_state = Graph.get_state graph src_index in                    *)
-(*		let elapsed = abstract_time_elapse program.predicates src_state in    *)
-(*		let my_new_states = List.fold_left (fun my_new_states trg ->          *)
-(*			let new_index, this_new_state = Graph.add_state graph trg in        *)
-(*			Graph.add_transition graph (src_index, Continuous, new_index);      *)
-(*			if this_new_state then new_index :: my_new_states else my_new_states*)
-(*		) [] elapsed in                                                       *)
-(*		my_new_states @ new_states                                            *)
-(*	) new_states new_states                                                 *)
-	
+
 	
 
 (*-------------------------------------------------------*)
@@ -1160,8 +1167,180 @@ let compute_transitions location constr action_index automata aut_table max_inde
 		true		
 	) with Unsat_exception -> false
 
+	
+let verify_post_C s a' = 
+	let program = Program.get_program ()
+	and l', _ = a' 
+	and l , c = s in
+	(* compute concretized state *)
+	let _, c' = PredicateAbstraction.concretize program.predicates a' in
+	(* compute the time elapse *)
+	let regions = compute_time_elapse_set l' c in
+	(* cut with target abstract state *)
+	let target_regions = List.map (fun r -> LinearConstraint.intersection [r; c']) regions in
+	(* compute convex hull *)
+	let hull = LinearConstraint.hull target_regions in
+	(l', hull)
+	
+	
+let verify_post_D s t a' =
+	let program = Program.get_program ()
+	and l', _ = a'
+	and l , c = s
+	and act, transitions = t in
+	(* make tables for transition *)
+	let aut_list, trans_list = List.split transitions in
+	let aut_table = Array.of_list aut_list
+	and trans_table = Array.of_list trans_list in
+	(* get transition infos *)
+	let _, g, updated_continuous, clock_updates = compute_new_location aut_table trans_table act l in
+	(* perform jump *)
+	let c' = compute_discrete_jump c l l' g updated_continuous clock_updates in
+	(* intersect with abstract target state *)
+	let _, d = PredicateAbstraction.concretize program.predicates a' in
+	let c'' = LinearConstraint.intersection [c'; d] in 
+	(* time elapse in target location *)
+	verify_post_C (l', c'') a'
 
 
+let verify_post s t a' =
+	let q', c' = match t with
+		| Continuous -> verify_post_C s a'
+		| Discrete (act, trans) -> verify_post_D s (act, trans) a' in
+	if LinearConstraint.is_satisfiable c' then (q', c') else
+		raise Unsat_exception
+
+
+(* Invert a flow constraint *)
+let invert_flow flow =
+	let invert constr = 
+		let program = Program.get_program () in
+		let vars = List.map program.prime_of_variable program.clocks in
+		let negate_vars = fun v -> (
+			if (List.mem v vars) then
+				Ppl_ocaml.Unary_Minus (Ppl_ocaml.Variable v)
+			else
+				Ppl_ocaml.Variable v
+		) in
+		LinearConstraint.substitute negate_vars constr in				
+	match flow with
+		| Rectangular constr -> Rectangular (invert constr) 
+		| Affine constr -> Affine (invert constr) 
+		| Undefined -> Undefined 
+		
+	
+let verify_pre_C a a' = 
+	let program = Program.get_program () in
+	(* get the location *)
+	let l, _ = a in
+	(* concretize source and target state *)
+	let _, c  = PredicateAbstraction.concretize program.predicates a
+	and _, c' = PredicateAbstraction.concretize program.predicates a' in
+	(* ivert flow of location *)
+	let flow = compute_flow l in
+	let inv_flow = invert_flow flow in
+	(* compute inverse time elapse from target state *)
+	Cache.flush part_cache;
+	let elapse_set = compute_time_elapse_set_with_flow l inv_flow c' in
+	Cache.flush part_cache;
+	(* constrain resulting regions to source invariant *)
+	let regions = List.map (fun r ->
+		LinearConstraint.intersection [c; r]
+	) elapse_set in
+	(* compute convex hull of result *)
+	LinearConstraint.hull regions
+
+
+let verify_pre_D a t a' =
+	let program = Program.get_program ()
+	and l , _ = a
+	and act, transitions = t in
+	(* make tables for transition *)
+	let aut_list, trans_list = List.split transitions in
+	let aut_table = Array.of_list aut_list
+	and trans_table = Array.of_list trans_list in
+	(* get transition infos *)
+	let _, guards, updated_continuous, clock_updates = compute_new_location aut_table trans_table act l in
+	let mu = compute_updates updated_continuous clock_updates in
+	(* concretize source and target states *)
+	let _, c  = PredicateAbstraction.concretize program.predicates a
+	and _, c' = PredicateAbstraction.concretize program.predicates a' in
+	(* transform target invariant to X' space *)
+	LinearConstraint.rename_variables_assign program.renamed_clocks_couples c';
+	(* combine constraints and update *)
+	let jump = LinearConstraint.intersection (guards @ [c; mu; c']) in
+	(* get pre-set of jump *)
+	let pre = LinearConstraint.hide program.renamed_clocks jump in
+	pre
+			
+
+let verify_pre a t a' =
+	match t with
+		| Continuous -> verify_pre_C a a'
+		| Discrete (act, trans) -> verify_pre_D a (act, trans) a'
+
+
+let verify_path s0 path =
+	let graph = Program.get_abstract_reachability_graph () in
+	let program = Program.get_program () in
+	(* initial state *)
+	let q0, c0 = s0 in
+	(* first abstract state on path *)
+	let path, trg_index = path in
+	let target = Graph.get_state graph trg_index in 
+	let i0, t0 = List.hd path in
+	let a0 = Graph.get_state graph i0 in 
+	(* concretize first state *) 
+	let _, d0 = PredicateAbstraction.concretize program.predicates a0 in
+	(* restrict initial state to first abstract state *) 
+	let c0' = LinearConstraint.intersection [c0; d0] in
+	(* first state on path to verify *)
+	let r0 = (q0, c0') in
+	let r = ref r0 in
+	let last_r = ref r0 in
+	(* walk the abstract path and check if it contains a concrete trajectory *)
+	let curr_a = ref a0 
+	and curr_t = ref t0
+	and next_a = ref a0  
+	and curr_p = ref (List.tl path) in
+	let new_pred = try (
+		while !curr_p <> [] do
+			(* get next abstract state *)
+			let i', t' = List.hd !curr_p in
+			let a' = Graph.get_state graph i' in
+			(* check transition *)
+			last_r := !r;
+			next_a := a';
+			r := verify_post !r !curr_t a';
+			(* set variables for next round *)		
+			curr_a := a';
+			curr_t := t';
+			curr_p := List.tl !curr_p;
+		done;
+		(* last step to target state *)
+		next_a := target;
+		r := verify_post !r !curr_t target;
+		(* all steps verified successfully -> no new predicate *)
+		None
+	) with Unsat_exception -> begin
+		  print_message Debug_standard "Spurious counterexample!";
+			let pre = verify_pre !curr_a !curr_t !next_a in
+			let _, post = !r in 
+			let new_pred = LinearConstraint.separation_plane program.nb_clocks pre post in
+			let _ = match new_pred with                                                                                                                                          
+				| None -> begin
+						print_message Debug_standard "No separation possible :";
+						print_message Debug_standard (LinearConstraint.string_of_linear_constraint program.variable_names pre);
+						print_message Debug_standard (LinearConstraint.string_of_linear_constraint program.variable_names post);
+					end
+				| Some ineq -> print_message Debug_standard ("separating predicate: " ^ (LinearConstraint.string_of_linear_inequality program.variable_names ineq)) in
+			(* return new predicate *)
+			new_pred
+		end in
+	(* return new predicate (or none) *)
+	new_pred
+	
+		
 (*-----------------------------------------------------*)
 (* Compute the list of possible destination states     *)
 (* wrt. to a reachability_graph, and update this graph *)
@@ -1255,12 +1434,12 @@ let post state_lookup orig_state_index =
 			for i=0 to Array.length current_transitions -1 do
 				current_transitions.(i) <- List.nth (possible_transitions.(i)) (current_indexes.(i))
 			done; 
-	
+				
 			(* Compute the new location for the current combination of transitions *)
 			let location, guards, updated_continuous, clock_updates = compute_new_location real_indexes current_transitions action_index original_location in
 			
 			(* Compute the new constraint for the current transition *)
-			let new_constraint = compute_new_constraint orig_constraint original_location location guards updated_continuous clock_updates in
+			let new_constraint = compute_new_constraint (orig_constraint ()) original_location location guards updated_continuous clock_updates in
 	
 			(* Check the satisfiability *)
 			let _ = match new_constraint with
@@ -1282,8 +1461,10 @@ let post state_lookup orig_state_index =
 							(* Create the new concrete state *)				
 							let new_state = location, final_constraint in
 							if program.imitator_mode = AbstractReachability then (
+								(* build list of transitions *)
+								let trans_list = List.combine (Array.to_list real_indexes) (Array.to_list current_transitions) in
 								(* Add all touched abstract states to reachability graph *)
-								let new_indices = add_abstract_transition orig_state_index action_index new_state in
+								let new_indices = add_abstract_transition orig_state_index action_index trans_list new_state in
 								new_states := new_indices @ !new_states;
 							) else (
 								(* Add new state to reachability graph *)
@@ -1309,7 +1490,18 @@ let post state_lookup orig_state_index =
 			let agraph = Program.get_abstract_reachability_graph () in
 			let state = state_lookup orig_state_index in
 			let astates = PredicateAbstraction.abstract program.predicates state in
-			if 1 <> List.length astates then raise (InternalError "Ambiguous abstract state");
+			if 1 <> List.length astates then (
+				if 0 = List.length astates then (
+					print_message Debug_standard ("Contradictory abstract state: ");
+					print_message Debug_standard (string_of_state state)						
+				) else (  					
+					print_message Debug_standard ("Ambiguous abstract states: ");
+					List.iter (fun astate -> 
+						print_message Debug_standard (PredicateAbstraction.string_of_abstract_state astate);
+					) astates;
+					raise (InternalError "Ambiguous abstract state")
+				);				
+			);
 			let astate = List.hd astates in
 			let elapsed = abstract_time_elapse program.predicates astate in
 			List.iter (fun trg -> 
@@ -1366,7 +1558,7 @@ let post_star init_state =
 	if program.imitator_mode = AbstractReachability then (
 		print_message Debug_medium "computing abstract initial states";
 		(* Create the abstract reachability graph *)
-		let agraph = Graph.make guessed_nb_transitions (=) in
+		let agraph = Graph.make guessed_nb_transitions (PredicateAbstraction.signatures_equal) in
 		(* clear delayed queue *)
 		clear_delayed_set ();
 		(* get abstract initial states *)
@@ -1374,10 +1566,12 @@ let post_star init_state =
 		(* Add them to reachability graph *)
 		List.iter (fun a_init -> 
 			print_message Debug_medium ("abstract inital state: " ^ (PredicateAbstraction.string_of_abstract_state a_init));
-			let index, added = Graph.add_state agraph a_init in
+			let index, added = Graph.add_initial_state agraph a_init in
 			(* initialize search list *)
-			if added then	newly_found_new_states := index :: !newly_found_new_states
-		) a_inits;
+			if added then	begin
+				newly_found_new_states := index :: !newly_found_new_states;
+			end
+		) a_inits;		
 		(* store in global table *)
 		Program.set_abstract_reachability_graph agraph;
 		(* build lookup function *)
@@ -1388,7 +1582,7 @@ let post_star init_state =
 		(* Create the reachability graph *)
 		let reachability_graph = Graph.make guessed_nb_transitions inclusion_predicate in
 		(* Add the initial state to the reachable states *)
-		let init_state_index, _ = Graph.add_state reachability_graph init_state in
+		let init_state_index, _ = Graph.add_initial_state reachability_graph init_state in
 		(* store in global table *)
 		Program.set_reachability_graph reachability_graph;
 		(* initialize search list *)
@@ -1454,12 +1648,26 @@ let post_star init_state =
 			(* Iterate *)
 			nb_iterations := !nb_iterations + 1;
 			(* Check if the limit has been reached *)
-			match options#post_limit with
-				| None -> ()
-				| Some limit -> if !nb_iterations > limit then limit_reached := true;
-			match options#time_limit with
-				| None -> ()
-				| Some limit -> if (get_time()) > (float_of_int limit) then limit_reached := true;
+			begin
+				match options#post_limit with
+					| None -> ()
+					| Some limit -> if !nb_iterations > limit then limit_reached := true;
+				match options#time_limit with
+					| None -> ()
+					| Some limit -> if (get_time()) > (float_of_int limit) then limit_reached := true;
+			end;
+					
+			if program.imitator_mode = AbstractReachability then (
+				(* check for counterexamples *)
+				let graph = Program.get_abstract_reachability_graph () in
+				let cex = Graph.get_counterexample graph in
+				match cex with
+					| Some path -> begin
+							print_message Debug_standard "Found a counterexample.";
+							limit_reached := true;
+					  end
+					| _ -> ()
+			);			
 		done;
 	) with Sys.Break -> (
 		print_warning ("Post^* was interrupted by the user. Analysis may be incomplete.");

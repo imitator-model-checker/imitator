@@ -58,7 +58,7 @@ let get_constant name =
 
 /* CT_ALL CT_ANALOG CT_ASAP CT_BACKWARD CT_CLDIFF CT_D  CT_ELSE CT_EMPTY  CT_ENDHIDE CT_ENDIF CT_ENDREACH CT_ENDWHILE CT_FORWARD CT_FREE CT_FROM  CT_HIDE CT_HULL CT_INTEGRATOR CT_ITERATE CT_NON_PARAMETERS CT_OMIT CT_POST CT_PRE CT_PRINT CT_PRINTS CT_PRINTSIZE CT_REACH  CT_STOPWATCH CT_THEN CT_TO CT_TRACE CT_USING  CT_WEAKDIFF CT_WEAKEQ CT_WEAKGE CT_WEAKLE  */
 
-%token CT_AND CT_AUTOMATON CT_ANALOG CT_BAD CT_CLOCK CT_CONST CT_DISCRETE CT_DO CT_END CT_ENDREACH CT_FALSE CT_FORWARD CT_FROM CT_GOTO CT_IF CT_INIT CT_INITIALLY CT_IN CT_LOC CT_LOCATIONS CT_NOT CT_OR CT_PARAMETER CT_PREDICATES CT_PRINT CT_REACH CT_REGION CT_SYNC CT_SYNCLABS CT_TRUE CT_VAR CT_WAIT CT_WHEN CT_WHILE
+%token CT_AND CT_AUTOMATON CT_ANALOG CT_BAD CT_CLOCK CT_CONST CT_DISCRETE CT_DO CT_DOMAIN CT_END CT_ENDREACH CT_FALSE CT_FORWARD CT_FROM CT_GOTO CT_IF CT_INIT CT_INITIALLY CT_IN CT_LOC CT_LOCATIONS CT_NOT CT_OR CT_PARAMETER CT_PREDICATES CT_PRINT CT_REACH CT_REGION CT_SYNC CT_SYNCLABS CT_TRUE CT_VAR CT_WAIT CT_WHEN CT_WHILE
 
 %token EOF
 
@@ -97,9 +97,9 @@ main:
 		(* parse automata *)
 		let automata = $3 in 
 		(* parse commands *)
-		let init,bad,preds = $4 in
+		let init,bad,preds,domain = $4 in
 		(* return global and local variables, automata and commands *)
-		!declarations, automata, init, bad, preds
+		!declarations, automata, init, bad, preds, domain
 	}
 ;
 
@@ -530,7 +530,8 @@ pos_float:
 ***********************************************/
 
 commands:
-	| init_declaration init_definition bad_declaration bad_definition reach_command predicates { ($2, $4, $6) }
+	| init_declaration init_definition bad_declaration bad_definition reach_command predicate_abstraction_info 
+		{	let preds, domain = $6 in	($2, $4, preds, domain) }
 ;
 
 
@@ -580,6 +581,10 @@ state_predicate:
 	| linear_constraint { List.map (fun x -> Linear_predicate x) $1 }
 ;
 
+predicate_abstraction_info:
+	| predicates domain { $1, $2 }
+	| domain predicates { $2, $1 }
+
 predicates:
 	| CT_PREDICATES COLON predicate_list SEMICOLON { $3 }
 	| { [] }
@@ -588,4 +593,8 @@ predicates:
 predicate_list:
 	linear_constraint COMMA predicate_list { $1 @ $3 }
 	| linear_constraint { $1 }
+
+domain:
+	CT_DOMAIN COLON convex_predicate SEMICOLON { $3 }
+	| { [] }
 ;

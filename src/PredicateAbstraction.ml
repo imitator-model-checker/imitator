@@ -9,6 +9,20 @@ let string_of_signature =
 	List.fold_left (fun s p -> 
 		s ^ (if p then "1" else "0")
 	) ""
+	
+exception Different	
+	
+let signatures_equal b b' = 
+	if List.length b <> List.length b' then false else 
+	begin
+		try (
+			List.iter2 (fun p p' -> 
+				if p <> p' then raise Different 
+			) b b';
+			(* reached here, so all entries equal *)
+			true
+		) with Different -> false
+	end 
 
 let string_of_abstract_state (loc, b) =
 	let program = Program.get_program () in
@@ -37,7 +51,8 @@ let concretize preds (loc, b) =
 	let inv = LinearConstraint.intersection invariants in	
 	(* build predicate instantiation *)
 	let p = instantiate_predicates preds b in
-	LinearConstraint.intersection_assign inv [p];
+	(* intersect with invariant and global domain *)
+	LinearConstraint.intersection_assign inv [p; program.domain];
 	(* return location with constraint *)
 	(loc, inv)
 	
@@ -64,9 +79,10 @@ let split preds constr =
 	
 (** converts a concrete state into a list of abstract states *)
 let abstract preds (loc, c) =
+	let program = Program.get_program () in
 	print_message Debug_total ("abstracting state: " ^ string_of_state (loc, c));
 	(* get all consistent signatures *)
-	let signatures = split preds c in
+	let signatures = split preds (LinearConstraint.intersection [c; program.domain]) in
 	(* combine with location *)
 	List.map (fun b -> (loc, b)) signatures
 		
@@ -85,5 +101,12 @@ let get_abstract_states preds loc =
 	(* get consistent abstract states *)
 	abstract preds (loc, inv)
 	
-		
+
+(** get all feasible regions with respect to a list of predicates *)
+let get_feasible_regions preds =
+	let program = Program.get_program () in
+	(* get all consistent signatures *)
+	let signatures = split preds program.domain in
+	(* concretize signatures *)
+	List.map (instantiate_predicates preds) signatures
 

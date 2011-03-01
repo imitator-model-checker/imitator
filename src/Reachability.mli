@@ -25,3 +25,5 @@ val post : lookup_function -> state_index -> state_index list
 val post_star : state -> linear_constraint * int * float
 	
 val print_stats: unit -> unit
+
+val verify_path : state -> abstract_path -> linear_inequality option

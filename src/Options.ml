@@ -21,6 +21,8 @@ class imitator_options =
 		val mutable post_limit = ref None
 		(* limit on runtime *)
 		val mutable time_limit = ref None
+		(* limit on refinement steps *)
+		val mutable cegar_limit = ref None
 		(* imitator mode *)
 		val mutable imitator_mode = ref Inverse_method
 		(* acyclic mode *)
@@ -61,6 +63,7 @@ class imitator_options =
 		method with_parametric_log = !with_parametric_log
 		method post_limit = !post_limit
 		method time_limit = !time_limit
+		method cegar_limit = !cegar_limit
 		method program_prefix = !program_prefix
 		method imitator_mode = !imitator_mode
 		method inclusion = !inclusion
@@ -107,7 +110,7 @@ class imitator_options =
 				else if mode = "cover" then 
 					imitator_mode := Cover_cartography
 				(* Case: number of iterations *)
-				else if mode = "abstract_reach" then
+				else if mode = "cegar" then
 					imitator_mode := AbstractReachability
 				else try (
 					(* Find the 'random' string *)
@@ -138,7 +141,7 @@ class imitator_options =
 				("-inclusion", Set inclusion, " Consider an inclusion of region instead of the equality when performing the Post operation. Default: 'false'");
 				("-union", Set union, " Consider last states for deriving constraint K. Default: 'false'");
 				("-log-prefix", Set_string program_prefix, " Sets the prefix for log files. Default: [program_file].");
-				("-mode", String set_mode, " Mode for IMITATOR II. Use 'reachability' for a parametric reachability analysis (no pi0 needed). Use 'inversemethod' for the inverse method. For the behavioral cartography algorithm, use 'cover' to cover all the points within V0, or 'randomXX' where XX is a number to iterate randomly algorithm. Default: 'inversemethod'.");
+				("-mode", String set_mode, " Mode for IMITATOR II. Use 'reachability' for a parametric reachability analysis (no pi0 needed). Use 'inversemethod' for the inverse method. For the behavioral cartography algorithm, use 'cover' to cover all the points within V0, or 'randomXX' where XX is a number to iterate randomly algorithm. Use 'cegar' for reachability based on counterexample guided abstraction refinement. Default: 'inversemethod'.");
 				("-pre", Set pre, " Use pre-image instead of post-image computation. Default: false.");
 				("-no-dot", Set no_dot, " No graphical output using 'dot'. Default: false.");
 				("-no-log", Set no_log, " No generation of log files. Default: false.");
@@ -148,9 +151,10 @@ class imitator_options =
 				("-part", Int (fun i -> nb_part := i), " Number of partitions for each affine variable. Default: 4.");
 				("-fancy", Set fancy, " Generate detailed state information for dot output. Default: false.");
 				("-no-random", Set no_random, " No random selection of the pi0-incompatible inequality (select the first found). Default: false.");
-				("-post-limit", Int (fun i -> post_limit := Some i), " Limits the depth of the Post exploration. Default: no limit.");
 				("-sync-auto-detect", Set sync_auto_detection, " Detect automatically the synchronized actions in each automaton. Default: false (consider the actions declared by the user)");
 				("-time-limit", Int (fun i -> time_limit := Some i), " Time limit in seconds. Warning: no guarantee that the program will stop exactly after the given amount of time. Default: no limit.");
+				("-post-limit", Int (fun i -> post_limit := Some i), " Limits the depth of the Post exploration. Default: no limit.");
+				("-cegar-limit", Int (fun i -> cegar_limit := Some i), " Limits the number of refinement steps in CEGAR mode. Default: no limit.");				
 				("-timed", Set timed_mode, " Adds a timing information to each output of the program. Default: none.");
 				("-with-parametric-log", Set with_parametric_log, " Adds the elimination of the clock variables in the constraints in the log files. Default: false.");
 				("-version", Unit (fun _ -> print_version_string (); exit 0), " Print version string and exit.");

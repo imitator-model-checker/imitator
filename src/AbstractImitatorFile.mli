@@ -29,6 +29,7 @@ open Automaton
 
 type action_index = int
 type action_name = string
+type transition_index = int
 
 (****************************************************************)
 (** Pi 0 *)
@@ -65,7 +66,7 @@ type abstract_state  = location * bool list
 
 type abstract_label =
 	| Continuous
-	| Discrete of action_index
+	| Discrete of action_index * (automaton_index * transition_index) list
 
 type predicate = linear_inequality
 
@@ -184,8 +185,11 @@ type abstract_program = {
 	init : state;
 	(* bad states *)
 	bad  : (automaton_index * location_index) list;
+	
 	(* initial predicates for abstraction *)
 	predicates : linear_inequality list;
+	(* bounded domain for predicate abstraction algorithm *)
+	domain : linear_constraint;
 
 	(* Acyclic mode *)
 	acyclic : bool;

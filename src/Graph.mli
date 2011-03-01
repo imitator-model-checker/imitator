@@ -25,7 +25,7 @@ type reachability_graph = (linear_constraint, action_index) t
 type abstract_reachability_graph = (bool list, abstract_label) t
 
 (** A path in a graph, represented by a list of pairs (state index, label) *)
-type 'l path = (state_index * 'l) list
+type 'l path = (state_index * 'l) list * state_index
 
 (** A path in an abstract reachability graph *)
 type abstract_path = abstract_label path
@@ -59,6 +59,9 @@ val exists_state: ('s graph_state -> bool) -> ('s, 'l) t -> bool
 (** test if all states satisfy predicate s *)
 val forall_state: ('s graph_state -> bool) -> ('s, 'l) t -> bool
 
+(** get indices of initial states *)
+val initial_states: ('s, 'l) t -> state_index list
+
 (** find all "last" states on finite or infinite runs *)
 val last_states: ('s, 'l) t -> state_index list 
 
@@ -72,6 +75,10 @@ val bad_states_reachable : ('s, 'l) t -> bool
  is the index of the state, and 'added' is false if the state was already 
  in the graph, true otherwise *)
 val add_state : ('s, 'l) t -> 's graph_state -> (state_index * bool)
+
+(** Add a state to a graph and tag it as initial state. Works as Graph.add_state *)
+val add_initial_state : ('s, 'l) t -> 's graph_state -> (state_index * bool)
+
 
 (** Add a transition to the graph *)
 val add_transition : ('s, 'l) t -> (state_index * 'l * state_index) -> unit
@@ -103,6 +110,9 @@ val dot_of_graph : reachability_graph -> (string * string)
 (** Specialized interface for abstract_reachability_graph *)
 (****************************************************************)
 
+(** Plot reachable states projected to the given two variables *)
+val plot_abstract_graph : variable -> variable -> abstract_reachability_graph -> string
+
 (** Convert a reachability graph to a dot file *)
 val dot_of_abstract_graph : abstract_reachability_graph -> (string * string)
 
@@ -110,6 +120,6 @@ val dot_of_abstract_graph : abstract_reachability_graph -> (string * string)
 val get_path : abstract_reachability_graph -> state_index list -> state_index -> abstract_path option
 
 (** Find a path from any initial state to a bad state *)
-val get_counterexample : abstract_reachability_graph -> state_index list -> abstract_path option
+val get_counterexample : abstract_reachability_graph -> abstract_path option
 
  

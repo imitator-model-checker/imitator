@@ -47,6 +47,7 @@ rule token = parse
 (*	| "d"              { CT_D }*)
 	| "discrete"       { CT_DISCRETE }
 	| "do"             { CT_DO }
+	| "domain"         { CT_DOMAIN }
 (* 	| "else"           { CT_ELSE } *)
 (* 	| "empty"          { CT_EMPTY } *)
 	| "end"            { CT_END }

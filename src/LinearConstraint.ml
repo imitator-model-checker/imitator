@@ -99,9 +99,6 @@ let rec normalize_linear_term lt =
 (** Global variables *)
 (**************************************************)
 
-(* The manager *)
-(*let manager = Polka.manager_alloc_strict ()*)
-
 (* The number of integer dimensions *)
 let int_dim = ref 0
 
@@ -134,13 +131,6 @@ let assert_dimensions poly =
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
 
 (** Create a linear term using a list of coef and variables, and a constant *)
-(*let make_linear_term members coef =                          *)
-(*	(* Convert the members *)                                  *)
-(*	let members = List.map apron_coeff_dim_of_member members in*)
-(*	(* Convert the coef *)                                     *)
-(*	let coeff_option = apron_coeff_option_of_constant coef in  *)
-(*		Linexpr0.of_list None members coeff_option               *)
-
 let make_linear_term members coef =
 	List.fold_left (fun term head ->
 		let (c, v) = head in 
@@ -395,6 +385,10 @@ let is_zero_coef = function
 	| Coefficient c -> c =! Gmp.Z.zero
 	| _ -> false
 
+let is_one_coef = function
+	| Coefficient c -> c =! Gmp.Z.one
+	| _ -> false
+
 
 (** build a sum of two expressions; respects the case where one of the 
 	  operands is zero *)
@@ -406,6 +400,26 @@ let compact_sum lexpr rexpr =
 			lexpr
 		) else (
 			Plus (lexpr, rexpr)
+		))
+		
+let compact_diff lexpr rexpr =
+	if is_zero_coef lexpr then (
+		Unary_Minus rexpr
+	) else (
+		if is_zero_coef rexpr then (
+			lexpr
+		) else (
+			Minus (lexpr, rexpr)		
+		))
+
+let compact_prod c expr =
+	if c =! Gmp.Z.zero then (
+		Coefficient Gmp.Z.zero
+	) else (
+		if c =! Gmp.Z.one then (
+			expr
+		) else (
+			Times (c, expr)
 		))
 
 (** splits an expression into positive and negative part for pretty printing;
@@ -638,6 +652,46 @@ let string_of_linear_constraint names linear_constraint =
 (** {3 Functions} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
 
+let rec minimize_term term =
+	match term with
+	| Unary_Plus expr -> minimize_term expr
+	| Unary_Minus expr -> ( 
+		let inner_expr = minimize_term expr in
+		match inner_expr with
+			| Coefficient c -> Coefficient (Gmp.Z.neg c)
+			| Times (c, inner_term) -> Times (Gmp.Z.neg c, inner_term)
+			| _ -> Unary_Minus inner_expr )
+	| Plus (lexpr, rexpr) -> (
+		let lterm = minimize_term lexpr 
+		and rterm = minimize_term rexpr in
+		match (lterm, rterm) with
+			| (Coefficient cl, Coefficient cr) -> Coefficient (Gmp.Z.add cl cr)
+			| _ -> compact_sum lterm rterm )			
+	| Minus (lexpr, rexpr) -> ( 
+		let lterm = minimize_term lexpr 
+		and rterm = minimize_term rexpr in
+		match (lterm, rterm) with
+			| (Coefficient cl, Coefficient cr) -> Coefficient (Gmp.Z.sub cl cr)
+			| _ -> compact_diff lterm rterm )
+	| Times (c, expr) -> ( 
+		let inner_term = minimize_term expr in
+		match inner_term with
+			| Coefficient d -> Coefficient (Gmp.Z.mul c d)
+			| Times (d, inner_expr) -> compact_prod (Gmp.Z.mul c d) inner_expr
+			| Plus (lexpr, rexpr) -> (
+				let lterm = minimize_term (Times (c, lexpr)) 
+				and rterm = minimize_term (Times (c, rexpr)) in
+				Plus (lterm, rterm)
+			)
+			| _ -> compact_prod c inner_term) 
+	| _ -> term			 
+
+
+let minimize_inequality ineq =
+	let lterm, rterm, op = split_linear_inequality ineq in
+	build_linear_inequality (minimize_term lterm) (minimize_term rterm) op
+	
+
 let rec term_support term =
 	match term with
 		| Coefficient _ -> VariableSet.empty
@@ -860,113 +914,215 @@ let bounding_box variables constr =
 	List.iter boxify bounds;
 	cylinder
 
+	
+exception Found of linear_inequality	
 
-let get_coefficients_term varlist term =
-	let zero_vec = fun x -> NumConst.zero in
-	let unit_vec v = fun x -> if v = x then NumConst.one else NumConst.zero in
-	let ccoef = evaluate_linear_term_ppl zero_vec term in
-	let vcoef = List.map (fun v -> 
-		let x = evaluate_linear_term_ppl (unit_vec v) term in
-		NumConst.sub x ccoef
-	) varlist in
-	(vcoef, ccoef) 
+(* find a facet of p that separates p from q *)
+let separate p q =
+	let facets = Ppl.ppl_Polyhedron_get_constraints p in
+	try (
+		List.iter (fun facet -> 
+			let test_facet f =
+				if not (is_satisfiable (intersection [q; make [f]])) then raise (Found f) in
+			match facet with
+				| Equal (lterm, rterm) -> begin
+						(* test both half spaces <= and >= *)
+						let upper_h = build_linear_inequality lterm rterm Greater_Or_Equal_RS in
+						test_facet upper_h;
+						let lower_h = build_linear_inequality lterm rterm Less_Or_Equal_RS in
+						test_facet lower_h;
+					end
+				| _ -> test_facet facet			
+		) facets;
+		(* no facet left -> give up *)
+		None	
+	) with Found facet -> Some facet
+	
 
+(** Simplistic algorithm to find a separation plane for two polyhedra. 
+	 It checks for each facet of the polyhedra, if it is a separating
+	 plane. If this is not the case (not guaranteed for dim > 2), None
+	 is returned.
+**)
+let simple_separation_plane p q =
+	let facet = separate p q in
+	match facet with
+		| Some ineq -> Some ineq
+		| None -> separate q p	
 
-let get_coefficients varlist ineq = 
-	let lterm, rterm, _ = split_linear_inequality ineq in
-	let lvcoef, lccoef = get_coefficients_term varlist lterm in
-	let rvcoef, rccoef = get_coefficients_term varlist rterm in
-	let vcoef = List.map2 (fun lc rc -> 
-		NumConst.sub rc lc	
-	) lvcoef rvcoef in
-	let ccoef = NumConst.sub rccoef lccoef in
-	(vcoef, ccoef)	
-			
-			
-let linear_system y_domain x_domain constr =
-	(* size of matrix *)
-	let n = List.length y_domain in
-	if n <> (List.length x_domain) then raise (InternalError "size of domains differ");
-	(* build index maps for variable domains *)
-	let y_table = Hashtbl.create n in	
-	let i = ref 0 in
-	List.iter (fun vy -> 
-		Hashtbl.add y_table vy !i;
-		i := !i + 1
-	) y_domain;
-	let y_index = Hashtbl.find y_table in
-	(* build linear system *)
-	let a = Array.make_matrix n n NumConst.zero in
-	let b = Array.make n NumConst.zero in
-	(* function to find the defined variable *)
-	let get_nonzero_coefs coefs =
-		List.filter (fun (_, c) -> 
-			NumConst.neq c NumConst.zero
-		) (List.combine y_domain coefs) in
-	let simple_varnames = fun x -> "x" ^ (string_of_int x) in
-	(* get inequalities *)
-	let eqs = ppl_Polyhedron_get_constraints constr in
-	(* remove inequalities that do not refer to the selected domains *)
-	let eqs = List.filter (fun eq -> 
-		let sup = inequality_support eq in
-		VariableSet.exists (fun v -> List.mem v (List.rev_append x_domain y_domain)) sup		
-	) eqs in
-	List.iter (fun eq -> 
-		print_message Debug_standard (string_of_linear_inequality simple_varnames eq);
-		let x_coef, c = get_coefficients x_domain eq in
-		let y_coef, _ = get_coefficients y_domain eq in
-		(* get defined y variable *)
-		let nz = get_nonzero_coefs y_coef in
-		(* no transformations supported yet *)
-		if (List.length nz) <> 1 then raise (InternalError "malformed flow");
-		let y, yc = List.hd nz in
-		let yd = NumConst.neg yc in
-		(* store coefficients in matrix *)
-		let yi = y_index y in		
-		let i = ref 0 in
-		List.iter (fun xc -> 
-			a.(yi).(!i) <- NumConst.div xc yd;
-			i := !i + 1
-		) x_coef;
-		(* store constant coefficient in vector *)
-		b.(yi) <- NumConst.div c yd				
-	) eqs;
-	(* print debug *)
-	for i = 0 to n-1 do
-		let row = Array.fold_left (fun s c -> 
-			s ^ "\t" ^ (NumConst.string_of_numconst c)
-		) "" a.(i) in 
-		print_message Debug_standard (row ^ "\t| " ^ (NumConst.string_of_numconst b.(i)));
-	done;	
-	(* return matrix and vector *)
-	(a, b)
+	
+exception Unbounded
+
+let make_variables n =
+	let rec build i rest =
+		if i = 0 then 0 :: rest else build (i-1) (i :: rest) in
+	build (n - 1) []
+
+let unit_vector i = fun j -> 
+ 	if i = j then NumConst.one else NumConst.zero  
+
+let simple_varnames = fun i -> "x" ^ (string_of_int i)
+
+(* get the vertices defining a polyhedron.
+	 Raises Unbounded exception if input is unbounded *)
+let get_vertices nvars p =
+	(* converts a generator to a list of coordinates, if it is a point *)  
+	let vertex_of_generator vars = function 
+		| Closure_Point (expr, c) 
+		| Point (expr, c) ->
+				let den = NumConst.numconst_of_mpz c in  
+				List.map (fun v -> 
+					let num = evaluate_linear_term_ppl (unit_vector v) expr in
+					(NumConst.div num den, v)
+				) vars				
+		| _ -> raise Unbounded in 
+	let variables = make_variables nvars in
+	(* get generators of polyhedron *)
+	let generators = ppl_Polyhedron_get_minimized_generators p in
+	let vertices = List.map (vertex_of_generator variables) generators in
+	vertices 
 
 
-(** computes an uncovered point, if it exists *)
-let uncovered_point variables v0 zones =
-	(* convert to powersets *)
-	let universe = Ppl.ppl_new_Pointset_Powerset_NNC_Polyhedron_from_NNC_Polyhedron v0 in
-	let covered = Ppl.ppl_new_Pointset_Powerset_NNC_Polyhedron_from_NNC_Polyhedron (false_constraint ()) in
-	List.iter (Ppl.ppl_Pointset_Powerset_NNC_Polyhedron_add_disjunct covered) zones;
-	(* compute difference *)
-	let uncovered = universe in
-	Ppl.ppl_Pointset_Powerset_NNC_Polyhedron_difference_assign uncovered covered;
-	(* compute the sum expression of the involved variables *)
-	let sum = List.fold_left (fun sum v ->
-		Plus (sum, Variable v)
-	) (Coefficient Gmp.Z.zero) variables in
-	(* get feasible point *)
-	let feasible, _, _, _, generator = ppl_Pointset_Powerset_NNC_Polyhedron_maximize_with_point uncovered sum in
-	if not feasible then 
-		None
-	else
-		match generator with
-			| Point (term, q) -> (
-				let coefs, _ = get_coefficients_term variables term in
-				let coefs = List.map (fun c ->
-					NumConst.div c (NumConst.numconst_of_mpz q) 					
-				) coefs in
-				Some coefs
-			) 
-			| _ -> None 
+let compact_coefficients =
+	List.filter (fun (c, v) -> NumConst.neq c NumConst.zero)
+
+
+(** Find a separating hyperplane for two polyhedra. The input polyhedra
+	 must be bounded, as the algorithm is based on separation of the 
+	 sets of vertices of both polyhedra, using linear programming.
+	 
+	 The LP formulation follows the description found in
+   http://cgm.cs.mcgill.ca/~beezer/cs644/main.html
+	
+	 Given sets P = {p1,...,ph} and Q = {q1,...,qm},
+	 find y \in R^h, z \in R^m, a \in R^n, b \in R that
+	 
+	 minimizes (1/h)[y1 + y2 +...+ yh] + (1/m)[z1 + z2 +...+ zm]  
+
+   subject to
+   yi >= -a^T * pi + b + 1  for i = 1,...,h 
+   zj >=  a^T * qj - b + 1  for j = 1,...,m 
+	 yi >=  0                 for i = 1,...,h 
+	 zj >=  0                 for j = 1,...,m 
+	
+	 If the optimal value is 0, then a,b define a separating hyperplane.		
+**)	
+let separation_plane_LP nvars p q =
+	(* project polyhedra to problem space *)
+	let p_proj = ppl_new_NNC_Polyhedron_from_NNC_Polyhedron p in
+	let q_proj = ppl_new_NNC_Polyhedron_from_NNC_Polyhedron q in
+	ppl_Polyhedron_remove_higher_space_dimensions p_proj nvars;
+	ppl_Polyhedron_remove_higher_space_dimensions q_proj nvars;
+	(* check for intersection *) 
+	(* get vertices of the polyhedra *)
+	let vp = get_vertices nvars p_proj in
+	let vq = get_vertices nvars q_proj in
+	(* number of vertices *)
+	let np = List.length vp in
+	let nq = List.length vq in
+	(* dimension of LP instance *)
+	let dim = np + nq + nvars + 1 in
+	(* variable indices *)
+	let b_index = nvars in
+	let y_index i = nvars + i + 1 in
+	let z_index i = nvars + i + 1 + List.length vp in
+	(* store constraints here *)
+	let lpc = ref [] in
+	(* positive y and z *)
+	let pos_constraint v =
+		Greater_Or_Equal ((Variable v), (Coefficient Gmp.Z.zero)) in
+	for i = 0 to np-1 do
+		lpc := (pos_constraint (y_index i)) :: !lpc
+	done;
+	for i = 0 to nq-1 do
+		lpc := (pos_constraint (z_index i)) :: !lpc
+	done;
+	(* relation of P to the plane *)
+	for i = 0 to np-1 do
+		let vertex = List.nth vp i in
+		let inv_vertex = List.map (fun (c, v) -> (NumConst.neg c, v)) vertex in
+		let bcoef = (NumConst.one, b_index) in
+		let rterm = make_linear_term (compact_coefficients (bcoef :: inv_vertex)) NumConst.one in
+		let lterm = make_linear_term [(NumConst.one, y_index i)] NumConst.zero in
+		let ineq = make_linear_inequality_ppl lterm Greater_Or_Equal_RS rterm in
+		lpc := ineq :: !lpc
+	done;
+	(* relation of Q to the plane *)
+	for i = 0 to nq-1 do
+		let vertex = List.nth vq i in
+		let bcoef = (NumConst.minus_one, b_index) in
+		let rterm = make_linear_term (compact_coefficients (bcoef :: vertex)) NumConst.one in
+		let lterm = make_linear_term [(NumConst.one, z_index i)] NumConst.zero in
+		let ineq = make_linear_inequality_ppl lterm Greater_Or_Equal_RS rterm in
+		lpc := ineq :: !lpc
+	done;
+	(* objective function *)
+	let rec build_y_sum i =
+		if i = 0 then Variable (y_index 0) else Plus (Variable (y_index i), build_y_sum (i-1)) in
+	let rec build_z_sum i =
+		if i = 0 then Variable (z_index 0) else Plus (Variable (z_index i), build_z_sum (i-1)) in
+	let yfac = Gmp.Z.from_int nq in
+	let zfac = Gmp.Z.from_int np in
+	let y_sum = Times (yfac, build_y_sum (np-1)) in
+	let z_sum = Times (zfac, build_z_sum (nq-1)) in
+	let goal = Plus (y_sum, z_sum) in
+	(* build LP problem *)
+	let lp = ppl_new_MIP_Problem_from_space_dimension dim in
+	ppl_MIP_Problem_set_objective_function lp goal;
+	ppl_MIP_Problem_add_constraints lp !lpc;
+	ppl_MIP_Problem_set_optimization_mode lp Minimization;
+	let status = ppl_MIP_Problem_solve lp in
+	if status = Unfeasible_Mip_Problem then None else (		
+		(* construct hyperplane from solution *)
+		let solution = ppl_MIP_Problem_optimizing_point lp in
+		(* get optimal value *)
+		let c, d = ppl_MIP_Problem_optimal_value lp in
+		let f = NumConst.numconst_of_zfrac c d in
+		(* Is the solution a real separating hyperplane? *)
+		if NumConst.neq f NumConst.zero then None else (
+			(* convert the LP solution to an inequality in the original space *) 
+			let make_hyperplane = function
+				| Point (expr, c) ->
+						let den = NumConst.numconst_of_mpz c in
+						let get_coef v =
+							let num = evaluate_linear_term_ppl (unit_vector v) expr in
+							(NumConst.div num den, v) in
+						let a = List.map get_coef (make_variables nvars) in
+						let b, _ = get_coef (b_index) in
+						let lterm = make_linear_term (compact_coefficients a) NumConst.zero in
+						let rterm = make_linear_term [] b in
+						make_linear_inequality_ppl lterm Greater_Or_Equal_RS rterm
+				| _ -> raise (InternalError "illegal LP solution") in				
+			let hyperplane = make_hyperplane solution in
+			Some hyperplane
+		)
+	)
+	
+	
+(** Try to find a separation plane for two polyhedra. 
+		Uses first the LP algorithm. If no solution is found in this
+		way, this might be because the polyhedra are "touching" each
+		other. In this case, one of the facets of the polyhedra
+		can be used as separating hyperplane.
+**)
+let separation_plane nvars p q =
+	(* If polyhedra intersect, there is surely no solution *)
+	if is_satisfiable (intersection [p; q]) then None else
+	(* If one of the polys is empty, just return an arbitrary facet of the other one *)
+	let get_facet p = 
+		let facets = Ppl.ppl_Polyhedron_get_constraints p in
+		match facets with
+			| [] -> None
+			| f :: fs -> Some f in
+	if not (is_satisfiable p) then 
+		get_facet q
+	else if not (is_satisfiable q) then
+		get_facet p
+	else begin
+		(* Try LP solution *)
+		let plane = separation_plane_LP nvars p q in
+		match plane with
+			| Some solution -> Some (minimize_inequality solution)
+			| None -> simple_separation_plane p q
+	end
 	

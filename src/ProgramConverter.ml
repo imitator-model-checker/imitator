@@ -1325,7 +1325,7 @@ let make_pi0cube parsed_pi0cube nb_parameters =
 (*--------------------------------------------------*)
 (* Convert the parsing structure into an abstract program *)
 (*--------------------------------------------------*)
-let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_automata, parsed_init_definition, parsed_bad_definition, parsed_predicates) parsed_pi0 parsed_pi0cube ~acyclic:acyclic ~sync_auto_detection:sync_auto_detection ~inclusion_mode:inclusion_mode ~union_mode:union_mode ~no_random:no_random ~with_parametric_log:with_parametric_log imitator_mode program_name =
+let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_automata, parsed_init_definition, parsed_bad_definition, parsed_predicates, parsed_domain) parsed_pi0 parsed_pi0cube ~acyclic:acyclic ~sync_auto_detection:sync_auto_detection ~inclusion_mode:inclusion_mode ~union_mode:union_mode ~no_random:no_random ~with_parametric_log:with_parametric_log imitator_mode program_name =
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Debug functions *) 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -1643,6 +1643,11 @@ let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_
 		| False_constraint -> raise InvalidProgram;
 		| Linear_constraint (lt, op, rt) ->   
 				linear_inequality_of_linear_constraint (lt, op, rt)) parsed_predicates in
+				
+	(* build domain *)
+	let well_formed = check_convex_predicate variable_name_list parsed_domain in
+	if not well_formed then raise InvalidProgram;
+	let domain = linear_constraint_of_convex_predicate parsed_domain in  	
 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Constuct the pi0 *) 
@@ -1878,8 +1883,11 @@ let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_
 	init = initial_state;
 	(* bad states *)
 	bad = bad_state_pairs;
+	
 	(* predicates for abstraction *)
 	predicates = predicates;
+	(* closed domain for predicate abstraction *)
+	domain = domain;
 
 	(* Acyclic mode *)
 	acyclic = acyclic;

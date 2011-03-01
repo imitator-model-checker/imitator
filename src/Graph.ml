@@ -4,13 +4,16 @@ open AbstractImitatorFile
 type state_index = int
 type 's graph_state = Automaton.location * 's
 type 'l graph_transition = state_index * 'l * state_index
-type 'l path = (state_index * 'l) list
+type 'l path = (state_index * 'l) list * state_index
 type abstract_path = abstract_label path
 
 
 type ('s, 'l) t = {
 	(** An Array 'state_index' -> 'state' *)
 	mutable states : 's graph_state DynArray.t;
+	
+	(** A list of initial states (indices) *)
+	mutable init_states : state_index list ref; 
 	
 	(** A hashtable to quickly find identical states *)
 	mutable hash_table : (int, state_index) Hashtbl.t;
@@ -36,6 +39,7 @@ let initial_size = 100
 let make guessed_nb_transitions inclusion_predicate =
 	{
 		states = DynArray.make initial_size;
+		init_states = ref [];
 		hash_table = Hashtbl.create initial_size;
 		transitions_table = Hashtbl.create guessed_nb_transitions;  
 		included_in = inclusion_predicate;
@@ -69,6 +73,10 @@ let get_states graph p =
 		if p state then	states := index :: !states
 	) graph.states;
 	!states
+
+(** Return initial states *)
+let initial_states graph =
+	!(graph.init_states)
 
 
 (* state struct for constructing set type *)
@@ -183,8 +191,8 @@ let add_state graph new_state =
 				print_message Debug_standard ("hashed list of length " ^ (string_of_int nb_old));
 			);
 			List.iter (fun index -> 
-				let _, c' = get_state graph index in
-				if graph.included_in c c' then raise (Found index)
+				let loc', c' = get_state graph index in
+				if loc = loc' && graph.included_in c c' then raise (Found index)
 			) old_states;
 			(* Not found -> insert state *)
 			let new_state_index = insert_state graph hash new_state in
@@ -194,10 +202,35 @@ let add_state graph new_state =
 				state_index, false
 		)
 	)
+	
+	
+(** Add an initial state to the graph *)
+let add_initial_state graph new_state =
+	(* add state to the graph and get the new index *)
+	let index, added = add_state graph new_state in
+	(* register state as initial state *)
+	if not (List.mem index !(graph.init_states)) then begin
+		graph.init_states := index :: !(graph.init_states)
+	end;
+	(index, added)
+
+	
+let get_transitions graph src =
+	try (
+		Hashtbl.find_all graph.transitions_table src
+	)	with Not_found -> []
+	
 		
-(** Add a transition to the graph *)
+(** Add a transition to the graph. Transitions are unique in that this 
+    function will refuse to add two transitions with the same source and
+		target index and the same label. *)
 let add_transition graph (src, label, trg) =
-	Hashtbl.add graph.transitions_table src (label, trg)
+	(* check if it already exists *)
+	let transitions = get_transitions graph src in
+	if not (List.mem (label, trg) transitions) then
+		Hashtbl.add graph.transitions_table src (label, trg)
+
+
 
 		
 (** Return the list of all constraints on the parameters associated to the states of a graph *)
@@ -250,7 +283,7 @@ let add_inequality_to_states graph inequality =
 let string_of_abstract_label = fun label -> 
 	match label with 
 		| Continuous -> "C"
-		| Discrete action_index -> (
+		| Discrete (action_index, trans) -> (
 			let program = Program.get_program () in
 			let is_nosync action =
 				String.length action >= 7 &&
@@ -264,6 +297,15 @@ let string_of_abstract_label = fun label ->
 			label
 		)
 
+let trans_compare t1 t2 = 
+	if t1 = t2 then 0 else
+		let l1, _ = t1 
+		and l2, _ = t2 in
+		let v_of_label = function
+			| Continuous -> 1
+			| _ -> -1 in
+		(v_of_label l1) - (v_of_label l2)
+
 	
 (** Try to construct a path from an initial state to a state satisfying a predicate *)
 let my_get_path graph initial_states index_predicate =
@@ -271,15 +313,19 @@ let my_get_path graph initial_states index_predicate =
 	let dfs_table = ref StateSet.empty in
 	(* functional version for lookup *)
 	let already_seen node = StateSet.mem node !dfs_table in
-	(* function to find all successors of a state *)
+	(* function to find all successors of a state, sorting discrete transitions to the head *)
 	let successors node = 
-		try (
-			Hashtbl.find_all graph.transitions_table node
-		) with Not_found -> [] in 
-	(* function to find all last states *)
+		let transitions = get_transitions graph node in
+		let sorted_transitions = List.sort trans_compare transitions in
+		sorted_transitions in
+	(* reference to remember the actual target state *)
+	let target = ref 0 in
+	(* traversal function *)
 	let rec dfs node was_continuous =
-		(* insert node in DFS table *)
-		dfs_table := StateSet.add node !dfs_table;		
+		(* if coming via a discrete transition, insert node in DFS table *)
+		if not was_continuous then begin 
+			dfs_table := StateSet.add node !dfs_table;
+		end;		
 		(* go on with successors *)
 		let rec dfs_list transitions =			
 			match transitions with
@@ -288,11 +334,16 @@ let my_get_path graph initial_states index_predicate =
 					let label, succ = t in
 					(* we are considering a continuous transition *)					
 					let is_continuous = (label = Continuous) in
+					(* delayed adding of this node, if a discrete transition was found *)
+					if was_continuous && (not is_continuous) then begin
+						dfs_table := StateSet.add node !dfs_table;
+					end;
 					if was_continuous && is_continuous then (
 						(* do not consider consecutive continuous transitions *)
 						dfs_list tail
 					) else if index_predicate succ then (
 						(* hit the target! *)
+						target := succ;
 						Some [(node,label)]
 					) else if already_seen succ then (
 						(* nothing to do here, go on with next *)
@@ -313,29 +364,41 @@ let my_get_path graph initial_states index_predicate =
 			| Some path -> Some path
 	) None initial_states in
 	(* debug output *)
-	(match path with
-		| Some path -> 
-				List.iter (fun (node, label) ->  
-					print_message Debug_standard ("s" ^ (string_of_int node) ^ 
-						" --|" ^ (string_of_abstract_label label) ^ "|--> ") 
-				) path;		
-		| None -> ());						
-	(* return path *)
-	path 
+	if debug_mode_greater Debug_low then begin
+		match path with
+			| Some path -> 
+					List.iter (fun (node, label) ->  
+						print_message Debug_low ("s" ^ (string_of_int node) ^ 
+							" --|" ^ (string_of_abstract_label label) ^ "|--> ") 
+					) path;		
+			| None -> ()
+	end;						
+	(* return path and target state index *)
+	match path with
+		| Some prefix -> Some (prefix, !target)
+		| None -> None
 	
 
 let get_path graph initial_states index =
 	my_get_path graph initial_states ((=) index)
 
-let get_counterexample graph initial_states =
+let get_counterexample graph =
 	let predicate = fun index -> is_bad (get_state graph index) in
-	my_get_path graph initial_states predicate
+	my_get_path graph (initial_states graph) predicate
 
 
 let plot_graph x y graph = 
 	DynArray.fold_left (
 		fun s (_, constr) -> s ^ (Graphics.plot_2d x y constr) ^ "\n"
 	) "" graph.states
+	
+let plot_abstract_graph x y = fun graph -> 
+	let program = Program.get_program () in
+	DynArray.fold_left (fun s (l,b) ->
+		let _,constr = PredicateAbstraction.concretize program.predicates (l,b) in 
+		s ^ (Graphics.plot_2d x y constr) ^ "\n"
+	) "" graph.states
+	
 
 let dot_colors = [
 (* I ordered the first colors *)

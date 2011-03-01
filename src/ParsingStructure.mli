@@ -69,6 +69,7 @@ type linear_constraint =
 
 
 type convex_predicate = linear_constraint list
+type predicate = linear_constraint
 
 
 (****************************************************************)
@@ -114,7 +115,7 @@ type bad_definition  = state_predicate list
 (** Input program *)
 (****************************************************************)
 
-type parsing_structure = variable_declarations * automata * init_definition * bad_definition * linear_constraint list
+type parsing_structure = variable_declarations * automata * init_definition * bad_definition * predicate list * convex_predicate
 
 (****************************************************************)
 (** Input pi0 *)
