@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre, Ulrich Kuehne
  * Created:       2010/07/22
- * Last modified: 2010/07/22
+ * Last modified: 2011/03/08
  *
  **************************************************)
 
@@ -953,16 +953,12 @@ let post_star program options pi0 init_state =
 	(* Case: dynamic *)
 	if options#dynamic then (
 		Convex_constraint !k_prime
-	)else(
+	) else (
 	(* Case union : return the constraint on the parameters associated to slast*)
 		if options#union then (
 			let list_of_constraints =
-			List.map (fun state_index -> 
-			
-			
-				print_message Debug_standard ("\nOne state found.");
-					
-			
+			List.map (fun state_index -> 			
+				print_message Debug_medium ("\nOne state found.");
 				(* Get the constraint on clocks and parameters *)
 				let (_, current_constraint) =
 					Graph.get_state reachability_graph state_index
@@ -971,8 +967,14 @@ let post_star program options pi0 init_state =
 			) !slast
 			in Union_of_constraints list_of_constraints
 		)
-		else( 	(* Case: classic : the returned constraint does not matter *)
-			Convex_constraint ( LinearConstraint.false_constraint () )
+	(* Case IMorig : return only the current constraint *)
+		else if options#pi_compatible then (
+			let (_ , k_constraint) = get_state reachability_graph 0 in
+				Convex_constraint (LinearConstraint.hide program.clocks_and_discrete k_constraint) 
+		) 
+	(* Case IM : intersection *)
+		else (
+			Convex_constraint (Graph.compute_k0_destructive program reachability_graph)
 		)
 	)
 	in

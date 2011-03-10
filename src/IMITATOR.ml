@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2009/09/07
- * Last modified: 2011/01/10
+ * Last modified: 2011/03/08
  *
  **************************************************)
 
@@ -301,21 +301,22 @@ let cover_behavioral_cartography program pi0cube init_state =
 			
 			(* compute k0 *)
 
-			let k0 =  if options#dynamic || options#union then ( returned_constraint )
+(*			let k0 =  if options#dynamic || options#union then ( returned_constraint )
 				else  match returned_constraint with 
 					| Convex_constraint _ -> Convex_constraint (Graph.compute_k0_destructive program graph)
 					| _ -> print_error ("Internal error when getting the result of post_star in cover: 'options#dynamic' is activated but the constraint returned is not convex (type 'Convex_constraint')."); abort_program (); exit(0)
-
-			in
+			in*)
+			let k0 = returned_constraint in
+			
 			(* Add the pi0 and the computed constraint *)
 			DynArray.add pi0_computed pi0;
 			DynArray.add results k0;
 			
 			(* Print the constraint *)
-			let bad_string = if Graph.is_bad program graph then "BAD." else "GOOD." in			
+(* 			let bad_string = if Graph.is_bad program graph then "BAD." else "GOOD." in			 *)
 			print_message Debug_low ("Constraint K0 computed:");
 			print_message Debug_standard (string_of_returned_constraint program.variable_names k0);
-			print_message Debug_standard ("This zone is " ^ bad_string);
+(* 			print_message Debug_standard ("This zone is " ^ bad_string); *)
 
 
 		); (* else if new pi0 *)
@@ -466,12 +467,13 @@ let random_behavioral_cartography program pi0cube init_state nb =
 				interesting_interations := !i :: !interesting_interations;
 
 				(* compute k0 *)
-				let k0 =  if options#dynamic || options#union then ( returned_constraint )
+(*				let k0 =  if options#dynamic || options#union then ( returned_constraint )
 				else  match returned_constraint with 
 					| Convex_constraint _ -> Convex_constraint (Graph.compute_k0_destructive program graph)
 					| _ -> print_error ("Internal error when getting the result of post_star in cover: 'options#dynamic' is activated but the constraint returned is not convex (type 'Convex_constraint')."); abort_program (); exit(0)
 
-				in
+				in*)
+				let k0 = returned_constraint in
 												
 				(* Print the constraint *)
 				print_message Debug_low ("Constraint K0 computed:");
@@ -568,19 +570,19 @@ in print_message Debug_standard ("Mode: " ^ message ^ ".");
 
 (* Variant of the inverse method *)
 if options#inclusion then
-	print_message Debug_standard ("Considering Algorithm IMincl.")
+	print_message Debug_standard ("Considering fixpoint variant IMincl.")
 else
-	print_message Debug_medium ("No inclusion mode (default).");
+	print_message Debug_medium ("No fixpoint variant (default).");
 
 if options#union then
-	print_message Debug_standard ("Considering Algorithm IMunion.")
+	print_message Debug_standard ("Considering return variant IMunion.")
 else
-	print_message Debug_medium ("No union mode (default).");
+	print_message Debug_medium ("No IMunion return variant (default).");
 
 if options#pi_compatible then
-	print_message Debug_standard ("Considering Algorithm IMoriginal.")
+	print_message Debug_standard ("Considering return variant IMoriginal.")
 else
-	print_message Debug_medium ("No original IM mode (default).");
+	print_message Debug_medium ("No IMoriginal return variant (default).");
 
 (* Should add a warning in case of incompatible mode (IMoriginal incompatible with IMunion) *)
 
@@ -603,10 +605,10 @@ else
 (* Output *)
 
 if options#no_dot then
-	print_message Debug_medium ("No graphical output.");
+	print_message Debug_standard ("No graphical output.");
 
 if options#no_log then
-	print_message Debug_medium ("No log mode.");
+	print_message Debug_standard ("No log mode.");
 
 
 (* LIMIT OF POST *)
@@ -747,7 +749,7 @@ match options#imitator_mode with
 		if options#imitator_mode = Inverse_method then (
 			(* If convex constraint (i.e., if no union mode) *)
 			if not options#union then(
-				(* compute k0 *)	
+(*				(* compute k0 *)	
 				let k0 =  if options#dynamic then ( if options#pi_compatible then ( 
 							let (_ , k_constraint) = get_state reachability_graph 0 in
 							(LinearConstraint.hide program.clocks_and_discrete k_constraint);
@@ -762,10 +764,11 @@ match options#imitator_mode with
 							(LinearConstraint.hide program.clocks_and_discrete k_constraint);
 						) else(Graph.compute_k0_destructive program reachability_graph)
 					)
-				in
+				in*)
 				(* print it *)
 				print_message Debug_standard ("\nFinal constraint K0 :");
-				print_message Debug_standard (LinearConstraint.string_of_linear_constraint program.variable_names k0);            		
+(* 				print_message Debug_standard (LinearConstraint.string_of_linear_constraint program.variable_names k0);            		 *)
+				print_message Debug_standard (string_of_returned_constraint program.variable_names returned_constraint);
 			) else (
 			(* Else (i.e., if union mode) *)
 
