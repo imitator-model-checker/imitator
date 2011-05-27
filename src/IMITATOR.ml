@@ -53,7 +53,6 @@ TAGS POUR CHOSES A FAIRE
 
 let dot_command = "dot"
 let dot_extension = "jpg"
-let pas = NumConst.numconst_of_frac 1 1
 
 
 
@@ -65,6 +64,9 @@ let pas = NumConst.numconst_of_frac 1 1
 
 (* object with command line options *)
 let options = new imitator_options
+
+
+
 
 (**************************************************)
 (**************************************************)
@@ -79,9 +81,6 @@ let string_of_returned_constraint variable_names = function
 	| Convex_constraint linear_constraint -> LinearConstraint.string_of_linear_constraint variable_names linear_constraint
 	(** Disjunction of constraints *)
 	| Union_of_constraints k_list -> string_of_list_of_string_with_sep "\n OR \n" (List.map (LinearConstraint.string_of_linear_constraint variable_names) k_list)
-
-
-
 
 
 
@@ -328,7 +327,7 @@ let cover_behavioral_cartography program pi0cube init_state =
 			(* Try to increment the local index *)
 			if current_pi0.(!local_index) < max_bounds.(!local_index) then(
 				(* Increment this index *)
-				current_pi0.(!local_index) <- NumConst.add current_pi0.(!local_index) pas;
+				current_pi0.(!local_index) <- NumConst.add current_pi0.(!local_index) options#step;
 				(* Reset the smaller indexes to the low bound *)
 				for i = 0 to !local_index - 1 do
 					current_pi0.(i) <- min_bounds.(i);
@@ -541,7 +540,7 @@ print_message Debug_standard
 Printf.printf " *  IMITATOR %-36s *\n" version_string;	
 print_message Debug_standard
 	( "*                                 Etienne ANDRE  *\n"
-	^ "*                                   2009 - 2010  *\n"
+	^ "*                                   2009 - 2011  *\n"
 	^ "*     Laboratoire Specification et Verification  *\n"
 	^ "*                  ENS de Cachan & CNRS, France  *\n"
 	^ "**************************************************");
@@ -562,8 +561,8 @@ if options#imitator_mode = Reachability_analysis && options#nb_args = 2 then
 let message = match options#imitator_mode with
 	| Reachability_analysis -> "parametric reachability analysis"
 	| Inverse_method -> "inverse method"
-	| Cover_cartography -> "behavioral cartography algorithm with full coverage"
-	| Random_cartography nb -> "behavioral cartography algorithm with " ^ (string_of_int nb) ^ " random iterations"
+	| Cover_cartography -> "behavioral cartography algorithm with full coverage and step " ^ (NumConst.string_of_numconst options#step)
+	| Random_cartography nb -> "behavioral cartography algorithm with " ^ (string_of_int nb) ^ " random iterations and step " ^ (NumConst.string_of_numconst options#step)
 in print_message Debug_standard ("Mode: " ^ message ^ ".");
 
 
@@ -584,12 +583,12 @@ if options#pi_compatible then
 else
 	print_message Debug_medium ("No IMoriginal return variant (default).");
 
-(* Should add a warning in case of incompatible mode (IMoriginal incompatible with IMunion) *)
+(* Should add a warning in case of incompatible mode (IMoriginal incompatible with IMunion) + VARIANT ROMAIN *)
 
 
 
 
-(* Options *)
+(* OPTIONS *)
 
 if options#sync_auto_detection then
 	print_message Debug_standard ("Auto-detection mode for sync actions.")
@@ -600,6 +599,7 @@ if options#no_random then
 	print_message Debug_standard ("No random selection for pi0-incompatible inequalities.")
 else
 	print_message Debug_medium ("Standard random selection for pi0-incompatible inequalities (default).");
+
 
 
 (* Output *)
@@ -631,6 +631,11 @@ in ();
 if options#imitator_mode =  Reachability_analysis && (options#union || options#pi_compatible) then
 	print_warning ("The program will be launched in reachability mode; options regarding to the variant of the inverse method will thus be ignored.");
 
+if options#imitator_mode =  Reachability_analysis && (NumConst.neq options#step NumConst.one) then
+	print_warning ("The program will be launched in reachability mode; option regarding to the step of the cartography algorithm will thus be ignored.");
+	
+	
+	
 
 (**************************************************)
 (* Timed mode *)

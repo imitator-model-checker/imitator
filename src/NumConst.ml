@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2010/03/04
- * Last modified: 2010/03/09
+ * Last modified: 2010/05/27
  *
  ****************************************************************)
 
@@ -20,6 +20,8 @@ open Gmp.Q.Infixes
 (*type t =          *)
 (*  | Mpq of Gmp.Q.t*)
 type t = Gmp.Q.t
+
+exception Unknown_numconst of string
 
 
 (**************************************************)
@@ -62,7 +64,21 @@ let numconst_of_float f = (* Mpq (Mpq.of_float i) DOES NOT WORK WELL *)
 	)
 	
 let numconst_of_string str =
-	Gmp.Q.from_z (Gmp.Z.from_string str)
+	(* Case int *)
+	if Str.string_match (Str.regexp "^[0-9]+$") str 0 then
+		numconst_of_int (int_of_string str)
+	(* Case fraction *)
+	else if Str.string_match (Str.regexp "^[0-9]+/[0-9]+$") str 0 then
+		let parts = Str.split (Str.regexp_string "/") str in
+		let denominator = int_of_string (List.nth parts 0) in
+		let fractional = int_of_string (List.nth parts 1) in
+		numconst_of_frac denominator fractional
+	(* Case float *)
+	else if Str.string_match (Str.regexp "^[0-9]+\.[0-9]+$") str 0 then numconst_of_float (float_of_string str)
+	(* Otherwise *)
+	else raise (Unknown_numconst ("Impossible to cast the string '" ^ str ^ "' to a NumConst in function numconst_of_string. Unknown type."))
+	(* 	Gmp.Q.from_z (Gmp.Z.from_string str) *)
+	
 
 let numconst_of_mpq m = m
 
@@ -70,7 +86,8 @@ let numconst_of_mpz z = Gmp.Q.from_z z
 
 let mpq_of_numconst = get_mpq
 
-let string_of_numconst a = Gmp.Q.to_string (get_mpq a)
+let string_of_numconst a =
+	Gmp.Q.to_string (get_mpq a)
 
 
 (**************************************************)

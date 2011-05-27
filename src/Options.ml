@@ -1,7 +1,6 @@
 open Arg
 open Global
 
-
 class imitator_options =
 	object
 		val mutable nb_args = 0
@@ -45,6 +44,8 @@ class imitator_options =
 		val mutable union = ref false
 		(*Returns contraint K*)
 		val mutable pi_compatible = ref false 
+		(* Step for the cartography *)
+		val mutable step = ref NumConst.one
 		
 		method nb_args = nb_args
 		method file = !file
@@ -66,6 +67,7 @@ class imitator_options =
 		method dynamic = !dynamic
 		method union = !union
 		method pi_compatible = !pi_compatible
+		method step = !step
 		
 		method parse =
 			let usage_msg = "Usage: IMITATOR program_file [pi0_file] [options]" in
@@ -121,6 +123,7 @@ class imitator_options =
 				("-fancy", Set fancy, " Generate detailed state information for dot output. Default: false.");
 				("-no-random", Set no_random, " No random selection of the pi0-incompatible inequality (select the first found). Default: false.");
 				("-post-limit", Int (fun i -> post_limit := Some i), " Limits the depth of the Post exploration. Default: no limit.");
+				("-step", String (fun i -> (* SHOULD CHECK HERE THAT STEP IS EITHER A FLOAT OR AN INT *) step := (NumConst.numconst_of_string i)), " Step for the cartography. Default: 1/1.");
 				("-sync-auto-detect", Set sync_auto_detection, " Detect automatically the synchronized actions in each automaton. Default: false (consider the actions declared by the user)");
 				("-time-limit", Int (fun i -> time_limit := Some i), " Time limit in seconds. Warning: no guarantee that the program will stop exactly after the given amount of time. Default: no limit.");
 				("-timed", Set timed_mode, " Adds a timing information to each output of the program. Default: none.");

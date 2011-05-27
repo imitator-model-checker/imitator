@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2009/09/08
- * Last modified: 2010/05/07
+ * Last modified: 2010/05/27
  *
  ****************************************************************)
 
@@ -13,7 +13,7 @@
 (** Version string *)
 (****************************************************************)
 
-let version_string = "2.2"
+let version_string = "2.3"
 
 let print_version_string _ = 
 	print_string ("IMITATOR " ^ version_string ^ "\n");
