@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2009/09/07
- * Last modified: 2011/03/08
+ * Last modified: 2011/05/27
  *
  **************************************************)
 
