@@ -1,4 +1,11 @@
 *******************************************************
+release 2.3    (2011-06-06)
+
+- Addition of variants of the inverse method algorithm
+- Addition of an optional optimization of the inverse method algorithm
+- Several optimizations to speed up post image computation
+
+*******************************************************
 release 2.2    (2010-07-30)
 
 - Several optimizations to speed up post image computation

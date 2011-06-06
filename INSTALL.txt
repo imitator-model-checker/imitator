@@ -4,7 +4,7 @@
 Note: In case of problem, please read this INSTALL file carefully before reporting a bug.
 
 The installation of IMITATOR II is very simple (see end of this file).
-However, the installation of the other libraries (especially PPL), although not difficult, will take more time…
+However, the installation of the other libraries (especially PPL), although not difficult, will take more time.
 
 
 ************************************************************
