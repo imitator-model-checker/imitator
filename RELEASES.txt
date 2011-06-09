@@ -1,8 +1,20 @@
 *******************************************************
+release 3.0    (2011-06-09)
+
+- Branch for linear hybrid automata
+
+*******************************************************
+release 2.2    (2010-07-30)
+
+- Several optimizations to speed up post image computation
+- More detailed presentation of reachability graph
+- Graphical output of behavioral cartography
+- Refactoring of source code to improve maintainability
+
+*******************************************************
 release 2.1    (2010-05-31)
 
-- Replaced APRON and POLKA libraries by PPL 
-  (Parma Polyhedra Library)
+- Replaced APRON and POLKA libraries by PPL (Parma Polyhedra Library)
 
 *******************************************************
 release 2.0    (2010-05-17)
