@@ -144,7 +144,7 @@ $(SRC)/%.cmi: $(SRC)/%.mly
 	@ echo [YACC] $<
 	@ ocamlyacc $<
 	@ echo [OCAMLC] $(SRC)/$*.mli
-	 $(OCAMLC) -c $(INCLUDE) $(SRC)/$*.mli
+	@ $(OCAMLC) -c $(INCLUDE) $(SRC)/$*.mli
 
 $(SRC)/%.ml: $(SRC)/%.mly 
 	@ echo [YACC] $<
