@@ -8,14 +8,10 @@
 --****************************************************--
 
 
-var 		i,j,k, 			-- counter of heater move (informative)
-		h			-- sampling period
-			: discrete;
-
+var     h,
 	max, 				-- maximum time of global clock
 	a1,a2,a3			-- parameters for room temperatures
 			: parameter;
-
 
 
 --****************************************************--
@@ -58,21 +54,18 @@ initially loc022_161616;
 loc loc022_161616: while t<=h & s<=max & 31/2 <=x3 & x3 <=35/2 
 		& 31/2 <=x1 & x1 <=35/2  & 31/2 <=x2 & x2 <=35/2
 
-		wait 		{
-				x3' in [1/10,1/10] & x2' >= 1/10 & x2' <= 1/10 &
-				x1' >= -12/10 & x1' <= -1		}
-		
-
-
+		wait 		{ x1' in [-10/10, -1] &
+				  x2' in [1/3, 1/3] &
+				  x3' in [1/3, 1/3] }
 
 	when t=h & x1 < 18  & x2-x1 >= 1  	
 		sync clockUp1 
-		do {x1' = x1, x2' = x2, x3' = x3, t'=0, j'=j+1} 
+		do {x1' = x1, x2' = x2, x3' = x3, t'=0} 
 		goto loc202_161616; -- move heater from room 2 to room 1
 
 	when t=h & x1 < 18  & x3-x1 >= 1  	
 		sync clockUp1 
-		do {x1' = x1, x2' = x2, x3' = x3, t'=0, k'=k+1} 
+		do {x1' = x1, x2' = x2, x3' = x3, t'=0} 
 		goto loc220_161616; -- move heater from room 3 to room 1
 
 	when t=h & x1>= 18
@@ -87,34 +80,33 @@ loc loc022_161616: while t<=h & s<=max & 31/2 <=x3 & x3 <=35/2
 
 	
 
-	when x1 = 35/2      do {x1' = x1, x2' = x2, x3' = x3} goto loc022_181616;   
+	when x1 = 35/2     do {x1' = x1, x2' = x2, x3' = x3} goto loc022_181616;   
 	when x2 = 35/2     do {x1' = x1, x2' = x2, x3' = x3} goto loc022_161816;
 	when x3 = 35/2     do {x1' = x1, x2' = x2, x3' = x3} goto loc022_161618;
 
+	when x1 = 31/2     do {x1' = x1, x2' = x2, x3' = x3} goto err;
+	
 
 -----
 
 loc loc202_161616: while t<=h & s<=max & 31/2 <=x3 & x3 <=35/2 
 		& 31/2 <=x1 & x1 <=35/2  & 31/2 <=x2 & x2 <=35/2
 
-		wait 		{
-				x3' >= 1/10 & x3' <= 1/10 & x1' >= 1/10 & x1' <= 1/10 &
-				x2' >= -12/10 & x2' <= -1		}
-		
-
-
+		wait 		{ x1' in [1/3, 1/3] &
+				  x2' in [-10/10, -1] &
+				  x3' in [1/3, 1/3] }
 
 	when t=h & x2 < 18  & x1-x2 >= 1  	
 		sync clockUp1 
-		do {x1' = x1, x2' = x2, x3' = x3, t'=0, i'=i+1} 
+		do {x1' = x1, x2' = x2, x3' = x3, t'=0} 
 		goto loc022_161616; -- move heater from room 1 to room 2
 
 	when t=h & x2 < 18  & x3-x2 >= 1  	
 		sync clockUp1 
-		do {x1' = x1, x2' = x2, x3' = x3, t'=0, k'=k+1} 
+		do {x1' = x1, x2' = x2, x3' = x3, t'=0} 
 		goto loc220_161616; -- move heater from room 3 to room 2
 
-	when t=h & x1>= 18
+	when t=h & x2>= 18
 		sync clockUp1 
 		do {x1' = x1, x2' = x2, x3' = x3, t'=0} 
 		goto loc202_161616; -- loop
@@ -126,9 +118,11 @@ loc loc202_161616: while t<=h & s<=max & 31/2 <=x3 & x3 <=35/2
 
 	
 
-	when x1 = 35/2      do {x1' = x1, x2' = x2, x3' = x3} goto loc202_181616;   
+	when x1 = 35/2     do {x1' = x1, x2' = x2, x3' = x3} goto loc202_181616;   
 	when x2 = 35/2     do {x1' = x1, x2' = x2, x3' = x3} goto loc202_161816;
 	when x3 = 35/2     do {x1' = x1, x2' = x2, x3' = x3} goto loc202_161618;
+
+	when x2 = 31/2     do {x1' = x1, x2' = x2, x3' = x3} goto err;
 
 
 -----
@@ -136,24 +130,21 @@ loc loc202_161616: while t<=h & s<=max & 31/2 <=x3 & x3 <=35/2
 loc loc220_161616: while t<=h & s<=max & 31/2 <=x3 & x3 <=35/2 
 		& 31/2 <=x1 & x1 <=35/2  & 31/2 <=x2 & x2 <=35/2
 
-		wait 		{
-				x1' >= 1/10 & x1' <= 1/10 & x2' >= 1/10 & x2' <= 1/10 &
-				x3' >= -12/10 & x3' <= -1		}
-		
-
-
+		wait 		{ x1' in [1/3, 1/3] &
+				  x2' in [1/3, 1/3] &
+				  x3' in [-10/10, -1] }
 
 	when t=h & x3 < 18  & x1-x3 >= 1  	
 		sync clockUp1 
-		do {x1' = x1, x2' = x2, x3' = x3, t'=0, i'=i+1} 
+		do {x1' = x1, x2' = x2, x3' = x3, t'=0} 
 		goto loc022_161616; -- move heater from room 1 to room 3
 
 	when t=h & x3 < 18  & x2-x3 >= 1  	
 		sync clockUp1 
-		do {x1' = x1, x2' = x2, x3' = x3, t'=0, j'=j+1} 
+		do {x1' = x1, x2' = x2, x3' = x3, t'=0} 
 		goto loc202_161616; -- move heater from room 2 to room 3
 
-	when t=h & x1>= 18
+	when t=h & x3>= 18
 		sync clockUp1 
 		do {x1' = x1, x2' = x2, x3' = x3, t'=0} 
 		goto loc220_161616; -- loop
@@ -165,9 +156,11 @@ loc loc220_161616: while t<=h & s<=max & 31/2 <=x3 & x3 <=35/2
 
 	
 
-	when x1 = 35/2      do {x1' = x1, x2' = x2, x3' = x3} goto loc220_181616;   
+	when x1 = 35/2     do {x1' = x1, x2' = x2, x3' = x3} goto loc220_181616;   
 	when x2 = 35/2     do {x1' = x1, x2' = x2, x3' = x3} goto loc220_161816;
 	when x3 = 35/2     do {x1' = x1, x2' = x2, x3' = x3} goto loc220_161618;
+
+	when x3 = 31/2     do {x1' = x1, x2' = x2, x3' = x3} goto err;
 
 
 -----
@@ -177,21 +170,18 @@ loc loc220_161616: while t<=h & s<=max & 31/2 <=x3 & x3 <=35/2
 loc loc022_181616: while t<=h & s<=max & 31/2 <=x3 & x3 <=35/2 
 		& 31/2 <=x2 & x2 <=35/2  & 35/2 <=x1 & x1 <=39/2
 
-		wait 		{
-				x3' >= 1/10 & x3' <= 1/10 & x2' >= 1/10 & x2' <= 1/10 &
-				x1' >= -12/10 & x1' <= -1		}
-		
-
-
+		wait 		{ x1' in [-10/10, -1] &
+				  x2' in [1/3, 1/3] &
+				  x3' in [1/3, 1/3] }
 
 	when t=h & x1 < 18  & x2-x1 >= 1  	
 		sync clockUp1 
-		do {x1' = x1, x2' = x2, x3' = x3, t'=0, j'=j+1} 
+		do {x1' = x1, x2' = x2, x3' = x3, t'=0} 
 		goto loc202_181616; -- move heater from room 2 to room 1
 
 	when t=h & x1 < 18  & x3-x1 >= 1  	
 		sync clockUp1 
-		do {x1' = x1, x2' = x2, x3' = x3, t'=0, k'=k+1} 
+		do {x1' = x1, x2' = x2, x3' = x3, t'=0} 
 		goto loc220_181616; -- move heater from room 3 to room 1
 
 	when t=h & x1>= 18
@@ -206,7 +196,7 @@ loc loc022_181616: while t<=h & s<=max & 31/2 <=x3 & x3 <=35/2
 
 	
 
-	when x1 = 35/2      do {x1' = x1, x2' = x2, x3' = x3} goto loc022_161616;   
+	when x1 = 35/2     do {x1' = x1, x2' = x2, x3' = x3} goto loc022_161616;   
 	when x2 = 35/2     do {x1' = x1, x2' = x2, x3' = x3} goto loc022_181816;
 	when x3 = 35/2     do {x1' = x1, x2' = x2, x3' = x3} goto loc022_181618;
 
@@ -217,24 +207,21 @@ loc loc022_181616: while t<=h & s<=max & 31/2 <=x3 & x3 <=35/2
 loc loc202_181616: while t<=h & s<=max & 31/2 <=x3 & x3 <=35/2 
 		& 35/2 <=x1 & x1 <=39/2  & 31/2 <=x2 & x2 <=35/2
 
-		wait 		{
-				x3' >= 1/10 & x3' <= 1/10 & x1' >= 1/10 & x1' <= 1/10 &
-				x2' >= -12/10 & x2' <= -1		}
-		
-
-
+		wait 		{ x1' in [1/3, 1/3] &
+				  x2' in [-10/10, -1] &
+				  x3' in [1/3, 1/3] }
 
 	when t=h & x2 < 18  & x1-x2 >= 1  	
 		sync clockUp1 
-		do {x1' = x1, x2' = x2, x3' = x3, t'=0, i'=i+1} 
+		do {x1' = x1, x2' = x2, x3' = x3, t'=0} 
 		goto loc022_181616; -- move heater from room 1 to room 2
 
 	when t=h & x2 < 18  & x3-x2 >= 1  	
 		sync clockUp1 
-		do {x1' = x1, x2' = x2, x3' = x3, t'=0, k'=k+1} 
+		do {x1' = x1, x2' = x2, x3' = x3, t'=0} 
 		goto loc220_181616; -- move heater from room 3 to room 2
 
-	when t=h & x1>= 18
+	when t=h & x2>= 18
 		sync clockUp1 
 		do {x1' = x1, x2' = x2, x3' = x3, t'=0} 
 		goto loc202_181616; -- loop
@@ -246,9 +233,12 @@ loc loc202_181616: while t<=h & s<=max & 31/2 <=x3 & x3 <=35/2
 
 	
 
-	when x1 = 35/2      do {x1' = x1, x2' = x2, x3' = x3} goto loc202_161616;   
+	when x1 = 35/2     do {x1' = x1, x2' = x2, x3' = x3} goto loc202_161616;   
 	when x2 = 35/2     do {x1' = x1, x2' = x2, x3' = x3} goto loc202_181816;
 	when x3 = 35/2     do {x1' = x1, x2' = x2, x3' = x3} goto loc202_181618;
+
+	when x2 = 31/2     do {x1' = x1, x2' = x2, x3' = x3} goto err;
+	when x1 = 39/2     do {x1' = x1, x2' = x2, x3' = x3} goto err;
 
 
 -----
@@ -256,24 +246,21 @@ loc loc202_181616: while t<=h & s<=max & 31/2 <=x3 & x3 <=35/2
 loc loc220_181616: while t<=h & s<=max & 31/2 <=x3 & x3 <=35/2 
 		& 35/2 <=x1 & x1 <=39/2  & 31/2 <=x2 & x2 <=35/2
 
-		wait 		{
-				x1' >= 1/10 & x1' <= 1/10 & x2' >= 1/10 & x2' <= 1/10 &
-				x3' >= -12/10 & x3' <= -1		}
-		
-
-
+		wait 		{ x1' in [1/3, 1/3] &
+				  x2' in [1/3, 1/3] &
+				  x3' in [-10/10, -1] }
 
 	when t=h & x3 < 18  & x1-x3 >= 1  	
 		sync clockUp1 
-		do {x1' = x1, x2' = x2, x3' = x3, t'=0, i'=i+1} 
+		do {x1' = x1, x2' = x2, x3' = x3, t'=0} 
 		goto loc022_181616; -- move heater from room 1 to room 3
 
 	when t=h & x3 < 18  & x2-x3 >= 1  	
 		sync clockUp1 
-		do {x1' = x1, x2' = x2, x3' = x3, t'=0, j'=j+1} 
+		do {x1' = x1, x2' = x2, x3' = x3, t'=0} 
 		goto loc202_181616; -- move heater from room 2 to room 3
 
-	when t=h & x1>= 18
+	when t=h & x3>= 18
 		sync clockUp1 
 		do {x1' = x1, x2' = x2, x3' = x3, t'=0} 
 		goto loc220_181616; -- loop
@@ -285,10 +272,12 @@ loc loc220_181616: while t<=h & s<=max & 31/2 <=x3 & x3 <=35/2
 
 	
 
-	when x1 = 35/2      do {x1' = x1, x2' = x2, x3' = x3} goto loc220_161616;   
+	when x1 = 35/2     do {x1' = x1, x2' = x2, x3' = x3} goto loc220_161616;   
 	when x2 = 35/2     do {x1' = x1, x2' = x2, x3' = x3} goto loc220_181816;
 	when x3 = 35/2     do {x1' = x1, x2' = x2, x3' = x3} goto loc220_181618;
 
+	when x3 = 31/2     do {x1' = x1, x2' = x2, x3' = x3} goto err;
+	when x1 = 39/2     do {x1' = x1, x2' = x2, x3' = x3} goto err;
 
 
 ---------- 161816 --------------------------------------
@@ -296,21 +285,18 @@ loc loc220_181616: while t<=h & s<=max & 31/2 <=x3 & x3 <=35/2
 loc loc022_161816: while t<=h & s<=max & 31/2 <=x3 & x3 <=35/2 
 		& 31/2 <=x1 & x1 <=35/2  & 35/2 <=x2 & x2 <=39/2
 
-		wait 		{
-				x3' >= 1/10 & x3' <= 1/10 & x2' >= 1/10 & x2' <= 1/10 &
-				x1' >= -12/10 & x1' <= -1		}
-		
-
-
+		wait 		{ x1' in [-10/10, -1] &
+				  x2' in [1/3, 1/3] &
+				  x3' in [1/3, 1/3] }
 
 	when t=h & x1 < 18  & x2-x1 >= 1  	
 		sync clockUp1 
-		do {x1' = x1, x2' = x2, x3' = x3, t'=0, j'=j+1} 
+		do {x1' = x1, x2' = x2, x3' = x3, t'=0} 
 		goto loc202_161816; -- move heater from room 2 to room 1
 
 	when t=h & x1 < 18  & x3-x1 >= 1  	
 		sync clockUp1 
-		do {x1' = x1, x2' = x2, x3' = x3, t'=0, k'=k+1} 
+		do {x1' = x1, x2' = x2, x3' = x3, t'=0} 
 		goto loc220_161816; -- move heater from room 3 to room 1
 
 	when t=h & x1>= 18
@@ -325,9 +311,12 @@ loc loc022_161816: while t<=h & s<=max & 31/2 <=x3 & x3 <=35/2
 
 	
 
-	when x1 = 35/2      do {x1' = x1, x2' = x2, x3' = x3} goto loc022_181816;   
+	when x1 = 35/2     do {x1' = x1, x2' = x2, x3' = x3} goto loc022_181816;   
 	when x2 = 31/2     do {x1' = x1, x2' = x2, x3' = x3} goto loc022_161616;
 	when x3 = 35/2     do {x1' = x1, x2' = x2, x3' = x3} goto loc022_161818;
+
+	when x1 = 31/2     do {x1' = x1, x2' = x2, x3' = x3} goto err;
+	when x2 = 39/2     do {x1' = x1, x2' = x2, x3' = x3} goto err;
 
 
 -----
@@ -335,24 +324,21 @@ loc loc022_161816: while t<=h & s<=max & 31/2 <=x3 & x3 <=35/2
 loc loc202_161816: while t<=h & s<=max & 31/2 <=x3 & x3 <=35/2 
 		& 31/2 <=x1 & x1 <=35/2  & 35/2 <=x2 & x2 <=39/2
 
-		wait 		{
-				x3' >= 1/10 & x3' <= 1/10 & x1' >= 1/10 & x1' <= 1/10 &
-				x2' >= -12/10 & x2' <= -1		} 
-		
-
-
+		wait 		{ x1' in [1/3, 1/3] &
+				  x2' in [-10/10, -1] &
+				  x3' in [1/3, 1/3] }
 
 	when t=h & x2 < 18  & x1-x2 >= 1  	
 		sync clockUp1 
-		do {x1' = x1, x2' = x2, x3' = x3, t'=0, i'=i+1} 
+		do {x1' = x1, x2' = x2, x3' = x3, t'=0} 
 		goto loc022_161816; -- move heater from room 1 to room 2
 
 	when t=h & x2 < 18  & x3-x2 >= 1  	
 		sync clockUp1 
-		do {x1' = x1, x2' = x2, x3' = x3, t'=0, k'=k+1} 
+		do {x1' = x1, x2' = x2, x3' = x3, t'=0} 
 		goto loc220_161816; -- move heater from room 3 to room 2
 
-	when t=h & x1>= 18
+	when t=h & x2>= 18
 		sync clockUp1 
 		do {x1' = x1, x2' = x2, x3' = x3, t'=0} 
 		goto loc202_161816; -- loop
@@ -364,7 +350,7 @@ loc loc202_161816: while t<=h & s<=max & 31/2 <=x3 & x3 <=35/2
 
 	
 
-	when x1 = 35/2      do {x1' = x1, x2' = x2, x3' = x3} goto loc202_181816;   
+	when x1 = 35/2     do {x1' = x1, x2' = x2, x3' = x3} goto loc202_181816;   
 	when x2 = 35/2     do {x1' = x1, x2' = x2, x3' = x3} goto loc202_161616;
 	when x3 = 35/2     do {x1' = x1, x2' = x2, x3' = x3} goto loc202_161818; 
 
@@ -374,24 +360,21 @@ loc loc202_161816: while t<=h & s<=max & 31/2 <=x3 & x3 <=35/2
 loc loc220_161816: while t<=h & s<=max & 31/2 <=x3 & x3 <=35/2 
 		& 31/2 <=x1 & x1 <=35/2  & 35/2 <=x2 & x2 <=39/2
 
-		wait 		{
-				x1' >= 1/10 & x1' <= 1/10 & x2' >= 1/10 & x2' <= 1/10 &
-				x3' >= -12/10 & x3' <= -1		}
-		
-
-
+		wait 		{ x1' in [1/3, 1/3] &
+				  x2' in [1/3, 1/3] &
+				  x3' in [-10/10, -1] }
 
 	when t=h & x3 < 18  & x1-x3 >= 1  	
 		sync clockUp1 
-		do {x1' = x1, x2' = x2, x3' = x3, t'=0, i'=i+1} 
+		do {x1' = x1, x2' = x2, x3' = x3, t'=0} 
 		goto loc022_161816; -- move heater from room 1 to room 3
 
 	when t=h & x3 < 18  & x2-x3 >= 1  	
 		sync clockUp1 
-		do {x1' = x1, x2' = x2, x3' = x3, t'=0, j'=j+1} 
+		do {x1' = x1, x2' = x2, x3' = x3, t'=0} 
 		goto loc202_161816; -- move heater from room 2 to room 3
 
-	when t=h & x1>= 18
+	when t=h & x3>= 18
 		sync clockUp1 
 		do {x1' = x1, x2' = x2, x3' = x3, t'=0} 
 		goto loc220_161816; -- loop
@@ -403,9 +386,12 @@ loc loc220_161816: while t<=h & s<=max & 31/2 <=x3 & x3 <=35/2
 
 	
 
-	when x1 = 35/2      do {x1' = x1, x2' = x2, x3' = x3} goto loc220_181816;   
+	when x1 = 35/2     do {x1' = x1, x2' = x2, x3' = x3} goto loc220_181816;   
 	when x2 = 35/2     do {x1' = x1, x2' = x2, x3' = x3} goto loc220_161616;
 	when x3 = 35/2     do {x1' = x1, x2' = x2, x3' = x3} goto loc220_161818;
+
+	when x3 = 31/2     do {x1' = x1, x2' = x2, x3' = x3} goto err;
+	when x2 = 39/2     do {x1' = x1, x2' = x2, x3' = x3} goto err;
 
 
 ---- 161618 -----------
@@ -414,21 +400,18 @@ loc loc220_161816: while t<=h & s<=max & 31/2 <=x3 & x3 <=35/2
 loc loc022_161618: while t<=h & s<=max & 35/2 <=x3 & x3 <=39/2 
 		& 31/2 <=x1 & x1 <=35/2  & 31/2 <=x2 & x2 <=35/2
 
-		wait 		{
-				x3' >= 1/10 & x3' <= 1/10 & x2' >= 1/10 & x2' <= 1/10 &
-				x1' >= -12/10 & x1' <= -1		}
-		
-
-
+		wait 		{ x1' in [-10/10, -1] &
+				  x2' in [1/3, 1/3] &
+				  x3' in [1/3, 1/3] }
 
 	when t=h & x1 < 18  & x2-x1 >= 1  	
 		sync clockUp1 
-		do {x1' = x1, x2' = x2, x3' = x3, t'=0, j'=j+1} 
+		do {x1' = x1, x2' = x2, x3' = x3, t'=0} 
 		goto loc202_161618; -- move heater from room 2 to room 1
 
 	when t=h & x1 < 18  & x3-x1 >= 1  	
 		sync clockUp1 
-		do {x1' = x1, x2' = x2, x3' = x3, t'=0, k'=k+1} 
+		do {x1' = x1, x2' = x2, x3' = x3, t'=0} 
 		goto loc220_161618; -- move heater from room 3 to room 1
 
 	when t=h & x1>= 18
@@ -443,9 +426,12 @@ loc loc022_161618: while t<=h & s<=max & 35/2 <=x3 & x3 <=39/2
 
 	
 
-	when x1 = 35/2      do {x1' = x1, x2' = x2, x3' = x3} goto loc022_181618;   
+	when x1 = 35/2     do {x1' = x1, x2' = x2, x3' = x3} goto loc022_181618;   
 	when x2 = 35/2     do {x1' = x1, x2' = x2, x3' = x3} goto loc022_161818;
 	when x3 = 35/2     do {x1' = x1, x2' = x2, x3' = x3} goto loc022_161616;
+
+	when x1 = 31/2     do {x1' = x1, x2' = x2, x3' = x3} goto err;
+	when x3 = 39/2     do {x1' = x1, x2' = x2, x3' = x3} goto err;
 
 
 -----
@@ -453,24 +439,21 @@ loc loc022_161618: while t<=h & s<=max & 35/2 <=x3 & x3 <=39/2
 loc loc202_161618: while t<=h & s<=max & 35/2 <=x3 & x3 <=39/2 
 		& 31/2 <=x1 & x1 <=35/2  & 31/2 <=x2 & x2 <=35/2
 
-		wait 		{
-				x3' >= 1/10 & x3' <= 1/10 & x1' >= 1/10 & x1' <= 1/10 &
-				x2' >= -12/10 & x2' <= -1		}
-		
-
-
+		wait 		{ x1' in [1/3, 1/3] &
+				  x2' in [-10/10, -1] &
+				  x3' in [1/3, 1/3] }
 
 	when t=h & x2 < 18  & x1-x2 >= 1  	
 		sync clockUp1 
-		do {x1' = x1, x2' = x2, x3' = x3, t'=0, i'=i+1} 
+		do {x1' = x1, x2' = x2, x3' = x3, t'=0} 
 		goto loc022_161618; -- move heater from room 1 to room 2
 
 	when t=h & x2 < 18  & x3-x2 >= 1  	
 		sync clockUp1 
-		do {x1' = x1, x2' = x2, x3' = x3, t'=0, k'=k+1} 
+		do {x1' = x1, x2' = x2, x3' = x3, t'=0} 
 		goto loc220_161618; -- move heater from room 3 to room 2
 
-	when t=h & x1>= 18
+	when t=h & x2>= 18
 		sync clockUp1 
 		do {x1' = x1, x2' = x2, x3' = x3, t'=0} 
 		goto loc202_161618; -- loop
@@ -482,9 +465,12 @@ loc loc202_161618: while t<=h & s<=max & 35/2 <=x3 & x3 <=39/2
 
 	
 
-	when x1 = 35/2      do {x1' = x1, x2' = x2, x3' = x3} goto loc202_181618;   
+	when x1 = 35/2     do {x1' = x1, x2' = x2, x3' = x3} goto loc202_181618;   
 	when x2 = 35/2     do {x1' = x1, x2' = x2, x3' = x3} goto loc202_161818;    
 	when x3 = 35/2     do {x1' = x1, x2' = x2, x3' = x3} goto loc202_161616;
+
+	when x2 = 31/2     do {x1' = x1, x2' = x2, x3' = x3} goto err;
+	when x3 = 39/2     do {x1' = x1, x2' = x2, x3' = x3} goto err;
 
 
 -----
@@ -492,24 +478,21 @@ loc loc202_161618: while t<=h & s<=max & 35/2 <=x3 & x3 <=39/2
 loc loc220_161618: while t<=h & s<=max & 35/2 <=x3 & x3 <=39/2 
 		& 31/2 <=x1 & x1 <=35/2  & 31/2 <=x2 & x2 <=35/2
 
-		wait 		{
-				x1' >= 1/10 & x1' <= 1/10 & x2' >= 1/10 & x2' <= 1/10 &
-				x3' >= -12/10 & x3' <= -1		}
-		
-
-
+		wait 		{ x1' in [1/3, 1/3] &
+				  x2' in [1/3, 1/3] &
+				  x3' in [-10/10, -1] }
 
 	when t=h & x3 < 18  & x1-x3 >= 1  	
 		sync clockUp1 
-		do {x1' = x1, x2' = x2, x3' = x3, t'=0, i'=i+1} 
+		do {x1' = x1, x2' = x2, x3' = x3, t'=0} 
 		goto loc022_161618; -- move heater from room 1 to room 3
 
 	when t=h & x3 < 18  & x2-x3 >= 1  	
 		sync clockUp1 
-		do {x1' = x1, x2' = x2, x3' = x3, t'=0, j'=j+1} 
+		do {x1' = x1, x2' = x2, x3' = x3, t'=0} 
 		goto loc202_161618; -- move heater from room 2 to room 3
 
-	when t=h & x1>= 18
+	when t=h & x3>= 18
 		sync clockUp1 
 		do {x1' = x1, x2' = x2, x3' = x3, t'=0} 
 		goto loc220_161618; -- loop
@@ -521,7 +504,7 @@ loc loc220_161618: while t<=h & s<=max & 35/2 <=x3 & x3 <=39/2
 
 	
 
-	when x1 = 35/2      do {x1' = x1, x2' = x2, x3' = x3} goto loc220_181618;   
+	when x1 = 35/2     do {x1' = x1, x2' = x2, x3' = x3} goto loc220_181618;   
 	when x2 = 35/2     do {x1' = x1, x2' = x2, x3' = x3} goto loc220_161818;
 	when x3 = 35/2     do {x1' = x1, x2' = x2, x3' = x3} goto loc220_161616;
 
@@ -534,21 +517,18 @@ loc loc220_161618: while t<=h & s<=max & 35/2 <=x3 & x3 <=39/2
 loc loc022_161818: while t<=h & s<=max & 35/2 <=x3 & x3 <=39/2 
 		& 31/2 <=x1 & x1 <=35/2  & 35/2 <=x2 & x2 <=39/2
 
-		wait 		{
-				x3' >= 1/10 & x3' <= 1/10 & x2' >= 1/10 & x2' <= 1/10 &
-				x1' >= -12/10 & x1' <= -1		}
-		
-
-
+		wait 		{ x1' in [-10/10, -1] &
+				  x2' in [1/3, 1/3] &
+				  x3' in [1/3, 1/3] }
 
 	when t=h & x1 < 18  & x2-x1 >= 1  	
 		sync clockUp1 
-		do {x1' = x1, x2' = x2, x3' = x3, t'=0, j'=j+1} 
+		do {x1' = x1, x2' = x2, x3' = x3, t'=0} 
 		goto loc202_161818; -- move heater from room 2 to room 1
 
 	when t=h & x1 < 18  & x3-x1 >= 1  	
 		sync clockUp1 
-		do {x1' = x1, x2' = x2, x3' = x3, t'=0, k'=k+1} 
+		do {x1' = x1, x2' = x2, x3' = x3, t'=0} 
 		goto loc220_161818; -- move heater from room 3 to room 1
 
 	when t=h & x1>= 18
@@ -563,9 +543,12 @@ loc loc022_161818: while t<=h & s<=max & 35/2 <=x3 & x3 <=39/2
 
 	
 
-	when x1 = 35/2      do {x1' = x1, x2' = x2, x3' = x3} goto loc022_181818;   
+	when x1 = 35/2     do {x1' = x1, x2' = x2, x3' = x3} goto loc022_181818;   
 	when x2 = 35/2     do {x1' = x1, x2' = x2, x3' = x3} goto loc022_161618;
 	when x3 = 35/2     do {x1' = x1, x2' = x2, x3' = x3} goto loc022_161816;
+
+	when x2 = 39/2     do {x1' = x1, x2' = x2, x3' = x3} goto err;
+	when x3 = 39/2     do {x1' = x1, x2' = x2, x3' = x3} goto err;
 
 
 -----
@@ -573,24 +556,21 @@ loc loc022_161818: while t<=h & s<=max & 35/2 <=x3 & x3 <=39/2
 loc loc202_161818: while t<=h & s<=max & 35/2 <=x3 & x3 <=39/2 
 		& 31/2 <=x1 & x1 <=35/2  & 35/2 <=x2 & x2 <=39/2
 
-		wait 		{
-				x3' >= 1/10 & x3' <= 1/10 & x1' >= 1/10 & x1' <= 1/10 &
-				x2' >= -12/10 & x2' <= -1		}
-		
-
-
+		wait 		{ x1' in [1/3, 1/3] &
+				  x2' in [-10/10, -1] &
+				  x3' in [1/3, 1/3] }
 
 	when t=h & x2 < 18  & x1-x2 >= 1  	
 		sync clockUp1 
-		do {x1' = x1, x2' = x2, x3' = x3, t'=0, i'=i+1} 
+		do {x1' = x1, x2' = x2, x3' = x3, t'=0} 
 		goto loc022_161818; -- move heater from room 1 to room 2
 
 	when t=h & x2 < 18  & x3-x2 >= 1  	
 		sync clockUp1 
-		do {x1' = x1, x2' = x2, x3' = x3, t'=0, k'=k+1} 
+		do {x1' = x1, x2' = x2, x3' = x3, t'=0} 
 		goto loc220_161818; -- move heater from room 3 to room 2
 
-	when t=h & x1>= 18
+	when t=h & x2>= 18
 		sync clockUp1 
 		do {x1' = x1, x2' = x2, x3' = x3, t'=0} 
 		goto loc202_161818; -- loop
@@ -602,9 +582,11 @@ loc loc202_161818: while t<=h & s<=max & 35/2 <=x3 & x3 <=39/2
 
 	
 
-	when x1 = 35/2      do {x1' = x1, x2' = x2, x3' = x3} goto loc202_181818;   
+	when x1 = 35/2     do {x1' = x1, x2' = x2, x3' = x3} goto loc202_181818;   
 	when x2 = 35/2     do {x1' = x1, x2' = x2, x3' = x3} goto loc202_161618;
 	when x3 = 35/2     do {x1' = x1, x2' = x2, x3' = x3} goto loc202_161816;
+
+	when x3 = 39/2     do {x1' = x1, x2' = x2, x3' = x3} goto err;
 
 
 -----
@@ -612,24 +594,21 @@ loc loc202_161818: while t<=h & s<=max & 35/2 <=x3 & x3 <=39/2
 loc loc220_161818: while t<=h & s<=max & 35/2 <=x3 & x3 <=39/2 
 		& 31/2 <=x1 & x1 <=35/2  & 35/2 <=x2 & x2 <=39/2
 
-		wait 		{
-				x1' >= 1/10 & x1' <= 1/10 & x2' >= 1/10 & x2' <= 1/10 &
-				x3' >= -12/10 & x3' <= -1		}
-		
-
-
+		wait 		{ x1' in [1/3, 1/3] &
+				  x2' in [1/3, 1/3] &
+				  x3' in [-10/10, -1] }
 
 	when t=h & x3 < 18  & x1-x3 >= 1  	
 		sync clockUp1 
-		do {x1' = x1, x2' = x2, x3' = x3, t'=0, i'=i+1} 
+		do {x1' = x1, x2' = x2, x3' = x3, t'=0} 
 		goto loc022_161818; -- move heater from room 1 to room 3
 
 	when t=h & x3 < 18  & x2-x3 >= 1  	
 		sync clockUp1 
-		do {x1' = x1, x2' = x2, x3' = x3, t'=0, j'=j+1} 
+		do {x1' = x1, x2' = x2, x3' = x3, t'=0} 
 		goto loc202_161818; -- move heater from room 2 to room 3
 
-	when t=h & x1>= 18
+	when t=h & x3>= 18
 		sync clockUp1 
 		do {x1' = x1, x2' = x2, x3' = x3, t'=0} 
 		goto loc220_161818; -- loop
@@ -641,9 +620,11 @@ loc loc220_161818: while t<=h & s<=max & 35/2 <=x3 & x3 <=39/2
 
 	
 
-	when x1 = 35/2      do {x1' = x1, x2' = x2, x3' = x3} goto loc220_181818;   
+	when x1 = 35/2     do {x1' = x1, x2' = x2, x3' = x3} goto loc220_181818;   
 	when x2 = 35/2     do {x1' = x1, x2' = x2, x3' = x3} goto loc220_161618;
 	when x3 = 35/2     do {x1' = x1, x2' = x2, x3' = x3} goto loc220_161816;
+
+	when x2 = 39/2     do {x1' = x1, x2' = x2, x3' = x3} goto err;
 
 
 -----  181618 --------------------------------------
@@ -651,21 +632,18 @@ loc loc220_161818: while t<=h & s<=max & 35/2 <=x3 & x3 <=39/2
 loc loc022_181618: while t<=h & s<=max & 35/2 <=x3 & x3 <=39/2 
 		& 35/2 <=x1 & x1 <=39/2  & 31/2 <=x2 & x2 <=35/2
 
-		wait 		{
-				x3' >= 1/10 & x3' <= 1/10 & x2' >= 1/10 & x2' <= 1/10 &
-				x1' >= -12/10 & x1' <= -1		}
-		
-
-
+		wait 		{ x1' in [-10/10, -1] &
+				  x2' in [1/3, 1/3] &
+				  x3' in [1/3, 1/3] }
 
 	when t=h & x1 < 18  & x2-x1 >= 1  	
 		sync clockUp1 
-		do {x1' = x1, x2' = x2, x3' = x3, t'=0, j'=j+1} 
+		do {x1' = x1, x2' = x2, x3' = x3, t'=0} 
 		goto loc202_181618; -- move heater from room 2 to room 1
 
 	when t=h & x1 < 18  & x3-x1 >= 1  	
 		sync clockUp1 
-		do {x1' = x1, x2' = x2, x3' = x3, t'=0, k'=k+1} 
+		do {x1' = x1, x2' = x2, x3' = x3, t'=0} 
 		goto loc220_181618; -- move heater from room 3 to room 1
 
 	when t=h & x1>= 18
@@ -680,9 +658,11 @@ loc loc022_181618: while t<=h & s<=max & 35/2 <=x3 & x3 <=39/2
 
 	
 
-	when x1 = 35/2      do {x1' = x1, x2' = x2, x3' = x3} goto loc022_161618;   
+	when x1 = 35/2     do {x1' = x1, x2' = x2, x3' = x3} goto loc022_161618;   
 	when x2 = 35/2     do {x1' = x1, x2' = x2, x3' = x3} goto loc022_181818;
 	when x3 = 35/2     do {x1' = x1, x2' = x2, x3' = x3} goto loc022_181616;
+
+	when x3 = 39/2     do {x1' = x1, x2' = x2, x3' = x3} goto err;
 
 
 -----
@@ -690,24 +670,21 @@ loc loc022_181618: while t<=h & s<=max & 35/2 <=x3 & x3 <=39/2
 loc loc202_181618: while t<=h & s<=max & 35/2 <=x3 & x3 <=39/2 
 		& 35/2 <=x1 & x1 <=39/2  & 31/2 <=x2 & x2 <=35/2
 
-		wait 		{
-				x3' >= 1/10 & x3' <= 1/10 & x1' >= 1/10 & x1' <= 1/10 &
-				x2' >= -12/10 & x2' <= -1		}
-		
-
-
+		wait 		{ x1' in [1/3, 1/3] &
+				  x2' in [-10/10, -1] &
+				  x3' in [1/3, 1/3] }
 
 	when t=h & x2 < 18  & x1-x2 >= 1  	
 		sync clockUp1 
-		do {x1' = x1, x2' = x2, x3' = x3, t'=0, i'=i+1} 
+		do {x1' = x1, x2' = x2, x3' = x3, t'=0} 
 		goto loc022_181618; -- move heater from room 1 to room 2
 
 	when t=h & x2 < 18  & x3-x2 >= 1  	
 		sync clockUp1 
-		do {x1' = x1, x2' = x2, x3' = x3, t'=0, k'=k+1} 
+		do {x1' = x1, x2' = x2, x3' = x3, t'=0} 
 		goto loc220_181618; -- move heater from room 3 to room 2
 
-	when t=h & x1>= 18
+	when t=h & x2>= 18
 		sync clockUp1 
 		do {x1' = x1, x2' = x2, x3' = x3, t'=0} 
 		goto loc202_181618; -- loop
@@ -719,34 +696,35 @@ loc loc202_181618: while t<=h & s<=max & 35/2 <=x3 & x3 <=39/2
 
 	
 
-	when x1 = 35/2      do {x1' = x1, x2' = x2, x3' = x3} goto loc202_161618;   
+	when x1 = 35/2     do {x1' = x1, x2' = x2, x3' = x3} goto loc202_161618;   
 	when x2 = 35/2     do {x1' = x1, x2' = x2, x3' = x3} goto loc202_181818;
 	when x3 = 35/2     do {x1' = x1, x2' = x2, x3' = x3} goto loc202_181616;
+
+	when x1 = 39/2     do {x1' = x1, x2' = x2, x3' = x3} goto err;
+	when x2 = 31/2     do {x1' = x1, x2' = x2, x3' = x3} goto err;
+	when x3 = 39/2     do {x1' = x1, x2' = x2, x3' = x3} goto err;
 
 
 -----
 
-loc loc220_181618: while t<=h & s<=max & 35/2 <=x3 & x3 <=39/2 
-		& 31/2 <=x1 & x1 <=35/2  & 35/2 <=x2 & x2 <=39/2
+loc loc220_181618: while t<=h & s<=max & 35/2 <= x3 & x3 <=39/2 
+		& 35/2 <=x1 & x1 <=39/2  & 31/2 <=x2 & x2 <=35/2
 
-		wait 		{
-				x1' >= 1/10 & x1' <= 1/10 & x2' >= 1/10 & x2' <= 1/10 &
-				x3' >= -12/10 & x3' <= -1		}
-		
-
-
+		wait 		{ x1' in [1/3, 1/3] &
+				  x2' in [1/3, 1/3] &
+				  x3' in [-10/10, -1] }
 
 	when t=h & x3 < 18  & x1-x3 >= 1  	
 		sync clockUp1 
-		do {x1' = x1, x2' = x2, x3' = x3, t'=0, i'=i+1} 
+		do {x1' = x1, x2' = x2, x3' = x3, t'=0} 
 		goto loc022_181618; -- move heater from room 1 to room 3
 
 	when t=h & x3 < 18  & x2-x3 >= 1  	
 		sync clockUp1 
-		do {x1' = x1, x2' = x2, x3' = x3, t'=0, j'=j+1} 
+		do {x1' = x1, x2' = x2, x3' = x3, t'=0} 
 		goto loc202_181618; -- move heater from room 2 to room 3
 
-	when t=h & x1>= 18
+	when t=h & x3>= 18
 		sync clockUp1 
 		do {x1' = x1, x2' = x2, x3' = x3, t'=0} 
 		goto loc220_181618; -- loop
@@ -758,10 +736,11 @@ loc loc220_181618: while t<=h & s<=max & 35/2 <=x3 & x3 <=39/2
 
 	
 
-	when x1 = 35/2      do {x1' = x1, x2' = x2, x3' = x3} goto loc220_161618;   
+	when x1 = 35/2     do {x1' = x1, x2' = x2, x3' = x3} goto loc220_161618;   
 	when x2 = 35/2     do {x1' = x1, x2' = x2, x3' = x3} goto loc220_181818;
 	when x3 = 35/2     do {x1' = x1, x2' = x2, x3' = x3} goto loc220_181616;
 
+	when x1 = 39/2     do {x1' = x1, x2' = x2, x3' = x3} goto err;
 
 
 ------- 181816 -----------------------------------------
@@ -769,21 +748,18 @@ loc loc220_181618: while t<=h & s<=max & 35/2 <=x3 & x3 <=39/2
 loc loc022_181816: while t<=h & s<=max & 31/2 <=x3 & x3 <=35/2 
 		& 35/2 <=x1 & x1 <=39/2  & 35/2 <=x2 & x2 <=39/2
 
-		wait 		{
-				x3' >= 1/10 & x3' <= 1/10 & x2' >= 1/10 & x2' <= 1/10 &
-				x1' >= -12/10 & x1' <= -1		}
-		
-
-
+		wait 		{ x1' in [-10/10, -1] &
+				  x2' in [1/3, 1/3] &
+				  x3' in [1/3, 1/3] }
 
 	when t=h & x1 < 18  & x2-x1 >= 1  	
 		sync clockUp1 
-		do {x1' = x1, x2' = x2, x3' = x3, t'=0, j'=j+1} 
+		do {x1' = x1, x2' = x2, x3' = x3, t'=0} 
 		goto loc202_181816; -- move heater from room 2 to room 1
 
 	when t=h & x1 < 18  & x3-x1 >= 1  	
 		sync clockUp1 
-		do {x1' = x1, x2' = x2, x3' = x3, t'=0, k'=k+1} 
+		do {x1' = x1, x2' = x2, x3' = x3, t'=0} 
 		goto loc220_181816; -- move heater from room 3 to room 1
 
 	when t=h & x1>= 18
@@ -798,9 +774,11 @@ loc loc022_181816: while t<=h & s<=max & 31/2 <=x3 & x3 <=35/2
 
 	
 
-	when x1 = 35/2      do {x1' = x1, x2' = x2, x3' = x3} goto loc022_161618;   
+	when x1 = 35/2     do {x1' = x1, x2' = x2, x3' = x3} goto loc022_161816;   
 	when x2 = 35/2     do {x1' = x1, x2' = x2, x3' = x3} goto loc022_181616;
 	when x3 = 35/2     do {x1' = x1, x2' = x2, x3' = x3} goto loc022_181818;
+
+	when x2 = 39/2     do {x1' = x1, x2' = x2, x3' = x3} goto err;
 
 
 -----
@@ -808,24 +786,21 @@ loc loc022_181816: while t<=h & s<=max & 31/2 <=x3 & x3 <=35/2
 loc loc202_181816: while t<=h & s<=max & 31/2 <=x3 & x3 <=35/2 
 		& 35/2 <=x1 & x1 <=39/2  & 35/2 <=x2 & x2 <=39/2
 
-		wait 		{
-				x3' >= 1/10 & x3' <= 1/10 & x1' >= 1/10 & x1' <= 1/10 &
-				x2' >= -1 & x2' <= -9/10 		}
-		
-
-
+		wait 		{ x1' in [1/3, 1/3] &
+				  x2' in [-10/10, -1] &
+				  x3' in [1/3, 1/3] }
 
 	when t=h & x2 < 18  & x1-x2 >= 1  	
 		sync clockUp1 
-		do {x1' = x1, x2' = x2, x3' = x3, t'=0, i'=i+1} 
+		do {x1' = x1, x2' = x2, x3' = x3, t'=0} 
 		goto loc022_181816; -- move heater from room 1 to room 2
 
 	when t=h & x2 < 18  & x3-x2 >= 1  	
 		sync clockUp1 
-		do {x1' = x1, x2' = x2, x3' = x3, t'=0, k'=k+1} 
+		do {x1' = x1, x2' = x2, x3' = x3, t'=0} 
 		goto loc220_181816; -- move heater from room 3 to room 2
 
-	when t=h & x1>= 18
+	when t=h & x2>= 18
 		sync clockUp1 
 		do {x1' = x1, x2' = x2, x3' = x3, t'=0} 
 		goto loc202_181816; -- loop
@@ -837,9 +812,11 @@ loc loc202_181816: while t<=h & s<=max & 31/2 <=x3 & x3 <=35/2
 
 	
 
-	when x1 = 35/2      do {x1' = x1, x2' = x2, x3' = x3} goto loc202_161816;   
+	when x1 = 35/2     do {x1' = x1, x2' = x2, x3' = x3} goto loc202_161816;   
 	when x2 = 35/2     do {x1' = x1, x2' = x2, x3' = x3} goto loc202_181616;
 	when x3 = 35/2     do {x1' = x1, x2' = x2, x3' = x3} goto loc202_181818;
+
+	when x1 = 39/2     do {x1' = x1, x2' = x2, x3' = x3} goto err;
 
 
 -----
@@ -847,24 +824,21 @@ loc loc202_181816: while t<=h & s<=max & 31/2 <=x3 & x3 <=35/2
 loc loc220_181816: while t<=h & s<=max & 31/2 <=x3 & x3 <=35/2 
 		& 35/2 <=x1 & x1 <=39/2  & 35/2 <=x2 & x2 <=39/2
 
-		wait 		{
-				x1' >= 1/10 & x1' <= 1/10 & x2' >= 1/10 & x2' <= 1/10 &
-				x3' >= -12/10 & x3' <= -1		}
-		
-
-
+		wait 		{ x1' in [1/3, 1/3] &
+				  x2' in [1/3, 1/3] &
+				  x3' in [-10/10, -1] }
 
 	when t=h & x3 < 18  & x1-x3 >= 1  	
 		sync clockUp1 
-		do {x1' = x1, x2' = x2, x3' = x3, t'=0, i'=i+1} 
+		do {x1' = x1, x2' = x2, x3' = x3, t'=0} 
 		goto loc022_181816; -- move heater from room 1 to room 3
 
 	when t=h & x3 < 18  & x2-x3 >= 1  	
 		sync clockUp1 
-		do {x1' = x1, x2' = x2, x3' = x3, t'=0, j'=j+1} 
+		do {x1' = x1, x2' = x2, x3' = x3, t'=0} 
 		goto loc202_181816; -- move heater from room 2 to room 3
 
-	when t=h & x1>= 18
+	when t=h & x3>= 18
 		sync clockUp1 
 		do {x1' = x1, x2' = x2, x3' = x3, t'=0} 
 		goto loc220_181816; -- loop
@@ -876,9 +850,13 @@ loc loc220_181816: while t<=h & s<=max & 31/2 <=x3 & x3 <=35/2
 
 	
 
-	when x1 = 35/2      do {x1' = x1, x2' = x2, x3' = x3} goto loc220_161816;   
-	when x2 = 35/2      do {x1' = x1, x2' = x2, x3' = x3} goto loc220_181616;
+	when x1 = 35/2     do {x1' = x1, x2' = x2, x3' = x3} goto loc220_161816;   
+	when x2 = 35/2     do {x1' = x1, x2' = x2, x3' = x3} goto loc220_181616;
 	when x3 = 35/2     do {x1' = x1, x2' = x2, x3' = x3} goto loc220_181818;
+
+	when x1 = 39/2     do {x1' = x1, x2' = x2, x3' = x3} goto err;
+	when x2 = 39/2     do {x1' = x1, x2' = x2, x3' = x3} goto err;
+	when x3 = 31/2     do {x1' = x1, x2' = x2, x3' = x3} goto err;
 
 
 -------------- 181818 ----------------------------
@@ -886,22 +864,18 @@ loc loc220_181816: while t<=h & s<=max & 31/2 <=x3 & x3 <=35/2
 loc loc022_181818: while t<=h & s<=max & 35/2 <=x3 & x3 <=39/2 
 		& 35/2 <=x1 & x1 <=39/2  & 35/2 <=x2 & x2 <=39/2
 
-		wait 		{
-				x3' >= 1/10 & x3' <= 1/10 & x2' >= 1/10 & x2' <= 1/10 &
-				x1' >= -12/10 & x1' <= -1 		
-}
-		
-
-
+		wait 		{ x1' in [-10/10, -1] &
+				  x2' in [1/3, 1/3] &
+				  x3' in [1/3, 1/3] }
 
 	when t=h & x1 < 18  & x2-x1 >= 1  	
 		sync clockUp1 
-		do {x1' = x1, x2' = x2, x3' = x3, t'=0, j'=j+1} 
+		do {x1' = x1, x2' = x2, x3' = x3, t'=0} 
 		goto loc202_181818; -- move heater from room 2 to room 1
 
 	when t=h & x1 < 18  & x3-x1 >= 1  	
 		sync clockUp1 
-		do {x1' = x1, x2' = x2, x3' = x3, t'=0, k'=k+1} 
+		do {x1' = x1, x2' = x2, x3' = x3, t'=0} 
 		goto loc220_181818; -- move heater from room 3 to room 1
 
 	when t=h & x1>= 18
@@ -916,9 +890,12 @@ loc loc022_181818: while t<=h & s<=max & 35/2 <=x3 & x3 <=39/2
 
 	
 
-	when x1 = 35/2      do {x1' = x1, x2' = x2, x3' = x3} goto loc022_161818;   
+	when x1 = 35/2     do {x1' = x1, x2' = x2, x3' = x3} goto loc022_161818;   
 	when x2 = 35/2     do {x1' = x1, x2' = x2, x3' = x3} goto loc022_181618;
 	when x3 = 35/2     do {x1' = x1, x2' = x2, x3' = x3} goto loc022_181816;
+
+	when x2 = 39/2     do {x1' = x1, x2' = x2, x3' = x3} goto err;
+	when x3 = 39/2     do {x1' = x1, x2' = x2, x3' = x3} goto err;
 
 
 -----
@@ -926,25 +903,21 @@ loc loc022_181818: while t<=h & s<=max & 35/2 <=x3 & x3 <=39/2
 loc loc202_181818: while t<=h & s<=max & 35/2 <=x3 & x3 <=39/2 
 		& 35/2 <=x1 & x1 <=39/2  & 35/2 <=x2 & x2 <=39/2
 
-		wait 		{
-				x3' >= 1/10 & x3' <= 1/10 & x1' >= 1/10 & x1' <= 1/10 &
-				x2' >= -12/10 & x2' <= -1 		
-}
-		
-
-
+		wait 		{ x1' in [1/3, 1/3] &
+				  x2' in [-10/10, -1] &
+				  x3' in [1/3, 1/3] }
 
 	when t=h & x2 < 18  & x1-x2 >= 1  	
 		sync clockUp1 
-		do {x1' = x1, x2' = x2, x3' = x3, t'=0, i'=i+1} 
+		do {x1' = x1, x2' = x2, x3' = x3, t'=0} 
 		goto loc022_181818; -- move heater from room 1 to room 2
 
 	when t=h & x2 < 18  & x3-x2 >= 1  	
 		sync clockUp1 
-		do {x1' = x1, x2' = x2, x3' = x3, t'=0, k'=k+1} 
+		do {x1' = x1, x2' = x2, x3' = x3, t'=0} 
 		goto loc220_181818; -- move heater from room 3 to room 2
 
-	when t=h & x1>= 18
+	when t=h & x2>= 18
 		sync clockUp1 
 		do {x1' = x1, x2' = x2, x3' = x3, t'=0} 
 		goto loc202_181818; -- loop
@@ -956,7 +929,7 @@ loc loc202_181818: while t<=h & s<=max & 35/2 <=x3 & x3 <=39/2
 
 	
 
-	when x1 = 35/2      do {x1' = x1, x2' = x2, x3' = x3} goto loc202_161818;   
+	when x1 = 35/2     do {x1' = x1, x2' = x2, x3' = x3} goto loc202_161818;   
 	when x2 = 35/2     do {x1' = x1, x2' = x2, x3' = x3} goto loc202_181618;
 	when x3 = 35/2     do {x1' = x1, x2' = x2, x3' = x3} goto loc202_181816;
 
@@ -966,25 +939,21 @@ loc loc202_181818: while t<=h & s<=max & 35/2 <=x3 & x3 <=39/2
 loc loc220_181818: while t<=h & s<=max & 35/2 <=x3 & x3 <=39/2 
 		& 35/2 <=x1 & x1 <=39/2  & 35/2 <=x2 & x2 <=39/2
 
-		wait 		{
-				x1' >= 1/10 & x1' <= 1/10 & x2' >= 1/10 & x2' <= 1/10 &
-				x3' >= -12/10 & x3' <= -1 		
-}
-		
-
-
+		wait 		{ x1' in [1/3, 1/3] &
+				  x2' in [1/3, 1/3] &
+				  x3' in [-10/10, -1] }
 
 	when t=h & x3 < 18  & x1-x3 >= 1  	
 		sync clockUp1 
-		do {x1' = x1, x2' = x2, x3' = x3, t'=0, i'=i+1} 
+		do {x1' = x1, x2' = x2, x3' = x3, t'=0} 
 		goto loc022_181818; -- move heater from room 1 to room 3
 
 	when t=h & x3 < 18  & x2-x3 >= 1  	
 		sync clockUp1 
-		do {x1' = x1, x2' = x2, x3' = x3, t'=0, j'=j+1} 
+		do {x1' = x1, x2' = x2, x3' = x3, t'=0} 
 		goto loc202_181818; -- move heater from room 2 to room 3
 
-	when t=h & x1>= 18
+	when t=h & x3>= 18
 		sync clockUp1 
 		do {x1' = x1, x2' = x2, x3' = x3, t'=0} 
 		goto loc220_181818; -- loop
@@ -1001,6 +970,8 @@ loc loc220_181818: while t<=h & s<=max & 35/2 <=x3 & x3 <=39/2
 	when x3 = 35/2     do {x1' = x1, x2' = x2, x3' = x3} goto loc220_181816;
 
 
+loc err: while s<=max wait {x1'=0 & x2'=0 & x3'=0}
+    when True do {x1'=x1, x2'=x2, x3'=x3} goto err;
 
 
 end -- rhb
@@ -1030,13 +1001,11 @@ init :=
 	----------------------
 	& x1=96/5 
 	& x2=91/5 
-        & x3=193/10		
---	& x1=a1 & x2=a2 & x3=a3
-	& h=1
-	& i=0 & j=0 & k=0
-	& max=8  
+        & x3=181/10		
+	& x1=a1 & x2=a2 & x3=a3
+	& h=1/3
+	& max=20
 
-	
 	----------------------
 	-- Instantiation of the parameters 
 	----------------------

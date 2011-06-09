@@ -34,42 +34,30 @@ let test_sat _ =
 	
 	let poly_mapped = LinearConstraint.rename_variables [(0,3); (1,4)] poly in
 	print_message Debug_standard ("constraint: " ^ (LinearConstraint.string_of_linear_constraint names poly_mapped));
-	assert_bool "constraint is unsatisfiable" (LinearConstraint.is_satisfiable poly_mapped);
+	assert_bool "constraint is unsatisfiable" (LinearConstraint.is_satisfiable poly_mapped)
 	
-	let elapse = LinearConstraint.add_d 6 (NumConst.numconst_of_frac 2 3) [0; 1] poly in
-	print_message Debug_standard ("constraint: " ^ (LinearConstraint.string_of_linear_constraint names elapse));
+  
+let test_inclusion _ =
+	set_manager 0 7;
 	
-	(* try affine mapping *)
-(*	let aff_expr = Plus (Variable 2, Variable 6) in                                                            *)
-(*	let ppoly = LinearConstraint.to_ppl_polyhedron poly in                                                     *)
-(*	ppl_Polyhedron_affine_preimage ppoly 2 aff_expr Gmp.Z.one;                                                 *)
-(*	let image = LinearConstraint.from_ppl_polyhedron ppoly in                                                  *)
-(*	print_message Debug_standard ("constraint: " ^ (LinearConstraint.string_of_linear_constraint names image));*)
-	
-	(* try PPL's time elapse operator *)
-	let my_poly = LinearConstraint.to_ppl_polyhedron (LinearConstraint.true_constraint ()) in
-	ppl_Polyhedron_add_constraints my_poly [
-		Equal (Variable 0, Coefficient Gmp.Z.zero);
-		Equal (Variable 1, Coefficient Gmp.Z.zero);
-		Equal (Variable 2, Coefficient Gmp.Z.one)	
-	];
-	let deriv = LinearConstraint.to_ppl_polyhedron (LinearConstraint.from_ppl_constraints [
-		Equal (Variable 0, Coefficient Gmp.Z.one);
-		Equal (Variable 1, Coefficient (Gmp.Z.from_int 2));
-		Equal (Variable 2, Coefficient (Gmp.Z.from_int (-1)))
-(*		Equal (Variable 3, Coefficient Gmp.Z.zero);*)
-(*		Equal (Variable 4, Coefficient Gmp.Z.zero);*)
-(*		Equal (Variable 5, Coefficient Gmp.Z.zero) *)
-(*		Equal (Variable 6, Coefficient Gmp.Z.zero)		*)
-	]) in
-	print_message Debug_standard ("derivatives: " ^ (LinearConstraint.string_of_linear_constraint names (LinearConstraint.from_ppl_polyhedron deriv)));
-	ppl_Polyhedron_time_elapse_assign my_poly deriv;
-	let new_constr = LinearConstraint.from_ppl_polyhedron my_poly in
-	print_message Debug_standard ("constraint: " ^ (LinearConstraint.string_of_linear_constraint names new_constr))	
-	
+	(* make inequality c > 0 *)
+	let c_greater_zero = make_linear_inequality_ppl (Var 2) Greater_Than_RS (Coef NumConst.zero) in
+	(* make equality a = b *)
+	let eq_ab = make_linear_inequality_ppl (Var 0) Equal_RS (Var 1) in
+	(* make inequality a >= c *)
+	let ineq_ac = make_linear_inequality_ppl (Var 0) Greater_Or_Equal_RS (Var 2) in
+	(* make inequality b >= 2c *)
+	let ineq_bc = make_linear_inequality_ppl (Var 1) Greater_Or_Equal_RS (Ti (c, Var 2)) in
+	(* make constraint a = b & a >= c *)
+	let constr1 = make [eq_ab; ineq_ac; c_greater_zero] in
+	(* make constraint a = b & b >= 2c *)
+	let constr2 = make [eq_ab; ineq_bc; c_greater_zero] in
+	assert_bool "contraint not included" (is_leq constr2 constr1) 
+		
 		
 (** Build testsuite **)
 
 let suite = "testLinearConstraint" >::: 
-	["test_sat" >:: test_sat]
+	["test_sat"       >:: test_sat;
+	 "test_inclusion" >:: test_inclusion]
 	 	

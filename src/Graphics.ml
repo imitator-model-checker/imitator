@@ -451,6 +451,7 @@ let cartography constraint_list badlist nb_variables_projected cartography_name 
 	
 (* Compute the area of a convex polyhedron, given as a sorted list of points *)
 let area_of_poly vertices = 
+	if 3 > List.length vertices then 0.0 else
 	match vertices with
 		| (px, py) :: ps ->
 			let last_x = ref px in
