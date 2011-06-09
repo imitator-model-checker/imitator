@@ -19,6 +19,7 @@ open Arg
 open ImitatorPrinter
 open Graph
 open Options
+open Reachability
 open Graphics
 
 

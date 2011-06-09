@@ -15,6 +15,14 @@ open Options
 open Graph
 open LinearConstraint
 
+(** Constraint returned by the inverse method *)
+type returned_constraint =
+	(** Constraint under convex form *)
+	| Convex_constraint of LinearConstraint.linear_constraint
+	(** Disjunction of constraints *)
+	| Union_of_constraints of LinearConstraint.linear_constraint list
+
+
 val create_initial_state : abstract_program -> state
 
 val post : abstract_program -> imitator_options -> pi0 -> reachability_graph -> state_index -> state_index list

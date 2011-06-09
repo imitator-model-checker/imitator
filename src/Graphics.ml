@@ -18,6 +18,7 @@ open LinearConstraint
 module Ppl = Ppl_ocaml
 open Ppl
 open AbstractImitatorFile
+open Reachability
 
 (**************************************************)
 (* Functions *)

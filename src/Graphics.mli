@@ -14,6 +14,7 @@
 (**************************************************)
 open Global
 open LinearConstraint
+open Reachability
 open AbstractImitatorFile
 
 val strict_to_not_strict_inequality : linear_inequality -> linear_inequality
