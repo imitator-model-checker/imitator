@@ -113,10 +113,10 @@ INSTALL MPFR
 	
      make
 
-5. To check the built library (runs the test files), type:
+To check the built library (runs the test files), type:
      make check
 
-6. To install it (default "/usr/local" | see "--prefix" option), type:
+To install it (default "/usr/local" | see "--prefix" option), type:
 	sudo make install
 
 Libraries have been installed in:                                                 
@@ -128,8 +128,8 @@ INSTALL MLGMP
 http://www-verimag.imag.fr/~monniaux/programmes.html.en
 
 Edit make file :
-- GMP_LIBDIR=/usr/lib
 - GMP_INCLUDES= -I=/usr/include
+- GMP_LIBDIR=/usr/lib
 
 
 	make
@@ -170,7 +170,7 @@ OR (to check linking with ocaml)
 	cd interfaces
 	make check
 
-	make install
+	sudo make install
 
 
 ************************************************************

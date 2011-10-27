@@ -6,8 +6,8 @@
 #
 #  Author:        Etienne Andre
 #  Created:       2009/09/07
-#  Last modified: 2011/01/10
-#  Ocaml version: 3.12.0
+#  Last modified: 2011/10/27
+#  Ocaml version: 3.12.1
 ###############################################################
 
 # flags for ocaml compiler
@@ -23,12 +23,12 @@ ifndef EXTLIB_PATH
   EXTLIB_PATH = /usr/lib/ocaml/extlib
 endif
 ifndef OCAML_PPL_PATH
-  OCAML_PPL_PATH = $(HOME)/local/lib/ppl
-#  OCAML_PPL_PATH = /usr/lib/ppl
+  #OCAML_PPL_PATH = $(HOME)/local/lib/ppl
+	OCAML_PPL_PATH = /usr/lib/ppl
 endif 
 ifndef OCAML_GMP_PATH
- OCAML_GMP_PATH = $(HOME)/local/lib
-# OCAML_GMP_PATH = /usr/lib/ocaml/mlgmp
+ #OCAML_GMP_PATH = $(HOME)/local/lib
+	OCAML_GMP_PATH = /usr/lib/ocaml/gmp
 endif
 ifndef CLIB_PATH
   CLIB_PATH = /usr/lib -I /usr/local/lib
