@@ -52,6 +52,9 @@ export OPTLIBS = $(CLIBS) $(OOLIBS)
 
 SRC = src
 
+# Example files for execution directly from the makefile
+EXAMPLE_PATH = /home/etienne/Developpement/IMITATOR2_Examples
+
 # main object
 MAIN = $(SRC)/IMITATOR.cmo
 MAIN_OPT = $(MAIN:.cmo=.cmx)
@@ -159,7 +162,7 @@ exe:
 
 ##### TESTS #####
 
-# 	./IMITATOR Examples/exCTL.imi Examples/exCTL.pi0
+	$(TARGET) $(EXAMPLE_PATH)/Proprietes/exCTL.imi $(EXAMPLE_PATH)/Proprietes/exCTL.pi0
 
 
 ##### CASE STUDIES : HARDWARE #####
@@ -232,7 +235,7 @@ exe:
 
 # 	./IMITATOR Examples/Wlan/wlan_boff2.imi Examples/Wlan/wlan_boff2.pi0 -timed
 
-	./IMITATOR Examples/Wlan/wlan2_for_im2.imi -mode reachability -debug low
+# 	./IMITATOR Examples/Wlan/wlan2_for_im2.imi -mode reachability -debug low
 # 	./IMITATOR Examples/Wlan/wlan2_for_im2.imi Examples/Wlan/wlan2_for_im2.pi0 -timed
 
 ##### CASE STUDIES : VALMEM #####
