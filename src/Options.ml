@@ -5,17 +5,35 @@ class imitator_options =
 	object
 		val mutable nb_args = 0
 	
+	
+		(* INPUT OPTIONS *)
+		
 		(* imitator program file *)
 		val mutable file = ref ""
 		(* pi0 file *)
 		val mutable pi0file = ref ""
+		
 	
+		(* OUTPUT OPTIONS *)
+		
 		(* print logs *)
 		val mutable no_log = ref false
 		(* print dot of reachable states *)
 		val mutable no_dot = ref false
 		(* plot fancy states in dot *)
 		val mutable fancy = ref false
+		(* prefix for output files *)
+		val mutable program_prefix = ref ""
+		(* print time stamps *)
+		val mutable timed_mode = ref false
+		(* print parametric logs *)
+		val mutable with_parametric_log = ref false
+		(* plot cartography *)
+		val mutable cart = ref false
+
+
+		(* ANALYSIS OPTIONS *)
+
 		(* limit number of iterations *)		
 		val mutable post_limit = ref None
 		(* limit on runtime *)
@@ -26,18 +44,10 @@ class imitator_options =
 		val mutable acyclic = ref false 
 		(* inclusion mode *)
 		val mutable inclusion = ref false
-		(* prefix for output files *)
-		val mutable program_prefix = ref ""
 		(* do not use random values *)
 		val mutable no_random = ref false
 		(* autodetect sync actions *)
 		val mutable sync_auto_detection = ref false
-		(* print time stamps *)
-		val mutable timed_mode = ref false
-		(* print parametric logs *)
-		val mutable with_parametric_log = ref false 
-		(* plot cartography *)
-		val mutable cart = ref false
 		(*On-the-fly intersection*)
 		val mutable dynamic = ref false
 		(*Union of last states*)
@@ -46,6 +56,12 @@ class imitator_options =
 		val mutable pi_compatible = ref false 
 		(* Step for the cartography *)
 		val mutable step = ref NumConst.one
+
+		(* EXTRA OPTIONS *)
+		(* Translate PTA into CLP program *)
+		val mutable pta2clp = ref false
+
+
 		
 		method nb_args = nb_args
 		method file = !file
@@ -68,6 +84,7 @@ class imitator_options =
 		method union = !union
 		method pi_compatible = !pi_compatible
 		method step = !step
+		method pta2clp = !pta2clp
 		
 		method parse =
 			let usage_msg = "Usage: IMITATOR program_file [pi0_file] [options]" in
@@ -119,6 +136,7 @@ class imitator_options =
 				("-mode", String set_mode, " Mode for IMITATOR II. Use 'reachability' for a parametric reachability analysis (no pi0 needed). Use 'inversemethod' for the inverse method. For the behavioral cartography algorithm, use 'cover' to cover all the points within V0, or 'randomXX' where XX is a number to iterate randomly algorithm. Default: 'inversemethod'.");
 				("-no-dot", Set no_dot, " No graphical output using 'dot'. Default: false.");
 				("-no-log", Set no_log, " No generation of log files. Default: false.");
+				("-PTA2CLP", Set pta2clp, "Translate PTA into a CLP program (**work in progress**), and exit without performing any analysis. Defaut : 'false'");
 				("-cart", Set cart, " Plot cartography before terminating the program. Uses the first two parameters with ranges. Default: false."); 
 				("-fancy", Set fancy, " Generate detailed state information for dot output. Default: false.");
 				("-no-random", Set no_random, " No random selection of the pi0-incompatible inequality (select the first found). Default: false.");
@@ -153,8 +171,8 @@ class imitator_options =
 			let usage_msg = "Usage: IMITATOR program_file [pi0_file] [options]" in
 			Arg.parse speclist anon_fun usage_msg;
 
-			(* Case no file *)
-			if nb_args < 1 then(
+			(* Case no file (except case translation) *)
+			if nb_args < 1 && not !pta2clp then(
 				print_error ("Please give a source file name.");
 				Arg.usage speclist usage_msg;
 				abort_program (); exit(0)

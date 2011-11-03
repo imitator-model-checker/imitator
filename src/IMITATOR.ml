@@ -547,6 +547,17 @@ print_message Debug_standard
 	^ "**************************************************");
 
 
+(**************************************************)
+(* Case translation *)
+(**************************************************)
+
+(* Translation to CLP (experimental) *)
+if options#pta2clp then(
+	print_message Debug_standard ("Translating program to CLP.");
+	print_message Debug_standard ("Not implemented.");
+	terminate_program()
+	);
+
 (**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 (* Check compatibility between options *) 
 (**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
