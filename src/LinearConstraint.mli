@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2010/03/04
- * Last modified: 2010/03/16
+ * Last modified: 2011/11/03
  *
  ****************************************************************)
  
@@ -16,6 +16,11 @@
 
 type variable = int
 type coef = NumConst.t
+
+
+(** Add on for TA2CLP *)
+val string_of_var : (variable -> string) -> variable -> string
+
 
 (**************************************************)
 (** {2 Linear terms} *)

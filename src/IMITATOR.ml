@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2009/09/07
- * Last modified: 2011/05/27
+ * Last modified: 2011/11/03
  *
  **************************************************)
 
@@ -547,16 +547,6 @@ print_message Debug_standard
 	^ "**************************************************");
 
 
-(**************************************************)
-(* Case translation *)
-(**************************************************)
-
-(* Translation to CLP (experimental) *)
-if options#pta2clp then(
-	print_message Debug_standard ("Translating program to CLP.");
-	print_message Debug_standard ("Not implemented.");
-	terminate_program()
-	);
 
 (**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 (* Check compatibility between options *) 
@@ -708,6 +698,19 @@ print_message Debug_standard ("Program checked and converted " ^ (after_seconds 
 Gc.major ();
 
 
+(**************************************************)
+(* Case translation *)
+(**************************************************)
+
+(* Translation to CLP (experimental) *)
+if options#pta2clp then(
+	print_message Debug_standard ("Translating program to CLP.");
+	print_warning ("Work in progress!!!!");
+	print_message Debug_standard ("\nProgram in CLP:\n" ^ (PTA2CLP.string_of_program program) ^ "\n");
+	terminate_program()
+	);
+
+	
 (**************************************************)
 (* Debug print: program *)
 (**************************************************)

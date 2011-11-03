@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2010/03/04
- * Last modified: 2010/07/13
+ * Last modified: 2011/11/03
  *
  ****************************************************************)
 
@@ -86,7 +86,12 @@ let rec normalize_linear_term lt =
 					let p = NumConst.get_num fac in
 					let q = NumConst.get_den fac in
 					term_norm, NumConst.mul r (NumConst.numconst_of_zfrac p q))				
-					
+
+
+(** Add on for TA2CLP *)
+let string_of_var names variable =
+	"V_" ^ (names variable)
+
 	
 (**************************************************)
 (** Global variables *)

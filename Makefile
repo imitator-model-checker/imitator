@@ -6,7 +6,7 @@
 #
 #  Author:        Etienne Andre
 #  Created:       2009/09/07
-#  Last modified: 2011/10/27
+#  Last modified: 2011/11/03
 #  Ocaml version: 3.12.1
 ###############################################################
 
@@ -60,10 +60,10 @@ MAIN = $(SRC)/IMITATOR.cmo
 MAIN_OPT = $(MAIN:.cmo=.cmx)
 
 # modules to compile
-MODULES = Global NumConst Options LinearConstraint Cache Automaton Pi0Lexer Pi0Parser Pi0CubeLexer Pi0CubeParser ImitatorLexer ImitatorParser ImitatorPrinter ProgramConverter Graph Reachability Graphics
+MODULES = Global NumConst Options LinearConstraint Cache Automaton Pi0Lexer Pi0Parser Pi0CubeLexer Pi0CubeParser ImitatorLexer ImitatorParser ImitatorPrinter PTA2CLP ProgramConverter Graph Reachability Graphics
 
 # interfaces
-HEADERS = Global NumConst LinearConstraint Cache Automaton ParsingStructure AbstractImitatorFile ImitatorPrinter ProgramConverter Graph Reachability Graphics
+HEADERS = Global NumConst LinearConstraint Cache Automaton ParsingStructure AbstractImitatorFile ImitatorPrinter PTA2CLP ProgramConverter Graph Reachability Graphics
 
 CMIS = $(addprefix $(SRC)/, $(addsuffix .cmi, $(HEADERS)))
 OBJS = $(addprefix $(SRC)/, $(addsuffix .cmo, $(MODULES)))
@@ -162,7 +162,8 @@ exe:
 
 ##### TESTS #####
 
-	$(TARGET) $(EXAMPLE_PATH)/Proprietes/exCTL.imi $(EXAMPLE_PATH)/Proprietes/exCTL.pi0
+# 	$(TARGET) $(EXAMPLE_PATH)/Proprietes/exCTL.imi $(EXAMPLE_PATH)/Proprietes/exCTL.pi0
+	$(TARGET) $(EXAMPLE_PATH)/Proprietes/exCTL.imi $(EXAMPLE_PATH)/Proprietes/exCTL.pi0 -PTA2CLP
 
 
 ##### CASE STUDIES : HARDWARE #####
