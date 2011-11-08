@@ -569,7 +569,8 @@ let intersection_assign linear_constraint constrs =
 let hide variables linear_constraint =
 	(* debug output *)
 	if debug_mode_greater Debug_total then (
-		List.iter (fun v ->	print_message Debug_high ("hide v" ^ string_of_int v)) variables;
+		print_message Debug_high "hide:";
+		List.iter (fun v -> print_message Debug_high ("  - v" ^ string_of_int v)) variables;
 	);
 	(* copy polyhedron, as PPL function has sideeffects *)
 	let poly = ppl_new_NNC_Polyhedron_from_NNC_Polyhedron linear_constraint in
@@ -582,7 +583,8 @@ let hide variables linear_constraint =
 let hide_assign variables linear_constraint =
 	(* debug output *)
 	if debug_mode_greater Debug_total then (
-		List.iter (fun v ->	print_message Debug_high ("hide v" ^ string_of_int v)) variables;
+		print_message Debug_high "hide:";
+		List.iter (fun v -> print_message Debug_high ("  - v" ^ string_of_int v)) variables;
 	);
 	ppl_Polyhedron_unconstrain_space_dimensions linear_constraint variables;
 	assert_dimensions linear_constraint

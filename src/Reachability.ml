@@ -958,31 +958,34 @@ let post_star program options pi0 init_state =
 	(* Computation of the returned constraint *)
 	(*--------------------------------------------------*)
 	let my_constraint =
-	(* Case: dynamic *)
-	if options#dynamic then (
-		Convex_constraint !k_prime
-	) else (
-	(* Case union : return the constraint on the parameters associated to slast*)
-		if options#union then (
-			let list_of_constraints =
-			List.map (fun state_index -> 			
-				print_message Debug_medium ("\nOne state found.");
-				(* Get the constraint on clocks and parameters *)
-				let (_, current_constraint) =
-					Graph.get_state reachability_graph state_index
-				(* Eliminate clocks *)
-				in LinearConstraint.hide program.clocks_and_discrete current_constraint
-			) !slast
-			in Union_of_constraints list_of_constraints
-		)
-	(* Case IMorig : return only the current constraint *)
-		else if options#pi_compatible then (
-			let (_ , k_constraint) = get_state reachability_graph 0 in
-				Convex_constraint (LinearConstraint.hide program.clocks_and_discrete k_constraint) 
-		) 
-	(* Case IM : intersection *)
-		else (
-			Convex_constraint (Graph.compute_k0_destructive program reachability_graph)
+	if options#imitator_mode = Reachability_analysis then Convex_constraint (LinearConstraint.true_constraint ())
+	else(
+		(* Case: dynamic *)
+		if options#dynamic then (
+			Convex_constraint !k_prime
+		) else (
+		(* Case union : return the constraint on the parameters associated to slast*)
+			if options#union then (
+				let list_of_constraints =
+				List.map (fun state_index -> 			
+					print_message Debug_medium ("\nOne state found.");
+					(* Get the constraint on clocks and parameters *)
+					let (_, current_constraint) =
+						Graph.get_state reachability_graph state_index
+					(* Eliminate clocks *)
+					in LinearConstraint.hide program.clocks_and_discrete current_constraint
+				) !slast
+				in Union_of_constraints list_of_constraints
+			)
+		(* Case IMorig : return only the current constraint *)
+			else if options#pi_compatible then (
+				let (_ , k_constraint) = get_state reachability_graph 0 in
+					Convex_constraint (LinearConstraint.hide program.clocks_and_discrete k_constraint) 
+			) 
+		(* Case IM : intersection *)
+			else (
+				Convex_constraint (Graph.compute_k0_destructive program reachability_graph)
+			)
 		)
 	)
 	in
