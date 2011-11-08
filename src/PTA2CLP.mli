@@ -16,19 +16,11 @@ open AbstractImitatorFile
 (** Local printings *)
 (****************************************************************)
 (* Convert a var_type into a string *)
-val string_of_var_type : var_type -> string
-
-(**************************************************)
-(** State *)
-(**************************************************)
-(* Convert a state into a string *)
-(* val string_of_state : abstract_program -> state -> string *)
+(* val string_of_var_type : var_type -> string *)
 
 (**************************************************)
 (** Program *)
 (**************************************************)
-(* Convert a pi0 into a string *)
-(* val string_of_pi0 : abstract_program -> pi0 -> string *)
 
 (* Convert a program into a string *)
 val string_of_program : abstract_program -> string

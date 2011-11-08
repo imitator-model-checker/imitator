@@ -163,7 +163,7 @@ exe:
 ##### TESTS #####
 
 # 	$(TARGET) $(EXAMPLE_PATH)/Proprietes/exCTL.imi $(EXAMPLE_PATH)/Proprietes/exCTL.pi0
-	$(TARGET) $(EXAMPLE_PATH)/Proprietes/exCTL.imi $(EXAMPLE_PATH)/Proprietes/exCTL.pi0 -PTA2CLP
+#	$(TARGET) $(EXAMPLE_PATH)/Proprietes/exCTL.imi $(EXAMPLE_PATH)/Proprietes/exCTL.pi0 -PTA2CLP
 
 
 ##### CASE STUDIES : HARDWARE #####
@@ -255,6 +255,12 @@ exe:
 
 ##### CASE STUDIES : SIMOP #####
 # 	./IMITATOR Examples/SIMOP/simop.imi -mode reachability
+
+
+
+##### JOB SHOP #####
+	$(TARGET) $(EXAMPLE_PATH)/Jobshop/maler_2_4.imi -mode reachability -no-dot
+
 
 
 ##### ANCIEN #####

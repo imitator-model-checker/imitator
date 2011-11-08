@@ -18,11 +18,11 @@ open AbstractImitatorFile
 (** Program *)
 (**************************************************)
 
-(* Convert a var_type into a string *)
+(*(* Convert a var_type into a string *)
 let string_of_var_type = function
 	| Var_type_clock -> "clock"
 	| Var_type_discrete -> "discrete"
-	| Var_type_parameter -> "parameter"
+	| Var_type_parameter -> "parameter"*)
 
 
 let all_vars = ref ""
@@ -157,27 +157,3 @@ let string_of_program program =
 	^  "\n" ^ string_of_automata program
 	^ !all_vars
 
-
-(**************************************************)
-(** States *)
-(**************************************************)
-
-(*(* Convert a state into a string *)
-let string_of_state program (location, linear_constraint) =
-	"" ^ (Automaton.string_of_location program.automata_names program.location_names program.variable_names location) ^ " ==> \n" ^ (LinearConstraint.string_of_linear_constraint program.variable_names linear_constraint) ^ "" *)
-
-
-(*(**************************************************)
-(** Pi0 *)
-(**************************************************)
-(* Convert a pi0 into a string *)
-let string_of_pi0 program pi0 =
-	"  " ^ (
-	string_of_list_of_string_with_sep "\n& " (
-		List.map (fun parameter ->
-			(program.variable_names parameter)
-			^ " = "
-			^ (NumConst.string_of_numconst (pi0 parameter))
-		) program.parameters
-	)
-	)*)
