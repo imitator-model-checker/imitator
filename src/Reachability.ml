@@ -859,7 +859,7 @@ let post_star program options pi0 init_state =
 	let nb_variables = program.nb_variables in
 	let nb_automata = program.nb_automata in
 	(* Debut prints *)
-	print_message Debug_low ("Performing reachability analysis from state:");
+	print_message Debug_low ("Starting reachability analysis (post*) from state:");
 	print_message Debug_low (string_of_state program init_state);
 	(* Guess the number of reachable states *)
 	let guessed_nb_states = 10 * (nb_actions + nb_automata + nb_variables) in 
@@ -984,6 +984,7 @@ let post_star program options pi0 init_state =
 			) 
 		(* Case IM : intersection *)
 			else (
+				(** HERE PROBLEM IF ONE WANTS TO COMPUTE THE states FILE AFTER (destruction of the states) **)
 				Convex_constraint (Graph.compute_k0_destructive program reachability_graph)
 			)
 		)

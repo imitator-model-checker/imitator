@@ -82,6 +82,7 @@ let iter f graph =
 	DynArray.iter f graph.states
 	
 (** Compute the intersection of all parameter constraints, DESTRUCTIVE!!! *)
+(** HERE PROBLEM IF ONE WANTS TO COMPUTE THE states FILE AFTER **)
 let compute_k0_destructive program graph =
 	let k0 = LinearConstraint.true_constraint () in
 	iter (fun (_, constr) -> 
