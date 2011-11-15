@@ -86,13 +86,13 @@ let compute_invariant program location =
 	match entry with
 		| Some inv -> inv
 		| None -> (
-			(* build plain invariant *)
+			(* Build plain invariant I_q(X) *)
 			let invariant = compute_plain_invariant program location in
-			(* rename variables X -> X' *)
+			(* rename variables X -> X', viz., create I_q(X') *)
 			LinearConstraint.rename_variables_assign program.renamed_clocks_couples invariant;
-			(* Compute invariant before time elapsing *)
+			(* Compute invariant before time elapsing I_q(X' - d) *)
 			let invariant_before_time_elapse = LinearConstraint.add_d program.d NumConst.minus_one program.renamed_clocks invariant in
-			(* intersection of those constraints *)
+			(* intersection of those constraints: I_q(X') and I_q(X' - d ) *)
 			LinearConstraint.intersection_assign invariant [invariant_before_time_elapse];
 			(* Store in cache *)
 			Cache.store inv_cache locations invariant;
@@ -401,39 +401,39 @@ let compute_updates program clock_updates =
 (* clock_updates   : updated clock variables        *)
 (*--------------------------------------------------*)
 let compute_new_constraint program orig_constraint orig_location dest_location guards clock_updates =
-	(* the constraint is checked on the fly for satisfyability -> exception mechanism *)
+	(* The constraint is checked on the fly for satisfyability -> exception mechanism *)
 	try ( 
 		print_message Debug_total ("\nComputing equalities for discrete variables (previous values)");
 		(* Compute discrete values using the current (new) location *)
 		let discrete_values = List.map (fun discrete_index -> discrete_index, (Automaton.get_discrete_value orig_location discrete_index)) program.discrete in
-		(* Convert to a constraint *)
+		(* Convert to a constraint of the form D_i = d_i, for all discrete i *)
 		let new_constraint = instantiate_discrete discrete_values in
 		(* Debug *)
-		if debug_mode_greater Debug_total then print_message Debug_total (LinearConstraint.string_of_linear_constraint program.variable_names new_constraint);
+		if debug_mode_greater Debug_total then
+			print_message Debug_total (LinearConstraint.string_of_linear_constraint program.variable_names new_constraint);
 	
 		(* Debug *)
 		if debug_mode_greater Debug_total then(
-			print_message Debug_total ("\nComputing guards g(X)");
+			print_message Debug_total ("\nComputing the guards g(x)");
 			List.iter (fun guard -> 
 				print_message Debug_total (LinearConstraint.string_of_linear_constraint program.variable_names guard);
 			) guards;
 		);
-		print_message Debug_total ("\nComputing the guards and discrete");
-		(* Add the (old) value for discrete to the guards *)
-	  LinearConstraint.intersection_assign new_constraint guards;
+		(* Add the (old) value for discrete to the guards D_i = d_i and g(X) *)
+		LinearConstraint.intersection_assign new_constraint guards;
 		(* Debug print *)
 		if debug_mode_greater Debug_total then(
 			print_message Debug_total (LinearConstraint.string_of_linear_constraint program.variable_names new_constraint);
 		);
 	
-		(* check here for unsatisfiability *)
+		(* Check here for unsatisfiability *)
 		if not (LinearConstraint.is_satisfiable new_constraint) then (
 			print_message Debug_high "skip transition";
 			raise Unsat_exception
 		);
 		
 		print_message Debug_total ("\nEliminate the discrete variables in g(X)");
-		(* Remove the discrete variables *)
+		(* Remove the discrete variables (Exists D_i : D_i = d_i and g(X)) *)
 		LinearConstraint.hide_assign program.discrete new_constraint;
 		(* Debug print *)
 		if debug_mode_greater Debug_total then(
@@ -444,7 +444,7 @@ let compute_new_constraint program orig_constraint orig_location dest_location g
 		let updates = compute_updates program clock_updates in
 
 		(* Compute the invariant in the destination location *)
-		print_message Debug_total ("\nComputing invariant I_q(X) ");
+		print_message Debug_total ("\nComputing invariant I_q(X') and I_q(X' - d) ");
 		let invariant = compute_invariant program dest_location in
 					
 		(* Compute the equalities for the discrete variables *)
@@ -454,13 +454,19 @@ let compute_new_constraint program orig_constraint orig_location dest_location g
 					
 		(* Perform the intersection *)
 		print_message Debug_total ("\nPerforming intersection of C(X) and g(X) and X' = rho(X) + d and I_q(X' - d) and I_q(X') ");
+		(* (Exists D_i : D_i = d_i and g(X)) *)
 		LinearConstraint.intersection_assign new_constraint
 			[
+				(* C(X) *)
 				orig_constraint ();
+				(* X' = rho(X) + d *)
 				updates;
+				(* I_q(X') and I_q(X' - d) *)
 				invariant;
+				(* D_i = d_i *)
 				discrete_constraint;
-				program.positive_d				
+				(* d >= 0 *)
+				program.positive_d
 			];
 		(* Debug print *)
 		if debug_mode_greater Debug_total then(
@@ -485,8 +491,9 @@ let compute_new_constraint program orig_constraint orig_location dest_location g
 		(* Debug print *)
 		if debug_mode_greater Debug_total then(
 			print_message Debug_total (LinearConstraint.string_of_linear_constraint program.variable_names new_constraint);
-			if not (LinearConstraint.is_satisfiable new_constraint) then
+			if not (LinearConstraint.is_satisfiable new_constraint) then(
 				print_message Debug_total ("This constraint is NOT satisfiable.");
+			);
 		);
 		(* return the final constraint *)
 		Some new_constraint
