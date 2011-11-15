@@ -61,6 +61,10 @@ class imitator_options =
 		(* Translate PTA into CLP program *)
 		val mutable pta2clp = ref false
 
+		(* SPECIALIZED OPTIONS*)
+		(* For jobshop *)
+		val mutable jobshop = ref false
+
 
 		
 		method nb_args = nb_args
@@ -85,6 +89,7 @@ class imitator_options =
 		method pi_compatible = !pi_compatible
 		method step = !step
 		method pta2clp = !pta2clp
+		method jobshop = !jobshop
 		
 		method parse =
 			let usage_msg = "Usage: IMITATOR program_file [pi0_file] [options]" in
@@ -147,6 +152,7 @@ class imitator_options =
 				("-timed", Set timed_mode, " Adds a timing information to each output of the program. Default: none.");
 				("-with-parametric-log", Set with_parametric_log, " Adds the elimination of the clock variables in the constraints in the log files. Default: false.");
 				("-version", Unit (fun _ -> print_version_string (); exit 0), " Print version string and exit.");
+				("-jobsjop", Set jobshop, " Use only when working on jobshop problems.");
 
 			] in
 					

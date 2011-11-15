@@ -538,7 +538,7 @@ let string_of_linear_constraint names linear_constraint =
 	(* Get an array of linear inequalities *)
 	let list_of_inequalities = ppl_Polyhedron_get_constraints linear_constraint in
 	let array_of_inequalities = Array.of_list list_of_inequalities in
-	"  " ^
+	" " ^
 	(string_of_array_of_string_with_sep
 		"\n& "
 		(Array.map (string_of_linear_inequality names) array_of_inequalities)

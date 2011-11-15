@@ -194,7 +194,7 @@ let string_of_program program =
 
 (* Convert a state into a string *)
 let string_of_state program (location, linear_constraint) =
-	"" ^ (Automaton.string_of_location program.automata_names program.location_names program.variable_names location) ^ " ==> \n" ^ (LinearConstraint.string_of_linear_constraint program.variable_names linear_constraint) ^ "" 
+	"" ^ (Automaton.string_of_location program.automata_names program.location_names program.variable_names location) ^ " ==> \n&" ^ (LinearConstraint.string_of_linear_constraint program.variable_names linear_constraint) ^ "" 
 
 
 (**************************************************)

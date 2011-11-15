@@ -564,7 +564,7 @@ let dot_of_graph program pi0 reachability_graph ~fancy =
 		^ "\n\n  q_0 [color=red, style=filled];"
 		^ "\n}"*)
 		(* Add nice colors *)
-		^ "\n" ^
+		^ "\n/*Colors*/\n" ^
 		(**** BAD PROG ****)
 		(let string_colors = ref "" in
 			DynArray.iteri (fun state_index (location, _) ->
@@ -599,7 +599,7 @@ let dot_of_graph program pi0 reachability_graph ~fancy =
 				(* Create the command *)
 				string_colors := !string_colors
 					^ "\n  " ^ node_index
-					^ "[color=" ^ location_color
+					^ " [color=" ^ location_color
 					^ ", style=filled];";				
 			)
 			) states;
