@@ -29,20 +29,22 @@ class imitator_options =
 	
 		(* OUTPUT OPTIONS *)
 		
-		(* print logs *)
-		val mutable no_log = ref false
-		(* print dot of reachable states *)
-		val mutable no_dot = ref false
+		(* plot cartography *)
+		val mutable cart = ref false
 		(* plot fancy states in dot *)
 		val mutable fancy = ref false
+		(* Does not print logs *)
+		val mutable no_log = ref false
+		(* Does not print graph of reachable states *)
+		val mutable no_dot = ref false
 		(* prefix for output files *)
 		val mutable program_prefix = ref ""
+		(* Gives statistics on number of calls *)
+		val mutable statistics = ref false
 		(* print time stamps *)
 		val mutable timed_mode = ref false
 		(* print parametric logs *)
 		val mutable with_parametric_log = ref false
-		(* plot cartography *)
-		val mutable cart = ref false
 
 
 		(* ANALYSIS OPTIONS *)
@@ -104,6 +106,7 @@ class imitator_options =
 		method union = !union
 		method pi_compatible = !pi_compatible
 		method step = !step
+		method statistics = !statistics
 		method pta2clp = !pta2clp
 		method jobshop = !jobshop
 		
@@ -163,6 +166,7 @@ class imitator_options =
 				("-jobsjop", Set jobshop, " Use only when working on jobshop problems.");
 				("-no-random", Set no_random, " No random selection of the pi0-incompatible inequality (select the first found). Default: false.");
 				("-post-limit", Int (fun i -> post_limit := Some i), " Limits the depth of the Post exploration. Default: no limit.");
+				("-statistics", Set statistics, " Print info on number of calls to PPL. Default: 'false'");		
 				("-step", String (fun i -> (* SHOULD CHECK HERE THAT STEP IS EITHER A FLOAT OR AN INT *) step := (NumConst.numconst_of_string i)), " Step for the cartography. Default: 1/1.");
 				("-sync-auto-detect", Set sync_auto_detection, " Detect automatically the synchronized actions in each automaton. Default: false (consider the actions declared by the user)");
 				("-time-limit", Int (fun i -> time_limit := Some i), " Time limit in seconds. Warning: no guarantee that the program will stop exactly after the given amount of time. Default: no limit.");

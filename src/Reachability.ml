@@ -959,12 +959,21 @@ let post_star program pi0 init_state =
 		^ (string_of_int (Graph.nb_states reachability_graph)) ^ " reachable state" ^ (s_of_int (Graph.nb_states reachability_graph))
 		^ " with "
 		^ (string_of_int (Hashtbl.length (reachability_graph.transitions_table))) ^ " transition" ^ (s_of_int (Hashtbl.length (reachability_graph.transitions_table))) ^ ".");
+
 	(*--------------------------------------------------*)
 	(* Performances *)
 	(*--------------------------------------------------*)
-	if debug_mode_greater Debug_low then (
-		print_message Debug_low ((string_of_int (Graph.get_nb_state_comparisons())) ^ " comparison(s) between states were performed.");
-		print_message Debug_low ((string_of_int (Graph.get_nb_constraint_comparisons())) ^ " comparison(s) between constraints were performed.");
+	if program.options#statistics then (
+		(* PPL *)
+		print_message Debug_standard "--------------------";
+		print_message Debug_standard "Statistics on PPL";
+		print_message Debug_standard "--------------------";
+		print_message Debug_standard (LinearConstraint.get_statistics ());
+		(* Graph *)
+		print_message Debug_standard "--------------------";
+		print_message Debug_standard "Statistics on Graph";
+		print_message Debug_standard "--------------------";
+		print_message Debug_standard (Graph.get_statistics ());
 	);
 
 	(*--------------------------------------------------*)

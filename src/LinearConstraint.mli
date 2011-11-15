@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2010/03/04
- * Last modified: 2011/11/03
+ * Last modified: 2011/11/15
  *
  ****************************************************************)
  
@@ -206,3 +206,9 @@ val shape_of_poly : variable -> variable -> linear_constraint -> (float*float) l
 
 (** Plot polyhedron corresponding to a convex constraint, projected on the two given variables *)
 val plot_2d : variable -> variable -> linear_constraint -> float -> float -> float -> float -> bool*string
+
+
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+(** {3 Statistics on performances} *)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+val get_statistics : unit -> string

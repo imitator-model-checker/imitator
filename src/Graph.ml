@@ -204,11 +204,10 @@ let states_equal state1 state2 =
 	let (loc1, constr1) = state1 in
 	let (loc2, constr2) = state2 in
 	if not (Automaton.location_equal loc1 loc2) then false else (
-		if debug_mode_greater Debug_low then (
-			print_message Debug_high ("About to compare equality between two constraints.");
-			nb_constraint_comparisons := !nb_constraint_comparisons + 1;
-			print_message Debug_high ("Already performed " ^ (string_of_int (!nb_constraint_comparisons)) ^ " constraint comparisons.");
-		);
+		(* Statistics *)
+		print_message Debug_high ("About to compare equality between two constraints.");
+		nb_constraint_comparisons := !nb_constraint_comparisons + 1;
+		print_message Debug_high ("Already performed " ^ (string_of_int (!nb_constraint_comparisons)) ^ " constraint comparisons.");
 		LinearConstraint.is_equal constr1 constr2
 	)
 	
@@ -217,11 +216,10 @@ let states_equal_dyn state1 state2 constr =
 	let (loc1, constr1) = state1 in
 	let (loc2, constr2) = state2 in
 	if not (Automaton.location_equal loc1 loc2) then false else (
-		if debug_mode_greater Debug_low then (
-			print_message Debug_high ("About to compare (dynamic) equality between two constraints.");
-			nb_constraint_comparisons := !nb_constraint_comparisons + 1;
-			print_message Debug_high ("Already performed " ^ (string_of_int (!nb_constraint_comparisons)) ^ " constraint comparisons.");
-		);
+		(* Statistics *)
+		print_message Debug_high ("About to compare (dynamic) equality between two constraints.");
+		nb_constraint_comparisons := !nb_constraint_comparisons + 1;
+		print_message Debug_high ("Already performed " ^ (string_of_int (!nb_constraint_comparisons)) ^ " constraint comparisons.");
 		LinearConstraint.intersection_assign constr1  [constr];
 		LinearConstraint.intersection_assign constr2 [constr];
 		LinearConstraint.is_equal constr1 constr2
@@ -234,11 +232,10 @@ let state_included state1 state2 =
 	let (loc1, constr1) = state1 in
 	let (loc2, constr2) = state2 in
 	if not (Automaton.location_equal loc1 loc2) then false else (
-		if debug_mode_greater Debug_low then (
-			print_message Debug_high ("About to compare inclusion between two constraints.");
-			nb_constraint_comparisons := !nb_constraint_comparisons + 1;
-			print_message Debug_high ("Already performed " ^ (string_of_int (!nb_constraint_comparisons)) ^ " constraint comparisons.");
-		);
+		(* Statistics *)
+		print_message Debug_high ("About to compare inclusion between two constraints.");
+		nb_constraint_comparisons := !nb_constraint_comparisons + 1;
+		print_message Debug_high ("Already performed " ^ (string_of_int (!nb_constraint_comparisons)) ^ " constraint comparisons.");
 		LinearConstraint.is_leq constr1 constr2
 	)
 
@@ -275,11 +272,12 @@ let add_state_dyn program graph new_state constr=
 				let nb_old = List.length old_states in
 				print_message Debug_total ("hashed list of length " ^ (string_of_int nb_old));
 			);
-			if debug_mode_greater Debug_low then (
-				print_message Debug_medium ("About to compare new state with " ^ (string_of_int (List.length old_states)) ^ " state(s).");
-				nb_state_comparisons := !nb_state_comparisons + (List.length old_states);
-				print_message Debug_medium ("Already performed " ^ (string_of_int (!nb_state_comparisons)) ^ " comparisons.");
-			);
+			
+			(* Statistics *)
+			print_message Debug_medium ("About to compare new state with " ^ (string_of_int (List.length old_states)) ^ " state(s).");
+			nb_state_comparisons := !nb_state_comparisons + (List.length old_states);
+			print_message Debug_medium ("Already performed " ^ (string_of_int (!nb_state_comparisons)) ^ " comparisons.");
+			
 			List.iter (fun index -> 
 				let state = get_state graph index in
 				if check_states new_state state constr then raise (Found index)
@@ -316,11 +314,12 @@ let add_state program graph new_state =
 				let nb_old = List.length old_states in
 				print_message Debug_total ("hashed list of length " ^ (string_of_int nb_old));
 			);
-			if debug_mode_greater Debug_low then (
-				print_message Debug_medium ("About to compare new state with " ^ (string_of_int (List.length old_states)) ^ " state(s).");
-				nb_state_comparisons := !nb_state_comparisons + (List.length old_states);
-				print_message Debug_medium ("Already performed " ^ (string_of_int (!nb_state_comparisons)) ^ " comparisons.");
-			);
+
+			(* Statistics *)
+			print_message Debug_medium ("About to compare new state with " ^ (string_of_int (List.length old_states)) ^ " state(s).");
+			nb_state_comparisons := !nb_state_comparisons + (List.length old_states);
+			print_message Debug_medium ("Already performed " ^ (string_of_int (!nb_state_comparisons)) ^ " comparisons.");
+			
 			List.iter (fun index -> 
 				let state = get_state graph index in
 				if check_states new_state state then raise (Found index)
@@ -360,14 +359,19 @@ let add_inequality_to_states graph inequality =
 let empty_states_for_comparison graph =
 	Hashtbl.clear graph.states_for_comparison
 
-(** Get the number of comparisons between states (performance checking purpose) *)
+(** Get statistics on the number of comparisons between states *)
+let get_statistics () =
+	(string_of_int !nb_state_comparisons) ^ " comparisons between states were performed."
+	^ "\n" ^ (string_of_int !nb_constraint_comparisons) ^ " comparisons between constraints were performed."
+	
+(*(** Get the number of comparisons between states (performance checking purpose) *)
 let get_nb_state_comparisons () =
 (*	print_message Debug_standard ("About to return the number of comparisons (" ^ (string_of_int !nb_state_comparisons) ^ ").");*)
 	!nb_state_comparisons
 
 (** Get the number of comparisons between constraints (performance checking purpose) *)
 let get_nb_constraint_comparisons () =
-	!nb_constraint_comparisons
+	!nb_constraint_comparisons*)
 
 
 (****************************************************************)

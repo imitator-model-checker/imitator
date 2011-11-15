@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2010/03/04
- * Last modified: 2011/11/03
+ * Last modified: 2011/11/15
  *
  ****************************************************************)
 
@@ -20,6 +20,59 @@ open Ppl
 
 open Global
 open Gmp.Z.Infixes
+
+(**************************************************)
+(* Statistics for the use of PPL *)
+(**************************************************)
+let ppl_nb_space_dimension = ref 0
+
+let ppl_nb_normalize_linear_term = ref 0
+
+let ppl_nb_true_constraint = ref 0
+let ppl_nb_false_constraint = ref 0
+
+let ppl_nb_is_true = ref 0
+let ppl_nb_is_false = ref 0
+let ppl_nb_is_equal = ref 0
+let ppl_nb_contains = ref 0
+let ppl_nb_get_constraints = ref 0
+let ppl_nb_get_generators = ref 0
+
+let ppl_nb_add_constraints = ref 0
+let ppl_nb_intersection_assign = ref 0
+let ppl_nb_unconstrain = ref 0
+let ppl_nb_map = ref 0
+let ppl_nb_preimage = ref 0
+let ppl_nb_remove_dim = ref 0
+
+let ppl_nb_copy_polyhedron = ref 0
+
+
+let get_statistics () =
+	"\n" ^ (string_of_int !ppl_nb_space_dimension) ^ " calls to space_dimension"
+	^ "\n" ^ (string_of_int !ppl_nb_normalize_linear_term) ^ " calls to normalize_linear_term"
+
+	^ "\n" ^ (string_of_int !ppl_nb_true_constraint) ^ " calls to true_constraint"
+	^ "\n" ^ (string_of_int !ppl_nb_false_constraint) ^ " calls to false_constraint"
+
+	^ "\n" ^ (string_of_int !ppl_nb_is_true) ^ " calls to is_true"
+	^ "\n" ^ (string_of_int !ppl_nb_is_false) ^ " calls to is_false"
+	^ "\n" ^ (string_of_int !ppl_nb_is_equal) ^ " calls to is_equals"
+	^ "\n" ^ (string_of_int !ppl_nb_contains) ^ " calls to contains"
+
+	^ "\n" ^ (string_of_int !ppl_nb_get_constraints) ^ " calls to get_constraints"
+	^ "\n" ^ (string_of_int !ppl_nb_get_generators) ^ " calls to get_generators"
+
+	^ "\n" ^ (string_of_int !ppl_nb_add_constraints) ^ " calls to add_constraints"
+	^ "\n" ^ (string_of_int !ppl_nb_intersection_assign) ^ " calls to intersection_assign"
+	^ "\n" ^ (string_of_int !ppl_nb_unconstrain) ^ " calls to unconstrain"
+	^ "\n" ^ (string_of_int !ppl_nb_map) ^ " calls to map"
+	^ "\n" ^ (string_of_int !ppl_nb_preimage) ^ " calls to preimage"
+	^ "\n" ^ (string_of_int !ppl_nb_remove_dim) ^ " calls to remove_dimension"
+
+	^ "\n" ^ (string_of_int !ppl_nb_copy_polyhedron) ^ " calls to copy_polyhedron"
+
+
 
 (**************************************************)
 (* TYPES *)
@@ -57,35 +110,37 @@ type linear_constraint = Ppl.polyhedron
 (* that the only non-rational coefficient is outside the term:    *)
 (* p/q * ( ax + by + c ) *)
 let rec normalize_linear_term lt =
-		match lt with
-			| Var v -> Variable v, NumConst.one
-			| Coef c -> (
-				  let p = NumConst.get_num c in
-				  let q = NumConst.get_den c in
-				  Coefficient p, NumConst.numconst_of_zfrac Gmp.Z.one q )
-			| Pl (lterm, rterm) -> (
-					let lterm_norm, fl = normalize_linear_term lterm in
-					let rterm_norm, fr = normalize_linear_term rterm in
-					let pl = NumConst.get_num fl in
-					let ql = NumConst.get_den fl in
-					let pr = NumConst.get_num fr in
-					let qr = NumConst.get_den fr in
-					(Plus (Times (pl *! qr, lterm_norm), (Times (pr *! ql, rterm_norm)))),
-					NumConst.numconst_of_zfrac Gmp.Z.one (ql *! qr))
-			| Mi (lterm, rterm) -> (
-					let lterm_norm, fl = normalize_linear_term lterm in
-					let rterm_norm, fr = normalize_linear_term rterm in
-					let pl = NumConst.get_num fl in
-					let ql = NumConst.get_den fl in
-					let pr = NumConst.get_num fr in
-					let qr = NumConst.get_den fr in
-					(Minus (Times (pl *! qr, lterm_norm), (Times (pr *! ql, rterm_norm)))),
-					NumConst.numconst_of_zfrac Gmp.Z.one (ql *! qr))
-			| Ti (fac, term) -> (
-					let term_norm, r = normalize_linear_term term in
-					let p = NumConst.get_num fac in
-					let q = NumConst.get_den fac in
-					term_norm, NumConst.mul r (NumConst.numconst_of_zfrac p q))				
+	(* Statistics *)
+	ppl_nb_normalize_linear_term := !ppl_nb_normalize_linear_term + 1;
+	match lt with
+		| Var v -> Variable v, NumConst.one
+		| Coef c -> (
+				let p = NumConst.get_num c in
+				let q = NumConst.get_den c in
+				Coefficient p, NumConst.numconst_of_zfrac Gmp.Z.one q )
+		| Pl (lterm, rterm) -> (
+				let lterm_norm, fl = normalize_linear_term lterm in
+				let rterm_norm, fr = normalize_linear_term rterm in
+				let pl = NumConst.get_num fl in
+				let ql = NumConst.get_den fl in
+				let pr = NumConst.get_num fr in
+				let qr = NumConst.get_den fr in
+				(Plus (Times (pl *! qr, lterm_norm), (Times (pr *! ql, rterm_norm)))),
+				NumConst.numconst_of_zfrac Gmp.Z.one (ql *! qr))
+		| Mi (lterm, rterm) -> (
+				let lterm_norm, fl = normalize_linear_term lterm in
+				let rterm_norm, fr = normalize_linear_term rterm in
+				let pl = NumConst.get_num fl in
+				let ql = NumConst.get_den fl in
+				let pr = NumConst.get_num fr in
+				let qr = NumConst.get_den fr in
+				(Minus (Times (pl *! qr, lterm_norm), (Times (pr *! ql, rterm_norm)))),
+				NumConst.numconst_of_zfrac Gmp.Z.one (ql *! qr))
+		| Ti (fac, term) -> (
+				let term_norm, r = normalize_linear_term term in
+				let p = NumConst.get_num fac in
+				let q = NumConst.get_den fac in
+				term_norm, NumConst.mul r (NumConst.numconst_of_zfrac p q))				
 
 
 (** Add on for TA2CLP *)
@@ -110,18 +165,40 @@ let real_dim = ref 0
 let total_dim = ref 0
 
 
+(**************************************************)
+(* Encapsulation of PPL functions *)
+(**************************************************)
+let space_dimension x =
+	(* Statistics *)
+	ppl_nb_space_dimension := !ppl_nb_space_dimension + 1;
+	(* Actual call to PPL *)
+	ppl_Polyhedron_space_dimension x
 
+let add_constraints x =
+	(* Statistics *)
+	ppl_nb_add_constraints := !ppl_nb_add_constraints + 1;
+	(* Actual call to PPL *)
+	ppl_Polyhedron_add_constraints x
+
+let get_constraints x =
+	(* Statistics *)
+	ppl_nb_get_constraints := !ppl_nb_get_constraints + 1;
+	(* Actual call to PPL *)
+	ppl_Polyhedron_get_constraints x
+
+	
+	
 (**************************************************)
 (* Useful Functions *)
 (**************************************************)
 
 (** check the dimensionality of a polyhedron *)
 let assert_dimensions poly =
-	let ndim = ppl_Polyhedron_space_dimension poly in
+	let ndim = space_dimension poly in
 	if not (ndim = !total_dim) then (
 		print_error ("Polyhedron has too few dimensions (" ^ (string_of_int ndim) ^ " / " ^ (string_of_int !total_dim) ^ ")");
 		raise (InternalError "Inconsistent polyhedron found")	
-	)			 	
+	)
 
 (**************************************************)
 (** {2 Linear terms} *)
@@ -456,17 +533,21 @@ let string_of_linear_inequality names linear_inequality =
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
 
 (** Create a false constraint *)
-let false_constraint () =	
+let false_constraint () =
+	(* Statistics *)
+	ppl_nb_false_constraint := !ppl_nb_false_constraint + 1;
 	ppl_new_NNC_Polyhedron_from_space_dimension !total_dim Empty
 
 (** Create a true constraint *)
 let true_constraint () = 
+	(* Statistics *)
+	ppl_nb_true_constraint := !ppl_nb_true_constraint + 1;
 	ppl_new_NNC_Polyhedron_from_space_dimension !total_dim Universe
 
 (** Create a linear constraint from a list of linear inequalities *)
 let make inequalities = 
 	let poly = true_constraint () in
-	ppl_Polyhedron_add_constraints poly inequalities;
+	add_constraints poly inequalities;
 	assert_dimensions poly;
   poly
 	
@@ -482,19 +563,31 @@ let set_manager int_d real_d =
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
 
 (** Check if a constraint is false *)
-let is_false = ppl_Polyhedron_is_empty
+let is_false c =
+	(* Statistics *)
+	ppl_nb_is_false := !ppl_nb_is_false + 1;
+	ppl_Polyhedron_is_empty c
 
 (** Check if a constraint is true *)
-let is_true = ppl_Polyhedron_is_universe
+let is_true c =
+	(* Statistics *)
+	ppl_nb_is_true := !ppl_nb_is_true + 1;
+	ppl_Polyhedron_is_universe c
 
 (** Check if a constraint is satisfiable *)
-let is_satisfiable = fun c -> not (is_false c)
+let is_satisfiable c = not (is_false c)
 
 (** Check if 2 constraints are equal *)
-let is_equal = ppl_Polyhedron_equals_Polyhedron
+let is_equal c =
+	(* Statistics *)
+	ppl_nb_is_equal := !ppl_nb_is_equal + 1;
+	ppl_Polyhedron_equals_Polyhedron c
 
 (** Check if a constraint is included in another one *)
-let is_leq x y = ppl_Polyhedron_contains_Polyhedron y x
+let is_leq x y =
+	(* Statistics *)
+	ppl_nb_contains := !ppl_nb_contains + 1;
+	ppl_Polyhedron_contains_Polyhedron y x
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
 (** {3 Pi0-compatibility} *)
@@ -503,7 +596,7 @@ let is_leq x y = ppl_Polyhedron_contains_Polyhedron y x
 (** Check if a linear constraint is pi0-compatible *)
 let is_pi0_compatible pi0 linear_constraint =
 	(* Get a list of linear inequalities *)
-	let list_of_inequalities = ppl_Polyhedron_get_constraints linear_constraint in
+	let list_of_inequalities = get_constraints linear_constraint in
 	(* Check the pi0-compatibility for all *)
 	List.for_all (is_pi0_compatible_inequality pi0) list_of_inequalities
 
@@ -511,7 +604,7 @@ let is_pi0_compatible pi0 linear_constraint =
 (** Compute the pi0-compatible and pi0-incompatible inequalities within a constraint *)
 let partition_pi0_compatible pi0 linear_constraint =
 	(* Get a list of linear inequalities *)
-	let list_of_inequalities = ppl_Polyhedron_get_constraints linear_constraint in
+	let list_of_inequalities = get_constraints linear_constraint in
 	(* Partition *)
 	List.partition (is_pi0_compatible_inequality pi0) list_of_inequalities
 
@@ -536,7 +629,7 @@ let string_of_linear_constraint names linear_constraint =
 	else if is_false linear_constraint then string_of_false
 	else
 	(* Get an array of linear inequalities *)
-	let list_of_inequalities = ppl_Polyhedron_get_constraints linear_constraint in
+	let list_of_inequalities = get_constraints linear_constraint in
 	let array_of_inequalities = Array.of_list list_of_inequalities in
 	" " ^
 	(string_of_array_of_string_with_sep
@@ -550,18 +643,26 @@ let string_of_linear_constraint names linear_constraint =
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
 
 let copy linear_constraint =
+	(* Statistics *)
+	ppl_nb_copy_polyhedron := !ppl_nb_copy_polyhedron + 1;
 	ppl_new_NNC_Polyhedron_from_NNC_Polyhedron linear_constraint
 
 (** Performs the intersection of a list of linear constraints *)
 let intersection linear_constraints =
 	let result_poly = true_constraint () in
-	List.iter (fun poly -> ppl_Polyhedron_intersection_assign result_poly poly) linear_constraints;
+	List.iter (fun poly ->
+		(* Statistics *)
+		ppl_nb_intersection_assign := !ppl_nb_intersection_assign + 1;
+		ppl_Polyhedron_intersection_assign result_poly poly) linear_constraints;
 	assert_dimensions result_poly;
 	result_poly	
 	
 (** same function, with side effects *)
 let intersection_assign linear_constraint constrs =
-	List.iter (fun poly -> ppl_Polyhedron_intersection_assign linear_constraint poly) constrs;
+	List.iter (fun poly ->
+		(* Statistics *)
+		ppl_nb_intersection_assign := !ppl_nb_intersection_assign + 1;
+		ppl_Polyhedron_intersection_assign linear_constraint poly) constrs;
 	assert_dimensions linear_constraint
 
 
@@ -573,7 +674,9 @@ let hide variables linear_constraint =
 		List.iter (fun v -> print_message Debug_high ("  - v" ^ string_of_int v)) variables;
 	);
 	(* copy polyhedron, as PPL function has sideeffects *)
-	let poly = ppl_new_NNC_Polyhedron_from_NNC_Polyhedron linear_constraint in
+	let poly = copy linear_constraint in
+	(* Statistics *)
+	ppl_nb_unconstrain := !ppl_nb_unconstrain + 1;
 	ppl_Polyhedron_unconstrain_space_dimensions poly variables;
 	assert_dimensions poly;
 	poly
@@ -586,6 +689,8 @@ let hide_assign variables linear_constraint =
 		print_message Debug_high "hide:";
 		List.iter (fun v -> print_message Debug_high ("  - v" ^ string_of_int v)) variables;
 	);
+	(* Statistics *)
+	ppl_nb_unconstrain := !ppl_nb_unconstrain + 1;
 	ppl_Polyhedron_unconstrain_space_dimensions linear_constraint variables;
 	assert_dimensions linear_constraint
 
@@ -593,7 +698,7 @@ let hide_assign variables linear_constraint =
 (** rename variables in a constraint *)
 let rename_variables list_of_couples linear_constraint =
 	(* copy polyhedron, as ppl function has sideeffects *)
-	let poly = ppl_new_NNC_Polyhedron_from_NNC_Polyhedron linear_constraint in
+	let poly = copy linear_constraint in
 	(* add reverse mapping *)
 	let reverse_couples = List.map (fun (a,b) -> (b,a)) list_of_couples in
 	let joined_couples = List.rev_append list_of_couples reverse_couples in
@@ -610,11 +715,13 @@ let rename_variables list_of_couples linear_constraint =
 	let complete_list = add_id joined_couples (!total_dim - 1) in
   (* debug output *)
 	if debug_mode_greater Debug_high then (
-		let ndim = ppl_Polyhedron_space_dimension poly in
+		let ndim = space_dimension poly in
 		print_message Debug_high ("mapping space dimensions, no. dimensions is " ^ string_of_int ndim);
 		List.iter (fun (a,b) -> (print_message Debug_high ("map v" ^ string_of_int a ^ " -> v" ^ string_of_int b))) complete_list;
 	);
 	(* perfom the mapping *)
+	(* Statistics *)
+	ppl_nb_map := !ppl_nb_map + 1;
 	ppl_Polyhedron_map_space_dimensions poly complete_list;
 	assert_dimensions poly;
 	poly
@@ -638,11 +745,13 @@ let rename_variables_assign list_of_couples linear_constraint =
 	let complete_list = add_id joined_couples (!total_dim - 1) in
   (* debug output *)
 	if debug_mode_greater Debug_high then (
-		let ndim = ppl_Polyhedron_space_dimension linear_constraint in
+		let ndim = space_dimension linear_constraint in
 		print_message Debug_high ("mapping space dimensions, no. dimensions is " ^ string_of_int ndim);
 		List.iter (fun (a,b) -> (print_message Debug_high ("map v" ^ string_of_int a ^ " -> v" ^ string_of_int b))) complete_list;
 	);
 	(* perfom the mapping *)
+	(* Statistics *)
+	ppl_nb_map := !ppl_nb_map + 1;
 	ppl_Polyhedron_map_space_dimensions linear_constraint complete_list;
 	assert_dimensions linear_constraint
 				
@@ -701,9 +810,11 @@ let add_d d coef variable_list linear_constraint =
 	(* function for building the affine translation of a variable: v -> v + coef*d *)
 	let affine_translation = fun v -> Plus (Times (q, Variable v), Times (p, Variable d)) in
 	(* copy linear constraint, as PPL functions have side effects *)	
-	let result_poly = ppl_new_NNC_Polyhedron_from_NNC_Polyhedron linear_constraint in
+	let result_poly = copy linear_constraint in
 	(* perform the affine translations *)
 	List.iter (fun v -> 
+		(* Statistics *)
+		ppl_nb_preimage := !ppl_nb_preimage + 1;
 		ppl_Polyhedron_affine_preimage result_poly v (affine_translation v) q
 	) variable_list;
 	assert_dimensions result_poly;
@@ -778,15 +889,20 @@ let point_on_line p min_abs min_ord max_abs max_ord =
 
 (* convert a linear constraint into two lists, one containing the points and the other containing the ray *)
 let shape_of_poly x y linear_constraint =
-	let poly = ppl_new_NNC_Polyhedron_from_NNC_Polyhedron linear_constraint in
+	let poly = copy linear_constraint in
 	(* project on variables x,y *)
 	let remove = ref [] in
 	for i = 0 to !total_dim - 1 do
 		if i <> x && i <> y then
 			remove := i :: !remove
 	done;
-	ppl_Polyhedron_remove_space_dimensions poly !remove;	
-	let generators = ppl_Polyhedron_get_generators poly in
+	(* Statistics *)
+	ppl_nb_remove_dim := !ppl_nb_remove_dim + 1;
+	ppl_Polyhedron_remove_space_dimensions poly !remove;
+	let generators =
+		(* Statistics *)
+		ppl_nb_get_generators := !ppl_nb_get_generators + 1;
+		ppl_Polyhedron_get_generators poly in
 	(* collect points for the generators *)
 	let points = List.fold_left (fun ps gen ->
 		let p = point_of_generator gen in 

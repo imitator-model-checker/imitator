@@ -173,7 +173,7 @@ exe:
 # 	$(TARGET) $(EXAMPLE_PATH)/AndOr/AndOr.imi $(EXAMPLE_PATH)/AndOr/AndOr.pi0
 # 	$(TARGET) $(EXAMPLE_PATH)/AndOr/AndOr.imi $(EXAMPLE_PATH)/AndOr/AndOr.v0 -mode cover
 
-	$(TARGET) $(EXAMPLE_PATH)/Flipflop/flipflop.imi -mode reachability -debug low
+	$(TARGET) $(EXAMPLE_PATH)/Flipflop/flipflop.imi -mode reachability -statistics
 # 	$(TARGET) $(EXAMPLE_PATH)/Flipflop/flipflop.imi -mode reachability -tree -debug low
 # 	$(TARGET) $(EXAMPLE_PATH)/Flipflop/flipflop.imi -mode reachability -acyclic -debug low
 # 	./IMITATOR Examples/Flipflop/flipflop.imi Examples/Flipflop/flipflop.pi0
