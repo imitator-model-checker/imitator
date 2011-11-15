@@ -606,7 +606,9 @@ if options#no_random then
 else
 	print_message Debug_medium ("Standard random selection for pi0-incompatible inequalities (default).");
 
-
+if options#tree then
+	print_message Debug_standard ("Tree mode: will never check inclusion or equality of a new state into a former state.")
+;
 
 (* Output *)
 

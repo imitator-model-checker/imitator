@@ -235,13 +235,13 @@ let add_state_dyn program graph new_state constr=
 	if debug_mode_greater Debug_total then (
 		print_message Debug_standard ("hash : " ^ (string_of_int hash));
 	); 
-	(* In acyclic mode: does not test anything *)
-	if program.options#acyclic then (
+	(* In tree mode: does not test anything *)
+	if program.options#tree then (
 		(* Since the state does NOT belong to the graph: find the state index *)
 		let new_state_index = insert_state graph hash new_state in
 		(* Return state_index, true *)
 		new_state_index, true
-	) else (		
+	) else (
 		(* The check used for equality *)
 		let check_states = states_equal_dyn in				
 		try (
@@ -271,8 +271,8 @@ let add_state program graph new_state =
 	if debug_mode_greater Debug_total then (
 		print_message Debug_standard ("hash : " ^ (string_of_int hash));
 	); 
-	(* In acyclic mode: does not test anything *)
-	if program.options#acyclic then (
+	(* In tree mode: does not test anything *)
+	if program.options#tree then (
 		(* Since the state does NOT belong to the graph: find the state index *)
 		let new_state_index = insert_state graph hash new_state in
 		(* Return state_index, true *)
