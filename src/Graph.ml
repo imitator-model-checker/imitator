@@ -9,7 +9,8 @@
  *
  ****************************************************************)
 
-
+module Ppl = Ppl_ocaml
+open Ppl
 open Global
 open AbstractImitatorFile
 
@@ -237,6 +238,23 @@ let state_included state1 state2 =
 		nb_constraint_comparisons := !nb_constraint_comparisons + 1;
 		print_message Debug_high ("Already performed " ^ (string_of_int (!nb_constraint_comparisons)) ^ " constraint comparisons.");
 		LinearConstraint.is_leq constr1 constr2
+	)
+
+
+(** Check if two states are mergeable*)
+let state_megeable state1 state2 =
+	let (loc1,constr1) = state1 in
+	let (loc2,constr2) = state2 in
+	let convex_hull_P1_P2 = constr1 in
+	if not (Automaton.location_equal loc1 loc2) then false else (
+		(*Check if the two states are mergeable*)
+		ppl_Polyhedron_poly_hull_assign convex_hull_P1_P2 constr2;
+		(**Return True if the convex hull is equal to the union, False otherwise*)
+		(**Compute the difference between the convex hull and state 1 then take the difference with state2*)
+		ppl_Polyhedron_difference_assign convex_hull_P1_P2 constr1;
+		ppl_Polyhedron_difference_assign convex_hull_P1_P2 constr2;
+		(** If there is anything left in convex_hull_P1_P2 then it wasn't mergeable*)
+		(ppl_Polyhedron_is_empty convex_hull_P1_P2);
 	)
 
 
