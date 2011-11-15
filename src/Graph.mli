@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2009/12/08
- * Last modified: 2010/03/25
+ * Last modified: 2011/11/15
  *
  ****************************************************************)
 
@@ -20,13 +20,13 @@ type state_index = int
 
 type reachability_graph = {
 	(** An Array 'state_index' -> 'state' *)
-	states : AbstractImitatorFile.state DynArray.t;
+	all_states : state DynArray.t;
 	
 	(** A hashtable to quickly find identical states *)
-	hash_table : (int, state_index) Hashtbl.t;
+	states_for_comparison : (int, state_index) Hashtbl.t;
 
 	(** A hashtable '(state_index, action_index)' -> 'dest_state_index' *)
-	transitions_table : ((state_index * AbstractImitatorFile.action_index), state_index) Hashtbl.t;
+	transitions_table : ((state_index * action_index), state_index) Hashtbl.t;
 }
 
 (****************************************************************)
@@ -71,6 +71,7 @@ val last_states: abstract_program -> reachability_graph -> int list
 (** check if bad states are reached *)
 val is_bad: abstract_program -> reachability_graph -> bool
 
+
 (****************************************************************)
 (** Actions on a graph *)
 (****************************************************************)
@@ -87,6 +88,9 @@ val add_transition : reachability_graph -> (state_index * action_index * state_i
 (** Add an inequality to all the states of the graph *)
 val add_inequality_to_states : reachability_graph -> LinearConstraint.linear_inequality -> unit
 
+(** Empties the hash table giving the set of states for a given location; optimization for the jobshop example, where one is not interested in comparing  a state of iteration n with states of iterations < n *)
+val empty_states_for_comparison : reachability_graph -> unit
+
 
 (****************************************************************)
 (** Interaction with dot *)
@@ -95,3 +99,9 @@ val add_inequality_to_states : reachability_graph -> LinearConstraint.linear_ine
 (* Convert a graph to a dot file *)
 val dot_of_graph : AbstractImitatorFile.abstract_program -> AbstractImitatorFile.pi0 -> reachability_graph -> fancy:bool -> (string * string)
 
+
+(****************************************************************)
+(** Debug and performances *)
+(****************************************************************)
+(** Get the number of comparisons between states (performance checking purpose) *)
+val get_nb_comparisons : unit -> int

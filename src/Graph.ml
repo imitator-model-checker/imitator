@@ -3,9 +3,9 @@
  *                     IMITATOR II
  * 
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
- * Author:        Etienne Andre
+ * Author:        Etienne Andre, Ulrich Kuehne
  * Created:       2009/12/08
- * Last modified: 2010/03/29
+ * Last modified: 2011/11/15
  *
  ****************************************************************)
 
@@ -19,14 +19,17 @@ open AbstractImitatorFile
 type state_index = int
 
 type reachability_graph = {
-	(** An Array 'state_index' -> 'state' *)
-	states : AbstractImitatorFile.state DynArray.t;
+	(** An Array 'state_index' -> 'state'; contains ALL states *)
+	all_states : state DynArray.t;
+	
+	(** A hash table 'state_index' -> 'state' only for the states the new states will be compared to *)
+(* 	states_to_be_compared : (state_index, state) Hashtbl.t; *)
 
-	(** A hashtable to quickly find identical states *)
-	hash_table : (int, state_index) Hashtbl.t;
+	(** A hashtable to quickly find states with identical locations (? ; made by Ulrich); only for states to be compared *)
+	states_for_comparison : (int, state_index) Hashtbl.t;
 
 	(** A hashtable '(state_index, action_index)' -> 'dest_state_index' *)
-	transitions_table : ((state_index * AbstractImitatorFile.action_index), state_index) Hashtbl.t;
+	transitions_table : ((state_index * action_index), state_index) Hashtbl.t;
 }
 
 
@@ -35,6 +38,10 @@ type reachability_graph = {
 (****************************************************************)
 (** Initial size of the array of states (will be updated automatically *)
 let initial_size = 100
+
+
+(* Debug *)
+let nb_comparisons = ref 0
 
 
 (****************************************************************)
@@ -51,8 +58,8 @@ let make guessed_nb_transitions =
 	let hash_table = Hashtbl.create initial_size in
 	(* Create the graph *)
 	{
-		states = states;
-		hash_table = hash_table;
+		all_states = states;
+		states_for_comparison = hash_table;
 		transitions_table = transitions_table;
 	}
 
@@ -63,11 +70,11 @@ let make guessed_nb_transitions =
 
 (** Return the number of states in a graph *)
 let nb_states graph =
-	DynArray.length graph.states
+	DynArray.length graph.all_states
 
 (** Return the state of a state_index *)
 let get_state graph state_index =
-	DynArray.get graph.states state_index 
+	DynArray.get graph.all_states state_index
 
 (** Return the list of all constraints on the parameters associated to the states of a graph *)
 let all_p_constraints program graph =
@@ -75,11 +82,11 @@ let all_p_constraints program graph =
 		(fun current_list (_, linear_constraint) ->
 			let p_constraint = LinearConstraint.hide program.clocks_and_discrete linear_constraint in
 			p_constraint :: current_list)
-		[] graph.states
+		[] graph.all_states
 		
 (** Iterate over the reachable states *)
 let iter f graph =
-	DynArray.iter f graph.states
+	DynArray.iter f graph.all_states
 	
 (** Compute the intersection of all parameter constraints, DESTRUCTIVE!!! *)
 (** HERE PROBLEM IF ONE WANTS TO COMPUTE THE states FILE AFTER **)
@@ -210,7 +217,8 @@ let states_equal_dyn state1 state2 constr=
 	)
 
 
-(** Check if a state is included in another one*)
+(** Check if a state is included in another one *)
+(* (Despite the test based on the hash table, this is still necessary in case of hash collisions) *)
 let state_included state1 state2 =
 	let (loc1, constr1) = state1 in
 	let (loc2, constr2) = state2 in
@@ -221,10 +229,10 @@ let state_included state1 state2 =
 
 (** perform the insertion of a new state in a graph *)
 let insert_state graph hash new_state =
-	let new_state_index = DynArray.length graph.states in
+	let new_state_index = DynArray.length graph.all_states in
 	(* Add the state to the tables *)
-	DynArray.add graph.states new_state;
-	Hashtbl.add graph.hash_table hash new_state_index;
+	DynArray.add graph.all_states new_state;
+	Hashtbl.add graph.states_for_comparison hash new_state_index;
 	(* Return state_index *)
 	new_state_index
 
@@ -246,10 +254,15 @@ let add_state_dyn program graph new_state constr=
 		let check_states = states_equal_dyn in				
 		try (
 			(* use hash table to find states with same locations (modulo hash collisions) *)
-			let old_states = Hashtbl.find_all graph.hash_table hash in
+			let old_states = Hashtbl.find_all graph.states_for_comparison hash in
 			if debug_mode_greater Debug_total then (
 				let nb_old = List.length old_states in
-				print_message Debug_standard ("hashed list of length " ^ (string_of_int nb_old));
+				print_message Debug_total ("hashed list of length " ^ (string_of_int nb_old));
+			);
+			if debug_mode_greater Debug_low then (
+				print_message Debug_medium ("About to compare new state with " ^ (string_of_int (List.length old_states)) ^ " state(s).");
+				nb_comparisons := !nb_comparisons + (List.length old_states);
+				print_message Debug_medium ("Already performed " ^ (string_of_int (!nb_comparisons)) ^ " comparisons.");
 			);
 			List.iter (fun index -> 
 				let state = get_state graph index in
@@ -259,7 +272,7 @@ let add_state_dyn program graph new_state constr=
 			let new_state_index = insert_state graph hash new_state in
 			(* Return state_index, true *)
 			new_state_index, true				
-		)	with Found state_index -> (								
+		)	with Found state_index -> (
 				state_index, false
 		)
 	)
@@ -277,15 +290,20 @@ let add_state program graph new_state =
 		let new_state_index = insert_state graph hash new_state in
 		(* Return state_index, true *)
 		new_state_index, true
-	) else (		
+	) else (
 		(* The check used for equality *)
 		let check_states = if program.options#inclusion then state_included else states_equal in				
 		try (
-			(* use hash table to find states with same locations (modulo hash collisions) *)
-			let old_states = Hashtbl.find_all graph.hash_table hash in
+			(* use hash table to find all states with same locations (modulo hash collisions) *)
+			let old_states = Hashtbl.find_all graph.states_for_comparison hash in
 			if debug_mode_greater Debug_total then (
 				let nb_old = List.length old_states in
-				print_message Debug_standard ("hashed list of length " ^ (string_of_int nb_old));
+				print_message Debug_total ("hashed list of length " ^ (string_of_int nb_old));
+			);
+			if debug_mode_greater Debug_low then (
+				print_message Debug_medium ("About to compare new state with " ^ (string_of_int (List.length old_states)) ^ " state(s).");
+				nb_comparisons := !nb_comparisons + (List.length old_states);
+				print_message Debug_medium ("Already performed " ^ (string_of_int (!nb_comparisons)) ^ " comparisons.");
 			);
 			List.iter (fun index -> 
 				let state = get_state graph index in
@@ -294,8 +312,8 @@ let add_state program graph new_state =
 			(* Not found -> insert state *)
 			let new_state_index = insert_state graph hash new_state in
 			(* Return state_index, true *)
-			new_state_index, true				
-		)	with Found state_index -> (								
+			new_state_index, true
+		)	with Found state_index -> (
 				state_index, false
 		)
 	)
@@ -310,18 +328,26 @@ let add_transition reachability_graph (orig_state_index, action_index, dest_stat
 let add_inequality_to_states graph inequality =
 	let constraint_to_add = LinearConstraint.make [inequality] in
 	(* For all state: *)
-	for state_index = 0 to (DynArray.length graph.states) - 1 do
+	for state_index = 0 to (DynArray.length graph.all_states) - 1 do
 		 (* experimental: *)
-		 let _, constr = DynArray.get graph.states state_index in
+		 let _, constr = DynArray.get graph.all_states state_index in
 		 LinearConstraint.intersection_assign constr [constraint_to_add] 
 		
-(*		 DynArray.set graph.states state_index (                          *)
-(*			let (loc, const) = DynArray.get graph.states state_index in     *)
+(*		 DynArray.set graph.all_states state_index (                          *)
+(*			let (loc, const) = DynArray.get graph.all_states state_index in     *)
 (*			(* Perform the intersection *)                                  *)
 (*			loc, (LinearConstraint.intersection [constraint_to_add; const] )*)
 (*		)                                                                 *)
 	done
-	
+
+(** Empties the hash table giving the set of states for a given location; optimization for the jobshop example, where one is not interested in comparing  a state of iteration n with states of iterations < n *)
+let empty_states_for_comparison graph =
+	Hashtbl.clear graph.states_for_comparison
+
+(** Get the number of comparisons between states (performance checking purpose) *)
+let get_nb_comparisons () =
+(*	print_message Debug_standard ("About to return the number of comparisons (" ^ (string_of_int !nb_comparisons) ^ ").");*)
+	!nb_comparisons
 
 (****************************************************************)
 (** Interaction with dot *)
@@ -486,7 +512,7 @@ let shuffle_dot_colors =
 
 (* Convert a graph to a dot file *)
 let dot_of_graph program pi0 reachability_graph ~fancy =	
-	let states = reachability_graph.states in
+	let states = reachability_graph.all_states in
 	let transitions = reachability_graph.transitions_table in
 	(* Create the array of dot colors *)
 	let dot_colors = Array.of_list dot_colors in

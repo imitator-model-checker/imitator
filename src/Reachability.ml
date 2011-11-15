@@ -808,7 +808,7 @@ let post program pi0 reachability_graph orig_state_index =
 								(* Adding the state *)
 								slast := new_state_index :: !slast;
 							);
-						    );						
+						);
 						
 						(* Update the transitions *)
 						Graph.add_transition reachability_graph (orig_state_index, action_index, new_state_index);
@@ -828,7 +828,7 @@ let post program pi0 reachability_graph orig_state_index =
 		done; (* while more new states *)
 	) list_of_possible_actions;
 	
-	(* If new_state is empty : the current state is a last state *)
+	(* If new_states is empty : the current state is a last state *)
 	if  program.options#union && list_empty (!new_states) then (
 		print_message Debug_low ("\nMode union: adding a state without successor to SLast.");
 		(* Adding the state *)
@@ -836,6 +836,7 @@ let post program pi0 reachability_graph orig_state_index =
 	);
 	
 	(* Return the list of (really) new states *)
+	(** TO DO: List.rev really useful??!!!! *)
 	List.rev (!new_states)
 
 
@@ -915,6 +916,12 @@ let post_star program pi0 init_state =
 			print_message Debug_medium (beginning_message ^ " for post^" ^ (string_of_int (!nb_iterations)) ^ ".\n");
 		);
 		
+		(* If jobshop option: empty the list of already reached states for comparison with former states *)
+		if program.options#acyclic then(
+			print_message Debug_low ("\nMode acyclic: empty the list of states to be compared.");
+			empty_states_for_comparison reachability_graph;
+		);
+		
 		(* Clean up a little *)
 		Gc.major ();
 		
@@ -952,6 +959,12 @@ let post_star program pi0 init_state =
 		^ (string_of_int (Graph.nb_states reachability_graph)) ^ " reachable state" ^ (s_of_int (Graph.nb_states reachability_graph))
 		^ " with "
 		^ (string_of_int (Hashtbl.length (reachability_graph.transitions_table))) ^ " transition" ^ (s_of_int (Hashtbl.length (reachability_graph.transitions_table))) ^ ".");
+	(*--------------------------------------------------*)
+	(* Performances *)
+	(*--------------------------------------------------*)
+	if debug_mode_greater Debug_low then (
+		print_message Debug_low ((string_of_int (Graph.get_nb_comparisons())) ^ " comparison(s) between states were performed.");
+	);
 
 	(*--------------------------------------------------*)
 	(* Computation of the returned constraint *)

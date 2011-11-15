@@ -53,7 +53,9 @@ class imitator_options =
 		val mutable time_limit = ref None
 		(* imitator mode *)
 		val mutable imitator_mode = ref Inverse_method
-		(* acyclic mode *)
+		(* acyclic mode: only compare inclusion or equality of a new state with former states of the same iteration (graph depth) *)
+		val mutable acyclic = ref false 
+		(* tree mode: never compare inclusion or equality of any new state with a former state *)
 		val mutable tree = ref false 
 		(* inclusion mode *)
 		val mutable inclusion = ref false
@@ -80,6 +82,7 @@ class imitator_options =
 
 
 		
+		method acyclic = !acyclic
 		method nb_args = nb_args
 		method file = !file
 		method pi0file = !pi0file
@@ -144,6 +147,7 @@ class imitator_options =
 
 			(* Options *)
 			and speclist = [
+				("-acyclic", Set acyclic, " Test if a new state was already encountered only with states of the same depth. To be set only if the system is fully acyclic (no backward branching, i.e., no cycle). Default: 'false'");		
 				("-debug", String set_debug_mode_ref, " Print more or less information. Can be set to 'nodebug', 'standard', 'low', 'medium', 'high', 'total'. Default: 'standard'");
 				("-dynamic", Set dynamic, "Perform the on-the-fly intersection. Defaut : 'false'");
 				("-IMincl", Set inclusion, " Algorithm IMIncl : consider an inclusion of region instead of the equality when performing the Post operation. Default: 'false'");
@@ -163,7 +167,7 @@ class imitator_options =
 				("-sync-auto-detect", Set sync_auto_detection, " Detect automatically the synchronized actions in each automaton. Default: false (consider the actions declared by the user)");
 				("-time-limit", Int (fun i -> time_limit := Some i), " Time limit in seconds. Warning: no guarantee that the program will stop exactly after the given amount of time. Default: no limit.");
 				("-timed", Set timed_mode, " Adds a timing information to each output of the program. Default: none.");
-				("-tree", Set tree, " Does not test if a new state was already encountered. To be set ONLY if the system is fully acyclic (reachability graph as a tree). Default: 'false'");		
+				("-tree", Set tree, " Does not test if a new state was already encountered. To be set ONLY if the reachability graph is a tree. Default: 'false'");		
 				("-with-parametric-log", Set with_parametric_log, " Adds the elimination of the clock variables in the constraints in the log files. Default: false.");
 				("-version", Unit (fun _ -> print_version_string (); exit 0), " Print version string and exit.");
 
