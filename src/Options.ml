@@ -1,3 +1,16 @@
+(*****************************************************************
+ *
+ *                     IMITATOR II
+ *
+ * Convert a parsing structure into an abstract program
+ *
+ * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
+ * Author:        Ulrich Kuehne
+ * Created:       2010
+ * Last modified: 2011/11/15
+ *
+ ****************************************************************)
+ 
 open Arg
 open Global
 

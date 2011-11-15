@@ -27,7 +27,7 @@ let string_of_var_type = function
 (* Add a header to the program *)
 let string_of_header program =
 		"(**************************************************"
-	^ "\n" ^" * Program " ^ program.program_name
+	^ "\n" ^" * Program " ^ program.options#file
 (* 	^ "\n" ^" * Generated at time " ^ time? *)
 	^ "\n" ^" **************************************************)"
 

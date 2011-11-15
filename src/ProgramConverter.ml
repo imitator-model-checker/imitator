@@ -1120,7 +1120,7 @@ let make_pi0cube parsed_pi0cube index_of_variables nb_parameters =
 (*--------------------------------------------------*)
 (* Convert the parsing structure into an abstract program *)
 (*--------------------------------------------------*)
-let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_automata, parsed_init_definition, parsed_bad_definition) parsed_pi0 parsed_pi0cube options =	
+let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_automata, parsed_init_definition, parsed_bad_definition) parsed_pi0 parsed_pi0cube options =
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Debug functions *) 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -1643,7 +1643,10 @@ let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_
 	init = initial_state;
 	(* bad states *)
 	bad = bad_state_pairs;
+	
+	options = options;
 
+	(*
 	(* Acyclic mode *)
 	acyclic = options#acyclic;
 	(* Inclusion for the post operation *)
@@ -1656,6 +1659,8 @@ let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_
 	with_parametric_log = options#with_parametric_log;
 	(* The name of the program *)
 	program_name = options#file;
+	
+	*)
 
 	}
 

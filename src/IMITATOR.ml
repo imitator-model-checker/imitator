@@ -281,7 +281,7 @@ let cover_behavioral_cartography program pi0cube init_state =
 			if not (debug_mode_greater Debug_medium) then
 				set_debug_mode Debug_nodebug;
 			(* Compute the post and the constraint *)
-			let returned_constraint, graph, nb_iterations, counter = Reachability.post_star program options pi0 init_state in
+			let returned_constraint, graph, nb_iterations, counter = Reachability.post_star program pi0 init_state in
 			(* Get the debug mode back *)
 			set_debug_mode global_debug_mode;
 			(* Update the counters *)
@@ -447,7 +447,7 @@ let random_behavioral_cartography program pi0cube init_state nb =
 					set_debug_mode Debug_nodebug;
 				);
 				(* Compute the post *)
-				let returned_constraint, graph, nb_iterations, counter = Reachability.post_star program options pi0_functional init_state in
+				let returned_constraint, graph, nb_iterations, counter = Reachability.post_star program pi0_functional init_state in
 				(* Get the debug mode back *)
 				set_debug_mode global_debug_mode;
 				print_message Debug_standard (
@@ -760,7 +760,7 @@ match options#imitator_mode with
 	(* Perform reachability analysis or inverse Method *)
 	| Reachability_analysis | Inverse_method ->
 		let returned_constraint, reachability_graph, _, _ =
-			Reachability.post_star program options pi0 init_state_after_time_elapsing
+			Reachability.post_star program pi0 init_state_after_time_elapsing
 		in
 		(* Generate the DOT graph *)
 		print_message Debug_high "Generating the dot graph";

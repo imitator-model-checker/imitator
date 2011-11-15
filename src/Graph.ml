@@ -236,7 +236,7 @@ let add_state_dyn program graph new_state constr=
 		print_message Debug_standard ("hash : " ^ (string_of_int hash));
 	); 
 	(* In acyclic mode: does not test anything *)
-	if program.acyclic then (
+	if program.options#acyclic then (
 		(* Since the state does NOT belong to the graph: find the state index *)
 		let new_state_index = insert_state graph hash new_state in
 		(* Return state_index, true *)
@@ -272,14 +272,14 @@ let add_state program graph new_state =
 		print_message Debug_standard ("hash : " ^ (string_of_int hash));
 	); 
 	(* In acyclic mode: does not test anything *)
-	if program.acyclic then (
+	if program.options#acyclic then (
 		(* Since the state does NOT belong to the graph: find the state index *)
 		let new_state_index = insert_state graph hash new_state in
 		(* Return state_index, true *)
 		new_state_index, true
 	) else (		
 		(* The check used for equality *)
-		let check_states = if program.inclusion then state_included else states_equal in				
+		let check_states = if program.options#inclusion then state_included else states_equal in				
 		try (
 			(* use hash table to find states with same locations (modulo hash collisions) *)
 			let old_states = Hashtbl.find_all graph.hash_table hash in
@@ -501,8 +501,8 @@ let dot_of_graph program pi0 reachability_graph ~fancy =
 	let header =
 		(* Header *)
 		"/***************************************************"
-		^ "\n * File automatically generated for file '" ^ program.program_name ^ "'"
-		^ (if program.imitator_mode = Reachability_analysis then "\n * Reachability analysis" else (
+		^ "\n * File automatically generated for file '" ^ program.options#file ^ "'"
+		^ (if program.options#imitator_mode = Reachability_analysis then "\n * Reachability analysis" else (
 			"\n * The following pi0 was considered:"
 			^ "\n" ^ (ImitatorPrinter.string_of_pi0 program pi0)
 		))
@@ -526,7 +526,7 @@ let dot_of_graph program pi0 reachability_graph ~fancy =
 				^ "\n\n\n  STATE " ^ (string_of_int state_index) ^ ":"
 				^ "\n  " ^ (ImitatorPrinter.string_of_state program state)
 				(* Add the constraint with no clocks (option only) *)
-				^ (if program.with_parametric_log then (
+				^ (if program.options#with_parametric_log then (
 					(* Get the constraint *)
 					let _, linear_constraint = state in
 					(* Eliminate clocks *)

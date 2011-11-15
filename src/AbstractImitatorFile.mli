@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2009/09/11
- * Last modified: 2010/03/29
+ * Last modified: 2011/11/15
  *
  ****************************************************************)
 
@@ -17,7 +17,7 @@
 open Global
 open LinearConstraint
 open Automaton
-
+open Options
 
 (****************************************************************)
 (** Environment *)
@@ -159,6 +159,10 @@ type abstract_program = {
 	(* bad states *)
 	bad  : (automaton_index * location_index) list;
 
+	(* All options *)
+	options : imitator_options;
+	
+	(*
 	(* Acyclic mode *)
 	acyclic : bool;
 	(* Inclusion for the post operation *)
@@ -170,7 +174,7 @@ type abstract_program = {
 	(* Mode with parametric constraints (clock elimination) in the log file *)
 	with_parametric_log : bool;
 	(* The name of the program *)
-	program_name : string;
+	program_name : string; *)
 }
 
 
