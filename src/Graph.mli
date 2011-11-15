@@ -104,4 +104,6 @@ val dot_of_graph : AbstractImitatorFile.abstract_program -> AbstractImitatorFile
 (** Debug and performances *)
 (****************************************************************)
 (** Get the number of comparisons between states (performance checking purpose) *)
-val get_nb_comparisons : unit -> int
+val get_nb_state_comparisons : unit -> int
+(** Get the number of comparisons between constraints (performance checking purpose) *)
+val get_nb_constraint_comparisons : unit -> int

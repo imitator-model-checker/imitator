@@ -963,7 +963,8 @@ let post_star program pi0 init_state =
 	(* Performances *)
 	(*--------------------------------------------------*)
 	if debug_mode_greater Debug_low then (
-		print_message Debug_low ((string_of_int (Graph.get_nb_comparisons())) ^ " comparison(s) between states were performed.");
+		print_message Debug_low ((string_of_int (Graph.get_nb_state_comparisons())) ^ " comparison(s) between states were performed.");
+		print_message Debug_low ((string_of_int (Graph.get_nb_constraint_comparisons())) ^ " comparison(s) between constraints were performed.");
 	);
 
 	(*--------------------------------------------------*)
