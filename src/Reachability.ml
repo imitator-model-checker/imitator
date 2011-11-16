@@ -592,6 +592,8 @@ let compute_new_constraint2 program orig_constraint discrete_constr orig_locatio
 		if debug_mode_greater Debug_total then
 			print_message Debug_total (LinearConstraint.string_of_linear_constraint program.variable_names current_constraint);*)
 
+		(** Il faudrait peut etre tout de suite tester que les gardes sont satisfaites ?!! Car elles sont "rarement" compatibles entre elles) *)
+			
 		let current_constraint = LinearConstraint.copy discrete_constr in
 
 		(* Debug *)
@@ -916,6 +918,11 @@ let post program pi0 reachability_graph orig_state_index =
 
 	(* build the list of new states *)
 	let new_states = ref [] in
+	
+	(* Create a constraint D_i = d_i for the discrete variables *)
+	let discrete_values = List.map (fun discrete_index -> discrete_index, (Automaton.get_discrete_value original_location discrete_index)) program.discrete in
+	(* Convert to a constraint *)
+	let discrete_constr = instantiate_discrete discrete_values in
 
 	(* FOR ALL ACTION DO: *)
 	List.iter (fun action_index ->
@@ -929,11 +936,7 @@ let post program pi0 reachability_graph orig_state_index =
 		(* Compute the reachable states on the fly: i.e., all the possible transitions for all the automata belonging to 'automata' *)
 		(*------------------------------------------------*)
 		
-		(* add discrete values to constraint *)
-		let discrete_values = List.map (fun discrete_index -> discrete_index, (Automaton.get_discrete_value original_location discrete_index)) program.discrete in
-		(* Convert to a constraint *)
-		let discrete_constr = instantiate_discrete discrete_values in
-		(* compute conjunction with current constraint *)
+		(* Compute conjunction with current constraint *)
 		let orig_plus_discrete = LinearConstraint.intersection [orig_constraint (); discrete_constr] in
 		
 		(* Give a new index to those automata *)
@@ -963,11 +966,11 @@ let post program pi0 reachability_graph orig_state_index =
 		while !more_combinations do
 			(* Debug *)
 			if debug_mode_greater Debug_total then (
-			let local_indexes = string_of_array_of_string_with_sep "\n\t" (
-			Array.mapi (fun local_index real_index ->
-				(string_of_int local_index) ^ " -> " ^ (string_of_int real_index) ^ " : " ^ (string_of_int current_indexes.(local_index)) ^ "; ";
-			) real_indexes) in
-			print_message Debug_total ("--- Consider the combination \n\t" ^ local_indexes);
+				let local_indexes = string_of_array_of_string_with_sep "\n\t" (
+				Array.mapi (fun local_index real_index ->
+					(string_of_int local_index) ^ " -> " ^ (string_of_int real_index) ^ " : " ^ (string_of_int current_indexes.(local_index)) ^ "; ";
+				) real_indexes) in
+				print_message Debug_total ("--- Consider the combination \n\t" ^ local_indexes);
 			);
 	
 			(* build the current combination of transitions *)
@@ -997,7 +1000,7 @@ let post program pi0 reachability_graph orig_state_index =
 			match new_constraint with
 				| None -> 
 					print_message Debug_high ("\nThis constraint is not satisfiable.");
-				| Some final_constraint ->(					
+				| Some final_constraint ->(
 					if not (LinearConstraint.is_satisfiable final_constraint) then(
 						print_message Debug_high ("\nThis constraint is not satisfiable.");
 					) else (

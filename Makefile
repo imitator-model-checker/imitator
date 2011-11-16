@@ -240,7 +240,8 @@ exe:
 # 	./IMITATOR Examples/CSMACD/csmacdPrism_2p.imi Examples/CSMACD/csmacdPrism_2p.v0 -mode cover -log-prefix Examples/CSMACD/carto_2p/csmacdPrism_2p
 
 # 	./IMITATOR Examples/Wlan/wlan.imi -mode reachability
-# 	./IMITATOR Examples/Wlan/wlan.imi Examples/Wlan/wlan.pi0 -timed
+	$(TARGET) $(EXAMPLE_PATH)/Wlan/wlan.imi $(EXAMPLE_PATH)/Wlan/wlan.pi0 -post-limit 9 -no-dot -no-log
+	bin/IMITATOR2.36.111115 $(EXAMPLE_PATH)/Wlan/wlan.imi $(EXAMPLE_PATH)/Wlan/wlan.pi0 -post-limit 9 -no-dot -no-log
 
 # 	./IMITATOR Examples/Wlan/wlan_boff2.imi Examples/Wlan/wlan_boff2.pi0 -timed
 
@@ -250,8 +251,9 @@ exe:
 ##### CASE STUDIES : VALMEM #####
 
 # 	./IMITATOR Examples/Valmem/spsmall.imi -mode reachability -timed -time-limit 60
-# 	./IMITATOR Examples/Valmem/spsmall.imi Examples/Valmem/spsmall.pi0
+	$(TARGET) $(EXAMPLE_PATH)/Valmem/spsmall.imi $(EXAMPLE_PATH)/Valmem/spsmall.pi0 -no-dot -no-log
 # -debug medium -inclusion -post-limit 2 -sync-auto-detect
+	bin/IMITATOR2.36.111115 $(EXAMPLE_PATH)/Valmem/spsmall.imi $(EXAMPLE_PATH)/Valmem/spsmall.pi0 -no-dot -no-log
 # 	./IMITATOR Examples/Valmem/spsmall.imi Examples/Valmem/spsmall.v0 -mode cover -no-dot -no-log
 
 # 	./IMITATOR Examples/Valmem/spsmall_obs.imi -mode reachability -with-parametric-log
