@@ -44,6 +44,7 @@ let ppl_nb_unconstrain = ref 0
 let ppl_nb_map = ref 0
 let ppl_nb_preimage = ref 0
 let ppl_nb_remove_dim = ref 0
+let ppl_nb_elapse = ref 0
 
 let ppl_nb_copy_polyhedron = ref 0
 
@@ -69,6 +70,7 @@ let get_statistics () =
 	^ "\n" ^ (string_of_int !ppl_nb_map) ^ " calls to map"
 	^ "\n" ^ (string_of_int !ppl_nb_preimage) ^ " calls to preimage"
 	^ "\n" ^ (string_of_int !ppl_nb_remove_dim) ^ " calls to remove_dimension"
+	^ "\n" ^ (string_of_int !ppl_nb_elapse) ^ " calls to time_elapsing"
 
 	^ "\n" ^ (string_of_int !ppl_nb_copy_polyhedron) ^ " calls to copy_polyhedron"
 
@@ -695,38 +697,6 @@ let hide_assign variables linear_constraint =
 	assert_dimensions linear_constraint
 
 
-(** rename variables in a constraint *)
-let rename_variables list_of_couples linear_constraint =
-	(* copy polyhedron, as ppl function has sideeffects *)
-	let poly = copy linear_constraint in
-	(* add reverse mapping *)
-	let reverse_couples = List.map (fun (a,b) -> (b,a)) list_of_couples in
-	let joined_couples = List.rev_append list_of_couples reverse_couples in
-	(* find all dimensions that will be mapped *)
-	let from, _  = List.split joined_couples in
-	(* add identity pairs (x,x) for remaining dimensions *) 
-	let rec add_id list i = 
-		if i < 0 then list else
-			if not (List.mem i from) then
-				(i,i) :: add_id list (i-1)
-			else
-				add_id list (i-1)
-		in 
-	let complete_list = add_id joined_couples (!total_dim - 1) in
-  (* debug output *)
-	if debug_mode_greater Debug_high then (
-		let ndim = space_dimension poly in
-		print_message Debug_high ("mapping space dimensions, no. dimensions is " ^ string_of_int ndim);
-		List.iter (fun (a,b) -> (print_message Debug_high ("map v" ^ string_of_int a ^ " -> v" ^ string_of_int b))) complete_list;
-	);
-	(* perfom the mapping *)
-	(* Statistics *)
-	ppl_nb_map := !ppl_nb_map + 1;
-	ppl_Polyhedron_map_space_dimensions poly complete_list;
-	assert_dimensions poly;
-	poly
-
-				
 (** rename variables in a constraint, with side effects *)
 let rename_variables_assign list_of_couples linear_constraint =
 	(* add reverse mapping *)
@@ -754,8 +724,70 @@ let rename_variables_assign list_of_couples linear_constraint =
 	ppl_nb_map := !ppl_nb_map + 1;
 	ppl_Polyhedron_map_space_dimensions linear_constraint complete_list;
 	assert_dimensions linear_constraint
-				
-				
+
+	
+(** Rename variables in a constraint *)
+let rename_variables list_of_couples linear_constraint =
+	(* copy polyhedron, as ppl function has sideeffects *)
+	let poly = copy linear_constraint in
+(*	(* add reverse mapping *)
+	let reverse_couples = List.map (fun (a,b) -> (b,a)) list_of_couples in
+	let joined_couples = List.rev_append list_of_couples reverse_couples in
+	(* find all dimensions that will be mapped *)
+	let from, _  = List.split joined_couples in
+	(* add identity pairs (x,x) for remaining dimensions *) 
+	let rec add_id list i = 
+		if i < 0 then list else
+			if not (List.mem i from) then
+				(i,i) :: add_id list (i-1)
+			else
+				add_id list (i-1)
+		in 
+	let complete_list = add_id joined_couples (!total_dim - 1) in
+  (* debug output *)
+	if debug_mode_greater Debug_high then (
+		let ndim = space_dimension poly in
+		print_message Debug_high ("mapping space dimensions, no. dimensions is " ^ string_of_int ndim);
+		List.iter (fun (a,b) -> (print_message Debug_high ("map v" ^ string_of_int a ^ " -> v" ^ string_of_int b))) complete_list;
+	);
+	(* perfom the mapping *)
+	(* Statistics *)
+	ppl_nb_map := !ppl_nb_map + 1;
+	ppl_Polyhedron_map_space_dimensions poly complete_list;
+	assert_dimensions poly;*)
+	rename_variables_assign list_of_couples poly;
+	poly
+
+
+(* Time elapsing function *)
+let time_elapse_assign variable_elapse variable_constant linear_constraint =
+	(* Create the inequalities var = 1, for var in variable_elapse *)
+	let inequalities_elapse = List.map (fun variable ->
+		(* Create a linear term *)
+		let linear_term = make_linear_term [(NumConst.one, variable)] NumConst.minus_one in
+		(* Create the inequality *)
+		make_linear_inequality linear_term Op_eq
+	) variable_elapse in
+	(* Create the inequalities var = 0, for var in variable_constant *)
+	let inequalities_constant = List.map (fun variable ->
+		(* Create a linear term *)
+		let linear_term = make_linear_term [(NumConst.one, variable)] NumConst.zero in
+		(* Create the inequality *)
+		make_linear_inequality linear_term Op_eq
+	) variable_constant in
+	(* Convert both sets of inequalities to a constraint *)
+	let linear_constraint_time = make (List.rev_append inequalities_elapse inequalities_constant) in
+	(* Assign the time elapsing using PPL *)
+	(* Statistics *)
+	ppl_nb_elapse := !ppl_nb_elapse + 1;
+	ppl_Polyhedron_time_elapse_assign linear_constraint linear_constraint_time
+
+let time_elapse variable_elapse variable_constant linear_constraint =
+	let linear_constraint = copy linear_constraint in
+	time_elapse_assign variable_elapse variable_constant linear_constraint;
+	linear_constraint
+
+	
 (** substitutes all variables in a linear term.
 		The substitution is given as a function sub: var -> linear_term *)
 let rec substitute_variables_in_term sub linear_term =

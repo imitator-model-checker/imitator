@@ -75,7 +75,23 @@ let compute_plain_invariant program location =
 
 
 (*--------------------------------------------------*)
-(* Compute the invariant associated to a location,  *)
+(* Compute the invariant I_q(X') and I_q(X' - d ) associated to a location,  *)
+(* including renaming and time elapse.  *)
+(*--------------------------------------------------*)
+let compute_invariants program location =
+	(* Build plain invariant I_q(X) *)
+	let invariant = compute_plain_invariant program location in
+	(* rename variables X -> X', viz., create I_q(X') *)
+	LinearConstraint.rename_variables_assign program.renamed_clocks_couples invariant;
+	(* Compute invariant before time elapsing I_q(X' - d) *)
+	let invariant_before_time_elapse = LinearConstraint.add_d program.d NumConst.minus_one program.renamed_clocks invariant in
+	(* intersection of those constraints: I_q(X') and I_q(X' - d ) *)
+	LinearConstraint.intersection_assign invariant [invariant_before_time_elapse];
+	invariant
+
+
+(*--------------------------------------------------*)
+(* Compute the invariant I_q associated to a location  *)
 (* including renaming and time elapse. Uses cache.  *)
 (*--------------------------------------------------*)
 let compute_invariant program location =
@@ -88,18 +104,63 @@ let compute_invariant program location =
 		| None -> (
 			(* Build plain invariant I_q(X) *)
 			let invariant = compute_plain_invariant program location in
-			(* rename variables X -> X', viz., create I_q(X') *)
-			LinearConstraint.rename_variables_assign program.renamed_clocks_couples invariant;
-			(* Compute invariant before time elapsing I_q(X' - d) *)
-			let invariant_before_time_elapse = LinearConstraint.add_d program.d NumConst.minus_one program.renamed_clocks invariant in
-			(* intersection of those constraints: I_q(X') and I_q(X' - d ) *)
-			LinearConstraint.intersection_assign invariant [invariant_before_time_elapse];
 			(* Store in cache *)
 			Cache.store inv_cache locations invariant;
 			invariant
 		)
 
+(*--------------------------------------------------*)
+(* Compute the polyhedron p projected onto rho(X) *)
+(*--------------------------------------------------*)
+(*** TO DO: use cache *)
+let rho_assign program linear_constraint clock_updates =
+	(* merge updates *)
+	(** BAD PROG: exponential *)
+	let clock_updates = List.fold_left (fun updates local_updates -> 
+		List.fold_left (fun updates update -> 
+			if not (List.mem update updates) then 
+				update :: updates
+			else
+				updates
+		) updates local_updates
+	) [] clock_updates in
+	(* Compute X = 0 for the variables appearing in updates *)
+	print_message Debug_total ("\n -- Computing updates X = 0");
+	let updates =
+		(List.map (fun variable_index ->
+			(* Consider cases for clocks *)				
+			match program.type_of_variables variable_index with
+			(* Clocks: X = 0 *)
+			| Var_type_clock -> 
+				let x_lt = LinearConstraint.make_linear_term [
+					NumConst.one, variable_index;
+				] NumConst.zero in
+				LinearConstraint.make_linear_inequality x_lt LinearConstraint.Op_eq
+			| _ -> raise (InternalError "Only clocks can be updated.")
+		) clock_updates) in
+	(* Create the constraint *)
+	let updates = LinearConstraint.make updates in
+	(* Debug print *)
+	if debug_mode_greater Debug_total then(
+		print_message Debug_total (LinearConstraint.string_of_linear_constraint program.variable_names updates);
+	);
+	
+	(* Hide clocks updated within the linear constraint, viz., exists X' : lc, for X' in rho(X) *)
+	print_message Debug_total ("\n -- Computing exists X : lc for updated clocks");
+	LinearConstraint.hide_assign clock_updates linear_constraint;
+	if debug_mode_greater Debug_total then(
+		print_message Debug_total (LinearConstraint.string_of_linear_constraint program.variable_names linear_constraint);
+	);
+	
+	(* Add the constraints X = 0 *)
+	print_message Debug_total ("\n -- Adding X = 0 for updated clocks");
+	LinearConstraint.intersection_assign linear_constraint [updates];
+	if debug_mode_greater Debug_total then(
+		print_message Debug_total (LinearConstraint.string_of_linear_constraint program.variable_names linear_constraint);
+	);
 
+	()
+	
 (*--------------------------------------------------*)
 (* Create a fresh constraint of the form 'D = d' for any discrete variable D with value d *)
 (*--------------------------------------------------*)
@@ -314,6 +375,7 @@ let compute_new_location program aut_table trans_table action_index original_loc
 (*------------------------------------------------------------*)
 let compute_updates program clock_updates =
 	(* merge updates *)
+	(** BAD PROG: exponential *)
 	let clock_updates = List.fold_left (fun updates local_updates -> 
 		List.fold_left (fun updates update -> 
 			if not (List.mem update updates) then 
@@ -388,10 +450,10 @@ let compute_updates program clock_updates =
 		(* store in cache *)
 		Cache.store upd_cache clock_updates updates;
 		(* return constraint *)
-		updates	
+		updates
 	)
 
-	
+
 (*--------------------------------------------------*)	
 (* Compute the new constraint for a transition      *)
 (* orig_constraint : contraint in source location   *)
@@ -401,6 +463,10 @@ let compute_updates program clock_updates =
 (* clock_updates   : updated clock variables        *)
 (*--------------------------------------------------*)
 let compute_new_constraint program orig_constraint orig_location dest_location guards clock_updates =
+	print_message Debug_total ("\n***********************************");
+	print_message Debug_total ("Entering compute_new_constraint");
+	print_message Debug_total ("***********************************");
+	print_message Debug_total ("C = " ^ (LinearConstraint.string_of_linear_constraint program.variable_names (orig_constraint ())));
 	(* The constraint is checked on the fly for satisfyability -> exception mechanism *)
 	try ( 
 		print_message Debug_total ("\nComputing equalities for discrete variables (previous values)");
@@ -445,7 +511,7 @@ let compute_new_constraint program orig_constraint orig_location dest_location g
 
 		(* Compute the invariant in the destination location *)
 		print_message Debug_total ("\nComputing invariant I_q(X') and I_q(X' - d) ");
-		let invariant = compute_invariant program dest_location in
+		let invariant = compute_invariants program dest_location in
 					
 		(* Compute the equalities for the discrete variables *)
 		let discrete_values = List.map (fun discrete_index -> discrete_index, (Automaton.get_discrete_value dest_location discrete_index)) program.discrete in
@@ -486,7 +552,7 @@ let compute_new_constraint program orig_constraint orig_location dest_location g
 		);
 
 		(* Rename X' -> X *)
-		print_message Debug_total ("\nRenaming X' into X:");		
+		print_message Debug_total ("\nRenaming X' into X:");
 		LinearConstraint.rename_variables_assign program.unrenamed_clocks_couples new_constraint;
 		(* Debug print *)
 		if debug_mode_greater Debug_total then(
@@ -498,9 +564,163 @@ let compute_new_constraint program orig_constraint orig_location dest_location g
 		(* return the final constraint *)
 		Some new_constraint
 	) with Unsat_exception -> None
-		
-		
+
+(*--------------------------------------------------*)	
+(* Compute the new constraint for a transition      *)
+(* orig_constraint : contraint in source location   *)
+(* discrete_constr : contraint D_i = d_i in source location (discrete variables) *)
+(* orig_location   : source location                *)
+(* dest_location   : target location                *)
+(* guards          : guard constraints per automaton*)
+(* clock_updates   : updated clock variables        *)
+(*--------------------------------------------------*)
+let compute_new_constraint2 program orig_constraint discrete_constr orig_location dest_location guards clock_updates =
+	if debug_mode_greater Debug_total then(
+		print_message Debug_total ("\n***********************************");
+		print_message Debug_total ("Entering compute_new_constraint2");	
+		print_message Debug_total ("***********************************");
+		print_message Debug_total ("C = " ^ (LinearConstraint.string_of_linear_constraint program.variable_names (orig_constraint ())));
+	);
+	(* The constraint is checked on the fly for satisfyability -> exception mechanism *)
+	try ( 
+(*		print_message Debug_total ("\nComputing equalities for discrete variables (previous values)");
+		(* Compute discrete values in the source location *)
+		let discrete_values = List.map (fun discrete_index -> discrete_index, (Automaton.get_discrete_value orig_location discrete_index)) program.discrete in
+		(* Convert to a constraint of the form D_i = d_i, for all discrete i *)
+		let current_constraint = instantiate_discrete discrete_values in
+		(* Debug *)
+		if debug_mode_greater Debug_total then
+			print_message Debug_total (LinearConstraint.string_of_linear_constraint program.variable_names current_constraint);*)
+
+		let current_constraint = LinearConstraint.copy discrete_constr in
+
+		(* Debug *)
+		if debug_mode_greater Debug_total then(
+			print_message Debug_total ("\nComputing the guards g(x)");
+			List.iter (fun guard -> 
+				print_message Debug_total (LinearConstraint.string_of_linear_constraint program.variable_names guard);
+			) guards;
+		);
+		print_message Debug_total ("\nPerforming intersection of Di = di and C(X) and g(X)");
+		(* Add the (old) value for discrete to the guards D_i = d_i and g(X) *)
+		LinearConstraint.intersection_assign current_constraint ((orig_constraint ()) :: guards);
+		(* Debug print *)
+		if debug_mode_greater Debug_total then(
+			print_message Debug_total (LinearConstraint.string_of_linear_constraint program.variable_names current_constraint);
+		);
 	
+		(* Check here for unsatisfiability *)
+		if not (LinearConstraint.is_satisfiable current_constraint) then (
+			print_message Debug_high "skip transition";
+			raise Unsat_exception
+		);
+		
+(*		(* Add C(X) *)
+		print_message Debug_total ("\nPerforming intersection of C(X) and g(X)");
+		LinearConstraint.intersection_assign current_constraint [orig_constraint ()];
+		(* Debug print *)
+		if debug_mode_greater Debug_total then(
+			print_message Debug_total (LinearConstraint.string_of_linear_constraint program.variable_names current_constraint);
+		);
+
+		(* Check here for unsatisfiability *)
+		if not (LinearConstraint.is_satisfiable current_constraint) then (
+			print_message Debug_high "skip transition";
+			raise Unsat_exception
+		);*)
+
+		print_message Debug_total ("\nEliminate the discrete variables in g(X)");
+		(* Remove the discrete variables (Exists D_i : D_i = d_i and g(X)) *)
+		LinearConstraint.hide_assign program.discrete current_constraint;
+		(* Debug print *)
+		if debug_mode_greater Debug_total then(
+			print_message Debug_total (LinearConstraint.string_of_linear_constraint program.variable_names current_constraint);
+		);
+		
+		print_message Debug_total ("\nProjecting C(X) and g(X) onto rho");
+		rho_assign program current_constraint clock_updates;
+		(* Debug print *)
+		if debug_mode_greater Debug_total then(
+			print_message Debug_total ("\nResult:");
+			print_message Debug_total (LinearConstraint.string_of_linear_constraint program.variable_names current_constraint);
+		);
+
+		(* Compute the invariant in the destination location I_q(X) *)
+		print_message Debug_total ("\nComputing invariant I_q(X)");
+		let invariant = compute_invariant program dest_location in
+		(* Debug print *)
+		if debug_mode_greater Debug_total then(
+			print_message Debug_total (LinearConstraint.string_of_linear_constraint program.variable_names invariant);
+		);
+(*		(* Make a copy of the invariant in the destination location I_q(X) (will be used later) *)
+		let invariant_copy = LinearConstraint.copy invariant in
+		(* Project I_q(X) onto rho : hide within I_q(X) clocks X' to be reset, and add X' = 0 *)
+		print_message Debug_total ("\nComputing invariant I_q(X) projected onto rho");
+		rho_assign program invariant clock_updates;
+		(* Debug print *)
+		if debug_mode_greater Debug_total then(
+			print_message Debug_total ("\nResult:");
+			print_message Debug_total (LinearConstraint.string_of_linear_constraint program.variable_names invariant);
+		);*)
+
+		(* Perform the intersection *)
+		print_message Debug_total ("\nPerforming intersection of [C(X) and g(X)] rho and I_q(X)");
+		(* (Exists D_i : D_i = d_i and g(X)) *)
+		LinearConstraint.intersection_assign current_constraint [invariant];
+		(* Debug print *)
+		if debug_mode_greater Debug_total then(
+			print_message Debug_total (LinearConstraint.string_of_linear_constraint program.variable_names current_constraint);
+			if not (LinearConstraint.is_satisfiable current_constraint) then
+				print_message Debug_total ("This constraint is NOT satisfiable.");
+		);
+
+		(* Check here for unsatisfiability *)
+		if not (LinearConstraint.is_satisfiable current_constraint) then (
+			print_message Debug_high "skip transition";
+			raise Unsat_exception
+		);
+
+		(* Perform time elapsing *)
+		print_message Debug_total ("\nPerforming time elapsing on [C(X) and g(X)] rho and I_q(X)");
+		LinearConstraint.time_elapse_assign program.clocks (List.rev_append program.discrete program.parameters) current_constraint ;
+		(* Debug print *)
+		if debug_mode_greater Debug_total then(
+			print_message Debug_total (LinearConstraint.string_of_linear_constraint program.variable_names current_constraint);
+		);
+
+		(* Compute the equalities for the discrete variables (in destination location) *)
+		let discrete_values = List.map (fun discrete_index -> discrete_index, (Automaton.get_discrete_value dest_location discrete_index)) program.discrete in
+		(* Convert to a constraint *)
+		let discrete_constraint = instantiate_discrete discrete_values in
+		
+		(* Perform the intersection *)
+		print_message Debug_total ("\nPerforming intersection of the constraint with D_i = d_i and I_q(X) ");
+		LinearConstraint.intersection_assign current_constraint
+			[
+				discrete_constraint;
+				invariant;
+			];
+		(* Debug print *)
+		if debug_mode_greater Debug_total then(
+			print_message Debug_total (LinearConstraint.string_of_linear_constraint program.variable_names current_constraint);
+			if not (LinearConstraint.is_satisfiable current_constraint) then
+				print_message Debug_total ("This constraint is NOT satisfiable.");
+		);
+
+		(* Hide discrete' *)
+		print_message Debug_total ("\nHide discrete variables ");
+		LinearConstraint.hide_assign (program.discrete) current_constraint;
+		(* Debug print *)
+		if debug_mode_greater Debug_total then(
+			print_message Debug_total (LinearConstraint.string_of_linear_constraint program.variable_names current_constraint);
+			if not (LinearConstraint.is_satisfiable current_constraint) then
+				print_message Debug_total ("This constraint is NOT satisfiable.");
+		);
+		(* return the final constraint *)
+		Some current_constraint
+	) with Unsat_exception -> None
+
+
 (*------------------------------------------------*)
 (* Computes next combination of indices           *)
 (* current_indexes : combination                  *)
@@ -758,13 +978,25 @@ let post program pi0 reachability_graph orig_state_index =
 			(* Compute the new location for the current combination of transitions *)
 			let location, guards, clock_updates = compute_new_location program real_indexes current_transitions action_index original_location in
 			
-			(* Compute the new constraint for the current transition *)
-			let new_constraint = compute_new_constraint program orig_constraint original_location location guards clock_updates in
-	
+			(* Compute the new constraint for the current transition (VERSION with X' = X + d) *)
+(* 			let new_constraint = compute_new_constraint program orig_constraint original_location location guards clock_updates in *)
+			(* Compute the new constraint for the current transition (VERSION with no duplicate variables) *)
+			let new_constraint2 = compute_new_constraint2 program orig_constraint discrete_constr original_location location guards clock_updates in
+			(** ADDED BY ETIENNE FOR COMPARING BOTH APPROACHES *)
+(*			let _ = 
+			match new_constraint, new_constraint2 with
+				| None, None -> ()
+				| Some c1, Some c2 -> (if not (LinearConstraint.is_equal c1 c2) then(
+					print_error "Unsound program."; abort_program ()
+					));
+				| _ -> print_error "Unsound program."; abort_program ()
+			in ();*)
+			let new_constraint = new_constraint2 in
+			
 			(* Check the satisfiability *)
 			match new_constraint with
 				| None -> 
-					print_message Debug_high ("\nThis constraint is not satisfiable.");	
+					print_message Debug_high ("\nThis constraint is not satisfiable.");
 				| Some final_constraint ->(					
 					if not (LinearConstraint.is_satisfiable final_constraint) then(
 						print_message Debug_high ("\nThis constraint is not satisfiable.");
@@ -981,6 +1213,10 @@ let post_star program pi0 init_state =
 		print_message Debug_standard "Statistics on Graph";
 		print_message Debug_standard "--------------------";
 		print_message Debug_standard (Graph.get_statistics ());
+		print_message Debug_standard "--------------------";
+		print_message Debug_standard "Statistics on Cache";
+		print_message Debug_standard "--------------------";
+		print_stats ();
 	);
 
 	(*--------------------------------------------------*)

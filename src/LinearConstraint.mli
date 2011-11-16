@@ -188,6 +188,13 @@ val rename_variables_assign : (variable * variable) list -> linear_constraint ->
 (** 'add_d d coef variables c' adds a variable 'coef * d' to any variable in 'variables' *)
 val add_d : variable -> coef -> variable list -> linear_constraint -> linear_constraint
 
+(** Perform time elapsing on a set of variables: the first variable list will elapse, the second will remain constant *)
+val time_elapse  : variable list -> variable list -> linear_constraint -> linear_constraint
+
+(** Perform time elapsing on a set of variables; version with side effects *)
+val time_elapse_assign  : variable list -> variable list -> linear_constraint -> unit
+
+
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
 (** {3 Conversion} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)

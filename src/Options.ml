@@ -153,7 +153,7 @@ class imitator_options =
 				("-acyclic", Set acyclic, " Test if a new state was already encountered only with states of the same depth. To be set only if the system is fully acyclic (no backward branching, i.e., no cycle). Default: 'false'");		
 				("-debug", String set_debug_mode_ref, " Print more or less information. Can be set to 'nodebug', 'standard', 'low', 'medium', 'high', 'total'. Default: 'standard'");
 				("-dynamic", Set dynamic, "Perform the on-the-fly intersection. Defaut : 'false'");
-				("-IMincl", Set inclusion, " Algorithm IMIncl : consider an inclusion of region instead of the equality when performing the Post operation. Default: 'false'");
+				("-incl", Set inclusion, " Consider an inclusion of region instead of the equality when performing the Post operation (e.g., implemented in algorithm IMincl). Default: 'false'");
 				("-IMorig", Set pi_compatible, " Algorithm IMoriginal : return a constraint such that no pi-incompatible state can be reached. Default: 'false'");
 				("-IMunion", Set union, " Algorithm IMUnion : Returns the union of the constraint on the parameters associated to the last state of each trace. Default: 'false'");
 				("-log-prefix", Set_string program_prefix, " Sets the prefix for log files. Default: [program_file].");

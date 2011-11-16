@@ -165,6 +165,8 @@ exe:
 # 	$(TARGET) $(EXAMPLE_PATH)/Proprietes/exCTL.imi $(EXAMPLE_PATH)/Proprietes/exCTL.pi0
 #	$(TARGET) $(EXAMPLE_PATH)/Proprietes/exCTL.imi $(EXAMPLE_PATH)/Proprietes/exCTL.pi0 -PTA2CLP
 
+# 	$(TARGET) $(EXAMPLE_PATH)/Tests/testPost.imi -mode reachability -statistics -debug total
+# 	$(TARGET) $(EXAMPLE_PATH)/Tests/testPostSansDiscrete.imi -mode reachability -statistics -debug total
 
 ##### CASE STUDIES : HARDWARE #####
 
@@ -173,10 +175,13 @@ exe:
 # 	$(TARGET) $(EXAMPLE_PATH)/AndOr/AndOr.imi $(EXAMPLE_PATH)/AndOr/AndOr.pi0
 # 	$(TARGET) $(EXAMPLE_PATH)/AndOr/AndOr.imi $(EXAMPLE_PATH)/AndOr/AndOr.v0 -mode cover
 
-	$(TARGET) $(EXAMPLE_PATH)/Flipflop/flipflop.imi -mode reachability -statistics
+# 	$(TARGET) $(EXAMPLE_PATH)/Flipflop/flipflop.imi -mode reachability -statistics
+# 	bin/IMITATOR2.35.111115 $(EXAMPLE_PATH)/Flipflop/flipflop.imi -mode reachability
+# 	bin/IMITATOR2.36.111115 $(EXAMPLE_PATH)/Flipflop/flipflop.imi -mode reachability
+
 # 	$(TARGET) $(EXAMPLE_PATH)/Flipflop/flipflop.imi -mode reachability -tree -debug low
 # 	$(TARGET) $(EXAMPLE_PATH)/Flipflop/flipflop.imi -mode reachability -acyclic -debug low
-# 	./IMITATOR Examples/Flipflop/flipflop.imi Examples/Flipflop/flipflop.pi0
+# 	$(TARGET) $(EXAMPLE_PATH)/Flipflop/flipflop.imi $(EXAMPLE_PATH)/Flipflop/flipflop.pi0
 # 	./IMITATOR Examples/Flipflop/flipflop.imi Examples/Flipflop/flipflop.v0 -mode cover -log-prefix Examples/Flipflop/carto_d3_d4/carto_d3_d4
 # 	./IMITATOR Examples/Flipflop/flipflop.imi Examples/Flipflop/flipflop.v0 -mode cover -log-prefix Examples/Flipflop/carto_d3_d4_timeafterCK/carto_d3_d4_timeafterCK
 # 	./IMITATOR Examples/Flipflop/flipflop.imi Examples/Flipflop/flipflop.v0 -mode cover -log-prefix Examples/Flipflop/test/test
@@ -262,8 +267,9 @@ exe:
 
 
 ##### JOB SHOP #####
-#	$(TARGET) $(EXAMPLE_PATH)/Jobshop/maler_2_4.imi -mode reachability -no-dot
-
+	$(TARGET) $(EXAMPLE_PATH)/Jobshop/maler_2_4.imi -mode reachability -no-dot -incl -statistics
+# 	bin/IMITATOR2.35.111115 $(EXAMPLE_PATH)/Jobshop/maler_2_4.imi -mode reachability -no-dot -IMunion
+	bin/IMITATOR2.36.111115 $(EXAMPLE_PATH)/Jobshop/maler_2_4.imi -mode reachability -no-dot -IMincl
 
 
 ##### ANCIEN #####
