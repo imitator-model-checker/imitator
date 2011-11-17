@@ -227,8 +227,8 @@ exe:
 # 	./IMITATOR Examples/BRP/brp.imi Examples/BRP/brp.v0 -mode cover
 
 # 	./IMITATOR Examples/RCP/RCP.imi -mode reachability
-	$(TARGET) $(EXAMPLE_PATH)/RCP.imi $(EXAMPLE_PATH)/RCP/RCP.pi0 -no-dot -no-log
-	bin/IMITATOR2.36.111115 $(EXAMPLE_PATH)/RCP.imi $(EXAMPLE_PATH)/RCP/RCP.pi0 -no-dot -no-log
+	$(TARGET) $(EXAMPLE_PATH)/RCP/RCP.imi $(EXAMPLE_PATH)/RCP/RCP.pi0 -no-dot -no-log
+	bin/IMITATOR2.36.111115 $(EXAMPLE_PATH)/RCP/RCP.imi $(EXAMPLE_PATH)/RCP/RCP.pi0 -no-dot -no-log
 # 	./IMITATOR Examples/RCP/RCP.imi Examples/RCP/RCP.v0 -mode cover -no-dot -log-prefix Examples/RCP/temp/RCP -no-log
 
 # 	./IMITATOR Examples/RCP/RCP_bounded.imi Examples/RCP/RCP_bounded.pi0 -no-dot -no-log
@@ -278,6 +278,9 @@ exe:
 
 	$(TARGET) $(EXAMPLE_PATH)/Jobshop/maler_3_4.imi -mode reachability -no-dot -no-log -incl -statistics -post-limit 12
 	bin/IMITATOR2.36.111115 $(EXAMPLE_PATH)/Jobshop/maler_3_4.imi -mode reachability -no-dot -no-log -IMincl -post-limit 12
+
+# 	$(TARGET) $(EXAMPLE_PATH)/Jobshop/maler_3_4.imi -mode reachability -no-dot -no-log -incl -statistics
+# 	bin/IMITATOR2.36.111115 $(EXAMPLE_PATH)/Jobshop/maler_3_4.imi -mode reachability -no-dot -no-log -IMincl
 
 
 ##### ANCIEN #####

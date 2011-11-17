@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre, Ulrich Kuehne, Romain Soulat
  * Created:       2010/07/22
- * Last modified: 2010/11/15
+ * Last modified: 2010/11/17
  *
  **************************************************)
 
@@ -24,6 +24,8 @@ type returned_constraint =
 
 
 val create_initial_state : abstract_program -> state
+(* working version *)
+val create_initial_state2 : abstract_program -> state
 
 val post : abstract_program -> pi0 -> reachability_graph -> state_index -> state_index list
 

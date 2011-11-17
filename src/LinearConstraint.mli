@@ -191,7 +191,7 @@ val add_d : variable -> coef -> variable list -> linear_constraint -> linear_con
 (** Perform time elapsing on a set of variables: the first variable list will elapse, the second will remain constant *)
 val time_elapse  : variable list -> variable list -> linear_constraint -> linear_constraint
 
-(** Perform time elapsing on a set of variables; version with side effects *)
+(** 'time_elapse_assign variables_elapse variables_constant linear_constraint' performs time elapsing on a set of variables variables_elapse; other variables remain constant; version with side effects; behavior is unspecified if some variables within linear_constraint do not appear in any set of variables *)
 val time_elapse_assign  : variable list -> variable list -> linear_constraint -> unit
 
 

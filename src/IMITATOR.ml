@@ -746,8 +746,24 @@ if not (LinearConstraint.is_satisfiable init_constraint) then (
 );
 
 (* Get the initial state after time elapsing *)
-let init_state_after_time_elapsing = Reachability.create_initial_state program in
+let init_state_after_time_elapsing = Reachability.create_initial_state2 program in
 let _, initial_constraint_after_time_elapsing = init_state_after_time_elapsing in
+
+(*(* COMPARISON *)
+let init_state_after_time_elapsing2 = Reachability.create_initial_state2 program in
+let _, initial_constraint_after_time_elapsing2 = init_state_after_time_elapsing2 in
+
+if(LinearConstraint.is_equal initial_constraint_after_time_elapsing initial_constraint_after_time_elapsing2) then(
+	print_message Debug_standard ("\n INITIAL STATE OK :o)");
+	terminate_program ();
+)else (
+	print_error ("\n INITIAL STATES DIFFERENT.");
+	print_message Debug_standard ("\n 1) \n" ^ (LinearConstraint.string_of_linear_constraint program.variable_names initial_constraint_after_time_elapsing));
+	print_message Debug_standard ("\n 2) \n" ^ (LinearConstraint.string_of_linear_constraint program.variable_names initial_constraint_after_time_elapsing2));
+	abort_program ();
+);*)
+
+
 (* Check the satisfiability *)
 if not (LinearConstraint.is_satisfiable initial_constraint_after_time_elapsing) then (
 	print_warning "The initial constraint of the program after time elapsing is not satisfiable.";

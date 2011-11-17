@@ -690,15 +690,18 @@ let intersection linear_constraints =
 	
 (** Eliminate a set of variables, side effects version *)
 let hide_assign variables linear_constraint =
-	(* debug output *)
-	if debug_mode_greater Debug_total then (
-		print_message Debug_high "hide:";
-		List.iter (fun v -> print_message Debug_high ("  - v" ^ string_of_int v)) variables;
-	);
-	(* Statistics *)
-	ppl_nb_unconstrain := !ppl_nb_unconstrain + 1;
-	ppl_Polyhedron_unconstrain_space_dimensions linear_constraint variables;
-	assert_dimensions linear_constraint
+	(* Only hide a non-empty list *)
+	if List.length variables > 0 then (
+		(* debug output *)
+		if debug_mode_greater Debug_total then (
+			print_message Debug_high "hide:";
+			List.iter (fun v -> print_message Debug_high ("  - v" ^ string_of_int v)) variables;
+		);
+		(* Statistics *)
+		ppl_nb_unconstrain := !ppl_nb_unconstrain + 1;
+		ppl_Polyhedron_unconstrain_space_dimensions linear_constraint variables;
+		assert_dimensions linear_constraint
+	)
 
 
 	(** Eliminate (using existential quantification) a set of variables in a linear constraint *)

@@ -245,6 +245,63 @@ let create_initial_state program =
 	initial_location, final_constraint
 
 
+(*--------------------------------------------------*)
+(* Compute the initial state with the initial invariants and time elapsing *)
+(*--------------------------------------------------*)
+let create_initial_state2 program =
+	(* Get the declared init state with initial constraint C_0(X) *)
+	let initial_location, init_constraint = program.init in
+	
+	(* Compute the invariants I_q0(X) for the initial locations *)
+	print_message Debug_high ("\nComputing initial invariant I_q0(X)");
+	(* Create the invariant *)
+	let invariant = compute_plain_invariant program initial_location in
+	(* Debug *)
+	if debug_mode_greater Debug_total then
+		print_message Debug_total (LinearConstraint.string_of_linear_constraint program.variable_names invariant);
+	
+	(* Compute constraint for assigning a (constant) value to discrete variables *)
+	print_message Debug_high ("Computing constraint for discrete variables");
+	let discrete_values = List.map (fun discrete_index -> discrete_index, (Automaton.get_discrete_value initial_location discrete_index)) program.discrete in
+	(* Constraint of the form D_i = d_i *)
+	let discrete_constraint = instantiate_discrete discrete_values in
+	(* Debug *)
+	if debug_mode_greater Debug_total then
+		print_message Debug_total (LinearConstraint.string_of_linear_constraint program.variable_names discrete_constraint);
+	
+	(* Perform intersection of C(X) and I_q0(X) and D_i = d_i *)
+	print_message Debug_high ("Performing intersection of C0(X) and I_q0(X) and D_i = d_i");
+	let current_constraint = LinearConstraint.intersection [init_constraint ; invariant ; discrete_constraint (** To optimize: could be removed *)] in
+	(* Debug *)
+	if debug_mode_greater Debug_total then
+		print_message Debug_total (LinearConstraint.string_of_linear_constraint program.variable_names current_constraint);
+	
+	(* Perform time elapsing *)
+	print_message Debug_high ("Performing time elapsing on [ C0(X) and I_q0(X) and D_i = d_i ]");
+	LinearConstraint.time_elapse_assign program.clocks (List.rev_append program.discrete program.parameters) current_constraint;
+	(* Debug *)
+	if debug_mode_greater Debug_total then
+		print_message Debug_total (LinearConstraint.string_of_linear_constraint program.variable_names current_constraint);
+	
+	(* Perform intersection of [C(X) and I_q0(X) and D_i = d_i]time with I_q0(X) and D_i = d_i *)
+	print_message Debug_high ("Performing intersection of [C0(X) and I_q0(X) and D_i = d_i]time and I_q0(X) and D_i = d_i");
+	LinearConstraint.intersection_assign current_constraint [invariant ; discrete_constraint];
+	(* Debug *)
+	if debug_mode_greater Debug_total then
+		print_message Debug_total (LinearConstraint.string_of_linear_constraint program.variable_names current_constraint);
+	
+	(* Hide discrete *)
+	print_message Debug_high ("Hide discrete");
+	LinearConstraint.hide_assign program.discrete current_constraint;
+	(* Debug *)
+	if debug_mode_greater Debug_total then
+		print_message Debug_total (LinearConstraint.string_of_linear_constraint program.variable_names current_constraint);
+
+	(* Return the initial state *)
+	initial_location, current_constraint
+
+
+
 
 (*--------------------------------------------------*)
 (* Compute a list of possible actions for a state   *)
