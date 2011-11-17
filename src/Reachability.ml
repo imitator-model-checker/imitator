@@ -74,7 +74,7 @@ let compute_plain_invariant program location =
 	LinearConstraint.intersection invariants
 
 
-(*--------------------------------------------------*)
+(*(*--------------------------------------------------*)
 (* Compute the invariant I_q(X') and I_q(X' - d ) associated to a location,  *)
 (* including renaming and time elapse.  *)
 (*--------------------------------------------------*)
@@ -87,7 +87,7 @@ let compute_invariants program location =
 	let invariant_before_time_elapse = LinearConstraint.add_d program.d NumConst.minus_one program.renamed_clocks invariant in
 	(* intersection of those constraints: I_q(X') and I_q(X' - d ) *)
 	LinearConstraint.intersection_assign invariant [invariant_before_time_elapse];
-	invariant
+	invariant*)
 
 
 (*--------------------------------------------------*)
@@ -178,11 +178,11 @@ let instantiate_discrete discrete_values =
 	LinearConstraint.make inequalities
 
 
-
+(*
 (*--------------------------------------------------*)
 (* Compute the initial state with the initial invariants and time elapsing *)
 (*--------------------------------------------------*)
-let create_initial_state program =
+let create_initial_state_ANCIEN program =
 	(* Get the declared init state with initial constraint C_0(X) *)
 	let initial_location, init_constraint = program.init in
 	
@@ -242,13 +242,13 @@ let create_initial_state program =
 	(* Debug *)
 	if debug_mode_greater Debug_total then print_message Debug_total (LinearConstraint.string_of_linear_constraint program.variable_names final_constraint);
 	(* Return the initial state *)
-	initial_location, final_constraint
+	initial_location, final_constraint*)
 
 
 (*--------------------------------------------------*)
 (* Compute the initial state with the initial invariants and time elapsing *)
 (*--------------------------------------------------*)
-let create_initial_state2 program =
+let create_initial_state program =
 	(* Get the declared init state with initial constraint C_0(X) *)
 	let initial_location, init_constraint = program.init in
 	
@@ -278,7 +278,7 @@ let create_initial_state2 program =
 	
 	(* Perform time elapsing *)
 	print_message Debug_high ("Performing time elapsing on [ C0(X) and I_q0(X) and D_i = d_i ]");
-	LinearConstraint.time_elapse_assign program.clocks (List.rev_append program.discrete program.parameters) current_constraint;
+	LinearConstraint.time_elapse_assign program.clocks program.parameters_and_discrete current_constraint;
 	(* Debug *)
 	if debug_mode_greater Debug_total then
 		print_message Debug_total (LinearConstraint.string_of_linear_constraint program.variable_names current_constraint);
@@ -422,7 +422,7 @@ let compute_new_location program aut_table trans_table action_index original_loc
 	(location, guards, clock_updates)
 	
 	
-	
+	(*
 (*------------------------------------------------------------*)
 (* Compute the clock updates for a given transition           *)
 (* clock_updates: list of lists of variables to be reset      *)
@@ -430,7 +430,7 @@ let compute_new_location program aut_table trans_table action_index original_loc
 (* returns a couple of constraints, representing the updated  *)
 (* and the non-updated clocks                                 *)
 (*------------------------------------------------------------*)
-let compute_updates program clock_updates =
+let compute_updates_ANCIEN program clock_updates =
 	(* merge updates *)
 	(** BAD PROG: exponential *)
 	let clock_updates = List.fold_left (fun updates local_updates -> 
@@ -508,9 +508,9 @@ let compute_updates program clock_updates =
 		Cache.store upd_cache clock_updates updates;
 		(* return constraint *)
 		updates
-	)
+	)*)
 
-
+(*
 (*--------------------------------------------------*)	
 (* Compute the new constraint for a transition      *)
 (* orig_constraint : contraint in source location   *)
@@ -519,7 +519,7 @@ let compute_updates program clock_updates =
 (* guards          : guard constraints per automaton*)
 (* clock_updates   : updated clock variables        *)
 (*--------------------------------------------------*)
-let compute_new_constraint program orig_constraint orig_location dest_location guards clock_updates =
+let compute_new_constraint_ANCIEN program orig_constraint orig_location dest_location guards clock_updates =
 	print_message Debug_total ("\n***********************************");
 	print_message Debug_total ("Entering compute_new_constraint");
 	print_message Debug_total ("***********************************");
@@ -620,7 +620,8 @@ let compute_new_constraint program orig_constraint orig_location dest_location g
 		);
 		(* return the final constraint *)
 		Some new_constraint
-	) with Unsat_exception -> None
+	) with Unsat_exception -> None*)
+
 
 (*--------------------------------------------------*)	
 (* Compute the new constraint for a transition      *)
@@ -631,10 +632,10 @@ let compute_new_constraint program orig_constraint orig_location dest_location g
 (* guards          : guard constraints per automaton*)
 (* clock_updates   : updated clock variables        *)
 (*--------------------------------------------------*)
-let compute_new_constraint2 program orig_constraint discrete_constr orig_location dest_location guards clock_updates =
+let compute_new_constraint program orig_constraint discrete_constr orig_location dest_location guards clock_updates =
 	if debug_mode_greater Debug_total then(
 		print_message Debug_total ("\n***********************************");
-		print_message Debug_total ("Entering compute_new_constraint2");	
+		print_message Debug_total ("Entering compute_new_constraint");	
 		print_message Debug_total ("***********************************");
 		print_message Debug_total ("C = " ^ (LinearConstraint.string_of_linear_constraint program.variable_names (orig_constraint ())));
 	);
@@ -739,7 +740,7 @@ let compute_new_constraint2 program orig_constraint discrete_constr orig_locatio
 
 		(* Perform time elapsing *)
 		print_message Debug_total ("\nPerforming time elapsing on [C(X) and g(X)] rho and I_q(X)");
-		LinearConstraint.time_elapse_assign program.clocks (List.rev_append program.discrete program.parameters) current_constraint ;
+		LinearConstraint.time_elapse_assign program.clocks program.parameters_and_discrete current_constraint ;
 		(* Debug print *)
 		if debug_mode_greater Debug_total then(
 			print_message Debug_total (LinearConstraint.string_of_linear_constraint program.variable_names current_constraint);
@@ -1043,7 +1044,7 @@ let post program pi0 reachability_graph orig_state_index =
 			(* Compute the new constraint for the current transition (VERSION with X' = X + d) *)
 (* 			let new_constraint = compute_new_constraint program orig_constraint original_location location guards clock_updates in *)
 			(* Compute the new constraint for the current transition (VERSION with no duplicate variables) *)
-			let new_constraint2 = compute_new_constraint2 program orig_constraint discrete_constr original_location location guards clock_updates in
+			let new_constraint = compute_new_constraint program orig_constraint discrete_constr original_location location guards clock_updates in
 (*			(** ADDED BY ETIENNE FOR COMPARING BOTH APPROACHES *)
 			let new_constraint = 
 			match new_constraint, new_constraint2 with
@@ -1058,7 +1059,7 @@ let post program pi0 reachability_graph orig_state_index =
 					print_error "Bad computation (one None found, one satisfiable)."; abort_program ()
 					)); new_constraint2
 			in*)
-			let new_constraint = new_constraint2 in
+(* 			let new_constraint = new_constraint2 in *)
 			
 			let _ =
 			(* Check the satisfiability *)

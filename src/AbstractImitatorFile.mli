@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2009/09/11
- * Last modified: 2011/11/15
+ * Last modified: 2011/11/17
  *
  ****************************************************************)
 
@@ -103,12 +103,15 @@ type abstract_program = {
 	parameters : parameter_index list;
 	(* The non parameters (clocks and discrete) *)
 	clocks_and_discrete : variable_index list;
+	(* The non clocks (parameters and discrete) *)
+	parameters_and_discrete : variable_index list;
 	(* The function : variable_index -> variable name *)
 	variable_names : variable_index -> variable_name;
 	(* The type of variables *)
 	type_of_variables : variable_index -> var_type;
 	
-	(* Renamed clocks *)
+	(* END OF X' AND D *)
+(*	(* Renamed clocks *)
 	renamed_clocks : variable_index list;
 	(* True for renamed clocks, false otherwise *)
 	is_renamed_clock : variable_index -> bool;
@@ -121,7 +124,7 @@ type abstract_program = {
 	(* Couples (x, x') for clock renamings *)
 	renamed_clocks_couples : (variable_index * variable_index) list;
 	(* Couples (x', x) for clock 'un'-renamings *)
-	unrenamed_clocks_couples : (variable_index * variable_index) list;
+	unrenamed_clocks_couples : (variable_index * variable_index) list;*)
 
 	(* The automata *)
 	automata : automaton_index list;
@@ -151,8 +154,9 @@ type abstract_program = {
 	(* The transitions for each automaton and each location and each action *)
 	transitions : automaton_index -> location_index -> action_index -> (transition list);
 
-	(* Time elapsing constraint : d >= 0 *)
-	positive_d : linear_constraint;
+	(* END OF X' AND D *)
+(*	(* Time elapsing constraint : d >= 0 *)
+	positive_d : linear_constraint;*)
 
 	(* Init : the initial state *)
 	init : state;

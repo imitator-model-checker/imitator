@@ -7,7 +7,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2009/09/09
- * Last modified: 2010/03/29
+ * Last modified: 2011/11/17
  *
  ****************************************************************)
 
@@ -1204,8 +1204,10 @@ let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_
 	(* Set the LinearConstraint manager *) 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	let nb_integer_variables = 0 in
-	(* 'nb_variables' represent the total number of variables, including renamings and 'd' (see below) *)
-	let nb_real_variables = 2 * (nb_analogs + nb_clocks  + nb_discrete) + nb_parameters + 1 in
+	(* 'nb_variables' represent the total number of variables *)
+	(* END OF X' AND D *)
+(* 	let nb_real_variables = 2 * (nb_analogs + nb_clocks  + nb_discrete) + nb_parameters + 1 in *)
+	let nb_real_variables = nb_analogs + nb_clocks  + nb_discrete + nb_parameters in
 	LinearConstraint.set_manager nb_integer_variables nb_real_variables;
 
 
@@ -1430,7 +1432,8 @@ let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Add more variables to allow renaming *) 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	print_message Debug_total ("*** Building renamed variables...");
+	(* END OF X' AND D *)
+(*	print_message Debug_total ("*** Building renamed variables...");
 	(* The renamed variable indexes are set just after the current variables *)
 	let offset = nb_analogs + nb_clocks + nb_discrete in
 	let prime_of_variable variable_index = variable_index + offset in
@@ -1443,42 +1446,46 @@ let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_
 	let renamed_clocks = list_of_interval nb_variables (d - 1) in
 
 	(* Create the function is_renamed_clock *)
-	let is_renamed_clock  = (fun variable_index -> variable_index >= nb_variables + nb_analogs && variable_index < d) in
+	let is_renamed_clock  = (fun variable_index -> variable_index >= nb_variables + nb_analogs && variable_index < d) in*)
 
 	(* Create an array for all variable names with renamings *)
-	let array_of_variable_names = Array.make (nb_variables + nb_analogs + nb_clocks + 1) "" in
+	(* END OF X' AND D *)
+(* 	let array_of_variable_names = Array.make (nb_variables + nb_analogs + nb_clocks + 1) "" in *)
+	let array_of_variable_names = Array.make nb_variables "" in
 	(* Add normal names *)
 	for variable_index = 0 to nb_variables - 1 do
 		array_of_variable_names.(variable_index) <- variables.(variable_index);
 	done;
-	(* Add renamed clocks and discrete *)
+	(* END OF X' AND D *)
+(*	(* Add renamed clocks and discrete *)
 	for variable_index = nb_variables to d - 1 do
 		array_of_variable_names.(variable_index) <- variables.(variable_of_prime variable_index) ^ "_PRIME";
 	done;
 	(* Add 'd' *)
 	(**** TO DO: should avoid the declaration of 'd' as a variable name (to do later, and only important in debug mode...) *)
-	array_of_variable_names.(d) <- "d";
+	array_of_variable_names.(d) <- "d";*)
 
 	 (* Create the functional representation *)
 	let variable_names = fun i -> array_of_variable_names.(i) in
 
-	(* Couples (x, x') for renamings *)
+(*	(* Couples (x, x') for renamings *)
 	let renamed_clocks_couples = List.map (fun index -> index, prime_of_variable index) clocks in
 	
 	(* Couples (x', x) for 'un'-renamings *)	
-	let unrenamed_clocks_couples = List.map (fun index -> prime_of_variable index, index) clocks in	
+	let unrenamed_clocks_couples = List.map (fun index -> prime_of_variable index, index) clocks in	*)
 
 
 	(* Variables *)
-	print_message Debug_high ("\n*** Variables with renamings:");
-	for i = 0 to d do
+	print_message Debug_high ("\n*** Variables:");
+	for i = 0 to nb_variables - 1 do
 		print_message Debug_high ("  "
 			^ (string_of_int i) ^ " : " ^ (variable_names i)
-			^ (if is_renamed_clock i then " (renamed clock)" else "")
+(* 			^ (if is_renamed_clock i then " (renamed clock)" else "") *)
 		);
 	done;
 
-	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(* END OF X' AND D *)
+(*	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Useful (static) constraints *) 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	print_message Debug_total ("\n*** Computing constraint d >= 0 :");
@@ -1493,7 +1500,7 @@ let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_
 	(* Time elapsing constraint *)
 	let positive_d = LinearConstraint.make [positive_d] in (* :: time_elapsing_inequalities) in*)
 
-	print_message Debug_total (LinearConstraint.string_of_linear_constraint variable_names positive_d);
+	print_message Debug_total (LinearConstraint.string_of_linear_constraint variable_names positive_d);*)
 
 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -1588,12 +1595,15 @@ let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_
 	parameters = parameters;
 	(* The non parameters (clocks and discrete) *)
 	clocks_and_discrete = list_append clocks discrete;
+	(* The non clocks (parameters and discrete) *)
+	parameters_and_discrete = list_append parameters discrete;
 	(* The function : variable_index -> variable name *)
 	variable_names = variable_names;
 	(* The type of variables *)
 	type_of_variables = type_of_variables;
 
-	(* Renamed clocks *)
+	(* END OF X' AND D *)
+(*	(* Renamed clocks *)
 	renamed_clocks = renamed_clocks;
 	(* True for renamed clocks, false otherwise *)
 	is_renamed_clock = is_renamed_clock;
@@ -1606,7 +1616,7 @@ let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_
 	(* Couples (x, x') for clock renamings *)
 	renamed_clocks_couples = renamed_clocks_couples;
 	(* Couples (x', x) for clock 'un'-renamings *)
-	unrenamed_clocks_couples = unrenamed_clocks_couples;
+	unrenamed_clocks_couples = unrenamed_clocks_couples;*)
 
 	(* The automata *)
 	automata = automata;
@@ -1636,8 +1646,9 @@ let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_
 	(* The transitions for each automaton and each location and each action *)
 	transitions = transitions;
 
-	(* Time elapsing constraint : d >= 0 *)
-	positive_d = positive_d;
+	(* END OF X' AND D *)
+(*	(* Time elapsing constraint : d >= 0 *)
+	positive_d = positive_d;*)
 
 	(* Init : the initial state *)
 	init = initial_state;

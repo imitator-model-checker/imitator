@@ -746,7 +746,7 @@ if not (LinearConstraint.is_satisfiable init_constraint) then (
 );
 
 (* Get the initial state after time elapsing *)
-let init_state_after_time_elapsing = Reachability.create_initial_state2 program in
+let init_state_after_time_elapsing = Reachability.create_initial_state program in
 let _, initial_constraint_after_time_elapsing = init_state_after_time_elapsing in
 
 (*(* COMPARISON *)

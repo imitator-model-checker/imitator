@@ -13,7 +13,7 @@
 (** Version string *)
 (****************************************************************)
 
-let version_string = "2.35"
+let version_string = "2.36"
 
 let print_version_string _ = 
 	print_string ("IMITATOR " ^ version_string ^ "\n");

@@ -24,8 +24,6 @@ type returned_constraint =
 
 
 val create_initial_state : abstract_program -> state
-(* working version *)
-val create_initial_state2 : abstract_program -> state
 
 val post : abstract_program -> pi0 -> reachability_graph -> state_index -> state_index list
 
