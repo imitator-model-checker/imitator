@@ -563,6 +563,9 @@ if options#imitator_mode = Reachability_analysis && options#nb_args = 2 then
 (* Recall the arguments *)
 (**************************************************)
 
+(* File *)
+print_message Debug_standard ("Model: " ^ options#file);
+
 (* Global mode *)
 let message = match options#imitator_mode with
 	| Reachability_analysis -> "parametric reachability analysis"

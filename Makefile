@@ -175,9 +175,9 @@ exe:
 # 	$(TARGET) $(EXAMPLE_PATH)/AndOr/AndOr.imi $(EXAMPLE_PATH)/AndOr/AndOr.pi0
 # 	$(TARGET) $(EXAMPLE_PATH)/AndOr/AndOr.imi $(EXAMPLE_PATH)/AndOr/AndOr.v0 -mode cover
 
-# 	$(TARGET) $(EXAMPLE_PATH)/Flipflop/flipflop.imi -mode reachability -statistics
+	$(TARGET) $(EXAMPLE_PATH)/Flipflop/flipflop.imi -mode reachability -statistics
 # 	bin/IMITATOR2.35.111115 $(EXAMPLE_PATH)/Flipflop/flipflop.imi -mode reachability
-# 	bin/IMITATOR2.36.111115 $(EXAMPLE_PATH)/Flipflop/flipflop.imi -mode reachability
+	bin/IMITATOR2.36.111115 $(EXAMPLE_PATH)/Flipflop/flipflop.imi -mode reachability
 
 # 	$(TARGET) $(EXAMPLE_PATH)/Flipflop/flipflop.imi -mode reachability -tree -debug low
 # 	$(TARGET) $(EXAMPLE_PATH)/Flipflop/flipflop.imi -mode reachability -acyclic -debug low
@@ -196,7 +196,8 @@ exe:
 
 # 	./IMITATOR Examples/Flipflop-inverse/flipflop-inverse.imi -mode reachability
 
-# 	./IMITATOR Examples/Latch/latchValmem.imi -mode reachability
+	$(TARGET) $(EXAMPLE_PATH)/Latch/latchValmem.imi -mode reachability
+	bin/IMITATOR2.36.111115 $(EXAMPLE_PATH)/Latch/latchValmem.imi -mode reachability
 # 	./IMITATOR Examples/Latch/latchValmem.imi Examples/Latch/latchValmem.pi0 
 
 # 	./IMITATOR Examples/SRlatch/SRlatch.imi -mode reachability
@@ -220,12 +221,14 @@ exe:
 # 	./IMITATOR Examples/BangOlufsen/BangOlufsen2.imi -mode reachability -no-dot -post-limit 30 -debug low
 
 # 	./IMITATOR Examples/BRP/brp.imi -mode reachability
-# 	./IMITATOR Examples/BRP/brp.imi Examples/BRP/brp.pi0
+	$(TARGET) $(EXAMPLE_PATH)/BRP/brp.imi $(EXAMPLE_PATH)/BRP/brp.pi0
+	bin/IMITATOR2.36.111115 $(EXAMPLE_PATH)/BRP/brp.imi $(EXAMPLE_PATH)/BRP/brp.pi0
 # 	./IMITATOR Examples/BRP/brp.imi Examples/BRP/brp.pi0 -post-limit 10 -time-limit 2
 # 	./IMITATOR Examples/BRP/brp.imi Examples/BRP/brp.v0 -mode cover
 
 # 	./IMITATOR Examples/RCP/RCP.imi -mode reachability
-# 	./IMITATOR Examples/RCP/RCP.imi Examples/RCP/RCP.pi0 -no-dot -no-log
+	$(TARGET) $(EXAMPLE_PATH)/RCP.imi $(EXAMPLE_PATH)/RCP/RCP.pi0 -no-dot -no-log
+	bin/IMITATOR2.36.111115 $(EXAMPLE_PATH)/RCP.imi $(EXAMPLE_PATH)/RCP/RCP.pi0 -no-dot -no-log
 # 	./IMITATOR Examples/RCP/RCP.imi Examples/RCP/RCP.v0 -mode cover -no-dot -log-prefix Examples/RCP/temp/RCP -no-log
 
 # 	./IMITATOR Examples/RCP/RCP_bounded.imi Examples/RCP/RCP_bounded.pi0 -no-dot -no-log
@@ -240,8 +243,8 @@ exe:
 # 	./IMITATOR Examples/CSMACD/csmacdPrism_2p.imi Examples/CSMACD/csmacdPrism_2p.v0 -mode cover -log-prefix Examples/CSMACD/carto_2p/csmacdPrism_2p
 
 # 	./IMITATOR Examples/Wlan/wlan.imi -mode reachability
-	$(TARGET) $(EXAMPLE_PATH)/Wlan/wlan.imi $(EXAMPLE_PATH)/Wlan/wlan.pi0 -post-limit 9 -no-dot -no-log
-	bin/IMITATOR2.36.111115 $(EXAMPLE_PATH)/Wlan/wlan.imi $(EXAMPLE_PATH)/Wlan/wlan.pi0 -post-limit 9 -no-dot -no-log
+	$(TARGET) $(EXAMPLE_PATH)/Wlan/wlan.imi $(EXAMPLE_PATH)/Wlan/wlan.pi0 -post-limit 10 -no-dot -no-log
+	bin/IMITATOR2.36.111115 $(EXAMPLE_PATH)/Wlan/wlan.imi $(EXAMPLE_PATH)/Wlan/wlan.pi0 -post-limit 10 -no-dot -no-log
 
 # 	./IMITATOR Examples/Wlan/wlan_boff2.imi Examples/Wlan/wlan_boff2.pi0 -timed
 
@@ -270,8 +273,11 @@ exe:
 
 ##### JOB SHOP #####
 	$(TARGET) $(EXAMPLE_PATH)/Jobshop/maler_2_4.imi -mode reachability -no-dot -incl -statistics
-# 	bin/IMITATOR2.35.111115 $(EXAMPLE_PATH)/Jobshop/maler_2_4.imi -mode reachability -no-dot -IMunion
+# 	bin/IMITATOR2.35.111115 $(EXAMPLE_PATH)/Jobshop/maler_2_4.imi -mode reachability -no-dot -IMincl
 	bin/IMITATOR2.36.111115 $(EXAMPLE_PATH)/Jobshop/maler_2_4.imi -mode reachability -no-dot -IMincl
+
+	$(TARGET) $(EXAMPLE_PATH)/Jobshop/maler_3_4.imi -mode reachability -no-dot -no-log -incl -statistics -post-limit 12
+	bin/IMITATOR2.36.111115 $(EXAMPLE_PATH)/Jobshop/maler_3_4.imi -mode reachability -no-dot -no-log -IMincl -post-limit 12
 
 
 ##### ANCIEN #####

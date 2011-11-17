@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2010/03/04
- * Last modified: 2011/11/15
+ * Last modified: 2011/11/16
  *
  ****************************************************************)
 
@@ -20,6 +20,9 @@ open Ppl
 
 open Global
 open Gmp.Z.Infixes
+
+
+exception Unsat_exception
 
 (**************************************************)
 (* Statistics for the use of PPL *)
@@ -188,7 +191,12 @@ let get_constraints x =
 	(* Actual call to PPL *)
 	ppl_Polyhedron_get_constraints x
 
-	
+
+let ppl_intersection_assign x =
+	(* Statistics *)
+	ppl_nb_intersection_assign := !ppl_nb_intersection_assign + 1;
+	ppl_Polyhedron_intersection_assign x
+
 	
 (**************************************************)
 (* Useful Functions *)
@@ -649,40 +657,36 @@ let copy linear_constraint =
 	ppl_nb_copy_polyhedron := !ppl_nb_copy_polyhedron + 1;
 	ppl_new_NNC_Polyhedron_from_NNC_Polyhedron linear_constraint
 
+(** Perform the intersection of a linear constrain with a list of constraints (with side effect) *)
+let intersection_assign linear_constraint constrs =
+(* 	try( *)
+		List.iter (fun poly ->
+			(* Perform the actual intersection *)
+			ppl_intersection_assign linear_constraint poly;
+			(* Check satisfiability *)
+			(** ACTUALLY: this does not bring anything on the examples I tried -- on the contrary! *)
+(* 			if not (is_satisfiable linear_constraint) then raise Unsat_exception; *)
+		) constrs;
+		assert_dimensions linear_constraint
+	(* If false: stop *)
+(* 	) with Unsat_exception -> () *)
+
+
 (** Performs the intersection of a list of linear constraints *)
 let intersection linear_constraints =
 	let result_poly = true_constraint () in
-	List.iter (fun poly ->
-		(* Statistics *)
-		ppl_nb_intersection_assign := !ppl_nb_intersection_assign + 1;
-		ppl_Polyhedron_intersection_assign result_poly poly) linear_constraints;
-	assert_dimensions result_poly;
-	result_poly	
-	
-(** same function, with side effects *)
-let intersection_assign linear_constraint constrs =
-	List.iter (fun poly ->
-		(* Statistics *)
-		ppl_nb_intersection_assign := !ppl_nb_intersection_assign + 1;
-		ppl_Polyhedron_intersection_assign linear_constraint poly) constrs;
-	assert_dimensions linear_constraint
+	intersection_assign result_poly linear_constraints;
+	result_poly
+(*	try(
+		List.iter (fun poly ->
+			if not (is_satisfiable poly) then raise Unsat_exception;
+			intersection_assign result_poly poly
+		) linear_constraints;
+		assert_dimensions result_poly;
+		result_poly
+	) with Unsat_exception -> false_constraint ()*)
 
 
-(** Eliminate (using existential quantification) a set of variables in a linear constraint *)
-let hide variables linear_constraint =
-	(* debug output *)
-	if debug_mode_greater Debug_total then (
-		print_message Debug_high "hide:";
-		List.iter (fun v -> print_message Debug_high ("  - v" ^ string_of_int v)) variables;
-	);
-	(* copy polyhedron, as PPL function has sideeffects *)
-	let poly = copy linear_constraint in
-	(* Statistics *)
-	ppl_nb_unconstrain := !ppl_nb_unconstrain + 1;
-	ppl_Polyhedron_unconstrain_space_dimensions poly variables;
-	assert_dimensions poly;
-	poly
-	
 	
 (** Eliminate a set of variables, side effects version *)
 let hide_assign variables linear_constraint =
@@ -696,6 +700,16 @@ let hide_assign variables linear_constraint =
 	ppl_Polyhedron_unconstrain_space_dimensions linear_constraint variables;
 	assert_dimensions linear_constraint
 
+
+	(** Eliminate (using existential quantification) a set of variables in a linear constraint *)
+let hide variables linear_constraint =
+	(* copy polyhedron, as PPL function has sideeffects *)
+	let poly = copy linear_constraint in
+	(* Call the function with side-effects *)
+	hide_assign variables poly;
+	poly
+	
+	
 
 (** rename variables in a constraint, with side effects *)
 let rename_variables_assign list_of_couples linear_constraint =

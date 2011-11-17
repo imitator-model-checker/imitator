@@ -95,13 +95,13 @@ let compute_invariants program location =
 (* including renaming and time elapse. Uses cache.  *)
 (*--------------------------------------------------*)
 let compute_invariant program location =
-	(* strip off discrete for caching scheme *)
+	(* Strip off discrete for caching scheme  *)
 	let locations = Automaton.get_locations location in
 	(* check in cache *)
 	let entry = Cache.find inv_cache locations in
 	match entry with
 		| Some inv -> inv
-		| None -> (
+		| None -> ( 
 			(* Build plain invariant I_q(X) *)
 			let invariant = compute_plain_invariant program location in
 			(* Store in cache *)
@@ -388,7 +388,7 @@ let compute_updates program clock_updates =
 	let entry = Cache.find upd_cache clock_updates in
 	match entry with
 		| Some updates -> updates
-		| None -> (
+		| None -> ( 
 		(* keep track of variables that are not updated *)
 		let not_appearing_in_updates = Array.make program.nb_variables true in
 		(* Compute X' = rho(X) + d for the variables appearing in updates *)
@@ -447,7 +447,7 @@ let compute_updates program clock_updates =
 		);
 		(* intersection of both constraints *)
 		LinearConstraint.intersection_assign updates [non_updated];
-		(* store in cache *)
+	(* store in cache *)
 		Cache.store upd_cache clock_updates updates;
 		(* return constraint *)
 		updates
@@ -592,8 +592,6 @@ let compute_new_constraint2 program orig_constraint discrete_constr orig_locatio
 		if debug_mode_greater Debug_total then
 			print_message Debug_total (LinearConstraint.string_of_linear_constraint program.variable_names current_constraint);*)
 
-		(** Il faudrait peut etre tout de suite tester que les gardes sont satisfaites ?!! Car elles sont "rarement" compatibles entre elles) *)
-			
 		let current_constraint = LinearConstraint.copy discrete_constr in
 
 		(* Debug *)
@@ -673,7 +671,7 @@ let compute_new_constraint2 program orig_constraint discrete_constr orig_locatio
 		if debug_mode_greater Debug_total then(
 			print_message Debug_total (LinearConstraint.string_of_linear_constraint program.variable_names current_constraint);
 			if not (LinearConstraint.is_satisfiable current_constraint) then
-				print_message Debug_total ("This constraint is NOT satisfiable.");
+				print_message Debug_total ("This constraint is NOT satisfiable (after intersection of [C(X) and g(X)] rho and I_q(X) ).");
 		);
 
 		(* Check here for unsatisfiability *)
@@ -706,8 +704,10 @@ let compute_new_constraint2 program orig_constraint discrete_constr orig_locatio
 		if debug_mode_greater Debug_total then(
 			print_message Debug_total (LinearConstraint.string_of_linear_constraint program.variable_names current_constraint);
 			if not (LinearConstraint.is_satisfiable current_constraint) then
-				print_message Debug_total ("This constraint is NOT satisfiable.");
+				print_message Debug_total ("This constraint is NOT satisfiable (after intersection of the constraint with D_i = d_i and I_q(X)).");
 		);
+		
+		(* TO DO: check satisfiability ? brings something? *)
 
 		(* Hide discrete' *)
 		print_message Debug_total ("\nHide discrete variables ");
@@ -716,7 +716,7 @@ let compute_new_constraint2 program orig_constraint discrete_constr orig_locatio
 		if debug_mode_greater Debug_total then(
 			print_message Debug_total (LinearConstraint.string_of_linear_constraint program.variable_names current_constraint);
 			if not (LinearConstraint.is_satisfiable current_constraint) then
-				print_message Debug_total ("This constraint is NOT satisfiable.");
+				print_message Debug_total ("This constraint is NOT satisfiable (after hiding discrete variables).");
 		);
 		(* return the final constraint *)
 		Some current_constraint
@@ -963,14 +963,16 @@ let post program pi0 reachability_graph orig_state_index =
 	
 		(* Loop on all the transition combinations *)
 		let more_combinations = ref legal_transitions_exist in
+		let debug_i = ref 0 in
 		while !more_combinations do
+			debug_i := !debug_i +1;
 			(* Debug *)
 			if debug_mode_greater Debug_total then (
 				let local_indexes = string_of_array_of_string_with_sep "\n\t" (
 				Array.mapi (fun local_index real_index ->
 					(string_of_int local_index) ^ " -> " ^ (string_of_int real_index) ^ " : " ^ (string_of_int current_indexes.(local_index)) ^ "; ";
 				) real_indexes) in
-				print_message Debug_total ("--- Consider the combination \n\t" ^ local_indexes);
+				print_message Debug_total ("\n\n\n--- Consider the combination " ^ (string_of_int !debug_i) ^ " \n\t" ^ local_indexes);
 			);
 	
 			(* build the current combination of transitions *)
@@ -985,24 +987,30 @@ let post program pi0 reachability_graph orig_state_index =
 (* 			let new_constraint = compute_new_constraint program orig_constraint original_location location guards clock_updates in *)
 			(* Compute the new constraint for the current transition (VERSION with no duplicate variables) *)
 			let new_constraint2 = compute_new_constraint2 program orig_constraint discrete_constr original_location location guards clock_updates in
-			(** ADDED BY ETIENNE FOR COMPARING BOTH APPROACHES *)
-(*			let _ = 
+(*			(** ADDED BY ETIENNE FOR COMPARING BOTH APPROACHES *)
+			let new_constraint = 
 			match new_constraint, new_constraint2 with
-				| None, None -> ()
+				| None, None -> new_constraint2
 				| Some c1, Some c2 -> (if not (LinearConstraint.is_equal c1 c2) then(
-					print_error "Unsound program."; abort_program ()
-					));
-				| _ -> print_error "Unsound program."; abort_program ()
-			in ();*)
+					print_error "Bad computation (two different constraints found)."; abort_program ()
+					)); new_constraint2
+				| Some c1, None -> (if LinearConstraint.is_satisfiable c1 then(
+					print_error "Bad computation (one satisfiable found, one None found)."; abort_program ()
+					)); new_constraint2
+				| None, Some c2 -> (if LinearConstraint.is_satisfiable c2 then(
+					print_error "Bad computation (one None found, one satisfiable)."; abort_program ()
+					)); new_constraint2
+			in*)
 			let new_constraint = new_constraint2 in
 			
+			let _ =
 			(* Check the satisfiability *)
 			match new_constraint with
 				| None -> 
-					print_message Debug_high ("\nThis constraint is not satisfiable.");
-				| Some final_constraint ->(
+					print_message Debug_high ("\nThis constraint is not satisfiable ('None').");
+				| Some final_constraint -> (
 					if not (LinearConstraint.is_satisfiable final_constraint) then(
-						print_message Debug_high ("\nThis constraint is not satisfiable.");
+						print_message Debug_high ("\nThis constraint is not satisfiable ('Some unsatisfiable').");
 					) else (
 			
 					let add_new_state =
@@ -1062,7 +1070,8 @@ let post program pi0 reachability_graph orig_state_index =
 						);
 					); (* end if pi0 incompatible *)
 				); (* end if satisfiable *)
-			);
+			); (* end if Some constraint *)
+			in ();
 		
 			(* get the next combination *)
 			more_combinations := next_combination current_indexes max_indexes;	
@@ -1124,8 +1133,7 @@ let post_star program pi0 init_state =
 	while not (!limit_reached  || list_empty !newly_found_new_states) do
 		if debug_mode_greater Debug_standard then (
 			print_message Debug_low ("\n");
-			print_message Debug_standard ("Computing post^" ^ (string_of_int (!nb_iterations)) ^ "");
-			print_message Debug_low ("Number of recently found state" ^ (s_of_int (List.length !newly_found_new_states)) ^ ": " ^ (string_of_int (List.length !newly_found_new_states)) ^ ".");
+			print_message Debug_standard ("Computing post^" ^ (string_of_int (!nb_iterations)) ^ " from "  ^ (string_of_int (List.length !newly_found_new_states)) ^ " state" ^ (s_of_int (List.length !newly_found_new_states)) ^ ".");
 		);
 		(* Count the states for debug purpose: *)
 		let num_state = ref 0 in
