@@ -1,4 +1,11 @@
 *******************************************************
+release 2.35    (2011-11-17) PRIVATE RELEASE
+
+- Starting removing "X' and d" variables
+- Addition of an optional optimization of the inverse method algorithm
+- Several optimizations to speed up post image computation, including a simple but efficient one for programs with discrete variables
+
+*******************************************************
 release 2.3    (2011-06-06)
 
 - Addition of variants of the inverse method algorithm
