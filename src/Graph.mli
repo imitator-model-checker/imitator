@@ -105,3 +105,6 @@ val dot_of_graph : AbstractImitatorFile.abstract_program -> AbstractImitatorFile
 (****************************************************************)
 (** Get statistics on number of comparisons *)
 val get_statistics : unit -> string
+
+(** Get statistics on states *)
+val get_statistics_states : reachability_graph -> string

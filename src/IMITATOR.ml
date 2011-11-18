@@ -578,7 +578,7 @@ in print_message Debug_standard ("Mode: " ^ message ^ ".");
 
 (* Variant of the inverse method *)
 if options#inclusion then
-	print_message Debug_standard ("Considering fixpoint variant IMincl.")
+	print_message Debug_standard ("Considering fixpoint variant with inclusion.")
 else
 	print_message Debug_medium ("No fixpoint variant (default).");
 

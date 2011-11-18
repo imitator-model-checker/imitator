@@ -54,10 +54,10 @@ let nb_constraint_comparisons = ref 0
 let make guessed_nb_transitions = 
 	(* Create a hashtable for the reachable states *)
 	let states = DynArray.make initial_size in
-	(* Create a hashtable for the graph *)
-	let transitions_table = Hashtbl.create guessed_nb_transitions in
 	(* Create an empty lookup table *)
 	let hash_table = Hashtbl.create initial_size in
+	(* Create a hashtable for the graph *)
+	let transitions_table = Hashtbl.create guessed_nb_transitions in
 	(* Create the graph *)
 	{
 		all_states = states;
@@ -362,15 +362,8 @@ let add_inequality_to_states graph inequality =
 	let constraint_to_add = LinearConstraint.make [inequality] in
 	(* For all state: *)
 	for state_index = 0 to (DynArray.length graph.all_states) - 1 do
-		 (* experimental: *)
 		 let _, constr = DynArray.get graph.all_states state_index in
 		 LinearConstraint.intersection_assign constr [constraint_to_add] 
-		
-(*		 DynArray.set graph.all_states state_index (                          *)
-(*			let (loc, const) = DynArray.get graph.all_states state_index in     *)
-(*			(* Perform the intersection *)                                  *)
-(*			loc, (LinearConstraint.intersection [constraint_to_add; const] )*)
-(*		)                                                                 *)
 	done
 
 (** Empties the hash table giving the set of states for a given location; optimization for the jobshop example, where one is not interested in comparing  a state of iteration n with states of iterations < n *)
@@ -381,6 +374,70 @@ let empty_states_for_comparison graph =
 let get_statistics () =
 	(string_of_int !nb_state_comparisons) ^ " comparisons between states were performed."
 	^ "\n" ^ (string_of_int !nb_constraint_comparisons) ^ " comparisons between constraints were performed."
+
+
+(** Get statistics on the structure of the states: number of different locations, number of different constraints *)
+let get_statistics_states graph =
+	let nb_states = DynArray.length graph.all_states in
+	(* Compute the number of constraints per location (size is actually too big! we have less locations than states) *)
+	let nb_constraints_per_location_id = Hashtbl.create nb_states in
+	(* Compute the number of constraints equal to each other (list of couples (constraint, nb) )*)
+	let nb_per_constraint = DynArray.make 0 in
+	(* Iterate on all states *)
+	for state_index = 0 to (DynArray.length graph.all_states) - 1 do
+		(* Look for location and constraint *)
+		let (location, the_constraint) = DynArray.get graph.all_states state_index in
+		(* Find former nb of constraints for this location *)
+		let former_nb = try
+			Hashtbl.find nb_constraints_per_location_id location
+		with Not_found -> 0 in
+		(* Add +1 *)
+		Hashtbl.replace nb_constraints_per_location_id location (former_nb + 1);
+		
+(*		(* Find former nb of constraints *)
+		let _ =
+		try(
+			(* Iterate on the array *)
+			DynArray.iteri (fun array_index (current_constraint, current_nb) ->
+				if LinearConstraint.is_equal the_constraint current_constraint then(
+					DynArray.set nb_per_constraint array_index (the_constraint, current_nb + 1);
+					(* Found index *)
+					raise (Found 0 (*(don't care) *));
+				);
+			) nb_per_constraint;
+			(* If here: not found, i.e., new index *)
+			DynArray.add nb_per_constraint (the_constraint, 1);
+		)
+		with Found _ -> ();
+		in ();*)
+	done;
+	
+	let nb_locations = Hashtbl.length nb_constraints_per_location_id in
+	let nb_different_constraints = DynArray.length nb_per_constraint in
+	let result_string = ref (
+		(string_of_int nb_states) ^ " states, " ^ (string_of_int nb_locations) ^ " locations, " ^ (string_of_int nb_different_constraints) ^ " constraints"
+		^ "\nNumber of constraints per locations:"
+	) in
+	
+	(* Add number of constraints per location *)
+	Hashtbl.iter (fun location nb_constraints ->
+		result_string := !result_string ^ " - " ^ (string_of_int nb_constraints);
+	) nb_constraints_per_location_id;
+	(* Add average *)
+	result_string := !result_string ^ "\nAverage: " ^ (string_of_float ((float_of_int nb_locations) /. (float_of_int nb_states)));
+	
+(*	(* Add number per constraint *)
+	result_string := !result_string ^ "\nNumber of occurrence of constraints: ";
+	DynArray.iter (fun (the_constraint , nb_constraints) ->
+		result_string := !result_string ^ " - " ^ (string_of_int nb_constraints);
+	) nb_per_constraint;
+	(* Add average *)
+	result_string := !result_string ^ "\nAverage: " ^ (string_of_float ((float_of_int nb_different_constraints) /. (float_of_int nb_states)));*)
+	
+	(* Return result *)
+	!result_string
+	
+	
 	
 (*(** Get the number of comparisons between states (performance checking purpose) *)
 let get_nb_state_comparisons () =

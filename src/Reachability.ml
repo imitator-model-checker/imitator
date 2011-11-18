@@ -59,6 +59,10 @@ let print_stats _ =
 	Cache.print_stats upd_cache
 
  
+(* Number of random selections of pi0-incompatible inequalities in IM *)
+let nb_random_selections = ref 0
+ 
+ 
 (*--------------------------------------------------*)
 (* Compute the invariant associated to a location   *)
 (*--------------------------------------------------*)
@@ -640,16 +644,7 @@ let compute_new_constraint program orig_constraint discrete_constr orig_location
 		print_message Debug_total ("C = " ^ (LinearConstraint.string_of_linear_constraint program.variable_names (orig_constraint ())));
 	);
 	(* The constraint is checked on the fly for satisfyability -> exception mechanism *)
-	try ( 
-(*		print_message Debug_total ("\nComputing equalities for discrete variables (previous values)");
-		(* Compute discrete values in the source location *)
-		let discrete_values = List.map (fun discrete_index -> discrete_index, (Automaton.get_discrete_value orig_location discrete_index)) program.discrete in
-		(* Convert to a constraint of the form D_i = d_i, for all discrete i *)
-		let current_constraint = instantiate_discrete discrete_values in
-		(* Debug *)
-		if debug_mode_greater Debug_total then
-			print_message Debug_total (LinearConstraint.string_of_linear_constraint program.variable_names current_constraint);*)
-
+	try (
 		let current_constraint = LinearConstraint.copy discrete_constr in
 
 		(* Debug *)
@@ -860,6 +855,9 @@ let inverse_method_check_constraint program pi0 reachability_graph constr =
 			print_message Debug_medium (LinearConstraint.string_of_linear_inequality program.variable_names inequality);
 		);
 
+		(* Update counter *)
+		if List.length incompatible > 1 then nb_random_selections := !nb_random_selections + 1;
+		
 		(* Negate the inequality *)
 		let negated_inequality = LinearConstraint.negate_wrt_pi0 pi0 inequality in
 		(* Debug print *)
@@ -1160,6 +1158,8 @@ let post_star program pi0 init_state =
 	slast := [];
 	(* Time counter *)
 	let counter = ref (Unix.gettimeofday()) in
+	(* Set the counter of selections to 0 *)
+	nb_random_selections := 0;
 	(* copy init state, as it might be destroyed later *)
 	let init_loc, init_constr = init_state in
 	let init_state = (init_loc, LinearConstraint.copy init_constr) in
@@ -1267,6 +1267,14 @@ let post_star program pi0 init_state =
 		^ (string_of_int (Graph.nb_states reachability_graph)) ^ " reachable state" ^ (s_of_int (Graph.nb_states reachability_graph))
 		^ " with "
 		^ (string_of_int (Hashtbl.length (reachability_graph.transitions_table))) ^ " transition" ^ (s_of_int (Hashtbl.length (reachability_graph.transitions_table))) ^ ".");
+	if program.options#imitator_mode != Reachability_analysis && (not program.options#no_random) then (
+		if(!nb_random_selections > 0) then(
+			print_message Debug_standard "Analysis may have been non-deterministic:";
+			print_message Debug_standard ((string_of_int !nb_random_selections) ^ " random selection" ^ (s_of_int !nb_random_selections) ^ " have been performed.");
+		) else (
+			print_message Debug_standard "Analysis has been fully deterministic.";
+		)
+	);
 
 	(*--------------------------------------------------*)
 	(* Performances *)
@@ -1282,6 +1290,7 @@ let post_star program pi0 init_state =
 		print_message Debug_standard "Statistics on Graph";
 		print_message Debug_standard "--------------------";
 		print_message Debug_standard (Graph.get_statistics ());
+		print_message Debug_standard (Graph.get_statistics_states reachability_graph);
 		print_message Debug_standard "--------------------";
 		print_message Debug_standard "Statistics on Cache";
 		print_message Debug_standard "--------------------";
