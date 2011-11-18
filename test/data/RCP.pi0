@@ -1,0 +1,51 @@
+--****************************************************--
+--****************************************************--
+--   Circuit described in
+--   "Parameterized Reachability Analysis of the IEEE 1394 Root Contention Protocol using TReX"
+--   Collomb-Annichini, Sighireanu (RTTOOLS 2001)
+--
+--   Etienne ANDRE and Laurent FRIBOURG
+--   Laboratoire Specification et Verification
+--
+--                                Created : 2008/01/10
+--                          Last modified : 2010/04/27
+--****************************************************--
+--****************************************************--
+
+
+	----------------------
+	-- Instanciations
+	----------------------
+	-- Instantiations taken from
+	-- "Probabilistic Model Checking of Deadline Properties in the IEEE 1394 FireWire Root Contention Protocol"
+	-- (possible values for "delay": 30 or 360)
+
+
+	---IEEE VALUES---
+-- 	& rc_fast_min	= 760
+-- 	& rc_fast_max	= 850
+-- 	& rc_slow_min	= 1590
+-- 	& rc_slow_max	= 1670
+-- 	& delay			= 360
+
+
+	---PRISM WEB PAGE---
+	& rc_fast_min	= 76
+	& rc_fast_max	= 85
+	& rc_slow_min	= 159
+	& rc_slow_max	= 167
+	& delay			= 36 -- PROBLEM HERE
+
+-- 	---TESTS---
+-- 	& rc_fast_min	= 76
+-- 	& rc_fast_max	= 85
+-- 	& rc_slow_min	= 140 -- 159
+-- 	& rc_slow_max	= 140 -- 167
+-- 	& delay		= 42 --30
+
+-- 	---SMALL VALUES---
+--	& rc_fast_max	= 4
+--	& rc_fast_min	= 3
+--	& rc_slow_max	= 8
+--	& rc_slow_min	= 7
+--	& delay		= 1
