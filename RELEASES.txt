@@ -1,4 +1,9 @@
 *******************************************************
+release 2.36    (2011-11-20) PRIVATE RELEASE
+
+- Fully removed "X' and d" variables: large gain in both memory and time
+
+*******************************************************
 release 2.35    (2011-11-17) PRIVATE RELEASE
 
 - Starting removing "X' and d" variables

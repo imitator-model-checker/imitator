@@ -394,7 +394,7 @@ let get_statistics_states graph =
 		(* Add +1 *)
 		Hashtbl.replace nb_constraints_per_location_id location (former_nb + 1);
 		
-(*		(* Find former nb of constraints *)
+		(*(* Find former nb of constraints *)
 		let _ =
 		try(
 			(* Iterate on the array *)
@@ -425,15 +425,15 @@ let get_statistics_states graph =
 	) nb_constraints_per_location_id;
 	(* Add average *)
 	result_string := !result_string ^ "\nAverage: " ^ (string_of_float ((float_of_int nb_locations) /. (float_of_int nb_states)));
-	
-(*	(* Add number per constraint *)
+	(*
+	(* Add number per constraint *)
 	result_string := !result_string ^ "\nNumber of occurrence of constraints: ";
 	DynArray.iter (fun (the_constraint , nb_constraints) ->
 		result_string := !result_string ^ " - " ^ (string_of_int nb_constraints);
 	) nb_per_constraint;
 	(* Add average *)
-	result_string := !result_string ^ "\nAverage: " ^ (string_of_float ((float_of_int nb_different_constraints) /. (float_of_int nb_states)));*)
-	
+	result_string := !result_string ^ "\nAverage: " ^ (string_of_float ((float_of_int nb_different_constraints) /. (float_of_int nb_states)));
+	*)
 	(* Return result *)
 	!result_string
 	

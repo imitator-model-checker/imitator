@@ -1295,6 +1295,16 @@ let post_star program pi0 init_state =
 		print_message Debug_standard "Statistics on Cache";
 		print_message Debug_standard "--------------------";
 		print_stats ();
+		print_message Debug_standard "--------------------";
+		print_message Debug_standard "Statistics on memory";
+		print_message Debug_standard "--------------------";
+		Gc.print_stat stdout;
+		print_message Debug_standard "--------------------";
+		Gc.major();
+		Gc.print_stat stdout;
+		print_message Debug_standard "--------------------";
+		Gc.full_major();
+		Gc.print_stat stdout;
 	);
 
 	(*--------------------------------------------------*)
