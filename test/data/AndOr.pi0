@@ -1,0 +1,31 @@
+--****************************************************--
+--****************************************************--
+--   Laboratoire Specification et Verification
+--
+--   Modeling of an "AND" and an "OR" logical gate
+--   From "Verification of Concurrent Systems with Parametric Delays Using Octahedra" by Clariso and Cortadella
+--
+--   Modelisation: Etienne ANDRE and Laurent FRIBOURG
+--
+--   Created       : 2008/01
+--   Last modified : 2010/03/29
+--****************************************************--
+--****************************************************--
+
+
+	---START PI0---
+	& dA_High_l = 13
+	& dA_High_u = 14
+	& dA_Low_l = 16
+	& dA_Low_u = 18
+-- 	& dB_High_l = 10
+-- 	& dB_High_u = 12
+	& dB_High_l = 7
+	& dB_High_u = 8
+	& dB_Low_l = 19
+	& dB_Low_u = 20
+	& dAnd_l = 3
+	& dAnd_u = 4
+	& dOr_l = 1
+	& dOr_u = 2
+	---END PI0---

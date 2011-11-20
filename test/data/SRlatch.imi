@@ -1,0 +1,245 @@
+--************************************************************--
+--************************************************************--
+--   Laboratoire Specification et Verification
+--
+--   Race on a digital circuit (SR Latch)
+--
+--   Etienne ANDRE
+--
+--   Created:        2010/03/19
+--   Last modified : 2010/03/24
+--************************************************************--
+--************************************************************--
+
+var 	ckNor1, ckNor2, s
+		: clock;
+
+	dNor1_l, dNor1_u,
+	dNor2_l, dNor2_u,
+-- 	,
+-- 	t_R_down, t_S_down
+	t_down
+			: parameter;
+
+--************************************************************--
+-- DESCRIPTION
+--************************************************************--
+-- We consider that the following connections :
+-- ** norGate1 :
+-- 	* input1 : R
+-- 	* input2 : overQ
+-- 	* output : Q
+-- ** norGate2 :
+-- 	* input1 : Q
+-- 	* input2 : S
+-- 	* output : overQ
+
+
+--************************************************************--
+  automaton norGate1
+--************************************************************--
+synclabs: R_Up, R_Down, overQ_Up, overQ_Down,
+	Q_Up, Q_Down;
+-- initially Nor1_001;
+initially Nor1_110;
+
+-- UNSTABLE
+loc Nor1_000: while ckNor1 <= dNor1_u wait {}
+	when True sync R_Up do {} goto Nor1_100;
+	when True sync overQ_Up do {} goto Nor1_010;
+	when ckNor1 >= dNor1_l sync Q_Up do {} goto Nor1_001;
+
+-- STABLE
+loc Nor1_001: while True wait {}
+	when True sync R_Up do {ckNor1' = 0} goto Nor1_101;
+	when True sync overQ_Up do {ckNor1' = 0} goto Nor1_011;
+
+-- STABLE
+loc Nor1_010: while True wait {}
+	when True sync R_Up do {} goto Nor1_110;
+	when True sync overQ_Down do {ckNor1' = 0} goto Nor1_000;
+
+-- UNSTABLE
+loc Nor1_011: while ckNor1 <= dNor1_u wait {}
+	when True sync R_Up do {ckNor1' = 0} goto Nor1_111;
+	when True sync overQ_Down do {} goto Nor1_001;
+	when ckNor1 >= dNor1_l sync Q_Down do {} goto Nor1_010;
+
+-- STABLE
+loc Nor1_100: while True wait {}
+	when True sync R_Down do {ckNor1' = 0} goto Nor1_000;
+	when True sync overQ_Up do {} goto Nor1_110;
+
+-- UNSTABLE
+loc Nor1_101: while ckNor1 <= dNor1_u wait {}
+	when True sync R_Down do {} goto Nor1_001;
+	when True sync overQ_Up do {ckNor1' = 0} goto Nor1_111;
+	when ckNor1 >= dNor1_l sync Q_Down do {} goto Nor1_100;
+
+-- STABLE
+loc Nor1_110: while True wait {}
+	when True sync R_Down do {} goto Nor1_010;
+	when True sync overQ_Down do {} goto Nor1_100;
+
+-- UNSTABLE
+loc Nor1_111: while ckNor1 <= dNor1_u wait {}
+	when True sync R_Down do {ckNor1' = 0} goto Nor1_011;
+	when True sync overQ_Down do {ckNor1' = 0} goto Nor1_101;
+	when ckNor1 >= dNor1_l sync Q_Down do {} goto Nor1_110;
+
+end -- norGate1
+
+
+--************************************************************--
+  automaton norGate2
+--************************************************************--
+synclabs: Q_Up, Q_Down, S_Up, S_Down,
+	overQ_Up, overQ_Down;
+-- initially Nor2_110;
+initially Nor2_001;
+
+-- UNSTABLE
+loc Nor2_000: while ckNor2 <= dNor2_u wait {}
+	when True sync Q_Up do {} goto Nor2_100;
+	when True sync S_Up do {} goto Nor2_010;
+	when ckNor2 >= dNor2_l sync overQ_Up do {} goto Nor2_001;
+
+-- STABLE
+loc Nor2_001: while True wait {}
+	when True sync Q_Up do {ckNor2' = 0} goto Nor2_101;
+	when True sync S_Up do {ckNor2' = 0} goto Nor2_011;
+
+-- STABLE
+loc Nor2_010: while True wait {}
+	when True sync Q_Up do {} goto Nor2_110;
+	when True sync S_Down do {ckNor2' = 0} goto Nor2_000;
+
+-- UNSTABLE
+loc Nor2_011: while ckNor2 <= dNor2_u wait {}
+	when True sync Q_Up do {ckNor2' = 0} goto Nor2_111;
+	when True sync S_Down do {} goto Nor2_001;
+	when ckNor2 >= dNor2_l sync overQ_Down do {} goto Nor2_010;
+
+-- STABLE
+loc Nor2_100: while True wait {}
+	when True sync Q_Down do {ckNor2' = 0} goto Nor2_000;
+	when True sync S_Up do {} goto Nor2_110;
+
+-- UNSTABLE
+loc Nor2_101: while ckNor2 <= dNor2_u wait {}
+	when True sync Q_Down do {} goto Nor2_001;
+	when True sync S_Up do {ckNor2' = 0} goto Nor2_111;
+	when ckNor2 >= dNor2_l sync overQ_Down do {} goto Nor2_100;
+
+-- STABLE
+loc Nor2_110: while True wait {}
+	when True sync Q_Down do {} goto Nor2_010;
+	when True sync S_Down do {} goto Nor2_100;
+
+-- UNSTABLE
+loc Nor2_111: while ckNor2 <= dNor2_u wait {}
+	when True sync Q_Down do {ckNor2' = 0} goto Nor2_011;
+	when True sync S_Down do {ckNor2' = 0} goto Nor2_101;
+	when ckNor2 >= dNor2_l sync overQ_Down do {} goto Nor2_110;
+
+end -- norGate2
+
+
+--************************************************************--
+  automaton env
+--************************************************************--
+synclabs: R_Down, R_Up, S_Down, S_Up;
+initially env_11;
+
+-- loc env_R: while s <= t_down wait {}
+-- 	when s = t_down sync R_Down do {} goto env_final;
+
+-- loc env_S: while s <= t_down wait {}
+-- 	when s = t_down sync S_Down do {} goto env_final;
+
+
+-- ENVIRONMENT : first S then R at constant time
+loc env_11: while True wait {}
+	when True sync S_Down do {s' = 0} goto env_10;
+
+loc env_10: while s <= t_down wait {}
+	when s = t_down sync R_Down do {} goto env_final;
+
+
+-- ENVIRONMENT : R and S go down anytime
+-- loc env_11: while True wait {}
+-- 	when True sync R_Down do {} goto env_01;
+-- 	when True sync S_Down do {} goto env_10;
+-- 
+-- loc env_01: while True wait {}
+-- 	when True sync S_Down do {} goto env_final;
+-- 
+-- loc env_10: while True wait {}
+-- 	when True sync R_Down do {} goto env_final;
+
+-- ENVIRONMENT : S and R anytime (at a parametric time)
+-- loc env_11: while s <= t_R_down & s <= t_S_down wait {}
+-- 	when s = t_R_down sync R_Down do {} goto env_01;
+-- 	when s = t_S_down sync S_Down do {} goto env_10;
+-- 
+-- loc env_01: while s <= t_S_down wait {}
+-- 	when s = t_S_down sync S_Down do {} goto env_final;
+-- 
+-- loc env_10: while s <= t_R_down wait {}
+-- 	when s = t_R_down sync R_Down do {} goto env_final;
+
+loc env_final: while True wait {}
+
+end -- env
+
+--************************************************************--
+-- ANALYSIS
+--************************************************************--
+
+var init : region;
+
+init := True
+	------------------------------------------------------------
+	-- INITIAL LOCATIONS
+	------------------------------------------------------------
+	-- R down
+-- 	& loc[norGate1] = Nor1_110
+-- 	& loc[norGate2] = Nor2_001
+-- 	& loc[env]		= env_R
+
+	-- S down
+-- 	& loc[norGate1] = Nor1_001
+-- 	& loc[norGate2] = Nor2_110
+-- 	& loc[env]		= env_S
+
+	-- S and R down
+	& loc[norGate1] = Nor1_100
+	& loc[norGate2] = Nor2_010
+	& loc[env]		= env_11
+
+	------------------------------------------------------------
+	-- INITIAL CONSTRAINTS
+	------------------------------------------------------------
+	& ckNor1	= 0
+	& ckNor2	= 0
+	& s			= 0
+
+	& dNor1_l >= 0
+	& dNor2_l >= 0
+
+	& dNor1_l <= dNor1_u
+	& dNor2_l <= dNor2_u
+
+	------------------------------------------------------------
+	-- PI0
+	------------------------------------------------------------
+	& dNor1_l	= 3
+-- 	& dNor1_u	= 4
+	& dNor2_l	= 5
+-- 	& dNor2_u	= 5
+	& t_down	= 10
+-- 	& t_R_down	= 11
+-- 	& t_S_down	= 10
+;
+
+print (reach forward from init endreach);
