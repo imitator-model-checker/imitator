@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2010/03/04
- * Last modified: 2010/05/27
+ * Last modified: 2011/11/22
  *
  ****************************************************************)
 
@@ -136,9 +136,6 @@ let abs a =
 (**************************************************)
 (** {2 Comparison Functions} *)
 (**************************************************)
-let comparison_gen op a b =
-	op (Gmp.Q.cmp (get_mpq a) (get_mpq b)) 0
-	
 let equal a b =
 	Gmp.Q.equal (get_mpq a) (get_mpq b)
 
@@ -149,14 +146,6 @@ let l  = ( </ )
 let le = ( <=/ )
 let ge = ( >=/ )
 let g  = ( >/ )
-
-(*let l = comparison_gen (<)  *)
-(*                            *)
-(*let le = comparison_gen (<=)*)
-(*                            *)
-(*let ge = comparison_gen (>=)*)
-(*                            *)
-(*let g = comparison_gen (>)  *)
 
 
 (**************************************************)

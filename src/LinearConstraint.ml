@@ -218,14 +218,6 @@ let assert_dimensions poly =
 (** {3 Creation} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
 
-(** Create a linear term using a list of coef and variables, and a constant *)
-(*let make_linear_term members coef =                          *)
-(*	(* Convert the members *)                                  *)
-(*	let members = List.map apron_coeff_dim_of_member members in*)
-(*	(* Convert the coef *)                                     *)
-(*	let coeff_option = apron_coeff_option_of_constant coef in  *)
-(*		Linexpr0.of_list None members coeff_option               *)
-
 let make_linear_term members coef =
 	List.fold_left (fun term head ->
 		let (c, v) = head in 
@@ -638,13 +630,12 @@ let string_of_linear_constraint names linear_constraint =
 	(* Then check if false *)
 	else if is_false linear_constraint then string_of_false
 	else
-	(* Get an array of linear inequalities *)
+	(* Get a list of linear inequalities *)
 	let list_of_inequalities = get_constraints linear_constraint in
-	let array_of_inequalities = Array.of_list list_of_inequalities in
 	" " ^
-	(string_of_array_of_string_with_sep
+	(string_of_list_of_string_with_sep
 		"\n& "
-		(Array.map (string_of_linear_inequality names) array_of_inequalities)
+		(List.map (string_of_linear_inequality names) list_of_inequalities)
 	)
 
 
@@ -747,31 +738,6 @@ let rename_variables_assign list_of_couples linear_constraint =
 let rename_variables list_of_couples linear_constraint =
 	(* copy polyhedron, as ppl function has sideeffects *)
 	let poly = copy linear_constraint in
-(*	(* add reverse mapping *)
-	let reverse_couples = List.map (fun (a,b) -> (b,a)) list_of_couples in
-	let joined_couples = List.rev_append list_of_couples reverse_couples in
-	(* find all dimensions that will be mapped *)
-	let from, _  = List.split joined_couples in
-	(* add identity pairs (x,x) for remaining dimensions *) 
-	let rec add_id list i = 
-		if i < 0 then list else
-			if not (List.mem i from) then
-				(i,i) :: add_id list (i-1)
-			else
-				add_id list (i-1)
-		in 
-	let complete_list = add_id joined_couples (!total_dim - 1) in
-  (* debug output *)
-	if debug_mode_greater Debug_high then (
-		let ndim = space_dimension poly in
-		print_message Debug_high ("mapping space dimensions, no. dimensions is " ^ string_of_int ndim);
-		List.iter (fun (a,b) -> (print_message Debug_high ("map v" ^ string_of_int a ^ " -> v" ^ string_of_int b))) complete_list;
-	);
-	(* perfom the mapping *)
-	(* Statistics *)
-	ppl_nb_map := !ppl_nb_map + 1;
-	ppl_Polyhedron_map_space_dimensions poly complete_list;
-	assert_dimensions poly;*)
 	rename_variables_assign list_of_couples poly;
 	poly
 
@@ -847,27 +813,102 @@ let substitute_variables sub linear_inequality =
 				let rsub = substitute_variables_in_term sub rterm in
 				Greater_Or_Equal (lsub, rsub))
 		
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+(** {3 Conversion to GML} *)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
 
-let split_q r = 
-	let p = NumConst.get_num r in
-	let q = NumConst.get_den r in
-	p, q
+(** Convert a linear term (PPL) into a string *)								
+let rec gml_of_linear_term_ppl names t_level linear_term =
+	match linear_term with
+		| Coefficient z ->
+			"\n" ^ (string_n_times t_level "\t") ^ "<attribute name=\"const\">" ^ (Gmp.Z.string_from z) ^ "</attribute>" 
+		
+		| Variable v ->
+			"\n" ^ (string_n_times t_level "\t") ^ "<attribute name=\"name\">" ^ (names v) ^ "</attribute>" 
+		
+		| Unary_Plus t ->
+			gml_of_linear_term_ppl names t_level t
 
-let add_d d coef variable_list linear_constraint =
-	(* get numerator and denominator of rational coefficient *)
-	let p, q = split_q coef in 
-	(* function for building the affine translation of a variable: v -> v + coef*d *)
-	let affine_translation = fun v -> Plus (Times (q, Variable v), Times (p, Variable d)) in
-	(* copy linear constraint, as PPL functions have side effects *)	
-	let result_poly = copy linear_constraint in
-	(* perform the affine translations *)
-	List.iter (fun v -> 
-		(* Statistics *)
-		ppl_nb_preimage := !ppl_nb_preimage + 1;
-		ppl_Polyhedron_affine_preimage result_poly v (affine_translation v) q
-	) variable_list;
-	assert_dimensions result_poly;
-	result_poly
+		| Unary_Minus t -> 
+			"\n" ^ (string_n_times t_level "\t") ^ "<attribute name=\"-\">"
+			^ "\n" ^ (string_n_times (t_level + 1) "\t") ^ "<attribute name=\"const\">0</attribute>"
+			^ (gml_of_linear_term_ppl names (t_level + 1) t)
+			^ "\n" ^ (string_n_times t_level "\t") ^ "</attribute>"
+		
+		| Plus (lterm, rterm) ->
+			"\n" ^ (string_n_times t_level "\t") ^ "<attribute name=\"+\">"
+			^ (gml_of_linear_term_ppl names (t_level + 1) lterm)
+			^ (gml_of_linear_term_ppl names (t_level + 1) rterm)
+			^ "\n" ^ (string_n_times t_level "\t") ^ "</attribute>"
+
+		| Minus (lterm, rterm) ->
+			"\n" ^ (string_n_times t_level "\t") ^ "<attribute name=\"-\">"
+			^ (gml_of_linear_term_ppl names (t_level + 1) lterm)
+			^ (gml_of_linear_term_ppl names (t_level + 1) rterm)
+			^ "\n" ^ (string_n_times t_level "\t") ^ "</attribute>"
+		
+		| Times (z, rterm) ->
+				(* Check that multiplication is not by one *)
+				if (Gmp.Z.equal z (Gmp.Z.one)) then
+					gml_of_linear_term_ppl names t_level rterm
+				else 
+					"\n" ^ (string_n_times t_level "\t") ^ "<attribute name=\"*\">"
+					^ "\n" ^ (string_n_times (t_level + 1) "\t") ^ "<attribute name=\"const\">" ^ (Gmp.Z.string_from z) ^ "</attribute>" 
+					^ (gml_of_linear_term_ppl names (t_level + 1) rterm)
+					^ "\n" ^ (string_n_times t_level "\t") ^ "</attribute>"
+
+
+(** Convert a linear inequality into a string *)
+let gml_of_linear_inequality names t_level linear_inequality =
+	let normal_ineq = normalize_inequality linear_inequality in
+	let lterm, rterm, op = split_linear_inequality normal_ineq in
+	let lstr = gml_of_linear_term_ppl names (t_level + 1) lterm in
+	let rstr = gml_of_linear_term_ppl names (t_level + 1) rterm in
+	let opstr = match op with
+		| Less_Than_RS -> "less"
+		| Less_Or_Equal_RS -> "lessEqual"
+		| Equal_RS -> "equal"
+		| Greater_Than_RS -> "greater"
+		| Greater_Or_Equal_RS -> "greaterEqual" in
+	  "\n" ^ (string_n_times t_level "\t") ^ "<attribute name=\"" ^ opstr ^ "\">"
+	^ lstr ^ rstr
+	^ "\n" ^ (string_n_times t_level "\t") ^ "</attribute>"
+
+	(*	    <attribute name="less">
+                    <attribute name="expr">
+                        <attribute name="name">y</attribute>
+                    </attribute>
+                    <attribute name="expr">
+                        <attribute name="const">4</attribute>
+                    </attribute>*)
+                    
+(** Convert a linear constraint into a string *)
+let gml_of_linear_constraint names t_level linear_constraint =
+	(* First check if true or false *)
+	if is_true linear_constraint || is_false linear_constraint then (raise (InternalError "A linear constraint can't be true or false when converted to GML."));
+	(* Get a list of linear inequalities *)
+	let list_of_inequalities = get_constraints linear_constraint in
+	let several_inequalities = List.length list_of_inequalities > 2 in
+	(* Conjunction : start *)
+	(if several_inequalities then
+		("\n" ^ (string_n_times t_level "\t") ^ "<attribute name=\"and\">"
+	) else "")
+	^
+	(* Convert all inequalities *)
+	(string_of_list_of_string
+		(List.map (gml_of_linear_inequality names (if several_inequalities then t_level + 1 else t_level)) list_of_inequalities)
+	)
+	^
+	(* Conjunction : end *)
+	(if several_inequalities then
+		("\n" ^ (string_n_times t_level "\t") ^ "</attribute>"
+	) else "")
+
+
+
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+(** {3 Plot interactions} *)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
 
 
 let unit_vector i =

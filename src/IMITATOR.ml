@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2009/09/07
- * Last modified: 2011/11/08
+ * Last modified: 2011/11/22
  *
  **************************************************)
 
@@ -227,7 +227,7 @@ let cover_behavioral_cartography program pi0cube init_state =
 	let max_bounds = Array.map (fun (low, high) -> NumConst.numconst_of_int high) pi0cube in
 	
 	(* Initial constraint of the program *)
-	let _, init_constraint = program.init in
+	let _, init_constraint = init_state in
 	(* Hide non parameters *)
 	let init_constraint = LinearConstraint.hide (List.rev_append program.discrete program.clocks) init_constraint in
 
@@ -399,7 +399,7 @@ let random_behavioral_cartography program pi0cube init_state nb =
 	(* Prevent the printing of messages in algorithm Inverse Method *)
 	let cut_messages = not (debug_mode_greater Debug_low) in
 	(* Initial constraint of the program *)
-	let _, init_constraint = program.init in
+	let _, init_constraint = init_state in
 	(* Hide non parameters *)
 	let init_constraint = LinearConstraint.hide (List.rev_append program.discrete program.clocks) init_constraint in
 
@@ -722,6 +722,14 @@ if options#pta2clp then(
 	terminate_program()
 	);
 
+(* Translation to GML (experimental) *)
+if options#pta2gml then(
+	print_message Debug_standard ("Translating program to GML.");
+	print_warning ("Work in progress!!!!");
+	print_message Debug_standard ("\nProgram in GML:\n" ^ (PTA2GML.string_of_program program) ^ "\n");
+	terminate_program()
+	);
+
 	
 (**************************************************)
 (* Debug print: program *)
@@ -733,12 +741,11 @@ if options#pta2clp then(
 (* Initial state *)
 (**************************************************)
 
-let (init_loc, init_constraint) = program.init in
 (* Print the initial state *)
-print_message Debug_medium ("\nInitial state:\n" ^ (ImitatorPrinter.string_of_state program program.init) ^ "\n");
+print_message Debug_medium ("\nInitial state:\n" ^ (ImitatorPrinter.string_of_state program (program.initial_location, program.initial_constraint)) ^ "\n");
 
 (* Check the satisfiability *)
-if not (LinearConstraint.is_satisfiable init_constraint) then (
+if not (LinearConstraint.is_satisfiable program.initial_constraint) then (
 	print_warning "The initial constraint of the program is not satisfiable.";
 	terminate_program();
 )else(

@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2009/09/08
- * Last modified: 2011/11/16
+ * Last modified: 2011/11/20
  *
  ****************************************************************)
 
@@ -13,7 +13,7 @@
 (** Version string *)
 (****************************************************************)
 
-let version_string = "2.36"
+let version_string = "2.37"
 
 let print_version_string _ = 
 	print_string ("IMITATOR " ^ version_string ^ "\n");
@@ -305,6 +305,11 @@ let string_of_list_of_string_with_sep sep l =
 	string_of_array_of_string_with_sep sep (Array.of_list l)
 
 
+(* Returns a fresh string made of 'n' times 's' *)
+let string_n_times n s =
+	string_of_array_of_string (Array.make n s)
+
+
 (* 's_of_int i' Return "s" if i > 1, "" otherwise *)
 let s_of_int i =
 	if i > 1 then "s" else ""
@@ -348,7 +353,7 @@ let print_message message_debug_mode message =
 		(* Find number of blanks for indentation *)
 		let nb_spaces = if debug_level-1 > 0 then debug_level-1 else 0 in
 		(* Create blanks proportionnally to the debug_level (at least one space) *)
-		let spaces = " " ^ string_of_array_of_string (Array.make nb_spaces "   ") in
+		let spaces = " " ^ (string_n_times nb_spaces "   ") in
 		(* Add new lines and blanks everywhere *)
 		let formatted_message = spaces ^ (Str.global_replace (Str.regexp "\n") ("\n" ^ spaces) message) in
 		(* Print *)

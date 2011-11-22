@@ -153,6 +153,9 @@ val dynArray_exists : ('a -> bool) -> 'a DynArray.t -> bool
 (****************************************************************)
 (** Useful functions on string *)
 (****************************************************************)
+(** Returns a fresh string made of 'n' times 's' *)
+val string_n_times : int -> string -> string
+
 (* Convert an array of string into a string *)
 val string_of_array_of_string : string array -> string
 

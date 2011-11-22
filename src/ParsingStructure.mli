@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2009/09/08
- * Last modified: 2010/03/04
+ * Last modified: 2011/11/22
  *
  ****************************************************************)
 
@@ -25,12 +25,14 @@ type sync_name = string
 (****************************************************************)
 (* Type of variable in declarations *)
 type var_type =
-	| Var_type_analog
 	| Var_type_clock
 	| Var_type_discrete
 	| Var_type_parameter
 
-type variable_declaration = var_type * variable_name list
+(* We allow for some variables a value *)
+type var_value = NumConst.t
+
+type variable_declaration = var_type * (variable_name * var_value option) list
 
 type variable_declarations = variable_declaration list
 
@@ -78,13 +80,11 @@ type update = variable_name * linear_expression
 
 type guard = convex_predicate
 
-type flow = variable_name * NumConst.t
-
 (* Transition = Guard * update * sync label * destination location *)
 type transition = guard * update list * sync * location_name
 
 (* Location = Name * Invariant * transitions *)
-type location = location_name * convex_predicate * flow list * transition list
+type location = location_name * convex_predicate * transition list
 
 type automaton = automaton_name * sync_name list * location list
 

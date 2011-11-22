@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2009/09/11
- * Last modified: 2011/11/17
+ * Last modified: 2011/11/20
  *
  ****************************************************************)
 
@@ -55,12 +55,7 @@ type action_type =
 	| Action_type_sync
 	| Action_type_nosync
 
-(****************************************************************)
-(** State *)
-(****************************************************************)
 
-(** State: location and constraint *)
-type state = location * linear_constraint
 
 (****************************************************************)
 (** Transition *)
@@ -110,22 +105,6 @@ type abstract_program = {
 	(* The type of variables *)
 	type_of_variables : variable_index -> var_type;
 	
-	(* END OF X' AND D *)
-(*	(* Renamed clocks *)
-	renamed_clocks : variable_index list;
-	(* True for renamed clocks, false otherwise *)
-	is_renamed_clock : variable_index -> bool;
-	(* Get the 'prime' equivalent of a variable *)
-	prime_of_variable : variable_index -> variable_index;
-	(* Get the normal equivalent of a 'prime' variable *)
-	variable_of_prime : variable_index -> variable_index;
-	(* Parameter 'd' *)
-	d : variable_index;
-	(* Couples (x, x') for clock renamings *)
-	renamed_clocks_couples : (variable_index * variable_index) list;
-	(* Couples (x', x) for clock 'un'-renamings *)
-	unrenamed_clocks_couples : (variable_index * variable_index) list;*)
-
 	(* The automata *)
 	automata : automaton_index list;
 	(* The automata names *)
@@ -154,31 +133,17 @@ type abstract_program = {
 	(* The transitions for each automaton and each location and each action *)
 	transitions : automaton_index -> location_index -> action_index -> (transition list);
 
-	(* END OF X' AND D *)
-(*	(* Time elapsing constraint : d >= 0 *)
-	positive_d : linear_constraint;*)
-
 	(* Init : the initial state *)
-	init : state;
+	initial_location : global_location;
+	(* Init : the initial state *)
+	initial_constraint : linear_constraint;
+
 	(* bad states *)
 	bad  : (automaton_index * location_index) list;
 
 	(* All options *)
 	options : imitator_options;
-	
-	(*
-	(* Acyclic mode *)
-	acyclic : bool;
-	(* Inclusion for the post operation *)
-	inclusion : bool;
-	(* Random selection of the pi0-incompatible inequality *)
-	random : bool;
-	(* Mode for IMITATOR *)
-	imitator_mode : imitator_mode;
-	(* Mode with parametric constraints (clock elimination) in the log file *)
-	with_parametric_log : bool;
-	(* The name of the program *)
-	program_name : string; *)
+
 }
 
 

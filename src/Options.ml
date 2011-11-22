@@ -7,7 +7,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Ulrich Kuehne
  * Created:       2010
- * Last modified: 2011/11/15
+ * Last modified: 2011/11/22
  *
  ****************************************************************)
  
@@ -77,6 +77,8 @@ class imitator_options =
 		(* EXTRA OPTIONS *)
 		(* Translate PTA into CLP program *)
 		val mutable pta2clp = ref false
+		(* Translate PTA into GML program *)
+		val mutable pta2gml = ref false
 
 		(* SPECIALIZED OPTIONS*)
 		(* For jobshop *)
@@ -108,6 +110,7 @@ class imitator_options =
 		method step = !step
 		method statistics = !statistics
 		method pta2clp = !pta2clp
+		method pta2gml = !pta2gml
 		method jobshop = !jobshop
 		
 		method parse =
@@ -161,6 +164,7 @@ class imitator_options =
 				("-no-dot", Set no_dot, " No graphical output using 'dot'. Default: false.");
 				("-no-log", Set no_log, " No generation of log files. Default: false.");
 				("-PTA2CLP", Set pta2clp, "Translate PTA into a CLP program (**work in progress**), and exit without performing any analysis. Defaut : 'false'");
+				("-PTA2GML", Set pta2gml, "Translate PTA into a GML program, and exit without performing any analysis. Defaut : 'false'");
 				("-cart", Set cart, " Plot cartography before terminating the program. Uses the first two parameters with ranges. Default: false."); 
 				("-fancy", Set fancy, " Generate detailed state information for dot output. Default: false.");
 				("-jobsjop", Set jobshop, " Use only when working on jobshop problems.");

@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre, Ulrich Kuehne
  * Created:       2009/12/08
- * Last modified: 2011/11/15
+ * Last modified: 2011/11/20
  *
  ****************************************************************)
 
@@ -14,17 +14,35 @@ open Ppl
 open Global
 open AbstractImitatorFile
 
+
 (****************************************************************)
-(** Graph structure *)
+(** Reachable states *)
 (****************************************************************)
 type state_index = int
 
+(** Unique identifier for each different global location *)
+type location_index = int
+
+(** State: location and constraint *)
+type state = Automaton.global_location * LinearConstraint.linear_constraint
+
+type abstract_state = location_index * LinearConstraint.linear_constraint
+
+(****************************************************************)
+(** Graph structure *)
+(****************************************************************)
 type reachability_graph = {
 	(** An Array 'state_index' -> 'state'; contains ALL states *)
-	all_states : state DynArray.t;
+	all_states : abstract_state DynArray.t;
 	
 	(** A hash table 'state_index' -> 'state' only for the states the new states will be compared to *)
 (* 	states_to_be_compared : (state_index, state) Hashtbl.t; *)
+
+	(** A hashtable location -> location_index *)
+	index_of_locations : (Automaton.global_location, location_index) Hashtbl.t;
+
+	(** A DynArray location_index -> location *)
+	locations : Automaton.global_location DynArray.t;
 
 	(** A hashtable to quickly find states with identical locations (? ; made by Ulrich); only for states to be compared *)
 	states_for_comparison : (int, state_index) Hashtbl.t;
@@ -52,15 +70,22 @@ let nb_constraint_comparisons = ref 0
 
 (** Create a fresh graph *)
 let make guessed_nb_transitions = 
-	(* Create a hashtable for the reachable states *)
+	(* Create a DynArray for the reachable states *)
 	let states = DynArray.make initial_size in
+	(* Create a hashtable for the locations *)
+	let index_of_locations = Hashtbl.create initial_size in
+	(* Create a DynArray for the locations *)
+	let locations = DynArray.make initial_size in
 	(* Create an empty lookup table *)
 	let hash_table = Hashtbl.create initial_size in
 	(* Create a hashtable for the graph *)
 	let transitions_table = Hashtbl.create guessed_nb_transitions in
+	
 	(* Create the graph *)
 	{
 		all_states = states;
+		index_of_locations = index_of_locations;
+		locations = locations;
 		states_for_comparison = hash_table;
 		transitions_table = transitions_table;
 	}
@@ -74,9 +99,21 @@ let make guessed_nb_transitions =
 let nb_states graph =
 	DynArray.length graph.all_states
 
+
+(* Return the global_location corresponding to a location_index *)
+let get_location graph location_index =
+	DynArray.get graph.locations location_index
+
+
 (** Return the state of a state_index *)
 let get_state graph state_index =
-	DynArray.get graph.all_states state_index
+	(* Find the couple (location_index, constraint) *)
+	let location_index, linear_constraint = DynArray.get graph.all_states state_index in
+	(* Find the location *)
+	let global_location = get_location graph location_index in
+	(* Return the state *)
+	(global_location, linear_constraint)
+
 
 (** Return the list of all constraints on the parameters associated to the states of a graph *)
 let all_p_constraints program graph =
@@ -85,11 +122,13 @@ let all_p_constraints program graph =
 			let p_constraint = LinearConstraint.hide program.clocks_and_discrete linear_constraint in
 			p_constraint :: current_list)
 		[] graph.all_states
-		
+
+	
 (** Iterate over the reachable states *)
 let iter f graph =
 	DynArray.iter f graph.all_states
-	
+
+
 (** Compute the intersection of all parameter constraints, DESTRUCTIVE!!! *)
 (** HERE PROBLEM IF ONE WANTS TO COMPUTE THE states FILE AFTER **)
 let compute_k0_destructive program graph =
@@ -100,6 +139,7 @@ let compute_k0_destructive program graph =
 
 	) graph;
 	k0
+
 
 (* state struct for constructing set type *)
 module State = struct
@@ -156,7 +196,7 @@ let last_states program graph =
 	!last_states
 
 
-exception Satisfied
+(*exception Satisfied
 
 (** Checks if a state exists that satisfies a given predicate *)
 let exists_state p graph =
@@ -174,9 +214,11 @@ let forall_state p graph =
 				if not (p s) then raise Satisfied
 			) graph;
 			true
-		) with Satisfied -> false		
-									
-(** Check if bad states are reachable *)
+		) with Satisfied -> false	*)	
+
+
+
+(*(** Check if bad states are reachable *)
 let is_bad program graph =
 	(* get bad state pairs from program *)
 	let bad_states = program.bad in
@@ -187,8 +229,8 @@ let is_bad program graph =
 				loc_index = Automaton.get_location location aut_index
 			) bad_states in
 		exists_state is_bad_state graph
-	) 
-		
+	) *)
+
 
 (****************************************************************)
 (** Actions on a graph *)
@@ -212,7 +254,7 @@ let states_equal state1 state2 =
 		LinearConstraint.is_equal constr1 constr2
 	)
 	
-(*Check dynamically if two states are equal*)
+(* Check dynamically if two states are equal*)
 let states_equal_dyn state1 state2 constr =
 	let (loc1, constr1) = state1 in
 	let (loc2, constr2) = state2 in
@@ -221,6 +263,7 @@ let states_equal_dyn state1 state2 constr =
 		print_message Debug_high ("About to compare (dynamic) equality between two constraints.");
 		nb_constraint_comparisons := !nb_constraint_comparisons + 1;
 		print_message Debug_high ("Already performed " ^ (string_of_int (!nb_constraint_comparisons)) ^ " constraint comparisons.");
+		(* WARNING!!! Really sure that one wants do ADD the state within the intersection ?!!! *)
 		LinearConstraint.intersection_assign constr1  [constr];
 		LinearConstraint.intersection_assign constr2 [constr];
 		LinearConstraint.is_equal constr1 constr2
@@ -258,14 +301,36 @@ let state_megeable state1 state2 =
 	)
 
 
-(** perform the insertion of a new state in a graph *)
+(** Perform the insertion of a new state in a graph *)
 let insert_state graph hash new_state =
+	(* Compute the new state index *)
 	let new_state_index = DynArray.length graph.all_states in
+	(* Retrieve the location and the constraint *)
+	let location, linear_constraint = new_state in
+	(* Try to find the location index *)
+	let location_index = try (
+		Hashtbl.find graph.index_of_locations location
+	) with Not_found -> (
+	(* If not found: add it *)
+		(* Find new index *)
+		let new_index = Hashtbl.length graph.index_of_locations in
+		(* Add to hash table *)
+		Hashtbl.add graph.index_of_locations location new_index;
+		(* Add to Dyn Array *)
+		DynArray.add graph.locations location;
+		(* Check length (COULD BE REMOVED) *)
+		if DynArray.length graph.locations != Hashtbl.length graph.index_of_locations then(
+			raise (InternalError "Locations and index_of_locations seem not to be consistent anymore.");
+		);
+		(* Return new index *)
+		new_index;
+	) in
 	(* Add the state to the tables *)
-	DynArray.add graph.all_states new_state;
+	DynArray.add graph.all_states (location_index, linear_constraint);
 	Hashtbl.add graph.states_for_comparison hash new_state_index;
 	(* Return state_index *)
 	new_state_index
+
 
 (** Add a state to a graph, if it is not present yet with the on-the-fly intersection *)
 let add_state_dyn program graph new_state constr=
@@ -308,6 +373,7 @@ let add_state_dyn program graph new_state constr=
 				state_index, false
 		)
 	)
+
 
 (** Add a state to a graph, if it is not present yet *)
 let add_state program graph new_state =
@@ -379,8 +445,8 @@ let get_statistics () =
 (** Get statistics on the structure of the states: number of different locations, number of different constraints *)
 let get_statistics_states graph =
 	let nb_states = DynArray.length graph.all_states in
-	(* Compute the number of constraints per location (size is actually too big! we have less locations than states) *)
-	let nb_constraints_per_location_id = Hashtbl.create nb_states in
+	(* Compute the number of constraints per location *)
+	let nb_constraints_per_location_id = Hashtbl.create (DynArray.length graph.locations) in
 	(* Compute the number of constraints equal to each other (list of couples (constraint, nb) )*)
 	let nb_per_constraint = DynArray.make 0 in
 	(* Iterate on all states *)
@@ -621,8 +687,8 @@ let dot_of_graph program pi0 reachability_graph ~fancy =
 		(* If more colors than our array: white *)
 		try dot_colors.(location_index) with Invalid_argument _ -> "white"
 	in
-	(* Array location_index -> location *)
-	let locations = DynArray.create () in
+(*	(* Array location_index -> location *)
+	let locations = DynArray.create () in*)
 	
 	let header =
 		(* Header *)
@@ -645,16 +711,16 @@ let dot_of_graph program pi0 reachability_graph ~fancy =
 		^
 		(**** BAD PROG ****)
 		(let string_states = ref "" in
-			DynArray.iteri (fun state_index state ->
+			DynArray.iteri (fun state_index (location_index, linear_constraint) ->
+			(* Get the location *)
+			let global_location = get_location reachability_graph location_index in
 			(* Construct the string *)
 			string_states := !string_states
 				(* Add the state *)
 				^ "\n\n\n  STATE " ^ (string_of_int state_index) ^ ":"
-				^ "\n  " ^ (ImitatorPrinter.string_of_state program state)
+				^ "\n  " ^ (ImitatorPrinter.string_of_state program (global_location, linear_constraint))
 				(* Add the constraint with no clocks (option only) *)
 				^ (if program.options#with_parametric_log then (
-					(* Get the constraint *)
-					let _, linear_constraint = state in
 					(* Eliminate clocks *)
 					let parametric_constraint = LinearConstraint.hide program.clocks linear_constraint in
 					"\n\n  After clock elimination:"
@@ -693,24 +759,26 @@ let dot_of_graph program pi0 reachability_graph ~fancy =
 		^ "\n/*Colors*/\n" ^
 		(**** BAD PROG ****)
 		(let string_colors = ref "" in
-			DynArray.iteri (fun state_index (location, _) ->
-			(* Find the location index *)
+			DynArray.iteri (fun state_index (location_index, _) ->
+(*			(* Find the location index *)
 			let location_index = try
 				(**** BAD PROG: should be hashed ****)
 				(* If the location index exists: return it *)
 				DynArray.index_of (fun some_location -> some_location = location) locations
 				(* Else add the location *)
 				with Not_found -> (DynArray.add locations location; DynArray.length locations - 1)
-			in
+			in*)
 			(* Find the location color *)
 			let location_color = color location_index in
 			(* create node index *)
 			let node_index = "s_" ^ (string_of_int state_index) in
 
 			if fancy then (
+				(* Get the location *)
+				let global_location = get_location reachability_graph location_index in
 				(* create record label with location names *)			
 				let loc_names = List.map (fun aut_index -> 
-					let loc_index = Automaton.get_location location aut_index in
+					let loc_index = Automaton.get_location global_location aut_index in
 					program.location_names aut_index loc_index
 				) program.automata in
 				let label = string_of_list_of_string_with_sep "|" loc_names in

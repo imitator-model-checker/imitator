@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2010/03/10
- * Last modified: 2010/03/16
+ * Last modified: 2011/11/20
  *
  ****************************************************************)
 
@@ -43,7 +43,9 @@ type locations = location_index array
 (* Array discrete_index -> NumConst.t *)
 type discrete = NumConst.t array
 
-type location = locations * discrete
+(* Global location: location for each automaton + value of the discrete *)
+type global_location = locations * discrete
+
 
 exception NotEqual
 

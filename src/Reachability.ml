@@ -5,16 +5,23 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Ulrich Kuehne, Etienne Andre
  * Created:       2010/07/22
- * Last modified: 2011/11/15
+ * Last modified: 2011/11/22
  *
  **************************************************)
 
+(**************************************************************)
+(* Modules *)
+(**************************************************************)
 open Options
 open Global
 open AbstractImitatorFile
 open ImitatorPrinter
 open Graph
 
+
+(**************************************************************)
+(* Types *)
+(**************************************************************)
 (** Constraint returned by the inverse method *)
 type returned_constraint =
 	(** Constraint under convex form *)
@@ -24,6 +31,27 @@ type returned_constraint =
 
 
 exception Unsat_exception
+
+
+
+
+(**************************************************************)
+(* Global variables *)
+(**************************************************************)
+
+(*K_prime*)
+let k_prime = ref ( LinearConstraint.true_constraint () )
+
+(* List of last states (of runs) : used for the union mode *)
+let slast = ref []
+
+(* Number of random selections of pi0-incompatible inequalities in IM *)
+let nb_random_selections = ref 0
+
+
+(**************************************************************)
+(* Cache *)
+(**************************************************************)
 
 (* hash function for locations *)
 let loc_hash locations =
@@ -45,11 +73,10 @@ let inv_cache = Cache.make loc_hash 200
 (* Cache for clock updates *)
 let upd_cache = Cache.make upd_hash 100
 
-(*K_prime*)
-let k_prime = ref ( LinearConstraint.true_constraint () )
 
-(* List of last states (of runs) : used for the union mode *)
-let slast = ref []
+(**************************************************************)
+(* Statistics *)
+(**************************************************************)
 
 (* Print statistics for cache usage *)
 let print_stats _ =
@@ -59,9 +86,17 @@ let print_stats _ =
 	Cache.print_stats upd_cache
 
  
-(* Number of random selections of pi0-incompatible inequalities in IM *)
-let nb_random_selections = ref 0
- 
+
+(* Number of constraints checked unsatisfiable while looking for the actions *)
+let nb_early_unsatisfiable = ref 0
+(* Number of actions discarded *)
+let nb_early_skip = ref 0
+(* Number of constraints computed but unsatisfiable *)
+let nb_unsatisfiable = ref 0
+
+let nb_unsat1 = ref 0
+let nb_unsat2 = ref 0
+
  
 (*--------------------------------------------------*)
 (* Compute the invariant associated to a location   *)
@@ -254,7 +289,8 @@ let create_initial_state_ANCIEN program =
 (*--------------------------------------------------*)
 let create_initial_state program =
 	(* Get the declared init state with initial constraint C_0(X) *)
-	let initial_location, init_constraint = program.init in
+	let initial_location = program.initial_location in
+	let initial_constraint = program.initial_constraint in
 	
 	(* Compute the invariants I_q0(X) for the initial locations *)
 	print_message Debug_high ("\nComputing initial invariant I_q0(X)");
@@ -275,7 +311,7 @@ let create_initial_state program =
 	
 	(* Perform intersection of C(X) and I_q0(X) and D_i = d_i *)
 	print_message Debug_high ("Performing intersection of C0(X) and I_q0(X) and D_i = d_i");
-	let current_constraint = LinearConstraint.intersection [init_constraint ; invariant ; discrete_constraint (** To optimize: could be removed *)] in
+	let current_constraint = LinearConstraint.intersection [initial_constraint ; invariant ; discrete_constraint (** To optimize: could be removed *)] in
 	(* Debug *)
 	if debug_mode_greater Debug_total then
 		print_message Debug_total (LinearConstraint.string_of_linear_constraint program.variable_names current_constraint);
@@ -661,28 +697,16 @@ let compute_new_constraint program orig_constraint discrete_constr orig_location
 		if debug_mode_greater Debug_total then(
 			print_message Debug_total (LinearConstraint.string_of_linear_constraint program.variable_names current_constraint);
 		);
-	
+		
 		(* Check here for unsatisfiability *)
 		if not (LinearConstraint.is_satisfiable current_constraint) then (
+			(* Statistics *)
+			nb_unsat1 := !nb_unsat1 + 1;
 			print_message Debug_high "skip transition";
 			raise Unsat_exception
 		);
 		
-(*		(* Add C(X) *)
-		print_message Debug_total ("\nPerforming intersection of C(X) and g(X)");
-		LinearConstraint.intersection_assign current_constraint [orig_constraint ()];
-		(* Debug print *)
-		if debug_mode_greater Debug_total then(
-			print_message Debug_total (LinearConstraint.string_of_linear_constraint program.variable_names current_constraint);
-		);
-
-		(* Check here for unsatisfiability *)
-		if not (LinearConstraint.is_satisfiable current_constraint) then (
-			print_message Debug_high "skip transition";
-			raise Unsat_exception
-		);*)
-
-		print_message Debug_total ("\nEliminate the discrete variables in g(X)");
+		print_message Debug_total ("\nEliminate the discrete variables in C(X) and g(X)");
 		(* Remove the discrete variables (Exists D_i : D_i = d_i and g(X)) *)
 		LinearConstraint.hide_assign program.discrete current_constraint;
 		(* Debug print *)
@@ -705,16 +729,6 @@ let compute_new_constraint program orig_constraint discrete_constr orig_location
 		if debug_mode_greater Debug_total then(
 			print_message Debug_total (LinearConstraint.string_of_linear_constraint program.variable_names invariant);
 		);
-(*		(* Make a copy of the invariant in the destination location I_q(X) (will be used later) *)
-		let invariant_copy = LinearConstraint.copy invariant in
-		(* Project I_q(X) onto rho : hide within I_q(X) clocks X' to be reset, and add X' = 0 *)
-		print_message Debug_total ("\nComputing invariant I_q(X) projected onto rho");
-		rho_assign program invariant clock_updates;
-		(* Debug print *)
-		if debug_mode_greater Debug_total then(
-			print_message Debug_total ("\nResult:");
-			print_message Debug_total (LinearConstraint.string_of_linear_constraint program.variable_names invariant);
-		);*)
 
 		(* Perform the intersection *)
 		print_message Debug_total ("\nPerforming intersection of [C(X) and g(X)] rho and I_q(X)");
@@ -727,12 +741,8 @@ let compute_new_constraint program orig_constraint discrete_constr orig_location
 				print_message Debug_total ("This constraint is NOT satisfiable (after intersection of [C(X) and g(X)] rho and I_q(X) ).");
 		);
 
-		(* Check here for unsatisfiability *)
-		if not (LinearConstraint.is_satisfiable current_constraint) then (
-			print_message Debug_high "skip transition";
-			raise Unsat_exception
-		);
-
+		(* NO USE FOR TESTING HERE FOR SATISFIABILITY (almost always satisfiable) *)
+	
 		(* Perform time elapsing *)
 		print_message Debug_total ("\nPerforming time elapsing on [C(X) and g(X)] rho and I_q(X)");
 		LinearConstraint.time_elapse_assign program.clocks program.parameters_and_discrete current_constraint ;
@@ -760,7 +770,15 @@ let compute_new_constraint program orig_constraint discrete_constr orig_location
 				print_message Debug_total ("This constraint is NOT satisfiable (after intersection of the constraint with D_i = d_i and I_q(X)).");
 		);
 		
-		(* TO DO: check satisfiability ? brings something? *)
+(*		(* Check here for unsatisfiability *)
+		if not (LinearConstraint.is_satisfiable current_constraint) then (
+			(* Statistics *)
+			nb_unsat2 := !nb_unsat2 + 1;
+			print_message Debug_high "skip transition";
+			raise Unsat_exception
+		);*)
+
+		(* AGAIN, NO USE FOR TESTING HERE FOR SATISFIABILITY (almost always satisfiable) *)
 
 		(* Hide discrete' *)
 		print_message Debug_total ("\nHide discrete variables ");
@@ -901,26 +919,31 @@ let compute_transitions program location constr action_index automata aut_table 
 			let location_index = Automaton.get_location location automaton_index in
 			(* Get transitions for this automaton *)
 			let transitions = program.transitions automaton_index location_index action_index in
+			(* REMOVED 2011/11/21 : computation always slower ; might be faster for strongly branching systems? EXCEPT FOR LSV.imi --> put it back! *)
 			(* Keep only possible transitions *)
 			let is_possible = fun trans -> (
 				let guard, _, _, _ = trans in
 				let constr_and_guard = LinearConstraint.intersection [constr; guard] in
-				let is_possible = LinearConstraint.is_satisfiable constr_and_guard in
+ 				let is_possible = LinearConstraint.is_satisfiable constr_and_guard in 
 				if not is_possible then (
+					(* Statistics *)
+					nb_early_unsatisfiable := !nb_early_unsatisfiable + 1;
 					print_message Debug_medium "** early skip transition **"
 				);
-				is_possible
+				is_possible(*true*)
 			) in
 			let legal_transitions = ref [] in
 			let trans_index = ref 0 in
 			List.iter (fun trans -> 
 				if is_possible trans then(
-					legal_transitions := !trans_index :: !legal_transitions
+					legal_transitions := !trans_index :: !legal_transitions;
 				);
 				trans_index := !trans_index + 1
 			) transitions;
 			(* Stop computation if no legal transition exists *)
 			if !legal_transitions = [] then (
+				(* Statistics *)
+				nb_early_skip := !nb_early_skip + 1;
 				print_message Debug_medium "*** early skip action ***";
 				raise Unsat_exception
 			);
@@ -1063,9 +1086,13 @@ let post program pi0 reachability_graph orig_state_index =
 			(* Check the satisfiability *)
 			match new_constraint with
 				| None -> 
+					(* Statistics *)
+					nb_unsatisfiable := !nb_unsatisfiable + 1;
 					print_message Debug_high ("\nThis constraint is not satisfiable ('None').");
 				| Some final_constraint -> (
 					if not (LinearConstraint.is_satisfiable final_constraint) then(
+						(* Statistics *)
+						nb_unsatisfiable := !nb_unsatisfiable + 1;
 						print_message Debug_high ("\nThis constraint is not satisfiable ('Some unsatisfiable').");
 					) else (
 			
@@ -1285,16 +1312,28 @@ let post_star program pi0 init_state =
 		print_message Debug_standard "Statistics on PPL";
 		print_message Debug_standard "--------------------";
 		print_message Debug_standard (LinearConstraint.get_statistics ());
+		
 		(* Graph *)
 		print_message Debug_standard "--------------------";
 		print_message Debug_standard "Statistics on Graph";
 		print_message Debug_standard "--------------------";
 		print_message Debug_standard (Graph.get_statistics ());
 		print_message Debug_standard (Graph.get_statistics_states reachability_graph);
+		
 		print_message Debug_standard "--------------------";
 		print_message Debug_standard "Statistics on Cache";
 		print_message Debug_standard "--------------------";
 		print_stats ();
+		
+		print_message Debug_standard "--------------------";
+		print_message Debug_standard "Statistics on Reachability";
+		print_message Debug_standard "--------------------";
+		print_message Debug_standard ("Number of early skips because of unsatisfiable guards: " ^ (string_of_int !nb_early_unsatisfiable));
+		print_message Debug_standard ("Number of early skips because no actions: " ^ (string_of_int !nb_early_skip));
+		print_message Debug_standard ("Number of unsatisfiable constraints: " ^ (string_of_int !nb_unsatisfiable));
+		print_message Debug_standard ("Number of unsat1: " ^ (string_of_int !nb_unsat1));
+		print_message Debug_standard ("Number of unsat2: " ^ (string_of_int !nb_unsat2));
+		
 		print_message Debug_standard "--------------------";
 		print_message Debug_standard "Statistics on memory";
 		print_message Debug_standard "--------------------";

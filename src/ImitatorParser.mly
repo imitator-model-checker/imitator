@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created       : 2009/09/07
- * Last modified : 2010/05/07
+ * Last modified : 2011/11/22
 ***********************************************/
 
 %{
@@ -92,14 +92,16 @@ var_lists:
 /**********************************************/
 
 var_list:
-	  NAME { [$1] }
-	| NAME COMMA var_list { $1 :: $3 }
+	| NAME { [($1, None)] }
+	| NAME OP_EQ rational { [($1, Some $3)] }
+	
+	| NAME COMMA var_list { ($1, None) :: $3 }
+	| NAME OP_EQ rational COMMA var_list { ($1, Some $3) :: $5 }
 ;
 
 /**********************************************/
 
 var_type:
-  | CT_ANALOG { Var_type_analog }
 	| CT_CLOCK { Var_type_clock }
 	| CT_DISCRETE { Var_type_discrete }
 	| CT_PARAMETER { Var_type_parameter }
@@ -174,7 +176,8 @@ locations:
 /**********************************************/
 
 location:
-  CT_LOC NAME COLON CT_WHILE convex_predicate CT_WAIT LBRACE rate_info_list RBRACE transitions { $2, $5, $8, $10 }
+	| CT_LOC NAME COLON CT_WHILE convex_predicate CT_WAIT LBRACE RBRACE transitions { $2, $5, $9 }
+	| CT_LOC NAME COLON CT_WHILE convex_predicate CT_WAIT transitions { $2, $5, $7 }
 ;
 
 /**********************************************/

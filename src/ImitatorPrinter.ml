@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2009/12/02
- * Last modified: 2010/03/10
+ * Last modified: 2011/11/20
  *
  **************************************************)
 
@@ -66,8 +66,8 @@ let string_of_synclabs program automaton_index =
 
 (* Convert the initially of an automaton into a string *)
 let string_of_initially program automaton_index =
-	let inital_locations, _ = program.init in
-	let initial_location = Automaton.get_location inital_locations automaton_index in
+	let inital_global_location  = program.initial_location in
+	let initial_location = Automaton.get_location inital_global_location automaton_index in
 	"initally: "
 	^ (program.location_names automaton_index initial_location)
 	^ ";"
@@ -136,7 +136,6 @@ let string_of_transitions program automaton_index location_index =
 			List.map (string_of_transition program automaton_index action_index) transitions
 			)
 		) (program.actions_per_location automaton_index location_index)
-		  (*test*)
 	)
 
 
@@ -193,8 +192,8 @@ let string_of_program program =
 	string_of_array_of_string_with_sep ", " string_array*)
 
 (* Convert a state into a string *)
-let string_of_state program (location, linear_constraint) =
-	"" ^ (Automaton.string_of_location program.automata_names program.location_names program.variable_names location) ^ " ==> \n&" ^ (LinearConstraint.string_of_linear_constraint program.variable_names linear_constraint) ^ "" 
+let string_of_state program (global_location, linear_constraint) =
+	"" ^ (Automaton.string_of_location program.automata_names program.location_names program.variable_names global_location) ^ " ==> \n&" ^ (LinearConstraint.string_of_linear_constraint program.variable_names linear_constraint) ^ "" 
 
 
 (**************************************************)

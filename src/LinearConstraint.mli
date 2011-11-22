@@ -185,9 +185,6 @@ val rename_variables : (variable * variable) list -> linear_constraint -> linear
 (** 'rename_variables renaming_couples c' renames all variables according to the couples of the form (old, new), with side effects *)
 val rename_variables_assign : (variable * variable) list -> linear_constraint -> unit
 
-(** 'add_d d coef variables c' adds a variable 'coef * d' to any variable in 'variables' *)
-val add_d : variable -> coef -> variable list -> linear_constraint -> linear_constraint
-
 (** Perform time elapsing on a set of variables: the first variable list will elapse, the second will remain constant *)
 val time_elapse  : variable list -> variable list -> linear_constraint -> linear_constraint
 
@@ -196,7 +193,7 @@ val time_elapse_assign  : variable list -> variable list -> linear_constraint ->
 
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
-(** {3 Conversion} *)
+(** {3 Conversion to string} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
 
 (** Convert a linear constraint into a string *)
@@ -207,6 +204,18 @@ val string_of_false : string
 
 (** String for the true constraint *)
 val string_of_true : string
+
+
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+(** {3 Conversion to GML} *)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+(** Convert a linear constraint into a string for GML *)
+val gml_of_linear_constraint : (variable -> string) -> int -> linear_constraint -> string
+
+
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+(** {3 Conversion to plot} *)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
 
 (** converts a linear_constraint to a set of 2d points wrt. the variables x,y *)
 val shape_of_poly : variable -> variable -> linear_constraint -> (float*float) list *(float*float) list

@@ -5,24 +5,44 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2009/12/08
- * Last modified: 2011/11/15
+ * Last modified: 2011/11/20
  *
  ****************************************************************)
 
 
 open AbstractImitatorFile
-(* open DynArray *)
+
+
+(****************************************************************)
+(** Reachable states *)
+(****************************************************************)
+type state_index = int
+
+(** Unique identifier for each different global location *)
+type location_index = int
+
+(** State: location and constraint *)
+type state = Automaton.global_location * LinearConstraint.linear_constraint
+
+type abstract_state = location_index * LinearConstraint.linear_constraint
 
 (****************************************************************)
 (** Graph structure *)
 (****************************************************************)
-type state_index = int
-
 type reachability_graph = {
-	(** An Array 'state_index' -> 'state' *)
-	all_states : state DynArray.t;
+	(** An Array 'state_index' -> 'state'; contains ALL states *)
+	all_states : abstract_state DynArray.t;
 	
-	(** A hashtable to quickly find identical states *)
+	(** A hash table 'state_index' -> 'state' only for the states the new states will be compared to *)
+(* 	states_to_be_compared : (state_index, state) Hashtbl.t; *)
+
+	(** A hashtable location -> location_index *)
+	index_of_locations : (Automaton.global_location, location_index) Hashtbl.t;
+
+	(** A DynArray location_index -> location *)
+	locations : Automaton.global_location DynArray.t;
+
+	(** A hashtable to quickly find states with identical locations (? ; made by Ulrich); only for states to be compared *)
 	states_for_comparison : (int, state_index) Hashtbl.t;
 
 	(** A hashtable '(state_index, action_index)' -> 'dest_state_index' *)
@@ -45,7 +65,7 @@ val make : int -> reachability_graph
 val nb_states : reachability_graph -> int
 
 (** Return the state of a state_index *)
-val get_state : reachability_graph -> int -> AbstractImitatorFile.state
+val get_state : reachability_graph -> state_index -> state
 
 (** Return the list of all constraints on the parameters associated to the states of a graph *)
 val all_p_constraints : abstract_program -> reachability_graph -> LinearConstraint.linear_constraint list
@@ -54,22 +74,22 @@ val all_p_constraints : abstract_program -> reachability_graph -> LinearConstrai
 val compute_k0_destructive : abstract_program -> reachability_graph -> LinearConstraint.linear_constraint
 
 (** Check if two states are equal *)
-val states_equal: AbstractImitatorFile.state -> AbstractImitatorFile.state -> bool
+val states_equal: state -> state -> bool
 
-(*Check dynamically if two states are equal*)
-val states_equal_dyn: AbstractImitatorFile.state -> AbstractImitatorFile.state -> LinearConstraint.linear_constraint -> bool
+(** Check dynamically if two states are equal, i.e., if the first one + constraint equals second one + constraint *)
+val states_equal_dyn: state -> state -> LinearConstraint.linear_constraint -> bool
 
-(** test if a state exists satisfying predicate s *)
-val exists_state: (AbstractImitatorFile.state -> bool) -> reachability_graph -> bool
+(*(** Test if a state exists satisfying predicate s *)
+val exists_state: (state -> bool) -> reachability_graph -> bool
 
 (** test if all states satisfy predicate s *)
-val forall_state: (AbstractImitatorFile.state -> bool) -> reachability_graph -> bool
+val forall_state: (state -> bool) -> reachability_graph -> bool*)
 
-(** find all "last" states on finite or infinite runs *)
-val last_states: abstract_program -> reachability_graph -> int list 
+(** Find all "last" states on finite or infinite runs *)
+val last_states: abstract_program -> reachability_graph -> state_index list 
 
-(** check if bad states are reached *)
-val is_bad: abstract_program -> reachability_graph -> bool
+(** Check if bad states are reached *)
+(* val is_bad: abstract_program -> reachability_graph -> bool *)
 
 
 (****************************************************************)
