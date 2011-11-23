@@ -25,6 +25,8 @@ class imitator_options =
 		val mutable file = ref ""
 		(* pi0 file *)
 		val mutable pi0file = ref ""
+		(* GML syntax *)
+		val mutable fromGML = ref false
 		
 	
 		(* OUTPUT OPTIONS *)
@@ -87,8 +89,9 @@ class imitator_options =
 
 		
 		method acyclic = !acyclic
-		method nb_args = nb_args
 		method file = !file
+		method fromGML = !fromGML
+		method nb_args = nb_args
 		method pi0file = !pi0file
 		method no_dot = !no_dot
 		method no_log = !no_log
@@ -156,6 +159,7 @@ class imitator_options =
 				("-acyclic", Set acyclic, " Test if a new state was already encountered only with states of the same depth. To be set only if the system is fully acyclic (no backward branching, i.e., no cycle). Default: 'false'");		
 				("-debug", String set_debug_mode_ref, " Print more or less information. Can be set to 'nodebug', 'standard', 'low', 'medium', 'high', 'total'. Default: 'standard'");
 				("-dynamic", Set dynamic, "Perform the on-the-fly intersection. Defaut : 'false'");
+				("-fromGML", Set fromGML, "GML syntax for input files (work in progress!). Defaut : 'false'");
 				("-incl", Set inclusion, " Consider an inclusion of region instead of the equality when performing the Post operation (e.g., implemented in algorithm IMincl). Default: 'false'");
 				("-IMorig", Set pi_compatible, " Algorithm IMoriginal : return a constraint such that no pi-incompatible state can be reached. Default: 'false'");
 				("-IMunion", Set union, " Algorithm IMUnion : Returns the union of the constraint on the parameters associated to the last state of each trace. Default: 'false'");
@@ -163,8 +167,8 @@ class imitator_options =
 				("-mode", String set_mode, " Mode for IMITATOR II. Use 'reachability' for a parametric reachability analysis (no pi0 needed). Use 'inversemethod' for the inverse method. For the behavioral cartography algorithm, use 'cover' to cover all the points within V0, or 'randomXX' where XX is a number to iterate randomly algorithm. Default: 'inversemethod'.");
 				("-no-dot", Set no_dot, " No graphical output using 'dot'. Default: false.");
 				("-no-log", Set no_log, " No generation of log files. Default: false.");
-				("-PTA2CLP", Set pta2clp, "Translate PTA into a CLP program (**work in progress**), and exit without performing any analysis. Defaut : 'false'");
-				("-PTA2GML", Set pta2gml, "Translate PTA into a GML program, and exit without performing any analysis. Defaut : 'false'");
+				("-PTA2CLP", Unit (fun _ -> pta2clp := true; imitator_mode := Translation), "Translate PTA into a CLP program (**work in progress**), and exit without performing any analysis. Defaut : 'false'");
+				("-PTA2GML", Unit (fun _ -> pta2gml := true; imitator_mode := Translation), "Translate PTA into a GML program, and exit without performing any analysis. EXPERIMENTAL. Defaut : 'false'");
 				("-cart", Set cart, " Plot cartography before terminating the program. Uses the first two parameters with ranges. Default: false."); 
 				("-fancy", Set fancy, " Generate detailed state information for dot output. Default: false.");
 				("-jobsjop", Set jobshop, " Use only when working on jobshop problems.");
@@ -203,14 +207,14 @@ class imitator_options =
 			Arg.parse speclist anon_fun usage_msg;
 
 			(* Case no file (except case translation) *)
-			if nb_args < 1 && not !pta2clp then(
+			if nb_args < 1 then(
 				print_error ("Please give a source file name.");
 				Arg.usage speclist usage_msg;
 				abort_program (); exit(0)
 			);
 			
 			(* Case no pi0 file *)
-			if nb_args = 1 && (!imitator_mode != Reachability_analysis) then(
+			if nb_args = 1 && (!imitator_mode != Reachability_analysis) && not !pta2clp && not !pta2gml  then(
 				print_error ("Please give a reference valuation file name.");
 				Arg.usage speclist usage_msg;
 				abort_program (); exit(0)

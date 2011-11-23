@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created       : 2009/09/07
- * Last modified : 2011/11/22
+ * Last modified : 2011/11/23
 ***********************************************/
 
 %{
@@ -35,21 +35,14 @@ let parse_error s =
 
 /* CT_ALL CT_ANALOG CT_ASAP CT_BACKWARD CT_CLDIFF CT_D  CT_ELSE CT_EMPTY  CT_ENDHIDE CT_ENDIF CT_ENDREACH CT_ENDWHILE CT_FORWARD CT_FREE CT_FROM  CT_HIDE CT_HULL CT_INTEGRATOR CT_ITERATE CT_NON_PARAMETERS CT_OMIT CT_POST CT_PRE CT_PRINT CT_PRINTS CT_PRINTSIZE CT_REACH  CT_STOPWATCH CT_THEN CT_TO CT_TRACE CT_USING  CT_WEAKDIFF CT_WEAKEQ CT_WEAKGE CT_WEAKLE  */
 
-%token CT_AND CT_AUTOMATON CT_ANALOG CT_BAD CT_CLOCK CT_DISCRETE CT_DO CT_END CT_ENDREACH CT_FALSE CT_FORWARD CT_FROM CT_GOTO CT_IF CT_INIT CT_INITIALLY CT_IN CT_LOC CT_LOCATIONS CT_NOT CT_OR CT_PARAMETER CT_PRINT CT_REACH CT_REGION CT_SYNC CT_SYNCLABS CT_TRUE CT_VAR CT_WAIT CT_WHEN CT_WHILE
+%token CT_AND CT_AUTOMATON CT_BAD CT_CLOCK CT_DISCRETE CT_DO CT_END CT_ENDREACH CT_FALSE CT_FORWARD CT_FROM CT_GOTO CT_IF CT_INIT CT_INITIALLY CT_IN CT_LOC CT_LOCATIONS CT_NOT CT_OR CT_PARAMETER CT_PRINT CT_REACH CT_REGION CT_SYNC CT_SYNCLABS CT_TRUE CT_VAR CT_WAIT CT_WHEN CT_WHILE
 
 %token EOF
 
-/*%left OP_L OP_LEQ OP_EQ OP_GEQ OP_G*/
 %left PIPE CT_OR        /* lowest precedence */
 %left AMPERSAND CT_AND  /* medium precedence */
-%nonassoc CT_NOT        /* highest precedence * /
+%nonassoc CT_NOT        /* highest precedence */
 
-
-/* %left OP_PLUS OP_MINUS        /* lowest precedence */
-/*
-%left OP_DIV         /* medium precedence * /
-%nonassoc UMINUS        /* highest precedence * /
-*/
 
 %start main             /* the entry point */
 %type <ParsingStructure.parsing_structure> main
@@ -130,7 +123,7 @@ automaton:
 prolog:
 	| initialization sync_labels { $2 }
 	| sync_labels initialization { $1 }
-	| sync_labels { $1 } /* L'initialisation n'est pas prise en compte, et est donc facultative */
+	| sync_labels { $1 } /* L'initialisation n'est pas (forcement) prise en compte, et est donc facultative */
 ;
 
 /**********************************************/
@@ -180,24 +173,24 @@ location:
 	| CT_LOC NAME COLON CT_WHILE convex_predicate CT_WAIT transitions { $2, $5, $7 }
 ;
 
-/**********************************************/
-rate_info_list:
-	rate_info_nonempty_list { $1 }
-	| { [] }
-;
- 
-/**********************************************/
-
-rate_info_nonempty_list:
-     rate_info COMMA rate_info_nonempty_list { $1 :: $3 } 
-	|  rate_info { [$1] }
-;
-
-/**********************************************/
-
-rate_info:
-	NAME APOSTROPHE OP_EQ rational { $1, $4 }
-;
+// /**********************************************/
+// rate_info_list:
+// 	rate_info_nonempty_list { $1 }
+// 	| { [] }
+// ;
+//  
+// /**********************************************/
+// 
+// rate_info_nonempty_list:
+//      rate_info COMMA rate_info_nonempty_list { $1 :: $3 } 
+// 	|  rate_info { [$1] }
+// ;
+// 
+// /**********************************************/
+// 
+// rate_info:
+// 	NAME APOSTROPHE OP_EQ rational { $1, $4 }
+// ;
 
 /**********************************************/
 

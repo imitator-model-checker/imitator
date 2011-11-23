@@ -1390,6 +1390,9 @@ let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_
 
 	let pi0, pi0cube =
 		match options#imitator_mode with
+		| Translation -> 
+			(* Return blank values *)
+			Array.make 0 NumConst.zero, Array.make 0 (0, 0)
 		| Reachability_analysis -> 
 			(* Return blank values *)
 			Array.make 0 NumConst.zero, Array.make 0 (0, 0)
@@ -1518,24 +1521,25 @@ let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_
 	) automata;
 
 	(* Debut print: Pi0 *)
-	let _ =
-	match options#imitator_mode with
-	| Reachability_analysis -> ()
-	| Inverse_method -> 
-		print_message Debug_medium ("\n*** Reference valuation pi0:");
-		List.iter (fun parameter ->
-			print_message Debug_medium (
-				variables.(parameter) ^ " : " ^ (NumConst.string_of_numconst (pi0 parameter))
-			)
-		) parameters;
-	| _ -> 
-		print_message Debug_medium ("\n*** Reference rectangle V0:");
-		Array.iteri (fun i (a, b) ->
-			print_message Debug_medium (
-				variables.(i) ^ " : [" ^ (string_of_int a) ^ ", " ^ (string_of_int b) ^ "]"
-			)
-		) pi0cube
-	in
+	if debug_mode_greater Debug_medium then(
+		match options#imitator_mode with
+		| Translation -> ()
+		| Reachability_analysis -> ()
+		| Inverse_method -> 
+			print_message Debug_medium ("\n*** Reference valuation pi0:");
+			List.iter (fun parameter ->
+				print_message Debug_medium (
+					variables.(parameter) ^ " : " ^ (NumConst.string_of_numconst (pi0 parameter))
+				)
+			) parameters;
+		| _ -> 
+			print_message Debug_medium ("\n*** Reference rectangle V0:");
+			Array.iteri (fun i (a, b) ->
+				print_message Debug_medium (
+					variables.(i) ^ " : [" ^ (string_of_int a) ^ ", " ^ (string_of_int b) ^ "]"
+				)
+			) pi0cube
+	);
 
 
 	(* Make the structure *)

@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2009/09/08
- * Last modified: 2011/11/18
+ * Last modified: 2011/11/23
  *
  ****************************************************************)
 
@@ -61,6 +61,8 @@ val get_debug_mode : unit -> debug_mode
 
 (** Mode for IMITATOR *)
 type imitator_mode =
+	(** Translation to another language: no analysis *)
+	| Translation
 	(** Classical parametric reachability analysis *)
 	| Reachability_analysis
 	(** Classical inverse method *)

@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2010/03/04
- * Last modified: 2011/11/22
+ * Last modified: 2011/11/23
  *
  ****************************************************************)
 
@@ -14,8 +14,6 @@
 (**************************************************)
 
 open Gmp.Q.Infixes
-
-(* type t *)
 
 (*type t =          *)
 (*  | Mpq of Gmp.Q.t*)
@@ -28,8 +26,6 @@ exception Unknown_numconst of string
 (* Functions *)
 (**************************************************)
 
-(*let get_mpq = function*)
-(*	| Mpq a -> a        *)
 let get_mpq a = a
 
 (**************************************************)
@@ -46,35 +42,40 @@ let numconst_of_frac i j = (Gmp.Q.from_ints i j)
 
 let numconst_of_zfrac i j = (Gmp.Q.from_zs i j)
 
+(* Cannot string_of_int (can overflow) ; behavior unspecified if no integer string *)
+let numconst_of_int_string s =
+	Gmp.Q.from_z (Gmp.Z.from_string s)
+
+
 let numconst_of_float f = (* Mpq (Mpq.of_float i) DOES NOT WORK WELL *)
 	(* Split the float in integer and fractional part *)
 	let (fractional, integer) = modf f in
-	let integer = int_of_float integer in
+	let integer = numconst_of_int (int_of_float integer) in
 	(* Case of an integer *)
-	if fractional = 0.0 then numconst_of_int integer
+	if fractional = 0.0 then integer
 	else(
 		let fractional = string_of_float fractional in
 		(* Remove the "0." in front of the fractional part *)
 		let fractional = String.sub fractional 2 (String.length fractional -2) in
 		(* Find the denominator *)
-		let denominator = int_of_string ("1" ^ (String.make (String.length fractional) '0')) in
-		let fractional = int_of_string fractional in
+		let denominator = numconst_of_int_string ("1" ^ (String.make (String.length fractional) '0')) in
+		let fractional = numconst_of_int_string fractional in
 		(* Create the fraction *)
-		 numconst_of_frac (integer * denominator + fractional) denominator
+		 (integer */ denominator +/ fractional) // denominator
 	)
 	
 let numconst_of_string str =
 	(* Case int *)
 	if Str.string_match (Str.regexp "^[0-9]+$") str 0 then
-		numconst_of_int (int_of_string str)
+		numconst_of_int_string str
 	(* Case fraction *)
 	else if Str.string_match (Str.regexp "^[0-9]+/[0-9]+$") str 0 then
 		let parts = Str.split (Str.regexp_string "/") str in
-		let denominator = int_of_string (List.nth parts 0) in
-		let fractional = int_of_string (List.nth parts 1) in
-		numconst_of_frac denominator fractional
+		let denominator =  numconst_of_int_string (List.nth parts 0) in
+		let fractional = numconst_of_int_string(List.nth parts 1) in
+		denominator // fractional
 	(* Case float *)
-	else if Str.string_match (Str.regexp "^[0-9]+\.[0-9]+$") str 0 then numconst_of_float (float_of_string str)
+	else if Str.string_match (Str.regexp "^[0-9]+.[0-9]+$") str 0 then numconst_of_float (float_of_string str)
 	(* Otherwise *)
 	else raise (Unknown_numconst ("Impossible to cast the string '" ^ str ^ "' to a NumConst in function numconst_of_string. Unknown type."))
 	(* 	Gmp.Q.from_z (Gmp.Z.from_string str) *)

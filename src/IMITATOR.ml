@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2009/09/07
- * Last modified: 2011/11/22
+ * Last modified: 2011/11/23
  *
  **************************************************)
 
@@ -26,7 +26,6 @@ open Graphics
 (**************************************************
 
 A FAIRE
-[ ] rétablir l'appel à IMITATOR pour graphe d'accessibilité non temporisé seulement
 [ ] eviter les etats degeneres (avec "faux") : arrive dans le cas ou aucun etat n'est genere (init deja pas satisfiable) --> bouger le test de satisfiabilite dans le demarrage de InverseMethod ?
 
  OPTIMISATIONS A FAIRE POUR L'EXECUTION
@@ -555,7 +554,7 @@ print_message Debug_standard
 (**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 (* Check compatibility between options *) 
 (**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-if options#imitator_mode = Reachability_analysis && options#nb_args = 2 then
+if (options#imitator_mode = Reachability_analysis || options#imitator_mode = Translation) && options#nb_args = 2 then
 	print_warning ("The pi0 file " ^ options#pi0file ^ " will be ignored since this is a reachability analysis.");
 
 
@@ -568,6 +567,7 @@ print_message Debug_standard ("Model: " ^ options#file);
 
 (* Global mode *)
 let message = match options#imitator_mode with
+	| Translation -> "translation"
 	| Reachability_analysis -> "parametric reachability analysis"
 	| Inverse_method -> "inverse method"
 	| Cover_cartography -> "behavioral cartography algorithm with full coverage and step " ^ (NumConst.string_of_numconst options#step)
@@ -595,6 +595,10 @@ else
 (* Should add a warning in case of incompatible mode (IMoriginal incompatible with IMunion) + VARIANT ROMAIN *)
 
 
+
+(* Syntax *)
+if options#fromGML then
+	print_warning ("GML syntax usesd (experimental!).");
 
 
 (* OPTIONS *)
@@ -642,10 +646,10 @@ in ();
 
 (* Verification of incompatibilities between options *)
 
-if options#imitator_mode =  Reachability_analysis && (options#union || options#pi_compatible) then
+if (options#imitator_mode = Reachability_analysis || options#imitator_mode = Translation) && (options#union || options#pi_compatible) then
 	print_warning ("The program will be launched in reachability mode; options regarding to the variant of the inverse method will thus be ignored.");
 
-if options#imitator_mode =  Reachability_analysis && (NumConst.neq options#step NumConst.one) then
+if (options#imitator_mode = Reachability_analysis || options#imitator_mode = Translation || options#imitator_mode = Inverse_method) && (NumConst.neq options#step NumConst.one) then
 	print_warning ("The program will be launched in reachability mode; option regarding to the step of the cartography algorithm will thus be ignored.");
 	
 	
@@ -670,17 +674,23 @@ if options#timed_mode then (
 
 (* Parsing the main program *)
 print_message Debug_low ("Considering file " ^ options#file ^ ".");
-let parsing_structure = parser_lexer ImitatorParser.main ImitatorLexer.token options#file in 
+let parsing_structure = 
+	(* Branching between 2 input syntaxes *)
+	if options#fromGML then parser_lexer GMLParser.main GMLLexer.token options#file
+	else parser_lexer ImitatorParser.main ImitatorLexer.token options#file
+in 
 
 print_message Debug_medium ("Considering program prefix " ^ options#program_prefix ^ ".");
 
-if options#imitator_mode != Reachability_analysis then
+if options#imitator_mode != Reachability_analysis && options#imitator_mode != Translation then
 	print_message Debug_low ("Considering reference valuation in file " ^ options#pi0file ^ ".");
 
 (* Pi0 Parsing *)
 let pi0_parsed, pi0cube_parsed =
 	(* Depending on which operation we are performing *)
 	match options#imitator_mode with
+		(* If translation: no pi0 *)
+		| Translation -> [], []
 		(* If reachability: no pi0 *)
 		| Reachability_analysis -> [], []
 		(* Inverse method : pi0 *)
@@ -716,6 +726,8 @@ Gc.major ();
 
 (* Translation to CLP (experimental) *)
 if options#pta2clp then(
+	if debug_mode_greater Debug_total then
+		print_message Debug_total ("\nProgram:\n" ^ (ImitatorPrinter.string_of_program program) ^ "\n");
 	print_message Debug_standard ("Translating program to CLP.");
 	print_warning ("Work in progress!!!!");
 	print_message Debug_standard ("\nProgram in CLP:\n" ^ (PTA2CLP.string_of_program program) ^ "\n");
@@ -724,17 +736,21 @@ if options#pta2clp then(
 
 (* Translation to GML (experimental) *)
 if options#pta2gml then(
+	if debug_mode_greater Debug_total then
+		print_message Debug_total ("\nProgram:\n" ^ (ImitatorPrinter.string_of_program program) ^ "\n");
 	print_message Debug_standard ("Translating program to GML.");
 	print_warning ("Work in progress!!!!");
 	print_message Debug_standard ("\nProgram in GML:\n" ^ (PTA2GML.string_of_program program) ^ "\n");
 	terminate_program()
 	);
 
-	
+
 (**************************************************)
 (* Debug print: program *)
 (**************************************************)
-(* print_message Debug_total ("\nProgram:\n" ^ (ImitatorPrinter.string_of_program program) ^ "\n"); *)
+if debug_mode_greater Debug_total then
+	print_message Debug_total ("\nProgram:\n" ^ (ImitatorPrinter.string_of_program program) ^ "\n");
+
 
 
 (**************************************************)
@@ -788,6 +804,7 @@ print_message Debug_medium ("\nInitial state after time-elapsing:\n" ^ (Imitator
 
 let zones =
 match options#imitator_mode with
+	| Translation -> raise (InternalError "Translation can't be executed; program should have terminated before.");
 	(* Perform reachability analysis or inverse Method *)
 	| Reachability_analysis | Inverse_method ->
 		let returned_constraint, reachability_graph, _, _ =
