@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2009/09/08
- * Last modified: 2011/11/23
+ * Last modified: 2011/11/24
  *
  ****************************************************************)
 
@@ -23,6 +23,7 @@ let print_version_string _ =
 (****************************************************************)
 exception InternalError of string
 exception Found
+exception InvalidProgram
 
 (** Parsing exception: starting position of the error symbol, ending position of the error symbol *)
 exception ParsingError of (int * int)

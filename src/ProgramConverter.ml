@@ -33,7 +33,6 @@ open ImitatorPrinter
 (****************************************************************)
 (** Exceptions *)
 (****************************************************************)
-exception InvalidProgram
 exception InvalidPi0
 
 

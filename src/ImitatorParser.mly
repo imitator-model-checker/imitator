@@ -173,24 +173,6 @@ location:
 	| CT_LOC NAME COLON CT_WHILE convex_predicate CT_WAIT transitions { $2, $5, $7 }
 ;
 
-// /**********************************************/
-// rate_info_list:
-// 	rate_info_nonempty_list { $1 }
-// 	| { [] }
-// ;
-//  
-// /**********************************************/
-// 
-// rate_info_nonempty_list:
-//      rate_info COMMA rate_info_nonempty_list { $1 :: $3 } 
-// 	|  rate_info { [$1] }
-// ;
-// 
-// /**********************************************/
-// 
-// rate_info:
-// 	NAME APOSTROPHE OP_EQ rational { $1, $4 }
-// ;
 
 /**********************************************/
 

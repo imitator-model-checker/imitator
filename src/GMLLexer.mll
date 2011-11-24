@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created       : 2011/11/23
- * Last modified : 2011/11/23
+ * Last modified : 2011/11/24
 *****************************************************************)
 
 {
@@ -33,10 +33,12 @@ rule token = parse
  	| "<?xml"		{ OPEN_XML } 	
 	| "?>"			{ CLOSE_XML }
 
+	| "<arc"		{ OPEN_ARC }
 	| "<attribute"	{ OPEN_ATTRIBUTE }
  	| "<model"		{ OPEN_MODEL }
 	| "<node"		{ OPEN_NODE }
  	
+	| "</arc"		{ OPEN_END_ARC }
 	| "</attribute"	{ OPEN_END_ATTRIBUTE }
 	| "</model"		{ OPEN_END_MODEL }
 	| "</node"		{ OPEN_END_NODE }
@@ -50,17 +52,31 @@ rule token = parse
 	| "\"const\""			{ STR_CONST }
 	| "\"constants\""		{ STR_CONSTANTS }
 	| "\"discrete\""		{ STR_DISCRETE }
+	| "\"expr\""			{ STR_EXPR }
 	| "\"finalState\""		{ STR_FINALSTATE }
 	| "\"globalconstants\""	{ STR_GLOBALCONSTANTS }
 	| "\"guard\""			{ STR_GUARD }
 	| "\"initialState\""	{ STR_INITIALSTATE }
 	| "\"invariant\""		{ STR_INVARIANT }
+	| "\"label\""			{ STR_LABEL }
 	| "\"name\""			{ STR_NAME }
 	| "\"parameters\""		{ STR_PARAMETERS }
 	| "\"state\""			{ STR_STATE }
 	| "\"type\""			{ STR_TYPE }
+	| "\"transition\""		{ STR_TRANSITION }
+	| "\"update\""			{ STR_UPDATE }
+	| "\"updates\""			{ STR_UPDATES }
 	| "\"UTF-8\""			{ STR_UTF8 }
 	| "\"variables\""		{ STR_VARIABLES }
+
+	| "\"less\""			{ STR_OPL }
+	| "\"lessEqual\""		{ STR_OPLEQ }
+	| "\"equal\""			{ STR_OPEQ }
+	| "\"greaterEqual\""	{ STR_OPGEQ }
+	| "\"greater\""			{ STR_OPG }
+	
+	| "\"*\""				{ STR_OPMUL }
+	
 	| "\"http://alligator.lip6.fr/timed-automata.fml\"" { STR_FORMALISM_URL }
 	| "\"http://gml.lip6.fr/model\"" { STR_XMLNS }
 	
@@ -77,13 +93,16 @@ rule token = parse
 		STR_FLOAT digits
 		} 
 
-	| "encoding"		{ CT_ENCODING}
-	| "formalismUrl"	{ CT_FORMALISMURL}
-	| "id"				{ CT_ID}
-	| "name"			{ CT_NAME}
-	| "nodeType"		{ CT_NODETYPE}
-	| "version"			{ CT_VERSION}
-	| "xmlns"			{ CT_XMLNS}
+	| "arcType"			{ CT_ARCTYPE }
+	| "encoding"		{ CT_ENCODING }
+	| "formalismUrl"	{ CT_FORMALISMURL }
+	| "id"				{ CT_ID }
+	| "name"			{ CT_NAME }
+	| "nodeType"		{ CT_NODETYPE }
+	| "source"			{ CT_SOURCE }
+	| "target"			{ CT_TARGET }
+	| "version"			{ CT_VERSION }
+	| "xmlns"			{ CT_XMLNS }
 
 	| ['0'-'9']+ as lxm { INT(NumConst.numconst_of_string lxm) }
 
@@ -92,9 +111,9 @@ rule token = parse
 
 	| '='              { OP_EQ }
 
-	| '+'              { OP_PLUS }
+(*	| '+'              { OP_PLUS }
+	| '*'              { OP_MUL }*)
 	| '-'              { OP_MINUS }
-	| '*'              { OP_MUL }
 	| '/'              { OP_DIV }
 
 	| eof              { EOF}

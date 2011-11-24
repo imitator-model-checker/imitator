@@ -6,7 +6,7 @@
 #
 #  Author:        Etienne Andre
 #  Created:       2009/09/07
-#  Last modified: 2011/11/22
+#  Last modified: 2011/11/23
 #  Ocaml version: 3.12.1
 ###############################################################
 
@@ -60,7 +60,7 @@ MAIN = $(SRC)/IMITATOR.cmo
 MAIN_OPT = $(MAIN:.cmo=.cmx)
 
 # modules to compile
-MODULES = Global NumConst Options LinearConstraint Cache Automaton Pi0Lexer Pi0Parser Pi0CubeLexer Pi0CubeParser ImitatorLexer ImitatorParser ImitatorPrinter PTA2CLP PTA2GML ProgramConverter Graph Reachability Graphics
+MODULES = Global NumConst Options LinearConstraint Cache Automaton Pi0Lexer Pi0Parser Pi0CubeLexer Pi0CubeParser ImitatorLexer ImitatorParser GMLLexer GMLParser ImitatorPrinter PTA2CLP PTA2GML ProgramConverter Graph Reachability Graphics
 
 # interfaces
 HEADERS = Global NumConst LinearConstraint Cache Automaton ParsingStructure AbstractImitatorFile ImitatorPrinter PTA2CLP PTA2GML ProgramConverter Graph Reachability Graphics
@@ -70,8 +70,8 @@ OBJS = $(addprefix $(SRC)/, $(addsuffix .cmo, $(MODULES)))
 OBJS_OPT = $(addprefix $(SRC)/, $(addsuffix .cmx, $(MODULES)))
 
 # parsers and lexers 
-LEXERS = Pi0Lexer Pi0CubeLexer ImitatorLexer
-PARSERS = Pi0Parser Pi0CubeParser ImitatorParser
+LEXERS = Pi0Lexer Pi0CubeLexer ImitatorLexer GMLLexer
+PARSERS = Pi0Parser Pi0CubeParser ImitatorParser GMLParser
 
 LEX_ML = $(addprefix $(SRC)/, $(addsuffix .ml, $(LEXERS)))
 LEX_CMI = $(addprefix $(SRC)/, $(addsuffix .cmi, $(LEXERS)))
@@ -160,14 +160,24 @@ exe:
 
 # 	./IMITATOR Examples/Gates/NorGate.imi -mode reachability -with-parametric-log
 
-##### TESTS #####
+##### TESTS FOR SYNTAX #####
 
-# 	$(TARGET) $(EXAMPLE_PATH)/Proprietes/exCTL.imi $(EXAMPLE_PATH)/Proprietes/exCTL.pi0
-	$(TARGET) $(EXAMPLE_PATH)/Proprietes/exCTL.imi $(EXAMPLE_PATH)/Proprietes/exCTL.pi0 -PTA2GML -debug high
-# 	$(TARGET) $(EXAMPLE_PATH)/Proprietes/exCTL.imi $(EXAMPLE_PATH)/Proprietes/exCTL.pi0 -PTA2CLP
+# 	$(TARGET) $(EXAMPLE_PATH)/Tests/test.gml -mode reachability -debug high -fromGML
+
+# 	$(TARGET) $(EXAMPLE_PATH)/Tests/test.imi -PTA2GML
 
 # 	$(TARGET) $(EXAMPLE_PATH)/Tests/testPost.imi -mode reachability -statistics -debug total
 # 	$(TARGET) $(EXAMPLE_PATH)/Tests/testPostSansDiscrete.imi -mode reachability -statistics -debug total
+
+# 	$(TARGET) $(EXAMPLE_PATH)/Tests/exPourGML.imi -PTA2GML
+
+	$(TARGET) $(EXAMPLE_PATH)/Tests/exPourGML.imi -mode reachability
+	$(TARGET) $(EXAMPLE_PATH)/Tests/SynthesizedGML.gml -fromGML -mode reachability
+
+##### TESTS FOR PROPERTIES #####
+
+# 	$(TARGET) $(EXAMPLE_PATH)/Proprietes/exCTL.imi $(EXAMPLE_PATH)/Proprietes/exCTL.pi0
+# 	$(TARGET) $(EXAMPLE_PATH)/Proprietes/exCTL.imi $(EXAMPLE_PATH)/Proprietes/exCTL.pi0 -PTA2CLP
 
 # 	$(TARGET) $(EXAMPLE_PATH)/Tests/testBoucleAvecDiscrete.imi -mode reachability -statistics -post-limit 200 -no-dot -no-log
 # 	bin/IMITATOR2.36 $(EXAMPLE_PATH)/Tests/testBoucleAvecDiscrete.imi -mode reachability -statistics -post-limit 200 -no-dot -no-log
@@ -265,7 +275,7 @@ exe:
 ##### CASE STUDIES : VALMEM #####
 
 # 	./IMITATOR Examples/Valmem/spsmall.imi -mode reachability -timed -time-limit 60
-	$(TARGET) $(EXAMPLE_PATH)/Valmem/spsmall.imi $(EXAMPLE_PATH)/Valmem/spsmall.pi0 -no-dot -no-log -PTA2GML -debug high
+# 	$(TARGET) $(EXAMPLE_PATH)/Valmem/spsmall.imi $(EXAMPLE_PATH)/Valmem/spsmall.pi0 -no-dot -no-log -PTA2GML -debug high
 # -debug medium -inclusion -post-limit 2 -sync-auto-detect
 # 	bin/IMITATOR2.35 $(EXAMPLE_PATH)/Valmem/spsmall.imi $(EXAMPLE_PATH)/Valmem/spsmall.pi0 -no-dot -no-log -statistics
 # 	bin/IMITATOR2.34.111115 $(EXAMPLE_PATH)/Valmem/spsmall.imi $(EXAMPLE_PATH)/Valmem/spsmall.pi0 -no-dot -no-log

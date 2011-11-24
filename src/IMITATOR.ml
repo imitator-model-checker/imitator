@@ -598,7 +598,7 @@ else
 
 (* Syntax *)
 if options#fromGML then
-	print_warning ("GML syntax usesd (experimental!).");
+	print_warning ("GML syntax used (experimental!).");
 
 
 (* OPTIONS *)
@@ -676,7 +676,9 @@ if options#timed_mode then (
 print_message Debug_low ("Considering file " ^ options#file ^ ".");
 let parsing_structure = 
 	(* Branching between 2 input syntaxes *)
-	if options#fromGML then parser_lexer GMLParser.main GMLLexer.token options#file
+	if options#fromGML then
+		try parser_lexer GMLParser.main GMLLexer.token options#file
+		with InvalidProgram -> (print_error ("GML input contains error. Please check it again."); abort_program (); exit 0)
 	else parser_lexer ImitatorParser.main ImitatorLexer.token options#file
 in 
 
@@ -711,7 +713,7 @@ try (
 	ProgramConverter.abstract_program_of_parsing_structure
 		parsing_structure pi0_parsed pi0cube_parsed options
 ) with 
-	| ProgramConverter.InvalidProgram -> (print_error ("The input program contains errors. Please check it again."); abort_program (); exit 0)
+	| InvalidProgram -> (print_error ("The input program contains errors. Please check it again."); abort_program (); exit 0)
 	| ProgramConverter.InvalidPi0 -> (print_error ("The input pi_0 file contains errors. Please check it again."); abort_program (); exit 0)
 	| InternalError e -> (print_error ("Internal error: " ^ e ^ "\nPlease insult the developers."); abort_program (); exit 0)
 	in

@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2010/03/04
- * Last modified: 2011/11/23
+ * Last modified: 2011/11/24
  *
  ****************************************************************)
 
@@ -88,7 +88,15 @@ let numconst_of_mpz z = Gmp.Q.from_z z
 let mpq_of_numconst = get_mpq
 
 let string_of_numconst a =
+	(* Avoid 0/1 *)
+	if a =/ (Gmp.Q.zero) then "0" else(
+	(* Avoid 1/1 *)
+	let den = get_den a in 
+	if den = (Gmp.Z.from_int 1) then
+		Gmp.Z.to_string (get_num a)
+	else
 	Gmp.Q.to_string (get_mpq a)
+	)
 
 
 (**************************************************)

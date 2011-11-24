@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2011/11/22
- * Last modified: 2011/11/22
+ * Last modified: 2011/11/24
  *
  ************************************************************)
 
@@ -33,10 +33,10 @@ let string_of_var_type = function
 
 (* Add a header to the program *)
 let string_of_header program =
-	"/************************************************************"
+	"<!-- ************************************************************"
 	^ "\n" ^" * Program " ^ program.options#file
 (* 	^ "\n" ^" * Generated at time " ^ time? *)
-	^ "\n" ^" ************************************************************/"
+	^ "\n" ^" ************************************************************ -->"
 	^ "\n"
 	^ "\n" ^ "<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
 	^ "\n" ^ "<model formalismUrl=\"http://alligator.lip6.fr/timed-automata.fml\""
@@ -74,11 +74,15 @@ let string_of_declarations program =
 			^ "\n\t\t" ^ "</attribute>"
 	) else "")
 
+	^ "\n\t" ^ "</attribute>"
 
 
 (* Convert a sync into a string *)
-let string_of_sync program =
-	program.action_names
+let string_of_sync program label =
+	match program.action_types label with
+	| Action_type_sync -> "\n\t\t<!-- Nosync " ^ (program.action_names label) ^ " -->"
+	| Action_type_nosync -> "\n\t\t<attribute name=\"label\">" ^ (program.action_names label) ^ "</attribute>"
+	
 
 
 
@@ -98,7 +102,7 @@ let string_of_updates program updates =
 		"\n\t\t\t<attribute name=\"update\">"
 		^ "\n\t\t\t\t<attribute name=\"name\">" ^ (program.variable_names variable_index) ^ "</attribute>"
 		^ "\n\t\t\t\t<attribute name=\"expr\">"
-		^ (LinearConstraint.string_of_linear_term program.variable_names linear_term)
+		^ (LinearConstraint.gml_of_linear_term program.variable_names 5 linear_term)
 		^ "\n\t\t\t\t</attribute>"
 		^ "\n\t\t\t</attribute>"
 	) updates)
@@ -138,7 +142,7 @@ let string_of_transition program automaton_index action_index location_index (gu
 	"\n\t<arc id=\"" ^ (string_of_int !id_transition) ^ "\" arcType=\"transition\" source=\"" ^ (string_of_int location_index) ^ "\" target=\"" ^ (string_of_int destination_location) ^ "\">"
 	
 	(* Convert the action *)
-	^ "\n\t\t<attribute name=\"label\">" ^ (string_of_sync program action_index) ^ "</attribute>"
+	^ (string_of_sync program action_index)
 	^
 	(* Convert the guard if any *)
 	(if not (LinearConstraint.is_true guard) then (
@@ -155,8 +159,8 @@ let string_of_transition program automaton_index action_index location_index (gu
 		^ (string_of_clock_updates program clock_updates)
 		^ (string_of_updates program discrete_updates)
 		^ "\n\t\t</attribute>"
-		^ "\n\t</arc>"
 	) else "")
+	^ "\n\t</arc>"
 
 
 
@@ -221,9 +225,9 @@ let string_of_locations program automaton_index =
 
 (* Convert an automaton into a string *)
 let string_of_automaton program automaton_index =
-	"\n/************************************************************"
+	"\n<!-- ************************************************************"
 	^ "\n automaton " ^ (program.automata_names automaton_index)
-	^ "\n ************************************************************/"
+	^ "\n ************************************************************ -->"
 	(* Description of states *)
 	^ "\n " ^ (string_of_locations program automaton_index)
 	(* Description of transitions *)
@@ -241,8 +245,9 @@ let string_of_automata program =
 (* Convert an automaton into a string *)
 let string_of_program program =
 	string_of_header program
-	^  "\n" ^ string_of_declarations program
-	^  "\n" ^ string_of_automata program
+	^ "\n" ^ string_of_declarations program
+	^ "\n" ^ string_of_automata program
+	^ "\n" ^ "</model>"
 
 
 (**************************************************)

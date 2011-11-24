@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2010/03/04
- * Last modified: 2011/11/15
+ * Last modified: 2011/11/24
  *
  ****************************************************************)
  
@@ -209,8 +209,12 @@ val string_of_true : string
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
 (** {3 Conversion to GML} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+(** Convert a linear term into a string for GML *)
+val gml_of_linear_term : (variable -> string) -> int -> linear_term -> string
+
 (** Convert a linear constraint into a string for GML *)
 val gml_of_linear_constraint : (variable -> string) -> int -> linear_constraint -> string
+
 
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)

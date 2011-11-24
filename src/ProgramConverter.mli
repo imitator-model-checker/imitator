@@ -7,7 +7,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2009/09/09
- * Last modified: 2010/03/29
+ * Last modified: 2011/11/24
  *
  ****************************************************************)
 
@@ -21,7 +21,6 @@ open AbstractImitatorFile
 (****************************************************************)
 (** Exceptions *)
 (****************************************************************)
-exception InvalidProgram
 exception InvalidPi0
 
 (****************************************************************)

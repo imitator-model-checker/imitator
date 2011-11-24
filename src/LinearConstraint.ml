@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2010/03/04
- * Last modified: 2011/11/16
+ * Last modified: 2011/11/24
  *
  ****************************************************************)
 
@@ -818,52 +818,62 @@ let substitute_variables sub linear_inequality =
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
 
 (** Convert a linear term (PPL) into a string *)								
-let rec gml_of_linear_term_ppl names t_level linear_term =
-	match linear_term with
-		| Coefficient z ->
-			"\n" ^ (string_n_times t_level "\t") ^ "<attribute name=\"const\">" ^ (Gmp.Z.string_from z) ^ "</attribute>" 
-		
-		| Variable v ->
-			"\n" ^ (string_n_times t_level "\t") ^ "<attribute name=\"name\">" ^ (names v) ^ "</attribute>" 
-		
-		| Unary_Plus t ->
-			gml_of_linear_term_ppl names t_level t
+let rec gml_of_linear_term_ppl names t_level = function
+	| Coefficient z ->
+		"\n" ^ (string_n_times t_level "\t") ^ "<attribute name=\"const\">" ^ (if Gmp.Z.equal z (Gmp.Z.from_int 0) then "0" else Gmp.Z.string_from z) ^ "</attribute>" 
+	
+	| Variable v ->
+		"\n" ^ (string_n_times t_level "\t") ^ "<attribute name=\"name\">" ^ (names v) ^ "</attribute>" 
+	
+	| Unary_Plus t ->
+		gml_of_linear_term_ppl names t_level t
 
-		| Unary_Minus t -> 
-			"\n" ^ (string_n_times t_level "\t") ^ "<attribute name=\"-\">"
-			^ "\n" ^ (string_n_times (t_level + 1) "\t") ^ "<attribute name=\"const\">0</attribute>"
-			^ (gml_of_linear_term_ppl names (t_level + 1) t)
-			^ "\n" ^ (string_n_times t_level "\t") ^ "</attribute>"
-		
-		| Plus (lterm, rterm) ->
-			"\n" ^ (string_n_times t_level "\t") ^ "<attribute name=\"+\">"
-			^ (gml_of_linear_term_ppl names (t_level + 1) lterm)
-			^ (gml_of_linear_term_ppl names (t_level + 1) rterm)
-			^ "\n" ^ (string_n_times t_level "\t") ^ "</attribute>"
+	| Unary_Minus t -> 
+		"\n" ^ (string_n_times t_level "\t") ^ "<attribute name=\"-\">"
+		^ "\n" ^ (string_n_times (t_level + 1) "\t") ^ "<attribute name=\"const\">0</attribute>"
+		^ (gml_of_linear_term_ppl names (t_level + 1) t)
+		^ "\n" ^ (string_n_times t_level "\t") ^ "</attribute>"
+	
+	| Plus (lterm, rterm) ->
+		let rightnull =
+		match rterm with
+			| Coefficient z -> Gmp.Z.equal z (Gmp.Z.from_int 0)
+			| Times (z1 , Coefficient z2) -> Gmp.Z.equal z1 (Gmp.Z.from_int 0) || Gmp.Z.equal z2 (Gmp.Z.from_int 0)
+			| Times (z , _) -> Gmp.Z.equal z (Gmp.Z.from_int 0)
+			| _ -> false
+		in
+		(* If no right attribute: discard '+' *)
+		if rightnull then gml_of_linear_term_ppl names t_level lterm
+		else
+		(* Else *)
+		"\n" ^ (string_n_times t_level "\t") ^ "<attribute name=\"+\">"
+		^ (gml_of_linear_term_ppl names (t_level + 1) lterm)
+		^ (gml_of_linear_term_ppl names (t_level + 1) rterm)
+		^ "\n" ^ (string_n_times t_level "\t") ^ "</attribute>"
 
-		| Minus (lterm, rterm) ->
-			"\n" ^ (string_n_times t_level "\t") ^ "<attribute name=\"-\">"
-			^ (gml_of_linear_term_ppl names (t_level + 1) lterm)
-			^ (gml_of_linear_term_ppl names (t_level + 1) rterm)
-			^ "\n" ^ (string_n_times t_level "\t") ^ "</attribute>"
-		
-		| Times (z, rterm) ->
-				(* Check that multiplication is not by one *)
-				if (Gmp.Z.equal z (Gmp.Z.one)) then
-					gml_of_linear_term_ppl names t_level rterm
-				else 
-					"\n" ^ (string_n_times t_level "\t") ^ "<attribute name=\"*\">"
-					^ "\n" ^ (string_n_times (t_level + 1) "\t") ^ "<attribute name=\"const\">" ^ (Gmp.Z.string_from z) ^ "</attribute>" 
-					^ (gml_of_linear_term_ppl names (t_level + 1) rterm)
-					^ "\n" ^ (string_n_times t_level "\t") ^ "</attribute>"
+	| Minus (lterm, rterm) ->
+		"\n" ^ (string_n_times t_level "\t") ^ "<attribute name=\"-\">"
+		^ (gml_of_linear_term_ppl names (t_level + 1) lterm)
+		^ (gml_of_linear_term_ppl names (t_level + 1) rterm)
+		^ "\n" ^ (string_n_times t_level "\t") ^ "</attribute>"
+	
+	| Times (z, rterm) ->
+			(* Check that multiplication is not by one *)
+			if (Gmp.Z.equal z (Gmp.Z.one)) then
+				gml_of_linear_term_ppl names t_level rterm
+			else 
+				"\n" ^ (string_n_times t_level "\t") ^ "<attribute name=\"*\">"
+				^ "\n" ^ (string_n_times (t_level + 1) "\t") ^ "<attribute name=\"const\">" ^ (Gmp.Z.string_from z) ^ "</attribute>" 
+				^ (gml_of_linear_term_ppl names (t_level + 1) rterm)
+				^ "\n" ^ (string_n_times t_level "\t") ^ "</attribute>"
 
 
 (** Convert a linear inequality into a string *)
 let gml_of_linear_inequality names t_level linear_inequality =
 	let normal_ineq = normalize_inequality linear_inequality in
 	let lterm, rterm, op = split_linear_inequality normal_ineq in
-	let lstr = gml_of_linear_term_ppl names (t_level + 1) lterm in
-	let rstr = gml_of_linear_term_ppl names (t_level + 1) rterm in
+	let lstr = gml_of_linear_term_ppl names (t_level + 2) lterm in
+	let rstr = gml_of_linear_term_ppl names (t_level + 2) rterm in
 	let opstr = match op with
 		| Less_Than_RS -> "less"
 		| Less_Or_Equal_RS -> "lessEqual"
@@ -871,39 +881,49 @@ let gml_of_linear_inequality names t_level linear_inequality =
 		| Greater_Than_RS -> "greater"
 		| Greater_Or_Equal_RS -> "greaterEqual" in
 	  "\n" ^ (string_n_times t_level "\t") ^ "<attribute name=\"" ^ opstr ^ "\">"
-	^ lstr ^ rstr
+	^ "\n" ^ (string_n_times (t_level + 1) "\t") ^ "<attribute name=\"expr\">" ^ lstr ^ "\n" ^ (string_n_times (t_level + 1) "\t") ^ "</attribute>"
+	^ "\n" ^ (string_n_times (t_level + 1) "\t") ^ "<attribute name=\"expr\">" ^ rstr ^ "\n" ^ (string_n_times (t_level + 1) "\t") ^ "</attribute>"
 	^ "\n" ^ (string_n_times t_level "\t") ^ "</attribute>"
 
-	(*	    <attribute name="less">
-                    <attribute name="expr">
-                        <attribute name="name">y</attribute>
-                    </attribute>
-                    <attribute name="expr">
-                        <attribute name="const">4</attribute>
-                    </attribute>*)
-                    
+(** Convert a linear term into a string *)
+let gml_of_linear_term names t_level linear_term =
+	let linear_term, coef = normalize_linear_term linear_term in
+(* 	gml_of_linear_term_ppl names t_level linear_term *)
+	gml_of_linear_term_ppl names t_level linear_term
+	
+
 (** Convert a linear constraint into a string *)
 let gml_of_linear_constraint names t_level linear_constraint =
 	(* First check if true or false *)
-	if is_true linear_constraint || is_false linear_constraint then (raise (InternalError "A linear constraint can't be true or false when converted to GML."));
-	(* Get a list of linear inequalities *)
-	let list_of_inequalities = get_constraints linear_constraint in
-	let several_inequalities = List.length list_of_inequalities > 2 in
-	(* Conjunction : start *)
-	(if several_inequalities then
-		("\n" ^ (string_n_times t_level "\t") ^ "<attribute name=\"and\">"
-	) else "")
-	^
-	(* Convert all inequalities *)
-	(string_of_list_of_string
-		(List.map (gml_of_linear_inequality names (if several_inequalities then t_level + 1 else t_level)) list_of_inequalities)
-	)
-	^
-	(* Conjunction : end *)
-	(if several_inequalities then
-		("\n" ^ (string_n_times t_level "\t") ^ "</attribute>"
-	) else "")
-
+	if is_true linear_constraint then "<attribute name=\"boolValue\">true</attribute>"
+	else (if is_false linear_constraint then "<attribute name=\"boolValue\">false</attribute>"
+	else (
+		(* Get a list of linear inequalities *)
+		let list_of_inequalities = get_constraints linear_constraint in
+		let rec gml_of_linear_constraint_rec t_level = function
+		| [] -> ""
+		| first :: rest ->
+			let several_inequalities = List.length rest > 0 in
+			(* Conjunction : start *)
+			(if several_inequalities then
+				("\n" ^ (string_n_times t_level "\t") ^ "<attribute name=\"and\">"
+			) else "")
+			^
+			(* Convert rest *)
+			(*(string_of_list_of_string
+				(List.map (gml_of_linear_inequality names (if several_inequalities then t_level + 1 else t_level)) list_of_inequalities)
+			)*)
+			(gml_of_linear_constraint_rec (t_level+1) rest)
+			^
+			(* Convert first *)
+			(gml_of_linear_inequality names (if several_inequalities then t_level + 1 else t_level) first)
+			^
+			(* Conjunction : end *)
+			(if several_inequalities then
+				("\n" ^ (string_n_times t_level "\t") ^ "</attribute>"
+			) else "")
+		in gml_of_linear_constraint_rec t_level list_of_inequalities
+	))
 
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
