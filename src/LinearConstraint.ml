@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2010/03/04
- * Last modified: 2011/11/24
+ * Last modified: 2011/11/29
  *
  ****************************************************************)
 
@@ -42,6 +42,8 @@ let ppl_nb_get_constraints = ref 0
 let ppl_nb_get_generators = ref 0
 
 let ppl_nb_add_constraints = ref 0
+let ppl_nb_hull = ref 0
+let ppl_nb_difference = ref 0
 let ppl_nb_intersection_assign = ref 0
 let ppl_nb_unconstrain = ref 0
 let ppl_nb_map = ref 0
@@ -68,6 +70,8 @@ let get_statistics () =
 	^ "\n" ^ (string_of_int !ppl_nb_get_generators) ^ " calls to get_generators"
 
 	^ "\n" ^ (string_of_int !ppl_nb_add_constraints) ^ " calls to add_constraints"
+	^ "\n" ^ (string_of_int !ppl_nb_difference) ^ " calls to difference_assign"
+	^ "\n" ^ (string_of_int !ppl_nb_hull) ^ " calls to hull_assign"
 	^ "\n" ^ (string_of_int !ppl_nb_intersection_assign) ^ " calls to intersection_assign"
 	^ "\n" ^ (string_of_int !ppl_nb_unconstrain) ^ " calls to unconstrain"
 	^ "\n" ^ (string_of_int !ppl_nb_map) ^ " calls to map"
@@ -677,6 +681,20 @@ let intersection linear_constraints =
 		result_poly
 	) with Unsat_exception -> false_constraint ()*)
 
+
+(** Perform the hull (version with side effect) *)
+let hull_assign linear_constraint1 linear_constraint2 =
+	(* Statistics *)
+	ppl_nb_hull := !ppl_nb_hull + 1;
+	ppl_Polyhedron_poly_hull_assign linear_constraint1 linear_constraint2
+
+
+(** Perform difference (version with side effect) *)
+let difference_assign linear_constraint1 linear_constraint2 =
+	(* Statistics *)
+	ppl_nb_difference := !ppl_nb_difference + 1;
+	ppl_Polyhedron_poly_difference_assign linear_constraint1 linear_constraint2
+	
 
 	
 (** Eliminate a set of variables, side effects version *)

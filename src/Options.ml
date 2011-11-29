@@ -76,7 +76,7 @@ class imitator_options =
 		(* Step for the cartography *)
 		val mutable step = ref NumConst.one
 
-		(* EXTRA OPTIONS *)
+		(* TRANSLATION *)
 		(* Translate PTA into CLP program *)
 		val mutable pta2clp = ref false
 		(* Translate PTA into GML program *)
@@ -89,32 +89,34 @@ class imitator_options =
 
 		
 		method acyclic = !acyclic
-		method file = !file
-		method fromGML = !fromGML
-		method nb_args = nb_args
-		method pi0file = !pi0file
-		method no_dot = !no_dot
-		method no_log = !no_log
-		method fancy = !fancy
-		method with_parametric_log = !with_parametric_log
-		method post_limit = !post_limit
-		method time_limit = !time_limit
-		method program_prefix = !program_prefix
-		method imitator_mode = !imitator_mode
-		method inclusion = !inclusion
-		method tree = !tree
-		method sync_auto_detection = !sync_auto_detection
-		method no_random = !no_random
-		method timed_mode = !timed_mode
 		method cart = !cart
 		method dynamic = !dynamic
-		method union = !union
+		method fancy = !fancy
+		method file = !file
+		method fromGML = !fromGML
+		method imitator_mode = !imitator_mode
+		method inclusion = !inclusion
+		method jobshop = !jobshop
+		method nb_args = nb_args
+		method no_dot = !no_dot
+		method no_log = !no_log
+		method no_random = !no_random
 		method pi_compatible = !pi_compatible
-		method step = !step
-		method statistics = !statistics
+		method post_limit = !post_limit
+		method program_prefix = !program_prefix
 		method pta2clp = !pta2clp
 		method pta2gml = !pta2gml
-		method jobshop = !jobshop
+		method statistics = !statistics
+		method step = !step
+		method sync_auto_detection = !sync_auto_detection
+		method time_limit = !time_limit
+		method timed_mode = !timed_mode
+		method tree = !tree
+		method union = !union
+		method with_parametric_log = !with_parametric_log
+
+		method pi0file = !pi0file
+
 		
 		method parse =
 			let usage_msg = "Usage: IMITATOR program_file [pi0_file] [options]" in
@@ -156,25 +158,25 @@ class imitator_options =
 
 			(* Options *)
 			and speclist = [
-				("-acyclic", Set acyclic, " Test if a new state was already encountered only with states of the same depth. To be set only if the system is fully acyclic (no backward branching, i.e., no cycle). Default: 'false'");		
+				("-acyclic", Set acyclic, " Test if a new state was already encountered only with states of the same depth. To be set only if the system is fully acyclic (no backward branching, i.e., no cycle). Default: 'false'");
+				("-cart", Set cart, " Plot cartography before terminating the program. Uses the first two parameters with ranges. Default: false."); 
 				("-debug", String set_debug_mode_ref, " Print more or less information. Can be set to 'nodebug', 'standard', 'low', 'medium', 'high', 'total'. Default: 'standard'");
 				("-dynamic", Set dynamic, "Perform the on-the-fly intersection. Defaut : 'false'");
+				("-fancy", Set fancy, " Generate detailed state information for dot output. Default: false.");
 				("-fromGML", Set fromGML, "GML syntax for input files (work in progress!). Defaut : 'false'");
 				("-incl", Set inclusion, " Consider an inclusion of region instead of the equality when performing the Post operation (e.g., implemented in algorithm IMincl). Default: 'false'");
 				("-IMorig", Set pi_compatible, " Algorithm IMoriginal : return a constraint such that no pi-incompatible state can be reached. Default: 'false'");
 				("-IMunion", Set union, " Algorithm IMUnion : Returns the union of the constraint on the parameters associated to the last state of each trace. Default: 'false'");
+				("-jobsjop", Set jobshop, " Use only when working on jobshop problems.");
 				("-log-prefix", Set_string program_prefix, " Sets the prefix for log files. Default: [program_file].");
 				("-mode", String set_mode, " Mode for IMITATOR II. Use 'reachability' for a parametric reachability analysis (no pi0 needed). Use 'inversemethod' for the inverse method. For the behavioral cartography algorithm, use 'cover' to cover all the points within V0, or 'randomXX' where XX is a number to iterate randomly algorithm. Default: 'inversemethod'.");
 				("-no-dot", Set no_dot, " No graphical output using 'dot'. Default: false.");
 				("-no-log", Set no_log, " No generation of log files. Default: false.");
-				("-PTA2CLP", Unit (fun _ -> pta2clp := true; imitator_mode := Translation), "Translate PTA into a CLP program (**work in progress**), and exit without performing any analysis. Defaut : 'false'");
-				("-PTA2GML", Unit (fun _ -> pta2gml := true; imitator_mode := Translation), "Translate PTA into a GML program, and exit without performing any analysis. EXPERIMENTAL. Defaut : 'false'");
-				("-cart", Set cart, " Plot cartography before terminating the program. Uses the first two parameters with ranges. Default: false."); 
-				("-fancy", Set fancy, " Generate detailed state information for dot output. Default: false.");
-				("-jobsjop", Set jobshop, " Use only when working on jobshop problems.");
 				("-no-random", Set no_random, " No random selection of the pi0-incompatible inequality (select the first found). Default: false.");
 				("-post-limit", Int (fun i -> post_limit := Some i), " Limits the depth of the Post exploration. Default: no limit.");
-				("-statistics", Set statistics, " Print info on number of calls to PPL. Default: 'false'");		
+				("-PTA2CLP", Unit (fun _ -> pta2clp := true; imitator_mode := Translation), "Translate PTA into a CLP program (**work in progress**), and exit without performing any analysis. Defaut : 'false'");
+				("-PTA2GML", Unit (fun _ -> pta2gml := true; imitator_mode := Translation), "Translate PTA into a GML program, and exit without performing any analysis. EXPERIMENTAL. Defaut : 'false'");
+				("-statistics", Set statistics, " Print info on number of calls to PPL. Default: 'false'");
 				("-step", String (fun i -> (* SHOULD CHECK HERE THAT STEP IS EITHER A FLOAT OR AN INT *) step := (NumConst.numconst_of_string i)), " Step for the cartography. Default: 1/1.");
 				("-sync-auto-detect", Set sync_auto_detection, " Detect automatically the synchronized actions in each automaton. Default: false (consider the actions declared by the user)");
 				("-time-limit", Int (fun i -> time_limit := Some i), " Time limit in seconds. Warning: no guarantee that the program will stop exactly after the given amount of time. Default: no limit.");

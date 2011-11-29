@@ -167,11 +167,17 @@ val partition_pi0_compatible : (variable -> coef) -> linear_constraint -> (linea
 (** makes a copy of a constraint *)
 val copy : linear_constraint -> linear_constraint
 
+(** Perform difference (version with side effect) *)
+val difference_assign : linear_constraint -> linear_constraint -> unit
+
 (** Performs the intersection of a list of linear constraints *)
 val intersection : linear_constraint list -> linear_constraint
 
 (** Performs the intersection of a list of linear constraints with sideeffect *)
 val intersection_assign : linear_constraint -> linear_constraint list -> unit
+
+(** Perform the hull assignation *)
+val hull_assign : linear_constraint -> linear_constraint -> unit
 
 (** Eliminate (using existential quantification) a set of variables in a linear constraint *)
 val hide : variable list -> linear_constraint -> linear_constraint

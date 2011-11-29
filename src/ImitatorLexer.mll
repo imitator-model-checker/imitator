@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created       : 2009/09/07
- * Last modified : 2010/05/07
+ * Last modified : 2011/11/25
 *****************************************************************)
 
 {
@@ -51,17 +51,17 @@ rule token = parse
 	| "end"            { CT_END }
 (* 	| "endhide"        { CT_ENDHIDE } *)
 (* 	| "endif"          { CT_ENDIF } *)
-	| "endreach"       { CT_ENDREACH }
+(* 	| "endreach"       { CT_ENDREACH } *)
 (* 	| "endwhile"       { CT_ENDWHILE } *)
 	| "False"          { CT_FALSE }
-	| "forward"        { CT_FORWARD }
+(* 	| "forward"        { CT_FORWARD } *)
 (* 	| "free"           { CT_FREE } *)
-	| "from"           { CT_FROM }
+(* 	| "from"           { CT_FROM } *)
 	| "goto"           { CT_GOTO }
 (* 	| "hide"           { CT_HIDE } *)
 (* 	| "hull"           { CT_HULL } *)
 	| "if"             { CT_IF }
-	| "in"             { CT_IN }
+(* 	| "in"             { CT_IN } *)
 	| "init"           { CT_INIT }
 	| "initially"      { CT_INITIALLY }
 (* 	| "integrator"     { CT_INTEGRATOR } *)
@@ -75,10 +75,10 @@ rule token = parse
 	| "parameter"      { CT_PARAMETER }
 (* 	| "post"           { CT_POST } *)
 (* 	| "pre"            { CT_PRE } *)
-	| "print"          { CT_PRINT }
+(* 	| "print"          { CT_PRINT } *)
 (* 	| "prints"         { CT_PRINTS } *)
 (* 	| "printsize"      { CT_PRINTSIZE } *)
-	| "reach"          { CT_REACH }
+(* 	| "reach"          { CT_REACH } *)
 	| "region"         { CT_REGION }
 (* 	| "stopwatch"      { CT_STOPWATCH } *)
 	| "sync"           { CT_SYNC }

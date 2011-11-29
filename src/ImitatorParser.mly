@@ -35,7 +35,7 @@ let parse_error s =
 
 /* CT_ALL CT_ANALOG CT_ASAP CT_BACKWARD CT_CLDIFF CT_D  CT_ELSE CT_EMPTY  CT_ENDHIDE CT_ENDIF CT_ENDREACH CT_ENDWHILE CT_FORWARD CT_FREE CT_FROM  CT_HIDE CT_HULL CT_INTEGRATOR CT_ITERATE CT_NON_PARAMETERS CT_OMIT CT_POST CT_PRE CT_PRINT CT_PRINTS CT_PRINTSIZE CT_REACH  CT_STOPWATCH CT_THEN CT_TO CT_TRACE CT_USING  CT_WEAKDIFF CT_WEAKEQ CT_WEAKGE CT_WEAKLE  */
 
-%token CT_AND CT_AUTOMATON CT_BAD CT_CLOCK CT_DISCRETE CT_DO CT_END CT_ENDREACH CT_FALSE CT_FORWARD CT_FROM CT_GOTO CT_IF CT_INIT CT_INITIALLY CT_IN CT_LOC CT_LOCATIONS CT_NOT CT_OR CT_PARAMETER CT_PRINT CT_REACH CT_REGION CT_SYNC CT_SYNCLABS CT_TRUE CT_VAR CT_WAIT CT_WHEN CT_WHILE
+%token CT_AND CT_AUTOMATON CT_BAD CT_CLOCK CT_DISCRETE CT_DO CT_END CT_FALSE CT_GOTO CT_IF CT_INIT CT_INITIALLY CT_LOC CT_LOCATIONS CT_NOT CT_OR CT_PARAMETER CT_REGION CT_SYNC CT_SYNCLABS CT_TRUE CT_VAR CT_WAIT CT_WHEN CT_WHILE
 
 %token EOF
 
@@ -123,7 +123,7 @@ automaton:
 prolog:
 	| initialization sync_labels { $2 }
 	| sync_labels initialization { $1 }
-	| sync_labels { $1 } /* L'initialisation n'est pas (forcement) prise en compte, et est donc facultative */
+	| sync_labels { $1 } /* L'initialisation n'est pas prise en compte, et est donc facultative */
 ;
 
 /**********************************************/
@@ -332,39 +332,60 @@ pos_float:
 ***********************************************/
 
 commands:
-	| init_declaration init_definition bad_declaration bad_definition reach_command { ($2, $4) }
+	| init_declaration init_definition bad_definition rest_of_commands { ($2, $3) }
+	| init_declaration init_definition rest_of_commands { ($2, []) }
 ;
 
 
 init_declaration:
-	| CT_VAR CT_INIT COLON CT_REGION SEMICOLON { }
+	| CT_VAR regions COLON CT_REGION SEMICOLON { }
 	| { }
 ;
 
-reach_command:
+regions:
+	| { }
+	| region_names { }
+;
+
+region_names:
+	| region_name COMMA region_names { }
+	| region_name { }
+;
+
+region_name:
+	| NAME { }
+	| CT_INIT { }
+	| CT_BAD { }
+;
+
+rest_of_commands:
 	/* print (reach forward from init endreach); */
-	| CT_PRINT LPAREN CT_REACH CT_FORWARD CT_FROM CT_INIT CT_ENDREACH RPAREN SEMICOLON { }
+/*	| CT_PRINT LPAREN CT_REACH CT_FORWARD CT_FROM region_name CT_ENDREACH RPAREN SEMICOLON { }
+	| { }*/
+	/* Allow anything from here! (to ensure compatibility with HyTech or other similar tools) */
+	| anything rest_of_commands { }
 	| { }
 ;
 
+anything:
+	| LPAREN { }
+	| region_name { }
+	| RPAREN { }
+	| SEMICOLON { }
+;
 
 init_definition:
 	CT_INIT OP_ASSIGN region_expression SEMICOLON { $3 }
 ;
 
-bad_declaration:
-	| CT_VAR CT_BAD COLON CT_REGION SEMICOLON { }
-	| { }
-;
-
 bad_definition:
 	| CT_BAD OP_ASSIGN loc_expression SEMICOLON { $3 }
-	| { [] } 
 ;
 
 loc_expression:
 	| loc_predicate { [ $1 ] }
-	| loc_expression AMPERSAND loc_expression { $1 @ $3 }
+	| loc_predicate AMPERSAND loc_expression { $1 :: $3 }
+	| loc_predicate loc_expression { $1 :: $2 }
 ;
 
 region_expression:

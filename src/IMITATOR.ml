@@ -603,6 +603,11 @@ if options#fromGML then
 
 (* OPTIONS *)
 
+if options#jobshop then
+	print_message Debug_standard ("Jobshop mode.")
+else
+	print_message Debug_medium ("No jobshop mode (default).");
+
 if options#sync_auto_detection then
 	print_message Debug_standard ("Auto-detection mode for sync actions.")
 else
@@ -615,10 +620,14 @@ else
 
 if options#acyclic then
 	print_message Debug_standard ("Acyclic mode: will only check inclusion or equality of a new state into a former state of the same iteration (graph depth).")
-;
+else
+	print_message Debug_medium ("No acyclic mode (default).");
+
 if options#tree then
 	print_message Debug_standard ("Tree mode: will never check inclusion or equality of a new state into a former state.")
-;
+else
+	print_message Debug_medium ("No tree mode (default).");
+
 
 (* Output *)
 

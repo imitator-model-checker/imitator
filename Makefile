@@ -171,8 +171,8 @@ exe:
 
 # 	$(TARGET) $(EXAMPLE_PATH)/Tests/exPourGML.imi -PTA2GML
 
-	$(TARGET) $(EXAMPLE_PATH)/Tests/exPourGML.imi -mode reachability
-	$(TARGET) $(EXAMPLE_PATH)/Tests/SynthesizedGML.gml -fromGML -mode reachability
+# 	$(TARGET) $(EXAMPLE_PATH)/Tests/exPourGML.imi -mode reachability
+# 	$(TARGET) $(EXAMPLE_PATH)/Tests/SynthesizedGML.gml -fromGML -mode reachability
 
 ##### TESTS FOR PROPERTIES #####
 
@@ -231,6 +231,9 @@ exe:
 
 
 ##### CASE STUDIES : PROTOCOLS #####
+
+# 	$(TARGET) $(EXAMPLE_PATH)/Train/TrainAHV93.imi -mode reachability
+	$(TARGET) $(EXAMPLE_PATH)/Train/TrainAHV93.imi $(EXAMPLE_PATH)/Train/TrainAHV93.pi0 -incl
 
 # 	./IMITATOR Examples/BangOlufsen.imi -mode reachability
 # 	./IMITATOR Examples/BangOlufsen.imi Examples/BangOlufsen.pi0 -post-limit 25 -timed
