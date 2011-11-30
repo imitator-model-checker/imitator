@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2009/12/08
- * Last modified: 2011/11/20
+ * Last modified: 2011/11/30
  *
  ****************************************************************)
 
@@ -30,12 +30,9 @@ type abstract_state = location_index * LinearConstraint.linear_constraint
 (** Graph structure *)
 (****************************************************************)
 type reachability_graph = {
-	(** An Array 'state_index' -> 'state'; contains ALL states *)
-	all_states : abstract_state DynArray.t;
+	(** An Array 'state_index' -> 'abstract_state'; contains ALL states *)
+	all_states : (state_index, abstract_state) Hashtbl.t;
 	
-	(** A hash table 'state_index' -> 'state' only for the states the new states will be compared to *)
-(* 	states_to_be_compared : (state_index, state) Hashtbl.t; *)
-
 	(** A hashtable location -> location_index *)
 	index_of_locations : (Automaton.global_location, location_index) Hashtbl.t;
 
@@ -47,7 +44,11 @@ type reachability_graph = {
 
 	(** A hashtable '(state_index, action_index)' -> 'dest_state_index' *)
 	transitions_table : ((state_index * action_index), state_index) Hashtbl.t;
+
+	(** An integer that remembers the next index of state_index (may not be equal to the number of states, if states are removed *)
+	next_state_index : state_index ref;
 }
+
 
 (****************************************************************)
 (** Graph creation *)
@@ -107,6 +108,12 @@ val add_transition : reachability_graph -> (state_index * action_index * state_i
 
 (** Add an inequality to all the states of the graph *)
 val add_inequality_to_states : reachability_graph -> LinearConstraint.linear_inequality -> unit
+
+(** Replace the constraint of a state in a graph by another one (the constraint is copied to avoid side-effects later) *)
+val replace_constraint : reachability_graph -> LinearConstraint.linear_constraint -> state_index -> unit
+
+(** Merge two states by replacing the second one by the first one, in the whole graph structure (lists of states, and transitions) *)
+val merge_states : reachability_graph -> state_index -> state_index -> unit
 
 (** Empties the hash table giving the set of states for a given location; optimization for the jobshop example, where one is not interested in comparing  a state of iteration n with states of iterations < n *)
 val empty_states_for_comparison : reachability_graph -> unit

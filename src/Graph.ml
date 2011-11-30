@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre, Ulrich Kuehne
  * Created:       2009/12/08
- * Last modified: 2011/11/20
+ * Last modified: 2011/11/30
  *
  ****************************************************************)
 
@@ -32,12 +32,9 @@ type abstract_state = location_index * LinearConstraint.linear_constraint
 (** Graph structure *)
 (****************************************************************)
 type reachability_graph = {
-	(** An Array 'state_index' -> 'state'; contains ALL states *)
-	all_states : abstract_state DynArray.t;
+	(** An Array 'state_index' -> 'abstract_state'; contains ALL states *)
+	all_states : (state_index, abstract_state) Hashtbl.t;
 	
-	(** A hash table 'state_index' -> 'state' only for the states the new states will be compared to *)
-(* 	states_to_be_compared : (state_index, state) Hashtbl.t; *)
-
 	(** A hashtable location -> location_index *)
 	index_of_locations : (Automaton.global_location, location_index) Hashtbl.t;
 
@@ -49,6 +46,9 @@ type reachability_graph = {
 
 	(** A hashtable '(state_index, action_index)' -> 'dest_state_index' *)
 	transitions_table : ((state_index * action_index), state_index) Hashtbl.t;
+
+	(** An integer that remembers the next index of state_index (may not be equal to the number of states, if states are removed *)
+	next_state_index : state_index ref;
 }
 
 
@@ -70,14 +70,14 @@ let nb_constraint_comparisons = ref 0
 
 (** Create a fresh graph *)
 let make guessed_nb_transitions = 
-	(* Create a DynArray for the reachable states *)
-	let states = DynArray.make initial_size in
-	(* Create a hashtable for the locations *)
+	(* Create a Hashtbl : state_index -> (location_index, linear_constraint) for the reachable states *)
+	let states = Hashtbl.create initial_size in
+	(* Create a hashtable : location -> location_index for the locations *)
 	let index_of_locations = Hashtbl.create initial_size in
-	(* Create a DynArray for the locations *)
+	(* Create a DynArray : location_index -> location for the locations *)
 	let locations = DynArray.make initial_size in
-	(* Create an empty lookup table *)
-	let hash_table = Hashtbl.create initial_size in
+	(* Create an empty lookup table : hash -> state_index *)
+	let states_for_comparison = Hashtbl.create initial_size in
 	(* Create a hashtable for the graph *)
 	let transitions_table = Hashtbl.create guessed_nb_transitions in
 	
@@ -86,8 +86,9 @@ let make guessed_nb_transitions =
 		all_states = states;
 		index_of_locations = index_of_locations;
 		locations = locations;
-		states_for_comparison = hash_table;
+		states_for_comparison = states_for_comparison;
 		transitions_table = transitions_table;
+		next_state_index = ref 0;
 	}
 
 
@@ -97,7 +98,7 @@ let make guessed_nb_transitions =
 
 (** Return the number of states in a graph *)
 let nb_states graph =
-	DynArray.length graph.all_states
+	Hashtbl.length graph.all_states
 
 
 (* Return the global_location corresponding to a location_index *)
@@ -108,7 +109,7 @@ let get_location graph location_index =
 (** Return the state of a state_index *)
 let get_state graph state_index =
 	(* Find the couple (location_index, constraint) *)
-	let location_index, linear_constraint = DynArray.get graph.all_states state_index in
+	let location_index, linear_constraint = Hashtbl.find graph.all_states state_index in
 	(* Find the location *)
 	let global_location = get_location graph location_index in
 	(* Return the state *)
@@ -117,23 +118,23 @@ let get_state graph state_index =
 
 (** Return the list of all constraints on the parameters associated to the states of a graph *)
 let all_p_constraints program graph =
-	DynArray.fold_left
-		(fun current_list (_, linear_constraint) ->
+	Hashtbl.fold
+		(fun _ (_, linear_constraint) current_list ->
 			let p_constraint = LinearConstraint.hide program.clocks_and_discrete linear_constraint in
 			p_constraint :: current_list)
-		[] graph.all_states
+		graph.all_states []
 
 	
 (** Iterate over the reachable states *)
-let iter f graph =
-	DynArray.iter f graph.all_states
+let iterate_on_states f graph =
+	Hashtbl.iter f graph.all_states
 
 
 (** Compute the intersection of all parameter constraints, DESTRUCTIVE!!! *)
 (** HERE PROBLEM IF ONE WANTS TO COMPUTE THE states FILE AFTER **)
 let compute_k0_destructive program graph =
 	let k0 = LinearConstraint.true_constraint () in
-	iter (fun (_, constr) -> 
+	iterate_on_states (fun _ (_, constr) -> 
 		LinearConstraint.hide_assign program.clocks_and_discrete constr;
 		LinearConstraint.intersection_assign k0 [constr];
 
@@ -284,27 +285,10 @@ let state_included state1 state2 =
 	)
 
 
-(** Check if two states are mergeable*)
-let state_megeable state1 state2 =
-	let (loc1,constr1) = state1 in
-	let (loc2,constr2) = state2 in
-	let convex_hull_P1_P2 = constr1 in
-	if not (Automaton.location_equal loc1 loc2) then false else (
-		(*Check if the two states are mergeable*)
-		ppl_Polyhedron_poly_hull_assign convex_hull_P1_P2 constr2;
-		(**Return True if the convex hull is equal to the union, False otherwise*)
-		(**Compute the difference between the convex hull and state 1 then take the difference with state2*)
-		ppl_Polyhedron_difference_assign convex_hull_P1_P2 constr1;
-		ppl_Polyhedron_difference_assign convex_hull_P1_P2 constr2;
-		(** If there is anything left in convex_hull_P1_P2 then it wasn't mergeable*)
-		(ppl_Polyhedron_is_empty convex_hull_P1_P2);
-	)
-
-
 (** Perform the insertion of a new state in a graph *)
 let insert_state graph hash new_state =
 	(* Compute the new state index *)
-	let new_state_index = DynArray.length graph.all_states in
+	let new_state_index = !(graph.next_state_index) in
 	(* Retrieve the location and the constraint *)
 	let location, linear_constraint = new_state in
 	(* Try to find the location index *)
@@ -326,14 +310,17 @@ let insert_state graph hash new_state =
 		new_index;
 	) in
 	(* Add the state to the tables *)
-	DynArray.add graph.all_states (location_index, linear_constraint);
+	Hashtbl.add graph.all_states new_state_index (location_index, linear_constraint);
 	Hashtbl.add graph.states_for_comparison hash new_state_index;
+	(* Update next state index *)
+	graph.next_state_index := !(graph.next_state_index) + 1;
 	(* Return state_index *)
 	new_state_index
 
 
+(**** TO DO: merge with add_state !!! *)
 (** Add a state to a graph, if it is not present yet with the on-the-fly intersection *)
-let add_state_dyn program graph new_state constr=
+let add_state_dyn program graph new_state constr =
 	(* compute hash value for the new state *)
 	let hash = hash_code new_state in
 	if debug_mode_greater Debug_total then (
@@ -427,14 +414,100 @@ let add_transition reachability_graph (orig_state_index, action_index, dest_stat
 let add_inequality_to_states graph inequality =
 	let constraint_to_add = LinearConstraint.make [inequality] in
 	(* For all state: *)
-	for state_index = 0 to (DynArray.length graph.all_states) - 1 do
-		 let _, constr = DynArray.get graph.all_states state_index in
-		 LinearConstraint.intersection_assign constr [constraint_to_add] 
-	done
+	iterate_on_states (fun _ (_, constr) ->
+		 LinearConstraint.intersection_assign constr [constraint_to_add]
+	) graph
+		 
+
+
+(** Replace the constraint of a state in a graph by another one (the constraint is copied to avoid side-effects later) *)
+let replace_constraint graph linear_constraint state_index =
+	(* Copy to avoid side-effects *)
+	let linear_constraint_copy = LinearConstraint.copy linear_constraint in
+	try (
+		(* Get the location index *)
+		let location_index, _ = Hashtbl.find graph.all_states state_index in
+		(* Replace with the new constraint *)
+		Hashtbl.replace graph.all_states state_index (location_index, linear_constraint_copy);
+	) with Not_found -> raise (InternalError ("Error when handling state '" ^ (string_of_int state_index) ^ "' in Graph:replace_constraint."))
+
+
+(** Merge two states by replacing the second one by the first one, in the whole graph structure (lists of states, and transitions) *)
+let merge_states graph state_index1 state_index2 =
+	(* Retrieve state2 (for hash later *)
+	let location_index2, constr2 = Hashtbl.find graph.all_states state_index2 in
+	let state2 = get_location graph location_index2, constr2 in
+	
+	(*-------------------------------------------------------------*)
+	(* Replace s2 with s1 in transition table *)
+	(*-------------------------------------------------------------*)
+	(* First copy the table (MEMORY CONSUMING! but necessary in order to avoid unexpected behaviors) *)
+	let transitions_copy = Hashtbl.copy graph.transitions_table in
+	Hashtbl.iter (fun (orig_state_index, action_index) dest_state_index ->
+		(* Replace if source *)
+		if orig_state_index = state_index2 then (
+			(* Replace dest if needed *)
+			let new_dest_state_index = if dest_state_index = state_index2 then state_index1 else dest_state_index in
+			Hashtbl.remove graph.transitions_table (orig_state_index, action_index);
+			if Hashtbl.mem graph.transitions_table (state_index1, action_index) then (
+				(* Unexpected case *)
+				raise (InternalError ("Error when merging states: a couple '(orig_state_index, action_index)' is already bound in the transitions table."));
+			);
+			Hashtbl.add graph.transitions_table (state_index1, action_index) new_dest_state_index;
+		)
+		(* Replace if destination *)
+		else (if dest_state_index = state_index2 then (
+			Hashtbl.remove graph.transitions_table (orig_state_index, action_index);
+			if Hashtbl.mem graph.transitions_table (orig_state_index, action_index) then (
+				(* Unexpected case *)
+				raise (InternalError ("Error when merging states: a couple '(orig_state_index, action_index)' is already bound in the transitions table."));
+			);
+			Hashtbl.add graph.transitions_table (orig_state_index, action_index) state_index1;
+		);
+		(* Else do nothing *)
+		)
+	) transitions_copy;
+	
+	(*-------------------------------------------------------------*)
+	(* Remove s2 from state hashtable *)
+	(*-------------------------------------------------------------*)
+	Hashtbl.remove graph.all_states state_index2;
+	
+	(*-------------------------------------------------------------*)
+	(* Replace s2 with s1 in states_for_comparison *)
+	(*-------------------------------------------------------------*)
+	(* Find the hash *)
+	let hash2 = hash_code state2 in
+	(* Get all states with that hash *)
+	let all_states_with_hash2 = Hashtbl.find_all graph.states_for_comparison hash2 in
+	(* Remove them all *)
+	while Hashtbl.mem graph.states_for_comparison hash2 do
+		Hashtbl.remove graph.states_for_comparison hash2;
+	done;
+	(* Add them back *)
+	List.iter (fun state_index ->
+		(* Only add if not state2 *)
+		if state_index != state_index2 then Hashtbl.add graph.states_for_comparison hash2 state_index;
+	) all_states_with_hash2;
+	
+(*	(* First copy the table (MEMORY CONSUMING! but necessary in order to avoid unexpected behaviors) *)
+	let states_for_comparison_copy = Hashtbl.copy graph.states_for_comparison in
+	(* Empty the original hashtable *)
+	Hashtbl.clear graph.states_for_comparison;
+	(* Fill it again *)
+	Hashtbl.iter (fun hash state_index ->
+		(* Replace the state if needed *)
+		let new_state_index = if state_index = state_index2 then state_index1 else state_index in
+		(* Add it *)
+		Hashtbl.add hash new_state_index;
+	) states_for_comparison_copy; *)
+	()
+
 
 (** Empties the hash table giving the set of states for a given location; optimization for the jobshop example, where one is not interested in comparing  a state of iteration n with states of iterations < n *)
 let empty_states_for_comparison graph =
 	Hashtbl.clear graph.states_for_comparison
+
 
 (** Get statistics on the number of comparisons between states *)
 let get_statistics () =
@@ -444,21 +517,19 @@ let get_statistics () =
 
 (** Get statistics on the structure of the states: number of different locations, number of different constraints *)
 let get_statistics_states graph =
-	let nb_states = DynArray.length graph.all_states in
+	let nb_states = nb_states graph in
 	(* Compute the number of constraints per location *)
 	let nb_constraints_per_location_id = Hashtbl.create (DynArray.length graph.locations) in
 	(* Compute the number of constraints equal to each other (list of couples (constraint, nb) )*)
 	let nb_per_constraint = DynArray.make 0 in
 	(* Iterate on all states *)
-	for state_index = 0 to (DynArray.length graph.all_states) - 1 do
-		(* Look for location and constraint *)
-		let (location, the_constraint) = DynArray.get graph.all_states state_index in
+	iterate_on_states (fun _ (location_index, the_constraint) ->
 		(* Find former nb of constraints for this location *)
 		let former_nb = try
-			Hashtbl.find nb_constraints_per_location_id location
+			Hashtbl.find nb_constraints_per_location_id location_index
 		with Not_found -> 0 in
 		(* Add +1 *)
-		Hashtbl.replace nb_constraints_per_location_id location (former_nb + 1);
+		Hashtbl.replace nb_constraints_per_location_id location_index (former_nb + 1);
 		
 		(*(* Find former nb of constraints *)
 		let _ =
@@ -476,7 +547,7 @@ let get_statistics_states graph =
 		)
 		with Found _ -> ();
 		in ();*)
-	done;
+	) graph;
 	
 	let nb_locations = Hashtbl.length nb_constraints_per_location_id in
 	let nb_different_constraints = DynArray.length nb_per_constraint in
@@ -678,7 +749,6 @@ let shuffle_dot_colors =
 
 (* Convert a graph to a dot file *)
 let dot_of_graph program pi0 reachability_graph ~fancy =	
-	let states = reachability_graph.all_states in
 	let transitions = reachability_graph.transitions_table in
 	(* Create the array of dot colors *)
 	let dot_colors = Array.of_list dot_colors in
@@ -698,7 +768,7 @@ let dot_of_graph program pi0 reachability_graph ~fancy =
 			"\n * The following pi0 was considered:"
 			^ "\n" ^ (ImitatorPrinter.string_of_pi0 program pi0)
 		))
-		^ "\n * " ^ (string_of_int (DynArray.length states)) ^ " states and "
+		^ "\n * " ^ (string_of_int (nb_states reachability_graph)) ^ " states and "
 			^ (string_of_int (Hashtbl.length transitions)) ^ " transitions"
 		^ "\n * Program terminated " ^ (after_seconds ())
 		^ "\n***************************************************/"
@@ -711,7 +781,7 @@ let dot_of_graph program pi0 reachability_graph ~fancy =
 		^
 		(**** BAD PROG ****)
 		(let string_states = ref "" in
-			DynArray.iteri (fun state_index (location_index, linear_constraint) ->
+			iterate_on_states (fun state_index (location_index, linear_constraint) ->
 			(* Get the location *)
 			let global_location = get_location reachability_graph location_index in
 			(* Construct the string *)
@@ -726,7 +796,7 @@ let dot_of_graph program pi0 reachability_graph ~fancy =
 					"\n\n  After clock elimination:"
 					^ "\n  " ^ (LinearConstraint.string_of_linear_constraint program.variable_names parametric_constraint);
 				) else "");
-			) states;
+			) reachability_graph;
 		!string_states)
 		^ "\n*/"
 	in
@@ -759,7 +829,7 @@ let dot_of_graph program pi0 reachability_graph ~fancy =
 		^ "\n/*Colors*/\n" ^
 		(**** BAD PROG ****)
 		(let string_colors = ref "" in
-			DynArray.iteri (fun state_index (location_index, _) ->
+			iterate_on_states (fun state_index (location_index, _) ->
 (*			(* Find the location index *)
 			let location_index = try
 				(**** BAD PROG: should be hashed ****)
@@ -796,7 +866,7 @@ let dot_of_graph program pi0 reachability_graph ~fancy =
 					^ " [color=" ^ location_color
 					^ ", style=filled];";				
 			)
-			) states;
+			) reachability_graph;
 		!string_colors)
 		^ "\n}"
 
