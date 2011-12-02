@@ -105,34 +105,45 @@ let nb_unsat2 = ref 0
 (**************************************************************)
 (* Jobshop functions *)
 (**************************************************************)
-
 (** Check if two states are mergeable*)
 let state_mergeable state1 state2 =
 	let (loc1,constr1) = state1 in
 	let (loc2,constr2) = state2 in
-	if LinearConstraint.is_false constr1 then print_message Debug_standard ("State 1 est associe a la contrainte false...");
+	let copy_constr1 = LinearConstraint.copy constr1 in
+(*	if LinearConstraint.is_false constr1 then print_message Debug_standard ("State 1 est associe a la contrainte false...");
 	if LinearConstraint.is_false constr2 then print_message Debug_standard ("State 2 est associe a la contrainte false...");
 	if LinearConstraint.is_true constr1 then print_message Debug_standard ("State 1 est associe a la contrainte true...");	
-	if LinearConstraint.is_true constr2 then print_message Debug_standard ("State 2 est associe a la contrainte true...");
-	let convex_hull_P1_P2 = constr1 in 
-		if not (Automaton.location_equal loc1 loc2) then false else (
-			(*Check if the two states are mergeable*)
-			(** ROMAIN : attention, ici constr1 est modifie, hein ! *)
-			LinearConstraint.hull_assign constr1 constr2;
-			(**Return True if the convex hull is equal to the union, False otherwise*)
-			(**Compute the difference between the convex hull and state 1 then take the difference with state2*)
-			if LinearConstraint.is_equal constr1 constr2 then print_message Debug_standard ("Convex hull is equal to the first constraint");
-			LinearConstraint.difference_assign constr1 constr2;			
-			if LinearConstraint.is_false constr1 then print_message Debug_standard ("LE DEUXIEME EGAL LE PREMIER !");
-			LinearConstraint.difference_assign constr1 convex_hull_P1_P2;	
-			(** If there is anything left in convex_hull_P1_P2 then it wasn't mergeable*)
-			if LinearConstraint.is_false constr1 then(
-				print_message Debug_total ("The convex difference has been found empty"); 
-				true;
-			)
-			else false
+	if LinearConstraint.is_true constr2 then print_message Debug_standard ("State 2 est associe a la contrainte true...");*)
+	if not (Automaton.location_equal loc1 loc2) then false else (
+		(*Check if the two states are mergeable*)
+		(**Return True if the convex hull is equal to the union, False otherwise*)
+		LinearConstraint.hull_assign copy_constr1 constr2;
+		(**Compute the difference between the convex hull and state 1 then take the difference with state2*)
+		LinearConstraint.difference_assign copy_constr1 constr2;			
+		LinearConstraint.difference_assign copy_constr1 constr1;	
+		(** If there is anything left in convex_hull_P1_P2 then it wasn't mergeable*)
+		if LinearConstraint.is_false copy_constr1 then(
+			print_message Debug_total ("The convex difference has been found empty"); 
+			true
 		)
+		else (false);
+	)
 
+
+let rec merging_of_states graph index_state list_index_states list_new_states =
+	match list_index_states with
+	  | [] -> print_message Debug_total ("Empty list in merging_of_states");
+		  (false,-1)
+	  | _  -> let (loc_state,constr_state) =  (get_state graph index_state) in
+		  let (loc_hd,constr_hd) = (get_state graph (List.hd list_index_states)) in
+		  if (state_mergeable (loc_state,constr_state) (loc_hd,constr_hd)) then (
+			print_message Debug_total ("Mergeable states");
+			merge_states graph index_state (List.hd list_index_states);
+			print_message Debug_total ("States merged");
+			(true, (List.hd list_index_states))
+		  )
+		  else ( merging_of_states graph index_state (List.tl list_index_states) ((List.hd list_index_states)::list_new_states); )
+(*  *)
 
 (**************************************************************)
 (* Main functions *)
@@ -588,6 +599,33 @@ let next_combination combination max_indexes =
 	done; (* end while *)
 	!valid_combination
 
+(* (* Stuff that has to go elsewhere *)
+(** Check if two states are mergeable*)
+let state_mergeable state1 state2 =
+	let (loc1,constr1) = state1 in
+	let (loc2,constr2) = state2 in
+	if (ppl_Polyhedron_is_empty constr1) then print_message Debug_standard ("State 1 est associe a la contrainte false...");
+	if (ppl_Polyhedron_is_empty constr2) then print_message Debug_standard ("State 2 est associe a la contrainte false...");
+	if (ppl_Polyhedron_is_universe constr1) then print_message Debug_standard ("State 1 est associe a la contrainte true...");	
+	if (ppl_Polyhedron_is_universe constr2) then print_message Debug_standard ("State 2 est associe a la contrainte true...");
+	let convex_hull_P1_P2 = constr1 in 
+		if not (Automaton.location_equal loc1 loc2) then false else (
+			(*Check if the two states are mergeable*)
+			ppl_Polyhedron_poly_hull_assign constr1 constr2;
+			(**Return True if the convex hull is equal to the union, False otherwise*)
+			(**Compute the difference between the convex hull and state 1 then take the difference with state2*)
+			if (LinearConstraint.is_equal constr1 constr2) then print_message Debug_standard ("Convex hull is equal to the first constraint");
+			ppl_Polyhedron_poly_difference_assign constr1 constr2;			
+			if (ppl_Polyhedron_is_empty constr1) then print_message Debug_standard ("LE DEUXIEME EGAL LE PREMIER !");
+			ppl_Polyhedron_poly_difference_assign constr1 convex_hull_P1_P2;	
+			(** If there is anything left in convex_hull_P1_P2 then it wasn't mergeable*)
+			if (ppl_Polyhedron_is_empty constr1) then(
+				print_message Debug_total ("The convex difference has been found empty"); 
+				true;
+			)
+			else (false)
+		)
+(* End of stuff that has to go elsewhere *)*)
 
 
 (*-----------------------------------------------------*)
@@ -770,7 +808,7 @@ let post program pi0 reachability_graph orig_state_index =
 		let automata_for_this_action = program.automata_per_action action_index in
 		let nb_automata_for_this_action = List.length automata_for_this_action in
 	
-		(*------------------------------------------------*)
+(* 		(*------------------------------------------------*) *)
 		(* Compute the reachable states on the fly: i.e., all the possible transitions for all the automata belonging to 'automata' *)
 		(*------------------------------------------------*)
 		
@@ -981,26 +1019,42 @@ let post_star program pi0 init_state =
 				print_message Debug_medium (beginning_message ^ " for the post of state " ^ (string_of_int !num_state) ^ " / " ^ (string_of_int nb_states) ^ " in post^" ^ (string_of_int (!nb_iterations)) ^ ".\n");
 			);
 			
-			if program.options#jobshop then (
-			
-			
-			
-				(* ROMAIN c a toi *)
-			
-			);
-			
-			
-			
-			
-			
-			
-
 			(* Return the concatenation of the new states *)
 			(**** OPTIMIZED: do not care about order (else shoud consider 'list_append new_newly_found_new_states (List.rev new_states)') *)
 			List.rev_append new_newly_found_new_states new_states
 		) [] !newly_found_new_states in
+
+
+		let new_states_after_merging = ref new_newly_found_new_states in
+		if program.options#jobshop then (
+			let merging = ref true in
+			while !merging do
+				print_message Debug_total ("Looped Merging");
+				merging := false;
+				print_message Debug_total ("merging set to false");
+				let state_to_be_tested = (List.hd !new_states_after_merging) in
+				print_message Debug_total ("state_to_be_tested set to something");
+				let states_to_test = List.tl !new_states_after_merging in
+				print_message Debug_total ("state_to_test set to something");				
+				let (result, state_merged) = merging_of_states reachability_graph state_to_be_tested states_to_test [] in
+				print_message Debug_total ("Test for debugging the fatal error 2/5");
+				if result then (
+					print_message Debug_total ("Test for debugging the fatal error 3/5");
+					merging := true;
+					print_message Debug_total ("Test for debugging the fatal error 4/5");
+					new_states_after_merging := list_remove_first_occurence state_merged !new_states_after_merging ;
+					print_message Debug_total ("Test for debugging the fatal error 5/5");
+				);
+			print_message Debug_total ("Looping merging");
+			done;
+		);
+		print_message Debug_total ("Test for debugging the fatal error 5bis");
+
+
 		(* Update the newly_found_new_states *)
-		newly_found_new_states := new_newly_found_new_states;
+(* 		newly_found_new_states := new_newly_found_new_states; *)
+		newly_found_new_states := !new_states_after_merging;
+		print_message Debug_total ("Test for debugging the fatal error 6");
 		(* Debug *)
 		if debug_mode_greater Debug_medium then (
 			let beginning_message = if list_empty !newly_found_new_states then "\nFound no new state" else ("\nFound " ^ (string_of_int (List.length !newly_found_new_states)) ^ " new state" ^ (s_of_int (List.length !newly_found_new_states)) ^ "") in

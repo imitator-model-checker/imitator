@@ -167,7 +167,7 @@ class imitator_options =
 				("-incl", Set inclusion, " Consider an inclusion of region instead of the equality when performing the Post operation (e.g., implemented in algorithm IMincl). Default: 'false'");
 				("-IMorig", Set pi_compatible, " Algorithm IMoriginal : return a constraint such that no pi-incompatible state can be reached. Default: 'false'");
 				("-IMunion", Set union, " Algorithm IMUnion : Returns the union of the constraint on the parameters associated to the last state of each trace. Default: 'false'");
-				("-jobsjop", Set jobshop, " Use only when working on jobshop problems.");
+				("-jobshop", Set jobshop, " Use only when working on jobshop problems. Default: 'false'");
 				("-log-prefix", Set_string program_prefix, " Sets the prefix for log files. Default: [program_file].");
 				("-mode", String set_mode, " Mode for IMITATOR II. Use 'reachability' for a parametric reachability analysis (no pi0 needed). Use 'inversemethod' for the inverse method. For the behavioral cartography algorithm, use 'cover' to cover all the points within V0, or 'randomXX' where XX is a number to iterate randomly algorithm. Default: 'inversemethod'.");
 				("-no-dot", Set no_dot, " No graphical output using 'dot'. Default: false.");
