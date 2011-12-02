@@ -140,6 +140,7 @@ let rec merging_of_states graph index_state list_index_states list_new_states =
 			print_message Debug_total ("Mergeable states");
 			merge_states graph index_state (List.hd list_index_states);
 			print_message Debug_total ("States merged");
+			LinearConstraint.hull_assign constr_state constr_hd;
 			(true, (List.hd list_index_states))
 		  )
 		  else ( merging_of_states graph index_state (List.tl list_index_states) ((List.hd list_index_states)::list_new_states); )
