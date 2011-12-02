@@ -896,10 +896,11 @@ let post program pi0 reachability_graph orig_state_index =
 						);
 
 						(* Add the p_constraint to the result *)
+						(** TO DO: do not do this if options IMunion or IMK or IMorig *)
 						LinearConstraint.intersection_assign !k_result [p_constraint];
 						
 						(* Add this new state *)
-						(* Try to add the state to the graph // with the p-constraint ????? *)
+						(* Try to add the state to the graph *)
 						let new_state_index, added = (
 						if program.options#dynamic then (
 						  Graph.add_state_dyn program reachability_graph new_state !k_result
@@ -1149,12 +1150,12 @@ let post_star program pi0 init_state =
 		print_message Debug_standard "Statistics on memory";
 		print_message Debug_standard "--------------------";
 		Gc.print_stat stdout;
-		print_message Debug_standard "--------------------";
+(*		print_message Debug_standard "--------------------";
 		Gc.major();
 		Gc.print_stat stdout;
 		print_message Debug_standard "--------------------";
 		Gc.full_major();
-		Gc.print_stat stdout;
+		Gc.print_stat stdout;*)
 	);
 
 	(*--------------------------------------------------*)
@@ -1185,7 +1186,7 @@ let post_star program pi0 init_state =
 				let (_ , k_constraint) = get_state reachability_graph 0 in
 					Convex_constraint (LinearConstraint.hide program.clocks_and_discrete k_constraint) 
 			) else (
-				raise (InternalError ("This code should be unreachable in end of post_star, when returning the constraint."));
+				raise (InternalError ("This code should be unreachable (in end of post_star, when returning the constraint)."));
 			)
 (*		(* Case IM : intersection *)
 			else (

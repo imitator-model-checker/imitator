@@ -110,6 +110,7 @@ let get_location graph location_index =
 let get_state graph state_index =
 	(* Find the couple (location_index, constraint) *)
 	let location_index, linear_constraint =
+		(* Exception just in case *)
 		try (
 			Hashtbl.find graph.all_states state_index
 		) with Not_found -> raise (InternalError ("State of index '" ^ (string_of_int state_index) ^ "' was not found in graph (function: get_state)."))
