@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2009/09/08
- * Last modified: 2011/11/30
+ * Last modified: 2011/12/02
  *
  ****************************************************************)
 
@@ -220,6 +220,13 @@ let elements_existing_several_times l =
 			| _ -> elements_existing_several_times_rec (first :: elements) sub_rest
 	in
 	List.rev (elements_existing_several_times_rec [] l)
+
+
+(* Remove the first occurence of element e in list l ; returns the list unchanged if not found *)
+let rec list_remove_first_occurence e = function
+	| [] -> []
+	| first :: rest -> if e = first then rest
+		else first :: (list_remove_first_occurence e rest)
 
 
 (****************************************************************)

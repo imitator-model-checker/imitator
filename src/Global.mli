@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2009/09/08
- * Last modified: 2011/11/24
+ * Last modified: 2011/12/02
  *
  ****************************************************************)
 
@@ -123,6 +123,9 @@ val list_only_once : 'a list -> 'a list
 
 (** Filter the elements appearing several times in the list *)
 val elements_existing_several_times : 'a list -> 'a list
+
+(** Remove the first occurence of element e in list l; return the list unchanged if not found *)
+val list_remove_first_occurence : 'a -> 'a list -> 'a list
 
 
 (****************************************************************)
