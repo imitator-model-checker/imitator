@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Ulrich Kuehne, Etienne Andre
  * Created:       2010/07/22
- * Last modified: 2011/11/29
+ * Last modified: 2011/12/02
  *
  ************************************************************)
 
@@ -40,8 +40,8 @@ exception Unsat_exception
 (* Global variables *)
 (**************************************************************)
 
-(*K_prime*)
-let k_prime = ref ( LinearConstraint.true_constraint () )
+(* Constraint for result *)
+let k_result = ref ( LinearConstraint.true_constraint () )
 
 (* List of last states (of runs) : used for the union mode *)
 let slast = ref []
@@ -95,6 +95,8 @@ let nb_early_unsatisfiable = ref 0
 let nb_early_skip = ref 0
 (* Number of constraints computed but unsatisfiable *)
 let nb_unsatisfiable = ref 0
+(* Number of different combinations considered when computing post *)
+let nb_combinations = ref 0
 
 let nb_unsat1 = ref 0
 let nb_unsat2 = ref 0
@@ -595,9 +597,9 @@ let next_combination combination max_indexes =
 (* rechability_graph : current reachability graph      *)
 (* constr            : new state constraint            *)
 (*-----------------------------------------------------*)
-(* returns true iff the state is pi0-compatible        *)
+(* returns (true, p_constraint) iff the state is pi0-compatible (false, _) otherwise *)
 (*-----------------------------------------------------*)
-let inverse_method_check_constraint program pi0 reachability_graph constr =			
+let inverse_method_check_constraint program pi0 reachability_graph constr =
 	(* Hide non parameters (X) *)
 	print_message Debug_high ("\nHiding non parameters:");
 	let p_constraint = LinearConstraint.hide program.clocks_and_discrete constr in
@@ -646,9 +648,9 @@ let inverse_method_check_constraint program pi0 reachability_graph constr =
 		Graph.add_inequality_to_states reachability_graph negated_inequality;
 		
 		(* If pi-incompatible *)
-		false
+		(false, p_constraint)
 		(* If pi-compatible *)
-	) else true
+	) else (true, p_constraint)
 
 
 
@@ -790,9 +792,11 @@ let post program pi0 reachability_graph orig_state_index =
 		let legal_transitions_exist = compute_transitions program original_location orig_plus_discrete action_index automata_for_this_action real_indexes max_indexes possible_transitions in 
 	
 		(* Debug: compute the number of combinations *)
-		if debug_mode_greater Debug_medium then(
-			let nb_combinations = Array.fold_left (fun sum max -> sum * (max + 1)) 1 max_indexes in
-			print_message Debug_medium ("I will consider " ^ (string_of_int nb_combinations) ^ " combination" ^ (s_of_int nb_combinations) ^ " for this state and this action\n");
+		if debug_mode_greater Debug_medium || program.options#statistics then(
+			let new_nb_combinations = Array.fold_left (fun sum max -> sum * (max + 1)) 1 max_indexes in
+			print_message Debug_medium ("I will consider " ^ (string_of_int new_nb_combinations) ^ " combination" ^ (s_of_int new_nb_combinations) ^ " for this state and this action\n");
+			(* Update for statistics *)
+			nb_combinations := !nb_combinations + new_nb_combinations;
 		);
 	
 		(* Loop on all the transition combinations *)
@@ -834,12 +838,12 @@ let post program pi0 reachability_graph orig_state_index =
 						print_message Debug_high ("\nThis constraint is not satisfiable ('Some unsatisfiable').");
 					) else (
 			
-					let add_new_state =
+					let add_new_state, p_constraint =
 					(*------------------------------------------------------------*)
 					(* Branching between 2 algorithms here *)
 					(*------------------------------------------------------------*)
 					if program.options#imitator_mode = Reachability_analysis then ( 
-						true
+						true, (LinearConstraint.true_constraint ())
 					) else (
 						inverse_method_check_constraint program pi0 reachability_graph final_constraint
 					) in
@@ -852,19 +856,15 @@ let post program pi0 reachability_graph orig_state_index =
 						if debug_mode_greater Debug_total then(
 							print_message Debug_total ("Consider the state \n" ^ (string_of_state program new_state));
 						);
-						
-						
-						if program.options#dynamic then (
-						let p_constraint = LinearConstraint.hide program.clocks_and_discrete final_constraint in
-						(* TO DO: use intersection_assign !!! *)
-						k_prime := LinearConstraint.intersection [!k_prime ; p_constraint];
-						);
+
+						(* Add the p_constraint to the result *)
+						LinearConstraint.intersection_assign !k_result [p_constraint];
 						
 						(* Add this new state *)
 						(* Try to add the state to the graph // with the p-constraint ????? *)
 						let new_state_index, added = (
 						if program.options#dynamic then (
-						  Graph.add_state_dyn program reachability_graph new_state !k_prime
+						  Graph.add_state_dyn program reachability_graph new_state !k_result
 						  )
 						  else (
 						    Graph.add_state program reachability_graph new_state
@@ -921,8 +921,8 @@ let post program pi0 reachability_graph orig_state_index =
 (* Compute the reachability graph from a given state *)
 (*---------------------------------------------------*)
 let post_star program pi0 init_state = 
-	(*Initialisation of k_prime*)
-	k_prime := LinearConstraint.true_constraint ();
+	(*Initialisation of k_result*)
+	k_result := LinearConstraint.true_constraint ();
 	(*Initialization of slast : used in union mode only*)
 	slast := [];
 	(* Time counter *)
@@ -1089,6 +1089,7 @@ let post_star program pi0 init_state =
 		print_message Debug_standard ("Number of unsatisfiable constraints: " ^ (string_of_int !nb_unsatisfiable));
 		print_message Debug_standard ("Number of unsat1: " ^ (string_of_int !nb_unsat1));
 		print_message Debug_standard ("Number of unsat2: " ^ (string_of_int !nb_unsat2));
+		print_message Debug_standard ("Number of combinations considered: " ^ (string_of_int !nb_combinations));
 		
 		print_message Debug_standard "--------------------";
 		print_message Debug_standard "Statistics on memory";
@@ -1108,14 +1109,14 @@ let post_star program pi0 init_state =
 	let my_constraint =
 	if program.options#imitator_mode = Reachability_analysis then Convex_constraint (LinearConstraint.true_constraint ())
 	else(
-		(* Case: dynamic *)
-		if program.options#dynamic then (
-			Convex_constraint !k_prime
+		(* Case: dynamic OR case IM standard : return the intersection *)
+		if program.options#dynamic || (not program.options#union && not program.options#pi_compatible) then (
+			Convex_constraint !k_result
 		) else (
 		(* Case union : return the constraint on the parameters associated to slast*)
 			if program.options#union then (
 				let list_of_constraints =
-				List.map (fun state_index -> 			
+				List.map (fun state_index ->
 					print_message Debug_medium ("\nOne state found.");
 					(* Get the constraint on clocks and parameters *)
 					let (_, current_constraint) =
@@ -1129,12 +1130,14 @@ let post_star program pi0 init_state =
 			else if program.options#pi_compatible then (
 				let (_ , k_constraint) = get_state reachability_graph 0 in
 					Convex_constraint (LinearConstraint.hide program.clocks_and_discrete k_constraint) 
-			) 
-		(* Case IM : intersection *)
+			) else (
+				raise (InternalError ("This code should be unreachable in end of post_star, when returning the constraint."));
+			)
+(*		(* Case IM : intersection *)
 			else (
 				(** HERE PROBLEM IF ONE WANTS TO COMPUTE THE states FILE AFTER (destruction of the states) **)
 				Convex_constraint (Graph.compute_k0_destructive program reachability_graph)
-			)
+			)*)
 		)
 	)
 	in

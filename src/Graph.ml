@@ -109,7 +109,11 @@ let get_location graph location_index =
 (** Return the state of a state_index *)
 let get_state graph state_index =
 	(* Find the couple (location_index, constraint) *)
-	let location_index, linear_constraint = Hashtbl.find graph.all_states state_index in
+	let location_index, linear_constraint =
+		try (
+			Hashtbl.find graph.all_states state_index
+		) with Not_found -> raise (InternalError ("State of index '" ^ (string_of_int state_index) ^ "' was not found in graph (function: get_state)."))
+	in
 	(* Find the location *)
 	let global_location = get_location graph location_index in
 	(* Return the state *)
@@ -264,7 +268,7 @@ let states_equal_dyn state1 state2 constr =
 		print_message Debug_high ("About to compare (dynamic) equality between two constraints.");
 		nb_constraint_comparisons := !nb_constraint_comparisons + 1;
 		print_message Debug_high ("Already performed " ^ (string_of_int (!nb_constraint_comparisons)) ^ " constraint comparisons.");
-		(* WARNING!!! Really sure that one wants do ADD the state within the intersection ?!!! *)
+		(* WARNING!!! Really sure that one wants do MODIFY the constraints here?!!! *)
 		LinearConstraint.intersection_assign constr1  [constr];
 		LinearConstraint.intersection_assign constr2 [constr];
 		LinearConstraint.is_equal constr1 constr2
@@ -334,7 +338,7 @@ let add_state_dyn program graph new_state constr =
 		new_state_index, true
 	) else (
 		(* The check used for equality *)
-		let check_states = states_equal_dyn in				
+		let check_states = states_equal_dyn in
 		try (
 			(* use hash table to find states with same locations (modulo hash collisions) *)
 			let old_states = Hashtbl.find_all graph.states_for_comparison hash in
