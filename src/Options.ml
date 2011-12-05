@@ -7,7 +7,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Ulrich Kuehne
  * Created:       2010
- * Last modified: 2011/11/22
+ * Last modified: 2011/12/04
  *
  ****************************************************************)
  
@@ -89,6 +89,7 @@ class imitator_options =
 
 		
 		method acyclic = !acyclic
+		method acyclic_unset = (acyclic := false)
 		method cart = !cart
 		method dynamic = !dynamic
 		method fancy = !fancy

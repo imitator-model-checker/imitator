@@ -105,46 +105,41 @@ let nb_unsat2 = ref 0
 (**************************************************************)
 (* Jobshop functions *)
 (**************************************************************)
-(** Check if two states are mergeable*)
+(** Check if two states are mergeable: return True if the convex hull is equal to the union, False otherwise*)
 let state_mergeable state1 state2 =
 	let (loc1,constr1) = state1 in
 	let (loc2,constr2) = state2 in
-	let copy_constr1 = LinearConstraint.copy constr1 in
-(*	if LinearConstraint.is_false constr1 then print_message Debug_standard ("State 1 est associe a la contrainte false...");
-	if LinearConstraint.is_false constr2 then print_message Debug_standard ("State 2 est associe a la contrainte false...");
-	if LinearConstraint.is_true constr1 then print_message Debug_standard ("State 1 est associe a la contrainte true...");	
-	if LinearConstraint.is_true constr2 then print_message Debug_standard ("State 2 est associe a la contrainte true...");*)
 	if not (Automaton.location_equal loc1 loc2) then false else (
-		(*Check if the two states are mergeable*)
-		(**Return True if the convex hull is equal to the union, False otherwise*)
+		let copy_constr1 = LinearConstraint.copy constr1 in
 		LinearConstraint.hull_assign copy_constr1 constr2;
-		(**Compute the difference between the convex hull and state 1 then take the difference with state2*)
-		LinearConstraint.difference_assign copy_constr1 constr2;			
-		LinearConstraint.difference_assign copy_constr1 constr1;	
+		(** Compute the difference between the convex hull and state 1 then take the difference with state2 *)
+		LinearConstraint.difference_assign copy_constr1 constr2;
+		LinearConstraint.difference_assign copy_constr1 constr1;
 		(** If there is anything left in convex_hull_P1_P2 then it wasn't mergeable*)
 		if LinearConstraint.is_false copy_constr1 then(
 			print_message Debug_total ("The convex difference has been found empty"); 
 			true
 		)
-		else (false);
+		else false;
 	)
 
 
 let rec merging_of_states graph index_state list_index_states list_new_states =
 	match list_index_states with
-	  | [] -> print_message Debug_total ("Empty list in merging_of_states");
-		  (false,-1)
-	  | _  -> let (loc_state,constr_state) =  (get_state graph index_state) in
-		  let (loc_hd,constr_hd) = (get_state graph (List.hd list_index_states)) in
-		  if (state_mergeable (loc_state,constr_state) (loc_hd,constr_hd)) then (
+	  | [] -> (false, -1)
+	  | first :: rest  -> let (loc_state, constr_state) =  (get_state graph index_state) in
+		  let (loc_hd, constr_hd) = (get_state graph first) in
+		  if (state_mergeable (loc_state, constr_state) (loc_hd, constr_hd)) then (
 			print_message Debug_total ("Mergeable states");
-			merge_states graph index_state (List.hd list_index_states);
+			merge_states graph index_state first;
 			print_message Debug_total ("States merged");
+			(* TO OPTIMIZE: operation already performed in state_mergeable !! *)
 			LinearConstraint.hull_assign constr_state constr_hd;
-			(true, (List.hd list_index_states))
+			(true, first)
 		  )
-		  else ( merging_of_states graph index_state (List.tl list_index_states) ((List.hd list_index_states)::list_new_states); )
-(*  *)
+		  else ( merging_of_states graph index_state rest (first :: list_new_states); )
+
+
 
 (**************************************************************)
 (* Main functions *)
@@ -600,33 +595,6 @@ let next_combination combination max_indexes =
 	done; (* end while *)
 	!valid_combination
 
-(* (* Stuff that has to go elsewhere *)
-(** Check if two states are mergeable*)
-let state_mergeable state1 state2 =
-	let (loc1,constr1) = state1 in
-	let (loc2,constr2) = state2 in
-	if (ppl_Polyhedron_is_empty constr1) then print_message Debug_standard ("State 1 est associe a la contrainte false...");
-	if (ppl_Polyhedron_is_empty constr2) then print_message Debug_standard ("State 2 est associe a la contrainte false...");
-	if (ppl_Polyhedron_is_universe constr1) then print_message Debug_standard ("State 1 est associe a la contrainte true...");	
-	if (ppl_Polyhedron_is_universe constr2) then print_message Debug_standard ("State 2 est associe a la contrainte true...");
-	let convex_hull_P1_P2 = constr1 in 
-		if not (Automaton.location_equal loc1 loc2) then false else (
-			(*Check if the two states are mergeable*)
-			ppl_Polyhedron_poly_hull_assign constr1 constr2;
-			(**Return True if the convex hull is equal to the union, False otherwise*)
-			(**Compute the difference between the convex hull and state 1 then take the difference with state2*)
-			if (LinearConstraint.is_equal constr1 constr2) then print_message Debug_standard ("Convex hull is equal to the first constraint");
-			ppl_Polyhedron_poly_difference_assign constr1 constr2;			
-			if (ppl_Polyhedron_is_empty constr1) then print_message Debug_standard ("LE DEUXIEME EGAL LE PREMIER !");
-			ppl_Polyhedron_poly_difference_assign constr1 convex_hull_P1_P2;	
-			(** If there is anything left in convex_hull_P1_P2 then it wasn't mergeable*)
-			if (ppl_Polyhedron_is_empty constr1) then(
-				print_message Debug_total ("The convex difference has been found empty"); 
-				true;
-			)
-			else (false)
-		)
-(* End of stuff that has to go elsewhere *)*)
 
 
 (*-----------------------------------------------------*)
@@ -809,7 +777,7 @@ let post program pi0 reachability_graph orig_state_index =
 		let automata_for_this_action = program.automata_per_action action_index in
 		let nb_automata_for_this_action = List.length automata_for_this_action in
 	
-(* 		(*------------------------------------------------*) *)
+		(*------------------------------------------------*)
 		(* Compute the reachable states on the fly: i.e., all the possible transitions for all the automata belonging to 'automata' *)
 		(*------------------------------------------------*)
 		
@@ -896,12 +864,11 @@ let post program pi0 reachability_graph orig_state_index =
 							print_message Debug_total ("Consider the state \n" ^ (string_of_state program new_state));
 						);
 
-						(* Add the p_constraint to the result *)
-						(** TO DO: do not do this if options IMunion or IMK or IMorig *)
-						LinearConstraint.intersection_assign !k_result [p_constraint];
+						(* Add the p_constraint to the result (except if case variants) *)
+						if not (program.options#pi_compatible || program.options#union) then(
+							LinearConstraint.intersection_assign !k_result [p_constraint]);
 						
-						(* Add this new state *)
-						(* Try to add the state to the graph *)
+						(* Try to add this new state to the graph *)
 						let new_state_index, added = (
 						if program.options#dynamic then (
 						  Graph.add_state_dyn program reachability_graph new_state !k_result
@@ -945,7 +912,7 @@ let post program pi0 reachability_graph orig_state_index =
 	) list_of_possible_actions;
 	
 	(* If new_states is empty : the current state is a last state *)
-	if  program.options#union && list_empty (!new_states) then (
+	if program.options#union && !new_states = [] then (
 		print_message Debug_low ("\nMode union: adding a state without successor to SLast.");
 		(* Adding the state *)
 		slast := orig_state_index :: !slast;
@@ -1027,36 +994,53 @@ let post_star program pi0 init_state =
 		) [] !newly_found_new_states in
 
 
+		(*
+			(* TO CHECK: Etienne' version should replace Romain's version *)
+			let rec try_to_merge = function
+				(* If empty list: do nothing *)
+				| [] -> []
+				(* Otherwise: *)
+				| first :: rest -> (
+					let (result, state_merged) = merging_of_states reachability_graph first rest [] in
+						if result then try_to_merge rest else first :: (try_to_merge rest)
+					)
+			in
+			newly_found_new_states := try_to_merge new_newly_found_new_states;*)
+
+		(** TO DO: il y a une curieuse DOUBLE recurrence ici, qui m'embete beaucoup *)
 		let new_states_after_merging = ref new_newly_found_new_states in
 		if program.options#jobshop then (
 			let merging = ref true in
+			let nb_merged = ref 0 in
 			while !merging do
 				print_message Debug_total ("Looped Merging");
 				merging := false;
-				print_message Debug_total ("merging set to false");
-				let state_to_be_tested = (List.hd !new_states_after_merging) in
-				print_message Debug_total ("state_to_be_tested set to something");
-				let states_to_test = List.tl !new_states_after_merging in
-				print_message Debug_total ("state_to_test set to something");				
-				let (result, state_merged) = merging_of_states reachability_graph state_to_be_tested states_to_test [] in
-				print_message Debug_total ("Test for debugging the fatal error 2/5");
-				if result then (
-					print_message Debug_total ("Test for debugging the fatal error 3/5");
-					merging := true;
-					print_message Debug_total ("Test for debugging the fatal error 4/5");
-					new_states_after_merging := list_remove_first_occurence state_merged !new_states_after_merging ;
-					print_message Debug_total ("Test for debugging the fatal error 5/5");
-				);
-			print_message Debug_total ("Looping merging");
+				match !new_states_after_merging with
+					(* If empty list: do nothing *)
+					| [] -> ()
+					(* Otherwise: *)
+					| first :: rest -> (
+						let (result, state_merged) = merging_of_states reachability_graph first rest [] in
+							print_message Debug_total ("Test for debugging the fatal error 2/5");
+							if result then (
+								print_message Debug_total ("Test for debugging the fatal error 3/5");
+								merging := true;
+								nb_merged := !nb_merged + 1;
+								print_message Debug_total ("Test for debugging the fatal error 4/5");
+								new_states_after_merging := list_remove_first_occurence state_merged !new_states_after_merging ;
+								print_message Debug_total ("Test for debugging the fatal error 5/5");
+							);
+						print_message Debug_total ("Looping merging");
+						);
 			done;
+			if !nb_merged > 0 then
+				print_message Debug_standard ("  " ^ (string_of_int !nb_merged) ^ " state" ^ (s_of_int !nb_merged) ^ " merged.");
 		);
-		print_message Debug_total ("Test for debugging the fatal error 5bis");
 
 
 		(* Update the newly_found_new_states *)
 (* 		newly_found_new_states := new_newly_found_new_states; *)
 		newly_found_new_states := !new_states_after_merging;
-		print_message Debug_total ("Test for debugging the fatal error 6");
 		(* Debug *)
 		if debug_mode_greater Debug_medium then (
 			let beginning_message = if list_empty !newly_found_new_states then "\nFound no new state" else ("\nFound " ^ (string_of_int (List.length !newly_found_new_states)) ^ " new state" ^ (s_of_int (List.length !newly_found_new_states)) ^ "") in
@@ -1122,8 +1106,7 @@ let post_star program pi0 init_state =
 		(* PPL *)
 		print_message Debug_standard "--------------------";
 		print_message Debug_standard "Statistics on PPL";
-		print_message Debug_standard "--------------------";
-		print_message Debug_standard (LinearConstraint.get_statistics ());
+		print_message Debug_standard ("--------------------" ^ (LinearConstraint.get_statistics ()));
 		
 		(* Graph *)
 		print_message Debug_standard "--------------------";

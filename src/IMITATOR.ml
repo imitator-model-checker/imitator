@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2009/09/07
- * Last modified: 2011/11/23
+ * Last modified: 2011/12/04
  *
  **************************************************)
 
@@ -30,12 +30,9 @@ A FAIRE
 
  OPTIMISATIONS A FAIRE POUR L'EXECUTION
 
-[ ] garder en memoire les p-contraintes. Avantage : plus rapide lors de l'intersection finale. Inconvenient : memoire en + ! Astuce : fichier temporaire ?
 [ ] METTRE DES TABLES DE HASH et non des tableaux pour transitions, gardes, invariants, etc. Avantage : (beaucoup) moins de choses en memoire, execution a peine plus lente.
-[ ] separer les elements de AbstractImitatorFile en (au moins) 'automata', 'variables' et 'env'
 
 
- OPTIMISATIONS A FAIRE POUR LE POST
 
 TAGS POUR CHOSES A FAIRE
 - (**** TO DO ****)
@@ -541,21 +538,14 @@ options#parse;
 
 print_message Debug_standard
 	( "**************************************************");
-Printf.printf " *  IMITATOR %-36s *\n" version_string;	
+Printf.printf " *  IMITATOR %-36s *\n" version_string;
 print_message Debug_standard
-	( "*   Etienne ANDRE, Ulrich KUEHNE, Romain SOULAT  *\n"
+	( "*                                                *\n"
+	^ "*   Etienne ANDRE, Ulrich KUEHNE, Romain SOULAT  *\n"
 	^ "*                                   2009 - 2011  *\n"
 	^ "*     Laboratoire Specification et Verification  *\n"
 	^ "*                  ENS de Cachan & CNRS, France  *\n"
 	^ "**************************************************");
-
-
-
-(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-(* Check compatibility between options *) 
-(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-if (options#imitator_mode = Reachability_analysis || options#imitator_mode = Translation) && options#nb_args = 2 then
-	print_warning ("The pi0 file " ^ options#pi0file ^ " will be ignored since this is a reachability analysis.");
 
 
 (**************************************************)
@@ -575,6 +565,21 @@ let message = match options#imitator_mode with
 in print_message Debug_standard ("Mode: " ^ message ^ ".");
 
 
+(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+(* Check compatibility between options *) 
+(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+if (options#imitator_mode = Reachability_analysis || options#imitator_mode = Translation) && options#nb_args = 2 then
+	print_warning ("The pi0 file " ^ options#pi0file ^ " will be ignored since this is a reachability analysis.");
+
+if options#acyclic && options#tree then (
+	options#acyclic_unset;
+	print_warning ("Ayclic mode is set although tree mode is already set. Only tree mode will be considered");
+);
+
+
+(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+(* Recall modes *) 
+(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 (* Variant of the inverse method *)
 if options#inclusion then
@@ -607,6 +612,11 @@ if options#jobshop then
 	print_message Debug_standard ("Jobshop mode.")
 else
 	print_message Debug_medium ("No jobshop mode (default).");
+
+if options#dynamic then
+	print_message Debug_standard ("Dynamic mode (optimization by RS).")
+else
+	print_message Debug_medium ("No dynamic mode (default).");
 
 if options#sync_auto_detection then
 	print_message Debug_standard ("Auto-detection mode for sync actions.")
@@ -660,9 +670,9 @@ if (options#imitator_mode = Reachability_analysis || options#imitator_mode = Tra
 
 if (options#imitator_mode = Reachability_analysis || options#imitator_mode = Translation || options#imitator_mode = Inverse_method) && (NumConst.neq options#step NumConst.one) then
 	print_warning ("The program will be launched in reachability mode; option regarding to the step of the cartography algorithm will thus be ignored.");
-	
-	
-	
+
+
+
 
 (**************************************************)
 (* Timed mode *)
