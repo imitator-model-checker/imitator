@@ -1,0 +1,24 @@
+--****************************************************--
+--****************************************************--
+--   Circuit described in
+--   "Parameterized Reachability Analysis of the IEEE 1394 Root Contention Protocol using TReX"
+--   Collomb-Annichini, Sighireanu (RTTOOLS 2001)
+--
+-- Addition of an observer for time-bounded properties
+--
+--   Etienne ANDRE and Laurent FRIBOURG
+--   Laboratoire Specification et Verification
+--
+--                                Created : 2010/04/30
+--                          Last modified : 2010/04/30
+--****************************************************--
+--****************************************************--
+	----------------------
+	-- Instantiations
+	----------------------
+	& rc_fast_max = 85 -- 76 .. 100 (* 85 *)
+	& rc_fast_min = 76
+	& rc_slow_max = 167 -- 159 .. 200 (* 167 *)
+	& rc_slow_min = 159
+	& delay       = 36
+	& tmax        = 750 -- 1000

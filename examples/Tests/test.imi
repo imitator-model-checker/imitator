@@ -1,0 +1,76 @@
+--****************************************************--
+--****************************************************--
+-- TEST OF INPUT PROGRAM
+--****************************************************--
+--****************************************************--
+
+var
+	p1, p2
+		: parameter;
+	x1, x2
+		: clock;
+	p3
+		: parameter;
+	i, j, k, l
+		: discrete;
+	p1, p3
+		: parameter;
+
+(* to oto (* commentaires (* imbriques *) haha *) *)
+
+--****************************************************--
+--****************************************************--
+-- AUTOMATA
+--****************************************************--
+--****************************************************--
+
+
+--****************************************************--
+automaton automaton1
+--****************************************************--
+synclabs: tata, tutu;
+
+loc A1: while x1 <= p1 + i & x2 >= 0 & i + j > k + p3 + 2l wait {}
+	when True do {x1' = 0} sync tutu goto A1;
+	when True do {x2' = 0} sync tutu goto A2;
+	when True do {} sync tutu goto A2;
+	when x1 = p1 do {x1' = 0, i' = i +1} goto A1; 
+
+loc A2: while x1 + x2 <= p1 + i & x2 > 0 wait {}
+	when x2 + x1 > 0 do {x1' = 0} goto A2; 
+	when True do {} sync tata goto A2; 
+	when True do {} sync tutu goto A2; 
+	when p1 - p2 < x1 do {} sync tutu goto A1; 
+	when False do {} sync tutu goto A1; 
+
+end -- automaton1
+
+--****************************************************--
+automaton automaton2
+--****************************************************--
+synclabs: toto, tutu, tata;
+-- initially A2_1;
+
+loc B1: while True wait {}
+	when True sync toto do {x2' = 0} goto B2; 
+	when True sync tutu do {i' = 0} goto B1; 
+	when True sync tutu do {i' = 1} goto B2; 
+	when True sync tata do {i' = 1} goto B2; 
+	when x1 = 0 do {l' = i + k + 2 l + j} goto B2; 
+
+loc B2: while x1 <= p1 & True wait {}
+	when x1 > p1 do {i' = i + j} goto B2; 
+
+end -- automaton2
+
+
+init := True
+-- 	& 2 >= 0
+-- 	& (p1 > 0)
+-- 	& i + j + k + 5 + 2 p1 > p1 + x2
+-- 	& True
+-- 	& 3k - 2 = x1 - 2
+	& loc[automaton1] = A1
+	& loc[automaton2] = B1
+--	& loc[clock2] = Highc1pre
+;

@@ -1,0 +1,66 @@
+--**************************************************--
+--**************************************************--
+--
+--            Test of input file for IMITATOR
+--
+--  Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
+--  Author:        Etienne Andre
+--  Created:       2009/12/23
+--  Last modified: 2009/12/23
+--****************************************************--
+--****************************************************--
+
+var
+	x, y
+		: clock;
+	i, j
+		: discrete;
+
+--****************************************************--
+--****************************************************--
+-- AUTOMATA
+--****************************************************--
+--****************************************************--
+
+--****************************************************--
+automaton automaton1
+--****************************************************--
+synclabs: a;
+initially A1;
+
+loc A1: while x <= 2 wait {}
+	when True sync a do {y' = 0} goto A2;
+
+loc A2: while y <= 10 wait {}
+-- 	when True do {} goto A2;
+end -- automaton1
+
+
+--****************************************************--
+automaton automaton2
+--****************************************************--
+synclabs: a;
+initially B1;
+
+loc B1: while y <= 5 wait {}
+	when True sync a do {} goto B2;
+
+loc B2: while True wait {}
+	when i < 3 do {i' = i + 1} goto B2;
+-- 	when True do {} goto B2; 
+end -- automaton2
+
+
+-- var init: region;
+
+-- init := reach forward from init endreach;
+-- print init;
+
+init := True
+	& loc[automaton1] = A1
+	& loc[automaton2] = B1
+	& x = 0
+	& y = 0
+	& i = 0
+;
+

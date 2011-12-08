@@ -1,0 +1,43 @@
+--****************************************************--
+--****************************************************--
+--   Portion of the SPSMALL memory circuit ("spsmall_blueb_lsv")
+--
+--   Design by ST-Microelectronics
+--   Timings by LIP6
+--   Model by LSV
+--
+--   Created       : 2010/01
+--   Last modified : 2010/04/02
+--****************************************************--
+--****************************************************--
+
+
+	---START PI0---
+	& d_up_q_0         = 21
+	& d_up_net27       = 0
+	& d_up_d_inta      = 22
+	& d_dn_d_inta      = 45
+	& d_up_wela        = 0
+	& d_dn_wela        = 22
+	& d_up_net45a      = 5
+	& d_dn_net45a      = 4
+	& d_up_net13a      = 19
+	& d_dn_net13a      = 13
+	& d_up_net45       = 21
+	& d_dn_net45       = 22
+	& d_up_d_int       = 14
+	& d_dn_d_int       = 18
+	& d_up_en_latchd   = 28
+ 	& d_dn_en_latchd   = 32
+	& d_up_en_latchwen = 5
+ 	& d_dn_en_latchwen = 4  
+	& d_up_wen_h       = 11
+	& d_dn_wen_h       = 8
+	& d_up_d_h         = 95
+  	& d_dn_d_h         = 66
+
+	& tHI              = 45
+	& tLO              = 65
+	& tsetupd          = 108
+	& tsetupwen        = 48
+	---END PI0---

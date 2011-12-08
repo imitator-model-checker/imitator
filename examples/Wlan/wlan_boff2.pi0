@@ -1,0 +1,47 @@
+--****************************************************--
+--****************************************************--
+-- WLAN PROTOCOL (two stations)
+-- discrete time model
+-- gxn/jzs 20/02/02
+--
+--   Created:       2010/04/27
+--   Last modified: 2010/05/03
+--****************************************************--
+--****************************************************--
+
+
+	--- OFFICIAL VALUE ---
+	& ASLOTTIME      = 50    --= 1;
+	& DIFS           = 128   --= 3;   -- due to scaling can be non-deterministically either 2 or 3
+	& VULN           = 48    --= 1;   -- due to scaling can be non-deterministically either 0 or 1
+	& TRANS_TIME_MAX = 15717 --= 315; -- scaling up
+	& TRANS_TIME_MIN = 224   --= 4;   -- scaling down
+	& ACK_TO         = 300   --= 6; 
+	& ACK            = 205   --= 4;   -- due to scaling can be non-deterministically either 3 or 4
+	& SIFS           = 28    --= 1;   -- due to scaling can be non-deterministically either 0 or 1
+-- 	& BOFF           = 6     --= 6;   -- max backoff (since contention window is [15,1023])
+
+	--- RESCALED VALUE ---
+-- 	& ASLOTTIME      = 1
+-- 	& DIFS           = 3
+-- 	& VULN           = 1
+-- 	& TRANS_TIME_MAX = 315
+-- 	& TRANS_TIME_MIN = 4
+-- 	& ACK_TO         = 6
+-- 	& ACK            = 4
+-- 	& SIFS           = 1
+-- 	& BOFF           = 6
+
+	--- RESCALED VALUE RESPECTING THE K0 FOUND IN 2009/10 ---
+-- 	& ASLOTTIME      = 1
+-- 	& DIFS           = 2
+-- 	& VULN           = 1
+-- 	& TRANS_TIME_MAX = 6
+-- 	& TRANS_TIME_MIN = 4
+-- 	& ACK_TO         = 6
+-- 	& ACK            = 4
+-- 	& SIFS           = 1
+	& BOFF           = 2
+
+-- TIME_MAX, --= 315; -- maximum constant used in timing constraints + 1
+

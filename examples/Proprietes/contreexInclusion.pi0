@@ -1,0 +1,19 @@
+--****************************************************--
+--****************************************************--
+--   Laboratoire Specification et Verification
+--
+--   Program showing that the number of iterations of IM is not equal to the depth of the traces of A[pi0] when cyclic traces
+--
+--   Etienne ANDRE
+--
+--   Created       : 2010/07/19
+--   Last modified : 2010/07/19
+--****************************************************--
+--****************************************************--
+
+	----------------------
+	-- pi0
+	----------------------
+	& p1 = 1
+	& p2 = 2
+

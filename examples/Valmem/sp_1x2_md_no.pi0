@@ -1,0 +1,300 @@
+
+	delta0_1_pr26 = 0
+	& delta1_1_pr26 = 0
+	&
+	delta0_2_pr26 = 0
+	& delta1_2_pr26 = 0
+	&
+	delta0_pr26 = 0
+	& delta1_pr26 = 0
+	&
+	delta0_1_pr25 = 0
+	& delta1_1_pr25 = 0
+	&
+	delta0_2_pr25 = 0
+	& delta1_2_pr25 = 0
+	&
+	delta0_pr25 = 0
+	& delta1_pr25 = 0
+	&
+	delta0_1_pr24 = 0
+	& delta1_1_pr24 = 0
+	&
+	delta0_2_pr24 = 0
+	& delta1_2_pr24 = 0
+	&
+	delta0_pr24 = 0
+	& delta1_pr24 = 0
+	&
+	delta0_1_pr23 = 0
+	& delta1_1_pr23 = 0
+	&
+	delta0_2_pr23 = 0
+	& delta1_2_pr23 = 0
+	&
+	delta0_pr23 = 0
+	& delta1_pr23 = 0
+	&
+	delta0_1_pr22 = 0
+	& delta1_1_pr22 = 0
+	&
+	delta0_pr22 = 0
+	& delta1_pr22 = 0
+	&
+	delta0_1_pr21 = 0
+	& delta1_1_pr21 = 0
+	&
+	delta0_pr21 = 0
+	& delta1_pr21 = 0
+	&
+	delta0_1_pr20 = 0
+	& delta1_1_pr20 = 0
+	&
+	delta0_pr20 = 0
+	& delta1_pr20 = 0
+	&
+	delta0_1_pr19 = 0
+	& delta1_1_pr19 = 0
+	&
+	delta0_pr19 = 0
+	& delta1_pr19 = 0
+	&
+	delta0_v_18_e_i47_out_p_drive_l = 0
+	& delta1_v_18_e_i47_out_p_drive_l = 0
+	&
+	delta0_v_18_f_i47_out_p_drive_l = 0
+	& delta1_v_18_f_i47_out_p_drive_l = 0
+	&
+	delta0_v_18_e_i47_out_n_drive_h = 0
+	& delta1_v_18_e_i47_out_n_drive_h = 0
+	&
+	delta0_v_18_f_i47_out_n_drive_h = 0
+	& delta1_v_18_f_i47_out_n_drive_h = 0
+	&
+	delta0_1_pr18 = 0
+	& delta1_1_pr18 = 0
+	&
+	delta0_pr18 = 0
+	& delta1_pr18 = 0
+	&
+	delta0_1_pr17 = 0
+	& delta1_1_pr17 = 0
+	&
+	delta0_pr17 = 0
+	& delta1_pr17 = 0
+	&
+	delta0_oe_l = 0
+	& delta1_oe_l = 0
+	&
+	delta0_we_h = 0
+	& delta1_we_h = 0
+	&
+	delta0_v_17_12_10_net13 = 0
+	& delta1_v_17_12_10_net13 = 0
+	&
+	delta0_dec_0 = 0
+	& delta1_dec_0 = 0
+	&
+	delta0_1_pr14 = 0
+	& delta1_1_pr14 = 0
+	&
+	delta0_pr14 = 0
+	& delta1_pr14 = 0
+	&
+	delta0_1_pr13 = 0
+	& delta1_1_pr13 = 0
+	&
+	delta0_pr13 = 0
+	& delta1_pr13 = 0
+	&
+	delta0_1_pr12 = 0
+	& delta1_1_pr12 = 0
+	&
+	delta0_pr12 = 0
+	& delta1_pr12 = 0
+	&
+	delta0_1_pr11 = 0
+	& delta1_1_pr11 = 0
+	&
+	delta0_pr11 = 0
+	& delta1_pr11 = 0
+	&
+	delta0_1_pr10 = 0
+	& delta1_1_pr10 = 0
+	&
+	delta0_pr10 = 0
+	& delta1_pr10 = 0
+	&
+	delta0_1_pr9 = 0
+	& delta1_1_pr9 = 0
+	&
+	delta0_pr9 = 0
+	& delta1_pr9 = 0
+	&
+	delta0_clk_h = 0
+	& delta1_clk_h = 0
+	&
+	delta0_v_17_12_clk_sig_h = 0
+	& delta1_v_17_12_clk_sig_h = 0
+	&
+	delta0_v_17_12_11_dec_eval0_l = 0
+	& delta1_v_17_12_11_dec_eval0_l = 0
+	&
+	delta0_v_17_12_10_net41 = 0
+	& delta1_v_17_12_10_net41 = 0
+	&
+	delta0_row = 0
+	& delta1_row = 0
+	&
+	delta0_1_pr8 = 0
+	& delta1_1_pr8 = 0
+	&
+	delta0_pr8 = 0
+	& delta1_pr8 = 0
+	&
+	delta0_1_pr7 = 0
+	& delta1_1_pr7 = 0
+	&
+	delta0_pr7 = 0
+	& delta1_pr7 = 0
+	&
+	delta0_v_17_12_10_we_l = 0
+	& delta1_v_17_12_10_we_l = 0
+	&
+	delta0_v_16_13_a1inv = 0
+	& delta1_v_16_13_a1inv = 0
+	&
+	delta0_v_16_13_net25 = 0
+	& delta1_v_16_13_net25 = 0
+	&
+	delta0_v_17_12_10_net113 = 0
+	& delta1_v_17_12_10_net113 = 0
+	&
+	delta0_v_17_12_10_net127 = 0
+	& delta1_v_17_12_10_net127 = 0
+	&
+	delta0_v_16_13_a1 = 0
+	& delta1_v_16_13_a1 = 0
+	&
+	delta0_v_18_e_bit_l_inv = 0
+	& delta1_v_18_e_bit_l_inv = 0
+	&
+	delta0_v_18_f_bit_l_inv = 0
+	& delta1_v_18_f_bit_l_inv = 0
+	&
+	delta0_v_17_12_10_net202 = 0
+	& delta1_v_17_12_10_net202 = 0
+	&
+	delta0_v_17_12_11_add0l = 0
+	& delta1_v_17_12_11_add0l = 0
+	&
+	delta0_v_17_12_11_net58 = 0
+	& delta1_v_17_12_11_net58 = 0
+	&
+	delta0_v_17_12_10_ext_cs_h = 0
+	& delta1_v_17_12_10_ext_cs_h = 0
+	&
+	delta0_1_pr6 = 0
+	& delta1_1_pr6 = 0
+	&
+	delta0_pr6 = 0
+	& delta1_pr6 = 0
+	&
+	delta0_v_18_e_clk_local_h = 0
+	& delta1_v_18_e_clk_local_h = 0
+	&
+	delta0_v_18_f_clk_local_h = 0
+	& delta1_v_18_f_clk_local_h = 0
+	&
+	delta0_1_pr5 = 0
+	& delta1_1_pr5 = 0
+	&
+	delta0_pr5 = 0
+	& delta1_pr5 = 0
+	&
+	delta0_v_18_e_net85 = 0
+	& delta1_v_18_e_net85 = 0
+	&
+	delta0_v_18_f_net85 = 0
+	& delta1_v_18_f_net85 = 0
+	&
+	delta0_v_17_12_11_net54 = 0
+	& delta1_v_17_12_11_net54 = 0
+	&
+	delta0_v_17_12_11_i63_net53 = 0
+	& delta1_v_17_12_11_i63_net53 = 0
+	&
+	delta0_v_17_12_11_i63_a_delay_h = 0
+	& delta1_v_17_12_11_i63_a_delay_h = 0
+	&
+	delta0_v_17_12_11_net120 = 0
+	& delta1_v_17_12_11_net120 = 0
+	&
+	delta0_v_17_12_11_i62_net53 = 0
+	& delta1_v_17_12_11_i62_net53 = 0
+	&
+	delta0_v_17_12_11_i62_a_delay_h = 0
+	& delta1_v_17_12_11_i62_a_delay_h = 0
+	&
+	delta0_v_17_12_10_ext_we_h = 0
+	& delta1_v_17_12_10_ext_we_h = 0
+	&
+	delta0_v_17_12_10_net100 = 0
+	& delta1_v_17_12_10_net100 = 0
+	&
+	delta0_v_17_12_10_we_latched_h = 0
+	& delta1_v_17_12_10_we_latched_h = 0
+	&
+	delta0_v_17_12_10_net115 = 0
+	& delta1_v_17_12_10_net115 = 0
+	&
+	delta0_v_17_12_10_net96 = 0
+	& delta1_v_17_12_10_net96 = 0
+	&
+	delta0_v_18_e_net83 = 0
+	& delta1_v_18_e_net83 = 0
+	&
+	delta0_v_18_e_data_delay_h = 0
+	& delta1_v_18_e_data_delay_h = 0
+	&
+	delta0_v_18_e_i47_oe_local_h = 0
+	& delta1_v_18_e_i47_oe_local_h = 0
+	&
+	delta0_v_18_e_net81 = 0
+	& delta1_v_18_e_net81 = 0
+	&
+	delta0_v_18_e_clk_local_l = 0
+	& delta1_v_18_e_clk_local_l = 0
+	&
+	delta0_v_18_f_net81 = 0
+	& delta1_v_18_f_net81 = 0
+	&
+	delta0_v_18_f_clk_local_l = 0
+	& delta1_v_18_f_clk_local_l = 0
+	&
+	delta0_v_18_f_data_delay_h = 0
+	& delta1_v_18_f_data_delay_h = 0
+	&
+	delta0_v_18_f_i47_oe_local_h = 0
+	& delta1_v_18_f_i47_oe_local_h = 0
+	&
+	delta0_v_18_f_net83 = 0
+	& delta1_v_18_f_net83 = 0
+	&
+	delta0_1_pr16 = 0
+	& delta1_1_pr16 = 0
+	&
+	delta0_2_pr16 = 0
+	& delta1_2_pr16 = 0
+	&
+	delta0_pr16 = 0
+	& delta1_pr16 = 0
+	&
+	delta0_1_pr15 = 0
+	& delta1_1_pr15 = 0
+	&
+	delta0_2_pr15 = 0
+	& delta1_2_pr15 = 0
+	&
+	delta0_pr15 = 0
+	& delta1_pr15 = 0

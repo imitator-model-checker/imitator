@@ -1,0 +1,69 @@
+var
+	p1, p2
+		: parameter;
+	x1, x2, p1
+		: clock;
+	p3
+		: parameter;
+	i, j, k, p3
+		: discrete;
+	p1, p2, k, j, l, p3, x1
+		: parameter;
+
+--****************************************************--
+--****************************************************--
+-- AUTOMATA
+--****************************************************--
+--****************************************************--
+
+
+--****************************************************--
+automaton clock1 
+--****************************************************--
+synclabs: upc1, downc1, 
+		downc2, upE, downE;
+initially Highc1pre;
+
+loc Highc1pre: while x1 <=tHI+b3up & x1>=0 wait {}			-- enable latch WEN
+	when x1=tHI+b3up sync upc1 do {tupc1'=s,e'=s} goto LowE; 
+
+loc LowE: while x1 <= tHI+b3up+b2up & x1>=0 wait {}
+	when x1=tHI+b3up+b2up sync upE do {tupE'=s,e1'=s} goto Lowc2;  
+
+loc Lowc2: while x1 <= tHI+tLO+b3down & x1>=0 wait {}
+	when x1= b3down+tHI+tLO sync downc1
+		do {tdownc1'=s} goto Highc1bis;
+
+loc Highc1bis: while x1 <=tHI+tLO+b3down+down_d15 & x1>=0 wait {}
+	when x1 = tHI+tLO+b3down+down_d15 sync downc2 do {tdownc2'=s,o15'=s} goto YY;
+
+loc YY: while x1 <= tHI+tLO+b3down+b2down & x1>=0 wait{}
+	when x1=tHI+tLO+b3down+b2down sync downE do {tdownE'=s} goto PreEndc1; -- entree CK de gate25
+
+loc PreEndc1: while x1 <= 2tHI+2tLO & x1>=0 wait {}
+	when x1=2tHI+2tLO -- sync upc1 
+	goto Endc1;  -- 18/10/06
+
+
+loc Endc1: while x1>=0 wait {}
+	when True do {} goto Endc1;
+
+end -- clock1
+
+
+
+--****************************************************--
+automaton clock1
+--****************************************************--
+synclabs: nom_de_sync_lab4;
+initially Highc1pre;
+
+loc Highc1pre: while x1 <=tHI+b3up & x1>=0 wait {}			-- enable latch WEN
+	when x1=tHI+b3up sync proutprout do {tupc1'=s,e'=s} goto LowE; 
+end -- clock2
+
+init := True
+	& 2 >= 0
+	& False
+	& (p1 > 0)
+;
