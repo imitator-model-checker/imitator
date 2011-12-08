@@ -1055,6 +1055,7 @@ let post_star program pi0 init_state =
 		);
 		
 		(* Clean up a little *)
+		(** LOOKS LIKE COMPLETELY USELESS !!! it even increases memory x-( *)
 		Gc.major ();
 		
 		(* Iterate *)

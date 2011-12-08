@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2009/09/07
- * Last modified: 2011/12/04
+ * Last modified: 2011/12/08
  *
  **************************************************)
 
@@ -21,6 +21,7 @@ open Graph
 open Options
 open Reachability
 open Graphics
+open Gc
 
 
 (**************************************************
@@ -721,7 +722,8 @@ let pi0_parsed, pi0cube_parsed =
 in
 
 print_message Debug_standard ("\nParsing done " ^ (after_seconds ()) ^ ".");
-Gc.major ();
+(** USELESS, even increases memory x-( **)
+(* Gc.major (); *)
 
 (**************************************************)
 (* Conversion to an abstract program *)
@@ -737,8 +739,11 @@ try (
 	| InternalError e -> (print_error ("Internal error: " ^ e ^ "\nPlease insult the developers."); abort_program (); exit 0)
 	in
 
-print_message Debug_standard ("Program checked and converted " ^ (after_seconds ()) ^ ".\n");
-Gc.major ();
+let gc_stat = Gc.stat () in
+let nb_words = gc_stat.minor_words +. gc_stat.major_words -. gc_stat.promoted_words in
+let nb_ko = nb_words *. 4.0 /. 1024.0 in
+print_message Debug_standard ("Memory for abstract program: " ^ (string_of_float nb_ko) ^ " KB (i.e., " ^ (string_of_float nb_words) ^ " words)\n");
+
 
 
 (**************************************************)
