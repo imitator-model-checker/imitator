@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Ulrich Kuehne, Etienne Andre
  * Created:       2010/07/22
- * Last modified: 2011/12/02
+ * Last modified: 2011/12/08
  *
  ************************************************************)
 
@@ -18,6 +18,7 @@ open Global
 open AbstractImitatorFile
 open ImitatorPrinter
 open Graph
+open Gc
 
 
 (**************************************************************)
@@ -1133,6 +1134,10 @@ let post_star program pi0 init_state =
 		print_message Debug_standard "--------------------";
 		print_message Debug_standard "Statistics on memory";
 		print_message Debug_standard "--------------------";
+		let gc_stat = Gc.stat () in
+		let nb_words = gc_stat.minor_words +. gc_stat.major_words -. gc_stat.promoted_words in
+		let nb_ko = nb_words *. 4.0 /. 1024.0 in
+		print_message Debug_standard ("Total memory: " ^ (string_of_float nb_ko) ^ " KB (i.e., " ^ (string_of_float nb_words) ^ " words)");
 		Gc.print_stat stdout;
 (*		print_message Debug_standard "--------------------";
 		Gc.major();
