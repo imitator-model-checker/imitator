@@ -104,28 +104,40 @@ let nb_unsat2 = ref 0
 
 
 (**************************************************************)
-(* Jobshop functions *)
+(* Fusion functions *)
 (**************************************************************)
 (** Check if two states are mergeable: return True if the convex hull is equal to the union, False otherwise*)
 let state_mergeable state1 state2 =
 	let (loc1,constr1) = state1 in
 	let (loc2,constr2) = state2 in
 	if not (Automaton.location_equal loc1 loc2) then false else (
-		let copy_constr1 = LinearConstraint.copy constr1 in
-		LinearConstraint.hull_assign copy_constr1 constr2;
-		(** Compute the difference between the convex hull and state 1 then take the difference with state2 *)
-		LinearConstraint.difference_assign copy_constr1 constr2;
-		LinearConstraint.difference_assign copy_constr1 constr1;
-		(** If there is anything left in convex_hull_P1_P2 then it wasn't mergeable*)
-		if LinearConstraint.is_false copy_constr1 then(
-			print_message Debug_total ("The convex difference has been found empty"); 
-			true
-		)
-		else false;
+		(* Patch to avoid very costly operations; note that this might prevent us from doing some merging !!! *)
+		(* NEVER HELPS US! *)
+(* 		if LinearConstraint.is_false (LinearConstraint.intersection [constr1; constr2]) then false *)
+(* 		else( *)
+			let copy_constr1 = LinearConstraint.copy constr1 in
+(* 			print_message Debug_standard ("HULL_ASSIGN");  *)
+			LinearConstraint.hull_assign copy_constr1 constr2;
+			(** Compute the difference between the convex hull and state 1 then take the difference with state2 *)
+(* 			print_message Debug_standard ("DIFF_ASSIGN1");  *)
+			LinearConstraint.difference_assign copy_constr1 constr2;
+(* 			print_message Debug_standard ("DIFF_ASSIGN2");  *)
+			(* Patch : only test polyhedra equality (might prevent us from doing some merging !!!) *)
+(* 			if LinearConstraint.is_equal copy_constr1 constr1 then true else false *)
+(* 			if LinearConstraint.is_leq copy_constr1 constr1 then true else false *)
+			LinearConstraint.difference_assign copy_constr1 constr1;
+			(** If there is anything left in convex_hull_P1_P2 then it wasn't mergeable*)
+(* 			print_message Debug_standard ("SAT TEST"); *)
+			if LinearConstraint.is_false copy_constr1 then(
+				print_message Debug_total ("The convex difference has been found empty"); 
+				true
+			)
+			else false
+(* 		) *)
 	)
 
 
-let rec merging_of_states graph index_state list_index_states list_new_states =
+(*let rec merging_of_states graph index_state list_index_states list_new_states =
 	match list_index_states with
 	  | [] -> (false, -1)
 	  | first :: rest  -> let (loc_state, constr_state) =  (get_state graph index_state) in
@@ -138,7 +150,128 @@ let rec merging_of_states graph index_state list_index_states list_new_states =
 			LinearConstraint.hull_assign constr_state constr_hd;
 			(true, first)
 		  )
-		  else ( merging_of_states graph index_state rest (first :: list_new_states); )
+		  else ( merging_of_states graph index_state rest (first :: list_new_states); )*)
+
+
+let try_to_merge_states graph list_of_states =
+	print_message Debug_high ("Starting merging");
+	
+	(* Count states (for statistics only *)
+	let nb_merged = ref 0 in
+	(* Check if we have to start the whole merging again (case a merging was found *)
+	let start_again = ref true in
+	(* Copy the list of states to work on it *)
+	let current_list_of_states = ref list_of_states in
+
+	(* DEFINITION OF AN AUXILIARY FUNCTION: 'eater' state id will try to merge with elements within 'eated_list' states id list *)
+	let merge_states_aux eater eated_list =
+		(* Flag to check if states were merged *)
+		let merged_states = ref true in
+		(* Copy eated list *)
+		let eated_list_copy = ref eated_list in
+		
+		(* Loop as long as we merged states, i.e., always start again to try to marge eater if some states were merged *)
+		while !merged_states do
+			print_message Debug_total ("Starting inner loop in merging");
+			
+(* 				print_message Debug_standard ("  Starting inner loop"); *)
+
+			
+			(* Set flag to false: no states merged yet *)
+			merged_states := false;
+			(* Get the real state *)
+			let s1 = get_state graph eater in
+			(* Iterate on all elements of eated_list, and update the eated_list *)
+			eated_list_copy := List.fold_left (fun current_list current_element ->
+(* 				print_message Debug_standard ("    Consider one more state"); *)
+				(* Get the real state *)
+				let s2 = get_state graph current_element in
+				(* Try to merge eater with current_element *)
+				if state_mergeable s1 s2 then (
+					print_message Debug_total ("Found a mergeable state");
+(* 					print_message Debug_standard ("FOUND MERGEABLE"); *)
+					Graph.merge_states graph eater current_element;
+(* 					print_message Debug_standard ("SUCCESS WITH MERGED"); *)
+					print_message Debug_total ("States successfully merged");
+					(* Get the constraints *)
+					let _, constr1 = s1 in
+					let _, constr2 = s2 in
+					(* Perform constr1 <-- constr2 *)
+					(** TO OPTIMIZE: operation already performed in state_mergeable !! *)
+(* 					print_message Debug_standard ("HULL ASSIGN:"); *)
+					LinearConstraint.hull_assign constr1 constr2;
+					(* Update flags (we will have to start everything again) *)
+					start_again := true;
+					merged_states := true;
+					nb_merged := !nb_merged + 1;
+					(* Return current list only, i.e., discard s2 *)
+					current_list
+				) else (
+					(* Keep s2 *)
+					current_element :: current_list
+				)
+				(* NOTE THAT THE LIST WAS REVERSED; IMPORTANT? *)
+			) [] !eated_list_copy;
+		done; (* end while merge first with rest *)
+		(* Result: *)
+		!eated_list_copy
+	(* END AUXILIARY FUNCTION *)
+	in
+
+	while !start_again do
+		(* Set flag to false: no states merged yet *)
+		start_again := false;
+
+		print_message Debug_total ("Starting one iteration of the outer loop in merging");
+
+		let beginning = ref [] in
+		let remaining = ref (!current_list_of_states) in
+		
+		while !remaining != [] do
+			match !remaining with
+			| [] -> raise (InternalError("Impossible case in 'merge_states'."))
+			| first_remaining :: rest_remaining ->
+				(* Call auxiliary function *)
+				print_message Debug_high ("Considered one more state");
+				remaining := merge_states_aux first_remaining rest_remaining;
+				(* Add first to rest, i.e., move one step within the list *)
+				beginning := first_remaining :: !beginning;
+		done;
+		(* Update list of states *)
+		current_list_of_states := !beginning;
+	done;
+
+	(* Some debug message *)
+	if !nb_merged > 0 then
+		print_message Debug_standard ("  " ^ (string_of_int !nb_merged) ^ " state" ^ (s_of_int !nb_merged) ^ " merged.");
+	
+	(* Return something *)
+	!current_list_of_states
+
+
+(*
+		match !new_states_after_merging with
+			(* If empty list: do nothing *)
+			| [] -> ()
+			(* Otherwise: *)
+			| first :: rest -> (
+				let (result, state_merged) = merging_of_states reachability_graph first rest [] in
+					print_message Debug_total ("Test for debugging the fatal error 2/5");
+					if result then (
+						print_message Debug_total ("Test for debugging the fatal error 3/5");
+						merging := true;
+						nb_merged := !nb_merged + 1;
+						print_message Debug_total ("Test for debugging the fatal error 4/5");
+						new_states_after_merging := list_remove_first_occurence state_merged !new_states_after_merging ;
+						print_message Debug_total ("Test for debugging the fatal error 5/5");
+					);
+				print_message Debug_total ("Looping merging");
+				);
+
+						(** DEBUT LOOP *)
+
+				
+				done;*)
 
 
 
@@ -1011,7 +1144,8 @@ let post_star program pi0 init_state =
 		(** TO DO: il y a une curieuse DOUBLE recurrence ici, qui m'embete beaucoup *)
 		let new_states_after_merging = ref new_newly_found_new_states in
 		if program.options#jobshop then (
-			let merging = ref true in
+			new_states_after_merging := try_to_merge_states reachability_graph !new_states_after_merging;
+(*			let merging = ref true in
 			let nb_merged = ref 0 in
 			while !merging do
 				print_message Debug_total ("Looped Merging");
@@ -1035,7 +1169,7 @@ let post_star program pi0 init_state =
 						);
 			done;
 			if !nb_merged > 0 then
-				print_message Debug_standard ("  " ^ (string_of_int !nb_merged) ^ " state" ^ (s_of_int !nb_merged) ^ " merged.");
+				print_message Debug_standard ("  " ^ (string_of_int !nb_merged) ^ " state" ^ (s_of_int !nb_merged) ^ " merged.");*)
 		);
 
 
