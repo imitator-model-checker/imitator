@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2010/03/04
- * Last modified: 2011/11/24
+ * Last modified: 2012/01/27
  *
  ****************************************************************)
 
@@ -81,6 +81,7 @@ let numconst_of_string str =
 	(* 	Gmp.Q.from_z (Gmp.Z.from_string str) *)
 	
 
+	
 let numconst_of_mpq m = m
 
 let numconst_of_mpz z = Gmp.Q.from_z z
@@ -98,7 +99,6 @@ let string_of_numconst a =
 	Gmp.Q.to_string (get_mpq a)
 	)
 
-
 (**************************************************)
 (** {2 Constants} *)
 (**************************************************)
@@ -113,12 +113,12 @@ let minus_one = numconst_of_int (-1)
 (** {2 Arithmetic Functions} *)
 (**************************************************)
 
-let arithmetic_gen op a b =
+(*let arithmetic_gen op a b =
 	let a = get_mpq a in
 	let b = get_mpq b in
 	let result = Gmp.Q.create () in
 	op result a b;
-	result
+	result*)
 
 let add = ( +/ ) 
 (*	arithmetic_gen Gmp.Q.add*)

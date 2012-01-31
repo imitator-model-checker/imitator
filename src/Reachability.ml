@@ -124,15 +124,15 @@ let state_mergeable state1 state2 =
 (* 			print_message Debug_standard ("DIFF_ASSIGN2");  *)
 			(* Patch : only test polyhedra equality (might prevent us from doing some merging !!!) *)
 (* 			if LinearConstraint.is_equal copy_constr1 constr1 then true else false *)
-(* 			if LinearConstraint.is_leq copy_constr1 constr1 then true else false *)
-			LinearConstraint.difference_assign copy_constr1 constr1;
+			if LinearConstraint.is_leq copy_constr1 constr1 then true else false
+(*			LinearConstraint.difference_assign copy_constr1 constr1;
 			(** If there is anything left in convex_hull_P1_P2 then it wasn't mergeable*)
 (* 			print_message Debug_standard ("SAT TEST"); *)
 			if LinearConstraint.is_false copy_constr1 then(
 				print_message Debug_total ("The convex difference has been found empty"); 
 				true
 			)
-			else false
+			else false*)
 (* 		) *)
 	)
 

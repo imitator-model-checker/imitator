@@ -163,9 +163,11 @@ INSTALL PPL
 
 	./configure --prefix=/usr --with-libgmp-prefix=/usr --with-libgmpxx-prefix=/usr --with-mlgmp=/usr/lib/ocaml/gmp
 
+Adding option "--disable-shared" may allow static compiling (?)
+
 	make
 
-	make check (optional and very very long, several hours at leasat)
+	make check (optional and very very long, several hours at least)
 OR (to check linking with ocaml)
 	cd interfaces
 	make check

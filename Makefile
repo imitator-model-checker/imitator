@@ -6,7 +6,7 @@
 #
 #  Author:        Etienne Andre
 #  Created:       2009/09/07
-#  Last modified: 2011/11/23
+#  Last modified: 2012/01/31
 #  Ocaml version: 3.12.1
 ###############################################################
 
@@ -37,7 +37,10 @@ endif
 INCLUDE = -I $(SRC) -I $(EXTLIB_PATH) -I $(OCAML_PPL_PATH) -I $(OCAML_GMP_PATH) -I $(CLIB_PATH)
 
 # native c libraries
-CLIBS = -cclib -lpwl -cclib -lm -cclib -lgmpxx -cclib -lgmp -cclib -lppl
+# CLIBS = -cclib -lpwl -cclib -lm -cclib -lgmpxx -cclib -lgmp -cclib -lppl
+# ALLOWS STATIC COMPILING :-)
+CLIBS = -cclib '-static -lppl -lpwl -lppl_ocaml -lstdc++ -lmlgmp -lmpfr -lgmp -lgmpxx ' 
+
 
 # ocaml lib files
 OLIBS = str.cma unix.cma extLib.cma bigarray.cma gmp.cma ppl_ocaml.cma 
@@ -53,17 +56,18 @@ export OPTLIBS = $(CLIBS) $(OOLIBS)
 SRC = src
 
 # Example files for execution directly from the makefile
-EXAMPLE_PATH = /home/etienne/Developpement/IMITATOR2_Examples
+# EXAMPLE_PATH = /home/etienne/Developpement/IMITATOR2_Examples
+EXAMPLE_PATH = examples/
 
 # main object
 MAIN = $(SRC)/IMITATOR.cmo
 MAIN_OPT = $(MAIN:.cmo=.cmx)
 
 # modules to compile
-MODULES = Global NumConst Options LinearConstraint Cache Automaton Pi0Lexer Pi0Parser Pi0CubeLexer Pi0CubeParser ImitatorLexer ImitatorParser GMLLexer GMLParser ImitatorPrinter PTA2CLP PTA2GML ProgramConverter Graph Reachability Graphics
+MODULES = Global NumConst Options LinearConstraint Automaton Cache Pi0Lexer Pi0Parser Pi0CubeLexer Pi0CubeParser ImitatorLexer ImitatorParser GMLLexer GMLParser ImitatorPrinter Graph PTA2CLP PTA2GML ProgramConverter Reachability Graphics
 
 # interfaces
-HEADERS = Global NumConst LinearConstraint Cache Automaton ParsingStructure AbstractImitatorFile ImitatorPrinter PTA2CLP PTA2GML ProgramConverter Graph Reachability Graphics
+HEADERS = Global NumConst LinearConstraint Automaton Cache ParsingStructure AbstractImitatorFile Graph ImitatorPrinter PTA2CLP PTA2GML ProgramConverter Reachability Graphics
 
 CMIS = $(addprefix $(SRC)/, $(addsuffix .cmi, $(HEADERS)))
 OBJS = $(addprefix $(SRC)/, $(addsuffix .cmo, $(MODULES)))
@@ -99,17 +103,23 @@ $(IMILIB): header parser $(OBJS)
 	@ echo [MKLIB] $@
 	@ $(OCAMLC) -a -o $@ $(OBJS)  
 
-$(IMILIB_OPT): header parser $(OBJS_OPT)  
-	@ echo [MKLIB] $@
-	@ $(OCAMLOPT) -a -o $@ $(OBJS_OPT)
+# $(IMILIB_OPT): header parser $(OBJS_OPT)  
+# 	@ echo [MKLIB] $@
+# 	@ $(OCAMLOPT) -a -o $@ $(OBJS_OPT)
 
+
+# $(TARGET): $(MAIN)
+# 	@ echo [LINK] $(TARGET)
+# 	@ $(OCAMLC) -custom -o $(TARGET) $(INCLUDE) $(LIBS) $(MAIN)
+	
 $(TARGET): $(IMILIB) $(MAIN)
 	@ echo [LINK] $(TARGET)
-	@ $(OCAMLC) -o $(TARGET) $(INCLUDE) $(LIBS) $(IMILIB) $(MAIN)
+	@ $(OCAMLC) -custom -o $(TARGET) $(INCLUDE) $(LIBS) $(IMILIB) $(MAIN)
+	# -custom added by EA 12/01/12
 
-$(TARGET_OPT): $(IMILIB_OPT) $(MAIN_OPT)
-	@ echo [LINK] $(TARGET_OPT)
-	$(OCAMLOPT) -o $(TARGET_OPT) $(INCLUDE) $(OPTLIBS) $(IMILIB_OPT) $(MAIN_OPT)
+# $(TARGET_OPT): $(IMILIB_OPT) $(MAIN_OPT)
+# 	@ echo [LINK] $(TARGET_OPT)
+# 	$(OCAMLOPT) -o $(TARGET_OPT) $(INCLUDE) $(OPTLIBS) $(IMILIB_OPT) $(MAIN_OPT)
 
 $(SRC)/%.cmo: $(SRC)/%.ml $(SRC)/%.mli
 	@ echo [OCAMLC] $<
@@ -146,9 +156,9 @@ $(SRC)/%.ml: $(SRC)/%.mll
 	@ ocamllex $< 
 
 # dependencies
-.depend:
-	@ echo [OCAMLDEP]
-	@ ocamldep -I $(SRC) $(SRC)/*.ml $(SRC)/*.mli > .depend 
+# .depend:
+# 	@ echo [OCAMLDEP]
+# 	@ ocamldep -I $(SRC) $(SRC)/*.ml $(SRC)/*.mli > .depend 
 
 
 test: $(IMILIB) 
@@ -166,7 +176,7 @@ exe:
 
 # 	$(TARGET) $(EXAMPLE_PATH)/Tests/test.imi -PTA2GML
 
-# 	$(TARGET) $(EXAMPLE_PATH)/Tests/testPost.imi -mode reachability -statistics -debug total
+	$(TARGET) $(EXAMPLE_PATH)/Tests/testPost.imi -mode reachability -statistics
 # 	$(TARGET) $(EXAMPLE_PATH)/Tests/testPostSansDiscrete.imi -mode reachability -statistics -debug total
 
 # 	$(TARGET) $(EXAMPLE_PATH)/Tests/exPourGML.imi -PTA2GML
@@ -252,7 +262,7 @@ exe:
 # 	$(TARGET) $(EXAMPLE_PATH)/Train/TrainAHV93.imi -mode reachability -no-dot -no-log
 # 	bin/IMITATOR2.34.111115 $(EXAMPLE_PATH)/Train/TrainAHV93.imi -mode reachability -no-dot -no-log
 # 	
-# 	$(TARGET) $(EXAMPLE_PATH)/Train/TrainAHV93.imi $(EXAMPLE_PATH)/Train/TrainAHV93.pi0 -incl -no-dot -no-log -statistics
+# 	$(TARGET) $(EXAMPLE_PATH)/Train/TrainAHV93.imi $(EXAMPLE_PATH)/Train/TrainAHV93.pi0 -no-dot -no-log
 # 	bin/IMITATOR2.371 $(EXAMPLE_PATH)/Train/TrainAHV93.imi $(EXAMPLE_PATH)/Train/TrainAHV93.pi0 -incl -no-dot -no-log -statistics
 # 	bin/IMITATOR2.370 $(EXAMPLE_PATH)/Train/TrainAHV93.imi $(EXAMPLE_PATH)/Train/TrainAHV93.pi0 -incl -no-dot -no-log -statistics
 # 	bin/IMITATOR2.34.111115 $(EXAMPLE_PATH)/Train/TrainAHV93.imi $(EXAMPLE_PATH)/Train/TrainAHV93.pi0 -IMincl -no-dot -no-log -statistics
@@ -299,6 +309,7 @@ exe:
 # 	./IMITATOR Examples/CSMACD/csmacdPrism_2p.imi Examples/CSMACD/csmacdPrism_2p.v0 -mode cover -log-prefix Examples/CSMACD/carto_2p/csmacdPrism_2p
 
 # 	./IMITATOR Examples/Wlan/wlan.imi -mode reachability
+# 	$(TARGET) $(EXAMPLE_PATH)/Wlan/wlan.imi $(EXAMPLE_PATH)/Wlan/wlan.pi0 -no-dot -no-log -statistics -jobshop
 # 	$(TARGET) $(EXAMPLE_PATH)/Wlan/wlan.imi $(EXAMPLE_PATH)/Wlan/wlan.pi0 -post-limit 10 -no-dot -no-log -statistics 
 # 	$(TARGET) $(EXAMPLE_PATH)/Wlan/wlan.imi $(EXAMPLE_PATH)/Wlan/wlan.pi0 -post-limit 10 -no-dot -no-log -statistics -dynamic
 # 	$(TARGET) $(EXAMPLE_PATH)/Wlan/wlan.imi $(EXAMPLE_PATH)/Wlan/wlan.pi0 -post-limit 10 -no-dot -no-log -statistics -jobshop
@@ -349,7 +360,7 @@ exe:
 
 # 	$(TARGET) $(EXAMPLE_PATH)/SIMOP/simop.imi $(EXAMPLE_PATH)/SIMOP/simop.pi0 -incl -no-dot -no-log -statistics
 # 	$(TARGET) $(EXAMPLE_PATH)/SIMOP/simop.imi $(EXAMPLE_PATH)/SIMOP/simop.pi0 -incl -no-dot -no-log -statistics -dynamic
-	$(TARGET) $(EXAMPLE_PATH)/SIMOP/simop.imi $(EXAMPLE_PATH)/SIMOP/simop.pi0 -incl -no-dot -no-log -statistics -jobshop
+# 	$(TARGET) $(EXAMPLE_PATH)/SIMOP/simop.imi $(EXAMPLE_PATH)/SIMOP/simop.pi0 -incl -no-dot -no-log -statistics
 # 	bin/IMITATOR2.371 $(EXAMPLE_PATH)/SIMOP/simop.imi $(EXAMPLE_PATH)/SIMOP/simop.pi0 -incl -no-dot -no-log -statistics
 # 	bin/IMITATOR2.370 $(EXAMPLE_PATH)/SIMOP/simop.imi $(EXAMPLE_PATH)/SIMOP/simop.pi0 -incl -no-dot -no-log -statistics
 # 	bin/IMITATOR2.36 $(EXAMPLE_PATH)/SIMOP/simop.imi $(EXAMPLE_PATH)/SIMOP/simop.pi0 -incl -no-dot -no-log -statistics
@@ -359,7 +370,7 @@ exe:
 
 
 ##### JOB SHOP #####
-# 	$(TARGET) $(EXAMPLE_PATH)/Jobshop/maler_2_4.imi -mode reachability -no-dot -no-log -incl -statistics
+# 	$(EXAMPLE_PATH)/Jobshop/maler_2_4.imi -mode reachability -no-dot -no-log -incl -statistics -jobshop
 # 	bin/IMITATOR2.371 $(EXAMPLE_PATH)/Jobshop/maler_2_4.imi -mode reachability -no-dot -no-log -incl -statistics
 # 	bin/IMITATOR2.370 $(EXAMPLE_PATH)/Jobshop/maler_2_4.imi -mode reachability -no-dot -no-log -incl -statistics
 # 	bin/IMITATOR2.36 $(EXAMPLE_PATH)/Jobshop/maler_2_4.ancien.imi -mode reachability -no-dot -no-log -incl -statistics
@@ -367,20 +378,21 @@ exe:
 # 	bin/IMITATOR2.35.111115 $(EXAMPLE_PATH)/Jobshop/maler_2_4.imi -mode reachability -no-dot -no-log -IMincl
 # 	bin/IMITATOR2.34.111115 $(EXAMPLE_PATH)/Jobshop/maler_2_4.ancien.imi -mode reachability -no-dot -no-log -IMincl
 
+# 	$(TARGET) $(EXAMPLE_PATH)/Jobshop/maler_2_4.imi $(EXAMPLE_PATH)/Jobshop/maler_2_4.pi0 -no-dot -no-log -acyclic -statistics
 # 	$(TARGET) $(EXAMPLE_PATH)/Jobshop/maler_2_4.imi $(EXAMPLE_PATH)/Jobshop/maler_2_4.pi0 -incl -no-dot -no-log -acyclic -statistics
 # 	$(TARGET) $(EXAMPLE_PATH)/Jobshop/maler_2_4.imi $(EXAMPLE_PATH)/Jobshop/maler_2_4.pi0 -incl -no-dot -no-log -acyclic -statistics -dynamic
 # 	$(TARGET) $(EXAMPLE_PATH)/Jobshop/maler_2_4.imi $(EXAMPLE_PATH)/Jobshop/maler_2_4.pi0 -incl -no-dot -no-log -acyclic -statistics -jobshop
 # 	bin/IMITATOR2.371 $(EXAMPLE_PATH)/Jobshop/maler_2_4.imi $(EXAMPLE_PATH)/Jobshop/maler_2_4.pi0 -incl -statistics
 
 
-# 	$(TARGET) $(EXAMPLE_PATH)/Jobshop/maler_3_4.imi -mode reachability -no-dot -no-log -incl -acyclic -statistics
+# 	$(TARGET) $(EXAMPLE_PATH)/Jobshop/maler_3_4.imi -mode reachability -no-dot -no-log -incl -acyclic -statistics -jobshop
 # 	$(TARGET) $(EXAMPLE_PATH)/Jobshop/maler_3_4.imi -mode reachability -no-dot -no-log -incl -acyclic -statistics -dynamic
 # 	$(TARGET) $(EXAMPLE_PATH)/Jobshop/maler_3_4.imi -mode reachability -no-dot -no-log -incl -acyclic -statistics -jobshop
 # 	bin/IMITATOR2.36 $(EXAMPLE_PATH)/Jobshop/maler_3_4_inst.imi -mode reachability -no-dot -no-log -incl -acyclic -statistics
 # 	bin/IMITATOR2.35 $(EXAMPLE_PATH)/Jobshop/maler_3_4.imi -mode reachability -no-dot -no-log -incl -statistics -post-limit 10
 # 	bin/IMITATOR2.34.111115 $(EXAMPLE_PATH)/Jobshop/maler_3_4_inst.imi -mode reachability -no-dot -no-log -IMincl
 
-# 	$(TARGET) $(EXAMPLE_PATH)/Jobshop/maler_3_4.imi $(EXAMPLE_PATH)/Jobshop/maler_3_4.pi0 -no-dot -no-log -incl -statistics -post-limit 9
+# 	$(TARGET) $(EXAMPLE_PATH)/Jobshop/maler_3_4.imi $(EXAMPLE_PATH)/Jobshop/maler_3_4.pi0 -no-dot -no-log -incl -statistics #-post-limit 9
 # 	bin/IMITATOR2.371 $(EXAMPLE_PATH)/Jobshop/maler_3_4.imi $(EXAMPLE_PATH)/Jobshop/maler_3_4.pi0 -no-dot -no-log -incl -statistics -post-limit 9
 
 # 	$(TARGET) $(EXAMPLE_PATH)/Jobshop/maler_3_4_inst.imi -mode reachability -no-dot -no-log -incl -statistics
@@ -396,7 +408,7 @@ exe:
 # 	bin/IMITATOR2.34.111115 $(EXAMPLE_PATH)/Jobshop/maler_3_4.imi -mode reachability -no-dot -no-log -IMincl
 
 
-# 	$(TARGET) $(EXAMPLE_PATH)/Jobshop/maler_4_4.imi -mode reachability -no-dot -no-log -incl -acyclic -statistics -post-limit 12 -jobshop
+# 	$(TARGET) $(EXAMPLE_PATH)/Jobshop/maler_4_4.imi -mode reachability -no-dot -no-log -incl -statistics -jobshop
 # 	$(TARGET) $(EXAMPLE_PATH)/Jobshop/maler_4_4.imi -mode reachability -no-dot -no-log -incl -acyclic -statistics -post-limit 12
 # 	bin/IMITATOR2.370 $(EXAMPLE_PATH)/Jobshop/maler_4_4.imi -mode reachability -no-dot -no-log -incl -statistics -post-limit 8
 # 	bin/IMITATOR2.36 $(EXAMPLE_PATH)/Jobshop/maler_4_4.imi -mode reachability -no-dot -no-log -incl -statistics
@@ -430,5 +442,5 @@ rmtpf:
 rmuseless:
 	@rm -rf $(FILES:+=cmo) $(FILES:+=cmx) $(FILES:+=cmi) $(FILES:+=o) $(MAIN) $(MAIN:.cmo=.cmi) $(MAIN:.cmo=.cmx)
 	@rm -rf $(FILESMLI:+=cmi)
-
-include .depend
+ 
+# include .depend

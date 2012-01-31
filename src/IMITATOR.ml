@@ -543,7 +543,7 @@ Printf.printf " *  IMITATOR %-36s *\n" version_string;
 print_message Debug_standard
 	( "*                                                *\n"
 	^ "*   Etienne ANDRE, Ulrich KUEHNE, Romain SOULAT  *\n"
-	^ "*                                   2009 - 2011  *\n"
+	^ "*                                   2009 - 2012  *\n"
 	^ "*     Laboratoire Specification et Verification  *\n"
 	^ "*                  ENS de Cachan & CNRS, France  *\n"
 	^ "**************************************************");
