@@ -179,6 +179,9 @@ val intersection_assign : linear_constraint -> linear_constraint list -> unit
 (** Perform the hull assignation *)
 val hull_assign : linear_constraint -> linear_constraint -> unit
 
+(** Perform convex hull, if the result is exact  *)
+val hull_assign_if_exact : linear_constraint -> linear_constraint -> bool
+
 (** Eliminate (using existential quantification) a set of variables in a linear constraint *)
 val hide : variable list -> linear_constraint -> linear_constraint
 

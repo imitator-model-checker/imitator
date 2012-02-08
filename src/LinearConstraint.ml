@@ -816,6 +816,18 @@ let hull_assign linear_constraint1 linear_constraint2 =
 	result
 	
 
+(** Perform the hull if the result is exact (version with side effect) *)
+let hull_assign_if_exact linear_constraint1 linear_constraint2 =
+	(* Statistics *)
+	ppl_nb_hull := !ppl_nb_hull + 1;
+	let start = Unix.gettimeofday() in
+	(* Actual call to PPL *)
+	let result = ppl_Polyhedron_poly_hull_assign_if_exact linear_constraint1 linear_constraint2 in
+	(* Statistics *)
+	ppl_t_hull := !ppl_t_hull +. (Unix.gettimeofday() -. start);
+	(* Return result *)
+	result
+
 
 (** Perform difference (version with side effect) *)
 let difference_assign linear_constraint1 linear_constraint2 =

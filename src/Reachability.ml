@@ -111,29 +111,7 @@ let state_mergeable state1 state2 =
 	let (loc1,constr1) = state1 in
 	let (loc2,constr2) = state2 in
 	if not (Automaton.location_equal loc1 loc2) then false else (
-		(* Patch to avoid very costly operations; note that this might prevent us from doing some merging !!! *)
-		(* NEVER HELPS US! *)
-(* 		if LinearConstraint.is_false (LinearConstraint.intersection [constr1; constr2]) then false *)
-(* 		else( *)
-			let copy_constr1 = LinearConstraint.copy constr1 in
-(* 			print_message Debug_standard ("HULL_ASSIGN");  *)
-			LinearConstraint.hull_assign copy_constr1 constr2;
-			(** Compute the difference between the convex hull and state 1 then take the difference with state2 *)
-(* 			print_message Debug_standard ("DIFF_ASSIGN1");  *)
-			LinearConstraint.difference_assign copy_constr1 constr2;
-(* 			print_message Debug_standard ("DIFF_ASSIGN2");  *)
-			(* Patch : only test polyhedra equality (might prevent us from doing some merging !!!) *)
-(* 			if LinearConstraint.is_equal copy_constr1 constr1 then true else false *)
-			if LinearConstraint.is_leq copy_constr1 constr1 then true else false
-(*			LinearConstraint.difference_assign copy_constr1 constr1;
-			(** If there is anything left in convex_hull_P1_P2 then it wasn't mergeable*)
-(* 			print_message Debug_standard ("SAT TEST"); *)
-			if LinearConstraint.is_false copy_constr1 then(
-				print_message Debug_total ("The convex difference has been found empty"); 
-				true
-			)
-			else false*)
-(* 		) *)
+		LinearConstraint.hull_assign_if_exact constr1 constr2 
 	)
 
 
@@ -173,33 +151,20 @@ let try_to_merge_states graph list_of_states =
 		(* Loop as long as we merged states, i.e., always start again to try to marge eater if some states were merged *)
 		while !merged_states do
 			print_message Debug_total ("Starting inner loop in merging");
-			
-(* 				print_message Debug_standard ("  Starting inner loop"); *)
-
-			
 			(* Set flag to false: no states merged yet *)
 			merged_states := false;
 			(* Get the real state *)
 			let s1 = get_state graph eater in
 			(* Iterate on all elements of eated_list, and update the eated_list *)
 			eated_list_copy := List.fold_left (fun current_list current_element ->
-(* 				print_message Debug_standard ("    Consider one more state"); *)
 				(* Get the real state *)
 				let s2 = get_state graph current_element in
 				(* Try to merge eater with current_element *)
 				if state_mergeable s1 s2 then (
 					print_message Debug_total ("Found a mergeable state");
-(* 					print_message Debug_standard ("FOUND MERGEABLE"); *)
 					Graph.merge_states graph eater current_element;
-(* 					print_message Debug_standard ("SUCCESS WITH MERGED"); *)
 					print_message Debug_total ("States successfully merged");
-					(* Get the constraints *)
-					let _, constr1 = s1 in
-					let _, constr2 = s2 in
-					(* Perform constr1 <-- constr2 *)
-					(** TO OPTIMIZE: operation already performed in state_mergeable !! *)
-(* 					print_message Debug_standard ("HULL ASSIGN:"); *)
-					LinearConstraint.hull_assign constr1 constr2;
+					(** Optimized: hull already performed in state_mergeable !! *)
 					(* Update flags (we will have to start everything again) *)
 					start_again := true;
 					merged_states := true;
