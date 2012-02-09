@@ -176,7 +176,7 @@ exe:
 
 # 	$(TARGET) $(EXAMPLE_PATH)/Tests/test.imi -PTA2GML
 
-	$(TARGET) $(EXAMPLE_PATH)/Tests/testPost.imi -mode reachability -statistics
+# 	$(TARGET) $(EXAMPLE_PATH)/Tests/testPost.imi -mode reachability -statistics
 # 	$(TARGET) $(EXAMPLE_PATH)/Tests/testPostSansDiscrete.imi -mode reachability -statistics -debug total
 
 # 	$(TARGET) $(EXAMPLE_PATH)/Tests/exPourGML.imi -PTA2GML
@@ -196,6 +196,9 @@ exe:
 # 	bin/IMITATOR2.36 $(EXAMPLE_PATH)/Examples/testBoucleAvecDiscrete.imi -mode reachability -statistics -post-limit 200 -no-dot -no-log
 # 	bin/IMITATOR2.35 $(EXAMPLE_PATH)/Examples/testBoucleAvecDiscrete.imi -mode reachability -statistics -post-limit 200 -no-dot -no-log
 # 	bin/IMITATOR2.34.111115 $(EXAMPLE_PATH)/Examples/testBoucleAvecDiscrete.imi -mode reachability -post-limit 200 -no-dot -no-log
+
+##### CASE STUDIES : EXAMPLES #####
+	$(TARGET) $(EXAMPLE_PATH)/Examples/exSITH.imi -mode reachability
 
 ##### CASE STUDIES : HARDWARE #####
 
