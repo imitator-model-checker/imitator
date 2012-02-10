@@ -743,7 +743,18 @@ let hull constraints =
 			let hull = ppl_new_NNC_Polyhedron_from_NNC_Polyhedron c in
 			List.iter (ppl_Polyhedron_poly_hull_assign hull) tail;
 			hull
-			
+	
+(** Perform the hull (version with side effect) *)
+let hull_assign linear_constraint1 linear_constraint2 =
+	let result = ppl_Polyhedron_poly_hull_assign linear_constraint1 linear_constraint2 in
+	result
+	
+
+(** Perform the hull if the result is exact (version with side effect) *)
+let hull_assign_if_exact linear_constraint1 linear_constraint2 =
+	let result = ppl_Polyhedron_poly_hull_assign_if_exact linear_constraint1 linear_constraint2 in
+	result
+					
 
 (** Performs the intersection of a list of linear constraints *)
 let intersection linear_constraints =

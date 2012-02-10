@@ -206,6 +206,12 @@ val intersection : linear_constraint list -> linear_constraint
 (** convex hull *)
 val hull : linear_constraint list -> linear_constraint
 
+(** Perform the hull assignment *)
+val hull_assign : linear_constraint -> linear_constraint -> unit
+
+(** Perform convex hull, if the result is exact  *)
+val hull_assign_if_exact : linear_constraint -> linear_constraint -> bool
+
 (** Performs the intersection of a list of linear constraints *)
 val intersection_assign : linear_constraint -> linear_constraint list -> unit
 

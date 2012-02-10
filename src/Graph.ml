@@ -9,8 +9,11 @@ type abstract_path = abstract_label path
 
 
 type ('s, 'l) t = {
+	(** Highest state index *)
+	mutable curr_id : state_index;
+	
 	(** An Array 'state_index' -> 'state' *)
-	mutable states : 's graph_state DynArray.t;
+	mutable states : (state_index, 's graph_state) Hashtbl.t;
 	
 	(** A list of initial states (indices) *)
 	mutable init_states : state_index list ref; 
@@ -38,7 +41,8 @@ let initial_size = 100
 
 let make guessed_nb_transitions inclusion_predicate =
 	{
-		states = DynArray.make initial_size;
+		curr_id = 0;
+		states = Hashtbl.create initial_size;
 		init_states = ref [];
 		hash_table = Hashtbl.create initial_size;
 		transitions_table = Hashtbl.create guessed_nb_transitions;  
@@ -48,7 +52,7 @@ let make guessed_nb_transitions inclusion_predicate =
 
 (** Return the number of states in a graph *)
 let nb_states graph =
-	DynArray.length graph.states
+	Hashtbl.length graph.states
 	
 (** Return the number of transitions in a graph *)
 let nb_transitions graph = 
@@ -56,20 +60,20 @@ let nb_transitions graph =
 
 (** Return the state of a state_index *)
 let get_state graph state_index =
-	DynArray.get graph.states state_index 
+	Hashtbl.find graph.states state_index 
 
 (** Iterate over the reachable states *)
 let iter f graph =
-	DynArray.iter f graph.states
+	Hashtbl.iter (fun _ s -> f s) graph.states
 	
 (** Fold the reachable states *)
 let fold f a graph =
-	DynArray.fold_left f a graph.states
+	Hashtbl.fold (fun _ s x -> f x s) graph.states a
 
 (** Return all states satisfying a predicate *)
 let get_states graph p =
 	let states = ref [] in 
-	DynArray.iteri (fun index state -> 
+	Hashtbl.iter (fun index state -> 
 		if p state then	states := index :: !states
 	) graph.states;
 	!states
@@ -152,14 +156,17 @@ let forall_state p graph =
 			true
 		) with Satisfied -> false		
 
-				
+
+(* The hash code only depends on the location + discrete. *)
+(* Note that merging / changing constraints will not change the hash code *)								
 let hash_code = Automaton.hash_code
 
 (* perform the insertion of a new state in a graph *)
 let insert_state graph hash new_state =
-	let new_state_index = DynArray.length graph.states in
+	let new_state_index = graph.curr_id in
+	graph.curr_id <- graph.curr_id + 1;
 	(* Add the state to the tables *)
-	DynArray.add graph.states new_state;
+	Hashtbl.add graph.states new_state_index new_state;
 	Hashtbl.add graph.hash_table hash new_state_index;
 	(* Return state_index *)
 	new_state_index
@@ -192,7 +199,7 @@ let add_state graph new_state =
 			);
 			List.iter (fun index -> 
 				let loc', c' = get_state graph index in
-				if loc = loc' && graph.included_in c c' then raise (Found index)
+				if Automaton.location_equal loc loc' && graph.included_in c c' then raise (Found index)
 			) old_states;
 			(* Not found -> insert state *)
 			let new_state_index = insert_state graph hash new_state in
@@ -230,17 +237,13 @@ let add_transition graph (src, label, trg) =
 	if not (List.mem (label, trg) transitions) then
 		Hashtbl.add graph.transitions_table src (label, trg)
 
-
-
 		
 (** Return the list of all constraints on the parameters associated to the states of a graph *)
 let all_p_constraints graph =
 	let program = Program.get_program () in
-	DynArray.fold_left
-		(fun current_list (_, linear_constraint) ->
+	fold (fun current_list (_, linear_constraint) ->
 			let p_constraint = LinearConstraint.hide program.clocks_and_discrete linear_constraint in
-			p_constraint :: current_list)
-		[] graph.states
+			p_constraint :: current_list)	[] graph
 
 
 (** Compute the intersection of all parameter constraints, DESTRUCTIVE!!! *)
@@ -271,14 +274,122 @@ let bad_states_reachable graph=
 let add_inequality_to_states graph inequality =
 	let constraint_to_add = LinearConstraint.make [inequality] in
 	(* For all state: *)
-	for state_index = 0 to (DynArray.length graph.states) - 1 do
-		 DynArray.set graph.states state_index (
-			let (loc, const) = DynArray.get graph.states state_index in
-			(* Perform the intersection *)
-			loc, (LinearConstraint.intersection [constraint_to_add; const] )
-		)
-	done
+	iter (fun (_,c) -> LinearConstraint.intersection_assign c [constraint_to_add]) graph
+
+		
+(** Merge two states by replacing the second one by the first one, in the whole graph structure (lists of states, and transitions) *)
+let merge_states graph s mergers =
+	print_message Debug_total ("update tables for " ^ (string_of_int s));
 	
+	(* rebuild transitions table *)
+	print_message Debug_total "update transition table";
+	let t' = Hashtbl.copy graph.transitions_table in
+	Hashtbl.clear graph.transitions_table;
+	Hashtbl.iter (fun src (a, trg) -> 
+		let src' = if (List.mem src mergers) then s else src 
+		and trg' = if (List.mem trg mergers) then s else trg in
+		add_transition graph (src', a, trg')
+	) t';
+
+	(* Remove mergers from hash table *)
+	print_message Debug_high "update hash table";
+	let l, _ = get_state graph s in
+	let h = hash_code l in
+	(* Get all states with that hash *)
+	print_message Debug_high ("get states with hash " ^ (string_of_int h));
+	let bucket = Hashtbl.find_all graph.hash_table h in
+	(* Remove them all *)
+	while Hashtbl.mem graph.hash_table h do
+		Hashtbl.remove graph.hash_table h;
+	done;
+	(* Add them back *)
+	List.iter (fun y ->
+		(* Only add if not state2 *)
+		if not (List.mem y mergers) then Hashtbl.add graph.hash_table h y;
+	) bucket;
+	
+	(* Remove mergers from state table *)
+	print_message Debug_high "update state table";
+	List.iter (fun s -> 
+		print_message Debug_high ("remove state " ^ (string_of_int s));
+(*		while Hashtbl.mem graph.states s do *)
+			Hashtbl.remove graph.states s
+(*		done*)
+	) mergers
+	
+
+
+(* get states sharing the same location and discrete values from hash_table, excluding s *)
+let get_siblings graph si =
+	let s = get_state graph si in
+	let l, _ = s in
+	let h = hash_code l in
+	let sibs = Hashtbl.find_all graph.hash_table h in
+	(* check for exact correspondence (=> hash collisions!), and exclude si *)
+	List.fold_left (fun siblings sj ->
+		if sj = si then siblings else begin 
+			let l', c' = get_state graph sj in
+			if (Automaton.location_equal l l') then
+				(sj, (l',c')) :: siblings
+			else
+				siblings
+		end
+	) [] sibs
+	
+	
+(* Try to merge new states with existing ones. Returns updated list of new states *)
+let merge graph new_states =
+	let mergeable = LinearConstraint.hull_assign_if_exact in
+	
+	(* function for merging one state with its siblings *)
+	let merge_state si =
+		print_message Debug_total ("try to merge state " ^ (string_of_int si));
+		let l, c = get_state graph si in
+		(* get merge candidates as pairs (index, state) *)
+		let candidates = get_siblings graph si in
+		(* try to merge with siblings, restart if merge found, return eaten states *)
+		let rec eat all_mc rest_mc = begin
+			match rest_mc with
+				| [] -> [] (* here, we are really done *)
+				| m :: tail_mc -> begin
+						let sj, (_, c') = m in
+					  if mergeable c c' then begin
+							print_message Debug_high ("merged with state " ^ (string_of_int sj));
+							(* we ate sj, start over with new bigger state, removing sj *)
+							let all_mc' = List.filter (fun (sk, _) -> sk <> sj) all_mc in
+							sj :: eat all_mc' all_mc'  					
+						end else begin
+							(* try to eat the rest of them *)
+							eat all_mc tail_mc
+						end
+					end
+		end in
+		eat candidates candidates in
+	
+	(* iterate list of new states and try to merge them, return eaten states *)
+	let rec main_merger states =
+		match states with
+			| [] -> []
+			| s :: ss -> begin
+					let eaten = merge_state s in
+					if eaten = [] then
+						(* nothing merged -> go on with the rest *)
+						main_merger ss
+					else begin
+						(* update transitions and state table *)
+						merge_states graph s eaten;
+						(* go on, skipping eaten states from the rest of the list *)
+						eaten @ (main_merger (List.filter (fun s' -> not (List.mem s' eaten)) ss))
+					end
+				end in
+	
+	(* do it! *)
+	let eaten = main_merger new_states in
+	print_message Debug_standard ("  " ^ (string_of_int (List.length eaten)) ^ " states merged.");
+	
+	(* return non-eaten new states *)
+	List.filter (fun s -> not (List.mem s eaten)) new_states 
+				
 
 let string_of_abstract_label = fun label -> 
 	match label with 
@@ -388,16 +499,14 @@ let get_counterexample graph =
 
 
 let plot_graph x y graph = 
-	DynArray.fold_left (
-		fun s (_, constr) -> s ^ (Graphics.plot_2d x y constr) ^ "\n"
-	) "" graph.states
+	fold (fun s (_, constr) -> s ^ (Graphics.plot_2d x y constr) ^ "\n") "" graph
 	
 let plot_abstract_graph x y = fun graph -> 
 	let program = Program.get_program () in
-	DynArray.fold_left (fun s (l,b) ->
+	fold (fun s (l,b) ->
 		let _,constr = PredicateAbstraction.concretize program.predicates (l,b) in 
 		s ^ (Graphics.plot_2d x y constr) ^ "\n"
-	) "" graph.states
+	) "" graph
 	
 
 let dot_colors = [
@@ -473,7 +582,7 @@ let make_dot_of_graph state_printer constraint_printer label_printer projection 
 			"\n * The following pi0 was considered:"
 			^ "\n" ^ (ImitatorPrinter.string_of_pi0 pi0)
 		))
-		^ "\n * " ^ (string_of_int (DynArray.length states)) ^ " states and "
+		^ "\n * " ^ (string_of_int (Hashtbl.length states)) ^ " states and "
 			^ (string_of_int (Hashtbl.length transitions)) ^ " transitions"
 		^ "\n * Program terminated " ^ (after_seconds ())
 		^ "\n***************************************************/"
@@ -486,7 +595,7 @@ let make_dot_of_graph state_printer constraint_printer label_printer projection 
 		^
 		(**** BAD PROG ****)
 		(let string_states = ref "" in
-			DynArray.iteri (fun state_index state ->
+			Hashtbl.iter (fun state_index state ->
 			(* Construct the string *)
 			string_states := !string_states
 				(* Add the state *)
@@ -521,7 +630,7 @@ let make_dot_of_graph state_printer constraint_printer label_printer projection 
 		(* Add nice colors *)
 		^ "\n" ^
 		(let string_colors = ref "" in
-			DynArray.iteri (fun state_index (location, _) ->
+			Hashtbl.iter (fun state_index (location, _) ->
 			(* Find the location index *)
 			let location_index = try
 				(**** BAD PROG: should be hashed ****)

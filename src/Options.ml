@@ -29,6 +29,8 @@ class imitator_options =
 		val mutable acyclic = ref false 
 		(* inclusion mode *)
 		val mutable inclusion = ref false
+		(* merging mode *)
+		val mutable merge = ref false
   	(* union mode *)
 		val mutable union = ref false
 		(* prefix for output files *)
@@ -67,6 +69,7 @@ class imitator_options =
 		method program_prefix = !program_prefix
 		method imitator_mode = !imitator_mode
 		method inclusion = !inclusion
+		method merge = !merge
 		method union = !union
 		method acyclic = !acyclic
 		method sync_auto_detection = !sync_auto_detection
@@ -140,6 +143,7 @@ class imitator_options =
 				("-debug", String set_debug_mode_ref, " Print more or less debug information. Can be set to 'nodebug', 'standard', 'low', 'medium', 'high', 'total'. Default: 'standard'");
 				("-inclusion", Set inclusion, " Consider an inclusion of region instead of the equality when performing the Post operation. Default: 'false'");
 				("-union", Set union, " Consider last states for deriving constraint K. Default: 'false'");
+				("-merge", Set merge, " Try to merge states when performing the Post operation. Default: 'false'");
 				("-log-prefix", Set_string program_prefix, " Sets the prefix for log files. Default: [program_file].");
 				("-mode", String set_mode, " Mode for IMITATOR II. Use 'reachability' for a parametric reachability analysis (no pi0 needed). Use 'inversemethod' for the inverse method. For the behavioral cartography algorithm, use 'cover' to cover all the points within V0, or 'randomXX' where XX is a number to iterate randomly algorithm. Use 'cegar' for reachability based on counterexample guided abstraction refinement. Default: 'inversemethod'.");
 				("-pre", Set pre, " Use pre-image instead of post-image computation. Default: false.");

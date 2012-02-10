@@ -1634,6 +1634,14 @@ let post_star init_state =
 				(**** OPTIMIZED: do not care about order (else shoud consider 'list_append new_newly_found_new_states (List.rev new_states)') *)
 				List.rev_append new_newly_found_new_states new_states
 			) [] !newly_found_new_states in
+			
+			(* Try to merge new states *)
+			let new_newly_found_new_states = if options#merge then
+				Graph.merge (Program.get_reachability_graph ()) new_newly_found_new_states
+			else begin
+				new_newly_found_new_states
+			end in			
+			
 			(* Update the newly_found_new_states *)
 			newly_found_new_states := new_newly_found_new_states;
 			(* Debug *)

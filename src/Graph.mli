@@ -79,15 +79,20 @@ val add_state : ('s, 'l) t -> 's graph_state -> (state_index * bool)
 (** Add a state to a graph and tag it as initial state. Works as Graph.add_state *)
 val add_initial_state : ('s, 'l) t -> 's graph_state -> (state_index * bool)
 
-
 (** Add a transition to the graph *)
 val add_transition : ('s, 'l) t -> (state_index * 'l * state_index) -> unit
+
+(** Merges the listed states into the first *)
+val merge_states : ('s, 'l) t -> state_index -> state_index list -> unit
 
 
 
 (****************************************************************)
 (** Specialized interface for reachability_graph *)
 (****************************************************************)
+
+(** Try to merge new states with existing ones. Returns indices of all modified (or new) states *)
+val merge : reachability_graph -> state_index list -> state_index list
 
 (** Return the list of all constraints on the parameters associated to the states of a graph *)
 val all_p_constraints : reachability_graph -> linear_constraint list
