@@ -38,8 +38,13 @@ INCLUDE = -I $(SRC) -I $(EXTLIB_PATH) -I $(OCAML_PPL_PATH) -I $(OCAML_GMP_PATH) 
 
 # native c libraries
 # CLIBS = -cclib -lpwl -cclib -lm -cclib -lgmpxx -cclib -lgmp -cclib -lppl
-# ALLOWS STATIC COMPILING :-)
+
+# ALLOWS STATIC COMPILING IN 64 BITS :-)
 CLIBS = -cclib '-static -lppl -lpwl -lppl_ocaml -lstdc++ -lmlgmp -lmpfr -lgmp -lgmpxx ' 
+
+# ALLOWS STATIC COMPILING IN 32 BITS :-)
+# CLIBS = -cclib '-static -lppl -lpwl -lcamlrun -ltinfo -lppl_ocaml -lstdc++ -lmlgmp -lmpfr -lgmp -lgmpxx'
+
 
 
 # ocaml lib files
