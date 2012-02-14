@@ -1,19 +1,34 @@
--- Fischer's mutual exclusion protocol
+--************************************************************--
+--************************************************************--
+--
+--   Fischer's mutual exclusion protocol
+--
+--   Romain SOULAT
+--   Laboratoire Specification Verification
+--
+--                                Created : < 2012/02/14
+--                          Last modified :   2012/02/14
+--************************************************************--
+--************************************************************--
+
 var 
-	x1,      	-- P1's clock
-	x2:clock;    		-- P2's clock
+	x1, -- P1's clock
+	x2  -- P2's clock
+		:clock;
 	
 
 	k
-	: discrete;
+		: discrete;
 
 	a,
-	b: parameter;
+	b
+		: parameter;
 
-	
- -- -------------------------------------------------------------- *)
 
+
+--************************************************************--
 automaton proc1
+--************************************************************--
 synclabs : tau,start1,set1,enter1,abort1,release1;
 
 
@@ -36,7 +51,9 @@ loc CS: while True wait {}
 	when True sync tau do {} goto CS;
 end
 
+--************************************************************--
 automaton proc2
+--************************************************************--
 synclabs : tau,start2,set2,enter2,abort2,release2;
 
 
@@ -59,7 +76,9 @@ loc CS: while True wait {}
 	when True sync tau do {} goto CS;
 end
 
+--************************************************************--
 automaton arbiter
+--************************************************************--
 synclabs : set1,release1,
            set2,release2,
 	   tau;
@@ -72,13 +91,39 @@ loc always: while True wait {}
 	when True sync release2 do {} goto always;
 	when True sync tau do {} goto always;
 end
-	
---
+
+
+
+--************************************************************--
+--************************************************************--
+-- ANALYSIS
+--************************************************************--
+--************************************************************--
+
 
 var 
    init: region;
 
-init:= loc[proc1] = idle & loc[proc2] = idle & loc[arbiter] = always & x1 = 0 & x2 = 0 & k=0;
+   
+init:=
+	----------------------
+	-- Initial locations
+	----------------------
+	  loc[proc1] = idle
+	& loc[proc2] = idle
+	& loc[arbiter] = always
+	
+	----------------------
+	-- Clocks
+	----------------------
+	& x1 = 0
+	& x2 = 0
+	
+	----------------------
+	-- Discrete
+	----------------------
+	& k=0
+;
 
 
 

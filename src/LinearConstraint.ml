@@ -56,6 +56,8 @@ let ppl_nb_add_constraints = ref 0
 
 let ppl_nb_hull = ref 0
 	let ppl_t_hull = ref 0.0
+let ppl_nb_hull_assign_if_exact = ref 0
+	let ppl_t_hull_assign_if_exact = ref 0.0
 let ppl_nb_difference = ref 0
 	let ppl_t_difference = ref 0.0
 let ppl_nb_intersection_assign = ref 0
@@ -91,6 +93,7 @@ let get_statistics () =
 		("add_constraints" , !ppl_nb_add_constraints, !ppl_t_add_constraints) ;
 		("difference_assign" , !ppl_nb_difference, !ppl_t_difference) ;
 		("hull_assign" , !ppl_nb_hull, !ppl_t_hull) ;
+		("hull_assign_if_exact" , !ppl_nb_hull_assign_if_exact, !ppl_t_hull_assign_if_exact) ;
 		("intersection_assign" , !ppl_nb_intersection_assign, !ppl_t_intersection_assign) ;
 		("unconstrain" , !ppl_nb_unconstrain, !ppl_t_unconstrain) ;
 		("map" , !ppl_nb_map, !ppl_t_map) ;
@@ -819,12 +822,12 @@ let hull_assign linear_constraint1 linear_constraint2 =
 (** Perform the hull if the result is exact (version with side effect) *)
 let hull_assign_if_exact linear_constraint1 linear_constraint2 =
 	(* Statistics *)
-	ppl_nb_hull := !ppl_nb_hull + 1;
+	ppl_nb_hull_assign_if_exact := !ppl_nb_hull_assign_if_exact + 1;
 	let start = Unix.gettimeofday() in
 	(* Actual call to PPL *)
 	let result = ppl_Polyhedron_poly_hull_assign_if_exact linear_constraint1 linear_constraint2 in
 	(* Statistics *)
-	ppl_t_hull := !ppl_t_hull +. (Unix.gettimeofday() -. start);
+	ppl_t_hull_assign_if_exact := !ppl_t_hull_assign_if_exact +. (Unix.gettimeofday() -. start);
 	(* Return result *)
 	result
 

@@ -566,7 +566,7 @@ let get_statistics_states graph =
 		result_string := !result_string ^ " - " ^ (string_of_int nb_constraints);
 	) nb_constraints_per_location_id;
 	(* Add average *)
-	result_string := !result_string ^ "\nAverage: " ^ (string_of_float ((float_of_int nb_locations) /. (float_of_int nb_states)));
+	result_string := !result_string ^ "\nAverage: " ^ (string_of_float ((float_of_int nb_states) /. (float_of_int nb_locations)));
 	(*
 	(* Add number per constraint *)
 	result_string := !result_string ^ "\nNumber of occurrence of constraints: ";
