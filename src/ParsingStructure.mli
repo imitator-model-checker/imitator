@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2009/09/08
- * Last modified: 2011/11/22
+ * Last modified: 2012/02/20
  *
  ****************************************************************)
 
@@ -83,8 +83,8 @@ type guard = convex_predicate
 (* Transition = Guard * update * sync label * destination location *)
 type transition = guard * update list * sync * location_name
 
-(* Location = Name * Invariant * transitions *)
-type location = location_name * convex_predicate * transition list
+(* Location = Name * Invariant * list of stopped clocks * transitions *)
+type location = location_name * convex_predicate * variable_name list * transition list
 
 type automaton = automaton_name * sync_name list * location list
 

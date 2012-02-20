@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created       : 2009/09/07
- * Last modified : 2011/11/23
+ * Last modified : 2012/02/20
 ***********************************************/
 
 %{
@@ -35,7 +35,7 @@ let parse_error s =
 
 /* CT_ALL CT_ANALOG CT_ASAP CT_BACKWARD CT_CLDIFF CT_D  CT_ELSE CT_EMPTY  CT_ENDHIDE CT_ENDIF CT_ENDREACH CT_ENDWHILE CT_FORWARD CT_FREE CT_FROM  CT_HIDE CT_HULL CT_INTEGRATOR CT_ITERATE CT_NON_PARAMETERS CT_OMIT CT_POST CT_PRE CT_PRINT CT_PRINTS CT_PRINTSIZE CT_REACH  CT_STOPWATCH CT_THEN CT_TO CT_TRACE CT_USING  CT_WEAKDIFF CT_WEAKEQ CT_WEAKGE CT_WEAKLE  */
 
-%token CT_AND CT_AUTOMATON CT_BAD CT_CLOCK CT_DISCRETE CT_DO CT_END CT_FALSE CT_GOTO CT_IF CT_INIT CT_INITIALLY CT_LOC CT_LOCATIONS CT_NOT CT_OR CT_PARAMETER CT_REGION CT_SYNC CT_SYNCLABS CT_TRUE CT_VAR CT_WAIT CT_WHEN CT_WHILE
+%token CT_AND CT_AUTOMATON CT_BAD CT_CLOCK CT_DISCRETE CT_DO CT_END CT_FALSE CT_GOTO CT_IF CT_INIT CT_INITIALLY CT_LOC CT_LOCATIONS CT_NOT CT_OR CT_PARAMETER CT_REGION CT_STOP CT_SYNC CT_SYNCLABS CT_TRUE CT_VAR CT_WAIT CT_WHEN CT_WHILE
 
 %token EOF
 
@@ -69,7 +69,7 @@ automata_descriptions:
 /**********************************************/
 
 declarations:
-	CT_VAR var_lists { $2 }
+	CT_VAR decl_var_lists { $2 }
 ;
 
 
@@ -77,19 +77,19 @@ declarations:
 
 /**********************************************/
 
-var_lists:
-	var_list COLON var_type SEMICOLON var_lists { (($3, $1) :: $5) }
+decl_var_lists:
+	decl_var_list COLON var_type SEMICOLON decl_var_lists { (($3, $1) :: $5) }
 	| { [] }
 ;
 
 /**********************************************/
 
-var_list:
+decl_var_list:
 	| NAME { [($1, None)] }
 	| NAME OP_EQ rational { [($1, Some $3)] }
 	
-	| NAME COMMA var_list { ($1, None) :: $3 }
-	| NAME OP_EQ rational COMMA var_list { ($1, Some $3) :: $5 }
+	| NAME COMMA decl_var_list { ($1, None) :: $3 }
+	| NAME OP_EQ rational COMMA decl_var_list { ($1, Some $3) :: $5 }
 ;
 
 /**********************************************/
@@ -142,20 +142,20 @@ state_initialization:
 /**********************************************/
 
 sync_labels:
-	CT_SYNCLABS COLON sync_var_list SEMICOLON { $3 }
+	CT_SYNCLABS COLON name_list SEMICOLON { $3 }
 ;
 
 /**********************************************/
 
-sync_var_list:
-	sync_var_nonempty_list { $1 }
+name_list:
+	name_nonempty_list { $1 }
 	| { [] }
 ;
 
 /**********************************************/
 
-sync_var_nonempty_list:
-	NAME COMMA sync_var_nonempty_list { $1 :: $3}
+name_nonempty_list:
+	NAME COMMA name_nonempty_list { $1 :: $3}
 	| NAME { [$1] }
 ;
 
@@ -169,10 +169,17 @@ locations:
 /**********************************************/
 
 location:
-	| CT_LOC NAME COLON CT_WHILE convex_predicate CT_WAIT LBRACE RBRACE transitions { $2, $5, $9 }
-	| CT_LOC NAME COLON CT_WHILE convex_predicate CT_WAIT transitions { $2, $5, $7 }
+	| CT_LOC NAME COLON CT_WHILE convex_predicate stopwatches CT_WAIT LBRACE RBRACE transitions { $2, $5, $6, $10 }
+	| CT_LOC NAME COLON CT_WHILE convex_predicate stopwatches CT_WAIT transitions { $2, $5, $6, $8 }
 ;
 
+
+/**********************************************/
+
+stopwatches:
+	| CT_STOP LBRACE name_list RBRACE { $3 }
+	| { [] }
+;
 
 /**********************************************/
 

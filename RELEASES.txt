@@ -1,4 +1,9 @@
 *******************************************************
+release 2.4    (2012-02-20)
+
+- Added stopwatches. Syntax, semantics and computation time are backward-compatible for models without stopwatches.
+
+*******************************************************
 release 2.375    (2012-02-20) PRIVATE RELEASE
 
 - Added merging of states (publication at NFM2012), several optimizations; added and changed input options

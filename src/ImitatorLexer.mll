@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created       : 2009/09/07
- * Last modified : 2011/11/25
+ * Last modified : 2012/02/20
 *****************************************************************)
 
 {
@@ -80,6 +80,7 @@ rule token = parse
 (* 	| "printsize"      { CT_PRINTSIZE } *)
 (* 	| "reach"          { CT_REACH } *)
 	| "region"         { CT_REGION }
+	| "stop"           { CT_STOP }
 (* 	| "stopwatch"      { CT_STOPWATCH } *)
 	| "sync"           { CT_SYNC }
 	| "synclabs"       { CT_SYNCLABS }

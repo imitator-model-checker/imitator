@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created       : 2011/11/23
- * Last modified : 2011/11/24
+ * Last modified : 2012/02/20
 ************************************************************/
 
 
@@ -102,7 +102,8 @@ let convert declarations locations transitions =
 		let transitions = try (Hashtbl.find location_transitions location_id) with Not_found -> [] in
 		let invariant = Hashtbl.find invariants location_id in
 		(* Make structure *)
-		let location = location_name , invariant , List.rev transitions in
+		(* WARNING: stopwatches not taken into account yet !! *)
+		let location = location_name , invariant , [], List.rev transitions in
 		(* Add it *)
 		location :: current_list
 	) location_names [] in
@@ -321,6 +322,7 @@ state:
 
 state_attributes:
 /* TO DO: allow different orders! */
+/* WARNING: stopwatches non allowed yet !! */
 /* WARNING: 1 shift/reduce conflict here because of non-empty invariant  */
 	| name state_type state_invariant { $1, $2, $3 }
 	| name state_type { $1, $2, [] }

@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2009/09/11
- * Last modified: 2011/11/20
+ * Last modified: 2012/02/20
  *
  ****************************************************************)
 
@@ -132,6 +132,10 @@ type abstract_program = {
 	invariants : automaton_index -> location_index -> linear_constraint;
 	(* The transitions for each automaton and each location and each action *)
 	transitions : automaton_index -> location_index -> action_index -> (transition list);
+	(* The list of clocks stopped for each automaton and each location *)
+	stopwatches : automaton_index -> location_index -> clock_index list;
+	(* Is there any stopwatch in the program? *)
+	has_stopwatches : bool;
 
 	(* Init : the initial state *)
 	initial_location : global_location;
@@ -139,7 +143,7 @@ type abstract_program = {
 	initial_constraint : linear_constraint;
 
 	(* bad states *)
-	bad  : (automaton_index * location_index) list;
+	bad : (automaton_index * location_index) list;
 
 	(* All options *)
 	options : imitator_options;

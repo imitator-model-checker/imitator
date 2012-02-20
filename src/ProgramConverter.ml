@@ -7,7 +7,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2009/09/09
- * Last modified: 2011/11/22
+ * Last modified: 2012/02/20
  *
  ****************************************************************)
 
@@ -340,7 +340,7 @@ let all_locations_different =
 	(fun all_different (automaton_name, _, locations) ->
 		(* Get all the location names *)
 		let locations =
-			List.map (fun (location_name, _, _) -> location_name) locations in
+			List.map (fun (location_name, _, _, _) -> location_name) locations in
 		(* Look for multiply declared locations *)
 		let multiply_declared_locations = elements_existing_several_times locations in
 			List.iter (fun location_name -> print_error ("Several locations have name '" ^ location_name ^ "' in automaton '" ^ automaton_name ^ "'.")) multiply_declared_locations;
@@ -464,7 +464,7 @@ let synclab_used_everywhere automata synclab_name =
 			(* Only check if the synclab is declared here *)
 			if List.mem synclab_name sync_name_list then(
 				(* Check that at least one location contains the synclab *)
-				if not (List.exists (fun (_, _, transitions) ->
+				if not (List.exists (fun (_, _, _, transitions) ->
 					(* Check that at least one transition contains the synclab *)
 					List.exists (fun (_, _, sync, _) -> sync = (Sync synclab_name)) transitions
 				) locations ) then (
@@ -480,6 +480,27 @@ let synclab_used_everywhere automata synclab_name =
 
 
 (*--------------------------------------------------*)
+(* Check that all variables mentioned in a list of stopwatches exist and are clocks *)
+(*--------------------------------------------------*)
+let check_stopwatches index_of_variables type_of_variables stopwatches =
+	let ok = ref true in
+	List.iter (fun stopwatch -> 
+		(* Get variable name *)
+		try (
+			let variable_index = Hashtbl.find index_of_variables stopwatch in
+			if type_of_variables variable_index != Var_type_clock then (
+				print_error ("The variable '" ^ stopwatch ^ "' that should be stopped is not defined as a clock.");
+				ok := false;
+			);
+		) with Not_found -> (
+			print_error ("The variable '" ^ stopwatch ^ "' that should be stopped is not defined.");
+			ok := false;
+		);
+	) stopwatches;
+	!ok
+
+
+(*--------------------------------------------------*)
 (* Check that the automata are well-formed *)
 (*--------------------------------------------------*)
 let check_automata index_of_variables type_of_variables variable_names index_of_automata locations_per_automaton constants automata =
@@ -492,12 +513,14 @@ let check_automata index_of_variables type_of_variables variable_names index_of_
 			Not_found -> raise (InternalError ("Impossible to find the index of automaton '" ^ automaton_name ^ "'."))
 		in
 		(* Check each location *)
-		List.iter (fun (location_name, convex_predicate, transitions) -> 
+		List.iter (fun (location_name, convex_predicate, stopwatches, transitions) -> 
 			(* Check that the location_name exists (which is obvious) *)
 			if not (in_array location_name locations_per_automaton.(index)) then(
 				print_error ("The location '" ^ location_name ^ "' declared in automaton '" ^ automaton_name ^ "' does not exist.");
 				well_formed := false);
 
+			(* Check the stopwatches *)
+			if not (check_stopwatches index_of_variables type_of_variables stopwatches) then well_formed := false;
 			(* Check the convex predicate *)
 			(* TODO: preciser quel automate et quelle location en cas d'erreur *)
 			if not (check_convex_predicate variable_names constants convex_predicate) then well_formed := false;
@@ -865,7 +888,7 @@ let make_locations_per_automaton index_of_automata automata =
 			(* Get the index of the automaton *)
 			let index = Hashtbl.find index_of_automata automaton_name in
 			(* Get the location names *)
-			let location_names = List.map (fun (location_name, _, _) -> location_name) transitions in
+			let location_names = List.map (fun (location_name, _, _, _) -> location_name) transitions in
 			(* Update the array *)
 			locations_per_automaton.(index) <- Array.of_list location_names
 		)
@@ -877,7 +900,7 @@ let make_locations_per_automaton index_of_automata automata =
 (*--------------------------------------------------*)
 (* Get all the possible actions for every location of every automaton *)
 (*--------------------------------------------------*)
-let make_automata index_of_automata index_of_locations labels index_of_labels removed_synclab_names automata =
+let make_automata index_of_variables index_of_automata index_of_locations labels index_of_labels removed_synclab_names automata =
 	(* Create an empty array for the actions of every automaton *)
 	let actions_per_automaton = Array.make (Hashtbl.length index_of_automata) [] in
 	(* Create an empty array for the actions of every location of every automaton *)
@@ -886,6 +909,10 @@ let make_automata index_of_automata index_of_locations labels index_of_labels re
 	let transitions = Array.make (Hashtbl.length index_of_automata) (Array.make 0 []) in
 	(* Create an empty array for the invariants *)
 	let invariants = Array.make (Hashtbl.length index_of_automata) (Array.make 0 []) in
+	(* Create an empty array for the invariants *)
+	let stopwatches_array = Array.make (Hashtbl.length index_of_automata) (Array.make 0 []) in
+	(* Does the program has any stopwatch? *)
+	let has_stopwatches = ref false in
 	(* Maintain the index of no_sync *)
 	let no_sync_index = ref (Array.length labels) in
 	(* For each automaton: *)
@@ -902,9 +929,11 @@ let make_automata index_of_automata index_of_locations labels index_of_labels re
 		transitions.(automaton_index) <- Array.make nb_locations [];
 		(* Create the array of invariants for this automaton *)
 		invariants.(automaton_index) <- Array.make nb_locations [];
+		(* Create the array of stopwatches for this automaton *)
+		stopwatches_array.(automaton_index) <- Array.make nb_locations [];
 		(* For each location: *)
 		List.iter
-		(fun (location_name, invariant, parsed_transitions) -> 
+		(fun (location_name, invariant, stopwatches, parsed_transitions) -> 
 			(* Get the index of the location *)
 			let location_index = try (Hashtbl.find index_of_locations.(automaton_index) location_name) with Not_found -> raise (InternalError ("Impossible to find the index of location '" ^ location_name ^ "'.")) in
 			(* Create the list of actions for this location *)
@@ -946,6 +975,15 @@ let make_automata index_of_automata index_of_locations labels index_of_labels re
 			transitions.(automaton_index).(location_index) <- (List.rev list_of_transitions);
 			(* Update the array of invariants *)
 			invariants.(automaton_index).(location_index) <- invariant;
+			(* Does the program has stopwatches? *)
+			if stopwatches != [] then has_stopwatches := true;
+			(* Convert the stopwatches names into variables *)
+			let list_of_stopwatch_names = list_only_once(stopwatches) in
+			(* Update the array of stopwatches *)
+			stopwatches_array.(automaton_index).(location_index) <- List.map (fun stopwatch_index -> 
+					Hashtbl.find index_of_variables stopwatch_index
+				)
+				list_of_stopwatch_names;
 		) locations;
 		(* Update the array of actions per automaton *)
 		let all_actions_for_this_automaton = Array.fold_left (fun list_of_all_actions list_of_actions ->
@@ -984,7 +1022,7 @@ let make_automata index_of_automata index_of_locations labels index_of_labels re
 	let actions_per_location = fun automaton_index location_index -> actions_per_location.(automaton_index).(location_index) in
 
 	(* Return all the structures in a functional representation *)
-	actions, action_names, action_types, actions_per_automaton, actions_per_location, invariants, transitions
+	actions, action_names, action_types, actions_per_automaton, actions_per_location, invariants, stopwatches_array, !has_stopwatches, transitions
 
 
 (*--------------------------------------------------*)
@@ -1063,6 +1101,7 @@ let convert_transitions nb_actions index_of_variables constants type_of_variable
 	) transitions;
 	(* Return a functional representation *)
 	fun automaton_index location_index action_index -> array_of_transitions.(automaton_index).(location_index).(action_index)
+
 
 
 (*--------------------------------------------------*)
@@ -1422,8 +1461,8 @@ let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	print_message Debug_total ("*** Building automata...");
 	(* Get all the possible actions for every location of every automaton *)
-	let actions, action_names, action_types, actions_per_automaton, actions_per_location, invariants, transitions =
-		make_automata index_of_automata index_of_locations labels index_of_labels removed_synclab_names parsed_automata in
+	let actions, action_names, action_types, actions_per_automaton, actions_per_location, invariants, stopwatches, has_stopwatches, transitions =
+		make_automata index_of_variables index_of_automata index_of_locations labels index_of_labels removed_synclab_names parsed_automata in
 	let nb_actions = List.length actions in
 
 	(* List of automata for every action *)
@@ -1437,6 +1476,10 @@ let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_
 	(* Convert the transitions *)
 	print_message Debug_total ("*** Building transitions...");
 	let transitions = convert_transitions nb_actions index_of_variables constants type_of_variables transitions in
+	
+	(* Convert the stopwatches *)
+	print_message Debug_total ("*** Building stopwatches...");
+	let stopwatches_fun = (fun automaton_index location_index -> stopwatches.(automaton_index).(location_index)) in
 
 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -1597,6 +1640,10 @@ let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_
 	invariants = invariants;
 	(* The transitions for each automaton and each location and each action *)
 	transitions = transitions;
+	(* The list of clocks stopped for each automaton and each location *)
+	stopwatches = stopwatches_fun;
+	(* Is there any stopwatch in the program? *)
+	has_stopwatches = has_stopwatches;
 
 	(* Init : the initial state *)
 	initial_location = initial_location;

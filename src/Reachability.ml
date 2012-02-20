@@ -347,6 +347,41 @@ let instantiate_discrete discrete_values =
 	LinearConstraint.make inequalities
 
 
+(*--------------------------------------------------*)
+(* Compute the list of stopped and elapsing clocks in a location *)
+(*--------------------------------------------------*)
+let compute_stopwatches program location =
+	(* If no stopwatches at all: just return the set of clocks *)
+	if not program.has_stopwatches then ([], program.clocks) else(
+		(* Hashtbl clock_id --> true if clock should be stopped by some automaton *)
+		let stopwatches_hash = Hashtbl.create (List.length program.clocks) in
+		let stopwatch_mode = ref false in
+		(* Update hash table *)
+		List.iter (fun automaton_index ->
+			(* Get the current location *)
+			let location_index = Automaton.get_location location automaton_index in
+			(* Get the list of stopped clocks *)
+			let stopped = program.stopwatches automaton_index location_index in
+			(* If list non null: we have stopwatches here *)
+			if stopped != [] then stopwatch_mode := true;
+			(* Add each clock *)
+			List.iter (fun stopwatch_id ->
+				Hashtbl.replace stopwatches_hash stopwatch_id true
+			) stopped;
+		) program.automata;
+		(* If there are no stopwatches then just return the set of clocks *)
+		if (not !stopwatch_mode) then ([], program.clocks) else (
+			(* Computing the list of stopped clocks, and the list of elapsing clocks *)
+			List.fold_left (fun (stopped_clocks, elapsing_clocks) clock_id -> 
+				(* Test if the clock should be stopped *)
+				if Hashtbl.mem stopwatches_hash clock_id then
+					clock_id :: stopped_clocks, elapsing_clocks
+				else
+					stopped_clocks, clock_id :: elapsing_clocks
+			) ([], []) program.clocks
+		) (* if no stopwatch for this location *)
+	) (* if no stopwatch in the program *)
+
 
 (*--------------------------------------------------*)
 (* Compute the initial state with the initial invariants and time elapsing *)
@@ -379,10 +414,24 @@ let create_initial_state program =
 	(* Debug *)
 	if debug_mode_greater Debug_total then
 		print_message Debug_total (LinearConstraint.string_of_linear_constraint program.variable_names current_constraint);
+		
+	(* Compute the list of stopwatches *)
+	let stopped_clocks, elapsing_clocks = compute_stopwatches program initial_location in
+	print_message Debug_high ("Computing list of stopwatches");
+	if debug_mode_greater Debug_total then(
+		let list_of_names = List.map program.variable_names stopped_clocks in
+		print_message Debug_total ("Stopped clocks : " ^ (string_of_list_of_string_with_sep ", " list_of_names));
+		let list_of_names = List.map program.variable_names elapsing_clocks in
+		print_message Debug_total ("Elapsing clocks: " ^ (string_of_list_of_string_with_sep ", " list_of_names));
+	);
 	
 	(* Perform time elapsing *)
 	print_message Debug_high ("Performing time elapsing on [ C0(X) and I_q0(X) and D_i = d_i ]");
-	LinearConstraint.time_elapse_assign program.clocks program.parameters_and_discrete current_constraint;
+	LinearConstraint.time_elapse_assign (*program.clocks program.parameters_and_discrete*)
+		elapsing_clocks
+		(List.rev_append stopped_clocks program.parameters_and_discrete)
+		current_constraint
+	;
 	(* Debug *)
 	if debug_mode_greater Debug_total then
 		print_message Debug_total (LinearConstraint.string_of_linear_constraint program.variable_names current_constraint);
@@ -532,6 +581,8 @@ let compute_new_location program aut_table trans_table action_index original_loc
 (* Compute the new constraint for a transition      *)
 (* orig_constraint : contraint in source location   *)
 (* discrete_constr : contraint D_i = d_i in source location (discrete variables) *)
+(* (* stopped_clocks  : list of clocks stopped         *) *)
+(* (* elapsing_clocks : list of clocks non stopped     *) *)
 (* orig_location   : source location                *)
 (* dest_location   : target location                *)
 (* guards          : guard constraints per automaton*)
@@ -608,9 +659,23 @@ let compute_new_constraint program orig_constraint discrete_constr orig_location
 
 		(* NO USE FOR TESTING HERE FOR SATISFIABILITY (almost always satisfiable) *)
 	
+		(* Compute the list of stopwatches *)
+		let stopped_clocks, elapsing_clocks = compute_stopwatches program dest_location in
+		print_message Debug_high ("Computing list of stopwatches");
+		if debug_mode_greater Debug_total then(
+			let list_of_names = List.map program.variable_names stopped_clocks in
+			print_message Debug_total ("Stopped clocks : " ^ (string_of_list_of_string_with_sep ", " list_of_names));
+			let list_of_names = List.map program.variable_names elapsing_clocks in
+			print_message Debug_total ("Elapsing clocks: " ^ (string_of_list_of_string_with_sep ", " list_of_names));
+		);
+		
 		(* Perform time elapsing *)
 		print_message Debug_total ("\nPerforming time elapsing on [C(X) and g(X)] rho and I_q(X)");
-		LinearConstraint.time_elapse_assign program.clocks program.parameters_and_discrete current_constraint ;
+		LinearConstraint.time_elapse_assign (*program.clocks program.parameters_and_discrete*)
+			elapsing_clocks
+			(List.rev_append stopped_clocks program.parameters_and_discrete)
+			current_constraint
+		;
 		(* Debug print *)
 		if debug_mode_greater Debug_total then(
 			print_message Debug_total (LinearConstraint.string_of_linear_constraint program.variable_names current_constraint);
@@ -927,7 +992,7 @@ let post program pi0 reachability_graph orig_state_index =
 			(* Compute the new location for the current combination of transitions *)
 			let location, guards, clock_updates = compute_new_location program real_indexes current_transitions action_index original_location in
 			
-			(* Compute the new constraint for the current transition (VERSION with no duplicate variables) *)
+			(* Compute the new constraint for the current transition *)
 			let new_constraint = compute_new_constraint program orig_constraint discrete_constr original_location location guards clock_updates in
 			
 			let _ =
