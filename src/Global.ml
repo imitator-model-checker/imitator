@@ -13,10 +13,10 @@
 (** Version string *)
 (****************************************************************)
 
-let version_string = "3.0 alpha"
+let version_string = "1.0 beta"
 
 let print_version_string _ = 
-	print_string ("IMITATOR " ^ version_string ^ "\n");
+	print_string ("HYMITATOR " ^ version_string ^ "\n");
 
 (****************************************************************)
 (** Modules *)
