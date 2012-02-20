@@ -406,7 +406,7 @@ let abort_program () =
 (* Terminate program *)
 let terminate_program () =
 	print_newline();
-	print_message Debug_standard ("IMITATOR II successfully terminated (" ^ (after_seconds ()) ^ ")");
+	print_message Debug_standard ("HYMITATOR successfully terminated (" ^ (after_seconds ()) ^ ")");
 	print_newline();
 	flush stdout;
 	exit(0)

@@ -1,11 +1,11 @@
 (***************************************************
  *
- *                     IMITATOR II
+ *                     HYMITATOR
  * 
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre, Ulrich Kuehne
  * Created:       2010/07/22
- * Last modified: 2010/07/22
+ * Last modified: 2012/02/20
  *
  **************************************************)
 
@@ -1445,7 +1445,7 @@ let post state_lookup orig_state_index =
 			let _ = match new_constraint with
 				| Some final_constraint -> (					
 					if not (LinearConstraint.is_satisfiable final_constraint) then(
-						print_message Debug_high ("\nThis constraint is not satisfiable.");
+						print_message Debug_total ("\nThis constraint is not satisfiable.");
 					) else (
 			
 						let add_new_state =
@@ -1474,7 +1474,7 @@ let post state_lookup orig_state_index =
 						); 
 					); (* end if satisfiable *)	)
 				| None -> (
-					print_message Debug_standard ("\nThis constraint is not satisfiable.");
+					print_message Debug_high ("\nThis constraint is not satisfiable.");
 				) in ();	
 			
 			(* get the next combination *)

@@ -92,8 +92,11 @@ LEXERS = $(SRC)/Pi0Lexer.+ $(SRC)/Pi0CubeLexer.+ $(SRC)/ImitatorLexer.+
 PARSERS = $(SRC)/Pi0Parser.+ $(SRC)/Pi0CubeParser.+ $(SRC)/ImitatorParser.+
 
 # target library
-IMILIB = lib/imitator.cma
+IMILIB = lib/hymitator.cma
 IMILIB_OPT = $(IMILIB:.cma=.cmxa)
+
+EXAMPLE_PATH = examples
+
 
 # target executable
 TARGET = bin/HYMITATOR
@@ -173,11 +176,15 @@ exe:
 
 ##### GATES #####
 
-# 	./IMITATOR Examples/Gates/NorGate.imi -mode reachability -with-parametric-log
+# 	$(TARGET) Examples/Gates/NorGate.imi -mode reachability -with-parametric-log
 
 ##### TESTS #####
 
 # 	./IMITATOR Examples/exCTL.imi Examples/exCTL.pi0
+
+##### SCHEDULING #####
+
+	$(TARGET) $(EXAMPLE_PATH)/CPR08/full_cpr08.im3 $(EXAMPLE_PATH)/CPR08/full_cpr08.pi0 -no-dot -no-log -inclusion
 
 
 count: clean
