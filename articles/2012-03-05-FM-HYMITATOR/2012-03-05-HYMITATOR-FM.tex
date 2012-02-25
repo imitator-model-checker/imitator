@@ -460,9 +460,11 @@ A constraint is output in text format; furthermore, the set of traces computed b
 
 \hymitator{} uses several algorithmic optimizations initially developed for \imitator{}.
 In particular, the efficient merging presented in~\cite{AFS12} has been successfully extended to the hybrid case: we merge any two states sharing the same discrete part (location and value of the discrete variables) and such that the union of their constraint on the analog variables and parameters is convex.
+This optimization preserves the correctness of all our algorithms; better, the constraint output by the inverse method in that case may be weaker, i.e., covers a larger set of parameter valuations.
 
 \commentaire{un mot sur la cartographie puisque, je crois, elle a ete modifiee dans le cas des systemes hybrides}
 
+\commentaire{un mot sur l'algo CEGAR-like de Ulrich}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -472,7 +474,7 @@ In particular, the efficient merging presented in~\cite{AFS12} has been successf
 
 \commentaire{Laurent a dit :}
 
-- sampled data hybrid systems (cf [RP11])
+- sampled data hybrid systems (cf~\cite{FK11})
 
 - synthesis schedulability regions (cf [Cimatti-Palopoli-Ramadian08], [Astrium EADS])
 
@@ -513,7 +515,11 @@ A graphical user interface for the input model is currently under construction, 
 
 \section*{Appendix}
 
+\subsection*{Example of Trace Set}
+
 \commentaire{ajouter un trace set en mode fancy}
+
+\subsection*{An Example of Model}
 
 \commentaire{ajouter un modele en entree avec sa representation graphique (pour decrire la syntaxe)}
 
