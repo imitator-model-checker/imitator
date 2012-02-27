@@ -354,12 +354,13 @@ $^3$Universit\"at Bremen, Germany}
 
 In~\cite{acef09}, we proposed the inverse method for Timed Automata, a subclass of hybrid systems whose variables (named clocks) all have constant rates equal to~1.
 Different from CEGAR-based methods, this original semi-algorithm for parameter synthesis is based on a ``good'' parameter valuation~$\pio$ instead of a set of ``bad'' states.
-$\IM$ synthesizes a constraint~$\Ko$ on the parameters such that, for all parameter valuation~$\piprime$ satisfying $\Ko$, the trace set, i.e., the discrete behavior, of~$\A$ under~$\piprime$ is the same as for~$\A$ under~$\pio$.
+$\IM$ synthesizes a constraint~$\Ko$ on the parameters such that, for all parameter valuation~$\piprime$ satisfying $\Ko$, the trace set (i.e., the discrete behavior) of~$\A$ under~$\piprime$ is the same as for~$\A$ under~$\pio$.
 This preserves in particular linear time properties, and provides the system with a criterion of robustness.
-By iterating the inverse method on all integer points within a bounded reference parameter domain, we get a set of constraints (``tiles'') such that, for every point in each such constraint, the time-abstract behavior is the same: this gives a behavioral cartography of the system~\cite{af10}.
+By iterating the inverse method on all integer points within a bounded reference parameter domain, we get a set of constraints %(``tiles'')
+% such that, for every point in each such constraint, the time-abstract behavior is the same: this gives a behavioral cartography of the system~\cite{af10}.
 
 A basic implementation named \imitator{} (for \emph{Inverse Method for Inferring Time AbstracT behaviOR}) has first been proposed%in~\cite{and09}
-, under the form of a \python{} script calling \hytech{}~\cite{hhw97}.
+, under the form of a \python{} script calling \hytech{}.
 The tool has then been entirely rewritten in \imitatordeux{}~\cite{and10}, under the form of a standalone \ocaml{} program making use of the Parma Polyhedra Library (PPL)~\cite{bhz08}.
 A number of case studies containing up to 60 timing parameters could be efficiently verified in the purely timed framework.
 
@@ -392,7 +393,7 @@ The input syntax, inspired by the input syntax of \hytech{}% and \imitator{}
 , allows the use of analog variables (i.e. variables such as time, velocity or temperature), rational-valued discrete variables, and parameters (i.e. unknown constants). The dynamics of the analog variables is described by ordinary differential equations. The tool directly supports linear dynamics, while affine dynamics can be approximated with arbitrary precision.
 
 The core of the program is written in the object-oriented language OCaml, and interacts with~PPL.
-Exact arithmetics is used.
+Exact arithmetics with unbounded precision is used.
 A constraint is output in text format; furthermore, the set of traces computed by the analysis can be output under a graphical form (using \graphviz{}).
 
 % %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
@@ -487,8 +488,8 @@ The post image computation can be costly for hybrid automata. To overcome this p
 
 
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
-  \begin{figure}[ht!]
-  \centering
+\begin{figure}[ht!]
+	\centering
 %   \subfigure[Starting from a single point]{
 %     \includegraphics[width=3.5cm]{point_x1} \; 
 %     \includegraphics[width=3.5cm]{point_x2} \;
@@ -496,12 +497,16 @@ The post image computation can be costly for hybrid automata. To overcome this p
 %     \label{fig:plot_point}
 %   }
 %   \subfigure[Starting from a tile synthesized by the Inverse Method]{
-    \includegraphics[width=3.5cm]{plot_t_x1} \; 
-    \includegraphics[width=3.5cm]{plot_t_x2} \;
-    \includegraphics[width=3.5cm]{plot_t_x3}
+		\includegraphics[width=3.6cm]{plot_t_x1} \ \ \ 
+%     \includegraphics[width=3.5cm]{plot_t_x2} \;
+%     \includegraphics[width=3.5cm]{plot_t_x3}
+		\includegraphics[width=3.6cm]{navigation_map.pdf} \ \ \ 
+		\includegraphics[height=3.6cm]{rhb_cart2.pdf}
 %     \label{fig:plot_zone}
 %   } 
-  \caption{Reachable states for room heating benchmark}\label{fig:plot_rhb}
+% 	\caption{a) and b) Set of reachable states c) Behavioral cartography}
+	\caption{Examples of graphics output by \hymitator{}}
+	\label{fig:plot_rhb}
 \end{figure}
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
 
@@ -525,7 +530,11 @@ The post image computation can be costly for hybrid automata. To overcome this p
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\commentaire{to do (citer HyTech, Phaver)}
+
+One of the first powerful model checkers for analyzing parametric timed automata is \hytech{}~\cite{hhw97}.
+Unfortunately, it can hardly verify even medium sized examples due to exact arithmetics with limited precision and static composition of automata, quickly leading to memory overflows.
+
+\commentaire{to do (citer Phaver)}
 
 A graphical user interface for the input model is currently under construction, based on a generic platform. \commentaire{utile ?!}
 
