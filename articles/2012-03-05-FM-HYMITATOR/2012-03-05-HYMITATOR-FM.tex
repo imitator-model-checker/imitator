@@ -384,7 +384,7 @@ du merging des TA  à la  [NFM 12] aux HA)
 
 \hymitator{} takes as input a network of hybrid automata synchronized on shared actions.
 The input syntax, inspired by the input syntax of \hytech{}% and \imitator{}
-, allows the use of analog variables (i.e., any variable such as temperature, time, etc., evolving in a non-linear manner), rational-valued discrete variables, and parameters (i.e., unknown constants).
+, allows the use of analog variables (i.e. variables such as time, velocity or temperature), rational-valued discrete variables, and parameters (i.e. unknown constants). The dynamics of the analog variables is described by ordinary differential equations. The tool directly supports linear dynamics, while affine dynamics can be approximated with arbitrary precision.
 
 The core of the program is written in the object-oriented language OCaml, and interacts with~PPL.
 Exact arithmetics is used.
@@ -454,15 +454,20 @@ A constraint is output in text format; furthermore, the set of traces computed b
 \hymitator{} implements the following algorithms for hybrid systems:
 \begin{description}
 	\item[Full reachability analysis] Given a model, it computes the set of symbolic reachable states.
+\item[Predicate Abstraction] Safety verification can alternatively be performed using a counterexample-guided abstraction refinement loop. The abstract state space is constructed wrt.~a set of linear predicates. The method has been described in~\cite{ADI2006}.
 	\item[Inverse method] Given a model and a reference parameter valuation~$\pio$, it computes a constraint on the parameter guaranteeing the same time-abstract behavior as under~$\pio$
 	\item[Behavioral cartography] Given a model and a bounded parameter domain for each parameter valuation, it computes a set of constraints and their corresponding trace sets.
 \end{description}
 
-\hymitator{} uses several algorithmic optimizations initially developed for \imitator{}.
+\hymitator{} uses several algorithmic optimizations, some of which have initially benn developed for \imitator{}.
 In particular, the efficient merging presented in~\cite{AFS12} has been successfully extended to the hybrid case: we merge any two states sharing the same discrete part (location and value of the discrete variables) and such that the union of their constraint on the analog variables and parameters is convex.
 This optimization preserves the correctness of all our algorithms; better, the constraint output by the inverse method in that case may be weaker, i.e., covers a larger set of parameter valuations.
 
+For affine hybrid systems, further optimizations are needed. Due to the linear overapproximation by partitioning the state space, a lot of additional branching is introduced, which renders the inverse method ineffective. To solve this problem, the algorithm has been extended as described in~\cite{FK11}. Basically, the partitioning is performed locally, and partitions belonging to the same discrete state are merged by taking their convex hull. 
+
 \commentaire{un mot sur la cartographie puisque, je crois, elle a ete modifiee dans le cas des systemes hybrides}
+
+The post image computation can be costly for hybrid automata. To overcome this problem, an abstraction technique for the verification of simple safety  properties (non-reachability of bad states) has been presented in~\cite{ADI2006}. Based on a set of linear predicates, reachability is performed on the abstract state space induced by these predicates. Refinement can be performed by discovering separation planes. While the original method is based on flow-pipe construction, we adapted the algorithm to the linear approximation by state space partitioning. 
 
 \commentaire{un mot sur l'algo CEGAR-like de Ulrich}
 
@@ -475,6 +480,8 @@ This optimization preserves the correctness of all our algorithms; better, the c
 \commentaire{Laurent a dit :}
 
 - sampled data hybrid systems (cf~\cite{FK11})
+
+- test coverage for hybrid systems
 
 - synthesis schedulability regions (cf [Cimatti-Palopoli-Ramadian08], [Astrium EADS])
 
