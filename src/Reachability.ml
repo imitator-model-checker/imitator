@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Ulrich Kuehne, Etienne Andre
  * Created:       2010/07/22
- * Last modified: 2011/12/08
+ * Last modified: 2012/02/22
  *
  ************************************************************)
 
@@ -63,18 +63,18 @@ let loc_hash locations =
 	) 0 locations
 
 
-(* hash function for clock updates *)
+(*(* hash function for clock updates *)
 let upd_hash clock_update =
 	List.fold_left (fun h v -> 
 		7919 * h + v
-	) 0 clock_update
+	) 0 clock_update*)
 
 
 (* Cache for computed invariants *)
 let inv_cache = Cache.make loc_hash 200
 
-(* Cache for clock updates *)
-let upd_cache = Cache.make upd_hash 100
+(*(* Cache for clock updates *)
+let upd_cache = Cache.make upd_hash 100*)
 
 
 (**************************************************************)
@@ -84,10 +84,10 @@ let upd_cache = Cache.make upd_hash 100
 (* Print statistics for cache usage *)
 let print_stats _ =
 	print_message Debug_standard "invariant cache:"; 
-	Cache.print_stats inv_cache;
-	print_message Debug_standard "clock update cache:";
-	Cache.print_stats upd_cache
-
+	Cache.print_stats inv_cache(*;
+ 	print_message Debug_standard "clock update cache:"; *)
+(* 	Cache.print_stats upd_cache *)
+	
  
 
 (* Number of constraints checked unsatisfiable while looking for the actions *)
@@ -283,53 +283,68 @@ let compute_invariant program location =
 (*--------------------------------------------------*)
 (*** TO DO: use cache *)
 let rho_assign program linear_constraint clock_updates =
-	(* merge updates *)
-	(** BAD PROG: exponential *)
-	let clock_updates = List.fold_left (fun updates local_updates -> 
-		List.fold_left (fun updates update -> 
-			if not (List.mem update updates) then 
-				update :: updates
-			else
-				updates
-		) updates local_updates
-	) [] clock_updates in
-	(* Compute X = 0 for the variables appearing in updates *)
-	print_message Debug_total ("\n -- Computing updates X = 0");
-	let updates =
-		(List.map (fun variable_index ->
-			(* Consider cases for clocks *)				
-			match program.type_of_variables variable_index with
-			(* Clocks: X = 0 *)
-			| Var_type_clock -> 
-				let x_lt = LinearConstraint.make_linear_term [
-					NumConst.one, variable_index;
-				] NumConst.zero in
-				LinearConstraint.make_linear_inequality x_lt LinearConstraint.Op_eq
-			| _ -> raise (InternalError "Only clocks can be updated.")
-		) clock_updates) in
-	(* Create the constraint *)
-	let updates = LinearConstraint.make updates in
-	(* Debug print *)
-	if debug_mode_greater Debug_total then(
-		print_message Debug_total (LinearConstraint.string_of_linear_constraint program.variable_names updates);
-	);
-	
-	(* Hide clocks updated within the linear constraint, viz., exists X' : lc, for X' in rho(X) *)
-	print_message Debug_total ("\n -- Computing exists X : lc for updated clocks");
-	LinearConstraint.hide_assign clock_updates linear_constraint;
-	if debug_mode_greater Debug_total then(
-		print_message Debug_total (LinearConstraint.string_of_linear_constraint program.variable_names linear_constraint);
-	);
-	
-	(* Add the constraints X = 0 *)
-	print_message Debug_total ("\n -- Adding X = 0 for updated clocks");
-	LinearConstraint.intersection_assign linear_constraint [updates];
-	if debug_mode_greater Debug_total then(
-		print_message Debug_total (LinearConstraint.string_of_linear_constraint program.variable_names linear_constraint);
-	);
+	if clock_updates != [] then(
+		(* Merge updates *)
+		let clocks_hash = Hashtbl.create program.nb_clocks in
+		(* Iterate on the lists of clocks for all synchronized automaton *)
+		List.iter (fun local_updates -> 
+			match local_updates with
+			| No_update -> ()
+			| Resets list_of_clocks ->
+				(* Iterate on the clocks, for a given automaton *)
+				List.iter (fun clock_id -> 
+					(* Assign this clock to true in the table *)
+					Hashtbl.replace clocks_hash clock_id true;
+		(*			if not (List.mem update updates) then 
+						update :: updates
+					else
+						updates*)
+				) list_of_clocks;
+		) clock_updates;
+		(* Compute the list of clocks to update from the hashtable *)
+		let list_of_clocks_to_update = Hashtbl.fold (fun clock_id _ list_of_clocks -> clock_id :: list_of_clocks) clocks_hash [] in
+		
+		(* Only go on if the list of clocks is non null *)
+		if list_of_clocks_to_update != [] then (
+		
+			(* Compute X = 0 for the variables appearing in updates *)
+			print_message Debug_total ("\n -- Computing updates X = 0");
+			let updates =
+				(List.map (fun variable_index ->
+					(* Consider cases for clocks *)				
+					match program.type_of_variables variable_index with
+					(* Clocks: X = 0 *)
+					| Var_type_clock -> 
+						let x_lt = LinearConstraint.make_linear_term [
+							NumConst.one, variable_index;
+						] NumConst.zero in
+						LinearConstraint.make_linear_inequality x_lt LinearConstraint.Op_eq
+					| _ -> raise (InternalError "Only clocks can be updated.")
+				) list_of_clocks_to_update) in
+			(* Create the constraint *)
+			let updates = LinearConstraint.make updates in
+			(* Debug print *)
+			if debug_mode_greater Debug_total then(
+				print_message Debug_total (LinearConstraint.string_of_linear_constraint program.variable_names updates);
+			);
+			
+			(* Hide clocks updated within the linear constraint, viz., exists X' : lc, for X' in rho(X) *)
+			print_message Debug_total ("\n -- Computing exists X : lc for updated clocks");
+			LinearConstraint.hide_assign list_of_clocks_to_update linear_constraint;
+			if debug_mode_greater Debug_total then(
+				print_message Debug_total (LinearConstraint.string_of_linear_constraint program.variable_names linear_constraint);
+			);
+			
+			(* Add the constraints X = 0 *)
+			print_message Debug_total ("\n -- Adding X = 0 for updated clocks");
+			LinearConstraint.intersection_assign linear_constraint [updates];
+			if debug_mode_greater Debug_total then(
+				print_message Debug_total (LinearConstraint.string_of_linear_constraint program.variable_names linear_constraint);
+			)
+		)
+	)
 
-	()
-	
+
 (*--------------------------------------------------*)
 (* Create a fresh constraint of the form 'D = d' for any discrete variable D with value d *)
 (*--------------------------------------------------*)
@@ -527,13 +542,15 @@ let compute_new_location program aut_table trans_table action_index original_loc
 	let location = Automaton.copy_location original_location in
 	(* Create a temporary hashtbl for discrete values *)
 	let updated_discrete = Hashtbl.create program.nb_discrete in
+	(* Check if we actually have updates *)
+	let has_updates = ref false in
 	(* Update the location for the automata synchronized with 'action_index'; return the list of guards and updates *)
 	let guards_and_updates = Array.to_list (Array.mapi (fun local_index real_index ->
 		(* Get the current location for this automaton *)
 		let location_index = Automaton.get_location original_location real_index in
 		(* Find the transitions for this automaton *)
 		let transitions = program.transitions real_index location_index action_index in
-  	(* Get the index of the examined transition for this automaton *)
+		(* Get the index of the examined transition for this automaton *)
 		let current_index = trans_table.(local_index) in
 		(* Keep the 'current_index'th transition *)
 		let transition = List.nth transitions current_index in
@@ -559,6 +576,12 @@ let compute_new_location program aut_table trans_table action_index original_loc
 		) discrete_updates;
 		(* Update the global location *)
 		Automaton.update_location_with [real_index, dest_index] [] location;
+		(* Update the update flag *)
+		let _ =
+		match clock_updates with
+			| Resets (_ :: _) -> has_updates := true
+			| _ -> ()
+		in ();
 		(* Keep the guard and updates *)
 		guard, clock_updates;
 	) aut_table) in
@@ -571,8 +594,8 @@ let compute_new_location program aut_table trans_table action_index original_loc
 	) updated_discrete;
 	(* Update the global location *)
 	Automaton.update_location_with [] !updated_discrete_couples location;
-  (* return the new location, the guards, and the clock updates *)
-	(location, guards, clock_updates)
+  (* return the new location, the guards, and the clock updates (if any!) *)
+	(location, guards, (if !has_updates then clock_updates else []))
 	
 	
 

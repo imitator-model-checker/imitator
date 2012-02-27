@@ -1093,6 +1093,11 @@ let convert_transitions nb_actions index_of_variables constants type_of_variable
 					else
 						cus, (variable_index, linear_term) :: dus
 				) ([], []) converted_updates in
+				(* semi-HACK: differentiate between different kinds of clock updates *)
+				let clock_updates =
+					if clock_updates = [] then No_update
+					else Resets clock_updates
+				in
 				(* Update the transition *)
 				array_of_transitions.(automaton_index).(location_index).(action_index) <- (converted_guard, clock_updates, discrete_updates, dest_location_index) :: array_of_transitions.(automaton_index).(location_index).(action_index);
 

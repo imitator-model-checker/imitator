@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2009/09/11
- * Last modified: 2012/02/20
+ * Last modified: 2012/02/22
  *
  ****************************************************************)
 
@@ -64,6 +64,15 @@ type action_type =
 (** update: variable_index := linear_term *)
 type clock_update = clock_index 
 
+type clock_updates =
+	(* No update at all *)
+	| No_update
+	(* Reset to 0 only *)
+	| Resets of clock_update list
+	(* Reset to arbitrary value (including discrete, parameters and clocks) *)
+(* 	| Exotic_resets of (clock_update * linear_term) list *)
+
+
 (** update: variable_index := linear_term *)
 type discrete_update = discrete_index * linear_term
 
@@ -71,7 +80,7 @@ type discrete_update = discrete_index * linear_term
 type guard = linear_constraint
 
 (** Transition: guard, updates, destination location *)
-type transition = guard * clock_update list * discrete_update list * location_index
+type transition = guard * clock_updates * discrete_update list * location_index
 
 
 (****************************************************************)

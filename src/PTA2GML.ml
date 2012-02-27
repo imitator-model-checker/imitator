@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2011/11/22
- * Last modified: 2011/11/24
+ * Last modified: 2012/02/22
  *
  ************************************************************)
 
@@ -86,16 +86,19 @@ let string_of_sync program label =
 
 
 
-let string_of_clock_updates program clock_updates =
-	string_of_list_of_string (List.map (fun variable_index ->
+let string_of_clock_updates program = function
+	| No_update -> ""
+	| Resets list_of_clocks -> 
+			string_of_list_of_string (List.map (fun variable_index ->
 		"\n\t\t\t<attribute name=\"update\">"
 		^ "\n\t\t\t\t<attribute name=\"name\">" ^ (program.variable_names variable_index) ^ "</attribute>"
 		^ "\n\t\t\t\t<attribute name=\"expr\">"
 		^ "\n\t\t\t\t\t<attribute name=\"const\">0</attribute>"
 		^ "\n\t\t\t\t</attribute>"
 		^ "\n\t\t\t</attribute>"
-	) clock_updates)
-	
+	) list_of_clocks)
+
+
 (* Convert a list of updates into a string *)
 let string_of_updates program updates =
 	string_of_list_of_string (List.map (fun (variable_index, linear_term) ->
@@ -154,12 +157,12 @@ let string_of_transition program automaton_index action_index location_index (gu
 	) else "")
 	^
 	(* Convert the updates if any*)
-	(if List.length clock_updates > 0 || List.length discrete_updates > 0 then (
-		  "\n\t\t<attribute name=\"updates\">"
-		^ (string_of_clock_updates program clock_updates)
-		^ (string_of_updates program discrete_updates)
-		^ "\n\t\t</attribute>"
-	) else "")
+	(if clock_updates != No_update || List.length discrete_updates > 0 then (
+			"\n\t\t<attribute name=\"updates\">"
+			^ (string_of_clock_updates program clock_updates)
+			^ (string_of_updates program discrete_updates)
+			^ "\n\t\t</attribute>"
+		) else "")
 	^ "\n\t</arc>"
 
 

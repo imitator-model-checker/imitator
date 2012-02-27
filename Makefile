@@ -185,6 +185,7 @@ exe:
 
 # 	$(TARGET) $(EXAMPLE_PATH)/Tests/testPost.imi -mode reachability
 # 	$(TARGET) $(EXAMPLE_PATH)/Tests/testPostSW.imi -mode reachability
+# 	bin/IMITATOR2.4 $(EXAMPLE_PATH)/Tests/testPostSW.imi -mode reachability
 # 	$(TARGET) $(EXAMPLE_PATH)/Tests/testPostSW.imi -mode reachability -debug total -post-limit 2
 # 	$(TARGET) $(EXAMPLE_PATH)/Tests/testPostSansDiscrete.imi -mode reachability -statistics -debug total
 
@@ -200,7 +201,8 @@ exe:
 
 # 	$(TARGET) $(EXAMPLE_PATH)/Examples/testBoucleAvecDiscrete.imi -mode reachability -statistics -post-limit 200 -no-dot -no-log
 # 	$(TARGET) $(EXAMPLE_PATH)/Examples/testBoucleAvecDiscrete.imi -mode reachability -statistics -post-limit 200 -no-dot -no-log -dynamic
-# 	$(TARGET) $(EXAMPLE_PATH)/Examples/testBoucleAvecDiscrete.imi -mode reachability -statistics -post-limit 200 -no-dot -no-log -jobshop
+# 	$(TARGET) $(EXAMPLE_PATH)/Examples/testBoucleAvecDiscrete.imi -mode reachability -post-limit 200 -no-dot -no-log -jobshop
+# 	bin/IMITATOR2.4 $(EXAMPLE_PATH)/Examples/testBoucleAvecDiscrete.imi -mode reachability -post-limit 200 -no-dot -no-log -jobshop
 # 	bin/IMITATOR2.375 $(EXAMPLE_PATH)/Examples/testBoucleAvecDiscrete.imi -mode reachability -post-limit 200 -no-dot -no-log -jobshop
 # 	bin/IMITATOR2.374 $(EXAMPLE_PATH)/Examples/testBoucleAvecDiscrete.imi -mode reachability -post-limit 200 -no-dot -no-log -jobshop
 # 	bin/IMITATOR2.370 $(EXAMPLE_PATH)/Examples/testBoucleAvecDiscrete.imi -mode reachability -statistics -post-limit 200 -no-dot -no-log
@@ -220,6 +222,7 @@ exe:
 # 	$(TARGET) $(EXAMPLE_PATH)/AndOr/AndOr.imi $(EXAMPLE_PATH)/AndOr/AndOr.pi0 -no-dot -no-log -statistics 
 # 	$(TARGET) $(EXAMPLE_PATH)/AndOr/AndOr.imi $(EXAMPLE_PATH)/AndOr/AndOr.pi0 -no-dot -no-log -statistics -dynamic
 # 	$(TARGET) $(EXAMPLE_PATH)/AndOr/AndOr.imi $(EXAMPLE_PATH)/AndOr/AndOr.pi0 -no-dot -no-log -jobshop
+# 	bin/IMITATOR2.4 $(EXAMPLE_PATH)/AndOr/AndOr.imi $(EXAMPLE_PATH)/AndOr/AndOr.pi0 -no-dot -no-log -jobshop
 # 	bin/IMITATOR2.375 $(EXAMPLE_PATH)/AndOr/AndOr.imi $(EXAMPLE_PATH)/AndOr/AndOr.pi0 -no-dot -no-log -jobshop
 # 	bin/IMITATOR2.370 $(EXAMPLE_PATH)/AndOr/AndOr.imi $(EXAMPLE_PATH)/AndOr/AndOr.pi0 -no-dot -no-log -statistics
 
@@ -227,6 +230,7 @@ exe:
 
 # 	$(TARGET) $(EXAMPLE_PATH)/Flipflop/flipflop.imi -mode reachability -jobshop
 # 	$(TARGET) $(EXAMPLE_PATH)/Flipflop/flipflop.imi -mode reachability -no-dot -no-log -jobshop
+# 	bin/IMITATOR2.4 $(EXAMPLE_PATH)/Flipflop/flipflop.imi -mode reachability -no-dot -no-log -jobshop
 # 	bin/IMITATOR2.375 $(EXAMPLE_PATH)/Flipflop/flipflop.imi -mode reachability -no-dot -no-log -jobshop
 # 	bin/IMITATOR2.374 $(EXAMPLE_PATH)/Flipflop/flipflop.imi -mode reachability -no-dot -no-log -jobshop
 # 	bin/IMITATOR2.371 $(EXAMPLE_PATH)/Flipflop/flipflop.imi -mode reachability -no-dot -no-log -statistics
@@ -283,6 +287,7 @@ exe:
 # 	bin/IMITATOR2.34.111115 $(EXAMPLE_PATH)/Train/TrainAHV93.imi -mode reachability -no-dot -no-log
 # 	
 # 	$(TARGET) $(EXAMPLE_PATH)/Train/TrainAHV93.imi $(EXAMPLE_PATH)/Train/TrainAHV93.pi0 -incl -no-dot -no-log -jobshop
+# 	bin/IMITATOR2.4 $(EXAMPLE_PATH)/Train/TrainAHV93.imi $(EXAMPLE_PATH)/Train/TrainAHV93.pi0 -incl -no-dot -no-log -jobshop
 # 	bin/IMITATOR2.375 $(EXAMPLE_PATH)/Train/TrainAHV93.imi $(EXAMPLE_PATH)/Train/TrainAHV93.pi0 -incl -no-dot -no-log -jobshop
 # 	bin/IMITATOR2.374 $(EXAMPLE_PATH)/Train/TrainAHV93.imi $(EXAMPLE_PATH)/Train/TrainAHV93.pi0 -incl -no-dot -no-log -jobshop
 # 	bin/IMITATOR2.371 $(EXAMPLE_PATH)/Train/TrainAHV93.imi $(EXAMPLE_PATH)/Train/TrainAHV93.pi0 -incl -no-dot -no-log -statistics
@@ -301,6 +306,7 @@ exe:
 # 	$(TARGET) $(EXAMPLE_PATH)/BRP/brp.imi $(EXAMPLE_PATH)/BRP/brp.pi0 -no-dot -no-log -statistics
 # 	$(TARGET) $(EXAMPLE_PATH)/BRP/brp.imi $(EXAMPLE_PATH)/BRP/brp.pi0 -no-dot -no-log -statistics -dynamic
 # 	$(TARGET) $(EXAMPLE_PATH)/BRP/brp.imi $(EXAMPLE_PATH)/BRP/brp.pi0 -no-dot -no-log -jobshop
+# 	bin/IMITATOR2.4 $(EXAMPLE_PATH)/BRP/brp.imi $(EXAMPLE_PATH)/BRP/brp.pi0 -no-dot -no-log -jobshop
 # 	bin/IMITATOR2.375 $(EXAMPLE_PATH)/BRP/brp.imi $(EXAMPLE_PATH)/BRP/brp.pi0 -no-dot -no-log -jobshop
 # 	bin/IMITATOR2.374 $(EXAMPLE_PATH)/BRP/brp.imi $(EXAMPLE_PATH)/BRP/brp.pi0 -no-dot -no-log -jobshop
 # 	bin/IMITATOR2.371 $(EXAMPLE_PATH)/BRP/brp.imi $(EXAMPLE_PATH)/BRP/brp.pi0 -no-dot -no-log -statistics
@@ -314,6 +320,7 @@ exe:
 # 	$(TARGET) $(EXAMPLE_PATH)/RCP/RCP.imi $(EXAMPLE_PATH)/RCP/RCP.pi0 -no-dot -no-log -statistics
 # 	$(TARGET) $(EXAMPLE_PATH)/RCP/RCP.imi $(EXAMPLE_PATH)/RCP/RCP.pi0 -no-dot -no-log -statistics -dynamic
 # 	$(TARGET) $(EXAMPLE_PATH)/RCP/RCP.imi $(EXAMPLE_PATH)/RCP/RCP.pi0 -no-dot -no-log -jobshop
+# 	bin/IMITATOR2.4 $(EXAMPLE_PATH)/RCP/RCP.imi $(EXAMPLE_PATH)/RCP/RCP.pi0 -no-dot -no-log -jobshop
 # 	bin/IMITATOR2.375 $(EXAMPLE_PATH)/RCP/RCP.imi $(EXAMPLE_PATH)/RCP/RCP.pi0 -no-dot -no-log -jobshop
 # 	bin/IMITATOR2.374 $(EXAMPLE_PATH)/RCP/RCP.imi $(EXAMPLE_PATH)/RCP/RCP.pi0 -no-dot -no-log -jobshop 
 # 	bin/IMITATOR2.371 $(EXAMPLE_PATH)/RCP/RCP.imi $(EXAMPLE_PATH)/RCP/RCP.pi0 -no-dot -no-log -statistics
@@ -329,6 +336,7 @@ exe:
 # 	$(TARGET) $(EXAMPLE_PATH)/CSMACD/csmacdPrism.imi $(EXAMPLE_PATH)/CSMACD/csmacdPrism.pi0 -no-dot -no-log -statistics -dynamic
 # 	$(TARGET) $(EXAMPLE_PATH)/CSMACD/csmacdPrism.imi $(EXAMPLE_PATH)/CSMACD/csmacdPrism.pi0 -no-dot -no-log -statistics -jobshop
 # 	$(TARGET) $(EXAMPLE_PATH)/CSMACD/csmacdPrism.imi $(EXAMPLE_PATH)/CSMACD/csmacdPrism.pi0 -no-dot -no-log -jobshop
+# 	bin/IMITATOR2.4 $(EXAMPLE_PATH)/CSMACD/csmacdPrism.imi $(EXAMPLE_PATH)/CSMACD/csmacdPrism.pi0 -no-dot -no-log -jobshop
 # 	bin/IMITATOR2.375 $(EXAMPLE_PATH)/CSMACD/csmacdPrism.imi $(EXAMPLE_PATH)/CSMACD/csmacdPrism.pi0 -no-dot -no-log -jobshop
 # 	bin/IMITATOR2.374 $(EXAMPLE_PATH)/CSMACD/csmacdPrism.imi $(EXAMPLE_PATH)/CSMACD/csmacdPrism.pi0 -no-dot -no-log -jobshop
 # 	bin/IMITATOR2.370 $(EXAMPLE_PATH)/CSMACD/csmacdPrism.imi $(EXAMPLE_PATH)/CSMACD/csmacdPrism.pi0 -no-dot -no-log -statistics
@@ -342,6 +350,7 @@ exe:
 # 	$(TARGET) $(EXAMPLE_PATH)/Wlan/wlan.imi $(EXAMPLE_PATH)/Wlan/wlan.pi0 -post-limit 10 -no-dot -no-log -statistics 
 # 	$(TARGET) $(EXAMPLE_PATH)/Wlan/wlan.imi $(EXAMPLE_PATH)/Wlan/wlan.pi0 -post-limit 10 -no-dot -no-log -statistics -dynamic
 # 	$(TARGET) $(EXAMPLE_PATH)/Wlan/wlan.imi $(EXAMPLE_PATH)/Wlan/wlan.pi0 -post-limit 10 -no-dot -no-log -jobshop
+# 	bin/IMITATOR2.4 $(EXAMPLE_PATH)/Wlan/wlan.imi $(EXAMPLE_PATH)/Wlan/wlan.pi0 -post-limit 10 -no-dot -no-log -jobshop
 # 	bin/IMITATOR2.375 $(EXAMPLE_PATH)/Wlan/wlan.imi $(EXAMPLE_PATH)/Wlan/wlan.pi0 -post-limit 10 -no-dot -no-log -jobshop
 # 	bin/IMITATOR2.374 $(EXAMPLE_PATH)/Wlan/wlan.imi $(EXAMPLE_PATH)/Wlan/wlan.pi0 -post-limit 10 -no-dot -no-log -jobshop
 # 	bin/IMITATOR2.371 $(EXAMPLE_PATH)/Wlan/wlan.imi $(EXAMPLE_PATH)/Wlan/wlan.pi0 -post-limit 10 -no-dot -no-log -statistics
@@ -364,6 +373,7 @@ exe:
 # 	$(TARGET) $(EXAMPLE_PATH)/Valmem/spsmall.imi $(EXAMPLE_PATH)/Valmem/spsmall.pi0 -no-dot -no-log -statistics -tree -acyclic
 # 	$(TARGET) $(EXAMPLE_PATH)/Valmem/spsmall.imi $(EXAMPLE_PATH)/Valmem/spsmall.pi0 -no-dot -no-log -statistics -dynamic
 # 	$(TARGET) $(EXAMPLE_PATH)/Valmem/spsmall.imi $(EXAMPLE_PATH)/Valmem/spsmall.pi0 -no-dot -no-log -jobshop
+# 	bin/IMITATOR2.4 $(EXAMPLE_PATH)/Valmem/spsmall.imi $(EXAMPLE_PATH)/Valmem/spsmall.pi0 -no-dot -no-log -jobshop
 # 	bin/IMITATOR2.375 $(EXAMPLE_PATH)/Valmem/spsmall.imi $(EXAMPLE_PATH)/Valmem/spsmall.pi0 -no-dot -no-log -jobshop
 # 	bin/IMITATOR2.374 $(EXAMPLE_PATH)/Valmem/spsmall.imi $(EXAMPLE_PATH)/Valmem/spsmall.pi0 -no-dot -no-log -jobshop
 # 	bin/IMITATOR2.371 $(EXAMPLE_PATH)/Valmem/spsmall.imi $(EXAMPLE_PATH)/Valmem/spsmall.pi0 -no-dot -no-log -statistics
@@ -381,6 +391,7 @@ exe:
 # 	$(TARGET) $(EXAMPLE_PATH)/Valmem/LSV.imi $(EXAMPLE_PATH)/Valmem/delais1_hy.pi0 -no-dot -no-log -statistics -acyclic -dynamic
 # 	bin/IMITATOR2.34.111115 $(EXAMPLE_PATH)/Valmem/LSV.imi $(EXAMPLE_PATH)/Valmem/delais1_hy.pi0 -no-dot -no-log -dynamic
 # 	$(TARGET) $(EXAMPLE_PATH)/Valmem/LSV.imi $(EXAMPLE_PATH)/Valmem/delais1_hy.pi0 -no-dot -no-log -post-limit 13 -no-random -jobshop
+# 	bin/IMITATOR2.4 $(EXAMPLE_PATH)/Valmem/LSV.imi $(EXAMPLE_PATH)/Valmem/delais1_hy.pi0 -no-dot -no-log -post-limit 13 -no-random -jobshop
 # 	bin/IMITATOR2.375 $(EXAMPLE_PATH)/Valmem/LSV.imi $(EXAMPLE_PATH)/Valmem/delais1_hy.pi0 -no-dot -no-log -post-limit 13 -no-random -jobshop
 # 	bin/IMITATOR2.374 $(EXAMPLE_PATH)/Valmem/LSV.imi $(EXAMPLE_PATH)/Valmem/delais1_hy.pi0 -no-dot -no-log -post-limit 13 -jobshop
 # 	bin/IMITATOR2.371 $(EXAMPLE_PATH)/Valmem/LSV.imi $(EXAMPLE_PATH)/Valmem/delais1_hy.pi0 -no-dot -no-log -statistics -post-limit 13
@@ -396,6 +407,7 @@ exe:
 # 	$(TARGET) $(EXAMPLE_PATH)/SIMOP/simop.imi $(EXAMPLE_PATH)/SIMOP/simop.pi0 -incl -no-dot -no-log -statistics
 # 	$(TARGET) $(EXAMPLE_PATH)/SIMOP/simop.imi $(EXAMPLE_PATH)/SIMOP/simop.pi0 -incl -no-dot -no-log -statistics -dynamic
 # 	$(TARGET) $(EXAMPLE_PATH)/SIMOP/simop.imi $(EXAMPLE_PATH)/SIMOP/simop.pi0 -incl -no-dot -no-log -jobshop
+# 	bin/IMITATOR2.4 $(EXAMPLE_PATH)/SIMOP/simop.imi $(EXAMPLE_PATH)/SIMOP/simop.pi0 -incl -no-dot -no-log -jobshop
 # 	bin/IMITATOR2.375 $(EXAMPLE_PATH)/SIMOP/simop.imi $(EXAMPLE_PATH)/SIMOP/simop.pi0 -incl -no-dot -no-log -jobshop
 # 	bin/IMITATOR2.374 $(EXAMPLE_PATH)/SIMOP/simop.imi $(EXAMPLE_PATH)/SIMOP/simop.pi0 -incl -no-dot -no-log -jobshop
 # 	bin/IMITATORsafeJS $(EXAMPLE_PATH)/SIMOP/simop.imi $(EXAMPLE_PATH)/SIMOP/simop.pi0 -incl -no-dot -no-log -jobshop -statistics
@@ -408,6 +420,7 @@ exe:
 
 ##### JOB SHOP #####
 # 	$(TARGET) $(EXAMPLE_PATH)/Jobshop/maler_2_4.imi -mode reachability -no-dot -no-log -incl -jobshop
+# 	bin/IMITATOR2.4 $(EXAMPLE_PATH)/Jobshop/maler_2_4.imi -mode reachability -no-dot -no-log -incl -jobshop
 # 	bin/IMITATOR2.375 $(EXAMPLE_PATH)/Jobshop/maler_2_4.imi -mode reachability -no-dot -no-log -incl -jobshop
 # 	bin/IMITATOR2.374 $(EXAMPLE_PATH)/Jobshop/maler_2_4.imi -mode reachability -no-dot -no-log -incl -jobshop
 # 	bin/IMITATOR2.371 $(EXAMPLE_PATH)/Jobshop/maler_2_4.imi -mode reachability -no-dot -no-log -incl -statistics
@@ -421,14 +434,16 @@ exe:
 # 	$(TARGET) $(EXAMPLE_PATH)/Jobshop/maler_2_4.imi $(EXAMPLE_PATH)/Jobshop/maler_2_4.pi0 -incl -no-dot -no-log -acyclic -statistics
 # 	$(TARGET) $(EXAMPLE_PATH)/Jobshop/maler_2_4.imi $(EXAMPLE_PATH)/Jobshop/maler_2_4.pi0 -incl -no-dot -no-log -acyclic -statistics -dynamic
 # 	$(TARGET) $(EXAMPLE_PATH)/Jobshop/maler_2_4.imi $(EXAMPLE_PATH)/Jobshop/maler_2_4.pi0 -incl -no-dot -no-log -acyclic -statistics -jobshop
-# 	$(TARGET) $(EXAMPLE_PATH)/Jobshop/maler_2_4.imi $(EXAMPLE_PATH)/Jobshop/maler_2_4.pi0 -incl -jobshop
+# 	$(TARGET) $(EXAMPLE_PATH)/Jobshop/maler_2_4.imi $(EXAMPLE_PATH)/Jobshop/maler_2_4.pi0 -no-dot -no-log -incl -jobshop
+# 	bin/IMITATOR2.4 $(EXAMPLE_PATH)/Jobshop/maler_2_4.imi $(EXAMPLE_PATH)/Jobshop/maler_2_4.pi0 -no-dot -no-log -incl -jobshop
 # 	bin/IMITATOR2.375 $(EXAMPLE_PATH)/Jobshop/maler_2_4.imi $(EXAMPLE_PATH)/Jobshop/maler_2_4.pi0 -incl -jobshop
 # 	bin/IMITATOR2.371 $(EXAMPLE_PATH)/Jobshop/maler_2_4.imi $(EXAMPLE_PATH)/Jobshop/maler_2_4.pi0 -incl -statistics
 
 
 # 	$(TARGET) $(EXAMPLE_PATH)/Jobshop/maler_3_4.imi -mode reachability -no-dot -no-log -incl -acyclic -statistics -jobshop
 # 	$(TARGET) $(EXAMPLE_PATH)/Jobshop/maler_3_4.imi -mode reachability -no-dot -no-log -incl -acyclic -statistics -dynamic
-# 	$(TARGET) $(EXAMPLE_PATH)/Jobshop/maler_3_4.imi -mode reachability -no-dot -no-log -incl -acyclic -jobshop
+	$(TARGET) $(EXAMPLE_PATH)/Jobshop/maler_3_4.imi -mode reachability -no-dot -no-log -incl -acyclic -jobshop -statistics
+	bin/IMITATOR2.4 $(EXAMPLE_PATH)/Jobshop/maler_3_4.imi -mode reachability -no-dot -no-log -incl -acyclic -jobshop -statistics
 # 	bin/IMITATOR2.375 $(EXAMPLE_PATH)/Jobshop/maler_3_4.imi -mode reachability -no-dot -no-log -incl -acyclic -jobshop
 # 	bin/IMITATOR2.374 $(EXAMPLE_PATH)/Jobshop/maler_3_4.imi -mode reachability -no-dot -no-log -incl -acyclic -jobshop
 # 	bin/IMITATOR2.371 $(EXAMPLE_PATH)/Jobshop/maler_3_4.imi -mode reachability -no-dot -no-log -incl -acyclic -statistics -jobshop
@@ -454,8 +469,8 @@ exe:
 
 
 # 	$(TARGET) $(EXAMPLE_PATH)/Jobshop/maler_4_4.imi -mode reachability -no-dot -no-log -incl -statistics -jobshop
-	$(TARGET) $(EXAMPLE_PATH)/Jobshop/maler_4_4.imi -mode reachability -no-dot -no-log -incl -acyclic -post-limit 10
-	bin/IMITATOR2.375 $(EXAMPLE_PATH)/Jobshop/maler_4_4.imi -mode reachability -no-dot -no-log -incl -acyclic -post-limit 10
+# 	$(TARGET) $(EXAMPLE_PATH)/Jobshop/maler_4_4.imi -mode reachability -no-dot -no-log -incl -acyclic -post-limit 10
+# 	bin/IMITATOR2.375 $(EXAMPLE_PATH)/Jobshop/maler_4_4.imi -mode reachability -no-dot -no-log -incl -acyclic -post-limit 10
 # 	bin/IMITATOR2.370 $(EXAMPLE_PATH)/Jobshop/maler_4_4.imi -mode reachability -no-dot -no-log -incl -statistics -post-limit 8
 # 	bin/IMITATOR2.36 $(EXAMPLE_PATH)/Jobshop/maler_4_4.imi -mode reachability -no-dot -no-log -incl -statistics
 

@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2009/12/02
- * Last modified: 2011/11/20
+ * Last modified: 2012/02/22
  *
  **************************************************)
 
@@ -88,11 +88,13 @@ let string_of_sync program action_index =
 
 
 
-let string_of_clock_updates program clock_updates =
-	string_of_list_of_string_with_sep ", " (List.map (fun variable_index ->
-		(program.variable_names variable_index)
-		^ "' = 0"
-	) clock_updates)
+let string_of_clock_updates program = function
+	| No_update -> ""
+	| Resets list_of_clocks -> 
+		string_of_list_of_string_with_sep ", " (List.map (fun variable_index ->
+			(program.variable_names variable_index)
+			^ "' = 0"
+		) list_of_clocks)
 	
 	
 (* Convert a list of updates into a string *)
