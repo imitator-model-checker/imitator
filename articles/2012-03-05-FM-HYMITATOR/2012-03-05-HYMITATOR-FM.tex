@@ -20,6 +20,8 @@
 \usepackage{pgf}
 \usepackage{tikz}
 
+\graphicspath{{./figures/}}
+
 % Couleurs
 \definecolor{turquoise}{rgb}{0 0.41 0.41}
 \definecolor{rouge}{rgb}{0.79 0.0 0.1}
@@ -370,10 +372,10 @@ We present in this paper \hymitator{}, an extension of that prototype, performin
 
 
 \commentaire{Laurent a dit :}
-- le principe de la methode inverse pour les TA a été implémenté de façon basique (IMITATOR 1 [ICTAC09])
-puis de façon sophistiquée (IMITATOR 2 [Infinity10])
+- le principe de la methode inverse pour les TA a été implémenté de façon basique ([ICTAC09])
+puis de façon sophistiquée ([Infinity10])
 
-- la méthode a été étendue pour les HA et implémentée de façon basique (Imitator 3 [RP11])
+- la méthode a été étendue pour les HA et implémentée de façon basique ([RP11])
 
 - il s'agit "ici" de décrire une implémentation sophistiquée (intégrant notamment des extensions
 du merging des TA  à la  [NFM 12] aux HA)
@@ -393,66 +395,66 @@ The core of the program is written in the object-oriented language OCaml, and in
 Exact arithmetics is used.
 A constraint is output in text format; furthermore, the set of traces computed by the analysis can be output under a graphical form (using \graphviz{}).
 
-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
-\begin{figure}[ht!]
-	% STYLES
-	\tikzstyle{etiquette} = [draw=none, color=black]
-	
-% \tikzstyle{boite}=[text width=8em, text centered, minimum height=2.5em, rounded corners, very thick]
-% \tikzstyle{input}=[boite, draw=green!20!gris, top color=green!50, bottom color=green!10!white]
-% \tikzstyle{output}=[boite, draw=red!20!gris, top color=red!50, bottom color=red!5!white]
-% \tikzstyle{imitator} = [boite, draw=blue!20!gris, text width=10em, minimum height=6em]
-
-	
-	\tikzstyle{boite}=[rectangle, draw=black, rounded corners, thick, draw=blue!40!black, top color=blue!20, bottom color=blue!5!white]
-% 	\tikzstyle{imitator} = [boite]
-% 	\tikzstyle{apron} = [boite, draw=yellow!20!gris, top color=yellow!70, bottom color=yellow!10!white]
-% 	\tikzstyle{polka} = [apron]
-% 	\tikzstyle{ppl} = [apron]
-	\tikzstyle{dot} = [boite, draw=purple!20!gris, top color=purple!60, bottom color=purple!10!white]
-
-	\tikzstyle{fleche} = [->, draw=black, semithick]
-{
-
-\centering
-
-\begin{tikzpicture}[scale=0.6,  =>stealth']
-
-	% Boites
-	\draw[boite] (-5, 5.5) rectangle (-2, 6.5);
-	\node [etiquette] at (-3.5, 6) {Model};
-	
-	\draw[boite] (-5, 3.8) rectangle (-2, 5);
-	\node [etiquette] at (-3.5, 4.4) {\begin{tabular}{c}Reference\\valuation\end{tabular}};
-	
-	\draw[boite] (0, 4) rectangle (6, 6.5);
-	\node [etiquette] at (3, 5.25) {\large \hymitator{}};
-	
-	\draw[boite] (1, 2.5) rectangle (5, 3.5);
-	\node [etiquette] at (3, 3) {PPL};
-	
-	\draw[boite] (8, 5.5) rectangle (12, 6.5);
-	\node [etiquette] at (10, 6) {Constraint};
-	
-	\draw[boite] (8, 4) rectangle (12, 5);
-	\node [etiquette] at (10, 4.5) {Trace set};
-
-	% Fleches
-	\path[fleche] (-2, 6) --++ (2, 0);
-	\path[fleche] (-2, 4.4) --++ (2, 0);
-	\path[fleche] (3.5, 4) --++ (0, -.5);
-	\path[fleche] (2.5, 3.5) --++ (0, .5);
-	\path[fleche] (6, 6) --++ (2, 0);
-	\path[fleche] (6, 4.5) --++ (2, 0);
-
-\end{tikzpicture}
-
-}
-
-\caption{Architecture of \hymitator{}}
-\label{fig:structure}
-\end{figure}
-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
+% %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
+% \begin{figure}[ht!]
+% 	% STYLES
+% 	\tikzstyle{etiquette} = [draw=none, color=black]
+% 	
+% % \tikzstyle{boite}=[text width=8em, text centered, minimum height=2.5em, rounded corners, very thick]
+% % \tikzstyle{input}=[boite, draw=green!20!gris, top color=green!50, bottom color=green!10!white]
+% % \tikzstyle{output}=[boite, draw=red!20!gris, top color=red!50, bottom color=red!5!white]
+% % \tikzstyle{imitator} = [boite, draw=blue!20!gris, text width=10em, minimum height=6em]
+% 
+% 	
+% 	\tikzstyle{boite}=[rectangle, draw=black, rounded corners, thick, draw=blue!40!black, top color=blue!20, bottom color=blue!5!white]
+% % 	\tikzstyle{imitator} = [boite]
+% % 	\tikzstyle{apron} = [boite, draw=yellow!20!gris, top color=yellow!70, bottom color=yellow!10!white]
+% % 	\tikzstyle{polka} = [apron]
+% % 	\tikzstyle{ppl} = [apron]
+% 	\tikzstyle{dot} = [boite, draw=purple!20!gris, top color=purple!60, bottom color=purple!10!white]
+% 
+% 	\tikzstyle{fleche} = [->, draw=black, semithick]
+% {
+% 
+% \centering
+% 
+% \begin{tikzpicture}[scale=0.6,  =>stealth']
+% 
+% 	% Boites
+% 	\draw[boite] (-5, 5.5) rectangle (-2, 6.5);
+% 	\node [etiquette] at (-3.5, 6) {Model};
+% 	
+% 	\draw[boite] (-5, 3.8) rectangle (-2, 5);
+% 	\node [etiquette] at (-3.5, 4.4) {\begin{tabular}{c}Reference\\valuation\end{tabular}};
+% 	
+% 	\draw[boite] (0, 4) rectangle (6, 6.5);
+% 	\node [etiquette] at (3, 5.25) {\large \hymitator{}};
+% 	
+% 	\draw[boite] (1, 2.5) rectangle (5, 3.5);
+% 	\node [etiquette] at (3, 3) {PPL};
+% 	
+% 	\draw[boite] (8, 5.5) rectangle (12, 6.5);
+% 	\node [etiquette] at (10, 6) {Constraint};
+% 	
+% 	\draw[boite] (8, 4) rectangle (12, 5);
+% 	\node [etiquette] at (10, 4.5) {Trace set};
+% 
+% 	% Fleches
+% 	\path[fleche] (-2, 6) --++ (2, 0);
+% 	\path[fleche] (-2, 4.4) --++ (2, 0);
+% 	\path[fleche] (3.5, 4) --++ (0, -.5);
+% 	\path[fleche] (2.5, 3.5) --++ (0, .5);
+% 	\path[fleche] (6, 6) --++ (2, 0);
+% 	\path[fleche] (6, 4.5) --++ (2, 0);
+% 
+% \end{tikzpicture}
+% 
+% }
+% 
+% \caption{Architecture of \hymitator{}}
+% \label{fig:structure}
+% \end{figure}
+% %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
 
 \hymitator{} implements the following algorithms for hybrid systems:
 \begin{description}
@@ -474,11 +476,34 @@ The post image computation can be costly for hybrid automata. To overcome this p
 
 \commentaire{un mot sur l'algo CEGAR-like de Ulrich}
 
+
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Applications}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
+  \begin{figure}[ht!]
+  \centering
+%   \subfigure[Starting from a single point]{
+%     \includegraphics[width=3.5cm]{point_x1} \; 
+%     \includegraphics[width=3.5cm]{point_x2} \;
+%     \includegraphics[width=3.5cm]{point_x3}
+%     \label{fig:plot_point}
+%   }
+%   \subfigure[Starting from a tile synthesized by the Inverse Method]{
+    \includegraphics[width=3.5cm]{plot_t_x1} \; 
+    \includegraphics[width=3.5cm]{plot_t_x2} \;
+    \includegraphics[width=3.5cm]{plot_t_x3}
+%     \label{fig:plot_zone}
+%   } 
+  \caption{Reachable states for room heating benchmark}\label{fig:plot_rhb}
+\end{figure}
+%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
 
 \commentaire{Laurent a dit :}
 
@@ -524,6 +549,10 @@ A graphical user interface for the input model is currently under construction, 
 \appendix
 
 \section*{Appendix}
+
+\subsection*{Summary of Experiments}
+
+\commentaire{ajouter un beau tableau avec des contraintes, et un lien vers un rapport d'etudes de cas (+ site Web)}
 
 \subsection*{Example of Trace Set}
 
