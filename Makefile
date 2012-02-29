@@ -1,10 +1,10 @@
 ###############################################################
 #
-#                    HYMITATOR
+#                    IMITATOR 2.5
 #
 #  Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
 #
-#  Author:        Etienne Andre
+#  Author:        Etienne Andre, Ulrich KUEHNE, Romain SOULAT
 #  Created:       2009/09/07
 #  Last modified: 2012/02/20
 #  Ocaml version: 3.11.2
@@ -53,7 +53,13 @@ INCLUDE = -I $(SRC) -I $(EXTLIB_PATH) -I $(OCAML_PPL_PATH) -I $(OCAML_GMP_PATH) 
 # export LIBS = str.cma unix.cma extLib.cma bigarray.cma gmp.cma apron.cma polkaMPQ.cma
 
 # native c libraries
-CLIBS = -cclib -lpwl -cclib -lm -cclib -lgmpxx -cclib -lgmp -cclib -lppl
+# CLIBS = -cclib -lpwl -cclib -lm -cclib -lgmpxx -cclib -lgmp -cclib -lppl
+
+# For 64 bits compiling
+CLIBS = -cclib '-static -lppl -lpwl -lppl_ocaml -lstdc++ -lmlgmp -lmpfr -lgmp -lgmpxx ' 
+
+# ALLOWS STATIC COMPILING IN 32 BITS :-)
+# CLIBS = -cclib '-static -lppl -lpwl -lcamlrun -ltinfo -lppl_ocaml -lstdc++ -lmlgmp -lmpfr -lgmp -lgmpxx'
 
 # ocaml lib files
 OLIBS = str.cma unix.cma extLib.cma bigarray.cma gmp.cma ppl_ocaml.cma 
@@ -65,9 +71,6 @@ OOLIBS = str.cmxa unix.cmxa extLib.cmxa bigarray.cmxa gmp.cmxa ppl_ocaml.cmxa
 export LIBS = $(CLIBS) $(OLIBS)
 export OPTLIBS = $(CLIBS) $(OOLIBS) 
 
-# OCAML_PPL_PATH = /home/andre/Prog/local/lib/ppl
-# OCAML_GMP_PATH = /home/andre/Prog/local/lib/gmp
-# OCAML_GMP_PATH = /usr/lib/ocaml/gmp
 
 SRC = src
 
@@ -115,7 +118,9 @@ $(IMILIB_OPT): header parser $(OBJS_OPT)
 
 $(TARGET): $(IMILIB) $(MAIN)
 	@ echo [LINK] $(TARGET)
-	@ $(OCAMLC) -o $(TARGET) $(INCLUDE) $(LIBS) $(IMILIB) $(MAIN)
+# 	@ $(OCAMLC) -o $(TARGET) $(INCLUDE) $(LIBS) $(IMILIB) $(MAIN)
+	@ $(OCAMLC) -custom -o $(TARGET) $(INCLUDE) $(LIBS) $(IMILIB) $(MAIN)
+
 
 $(TARGET_OPT): $(IMILIB_OPT) $(MAIN_OPT)
 	@ echo [LINK] $(TARGET_OPT)
