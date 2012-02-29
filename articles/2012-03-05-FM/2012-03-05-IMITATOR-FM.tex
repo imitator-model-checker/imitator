@@ -323,7 +323,7 @@
 \title{Parametric Scheduling with IMITATOR}
 \author{\'Etienne Andr\'e$^1$, Laurent Fribourg$^2$, Ulrich K\"uhne$^3$ and Romain Soulat$^2$}
 \institute{$^1$LIPN, CNRS UMR 7030, Université Paris 13, France \\
-$^2$ENS Cachan, CNRS, LSV, UMR8643 \\
+$^2$LSV -- ENS Cachan \& CNRS \\
 $^3$Universit\"at Bremen, Germany}
 
 
@@ -332,7 +332,7 @@ $^3$Universit\"at Bremen, Germany}
 \maketitle
 
 \begin{abstract}
-	We present here \imitator{} 2.4.
+	We present here \imitator{} 2.5.
 \end{abstract}
 
 \keywords{Real-Time Systems, Scheduling, Parametric Timed Automata, Parameter Synthesis}
@@ -360,11 +360,12 @@ A basic implementation named \imitator{} (for \emph{Inverse Method for Inferring
 The tool has then been entirely rewritten in \imitatordeux{}~\cite{and10}, under the form of a standalone \ocaml{} program making use of the Parma Polyhedra Library (PPL)~\cite{bhz08}.
 A number of case studies containing up to 60 timing parameters could be efficiently verified in the purely timed framework.
 
-Since~\cite{and10}, we extended \imitator{} to deal with parametric scheduling analysis.
-First, we extended the input formalism to parametric timed automata equipped with \emph{stopwatches}: clocks can now be stopped for some time while others keep growing.
+Since~\cite{and10}, we extended the input formalism to parametric timed automata equipped with \emph{stopwatches}: clocks can now be stopped for some time while others keep growing.
 Also, we added arbitrary clock resets: clocks can be set to arbitrary linear combinations of other clocks, parameters and discrete variables.
 We also implemented further algorithms based on~$\IM$, that satisfy weaker properties than the preservation of the trace sets, while outputting larger sets of parameter valuations than~$\IM$.
 These extensions allow us to consider larger classes of case studies, and in particular scheduling problems.
+
+\commentaire{Laurent: dans l'esprit, similaire aux etudiants (utiliser PTA pour synthetiser schedulability regions, mais nous on n'est pas CEGAR}
 
 \commentaire{Laurent a dit :
 - le principe de la methode inverse pour les TA a été implémenté de façon basique ([ICTAC09])
@@ -449,27 +450,46 @@ A constraint is output in text format; furthermore, the set of traces computed b
 % \end{figure}
 % %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
 
-\imitator{} implements the following algorithms:
+\imitator{} implements in particular the following algorithms:
 \begin{description}
 	\item[Full reachability analysis] Given a model, it computes the set of symbolic reachable states.
 	\item[Inverse method] Given a model and a reference parameter valuation~$\pio$, it computes a constraint on the parameter guaranteeing the same time-abstract behavior as under~$\pio$
-	\item[Behavioral cartography] Given a model and a bounded parameter domain for each parameter valuation, it computes a set of constraints and their corresponding trace sets.
+% 	\item[Behavioral cartography] Given a model and a bounded parameter domain for each parameter valuation, it computes a set of constraints and their corresponding trace sets.
 \end{description}
 
 \imitator{} makes use of several algorithmic optimizations.
 In particular, we implemented a technique that merge any two states sharing the same discrete part (location and value of the discrete variables) and such that the union of their constraint on the analog variables and parameters is convex~\cite{AFS12}.
-This optimization preserves the correctness of all our algorithms; better, the constraint output by the inverse method in that case may be weaker, i.e., covers a larger set of parameter valuations.
+This optimization preserves the correctness of all our algorithms; better, the constraint output by the inverse method in that case is always weaker or equal, i.e., covers a set of parameter valuations larger or equal.
 This optimization behaves particularly well in the framework of scheduling problems, where the state space is drastically reduced.
 
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Applications}
+\section{Application to Parametric Schedulability}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-Source code, binaries, case studies and logs are available in~\cite{imitator-web}.
+
+
+Astrium, FPs and EDFs case studies are composed of three cyclic tasks that need to be performed on a single machine.
+	Therefore, the machine has to choose which task is active when several tasks are requiring computation.
+	This is done in two ways, either with a Fixed Priority (FP) scheduler or an Earliest Deadline First scheduler (EDF).
+	These three case studies are being studied in the framework of the joint project Roscov between LSV and Astrium.
+	
+CPR08~\cite{CPR08} and HPPR10~\cite{LPPRC10} are two-cyclic-tasks problem with an EDF scheduler.
+	TaskChain~\cite{SGL97} does not use cyclic tasks but instead has a 4 task chain and a concurrent 3 task chain.
+		Each task in a chain cannot start until the previous one has not terminated.
+		Each task in each chain has a given fixed priority.
+		A scheduler assigns which task has the computational time with a FP policy.
+
+For every FP scheduling example, the parameters are the offsets of the tasks, their Wost Case Execution Time (WCET), their periods and a deadline to achieve a given goal (modeled by an extra automaton).
+	For every EDF scheduling example, the parameters are the offsets of the tasks, their WCET, their periods, a deadline to achieve each task and a deadline to achieve a given goal (modeled by an extra automaton).
+
+	
+
+Experiments were performed on Ubuntu 11.10 equipped with an Intel Core\,2 2.93\,GiHz processor with 2\,GiB RAM.
+Source code, binaries, all case studies and logs are available in~\cite{imitator-web}.
 
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
 \begin{figure}[ht!]
@@ -481,17 +501,15 @@ Source code, binaries, case studies and logs are available in~\cite{imitator-web
 \end{figure}
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
 
-\commentaire{Laurent a dit :}
+un automate par tache, un scheduler
 
-- sampled data hybrid systems (cf~[RP11])
 
-- test coverage for hybrid systems
+ex de TA en appendix, avec schema et code IMITATOR
 
-- synthesis schedulability regions (cf [Cimatti-Palopoli-Ramadian08], [Astrium EADS])
+quand il y a une variablité du computation time (entre BCET et WCET), pas de méthode exacte analytique --> interet des methodes symboliques (model checking) d'exploration exhaustive basee sur TA (et donc interet de IM puisque generalisation! si on etait schedulable, on lest encore avec IM)
 
-\commentaire{experiences ?}
+ex italiens : assure schedulability (etat erreur jamais atteint, donc schedulable vis a vis d'une deadline) ; forme of robustness autour d'un point de depart connu comme schedulable
 
-\commentaire{rapport d'etudes de cas a rediger}
 
 
 
@@ -505,9 +523,9 @@ Source code, binaries, case studies and logs are available in~\cite{imitator-web
 One of the first powerful model checkers for analyzing parametric timed automata is \hytech{}~\cite{hhw97}.
 Unfortunately, it can hardly verify even medium sized examples due to exact arithmetics with limited precision and static composition of automata, quickly leading to memory overflows.
 
-\commentaire{to do (citer Romeo)}
+\romeo{}~\cite{lrst09} performs parametric model checking for (bounded) Time Petri Nets with stopwatches, and synthesizes parameter valuations for which a TCTL formula is satisfied.
 
-A graphical user interface for the input model is currently under construction, based on a generic platform. \commentaire{utile ?!}
+% A graphical user interface for the input model is currently under construction, based on a generic platform. \commentaire{utile ?!}
 
 
 
