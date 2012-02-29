@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2009/09/08
- * Last modified: 2010/05/07
+ * Last modified: 2012/02/29
  *
  ****************************************************************)
 
@@ -13,10 +13,10 @@
 (** Version string *)
 (****************************************************************)
 
-let version_string = "1.0 beta"
+let version_string = "2.5"
 
 let print_version_string _ = 
-	print_string ("HYMITATOR " ^ version_string ^ "\n");
+	print_string ("IMITATOR " ^ version_string ^ "\n");
 
 (****************************************************************)
 (** Modules *)
@@ -406,7 +406,7 @@ let abort_program () =
 (* Terminate program *)
 let terminate_program () =
 	print_newline();
-	print_message Debug_standard ("HYMITATOR successfully terminated (" ^ (after_seconds ()) ^ ")");
+	print_message Debug_standard ("IMITATOR successfully terminated (" ^ (after_seconds ()) ^ ")");
 	print_newline();
 	flush stdout;
 	exit(0)
