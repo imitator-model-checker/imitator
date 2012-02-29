@@ -1,6 +1,6 @@
 (***************************************************
  *
- *                     HYMITATOR
+ *                     IMITATOR
  * 
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
@@ -518,9 +518,9 @@ options#parse;
 
 print_message Debug_standard
 	( "**************************************************");
-Printf.printf " *  HYMITATOR %-36s *\n" version_string;	
+Printf.printf " *  IMITATOR %-36s *\n" version_string;	
 print_message Debug_standard
-	( "*                  Etienne ANDRE, Ulrich KUEHNE  *\n"
+	( "*   Etienne ANDRE, Ulrich KUEHNE, Romain SOULAT  *\n"
 	^ "*                                   2009 - 2012  *\n"
 	^ "*     Laboratoire Specification et Verification  *\n"
 	^ "*                  ENS de Cachan & CNRS, France  *\n"
