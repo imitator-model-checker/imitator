@@ -1,0 +1,384 @@
+-----------------------------------------
+-- STOPPER Used for Analysis Only		--
+-----------------------------------------
+automaton stopper
+var time :clock;
+	  deadlineBasic: parameter;
+
+synclabs: Fast_done, GNC_require, GNC_done;
+
+loc f_1_r: while time<= deadlineBasic wait {}	
+	when True sync Fast_done goto f_2_r;
+	when True sync GNC_require goto f_1_r;
+	when True sync GNC_done goto f_1_r;
+
+loc f_2_r: while time<= deadlineBasic wait {}	
+	when True sync Fast_done goto f_3_r;
+	when True sync GNC_require goto f_2_r;
+	when True sync GNC_done goto f_2_r;
+
+loc f_3_r: while time<= deadlineBasic wait {}	
+	when True sync Fast_done goto f_4_r;
+	when True sync GNC_require goto f_3_r;
+	when True sync GNC_done goto f_3_r;
+
+loc f_4_r: while time<= deadlineBasic wait {}	
+	when True sync Fast_done goto f_5_r;
+	when True sync GNC_require goto f_4_r;
+	when True sync GNC_done goto f_4_r;
+
+loc f_5_r: while time<= deadlineBasic wait {}	
+	when True sync Fast_done goto f_6_r;
+	when True sync GNC_require goto f_5_r;
+	when True sync GNC_done goto f_5_r;
+
+loc f_6_r: while time<= deadlineBasic wait {}	
+	when True sync Fast_done goto f_7_r;
+	when True sync GNC_require goto f_6_r;
+	when True sync GNC_done goto f_6_r;
+
+loc f_7_r: while time<= deadlineBasic wait {}	
+	when True sync Fast_done goto f_8_r;
+	when True sync GNC_require goto f_7_r;
+	when True sync GNC_done goto f_7_r;
+
+loc f_8_r: while time<= deadlineBasic wait {}	
+	when True sync Fast_done goto f_9_r;
+	when True sync GNC_require goto f_8_r;
+	when True sync GNC_done goto f_8_r;
+
+loc f_9_r: while time<= deadlineBasic wait {}	
+	when True sync Fast_done goto f_10_r;
+	when True sync GNC_require goto f_9_r;
+	when True sync GNC_done goto f_9_r;
+
+loc f_10_r: while time<= deadlineBasic wait {}	
+	when True sync Fast_done goto f_10;
+	when True sync GNC_require goto f_10_r;
+	when True sync GNC_done goto f_10_r;
+
+loc f_10: while time <= deadlineBasic wait {}
+	when True sync GNC_require goto g_r;
+
+loc g_r: while time <= deadlineBasic wait {}
+	when True sync GNC_done goto lf_r;
+	when True sync Fast_done goto g_r;
+
+loc lf_r: while time <= deadlineBasic wait {}
+	when True sync Fast_done goto end_flow;
+
+loc end_flow: while True wait {}
+	when True sync Fast_done goto end_flow;
+	when True sync GNC_require goto end_flow;
+	when True sync GNC_done goto end_flow;
+
+end
+
+automaton stopper2
+var	  deadlineSafety: parameter;
+
+synclabs: Fast_done, GNC_require, GNC_done, Safety_require, Safety_done;
+
+loc f_1_r: while time<= deadlineSafety wait {}	
+	when True sync Fast_done goto f_2_r;
+	when True sync GNC_require goto f_1_r;
+	when True sync GNC_done goto f_1_r;
+	when True sync Safety_require goto f_1_r;
+	when True sync Safety_done goto f_1_r;
+
+loc f_2_r: while time<= deadlineSafety wait {}	
+	when True sync Fast_done goto f_3_r;
+	when True sync GNC_require goto f_2_r;
+	when True sync GNC_done goto f_2_r;
+	when True sync Safety_require goto f_2_r;
+	when True sync Safety_done goto f_2_r;
+
+loc f_3_r: while time<= deadlineSafety wait {}	
+	when True sync Fast_done goto f_4_r;
+	when True sync GNC_require goto f_3_r;
+	when True sync GNC_done goto f_3_r;
+	when True sync Safety_require goto f_3_r;
+	when True sync Safety_done goto f_3_r;
+
+loc f_4_r: while time<= deadlineSafety wait {}	
+	when True sync Fast_done goto f_5_r;
+	when True sync GNC_require goto f_4_r;
+	when True sync GNC_done goto f_4_r;
+	when True sync Safety_require goto f_4_r;
+	when True sync Safety_done goto f_4_r;
+
+loc f_5_r: while time<= deadlineSafety wait {}	
+	when True sync Fast_done goto f_6_r;
+	when True sync GNC_require goto f_5_r;
+	when True sync GNC_done goto f_5_r;
+	when True sync Safety_require goto f_5_r;
+	when True sync Safety_done goto f_5_r;
+
+loc f_6_r: while time<= deadlineSafety wait {}	
+	when True sync Fast_done goto f_7_r;
+	when True sync GNC_require goto f_6_r;
+	when True sync GNC_done goto f_6_r;
+	when True sync Safety_require goto f_6_r;
+	when True sync Safety_done goto f_6_r;
+
+loc f_7_r: while time<= deadlineSafety wait {}	
+	when True sync Fast_done goto f_8_r;
+	when True sync GNC_require goto f_7_r;
+	when True sync GNC_done goto f_7_r;
+	when True sync Safety_require goto f_7_r;
+	when True sync Safety_done goto f_7_r;
+
+loc f_8_r: while time<= deadlineSafety wait {}	
+	when True sync Fast_done goto f_9_r;
+	when True sync GNC_require goto f_8_r;
+	when True sync GNC_done goto f_8_r;
+	when True sync Safety_require goto f_8_r;
+	when True sync Safety_done goto f_8_r;
+
+loc f_9_r: while time<= deadlineSafety wait {}	
+	when True sync Fast_done goto f_10_r;
+	when True sync GNC_require goto f_9_r;
+	when True sync GNC_done goto f_9_r;
+	when True sync Safety_require goto f_9_r;
+	when True sync Safety_done goto f_9_r;
+
+loc f_10_r: while time<= deadlineSafety wait {}	
+	when True sync Fast_done goto f_10;
+	when True sync Fast_done goto end_flow;
+	when True sync Safety_require goto f_10_r;
+	when True sync Safety_done goto f_10_r;
+
+loc f_10: while time <= deadlineSafety wait {}
+	when True sync GNC_require goto g_r;
+	when True sync Safety_require goto f_10;
+	when True sync Safety_done goto f_10;
+
+loc g_r: while time <= deadlineSafety wait {}
+	when True sync GNC_done goto ls_r;
+	when True sync Fast_done goto g_r;
+	when True sync Safety_require goto g_r;
+	when True sync Safety_done goto g_r;
+
+loc ls_r: while time <= deadlineSafety wait {}
+	when True sync Safety_require goto ls;
+	when True sync Safety_done goto ls_r;
+	when True sync Fast_done goto ls_r;
+	when True sync GNC_require goto ls_r;
+	when True sync GNC_done goto ls_r;
+
+loc ls: while time <= deadlineSafety wait {}
+	when True sync Safety_done goto end_flow;
+	when True sync Fast_done goto ls;
+	when True sync GNC_require goto end_flow;
+	when True sync GNC_done goto end_flow;
+
+loc end_flow: while True wait {}
+	when True sync Fast_done goto end_flow;
+
+end
+
+automaton scheduler_partition
+
+synclabs: p_appli, p_safety;
+
+loc appli: while True wait {}
+	when True sync p_safety goto safety;
+
+loc safety: while True wait {}
+	when True sync p_appli goto appli;
+
+end
+
+
+automaton scheduler_P_Safety
+
+var x_Safety: analog;
+	 WCET_Safety: parameter;
+	 dSafety: discrete;
+
+synclabs: Safety_require, Safety_done, p_appli, p_safety;
+
+loc inactive: while True wait {x_Safety'=0}
+	when dSafety = 1 sync p_safety do {x_Safety'=x_Safety} goto active_Safety;
+	when dSafety = 0 sync p_safety do {x_Safety'=x_Safety} goto active_non_Safety;
+	when True sync Safety_require do {x_Safety'=x_Safety, dSafety'=1} goto inactive;
+
+loc active_Safety: while x_Safety <= WCET_Safety wait {x_Safety'=1}
+	when x_Safety < WCET_Safety sync p_appli do {x_Safety'=x_Safety} goto inactive;
+	when x_Safety = WCET_Safety sync Safety_done do {dSafety'=0, x_Safety'=0} goto active_non_Safety;
+
+
+loc active_non_Safety: while True wait {x_Safety'=0}
+	when True sync Safety_require do {dSafety'=1, x_Safety'=0} goto active_Safety;
+	when True sync p_appli do {x_Safety'=x_Safety} goto inactive;
+
+end
+
+automaton scheduler_P_Application
+
+var x_Fast, x_GNC, x_Thermal:analog;
+	WCET_Thermal, WCET_GNC, WCET_Fast:parameter;
+	dFast, dGNC, dThermal: discrete;
+
+synclabs: Fast_require, Fast_done, GNC_require, GNC_done, Thermal_require, Thermal_done, p_appli, p_safety;
+
+initially active_non_Fast_non_GNC_non_Thermal;
+
+loc inactive: while True wait {x_Fast' = 0 & x_GNC' = 0 &  x_Thermal' = 0}
+	when True sync Fast_require do {dFast'=1, x_Fast' = x_Fast, x_GNC' = x_GNC, x_Thermal' = x_Thermal} goto inactive;
+	when True sync GNC_require do {dGNC'=1, x_Fast' = x_Fast, x_GNC' = x_GNC, x_Thermal' = x_Thermal} goto inactive;
+	when True sync Thermal_require do {dThermal'=1, x_Fast' = x_Fast, x_GNC' = x_GNC, x_Thermal' = x_Thermal} goto inactive;
+	when dFast = 0 & dGNC = 0 & dThermal = 0 sync p_appli do {x_Fast' = x_Fast, x_GNC' = x_GNC, x_Thermal' = x_Thermal} goto active_non_Fast_non_GNC_non_Thermal;
+	when dFast = 0 & dGNC = 0 & dThermal = 1 sync p_appli do {x_Fast' = x_Fast, x_GNC' = x_GNC, x_Thermal' = x_Thermal} goto active_non_Fast_non_GNC_Thermal;
+	when dFast = 0 & dGNC = 1 & dThermal = 0 sync p_appli do {x_Fast' = x_Fast, x_GNC' = x_GNC, x_Thermal' = x_Thermal} goto active_non_Fast_GNC_non_Thermal;
+	when dFast = 0 & dGNC = 1 & dThermal = 1 sync p_appli do {x_Fast' = x_Fast, x_GNC' = x_GNC, x_Thermal' = x_Thermal} goto active_non_Fast_GNC_Thermal;
+	when dFast = 1 & dGNC = 0 & dThermal = 0 sync p_appli do {x_Fast' = x_Fast, x_GNC' = x_GNC, x_Thermal' = x_Thermal} goto active_Fast_non_GNC_non_Thermal;
+	when dFast = 1 & dGNC = 0 & dThermal = 1 sync p_appli do {x_Fast' = x_Fast, x_GNC' = x_GNC, x_Thermal' = x_Thermal} goto active_Fast_non_GNC_Thermal;
+	when dFast = 1 & dGNC = 1 & dThermal = 0 sync p_appli do {x_Fast' = x_Fast, x_GNC' = x_GNC, x_Thermal' = x_Thermal}goto active_Fast_GNC_non_Thermal;
+	when dFast = 1 & dGNC = 1 & dThermal = 1 sync p_appli do {x_Fast' = x_Fast, x_GNC' = x_GNC, x_Thermal' = x_Thermal} goto active_Fast_GNC_Thermal;
+
+
+loc active_non_Fast_non_GNC_non_Thermal: while True wait {x_Fast' = 0 & x_GNC' = 0 &  x_Thermal' = 0}
+	when True sync Fast_require  do {dFast'=1, x_Fast' = x_Fast, x_GNC' = x_GNC, x_Thermal' = x_Thermal} goto active_Fast_non_GNC_non_Thermal;
+	when True sync GNC_require do {dGNC'=1, x_Fast' = x_Fast, x_GNC' = x_GNC, x_Thermal' = x_Thermal} goto active_non_Fast_GNC_non_Thermal;	
+	when True sync Thermal_require do {dThermal'=1, x_Fast' = x_Fast, x_GNC' = x_GNC, x_Thermal' = x_Thermal} goto active_non_Fast_non_GNC_Thermal;
+	when True sync p_safety do {x_Fast' = x_Fast, x_GNC' = x_GNC, x_Thermal' = x_Thermal} goto inactive;
+
+loc active_non_Fast_non_GNC_Thermal: while x_Thermal <= WCET_Thermal wait {x_Fast' = 0 & x_GNC' = 0 & x_Thermal' = 1}
+	when x_Thermal < WCET_Thermal sync Fast_require do {dFast' = 1, x_Fast' = x_Fast, x_GNC' = x_GNC, x_Thermal' = x_Thermal} goto active_Fast_non_GNC_Thermal;
+	when x_Thermal < WCET_Thermal sync GNC_require do {dGNC' = 1, x_Fast' = x_Fast, x_GNC' = x_GNC, x_Thermal' = x_Thermal} goto active_non_Fast_GNC_Thermal;
+	when x_Thermal = WCET_Thermal sync Thermal_done do {dThermal'=0, x_Thermal'=0,x_Fast' = x_Fast, x_GNC' = x_GNC} goto active_non_Fast_non_GNC_non_Thermal;
+	when True sync p_safety do {x_Fast' = x_Fast, x_GNC' = x_GNC, x_Thermal' = x_Thermal} goto inactive;
+
+loc active_non_Fast_GNC_non_Thermal: while x_GNC <= WCET_GNC wait {x_Fast' = 0 & x_GNC' = 1 & x_Thermal' = 0}
+	when x_GNC < WCET_GNC sync Fast_require do {dFast'=1, x_Fast' = x_Fast, x_GNC' = x_GNC, x_Thermal' = x_Thermal} goto active_Fast_GNC_non_Thermal;
+	when x_GNC < WCET_GNC sync Thermal_require do {dThermal'=1, x_Fast' = x_Fast, x_GNC' = x_GNC, x_Thermal' = x_Thermal} goto active_non_Fast_GNC_Thermal;
+	when x_GNC = WCET_GNC do {dGNC'=0, x_GNC'=0, x_Fast' = x_Fast, x_Thermal' = x_Thermal} sync GNC_done goto active_non_Fast_non_GNC_non_Thermal;
+	when True sync p_safety do {x_Fast' = x_Fast, x_GNC' = x_GNC, x_Thermal' = x_Thermal} goto inactive;
+
+loc active_non_Fast_GNC_Thermal: while x_GNC <= WCET_GNC wait {x_Fast' = 0 & x_GNC' = 1 & x_Thermal' = 0}
+	when x_GNC < WCET_GNC sync Fast_require do {dFast'=1, x_Fast' = x_Fast, x_GNC' = x_GNC, x_Thermal' = x_Thermal} goto active_Fast_GNC_Thermal;
+	when x_GNC = WCET_GNC sync GNC_done do {dGNC'=0, x_GNC'=0, x_Fast' = x_Fast, x_Thermal' = x_Thermal} goto active_non_Fast_non_GNC_Thermal;
+	when True sync p_safety do {x_Fast' = x_Fast, x_GNC' = x_GNC, x_Thermal' = x_Thermal} goto inactive;
+
+loc active_Fast_non_GNC_non_Thermal: while x_Fast <= WCET_Fast wait {x_Fast' = 1 & x_GNC' = 0 & x_Thermal' = 0}
+	when x_Fast < WCET_Fast sync GNC_require do {dGNC'=1, x_Fast' = x_Fast, x_GNC' = x_GNC, x_Thermal' = x_Thermal} goto active_Fast_GNC_non_Thermal;	
+	when x_Fast < WCET_Fast sync Thermal_require do {dThermal'=1, x_Fast' = x_Fast, x_GNC' = x_GNC, x_Thermal' = x_Thermal} goto active_Fast_non_GNC_Thermal;
+	when x_Fast = WCET_Fast sync Fast_done do {dFast'=0, x_Fast'=0, x_GNC' = x_GNC, x_Thermal' = x_Thermal} goto active_non_Fast_non_GNC_non_Thermal;
+	when True sync p_safety do {x_Fast' = x_Fast, x_GNC' = x_GNC, x_Thermal' = x_Thermal} goto inactive;
+
+loc active_Fast_non_GNC_Thermal: while x_Fast <= WCET_Fast wait {x_Fast' = 1 & x_GNC' = 0 & x_Thermal' = 0}
+	when x_Fast < WCET_Fast sync GNC_require do {dGNC'=1, x_Fast' = x_Fast, x_GNC' = x_GNC, x_Thermal' = x_Thermal} goto active_Fast_GNC_Thermal;	
+	when x_Fast = WCET_Fast sync Fast_done  do {dFast'=0, x_Fast' = 0, x_GNC' = x_GNC, x_Thermal' = x_Thermal} goto active_non_Fast_non_GNC_Thermal;
+	when True sync p_safety do {x_Fast' = x_Fast, x_GNC' = x_GNC, x_Thermal' = x_Thermal} goto inactive;
+
+loc active_Fast_GNC_non_Thermal: while x_Fast <= WCET_Fast wait {x_Fast' = 1 & x_GNC' = 0 & x_Thermal' = 0}
+	when x_Fast < WCET_Fast sync Thermal_require do {dThermal'=1, x_Fast' = x_Fast, x_GNC' = x_GNC, x_Thermal' = x_Thermal} goto active_Fast_GNC_Thermal;
+	when x_Fast = WCET_Fast sync Fast_done do {dFast'=0, x_Fast'=0, x_GNC' = x_GNC, x_Thermal' = x_Thermal}  goto active_non_Fast_GNC_non_Thermal;
+	when True sync p_safety do {x_Fast' = x_Fast, x_GNC' = x_GNC, x_Thermal' = x_Thermal} goto inactive;
+
+loc active_Fast_GNC_Thermal: while x_Fast <= WCET_Fast wait {x_Fast' = 1 & x_GNC' = 0 & x_Thermal' = 0}
+	when x_Fast = WCET_Fast sync Fast_done do {dFast'=0, x_Fast' = 0, x_GNC' = x_GNC, x_Thermal' = x_Thermal} goto active_non_Fast_GNC_Thermal;
+	when True sync p_safety do {x_Fast' = x_Fast, x_GNC' = x_GNC, x_Thermal' = x_Thermal} goto inactive;
+
+
+end -- automaton_P_gyro
+
+automaton T_Safety
+
+var t_Safety:clock;
+	perSafety:parameter;
+
+synclabs: Safety_done, Safety_require;
+
+initially idle;
+
+loc idle: while t_Safety <= perSafety wait {}
+	when t_Safety = perSafety sync Safety_require do {t_Safety' = 0} goto waiting;
+
+loc waiting: while t_Safety <= perSafety wait {}
+	when True sync Safety_done do {} goto idle;
+
+end
+
+automaton T_Fast
+var t_Fast:clock;
+	perFast:parameter;
+
+synclabs: Fast_done, Fast_require;
+
+initially idle;
+
+loc idle: while t_Fast <= perFast wait {}
+	when t_Fast = perFast sync Fast_require do {t_Fast'=0} goto waiting;
+
+loc waiting: while t_Fast <= perFast wait {}
+	when True sync Fast_done do {} goto idle;
+
+end
+
+automaton T_GNC
+var t_GNC:clock;
+	perGNC:parameter;
+synclabs: GNC_done, GNC_require;
+
+initially idle;
+
+loc idle: while t_GNC <= perGNC wait {}
+	when t_GNC = perGNC sync GNC_require do {t_GNC'=0} goto waiting;
+
+loc waiting: while t_GNC <= perGNC wait {}
+	when True sync GNC_done do {} goto idle;
+
+end
+
+automaton T_Thermal
+
+var t_Thermal:clock;
+	perThermal:parameter;
+
+synclabs: Thermal_done, Thermal_require;
+
+initially idle;
+
+loc idle: while t_Thermal <= perThermal wait {}
+	when t_Thermal = perThermal sync Thermal_require do {t_Thermal' = 0} goto waiting;
+
+loc waiting: while t_Thermal <= perThermal wait {}
+	when True sync Thermal_done do {} goto idle;
+
+end
+
+var init : region;
+
+init := 	loc[stopper] = f_1_r &
+			loc[stopper2] = f_1_r &
+			loc[scheduler_partition] = appli &
+			loc[scheduler_P_Safety] = inactive &
+			loc[scheduler_P_Application] = active_Fast_GNC_Thermal &
+			loc[T_Safety] = waiting &
+			loc[T_GNC] = waiting &
+			loc[T_Thermal]= waiting &
+			loc[T_Fast] = waiting &
+			dSafety = 1 &
+			dFast = 1 &
+			dGNC = 1 &
+			dThermal = 1 &
+			x_Safety = 0 &
+			x_Fast = 0 &
+			x_GNC = 0 &
+			x_Thermal = 0 &
+			t_Safety = 0 &
+			t_Fast = 0 &
+			t_GNC = 0 &
+			t_Thermal = 0 &
+			time = 0 
+			& 
+			deadlineBasic = 150 &
+			deadlineSafety = 200 &
+			WCET_Safety = 20 &
+			WCET_Fast = 4 &
+			WCET_GNC = 20 &
+			WCET_Thermal = 120 &
+			perSafety = 100 &
+			perFast = 10 &
