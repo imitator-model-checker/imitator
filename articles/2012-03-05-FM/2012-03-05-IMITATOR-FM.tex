@@ -320,7 +320,8 @@
 
 
 % Title
-\title{Parametric Scheduling with IMITATOR}
+% \title{Parametric Scheduling with IMITATOR}
+\title{IMITATOR with Stopwatches and its Applications to Parametric Preemptive Scheduling}
 \author{\'Etienne Andr\'e$^1$, Laurent Fribourg$^2$, Ulrich K\"uhne$^3$ and Romain Soulat$^2$}
 \institute{$^1$LIPN, CNRS UMR 7030, Université Paris 13, France \\
 $^2$LSV -- ENS Cachan \& CNRS \\
@@ -389,66 +390,66 @@ The input syntax, inspired by~\hytech{}, allows the use of clocks (or stopwatche
 
 A constraint is output in text format; furthermore, the set of traces computed by the analysis can be output under a graphical form (using \graphviz{}) for reasonably sized case studies (up to a few thousands reachable states).
 
-% %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
-% \begin{figure}[ht!]
-% 	% STYLES
-% 	\tikzstyle{etiquette} = [draw=none, color=black]
-% 	
-% % \tikzstyle{boite}=[text width=8em, text centered, minimum height=2.5em, rounded corners, very thick]
-% % \tikzstyle{input}=[boite, draw=green!20!gris, top color=green!50, bottom color=green!10!white]
-% % \tikzstyle{output}=[boite, draw=red!20!gris, top color=red!50, bottom color=red!5!white]
-% % \tikzstyle{imitator} = [boite, draw=blue!20!gris, text width=10em, minimum height=6em]
-% 
-% 	
-% 	\tikzstyle{boite}=[rectangle, draw=black, rounded corners, thick, draw=blue!40!black, top color=blue!20, bottom color=blue!5!white]
-% % 	\tikzstyle{imitator} = [boite]
-% % 	\tikzstyle{apron} = [boite, draw=yellow!20!gris, top color=yellow!70, bottom color=yellow!10!white]
-% % 	\tikzstyle{polka} = [apron]
-% % 	\tikzstyle{ppl} = [apron]
-% 	\tikzstyle{dot} = [boite, draw=purple!20!gris, top color=purple!60, bottom color=purple!10!white]
-% 
-% 	\tikzstyle{fleche} = [->, draw=black, semithick]
-% {
-% 
-% \centering
-% 
-% \begin{tikzpicture}[scale=0.6,  =>stealth']
-% 
-% 	% Boites
-% 	\draw[boite] (-5, 5.5) rectangle (-2, 6.5);
-% 	\node [etiquette] at (-3.5, 6) {Model};
-% 	
-% 	\draw[boite] (-5, 3.8) rectangle (-2, 5);
-% 	\node [etiquette] at (-3.5, 4.4) {\begin{tabular}{c}Reference\\valuation\end{tabular}};
-% 	
-% 	\draw[boite] (0, 4) rectangle (6, 6.5);
-% 	\node [etiquette] at (3, 5.25) {\large \hymitator{}};
-% 	
-% 	\draw[boite] (1, 2.5) rectangle (5, 3.5);
-% 	\node [etiquette] at (3, 3) {PPL};
-% 	
-% 	\draw[boite] (8, 5.5) rectangle (12, 6.5);
-% 	\node [etiquette] at (10, 6) {Constraint};
-% 	
-% 	\draw[boite] (8, 4) rectangle (12, 5);
-% 	\node [etiquette] at (10, 4.5) {Trace set};
-% 
-% 	% Fleches
-% 	\path[fleche] (-2, 6) --++ (2, 0);
-% 	\path[fleche] (-2, 4.4) --++ (2, 0);
-% 	\path[fleche] (3.5, 4) --++ (0, -.5);
-% 	\path[fleche] (2.5, 3.5) --++ (0, .5);
-% 	\path[fleche] (6, 6) --++ (2, 0);
-% 	\path[fleche] (6, 4.5) --++ (2, 0);
-% 
-% \end{tikzpicture}
-% 
-% }
-% 
-% \caption{Architecture of \hymitator{}}
-% \label{fig:structure}
-% \end{figure}
-% %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
+%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
+\begin{figure}[ht!]
+	% STYLES
+	\tikzstyle{etiquette} = [draw=none, color=black]
+	
+% \tikzstyle{boite}=[text width=8em, text centered, minimum height=2.5em, rounded corners, very thick]
+% \tikzstyle{input}=[boite, draw=green!20!gris, top color=green!50, bottom color=green!10!white]
+% \tikzstyle{output}=[boite, draw=red!20!gris, top color=red!50, bottom color=red!5!white]
+% \tikzstyle{imitator} = [boite, draw=blue!20!gris, text width=10em, minimum height=6em]
+
+	
+	\tikzstyle{boite}=[rectangle, draw=black, rounded corners, thick, draw=blue!40!black, top color=blue!20, bottom color=blue!5!white]
+% 	\tikzstyle{imitator} = [boite]
+% 	\tikzstyle{apron} = [boite, draw=yellow!20!gris, top color=yellow!70, bottom color=yellow!10!white]
+% 	\tikzstyle{polka} = [apron]
+% 	\tikzstyle{ppl} = [apron]
+	\tikzstyle{dot} = [boite, draw=purple!20!gris, top color=purple!60, bottom color=purple!10!white]
+
+	\tikzstyle{fleche} = [->, draw=black, semithick]
+{
+
+\centering
+
+\begin{tikzpicture}[scale=0.6,  =>stealth']
+
+	% Boites
+	\draw[boite] (-5, 5.5) rectangle (-2, 6.5);
+	\node [etiquette] at (-3.5, 6) {Model};
+	
+	\draw[boite] (-5, 3.8) rectangle (-2, 5);
+	\node [etiquette] at (-3.5, 4.4) {\begin{tabular}{c}Reference\\valuation\end{tabular}};
+	
+	\draw[boite] (0, 4) rectangle (6, 6.5);
+	\node [etiquette] at (3, 5.25) {\large \imitator{}};
+	
+	\draw[boite] (1, 2.5) rectangle (5, 3.5);
+	\node [etiquette] at (3, 3) {PPL};
+	
+	\draw[boite] (8, 5.5) rectangle (12, 6.5);
+	\node [etiquette] at (10, 6) {Constraint};
+	
+	\draw[boite] (8, 4) rectangle (12, 5);
+	\node [etiquette] at (10, 4.5) {Trace set};
+
+	% Fleches
+	\path[fleche] (-2, 6) --++ (2, 0);
+	\path[fleche] (-2, 4.4) --++ (2, 0);
+	\path[fleche] (3.5, 4) --++ (0, -.5);
+	\path[fleche] (2.5, 3.5) --++ (0, .5);
+	\path[fleche] (6, 6) --++ (2, 0);
+	\path[fleche] (6, 4.5) --++ (2, 0);
+
+\end{tikzpicture}
+
+}
+
+\caption{Architecture of \imitator{}}
+\label{fig:structure}
+\end{figure}
+%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
 
 \imitator{} implements in particular the following algorithms:
 \begin{description}
@@ -501,15 +502,21 @@ Source code, binaries, all case studies and logs are available in~\cite{imitator
 \end{figure}
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
 
+\commentaire{
 un automate par tache, un scheduler
+}
 
-
+\commentaire{
 ex de TA en appendix, avec schema et code IMITATOR
+}
 
+\commentaire{
 quand il y a une variablité du computation time (entre BCET et WCET), pas de méthode exacte analytique --> interet des methodes symboliques (model checking) d'exploration exhaustive basee sur TA (et donc interet de IM puisque generalisation! si on etait schedulable, on lest encore avec IM)
+}
 
+\commentaire{
 ex italiens : assure schedulability (etat erreur jamais atteint, donc schedulable vis a vis d'une deadline) ; forme of robustness autour d'un point de depart connu comme schedulable
-
+}
 
 
 
