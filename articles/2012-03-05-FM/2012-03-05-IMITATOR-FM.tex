@@ -339,13 +339,34 @@ $^3$Universit\"at Bremen, Germany}
 	We present here \imitator{} 2.5.
 \end{abstract}
 
-\keywords{Real-Time Systems, Scheduling, Parametric Timed Automata, Parameter Synthesis}
+\keywords{Real-Time Systems, Scheduling, Parametric Timed Automata with Stopwatches, Parameter Synthesis}
 
 \commentaire{Version avec commentaires}
 
-(preemptive)
-(stopwatches)
- 
+% (preemptive)
+
+
+
+% 1) 
+% % dessin (sans ppl)
+% % parg2 sec 2
+% % proprietes im (1) et (2)
+% 
+% 
+% stopwatches: efficace pour robustesse scheduking
+% motiv' rapport
+% 
+% 2) historique
+% 
+% 3) archi
+% 
+% 4) etudes de cas --> appendix
+% 
+
+
+
+
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Motivation}
@@ -354,47 +375,26 @@ $^3$Universit\"at Bremen, Germany}
 
 \commentaire{short introduction}
 
-In~\cite{acef09}, we proposed the inverse method~$\IM$ for Timed Automata.
-Different from CEGAR-based methods, this original semi-algorithm for parameter synthesis is based on a ``good'' parameter valuation~$\pio$ instead of a set of ``bad'' states.
-$\IM$ synthesizes a constraint~$\Ko$ on the parameters such that, for all parameter valuation~$\piprime$ satisfying $\Ko$, the trace set (i.e., the discrete behavior) of~$\A$ under~$\piprime$ is the same as for~$\A$ under~$\pio$.
-This preserves in particular linear time properties, and provides the system with a criterion of robustness.
+The specification and verification of real-time systems, involving concurrency and timing delays, are notoriously difficult problems.
+The correctness of such real-time systems usually depends on the values of these timing delays.
+One can check the correctness for one particular value for each delay, but this does not guarantee the correctness for other values.
+Actually, checking the correctness for all possible delays, even in a bounded interval, would require an infinite number of calls to the model checker, because those delays can have real (or rational) values.
+It is therefore interesting to consider that these delays are \emph{parameters} (unknown constants), and synthesize a constraint on these parameters guaranteeing a correct behavior.
+
+
+\imitator{} 2.5 (for \emph{Inverse Method for Inferring Time AbstracT behaviOR}) is a tool for parameter synthesis in the framework of real-time systems based on the inverse method~$\IM$ for Timed Automata (TAs,~\cite{ad94}).
+Different from CEGAR-based methods, this original semi-algorithm %for parameter synthesis
+is based on a ``good'' parameter valuation~$\pio$ instead of a set of ``bad'' states~\cite{acef09}.
+\imitator{} takes as input a network of timed automata with stopwatches; it synthesizes a constraint~$\Ko$ on the parameters such that (1) $\pio \models K$ and (2) for all parameter valuation~$\piprime$ satisfying $\Ko$, the trace set (i.e., the discrete behavior) of~$\A$ under~$\piprime$ is the same as for~$\A$ under~$\pio$.
+This preserves in particular linear time properties, and provides the system with a criterion of \emph{robustness}, by formally guaranteeing the system correctness around the reference parameter valuation~$\pio$.
+
+% It , that synchronize on shared actions
+% The input syntax, inspired by~\hytech{}, allows the use of clocks (or stopwatches), rational-valued discrete variables, and parameters (i.e. unknown constants) to be used altogether in linear terms, within guards, invariants and updates.
+
 % By iterating the inverse method on all integer points within a bounded reference parameter domain, we get a set of constraints %(``tiles'')
 % such that, for every point in each such constraint, the time-abstract behavior is the same: this gives a behavioral cartography of the system~\cite{af10}.
 
-A basic implementation named \imitator{} (for \emph{Inverse Method for Inferring Time AbstracT behaviOR}) has first been proposed%in~\cite{and09}
-, under the form of a \python{} script calling \hytech{}.
-The tool has then been entirely rewritten in \imitatordeux{}~\cite{and10}, under the form of a standalone \ocaml{} program making use of the Parma Polyhedra Library (PPL)~\cite{bhz08}.
-A number of case studies containing up to 60 timing parameters could be efficiently verified in the purely timed framework.
 
-Since~\cite{and10}, we extended the input formalism to parametric timed automata equipped with \emph{stopwatches}: clocks can now be stopped for some time while others keep growing.
-Also, we added arbitrary clock resets: clocks can be set to arbitrary linear combinations of other clocks, parameters and discrete variables.
-We also implemented further algorithms based on~$\IM$, that satisfy weaker properties than the preservation of the trace sets, while outputting larger sets of parameter valuations than~$\IM$.
-These extensions allow us to consider larger classes of case studies, and in particular scheduling problems.
-
-\commentaire{Laurent: dans l'esprit, similaire aux etudiants (utiliser PTA pour synthetiser schedulability regions, mais nous on n'est pas CEGAR}
-
-\commentaire{Laurent a dit :
-- le principe de la methode inverse pour les TA a été implémenté de façon basique ([ICTAC09])
-puis de façon sophistiquée ([Infinity10])\\
-- la méthode a été étendue pour les HA et implémentée de façon basique ([RP11])\\
-- il s'agit "ici" de décrire une implémentation sophistiquée (intégrant notamment des extensions
-du merging des TA  à la  [NFM 12] aux HA)
-}
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Architecture and Features}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-\imitator{} is available under the GNU GPL license.
-The core of the program is written in OCaml, and interacts with~PPL.
-Exact arithmetics with unbounded precision is used.
-
-\imitator{} takes as input a network of timed automata with stopwatches, that synchronize on shared actions.
-The input syntax, inspired by~\hytech{}, allows the use of clocks (or stopwatches), rational-valued discrete variables, and parameters (i.e. unknown constants) to be used altogether in linear terms, within guards, invariants and updates.
-
-A constraint is output in text format; furthermore, the set of traces computed by the analysis can be output under a graphical form (using \graphviz{}) for reasonably sized case studies (up to a few thousands reachable states).
 
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
 \begin{figure}[ht!]
@@ -429,33 +429,71 @@ A constraint is output in text format; furthermore, the set of traces computed b
 	\node [etiquette] at (-3.5, 4.4) {\begin{tabular}{c}Reference\\valuation\end{tabular}};
 	
 	\draw[boite] (0, 4) rectangle (6, 6.5);
-	\node [etiquette] at (3, 5.75) {\large \imitator{}};
+	\node [etiquette] at (3, 5.25) {\large \imitator{}};
 	
-	\draw[boite] (1, 4) rectangle (5, 5);
-	\node [etiquette] at (3, 4.5) {PPL};
+% 	\draw[boite] (1, 4) rectangle (5, 5);
+% 	\node [etiquette] at (3, 4.5) {PPL};
 	
-	\draw[boite] (8, 5.5) rectangle (12, 6.5);
-	\node [etiquette] at (10, 6) {Constraint};
+	\draw[boite] (8, 4.5) rectangle (12, 6);
+	\node [etiquette] at (10, 5.25) {Constraint};
 	
-	\draw[boite] (8, 4) rectangle (12, 5);
-	\node [etiquette] at (10, 4.5) {Trace set};
+% 	\draw[boite] (8, 4) rectangle (12, 5);
+% 	\node [etiquette] at (10, 4.5) {Trace set};
 
 	% Fleches
 	\path[fleche] (-2, 6) --++ (2, 0);
 	\path[fleche] (-2, 4.4) --++ (2, 0);
 % 	\path[fleche] (3.5, 4) --++ (0, -.5);
 % 	\path[fleche] (2.5, 3.5) --++ (0, .5);
-	\path[fleche] (6, 6) --++ (2, 0);
-	\path[fleche] (6, 4.5) --++ (2, 0);
+	\path[fleche] (6, 5.25) --++ (2, 0);
+% 	\path[fleche] (6, 4.5) --++ (2, 0);
 
 \end{tikzpicture}
 
 }
 
-\caption{Architecture of \imitator{}}
+\caption{Functional view of \imitator{}}
 \label{fig:structure}
 \end{figure}
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsubsection*{History and Improvements}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+A basic implementation named \imitator{} has first been proposed%in~\cite{and09}
+, under the form of a \python{} script calling \hytech{}.
+The tool has then been entirely rewritten in \imitatordeux{}~\cite{and10}, under the form of a standalone \ocaml{} program. % making use of the Parma Polyhedra Library (PPL)~\cite{bhz08}.
+A number of case studies containing up to 60 timing parameters could be efficiently verified in the purely timed framework.
+
+Since~\cite{and10}, we extended the input formalism to parametric timed automata equipped with \emph{stopwatches}: clocks can now be stopped for some time while others keep growing.
+Also, we added arbitrary clock resets: clocks can be set to arbitrary linear combinations of other clocks, parameters and discrete variables.
+We also implemented further algorithms based on~$\IM$, that satisfy weaker properties than the preservation of the trace sets, while outputting larger sets of parameter valuations than~$\IM$.
+These extensions allow us to consider larger classes of case studies, and in particular scheduling problems.
+
+% \commentaire{Laurent a dit :
+% - le principe de la methode inverse pour les TA a été implémenté de façon basique ([ICTAC09])
+% puis de façon sophistiquée ([Infinity10])\\
+% - la méthode a été étendue pour les HA et implémentée de façon basique ([RP11])\\
+% - il s'agit "ici" de décrire une implémentation sophistiquée (intégrant notamment des extensions
+% du merging des TA  à la  [NFM 12] aux HA)
+% }
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Architecture and Features}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\imitator{} is available under the GNU GPL license.
+The core of the program is written in OCaml, and interacts with the Parma Polyhedra Library (PPL)~\cite{bhz08}.
+Exact arithmetics with unbounded precision is used.
+
+\imitator{} takes as input a network of timed automata with stopwatches, that synchronize on shared actions.
+The input syntax, inspired by~\hytech{}, allows the use of clocks (or stopwatches), rational-valued discrete variables, and parameters (i.e., unknown constants) to be used altogether in linear terms, within guards, invariants and updates.
+
+A constraint is output in text format; furthermore, the set of traces computed by the analysis can be output under a graphical form (using \graphviz{}) for reasonably sized case studies (up to a few thousands reachable states).
 
 \imitator{} implements in particular the following algorithms:
 \begin{description}
@@ -468,8 +506,7 @@ A constraint is output in text format; furthermore, the set of traces computed b
 In particular, we implemented a technique that merge any two states sharing the same discrete part (location and value of the discrete variables) and such that the union of their constraint on the analog variables and parameters is convex~\cite{AFS12}.
 This optimization preserves the correctness of all our algorithms; better, the constraint output by the inverse method in that case is always weaker or equal, i.e., covers a set of parameter valuations larger or equal.
 This optimization behaves particularly well in the framework of scheduling problems, where the state space is drastically reduced.
-
-
+Actually, most scheduling examples we consider run out of memory without this optimization.
 
 
 
@@ -480,52 +517,74 @@ This optimization behaves particularly well in the framework of scheduling probl
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+Due to the aforementioned state space reduction and the use of stopwatches, \imitator{} 2.5 becomes an interesting tool for synthesizing robust conditions for scheduling problems.
+In \cite{AM02}, the preemptive scheduling problem is encoded into TAs with stopwatches.
+The jobshop scheduling problem is a generic resource allocation problem in which common resources (``machines'') are required at various time points (and for given duration) by different tasks.
+For instance, one needs to use a machine $m_1$ for $d_1$ time units, machine $m_2$ for $d_2$ time units, and so on.
+The goal is to find a way to allocate the resources such that all tasks terminate as early as possible (``minimal makespan'').
+% Given a fixed set $M$ of resources, a \emph{step} is a pair $(m,d)$ where $m \in M$ and $d \in \mathcal{N}$, indicating the required utilization of resource $m$ for time duration $d$.
+% A \emph{job specification} is $J = (m_1,d_1),(m_2,d_2),\cdots, (m_k,d_k)$, stating that in order to accomplish job $J$, one needs to use a machine $m_1$ for $d_1$ time units, then use machine $m_2$ for $d_2$ time units, and so on.
 
-
-Astrium, FPs and EDFs case studies are composed of three cyclic tasks that need to be performed on a single machine.
-	Therefore, the machine has to choose which task is active when several tasks are requiring computation.
-	This is done in two ways, either with a Fixed Priority (FP) scheduler or an Earliest Deadline First scheduler (EDF).
-	These three case studies are being studied in the framework of the joint project Roscov between LSV and Astrium.
-	
-CPR08~\cite{CPR08} and HPPR10~\cite{LPPRC10} are two-cyclic-tasks problem with an EDF scheduler.
-	TaskChain~\cite{SGL97} does not use cyclic tasks but instead has a 4 task chain and a concurrent 3 task chain.
-		Each task in a chain cannot start until the previous one has not terminated.
-		Each task in each chain has a given fixed priority.
-		A scheduler assigns which task has the computational time with a FP policy.
-
-For every FP scheduling example, the parameters are the offsets of the tasks, their Wost Case Execution Time (WCET), their periods and a deadline to achieve a given goal (modeled by an extra automaton).
-	For every EDF scheduling example, the parameters are the offsets of the tasks, their WCET, their periods, a deadline to achieve each task and a deadline to achieve a given goal (modeled by an extra automaton).
-
-	
-
-Experiments were performed on Ubuntu 11.10 equipped with an Intel Core\,2 2.93\,GiHz processor with 2\,GiB RAM.
-Source code, binaries, all case studies and logs are available in~\cite{imitator-web}.
+Consider the jobshop problem with 2 jobs on 3 machines: $\{J_1, J_2\}$ with $J_1 = (m_1,d_1), (m_2,d_2),(m_3,d_3)$ and $J_2 = (m_2,d'_2)$ with $d_1 = 3, d_2=2, d_3=4, d'_2 = 5$.
+There are many possible schedules; two of them are illustrated in Figure~\ref{fig:schedules_maler}.
+\commentaire{?}
 
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
-\begin{figure}[ht!]
-	\centering
-		\includegraphics[height=3.6cm]{traceset.jpg}
-% 	\commentaire{TO DO}
-	\caption{Examples of graphics output by \imitator{}}
-	\label{fig:output}
+\begin{figure}[!ht]
+	\commentaire{?}
+	\caption{Schedules}
+	\label{fig:schedules_maler}
 \end{figure}
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
 
-\commentaire{
-un automate par tache, un scheduler
-}
+% The problem is to find a schedule such that the value of the last completed job is minimal.
+% This minimal value is called makespan.
+% There are plenty techniques designed to solve this makespan problem.
+In  \cite{AM02}, this problem is modeled as a product of TAs, each TA corresponding to a job.
+The makespan problem then reduces to find the shortest path in the product (9, for this example).
+% As a recapitulation, we have:
+% \begin{itemize}
+% 	\item Model $M$: A product of TAs
+% 	\item Input $I$:  $\{(m_{i,j},d_{i,j})_{j\in J(i)}\}_{i \in \mathcal{I}}$
+% 	\item Output: $\mu =$ minimal makespan
+% \end{itemize}
+% 
+% For example, the makespan is found to be equal to 9.
 
-\commentaire{
-ex de TA en appendix, avec schema et code IMITATOR
-}
 
-\commentaire{
-quand il y a une variablité du computation time (entre BCET et WCET), pas de méthode exacte analytique --> interet des methodes symboliques (model checking) d'exploration exhaustive basee sur TA (et donc interet de IM puisque generalisation! si on etait schedulable, on lest encore avec IM)
-}
 
-\commentaire{
-ex italiens : assure schedulability (etat erreur jamais atteint, donc schedulable vis a vis d'une deadline) ; forme of robustness autour d'un point de depart connu comme schedulable
-}
+% \subsection{Robustness Analysis}
+We consider a parameterized version of this problem: all durations (e.g., $d_2$ and $d'_2$) become parameters.
+By considering as reference parameter valuation~$\pio$ the duration for each task, and knowing the minimal makespan, one can use~$\IM$ in order to infer a constraint~$\Ko$ on the delays associated with each task.
+This gives a value of the robustness or implementability of the system, in the sense that, for any parameter valuation satisfying~$\Ko$, the system will be guaranteed to behave the same as for~$\pio$.
+% We first transform the instantiated problem by parametrizing some of the duration values.
+% In the example, we will consider that $d_2$ and $d'_2$ are parameters. We consider accordingly
+
+In order to ensure that~$\Ko$ preserves the schedulability under~$\pio$, one needs to represent the schedulability as a time-abstract behavior.
+This is done by use of an extra (observer) TA, that moves to a ``bad'' location after the (parametric) makespan duration has expired.
+
+%  the parametric version $\mathcal{PA}$ of the original TA. Besides, we consider the makespan (viz, 9) as an additional input, and we construct a simple test automaton which is composed with $\mathcal{PA}$ in order to test wether or not the 
+% last job is completed within the makespan.
+% Finally, we give to IMITATOR as inputs:
+% \begin{enumerate}
+%  \item  the automaton resulting from the product of $\mathcal{PA}$ with the test automaton
+%  \item  an input valuation $\pi_0 = \{d_2=2, d'_2 = 5\}$ for the parameters.
+% \end{enumerate}
+We apply \imitator{} to a network of PTAs with stopwatches corresponding to the example of~\cite{AM02} (with only two parameters $d_2$ and $d'_2$).
+With $\pio = \{d_2=2, d'_2 = 5\}$, the resulting constraint is $ 7 > d'_2 \wedge 3 > d_2 \wedge d'_2 + d_2 \geq 7$.
+% 
+% \imitator{} outputs:
+%  $ 7 > d'_2 \wedge 3 > d_2 \wedge d'_2 + d_2 \geq 7$.\footnote{There three couples of integer values that satisfy $K$: $(1,6)$, $(2,5)$, $(2,6)$.} This gives us a quantitative
+%  measure of robustness for the input valuation $\pi_0 = \{d_2=2, d'_2 = 5\}$.
+% 
+% \begin{enumerate}
+%  \item $(2,5) \in K$
+%  \item the makespan of the system obtained by replacing $d_2, d'_2$ by $v_2, v'_2$ is less than or equal to 9, for all $(v_2,v'_2) \in K$.
+% \end{enumerate}
+% On this example K is equal to $ 7 > d'_2 \wedge 3 > d_2 \wedge d'_2 + d_2 \geq 7$.\footnote{There three couples of integer values that satisfy $K$: $(1,6)$, $(2,5)$, $(2,6)$.}
+This gives us a quantitative measure of the robustness of the system under~$\pio$.%for the input valuation $\pi_0 = \{d_2=2, d'_2 = 5\}$.
+% \section{Presentation of the case studies}
+
 
 
 
@@ -535,14 +594,26 @@ ex italiens : assure schedulability (etat erreur jamais atteint, donc schedulabl
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-
 One of the first powerful model checkers for analyzing parametric timed automata is \hytech{}~\cite{hhw97}.
 Unfortunately, it can hardly verify even medium sized examples due to exact arithmetics with limited precision and static composition of automata, quickly leading to memory overflows.
+Since, \trex{}~\cite{abs01} has been able to perform parameter synthesis (see, e.g.,~\cite{cs01}), and an extension of \uppaal{} allows parametric model checking \cite{BLR05formats}, although the model itself remains non-parametric.
+
+\commentaire{
+ex italiens : assure schedulability (etat erreur jamais atteint, donc schedulable vis a vis d'une deadline) ; forme of robustness autour d'un point de depart connu comme schedulable
+}
+
+The use of PTAs and their extensions for scheduling problems has caught attention in the past few years (see, e.g., Section\,7 of~\cite{CPR08} for a survey).
+The approach most related to \imitator{} 2.5 is~\cite{CPR08,LPPRC10}, where the authors infer parametric constraints guaranteeing the feasibility of a schedule, using PTAs with stopwatches.
+The main difference between~\cite{CPR08,LPPRC10} and \imitator{} relies in our choice of the inverse method, rather than a CEGAR-based method.
+Also, although \imitator{} offers facilities for robust analysis of scheduling problems, the tool is not specifically dedicated to scheduling, but applies to the verification of many classes of concurrent real-time systems, such as communication protocols and hardware components (see, e.g.,~\cite{acef09}).
 
 \romeo{}~\cite{lrst09} performs parametric model checking for (bounded) Time Petri Nets with stopwatches, and synthesizes parameter valuations for which a TCTL formula is satisfied.
 
 % A graphical user interface for the input model is currently under construction, based on a generic platform. \commentaire{utile ?!}
 
+\subsubsection*{Future Work}
+In~\cite{FK11}, the inverse method has been extended to hybrid automata, and a prototype based on \imitator{} has been implemented.
+Bridging the gap between that experimental prototype with high expressiveness but moderate performances, and the optimized \imitator{} 2.5 dedicated to PTAs with stopwatches is the subject of ongoing work.
 
 
 
@@ -607,6 +678,50 @@ Task chains\cite{SGL97} & 8 & 15 & 18 & 215/1364 & 264/1363 & 15/15 &
 \caption{Title}
 \end{figure}
 
+
+
+\commentaire{
+quand il y a une variablité du computation time (entre BCET et WCET), pas de méthode exacte analytique --> interet des methodes symboliques (model checking) d'exploration exhaustive basee sur TA (et donc interet de IM puisque generalisation! si on etait schedulable, on lest encore avec IM)
+}
+
+Astrium, FPs and EDFs case studies are composed of three cyclic tasks that need to be performed on a single machine.
+	Therefore, the machine has to choose which task is active when several tasks are requiring computation.
+	This is done in two ways, either with a Fixed Priority (FP) scheduler or an Earliest Deadline First scheduler (EDF).
+	These three case studies are being studied in the framework of the joint project Roscov between LSV and Astrium.
+	
+CPR08~\cite{CPR08} and HPPR10~\cite{LPPRC10} are two-cyclic-tasks problem with an EDF scheduler.
+	TaskChain~\cite{SGL97} does not use cyclic tasks but instead has a 4 task chain and a concurrent 3 task chain.
+		Each task in a chain cannot start until the previous one has not terminated.
+		Each task in each chain has a given fixed priority.
+		A scheduler assigns which task has the computational time with a FP policy.
+
+For every FP scheduling example, the parameters are the offsets of the tasks, their Wost Case Execution Time (WCET), their periods and a deadline to achieve a given goal (modeled by an extra automaton).
+	For every EDF scheduling example, the parameters are the offsets of the tasks, their WCET, their periods, a deadline to achieve each task and a deadline to achieve a given goal (modeled by an extra automaton).
+
+
+
+Experiments were performed on Ubuntu 11.10 equipped with an Intel Core\,2 2.93\,GiHz processor with 2\,GiB RAM.
+Source code, binaries, all case studies and logs are available in~\cite{imitator-web}.
+	
+%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
+\begin{figure}[ht!]
+	\centering
+		\includegraphics[width=7cm]{traceset.jpg}
+% 	\commentaire{TO DO}
+	\caption{Examples of graphics output by \imitator{}}
+	\label{fig:output}
+\end{figure}
+%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
+
+\commentaire{commenter figure: maler, merging; seul l'etat du bas respecte}
+
+\commentaire{
+un automate par tache, un scheduler
+}
+
+\commentaire{
+ex de TA en appendix, avec schema et code IMITATOR
+}
 
 \subsection*{Example of Trace Set}
 
