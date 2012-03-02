@@ -382,11 +382,12 @@ du merging des TA  à la  [NFM 12] aux HA)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+\imitator{} is available under the GNU GPL license.
 The core of the program is written in OCaml, and interacts with~PPL.
 Exact arithmetics with unbounded precision is used.
 
 \imitator{} takes as input a network of timed automata with stopwatches, that synchronize on shared actions.
-The input syntax, inspired by~\hytech{}, allows the use of clocks (or stopwatches), rational-valued discrete variables, and parameters (i.e. unknown constants).
+The input syntax, inspired by~\hytech{}, allows the use of clocks (or stopwatches), rational-valued discrete variables, and parameters (i.e. unknown constants) to be used altogether in linear terms, within guards, invariants and updates.
 
 A constraint is output in text format; furthermore, the set of traces computed by the analysis can be output under a graphical form (using \graphviz{}) for reasonably sized case studies (up to a few thousands reachable states).
 
@@ -423,10 +424,10 @@ A constraint is output in text format; furthermore, the set of traces computed b
 	\node [etiquette] at (-3.5, 4.4) {\begin{tabular}{c}Reference\\valuation\end{tabular}};
 	
 	\draw[boite] (0, 4) rectangle (6, 6.5);
-	\node [etiquette] at (3, 5.25) {\large \imitator{}};
+	\node [etiquette] at (3, 5.75) {\large \imitator{}};
 	
-	\draw[boite] (1, 2.5) rectangle (5, 3.5);
-	\node [etiquette] at (3, 3) {PPL};
+	\draw[boite] (1, 4) rectangle (5, 5);
+	\node [etiquette] at (3, 4.5) {PPL};
 	
 	\draw[boite] (8, 5.5) rectangle (12, 6.5);
 	\node [etiquette] at (10, 6) {Constraint};
@@ -437,8 +438,8 @@ A constraint is output in text format; furthermore, the set of traces computed b
 	% Fleches
 	\path[fleche] (-2, 6) --++ (2, 0);
 	\path[fleche] (-2, 4.4) --++ (2, 0);
-	\path[fleche] (3.5, 4) --++ (0, -.5);
-	\path[fleche] (2.5, 3.5) --++ (0, .5);
+% 	\path[fleche] (3.5, 4) --++ (0, -.5);
+% 	\path[fleche] (2.5, 3.5) --++ (0, .5);
 	\path[fleche] (6, 6) --++ (2, 0);
 	\path[fleche] (6, 4.5) --++ (2, 0);
 
@@ -453,8 +454,8 @@ A constraint is output in text format; furthermore, the set of traces computed b
 
 \imitator{} implements in particular the following algorithms:
 \begin{description}
-	\item[Full reachability analysis] Given a model, it computes the set of symbolic reachable states.
-	\item[Inverse method] Given a model and a reference parameter valuation~$\pio$, it computes a constraint on the parameter guaranteeing the same time-abstract behavior as under~$\pio$
+	\item[Full reachability analysis] Given a model, it computes the reachability graph.
+	\item[Inverse method] Given a model and a reference parameter valuation~$\pio$, it computes a constraint on the parameter guaranteeing the same time-abstract behavior as under~$\pio$.
 % 	\item[Behavioral cartography] Given a model and a bounded parameter domain for each parameter valuation, it computes a set of constraints and their corresponding trace sets.
 \end{description}
 
@@ -495,8 +496,8 @@ Source code, binaries, all case studies and logs are available in~\cite{imitator
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
 \begin{figure}[ht!]
 	\centering
-% 		\includegraphics[height=3.6cm]{rhb_cart2.pdf}
-	\commentaire{TO DO}
+		\includegraphics[height=3.6cm]{traceset.jpg}
+% 	\commentaire{TO DO}
 	\caption{Examples of graphics output by \imitator{}}
 	\label{fig:output}
 \end{figure}
@@ -558,6 +559,46 @@ Unfortunately, it can hardly verify even medium sized examples due to exact arit
 \subsection*{Summary of Experiments}
 
 \commentaire{ajouter un beau tableau avec des contraintes, et un lien vers un rapport d'etudes de cas (+ site Web)}
+
+\begin{figure}[!ht]
+ \centering
+ \label{table:results}
+\begin{tabular}{|c|c|c|c|c|c|c|c|c|}
+\hline
+ Case study             & $|\mathcal{A}|$& $|X|$ & $|P|$ & $|S|$        & $|T|$         & $n$   &
+$|K|$ & t               \\
+\hline
+Astrium (FP)\cite{roscov}       & 5 & 7         & 10    & 63/63         & 62/62         & 32/32 &
+12/12 & 1.10/0.93       \\
+\hline
+FP 1            & 5 & 7         & 10    & 205/805       & 225/837       & 40/40 & 11/11 & 15.6/28.5  \\
+\hline
+FP 2            & 5 & 7         & 10    & 208/1174      & 228/1269      & 42/42 & 12/12 & 10.7/41.0  \\
+\hline
+FP 3            & 5 & 7         & 10    & 49/82         & 51/81         & 15/15 & 12/12 & 1.03/1.75  \\
+\hline
+Astrium (EDF)   & 5 & 10        & 13    & 63/63         & 62/62         & 32/32 & 13/13 &
+2.42/2.30       \\
+\hline
+EDF 1           & 5 & 10        & 13    & 76/415        & 91/454 & 31/31        & 20/20 & 66.1/288.2  \\
+\hline
+EDF 2           & 5 & 10        & 13    & 254/642       & 326/817       & 47/47 & 12/12 & 9.9/23.2  \\
+\hline
+EDF 3           & 5 & 10&  13   & 31/43         & 33/45         & 9/9   & 13/14 & 1.09/1.57  \\
+\hline
+CPR08\cite{CPR08}               & 4 & 6         & 8     & 676/3194      & 886/3931      & 15/15 & 15/10
+& 288.2/450.4   \\
+\hline
+HPPR10\cite{LPPRC10}             & 3 & 4 &  9& 60/103    & 103/686               & 10/10 & 7/5 &
+2.10/11.7\\
+\hline
+Task chains\cite{SGL97} & 8 & 15 & 18 & 215/1364 & 264/1363 & 15/15 &
+17/17 & 85.3/270.6\\
+\hline
+\end{tabular}
+\caption{Title}
+\end{figure}
+
 
 \subsection*{Example of Trace Set}
 
