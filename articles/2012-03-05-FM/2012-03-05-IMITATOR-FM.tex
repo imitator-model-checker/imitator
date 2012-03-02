@@ -321,11 +321,14 @@
 
 % Title
 % \title{Parametric Scheduling with IMITATOR}
-\title{IMITATOR with Stopwatches and its Applications to Parametric Preemptive Scheduling}
+% \title{IMITATOR with Stopwatches and its Applications to Parametric Preemptive Scheduling}
+\title{Robustness Analysis for Scheduling Problems with IMITATOR}
 \author{\'Etienne Andr\'e$^1$, Laurent Fribourg$^2$, Ulrich K\"uhne$^3$ and Romain Soulat$^2$}
 \institute{$^1$LIPN, CNRS UMR 7030, Université Paris 13, France \\
 $^2$LSV -- ENS Cachan \& CNRS \\
 $^3$Universit\"at Bremen, Germany}
+
+
 
 
 \begin{document}
@@ -340,7 +343,9 @@ $^3$Universit\"at Bremen, Germany}
 
 \commentaire{Version avec commentaires}
 
-
+(preemptive)
+(stopwatches)
+ 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Motivation}
@@ -466,6 +471,9 @@ This optimization behaves particularly well in the framework of scheduling probl
 
 
 
+
+
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Application to Parametric Schedulability}
@@ -568,7 +576,7 @@ Unfortunately, it can hardly verify even medium sized examples due to exact arit
  Case study             & $|\mathcal{A}|$& $|X|$ & $|P|$ & $|S|$        & $|T|$         & $n$   &
 $|K|$ & t               \\
 \hline
-Astrium (FP)\cite{roscov}       & 5 & 7         & 10    & 63/63         & 62/62         & 32/32 &
+Astrium (FP)\cite{Soulat12}       & 5 & 7         & 10    & 63/63         & 62/62         & 32/32 &
 12/12 & 1.10/0.93       \\
 \hline
 FP 1            & 5 & 7         & 10    & 205/805       & 225/837       & 40/40 & 11/11 & 15.6/28.5  \\
