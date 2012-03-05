@@ -393,8 +393,8 @@ $^3$Universit\"at Bremen, Germany}
 
 
 \imitator{} 2.5 (for \emph{Inverse Method for Inferring Time AbstracT behaviOR}) is a tool for parameter synthesis in the framework of real-time systems based on the inverse method~$\IM$ for Parametric Timed Automata (PTAs).  % ,~\cite{ad94}
-Different from CEGAR-based methods (see \cite{cgjlv00}), this algorithm for parameter synthesis
-makes use of a ``good'' parameter valuation~$\pio$ instead of a set of ``bad'' states~\cite{acef09}.
+Different from CEGAR-based methods% (see \cite{cgjlv00})
+, this algorithm for parameter synthesis makes use of a ``good'' parameter valuation~$\pio$ instead of a set of ``bad'' states~\cite{acef09}.
 \imitator{} takes as input a network of PTAs with stopwatches
 and a reference valuation $\pio$; it synthesizes a constraint~$\Ko$ on the parameters such that (1) $\pio \models \Ko$ and (2) for all parameter valuation~$\piprime$ satisfying $\Ko$, the trace set (i.e., the discrete behavior) of~$\A$ under~$\piprime$ is the same as for~$\A$ under~$\pio$.
 %This preserves in particular linear time properties, 
@@ -519,14 +519,14 @@ A constraint is output in text format; furthermore, the set of traces computed b
 % 	\item[Behavioral cartography] Given a model and a bounded parameter domain for each parameter valuation, it computes a set of constraints and their corresponding trace sets.
 \end{description}
 
-\imitator{} makes use of several algorithmic optimizations.
+\imitator{} 2.5 makes use of several algorithmic optimizations.
 In particular, we implemented a technique that merges any two states sharing the same discrete part %(location and value of the discrete variables)
 and such that the union of their constraint on the clocks and parameters is convex~\cite{AFS12}.
 This optimization preserves the correctness of all our algorithms; better, the output constraint 
 %output by~$\IM$ in that case 
 is then always weaker or equal, i.e., covers a set of parameter valuations larger or equal.
 It behaves particularly well in the framework of scheduling problems, where the state space is drastically reduced.
-Actually, most of the scheduling examples we consider run out of memory without the merging technique.
+Actually, most of the scheduling examples we consider run out of memory without this merging technique.
 
 
 
@@ -547,18 +547,15 @@ The goal is to find a way (``schedule'') to allocate the resources such that all
 % A \emph{job specification} is $J = (m_1,d_1),(m_2,d_2),\cdots, (m_k,d_k)$, stating that in order to accomplish job $J$, one needs to use a machine $m_1$ for $d_1$ time units, then use machine $m_2$ for $d_2$ time units, and so on.
 %
 Let us consider the jobshop problem $\{J_1, J_2\}$ for 2 jobs and 3 machines  with: $J_1 = (m_1,d_1), (m_2,d_2),(m_3,d_3)$ and $J_2 = (m_2,d'_2)$ with $d_1 = 3, d_2=2, d_3=4, d'_2 = 5$.
-There are many possible schedules; two of them are depicted in Fig.
-\ref{fig:schedules_maler} (see Appendix). 
+There are many possible schedules (two of them are depicted in Figure~\ref{fig:schedules_maler} in Appendix). 
 %
 % The problem is to find a schedule such that the value of the last completed job is minimal.
 % This minimal value is called makespan.
 % There are plenty techniques designed to solve this makespan problem.
-In  \cite{AM02}, this problem is modeled as a product ${\cal A}$ of TAs
-with stopwatches, each TA corresponding to a job.
-Each schedule corresponds to a branch in the
-reachability tree of ${\cal A}$.
+In  \cite{AM02}, this problem is modeled as a product $\A$ of TAs with stopwatches, each TA modeling a job.
+Each schedule corresponds to a branch in the reachability tree of~$\A$.
 The makespan value corresponds to the
-duration of the shortest branch, and is here~9.
+duration of the shortest branch, here~9.
 % As a recapitulation, we have:
 % \begin{itemize}
 % 	\item Model $M$: A product of TAs
@@ -569,7 +566,7 @@ duration of the shortest branch, and is here~9.
 % For example, the makespan is found to be equal to 9.
 
 
-Let us explain how to analyse the robustness of the
+Let us explain how to analyze the robustness of the
 valuation $\pio:\{d_2=2,d'_2=5\}$ with respect to the makespan value 9.
 % \subsection{Robustness Analysis}
 We first consider a parametric version of ${\cal A}$ where
@@ -578,17 +575,16 @@ $d_2$ and $d'_2$ become parameters.
 %such that the minimum makespan value remains (at most) equal to 9,
 In the same spirit as in \cite{cpr08},
 we add an observer ${\cal O}$, which is a TA
-synchronized with $\A$, which fires a transition labeled $\mathit{DEADLINE}$
-as soon as a schedule spends more than 9 units of time.
+synchronized with $\A$, that fires a transition labeled $\mathit{DEADLINE}$ as soon as a schedule spends more than 9 time units.
 We then use \imitator{} (instead of a CEGAR-like method
 as in \cite{cpr08}) with $\A \parallel {\cal O}$ as a model input
 and $\pio$ as a valuation input.
-This yields the constraint $\Ko$:  $7 > d'_2 \wedge 3 > d_2 \wedge d'_2 + d_2 \geq 7$. (For a geometrical representation of $\Ko$,  see Fig.\ref{fig:geom} pf Appendix).
+This yields the constraint $\Ko$:  $7 > d'_2 \wedge 3 > d_2 \wedge d'_2 + d_2 \geq 7$.
+(For a geometrical representation of $\Ko$, see Figure~\ref{fig:geom} of Appendix.)
 By the $\IM$ principle, the set of traces (i.e., discrete runs) of
 $\A \parallel {\cal O}$ is always the same,
 for any point $(d_2,d'_2)$ of $\Ko$.
-This set of traces is depicted under the form of a tree in
-Fig. 	\ref{fig:output} (see Appendix).
+(This set of traces is depicted under the form of a tree in Figure~\ref{fig:output} in Appendix.)
 Since the makespan for $\pio$ is 9,
 we know that there is at least one branch of the tree without
 any $\mathit{DEADLINE}$ label.
@@ -598,7 +594,7 @@ In other words, the makespan of the system is  (at most) equal to~9, for every p
 
 Such a robustness analysis, inspired from \cite{cpr08}, 
 has been conducted with \imitator{} 2.5
-on several classes of scheduling problems (see \cite{soulat12} for details).
+on several classes of scheduling problems (see Table~\ref{table:results} in Appendix).
 
 %This gives us a quantitative measure of robustness of $\pio$,
 %seen as a solution for the value 9 of makespan.
@@ -640,7 +636,8 @@ on several classes of scheduling problems (see \cite{soulat12} for details).
 One of the first powerful model checkers for analyzing PTAs is \hytech{}~\cite{hhw97}.
 Unfortunately, it can hardly verify even medium sized examples due to exact arithmetics with limited precision and static composition of automata.
 %, quickly leading to memory overflows.
-Since, \trex{}~\cite{abs01} has been able to perform parameter synthesis (see, e.g.,~\cite{cs01}), and an extension of \uppaal{} allows parametric model checking \cite{BLR05formats}, although the model itself remains non-parametric.
+Since, \trex{}~\cite{abs01} has been able to perform parameter synthesis%(see, e.g.,~\cite{cs01})
+, and an extension of \uppaal{} allows parametric model checking \cite{BLR05formats}, although the model itself remains non-parametric.
 
 % \commentaire{
 % ex italiens : assure schedulability (etat erreur jamais atteint, donc schedulable vis a vis d'une deadline) ; forme of robustness autour d'un point de depart connu comme schedulable
@@ -652,12 +649,11 @@ The main difference between~\cite{cpr08,LPPRC10} and \imitator{} relies in our c
 The first results obtained by the two methods on the same case studies
 are uncomparable (although similar in form), which seems to indicate
 that they are complementary.
-%Also, although \imitator{} offers facilities for robust analysis of scheduling problems, the tool is not specifically dedicated to scheduling, but applies to the verification of many classes of concurrent real-time systems, such as communication protocols and hardware components (see, e.g.,~\cite{acef09}).
+Also, although \imitator{} offers facilities for robustness analysis in scheduling problems, the tool applies to the verification of many other classes of concurrent real-time systems, such as communication protocols and hardware components (see, e.g.,~\cite{acef09}).
 
 \romeo{}~\cite{lrst09} performs 
 %parametric model checking for (bounded) Time Petri Nets 
-model checking for parametric time Petri nets
-with stopwatches, and synthesizes parameter valuations satisfying a TCTL formula.
+model checking for parametric time Petri nets with stopwatches, and synthesizes parameter valuations satisfying TCTL formul\ae{}.
 
 % A graphical user interface for the input model is currently under construction, based on a generic platform. \commentaire{utile ?!}
 
@@ -737,9 +733,8 @@ prototype with high expressiveness but moderate performances, and the optimized 
 
 %\commentaire{ajouter un beau tableau avec des contraintes, et un lien vers un rapport d'etudes de cas (+ site Web)}
 
-\begin{figure}[!ht]
+\begin{table}[!ht]
  \centering
- \label{table:results}
 \begin{tabular}{|c|c|c|c|c|c|c|c|c|}
 \hline
  Case study             & $|\mathcal{A}|$& $|X|$ & $|P|$ & $|S|$        & $|T|$         & $n$   &
@@ -783,7 +778,8 @@ EDF 3           & 5 & 10&  13   & 31/43         & 33/45         & 9/9   & 13/14 
 \hline
 \end{tabular}
 \caption{Experimental results with \imitator{} on scheduling examples}
-\end{figure}
+ \label{table:results}
+\end{table}
 
 
 
@@ -808,7 +804,10 @@ For every RM scheduling example, the parameters are the offsets of the tasks, th
 
 
 Experiments were performed on Ubuntu 11.10 equipped with an Intel Core\,2 2.93\,GiHz processor with 2\,GiB RAM.
-Source code, binaries, all case studies and logs are available in~\cite{imitator-web}.
+Source code, binaries, all case studies and logs are available in
+\url{http://www.lsv.ens-cachan.fr/Software/imitator/}.
+
+All case studies and experiments are also described in a research report~\cite{soulat12}.
 
 
 %\subsection*{Example of Trace Set}
