@@ -1,0 +1,100 @@
+\begin{thebibliography}{10}
+
+\bibitem{AM02}
+Y.~Abdedda\"{\i}m and O.~Maler.
+\newblock Preemptive job-shop scheduling using stopwatch automata.
+\newblock In {\em TACAS}, pages 113--126, 2002.
+
+\bibitem{and10}
+{\'E}.~Andr{\'e}.
+\newblock {IMITATOR~II}: A~tool for solving the good parameters problem in
+  timed automata.
+\newblock In {\em {INFINITY}}, volume~39 of {\em EPTCS}, pages 91--99, 2010.
+
+\bibitem{acef09}
+{\'E}.~Andr{\'e}, T.~Chatain, E.~Encrenaz, and L.~Fribourg.
+\newblock An inverse method for parametric timed automata.
+\newblock {\em International Journal of Foundations of Computer Science},
+  20(5):819--836, 2009.
+
+\bibitem{af10}
+{\'E}.~Andr{\'e} and L.~Fribourg.
+\newblock Behavioral cartography of timed automata.
+\newblock In {\em {RP}'10}, volume 6227 of {\em LNCS}, pages 76--90. Springer,
+  2010.
+
+\bibitem{AFS12}
+{\'E}.~Andr{\'e}, L.~Fribourg, and R.~Soulat.
+\newblock Enhancing the inverse method with state merging.
+\newblock In {\em NFM}, volume 7226 of {\em LNCS}. Springer, 2012.
+\newblock To appear.
+
+\bibitem{bhz08}
+R.~Bagnara, P.~M. Hill, and E.~Zaffanella.
+\newblock The {Parma Polyhedra Library}: Toward a complete set of numerical
+  abstractions for the analysis and verification of hardware and software
+  systems.
+\newblock {\em Science of Computer Programming}, 72(1--2):3--21, 2008.
+
+\bibitem{BLR05formats}
+G.~Behrmann, K.~G. Larsen, and J.~I. Rasmussen.
+\newblock Beyond liveness: Efficient parameter synthesis for time bounded
+  liveness.
+\newblock In {\em FORMATS}, pages 81--94, 2005.
+
+\bibitem{bb04}
+E.~Bini and G.~C. Buttazzo.
+\newblock Schedulability analysis of periodic fixed priority systems.
+\newblock {\em IEEE Trans. Computers}, 53(11):1462--1473, 2004.
+
+\bibitem{cpr08}
+A.~Cimatti, L.~Palopoli, and Y.~Ramadian.
+\newblock Symbolic computation of schedulability regions using parametric timed
+  automata.
+\newblock In {\em RTSS}, pages 80--89, Washington, DC, USA, 2008. IEEE Computer
+  Society.
+
+\bibitem{fl11}
+L.~Fribourg and D.~Lesens.
+\newblock Projet {ROSCOV}: {R}obuste {O}rdonnancement de {S}yst\`{e}mes de
+  {CO}ntr\^{o}le de {V}ol.
+\newblock Project report (in {F}rench), December 2011.
+\newblock Available at \url{http://www.farman.ens-cachan.fr/ROSCOV.pdf}.
+
+\bibitem{hhw97}
+T.~A. Henzinger, P.~H. Ho, and H.~Wong-Toi.
+\newblock Hytech: A model checker for hybrid systems.
+\newblock {\em Software Tools for Technology Transfer}, 1:460--463, 1997.
+
+\bibitem{LPPRC10}
+T.~Le, L.~Palopoli, R.~Passerone, Y.~Ramadian, and A.~Cimatti.
+\newblock Parametric analysis of distributed firm real-time systems: A case
+  study.
+\newblock In {\em ETFA}, pages 1--8, 2010.
+
+\bibitem{lrst09}
+D.~Lime, O.~H. Roux, C.~Seidner, and L.-M. Traonouez.
+\newblock Romeo: A parametric model-checker for {Petri} nets with stopwatches.
+\newblock In {\em TACAS}, volume 5505 of {\em LNCS}, pages 54--57. Springer,
+  2009.
+
+\bibitem{m11}
+N.~Markey.
+\newblock Robustness in real-time systems.
+\newblock In {\em SIES}, pages 28--34. IEEE, 2011.
+
+\bibitem{soulat12}
+R.~Soulat.
+\newblock Scheduling with {IMITATOR}: Some case studies.
+\newblock Research Report LSV-12-05, Laboratoire Sp{\'e}cification et
+  V{\'e}rification, France, March 2012.
+\newblock Available on
+  \url{www.lsv.ens-cachan.fr/Publis/RAPPORTS_LSV/PDF/rr-lsv-2012-05.pdf}.
+
+\bibitem{SGL97}
+J.~Sun, M.~K. Gardner, and J.~W.~S. Liu.
+\newblock Bounding completion times of jobs with arbitrary release times,
+  variable execution times, and resource sharing.
+\newblock {\em IEEE Trans. Softw. Eng.}, 23:603--615, 1997.
+
+\end{thebibliography}

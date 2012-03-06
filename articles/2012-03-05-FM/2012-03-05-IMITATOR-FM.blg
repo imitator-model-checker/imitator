@@ -1,0 +1,47 @@
+This is BibTeX, Version 0.99c (TeX Live 2009/Debian)
+The top-level auxiliary file: 2012-03-05-IMITATOR-FM.aux
+The style file: abbrv.bst
+Database file #1: biblio.bib
+Warning--empty institution in fl11
+You've used 16 entries,
+            2118 wiz_defined-function locations,
+            615 strings with 6490 characters,
+and the built_in function-call counts, 6106 in all, are:
+= -- 609
+> -- 255
+< -- 13
++ -- 102
+- -- 84
+* -- 419
+:= -- 963
+add.period$ -- 56
+call.type$ -- 16
+change.case$ -- 91
+chr.to.int$ -- 0
+cite$ -- 17
+duplicate$ -- 258
+empty$ -- 497
+format.name$ -- 84
+if$ -- 1342
+int.to.chr$ -- 0
+int.to.str$ -- 16
+missing$ -- 14
+newline$ -- 86
+num.names$ -- 32
+pop$ -- 95
+preamble$ -- 1
+purify$ -- 74
+quote$ -- 0
+skip$ -- 185
+stack$ -- 0
+substring$ -- 364
+swap$ -- 87
+text.length$ -- 13
+text.prefix$ -- 0
+top$ -- 0
+type$ -- 64
+warning$ -- 1
+while$ -- 58
+width$ -- 18
+write$ -- 192
+(There was 1 warning)
