@@ -547,7 +547,7 @@ The goal is to find a way (``schedule'') to allocate the resources such that all
 % A \emph{job specification} is $J = (m_1,d_1),(m_2,d_2),\cdots, (m_k,d_k)$, stating that in order to accomplish job $J$, one needs to use a machine $m_1$ for $d_1$ time units, then use machine $m_2$ for $d_2$ time units, and so on.
 %
 Let us consider the jobshop problem $\{J_1, J_2\}$ for 2 jobs and 3 machines  with: $J_1 = (m_1,d_1), (m_2,d_2),(m_3,d_3)$ and $J_2 = (m_2,d'_2)$ with $d_1 = 3, d_2=2, d_3=4, d'_2 = 5$.
-There are many possible schedules (two of them are depicted in Fig.~\ref{fig:schedules_maler} in Appendix). 
+There are many possible schedules (two of them are depicted in Fig.~\ref{fig:schedules_maler} in Appendix 1). 
 %
 % The problem is to find a schedule such that the value of the last completed job is minimal.
 % This minimal value is called makespan.
@@ -580,11 +580,11 @@ We then use \imitator{} (instead of a CEGAR-like method
 as in \cite{cpr08}) with $\A \parallel {\cal O}$ as a model input
 and $\pio$ as a valuation input.
 This yields the constraint $\Ko$:  $7 > d'_2 \wedge 3 > d_2 \wedge d'_2 + d_2 \geq 7$.
-(For a geometrical representation of $\Ko$, see Fig.~\ref{fig:geom} of Appendix.)
+(For a geometrical representation of $\Ko$, see Fig.~\ref{fig:geom} of Appendix 1.)
 By the $\IM$ principle, the set of traces (i.e., discrete runs) of
 $\A \parallel {\cal O}$ is always the same,
 for any point $(d_2,d'_2)$ of $\Ko$.
-(This set of traces is depicted under the form of a tree in Fig.~\ref{fig:output} in Appendix.)
+(This set of traces is depicted under the form of a tree in Fig.~\ref{fig:output} in Appendix 1.)
 Since the makespan for $\pio$ is 9,
 we know that some branches of the tree do not contain
 any $\mathit{DEADLINE}$ label (these branches end at node $s73$
@@ -597,8 +597,8 @@ In other words, the makespan of the system is  (at most) 9, everywhere in~ $\Ko$
 % has been conducted with \imitator{} 2.5
 % on several classes of scheduling problems (see Table~\ref{table:results} in Appendix).
 
-Another example of application of \imitator{} 2.5 to a scheduling problem, originating from \cite{bb04}, is given in Appendix \ref{app:carto} (using 
-the cartography method \cite{af10}). 
+Another example of application of \imitator{} 2.5 to a scheduling problem, originating from \cite{bb04}, is given in Appendix 2 (using 
+the cartography method of~\cite{af10}). 
 All case studies and experiments (performed on Ubuntu 11.10 equipped with an Intel Core\,2 2.93\,GiHz processor with 2\,GiB RAM) are described in a research report~\cite{soulat12} (Source code, binaries, all case studies and logs are available in \url{http://www.lsv.ens-cachan.fr/Software/imitator/}).
 
 
@@ -636,7 +636,7 @@ All case studies and experiments (performed on Ubuntu 11.10 equipped with an Int
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Related Work}
+\section{Comparison with Related Work}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -669,7 +669,7 @@ that the two methods are complementary.
 The problem of finding the schedulability region was attacked in analytic terms
 in \cite{bb04}. 
 The size of our examples is modest, compared to those treated by such analytic methods.
-However, in many scheduling problems,
+However, in many schedulability problems,
 no analytic solution exists (see, e.g.,~\cite{SGL97}), 
 and exhaustive simulation is exponential
 in the number of jobs. In such cases, symbolic methods as ours and those
@@ -705,7 +705,7 @@ with first interesting results.
 
 \appendix
 
-\section*{Appendix: Case Study from \cite{AM02}}
+\section*{Appendix 1: Job-shop Case Case Study from \cite{AM02}}
 
 %%%%\subsection*{Visual Examples of Schedules}\label{app:schedules}
 
@@ -721,8 +721,6 @@ with first interesting results.
 	\caption{Schedules for jobshop example (with makespan 9 (left) and 11 (right)) \cite{AM02}}
 	\label{fig:schedules_maler}
 \end{figure}
-
-%%%%%%
 %%%\subsection*{Geometrical Representation of $\Ko$}\label{app:geom}
 
 \begin{figure}[ht!]
@@ -742,6 +740,9 @@ with first interesting results.
 	\label{fig:output}
 \end{figure}
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
+%%%%%%
+
+
 
 %\commentaire{commenter figure: maler, merging; seul l'etat du bas respecte}
 %\commentaire{
@@ -751,31 +752,33 @@ with first interesting results.
 %ex de TA en appendix, avec schema et code IMITATOR
 %}
 
-\section*{Appendix: Case Study from \cite{bb04}}
+\section*{Appendix 2: Rate Monotonic Case Study from \cite{bb04}}
 \label{app:carto}
-We present here what we can obtain from \imitator{} 2.5 with the Behavioral Cartography (BC) output. By iterating $\IM$ over all the integers points inside a finite rectangle $V_0$, one is able to decompose
-(most of) the parametric space included into $V_0$ into behavioral tiles\footnote{Actually, one can take a finer discretization step to ensure a better coverability of $V_0$}.
+We present here what we can obtain from \imitator{} 2.5 with the Behavioral Cartography (BC) output. By iterating $\IM$ over all the integers points inside a finite rectangle $V_0$ in the parametric space,
+ one is able to decompose
+(most of) the parametric space included into $V_0$ into behavioral tiles
+\footnote{Actually, one can take a finer discretization step to ensure a better coverability of~$V_0$}.
 
 For a given tile, we ensure that for every valuation of the parameters in this tile, the behavior of $\A$ is the same, therefore, we only
-have to test the schedulability of a single point for each tile to test wether or not $\A$ is schedulable for any point in this tile. We apply this method on the example presented in \cite{bb04}.
+have to test the schedulability of a single point for each tile to ensure the schedulability on the whole tile. We apply this method on a ``Rate Monotonic''
+ example of \cite{bb04} (Section~III).
 
-We have three periodic tasks $\tau_1, \tau_2$ and $\tau_3$ with periods of $3,8$ and $20$ respectively and deadlines of $3,8$ and $20$ respectively. We are interested in finding the set of computation times
- of each task such that the system is schedulable. The interested reader can find the full details in \cite{bb04}.
+There are three periodic tasks $\tau_1, \tau_2$ and $\tau_3$ with periods of $T_1 = 3, \ T_2 = 8$ and $T_3 = 20$ and deadlines of $D_1 = 3, \ D_2 = 8$ and $D_3 = 20$. We are interested in finding the set
+ of computation times of each task such that the system is schedulable. The interested reader can find the full details in \cite{bb04}.
 
-We set $V_0$ as $C_1 \in [0,3]$, $C_2 \in [0,8]$ and $C_3 \in [0,20]$ because the system is unschedulable if there exists a task $\tau_i$ such that $C_i > T_i$. 
+We set $V_0$ as $C_1 \in [0,3]$, $C_2 \in [0,8]$ and $C_3 = 0$, where $C_i$ is the computational time of $\tau_i$. The system is unschedulable if there exists a task $\tau_i$ such that $C_i > T_i$. 
 % We recall the algorithm for BC, we first pick an integer point $\pi_k$ that does not belong to any tile already computed and we synthesize $\IM(\A,\pi_k)$ which will be a new tile. We iterate this process 
 % until no integer point remains uncover (since $V_0$ only contains a finite number of integer points, we know that GC will terminate in a finite number of iterations).
-BC outputs the set of tiles and, we check for one point of each tile wether the system is schedulable or not.
-The result for this example is given in Figure \ref{fig:carto}, for $C_1,C_2$ left as parameters and $C_3$ set to $0$, for the sake of lisibility but the method works for an arbitrary number of parameters.
+BC outputs the set of tiles and we check for one point of each tile wether the system is schedulable or not.
+The result for this example is given in Figure \ref{fig:carto} for this $V_0$ with a discretization step of $0.2$.
 
 \begin{figure}[!ht]
  \centering
  \includegraphics[scale = 0.5]{./figures/C1-C2.png}
- \caption{Schedulability, in green the system is schedulable, in red, unschedulable}
+ \caption{Cartography output by \imitator{} 2.5 (in green the system is schedulable; in red, unschedulable)}
  \label{fig:carto}
 \end{figure}
-It is interesting to notice that, we covered the full parameter space and, therefore solved the parametric schedulability problem by simply checking the schedulability of 20 valuations of the parameters
-, as there is only 20 tiles.
+Note that the full parametric space is covered after only 20 applications of $\IM$. This corresponds to the bottom left ``triangle'' of Fig. 1 (a) in \cite{bb04}.
 
 
 % 
