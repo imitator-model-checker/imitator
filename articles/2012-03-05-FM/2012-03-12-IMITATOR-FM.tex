@@ -754,22 +754,19 @@ with first interesting results.
 
 \section*{Appendix 2: Rate Monotonic Case Study from \cite{bb04}}
 \label{app:carto}
-We present here what we can obtain from \imitator{} 2.5 with the Behavioral Cartography (BC) output. By iterating $\IM$ over all the integers points inside a finite rectangle $V_0$ in the parametric space,
- one is able to decompose
-(most of) the parametric space included into $V_0$ into behavioral tiles
-\footnote{Actually, one can take a finer discretization step to ensure a better coverability of~$V_0$}.
+We present here what we can obtain from \imitator{} 2.5 with the Behavioral Cartography ($\BC$) output. By iterating $\IM$ over all the integers points (or each step given by a rational value, e.g., $1/3$) inside a finite but dense rectangle $V_0$ in the parametric space, one is able to decompose (most of) the parametric space included into $V_0$ into behavioral tiles\footnote{Actually, one can take a finer discretization step to ensure a better coverability of~$V_0$}.
 
-For a given tile, we ensure that for every valuation of the parameters in this tile, the behavior of $\A$ is the same, therefore, we only
-have to test the schedulability of a single point for each tile to ensure the schedulability on the whole tile. We apply this method on a ``Rate Monotonic''
- example of \cite{bb04} (Section~III).
+For a given tile, we ensure that for every valuation of the parameters in this tile, the behavior of $\A$ is the same;
+therefore, we only have to test the schedulability of a single point for each tile to ensure the schedulability on the whole tile.
 
+Let us apply this method on a ``Rate Monotonic'' example of \cite{bb04} (Section~III).
 There are three periodic tasks $\tau_1, \tau_2$ and $\tau_3$ with periods of $T_1 = 3, \ T_2 = 8$ and $T_3 = 20$ and deadlines of $D_1 = 3, \ D_2 = 8$ and $D_3 = 20$. We are interested in finding the set
  of computation times of each task such that the system is schedulable. The interested reader can find the full details in \cite{bb04}.
 
 We set $V_0$ as $C_1 \in [0,3]$, $C_2 \in [0,8]$ and $C_3 = 0$, where $C_i$ is the computational time of $\tau_i$. The system is unschedulable if there exists a task $\tau_i$ such that $C_i > T_i$. 
-% We recall the algorithm for BC, we first pick an integer point $\pi_k$ that does not belong to any tile already computed and we synthesize $\IM(\A,\pi_k)$ which will be a new tile. We iterate this process 
+% We recall the algorithm for $\BC$, we first pick an integer point $\pi_k$ that does not belong to any tile already computed and we synthesize $\IM(\A,\pi_k)$ which will be a new tile. We iterate this process 
 % until no integer point remains uncover (since $V_0$ only contains a finite number of integer points, we know that GC will terminate in a finite number of iterations).
-BC outputs the set of tiles and we check for one point of each tile whether the system is schedulable or not.
+Algorithm~$\BC$ outputs the set of tiles and we check for one point of each tile whether the system is schedulable or not.
 The result for this example is given in Figure \ref{fig:carto} for this $V_0$ with a discretization step of $0.2$.
 
 \begin{figure}[!ht]
@@ -778,7 +775,8 @@ The result for this example is given in Figure \ref{fig:carto} for this $V_0$ wi
 	\caption{Cartography output by \imitator{} 2.5 (in green the system is schedulable; in red, unschedulable)}
 	\label{fig:carto}
 \end{figure}
-Note that the full parametric space is covered after only 20 applications of $\IM$.
+
+Note that the full dense parametric space is covered after only 20 applications of~$\IM$.
 This corresponds to the bottom left ``triangle'' of Fig. 1 (a) in \cite{bb04}.
 
 
