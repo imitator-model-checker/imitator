@@ -484,7 +484,7 @@ A number of case studies containing up to 60 timing parameters could be efficien
 Since~\cite{and10}, we extended the input formalism to PTAs equipped with \emph{stopwatches}: clocks can now be stopped for some time while others keep growing.
 Also, we added clock updates: clocks can now be set to arbitrary linear combinations of other clocks, parameters
 and discrete variables.
-%%%We also implemented further algorithms based on~$\IM$, that satisfy weaker properties than the preservation of the trace sets, while outputting larger sets of parameter valuations than~$\IM$ (and possibly non-convex)..
+%%%We also implemented further algorithms based on~$\IM$, that satisfy weaker properties than the preservation of the trace sets, while outputting larger sets of parameter valuations than~$\IM$ (and possibly non-convex)...
 These extensions allow us to consider larger classes of case studies, 
 such as scheduling problems.
 
@@ -515,7 +515,7 @@ A constraint is output in text format; furthermore, the set of traces computed b
 \imitator{} implements in particular the following algorithms:
 \begin{description}
 	\item[Full reachability analysis] Given a PTA, it computes the reachability graph.
-	\item[Inverse method] Given a PTA and a reference parameter valuation~$\pio$, it computes a constraint $K$ on the parameter guaranteeing the same time-abstract behavior as under~$\pio$ (see Figure \ref{fig:structure}).
+	\item[Inverse method] Given a PTA and a reference parameter valuation~$\pio$, it computes a constraint $K$ on the parameter guaranteeing the same time-abstract behavior as under~$\pio$ (see Fig. \ref{fig:structure}).
 % 	\item[Behavioral cartography] Given a model and a bounded parameter domain for each parameter valuation, it computes a set of constraints and their corresponding trace sets.
 \end{description}
 
@@ -547,7 +547,7 @@ The goal is to find a way (``schedule'') to allocate the resources such that all
 % A \emph{job specification} is $J = (m_1,d_1),(m_2,d_2),\cdots, (m_k,d_k)$, stating that in order to accomplish job $J$, one needs to use a machine $m_1$ for $d_1$ time units, then use machine $m_2$ for $d_2$ time units, and so on.
 %
 Let us consider the jobshop problem $\{J_1, J_2\}$ for 2 jobs and 3 machines  with: $J_1 = (m_1,d_1), (m_2,d_2),(m_3,d_3)$ and $J_2 = (m_2,d'_2)$ with $d_1 = 3, d_2=2, d_3=4, d'_2 = 5$.
-There are many possible schedules (two of them are depicted in Figure~\ref{fig:schedules_maler} in Appendix). 
+There are many possible schedules (two of them are depicted in Fig.~\ref{fig:schedules_maler} in Appendix). 
 %
 % The problem is to find a schedule such that the value of the last completed job is minimal.
 % This minimal value is called makespan.
@@ -580,16 +580,17 @@ We then use \imitator{} (instead of a CEGAR-like method
 as in \cite{cpr08}) with $\A \parallel {\cal O}$ as a model input
 and $\pio$ as a valuation input.
 This yields the constraint $\Ko$:  $7 > d'_2 \wedge 3 > d_2 \wedge d'_2 + d_2 \geq 7$.
-(For a geometrical representation of $\Ko$, see Figure~\ref{fig:geom} of Appendix.)
+(For a geometrical representation of $\Ko$, see Fig.~\ref{fig:geom} of Appendix.)
 By the $\IM$ principle, the set of traces (i.e., discrete runs) of
 $\A \parallel {\cal O}$ is always the same,
 for any point $(d_2,d'_2)$ of $\Ko$.
-(This set of traces is depicted under the form of a tree in Figure~\ref{fig:output} in Appendix.)
+(This set of traces is depicted under the form of a tree in Fig.~\ref{fig:output} in Appendix.)
 Since the makespan for $\pio$ is 9,
-we know that there is at least one branch of the tree without
-any $\mathit{DEADLINE}$ label.
-This holds for all the points $(d_2,d'_2)$ of $\Ko$.
-In other words, the makespan of the system is  (at most) equal to~9, for every point of $\Ko$. 
+we know that some branches of the tree do not contain
+any $\mathit{DEADLINE}$ label (these branches end at node $s73$
+in Fig. \ref{fig:output}).
+This holds for each point $(d_2,d'_2)$ of $\Ko$.
+In other words, the makespan of the system is  (at most) 9, everywhere in~ $\Ko$. 
 %This gives us a measure of robustness of the system around $\pio$.
 
 Such a robustness analysis, inspired from \cite{cpr08}, 
@@ -614,7 +615,7 @@ on several classes of scheduling problems (see Table~\ref{table:results} in Appe
 %We apply \imitator{} to a network of PTAs with stopwatches corresponding to the example of~\cite{AM02} (with only two parameters $d_2$ and $d'_2$).
 % 
 % \imitator{} outputs:
-%  $ 7 > d'_2 \wedge 3 > d_2 \wedge d'_2 + d_2 \geq 7$.\footnote{There three couples of integer values that satisfy $K$: $(1,6)$, $(2,5)$, $(2,6)$...} This gives us a quantitative
+%  $ 7 > d'_2 \wedge 3 > d_2 \wedge d'_2 + d_2 \geq 7$.\footnote{There three couples of integer values that satisfy $K$: $(1,6)$, $(2,5)$, $(2,6)$....} This gives us a quantitative
 %  measure of robustness for the input valuation $\pi_0 = \{d_2=2, d'_2 = 5\}$.
 % 
 % \begin{enumerate}
@@ -633,27 +634,43 @@ on several classes of scheduling problems (see Table~\ref{table:results} in Appe
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-One of the first powerful model checkers for analyzing PTAs is \hytech{}~\cite{hhw97}.
-Unfortunately, it can hardly verify even medium sized examples due to exact arithmetics with limited precision and static composition of automata.
-%, quickly leading to memory overflows.
-Since, \trex{}~\cite{abs01} has been able to perform parameter synthesis%(see, e.g.,~\cite{cs01})
-, and an extension of \uppaal{} allows parametric model checking \cite{BLR05formats}, although the model itself remains non-parametric.
+%One of the first powerful model checkers for analyzing PTAs is \hytech{}~\cite{hhw97}.
+%Unfortunately, it can hardly verify even medium sized examples due to exact arithmetics with limited precision and static composition of automata..
+%%, quickly leading to memory overflows.
+%%%Since, \trex{}~\cite{abs01} has been able to perform parameter synthesis%(see, e.g.,~\cite{cs01})
+%, and 
 
+The use of models such as PTAs and parametric Time Petri Nets (TPNs)
+for solving scheduling problems has received attention in the past few years.
+For example, \romeo{}~\cite{lrst09} performs 
+%parametric model checking for TPNs
+model checking for parametric TPNs with stopwatches, and synthesizes parameter valuations satisfying TCTL formul\ae{}.
+An extension of \uppaal{} allows parametric model checking \cite{BLR05formats}, although the model itself remains non-parametric.
+%See, e.g., Section\,7 of~\cite{cpr08} for a survey.
+%
 % \commentaire{
 % ex italiens : assure schedulability (etat erreur jamais atteint, donc schedulable vis a vis d'une deadline) ; forme of robustness autour d'un point de depart connu comme schedulable
 % }
-
-The use of PTAs and their extensions for scheduling problems has received attention in the past few years (see, e.g., Section\,7 of~\cite{cpr08} for a survey).
+%
 The approach most related to \imitator{} 2.5 is~\cite{cpr08,LPPRC10}, where the authors infer parametric constraints guaranteeing the feasibility of a schedule, using PTAs with stopwatches.
 The main difference between~\cite{cpr08,LPPRC10} and \imitator{} relies in our choice of the inverse method, rather than a CEGAR-based method.
-The first results obtained by the two methods on the same case studies
+First results obtained on the same case studies
 are uncomparable (although similar in form), which seems to indicate
-that they are complementary.
-Also, although \imitator{} offers facilities for robustness analysis in scheduling problems, the tool applies to the verification of many other classes of concurrent real-time systems, such as communication protocols and hardware components (see, e.g.,~\cite{acef09}).
-
-\romeo{}~\cite{lrst09} performs 
-%parametric model checking for (bounded) Time Petri Nets 
-model checking for parametric time Petri nets with stopwatches, and synthesizes parameter valuations satisfying TCTL formul\ae{}.
+that the two methods are complementary.
+%%%Also, although \imitator{} 2.5 is well-suited to schedulability analysis, as emphasized here,
+%%%the tool applies to many other classes of concurrent real-time systems, such as communication protocols and hardware components (see, e.g.,~\cite{acef09}).
+%%%
+The problem of finding the schedulability region was attacked in analytic terms
+in \cite{bb04}. 
+The size of our examples is modest, compared to those treated by such analytic methods.
+However, in many scheduling problems,
+no analytic solution exists (see, e.g.,~\cite{SGL97}), 
+while exhaustive simulation is exponential
+in the number of jobs. In such cases, symbolic methods as ours and those
+of \cite{cpr08,LPPRC10}  are useful to treat
+critical real-life examples of small size.
+(We are thus involved in a project~\cite{fl11} with an industrial partner 
+with first interesting results.)
 
 % A graphical user interface for the input model is currently under construction, based on a generic platform. \commentaire{utile ?!}
 
