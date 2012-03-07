@@ -658,17 +658,17 @@ An extension of \uppaal{} allows parametric model checking \cite{BLR05formats}, 
 % ex italiens : assure schedulability (etat erreur jamais atteint, donc schedulable vis a vis d'une deadline) ; forme of robustness autour d'un point de depart connu comme schedulable
 % }
 %
-The approach most related to \imitator{} 2.5 is~\cite{cpr08,LPPRC10}, where the authors infer parametric constraints guaranteeing the feasibility of a schedule, using PTAs with stopwatches.
+The approach most related to \imitator{} 2.5 is~\mbox{\cite{cpr08,LPPRC10}}, where the authors infer parametric constraints guaranteeing the feasibility of a schedule, using PTAs with stopwatches.
 The main difference between~\cite{cpr08,LPPRC10} and \imitator{} relies in our choice of the inverse method, rather than a CEGAR-based method.
 First results obtained on the same case studies
-are uncomparable (although similar in form), which seems to indicate
+are incomparable (although similar in form), which seems to indicate
 that the two methods are complementary.
 %%%Also, although \imitator{} 2.5 is well-suited to schedulability analysis, as emphasized here,
 %%%the tool applies to many other classes of concurrent real-time systems, such as communication protocols and hardware components (see, e.g.,~\cite{acef09}).
 %%%
 The problem of finding the schedulability region was attacked in analytic terms
-in \cite{bb04}. 
-The size of our examples is modest, compared to those treated by such analytic methods.
+in \cite{bb04};
+the size of our examples is rather modest compared to those treated using such analytic methods.
 However, in many schedulability problems,
 no analytic solution exists (see, e.g.,~\cite{SGL97}), 
 and exhaustive simulation is exponential
@@ -769,16 +769,17 @@ There are three periodic tasks $\tau_1, \tau_2$ and $\tau_3$ with periods of $T_
 We set $V_0$ as $C_1 \in [0,3]$, $C_2 \in [0,8]$ and $C_3 = 0$, where $C_i$ is the computational time of $\tau_i$. The system is unschedulable if there exists a task $\tau_i$ such that $C_i > T_i$. 
 % We recall the algorithm for BC, we first pick an integer point $\pi_k$ that does not belong to any tile already computed and we synthesize $\IM(\A,\pi_k)$ which will be a new tile. We iterate this process 
 % until no integer point remains uncover (since $V_0$ only contains a finite number of integer points, we know that GC will terminate in a finite number of iterations).
-BC outputs the set of tiles and we check for one point of each tile wether the system is schedulable or not.
+BC outputs the set of tiles and we check for one point of each tile whether the system is schedulable or not.
 The result for this example is given in Figure \ref{fig:carto} for this $V_0$ with a discretization step of $0.2$.
 
 \begin{figure}[!ht]
- \centering
- \includegraphics[scale = 0.5]{./figures/C1-C2.png}
- \caption{Cartography output by \imitator{} 2.5 (in green the system is schedulable; in red, unschedulable)}
- \label{fig:carto}
+	\centering
+% 	\includegraphics[scale = 0.5]{./figures/C1-C2.png}
+	\caption{Cartography output by \imitator{} 2.5 (in green the system is schedulable; in red, unschedulable)}
+	\label{fig:carto}
 \end{figure}
-Note that the full parametric space is covered after only 20 applications of $\IM$. This corresponds to the bottom left ``triangle'' of Fig. 1 (a) in \cite{bb04}.
+Note that the full parametric space is covered after only 20 applications of $\IM$.
+This corresponds to the bottom left ``triangle'' of Fig. 1 (a) in \cite{bb04}.
 
 
 % 
