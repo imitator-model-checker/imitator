@@ -757,7 +757,8 @@ with first interesting results.
 
 \section*{Appendix 2: Rate Monotonic Case Study from \cite{bb04}}
 \label{app:carto}
-We present here what we can obtain from \imitator{} 2.5 with the Behavioral Cartography ($\BC$) output. By iterating $\IM$ over all the integers points (or each step given by a rational value, e.g., $1/3$) inside a finite but dense rectangle $V_0$ in the parametric space, one is able to decompose (most of) the parametric space included into $V_0$ into behavioral tiles\footnote{Actually, one can take a finer discretization step to ensure a better coverability of~$V_0$}~\cite{af10}.
+We present here what we can obtain from \imitator{} 2.5 with the Behavioral Cartography ($\BC$) output. By iterating $\IM$ over all the integers points %(or each step given by a rational value, e.g., $1/3$)
+inside a finite but dense rectangle $V_0$ in the parametric space, one is able to decompose (most of) the parametric space included into $V_0$ into behavioral tiles\footnote{Actually, one can take a finer discretization step than integers to ensure a better coverability of~$V_0$}~\cite{af10}.
 
 For a given tile, we ensure that for every valuation of the parameters in this tile, the behavior of $\A$ is the same;
 therefore, we only have to test the schedulability of a single point for each tile to ensure the schedulability on the whole tile.
