@@ -592,7 +592,11 @@ we know that some branches of the tree do not contain
 any $\mathit{DEADLINE}$ label (these branches end at node $s73$
 in Figure~\ref{fig:output}).
 This holds for each point $(d_2,d'_2)$ of~$\Ko$.
-In other words, the makespan of the system is  (at most) 9, everywhere in~$\Ko$. 
+The makespan of the system is thus always at most~9 in~$\Ko$. (In particular, we can increase $d_2$ from 2 to 3, or increase $d'_2$ from 5~to~7
+while keeping the makespan less than or equal to 9.)
+
+%(in particular, when $d'_2 = 5$ and $d_2$ grows from 2 to 3, or $d_2 = 2$ and $d'_2$ grows from 5 to 7).
+
 %This gives us a measure of robustness of the system around $\pio$.
 
 % Such a robustness analysis, inspired from \cite{cpr08}, 
@@ -602,7 +606,8 @@ In other words, the makespan of the system is  (at most) 9, everywhere in~$\Ko$.
 Another example of application of \imitator{} 2.5 to a scheduling problem, originating from \cite{bb04}, is given in Appendix 2 (using 
 the cartography method of~\cite{af10}). 
 All case studies and experiments %(performed on Ubuntu 11.10 equipped with an Intel Core\,2 2.93\,GiHz processor with 2\,GiB RAM)
-are described in a research report~\cite{soulat12} (Source code, binaries, all case studies and logs are available in \url{http://www.lsv.ens-cachan.fr/Software/imitator/}).
+are described in a research report~\cite{soulat12}. See also \url{http://www.lsv.ens-cachan.fr/Software/imitator/}.
+%  (Source code, binaries, all case studies and logs are available in \url{http://www.lsv.ens-cachan.fr/Software/imitator/}).
 
 
 
@@ -729,7 +734,7 @@ with first interesting results.
 \begin{figure}[ht!]
 	\centering
  		\includegraphics[width=3cm]{./figures/geom.jpg}
-	\caption{Geometrical representation of $\Ko$ around $\pio: (2,5)$}
+	\caption{Geometrical representation of $\Ko$ around $\pio: (2,5)$.}
 	\label{fig:geom}
 \end{figure}
 
