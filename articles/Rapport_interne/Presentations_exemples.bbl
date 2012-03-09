@@ -1,0 +1,39 @@
+\begin{thebibliography}{1}
+
+\bibitem{am02}
+Yasmina Abdedda\"{\i}m and Oded Maler.
+\newblock Preemptive job-shop scheduling using stopwatch automata.
+\newblock In {\em TACAS}, pages 113--126, 2002.
+
+\bibitem{af10}
+{\'E}.~Andr{\'e} and L.~Fribourg.
+\newblock Behavioral cartography of timed automata.
+\newblock In {\em {RP}}, volume 6227 of {\em LNCS}, pages 76--90. Springer,
+  2010.
+
+\bibitem{bb04}
+Enrico Bini and Giorgio~C. Buttazzo.
+\newblock Schedulability analysis of periodic fixed priority systems.
+\newblock {\em IEEE Trans. Computers}, 53(11):1462--1473, 2004.
+
+\bibitem{cpr08}
+A.~Cimatti, L.~Palopoli, and Y.~Ramadian.
+\newblock Symbolic computation of schedulability regions using parametric timed
+  automata.
+\newblock In {\em RTSS}, pages 80--89, Washington, DC, USA, 2008. IEEE Computer
+  Society.
+
+\bibitem{lpprc10}
+Thi Le, Luigi Palopoli, Roberto Passerone, Yusi Ramadian, and Alessandro
+  Cimatti.
+\newblock Parametric analysis of distributed firm real-time systems: A case
+  study.
+\newblock In {\em ETFA}, pages 1--8, 2010.
+
+\bibitem{sgl97}
+Jun Sun, Mark~K. Gardner, and Jane W.~S. Liu.
+\newblock Bounding completion times of jobs with arbitrary release times,
+  variable execution times, and resource sharing.
+\newblock {\em IEEE Trans. Softw. Eng.}, 23:603--615, 1997.
+
+\end{thebibliography}
