@@ -1,0 +1,233 @@
+ **************************************************
+ *  IMITATOR 2.5                                  *
+ *   Etienne ANDRE, Ulrich KUEHNE, Romain SOULAT  *
+ *                                   2009 - 2012  *
+ *     Laboratoire Specification et Verification  *
+ *                  ENS de Cachan & CNRS, France  *
+ **************************************************
+ Mode: inverse method.
+ 
+ Parsing done after 0.009 second.
+ Program checked and converted after 0.078 second.
+ 
+ Computing post^1
+   Adding the following inequality (randomly selected among 2 inequalities):
+   Off3 < Off2
+   0 states merged.
+ Computing post^2
+   Adding the following inequality:
+   Off3 < WCET1 + Off1
+   Adding the following inequality:
+   D1 + Off1 <= D3 + Off3
+   Adding the following inequality:
+   Off1 < Off2
+   Adding the following inequality (randomly selected among 3 inequalities):
+   WCET3 + D1 <= D3
+   Adding the following inequality:
+   Off1 < WCET3 + Off3
+   0 states merged.
+ Computing post^3
+   Adding the following inequality (randomly selected among 2 inequalities):
+   WCET1 + Off1 <= Off2
+   0 states merged.
+ Computing post^4
+   Adding the following inequality:
+   D1 + Off1 < Off2
+   Adding the following inequality:
+   2*D1 + Off1 < D3 + Off3
+   Adding the following inequality:
+   D1 < WCET1 + WCET3
+   Adding the following inequality:
+   D1 + Off1 < WCET1 + WCET3 + Off3
+   0 states merged.
+ Computing post^5
+   Adding the following inequality (randomly selected among 2 inequalities):
+   2*D1 + Off1 <= D2 + Off2
+   Adding the following inequality:
+   WCET1 + D1 + Off1 <= Off2
+   0 states merged.
+ Computing post^6
+   Adding the following inequality:
+   2*D1 + Off1 < Off2
+   Adding the following inequality:
+   3*D1 + Off1 < D3 + Off3
+   Adding the following inequality:
+   2*D1 < 2*WCET1 + WCET3
+   Adding the following inequality:
+   2*D1 + Off1 < 2*WCET1 + WCET3 + Off3
+   0 states merged.
+ Computing post^7
+   Adding the following inequality (randomly selected among 2 inequalities):
+   WCET1 + 2*D1 + Off1 <= Off2
+   0 states merged.
+ Computing post^8
+   Adding the following inequality:
+   3*D1 + Off1 < Off2
+   Adding the following inequality:
+   4*D1 + Off1 < D3 + Off3
+   Adding the following inequality:
+   3*D1 < 3*WCET1 + WCET3
+   Adding the following inequality:
+   3*D1 + Off1 < 3*WCET1 + WCET3 + Off3
+   0 states merged.
+ Computing post^9
+   Adding the following inequality (randomly selected among 2 inequalities):
+   4*D1 + Off1 <= D2 + Off2
+   Adding the following inequality:
+   WCET1 + 3*D1 + Off1 <= Off2
+   0 states merged.
+ Computing post^10
+   Adding the following inequality:
+   4*D1 + Off1 < Off2
+   Adding the following inequality:
+   5*D1 + Off1 < D3 + Off3
+   Adding the following inequality (randomly selected among 2 inequalities):
+   deadlineBasic < 4*WCET1 + WCET3 + Off1
+   Adding the following inequality (randomly selected among 2 inequalities):
+   deadlineBasic < 4*WCET1 + WCET3 + Off3
+   0 states merged.
+ Computing post^11
+   Adding the following inequality (randomly selected among 2 inequalities):
+   WCET1 + 4*D1 + Off1 <= Off2
+   0 states merged.
+ Computing post^12
+   Adding the following inequality:
+   5*D1 + Off1 < Off2
+   Adding the following inequality:
+   6*D1 + Off1 < D3 + Off3
+   0 states merged.
+ Computing post^13
+   Adding the following inequality (randomly selected among 2 inequalities):
+   6*D1 + Off1 <= D2 + Off2
+   Adding the following inequality:
+   WCET1 + 5*D1 + Off1 <= Off2
+   0 states merged.
+ Computing post^14
+   Adding the following inequality:
+   6*D1 + Off1 < Off2
+   Adding the following inequality:
+   7*D1 + Off1 < D3 + Off3
+   0 states merged.
+ Computing post^15
+   Adding the following inequality (randomly selected among 2 inequalities):
+   7*D1 + Off1 <= D2 + Off2
+   Adding the following inequality:
+   WCET1 + 6*D1 + Off1 <= Off2
+   0 states merged.
+ Computing post^16
+   Adding the following inequality:
+   7*D1 + Off1 < Off2
+   Adding the following inequality:
+   8*D1 + Off1 < D3 + Off3
+   0 states merged.
+ Computing post^17
+   Adding the following inequality (randomly selected among 2 inequalities):
+   WCET1 + 7*D1 + Off1 <= Off2
+   0 states merged.
+ Computing post^18
+   Adding the following inequality:
+   8*D1 + Off1 < Off2
+   Adding the following inequality:
+   9*D1 + Off1 < D3 + Off3
+   0 states merged.
+ Computing post^19
+   Adding the following inequality (randomly selected among 2 inequalities):
+   WCET1 + 8*D1 + Off1 <= Off2
+   0 states merged.
+ Computing post^20
+   Adding the following inequality:
+   9*D1 + Off1 < Off2
+   Adding the following inequality:
+   10*D1 + Off1 < D3 + Off3
+   0 states merged.
+ Computing post^21
+   Adding the following inequality (randomly selected among 2 inequalities):
+   10*D1 + Off1 <= D2 + Off2
+   Adding the following inequality:
+   WCET1 + 9*D1 + Off1 <= Off2
+   0 states merged.
+ Computing post^22
+   Adding the following inequality:
+   D2 + Off2 < D3 + Off3
+   Adding the following inequality:
+   Off2 < 10*D1 + Off1
+   0 states merged.
+ Computing post^23
+   Adding the following inequality:
+   10*D1 + Off1 < WCET2 + Off2
+   Adding the following inequality:
+   11*D1 + Off1 < D2 + Off2
+   0 states merged.
+ Computing post^24
+   0 states merged.
+ Computing post^25
+   Adding the following inequality:
+   11*D1 + Off1 < WCET1 + WCET2 + Off2
+   Adding the following inequality:
+   12*D1 + Off1 < D2 + Off2
+   0 states merged.
+ Computing post^26
+   0 states merged.
+ Computing post^27
+   Adding the following inequality:
+   12*D1 + Off1 < 2*WCET1 + WCET2 + Off2
+   Adding the following inequality:
+   13*D1 + Off1 < D2 + Off2
+   0 states merged.
+ Computing post^28
+   0 states merged.
+ Computing post^29
+   Adding the following inequality:
+   3*WCET1 + WCET2 + Off2 <= 13*D1 + Off1
+   0 states merged.
+ Computing post^30
+   Adding the following inequality:
+   14*D1 + Off1 < D3 + Off3
+   0 states merged.
+ Computing post^31
+   0 states merged.
+ Computing post^32
+   Adding the following inequality:
+   deadlineBasic < 14*D1 + Off1
+   0 states merged.
+ 
+ Final constraint K  :
+   D2 + Off2 > 13*D1 + Off1
+ & D3 + Off3 > 14*D1 + Off1
+ & D3 >= WCET3 + D1
+ & 10*D1 + Off1 > Off2
+ & D3 + Off3 > D2 + Off2
+ & WCET1 + Off1 > Off3
+ & Off2 > 9*D1 + Off1
+ & 2*WCET1 + WCET2 + Off2 > 12*D1 + Off1
+ & 3*WCET1 + WCET3 + Off3 > 3*D1 + Off1
+ & 3*WCET1 + WCET3 > 3*D1
+ & Off2 >= WCET1 + 9*D1 + Off1
+ & 13*D1 + Off1 >= 3*WCET1 + WCET2 + Off2
+ & 4*WCET1 + WCET3 + Off1 > deadlineBasic
+ & 4*WCET1 + WCET3 + Off3 > deadlineBasic
+ & 14*D1 + Off1 > deadlineBasic
+ 
+ Fixpoint reached after 32 iterations in 2.419 seconds: 63 reachable states with 62 transitions.
+ 
+ Final constraint K0 :
+   10*D1 + Off1 > Off2
+ & WCET1 > 0
+ & Off1 >= 0
+ & 14*D1 + Off1 > deadlineBasic
+ & D3 + Off1 > D2 + Off2
+ & 2*WCET1 + WCET2 + Off2 > 12*D1 + Off1
+ & D2 + Off2 > 13*D1 + Off1
+ & D3 > 14*D1
+ & D3 >= WCET3 + D1
+ & Off2 >= WCET1 + 9*D1 + Off1
+ & 13*D1 + Off1 >= 3*WCET1 + WCET2 + Off2
+ & 4*WCET1 + WCET3 + Off1 > deadlineBasic
+ & deadlineBasic >= 13*D1 + Off1
+ & D1 = per1
+ & D2 = per2
+ & D3 = per3
+ & Off1 = Off3
+
+ IMITATOR successfully terminated (after 3.563 seconds)
+

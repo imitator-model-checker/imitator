@@ -1,0 +1,2227 @@
+/***************************************************
+ * File automatically generated for file 'astrium_basic_edf.im3'
+ * The following pi0 was considered:
+  deadlineBasic = 134
+& WCET1 = 4
+& WCET2 = 20
+& WCET3 = 120
+& D1 = 10
+& D2 = 100
+& D3 = 1000
+& per1 = 10
+& Off1 = 0
+& per2 = 100
+& Off2 = 94
+& per3 = 1000
+& Off3 = 0
+ * 63 states and 62 transitions
+ * Program terminated after 2.501 seconds
+***************************************************/
+
+/*
+  DESCRIPTION OF THE STATES
+
+
+  STATE 0:
+  stopper: f_1_r, scheduler_EDF: non1_non2_non3, T_1: init_s, T_2: init_s, T_3: init_s ==> 
+  D3 >= WCET3 + D1
+& WCET1 + Off1 > Off3
+& D3 + Off3 > 14*D1 + Off1
+& D2 + Off2 > 13*D1 + Off1
+& Off2 > 9*D1 + Off1
+& 10*D1 + Off1 > Off2
+& D3 + Off3 > D2 + Off2
+& 2*WCET1 + WCET2 + Off2 > 12*D1 + Off1
+& 3*WCET1 + WCET3 + Off3 > 3*D1 + Off1
+& Off2 >= WCET1 + 9*D1 + Off1
+& 13*D1 + Off1 >= 3*WCET1 + WCET2 + Off2
+& 4*WCET1 + WCET3 + Off1 > deadlineBasic
+& 4*WCET1 + WCET3 + Off3 > deadlineBasic
+& 14*D1 + Off1 > deadlineBasic
+& deadlineBasic >= time
+& Off1 >= time
+& 3*WCET1 + WCET3 > 3*D1
+& Off3 >= time
+& time >= 0
+& D1 = per1
+& D2 = per2
+& D3 = per3
+& x1 = 0
+& x2 = 0
+& x3 = 0
+& time = d1
+& time = d2
+& time = d3
+& time = t_1
+& time = t_2
+& time = t_3
+
+
+  STATE 1:
+  stopper: f_1_r, scheduler_EDF: ok1_non2_non3, T_1: waiting, T_2: init_s, T_3: init_s ==> 
+  D3 + Off3 > D2 + Off2
+& D2 + Off2 > 13*D1 + Off1
+& D3 + Off3 > 14*D1 + Off1
+& D3 >= WCET3 + D1
+& Off2 >= WCET1 + 9*D1 + Off1
+& 13*D1 + Off1 >= 3*WCET1 + WCET2 + Off2
+& 4*WCET1 + WCET3 + Off1 > deadlineBasic
+& 10*D1 + Off1 > Off2
+& 14*D1 + Off1 > deadlineBasic
+& deadlineBasic >= Off1 + x1
+& WCET1 + Off1 > Off3
+& 2*WCET1 + WCET2 + Off2 > 12*D1 + Off1
+& Off1 >= 0
+& 3*WCET1 + WCET3 > 3*D1
+& x1 >= 0
+& Off3 >= Off1 + x1
+& D1 = per1
+& D2 = per2
+& D3 = per3
+& x2 = 0
+& x3 = 0
+& Off1 + x1 = time
+& x1 = d1
+& Off1 + x1 = d2
+& Off1 + x1 = d3
+& x1 = t_1
+& Off1 + x1 = t_2
+& Off1 + x1 = t_3
+
+
+  STATE 2:
+  stopper: f_1_r, scheduler_EDF: non1_non2_ok3, T_1: init_s, T_2: init_s, T_3: waiting ==> 
+  D3 >= WCET3 + D1
+& D3 + Off3 > D2 + Off2
+& D3 + Off3 > 14*D1 + Off1
+& 10*D1 + Off1 > Off2
+& D2 + Off2 > 13*D1 + Off1
+& Off2 >= WCET1 + 9*D1 + Off1
+& 13*D1 + Off1 >= 3*WCET1 + WCET2 + Off2
+& 4*WCET1 + WCET3 + Off3 > deadlineBasic
+& 14*D1 + Off1 > deadlineBasic
+& deadlineBasic >= Off3 + x3
+& WCET1 + Off1 > Off3
+& Off2 > 9*D1 + Off1
+& Off1 >= Off3 + x3
+& 2*WCET1 + WCET2 + Off2 > 12*D1 + Off1
+& 3*WCET1 + WCET3 + Off3 > 3*D1 + Off1
+& Off3 >= 0
+& x3 >= 0
+& D1 = per1
+& D2 = per2
+& D3 = per3
+& x1 = 0
+& x2 = 0
+& Off3 + x3 = time
+& Off3 + x3 = d1
+& Off3 + x3 = d2
+& x3 = d3
+& Off3 + x3 = t_1
+& Off3 + x3 = t_2
+& x3 = t_3
+
+
+  STATE 3:
+  stopper: f_1_r, scheduler_EDF: ok1_non2_w3, T_1: waiting, T_2: init_s, T_3: waiting ==> 
+  D3 + Off3 > 14*D1 + Off1
+& Off2 >= WCET1 + 9*D1 + Off1
+& 13*D1 + Off1 >= 3*WCET1 + WCET2 + Off2
+& 4*WCET1 + WCET3 + Off1 > deadlineBasic
+& D2 + Off2 > 13*D1 + Off1
+& 14*D1 + Off1 > deadlineBasic
+& deadlineBasic >= Off1 + x1
+& WCET1 + Off1 > Off3
+& WCET1 >= x1
+& D3 + Off3 > D2 + Off2
+& 10*D1 + Off1 > Off2
+& Off1 >= 0
+& Off1 + x1 >= Off3
+& 2*WCET1 + WCET2 + Off2 > 12*D1 + Off1
+& 3*WCET1 + WCET3 > 3*D1
+& Off3 >= Off1
+& D3 >= WCET3 + D1
+& D1 = per1
+& D2 = per2
+& D3 = per3
+& x2 = 0
+& x3 = 0
+& Off1 + x1 = time
+& x1 = d1
+& Off1 + x1 = d2
+& Off1 + x1 = Off3 + d3
+& x1 = t_1
+& Off1 + x1 = t_2
+& Off1 + x1 = Off3 + t_3
+
+
+  STATE 4:
+  stopper: f_1_r, scheduler_EDF: ok1_non2_w3, T_1: waiting, T_2: init_s, T_3: waiting ==> 
+  Off2 > 9*D1 + Off1
+& D2 + Off2 > 13*D1 + Off1
+& D3 + Off3 > 14*D1 + Off1
+& Off2 >= WCET1 + 9*D1 + Off1
+& 13*D1 + Off1 >= 3*WCET1 + WCET2 + Off2
+& 4*WCET1 + WCET3 + Off3 > deadlineBasic
+& 14*D1 + Off1 > deadlineBasic
+& deadlineBasic >= Off1 + x1
+& WCET1 + Off1 > Off3
+& WCET1 >= x1
+& D3 + Off3 > D2 + Off2
+& 10*D1 + Off1 > Off2
+& Off1 >= Off3
+& Off3 >= 0
+& x1 >= 0
+& 2*WCET1 + WCET2 + Off2 > 12*D1 + Off1
+& 3*WCET1 + WCET3 + Off3 > 3*D1 + Off1
+& D3 >= WCET3 + D1
+& D1 = per1
+& D2 = per2
+& D3 = per3
+& x2 = 0
+& Off1 = Off3 + x3
+& Off1 + x1 = time
+& x1 = d1
+& Off1 + x1 = d2
+& Off1 + x1 = Off3 + d3
+& x1 = t_1
+& Off1 + x1 = t_2
+& Off1 + x1 = Off3 + t_3
+
+
+  STATE 5:
+  stopper: f_2_r, scheduler_EDF: non1_non2_ok3, T_1: idle, T_2: init_s, T_3: waiting ==> 
+  D2 + Off2 > 13*D1 + Off1
+& D3 + Off3 > 14*D1 + Off1
+& Off2 >= WCET1 + 9*D1 + Off1
+& 13*D1 + Off1 >= 3*WCET1 + WCET2 + Off2
+& 4*WCET1 + WCET3 + Off1 > deadlineBasic
+& D3 + Off3 > D2 + Off2
+& 14*D1 + Off1 > deadlineBasic
+& deadlineBasic >= WCET1 + Off1 + x3
+& WCET1 + Off1 > Off3
+& 10*D1 + Off1 > Off2
+& 2*WCET1 + WCET2 + Off2 > 12*D1 + Off1
+& Off1 >= 0
+& x3 >= 0
+& Off3 >= Off1
+& D3 >= WCET3 + D1
+& D1 >= WCET1 + x3
+& 3*WCET1 + WCET3 > 3*D1
+& D1 = per1
+& D2 = per2
+& D3 = per3
+& x1 = 0
+& x2 = 0
+& WCET1 + Off1 + x3 = time
+& WCET1 + x3 = d1
+& WCET1 + Off1 + x3 = d2
+& WCET1 + Off1 + x3 = Off3 + d3
+& WCET1 + x3 = t_1
+& WCET1 + Off1 + x3 = t_2
+& WCET1 + Off1 + x3 = Off3 + t_3
+
+
+  STATE 6:
+  stopper: f_2_r, scheduler_EDF: non1_non2_ok3, T_1: idle, T_2: init_s, T_3: waiting ==> 
+  Off2 > 9*D1 + Off1
+& D2 + Off2 > 13*D1 + Off1
+& D3 + Off3 > 14*D1 + Off1
+& Off2 >= WCET1 + 9*D1 + Off1
+& 13*D1 + Off1 >= 3*WCET1 + WCET2 + Off2
+& 4*WCET1 + WCET3 + Off3 > deadlineBasic
+& 14*D1 + Off1 > deadlineBasic
+& deadlineBasic >= WCET1 + Off3 + x3
+& WCET1 + Off1 > Off3
+& WCET1 >= 0
+& D3 + Off3 > D2 + Off2
+& 10*D1 + Off1 > Off2
+& Off1 >= Off3
+& Off3 >= 0
+& 2*WCET1 + WCET2 + Off2 > 12*D1 + Off1
+& Off3 + x3 >= Off1
+& D3 >= WCET3 + D1
+& D1 + Off1 >= WCET1 + Off3 + x3
+& 3*WCET1 + WCET3 + Off3 > 3*D1 + Off1
+& D1 = per1
+& D2 = per2
+& D3 = per3
+& x1 = 0
+& x2 = 0
+& WCET1 + Off3 + x3 = time
+& WCET1 + Off3 + x3 = Off1 + d1
+& WCET1 + Off3 + x3 = d2
+& WCET1 + x3 = d3
+& WCET1 + Off3 + x3 = Off1 + t_1
+& WCET1 + Off3 + x3 = t_2
+& WCET1 + x3 = t_3
+
+
+  STATE 7:
+  stopper: f_2_r, scheduler_EDF: ok1_non2_w3, T_1: waiting, T_2: init_s, T_3: waiting ==> 
+  Off2 >= WCET1 + 9*D1 + Off1
+& 13*D1 + Off1 >= 3*WCET1 + WCET2 + Off2
+& 4*WCET1 + WCET3 + Off1 > deadlineBasic
+& D3 + Off3 > 14*D1 + Off1
+& 14*D1 + Off1 > deadlineBasic
+& deadlineBasic >= D1 + Off1 + x1
+& D2 + Off2 > 13*D1 + Off1
+& WCET1 + Off1 > Off3
+& WCET1 >= x1
+& Off1 >= 0
+& x1 >= 0
+& Off3 >= Off1
+& 2*WCET1 + WCET2 + Off2 > 12*D1 + Off1
+& D3 + Off3 > D2 + Off2
+& 3*WCET1 + WCET3 > 3*D1
+& D3 >= WCET3 + D1
+& 10*D1 + Off1 > Off2
+& D1 = per1
+& D2 = per2
+& D3 = per3
+& x2 = 0
+& WCET1 + x3 = D1
+& D1 + Off1 + x1 = time
+& x1 = d1
+& D1 + Off1 + x1 = d2
+& D1 + Off1 + x1 = Off3 + d3
+& x1 = t_1
+& D1 + Off1 + x1 = t_2
+& D1 + Off1 + x1 = Off3 + t_3
+
+
+  STATE 8:
+  stopper: f_2_r, scheduler_EDF: ok1_non2_w3, T_1: waiting, T_2: init_s, T_3: waiting ==> 
+  D2 + Off2 > 13*D1 + Off1
+& D3 + Off3 > 14*D1 + Off1
+& Off2 >= WCET1 + 9*D1 + Off1
+& 13*D1 + Off1 >= 3*WCET1 + WCET2 + Off2
+& 4*WCET1 + WCET3 + Off3 > deadlineBasic
+& 14*D1 + Off1 > deadlineBasic
+& deadlineBasic >= D1 + Off1 + x1
+& Off2 > 9*D1 + Off1
+& WCET1 + Off1 > Off3
+& WCET1 >= x1
+& Off1 >= Off3
+& Off3 >= 0
+& x1 >= 0
+& D3 + Off3 > D2 + Off2
+& 2*WCET1 + WCET2 + Off2 > 12*D1 + Off1
+& 3*WCET1 + WCET3 + Off3 > 3*D1 + Off1
+& D3 >= WCET3 + D1
+& 10*D1 + Off1 > Off2
+& D1 = per1
+& D2 = per2
+& D3 = per3
+& x2 = 0
+& WCET1 + Off3 + x3 = D1 + Off1
+& D1 + Off1 + x1 = time
+& x1 = d1
+& D1 + Off1 + x1 = d2
+& D1 + Off1 + x1 = Off3 + d3
+& x1 = t_1
+& D1 + Off1 + x1 = t_2
+& D1 + Off1 + x1 = Off3 + t_3
+
+
+  STATE 9:
+  stopper: f_3_r, scheduler_EDF: non1_non2_ok3, T_1: idle, T_2: init_s, T_3: waiting ==> 
+  Off2 >= WCET1 + 9*D1 + Off1
+& 13*D1 + Off1 >= 3*WCET1 + WCET2 + Off2
+& 4*WCET1 + WCET3 + Off1 > deadlineBasic
+& D3 + Off3 > 14*D1 + Off1
+& 14*D1 + Off1 > deadlineBasic
+& deadlineBasic >= 2*WCET1 + Off1 + x3
+& D2 + Off2 > 13*D1 + Off1
+& WCET1 + Off1 > Off3
+& WCET1 + x3 >= D1
+& D3 + Off3 > D2 + Off2
+& Off1 >= 0
+& Off3 >= Off1
+& 2*WCET1 + WCET2 + Off2 > 12*D1 + Off1
+& 10*D1 + Off1 > Off2
+& D3 >= WCET3 + D1
+& 2*D1 >= 2*WCET1 + x3
+& 3*WCET1 + WCET3 > 3*D1
+& D1 = per1
+& D2 = per2
+& D3 = per3
+& x1 = 0
+& x2 = 0
+& 2*WCET1 + Off1 + x3 = time
+& 2*WCET1 + x3 = D1 + d1
+& 2*WCET1 + Off1 + x3 = d2
+& 2*WCET1 + Off1 + x3 = Off3 + d3
+& 2*WCET1 + x3 = D1 + t_1
+& 2*WCET1 + Off1 + x3 = t_2
+& 2*WCET1 + Off1 + x3 = Off3 + t_3
+
+
+  STATE 10:
+  stopper: f_3_r, scheduler_EDF: non1_non2_ok3, T_1: idle, T_2: init_s, T_3: waiting ==> 
+  D3 + Off3 > 14*D1 + Off1
+& Off2 >= WCET1 + 9*D1 + Off1
+& 13*D1 + Off1 >= 3*WCET1 + WCET2 + Off2
+& 4*WCET1 + WCET3 + Off3 > deadlineBasic
+& 14*D1 + Off1 > deadlineBasic
+& deadlineBasic >= 2*WCET1 + Off3 + x3
+& D3 + Off3 > D2 + Off2
+& WCET1 + Off1 > Off3
+& WCET1 >= 0
+& WCET1 + Off3 + x3 >= D1 + Off1
+& 10*D1 + Off1 > Off2
+& Off1 >= Off3
+& Off3 >= 0
+& D2 + Off2 > 13*D1 + Off1
+& Off2 > 9*D1 + Off1
+& 2*WCET1 + WCET2 + Off2 > 12*D1 + Off1
+& D3 >= WCET3 + D1
+& 2*D1 + Off1 >= 2*WCET1 + Off3 + x3
+& 3*WCET1 + WCET3 + Off3 > 3*D1 + Off1
+& D1 = per1
+& D2 = per2
+& D3 = per3
+& x1 = 0
+& x2 = 0
+& 2*WCET1 + Off3 + x3 = time
+& 2*WCET1 + Off3 + x3 = D1 + Off1 + d1
+& 2*WCET1 + Off3 + x3 = d2
+& 2*WCET1 + x3 = d3
+& 2*WCET1 + Off3 + x3 = D1 + Off1 + t_1
+& 2*WCET1 + Off3 + x3 = t_2
+& 2*WCET1 + x3 = t_3
+
+
+  STATE 11:
+  stopper: f_3_r, scheduler_EDF: ok1_non2_w3, T_1: waiting, T_2: init_s, T_3: waiting ==> 
+  13*D1 + Off1 >= 3*WCET1 + WCET2 + Off2
+& 4*WCET1 + WCET3 + Off1 > deadlineBasic
+& Off2 >= WCET1 + 9*D1 + Off1
+& 14*D1 + Off1 > deadlineBasic
+& deadlineBasic >= 2*D1 + Off1 + x1
+& D3 + Off3 > 14*D1 + Off1
+& WCET1 + Off1 > Off3
+& WCET1 >= x1
+& Off1 >= 0
+& x1 >= 0
+& Off3 >= Off1
+& D2 + Off2 > 13*D1 + Off1
+& 2*WCET1 + WCET2 + Off2 > 12*D1 + Off1
+& D3 + Off3 > D2 + Off2
+& 3*WCET1 + WCET3 > 3*D1
+& D3 >= WCET3 + D1
+& 10*D1 + Off1 > Off2
+& D1 = per1
+& D2 = per2
+& D3 = per3
+& x2 = 0
+& 2*WCET1 + x3 = 2*D1
+& 2*D1 + Off1 + x1 = time
+& x1 = d1
+& 2*D1 + Off1 + x1 = d2
+& 2*D1 + Off1 + x1 = Off3 + d3
+& x1 = t_1
+& 2*D1 + Off1 + x1 = t_2
+& 2*D1 + Off1 + x1 = Off3 + t_3
+
+
+  STATE 12:
+  stopper: f_3_r, scheduler_EDF: ok1_non2_w3, T_1: waiting, T_2: init_s, T_3: waiting ==> 
+  D3 + Off3 > 14*D1 + Off1
+& Off2 >= WCET1 + 9*D1 + Off1
+& 13*D1 + Off1 >= 3*WCET1 + WCET2 + Off2
+& 4*WCET1 + WCET3 + Off3 > deadlineBasic
+& 14*D1 + Off1 > deadlineBasic
+& deadlineBasic >= 2*D1 + Off1 + x1
+& D2 + Off2 > 13*D1 + Off1
+& WCET1 + Off1 > Off3
+& WCET1 >= x1
+& Off1 >= Off3
+& Off3 >= 0
+& x1 >= 0
+& Off2 > 9*D1 + Off1
+& D3 + Off3 > D2 + Off2
+& 2*WCET1 + WCET2 + Off2 > 12*D1 + Off1
+& 3*WCET1 + WCET3 + Off3 > 3*D1 + Off1
+& D3 >= WCET3 + D1
+& 10*D1 + Off1 > Off2
+& D1 = per1
+& D2 = per2
+& D3 = per3
+& x2 = 0
+& 2*WCET1 + Off3 + x3 = 2*D1 + Off1
+& 2*D1 + Off1 + x1 = time
+& x1 = d1
+& 2*D1 + Off1 + x1 = d2
+& 2*D1 + Off1 + x1 = Off3 + d3
+& x1 = t_1
+& 2*D1 + Off1 + x1 = t_2
+& 2*D1 + Off1 + x1 = Off3 + t_3
+
+
+  STATE 13:
+  stopper: f_4_r, scheduler_EDF: non1_non2_ok3, T_1: idle, T_2: init_s, T_3: waiting ==> 
+  Off2 >= WCET1 + 9*D1 + Off1
+& 13*D1 + Off1 >= 3*WCET1 + WCET2 + Off2
+& 4*WCET1 + WCET3 + Off1 > deadlineBasic
+& D3 + Off3 > 14*D1 + Off1
+& 14*D1 + Off1 > deadlineBasic
+& deadlineBasic >= 3*WCET1 + Off1 + x3
+& D2 + Off2 > 13*D1 + Off1
+& 2*WCET1 + x3 >= 2*D1
+& WCET1 + Off1 > Off3
+& D3 + Off3 > D2 + Off2
+& Off1 >= 0
+& Off3 >= Off1
+& 2*WCET1 + WCET2 + Off2 > 12*D1 + Off1
+& 10*D1 + Off1 > Off2
+& D3 >= WCET3 + D1
+& 3*D1 >= 3*WCET1 + x3
+& 3*WCET1 + WCET3 > 3*D1
+& D1 = per1
+& D2 = per2
+& D3 = per3
+& x1 = 0
+& x2 = 0
+& 3*WCET1 + Off1 + x3 = time
+& 3*WCET1 + x3 = 2*D1 + d1
+& 3*WCET1 + Off1 + x3 = d2
+& 3*WCET1 + Off1 + x3 = Off3 + d3
+& 3*WCET1 + x3 = 2*D1 + t_1
+& 3*WCET1 + Off1 + x3 = t_2
+& 3*WCET1 + Off1 + x3 = Off3 + t_3
+
+
+  STATE 14:
+  stopper: f_4_r, scheduler_EDF: non1_non2_ok3, T_1: idle, T_2: init_s, T_3: waiting ==> 
+  D3 + Off3 > 14*D1 + Off1
+& Off2 >= WCET1 + 9*D1 + Off1
+& 13*D1 + Off1 >= 3*WCET1 + WCET2 + Off2
+& 4*WCET1 + WCET3 + Off3 > deadlineBasic
+& 14*D1 + Off1 > deadlineBasic
+& deadlineBasic >= 3*WCET1 + Off3 + x3
+& 10*D1 + Off1 > Off2
+& 2*WCET1 + Off3 + x3 >= 2*D1 + Off1
+& WCET1 + Off1 > Off3
+& WCET1 >= 0
+& D2 + Off2 > 13*D1 + Off1
+& Off1 >= Off3
+& Off3 >= 0
+& Off2 > 9*D1 + Off1
+& D3 + Off3 > D2 + Off2
+& 2*WCET1 + WCET2 + Off2 > 12*D1 + Off1
+& D3 >= WCET3 + D1
+& 3*D1 + Off1 >= 3*WCET1 + Off3 + x3
+& 3*WCET1 + WCET3 + Off3 > 3*D1 + Off1
+& D1 = per1
+& D2 = per2
+& D3 = per3
+& x1 = 0
+& x2 = 0
+& 3*WCET1 + Off3 + x3 = time
+& 3*WCET1 + Off3 + x3 = 2*D1 + Off1 + d1
+& 3*WCET1 + Off3 + x3 = d2
+& 3*WCET1 + x3 = d3
+& 3*WCET1 + Off3 + x3 = 2*D1 + Off1 + t_1
+& 3*WCET1 + Off3 + x3 = t_2
+& 3*WCET1 + x3 = t_3
+
+
+  STATE 15:
+  stopper: f_4_r, scheduler_EDF: ok1_non2_w3, T_1: waiting, T_2: init_s, T_3: waiting ==> 
+  13*D1 + Off1 >= 3*WCET1 + WCET2 + Off2
+& 4*WCET1 + WCET3 + Off1 > deadlineBasic
+& Off2 >= WCET1 + 9*D1 + Off1
+& 14*D1 + Off1 > deadlineBasic
+& deadlineBasic >= 3*D1 + Off1 + x1
+& 3*WCET1 + WCET3 > 3*D1
+& WCET1 + Off1 > Off3
+& WCET1 >= x1
+& Off1 >= 0
+& x1 >= 0
+& Off3 >= Off1
+& 10*D1 + Off1 > Off2
+& D3 + Off3 > 14*D1 + Off1
+& D2 + Off2 > 13*D1 + Off1
+& 2*WCET1 + WCET2 + Off2 > 12*D1 + Off1
+& D3 >= WCET3 + D1
+& D3 + Off3 > D2 + Off2
+& D1 = per1
+& D2 = per2
+& D3 = per3
+& x2 = 0
+& 3*WCET1 + x3 = 3*D1
+& 3*D1 + Off1 + x1 = time
+& x1 = d1
+& 3*D1 + Off1 + x1 = d2
+& 3*D1 + Off1 + x1 = Off3 + d3
+& x1 = t_1
+& 3*D1 + Off1 + x1 = t_2
+& 3*D1 + Off1 + x1 = Off3 + t_3
+
+
+  STATE 16:
+  stopper: f_4_r, scheduler_EDF: ok1_non2_w3, T_1: waiting, T_2: init_s, T_3: waiting ==> 
+  D3 + Off3 > 14*D1 + Off1
+& Off2 >= WCET1 + 9*D1 + Off1
+& 13*D1 + Off1 >= 3*WCET1 + WCET2 + Off2
+& 4*WCET1 + WCET3 + Off3 > deadlineBasic
+& 14*D1 + Off1 > deadlineBasic
+& deadlineBasic >= 3*D1 + Off1 + x1
+& 3*WCET1 + WCET3 + Off3 > 3*D1 + Off1
+& WCET1 + Off1 > Off3
+& WCET1 >= x1
+& Off1 >= Off3
+& Off3 >= 0
+& x1 >= 0
+& 10*D1 + Off1 > Off2
+& D2 + Off2 > 13*D1 + Off1
+& Off2 > 9*D1 + Off1
+& 2*WCET1 + WCET2 + Off2 > 12*D1 + Off1
+& D3 >= WCET3 + D1
+& D3 + Off3 > D2 + Off2
+& D1 = per1
+& D2 = per2
+& D3 = per3
+& x2 = 0
+& 3*WCET1 + Off3 + x3 = 3*D1 + Off1
+& 3*D1 + Off1 + x1 = time
+& x1 = d1
+& 3*D1 + Off1 + x1 = d2
+& 3*D1 + Off1 + x1 = Off3 + d3
+& x1 = t_1
+& 3*D1 + Off1 + x1 = t_2
+& 3*D1 + Off1 + x1 = Off3 + t_3
+
+
+  STATE 17:
+  stopper: f_5_r, scheduler_EDF: non1_non2_ok3, T_1: idle, T_2: init_s, T_3: waiting ==> 
+  13*D1 + Off1 >= 3*WCET1 + WCET2 + Off2
+& 4*WCET1 + WCET3 + Off1 > deadlineBasic
+& Off2 >= WCET1 + 9*D1 + Off1
+& 14*D1 + Off1 > deadlineBasic
+& deadlineBasic >= 4*WCET1 + Off1 + x3
+& D3 + Off3 > 14*D1 + Off1
+& 3*WCET1 + x3 >= 3*D1
+& WCET1 + Off1 > Off3
+& D2 + Off2 > 13*D1 + Off1
+& Off1 >= 0
+& Off3 >= Off1
+& D3 + Off3 > D2 + Off2
+& 10*D1 + Off1 > Off2
+& D3 >= WCET3 + D1
+& 4*D1 >= 4*WCET1 + x3
+& 2*WCET1 + WCET2 + Off2 > 12*D1 + Off1
+& D1 = per1
+& D2 = per2
+& D3 = per3
+& x1 = 0
+& x2 = 0
+& 4*WCET1 + Off1 + x3 = time
+& 4*WCET1 + x3 = 3*D1 + d1
+& 4*WCET1 + Off1 + x3 = d2
+& 4*WCET1 + Off1 + x3 = Off3 + d3
+& 4*WCET1 + x3 = 3*D1 + t_1
+& 4*WCET1 + Off1 + x3 = t_2
+& 4*WCET1 + Off1 + x3 = Off3 + t_3
+
+
+  STATE 18:
+  stopper: f_5_r, scheduler_EDF: non1_non2_ok3, T_1: idle, T_2: init_s, T_3: waiting ==> 
+  Off2 >= WCET1 + 9*D1 + Off1
+& 13*D1 + Off1 >= 3*WCET1 + WCET2 + Off2
+& 4*WCET1 + WCET3 + Off3 > deadlineBasic
+& 14*D1 + Off1 > deadlineBasic
+& deadlineBasic >= 4*WCET1 + Off3 + x3
+& D3 + Off3 > 14*D1 + Off1
+& 3*WCET1 + Off3 + x3 >= 3*D1 + Off1
+& WCET1 + Off1 > Off3
+& WCET1 >= 0
+& D2 + Off2 > 13*D1 + Off1
+& Off1 >= Off3
+& Off3 >= 0
+& 10*D1 + Off1 > Off2
+& Off2 > 9*D1 + Off1
+& D3 + Off3 > D2 + Off2
+& D3 >= WCET3 + D1
+& 4*D1 + Off1 >= 4*WCET1 + Off3 + x3
+& 2*WCET1 + WCET2 + Off2 > 12*D1 + Off1
+& D1 = per1
+& D2 = per2
+& D3 = per3
+& x1 = 0
+& x2 = 0
+& 4*WCET1 + Off3 + x3 = time
+& 4*WCET1 + Off3 + x3 = 3*D1 + Off1 + d1
+& 4*WCET1 + Off3 + x3 = d2
+& 4*WCET1 + x3 = d3
+& 4*WCET1 + Off3 + x3 = 3*D1 + Off1 + t_1
+& 4*WCET1 + Off3 + x3 = t_2
+& 4*WCET1 + x3 = t_3
+
+
+  STATE 19:
+  stopper: f_5_r, scheduler_EDF: ok1_non2_w3, T_1: waiting, T_2: init_s, T_3: waiting ==> 
+  Off2 >= WCET1 + 9*D1 + Off1
+& 13*D1 + Off1 >= 3*WCET1 + WCET2 + Off2
+& 14*D1 + Off1 > deadlineBasic
+& deadlineBasic >= 4*D1 + Off1 + x1
+& WCET1 + Off1 > Off3
+& WCET1 >= x1
+& Off1 >= 0
+& x1 >= 0
+& Off3 >= Off1
+& 10*D1 + Off1 > Off2
+& D3 + Off3 > 14*D1 + Off1
+& D2 + Off2 > 13*D1 + Off1
+& 2*WCET1 + WCET2 + Off2 > 12*D1 + Off1
+& D3 >= WCET3 + D1
+& D3 + Off3 > D2 + Off2
+& 4*WCET1 + WCET3 + Off1 > deadlineBasic
+& D1 = per1
+& D2 = per2
+& D3 = per3
+& x2 = 0
+& 4*WCET1 + x3 = 4*D1
+& 4*D1 + Off1 + x1 = time
+& x1 = d1
+& 4*D1 + Off1 + x1 = d2
+& 4*D1 + Off1 + x1 = Off3 + d3
+& x1 = t_1
+& 4*D1 + Off1 + x1 = t_2
+& 4*D1 + Off1 + x1 = Off3 + t_3
+
+
+  STATE 20:
+  stopper: f_5_r, scheduler_EDF: ok1_non2_w3, T_1: waiting, T_2: init_s, T_3: waiting ==> 
+  D3 + Off3 > 14*D1 + Off1
+& Off2 >= WCET1 + 9*D1 + Off1
+& 13*D1 + Off1 >= 3*WCET1 + WCET2 + Off2
+& 14*D1 + Off1 > deadlineBasic
+& deadlineBasic >= 4*D1 + Off1 + x1
+& WCET1 + Off1 > Off3
+& WCET1 >= x1
+& Off1 >= Off3
+& Off3 >= 0
+& x1 >= 0
+& 10*D1 + Off1 > Off2
+& D2 + Off2 > 13*D1 + Off1
+& Off2 > 9*D1 + Off1
+& 2*WCET1 + WCET2 + Off2 > 12*D1 + Off1
+& D3 >= WCET3 + D1
+& D3 + Off3 > D2 + Off2
+& 4*WCET1 + WCET3 + Off3 > deadlineBasic
+& D1 = per1
+& D2 = per2
+& D3 = per3
+& x2 = 0
+& 4*WCET1 + Off3 + x3 = 4*D1 + Off1
+& 4*D1 + Off1 + x1 = time
+& x1 = d1
+& 4*D1 + Off1 + x1 = d2
+& 4*D1 + Off1 + x1 = Off3 + d3
+& x1 = t_1
+& 4*D1 + Off1 + x1 = t_2
+& 4*D1 + Off1 + x1 = Off3 + t_3
+
+
+  STATE 21:
+  stopper: f_6_r, scheduler_EDF: non1_non2_ok3, T_1: idle, T_2: init_s, T_3: waiting ==> 
+  D2 + Off2 > 13*D1 + Off1
+& D3 + Off3 > 14*D1 + Off1
+& Off2 >= WCET1 + 9*D1 + Off1
+& 13*D1 + Off1 >= 3*WCET1 + WCET2 + Off2
+& 14*D1 + Off1 > deadlineBasic
+& deadlineBasic >= 5*WCET1 + Off1 + x3
+& 4*WCET1 + x3 >= 4*D1
+& WCET1 + Off1 > Off3
+& Off1 >= 0
+& Off3 >= Off1
+& D3 + Off3 > D2 + Off2
+& 10*D1 + Off1 > Off2
+& D3 >= WCET3 + D1
+& 5*D1 >= 5*WCET1 + x3
+& 2*WCET1 + WCET2 + Off2 > 12*D1 + Off1
+& 4*WCET1 + WCET3 + Off1 > deadlineBasic
+& D1 = per1
+& D2 = per2
+& D3 = per3
+& x1 = 0
+& x2 = 0
+& 5*WCET1 + Off1 + x3 = time
+& 5*WCET1 + x3 = 4*D1 + d1
+& 5*WCET1 + Off1 + x3 = d2
+& 5*WCET1 + Off1 + x3 = Off3 + d3
+& 5*WCET1 + x3 = 4*D1 + t_1
+& 5*WCET1 + Off1 + x3 = t_2
+& 5*WCET1 + Off1 + x3 = Off3 + t_3
+
+
+  STATE 22:
+  stopper: f_6_r, scheduler_EDF: non1_non2_ok3, T_1: idle, T_2: init_s, T_3: waiting ==> 
+  D2 + Off2 > 13*D1 + Off1
+& D3 + Off3 > 14*D1 + Off1
+& Off2 >= WCET1 + 9*D1 + Off1
+& 13*D1 + Off1 >= 3*WCET1 + WCET2 + Off2
+& 14*D1 + Off1 > deadlineBasic
+& deadlineBasic >= 5*WCET1 + Off3 + x3
+& 4*WCET1 + Off3 + x3 >= 4*D1 + Off1
+& WCET1 + Off1 > Off3
+& WCET1 >= 0
+& Off1 >= Off3
+& Off3 >= 0
+& 10*D1 + Off1 > Off2
+& Off2 > 9*D1 + Off1
+& D3 + Off3 > D2 + Off2
+& D3 >= WCET3 + D1
+& 5*D1 + Off1 >= 5*WCET1 + Off3 + x3
+& 2*WCET1 + WCET2 + Off2 > 12*D1 + Off1
+& 4*WCET1 + WCET3 + Off3 > deadlineBasic
+& D1 = per1
+& D2 = per2
+& D3 = per3
+& x1 = 0
+& x2 = 0
+& 5*WCET1 + Off3 + x3 = time
+& 5*WCET1 + Off3 + x3 = 4*D1 + Off1 + d1
+& 5*WCET1 + Off3 + x3 = d2
+& 5*WCET1 + x3 = d3
+& 5*WCET1 + Off3 + x3 = 4*D1 + Off1 + t_1
+& 5*WCET1 + Off3 + x3 = t_2
+& 5*WCET1 + x3 = t_3
+
+
+  STATE 23:
+  stopper: f_6_r, scheduler_EDF: ok1_non2_w3, T_1: waiting, T_2: init_s, T_3: waiting ==> 
+  Off2 >= WCET1 + 9*D1 + Off1
+& 13*D1 + Off1 >= 3*WCET1 + WCET2 + Off2
+& 14*D1 + Off1 > deadlineBasic
+& deadlineBasic >= 5*D1 + Off1 + x1
+& WCET1 + Off1 > Off3
+& WCET1 >= x1
+& Off1 >= 0
+& x1 >= 0
+& Off3 >= Off1
+& 10*D1 + Off1 > Off2
+& D3 + Off3 > 14*D1 + Off1
+& D2 + Off2 > 13*D1 + Off1
+& 2*WCET1 + WCET2 + Off2 > 12*D1 + Off1
+& D3 >= WCET3 + D1
+& D3 + Off3 > D2 + Off2
+& 4*WCET1 + WCET3 + Off1 > deadlineBasic
+& D1 = per1
+& D2 = per2
+& D3 = per3
+& x2 = 0
+& 5*WCET1 + x3 = 5*D1
+& 5*D1 + Off1 + x1 = time
+& x1 = d1
+& 5*D1 + Off1 + x1 = d2
+& 5*D1 + Off1 + x1 = Off3 + d3
+& x1 = t_1
+& 5*D1 + Off1 + x1 = t_2
+& 5*D1 + Off1 + x1 = Off3 + t_3
+
+
+  STATE 24:
+  stopper: f_6_r, scheduler_EDF: ok1_non2_w3, T_1: waiting, T_2: init_s, T_3: waiting ==> 
+  D3 + Off3 > 14*D1 + Off1
+& Off2 >= WCET1 + 9*D1 + Off1
+& 13*D1 + Off1 >= 3*WCET1 + WCET2 + Off2
+& 14*D1 + Off1 > deadlineBasic
+& deadlineBasic >= 5*D1 + Off1 + x1
+& WCET1 + Off1 > Off3
+& WCET1 >= x1
+& Off1 >= Off3
+& Off3 >= 0
+& x1 >= 0
+& 10*D1 + Off1 > Off2
+& D2 + Off2 > 13*D1 + Off1
+& Off2 > 9*D1 + Off1
+& 2*WCET1 + WCET2 + Off2 > 12*D1 + Off1
+& D3 >= WCET3 + D1
+& D3 + Off3 > D2 + Off2
+& 4*WCET1 + WCET3 + Off3 > deadlineBasic
+& D1 = per1
+& D2 = per2
+& D3 = per3
+& x2 = 0
+& 5*WCET1 + Off3 + x3 = 5*D1 + Off1
+& 5*D1 + Off1 + x1 = time
+& x1 = d1
+& 5*D1 + Off1 + x1 = d2
+& 5*D1 + Off1 + x1 = Off3 + d3
+& x1 = t_1
+& 5*D1 + Off1 + x1 = t_2
+& 5*D1 + Off1 + x1 = Off3 + t_3
+
+
+  STATE 25:
+  stopper: f_7_r, scheduler_EDF: non1_non2_ok3, T_1: idle, T_2: init_s, T_3: waiting ==> 
+  D2 + Off2 > 13*D1 + Off1
+& D3 + Off3 > 14*D1 + Off1
+& Off2 >= WCET1 + 9*D1 + Off1
+& 13*D1 + Off1 >= 3*WCET1 + WCET2 + Off2
+& 14*D1 + Off1 > deadlineBasic
+& deadlineBasic >= 6*WCET1 + Off1 + x3
+& 5*WCET1 + x3 >= 5*D1
+& WCET1 + Off1 > Off3
+& Off1 >= 0
+& Off3 >= Off1
+& D3 + Off3 > D2 + Off2
+& 10*D1 + Off1 > Off2
+& D3 >= WCET3 + D1
+& 6*D1 >= 6*WCET1 + x3
+& 2*WCET1 + WCET2 + Off2 > 12*D1 + Off1
+& 4*WCET1 + WCET3 + Off1 > deadlineBasic
+& D1 = per1
+& D2 = per2
+& D3 = per3
+& x1 = 0
+& x2 = 0
+& 6*WCET1 + Off1 + x3 = time
+& 6*WCET1 + x3 = 5*D1 + d1
+& 6*WCET1 + Off1 + x3 = d2
+& 6*WCET1 + Off1 + x3 = Off3 + d3
+& 6*WCET1 + x3 = 5*D1 + t_1
+& 6*WCET1 + Off1 + x3 = t_2
+& 6*WCET1 + Off1 + x3 = Off3 + t_3
+
+
+  STATE 26:
+  stopper: f_7_r, scheduler_EDF: non1_non2_ok3, T_1: idle, T_2: init_s, T_3: waiting ==> 
+  D2 + Off2 > 13*D1 + Off1
+& D3 + Off3 > 14*D1 + Off1
+& Off2 >= WCET1 + 9*D1 + Off1
+& 13*D1 + Off1 >= 3*WCET1 + WCET2 + Off2
+& 14*D1 + Off1 > deadlineBasic
+& deadlineBasic >= 6*WCET1 + Off3 + x3
+& 5*WCET1 + Off3 + x3 >= 5*D1 + Off1
+& WCET1 + Off1 > Off3
+& WCET1 >= 0
+& Off1 >= Off3
+& Off3 >= 0
+& 10*D1 + Off1 > Off2
+& Off2 > 9*D1 + Off1
+& D3 + Off3 > D2 + Off2
+& D3 >= WCET3 + D1
+& 6*D1 + Off1 >= 6*WCET1 + Off3 + x3
+& 2*WCET1 + WCET2 + Off2 > 12*D1 + Off1
+& 4*WCET1 + WCET3 + Off3 > deadlineBasic
+& D1 = per1
+& D2 = per2
+& D3 = per3
+& x1 = 0
+& x2 = 0
+& 6*WCET1 + Off3 + x3 = time
+& 6*WCET1 + Off3 + x3 = 5*D1 + Off1 + d1
+& 6*WCET1 + Off3 + x3 = d2
+& 6*WCET1 + x3 = d3
+& 6*WCET1 + Off3 + x3 = 5*D1 + Off1 + t_1
+& 6*WCET1 + Off3 + x3 = t_2
+& 6*WCET1 + x3 = t_3
+
+
+  STATE 27:
+  stopper: f_7_r, scheduler_EDF: ok1_non2_w3, T_1: waiting, T_2: init_s, T_3: waiting ==> 
+  Off2 >= WCET1 + 9*D1 + Off1
+& 13*D1 + Off1 >= 3*WCET1 + WCET2 + Off2
+& 14*D1 + Off1 > deadlineBasic
+& deadlineBasic >= 6*D1 + Off1 + x1
+& WCET1 + Off1 > Off3
+& WCET1 >= x1
+& Off1 >= 0
+& x1 >= 0
+& Off3 >= Off1
+& 10*D1 + Off1 > Off2
+& D3 + Off3 > 14*D1 + Off1
+& D2 + Off2 > 13*D1 + Off1
+& 2*WCET1 + WCET2 + Off2 > 12*D1 + Off1
+& D3 >= WCET3 + D1
+& D3 + Off3 > D2 + Off2
+& 4*WCET1 + WCET3 + Off1 > deadlineBasic
+& D1 = per1
+& D2 = per2
+& D3 = per3
+& x2 = 0
+& 6*WCET1 + x3 = 6*D1
+& 6*D1 + Off1 + x1 = time
+& x1 = d1
+& 6*D1 + Off1 + x1 = d2
+& 6*D1 + Off1 + x1 = Off3 + d3
+& x1 = t_1
+& 6*D1 + Off1 + x1 = t_2
+& 6*D1 + Off1 + x1 = Off3 + t_3
+
+
+  STATE 28:
+  stopper: f_7_r, scheduler_EDF: ok1_non2_w3, T_1: waiting, T_2: init_s, T_3: waiting ==> 
+  D3 + Off3 > 14*D1 + Off1
+& Off2 >= WCET1 + 9*D1 + Off1
+& 13*D1 + Off1 >= 3*WCET1 + WCET2 + Off2
+& 14*D1 + Off1 > deadlineBasic
+& deadlineBasic >= 6*D1 + Off1 + x1
+& WCET1 + Off1 > Off3
+& WCET1 >= x1
+& Off1 >= Off3
+& Off3 >= 0
+& x1 >= 0
+& 10*D1 + Off1 > Off2
+& D2 + Off2 > 13*D1 + Off1
+& Off2 > 9*D1 + Off1
+& 2*WCET1 + WCET2 + Off2 > 12*D1 + Off1
+& D3 >= WCET3 + D1
+& D3 + Off3 > D2 + Off2
+& 4*WCET1 + WCET3 + Off3 > deadlineBasic
+& D1 = per1
+& D2 = per2
+& D3 = per3
+& x2 = 0
+& 6*WCET1 + Off3 + x3 = 6*D1 + Off1
+& 6*D1 + Off1 + x1 = time
+& x1 = d1
+& 6*D1 + Off1 + x1 = d2
+& 6*D1 + Off1 + x1 = Off3 + d3
+& x1 = t_1
+& 6*D1 + Off1 + x1 = t_2
+& 6*D1 + Off1 + x1 = Off3 + t_3
+
+
+  STATE 29:
+  stopper: f_8_r, scheduler_EDF: non1_non2_ok3, T_1: idle, T_2: init_s, T_3: waiting ==> 
+  D2 + Off2 > 13*D1 + Off1
+& D3 + Off3 > 14*D1 + Off1
+& Off2 >= WCET1 + 9*D1 + Off1
+& 13*D1 + Off1 >= 3*WCET1 + WCET2 + Off2
+& 14*D1 + Off1 > deadlineBasic
+& deadlineBasic >= 7*WCET1 + Off1 + x3
+& 6*WCET1 + x3 >= 6*D1
+& WCET1 + Off1 > Off3
+& Off1 >= 0
+& Off3 >= Off1
+& D3 + Off3 > D2 + Off2
+& 10*D1 + Off1 > Off2
+& D3 >= WCET3 + D1
+& 7*D1 >= 7*WCET1 + x3
+& 2*WCET1 + WCET2 + Off2 > 12*D1 + Off1
+& 4*WCET1 + WCET3 + Off1 > deadlineBasic
+& D1 = per1
+& D2 = per2
+& D3 = per3
+& x1 = 0
+& x2 = 0
+& 7*WCET1 + Off1 + x3 = time
+& 7*WCET1 + x3 = 6*D1 + d1
+& 7*WCET1 + Off1 + x3 = d2
+& 7*WCET1 + Off1 + x3 = Off3 + d3
+& 7*WCET1 + x3 = 6*D1 + t_1
+& 7*WCET1 + Off1 + x3 = t_2
+& 7*WCET1 + Off1 + x3 = Off3 + t_3
+
+
+  STATE 30:
+  stopper: f_8_r, scheduler_EDF: non1_non2_ok3, T_1: idle, T_2: init_s, T_3: waiting ==> 
+  D2 + Off2 > 13*D1 + Off1
+& D3 + Off3 > 14*D1 + Off1
+& Off2 >= WCET1 + 9*D1 + Off1
+& 13*D1 + Off1 >= 3*WCET1 + WCET2 + Off2
+& 14*D1 + Off1 > deadlineBasic
+& deadlineBasic >= 7*WCET1 + Off3 + x3
+& 6*WCET1 + Off3 + x3 >= 6*D1 + Off1
+& WCET1 + Off1 > Off3
+& WCET1 >= 0
+& Off1 >= Off3
+& Off3 >= 0
+& 10*D1 + Off1 > Off2
+& Off2 > 9*D1 + Off1
+& D3 + Off3 > D2 + Off2
+& D3 >= WCET3 + D1
+& 7*D1 + Off1 >= 7*WCET1 + Off3 + x3
+& 2*WCET1 + WCET2 + Off2 > 12*D1 + Off1
+& 4*WCET1 + WCET3 + Off3 > deadlineBasic
+& D1 = per1
+& D2 = per2
+& D3 = per3
+& x1 = 0
+& x2 = 0
+& 7*WCET1 + Off3 + x3 = time
+& 7*WCET1 + Off3 + x3 = 6*D1 + Off1 + d1
+& 7*WCET1 + Off3 + x3 = d2
+& 7*WCET1 + x3 = d3
+& 7*WCET1 + Off3 + x3 = 6*D1 + Off1 + t_1
+& 7*WCET1 + Off3 + x3 = t_2
+& 7*WCET1 + x3 = t_3
+
+
+  STATE 31:
+  stopper: f_8_r, scheduler_EDF: ok1_non2_w3, T_1: waiting, T_2: init_s, T_3: waiting ==> 
+  Off2 >= WCET1 + 9*D1 + Off1
+& 13*D1 + Off1 >= 3*WCET1 + WCET2 + Off2
+& 14*D1 + Off1 > deadlineBasic
+& deadlineBasic >= 7*D1 + Off1 + x1
+& WCET1 + Off1 > Off3
+& WCET1 >= x1
+& Off1 >= 0
+& x1 >= 0
+& Off3 >= Off1
+& 10*D1 + Off1 > Off2
+& D3 + Off3 > 14*D1 + Off1
+& D2 + Off2 > 13*D1 + Off1
+& 2*WCET1 + WCET2 + Off2 > 12*D1 + Off1
+& D3 >= WCET3 + D1
+& D3 + Off3 > D2 + Off2
+& 4*WCET1 + WCET3 + Off1 > deadlineBasic
+& D1 = per1
+& D2 = per2
+& D3 = per3
+& x2 = 0
+& 7*WCET1 + x3 = 7*D1
+& 7*D1 + Off1 + x1 = time
+& x1 = d1
+& 7*D1 + Off1 + x1 = d2
+& 7*D1 + Off1 + x1 = Off3 + d3
+& x1 = t_1
+& 7*D1 + Off1 + x1 = t_2
+& 7*D1 + Off1 + x1 = Off3 + t_3
+
+
+  STATE 32:
+  stopper: f_8_r, scheduler_EDF: ok1_non2_w3, T_1: waiting, T_2: init_s, T_3: waiting ==> 
+  D3 + Off3 > 14*D1 + Off1
+& Off2 >= WCET1 + 9*D1 + Off1
+& 13*D1 + Off1 >= 3*WCET1 + WCET2 + Off2
+& 14*D1 + Off1 > deadlineBasic
+& deadlineBasic >= 7*D1 + Off1 + x1
+& WCET1 + Off1 > Off3
+& WCET1 >= x1
+& Off1 >= Off3
+& Off3 >= 0
+& x1 >= 0
+& 10*D1 + Off1 > Off2
+& D2 + Off2 > 13*D1 + Off1
+& Off2 > 9*D1 + Off1
+& 2*WCET1 + WCET2 + Off2 > 12*D1 + Off1
+& D3 >= WCET3 + D1
+& D3 + Off3 > D2 + Off2
+& 4*WCET1 + WCET3 + Off3 > deadlineBasic
+& D1 = per1
+& D2 = per2
+& D3 = per3
+& x2 = 0
+& 7*WCET1 + Off3 + x3 = 7*D1 + Off1
+& 7*D1 + Off1 + x1 = time
+& x1 = d1
+& 7*D1 + Off1 + x1 = d2
+& 7*D1 + Off1 + x1 = Off3 + d3
+& x1 = t_1
+& 7*D1 + Off1 + x1 = t_2
+& 7*D1 + Off1 + x1 = Off3 + t_3
+
+
+  STATE 33:
+  stopper: f_9_r, scheduler_EDF: non1_non2_ok3, T_1: idle, T_2: init_s, T_3: waiting ==> 
+  D2 + Off2 > 13*D1 + Off1
+& D3 + Off3 > 14*D1 + Off1
+& Off2 >= WCET1 + 9*D1 + Off1
+& 13*D1 + Off1 >= 3*WCET1 + WCET2 + Off2
+& 14*D1 + Off1 > deadlineBasic
+& deadlineBasic >= 8*WCET1 + Off1 + x3
+& 7*WCET1 + x3 >= 7*D1
+& WCET1 + Off1 > Off3
+& Off1 >= 0
+& Off3 >= Off1
+& D3 + Off3 > D2 + Off2
+& 10*D1 + Off1 > Off2
+& D3 >= WCET3 + D1
+& 8*D1 >= 8*WCET1 + x3
+& 2*WCET1 + WCET2 + Off2 > 12*D1 + Off1
+& 4*WCET1 + WCET3 + Off1 > deadlineBasic
+& D1 = per1
+& D2 = per2
+& D3 = per3
+& x1 = 0
+& x2 = 0
+& 8*WCET1 + Off1 + x3 = time
+& 8*WCET1 + x3 = 7*D1 + d1
+& 8*WCET1 + Off1 + x3 = d2
+& 8*WCET1 + Off1 + x3 = Off3 + d3
+& 8*WCET1 + x3 = 7*D1 + t_1
+& 8*WCET1 + Off1 + x3 = t_2
+& 8*WCET1 + Off1 + x3 = Off3 + t_3
+
+
+  STATE 34:
+  stopper: f_9_r, scheduler_EDF: non1_non2_ok3, T_1: idle, T_2: init_s, T_3: waiting ==> 
+  D2 + Off2 > 13*D1 + Off1
+& D3 + Off3 > 14*D1 + Off1
+& Off2 >= WCET1 + 9*D1 + Off1
+& 13*D1 + Off1 >= 3*WCET1 + WCET2 + Off2
+& 14*D1 + Off1 > deadlineBasic
+& deadlineBasic >= 8*WCET1 + Off3 + x3
+& 7*WCET1 + Off3 + x3 >= 7*D1 + Off1
+& WCET1 + Off1 > Off3
+& WCET1 >= 0
+& Off1 >= Off3
+& Off3 >= 0
+& 10*D1 + Off1 > Off2
+& Off2 > 9*D1 + Off1
+& D3 + Off3 > D2 + Off2
+& D3 >= WCET3 + D1
+& 8*D1 + Off1 >= 8*WCET1 + Off3 + x3
+& 2*WCET1 + WCET2 + Off2 > 12*D1 + Off1
+& 4*WCET1 + WCET3 + Off3 > deadlineBasic
+& D1 = per1
+& D2 = per2
+& D3 = per3
+& x1 = 0
+& x2 = 0
+& 8*WCET1 + Off3 + x3 = time
+& 8*WCET1 + Off3 + x3 = 7*D1 + Off1 + d1
+& 8*WCET1 + Off3 + x3 = d2
+& 8*WCET1 + x3 = d3
+& 8*WCET1 + Off3 + x3 = 7*D1 + Off1 + t_1
+& 8*WCET1 + Off3 + x3 = t_2
+& 8*WCET1 + x3 = t_3
+
+
+  STATE 35:
+  stopper: f_9_r, scheduler_EDF: ok1_non2_w3, T_1: waiting, T_2: init_s, T_3: waiting ==> 
+  Off2 >= WCET1 + 9*D1 + Off1
+& 13*D1 + Off1 >= 3*WCET1 + WCET2 + Off2
+& 14*D1 + Off1 > deadlineBasic
+& deadlineBasic >= 8*D1 + Off1 + x1
+& WCET1 + Off1 > Off3
+& WCET1 >= x1
+& Off1 >= 0
+& x1 >= 0
+& Off3 >= Off1
+& 10*D1 + Off1 > Off2
+& D3 + Off3 > 14*D1 + Off1
+& D2 + Off2 > 13*D1 + Off1
+& 2*WCET1 + WCET2 + Off2 > 12*D1 + Off1
+& D3 >= WCET3 + D1
+& D3 + Off3 > D2 + Off2
+& 4*WCET1 + WCET3 + Off1 > deadlineBasic
+& D1 = per1
+& D2 = per2
+& D3 = per3
+& x2 = 0
+& 8*WCET1 + x3 = 8*D1
+& 8*D1 + Off1 + x1 = time
+& x1 = d1
+& 8*D1 + Off1 + x1 = d2
+& 8*D1 + Off1 + x1 = Off3 + d3
+& x1 = t_1
+& 8*D1 + Off1 + x1 = t_2
+& 8*D1 + Off1 + x1 = Off3 + t_3
+
+
+  STATE 36:
+  stopper: f_9_r, scheduler_EDF: ok1_non2_w3, T_1: waiting, T_2: init_s, T_3: waiting ==> 
+  D3 + Off3 > 14*D1 + Off1
+& Off2 >= WCET1 + 9*D1 + Off1
+& 13*D1 + Off1 >= 3*WCET1 + WCET2 + Off2
+& 14*D1 + Off1 > deadlineBasic
+& deadlineBasic >= 8*D1 + Off1 + x1
+& WCET1 + Off1 > Off3
+& WCET1 >= x1
+& Off1 >= Off3
+& Off3 >= 0
+& x1 >= 0
+& 10*D1 + Off1 > Off2
+& D2 + Off2 > 13*D1 + Off1
+& Off2 > 9*D1 + Off1
+& 2*WCET1 + WCET2 + Off2 > 12*D1 + Off1
+& D3 >= WCET3 + D1
+& D3 + Off3 > D2 + Off2
+& 4*WCET1 + WCET3 + Off3 > deadlineBasic
+& D1 = per1
+& D2 = per2
+& D3 = per3
+& x2 = 0
+& 8*WCET1 + Off3 + x3 = 8*D1 + Off1
+& 8*D1 + Off1 + x1 = time
+& x1 = d1
+& 8*D1 + Off1 + x1 = d2
+& 8*D1 + Off1 + x1 = Off3 + d3
+& x1 = t_1
+& 8*D1 + Off1 + x1 = t_2
+& 8*D1 + Off1 + x1 = Off3 + t_3
+
+
+  STATE 37:
+  stopper: f_10_r, scheduler_EDF: non1_non2_ok3, T_1: idle, T_2: init_s, T_3: waiting ==> 
+  D2 + Off2 > 13*D1 + Off1
+& D3 + Off3 > 14*D1 + Off1
+& Off2 >= WCET1 + 9*D1 + Off1
+& 13*D1 + Off1 >= 3*WCET1 + WCET2 + Off2
+& 14*D1 + Off1 > deadlineBasic
+& deadlineBasic >= 9*WCET1 + Off1 + x3
+& 8*WCET1 + x3 >= 8*D1
+& WCET1 + Off1 > Off3
+& Off1 >= 0
+& Off3 >= Off1
+& D3 + Off3 > D2 + Off2
+& 2*WCET1 + WCET2 + Off2 > 12*D1 + Off1
+& D3 >= WCET3 + D1
+& 9*D1 >= 9*WCET1 + x3
+& 10*D1 + Off1 > Off2
+& 4*WCET1 + WCET3 + Off1 > deadlineBasic
+& D1 = per1
+& D2 = per2
+& D3 = per3
+& x1 = 0
+& x2 = 0
+& 9*WCET1 + Off1 + x3 = time
+& 9*WCET1 + x3 = 8*D1 + d1
+& 9*WCET1 + Off1 + x3 = d2
+& 9*WCET1 + Off1 + x3 = Off3 + d3
+& 9*WCET1 + x3 = 8*D1 + t_1
+& 9*WCET1 + Off1 + x3 = t_2
+& 9*WCET1 + Off1 + x3 = Off3 + t_3
+
+
+  STATE 38:
+  stopper: f_10_r, scheduler_EDF: non1_non2_ok3, T_1: idle, T_2: init_s, T_3: waiting ==> 
+  D2 + Off2 > 13*D1 + Off1
+& D3 + Off3 > 14*D1 + Off1
+& Off2 >= WCET1 + 9*D1 + Off1
+& 13*D1 + Off1 >= 3*WCET1 + WCET2 + Off2
+& 14*D1 + Off1 > deadlineBasic
+& deadlineBasic >= 9*WCET1 + Off3 + x3
+& 8*WCET1 + Off3 + x3 >= 8*D1 + Off1
+& WCET1 + Off1 > Off3
+& WCET1 >= 0
+& Off1 >= Off3
+& Off3 >= 0
+& Off2 > 9*D1 + Off1
+& D3 + Off3 > D2 + Off2
+& 2*WCET1 + WCET2 + Off2 > 12*D1 + Off1
+& D3 >= WCET3 + D1
+& 9*D1 + Off1 >= 9*WCET1 + Off3 + x3
+& 10*D1 + Off1 > Off2
+& 4*WCET1 + WCET3 + Off3 > deadlineBasic
+& D1 = per1
+& D2 = per2
+& D3 = per3
+& x1 = 0
+& x2 = 0
+& 9*WCET1 + Off3 + x3 = time
+& 9*WCET1 + Off3 + x3 = 8*D1 + Off1 + d1
+& 9*WCET1 + Off3 + x3 = d2
+& 9*WCET1 + x3 = d3
+& 9*WCET1 + Off3 + x3 = 8*D1 + Off1 + t_1
+& 9*WCET1 + Off3 + x3 = t_2
+& 9*WCET1 + x3 = t_3
+
+
+  STATE 39:
+  stopper: f_10_r, scheduler_EDF: ok1_non2_w3, T_1: waiting, T_2: init_s, T_3: waiting ==> 
+  Off2 >= WCET1 + 9*D1 + Off1
+& 13*D1 + Off1 >= 3*WCET1 + WCET2 + Off2
+& 14*D1 + Off1 > deadlineBasic
+& deadlineBasic >= 9*D1 + Off1 + x1
+& WCET1 + Off1 > Off3
+& WCET1 >= x1
+& Off1 >= 0
+& x1 >= 0
+& Off3 >= Off1
+& D3 + Off3 > 14*D1 + Off1
+& D2 + Off2 > 13*D1 + Off1
+& D3 + Off3 > D2 + Off2
+& 2*WCET1 + WCET2 + Off2 > 12*D1 + Off1
+& D3 >= WCET3 + D1
+& 10*D1 + Off1 > Off2
+& 4*WCET1 + WCET3 + Off1 > deadlineBasic
+& D1 = per1
+& D2 = per2
+& D3 = per3
+& x2 = 0
+& 9*WCET1 + x3 = 9*D1
+& 9*D1 + Off1 + x1 = time
+& x1 = d1
+& 9*D1 + Off1 + x1 = d2
+& 9*D1 + Off1 + x1 = Off3 + d3
+& x1 = t_1
+& 9*D1 + Off1 + x1 = t_2
+& 9*D1 + Off1 + x1 = Off3 + t_3
+
+
+  STATE 40:
+  stopper: f_10_r, scheduler_EDF: ok1_non2_w3, T_1: waiting, T_2: init_s, T_3: waiting ==> 
+  D3 + Off3 > 14*D1 + Off1
+& Off2 >= WCET1 + 9*D1 + Off1
+& 13*D1 + Off1 >= 3*WCET1 + WCET2 + Off2
+& 14*D1 + Off1 > deadlineBasic
+& deadlineBasic >= 9*D1 + Off1 + x1
+& WCET1 + Off1 > Off3
+& WCET1 >= x1
+& Off1 >= Off3
+& Off3 >= 0
+& x1 >= 0
+& D2 + Off2 > 13*D1 + Off1
+& Off2 > 9*D1 + Off1
+& D3 + Off3 > D2 + Off2
+& 2*WCET1 + WCET2 + Off2 > 12*D1 + Off1
+& D3 >= WCET3 + D1
+& 10*D1 + Off1 > Off2
+& 4*WCET1 + WCET3 + Off3 > deadlineBasic
+& D1 = per1
+& D2 = per2
+& D3 = per3
+& x2 = 0
+& 9*WCET1 + Off3 + x3 = 9*D1 + Off1
+& 9*D1 + Off1 + x1 = time
+& x1 = d1
+& 9*D1 + Off1 + x1 = d2
+& 9*D1 + Off1 + x1 = Off3 + d3
+& x1 = t_1
+& 9*D1 + Off1 + x1 = t_2
+& 9*D1 + Off1 + x1 = Off3 + t_3
+
+
+  STATE 41:
+  stopper: f_10, scheduler_EDF: non1_non2_ok3, T_1: idle, T_2: init_s, T_3: waiting ==> 
+  D2 + Off2 > 13*D1 + Off1
+& D3 + Off3 > 14*D1 + Off1
+& 13*D1 + Off1 >= 3*WCET1 + WCET2 + Off2
+& 14*D1 + Off1 > deadlineBasic
+& deadlineBasic >= 10*WCET1 + Off1 + x3
+& 9*WCET1 + x3 >= 9*D1
+& WCET1 + Off1 > Off3
+& Off1 >= 0
+& Off3 >= Off1
+& D3 + Off3 > D2 + Off2
+& 2*WCET1 + WCET2 + Off2 > 12*D1 + Off1
+& D3 >= WCET3 + D1
+& 10*D1 + Off1 > Off2
+& Off2 >= 10*WCET1 + Off1 + x3
+& 4*WCET1 + WCET3 + Off1 > deadlineBasic
+& D1 = per1
+& D2 = per2
+& D3 = per3
+& x1 = 0
+& x2 = 0
+& 10*WCET1 + Off1 + x3 = time
+& 10*WCET1 + x3 = 9*D1 + d1
+& 10*WCET1 + Off1 + x3 = d2
+& 10*WCET1 + Off1 + x3 = Off3 + d3
+& 10*WCET1 + x3 = 9*D1 + t_1
+& 10*WCET1 + Off1 + x3 = t_2
+& 10*WCET1 + Off1 + x3 = Off3 + t_3
+
+
+  STATE 42:
+  stopper: f_10, scheduler_EDF: non1_non2_ok3, T_1: idle, T_2: init_s, T_3: waiting ==> 
+  D2 + Off2 > 13*D1 + Off1
+& D3 + Off3 > 14*D1 + Off1
+& 13*D1 + Off1 >= 3*WCET1 + WCET2 + Off2
+& 14*D1 + Off1 > deadlineBasic
+& deadlineBasic >= 10*WCET1 + Off3 + x3
+& 9*WCET1 + Off3 + x3 >= 9*D1 + Off1
+& WCET1 + Off1 > Off3
+& WCET1 >= 0
+& Off1 >= Off3
+& Off3 >= 0
+& Off2 > 9*D1 + Off1
+& D3 + Off3 > D2 + Off2
+& 2*WCET1 + WCET2 + Off2 > 12*D1 + Off1
+& D3 >= WCET3 + D1
+& 10*D1 + Off1 > Off2
+& Off2 >= 10*WCET1 + Off3 + x3
+& 4*WCET1 + WCET3 + Off3 > deadlineBasic
+& D1 = per1
+& D2 = per2
+& D3 = per3
+& x1 = 0
+& x2 = 0
+& 10*WCET1 + Off3 + x3 = time
+& 10*WCET1 + Off3 + x3 = 9*D1 + Off1 + d1
+& 10*WCET1 + Off3 + x3 = d2
+& 10*WCET1 + x3 = d3
+& 10*WCET1 + Off3 + x3 = 9*D1 + Off1 + t_1
+& 10*WCET1 + Off3 + x3 = t_2
+& 10*WCET1 + x3 = t_3
+
+
+  STATE 43:
+  stopper: g_r, scheduler_EDF: non1_ok2_w3, T_1: idle, T_2: waiting, T_3: waiting ==> 
+  D3 + Off3 > 14*D1 + Off1
+& 13*D1 + Off1 >= 3*WCET1 + WCET2 + Off2
+& 14*D1 + Off1 > deadlineBasic
+& deadlineBasic >= Off2 + x2
+& 2*WCET1 + WCET2 + Off2 > 12*D1 + Off1
+& WCET1 + Off1 > Off3
+& 10*D1 + Off1 > Off2
+& 10*D1 + Off1 >= Off2 + x2
+& Off1 >= 0
+& x2 >= 0
+& Off3 >= Off1
+& D3 + Off3 > D2 + Off2
+& D2 + Off2 > 13*D1 + Off1
+& D3 >= WCET3 + D1
+& Off2 >= WCET1 + 9*D1 + Off1
+& 4*WCET1 + WCET3 + Off1 > deadlineBasic
+& D1 = per1
+& D2 = per2
+& D3 = per3
+& x1 = 0
+& 10*WCET1 + Off1 + x3 = Off2
+& Off2 + x2 = time
+& 9*D1 + Off1 + d1 = Off2 + x2
+& x2 = d2
+& Off2 + x2 = Off3 + d3
+& 9*D1 + Off1 + t_1 = Off2 + x2
+& x2 = t_2
+& Off2 + x2 = Off3 + t_3
+
+
+  STATE 44:
+  stopper: g_r, scheduler_EDF: non1_ok2_w3, T_1: idle, T_2: waiting, T_3: waiting ==> 
+  D3 + Off3 > 14*D1 + Off1
+& 13*D1 + Off1 >= 3*WCET1 + WCET2 + Off2
+& 14*D1 + Off1 > deadlineBasic
+& deadlineBasic >= Off2 + x2
+& 2*WCET1 + WCET2 + Off2 > 12*D1 + Off1
+& WCET1 + Off1 > Off3
+& WCET1 >= 0
+& 10*D1 + Off1 > Off2
+& 10*D1 + Off1 >= Off2 + x2
+& Off1 >= Off3
+& Off3 >= 0
+& x2 >= 0
+& D3 + Off3 > D2 + Off2
+& Off2 > 9*D1 + Off1
+& D2 + Off2 > 13*D1 + Off1
+& D3 >= WCET3 + D1
+& Off2 >= WCET1 + 9*D1 + Off1
+& 4*WCET1 + WCET3 + Off3 > deadlineBasic
+& D1 = per1
+& D2 = per2
+& D3 = per3
+& x1 = 0
+& 10*WCET1 + Off3 + x3 = Off2
+& Off2 + x2 = time
+& 9*D1 + Off1 + d1 = Off2 + x2
+& x2 = d2
+& Off2 + x2 = Off3 + d3
+& 9*D1 + Off1 + t_1 = Off2 + x2
+& x2 = t_2
+& Off2 + x2 = Off3 + t_3
+
+
+  STATE 45:
+  stopper: g_r, scheduler_EDF: ok1_w2_w3, T_1: waiting, T_2: waiting, T_3: waiting ==> 
+  D3 + Off3 > 14*D1 + Off1
+& 13*D1 + Off1 >= 3*WCET1 + WCET2 + Off2
+& 14*D1 + Off1 > deadlineBasic
+& deadlineBasic >= 10*D1 + Off1 + x1
+& 2*WCET1 + WCET2 + Off2 > 12*D1 + Off1
+& WCET1 + Off1 > Off3
+& WCET1 >= x1
+& 10*D1 + Off1 > Off2
+& Off1 >= 0
+& x1 >= 0
+& Off3 >= Off1
+& D3 + Off3 > D2 + Off2
+& D2 + Off2 > 13*D1 + Off1
+& D3 >= WCET3 + D1
+& Off2 >= WCET1 + 9*D1 + Off1
+& 4*WCET1 + WCET3 + Off1 > deadlineBasic
+& D1 = per1
+& D2 = per2
+& D3 = per3
+& 10*D1 + Off1 = Off2 + x2
+& 10*WCET1 + Off1 + x3 = Off2
+& 10*D1 + Off1 + x1 = time
+& x1 = d1
+& 10*D1 + Off1 + x1 = Off2 + d2
+& 10*D1 + Off1 + x1 = Off3 + d3
+& x1 = t_1
+& 10*D1 + Off1 + x1 = Off2 + t_2
+& 10*D1 + Off1 + x1 = Off3 + t_3
+
+
+  STATE 46:
+  stopper: g_r, scheduler_EDF: ok1_w2_w3, T_1: waiting, T_2: waiting, T_3: waiting ==> 
+  D3 + Off3 > 14*D1 + Off1
+& 13*D1 + Off1 >= 3*WCET1 + WCET2 + Off2
+& 14*D1 + Off1 > deadlineBasic
+& deadlineBasic >= 10*D1 + Off1 + x1
+& 2*WCET1 + WCET2 + Off2 > 12*D1 + Off1
+& WCET1 + Off1 > Off3
+& WCET1 >= x1
+& 10*D1 + Off1 > Off2
+& Off1 >= Off3
+& Off3 >= 0
+& x1 >= 0
+& D3 + Off3 > D2 + Off2
+& Off2 > 9*D1 + Off1
+& D2 + Off2 > 13*D1 + Off1
+& D3 >= WCET3 + D1
+& Off2 >= WCET1 + 9*D1 + Off1
+& 4*WCET1 + WCET3 + Off3 > deadlineBasic
+& D1 = per1
+& D2 = per2
+& D3 = per3
+& 10*D1 + Off1 = Off2 + x2
+& 10*WCET1 + Off3 + x3 = Off2
+& 10*D1 + Off1 + x1 = time
+& x1 = d1
+& 10*D1 + Off1 + x1 = Off2 + d2
+& 10*D1 + Off1 + x1 = Off3 + d3
+& x1 = t_1
+& 10*D1 + Off1 + x1 = Off2 + t_2
+& 10*D1 + Off1 + x1 = Off3 + t_3
+
+
+  STATE 47:
+  stopper: g_r, scheduler_EDF: non1_ok2_w3, T_1: idle, T_2: waiting, T_3: waiting ==> 
+  D3 + Off3 > 14*D1 + Off1
+& 13*D1 + Off1 >= 3*WCET1 + WCET2 + Off2
+& 14*D1 + Off1 > deadlineBasic
+& deadlineBasic >= WCET1 + Off2 + x2
+& 2*WCET1 + WCET2 + Off2 > 12*D1 + Off1
+& WCET1 + Off1 > Off3
+& 10*D1 + Off1 > Off2
+& Off1 >= 0
+& Off3 >= Off1
+& D3 + Off3 > D2 + Off2
+& Off2 + x2 >= 10*D1 + Off1
+& D2 + Off2 > 13*D1 + Off1
+& D3 >= WCET3 + D1
+& 11*D1 + Off1 >= WCET1 + Off2 + x2
+& Off2 >= WCET1 + 9*D1 + Off1
+& 4*WCET1 + WCET3 + Off1 > deadlineBasic
+& D1 = per1
+& D2 = per2
+& D3 = per3
+& x1 = 0
+& 10*WCET1 + Off1 + x3 = Off2
+& WCET1 + Off2 + x2 = time
+& WCET1 + Off2 + x2 = 10*D1 + Off1 + d1
+& WCET1 + x2 = d2
+& WCET1 + Off2 + x2 = Off3 + d3
+& WCET1 + Off2 + x2 = 10*D1 + Off1 + t_1
+& WCET1 + x2 = t_2
+& WCET1 + Off2 + x2 = Off3 + t_3
+
+
+  STATE 48:
+  stopper: g_r, scheduler_EDF: non1_ok2_w3, T_1: idle, T_2: waiting, T_3: waiting ==> 
+  D3 + Off3 > 14*D1 + Off1
+& 13*D1 + Off1 >= 3*WCET1 + WCET2 + Off2
+& 14*D1 + Off1 > deadlineBasic
+& deadlineBasic >= WCET1 + Off2 + x2
+& 2*WCET1 + WCET2 + Off2 > 12*D1 + Off1
+& WCET1 + Off1 > Off3
+& WCET1 >= 0
+& 10*D1 + Off1 > Off2
+& Off1 >= Off3
+& Off3 >= 0
+& D3 + Off3 > D2 + Off2
+& Off2 > 9*D1 + Off1
+& Off2 + x2 >= 10*D1 + Off1
+& D2 + Off2 > 13*D1 + Off1
+& D3 >= WCET3 + D1
+& 11*D1 + Off1 >= WCET1 + Off2 + x2
+& Off2 >= WCET1 + 9*D1 + Off1
+& 4*WCET1 + WCET3 + Off3 > deadlineBasic
+& D1 = per1
+& D2 = per2
+& D3 = per3
+& x1 = 0
+& 10*WCET1 + Off3 + x3 = Off2
+& WCET1 + Off2 + x2 = time
+& WCET1 + Off2 + x2 = 10*D1 + Off1 + d1
+& WCET1 + x2 = d2
+& WCET1 + Off2 + x2 = Off3 + d3
+& WCET1 + Off2 + x2 = 10*D1 + Off1 + t_1
+& WCET1 + x2 = t_2
+& WCET1 + Off2 + x2 = Off3 + t_3
+
+
+  STATE 49:
+  stopper: g_r, scheduler_EDF: ok1_w2_w3, T_1: waiting, T_2: waiting, T_3: waiting ==> 
+  D3 + Off3 > 14*D1 + Off1
+& 13*D1 + Off1 >= 3*WCET1 + WCET2 + Off2
+& 14*D1 + Off1 > deadlineBasic
+& deadlineBasic >= 11*D1 + Off1 + x1
+& 2*WCET1 + WCET2 + Off2 > 12*D1 + Off1
+& WCET1 + Off1 > Off3
+& WCET1 >= x1
+& 10*D1 + Off1 > Off2
+& Off1 >= 0
+& x1 >= 0
+& Off3 >= Off1
+& D3 + Off3 > D2 + Off2
+& D2 + Off2 > 13*D1 + Off1
+& D3 >= WCET3 + D1
+& Off2 >= WCET1 + 9*D1 + Off1
+& 4*WCET1 + WCET3 + Off1 > deadlineBasic
+& D1 = per1
+& D2 = per2
+& D3 = per3
+& WCET1 + Off2 + x2 = 11*D1 + Off1
+& 10*WCET1 + Off1 + x3 = Off2
+& 11*D1 + Off1 + x1 = time
+& x1 = d1
+& 11*D1 + Off1 + x1 = Off2 + d2
+& 11*D1 + Off1 + x1 = Off3 + d3
+& x1 = t_1
+& 11*D1 + Off1 + x1 = Off2 + t_2
+& 11*D1 + Off1 + x1 = Off3 + t_3
+
+
+  STATE 50:
+  stopper: g_r, scheduler_EDF: ok1_w2_w3, T_1: waiting, T_2: waiting, T_3: waiting ==> 
+  D3 + Off3 > 14*D1 + Off1
+& 13*D1 + Off1 >= 3*WCET1 + WCET2 + Off2
+& 14*D1 + Off1 > deadlineBasic
+& deadlineBasic >= 11*D1 + Off1 + x1
+& 2*WCET1 + WCET2 + Off2 > 12*D1 + Off1
+& WCET1 + Off1 > Off3
+& WCET1 >= x1
+& 10*D1 + Off1 > Off2
+& Off1 >= Off3
+& Off3 >= 0
+& x1 >= 0
+& D3 + Off3 > D2 + Off2
+& Off2 > 9*D1 + Off1
+& D2 + Off2 > 13*D1 + Off1
+& D3 >= WCET3 + D1
+& Off2 >= WCET1 + 9*D1 + Off1
+& 4*WCET1 + WCET3 + Off3 > deadlineBasic
+& D1 = per1
+& D2 = per2
+& D3 = per3
+& WCET1 + Off2 + x2 = 11*D1 + Off1
+& 10*WCET1 + Off3 + x3 = Off2
+& 11*D1 + Off1 + x1 = time
+& x1 = d1
+& 11*D1 + Off1 + x1 = Off2 + d2
+& 11*D1 + Off1 + x1 = Off3 + d3
+& x1 = t_1
+& 11*D1 + Off1 + x1 = Off2 + t_2
+& 11*D1 + Off1 + x1 = Off3 + t_3
+
+
+  STATE 51:
+  stopper: g_r, scheduler_EDF: non1_ok2_w3, T_1: idle, T_2: waiting, T_3: waiting ==> 
+  D3 + Off3 > 14*D1 + Off1
+& 13*D1 + Off1 >= 3*WCET1 + WCET2 + Off2
+& 14*D1 + Off1 > deadlineBasic
+& deadlineBasic >= 2*WCET1 + Off2 + x2
+& 2*WCET1 + WCET2 + Off2 > 12*D1 + Off1
+& WCET1 + Off1 > Off3
+& WCET1 + Off2 + x2 >= 11*D1 + Off1
+& 10*D1 + Off1 > Off2
+& Off1 >= 0
+& Off3 >= Off1
+& D3 + Off3 > D2 + Off2
+& D2 + Off2 > 13*D1 + Off1
+& D3 >= WCET3 + D1
+& Off2 >= WCET1 + 9*D1 + Off1
+& 12*D1 + Off1 >= 2*WCET1 + Off2 + x2
+& 4*WCET1 + WCET3 + Off1 > deadlineBasic
+& D1 = per1
+& D2 = per2
+& D3 = per3
+& x1 = 0
+& 10*WCET1 + Off1 + x3 = Off2
+& 2*WCET1 + Off2 + x2 = time
+& 2*WCET1 + Off2 + x2 = 11*D1 + Off1 + d1
+& 2*WCET1 + x2 = d2
+& 2*WCET1 + Off2 + x2 = Off3 + d3
+& 2*WCET1 + Off2 + x2 = 11*D1 + Off1 + t_1
+& 2*WCET1 + x2 = t_2
+& 2*WCET1 + Off2 + x2 = Off3 + t_3
+
+
+  STATE 52:
+  stopper: g_r, scheduler_EDF: non1_ok2_w3, T_1: idle, T_2: waiting, T_3: waiting ==> 
+  D3 + Off3 > 14*D1 + Off1
+& 13*D1 + Off1 >= 3*WCET1 + WCET2 + Off2
+& 14*D1 + Off1 > deadlineBasic
+& deadlineBasic >= 2*WCET1 + Off2 + x2
+& 2*WCET1 + WCET2 + Off2 > 12*D1 + Off1
+& WCET1 + Off1 > Off3
+& WCET1 >= 0
+& WCET1 + Off2 + x2 >= 11*D1 + Off1
+& 10*D1 + Off1 > Off2
+& Off1 >= Off3
+& Off3 >= 0
+& D3 + Off3 > D2 + Off2
+& Off2 > 9*D1 + Off1
+& D2 + Off2 > 13*D1 + Off1
+& D3 >= WCET3 + D1
+& Off2 >= WCET1 + 9*D1 + Off1
+& 12*D1 + Off1 >= 2*WCET1 + Off2 + x2
+& 4*WCET1 + WCET3 + Off3 > deadlineBasic
+& D1 = per1
+& D2 = per2
+& D3 = per3
+& x1 = 0
+& 10*WCET1 + Off3 + x3 = Off2
+& 2*WCET1 + Off2 + x2 = time
+& 2*WCET1 + Off2 + x2 = 11*D1 + Off1 + d1
+& 2*WCET1 + x2 = d2
+& 2*WCET1 + Off2 + x2 = Off3 + d3
+& 2*WCET1 + Off2 + x2 = 11*D1 + Off1 + t_1
+& 2*WCET1 + x2 = t_2
+& 2*WCET1 + Off2 + x2 = Off3 + t_3
+
+
+  STATE 53:
+  stopper: g_r, scheduler_EDF: ok1_w2_w3, T_1: waiting, T_2: waiting, T_3: waiting ==> 
+  D3 + Off3 > 14*D1 + Off1
+& 13*D1 + Off1 >= 3*WCET1 + WCET2 + Off2
+& 14*D1 + Off1 > deadlineBasic
+& deadlineBasic >= 12*D1 + Off1 + x1
+& 2*WCET1 + WCET2 + Off2 > 12*D1 + Off1
+& WCET1 + Off1 > Off3
+& WCET1 >= x1
+& 10*D1 + Off1 > Off2
+& Off1 >= 0
+& x1 >= 0
+& Off3 >= Off1
+& D3 + Off3 > D2 + Off2
+& D2 + Off2 > 13*D1 + Off1
+& D3 >= WCET3 + D1
+& Off2 >= WCET1 + 9*D1 + Off1
+& 4*WCET1 + WCET3 + Off1 > deadlineBasic
+& D1 = per1
+& D2 = per2
+& D3 = per3
+& 2*WCET1 + Off2 + x2 = 12*D1 + Off1
+& 10*WCET1 + Off1 + x3 = Off2
+& 12*D1 + Off1 + x1 = time
+& x1 = d1
+& 12*D1 + Off1 + x1 = Off2 + d2
+& 12*D1 + Off1 + x1 = Off3 + d3
+& x1 = t_1
+& 12*D1 + Off1 + x1 = Off2 + t_2
+& 12*D1 + Off1 + x1 = Off3 + t_3
+
+
+  STATE 54:
+  stopper: g_r, scheduler_EDF: ok1_w2_w3, T_1: waiting, T_2: waiting, T_3: waiting ==> 
+  D3 + Off3 > 14*D1 + Off1
+& 13*D1 + Off1 >= 3*WCET1 + WCET2 + Off2
+& 14*D1 + Off1 > deadlineBasic
+& deadlineBasic >= 12*D1 + Off1 + x1
+& 2*WCET1 + WCET2 + Off2 > 12*D1 + Off1
+& WCET1 + Off1 > Off3
+& WCET1 >= x1
+& 10*D1 + Off1 > Off2
+& Off1 >= Off3
+& Off3 >= 0
+& x1 >= 0
+& D3 + Off3 > D2 + Off2
+& Off2 > 9*D1 + Off1
+& D2 + Off2 > 13*D1 + Off1
+& D3 >= WCET3 + D1
+& Off2 >= WCET1 + 9*D1 + Off1
+& 4*WCET1 + WCET3 + Off3 > deadlineBasic
+& D1 = per1
+& D2 = per2
+& D3 = per3
+& 2*WCET1 + Off2 + x2 = 12*D1 + Off1
+& 10*WCET1 + Off3 + x3 = Off2
+& 12*D1 + Off1 + x1 = time
+& x1 = d1
+& 12*D1 + Off1 + x1 = Off2 + d2
+& 12*D1 + Off1 + x1 = Off3 + d3
+& x1 = t_1
+& 12*D1 + Off1 + x1 = Off2 + t_2
+& 12*D1 + Off1 + x1 = Off3 + t_3
+
+
+  STATE 55:
+  stopper: g_r, scheduler_EDF: non1_ok2_w3, T_1: idle, T_2: waiting, T_3: waiting ==> 
+  13*D1 + Off1 >= 3*WCET1 + WCET2 + Off2
+& 14*D1 + Off1 > deadlineBasic
+& deadlineBasic >= 3*WCET1 + Off2 + x2
+& 2*WCET1 + WCET2 + Off2 > 12*D1 + Off1
+& 2*WCET1 + Off2 + x2 >= 12*D1 + Off1
+& WCET1 + Off1 > Off3
+& WCET2 >= x2
+& 10*D1 + Off1 > Off2
+& Off1 >= 0
+& Off3 >= Off1
+& D3 + Off3 > D2 + Off2
+& D2 + Off2 > 13*D1 + Off1
+& D3 >= WCET3 + D1
+& Off2 >= WCET1 + 9*D1 + Off1
+& D3 + Off3 > 14*D1 + Off1
+& 4*WCET1 + WCET3 + Off1 > deadlineBasic
+& D1 = per1
+& D2 = per2
+& D3 = per3
+& x1 = 0
+& 10*WCET1 + Off1 + x3 = Off2
+& 3*WCET1 + Off2 + x2 = time
+& 3*WCET1 + Off2 + x2 = 12*D1 + Off1 + d1
+& 3*WCET1 + x2 = d2
+& 3*WCET1 + Off2 + x2 = Off3 + d3
+& 3*WCET1 + Off2 + x2 = 12*D1 + Off1 + t_1
+& 3*WCET1 + x2 = t_2
+& 3*WCET1 + Off2 + x2 = Off3 + t_3
+
+
+  STATE 56:
+  stopper: g_r, scheduler_EDF: non1_ok2_w3, T_1: idle, T_2: waiting, T_3: waiting ==> 
+  13*D1 + Off1 >= 3*WCET1 + WCET2 + Off2
+& 14*D1 + Off1 > deadlineBasic
+& deadlineBasic >= 3*WCET1 + Off2 + x2
+& 2*WCET1 + WCET2 + Off2 > 12*D1 + Off1
+& 2*WCET1 + Off2 + x2 >= 12*D1 + Off1
+& WCET1 + Off1 > Off3
+& WCET1 >= 0
+& WCET2 >= x2
+& 10*D1 + Off1 > Off2
+& Off1 >= Off3
+& Off3 >= 0
+& D3 + Off3 > D2 + Off2
+& Off2 > 9*D1 + Off1
+& D2 + Off2 > 13*D1 + Off1
+& D3 >= WCET3 + D1
+& Off2 >= WCET1 + 9*D1 + Off1
+& D3 + Off3 > 14*D1 + Off1
+& 4*WCET1 + WCET3 + Off3 > deadlineBasic
+& D1 = per1
+& D2 = per2
+& D3 = per3
+& x1 = 0
+& 10*WCET1 + Off3 + x3 = Off2
+& 3*WCET1 + Off2 + x2 = time
+& 3*WCET1 + Off2 + x2 = 12*D1 + Off1 + d1
+& 3*WCET1 + x2 = d2
+& 3*WCET1 + Off2 + x2 = Off3 + d3
+& 3*WCET1 + Off2 + x2 = 12*D1 + Off1 + t_1
+& 3*WCET1 + x2 = t_2
+& 3*WCET1 + Off2 + x2 = Off3 + t_3
+
+
+  STATE 57:
+  stopper: lf_r, scheduler_EDF: non1_non2_ok3, T_1: idle, T_2: idle, T_3: waiting ==> 
+  D3 + Off3 > 14*D1 + Off1
+& 14*D1 + Off1 > deadlineBasic
+& deadlineBasic >= 13*WCET1 + WCET2 + Off1 + x3
+& 10*WCET1 + Off1 + x3 >= Off2
+& 2*WCET1 + WCET2 + Off2 > 12*D1 + Off1
+& WCET1 + Off1 > Off3
+& 10*D1 + Off1 > Off2
+& Off1 >= 0
+& Off3 >= Off1
+& D3 + Off3 > D2 + Off2
+& D2 + Off2 > 13*D1 + Off1
+& D3 >= WCET3 + D1
+& Off2 >= WCET1 + 9*D1 + Off1
+& 13*D1 >= 13*WCET1 + WCET2 + x3
+& 4*WCET1 + WCET3 + Off1 > deadlineBasic
+& D1 = per1
+& D2 = per2
+& D3 = per3
+& x2 = 0
+& 13*WCET1 + WCET2 + Off1 + x3 = time
+& 13*WCET1 + WCET2 + x3 = 12*D1 + d1
+& 13*WCET1 + WCET2 + Off1 + x3 = Off2 + d2
+& 13*WCET1 + WCET2 + Off1 + x3 = Off3 + d3
+& 13*WCET1 + WCET2 + x3 = 12*D1 + t_1
+& 13*WCET1 + WCET2 + Off1 + x3 = Off2 + t_2
+& 13*WCET1 + WCET2 + Off1 + x3 = Off3 + t_3
+
+
+  STATE 58:
+  stopper: lf_r, scheduler_EDF: non1_non2_ok3, T_1: idle, T_2: idle, T_3: waiting ==> 
+  D3 + Off3 > 14*D1 + Off1
+& 14*D1 + Off1 > deadlineBasic
+& deadlineBasic >= 13*WCET1 + WCET2 + Off3 + x3
+& 10*WCET1 + Off3 + x3 >= Off2
+& 2*WCET1 + WCET2 + Off2 > 12*D1 + Off1
+& WCET1 + Off1 > Off3
+& WCET1 >= 0
+& 10*D1 + Off1 > Off2
+& Off1 >= Off3
+& Off3 >= 0
+& D3 + Off3 > D2 + Off2
+& Off2 > 9*D1 + Off1
+& D2 + Off2 > 13*D1 + Off1
+& D3 >= WCET3 + D1
+& Off2 >= WCET1 + 9*D1 + Off1
+& 13*D1 + Off1 >= 13*WCET1 + WCET2 + Off3 + x3
+& 4*WCET1 + WCET3 + Off3 > deadlineBasic
+& D1 = per1
+& D2 = per2
+& D3 = per3
+& x2 = 0
+& 13*WCET1 + WCET2 + Off3 + x3 = time
+& 13*WCET1 + WCET2 + Off3 + x3 = 12*D1 + Off1 + d1
+& 13*WCET1 + WCET2 + Off3 + x3 = Off2 + d2
+& 13*WCET1 + WCET2 + x3 = d3
+& 13*WCET1 + WCET2 + Off3 + x3 = 12*D1 + Off1 + t_1
+& 13*WCET1 + WCET2 + Off3 + x3 = Off2 + t_2
+& 13*WCET1 + WCET2 + x3 = t_3
+
+
+  STATE 59:
+  stopper: lf_r, scheduler_EDF: ok1_non2_w3, T_1: waiting, T_2: idle, T_3: waiting ==> 
+  deadlineBasic >= time
+& 2*WCET1 + WCET2 + Off2 > 12*D1 + Off1
+& WCET1 + Off1 > Off3
+& WCET1 >= x1
+& 14*D1 + Off1 > deadlineBasic
+& 10*D1 + Off1 > Off2
+& D2 + Off2 >= time
+& Off1 >= 0
+& Off3 >= Off1
+& D3 + Off3 > D2 + Off2
+& D2 + Off2 > 13*D1 + Off1
+& time >= 13*D1 + Off1
+& D3 + Off3 > 14*D1 + Off1
+& D3 >= WCET3 + D1
+& Off2 >= WCET1 + 9*D1 + Off1
+& 13*D1 + Off1 >= 3*WCET1 + WCET2 + Off2
+& 4*WCET1 + WCET3 + Off1 > deadlineBasic
+& D1 = per1
+& D2 = per2
+& D3 = per3
+& x2 = 0
+& 13*WCET1 + WCET2 + x3 = 13*D1
+& 13*D1 + Off1 + d1 = time
+& Off2 + d2 = time
+& Off3 + d3 = time
+& 13*D1 + Off1 + t_1 = time
+& Off2 + t_2 = time
+& Off3 + t_3 = time
+
+
+  STATE 60:
+  stopper: lf_r, scheduler_EDF: ok1_non2_w3, T_1: waiting, T_2: idle, T_3: waiting ==> 
+  deadlineBasic >= time
+& 2*WCET1 + WCET2 + Off2 > 12*D1 + Off1
+& WCET1 + Off1 > Off3
+& WCET1 >= 0
+& WCET1 >= x1
+& 14*D1 + Off1 > deadlineBasic
+& 10*D1 + Off1 > Off2
+& D2 + Off2 >= time
+& Off1 >= Off3
+& Off3 >= 0
+& D3 + Off3 > D2 + Off2
+& Off2 > 9*D1 + Off1
+& D2 + Off2 > 13*D1 + Off1
+& time >= 13*D1 + Off1
+& D3 + Off3 > 14*D1 + Off1
+& D3 >= WCET3 + D1
+& Off2 >= WCET1 + 9*D1 + Off1
+& 13*D1 + Off1 >= 3*WCET1 + WCET2 + Off2
+& 4*WCET1 + WCET3 + Off3 > deadlineBasic
+& D1 = per1
+& D2 = per2
+& D3 = per3
+& x2 = 0
+& 13*WCET1 + WCET2 + Off3 + x3 = 13*D1 + Off1
+& 13*D1 + Off1 + d1 = time
+& Off2 + d2 = time
+& Off3 + d3 = time
+& 13*D1 + Off1 + t_1 = time
+& Off2 + t_2 = time
+& Off3 + t_3 = time
+
+
+  STATE 61:
+  stopper: end_flow, scheduler_EDF: non1_non2_ok3, T_1: idle, T_2: idle, T_3: waiting ==> 
+  deadlineBasic >= time
+& 13*WCET1 + WCET2 + x3 >= 13*D1
+& 2*WCET1 + WCET2 + Off2 > 12*D1 + Off1
+& WCET1 + Off1 > Off3
+& 14*D1 + Off1 > deadlineBasic
+& 10*D1 + Off1 > Off2
+& D2 + Off2 >= time
+& Off1 >= 0
+& Off3 >= Off1
+& D3 + Off3 > D2 + Off2
+& D2 + Off2 > 13*D1 + Off1
+& D3 + Off3 > 14*D1 + Off1
+& D3 >= WCET3 + D1
+& Off2 >= WCET1 + 9*D1 + Off1
+& 13*D1 + Off1 >= 3*WCET1 + WCET2 + Off2
+& time >= 13*WCET1 + WCET2 + Off1 + x3
+& 4*WCET1 + WCET3 + Off1 > deadlineBasic
+& D1 = per1
+& D2 = per2
+& D3 = per3
+& x1 = 0
+& x2 = 0
+& 13*D1 + Off1 + d1 = time
+& Off2 + d2 = time
+& Off3 + d3 = time
+& 13*D1 + Off1 + t_1 = time
+& Off2 + t_2 = time
+& Off3 + t_3 = time
+
+
+  STATE 62:
+  stopper: end_flow, scheduler_EDF: non1_non2_ok3, T_1: idle, T_2: idle, T_3: waiting ==> 
+  deadlineBasic >= time
+& 13*WCET1 + WCET2 + Off3 + x3 >= 13*D1 + Off1
+& 2*WCET1 + WCET2 + Off2 > 12*D1 + Off1
+& WCET1 + Off1 > Off3
+& WCET1 >= 0
+& 14*D1 + Off1 > deadlineBasic
+& 10*D1 + Off1 > Off2
+& D2 + Off2 >= time
+& Off1 >= Off3
+& Off3 >= 0
+& D3 + Off3 > D2 + Off2
+& Off2 > 9*D1 + Off1
+& D2 + Off2 > 13*D1 + Off1
+& D3 + Off3 > 14*D1 + Off1
+& D3 >= WCET3 + D1
+& Off2 >= WCET1 + 9*D1 + Off1
+& 13*D1 + Off1 >= 3*WCET1 + WCET2 + Off2
+& time >= 13*WCET1 + WCET2 + Off3 + x3
+& 4*WCET1 + WCET3 + Off3 > deadlineBasic
+& D1 = per1
+& D2 = per2
+& D3 = per3
+& x1 = 0
+& x2 = 0
+& 13*D1 + Off1 + d1 = time
+& Off2 + d2 = time
+& Off3 + d3 = time
+& 13*D1 + Off1 + t_1 = time
+& Off2 + t_2 = time
+& Off3 + t_3 = time
+*/
+
+digraph G {
+  s0 -> s2 [label="require3"];
+  s0 -> s1 [label="require1"];
+  s1 -> s3 [label="require3"];
+  s2 -> s4 [label="require1"];
+  s3 -> s5 [label="done1"];
+  s4 -> s6 [label="done1"];
+  s5 -> s7 [label="require1"];
+  s6 -> s8 [label="require1"];
+  s7 -> s9 [label="done1"];
+  s8 -> s10 [label="done1"];
+  s9 -> s11 [label="require1"];
+  s10 -> s12 [label="require1"];
+  s11 -> s13 [label="done1"];
+  s12 -> s14 [label="done1"];
+  s13 -> s15 [label="require1"];
+  s14 -> s16 [label="require1"];
+  s15 -> s17 [label="done1"];
+  s16 -> s18 [label="done1"];
+  s17 -> s19 [label="require1"];
+  s18 -> s20 [label="require1"];
+  s19 -> s21 [label="done1"];
+  s20 -> s22 [label="done1"];
+  s21 -> s23 [label="require1"];
+  s22 -> s24 [label="require1"];
+  s23 -> s25 [label="done1"];
+  s24 -> s26 [label="done1"];
+  s25 -> s27 [label="require1"];
+  s26 -> s28 [label="require1"];
+  s27 -> s29 [label="done1"];
+  s28 -> s30 [label="done1"];
+  s29 -> s31 [label="require1"];
+  s30 -> s32 [label="require1"];
+  s31 -> s33 [label="done1"];
+  s32 -> s34 [label="done1"];
+  s33 -> s35 [label="require1"];
+  s34 -> s36 [label="require1"];
+  s35 -> s37 [label="done1"];
+  s36 -> s38 [label="done1"];
+  s37 -> s39 [label="require1"];
+  s38 -> s40 [label="require1"];
+  s39 -> s41 [label="done1"];
+  s40 -> s42 [label="done1"];
+  s41 -> s43 [label="require2"];
+  s42 -> s44 [label="require2"];
+  s43 -> s45 [label="require1"];
+  s44 -> s46 [label="require1"];
+  s45 -> s47 [label="done1"];
+  s46 -> s48 [label="done1"];
+  s47 -> s49 [label="require1"];
+  s48 -> s50 [label="require1"];
+  s49 -> s51 [label="done1"];
+  s50 -> s52 [label="done1"];
+  s51 -> s53 [label="require1"];
+  s52 -> s54 [label="require1"];
+  s53 -> s55 [label="done1"];
+  s54 -> s56 [label="done1"];
+  s55 -> s57 [label="done2"];
+  s56 -> s58 [label="done2"];
+  s57 -> s59 [label="require1"];
+  s58 -> s60 [label="require1"];
+  s59 -> s61 [label="done1"];
+  s60 -> s62 [label="done1"];
+
+  s0[color=red, style=filled];
+  s1[color=green, style=filled];
+  s2[color=blue, style=filled];
+  s3[color=yellow, style=filled];
+  s4[color=yellow, style=filled];
+  s5[color=cyan, style=filled];
+  s6[color=cyan, style=filled];
+  s7[color=magenta, style=filled];
+  s8[color=magenta, style=filled];
+  s9[color=paleturquoise2, style=filled];
+  s10[color=paleturquoise2, style=filled];
+  s11[color=indianred1, style=filled];
+  s12[color=indianred1, style=filled];
+  s13[color=goldenrod3, style=filled];
+  s14[color=goldenrod3, style=filled];
+  s15[color=darkolivegreen4, style=filled];
+  s16[color=darkolivegreen4, style=filled];
+  s17[color=slategray4, style=filled];
+  s18[color=slategray4, style=filled];
+  s19[color=turquoise4, style=filled];
+  s20[color=turquoise4, style=filled];
+  s21[color=lightpink, style=filled];
+  s22[color=lightpink, style=filled];
+  s23[color=salmon, style=filled];
+  s24[color=salmon, style=filled];
+  s25[color=pink3, style=filled];
+  s26[color=pink3, style=filled];
+  s27[color=chocolate4, style=filled];
+  s28[color=chocolate4, style=filled];
+  s29[color=lightslateblue, style=filled];
+  s30[color=lightslateblue, style=filled];
+  s31[color=yellow3, style=filled];
+  s32[color=yellow3, style=filled];
+  s33[color=   red4   , style=filled];
+  s34[color=   red4   , style=filled];
+  s35[color=seashell3, style=filled];
+  s36[color=seashell3, style=filled];
+  s37[color=cyan, style=filled];
+  s38[color=cyan, style=filled];
+  s39[color=darkgoldenrod3, style=filled];
+  s40[color=darkgoldenrod3, style=filled];
+  s41[color=gainsboro, style=filled];
+  s42[color=gainsboro, style=filled];
+  s43[color=yellowgreen, style=filled];
+  s44[color=yellowgreen, style=filled];
+  s45[color=peachpuff1, style=filled];
+  s46[color=peachpuff1, style=filled];
+  s47[color=yellowgreen, style=filled];
+  s48[color=yellowgreen, style=filled];
+  s49[color=peachpuff1, style=filled];
+  s50[color=peachpuff1, style=filled];
+  s51[color=yellowgreen, style=filled];
+  s52[color=yellowgreen, style=filled];
+  s53[color=peachpuff1, style=filled];
+  s54[color=peachpuff1, style=filled];
+  s55[color=yellowgreen, style=filled];
+  s56[color=yellowgreen, style=filled];
+  s57[color=oldlace, style=filled];
+  s58[color=oldlace, style=filled];
+  s59[color=khaki, style=filled];
+  s60[color=khaki, style=filled];
+  s61[color=deepskyblue, style=filled];
+  s62[color=deepskyblue, style=filled];
+}
