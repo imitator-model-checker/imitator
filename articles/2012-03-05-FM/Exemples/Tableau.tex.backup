@@ -1,0 +1,7 @@
+\begin{tabular}{c|c|c|c|c|c|c|c}
+
+[SGL97] 	tasks_chain.pi0 	8 	15 	18 	215 	264 	15 	17 	85.3s 	tasks_chain.log 	tasks_chain.states 	tasks_chain.jpg
+[CPR08] 	full_cpr08.pi0 		4 	6 	8 	676 	886 	15 	15 	288.25s 	full_cpr08.log 	full_cpr08.states 	full_cpr08.jpg
+[HPPR10] 	hppr10_audio.pi0 	3 	4 	9 	60 	103 	10 	7 	2.1s 	hppr10_audio.log 	hppr10_audio.states 	hppr10_audio.jpg
+[AM02] 		preemptive_maler.pi0 	3 	3 	4 	53 	70 	10 	5 	0.45s 	preemptive_maler.log 	preemptive_maler.states preemptive_maler.jpg
+[LA02] 2*5				3	3	11			21	10	63.4
