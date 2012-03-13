@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2011/11/22
- * Last modified: 2012/02/22
+ * Last modified: 2012/03/12
  *
  ************************************************************)
 
@@ -97,6 +97,15 @@ let string_of_clock_updates program = function
 		^ "\n\t\t\t\t</attribute>"
 		^ "\n\t\t\t</attribute>"
 	) list_of_clocks)
+	| Updates list_of_clocks_lt ->
+			string_of_list_of_string (List.map (fun (variable_index, linear_term) ->
+		"\n\t\t\t<attribute name=\"update\">"
+		^ "\n\t\t\t\t<attribute name=\"name\">" ^ (program.variable_names variable_index) ^ "</attribute>"
+		^ "\n\t\t\t\t<attribute name=\"expr\">"
+		^ (LinearConstraint.gml_of_linear_term program.variable_names 5 linear_term)
+		^ "\n\t\t\t\t</attribute>"
+		^ "\n\t\t\t</attribute>"
+	) list_of_clocks_lt)
 
 
 (* Convert a list of updates into a string *)

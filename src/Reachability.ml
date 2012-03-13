@@ -286,6 +286,8 @@ let rho_assign program linear_constraint clock_updates =
 	if clock_updates != [] then(
 		(* Merge updates *)
 		let clocks_hash = Hashtbl.create program.nb_clocks in
+		(* Check wether there are some complex updates of the form clock' = linear_term *)
+		let arbitrary_updates = ref false in
 		(* Iterate on the lists of clocks for all synchronized automaton *)
 		List.iter (fun local_updates -> 
 			match local_updates with
@@ -294,12 +296,28 @@ let rho_assign program linear_constraint clock_updates =
 				(* Iterate on the clocks, for a given automaton *)
 				List.iter (fun clock_id -> 
 					(* Assign this clock to true in the table *)
-					Hashtbl.replace clocks_hash clock_id true;
-		(*			if not (List.mem update updates) then 
-						update :: updates
-					else
-						updates*)
+					Hashtbl.replace clocks_hash clock_id (LinearConstraint.make_linear_term [] NumConst.zero);
 				) list_of_clocks;
+			| Updates list_of_clocks_lt ->
+				(* Set the flag *)
+				arbitrary_updates := true;
+				(* Iterate on the clocks, for a given automaton *)
+				List.iter (fun (clock_id, linear_term) -> 
+					(* Check if already updated *)
+					if Hashtbl.mem clocks_hash clock_id then (
+						(* Find its previous value *)
+						let previous_update = Hashtbl.find clocks_hash clock_id in
+						(* Compare with the new one *)
+						if previous_update <> linear_term then (
+						(* If different: warning *)
+							print_warning ("The clock '" ^ (program.variable_names clock_id) ^ "' is updated several times with different values for the same synchronized action.
+								The behavior of the system is now unspecified.");
+						)
+					);
+					(* Update the update *)
+					Hashtbl.replace clocks_hash clock_id linear_term;
+				) list_of_clocks_lt;
+				raise (InternalError "Not implemented")
 		) clock_updates;
 		(* Compute the list of clocks to update from the hashtable *)
 		let list_of_clocks_to_update = Hashtbl.fold (fun clock_id _ list_of_clocks -> clock_id :: list_of_clocks) clocks_hash [] in
@@ -580,6 +598,7 @@ let compute_new_location program aut_table trans_table action_index original_loc
 		let _ =
 		match clock_updates with
 			| Resets (_ :: _) -> has_updates := true
+			| Updates (_ :: _) -> has_updates := true
 			| _ -> ()
 		in ();
 		(* Keep the guard and updates *)

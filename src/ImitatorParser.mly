@@ -243,7 +243,7 @@ syn_label:
 
 
 /***********************************************
-  RATIONALS, LINEAR TERMS, LINEAR CONSTRAINTS AND CONVEX PREDICATES
+ RATIONALS, LINEAR TERMS, LINEAR CONSTRAINTS AND CONVEX PREDICATES
 ***********************************************/
 
 convex_predicate:

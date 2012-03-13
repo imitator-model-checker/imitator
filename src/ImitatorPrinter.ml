@@ -95,6 +95,13 @@ let string_of_clock_updates program = function
 			(program.variable_names variable_index)
 			^ "' = 0"
 		) list_of_clocks)
+	| Updates list_of_clocks_lt -> 
+		string_of_list_of_string_with_sep ", " (List.map (fun (variable_index, linear_term) ->
+			(program.variable_names variable_index)
+			^ "' = "
+			^ (LinearConstraint.string_of_linear_term program.variable_names linear_term)
+		) list_of_clocks_lt)
+
 	
 	
 (* Convert a list of updates into a string *)

@@ -7,7 +7,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2009/09/09
- * Last modified: 2012/02/20
+ * Last modified: 2012/03/13
  *
  ****************************************************************)
 
@@ -428,13 +428,16 @@ let check_update index_of_variables type_of_variables variable_names automaton_n
 		match type_of_variable with
 		(* Case of a clock: allow only 0 as an update *)
 		| AbstractImitatorFile.Var_type_clock ->
-			let result =
+			(* Now update ANY linear term in updates *)
+			true
+(*			let result =
 			match linear_expression with
 			| Linear_term (Constant constant) ->
 				if NumConst.equal constant NumConst.zero then true
 				else (print_error ("The variable '" ^ variable_name ^ "' is a clock and can only be reset to 0 in automaton '" ^ automaton_name ^ "'."); false)
 			| _ -> print_error ("The variable '" ^ variable_name ^ "' is a clock and can only be reset to 0 in automaton '" ^ automaton_name ^ "'."); false
-			in result
+			in result*)
+			
 		(* Case of a discrete var.: allow only a linear combinations of constants and discrete *)
 		| AbstractImitatorFile.Var_type_discrete -> let result = only_discrete_in_linear_expression index_of_variables type_of_variables linear_expression in
 		if not result then (print_error ("The variable '" ^ variable_name ^ "' is a discrete and its update can only be a linear combination of constants and discrete variables in automaton '" ^ automaton_name ^ "'."); false)
@@ -1086,17 +1089,34 @@ let convert_transitions nb_actions index_of_variables constants type_of_variable
 					let linear_term = linear_term_of_linear_expression index_of_variables constants linear_expression in
 					(variable_index, linear_term)
 				) updates in
-				(* Split between the clock and discrete updates, removing the linear expression from clock updates *)
+				(* Flag to check if there are clock resets only to 0 *)
+				let only_resets = ref true in
+				(* Split between the clock and discrete updates *)
 				let clock_updates, discrete_updates = List.fold_left (fun (cus, dus) (variable_index, linear_term) -> 
-					if type_of_variables variable_index = Var_type_clock then
-						variable_index :: cus, dus
-					else
+					if type_of_variables variable_index = Var_type_clock then(
+						(* Update flag *)
+						if linear_term <> (LinearConstraint.make_linear_term [] NumConst.zero) then(
+							only_resets := false;
+							raise (InternalError "Clock updates not supported.");
+						);
+						(variable_index, linear_term) :: cus, dus
+					) else
 						cus, (variable_index, linear_term) :: dus
 				) ([], []) converted_updates in
-				(* semi-HACK: differentiate between different kinds of clock updates *)
+				(* Differentiate between different kinds of clock updates *)
 				let clock_updates =
+					(* Case 1: no update *)
 					if clock_updates = [] then No_update
-					else Resets clock_updates
+					else (
+						(* Case 2: resets only *)
+						if !only_resets then (
+							(* Keep only the clock ids, not the linear terms *)
+							let clocks_to_reset, _ = List.split clock_updates in
+							Resets clocks_to_reset
+						)else
+						(* Case 3: complex with linear terms *)
+							Updates clock_updates
+					)
 				in
 				(* Update the transition *)
 				array_of_transitions.(automaton_index).(location_index).(action_index) <- (converted_guard, clock_updates, discrete_updates, dest_location_index) :: array_of_transitions.(automaton_index).(location_index).(action_index);

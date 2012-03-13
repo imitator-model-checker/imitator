@@ -70,7 +70,7 @@ type clock_updates =
 	(* Reset to 0 only *)
 	| Resets of clock_update list
 	(* Reset to arbitrary value (including discrete, parameters and clocks) *)
-(* 	| Exotic_resets of (clock_update * linear_term) list *)
+	| Updates of (clock_update * linear_term) list
 
 
 (** update: variable_index := linear_term *)
