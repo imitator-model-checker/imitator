@@ -1092,17 +1092,17 @@ let convert_transitions nb_actions index_of_variables constants type_of_variable
 				(* Flag to check if there are clock resets only to 0 *)
 				let only_resets = ref true in
 				(* Split between the clock and discrete updates *)
-				let clock_updates, discrete_updates = List.fold_left (fun (cus, dus) (variable_index, linear_term) -> 
+				let clock_updates, discrete_updates = List.partition (fun (variable_index, linear_term) ->
 					if type_of_variables variable_index = Var_type_clock then(
 						(* Update flag *)
 						if linear_term <> (LinearConstraint.make_linear_term [] NumConst.zero) then(
 							only_resets := false;
-							raise (InternalError "Clock updates not supported.");
 						);
-						(variable_index, linear_term) :: cus, dus
-					) else
-						cus, (variable_index, linear_term) :: dus
-				) ([], []) converted_updates in
+						true
+					)else
+						false
+				) converted_updates
+				in
 				(* Differentiate between different kinds of clock updates *)
 				let clock_updates =
 					(* Case 1: no update *)

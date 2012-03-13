@@ -319,17 +319,18 @@ let rho_assign program linear_constraint clock_updates =
 				) list_of_clocks_lt;
 				raise (InternalError "Not implemented")
 		) clock_updates;
+		
 		(* Compute the list of clocks to update from the hashtable *)
 		let list_of_clocks_to_update = Hashtbl.fold (fun clock_id _ list_of_clocks -> clock_id :: list_of_clocks) clocks_hash [] in
 		
-		(* Only go on if the list of clocks is non null *)
+		(* Only go on if the list of clocks is non-null *)
 		if list_of_clocks_to_update != [] then (
 		
 			(* Compute X = 0 for the variables appearing in updates *)
 			print_message Debug_total ("\n -- Computing updates X = 0");
 			let updates =
 				(List.map (fun variable_index ->
-					(* Consider cases for clocks *)				
+					(* Consider cases for clocks *)
 					match program.type_of_variables variable_index with
 					(* Clocks: X = 0 *)
 					| Var_type_clock -> 

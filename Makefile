@@ -177,6 +177,11 @@ exe:
 
 # 	./IMITATOR Examples/Gates/NorGate.imi -mode reachability -with-parametric-log
 
+##### TRAINS #####
+
+# 	$(TARGET) $(EXAMPLE_PATH)/Train/Train1PTA.imi -mode reachability -with-parametric-log -incl
+# 	$(TARGET) $(EXAMPLE_PATH)/Train/Train1PTA.imi $(EXAMPLE_PATH)/Train/Train1PTA.pi0
+
 ##### TESTS FOR SYNTAX #####
 
 # 	$(TARGET) $(EXAMPLE_PATH)/Tests/test.gml -mode reachability -debug high -fromGML
@@ -186,6 +191,8 @@ exe:
 # 	$(TARGET) $(EXAMPLE_PATH)/Tests/testPost.imi -mode reachability
 # 	$(TARGET) $(EXAMPLE_PATH)/Tests/testPostSW.imi -mode reachability
 # 	bin/IMITATOR2.4 $(EXAMPLE_PATH)/Tests/testPostSW.imi -mode reachability
+# 	$(TARGET) $(EXAMPLE_PATH)/Tests/testPostUpdates.imi -mode reachability
+# 	bin/IMITATOR2.4 $(EXAMPLE_PATH)/Tests/testPostUpdates.imi -mode reachability
 # 	$(TARGET) $(EXAMPLE_PATH)/Tests/testPostSW.imi -mode reachability -debug total -post-limit 2
 # 	$(TARGET) $(EXAMPLE_PATH)/Tests/testPostSansDiscrete.imi -mode reachability -statistics -debug total
 
@@ -241,7 +248,8 @@ exe:
 
 # 	$(TARGET) $(EXAMPLE_PATH)/Flipflop/flipflop.imi -mode reachability -tree -debug low
 # 	$(TARGET) $(EXAMPLE_PATH)/Flipflop/flipflop.imi -mode reachability -acyclic -debug low
-# 	$(TARGET) $(EXAMPLE_PATH)/Flipflop/flipflop.imi $(EXAMPLE_PATH)/Flipflop/flipflop.pi0 -no-dot -no-log -statistics
+	$(TARGET) $(EXAMPLE_PATH)/Flipflop/flipflop.imi $(EXAMPLE_PATH)/Flipflop/flipflop.pi0 -no-dot -no-log -jobshop -no-random
+	bin/IMITATOR2.4 $(EXAMPLE_PATH)/Flipflop/flipflop.imi $(EXAMPLE_PATH)/Flipflop/flipflop.pi0 -no-dot -no-log -jobshop -no-random
 # 	$(TARGET) $(EXAMPLE_PATH)/Flipflop/flipflop.imi $(EXAMPLE_PATH)/Flipflop/flipflop.pi0 -no-dot -no-log -statistics -acyclic
 # 	$(TARGET) $(EXAMPLE_PATH)/Flipflop/flipflop.imi $(EXAMPLE_PATH)/Flipflop/flipflop.pi0 -no-dot -no-log -statistics -tree
 # 	$(TARGET) $(EXAMPLE_PATH)/Flipflop/flipflop.imi $(EXAMPLE_PATH)/Flipflop/flipflop.pi0 -no-dot -no-log -statistics -dynamic
@@ -419,8 +427,8 @@ exe:
 
 
 ##### JOB SHOP #####
-# 	$(TARGET) $(EXAMPLE_PATH)/Jobshop/maler_2_4.imi -mode reachability -no-dot -no-log -incl -jobshop
-# 	bin/IMITATOR2.4 $(EXAMPLE_PATH)/Jobshop/maler_2_4.imi -mode reachability -no-dot -no-log -incl -jobshop
+	$(TARGET) $(EXAMPLE_PATH)/Jobshop/maler_2_4.imi -mode reachability -no-dot -no-log -incl -jobshop
+	bin/IMITATOR2.4 $(EXAMPLE_PATH)/Jobshop/maler_2_4.imi -mode reachability -no-dot -no-log -incl -jobshop
 # 	bin/IMITATOR2.375 $(EXAMPLE_PATH)/Jobshop/maler_2_4.imi -mode reachability -no-dot -no-log -incl -jobshop
 # 	bin/IMITATOR2.374 $(EXAMPLE_PATH)/Jobshop/maler_2_4.imi -mode reachability -no-dot -no-log -incl -jobshop
 # 	bin/IMITATOR2.371 $(EXAMPLE_PATH)/Jobshop/maler_2_4.imi -mode reachability -no-dot -no-log -incl -statistics
@@ -442,8 +450,8 @@ exe:
 
 # 	$(TARGET) $(EXAMPLE_PATH)/Jobshop/maler_3_4.imi -mode reachability -no-dot -no-log -incl -acyclic -statistics -jobshop
 # 	$(TARGET) $(EXAMPLE_PATH)/Jobshop/maler_3_4.imi -mode reachability -no-dot -no-log -incl -acyclic -statistics -dynamic
-	$(TARGET) $(EXAMPLE_PATH)/Jobshop/maler_3_4.imi -mode reachability -no-dot -no-log -incl -acyclic -jobshop -statistics
-	bin/IMITATOR2.4 $(EXAMPLE_PATH)/Jobshop/maler_3_4.imi -mode reachability -no-dot -no-log -incl -acyclic -jobshop -statistics
+# 	$(TARGET) $(EXAMPLE_PATH)/Jobshop/maler_3_4.imi -mode reachability -no-dot -no-log -incl -acyclic -jobshop -statistics
+# 	bin/IMITATOR2.4 $(EXAMPLE_PATH)/Jobshop/maler_3_4.imi -mode reachability -no-dot -no-log -incl -acyclic -jobshop -statistics
 # 	bin/IMITATOR2.375 $(EXAMPLE_PATH)/Jobshop/maler_3_4.imi -mode reachability -no-dot -no-log -incl -acyclic -jobshop
 # 	bin/IMITATOR2.374 $(EXAMPLE_PATH)/Jobshop/maler_3_4.imi -mode reachability -no-dot -no-log -incl -acyclic -jobshop
 # 	bin/IMITATOR2.371 $(EXAMPLE_PATH)/Jobshop/maler_3_4.imi -mode reachability -no-dot -no-log -incl -acyclic -statistics -jobshop
