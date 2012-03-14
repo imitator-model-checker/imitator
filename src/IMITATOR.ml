@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2009/09/07
- * Last modified: 2012/02/20
+ * Last modified: 2012/03/14
  *
  **************************************************)
 
@@ -518,7 +518,7 @@ options#parse;
 
 print_message Debug_standard
 	( "**************************************************");
-Printf.printf " *  IMITATOR %-36s *\n" version_string;	
+Printf.printf " *   HYMITATOR %-34s *\n" version_string;
 print_message Debug_standard
 	( "*   Etienne ANDRE, Ulrich KUEHNE, Romain SOULAT  *\n"
 	^ "*                                   2009 - 2012  *\n"
