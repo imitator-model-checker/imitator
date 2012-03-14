@@ -11,7 +11,7 @@
 --****************************************************--
 
 var
-	p1, p2, p3
+	p1, p2, p3, c1 = 1
 		: parameter;
 	x, y
 		: clock;
@@ -30,7 +30,7 @@ automaton automaton1
 synclabs: action1, action2, action3;
 
 loc A1: while x <= p1 stop {x, x} wait {}
-	when x >= p2 sync action1 do {x' = 2} goto A2;
+	when x >= p2 sync action1 do {x' = 2 c1} goto A2;
 
 loc A2: while x <= p3 wait {}
 	when True do {} goto A2;
@@ -44,7 +44,7 @@ synclabs: action1, action3;
 
 loc B1: while y <= i stop{} wait
 	when y = i & i < 5 do {y' = 0, i' = i + 1} goto B1; 
-	when y = 3 sync action1 goto B2; 
+	when y = 3 sync action1 do {} goto B2; 
 
 loc B2: while True wait{}
 	when True sync action3 goto B2; -- impossible to take
