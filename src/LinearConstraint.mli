@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2010/03/04
- * Last modified: 2011/11/24
+ * Last modified: 2012/03/14
  *
  ****************************************************************)
  
@@ -187,6 +187,12 @@ val hide : variable list -> linear_constraint -> linear_constraint
 
 (** Eliminate (using existential quantification) a set of variables in a linear constraint, with side effects *)
 val hide_assign : variable list -> linear_constraint -> unit
+
+(** Add nb_dimensions to a linear_constraint *)
+val add_dimensions : int -> linear_constraint -> unit
+
+(** Remove the highest nb_dimensions from a linear_constraint *)
+val remove_dimensions : int -> linear_constraint -> unit
 
 (** 'rename_variables renaming_couples c' renames all variables according to the couples of the form (old, new) *)
 val rename_variables : (variable * variable) list -> linear_constraint -> linear_constraint

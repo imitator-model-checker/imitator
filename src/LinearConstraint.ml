@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2010/03/04
- * Last modified: 2011/12/04
+ * Last modified: 2012/03/14
  *
  ****************************************************************)
 
@@ -280,6 +280,7 @@ let ppl_remove_dim poly remove =
 	(* Statistics *)
 	ppl_t_remove_dim := !ppl_t_remove_dim +. (Unix.gettimeofday() -. start)
 
+	
 	
 (**************************************************)
 (* Useful Functions *)
@@ -874,6 +875,26 @@ let hide variables linear_constraint =
 	poly
 	
 	
+
+(** Add nb_dimensions to a linear_constraint *)
+let add_dimensions nb_dimensions linear_constraint =
+
+	(* TODO: add a counter *)
+	
+	ppl_Polyhedron_add_space_dimensions_and_project linear_constraint nb_dimensions
+
+
+
+(** Remove the highest nb_dimensions from a linear_constraint *)
+let remove_dimensions nb_dimensions linear_constraint =
+
+	(* TODO: add a counter *)
+	
+	(* Compute the highest space dimension to keep *)
+	let space_dimension = (ppl_Polyhedron_space_dimension linear_constraint) - nb_dimensions in
+	(* Projects the polyhedron referenced to by handle onto the first space_dimension dimensions *)
+	ppl_Polyhedron_remove_higher_space_dimensions linear_constraint space_dimension
+
 
 (** rename variables in a constraint, with side effects *)
 let rename_variables_assign list_of_couples linear_constraint =

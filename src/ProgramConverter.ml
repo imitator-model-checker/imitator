@@ -412,7 +412,7 @@ let rec only_discrete_in_linear_expression index_of_variables type_of_variables 
 (*--------------------------------------------------*)
 (* Check that an update is well formed *)
 (*--------------------------------------------------*)
-let check_update index_of_variables type_of_variables variable_names automaton_name (variable_name, linear_expression) =
+let check_update index_of_variables type_of_variables variable_names constants automaton_name (variable_name, linear_expression) =
 	(* Get the index of the variable *)
 	let index, declared = try (Hashtbl.find index_of_variables variable_name, true)
 		with Not_found -> (
@@ -428,8 +428,8 @@ let check_update index_of_variables type_of_variables variable_names automaton_n
 		match type_of_variable with
 		(* Case of a clock: allow only 0 as an update *)
 		| AbstractImitatorFile.Var_type_clock ->
-			(* Now update ANY linear term in updates *)
-			true
+			(* Now allow ANY linear term in updates: so just check that variables have been declared *)
+			check_linear_expression variable_names constants linear_expression
 (*			let result =
 			match linear_expression with
 			| Linear_term (Constant constant) ->
@@ -532,7 +532,7 @@ let check_automata index_of_variables type_of_variables variable_names index_of_
 				(* Check the convex predicate *)
 				if not (check_convex_predicate variable_names constants convex_predicate) then well_formed := false;
 				(* Check the updates *)
-				List.iter (fun update -> if not (check_update index_of_variables type_of_variables variable_names automaton_name update) then well_formed := false) updates;
+				List.iter (fun update -> if not (check_update index_of_variables type_of_variables variable_names constants automaton_name update) then well_formed := false) updates;
 				(* Check the sync *)
 				if not (check_sync sync_name_list automaton_name sync) then well_formed := false;
 				(* Check that the destination location exists for this automaton *)

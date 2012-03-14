@@ -281,10 +281,13 @@ let compute_invariant program location =
 (*--------------------------------------------------*)
 (* Compute the polyhedron p projected onto rho(X) *)
 (*--------------------------------------------------*)
-(*** TO DO: use cache *)
+(*** TO OPTIMIZE: use cache (?) *)
 let rho_assign program linear_constraint clock_updates =
 	if clock_updates != [] then(
 		(* Merge updates *)
+		
+		(** TO OPTIMIZE: only create the hash if there are indeed some resets/updates *)
+		
 		let clocks_hash = Hashtbl.create program.nb_clocks in
 		(* Check wether there are some complex updates of the form clock' = linear_term *)
 		let arbitrary_updates = ref false in
@@ -317,17 +320,25 @@ let rho_assign program linear_constraint clock_updates =
 					(* Update the update *)
 					Hashtbl.replace clocks_hash clock_id linear_term;
 				) list_of_clocks_lt;
-				raise (InternalError "Not implemented")
 		) clock_updates;
 		
-		(* Compute the list of clocks to update from the hashtable *)
-		let list_of_clocks_to_update = Hashtbl.fold (fun clock_id _ list_of_clocks -> clock_id :: list_of_clocks) clocks_hash [] in
+		(* THREE CASES: no updates, only resets (to 0) or updates (to linear terms) *)
 		
-		(* Only go on if the list of clocks is non-null *)
-		if list_of_clocks_to_update != [] then (
+		(* CASE 1: no update *)
+		if Hashtbl.length clocks_hash = 0 then (
+			
+			(* do nothing! *)
+			
+		(* CASE 2: only resets *)
+		)else(if not !arbitrary_updates then(
 		
-			(* Compute X = 0 for the variables appearing in updates *)
-			print_message Debug_total ("\n -- Computing updates X = 0");
+			(** TO OPTIMIZE: Hashtbl.fold and List.map should be merged into one function *)
+			
+			(* Compute the list of clocks to update from the hashtable *)
+			let list_of_clocks_to_update = Hashtbl.fold (fun clock_id _ list_of_clocks -> clock_id :: list_of_clocks) clocks_hash [] in
+			
+			(* Compute X = 0 for the variables appearing in resets *)
+			print_message Debug_total ("\n -- Computing resets X = 0");
 			let updates =
 				(List.map (fun variable_index ->
 					(* Consider cases for clocks *)
@@ -348,18 +359,119 @@ let rho_assign program linear_constraint clock_updates =
 			);
 			
 			(* Hide clocks updated within the linear constraint, viz., exists X' : lc, for X' in rho(X) *)
-			print_message Debug_total ("\n -- Computing exists X : lc for updated clocks");
+			print_message Debug_total ("\n -- Computing exists X : lc for reset clocks");
 			LinearConstraint.hide_assign list_of_clocks_to_update linear_constraint;
 			if debug_mode_greater Debug_total then(
 				print_message Debug_total (LinearConstraint.string_of_linear_constraint program.variable_names linear_constraint);
 			);
 			
 			(* Add the constraints X = 0 *)
-			print_message Debug_total ("\n -- Adding X = 0 for updated clocks");
+			print_message Debug_total ("\n -- Adding X = 0 for reset clocks");
 			LinearConstraint.intersection_assign linear_constraint [updates];
 			if debug_mode_greater Debug_total then(
 				print_message Debug_total (LinearConstraint.string_of_linear_constraint program.variable_names linear_constraint);
 			)
+			
+		(* CASE 3: updates to linear terms *)
+		)else(
+			(* Compute the couples (X_i , = linear_term) from the hashtable *)
+			let updates = Hashtbl.fold (fun clock_id linear_term current_updates -> (clock_id, linear_term) :: current_updates) clocks_hash [] in
+			(** TO OPTIMIZE (?): could be performed statically (when converting the program).
+				PRO: save time because no need to compute this for each constraint;
+				CON: lose time & memory (but maybe not that much) at some point because operations on constraints will have all dimensions instead of just the updated prime variables
+				TO OPTIMIZE (other option): merge all operations together, so that no need for hashtable
+			*)
+			(* Compute the correspondance between clocks X_i and renamed clocks X_i' *)
+			let prime_of_variable = Hashtbl.create (List.length updates) in
+			let variable_of_prime = Hashtbl.create (List.length updates) in
+			let clock_prime_id = ref program.nb_variables in
+			List.iter (fun (clock_id, _) ->
+				Hashtbl.add prime_of_variable clock_id !clock_prime_id;
+				Hashtbl.add variable_of_prime !clock_prime_id clock_id;
+				(* Debug message *)
+				if debug_mode_greater Debug_standard then(
+					print_message Debug_standard ("\nThe primed index of variable '" ^ (program.variable_names clock_id) ^ "' (index = " ^ (string_of_int clock_id) ^ ") is set to " ^ (string_of_int !clock_prime_id) ^ ".")
+				);
+				(* Increment the prime id for next variable *)
+				clock_prime_id := !clock_prime_id + 1;
+				()
+			) updates;
+			let new_max_dimension = !clock_prime_id in
+			let extra_dimensions = new_max_dimension - program.nb_variables in
+			print_message Debug_standard ("\nNew dimension for constraints: " ^ (string_of_int new_max_dimension) ^ "; extra dimensions : " ^ (string_of_int extra_dimensions) ^ ".");
+			(* Extend the number of dimensions *)
+			LinearConstraint.set_manager 0 new_max_dimension;
+			LinearConstraint.add_dimensions extra_dimensions linear_constraint;
+
+			(* Create constraints X_i' = linear_term *)
+			let inequalities = List.map (fun (clock_id, linear_term) ->
+				(* Build linear_term - clock_id' = 0 *)
+				LinearConstraint.make_linear_inequality (
+					LinearConstraint.add_linear_terms
+						(* 1: The update linear term *)
+						linear_term
+						(* 2: - clock_id' *)
+						(LinearConstraint.make_linear_term [
+								NumConst.minus_one, (Hashtbl.find prime_of_variable clock_id);
+							] NumConst.zero)
+				) LinearConstraint.Op_eq
+			) updates in
+			(* Create the constraint *)
+			let inequalities = LinearConstraint.make inequalities in
+			(* Debug print *)
+			let print_constraint c = 
+				if debug_mode_greater Debug_standard then(
+					let all_variable_names = fun variable_id ->
+						if variable_id < program.nb_variables then 
+							program.variable_names variable_id
+						else
+							(program.variable_names (Hashtbl.find variable_of_prime variable_id)) ^ "'"
+					in
+					print_message Debug_standard (LinearConstraint.string_of_linear_constraint all_variable_names c);
+				)else(
+					()
+				)
+			in
+			print_constraint inequalities;
+
+			(* Add the constraints X_i' = linear_term *)
+			print_message Debug_standard ("\n -- Adding X_i' = linear_term for updated clocks");
+			LinearConstraint.intersection_assign linear_constraint [inequalities];
+			(* Debug print *)
+			print_constraint linear_constraint;
+			
+			(* Remove the variables X_i *)
+			let list_of_clocks_to_hide, _ = List.split updates in
+			(* Hide clocks updated within the linear constraint, viz., exists X_i : lc, for X_i in rho(X) *)
+			print_message Debug_standard ("\n -- Computing exists X : lc for updated clocks");
+			LinearConstraint.hide_assign list_of_clocks_to_hide linear_constraint;
+			(* Debug print *)
+			if debug_mode_greater Debug_standard then(
+				print_constraint linear_constraint;
+			);
+			
+			(* Renames clock X_i' into X_i *)
+			(** TO OPTIMIZE !! *)
+			(* Compute couples (X_i', X_i) *)
+			let clocks_and_primes = Hashtbl.fold (fun clock_id clock_prime_id couples -> (clock_id, clock_prime_id) :: couples) prime_of_variable [] in
+			print_message Debug_standard ("\n -- Renaming clocks X_i' into X_i for updated clocks");
+			LinearConstraint.rename_variables_assign clocks_and_primes linear_constraint;
+			(* Debug print *)
+			if debug_mode_greater Debug_standard then(
+				print_constraint linear_constraint;
+			);
+
+			(* Go back to the original number of dimensions *)
+			print_message Debug_standard ("\nGo back to standard dimension for constraints: " ^ (string_of_int program.nb_variables) ^ ".");
+			LinearConstraint.set_manager 0 program.nb_variables;
+			LinearConstraint.remove_dimensions extra_dimensions linear_constraint;
+			(* Debug print *)
+			if debug_mode_greater Debug_standard then(
+				print_constraint linear_constraint;
+			);
+			
+			(** TO CHECK: what about discrete variables ?!! *)
+		)
 		)
 	)
 
