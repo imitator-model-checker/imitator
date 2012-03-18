@@ -246,7 +246,7 @@ exception Found of state_index
 (** compute a hash code for a state, depending only on the location *)
 let hash_code (location, _) =
 	Automaton.hash_code location
-	
+
 
 (** Check if two states are equal *)
 let states_equal state1 state2 =
@@ -410,9 +410,27 @@ let add_state program graph new_state =
 	)
 			
 
+			
+let get_transitions graph orig_state_index action_index =
+	try (
+		Hashtbl.find_all graph.transitions_table (orig_state_index, action_index)
+	)	with Not_found -> []
+
+
+(** Add a transition to the graph. Transitions are unique in that this 
+    function will refuse to add two transitions with the same source and
+		target index and the same label. *)
+let add_transition graph (orig_state_index, action_index, dest_state_index) =
+	(* check if it already exists *)
+	let transitions = get_transitions graph orig_state_index action_index in
+	if not (List.mem dest_state_index transitions) then
+		Hashtbl.add graph.transitions_table (orig_state_index, action_index) dest_state_index
+
+
+(*		
 (** Add a transition to the graph *)
 let add_transition reachability_graph (orig_state_index, action_index, dest_state_index) =
-	Hashtbl.add reachability_graph.transitions_table (orig_state_index, action_index) dest_state_index
+	Hashtbl.add reachability_graph.transitions_table (orig_state_index, action_index) dest_state_index*)
 
 
 (** Add an inequality to all the states of the graph *)
@@ -422,9 +440,10 @@ let add_inequality_to_states graph inequality =
 	iterate_on_states (fun _ (_, constr) ->
 		 LinearConstraint.intersection_assign constr [constraint_to_add]
 	) graph
-		 
 
 
+(*
+	CURRENTLY USELESS
 (** Replace the constraint of a state in a graph by another one (the constraint is copied to avoid side-effects later) *)
 let replace_constraint graph linear_constraint state_index =
 	(* Copy to avoid side-effects *)
@@ -434,11 +453,11 @@ let replace_constraint graph linear_constraint state_index =
 		let location_index, _ = Hashtbl.find graph.all_states state_index in
 		(* Replace with the new constraint *)
 		Hashtbl.replace graph.all_states state_index (location_index, linear_constraint_copy);
-	) with Not_found -> raise (InternalError ("Error when handling state '" ^ (string_of_int state_index) ^ "' in Graph:replace_constraint."))
+	) with Not_found -> raise (InternalError ("Error when handling state '" ^ (string_of_int state_index) ^ "' in Graph:replace_constraint."))*)
 
 
-(** Merge two states by replacing the second one by the first one, in the whole graph structure (lists of states, and transitions) *)
-let merge_states graph state_index1 state_index2 =
+(** Merge two states by replacing the second one with the first one, in the whole graph structure (lists of states, and transitions) *)
+let merge_2_states graph state_index1 state_index2 =
 	(* Retrieve state2 (for hash later *)
 	let location_index2, constr2 = Hashtbl.find graph.all_states state_index2 in
 	let state2 = get_location graph location_index2, constr2 in
@@ -454,20 +473,27 @@ let merge_states graph state_index1 state_index2 =
 			(* Replace dest if needed *)
 			let new_dest_state_index = if dest_state_index = state_index2 then state_index1 else dest_state_index in
 			Hashtbl.remove graph.transitions_table (orig_state_index, action_index);
-			if Hashtbl.mem graph.transitions_table (state_index1, action_index) then (
+			if Hashtbl.mem graph.transitions_table (state_index1, action_index) && (Hashtbl.find graph.transitions_table (state_index1, action_index)) = new_dest_state_index then (
+				
+				(* TO RECHECK (exception disabled by Etienne, 16/03/2012 *)
+
+				
 				(* Unexpected case *)
-				raise (InternalError ("Error when merging states: a couple '(orig_state_index, action_index)' is already bound in the transitions table."));
-			);
-			Hashtbl.add graph.transitions_table (state_index1, action_index) new_dest_state_index;
+(* 				raise (InternalError ("Error when merging states: a couple '(orig_state_index, action_index)' is already bound in the transitions table.")); *)
+			)else
+				Hashtbl.add graph.transitions_table (state_index1, action_index) new_dest_state_index;
 		)
 		(* Replace if destination *)
 		else (if dest_state_index = state_index2 then (
 			Hashtbl.remove graph.transitions_table (orig_state_index, action_index);
-			if Hashtbl.mem graph.transitions_table (orig_state_index, action_index) then (
+			if Hashtbl.mem graph.transitions_table (orig_state_index, action_index)  && (Hashtbl.find graph.transitions_table (orig_state_index, action_index)) = state_index1 then (
+
+				(* TO RECHECK (exception disabled by Etienne, 16/03/2012 *)
+			
 				(* Unexpected case *)
-				raise (InternalError ("Error when merging states: a couple '(orig_state_index, action_index)' is already bound in the transitions table."));
-			);
-			Hashtbl.add graph.transitions_table (orig_state_index, action_index) state_index1;
+(* 				raise (InternalError ("Error when merging states: a couple '(orig_state_index, action_index)' is already bound in the transitions table.")); *)
+			)else
+				Hashtbl.add graph.transitions_table (orig_state_index, action_index) state_index1;
 		);
 		(* Else do nothing *)
 		)
@@ -495,6 +521,10 @@ let merge_states graph state_index1 state_index2 =
 		if state_index != state_index2 then Hashtbl.add graph.states_for_comparison hash2 state_index;
 	) all_states_with_hash2;
 	
+	
+	(* TO DO: remove merged state from states_for_comparison *)
+	
+	
 (*	(* First copy the table (MEMORY CONSUMING! but necessary in order to avoid unexpected behaviors) *)
 	let states_for_comparison_copy = Hashtbl.copy graph.states_for_comparison in
 	(* Empty the original hashtable *)
@@ -507,6 +537,171 @@ let merge_states graph state_index1 state_index2 =
 		Hashtbl.add hash new_state_index;
 	) states_for_comparison_copy; *)
 	()
+
+
+
+(** Merge two states by replacing the second one by the first one, in the whole graph structure (lists of states, and transitions) *)
+let merge_states_ulrich graph s merged =
+	(* NOTE: 'merged' is usually very small, e.g., 1 or 2, so no need to optimize functions using 'merged *) 
+	print_message Debug_high ("Merging: update tables for state '" ^ (string_of_int s) ^ "' with " ^ (string_of_int (List.length merged)) ^ " merged.");
+	
+	(* Rebuild transitions table *)
+	print_message Debug_high ("Merging: update transition table, containing " ^ (string_of_int (Hashtbl.length graph.transitions_table)) ^ " elements");
+	let t' = Hashtbl.copy graph.transitions_table in
+	Hashtbl.clear graph.transitions_table;
+	Hashtbl.iter (fun (src, a) trg -> 
+		let src' = if (List.mem src merged) then s else src 
+		and trg' = if (List.mem trg merged) then s else trg in
+		(* Add if not *)
+		add_transition graph (src', a, trg')
+	) t';
+
+	(* Remove merged from hash table *)
+	print_message Debug_high "Merging: update hash table";
+	let the_state = get_state graph s in
+	let h = hash_code the_state in
+	(* Get all states with that hash *)
+	let bucket = Hashtbl.find_all graph.states_for_comparison h in
+	print_message Debug_high ("Merging: got " ^ (string_of_int (List.length bucket)) ^ " states with hash " ^ (string_of_int h));
+	(* Remove them all *)
+	while Hashtbl.mem graph.states_for_comparison h do
+		Hashtbl.remove graph.states_for_comparison h;
+	done;
+	(* Add them back *)
+	List.iter (fun y ->
+		(* Only add if not to be merged *)
+		if not (List.mem y merged) then Hashtbl.add graph.states_for_comparison h y;
+	) bucket;
+	
+	(* Remove merged from state table *)
+	print_message Debug_high "Merging: update state table";
+	List.iter (fun s -> 
+		print_message Debug_high ("Merging: remove state " ^ (string_of_int s));
+(*		while Hashtbl.mem graph.states s do *)
+			Hashtbl.remove graph.all_states s
+(*		done*)
+	) merged
+	
+
+
+(* Get states sharing the same location and discrete values from hash_table, excluding s *)
+let get_siblings graph si =
+	let s = get_state graph si in
+	let l, _ = s in
+	let h = hash_code s in
+	let sibs = Hashtbl.find_all graph.states_for_comparison h in
+	(* check for exact correspondence (=> hash collisions!), and exclude si *)
+	List.fold_left (fun siblings sj ->
+		if sj = si then siblings else begin 
+			let l', c' = get_state graph sj in
+			if (Automaton.location_equal l l') then
+				(sj, (l',c')) :: siblings
+			else
+				siblings
+		end
+	) [] sibs
+	
+
+module IntSet = Set.Make(
+	struct
+		type t = state_index
+		let compare a b = compare a b
+	end
+)
+
+
+(** Returns l1 minus l2, with assumption that all elements of l1 are different *)
+let list_diff (l1 : int list) (l2 : int list) : int list =
+(* 	print_message Debug_standard ("List diff : [" ^ (string_of_int (List.length l1)) ^ "] \ [" ^ (string_of_int (List.length l2)) ^ "]"); *)
+	(* Optimize a little *)
+	if l2 = [] then l1
+	else (if l1 = [] then []
+	else
+		List.filter (fun elt -> not (List.mem elt l2)) l1
+		(* NOTE: surprisingly much less efficient (some times 4 times slower!) to do the n log(n) solution below rather than the n2 solution above *)
+(*		let set_of_list l =
+			List.fold_left (fun set elt -> IntSet.add elt set) IntSet.empty l
+		in
+		(* Convert l1 *)
+		let s1 = set_of_list l1 in
+	(*	(* Convert l2 *)
+		let s2 = set_of_list l2 in
+		(* Performs set difference *)
+		let set_diff = IntSet.diff s1 s2 in*)
+		(* Remove elements from l2 *)
+		let set_diff =
+			List.fold_left (fun set elt -> IntSet.remove elt set) s1 l2
+		in
+		(* Return elements *)
+		IntSet.elements set_diff
+*)
+	)
+
+
+
+(* Try to merge new states with existing ones. Returns updated list of new states (ULRICH) *)
+let merge graph new_states =
+	let mergeable = LinearConstraint.hull_assign_if_exact in
+	
+	(* function for merging one state with its siblings *)
+	let merge_state si =
+		print_message Debug_total ("try to merge state " ^ (string_of_int si));
+		let l, c = get_state graph si in
+		(* get merge candidates as pairs (index, state) *)
+		let candidates = get_siblings graph si in
+		(* try to merge with siblings, restart if merge found, return eaten states *)
+		let rec eat all_mc rest_mc = begin
+			match rest_mc with
+				| [] -> [] (* here, we are really done *)
+				| m :: tail_mc -> begin
+					let sj, (_, c') = m in
+					if mergeable c c' then begin
+						print_message Debug_high ("merged with state " ^ (string_of_int sj));
+						(* we ate sj, start over with new bigger state, removing sj *)
+						let all_mc' = List.filter (fun (sk, _) -> sk <> sj) all_mc in
+						sj :: eat all_mc' all_mc'
+					end else begin
+						(* try to eat the rest of them *)
+						eat all_mc tail_mc
+					end
+				end
+		end
+		in
+		eat candidates candidates
+	in
+	
+	(* Iterate list of new states and try to merge them, return eaten states *)
+	let rec main_merger states =
+		match states with
+			| [] -> []
+			| s :: ss -> begin
+					let eaten = merge_state s in
+					if eaten = [] then
+						(* nothing merged -> go on with the rest *)
+						main_merger ss
+					else begin
+						(* update transitions and state table *)
+						merge_states_ulrich graph s eaten;
+(*						List.iter (fun state_to_be_eaten -> 
+							merge_2_states graph s state_to_be_eaten
+						) eaten;*)
+						
+						(* go on, skipping eaten states from the rest of the list *)
+						(* Optimization: does not care of the order (otherwise use list_append *)
+						List.rev_append eaten (main_merger (list_diff ss eaten))
+					end
+				end in
+	
+	(* Do it! *)
+	let eaten = main_merger new_states in
+	let nb_eaten = List.length eaten in
+	let nb_orig = List.length new_states in
+	if nb_eaten > 0 then
+		print_message Debug_standard ("  " ^ (string_of_int nb_eaten) ^ " state" ^ (s_of_int nb_eaten) ^ " merged within " ^ (string_of_int nb_orig) ^ " state" ^ (s_of_int nb_orig) ^ ".");
+	
+	(* return non-eaten new states *)
+	list_diff new_states eaten
+
 
 
 (** Empties the hash table giving the set of states for a given location; optimization for the jobshop example, where one is not interested in comparing  a state of iteration n with states of iterations < n *)

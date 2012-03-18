@@ -110,10 +110,13 @@ val add_transition : reachability_graph -> (state_index * action_index * state_i
 val add_inequality_to_states : reachability_graph -> LinearConstraint.linear_inequality -> unit
 
 (** Replace the constraint of a state in a graph by another one (the constraint is copied to avoid side-effects later) *)
-val replace_constraint : reachability_graph -> LinearConstraint.linear_constraint -> state_index -> unit
+(* val replace_constraint : reachability_graph -> LinearConstraint.linear_constraint -> state_index -> unit *)
 
 (** Merge two states by replacing the second one by the first one, in the whole graph structure (lists of states, and transitions) *)
-val merge_states : reachability_graph -> state_index -> state_index -> unit
+val merge_2_states : reachability_graph -> state_index -> state_index -> unit
+
+(* Try to merge new states with existing ones. Returns updated list of new states (ULRICH) *)
+val merge : reachability_graph -> state_index list -> state_index list
 
 (** Empties the hash table giving the set of states for a given location; optimization for the jobshop example, where one is not interested in comparing  a state of iteration n with states of iterations < n *)
 val empty_states_for_comparison : reachability_graph -> unit

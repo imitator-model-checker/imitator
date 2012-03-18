@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2009/09/08
- * Last modified: 2012/02/22
+ * Last modified: 2012/03/18
  *
  ****************************************************************)
 
@@ -13,7 +13,7 @@
 (** Version string *)
 (****************************************************************)
 
-let version_string = "2.41"
+let version_string = "2.42"
 
 let print_version_string _ = 
 	print_string ("IMITATOR " ^ version_string ^ "\n");
@@ -166,9 +166,12 @@ let random_element l =
 	let nth = Random.int (List.length l) in
 	List.nth l nth
 
-(* list_of_interval a b Create a fresh new list filled with elements [a, a+1, ..., b-1, b] *)
-let list_of_interval a b =
-	(* Check if the interval is valid *)
+(** list_of_interval l u Create a fresh new list filled with elements [l, l+1, ..., u-1, u] *)
+let rec list_of_interval l u =
+	if ( l > u )
+		then []
+	else l :: (list_of_interval ( l + 1 ) u)
+(*	(* Check if the interval is valid *)
 	if a > b then [] else(
 		(* Create an array (more efficient?) *)
 		let ar = Array.make (b - a + 1) a in
@@ -178,7 +181,7 @@ let list_of_interval a b =
 		done;
 		(* Return a list *)
 		Array.to_list ar
-	)
+	)*)
 
 (* Intersection of 2 lists (keeps the order of the elements as in l1) *)
 let list_inter l1 l2 =

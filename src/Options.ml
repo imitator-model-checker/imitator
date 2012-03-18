@@ -7,7 +7,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Ulrich Kuehne
  * Created:       2010
- * Last modified: 2011/12/04
+ * Last modified: 2012/03/14
  *
  ****************************************************************)
  
@@ -83,8 +83,8 @@ class imitator_options =
 		val mutable pta2gml = ref false
 
 		(* SPECIALIZED OPTIONS*)
-		(* For jobshop *)
-		val mutable jobshop = ref false
+		(* No merging of states (former jobshop option) *)
+		val mutable no_merging = ref false
 
 
 		
@@ -97,10 +97,10 @@ class imitator_options =
 		method fromGML = !fromGML
 		method imitator_mode = !imitator_mode
 		method inclusion = !inclusion
-		method jobshop = !jobshop
 		method nb_args = nb_args
 		method no_dot = !no_dot
 		method no_log = !no_log
+		method no_merging = !no_merging
 		method no_random = !no_random
 		method pi_compatible = !pi_compatible
 		method post_limit = !post_limit
@@ -168,11 +168,11 @@ class imitator_options =
 				("-incl", Set inclusion, " Consider an inclusion of region instead of the equality when performing the Post operation (e.g., implemented in algorithm IMincl). Default: 'false'");
 				("-IMorig", Set pi_compatible, " Algorithm IMoriginal : return a constraint such that no pi-incompatible state can be reached. Default: 'false'");
 				("-IMunion", Set union, " Algorithm IMUnion : Returns the union of the constraint on the parameters associated to the last state of each trace. Default: 'false'");
-				("-jobshop", Set jobshop, " Use only when working on jobshop problems. Default: 'false'");
 				("-log-prefix", Set_string program_prefix, " Sets the prefix for log files. Default: [program_file].");
 				("-mode", String set_mode, " Mode for IMITATOR II. Use 'reachability' for a parametric reachability analysis (no pi0 needed). Use 'inversemethod' for the inverse method. For the behavioral cartography algorithm, use 'cover' to cover all the points within V0, or 'randomXX' where XX is a number to iterate randomly algorithm. Default: 'inversemethod'.");
 				("-no-dot", Set no_dot, " No graphical output using 'dot'. Default: false.");
 				("-no-log", Set no_log, " No generation of log files. Default: false.");
+				("-no-merging", Set no_merging, " Disable the merging technique of [AFS12]. Default: 'false' (enable)");
 				("-no-random", Set no_random, " No random selection of the pi0-incompatible inequality (select the first found). Default: false.");
 				("-post-limit", Int (fun i -> post_limit := Some i), " Limits the depth of the Post exploration. Default: no limit.");
 				("-PTA2CLP", Unit (fun _ -> pta2clp := true; imitator_mode := Translation), "Translate PTA into a CLP program (**work in progress**), and exit without performing any analysis. Defaut : 'false'");

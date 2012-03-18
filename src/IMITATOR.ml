@@ -609,10 +609,10 @@ if options#fromGML then
 
 (* OPTIONS *)
 
-if options#jobshop then
-	print_message Debug_standard ("Jobshop mode.")
+if options#no_merging then
+	print_message Debug_standard ("Merging technique of [AFS12] disabled.")
 else
-	print_message Debug_medium ("No jobshop mode (default).");
+	print_message Debug_medium ("Merging technique of [AFS12] enabled (default).");
 
 if options#dynamic then
 	print_message Debug_standard ("Dynamic mode (optimization by RS).")

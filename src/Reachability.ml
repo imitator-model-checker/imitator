@@ -162,7 +162,7 @@ let try_to_merge_states graph list_of_states =
 				(* Try to merge eater with current_element *)
 				if state_mergeable s1 s2 then (
 					print_message Debug_total ("Found a mergeable state");
-					Graph.merge_states graph eater current_element;
+					Graph.merge_2_states graph eater current_element;
 					print_message Debug_total ("States successfully merged");
 					(** Optimized: hull already performed in state_mergeable !! *)
 					(* Update flags (we will have to start everything again) *)
@@ -1326,40 +1326,15 @@ let post_star program pi0 init_state =
 			in
 			newly_found_new_states := try_to_merge new_newly_found_new_states;*)
 
-		(** TO DO: il y a une curieuse DOUBLE recurrence ici, qui m'embete beaucoup *)
 		let new_states_after_merging = ref new_newly_found_new_states in
-		if program.options#jobshop then (
-			new_states_after_merging := try_to_merge_states reachability_graph !new_states_after_merging;
-(*			let merging = ref true in
-			let nb_merged = ref 0 in
-			while !merging do
-				print_message Debug_total ("Looped Merging");
-				merging := false;
-				match !new_states_after_merging with
-					(* If empty list: do nothing *)
-					| [] -> ()
-					(* Otherwise: *)
-					| first :: rest -> (
-						let (result, state_merged) = merging_of_states reachability_graph first rest [] in
-							print_message Debug_total ("Test for debugging the fatal error 2/5");
-							if result then (
-								print_message Debug_total ("Test for debugging the fatal error 3/5");
-								merging := true;
-								nb_merged := !nb_merged + 1;
-								print_message Debug_total ("Test for debugging the fatal error 4/5");
-								new_states_after_merging := list_remove_first_occurence state_merged !new_states_after_merging ;
-								print_message Debug_total ("Test for debugging the fatal error 5/5");
-							);
-						print_message Debug_total ("Looping merging");
-						);
-			done;
-			if !nb_merged > 0 then
-				print_message Debug_standard ("  " ^ (string_of_int !nb_merged) ^ " state" ^ (s_of_int !nb_merged) ^ " merged.");*)
+		if not program.options#no_merging then (
+(* 			new_states_after_merging := try_to_merge_states reachability_graph !new_states_after_merging; *)
+			(* New version *)
+			new_states_after_merging := Graph.merge reachability_graph !new_states_after_merging;
 		);
 
 
 		(* Update the newly_found_new_states *)
-(* 		newly_found_new_states := new_newly_found_new_states; *)
 		newly_found_new_states := !new_states_after_merging;
 		(* Debug *)
 		if debug_mode_greater Debug_medium then (
@@ -1367,7 +1342,7 @@ let post_star program pi0 init_state =
 			print_message Debug_medium (beginning_message ^ " for post^" ^ (string_of_int (!nb_iterations)) ^ ".\n");
 		);
 		
-		(* If jobshop option: empty the list of already reached states for comparison with former states *)
+		(* If acyclic option: empty the list of already reached states for comparison with former states *)
 		if program.options#acyclic then(
 			print_message Debug_low ("\nMode acyclic: empty the list of states to be compared.");
 			empty_states_for_comparison reachability_graph;
