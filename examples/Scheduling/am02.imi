@@ -1,5 +1,6 @@
 var time: clock;
-	 deadline: parameter;
+	 deadline = 10
+	 : parameter;
 
 	c1 : clock;
 	wcet_m1_job1, wcet_m2_job1, wcet_m3_job1: parameter;
@@ -129,7 +130,7 @@ init:= 	loc[checker] = nop &
 --			wcet_m2_job1 = 2 &
 --			wcet_m3_job1 = 4 &
 --			wcet_m2_job2 = 5 &
-			deadline = 10 &
+
 			-----------------
 			True
 ;
