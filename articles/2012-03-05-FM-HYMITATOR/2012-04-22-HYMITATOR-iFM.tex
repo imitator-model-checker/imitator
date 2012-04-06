@@ -354,7 +354,9 @@ $^2$Universit\"at Bremen, Germany}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\commentaire{short introduction}
+%% \commentaire{short introduction}
+
+Hybrid systems combine discrete and continuous behavior. This corresponds e.g.~to the discrete control logic and continuous physical variables in an embedded system. Hybrid Automata are a popular and powerful model for such systems, where the continuous variables evolve according to a ordinary differential equations in each control mode.
 
 In~\cite{acef09}, we proposed the inverse method for Timed Automata, a subclass of hybrid systems whose variables (named clocks) all have constant rates equal to~1.
 Different from CEGAR-based methods, this original semi-algorithm for parameter synthesis is based on a ``good'' parameter valuation~$\pio$ instead of a set of ``bad'' states.
@@ -519,8 +521,8 @@ This gives more accurate results, by reducing the size of the possible ``holes''
 
 %% \commentaire{Laurent a dit :}
 
-\hymitator{} can be used for the \emph{parametric verification} of hybrid systems. An application to sampled data hybrid systems has been presented in \cite{FK11}. As a special case, such systems can be parameterized over the initial states. Then, a single run satisfying a desirable reachability property can be generalized to a larger set of initial states. As an example, Figure~\ref{fig:plot_rhb} (left) shows the enlarged reachable states of a single run for the \emph{room heating benchmark} from~\cite{FI2004}.
-This also proves the \emph{robustness} of the system w.r.t.~the tested property.
+\hymitator{} can be used for the \emph{parametric verification} of hybrid systems. An application to sampled data hybrid systems has been presented in \cite{FK11}. As a special case, such systems can be parameterized over the initial states. Then, a single run satisfying a desirable reachability property can be generalized to a larger set of initial states. As an example, Figure~\ref{fig:plot_rhb} (left) shows the enlarged reachable states of a single run for the \emph{room   heating benchmark} from~\cite{FI2004}.
+This also proves the \emph{robustness} of the system w.r.t.~the tested property. Figure~\ref{fig:plot_rhb} in the middle shows an overapproximation of the reachable states for the \emph{navigation   benchmark} \cite{FI2004}, proving that all trajectories will eventually enter the green target zone.
 
 Another problem that can be addressed using \hymitator{} is \emph{test   coverage}. In order to ensure the quality of an implementation of a hybrid system, a set of tests is generated which is then applied to the system. However, since the state space of hybrid systems is infinite in general, it is hard to decide when enough tests have been performed. Using the inverse method, a region around each test point is generated which entails the same discrete behavior. This means that any point in this region can be considered covered. Figure~\ref{fig:plot_rhb} (right) shows the coverage of a rectangle for the room heating benchmark.
 
@@ -539,14 +541,11 @@ Another problem that can be addressed using \hymitator{} is \emph{test   coverag
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
-One of the first powerful model checkers for analyzing parametric timed automata is \hytech{}~\cite{hhw97}.
-Unfortunately, it can hardly verify even medium sized examples due to exact arithmetics with limited precision and static composition of automata, quickly leading to memory overflows.
+One of the first powerful model checkers for analyzing Parametric Timed Automata and Hybrid Automata is \hytech{}~\cite{hhw97}.
+Unfortunately, it can hardly verify even medium sized examples due to exact arithmetics with limited precision and static composition of automata, quickly leading to memory overflows. The tool \phaver{}~\cite{frehse05} improves on the computation of the reachable states by using efficient overapproximations. Techniques similar to those in \phaver{} have also been implemented in \imitator{}, with additional algorithmic improvements.
 
-\commentaire{to do (citer Phaver)}
-
-\commentaire{to do (citer alur et al)}
+%% \commentaire{to do (citer alur et al)}
 % A graphical user interface for the input model is currently under construction, based on a generic platform. \commentaire{utile ?!}
-
 
 
 \commentaire{justifier l'aspect fork, et non extension d'IMITATOR 2}
