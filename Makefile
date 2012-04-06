@@ -44,9 +44,6 @@ export OCAML_PPL_PATH
 export OCAML_GMP_PATH
 export CLIB_PATH
 
-#export APRON_PATH = /home/andre/local/lib
-
-#INCLUDE = -I $(SRC) -I $(EXTLIB_PATH) -I $(OCAML_PPL_PATH) -I $(OCAML_GMP_PATH) -I $(APRON_PATH)
 INCLUDE = -I $(SRC) -I $(EXTLIB_PATH) -I $(OCAML_PPL_PATH) -I $(OCAML_GMP_PATH) -I $(CLIB_PATH)
 
 # external libs for compiling imitator
@@ -95,15 +92,15 @@ LEXERS = $(SRC)/Pi0Lexer.+ $(SRC)/Pi0CubeLexer.+ $(SRC)/ImitatorLexer.+
 PARSERS = $(SRC)/Pi0Parser.+ $(SRC)/Pi0CubeParser.+ $(SRC)/ImitatorParser.+
 
 # target library
-IMILIB = lib/hymitator.cma
+IMILIB = lib/imitator.cma
 IMILIB_OPT = $(IMILIB:.cma=.cmxa)
 
 EXAMPLE_PATH = examples
 
 
 # target executable
-TARGET = bin/HYMITATOR
-TARGET_OPT = bin/HYMITATOR.opt
+TARGET = bin/IMITATOR
+TARGET_OPT = bin/IMITATOR.opt
 
 default all: $(TARGET)
 opt: $(TARGET_OPT)
@@ -189,7 +186,8 @@ exe:
 
 ##### SCHEDULING #####
 
-	$(TARGET) $(EXAMPLE_PATH)/CPR08/full_cpr08.im3 $(EXAMPLE_PATH)/CPR08/full_cpr08.pi0 -no-dot -no-log -inclusion
+# 	$(TARGET) $(EXAMPLE_PATH)/CPR08/full_cpr08.im3 $(EXAMPLE_PATH)/CPR08/full_cpr08.pi0 -no-dot -no-log -inclusion
+	$(TARGET) $(EXAMPLE_PATH)/LA02/LA02_2.imi $(EXAMPLE_PATH)/LA02/LA02_2.pi0 -no-dot -no-log -inclusion -merge
 
 
 count: clean
@@ -213,17 +211,5 @@ rmuseless:
 	@rm -rf $(FILES:+=cmx) $(FILES:+=cmo) $(FILES:+=cmi) $(FILES:+=o) $(MAIN) $(MAIN:.cmo=.cmi) $(MAIN:.cmo=.cmx)
 	@rm -rf $(FILESMLI:+=cmi)
 
-# ppl:
-# 	ocamlc -I $(OCAML_GMP_PATH) -I $(OCAML_PPL_PATH) -c test1.ml
-# # 	ocamlc -I +gmp libmlgmp.a -I $(OCAML_PPL_PATH) -o TEST ppl2.cmo
-# 	ocamlc -o TEST -I $(OCAML_GMP_PATH) -I $(OCAML_PPL_PATH)  gmp.cma ppl_ocaml.cma test1.cmo
-# # 	ocamlc -o TEST -I +gmp -I $(OCAML_PPL_PATH) -cclib -lppl -cclib -lm -cclib -lgmpxx -cclib -lgmp   ppl2.cmo
-# 	./TEST
-# #	-I $(OCAML_GMP_PATH)
-# # libppl_ocaml.a gmp.cma nums.cma str.cma unix.cma  libmlgmp.a libppl_ocaml.a gmp.cma 
-# 
-# ppl2:
-# 	OCAMLRUNPARAM='l=1M' ocamlc -o test2.cmo -c -I $(OCAML_GMP_PATH) -I $(OCAML_PPL_PATH)  gmp.cma ppl_ocaml.cma -ccopt -g test2.ml
-# 	OCAMLRUNPARAM='l=1M' ocamlc -o TEST2 -I $(OCAML_GMP_PATH) -I $(OCAML_PPL_PATH)  gmp.cma ppl_ocaml.cma -ccopt -g test2.cmo
 
 include .depend

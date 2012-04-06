@@ -479,7 +479,10 @@ The post image computation can be costly for hybrid automata. To overcome this p
 
 %% \commentaire{un mot sur la cartographie puisque, je crois, elle a ete modifiee dans le cas des systemes hybrides}
 
-The behavioral cartography has been slightly modified. For hybrid automata, there is no restriction of the clock constraints to integer coefficients. For this reason, instead of considering only integer points as starting points for the inverse method, an arbitrary rational step size can be used for each parameter dimension.
+The behavioral cartography has been adapted to the framework of hybrid systems.
+Different  from timed automata, hybrid automata do not restrict coefficients appearing in clock constraints to integers, and allow variables to be compared with any rational value.
+For this reason, instead of considering only integer points as starting points for the inverse method, an arbitrary rational step size can be used for each parameter dimension in \hymitator{}.
+This gives more accurate results, by reducing the size of the possible ``holes'' not covered by any tile of the cartography.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -515,9 +518,10 @@ The behavioral cartography has been slightly modified. For hybrid automata, ther
 
 %% \commentaire{Laurent a dit :}
 
-\hymitator{} can be used for the \emph{parametric verification} of hybrid systems. An application to sampled data hybrid systems has been presented in \cite{FK11}. As a special case, such systems can be parameterized over the initial states. Then, a single run satisfying a desirable reachability property can be generalized to a larger set of initial states. As an example, Figure~\ref{fig:plot_rhb} on the left  shows the enlarged reachable states of a single run for the \emph{room heating benchmark} from~\cite{FI2004}. This also proves the \emph{robustness} of the system wrt.~the tested property.
+\hymitator{} can be used for the \emph{parametric verification} of hybrid systems. An application to sampled data hybrid systems has been presented in \cite{FK11}. As a special case, such systems can be parameterized over the initial states. Then, a single run satisfying a desirable reachability property can be generalized to a larger set of initial states. As an example, Figure~\ref{fig:plot_rhb} (left) shows the enlarged reachable states of a single run for the \emph{room heating benchmark} from~\cite{FI2004}.
+This also proves the \emph{robustness} of the system w.r.t.~the tested property.
 
-Another problem that can be addressed using \hymitator{} is \emph{test   coverage}. In order to ensure the quality of an implementation of a hybrid system, a set of tests is generated which is then applied to the system. However, since the state space of hybrid systems is infinite in general, it is hard to decide when enough tests have been performed. Using the inverse method, a region around each test point is generated which entails the same discrete behavior. This means that any point in this region can be considerd covered. Figure~\ref{fig:plot_rhb} on the right shows the coverage of a rectangle for the room heating benchmark.
+Another problem that can be addressed using \hymitator{} is \emph{test   coverage}. In order to ensure the quality of an implementation of a hybrid system, a set of tests is generated which is then applied to the system. However, since the state space of hybrid systems is infinite in general, it is hard to decide when enough tests have been performed. Using the inverse method, a region around each test point is generated which entails the same discrete behavior. This means that any point in this region can be considered covered. Figure~\ref{fig:plot_rhb} (right) shows the coverage of a rectangle for the room heating benchmark.
 
 % - synthesis schedulability regions (cf [Cimatti-Palopoli-Ramadian08], [Astrium EADS])
 
