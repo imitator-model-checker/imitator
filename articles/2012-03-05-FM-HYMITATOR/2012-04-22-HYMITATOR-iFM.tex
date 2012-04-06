@@ -360,7 +360,7 @@ Different from CEGAR-based methods, this original semi-algorithm for parameter s
 $\IM$ synthesizes a constraint~$\Ko$ on the parameters such that, for all parameter valuation~$\piprime$ satisfying $\Ko$, the trace set (i.e., the discrete behavior) of~$\A$ under~$\piprime$ is the same as for~$\A$ under~$\pio$.
 This preserves in particular linear time properties, and provides the system with a criterion of robustness.
 By iterating the inverse method on all integer points within a bounded reference parameter domain, we get a set of constraints %(``tiles'')
-% such that, for every point in each such constraint, the time-abstract behavior is the same: this gives a behavioral cartography of the system~\cite{af10}.
+such that, for every point in each such constraint, the time-abstract behavior is the same: this gives a behavioral cartography of the system~\cite{af10}.
 
 A basic implementation named \imitator{} (for \emph{Inverse Method for Inferring Time AbstracT behaviOR}) has first been proposed%in~\cite{and09}
 , under the form of a \python{} script calling \hytech{}.
@@ -513,11 +513,11 @@ The behavioral cartography has been slightly modified. For hybrid automata, ther
 \end{figure}
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
 
-\commentaire{Laurent a dit :}
+%% \commentaire{Laurent a dit :}
 
-- sampled data hybrid systems (cf~\cite{FK11})
+\hymitator{} can be used for the \emph{parametric verification} of hybrid systems. An application to sampled data hybrid systems has been presented in \cite{FK11}. As a special case, such systems can be parameterized over the initial states. Then, a single run satisfying a desirable reachability property can be generalized to a larger set of initial states. As an example, Figure~\ref{fig:plot_rhb} on the left  shows the enlarged reachable states of a single run for the \emph{room heating benchmark} from~\cite{FI2004}. This also proves the \emph{robustness} of the system wrt.~the tested property.
 
-- test coverage for hybrid systems
+Another problem that can be addressed using \hymitator{} is \emph{test   coverage}. In order to ensure the quality of an implementation of a hybrid system, a set of tests is generated which is then applied to the system. However, since the state space of hybrid systems is infinite in general, it is hard to decide when enough tests have been performed. Using the inverse method, a region around each test point is generated which entails the same discrete behavior. This means that any point in this region can be considerd covered. Figure~\ref{fig:plot_rhb} on the right shows the coverage of a rectangle for the room heating benchmark.
 
 % - synthesis schedulability regions (cf [Cimatti-Palopoli-Ramadian08], [Astrium EADS])
 
