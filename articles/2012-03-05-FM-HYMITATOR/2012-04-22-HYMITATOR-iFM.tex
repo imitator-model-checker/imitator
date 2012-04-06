@@ -12,6 +12,7 @@
 % ALGORITHMES
 \usepackage[ruled,vlined,linesnumbered]{algorithm2e}
 
+\usepackage{subfigure}
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -311,8 +312,8 @@
 
 
 % COMMENTAIRES DANS UN PARAGRAPHE
-\newcommand{\commentaire}[1]{\textcolor{red}{\textbf{$\Leftarrow$  #1 $\Rightarrow$}}}
-% \newcommand{\commentaire}[1]{}
+% \newcommand{\commentaire}[1]{\textcolor{red}{\textbf{$\Leftarrow$  #1 $\Rightarrow$}}}
+\newcommand{\commentaire}[1]{}
 
 % REDEFINITIONS DES PARAGRAPHES
 \newcommand{\paragraphe}[1]{\paragraph{#1.}}
@@ -336,14 +337,12 @@ $^2$Universit\"at Bremen, Germany}
 \maketitle
 
 \begin{abstract}
-	Hybrid systems combine continuous and discrete behavior. 
-	Hybrid Automata are a powerful formalism for the modeling and verification of such systems.
+	Hybrid Automata are a powerful formalism for modeling and verifying hybrid systems, that combine continuous and discrete behavior.
 	A common problem in hybrid system verification is the good parameters problem, which consists in identifying a set of parameter valuations which guarantee a certain behavior of a system.
-	We present here \hymitator{}, a tool allowing efficient parameter synthesis for hybrid automata.
-	\commentaire{parler de robustesse des l'abstract}
+	We introduce here \hymitator{}, a tool allowing efficient parameter synthesis for hybrid automata, and providing the system with a quantitative measure of its robustness.
 \end{abstract}
 
-\keywords{Real-Time Systems, Hybrid Automata, Verification, Parameter Synthesis}
+\keywords{Hybrid automata, Verification, Parameter synthesis, Robustness}
 
 \commentaire{Version avec commentaires}
 
@@ -356,24 +355,30 @@ $^2$Universit\"at Bremen, Germany}
 
 %% \commentaire{short introduction}
 
-Hybrid systems combine discrete and continuous behavior. This corresponds e.g.~to the discrete control logic and continuous physical variables in an embedded system. Hybrid Automata are a popular and powerful model for such systems, where the continuous variables evolve according to a ordinary differential equations in each control mode.
+Hybrid systems combine discrete and continuous behavior.
+This corresponds for instance to the discrete control logic and continuous physical variables in an embedded system.
+Hybrid automata are a popular and powerful model for such systems, where the continuous variables evolve according to ordinary differential equations in each control mode.
 
-In~\cite{acef09}, we proposed the inverse method for Timed Automata, a subclass of hybrid systems whose variables (named clocks) all have constant rates equal to~1.
-Different from CEGAR-based methods, this original semi-algorithm for parameter synthesis is based on a ``good'' parameter valuation~$\pio$ instead of a set of ``bad'' states.
-$\IM$ synthesizes a constraint~$\Ko$ on the parameters such that, for all parameter valuation~$\piprime$ satisfying $\Ko$, the trace set (i.e., the discrete behavior) of~$\A$ under~$\piprime$ is the same as for~$\A$ under~$\pio$.
-This preserves in particular linear time properties, and provides the system with a criterion of robustness.
-By iterating the inverse method on all integer points within a bounded reference parameter domain, we get a set of constraints (``tiles'')
-such that, for every point in each such constraint, the time-abstract behavior is the same: this gives a behavioral cartography of the system~\cite{af10}.
+In~\cite{acef09}, we proposed the \emph{inverse method} for timed automata, a subclass of hybrid systems whose variables (named clocks) all have constant rates equal to~1.
+Different from CEGAR-based methods, this original semi-algorithm for parameter synthesis is based on a ``good'' parameter valuation (also named \emph{point})~$\pio$ instead of a set of ``bad'' states.
+This method synthesizes a constraint~$\Ko$ on the parameters such that, for each parameter valuation~$\piprime$ satisfying $\Ko$, the trace set (i.e., the discrete behavior) of~$\A$ under~$\piprime$ is the same as for~$\A$ under~$\pio$.
+This preserves in particular linear time properties.
+This also provides the system with a criterion of robustness, in the sense that the resulting constraint gives a quantitative measure of the allowed ``drift'' such that the discrete behavior of the system is not impacted.
+By iterating the inverse method on all integer points within a bounded reference parameter domain, we get a set of constraints (or \emph{tiles}) such that, for each parameter valuation in each such tile, the time-abstract behavior is the same: this gives a \emph{behavioral cartography} of the system~\cite{af10}.
 
 A basic implementation named \imitator{} (for \emph{Inverse Method for Inferring Time AbstracT behaviOR}) has first been proposed%in~\cite{and09}
 , under the form of a \python{} script calling \hytech{}.
 The tool has then been entirely rewritten in \imitator{}\,2.0~\cite{and10}, under the form of a standalone \ocaml{} program making use of the Parma Polyhedra Library (PPL)~\cite{bhz08}.
 A number of case studies containing up to 60 timing parameters could be efficiently verified in the purely timed framework.
-The latest version (2.5) includes stopwatches and arbitrary updates, and has been applied to many scheduling problems~\cite{afks12}.
+The latest version (2.5) includes stopwatches and arbitrary updates, and has been applied to several classes of scheduling problems~\cite{afks12}.
 
-The inverse method and the behavioral cartography have then been extended to hybrid systems in~\cite{FK11}, and implemented in a prototype ``fork'' of \imitator{}\,2.0.
+The inverse method and the behavioral cartography have been extended to hybrid systems in~\cite{FK11}.
+Due to the strong syntactic and algorithmic differences between timed automata and hybrid automata, the work of~\cite{FK11} had to be implemented in an experimental ``fork'' of \imitator{}\,2.0, and not in the main version.
 % \commentaire{small description to add}
-We present in this paper \hymitator{}, an extension of that prototype, performing parameter synthesis on hybrid systems.
+We present in this paper \hymitator{}, a now mature extension of that prototype, performing parameter synthesis on hybrid systems.
+
+% It would be unfortunately hard (if not impossible) to merge \imitator{} with \hymitator{}; the 
+
 
 
 
@@ -396,8 +401,8 @@ We present in this paper \hymitator{}, an extension of that prototype, performin
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \hymitator{} takes as input a network of hybrid automata synchronized on shared actions.
-The input syntax, inspired by the input syntax of \hytech{}% and \imitator{}
-, allows the use of analog variables (i.e., such as time, velocity or temperature), rational-valued discrete variables, and parameters (i.e., unknown constants). The dynamics of the analog variables is described by ordinary differential equations. The tool directly supports linear dynamics, while affine dynamics can be approximated with arbitrary precision.
+The input syntax, inspired by \hytech{}% and \imitator{}
+, allows the use of analog variables (such as time, velocity or temperature), rational-valued discrete variables, and parameters (i.e., unknown constants). The dynamics of the analog variables is described by ordinary differential equations. The tool directly supports linear dynamics, while affine dynamics can be approximated with arbitrary precision.
 
 The core of the program is written in the object-oriented language OCaml, and interacts with~PPL.
 Exact arithmetics with unbounded precision is used.
@@ -467,13 +472,14 @@ A constraint is output in text format; furthermore, the set of traces computed b
 \hymitator{} implements the following algorithms for hybrid systems:
 \begin{description}
 	\item[Full reachability analysis] Given a model, it computes the set of symbolic reachable states.
-\item[Predicate Abstraction] Safety verification can alternatively be performed using a counterexample-guided abstraction refinement loop. The abstract state space is constructed wrt.~a set of linear predicates. The method has been described in~\cite{ADI2006}.
-	\item[Inverse method] Given a model and a reference parameter valuation~$\pio$, it computes a constraint on the parameter guaranteeing the same time-abstract behavior as under~$\pio$
-	\item[Behavioral cartography] Given a model and a bounded parameter domain for each parameter valuation, it computes a set of constraints and their corresponding trace sets.
+\item[Predicate Abstraction] Safety verification can alternatively be performed using a counterexample-guided abstraction refinement loop. The abstract state space is constructed w.r.t.~a set of linear predicates%. The method has been described in
+	~\cite{ADI2006}.
+	\item[Inverse method] Given a model and a reference parameter valuation~$\pio$, it computes a constraint on the parameter guaranteeing the same time-abstract behavior as under~$\pio$.
+	\item[Behavioral cartography] Given a model and a bounded parameter domain for each parameter valuation, it computes a set of constraints.% and their corresponding trace sets.
 \end{description}
 
 \hymitator{} uses several algorithmic optimizations, some of which have initially been developed for \imitator{}.
-In particular, the efficient merging presented in~\cite{AFS12} has been successfully extended to the hybrid case: we merge any two states sharing the same discrete part (location and value of the discrete variables) and such that the union of their constraint on the analog variables and parameters is convex.
+In particular, the efficient merging technique presented in~\cite{AFS12} has been successfully extended to the hybrid case: we merge any two states sharing the same discrete part (location and value of the discrete variables) and such that the union of their constraint on the analog variables and parameters is convex.
 This optimization preserves the correctness of all our algorithms; better, the constraint output by the inverse method in that case may be weaker, i.e., covers a larger set of parameter valuations.
 
 For affine hybrid systems, further optimizations are needed. Due to the linear overapproximation by partitioning the state space, a lot of additional branching is introduced, which renders the inverse method ineffective. To solve this problem, the algorithm has been extended as described in~\cite{FK11}. Basically, the partitioning is performed locally, and partitions belonging to the same discrete state are merged by taking their convex hull. 
@@ -483,9 +489,12 @@ The post image computation can be costly for hybrid automata. To overcome this p
 %% \commentaire{un mot sur la cartographie puisque, je crois, elle a ete modifiee dans le cas des systemes hybrides}
 
 The behavioral cartography has been adapted to the framework of hybrid systems.
-Different  from timed automata, hybrid automata do not restrict coefficients appearing in clock constraints to integers, and allow variables to be compared with any rational value.
+Different  from timed automata, hybrid automata do not restrict coefficients appearing in clock constraints to be integers, and allow variables to be compared with any rational value.
 For this reason, instead of considering only integer points as starting points for the inverse method, an arbitrary rational step size can be used for each parameter dimension in \hymitator{}.
 This gives more accurate results, by reducing the size of the possible ``holes'' not covered by any tile of the cartography.
+
+\hymitator{} (with sources, binaries and case studies) is available on its Web page: \url{http://www-lipn.univ-paris13.fr/~andre/software/hymitator/}.
+
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -496,21 +505,45 @@ This gives more accurate results, by reducing the size of the possible ``holes''
 
 
 
+\hymitator{} can be used for the \emph{parametric verification} of hybrid systems. An application to sampled data hybrid systems has been presented in \cite{FK11}. As a special case, such systems can be parameterized over the initial states. Then, a single run satisfying a desirable reachability property can be generalized to a larger set of initial states. As an example, Figure~\ref{fig:plot1} shows the enlarged reachable states of a single run for the \emph{room   heating benchmark} from~\cite{FI2004}.
+This also proves the \emph{robustness} of the system w.r.t.~the tested property. Figure~\ref{fig:plot2} shows an overapproximation of the reachable states for the \emph{navigation benchmark}~\cite{FI2004}, proving that all trajectories will eventually enter the green target zone.
+
+% 
+% \begin{figure}[ht]
+% \centering
+% \subfigure[Caption of subfigure 1]{
+% \includegraphics[scale=1]{subfigure1.eps}
+% \label{fig:subfig1}
+% }
+% \subfigure[Caption of subfigure 2]{
+% \includegraphics[scale=1]{subfigure2.eps}
+% \label{fig:subfig2}
+% }
+% \subfigure[Caption of subfigure 3]{
+% \includegraphics[scale=1]{subfigure3.eps}
+% \label{fig:subfig3}
+% }
+% \label{fig:subfigureExample}
+% \caption[Optional caption for list of figures]{Caption of subfigures \subref{fig:subfig1}, \subref{fig:subfig2} and \subref{fig:subfig3}}
+% \end{figure}
+
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
 \begin{figure}[ht!]
 	\centering
-%   \subfigure[Starting from a single point]{
-%     \includegraphics[width=3.5cm]{point_x1} \; 
-%     \includegraphics[width=3.5cm]{point_x2} \;
-%     \includegraphics[width=3.5cm]{point_x3}
-%     \label{fig:plot_point}
-%   }
-%   \subfigure[Starting from a tile synthesized by the Inverse Method]{
-		\includegraphics[width=3.6cm]{plot_t_x1} \ \ \ 
+	\subfigure[Reachable states]{
+		\includegraphics[width=3.6cm]{plot_t_x1}
+		\label{fig:plot1}
+	}
 %     \includegraphics[width=3.5cm]{plot_t_x2} \;
 %     \includegraphics[width=3.5cm]{plot_t_x3}
-		\includegraphics[width=3.6cm]{navigation_map.pdf} \ \ \ 
+	\subfigure[Trajectories]{
+		\includegraphics[width=3.6cm]{navigation_map.pdf}
+		\label{fig:plot2}
+	}
+	\subfigure[Behavioral cartography]{
 		\includegraphics[height=3.6cm]{rhb_cart2.pdf}
+		\label{fig:plot3}
+	}
 %     \label{fig:plot_zone}
 %   } 
 % 	\caption{a) and b) Set of reachable states c) Behavioral cartography}
@@ -519,12 +552,13 @@ This gives more accurate results, by reducing the size of the possible ``holes''
 \end{figure}
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
 
-%% \commentaire{Laurent a dit :}
-
-\hymitator{} can be used for the \emph{parametric verification} of hybrid systems. An application to sampled data hybrid systems has been presented in \cite{FK11}. As a special case, such systems can be parameterized over the initial states. Then, a single run satisfying a desirable reachability property can be generalized to a larger set of initial states. As an example, Figure~\ref{fig:plot_rhb} (left) shows the enlarged reachable states of a single run for the \emph{room   heating benchmark} from~\cite{FI2004}.
-This also proves the \emph{robustness} of the system w.r.t.~the tested property. Figure~\ref{fig:plot_rhb} in the middle shows an overapproximation of the reachable states for the \emph{navigation   benchmark} \cite{FI2004}, proving that all trajectories will eventually enter the green target zone.
-
-Another problem that can be addressed using \hymitator{} is \emph{test   coverage}. In order to ensure the quality of an implementation of a hybrid system, a set of tests is generated which is then applied to the system. However, since the state space of hybrid systems is infinite in general, it is hard to decide when enough tests have been performed. Using the inverse method, a region around each test point is generated which entails the same discrete behavior. This means that any point in this region can be considered covered. Figure~\ref{fig:plot_rhb} (right) shows the coverage of a rectangle for the room heating benchmark.
+Another problem that can be addressed using \hymitator{} is \emph{test   coverage}.
+In order to ensure the quality of an implementation of a hybrid system, a set of tests is generated which is then applied to the system.
+However, since the state space of hybrid systems is infinite in general, it is hard to decide when enough tests have been performed.
+Using the inverse method, a tile (dense set of points) around each test point is generated which entails the same discrete behavior.
+This means that any point in this tile can be considered covered.
+Figure~\ref{fig:plot3} shows the coverage of a parameter rectangle for the room heating benchmark.
+% Each colored ``zone'' is a tile generated from one single point; the reference parameter domain is depicted as a dotted rectangle.
 
 % - synthesis schedulability regions (cf [Cimatti-Palopoli-Ramadian08], [Astrium EADS])
 
@@ -541,15 +575,11 @@ Another problem that can be addressed using \hymitator{} is \emph{test   coverag
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
-One of the first powerful model checkers for analyzing Parametric Timed Automata and Hybrid Automata is \hytech{}~\cite{hhw97}.
+One of the first powerful model checkers for analyzing hybrid automata is \hytech{}~\cite{hhw97}.
 Unfortunately, it can hardly verify even medium sized examples due to exact arithmetics with limited precision and static composition of automata, quickly leading to memory overflows. The tool \phaver{}~\cite{frehse05} improves on the computation of the reachable states by using efficient overapproximations. Techniques similar to those in \phaver{} have also been implemented in \imitator{}, with additional algorithmic improvements.
 
 %% \commentaire{to do (citer alur et al)}
 % A graphical user interface for the input model is currently under construction, based on a generic platform. \commentaire{utile ?!}
-
-
-\commentaire{justifier l'aspect fork, et non extension d'IMITATOR 2}
-
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -560,23 +590,23 @@ Unfortunately, it can hardly verify even medium sized examples due to exact arit
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\newpage
-
-
-\appendix
-
-\section*{Appendix}
-
-\subsection*{Summary of Experiments}
-
-\commentaire{ajouter un beau tableau avec des contraintes, et un lien vers un rapport d'etudes de cas (+ site Web)}
-
-\subsection*{Example of Trace Set}
-
-\commentaire{ajouter un trace set en mode fancy}
-
-\subsection*{An Example of Model}
-
-\commentaire{ajouter un modele en entree avec sa representation graphique (pour decrire la syntaxe)}
+% \newpage
+% 
+% 
+% \appendix
+% 
+% \section*{Appendix}
+% 
+% \subsection*{Summary of Experiments}
+% 
+% \commentaire{ajouter un beau tableau avec des contraintes, et un lien vers un rapport d'etudes de cas (+ site Web)}
+% 
+% \subsection*{Example of Trace Set}
+% 
+% \commentaire{ajouter un trace set en mode fancy}
+% 
+% \subsection*{An Example of Model}
+% 
+% \commentaire{ajouter un modele en entree avec sa representation graphique (pour decrire la syntaxe)}
 
 \end{document}          
