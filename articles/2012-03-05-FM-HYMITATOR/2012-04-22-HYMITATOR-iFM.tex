@@ -475,12 +475,11 @@ This optimization preserves the correctness of all our algorithms; better, the c
 
 For affine hybrid systems, further optimizations are needed. Due to the linear overapproximation by partitioning the state space, a lot of additional branching is introduced, which renders the inverse method ineffective. To solve this problem, the algorithm has been extended as described in~\cite{FK11}. Basically, the partitioning is performed locally, and partitions belonging to the same discrete state are merged by taking their convex hull. 
 
-\commentaire{un mot sur la cartographie puisque, je crois, elle a ete modifiee dans le cas des systemes hybrides}
-
 The post image computation can be costly for hybrid automata. To overcome this problem, an abstraction technique for the verification of simple safety  properties (non-reachability of bad states) has been presented in~\cite{ADI2006}. Based on a set of linear predicates, reachability is performed on the abstract state space induced by these predicates. Refinement can be performed by discovering separation planes. While the original method is based on flow-pipe construction, we adapted the algorithm to the linear approximation by state space partitioning. 
 
-\commentaire{un mot sur l'algo CEGAR-like de Ulrich}
+%% \commentaire{un mot sur la cartographie puisque, je crois, elle a ete modifiee dans le cas des systemes hybrides}
 
+The behavioral cartography has been slightly modified. For hybrid automata, there is no restriction of the clock constraints to integer coefficients. For this reason, instead of considering only integer points as starting points for the inverse method, an arbitrary rational step size can be used for each parameter dimension.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
