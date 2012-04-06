@@ -320,12 +320,15 @@
 
 
 % Title
-\title{Efficient Analysis of Parametric Hybrid Systems with HYMITATOR}
+% \title{Efficient Analysis of Parametric Hybrid Systems with HYMITATOR}
+\title{Parametric Analysis of Hybrid Systems Using HYMITATOR}
 % \thanks{A long version of this paper is available in~\cite{AS11}, with full preliminary definitions, and all detaild algorithms and proofs.}
-\author{\'Etienne Andr\'e$^1$, Laurent Fribourg$^2$, Ulrich K\"uhne$^3$ and Romain Soulat$^2$}
+\author{\'Etienne Andr\'e$^1$, %Laurent Fribourg$^2$,
+	Ulrich K\"uhne$^2$% and Romain Soulat$^2$
+	}
 \institute{$^1$LIPN, CNRS UMR 7030, Université Paris 13, France \\
-$^2$ENS Cachan, CNRS, LSV, UMR8643 \\
-$^3$Universit\"at Bremen, Germany}
+% $^2$ENS Cachan, CNRS, LSV, UMR8643 \\
+$^2$Universit\"at Bremen, Germany}
 
 
 \begin{document}
@@ -362,6 +365,7 @@ By iterating the inverse method on all integer points within a bounded reference
 A basic implementation named \imitator{} (for \emph{Inverse Method for Inferring Time AbstracT behaviOR}) has first been proposed%in~\cite{and09}
 , under the form of a \python{} script calling \hytech{}.
 The tool has then been entirely rewritten in \imitatordeux{}~\cite{and10}, under the form of a standalone \ocaml{} program making use of the Parma Polyhedra Library (PPL)~\cite{bhz08}.
+The latest version (2.5) includes stopwatches and arbitrary updates, and has been applied to many scheduling problems~\cite{afks12}.
 A number of case studies containing up to 60 timing parameters could be efficiently verified in the purely timed framework.
 
 The inverse method and the behavioral cartography have then been extended to hybrid systems in~\cite{FK11}, and implemented in a prototype ``fork'' of \imitatordeux{}.
@@ -370,17 +374,17 @@ We present in this paper \hymitator{}, an extension of that prototype, performin
 
 
 
-
-
-\commentaire{Laurent a dit :}
-- le principe de la methode inverse pour les TA a été implémenté de façon basique ([ICTAC09])
-puis de façon sophistiquée ([Infinity10])
-
-- la méthode a été étendue pour les HA et implémentée de façon basique ([RP11])
-
-- il s'agit "ici" de décrire une implémentation sophistiquée (intégrant notamment des extensions
-du merging des TA  à la  [NFM 12] aux HA)
-
+% 
+% 
+% \commentaire{Laurent a dit :}
+% - le principe de la methode inverse pour les TA a été implémenté de façon basique ([ICTAC09])
+% puis de façon sophistiquée ([Infinity10])
+% 
+% - la méthode a été étendue pour les HA et implémentée de façon basique ([RP11])
+% 
+% - il s'agit "ici" de décrire une implémentation sophistiquée (intégrant notamment des extensions
+% du merging des TA  à la  [NFM 12] aux HA)
+% 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -390,7 +394,7 @@ du merging des TA  à la  [NFM 12] aux HA)
 
 \hymitator{} takes as input a network of hybrid automata synchronized on shared actions.
 The input syntax, inspired by the input syntax of \hytech{}% and \imitator{}
-, allows the use of analog variables (i.e. variables such as time, velocity or temperature), rational-valued discrete variables, and parameters (i.e. unknown constants). The dynamics of the analog variables is described by ordinary differential equations. The tool directly supports linear dynamics, while affine dynamics can be approximated with arbitrary precision.
+, allows the use of analog variables (i.e., such as time, velocity or temperature), rational-valued discrete variables, and parameters (i.e., unknown constants). The dynamics of the analog variables is described by ordinary differential equations. The tool directly supports linear dynamics, while affine dynamics can be approximated with arbitrary precision.
 
 The core of the program is written in the object-oriented language OCaml, and interacts with~PPL.
 Exact arithmetics with unbounded precision is used.
@@ -516,7 +520,7 @@ The post image computation can be costly for hybrid automata. To overcome this p
 
 - test coverage for hybrid systems
 
-- synthesis schedulability regions (cf [Cimatti-Palopoli-Ramadian08], [Astrium EADS])
+% - synthesis schedulability regions (cf [Cimatti-Palopoli-Ramadian08], [Astrium EADS])
 
 \commentaire{experiences ?}
 
@@ -536,7 +540,8 @@ Unfortunately, it can hardly verify even medium sized examples due to exact arit
 
 \commentaire{to do (citer Phaver)}
 
-A graphical user interface for the input model is currently under construction, based on a generic platform. \commentaire{utile ?!}
+\commentaire{to do (citer alur et al)}
+% A graphical user interface for the input model is currently under construction, based on a generic platform. \commentaire{utile ?!}
 
 
 
