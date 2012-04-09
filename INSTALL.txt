@@ -1,4 +1,4 @@
-                        Installing IMITATOR II
+                        Installing HYMITATOR
                         ======================
 
 
@@ -7,7 +7,7 @@ Note: In case of problem, please read this INSTALL file carefully before reporti
 
 
 0. Install the required components and libraries, i.e.:
-	* OCaml (the version used to develop IMITATOR II is 3.11.2)
+	* OCaml (the version used to develop HYMITATOR is 3.12.1)
 	* The OCaml ExtLib library (Extended Standard Library for Objective Caml)
 	* The GMP library Ocaml interface (http://www-verimag.imag.fr/~monniaux/download/mlgmp.tar.gz)
 	* The PPL library, including its Ocaml interface (http://www.cs.unipr.it/ppl/)
@@ -17,7 +17,7 @@ Note: In case of problem, please read this INSTALL file carefully before reporti
 	* The Ocaml unit test module (http://www.xs4all.nl/~mmzeeman/ocaml/)
 
 
-Note that 'dot', used to generate graphical outputs, is not necessary if you run IMITATOR II using the '-no-dot' option.
+Note that 'dot', used to generate graphical outputs, is not necessary if you run HYMITATOR using the '-no-dot' option.
 
 The above libraries will probably require themselves several other libraries, including:
 	* g++
@@ -27,7 +27,7 @@ The above libraries will probably require themselves several other libraries, in
 	* sed
 	* MPFR
 
-1. Extract the files from the archive to an installation directory, say <IMITATOR_II_install_dir>.
+1. Extract the files from the archive to an installation directory, say <HYMITATOR_install_dir>.
 
 2. Open the Makefile and update:
 	* EXTLIB_PATH : path to Ocaml ExtLib
@@ -41,6 +41,6 @@ If you installed the required libraries in directories that are not searched by 
 
 3. Type "make all".
 
-IMITATOR II will be installed in the installation directory <IMITATOR_II_install_dir>.
+HYMITATOR will be installed in the installation directory <HYMITATOR_install_dir>.
 You may copy it to your default binary directory by typing, e.g.:
-	"sudo cp <IMITATOR_II_install_dir>/IMITATOR /usr/bin/".
+	"sudo cp <HYMITATOR_install_dir>/HYMITATOR /usr/bin/".

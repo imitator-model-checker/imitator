@@ -1,12 +1,13 @@
 ###############################################################
 #
-#                    IMITATOR 2.5
+#                    HYMITATOR
 #
 #  Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
+#  HYMITATOR is a fork of IMITATOR (split occured in 2010-2011)
 #
 #  Author:        Etienne Andre, Ulrich KUEHNE, Romain SOULAT
 #  Created:       2009/09/07
-#  Last modified: 2012/02/20
+#  Last modified: 2012/04/09
 #  Ocaml version: 3.11.2
 ###############################################################
 
@@ -46,16 +47,10 @@ export CLIB_PATH
 
 INCLUDE = -I $(SRC) -I $(EXTLIB_PATH) -I $(OCAML_PPL_PATH) -I $(OCAML_GMP_PATH) -I $(CLIB_PATH)
 
-# external libs for compiling imitator
-# export LIBS = str.cma unix.cma extLib.cma bigarray.cma gmp.cma apron.cma polkaMPQ.cma
-
-# native c libraries
-# CLIBS = -cclib -lpwl -cclib -lm -cclib -lgmpxx -cclib -lgmp -cclib -lppl
-
 # For 64 bits compiling
 CLIBS = -cclib '-static -lppl -lpwl -lppl_ocaml -lstdc++ -lmlgmp -lmpfr -lgmp -lgmpxx ' 
 
-# ALLOWS STATIC COMPILING IN 32 BITS :-)
+# For 32 bits compiling
 # CLIBS = -cclib '-static -lppl -lpwl -lcamlrun -ltinfo -lppl_ocaml -lstdc++ -lmlgmp -lmpfr -lgmp -lgmpxx'
 
 # ocaml lib files
@@ -76,31 +71,31 @@ SRC = src
 .SUFFIXES : .cmo .cmi .ml .mli .cmxo
 
 # main object
-MAIN = $(SRC)/IMITATOR.cmo
+MAIN = $(SRC)/HYMITATOR.cmo
 MAIN_OPT = $(MAIN:.cmo=.cmx)
 
 # sources to compile
-FILES =  $(SRC)/Global.+ $(SRC)/Cache.+ $(SRC)/Options.+ $(SRC)/NumConst.+  $(SRC)/LinearConstraint.+ $(SRC)/Program.+ $(SRC)/Graphics.+ $(SRC)/Automaton.+ $(SRC)/Pi0Lexer.+ $(SRC)/Pi0Parser.+ $(SRC)/Pi0CubeLexer.+ $(SRC)/Pi0CubeParser.+ $(SRC)/ImitatorLexer.+ $(SRC)/ImitatorParser.+ $(SRC)/ImitatorPrinter.+ $(SRC)/ProgramConverter.+ $(SRC)/ProgramInverter.+ $(SRC)/PredicateAbstraction.+ $(SRC)/Graph.+  $(SRC)/Reachability.+ 
+FILES =  $(SRC)/Global.+ $(SRC)/Cache.+ $(SRC)/Options.+ $(SRC)/NumConst.+  $(SRC)/LinearConstraint.+ $(SRC)/Program.+ $(SRC)/Graphics.+ $(SRC)/Automaton.+ $(SRC)/Pi0Lexer.+ $(SRC)/Pi0Parser.+ $(SRC)/Pi0CubeLexer.+ $(SRC)/Pi0CubeParser.+ $(SRC)/ModelLexer.+ $(SRC)/ModelParser.+ $(SRC)/ModelPrinter.+ $(SRC)/ProgramConverter.+ $(SRC)/ProgramInverter.+ $(SRC)/PredicateAbstraction.+ $(SRC)/Graph.+  $(SRC)/Reachability.+ 
 OBJS = $(FILES:+=cmo)
 OBJS_OPT = $(OBJS:.cmo=.cmx)
 
 # header files
-FILESMLI = $(SRC)/Global.+ $(SRC)/Cache.+ $(SRC)/NumConst.+ $(SRC)/LinearConstraint.+ $(SRC)/Graphics.+ $(SRC)/Automaton.+ $(SRC)/ParsingStructure.+ $(SRC)/AbstractImitatorFile.+ $(SRC)/Program.+ $(SRC)/ImitatorPrinter.+ $(SRC)/ProgramConverter.+ $(SRC)/ProgramInverter.+ $(SRC)/PredicateAbstraction.+ $(SRC)/Graph.+  $(SRC)/Reachability.+  
+FILESMLI = $(SRC)/Global.+ $(SRC)/Cache.+ $(SRC)/NumConst.+ $(SRC)/LinearConstraint.+ $(SRC)/Graphics.+ $(SRC)/Automaton.+ $(SRC)/ParsingStructure.+ $(SRC)/AbstractModel.+ $(SRC)/Program.+ $(SRC)/ModelPrinter.+ $(SRC)/ProgramConverter.+ $(SRC)/ProgramInverter.+ $(SRC)/PredicateAbstraction.+ $(SRC)/Graph.+  $(SRC)/Reachability.+  
 
 # parsers and lexers 
-LEXERS = $(SRC)/Pi0Lexer.+ $(SRC)/Pi0CubeLexer.+ $(SRC)/ImitatorLexer.+
-PARSERS = $(SRC)/Pi0Parser.+ $(SRC)/Pi0CubeParser.+ $(SRC)/ImitatorParser.+
+LEXERS = $(SRC)/Pi0Lexer.+ $(SRC)/Pi0CubeLexer.+ $(SRC)/ModelLexer.+
+PARSERS = $(SRC)/Pi0Parser.+ $(SRC)/Pi0CubeParser.+ $(SRC)/ModelParser.+
 
 # target library
-IMILIB = lib/imitator.cma
+IMILIB = lib/hymitator.cma
 IMILIB_OPT = $(IMILIB:.cma=.cmxa)
 
 EXAMPLE_PATH = examples
 
 
 # target executable
-TARGET = bin/IMITATOR
-TARGET_OPT = bin/IMITATOR.opt
+TARGET = bin/HYMITATOR
+TARGET_OPT = bin/HYMITATOR.opt
 
 default all: $(TARGET)
 opt: $(TARGET_OPT)
@@ -180,10 +175,6 @@ exe:
 
 # 	$(TARGET) Examples/Gates/NorGate.imi -mode reachability -with-parametric-log
 
-##### TESTS #####
-
-# 	./IMITATOR Examples/exCTL.imi Examples/exCTL.pi0
-
 ##### SCHEDULING #####
 
 # 	$(TARGET) $(EXAMPLE_PATH)/CPR08/full_cpr08.im3 $(EXAMPLE_PATH)/CPR08/full_cpr08.pi0 -no-dot -no-log -inclusion
@@ -192,8 +183,6 @@ exe:
 
 count: clean
 	@ for f in src/*.ml src/*.mli; do wc -l $$f; done | sort -n -r -
-#	make clean
-#	python lineCounter.py
 
 
 clean: rmtpf rmuseless

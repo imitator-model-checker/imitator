@@ -515,11 +515,10 @@ options#parse;
 (**************************************************)
 
 print_message Debug_standard
-	( "**************************************************");
-Printf.printf " *   HYMITATOR %-34s *\n" version_string;
-print_message Debug_standard
-	( "*   Etienne ANDRE, Ulrich KUEHNE, Romain SOULAT  *\n"
+	( "**************************************************\n"
+	^ "*                  " ^ program_name ^ " " ^ version_string ^ "                 *\n"
 	^ "*                                   2009 - 2012  *\n"
+	^ "*   Etienne ANDRE, Ulrich KUEHNE, Romain SOULAT  *\n"
 	^ "*     Laboratoire Specification et Verification  *\n"
 	^ "*                  ENS de Cachan & CNRS, France  *\n"
 	^ "**************************************************");

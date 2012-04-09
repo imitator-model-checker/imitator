@@ -83,7 +83,7 @@ class imitator_options =
 		method nb_partitions = !nb_part
 		
 		method parse =
-			let usage_msg = "Usage: IMITATOR program_file [pi0_file] [options]" in
+			let usage_msg = "Usage: ./" ^ program_name ^ " model [pi0_file] [options]" in
 			
 			(* auxiliary variables *)
 			let plot_vars_x = ref [] in
@@ -144,8 +144,8 @@ class imitator_options =
 				("-inclusion", Set inclusion, " Consider an inclusion of region instead of the equality when performing the Post operation. Default: 'false'");
 				("-union", Set union, " Consider last states for deriving constraint K. Default: 'false'");
 				("-merge", Set merge, " Try to merge states when performing the Post operation. Default: 'false'");
-				("-log-prefix", Set_string program_prefix, " Sets the prefix for log files. Default: [program_file].");
-				("-mode", String set_mode, " Mode for IMITATOR II. Use 'reachability' for a parametric reachability analysis (no pi0 needed). Use 'inversemethod' for the inverse method. For the behavioral cartography algorithm, use 'cover' to cover all the points within V0, or 'randomXX' where XX is a number to iterate randomly algorithm. Use 'cegar' for reachability based on counterexample guided abstraction refinement. Default: 'inversemethod'.");
+				("-log-prefix", Set_string program_prefix, " Sets the prefix for log files. Default: [model].");
+				("-mode", String set_mode, " Mode for " ^ program_name ^ ". Use 'reachability' for a parametric reachability analysis (no pi0 needed). Use 'inversemethod' for the inverse method. For the behavioral cartography algorithm, use 'cover' to cover all the points within V0, or 'randomXX' where XX is a number to iterate randomly algorithm. Use 'cegar' for reachability based on counterexample guided abstraction refinement. Default: 'inversemethod'.");
 				("-pre", Set pre, " Use pre-image instead of post-image computation. Default: false.");
 				("-no-dot", Set no_dot, " No graphical output using 'dot'. Default: false.");
 				("-no-log", Set no_log, " No generation of log files. Default: false.");
@@ -183,7 +183,7 @@ class imitator_options =
 				)
 			) in
 
-			let usage_msg = "Usage: IMITATOR program_file [pi0_file] [options]" in
+			let usage_msg = "Usage: ./" ^ program_name ^ " model [pi0_file] [options]" in
 			
 			(* set default debug level *)
 			set_debug_mode Debug_standard;
