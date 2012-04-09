@@ -207,7 +207,7 @@ let invert_flow vars_to_invert flow =
 (* Invert the standard flow for clocks *)
 let invert_standard_flow program =
 	let flow = program.standard_flow in
-	let clocks = program.clocks in
+(* 	let clocks = program.clocks in *)
 	invert_flow program.renamed_clocks flow
 
 
