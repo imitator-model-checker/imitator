@@ -1,4 +1,4 @@
-open AbstractImitatorFile
+open AbstractModel
 
 val invert : abstract_program -> abstract_program
 

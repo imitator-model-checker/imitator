@@ -1,6 +1,6 @@
 (*****************************************************************
  *
- *                     IMITATOR
+ *                     HYMITATOR
  * 
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre, Ulrich Kuehne
@@ -17,7 +17,7 @@ open Global
 open LinearConstraint
 module Ppl = Ppl_ocaml
 open Ppl
-open AbstractImitatorFile
+open AbstractModel
 
 let unit_vector i =
  	fun j -> if i = j then NumConst.one else NumConst.zero

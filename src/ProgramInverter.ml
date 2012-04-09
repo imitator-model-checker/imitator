@@ -1,7 +1,7 @@
 open Global
-open AbstractImitatorFile
+open AbstractModel
 open Ppl_ocaml
-open ImitatorPrinter
+open ModelPrinter
 open Gmp
 open Gmp.Q.Infixes
 open LinearConstraint

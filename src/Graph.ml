@@ -1,5 +1,5 @@
 open Global
-open AbstractImitatorFile
+open AbstractModel
 
 type state_index = int
 type 's graph_state = Automaton.location * 's
@@ -30,7 +30,7 @@ type ('s, 'l) t = {
 
 
 (** Type alias for symbolic reachabiliy graph *)
-type reachability_graph = (LinearConstraint.linear_constraint, AbstractImitatorFile.action_index) t
+type reachability_graph = (LinearConstraint.linear_constraint, AbstractModel.action_index) t
 
 (** Type alias for abstract reachability graph *)
 type abstract_reachability_graph = (bool list, abstract_label) t
@@ -518,11 +518,11 @@ let dot_colors = [
 
 
 let concrete_state_printer =
-	ImitatorPrinter.string_of_state 
+	ModelPrinter.string_of_state 
 	
 let abstract_state_printer = fun state -> 
 	let program = Program.get_program () in
-	ImitatorPrinter.string_of_state (PredicateAbstraction.concretize program.predicates state)
+	ModelPrinter.string_of_state (PredicateAbstraction.concretize program.predicates state)
 	 
 let concrete_label_printer action_index =
 	let program = Program.get_program () in
@@ -580,7 +580,7 @@ let make_dot_of_graph state_printer constraint_printer label_printer projection 
 		^ "\n * File automatically generated for file '" ^ program.program_name ^ "'"
 		^ (if program.imitator_mode = Reachability_analysis || program.imitator_mode = AbstractReachability then "\n * Reachability analysis" else (
 			"\n * The following pi0 was considered:"
-			^ "\n" ^ (ImitatorPrinter.string_of_pi0 pi0)
+			^ "\n" ^ (ModelPrinter.string_of_pi0 pi0)
 		))
 		^ "\n * " ^ (string_of_int (Hashtbl.length states)) ^ " states and "
 			^ (string_of_int (Hashtbl.length transitions)) ^ " transitions"

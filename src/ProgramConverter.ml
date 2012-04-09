@@ -1,6 +1,6 @@
 (*****************************************************************
  *
- *                     IMITATOR II
+ *                     HYMITATOR
  *
  * Convert a parsing structure into an abstract program
  *
@@ -26,8 +26,8 @@
 (****************************************************************)
 open Global
 open ParsingStructure
-open AbstractImitatorFile
-open ImitatorPrinter
+open AbstractModel
+open ModelPrinter
 
 
 (****************************************************************)
@@ -475,7 +475,7 @@ let rec only_discrete_in_linear_expression type_of_variables = function
 (*		) in                                                                                                                                                                                                                     *)
 (*		match type_of_variable with                                                                                                                                                                                              *)
 (*		(* Case of a clock: allow only 0 as an update *)                                                                                                                                                                         *)
-(*		| AbstractImitatorFile.Var_type_clock ->                                                                                                                                                                                 *)
+(*		| AbstractModel.Var_type_clock ->                                                                                                                                                                                 *)
 (*			let result =                                                                                                                                                                                                           *)
 (*			match linear_expression with                                                                                                                                                                                           *)
 (*			| Linear_term (Constant constant) ->                                                                                                                                                                                   *)
@@ -484,12 +484,12 @@ let rec only_discrete_in_linear_expression type_of_variables = function
 (*			| _ -> print_error ("The variable '" ^ variable_name ^ "' is a clock and can only be reset to 0 in automaton '" ^ automaton_name ^ "'."); false                                                                        *)
 (*			in result                                                                                                                                                                                                              *)
 (*		(* Case of a discrete var.: allow only a linear combinations of constants and discrete *)                                                                                                                                *)
-(*		| AbstractImitatorFile.Var_type_discrete -> let result = only_discrete_in_linear_expression type_of_variables linear_expression in                                                                                       *)
+(*		| AbstractModel.Var_type_discrete -> let result = only_discrete_in_linear_expression type_of_variables linear_expression in                                                                                       *)
 (*		if not result then (print_error ("The variable '" ^ variable_name ^ "' is a discrete and its update can only be a linear combination of constants and discrete variables in automaton '" ^ automaton_name ^ "'."); false)*)
 (*		else true                                                                                                                                                                                                                *)
 (*		(* Case of a parameter: forbidden! *)                                                                                                                                                                                    *)
-(*		| AbstractImitatorFile.Var_type_parameter -> print_error ("The variable '" ^ variable_name ^ "' is a parameter and can not be updated in automaton '" ^ automaton_name ^ "'."); false                                    *)
-(*		| AbstractImitatorFile.Var_type_analog -> print_error ("The variable '" ^ variable_name ^ "' is an analog and can not be updated in automaton '" ^ automaton_name ^ "'."); false                                         *)
+(*		| AbstractModel.Var_type_parameter -> print_error ("The variable '" ^ variable_name ^ "' is a parameter and can not be updated in automaton '" ^ automaton_name ^ "'."); false                                    *)
+(*		| AbstractModel.Var_type_analog -> print_error ("The variable '" ^ variable_name ^ "' is an analog and can not be updated in automaton '" ^ automaton_name ^ "'."); false                                         *)
 (*	)                                                                                                                                                                                                                          *)
 
 (*--------------------------------------------------*)
@@ -505,8 +505,8 @@ let rec only_discrete_in_linear_expression type_of_variables = function
 (*		if not declared then false else (                                                                          *)
 (*			(* Get the type of the variable *)                                                                       *)
 (*			let type_of_variable = type_of_variables index in                                                        *)
-(*			if not (type_of_variable = AbstractImitatorFile.Var_type_analog) &&                                      *)
-(*				 not (type_of_variable = AbstractImitatorFile.Var_type_clock) then (                                   *)
+(*			if not (type_of_variable = AbstractModel.Var_type_analog) &&                                      *)
+(*				 not (type_of_variable = AbstractModel.Var_type_clock) then (                                   *)
 (*				print_error ("The variable '" ^ variable_name ^ "' used in a rate condition is not analog.");          *)
 (*				false                                                                                                  *)
 (*			) else true                                                                                              *)
@@ -1453,22 +1453,22 @@ let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_
 	let renamed_clocks = list_of_interval (nb_variables + nb_analogs) (nb_variables + nb_analogs + nb_clocks -1) in
 	let renamed_continuous = list_of_interval nb_variables (nb_variables + nb_analogs + nb_clocks - 1) in
 		
-	(* An array 'variable index -> AbstractImitatorFile.var_type' *)
-	let type_of_variables = Array.make (nb_variables + nb_analogs + nb_clocks) AbstractImitatorFile.Var_type_parameter in	
+	(* An array 'variable index -> AbstractModel.var_type' *)
+	let type_of_variables = Array.make (nb_variables + nb_analogs + nb_clocks) AbstractModel.Var_type_parameter in	
 	for i = first_analog_index to first_clock_index - 1 do
-		type_of_variables.(i) <- AbstractImitatorFile.Var_type_analog;
+		type_of_variables.(i) <- AbstractModel.Var_type_analog;
 	done;
 	for i = first_clock_index to first_discrete_index - 1 do
-		type_of_variables.(i) <- AbstractImitatorFile.Var_type_clock;
+		type_of_variables.(i) <- AbstractModel.Var_type_clock;
 	done;
 	for i = first_discrete_index to nb_variables - 1 do
-		type_of_variables.(i) <- AbstractImitatorFile.Var_type_discrete;
+		type_of_variables.(i) <- AbstractModel.Var_type_discrete;
 	done;
 	for i = nb_variables to nb_variables + nb_analogs - 1 do
-		type_of_variables.(i) <- AbstractImitatorFile.Var_type_analog;
+		type_of_variables.(i) <- AbstractModel.Var_type_analog;
 	done;
 	for i = nb_variables + nb_analogs to nb_variables + nb_analogs + nb_clocks - 1 do
-		type_of_variables.(i) <- AbstractImitatorFile.Var_type_clock;
+		type_of_variables.(i) <- AbstractModel.Var_type_clock;
 	done;
 	
 	(* Functional representation *)

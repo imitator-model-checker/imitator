@@ -11,8 +11,8 @@
 
 open Options
 open Global
-open AbstractImitatorFile
-open ImitatorPrinter
+open AbstractModel
+open ModelPrinter
 open Graph
 
 exception Unsat_exception

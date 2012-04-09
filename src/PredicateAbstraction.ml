@@ -1,8 +1,8 @@
 open Global
 open LinearConstraint
 open Automaton
-open AbstractImitatorFile
-open ImitatorPrinter
+open AbstractModel
+open ModelPrinter
 
 
 let string_of_signature =

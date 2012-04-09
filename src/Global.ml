@@ -1,6 +1,6 @@
 (*****************************************************************
  *
- *                     IMITATOR II
+ *                     HYMITATOR
  * 
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
@@ -13,7 +13,7 @@
 (** Version string *)
 (****************************************************************)
 
-let version_string = "III (fake 2.5)"
+let version_string = "1.0"
 
 let print_version_string _ = 
 	print_string ("HYMITATOR " ^ version_string ^ "\n");

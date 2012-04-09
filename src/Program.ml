@@ -1,6 +1,6 @@
 open Global
 open Graph
-open AbstractImitatorFile
+open AbstractModel
 
 (* internal references to global data structures *)
 let program_ref = ref None

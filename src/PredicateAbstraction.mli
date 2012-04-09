@@ -1,7 +1,7 @@
 open Global
 open LinearConstraint
 open Automaton
-open AbstractImitatorFile
+open AbstractModel
 
 
 (** concretization function *)

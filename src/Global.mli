@@ -1,6 +1,6 @@
 (*****************************************************************
  *
- *                     IMITATOR II
+ *                     HYMITATOR
  *
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre

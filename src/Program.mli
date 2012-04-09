@@ -1,4 +1,4 @@
-open AbstractImitatorFile
+open AbstractModel
 open Graph
 open Options
 

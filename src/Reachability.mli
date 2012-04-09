@@ -1,6 +1,6 @@
 (***************************************************
  *
- *                     IMITATOR II
+ *                     HYMITATOR
  * 
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre, Ulrich Kuehne
@@ -10,7 +10,7 @@
  **************************************************)
 
 open Automaton
-open AbstractImitatorFile
+open AbstractModel
 open Graph
 open Options
 open LinearConstraint

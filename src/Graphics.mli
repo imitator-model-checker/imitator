@@ -1,6 +1,6 @@
 (*****************************************************************
  *
- *                     IMITATOR
+ *                     HYMITATOR
  * 
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre, Ulrich Kuehne
@@ -13,7 +13,7 @@
 (* Functions *)
 (**************************************************)
 open LinearConstraint
-open AbstractImitatorFile
+open AbstractModel
 
 
 (** Plot polyhedron corresponding to a convex constraint, projected onto the first two variables *)

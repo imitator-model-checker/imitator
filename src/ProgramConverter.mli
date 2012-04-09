@@ -1,6 +1,6 @@
 (*****************************************************************
  *
- *                     IMITATOR II
+ *                     HYMITATOR
  *
  * Convert a parsing structur into an abstract program
  *
@@ -15,7 +15,7 @@
 (** Modules *)
 (****************************************************************)
 open Global
-open AbstractImitatorFile
+open AbstractModel
 
 (****************************************************************)
 (** Exceptions *)

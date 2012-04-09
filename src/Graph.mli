@@ -1,7 +1,7 @@
 open Global
 open LinearConstraint
 open Automaton
-open AbstractImitatorFile
+open AbstractModel
 
 type state_index = int
 type 's graph_state = Automaton.location * 's
