@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2009/09/08
- * Last modified: 2011/12/02
+ * Last modified: 2012/04/10
  *
  ****************************************************************)
 
@@ -13,6 +13,7 @@
 (** Version string *)
 (****************************************************************)
 
+val program_name: string
 val version_string: string
 val print_version_string: unit -> unit
 

@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2009/09/08
- * Last modified: 2012/03/18
+ * Last modified: 2012/04/10
  *
  ****************************************************************)
 
@@ -13,10 +13,11 @@
 (** Version string *)
 (****************************************************************)
 
+let program_name = "IMITATOR"
 let version_string = "2.42"
 
 let print_version_string _ = 
-	print_string ("IMITATOR " ^ version_string ^ "\n");
+	print_string (program_name ^ " " ^ version_string ^ "\n");
 
 (****************************************************************)
 (** Exceptions *)
@@ -406,7 +407,7 @@ let abort_program () =
 (* Terminate program *)
 let terminate_program () =
 	print_newline();
-	print_message Debug_standard ("IMITATOR II successfully terminated (" ^ (after_seconds ()) ^ ")");
+	print_message Debug_standard (program_name ^ " successfully terminated (" ^ (after_seconds ()) ^ ")");
 	print_newline();
 	flush stdout;
 	exit(0)

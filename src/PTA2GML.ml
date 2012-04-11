@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2011/11/22
- * Last modified: 2012/03/12
+ * Last modified: 2012/04/10
  *
  ************************************************************)
 
@@ -31,35 +31,55 @@ let string_of_var_type = function
 	| Var_type_discrete -> "discrete"
 	| Var_type_parameter -> "parameter"
 
+
 (* Add a header to the program *)
 let string_of_header program =
-	"<!-- ************************************************************"
+	          "<!-- ************************************************************"
 	^ "\n" ^" * Program " ^ program.options#file
+	^ "\n" ^" * Converted by " ^ program_name ^ " " ^ version_string
 (* 	^ "\n" ^" * Generated at time " ^ time? *)
 	^ "\n" ^" ************************************************************ -->"
 	^ "\n"
-	^ "\n" ^ "<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
-	^ "\n" ^ "<model formalismUrl=\"http://alligator.lip6.fr/timed-automata.fml\""
-	^ "\n" ^ "    xmlns=\"http://gml.lip6.fr/model\">"
+	^ "\n" ^ "<!-- ************************************************************"
+	^ "\n" ^" * !! Experimental translation !!"
+	^ "\n" ^" *   - All automata are defined into one file (but in independent GML structures)"
+	^ "\n" ^" *   - All variables are declared in all automata."
+	^ "\n" ^" *   - Initial constraint (on all variables) is added to each automaton."
+	^ "\n" ^" *   - We suppose that automata synchronize on variables and actions sharing the same names (common behavior)."
+	^ "\n" ^" * This translation will be improved by the definition of synchronization rules conform with FML. Work in progress."
+	^ "\n" ^" ************************************************************ -->"
+	^ "\n"
 
+	
+	
+	
+	
+	(** TO DO: ADD INITIAL CONSTRAINT !!!!! *)
+	
+	
+	
 
 (* Convert the initial variable declarations into a string *)
 let string_of_declarations program =
-	let string_of_variables list_of_variables =
-		string_of_list_of_string (List.map (fun variable_index -> "\n\t\t\t<attribute name=\"name\">" ^ (program.variable_names variable_index) ^ "</attribute>" ) list_of_variables)
+	let string_of_variables type_string list_of_variables =
+		string_of_list_of_string (List.map (fun variable_index ->
+			  "\n\t\t\t<attribute name=\"" ^ type_string ^ "\">"
+			^ "\n\t\t\t\t<attribute name=\"name\">" ^ (program.variable_names variable_index) ^ "</attribute>"
+			^ "\n\t\t\t</attribute>"
+		) list_of_variables)
 	in
 	(* VARIABLES *)
 	"\n\n\t" ^ " <attribute name=\"variables\">"
 	^
 	(if program.nb_clocks > 0 then
 		("\n\t\t" ^ " <attribute name=\"clocks\">"
-			^ (string_of_variables program.clocks)
+			^ (string_of_variables "clock" program.clocks)
 			^ "\n\t\t" ^ "</attribute>"
 	) else "")
 	^
 	(if program.nb_discrete > 0 then
-		("\n\t\t" ^ " <attribute name=\"discrete\">"
-			^ (string_of_variables program.discrete)
+		("\n\t\t" ^ " <attribute name=\"discretes\">"
+			^ (string_of_variables "discrete" program.discrete)
 			^ "\n\t\t" ^ "</attribute>"
 	) else "")
 
@@ -70,7 +90,7 @@ let string_of_declarations program =
 	^
 	(if program.nb_parameters > 0 then
 		("\n\t\t" ^ " <attribute name=\"parameters\">"
-			^ (string_of_variables program.parameters)
+			^ (string_of_variables "parameter" program.parameters)
 			^ "\n\t\t" ^ "</attribute>"
 	) else "")
 
@@ -236,30 +256,38 @@ let string_of_locations program automaton_index =
 
 
 (* Convert an automaton into a string *)
-let string_of_automaton program automaton_index =
-	"\n<!-- ************************************************************"
+let string_of_automaton program declarations_string automaton_index =
+	         "<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
+	^ "\n" ^ "<model formalismUrl=\"http://alligator.lip6.fr/parametric-timed-automaton.fml\""
+	^ "\n" ^ "    xmlns=\"http://gml.lip6.fr/model\">"
+
+	^ "\n<!-- ************************************************************"
 	^ "\n automaton " ^ (program.automata_names automaton_index)
 	^ "\n ************************************************************ -->"
+	(* Declarations *)
+	^ declarations_string
 	(* Description of states *)
 	^ "\n " ^ (string_of_locations program automaton_index)
 	(* Description of transitions *)
  	^ "\n " ^ (string_of_transitions program automaton_index)
+ 	(* The end *)
+	^ "\n" ^ "</model>"
 
 
 (* Convert the automata into a string *)
-let string_of_automata program =
+let string_of_automata program declarations_string =
 	id_transition := 0;
 	string_of_list_of_string_with_sep "\n\n" (
-		List.map (fun automaton_index -> string_of_automaton program automaton_index
+		List.map (fun automaton_index -> string_of_automaton program declarations_string automaton_index
 	) program.automata)
 
 
 (* Convert an automaton into a string *)
 let string_of_program program =
+	(* Compute the declarations *)
+	let declarations_string = string_of_declarations program in
 	string_of_header program
-	^ "\n" ^ string_of_declarations program
-	^ "\n" ^ string_of_automata program
-	^ "\n" ^ "</model>"
+	^ "\n" ^ string_of_automata program declarations_string
 
 
 (**************************************************)

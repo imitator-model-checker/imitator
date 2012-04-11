@@ -120,8 +120,8 @@ class imitator_options =
 
 		
 		method parse =
-			let usage_msg = "Usage: IMITATOR program_file [pi0_file] [options]" in
-			
+			let usage_msg = "Usage: " ^ program_name ^ " model.imi [reference_valuation.pi0] [options]" in
+
 			(* Get the debug mode *)
 			let rec set_debug_mode_ref debug_mode =
 					let mode = try debug_mode_of_string debug_mode
@@ -164,25 +164,25 @@ class imitator_options =
 				("-debug", String set_debug_mode_ref, " Print more or less information. Can be set to 'nodebug', 'standard', 'low', 'medium', 'high', 'total'. Default: 'standard'");
 				("-dynamic", Set dynamic, "Perform the on-the-fly intersection. Defaut : 'false'");
 				("-fancy", Set fancy, " Generate detailed state information for dot output. Default: false.");
-				("-fromGML", Set fromGML, "GML syntax for input files (work in progress!). Defaut : 'false'");
-				("-incl", Set inclusion, " Consider an inclusion of region instead of the equality when performing the Post operation (e.g., implemented in algorithm IMincl). Default: 'false'");
-				("-IMorig", Set pi_compatible, " Algorithm IMoriginal : return a constraint such that no pi-incompatible state can be reached. Default: 'false'");
-				("-IMunion", Set union, " Algorithm IMUnion : Returns the union of the constraint on the parameters associated to the last state of each trace. Default: 'false'");
+				("-fromGML", Set fromGML, "GML syntax for input files (experimental). Defaut : 'false'");
+				("-incl", Set inclusion, " Consider an inclusion of region instead of the equality when performing the Post operation (e.g., as in algorithm IMincl defined in [AS11]). Default: 'false'");
+				("-IMorig", Set pi_compatible, " Algorithm IMoriginal (defined in [AS11]): return a constraint such that no pi-incompatible state can be reached. Default: 'false'");
+				("-IMunion", Set union, " Algorithm IMUnion (defined in [AS11]): Returns the union of the constraint on the parameters associated to the last state of each trace. Default: 'false'");
 				("-log-prefix", Set_string program_prefix, " Sets the prefix for log files. Default: [program_file].");
-				("-mode", String set_mode, " Mode for IMITATOR II. Use 'reachability' for a parametric reachability analysis (no pi0 needed). Use 'inversemethod' for the inverse method. For the behavioral cartography algorithm, use 'cover' to cover all the points within V0, or 'randomXX' where XX is a number to iterate randomly algorithm. Default: 'inversemethod'.");
+				("-mode", String set_mode, " Mode for " ^ program_name ^ ". Use 'reachability' for a parametric reachability analysis (no pi0 needed). Use 'inversemethod' for the inverse method. For the behavioral cartography algorithm, use 'cover' to cover all the points within V0, or 'randomXX' where XX is a number to iterate randomly algorithm (e.g., random5 or random100). Default: 'inversemethod'.");
 				("-no-dot", Set no_dot, " No graphical output using 'dot'. Default: false.");
 				("-no-log", Set no_log, " No generation of log files. Default: false.");
 				("-no-merging", Set no_merging, " Disable the merging technique of [AFS12]. Default: 'false' (enable)");
 				("-no-random", Set no_random, " No random selection of the pi0-incompatible inequality (select the first found). Default: false.");
 				("-post-limit", Int (fun i -> post_limit := Some i), " Limits the depth of the Post exploration. Default: no limit.");
-				("-PTA2CLP", Unit (fun _ -> pta2clp := true; imitator_mode := Translation), "Translate PTA into a CLP program (**work in progress**), and exit without performing any analysis. Defaut : 'false'");
-				("-PTA2GML", Unit (fun _ -> pta2gml := true; imitator_mode := Translation), "Translate PTA into a GML program, and exit without performing any analysis. EXPERIMENTAL. Defaut : 'false'");
-				("-statistics", Set statistics, " Print info on number of calls to PPL. Default: 'false'");
+				("-PTA2CLP", Unit (fun _ -> pta2clp := true; imitator_mode := Translation), "Translate PTA into a CLP program (work in progress!), and exit without performing any analysis. Defaut : 'false'");
+				("-PTA2GML", Unit (fun _ -> pta2gml := true; imitator_mode := Translation), "Translate PTA into a GML program, and exit without performing any analysis. Experimental. Defaut : 'false'");
+				("-statistics", Set statistics, " Print info on number of calls to PPL, and other statistics. Default: 'false'");
 				("-step", String (fun i -> (* SHOULD CHECK HERE THAT STEP IS EITHER A FLOAT OR AN INT *) step := (NumConst.numconst_of_string i)), " Step for the cartography. Default: 1/1.");
 				("-sync-auto-detect", Set sync_auto_detection, " Detect automatically the synchronized actions in each automaton. Default: false (consider the actions declared by the user)");
 				("-time-limit", Int (fun i -> time_limit := Some i), " Time limit in seconds. Warning: no guarantee that the program will stop exactly after the given amount of time. Default: no limit.");
 				("-timed", Set timed_mode, " Adds a timing information to each output of the program. Default: none.");
-				("-tree", Set tree, " Does not test if a new state was already encountered. To be set ONLY if the reachability graph is a tree. Default: 'false'");		
+				("-tree", Set tree, " Does not test if a new state was already encountered. To be set ONLY if the reachability graph is a tree. Default: 'false'");
 				("-with-parametric-log", Set with_parametric_log, " Adds the elimination of the clock variables in the constraints in the log files. Default: false.");
 				("-version", Unit (fun _ -> print_version_string (); exit 0), " Print version string and exit.");
 
@@ -206,7 +206,6 @@ class imitator_options =
 				)
 			) in
 
-			let usage_msg = "Usage: IMITATOR program_file [pi0_file] [options]" in
 			Arg.parse speclist anon_fun usage_msg;
 
 			(* Case no file (except case translation) *)

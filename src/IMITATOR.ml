@@ -569,8 +569,14 @@ in print_message Debug_standard ("Mode: " ^ message ^ ".");
 (**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 (* Check compatibility between options *) 
 (**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-if (options#imitator_mode = Reachability_analysis || options#imitator_mode = Translation) && options#nb_args = 2 then
-	print_warning ("The pi0 file " ^ options#pi0file ^ " will be ignored since this is a reachability analysis.");
+if options#nb_args = 2 then(
+	if options#imitator_mode = Reachability_analysis then
+		print_warning ("The pi0 file " ^ options#pi0file ^ " will be ignored since this is a reachability analysis.")
+	;
+	if options#imitator_mode = Translation then
+		print_warning ("The pi0 file " ^ options#pi0file ^ " will be ignored since this is a translation.")
+	;
+);
 
 if options#acyclic && options#tree then (
 	options#acyclic_unset;
@@ -751,14 +757,20 @@ else
 	print_message Debug_standard ("The model is purely timed (no stopwatches).\n");
 
 
+	
+(**************************************************)
+(* Debug print: program *)
+(**************************************************)
+if debug_mode_greater Debug_total then
+	print_message Debug_total ("\nProgram:\n" ^ (ImitatorPrinter.string_of_program program) ^ "\n");
+
+
 (**************************************************)
 (* Case translation *)
 (**************************************************)
 
-(* Translation to CLP (experimental) *)
+(* Translation to CLP (work in progress) *)
 if options#pta2clp then(
-	if debug_mode_greater Debug_total then
-		print_message Debug_total ("\nProgram:\n" ^ (ImitatorPrinter.string_of_program program) ^ "\n");
 	print_message Debug_standard ("Translating program to CLP.");
 	print_warning ("Work in progress!!!!");
 	print_message Debug_standard ("\nProgram in CLP:\n" ^ (PTA2CLP.string_of_program program) ^ "\n");
@@ -767,20 +779,15 @@ if options#pta2clp then(
 
 (* Translation to GML (experimental) *)
 if options#pta2gml then(
-	if debug_mode_greater Debug_total then
-		print_message Debug_total ("\nProgram:\n" ^ (ImitatorPrinter.string_of_program program) ^ "\n");
 	print_message Debug_standard ("Translating program to GML.");
-	print_warning ("Work in progress!!!!");
-	print_message Debug_standard ("\nProgram in GML:\n" ^ (PTA2GML.string_of_program program) ^ "\n");
+	print_warning ("Experimental translation!");
+	let translated_model = PTA2GML.string_of_program program in
+	let gml_file = program.options#file ^ ".gml" in
+	print_message Debug_total ("\n" ^ translated_model ^ "\n");
+	(* Write *)
+	write_to_file gml_file translated_model;
 	terminate_program()
 	);
-
-
-(**************************************************)
-(* Debug print: program *)
-(**************************************************)
-if debug_mode_greater Debug_total then
-	print_message Debug_total ("\nProgram:\n" ^ (ImitatorPrinter.string_of_program program) ^ "\n");
 
 
 
