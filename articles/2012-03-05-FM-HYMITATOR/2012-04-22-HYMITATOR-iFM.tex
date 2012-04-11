@@ -319,6 +319,8 @@
 \newcommand{\paragraphe}[1]{\paragraph{#1.}}
 % \newcommand{\paragraphe}[1]{\subsubsection{#1.}}
 
+\renewcommand{\baselinestretch}{0.98}
+\addtolength{\textheight}{0.2cm}
 
 % Title
 % \title{Efficient Analysis of Parametric Hybrid Systems with HYMITATOR}
@@ -504,31 +506,8 @@ This gives more accurate results, by reducing the size of the possible ``holes''
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
-
-\hymitator{} can be used for the \emph{parametric verification} of hybrid systems. An application to sampled data hybrid systems has been presented in \cite{FK11}. As a special case, such systems can be parameterized over the initial states. Then, a single run satisfying a desirable reachability property can be generalized to a larger set of initial states. As an example, Figure~\ref{fig:plot1} shows the enlarged reachable states of a single run for the \emph{room   heating benchmark} from~\cite{FI2004}.
-This also proves the \emph{robustness} of the system w.r.t.~the tested property. Figure~\ref{fig:plot2} shows an overapproximation of the reachable states for the \emph{navigation benchmark}~\cite{FI2004}, proving that all trajectories will eventually enter the green target zone.
-
-% 
-% \begin{figure}[ht]
-% \centering
-% \subfigure[Caption of subfigure 1]{
-% \includegraphics[scale=1]{subfigure1.eps}
-% \label{fig:subfig1}
-% }
-% \subfigure[Caption of subfigure 2]{
-% \includegraphics[scale=1]{subfigure2.eps}
-% \label{fig:subfig2}
-% }
-% \subfigure[Caption of subfigure 3]{
-% \includegraphics[scale=1]{subfigure3.eps}
-% \label{fig:subfig3}
-% }
-% \label{fig:subfigureExample}
-% \caption[Optional caption for list of figures]{Caption of subfigures \subref{fig:subfig1}, \subref{fig:subfig2} and \subref{fig:subfig3}}
-% \end{figure}
-
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
-\begin{figure}[ht!]
+\begin{figure}[t]
 	\centering
 	\subfigure[Reachable states]{
 		\includegraphics[width=3.6cm]{plot_t_x1}
@@ -552,6 +531,30 @@ This also proves the \emph{robustness} of the system w.r.t.~the tested property.
 \end{figure}
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
 
+
+\hymitator{} can be used for the \emph{parametric verification} of hybrid systems. An application to sampled data hybrid systems has been presented in \cite{FK11}. As a special case, such systems can be parameterized over the initial states. Then, a single run satisfying a desirable reachability property can be generalized to a larger set of initial states. As an example, Figure~\ref{fig:plot1} shows the enlarged reachable states of a single run for the \emph{room   heating benchmark} from~\cite{FI2004}.
+This also proves the \emph{robustness} of the system w.r.t.~the tested property. Figure~\ref{fig:plot2} shows an overapproximation of the reachable states for the \emph{navigation benchmark}~\cite{FI2004}, proving that all trajectories will eventually enter the green target zone.
+
+% 
+% \begin{figure}[ht]
+% \centering
+% \subfigure[Caption of subfigure 1]{
+% \includegraphics[scale=1]{subfigure1.eps}
+% \label{fig:subfig1}
+% }
+% \subfigure[Caption of subfigure 2]{
+% \includegraphics[scale=1]{subfigure2.eps}
+% \label{fig:subfig2}
+% }
+% \subfigure[Caption of subfigure 3]{
+% \includegraphics[scale=1]{subfigure3.eps}
+% \label{fig:subfig3}
+% }
+% \label{fig:subfigureExample}
+% \caption[Optional caption for list of figures]{Caption of subfigures \subref{fig:subfig1}, \subref{fig:subfig2} and \subref{fig:subfig3}}
+% \end{figure}
+
+
 Another problem that can be addressed using \hymitator{} is \emph{test   coverage}.
 In order to ensure the quality of an implementation of a hybrid system, a set of tests is generated which is then applied to the system.
 However, since the state space of hybrid systems is infinite in general, it is hard to decide when enough tests have been performed.
@@ -574,12 +577,15 @@ Figure~\ref{fig:plot3} shows the coverage of a parameter rectangle for the room 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+\vspace{-0.1cm}
 
 One of the first powerful model checkers for analyzing hybrid automata is \hytech{}~\cite{hhw97}.
-Unfortunately, it can hardly verify even medium sized examples due to exact arithmetics with limited precision and static composition of automata, quickly leading to memory overflows. The tool \phaver{}~\cite{frehse05} improves on the computation of the reachable states by using efficient overapproximations. Techniques similar to those in \phaver{} have also been implemented in \imitator{}, with additional algorithmic improvements.
+Unfortunately, it can hardly verify even medium sized examples due to exact arithmetics with limited precision and static composition of automata, quickly leading to memory overflows. The tool \phaver{}~\cite{frehse05} improves on the computation of the reachable states by using efficient overapproximations. Techniques similar to those in \phaver{} have also been implemented in \hymitator{}, with additional algorithmic improvements. The work in \cite{akrs08} presents an analysis on Simulink models which shares similar goals with our approach.
 
 %% \commentaire{to do (citer alur et al)}
 % A graphical user interface for the input model is currently under construction, based on a generic platform. \commentaire{utile ?!}
+
+\vspace{-0.1cm}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
