@@ -331,7 +331,7 @@
 	}
 \institute{$^1$LIPN, CNRS UMR 7030, Université Paris 13, France \\
 % $^2$ENS Cachan, CNRS, LSV, UMR8643 \\
-$^2$Universit\"at Bremen, Germany}
+$^2$Group for Computer Architecture, University of Bremen, Germany}
 
 
 \begin{document}
@@ -484,7 +484,7 @@ A constraint is output in text format; furthermore, the set of traces computed b
 In particular, the efficient merging technique presented in~\cite{AFS12} has been successfully extended to the hybrid case: we merge any two states sharing the same discrete part (location and value of the discrete variables) and such that the union of their constraint on the analog variables and parameters is convex.
 This optimization preserves the correctness of all our algorithms; better, the constraint output by the inverse method in that case may be weaker, i.e., covers a larger set of parameter valuations.
 
-For affine hybrid systems, further optimizations are needed. Due to the linear overapproximation by partitioning the state space, a lot of additional branching is introduced, which renders the inverse method ineffective. To solve this problem, the algorithm has been extended as described in~\cite{FK11}. Basically, the partitioning is performed locally, and partitions belonging to the same discrete state are merged by taking their convex hull. 
+For affine hybrid systems, further optimizations are needed. Due to the linear over-approximation by partitioning the state space, a lot of additional branching is introduced, which renders the inverse method ineffective. To solve this problem, the algorithm has been extended as described in~\cite{FK11}. Basically, the partitioning is performed locally, and partitions belonging to the same discrete state are merged by taking their convex hull. 
 
 The post image computation can be costly for hybrid automata. To overcome this problem, an abstraction technique for the verification of simple safety  properties (non-reachability of bad states) has been presented in~\cite{ADI2006}. Based on a set of linear predicates, reachability is performed on the abstract state space induced by these predicates. Refinement can be performed by discovering separation planes. While the original method is based on flow-pipe construction, we adapted the algorithm to the linear approximation by state space partitioning. 
 
@@ -532,8 +532,8 @@ This gives more accurate results, by reducing the size of the possible ``holes''
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
 
 
-\hymitator{} can be used for the \emph{parametric verification} of hybrid systems. An application to sampled data hybrid systems has been presented in \cite{FK11}. As a special case, such systems can be parameterized over the initial states. Then, a single run satisfying a desirable reachability property can be generalized to a larger set of initial states. As an example, Figure~\ref{fig:plot1} shows the enlarged reachable states of a single run for the \emph{room   heating benchmark} from~\cite{FI2004}.
-This also proves the \emph{robustness} of the system w.r.t.~the tested property. Figure~\ref{fig:plot2} shows an overapproximation of the reachable states for the \emph{navigation benchmark}~\cite{FI2004}, proving that all trajectories will eventually enter the green target zone.
+\hymitator{} can be used for the \emph{parametric verification} of hybrid systems. An application to sampled data hybrid systems has been presented in \cite{FK11}. As a special case, such systems can be parametrized over the initial states. Then, a single run satisfying a desirable reachability property can be generalized to a larger set of initial states. As an example, Figure~\ref{fig:plot1} shows the enlarged reachable states of a single run for the \emph{room   heating benchmark} from~\cite{FI2004}.
+This also proves the \emph{robustness} of the system w.r.t.~the tested property. Figure~\ref{fig:plot2} shows an over-approximation of the reachable states for the \emph{navigation benchmark}~\cite{FI2004}, proving that all trajectories will eventually enter the green target zone.
 
 % 
 % \begin{figure}[ht]
@@ -580,7 +580,7 @@ Figure~\ref{fig:plot3} shows the coverage of a parameter rectangle for the room 
 \vspace{-0.1cm}
 
 One of the first powerful model checkers for analyzing hybrid automata is \hytech{}~\cite{hhw97}.
-Unfortunately, it can hardly verify even medium sized examples due to exact arithmetics with limited precision and static composition of automata, quickly leading to memory overflows. The tool \phaver{}~\cite{frehse05} improves on the computation of the reachable states by using efficient overapproximations. Techniques similar to those in \phaver{} have also been implemented in \hymitator{}, with additional algorithmic improvements. The work in \cite{akrs08} presents an analysis on Simulink models which shares similar goals with our approach.
+Unfortunately, it can hardly verify even medium sized examples due to exact arithmetics with limited precision and static composition of automata, quickly leading to memory overflows. The tool \phaver{}~\cite{frehse05} improves on the computation of the reachable states by using efficient over-approximations. Techniques similar to those in \phaver{} have also been implemented in \hymitator{}, with additional algorithmic improvements. The work in \cite{akrs08} presents an analysis on Simulink models which shares similar goals with our approach.
 
 %% \commentaire{to do (citer alur et al)}
 % A graphical user interface for the input model is currently under construction, based on a generic platform. \commentaire{utile ?!}
