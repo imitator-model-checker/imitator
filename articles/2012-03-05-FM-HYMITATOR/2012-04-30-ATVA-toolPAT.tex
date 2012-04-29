@@ -1,0 +1,423 @@
+\documentclass{llncs}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% PACKAGES
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\usepackage[utf8x]{inputenc}
+
+% SYMBOLES
+\usepackage{amsmath, amssymb, url} % amsthm, 
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% TIKZ
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\usepackage{pgf}
+\usepackage{tikz}
+
+\graphicspath{{./figures/}}
+
+% Couleurs
+\definecolor{turquoise}{rgb}{0 0.41 0.41}
+\definecolor{rouge}{rgb}{0.79 0.0 0.1}
+\definecolor{vert}{rgb}{0.15 0.4 0.1}
+\definecolor{mauve}{rgb}{0.6 0.4 0.8}
+\definecolor{violet}{rgb}{0.58 0. 0.41}
+\definecolor{orange}{rgb}{0.8 0.4 0.2}
+\definecolor{bleu}{rgb}{0.39, 0.58, 0.93}
+\definecolor{gris}{rgb}{0.6,0.6,0.6}
+\definecolor{grisfonce}{rgb}{0.4, 0.4, 0.4}
+\definecolor{grispale}{rgb}{0.9, 0.9, 0.9}
+% NOIR ET BLANC
+\definecolor{vertfonce}{rgb}{0.0, 0, 0.0}
+\definecolor{rougefonce}{rgb}{0, 0.0, 0.0}
+\definecolor{rougeclair}{rgb}{0.6, 0.6, 0.6} %{red!50!white}
+\definecolor{bleufonce}{rgb}{0.2, 0.2, 0.2} %blue!80!black
+\definecolor{bleutresfonce}{rgb}{0.1, 0.1, 0.1} %blue!50!black
+% \definecolor{vertfonce}{rgb}{0.0, 0.5, 0.0}
+% \definecolor{rougefonce}{rgb}{1, 0.0, 0.0}
+% \definecolor{rougeclair}{rgb}{1, 0.5, 0.5} %{red!50!white}
+% \definecolor{bleufonce}{rgb}{0, 0, 0.8} %blue!80!black
+% \definecolor{bleutresfonce}{rgb}{0, 0, 0.5} %blue!50!black
+
+
+% Jeu de couleurs pales
+% NOIR ET BLANC
+\definecolor{cpale1}{rgb}{0.6, 0.6, 0.6}
+\definecolor{cpale2}{rgb}{0.9, 0.9, 0.9}
+% \definecolor{cpale1}{rgb}{1, 0.6, 0.6}
+% \definecolor{cpale2}{rgb}{0.6, 1, 0.6}
+\definecolor{cpale3}{rgb}{0.6, 0.6, 1}
+\definecolor{cpale4}{rgb}{1, 0.6, 1}
+\definecolor{cpale5}{rgb}{1, 1, 0.6}
+\definecolor{cpale6}{rgb}{0.6, 1, 1}
+\definecolor{cpale7}{rgb}{0.95, 0.65, 0.25}
+\definecolor{cpale8}{rgb}{0.75, 0.45, 1}
+\definecolor{cpale9}{rgb}{0.5, 1, 0.75}
+\definecolor{cpale10}{rgb}{0.8, 0.7, 0.6}
+\definecolor{cpale11}{rgb}{0.6, 0.7, 0.8}
+\definecolor{cpale12}{rgb}{0.2, 0.5, 0.9}
+\definecolor{cpale13}{rgb}{0.5, 0.9, 0.2}
+\definecolor{cpale14}{rgb}{0.9, 0.2, 0.5}
+\definecolor{cpale15}{rgb}{0.7, 0.7, 0.7}
+\definecolor{cpale16}{rgb}{0.8, 0.8, 0.5}
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% CONSTANTES
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
+% CONSTANTES MATHEMATIQUES
+%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
+% Booleens
+\newcommand{\false}{\mathit{False}}
+\newcommand{\true}{\mathit{True}}
+
+% Ensembles
+\newcommand{\AP}{\mathit{AP}}
+\newcommand{\grandn}{{\mathbb N}}
+\newcommand{\grandq}{{\mathbb Q}}
+\newcommand{\grandqplus}{{\mathbb Q}_{\geq 0}}
+\newcommand{\grandr}{{\mathbb R}}
+\newcommand{\grandrplus}{\grandr_{\geq 0}}
+\newcommand{\grandz}{{\mathbb Z}}
+\newcommand{\setX}{\mathcal{K}_{\Clock}}
+\newcommand{\setP}{\mathcal{K}_{\Param}}
+\newcommand{\setXP}{\mathcal{K}_{\Clock \cup \Param}}
+
+
+% Noms
+% \newcommand{\tiling}{Tiling} % \mathit{Tiling}
+\newcommand{\post}{\mathit{Post}}
+\newcommand{\Pre}{\mathit{Pre}}
+\newcommand{\TS}{\mathit{TS}}
+\newcommand{\words}{\mathit{Words}}
+
+% Operateurs
+% \newcommand{\eqdef}{ \overset{\mathit{def}}{=}}
+
+
+% Symboles
+\newcommand{\cro}[1]{\langle #1 \rangle}
+\newcommand{\fleche}[1]{\stackrel{#1}{\rightarrow}}
+\newcommand{\Fleche}[1]{\stackrel{#1}{\Rightarrow}}
+% \newcommand{\prefix}[2]{ |#1|_{#2} }
+\newcommand{\steps}[0]{ {\rightarrow} }
+\newcommand{\Steps}[0]{ {\Rightarrow} }
+\newcommand{\timelaps}[1]{#1^\uparrow}
+\newcommand{\urgent}[0]{\twoheadrightarrow}
+\newcommand{\wpi}[1]{\mathbin{<}#1\mathbin{>}}
+
+% Redfinition of CSP constructs
+\newcommand{\trace}[1]{\langle #1 \rangle}
+\newcommand{\fun}{\rightarrow}
+\newcommand{\hide}[0]{ \  {\backslash} \, }
+\newcommand{\sdef}{\doteq} % \corresponds \hateq
+\newcommand{\tun}{\hspace{1cm}} % formerly t1!
+\newcommand{\srule}[3]{
+\infer[ (#1) ]
+     {#3}
+     {#2}
+     \bigskip
+}
+
+
+
+
+
+
+% Unites
+% \newcommand{\micros}{\mathit{\mu\,s}}
+% \newcommand{\millis}{\mathit{m\,s}}
+% \newcommand{\nanos}{ns}
+% \newcommand{\picos}{ps}
+
+
+% Variables
+\newcommand{\A}{\mathsf{A}} % \mathcal{A}
+\newcommand{\activation}{\mathit{Act}} % \mathsf{A}
+\newcommand{\counter}{C}
+% \newcommand{\enabled}{\mathit{enabled}}
+\newcommand{\enev}{\mathit{active}} % Active / enables events
+\newcommand{\formule}{\varphi}
+\newcommand{\Formule}{\Phi}
+\newcommand{\G}{\mathcal{G}}
+\newcommand{\LTS}{\mathcal{L}}
+\newcommand{\Clock}{X} % set of clocks
+\newcommand{\Clocks}{\mathcal{X}} % set of clocks
+\newcommand{\clock}{x} % clock
+\newcommand{\clockval}{w} % clock valuation
+\newcommand{\events}{E} % a possible set of events
+\newcommand{\EventsSet}{\Sigma} % all possible events
+\newcommand{\instr}{I} % instruction
+\newcommand{\Kinit}{K_0} % {\mathit{init}} initial constraint on the parameters
+\newcommand{\Machine}{\mathit{CM}} % 2-counter machine
+\newcommand{\Param}{U} % set of parameters (P / Y)
+\newcommand{\Params}{\mathcal{U}} % set of parameters (P / Y)
+\newcommand{\param}{u} % parameter (p / y)
+\newcommand{\Processes}{\mathcal{P}}
+\newcommand{\ProcessesAct}{\Processes_\mathit{act}}
+\newcommand{\PS}{\mathsf{M}} % \mathcal{M} PSTCSP model
+\newcommand{\PSex}{\PS_\mathit{ex}}
+\newcommand{\py}{\pi} % parameter valuation
+\newcommand{\Py}{\Pi} % set of consistent parameter valuations
+\newcommand{\runs}{\mathit{Runs}} % set of runs
+\newcommand{\sinit}{s_0} % {init} initial set of states
+% \newcommand{\Slast}{S_{last}}
+\newcommand{\varCl}{\mathit{cl}}
+\newcommand{\varIdle}{\mathit{idle}}
+\newcommand{\ruleIdle}{\mathit{idle}}
+\newcommand{\Val}{\mathcal{V}}
+\newcommand{\Var}{\mathit{Var}}
+\newcommand{\Vars}{\mathcal{V}ar}
+\newcommand{\Vinit}{V_0} % \mathit{init} initial valuation of the variables
+
+% EXAMPLES
+\newcommand{\varActive}{\mathit{Active}}
+\newcommand{\varCnt}{\mathit{cnt}}
+\newcommand{\varExit}{\mathit{exit}}
+\newcommand{\varProc}{\mathit{proc}}
+\newcommand{\varProtocol}{\mathit{FME}}
+\newcommand{\varTurn}{\mathit{turn}}
+\newcommand{\varUpdate}{\mathit{update}}
+
+\newcommand{\FischerEpsilon}{\gamma}
+\newcommand{\FischerDelta}{\delta}
+
+%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
+% ALGORITHMES
+%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
+% Algorithmes PTA
+\newcommand{\explo}{\mathit{reachAll}}
+\newcommand{\IM}{\mathit{IM}} % \mathit{IM}
+
+
+%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
+% CONSTANTES DE CHAINES
+%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
+
+% Outils
+% \newcommand{\apron}{\textsc{Apron}}
+% \newcommand{\cplusplus}{C++}
+% \newcommand{\gdot}{\textsc{dot}}
+% \newcommand{\graphviz}{Graphviz}
+\newcommand{\hytech}{{\sc HyTech}}
+% \newcommand{\imitator}{\textsc{Imitator}}
+\newcommand{\imitatordeux}{\textsc{Imitator}\,II}
+% \newcommand{\imperator}{\textsc{ImpRator}}
+% \newcommand{\inspeqtor}{\textsc{InSPEQTor}}
+% \newcommand{\java}{Java}
+% \newcommand{\kronos}{\textsc{Kronos}}
+% \newcommand{\nusmv}{NuSMV}
+\newcommand{\ocaml}{OCaml}
+% \newcommand{\phaver}{PHAVer}
+% \newcommand{\plot}{gnuplot}
+% \newcommand{\polka}{NewPolka}
+% \newcommand{\prism}{\textsc{Prism}}
+% \newcommand{\python}{Python}
+% \newcommand{\red}{RED}
+\newcommand{\romeo}{Rom\'eo}
+% \newcommand{\smv}{SMV}
+\newcommand{\spark}{\textsc{Spark}}
+\newcommand{\spin}{Spin}
+% \newcommand{\tina}{TINA}
+\newcommand{\trex}{\textsc{TReX}}
+\newcommand{\uppaal}{\textsc{Uppaal}}
+% \newcommand{\vhdlta}{\textsc{Vhdl2Ta}}
+
+% PSTCSP constructs
+% \newcommand{\CSPdeadline}{\mathit{deadline}}
+% \newcommand{\CSPinterrupt}{\mathit{interrupt}}
+% \newcommand{\CSPprogram}{\mathit{program}}
+% \newcommand{\CSPskip}{\mathit{Skip}}
+% \newcommand{\CSPstop}{\mathit{Stop}}
+% \newcommand{\CSPtimeout}{\mathit{timeout}}
+% \newcommand{\CSPwait}{\mathit{Wait}}
+% \newcommand{\CSPwithin}{\mathit{within}}
+% \newcommand{\CSPdeadline}{ {ddl} }
+% \newcommand{\CSPinterrupt}{{inpt}}
+% \newcommand{\CSPprogram}{{prg}}
+% \newcommand{\CSPskip}{{Skip}}
+% \newcommand{\CSPstop}{{Stop}}
+% \newcommand{\CSPtimeout}{ {tout} }
+% \newcommand{\CSPwait}{{Wait}}
+% \newcommand{\CSPwithin}{{win}}
+\newcommand{\CSPdeadline}{\mathtt{deadline} }
+\newcommand{\CSPelse}{\mathtt{else}}
+\newcommand{\CSPif}{\mathtt{if}}
+\newcommand{\CSPthen}{\mathtt{then}}
+\newcommand{\CSPinterrupt}{\mathtt{interrupt}}
+\newcommand{\CSPprogram}{\mathit{program}}
+\newcommand{\CSPskip}{\mathtt{Skip}}
+\newcommand{\CSPstop}{\mathtt{Stop}}
+\newcommand{\CSPtimeout}{\mathtt{timeout} }
+\newcommand{\CSPwait}{\mathtt{Wait}}
+\newcommand{\CSPwithin}{\mathtt{within}}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% FORMATING
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% CODE INTEGRE AU TEXTE
+\newcommand{\code}[1]{\textbf{\texttt{#1}}}
+
+% COMMENTAIRES DANS UN PARAGRAPHE
+% \newcommand{\commentaire}[1]{\textcolor{red}{\textbf{$\Leftarrow$  #1 $\Rightarrow$}}}
+\newcommand{\commentaire}[1]{}
+
+% REDEFINITIONS DES PARAGRAPHES
+\newcommand{\paragraphe}[1]{\paragraph{#1.}}
+% \newcommand{\paragraphe}[1]{\subsubsection{#1.}}
+
+\renewcommand{\baselinestretch}{0.98}
+\addtolength{\textheight}{0.2cm}
+
+% Title
+\title{Parameter Synthesis for Hierarchical Concurrent Real-Time Systems Using TOOL}
+\author{\'Etienne Andr\'e$^1$, Yang Liu$^2$, Jun Sun$^3$ and Jin-Song Dong$^4$}
+\institute{$^1$LIPN, CNRS UMR 7030, Université Paris 13, France \\
+	$^2$ Temasek Laboratories, National University of Singapore \\
+	$^3$ Singapore University of Technology and Design \\
+	$^4$ School of Computing, National University of Singapore
+}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+	
+\end{abstract}
+
+\keywords{Hybrid automata, Verification, Parameter synthesis, Robustness}
+
+\commentaire{Version avec commentaires}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Motivation}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+The specification and verification of real-time systems, involving complex data structures and timing delays, are notoriously difficult problems.
+The correctness of such real-time systems usually depends on the values of these timing delays.
+One can check the correctness for one particular value for each delay, using classical techniques of timed model checking, but this does not guarantee the correctness for other values.
+Actually, checking the correctness for all possible delays, even in a bounded interval, would require an infinite number of calls to the model checker, because those delays can have real (or rational) values.
+It is therefore interesting to reason \emph{parametrically}, by considering that these delays are unknown constants, or \emph{parameters}, and try to synthesize a constraint (a conjunction of linear inequalities) on these parameters guaranteeing a correct behavior.
+
+%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
+\paragraphe{Motivation}
+%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
+We are interested here in the \emph{good parameters problem} for real-time systems:
+``find a set of parameter valuations for which the system is correct''.
+This problem stands between verification and control, in the sense that we actually change (the timing part of) the system in order to guarantee some property.
+% This notion of correctness can refer to any kind of properties.
+%
+Furthermore, we aim at defining a formalism that is intuitive, powerful (with use of external variables, structures and user defined functions), and allowing efficient parameter synthesis and verification.
+
+
+\cite{ALSD12}
+
+\cite{AD94}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Implementation and Features}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
+% \begin{figure}[ht!]
+% 	% STYLES
+% 	\tikzstyle{etiquette} = [draw=none, color=black]
+% 	
+% % \tikzstyle{boite}=[text width=8em, text centered, minimum height=2.5em, rounded corners, very thick]
+% % \tikzstyle{input}=[boite, draw=green!20!gris, top color=green!50, bottom color=green!10!white]
+% % \tikzstyle{output}=[boite, draw=red!20!gris, top color=red!50, bottom color=red!5!white]
+% % \tikzstyle{imitator} = [boite, draw=blue!20!gris, text width=10em, minimum height=6em]
+% 
+% 	
+% 	\tikzstyle{boite}=[rectangle, draw=black, rounded corners, thick, draw=blue!40!black, top color=blue!20, bottom color=blue!5!white]
+% % 	\tikzstyle{imitator} = [boite]
+% % 	\tikzstyle{apron} = [boite, draw=yellow!20!gris, top color=yellow!70, bottom color=yellow!10!white]
+% % 	\tikzstyle{polka} = [apron]
+% % 	\tikzstyle{ppl} = [apron]
+% 	\tikzstyle{dot} = [boite, draw=purple!20!gris, top color=purple!60, bottom color=purple!10!white]
+% 
+% 	\tikzstyle{fleche} = [->, draw=black, semithick]
+% {
+% 
+% \centering
+% 
+% \begin{tikzpicture}[scale=0.6,  =>stealth']
+% 
+% 	% Boites
+% 	\draw[boite] (-5, 5.5) rectangle (-2, 6.5);
+% 	\node [etiquette] at (-3.5, 6) {Model};
+% 	
+% 	\draw[boite] (-5, 3.8) rectangle (-2, 5);
+% 	\node [etiquette] at (-3.5, 4.4) {\begin{tabular}{c}Reference\\valuation\end{tabular}};
+% 	
+% 	\draw[boite] (0, 4) rectangle (6, 6.5);
+% 	\node [etiquette] at (3, 5.25) {\large \hymitator{}};
+% 	
+% 	\draw[boite] (1, 2.5) rectangle (5, 3.5);
+% 	\node [etiquette] at (3, 3) {PPL};
+% 	
+% 	\draw[boite] (8, 5.5) rectangle (12, 6.5);
+% 	\node [etiquette] at (10, 6) {Constraint};
+% 	
+% 	\draw[boite] (8, 4) rectangle (12, 5);
+% 	\node [etiquette] at (10, 4.5) {Trace set};
+% 
+% 	% Fleches
+% 	\path[fleche] (-2, 6) --++ (2, 0);
+% 	\path[fleche] (-2, 4.4) --++ (2, 0);
+% 	\path[fleche] (3.5, 4) --++ (0, -.5);
+% 	\path[fleche] (2.5, 3.5) --++ (0, .5);
+% 	\path[fleche] (6, 6) --++ (2, 0);
+% 	\path[fleche] (6, 4.5) --++ (2, 0);
+% 
+% \end{tikzpicture}
+% 
+% }
+% 
+% \caption{Architecture of \hymitator{}}
+% \label{fig:structure}
+% \end{figure}
+% %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
+
+TOOL (with sources, binaries and case studies) is available on its Web page: \url{http://www-lipn.univ-paris13.fr/~andre/software/hymitator/}.
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Applications}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Related Work}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\bibliographystyle{abbrv} % alpha plain
+\bibliography{biblioPSTCSP}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+\end{document}          
