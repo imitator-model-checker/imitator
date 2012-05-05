@@ -14,6 +14,8 @@
 
 \usepackage{subfigure}
 
+\usepackage[pdftex,pagebackref=false,colorlinks=true]{hyperref}
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % TIKZ
@@ -372,7 +374,7 @@ A basic implementation named \imitator{} (for \emph{Inverse Method for Inferring
 , under the form of a \python{} script calling \hytech{}.
 The tool has then been entirely rewritten in \imitator{}\,2.0~\cite{and10}, under the form of a standalone \ocaml{} program making use of the Parma Polyhedra Library (PPL)~\cite{bhz08}.
 A number of case studies containing up to 60 timing parameters could be efficiently verified in the purely timed framework.
-The latest version (2.5) includes stopwatches and arbitrary updates, and has been applied to several classes of scheduling problems~\cite{afks12}.
+The latest version (2.5) includes stopwatches and arbitrary updates, and has been applied to several classes of scheduling problems~\cite{afks}.
 
 The inverse method and the behavioral cartography have been extended to hybrid systems in~\cite{FK11}.
 Due to the strong syntactic and algorithmic differences between timed automata and hybrid automata, the work of~\cite{FK11} had to be implemented in an experimental ``fork'' of \imitator{}\,2.0, and not in the main version.
@@ -476,8 +478,8 @@ A constraint is output in text format; furthermore, the set of traces computed b
 	\item[Full reachability analysis] Given a model, it computes the set of symbolic reachable states.
 \item[Predicate Abstraction] Safety verification can alternatively be performed using a counterexample-guided abstraction refinement loop. The abstract state space is constructed w.r.t.~a set of linear predicates%. The method has been described in
 	~\cite{ADI2006}.
-	\item[Inverse method] Given a model and a reference parameter valuation~$\pio$, it computes a constraint on the parameter guaranteeing the same time-abstract behavior as under~$\pio$.
-	\item[Behavioral cartography] Given a model and a bounded parameter domain for each parameter valuation, it computes a set of constraints.% and their corresponding trace sets.
+	\item[Inverse method] Given a model and a reference parameter valuation~$\pio$, it computes a constraint on the parameter guaranteeing the same time-abstract behavior as under~$\pio$~\cite{acef09,FK11}.
+	\item[Behavioral cartography] Given a model and a bounded parameter domain for each parameter valuation, it computes a set of constraints~\cite{af10,FK11}.% and their corresponding trace sets.
 \end{description}
 
 \hymitator{} uses several algorithmic optimizations, some of which have initially been developed for \imitator{}.
@@ -580,7 +582,7 @@ Figure~\ref{fig:plot3} shows the coverage of a parameter rectangle for the room 
 \vspace{-0.1cm}
 
 One of the first powerful model checkers for analyzing hybrid automata is \hytech{}~\cite{hhw97}.
-Unfortunately, it can hardly verify even medium sized examples due to exact arithmetics with limited precision and static composition of automata, quickly leading to memory overflows. The tool \phaver{}~\cite{frehse05} improves on the computation of the reachable states by using efficient over-approximations. Techniques similar to those in \phaver{} have also been implemented in \hymitator{}, with additional algorithmic improvements. The work in \cite{akrs08} presents an analysis on Simulink models which shares similar goals with our approach.
+Unfortunately, it can hardly verify even medium sized examples due to exact arithmetics with limited precision and static composition of automata, quickly leading to memory overflows. The tool \phaver{}~\cite{Frehse08} improves on the computation of the reachable states by using efficient over-approximations. Techniques similar to those in \phaver{} have also been implemented in \hymitator{}, with additional algorithmic improvements. The work in \cite{akrs08} presents an analysis on Simulink models which shares similar goals with our approach.
 
 %% \commentaire{to do (citer alur et al)}
 % A graphical user interface for the input model is currently under construction, based on a generic platform. \commentaire{utile ?!}
