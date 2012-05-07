@@ -445,7 +445,7 @@
       \param{M} and \param{delay}, such that always $\param{min} < \vari{w} < \param{max}$?
   \end{itemize}
 
-Synthesis problem: find values for the timing parameters such that the system behaves well.
+Synthesis problem: \couleur{find values for the timing parameters such that the system behaves well}.
 
 \end{block}
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-
@@ -484,7 +484,7 @@ Synthesis problem: find values for the timing parameters such that the system be
 \begin{itemize}
 	\item \coulitem{Inverse Method}~\refer{FK11}
 	\begin{itemize}
-		\item Given a HA and a reference valuation~$\pio$ for the parameters, synthesize a constraint $K_0$ guaranteeing the same time-abstract behavior as for~$\pio$
+		\item Given a HA and a reference valuation~$\pio$ for the parameters, synthesize a \couleur{constraint} $K_0$ guaranteeing the \couleur{same time-abstract behavior} as for~$\pio$
 
   \begin{center}
   \begin{tikzpicture}[scale=1]
@@ -538,7 +538,7 @@ Synthesis problem: find values for the timing parameters such that the system be
 
 	\item \coulitem{Behavioral Cartography}~\refer{AF10}
 	\begin{itemize}
-		\item Performs a tiling of the parametric space, and partition it between good and bad tiles w.r.t.\ a given property
+		\item Performs a tiling of the parametric space, and partition it between good and bad tiles w.r.t.~a given property
 			
 		\begin{columns}
 		\begin{column}{0.5\textwidth}
@@ -615,7 +615,7 @@ Synthesis problem: find values for the timing parameters such that the system be
 
 		\begin{column}{0.5\textwidth}
 			\small
-			Example of good constraint for the water tank: \\
+			Example of ``good'' constraint for the water tank: \\
 		$\param{M} + \param{delay} \geq m \;\wedge\; \param{m} \geq \param{min} +
       2\cdot \param{delay} \;\wedge\; \param{max} \geq \param{M} + \param{delay}$
 		\end{column}
@@ -637,10 +637,10 @@ Synthesis problem: find values for the timing parameters such that the system be
 \begin{itemize}
 	\item \coulitem{Algorithms of Parameter Synthesis for Hybrid Systems}
 	\begin{itemize}
-		\item Implements the inverse method and the behavioral cartography
-		\item Includes local partitioning with linear over-approximations
-		\item Makes use of predicate abstraction techniques
-		\item Features an efficient merging technique~\refer{afs12}
+		\item Implements the \couleur{inverse method} and the \couleur{behavioral cartography}
+		\item Includes \couleur{local partitioning} with \couleur{linear over-approximations}
+		\item Makes use of \couleur{predicate abstraction} techniques
+		\item Features an efficient \couleur{merging technique}~\refer{afs12}
 	\end{itemize}
 	
 	\vspace{0.5cm}
@@ -656,11 +656,24 @@ Synthesis problem: find values for the timing parameters such that the system be
 	\begin{itemize}
 		\item Numerous options for analysis
 		\item Graphical output
-	\end{itemize}
+
+		\begin{columns}
+			\begin{column}{0.5\textwidth}
+				\begin{center}
+					\includegraphics[width=0.6\textwidth]{rhb_cart2.pdf}
+				\end{center}
+			\end{column}
+			\begin{column}{0.5\textwidth}
+				\begin{center}
+					\includegraphics[width=0.6\textwidth]{good-bad.pdf}
+				\end{center}
+			\end{column}
+		\end{columns}
+		\end{itemize}
 
 	\item \coulitem{Implementation}  \refer{AK12}
 	\begin{itemize}
-		\item Implemented in OCaml, using PPL~\refer{bhz08}
+		\item Implemented in OCaml, using the Parma Polyhedra Library %PPL~\refer{bhz08}
 	\end{itemize}
 \end{itemize}
 
