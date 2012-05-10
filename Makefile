@@ -72,7 +72,7 @@ MAIN_OPT = $(MAIN:.cmo=.cmx)
 MODULES = Global NumConst Options LinearConstraint Automaton Cache Pi0Lexer Pi0Parser Pi0CubeLexer Pi0CubeParser ImitatorLexer ImitatorParser GMLLexer GMLParser ImitatorPrinter Graph PTA2CLP PTA2GML ProgramConverter Reachability Graphics
 
 # interfaces
-HEADERS = Global NumConst LinearConstraint Automaton Cache ParsingStructure AbstractImitatorFile Graph ImitatorPrinter PTA2CLP PTA2GML ProgramConverter Reachability Graphics
+HEADERS = Global NumConst Options LinearConstraint Automaton Cache ParsingStructure AbstractImitatorFile Graph ImitatorPrinter PTA2CLP PTA2GML ProgramConverter Reachability Graphics
 
 CMIS = $(addprefix $(SRC)/, $(addsuffix .cmi, $(HEADERS)))
 OBJS = $(addprefix $(SRC)/, $(addsuffix .cmo, $(MODULES)))
@@ -375,6 +375,8 @@ exe:
 # 	bin/IMITATOR2.35 $(EXAMPLE_PATH)/Wlan/wlan.imi $(EXAMPLE_PATH)/Wlan/wlan.pi0 -post-limit 10 -no-dot -no-log -statistics
 # 	bin/IMITATOR2.34.111115 $(EXAMPLE_PATH)/Wlan/wlan.imi $(EXAMPLE_PATH)/Wlan/wlan.pi0 -post-limit 10 -no-dot -no-log
 
+	$(TARGET) $(EXAMPLE_PATH)/Wlan/wlan2_without_asap.imi $(EXAMPLE_PATH)/Wlan/wlan.pi0 -no-dot -no-log -statistics -post-limit 10
+
 # 	./IMITATOR Examples/Wlan/wlan_boff2.imi Examples/Wlan/wlan_boff2.pi0 -timed
 
 # 	./IMITATOR Examples/Wlan/wlan2_for_im2.imi -mode reachability -debug low
@@ -495,7 +497,7 @@ exe:
 # 	bin/IMITATOR2.34.111115 $(EXAMPLE_PATH)/Jobshop/maler_3_4.imi -mode reachability -no-dot -no-log -IMincl
 
 
-	$(TARGET) $(EXAMPLE_PATH)/Jobshop/maler_4_4.imi -mode reachability -no-dot -no-log -incl -statistics -PTA2GML
+# 	$(TARGET) $(EXAMPLE_PATH)/Jobshop/maler_4_4.imi -mode reachability -no-dot -no-log -incl -statistics -PTA2GML
 # 	$(TARGET) $(EXAMPLE_PATH)/Jobshop/maler_4_4.imi -mode reachability -no-dot -no-log -incl -acyclic -post-limit 10
 # 	bin/IMITATOR2.375 $(EXAMPLE_PATH)/Jobshop/maler_4_4.imi -mode reachability -no-dot -no-log -incl -acyclic -post-limit 10
 # 	bin/IMITATOR2.370 $(EXAMPLE_PATH)/Jobshop/maler_4_4.imi -mode reachability -no-dot -no-log -incl -statistics -post-limit 8
