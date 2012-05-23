@@ -70,7 +70,7 @@ end
   automaton sender1
 --****************************************************--
 
-synclabs: send1, end1, busy1, cd;
+synclabs: send1, end1, busy1, cd, prob1;
 
 initially Init1;
 
@@ -84,10 +84,10 @@ loc Transmit1: while x1 <= lambda wait {}
 	when True sync cd do {x1' = 0} goto Collide1;
 
 loc Collide1: while x1 <= 0 wait {}
-	when True do {} goto Wait1_0;
-	when True do {} goto Wait1_1;
-	when True do {} goto Wait1_2;
-	when True do {} goto Wait1_3;
+	when True sync prob1 goto Wait1_0;
+	when True sync prob1 goto Wait1_1;
+	when True sync prob1 goto Wait1_2;
+	when True sync prob1 goto Wait1_3;
 
 loc Wait1_0: while x1 <= 0 wait {}
 	when x1 = 0 sync busy1 do {x1' = 0} goto Collide1;
@@ -116,7 +116,7 @@ end
   automaton sender2
 --****************************************************--
 
-synclabs: send2, end2, busy2, cd;
+synclabs: send2, end2, busy2, cd, prob2;
 
 initially Init2;
 
@@ -130,10 +130,10 @@ loc Transmit2: while x2 <= lambda wait {}
 	when True sync cd do {x2' = 0} goto Collide2;
 
 loc Collide2: while x2 <= 0 wait {}
-	when True do {} goto Wait2_0;
-	when True do {} goto Wait2_1;
-	when True do {} goto Wait2_2;
-	when True do {} goto Wait2_3;
+	when True sync prob2 goto Wait2_0;
+	when True sync prob2 goto Wait2_1;
+	when True sync prob2 goto Wait2_2;
+	when True sync prob2 goto Wait2_3;
 
 loc Wait2_0: while x2 <= 0 wait {}
 	when x2 = 0 sync busy2 do {x2' = 0} goto Collide2;
