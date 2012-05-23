@@ -17,11 +17,11 @@
 
 
 	---IEEE VALUE---
--- 	& lambda   = 808
--- 	& sigma    = 26
--- 	& timeslot = 52
+ 	& lambda   = 808
+ 	& sigma    = 26
+ 	& timeslot = 52
 
 	---RESCALED PRISM VALUE---
-	& lambda   = 96
-	& sigma    = 3
-	& timeslot = 6
+--	& lambda   = 96
+--	& sigma    = 3
+--	& timeslot = 6

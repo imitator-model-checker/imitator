@@ -225,7 +225,7 @@ exe:
 # 	$(TARGET) $(EXAMPLE_PATH)/Examples/exSITH.imi -mode reachability -PTA2GML
 # 	$(TARGET) $(EXAMPLE_PATH)/Examples/exSITH.imi $(EXAMPLE_PATH)/Examples/exSITH.pi0
 
-	$(TARGET) $(EXAMPLE_PATH)/Examples/contrexPPTA.imi $(EXAMPLE_PATH)/Examples/contrexPPTA.pi0
+# 	$(TARGET) $(EXAMPLE_PATH)/Examples/contrexPPTA.imi $(EXAMPLE_PATH)/Examples/contrexPPTA.pi0
 
 ##### CASE STUDIES : HARDWARE #####
 
@@ -349,7 +349,7 @@ exe:
 # 	./IMITATOR Examples/RCP/RCP_bounded.imi Examples/RCP/RCP_bounded.pi0 -no-dot -no-log
 
 # 	$(TARGET) $(EXAMPLE_PATH)/CSMACD/csmacdPrism.imi -mode reachability  
-# 	$(TARGET) $(EXAMPLE_PATH)/CSMACD/csmacdPrism.imi $(EXAMPLE_PATH)/CSMACD/csmacdPrism.pi0 -no-dot -no-log -statistics
+	$(TARGET) $(EXAMPLE_PATH)/CSMACD/csmacdPrism.imi $(EXAMPLE_PATH)/CSMACD/csmacdPrism.pi0 -no-dot -no-log
 # 	$(TARGET) $(EXAMPLE_PATH)/CSMACD/csmacdPrism.imi $(EXAMPLE_PATH)/CSMACD/csmacdPrism.pi0 -no-dot -no-log -statistics -dynamic
 # 	$(TARGET) $(EXAMPLE_PATH)/CSMACD/csmacdPrism.imi $(EXAMPLE_PATH)/CSMACD/csmacdPrism.pi0 -no-dot -no-log -statistics -jobshop
 # 	$(TARGET) $(EXAMPLE_PATH)/CSMACD/csmacdPrism.imi $(EXAMPLE_PATH)/CSMACD/csmacdPrism.pi0 -no-dot -no-log
