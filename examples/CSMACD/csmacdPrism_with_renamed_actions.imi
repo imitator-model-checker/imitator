@@ -75,12 +75,11 @@ synclabs: send1, end1, busy1, cd, prob1;
 initially Init1;
 
 
-loc Init1: while True wait {}
-	when True sync send1 do {} goto Transmit1;
+loc Init1: while x1 = 0 wait {}
+	when x1 = 0 sync send1 do {} goto Transmit1;
 
 loc Transmit1: while x1 <= lambda wait {}
 	when x1 = lambda sync end1 do {x1' = 0} goto Done1;
-	
 	when True sync cd do {x1' = 0} goto Collide1;
 
 loc Collide1: while x1 <= 0 wait {}
@@ -121,12 +120,11 @@ synclabs: send2, end2, busy2, cd, prob2;
 initially Init2;
 
 
-loc Init2: while True wait {}
-	when True sync send2 do {} goto Transmit2;
+loc Init2: while x2 = 0 wait {}
+	when x2 = 0 sync send2 do {} goto Transmit2;
 
 loc Transmit2: while x2 <= lambda wait {}
 	when x2 = lambda sync end2 do {x2' = 0} goto Done2;
-	
 	when True sync cd do {x2' = 0} goto Collide2;
 
 loc Collide2: while x2 <= 0 wait {}
@@ -191,7 +189,7 @@ init := True
 	-- Instantiations
 	----------------------
 -- 	& lambda   = 808
--- 	& sigma    = 26
+--	& sigma    = 26
 -- 	& timeslot = 52
 	---END PI0---
 

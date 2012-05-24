@@ -32,7 +32,7 @@ SIFS, --= 1; -- due to scaling can be non-deterministically either 0 or 1
 -- TIME_MAX, --= 315; -- maximum constant used in timing constraints + 1
 BOFF = 1, --= 6; -- max backoff (since contention window is [15,1023])
 
-	MAXCOL = 3
+	MAXCOL = 2
 	
 		: parameter;
 
