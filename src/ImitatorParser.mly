@@ -169,10 +169,13 @@ locations:
 /**********************************************/
 
 location:
-	| CT_LOC NAME COLON CT_WHILE convex_predicate stopwatches CT_WAIT LBRACE RBRACE transitions { $2, $5, $6, $10 }
-	| CT_LOC NAME COLON CT_WHILE convex_predicate stopwatches CT_WAIT transitions { $2, $5, $6, $8 }
+	| CT_LOC location_name COLON CT_WHILE convex_predicate stopwatches CT_WAIT LBRACE RBRACE transitions { $2, $5, $6, $10 }
+	| CT_LOC location_name COLON CT_WHILE convex_predicate stopwatches CT_WAIT transitions { $2, $5, $6, $8 }
 ;
 
+location_name:
+	| NAME { $1 }
+;
 
 /**********************************************/
 
