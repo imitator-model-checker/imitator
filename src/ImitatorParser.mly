@@ -175,6 +175,7 @@ location:
 
 location_name:
 	| NAME { $1 }
+	| NAME LSQBRA linear_expression RSQBRA { $1 }
 ;
 
 /**********************************************/
