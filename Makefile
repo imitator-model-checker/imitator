@@ -204,6 +204,7 @@ exe:
 # 	$(TARGET) $(EXAMPLE_PATH)/Tests/exPourGML.imi -mode reachability
 # 	$(TARGET) $(EXAMPLE_PATH)/Tests/SynthesizedGML.gml -fromGML -mode reachability
 
+	$(TARGET) $(EXAMPLE_PATH)/Tests/testCosts.imi -mode reachability -debug total
 ##### TESTS FOR PROPERTIES #####
 
 # 	$(TARGET) $(EXAMPLE_PATH)/Proprietes/exCTL.imi $(EXAMPLE_PATH)/Proprietes/exCTL.pi0
@@ -365,7 +366,7 @@ exe:
 # 	bin/IMITATOR2.370 $(EXAMPLE_PATH)/CSMACD/csmacdPrism.imi $(EXAMPLE_PATH)/CSMACD/csmacdPrism.pi0 -no-dot -no-log -statistics
 
 # 	$(TARGET) $(EXAMPLE_PATH)/CSMACD/csmacdPrism_with_renamed_actions.imi -mode reachability -no-merging
-	$(TARGET) $(EXAMPLE_PATH)/CSMACD/csmacdPrism_with_renamed_actions.imi $(EXAMPLE_PATH)/CSMACD/csmacdPrism.pi0
+# 	$(TARGET) $(EXAMPLE_PATH)/CSMACD/csmacdPrism_with_renamed_actions.imi $(EXAMPLE_PATH)/CSMACD/csmacdPrism.pi0
 
 # 	./IMITATOR Examples/CSMACD/csmacdPrism_2p.imi -mode reachability
 # 	./IMITATOR Examples/CSMACD/csmacdPrism_2p.imi Examples/CSMACD/csmacdPrism_2p.pi0 

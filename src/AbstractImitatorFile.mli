@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2009/09/11
- * Last modified: 2012/02/22
+ * Last modified: 2012/05/30
  *
  ****************************************************************)
 
@@ -137,8 +137,12 @@ type abstract_program = {
 	(* The list of actions for each automaton for each location *)
 	actions_per_location : automaton_index -> location_index -> (action_index list);
 
+	(* The cost for each automaton and each location *)
+	costs : automaton_index -> location_index -> linear_term option;
+	
 	(* The invariant for each automaton and each location *)
 	invariants : automaton_index -> location_index -> linear_constraint;
+	
 	(* The transitions for each automaton and each location and each action *)
 	transitions : automaton_index -> location_index -> action_index -> (transition list);
 	(* The list of clocks stopped for each automaton and each location *)

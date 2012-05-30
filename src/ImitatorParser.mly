@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created       : 2009/09/07
- * Last modified : 2012/02/20
+ * Last modified : 2012/05/30
 ***********************************************/
 
 %{
@@ -169,13 +169,20 @@ locations:
 /**********************************************/
 
 location:
-	| CT_LOC location_name COLON CT_WHILE convex_predicate stopwatches CT_WAIT LBRACE RBRACE transitions { $2, $5, $6, $10 }
-	| CT_LOC location_name COLON CT_WHILE convex_predicate stopwatches CT_WAIT transitions { $2, $5, $6, $8 }
+	| CT_LOC location_name COLON CT_WHILE convex_predicate stopwatches CT_WAIT braces_opt transitions {
+		let name, cost = $2 in
+			name, cost, $5, $6, $9
+		}
 ;
 
 location_name:
-	| NAME { $1 }
-	| NAME LSQBRA linear_expression RSQBRA { $1 }
+	| NAME { $1, None }
+	| NAME LSQBRA linear_expression RSQBRA { $1, Some $3 }
+;
+
+braces_opt:
+	| LBRACE RBRACE { }
+	| { }
 ;
 
 /**********************************************/

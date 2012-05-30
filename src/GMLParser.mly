@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created       : 2011/11/23
- * Last modified : 2012/02/20
+ * Last modified : 2012/05/30
 ************************************************************/
 
 
@@ -102,8 +102,8 @@ let convert declarations locations transitions =
 		let transitions = try (Hashtbl.find location_transitions location_id) with Not_found -> [] in
 		let invariant = Hashtbl.find invariants location_id in
 		(* Make structure *)
-		(* WARNING: stopwatches not taken into account yet !! *)
-		let location = location_name , invariant , [], List.rev transitions in
+		(* WARNING: stopwatches and costs not taken into account yet !! *)
+		let location = location_name , None , invariant , [], List.rev transitions in
 		(* Add it *)
 		location :: current_list
 	) location_names [] in

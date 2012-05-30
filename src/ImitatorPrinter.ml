@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2009/12/02
- * Last modified: 2012/02/22
+ * Last modified: 2012/05/30
  *
  **************************************************)
 
@@ -123,6 +123,12 @@ let string_of_transition program automaton_index action_index (guard, clock_upda
 	(* Convert the updates *)
 	^ " do {"
 	^ (string_of_clock_updates program clock_updates)
+	
+	
+	
+	(** BUG! missing a ',' in case both clock resets and updates are allowed *)
+	
+	
 	^ (string_of_updates program discrete_updates)
 	^ "} "
 	(* Convert the sync *)
@@ -152,6 +158,10 @@ let string_of_transitions program automaton_index location_index =
 let string_of_location program automaton_index location_index =
 	"\n" ^ "loc: "
 	^ (program.location_names automaton_index location_index)
+	^ (match program.costs automaton_index location_index with
+		| None -> ""
+		| Some cost -> "[" ^ (LinearConstraint.string_of_linear_term program.variable_names cost) ^ "]"
+	)
 	^ ": "
 	^ (string_of_invariant program automaton_index location_index)
 	^ (string_of_transitions program automaton_index location_index)

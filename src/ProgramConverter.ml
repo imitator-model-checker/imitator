@@ -7,7 +7,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2009/09/09
- * Last modified: 2012/03/13
+ * Last modified: 2012/05/30
  *
  ****************************************************************)
 
@@ -114,7 +114,7 @@ let linear_term_of_array (array_of_coef, constant) =
 	
 
 (*--------------------------------------------------*)
-(* Direct conversion of a ParsingStructure.linear_expression into a Linear_term.linear_term *)
+(* Direct conversion of a ParsingStructure.linear_expression into a Linear_constraint.linear_term *)
 (*--------------------------------------------------*)
 let linear_term_of_linear_expression index_of_variables constants linear_expression =
 	let array_of_coef, constant = array_of_coef_of_linear_expression index_of_variables constants linear_expression in
@@ -340,7 +340,7 @@ let all_locations_different =
 	(fun all_different (automaton_name, _, locations) ->
 		(* Get all the location names *)
 		let locations =
-			List.map (fun (location_name, _, _, _) -> location_name) locations in
+			List.map (fun (location_name, _, _, _, _) -> location_name) locations in
 		(* Look for multiply declared locations *)
 		let multiply_declared_locations = elements_existing_several_times locations in
 			List.iter (fun location_name -> print_error ("Several locations have name '" ^ location_name ^ "' in automaton '" ^ automaton_name ^ "'.")) multiply_declared_locations;
@@ -467,7 +467,7 @@ let synclab_used_everywhere automata synclab_name =
 			(* Only check if the synclab is declared here *)
 			if List.mem synclab_name sync_name_list then(
 				(* Check that at least one location contains the synclab *)
-				if not (List.exists (fun (_, _, _, transitions) ->
+				if not (List.exists (fun (_, _, _, _, transitions) ->
 					(* Check that at least one transition contains the synclab *)
 					List.exists (fun (_, _, sync, _) -> sync = (Sync synclab_name)) transitions
 				) locations ) then (
@@ -516,17 +516,26 @@ let check_automata index_of_variables type_of_variables variable_names index_of_
 			Not_found -> raise (InternalError ("Impossible to find the index of automaton '" ^ automaton_name ^ "'."))
 		in
 		(* Check each location *)
-		List.iter (fun (location_name, convex_predicate, stopwatches, transitions) -> 
+		List.iter (fun (location_name, cost, convex_predicate, stopwatches, transitions) -> 
 			(* Check that the location_name exists (which is obvious) *)
 			if not (in_array location_name locations_per_automaton.(index)) then(
 				print_error ("The location '" ^ location_name ^ "' declared in automaton '" ^ automaton_name ^ "' does not exist.");
 				well_formed := false);
 
+			(* Check the cost *)
+			begin
+			match cost with
+				| Some cost -> if not (check_linear_expression variable_names constants cost) then well_formed := false;
+				| None -> ()
+			end;
+			
 			(* Check the stopwatches *)
 			if not (check_stopwatches index_of_variables type_of_variables stopwatches) then well_formed := false;
+			
 			(* Check the convex predicate *)
 			(* TODO: preciser quel automate et quelle location en cas d'erreur *)
 			if not (check_convex_predicate variable_names constants convex_predicate) then well_formed := false;
+			
 			(* Check transitions *)
 			List.iter (fun (convex_predicate, updates, sync, dest_location_name) ->
 				(* Check the convex predicate *)
@@ -891,7 +900,7 @@ let make_locations_per_automaton index_of_automata automata =
 			(* Get the index of the automaton *)
 			let index = Hashtbl.find index_of_automata automaton_name in
 			(* Get the location names *)
-			let location_names = List.map (fun (location_name, _, _, _) -> location_name) transitions in
+			let location_names = List.map (fun (location_name, _, _, _, _) -> location_name) transitions in
 			(* Update the array *)
 			locations_per_automaton.(index) <- Array.of_list location_names
 		)
@@ -908,6 +917,8 @@ let make_automata index_of_variables index_of_automata index_of_locations labels
 	let actions_per_automaton = Array.make (Hashtbl.length index_of_automata) [] in
 	(* Create an empty array for the actions of every location of every automaton *)
 	let actions_per_location = Array.make (Hashtbl.length index_of_automata) (Array.make 0 []) in
+	(* Create an empty array for the costs *)
+	let costs = Array.make (Hashtbl.length index_of_automata) (Array.make 0 None) in
 	(* Create an empty array for the transitions *)
 	let transitions = Array.make (Hashtbl.length index_of_automata) (Array.make 0 []) in
 	(* Create an empty array for the invariants *)
@@ -928,6 +939,8 @@ let make_automata index_of_variables index_of_automata index_of_locations labels
 		let nb_locations = List.length locations in 
 		(* Create the array of lists of actions for this automaton *)
 		actions_per_location.(automaton_index) <- Array.make nb_locations [];
+		(* Create the array of costs for this automaton *)
+		costs.(automaton_index) <- Array.make nb_locations None;
 		(* Create the array of list of transitions for this automaton *)
 		transitions.(automaton_index) <- Array.make nb_locations [];
 		(* Create the array of invariants for this automaton *)
@@ -936,7 +949,7 @@ let make_automata index_of_variables index_of_automata index_of_locations labels
 		stopwatches_array.(automaton_index) <- Array.make nb_locations [];
 		(* For each location: *)
 		List.iter
-		(fun (location_name, invariant, stopwatches, parsed_transitions) -> 
+		(fun (location_name, cost, invariant, stopwatches, parsed_transitions) -> 
 			(* Get the index of the location *)
 			let location_index = try (Hashtbl.find index_of_locations.(automaton_index) location_name) with Not_found -> raise (InternalError ("Impossible to find the index of location '" ^ location_name ^ "'.")) in
 			(* Create the list of actions for this location *)
@@ -974,10 +987,21 @@ let make_automata index_of_variables index_of_automata index_of_locations labels
 			) ([], []) parsed_transitions in
 			(* Update the array of actions per location *)
 			actions_per_location.(automaton_index).(location_index) <- (List.rev (list_only_once list_of_actions));
+			
+			(* Update the array of costs per location *)
+			begin
+			match cost with
+				| Some cost -> 
+					costs.(automaton_index).(location_index) <- Some cost;
+				| None -> ()
+			end;
+			
 			(* Update the array of transitions per location *)
 			transitions.(automaton_index).(location_index) <- (List.rev list_of_transitions);
+			
 			(* Update the array of invariants *)
 			invariants.(automaton_index).(location_index) <- invariant;
+			
 			(* Does the program has stopwatches? *)
 			if stopwatches != [] then has_stopwatches := true;
 			(* Convert the stopwatches names into variables *)
@@ -987,6 +1011,7 @@ let make_automata index_of_variables index_of_automata index_of_locations labels
 					Hashtbl.find index_of_variables stopwatch_index
 				)
 				list_of_stopwatch_names;
+				
 		) locations;
 		(* Update the array of actions per automaton *)
 		let all_actions_for_this_automaton = Array.fold_left (fun list_of_all_actions list_of_actions ->
@@ -1025,7 +1050,7 @@ let make_automata index_of_variables index_of_automata index_of_locations labels
 	let actions_per_location = fun automaton_index location_index -> actions_per_location.(automaton_index).(location_index) in
 
 	(* Return all the structures in a functional representation *)
-	actions, action_names, action_types, actions_per_automaton, actions_per_location, invariants, stopwatches_array, !has_stopwatches, transitions
+	actions, action_names, action_types, actions_per_automaton, actions_per_location, costs, invariants, stopwatches_array, !has_stopwatches, transitions
 
 
 (*--------------------------------------------------*)
@@ -1047,6 +1072,25 @@ let make_automata_per_action actions_per_automaton nb_automata nb_actions =
 	(* Return a functional representation *)
 	fun automaton_index -> automata_per_action.(automaton_index)
 	
+
+(*--------------------------------------------------*)
+(* Convert the costs *)
+(** TODO: do not call if actually no cost! *)
+(*--------------------------------------------------*)
+(* Convert the structure: 'automaton_index -> location_index -> ParsingStructure.linear_expression' into a structure: 'automaton_index -> location_index -> Constraint.linear_expression' *)
+let convert_costs index_of_variables constants costs =
+	(* Convert for each automaton *)
+	let costs = Array.map (
+		(* Convert for each location *)
+		Array.map (
+			function
+			| None -> None
+			| Some cost -> Some (linear_term_of_linear_expression index_of_variables constants cost)
+		)
+	) costs in
+	(* Functional representation *)
+	fun automaton_index location_index -> costs.(automaton_index).(location_index)
+
 
 (*--------------------------------------------------*)
 (* Convert the invariants *)
@@ -1486,7 +1530,7 @@ let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	print_message Debug_total ("*** Building automata...");
 	(* Get all the possible actions for every location of every automaton *)
-	let actions, action_names, action_types, actions_per_automaton, actions_per_location, invariants, stopwatches, has_stopwatches, transitions =
+	let actions, action_names, action_types, actions_per_automaton, actions_per_location, costs, invariants, stopwatches, has_stopwatches, transitions =
 		make_automata index_of_variables index_of_automata index_of_locations labels index_of_labels removed_synclab_names parsed_automata in
 	let nb_actions = List.length actions in
 
@@ -1494,6 +1538,10 @@ let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_
 	print_message Debug_total ("*** Building automata per action...");
 	let automata_per_action = make_automata_per_action actions_per_automaton nb_automata nb_actions in
 
+	(* Convert the costs *)
+	print_message Debug_total ("*** Building costs (if any)...");
+	let costs = convert_costs index_of_variables constants costs in
+  	
 	(* Convert the invariants *)
 	print_message Debug_total ("*** Building invariants...");
 	let invariants = convert_invariants index_of_variables constants invariants in
@@ -1661,6 +1709,9 @@ let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_
 	(* The list of actions for each automaton for each location *)
 	actions_per_location = actions_per_location;
 
+	(* The cost for each automaton and each location *)
+	costs = costs;
+	
 	(* The invariant for each automaton and each location *)
 	invariants = invariants;
 	(* The transitions for each automaton and each location and each action *)
