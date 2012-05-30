@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Ulrich Kuehne, Etienne Andre
  * Created:       2010/07/22
- * Last modified: 2012/02/22
+ * Last modified: 2012/05/30
  *
  ************************************************************)
 
@@ -49,6 +49,9 @@ let slast = ref []
 
 (* Number of random selections of pi0-incompatible inequalities in IM *)
 let nb_random_selections = ref 0
+
+(* Instantiated costs (no need to compute them for each location) *)
+let instantiated_costs = Array.make (Hashtbl.length index_of_automata) (Array.make 0 (NumConst.zero))
 
 
 
