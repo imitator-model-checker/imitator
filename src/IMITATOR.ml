@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2009/09/07
- * Last modified: 2012/02/20
+ * Last modified: 2012/05/30
  *
  **************************************************)
 
@@ -834,6 +834,19 @@ if not (LinearConstraint.is_satisfiable initial_constraint_after_time_elapsing) 
 );
 (* Print the initial state after time elapsing *)
 print_message Debug_medium ("\nInitial state after time-elapsing:\n" ^ (ImitatorPrinter.string_of_state program init_state_after_time_elapsing) ^ "\n");
+
+
+
+(**************************************************)
+(* EXPERIMENTAL: branch and bound *)
+(**************************************************)
+
+if options#imitator_mode = Inverse_method && options#branch_and_bound then(
+	Reachability.branch_and_bound program pi0 init_state_after_time_elapsing;
+	terminate_program();
+);
+
+
 
 
 (**************************************************)

@@ -7,7 +7,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Ulrich Kuehne
  * Created:       2010
- * Last modified: 2012/03/14
+ * Last modified: 2012/05/30
  *
  ****************************************************************)
  
@@ -51,7 +51,9 @@ class imitator_options =
 
 		(* ANALYSIS OPTIONS *)
 
-		(* limit number of iterations *)		
+		(* yet another (testing) mode *)
+		val mutable branch_and_bound = ref false
+		(* limit number of iterations *)
 		val mutable post_limit = ref None
 		(* limit on runtime *)
 		val mutable time_limit = ref None
@@ -90,6 +92,7 @@ class imitator_options =
 		
 		method acyclic = !acyclic
 		method acyclic_unset = (acyclic := false)
+		method branch_and_bound = !branch_and_bound
 		method cart = !cart
 		method dynamic = !dynamic
 		method fancy = !fancy
@@ -160,6 +163,7 @@ class imitator_options =
 			(* Options *)
 			and speclist = [
 				("-acyclic", Set acyclic, " Test if a new state was already encountered only with states of the same depth. To be set only if the system is fully acyclic (no backward branching, i.e., no cycle). Default: 'false'");
+				("-bab", Set branch_and_bound, " Experimental new feature of IMITATOR, based on cost optimization. Default: 'false'");
 				("-cart", Set cart, " Plot cartography before terminating the program. Uses the first two parameters with ranges. Default: false."); 
 				("-debug", String set_debug_mode_ref, " Print more or less information. Can be set to 'nodebug', 'standard', 'low', 'medium', 'high', 'total'. Default: 'standard'");
 				("-dynamic", Set dynamic, "Perform the on-the-fly intersection. Defaut : 'false'");

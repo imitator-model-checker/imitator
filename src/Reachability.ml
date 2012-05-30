@@ -50,9 +50,38 @@ let slast = ref []
 (* Number of random selections of pi0-incompatible inequalities in IM *)
 let nb_random_selections = ref 0
 
-(* Instantiated costs (no need to compute them for each location) *)
-let instantiated_costs = Array.make (Hashtbl.length index_of_automata) (Array.make 0 (NumConst.zero))
 
+(**************************************************************)
+(* Costs *)
+(**************************************************************)
+
+(* Instantiated costs (no need to compute them for each location) *)
+let instantiated_costs = ref (Array.make 0 (Array.make 0 NumConst.zero)) (*Array.make (Hashtbl.length index_of_automata) (Array.make 0 (NumConst.zero))*)
+
+let instantiate_costs program pi0 =
+	(* Create an empty array *)
+	let costs = Array.make program.nb_automata (Array.make 0 NumConst.zero) in
+	(* For each automaton *)
+	for automaton_index = 0 to program.nb_automata - 1 do
+		(* Retrieve the number of locations for this automaton *)
+		let nb_locations = List.length (program.locations_per_automaton automaton_index) in
+		(* Create the array of costs for this automaton *)
+		costs.(automaton_index) <- Array.make nb_locations NumConst.zero;
+		(* For each location *)
+		for location_index = 0 to nb_locations - 1 do
+			(* Retrieve the cost *)
+			let cost = program.costs automaton_index location_index in
+			(* Instantiate it *)
+			let instantiated_cost = match cost with 
+				| None -> NumConst.zero 
+				| Some cost -> LinearConstraint.evaluate_linear_term pi0 cost in
+			(* Save it *)
+			costs.(automaton_index).(location_index) <- instantiated_cost;
+		done;
+	done;
+	(* Set the global array *)
+	instantiated_costs := costs;
+	()
 
 
 (**************************************************************)
@@ -1245,6 +1274,184 @@ let post program pi0 reachability_graph orig_state_index =
 	List.rev (!new_states)
 
 
+	
+(*---------------------------------------------------*)
+(* Compute and print the final constraint *)
+(*---------------------------------------------------*)
+let compute_and_return_result program reachability_graph nb_iterations counter =
+	(*--------------------------------------------------*)
+	(* Print information *)
+	(*--------------------------------------------------*)
+	print_message Debug_standard (
+		"\nFixpoint reached after "
+		^ (string_of_int nb_iterations) ^ " iteration" ^ (s_of_int nb_iterations) ^ ""
+		^ " in " ^ (string_of_seconds (time_from counter)) ^ ": "
+		^ (string_of_int (Graph.nb_states reachability_graph)) ^ " reachable state" ^ (s_of_int (Graph.nb_states reachability_graph))
+		^ " with "
+		^ (string_of_int (Hashtbl.length (reachability_graph.transitions_table))) ^ " transition" ^ (s_of_int (Hashtbl.length (reachability_graph.transitions_table))) ^ ".");
+	if program.options#imitator_mode != Reachability_analysis && (not program.options#no_random) then (
+		if(!nb_random_selections > 0) then(
+			print_message Debug_standard "Analysis may have been non-deterministic:";
+			print_message Debug_standard ((string_of_int !nb_random_selections) ^ " random selection" ^ (s_of_int !nb_random_selections) ^ " have been performed.");
+		) else (
+			print_message Debug_standard "Analysis has been fully deterministic.";
+		)
+	);
+
+	(*--------------------------------------------------*)
+	(* Performances *)
+	(*--------------------------------------------------*)
+	if program.options#statistics then (
+		(* PPL *)
+		print_message Debug_standard "--------------------";
+		print_message Debug_standard "Statistics on PPL";
+		print_message Debug_standard ("--------------------" ^ (LinearConstraint.get_statistics ()));
+		
+		(* Graph *)
+		print_message Debug_standard "--------------------";
+		print_message Debug_standard "Statistics on Graph";
+		print_message Debug_standard "--------------------";
+		print_message Debug_standard (Graph.get_statistics ());
+		print_message Debug_standard (Graph.get_statistics_states reachability_graph);
+		
+		print_message Debug_standard "--------------------";
+		print_message Debug_standard "Statistics on Cache";
+		print_message Debug_standard "--------------------";
+		print_stats ();
+		
+		print_message Debug_standard "--------------------";
+		print_message Debug_standard "Statistics on Reachability";
+		print_message Debug_standard "--------------------";
+		print_message Debug_standard ("Number of early skips because of unsatisfiable guards: " ^ (string_of_int !nb_early_unsatisfiable));
+		print_message Debug_standard ("Number of early skips because no actions: " ^ (string_of_int !nb_early_skip));
+		print_message Debug_standard ("Number of unsatisfiable constraints: " ^ (string_of_int !nb_unsatisfiable));
+		print_message Debug_standard ("Number of unsat1: " ^ (string_of_int !nb_unsat1));
+		print_message Debug_standard ("Number of unsat2: " ^ (string_of_int !nb_unsat2));
+		print_message Debug_standard ("Number of combinations considered: " ^ (string_of_int !nb_combinations));
+		
+		print_message Debug_standard "--------------------";
+		print_message Debug_standard "Statistics on memory";
+		print_message Debug_standard "--------------------";
+		let gc_stat = Gc.stat () in
+		let nb_words = gc_stat.minor_words +. gc_stat.major_words -. gc_stat.promoted_words in
+		let nb_ko = nb_words *. 4.0 /. 1024.0 in
+		print_message Debug_standard ("Total memory: " ^ (string_of_float nb_ko) ^ " KB (i.e., " ^ (string_of_float nb_words) ^ " words)");
+		Gc.print_stat stdout;
+(*		print_message Debug_standard "--------------------";
+		Gc.major();
+		Gc.print_stat stdout;
+		print_message Debug_standard "--------------------";
+		Gc.full_major();
+		Gc.print_stat stdout;*)
+	);
+
+	(*--------------------------------------------------*)
+	(* Computation of the returned constraint *)
+	(*--------------------------------------------------*)
+	let my_constraint =
+	if program.options#imitator_mode = Reachability_analysis then Convex_constraint (LinearConstraint.true_constraint ())
+	else(
+		(* Case: dynamic OR case IM standard : return the intersection *)
+		if program.options#dynamic || (not program.options#union && not program.options#pi_compatible) then (
+			Convex_constraint !k_result
+		) else (
+		(* Case union : return the constraint on the parameters associated to slast*)
+			if program.options#union then (
+				let list_of_constraints =
+				List.map (fun state_index ->
+					print_message Debug_medium ("\nOne state found.");
+					(* Get the constraint on clocks and parameters *)
+					let (_, current_constraint) =
+						Graph.get_state reachability_graph state_index
+					(* Eliminate clocks *)
+					in LinearConstraint.hide program.clocks_and_discrete current_constraint
+				) !slast
+				in Union_of_constraints list_of_constraints
+			)
+		(* Case IMorig : return only the current constraint *)
+			else if program.options#pi_compatible then (
+				let (_ , k_constraint) = get_state reachability_graph 0 in
+					Convex_constraint (LinearConstraint.hide program.clocks_and_discrete k_constraint) 
+			) else (
+				raise (InternalError ("This code should be unreachable (in end of post_star, when returning the constraint)."));
+			)
+(*		(* Case IM : intersection *)
+			else (
+				(** HERE PROBLEM IF ONE WANTS TO COMPUTE THE states FILE AFTER (destruction of the states) **)
+				Convex_constraint (Graph.compute_k0_destructive program reachability_graph)
+			)*)
+		)
+	)
+	in
+
+	(*--------------------------------------------------*)
+	(* Return the result *)
+	(*--------------------------------------------------*)
+	my_constraint, reachability_graph, nb_iterations, counter
+
+
+
+
+(*---------------------------------------------------*)
+(* EXPERIMENTAL BRANCH AND BOUND FUNCTION *)
+(*---------------------------------------------------*)
+let branch_and_bound program pi0 init_state = 
+	print_message Debug_standard ("START BRANCH AND BOUND");
+	
+	(* Instantiate all costs associated to locations, for once *)
+	print_message Debug_standard ("Instantiate costs");
+	instantiate_costs program pi0;
+	
+	(* Debug print *)
+	if debug_mode_greater Debug_total then (
+		print_message Debug_standard ("Print costs");
+		(* For each automaton *)
+		for automaton_index = 0 to program.nb_automata - 1 do
+			(* Retrieve the number of locations for this automaton *)
+			let nb_locations = List.length (program.locations_per_automaton automaton_index) in
+			(* For each location *)
+			for location_index = 0 to nb_locations - 1 do
+				(* Retrieve the cost *)
+				let cost = (!instantiated_costs).(automaton_index).(location_index) in
+				(* Print it *)
+					print_message Debug_total ((program.automata_names automaton_index) ^ " --> " ^ (program.location_names automaton_index location_index) ^ " : " ^ (NumConst.string_of_numconst cost));
+			done;
+		done;
+		
+	);
+	
+	(* copy init state, as it might be destroyed later *)
+	let init_loc, init_constr = init_state in
+	let init_state = (init_loc, LinearConstraint.copy init_constr) in
+	(* Get some variables *)
+	let nb_actions = program.nb_actions in
+	let nb_variables = program.nb_variables in
+	let nb_automata = program.nb_automata in
+	(* Debut prints *)
+	print_message Debug_low ("Starting reachability analysis (post*) from state:");
+	print_message Debug_low (string_of_state program init_state);
+	(* Guess the number of reachable states *)
+	let guessed_nb_states = 10 * (nb_actions + nb_automata + nb_variables) in 
+	let guessed_nb_transitions = guessed_nb_states * nb_actions in 
+	print_message Debug_total ("I guess I will reach about " ^ (string_of_int guessed_nb_states) ^ " states with " ^ (string_of_int guessed_nb_transitions) ^ " transitions.");
+	(* Create the reachability graph *)
+	let reachability_graph = Graph.make guessed_nb_transitions in
+	
+	(* Add the initial state to the reachable states *)
+	let init_state_index, _ = Graph.add_state program reachability_graph init_state in
+	
+	(*--------------------------------------------------*)
+	(* Perform the post^* *)
+	(*--------------------------------------------------*)
+	let newly_found_new_states = ref [init_state_index] in
+	let nb_iterations = ref 1 in
+	let limit_reached = ref false in
+
+	
+	
+	()
+
+
 
 (*---------------------------------------------------*)
 (* Compute the reachability graph from a given state *)
@@ -1379,112 +1586,7 @@ let post_star program pi0 init_state =
 			);
 	);
 
-	(*--------------------------------------------------*)
-	(* Debug *)
-	(*--------------------------------------------------*)
-	print_message Debug_standard (
-		"\nFixpoint reached after "
-		^ (string_of_int (!nb_iterations)) ^ " iteration" ^ (s_of_int (!nb_iterations)) ^ ""
-		^ " in " ^ (string_of_seconds (time_from !counter)) ^ ": "
-		^ (string_of_int (Graph.nb_states reachability_graph)) ^ " reachable state" ^ (s_of_int (Graph.nb_states reachability_graph))
-		^ " with "
-		^ (string_of_int (Hashtbl.length (reachability_graph.transitions_table))) ^ " transition" ^ (s_of_int (Hashtbl.length (reachability_graph.transitions_table))) ^ ".");
-	if program.options#imitator_mode != Reachability_analysis && (not program.options#no_random) then (
-		if(!nb_random_selections > 0) then(
-			print_message Debug_standard "Analysis may have been non-deterministic:";
-			print_message Debug_standard ((string_of_int !nb_random_selections) ^ " random selection" ^ (s_of_int !nb_random_selections) ^ " have been performed.");
-		) else (
-			print_message Debug_standard "Analysis has been fully deterministic.";
-		)
-	);
-
-	(*--------------------------------------------------*)
-	(* Performances *)
-	(*--------------------------------------------------*)
-	if program.options#statistics then (
-		(* PPL *)
-		print_message Debug_standard "--------------------";
-		print_message Debug_standard "Statistics on PPL";
-		print_message Debug_standard ("--------------------" ^ (LinearConstraint.get_statistics ()));
-		
-		(* Graph *)
-		print_message Debug_standard "--------------------";
-		print_message Debug_standard "Statistics on Graph";
-		print_message Debug_standard "--------------------";
-		print_message Debug_standard (Graph.get_statistics ());
-		print_message Debug_standard (Graph.get_statistics_states reachability_graph);
-		
-		print_message Debug_standard "--------------------";
-		print_message Debug_standard "Statistics on Cache";
-		print_message Debug_standard "--------------------";
-		print_stats ();
-		
-		print_message Debug_standard "--------------------";
-		print_message Debug_standard "Statistics on Reachability";
-		print_message Debug_standard "--------------------";
-		print_message Debug_standard ("Number of early skips because of unsatisfiable guards: " ^ (string_of_int !nb_early_unsatisfiable));
-		print_message Debug_standard ("Number of early skips because no actions: " ^ (string_of_int !nb_early_skip));
-		print_message Debug_standard ("Number of unsatisfiable constraints: " ^ (string_of_int !nb_unsatisfiable));
-		print_message Debug_standard ("Number of unsat1: " ^ (string_of_int !nb_unsat1));
-		print_message Debug_standard ("Number of unsat2: " ^ (string_of_int !nb_unsat2));
-		print_message Debug_standard ("Number of combinations considered: " ^ (string_of_int !nb_combinations));
-		
-		print_message Debug_standard "--------------------";
-		print_message Debug_standard "Statistics on memory";
-		print_message Debug_standard "--------------------";
-		let gc_stat = Gc.stat () in
-		let nb_words = gc_stat.minor_words +. gc_stat.major_words -. gc_stat.promoted_words in
-		let nb_ko = nb_words *. 4.0 /. 1024.0 in
-		print_message Debug_standard ("Total memory: " ^ (string_of_float nb_ko) ^ " KB (i.e., " ^ (string_of_float nb_words) ^ " words)");
-		Gc.print_stat stdout;
-(*		print_message Debug_standard "--------------------";
-		Gc.major();
-		Gc.print_stat stdout;
-		print_message Debug_standard "--------------------";
-		Gc.full_major();
-		Gc.print_stat stdout;*)
-	);
-
-	(*--------------------------------------------------*)
-	(* Computation of the returned constraint *)
-	(*--------------------------------------------------*)
-	let my_constraint =
-	if program.options#imitator_mode = Reachability_analysis then Convex_constraint (LinearConstraint.true_constraint ())
-	else(
-		(* Case: dynamic OR case IM standard : return the intersection *)
-		if program.options#dynamic || (not program.options#union && not program.options#pi_compatible) then (
-			Convex_constraint !k_result
-		) else (
-		(* Case union : return the constraint on the parameters associated to slast*)
-			if program.options#union then (
-				let list_of_constraints =
-				List.map (fun state_index ->
-					print_message Debug_medium ("\nOne state found.");
-					(* Get the constraint on clocks and parameters *)
-					let (_, current_constraint) =
-						Graph.get_state reachability_graph state_index
-					(* Eliminate clocks *)
-					in LinearConstraint.hide program.clocks_and_discrete current_constraint
-				) !slast
-				in Union_of_constraints list_of_constraints
-			)
-		(* Case IMorig : return only the current constraint *)
-			else if program.options#pi_compatible then (
-				let (_ , k_constraint) = get_state reachability_graph 0 in
-					Convex_constraint (LinearConstraint.hide program.clocks_and_discrete k_constraint) 
-			) else (
-				raise (InternalError ("This code should be unreachable (in end of post_star, when returning the constraint)."));
-			)
-(*		(* Case IM : intersection *)
-			else (
-				(** HERE PROBLEM IF ONE WANTS TO COMPUTE THE states FILE AFTER (destruction of the states) **)
-				Convex_constraint (Graph.compute_k0_destructive program reachability_graph)
-			)*)
-		)
-	)
-	in
-
-	(*--------------------------------------------------*)
-	(* Return the result *)
-	(*--------------------------------------------------*)
-	my_constraint, reachability_graph, !nb_iterations, !counter
+	(* Return the final constraint *)
+	compute_and_return_result program reachability_graph !nb_iterations !counter
+	
+	
