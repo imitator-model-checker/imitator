@@ -143,6 +143,15 @@
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-
 \begin{block}{An Example of Hybrid System: The Bouncing Ball}
 
+	Hybrid systems combine
+	\begin{itemize}
+		\item Discrete behavior
+		\item Continuous behavior
+	\end{itemize}
+	
+	\vspace{1cm}
+
+
 
 % \begin{figure}
 	\begin{tikzpicture}[scale=1.8]
@@ -183,10 +192,10 @@
 
       \node at (0,6) (INIT) {$\vari{v_x} = \param{v_0}$};
 
-      \path (q0) edge[left,->] node {\actlab{safe}} (q1);
-      \path (q0) edge[right,->] node {\actlab{crash}} (q2);
-      \path (q0) edge[loop above] node {\actlab{bounce}} (q0);
-      \path (INIT) edge[->,bend right=30] (q0);      
+      \path (q0) edge[left,->, line width=1.5] node {\actlab{safe}} (q1);
+      \path (q0) edge[right,->, line width=1.5] node {\actlab{crash}} (q2);
+      \path (q0) edge[loop above, line width=1.5] node {\actlab{bounce}} (q0);
+      \path (INIT) edge[->,bend right=30, line width=1.5] (q0);      
     \end{scope}
 
     \begin{scope}[yshift=-2cm]
@@ -222,7 +231,8 @@
 \begin{block}{Parameterized Hybrid Automata}
 
 \begin{itemize}
-	\item \coulitem{Hybrid Automata} (HA): Set of \vari{variables}, \actlab{actions}, locations (with an activity and an invariant), and discrete transitions (with jumps).
+	\item \coulitem{Hybrid Automata} (HA): Sets of \vari{variables}, \actlab{actions}, locations, % (with an activity and an invariant)
+		and discrete transitions % (with jumps).
 	\item \coulitem{Parameterized Hybrid Automata}: HA augmented with a set of \param{timing parameters} (unknown constants)
 	\vspace{1cm}
 	\item Example: Water Tank
@@ -232,7 +242,7 @@
 	\newcommand{\scalepump}{3.5}
 
   \small
-  \begin{tikzpicture}[scale=\scalepump * 0.4,->,>=stealth']
+  \begin{tikzpicture}[scale=\scalepump * 0.4,very thick,->,>=stealth']
 
     \node[state] (ON)
     {
@@ -316,7 +326,7 @@
     \path
     (INIT) edge (ON)
 
-    (ON)  edge[bend left=30] node[anchor=right,left]
+    (ON)  edge[bend left=30] node[above left] % , anchor=right,left
     {
       \begin{tabular}{r}
         $\vari{w} = \param{M} /$ \\
@@ -340,7 +350,7 @@
       \end{tabular}
     } (START)
 
-    (START)  edge[bend left=30] node[anchor=right,left]
+    (START)  edge[bend left=30] node[below left]
     {
       \begin{tabular}{r}
         $\vari{t} = \param{delay} /$ \\
@@ -348,7 +358,7 @@
       \end{tabular}
     } (ON)
 
-    (STOP)  edge[bend left=30] node[anchor=left,right]
+    (STOP)  edge[bend left=30] node[above right]
     {
       \begin{tabular}{l}
         $\vari{w} > \param{max} /$ \\
@@ -356,7 +366,7 @@
       \end{tabular}
     } (ERROR)
 
-    (START)  edge[bend right=30] node[anchor=left,right]
+    (START)  edge[bend right=30] node[below right]
     {
       \begin{tabular}{l}
         $\vari{w} < \param{min} /$ \\
@@ -364,7 +374,7 @@
       \end{tabular}
     } (ERROR);
 
-    \draw (-5,-8.5) node {\refer{HPR97}};
+    \node at (-5,-8.5) [draw=none] {\refer{HPR97}}; % 
 
 
   \end{tikzpicture}
@@ -387,8 +397,8 @@
     \draw (5,-4) node {};
 
 
-    \draw[->] (0,0) -- (0,12); \draw (0,13) node {$w$};
-    \draw[->] (0,0) -- (16,0); \draw (17.4,0) node {$time$};
+    \draw[->, line width=1.2] (0,0) -- (0,12); \draw (0,13) node {$w$};
+    \draw[->, line width=1.2] (0,0) -- (16,0); \draw (17.4,0) node [below] {$time$};
 
     \draw (-0.2,1) -- (0,1); \draw (-1.5,1) node {$min$};
     \draw (-0.2,4) -- (0,4); \draw (-1.5,4) node {$m$};
@@ -446,8 +456,12 @@
   \end{itemize}
 
   \vspace{1cm}
-  
+
 Synthesis problem: ``\couleur{find values for the timing parameters such that the system behaves well}''.
+
+\vspace{1cm}
+
+We will synthesize here a \couleur{constraint}, viz., a convex and dense set of values.
 
 \end{block}
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-
@@ -486,7 +500,7 @@ Synthesis problem: ``\couleur{find values for the timing parameters such that th
 \begin{itemize}
 	\item \coulitem{Inverse Method}~\refer{FK11}
 	\begin{itemize}
-		\item Given a HA and a reference valuation~$\pio$ for the parameters, synthesize a \couleur{constraint} $K_0$ guaranteeing the \couleur{same time-abstract behavior} as for~$\pio$
+		\item Given an HA and a reference valuation~$\pio$ for the parameters, synthesize a \couleur{constraint} $K_0$ guaranteeing the \couleur{same time-abstract behavior} as for~$\pio$
 
   \begin{center}
   \begin{tikzpicture}[scale=1]
@@ -504,13 +518,14 @@ Synthesis problem: ``\couleur{find values for the timing parameters such that th
     \end{scope}
     
     \begin{scope}[xshift=0cm]
-      \draw (0,0) node[location] (Q0) {$s_0$};
-      \draw (3,0) node[location] (Q1) {$s_1$};
-      \draw (6,2) node[location] (Q2) {$s_2$};
-      \draw (6,-2) node[location] (Q3) {$s_3$};
-      \draw (9,-2) node[location] (Q4) {$s_4$};
-      \draw (12,1) node[location] (Q5) {$s_5$};
-      \draw (12,-2) node[location] (Q6) {$s_6$};
+	\tikzstyle{etat}=[location, inner sep=5pt]
+      \draw (0,0) node[etat] (Q0) {$s_0$};
+      \draw (3,0) node[etat] (Q1) {$s_1$};
+      \draw (6,2) node[etat] (Q2) {$s_2$};
+      \draw (6,-2) node[etat] (Q3) {$s_3$};
+      \draw (9,-2) node[etat] (Q4) {$s_4$};
+      \draw (12,1) node[etat] (Q5) {$s_5$};
+      \draw (12,-2) node[etat] (Q6) {$s_6$};
 
       \path (Q0) edge[->,double] (Q1);
       \path (Q1) edge[->,double] (Q2);
@@ -520,12 +535,12 @@ Synthesis problem: ``\couleur{find values for the timing parameters such that th
       \path (Q4) edge[->,double] (Q6);
       \path (Q6) edge[->,double,bend left=35] (Q3);
 
-      \draw (6,2) node[location,color=gray!30,fill=gray!10,text=gray!30] (Q2b) {$s_2$};
+      \draw (6,2) node[etat,color=gray!30,fill=gray!10,text=gray!30] (Q2b) {$s_2$};
       \path (Q1) edge[->,double,color=gray!30] (Q2);      
       \draw[color=red,very thick] (5,3) -- (7,1);
       \draw[color=red,very thick] (5,1) -- (7,3);
 
-      \draw (12,1) node[location,color=gray!30,fill=gray!10,text=gray!30] (Q5b) {$s_5$};
+      \draw (12,1) node[etat,color=gray!30,fill=gray!10,text=gray!30] (Q5b) {$s_5$};
       \path (Q4) edge[->,double,color=gray!30] (Q5);     
       \draw[color=red,very thick] (11,2) -- (13,0);
       \draw[color=red,very thick] (11,0) -- (13,2);            
@@ -540,7 +555,7 @@ Synthesis problem: ``\couleur{find values for the timing parameters such that th
 
 	\item \coulitem{Behavioral Cartography}~\refer{AF10}
 	\begin{itemize}
-		\item Performs a tiling of the parametric space, and partition it between good and bad tiles w.r.t.~a given property
+		\item Performs a tiling of the parametric space, and partition it between good and bad tiles w.r.t.\ a given property
 			
 		\begin{columns}
 		\begin{column}{0.5\textwidth}
