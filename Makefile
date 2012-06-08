@@ -6,7 +6,7 @@
 #
 #  Author:        Etienne Andre
 #  Created:       2009/09/07
-#  Last modified: 2012/02/20
+#  Last modified: 2012/06/07
 #  Ocaml version: 3.12.1
 ###############################################################
 
@@ -34,17 +34,21 @@ ifndef CLIB_PATH
   CLIB_PATH = /usr/lib -I /usr/local/lib
 endif 
 
-INCLUDE = -I $(SRC) -I $(EXTLIB_PATH) -I $(OCAML_PPL_PATH) -I $(OCAML_GMP_PATH) -I $(CLIB_PATH)
+INCLUDE = -I $(SRC) -I $(EXTLIB_PATH) -I $(OCAML_PPL_PATH) -I $(OCAML_GMP_PATH)
 
-# native c libraries
+# native c libraries (old version)
 # CLIBS = -cclib -lpwl -cclib -lm -cclib -lgmpxx -cclib -lgmp -cclib -lppl
 
-# ALLOWS STATIC COMPILING IN 64 BITS :-)
-CLIBS = -cclib '-static -lppl -lpwl -lppl_ocaml -lstdc++ -lmlgmp -lmpfr -lgmp -lgmpxx ' 
+# native c libraries (updated 2012/06/07)
+CLIBS = -cclib -lppl
 
-# ALLOWS STATIC COMPILING IN 32 BITS :-)
+# FOR STATIC COMPILING IN 32 BITS
+STATIC32CLIBS = -cclib '-static -lppl -lcamlrun -ltinfo -lppl_ocaml -lstdc++ -lgmp -lgmpxx'
+# (old version)
 # CLIBS = -cclib '-static -lppl -lpwl -lcamlrun -ltinfo -lppl_ocaml -lstdc++ -lmlgmp -lmpfr -lgmp -lgmpxx'
 
+# ALLOWS STATIC COMPILING IN 64 BITS :-)
+# CLIBS = -cclib '-static -lppl -lpwl -lppl_ocaml -lstdc++ -lmlgmp -lmpfr -lgmp -lgmpxx ' 
 
 
 # ocaml lib files
@@ -55,7 +59,8 @@ OOLIBS = str.cmxa unix.cmxa extLib.cmxa bigarray.cmxa gmp.cmxa ppl_ocaml.cmxa
 
 # external libs for compiling with PPL support
 export LIBS = $(CLIBS) $(OLIBS)
-export OPTLIBS = $(CLIBS) $(OOLIBS) 
+export STATIC32LIBS = $(STATIC32CLIBS) $(OLIBS)
+# export OPTLIBS = $(CLIBS) $(OOLIBS) 
 
 
 SRC = src
@@ -66,17 +71,17 @@ EXAMPLE_PATH = examples
 
 # main object
 MAIN = $(SRC)/IMITATOR.cmo
-MAIN_OPT = $(MAIN:.cmo=.cmx)
+# MAIN_OPT = $(MAIN:.cmo=.cmx)
 
 # modules to compile
-MODULES = Global NumConst Options LinearConstraint Automaton Cache Pi0Lexer Pi0Parser Pi0CubeLexer Pi0CubeParser ImitatorLexer ImitatorParser GMLLexer GMLParser ImitatorPrinter Graph PTA2CLP PTA2GML ProgramConverter Reachability Graphics
+MODULES = Global NumConst ReachabilityTree Options LinearConstraint Automaton Cache Pi0Lexer Pi0Parser Pi0CubeLexer Pi0CubeParser ImitatorLexer ImitatorParser GMLLexer GMLParser ImitatorPrinter Graph PTA2CLP PTA2GML ProgramConverter Reachability Graphics
 
 # interfaces
-HEADERS = Global NumConst Options LinearConstraint Automaton Cache ParsingStructure AbstractImitatorFile Graph ImitatorPrinter PTA2CLP PTA2GML ProgramConverter Reachability Graphics
+HEADERS = Global NumConst ReachabilityTree Options LinearConstraint Automaton Cache ParsingStructure AbstractImitatorFile Graph ImitatorPrinter PTA2CLP PTA2GML ProgramConverter Reachability Graphics
 
 CMIS = $(addprefix $(SRC)/, $(addsuffix .cmi, $(HEADERS)))
 OBJS = $(addprefix $(SRC)/, $(addsuffix .cmo, $(MODULES)))
-OBJS_OPT = $(addprefix $(SRC)/, $(addsuffix .cmx, $(MODULES)))
+# OBJS_OPT = $(addprefix $(SRC)/, $(addsuffix .cmx, $(MODULES)))
 
 # parsers and lexers 
 LEXERS = Pi0Lexer Pi0CubeLexer ImitatorLexer GMLLexer
@@ -89,15 +94,17 @@ PAR_CMI = $(addprefix $(SRC)/, $(addsuffix .cmi, $(PARSERS)))
 
 # target library
 IMILIB = lib/imitator.cma
-IMILIB_OPT = $(IMILIB:.cma=.cmxa)
+# IMILIB_OPT = $(IMILIB:.cma=.cmxa)
 
 # target executable
 TARGET = bin/IMITATOR
-TARGET_OPT = bin/IMITATOR.opt
+# TARGET_OPT = bin/IMITATOR.opt
+TARGET_STATIC = bin/IMITATOR32
 
 
 default all: $(TARGET)
-opt: $(TARGET_OPT)
+# opt: $(TARGET_OPT)
+static32: $(TARGET_STATIC)
 
 
 header: $(CMIS)
@@ -119,7 +126,11 @@ $(IMILIB): header parser $(OBJS)
 	
 $(TARGET): $(IMILIB) $(MAIN)
 	@ echo [LINK] $(TARGET)
-	@ $(OCAMLC) -custom -o $(TARGET) $(INCLUDE) $(LIBS) $(IMILIB) $(MAIN)
+	@ $(OCAMLC) $(INCLUDE) $(LIBS) $(IMILIB) $(MAIN) -o $(TARGET)
+	
+$(TARGET_STATIC): $(IMILIB) $(MAIN)
+	@ echo [LINK] $(TARGET_STATIC)
+	@ $(OCAMLC) -custom $(INCLUDE) -I $(CLIB_PATH) $(STATIC32LIBS) $(IMILIB) $(MAIN) -o $(TARGET_STATIC) 
 	
 # $(TARGET_OPT): $(IMILIB_OPT) $(MAIN_OPT)
 # 	@ echo [LINK] $(TARGET_OPT)

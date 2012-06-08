@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Ulrich Kuehne, Etienne Andre
  * Created:       2010/07/22
- * Last modified: 2012/05/30
+ * Last modified: 2012/06/07
  *
  ************************************************************)
 

@@ -1,5 +1,5 @@
-                        Installing IMITATOR II
-                        ======================
+                        Installing IMITATOR
+                        ===================
 
 Note: In case of problem, please read this INSTALL file carefully before reporting a bug.
 
