@@ -1447,8 +1447,8 @@ let branch_and_bound program pi0 init_state =
 	(*--------------------------------------------------*)
 	(* Perform the post^* *)
 	(*--------------------------------------------------*)
-	let newly_found_new_states = ref [init_state_index] in
-	let nb_iterations = ref 1 in
+(* 	let newly_found_new_states = ref [init_state_index] in *)
+(* 	let nb_iterations = ref 1 in *)
 	let limit_reached = ref false in
 
 	
