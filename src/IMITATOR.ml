@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2009/09/07
- * Last modified: 2012/06/07
+ * Last modified: 2012/06/12
  *
  **************************************************)
 
@@ -662,6 +662,13 @@ match options#post_limit with
 	| None -> print_message Debug_medium "Considering no limit for the depth of the Post operation (default)."
 	| Some limit -> print_warning ("Considering a limit of " ^ (string_of_int limit) ^ " for the depth of the Post operation.")
 in ();
+
+(* LIMIT OF POST *)
+begin
+match options#states_limit with
+	| None -> print_message Debug_medium "Considering no limit for the number of states (default)."
+	| Some limit -> print_warning ("Considering a limit of " ^ (string_of_int limit) ^ " for the number of states.")
+end;
 
 (* TIME LIMIT *)
 let _ =

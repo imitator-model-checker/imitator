@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2009/09/08
- * Last modified: 2012/05/30
+ * Last modified: 2012/06/12
  *
  ****************************************************************)
 
@@ -157,10 +157,9 @@ let set_timed_mode () =
 (****************************************************************)
 
 (* Check if a list is empty *)
-let list_empty = function
-	| [] -> true
-	| _ -> false
-	
+let list_empty l =
+	l = []
+
 (* Return a random element in a list *)
 let random_element l =
 	Random.self_init();

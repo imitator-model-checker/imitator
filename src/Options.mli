@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2012/05/10
- * Last modified: 2012/05/30
+ * Last modified: 2012/06/12
  *
  ****************************************************************)
 
@@ -32,6 +32,7 @@ class imitator_options :
 		val mutable program_prefix : string ref
 		val mutable pta2clp : bool ref
 		val mutable pta2gml : bool ref
+		val mutable states_limit : int option ref
 		val mutable statistics : bool ref
 		val mutable step : NumConst.t ref
 		val mutable sync_auto_detection : bool ref
@@ -63,6 +64,7 @@ class imitator_options :
 		method program_prefix : string
 		method pta2clp : bool
 		method pta2gml : bool
+		method states_limit : int option
 		method statistics : bool
 		method step : NumConst.t
 		method sync_auto_detection : bool

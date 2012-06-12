@@ -1434,9 +1434,13 @@ let branch_and_bound program pi0 init_state =
 	let guessed_nb_states = 10 * (nb_actions + nb_automata + nb_variables) in 
 	let guessed_nb_transitions = guessed_nb_states * nb_actions in 
 	print_message Debug_total ("I guess I will reach about " ^ (string_of_int guessed_nb_states) ^ " states with " ^ (string_of_int guessed_nb_transitions) ^ " transitions.");
+
 	(* Create the reachability graph *)
 	let reachability_graph = Graph.make guessed_nb_transitions in
-	
+
+	(* Create the tree for exploration *)
+	let rtree = ReachabilityTree.create guessed_nb_states in
+
 	(* Add the initial state to the reachable states *)
 	let init_state_index, _ = Graph.add_state program reachability_graph init_state in
 	
@@ -1565,25 +1569,45 @@ let post_star program pi0 init_state =
 		(* Iterate *)
 		nb_iterations := !nb_iterations + 1;
 		(* Check if the limit has been reached *)
+		begin
 		match program.options#post_limit with
 			| None -> ()
 			| Some limit -> if !nb_iterations > limit then limit_reached := true;
+		end;
+		begin
+		match program.options#states_limit with
+			| None -> ()
+			| Some limit -> if (Graph.nb_states reachability_graph) > limit then limit_reached := true;
+		end;
+		begin
 		match program.options#time_limit with
 			| None -> ()
 			| Some limit -> if (get_time()) > (float_of_int limit) then limit_reached := true;
+		end;
 	done;
-
-	if !limit_reached && not (list_empty !newly_found_new_states) then(
+	
+	if !limit_reached && !newly_found_new_states != [] then(
+		begin
 		match program.options#post_limit with
 			| None -> ()
 			| Some limit -> if !nb_iterations > limit then print_warning (
 				"The limit number of iterations (" ^ (string_of_int limit) ^ ") has been reached. Post^* now stops, although there were still " ^ (string_of_int (List.length !newly_found_new_states)) ^ " state" ^ (s_of_int (List.length !newly_found_new_states)) ^ " to explore at this iteration."
 			);
+		end;
+		begin
+		match program.options#states_limit with
+			| None -> ()
+			| Some limit -> if (Graph.nb_states reachability_graph) > limit then print_warning (
+				"The limit number of states (" ^ (string_of_int limit) ^ ") has been reached. Post^* now stops, although there were still " ^ (string_of_int (List.length !newly_found_new_states)) ^ " state" ^ (s_of_int (List.length !newly_found_new_states)) ^ " to explore."
+			);
+		end;
+		begin
 		match program.options#time_limit with
 			| None -> ()
 			| Some limit -> if (get_time()) > (float_of_int limit) then print_warning (
 				"The time limit (" ^ (string_of_int limit) ^ " second" ^ (s_of_int limit) ^ ") has been reached. Post^* now stops, although there were still " ^ (string_of_int (List.length !newly_found_new_states)) ^ " state" ^ (s_of_int (List.length !newly_found_new_states)) ^ " to explore at this iteration."
 			);
+		end;
 	);
 
 	(* Return the final constraint *)

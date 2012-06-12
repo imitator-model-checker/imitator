@@ -5,9 +5,9 @@
  * Convert a parsing structure into an abstract program
  *
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
- * Author:        Ulrich Kuehne
+ * Author:        Ulrich Kuehne, Etienne Andre
  * Created:       2010
- * Last modified: 2012/05/30
+ * Last modified: 2012/06/12
  *
  ****************************************************************)
  
@@ -53,6 +53,8 @@ class imitator_options =
 
 		(* yet another (testing) mode *)
 		val mutable branch_and_bound = ref false
+		(* limit number of states *)
+		val mutable states_limit = ref None
 		(* limit number of iterations *)
 		val mutable post_limit = ref None
 		(* limit on runtime *)
@@ -110,6 +112,7 @@ class imitator_options =
 		method program_prefix = !program_prefix
 		method pta2clp = !pta2clp
 		method pta2gml = !pta2gml
+		method states_limit = !states_limit
 		method statistics = !statistics
 		method step = !step
 		method sync_auto_detection = !sync_auto_detection
@@ -181,6 +184,7 @@ class imitator_options =
 				("-post-limit", Int (fun i -> post_limit := Some i), " Limits the depth of the Post exploration. Default: no limit.");
 				("-PTA2CLP", Unit (fun _ -> pta2clp := true; imitator_mode := Translation), "Translate PTA into a CLP program (work in progress!), and exit without performing any analysis. Defaut : 'false'");
 				("-PTA2GML", Unit (fun _ -> pta2gml := true; imitator_mode := Translation), "Translate PTA into a GML program, and exit without performing any analysis. Experimental. Defaut : 'false'");
+				("-states-limit", Int (fun i -> states_limit := Some i), " States limit: will try to stop after reaching this number of states. Warning: the program may first finish to compute the current iteration before stopping. Default: no limit.");
 				("-statistics", Set statistics, " Print info on number of calls to PPL, and other statistics. Default: 'false'");
 				("-step", String (fun i -> (* SHOULD CHECK HERE THAT STEP IS EITHER A FLOAT OR AN INT *) step := (NumConst.numconst_of_string i)), " Step for the cartography. Default: 1/1.");
 				("-sync-auto-detect", Set sync_auto_detection, " Detect automatically the synchronized actions in each automaton. Default: false (consider the actions declared by the user)");
