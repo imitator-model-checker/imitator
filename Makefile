@@ -247,7 +247,7 @@ exe:
 ##### CASE STUDIES : HARDWARE #####
 
 # 	$(TARGET) $(EXAMPLE_PATH)/AndOr/AndOr.imi -mode reachability -post-limit 10
-	$(TARGET) $(EXAMPLE_PATH)/AndOr/AndOr.imi -mode reachability -states-limit 10
+# 	$(TARGET) $(EXAMPLE_PATH)/AndOr/AndOr.imi -mode reachability -states-limit 10
 
 # 	$(TARGET) $(EXAMPLE_PATH)/AndOr/AndOr.imi -mode reachability -post-limit 10 -PTA2GML
 

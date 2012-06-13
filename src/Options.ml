@@ -7,7 +7,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Ulrich Kuehne, Etienne Andre
  * Created:       2010
- * Last modified: 2012/06/12
+ * Last modified: 2012/06/13
  *
  ****************************************************************)
  
@@ -25,6 +25,8 @@ class imitator_options =
 		val mutable file = ref ""
 		(* pi0 file *)
 		val mutable pi0file = ref ""
+		(* Create a "fake" pi0 file *)
+		val mutable forcePi0 = ref false
 		(* GML syntax *)
 		val mutable fromGML = ref false
 		
@@ -99,6 +101,7 @@ class imitator_options =
 		method dynamic = !dynamic
 		method fancy = !fancy
 		method file = !file
+		method forcePi0 = !forcePi0
 		method fromGML = !fromGML
 		method imitator_mode = !imitator_mode
 		method inclusion = !inclusion
@@ -171,11 +174,12 @@ class imitator_options =
 				("-debug", String set_debug_mode_ref, " Print more or less information. Can be set to 'nodebug', 'standard', 'low', 'medium', 'high', 'total'. Default: 'standard'");
 				("-dynamic", Set dynamic, "Perform the on-the-fly intersection. Defaut : 'false'");
 				("-fancy", Set fancy, " Generate detailed state information for dot output. Default: false.");
+				("-forcePi0", Set forcePi0, "Create a predefined pi0 file of the form p1 = 1, p2 = 2, etc. Defaut : 'false'");
 				("-fromGML", Set fromGML, "GML syntax for input files (experimental). Defaut : 'false'");
 				("-incl", Set inclusion, " Consider an inclusion of region instead of the equality when performing the Post operation (e.g., as in algorithm IMincl defined in [AS11]). Default: 'false'");
 				("-IMorig", Set pi_compatible, " Algorithm IMoriginal (defined in [AS11]): return a constraint such that no pi-incompatible state can be reached. Default: 'false'");
 				("-IMunion", Set union, " Algorithm IMUnion (defined in [AS11]): Returns the union of the constraint on the parameters associated to the last state of each trace. Default: 'false'");
-				("-log-prefix", Set_string program_prefix, " Sets the prefix for log files. Default: [program_file].");
+				("-log-prefix", Set_string program_prefix, " Sets the prefix for log files. Default: [model].");
 				("-mode", String set_mode, " Mode for " ^ program_name ^ ". Use 'reachability' for a parametric reachability analysis (no pi0 needed). Use 'inversemethod' for the inverse method. For the behavioral cartography algorithm, use 'cover' to cover all the points within V0, or 'randomXX' where XX is a number to iterate randomly algorithm (e.g., random5 or random100). Default: 'inversemethod'.");
 				("-no-dot", Set no_dot, " No graphical output using 'dot'. Default: false.");
 				("-no-log", Set no_log, " No generation of log files. Default: false.");
@@ -210,7 +214,7 @@ class imitator_options =
 				)
 				(* If more than one argument : warns *)
 				else (
-					print_warning ("The program argument '" ^ arg ^ "' will be ignored.");
+					print_warning ("The argument '" ^ arg ^ "' will be ignored.");
 				)
 			) in
 
@@ -218,20 +222,21 @@ class imitator_options =
 
 			(* Case no file (except case translation) *)
 			if nb_args < 1 then(
-				print_error ("Please give a source file name.");
+				print_error ("Please give a file name for the model.");
 				Arg.usage speclist usage_msg;
 				abort_program (); exit(0)
 			);
 			
 			(* Case no pi0 file *)
-			if nb_args = 1 && (!imitator_mode != Reachability_analysis) && not !pta2clp && not !pta2gml  then(
-				print_error ("Please give a reference valuation file name.");
+			if nb_args = 1 && (!imitator_mode != Reachability_analysis) && not !pta2clp && not !pta2gml && not !forcePi0 then(
+				print_error ("Please give a file name for the reference valuation.");
 				Arg.usage speclist usage_msg;
 				abort_program (); exit(0)
 			);
 			
 			(* set program prefix *)
 			if !program_prefix = "" then
+				(* WHAT ? *)
 			  program_prefix := !file
 
 	end

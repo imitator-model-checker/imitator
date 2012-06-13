@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2012/05/10
- * Last modified: 2012/06/12
+ * Last modified: 2012/06/13
  *
  ****************************************************************)
 
@@ -18,6 +18,7 @@ class imitator_options :
 		val mutable dynamic : bool ref
 		val mutable fancy : bool ref
 		val mutable file : string ref
+		val mutable forcePi0 : bool ref
 		val mutable fromGML : bool ref
 		val mutable imitator_mode : Global.imitator_mode ref
 		val mutable inclusion : bool ref
@@ -49,6 +50,7 @@ class imitator_options :
 		method dynamic : bool
 		method fancy : bool
 		method file : string
+		method forcePi0 : bool
 		method fromGML : bool
 		method imitator_mode : Global.imitator_mode
 		method inclusion : bool

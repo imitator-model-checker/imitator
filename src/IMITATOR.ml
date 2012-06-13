@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2009/09/07
- * Last modified: 2012/06/12
+ * Last modified: 2012/06/13
  *
  **************************************************)
 
@@ -85,27 +85,15 @@ let string_of_returned_constraint variable_names = function
 (**************************************************)
 (* Parsing function *)
 (**************************************************)
-
-(* Parse a file and return the abstract structure *)
-let parser_lexer the_parser the_lexer file =
-	(* Open file *)
-	let in_channel = try (open_in file) with
-		| Sys_error e -> print_error ("The file " ^ file ^ " could not be opened.\n" ^ e); abort_program (); exit(0)
-	in
-	
-	(* Lexing *)
-	let lexbuf = try (Lexing.from_channel in_channel) with
-		| Failure f -> print_error ("Lexing error in file " ^ file ^ ": " ^ f); abort_program (); exit(0)
-	in
-
+(* Generic parser that returns the abstract structure *)
+let parser_lexer_gen the_parser the_lexer lexbuf string_of_input file_name =
 	(* Parsing *)
 	let parsing_structure = try(
 		the_parser the_lexer lexbuf
 	) with
 		| ParsingError (symbol_start, symbol_end) ->
-			(* Convert the file into a string *)
-			let extlib_input = IO.input_channel (open_in file) in
-			let file_string = IO.read_all extlib_input in
+			(* Convert the in_channel into a string *)
+			let file_string = string_of_input () in
 			(* Create the error message *)
 			let error_message =
 				if symbol_start >= 0 && symbol_end >= symbol_start then (
@@ -126,10 +114,44 @@ let parser_lexer the_parser the_lexer file =
 				else "somewhere in the file, most probably in the very beginning."
 			in
 			(* Print the error message *)
-			print_error ("Parsing error in file " ^ file ^ " " ^ error_message); abort_program (); exit(0)
-		| Failure f -> print_error ("Parsing error in file " ^ file ^ ": " ^ f); abort_program (); exit(0)
+			print_error ("Parsing error in file " ^ file_name ^ " " ^ error_message); abort_program (); exit(0)
+		| Failure f -> print_error ("Parsing error in file " ^ file_name ^ ": " ^ f); abort_program (); exit(0)
 	in
 	parsing_structure
+
+
+(* Parse a file and return the abstract structure *)
+let parser_lexer_from_file the_parser the_lexer file_name =
+	(* Open file *)
+	let in_channel = try (open_in file_name) with
+		| Sys_error e -> print_error ("The file " ^ file_name ^ " could not be opened.\n" ^ e); abort_program (); exit(0)
+	in
+	(* Lexing *)
+	let lexbuf = try (Lexing.from_channel in_channel) with
+		| Failure f -> print_error ("Lexing error in file " ^ file_name ^ ": " ^ f); abort_program (); exit(0)
+	in
+	(* Function to convert a in_channel to a string (in case of parsing error) *)
+	let string_of_input () =
+		(* Convert the file into a string *)
+		let extlib_input = IO.input_channel (open_in file_name) in
+			IO.read_all extlib_input
+	in
+	(* Generic function *)
+	parser_lexer_gen the_parser the_lexer lexbuf string_of_input file_name
+
+
+(* Parse a string and return the abstract structure *)
+let parser_lexer_from_string the_parser the_lexer the_string =
+	(* Lexing *)
+	let lexbuf = try (Lexing.from_string the_string) with
+		| Failure f -> print_error ("Lexing error: " ^ f ^ "\n The string was: \n" ^ the_string ^ ""); abort_program (); exit(0)
+(* 		| Parsing.Parse_error -> print_error ("Parsing error\n The string was: \n" ^ the_string ^ ""); abort_program (); exit(0) *)
+	in
+	(* Function to convert a in_channel to a string (in case of parsing error) *)
+	let string_of_input () = the_string in
+	(* Generic function *)
+	parser_lexer_gen the_parser the_lexer lexbuf string_of_input the_string
+
 
 
 (**************************************************)
@@ -577,6 +599,9 @@ if options#nb_args = 2 then(
 	if options#imitator_mode = Translation then
 		print_warning ("The pi0 file " ^ options#pi0file ^ " will be ignored since this is a translation.")
 	;
+	if options#forcePi0 then
+		print_warning ("The pi0 file " ^ options#pi0file ^ " will be ignored since this the pi0 file is automatically generated.")
+	;
 );
 
 if options#acyclic && options#tree then (
@@ -612,6 +637,10 @@ else
 (* Syntax *)
 if options#fromGML then
 	print_warning ("GML syntax used (experimental!).");
+
+(* Syntax *)
+if options#forcePi0 then
+	print_warning ("Pi0 is automatically generated.");
 
 
 (* OPTIONS *)
@@ -711,9 +740,9 @@ print_message Debug_low ("Considering file " ^ options#file ^ ".");
 let parsing_structure = 
 	(* Branching between 2 input syntaxes *)
 	if options#fromGML then
-		try parser_lexer GMLParser.main GMLLexer.token options#file
+		try parser_lexer_from_file GMLParser.main GMLLexer.token options#file
 		with InvalidProgram -> (print_error ("GML input contains error. Please check it again."); abort_program (); exit 0)
-	else parser_lexer ImitatorParser.main ImitatorLexer.token options#file
+	else parser_lexer_from_file ImitatorParser.main ImitatorLexer.token options#file
 in 
 
 print_message Debug_medium ("Considering program prefix " ^ options#program_prefix ^ ".");
@@ -730,14 +759,20 @@ let pi0_parsed, pi0cube_parsed =
 		(* If reachability: no pi0 *)
 		| Reachability_analysis -> [], []
 		(* Inverse method : pi0 *)
-		| Inverse_method -> parser_lexer Pi0Parser.main Pi0Lexer.token options#pi0file, []
+		| Inverse_method ->
+			(* Case forcePi0 *)
+			(* HACK !! *)
+			if options#forcePi0 then  parser_lexer_from_string Pi0Parser.main Pi0Lexer.token "p1 = 1 & p2 = 2 & p3 = 3 & p4 = 4 & p5 = 5", []
+			(* Normal case *)
+			else parser_lexer_from_file Pi0Parser.main Pi0Lexer.token options#pi0file, []
 		(* Cartography : pi0cube *)
-		| _ -> [], parser_lexer Pi0CubeParser.main Pi0CubeLexer.token options#pi0file
+		| _ -> [], parser_lexer_from_file Pi0CubeParser.main Pi0CubeLexer.token options#pi0file
 in
 
 print_message Debug_standard ("\nParsing done " ^ (after_seconds ()) ^ ".");
 (** USELESS, even increases memory x-( **)
 (* Gc.major (); *)
+
 
 (**************************************************)
 (* Conversion to an abstract program *)
@@ -930,6 +965,7 @@ if options#cart then (
 		print_message Debug_medium "No graph for the cartography."
 	)
 in ();
+
 
 (**************************************************)
 (* Bye bye! *)
