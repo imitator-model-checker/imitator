@@ -215,7 +215,7 @@ exe:
 # 	$(TARGET) $(EXAMPLE_PATH)/Tests/exPourGML.imi -mode reachability
 # 	$(TARGET) $(EXAMPLE_PATH)/Tests/SynthesizedGML.gml -fromGML -mode reachability
 
-	$(TARGET) $(EXAMPLE_PATH)/Tests/model1.gml -fromGML -forcePi0
+	$(TARGET) $(EXAMPLE_PATH)/Tests/model3.gml -fromGML -forcePi0
 
 # 	$(TARGET) $(EXAMPLE_PATH)/Tests/testCosts.imi $(EXAMPLE_PATH)/Tests/testCosts.pi0 -debug total -bab
 ##### TESTS FOR PROPERTIES #####

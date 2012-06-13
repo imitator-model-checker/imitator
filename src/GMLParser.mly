@@ -14,6 +14,8 @@ open ParsingStructure;;
 open Global;;
 open NumConst;;
 
+(* Counter for the unnamed locations *)
+let nb_unnamed_locations = ref 0;;
 
 let parse_error s =
 	let symbol_start = symbol_start () in
@@ -142,7 +144,9 @@ let convert declarations locations transitions =
 %token CLOSE CLOSE_XML
 %token SINGLE_CLOSE 
 
-%token STR_AND STR_BOOLEXPR STR_CLOCK STR_CLOCKS STR_CONST STR_CONSTANTS STR_DECLARATION STR_GLOBALCONSTANTS STR_DISCRETE STR_DISCRETES STR_EXPR STR_FINALSTATE STR_FORMALISM_URL STR_GUARD STR_INITIALCONSTRAINT STR_INITIALSTATE STR_INVARIANT STR_LABEL STR_NAME STR_PARAMETER STR_PARAMETERS STR_STATE STR_TRANSITION  STR_TYPE STR_UPDATE STR_UPDATES STR_UTF8 STR_VARIABLES STR_XMLNS
+%token INITIAL NORMAL TRUE
+
+%token STR_AND STR_BOOLEXPR STR_BOOLVALUE STR_CLOCK STR_CLOCKS STR_CONST STR_CONSTANTS STR_DECLARATION STR_GLOBALCONSTANTS STR_DISCRETE STR_DISCRETES STR_EXPR STR_FINALSTATE STR_FORMALISM_URL STR_GUARD STR_INITIALCONSTRAINT STR_INVARIANT STR_LABEL STR_NAME STR_PARAMETER STR_PARAMETERS STR_STATE STR_TRANSITION STR_TYPE STR_UPDATE STR_UPDATES STR_UTF8 STR_VARIABLES STR_XMLNS
 %token STR_OPL STR_OPLEQ STR_OPEQ STR_OPGEQ STR_OPG
 %token STR_OPMUL
 
@@ -376,12 +380,13 @@ state:
 
 state_attributes:
 /* TO DO: allow different orders! */
-/* WARNING: stopwatches non allowed yet !! */
+/* TODO: stopwatches non allowed yet !! */
 /* WARNING: 1 shift/reduce conflict here because of non-empty invariant  */
-	| name state_type state_invariant { $1, $2, $3 }
-	| name state_type { $1, $2, [] }
-	| name state_invariant { $1, (false, false), $2 }
-	| name { $1, (false, false), [] }
+// 	| name state_type state_invariant { $1, $2, $3 }
+	| state_invariant state_name state_type { $2, $3, $1 }
+// 	| name state_type { $1, $2, [] }
+// 	| name state_invariant { $1, (false, false), $2 }
+// 	| name { $1, (false, false), [] }
 ;
 
 /*<node id="1" nodeType="state">
@@ -427,7 +432,8 @@ state_open:
 
 state_type_init:
 /* <attribute name="initialState"/> */
-	| open_attribute STR_INITIALSTATE SINGLE_CLOSE { true }
+	| INITIAL { true }
+	| NORMAL { false }
 ;
 
 state_type_final:
@@ -470,27 +476,29 @@ transition:
 ;
 
 transition_body:
-	/* TO IMPROVE ! */
-	| label guard updates { $1, $2, $3 }
-	| label guard { $1, $2, [] }
-	| label updates { $1, [], $2 }
-	| guard updates { NoSync, $1, $2 }
-	| label { $1, [], [] }
-	| guard { NoSync, $1, [] }
-	| updates { NoSync, [], $1 }
-	| { NoSync, [], [] }
+	/* TODO: TO IMPROVE ! */
+// 	| label guard updates { $1, $2, $3 }
+	| updates guard label_name { $3, $2, $1 }
+// 	| label guard { $1, $2, [] }
+// 	| label updates { $1, [], $2 }
+// 	| guard updates { NoSync, $1, $2 }
+// 	| label { $1, [], [] }
+// 	| guard { NoSync, $1, [] }
+// 	| updates { NoSync, [], $1 }
+// 	| { NoSync, [], [] }
 ;
 
 /*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
   Label
 -*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*/
-label:
-	/*<attribute name="label">a</attribute>*/
-	| open_attribute STR_LABEL CLOSE 
-	NAME
-	close_attribute { Sync $4 }
-/* 	|  { NoSync } */
-;
+// label:
+// 	/*<attribute name="label">a</attribute>*/
+// 	| open_attribute STR_LABEL CLOSE 
+// 	NAME
+// 	close_attribute { Sync $4 }
+// /* 	|  { NoSync } */
+// ;
+
 
 /*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
   Guard
@@ -545,19 +553,41 @@ update:
   BOOLEAN EXPRESSIONS
 ************************************************************/
 bool_expr:
-	/* TO DO: allow true and false! */
 	|  open_attribute STR_BOOLEXPR CLOSE
-	conjunction
+	bool_expr_body
 	close_attribute { $4 }
 ;
 
+bool_expr_body:
+	/* TODO: allow false! */
+	| bool_expr_true { $1 }
+	| conjunction { $1 }
+	| comparison { [$1] }
+;
+
+bool_expr_true:
+	|  open_attribute STR_BOOLVALUE CLOSE
+	TRUE
+	close_attribute { [] }
+;
+
+/*
+str_true:
+	// BUG!! STR_TRUE doesn't work !
+	NAME { 	if $1 <> "true"
+				then raise (InternalError ("'true' expected, seen: '" ^ $1 ^ "'"))
+			; $1
+	}
+;*/
+
+
 conjunction:
 	|  open_attribute STR_AND CLOSE
-	conjunction
-	comparison
-	close_attribute { $5 :: $4 }
+	bool_expr
+	bool_expr
+	close_attribute { list_append $4 $5 }
 
-// uncommenting these 2 rules creates conflict!
+// WARNING: uncommenting these 2 rules creates conflict!
 /*	|  open_attribute STR_AND CLOSE
 	conjunction
 	conjunction
@@ -568,7 +598,7 @@ conjunction:
 	conjunction
 	close_attribute { $6 :: $7 }*/
 	
-	| comparison { [$1] }
+// 	| comparison { [$1] }
 ;
 
 comparison:
@@ -631,6 +661,33 @@ const:
 /************************************************************
   NAME
 ************************************************************/
+
+state_name:
+	| open_attribute STR_NAME CLOSE
+		state_name_string
+		close_attribute { $4 }
+;
+
+state_name_string:
+	| NAME { $1 }
+	| { (* Increment the counter for unnamed locations *)
+		nb_unnamed_locations := !nb_unnamed_locations + 1;
+		(* Name the state *)
+		"noname" ^ (string_of_int !nb_unnamed_locations)
+	}
+;
+
+label_name:
+	| open_attribute STR_LABEL CLOSE
+		label_name_string
+		close_attribute { $4 }
+;
+
+label_name_string:
+	| NAME { Sync $1 }
+	| { NoSync }
+;
+
 
 name:
 /* <attribute name="name">q</attribute> */

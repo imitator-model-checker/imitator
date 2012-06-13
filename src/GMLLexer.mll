@@ -46,8 +46,13 @@ rule token = parse
 	| ">"			{ CLOSE }
 	| "/>"			{ SINGLE_CLOSE }
 	
+	| "Initial"	    { INITIAL }
+	| "Normal"	    { NORMAL }
+	| "true"		{ TRUE }
+
 	| "\"and\""				{ STR_AND }
 	| "\"boolExpr\""		{ STR_BOOLEXPR }
+	| "\"boolValue\""		{ STR_BOOLVALUE }
 	| "\"clock\""			{ STR_CLOCK }
 	| "\"clocks\""			{ STR_CLOCKS }
 	| "\"const\""			{ STR_CONST }
@@ -60,7 +65,6 @@ rule token = parse
 	| "\"globalconstants\""	{ STR_GLOBALCONSTANTS }
 	| "\"guard\""			{ STR_GUARD }
 	| "\"initialConstraint\"" { STR_INITIALCONSTRAINT }
-	| "\"initialState\""	{ STR_INITIALSTATE }
 	| "\"invariant\""		{ STR_INVARIANT }
 	| "\"label\""			{ STR_LABEL }
 	| "\"name\""			{ STR_NAME }
@@ -68,7 +72,7 @@ rule token = parse
 	| "\"parameters\""		{ STR_PARAMETERS }
 	| "\"state\""			{ STR_STATE }
 	| "\"type\""			{ STR_TYPE }
-	| "\"transition\""		{ STR_TRANSITION }
+	| "\"Transition\""		{ STR_TRANSITION }
 	| "\"update\""			{ STR_UPDATE }
 	| "\"updates\""			{ STR_UPDATES }
 	| "\"UTF-8\""			{ STR_UTF8 }

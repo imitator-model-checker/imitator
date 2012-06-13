@@ -39,25 +39,33 @@
   </attribute>
   
   <attribute name="initialConstraint">
-    <attribute name="boolExpr"><attribute name="lessEqual">
-      <attribute name="expr"><attribute name="name">
-        x1
-      </attribute></attribute>
-      <attribute name="expr"><attribute name="name">
-        p2
-      </attribute></attribute>
-    </attribute></attribute>
+    <attribute name="boolExpr">
+		<attribute name="lessEqual">
+			<attribute name="expr">
+				<attribute name="name">
+					x1
+				</attribute>
+			</attribute>
+			<attribute name="expr">
+				<attribute name="name">
+					p2
+				</attribute>
+			</attribute>
+		</attribute>
+	</attribute>
   </attribute>
   
   <node id="3" nodeType="state">
     <attribute name="invariant">
-      <attribute name="boolExpr"><attribute name="boolValue">
-        true
-      </attribute></attribute>
+      <attribute name="boolExpr">
+		<attribute name="boolValue">
+			true
+		</attribute>
+	</attribute>
+   </attribute>
+   <attribute name="name">
     </attribute>
-    <attribute name="name">
-    </attribute>
-    <attribute name="type">
+    <attribute name="type">initial
     </attribute>
   </node>
   <node id="4" nodeType="state">
@@ -86,15 +94,22 @@
     <attribute name="updates">
     </attribute>
     <attribute name="guard">
-      <attribute name="boolExpr"><attribute name="and">
-        <attribute name="boolExpr"><attribute name="greaterEqual">
-          <attribute name="expr"><attribute name="name">
-            p1
-          </attribute></attribute>
-          <attribute name="expr"><attribute name="name">
-            x1
-          </attribute></attribute>
-        </attribute></attribute>
+      <attribute name="boolExpr">
+		<attribute name="and">
+			<attribute name="boolExpr">
+				<attribute name="greaterEqual">
+					<attribute name="expr">
+						<attribute name="name">
+							p1
+						</attribute>
+					</attribute>
+					<attribute name="expr">
+						<attribute name="name">
+							x1
+						</attribute>
+					</attribute>
+				</attribute>
+			</attribute>
         <attribute name="boolExpr"><attribute name="equal">
           <attribute name="expr"><attribute name="name">
             x2
