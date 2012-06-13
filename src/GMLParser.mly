@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created       : 2011/11/23
- * Last modified : 2012/05/30
+ * Last modified : 2012/06/13
 ************************************************************/
 
 
@@ -142,7 +142,7 @@ let convert declarations locations transitions =
 %token CLOSE CLOSE_XML
 %token SINGLE_CLOSE 
 
-%token STR_AND STR_BOOLEXPR STR_CLOCKS STR_CONST STR_CONSTANTS STR_GLOBALCONSTANTS STR_DISCRETE STR_EXPR STR_FINALSTATE STR_FORMALISM_URL STR_GUARD STR_INITIALSTATE STR_INVARIANT STR_LABEL STR_NAME STR_PARAMETERS STR_STATE STR_TRANSITION  STR_TYPE STR_UPDATE STR_UPDATES STR_UTF8 STR_VARIABLES STR_XMLNS
+%token STR_AND STR_BOOLEXPR STR_CLOCK STR_CLOCKS STR_CONST STR_CONSTANTS STR_DECLARATION STR_GLOBALCONSTANTS STR_DISCRETE STR_DISCRETES STR_EXPR STR_FINALSTATE STR_FORMALISM_URL STR_GUARD STR_INITIALCONSTRAINT STR_INITIALSTATE STR_INVARIANT STR_LABEL STR_NAME STR_PARAMETER STR_PARAMETERS STR_STATE STR_TRANSITION  STR_TYPE STR_UPDATE STR_UPDATES STR_UTF8 STR_VARIABLES STR_XMLNS
 %token STR_OPL STR_OPLEQ STR_OPEQ STR_OPGEQ STR_OPG
 %token STR_OPMUL
 
@@ -200,8 +200,8 @@ close_attribute:
   BODY
 ************************************************************/
 body:
-/* 	TO DO: allow different orders, even all mixed together  */
-	| declarations states transitions { $1, $2, $3 }
+/* 	TODO: allow different orders, even all mixed together  */
+	| declarations initial states transitions { $1, $3, $4 } /*TODO: constraint*/ 
 /* 	| declarations states { $1, [], [], [] } */
 ;
 
@@ -210,9 +210,11 @@ body:
 ************************************************************/
 declarations:
 /* 1 shift / reduce conflict here! */
-	| variables constants { List.rev_append $1 $2 }
+	| open_attribute STR_DECLARATION CLOSE
+	variables constants
+	close_attribute
+		{ List.rev_append $4 $5 }
 ;
-
 
 
 
@@ -229,12 +231,12 @@ variables:
 ;
 
 variables_body:
-/* 	TO DO: allow several definitions of clocks and discrete, all mixed together  */
+/* 	TODO: allow several definitions of clocks and discrete, all mixed together  */
 	| { [] }
 	| clocks { [$1] }
-	| discrete { [$1] }
-	| clocks discrete { [ $1 ; $2 ] }
-	| discrete clocks { [ $1 ; $2 ] }
+	| discretes { [$1] }
+	| clocks discretes { [ $1 ; $2 ] }
+	| discretes clocks { [ $1 ; $2 ] }
 ;
 
 
@@ -252,12 +254,13 @@ constants:
 ;
 
 constants_body:
-/* 	TO DO: allow several definitions of constants and parameters, all mixed together  */
+/* 	TODO: allow several definitions of constants and parameters, all mixed together  */
 	| { [] }
-	| globalconstants { [$1] }
+// 	TODO: Global constants not yet supported 
+// 	| globalconstants { [$1] }
 	| parameters { [$1] }
-	| globalconstants parameters { [ $1 ; $2 ] }
-	| parameters globalconstants { [ $1 ; $2 ] }
+// 	| globalconstants parameters { [ $1 ; $2 ] }
+// 	| parameters globalconstants { [ $1 ; $2 ] }
 ;
 
 
@@ -268,31 +271,56 @@ constants_body:
 
 clocks:
 	| open_attribute STR_CLOCKS CLOSE
-		list_of_names_with_values
+		list_of_clocks
 		close_attribute { (Var_type_clock, $4) }
 ;
 
+list_of_clocks:
+	| { [] }
+	| clock list_of_clocks { $1 :: $2 }
+;
+
+clock:
+	| open_attribute STR_CLOCK CLOSE
+		NAME
+		close_attribute
+			{ ($4, None) }
+;
 
 /*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
-  Discrete
+  Discretes
 -*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*/
+
+discretes:
+	| open_attribute STR_DISCRETES CLOSE
+		list_of_discretes
+		close_attribute { (Var_type_discrete, $4) }
+;
+
+list_of_discretes:
+	| { [] }
+	| discrete list_of_discretes { $1 :: $2 }
+;
 
 discrete:
 	| open_attribute STR_DISCRETE CLOSE
-		list_of_names_with_values
-		close_attribute { (Var_type_discrete, $4) }
+		NAME
+		close_attribute
+			{ ($4, None) }
 ;
 
 /*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
   Global constants
 -*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*/
 
-globalconstants:
-	| open_attribute STR_GLOBALCONSTANTS CLOSE
-		list_of_names_with_values
-/* 		TO DO: add type constant ! */
-		close_attribute { (Var_type_parameter, $4) }
-;
+// TODO: NOT YET SUPPORTED
+// globalconstants:
+// 	| open_attribute STR_GLOBALCONSTANTS CLOSE
+// 		list_of_names_with_values
+// /* 		TO DO: add type constant ! */
+// 		close_attribute { (Var_type_parameter, $4) }
+// ;
+
 
 /*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
   Parameters
@@ -300,8 +328,34 @@ globalconstants:
 
 parameters:
 	| open_attribute STR_PARAMETERS CLOSE
-		list_of_names_with_values
+		list_of_parameters
 		close_attribute { (Var_type_parameter, $4) }
+;
+
+list_of_parameters:
+	| { [] }
+	| parameter list_of_parameters { $1 :: $2 }
+;
+
+parameter:
+	| open_attribute STR_PARAMETER CLOSE
+		NAME
+		close_attribute
+			{ ($4, None) }
+;
+
+/************************************************************
+  INITIAL CONSTRAINT
+************************************************************/
+initial:
+	| { [] } /*true is an empty list of constraint*/
+	| initial_constraint { $1 }
+;
+
+initial_constraint:
+	| open_attribute STR_INITIALCONSTRAINT CLOSE
+	bool_expr
+	close_attribute { $4 }
 ;
 
 
@@ -586,17 +640,17 @@ name:
 ;
 
 
-list_of_names_with_values:
-	| name_with_value list_of_names_with_values { $1 :: $2 }
-	| { [] }
-;
-
-
-name_with_value:
-	open_attribute STR_NAME CLOSE
-		NAME
-		close_attribute { ($4, None) }
-;
+// list_of_names_with_values:
+// 	| name_with_value list_of_names_with_values { $1 :: $2 }
+// 	| { [] }
+// ;
+// 
+// 
+// name_with_value:
+// 	open_attribute STR_NAME CLOSE
+// 		NAME
+// 		close_attribute { ($4, None) }
+// ;
 
 
 /************************************************************

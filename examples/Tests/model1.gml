@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<model formalismUrl="http://alligator.lip6.fr/parametric-timed-automaton.fml" xmlns="http://cosyverif.org/ns/model">
+<model formalismUrl="http://formalisms.cosyverif.org/parametric-timed-automaton.fml" xmlns="http://cosyverif.org/ns/model">
   <attribute name="declaration">
     <attribute name="variables">
       <attribute name="discretes">
@@ -22,6 +22,8 @@
           x2
         </attribute>
       </attribute>
+    </attribute>
+    <attribute name="constants">
       <attribute name="parameters">
         <attribute name="parameter">
           p1
@@ -35,6 +37,7 @@
       </attribute>
     </attribute>
   </attribute>
+  
   <attribute name="initialConstraint">
     <attribute name="boolExpr"><attribute name="lessEqual">
       <attribute name="expr"><attribute name="name">
@@ -45,6 +48,7 @@
       </attribute></attribute>
     </attribute></attribute>
   </attribute>
+  
   <node id="3" nodeType="state">
     <attribute name="invariant">
       <attribute name="boolExpr"><attribute name="boolValue">

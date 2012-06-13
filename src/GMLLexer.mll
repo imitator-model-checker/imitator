@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created       : 2011/11/23
- * Last modified : 2011/11/24
+ * Last modified : 2012/06/13
 *****************************************************************)
 
 {
@@ -48,18 +48,23 @@ rule token = parse
 	
 	| "\"and\""				{ STR_AND }
 	| "\"boolExpr\""		{ STR_BOOLEXPR }
+	| "\"clock\""			{ STR_CLOCK }
 	| "\"clocks\""			{ STR_CLOCKS }
 	| "\"const\""			{ STR_CONST }
 	| "\"constants\""		{ STR_CONSTANTS }
+	| "\"declaration\""		{ STR_DECLARATION }
 	| "\"discrete\""		{ STR_DISCRETE }
+	| "\"discretes\""		{ STR_DISCRETES }
 	| "\"expr\""			{ STR_EXPR }
 	| "\"finalState\""		{ STR_FINALSTATE }
 	| "\"globalconstants\""	{ STR_GLOBALCONSTANTS }
 	| "\"guard\""			{ STR_GUARD }
+	| "\"initialConstraint\"" { STR_INITIALCONSTRAINT }
 	| "\"initialState\""	{ STR_INITIALSTATE }
 	| "\"invariant\""		{ STR_INVARIANT }
 	| "\"label\""			{ STR_LABEL }
 	| "\"name\""			{ STR_NAME }
+	| "\"parameter\""		{ STR_PARAMETER }
 	| "\"parameters\""		{ STR_PARAMETERS }
 	| "\"state\""			{ STR_STATE }
 	| "\"type\""			{ STR_TYPE }
@@ -77,8 +82,8 @@ rule token = parse
 	
 	| "\"*\""				{ STR_OPMUL }
 	
-	| "\"http://alligator.lip6.fr/timed-automata.fml\"" { STR_FORMALISM_URL }
-	| "\"http://gml.lip6.fr/model\"" { STR_XMLNS }
+	| "\"http://formalisms.cosyverif.org/parametric-timed-automaton.fml\"" { STR_FORMALISM_URL }
+	| "\"http://cosyverif.org/ns/model\"" { STR_XMLNS }
 	
 	
 	
