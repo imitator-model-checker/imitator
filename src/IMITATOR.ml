@@ -16,7 +16,7 @@
 open Global
 open AbstractModel
 open Arg
-open ImitatorPrinter
+open ModelPrinter
 open Graph
 open Options
 open Reachability
@@ -742,7 +742,7 @@ let parsing_structure =
 	if options#fromGML then
 		try parser_lexer_from_file GMLParser.main GMLLexer.token options#file
 		with InvalidProgram -> (print_error ("GML input contains error. Please check it again."); abort_program (); exit 0)
-	else parser_lexer_from_file ImitatorParser.main ImitatorLexer.token options#file
+	else parser_lexer_from_file ModelParser.main ModelLexer.token options#file
 in 
 
 print_message Debug_medium ("Considering program prefix " ^ options#program_prefix ^ ".");
@@ -766,7 +766,7 @@ let pi0_parsed, pi0cube_parsed =
 			(* Normal case *)
 			else parser_lexer_from_file Pi0Parser.main Pi0Lexer.token options#pi0file, []
 		(* Cartography : pi0cube *)
-		| _ -> [], parser_lexer_from_file Pi0CubeParser.main Pi0CubeLexer.token options#pi0file
+		| _ -> [], parser_lexer_from_file V0Parser.main V0Lexer.token options#pi0file
 in
 
 print_message Debug_standard ("\nParsing done " ^ (after_seconds ()) ^ ".");
@@ -805,7 +805,7 @@ else
 (* Debug print: program *)
 (**************************************************)
 if debug_mode_greater Debug_total then
-	print_message Debug_total ("\nProgram:\n" ^ (ImitatorPrinter.string_of_program program) ^ "\n");
+	print_message Debug_total ("\nProgram:\n" ^ (ModelPrinter.string_of_program program) ^ "\n");
 
 
 (**************************************************)
@@ -839,7 +839,7 @@ if options#pta2gml then(
 (**************************************************)
 
 (* Print the initial state *)
-print_message Debug_medium ("\nInitial state:\n" ^ (ImitatorPrinter.string_of_state program (program.initial_location, program.initial_constraint)) ^ "\n");
+print_message Debug_medium ("\nInitial state:\n" ^ (ModelPrinter.string_of_state program (program.initial_location, program.initial_constraint)) ^ "\n");
 
 (* Check the satisfiability *)
 if not (LinearConstraint.is_satisfiable program.initial_constraint) then (
@@ -876,7 +876,7 @@ if not (LinearConstraint.is_satisfiable initial_constraint_after_time_elapsing) 
 	print_message Debug_total ("\nThe initial constraint of the program after time elapsing is satisfiable.");
 );
 (* Print the initial state after time elapsing *)
-print_message Debug_medium ("\nInitial state after time-elapsing:\n" ^ (ImitatorPrinter.string_of_state program init_state_after_time_elapsing) ^ "\n");
+print_message Debug_medium ("\nInitial state after time-elapsing:\n" ^ (ModelPrinter.string_of_state program init_state_after_time_elapsing) ^ "\n");
 
 
 

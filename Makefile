@@ -74,18 +74,18 @@ MAIN = $(SRC)/IMITATOR.cmo
 # MAIN_OPT = $(MAIN:.cmo=.cmx)
 
 # modules to compile
-MODULES = Global NumConst ReachabilityTree Options LinearConstraint Automaton Cache Pi0Lexer Pi0Parser Pi0CubeLexer Pi0CubeParser ImitatorLexer ImitatorParser GMLLexer GMLParser ImitatorPrinter Graph PTA2CLP PTA2GML ProgramConverter Reachability Graphics
+MODULES = Global NumConst ReachabilityTree Options LinearConstraint Automaton Cache Pi0Lexer Pi0Parser V0Lexer V0Parser ModelLexer ModelParser GMLLexer GMLParser ModelPrinter Graph PTA2CLP PTA2GML ProgramConverter Reachability Graphics
 
 # interfaces
-HEADERS = Global NumConst ReachabilityTree Options LinearConstraint Automaton Cache ParsingStructure AbstractModel Graph ImitatorPrinter PTA2CLP PTA2GML ProgramConverter Reachability Graphics
+HEADERS = Global NumConst ReachabilityTree Options LinearConstraint Automaton Cache ParsingStructure AbstractModel Graph ModelPrinter PTA2CLP PTA2GML ProgramConverter Reachability Graphics
 
 CMIS = $(addprefix $(SRC)/, $(addsuffix .cmi, $(HEADERS)))
 OBJS = $(addprefix $(SRC)/, $(addsuffix .cmo, $(MODULES)))
 # OBJS_OPT = $(addprefix $(SRC)/, $(addsuffix .cmx, $(MODULES)))
 
 # parsers and lexers 
-LEXERS = Pi0Lexer Pi0CubeLexer ImitatorLexer GMLLexer
-PARSERS = Pi0Parser Pi0CubeParser ImitatorParser GMLParser
+LEXERS = Pi0Lexer V0Lexer ModelLexer GMLLexer
+PARSERS = Pi0Parser V0Parser ModelParser GMLParser
 
 LEX_ML = $(addprefix $(SRC)/, $(addsuffix .ml, $(LEXERS)))
 LEX_CMI = $(addprefix $(SRC)/, $(addsuffix .cmi, $(LEXERS)))

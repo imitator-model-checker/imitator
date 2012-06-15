@@ -16,7 +16,7 @@
 open Options
 open Global
 open AbstractModel
-open ImitatorPrinter
+open ModelPrinter
 open Graph
 open Gc
 

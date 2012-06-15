@@ -27,7 +27,7 @@ open Global
 open Options
 open ParsingStructure
 open AbstractModel
-open ImitatorPrinter
+open ModelPrinter
 
 
 (****************************************************************)
@@ -1397,7 +1397,7 @@ let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_
 	(* Create the type check functions *)
 	let is_clock = (fun variable_index -> try (type_of_variables variable_index = Var_type_clock) with Invalid_argument _ ->  false) in
 	let is_discrete = (fun variable_index -> try (type_of_variables variable_index = Var_type_discrete) with Invalid_argument _ ->  false) in
-		
+	
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Debug prints *)
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)

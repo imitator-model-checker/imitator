@@ -9,7 +9,7 @@
 *****************************************************************)
 
 {
-open ImitatorParser
+open ModelParser
 
 (* OCaml style comments *)
 let comment_depth = ref 0;;

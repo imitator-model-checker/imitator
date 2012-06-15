@@ -10,7 +10,7 @@
 
 
 {
-open Pi0CubeParser
+open V0Parser
 
 (* OCaml style comments *)
 let comment_depth = ref 0;;
