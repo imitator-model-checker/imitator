@@ -6,7 +6,7 @@
 #
 #  Author:        Etienne Andre
 #  Created:       2009/09/07
-#  Last modified: 2012/06/07
+#  Last modified: 2012/06/15
 #  Ocaml version: 3.12.1
 ###############################################################
 
@@ -77,7 +77,7 @@ MAIN = $(SRC)/IMITATOR.cmo
 MODULES = Global NumConst ReachabilityTree Options LinearConstraint Automaton Cache Pi0Lexer Pi0Parser Pi0CubeLexer Pi0CubeParser ImitatorLexer ImitatorParser GMLLexer GMLParser ImitatorPrinter Graph PTA2CLP PTA2GML ProgramConverter Reachability Graphics
 
 # interfaces
-HEADERS = Global NumConst ReachabilityTree Options LinearConstraint Automaton Cache ParsingStructure AbstractImitatorFile Graph ImitatorPrinter PTA2CLP PTA2GML ProgramConverter Reachability Graphics
+HEADERS = Global NumConst ReachabilityTree Options LinearConstraint Automaton Cache ParsingStructure AbstractModel Graph ImitatorPrinter PTA2CLP PTA2GML ProgramConverter Reachability Graphics
 
 CMIS = $(addprefix $(SRC)/, $(addsuffix .cmi, $(HEADERS)))
 OBJS = $(addprefix $(SRC)/, $(addsuffix .cmo, $(MODULES)))

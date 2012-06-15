@@ -7,7 +7,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2009/09/09
- * Last modified: 2012/05/30
+ * Last modified: 2012/06/15
  *
  ****************************************************************)
 
@@ -26,7 +26,7 @@
 open Global
 open Options
 open ParsingStructure
-open AbstractImitatorFile
+open AbstractModel
 open ImitatorPrinter
 
 
@@ -427,7 +427,7 @@ let check_update index_of_variables type_of_variables variable_names constants a
 		) in
 		match type_of_variable with
 		(* Case of a clock: allow only 0 as an update *)
-		| AbstractImitatorFile.Var_type_clock ->
+		| AbstractModel.Var_type_clock ->
 			(* Now allow ANY linear term in updates: so just check that variables have been declared *)
 			check_linear_expression variable_names constants linear_expression
 (*			let result =
@@ -439,11 +439,11 @@ let check_update index_of_variables type_of_variables variable_names constants a
 			in result*)
 			
 		(* Case of a discrete var.: allow only a linear combinations of constants and discrete *)
-		| AbstractImitatorFile.Var_type_discrete -> let result = only_discrete_in_linear_expression index_of_variables type_of_variables linear_expression in
+		| AbstractModel.Var_type_discrete -> let result = only_discrete_in_linear_expression index_of_variables type_of_variables linear_expression in
 		if not result then (print_error ("The variable '" ^ variable_name ^ "' is a discrete and its update can only be a linear combination of constants and discrete variables in automaton '" ^ automaton_name ^ "'."); false)
 		else true
 		(* Case of a parameter: forbidden! *)
-		| AbstractImitatorFile.Var_type_parameter -> print_error ("The variable '" ^ variable_name ^ "' is a parameter and can not be updated in automaton '" ^ automaton_name ^ "'."); false 
+		| AbstractModel.Var_type_parameter -> print_error ("The variable '" ^ variable_name ^ "' is a parameter and can not be updated in automaton '" ^ automaton_name ^ "'."); false 
 	)
 
 
@@ -1378,13 +1378,13 @@ let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_
 	let first_clock_index    = first_parameter_index + nb_parameters in
 	let first_discrete_index  = first_clock_index + nb_clocks in
 	
-	(* An array 'variable index -> AbstractImitatorFile.var_type' *)
-	let type_of_variables = Array.make nb_variables AbstractImitatorFile.Var_type_parameter in	
+	(* An array 'variable index -> AbstractModel.var_type' *)
+	let type_of_variables = Array.make nb_variables AbstractModel.Var_type_parameter in	
 	for i = first_clock_index to first_discrete_index - 1 do
-		type_of_variables.(i) <- AbstractImitatorFile.Var_type_clock;
+		type_of_variables.(i) <- AbstractModel.Var_type_clock;
 	done;
 	for i = first_discrete_index to nb_variables - 1 do
-		type_of_variables.(i) <- AbstractImitatorFile.Var_type_discrete;
+		type_of_variables.(i) <- AbstractModel.Var_type_discrete;
 	done;
 	(* Functional representation *)
 	let type_of_variables = fun variable_index -> type_of_variables.(variable_index) in

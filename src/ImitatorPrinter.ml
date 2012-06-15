@@ -5,13 +5,13 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2009/12/02
- * Last modified: 2012/05/30
+ * Last modified: 2012/06/15
  *
  **************************************************)
 
 
 open Global
-open AbstractImitatorFile
+open AbstractModel
 
 
 (**************************************************)

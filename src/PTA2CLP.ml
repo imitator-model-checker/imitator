@@ -11,7 +11,7 @@
 
 
 open Global
-open AbstractImitatorFile
+open AbstractModel
 
 
 (**************************************************)

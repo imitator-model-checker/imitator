@@ -10,7 +10,7 @@
  **************************************************)
 
 open Global
-open AbstractImitatorFile
+open AbstractModel
 open Options
 open Graph
 open LinearConstraint

@@ -10,7 +10,7 @@
  ****************************************************************)
 
 
-open AbstractImitatorFile
+open AbstractModel
 open Graph
 
 

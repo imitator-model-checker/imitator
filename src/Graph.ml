@@ -5,14 +5,14 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre, Ulrich Kuehne
  * Created:       2009/12/08
- * Last modified: 2012/06/07
+ * Last modified: 2012/06/15
  *
  ****************************************************************)
 
 module Ppl = Ppl_ocaml
 open Ppl
 open Global
-open AbstractImitatorFile
+open AbstractModel
 
 
 (****************************************************************)

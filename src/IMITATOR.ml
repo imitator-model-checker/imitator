@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2009/09/07
- * Last modified: 2012/06/13
+ * Last modified: 2012/06/15
  *
  **************************************************)
 
@@ -14,7 +14,7 @@
 (* Modules *)
 (**************************************************)
 open Global
-open AbstractImitatorFile
+open AbstractModel
 open Arg
 open ImitatorPrinter
 open Graph

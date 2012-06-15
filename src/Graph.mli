@@ -5,12 +5,12 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2009/12/08
- * Last modified: 2011/11/30
+ * Last modified: 2012/06/15
  *
  ****************************************************************)
 
 
-open AbstractImitatorFile
+open AbstractModel
 
 
 (****************************************************************)
@@ -98,10 +98,10 @@ val last_states: abstract_program -> reachability_graph -> state_index list
 (****************************************************************)
 
 (** Add a state to a graph: return (state_index, added), where state_index is the index of the state, and 'added' is false if the state was already in the graph, true otherwise *)
-val add_state : AbstractImitatorFile.abstract_program -> reachability_graph -> state -> (state_index * bool)
+val add_state : AbstractModel.abstract_program -> reachability_graph -> state -> (state_index * bool)
 
 (**Add a state to a graph dynamically**)
-val add_state_dyn : AbstractImitatorFile.abstract_program -> reachability_graph -> state -> LinearConstraint.linear_constraint -> (state_index * bool)
+val add_state_dyn : AbstractModel.abstract_program -> reachability_graph -> state -> LinearConstraint.linear_constraint -> (state_index * bool)
 
 (** Add a transition to the graph *)
 val add_transition : reachability_graph -> (state_index * action_index * state_index) -> unit
@@ -127,7 +127,7 @@ val empty_states_for_comparison : reachability_graph -> unit
 (****************************************************************)
 
 (* Convert a graph to a dot file *)
-val dot_of_graph : AbstractImitatorFile.abstract_program -> AbstractImitatorFile.pi0 -> reachability_graph -> fancy:bool -> (string * string)
+val dot_of_graph : AbstractModel.abstract_program -> AbstractModel.pi0 -> reachability_graph -> fancy:bool -> (string * string)
 
 
 (****************************************************************)

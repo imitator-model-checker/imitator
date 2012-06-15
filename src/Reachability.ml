@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Ulrich Kuehne, Etienne Andre
  * Created:       2010/07/22
- * Last modified: 2012/06/07
+ * Last modified: 2012/06/15
  *
  ************************************************************)
 
@@ -15,7 +15,7 @@
 (**************************************************************)
 open Options
 open Global
-open AbstractImitatorFile
+open AbstractModel
 open ImitatorPrinter
 open Graph
 open Gc
