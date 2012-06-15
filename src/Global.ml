@@ -24,7 +24,7 @@ let print_version_string _ =
 (****************************************************************)
 exception InternalError of string
 exception Found
-exception InvalidProgram
+exception InvalidModel
 
 (** Parsing exception: starting position of the error symbol, ending position of the error symbol *)
 exception ParsingError of (int * int)

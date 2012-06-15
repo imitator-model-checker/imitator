@@ -26,8 +26,9 @@ let string_of_var_type = function
 
 (* Add a header to the program *)
 let string_of_header program =
+	let options = Input.get_options () in
 		"(**************************************************"
-	^ "\n" ^" * Program " ^ program.options#file
+	^ "\n" ^" * Program " ^ options#file
 (* 	^ "\n" ^" * Generated at time " ^ time? *)
 	^ "\n" ^" **************************************************)"
 

@@ -37,7 +37,7 @@ type action_name = string
 (* type pi0 = NumConst.t array *)
 type pi0 = variable_index -> NumConst.t
 
-type pi0cube = (int * int) array
+type v0 = (int * int) array
 
 
 (****************************************************************)
@@ -157,10 +157,6 @@ type abstract_program = {
 
 	(* bad states *)
 	bad : (automaton_index * location_index) list;
-
-	(* All options *)
-	options : imitator_options;
-
 }
 
 

@@ -783,14 +783,14 @@ let check_pi0 pi0 parameters_names =
 (*--------------------------------------------------*)
 (* Check the pi0 cube w.r.t. the program parameters *)
 (*--------------------------------------------------*)
-let check_pi0cube pi0cube parameters_names =
+let check_v0 v0 parameters_names =
 	(* Compute the list of variable names *)
-	let list_of_variables = List.map (fun (v, _, _) -> v) pi0cube in
+	let list_of_variables = List.map (fun (v, _, _) -> v) v0 in
 
 	(* Compute the multiply defined variables *)
 	let multiply_defined_variables = elements_existing_several_times list_of_variables in
 	(* Print an error for each of them *)
-	List.iter (fun variable_name -> print_error ("The parameter '" ^ variable_name ^ "' was assigned several times a valuation in pi0cube.")) multiply_defined_variables;
+	List.iter (fun variable_name -> print_error ("The parameter '" ^ variable_name ^ "' was assigned several times a valuation in v0.")) multiply_defined_variables;
 	(* TODO: only warns if it is always defined to the same value *)
 
 	(* Check if the variables are all defined *)
@@ -798,7 +798,7 @@ let check_pi0cube pi0cube parameters_names =
 		(fun all_defined variable_name ->
 			if List.mem variable_name list_of_variables then all_defined
 			else (
-				print_error ("The parameter '" ^ variable_name ^ "' was not assigned a valuation in pi0cube.");
+				print_error ("The parameter '" ^ variable_name ^ "' was not assigned a valuation in v0.");
 				false
 			)
 		)
@@ -811,19 +811,19 @@ let check_pi0cube pi0cube parameters_names =
 		(fun all_intervals_ok (variable_name, a, b) ->
 			if a <= b then all_intervals_ok
 			else (
-				print_error ("The interval [" ^ (string_of_int a) ^ ", " ^ (string_of_int b) ^ "] is null for parameter '" ^ variable_name ^ "' in pi0cube.");
+				print_error ("The interval [" ^ (string_of_int a) ^ ", " ^ (string_of_int b) ^ "] is null for parameter '" ^ variable_name ^ "' in v0.");
 				false
 			)
 		)
 		true
-		pi0cube
+		v0
 	in
 
 	(* Check if some defined variables are not parameters (and warn) *)
 	List.iter
 		(fun variable_name ->
 			if not (List.mem variable_name parameters_names) then (
-				print_warning ("'" ^ variable_name ^ "', which is assigned a valuation in pi0cube, is not a valid parameter name.")
+				print_warning ("'" ^ variable_name ^ "', which is assigned a valuation in v0, is not a valid parameter name.")
 			)
 		)
 		list_of_variables
@@ -1243,22 +1243,22 @@ let make_pi0 parsed_pi0 variables nb_parameters =
 	done;
 	pi0
 
-let make_pi0cube parsed_pi0cube index_of_variables nb_parameters =
-	let pi0cube = Array.make nb_parameters (0, 0) in
+let make_v0 parsed_v0 index_of_variables nb_parameters =
+	let v0 = Array.make nb_parameters (0, 0) in
 	List.iter (fun (variable_name, a, b) ->
 		let variable_index = try Hashtbl.find index_of_variables variable_name
 			with Not_found ->
 			raise (InternalError ("The variable name '" ^ variable_name ^ "' was not found in the list of variables although checks should have been performed before."))
 		in
-		pi0cube.(variable_index) <- (a, b)
-	) parsed_pi0cube;
-	pi0cube
+		v0.(variable_index) <- (a, b)
+	) parsed_v0;
+	v0
 
 
 (*--------------------------------------------------*)
 (* Convert the parsing structure into an abstract program *)
 (*--------------------------------------------------*)
-let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_automata, parsed_init_definition, parsed_bad_definition) parsed_pi0 parsed_pi0cube options =
+let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_automata, parsed_init_definition, parsed_bad_definition) parsed_pi0 parsed_v0 options =
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Debug functions *) 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -1329,7 +1329,7 @@ let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_
 		) else true in
 	
 	(* Perform intersection and may raise exception *)
- 	if not (constants_consistent && all_variables_different && all_automata_different && at_least_one_automaton) then raise InvalidProgram;
+ 	if not (constants_consistent && all_variables_different && all_automata_different && at_least_one_automaton) then raise InvalidModel;
 
 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -1432,7 +1432,7 @@ let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_
 	(* Get all the locations *) 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Check that all the location names of an automaton are different *)
-	if not (all_locations_different parsed_automata) then raise InvalidProgram;
+	if not (all_locations_different parsed_automata) then raise InvalidModel;
 	
 	(* Get all the locations for each automaton: automaton_index -> location_index -> location_name *)
 	let array_of_location_names = make_locations_per_automaton index_of_automata parsed_automata in
@@ -1473,7 +1473,7 @@ let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_
 	(* Check the automata *) 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	print_message Debug_total ("*** Checking automata...");
-	if not (check_automata index_of_variables type_of_variables variable_names index_of_automata array_of_location_names constants parsed_automata) then raise InvalidProgram;
+	if not (check_automata index_of_variables type_of_variables variable_names index_of_automata array_of_location_names constants parsed_automata) then raise InvalidModel;
 
 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -1483,19 +1483,19 @@ let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_
 	(* Get couples for the initialisation of the discrete variables, and check the init definition *)
 	let init_discrete_couples, well_formed_init =
 		check_init discrete variable_names constants index_of_variables type_of_variables automata automata_names index_of_automata array_of_location_names parsed_init_definition in
-	if not well_formed_init then raise InvalidProgram;
+	if not well_formed_init then raise InvalidModel;
 
 	(* check bad state definition *)
 	let bad_state_pairs, well_formed_bad =
 		check_bad index_of_automata index_of_locations parsed_bad_definition in
-	if not well_formed_bad then raise InvalidProgram;
+	if not well_formed_bad then raise InvalidModel;
 
 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Constuct the pi0 *) 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
-	let pi0, pi0cube =
+	let pi0, v0 =
 		match options#imitator_mode with
 		| Translation -> 
 			(* Return blank values *)
@@ -1514,11 +1514,11 @@ let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_
 		| _ -> 
 			print_message Debug_total ("*** Building reference rectangle...");
 			(* Verification of the pi_0 *)
-			if not (check_pi0cube parsed_pi0cube parameters_names) then raise InvalidPi0;
+			if not (check_v0 parsed_v0 parameters_names) then raise InvalidPi0;
 			(* Construction of the pi_0 *)
-			let pi0cube = make_pi0cube parsed_pi0cube index_of_variables nb_parameters in
+			let v0 = make_v0 parsed_v0 index_of_variables nb_parameters in
 			(* Return the pair *)
-			Array.make 0 NumConst.zero, pi0cube
+			Array.make 0 NumConst.zero, v0
 	in
 	
 	(* Make a functional version of the pi0 *)
@@ -1653,7 +1653,7 @@ let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_
 				print_message Debug_medium (
 					variables.(i) ^ " : [" ^ (string_of_int a) ^ ", " ^ (string_of_int b) ^ "]"
 				)
-			) pi0cube
+			) v0
 	);
 
 
@@ -1726,13 +1726,11 @@ let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_
 	initial_constraint = initial_constraint;
 	(* Bad states *)
 	bad = bad_state_pairs;
-	
-	options = options;
 	}
 
 	,
 	(* Also return the pi0 *)
 	pi0
 	,
-	(* Also return the pi0cube *)
-	pi0cube
+	(* Also return the v0 *)
+	v0

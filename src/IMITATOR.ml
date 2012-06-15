@@ -16,6 +16,7 @@
 open Global
 open AbstractModel
 open Arg
+(* open Input *)
 open ModelPrinter
 open Graph
 open Options
@@ -59,10 +60,6 @@ let dot_extension = "jpg"
 (* GLOBAL VARIABLES *)
 (**************************************************)
 (**************************************************)
-
-(* object with command line options *)
-let options = new imitator_options
-
 
 
 
@@ -196,6 +193,8 @@ let random_pi0 program pi0 =
 (**************************************************)
 (* Create a gif graph using dot *)
 let generate_graph program pi0 reachability_graph dot_file_name states_file_name gif_file_name =
+	(* Retrieve the input options *)
+	let options = Input.get_options () in
 	(* Do not write if no dot AND no log *)
 	if not (options#no_dot && options#no_log) then (
 		
@@ -239,6 +238,8 @@ let pi0_in_returned_constraint pi0 = function
 
 (** Behavioral cartography algorithm with full coverage of V0 *)
 let cover_behavioral_cartography program pi0cube init_state =
+	(* Retrieve the input options *)
+	let options = Input.get_options () in
 	(* Dimension of the system *)
 	let dimension = Array.length pi0cube in
 	(* Min & max bounds for the parameters *)
@@ -405,6 +406,9 @@ let cover_behavioral_cartography program pi0cube init_state =
 
 (** Behavioral cartography algorithm with random selection of a pi0 *)
 let random_behavioral_cartography program pi0cube init_state nb =
+	(* Retrieve the input options *)
+	let options = Input.get_options () in
+
 	(* Array for the pi0 *)
 	(***** TO OPTIMIZE: why create such a big array?! *****)
 	let pi0_computed = Array.make nb (random_pi0 program pi0cube) in
@@ -549,9 +553,13 @@ let random_behavioral_cartography program pi0cube init_state nb =
 (**************************************************)
 (* Get the arguments *)
 (**************************************************)
+(* object with command line options *)
+let options = new imitator_options in
 
 options#parse;
 
+(* Set the options (for other modules) *)
+Input.set_options options;
 
 
 (**************************************************)
@@ -741,7 +749,7 @@ let parsing_structure =
 	(* Branching between 2 input syntaxes *)
 	if options#fromGML then
 		try parser_lexer_from_file GMLParser.main GMLLexer.token options#file
-		with InvalidProgram -> (print_error ("GML input contains error. Please check it again."); abort_program (); exit 0)
+		with InvalidModel -> (print_error ("GML input contains error. Please check it again."); abort_program (); exit 0)
 	else parser_lexer_from_file ModelParser.main ModelLexer.token options#file
 in 
 
@@ -783,7 +791,7 @@ try (
 	ProgramConverter.abstract_program_of_parsing_structure
 		parsing_structure pi0_parsed pi0cube_parsed options
 ) with 
-	| InvalidProgram -> (print_error ("The input program contains errors. Please check it again."); abort_program (); exit 0)
+	| InvalidModel -> (print_error ("The input program contains errors. Please check it again."); abort_program (); exit 0)
 	| ProgramConverter.InvalidPi0 -> (print_error ("The input pi_0 file contains errors. Please check it again."); abort_program (); exit 0)
 	| InternalError e -> (print_error ("Internal error: " ^ e ^ "\nPlease insult the developers."); abort_program (); exit 0)
 	in
@@ -825,7 +833,7 @@ if options#pta2gml then(
 	print_message Debug_standard ("Translating program to GML.");
 	print_warning ("Experimental translation!");
 	let translated_model = PTA2GML.string_of_program program in
-	let gml_file = program.options#file ^ ".gml" in
+	let gml_file = options#file ^ ".gml" in
 	print_message Debug_total ("\n" ^ translated_model ^ "\n");
 	(* Write *)
 	write_to_file gml_file translated_model;

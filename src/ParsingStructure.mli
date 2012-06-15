@@ -117,4 +117,4 @@ type parsing_structure = variable_declarations * automata * init_definition * ba
 
 type pi0 = (string *  NumConst.t) list
 
-type pi0cube = (string * int * int) list
+type v0 = (string * int * int) list

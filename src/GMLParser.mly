@@ -95,7 +95,7 @@ let convert declarations locations transitions =
 	) transitions;
 	
 	(* Don't go further *)
-	if (not !ok) then raise InvalidProgram;
+	if (not !ok) then raise InvalidModel;
 
 	(* Make transitions *)
 	let locations = Hashtbl.fold (fun location_id location_name current_list ->

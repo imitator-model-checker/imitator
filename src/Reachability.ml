@@ -958,6 +958,8 @@ let next_combination combination max_indexes =
 (* returns (true, p_constraint) iff the state is pi0-compatible (false, _) otherwise *)
 (*-----------------------------------------------------*)
 let inverse_method_check_constraint program pi0 reachability_graph constr =
+	(* Retrieve the input options *)
+	let options = Input.get_options () in
 	(* Hide non parameters (X) *)
 	print_message Debug_high ("\nHiding non parameters:");
 	let p_constraint = LinearConstraint.hide program.clocks_and_discrete constr in
@@ -980,7 +982,7 @@ let inverse_method_check_constraint program pi0 reachability_graph constr =
 
 		let inequality =
 			(* If random selection: pick up a random inequality *)
-			if not program.options#no_random then random_element incompatible
+			if not options#no_random then random_element incompatible
 			(* Else select the first one *)
 			else List.nth incompatible 0
 		in
@@ -996,7 +998,7 @@ let inverse_method_check_constraint program pi0 reachability_graph constr =
 		(* Negate the inequality *)
 		let negated_inequality = LinearConstraint.negate_wrt_pi0 pi0 inequality in
 		(* Debug print *)
-		let randomly = if not program.options#no_random then "randomly " else "" in
+		let randomly = if not options#no_random then "randomly " else "" in
 		let among = if List.length incompatible > 1 then (" (" ^ randomly ^ "selected among " ^ (string_of_int (List.length incompatible)) ^ " inequalities)") else "" in
 		print_message Debug_standard ("  Adding the following inequality" ^ among ^ ":");
 		print_message Debug_standard ("  " ^ (LinearConstraint.string_of_linear_inequality program.variable_names negated_inequality));
@@ -1084,6 +1086,8 @@ let compute_transitions program location constr action_index automata aut_table 
 (* returns a list of (really) new states               *)
 (*-----------------------------------------------------*)
 let post program pi0 reachability_graph orig_state_index =
+	(* Retrieve the input options *)
+	let options = Input.get_options () in
 	(* Original location: static *)
 	let original_location, _ = Graph.get_state reachability_graph orig_state_index in
 	(* Dynamic version of the orig_constraint (can change!) *)
@@ -1150,7 +1154,7 @@ let post program pi0 reachability_graph orig_state_index =
 		let legal_transitions_exist = compute_transitions program original_location orig_plus_discrete action_index automata_for_this_action real_indexes max_indexes possible_transitions in 
 	
 		(* Debug: compute the number of combinations *)
-		if debug_mode_greater Debug_medium || program.options#statistics then(
+		if debug_mode_greater Debug_medium || options#statistics then(
 			let new_nb_combinations = Array.fold_left (fun sum max -> sum * (max + 1)) 1 max_indexes in
 			print_message Debug_medium ("I will consider " ^ (string_of_int new_nb_combinations) ^ " combination" ^ (s_of_int new_nb_combinations) ^ " for this state and this action\n");
 			(* Update for statistics *)
@@ -1200,7 +1204,7 @@ let post program pi0 reachability_graph orig_state_index =
 					(*------------------------------------------------------------*)
 					(* Branching between 2 algorithms here *)
 					(*------------------------------------------------------------*)
-					if program.options#imitator_mode = Reachability_analysis then ( 
+					if options#imitator_mode = Reachability_analysis then ( 
 						true, (LinearConstraint.true_constraint ())
 					) else (
 						inverse_method_check_constraint program pi0 reachability_graph final_constraint
@@ -1216,12 +1220,12 @@ let post program pi0 reachability_graph orig_state_index =
 						);
 
 						(* Add the p_constraint to the result (except if case variants) *)
-						if not (program.options#pi_compatible || program.options#union) then(
+						if not (options#pi_compatible || options#union) then(
 							LinearConstraint.intersection_assign !k_result [p_constraint]);
 						
 						(* Try to add this new state to the graph *)
 						let new_state_index, added = (
-						(*if program.options#dynamic then (
+						(*if options#dynamic then (
 						  Graph.add_state_dyn program reachability_graph new_state !k_result
 						  )
 						  else ( *)
@@ -1235,7 +1239,7 @@ let post program pi0 reachability_graph orig_state_index =
 						)
 						(* ELSE : add to SLAST if mode union *)
 						else (
-							if program.options#union then (
+							if options#union then (
 								print_message Debug_low ("\nMode union: adding a looping state to SLast.");
 								(* Adding the state *)
 								(* TO CHECK: what if new_state_index is already in slast?!! *)
@@ -1263,7 +1267,7 @@ let post program pi0 reachability_graph orig_state_index =
 	) list_of_possible_actions;
 	
 	(* If new_states is empty : the current state is a last state *)
-	if program.options#union && !new_states = [] then (
+	if options#union && !new_states = [] then (
 		print_message Debug_low ("\nMode union: adding a state without successor to SLast.");
 		(* Adding the state *)
 		slast := orig_state_index :: !slast;
@@ -1279,6 +1283,8 @@ let post program pi0 reachability_graph orig_state_index =
 (* Compute and print the final constraint *)
 (*---------------------------------------------------*)
 let compute_and_return_result program reachability_graph nb_iterations counter =
+	(* Retrieve the input options *)
+	let options = Input.get_options () in
 	(*--------------------------------------------------*)
 	(* Print information *)
 	(*--------------------------------------------------*)
@@ -1289,7 +1295,7 @@ let compute_and_return_result program reachability_graph nb_iterations counter =
 		^ (string_of_int (Graph.nb_states reachability_graph)) ^ " reachable state" ^ (s_of_int (Graph.nb_states reachability_graph))
 		^ " with "
 		^ (string_of_int (Hashtbl.length (reachability_graph.transitions_table))) ^ " transition" ^ (s_of_int (Hashtbl.length (reachability_graph.transitions_table))) ^ ".");
-	if program.options#imitator_mode != Reachability_analysis && (not program.options#no_random) then (
+	if options#imitator_mode != Reachability_analysis && (not options#no_random) then (
 		if(!nb_random_selections > 0) then(
 			print_message Debug_standard "Analysis may have been non-deterministic:";
 			print_message Debug_standard ((string_of_int !nb_random_selections) ^ " random selection" ^ (s_of_int !nb_random_selections) ^ " have been performed.");
@@ -1301,7 +1307,7 @@ let compute_and_return_result program reachability_graph nb_iterations counter =
 	(*--------------------------------------------------*)
 	(* Performances *)
 	(*--------------------------------------------------*)
-	if program.options#statistics then (
+	if options#statistics then (
 		(* PPL *)
 		print_message Debug_standard "--------------------";
 		print_message Debug_standard "Statistics on PPL";
@@ -1349,16 +1355,16 @@ let compute_and_return_result program reachability_graph nb_iterations counter =
 	(* Computation of the returned constraint *)
 	(*--------------------------------------------------*)
 	let my_constraint =
-	if program.options#imitator_mode = Reachability_analysis then Convex_constraint (LinearConstraint.true_constraint ())
+	if options#imitator_mode = Reachability_analysis then Convex_constraint (LinearConstraint.true_constraint ())
 	else(
 		(* Case: dynamic OR case IM standard : return the intersection *)
 		(** TODO: recheck this part! (Etienne, 15/6/2012) *)
-		if (*program.options#dynamic ||*) (not program.options#union && not program.options#pi_compatible) then (
+		if (*options#dynamic ||*) (not options#union && not options#pi_compatible) then (
 			print_message Debug_total ("\nMode: IM standard.");
 			Convex_constraint !k_result
 		) else (
 		(* Case union : return the constraint on the parameters associated to slast*)
-			if program.options#union then (
+			if options#union then (
 				print_message Debug_total ("\nMode: union.");
 				let list_of_constraints =
 				List.map (fun state_index ->
@@ -1372,7 +1378,7 @@ let compute_and_return_result program reachability_graph nb_iterations counter =
 				in Union_of_constraints list_of_constraints
 			)
 		(* Case IMorig : return only the current constraint *)
-			else if program.options#pi_compatible then (
+			else if options#pi_compatible then (
 				let (_ , k_constraint) = get_state reachability_graph 0 in
 					Convex_constraint (LinearConstraint.hide program.clocks_and_discrete k_constraint) 
 			) else (
@@ -1464,6 +1470,8 @@ let branch_and_bound program pi0 init_state =
 (* Compute the reachability graph from a given state *)
 (*---------------------------------------------------*)
 let post_star program pi0 init_state = 
+	(* Retrieve the input options *)
+	let options = Input.get_options () in
 	(*Initialisation of k_result*)
 	k_result := LinearConstraint.true_constraint ();
 	(*Initialization of slast : used in union mode only*)
@@ -1544,7 +1552,7 @@ let post_star program pi0 init_state =
 			newly_found_new_states := try_to_merge new_newly_found_new_states;*)
 
 		let new_states_after_merging = ref new_newly_found_new_states in
-		if not program.options#no_merging then (
+		if not options#no_merging then (
 (* 			new_states_after_merging := try_to_merge_states reachability_graph !new_states_after_merging; *)
 			(* New version *)
 			new_states_after_merging := Graph.merge reachability_graph !new_states_after_merging;
@@ -1560,7 +1568,7 @@ let post_star program pi0 init_state =
 		);
 		
 		(* If acyclic option: empty the list of already reached states for comparison with former states *)
-		if program.options#acyclic then(
+		if options#acyclic then(
 			print_message Debug_low ("\nMode acyclic: empty the list of states to be compared.");
 			empty_states_for_comparison reachability_graph;
 		);
@@ -1573,17 +1581,17 @@ let post_star program pi0 init_state =
 		nb_iterations := !nb_iterations + 1;
 		(* Check if the limit has been reached *)
 		begin
-		match program.options#post_limit with
+		match options#post_limit with
 			| None -> ()
 			| Some limit -> if !nb_iterations > limit then limit_reached := true;
 		end;
 		begin
-		match program.options#states_limit with
+		match options#states_limit with
 			| None -> ()
 			| Some limit -> if (Graph.nb_states reachability_graph) > limit then limit_reached := true;
 		end;
 		begin
-		match program.options#time_limit with
+		match options#time_limit with
 			| None -> ()
 			| Some limit -> if (get_time()) > (float_of_int limit) then limit_reached := true;
 		end;
@@ -1591,21 +1599,21 @@ let post_star program pi0 init_state =
 	
 	if !limit_reached && !newly_found_new_states != [] then(
 		begin
-		match program.options#post_limit with
+		match options#post_limit with
 			| None -> ()
 			| Some limit -> if !nb_iterations > limit then print_warning (
 				"The limit number of iterations (" ^ (string_of_int limit) ^ ") has been reached. Post^* now stops, although there were still " ^ (string_of_int (List.length !newly_found_new_states)) ^ " state" ^ (s_of_int (List.length !newly_found_new_states)) ^ " to explore at this iteration."
 			);
 		end;
 		begin
-		match program.options#states_limit with
+		match options#states_limit with
 			| None -> ()
 			| Some limit -> if (Graph.nb_states reachability_graph) > limit then print_warning (
 				"The limit number of states (" ^ (string_of_int limit) ^ ") has been reached. Post^* now stops, although there were still " ^ (string_of_int (List.length !newly_found_new_states)) ^ " state" ^ (s_of_int (List.length !newly_found_new_states)) ^ " to explore."
 			);
 		end;
 		begin
-		match program.options#time_limit with
+		match options#time_limit with
 			| None -> ()
 			| Some limit -> if (get_time()) > (float_of_int limit) then print_warning (
 				"The time limit (" ^ (string_of_int limit) ^ " second" ^ (s_of_int limit) ^ ") has been reached. Post^* now stops, although there were still " ^ (string_of_int (List.length !newly_found_new_states)) ^ " state" ^ (s_of_int (List.length !newly_found_new_states)) ^ " to explore at this iteration."

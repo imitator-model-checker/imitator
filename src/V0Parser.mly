@@ -28,7 +28,7 @@
 /* %left OP_PLUS OP_MINUS        /* lowest precedence */
 
 %start main             /* the entry point */
-%type <ParsingStructure.pi0cube> main
+%type <ParsingStructure.v0> main
 %%
 
 /**********************************************/
