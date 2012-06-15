@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2012/05/10
- * Last modified: 2012/06/13
+ * Last modified: 2012/06/15
  *
  ****************************************************************)
 
@@ -15,7 +15,7 @@ class imitator_options :
 		val mutable acyclic : bool ref
 		val mutable branch_and_bound : bool ref
 		val mutable cart : bool ref
-		val mutable dynamic : bool ref
+(* 		val mutable dynamic : bool ref *)
 		val mutable fancy : bool ref
 		val mutable file : string ref
 		val mutable forcePi0 : bool ref
@@ -47,7 +47,7 @@ class imitator_options :
 		method acyclic_unset : unit
 		method branch_and_bound : bool
 		method cart : bool
-		method dynamic : bool
+(* 		method dynamic : bool *)
 		method fancy : bool
 		method file : string
 		method forcePi0 : bool

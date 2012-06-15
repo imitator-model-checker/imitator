@@ -7,7 +7,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Ulrich Kuehne, Etienne Andre
  * Created:       2010
- * Last modified: 2012/06/13
+ * Last modified: 2012/06/15
  *
  ****************************************************************)
  
@@ -98,7 +98,7 @@ class imitator_options =
 		method acyclic_unset = (acyclic := false)
 		method branch_and_bound = !branch_and_bound
 		method cart = !cart
-		method dynamic = !dynamic
+(* 		method dynamic = !dynamic *)
 		method fancy = !fancy
 		method file = !file
 		method forcePi0 = !forcePi0
@@ -172,7 +172,7 @@ class imitator_options =
 				("-bab", Set branch_and_bound, " Experimental new feature of IMITATOR, based on cost optimization. Default: 'false'");
 				("-cart", Set cart, " Plot cartography before terminating the program. Uses the first two parameters with ranges. Default: false."); 
 				("-debug", String set_debug_mode_ref, " Print more or less information. Can be set to 'nodebug', 'standard', 'low', 'medium', 'high', 'total'. Default: 'standard'");
-				("-dynamic", Set dynamic, "Perform the on-the-fly intersection. Defaut : 'false'");
+(* 				("-dynamic", Set dynamic, "Perform the on-the-fly intersection. Defaut : 'false'"); *)
 				("-fancy", Set fancy, " Generate detailed state information for dot output. Default: false.");
 				("-forcePi0", Set forcePi0, "Create a predefined pi0 file of the form p1 = 1, p2 = 2, etc. Defaut : 'false'");
 				("-fromGML", Set fromGML, "GML syntax for input files (experimental). Defaut : 'false'");

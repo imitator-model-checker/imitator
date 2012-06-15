@@ -650,10 +650,10 @@ if options#no_merging then
 else
 	print_message Debug_medium ("Merging technique of [AFS12] enabled (default).");
 
-if options#dynamic then
+(*if options#dynamic then
 	print_message Debug_standard ("Dynamic mode (optimization by RS).")
 else
-	print_message Debug_medium ("No dynamic mode (default).");
+	print_message Debug_medium ("No dynamic mode (default).");*)
 
 if options#sync_auto_detection then
 	print_message Debug_standard ("Auto-detection mode for sync actions.")

@@ -1221,12 +1221,12 @@ let post program pi0 reachability_graph orig_state_index =
 						
 						(* Try to add this new state to the graph *)
 						let new_state_index, added = (
-						if program.options#dynamic then (
+						(*if program.options#dynamic then (
 						  Graph.add_state_dyn program reachability_graph new_state !k_result
 						  )
-						  else (
+						  else ( *)
 						    Graph.add_state program reachability_graph new_state
-						  )
+(* 						  ) *)
 						) in
 						(* If this is really a new state *)
 						if added then (
@@ -1352,8 +1352,9 @@ let compute_and_return_result program reachability_graph nb_iterations counter =
 	if program.options#imitator_mode = Reachability_analysis then Convex_constraint (LinearConstraint.true_constraint ())
 	else(
 		(* Case: dynamic OR case IM standard : return the intersection *)
-		if program.options#dynamic || (not program.options#union && not program.options#pi_compatible) then (
-			print_message Debug_total ("\nMode: Dynamic or IM standard.");
+		(** TODO: recheck this part! (Etienne, 15/6/2012) *)
+		if (*program.options#dynamic ||*) (not program.options#union && not program.options#pi_compatible) then (
+			print_message Debug_total ("\nMode: IM standard.");
 			Convex_constraint !k_result
 		) else (
 		(* Case union : return the constraint on the parameters associated to slast*)
