@@ -1353,10 +1353,12 @@ let compute_and_return_result program reachability_graph nb_iterations counter =
 	else(
 		(* Case: dynamic OR case IM standard : return the intersection *)
 		if program.options#dynamic || (not program.options#union && not program.options#pi_compatible) then (
+			print_message Debug_total ("\nMode: Dynamic or IM standard.");
 			Convex_constraint !k_result
 		) else (
 		(* Case union : return the constraint on the parameters associated to slast*)
 			if program.options#union then (
+				print_message Debug_total ("\nMode: union.");
 				let list_of_constraints =
 				List.map (fun state_index ->
 					print_message Debug_medium ("\nOne state found.");
