@@ -16,12 +16,10 @@
 open Global
 open AbstractModel
 open Arg
-(* open Input *)
 open ModelPrinter
 open Graph
 open Options
 open Reachability
-open Graphics
 open Gc
 
 
@@ -237,14 +235,14 @@ let pi0_in_returned_constraint pi0 = function
 
 
 (** Behavioral cartography algorithm with full coverage of V0 *)
-let cover_behavioral_cartography program pi0cube init_state =
+let cover_behavioral_cartography program v0 init_state =
 	(* Retrieve the input options *)
 	let options = Input.get_options () in
 	(* Dimension of the system *)
-	let dimension = Array.length pi0cube in
+	let dimension = Array.length v0 in
 	(* Min & max bounds for the parameters *)
-	let min_bounds = Array.map (fun (low, high) -> NumConst.numconst_of_int low) pi0cube in
-	let max_bounds = Array.map (fun (low, high) -> NumConst.numconst_of_int high) pi0cube in
+	let min_bounds = Array.map (fun (low, high) -> NumConst.numconst_of_int low) v0 in
+	let max_bounds = Array.map (fun (low, high) -> NumConst.numconst_of_int high) v0 in
 	
 	(* Initial constraint of the program *)
 	let _, init_constraint = init_state in
@@ -405,13 +403,13 @@ let cover_behavioral_cartography program pi0cube init_state =
 
 
 (** Behavioral cartography algorithm with random selection of a pi0 *)
-let random_behavioral_cartography program pi0cube init_state nb =
+let random_behavioral_cartography program v0 init_state nb =
 	(* Retrieve the input options *)
 	let options = Input.get_options () in
 
 	(* Array for the pi0 *)
 	(***** TO OPTIMIZE: why create such a big array?! *****)
-	let pi0_computed = Array.make nb (random_pi0 program pi0cube) in
+	let pi0_computed = Array.make nb (random_pi0 program v0) in
 	(* Array for the results *)
 	(***** TO OPTIMIZE: why create such a big array?! *****)
 	let results = Array.make nb (Convex_constraint (LinearConstraint.false_constraint ())) in
@@ -430,7 +428,7 @@ let random_behavioral_cartography program pi0cube init_state nb =
 	let i = ref 1 in
 	let limit_reached = ref false in
 	while !i <= nb && not !limit_reached do
-		let pi0 = random_pi0 program pi0cube in
+		let pi0 = random_pi0 program v0 in
 
 		(* Print messages *)
 		print_message Debug_standard ("\n**************************************************");
@@ -759,7 +757,7 @@ if options#imitator_mode != Reachability_analysis && options#imitator_mode != Tr
 	print_message Debug_low ("Considering reference valuation in file " ^ options#pi0file ^ ".");
 
 (* Pi0 Parsing *)
-let pi0_parsed, pi0cube_parsed =
+let pi0_parsed, v0_parsed =
 	(* Depending on which operation we are performing *)
 	match options#imitator_mode with
 		(* If translation: no pi0 *)
@@ -773,7 +771,7 @@ let pi0_parsed, pi0cube_parsed =
 			if options#forcePi0 then  parser_lexer_from_string Pi0Parser.main Pi0Lexer.token "p1 = 1 & p2 = 2 & p3 = 3 & p4 = 4 & p5 = 5", []
 			(* Normal case *)
 			else parser_lexer_from_file Pi0Parser.main Pi0Lexer.token options#pi0file, []
-		(* Cartography : pi0cube *)
+		(* Cartography : v0 *)
 		| _ -> [], parser_lexer_from_file V0Parser.main V0Lexer.token options#pi0file
 in
 
@@ -786,10 +784,10 @@ print_message Debug_standard ("\nParsing done " ^ (after_seconds ()) ^ ".");
 (* Conversion to an abstract program *)
 (**************************************************)
 
-let program, pi0, pi0cube = 
+let program, pi0, v0 = 
 try (
 	ProgramConverter.abstract_program_of_parsing_structure
-		parsing_structure pi0_parsed pi0cube_parsed options
+		parsing_structure pi0_parsed v0_parsed options
 ) with 
 	| InvalidModel -> (print_error ("The input program contains errors. Please check it again."); abort_program (); exit 0)
 	| ProgramConverter.InvalidPi0 -> (print_error ("The input pi_0 file contains errors. Please check it again."); abort_program (); exit 0)
@@ -808,7 +806,7 @@ else
 	print_message Debug_standard ("The model is purely timed (no stopwatches).\n");
 
 
-	
+
 (**************************************************)
 (* Debug print: program *)
 (**************************************************)
@@ -921,58 +919,32 @@ match options#imitator_mode with
 		
 		(* MODE INVERSE METHOD *)
 		if options#imitator_mode = Inverse_method then (
-			(* If convex constraint (i.e., if no union mode) *)
-			if not options#union then(
-(*				(* compute k0 *)	
-				let k0 =  if options#dynamic then ( if options#pi_compatible then ( 
-							let (_ , k_constraint) = get_state reachability_graph 0 in
-							(LinearConstraint.hide program.clocks_and_discrete k_constraint);
-						) else(
-					match returned_constraint with
-					| Convex_constraint k_prime -> k_prime
-					| _ -> print_error ("Internal error when getting the result of post_star: 'options#dynamic' is activated but the constraint returned is not convex (type 'Convex_constraint')."); abort_program (); exit(0)
-				))
-				else ( 
-						if options#pi_compatible then ( 
-							let (_ , k_constraint) = get_state reachability_graph 0 in
-							(LinearConstraint.hide program.clocks_and_discrete k_constraint);
-						) else(Graph.compute_k0_destructive program reachability_graph)
-					)
-				in*)
-				(* print it *)
-				print_message Debug_standard ("\nFinal constraint K0 :");
-(* 				print_message Debug_standard (LinearConstraint.string_of_linear_constraint program.variable_names k0);            		 *)
-				print_message Debug_standard (string_of_returned_constraint program.variable_names returned_constraint);
-			) else (
-			(* Else (i.e., if union mode) *)
-
-				(* print it *)
-				print_message Debug_standard ("\nFinal constraint K0 under disjunctive form :");
-				print_message Debug_standard (string_of_returned_constraint program.variable_names returned_constraint);
-				
-			);
+			print_message Debug_standard ("\nFinal constraint K0 "
+				^ (if options#union then "(under disjunctive form) " else "")
+				^ ":");
+			print_message Debug_standard (string_of_returned_constraint program.variable_names returned_constraint);
 		);
 		[ ]
 
 
 	| Random_cartography nb ->
 	(* Behavioral cartography algorithm with random iterations *)
-		random_behavioral_cartography program pi0cube init_state_after_time_elapsing nb;
+		random_behavioral_cartography program v0 init_state_after_time_elapsing nb;
 
 	| Cover_cartography ->
 	(* Behavioral cartography algorithm with full coverage *)
-		cover_behavioral_cartography program pi0cube init_state_after_time_elapsing
+		cover_behavioral_cartography program v0 init_state_after_time_elapsing
 		
-in ();
+in
 
-let _ =
+(* Computation of the cartography *)
 if options#cart then ( 
 		print_message Debug_standard ("Cartography started " ^ (after_seconds ()) ^ "\n");
- 		cartography program pi0cube zones (options#program_prefix ^ "_cart")
+ 		Graphics.cartography program v0 zones (options#program_prefix ^ "_cart")
 	) else (
 		print_message Debug_medium "No graph for the cartography."
 	)
-in ();
+;
 
 
 (**************************************************)
