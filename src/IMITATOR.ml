@@ -154,15 +154,15 @@ Input.set_options options;
 (**************************************************)
 
 print_message Debug_standard
-	( "**************************************************");
-Printf.printf " *  IMITATOR %-36s *\n" version_string;
+	( "****************************************************");
+Printf.printf " *  IMITATOR %-38s *\n" version_string;
 print_message Debug_standard
-	( "*                                                *\n"
-	^ "*   Etienne ANDRE, Ulrich KUEHNE, Romain SOULAT  *\n"
-	^ "*                                   2009 - 2012  *\n"
-	^ "*     Laboratoire Specification et Verification  *\n"
-	^ "*                  ENS de Cachan & CNRS, France  *\n"
-	^ "**************************************************");
+	( "*                                                  *\n"
+	^ "*     Etienne ANDRE, Ulrich KUEHNE, Romain SOULAT  *\n"
+	^ "*                                     2009 - 2012  *\n"
+	^ "*               LSV, ENS de Cachan & CNRS, France  *\n"
+	^ "*  LIPN, Universite Paris 13, Sorbonne Paris Cite  *\n"
+	^ "****************************************************");
 
 
 (**************************************************)
@@ -199,7 +199,11 @@ if options#nb_args = 2 then(
 
 if options#acyclic && options#tree then (
 	options#acyclic_unset;
-	print_warning ("Ayclic mode is set although tree mode is already set. Only tree mode will be considered");
+	print_warning ("Ayclic mode is set although tree mode is already set. Only tree mode will be considered.");
+);
+
+if options#with_parametric_log && not options#with_log then (
+	print_warning ("Parametric log was asked, but log was not asked. No log will be output.");
 );
 
 
@@ -271,12 +275,15 @@ else
 
 (* Output *)
 
-if options#no_dot then
-	print_message Debug_standard ("No graphical output.");
-
-if options#no_log then
-	print_message Debug_standard ("No log mode.");
-
+if options#with_dot then
+	print_message Debug_standard ("Graphical output will be generated.")
+else
+	print_message Debug_medium ("No graphical output (default).");
+	
+if options#with_log then
+	print_message Debug_standard ("Log (description of states) will be generated.")
+else
+	print_message Debug_medium ("No state description (default).");
 
 (* LIMIT OF POST *)
 let _ =
@@ -362,7 +369,7 @@ let pi0_parsed, v0_parsed =
 		| _ -> [], parser_lexer_from_file V0Parser.main V0Lexer.token options#pi0file
 in
 
-print_message Debug_standard ("\nParsing done " ^ (after_seconds ()) ^ ".");
+print_message Debug_standard ("\nParsing completed " ^ (after_seconds ()) ^ ".");
 (** USELESS, even increases memory x-( **)
 (* Gc.major (); *)
 
@@ -388,10 +395,17 @@ print_message Debug_standard ("Memory for abstract program: " ^ (string_of_float
 
 (* With or without stopwatches *)
 if program.has_stopwatches then
-	print_message Debug_standard ("The model contains stopwatches.\n")
+	print_message Debug_standard ("The model contains stopwatches.")
 else
-	print_message Debug_standard ("The model is purely timed (no stopwatches).\n");
+	print_message Debug_low ("The model is purely timed (no stopwatches).");
 
+print_message Debug_standard "";
+
+
+(**************************************************)
+(* Set pi0 *)
+(**************************************************)
+Input.set_pi0 pi0;
 
 
 (**************************************************)
@@ -484,38 +498,29 @@ if options#imitator_mode = Inverse_method && options#branch_and_bound then(
 
 
 
-
 (**************************************************)
-(* Execute IMITATOR II *)
+(* Execute IMITATOR *)
 (**************************************************)
 
 let zones =
 match options#imitator_mode with
 	| Translation -> raise (InternalError "Translation can't be executed; program should have terminated before.");
-	(* Perform reachability analysis or inverse Method *)
-	| Reachability_analysis | Inverse_method ->
-		let returned_constraint, reachability_graph, _, _ =
-			Reachability.post_star program pi0 init_state_after_time_elapsing
-		in
-		(* Generate the DOT graph *)
-		print_message Debug_high "Generating the dot graph";
-		let radical = options#program_prefix in
-		Graphics.generate_graph program pi0 reachability_graph radical;
-		
-		(* MODE INVERSE METHOD *)
-		if options#imitator_mode = Inverse_method then (
-			print_message Debug_standard ("\nFinal constraint K0 "
-				^ (if options#union then "(under disjunctive form) " else "")
-				^ ":");
-			print_message Debug_standard (string_of_returned_constraint program.variable_names returned_constraint);
-		);
-		[ ]
+
+	| Reachability_analysis ->
+		Reachability.full_reachability program init_state_after_time_elapsing;
+		[]
+	
+	(* Inverse Method *)
+	| Inverse_method ->
+			Reachability.inverse_method program init_state_after_time_elapsing;
+		[]
 
 
 	| Random_cartography nb ->
 	(* Behavioral cartography algorithm with random iterations *)
 		Cartography.random_behavioral_cartography program v0 init_state_after_time_elapsing nb;
 
+		
 	| Cover_cartography ->
 	(* Behavioral cartography algorithm with full coverage *)
 		Cartography.cover_behavioral_cartography program v0 init_state_after_time_elapsing
@@ -524,7 +529,7 @@ in
 
 (* Computation of the cartography *)
 if options#cart then ( 
-		print_message Debug_standard ("Cartography started " ^ (after_seconds ()) ^ "\n");
+		print_message Debug_standard ("Graphical cartography started " ^ (after_seconds ()) ^ "\n");
  		Graphics.cartography program v0 zones (options#program_prefix ^ "_cart")
 	) else (
 		print_message Debug_total "Not in cartography mode: no graph for the cartography."

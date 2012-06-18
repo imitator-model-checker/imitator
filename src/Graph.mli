@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2009/12/08
- * Last modified: 2012/06/15
+ * Last modified: 2012/06/18
  *
  ****************************************************************)
 
@@ -65,14 +65,20 @@ val make : int -> reachability_graph
 (** Return the number of states in a graph *)
 val nb_states : reachability_graph -> int
 
+(** Return the global_location corresponding to a location_index *)
+val get_location : reachability_graph -> location_index -> Automaton.global_location
+
 (** Return the state of a state_index *)
 val get_state : reachability_graph -> state_index -> state
+
+(** Return the list of all state indexes *)
+val all_state_indexes : abstract_program -> reachability_graph -> state_index list
 
 (** Return the list of all constraints on the parameters associated to the states of a graph *)
 val all_p_constraints : abstract_program -> reachability_graph -> LinearConstraint.linear_constraint list
 
 (** Returns the intersection of all parameter constraints, thereby destroying all constraints *)
-val compute_k0_destructive : abstract_program -> reachability_graph -> LinearConstraint.linear_constraint
+(* val compute_k0_destructive : abstract_program -> reachability_graph -> LinearConstraint.linear_constraint *)
 
 (** Check if two states are equal *)
 val states_equal: state -> state -> bool
@@ -121,13 +127,9 @@ val merge : reachability_graph -> state_index list -> state_index list
 (** Empties the hash table giving the set of states for a given location; optimization for the jobshop example, where one is not interested in comparing  a state of iteration n with states of iterations < n *)
 val empty_states_for_comparison : reachability_graph -> unit
 
+(** Iterate over the reachable states (with possible side effects) *)
+val iterate_on_states : (state_index -> abstract_state -> unit) -> reachability_graph -> unit
 
-(****************************************************************)
-(** Interaction with dot *)
-(****************************************************************)
-
-(* Convert a graph to a dot file *)
-val dot_of_graph : AbstractModel.abstract_program -> AbstractModel.pi0 -> reachability_graph -> fancy:bool -> (string * string)
 
 
 (****************************************************************)

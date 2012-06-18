@@ -160,3 +160,14 @@ type abstract_program = {
 }
 
 
+(****************************************************************)
+(** Result *)
+(****************************************************************)
+
+(** Constraint returned by the inverse method *)
+type returned_constraint =
+	(** Constraint under convex form *)
+	| Convex_constraint of LinearConstraint.linear_constraint
+	(** Disjunction of constraints *)
+	| Union_of_constraints of LinearConstraint.linear_constraint list
+

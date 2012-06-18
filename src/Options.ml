@@ -7,7 +7,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Ulrich Kuehne, Etienne Andre
  * Created:       2010
- * Last modified: 2012/06/15
+ * Last modified: 2012/06/18
  *
  ****************************************************************)
  
@@ -37,16 +37,16 @@ class imitator_options =
 		val mutable cart = ref false
 		(* plot fancy states in dot *)
 		val mutable fancy = ref false
-		(* Does not print logs *)
-		val mutable no_log = ref false
-		(* Does not print graph of reachable states *)
-		val mutable no_dot = ref false
 		(* prefix for output files *)
 		val mutable program_prefix = ref ""
 		(* Gives statistics on number of calls *)
 		val mutable statistics = ref false
 		(* print time stamps *)
 		val mutable timed_mode = ref false
+		(* Print graph of reachable states *)
+		val mutable with_dot = ref false
+		(* Print logs *)
+		val mutable with_log = ref false
 		(* print parametric logs *)
 		val mutable with_parametric_log = ref false
 
@@ -106,8 +106,6 @@ class imitator_options =
 		method imitator_mode = !imitator_mode
 		method inclusion = !inclusion
 		method nb_args = nb_args
-		method no_dot = !no_dot
-		method no_log = !no_log
 		method no_merging = !no_merging
 		method no_random = !no_random
 		method pi_compatible = !pi_compatible
@@ -123,6 +121,8 @@ class imitator_options =
 		method timed_mode = !timed_mode
 		method tree = !tree
 		method union = !union
+		method with_dot = !with_dot
+		method with_log = !with_log
 		method with_parametric_log = !with_parametric_log
 
 		method pi0file = !pi0file
@@ -181,22 +181,22 @@ class imitator_options =
 				("-IMunion", Set union, " Algorithm IMUnion (defined in [AS11]): Returns the union of the constraint on the parameters associated to the last state of each trace. Default: 'false'");
 				("-log-prefix", Set_string program_prefix, " Sets the prefix for log files. Default: [model].");
 				("-mode", String set_mode, " Mode for " ^ program_name ^ ". Use 'reachability' for a parametric reachability analysis (no pi0 needed). Use 'inversemethod' for the inverse method. For the behavioral cartography algorithm, use 'cover' to cover all the points within V0, or 'randomXX' where XX is a number to iterate randomly algorithm (e.g., random5 or random100). Default: 'inversemethod'.");
-				("-no-dot", Set no_dot, " No graphical output using 'dot'. Default: false.");
-				("-no-log", Set no_log, " No generation of log files. Default: false.");
 				("-no-merging", Set no_merging, " Disable the merging technique of [AFS12]. Default: 'false' (enable)");
 				("-no-random", Set no_random, " No random selection of the pi0-incompatible inequality (select the first found). Default: false.");
 				("-post-limit", Int (fun i -> post_limit := Some i), " Limits the depth of the Post exploration. Default: no limit.");
 				("-PTA2CLP", Unit (fun _ -> pta2clp := true; imitator_mode := Translation), "Translate PTA into a CLP program (work in progress!), and exit without performing any analysis. Defaut : 'false'");
 				("-PTA2GML", Unit (fun _ -> pta2gml := true; imitator_mode := Translation), "Translate PTA into a GML program, and exit without performing any analysis. Experimental. Defaut : 'false'");
-				("-states-limit", Int (fun i -> states_limit := Some i), " States limit: will try to stop after reaching this number of states. Warning: the program may first finish to compute the current iteration before stopping. Default: no limit.");
+				("-states-limit", Int (fun i -> states_limit := Some i), " States limit: will try to stop after reaching this number of states. Warning: the program may have to first finish computing the current iteration before stopping. Default: no limit.");
 				("-statistics", Set statistics, " Print info on number of calls to PPL, and other statistics. Default: 'false'");
 				("-step", String (fun i -> (* SHOULD CHECK HERE THAT STEP IS EITHER A FLOAT OR AN INT *) step := (NumConst.numconst_of_string i)), " Step for the cartography. Default: 1/1.");
 				("-sync-auto-detect", Set sync_auto_detection, " Detect automatically the synchronized actions in each automaton. Default: false (consider the actions declared by the user)");
 				("-time-limit", Int (fun i -> time_limit := Some i), " Time limit in seconds. Warning: no guarantee that the program will stop exactly after the given amount of time. Default: no limit.");
 				("-timed", Set timed_mode, " Adds a timing information to each output of the program. Default: none.");
 				("-tree", Set tree, " Does not test if a new state was already encountered. To be set ONLY if the reachability graph is a tree. Default: 'false'");
+				("-with-dot", Set with_dot, " Graphical output using 'dot'. Default: false.");
+				("-with-log", Set with_log, " Generation of log files (description of states). Default: false.");
 				("-with-parametric-log", Set with_parametric_log, " Adds the elimination of the clock variables in the constraints in the log files. Default: false.");
-				("-version", Unit (fun _ -> print_version_string (); exit 0), " Print version string and exit.");
+				("-version", Unit (fun _ -> print_version_string (); exit 0), " Print version number and exit.");
 
 			] in
 					

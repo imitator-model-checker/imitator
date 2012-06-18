@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2012/05/10
- * Last modified: 2012/06/15
+ * Last modified: 2012/06/18
  *
  ****************************************************************)
 
@@ -23,8 +23,6 @@ class imitator_options :
 		val mutable imitator_mode : Global.imitator_mode ref
 		val mutable inclusion : bool ref
 		val mutable nb_args : int
-		val mutable no_dot : bool ref
-		val mutable no_log : bool ref
 		val mutable no_merging : bool ref
 		val mutable no_random : bool ref
 		val mutable pi0file : string ref
@@ -41,6 +39,8 @@ class imitator_options :
 		val mutable timed_mode : bool ref
 		val mutable tree : bool ref
 		val mutable union : bool ref
+		val mutable with_dot : bool ref
+		val mutable with_log : bool ref
 		val mutable with_parametric_log : bool ref
 		
 		method acyclic : bool
@@ -55,8 +55,6 @@ class imitator_options :
 		method imitator_mode : Global.imitator_mode
 		method inclusion : bool
 		method nb_args : int
-		method no_dot : bool
-		method no_log : bool
 		method no_merging : bool
 		method no_random : bool
 		method parse : unit
@@ -74,5 +72,7 @@ class imitator_options :
 		method timed_mode : bool
 		method tree : bool
 		method union : bool
+		method with_dot : bool
+		method with_log : bool
 		method with_parametric_log : bool
 end

@@ -6,7 +6,7 @@
 #
 #  Author:        Etienne Andre
 #  Created:       2009/09/07
-#  Last modified: 2012/06/15
+#  Last modified: 2012/06/18
 #  Ocaml version: 3.12.1
 ###############################################################
 
@@ -74,10 +74,10 @@ MAIN = $(SRC)/IMITATOR.cmo
 # MAIN_OPT = $(MAIN:.cmo=.cmx)
 
 # modules to compile
-MODULES = Global NumConst ReachabilityTree Options LinearConstraint Automaton Cache Input Pi0Lexer Pi0Parser V0Lexer V0Parser ModelLexer ModelParser GMLLexer GMLParser ModelPrinter Graph PTA2CLP PTA2GML ProgramConverter Reachability Graphics Cartography
+MODULES = Global NumConst ReachabilityTree Options LinearConstraint Automaton Cache Input Pi0Lexer Pi0Parser V0Lexer V0Parser ModelLexer ModelParser GMLLexer GMLParser ModelPrinter Graph PTA2CLP PTA2GML ProgramConverter Graphics Reachability Cartography
 
 # interfaces
-HEADERS = Global NumConst ReachabilityTree Options LinearConstraint Automaton Cache ParsingStructure AbstractModel Input Graph ModelPrinter PTA2CLP PTA2GML ProgramConverter Reachability Graphics Cartography
+HEADERS = Global NumConst ReachabilityTree Options LinearConstraint Automaton Cache ParsingStructure AbstractModel Input Graph ModelPrinter PTA2CLP PTA2GML ProgramConverter Graphics Reachability Cartography
 
 CMIS = $(addprefix $(SRC)/, $(addsuffix .cmi, $(HEADERS)))
 OBJS = $(addprefix $(SRC)/, $(addsuffix .cmo, $(MODULES)))
@@ -190,7 +190,7 @@ exe:
 
 ##### TRAINS #####
 
-# 	$(TARGET) $(EXAMPLE_PATH)/Train/Train1PTA.imi -mode reachability -with-parametric-log -incl
+# 	$(TARGET) $(EXAMPLE_PATH)/Train/Train1PTA.imi -mode reachability -incl
 # 	$(TARGET) $(EXAMPLE_PATH)/Train/Train1PTA.imi $(EXAMPLE_PATH)/Train/Train1PTA.pi0
 # 	$(TARGET) $(EXAMPLE_PATH)/Train/Train1PTA.imi -PTA2GML
 # 	$(TARGET) $(EXAMPLE_PATH)/Train/Train1PTA.gml -fromGML -mode reachability
@@ -218,8 +218,8 @@ exe:
 # 	$(TARGET) $(EXAMPLE_PATH)/Tests/model2.gml -fromGML -forcePi0
 # 	$(TARGET) $(EXAMPLE_PATH)/Tests/model2.imi -forcePi0
 
-	$(TARGET) $(EXAMPLE_PATH)/Tests/model2.imi $(EXAMPLE_PATH)/Tests/model2.pi0 -debug total
-# 	bin/IMITATOR32romain $(EXAMPLE_PATH)/Tests/model2.imi $(EXAMPLE_PATH)/Tests/model2.pi0 -debug total
+# 	$(TARGET) $(EXAMPLE_PATH)/Tests/model2.imi $(EXAMPLE_PATH)/Tests/model2.pi0 -debug total
+# # 	bin/IMITATOR32romain $(EXAMPLE_PATH)/Tests/model2.imi $(EXAMPLE_PATH)/Tests/model2.pi0 -debug total
 	
 # 	$(TARGET) $(EXAMPLE_PATH)/Tests/model2.imi $(EXAMPLE_PATH)/Tests/model2.pi0 -debug total
 
@@ -254,12 +254,14 @@ exe:
 
 ##### CASE STUDIES : HARDWARE #####
 
-# 	$(TARGET) $(EXAMPLE_PATH)/AndOr/AndOr.imi -mode reachability -post-limit 10
+# 	$(TARGET) $(EXAMPLE_PATH)/AndOr/AndOr.imi -mode reachability -post-limit 10 -debug nodebug
 # 	$(TARGET) $(EXAMPLE_PATH)/AndOr/AndOr.imi -mode reachability -states-limit 10
+# 	$(TARGET) $(EXAMPLE_PATH)/AndOr/AndOr.imi -mode reachability -time-limit 10
 
 # 	$(TARGET) $(EXAMPLE_PATH)/AndOr/AndOr.imi -mode reachability -post-limit 10 -PTA2GML
 
 # 	$(TARGET) $(EXAMPLE_PATH)/AndOr/AndOr.imi $(EXAMPLE_PATH)/AndOr/AndOr.pi0
+# 	$(TARGET) $(EXAMPLE_PATH)/AndOr/AndOr.imi $(EXAMPLE_PATH)/AndOr/AndOr.pi0 -with-dot
 # 	$(TARGET) $(EXAMPLE_PATH)/AndOr/AndOr.imi $(EXAMPLE_PATH)/AndOr/AndOr.pi0 -no-dot -no-log -statistics 
 # 	$(TARGET) $(EXAMPLE_PATH)/AndOr/AndOr.imi $(EXAMPLE_PATH)/AndOr/AndOr.pi0 -no-dot -no-log -statistics -dynamic
 # 	$(TARGET) $(EXAMPLE_PATH)/AndOr/AndOr.imi $(EXAMPLE_PATH)/AndOr/AndOr.pi0 -no-dot -no-log -jobshop
@@ -346,7 +348,7 @@ exe:
 # 	./IMITATOR Examples/BangOlufsen/BangOlufsen2.imi -mode reachability -no-dot -post-limit 30 -debug low
 
 # 	$(TARGET) $(EXAMPLE_PATH)/BRP/brp.imi -mode reachability 
-# 	$(TARGET) $(EXAMPLE_PATH)/BRP/brp.imi $(EXAMPLE_PATH)/BRP/brp.pi0 -no-dot -no-log -statistics
+# 	$(TARGET) $(EXAMPLE_PATH)/BRP/brp.imi $(EXAMPLE_PATH)/BRP/brp.pi0 -statistics
 # 	$(TARGET) $(EXAMPLE_PATH)/BRP/brp.imi $(EXAMPLE_PATH)/BRP/brp.pi0 -no-dot -no-log -statistics -dynamic
 # 	$(TARGET) $(EXAMPLE_PATH)/BRP/brp.imi $(EXAMPLE_PATH)/BRP/brp.pi0 -no-dot -no-log
 # 	bin/IMITATOR2.41 $(EXAMPLE_PATH)/BRP/brp.imi $(EXAMPLE_PATH)/BRP/brp.pi0 -no-dot -no-log
@@ -361,7 +363,7 @@ exe:
 # 	./IMITATOR Examples/BRP/brp.imi Examples/BRP/brp.v0 -mode cover
 
 # 	$(TARGET) $(EXAMPLE_PATH)/RCP/RCP.imi -mode reachability -PTA2GML
-# 	$(TARGET) $(EXAMPLE_PATH)/RCP/RCP.imi $(EXAMPLE_PATH)/RCP/RCP.pi0 -no-dot -no-log -statistics
+# 	$(TARGET) $(EXAMPLE_PATH)/RCP/RCP.imi $(EXAMPLE_PATH)/RCP/RCP.pi0 -statistics
 # 	$(TARGET) $(EXAMPLE_PATH)/RCP/RCP.imi $(EXAMPLE_PATH)/RCP/RCP.pi0 -no-dot -no-log -statistics -dynamic
 # 	$(TARGET) $(EXAMPLE_PATH)/RCP/RCP.imi $(EXAMPLE_PATH)/RCP/RCP.pi0 -no-dot -no-log
 # 	bin/IMITATOR2.41 $(EXAMPLE_PATH)/RCP/RCP.imi $(EXAMPLE_PATH)/RCP/RCP.pi0 -no-dot -no-log
@@ -377,7 +379,7 @@ exe:
 # 	./IMITATOR Examples/RCP/RCP_bounded.imi Examples/RCP/RCP_bounded.pi0 -no-dot -no-log
 
 # 	$(TARGET) $(EXAMPLE_PATH)/CSMACD/csmacdPrism.imi -mode reachability 
-# 	$(TARGET) $(EXAMPLE_PATH)/CSMACD/csmacdPrism.imi $(EXAMPLE_PATH)/CSMACD/csmacdPrism.pi0 -no-dot -no-log
+# 	$(TARGET) $(EXAMPLE_PATH)/CSMACD/csmacdPrism.imi $(EXAMPLE_PATH)/CSMACD/csmacdPrism.pi0
 # 	$(TARGET) $(EXAMPLE_PATH)/CSMACD/csmacdPrism.imi $(EXAMPLE_PATH)/CSMACD/csmacdPrism.pi0 -no-dot -no-log -statistics -dynamic
 # 	$(TARGET) $(EXAMPLE_PATH)/CSMACD/csmacdPrism.imi $(EXAMPLE_PATH)/CSMACD/csmacdPrism.pi0 -no-dot -no-log -statistics -jobshop
 # 	$(TARGET) $(EXAMPLE_PATH)/CSMACD/csmacdPrism.imi $(EXAMPLE_PATH)/CSMACD/csmacdPrism.pi0 -no-dot -no-log
@@ -459,7 +461,7 @@ exe:
 ##### CASE STUDIES : SIMOP #####
 # 	$(TARGET) $(EXAMPLE_PATH)/SIMOP/simop.imi -mode reachability 
 
-# 	$(TARGET) $(EXAMPLE_PATH)/SIMOP/simop.imi $(EXAMPLE_PATH)/SIMOP/simop.pi0 -incl -no-dot -no-log -statistics
+	$(TARGET) $(EXAMPLE_PATH)/SIMOP/simop.imi $(EXAMPLE_PATH)/SIMOP/simop.pi0 -with-log -with-dot -fancy
 # 	$(TARGET) $(EXAMPLE_PATH)/SIMOP/simop.imi $(EXAMPLE_PATH)/SIMOP/simop.pi0 -incl -no-dot -no-log -statistics -dynamic
 # 	$(TARGET) $(EXAMPLE_PATH)/SIMOP/simop.imi $(EXAMPLE_PATH)/SIMOP/simop.pi0 -incl -no-dot -no-log
 # 	bin/IMITATOR2.41 $(EXAMPLE_PATH)/SIMOP/simop.imi $(EXAMPLE_PATH)/SIMOP/simop.pi0 -incl -no-dot -no-log
@@ -481,7 +483,7 @@ exe:
 # 	bin/IMITATOR2.4 $(EXAMPLE_PATH)/Scheduling/LA02_2.imi $(EXAMPLE_PATH)/Scheduling/LA02_2.pi0 -incl -jobshop
 
 ##### JOB SHOP #####
-# 	$(TARGET) $(EXAMPLE_PATH)/Jobshop/maler_2_4.imi -mode reachability -no-dot -no-log -incl 
+# 	$(TARGET) $(EXAMPLE_PATH)/Jobshop/maler_2_4.imi -mode reachability -incl 
 # 	bin/IMITATOR2.4 $(EXAMPLE_PATH)/Jobshop/maler_2_4.imi -mode reachability -no-dot -no-log -incl -jobshop
 # 	bin/IMITATOR2.375 $(EXAMPLE_PATH)/Jobshop/maler_2_4.imi -mode reachability -no-dot -no-log -incl -jobshop
 # 	bin/IMITATOR2.374 $(EXAMPLE_PATH)/Jobshop/maler_2_4.imi -mode reachability -no-dot -no-log -incl -jobshop
@@ -492,8 +494,8 @@ exe:
 # 	bin/IMITATOR2.35.111115 $(EXAMPLE_PATH)/Jobshop/maler_2_4.imi -mode reachability -no-dot -no-log -IMincl
 # 	bin/IMITATOR2.34.111115 $(EXAMPLE_PATH)/Jobshop/maler_2_4.ancien.imi -mode reachability -no-dot -no-log -IMincl
 
-# 	$(TARGET) $(EXAMPLE_PATH)/Jobshop/maler_2_4.imi $(EXAMPLE_PATH)/Jobshop/maler_2_4.pi0 -no-dot -no-log -acyclic -statistics
-# 	$(TARGET) $(EXAMPLE_PATH)/Jobshop/maler_2_4.imi $(EXAMPLE_PATH)/Jobshop/maler_2_4.pi0 -no-dot -no-log -incl
+# 	$(TARGET) $(EXAMPLE_PATH)/Jobshop/maler_2_4.imi $(EXAMPLE_PATH)/Jobshop/maler_2_4.pi0 -acyclic -statistics
+# 	$(TARGET) $(EXAMPLE_PATH)/Jobshop/maler_2_4.imi $(EXAMPLE_PATH)/Jobshop/maler_2_4.pi0 -incl
 # 	bin/IMITATOR2.41 $(EXAMPLE_PATH)/Jobshop/maler_2_4.imi $(EXAMPLE_PATH)/Jobshop/maler_2_4.pi0 -no-dot -no-log -incl
 # 	bin/IMITATOR2.4 $(EXAMPLE_PATH)/Jobshop/maler_2_4.imi $(EXAMPLE_PATH)/Jobshop/maler_2_4.pi0 -no-dot -no-log -incl -jobshop
 # 	bin/IMITATOR2.4 $(EXAMPLE_PATH)/Jobshop/maler_2_4.imi $(EXAMPLE_PATH)/Jobshop/maler_2_4.pi0 -no-dot -no-log -incl -jobshop
@@ -512,7 +514,7 @@ exe:
 # 	bin/IMITATOR2.35 $(EXAMPLE_PATH)/Jobshop/maler_3_4.imi -mode reachability -no-dot -no-log -incl -statistics -post-limit 10
 # 	bin/IMITATOR2.34.111115 $(EXAMPLE_PATH)/Jobshop/maler_3_4_inst.imi -mode reachability -no-dot -no-log -IMincl
 
-# 	$(TARGET) $(EXAMPLE_PATH)/Jobshop/maler_3_4.imi $(EXAMPLE_PATH)/Jobshop/maler_3_4.pi0 -no-dot -no-log -incl
+# 	$(TARGET) $(EXAMPLE_PATH)/Jobshop/maler_3_4.imi $(EXAMPLE_PATH)/Jobshop/maler_3_4.pi0 -incl
 # 	bin/IMITATOR2.41 $(EXAMPLE_PATH)/Jobshop/maler_3_4.imi $(EXAMPLE_PATH)/Jobshop/maler_3_4.pi0 -no-dot -no-log -incl
 # 	bin/IMITATOR2.4 $(EXAMPLE_PATH)/Jobshop/maler_3_4.imi $(EXAMPLE_PATH)/Jobshop/maler_3_4.pi0 -no-dot -no-log -incl -jobshop
 # 	bin/IMITATOR2.375 $(EXAMPLE_PATH)/Jobshop/maler_3_4.imi $(EXAMPLE_PATH)/Jobshop/maler_3_4.pi0 -no-dot -no-log -incl -jobshop

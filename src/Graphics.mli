@@ -15,7 +15,6 @@
 
 open Global
 open LinearConstraint
-open Reachability
 open AbstractModel
 
 
@@ -36,4 +35,7 @@ val strict_to_not_strict_inequality : linear_inequality -> linear_inequality
 
 val cartography : abstract_program ->  (int*int) array -> returned_constraint list ->  string -> unit
 
-val generate_graph : abstract_program -> pi0 -> Graph.reachability_graph -> string -> unit
+val generate_graph : abstract_program -> Graph.reachability_graph -> string -> unit
+
+(* Convert a graph to a dot file *)
+(* val dot_of_graph : AbstractModel.abstract_program -> reachability_graph -> fancy:bool -> (string * string) *)

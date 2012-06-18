@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Ulrich Kuehne, Etienne Andre
  * Created:       2010/07/22
- * Last modified: 2012/06/15
+ * Last modified: 2012/06/18
  *
  ************************************************************)
 
@@ -22,15 +22,8 @@ open Gc
 
 
 (**************************************************************)
-(* Types *)
+(* Exception *)
 (**************************************************************)
-(** Constraint returned by the inverse method *)
-type returned_constraint =
-	(** Constraint under convex form *)
-	| Convex_constraint of LinearConstraint.linear_constraint
-	(** Disjunction of constraints *)
-	| Union_of_constraints of LinearConstraint.linear_constraint list
-
 
 exception Unsat_exception
 
@@ -137,15 +130,6 @@ let nb_unsat2 = ref 0
 
 
 
-
-
-(**************************************************************)
-(* String functions *)
-(**************************************************************)
-let string_of_returned_constraint variable_names = function 
-	| Convex_constraint linear_constraint -> LinearConstraint.string_of_linear_constraint variable_names linear_constraint
-	(** Disjunction of constraints *)
-	| Union_of_constraints k_list -> string_of_list_of_string_with_sep "\n OR \n" (List.map (LinearConstraint.string_of_linear_constraint variable_names) k_list)
 
 
 
@@ -972,9 +956,12 @@ let next_combination combination max_indexes =
 (*-----------------------------------------------------*)
 (* returns (true, p_constraint) iff the state is pi0-compatible (false, _) otherwise *)
 (*-----------------------------------------------------*)
-let inverse_method_check_constraint program pi0 reachability_graph constr =
+let inverse_method_check_constraint program reachability_graph constr =
 	(* Retrieve the input options *)
 	let options = Input.get_options () in
+	(* Retrieve the pi0 (dynamic!) *)
+	let pi0 = Input.get_pi0 () in
+	
 	(* Hide non parameters (X) *)
 	print_message Debug_high ("\nHiding non parameters:");
 	let p_constraint = LinearConstraint.hide program.clocks_and_discrete constr in
@@ -1017,6 +1004,14 @@ let inverse_method_check_constraint program pi0 reachability_graph constr =
 		let among = if List.length incompatible > 1 then (" (" ^ randomly ^ "selected among " ^ (string_of_int (List.length incompatible)) ^ " inequalities)") else "" in
 		print_message Debug_standard ("  Adding the following inequality" ^ among ^ ":");
 		print_message Debug_standard ("  " ^ (LinearConstraint.string_of_linear_inequality program.variable_names negated_inequality));
+		
+		
+		(* Add the p_constraint to the result (except if case variants) *)
+		if not (options#pi_compatible || options#union) then(
+			print_message Debug_high ("Updating k_result with the negated inequality");
+			LinearConstraint.intersection_assign !k_result [LinearConstraint.make [negated_inequality]];
+		);
+		
 
 		(* Update the previous states (including the 'new_states' and the 'orig_state') *)
 		print_message Debug_medium ("\nUpdating all the previous states.\n");
@@ -1100,7 +1095,7 @@ let compute_transitions program location constr action_index automata aut_table 
 (*-----------------------------------------------------*)
 (* returns a list of (really) new states               *)
 (*-----------------------------------------------------*)
-let post program pi0 reachability_graph orig_state_index =
+let post program reachability_graph orig_state_index =
 	(* Retrieve the input options *)
 	let options = Input.get_options () in
 	(* Original location: static *)
@@ -1222,7 +1217,7 @@ let post program pi0 reachability_graph orig_state_index =
 					if options#imitator_mode = Reachability_analysis then ( 
 						true, (LinearConstraint.true_constraint ())
 					) else (
-						inverse_method_check_constraint program pi0 reachability_graph final_constraint
+						inverse_method_check_constraint program reachability_graph final_constraint
 					) in
 					
 					if add_new_state then (
@@ -1234,9 +1229,11 @@ let post program pi0 reachability_graph orig_state_index =
 							print_message Debug_total ("Consider the state \n" ^ (string_of_state program new_state));
 						);
 
-						(* Add the p_constraint to the result (except if case variants) *)
-						if not (options#pi_compatible || options#union) then(
-							LinearConstraint.intersection_assign !k_result [p_constraint]);
+						(* If IM: Add the p_constraint to the result (except if case variants) *)
+						if options#imitator_mode != Reachability_analysis && not (options#pi_compatible || options#union) then(
+							print_message Debug_high ("Updating k_result");
+							LinearConstraint.intersection_assign !k_result [p_constraint];
+						);
 						
 						(* Try to add this new state to the graph *)
 						let new_state_index, added = (
@@ -1293,126 +1290,6 @@ let post program pi0 reachability_graph orig_state_index =
 	List.rev (!new_states)
 
 
-	
-(*---------------------------------------------------*)
-(* Compute and print the final constraint *)
-(*---------------------------------------------------*)
-let compute_and_return_result program reachability_graph nb_iterations counter =
-	(* Retrieve the input options *)
-	let options = Input.get_options () in
-	(*--------------------------------------------------*)
-	(* Print information *)
-	(*--------------------------------------------------*)
-	print_message Debug_standard (
-		"\nFixpoint reached after "
-		^ (string_of_int nb_iterations) ^ " iteration" ^ (s_of_int nb_iterations) ^ ""
-		^ " in " ^ (string_of_seconds (time_from counter)) ^ ": "
-		^ (string_of_int (Graph.nb_states reachability_graph)) ^ " reachable state" ^ (s_of_int (Graph.nb_states reachability_graph))
-		^ " with "
-		^ (string_of_int (Hashtbl.length (reachability_graph.transitions_table))) ^ " transition" ^ (s_of_int (Hashtbl.length (reachability_graph.transitions_table))) ^ ".");
-	if options#imitator_mode != Reachability_analysis && (not options#no_random) then (
-		if(!nb_random_selections > 0) then(
-			print_message Debug_standard "Analysis may have been non-deterministic:";
-			print_message Debug_standard ((string_of_int !nb_random_selections) ^ " random selection" ^ (s_of_int !nb_random_selections) ^ " have been performed.");
-		) else (
-			print_message Debug_standard "Analysis has been fully deterministic.";
-		)
-	);
-
-	(*--------------------------------------------------*)
-	(* Performances *)
-	(*--------------------------------------------------*)
-	if options#statistics then (
-		(* PPL *)
-		print_message Debug_standard "--------------------";
-		print_message Debug_standard "Statistics on PPL";
-		print_message Debug_standard ("--------------------" ^ (LinearConstraint.get_statistics ()));
-		
-		(* Graph *)
-		print_message Debug_standard "--------------------";
-		print_message Debug_standard "Statistics on Graph";
-		print_message Debug_standard "--------------------";
-		print_message Debug_standard (Graph.get_statistics ());
-		print_message Debug_standard (Graph.get_statistics_states reachability_graph);
-		
-		print_message Debug_standard "--------------------";
-		print_message Debug_standard "Statistics on Cache";
-		print_message Debug_standard "--------------------";
-		print_stats ();
-		
-		print_message Debug_standard "--------------------";
-		print_message Debug_standard "Statistics on Reachability";
-		print_message Debug_standard "--------------------";
-		print_message Debug_standard ("Number of early skips because of unsatisfiable guards: " ^ (string_of_int !nb_early_unsatisfiable));
-		print_message Debug_standard ("Number of early skips because no actions: " ^ (string_of_int !nb_early_skip));
-		print_message Debug_standard ("Number of unsatisfiable constraints: " ^ (string_of_int !nb_unsatisfiable));
-		print_message Debug_standard ("Number of unsat1: " ^ (string_of_int !nb_unsat1));
-		print_message Debug_standard ("Number of unsat2: " ^ (string_of_int !nb_unsat2));
-		print_message Debug_standard ("Number of combinations considered: " ^ (string_of_int !nb_combinations));
-		
-		print_message Debug_standard "--------------------";
-		print_message Debug_standard "Statistics on memory";
-		print_message Debug_standard "--------------------";
-		let gc_stat = Gc.stat () in
-		let nb_words = gc_stat.minor_words +. gc_stat.major_words -. gc_stat.promoted_words in
-		let nb_ko = nb_words *. 4.0 /. 1024.0 in
-		print_message Debug_standard ("Total memory: " ^ (string_of_float nb_ko) ^ " KB (i.e., " ^ (string_of_float nb_words) ^ " words)");
-		Gc.print_stat stdout;
-(*		print_message Debug_standard "--------------------";
-		Gc.major();
-		Gc.print_stat stdout;
-		print_message Debug_standard "--------------------";
-		Gc.full_major();
-		Gc.print_stat stdout;*)
-	);
-
-	(*--------------------------------------------------*)
-	(* Computation of the returned constraint *)
-	(*--------------------------------------------------*)
-	let my_constraint =
-	if options#imitator_mode = Reachability_analysis then Convex_constraint (LinearConstraint.true_constraint ())
-	else(
-		(* Case: dynamic OR case IM standard : return the intersection *)
-		(** TODO: recheck this part! (Etienne, 15/6/2012) *)
-		if (*options#dynamic ||*) (not options#union && not options#pi_compatible) then (
-			print_message Debug_total ("\nMode: IM standard.");
-			Convex_constraint !k_result
-		) else (
-		(* Case union : return the constraint on the parameters associated to slast*)
-			if options#union then (
-				print_message Debug_total ("\nMode: union.");
-				let list_of_constraints =
-				List.map (fun state_index ->
-					print_message Debug_medium ("\nOne state found.");
-					(* Get the constraint on clocks and parameters *)
-					let (_, current_constraint) =
-						Graph.get_state reachability_graph state_index
-					(* Eliminate clocks *)
-					in LinearConstraint.hide program.clocks_and_discrete current_constraint
-				) !slast
-				in Union_of_constraints list_of_constraints
-			)
-		(* Case IMorig : return only the current constraint *)
-			else if options#pi_compatible then (
-				let (_ , k_constraint) = get_state reachability_graph 0 in
-					Convex_constraint (LinearConstraint.hide program.clocks_and_discrete k_constraint) 
-			) else (
-				raise (InternalError ("This code should be unreachable (in end of post_star, when returning the constraint)."));
-			)
-(*		(* Case IM : intersection *)
-			else (
-				(** HERE PROBLEM IF ONE WANTS TO COMPUTE THE states FILE AFTER (destruction of the states) **)
-				Convex_constraint (Graph.compute_k0_destructive program reachability_graph)
-			)*)
-		)
-	)
-	in
-
-	(*--------------------------------------------------*)
-	(* Return the result *)
-	(*--------------------------------------------------*)
-	my_constraint, reachability_graph, nb_iterations, counter
-
 
 
 
@@ -1452,7 +1329,7 @@ let branch_and_bound program pi0 init_state =
 	let nb_variables = program.nb_variables in
 	let nb_automata = program.nb_automata in
 	(* Debut prints *)
-	print_message Debug_low ("Starting reachability analysis (post*) from state:");
+	print_message Debug_low ("Starting reachability analysis from state:");
 	print_message Debug_low (string_of_state program init_state);
 	(* Guess the number of reachable states *)
 	let guessed_nb_states = 10 * (nb_actions + nb_automata + nb_variables) in 
@@ -1484,26 +1361,32 @@ let branch_and_bound program pi0 init_state =
 (*---------------------------------------------------*)
 (* Compute the reachability graph from a given state *)
 (*---------------------------------------------------*)
-let post_star program pi0 init_state = 
+let post_star program init_state = 
 	(* Retrieve the input options *)
 	let options = Input.get_options () in
-	(*Initialisation of k_result*)
-	k_result := LinearConstraint.true_constraint ();
+	
+	(* Get some variables *)
+	let nb_actions = program.nb_actions in
+	let nb_variables = program.nb_variables in
+	let nb_automata = program.nb_automata in
+
+	(* copy init state, as it might be destroyed later *)
+	let init_loc, init_constr = init_state in
+	let init_state = (init_loc, LinearConstraint.copy init_constr) in
+
+	(*Initialization of k_result*)
+(* 	k_result := LinearConstraint.true_constraint (); *)
+	k_result := LinearConstraint.hide program.clocks_and_discrete init_constr;
+
 	(*Initialization of slast : used in union mode only*)
 	slast := [];
 	(* Time counter *)
 	let counter = ref (Unix.gettimeofday()) in
 	(* Set the counter of selections to 0 *)
 	nb_random_selections := 0;
-	(* copy init state, as it might be destroyed later *)
-	let init_loc, init_constr = init_state in
-	let init_state = (init_loc, LinearConstraint.copy init_constr) in
-	(* Get some variables *)
-	let nb_actions = program.nb_actions in
-	let nb_variables = program.nb_variables in
-	let nb_automata = program.nb_automata in
+
 	(* Debut prints *)
-	print_message Debug_low ("Starting reachability analysis (post*) from state:");
+	print_message Debug_low ("Starting reachability analysis from state:");
 	print_message Debug_low (string_of_state program init_state);
 	(* Guess the number of reachable states *)
 	let guessed_nb_states = 10 * (nb_actions + nb_automata + nb_variables) in 
@@ -1539,7 +1422,7 @@ let post_star program pi0 init_state =
 			(* Count the states for debug purpose: *)
 			num_state := !num_state + 1;
 			(* Perform the post *)
-			let post = post program pi0 reachability_graph orig_state_index in
+			let post = post program reachability_graph orig_state_index in
 			let new_states = post in
 			(* Debug *)
 			if debug_mode_greater Debug_medium then (
@@ -1612,6 +1495,7 @@ let post_star program pi0 init_state =
 		end;
 	done;
 	
+	(* There were still states to explore *)
 	if !limit_reached && !newly_found_new_states != [] then(
 		begin
 		match options#post_limit with
@@ -1636,7 +1520,216 @@ let post_star program pi0 init_state =
 		end;
 	);
 
-	(* Return the final constraint *)
-	compute_and_return_result program reachability_graph !nb_iterations !counter
+	print_message Debug_standard (
+		"\nFixpoint reached after "
+		^ (string_of_int !nb_iterations) ^ " iteration" ^ (s_of_int !nb_iterations) ^ ""
+(* 		^ " in " ^ (string_of_seconds (time_from !counter)) *)
+		^ ": "
+		^ (string_of_int (Graph.nb_states reachability_graph)) ^ " reachable state" ^ (s_of_int (Graph.nb_states reachability_graph))
+		^ " with "
+		^ (string_of_int (Hashtbl.length (reachability_graph.transitions_table))) ^ " transition" ^ (s_of_int (Hashtbl.length (reachability_graph.transitions_table))) ^ ".");
+
+	(* Return the graph, the iteration and the counter *)
+	(*compute_and_return_result program*) reachability_graph , !nb_iterations , !counter , !nb_random_selections
+
+
+
+
+(*--------------------------------------------------*)
+(* Performances *)
+(*--------------------------------------------------*)
+let print_statistics reachability_graph =
+	(* Retrieve the input options *)
+	let options = Input.get_options () in
+
+	if options#statistics then (
+		(* PPL *)
+		print_message Debug_standard "--------------------";
+		print_message Debug_standard "Statistics on PPL";
+		print_message Debug_standard ("--------------------" ^ (LinearConstraint.get_statistics ()));
+		
+		(* Graph *)
+		print_message Debug_standard "--------------------";
+		print_message Debug_standard "Statistics on Graph";
+		print_message Debug_standard "--------------------";
+		print_message Debug_standard (Graph.get_statistics ());
+		print_message Debug_standard (Graph.get_statistics_states reachability_graph);
+		
+		print_message Debug_standard "--------------------";
+		print_message Debug_standard "Statistics on Cache";
+		print_message Debug_standard "--------------------";
+		print_stats ();
+		
+		print_message Debug_standard "--------------------";
+		print_message Debug_standard "Statistics on Reachability";
+		print_message Debug_standard "--------------------";
+		print_message Debug_standard ("Number of early skips because of unsatisfiable guards: " ^ (string_of_int !nb_early_unsatisfiable));
+		print_message Debug_standard ("Number of early skips because no actions: " ^ (string_of_int !nb_early_skip));
+		print_message Debug_standard ("Number of unsatisfiable constraints: " ^ (string_of_int !nb_unsatisfiable));
+		print_message Debug_standard ("Number of unsat1: " ^ (string_of_int !nb_unsat1));
+		print_message Debug_standard ("Number of unsat2: " ^ (string_of_int !nb_unsat2));
+		print_message Debug_standard ("Number of combinations considered: " ^ (string_of_int !nb_combinations));
+		
+		print_message Debug_standard "--------------------";
+		print_message Debug_standard "Statistics on memory";
+		print_message Debug_standard "--------------------";
+		let gc_stat = Gc.stat () in
+		let nb_words = gc_stat.minor_words +. gc_stat.major_words -. gc_stat.promoted_words in
+		let nb_ko = nb_words *. 4.0 /. 1024.0 in
+		print_message Debug_standard ("Total memory: " ^ (string_of_float nb_ko) ^ " KB (i.e., " ^ (string_of_float nb_words) ^ " words)");
+		Gc.print_stat stdout;
+(*		print_message Debug_standard "--------------------";
+		Gc.major();
+		Gc.print_stat stdout;
+		print_message Debug_standard "--------------------";
+		Gc.full_major();
+		Gc.print_stat stdout;*)
+	)
+
+
+
+
+
+(************************************************************)
+(************************************************************)
+(** Main functions *)
+(************************************************************)
+(************************************************************)
+
+
+(************************************************************)
+(* Full reachability analysis *)
+(************************************************************)
+let full_reachability program init_state =
+	(* Retrieve the input options *)
+	let options = Input.get_options () in
+
+	(* Call to generic function *)
+	let reachability_graph , _ , counter ,  _ = post_star program init_state in
+	
+	print_message Debug_standard (
+		"\nReachabiliy analysis completed " ^ (after_seconds ()) ^ "."
+	);
+	print_message Debug_low (
+		"Computation time for reachability analysis: "
+		^ (string_of_seconds (time_from counter)) ^ "."
+	);
+
+	(* Print statistics *)
+	print_statistics reachability_graph;
+	
+	(* Generate graphics *)
+	let radical = options#program_prefix in
+	Graphics.generate_graph program reachability_graph radical;
+	
+	(* The end*)
+	()
+
+
+
+(************************************************************)
+(* Main inverse method functions *)
+(************************************************************)
+
+(*--------------------------------------------------*)
+(* Encapsulation function for IM, called by the real inverse method function, and by the cartography algorithms *)
+(*--------------------------------------------------*)
+let inverse_method_gen program init_state =
+	(* Retrieve the input options *)
+	let options = Input.get_options () in
+	
+	(* Compute post star (IM is called automatically inside) *)
+	let reachability_graph, nb_iterations, counter, nb_random_selections = post_star program init_state in
+	
+	(*--------------------------------------------------*)
+	(* Print information *)
+	(*--------------------------------------------------*)
+	if not options#no_random then (
+		if (nb_random_selections > 0) then (
+			print_message Debug_standard "Analysis may have been non-deterministic:";
+			print_message Debug_standard ((string_of_int nb_random_selections) ^ " random selection" ^ (s_of_int nb_random_selections) ^ " have been performed.");
+		) else (
+			print_message Debug_standard "Analysis has been fully deterministic.";
+		)
+	);
+	
+
+	(*--------------------------------------------------*)
+	(* Computation of the returned constraint *)
+	(*--------------------------------------------------*)
+	let returned_constraint =
+	(* Case IM standard : return the intersection *)
+	if (*options#dynamic ||*) (not options#union && not options#pi_compatible) then (
+		print_message Debug_total ("\nMode: IM standard.");
+		Convex_constraint !k_result
+	) else (
+	(* Case union : return the constraint on the parameters associated to slast*)
+		if options#union then (
+			print_message Debug_total ("\nMode: union.");
+			let list_of_constraints =
+			List.map (fun state_index ->
+				print_message Debug_medium ("\nOne state found.");
+				(* Get the constraint on clocks and parameters *)
+				let (_, current_constraint) =
+					Graph.get_state reachability_graph state_index
+				(* Eliminate clocks *)
+				in LinearConstraint.hide program.clocks_and_discrete current_constraint
+			) !slast
+			in Union_of_constraints list_of_constraints
+		)
+	(* Case IMorig : return only the current constraint, viz., the constraint of the first state *)
+		else if options#pi_compatible then (
+			let (_ , k_constraint) = get_state reachability_graph 0 in
+				print_message Debug_total ("\nMode: IMorig.");
+				Convex_constraint (LinearConstraint.hide program.clocks_and_discrete k_constraint) 
+		) else (
+			raise (InternalError ("This code should be unreachable (in end of inverse_method, when returning the constraint)."));
+		)
+(*		(* Case IM : intersection *)
+		else (
+			(** HERE PROBLEM IF ONE WANTS TO COMPUTE THE states FILE AFTER (destruction of the states) **)
+			Convex_constraint (Graph.compute_k0_destructive program reachability_graph)
+		)*)
+	)
+	in
+
+	(*--------------------------------------------------*)
+	(* Return result *)
+	(*--------------------------------------------------*)
+	returned_constraint, reachability_graph, nb_iterations, counter
 	
 	
+
+(*--------------------------------------------------*)
+let inverse_method program init_state =
+(*--------------------------------------------------*)
+	(* Retrieve the input options *)
+	let options = Input.get_options () in
+
+	(* Call the inverse method *)
+	let returned_constraint, reachability_graph, nb_iterations, counter = inverse_method_gen program init_state in
+	
+	(* Here comes the result *)
+	print_message Debug_standard ("\nFinal constraint K0 "
+		^ (if options#union then "(under disjunctive form) " else "")
+		^ ":");
+	print_message Debug_nodebug (string_of_returned_constraint program.variable_names returned_constraint);
+	print_message Debug_standard (
+		"\nInverse method successfully finished " ^ (after_seconds ()) ^ "."
+	);
+	print_message Debug_low (
+		"Computation time for IM only: "
+		^ (string_of_seconds (time_from counter)) ^ "."
+	);
+	
+	(* Generate graphics *)
+	let radical = options#program_prefix in
+	Graphics.generate_graph program reachability_graph radical;
+	
+	(* Print statistics *)
+	print_statistics reachability_graph;
+
+	(* The end *)
+	()
+
+

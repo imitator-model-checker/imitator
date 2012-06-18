@@ -115,8 +115,12 @@ let cover_behavioral_cartography program v0 init_state =
 			(* Prevent the debug messages *)
 			if not (debug_mode_greater Debug_medium) then
 				set_debug_mode Debug_nodebug;
-			(* Compute the post and the constraint *)
-			let returned_constraint, graph, nb_iterations, counter = Reachability.post_star program pi0 init_state in
+			
+			(* Set the new pi0 *)
+			Input.set_pi0 pi0;
+			
+			(* Call the inverse method *)
+			let returned_constraint, graph, nb_iterations, counter = Reachability.inverse_method_gen program init_state in
 			(* Get the debug mode back *)
 			set_debug_mode global_debug_mode;
 			(* Update the counters *)
@@ -133,7 +137,7 @@ let cover_behavioral_cartography program v0 init_state =
 			
 			(* Generate the dot graph *)			
 			let radical = options#program_prefix ^ "_" ^ (string_of_int !current_iteration) in
-			Graphics.generate_graph program pi0 graph radical;
+			Graphics.generate_graph program graph radical;
 			
 			let k0 = returned_constraint in
 			
@@ -144,7 +148,7 @@ let cover_behavioral_cartography program v0 init_state =
 			(* Print the constraint *)
 (* 			let bad_string = if Graph.is_bad program graph then "BAD." else "GOOD." in			 *)
 			print_message Debug_low ("Constraint K0 computed:");
-			print_message Debug_standard (string_of_returned_constraint program.variable_names k0);
+			print_message Debug_standard (ModelPrinter.string_of_returned_constraint program.variable_names k0);
 (* 			print_message Debug_standard ("This zone is " ^ bad_string); *)
 
 
@@ -274,8 +278,12 @@ let random_behavioral_cartography program v0 init_state nb =
 				if cut_messages then (
 					set_debug_mode Debug_nodebug;
 				);
-				(* Compute the post *)
-				let returned_constraint, graph, nb_iterations, counter = Reachability.post_star program pi0_functional init_state in
+				
+				(* Set the new pi0 *)
+				Input.set_pi0 pi0_functional;
+			
+				(* Call the inverse method *)
+				let returned_constraint, graph, nb_iterations, counter = Reachability.inverse_method_gen program init_state in
 				(* Get the debug mode back *)
 				set_debug_mode global_debug_mode;
 				print_message Debug_standard (
@@ -291,7 +299,7 @@ let random_behavioral_cartography program v0 init_state nb =
 
 				(* Generate the dot graph *)
 				let radical = options#program_prefix ^ "_" ^ (string_of_int !i) in
-				Graphics.generate_graph program pi0_functional graph radical;
+				Graphics.generate_graph program graph radical;
 				(* Add the index to the interesting list *)
 				interesting_interations := !i :: !interesting_interations;
 
@@ -306,7 +314,7 @@ let random_behavioral_cartography program v0 init_state nb =
 												
 				(* Print the constraint *)
 				print_message Debug_low ("Constraint K0 computed:");
-				print_message Debug_standard (string_of_returned_constraint program.variable_names k0);
+				print_message Debug_standard (ModelPrinter.string_of_returned_constraint program.variable_names k0);
 
 				(* Add the result *)
 				results.(!i - 1) <- k0;

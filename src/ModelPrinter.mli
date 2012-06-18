@@ -26,6 +26,13 @@ val string_of_var_type : var_type -> string
 val string_of_state : abstract_program -> (Automaton.global_location * LinearConstraint.linear_constraint) -> string
 
 (**************************************************)
+(** Result *)
+(**************************************************)
+val string_of_returned_constraint : (int -> string) -> returned_constraint -> string
+
+
+
+(**************************************************)
 (** Program *)
 (**************************************************)
 (* Convert a pi0 into a string *)

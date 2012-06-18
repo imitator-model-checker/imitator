@@ -15,26 +15,33 @@ open Options
 open Graph
 open LinearConstraint
 
-(** Constraint returned by the inverse method *)
-type returned_constraint =
-	(** Constraint under convex form *)
-	| Convex_constraint of LinearConstraint.linear_constraint
-	(** Disjunction of constraints *)
-	| Union_of_constraints of LinearConstraint.linear_constraint list
-
-val string_of_returned_constraint : (int -> string) -> returned_constraint -> string
-
 
 val create_initial_state : abstract_program -> state
 
-val post : abstract_program -> pi0 -> reachability_graph -> state_index -> state_index list
+(* val post : abstract_program -> pi0 -> reachability_graph -> state_index -> state_index list *)
 
-val post_star :
+(*val post_star :
 	abstract_program -> pi0 -> state ->
 	(* K0 * reachability_graph * nb_iterations * counter_value *)
-	returned_constraint * Graph.reachability_graph * int * float
+	returned_constraint * Graph.reachability_graph * int * float*)
+
+
 
 val branch_and_bound :
 	abstract_program -> pi0 -> state -> unit
 
 val print_stats: unit -> unit
+
+
+
+(************************************************************)
+(* Full reachability analysis *)
+(************************************************************)
+val full_reachability : abstract_program -> state -> unit
+
+
+(************************************************************)
+(* Main inverse method function *)
+(************************************************************)
+val inverse_method_gen : abstract_program -> state -> returned_constraint * Graph.reachability_graph * int * float
+val inverse_method : abstract_program -> state -> unit
