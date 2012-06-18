@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2009/09/08
- * Last modified: 2012/04/10
+ * Last modified: 2012/06/18
  *
  ****************************************************************)
 
@@ -186,6 +186,15 @@ val evaluate_and : bool -> bool -> bool
 
 (* Evaluate both part of an 'or' comparison and return the disjunction *)
 val evaluate_or : bool -> bool -> bool
+
+
+
+
+(**************************************************)
+(** System functions *)
+(**************************************************)
+
+val write_to_file : string -> string -> unit
 
 
 (****************************************************************)

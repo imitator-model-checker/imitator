@@ -1,3 +1,15 @@
+(*****************************************************************
+ *
+ *                     IMITATOR II
+ * 
+ * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
+ * Author:        Etienne Andre
+ * Created:       2012/06/15
+ * Last modified: 2012/06/15
+ *
+ ****************************************************************)
+
+
 open Global
 (* open Graph *)
 open AbstractModel

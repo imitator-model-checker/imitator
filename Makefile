@@ -74,10 +74,10 @@ MAIN = $(SRC)/IMITATOR.cmo
 # MAIN_OPT = $(MAIN:.cmo=.cmx)
 
 # modules to compile
-MODULES = Global NumConst ReachabilityTree Options LinearConstraint Automaton Cache Input Pi0Lexer Pi0Parser V0Lexer V0Parser ModelLexer ModelParser GMLLexer GMLParser ModelPrinter Graph PTA2CLP PTA2GML ProgramConverter Reachability Graphics
+MODULES = Global NumConst ReachabilityTree Options LinearConstraint Automaton Cache Input Pi0Lexer Pi0Parser V0Lexer V0Parser ModelLexer ModelParser GMLLexer GMLParser ModelPrinter Graph PTA2CLP PTA2GML ProgramConverter Reachability Graphics Cartography
 
 # interfaces
-HEADERS = Global NumConst ReachabilityTree Options LinearConstraint Automaton Cache ParsingStructure AbstractModel Input Graph ModelPrinter PTA2CLP PTA2GML ProgramConverter Reachability Graphics
+HEADERS = Global NumConst ReachabilityTree Options LinearConstraint Automaton Cache ParsingStructure AbstractModel Input Graph ModelPrinter PTA2CLP PTA2GML ProgramConverter Reachability Graphics Cartography
 
 CMIS = $(addprefix $(SRC)/, $(addsuffix .cmi, $(HEADERS)))
 OBJS = $(addprefix $(SRC)/, $(addsuffix .cmo, $(MODULES)))
@@ -218,7 +218,8 @@ exe:
 # 	$(TARGET) $(EXAMPLE_PATH)/Tests/model2.gml -fromGML -forcePi0
 # 	$(TARGET) $(EXAMPLE_PATH)/Tests/model2.imi -forcePi0
 
-	bin/IMITATOR32romain $(EXAMPLE_PATH)/Tests/model2.imi $(EXAMPLE_PATH)/Tests/model2.pi0 -debug total
+	$(TARGET) $(EXAMPLE_PATH)/Tests/model2.imi $(EXAMPLE_PATH)/Tests/model2.pi0 -debug total
+# 	bin/IMITATOR32romain $(EXAMPLE_PATH)/Tests/model2.imi $(EXAMPLE_PATH)/Tests/model2.pi0 -debug total
 	
 # 	$(TARGET) $(EXAMPLE_PATH)/Tests/model2.imi $(EXAMPLE_PATH)/Tests/model2.pi0 -debug total
 

@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre, Ulrich Kuehne
  * Created:       2010/07/05
- * Last modified: 2012/06/15 
+ * Last modified: 2012/06/18
  *
  ****************************************************************)
 
@@ -19,6 +19,24 @@ module Ppl = Ppl_ocaml
 open Ppl
 open AbstractModel
 open Reachability
+
+
+
+(**************************************************)
+(**************************************************)
+(* GLOBAL CONSTANTS *)
+(**************************************************)
+(**************************************************)
+
+let dot_command = "dot"
+let dot_image_extension = "jpg"
+let dot_file_extension = "dot"
+let states_file_extension = "states"
+
+
+
+
+
 
 (**************************************************)
 (* Functions *)
@@ -222,4 +240,46 @@ let cartography program pi0cube returned_constraint_list cartography_name =
 		(* execute the script *)
 		let execution = Sys.command !script_line in 
 		print_message Debug_high ("Result of the cartography execution: exit code "^(string_of_int execution))
+	)
+
+
+
+
+(**************************************************)
+(* Function to interact with Dot *)
+(**************************************************)
+(* Create a gif or jpg graph using dot *)
+let generate_graph program pi0 reachability_graph radical =
+	(* Get the file names *)
+	let dot_file_name = (radical ^ "." ^ dot_file_extension) in
+	let states_file_name = (radical ^ "." ^ states_file_extension) in
+	let gif_file_name = (radical ^ "." ^ dot_image_extension) in
+	(* Retrieve the input options *)
+	let options = Input.get_options () in
+	(* Do not write if no dot AND no log *)
+	if not (options#no_dot && options#no_log) then (
+		
+		(* Create the input file *)
+		print_message Debug_medium ("Creating input file for dot...");
+		let dot_program, states = Graph.dot_of_graph program pi0 reachability_graph ~fancy:options#fancy in
+
+		if not options#no_dot then (
+			(* Write dot file *)
+			print_message Debug_medium ("Writing to dot file...");
+			write_to_file dot_file_name dot_program;
+
+			(* Generate gif file using dot *)
+			print_message Debug_medium ("Calling dot...");
+			let command_result = Sys.command (dot_command ^ " -T" ^ dot_image_extension ^ " " ^ dot_file_name ^ " -o " ^ gif_file_name ^ "") in
+			print_message Debug_medium ("Result of the 'dot' command: " ^ (string_of_int command_result));
+			(* Removing dot file *)
+			print_message Debug_medium ("Removing dot file...");
+			Sys.remove dot_file_name;
+		);
+			
+		(* Write states file *)
+		if not options#no_log then (
+			print_message Debug_medium ("Writing to file for file description...");
+			write_to_file states_file_name states;
+		);
 	)

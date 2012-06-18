@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre, Ulrich Kuehne, Romain Soulat
  * Created:       2010/07/22
- * Last modified: 2012/05/30
+ * Last modified: 2012/06/18
  *
  **************************************************)
 
@@ -21,6 +21,8 @@ type returned_constraint =
 	| Convex_constraint of LinearConstraint.linear_constraint
 	(** Disjunction of constraints *)
 	| Union_of_constraints of LinearConstraint.linear_constraint list
+
+val string_of_returned_constraint : (int -> string) -> returned_constraint -> string
 
 
 val create_initial_state : abstract_program -> state

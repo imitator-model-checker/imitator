@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2009/09/08
- * Last modified: 2012/06/12
+ * Last modified: 2012/06/18
  *
  ****************************************************************)
 
@@ -340,6 +340,20 @@ let evaluate_and a b =
 (* Evaluate both part of an 'or' comparison and return the disjunction *)
 let evaluate_or a b =
 	a || b
+
+
+(**************************************************)
+(** System functions *)
+(**************************************************)
+
+let write_to_file file_name file_content =
+	let oc = open_out file_name in
+	(* Write file *)
+	output_string oc file_content;
+	(* Close channel *)
+	close_out oc;
+	()
+
 
 
 (****************************************************************)
