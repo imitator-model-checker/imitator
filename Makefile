@@ -199,14 +199,29 @@ doc:
 
 exe:
 
-##### GATES #####
+##### FISCHER #####
 
-# 	$(TARGET) Examples/Gates/NorGate.imi -mode reachability -with-parametric-log
+	$(TARGET) $(EXAMPLE_PATH)/Fischer/fischer.hym $(EXAMPLE_PATH)/Fischer/fischer.pi0 -inclusion -fancy
+
+##### JUMPING FROG #####
+
+# 	$(TARGET) $(EXAMPLE_PATH)/Frog/jump.hym $(EXAMPLE_PATH)/Frog/jump.pi0 -inclusion -plot x y -limits x 0 4 -limits y 0 2.5 -fancy
+
+##### NAVIGATION BENCHMARK #####
+
+# 	$(TARGET) $(EXAMPLE_PATH)/Navigation/NAV01.hym -mode reachability -plot x y -limits x 0 3 -limits y 0 3 -fancy
+# 	$(TARGET) $(EXAMPLE_PATH)/Navigation/NAV04.hym -mode reachability -plot x y -limits x 0 3 -limits y 0 3 -fancy
+
 
 ##### SCHEDULING #####
 
 # 	$(TARGET) $(EXAMPLE_PATH)/CPR08/full_cpr08.im3 $(EXAMPLE_PATH)/CPR08/full_cpr08.pi0 -no-dot -no-log -inclusion
-	$(TARGET) $(EXAMPLE_PATH)/LA02/LA02_2.imi $(EXAMPLE_PATH)/LA02/LA02_2.pi0 -no-dot -no-log -inclusion -merge
+# 	$(TARGET) $(EXAMPLE_PATH)/LA02/LA02_2.imi $(EXAMPLE_PATH)/LA02/LA02_2.pi0 -no-dot -no-log -inclusion -merge
+
+##### WATER TANK #####
+
+# 	$(TARGET) $(EXAMPLE_PATH)/WaterTank/tank.hym -mode cegar -fancy
+
 
 
 count: clean
