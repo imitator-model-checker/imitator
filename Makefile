@@ -7,7 +7,7 @@
 #
 #  Author:        Etienne Andre, Ulrich KUEHNE, Romain SOULAT
 #  Created:       2009/09/07
-#  Last modified: 2012/04/09
+#  Last modified: 2012/06/18
 #  Ocaml version: 3.11.2
 ###############################################################
 
@@ -47,11 +47,18 @@ export CLIB_PATH
 
 INCLUDE = -I $(SRC) -I $(EXTLIB_PATH) -I $(OCAML_PPL_PATH) -I $(OCAML_GMP_PATH) -I $(CLIB_PATH)
 
-# For 64 bits compiling
-CLIBS = -cclib '-static -lppl -lpwl -lppl_ocaml -lstdc++ -lmlgmp -lmpfr -lgmp -lgmpxx ' 
+# native c libraries (updated 2012/06/18)
+CLIBS = -cclib -lppl
 
 # For 32 bits compiling
+STATIC32CLIBS = -cclib '-static -lppl -lcamlrun -ltinfo -lppl_ocaml -lstdc++ -lgmp -lgmpxx'
 # CLIBS = -cclib '-static -lppl -lpwl -lcamlrun -ltinfo -lppl_ocaml -lstdc++ -lmlgmp -lmpfr -lgmp -lgmpxx'
+
+# For 64 bits compiling
+STATIC64CLIBS = -cclib '-static -ldl -lppl -lcamlrun -ltinfo -lppl_ocaml -lstdc++ -lgmpxx'
+# -ldl : inutile
+# CLIBS = -cclib '-static -lppl -lpwl -lppl_ocaml -lstdc++ -lmlgmp -lmpfr -lgmp -lgmpxx'
+
 
 # ocaml lib files
 OLIBS = str.cma unix.cma extLib.cma bigarray.cma gmp.cma ppl_ocaml.cma 
@@ -61,7 +68,9 @@ OOLIBS = str.cmxa unix.cmxa extLib.cmxa bigarray.cmxa gmp.cmxa ppl_ocaml.cmxa
 
 # external libs for compiling with PPL support
 export LIBS = $(CLIBS) $(OLIBS)
-export OPTLIBS = $(CLIBS) $(OOLIBS) 
+# export OPTLIBS = $(CLIBS) $(OOLIBS) 
+export STATIC32LIBS = $(STATIC32CLIBS) $(OLIBS)
+export STATIC64LIBS = $(STATIC64CLIBS) $(OLIBS)
 
 
 SRC = src
@@ -95,10 +104,16 @@ EXAMPLE_PATH = examples
 
 # target executable
 TARGET = bin/HYMITATOR
-TARGET_OPT = bin/HYMITATOR.opt
+# TARGET_OPT = bin/HYMITATOR.opt
+TARGET_STATIC = bin/HYMITATOR32
+TARGET_STATIC64 = bin/HYMITATOR64
+
 
 default all: $(TARGET)
-opt: $(TARGET_OPT)
+# opt: $(TARGET_OPT)
+static32: $(TARGET_STATIC)
+static64: $(TARGET_STATIC64)
+
 
 $(IMILIB): header parser $(OBJS)
 	@ echo [MKLIB] $@
@@ -108,15 +123,28 @@ $(IMILIB_OPT): header parser $(OBJS_OPT)
 	@ echo [MKLIB] $@
 	@ $(OCAMLOPT) -a -o $@ $(OBJS_OPT)
 
+# $(TARGET): $(IMILIB) $(MAIN)
+# 	@ echo [LINK] $(TARGET)
+# # 	@ $(OCAMLC) -o $(TARGET) $(INCLUDE) $(LIBS) $(IMILIB) $(MAIN)
+# 	@ $(OCAMLC) -custom -o $(TARGET) $(INCLUDE) $(LIBS) $(IMILIB) $(MAIN)
+# 
+# $(TARGET_OPT): $(IMILIB_OPT) $(MAIN_OPT)
+# 	@ echo [LINK] $(TARGET_OPT)
+# 	@ $(OCAMLOPT) -o $(TARGET_OPT) $(INCLUDE) $(OPTLIBS) $(IMILIB_OPT) $(MAIN_OPT)
+
 $(TARGET): $(IMILIB) $(MAIN)
 	@ echo [LINK] $(TARGET)
-# 	@ $(OCAMLC) -o $(TARGET) $(INCLUDE) $(LIBS) $(IMILIB) $(MAIN)
-	@ $(OCAMLC) -custom -o $(TARGET) $(INCLUDE) $(LIBS) $(IMILIB) $(MAIN)
+	@ $(OCAMLC) $(INCLUDE) $(LIBS) $(IMILIB) $(MAIN) -o $(TARGET)
+	
+$(TARGET_STATIC): $(IMILIB) $(MAIN)
+	@ echo [LINK] $(TARGET_STATIC)
+	@ $(OCAMLC) -custom $(INCLUDE) -I $(CLIB_PATH) $(STATIC32LIBS) $(IMILIB) $(MAIN) -o $(TARGET_STATIC) 
+	
+$(TARGET_STATIC64): $(IMILIB) $(MAIN)
+	@ echo [LINK] $(TARGET_STATIC)
+	@ $(OCAMLC) -custom $(INCLUDE) -I $(CLIB_PATH) $(STATIC64LIBS) $(IMILIB) $(MAIN) -o $(TARGET_STATIC) 
+	
 
-
-$(TARGET_OPT): $(IMILIB_OPT) $(MAIN_OPT)
-	@ echo [LINK] $(TARGET_OPT)
-	@ $(OCAMLOPT) -o $(TARGET_OPT) $(INCLUDE) $(OPTLIBS) $(IMILIB_OPT) $(MAIN_OPT)
 
 header: $(FILESMLI:+=cmi)
 
