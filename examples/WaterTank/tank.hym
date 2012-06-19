@@ -1,0 +1,43 @@
+var delay, m, M, min, max: parameter;
+
+automaton tank
+
+var x : clock;
+    w : analog;
+
+synclabs: sig_on, sig_off, on, off, underflow, overflow, err;
+initially ini;
+
+loc pump_is_on: while w <= M wait {w' = 1}
+      when w = M sync sig_off do {x' = 0, w' = w} goto pump_stop;
+
+loc pump_is_off: while w >= m wait {w' = -2}
+      when w = m sync sig_on do {x' = 0, w' = w} goto pump_start;
+
+loc pump_stop: while x <= delay wait {w' = 1}
+      when x = delay sync off do {w' = w} goto pump_is_off;
+      when w > max sync overflow do {w' = w} goto error;
+
+loc pump_start: while x <= delay wait {w' = -2}
+      when x = delay sync on do {w' = w} goto pump_is_on;
+      when w < min sync underflow do {w' = w} goto error;
+
+loc error: while True wait {w' = 0} 
+      when True sync err do {w' = w} goto error;
+
+end
+
+var init: region;
+init := loc[tank] = pump_is_on & x = 0 & w = 0 & delay = 1 & M = 10 & m = 5 & min = 1 & max = 15;
+
+
+var bad: region;
+bad := loc[tank] = error;
+
+
+-- predicates: w < 9, w < 10, w > 0, w > 2, x <= 0, x >= 0;
+-- predicates: w < 10, w > 0, w > 2, x <= 0, x >= 0;
+-- predicates: x <= 0, 2*w >= 17 + 2*x;
+-- predicates: w >= 4, 2*w >= 17 + 2*x;
+
+domain    : x in [0,100] & w in [0,100] & delay in [0,10] & M in [0,100] & m in [0,100];

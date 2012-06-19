@@ -1,0 +1,36 @@
+-- a frog jumps over a box
+
+--           
+--      <=*
+--    /    +––+
+-- __/_____|  |_____
+
+automaton frog
+
+var x,y,v: analog;    -- position and vertical speed
+    v0   : parameter; -- initial vertical speed
+
+synclabs: crash, zenit;
+
+loc jump: while v >= 0 & v <= 2 & y >= 0 wait {v'=-1 & y'=v & x'=1}
+    when v = 0 sync zenit do {x'=x, y'=y, v'=v} goto fall;
+    when x >= 1 & x <= 1.5 & y <= 0.5 sync crash do {x'=x, y'=y, v'=v} goto lbad;
+
+loc fall: while v >= -2 & v <= 0 & y >= 0 wait {v'=-1 & y'=v & x'=1}
+    when x >= 1 & x <= 1.5 & y <= 0.5 sync crash do {x'=x, y'=y, v'=v} goto lbad;
+
+loc lbad: while True wait {v'=0 & y'=0 & x'=0}
+    when True do {y'=y, v'=v, x'=x} goto lbad;
+
+end
+
+var init: region;
+init := loc[frog] = jump 
+  & x=0 
+  & y=0
+  & v=v0
+--  & v0=1.55
+  ;
+
+var bad: region;
+bad := loc[frog] = lbad;
