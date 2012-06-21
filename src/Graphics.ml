@@ -265,7 +265,7 @@ open Graph
 let dot_of_graph program reachability_graph ~fancy =
 	(* Retrieve the input options *)
 	let options = Input.get_options () in
-	let transitions = reachability_graph.transitions_table in
+	let transitions = get_transitions reachability_graph in
 	(* Create the array of dot colors *)
 	let dot_colors = Array.of_list dot_colors in
 	(* Coloring function for each location *)

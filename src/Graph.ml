@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre, Ulrich Kuehne
  * Created:       2009/12/08
- * Last modified: 2012/06/18
+ * Last modified: 2012/06/21
  *
  ****************************************************************)
 
@@ -101,6 +101,11 @@ let nb_states graph =
 	Hashtbl.length graph.all_states
 
 
+(** Return the number of transitions in a graph *)
+let nb_transitions graph =
+	Hashtbl.length graph.transitions_table
+
+
 (* Return the global_location corresponding to a location_index *)
 let get_location graph location_index =
 	DynArray.get graph.locations location_index
@@ -119,6 +124,11 @@ let get_state graph state_index =
 	let global_location = get_location graph location_index in
 	(* Return the state *)
 	(global_location, linear_constraint)
+
+
+(** Return the table of transitions *)
+let get_transitions graph =
+	graph.transitions_table
 
 
 (** Return the list of all state indexes *)
@@ -425,7 +435,7 @@ let add_state program graph new_state =
 			
 
 			
-let get_transitions graph orig_state_index action_index =
+let get_transitions_of_state graph orig_state_index action_index =
 	try (
 		Hashtbl.find_all graph.transitions_table (orig_state_index, action_index)
 	)	with Not_found -> []
@@ -436,7 +446,7 @@ let get_transitions graph orig_state_index action_index =
 		target index and the same label. *)
 let add_transition graph (orig_state_index, action_index, dest_state_index) =
 	(* check if it already exists *)
-	let transitions = get_transitions graph orig_state_index action_index in
+	let transitions = get_transitions_of_state graph orig_state_index action_index in
 	if not (List.mem dest_state_index transitions) then
 		Hashtbl.add graph.transitions_table (orig_state_index, action_index) dest_state_index
 
@@ -469,7 +479,7 @@ let replace_constraint graph linear_constraint state_index =
 		Hashtbl.replace graph.all_states state_index (location_index, linear_constraint_copy);
 	) with Not_found -> raise (InternalError ("Error when handling state '" ^ (string_of_int state_index) ^ "' in Graph:replace_constraint."))*)
 
-
+(*
 (** Merge two states by replacing the second one with the first one, in the whole graph structure (lists of states, and transitions) *)
 let merge_2_states graph state_index1 state_index2 =
 	(* Retrieve state2 (for hash later *)
@@ -550,7 +560,7 @@ let merge_2_states graph state_index1 state_index2 =
 		(* Add it *)
 		Hashtbl.add hash new_state_index;
 	) states_for_comparison_copy; *)
-	()
+	()*)
 
 
 
@@ -624,36 +634,8 @@ module IntSet = Set.Make(
 )
 
 
-(** Returns l1 minus l2, with assumption that all elements of l1 are different *)
-let list_diff (l1 : int list) (l2 : int list) : int list =
-(* 	print_message Debug_standard ("List diff : [" ^ (string_of_int (List.length l1)) ^ "] \ [" ^ (string_of_int (List.length l2)) ^ "]"); *)
-	(* Optimize a little *)
-	if l2 = [] then l1
-	else (if l1 = [] then []
-	else
-		List.filter (fun elt -> not (List.mem elt l2)) l1
-		(* NOTE: surprisingly much less efficient (some times 4 times slower!) to do the n log(n) solution below rather than the n2 solution above *)
-(*		let set_of_list l =
-			List.fold_left (fun set elt -> IntSet.add elt set) IntSet.empty l
-		in
-		(* Convert l1 *)
-		let s1 = set_of_list l1 in
-	(*	(* Convert l2 *)
-		let s2 = set_of_list l2 in
-		(* Performs set difference *)
-		let set_diff = IntSet.diff s1 s2 in*)
-		(* Remove elements from l2 *)
-		let set_diff =
-			List.fold_left (fun set elt -> IntSet.remove elt set) s1 l2
-		in
-		(* Return elements *)
-		IntSet.elements set_diff
-*)
-	)
 
-
-
-(* Try to merge new states with existing ones. Returns updated list of new states (ULRICH) *)
+(* Try to merge new states with existing ones. Returns list of merged states (ULRICH) *)
 let merge graph new_states =
 	let mergeable = LinearConstraint.hull_assign_if_exact in
 	
@@ -713,8 +695,8 @@ let merge graph new_states =
 	if nb_eaten > 0 then
 		print_message Debug_low ("" ^ (string_of_int nb_eaten) ^ " state" ^ (s_of_int nb_eaten) ^ " merged within " ^ (string_of_int nb_orig) ^ " state" ^ (s_of_int nb_orig) ^ ".");
 	
-	(* return non-eaten new states *)
-	list_diff new_states eaten
+	(* return eaten states *)
+	(*list_diff new_states*) eaten
 
 
 

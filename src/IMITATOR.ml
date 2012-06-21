@@ -40,6 +40,8 @@ TAGS POUR CHOSES A FAIRE
 - (**** TO OPTIMIZE ****)
 - (**** OPTIMIZED ****)
 
+<>
+
 **************************************************)
 
 
@@ -228,6 +230,11 @@ else
 	print_message Debug_medium ("No IMoriginal return variant (default).");
 
 (* Should add a warning in case of incompatible mode (IMoriginal incompatible with IMunion) + VARIANT ROMAIN *)
+
+if options#branch_and_bound then
+	print_message Debug_standard ("Considering branch and bound (experimental!).")
+else
+	print_message Debug_medium ("No branch and bound mode (default).");
 
 
 
@@ -487,14 +494,14 @@ print_message Debug_medium ("\nInitial state after time-elapsing:\n" ^ (ModelPri
 
 
 
-(**************************************************)
+(*(**************************************************)
 (* EXPERIMENTAL: branch and bound *)
 (**************************************************)
 
 if options#imitator_mode = Inverse_method && options#branch_and_bound then(
 	Reachability.branch_and_bound program pi0 init_state_after_time_elapsing;
 	terminate_program();
-);
+);*)
 
 
 

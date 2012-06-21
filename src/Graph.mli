@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2009/12/08
- * Last modified: 2012/06/18
+ * Last modified: 2012/06/21
  *
  ****************************************************************)
 
@@ -29,7 +29,7 @@ type abstract_state = location_index * LinearConstraint.linear_constraint
 (****************************************************************)
 (** Graph structure *)
 (****************************************************************)
-type reachability_graph = {
+type reachability_graph (*= {
 	(** An Array 'state_index' -> 'abstract_state'; contains ALL states *)
 	all_states : (state_index, abstract_state) Hashtbl.t;
 	
@@ -47,7 +47,7 @@ type reachability_graph = {
 
 	(** An integer that remembers the next index of state_index (may not be equal to the number of states, if states are removed *)
 	next_state_index : state_index ref;
-}
+}*)
 
 
 (****************************************************************)
@@ -65,11 +65,17 @@ val make : int -> reachability_graph
 (** Return the number of states in a graph *)
 val nb_states : reachability_graph -> int
 
+(** Return the number of transitions in a graph *)
+val nb_transitions : reachability_graph -> int
+
 (** Return the global_location corresponding to a location_index *)
 val get_location : reachability_graph -> location_index -> Automaton.global_location
 
 (** Return the state of a state_index *)
 val get_state : reachability_graph -> state_index -> state
+
+(** Return the table of transitions *)
+val get_transitions : reachability_graph -> ((state_index * action_index), state_index) Hashtbl.t
 
 (** Return the list of all state indexes *)
 val all_state_indexes : abstract_program -> reachability_graph -> state_index list
@@ -119,7 +125,7 @@ val add_inequality_to_states : reachability_graph -> LinearConstraint.linear_ine
 (* val replace_constraint : reachability_graph -> LinearConstraint.linear_constraint -> state_index -> unit *)
 
 (** Merge two states by replacing the second one by the first one, in the whole graph structure (lists of states, and transitions) *)
-val merge_2_states : reachability_graph -> state_index -> state_index -> unit
+(* val merge_2_states : reachability_graph -> state_index -> state_index -> unit *)
 
 (* Try to merge new states with existing ones. Returns updated list of new states (ULRICH) *)
 val merge : reachability_graph -> state_index list -> state_index list

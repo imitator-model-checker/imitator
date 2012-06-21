@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre, Ulrich Kuehne, Romain Soulat
  * Created:       2010/07/22
- * Last modified: 2012/06/18
+ * Last modified: 2012/06/21
  *
  **************************************************)
 
@@ -27,8 +27,8 @@ val create_initial_state : abstract_program -> state
 
 
 
-val branch_and_bound :
-	abstract_program -> pi0 -> state -> unit
+(*val branch_and_bound :
+	abstract_program -> pi0 -> state -> unit*)
 
 val print_stats: unit -> unit
 

@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2010/03/04
- * Last modified: 2012/03/14
+ * Last modified: 2012/06/21
  *
  ****************************************************************)
 
@@ -658,6 +658,7 @@ let set_manager int_d real_d =
 	total_dim := int_d + real_d 
 
 
+
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
 (** {3 Tests} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
@@ -713,6 +714,23 @@ let is_leq x y =
 	ppl_t_contains := !ppl_t_contains +. (Unix.gettimeofday() -. start);
 	(* Return result *)
 	result
+
+
+
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+(** {3 Access} *)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+
+(** Get the number of inequalities of a constraint *)
+let nb_inequalities linear_constraint = 
+	(* First check if true *)
+	if is_true linear_constraint || is_false linear_constraint then 0
+	else
+	(* Get a list of linear inequalities *)
+	let list_of_inequalities = get_constraints linear_constraint in
+	List.length list_of_inequalities
+
+
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
 (** {3 Pi0-compatibility} *)

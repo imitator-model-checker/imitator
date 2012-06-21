@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2009/09/08
- * Last modified: 2012/06/18
+ * Last modified: 2012/06/21
  *
  ****************************************************************)
 
@@ -115,6 +115,11 @@ val list_inter : 'a list -> 'a list -> 'a list
 
 (** Union of 2 lists *)
 val list_union : 'a list -> 'a list -> 'a list
+
+
+(** Difference of 2 lists *)
+val list_diff : 'a list	 -> 'a list-> 'a list
+
 
 (** Tail-recursive function for 'append' *)
 val list_append : 'a list -> 'a list -> 'a list

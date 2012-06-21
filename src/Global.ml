@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2009/09/08
- * Last modified: 2012/06/18
+ * Last modified: 2012/06/21
  *
  ****************************************************************)
 
@@ -194,6 +194,35 @@ let list_union l1 l2 =
 		(List.rev l1)
 		l2
 	)
+
+
+(** Returns l1 minus l2, with assumption that all elements of l1 are different *)
+let list_diff (l1 : 'a list) (l2 : 'a list) : 'a list =
+(* 	print_message Debug_standard ("List diff : [" ^ (string_of_int (List.length l1)) ^ "] \ [" ^ (string_of_int (List.length l2)) ^ "]"); *)
+	(* Optimize a little *)
+	if l2 = [] then l1
+	else (if l1 = [] then []
+	else
+		List.filter (fun elt -> not (List.mem elt l2)) l1
+		(* NOTE: surprisingly much less efficient (some times 4 times slower!) to do the n log(n) solution below rather than the n2 solution above *)
+(*		let set_of_list l =
+			List.fold_left (fun set elt -> IntSet.add elt set) IntSet.empty l
+		in
+		(* Convert l1 *)
+		let s1 = set_of_list l1 in
+	(*	(* Convert l2 *)
+		let s2 = set_of_list l2 in
+		(* Performs set difference *)
+		let set_diff = IntSet.diff s1 s2 in*)
+		(* Remove elements from l2 *)
+		let set_diff =
+			List.fold_left (fun set elt -> IntSet.remove elt set) s1 l2
+		in
+		(* Return elements *)
+		IntSet.elements set_diff
+*)
+	)
+
 
 (* Tail-recursive function for 'append' *)
 let list_append l1 l2 =

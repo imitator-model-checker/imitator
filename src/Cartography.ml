@@ -120,20 +120,23 @@ let cover_behavioral_cartography program v0 init_state =
 			Input.set_pi0 pi0;
 			
 			(* Call the inverse method *)
-			let returned_constraint, graph, nb_iterations, counter = Reachability.inverse_method_gen program init_state in
+			let returned_constraint, graph, nb_iterations, total_time = Reachability.inverse_method_gen program init_state in
 			(* Get the debug mode back *)
 			set_debug_mode global_debug_mode;
+			(* Retrieve some info *)
+			let current_nb_states = Graph.nb_states graph in
+			let current_nb_transitions = Graph.nb_transitions graph in
 			(* Update the counters *)
-			nb_states := !nb_states + (Graph.nb_states graph);
-			nb_transitions := !nb_transitions + (Hashtbl.length (graph.transitions_table));
+			nb_states := !nb_states + current_nb_states;
+			nb_transitions := !nb_transitions + current_nb_transitions;
 			(* Print message *)
 			print_message Debug_standard (
 				"\nK" ^ (string_of_int (!current_iteration)) ^ " computed using algorithm InverseMethod after "
 				^ (string_of_int nb_iterations) ^ " iteration" ^ (s_of_int nb_iterations) ^ ""
-				^ " in " ^ (string_of_seconds (time_from counter)) ^ ": "
-				^ (string_of_int (Graph.nb_states graph)) ^ " reachable state" ^ (s_of_int (Graph.nb_states graph))
+				^ " in " ^ (string_of_seconds total_time) ^ ": "
+				^ (string_of_int current_nb_states) ^ " reachable state" ^ (s_of_int current_nb_states)
 				^ " with "
-				^ (string_of_int (Hashtbl.length (graph.transitions_table))) ^ " transition" ^ (s_of_int (Hashtbl.length (graph.transitions_table))) ^ ".");
+				^ (string_of_int current_nb_transitions) ^ " transition" ^ (s_of_int current_nb_transitions) ^ ".");
 			
 			(* Generate the dot graph *)			
 			let radical = options#program_prefix ^ "_" ^ (string_of_int !current_iteration) in
@@ -283,16 +286,21 @@ let random_behavioral_cartography program v0 init_state nb =
 				Input.set_pi0 pi0_functional;
 			
 				(* Call the inverse method *)
-				let returned_constraint, graph, nb_iterations, counter = Reachability.inverse_method_gen program init_state in
+				let returned_constraint, graph, nb_iterations, total_time = Reachability.inverse_method_gen program init_state in
 				(* Get the debug mode back *)
 				set_debug_mode global_debug_mode;
+
+				(* Retrieve some info *)
+				let current_nb_states = Graph.nb_states graph in
+				let current_nb_transitions = Graph.nb_transitions graph in
+				
 				print_message Debug_standard (
 					"\nK" ^ (string_of_int !i) ^ " computed using algorithm InverseMethod after "
 					^ (string_of_int nb_iterations) ^ " iteration" ^ (s_of_int nb_iterations) ^ ""
-					^ " in " ^ (string_of_seconds (time_from counter)) ^ ": "
-					^ (string_of_int (Graph.nb_states graph)) ^ " reachable state" ^ (s_of_int (Graph.nb_states graph))
+					^ " in " ^ (string_of_seconds total_time) ^ ": "
+					^ (string_of_int current_nb_states) ^ " reachable state" ^ (s_of_int current_nb_states)
 					^ " with "
-					^ (string_of_int (Hashtbl.length (graph.transitions_table))) ^ " transition" ^ (s_of_int (Hashtbl.length (graph.transitions_table))) ^ ".");
+					^ (string_of_int current_nb_transitions) ^ " transition" ^ (s_of_int current_nb_transitions) ^ ".");
 
 				(* Add the pi0 *)
 				pi0_computed.(!i - 1) <- pi0;

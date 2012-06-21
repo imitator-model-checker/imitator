@@ -138,12 +138,12 @@ let nb_unsat2 = ref 0
 (* Fusion functions *)
 (**************************************************************)
 (** Check if two states are mergeable: return True if the convex hull is equal to the union, False otherwise*)
-let state_mergeable state1 state2 =
+(*let state_mergeable state1 state2 =
 	let (loc1,constr1) = state1 in
 	let (loc2,constr2) = state2 in
 	if not (Automaton.location_equal loc1 loc2) then false else (
 		LinearConstraint.hull_assign_if_exact constr1 constr2 
-	)
+	)*)
 
 
 (*let rec merging_of_states graph index_state list_index_states list_new_states =
@@ -162,7 +162,7 @@ let state_mergeable state1 state2 =
 		  else ( merging_of_states graph index_state rest (first :: list_new_states); )*)
 
 
-let try_to_merge_states graph list_of_states =
+(*let try_to_merge_states graph list_of_states =
 	print_message Debug_high ("Starting merging");
 	
 	(* Count states (for statistics only *)
@@ -267,7 +267,7 @@ let try_to_merge_states graph list_of_states =
 						(** DEBUT LOOP *)
 
 				
-				done;*)
+				done;*)*)
 
 
 
@@ -1089,6 +1089,13 @@ let compute_transitions program location constr action_index automata aut_table 
 
 
 
+
+
+
+(************************************************************)
+(* Post function *)
+(************************************************************)
+
 (*-----------------------------------------------------*)
 (* Compute the list of possible destination states     *)
 (* wrt. to a reachability_graph, and update this graph *)
@@ -1292,11 +1299,88 @@ let post program reachability_graph orig_state_index =
 
 
 
+(************************************************************)
+(* Full reachability functions *)
+(************************************************************)
+
+
+(*---------------------------------------------------*)
+(* Check whether the limit of an exploration has been reached, according to the analysis options *)
+(*---------------------------------------------------*)
+let check_limit depth nb_states time =
+	(* Retrieve the input options *)
+	let options = Input.get_options () in
+	(* Disjunction between the different options *)
+	begin
+	match options#post_limit with
+		| None -> false
+		| Some limit -> depth > limit
+	end
+	||
+	begin
+	match options#states_limit with
+		| None -> false
+		| Some limit -> nb_states > limit
+	end
+	||
+	begin
+	match options#time_limit with
+		| None -> false
+		| Some limit -> time > (float_of_int limit)
+	end
+
+
+(*---------------------------------------------------*)
+(* Print warning(s) if the limit of an exploration has been reached, according to the analysis options *)
+(*---------------------------------------------------*)
+let print_warnings_limit depth nb_states time nb_states_to_visit =
+	(* Retrieve the input options *)
+	let options = Input.get_options () in
+	begin
+	match options#post_limit with
+		| None -> ()
+		| Some limit -> if depth > limit then print_warning (
+			"The limit depth (" ^ (string_of_int limit) ^ ") has been reached. The exploration now stops, although there were still " ^ (string_of_int nb_states_to_visit) ^ " state" ^ (s_of_int nb_states_to_visit) ^ " to explore."
+		);
+	end;
+	begin
+	match options#states_limit with
+		| None -> ()
+		| Some limit -> if nb_states > limit then print_warning (
+			"The limit number of states (" ^ (string_of_int limit) ^ ") has been reached. The exploration now stops, although there were still " ^ (string_of_int nb_states_to_visit) ^ " state" ^ (s_of_int nb_states_to_visit) ^ " to explore."
+		);
+	end;
+	begin
+	match options#time_limit with
+		| None -> ()
+		| Some limit -> if time > (float_of_int limit) then print_warning (
+			"The time limit (" ^ (string_of_int limit) ^ " second" ^ (s_of_int limit) ^ ") has been reached. The exploration now stops, although there were still " ^ (string_of_int nb_states_to_visit) ^ " state" ^ (s_of_int nb_states_to_visit) ^ " to explore at this iteration."
+		);
+	end
+
+
 
 (*---------------------------------------------------*)
 (* EXPERIMENTAL BRANCH AND BOUND FUNCTION *)
 (*---------------------------------------------------*)
-let branch_and_bound program pi0 init_state = 
+let branch_and_bound program init_state = 
+	(* Retrieve the input options *)
+	let options = Input.get_options () in
+	(* Retrieve the pi0 *)
+	let pi0 = Input.get_pi0 () in
+	
+	(* Get some variables *)
+	let nb_actions = program.nb_actions in
+	let nb_variables = program.nb_variables in
+	let nb_automata = program.nb_automata in
+
+	(* copy init state, as it might be destroyed later *)
+	let init_loc, init_constr = init_state in
+	let init_state = (init_loc, LinearConstraint.copy init_constr) in
+
+	(*Initialization of k_result*)
+	k_result := LinearConstraint.hide program.clocks_and_discrete init_constr;
+
 	print_message Debug_standard ("START BRANCH AND BOUND");
 	
 	(* Instantiate all costs associated to locations, for once *)
@@ -1321,13 +1405,12 @@ let branch_and_bound program pi0 init_state =
 		
 	);
 	
-	(* copy init state, as it might be destroyed later *)
-	let init_loc, init_constr = init_state in
-	let init_state = (init_loc, LinearConstraint.copy init_constr) in
-	(* Get some variables *)
-	let nb_actions = program.nb_actions in
-	let nb_variables = program.nb_variables in
-	let nb_automata = program.nb_automata in
+	(* Time counter *)
+	let start_time = Unix.gettimeofday() in
+	
+	(* Reset counter for random selections *)
+	nb_random_selections := 0;
+
 	(* Debut prints *)
 	print_message Debug_low ("Starting reachability analysis from state:");
 	print_message Debug_low (string_of_state program init_state);
@@ -1339,22 +1422,117 @@ let branch_and_bound program pi0 init_state =
 	(* Create the reachability graph *)
 	let reachability_graph = Graph.make guessed_nb_transitions in
 
-	(* Create the tree for exploration *)
-	let rtree = ReachabilityTree.create guessed_nb_states in
-
 	(* Add the initial state to the reachable states *)
 	let init_state_index, _ = Graph.add_state program reachability_graph init_state in
 	
+	(* Create the tree for exploration *)
+	let rtree = ReachabilityTree.create guessed_nb_states init_state_index in
+	
+	if debug_mode_greater Debug_total then(
+		print_message Debug_total ("\nReachability tree initialized:\n" ^ (ReachabilityTree.string_of_rtree string_of_int rtree));
+	);
+
 	(*--------------------------------------------------*)
-	(* Perform the post^* *)
+	(* Start the exploration *)
 	(*--------------------------------------------------*)
-(* 	let newly_found_new_states = ref [init_state_index] in *)
-(* 	let nb_iterations = ref 1 in *)
+	(* Current state to be analyzed *)
+	let current_state_index = ref init_state_index in
+	(* Limit reached? (Due to bounded analysis options) *)
 	let limit_reached = ref false in
+	(* Number of states to visit (in the tree) *)
+	let nb_states_to_visit = ref (ReachabilityTree.nb_states_to_visit rtree) in
 
 	
+	(* Check if the list of new states is empty *)
+	while not (!limit_reached  || !nb_states_to_visit = 0) do
+		if debug_mode_greater Debug_standard then (
+			print_message Debug_low ("\n");
+			print_message Debug_standard ("Computing successors of state " ^ (string_of_int !current_state_index));
+			if debug_mode_greater Debug_medium then (
+				print_message Debug_medium (string_of_state program (Graph.get_state reachability_graph !current_state_index ));
+			);
+		);
+		
+		(* Now compute successors *)
+		let new_states = post program reachability_graph !current_state_index in
+		
+		
+		(* Merge states ! *)
+		let new_states =
+		if not options#no_merging then (
+			let eaten_states = Graph.merge reachability_graph new_states in
+			
+			
+			(* TODO: remove states from rtree !! (and big problem if some previous states have been removed due to merging.....) *)
+			
+			
+			Global.list_diff new_states eaten_states;
+		) else (
+			new_states
+		) in
+		
+		(* Update the reachability tree *)
+		ReachabilityTree.add_children !current_state_index new_states rtree;
+		ReachabilityTree.set_visited !current_state_index rtree;
+		
+		(* Debug *)
+		if debug_mode_greater Debug_medium then (
+			let beginning_message = if new_states = [] then "\nFound no new state" else ("\nFound " ^ (string_of_int (List.length new_states)) ^ " new state" ^ (s_of_int (List.length new_states)) ^ "") in
+			print_message Debug_medium (beginning_message ^ ".\n");
+		);
+		
+		if debug_mode_greater Debug_total then(
+			print_message Debug_total ("\nReachability tree now as follows:\n" ^ (ReachabilityTree.string_of_rtree string_of_int rtree));
+		);
+		(* If acyclic option: empty the list of already reached states for comparison with former states *)
+		
+		(** TODO : recheck this !! *)
+		
+		if options#acyclic then(
+			print_message Debug_low ("\nMode acyclic: empty the list of states to be compared.");
+			empty_states_for_comparison reachability_graph;
+		);
+		
+		
+		(* Clean up a little *)
+		(** LOOKS LIKE COMPLETELY USELESS !!! it even increases memory x-( *)
+		Gc.major ();
+		
+		(* Recompute the number of states to visit *)
+		nb_states_to_visit := ReachabilityTree.nb_states_to_visit rtree;
+		
+		(* Update the new state to visit *)
+		if !nb_states_to_visit > 0 then(
+			print_message Debug_high ("Recall that current element in the reachability tree is " ^ (string_of_int !current_state_index));
+			print_message Debug_medium ("Finding next element in the reachability tree...");
+			try(
+				current_state_index := ReachabilityTree.get_next_element rtree;
+			) with Not_found -> (
+				print_warning ("\nReachability tree now as follows:\n" ^ (ReachabilityTree.string_of_rtree string_of_int rtree));
+				raise (InternalError "The reachability tree has an unexpected structure, when looking for the next state in branch and bound.");
+			);
+		);
+		
+		(* Check if the limit has been reached according to the options *)
+		limit_reached := check_limit 0 (** TODO: check depth *) (Graph.nb_states reachability_graph) (time_from start_time);
+	done;
 	
-	()
+	(* Check whether there are still states to explore *)
+	if !limit_reached && !nb_states_to_visit > 0 then(
+		print_warnings_limit 0 (** TODO: check depth *) (Graph.nb_states reachability_graph) (time_from start_time) !nb_states_to_visit;
+	);
+	
+	
+	print_message Debug_standard (
+		let nb_states = Graph.nb_states reachability_graph in
+		let nb_transitions = Graph.nb_transitions reachability_graph in
+		"\nFixpoint reached: "
+		^ (string_of_int nb_states) ^ " reachable state" ^ (s_of_int nb_states)
+		^ " with "
+		^ (string_of_int nb_transitions) ^ " transition" ^ (s_of_int nb_transitions) ^ ".");
+
+	(* Return the graph, the iteration and the counter *)
+	reachability_graph , 0 (** TODO: check depth *) , (time_from start_time) , !nb_random_selections
 
 
 
@@ -1381,7 +1559,7 @@ let post_star program init_state =
 	(*Initialization of slast : used in union mode only*)
 	slast := [];
 	(* Time counter *)
-	let counter = ref (Unix.gettimeofday()) in
+	let start_time = Unix.gettimeofday() in
 	(* Set the counter of selections to 0 *)
 	nb_random_selections := 0;
 
@@ -1406,7 +1584,7 @@ let post_star program init_state =
 	let limit_reached = ref false in
 
 	(* Check if the list of new states is empty *)
-	while not (!limit_reached  || list_empty !newly_found_new_states) do
+	while not (!limit_reached  || !newly_found_new_states = []) do
 		if debug_mode_greater Debug_standard then (
 			print_message Debug_low ("\n");
 			print_message Debug_standard ("Computing post^" ^ (string_of_int (!nb_iterations)) ^ " from "  ^ (string_of_int (List.length !newly_found_new_states)) ^ " state" ^ (s_of_int (List.length !newly_found_new_states)) ^ ".");
@@ -1422,11 +1600,11 @@ let post_star program init_state =
 			(* Count the states for debug purpose: *)
 			num_state := !num_state + 1;
 			(* Perform the post *)
-			let post = post program reachability_graph orig_state_index in
-			let new_states = post in
+			let new_states = post program reachability_graph orig_state_index in
+(* 			let new_states = post in *)
 			(* Debug *)
 			if debug_mode_greater Debug_medium then (
-				let beginning_message = if list_empty new_states then "Found no new state" else ("Found " ^ (string_of_int (List.length new_states)) ^ " new state" ^ (s_of_int (List.length new_states)) ^ "") in
+				let beginning_message = if new_states = [] then "Found no new state" else ("Found " ^ (string_of_int (List.length new_states)) ^ " new state" ^ (s_of_int (List.length new_states)) ^ "") in
 				print_message Debug_medium (beginning_message ^ " for the post of state " ^ (string_of_int !num_state) ^ " / " ^ (string_of_int nb_states) ^ " in post^" ^ (string_of_int (!nb_iterations)) ^ ".\n");
 			);
 			
@@ -1449,11 +1627,14 @@ let post_star program init_state =
 			in
 			newly_found_new_states := try_to_merge new_newly_found_new_states;*)
 
+
+		(* Merge states ! *)
 		let new_states_after_merging = ref new_newly_found_new_states in
 		if not options#no_merging then (
 (* 			new_states_after_merging := try_to_merge_states reachability_graph !new_states_after_merging; *)
 			(* New version *)
-			new_states_after_merging := Graph.merge reachability_graph !new_states_after_merging;
+			let eaten_states = Graph.merge reachability_graph !new_states_after_merging in
+			new_states_after_merging := Global.list_diff !new_states_after_merging eaten_states;
 		);
 
 
@@ -1461,7 +1642,7 @@ let post_star program init_state =
 		newly_found_new_states := !new_states_after_merging;
 		(* Debug *)
 		if debug_mode_greater Debug_medium then (
-			let beginning_message = if list_empty !newly_found_new_states then "\nFound no new state" else ("\nFound " ^ (string_of_int (List.length !newly_found_new_states)) ^ " new state" ^ (s_of_int (List.length !newly_found_new_states)) ^ "") in
+			let beginning_message = if !newly_found_new_states = [] then "\nFound no new state" else ("\nFound " ^ (string_of_int (List.length !newly_found_new_states)) ^ " new state" ^ (s_of_int (List.length !newly_found_new_states)) ^ "") in
 			print_message Debug_medium (beginning_message ^ " for post^" ^ (string_of_int (!nb_iterations)) ^ ".\n");
 		);
 		
@@ -1477,60 +1658,29 @@ let post_star program init_state =
 		
 		(* Iterate *)
 		nb_iterations := !nb_iterations + 1;
+		
 		(* Check if the limit has been reached *)
-		begin
-		match options#post_limit with
-			| None -> ()
-			| Some limit -> if !nb_iterations > limit then limit_reached := true;
-		end;
-		begin
-		match options#states_limit with
-			| None -> ()
-			| Some limit -> if (Graph.nb_states reachability_graph) > limit then limit_reached := true;
-		end;
-		begin
-		match options#time_limit with
-			| None -> ()
-			| Some limit -> if (get_time()) > (float_of_int limit) then limit_reached := true;
-		end;
+		limit_reached := check_limit !nb_iterations (Graph.nb_states reachability_graph) (time_from start_time);
 	done;
 	
 	(* There were still states to explore *)
 	if !limit_reached && !newly_found_new_states != [] then(
-		begin
-		match options#post_limit with
-			| None -> ()
-			| Some limit -> if !nb_iterations > limit then print_warning (
-				"The limit number of iterations (" ^ (string_of_int limit) ^ ") has been reached. Post^* now stops, although there were still " ^ (string_of_int (List.length !newly_found_new_states)) ^ " state" ^ (s_of_int (List.length !newly_found_new_states)) ^ " to explore at this iteration."
-			);
-		end;
-		begin
-		match options#states_limit with
-			| None -> ()
-			| Some limit -> if (Graph.nb_states reachability_graph) > limit then print_warning (
-				"The limit number of states (" ^ (string_of_int limit) ^ ") has been reached. Post^* now stops, although there were still " ^ (string_of_int (List.length !newly_found_new_states)) ^ " state" ^ (s_of_int (List.length !newly_found_new_states)) ^ " to explore."
-			);
-		end;
-		begin
-		match options#time_limit with
-			| None -> ()
-			| Some limit -> if (get_time()) > (float_of_int limit) then print_warning (
-				"The time limit (" ^ (string_of_int limit) ^ " second" ^ (s_of_int limit) ^ ") has been reached. Post^* now stops, although there were still " ^ (string_of_int (List.length !newly_found_new_states)) ^ " state" ^ (s_of_int (List.length !newly_found_new_states)) ^ " to explore at this iteration."
-			);
-		end;
+		print_warnings_limit !nb_iterations (Graph.nb_states reachability_graph) (time_from start_time) (List.length !newly_found_new_states);
 	);
 
 	print_message Debug_standard (
+		let nb_states = Graph.nb_states reachability_graph in
+		let nb_transitions = Graph.nb_transitions reachability_graph in
 		"\nFixpoint reached after "
 		^ (string_of_int !nb_iterations) ^ " iteration" ^ (s_of_int !nb_iterations) ^ ""
 (* 		^ " in " ^ (string_of_seconds (time_from !counter)) *)
 		^ ": "
-		^ (string_of_int (Graph.nb_states reachability_graph)) ^ " reachable state" ^ (s_of_int (Graph.nb_states reachability_graph))
+		^ (string_of_int nb_states) ^ " reachable state" ^ (s_of_int nb_states)
 		^ " with "
-		^ (string_of_int (Hashtbl.length (reachability_graph.transitions_table))) ^ " transition" ^ (s_of_int (Hashtbl.length (reachability_graph.transitions_table))) ^ ".");
+		^ (string_of_int nb_transitions) ^ " transition" ^ (s_of_int nb_transitions) ^ ".");
 
 	(* Return the graph, the iteration and the counter *)
-	(*compute_and_return_result program*) reachability_graph , !nb_iterations , !counter , !nb_random_selections
+	reachability_graph , !nb_iterations , (time_from start_time) , !nb_random_selections
 
 
 
@@ -1605,14 +1755,14 @@ let full_reachability program init_state =
 	let options = Input.get_options () in
 
 	(* Call to generic function *)
-	let reachability_graph , _ , counter ,  _ = post_star program init_state in
+	let reachability_graph , _ , total_time ,  _ = post_star program init_state in
 	
 	print_message Debug_standard (
 		"\nReachabiliy analysis completed " ^ (after_seconds ()) ^ "."
 	);
 	print_message Debug_low (
 		"Computation time for reachability analysis: "
-		^ (string_of_seconds (time_from counter)) ^ "."
+		^ (string_of_seconds total_time) ^ "."
 	);
 
 	(* Print statistics *)
@@ -1638,8 +1788,10 @@ let inverse_method_gen program init_state =
 	(* Retrieve the input options *)
 	let options = Input.get_options () in
 	
-	(* Compute post star (IM is called automatically inside) *)
-	let reachability_graph, nb_iterations, counter, nb_random_selections = post_star program init_state in
+	(* Choose the correct algorithm *)
+	let algo = if options#branch_and_bound then branch_and_bound else post_star in
+	(* Call to generic functions *)
+	let reachability_graph, nb_iterations, total_time, nb_random_selections = algo program init_state in
 	
 	(*--------------------------------------------------*)
 	(* Print information *)
@@ -1696,7 +1848,7 @@ let inverse_method_gen program init_state =
 	(*--------------------------------------------------*)
 	(* Return result *)
 	(*--------------------------------------------------*)
-	returned_constraint, reachability_graph, nb_iterations, counter
+	returned_constraint, reachability_graph, nb_iterations, total_time
 	
 	
 
@@ -1707,11 +1859,21 @@ let inverse_method program init_state =
 	let options = Input.get_options () in
 
 	(* Call the inverse method *)
-	let returned_constraint, reachability_graph, nb_iterations, counter = inverse_method_gen program init_state in
+	let returned_constraint, reachability_graph, nb_iterations, total_time = inverse_method_gen program init_state in
 	
 	(* Here comes the result *)
 	print_message Debug_standard ("\nFinal constraint K0 "
-		^ (if options#union then "(under disjunctive form) " else "")
+		^ (if options#union
+			then "(under disjunctive form) "
+			else (
+				let linear_constraint =
+				match returned_constraint with
+					| Convex_constraint linear_constraint -> linear_constraint
+					| _ -> raise (InternalError "Impossible situation in inverse_method: a returned_constraint is not under convex form although union mode is not enabled.");
+				in
+				" (" ^ (string_of_int (LinearConstraint.nb_inequalities linear_constraint)) ^ " inequalities)"
+			)
+		)
 		^ ":");
 	print_message Debug_nodebug (string_of_returned_constraint program.variable_names returned_constraint);
 	print_message Debug_standard (
@@ -1719,7 +1881,7 @@ let inverse_method program init_state =
 	);
 	print_message Debug_low (
 		"Computation time for IM only: "
-		^ (string_of_seconds (time_from counter)) ^ "."
+		^ (string_of_seconds total_time) ^ "."
 	);
 	
 	(* Generate graphics *)

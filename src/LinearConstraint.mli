@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2010/03/04
- * Last modified: 2012/03/14
+ * Last modified: 2012/06/21
  *
  ****************************************************************)
  
@@ -128,6 +128,14 @@ val false_constraint : unit -> linear_constraint
 
 (** Create a true constraint *)
 val true_constraint : unit -> linear_constraint
+
+
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+(** {3 Access} *)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+
+(** Get the number of inequalities of a constraint *)
+val nb_inequalities : linear_constraint -> int
 
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
