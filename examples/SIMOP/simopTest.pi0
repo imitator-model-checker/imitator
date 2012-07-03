@@ -13,9 +13,7 @@
 -- automates de etude 1110 - V8
 
 	---START PI0---
-	&	p2  = 600
-	&	COMct  = 500
-	& 	SIGmrt = 2071
-	&	PLCmtt = 100
-	&	p3   = 25
+	&	p1  = 2 -- 500
+	&	p2  = 3 -- 600
+	&	p3   = 1 -- 25
 	---END PI0---
