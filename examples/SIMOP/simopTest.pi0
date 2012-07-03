@@ -17,5 +17,5 @@
 	&	COMct  = 500
 	& 	SIGmrt = 2071
 	&	PLCmtt = 100
-	&	COMd   = 25
+	&	p3   = 25
 	---END PI0---

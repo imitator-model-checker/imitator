@@ -17,7 +17,7 @@ var 	PLCclk, COMclk (*, NETclk, RIOclk, ENVclk*) ,
 	: clock;
 
 	(*PLCmtt,*) p2,
-	COMd,
+	p3,
 	COMct
 	: parameter;
 
@@ -67,8 +67,8 @@ initially COM2;
 	when True do {COMclk'=0} goto COM2;
 (* 	when True sync PLCout0 goto COM1;  -- remis le 30/06/07 ----* *) *)
 
-loc COM2 : while COMclk <= COMd wait{}
-	when COMclk=COMd  sync CNreq0 do {} goto COM3;
+loc COM2 : while COMclk <= p3 wait{}
+	when COMclk=p3  sync CNreq0 do {} goto COM3;
 (* 	when True sync PLCout0 goto COM2; -- (remis) (retrait --> loss!!!) *)
 
 loc COM3 : while COMclk <= COMct wait{}
@@ -87,8 +87,8 @@ loc COM6 : while COMclk<= COMct wait{}
 (* 	when True sync PLCout0 goto COM6; -- remis le 30/06/07	 de 10 mn a 1h >> OVERFLOW *)
 (* 	when True sync PLCout1 goto COM11; --*	-- retrait le 03/07/07 --- de 10 mn a 1h *)
 
-(*loc COM7 : while COMclk <= COMd wait{}		
-	when COMclk=COMd  sync CNreq0 do {} goto COM8;
+(*loc COM7 : while COMclk <= p3 wait{}		
+	when COMclk=p3  sync CNreq0 do {} goto COM8;
 (* 	when True sync PLCout1 goto COM7; ---- remis le 30/06/07 ----* *)
 
 loc COM8 : while COMclk <= COMct wait{}  -- inv. nouveau
@@ -106,8 +106,8 @@ loc COM11 : while COMclk<= COMct wait{}
 	when COMclk= COMct  do {COMclk'=0} goto COM12; 
 (* 	when True sync PLCout1 goto COM11; -- remis 30/06/07 (retrait ->loss!!) *)
 
-loc COM12 : while COMclk <= COMd wait{}		
-	when COMclk=COMd  sync CNreq1 do {} goto COM13; -- = au lieu de <=
+loc COM12 : while COMclk <= p3 wait{}		
+	when COMclk=p3  sync CNreq1 do {} goto COM13; -- = au lieu de <=
 (* 	when True sync PLCout1 goto COM12; -- retrait 03/07/07 ----* *)
 
 loc COM13 : while COMclk <= COMct wait{}  -- inv. nouveau
@@ -263,7 +263,7 @@ init := 	loc[PLC]=(*PLCinit*) PLC1
 	&	p2  > 0
 	&	COMct  > 0
 (* 	&	PLCmtt  > 0 *)
-	&	COMd  > 0
+	&	p3  > 0
 
 
 	& 	tt = 0 & yy = 0 (*& zz=0*)
