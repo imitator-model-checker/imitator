@@ -11,8 +11,7 @@
 --****************************************************--
 --****************************************************--
 
-var 	x1, x2,
-	x4
+var 	x1, x2, x3
 	: clock;
 
 	p1, p2, p3
@@ -22,24 +21,16 @@ var 	x1, x2,
 --****************************************************--
 automaton COM
 --****************************************************--
-synclabs : int1, int2, int3, int4;
-initially Q0;
-
-loc Q0: while True wait{}
-	when True goto Q1; (*ICI : AJOUTER p2 >= p1 & p2 >= p3*)
-	when True goto Q0bis;
-
-loc Q0bis: while True wait{}
-	when p2 >= p1 & p2 >= p3 do {x1' = 0, x2' = 0} goto Q1;
+synclabs : int1, int2, int3;
 
 loc Q1 : while True  wait{}
-	when x2 >=p3  sync int1 do {} goto Q2;
+	when x2 >= p1 sync int1 do {} goto Q2;
 
-loc Q2 : while x1<= p2 wait{}
-	when True sync int4 do {x1'=0} goto Q4;
+loc Q2 : while x1 <= p3 wait{}
+	when True sync int2 do {x1'=0} goto Q3;
 
-loc Q4 : while x2 <= p1 wait{}
-	when x2 = p1 sync int3 do {x2'=0} goto Q1;
+loc Q3 : while x2 <= p2 wait{}
+	when x2 <= p2 sync int3 do {x2'=0} goto Q1;
 end -- COM
 
 
@@ -52,19 +43,19 @@ end -- COM
 
 var init : region;
 
-init := loc[COM]= Q0
+init := loc[COM]= Q1
 
-	& x1 = 0
-	& x2 = 0
-
-	& x4 = 0
+	& x1 >= 0
+	& x2 >= 0
+	& x3 = 0 (* must be set to 0, otherwise IMincl terminates *)
 	
 	& p1 >= 0
 	& p2 >= 0
 	& p3 >= 0
 	
-(*	&	p1  = 2 -- 500
-	&	p2  = 3 -- 600
-	&	p3   = 1 -- 25*)
+(*	&	p1 = 1
+	&	p2 = 2
+	&	p3 = 3
+	*)
 
 ;

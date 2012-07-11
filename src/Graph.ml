@@ -334,6 +334,22 @@ let insert_state graph hash new_state =
 		(* Return new index *)
 		new_index;
 	) in
+	
+	
+	
+(*	print_warning "warning: consistency check";
+	(* Consistency check: the state should NOT be present (otherwise this is a duplicate) *)
+	Hashtbl.iter (fun state_index _ ->
+(* 		print_string "."; *)
+		let state = get_state graph state_index in
+		if states_equal state new_state then(
+			raise (InternalError "Trying to add a state that is present");
+		);
+	) graph.all_states;*)
+	
+	
+	
+	
 	(* Add the state to the tables *)
 	Hashtbl.add graph.all_states new_state_index (location_index, linear_constraint);
 	Hashtbl.add graph.states_for_comparison hash new_state_index;
@@ -343,7 +359,7 @@ let insert_state graph hash new_state =
 	new_state_index
 
 
-(**** TO DO: merge with add_state !!! *)
+(*(**** TO DO: merge with add_state !!! *)
 (** Add a state to a graph, if it is not present yet with the on-the-fly intersection *)
 let add_state_dyn program graph new_state constr =
 	(* Retrieve the input options *)
@@ -386,7 +402,7 @@ let add_state_dyn program graph new_state constr =
 		)	with Found state_index -> (
 				state_index, false
 		)
-	)
+	)*)
 
 
 (** Add a state to a graph, if it is not present yet *)
@@ -406,7 +422,7 @@ let add_state program graph new_state =
 		new_state_index, true
 	) else (
 		(* The check used for equality *)
-		let check_states = if options#inclusion then state_included else states_equal in				
+		let check_states = if options#inclusion then state_included else states_equal in
 		try (
 			(* use hash table to find all states with same locations (modulo hash collisions) *)
 			let old_states = Hashtbl.find_all graph.states_for_comparison hash in

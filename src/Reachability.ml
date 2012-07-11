@@ -1486,7 +1486,7 @@ let branch_and_bound program init_state =
 		);
 		(* If acyclic option: empty the list of already reached states for comparison with former states *)
 		
-		(** TODO : recheck this !! *)
+		(** TODO : recheck this !! (I guess very dangerous, because would empty the whole list of states to compare!) *)
 		
 		if options#acyclic then(
 			print_message Debug_low ("\nMode acyclic: empty the list of states to be compared.");
@@ -1787,6 +1787,42 @@ let full_reachability program init_state =
 let inverse_method_gen program init_state =
 	(* Retrieve the input options *)
 	let options = Input.get_options () in
+	
+	
+	
+	
+	(*(* TEST FOR BRANCH AND BOUND *)
+	if options#branch_and_bound then(
+		
+		print_message Debug_standard "1) BRANCH AND BOUND";
+		let _,_,_,_ = branch_and_bound program init_state in
+		let constraint1 = !k_result in
+
+		(* Remove branch and bound *)
+		options#branch_and_bound_unset;
+		print_message Debug_standard "2) CLASSICAL ALGORITHM";
+		let _,_,_,_ = post_star program init_state in
+		let constraint2 = !k_result in
+	
+		print_message Debug_standard "3) COMPARE RESULT";
+		print_message Debug_standard "-> Branch and bound:";
+		print_message Debug_standard (LinearConstraint.string_of_linear_constraint program.variable_names constraint1);
+		print_message Debug_standard "-> Classical IM:";
+		print_message Debug_standard (LinearConstraint.string_of_linear_constraint program.variable_names constraint2);
+		
+		if LinearConstraint.is_equal constraint1 constraint2 then(
+			print_message Debug_standard "\n\nCONSTRAINTS EQUAL :-)";
+			terminate_program();
+		) else (
+			print_message Debug_standard "\n\nARGH! CONSTRAINTS DIFFERENT :-(\n\n";
+			raise (InternalError "byebye");
+		);
+	);*)
+	
+	
+	
+	
+	
 	
 	(* Choose the correct algorithm *)
 	let algo = if options#branch_and_bound then branch_and_bound else post_star in

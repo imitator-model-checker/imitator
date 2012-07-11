@@ -113,7 +113,7 @@ val last_states: abstract_program -> reachability_graph -> state_index list
 val add_state : AbstractModel.abstract_program -> reachability_graph -> state -> (state_index * bool)
 
 (**Add a state to a graph dynamically**)
-val add_state_dyn : AbstractModel.abstract_program -> reachability_graph -> state -> LinearConstraint.linear_constraint -> (state_index * bool)
+(* val add_state_dyn : AbstractModel.abstract_program -> reachability_graph -> state -> LinearConstraint.linear_constraint -> (state_index * bool) *)
 
 (** Add a transition to the graph *)
 val add_transition : reachability_graph -> (state_index * action_index * state_index) -> unit

@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2012/05/10
- * Last modified: 2012/06/18
+ * Last modified: 2012/07/03
  *
  ****************************************************************)
 
@@ -46,6 +46,7 @@ class imitator_options :
 		method acyclic : bool
 		method acyclic_unset : unit
 		method branch_and_bound : bool
+		method branch_and_bound_unset : unit
 		method cart : bool
 (* 		method dynamic : bool *)
 		method fancy : bool

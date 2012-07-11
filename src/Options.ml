@@ -7,7 +7,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Ulrich Kuehne, Etienne Andre
  * Created:       2010
- * Last modified: 2012/06/21
+ * Last modified: 2012/07/03
  *
  ****************************************************************)
  
@@ -97,6 +97,7 @@ class imitator_options =
 		method acyclic = !acyclic
 		method acyclic_unset = (acyclic := false)
 		method branch_and_bound = !branch_and_bound
+		method branch_and_bound_unset = (branch_and_bound := false)
 		method cart = !cart
 (* 		method dynamic = !dynamic *)
 		method fancy = !fancy
