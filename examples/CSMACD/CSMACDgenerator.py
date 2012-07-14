@@ -39,4 +39,4 @@ def write_program(bcmax):
 	write_program_for_station(1, bcmax)
 	write_program_for_station(2, bcmax)
 
-write_program(9)
+write_program(10)
