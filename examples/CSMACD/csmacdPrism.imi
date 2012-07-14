@@ -89,20 +89,62 @@ loc Collide1: while x1 <= 0 wait {}
 	when True do {} goto Wait1_3;
 
 loc Wait1_0: while x1 <= 0 wait {}
-	when x1 = 0 sync busy1 do {x1' = 0} goto Collide1;
+	when x1 = 0 sync busy1 do {x1' = 0} goto Collide2;
 	when x1 = 0 sync send1 do {x1' = 0} goto Transmit1;
 
 loc Wait1_1: while x1 <= timeslot wait {}
-	when x1 = timeslot sync busy1 do {x1' = 0} goto Collide1;
+	when x1 = timeslot sync busy1 do {x1' = 0} goto Collide2;
 	when x1 = timeslot sync send1 do {x1' = 0} goto Transmit1;
 
 loc Wait1_2: while x1 <= 2 timeslot wait {}
-	when x1 = 2 timeslot sync busy1 do {x1' = 0} goto Collide1;
+	when x1 = 2 timeslot sync busy1 do {x1' = 0} goto Collide2;
 	when x1 = 2 timeslot sync send1 do {x1' = 0} goto Transmit1;
 
 loc Wait1_3: while x1 <= 3 timeslot wait {}
-	when x1 = 3 timeslot sync busy1 do {x1' = 0} goto Collide1;
+	when x1 = 3 timeslot sync busy1 do {x1' = 0} goto Collide2;
 	when x1 = 3 timeslot sync send1 do {x1' = 0} goto Transmit1;
+
+loc Collide2: while x1 <= 0 wait {}
+	when True do {} goto Wait2_0;
+	when True do {} goto Wait2_1;
+	when True do {} goto Wait2_2;
+	when True do {} goto Wait2_3;
+	when True do {} goto Wait2_4;
+	when True do {} goto Wait2_5;
+	when True do {} goto Wait2_6;
+	when True do {} goto Wait2_7;
+
+loc Wait2_0: while x1 <= 0 wait {}
+	when x1 = 0 sync busy1 do {x1' = 0} goto Collide2;
+	when x1 = 0 sync send1 do {x1' = 0} goto Transmit1;
+
+loc Wait2_1: while x1 <= timeslot wait {}
+	when x1 = timeslot sync busy1 do {x1' = 0} goto Collide2;
+	when x1 = timeslot sync send1 do {x1' = 0} goto Transmit1;
+
+loc Wait2_2: while x1 <= 2 timeslot wait {}
+	when x1 = 2 timeslot sync busy1 do {x1' = 0} goto Collide2;
+	when x1 = 2 timeslot sync send1 do {x1' = 0} goto Transmit1;
+
+loc Wait2_3: while x1 <= 3 timeslot wait {}
+	when x1 = 3 timeslot sync busy1 do {x1' = 0} goto Collide2;
+	when x1 = 3 timeslot sync send1 do {x1' = 0} goto Transmit1;
+
+loc Wait2_4: while x1 <= 4 timeslot wait {}
+	when x1 = 4 timeslot sync busy1 do {x1' = 0} goto Collide2;
+	when x1 = 4 timeslot sync send1 do {x1' = 0} goto Transmit1;
+
+loc Wait2_5: while x1 <= 5 timeslot wait {}
+	when x1 = 5 timeslot sync busy1 do {x1' = 0} goto Collide2;
+	when x1 = 5 timeslot sync send1 do {x1' = 0} goto Transmit1;
+
+loc Wait2_6: while x1 <= 6 timeslot wait {}
+	when x1 = 6 timeslot sync busy1 do {x1' = 0} goto Collide2;
+	when x1 = 6 timeslot sync send1 do {x1' = 0} goto Transmit1;
+
+loc Wait2_7: while x1 <= 7 timeslot wait {}
+	when x1 = 7 timeslot sync busy1 do {x1' = 0} goto Collide2;
+	when x1 = 7 timeslot sync send1 do {x1' = 0} goto Transmit1;
 
 loc Done1: while x1 <= 0 wait {}
 -- 	when True goto Done1;
