@@ -229,9 +229,11 @@ exe:
 # 	$(TARGET) $(EXAMPLE_PATH)/Proprietes/exCTL.imi $(EXAMPLE_PATH)/Proprietes/exCTL.pi0
 # 	$(TARGET) $(EXAMPLE_PATH)/Proprietes/exCTL.imi $(EXAMPLE_PATH)/Proprietes/exCTL.pi0 -PTA2CLP
 
-# 	$(TARGET) $(EXAMPLE_PATH)/Proprietes/contrexTermination.imi $(EXAMPLE_PATH)/Proprietes/contrexTermination.pi0 -no-merging -with-parametric-log -with-log -states-limit 30 -with-dot
+# 	$(TARGET) $(EXAMPLE_PATH)/Proprietes/contrexTermination.imi -mode reachability -no-merging -with-dot -with-log -with-parametric-log
+	$(TARGET) $(EXAMPLE_PATH)/Proprietes/contrexTermination.imi $(EXAMPLE_PATH)/Proprietes/contrexTermination.pi0 -no-merging -with-parametric-log -with-log -states-limit 8 -with-dot
 
-	$(TARGET) $(EXAMPLE_PATH)/Proprietes/contrexTerminationGlobalClockIMincl.imi $(EXAMPLE_PATH)/Proprietes/contrexTerminationGlobalClockIMincl.pi0 -no-merging -incl -with-parametric-log -with-log -states-limit 30 -with-dot
+# 	$(TARGET) $(EXAMPLE_PATH)/Proprietes/contrexTerminationGlobalClockIMincl.imi -mode reachability -no-merging -incl
+# 	$(TARGET) $(EXAMPLE_PATH)/Proprietes/contrexTerminationGlobalClockIMincl.imi $(EXAMPLE_PATH)/Proprietes/contrexTerminationGlobalClockIMincl.pi0 -no-merging -incl -with-parametric-log -with-log -states-limit 30 -with-dot
 
 # 	$(TARGET) $(EXAMPLE_PATH)/Proprietes/exNonTerminationDFS.imi $(EXAMPLE_PATH)/Proprietes/exNonTerminationDFS.pi0 -bab -no-merging -incl -with-log -states-limit 30 -with-parametric-log # PROBLEM BAB
 # 	$(TARGET) $(EXAMPLE_PATH)/Proprietes/exNonTerminationDFS.imi $(EXAMPLE_PATH)/Proprietes/exNonTerminationDFS.pi0 -no-merging -incl -with-parametric-log -with-log -states-limit 30 -with-dot

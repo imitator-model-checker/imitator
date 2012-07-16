@@ -47,7 +47,7 @@ init := loc[COM]= Q1
 
 	& x1 >= 0
 	& x2 >= 0
-	& x3 = 0 (* must be set to 0, otherwise IMincl terminates *)
+	& x3 >= 0 (* must be set to 0, otherwise IMincl terminates *)
 	
 	& p1 >= 0
 	& p2 >= 0
