@@ -1,4 +1,11 @@
 *******************************************************
+release 2.5.0    (2012-08-21)
+
+- Merging is still not enabled by default; inverted options "-no-log" and "-no-log" to "-with-dot" and "-with-log". "-post-limit" becomes "-depth-limit".
+	Added experimental and ongoing features (import from and export to GML, depth first exploration).
+	Partial code refactoring.
+
+*******************************************************
 release 2.4    (2012-02-20)
 
 - Added stopwatches. Syntax, semantics and computation time are backward-compatible for models without stopwatches.
