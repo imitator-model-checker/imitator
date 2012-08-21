@@ -6,16 +6,6 @@
 			offset_2_2 = 60 &
 			offset_2_3 = 120 &
 
-
-			priority1_1 = 2 &
-			priority1_2 = 4 &
-			priority1_3 = 2 &
-			priority1_4 = 4 &
-
-			priority2_1 = 3 &
-			priority2_2 = 3 &
-			priority2_3 = 1 &
-
 			bcet1_1 = 10 &
 			wcet1_1 = 40 &
 			bcet1_2 = 5 &

@@ -1,6 +1,15 @@
 var
 	time_1_1: clock;
-	offset_1_1, bcet1_1, bcet1_2, bcet1_3, bcet1_4, bcet2_1, bcet2_2, bcet2_3, wcet1_1, wcet1_2, wcet1_3, wcet1_4, wcet2_1, wcet2_2, wcet2_3, priority1_1,  priority1_2,  priority1_3,  priority1_4, priority2_1, priority2_2, priority2_3: parameter;
+	offset_1_1, bcet1_1, bcet1_2, bcet1_3, bcet1_4, bcet2_1, bcet2_2, bcet2_3, wcet1_1, wcet1_2, wcet1_3, wcet1_4, wcet2_1, wcet2_2, wcet2_3,
+		priority1_1 = 2,
+		priority1_2 = 4,
+		priority1_3 = 2,
+		priority1_4 = 4,
+
+		priority2_1 = 3,
+		priority2_2 = 3,
+		priority2_3 = 1
+	: parameter;
 	priority_1,	wcet_1, bcet_1:clock;
 	time_1_2: clock;
 	offset_1_2 : parameter;
@@ -16,6 +25,8 @@ var
 	time_2_3: clock;
 	offset_2_3 : parameter;
 	x_1, x_2: clock;
+	
+
 
 automaton j_1_1
 
