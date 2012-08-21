@@ -1,9 +1,10 @@
 *******************************************************
 release 2.5.0    (2012-08-21)
 
-- Merging is still not enabled by default; inverted options "-no-log" and "-no-log" to "-with-dot" and "-with-log". "-post-limit" becomes "-depth-limit".
-	Added experimental and ongoing features (import from and export to GML, depth first exploration).
-	Partial code refactoring.
+- Added arbitrary clock updates (not only to 0).
+- Partial code refactoring.
+- Options: Merging is still not enabled by default; inverted options "-no-log" and "-no-log" to "-with-dot" and "-with-log". "-post-limit" becomes "-depth-limit".
+- Added experimental and ongoing features (import from and export to GML, depth first exploration).
 
 *******************************************************
 release 2.4    (2012-02-20)
