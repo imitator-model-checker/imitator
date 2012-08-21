@@ -1,0 +1,32 @@
+			offset_1_1 = 0 &
+			offset_1_2 = 20 &
+			offset_1_3 = 75 &
+			offset_1_4 = 130 &
+			offset_2_1 = 30 &
+			offset_2_2 = 60 &
+			offset_2_3 = 120 &
+
+
+			priority1_1 = 2 &
+			priority1_2 = 4 &
+			priority1_3 = 2 &
+			priority1_4 = 4 &
+
+			priority2_1 = 3 &
+			priority2_2 = 3 &
+			priority2_3 = 1 &
+
+			bcet1_1 = 10 &
+			wcet1_1 = 40 &
+			bcet1_2 = 5 &
+			wcet1_2 = 10 &
+			bcet1_3 = 20 &
+			wcet1_3 = 30 &
+			bcet1_4 = 15 &
+			wcet1_4 = 50 &
+			bcet2_1 = 10 &
+			wcet2_1 = 10 &
+			bcet2_2 = 5 &
+			wcet2_2 = 40 &
+			bcet2_3 = 20 &
+			wcet2_3 = 70 

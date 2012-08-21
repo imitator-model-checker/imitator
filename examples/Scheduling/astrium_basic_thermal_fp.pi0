@@ -1,0 +1,10 @@
+WCET_1 = 4 &
+WCET_2 = 20 &
+WCET_3 = 120 &
+per1 = 10 &
+per2 = 100 &
+per3 = 1000 &
+Off1 = 0 &
+Off2 = 94 &
+Off3 = 0 & 
+deadlineBasic = 134
