@@ -7,7 +7,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Ulrich Kuehne, Etienne Andre
  * Created:       2010
- * Last modified: 2012/07/03
+ * Last modified: 2012/08/21
  *
  ****************************************************************)
  
@@ -89,8 +89,8 @@ class imitator_options =
 		val mutable pta2gml = ref false
 
 		(* SPECIALIZED OPTIONS*)
-		(* No merging of states (former jobshop option) *)
-		val mutable no_merging = ref false
+		(* Merging of states (former jobshop option) *)
+		val mutable no_merging = ref true
 
 
 		
@@ -183,7 +183,6 @@ class imitator_options =
 				("-IMunion", Set union, " Algorithm IMUnion (defined in [AS11]): Returns the union of the constraint on the parameters associated to the last state of each trace. Default: 'false'");
 				("-log-prefix", Set_string program_prefix, " Sets the prefix for log files. Default: [model].");
 				("-mode", String set_mode, " Mode for " ^ program_name ^ ". Use 'reachability' for a parametric reachability analysis (no pi0 needed). Use 'inversemethod' for the inverse method. For the behavioral cartography algorithm, use 'cover' to cover all the points within V0, or 'randomXX' where XX is a number to iterate randomly algorithm (e.g., random5 or random100). Default: 'inversemethod'.");
-				("-no-merging", Set no_merging, " Disable the merging technique of [AFS12]. Default: 'false' (enable)");
 				("-no-random", Set no_random, " No random selection of the pi0-incompatible inequality (select the first found). Default: false.");
 				("-PTA2CLP", Unit (fun _ -> pta2clp := true; imitator_mode := Translation), "Translate PTA into a CLP program (work in progress!), and exit without performing any analysis. Defaut : 'false'");
 				("-PTA2GML", Unit (fun _ -> pta2gml := true; imitator_mode := Translation), "Translate PTA into a GML program, and exit without performing any analysis. Experimental. Defaut : 'false'");
@@ -196,6 +195,7 @@ class imitator_options =
 				("-tree", Set tree, " Does not test if a new state was already encountered. To be set ONLY if the reachability graph is a tree. Default: 'false'");
 				("-with-dot", Set with_dot, " Graphical output using 'dot'. Default: false.");
 				("-with-log", Set with_log, " Generation of log files (description of states). Default: false.");
+				("-with-merging", Clear no_merging, " Use the merging technique of [AFS12]. Default: 'false' (disable)");
 				("-with-parametric-log", Set with_parametric_log, " Adds the elimination of the clock variables in the constraints in the log files. Default: false.");
 				("-version", Unit (fun _ -> print_version_string (); exit 0), " Print version number and exit.");
 

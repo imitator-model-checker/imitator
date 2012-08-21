@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2009/09/07
- * Last modified: 2012/06/15
+ * Last modified: 2012/08/21
  *
  **************************************************)
 
@@ -156,15 +156,15 @@ Input.set_options options;
 (**************************************************)
 
 print_message Debug_standard
-	( "****************************************************");
-Printf.printf " *  IMITATOR %-38s *\n" version_string;
+	( "************************************************************");
+Printf.printf " *  IMITATOR %-46s *\n" version_string;
 print_message Debug_standard
-	( "*                                                  *\n"
-	^ "*     Etienne ANDRE, Ulrich KUEHNE, Romain SOULAT  *\n"
-	^ "*                                     2009 - 2012  *\n"
-	^ "*               LSV, ENS de Cachan & CNRS, France  *\n"
-	^ "*  LIPN, Universite Paris 13, Sorbonne Paris Cite  *\n"
-	^ "****************************************************");
+	( "*                                                          *\n"
+	^ "*             Etienne ANDRE, Ulrich KUEHNE, Romain SOULAT  *\n"
+	^ "*                                             2009 - 2012  *\n"
+	^ "*                       LSV, ENS de Cachan & CNRS, France  *\n"
+	^ "*  LIPN, Universite Paris 13, Sorbonne Paris Cite, France  *\n"
+	^ "************************************************************");
 
 
 (**************************************************)
@@ -250,9 +250,9 @@ if options#forcePi0 then
 (* OPTIONS *)
 
 if options#no_merging then
-	print_message Debug_standard ("Merging technique of [AFS12] disabled.")
+	print_message Debug_medium ("Merging technique of [AFS12] disabled (default).")
 else
-	print_message Debug_medium ("Merging technique of [AFS12] enabled (default).");
+	print_message Debug_standard ("Merging technique of [AFS12] enabled.");
 
 (*if options#dynamic then
 	print_message Debug_standard ("Dynamic mode (optimization by RS).")
