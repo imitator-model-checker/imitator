@@ -42,13 +42,14 @@ INCLUDE = -I $(SRC) -I $(EXTLIB_PATH) -I $(OCAML_PPL_PATH) -I $(OCAML_GMP_PATH)
 # native c libraries (updated 2012/06/07)
 CLIBS = -cclib -lppl
 
-# FOR STATIC COMPILING IN 32 BITS
+# For 32 bits compiling
 STATIC32CLIBS = -cclib '-static -lppl -lcamlrun -ltinfo -lppl_ocaml -lstdc++ -lgmp -lgmpxx'
-# (old version)
 # CLIBS = -cclib '-static -lppl -lpwl -lcamlrun -ltinfo -lppl_ocaml -lstdc++ -lmlgmp -lmpfr -lgmp -lgmpxx'
 
-# ALLOWS STATIC COMPILING IN 64 BITS :-)
-# CLIBS = -cclib '-static -lppl -lpwl -lppl_ocaml -lstdc++ -lmlgmp -lmpfr -lgmp -lgmpxx ' 
+# For 64 bits compiling
+STATIC64CLIBS = -cclib '-static -ldl -lppl -lcamlrun -ltinfo -lppl_ocaml -lstdc++ -lgmpxx'
+# -ldl : inutile
+# CLIBS = -cclib '-static -lppl -lpwl -lppl_ocaml -lstdc++ -lmlgmp -lmpfr -lgmp -lgmpxx'
 
 
 # ocaml lib files
@@ -57,10 +58,12 @@ OLIBS = str.cma unix.cma extLib.cma bigarray.cma gmp.cma ppl_ocaml.cma
 # native ocaml lib files
 OOLIBS = str.cmxa unix.cmxa extLib.cmxa bigarray.cmxa gmp.cmxa ppl_ocaml.cmxa
 
+
 # external libs for compiling with PPL support
 export LIBS = $(CLIBS) $(OLIBS)
-export STATIC32LIBS = $(STATIC32CLIBS) $(OLIBS)
 # export OPTLIBS = $(CLIBS) $(OOLIBS) 
+export STATIC32LIBS = $(STATIC32CLIBS) $(OLIBS)
+export STATIC64LIBS = $(STATIC64CLIBS) $(OLIBS)
 
 
 SRC = src
@@ -99,12 +102,14 @@ IMILIB = lib/imitator.cma
 # target executable
 TARGET = bin/IMITATOR
 # TARGET_OPT = bin/IMITATOR.opt
-TARGET_STATIC = bin/IMITATOR32
+TARGET_STATIC32 = bin/IMITATOR32
+TARGET_STATIC64 = bin/IMITATOR64
 
 
 default all: $(TARGET)
 # opt: $(TARGET_OPT)
-static32: $(TARGET_STATIC)
+static32: $(TARGET_STATIC32)
+static64: $(TARGET_STATIC64)
 
 
 header: $(CMIS)
@@ -128,11 +133,16 @@ $(TARGET): $(IMILIB) $(MAIN)
 	@ echo [LINK] $(TARGET)
 	@ $(OCAMLC) $(INCLUDE) $(LIBS) $(IMILIB) $(MAIN) -o $(TARGET)
 	
-$(TARGET_STATIC): $(IMILIB) $(MAIN)
-	@ echo [LINK] $(TARGET_STATIC)
-	@ $(OCAMLC) -custom $(INCLUDE) -I $(CLIB_PATH) $(STATIC32LIBS) $(IMILIB) $(MAIN) -o $(TARGET_STATIC) 
+$(TARGET_STATIC32): $(IMILIB) $(MAIN)
+	@ echo [LINK] $(TARGET_STATIC32)
+	@ $(OCAMLC) -custom $(INCLUDE) -I $(CLIB_PATH) $(STATIC32LIBS) $(IMILIB) $(MAIN) -o $(TARGET_STATIC32) 
 	
-# $(TARGET_OPT): $(IMILIB_OPT) $(MAIN_OPT)
+$(TARGET_STATIC64): $(IMILIB) $(MAIN)
+	@ echo [LINK] $(TARGET_STATIC64)
+	@ $(OCAMLC) -custom $(INCLUDE) -I $(CLIB_PATH) $(STATIC64LIBS) $(IMILIB) $(MAIN) -o $(TARGET_STATIC64)
+
+	
+	# $(TARGET_OPT): $(IMILIB_OPT) $(MAIN_OPT)
 # 	@ echo [LINK] $(TARGET_OPT)
 # 	$(OCAMLOPT) -o $(TARGET_OPT) $(INCLUDE) $(OPTLIBS) $(IMILIB_OPT) $(MAIN_OPT)
 
