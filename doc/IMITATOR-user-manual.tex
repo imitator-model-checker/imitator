@@ -1,29 +1,16 @@
-\documentclass[a4paper,10pt]{article}
-\usepackage[latin1]{inputenc}
+\documentclass[a4paper,11pt]{article}
 
 % \sloppy
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % PACKAGES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\usepackage[utf8x]{inputenc}
+
 \usepackage{amsmath, amssymb, url}
-\usepackage[ruled,vlined]{algorithm2e}
 
-\usepackage{fancyheadings}
-
-\newcommand{\LinesNumbered}{\linesnumbered}
-\newcommand{\IncMargin}{\incmargin}
-\newcommand{\DecMargin}{\decmargin}
-
-\LinesNumbered
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% PDFTEX
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-\usepackage[pdftex]{graphicx,color}
-
-	\usepackage[pdftex,
+% \usepackage[pdftex]{graphicx,color}
+\usepackage[pdftex,
 		colorlinks=true,
 		pagebackref=true,
 		citecolor=darkgreen,
@@ -103,6 +90,11 @@
 % Noms
 \newcommand{\tiling}{\mathit{Tiling}}
 % \newcommand{\true}{\mathbf{true}}
+\newcommand{\Ko}{K}
+\newcommand{\pio}{\pi_0}
+\newcommand{\piprime}{\pi}
+\newcommand{\To}{T_0}
+\newcommand{\Tprime}{T}
 
 % Symboles
 \newcommand{\emptystring}{$\epsilon$}
@@ -217,7 +209,7 @@ and, automaton, clock, discrete, do, end, endreach, False, forward, from, goto, 
 
 % Title Page
 \title{IMITATOR User Manual\\{\Large Version \imitatorversion{}}}
-\author{\'Etienne Andr\'e, Romain Soulat}
+\author{}
 % \date{}
 
 \begin{document}
@@ -228,7 +220,7 @@ and, automaton, clock, discrete, do, end, endreach, False, forward, from, goto, 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{abstract}
-\imitator{} is a tool for parameter synthesis in timed automata with stopwatches.
+\imitator{} is a tool for parameter synthesis in timed automata with stopwatches~\cite{AFKS12}.
 It is based on the inverse method: given a reference valuation of the parameters, its generates a constraint such that the system behaves the same as under the reference valuation in terms of traces, i.e., alternating sequences of locations and actions.
 % This is useful for safely relaxing some values of the reference valuation, and optimizing timing bounds of the system.
 Besides the inverse method, \imitator{} also implements the ``behavioral cartography algorithm'', allowing to solve the following good parameters problem: find a set of valuations within a given rectangle for which the system behaves well.
@@ -243,13 +235,103 @@ We give here the installation requirements and the launching commands of \imitat
 % \pagestyle{fancyplain}
 % \lhead{\fancyplain{}{\imitator{} \imitatorversion{} User Manual}}
 
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Introduction}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+\imitator{} 2.5 (for \emph{Inverse Method for Inferring Time AbstracT behaviOR}) is a tool for parameter synthesis in the framework of real-time systems based on the inverse method~$\IM$ for Parametric Timed Automata (PTAs) augmented with stopwatches~\cite{AFKS12}.  % ,~\cite{ad94}
+Different from CEGAR-based methods (see \cite{cgjlv00}), this algorithm for parameter synthesis makes use of a ``good'' parameter valuation~$\pio$ instead of a set of ``bad'' states~\cite{acef09}.
+\imitator{} takes as input a network of PTAs with stopwatches
+and a reference valuation~$\pio$; it synthesizes a constraint~$\Ko$ on the parameters such that (1) $\pio \models \Ko$ and (2) for all parameter valuation~$\piprime$ satisfying $\Ko$, the trace set (i.e., the discrete behavior) of~$\A$ under~$\piprime$ is the same as for~$\A$ under~$\pio$.
+%This preserves in particular linear time properties, 
+This provides the system with a criterion of \emph{robustness} (see, e.g., \cite{Markey11})
+%, by formally guaranteeing a uniform discrete behavior 
+around~$\pio$.
+
+% It , that synchronize on shared actions
+% The input syntax, inspired by~\hytech{}, allows the use of clocks (or stopwatches), rational-valued discrete variables, and parameters (i.e. unknown constants) to be used altogether in linear terms, within guards, invariants and updates.
+
+% By iterating the inverse method on all integer points within a bounded reference parameter domain, we get a set of constraints %(``tiles'')
+% such that, for every point in each such constraint, the time-abstract behavior is the same: this gives a behavioral cartography of the system~\cite{af10}.
+
+
+
+%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
+\begin{figure}[ht!]
+	% STYLES
+	\tikzstyle{etiquette} = [draw=none, color=black]
+	
+% \tikzstyle{boite}=[text width=8em, text centered, minimum height=2.5em, rounded corners, very thick]
+% \tikzstyle{input}=[boite, draw=green!20!gris, top color=green!50, bottom color=green!10!white]
+% \tikzstyle{output}=[boite, draw=red!20!gris, top color=red!50, bottom color=red!5!white]
+% \tikzstyle{imitator} = [boite, draw=blue!20!gris, text width=10em, minimum height=6em]
+
+	
+	\tikzstyle{boite}=[rectangle, draw=black, rounded corners, thick, draw=blue!40!black, top color=blue!5!white, bottom color=blue!20]
+% 	\tikzstyle{imitator} = [boite]
+% 	\tikzstyle{apron} = [boite, draw=yellow!20!gris, top color=yellow!70, bottom color=yellow!10!white]
+% 	\tikzstyle{polka} = [apron]
+% 	\tikzstyle{ppl} = [apron]
+% 	\tikzstyle{dot} = [boite, draw=purple!20!gris, top color=purple!10!white, bottom color=purple!60]
+
+	\tikzstyle{fleche} = [->, draw=black, semithick]
+{
+
+\centering
+
+\begin{tikzpicture}[scale=0.72,  =>stealth']
+
+	% Boites
+	\draw[boite] (-5, 5.5) rectangle (-2, 6.5);
+	\node [etiquette] at (-3.5, 6) {PTA};
+	
+	\draw[boite] (-5, 3.8) rectangle (-2, 5);
+	\node [etiquette] at (-3.5, 4.4) {\begin{tabular}{c}Reference\\valuation $\pio$\end{tabular}};
+	
+	\draw[boite] (0, 4) rectangle (6, 6.5);
+	\node [etiquette] at (3, 5.25) {\large \imitator{}};
+	
+% 	\draw[boite] (1, 4) rectangle (5, 5);
+% 	\node [etiquette] at (3, 4.5) {PPL};
+	
+	\draw[boite] (8, 4.5) rectangle (12, 6);
+	\node [etiquette] at (10, 5.25) {Constraint $\Ko$};
+	
+% 	\draw[boite] (8, 4) rectangle (12, 5);
+% 	\node [etiquette] at (10, 4.5) {Trace set};
+
+	% Fleches
+	\path[fleche] (-2, 6) --++ (2, 0);
+	\path[fleche] (-2, 4.4) --++ (2, 0);
+% 	\path[fleche] (3.5, 4) --++ (0, -.5);
+% 	\path[fleche] (2.5, 3.5) --++ (0, .5);
+	\path[fleche] (6, 5.25) --++ (2, 0);
+% 	\path[fleche] (6, 4.5) --++ (2, 0);
+
+\end{tikzpicture}
+
+}
+
+\caption{Functional view of \imitator{}}
+\label{fig:structure}
+\end{figure}
+%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
+
+
+
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Installing IMITATOR}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-Sources, binaries for Linux platforms, and installation instructions are available on \imitator{}'s Web page \cite{}.
+Sources, binaries for Linux platforms, and installation instructions are available on \imitator{}'s Web page \cite{imitator_web}.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -264,16 +346,17 @@ Sources, binaries for Linux platforms, and installation instructions are availab
 \subsection{Inputs and Outputs}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-The input syntax of \imitator{} to describe the network of PTAs modeling the system is given in~\cite{imitator2_web}, and is very close to the \hytech{} syntax.
-Actually, all standard \hytech{} files describing only PTAs (and not more general systems like linear hybrid automata\cite{achh92}) can be analyzed directly by \imitator{} with very minor changes\footnote{An interface to accept as well files given using the \phaver{} syntax is currently being implemented.}.
+The input syntax of \imitator{} to describe the network of PTAs modeling the system is originally based on the \hytech{} syntax, with several improvements.
+Actually, all standard \hytech{} files describing only PTAs (and not more general systems like linear hybrid automata\cite{achh92}) can be analyzed directly by \imitator{} with very minor changes.
+% \footnote{An interface to accept as well files given using the \phaver{} syntax is currently being implemented.}.
 
 
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
 \paragraphe{Inverse Method}
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
 When calling \imitator{} to apply the inverse method algorithm, the tool takes as input two files, one describing the network of PTAs modeling the system, and the other describing the reference valuation.
-As depicted in Figure~\ref{fig:ioIM}, it synthesizes a constraint on the parameters solving the inverse problem, as well as the corresponding trace set under a graphical form.
-The description of all the parametric reachable states is also returned.
+As depicted in Figure~\ref{fig:ioIM}, it synthesizes a constraint on the parameters solving the inverse problem, as well as optionally the corresponding trace set under a graphical form.
+The description of all the parametric reachable states can also be optionally output.
 
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
 \begin{figure}[ht!]
@@ -315,8 +398,8 @@ The description of all the parametric reachable states is also returned.
 \paragraphe{Behavioral Cartography Algorithm}
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
 When calling \imitator{} to apply the behavioral cartography algorithm, the tool takes as an input two files, one describing the network of PTAs modeling the system, and the other describing the reference rectangle, i.e., the bounds to consider for each parameter.
-As depicted in Figure~\ref{fig:ioBC}, it synthesizes a list of tiles, as well as the trace set corresponding to each tile under a graphical form.
-The description of all the parametric reachable states for each tile is also returned.
+As depicted in Figure~\ref{fig:ioBC}, it synthesizes a list of tiles, as well as optionally the trace set corresponding to each tile under a graphical form.
+The description of all the parametric reachable states for each tile may also optionally be output.
 
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
 \begin{figure}[ht!]
@@ -353,90 +436,21 @@ The description of all the parametric reachable states for each tile is also ret
 \end{figure}
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
 
+% 
+% %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
+% \paragraphe{Internal Representation}
+% %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
+% States are represented using a triple $(q, v, C)$ made of the current location~$q$ in each automaton, a value for each discrete variable\footnote{Discrete variables are syntactic sugar allowing to factorize several locations into a single one. In~\imitator{}, discrete variables are integer variables that can be updated using constants or other discrete variables.}~$v$, and a constraint $C$ on the clocks and the parameters.
+% In order to optimize the test of equality between a new computed state and the set of states computed previously, the states are stored in a hash table as follows:
+% to a given key $(q, v)$ of the hash table, we associate a list of constraints $C_1, \dots, C_n$, corresponding to the $n$ states $(q, v, C_1)$, \dots, $(q, v, C_n)$.
+% % the location and the value for the discrete variables represent the key, and the value corresponds to 
+% 
+% Note that, unlike \hytech{}, \imitator{} uses exact arithmetics with unlimited precision.
+% 
+% Contrarily to \hytech{} which performs an \emph{a\,priori} static composition of the automata, thus leading to a dramatical explosion of the number of locations, \imitator{} performs an \emph{on-the-fly} composition of the automata.
+% This \emph{on-the-fly} composition allows to analyze bigger systems, and decrease drastically the computation time compared to \imitator{}. % (see Section~\ref{sec:experiments}).
 
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{Structure and Implementation}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
-\paragraphe{Structure}
-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
-% Whereas \imitator{} was a prototype written in \python{} calling \hytech{} for the computation of the $\mathit{Post}$ operation, 
-\imitator{} is a standalone tool written in \ocaml{}.
-% The $\mathit{Post}$ operation has been fully implemented, and the inverse method algorithm entirely rewritten.
-As depicted in Figure~\ref{fig:structure}, \imitator{} makes use of an external library for manipulating convex polyhedra.
-\imitator{} relies on the Parma Polyhedra Library (PPL)~\cite{bhz08}.
-The trace sets are output under a graphical form using the \gdot{} module of the graph visualization software \graphviz{}.
-
-\imitator{} contains about 9000 lines of code, and its development took about 6 man-months.
-
-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
-\begin{figure}[ht!]
-	% STYLES
-	\tikzstyle{etiquette} = [draw=none, color=black]
 	
-	\tikzstyle{boite}=[rectangle, draw=black, rounded corners]
-	\tikzstyle{imitator} = [boite, fill=blue!40]
-	\tikzstyle{apron} = [boite, fill=yellow!40]
-	\tikzstyle{polka} = [apron]
-	\tikzstyle{ppl} = [apron]
-	\tikzstyle{dot} = [boite, fill=purple!40]
-
-	\tikzstyle{fleche} = [->, draw=black, thick]
-{
-
-\centering
-
-\begin{tikzpicture}[scale=0.6]
-
-	% Boites
-	\path[imitator] (0, 6) -- (0, 4) -- (7, 4) -- (7, 6) -- cycle;
-	\path[apron] (0, 3) -- (0, 2) -- (3, 2) -- (3, 3) -- cycle;
-	\path[ppl] (4, 3) -- (4, 2) -- (7, 2) -- (7, 3) -- cycle;
-	\path[polka] (0, 1) -- (0, 0) -- (3, 0) -- (3, 1) -- cycle;
-	\path[dot] (9, 6) -- (9, 4) -- (12, 4) -- (12, 6) -- cycle;
-
-	% Etiquettes
-	\node [etiquette] at (3.5, 5) {\imitator{} (\ocaml{})};
-	\node [etiquette] at (1.5, 2.5) {\apron{}};
-	\node [etiquette] at (5.5, 2.5) {PPL};
-	\node [etiquette] at (1.5, 0.5) {\polka{}};
-	\node [etiquette] at (10.5, 5) {\gdot{}};
-
-	% Fleches
-	\path[fleche] (7, 5) -- (9, 5);
-	\path[fleche] (1, 4) -- (1, 3);
-	\path[fleche] (2, 3) -- (2, 4);
-	\path[fleche] (5, 4) -- (5, 3);
-	\path[fleche] (6, 3) -- (6, 4);
-	\path[fleche] (1, 2) -- (1, 1);
-	\path[fleche] (2, 1) -- (2, 2);
-
-\end{tikzpicture}
-
-}
-
-\caption{\imitator{} internal structure}
-\label{fig:structure}
-\end{figure}
-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
-
-
-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
-\paragraphe{Internal Representation}
-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
-States are represented using a triple $(q, v, C)$ made of the current location~$q$ in each automaton, a value for each discrete variable\footnote{Discrete variables are syntactic sugar allowing to factorize several locations into a single one. In~\imitator{}, discrete variables are integer variables that can be updated using constants or other discrete variables.}~$v$, and a constraint $C$ on the clocks and the parameters.
-In order to optimize the test of equality between a new computed state and the set of states computed previously, the states are stored in a hash table as follows:
-to a given key $(q, v)$ of the hash table, we associate a list of constraints $C_1, \dots, C_n$, corresponding to the $n$ states $(q, v, C_1)$, \dots, $(q, v, C_n)$.
-% the location and the value for the discrete variables represent the key, and the value corresponds to 
-
-Note that, unlike \hytech{}, \imitator{} uses exact arithmetics with unlimited precision.
-
-Contrarily to \hytech{} which performs an \emph{a\,priori} static composition of the automata, thus leading to a dramatical explosion of the number of locations, \imitator{} performs an \emph{on-the-fly} composition of the automata.
-This \emph{on-the-fly} composition allows to analyze bigger systems, and decrease drastically the computation time compared to \imitator{}. % (see Section~\ref{sec:experiments}).
-
-
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -446,39 +460,16 @@ This \emph{on-the-fly} composition allows to analyze bigger systems, and decreas
 \imitator{} (version \imitatorversion{}) includes the following features:
 
 \begin{itemize}
+	\item Analysis of a network of parametric timed automata augmented with stopwatches and discrete rational-valued variables;
 	\item Reachability analysis: given a PTA~$\A$, compute the set of all the reachable states (as it is done in tools such as, e.g., \hytech{} and \phaver{});
 	\item Inverse method algorithm: given a PTA~$\A$ and a reference valuation~$\pi_0$, synthesize a constraint guaranteeing the same trace set as for $\A[\pi_0]$;
 	\item Behavioral cartography algorithm: given a PTA~$\A$ and a rectangular parameter domain~$V_0$, compute a list of tiles. Two different modes can be considered: (1) cover all the integer points of~$V_0$ or, (2) call a given number of times the inverse method on an integer point selected randomly within $V_0$ (which is interesting for rectangles containing a very big number of integer points but few different tiles);
 	\item Automatic generation of the trace sets, for the reachability analysis and for both algorithms $\IM$ and $\carto$;
 	\item Graphical output of the trace sets;
-        \item Graphical output of the behavioral cartography. 
+	\item Graphical output of the behavioral cartography;
+	\item Optional use of the merging technique of \cite{AFS12}.
 \end{itemize}
 
-As shown in Table~\ref{table:features}, all those features (except the inverse method) are new features which were not available in the original version \imitator{} 1.0.
-
-
-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
-\begin{table}[ht!]
-{
-
-\centering
-\small
-
-\begin{tabular}{| c || c | c | c | c |}
-	\hline
-	Tool & Inverse Method & Cartography & Computation of traces & Graphical output \\
-	\hline
-	\imitator{} 1.0 & Yes & - & - & - \\
-	\hline
-	\imitator{} \imitatorversion{} & Yes & Yes & Yes & Yes\\
-	\hline
-\end{tabular}
-
-}
-\caption{Comparison of the features of \imitator{} and \imitator{}}
-\label{table:features}
-\end{table}
-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
 
 See Section~\ref{sss:options} for the list of options available when calling \imitator{}.
 
@@ -506,7 +497,7 @@ In short, \imitator{} is written in \ocaml{}, and makes use of the following lib
         \item The GNU Multiple Precision Arithmetic Library (GMP)
 \end{itemize}
 
-Binaries and source code packages are available on \imitator{}'s Web page.
+Binaries and source code packages are available on \imitator{}'s Web page~\cite{imitator_web}.
 
 
 
@@ -514,8 +505,9 @@ Binaries and source code packages are available on \imitator{}'s Web page.
 \subsection{The \imitator{} Input File}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-The syntax of the automata in \imitator{} is similar to the syntax of the automata for \hytech{}.
-% Beside the classical syntax of \hytech{}, the input file must follow a certain number of requirements, which are given below.
+Examples of input files can be found on \imitator{}'s Web page~\cite{imitator_web}.
+A complete example is given in Appendix~\ref{app:source}.
+A tentative grammar is given in Appendix~\ref{app:grammar}.
 
 
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
@@ -578,21 +570,6 @@ The syntax in this case is the following one:
 
 Note that there is no need to provide a $\pi_0$ or $V_0$ file in this case (if one is provided, it will be ignored).
 
-In this case, \imitator{} outputs two files:
-
-\begin{itemize}
-	\item A file \code{<input\_file>.states} containing the set of all the reachable states, with their names and the associated constraint on the clocks and parameters.
-	If one wants to generate also the constraint on the parameters only, use the \code{-with-parametric-log} option.
-	This file also contains the source for the generation of the graphical file, using the \gdot{} syntax.
-	This log file is not generated in the case where the \code{-no-log} option is activated.
-	
-	\item A file \code{<input\_file>.gif}, which is a graphical output in the gif format, generated using \gdot{}, corresponding to the trace set.
-	This graphical output is not generated in the case where the \code{-no-dot} option is activated.
-\end{itemize}
-
-Note that the location and the name of those two files can be changed using the \code{-log-prefix} option.
-
-% \commentaire{preciser la s\'emantique du fichier gif}
 
 
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
@@ -610,7 +587,7 @@ Note that, unlike the algorithm given in~\cite{acef09}, at a given iteration, th
 However, the $\pi_0$-incompatible inequality within a $\pi_0$-incompatible state is selected randomly, unless the \code{-no-random} option is activated.
 
 In this case, \imitator{} outputs the resulting constraint $K_0$ on the standard output.
-Moreover, \imitator{} outputs the same two files as in the reachability analysis.
+% Moreover, \imitator{} outputs the same two files as in the reachability analysis.
 
 
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
@@ -693,12 +670,20 @@ The admissible values for \code{-debug} are given below:
  \code{total} & Give really too much information\\
 \end{tabular}
 
+
+%------------------------------------------------------------
+\paragraph{\code{-depth-limit <limit>} (default: \code{none})}
+%------------------------------------------------------------
+Limits the number of iterations in the $\mathit{Post}$ exploration, i.e., the depth of the traces.
+In the cartography mode, this option gives a limit to \emph{each} call to the inverse method.
+
 %------------------------------------------------------------
 \paragraph{\code{-fancy} (default: \code{false})}
 %------------------------------------------------------------
 
-In the graphical output of the reachable states (see option \code{-no-dot}), 
+In the graphical output of the reachable states (see option \code{-with-dot}), 
 provide detailed information on the local states of the composed automata.
+
 
 %------------------------------------------------------------
 \paragraph{\code{-inclusion} (default: \code{false})}
@@ -732,15 +717,6 @@ The mode for \imitator{}.
 \end{tabular}
 
 
-%------------------------------------------------------------
-\paragraph{\code{-no-dot} (default: \code{false})}
-%------------------------------------------------------------
-No graphical output using \gdot{}.
-
-%------------------------------------------------------------
-\paragraph{\code{-no-log} (default: \code{false})}
-%------------------------------------------------------------
-No generation of the files describing the reachable states.
 
 %------------------------------------------------------------
 \paragraph{\code{-no-random} (default: \code{false})}
@@ -748,11 +724,26 @@ No generation of the files describing the reachable states.
 No random selection of the $\pi_0$-incompatible inequality (select the first found).
 By default, select an inequality in a random manner.
 
+
 %------------------------------------------------------------
-\paragraph{\code{-post-limit <limit>} (default: \code{none})}
+\paragraph{\code{-states-limit} (default: \code{none})}
 %------------------------------------------------------------
-Limits the number of iterations in the $\mathit{Post}$ exploration, i.e., the depth of the traces.
-In the cartography mode, this option gives a limit to \emph{each} call to the inverse method.
+Will try to stop after reaching this number of states.
+Warning: the program may have to first finish computing the current iteration before stopping.
+
+
+%------------------------------------------------------------
+\paragraph{\code{-statistics} (default: \code{false})}
+%------------------------------------------------------------
+Print info on number of calls to PPL, and other statistics about memory and time.
+Warning: enabling this option may slow down the analysis, and will certainly induce some extra computational time at the end.
+
+
+%------------------------------------------------------------
+\paragraph{\code{-step} (default: \code{1})}
+%------------------------------------------------------------
+Step for the behavioral cartography.
+
 
 %------------------------------------------------------------
 \paragraph{\code{-sync-auto-detect} (default: \code{false})}
@@ -779,6 +770,32 @@ Add a timing information to each output of the program.
 
 
 %------------------------------------------------------------
+\paragraph{\code{-with-dot} (default: \code{false})}
+%------------------------------------------------------------
+Graphical output using \gdot{}.
+In this case, \imitator{} outputs a file \code{<input\_file>.jpg}, which is a graphical output in the jpg format, generated using \gdot{}, corresponding to the trace set.
+% 	This graphical output is not generated in the case where the \code{-no-dot} option is activated.
+
+Note that the location and the name of those two files can be changed using the \code{-log-prefix} option.
+
+
+
+%------------------------------------------------------------
+\paragraph{\code{-with-log} (default: \code{false})}
+%------------------------------------------------------------
+Generation of the files describing the reachable states.
+In this case, \imitator{} outputs a file \code{<input\_file>.states} containing the set of all the reachable states, with their names and the associated constraint on the clocks and parameters.
+If one wants to generate also the constraint on the parameters only, use the \code{-with-parametric-log} option.
+This file also contains the source for the generation of the graphical file, using the \gdot{} syntax.
+
+
+%------------------------------------------------------------
+\paragraph{\code{-with-merging} (default: \code{false})}
+%------------------------------------------------------------
+Use the merging technique of \cite{AFS12}.
+
+
+%------------------------------------------------------------
 \paragraph{\code{-with-parametric-log } (default: \code{false})}
 %------------------------------------------------------------
 For any constraint on the clocks and the parameters in the description of the states in the log files,
@@ -794,7 +811,12 @@ add the constraint on the parameters only (i.e., eliminate clock variables).
 \paragraph{\code{\imitatorExec{} flipflop.imi -mode reachability}}
 %------------------------------------------------------------
 Computes a reachability analysis on the automata described in file \code{flipflop.imi}.
-Will generate files \code{flipflop.imi.states}, containing the description of the reachable states, and \code{flipflop.imi.gif} depicting the reachability graph.
+
+%------------------------------------------------------------
+\paragraph{\code{\imitatorExec{} flipflop.imi -mode reachability -with-dot -with-log}}
+%------------------------------------------------------------
+Computes a reachability analysis on the automata described in file \code{flipflop.imi}.
+Will generate files \code{flipflop.imi.states}, containing the description of the reachable states, and \code{flipflop.imi.jpg} depicting the reachability graph.
 
 
 %------------------------------------------------------------
@@ -802,25 +824,26 @@ Will generate files \code{flipflop.imi.states}, containing the description of th
 %------------------------------------------------------------
 Calls the inverse method on the automata described in file \code{flipflop.imi}, and the reference valuation $\pi_0$ given in file \code{flipflop.pi0}.
 The resulting constraint $K_0$ will be given on the standard output.
-Moreover, \imitator{} will generate the file \code{flipflop.imi.states}, containing the description of the (parametric) states reachable under $K_0$, and the file \code{flipflop.imi.gif} depicting the reachability graph under any point $\pi \models K_0$.
+% Moreover, \imitator{} will generate the file \code{flipflop.imi.states}, containing the description of the (parametric) states reachable under $K_0$, and the file \code{flipflop.imi.gif} depicting the reachability graph under any point $\pi \models K_0$.
+
+
+% %------------------------------------------------------------
+% \paragraph{\code{\imitatorExec{} flipflop.imi flipflop.pi0 -no-dot -no-log}}
+% %------------------------------------------------------------
+% Calls the inverse method on the automata described in file \code{flipflop.imi}, and the reference valuation given in file \code{flipflop.pi0}.
+% The resulting constraint will be given on the standard output.
+% No file will be generated.
 
 
 %------------------------------------------------------------
-\paragraph{\code{\imitatorExec{} flipflop.imi flipflop.pi0 -no-dot -no-log}}
-%------------------------------------------------------------
-Calls the inverse method on the automata described in file \code{flipflop.imi}, and the reference valuation given in file \code{flipflop.pi0}.
-The resulting constraint will be given on the standard output.
-No file will be generated.
-
-
-%------------------------------------------------------------
-\paragraph{\code{\imitatorExec{} flipflop.imi flipflop.pi0 -with-parametric-log}}
+\paragraph{\code{\imitatorExec{} flipflop.imi flipflop.pi0 -with-log -with-parametric-log}}
 %------------------------------------------------------------
 Calls the inverse method on the automata described in file \code{flipflop.imi}, and the reference valuation $\pi_0$ given in file \code{flipflop.pi0}.
 The resulting constraint $K_0$ will be given on the standard output.
 and \imitator{} will generate the file \code{flipflop.imi.states}, containing the description of the (parametric) states reachable under $K_0$.
 Moveover, for any state in this file, both the constraint on the clocks and the parameters, and the constraint on the parameters will be given.
-\imitator{} will also generate the file \code{flipflop.imi.gif} depicting the reachability graph under any point $\pi \models K_0$.
+% \imitator{} will also generate the file \code{flipflop.imi.gif} depicting the reachability graph under any point $\pi \models K_0$.
+
 
 %------------------------------------------------------------
 \paragraph{\code{\imitatorExec{} SRlatch.imi SRlatch.v0 -mode cover}}
@@ -828,16 +851,24 @@ Moveover, for any state in this file, both the constraint on the clocks and the 
 Calls the behavioral cartography algorithm on the automata described in file \code{flipflop.imi}, and the rectangle $V_0$ given in file \code{SRlatch.v0}.
 The algorithm will cover (at least) all the integer points within $V_0$.
 The resulting set of tiles will be given on the standard output.
-Given $n$ the number of generated tiles (i.e., the number of calls to the inverse method algorithm), the program will generate $n$ files of the form \code{SRlatch.imi\_$i$.states} (resp.~$n$ files of the form \code{SRlatch.imi\_$i$.gif}) giving the description of the states (resp.~the reachability graph) of tile $i$, for $i = 1, \dots, n$.
 
 
 %------------------------------------------------------------
-\paragraph{\code{\imitatorExec{} SRlatch.imi SRlatch.v0 -mode random100 -no-log}}
+\paragraph{\code{\imitatorExec{} SRlatch.imi SRlatch.v0 -mode cover -with-dot -with-log}}
+%------------------------------------------------------------
+Calls the behavioral cartography algorithm on the automata described in file \code{flipflop.imi}, and the rectangle $V_0$ given in file \code{SRlatch.v0}.
+The algorithm will cover (at least) all the integer points within $V_0$.
+The resulting set of tiles will be given on the standard output.
+Given $n$ the number of generated tiles (i.e., the number of calls to the inverse method algorithm), the program will generate $n$ files of the form \code{SRlatch.imi\_$i$.states} (resp.~$n$ files of the form \code{SRlatch.imi\_$i$.jpg}) giving the description of the states (resp.~the reachability graph) of tile $i$, for $i = 1, \dots, n$.
+
+
+%------------------------------------------------------------
+\paragraph{\code{\imitatorExec{} SRlatch.imi SRlatch.v0 -mode random100 -with-dot}}
 %------------------------------------------------------------
 Calls the behavioral cartography algorithm on the automata described in file \code{flipflop.imi}, and the rectangle $V_0$ given in file \code{SRlatch.v0}.
 The program will call the inverse method on 100 points randomly selected within $V_0$.
 Since some points may be generated several times, or some points may belong to previously generated tiles (see Section~\ref{ss:mode_cartography}), the number $n$ of tiles generated will be such that $n \leq 100$.
-The program will generate $n$ files of the form \code{SRlatch.imi\_$i$.gif} giving the reachability graph of tile $i$, for $i = 1, \dots, n$.
+The program will generate $n$ files of the form \code{SRlatch.imi\_$i$.jpg} giving the reachability graph of tile $i$, for $i = 1, \dots, n$.
 
 
 
@@ -1120,7 +1151,7 @@ The launch command for \imitator{} is the following one:
 \code{\imitatorExec{} SRlatch.imi SRlatch.v0 -mode cover}
 
 We get the following six behavioral tiles.
-Note that the graphical outputs, automatically generated by~\imitator{} in the \code{gif} format, were rewritten in \LaTeX{} in this document.
+Note that the graphical outputs, automatically generated in the \code{jpg} format by~\imitator{} using the \code{-with-dot} option, were rewritten in \LaTeX{} in this document.
 
 
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
@@ -1501,50 +1532,25 @@ Note that all tiles (except tile~1) are unbounded, so that they cover, not only 
 The source code of this example is available in Appendix~\ref{app:source}.
 
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Final Remarks} \label{sec:conclusion}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-The tool \imitator{} allows us to solve the good parameters problem for timed automata by iterating the inverse method algorithm on the integer points of a given rectangular parameter domain~$V_0$.
-In practice, our cartography algorithm covers not only (most of) $V_0$ but also a significant part of the whole parametric space beyond~$V_0$.
-This is of interest to classify the behavior of the system into good or bad for dense and unbounded values of the parameters.
-
-Our tool has been successfully applied to various examples of asynchronous circuits and protocols.
-
-Future works include:
-
-\begin{itemize}
-%%	\item an automatic generation of the cartography under a graphical form (so far, only the trace sets are automatically generated under a graphical form; the cartography itself is given under the form of a list of constraints);
-	\item an automatic verification of the property one wants to check, e.g., by using a tool such as \uppaal{}~\cite{lpy97};
-	\item a ``dynamic'' cartography, where the scale (so far, the integers) can be refined to fill the possible holes;
-	\item a backward analysis, i.e., considering a $\mathit{Pre}$ operation instead of $\mathit{Post}$ computation in Algorithm~\ref{algo:IM};
-	\item the reachability analysis of a given state, and the generation of a trace from the initial state to this given state;
-	\item the extension to hybrid systems;
-	\item the automatic generation of the probabilities of a given property in the probabilistic framework, without the use of an external tool (e.g., \prism{}~\cite{hknp06})
-	\item the automatic generation of the ``next point'' not covered by $\tiling$ without testing all the integer points (note that a random generation of points is already implemented);
-	\item the possibility to compute several tiles in parallel in the cartography algorithm;
-	\item a user-friendly graphical interface;
-	\item the possibility to save and load sets of states.
-\end{itemize}
-
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \paragraph{Acknowledgments.}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+\'Etienne André instigated the development of \imitator{}, and keeps developing it.
 Emmanuelle~Encrenaz and Laurent~Fribourg have been great contributors of \imitator{}, on a theoretical point of view, and to find applications both from the literature and real case studies.
 Abdelrezzak~Bara provided several examples from the hardware literature.
 Jeremy~Sproston provided examples from the probabilistic community.
-Bertrand~Jeannet has been of great help on the installation part, and the linking with Apron~\cite{jm09}.
-Ulrich~K\"uhne started to improve \imitator{}, and added the link with PPL.
+Bertrand~Jeannet has been of great help on the linking with Apron~\cite{jm09} on a previous version of \imitator{}.
+Ulrich~K\"uhne made several important improvements to \imitator{}, and link the tool to PPL.
+Daphne~Dussaud implemented the graphical output of the behavioral cartography.
+Romain~Soulat implemented powerful algorithmic optimizations, and brought many case studies.
 
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\bibliographystyle{plain}
+\bibliographystyle{abbrv}
 \bibliography{biblio}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1696,7 +1702,7 @@ We define each of those two components below.
 }
 
 %------------------------------------------------------------
-\regleGrammaire{prolog}
+\regleGrammaire{sync\_labels}
 %------------------------------------------------------------
 \begin{tabular}{l l}
 	\  & \code{synclabs} \code{:} \nt{sync\_var\_list} \code{;} \\
@@ -1730,10 +1736,28 @@ We define each of those two components below.
 \regleGrammaire{locations}
 %------------------------------------------------------------
 \begin{tabular}{l l}
-	\  & \code{loc} \code{<name>} \code{:} \code{while} \nt{convex\_predicate} \code{wait} \npec{\code{()}} \nt{transitions} \\
-	$|$ & \code{loc} \code{<name>} \code{:} \code{while} \nt{convex\_predicate} \code{wait} \nt{transitions} \\
+	\  & \code{loc} \code{<name>} \code{:} \code{while} \nt{convex\_predicate} \nt{stop\_opt} \npec{\nt{wait\_opt}} \nt{transitions} \\
+% 	$|$ & \code{loc} \code{<name>} \code{:} \code{while} \nt{convex\_predicate} \nt{transitions} \\
 \end{tabular}
 
+%------------------------------------------------------------
+\regleGrammaire{wait\_opt}
+%------------------------------------------------------------
+\begin{tabular}{l l}
+	\ & \npec{\code{wait()}} \\
+	$|$ & \npec{\code{wait}} \\
+	$|$ & \npec{\emptystring} \\
+\end{tabular}
+
+%------------------------------------------------------------
+\regleGrammaire{stop\_opt}
+%------------------------------------------------------------
+\begin{tabular}{l l}
+	\ & \code{stop\{} \nt{var\_list} \code{\}} \\
+	$|$ & \emptystring \\
+\end{tabular}
+
+	
 %------------------------------------------------------------
 \regleGrammaire{transitions}
 %------------------------------------------------------------
@@ -1784,7 +1808,7 @@ We define each of those two components below.
 \end{tabular}
 
 %------------------------------------------------------------
-\regleGrammaire{update\_nonempty\_list}
+\regleGrammaire{update}
 %------------------------------------------------------------
 \begin{tabular}{l l}
 	\  & \code{<name>} \code{'} \code{=} \nt{linear\_expression} \\
@@ -1852,6 +1876,7 @@ We define each of those two components below.
 %------------------------------------------------------------
 \begin{tabular}{l l}
 	\  & \nt{integer} \\
+	\  & \nt{float} \\
 	$|$ & \nt{integer} \code{/} \nt{pos\_integer}  \\
 \end{tabular}
 
@@ -1872,6 +1897,22 @@ We define each of those two components below.
 
 
 
+%------------------------------------------------------------
+\regleGrammaire{float}
+%------------------------------------------------------------
+\begin{tabular}{l l}
+	\  & \nt{pos\_float} \\
+	$|$ & \code{-} \nt{pos\_float}  \\
+\end{tabular}
+
+
+%------------------------------------------------------------
+\regleGrammaire{pos\_float}
+%------------------------------------------------------------
+\begin{tabular}{l l}
+	\  & \code{<float>} \\
+\end{tabular}
+
 
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
 \subsubsection{Initial State}
@@ -1881,7 +1922,8 @@ We define each of those two components below.
 \regleGrammaire{init}
 %------------------------------------------------------------
 \begin{tabular}{l l}
-	\  & \npec{\nt{init\_declaration}} \nt{init\_definition} \npec{\nt{reach\_command}} \\
+	& \npec{\nt{init\_declaration}} \nt{init\_definition} \nt{bad\_definition} \npec{\nt{reach\_command}} \\
+	$|$  & \npec{\nt{init\_declaration}} \nt{init\_definition} \npec{\nt{reach\_command}} \\
 \end{tabular}
 
 %------------------------------------------------------------
@@ -1924,6 +1966,28 @@ We define each of those two components below.
 	$|$ & \nt{linear\_constraint} \\
 \end{tabular}
 
+%------------------------------------------------------------
+\regleGrammaire{bad\_definition}
+%------------------------------------------------------------
+\begin{tabular}{l l}
+	\  & \code{bad := } \nt{loc\_expression} \code{;} \\
+\end{tabular}
+
+%------------------------------------------------------------
+\regleGrammaire{loc\_expression}
+%------------------------------------------------------------
+\begin{tabular}{l l}
+	\  & \nt{loc\_predicate} \\
+	$|$ & \nt{loc\_predicate} \code{\&} \nt{loc\_expression} \\
+	$|$ & \nt{loc\_predicate} \nt{loc\_expression} \\
+\end{tabular}
+
+%------------------------------------------------------------
+\regleGrammaire{loc\_predicate}
+%------------------------------------------------------------
+\begin{tabular}{l l}
+	\  & \code{loc[} \code{<name>} \code{] = \code{<name>}} \\
+\end{tabular}
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1945,17 +2009,18 @@ The following words are keywords and cannot be used as names for automata, varia
 
 \code{and},
 \code{automaton},
+\code{bad},
 \code{clock},
 \code{discrete},
 \code{do},
 \code{end},
-\code{endreach},
+% \code{endreach},
 \code{False},
-\code{forward},
-\code{from},
+% \code{forward},
+% \code{from},
 \code{goto},
 \code{if},
-\code{in},
+% \code{in},
 \code{init},
 \code{initially},
 \code{loc},
@@ -1963,10 +2028,11 @@ The following words are keywords and cannot be used as names for automata, varia
 \code{not},
 \code{or},
 \code{parameter},
-\code{print},
-\code{reach},
+% \code{print},
+% \code{reach},
 \code{region},
 \code{sync},
+\code{stop},
 \code{synclabs},
 \code{True},
 \code{var},

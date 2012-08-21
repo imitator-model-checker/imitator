@@ -169,9 +169,10 @@ locations:
 /**********************************************/
 
 location:
-	| CT_LOC location_name COLON CT_WHILE convex_predicate stopwatches CT_WAIT braces_opt transitions {
+// 	| CT_LOC location_name COLON CT_WHILE convex_predicate stopwatches CT_WAIT braces_opt transitions {
+	| CT_LOC location_name COLON CT_WHILE convex_predicate stopwatches wait_opt transitions {
 		let name, cost = $2 in
-			name, cost, $5, $6, $9
+			name, cost, $5, $6, $8
 		}
 ;
 
@@ -180,7 +181,8 @@ location_name:
 	| NAME LSQBRA linear_expression RSQBRA { $1, Some $3 }
 ;
 
-braces_opt:
+wait_opt:
+	| CT_WAIT LBRACE RBRACE { }
 	| LBRACE RBRACE { }
 	| { }
 ;
