@@ -420,8 +420,8 @@ let rho_assign program linear_constraint clock_updates =
 				Hashtbl.add prime_of_variable clock_id !clock_prime_id;
 				Hashtbl.add variable_of_prime !clock_prime_id clock_id;
 				(* Debug message *)
-				if debug_mode_greater Debug_standard then(
-					print_message Debug_standard ("\nThe primed index of variable '" ^ (program.variable_names clock_id) ^ "' (index = " ^ (string_of_int clock_id) ^ ") is set to " ^ (string_of_int !clock_prime_id) ^ ".")
+				if debug_mode_greater Debug_total then(
+					print_message Debug_total ("\nThe primed index of variable '" ^ (program.variable_names clock_id) ^ "' (index = " ^ (string_of_int clock_id) ^ ") is set to " ^ (string_of_int !clock_prime_id) ^ ".")
 				);
 				(* Increment the prime id for next variable *)
 				clock_prime_id := !clock_prime_id + 1;
@@ -429,7 +429,7 @@ let rho_assign program linear_constraint clock_updates =
 			) updates;
 			let new_max_dimension = !clock_prime_id in
 			let extra_dimensions = new_max_dimension - program.nb_variables in
-			print_message Debug_standard ("\nNew dimension for constraints: " ^ (string_of_int new_max_dimension) ^ "; extra dimensions : " ^ (string_of_int extra_dimensions) ^ ".");
+			print_message Debug_total ("\nNew dimension for constraints: " ^ (string_of_int new_max_dimension) ^ "; extra dimensions : " ^ (string_of_int extra_dimensions) ^ ".");
 			(* Extend the number of dimensions *)
 			LinearConstraint.set_manager 0 new_max_dimension;
 			LinearConstraint.add_dimensions extra_dimensions linear_constraint;
@@ -451,14 +451,14 @@ let rho_assign program linear_constraint clock_updates =
 			let inequalities = LinearConstraint.make inequalities in
 			(* Debug print *)
 			let print_constraint c = 
-				if debug_mode_greater Debug_standard then(
+				if debug_mode_greater Debug_total then(
 					let all_variable_names = fun variable_id ->
 						if variable_id < program.nb_variables then 
 							program.variable_names variable_id
 						else
 							(program.variable_names (Hashtbl.find variable_of_prime variable_id)) ^ "'"
 					in
-					print_message Debug_standard (LinearConstraint.string_of_linear_constraint all_variable_names c);
+					print_message Debug_total (LinearConstraint.string_of_linear_constraint all_variable_names c);
 				)else(
 					()
 				)
@@ -466,7 +466,7 @@ let rho_assign program linear_constraint clock_updates =
 			print_constraint inequalities;
 
 			(* Add the constraints X_i' = linear_term *)
-			print_message Debug_standard ("\n -- Adding X_i' = linear_term for updated clocks");
+			print_message Debug_total ("\n -- Adding X_i' = linear_term for updated clocks");
 			LinearConstraint.intersection_assign linear_constraint [inequalities];
 			(* Debug print *)
 			print_constraint linear_constraint;
@@ -474,10 +474,10 @@ let rho_assign program linear_constraint clock_updates =
 			(* Remove the variables X_i *)
 			let list_of_clocks_to_hide, _ = List.split updates in
 			(* Hide clocks updated within the linear constraint, viz., exists X_i : lc, for X_i in rho(X) *)
-			print_message Debug_standard ("\n -- Computing exists X : lc for updated clocks");
+			print_message Debug_total ("\n -- Computing exists X : lc for updated clocks");
 			LinearConstraint.hide_assign list_of_clocks_to_hide linear_constraint;
 			(* Debug print *)
-			if debug_mode_greater Debug_standard then(
+			if debug_mode_greater Debug_total then(
 				print_constraint linear_constraint;
 			);
 			
@@ -485,19 +485,19 @@ let rho_assign program linear_constraint clock_updates =
 			(** TO OPTIMIZE !! *)
 			(* Compute couples (X_i', X_i) *)
 			let clocks_and_primes = Hashtbl.fold (fun clock_id clock_prime_id couples -> (clock_id, clock_prime_id) :: couples) prime_of_variable [] in
-			print_message Debug_standard ("\n -- Renaming clocks X_i' into X_i for updated clocks");
+			print_message Debug_total ("\n -- Renaming clocks X_i' into X_i for updated clocks");
 			LinearConstraint.rename_variables_assign clocks_and_primes linear_constraint;
 			(* Debug print *)
-			if debug_mode_greater Debug_standard then(
+			if debug_mode_greater Debug_total then(
 				print_constraint linear_constraint;
 			);
 
 			(* Go back to the original number of dimensions *)
-			print_message Debug_standard ("\nGo back to standard dimension for constraints: " ^ (string_of_int program.nb_variables) ^ ".");
+			print_message Debug_total ("\nGo back to standard dimension for constraints: " ^ (string_of_int program.nb_variables) ^ ".");
 			LinearConstraint.set_manager 0 program.nb_variables;
 			LinearConstraint.remove_dimensions extra_dimensions linear_constraint;
 			(* Debug print *)
-			if debug_mode_greater Debug_standard then(
+			if debug_mode_greater Debug_total then(
 				print_constraint linear_constraint;
 			);
 			
