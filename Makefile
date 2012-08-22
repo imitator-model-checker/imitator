@@ -537,12 +537,26 @@ exe:
 
 # 	$(TARGET) $(EXAMPLE_PATH)/Scheduling/bb.imi $(EXAMPLE_PATH)/Scheduling/bb.pi0 -with-merging -with-dot -with-log
 	
-	$(TARGET) $(EXAMPLE_PATH)/Scheduling/concurent_tasks_chain.imi $(EXAMPLE_PATH)/Scheduling/concurent_tasks_chain.pi0 -with-merging -with-dot -with-log
+# 	$(TARGET) $(EXAMPLE_PATH)/Scheduling/concurent_tasks_chain.imi $(EXAMPLE_PATH)/Scheduling/concurent_tasks_chain.pi0 -with-merging -with-dot -with-log
 	
+# 	$(TARGET) $(EXAMPLE_PATH)/Scheduling/full_cpr08.imi $(EXAMPLE_PATH)/Scheduling/full_cpr08.pi0 -with-merging -with-dot -with-log -depth-limit 30
 
-# 	$(TARGET) $(EXAMPLE_PATH)/Scheduling/LA02_2.imi $(EXAMPLE_PATH)/Scheduling/LA02_2.pi0 -incl
+# 	$(TARGET) $(EXAMPLE_PATH)/Scheduling/generic_edf.imi $(EXAMPLE_PATH)/Scheduling/generic_edf.pi0 -with-merging -with-dot -with-log
+
+# 	$(TARGET) $(EXAMPLE_PATH)/Scheduling/generic_fp.imi $(EXAMPLE_PATH)/Scheduling/generic_fp.pi0 -with-merging -with-dot -with-log
+
+# 	$(TARGET) $(EXAMPLE_PATH)/Scheduling/hppr10_audio.imi $(EXAMPLE_PATH)/Scheduling/hppr10_audio.pi0 -with-merging -with-dot -with-log
+	
+# 	$(TARGET) $(EXAMPLE_PATH)/Scheduling/LA02_2.imi $(EXAMPLE_PATH)/Scheduling/LA02_2.pi0 -with-merging -with-dot -with-log
 # 	bin/IMITATOR2.41 $(EXAMPLE_PATH)/Scheduling/LA02_2.imi $(EXAMPLE_PATH)/Scheduling/LA02_2.pi0 -incl
 # 	bin/IMITATOR2.4 $(EXAMPLE_PATH)/Scheduling/LA02_2.imi $(EXAMPLE_PATH)/Scheduling/LA02_2.pi0 -incl -jobshop
+
+# 	$(TARGET) $(EXAMPLE_PATH)/Scheduling/LA02_2_2.5.imi $(EXAMPLE_PATH)/Scheduling/LA02_2.pi0 -with-merging -with-dot -with-log
+
+# 	$(TARGET) $(EXAMPLE_PATH)/Scheduling/LA02_3.imi $(EXAMPLE_PATH)/Scheduling/LA02_3.pi0 -with-merging
+
+	$(TARGET) $(EXAMPLE_PATH)/Scheduling/preemptive_maler.imi $(EXAMPLE_PATH)/Scheduling/preemptive_maler.pi0 -with-merging -with-dot -with-log
+
 
 ##### JOB SHOP #####
 # 	$(TARGET) $(EXAMPLE_PATH)/Jobshop/maler_2_4.imi -mode reachability -incl 
