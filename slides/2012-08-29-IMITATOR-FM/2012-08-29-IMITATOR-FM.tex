@@ -197,6 +197,7 @@
 \newtheorem{algo}{Algorithm}
 \newtheorem{objectif}{Goal}
 \newtheorem{badnews}{Bad News}
+\newtheorem{jobshopproblem}{The Jobshop Poblem}
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%% AUTRES PACKAGES %%%%%%%%%%%%%%%%%%%%%%%%%
@@ -282,6 +283,7 @@
 \newcommand{\refer}[1]{\textcolor{couleurref}{\cite{#1}}}
 
 % \newcommand{\commentaire}[1]{\textcolor{red}{\textbf{$\Leftarrow$  #1 $\Rightarrow$}}}
+\newcommand{\ea}[1]{\textcolor{red}{\textbf{\'EA : #1}}}
 
 
 % DESSIN D'UNE BOULE
@@ -490,12 +492,55 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}
- \frametitle{Context}
-\begin{itemize}
- \item Verification of critical systems
- \item To ensure safety properties, robustness of the system
+\frametitle{Context: Verification of Critical Real Time Systems}
 
+
+\begin{columns}
+	\begin{column}[c]{0.45 \textwidth}
+
+		%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
+		{
+		\centering
+		\includegraphics[width=0.75\textwidth]{figures/blackout.jpg}
+
+		\bigskip
+
+		\includegraphics[width=0.75\textwidth]{figures/therac.jpg}
+		
+		}
+		%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
+		
+	\end{column}
+
+	\begin{column}[c]{0.45 \textwidth}
+	
+		\medskip
+	
+		%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
+		{
+		\centering
+		\includegraphics[width=0.65\textwidth]{figures/ariane5.jpg}
+
+		\bigskip
+
+		\includegraphics[width=0.65\textwidth]{figures/AF447-crash.jpg}
+		
+		}
+		%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
+		
+	\end{column}
+\end{columns}
+
+\medskip
+
+\begin{itemize}
+% 	\item Verification of critical systems
+	\item Goal: Ensure safety properties in a \emph{robust} manner
+	\begin{itemize}
+		\item Properties must hold not only for some timing constants, but also \couleur{around} them
+	\end{itemize}
 \end{itemize}
+
 
 \end{frame}
 
@@ -504,9 +549,15 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}
  \frametitle{An Example of a Jobshop Problem}
-\begin{itemize}
- \item A job: a tuple $((m_1,d_1),\dots,(m_n,d_n))$
- \item For example: $((\textcolor{cpale4}{m_1},3),(\textcolor{cpale7}{m_2},4),(\textcolor{cpale6}{m_3},2))$
+
+ \begin{itemize}
+	\item A job: a tuple $((m_1,d_1),\dots,(m_n,d_n))$
+	\begin{itemize}
+		\item $m_i$: machine to execute the task
+		\item $d_i$: duration of this task on this machine
+	\end{itemize}
+
+	\item For example: $((\textcolor{cpale4}{m_1},3),(\textcolor{cpale7}{m_2},4),(\textcolor{cpale6}{m_3},2))$
 \end{itemize}
 
  \begin{figure}
@@ -622,16 +673,25 @@
 
 \end{frame}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}
- \frametitle{An Example of a Jobshop Problem}
+ \frametitle{The Jobshop Problem}
+
+ 
+\begin{jobshopproblem}
+	Given a set of jobs $J_1,\dots,J_m$
+ 
+	Given a deadline $d$
+ 
+	Question: \couleur{Can all the jobs be completed within $d$ time units?}
+\end{jobshopproblem}
+
+\pause
+
 \begin{itemize}
- \item A Jobshop problem
- \item Given a set of jobs $J_1,\dots,J_m$
- \item Given a deadline $d$
- \item Question: Can all the jobs be completed in $d$ time units?
- \pause
- \item Timed model checking gives the answer: \couleur{yes/no}
+	\item Timed model checking techniques give the answer: \couleur{yes/no}
 \end{itemize}
 
 \end{frame}
@@ -1225,7 +1285,7 @@
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Implemetation}
+\section{Implementation}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -1293,28 +1353,29 @@
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}
- \frametitle{Conclusion}
+ \frametitle{What's Inside?}
 \begin{itemize}
 	\item \couleur{\imitator{}} 2.5 \refer{afks12}
 
 	\begin{itemize}
 		\item ``\couleur{I}nverse \couleur{M}ethod for \couleur{I}nferring \couleur{T}ime \couleur{A}bstrac\couleur{T} Behavi\couleur{OR}''
 		\item 10\,000 lines of \couleur{\ocaml{}} code
-		\item Makes use of the \couleur{PPL} library for handling polyhedra % \refer{bhz08}
+		\item Makes use of the \couleur{PPL} library for handling polyhedra \refer{bhz08}
+		\item Implements an efficient state merging technique\refer{AFS12}
 	\end{itemize}
 
-	\medskip
+	\bigskip
+% 
+% 	\item Main contributors
+% 
+% 	\begin{itemize}
+% 		\item \'Etienne Andr\'e
+% 		\item Laurent Fribourg
+% 		\item Ulrich K\"uhne
+% 		\item Romain Soulat
+% 	\end{itemize}
 
-	\item Main contributors
-
-	\begin{itemize}
-		\item \'Etienne Andr\'e
-		\item Laurent Fribourg
-		\item Ulrich K\"uhne
-		\item Romain Soulat
-	\end{itemize}
-
-	\medskip
+	\bigskip
 
 	\item Available on the Web
 
@@ -1322,11 +1383,11 @@
 		\item \couleur{\url{http://www.lsv.ens-cachan.fr/Software/imitator/}}
 	\end{itemize}
 
-	\pause
-	
-	\medskip
-
-	\item And now part of CosyVerif!
+% 	\pause
+% 	
+% 	\medskip
+% 
+% 	\item And now part of CosyVerif!
 
 
 \end{itemize}
@@ -1343,26 +1404,32 @@
 
 	\begin{itemize}
 		\item Asynchronous circuits
+		\begin{itemize}
+			\item From the literature
+			\item Model of an industrial circuit (ST-Microelectronics)
+		\end{itemize}
 		\item Communication protocols
-		\item Scheduling problems
+		\item Scheduling problems \ea{donner plus de precisions sur ce theme}
 	\end{itemize}
 
-	\bigskip
-
-	\item Industrial projects
-
-	\begin{itemize}
-		\item ANR \couleur{Valmem} (with ST-Microelectronics) : 2007--2010 \refer{ACEF09}
-		
-		\medskip
-		
-		\item Farman \couleur{ROSCOV} (with EADS Astrium Space Transportation) : 2012--2013 \refer{FLMS12}
-	\end{itemize}
+% 	\bigskip
+% 
+% 	\item Industrial projects
+% 
+% 	\begin{itemize}
+% 		\item ANR \couleur{Valmem} (with ST-Microelectronics) : 2007--2010 \refer{ACEF09}
+% 		
+% 		\medskip
+% 		
+% 		\item Farman \couleur{ROSCOV} (with EADS Astrium Space Transportation) : 2012--2013 \refer{FLMS12}
+% 	\end{itemize}
 
 
 \end{itemize}
 
 \end{frame}
+
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Perspectives}
@@ -1370,7 +1437,14 @@
 \begin{frame}
  \frametitle{Perspectives}
 \begin{itemize}
- \item Branch-and-bound strategy to cut branches that are to take longer than the deadline
+%  \item Branch-and-bound strategy to cut branches that are to take longer than the deadline
+% 	\item Integration in the CosyVerif platform
+
+	\item Integration in the CosyVerif platform
+	\begin{itemize}
+		\item Graphical interface
+		\item Eclipse plugin based on Web services
+	\end{itemize}
 \end{itemize}
 
 \end{frame}
@@ -1449,7 +1523,7 @@ EDF 3           & 5 & 10&  13   & 31/43         & 33/45         & 9/9   & 13/14 
 \begin{frame}[allowframebreaks]
 \frametitle{References}
 
-\nocite*{}
+% \nocite*{}
 
 \scriptsize{
 	\bibliographystyle{apalike} % alpha / apalike
