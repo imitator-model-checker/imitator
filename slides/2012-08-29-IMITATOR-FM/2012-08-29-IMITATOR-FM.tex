@@ -489,33 +489,164 @@
 \section*{Introduction}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}
+ \frametitle{Context}
+\begin{itemize}
+ \item Verification of critical systems
+ \item To ensure safety properties, robustness of the system
+
+\end{itemize}
+
+\end{frame}
+
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}
  \frametitle{An Example of a Jobshop Problem}
+\begin{itemize}
+ \item A job: a tuple $((m_1,d_1),\dots,(m_n,d_n))$
+ \item For example: $((\textcolor{cpale4}{m_1},3),(\textcolor{cpale7}{m_2},4),(\textcolor{cpale6}{m_3},2))$
+\end{itemize}
+
  \begin{figure}
   \centering
-  \begin{tikzpicture}
-   
-  \end{tikzpicture}
+\begin{tikzpicture}[scale=0.6,->, auto]
+	\tikzstyle{state}=[circle, minimum size=13pt, inner sep=1.5pt, draw=gris, text=black]
 
+	% ETATS
+	\node[state,fill=cpale2, double] (Q0) at (0, 0) {$q_0$};
+	\node[state,fill=cpale4] (Q1) at (3, 0) {$q_1$};
+	\node[state,fill=cpale2] (Q2) at (6, 0) {$q_2$};
+	\node[state,fill=cpale7] (Q3) at (9, 0) {$q_3$};
+	\node[state,fill=cpale2] (Q4) at (12,0) {$q_4$};
+	\node[state,fill=cpale6] (Q5) at (15,0) {$q_5$};
+	\node[state,fill=cpale2] (Q6) at (18,0) {$q_6$};
+	\node[state,fill=cpale1] (Q1b) at (3,-3) {$q_{1}^{w}$};
+	\node[state,fill=cpale1] (Q3b) at (9,-3) {$q_{3}^{w}$};
+	\node[state,fill=cpale1] (Q5b) at (15,-3) {$q_{5}^{w}$}; 
+
+	
+	% INVARIANTS
+ 	\node [above] at (Q1.north) {$t_1 \leq 3$};
+ 	\node [above] at (Q3.north) {$t_1 \leq 4$};
+ 	\node [above] at (Q5.north) {$t_1 \leq 2$};
+
+% 	\node [above] at (Q2.north) {$x_2 \leq p_2$};
+% 	\node [above] at (Q3.north) {\begin{tabular}{c}  $x_1 \leq p_2$ \\ \end{tabular}};
+% 	
+ 	\path
+ 		(Q0) edge [below] node {\begin{tabular}{r @{\,} c @{\,} l}
+%  			& beginJob1Machine1 & \\
+ 			$t_1$ & $:=$ & $0$ \\
+ 		\end{tabular}} (Q1)
+
+ 		(Q1) edge [below] node {\begin{tabular}{r @{\,} c @{\,} l}
+%  			& beginJob1Machine1 & \\
+ 			$t_1$ & $=$ & $3$ \\
+ 		\end{tabular}} (Q2)
+ 		
+		(Q1) edge [bend left, right] node {\begin{tabular}{r @{\,} c @{\,} l}
+ 			& HoldJ1 & \\
+%  			$t_1$ & $=$ & $3$ \\
+ 		\end{tabular}} (Q1b)
+
+		(Q1b) edge [left] node {\begin{tabular}{r @{\,} c @{\,} l}
+ 			& GoJ1 & \\
+%  			$t_1$ & $=$ & $3$ \\
+ 		\end{tabular}} (Q1)
+
+ 		(Q2) edge [below] node {\begin{tabular}{r @{\,} c @{\,} l}
+%  			& beginJob1Machine1 & \\
+ 			$t_1$ & $:=$ & $0$ \\
+ 		\end{tabular}} (Q3)
+
+ 		(Q3) edge [below] node {\begin{tabular}{r @{\,} c @{\,} l}
+%  			& beginJob1Machine1 & \\
+ 			$t_1$ & $=$ & $4$ \\
+ 		\end{tabular}} (Q4)
+
+		(Q3) edge [bend left, right] node {\begin{tabular}{r @{\,} c @{\,} l}
+ 			& HoldJ1 & \\
+%  			$t_1$ & $=$ & $3$ \\
+ 		\end{tabular}} (Q3b)
+
+		(Q3b) edge [left] node {\begin{tabular}{r @{\,} c @{\,} l}
+ 			& GoJ1 & \\
+%  			$t_1$ & $=$ & $3$ \\
+ 		\end{tabular}} (Q3)
+
+ 		(Q4) edge [below] node {\begin{tabular}{r @{\,} c @{\,} l}
+%  			& beginJob1Machine1 & \\
+ 			$t_1$ & $:=$ & $0$ \\
+ 		\end{tabular}} (Q5)
+
+ 		(Q5) edge [below] node {\begin{tabular}{r @{\,} c @{\,} l}
+%  			& beginJob1Machine1 & \\
+ 			$t_1$ & $=$ & $2$ \\
+ 		\end{tabular}} (Q6)
+
+		(Q5) edge [bend left, right] node {\begin{tabular}{r @{\,} c @{\,} l}
+ 			& HoldJ1 & \\
+%  			$t_1$ & $=$ & $3$ \\
+ 		\end{tabular}} (Q5b)
+
+		(Q5b) edge [left] node {\begin{tabular}{r @{\,} c @{\,} l}
+ 			& GoJ1 & \\
+%  			$t_1$ & $=$ & $3$ \\
+ 		\end{tabular}} (Q5)
+
+% 		(Q0) edge [above] node {\begin{tabular}{r @{\,} c @{\,} l}
+% 			$x_1$ & $\geq$ & $p_2$ \\
+% 			& $c$ & \\
+% 		\end{tabular}} (Q4)
+% % 
+% 		(Q1) edge [] node {$a$} (Q2)
+% 		(Q1) edge [below left] node {\begin{tabular}{r @{\,} c @{\,} l}
+% 			$x_1$ & $\geq$ & $3$ \\
+% 			& $b$ & \\
+% 		\end{tabular}} (Q3)
+% 
+% 		(Q2) edge [loop right] node {\begin{tabular}{r @{\,} c @{\,} l}
+% 			$x_1$ & $\geq$ & $p_1$ \\
+% 			& $a$ & \\
+% 			$x_1$ & $:=$ & $0$ \\
+% 		\end{tabular}} (Q2)
+% 
+% 		(Q3) edge [loop right] node {$b$} (Q3)
+% 
+% 		(Q4) edge [loop right] node {$c$} (Q4)
+	;
+\end{tikzpicture}
  \end{figure}
 
 \end{frame}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}
- \frametitle{An Example of a Jobshop Problem with Preemption}
- \begin{figure}
-  \centering
-  \begin{tikzpicture}
-   
-  \end{tikzpicture}
-
- \end{figure}
+ \frametitle{An Example of a Jobshop Problem}
+\begin{itemize}
+ \item A Jobshop problem
+ \item Given a set of jobs $J_1,\dots,J_m$
+ \item Given a deadline $d$
+ \item Question: Can all the jobs be completed in $d$ time units?
+ \pause
+ \item Timed model checking gives the answer: \couleur{yes/no}
+\end{itemize}
 
 \end{frame}
+
+% \begin{frame}
+%  \frametitle{An Example of a Jobshop Problem with Preemption}
+%  \begin{figure}
+%   \centering
+%   \begin{tikzpicture}
+%    
+%   \end{tikzpicture}
+% 
+%  \end{figure}
+% 
+% \end{frame}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -553,15 +684,122 @@
 \end{frame}
 
 \begin{frame}
- \frametitle{An Example of a Parametric Jobshop Problem with Preemption}
+ \frametitle{An Example of a Parametric Jobshop Problem}
+\begin{itemize}
+ \item A job: a tuple $((m_1,d_1),\dots,(m_n,d_n))$
+ \item For example: $((\textcolor{cpale4}{m_1},\coulparam{d_1}),(\textcolor{cpale7}{m_2},\coulparam{d_2}),(\textcolor{cpale6}{m_3},\coulparam{d_3}))$
  \begin{figure}
   \centering
-  \begin{tikzpicture}
-   
-  \end{tikzpicture}
+\begin{tikzpicture}[scale=0.6,->, auto]
+	\tikzstyle{state}=[circle, minimum size=13pt, inner sep=1.5pt, draw=gris, text=black]
 
+	% ETATS
+	\node[state,fill=cpale2, double] (Q0) at (0, 0) {$q_0$};
+	\node[state,fill=cpale4] (Q1) at (3, 0) {$q_1$};
+	\node[state,fill=cpale2] (Q2) at (6, 0) {$q_2$};
+	\node[state,fill=cpale7] (Q3) at (9, 0) {$q_3$};
+	\node[state,fill=cpale2] (Q4) at (12,0) {$q_4$};
+	\node[state,fill=cpale6] (Q5) at (15,0) {$q_5$};
+	\node[state,fill=cpale2] (Q6) at (18,0) {$q_6$};
+	\node[state,fill=cpale1] (Q1b) at (3,-3) {$q_{1}^{w}$};
+	\node[state,fill=cpale1] (Q3b) at (9,-3) {$q_{3}^{w}$};
+	\node[state,fill=cpale1] (Q5b) at (15,-3) {$q_{5}^{w}$}; 
+
+	
+	% INVARIANTS
+ 	\node [above] at (Q1.north) {$t_1 \leq \coulparam{d_1}$};
+ 	\node [above] at (Q3.north) {$t_1 \leq \coulparam{d_2}$};
+ 	\node [above] at (Q5.north) {$t_1 \leq \coulparam{d_3}$};
+
+% 	\node [above] at (Q2.north) {$x_2 \leq p_2$};
+% 	\node [above] at (Q3.north) {\begin{tabular}{c}  $x_1 \leq p_2$ \\ \end{tabular}};
+% 	
+ 	\path
+ 		(Q0) edge [below] node {\begin{tabular}{r @{\,} c @{\,} l}
+%  			& beginJob1Machine1 & \\
+ 			$t_1$ & $:=$ & $0$ \\
+ 		\end{tabular}} (Q1)
+
+ 		(Q1) edge [below] node {\begin{tabular}{r @{\,} c @{\,} l}
+%  			& beginJob1Machine1 & \\
+ 			$t_1$ & $=$ & $\coulparam{d_1}$ \\
+ 		\end{tabular}} (Q2)
+ 		
+		(Q1) edge [bend left, right] node {\begin{tabular}{r @{\,} c @{\,} l}
+ 			& HoldJ1 & \\
+%  			$t_1$ & $=$ & $3$ \\
+ 		\end{tabular}} (Q1b)
+
+		(Q1b) edge [left] node {\begin{tabular}{r @{\,} c @{\,} l}
+ 			& GoJ1 & \\
+%  			$t_1$ & $=$ & $3$ \\
+ 		\end{tabular}} (Q1)
+
+ 		(Q2) edge [below] node {\begin{tabular}{r @{\,} c @{\,} l}
+%  			& beginJob1Machine1 & \\
+ 			$t_1$ & $:=$ & $0$ \\
+ 		\end{tabular}} (Q3)
+
+ 		(Q3) edge [below] node {\begin{tabular}{r @{\,} c @{\,} l}
+%  			& beginJob1Machine1 & \\
+ 			$t_1$ & $=$ & $\coulparam{d_2}$ \\
+ 		\end{tabular}} (Q4)
+
+		(Q3) edge [bend left, right] node {\begin{tabular}{r @{\,} c @{\,} l}
+ 			& HoldJ1 & \\
+%  			$t_1$ & $=$ & $3$ \\
+ 		\end{tabular}} (Q3b)
+
+		(Q3b) edge [left] node {\begin{tabular}{r @{\,} c @{\,} l}
+ 			& GoJ1 & \\
+%  			$t_1$ & $=$ & $3$ \\
+ 		\end{tabular}} (Q3)
+
+ 		(Q4) edge [below] node {\begin{tabular}{r @{\,} c @{\,} l}
+%  			& beginJob1Machine1 & \\
+ 			$t_1$ & $:=$ & $0$ \\
+ 		\end{tabular}} (Q5)
+
+ 		(Q5) edge [below] node {\begin{tabular}{r @{\,} c @{\,} l}
+%  			& beginJob1Machine1 & \\
+ 			$t_1$ & $=$ & $\coulparam{d_3}$ \\
+ 		\end{tabular}} (Q6)
+
+		(Q5) edge [bend left, right] node {\begin{tabular}{r @{\,} c @{\,} l}
+ 			& HoldJ1 & \\
+%  			$t_1$ & $=$ & $3$ \\
+ 		\end{tabular}} (Q5b)
+
+		(Q5b) edge [left] node {\begin{tabular}{r @{\,} c @{\,} l}
+ 			& GoJ1 & \\
+%  			$t_1$ & $=$ & $3$ \\
+ 		\end{tabular}} (Q5)
+
+% 		(Q0) edge [above] node {\begin{tabular}{r @{\,} c @{\,} l}
+% 			$x_1$ & $\geq$ & $p_2$ \\
+% 			& $c$ & \\
+% 		\end{tabular}} (Q4)
+% % 
+% 		(Q1) edge [] node {$a$} (Q2)
+% 		(Q1) edge [below left] node {\begin{tabular}{r @{\,} c @{\,} l}
+% 			$x_1$ & $\geq$ & $3$ \\
+% 			& $b$ & \\
+% 		\end{tabular}} (Q3)
+% 
+% 		(Q2) edge [loop right] node {\begin{tabular}{r @{\,} c @{\,} l}
+% 			$x_1$ & $\geq$ & $p_1$ \\
+% 			& $a$ & \\
+% 			$x_1$ & $:=$ & $0$ \\
+% 		\end{tabular}} (Q2)
+% 
+% 		(Q3) edge [loop right] node {$b$} (Q3)
+% 
+% 		(Q4) edge [loop right] node {$c$} (Q4)
+	;
+\end{tikzpicture}
  \end{figure}
-
+\item For which value of $(\coulparam{d_1},\coulparam{d_2},\coulparam{d_3})$ is the system schedulable in $d$ time units?
+\end{itemize}
 \end{frame}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -677,58 +915,7 @@
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\begin{frame}
-\frametitle{Functional view of \imitator{}}
 
-
-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
-	% STYLES
-	\tikzstyle{etiquette} = [draw=none, color=black]
-	
-	\tikzstyle{boite}=[rectangle, draw=black, rounded corners, thick, draw=blue!40!black, top color=blue!5!white, bottom color=blue!20]
-	\tikzstyle{fleche} = [->, draw=black, semithick]
-{
-
-\centering
-
-\begin{tikzpicture}[scale=0.6,  =>stealth']
-
-	\small
-
-	% Boites
-	\draw[boite] (-6, 5.5) rectangle (-2, 6.5);
-	\node [etiquette] at (-4, 6) {PTA~$\A$};
-	
-	\draw[boite] (-6, 3.5) rectangle (-2, 5);
-	\node [etiquette] at (-4, 4.25) {\begin{tabular}{c}Reference\\valuation $\pio$\end{tabular}};
-	
-	\draw[boite] (0, 4) rectangle (6, 6.5);
-	\node [etiquette] at (3, 5.25) {\large \imitator{}};
-	
-% 	\draw[boite] (1, 4) rectangle (5, 5);
-% 	\node [etiquette] at (3, 4.5) {PPL};
-	
-	\draw[boite] (8, 4.5) rectangle (12, 6);
-	\node [etiquette] at (10, 5.25) {Constraint $\Ko$};
-	
-% 	\draw[boite] (8, 4) rectangle (12, 5);
-% 	\node [etiquette] at (10, 4.5) {Trace set};
-
-	% Fleches
-	\path[fleche] (-2, 6) --++ (2, 0);
-	\path[fleche] (-2, 4.4) --++ (2, 0);
-% 	\path[fleche] (3.5, 4) --++ (0, -.5);
-% 	\path[fleche] (2.5, 3.5) --++ (0, .5);
-	\path[fleche] (6, 5.25) --++ (2, 0);
-% 	\path[fleche] (6, 4.5) --++ (2, 0);
-
-\end{tikzpicture}
-
-}
-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
-
-
-\end{frame}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
@@ -751,7 +938,7 @@
 
 		\medskip
 
-		\item Example of trace set for the flip-flop example
+		\item Example of trace set for the jobshop example
 	\end{itemize}
 
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
@@ -759,34 +946,34 @@
 \centering
 \footnotesize
 
-\begin{tikzpicture}[scale=0.45, ->, >=stealth', shorten >=1pt, auto, thin]
-\tikzstyle{state}=[circle, minimum size=12pt, draw=none, text=black, shade=ball, inner sep=1.5pt]
+\begin{tikzpicture}[scale=0.2, ->, >=stealth', shorten >=2pt, auto, thin]
+\tikzstyle{state}=[circle, minimum size=12pt, draw=none, text=black, shade=ball, inner sep=3pt]
 
 % 	\node[state,ball color=cv1] (I1I1) at (0
 
-	\node[state, ball color=cv1] (Q0) at (0,4) {};
-	\node[state, ball color=cv2]         (Q1) at (3,4) {};
-	\node[state, ball color=cv3]         (Q2) at (6,4) {};
-	\node[state, ball color=cv4]         (Q3) at (9,4) {};
-	\node[state, ball color=cv5]         (Q5) at (12,4) {};
-	\node[state, ball color=cv7]         (Q8) at (15,4) {};
-	\node[state, ball color=cv6]         (Q9) at (15,6) {};
-	\node[state, ball color=cv8]        (Q13) at (18,4) {};
-	\node[state, ball color=cv8]        (Q14) at (18,6) {};
-	\node[state, ball color=cv9]        (Q15) at (21,4) {};
-	\node[state, ball color=cv9]        (Q19) at (21,6) {};
+	\node[state, ball color=cv1]         (Q0) at (0,4) {};
+	\node[state, ball color=cv2]         (Q1) at (5,4) {};
+	\node[state, ball color=cv3]         (Q2) at (10,4) {};
+	\node[state, ball color=cv4]         (Q3) at (15,4) {};
+	\node[state, ball color=cv5]         (Q5) at (20,4) {};
+	\node[state, ball color=cv7]         (Q8) at (25,4) {};
+	\node[state, ball color=cv6]         (Q9) at (30,4) {};
+	\node[state, ball color=cv8]        (Q13) at (35,4) {};
+	\node[state, ball color=cv10]        (Q14) at (40,4) {};
+	\node[state, ball color=cv9]        (Q15) at (45,4) {};
+	\node[state, ball color=cv11]        (Q19) at (50,4) {};
 
 	\path
-		(Q0) edge [double] node {$\coulact{D^\uparrow}$} (Q1)
-		(Q1) edge [double] node {$\coulact{G_1^\downarrow}$} (Q2)
-		(Q2) edge [double] node {$\coulact{\mathit{CK}^\uparrow}$} (Q3)
-		(Q3) edge [double] node {$\coulact{G_3^\downarrow}$} (Q5)
-		(Q5) edge [double] node {$\coulact{D^\downarrow}$} (Q8)
-		(Q5) edge [double] node {$\coulact{Q^\uparrow}$} (Q9)
-		(Q8) edge [double] node {$\coulact{Q^\uparrow}$} (Q13)
-		(Q9) edge [double] node {$\coulact{D^\downarrow}$} (Q14)
-		(Q13) edge [double] node {$\coulact{\mathit{CK}^\downarrow}$} (Q15)
-		(Q14) edge [double] node {$\coulact{\mathit{CK}^\downarrow}$} (Q19)
+		(Q0) edge [double] node {$\coulact{J_{1,m1}^\uparrow}$} (Q1)
+		(Q1) edge [double] node {$\coulact{J_{2,m2}^\uparrow}$} (Q2)
+		(Q2) edge [double] node {$\coulact{J_{1,m1}^\downarrow}$} (Q3)
+		(Q3) edge [double] node {$\coulact{J_{2,m2}^{h}}$} (Q5)
+		(Q5) edge [double] node {$\coulact{J_{1,m2}^\uparrow}$} (Q8)
+		(Q8) edge [double] node {$\coulact{J_{1,m2}^\downarrow}$} (Q9)
+		(Q9) edge [double] node {$\coulact{J_{2,m2}^{r}}$} (Q13)
+		(Q13) edge [double] node {$\coulact{J_{1,m3}^\uparrow}$} (Q14)
+		(Q14) edge [double] node {$\coulact{J_{2,m2}^\downarrow}$} (Q15)
+		(Q15) edge [double] node {$\coulact{J_{1,m3}^\uparrow}$} (Q19)
 		;
 
 \end{tikzpicture}
@@ -800,9 +987,6 @@
 
 \end{frame}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-
-
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}
@@ -900,29 +1084,29 @@
 
 	% CONTRAINTES
 	\node[contrainte, fill=cv1!30] at (0, -1) (C0) {\centering \begin{tabular}{r @{\,} c @{\,} l }
-		$\coulparam{p_1}$ & $\leq$ & $\coulparam{p_2}$ \\
+		$\coulparam{d_1}$ & $\leq$ & $\coulparam{d_2}$ \\
 		& & \\
 	\end{tabular}
 	
 	};
 
 	\node[contrainte, fill=cv2!30] at (2.5, -1) (C1) {\centering \begin{tabular}{r @{\,} c @{\,} l }
-		$\coulparam{p_1}$ & $\leq$ & $\coulparam{p_2}$ \\
-		$\coulparam{p_1}$ & $\leq$ & $\coulparam{p_3} + \coulparam{p_4}$ \\
+		$\coulparam{d_1}$ & $\leq$ & $\coulparam{d_2}$ \\
+		$\coulparam{d_1}$ & $\leq$ & $\coulparam{d_3} + \coulparam{d_4}$ \\
 	\end{tabular}
 	};
 
 	\node[contrainte, fill=cv3!30] at (5, -1) (C2) {\centering \begin{tabular}{r @{\,} c @{\,} l }
-		$\coulparam{p_1}$ & $\leq$ & $\coulparam{p_2}$ \\
-		$\coulparam{p_1}$ & $\leq$ & $\coulparam{p_3} + \coulparam{p_4}$ \\
-		$\coulparam{p_3}$ & $\geq$ & $\coulparam{p_4}$ \\
+		$\coulparam{d_1}$ & $\leq$ & $\coulparam{d_2}$ \\
+		$\coulparam{d_1}$ & $\leq$ & $\coulparam{d_3} + \coulparam{d_4}$ \\
+		$\coulparam{d_3}$ & $\geq$ & $\coulparam{d_4}$ \\
 	\end{tabular}	
 	};
 
 	\node[contrainte, fill=cv4!30, draw=couleurbad] at (5, 2) (C3) {\centering \begin{tabular}{r @{\,} c @{\,} l }
-		$\coulparam{p_1}$ & $\leq$ & $\coulparam{p_2}$ \\
-		$\coulparam{p_1}$ & $\leq$ & $\coulparam{p_3} + \coulparam{p_4}$ \\
-		$\textcolor{red}{p_3}$ & $\textcolor{red}{<}$ & $\textcolor{red}{p_4}$ \\
+		$\coulparam{d_1}$ & $\leq$ & $\coulparam{d_2}$ \\
+		$\coulparam{d_1}$ & $\leq$ & $\coulparam{d_3} + \coulparam{d_4}$ \\
+		$\textcolor{red}{d_3}$ & $\textcolor{red}{<}$ & $\textcolor{red}{d_4}$ \\
 	\end{tabular}	
 	};
 
@@ -956,59 +1140,92 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\begin{frame}
-\frametitle{Application to the Jobshop Example}
-\end{frame}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{State Merging}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Plan
-\begin{frame}
-	\frametitle{\plan{}}
-	\tableofcontents[currentsection, hideallsubsections]
-\end{frame}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\begin{frame}
- \frametitle{Principle}
-\end{frame}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-
-
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\begin{frame}
- \frametitle{Application to the Jobshop Problem}
-\end{frame}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
+% 
+% 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % \begin{frame}
-%  \frametitle{Theoretical Results}
+% \frametitle{Application to the Jobshop Example}
 % \end{frame}
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% \section{State Merging}
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% 
+% 
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% % Plan
+% \begin{frame}
+% 	\frametitle{\plan{}}
+% 	\tableofcontents[currentsection, hideallsubsections]
+% \end{frame}
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% 
+% 
+% 
+% 
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% \begin{frame}
+%  \frametitle{Principle}
+% \end{frame}
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% \begin{itemize}
+%  \item Let $s$ and $s'$ be two states sharing the same location
+%  \item Under certain circonstances 
+% \end{itemize}
+% 
+% 
+% 
+% 
+% 
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% \begin{frame}
+%  \frametitle{Application to the Jobshop Problem}
+% \end{frame}
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% 
+% % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% % \begin{frame}
+% %  \frametitle{Theoretical Results}
+% % \end{frame}
+% % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% 
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% \section{Experiments}
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% 
+% 
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% % Plan
+% \begin{frame}
+% 	\frametitle{\plan{}}
+% 	\tableofcontents[currentsection, hideallsubsections]
+% \end{frame}
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% 
+% 
+% 
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% \begin{frame}
+%  \frametitle{Experimentations}
+% \end{frame}
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% 
+% 
+% 
+% 
+
+
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Experiments}
+\section{Implemetation}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -1021,43 +1238,134 @@
 \end{frame}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}
- \frametitle{Experimentations}
+\frametitle{Functional view of \imitator{}}
+
+
+%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
+	% STYLES
+	\tikzstyle{etiquette} = [draw=none, color=black]
+	
+	\tikzstyle{boite}=[rectangle, draw=black, rounded corners, thick, draw=blue!40!black, top color=blue!5!white, bottom color=blue!20]
+	\tikzstyle{fleche} = [->, draw=black, semithick]
+{
+
+\centering
+
+\begin{tikzpicture}[scale=0.6,  =>stealth']
+
+	\small
+
+	% Boites
+	\draw[boite] (-6, 5.5) rectangle (-2, 6.5);
+	\node [etiquette] at (-4, 6) {PTA~$\A$};
+	
+	\draw[boite] (-6, 3.5) rectangle (-2, 5);
+	\node [etiquette] at (-4, 4.25) {\begin{tabular}{c}Reference\\valuation $\pio$\end{tabular}};
+	
+	\draw[boite] (0, 4) rectangle (6, 6.5);
+	\node [etiquette] at (3, 5.25) {\large \imitator{}};
+	
+% 	\draw[boite] (1, 4) rectangle (5, 5);
+% 	\node [etiquette] at (3, 4.5) {PPL};
+	
+	\draw[boite] (8, 4.5) rectangle (12, 6);
+	\node [etiquette] at (10, 5.25) {Constraint $\Ko$};
+	
+% 	\draw[boite] (8, 4) rectangle (12, 5);
+% 	\node [etiquette] at (10, 4.5) {Trace set};
+
+	% Fleches
+	\path[fleche] (-2, 6) --++ (2, 0);
+	\path[fleche] (-2, 4.4) --++ (2, 0);
+% 	\path[fleche] (3.5, 4) --++ (0, -.5);
+% 	\path[fleche] (2.5, 3.5) --++ (0, .5);
+	\path[fleche] (6, 5.25) --++ (2, 0);
+% 	\path[fleche] (6, 4.5) --++ (2, 0);
+
+\end{tikzpicture}
+
+}
+%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
+
+
 \end{frame}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-
-
-
-
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Perspectives}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Plan
-\begin{frame}
-	\frametitle{\plan{}}
-	\tableofcontents[currentsection, hideallsubsections]
-\end{frame}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}
  \frametitle{Conclusion}
+\begin{itemize}
+	\item \couleur{\imitator{}} 2.5 \refer{afks12}
+
+	\begin{itemize}
+		\item ``\couleur{I}nverse \couleur{M}ethod for \couleur{I}nferring \couleur{T}ime \couleur{A}bstrac\couleur{T} Behavi\couleur{OR}''
+		\item 10\,000 lines of \couleur{\ocaml{}} code
+		\item Makes use of the \couleur{PPL} library for handling polyhedra % \refer{bhz08}
+	\end{itemize}
+
+	\medskip
+
+	\item Main contributors
+
+	\begin{itemize}
+		\item \'Etienne Andr\'e
+		\item Laurent Fribourg
+		\item Ulrich K\"uhne
+		\item Romain Soulat
+	\end{itemize}
+
+	\medskip
+
+	\item Available on the Web
+
+	\begin{itemize}
+		\item \couleur{\url{http://www.lsv.ens-cachan.fr/Software/imitator/}}
+	\end{itemize}
+
+	\pause
+	
+	\medskip
+
+	\item And now part of CosyVerif!
+
+
+\end{itemize}
+
 \end{frame}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+\begin{frame}
+\frametitle{Case Studies and Main Projects}
+
+\begin{itemize}
+	\item Applications
+
+	\begin{itemize}
+		\item Asynchronous circuits
+		\item Communication protocols
+		\item Scheduling problems
+	\end{itemize}
+
+	\bigskip
+
+	\item Industrial projects
+
+	\begin{itemize}
+		\item ANR \couleur{Valmem} (with ST-Microelectronics) : 2007--2010 \refer{ACEF09}
+		
+		\medskip
+		
+		\item Farman \couleur{ROSCOV} (with EADS Astrium Space Transportation) : 2012--2013 \refer{FLMS12}
+	\end{itemize}
+
+
+\end{itemize}
+
+\end{frame}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Perspectives}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}
  \frametitle{Perspectives}
@@ -1072,19 +1380,21 @@
 
 \backupbegin{}
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section*{\biblio{}}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section*{Experiments}
 \begin{frame}
 \frametitle{Experiments}
 
 
 
 \end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section*{\biblio{}}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
@@ -1223,7 +1533,6 @@
  \end{figure}
 \end{frame}
 
- \end{document}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}
@@ -2121,29 +2430,29 @@
 
 	% CONTRAINTES
 	\node[contrainte, fill=cv1!30] at (0, -1) (C0) {\centering \begin{tabular}{r @{\,} c @{\,} l }
-		$\coulparam{p_1}$ & $\leq$ & $\coulparam{p_2}$ \\
+		$\coulparam{d_1}$ & $\leq$ & $\coulparam{d_2}$ \\
 		& & \\
 	\end{tabular}
 	
 	};
 
 	\node[contrainte, fill=cv2!30] at (2.5, -1) (C1) {\centering \begin{tabular}{r @{\,} c @{\,} l }
-		$\coulparam{p_1}$ & $\leq$ & $\coulparam{p_2}$ \\
-		$\coulparam{p_1}$ & $\leq$ & $\coulparam{p_3} + \coulparam{p_4}$ \\
+		$\coulparam{d_1}$ & $\leq$ & $\coulparam{d_2}$ \\
+		$\coulparam{d_1}$ & $\leq$ & $\coulparam{d_3} + \coulparam{d_4}$ \\
 	\end{tabular}
 	};
 
 	\node[contrainte, fill=cv3!30] at (5, -1) (C2) {\centering \begin{tabular}{r @{\,} c @{\,} l }
-		$\coulparam{p_1}$ & $\leq$ & $\coulparam{p_2}$ \\
-		$\coulparam{p_1}$ & $\leq$ & $\coulparam{p_3} + \coulparam{p_4}$ \\
-		$\coulparam{p_3}$ & $\geq$ & $\coulparam{p_4}$ \\
+		$\coulparam{d_1}$ & $\leq$ & $\coulparam{d_2}$ \\
+		$\coulparam{d_1}$ & $\leq$ & $\coulparam{d_3} + \coulparam{d_4}$ \\
+		$\coulparam{d_3}$ & $\geq$ & $\coulparam{d_4}$ \\
 	\end{tabular}	
 	};
 
 	\node[contrainte, fill=cv4!30, draw=couleurbad] at (5, 2) (C3) {\centering \begin{tabular}{r @{\,} c @{\,} l }
-		$\coulparam{p_1}$ & $\leq$ & $\coulparam{p_2}$ \\
-		$\coulparam{p_1}$ & $\leq$ & $\coulparam{p_3} + \coulparam{p_4}$ \\
-		$\textcolor{red}{p_3}$ & $\textcolor{red}{<}$ & $\textcolor{red}{p_4}$ \\
+		$\coulparam{d_1}$ & $\leq$ & $\coulparam{d_2}$ \\
+		$\coulparam{d_1}$ & $\leq$ & $\coulparam{d_3} + \coulparam{d_4}$ \\
+		$\textcolor{red}{d_3}$ & $\textcolor{red}{<}$ & $\textcolor{red}{d_4}$ \\
 	\end{tabular}	
 	};
 
