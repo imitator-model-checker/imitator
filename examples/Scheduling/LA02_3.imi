@@ -816,7 +816,7 @@ init:= 	loc[checker] = check_1 &
 			wcet_m_3_job_3 = 99 &			
 			wcet_m_4_job_3 = 28 &
 
-			deadline = 320 & --231 &
+			deadline = 300 & --231 &
 			True
 ;
 

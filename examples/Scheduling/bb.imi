@@ -141,7 +141,7 @@ deadlineBasic = 24 &
 --Etude 1--
 --WCET_1 = 1 &
 --WCET_2 = 2 &
---WCET_3 = 0 &
+--WCET_3 = 6 &
 per1 = 3 &
 per2 = 8 &
 --per3 = 20 &
