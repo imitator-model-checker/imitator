@@ -7,7 +7,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Ulrich Kuehne, Etienne Andre
  * Created:       2010
- * Last modified: 2012/08/21
+ * Last modified: 2012/08/24
  *
  ****************************************************************)
  
@@ -45,6 +45,8 @@ class imitator_options =
 		val mutable timed_mode = ref false
 		(* Print graph of reachable states *)
 		val mutable with_dot = ref false
+		(* Keep the source file used for dot *)
+		val mutable with_dot_source = ref false
 		(* Print logs *)
 		val mutable with_log = ref false
 		(* print parametric logs *)
@@ -83,10 +85,12 @@ class imitator_options =
 		val mutable step = ref NumConst.one
 
 		(* TRANSLATION *)
-		(* Translate PTA into CLP program *)
+		(* Translate PTA into a CLP program *)
 		val mutable pta2clp = ref false
-		(* Translate PTA into GML program *)
+		(* Translate PTA into a GML program *)
 		val mutable pta2gml = ref false
+		(* Translate PTA into a graphics *)
+		val mutable pta2jpg = ref false
 
 		(* SPECIALIZED OPTIONS*)
 		(* Merging of states (former jobshop option) *)
@@ -114,6 +118,7 @@ class imitator_options =
 		method program_prefix = !program_prefix
 		method pta2clp = !pta2clp
 		method pta2gml = !pta2gml
+		method pta2jpg = !pta2jpg
 		method states_limit = !states_limit
 		method statistics = !statistics
 		method step = !step
@@ -123,6 +128,7 @@ class imitator_options =
 		method tree = !tree
 		method union = !union
 		method with_dot = !with_dot
+		method with_dot_source = !with_dot_source
 		method with_log = !with_log
 		method with_parametric_log = !with_parametric_log
 
@@ -184,8 +190,9 @@ class imitator_options =
 				("-log-prefix", Set_string program_prefix, " Sets the prefix for log files. Default: [model].");
 				("-mode", String set_mode, " Mode for " ^ program_name ^ ". Use 'reachability' for a parametric reachability analysis (no pi0 needed). Use 'inversemethod' for the inverse method. For the behavioral cartography algorithm, use 'cover' to cover all the points within V0, or 'randomXX' where XX is a number to iterate randomly algorithm (e.g., random5 or random100). Default: 'inversemethod'.");
 				("-no-random", Set no_random, " No random selection of the pi0-incompatible inequality (select the first found). Default: false.");
-				("-PTA2CLP", Unit (fun _ -> pta2clp := true; imitator_mode := Translation), "Translate PTA into a CLP program (work in progress!), and exit without performing any analysis. Defaut : 'false'");
+				("-PTA2CLP", Unit (fun _ -> pta2clp := true; imitator_mode := Translation), "Translate PTA into a CLP program, and exit without performing any analysis. Work in progress! Defaut : 'false'");
 				("-PTA2GML", Unit (fun _ -> pta2gml := true; imitator_mode := Translation), "Translate PTA into a GML program, and exit without performing any analysis. Experimental. Defaut : 'false'");
+				("-PTA2JPG", Unit (fun _ -> pta2jpg := true; with_dot:= true; imitator_mode := Translation), "Translate PTA into a graphics, and exit without performing any analysis. Defaut : 'false'");
 				("-states-limit", Int (fun i -> states_limit := Some i), " States limit: will try to stop after reaching this number of states. Warning: the program may have to first finish computing the current iteration before stopping. Default: no limit.");
 				("-statistics", Set statistics, " Print info on number of calls to PPL, and other statistics. Default: 'false'");
 				("-step", String (fun i -> (* SHOULD CHECK HERE THAT STEP IS EITHER A FLOAT OR AN INT *) step := (NumConst.numconst_of_string i)), " Step for the cartography. Default: 1/1.");
@@ -194,6 +201,7 @@ class imitator_options =
 				("-timed", Set timed_mode, " Adds a timing information to each output of the program. Default: none.");
 				("-tree", Set tree, " Does not test if a new state was already encountered. To be set ONLY if the reachability graph is a tree. Default: 'false'");
 				("-with-dot", Set with_dot, " Graphical output using 'dot'. Default: false.");
+				("-with-dot-source", Set with_dot_source, " Keep file used for generating graphical output. Default: false.");
 				("-with-log", Set with_log, " Generation of log files (description of states). Default: false.");
 				("-with-merging", Clear no_merging, " Use the merging technique of [AFS12]. Default: 'false' (disable)");
 				("-with-parametric-log", Set with_parametric_log, " Adds the elimination of the clock variables in the constraints in the log files. Default: false.");
@@ -229,7 +237,7 @@ class imitator_options =
 			);
 			
 			(* Case no pi0 file *)
-			if nb_args = 1 && (!imitator_mode != Reachability_analysis) && not !pta2clp && not !pta2gml && not !forcePi0 then(
+			if nb_args = 1 && (!imitator_mode != Reachability_analysis) && (!imitator_mode != Translation) && not !forcePi0 then(
 				print_error ("Please give a file name for the reference valuation.");
 				Arg.usage speclist usage_msg;
 				abort_program (); exit(0)

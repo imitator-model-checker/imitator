@@ -77,10 +77,10 @@ MAIN = $(SRC)/IMITATOR.cmo
 # MAIN_OPT = $(MAIN:.cmo=.cmx)
 
 # modules to compile
-MODULES = Global NumConst ReachabilityTree Options LinearConstraint Automaton Cache Input Pi0Lexer Pi0Parser V0Lexer V0Parser ModelLexer ModelParser GMLLexer GMLParser ModelPrinter Graph PTA2CLP PTA2GML ProgramConverter Graphics Reachability Cartography
+MODULES = Global NumConst ReachabilityTree Options LinearConstraint Automaton Cache Input Pi0Lexer Pi0Parser V0Lexer V0Parser ModelLexer ModelParser GMLLexer GMLParser ModelPrinter Graph PTA2CLP PTA2GML ProgramConverter Graphics PTA2JPG Reachability Cartography
 
 # interfaces
-HEADERS = Global NumConst ReachabilityTree Options LinearConstraint Automaton Cache ParsingStructure AbstractModel Input Graph ModelPrinter PTA2CLP PTA2GML ProgramConverter Graphics Reachability Cartography
+HEADERS = Global NumConst ReachabilityTree Options LinearConstraint Automaton Cache ParsingStructure AbstractModel Input Graph ModelPrinter PTA2CLP PTA2GML  ProgramConverter Graphics PTA2JPG Reachability Cartography
 
 CMIS = $(addprefix $(SRC)/, $(addsuffix .cmi, $(HEADERS)))
 OBJS = $(addprefix $(SRC)/, $(addsuffix .cmo, $(MODULES)))
@@ -279,15 +279,15 @@ exe:
 
 ##### CASE STUDIES : HARDWARE #####
 
+	$(TARGET) $(EXAMPLE_PATH)/AndOr/AndOr.imi -mode reachability -PTA2JPG
+
 # 	$(TARGET) $(EXAMPLE_PATH)/AndOr/AndOr.imi -mode reachability -depth-limit 10 -debug nodebug
 # 	$(TARGET) $(EXAMPLE_PATH)/AndOr/AndOr.imi -mode reachability -states-limit 10
 # 	$(TARGET) $(EXAMPLE_PATH)/AndOr/AndOr.imi -mode reachability -time-limit 10
 
-# 	$(TARGET) $(EXAMPLE_PATH)/AndOr/AndOr.imi -mode reachability -depth-limit 10 -PTA2GML
-
 # 	$(TARGET) $(EXAMPLE_PATH)/AndOr/AndOr.imi $(EXAMPLE_PATH)/AndOr/AndOr.pi0
 # 	$(TARGET) $(EXAMPLE_PATH)/AndOr/AndOr.imi $(EXAMPLE_PATH)/AndOr/AndOr.pi0 -bab
-# 	$(TARGET) $(EXAMPLE_PATH)/AndOr/AndOr.imi $(EXAMPLE_PATH)/AndOr/AndOr.pi0 -with-dot
+# 	$(TARGET) $(EXAMPLE_PATH)/AndOr/AndOr.imi $(EXAMPLE_PATH)/AndOr/AndOr.pi0 -with-dot -with-dot-source -fancy
 # 	$(TARGET) $(EXAMPLE_PATH)/AndOr/AndOr.imi $(EXAMPLE_PATH)/AndOr/AndOr.pi0 -no-dot -no-log -statistics 
 # 	$(TARGET) $(EXAMPLE_PATH)/AndOr/AndOr.imi $(EXAMPLE_PATH)/AndOr/AndOr.pi0 -no-dot -no-log -statistics -dynamic
 # 	$(TARGET) $(EXAMPLE_PATH)/AndOr/AndOr.imi $(EXAMPLE_PATH)/AndOr/AndOr.pi0 -no-dot -no-log -jobshop
@@ -377,6 +377,8 @@ exe:
 # 	./IMITATOR Examples/BangOlufsen/BangOlufsen2.imi -mode reachability -no-dot
 # 	./IMITATOR Examples/BangOlufsen/BangOlufsen2.imi -mode reachability -no-dot -depth-limit 30 -debug low
 
+	
+# 	$(TARGET) $(EXAMPLE_PATH)/BRP/brp.imi -PTA2JPG
 # 	$(TARGET) $(EXAMPLE_PATH)/BRP/brp.imi -mode reachability 
 # 	$(TARGET) $(EXAMPLE_PATH)/BRP/brp.imi $(EXAMPLE_PATH)/BRP/brp.pi0 -statistics
 # 	$(TARGET) $(EXAMPLE_PATH)/BRP/brp.imi $(EXAMPLE_PATH)/BRP/brp.pi0 -bab
@@ -411,18 +413,20 @@ exe:
 
 # 	./IMITATOR Examples/RCP/RCP_bounded.imi Examples/RCP/RCP_bounded.pi0 -no-dot -no-log
 
+
+	#### WARNING: the prism model seems odd!!
+	
+# 	$(TARGET) $(EXAMPLE_PATH)/CSMACD/csmacdPrism.imi -PTA2JPG
 # 	$(TARGET) $(EXAMPLE_PATH)/CSMACD/csmacdPrism.imi -mode reachability 
 # 	$(TARGET) $(EXAMPLE_PATH)/CSMACD/csmacdPrism.imi $(EXAMPLE_PATH)/CSMACD/csmacdPrism.pi0
 # 	$(TARGET) $(EXAMPLE_PATH)/CSMACD/csmacdPrism.imi $(EXAMPLE_PATH)/CSMACD/csmacdPrism.pi0 -bab
-# 	$(TARGET) $(EXAMPLE_PATH)/CSMACD/csmacdPrism.imi $(EXAMPLE_PATH)/CSMACD/csmacdPrism.pi0 -no-dot -no-log -statistics -dynamic
-# 	$(TARGET) $(EXAMPLE_PATH)/CSMACD/csmacdPrism.imi $(EXAMPLE_PATH)/CSMACD/csmacdPrism.pi0 -no-dot -no-log -statistics -jobshop
-# 	$(TARGET) $(EXAMPLE_PATH)/CSMACD/csmacdPrism.imi $(EXAMPLE_PATH)/CSMACD/csmacdPrism.pi0 -no-dot -no-log
 # 	bin/IMITATOR2.41 $(EXAMPLE_PATH)/CSMACD/csmacdPrism.imi $(EXAMPLE_PATH)/CSMACD/csmacdPrism.pi0 -no-dot -no-log
 # 	bin/IMITATOR2.4 $(EXAMPLE_PATH)/CSMACD/csmacdPrism.imi $(EXAMPLE_PATH)/CSMACD/csmacdPrism.pi0 -no-dot -no-log -jobshop
 # 	bin/IMITATOR2.375 $(EXAMPLE_PATH)/CSMACD/csmacdPrism.imi $(EXAMPLE_PATH)/CSMACD/csmacdPrism.pi0 -no-dot -no-log -jobshop
 # 	bin/IMITATOR2.374 $(EXAMPLE_PATH)/CSMACD/csmacdPrism.imi $(EXAMPLE_PATH)/CSMACD/csmacdPrism.pi0 -no-dot -no-log -jobshop
 # 	bin/IMITATOR2.370 $(EXAMPLE_PATH)/CSMACD/csmacdPrism.imi $(EXAMPLE_PATH)/CSMACD/csmacdPrism.pi0 -no-dot -no-log -statistics
 
+	#### WARNING: the prism model seems odd!!
 # 	$(TARGET) $(EXAMPLE_PATH)/CSMACD/csmacdPrism_with_renamed_actions.imi -mode reachability -no-merging
 # 	$(TARGET) $(EXAMPLE_PATH)/CSMACD/csmacdPrism_with_renamed_actions.imi $(EXAMPLE_PATH)/CSMACD/csmacdPrism.pi0 -no-merging
 
@@ -438,6 +442,7 @@ exe:
 # 	./IMITATOR Examples/CSMACD/csmacdPrism_2p.imi Examples/CSMACD/csmacdPrism_2p.pi0 
 # 	./IMITATOR Examples/CSMACD/csmacdPrism_2p.imi Examples/CSMACD/csmacdPrism_2p.v0 -mode cover -log-prefix Examples/CSMACD/carto_2p/csmacdPrism_2p
 
+# 	$(TARGET) $(EXAMPLE_PATH)/Wlan/wlan.imi -PTA2JPG
 # 	$(TARGET) $(EXAMPLE_PATH)/Wlan/wlan.imi -mode reachability
 # 	$(TARGET) $(EXAMPLE_PATH)/Wlan/wlan.imi $(EXAMPLE_PATH)/Wlan/wlan.pi0
 # 	$(TARGET) $(EXAMPLE_PATH)/Wlan/wlan.imi $(EXAMPLE_PATH)/Wlan/wlan.pi0 -no-merging
@@ -464,10 +469,10 @@ exe:
 
 ##### CASE STUDIES : VALMEM #####
 
-# -debug medium -inclusion -depth-limit 2 -sync-auto-detect
+# 	$(TARGET) $(EXAMPLE_PATH)/Valmem/spsmall.imi -PTA2JPG
 # 	$(TARGET) $(EXAMPLE_PATH)/Valmem/spsmall.imi $(EXAMPLE_PATH)/Valmem/spsmall.pi0
 # 	$(TARGET) $(EXAMPLE_PATH)/Valmem/spsmall.imi $(EXAMPLE_PATH)/Valmem/spsmall.pi0 -no-random -bab
-# 	$(TARGET) $(EXAMPLE_PATH)/Valmem/spsmall.imi $(EXAMPLE_PATH)/Valmem/spsmall.pi0 -with-dot -fancy
+# 	$(TARGET) $(EXAMPLE_PATH)/Valmem/spsmall.imi $(EXAMPLE_PATH)/Valmem/spsmall.pi0 -with-dot -with-dot-source -fancy
 # 	$(TARGET) $(EXAMPLE_PATH)/Valmem/spsmall.imi $(EXAMPLE_PATH)/Valmem/spsmall.pi0 -no-dot -no-log -PTA2GML
 # 	$(TARGET) $(EXAMPLE_PATH)/Valmem/spsmall.imi $(EXAMPLE_PATH)/Valmem/spsmall.pi0 -no-dot -no-log -statistics
 # 	$(TARGET) $(EXAMPLE_PATH)/Valmem/spsmall.imi $(EXAMPLE_PATH)/Valmem/spsmall.pi0 -no-dot -no-log -statistics -acyclic
@@ -505,6 +510,7 @@ exe:
 # 	$(TARGET) $(EXAMPLE_PATH)/Valmem/sp_1x2_md_no.imi Examples/Valmem/sp_1x2_md_no.pi0 
 
 ##### CASE STUDIES : SIMOP #####
+# 	$(TARGET) $(EXAMPLE_PATH)/SIMOP/simop.imi -PTA2JPG
 # 	$(TARGET) $(EXAMPLE_PATH)/SIMOP/simop.imi -mode reachability 
 
 # 	$(TARGET) $(EXAMPLE_PATH)/SIMOP/simop.imi $(EXAMPLE_PATH)/SIMOP/simop.pi0 -no-merging -incl -statistics
@@ -528,34 +534,46 @@ exe:
 
 
 ##### SCHEDULING #####
+# 	$(TARGET) $(EXAMPLE_PATH)/Scheduling/am02.imi -PTA2JPG
 # 	$(TARGET) $(EXAMPLE_PATH)/Scheduling/am02.imi -mode reachability 
 # 	$(TARGET) $(EXAMPLE_PATH)/Scheduling/am02.imi $(EXAMPLE_PATH)/Scheduling/am02.pi0 -with-merging -with-dot -with-log
 # 	$(TARGET) $(EXAMPLE_PATH)/Scheduling/am02.imi $(EXAMPLE_PATH)/Scheduling/am02.pi0 -bab # PROBLEM BAB
 # 	$(TARGET) $(EXAMPLE_PATH)/Scheduling/am02.imi $(EXAMPLE_PATH)/Scheduling/am02.pi0 -bab -no-merging
 
+# 	$(TARGET) $(EXAMPLE_PATH)/Scheduling/astrium_basic_thermal_fp.imi -PTA2JPG
 # 	$(TARGET) $(EXAMPLE_PATH)/Scheduling/astrium_basic_thermal_fp.imi $(EXAMPLE_PATH)/Scheduling/astrium_basic_thermal_fp.pi0 -with-merging -with-dot -with-log
 
+# 	$(TARGET) $(EXAMPLE_PATH)/Scheduling/bb.imi -PTA2JPG
 # 	$(TARGET) $(EXAMPLE_PATH)/Scheduling/bb.imi $(EXAMPLE_PATH)/Scheduling/bb.pi0 -with-merging -with-dot -with-log
 	
+# 	$(TARGET) $(EXAMPLE_PATH)/Scheduling/concurent_tasks_chain.imi -PTA2JPG
 # 	$(TARGET) $(EXAMPLE_PATH)/Scheduling/concurent_tasks_chain.imi $(EXAMPLE_PATH)/Scheduling/concurent_tasks_chain.pi0 -with-merging -with-dot -with-log
 	
+# 	$(TARGET) $(EXAMPLE_PATH)/Scheduling/full_cpr08.imi -PTA2JPG
 # 	$(TARGET) $(EXAMPLE_PATH)/Scheduling/full_cpr08.imi $(EXAMPLE_PATH)/Scheduling/full_cpr08.pi0 -with-merging -with-dot -with-log -depth-limit 30
 
+# 	$(TARGET) $(EXAMPLE_PATH)/Scheduling/generic_edf.imi -PTA2JPG
 # 	$(TARGET) $(EXAMPLE_PATH)/Scheduling/generic_edf.imi $(EXAMPLE_PATH)/Scheduling/generic_edf.pi0 -with-merging -with-dot -with-log
 
+# 	$(TARGET) $(EXAMPLE_PATH)/Scheduling/generic_fp.imi -PTA2JPG
 # 	$(TARGET) $(EXAMPLE_PATH)/Scheduling/generic_fp.imi $(EXAMPLE_PATH)/Scheduling/generic_fp.pi0 -with-merging -with-dot -with-log
 
+# 	$(TARGET) $(EXAMPLE_PATH)/Scheduling/hppr10_audio.imi -PTA2JPG
 # 	$(TARGET) $(EXAMPLE_PATH)/Scheduling/hppr10_audio.imi $(EXAMPLE_PATH)/Scheduling/hppr10_audio.pi0 -with-merging -with-dot -with-log
 	
+# 	$(TARGET) $(EXAMPLE_PATH)/Scheduling/LA02_2.imi -PTA2JPG
 # 	$(TARGET) $(EXAMPLE_PATH)/Scheduling/LA02_2.imi $(EXAMPLE_PATH)/Scheduling/LA02_2.pi0 -with-merging -with-dot -with-log
 # 	bin/IMITATOR2.41 $(EXAMPLE_PATH)/Scheduling/LA02_2.imi $(EXAMPLE_PATH)/Scheduling/LA02_2.pi0 -incl
 # 	bin/IMITATOR2.4 $(EXAMPLE_PATH)/Scheduling/LA02_2.imi $(EXAMPLE_PATH)/Scheduling/LA02_2.pi0 -incl -jobshop
 
+# 	$(TARGET) $(EXAMPLE_PATH)/Scheduling/LA02_2_2.5.imi -PTA2JPG
 # 	$(TARGET) $(EXAMPLE_PATH)/Scheduling/LA02_2_2.5.imi $(EXAMPLE_PATH)/Scheduling/LA02_2.pi0 -with-merging -with-dot -with-log
 
+# 	$(TARGET) $(EXAMPLE_PATH)/Scheduling/LA02_3.imi -PTA2JPG
 # 	$(TARGET) $(EXAMPLE_PATH)/Scheduling/LA02_3.imi $(EXAMPLE_PATH)/Scheduling/LA02_3.pi0 -with-merging
 
-	$(TARGET) $(EXAMPLE_PATH)/Scheduling/preemptive_maler.imi $(EXAMPLE_PATH)/Scheduling/preemptive_maler.pi0 -with-merging -with-dot -with-log
+# 	$(TARGET) $(EXAMPLE_PATH)/Scheduling/preemptive_maler.imi -PTA2JPG
+# 	$(TARGET) $(EXAMPLE_PATH)/Scheduling/preemptive_maler.imi $(EXAMPLE_PATH)/Scheduling/preemptive_maler.pi0 -with-merging -with-dot -with-log
 
 
 ##### JOB SHOP #####

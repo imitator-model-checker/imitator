@@ -121,17 +121,17 @@ let string_of_transition program automaton_index action_index (guard, clock_upda
 	"\n\t" ^ "when "
 	(* Convert the guard *)
 	^ (LinearConstraint.string_of_linear_constraint program.variable_names guard)
+
 	(* Convert the updates *)
 	^ " do {"
+	(* Clock updates *)
 	^ (string_of_clock_updates program clock_updates)
-	
-	
-	
-	(** BUG! missing a ',' in case both clock resets and updates are allowed *)
-	
-	
+	(* Add a coma in case of both clocks and discrete *)
+	^ (if clock_updates != No_update && discrete_updates != [] then ", " else "")
+	(* Discrete updates *)
 	^ (string_of_updates program discrete_updates)
 	^ "} "
+	
 	(* Convert the sync *)
 	^ (string_of_sync program action_index)
 	(* Convert the destination location *)
@@ -193,11 +193,12 @@ let string_of_automata program =
 		List.map (fun automaton_index -> string_of_automaton program automaton_index
 	) program.automata)
 
-(* Convert an automaton into a string *)
+(* Convert the program into a string *)
 let string_of_program program =
 	string_of_header program
 	^  "\n" ^ string_of_declarations program
 	^  "\n" ^ string_of_automata program
+	(** TODO: the initial constraint !! *)
 
 
 (**************************************************)

@@ -425,17 +425,58 @@ let dot_of_graph program reachability_graph ~fancy =
 	header ^ states_description ^ transitions_description
 
 
+let dot program radical dot_source_file =
+	(* Retrieve the input options *)
+	let options = Input.get_options () in
 
+	(* Do not write if no dot AND no log *)
+	if options#with_dot || options#with_log then (
+		(* Get the file names *)
+		let dot_file_name = (radical ^ "." ^ dot_file_extension) in
+		let image_file_name = (radical ^ "." ^ dot_image_extension) in
+		
+		(* New line *)
+		print_message Debug_standard "";
+		
+		(* Create the input file *)
+		print_message Debug_medium ("Creating input file for dot...");
 
+		if options#with_dot then (
+			(* Write dot file *)
+			if options#with_dot_source then(
+				print_message Debug_standard ("Creating source file for dot...");
+			)else(
+				print_message Debug_medium ("Writing to dot file...");
+			);
+			write_to_file dot_file_name dot_source_file;
 
-(* Create a gif or jpg graph using dot *)
+			(* Generate gif file using dot *)
+			print_message Debug_standard "Generating graphical output...";
+			print_message Debug_medium ("Calling dot...");
+			let command_result = Sys.command (dot_command ^ " -T" ^ dot_image_extension ^ " " ^ dot_file_name ^ " -o " ^ image_file_name ^ "") in
+			print_message Debug_medium ("Result of the 'dot' command: " ^ (string_of_int command_result));
+			
+			(* Removing dot file (except if option) *)
+			if not options#with_dot_source then(
+				print_message Debug_medium ("Removing dot file...");
+				Sys.remove dot_file_name;
+			);
+		);
+	)
+	
+
+(* Create a jpg graph using dot *)
 let generate_graph program reachability_graph radical =
 	(* Retrieve the input options *)
 	let options = Input.get_options () in
 	
 	(* Do not write if no dot AND no log *)
 	if options#with_dot || options#with_log then (
-		(* Get the file names *)
+		let dot_program, states = dot_of_graph program reachability_graph ~fancy:options#fancy in
+		
+		dot program radical dot_program;
+		
+		(*(* Get the file names *)
 		let dot_file_name = (radical ^ "." ^ dot_file_extension) in
 		let states_file_name = (radical ^ "." ^ states_file_extension) in
 		let gif_file_name = (radical ^ "." ^ dot_image_extension) in
@@ -445,25 +486,32 @@ let generate_graph program reachability_graph radical =
 		
 		(* Create the input file *)
 		print_message Debug_medium ("Creating input file for dot...");
-		let dot_program, states = dot_of_graph program reachability_graph ~fancy:options#fancy in
 
 		if options#with_dot then (
-			print_message Debug_standard "Generating graphical output...";
 			(* Write dot file *)
-			print_message Debug_medium ("Writing to dot file...");
+			if options#with_dot_source then(
+				print_message Debug_standard ("Creating source file for dot...");
+			)else(
+				print_message Debug_medium ("Writing to dot file...");
+			);
 			write_to_file dot_file_name dot_program;
 
 			(* Generate gif file using dot *)
+			print_message Debug_standard "Generating graphical output...";
 			print_message Debug_medium ("Calling dot...");
 			let command_result = Sys.command (dot_command ^ " -T" ^ dot_image_extension ^ " " ^ dot_file_name ^ " -o " ^ gif_file_name ^ "") in
 			print_message Debug_medium ("Result of the 'dot' command: " ^ (string_of_int command_result));
-			(* Removing dot file *)
-			print_message Debug_medium ("Removing dot file...");
-			Sys.remove dot_file_name;
-		);
+			
+			(* Removing dot file (except if option) *)
+			if not options#with_dot_source then(
+				print_message Debug_medium ("Removing dot file...");
+				Sys.remove dot_file_name;
+			);
+		);*)
 			
 		(* Write states file *)
 		if options#with_log then (
+			let states_file_name = (radical ^ "." ^ states_file_extension) in
 			print_message Debug_standard ("Writing to file the states description...");
 			write_to_file states_file_name states;
 		);

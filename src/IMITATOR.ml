@@ -432,7 +432,7 @@ if options#pta2clp then(
 	print_warning ("Work in progress!!!!");
 	print_message Debug_standard ("\nProgram in CLP:\n" ^ (PTA2CLP.string_of_program program) ^ "\n");
 	terminate_program()
-	);
+);
 
 (* Translation to GML (experimental) *)
 if options#pta2gml then(
@@ -444,7 +444,16 @@ if options#pta2gml then(
 	(* Write *)
 	write_to_file gml_file translated_model;
 	terminate_program()
-	);
+);
+
+(* Translation to JPG *)
+if options#pta2jpg then(
+	print_message Debug_standard ("Translating program to a graphics.");
+	let translated_model = PTA2JPG.string_of_program program in
+	print_message Debug_high ("\n" ^ translated_model ^ "\n");
+	Graphics.dot program options#file translated_model;
+	terminate_program()
+);
 
 
 

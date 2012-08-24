@@ -296,9 +296,9 @@ let string_of_program program =
 (** States *)
 (**************************************************)
 
-(* Convert a state into a string *)
+(*(* Convert a state into a string *)
 let string_of_state program (global_location, linear_constraint) =
-	"" ^ (Automaton.string_of_location program.automata_names program.location_names program.variable_names global_location) ^ " ==> \n&" ^ (LinearConstraint.gml_of_linear_constraint program.variable_names 0 linear_constraint) ^ "" 
+	"" ^ (Automaton.string_of_location program.automata_names program.location_names program.variable_names global_location) ^ " ==> \n&" ^ (LinearConstraint.gml_of_linear_constraint program.variable_names 0 linear_constraint) ^ "" *)
 
 
 (**************************************************)

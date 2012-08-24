@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2012/05/10
- * Last modified: 2012/07/03
+ * Last modified: 2012/08/24
  *
  ****************************************************************)
 
@@ -31,6 +31,7 @@ class imitator_options :
 		val mutable program_prefix : string ref
 		val mutable pta2clp : bool ref
 		val mutable pta2gml : bool ref
+		val mutable pta2jpg : bool ref
 		val mutable states_limit : int option ref
 		val mutable statistics : bool ref
 		val mutable step : NumConst.t ref
@@ -40,6 +41,7 @@ class imitator_options :
 		val mutable tree : bool ref
 		val mutable union : bool ref
 		val mutable with_dot : bool ref
+		val mutable with_dot_source : bool ref
 		val mutable with_log : bool ref
 		val mutable with_parametric_log : bool ref
 		
@@ -58,13 +60,13 @@ class imitator_options :
 		method nb_args : int
 		method no_merging : bool
 		method no_random : bool
-		method parse : unit
 		method pi0file : string
 		method pi_compatible : bool
 		method post_limit : int option
 		method program_prefix : string
 		method pta2clp : bool
 		method pta2gml : bool
+		method pta2jpg : bool
 		method states_limit : int option
 		method statistics : bool
 		method step : NumConst.t
@@ -74,6 +76,8 @@ class imitator_options :
 		method tree : bool
 		method union : bool
 		method with_dot : bool
+		method with_dot_source : bool
 		method with_log : bool
 		method with_parametric_log : bool
+		method parse : unit
 end
