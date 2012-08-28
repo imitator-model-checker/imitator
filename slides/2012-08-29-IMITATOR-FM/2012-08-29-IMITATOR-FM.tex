@@ -480,12 +480,11 @@
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%première page
+%premi?re page
 \begin{frame}
 	\titlepage
 \end{frame}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section*{Introduction}
@@ -545,17 +544,43 @@
 \end{frame}
 
 
+% \begin{frame}
+% \frametitle{An example of Scheduling problem}
+% \begin{columns}[t] % contents are top vertically aligned
+% \begin{column}{5cm} % each column can also be its own environment
+% \begin{itemize}
+%  \item A processor
+%  \item 3 cyclic tasks $\tau_1,\tau_2,\tau_3$
+%  \item Each task defined by:
+%  \begin{itemize}
+%  \item Offset
+%  \item Period
+%  \item WCET
+%  \end{itemize}
+% \end{itemize}
+% \end{column}
+% 
+% \begin{column}[T]{5cm} % alternative top-align that's better for graphics Line 13
+% \begin{figure}
+%  \centering
+%  \includegraphics[scale = 0.25]{./figures/proc.jpg}
+% \end{figure}
+% 
+% \end{column}
+% \end{columns}
+% \end{frame}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}
  \frametitle{An Example of a Jobshop Problem}
 
  \begin{itemize}
-	\item A job: a tuple $((m_1,d_1),\dots,(m_n,d_n))$
+	\item A \couleur{job}: a tuple of \couleur{tasks} $((m_1,d_1),\dots,(m_n,d_n))$
 	\begin{itemize}
 		\item $m_i$: machine to execute the task
 		\item $d_i$: duration of this task on this machine
 	\end{itemize}
+	\item A task can be \couleur{preempted} by another one
 
 	\item For example: $((\textcolor{cpale4}{m_1},3),(\textcolor{cpale7}{m_2},4),(\textcolor{cpale6}{m_3},2))$
 \end{itemize}
@@ -598,12 +623,12 @@
  		\end{tabular}} (Q2)
  		
 		(Q1) edge [bend left, right] node {\begin{tabular}{r @{\,} c @{\,} l}
- 			& HoldJ1 & \\
+ 			& Stop & \\
 %  			$t_1$ & $=$ & $3$ \\
  		\end{tabular}} (Q1b)
 
-		(Q1b) edge [left] node {\begin{tabular}{r @{\,} c @{\,} l}
- 			& GoJ1 & \\
+		(Q1b) edge [bend left] node {\begin{tabular}{r @{\,} c @{\,} l}
+ 			& Go & \\
 %  			$t_1$ & $=$ & $3$ \\
  		\end{tabular}} (Q1)
 
@@ -618,12 +643,12 @@
  		\end{tabular}} (Q4)
 
 		(Q3) edge [bend left, right] node {\begin{tabular}{r @{\,} c @{\,} l}
- 			& HoldJ1 & \\
+ 			& Stop & \\
 %  			$t_1$ & $=$ & $3$ \\
  		\end{tabular}} (Q3b)
 
-		(Q3b) edge [left] node {\begin{tabular}{r @{\,} c @{\,} l}
- 			& GoJ1 & \\
+		(Q3b) edge [bend left] node {\begin{tabular}{r @{\,} c @{\,} l}
+ 			& Go & \\
 %  			$t_1$ & $=$ & $3$ \\
  		\end{tabular}} (Q3)
 
@@ -638,12 +663,12 @@
  		\end{tabular}} (Q6)
 
 		(Q5) edge [bend left, right] node {\begin{tabular}{r @{\,} c @{\,} l}
- 			& HoldJ1 & \\
+ 			& Stop & \\
 %  			$t_1$ & $=$ & $3$ \\
  		\end{tabular}} (Q5b)
 
-		(Q5b) edge [left] node {\begin{tabular}{r @{\,} c @{\,} l}
- 			& GoJ1 & \\
+		(Q5b) edge [bend left] node {\begin{tabular}{r @{\,} c @{\,} l}
+ 			& Go & \\
 %  			$t_1$ & $=$ & $3$ \\
  		\end{tabular}} (Q5)
 
@@ -672,7 +697,7 @@
  \end{figure}
 
 \end{frame}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -682,9 +707,11 @@
  
 \begin{jobshopproblem}
 	Given a set of jobs $J_1,\dots,J_m$
+% 	Given a set of tasts $\tau_1,\dots,\tau_n$
  
 	Given a deadline $d$
  
+% 	Question: \couleur{Is the system schedulable on one processor?}
 	Question: \couleur{Can all the jobs be completed within $d$ time units?}
 \end{jobshopproblem}
 
@@ -743,15 +770,43 @@
 
 \end{frame}
 
+% \begin{frame}
+% \frametitle{An example of Scheduling problem}
+% \begin{columns}[t] % contents are top vertically aligned
+% \begin{column}{5cm} % each column can also be its own environment
+% \begin{itemize}
+%  \item A processor
+%  \item 3 cyclic tasks $\tau_1,\tau_2,\tau_3$
+%  \item Each task defined by:
+%  \begin{itemize}
+%  \item Offset
+%  \item Period
+%  \item WCET
+%  \end{itemize}
+% \end{itemize}
+% \end{column}
+% 
+% \begin{column}[T]{5cm} % alternative top-align that's better for graphics Line 13
+% \begin{figure}
+%  \centering
+%  \includegraphics[scale = 0.25]{./figures/proc2.jpg}
+% \end{figure}
+% 
+% \end{column}
+% \end{columns}
+% \end{frame}
+
+
 \begin{frame}
  \frametitle{An Example of a Parametric Jobshop Problem}
 \begin{itemize}
  \item A job: a tuple $((m_1,d_1),\dots,(m_n,d_n))$
  \item For example: $((\textcolor{cpale4}{m_1},\coulparam{d_1}),(\textcolor{cpale7}{m_2},\coulparam{d_2}),(\textcolor{cpale6}{m_3},\coulparam{d_3}))$
+\end{itemize}
  \begin{figure}
   \centering
 \begin{tikzpicture}[scale=0.6,->, auto]
-	\tikzstyle{state}=[circle, minimum size=13pt, inner sep=1.5pt, draw=gris, text=black]
+	\tikzstyle{state}=[circle, minimum size=13pt, inner sep=1pt, draw=gris, text=black]
 
 	% ETATS
 	\node[state,fill=cpale2, double] (Q0) at (0, 0) {$q_0$};
@@ -786,12 +841,12 @@
  		\end{tabular}} (Q2)
  		
 		(Q1) edge [bend left, right] node {\begin{tabular}{r @{\,} c @{\,} l}
- 			& HoldJ1 & \\
+ 			& Stop & \\
 %  			$t_1$ & $=$ & $3$ \\
  		\end{tabular}} (Q1b)
 
-		(Q1b) edge [left] node {\begin{tabular}{r @{\,} c @{\,} l}
- 			& GoJ1 & \\
+		(Q1b) edge [bend left] node {\begin{tabular}{r @{\,} c @{\,} l}
+ 			& Go & \\
 %  			$t_1$ & $=$ & $3$ \\
  		\end{tabular}} (Q1)
 
@@ -806,12 +861,12 @@
  		\end{tabular}} (Q4)
 
 		(Q3) edge [bend left, right] node {\begin{tabular}{r @{\,} c @{\,} l}
- 			& HoldJ1 & \\
+ 			& Stop & \\
 %  			$t_1$ & $=$ & $3$ \\
  		\end{tabular}} (Q3b)
 
-		(Q3b) edge [left] node {\begin{tabular}{r @{\,} c @{\,} l}
- 			& GoJ1 & \\
+		(Q3b) edge [bend left] node {\begin{tabular}{r @{\,} c @{\,} l}
+ 			& Go & \\
 %  			$t_1$ & $=$ & $3$ \\
  		\end{tabular}} (Q3)
 
@@ -826,12 +881,12 @@
  		\end{tabular}} (Q6)
 
 		(Q5) edge [bend left, right] node {\begin{tabular}{r @{\,} c @{\,} l}
- 			& HoldJ1 & \\
+ 			& Stop & \\
 %  			$t_1$ & $=$ & $3$ \\
  		\end{tabular}} (Q5b)
 
-		(Q5b) edge [left] node {\begin{tabular}{r @{\,} c @{\,} l}
- 			& GoJ1 & \\
+		(Q5b) edge [bend left] node {\begin{tabular}{r @{\,} c @{\,} l}
+ 			& Go & \\
 %  			$t_1$ & $=$ & $3$ \\
  		\end{tabular}} (Q5)
 
@@ -858,6 +913,7 @@
 	;
 \end{tikzpicture}
  \end{figure}
+\begin{itemize}
 \item For which value of $(\coulparam{d_1},\coulparam{d_2},\coulparam{d_3})$ is the system schedulable in $d$ time units?
 \end{itemize}
 \end{frame}
@@ -987,21 +1043,8 @@
 \frametitle{Trace Set}
 
 \begin{itemize}
-	\item \couleur{Trace set}: set of all traces of a PTA
-
-	\bigskip
-
-	\item Graphical representation under the form of a \couleur{tree}
-	
-	\begin{itemize}
-		\item Does not give any information on the \couleur{branching behavior} though
-
-		\medskip
-
-		\item Example of trace set for the jobshop example
-	\end{itemize}
-
-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
+	\item \couleur{Trace}: A time-abstract run
+\end{itemize}
 {
 \centering
 \footnotesize
@@ -1039,6 +1082,23 @@
 \end{tikzpicture}
 
 }
+\begin{itemize}
+	\item \couleur{Trace set}: set of all traces of a PTA
+
+	\bigskip
+
+	\item Graphical representation under the form of a \couleur{tree}
+	
+	\begin{itemize}
+		\item Does not give any information on the \couleur{branching behavior} though
+
+% 		\medskip
+% 
+% 		\item Example of trace set for the jobshop example
+	\end{itemize}
+
+%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
+
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
 
 
@@ -1350,7 +1410,33 @@
 
 
 \end{frame}
-
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}
+	\frametitle{Output of \imitator{}}
+	\begin{itemize}
+		\item The \couleur{trace set}
+		\begin{figure}[!ht]
+			\centering
+			\includegraphics[scale = 0.12]{./figures/trace_set.jpg}
+		\end{figure}
+	\end{itemize}
+\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}
+	\frametitle{Output of \imitator{}}
+	\begin{itemize}
+		\item A \couleur{constraint} $K_0$ on the parameters 
+%   that guarantees the schedulability
+		\medskip
+		\begin{itemize}
+			\item[]   $10 > wcet\_m2\_job1 + wcet\_m2\_job2$
+			\item[$\wedge$] $10 > wcet\_m1\_job1 + wcet\_m2\_job2$
+			\item[$\wedge$] $wcet\_m2\_job1 + wcet\_m3\_job1 + wcet\_m2\_job2 \geq 10$
+			\item[$\wedge$] $10 > wcet\_m1\_job1 + wcet\_m2\_job1 + wcet\_m3\_job1$
+			\item[$\wedge$] $wcet\_m1\_job1 + wcet\_m2\_job1 + wcet\_m2\_job2 \geq 10$
+		\end{itemize}
+	\end{itemize}
+\end{frame}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}
  \frametitle{What's Inside?}
@@ -1409,8 +1495,13 @@
 			\item Model of an industrial circuit (ST-Microelectronics)
 		\end{itemize}
 		\item Communication protocols
-		\item Scheduling problems \ea{donner plus de precisions sur ce theme}
+		\item Scheduling problems \textcolor{red}{with preemption (feature of \imitator{} 2.5)}
+		\begin{itemize}
+			\item From the literature
+			\item Model of the next generation of architecture for Arianne 6 (multi-processor, multi-partition, multi-tasks) with Astrium EADS
+		\end{itemize}
 	\end{itemize}
+	\item 16 case studies available on the webpage
 
 % 	\bigskip
 % 
@@ -1444,6 +1535,7 @@
 	\begin{itemize}
 		\item Graphical interface
 		\item Eclipse plugin based on Web services
+		\item \url{http://www.cosyverif.org/}
 	\end{itemize}
 \end{itemize}
 
@@ -1459,58 +1551,7 @@
 \backupbegin{}
 
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section*{Experiments}
-\begin{frame}
-\frametitle{Experiments}
-\scalebox{0.7}{
-\begin{tabular}{|c|c|c|c|c|c|c|c|c|}
-\hline
- Case study             & $|\mathcal{A}|$& $|X|$ & $|P|$ & $|S|$        & $|T|$         & $n$   &
-$|K|$ & t               \\
-\hline
-jobshop $2\times 3$               & 4 & 6         & 8     & 676/3194      & 886/3931      & 15/15 & 15/10
-& 288.2/450.4   \\
-\hline
-jobshop $2\times 5$               & 4 & 6         & 8     & 676/3194      & 886/3931      & 15/15 & 15/10
-& 288.2/450.4   \\
-\hline
-jobshop $3\times 5$               & 4 & 6         & 8     & 676/3194      & 886/3931      & 15/15 & 15/10
-& 288.2/450.4   \\
-\hline
-cpr08 \cite{cpr08}               & 4 & 6         & 8     & 676/3194      & 886/3931      & 15/15 & 15/10
-& 288.2/450.4   \\
-\hline
-hppr10 \cite{LPPRC10}             & 3 & 4 &  9& 60/103    & 103/686               & 10/10 & 7/5 &
-2.10/11.7\\
-\hline
-Task chains \cite{SGL97} & 8 & 15 & 18 & 215/1364 & 264/1363 & 15/15 &
-17/17 & 85.3/270.6\\
-\hline
-%Astrium (RM) \cite{soulat12}       & 5 & 7         & 10    & 63/63         & 62/62         & 32/32 &
-%12/12 & 1.10/0.93       \\
-%\hline
-RM 1            & 5 & 7         & 10    & 205/805       & 225/837       & 40/40 & 11/11 & 15.6/28.5  \\
-\hline
-RM 2            & 5 & 7         & 10    & 208/1174      & 228/1269      & 42/42 & 12/12 & 10.7/41.0  \\
-\hline
-RM 3            & 5 & 7         & 10    & 49/82         & 51/81         & 15/15 & 12/12 & 1.03/1.75  \\
-\hline
-%Astrium (EDF)   & 5 & 10        & 13    & 63/63         & 62/62         & 32/32 & 13/13 &
-%2.42/2.30       \\
-%\hline
-EDF 1           & 5 & 10        & 13    & 76/415        & 91/454 & 31/31        & 20/20 & 66.1/288.2  \\
-\hline
-EDF 2           & 5 & 10        & 13    & 254/642       & 326/817       & 47/47 & 12/12 & 9.9/23.2  \\
-\hline
-EDF 3           & 5 & 10&  13   & 31/43         & 33/45         & 9/9   & 13/14 & 1.09/1.57  \\
-\hline
-\end{tabular}
-}
 
-
-\end{frame}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section*{\biblio{}}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1531,6 +1572,58 @@ EDF 3           & 5 & 10&  13   & 31/43         & 33/45         & 9/9   & 13/14 
 }
 
 \end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%\section*{Experiments}
+%\begin{frame}
+%\frametitle{Experiments}
+%\scalebox{0.7}{
+%\begin{tabular}{|c|c|c|c|c|c|c|c|c|}
+%\hline
+% Case study             & $|\mathcal{A}|$& $|X|$ & $|P|$ & $|S|$        & $|T|$         & $n$   &
+%$|K|$ & t               \\
+%\hline
+%jobshop $2\times 3$               & 4 & 6         & 8     & 676/3194      & 886/3931      & 15/15 & 15/10
+%& 288.2/450.4   \\
+%\hline
+%jobshop $2\times 5$               & 4 & 6         & 8     & 676/3194      & 886/3931      & 15/15 & 15/10
+%& 288.2/450.4   \\
+%\hline
+%jobshop $3\times 5$               & 4 & 6         & 8     & 676/3194      & 886/3931      & 15/15 & 15/10
+%& 288.2/450.4   \\
+%\hline
+%cpr08 \cite{cpr08}               & 4 & 6         & 8     & 676/3194      & 886/3931      & 15/15 & 15/10
+%& 288.2/450.4   \\
+%\hline
+%hppr10 \cite{LPPRC10}             & 3 & 4 &  9& 60/103    & 103/686               & 10/10 & 7/5 &
+%2.10/11.7\\
+%\hline
+%Task chains \cite{SGL97} & 8 & 15 & 18 & 215/1364 & 264/1363 & 15/15 &
+%17/17 & 85.3/270.6\\
+%\hline
+%%Astrium (RM) \cite{soulat12}       & 5 & 7         & 10    & 63/63         & 62/62         & 32/32 &
+%%12/12 & 1.10/0.93       \\
+%%\hline
+%%RM 1            & 5 & 7         & 10    & 205/805       & 225/837       & 40/40 & 11/11 & 15.6/28.5  \\
+%%\hline
+%%RM 2            & 5 & 7         & 10    & 208/1174      & 228/1269      & 42/42 & 12/12 & 10.7/41.0  \\
+%%\hline
+%%RM 3            & 5 & 7         & 10    & 49/82         & 51/81         & 15/15 & 12/12 & 1.03/1.75  \\
+%%\hline
+%%Astrium (EDF)   & 5 & 10        & 13    & 63/63         & 62/62         & 32/32 & 13/13 &
+%%2.42/2.30       \\
+%%\hline
+%EDF 1           & 5 & 10        & 13    & 76/415        & 91/454 & 31/31        & 20/20 & 66.1/288.2  \\
+%\hline
+%EDF 2           & 5 & 10        & 13    & 254/642       & 326/817       & 47/47 & 12/12 & 9.9/23.2  \\
+%\hline
+%EDF 3           & 5 & 10&  13   & 31/43         & 33/45         & 9/9   & 13/14 & 1.09/1.57  \\
+%\hline
+%\end{tabular}
+%}
+%
+%
+%\end{frame}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \backupend{}
@@ -3489,4 +3582,3 @@ Robustness analysis for scheduling problems
 \end{document}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
