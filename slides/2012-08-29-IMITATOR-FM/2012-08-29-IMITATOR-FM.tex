@@ -456,7 +456,7 @@
 	\bigskip
 
 	\small{\textbf{
-		\'E. Andr\'e$^1$, L. Fribourg$^2$, U. K\"uhne$^3$ and R. Soulat$^2$
+		\'E. Andr\'e$^1$, L. Fribourg$^2$, U. K\"uhne$^3$ and \underline{R. Soulat}$^2$
 	}}
 
 	\bigskip
@@ -718,6 +718,10 @@
 \pause
 
 \begin{itemize}
+	\item Use of \couleur{timed automata}
+	
+	\bigskip
+	
 	\item Timed model checking techniques give the answer: \couleur{yes/no}
 \end{itemize}
 
@@ -746,6 +750,10 @@
 	\bigskip
 
 	\item Idea: reason with unknown constants or \couleur{parameters}
+	\begin{itemize}
+		\item Use of \couleur{parametric timed automata} (PTAs) equipped with stopwatches
+	\end{itemize}
+
 	
 	\bigskip
 
@@ -753,7 +761,6 @@
 	\begin{itemize}
 		\item Ensure the \couleur{robustness} of the system
 		\item Allow the designer to \couleur{optimize} timing delays
-% 		\item Allow to \couleur{scale down} large timing constants
 	\end{itemize}
 
 	
@@ -1116,8 +1123,8 @@
 
 	\item \coulinput{Input}
 	\begin{itemize}
-		\item A PTA $\A$ % with initial state \symb{$s_{\mathit{init}}$}
-		\item A \couleur{reference valuation} $\pio$ of all the parameters of $\A$
+		\item $\A$: A PTA equipped with stopwatches
+		\item $\pio$: A \couleur{reference valuation} of all the parameters of $\A$
 % 		\begin{itemize}
 %  			\item Exemplifying a good behavior\\
 % 			(all traces of \symb{$\A[\pio]$} correspond to good behaviors)
@@ -1407,23 +1414,13 @@
 
 }
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
-
-
 \end{frame}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\begin{frame}
-	\frametitle{Output of \imitator{}}
-	\begin{itemize}
-		\item The \couleur{trace set}
-		\begin{figure}[!ht]
-			\centering
-			\includegraphics[scale = 0.12]{./figures/trace_set.jpg}
-		\end{figure}
-	\end{itemize}
-\end{frame}
+
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}
-	\frametitle{Output of \imitator{}}
+	\frametitle{Output of \imitator{} (1/2)}
 	\begin{itemize}
 		\item A \couleur{constraint} $K_0$ on the parameters 
 %   that guarantees the schedulability
@@ -1438,6 +1435,22 @@
 	\end{itemize}
 \end{frame}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}
+	\frametitle{Output of \imitator{} (2/2)}
+	\begin{itemize}
+		\item The \couleur{trace set}
+		\begin{figure}[!ht]
+			\centering
+			\includegraphics[scale = 0.12]{./figures/trace_set.jpg}
+		\end{figure}
+	\end{itemize}
+\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}
  \frametitle{What's Inside?}
 \begin{itemize}
@@ -1447,7 +1460,8 @@
 		\item ``\couleur{I}nverse \couleur{M}ethod for \couleur{I}nferring \couleur{T}ime \couleur{A}bstrac\couleur{T} Behavi\couleur{OR}''
 		\item 10\,000 lines of \couleur{\ocaml{}} code
 		\item Makes use of the \couleur{PPL} library for handling polyhedra \refer{bhz08}
-		\item Implements an efficient state merging technique\refer{AFS12}
+		\item Implements an efficient state \couleur{merging technique} \refer{AFS12}
+		\item Numerous analysis \couleur{options}
 	\end{itemize}
 
 	\bigskip
@@ -1494,14 +1508,23 @@
 			\item From the literature
 			\item Model of an industrial circuit (ST-Microelectronics)
 		\end{itemize}
+		
+		\smallskip
+		
 		\item Communication protocols
-		\item Scheduling problems \textcolor{red}{with preemption (feature of \imitator{} 2.5)}
+
+		\smallskip
+
+		\item Scheduling problems \couleur{with preemption (feature of \imitator{} 2.5)}
 		\begin{itemize}
 			\item From the literature
 			\item Model of the next generation of architecture for Arianne 6 (multi-processor, multi-partition, multi-tasks) with Astrium EADS
 		\end{itemize}
 	\end{itemize}
-	\item 16 case studies available on the webpage
+	
+	\smallskip
+
+	\item Set of case studies available on the Web page
 
 % 	\bigskip
 % 
