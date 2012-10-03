@@ -236,6 +236,7 @@ exe:
 # 	$(TARGET) $(EXAMPLE_PATH)/Tests/testCosts.imi $(EXAMPLE_PATH)/Tests/testCosts.pi0 -debug total -bab -time-limit 1
 ##### TESTS FOR PROPERTIES #####
 
+	$(TARGET) $(EXAMPLE_PATH)/Proprietes/exCTL.imi -mode reachability -with-dot -with-log
 # 	$(TARGET) $(EXAMPLE_PATH)/Proprietes/exCTL.imi $(EXAMPLE_PATH)/Proprietes/exCTL.pi0
 # 	$(TARGET) $(EXAMPLE_PATH)/Proprietes/exCTL.imi $(EXAMPLE_PATH)/Proprietes/exCTL.pi0 -PTA2CLP
 
@@ -279,7 +280,7 @@ exe:
 
 ##### CASE STUDIES : HARDWARE #####
 
-	$(TARGET) $(EXAMPLE_PATH)/AndOr/AndOr.imi -mode reachability -PTA2JPG
+# 	$(TARGET) $(EXAMPLE_PATH)/AndOr/AndOr.imi -mode reachability -PTA2JPG
 
 # 	$(TARGET) $(EXAMPLE_PATH)/AndOr/AndOr.imi -mode reachability -depth-limit 10 -debug nodebug
 # 	$(TARGET) $(EXAMPLE_PATH)/AndOr/AndOr.imi -mode reachability -states-limit 10

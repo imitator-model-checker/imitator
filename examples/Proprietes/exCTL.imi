@@ -36,7 +36,7 @@ loc Q1: while x <= 1 wait {}
 loc Q2: while True wait {}
 	when x = p1 & y = p2 do {} goto Q3;
 	when x = p2 & y = p2 do {} goto Q4;
-	when True do {} goto Q4;
+	-- when True do {} goto Q4;
 
 loc Q3: while y >= 0 wait {}
 
@@ -65,6 +65,17 @@ init :=
 	----------------------
 	& x = 0
 	& y = 0
+
+	----------------------
+	-- Parameters
+	----------------------
+	-- PI0
+	-- & p1 = 2
+	-- & p2 = 1
+	
+	-- PI'
+	-- & p1 = 1
+	-- & p2 = 1
 ;
 
 -- init := reach forward from init endreach;
