@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created       : 2009/09/07
- * Last modified : 2012/05/30
+ * Last modified : 2012/10/08
 ***********************************************/
 
 %{
@@ -85,8 +85,8 @@ decl_var_lists:
 /**********************************************/
 
 decl_var_list:
-	| NAME { [($1, None)] }
-	| NAME OP_EQ rational { [($1, Some $3)] }
+	| NAME comma_opt { [($1, None)] }
+	| NAME OP_EQ rational comma_opt { [($1, Some $3)] }
 	
 	| NAME COMMA decl_var_list { ($1, None) :: $3 }
 	| NAME OP_EQ rational COMMA decl_var_list { ($1, Some $3) :: $5 }
@@ -124,6 +124,8 @@ prolog:
 	| initialization sync_labels { $2 }
 	| sync_labels initialization { $1 }
 	| sync_labels { $1 } /* L'initialisation n'est pas prise en compte, et est donc facultative */
+	| initialization { [] }
+	| { [] }
 ;
 
 /**********************************************/
@@ -156,7 +158,7 @@ name_list:
 
 name_nonempty_list:
 	NAME COMMA name_nonempty_list { $1 :: $3}
-	| NAME { [$1] }
+	| NAME comma_opt { [$1] }
 ;
 
 /**********************************************/
@@ -421,5 +423,10 @@ loc_predicate:
 state_predicate:
 	| loc_predicate { $1 } 
 	| linear_constraint { Linear_predicate $1 }
+;
+
+comma_opt:
+	| COMMA { }
+	| { }
 ;
 

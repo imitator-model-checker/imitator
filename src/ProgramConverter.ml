@@ -7,7 +7,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2009/09/09
- * Last modified: 2012/06/15
+ * Last modified: 2012/10/08
  *
  ****************************************************************)
 
@@ -393,27 +393,33 @@ let check_convex_predicate variable_names constants =
 (*--------------------------------------------------*)
 (* Check that a linear expression contains only discrete variables and constants *)
 (*--------------------------------------------------*)
-let only_discrete_in_linear_term index_of_variables type_of_variables = function
+let only_discrete_in_linear_term index_of_variables type_of_variables constants = function
 	| Constant _ -> true
 	| Variable (_, variable_name) ->
+		(* Constants are allowed *)
+		(Hashtbl.mem constants variable_name)
+		(* Or discrete *)
+		||
 		let variable_index = Hashtbl.find index_of_variables variable_name in
-		type_of_variables variable_index = Var_type_discrete
+			type_of_variables variable_index = Var_type_discrete
 
-let rec only_discrete_in_linear_expression index_of_variables type_of_variables = function
+let rec only_discrete_in_linear_expression index_of_variables type_of_variables constants = function
 	| Linear_term linear_term ->
-		only_discrete_in_linear_term index_of_variables type_of_variables  linear_term
+		only_discrete_in_linear_term index_of_variables type_of_variables constants linear_term
 	| Linear_plus_expression (linear_expression, linear_term) ->
-		only_discrete_in_linear_expression index_of_variables type_of_variables linear_expression
-		&& only_discrete_in_linear_term index_of_variables type_of_variables linear_term
+		only_discrete_in_linear_expression index_of_variables type_of_variables constants linear_expression
+		&& only_discrete_in_linear_term index_of_variables type_of_variables constants linear_term
 	| Linear_minus_expression (linear_expression, linear_term) ->
-	only_discrete_in_linear_expression index_of_variables type_of_variables linear_expression
-	&& only_discrete_in_linear_term index_of_variables type_of_variables linear_term
+	only_discrete_in_linear_expression index_of_variables type_of_variables constants linear_expression
+	&& only_discrete_in_linear_term index_of_variables type_of_variables constants linear_term
+
 
 (*--------------------------------------------------*)
 (* Check that an update is well formed *)
 (*--------------------------------------------------*)
 let check_update index_of_variables type_of_variables variable_names constants automaton_name (variable_name, linear_expression) =
 	(* Get the index of the variable *)
+	print_message Debug_total ("              Checking one update");
 	let index, declared = try (Hashtbl.find index_of_variables variable_name, true)
 		with Not_found -> (
 			print_error ("The variable '" ^ variable_name ^ "' used in an update in automaton '" ^ automaton_name ^ "' was not declared."); 0, false
@@ -421,14 +427,17 @@ let check_update index_of_variables type_of_variables variable_names constants a
 	in
 	if not declared then false else(
 		(* Get the type of the variable *)
+		print_message Debug_total ("                Getting the type of the variable");
 		let type_of_variable = try (type_of_variables index)
 			with Invalid_argument comment -> (
 			raise (InternalError ("The variable '" ^ variable_name ^ "' was not found in '" ^ automaton_name ^ "', although this has been checked before. OCaml says: " ^ comment ^ "."))
 		) in
+		print_message Debug_total ("                Checking the type of the variable");
 		match type_of_variable with
 		(* Case of a clock: allow only 0 as an update *)
 		| AbstractModel.Var_type_clock ->
 			(* Now allow ANY linear term in updates: so just check that variables have been declared *)
+			print_message Debug_total ("                A clock!");
 			check_linear_expression variable_names constants linear_expression
 (*			let result =
 			match linear_expression with
@@ -439,9 +448,12 @@ let check_update index_of_variables type_of_variables variable_names constants a
 			in result*)
 			
 		(* Case of a discrete var.: allow only a linear combinations of constants and discrete *)
-		| AbstractModel.Var_type_discrete -> let result = only_discrete_in_linear_expression index_of_variables type_of_variables linear_expression in
-		if not result then (print_error ("The variable '" ^ variable_name ^ "' is a discrete and its update can only be a linear combination of constants and discrete variables in automaton '" ^ automaton_name ^ "'."); false)
-		else true
+		| AbstractModel.Var_type_discrete ->
+			print_message Debug_total ("                A discrete!");
+			let result = only_discrete_in_linear_expression index_of_variables type_of_variables constants linear_expression in
+			if not result then
+				(print_error ("The variable '" ^ variable_name ^ "' is a discrete and its update can only be a linear combination of constants and discrete variables in automaton '" ^ automaton_name ^ "'."); false)
+			else true
 		(* Case of a parameter: forbidden! *)
 		| AbstractModel.Var_type_parameter -> print_error ("The variable '" ^ variable_name ^ "' is a parameter and can not be updated in automaton '" ^ automaton_name ^ "'."); false 
 	)
@@ -511,12 +523,14 @@ let check_automata index_of_variables type_of_variables variable_names index_of_
 
 	(* Check each automaton *)
 	List.iter (fun (automaton_name, sync_name_list, locations) ->
+		print_message Debug_total ("      Checking automaton " ^ automaton_name);
 		(* Get the index of the automaton *)
 		let index = try (Hashtbl.find index_of_automata automaton_name) with
 			Not_found -> raise (InternalError ("Impossible to find the index of automaton '" ^ automaton_name ^ "'."))
 		in
 		(* Check each location *)
 		List.iter (fun (location_name, cost, convex_predicate, stopwatches, transitions) -> 
+			print_message Debug_total ("        Checking location " ^ location_name);
 			(* Check that the location_name exists (which is obvious) *)
 			if not (in_array location_name locations_per_automaton.(index)) then(
 				print_error ("The location '" ^ location_name ^ "' declared in automaton '" ^ automaton_name ^ "' does not exist.");
@@ -525,24 +539,32 @@ let check_automata index_of_variables type_of_variables variable_names index_of_
 			(* Check the cost *)
 			begin
 			match cost with
-				| Some cost -> if not (check_linear_expression variable_names constants cost) then well_formed := false;
+				| Some cost ->
+					print_message Debug_total ("          Checking cost");
+					if not (check_linear_expression variable_names constants cost) then well_formed := false;
 				| None -> ()
 			end;
 			
 			(* Check the stopwatches *)
+			print_message Debug_total ("          Checking possible stopwatches");
 			if not (check_stopwatches index_of_variables type_of_variables stopwatches) then well_formed := false;
 			
 			(* Check the convex predicate *)
 			(* TODO: preciser quel automate et quelle location en cas d'erreur *)
+			print_message Debug_total ("          Checking convex predicate");
 			if not (check_convex_predicate variable_names constants convex_predicate) then well_formed := false;
 			
 			(* Check transitions *)
+			print_message Debug_total ("          Checking transitions");
 			List.iter (fun (convex_predicate, updates, sync, dest_location_name) ->
 				(* Check the convex predicate *)
+				print_message Debug_total ("            Checking convex predicate");
 				if not (check_convex_predicate variable_names constants convex_predicate) then well_formed := false;
 				(* Check the updates *)
+				print_message Debug_total ("            Checking updates");
 				List.iter (fun update -> if not (check_update index_of_variables type_of_variables variable_names constants automaton_name update) then well_formed := false) updates;
 				(* Check the sync *)
+				print_message Debug_total ("            Checking sync name ");
 				if not (check_sync sync_name_list automaton_name sync) then well_formed := false;
 				(* Check that the destination location exists for this automaton *)
 				if not (in_array dest_location_name locations_per_automaton.(index)) then(
@@ -671,7 +693,13 @@ let check_init discrete variable_names constants index_of_variables type_of_vari
 				(* Check if the assignment is well formed, and keep the discrete value *)
 				let discrete_value =
 				match (op, expression) with
+					(* Simple constant: OK *)
 					| (OP_EQ, Linear_term (Constant c)) -> c
+					(* Constant: OK *)
+					| (OP_EQ, Linear_term (Variable (coef, variable_name))) ->
+						(* Get the value of  the variable *)
+						let value = Hashtbl.find constants variable_name in
+						NumConst.mul coef value
 					| _ -> print_error ("The initial value for discrete variable '" ^ discrete_name ^ "' must be under the form of an equality with a constant.");
 					well_formed := false;
 					NumConst.zero
