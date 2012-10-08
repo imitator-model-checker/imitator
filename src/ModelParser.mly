@@ -257,11 +257,16 @@ syn_label:
 ;
 
 
-/***********************************************
- RATIONALS, LINEAR TERMS, LINEAR CONSTRAINTS AND CONVEX PREDICATES
-***********************************************/
+/**********************************************/
+/** RATIONALS, LINEAR TERMS, LINEAR CONSTRAINTS AND CONVEX PREDICATES */
+/***********************************************/
 
+/* We allow an optional "&" at the beginning of a convex predicate (sometimes useful) */
 convex_predicate:
+	ampersand_opt convex_predicate_fol { $2 }
+;
+
+convex_predicate_fol:
 	linear_constraint AMPERSAND convex_predicate { $1 :: $3 }
 	| linear_constraint { [$1] }
 ;
@@ -430,3 +435,7 @@ comma_opt:
 	| { }
 ;
 
+ampersand_opt:
+	| AMPERSAND { }
+	| { }
+;
