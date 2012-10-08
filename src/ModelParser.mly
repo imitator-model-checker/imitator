@@ -415,10 +415,15 @@ loc_expression:
 	| loc_predicate loc_expression { $1 :: $2 }
 ;
 
+// We allow here an optional "&" at the beginning
 region_expression:
+	ampersand_opt region_expression_fol { $2 }
+;
+
+region_expression_fol:
 	| state_predicate { [ $1 ] }
-	| LPAREN region_expression RPAREN { $2 }
-	| region_expression AMPERSAND region_expression { $1 @ $3 }
+	| LPAREN region_expression_fol RPAREN { $2 }
+	| region_expression_fol AMPERSAND region_expression_fol { $1 @ $3 }
 ;
 
 loc_predicate:

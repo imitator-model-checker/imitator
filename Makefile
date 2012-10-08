@@ -236,7 +236,7 @@ exe:
 # 	$(TARGET) $(EXAMPLE_PATH)/Tests/testCosts.imi $(EXAMPLE_PATH)/Tests/testCosts.pi0 -debug total -bab -time-limit 1
 ##### TESTS FOR PROPERTIES #####
 
-	$(TARGET) $(EXAMPLE_PATH)/Proprietes/exCTL.imi -mode reachability -with-dot -with-log
+# 	$(TARGET) $(EXAMPLE_PATH)/Proprietes/exCTL.imi -mode reachability -with-dot -with-log
 # 	$(TARGET) $(EXAMPLE_PATH)/Proprietes/exCTL.imi $(EXAMPLE_PATH)/Proprietes/exCTL.pi0
 # 	$(TARGET) $(EXAMPLE_PATH)/Proprietes/exCTL.imi $(EXAMPLE_PATH)/Proprietes/exCTL.pi0 -PTA2CLP
 
@@ -341,8 +341,8 @@ exe:
 # 	$(TARGET) $(EXAMPLE_PATH)/Latch/latchValmem.imi $(EXAMPLE_PATH)/Latch/latchValmem.pi0
 # 	$(TARGET) $(EXAMPLE_PATH)/Latch/latchValmem.imi $(EXAMPLE_PATH)/Latch/latchValmem.pi0 -bab
 
-# 	$(TARGET) $(EXAMPLE_PATH)/SRlatch/SRlatch.imi -mode reachability -no-dot -no-log -statistics 
-# 	./IMITATOR Examples/SRlatch/SRlatch.imi Examples/SRlatch/SRlatch.pi0
+# 	$(TARGET) $(EXAMPLE_PATH)/SRlatch/SRlatch.imi -mode reachability
+# 	$(TARGET) $(EXAMPLE_PATH)/SRlatch/SRlatch.imi $(EXAMPLE_PATH)/SRlatch/SRlatch.pi0 -with-dot-source -with-dot
 # 	$(TARGET) $(EXAMPLE_PATH)/SRlatch/SRlatch.imi $(EXAMPLE_PATH)/SRlatch/SRlatch.pi0 -bab
 # 	./IMITATOR $(EXAMPLE_PATH)//SRlatch/SRlatch.imi $(EXAMPLE_PATH)//SRlatch/SRlatch.v0 -mode cover
 
@@ -354,7 +354,7 @@ exe:
 # 	./IMITATOR Examples/SRlatch/sr_latch_nand.hy -mode reachability
 
 
-##### CASE STUDIES : PROTOCOLS #####
+##### CASE STUDIES : TRAINS #####
 
 # 	$(TARGET) $(EXAMPLE_PATH)/Train/TrainAHV93.imi -mode reachability
 # 	bin/IMITATOR2.34.111115 $(EXAMPLE_PATH)/Train/TrainAHV93.imi -mode reachability
@@ -369,6 +369,12 @@ exe:
 # 	bin/IMITATOR2.371 $(EXAMPLE_PATH)/Train/TrainAHV93.imi $(EXAMPLE_PATH)/Train/TrainAHV93.pi0 -incl -no-dot -no-log -statistics
 # 	bin/IMITATOR2.370 $(EXAMPLE_PATH)/Train/TrainAHV93.imi $(EXAMPLE_PATH)/Train/TrainAHV93.pi0 -incl -no-dot -no-log -statistics
 # 	bin/IMITATOR2.34.111115 $(EXAMPLE_PATH)/Train/TrainAHV93.imi $(EXAMPLE_PATH)/Train/TrainAHV93.pi0 -IMincl -no-dot -no-log -statistics
+
+
+##### CASE STUDIES : PROTOCOLS #####
+
+# 	$(TARGET) $(EXAMPLE_PATH)/Fischer/fischerPAT.imi -mode reachability -with-log -with-dot -incl -fancy
+	$(TARGET) $(EXAMPLE_PATH)/Fischer/fischerPAT.imi $(EXAMPLE_PATH)/Fischer/fischerPAT.pi0 -incl
 
 # 	$(TARGET) $(EXAMPLE_PATH)/BangOlufsen/BangOlufsen.imi -mode reachability 
 # 	$(TARGET) $(EXAMPLE_PATH)/BangOlufsen/BangOlufsen.imi $(EXAMPLE_PATH)/BangOlufsen/BangOlufsen.pi0 -depth-limit 12 -incl -statistics
@@ -415,7 +421,7 @@ exe:
 # 	./IMITATOR Examples/RCP/RCP_bounded.imi Examples/RCP/RCP_bounded.pi0 -no-dot -no-log
 
 
-	#### WARNING: the prism model seems odd!!
+# 	### WARNING: the prism model seems odd!!
 	
 # 	$(TARGET) $(EXAMPLE_PATH)/CSMACD/csmacdPrism.imi -PTA2JPG
 # 	$(TARGET) $(EXAMPLE_PATH)/CSMACD/csmacdPrism.imi -mode reachability 
@@ -427,7 +433,7 @@ exe:
 # 	bin/IMITATOR2.374 $(EXAMPLE_PATH)/CSMACD/csmacdPrism.imi $(EXAMPLE_PATH)/CSMACD/csmacdPrism.pi0 -no-dot -no-log -jobshop
 # 	bin/IMITATOR2.370 $(EXAMPLE_PATH)/CSMACD/csmacdPrism.imi $(EXAMPLE_PATH)/CSMACD/csmacdPrism.pi0 -no-dot -no-log -statistics
 
-	#### WARNING: the prism model seems odd!!
+#	### WARNING: the prism model seems odd!!
 # 	$(TARGET) $(EXAMPLE_PATH)/CSMACD/csmacdPrism_with_renamed_actions.imi -mode reachability -no-merging
 # 	$(TARGET) $(EXAMPLE_PATH)/CSMACD/csmacdPrism_with_renamed_actions.imi $(EXAMPLE_PATH)/CSMACD/csmacdPrism.pi0 -no-merging
 
