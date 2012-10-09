@@ -264,7 +264,7 @@ exe:
 ##### CASE STUDIES : EXAMPLES #####
 # 	$(TARGET) $(EXAMPLE_PATH)/Examples/exSITH.imi -mode reachability -PTA2GML
 # 	$(TARGET) $(EXAMPLE_PATH)/Examples/exSITH.imi $(EXAMPLE_PATH)/Examples/exSITH.pi0 -bab -with-merging
-	$(TARGET) $(EXAMPLE_PATH)/Examples/exSITH.imi $(EXAMPLE_PATH)/Examples/exSITH.pi0 -bab
+# 	$(TARGET) $(EXAMPLE_PATH)/Examples/exSITH.imi $(EXAMPLE_PATH)/Examples/exSITH.pi0 -bab
 # 	$(TARGET) $(EXAMPLE_PATH)/Examples/exSITH.imi $(EXAMPLE_PATH)/Examples/exSITH.pi0
 
 # 	$(TARGET) $(EXAMPLE_PATH)/Examples/contrexPPTA.imi $(EXAMPLE_PATH)/Examples/contrexPPTA.pi0
@@ -374,7 +374,7 @@ exe:
 ##### CASE STUDIES : PROTOCOLS #####
 
 # 	$(TARGET) $(EXAMPLE_PATH)/Fischer/fischerPAT.imi -mode reachability -with-log -with-dot -incl -fancy
-# 	$(TARGET) $(EXAMPLE_PATH)/Fischer/fischerPAT.imi $(EXAMPLE_PATH)/Fischer/fischerPAT.pi0 -incl
+	$(TARGET) $(EXAMPLE_PATH)/Fischer/fischerPAT.imi $(EXAMPLE_PATH)/Fischer/fischerPAT.pi0 -incl
 
 # 	$(TARGET) $(EXAMPLE_PATH)/BangOlufsen/BangOlufsen.imi -mode reachability 
 # 	$(TARGET) $(EXAMPLE_PATH)/BangOlufsen/BangOlufsen.imi $(EXAMPLE_PATH)/BangOlufsen/BangOlufsen.pi0 -depth-limit 12 -incl -statistics
