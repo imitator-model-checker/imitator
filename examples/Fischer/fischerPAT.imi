@@ -6,15 +6,20 @@
 --   From the PAT version of the protocol
 --
 --                                Created : 2012/10/08
---                          Last modified : 2012/10/08
+--                          Last modified : 2012/10/09
 --************************************************************--
 --************************************************************--
 
 var 
-	x1, -- P1's clock
-	x2, -- P2's clock
-	x3, -- P3's clock
-	x4, -- P4's clock
+	-- P1's clocks
+	x1,
+	y1,
+	-- P2's clocks
+	x2,
+	y2,
+(*	-- P3's clocks
+	x3,
+	y3,*)
 		:clock;
 	
 
@@ -30,31 +35,31 @@ var
 	IDLE = -1 -- (constant)
 		: parameter; 
 
-(*
---************************************************************--
+
+(*--************************************************************--
 automaton procGEN
 --************************************************************--
-synclabs: access_GEN, enter_GEN, check_GEN, finish_GEN, no_access_GEN, turn_GEN, try_GEN;
+synclabs: access_GEN, enter_GEN, check_GEN, finish_GEN, no_access_GEN, try_GEN, update_GEN;
 
 loc idleGEN: while True wait {}
-	when turn = IDLE sync try_GEN do {xGEN' = 0} goto startGEN;
+	when turn = IDLE sync try_GEN do {xGEN' = 0} goto activeGEN;
 
-loc startGEN: while xGEN = 0 wait {}
-	when xGEN = 0 sync turn_GEN do {turn' = GEN} goto startGENbis;
+loc activeGEN: while xGEN <= delta wait {}
+	when True sync update_GEN do {turn' = GEN, yGEN' = 0} goto waitGEN;
 
-loc startGENbis: while xGEN <= delta wait {}
-	when xGEN >= epsilon sync check_GEN do {xGEN' = 0} goto checkGEN;
+loc waitGEN: while xGEN <= delta & yGEN <= epsilon wait {}
+	when yGEN = epsilon sync check_GEN do {xGEN' = 0} goto checkGEN;
 
 loc checkGEN: while xGEN = 0 wait {}
 	when turn = GEN sync access_GEN goto accessGEN;
-	when turn < GEN sync no_access_GEN goto idleGEN;
-	when turn > GEN sync no_access_GEN goto idleGEN; -- oops, no "<>" operator here!
+	when turn < GEN sync no_access_GEN do {xGEN' = 0, yGEN' = 0} goto idleGEN;
+	when turn > GEN sync no_access_GEN do {xGEN' = 0, yGEN' = 0} goto idleGEN; -- oops, no "<>" operator here!
 
-loc accessGEN: while xGEN = 0 wait {}
+loc accessGEN: while True wait {}
 	when True sync enter_GEN do {counter' = counter + 1} goto CSGEN;
 
 loc CSGEN: while True wait {}
-	when True sync finish_GEN do {counter' = counter - 1, turn' = IDLE} goto idleGEN;
+	when True sync finish_GEN do {counter' = counter - 1, turn' = IDLE, xGEN' = 0, yGEN' = 0} goto idleGEN;
 
 end -- procGEN*)
 
@@ -62,27 +67,27 @@ end -- procGEN*)
 --************************************************************--
 automaton proc1
 --************************************************************--
-synclabs: access_1, enter_1, check_1, finish_1, no_access_1, turn_1, try_1;
+synclabs: access_1, enter_1, check_1, finish_1, no_access_1, try_1, update_1;
 
 loc idle1: while True wait {}
-	when turn = IDLE sync try_1 do {x1' = 0} goto start1;
+	when turn = IDLE sync try_1 do {x1' = 0} goto active1;
 
-loc start1: while x1 = 0 wait {}
-	when x1 = 0 sync turn_1 do {turn' = 1} goto start1bis;
+loc active1: while x1 <= delta wait {}
+	when True sync update_1 do {turn' = 1, y1' = 0} goto wait1;
 
-loc start1bis: while x1 <= delta wait {}
-	when x1 >= epsilon sync check_1 do {x1' = 0} goto check1;
+loc wait1: while x1 <= delta & y1 <= epsilon wait {}
+	when y1 = epsilon sync check_1 do {x1' = 0} goto check1;
 
 loc check1: while x1 = 0 wait {}
 	when turn = 1 sync access_1 goto access1;
-	when turn < 1 sync no_access_1 goto idle1;
-	when turn > 1 sync no_access_1 goto idle1; -- oops, no "<>" operator here!
+	when turn < 1 sync no_access_1 do {x1' = 0, y1' = 0} goto idle1;
+	when turn > 1 sync no_access_1 do {x1' = 0, y1' = 0} goto idle1; -- oops, no "<>" operator here!
 
-loc access1: while x1 = 0 wait {}
+loc access1: while True wait {}
 	when True sync enter_1 do {counter' = counter + 1} goto CS1;
 
 loc CS1: while True wait {}
-	when True sync finish_1 do {counter' = counter - 1, turn' = IDLE, x1' = 0} goto idle1;
+	when True sync finish_1 do {counter' = counter - 1, turn' = IDLE, x1' = 0, y1' = 0} goto idle1;
 
 end -- proc1
 
@@ -90,84 +95,57 @@ end -- proc1
 --************************************************************--
 automaton proc2
 --************************************************************--
-synclabs: access_2, enter_2, check_2, finish_2, no_access_2, turn_2, try_2;
+synclabs: access_2, enter_2, check_2, finish_2, no_access_2, try_2, update_2;
 
 loc idle2: while True wait {}
-	when turn = IDLE sync try_2 do {x2' = 0} goto start2;
+	when turn = IDLE sync try_2 do {x2' = 0} goto active2;
 
-loc start2: while x2 = 0 wait {}
-	when x2 = 0 sync turn_2 do {turn' = 2} goto start2bis;
+loc active2: while x2 <= delta wait {}
+	when True sync update_2 do {turn' = 2, y2' = 0} goto wait2;
 
-loc start2bis: while x2 <= delta wait {}
-	when x2 >= epsilon sync check_2 do {x2' = 0} goto check2;
+loc wait2: while x2 <= delta & y2 <= epsilon wait {}
+	when y2 = epsilon sync check_2 do {x2' = 0} goto check2;
 
 loc check2: while x2 = 0 wait {}
 	when turn = 2 sync access_2 goto access2;
-	when turn < 2 sync no_access_2 goto idle2;
-	when turn > 2 sync no_access_2 goto idle2; -- oops, no "<>" operator here!
+	when turn < 2 sync no_access_2 do {x2' = 0, y2' = 0} goto idle2;
+	when turn > 2 sync no_access_2 do {x2' = 0, y2' = 0} goto idle2; -- oops, no "<>" operator here!
 
-loc access2: while x2 = 0 wait {}
+loc access2: while True wait {}
 	when True sync enter_2 do {counter' = counter + 1} goto CS2;
 
 loc CS2: while True wait {}
-	when True sync finish_2 do {counter' = counter - 1, turn' = IDLE, x2' = 0} goto idle2;
+	when True sync finish_2 do {counter' = counter - 1, turn' = IDLE, x2' = 0, y2' = 0} goto idle2;
 
 end -- proc2
 
---************************************************************--
+
+(*--************************************************************--
 automaton proc3
 --************************************************************--
-synclabs: access_3, enter_3, check_3, finish_3, no_access_3, turn_3, try_3;
+synclabs: access_3, enter_3, check_3, finish_3, no_access_3, try_3, update_3;
 
 loc idle3: while True wait {}
-	when turn = IDLE sync try_3 do {x3' = 0} goto start3;
+	when turn = IDLE sync try_3 do {x3' = 0} goto active3;
 
-loc start3: while x3 = 0 wait {}
-	when x3 = 0 sync turn_3 do {turn' = 3} goto start3bis;
+loc active3: while x3 <= delta wait {}
+	when True sync update_3 do {turn' = 3, y3' = 0} goto wait3;
 
-loc start3bis: while x3 <= delta wait {}
-	when x3 >= epsilon sync check_3 do {x3' = 0} goto check3;
+loc wait3: while x3 <= delta & y3 <= epsilon wait {}
+	when y3 = epsilon sync check_3 do {x3' = 0} goto check3;
 
 loc check3: while x3 = 0 wait {}
 	when turn = 3 sync access_3 goto access3;
-	when turn < 3 sync no_access_3 goto idle3;
-	when turn > 3 sync no_access_3 goto idle3; -- oops, no "<>" operator here!
+	when turn < 3 sync no_access_3 do {x3' = 0, y3' = 0} goto idle3;
+	when turn > 3 sync no_access_3 do {x3' = 0, y3' = 0} goto idle3; -- oops, no "<>" operator here!
 
-loc access3: while x3 = 0 wait {}
+loc access3: while True wait {}
 	when True sync enter_3 do {counter' = counter + 1} goto CS3;
 
 loc CS3: while True wait {}
-	when True sync finish_3 do {counter' = counter - 1, turn' = IDLE, x3' = 0} goto idle3;
+	when True sync finish_3 do {counter' = counter - 1, turn' = IDLE, x3' = 0, y3' = 0} goto idle3;
 
-end -- proc3
-
-
---************************************************************--
-automaton proc4
---************************************************************--
-synclabs: access_4, enter_4, check_4, finish_4, no_access_4, turn_4, try_4;
-
-loc idle4: while True wait {}
-	when turn = IDLE sync try_4 do {x4' = 0} goto start4;
-
-loc start4: while x4 = 0 wait {}
-	when x4 = 0 sync turn_4 do {turn' = 4} goto start4bis;
-
-loc start4bis: while x4 <= delta wait {}
-	when x4 >= epsilon sync check_4 do {x4' = 0} goto check4;
-
-loc check4: while x4 = 0 wait {}
-	when turn = 4 sync access_4 goto access4;
-	when turn < 4 sync no_access_4 goto idle4;
-	when turn > 4 sync no_access_4 goto idle4; -- oops, no "<>" operator here!
-
-loc access4: while x4 = 0 wait {}
-	when True sync enter_4 do {counter' = counter + 1} goto CS4;
-
-loc CS4: while True wait {}
-	when True sync finish_4 do {counter' = counter - 1, turn' = IDLE, x4' = 0} goto idle4;
-
-end -- proc4
+end -- proc3*)
 
 
 --************************************************************--
@@ -187,17 +165,21 @@ init :=
 	----------------------
 	& loc[proc1] = idle1
 	& loc[proc2] = idle2
-	& loc[proc3] = idle3
-	& loc[proc4] = idle4
+(* 	& loc[proc3] = idle3 *)
+(*	& loc[proc4] = idle4*)
 	
 	----------------------
 	-- Clocks
 	----------------------
 	& x1 = 0
-	& x2 = 0
-	& x3 = 0
-	& x4 = 0
+	& y1 = 0
 	
+	& x2 = 0
+	& y2 = 0
+
+(*	& x3 = 0
+	& y3 = 0
+	*)
 	----------------------
 	-- Discrete
 	----------------------
