@@ -91,15 +91,15 @@ loc active1: while x1 <= delta wait {}
 	when True sync update_1 do {turn' = 1, x1' = 0} goto check1;
 
 loc check1: while True wait {}
-	when x1 >= epsilon & turn = 1 sync access_1 goto access1;
-	when x1 >= epsilon & turn < 1 sync no_access_1 do {} goto idle1;
-	when x1 >= epsilon & turn > 1 sync no_access_1 do {} goto idle1; -- oops, no "<>" operator here!
+	when x1 >= epsilon & turn = 1 sync access_1 do {x1' = 0} goto access1;
+	when x1 >= epsilon & turn < 1 sync no_access_1 do {x1' = 0}  goto idle1;
+	when x1 >= epsilon & turn > 1 sync no_access_1 do {x1' = 0}  goto idle1; -- oops, no "<>" operator here!
 
 loc access1: while True wait {}
 	when True sync enter_1 do {counter' = counter + 1} goto CS1;
 
 loc CS1: while True wait {}
-	when True sync exit_1 do {counter' = counter - 1, turn' = IDLE} goto idle1;
+	when True sync exit_1 do {counter' = counter - 1, turn' = IDLE, x1' = 0} goto idle1;
 
 end -- proc1
 
@@ -116,15 +116,15 @@ loc active2: while x2 <= delta wait {}
 	when True sync update_2 do {turn' = 2, x2' = 0} goto check2;
 
 loc check2: while True wait {}
-	when x2 >= epsilon & turn = 2 sync access_2 goto access2;
-	when x2 >= epsilon & turn < 2 sync no_access_2 do {} goto idle2;
-	when x2 >= epsilon & turn > 2 sync no_access_2 do {} goto idle2; -- oops, no "<>" operator here!
+	when x2 >= epsilon & turn = 2 sync access_2 do {x2' = 0} goto access2;
+	when x2 >= epsilon & turn < 2 sync no_access_2 do {x2' = 0} goto idle2;
+	when x2 >= epsilon & turn > 2 sync no_access_2 do {x2' = 0} goto idle2; -- oops, no "<>" operator here!
 
 loc access2: while True wait {}
 	when True sync enter_2 do {counter' = counter + 1} goto CS2;
 
 loc CS2: while True wait {}
-	when True sync exit_2 do {counter' = counter - 1, turn' = IDLE} goto idle2;
+	when True sync exit_2 do {counter' = counter - 1, turn' = IDLE, x2' = 0} goto idle2;
 
 end -- proc2
 
@@ -151,8 +151,8 @@ init :=
 	----------------------
 	-- Clocks
 	----------------------
-(* 	& x1 = 0 *)
-(* 	& x2 = 0 *)
+	& x1 = 0
+	& x2 = 0
 
 (*	& x3 = 0
 	& y3 = 0
@@ -166,7 +166,7 @@ init :=
 	----------------------
 	-- Parameters
 	----------------------
-	& delta   = 3
-	& epsilon = 4
+(*	& delta   = 3
+	& epsilon = 4*)
 ;
 
