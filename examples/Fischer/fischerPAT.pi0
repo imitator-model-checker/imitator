@@ -13,5 +13,5 @@
 	----------------------
 	-- Parameters
 	----------------------
-	& epsilon = 3
-	& delta   = 4
+	& delta   = 3
+	& epsilon = 4
