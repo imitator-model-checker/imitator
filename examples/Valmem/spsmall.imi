@@ -97,7 +97,7 @@ synclabs: up_net45a, down_net45a,
 
 initially e_01_1_wela;
 
-loc  e_00_0_wela : while True wait {}
+loc  e_00_0_wela : while True wait {} 
 	 when True sync up_net45a  do {x_wela'=0} goto e_01_X_wela;
 	 when True sync up_net13a  do {x_wela'=0} goto e_10_X_wela;
 	 when True sync down_net45a  do {} goto e_00_0_wela;

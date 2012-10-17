@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2009/09/11
- * Last modified: 2012/05/30
+ * Last modified: 2012/10/16
  *
  ****************************************************************)
 
@@ -79,6 +79,9 @@ type discrete_update = discrete_index * linear_term
 (** Guard: linear constraint *)
 type guard = linear_constraint
 
+(** Invariant: linear constraint *)
+type invariant = linear_constraint
+
 (** Transition: guard, updates, destination location *)
 type transition = guard * clock_updates * discrete_update list * location_index
 
@@ -141,7 +144,7 @@ type abstract_program = {
 	costs : automaton_index -> location_index -> linear_term option;
 	
 	(* The invariant for each automaton and each location *)
-	invariants : automaton_index -> location_index -> linear_constraint;
+	invariants : automaton_index -> location_index -> invariant;
 	
 	(* The transitions for each automaton and each location and each action *)
 	transitions : automaton_index -> location_index -> action_index -> (transition list);

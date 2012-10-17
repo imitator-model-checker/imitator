@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre, Ulrich Kuehne
  * Created:       2010/07/05
- * Last modified: 2012/06/18
+ * Last modified: 2012/10/16
  *
  ****************************************************************)
 
@@ -15,8 +15,6 @@
 
 open Global
 open LinearConstraint
-module Ppl = Ppl_ocaml
-open Ppl
 open AbstractModel
 
 
@@ -40,23 +38,15 @@ let states_file_extension = "states"
 (* Plot Functions *)
 (**************************************************)
 
-(* transform a strict inequality into a not strict inequality *)
-let strict_to_not_strict_inequality inequality =
-	match inequality with
-		|Less_Than (x,y) -> Less_Or_Equal (x,y)
-		|Greater_Than (x,y) -> Greater_Or_Equal (x,y)
-		|_ -> inequality
-
 
 (* print the cartography which correspond to the list of constraint *)
 let cartography program pi0cube returned_constraint_list cartography_name =
 	(* Replace strict inequalities with large inequalities *)
-(* 	let new_constraint_list = ref [] in  *)
 
 	(* Local function to replace strict inequalities within a linear_constraint *)
 	let replace_strict_inequalities_in_k k =
 		(* Get the list of inequalities *)
-		let inequality_list = ppl_Polyhedron_get_constraints k in 
+		let inequality_list = get_inequalities k in 
 		(* Replace inequelities and convert back to a linear_constraint *)
 			make (List.map strict_to_not_strict_inequality inequality_list)
 	in

@@ -7,7 +7,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2009/09/09
- * Last modified: 2012/10/08
+ * Last modified: 2012/10/16
  *
  ****************************************************************)
 
@@ -941,22 +941,25 @@ let make_locations_per_automaton index_of_automata automata =
 (* Get all the possible actions for every location of every automaton *)
 (*--------------------------------------------------*)
 let make_automata index_of_variables index_of_automata index_of_locations labels index_of_labels removed_synclab_names automata =
+	(* Number of automata *)
+	let nb_automata = Hashtbl.length index_of_automata in
 	(* Create an empty array for the actions of every automaton *)
-	let actions_per_automaton = Array.make (Hashtbl.length index_of_automata) [] in
+	let actions_per_automaton = Array.make nb_automata [] in
 	(* Create an empty array for the actions of every location of every automaton *)
-	let actions_per_location = Array.make (Hashtbl.length index_of_automata) (Array.make 0 []) in
+	let actions_per_location = Array.make nb_automata (Array.make 0 []) in
 	(* Create an empty array for the costs *)
-	let costs = Array.make (Hashtbl.length index_of_automata) (Array.make 0 None) in
+	let costs = Array.make nb_automata (Array.make 0 None) in
 	(* Create an empty array for the transitions *)
-	let transitions = Array.make (Hashtbl.length index_of_automata) (Array.make 0 []) in
+	let transitions = Array.make nb_automata (Array.make 0 []) in
 	(* Create an empty array for the invariants *)
-	let invariants = Array.make (Hashtbl.length index_of_automata) (Array.make 0 []) in
+	let invariants = Array.make nb_automata (Array.make 0 []) in
 	(* Create an empty array for the invariants *)
-	let stopwatches_array = Array.make (Hashtbl.length index_of_automata) (Array.make 0 []) in
+	let stopwatches_array = Array.make nb_automata (Array.make 0 []) in
 	(* Does the program has any stopwatch? *)
 	let has_stopwatches = ref false in
 	(* Maintain the index of no_sync *)
 	let no_sync_index = ref (Array.length labels) in
+	
 	(* For each automaton: *)
 	List.iter
 	(fun (automaton_name, _, locations) ->
@@ -975,12 +978,15 @@ let make_automata index_of_variables index_of_automata index_of_locations labels
 		invariants.(automaton_index) <- Array.make nb_locations [];
 		(* Create the array of stopwatches for this automaton *)
 		stopwatches_array.(automaton_index) <- Array.make nb_locations [];
+		
 		(* For each location: *)
 		List.iter
 		(fun (location_name, cost, invariant, stopwatches, parsed_transitions) -> 
+		
 			(* Get the index of the location *)
 			let location_index = try (Hashtbl.find index_of_locations.(automaton_index) location_name) with Not_found -> raise (InternalError ("Impossible to find the index of location '" ^ location_name ^ "'.")) in
-			(* Create the list of actions for this location *)
+			
+			(* Create the list of actions for this location, by iterating on parsed_transitions *)
 			let list_of_actions, list_of_transitions =  List.fold_left (fun (current_list_of_actions, current_list_of_transitions) (guard, updates, sync, dest_location_name) ->
 				(* Get the index of the dest location *)
 				let dest_location_index = try (Hashtbl.find index_of_locations.(automaton_index) dest_location_name) with Not_found -> raise (InternalError ("Impossible to find the index of location '" ^ dest_location_name ^ "'.")) in
@@ -1013,6 +1019,7 @@ let make_automata index_of_variables index_of_automata index_of_locations labels
 					(* Compute the list of transitions *)
 					((action_index, guard, updates, dest_location_index) :: current_list_of_transitions)
 			) ([], []) parsed_transitions in
+			
 			(* Update the array of actions per location *)
 			actions_per_location.(automaton_index).(location_index) <- (List.rev (list_only_once list_of_actions));
 			
@@ -1282,6 +1289,97 @@ let make_v0 parsed_v0 index_of_variables nb_parameters =
 	) parsed_v0;
 	v0
 
+
+(*--------------------------------------------------*)
+(* Find the clocks in a linear_constraint *)
+(*--------------------------------------------------*)
+(*let get_clocks_in_linear_inequality is_clock linear_inequality =
+	[]*)
+
+let get_clocks_in_linear_constraint clocks =
+	(* Get a long list with duplicates, and then simplify *)
+(*	(* Should not be too inefficient, because our linear constraints are relatively small *)
+	let list_of_clocks = List.fold_left (fun current_list_of_clocks linear_inequality ->
+		list_append current_list_of_clocks (get_clocks_in_linear_inequality is_clock linear_inequality)
+	) [] linear_constraint
+	in
+	(* Simplify *)
+	list_only_once list_of_clocks*)
+	LinearConstraint.find_variables clocks
+
+let get_clocks_in_updates : clock_updates -> Automaton.clock_index list = function
+	(* No update at all *)
+	| No_update -> []
+	(* Reset to 0 only *)
+	| Resets clock_reset_list -> clock_reset_list
+	(* Reset to arbitrary value (including discrete, parameters and clocks) *)
+	| Updates clock_update_list -> let result, _ = List.split clock_update_list in result
+
+
+(*let get_clocks_in_updates =
+	List.fold_left (fun current_list clock_update ->
+		List.rev_append current_list (get_clocks_in_update clock_update)
+	) []*)
+
+
+(*--------------------------------------------------*)
+(* Find the local clocks per automaton *)
+(*--------------------------------------------------*)
+let find_local_clocks nb_automata clocks clock_offset actions_per_location locations_per_automaton invariants transitions stopwatches =
+	let nb_clocks = List.length clocks in
+	(* Create an empty array for the clocks of every automaton *)
+	let clocks_per_automaton = Array.make nb_automata [] in
+	(* Create an empty array for the automata associated with each clock *)
+	let automata_per_clock = Array.make nb_clocks [] in
+	
+	(* For each automaton *)
+	for automaton_index = 0 to nb_automata - 1 do
+		(* Get the locations for this automaton *)
+		let locations = locations_per_automaton automaton_index in
+		(* For each location *)
+		let clocks_for_locations = List.fold_left (fun list_of_clocks_for_previous_locations location_index ->
+			(* Get the clocks in the invariant *)
+			let invariant = invariants automaton_index location_index in
+			let clocks_in_invariant = get_clocks_in_linear_constraint clocks invariant in
+			(* Get the clocks from the stopwatches *)
+			let clocks_in_stopwatches = stopwatches automaton_index location_index in
+			
+			(* Now find clocks in guards *)
+			(* For each action for this automaton and location *)
+			let actions_for_this_location = actions_per_location automaton_index location_index in
+			let clocks_for_actions = List.fold_left (fun list_of_clocks_for_previous_actions action_index ->
+				(* For each transition for this automaton, location and action *)
+				let transitions_for_this_action = transitions automaton_index location_index action_index in
+				let clocks_for_transitions = List.fold_left (fun list_of_clocks_for_previous_transitions transition ->
+					(* Name the elements in the transition *)
+					let guard , clock_updates , _ , _ = transition in
+					let clocks_in_guards = get_clocks_in_linear_constraint clocks guard in
+					let clocks_in_updates = get_clocks_in_updates clock_updates in
+						(* Add these 2 new lists to the current list *)
+						List.rev_append (List.rev_append clocks_in_guards clocks_in_updates) list_of_clocks_for_previous_transitions
+				) [] transitions_for_this_action in
+				(* Add the list for this action to the one for previous actions *)
+				List.rev_append clocks_for_transitions list_of_clocks_for_previous_actions
+			) [] actions_for_this_location in
+			
+			(* Add all clocks *)
+			List.rev_append (List.rev_append (List.rev_append clocks_in_invariant clocks_in_stopwatches) clocks_for_actions) list_of_clocks_for_previous_locations
+		) [] locations in
+		
+		(* Collapse the list *)
+		let clocks_for_this_automaton = list_only_once clocks_for_locations in
+		(* Update the clocks per automaton *)
+		clocks_per_automaton.(automaton_index) <- clocks_for_this_automaton;
+		(* Update the automaton for all clocks *)
+		List.iter (fun clock ->
+			(* Add current automaton to the list of automata for this clock *)
+			automata_per_clock.(clock - clock_offset) <- (automaton_index :: automata_per_clock.(clock - clock_offset));
+		) clocks_for_this_automaton;
+	done; (* end for each automaton *)
+	
+	clocks_per_automaton, automata_per_clock
+	
+	
 
 (*--------------------------------------------------*)
 (* Convert the parsing structure into an abstract program *)
@@ -1582,6 +1680,10 @@ let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_
 	print_message Debug_total ("*** Building stopwatches...");
 	let stopwatches_fun = (fun automaton_index location_index -> stopwatches.(automaton_index).(location_index)) in
 
+	(* Compute the clocks per automaton *)
+	print_message Debug_total ("*** Building clocks per automaton...");
+	let clocks_per_automaton, automata_per_clock = find_local_clocks nb_automata clocks nb_parameters actions_per_location locations_per_automaton invariants transitions stopwatches_fun in
+
 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Set the number of discrete variables *) 
@@ -1618,51 +1720,70 @@ let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Debug prints *) 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* All action names *)
-	print_message Debug_total ("\n*** All action names:");
-	(* For each action *)
-	List.iter (fun action_index -> 
-		print_message Debug_total ((string_of_int action_index) ^ " -> " ^ (action_names action_index));
-	) actions;
+	if debug_mode_greater Debug_total then(
+		(* All action names *)
+		print_message Debug_total ("\n*** All action names:");
+		(* For each action *)
+		List.iter (fun action_index -> 
+			print_message Debug_total ((string_of_int action_index) ^ " -> " ^ (action_names action_index));
+		) actions;
 
-	(* Debug print: actions per automaton *)
-	print_message Debug_total ("\n*** Actions per automaton:");
-	(* For each automaton *)
-	List.iter (fun automaton_index ->
-		(* Get the actions *)
-		let actions = actions_per_automaton automaton_index in
-		(* Print it *)
-		let actions_string = string_of_list_of_string_with_sep ", " (List.map action_names actions) in
-		print_message Debug_total ((automata_names automaton_index) ^ " : " ^ actions_string)
-	) automata;
-
-	(* Debug print: automata per action *)
-	print_message Debug_total ("\n*** Automata per action:");
-	(* For each action *)
-	List.iter (fun action_index ->
-		(* Get the automata *)
-		let automata = automata_per_action action_index in
-		(* Print it *)
-		let automata_string = string_of_list_of_string_with_sep ", " (List.map automata_names automata) in
-		print_message Debug_total ((action_names action_index) ^ " : " ^ automata_string)
-	) actions;
-
-	(* Possible actions per location *)
-	print_message Debug_total ("\n*** Possible actions per location:");
-	(* For each automaton *)
-	List.iter (fun automaton_index ->
-		(* Print the automaton name *)
-		print_message Debug_total ("" ^ (automata_names automaton_index) ^ " :");
-		(* For each location *)
-		List.iter (fun location_index ->
+		(* Debug print: actions per automaton *)
+		print_message Debug_total ("\n*** Actions per automaton:");
+		(* For each automaton *)
+		List.iter (fun automaton_index ->
 			(* Get the actions *)
-			let actions = actions_per_location automaton_index location_index in
+			let actions = actions_per_automaton automaton_index in
 			(* Print it *)
-			let my_string = string_of_list_of_string_with_sep ", " (List.map action_names actions) in
-			print_message Debug_total (" - " ^ (location_names automaton_index location_index) ^ " :" ^ my_string);
-		) (locations_per_automaton automaton_index);
-	) automata;
+			let actions_string = string_of_list_of_string_with_sep ", " (List.map action_names actions) in
+			print_message Debug_total ((automata_names automaton_index) ^ " : " ^ actions_string)
+		) automata;
 
+		(* Debug print: automata per action *)
+		print_message Debug_total ("\n*** Automata per action:");
+		(* For each action *)
+		List.iter (fun action_index ->
+			(* Get the automata *)
+			let automata = automata_per_action action_index in
+			(* Print it *)
+			let automata_string = string_of_list_of_string_with_sep ", " (List.map automata_names automata) in
+			print_message Debug_total ((action_names action_index) ^ " : " ^ automata_string)
+		) actions;
+
+		(* Debug print: clocks per automaton *)
+		print_message Debug_total ("\n*** Clocks per automaton:");
+		(* For each automaton *)
+		List.iter (fun automaton_index ->
+			(* Get the actions *)
+			let clocks = clocks_per_automaton.(automaton_index) in
+			(* Print it *)
+			let clocks_string = string_of_list_of_string_with_sep ", " (List.map variable_names clocks) in
+			print_message Debug_total ((automata_names automaton_index) ^ " : " ^ clocks_string)
+		) automata;
+		
+		
+	(*JE SUIS LA *)
+(* 	terminate_program(); *)
+
+
+
+		(* Possible actions per location *)
+		print_message Debug_total ("\n*** Possible actions per location:");
+		(* For each automaton *)
+		List.iter (fun automaton_index ->
+			(* Print the automaton name *)
+			print_message Debug_total ("" ^ (automata_names automaton_index) ^ " :");
+			(* For each location *)
+			List.iter (fun location_index ->
+				(* Get the actions *)
+				let actions = actions_per_location automaton_index location_index in
+				(* Print it *)
+				let my_string = string_of_list_of_string_with_sep ", " (List.map action_names actions) in
+				print_message Debug_total (" - " ^ (location_names automaton_index location_index) ^ " :" ^ my_string);
+			) (locations_per_automaton automaton_index);
+		) automata;
+	);
+	
 	(* Debut print: Pi0 *)
 	if debug_mode_greater Debug_medium then(
 		match options#imitator_mode with
@@ -1683,8 +1804,10 @@ let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_
 				)
 			) v0
 	);
-
-
+	
+	
+	
+	
 	(* Make the structure *)
 	{
 	(* Cardinality *)

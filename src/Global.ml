@@ -230,6 +230,7 @@ let list_append l1 l2 =
 	
 
 (* Return a list where every element only appears once *)
+(** WARNING: exponential here *)
 let list_only_once l =
 	List.rev (List.fold_left
 		(fun current_list e -> if List.mem e current_list then current_list else e::current_list)

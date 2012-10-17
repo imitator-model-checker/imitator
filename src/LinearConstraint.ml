@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2010/03/04
- * Last modified: 2012/06/21
+ * Last modified: 2012/10/16
  *
  ****************************************************************)
 
@@ -497,6 +497,13 @@ let evaluate_linear_inequality valuation_function linear_inequality =
 				let rval = evaluate_linear_term_ppl valuation_function rterm in
 				NumConst.ge lval rval )
 
+(* Transform a strict inequality into a not strict inequality *)
+let strict_to_not_strict_inequality inequality =
+	match inequality with
+		|Less_Than (x,y) -> Less_Or_Equal (x,y)
+		|Greater_Than (x,y) -> Greater_Or_Equal (x,y)
+		|_ -> inequality
+
 
 (*--------------------------------------------------*)
 (* Pi0-compatibility *)
@@ -730,6 +737,19 @@ let nb_inequalities linear_constraint =
 	let list_of_inequalities = get_constraints linear_constraint in
 	List.length list_of_inequalities
 
+
+(** Get the linear inequalities *)
+let get_inequalities =
+	ppl_Polyhedron_get_constraints
+
+
+(** Return the list of variables from l that are constrained in the constraint *)
+(* WARNING: no idea of the efficiency of this way of doing *)
+(* (but not crucial because only called for preprocessing in IMITATOR) *)
+let find_variables variables_list linear_constraint =
+	List.filter (fun variable ->
+		ppl_Polyhedron_constrains linear_constraint variable
+	) variables_list
 
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)

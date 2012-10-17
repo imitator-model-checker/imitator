@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2010/03/04
- * Last modified: 2012/06/21
+ * Last modified: 2012/10/16
  *
  ****************************************************************)
  
@@ -36,7 +36,7 @@ type linear_term
 (** {3 Creation} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
 
-val normalize_linear_term : linear_term -> Ppl_ocaml.linear_expression * NumConst.t
+(* val normalize_linear_term : linear_term -> Ppl_ocaml.linear_expression * NumConst.t *)
 
 (** Create a linear term using a list of coef and variables, and a constant *)
 val make_linear_term : (coef * variable) list -> coef -> linear_term
@@ -73,7 +73,7 @@ type op =
 	| Op_ge
 	| Op_eq
 
-type linear_inequality = Ppl_ocaml.linear_constraint
+type linear_inequality
 
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
@@ -87,6 +87,10 @@ val make_linear_inequality : linear_term -> op -> linear_inequality
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
 (** {3 Functions} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+
+(** Convert to a nonstrict inequality *)
+val strict_to_not_strict_inequality : linear_inequality -> linear_inequality
+
 
 (** Check if a linear inequality is pi0-compatible *)
 val is_pi0_compatible_inequality : (variable -> coef) -> linear_inequality -> bool
@@ -110,7 +114,7 @@ val string_of_linear_inequality : (variable -> string) -> linear_inequality -> s
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
 (** {3 Type} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
-type linear_constraint = Ppl_ocaml.polyhedron
+type linear_constraint
 
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
@@ -136,6 +140,14 @@ val true_constraint : unit -> linear_constraint
 
 (** Get the number of inequalities of a constraint *)
 val nb_inequalities : linear_constraint -> int
+
+(** Get the linear inequalities *)
+(* WARNING: NOT SO BEAUTIFUL, is only needed by Graphics, and should be removed *)
+val get_inequalities : linear_constraint -> linear_inequality list
+
+
+(** Return the list of variables from l that are constrained in the constraint *)
+val find_variables : variable list -> linear_constraint -> variable list
 
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
