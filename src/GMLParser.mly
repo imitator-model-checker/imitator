@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created       : 2011/11/23
- * Last modified : 2012/06/13
+ * Last modified : 2012/10/24
 ************************************************************/
 
 
@@ -144,9 +144,9 @@ let convert declarations locations transitions =
 %token CLOSE CLOSE_XML
 %token SINGLE_CLOSE 
 
-%token INITIAL NORMAL TRUE
+%token INITIAL NORMAL FINAL TRUE
 
-%token STR_AND STR_BOOLEXPR STR_BOOLVALUE STR_CLOCK STR_CLOCKS STR_CONST STR_CONSTANTS STR_DECLARATION STR_GLOBALCONSTANTS STR_DISCRETE STR_DISCRETES STR_EXPR STR_FINALSTATE STR_FORMALISM_URL STR_GUARD STR_INITIALCONSTRAINT STR_INVARIANT STR_LABEL STR_NAME STR_PARAMETER STR_PARAMETERS STR_STATE STR_TRANSITION STR_TYPE STR_UPDATE STR_UPDATES STR_UTF8 STR_VARIABLES STR_XMLNS
+%token STR_AND STR_BOOLEXPR STR_BOOLVALUE STR_CLOCK STR_CLOCKS STR_CONST STR_CONSTANTS STR_DECLARATION STR_GLOBALCONSTANTS STR_DISCRETE STR_DISCRETES STR_EXPR STR_FORMALISM_URL STR_GUARD STR_INITIALCONSTRAINT STR_INVARIANT STR_LABEL STR_NAME STR_PARAMETER STR_PARAMETERS STR_STATE STR_TRANSITION STR_TYPE STR_UPDATE STR_UPDATES STR_UTF8 STR_VARIABLES STR_XMLNS
 %token STR_OPL STR_OPLEQ STR_OPEQ STR_OPGEQ STR_OPG
 %token STR_OPMUL
 
@@ -373,9 +373,9 @@ states:
 
 state:
 /* <node id="2" nodeType="state"> */
-	| OPEN_NODE CT_ID OP_EQ STR_INT CT_NODETYPE OP_EQ STR_STATE CLOSE
+	| OPEN_NODE CT_ID OP_EQ STR_INT CT_NODETYPE OP_EQ STR_STATE coordinates_opt CLOSE
 		state_attributes
-		OPEN_END_NODE CLOSE { $4, $9 }
+		OPEN_END_NODE CLOSE { $4, $10 }
 ;
 
 state_attributes:
@@ -396,6 +396,16 @@ state_attributes:
             <attribute name="finalState"/>
         </attribute>
     </node>*/
+
+
+
+// x="237" y="169"
+// WARNING : here we cheat (if we define "x" and "y", can't be used later...)
+coordinates_opt:
+	| NAME OP_EQ STR_INT NAME OP_EQ STR_INT { }
+	| { }
+;
+
 
 /*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
   Type
@@ -437,7 +447,7 @@ state_type_init:
 ;
 
 state_type_final:
-	| open_attribute STR_FINALSTATE SINGLE_CLOSE { true }
+	| FINAL { true }
 ;
 
 

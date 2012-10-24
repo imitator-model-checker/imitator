@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2011/11/22
- * Last modified: 2012/04/10
+ * Last modified: 2012/10/24
  *
  ************************************************************)
 
@@ -65,38 +65,41 @@ let string_of_header program =
 let string_of_declarations program =
 	let string_of_variables type_string list_of_variables =
 		string_of_list_of_string (List.map (fun variable_index ->
-			  "\n\t\t\t<attribute name=\"" ^ type_string ^ "\">"
-			^ "\n\t\t\t\t<attribute name=\"name\">" ^ (program.variable_names variable_index) ^ "</attribute>"
-			^ "\n\t\t\t</attribute>"
+			  "\n\t\t\t\t<attribute name=\"" ^ type_string ^ "\">"
+			(*^ "\n\t\t\t\t\t<attribute name=\"name\">"*) ^ (program.variable_names variable_index) (*^ "</attribute>"*)
+			^ "</attribute>"
 		) list_of_variables)
 	in
+	"\n\n\t" ^ " <attribute name=\"declaration\">"
 	(* VARIABLES *)
-	"\n\n\t" ^ " <attribute name=\"variables\">"
+	^ "\n\t\t" ^ " <attribute name=\"variables\">"
 	^
 	(if program.nb_clocks > 0 then
-		("\n\t\t" ^ " <attribute name=\"clocks\">"
+		("\n\t\t\t" ^ " <attribute name=\"clocks\">"
 			^ (string_of_variables "clock" program.clocks)
-			^ "\n\t\t" ^ "</attribute>"
+			^ "\n\t\t\t" ^ "</attribute> <!-- end clocks -->"
 	) else "")
 	^
 	(if program.nb_discrete > 0 then
-		("\n\t\t" ^ " <attribute name=\"discretes\">"
+		("\n\t\t\t" ^ " <attribute name=\"discretes\">"
 			^ (string_of_variables "discrete" program.discrete)
-			^ "\n\t\t" ^ "</attribute>"
+			^ "\n\t\t\t" ^ "</attribute>"
 	) else "")
 
-	^ "\n\t" ^ "</attribute>"
+	^ "\n\t\t" ^ "</attribute> <!-- end discretes -->"
 	
 	(* CONSTANTS AND PARAMETERS *)
-	^ "\n\n\t" ^ " <attribute name=\"constants\">"
+	^ "\n\n\t\t" ^ " <attribute name=\"constants\">"
 	^
 	(if program.nb_parameters > 0 then
-		("\n\t\t" ^ " <attribute name=\"parameters\">"
+		("\n\t\t\t" ^ " <attribute name=\"parameters\">"
 			^ (string_of_variables "parameter" program.parameters)
-			^ "\n\t\t" ^ "</attribute>"
+			^ "\n\t\t\t" ^ "</attribute>"
 	) else "")
 
-	^ "\n\t" ^ "</attribute>"
+	^ "\n\t\t" ^ "</attribute> <!-- end constants -->"
+
+	^ "\n\t" ^ " </attribute> <!-- end declaration -->"
 
 
 (* Convert a sync into a string *)
@@ -117,7 +120,7 @@ let string_of_clock_updates program = function
 		^ "\n\t\t\t\t<attribute name=\"expr\">"
 		^ "\n\t\t\t\t\t<attribute name=\"const\">0</attribute>"
 		^ "\n\t\t\t\t</attribute>"
-		^ "\n\t\t\t</attribute>"
+		^ "\n\t\t\t</attribute> <!-- end update -->"
 	) list_of_clocks)
 	| Updates list_of_clocks_lt ->
 			string_of_list_of_string (List.map (fun (variable_index, linear_term) ->
@@ -126,7 +129,7 @@ let string_of_clock_updates program = function
 		^ "\n\t\t\t\t<attribute name=\"expr\">"
 		^ (LinearConstraint.gml_of_linear_term program.variable_names 5 linear_term)
 		^ "\n\t\t\t\t</attribute>"
-		^ "\n\t\t\t</attribute>"
+		^ "\n\t\t\t</attribute> <!-- end update -->"
 	) list_of_clocks_lt)
 
 
@@ -138,7 +141,7 @@ let string_of_updates program updates =
 		^ "\n\t\t\t\t<attribute name=\"expr\">"
 		^ (LinearConstraint.gml_of_linear_term program.variable_names 5 linear_term)
 		^ "\n\t\t\t\t</attribute>"
-		^ "\n\t\t\t</attribute>"
+		^ "\n\t\t\t</attribute> <!-- end update -->"
 	) updates)
 
 
@@ -175,8 +178,15 @@ let string_of_transition program automaton_index action_index location_index (gu
 	(* Convert source and dest *)
 	"\n\t<arc id=\"" ^ (string_of_int !id_transition) ^ "\" arcType=\"transition\" source=\"" ^ (string_of_int location_index) ^ "\" target=\"" ^ (string_of_int destination_location) ^ "\">"
 	
-	(* Convert the action *)
-	^ (string_of_sync program action_index)
+	^
+	(* Convert the updates if any*)
+	(if clock_updates != No_update || List.length discrete_updates > 0 then (
+			"\n\t\t<attribute name=\"updates\">"
+			^ (string_of_clock_updates program clock_updates)
+			^ (string_of_updates program discrete_updates)
+			^ "\n\t\t</attribute> <!-- end updates -->"
+		) else "")
+
 	^
 	(* Convert the guard if any *)
 	(if not (LinearConstraint.is_true guard) then (
@@ -184,16 +194,12 @@ let string_of_transition program automaton_index action_index location_index (gu
 		^ "\n\t\t\t<attribute name=\"boolExpr\">"
 		^ (LinearConstraint.gml_of_linear_constraint program.variable_names 4 guard)
 		^ "\n\t\t\t</attribute>"
-		^ "\n\t\t</attribute>"
+		^ "\n\t\t</attribute> <!-- end guard -->"
 	) else "")
-	^
-	(* Convert the updates if any*)
-	(if clock_updates != No_update || List.length discrete_updates > 0 then (
-			"\n\t\t<attribute name=\"updates\">"
-			^ (string_of_clock_updates program clock_updates)
-			^ (string_of_updates program discrete_updates)
-			^ "\n\t\t</attribute>"
-		) else "")
+
+	(* Convert the action *)
+	^ (string_of_sync program action_index)
+
 	^ "\n\t</arc>"
 
 
@@ -225,16 +231,8 @@ let string_of_location program automaton_index location_index =
 	let inital_global_location  = program.initial_location in
 	let initial_location = Automaton.get_location inital_global_location automaton_index in
 	
-	(* ID and name *)
+	(* ID *)
 	"\n\t<node id=\"" ^ (string_of_int location_index) ^ "\" nodeType=\"state\">"
-	^ "\n\t\t<attribute name=\"name\">" ^ (program.location_names automaton_index location_index) ^ "</attribute>"
-	
-	(* Init ? *)
-	^ (if initial_location = location_index then (
-		"\n\t\t<attribute name=\"type\">"
-		^ "\n\t\t\t<attribute name=\"initialState\"/>"
-        ^ "\n\t\t</attribute>"
-	) else "")
 	
 	^
 	(* Invariant only if not true *)
@@ -244,8 +242,17 @@ let string_of_location program automaton_index location_index =
 		^ "\n\t\t\t<attribute name=\"boolExpr\">"
 		^ (LinearConstraint.gml_of_linear_constraint program.variable_names 4 invariant)
 		^ "\n\t\t\t</attribute>"
-		^ "\n\t\t</attribute>"
+		^ "\n\t\t</attribute> <!-- end invariant -->"
 	) else "")
+	
+	^ "\n\t\t<attribute name=\"name\">" ^ (program.location_names automaton_index location_index) ^ "</attribute>"
+	
+	(* Init ? *)
+	^ "\n\t\t<attribute name=\"type\">"
+	^ (if initial_location = location_index then (
+		"initialState"
+	) else "")
+	^ "</attribute>"
 	
 	^ "\n\t</node>"
 
@@ -260,8 +267,8 @@ let string_of_locations program automaton_index =
 (* Convert an automaton into a string *)
 let string_of_automaton program declarations_string automaton_index =
 	         "<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
-	^ "\n" ^ "<model formalismUrl=\"http://alligator.lip6.fr/parametric-timed-automaton.fml\""
-	^ "\n" ^ "    xmlns=\"http://grml.lip6.fr/model\">"
+	^ "\n" ^ "<model formalismUrl=\"http://formalisms.cosyverif.org/parametric-timed-automaton.fml\""
+	^ "\n" ^ "    xmlns=\"http://cosyverif.org/ns/model\">"
 
 	^ "\n<!-- ************************************************************"
 	^ "\n automaton " ^ (program.automata_names automaton_index)

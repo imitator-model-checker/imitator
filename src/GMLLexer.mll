@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created       : 2011/11/23
- * Last modified : 2012/06/13
+ * Last modified : 2012/10/24
 *****************************************************************)
 
 {
@@ -24,7 +24,7 @@ rule token = parse
 	| [' ' '\t']         { token lexbuf }     (* skip blanks *)
 	| "--" [^'\n']* '\n' { line := !line + 1 ; token lexbuf }     (* skip Hytech-style comments *)
 
-	(* OCaml style comments *)
+	(* Nested style comments *)
 	| "<!--"
 		{ comment_depth := 1;
 		comment_ocaml lexbuf;
@@ -46,7 +46,8 @@ rule token = parse
 	| ">"			{ CLOSE }
 	| "/>"			{ SINGLE_CLOSE }
 	
-	| "Initial"	    { INITIAL }
+	| "initialState"	    { INITIAL }
+	| "finalState"	    { FINAL }
 	| "Normal"	    { NORMAL }
 	| "true"		{ TRUE }
 
@@ -61,7 +62,6 @@ rule token = parse
 	| "\"discrete\""		{ STR_DISCRETE }
 	| "\"discretes\""		{ STR_DISCRETES }
 	| "\"expr\""			{ STR_EXPR }
-	| "\"finalState\""		{ STR_FINALSTATE }
 	| "\"globalconstants\""	{ STR_GLOBALCONSTANTS }
 	| "\"guard\""			{ STR_GUARD }
 	| "\"initialConstraint\"" { STR_INITIALCONSTRAINT }
@@ -86,8 +86,8 @@ rule token = parse
 	
 	| "\"*\""				{ STR_OPMUL }
 	
-	| "\"http://alligator.lip6.fr/parametric-timed-automaton.fml\"" { STR_FORMALISM_URL }
-	| "\"http://grml.lip6.fr/model\"" { STR_XMLNS }
+	| "\"http://formalisms.cosyverif.org/parametric-timed-automaton.fml\"" { STR_FORMALISM_URL }
+	| "\"http://cosyverif.org/ns/model\"" { STR_XMLNS }
 	
 	
 	

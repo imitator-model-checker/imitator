@@ -240,7 +240,7 @@ else
 
 (* Syntax *)
 if options#fromGML then
-	print_warning ("GML syntax used (experimental!).");
+	print_warning ("GrML syntax used (experimental!).");
 
 (* Syntax *)
 if options#forcePi0 then
