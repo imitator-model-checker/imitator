@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2009/09/07
- * Last modified: 2012/08/21
+ * Last modified: 2012/10/24
  *
  **************************************************)
 
@@ -348,7 +348,7 @@ let parsing_structure =
 	(* Branching between 2 input syntaxes *)
 	if options#fromGML then
 		try parser_lexer_from_file GMLParser.main GMLLexer.token options#file
-		with InvalidModel -> (print_error ("GML input contains error. Please check it again."); abort_program (); exit 0)
+		with InvalidModel -> (print_error ("GrML input contains error. Please check it again."); abort_program (); exit 0)
 	else parser_lexer_from_file ModelParser.main ModelLexer.token options#file
 in 
 
@@ -436,10 +436,10 @@ if options#pta2clp then(
 
 (* Translation to GML (experimental) *)
 if options#pta2gml then(
-	print_message Debug_standard ("Translating program to GML.");
+	print_message Debug_standard ("Translating program to GrML.");
 	print_warning ("Experimental translation!");
 	let translated_model = PTA2GML.string_of_program program in
-	let gml_file = options#file ^ ".gml" in
+	let gml_file = options#file ^ ".grml" in
 	print_message Debug_total ("\n" ^ translated_model ^ "\n");
 	(* Write *)
 	write_to_file gml_file translated_model;

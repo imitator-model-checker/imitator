@@ -280,7 +280,8 @@ exe:
 
 ##### CASE STUDIES : HARDWARE #####
 
-# 	$(TARGET) $(EXAMPLE_PATH)/AndOr/AndOr.imi -mode reachability -PTA2JPG
+	$(TARGET) $(EXAMPLE_PATH)/AndOr/AndOr.imi -PTA2GrML
+	$(TARGET) $(EXAMPLE_PATH)/AndOr/AndOr.imi.grml -fromGrML -mode reachability
 
 # 	$(TARGET) $(EXAMPLE_PATH)/AndOr/AndOr.imi -mode reachability -depth-limit 10 -debug nodebug
 # 	$(TARGET) $(EXAMPLE_PATH)/AndOr/AndOr.imi -mode reachability -states-limit 10
@@ -480,7 +481,7 @@ exe:
 ##### CASE STUDIES : VALMEM #####
 
 # 	$(TARGET) $(EXAMPLE_PATH)/Valmem/spsmall.imi -PTA2JPG 
-	$(TARGET) $(EXAMPLE_PATH)/Valmem/spsmall.imi -mode reachability -debug total
+# 	$(TARGET) $(EXAMPLE_PATH)/Valmem/spsmall.imi -mode reachability -debug total
 # 	$(TARGET) $(EXAMPLE_PATH)/Valmem/spsmall.imi $(EXAMPLE_PATH)/Valmem/spsmall.pi0
 # 	$(TARGET) $(EXAMPLE_PATH)/Valmem/spsmall.imi $(EXAMPLE_PATH)/Valmem/spsmall.pi0 -no-random -bab
 # 	$(TARGET) $(EXAMPLE_PATH)/Valmem/spsmall.imi $(EXAMPLE_PATH)/Valmem/spsmall.pi0 -with-dot -with-dot-source -fancy
@@ -489,7 +490,6 @@ exe:
 # 	$(TARGET) $(EXAMPLE_PATH)/Valmem/spsmall.imi $(EXAMPLE_PATH)/Valmem/spsmall.pi0 -no-dot -no-log -statistics -acyclic
 # 	$(TARGET) $(EXAMPLE_PATH)/Valmem/spsmall.imi $(EXAMPLE_PATH)/Valmem/spsmall.pi0 -no-dot -no-log -statistics -tree -acyclic
 # 	$(TARGET) $(EXAMPLE_PATH)/Valmem/spsmall.imi $(EXAMPLE_PATH)/Valmem/spsmall.pi0 -no-dot -no-log -statistics -dynamic
-# 	$(TARGET) $(EXAMPLE_PATH)/Valmem/spsmall.imi $(EXAMPLE_PATH)/Valmem/spsmall.pi0 -no-dot -no-log
 # 	bin/IMITATOR2.41 $(EXAMPLE_PATH)/Valmem/spsmall.imi $(EXAMPLE_PATH)/Valmem/spsmall.pi0 -no-dot -no-log
 # 	bin/IMITATOR2.4 $(EXAMPLE_PATH)/Valmem/spsmall.imi $(EXAMPLE_PATH)/Valmem/spsmall.pi0 -no-dot -no-log -jobshop
 # 	bin/IMITATOR2.375 $(EXAMPLE_PATH)/Valmem/spsmall.imi $(EXAMPLE_PATH)/Valmem/spsmall.pi0 -no-dot -no-log -jobshop

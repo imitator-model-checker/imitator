@@ -190,8 +190,8 @@ class imitator_options =
 				("-log-prefix", Set_string program_prefix, " Sets the prefix for log files. Default: [model].");
 				("-mode", String set_mode, " Mode for " ^ program_name ^ ". Use 'reachability' for a parametric reachability analysis (no pi0 needed). Use 'inversemethod' for the inverse method. For the behavioral cartography algorithm, use 'cover' to cover all the points within V0, or 'randomXX' where XX is a number to iterate randomly algorithm (e.g., random5 or random100). Default: 'inversemethod'.");
 				("-no-random", Set no_random, " No random selection of the pi0-incompatible inequality (select the first found). Default: false.");
-				("-PTA2CLP", Unit (fun _ -> pta2clp := true; imitator_mode := Translation), "Translate PTA into a CLP program, and exit without performing any analysis. Work in progress! Defaut : 'false'");
-				("-PTA2GML", Unit (fun _ -> pta2gml := true; imitator_mode := Translation), "Translate PTA into a GML program, and exit without performing any analysis. Experimental. Defaut : 'false'");
+(* 				("-PTA2CLP", Unit (fun _ -> pta2clp := true; imitator_mode := Translation), "Translate PTA into a CLP program, and exit without performing any analysis. Work in progress! Defaut : 'false'"); *)
+				("-PTA2GrML", Unit (fun _ -> pta2gml := true; imitator_mode := Translation), "Translate PTA into a GrML program, and exit without performing any analysis. Defaut : 'false'");
 				("-PTA2JPG", Unit (fun _ -> pta2jpg := true; with_dot:= true; imitator_mode := Translation), "Translate PTA into a graphics, and exit without performing any analysis. Defaut : 'false'");
 				("-states-limit", Int (fun i -> states_limit := Some i), " States limit: will try to stop after reaching this number of states. Warning: the program may have to first finish computing the current iteration before stopping. Default: no limit.");
 				("-statistics", Set statistics, " Print info on number of calls to PPL, and other statistics. Default: 'false'");

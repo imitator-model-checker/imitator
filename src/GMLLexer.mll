@@ -86,8 +86,8 @@ rule token = parse
 	
 	| "\"*\""				{ STR_OPMUL }
 	
-	| "\"http://formalisms.cosyverif.org/parametric-timed-automaton.fml\"" { STR_FORMALISM_URL }
-	| "\"http://cosyverif.org/ns/model\"" { STR_XMLNS }
+	| "\"http://alligator.lip6.fr/parametric-timed-automaton.fml\"" { STR_FORMALISM_URL }
+	| "\"http://grml.lip6.fr/model\"" { STR_XMLNS }
 	
 	
 	

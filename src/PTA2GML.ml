@@ -44,7 +44,7 @@ let string_of_header program =
 	^ "\n"
 	^ "\n" ^ "<!-- ************************************************************"
 	^ "\n" ^" * !! Experimental translation !!"
-	^ "\n" ^" *   - All automata are defined into one file (but in independent GML structures)"
+	^ "\n" ^" *   - All automata are defined into one file (but in independent GrML structures)"
 	^ "\n" ^" *   - All variables are declared in all automata."
 	^ "\n" ^" *   - Initial constraint (on all variables) is added to each automaton."
 	^ "\n" ^" *   - We suppose that automata synchronize on variables and actions sharing the same names (common behavior)."
@@ -261,7 +261,7 @@ let string_of_locations program automaton_index =
 let string_of_automaton program declarations_string automaton_index =
 	         "<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
 	^ "\n" ^ "<model formalismUrl=\"http://alligator.lip6.fr/parametric-timed-automaton.fml\""
-	^ "\n" ^ "    xmlns=\"http://gml.lip6.fr/model\">"
+	^ "\n" ^ "    xmlns=\"http://grml.lip6.fr/model\">"
 
 	^ "\n<!-- ************************************************************"
 	^ "\n automaton " ^ (program.automata_names automaton_index)
