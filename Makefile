@@ -280,8 +280,8 @@ exe:
 
 ##### CASE STUDIES : HARDWARE #####
 
-	$(TARGET) $(EXAMPLE_PATH)/GML/testtemp.grml -fromGrML -mode reachability
-# 	$(TARGET) $(EXAMPLE_PATH)/GML/pta1.grml -fromGrML -mode reachability
+# 	$(TARGET) $(EXAMPLE_PATH)/GML/testtemp.grml -fromGrML -mode reachability
+	$(TARGET) $(EXAMPLE_PATH)/GML/pta2.grml -fromGrML -mode reachability
 # 	$(TARGET) $(EXAMPLE_PATH)/AndOr/AndOr.imi -PTA2GrML
 # 	$(TARGET) $(EXAMPLE_PATH)/AndOr/AndOr.imi.grml -fromGrML -mode reachability
 
