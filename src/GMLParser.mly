@@ -17,11 +17,27 @@ open NumConst;;
 (* Counter for the unnamed locations *)
 let nb_unnamed_locations = ref 0;;
 
+(* Counter for the names of the automata*)
+let automata_names = ref 0;;
+
 let parse_error s =
 	let symbol_start = symbol_start () in
 	let symbol_end = symbol_end () in
 	raise (ParsingError (symbol_start, symbol_end))
 ;;
+
+let  merge_declarations local_declarations declarations  =
+     List.append local_declarations declarations
+;;
+
+let  merge_automata local_automaton automata =
+     List.append local_automaton automata
+;;   
+
+
+let merge_init_definitions local_init_definitions init_definitions =
+    List.append local_init_definitions init_definitions
+;; 
 
 let convert declarations locations transitions =
 	(* SO FAR CONSIDER ONLY ONE AUTOMATON *)
@@ -109,9 +125,11 @@ let convert declarations locations transitions =
 		(* Add it *)
 		location :: current_list
 	) location_names [] in
-	
-	let automaton_name = "only_one_automaton" in
-	
+		
+	(* Allows different names for the automata *)
+	automata_names := !automata_names + 1 ;
+	let automaton_name = string_of_int(!automata_names) in 
+
 	(* Name x list of synclabs x locations *)
 	let automaton = automaton_name, list_only_once(!synclabs), List.rev locations in
 	
@@ -161,10 +179,27 @@ let convert declarations locations transitions =
 
 
 
+/************************************************************
+  MAIN - Multiple automata
+************************************************************/
 
-/************************************************************/
-main:
-	 header body footer EOF
+main : models EOF {$1}
+
+models : model {$1} |  models model 
+       {      
+	 let declarations, automata, init_definitions, []  = $1 in
+	 let local_declarations, local_automaton, local_init_definitions, []  = $2 in
+	 let all_declarations = merge_declarations local_declarations declarations  in
+	 let all_automata = merge_automata local_automaton automata in
+	 let all_init_definitions = merge_init_definitions local_init_definitions init_definitions in 
+	  		  all_declarations, all_automata, all_init_definitions, []
+	}	
+
+/************************************************************
+  MAIN - One automaton
+************************************************************/
+model:
+	 header body footer
 	{
 		let declarations, states, transitions = $2 in
 		let automata, init_definition = convert declarations states transitions in
