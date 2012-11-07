@@ -56,7 +56,7 @@ rule token = parse
 	| "\"boolValue\""		{ STR_BOOLVALUE }
 	| "\"clock\""			{ STR_CLOCK }
 	| "\"clocks\""			{ STR_CLOCKS }
-	| "\"const\""			{ STR_CONST }
+	| "\"numValue\""			{ STR_CONST }
 	| "\"constants\""		{ STR_CONSTANTS }
 	| "\"declaration\""		{ STR_DECLARATION }
 	| "\"discrete\""		{ STR_DISCRETE }

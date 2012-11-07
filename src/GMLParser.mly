@@ -240,7 +240,7 @@ close_attribute:
 ************************************************************/
 body:
 /* 	TODO: allow different orders, even all mixed together  */
-	| declarations initial states transitions { $1, $3, $4 } /*TODO: constraint*/ 
+	| declarations states transitions { $1, $2, $3 } /*TODO: constraint*/ 
 /* 	| declarations states { $1, [], [], [] } */
 ;
 
@@ -250,7 +250,7 @@ body:
 declarations:
 /* 1 shift / reduce conflict here! */
 	| open_attribute STR_DECLARATION CLOSE
-	variables constants
+	variables constants initial
 	close_attribute
 		{ List.rev_append $4 $5 }
 ;
