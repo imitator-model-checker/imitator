@@ -187,8 +187,8 @@ main : models EOF {$1}
 
 models : model {$1} |  models model 
        {      
-	 let declarations, automata, init_definitions, []  = $1 in
-	 let local_declarations, local_automaton, local_init_definitions, []  = $2 in
+	 let declarations, automata, init_definitions, _  = $1 in
+	 let local_declarations, local_automaton, local_init_definitions, _  = $2 in
 	 let all_declarations = merge_declarations local_declarations declarations  in
 	 let all_automata = merge_automata local_automaton automata in
 	 let all_init_definitions = merge_init_definitions local_init_definitions init_definitions in 

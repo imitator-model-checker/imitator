@@ -7,7 +7,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2009/09/09
- * Last modified: 2012/10/16
+ * Last modified: 2013/01/16
  *
  ****************************************************************)
 
@@ -1325,10 +1325,14 @@ let get_clocks_in_updates : clock_updates -> Automaton.clock_index list = functi
 (*--------------------------------------------------*)
 (* Find the local clocks per automaton *)
 (*--------------------------------------------------*)
+(** NOTE: this function is not strictly speaking program conversion, and could (should?) be defined elsewhere *)
+(** WARNING: the use of clock_offset is not beautiful (and error prone) here *)
 let find_local_clocks nb_automata clocks clock_offset actions_per_location locations_per_automaton invariants transitions stopwatches =
 	let nb_clocks = List.length clocks in
-	(* Create an empty array for the clocks of every automaton *)
+	(* Create an empty array for the clocks of each automaton *)
 	let clocks_per_automaton = Array.make nb_automata [] in
+	(* Create an empty array for the local clocks of each automaton *)
+	let local_clocks_per_automaton = Array.make nb_automata [] in
 	(* Create an empty array for the automata associated with each clock *)
 	let automata_per_clock = Array.make nb_clocks [] in
 	
@@ -1377,9 +1381,57 @@ let find_local_clocks nb_automata clocks clock_offset actions_per_location locat
 		) clocks_for_this_automaton;
 	done; (* end for each automaton *)
 	
-	clocks_per_automaton, automata_per_clock
+	(* Now compute the local clocks *)
+	for clock_index = clock_offset to clock_offset + nb_clocks - 1 do
+		(* Retrieve the automata in which this clock appears *)
+		let automata_for_this_clock = automata_per_clock.(clock_index - clock_offset) in
+		(* If size is 1, the clock is local *)
+		match automata_for_this_clock with
+			(* Only one element: clock is local *)
+			| [automaton_index] -> 
+(* 				print_message Debug_high ("Automaton " ^ (string_of_int automaton_index) ^ " has local clock " ^ (string_of_int clock_index)); *)
+				(* Add the clock to the automaton *)
+				local_clocks_per_automaton.(automaton_index) <- (clock_index) :: local_clocks_per_automaton.(automaton_index);
+			(* Otherwise, clock is not local *)
+			| _ -> ()
+	done;
+
+	(*clocks_per_automaton, automata_per_clock,*) local_clocks_per_automaton
 	
+
+(*--------------------------------------------------*)
+(* Find the useless clocks in automata locations *)
+(*--------------------------------------------------*)
+(** NOTE: this function is not related to program conversion, and could (should?) be defined elsewhere *)
+let find_useless_clocks_in_automata nb_automata local_clocks_per_automaton =
+	(* For each automaton *)
+	for automaton_index = 0 to nb_automata - 1 do
 	
+		(* Compute the predecessor locations *)
+
+	
+		(* Retrieve the local clocks *)
+		let local_clocks = local_clocks_per_automaton.(automaton_index) in
+		(* For each local clock for this automaton *)
+		List.iter(fun clock_index ->
+			(* Create a waiting list *)
+			
+			(* Create a list of marked locations *)
+			
+			(* Start the algorithm *)
+
+			(* End the algorithm *)
+			()
+			
+			
+			(* JE SUIS LA (au niveau local) *)
+			
+		
+		) local_clocks; (* end for each local clock *)
+	done; (* end for each automaton *)
+
+	()
+
 
 (*--------------------------------------------------*)
 (* Convert the parsing structure into an abstract program *)
@@ -1680,9 +1732,10 @@ let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_
 	print_message Debug_total ("*** Building stopwatches...");
 	let stopwatches_fun = (fun automaton_index location_index -> stopwatches.(automaton_index).(location_index)) in
 
+	(** TODO: only compute this if the dynamic clock elimination option is activated *)
 	(* Compute the clocks per automaton *)
 	print_message Debug_total ("*** Building clocks per automaton...");
-	let clocks_per_automaton, automata_per_clock = find_local_clocks nb_automata clocks nb_parameters actions_per_location locations_per_automaton invariants transitions stopwatches_fun in
+	let (*clocks_per_automaton, automata_per_clock*) local_clocks_per_automaton = find_local_clocks nb_automata clocks nb_parameters actions_per_location locations_per_automaton invariants transitions stopwatches_fun in
 
 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -1750,19 +1803,19 @@ let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_
 			print_message Debug_total ((action_names action_index) ^ " : " ^ automata_string)
 		) actions;
 
-		(* Debug print: clocks per automaton *)
-		print_message Debug_total ("\n*** Clocks per automaton:");
+		(* Debug print: local clocks per automaton *)
+		print_message Debug_total ("\n*** Local clocks per automaton:");
 		(* For each automaton *)
 		List.iter (fun automaton_index ->
 			(* Get the actions *)
-			let clocks = clocks_per_automaton.(automaton_index) in
+			let clocks = local_clocks_per_automaton.(automaton_index) in
 			(* Print it *)
 			let clocks_string = string_of_list_of_string_with_sep ", " (List.map variable_names clocks) in
 			print_message Debug_total ((automata_names automaton_index) ^ " : " ^ clocks_string)
 		) automata;
 		
 		
-	(*JE SUIS LA *)
+	(*JE SUIS LA (au niveau global) *)
 (* 	terminate_program(); *)
 
 

@@ -262,7 +262,7 @@ exe:
 # 	bin/IMITATOR2.34.111115 $(EXAMPLE_PATH)/Examples/testBoucleAvecDiscrete.imi -mode reachability -depth-limit 200 -no-dot -no-log
 
 ##### CASE STUDIES : EXAMPLES #####
-# 	$(TARGET) $(EXAMPLE_PATH)/Examples/exSITH.imi -mode reachability -PTA2GML
+# 	$(TARGET) $(EXAMPLE_PATH)/Examples/exSITH.imi -mode reachability -PTA2GrML
 # 	$(TARGET) $(EXAMPLE_PATH)/Examples/exSITH.imi $(EXAMPLE_PATH)/Examples/exSITH.pi0 -bab -with-merging
 # 	$(TARGET) $(EXAMPLE_PATH)/Examples/exSITH.imi $(EXAMPLE_PATH)/Examples/exSITH.pi0 -bab
 # 	$(TARGET) $(EXAMPLE_PATH)/Examples/exSITH.imi $(EXAMPLE_PATH)/Examples/exSITH.pi0
@@ -281,11 +281,11 @@ exe:
 ##### CASE STUDIES : HARDWARE #####
 
 # 	$(TARGET) $(EXAMPLE_PATH)/GML/testtemp.grml -fromGrML -mode reachability
-	$(TARGET) $(EXAMPLE_PATH)/GML/pta1.grml -fromGrML -mode reachability
+# 	$(TARGET) $(EXAMPLE_PATH)/GML/pta1.grml -fromGrML -mode reachability
 # 	$(TARGET) $(EXAMPLE_PATH)/AndOr/AndOr.imi -PTA2GrML
 # 	$(TARGET) $(EXAMPLE_PATH)/AndOr/AndOr.imi.grml -fromGrML -mode reachability
 
-# 	$(TARGET) $(EXAMPLE_PATH)/AndOr/AndOr.imi -mode reachability -depth-limit 10 -debug nodebug
+	$(TARGET) $(EXAMPLE_PATH)/AndOr/AndOr.imi -mode reachability -depth-limit 10 -debug total
 # 	$(TARGET) $(EXAMPLE_PATH)/AndOr/AndOr.imi -mode reachability -states-limit 10
 # 	$(TARGET) $(EXAMPLE_PATH)/AndOr/AndOr.imi -mode reachability -time-limit 10
 
