@@ -7,7 +7,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Ulrich Kuehne, Etienne Andre
  * Created:       2010
- * Last modified: 2012/08/24
+ * Last modified: 2013/01/17
  *
  ****************************************************************)
  
@@ -57,6 +57,8 @@ class imitator_options =
 
 		(* yet another (testing) mode *)
 		val mutable branch_and_bound = ref false
+		(* yet another (testing) mode *)
+		val mutable dynamic_clock_elimination = ref false
 		(* limit number of states *)
 		val mutable states_limit = ref None
 		(* limit number of iterations *)
@@ -104,6 +106,7 @@ class imitator_options =
 		method branch_and_bound_unset = (branch_and_bound := false)
 		method cart = !cart
 (* 		method dynamic = !dynamic *)
+		method dynamic_clock_elimination = !dynamic_clock_elimination
 		method fancy = !fancy
 		method file = !file
 		method forcePi0 = !forcePi0
@@ -181,6 +184,7 @@ class imitator_options =
 				("-debug", String set_debug_mode_ref, " Print more or less information. Can be set to 'nodebug', 'standard', 'low', 'medium', 'high', 'total'. Default: 'standard'");
 (* 				("-dynamic", Set dynamic, "Perform the on-the-fly intersection. Defaut : 'false'"); *)
 				("-depth-limit", Int (fun i -> post_limit := Some i), " Limits the depth of the exploration of the reachability graph. Default: no limit.");
+				("-dynamic-elimination", Set dynamic_clock_elimination, " Dynamic clock elimination (experimental). Default: false.");
 				("-fancy", Set fancy, " Generate detailed state information for dot output. Default: false.");
 				("-forcePi0", Set forcePi0, "Create a predefined pi0 file of the form p1 = 1, p2 = 2, etc. Defaut : 'false'");
 				("-fromGrML", Set fromGML, "GrML syntax for input files (experimental). Defaut : 'false'");

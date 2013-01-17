@@ -1293,8 +1293,6 @@ let make_v0 parsed_v0 index_of_variables nb_parameters =
 (*--------------------------------------------------*)
 (* Find the clocks in a linear_constraint *)
 (*--------------------------------------------------*)
-(*let get_clocks_in_linear_inequality is_clock linear_inequality =
-	[]*)
 
 let get_clocks_in_linear_constraint clocks =
 	(* Get a long list with duplicates, and then simplify *)
@@ -1307,6 +1305,8 @@ let get_clocks_in_linear_constraint clocks =
 	list_only_once list_of_clocks*)
 	LinearConstraint.find_variables clocks
 
+
+(** WARNING: duplicate function in Reachability *)
 let get_clocks_in_updates : clock_updates -> Automaton.clock_index list = function
 	(* No update at all *)
 	| No_update -> []
@@ -1316,121 +1316,6 @@ let get_clocks_in_updates : clock_updates -> Automaton.clock_index list = functi
 	| Updates clock_update_list -> let result, _ = List.split clock_update_list in result
 
 
-(*let get_clocks_in_updates =
-	List.fold_left (fun current_list clock_update ->
-		List.rev_append current_list (get_clocks_in_update clock_update)
-	) []*)
-
-
-(*--------------------------------------------------*)
-(* Find the local clocks per automaton *)
-(*--------------------------------------------------*)
-(** NOTE: this function is not strictly speaking program conversion, and could (should?) be defined elsewhere *)
-(** WARNING: the use of clock_offset is not beautiful (and error prone) here *)
-let find_local_clocks nb_automata clocks clock_offset actions_per_location locations_per_automaton invariants transitions stopwatches =
-	let nb_clocks = List.length clocks in
-	(* Create an empty array for the clocks of each automaton *)
-	let clocks_per_automaton = Array.make nb_automata [] in
-	(* Create an empty array for the local clocks of each automaton *)
-	let local_clocks_per_automaton = Array.make nb_automata [] in
-	(* Create an empty array for the automata associated with each clock *)
-	let automata_per_clock = Array.make nb_clocks [] in
-	
-	(* For each automaton *)
-	for automaton_index = 0 to nb_automata - 1 do
-		(* Get the locations for this automaton *)
-		let locations = locations_per_automaton automaton_index in
-		(* For each location *)
-		let clocks_for_locations = List.fold_left (fun list_of_clocks_for_previous_locations location_index ->
-			(* Get the clocks in the invariant *)
-			let invariant = invariants automaton_index location_index in
-			let clocks_in_invariant = get_clocks_in_linear_constraint clocks invariant in
-			(* Get the clocks from the stopwatches *)
-			let clocks_in_stopwatches = stopwatches automaton_index location_index in
-			
-			(* Now find clocks in guards *)
-			(* For each action for this automaton and location *)
-			let actions_for_this_location = actions_per_location automaton_index location_index in
-			let clocks_for_actions = List.fold_left (fun list_of_clocks_for_previous_actions action_index ->
-				(* For each transition for this automaton, location and action *)
-				let transitions_for_this_action = transitions automaton_index location_index action_index in
-				let clocks_for_transitions = List.fold_left (fun list_of_clocks_for_previous_transitions transition ->
-					(* Name the elements in the transition *)
-					let guard , clock_updates , _ , _ = transition in
-					let clocks_in_guards = get_clocks_in_linear_constraint clocks guard in
-					let clocks_in_updates = get_clocks_in_updates clock_updates in
-						(* Add these 2 new lists to the current list *)
-						List.rev_append (List.rev_append clocks_in_guards clocks_in_updates) list_of_clocks_for_previous_transitions
-				) [] transitions_for_this_action in
-				(* Add the list for this action to the one for previous actions *)
-				List.rev_append clocks_for_transitions list_of_clocks_for_previous_actions
-			) [] actions_for_this_location in
-			
-			(* Add all clocks *)
-			List.rev_append (List.rev_append (List.rev_append clocks_in_invariant clocks_in_stopwatches) clocks_for_actions) list_of_clocks_for_previous_locations
-		) [] locations in
-		
-		(* Collapse the list *)
-		let clocks_for_this_automaton = list_only_once clocks_for_locations in
-		(* Update the clocks per automaton *)
-		clocks_per_automaton.(automaton_index) <- clocks_for_this_automaton;
-		(* Update the automaton for all clocks *)
-		List.iter (fun clock ->
-			(* Add current automaton to the list of automata for this clock *)
-			automata_per_clock.(clock - clock_offset) <- (automaton_index :: automata_per_clock.(clock - clock_offset));
-		) clocks_for_this_automaton;
-	done; (* end for each automaton *)
-	
-	(* Now compute the local clocks *)
-	for clock_index = clock_offset to clock_offset + nb_clocks - 1 do
-		(* Retrieve the automata in which this clock appears *)
-		let automata_for_this_clock = automata_per_clock.(clock_index - clock_offset) in
-		(* If size is 1, the clock is local *)
-		match automata_for_this_clock with
-			(* Only one element: clock is local *)
-			| [automaton_index] -> 
-(* 				print_message Debug_high ("Automaton " ^ (string_of_int automaton_index) ^ " has local clock " ^ (string_of_int clock_index)); *)
-				(* Add the clock to the automaton *)
-				local_clocks_per_automaton.(automaton_index) <- (clock_index) :: local_clocks_per_automaton.(automaton_index);
-			(* Otherwise, clock is not local *)
-			| _ -> ()
-	done;
-
-	(*clocks_per_automaton, automata_per_clock,*) local_clocks_per_automaton
-	
-
-(*--------------------------------------------------*)
-(* Find the useless clocks in automata locations *)
-(*--------------------------------------------------*)
-(** NOTE: this function is not related to program conversion, and could (should?) be defined elsewhere *)
-let find_useless_clocks_in_automata nb_automata local_clocks_per_automaton =
-	(* For each automaton *)
-	for automaton_index = 0 to nb_automata - 1 do
-	
-		(* Compute the predecessor locations *)
-
-	
-		(* Retrieve the local clocks *)
-		let local_clocks = local_clocks_per_automaton.(automaton_index) in
-		(* For each local clock for this automaton *)
-		List.iter(fun clock_index ->
-			(* Create a waiting list *)
-			
-			(* Create a list of marked locations *)
-			
-			(* Start the algorithm *)
-
-			(* End the algorithm *)
-			()
-			
-			
-			(* JE SUIS LA (au niveau local) *)
-			
-		
-		) local_clocks; (* end for each local clock *)
-	done; (* end for each automaton *)
-
-	()
 
 
 (*--------------------------------------------------*)
@@ -1732,11 +1617,6 @@ let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_
 	print_message Debug_total ("*** Building stopwatches...");
 	let stopwatches_fun = (fun automaton_index location_index -> stopwatches.(automaton_index).(location_index)) in
 
-	(** TODO: only compute this if the dynamic clock elimination option is activated *)
-	(* Compute the clocks per automaton *)
-	print_message Debug_total ("*** Building clocks per automaton...");
-	let (*clocks_per_automaton, automata_per_clock*) local_clocks_per_automaton = find_local_clocks nb_automata clocks nb_parameters actions_per_location locations_per_automaton invariants transitions stopwatches_fun in
-
 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Set the number of discrete variables *) 
@@ -1802,22 +1682,6 @@ let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_
 			let automata_string = string_of_list_of_string_with_sep ", " (List.map automata_names automata) in
 			print_message Debug_total ((action_names action_index) ^ " : " ^ automata_string)
 		) actions;
-
-		(* Debug print: local clocks per automaton *)
-		print_message Debug_total ("\n*** Local clocks per automaton:");
-		(* For each automaton *)
-		List.iter (fun automaton_index ->
-			(* Get the actions *)
-			let clocks = local_clocks_per_automaton.(automaton_index) in
-			(* Print it *)
-			let clocks_string = string_of_list_of_string_with_sep ", " (List.map variable_names clocks) in
-			print_message Debug_total ((automata_names automaton_index) ^ " : " ^ clocks_string)
-		) automata;
-		
-		
-	(*JE SUIS LA (au niveau global) *)
-(* 	terminate_program(); *)
-
 
 
 		(* Possible actions per location *)

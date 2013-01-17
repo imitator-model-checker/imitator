@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Ulrich Kuehne, Etienne Andre
  * Created:       2010/07/22
- * Last modified: 2012/06/18
+ * Last modified: 2013/01/17
  *
  ************************************************************)
 
@@ -74,6 +74,248 @@ let instantiate_costs program pi0 =
 	done;
 	(* Set the global array *)
 	instantiated_costs := costs;
+	()
+
+
+
+
+
+(**************************************************************)
+(* Local Clocks *)
+(**************************************************************)
+
+(** WARNING: duplicate function in ProgramConverter *)
+let get_clocks_in_updates : clock_updates -> Automaton.clock_index list = function
+	(* No update at all *)
+	| No_update -> []
+	(* Reset to 0 only *)
+	| Resets clock_reset_list -> clock_reset_list
+	(* Reset to arbitrary value (including discrete, parameters and clocks) *)
+	| Updates clock_update_list -> let result, _ = List.split clock_update_list in result
+
+
+(*--------------------------------------------------*)
+(* Find the local clocks per automaton *)
+(*--------------------------------------------------*)
+(** WARNING: the use of clock_offset is not beautiful (and error prone) here *)
+let find_local_clocks program =
+	(** HACK: yes, clock_offset is the number of parameters, but quite hard coded *)
+	let clock_offset = program.nb_parameters in
+	
+	(* Create an empty array for the clocks of each automaton *)
+	let clocks_per_automaton = Array.make program.nb_automata [] in
+	(* Create an empty array for the local clocks of each automaton *)
+	let local_clocks_per_automaton = Array.make program.nb_automata [] in
+	(* Create an empty array for the automata associated with each clock *)
+	let automata_per_clock = Array.make program.nb_clocks [] in
+	
+	(* For each automaton *)
+	for automaton_index = 0 to program.nb_automata - 1 do
+		(* Get the locations for this automaton *)
+		let locations = program.locations_per_automaton automaton_index in
+		(* For each location *)
+		let clocks_for_locations = List.fold_left (fun list_of_clocks_for_previous_locations location_index ->
+			(* Get the clocks in the invariant *)
+			let invariant = program.invariants automaton_index location_index in
+			let clocks_in_invariant = LinearConstraint.find_variables program.clocks invariant in
+			(* Get the clocks from the stopwatches *)
+			let clocks_in_stopwatches = program.stopwatches automaton_index location_index in
+			
+			(* Now find clocks in guards *)
+			(* For each action for this automaton and location *)
+			let actions_for_this_location = program.actions_per_location automaton_index location_index in
+			let clocks_for_actions = List.fold_left (fun list_of_clocks_for_previous_actions action_index ->
+				(* For each transition for this automaton, location and action *)
+				let transitions_for_this_action = program.transitions automaton_index location_index action_index in
+				let clocks_for_transitions = List.fold_left (fun list_of_clocks_for_previous_transitions transition ->
+					(* Name the elements in the transition *)
+					let guard , clock_updates , _ , _ = transition in
+					let clocks_in_guards = LinearConstraint.find_variables program.clocks guard in
+					let clocks_in_updates = get_clocks_in_updates clock_updates in
+						(* Add these 2 new lists to the current list *)
+						List.rev_append (List.rev_append clocks_in_guards clocks_in_updates) list_of_clocks_for_previous_transitions
+				) [] transitions_for_this_action in
+				(* Add the list for this action to the one for previous actions *)
+				List.rev_append clocks_for_transitions list_of_clocks_for_previous_actions
+			) [] actions_for_this_location in
+			
+			(* Add all clocks *)
+			List.rev_append (List.rev_append (List.rev_append clocks_in_invariant clocks_in_stopwatches) clocks_for_actions) list_of_clocks_for_previous_locations
+		) [] locations in
+		
+		(* Collapse the list *)
+		let clocks_for_this_automaton = list_only_once clocks_for_locations in
+		(* Update the clocks per automaton *)
+		clocks_per_automaton.(automaton_index) <- clocks_for_this_automaton;
+		(* Update the automaton for all clocks *)
+		List.iter (fun clock ->
+			(* Add current automaton to the list of automata for this clock *)
+			automata_per_clock.(clock - clock_offset) <- (automaton_index :: automata_per_clock.(clock - clock_offset));
+		) clocks_for_this_automaton;
+	done; (* end for each automaton *)
+	
+	(* Now compute the local clocks *)
+	for clock_index = clock_offset to clock_offset + program.nb_clocks - 1 do
+		(* Retrieve the automata in which this clock appears *)
+		let automata_for_this_clock = automata_per_clock.(clock_index - clock_offset) in
+		(* If size is 1, the clock is local *)
+		match automata_for_this_clock with
+			(* Only one element: clock is local *)
+			| [automaton_index] -> 
+(* 				print_message Debug_high ("Automaton " ^ (string_of_int automaton_index) ^ " has local clock " ^ (string_of_int clock_index)); *)
+				(* Add the clock to the automaton *)
+				local_clocks_per_automaton.(automaton_index) <- (clock_index) :: local_clocks_per_automaton.(automaton_index);
+			(* Otherwise, clock is not local *)
+			| _ -> ()
+	done;
+
+	(*clocks_per_automaton, automata_per_clock,*) local_clocks_per_automaton
+	
+
+(*--------------------------------------------------*)
+(* Find the useless clocks in automata locations *)
+(*--------------------------------------------------*)
+(** NOTE: this function is not related to program conversion, and could (should?) be defined elsewhere *)
+let find_useless_clocks_in_automata program local_clocks_per_automaton =
+	
+	(* For each automaton *)
+	for automaton_index = 0 to program.nb_automata - 1 do
+	
+		(* Get the locations for this automaton *)
+		let locations_for_this_automaton = program.locations_per_automaton automaton_index in
+		let nb_locations = List.length locations_for_this_automaton in
+	
+		(* Retrieve the local clocks for this automaton *)
+		let local_clocks = local_clocks_per_automaton.(automaton_index) in
+
+		(* Compute the predecessor locations and lists of local clock reset *)
+		let predecessors = Array.make nb_locations [] in
+		(* For each location in this automaton: *)
+		List.iter (fun location_index ->
+			(* Get the actions for this location *)
+			let actions_for_this_location = program.actions_per_location automaton_index location_index in
+			
+			(* For each action available in this location *)
+			List.iter (fun action_index ->
+				(* Retrieve the transitions from this location & action *)
+				let transitions = program.transitions automaton_index location_index action_index in
+				
+				(* For each transition starting from this location *)
+				List.iter (fun ((*guard*) _ , clock_updates , (*discrete_update*) _ , destination_index) ->
+					(* Get the clocks updated or reset *)
+					let reset_clocks =
+					match clock_updates with
+					| No_update -> []
+					| Resets list_of_clocks -> list_of_clocks
+					| Updates list_of_clocks_and_updates ->
+						(* Keep only the left part (the clock indexes) *)
+						let left, _ =  List.split list_of_clocks_and_updates in left
+					in
+					(* Compute the local clocks updated or reset *)
+					let reset_local_clocks = list_inter reset_clocks local_clocks in
+					(* Update the predecessors *)
+					predecessors.(destination_index) <- (location_index, reset_local_clocks) :: predecessors.(destination_index);
+				) transitions; (* end for each transition *)
+			) actions_for_this_location; (* end for each action *)
+		) locations_for_this_automaton; (* end for each location *)
+		
+		(* Print debug information *)
+		if debug_mode_greater Debug_total then(
+			print_message Debug_total ("Computed predecessor locations and clock resets for automaton '" ^ (program.automata_names automaton_index) ^ "'");
+			(* Iterate on locations *)
+			List.iter (fun location_index ->
+				print_message Debug_total ("  Location '" ^ (program.location_names automaton_index location_index) ^ "' has predecessors:");
+				let predecessors_string = string_of_list_of_string_with_sep ", " (List.map (
+					fun (source_index, reset_local_clocks) ->
+						(program.location_names automaton_index source_index) ^ "[resets: " ^ (string_of_list_of_string_with_sep ", " (List.map program.variable_names reset_local_clocks)) ^ "]"
+					) predecessors.(location_index)) in
+				print_message Debug_total ("    " ^ predecessors_string);
+			) locations_for_this_automaton; (* end for each location *)
+		);
+	
+		(* For each local clock for this automaton *)
+		List.iter(fun clock_index ->
+			(* Create a waiting list *)
+			let waiting = ref [] in
+			
+			(* Create a list of marked locations (i.e., where the clock is useful) *)
+			let marked = ref [] in
+			(** TODO: update it! *)
+			
+			(* Start the algorithm *)
+			while !waiting != [] do
+				(* Pick a location from the waiting list *)
+				match !waiting with
+				| location_index :: rest ->
+					(* Remove the first element *)
+					waiting := rest;
+					(* For each transition leading to this location *)
+					List.iter (fun (source_index, reset_local_clocks) ->
+						(* If the clock is not reset by the transition *)
+						if not (List.mem clock_index reset_local_clocks) then(
+							(* If the source location does not belong to the marked list *)
+							if not (List.mem source_index !marked) then(
+								(* Add it to the marked list *)
+								marked := source_index :: !marked;
+								(* Add it to the waiting list (if not present) *)
+								if not (List.mem source_index !waiting) then
+									waiting := source_index :: !waiting;
+							); (* end if not in marked list *)
+						);(* end if clock not reset *)
+					) predecessors.(location_index); (* end for each transition *)
+					
+				| _ -> raise (InternalError "Impossible situation: list should not be empty.");
+
+			(* End the algorithm *)
+			done;
+			
+			(* Return the list of locations where the clock can be removed *)
+			let useless_locations = list_diff locations_for_this_automaton !marked in
+			
+			(* Print debug information *)
+			if debug_mode_greater Debug_total then(
+				print_message Debug_total ("List of useless locations for local clock '" ^ (program.variable_names clock_index) ^ "'");
+				print_message Debug_total (	"  " ^ (string_of_list_of_string_with_sep ", " (List.map (program.location_names automaton_index) useless_locations)));
+			);
+			
+		) local_clocks; (* end for each local clock *)
+	done; (* end for each automaton *)
+
+	()
+	(* Return something *)
+
+
+
+(*--------------------------------------------------*)
+(* Function for optimizing state space by clock elimination *)
+(*--------------------------------------------------*)
+let prepare_clocks_elimination program =
+	(** TODO: only compute this if the dynamic clock elimination option is activated *)
+	(* Compute the clocks per automaton *)
+	print_message Debug_total ("*** Building clocks per automaton...");
+	let (*clocks_per_automaton, automata_per_clock*) local_clocks_per_automaton = find_local_clocks program(*.nb_automata program.clocks program.nb_parameters program.actions_per_location program.locations_per_automaton program.invariants program.transitions program.stopwatches_fun*) in
+
+	(* Debug print: local clocks per automaton *)
+	print_message Debug_total ("\n*** Local clocks per automaton:");
+	(* For each automaton *)
+	List.iter (fun automaton_index ->
+		(* Get the actions *)
+		let clocks = local_clocks_per_automaton.(automaton_index) in
+		(* Print it *)
+		let clocks_string = string_of_list_of_string_with_sep ", " (List.map program.variable_names clocks) in
+		print_message Debug_total ("  " ^ (program.automata_names automaton_index) ^ " : " ^ clocks_string)
+	) program.automata;
+	
+	
+	
+	let _ = find_useless_clocks_in_automata program local_clocks_per_automaton in
+	
+	
+	terminate_program();
+
+	(*JE SUIS LA *)
+	
+	
 	()
 
 

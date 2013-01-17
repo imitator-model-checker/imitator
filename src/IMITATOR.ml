@@ -515,6 +515,15 @@ if options#imitator_mode = Inverse_method && options#branch_and_bound then(
 
 
 (**************************************************)
+(* EXPERIMENTAL: dynamic clock elimination *)
+(**************************************************)
+if options#dynamic_clock_elimination then (
+	Reachability.prepare_clocks_elimination program;
+	terminate_program();
+);
+
+
+(**************************************************)
 (* Execute IMITATOR *)
 (**************************************************)
 

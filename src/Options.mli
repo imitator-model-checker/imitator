@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2012/05/10
- * Last modified: 2012/08/24
+ * Last modified: 2013/01/17
  *
  ****************************************************************)
 
@@ -16,6 +16,7 @@ class imitator_options :
 		val mutable branch_and_bound : bool ref
 		val mutable cart : bool ref
 (* 		val mutable dynamic : bool ref *)
+		val mutable dynamic_clock_elimination : bool ref
 		val mutable fancy : bool ref
 		val mutable file : string ref
 		val mutable forcePi0 : bool ref
@@ -51,6 +52,7 @@ class imitator_options :
 		method branch_and_bound_unset : unit
 		method cart : bool
 (* 		method dynamic : bool *)
+		method dynamic_clock_elimination : bool
 		method fancy : bool
 		method file : string
 		method forcePi0 : bool
