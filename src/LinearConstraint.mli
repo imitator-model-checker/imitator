@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2010/03/04
- * Last modified: 2012/10/16
+ * Last modified: 2013/01/18
  *
  ****************************************************************)
  
@@ -134,6 +134,7 @@ val false_constraint : unit -> linear_constraint
 val true_constraint : unit -> linear_constraint
 
 
+
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
 (** {3 Access} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
@@ -145,6 +146,8 @@ val nb_inequalities : linear_constraint -> int
 (* WARNING: NOT SO BEAUTIFUL, is only needed by Graphics, and should be removed *)
 val get_inequalities : linear_constraint -> linear_inequality list
 
+(** Return true if the variable is constrained in a linear_constraint *)
+val is_constrained : linear_constraint -> variable -> bool
 
 (** Return the list of variables from l that are constrained in the constraint *)
 val find_variables : variable list -> linear_constraint -> variable list

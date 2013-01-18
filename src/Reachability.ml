@@ -239,8 +239,50 @@ let find_useless_clocks_in_automata program local_clocks_per_automaton =
 			let waiting = ref [] in
 			
 			(* Create a list of marked locations (i.e., where the clock is useful) *)
-			let marked = ref [] in
-			(** TODO: update it! *)
+			let marked = ref (list_union 
+				(* All locations with an invariant involving this clock *)
+				(List.filter (fun location_index ->
+					(* Retrieve the invariant *)
+					let invariant = program.invariants automaton_index location_index in
+					(* Check if the clock is present in the invariant *)
+					let constrained = LinearConstraint.is_constrained invariant clock_index in
+					(* Debug print *)
+					print_message Debug_total ("Clock '" ^ (program.variable_names clock_index) ^ "' is " ^ (if constrained then "" else "NOT ") ^ "constrained in invariant of location '" ^ (program.location_names automaton_index location_index) ^ "'");
+					(* Return true or false *)
+					constrained
+				) locations_for_this_automaton
+				) 
+				(* All predecessor locations of transitions with a guard involving this clock *)
+				(
+					(* For each location *)
+					List.fold_left (fun current_list_of_locations location_index ->
+						(* Get the actions for this location *)
+						let actions_for_this_location = program.actions_per_location automaton_index location_index in
+						(* For each action available in this location *)
+						List.fold_left (fun current_list_of_locations action_index ->
+							(* Retrieve the transitions from this location & action *)
+							let transitions = program.transitions automaton_index location_index action_index in
+							(* Check if there exists a guard in an outgoing transition where the clock is constrained *)
+							let exists_guard = List.exists (fun (guard , (*clock_updates*)_ , (*discrete_update_list*)_ , (*destination_index*)_) ->
+								(* Check if the clock is present in the guard *)
+								let constrained = LinearConstraint.is_constrained guard clock_index in
+								(* Debug print *)
+								if constrained then (
+									print_message Debug_high ("Found a transition where clock '" ^ (program.variable_names clock_index) ^ "' is constrained in guard from location '" ^ (program.location_names automaton_index location_index) ^ "', through '" ^ (program.action_names action_index) ^ "'");
+								) else (
+									print_message Debug_total ("Clock '" ^ (program.variable_names clock_index) ^ "' is not constrained in guard from location '" ^ (program.location_names automaton_index location_index) ^ "' through '" ^ (program.action_names action_index) ^ "'");
+								);
+								(* Return true or false *)
+								constrained
+							) transitions in
+							(* Keep the location if there exists a guard *)
+							if exists_guard then location_index :: current_list_of_locations
+							else current_list_of_locations
+						) current_list_of_locations actions_for_this_location
+					) [] locations_for_this_automaton
+				)
+			) in
+
 			
 			(* Start the algorithm *)
 			while !waiting != [] do
@@ -273,9 +315,9 @@ let find_useless_clocks_in_automata program local_clocks_per_automaton =
 			let useless_locations = list_diff locations_for_this_automaton !marked in
 			
 			(* Print debug information *)
-			if debug_mode_greater Debug_total then(
-				print_message Debug_total ("List of useless locations for local clock '" ^ (program.variable_names clock_index) ^ "'");
-				print_message Debug_total (	"  " ^ (string_of_list_of_string_with_sep ", " (List.map (program.location_names automaton_index) useless_locations)));
+			if debug_mode_greater Debug_low then(
+				print_message Debug_low ("List of useless locations for local clock '" ^ (program.variable_names clock_index) ^ "' in automaton '" ^ (program.automata_names automaton_index) ^ "'");
+				print_message Debug_low (	"  " ^ (string_of_list_of_string_with_sep ", " (List.map (program.location_names automaton_index) useless_locations)));
 			);
 			
 		) local_clocks; (* end for each local clock *)

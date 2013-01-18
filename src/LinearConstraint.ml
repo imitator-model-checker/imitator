@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2010/03/04
- * Last modified: 2012/10/16
+ * Last modified: 2013/01/18
  *
  ****************************************************************)
 
@@ -743,12 +743,17 @@ let get_inequalities =
 	ppl_Polyhedron_get_constraints
 
 
+(** Return true if the variable is constrained in a linear_constraint *)
+let is_constrained =
+	ppl_Polyhedron_constrains
+
+
 (** Return the list of variables from l that are constrained in the constraint *)
 (* WARNING: no idea of the efficiency of this way of doing *)
 (* (but not crucial because only called for preprocessing in IMITATOR) *)
 let find_variables variables_list linear_constraint =
 	List.filter (fun variable ->
-		ppl_Polyhedron_constrains linear_constraint variable
+		is_constrained linear_constraint variable
 	) variables_list
 
 

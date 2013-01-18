@@ -285,7 +285,9 @@ exe:
 # 	$(TARGET) $(EXAMPLE_PATH)/AndOr/AndOr.imi -PTA2GrML
 # 	$(TARGET) $(EXAMPLE_PATH)/AndOr/AndOr.imi.grml -fromGrML -mode reachability
 
-	$(TARGET) $(EXAMPLE_PATH)/AndOr/AndOr.imi -mode reachability -dynamic-elimination -debug total
+# 	$(TARGET) $(EXAMPLE_PATH)/AndOr/AndOr.imi -mode reachability -dynamic-elimination -debug total
+	$(TARGET) $(EXAMPLE_PATH)/AndOr/AndOr2.imi -mode reachability -dynamic-elimination -debug total
+# 	$(TARGET) $(EXAMPLE_PATH)/AndOr/AndOr2.imi -PTA2JPG
 # 	$(TARGET) $(EXAMPLE_PATH)/AndOr/AndOr.imi -mode reachability -states-limit 10
 # 	$(TARGET) $(EXAMPLE_PATH)/AndOr/AndOr.imi -mode reachability -time-limit 10
 
