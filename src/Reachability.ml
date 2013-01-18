@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Ulrich Kuehne, Etienne Andre
  * Created:       2010/07/22
- * Last modified: 2013/01/17
+ * Last modified: 2013/01/18
  *
  ************************************************************)
 
@@ -83,6 +83,11 @@ let instantiate_costs program pi0 =
 (**************************************************************)
 (* Local Clocks *)
 (**************************************************************)
+
+(* Global variable *)
+(** WARNING: initial value quite ugly; but using a Some / None would be a bit troublesome *)
+let useless_clocks = ref (fun automaton_index location_index -> [])
+
 
 (** WARNING: duplicate function in ProgramConverter *)
 let get_clocks_in_updates : clock_updates -> Automaton.clock_index list = function
@@ -177,14 +182,21 @@ let find_local_clocks program =
 (*--------------------------------------------------*)
 (** NOTE: this function is not related to program conversion, and could (should?) be defined elsewhere *)
 let find_useless_clocks_in_automata program local_clocks_per_automaton =
+
+	(* Create the data structure *)
+	let useless_clocks_per_location = Array.make program.nb_automata (Array.make 0 []) in
 	
 	(* For each automaton *)
 	for automaton_index = 0 to program.nb_automata - 1 do
+	
 	
 		(* Get the locations for this automaton *)
 		let locations_for_this_automaton = program.locations_per_automaton automaton_index in
 		let nb_locations = List.length locations_for_this_automaton in
 	
+		(* Initialize the data structure for this automaton *)
+		useless_clocks_per_location.(automaton_index) <- Array.make nb_locations [];
+		
 		(* Retrieve the local clocks for this automaton *)
 		let local_clocks = local_clocks_per_automaton.(automaton_index) in
 
@@ -235,9 +247,6 @@ let find_useless_clocks_in_automata program local_clocks_per_automaton =
 	
 		(* For each local clock for this automaton *)
 		List.iter(fun clock_index ->
-			(* Create a waiting list *)
-			let waiting = ref [] in
-			
 			(* Create a list of marked locations (i.e., where the clock is useful) *)
 			let marked = ref (list_union 
 				(* All locations with an invariant involving this clock *)
@@ -283,24 +292,40 @@ let find_useless_clocks_in_automata program local_clocks_per_automaton =
 				)
 			) in
 
+			(* Create a waiting list *)
+			let waiting = ref !marked in
+			
+			(* Print debug information *)
+			if debug_mode_greater Debug_medium then(
+				print_message Debug_medium ("Starting the XXX algorithm for local clock '" ^ (program.variable_names clock_index) ^ "' in automaton '" ^ (program.automata_names automaton_index) ^ "', with initial marked states:");
+				print_message Debug_medium (	"  " ^ (string_of_list_of_string_with_sep ", " (List.map (program.location_names automaton_index) !marked)));
+			);
 			
 			(* Start the algorithm *)
 			while !waiting != [] do
 				(* Pick a location from the waiting list *)
 				match !waiting with
 				| location_index :: rest ->
+					(* Debug information *)
+					print_message Debug_medium ("Pick up location '" ^ (program.location_names automaton_index location_index) ^ "'");
 					(* Remove the first element *)
 					waiting := rest;
 					(* For each transition leading to this location *)
 					List.iter (fun (source_index, reset_local_clocks) ->
+						(* Debug information *)
+						print_message Debug_high ("Considering predecessor transition from '" ^ (program.location_names automaton_index source_index) ^ "'");
 						(* If the clock is not reset by the transition *)
 						if not (List.mem clock_index reset_local_clocks) then(
+							(* Debug information *)
+							print_message Debug_high ("Clock not reset by a transition.");
 							(* If the source location does not belong to the marked list *)
 							if not (List.mem source_index !marked) then(
 								(* Add it to the marked list *)
 								marked := source_index :: !marked;
+								print_message Debug_high ("Location marked.");
 								(* Add it to the waiting list (if not present) *)
 								if not (List.mem source_index !waiting) then
+									print_message Debug_high ("Location added to waiting list.");
 									waiting := source_index :: !waiting;
 							); (* end if not in marked list *)
 						);(* end if clock not reset *)
@@ -317,47 +342,52 @@ let find_useless_clocks_in_automata program local_clocks_per_automaton =
 			(* Print debug information *)
 			if debug_mode_greater Debug_low then(
 				print_message Debug_low ("List of useless locations for local clock '" ^ (program.variable_names clock_index) ^ "' in automaton '" ^ (program.automata_names automaton_index) ^ "'");
-				print_message Debug_low (	"  " ^ (string_of_list_of_string_with_sep ", " (List.map (program.location_names automaton_index) useless_locations)));
+				print_message Debug_low ("  " ^ (string_of_list_of_string_with_sep ", " (List.map (program.location_names automaton_index) useless_locations)));
 			);
+			
+			(* Update the data structure *)
+			List.iter (fun location_index ->
+				(useless_clocks_per_location.(automaton_index)).(location_index) <- clock_index :: (useless_clocks_per_location.(automaton_index)).(location_index);
+			) useless_locations;
+			
 			
 		) local_clocks; (* end for each local clock *)
 	done; (* end for each automaton *)
-
-	()
-	(* Return something *)
+	
+	(* Return a functional structure *)
+	(fun automaton_index location_index ->
+		(useless_clocks_per_location.(automaton_index)).(location_index)
+	)
+	(* THE END *)
 
 
 
 (*--------------------------------------------------*)
-(* Function for optimizing state space by clock elimination *)
+(* Function for preparing data structures for dynamic clock elimination *)
 (*--------------------------------------------------*)
+(* NOTE: This function is only called if the dynamic clock elimination option is activated *)
 let prepare_clocks_elimination program =
-	(** TODO: only compute this if the dynamic clock elimination option is activated *)
-	(* Compute the clocks per automaton *)
-	print_message Debug_total ("*** Building clocks per automaton...");
-	let (*clocks_per_automaton, automata_per_clock*) local_clocks_per_automaton = find_local_clocks program(*.nb_automata program.clocks program.nb_parameters program.actions_per_location program.locations_per_automaton program.invariants program.transitions program.stopwatches_fun*) in
+	(* Compute the local clocks per automaton *)
+	print_message Debug_low ("*** Building local clocks per automaton...");
+	let local_clocks_per_automaton = find_local_clocks program in
 
 	(* Debug print: local clocks per automaton *)
-	print_message Debug_total ("\n*** Local clocks per automaton:");
-	(* For each automaton *)
-	List.iter (fun automaton_index ->
-		(* Get the actions *)
-		let clocks = local_clocks_per_automaton.(automaton_index) in
-		(* Print it *)
-		let clocks_string = string_of_list_of_string_with_sep ", " (List.map program.variable_names clocks) in
-		print_message Debug_total ("  " ^ (program.automata_names automaton_index) ^ " : " ^ clocks_string)
-	) program.automata;
+	if debug_mode_greater Debug_total then(
+		print_message Debug_total ("\n*** Local clocks per automaton:");
+		(* For each automaton *)
+		List.iter (fun automaton_index ->
+			(* Get the actions *)
+			let clocks = local_clocks_per_automaton.(automaton_index) in
+			(* Print it *)
+			let clocks_string = string_of_list_of_string_with_sep ", " (List.map program.variable_names clocks) in
+			print_message Debug_total ("  " ^ (program.automata_names automaton_index) ^ " : " ^ clocks_string)
+		) program.automata;
+	);
 	
 	
-	
-	let _ = find_useless_clocks_in_automata program local_clocks_per_automaton in
-	
-	
-	terminate_program();
-
-	(*JE SUIS LA *)
-	
-	
+	(* Compute and update useless clocks *)
+	print_message Debug_low ("*** Building useless clocks per location per automaton...");
+	useless_clocks := find_useless_clocks_in_automata program local_clocks_per_automaton;
 	()
 
 
@@ -848,6 +878,9 @@ let compute_stopwatches program location =
 (* Compute the initial state with the initial invariants and time elapsing *)
 (*--------------------------------------------------*)
 let create_initial_state program =
+	(* Retrieve the input options *)
+	let options = Input.get_options () in
+
 	(* Get the declared init state with initial constraint C_0(X) *)
 	let initial_location = program.initial_location in
 	let initial_constraint = program.initial_constraint in
@@ -910,7 +943,32 @@ let create_initial_state program =
 	(* Debug *)
 	if debug_mode_greater Debug_total then
 		print_message Debug_total (LinearConstraint.string_of_linear_constraint program.variable_names current_constraint);
-
+		
+		
+	(* Remove useless clocks (if option activated) *)
+	if options#dynamic_clock_elimination then(
+		(* Compute the useless clocks *)
+		let clocks_to_remove = List.fold_left (fun current_list_of_clocks automaton_index ->
+			(* Retrieve dest location for this automaton *)
+			let location_index = Automaton.get_location initial_location automaton_index in
+			(* Get the clocks and append to previously computed clocks (rev_append because the order doesn't matter) *)
+			List.rev_append current_list_of_clocks (!useless_clocks automaton_index location_index)
+		) [] program.automata in
+		(* Debug print *)
+		if debug_mode_greater Debug_low then(
+			print_message Debug_low ("The following clocks will be dynamically removed:");
+			print_message Debug_low ("  " ^ (string_of_list_of_string_with_sep ", " (List.map program.variable_names clocks_to_remove)));
+		);
+		
+		print_message Debug_high ("\nRemoving useless clocks ");
+		LinearConstraint.hide_assign clocks_to_remove current_constraint;
+		(* Debug print *)
+		if debug_mode_greater Debug_total then(
+			print_message Debug_total (LinearConstraint.string_of_linear_constraint program.variable_names current_constraint);
+		);
+	);
+	
+	
 	(* Return the initial state *)
 	initial_location, current_constraint
 
@@ -1059,6 +1117,9 @@ let compute_new_location program aut_table trans_table action_index original_loc
 (* clock_updates   : updated clock variables        *)
 (*--------------------------------------------------*)
 let compute_new_constraint program orig_constraint discrete_constr orig_location dest_location guards clock_updates =
+	(* Retrieve the input options *)
+	let options = Input.get_options () in
+
 	if debug_mode_greater Debug_total then(
 		print_message Debug_total ("\n***********************************");
 		print_message Debug_total ("Entering compute_new_constraint");	
@@ -1189,6 +1250,33 @@ let compute_new_constraint program orig_constraint discrete_constr orig_location
 			if not (LinearConstraint.is_satisfiable current_constraint) then
 				print_message Debug_total ("This constraint is NOT satisfiable (after hiding discrete variables).");
 		);
+		
+		
+		(* Remove useless clocks (if option activated) *)
+		if options#dynamic_clock_elimination then(
+			(* Compute the useless clocks *)
+			let clocks_to_remove = List.fold_left (fun current_list_of_clocks automaton_index ->
+				(* Retrieve dest location for this automaton *)
+				let location_index = Automaton.get_location dest_location automaton_index in
+				(* Get the clocks and append to previously computed clocks (rev_append because the order doesn't matter) *)
+				List.rev_append current_list_of_clocks (!useless_clocks automaton_index location_index)
+			) [] program.automata in
+			(* Debug print *)
+			if debug_mode_greater Debug_low then(
+				print_message Debug_low ("The following clocks will be dynamically removed:");
+				print_message Debug_low ("  " ^ (string_of_list_of_string_with_sep ", " (List.map program.variable_names clocks_to_remove)));
+			);
+			
+			print_message Debug_high ("\nRemoving useless clocks ");
+			LinearConstraint.hide_assign clocks_to_remove current_constraint;
+			(* Debug print *)
+			if debug_mode_greater Debug_total then(
+				print_message Debug_total (LinearConstraint.string_of_linear_constraint program.variable_names current_constraint);
+			);
+		);
+		
+		
+		
 		(* return the final constraint *)
 		Some current_constraint
 	) with Unsat_exception -> None

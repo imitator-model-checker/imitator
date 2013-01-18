@@ -161,7 +161,7 @@ Printf.printf " *  IMITATOR %-46s *\n" version_string;
 print_message Debug_standard
 	( "*                                                          *\n"
 	^ "*             Etienne ANDRE, Ulrich KUEHNE, Romain SOULAT  *\n"
-	^ "*                                             2009 - 2012  *\n"
+	^ "*                                             2009 - 2013  *\n"
 	^ "*                       LSV, ENS de Cachan & CNRS, France  *\n"
 	^ "*  LIPN, Universite Paris 13, Sorbonne Paris Cite, France  *\n"
 	^ "************************************************************");
@@ -278,6 +278,11 @@ if options#tree then
 	print_message Debug_standard ("Tree mode: will never check inclusion or equality of a new state into a former state.")
 else
 	print_message Debug_medium ("No tree mode (default).");
+
+if options#dynamic_clock_elimination then
+	print_message Debug_standard ("Dynamic clock elimination activated.")
+else
+	print_message Debug_medium ("No dynamic clock elimination (default).");
 
 
 (* Output *)
@@ -434,7 +439,7 @@ if options#pta2clp then(
 	terminate_program()
 );
 
-(* Translation to GML (experimental) *)
+(* Translation to GrML (experimental) *)
 if options#pta2gml then(
 	print_message Debug_standard ("Translating program to GrML.");
 	print_warning ("Experimental translation!");
@@ -455,6 +460,15 @@ if options#pta2jpg then(
 	terminate_program()
 );
 
+
+
+(**************************************************)
+(* EXPERIMENTAL: dynamic clock elimination *)
+(**************************************************)
+(* Need to be called before initial state is created! *)
+if options#dynamic_clock_elimination then (
+	Reachability.prepare_clocks_elimination program
+);
 
 
 (**************************************************)
@@ -513,14 +527,6 @@ if options#imitator_mode = Inverse_method && options#branch_and_bound then(
 );*)
 
 
-
-(**************************************************)
-(* EXPERIMENTAL: dynamic clock elimination *)
-(**************************************************)
-if options#dynamic_clock_elimination then (
-	Reachability.prepare_clocks_elimination program;
-	terminate_program();
-);
 
 
 (**************************************************)

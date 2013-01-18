@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre, Ulrich Kuehne, Romain Soulat
  * Created:       2010/07/22
- * Last modified: 2013/01/17
+ * Last modified: 2013/01/18
  *
  **************************************************)
 
@@ -34,8 +34,10 @@ val print_stats: unit -> unit
 
 
 (************************************************************)
-(* TEMPORARY FOR TESTING *)
+(* Clock elimination *)
 (************************************************************)
+(* Create data structures for detecting useless clocks (to be called once per model) *)
+(** WARNING: should maybe be somewhere else? *)
 val prepare_clocks_elimination : abstract_program -> unit
 
 
