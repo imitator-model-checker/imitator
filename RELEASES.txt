@@ -1,4 +1,14 @@
 *******************************************************
+release 2.5.1    (COMING SOON)
+
+Features:
+- Merging option becomes (again?) "-merge"
+- Added dynamic clock elimination (ongoing work)
+
+Internal
+- Refactoring BC code
+
+*******************************************************
 release 2.5.0    (2012-08-21)
 
 - Added arbitrary clock updates (not only to 0).

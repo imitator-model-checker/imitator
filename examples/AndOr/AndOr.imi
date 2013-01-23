@@ -4,7 +4,7 @@
 --   Modeling of an "AND" and an "OR" logical gate
 --   From "Verification of Concurrent Systems with Parametric Delays Using Octahedra" by Clariso and Cortadella
 --
---   Modelisation: Etienne ANDRE and Laurent FRIBOURG
+--   Modeling: Etienne ANDRE and Laurent FRIBOURG
 --
 --   Version SANS compteur de B^\up
 --   Version SANS variables discretes reprenant les valeurs des signaux
@@ -313,7 +313,39 @@ init :=
 	& dAnd_l = 3
 --	& dAnd_u = 4
 	& dOr_l = 1
-	& dOr_u = 2*)
+	& dOr_u = 2
+*)
+
+
+(* CARTO 5 PARAM (INFINITY'10 ?) 
+	& dA_High_l = 13
+--	& dA_High_u = 13 .. 30 -- 14
+	& dA_Low_l = 16
+--	& dA_Low_u = 16 .. 30 -- 16 .. 25 -- 18
+	& dB_High_l = 7
+--	& dB_High_u = 7 .. 20 --7 .. 15 -- 8
+	& dB_Low_l = 19
+--	& dB_Low_u = 20 -- 19 .. 25 -- 20
+	& dAnd_l = 3
+--	& dAnd_u = 3 .. 10 -- 3 .. 5 -- 4
+	& dOr_l = 1
+--	& dOr_u = 1 .. 5 -- 1 .. 5 -- 2
+*)
+
+
+(* CARTO 4 PARAM (as of 2013/01/23) *)
+	& dA_High_l = 13
+	& dA_High_u = 14
+	& dA_Low_l = 16
+--	& dA_Low_u = 16 .. 30 -- 16 .. 25 -- 18
+	& dB_High_l = 7
+--	& dB_High_u = 7 .. 20 --7 .. 15 -- 8
+	& dB_Low_l = 19
+--	& dB_Low_u = 20 -- 19 .. 25 -- 20
+	& dAnd_l = 3
+--	& dAnd_u = 3 .. 10 -- 3 .. 5 -- 4
+	& dOr_l = 1
+--	& dOr_u = 1 .. 5 -- 1 .. 5 -- 2
 
 ;
 

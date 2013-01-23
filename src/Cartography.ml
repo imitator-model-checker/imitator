@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2012/06/18
- * Last modified: 2012/06/18
+ * Last modified: 2013/01/23
  *
  ****************************************************************)
 
@@ -14,6 +14,23 @@
  open Graph
  open Reachability
  
+(**************************************************)
+(* Global variable (for testing purpose) *)
+(**************************************************)
+let giuseppe_idea = false
+
+
+
+(**************************************************)
+(* General functions *)
+(**************************************************)
+(** Check if a pi_0 belongs to a 'returned_constraint'*)
+let pi0_in_returned_constraint pi0 = function
+	| Convex_constraint k -> LinearConstraint.is_pi0_compatible pi0 k
+	(** Disjunction of constraints *)
+	| Union_of_constraints k_list -> List.exists (LinearConstraint.is_pi0_compatible pi0) k_list
+
+
 
 (**************************************************)
 (* Pi0 function *)
@@ -37,134 +54,38 @@ let random_pi0 program pi0 =
 	random_pi0
 
 
-
-
-
-
 (**************************************************)
-(* BEHAVIORAL CARTOGRAPHY ALGORITHM functions *)
+(* Next pi0 functions *)
 (**************************************************)
-(** Check if a pi_0 belongs to a 'returned_constraint'*)
-let pi0_in_returned_constraint pi0 = function
-	| Convex_constraint k -> LinearConstraint.is_pi0_compatible pi0 k
-	(** Disjunction of constraints *)
-	| Union_of_constraints k_list -> List.exists (LinearConstraint.is_pi0_compatible pi0) k_list
 
-
-(** Behavioral cartography algorithm with full coverage of V0 *)
-let cover_behavioral_cartography program v0 init_state =
+(** Compute the next pi0 and directly modify the variable 'current_pi0' (standard BC) *)
+let find_next_pi0 program init_constraint min_bounds max_bounds dimension computed_constraints current_pi0 =
 	(* Retrieve the input options *)
 	let options = Input.get_options () in
-	(* Dimension of the system *)
-	let dimension = Array.length v0 in
-	(* Min & max bounds for the parameters *)
-	let min_bounds = Array.map (fun (low, high) -> NumConst.numconst_of_int low) v0 in
-	let max_bounds = Array.map (fun (low, high) -> NumConst.numconst_of_int high) v0 in
 	
-	(* Initial constraint of the program *)
-	let _, init_constraint = init_state in
-	(* Hide non parameters *)
-	let init_constraint = LinearConstraint.hide (List.rev_append program.discrete program.clocks) init_constraint in
-
-	(* Current pi0, instantiated with the lower bounds *)
-	let current_pi0 = Array.copy min_bounds in
-	(* (Dynamic) Array for the pi0 *)
-	let pi0_computed = DynArray.create() in
-	(* (Dynamic) Array for the results *)
-	let results = DynArray.create() in
-	(* Current iteration *)
-	let current_iteration = ref 0 in
-	(* Sum of number of states *)
-	let nb_states = ref 0 in
-	(* Sum of number of transitions *)
-	let nb_transitions = ref 0 in
-
-	(* Debug mode *)
-	let global_debug_mode = get_debug_mode() in
+	(* Counts the points actually member of an existing constraint (hence useless) for information purpose *)
+	let nb_useless_points = ref 0 in
 	
-	(* Iterate on all the possible pi0 *)
+	(* Are there still possible points *)
 	let more_pi0 = ref true in
-	let limit_reached = ref false in
-	while !more_pi0 && not !limit_reached do
-		(* Copy the array current_pi0*)
-		let pi0_array = Array.copy current_pi0 in
-		let pi0 = fun parameter -> pi0_array.(parameter) in
+	(* Did we find a suitable pi0 *)
+	let found_pi0 = ref false in
+	(* Did we reach the time limit *)
+	let time_limit_reached = ref false in
+
+	while !more_pi0 && not !time_limit_reached && not !found_pi0 do
 		
-		(* Check that it does not belong to any constraint *)
-		if dynArray_exists (pi0_in_returned_constraint pi0) results then (
-			if debug_mode_greater Debug_medium then (
-				print_message Debug_medium "The following pi0 is already included in a constraint.";
-				print_message Debug_medium (ModelPrinter.string_of_pi0 program pi0);
-			);
-		(* Check that it satisfies the initial constraint *)
-		) else if not (LinearConstraint.is_pi0_compatible pi0 init_constraint) then (
-			if debug_mode_greater Debug_medium then (
-				print_message Debug_medium "The following pi0 does not satisfy the initial constraint of the program.";
-				print_message Debug_medium (ModelPrinter.string_of_pi0 program pi0);
-			);
-		) else (
-			(* Iterate *)
-			current_iteration := !current_iteration + 1;
-
-			(* Debug messages *)
-			print_message Debug_standard ("\n**************************************************");
-			print_message Debug_standard ("BEHAVIORAL CARTOGRAPHY ALGORITHM: " ^ (string_of_int !current_iteration) ^ "");
-			print_message Debug_standard ("Considering the following pi" ^ (string_of_int !current_iteration));
-			print_message Debug_standard (ModelPrinter.string_of_pi0 program pi0);
-			
-			(* Prevent the debug messages *)
-			if not (debug_mode_greater Debug_medium) then
-				set_debug_mode Debug_nodebug;
-			
-			(* Set the new pi0 *)
-			Input.set_pi0 pi0;
-			
-			(* Call the inverse method *)
-			let returned_constraint, graph, nb_iterations, total_time = Reachability.inverse_method_gen program init_state in
-			(* Get the debug mode back *)
-			set_debug_mode global_debug_mode;
-			(* Retrieve some info *)
-			let current_nb_states = Graph.nb_states graph in
-			let current_nb_transitions = Graph.nb_transitions graph in
-			(* Update the counters *)
-			nb_states := !nb_states + current_nb_states;
-			nb_transitions := !nb_transitions + current_nb_transitions;
-			(* Print message *)
-			print_message Debug_standard (
-				"\nK" ^ (string_of_int (!current_iteration)) ^ " computed using algorithm InverseMethod after "
-				^ (string_of_int nb_iterations) ^ " iteration" ^ (s_of_int nb_iterations) ^ ""
-				^ " in " ^ (string_of_seconds total_time) ^ ": "
-				^ (string_of_int current_nb_states) ^ " reachable state" ^ (s_of_int current_nb_states)
-				^ " with "
-				^ (string_of_int current_nb_transitions) ^ " transition" ^ (s_of_int current_nb_transitions) ^ ".");
-			
-			(* Generate the dot graph *)			
-			let radical = options#program_prefix ^ "_" ^ (string_of_int !current_iteration) in
-			Graphics.generate_graph program graph radical;
-			
-			let k0 = returned_constraint in
-			
-			(* Add the pi0 and the computed constraint *)
-			DynArray.add pi0_computed pi0;
-			DynArray.add results k0;
-			
-			(* Print the constraint *)
-(* 			let bad_string = if Graph.is_bad program graph then "BAD." else "GOOD." in			 *)
-			print_message Debug_low ("Constraint K0 computed:");
-			print_message Debug_standard (ModelPrinter.string_of_returned_constraint program.variable_names k0);
-(* 			print_message Debug_standard ("This zone is " ^ bad_string); *)
-
-
-		); (* else if new pi0 *)
-
-		(* Find the next pi0 *)
+		(* 1) Compute the next pi0 (if any left) *)
+		
 		let not_is_max = ref true in
 		let local_index = ref 0 in
+		
 		while !not_is_max do
 			(* Try to increment the local index *)
-			if current_pi0.(!local_index) < max_bounds.(!local_index) then(
+			let local_index_incremented = NumConst.add current_pi0.(!local_index) options#step in
+			if local_index_incremented <= max_bounds.(!local_index) then (
 				(* Increment this index *)
-				current_pi0.(!local_index) <- NumConst.add current_pi0.(!local_index) options#step;
+				current_pi0.(!local_index) <- local_index_incremented;
 				(* Reset the smaller indexes to the low bound *)
 				for i = 0 to !local_index - 1 do
 					current_pi0.(i) <- min_bounds.(i);
@@ -182,11 +103,215 @@ let cover_behavioral_cartography program v0 init_state =
 				)
 			);
 		done; (* while not is max *)
+	
+		(* 2) Check that this pi0 is new *)
 		
-		(* Stop if the time limit has been reached *)
-		match options#time_limit with
-			| None -> ()
-			| Some limit -> if (get_time()) > (float_of_int limit) then limit_reached := true;
+		if !more_pi0 then(
+
+			(* Convert the current pi0 to functional representation *)
+			let pi0 = fun parameter -> current_pi0.(parameter) in
+			
+			(* Check that the current pi0 does not belong to any constraint *)
+			if dynArray_exists (pi0_in_returned_constraint pi0) computed_constraints then (
+				(* Update the number of unsuccessful points *)
+				nb_useless_points := !nb_useless_points + 1;
+				if debug_mode_greater Debug_medium then (
+					print_message Debug_medium "The following pi0 is already included in a constraint.";
+					print_message Debug_medium (ModelPrinter.string_of_pi0 program pi0);
+				);
+				
+			(* Check that it satisfies the initial constraint *)
+			) else if not (LinearConstraint.is_pi0_compatible pi0 init_constraint) then (
+				(* Update the number of unsuccessful points *)
+				nb_useless_points := !nb_useless_points + 1;
+				if debug_mode_greater Debug_medium then (
+					print_message Debug_medium "The following pi0 does not satisfy the initial constraint of the program.";
+					print_message Debug_medium (ModelPrinter.string_of_pi0 program pi0);
+				);
+			(* If both checks passed, then pi0 found *)
+			)else(
+				found_pi0 := true;
+			);
+			
+			(* If pi0 still not found, check time limit *)
+			if not !found_pi0 then(
+				(* Stop if the time limit has been reached *)
+				match options#time_limit with
+					| None -> ()
+					| Some limit -> if (get_time()) > (float_of_int limit) then time_limit_reached := true;
+			);
+		); (*if more pi0 *)
+	done;
+	
+	(* Return info (note that current_pi0 has ALREADY been updated if a suitable pi0 was found !) *)
+	!found_pi0 , !time_limit_reached , !nb_useless_points
+
+
+
+
+
+(**************************************************)
+(* BEHAVIORAL CARTOGRAPHY ALGORITHM functions *)
+(**************************************************)
+	
+	
+	
+	
+(* TODO: merge both algorithms into cover_behavioral_cartography !!! *)
+
+
+
+
+(** Behavioral cartography algorithm with full coverage of V0 *)
+let cover_behavioral_cartography program v0 init_state =
+	(* Retrieve the input options *)
+	let options = Input.get_options () in
+
+	(* Time counter for recording the globl time spent on BC *)
+	let time_spent_on_IM = ref 0. in
+	(* Record start time to compute the time spent only on calling IM *)
+	let start_time = Unix.gettimeofday() in
+
+	(* Dimension of the system *)
+	let dimension = Array.length v0 in
+	(* Min & max bounds for the parameters *)
+	let min_bounds = Array.map (fun (low, high) -> NumConst.numconst_of_int low) v0 in
+	let max_bounds = Array.map (fun (low, high) -> NumConst.numconst_of_int high) v0 in
+	
+	(* Compute the (actually slightly approximate) number of points in V0 (for information purpose) *)
+	let nb_points = Array.fold_left (fun current_number (low, high) ->
+		(* Multiply current number of points by the interval + 1, itself divided by the step *)
+		NumConst.mul
+			current_number
+			(NumConst.div
+				(NumConst.add
+					(NumConst.sub 
+						(NumConst.numconst_of_int high)
+						(NumConst.numconst_of_int low)
+					)
+					NumConst.one
+				)
+				options#step
+			)
+	) NumConst.one v0 in
+	
+	(* Counts the points actually member of an existing constraint (hence useless) for information purpose *)
+	let nb_useless_points = ref 0 in
+	
+	(* Initial constraint of the program *)
+	let _, init_constraint = init_state in
+	(* Hide non parameters *)
+	let init_constraint = LinearConstraint.hide program.clocks_and_discrete init_constraint in
+
+(*	(* (Dynamic) Array for the pi0 (USELESS SO FAR) *)
+	let pi0_computed = DynArray.create() in*)
+	(* (Dynamic) Array for the results *)
+	let computed_constraints = DynArray.create() in
+
+	(* Current pi0, instantiated with the lower bounds *)
+	let current_pi0 = Array.copy min_bounds in
+	
+	(* Current iteration (for information purpose) *)
+	let current_iteration = ref 0 in
+	(* Sum of number of states (for information purpose) *)
+	let nb_states = ref 0 in
+	(* Sum of number of transitions (for information purpose) *)
+	let nb_transitions = ref 0 in
+
+	(* Debug mode *)
+	let global_debug_mode = get_debug_mode() in
+	
+	(** TODO : check that initial pi0 is suitable!! (could be incompatible with initial constraint) *)
+	
+	(* Print *)
+	print_message Debug_standard ("\n**************************************************");
+	print_message Debug_standard (" START THE BEHAVIORAL CARTOGRAPHY ALGORITHM");
+	print_message Debug_standard ("**************************************************");
+	print_message Debug_standard (" Parametric rectangle V0: ");
+	print_message Debug_standard (ModelPrinter.string_of_v0 program v0);
+
+	(* Iterate on all the possible pi0 *)
+	let more_pi0 = ref true in
+	let limit_reached = ref false in
+	while !more_pi0 && not !limit_reached do
+		(* Copy the array current_pi0 *)
+		(*(** NOTE: this copy looks completely useless *)
+		let pi0_array = Array.copy current_pi0 in*)
+		
+		(** WARNING : duplicate operation (quite cheap anyway) *)
+		(* Convert to functional representation *)
+		let pi0 = fun parameter -> current_pi0.(parameter) in
+		
+		(* Iterate *)
+		current_iteration := !current_iteration + 1;
+
+		(* Debug messages *)
+		print_message Debug_standard ("\n**************************************************");
+		print_message Debug_standard ("BEHAVIORAL CARTOGRAPHY ALGORITHM: " ^ (string_of_int !current_iteration) ^ "");
+		print_message Debug_standard ("Considering the following pi" ^ (string_of_int !current_iteration));
+		print_message Debug_standard (ModelPrinter.string_of_pi0 program pi0);
+		
+		(* Prevent the debug messages (except in debug high or total) *)
+		if not (debug_mode_greater Debug_medium) then
+			set_debug_mode Debug_nodebug;
+		
+		(* Set the new pi0 *)
+		Input.set_pi0 pi0;
+		
+		(* Call the inverse method *)
+		let returned_constraint, graph, nb_iterations, total_time = Reachability.inverse_method_gen program init_state in
+		
+		(* Update the time spent on IM *)
+		time_spent_on_IM := !time_spent_on_IM +. total_time;
+		
+		(* Get the debug mode back *)
+		set_debug_mode global_debug_mode;
+		
+		(* Retrieve some info *)
+		let current_nb_states = Graph.nb_states graph in
+		let current_nb_transitions = Graph.nb_transitions graph in
+		
+		(* Update the counters *)
+		nb_states := !nb_states + current_nb_states;
+		nb_transitions := !nb_transitions + current_nb_transitions;
+		
+		(* Print message *)
+		print_message Debug_standard (
+			"\nK" ^ (string_of_int (!current_iteration)) ^ " computed using algorithm InverseMethod after "
+			^ (string_of_int nb_iterations) ^ " iteration" ^ (s_of_int nb_iterations) ^ ""
+			^ " in " ^ (string_of_seconds total_time) ^ ": "
+			^ (string_of_int current_nb_states) ^ " reachable state" ^ (s_of_int current_nb_states)
+			^ " with "
+			^ (string_of_int current_nb_transitions) ^ " transition" ^ (s_of_int current_nb_transitions) ^ ".");
+		
+		(* Generate the dot graph (will not be performed if options are not suitable) *)
+		let radical = options#program_prefix ^ "_" ^ (string_of_int !current_iteration) in
+			Graphics.generate_graph program graph radical;
+		
+		let k0 = returned_constraint in
+		
+		(* Add the pi0 and the computed constraint *)
+		(*USELESS SO FAR 
+		DynArray.add pi0_computed pi0;*)
+		DynArray.add computed_constraints k0;
+		
+		(* Print the constraint *)
+(* 			let bad_string = if Graph.is_bad program graph then "BAD." else "GOOD." in *)
+		print_message Debug_low ("Constraint K0 computed:");
+		print_message Debug_standard (ModelPrinter.string_of_returned_constraint program.variable_names k0);
+(* 			print_message Debug_standard ("This zone is " ^ bad_string); *)
+
+
+		(* Compute the next pi0 (note that current_pi0 is directly modified by the function!) and return flags for more pi0 and co *)
+		let found_pi0 , time_limit_reached , new_nb_useless_points =
+			find_next_pi0 program init_constraint min_bounds max_bounds dimension computed_constraints current_pi0 in
+			
+		(* Update the number of useless points *)
+		nb_useless_points := !nb_useless_points + new_nb_useless_points;
+		(* Update the time limit *)
+		limit_reached := time_limit_reached;
+		(* Update the found pi0 flag *)
+		more_pi0 := found_pi0;
 
 	done; (* while more pi0 *)
 
@@ -198,19 +323,28 @@ let cover_behavioral_cartography program v0 init_state =
 			);
 	);
 	
-	let nb_tiles = DynArray.length results in
+	let nb_tiles = DynArray.length computed_constraints in
 	let nb_states = (float_of_int (!nb_states)) /. (float_of_int nb_tiles) in
 	let nb_transitions = (float_of_int (!nb_transitions)) /. (float_of_int nb_tiles) in
 	
+	let global_time = time_from start_time in
+	let time_spent_on_BC = global_time -. (!time_spent_on_IM) in
+	
 	(* Print the result *)
 	print_message Debug_standard ("\n**************************************************");
+	print_message Debug_standard (" END OF THE BEHAVIORAL CARTOGRAPHY ALGORITHM");
+	print_message Debug_standard ("Size of V0: " ^ (NumConst.string_of_numconst nb_points) ^ "");
+	print_message Debug_standard ("Unsuccessful points: " ^ (string_of_int !nb_useless_points) ^ "");
 	print_message Debug_standard ("" ^ (string_of_int nb_tiles) ^ " different constraints were computed.");
 	print_message Debug_standard ("Average number of states     : " ^ (string_of_float nb_states) ^ "");
 	print_message Debug_standard ("Average number of transitions: " ^ (string_of_float nb_transitions) ^ "");
+	print_message Debug_standard ("Global time spent    : " ^ (string_of_float global_time) ^ "");
+	print_message Debug_standard ("Time spent on IM     : " ^ (string_of_float (!time_spent_on_IM)) ^ "");
+	print_message Debug_standard ("Time spent on BC only: " ^ (string_of_float (time_spent_on_BC)) ^ "");
 	print_message Debug_standard ("**************************************************");
 
 	(* Return a list of the generated zones *)
-	let zones = DynArray.to_list results in
+	let zones = DynArray.to_list computed_constraints in
 	zones
 
 

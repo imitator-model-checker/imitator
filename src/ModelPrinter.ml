@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2009/12/02
- * Last modified: 2012/06/15
+ * Last modified: 2013/01/23
  *
  **************************************************)
 
@@ -228,6 +228,26 @@ let string_of_pi0 program pi0 =
 			(program.variable_names parameter)
 			^ " = "
 			^ (NumConst.string_of_numconst (pi0 parameter))
+		) program.parameters
+	)
+	)
+
+
+(**************************************************)
+(** V0 *)
+(**************************************************)
+(* Convert a V0 into a string *)
+let string_of_v0 program v0 =
+	"  " ^ (
+	string_of_list_of_string_with_sep "\n& " (
+		List.map (fun parameter ->
+			(program.variable_names parameter)
+			^ " = "
+			^ (let min_bound, max_bound = v0.(parameter) in
+				if min_bound = max_bound
+					then string_of_int min_bound
+					else (string_of_int min_bound) ^ ".." ^ (string_of_int max_bound)
+			)
 		) program.parameters
 	)
 	)

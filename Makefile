@@ -196,6 +196,9 @@ test:	all
 testUlrich: $(IMILIB) 
 	cd test; make unit
 
+tests:
+	python testing/test.py
+
 exe:
 
 ##### GATES #####
@@ -355,7 +358,7 @@ exe:
 # 	$(TARGET) $(EXAMPLE_PATH)/SRlatch/SRlatch.imi -mode reachability
 # 	$(TARGET) $(EXAMPLE_PATH)/SRlatch/SRlatch.imi $(EXAMPLE_PATH)/SRlatch/SRlatch.pi0 -with-dot-source -with-dot
 # 	$(TARGET) $(EXAMPLE_PATH)/SRlatch/SRlatch.imi $(EXAMPLE_PATH)/SRlatch/SRlatch.pi0 -bab
-# 	./IMITATOR $(EXAMPLE_PATH)//SRlatch/SRlatch.imi $(EXAMPLE_PATH)//SRlatch/SRlatch.v0 -mode cover
+# 	./IMITATOR $(EXAMPLE_PATH)/SRlatch/SRlatch.imi $(EXAMPLE_PATH)/SRlatch/SRlatch.v0 -mode cover
 
 # 	./IMITATOR Examples/SRlatch/SRlatch_delais_fixes.imi -mode reachability
 # 	./IMITATOR Examples/SRlatch/SRlatch_delais_fixes.imi Examples/SRlatch/SRlatch_delais_fixes.pi0

@@ -8,8 +8,8 @@
 # Etienne ANDRE
 # Laboratoire d'Informatique de Paris Nord
 # Universite Paris 13, Sorbonne Paris Cite, France
-# Created      : ??/05/2012
-# Last modified: 23/01/2013
+# Created      : 2012/05/??
+# Last modified: 2013/01/23
 #************************************************************
 
 
@@ -41,10 +41,16 @@ BINARY_NAME = 'IMITATOR'
 #************************************************************
 # Import ONE AND ONLY ONE set of data at a time
 # WARNING: very very ugly (but couldn't find better)
-import testdata_sample
-binaries = testdata_sample.binaries
-examples = testdata_sample.examples
-common_options = testdata_sample.common_options
+
+#import testdata_sample
+#binaries = testdata_sample.binaries
+#examples = testdata_sample.examples
+#common_options = testdata_sample.common_options
+
+import testdata_bc_improved
+binaries = testdata_bc_improved.binaries
+examples = testdata_bc_improved.examples
+common_options = testdata_bc_improved.common_options
 
 print dir()
 

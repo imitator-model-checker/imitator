@@ -7,7 +7,7 @@
 #                     (Testing data)
 #
 # Testing data descripion:
-#     sample test data for testing the test =)
+#     cartography algorithm, testing improved algorithm
 #
 # Etienne ANDRE
 # Laboratoire d'Informatique de Paris Nord
@@ -23,7 +23,7 @@
 
 # Binaries to execute, with options
 binaries = [
-		{'version': '2.51' , 'options' : '-merge'}
+		{'version': '2.51' , 'options' : ''}
 		,
 		{'version': 'unstable' , 'options' : ''}
 ]
@@ -33,7 +33,7 @@ binaries = [
 #************************************************************
 
 # Options common for all case studies
-common_options = ''
+common_options = '-mode cover'
 
 
 
@@ -41,20 +41,14 @@ common_options = ''
 # LIST OF EXAMPLES
 #************************************************************
 examples = [
-	{'files' : ['Train/Train1PTA.imi' , 'Train/Train1PTA.pi0'] , 'options' : ''}
+	{'files' : ['AndOr/AndOr.imi' , 'AndOr/AndOr.v0 '] , 'options' : ''}
 	,
-	{'files' : ['Train/Train1PTA.imi' , 'Train/Train1PTA.pi0'] , 'options' : ''}
+	{'files' : ['Flipflop/flipflop.imi' , 'Flipflop/flipflop.v0'] , 'options' : ''}
+	,
+	{'files' : ['SRlatch/SRlatch.imi' , 'SRlatch/SRlatch.v0'] , 'options' : ''}
+	,
+	#{'files' : ['RCP/RCP.imi' , 'RCP/RCP.v0'] , 'options' : ''}
+	#,
+	{'files' : ['CSMACD/csmacdPrism_2p.imi' , 'CSMACD/csmacdPrism_2p.v0'] , 'options' : ''}
 ]
 
-
-
-##************************************************************
-## STANDARD CODE
-##************************************************************
-## NOTE: I couldn't find a way to get the previous variables global (otherwise this code is useless)
-#def get_examples():
-	#return examples
-#def get_binaries():
-	#return binaries
-#def get_common_options():
-	#return common_options
