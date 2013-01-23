@@ -192,6 +192,7 @@ class imitator_options =
 				("-IMorig", Set pi_compatible, " Algorithm IMoriginal (defined in [AS11]): return a constraint such that no pi-incompatible state can be reached. Default: 'false'");
 				("-IMunion", Set union, " Algorithm IMUnion (defined in [AS11]): Returns the union of the constraint on the parameters associated to the last state of each trace. Default: 'false'");
 				("-log-prefix", Set_string program_prefix, " Sets the prefix for log files. Default: [model].");
+				("-merge", Clear no_merging, " Use the merging technique of [AFS12]. Default: 'false' (disable)");
 				("-mode", String set_mode, " Mode for " ^ program_name ^ ". Use 'reachability' for a parametric reachability analysis (no pi0 needed). Use 'inversemethod' for the inverse method. For the behavioral cartography algorithm, use 'cover' to cover all the points within V0, or 'randomXX' where XX is a number to iterate randomly algorithm (e.g., random5 or random100). Default: 'inversemethod'.");
 				("-no-random", Set no_random, " No random selection of the pi0-incompatible inequality (select the first found). Default: false.");
 (* 				("-PTA2CLP", Unit (fun _ -> pta2clp := true; imitator_mode := Translation), "Translate PTA into a CLP program, and exit without performing any analysis. Work in progress! Defaut : 'false'"); *)
@@ -207,7 +208,6 @@ class imitator_options =
 				("-with-dot", Set with_dot, " Graphical output using 'dot'. Default: false.");
 				("-with-dot-source", Set with_dot_source, " Keep file used for generating graphical output. Default: false.");
 				("-with-log", Set with_log, " Generation of log files (description of states). Default: false.");
-				("-with-merging", Clear no_merging, " Use the merging technique of [AFS12]. Default: 'false' (disable)");
 				("-with-parametric-log", Set with_parametric_log, " Adds the elimination of the clock variables in the constraints in the log files. Default: false.");
 				("-version", Unit (fun _ -> print_version_string (); exit 0), " Print version number and exit.");
 
