@@ -6,7 +6,7 @@
 #
 #  Author:        Etienne Andre
 #  Created:       2009/09/07
-#  Last modified: 2012/08/21
+#  Last modified: 2013/01/24
 #  Ocaml version: 3.12.1
 ###############################################################
 
@@ -609,6 +609,8 @@ exe:
 # 	$(TARGET) $(EXAMPLE_PATH)/Scheduling/preemptive_maler.imi -PTA2JPG
 # 	$(TARGET) $(EXAMPLE_PATH)/Scheduling/preemptive_maler.imi $(EXAMPLE_PATH)/Scheduling/preemptive_maler.pi0 -with-merging -with-dot -with-log
 
+# 	$(TARGET) $(EXAMPLE_PATH)/Others/giuseppe.imi $(EXAMPLE_PATH)/Others/giuseppe.v0 -mode cover -incl -merge -depth-limit 80 -timed 
+# 	$(TARGET) $(EXAMPLE_PATH)/Others/giuseppe_opt.imi $(EXAMPLE_PATH)/Others/giuseppe_opt.v0 -mode cover -incl -merge
 
 ##### JOB SHOP #####
 # 	$(TARGET) $(EXAMPLE_PATH)/Jobshop/maler_2_4.imi -mode reachability -incl 
@@ -622,10 +624,10 @@ exe:
 # 	bin/IMITATOR2.35.111115 $(EXAMPLE_PATH)/Jobshop/maler_2_4.imi -mode reachability -no-dot -no-log -IMincl
 # 	bin/IMITATOR2.34.111115 $(EXAMPLE_PATH)/Jobshop/maler_2_4.ancien.imi -mode reachability -no-dot -no-log -IMincl
 
-	$(TARGET) $(EXAMPLE_PATH)/Jobshop/maler_2_4.imi $(EXAMPLE_PATH)/Jobshop/maler_2_4.pi0
-	$(TARGET) $(EXAMPLE_PATH)/Jobshop/maler_2_4.imi $(EXAMPLE_PATH)/Jobshop/maler_2_4.pi0 -with-merging
-	$(TARGET) $(EXAMPLE_PATH)/Jobshop/maler_2_4.imi $(EXAMPLE_PATH)/Jobshop/maler_2_4.pi0 -dynamic-elimination
-	$(TARGET) $(EXAMPLE_PATH)/Jobshop/maler_2_4.imi $(EXAMPLE_PATH)/Jobshop/maler_2_4.pi0 -with-merging -dynamic-elimination
+# 	$(TARGET) $(EXAMPLE_PATH)/Jobshop/maler_2_4.imi $(EXAMPLE_PATH)/Jobshop/maler_2_4.pi0
+# 	$(TARGET) $(EXAMPLE_PATH)/Jobshop/maler_2_4.imi $(EXAMPLE_PATH)/Jobshop/maler_2_4.pi0 -with-merging
+# 	$(TARGET) $(EXAMPLE_PATH)/Jobshop/maler_2_4.imi $(EXAMPLE_PATH)/Jobshop/maler_2_4.pi0 -dynamic-elimination
+# 	$(TARGET) $(EXAMPLE_PATH)/Jobshop/maler_2_4.imi $(EXAMPLE_PATH)/Jobshop/maler_2_4.pi0 -with-merging -dynamic-elimination
 # 	$(TARGET) $(EXAMPLE_PATH)/Jobshop/maler_2_4.imi $(EXAMPLE_PATH)/Jobshop/maler_2_4.pi0 -acyclic -statistics
 # 	$(TARGET) $(EXAMPLE_PATH)/Jobshop/maler_2_4.imi $(EXAMPLE_PATH)/Jobshop/maler_2_4.pi0 -incl
 # 	$(TARGET) $(EXAMPLE_PATH)/Jobshop/maler_2_4.imi $(EXAMPLE_PATH)/Jobshop/maler_2_4.pi0 -bab # PROBLEM BAB

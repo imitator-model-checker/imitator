@@ -184,6 +184,7 @@ location_name:
 ;
 
 wait_opt:
+	| CT_WAIT { }
 	| CT_WAIT LBRACE RBRACE { }
 	| LBRACE RBRACE { }
 	| { }

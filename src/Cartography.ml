@@ -229,6 +229,7 @@ let cover_behavioral_cartography program v0 init_state =
 	print_message Debug_standard ("**************************************************");
 	print_message Debug_standard (" Parametric rectangle V0: ");
 	print_message Debug_standard (ModelPrinter.string_of_v0 program v0);
+	print_message Debug_standard (" Number of points inside V0: " ^ (NumConst.string_of_numconst nb_points));
 
 	(* Iterate on all the possible pi0 *)
 	let more_pi0 = ref true in

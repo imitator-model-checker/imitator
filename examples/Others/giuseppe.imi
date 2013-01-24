@@ -1,0 +1,260 @@
+var 
+		t_starter_pipeline_1:clock;
+		t_pipeline_1:clock;
+		T_pipeline_1:parameter;
+		D_pipeline_1:parameter;
+		t_task_11:clock;
+		C_task_11:parameter;
+		t_starter_pipeline_2:clock;
+		t_pipeline_2:clock;
+		T_pipeline_2:parameter;
+		D_pipeline_2:parameter;
+		t_task_21:clock;
+		C_task_21:parameter;
+		t_task_22:clock;
+		C_task_22:parameter;
+		t_task_23:clock;
+		C_task_23:parameter;
+		t_task_24:clock;
+		C_task_24:parameter;
+		t_task_25:clock;
+		C_task_25:parameter;
+		t_starter_pipeline_3:clock;
+		t_pipeline_3:clock;
+		T_pipeline_3:parameter;
+		D_pipeline_3:parameter;
+		t_task_31:clock;
+		C_task_31:parameter;
+		t_starter_pipeline_4:clock;
+		t_pipeline_4:clock;
+		T_pipeline_4:parameter;
+		D_pipeline_4:parameter;
+		t_task_41:clock;
+		C_task_41:parameter;
+
+
+automaton pipeline_starter_1
+	 synclabs: start_pipeline_1;
+
+	 loc starter: while t_starter_pipeline_1 <= T_pipeline_1 wait
+		 when t_starter_pipeline_1 = T_pipeline_1 sync start_pipeline_1 do {t_starter_pipeline_1'=0} goto starter;
+end
+
+automaton pipeline_1
+	synclabs:start_pipeline_1,task_11_act,task_11_done;
+
+	loc P1_1: while True wait
+		 when True sync start_pipeline_1 do {t_pipeline_1'=0}goto P1_2;
+	loc P1_2: while t_pipeline_1 <= D_pipeline_1 wait
+		 when True sync task_11_act goto P1_3;
+	loc P1_3: while t_pipeline_1 <= D_pipeline_1 wait
+		 when True sync task_11_done goto P1_1;
+end
+
+automaton pipeline_starter_2
+	 synclabs: start_pipeline_2;
+
+	 loc starter: while t_starter_pipeline_2 <= T_pipeline_2 wait
+		 when t_starter_pipeline_2 = T_pipeline_2 sync start_pipeline_2 do {t_starter_pipeline_2'=0} goto starter;
+end
+
+automaton pipeline_2
+	synclabs:start_pipeline_2,task_21_act,task_21_done,task_22_act,task_22_done,task_23_act,task_23_done,task_24_act,task_24_done,task_25_act,task_25_done;
+
+	loc P2_1: while True wait
+		 when True sync start_pipeline_2 do {t_pipeline_2'=0}goto P2_2;
+	loc P2_2: while t_pipeline_2 <= D_pipeline_2 wait
+		 when True sync task_21_act goto P2_3;
+	loc P2_3: while t_pipeline_2 <= D_pipeline_2 wait
+		 when True sync task_21_done goto P2_4;
+	loc P2_4: while t_pipeline_2 <= D_pipeline_2 wait
+		 when True sync task_22_act goto P2_5;
+	loc P2_5: while t_pipeline_2 <= D_pipeline_2 wait
+		 when True sync task_22_done goto P2_6;
+	loc P2_6: while t_pipeline_2 <= D_pipeline_2 wait
+		 when True sync task_23_act goto P2_7;
+	loc P2_7: while t_pipeline_2 <= D_pipeline_2 wait
+		 when True sync task_23_done goto P2_8;
+	loc P2_8: while t_pipeline_2 <= D_pipeline_2 wait
+		 when True sync task_24_act goto P2_9;
+	loc P2_9: while t_pipeline_2 <= D_pipeline_2 wait
+		 when True sync task_24_done goto P2_10;
+	loc P2_10: while t_pipeline_2 <= D_pipeline_2 wait
+		 when True sync task_25_act goto P2_11;
+	loc P2_11: while t_pipeline_2 <= D_pipeline_2 wait
+		 when True sync task_25_done goto P2_1;
+end
+
+automaton pipeline_starter_3
+	 synclabs: start_pipeline_3;
+
+	 loc starter: while t_starter_pipeline_3 <= T_pipeline_3 wait
+		 when t_starter_pipeline_3 = T_pipeline_3 sync start_pipeline_3 do {t_starter_pipeline_3'=0} goto starter;
+end
+
+automaton pipeline_3
+	synclabs:start_pipeline_3,task_31_act,task_31_done;
+
+	loc P3_1: while True wait
+		 when True sync start_pipeline_3 do {t_pipeline_3'=0}goto P3_2;
+	loc P3_2: while t_pipeline_3 <= D_pipeline_3 wait
+		 when True sync task_31_act goto P3_3;
+	loc P3_3: while t_pipeline_3 <= D_pipeline_3 wait
+		 when True sync task_31_done goto P3_1;
+end
+
+automaton pipeline_starter_4
+	 synclabs: start_pipeline_4;
+
+	 loc starter: while t_starter_pipeline_4 <= T_pipeline_4 wait
+		 when t_starter_pipeline_4 = T_pipeline_4 sync start_pipeline_4 do {t_starter_pipeline_4'=0} goto starter;
+end
+
+automaton pipeline_4
+	synclabs:start_pipeline_4,task_41_act,task_41_done;
+
+	loc P4_1: while True wait
+		 when True sync start_pipeline_4 do {t_pipeline_4'=0}goto P4_2;
+	loc P4_2: while t_pipeline_4 <= D_pipeline_4 wait
+		 when True sync task_41_act goto P4_3;
+	loc P4_3: while t_pipeline_4 <= D_pipeline_4 wait
+		 when True sync task_41_done goto P4_1;
+end
+
+automaton proc_1
+	 synclabs: task_11_act,task_11_done,task_21_act,task_21_done,task_25_act,task_25_done;
+
+	loc proc_1_000: while True stop {t_task_11,t_task_21,t_task_25} wait
+		when True sync task_11_act do {t_task_11'=0} goto proc_1_100;
+		when True sync task_21_act do {t_task_21'=0} goto proc_1_010;
+		when True sync task_25_act do {t_task_25'=0} goto proc_1_001;
+	loc proc_1_100: while t_task_11 <= C_task_11 stop {t_task_21,t_task_25} wait
+		when t_task_11 = C_task_11 sync task_11_done goto proc_1_000;
+		when t_task_11 < C_task_11 sync task_21_act do {t_task_21'=0} goto proc_1_110;
+		when t_task_11 < C_task_11 sync task_25_act do {t_task_25'=0} goto proc_1_101;
+	loc proc_1_010: while t_task_21 <= C_task_21 stop {t_task_11,t_task_25} wait
+		when t_task_21 < C_task_21 sync task_11_act do {t_task_11'=0} goto proc_1_110;
+		when t_task_21 = C_task_21 sync task_21_done goto proc_1_000;
+		when t_task_21 < C_task_21 sync task_25_act do {t_task_25'=0} goto proc_1_011;
+	loc proc_1_001: while t_task_25 <= C_task_25 stop {t_task_11,t_task_21} wait
+		when t_task_25 < C_task_25 sync task_11_act do {t_task_11'=0} goto proc_1_101;
+		when t_task_25 < C_task_25 sync task_21_act do {t_task_21'=0} goto proc_1_011;
+		when t_task_25 = C_task_25 sync task_25_done goto proc_1_000;
+	loc proc_1_110: while t_task_11 <= C_task_11 stop {t_task_21,t_task_25} wait
+		when t_task_11 = C_task_11 sync task_11_done goto proc_1_010;
+		when t_task_21 = C_task_21 sync task_21_done goto proc_1_100;
+		when t_task_11 < C_task_11 sync task_25_act do {t_task_25'=0} goto proc_1_111;
+	loc proc_1_101: while t_task_11 <= C_task_11 stop {t_task_21,t_task_25} wait
+		when t_task_11 = C_task_11 sync task_11_done goto proc_1_001;
+		when t_task_11 < C_task_11 sync task_21_act do {t_task_21'=0} goto proc_1_111;
+		when t_task_25 = C_task_25 sync task_25_done goto proc_1_100;
+	loc proc_1_011: while t_task_21 <= C_task_21 stop {t_task_11,t_task_25} wait
+		when t_task_21 < C_task_21 sync task_11_act do {t_task_11'=0} goto proc_1_111;
+		when t_task_21 = C_task_21 sync task_21_done goto proc_1_001;
+		when t_task_25 = C_task_25 sync task_25_done goto proc_1_010;
+	loc proc_1_111: while t_task_11 <= C_task_11 stop {t_task_21,t_task_25} wait
+		when t_task_11 = C_task_11 sync task_11_done goto proc_1_011;
+		when t_task_21 = C_task_21 sync task_21_done goto proc_1_101;
+		when t_task_25 = C_task_25 sync task_25_done goto proc_1_110;
+end
+
+automaton proc_2
+	 synclabs: task_22_act,task_22_done,task_24_act,task_24_done;
+
+	loc proc_2_00: while True stop {t_task_22,t_task_24} wait
+		when True sync task_22_act do {t_task_22'=0} goto proc_2_10;
+		when True sync task_24_act do {t_task_24'=0} goto proc_2_01;
+	loc proc_2_10: while t_task_22 <= C_task_22 stop {t_task_24} wait
+		when t_task_22 = C_task_22 sync task_22_done goto proc_2_00;
+		when t_task_22 <= 0 sync task_24_act do {t_task_24'=0} goto proc_2_11;
+	loc proc_2_01: while t_task_24 <= C_task_24 stop {t_task_22} wait
+		when t_task_24 <= 0 sync task_22_act do {t_task_22'=0} goto proc_2_11;
+		when t_task_24 = C_task_24 sync task_24_done goto proc_2_00;
+	loc proc_2_11: while t_task_22 <= C_task_22 stop {t_task_24} wait
+		when t_task_22 = C_task_22 sync task_22_done goto proc_2_01;
+		when t_task_24 = C_task_24 sync task_24_done goto proc_2_10;
+end
+
+automaton proc_3
+	 synclabs: task_23_act,task_23_done,task_31_act,task_31_done,task_41_act,task_41_done;
+
+	loc proc_3_000: while True stop {t_task_23,t_task_31,t_task_41} wait
+		when True sync task_23_act do {t_task_23'=0} goto proc_3_100;
+		when True sync task_31_act do {t_task_31'=0} goto proc_3_010;
+		when True sync task_41_act do {t_task_41'=0} goto proc_3_001;
+	loc proc_3_100: while t_task_23 <= C_task_23 stop {t_task_31,t_task_41} wait
+		when t_task_23 = C_task_23 sync task_23_done goto proc_3_000;
+		when t_task_23 < C_task_23 sync task_31_act do {t_task_31'=0} goto proc_3_110;
+		when t_task_23 < C_task_23 sync task_41_act do {t_task_41'=0} goto proc_3_101;
+	loc proc_3_010: while t_task_31 <= C_task_31 stop {t_task_23,t_task_41} wait
+		when t_task_31 < C_task_31 sync task_23_act do {t_task_23'=0} goto proc_3_110;
+		when t_task_31 = C_task_31 sync task_31_done goto proc_3_000;
+		when t_task_31 < C_task_31 sync task_41_act do {t_task_41'=0} goto proc_3_011;
+	loc proc_3_001: while t_task_41 <= C_task_41 stop {t_task_23,t_task_31} wait
+		when t_task_41 < C_task_41 sync task_23_act do {t_task_23'=0} goto proc_3_101;
+		when t_task_41 < C_task_41 sync task_31_act do {t_task_31'=0} goto proc_3_011;
+		when t_task_41 = C_task_41 sync task_41_done goto proc_3_000;
+	loc proc_3_110: while t_task_31 <= C_task_31 stop {t_task_23,t_task_41} wait
+		when t_task_23 = C_task_23 sync task_23_done goto proc_3_010;
+		when t_task_31 = C_task_31 sync task_31_done goto proc_3_100;
+		when t_task_31 < C_task_31 sync task_41_act do {t_task_41'=0} goto proc_3_111;
+	loc proc_3_101: while t_task_23 <= C_task_23 stop {t_task_31,t_task_41} wait
+		when t_task_23 = C_task_23 sync task_23_done goto proc_3_001;
+		when t_task_23 < C_task_23 sync task_31_act do {t_task_31'=0} goto proc_3_111;
+		when t_task_41 = C_task_41 sync task_41_done goto proc_3_100;
+	loc proc_3_011: while t_task_31 <= C_task_31 stop {t_task_23,t_task_41} wait
+		when t_task_31 < C_task_31 sync task_23_act do {t_task_23'=0} goto proc_3_111;
+		when t_task_31 = C_task_31 sync task_31_done goto proc_3_001;
+		when t_task_41 = C_task_41 sync task_41_done goto proc_3_010;
+	loc proc_3_111: while t_task_31 <= C_task_31 stop {t_task_23,t_task_41} wait
+		when t_task_23 = C_task_23 sync task_23_done goto proc_3_011;
+		when t_task_31 = C_task_31 sync task_31_done goto proc_3_101;
+		when t_task_41 = C_task_41 sync task_41_done goto proc_3_110;
+end
+
+var init:region;
+init:= True &
+	loc[proc_1]= proc_1_000 &
+	loc[proc_2]= proc_2_00 &
+	loc[proc_3]= proc_3_000 &
+	loc[pipeline_starter_1]=starter &
+	loc[pipeline_1]=P1_1 &
+	loc[pipeline_starter_2]=starter &
+	loc[pipeline_2]=P2_1 &
+	loc[pipeline_starter_3]=starter &
+	loc[pipeline_3]=P3_1 &
+	loc[pipeline_starter_4]=starter &
+	loc[pipeline_4]=P4_1 &
+	t_starter_pipeline_1 = 0 &
+	t_pipeline_1 = 0 &
+	t_task_11 = 0 & 
+	t_starter_pipeline_2 = 0 &
+	t_pipeline_2 = 0 &
+	t_task_21 = 0 & 
+	t_task_22 = 0 & 
+	t_task_23 = 0 & 
+	t_task_24 = 0 & 
+	t_task_25 = 0 & 
+	t_starter_pipeline_3 = 0 &
+	t_pipeline_3 = 0 &
+	t_task_31 = 0 & 
+	t_starter_pipeline_4 = 0 &
+	t_pipeline_4 = 0 &
+	t_task_41 = 0 & 
+	T_pipeline_1 = 20 &
+	D_pipeline_1 = 20 &
+	-- C_task_11 = 4 & 
+	T_pipeline_2 = 150 &
+	D_pipeline_2 = 150 &
+	-- C_task_21 = 20 & 
+	C_task_22 = 25 & 
+	C_task_23 = 15 & 
+	C_task_24 = 34 & 
+	C_task_25 = 30 & 
+	T_pipeline_3 = 30 &
+	D_pipeline_3 = 30 &
+	C_task_31 = 5 & 
+	T_pipeline_4 = 200 &
+	D_pipeline_4 = 200 &
+	C_task_41 = 100 & 
+	True;
