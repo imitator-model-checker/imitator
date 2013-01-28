@@ -135,6 +135,7 @@ $(IMILIB): header parser $(OBJS)
 $(TARGET): $(IMILIB) $(MAIN)
 	@ echo [LINK] $(TARGET)
 	@ $(OCAMLC) $(INCLUDE) $(LIBS) $(IMILIB) $(MAIN) -o $(TARGET)
+	@ echo [LN]  $(TARGET_PATH)$(TARGET_NAME)$(VERSION)
 	@ cd $(TARGET_PATH) ; rm $(TARGET_NAME)$(VERSION) ; ln $(TARGET_NAME) $(TARGET_NAME)$(VERSION) -s
 	
 $(TARGET_STATIC32): $(IMILIB) $(MAIN)
@@ -214,7 +215,7 @@ exe:
 
 ##### TESTS FOR SYNTAX #####
 
-# 	$(TARGET) $(EXAMPLE_PATH)/Tests/test.gml -mode reachability -debug high -fromGML
+# 	$(TARGET) $(EXAMPLE_PATH)/Tests/test.gml -mode reachability -verbose high -fromGML
 
 # 	$(TARGET) $(EXAMPLE_PATH)/Tests/test.imi -PTA2GML
 
@@ -224,8 +225,8 @@ exe:
 # 	$(TARGET) $(EXAMPLE_PATH)/Tests/testPostUpdates.imi -mode reachability -no-merging
 # 	bin/IMITATOR2.4 $(EXAMPLE_PATH)/Tests/testPostUpdates.imi -mode reachability
 # 	$(TARGET) $(EXAMPLE_PATH)/Tests/testPostUpdates1PTA.imi -mode reachability
-# 	$(TARGET) $(EXAMPLE_PATH)/Tests/testPostSW.imi -mode reachability -debug total -depth-limit 2
-# 	$(TARGET) $(EXAMPLE_PATH)/Tests/testPostSansDiscrete.imi -mode reachability -statistics -debug total
+# 	$(TARGET) $(EXAMPLE_PATH)/Tests/testPostSW.imi -mode reachability -verbose total -depth-limit 2
+# 	$(TARGET) $(EXAMPLE_PATH)/Tests/testPostSansDiscrete.imi -mode reachability -statistics -verbose total
 
 # 	$(TARGET) $(EXAMPLE_PATH)/Tests/exPourGML.imi -PTA2GML
 
@@ -235,12 +236,12 @@ exe:
 # 	$(TARGET) $(EXAMPLE_PATH)/Tests/model2.gml -fromGML -forcePi0
 # 	$(TARGET) $(EXAMPLE_PATH)/Tests/model2.imi -forcePi0
 
-# 	$(TARGET) $(EXAMPLE_PATH)/Tests/model2.imi $(EXAMPLE_PATH)/Tests/model2.pi0 -debug total
-# # 	bin/IMITATOR32romain $(EXAMPLE_PATH)/Tests/model2.imi $(EXAMPLE_PATH)/Tests/model2.pi0 -debug total
+# 	$(TARGET) $(EXAMPLE_PATH)/Tests/model2.imi $(EXAMPLE_PATH)/Tests/model2.pi0 -verbose total
+# # 	bin/IMITATOR32romain $(EXAMPLE_PATH)/Tests/model2.imi $(EXAMPLE_PATH)/Tests/model2.pi0 -verbose total
 	
-# 	$(TARGET) $(EXAMPLE_PATH)/Tests/model2.imi $(EXAMPLE_PATH)/Tests/model2.pi0 -debug total
+# 	$(TARGET) $(EXAMPLE_PATH)/Tests/model2.imi $(EXAMPLE_PATH)/Tests/model2.pi0 -verbose total
 
-# 	$(TARGET) $(EXAMPLE_PATH)/Tests/testCosts.imi $(EXAMPLE_PATH)/Tests/testCosts.pi0 -debug total -bab -time-limit 1
+# 	$(TARGET) $(EXAMPLE_PATH)/Tests/testCosts.imi $(EXAMPLE_PATH)/Tests/testCosts.pi0 -verbose total -bab -time-limit 1
 ##### TESTS FOR PROPERTIES #####
 
 # 	$(TARGET) $(EXAMPLE_PATH)/Proprietes/exCTL.imi -mode reachability -with-dot -with-log
@@ -292,13 +293,13 @@ exe:
 # 	$(TARGET) $(EXAMPLE_PATH)/AndOr/AndOr.imi -PTA2GrML
 # 	$(TARGET) $(EXAMPLE_PATH)/AndOr/AndOr.imi.grml -fromGrML -mode reachability
 
-# 	$(TARGET) $(EXAMPLE_PATH)/AndOr/AndOr.imi -mode reachability -dynamic-elimination -debug total
+# 	$(TARGET) $(EXAMPLE_PATH)/AndOr/AndOr.imi -mode reachability -dynamic-elimination -verbose total
 # 	$(TARGET) $(EXAMPLE_PATH)/AndOr/AndOr2.imi -PTA2JPG
 # 	$(TARGET) $(EXAMPLE_PATH)/AndOr/AndOr.imi -mode reachability -states-limit 10
 # 	$(TARGET) $(EXAMPLE_PATH)/AndOr/AndOr.imi -mode reachability -time-limit 10
 
 # 	$(TARGET) $(EXAMPLE_PATH)/AndOr/AndOr2.imi $(EXAMPLE_PATH)/AndOr/AndOr.pi0
-# 	$(TARGET) $(EXAMPLE_PATH)/AndOr/AndOr2.imi $(EXAMPLE_PATH)/AndOr/AndOr.pi0 -dynamic-elimination -debug low
+# 	$(TARGET) $(EXAMPLE_PATH)/AndOr/AndOr2.imi $(EXAMPLE_PATH)/AndOr/AndOr.pi0 -dynamic-elimination -verbose low
 
 # 	$(TARGET) $(EXAMPLE_PATH)/AndOr/AndOr.imi $(EXAMPLE_PATH)/AndOr/AndOr.pi0
 # 	$(TARGET) $(EXAMPLE_PATH)/AndOr/AndOr.imi $(EXAMPLE_PATH)/AndOr/AndOr.pi0 -bab
@@ -322,8 +323,8 @@ exe:
 # 	bin/IMITATOR2.35 $(EXAMPLE_PATH)/Flipflop/flipflop.imi -mode reachability -no-dot -no-log -statistics
 # 	bin/IMITATOR2.34.111115 $(EXAMPLE_PATH)/Flipflop/flipflop.imi -mode reachability -no-dot -no-log 
 
-# 	$(TARGET) $(EXAMPLE_PATH)/Flipflop/flipflop.imi -mode reachability -tree -debug low
-# 	$(TARGET) $(EXAMPLE_PATH)/Flipflop/flipflop.imi -mode reachability -acyclic -debug low
+# 	$(TARGET) $(EXAMPLE_PATH)/Flipflop/flipflop.imi -mode reachability -tree -verbose low
+# 	$(TARGET) $(EXAMPLE_PATH)/Flipflop/flipflop.imi -mode reachability -acyclic -verbose low
 # 		$(TARGET) $(EXAMPLE_PATH)/Flipflop/flipflop.imi $(EXAMPLE_PATH)/Flipflop/flipflop.pi0 -no-dot -no-log -jobshop -no-random
 # 		bin/IMITATOR2.4 $(EXAMPLE_PATH)/Flipflop/flipflop.imi $(EXAMPLE_PATH)/Flipflop/flipflop.pi0 -no-dot -no-log -jobshop -no-random
 # 	$(TARGET) $(EXAMPLE_PATH)/Flipflop/flipflop.imi $(EXAMPLE_PATH)/Flipflop/flipflop.pi0
@@ -387,13 +388,13 @@ exe:
 
 ##### CASE STUDIES : PROTOCOLS #####
 
-# 	$(TARGET) $(EXAMPLE_PATH)/Fischer/fischerPAT.imi -mode reachability -debug total
+# 	$(TARGET) $(EXAMPLE_PATH)/Fischer/fischerPAT.imi -mode reachability -verbose total
 # 	$(TARGET) $(EXAMPLE_PATH)/Fischer/fischerPAT.imi -mode reachability -with-log -with-dot -incl -fancy
 # 	$(TARGET) $(EXAMPLE_PATH)/Fischer/fischerPAT.imi -mode reachability -depth-limit 80 -with-log
 # 	$(TARGET) $(EXAMPLE_PATH)/Fischer/fischerPAT.imi $(EXAMPLE_PATH)/Fischer/fischerPAT.pi0 -depth-limit 12 -with-log -with-dot
 # 	$(TARGET) $(EXAMPLE_PATH)/Fischer/fischerPAT.imi -PTA2JPG
 # 	$(TARGET) $(EXAMPLE_PATH)/Fischer/fischerPAT.imi $(EXAMPLE_PATH)/Fischer/fischerPAT.pi0 -depth-limit 20
-# 	$(TARGET) $(EXAMPLE_PATH)/Fischer/fischerPAT.imi $(EXAMPLE_PATH)/Fischer/fischerPAT.pi0 -dynamic-elimination -debug low -depth-limit 20 -with-log 
+# 	$(TARGET) $(EXAMPLE_PATH)/Fischer/fischerPAT.imi $(EXAMPLE_PATH)/Fischer/fischerPAT.pi0 -dynamic-elimination -verbose low -depth-limit 20 -with-log 
 
 # 	$(TARGET) $(EXAMPLE_PATH)/BangOlufsen/BangOlufsen.imi -mode reachability 
 # 	$(TARGET) $(EXAMPLE_PATH)/BangOlufsen/BangOlufsen.imi $(EXAMPLE_PATH)/BangOlufsen/BangOlufsen.pi0 -depth-limit 12 -incl -statistics
@@ -401,7 +402,7 @@ exe:
 # 	$(TARGET) $(EXAMPLE_PATH)/BangOlufsen/BangOlufsen.imi $(EXAMPLE_PATH)/BangOlufsen/BangOlufsen.pi0 -depth-limit 12 -incl -no-dot -no-log -statistics -jobshop
 
 # 	./IMITATOR Examples/BangOlufsen/BangOlufsen2.imi -mode reachability -no-dot
-# 	./IMITATOR Examples/BangOlufsen/BangOlufsen2.imi -mode reachability -no-dot -depth-limit 30 -debug low
+# 	./IMITATOR Examples/BangOlufsen/BangOlufsen2.imi -mode reachability -no-dot -depth-limit 30 -verbose low
 
 	
 # 	$(TARGET) $(EXAMPLE_PATH)/BRP/brp.imi -PTA2JPG
@@ -495,13 +496,13 @@ exe:
 
 # 	./IMITATOR Examples/Wlan/wlan_boff2.imi Examples/Wlan/wlan_boff2.pi0 -timed
 
-# 	./IMITATOR Examples/Wlan/wlan2_for_im2.imi -mode reachability -debug low
+# 	./IMITATOR Examples/Wlan/wlan2_for_im2.imi -mode reachability -verbose low
 # 	./IMITATOR Examples/Wlan/wlan2_for_im2.imi Examples/Wlan/wlan2_for_im2.pi0 -timed
 
 ##### CASE STUDIES : VALMEM #####
 
 # 	$(TARGET) $(EXAMPLE_PATH)/Valmem/spsmall.imi -PTA2JPG 
-# 	$(TARGET) $(EXAMPLE_PATH)/Valmem/spsmall.imi -mode reachability -debug total
+# 	$(TARGET) $(EXAMPLE_PATH)/Valmem/spsmall.imi -mode reachability -verbose total
 # 	$(TARGET) $(EXAMPLE_PATH)/Valmem/spsmall.imi $(EXAMPLE_PATH)/Valmem/spsmall.pi0
 # 	$(TARGET) $(EXAMPLE_PATH)/Valmem/spsmall.imi $(EXAMPLE_PATH)/Valmem/spsmall.pi0 -no-random -bab
 # 	$(TARGET) $(EXAMPLE_PATH)/Valmem/spsmall.imi $(EXAMPLE_PATH)/Valmem/spsmall.pi0 -with-dot -with-dot-source -fancy
@@ -525,7 +526,7 @@ exe:
 # 	./IMITATOR Examples/Valmem/spsmall_obs.imi Examples/Valmem/spsmall.v0 -mode cover -log-prefix Examples/Valmem/carto/spsmall
 
 # 	$(TARGET) $(EXAMPLE_PATH)/Valmem/LSV.imi $(EXAMPLE_PATH)/Valmem/delais1_hy.pi0 -no-dot -no-log -statistics 
-# 	$(TARGET) $(EXAMPLE_PATH)/Valmem/LSV.imi $(EXAMPLE_PATH)/Valmem/delais1_hy.pi0 -no-dot -no-log -depth-limit 31 -jobshop -debug medium
+# 	$(TARGET) $(EXAMPLE_PATH)/Valmem/LSV.imi $(EXAMPLE_PATH)/Valmem/delais1_hy.pi0 -no-dot -no-log -depth-limit 31 -jobshop -verbose medium
 # 	$(TARGET) $(EXAMPLE_PATH)/Valmem/LSV.imi $(EXAMPLE_PATH)/Valmem/delais1_hy.pi0 -no-dot -no-log -statistics -acyclic -dynamic
 # 	bin/IMITATOR2.34.111115 $(EXAMPLE_PATH)/Valmem/LSV.imi $(EXAMPLE_PATH)/Valmem/delais1_hy.pi0 -no-dot -no-log -dynamic
 # 	$(TARGET) $(EXAMPLE_PATH)/Valmem/LSV.imi $(EXAMPLE_PATH)/Valmem/delais1_hy.pi0 -no-dot -no-log -depth-limit 13 -no-random
@@ -610,6 +611,7 @@ exe:
 # 	$(TARGET) $(EXAMPLE_PATH)/Scheduling/preemptive_maler.imi $(EXAMPLE_PATH)/Scheduling/preemptive_maler.pi0 -with-merging -with-dot -with-log
 
 # 	$(TARGET) $(EXAMPLE_PATH)/Others/giuseppe.imi $(EXAMPLE_PATH)/Others/giuseppe.v0 -mode cover -incl -merge -depth-limit 80 -timed 
+	$(TARGET) $(EXAMPLE_PATH)/Others/giuseppe3.imi $(EXAMPLE_PATH)/Others/giuseppe3.v0 -mode cover -incl -merge -timed 
 # 	$(TARGET) $(EXAMPLE_PATH)/Others/giuseppe_opt.imi $(EXAMPLE_PATH)/Others/giuseppe_opt.v0 -mode cover -incl -merge
 
 ##### JOB SHOP #####
@@ -675,14 +677,6 @@ exe:
 # 	bin/IMITATOR2.370 $(EXAMPLE_PATH)/Jobshop/maler_4_4.imi -mode reachability -no-dot -no-log -incl -statistics -depth-limit 8
 # 	bin/IMITATOR2.36 $(EXAMPLE_PATH)/Jobshop/maler_4_4.imi -mode reachability -no-dot -no-log -incl -statistics
 
-
-##### ANCIEN #####
-
-# 	./IMITATOR Examples/test.imi Examples/test.pi0 -debug total
-# 	./IMITATOR Examples/testBoucle.imi Examples/vide.pi0 -debug high
-# 	./IMITATOR Examples/testPost.imi Examples/testPost.pi0 -debug total
-# 	./IMITATOR Examples/testPost.imi Examples/testPost.pi0 -debug total -sync-auto-detect
-# 	./IMITATOR Examples/testPost2.imi Examples/vide.pi0 -debug nodebug -timed
 
 
 count: clean

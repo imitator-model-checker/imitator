@@ -762,13 +762,16 @@ let check_bad index_of_labels index_of_automata index_of_locations parsed_bad_de
 	(!state_pairs, !well_formed)*)
 (*	let action_index =*)
 	match parsed_bad_definition with
+		| [] -> ((*well_formed := false; *)Nobad , true)
 		| [ParsingStructure.Exists_action action_name] -> 
 			(* Check the existence and Return the index *)
 			begin
 			try (
 				let action_index = Hashtbl.find index_of_labels action_name in
 				AbstractModel.Exists_action action_index , true
-			) with Not_found -> ((*well_formed := false; *)Nobad , false)
+			) with Not_found ->
+				print_error ("The action '" ^ action_name ^ "' used in the bad definition was not declared.");
+				((*well_formed := false; *)Nobad , false)
 			end
 		| [ParsingStructure.Exists_location (automaton_name , location_name)] -> 
 			begin
@@ -776,7 +779,9 @@ let check_bad index_of_labels index_of_automata index_of_locations parsed_bad_de
 				let automaton_index = Hashtbl.find index_of_automata automaton_name in
 				let location_index = Hashtbl.find index_of_locations.(automaton_index) location_name in
 					AbstractModel.Exists_location (automaton_index, location_index) , true
-			) with Not_found -> ((*well_formed := false; *)Nobad , false)
+			) with Not_found -> 
+				print_error ("The location '" ^ location_name ^ "' for automaton '" ^ automaton_name ^ "' used in the bad definition is not declared.");
+				((*well_formed := false; *)Nobad , false)
 			end
 		| _ -> raise (InternalError ("In the bad definition, not all possibilities are implemented yet."))
 (*	in
@@ -1579,7 +1584,7 @@ let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* exit if not well formed *)
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	if not (well_formed_automata && well_formed_bad && not well_formed_init)
+	if not (well_formed_automata && well_formed_bad && well_formed_init)
 		then raise InvalidModel;
 
 

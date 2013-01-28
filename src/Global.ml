@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2009/09/08
- * Last modified: 2013/01/23
+ * Last modified: 2013/01/28
  *
  ****************************************************************)
 
@@ -79,7 +79,7 @@ let debug_mode_greater debug_mode =
 
 (* Convert a string into a debug_mode; raise Not_found if not found *)
 let debug_mode_of_string debug_mode =
-	if debug_mode = "nodebug" then Debug_nodebug
+	if debug_mode = "mute" then Debug_nodebug
 	else if debug_mode = "standard" then Debug_standard
 	else if debug_mode = "low" then Debug_low
 	else if debug_mode = "medium" then Debug_medium

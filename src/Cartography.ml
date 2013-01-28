@@ -260,7 +260,7 @@ let cover_behavioral_cartography program v0 init_state =
 		Input.set_pi0 pi0;
 		
 		(* Call the inverse method *)
-		let returned_constraint, graph, nb_iterations, total_time = Reachability.inverse_method_gen program init_state in
+		let returned_constraint, graph, tile_nature, (*deterministic*)_, nb_iterations, total_time = Reachability.inverse_method_gen program init_state in
 		
 		(* Update the time spent on IM *)
 		time_spent_on_IM := !time_spent_on_IM +. total_time;
@@ -297,10 +297,23 @@ let cover_behavioral_cartography program v0 init_state =
 		DynArray.add computed_constraints k0;
 		
 		(* Print the constraint *)
+		
+		
+		(** NOTE: it may actually be more clever to check the tile nature from the graph, especially if we go for more complicated properties!! *)
+		
+		
 (* 			let bad_string = if Graph.is_bad program graph then "BAD." else "GOOD." in *)
 		print_message Debug_low ("Constraint K0 computed:");
 		print_message Debug_standard (ModelPrinter.string_of_returned_constraint program.variable_names k0);
-(* 			print_message Debug_standard ("This zone is " ^ bad_string); *)
+		if program.bad <> Nobad then(
+			(* TODO: move this translation somewhere else *)
+			let bad_string = match tile_nature with
+				| Good -> "good"
+				| Bad -> "bad"
+				| _ -> raise (InternalError ("Tile nature should be good or bad only, so far "))
+			in
+			print_message Debug_standard ("This zone is " ^ bad_string ^ ".");
+		);
 
 
 		(* Compute the next pi0 (note that current_pi0 is directly modified by the function!) and return flags for more pi0 and co *)
@@ -421,7 +434,7 @@ let random_behavioral_cartography program v0 init_state nb =
 				Input.set_pi0 pi0_functional;
 			
 				(* Call the inverse method *)
-				let returned_constraint, graph, nb_iterations, total_time = Reachability.inverse_method_gen program init_state in
+				let returned_constraint, graph, (*tile_nature*)_, (*deterministic*)_, nb_iterations, total_time = Reachability.inverse_method_gen program init_state in
 				(* Get the debug mode back *)
 				set_debug_mode global_debug_mode;
 

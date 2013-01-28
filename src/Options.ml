@@ -7,7 +7,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Ulrich Kuehne, Etienne Andre
  * Created:       2010
- * Last modified: 2013/01/17
+ * Last modified: 2013/01/28
  *
  ****************************************************************)
  
@@ -57,6 +57,8 @@ class imitator_options =
 
 		(* yet another (testing) mode *)
 		val mutable branch_and_bound = ref false
+		(* stop the analysis as soon as a counterexample is found *)
+		val mutable counterex = ref false
 		(* yet another (testing) mode *)
 		val mutable dynamic_clock_elimination = ref false
 		(* limit number of states *)
@@ -105,7 +107,8 @@ class imitator_options =
 		method branch_and_bound = !branch_and_bound
 		method branch_and_bound_unset = (branch_and_bound := false)
 		method cart = !cart
-(* 		method dynamic = !dynamic *)
+		method counterex = !counterex
+		(* method dynamic = !dynamic *)
 		method dynamic_clock_elimination = !dynamic_clock_elimination
 		method fancy = !fancy
 		method file = !file
@@ -180,16 +183,16 @@ class imitator_options =
 			and speclist = [
 				("-acyclic", Set acyclic, " Test if a new state was already encountered only with states of the same depth. To be set only if the system is fully acyclic (no backward branching, i.e., no cycle). Default: 'false'");
 				("-bab", Set branch_and_bound, " Experimental new feature of IMITATOR, based on cost optimization. Default: 'false'");
-				("-cart", Set cart, " Plot cartography before terminating the program. Uses the first two parameters with ranges. Default: false."); 
-				("-debug", String set_debug_mode_ref, " Print more or less information. Can be set to 'nodebug', 'standard', 'low', 'medium', 'high', 'total'. Default: 'standard'");
+				("-cart", Set cart, " Plot cartography before terminating the program. Uses the first two parameters with ranges. Default: false.");
 (* 				("-dynamic", Set dynamic, "Perform the on-the-fly intersection. Defaut : 'false'"); *)
+				("-counterex", Set counterex, " Stop the analysis as soon as a bad state is discovered. Default: false.");
 				("-depth-limit", Int (fun i -> post_limit := Some i), " Limits the depth of the exploration of the reachability graph. Default: no limit.");
 				("-dynamic-elimination", Set dynamic_clock_elimination, " Dynamic clock elimination (experimental). Default: false.");
 				("-fancy", Set fancy, " Generate detailed state information for dot output. Default: false.");
 				("-forcePi0", Set forcePi0, "Create a predefined pi0 file of the form p1 = 1, p2 = 2, etc. Defaut : 'false'");
 				("-fromGrML", Set fromGML, "GrML syntax for input files (experimental). Defaut : 'false'");
 				("-incl", Set inclusion, " Consider an inclusion of region instead of the equality when performing the Post operation (e.g., as in algorithm IMincl defined in [AS11]). Default: 'false'");
-				("-IMorig", Set pi_compatible, " Algorithm IMoriginal (defined in [AS11]): return a constraint such that no pi-incompatible state can be reached. Default: 'false'");
+				("-IMK", Set pi_compatible, " Algorithm IMoriginal (defined in [AS11]): return a constraint such that no pi-incompatible state can be reached. Default: 'false'");
 				("-IMunion", Set union, " Algorithm IMUnion (defined in [AS11]): Returns the union of the constraint on the parameters associated to the last state of each trace. Default: 'false'");
 				("-log-prefix", Set_string program_prefix, " Sets the prefix for log files. Default: [model].");
 				("-merge", Clear no_merging, " Use the merging technique of [AFS12]. Default: 'false' (disable)");
@@ -200,16 +203,17 @@ class imitator_options =
 				("-PTA2JPG", Unit (fun _ -> pta2jpg := true; with_dot:= true; imitator_mode := Translation), "Translate PTA into a graphics, and exit without performing any analysis. Defaut : 'false'");
 				("-states-limit", Int (fun i -> states_limit := Some i), " States limit: will try to stop after reaching this number of states. Warning: the program may have to first finish computing the current iteration before stopping. Default: no limit.");
 				("-statistics", Set statistics, " Print info on number of calls to PPL, and other statistics. Default: 'false'");
-				("-step", String (fun i -> (* SHOULD CHECK HERE THAT STEP IS EITHER A FLOAT OR AN INT *) step := (NumConst.numconst_of_string i)), " Step for the cartography. Default: 1/1.");
+				("-step", String (fun i -> (* TODO: SHOULD CHECK HERE THAT STEP IS EITHER A FLOAT OR AN INT *) step := (NumConst.numconst_of_string i)), " Step for the cartography. Default: 1/1.");
 				("-sync-auto-detect", Set sync_auto_detection, " Detect automatically the synchronized actions in each automaton. Default: false (consider the actions declared by the user)");
 				("-time-limit", Int (fun i -> time_limit := Some i), " Time limit in seconds. Warning: no guarantee that the program will stop exactly after the given amount of time. Default: no limit.");
 				("-timed", Set timed_mode, " Adds a timing information to each output of the program. Default: none.");
-				("-tree", Set tree, " Does not test if a new state was already encountered. To be set ONLY if the reachability graph is a tree. Default: 'false'");
-				("-with-dot", Set with_dot, " Graphical output using 'dot'. Default: false.");
+				("-tree", Set tree, " Does not test if a new state was already encountered. To be set ONLY if the reachability graph is a tree (otherwise analysis may loop). Default: 'false'");
+				("-verbose", String set_debug_mode_ref, " Print more or less information. Can be set to 'mute', 'standard', 'low', 'medium', 'high', 'total'. Default: 'standard'");
+				("-version", Unit (fun _ -> print_version_string (); exit 0), " Print version number and exit.");
+				("-with-dot", Set with_dot, " Trace set under a graphical form (using 'dot'). Default: false.");
 				("-with-dot-source", Set with_dot_source, " Keep file used for generating graphical output. Default: false.");
 				("-with-log", Set with_log, " Generation of log files (description of states). Default: false.");
 				("-with-parametric-log", Set with_parametric_log, " Adds the elimination of the clock variables in the constraints in the log files. Default: false.");
-				("-version", Unit (fun _ -> print_version_string (); exit 0), " Print version number and exit.");
 
 			] in
 					

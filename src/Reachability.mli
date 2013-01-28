@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre, Ulrich Kuehne, Romain Soulat
  * Created:       2010/07/22
- * Last modified: 2013/01/18
+ * Last modified: 2013/01/28
  *
  **************************************************)
 
@@ -50,5 +50,5 @@ val full_reachability : abstract_program -> state -> unit
 (************************************************************)
 (* Main inverse method function *)
 (************************************************************)
-val inverse_method_gen : abstract_program -> state -> returned_constraint * Graph.reachability_graph * int * float
+val inverse_method_gen : abstract_program -> state -> returned_constraint * Graph.reachability_graph * tile_nature * bool * int * float
 val inverse_method : abstract_program -> state -> unit

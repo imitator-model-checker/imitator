@@ -415,8 +415,9 @@ print_message Debug_standard "";
 
 
 (**************************************************)
-(* Set pi0 *)
+(* Set program and pi0 *)
 (**************************************************)
+Input.set_program program;
 Input.set_pi0 pi0;
 
 

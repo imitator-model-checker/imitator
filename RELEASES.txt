@@ -2,15 +2,20 @@
 release 2.5.1    (COMING SOON)
 
 Features:
-- Merging option becomes (again?) "-merge"
 - Added dynamic clock elimination (ongoing work)
-- Changed bad state definition (that was not really used anyway)
+- Added branch and bound (ongoing work)
+- Changed and improved bad state definition (that was not really used anyway)
 
 Syntax:
 - region declaration not compulsory anymore (was not used anyway, just for Hytech retrocompatibility)
+- -IMorig becomes -IMK
+- -debug becomes -verbose
+- Merging option becomes (again?) "-merge"
+- Added -bab option (for branch and bound)
+- Added -counterex option (stops the analysis as soon as a counterexample is found)
 
 Internal
-- Refactoring BC code
+- Refactored BC code
 
 *******************************************************
 release 2.5.0    (2012-08-21)

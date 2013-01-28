@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Ulrich Kuehne, Etienne Andre
  * Created:       2010/07/22
- * Last modified: 2013/01/18
+ * Last modified: 2013/01/28
  *
  ************************************************************)
 
@@ -42,6 +42,9 @@ let slast = ref []
 
 (* Number of random selections of pi0-incompatible inequalities in IM *)
 let nb_random_selections = ref 0
+
+(* Check whether the tile is bad (for IM and BC) *)
+let tile_nature = ref Unknown
 
 
 (**************************************************************)
@@ -389,6 +392,23 @@ let prepare_clocks_elimination program =
 	print_message Debug_low ("*** Building useless clocks per location per automaton...");
 	useless_clocks := find_useless_clocks_in_automata program local_clocks_per_automaton;
 	()
+
+
+(**************************************************************)
+(* Functions related to states *)
+(**************************************************************)
+(* Check whether a state is bad *)
+let update_tile_nature (location, (*linear_constraint*)_) =
+	(* Get the program *)
+	let program = Input.get_program() in
+	match program.bad with
+	| Nobad -> ()
+	| Exists_location (bad_automaton_index , bad_location_index) ->
+		(* Check if the local location is the same as the bad one *)
+		let is_bad = (Automaton.get_location location bad_automaton_index) = bad_location_index in
+			if is_bad then tile_nature := Bad;
+	| _ -> raise (InternalError("Mechanism for checking good or bad states not fully implemented yet."))
+
 
 
 (**************************************************************)
@@ -1081,12 +1101,12 @@ let compute_new_location program aut_table trans_table action_index original_loc
 		(* Update the global location *)
 		Automaton.update_location_with [real_index, dest_index] [] location;
 		(* Update the update flag *)
-		let _ =
+		begin
 		match clock_updates with
 			| Resets (_ :: _) -> has_updates := true
 			| Updates (_ :: _) -> has_updates := true
 			| _ -> ()
-		in ();
+		end;
 		(* Keep the guard and updates *)
 		guard, clock_updates;
 	) aut_table) in
@@ -1575,7 +1595,7 @@ let post program reachability_graph orig_state_index =
 			(* Compute the new constraint for the current transition *)
 			let new_constraint = compute_new_constraint program orig_constraint discrete_constr original_location location guards clock_updates in
 			
-			let _ =
+			begin
 			(* Check the satisfiability *)
 			match new_constraint with
 				| None -> 
@@ -1627,6 +1647,8 @@ let post program reachability_graph orig_state_index =
 						if added then (
 							(* Add the state_index to the list of new states *)
 							new_states := new_state_index :: !new_states;
+							(* Now check whether this is a bad tile according to the property and the nature of the state *)
+							update_tile_nature new_state;
 						)
 						(* ELSE : add to SLAST if mode union *)
 						else (
@@ -1649,7 +1671,7 @@ let post program reachability_graph orig_state_index =
 					); (* end if pi0 incompatible *)
 				); (* end if satisfiable *)
 			); (* end if Some constraint *)
-			in ();
+			end;
 		
 			(* get the next combination *)
 			more_combinations := next_combination current_indexes max_indexes;	
@@ -1957,10 +1979,12 @@ let post_star program init_state =
 
 	(* Check if the list of new states is empty *)
 	while not (!limit_reached  || !newly_found_new_states = []) do
+		(* Print some information *)
 		if debug_mode_greater Debug_standard then (
 			print_message Debug_low ("\n");
 			print_message Debug_standard ("Computing post^" ^ (string_of_int (!nb_iterations)) ^ " from "  ^ (string_of_int (List.length !newly_found_new_states)) ^ " state" ^ (s_of_int (List.length !newly_found_new_states)) ^ ".");
 		);
+		
 		(* Count the states for debug purpose: *)
 		let num_state = ref 0 in
 		(* Length of 'newly_found_new_states' for debug purpose *)
@@ -2193,8 +2217,13 @@ let inverse_method_gen program init_state =
 	
 	
 	
-	
-	
+	(* For now, the tile is good by default *)
+	begin
+	match program.bad with
+		| Nobad -> ()
+		| Exists_location _ -> tile_nature := Good
+		| _ -> raise (InternalError("Only the bad location is implemented to define a bad tile."))
+	end;
 	
 	(* Choose the correct algorithm *)
 	let algo = if options#branch_and_bound then branch_and_bound else post_star in
@@ -2256,7 +2285,7 @@ let inverse_method_gen program init_state =
 	(*--------------------------------------------------*)
 	(* Return result *)
 	(*--------------------------------------------------*)
-	returned_constraint, reachability_graph, nb_iterations, total_time
+	returned_constraint, reachability_graph, !tile_nature, (nb_random_selections > 0), nb_iterations, total_time
 	
 	
 
@@ -2267,7 +2296,7 @@ let inverse_method program init_state =
 	let options = Input.get_options () in
 
 	(* Call the inverse method *)
-	let returned_constraint, reachability_graph, nb_iterations, total_time = inverse_method_gen program init_state in
+	let returned_constraint, reachability_graph, tile_nature, deterministic, nb_iterations, total_time = inverse_method_gen program init_state in
 	
 	(* Here comes the result *)
 	print_message Debug_standard ("\nFinal constraint K0 "

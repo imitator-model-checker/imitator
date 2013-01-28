@@ -190,3 +190,11 @@ type returned_constraint =
 	(** Disjunction of constraints *)
 	| Union_of_constraints of LinearConstraint.linear_constraint list
 
+
+(****************************************************************)
+(** Nature of the tiles *)
+(****************************************************************)
+type tile_nature =
+	| Good
+	| Bad
+	| Unknown
