@@ -112,7 +112,7 @@ type init_definition = state_predicate list
 (** predicates for bad definition *)
 
 type bad_predicate =
-(* 	| Loc_assignment of automaton_name * location_name *)
+	| Exists_location of automaton_name * location_name
 	| Exists_action of sync_name
 
 type bad_definition  = bad_predicate list

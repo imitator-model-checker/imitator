@@ -7,7 +7,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2009/09/09
- * Last modified: 2013/01/16
+ * Last modified: 2013/01/28
  *
  ****************************************************************)
 
@@ -33,13 +33,10 @@ open ModelPrinter
 (****************************************************************)
 (** Exceptions *)
 (****************************************************************)
+(* When checking pi0 *)
 exception InvalidPi0
 
-
-
-(****************************************************************)
-(** Constraint conversion *)
-(****************************************************************)
+(* For constraint conversion *)
 exception False_exception
 
 
@@ -742,8 +739,8 @@ let check_init discrete variable_names constants index_of_variables type_of_vari
 (*--------------------------------------------------*)
 (* Check the bad state declaration                  *)
 (*--------------------------------------------------*)
-let check_bad index_of_labels (*index_of_automata index_of_locations*) parsed_bad_definition =
-	let well_formed = ref true in
+let check_bad index_of_labels index_of_automata index_of_locations parsed_bad_definition =
+(* 	let well_formed = ref true in *)
 	(*(*CASE LIST OF LOCATIONS*)
 	(* convert to pairs of automata indices and location indices *)
 	let state_pairs = ref [] in
@@ -763,20 +760,27 @@ let check_bad index_of_labels (*index_of_automata index_of_locations*) parsed_ba
 		| (i, _) :: tail -> (not (List.exists (fun (j, _) -> i=j) tail)) && unique tail in  
 	well_formed := !well_formed && unique !state_pairs;			
 	(!state_pairs, !well_formed)*)
-	let action_index =
+(*	let action_index =*)
 	match parsed_bad_definition with
 		| [ParsingStructure.Exists_action action_name] -> 
 			(* Check the existence and Return the index *)
+			begin
 			try (
 				let action_index = Hashtbl.find index_of_labels action_name in
-				action_index
-			) with Not_found -> (well_formed := false;
-				(* WARNING: bad prog! *)
-				(* Return a degenerated index *)
-				-1)
-		| _ -> raise (InternalError ("In the bad definition, only 'exists action' is implemented so far."))
-	in
-	[AbstractModel.Exists_action action_index], !well_formed
+				AbstractModel.Exists_action action_index , true
+			) with Not_found -> ((*well_formed := false; *)Nobad , false)
+			end
+		| [ParsingStructure.Exists_location (automaton_name , location_name)] -> 
+			begin
+			try (
+				let automaton_index = Hashtbl.find index_of_automata automaton_name in
+				let location_index = Hashtbl.find index_of_locations.(automaton_index) location_name in
+					AbstractModel.Exists_location (automaton_index, location_index) , true
+			) with Not_found -> ((*well_formed := false; *)Nobad , false)
+			end
+		| _ -> raise (InternalError ("In the bad definition, not all possibilities are implemented yet."))
+(*	in
+	[n action_index], !well_formed*)
 
 
 (*--------------------------------------------------*)
@@ -905,7 +909,7 @@ let make_constants constants =
 
 
 (****************************************************************)
-(** Program conversion *)
+(** PROGRAM CONVERSION *)
 (****************************************************************)
 
 (*--------------------------------------------------*)
@@ -1569,7 +1573,7 @@ let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* WARNING: might be a problem if the check_automata test fails *)
 	let bad, well_formed_bad =
-		check_bad index_of_labels (*index_of_automata index_of_locations*) parsed_bad_definition in
+		check_bad index_of_labels index_of_automata index_of_locations parsed_bad_definition in
 		
 		
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)

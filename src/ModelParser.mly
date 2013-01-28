@@ -35,7 +35,25 @@ let parse_error s =
 
 /* CT_ALL CT_ANALOG CT_ASAP CT_BACKWARD CT_CLDIFF CT_D  CT_ELSE CT_EMPTY  CT_ENDHIDE CT_ENDIF CT_ENDREACH CT_ENDWHILE CT_FORWARD CT_FREE CT_FROM  CT_HIDE CT_HULL CT_INTEGRATOR CT_ITERATE CT_NON_PARAMETERS CT_OMIT CT_POST CT_PRE CT_PRINT CT_PRINTS CT_PRINTSIZE CT_REACH  CT_STOPWATCH CT_THEN CT_TO CT_TRACE CT_USING  CT_WEAKDIFF CT_WEAKEQ CT_WEAKGE CT_WEAKLE  */
 
-%token CT_AND CT_AUTOMATON CT_BAD CT_CLOCK CT_DISCRETE CT_DO CT_END CT_EXISTS CT_FALSE CT_GOTO CT_IF CT_INIT CT_INITIALLY CT_LOC CT_LOCATIONS CT_NOT CT_OR CT_PARAMETER CT_REGION CT_STOP CT_SYNC CT_SYNCLABS CT_TRUE CT_VAR CT_WAIT CT_WHEN CT_WHILE
+%token
+	CT_AND CT_AUTOMATON
+	CT_BAD
+	CT_CLOCK
+	CT_DISCRETE CT_DO
+	CT_END CT_EXISTS_ACTION CT_EXISTS_LOCATION
+	CT_FALSE
+	CT_GOTO
+	CT_IF CT_INIT CT_INITIALLY
+	CT_LOC CT_LOCATIONS
+	CT_NOT
+	CT_OR
+	CT_PARAMETER
+	CT_REGION
+	CT_STOP CT_SYNC CT_SYNCLABS
+	CT_TRUE
+	CT_VAR
+	CT_WAIT CT_WHEN CT_WHILE
+
 
 %token EOF
 
@@ -416,12 +434,16 @@ init_definition:
 ;
 
 bad_definition:
-	// Case: action
-	| CT_BAD OP_ASSIGN CT_EXISTS NAME SEMICOLON { [Exists_action $4] }
 // TODO: improve the bad definitions
+	// Case: action
+	| CT_BAD OP_ASSIGN CT_EXISTS_ACTION NAME SEMICOLON { [Exists_action $4] }
+	// Case: location
+	| CT_BAD OP_ASSIGN CT_EXISTS_LOCATION loc_predicate { let a,b = $4 in [(Exists_location (a , b))] }
+	// NOTE: Old version
 // 	| CT_BAD OP_ASSIGN loc_expression SEMICOLON { $3 }
 ;
 
+// NOTE: Old version
 // loc_expression:
 // 	| loc_predicate { [ $1 ] }
 // 	| loc_predicate AMPERSAND loc_expression { $1 :: $3 }
@@ -440,11 +462,11 @@ region_expression_fol:
 ;
 
 loc_predicate:
-	CT_LOC LSQBRA NAME RSQBRA OP_EQ NAME { Loc_assignment ($3, $6) }
+	CT_LOC LSQBRA NAME RSQBRA OP_EQ NAME { ($3, $6) }
 ;
 
 state_predicate:
-	| loc_predicate { $1 } 
+	| loc_predicate { let a,b = $1 in (Loc_assignment (a,b)) } 
 	| linear_constraint { Linear_predicate $1 }
 ;
 

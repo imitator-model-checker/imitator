@@ -94,8 +94,12 @@ type transition = guard * clock_updates * discrete_update list * location_index
 type bad_predicate =
 (* 	| Loc_assignment of automaton_name * location_name *)
 	| Exists_action of action_index
+	| Exists_location of automaton_index * location_index
+	| Nobad
 
-type bad_definition  = bad_predicate list
+
+(* TODO: allow several definitions *)
+type bad_definition  = bad_predicate (*list*)
 
 
 (****************************************************************)

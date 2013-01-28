@@ -53,7 +53,8 @@ rule token = parse
 (* 	| "endif"          { CT_ENDIF } *)
 (* 	| "endreach"       { CT_ENDREACH } *)
 (* 	| "endwhile"       { CT_ENDWHILE } *)
- 	| "exists"         { CT_EXISTS }
+ 	| "exists_action"  { CT_EXISTS_ACTION }
+ 	| "exists_location"{ CT_EXISTS_LOCATION }
 	| "False"          { CT_FALSE }
 (* 	| "forward"        { CT_FORWARD } *)
 (* 	| "free"           { CT_FREE } *)
