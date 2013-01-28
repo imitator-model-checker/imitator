@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created       : 2009/09/07
- * Last modified : 2012/02/20
+ * Last modified : 2013/01/28
 *****************************************************************)
 
 {
@@ -53,6 +53,7 @@ rule token = parse
 (* 	| "endif"          { CT_ENDIF } *)
 (* 	| "endreach"       { CT_ENDREACH } *)
 (* 	| "endwhile"       { CT_ENDWHILE } *)
+ 	| "exists"         { CT_EXISTS }
 	| "False"          { CT_FALSE }
 (* 	| "forward"        { CT_FORWARD } *)
 (* 	| "free"           { CT_FREE } *)

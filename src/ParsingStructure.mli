@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2009/09/08
- * Last modified: 2012/02/20
+ * Last modified: 2013/01/28
  *
  ****************************************************************)
 
@@ -103,7 +103,20 @@ type state_predicate =
 
 
 type init_definition = state_predicate list
-type bad_definition  = state_predicate list
+
+
+(****************************************************************)
+(** Bad definition *)
+(****************************************************************)
+
+(** predicates for bad definition *)
+
+type bad_predicate =
+(* 	| Loc_assignment of automaton_name * location_name *)
+	| Exists_action of sync_name
+
+type bad_definition  = bad_predicate list
+
 
 (****************************************************************)
 (** Input program *)

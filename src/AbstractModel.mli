@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2009/09/11
- * Last modified: 2012/10/16
+ * Last modified: 2013/01/28
  *
  ****************************************************************)
 
@@ -87,6 +87,18 @@ type transition = guard * clock_updates * discrete_update list * location_index
 
 
 (****************************************************************)
+(** Bad definition *)
+(****************************************************************)
+(** predicates for bad definition *)
+
+type bad_predicate =
+(* 	| Loc_assignment of automaton_name * location_name *)
+	| Exists_action of action_index
+
+type bad_definition  = bad_predicate list
+
+
+(****************************************************************)
 (** The abstract program *)
 (****************************************************************)
 type abstract_program = {
@@ -159,7 +171,7 @@ type abstract_program = {
 	initial_constraint : linear_constraint;
 
 	(* bad states *)
-	bad : (automaton_index * location_index) list;
+	bad : bad_definition (*(automaton_index * location_index) list*);
 }
 
 

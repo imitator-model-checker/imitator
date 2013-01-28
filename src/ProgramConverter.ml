@@ -742,10 +742,11 @@ let check_init discrete variable_names constants index_of_variables type_of_vari
 (*--------------------------------------------------*)
 (* Check the bad state declaration                  *)
 (*--------------------------------------------------*)
-let check_bad index_of_automata index_of_locations parsed_bad_definition =
+let check_bad index_of_labels (*index_of_automata index_of_locations*) parsed_bad_definition =
+	let well_formed = ref true in
+	(*(*CASE LIST OF LOCATIONS*)
 	(* convert to pairs of automata indices and location indices *)
 	let state_pairs = ref [] in
-	let well_formed = ref true in
 	List.iter (fun bad_def -> 
 		match bad_def with
 			| Loc_assignment (aut, loc) -> (
@@ -761,8 +762,22 @@ let check_bad index_of_automata index_of_locations parsed_bad_definition =
 		| [] -> true
 		| (i, _) :: tail -> (not (List.exists (fun (j, _) -> i=j) tail)) && unique tail in  
 	well_formed := !well_formed && unique !state_pairs;			
-	(!state_pairs, !well_formed)
-	
+	(!state_pairs, !well_formed)*)
+	let action_index =
+	match parsed_bad_definition with
+		| [ParsingStructure.Exists_action action_name] -> 
+			(* Check the existence and Return the index *)
+			try (
+				let action_index = Hashtbl.find index_of_labels action_name in
+				action_index
+			) with Not_found -> (well_formed := false;
+				(* WARNING: bad prog! *)
+				(* Return a degenerated index *)
+				-1)
+		| _ -> raise (InternalError ("In the bad definition, only 'exists action' is implemented so far."))
+	in
+	[AbstractModel.Exists_action action_index], !well_formed
+
 
 (*--------------------------------------------------*)
 (* Check the pi0 w.r.t. the program parameters *)
@@ -1536,7 +1551,7 @@ let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_
 	(* Check the automata *) 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	print_message Debug_total ("*** Checking automata...");
-	if not (check_automata index_of_variables type_of_variables variable_names index_of_automata array_of_location_names constants parsed_automata) then raise InvalidModel;
+	let well_formed_automata = check_automata index_of_variables type_of_variables variable_names index_of_automata array_of_location_names constants parsed_automata in
 
 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -1544,14 +1559,24 @@ let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	print_message Debug_total ("*** Checking init definition...");
 	(* Get couples for the initialisation of the discrete variables, and check the init definition *)
+	(* WARNING: might be a problem if the check_automata test fails *)
 	let init_discrete_couples, well_formed_init =
 		check_init discrete variable_names constants index_of_variables type_of_variables automata automata_names index_of_automata array_of_location_names parsed_init_definition in
-	if not well_formed_init then raise InvalidModel;
 
+	
+	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* check bad state definition *)
-	let bad_state_pairs, well_formed_bad =
-		check_bad index_of_automata index_of_locations parsed_bad_definition in
-	if not well_formed_bad then raise InvalidModel;
+	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(* WARNING: might be a problem if the check_automata test fails *)
+	let bad, well_formed_bad =
+		check_bad index_of_labels (*index_of_automata index_of_locations*) parsed_bad_definition in
+		
+		
+	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(* exit if not well formed *)
+	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	if not (well_formed_automata && well_formed_bad && not well_formed_init)
+		then raise InvalidModel;
 
 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -1793,7 +1818,7 @@ let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_
 	initial_location = initial_location;
 	initial_constraint = initial_constraint;
 	(* Bad states *)
-	bad = bad_state_pairs;
+	bad = (*bad_state_pairs*) bad;
 	}
 
 	,

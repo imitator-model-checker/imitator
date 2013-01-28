@@ -4,6 +4,10 @@ release 2.5.1    (COMING SOON)
 Features:
 - Merging option becomes (again?) "-merge"
 - Added dynamic clock elimination (ongoing work)
+- Changed bad state definition (that was not really used anyway)
+
+Syntax:
+- region declaration not compulsory anymore (was not used anyway, just for Hytech retrocompatibility)
 
 Internal
 - Refactoring BC code

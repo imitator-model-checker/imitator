@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created       : 2009/09/07
- * Last modified : 2012/10/08
+ * Last modified : 2013/01/28
 ***********************************************/
 
 %{
@@ -35,7 +35,7 @@ let parse_error s =
 
 /* CT_ALL CT_ANALOG CT_ASAP CT_BACKWARD CT_CLDIFF CT_D  CT_ELSE CT_EMPTY  CT_ENDHIDE CT_ENDIF CT_ENDREACH CT_ENDWHILE CT_FORWARD CT_FREE CT_FROM  CT_HIDE CT_HULL CT_INTEGRATOR CT_ITERATE CT_NON_PARAMETERS CT_OMIT CT_POST CT_PRE CT_PRINT CT_PRINTS CT_PRINTSIZE CT_REACH  CT_STOPWATCH CT_THEN CT_TO CT_TRACE CT_USING  CT_WEAKDIFF CT_WEAKEQ CT_WEAKGE CT_WEAKLE  */
 
-%token CT_AND CT_AUTOMATON CT_BAD CT_CLOCK CT_DISCRETE CT_DO CT_END CT_FALSE CT_GOTO CT_IF CT_INIT CT_INITIALLY CT_LOC CT_LOCATIONS CT_NOT CT_OR CT_PARAMETER CT_REGION CT_STOP CT_SYNC CT_SYNCLABS CT_TRUE CT_VAR CT_WAIT CT_WHEN CT_WHILE
+%token CT_AND CT_AUTOMATON CT_BAD CT_CLOCK CT_DISCRETE CT_DO CT_END CT_EXISTS CT_FALSE CT_GOTO CT_IF CT_INIT CT_INITIALLY CT_LOC CT_LOCATIONS CT_NOT CT_OR CT_PARAMETER CT_REGION CT_STOP CT_SYNC CT_SYNCLABS CT_TRUE CT_VAR CT_WAIT CT_WHEN CT_WHILE
 
 %token EOF
 
@@ -360,26 +360,35 @@ pos_float:
 ***********************************************/
 
 commands:
-	| init_declaration init_definition bad_definition rest_of_commands { ($2, $3) }
-	| init_declaration init_definition rest_of_commands { ($2, []) }
+	| init_declaration_opt init_definition bad_definition rest_of_commands { ($2, $3) }
+	| init_declaration_opt init_definition rest_of_commands { ($2, []) }
 ;
 
 
-init_declaration:
-	| CT_VAR regions COLON CT_REGION SEMICOLON { }
+// For retrocompatibility with HyTech only
+init_declaration_opt:
+	| init_declaration_useless { }
 	| { }
 ;
 
+// For retrocompatibility with HyTech only
+init_declaration_useless:
+	| CT_VAR regions COLON CT_REGION SEMICOLON { }
+;
+
+// For retrocompatibility with HyTech only
 regions:
 	| { }
 	| region_names { }
 ;
 
+// For retrocompatibility with HyTech only
 region_names:
 	| region_name COMMA region_names { }
 	| region_name { }
 ;
 
+// For retrocompatibility with HyTech only
 region_name:
 	| NAME { }
 	| CT_INIT { }
@@ -407,14 +416,17 @@ init_definition:
 ;
 
 bad_definition:
-	| CT_BAD OP_ASSIGN loc_expression SEMICOLON { $3 }
+	// Case: action
+	| CT_BAD OP_ASSIGN CT_EXISTS NAME SEMICOLON { [Exists_action $4] }
+// TODO: improve the bad definitions
+// 	| CT_BAD OP_ASSIGN loc_expression SEMICOLON { $3 }
 ;
 
-loc_expression:
-	| loc_predicate { [ $1 ] }
-	| loc_predicate AMPERSAND loc_expression { $1 :: $3 }
-	| loc_predicate loc_expression { $1 :: $2 }
-;
+// loc_expression:
+// 	| loc_predicate { [ $1 ] }
+// 	| loc_predicate AMPERSAND loc_expression { $1 :: $3 }
+// 	| loc_predicate loc_expression { $1 :: $2 }
+// ;
 
 // We allow here an optional "&" at the beginning
 region_expression:
