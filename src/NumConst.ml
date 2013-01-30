@@ -145,9 +145,7 @@ let abs a =
 
 
 
-(** Find the closest multiple of step from base_number below (or equal to) number *)
-(* That is: find the largest n s.t. n = k * step + base_number, with k integer, and n <= number *)
-let find_multiple_below base_number step number =
+let find_multiple_gen tcdiv_q base_number step number =
 	(* 1) Compute m = number - base_number *)
 	let m = sub number base_number in
 	
@@ -158,8 +156,38 @@ let find_multiple_below base_number step number =
 		(* 3a) Extract numerator and denominator (integers) *)
 	let d_num = get_num d in
 	let d_den = get_den d in
+		(* 3b) Use integer division (rounded above/below) *)
+	let k = tcdiv_q d_num d_den in
+	
+	(* 4) Return n = k * step + base_number *)
+	add
+		(mul 
+			(Gmp.Q.from_z k)
+			step
+		)
+		base_number
+
+(** Find the closest multiple of step from base_number below (or equal to) number *)
+(* That is: find the largest n s.t. n = k * step + base_number, with k integer, and n <= number *)
+let find_multiple_below =
+	Gmp.Z.tdiv_q tcdiv_q
+		
+
+(** Find the closest multiple of step from base_number above (or equal to) number *)
+(* That is: find the smallest n s.t. n = k * step + base_number, with k integer, and n >= number *)
+let find_multiple_above base_number step number =
+	(* 1) Compute m = number - base_number *)
+	let m = sub number base_number in
+	
+	(* 2) Compute d = m / step (hence, m = n * step) *)
+	let d = div m step in
+	
+	(* 3) Find the closest integer k above d *)
+		(* 3a) Extract numerator and denominator (integers) *)
+	let d_num = get_num d in
+	let d_den = get_den d in
 		(* 3b) Use integer division (rounded below) *)
-	let k = Gmp.Z.tdiv_q d_num d_den in
+	let k = Gmp.Z.cdiv_q d_num d_den in
 	
 	(* 4) Return n = k * step + base_number *)
 	add
@@ -169,11 +197,6 @@ let find_multiple_below base_number step number =
 		)
 		base_number
 		
-
-(** Find the closest multiple of step from base_number above (or equal to) number *)
-(* That is: find the smallest n s.t. n = k * step + base_number, with k integer, and n >= number *)
-let find_multiple_above base_number step number =
-	raise (Failure("Function 'find_multiple_above' not implemented!"))
 
 
 (**************************************************)
