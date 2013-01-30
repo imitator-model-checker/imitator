@@ -398,7 +398,7 @@ try (
 ) with 
 	| InvalidModel -> (print_error ("The input program contains errors. Please check it again."); abort_program (); exit 0)
 	| ProgramConverter.InvalidPi0 -> (print_error ("The input pi_0 file contains errors. Please check it again."); abort_program (); exit 0)
-	| InternalError e -> (print_error ("Internal error: " ^ e ^ "\nPlease insult the developers."); abort_program (); exit 0)
+	| InternalError e -> (print_error ("Internal error: " ^ e ^ "\nPlease kindly insult the developers."); abort_program (); exit 0)
 	in
 
 let gc_stat = Gc.stat () in
@@ -535,39 +535,43 @@ if options#imitator_mode = Inverse_method && options#branch_and_bound then(
 (* Execute IMITATOR *)
 (**************************************************)
 
-let zones =
-match options#imitator_mode with
-	| Translation -> raise (InternalError "Translation can't be executed; program should have terminated before.");
+try(
+	let zones =
+	match options#imitator_mode with
+		| Translation -> raise (InternalError "Translation can't be executed; program should have terminated before.");
 
-	| Reachability_analysis ->
-		Reachability.full_reachability program init_state_after_time_elapsing;
-		[]
-	
-	(* Inverse Method *)
-	| Inverse_method ->
-			Reachability.inverse_method program init_state_after_time_elapsing;
-		[]
-
-
-	| Cover_cartography | Border_cartography ->
-	(* Behavioral cartography algorithm with full coverage *)
-		Cartography.cover_behavioral_cartography program v0 init_state_after_time_elapsing
+		| Reachability_analysis ->
+			Reachability.full_reachability program init_state_after_time_elapsing;
+			[]
 		
-	| Random_cartography nb ->
-	(* Behavioral cartography algorithm with random iterations *)
-		Cartography.random_behavioral_cartography program v0 init_state_after_time_elapsing nb;
+		(* Inverse Method *)
+		| Inverse_method ->
+				Reachability.inverse_method program init_state_after_time_elapsing;
+			[]
 
-		
-in
 
-(* Computation of the cartography *)
-if options#cart then ( 
-		print_message Debug_standard ("Graphical cartography started " ^ (after_seconds ()) ^ "\n");
- 		Graphics.cartography program v0 zones (options#program_prefix ^ "_cart")
-	) else (
-		print_message Debug_total "Not in cartography mode: no graph for the cartography."
-	)
-;
+		| Cover_cartography | Border_cartography ->
+		(* Behavioral cartography algorithm with full coverage *)
+			Cartography.cover_behavioral_cartography program v0 init_state_after_time_elapsing
+			
+		| Random_cartography nb ->
+		(* Behavioral cartography algorithm with random iterations *)
+			Cartography.random_behavioral_cartography program v0 init_state_after_time_elapsing nb;
+
+			
+	in
+
+	(* Computation of the cartography *)
+	if options#cart then ( 
+			print_message Debug_standard ("Graphical cartography started " ^ (after_seconds ()) ^ "\n");
+			Graphics.cartography program v0 zones (options#program_prefix ^ "_cart")
+		) else (
+			print_message Debug_total "Not in cartography mode: no graph for the cartography."
+		)
+	;
+) with
+| InternalError e -> (print_error ("Internal error: " ^ e ^ "\nPlease kindly insult the developers."); abort_program (); exit 0);
+
 
 
 (**************************************************)

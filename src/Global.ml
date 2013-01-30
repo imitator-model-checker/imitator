@@ -444,7 +444,8 @@ let print_error message =
 
 (* Abort program *)
 let abort_program () =
-	print_error ("Program aborted (" ^ (after_seconds ()) ^ ")");
+	print_error (program_name ^ " aborted (" ^ (after_seconds ()) ^ ")");
+	print_string (" We are sincerely sorry about that.");
 	print_newline();
 	flush stdout;
 	exit(0)
