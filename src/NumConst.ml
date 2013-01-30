@@ -91,12 +91,13 @@ let mpq_of_numconst = get_mpq
 let string_of_numconst a =
 	(* Avoid 0/1 *)
 	if a =/ (Gmp.Q.zero) then "0" else(
-	(* Avoid 1/1 *)
-	let den = get_den a in 
-	if den = (Gmp.Z.from_int 1) then
-		Gmp.Z.to_string (get_num a)
-	else
-	Gmp.Q.to_string (get_mpq a)
+		(* Avoid 1/1 *)
+		let den = get_den a in 
+		if den = (Gmp.Z.from_int 1) then
+			Gmp.Z.to_string (get_num a)
+		else
+			(* Nice predefined function *)
+			Gmp.Q.to_string (get_mpq a)
 	)
 
 (**************************************************)
@@ -142,6 +143,39 @@ let abs a =
 	if Gmp.Q.cmp (get_mpq a) (Gmp.Q.zero) >= 0 then a
 	else neg a
 
+
+
+(** Find the closest multiple of step from base_number below (or equal to) number *)
+(* That is: find the largest n s.t. n = k * step + base_number, with k integer, and n <= number *)
+let find_multiple_below base_number step number =
+	(* 1) Compute m = number - base_number *)
+	let m = sub number base_number in
+	
+	(* 2) Compute d = m / step (hence, m = n * step) *)
+	let d = div m step in
+	
+	(* 3) Find the closest integer k below d *)
+		(* 3a) Extract numerator and denominator (integers) *)
+	let d_num = get_num d in
+	let d_den = get_den d in
+		(* 3b) Use integer division (rounded below) *)
+	let k = Gmp.Z.tdiv_q d_num d_den in
+	
+	(* 4) Return n = k * step + base_number *)
+	add
+		(mul 
+			(Gmp.Q.from_z k)
+			step
+		)
+		base_number
+		
+
+(** Find the closest multiple of step from base_number above (or equal to) number *)
+(* That is: find the smallest n s.t. n = k * step + base_number, with k integer, and n >= number *)
+let find_multiple_above base_number step number =
+	raise (Failure("Function 'find_multiple_above' not implemented!"))
+
+
 (**************************************************)
 (** {2 Comparison Functions} *)
 (**************************************************)
@@ -161,6 +195,9 @@ let g  = ( >/ )
 (** {2 Test Functions} *)
 (**************************************************)
 let is_integer n =
+	(* Zero is an integer! *)
+	equal n zero ||
+	(* Then check denominator = numerator *)
 	(get_num n) = (get_den n)
 
 

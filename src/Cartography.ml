@@ -30,21 +30,19 @@ let is_multiple_with_step base_number step number =
 	let number_minus_base = NumConst.sub number base_number in
 	(* Divide by step *)
 	let number_minus_base_divided = NumConst.div number_minus_base step in
+
+	(* Print some information *)
+	print_message Debug_standard ("(" ^ (NumConst.string_of_numconst number) ^ " - " ^ (NumConst.string_of_numconst base_number) ^ ") / " ^ (NumConst.string_of_numconst step) ^ " = " ^ (NumConst.string_of_numconst number_minus_base_divided) ^ "");
+	
+	(* Print some information again *)
+	print_message Debug_standard ("  Is it positive? " ^ (string_of_bool (NumConst.ge number_minus_base_divided NumConst.zero)));
+	print_message Debug_standard ("  Is it an integer? " ^ (string_of_bool (NumConst.is_integer number_minus_base_divided)));
+	
 	(* Check if positive integer *)
 	(NumConst.ge number_minus_base_divided NumConst.zero)
 	&&
 	(NumConst.is_integer number_minus_base_divided)
 
-
-(* Find the closest multiple of step from base_number below (or equal to) number *)
-(* That is: find the largest n s.t. n = k * step + base_number, with k integer, and n <= number *)
-let find_multiple_below base_number step number =
-	raise (InternalError("Not implemented!"))
-
-(* Find the closest multiple of step from base_number above (or equal to) number *)
-(* That is: find the smallest n s.t. n = k * step + base_number, with k integer, and n >= number *)
-let find_multiple_above base_number step number =
-	raise (InternalError("Not implemented!"))
 
 
 
@@ -113,12 +111,17 @@ let initial_pi0 min_bounds max_bounds =
 			in
 			let local_point =
 			(* Check if the average is a valid point *)
-			if is_multiple_with_step min_bound step average then average else(
+			if is_multiple_with_step min_bound step average then (
+				print_message Debug_standard ((NumConst.string_of_numconst average) ^ " is multiple of " ^ (NumConst.string_of_numconst step) ^ ".");
+				average
+				
 				(* Otherwise try below *)
-				let below = find_multiple_below min_bound step average in
+				) else(
+				print_message Debug_standard ((NumConst.string_of_numconst average) ^ " is NOT multiple of " ^ (NumConst.string_of_numconst step) ^ "");
+				let below = NumConst.find_multiple_below min_bound step average in
 				if NumConst.ge below min_bound then below else(
 					(* Otherwise try above *)
-					let above = find_multiple_above min_bound step average in
+					let above = NumConst.find_multiple_above min_bound step average in
 					if NumConst.le above max_bound then above else(
 						(* Otherwise cannot start (but this should not happen if max_bound >= min_bound, for whatever step) *)
 						raise (Failure("V0 does not contain any point multiple of step '" ^ (NumConst.string_of_numconst step) ^"' in some direction."))

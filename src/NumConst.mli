@@ -58,6 +58,11 @@ val div : t -> t -> t
 val neg : t -> t
 val abs : t -> t
 
+(** Find the closest multiple of step from base_number below (or equal to) number *)
+val find_multiple_below : t -> t -> t -> t
+(** Find the closest multiple of step from base_number above (or equal to) number *)
+val find_multiple_above : t -> t -> t -> t
+
 (**************************************************)
 (** {2 Comparison Functions} *)
 (**************************************************)
