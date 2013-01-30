@@ -231,21 +231,13 @@ let find_next_pi0_cover program init_constraint min_bounds max_bounds dimension 
 	!found_pi0 , !time_limit_reached , !nb_useless_points
 
 
-
 (** Compute the next pi0 and directly modify the variable 'current_pi0' (standard BC) *)
-let find_next_pi0 program init_constraint min_bounds max_bounds dimension computed_constraints current_pi0 =
+let find_next_pi0_border program init_constraint min_bounds max_bounds dimension computed_constraints current_pi0 =
 	(* Retrieve the input options *)
 	let options = Input.get_options () in
+
+	raise (InternalError("Not implemented."))
 	
-	(* Branching *)
-	match options#imitator_mode with
-	| Cover_cartography ->
-		find_next_pi0_cover program init_constraint min_bounds max_bounds dimension computed_constraints current_pi0
-
-(* 	| Border_cartography -> *)
-
-	| _ -> raise (InternalError("In function 'find_next_pi0', the mode should be a cover / border cartography only."))
-
 
 
 (**************************************************)
@@ -416,8 +408,17 @@ let cover_behavioral_cartography program v0 init_state =
 
 		(* Compute the next pi0 (note that current_pi0 is directly modified by the function!) and return flags for more pi0 and co *)
 		let found_pi0 , time_limit_reached , new_nb_useless_points =
-			find_next_pi0 program init_constraint min_bounds max_bounds dimension computed_constraints current_pi0 in
-			
+			(* Branching *)
+			match options#imitator_mode with
+			| Cover_cartography ->
+				find_next_pi0_cover program init_constraint min_bounds max_bounds dimension computed_constraints current_pi0
+
+			| Border_cartography ->
+				find_next_pi0_border program init_constraint min_bounds max_bounds dimension computed_constraints current_pi0
+
+			| _ -> raise (InternalError("In function 'cover_behavioral_cartography', the mode should be a cover / border cartography only."))
+		in
+		
 		(* Update the number of useless points *)
 		nb_useless_points := !nb_useless_points + new_nb_useless_points;
 		(* Update the time limit *)
