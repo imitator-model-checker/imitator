@@ -180,6 +180,7 @@ let message = match options#imitator_mode with
 	| Reachability_analysis -> "parametric reachability analysis"
 	| Inverse_method -> "inverse method"
 	| Cover_cartography -> "behavioral cartography algorithm with full coverage and step " ^ (NumConst.string_of_numconst options#step)
+	| Border_cartography -> "behavioral cartography algorithm with border detection (WORK IN PROGRESS) and step " ^ (NumConst.string_of_numconst options#step)
 	| Random_cartography nb -> "behavioral cartography algorithm with " ^ (string_of_int nb) ^ " random iterations and step " ^ (NumConst.string_of_numconst options#step)
 in print_message Debug_standard ("Mode: " ^ message ^ ".");
 
@@ -548,14 +549,14 @@ match options#imitator_mode with
 		[]
 
 
+	| Cover_cartography | Border_cartography ->
+	(* Behavioral cartography algorithm with full coverage *)
+		Cartography.cover_behavioral_cartography program v0 init_state_after_time_elapsing
+		
 	| Random_cartography nb ->
 	(* Behavioral cartography algorithm with random iterations *)
 		Cartography.random_behavioral_cartography program v0 init_state_after_time_elapsing nb;
 
-		
-	| Cover_cartography ->
-	(* Behavioral cartography algorithm with full coverage *)
-		Cartography.cover_behavioral_cartography program v0 init_state_after_time_elapsing
 		
 in
 

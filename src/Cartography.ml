@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2012/06/18
- * Last modified: 2013/01/23
+ * Last modified: 2013/01/30
  *
  ****************************************************************)
 
@@ -18,6 +18,33 @@
 (* Global variable (for testing purpose) *)
 (**************************************************)
 let giuseppe_idea = false
+
+
+(**************************************************)
+(* Functions on NumConst (that may not need to be defined here) *)
+(**************************************************)
+(* Check if number is a multiple of step since base_number *)
+(* That is: does there exist an integer k such that number = base_number + k * step ? *)
+let is_multiple_with_step base_number step number =
+	(* Substract base_number *)
+	let number_minus_base = NumConst.sub number base_number in
+	(* Divide by step *)
+	let number_minus_base_divided = NumConst.div number_minus_base step in
+	(* Check if positive integer *)
+	(NumConst.ge number_minus_base_divided NumConst.zero)
+	&&
+	(NumConst.is_integer number_minus_base_divided)
+
+
+(* Find the closest multiple of step from base_number below (or equal to) number *)
+(* That is: find the largest n s.t. n = k * step + base_number, with k integer, and n <= number *)
+let find_multiple_below base_number step number =
+	raise (InternalError("Not implemented!"))
+
+(* Find the closest multiple of step from base_number above (or equal to) number *)
+(* That is: find the smallest n s.t. n = k * step + base_number, with k integer, and n >= number *)
+let find_multiple_above base_number step number =
+	raise (InternalError("Not implemented!"))
 
 
 
@@ -33,7 +60,7 @@ let pi0_in_returned_constraint pi0 = function
 
 
 (**************************************************)
-(* Pi0 function *)
+(* Pi0 function (to move to "next pi0 functions" section) *)
 (**************************************************)
 (* Generate a random pi0 in a given interval for each parameter (array view!) *)
 let random_pi0 program pi0 =
@@ -52,6 +79,60 @@ let random_pi0 program pi0 =
 	done;
 	(* Return the result as an array *)
 	random_pi0
+
+
+
+(**************************************************)
+(* Initial pi0 functions *)
+(**************************************************)
+(* First point pi0 *)
+let initial_pi0 min_bounds max_bounds =
+	(* Retrieve the options *)
+	let options = Input.get_options () in
+	
+	let step = options#step in
+	
+	(* Case by case *)
+	match options#imitator_mode with
+	
+	(* Instantiate with the lower bounds *)
+	| Cover_cartography ->
+		Array.copy min_bounds
+
+		(* Instantiate with the point in the middle of V0 *)
+	| Border_cartography ->
+		let initial_pi0 = Array.create (Array.length min_bounds) NumConst.zero in
+		for i = 0 to (Array.length initial_pi0) - 1 do
+			(* Get some variables *)
+			let min_bound = min_bounds.(i) in
+			let max_bound = max_bounds.(i) in
+			(* Compute the average *)
+			let average = NumConst.div
+				(NumConst.add min_bound max_bound)
+				(NumConst.numconst_of_int 2)
+			in
+			let local_point =
+			(* Check if the average is a valid point *)
+			if is_multiple_with_step min_bound step average then average else(
+				(* Otherwise try below *)
+				let below = find_multiple_below min_bound step average in
+				if NumConst.ge below min_bound then below else(
+					(* Otherwise try above *)
+					let above = find_multiple_above min_bound step average in
+					if NumConst.le above max_bound then above else(
+						(* Otherwise cannot start (but this should not happen if max_bound >= min_bound, for whatever step) *)
+						raise (Failure("V0 does not contain any point multiple of step '" ^ (NumConst.string_of_numconst step) ^"' in some direction."))
+					) (* end if above valid *)
+				) (* end if below valid *)
+			) (* end if average valid *)
+			in
+			(* Assign it to the array *)
+			initial_pi0.(i) <- local_point;
+		done;
+		(* Return the initial_pi0 *)
+		initial_pi0
+		
+	| _ -> raise (InternalError("In function initial_pi0, the mode should be a cover / border cartography only."))
 
 
 (**************************************************)
@@ -208,8 +289,8 @@ let cover_behavioral_cartography program v0 init_state =
 	(* (Dynamic) Array for the results *)
 	let computed_constraints = DynArray.create() in
 
-	(* Current pi0, instantiated with the lower bounds *)
-	let current_pi0 = Array.copy min_bounds in
+	(* Compute the first point pi0 *)
+	let current_pi0 = initial_pi0 min_bounds max_bounds in
 	
 	(* Current iteration (for information purpose) *)
 	let current_iteration = ref 0 in

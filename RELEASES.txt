@@ -4,6 +4,7 @@ release 2.5.1    (COMING SOON)
 Features:
 - Added dynamic clock elimination (ongoing work)
 - Added branch and bound (ongoing work)
+- Added a new cartography mode (ongoing work)
 - Changed and improved bad state definition (that was not really used anyway)
 
 Syntax:

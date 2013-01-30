@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2010/03/04
- * Last modified: 2010/03/09
+ * Last modified: 2013/01/30
  *
  ****************************************************************)
  
@@ -67,3 +67,8 @@ val l : t -> t -> bool
 val le : t -> t -> bool
 val ge : t -> t -> bool
 val g : t -> t -> bool
+
+(**************************************************)
+(** {2 Test Functions} *)
+(**************************************************)
+val is_integer : t -> bool

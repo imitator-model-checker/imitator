@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2010/03/04
- * Last modified: 2012/01/27
+ * Last modified: 2013/01/30
  *
  ****************************************************************)
 
@@ -155,6 +155,14 @@ let l  = ( </ )
 let le = ( <=/ )
 let ge = ( >=/ )
 let g  = ( >/ )
+
+
+(**************************************************)
+(** {2 Test Functions} *)
+(**************************************************)
+let is_integer n =
+	(get_num n) = (get_den n)
+
 
 
 (**************************************************)

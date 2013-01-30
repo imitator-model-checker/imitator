@@ -165,6 +165,9 @@ class imitator_options =
 				(* Case: cover *)
 				else if mode = "cover" then 
 					imitator_mode := Cover_cartography
+				(* Case: border *)
+				else if mode = "border" then 
+					imitator_mode := Border_cartography
 				(* Case: number of iterations *)
 				else try (
 					(* Find the 'random' string *)
@@ -172,7 +175,7 @@ class imitator_options =
 					(* Find the number *)
 					let number = String.sub mode 6 (String.length mode - 6) in
 					imitator_mode := (Random_cartography (int_of_string number))
-				) with _ -> (
+				) with Failure _ -> (
 					print_error ("The mode '" ^ mode ^ "' is not valid.");
 					Arg.usage speclist usage_msg;
 					abort_program ();
@@ -185,7 +188,7 @@ class imitator_options =
 				("-bab", Set branch_and_bound, " Experimental new feature of IMITATOR, based on cost optimization. Default: 'false'");
 				("-cart", Set cart, " Plot cartography before terminating the program. Uses the first two parameters with ranges. Default: false.");
 (* 				("-dynamic", Set dynamic, "Perform the on-the-fly intersection. Defaut : 'false'"); *)
-				("-counterex", Set counterex, " Stop the analysis as soon as a bad state is discovered. Default: false.");
+				("-counterex", Set counterex, " Stop the analysis as soon as a bad state is discovered (work in progress). Default: false.");
 				("-depth-limit", Int (fun i -> post_limit := Some i), " Limits the depth of the exploration of the reachability graph. Default: no limit.");
 				("-dynamic-elimination", Set dynamic_clock_elimination, " Dynamic clock elimination (experimental). Default: false.");
 				("-fancy", Set fancy, " Generate detailed state information for dot output. Default: false.");
@@ -196,7 +199,7 @@ class imitator_options =
 				("-IMunion", Set union, " Algorithm IMUnion (defined in [AS11]): Returns the union of the constraint on the parameters associated to the last state of each trace. Default: 'false'");
 				("-log-prefix", Set_string program_prefix, " Sets the prefix for log files. Default: [model].");
 				("-merge", Clear no_merging, " Use the merging technique of [AFS12]. Default: 'false' (disable)");
-				("-mode", String set_mode, " Mode for " ^ program_name ^ ". Use 'reachability' for a parametric reachability analysis (no pi0 needed). Use 'inversemethod' for the inverse method. For the behavioral cartography algorithm, use 'cover' to cover all the points within V0, or 'randomXX' where XX is a number to iterate randomly algorithm (e.g., random5 or random100). Default: 'inversemethod'.");
+				("-mode", String set_mode, " Mode for " ^ program_name ^ ". Use 'reachability' for a parametric reachability analysis (no pi0 needed). Use 'inversemethod' for the inverse method. For the behavioral cartography algorithm, use 'cover' to cover all the points within V0, 'border' to find the border between a small-valued good and a large-valued bad zone (WORK IN PROGRESS), or 'randomXX' where XX is a number to iterate randomly algorithm (e.g., random5 or random100). Default: 'inversemethod'.");
 				("-no-random", Set no_random, " No random selection of the pi0-incompatible inequality (select the first found). Default: false.");
 (* 				("-PTA2CLP", Unit (fun _ -> pta2clp := true; imitator_mode := Translation), "Translate PTA into a CLP program, and exit without performing any analysis. Work in progress! Defaut : 'false'"); *)
 				("-PTA2GrML", Unit (fun _ -> pta2gml := true; imitator_mode := Translation), "Translate PTA into a GrML program, and exit without performing any analysis. Defaut : 'false'");

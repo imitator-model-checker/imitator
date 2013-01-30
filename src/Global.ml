@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2009/09/08
- * Last modified: 2013/01/28
+ * Last modified: 2013/01/30
  *
  ****************************************************************)
 
@@ -115,6 +115,8 @@ type imitator_mode =
 	| Inverse_method
 	(** Cover the whole cartography *)
 	| Cover_cartography
+	(** Look for the border using the cartography*)
+	| Border_cartography
 	(** Randomly pick up values for a given number of iterations *)
 	| Random_cartography of int
 
