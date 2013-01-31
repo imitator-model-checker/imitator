@@ -1305,11 +1305,15 @@ let make_pi0 parsed_pi0 variables nb_parameters =
 let make_v0 parsed_v0 index_of_variables nb_parameters =
 	let v0 = Array.make nb_parameters (0, 0) in
 	List.iter (fun (variable_name, a, b) ->
-		let variable_index = try Hashtbl.find index_of_variables variable_name
-			with Not_found ->
-			raise (InternalError ("The variable name '" ^ variable_name ^ "' was not found in the list of variables although checks should have been performed before."))
-		in
+		try
+		(* Get the variable index *)
+		let variable_index = Hashtbl.find index_of_variables variable_name in
+		(* Update the variable value *)
 		v0.(variable_index) <- (a, b)
+		with Not_found -> 
+			(* No problem: this must be an invalid parameter name (which is ignored) *)
+			()
+(* 			raise (InternalError ("The variable name '" ^ variable_name ^ "' was not found in the list of variables although checks should have been performed before.")) *)
 	) parsed_v0;
 	v0
 

@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2010/03/04
- * Last modified: 2013/01/18
+ * Last modified: 2013/01/30
  *
  ****************************************************************)
  
@@ -228,6 +228,14 @@ val time_elapse  : variable list -> variable list -> linear_constraint -> linear
 
 (** 'time_elapse_assign variables_elapse variables_constant linear_constraint' performs time elapsing on a set of variables variables_elapse; other variables remain constant; version with side effects; behavior is unspecified if some variables within linear_constraint do not appear in any set of variables *)
 val time_elapse_assign  : variable list -> variable list -> linear_constraint -> unit
+
+(** Perform an operation (?) on a set of variables: the first variable list will elapse, the second will remain constant *)
+(** TODO: describe better *)
+val grow_to_infinite_assign : variable list -> variable list -> linear_constraint -> unit
+
+(** Perform an operation (?) on a set of variables: the first variable list will elapse, the second will remain constant *)
+(** TODO: describe better *)
+val grow_to_zero_assign : variable list -> variable list -> linear_constraint -> unit
 
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)

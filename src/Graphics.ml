@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre, Ulrich Kuehne
  * Created:       2010/07/05
- * Last modified: 2012/10/16
+ * Last modified: 2013/01/31
  *
  ****************************************************************)
 
@@ -54,8 +54,8 @@ let cartography program pi0cube returned_constraint_list cartography_name =
 	(* For all returned_constraint *)
 	let new_returned_constraint_list = List.map (
 		fun returned_constraint -> match returned_constraint with
-			| Convex_constraint k -> Convex_constraint (replace_strict_inequalities_in_k k)
-			| Union_of_constraints list_of_k -> Union_of_constraints (List.map replace_strict_inequalities_in_k list_of_k)
+			| Convex_constraint (k, tn) -> Convex_constraint (replace_strict_inequalities_in_k k , tn)
+			| Union_of_constraints (list_of_k, tn) -> Union_of_constraints (List.map replace_strict_inequalities_in_k list_of_k , tn)
 	) returned_constraint_list
 	in
 
@@ -143,8 +143,8 @@ let cartography program pi0cube returned_constraint_list cartography_name =
 		in
 		(* Update min / max for all returned constraint *)
 		List.iter (function
-			| Convex_constraint k -> update_min_max k
-			| Union_of_constraints list_of_k -> List.iter update_min_max list_of_k
+			| Convex_constraint (k, _) -> update_min_max k
+			| Union_of_constraints (list_of_k, _) -> List.iter update_min_max list_of_k
 		) new_returned_constraint_list;
 
 		(* Add a margin of 1 unit *)
@@ -209,8 +209,8 @@ let cartography program pi0cube returned_constraint_list cartography_name =
 
 		(* For all returned_constraint *)
 		List.iter (function
-			| Convex_constraint k -> tile_index := !tile_index + 1; create_file_for_constraint k
-			| Union_of_constraints list_of_k ->
+			| Convex_constraint (k, _) -> tile_index := !tile_index + 1; create_file_for_constraint k
+			| Union_of_constraints (list_of_k, _) ->
 				List.iter (fun k -> tile_index := !tile_index + 1; create_file_for_constraint k) list_of_k
 		) new_returned_constraint_list;
 
@@ -226,8 +226,11 @@ let cartography program pi0cube returned_constraint_list cartography_name =
 			"Plot cartography projected on parameters " ^ x_name ^ ", " ^ y_name
 			^ " to file '" ^ final_name ^ "'"); 
 		(* execute the script *)
-		let execution = Sys.command !script_line in 
-		print_message Debug_high ("Result of the cartography execution: exit code "^(string_of_int execution))
+		(** TODO: Improve! Should perform an automatic detection of the program! *)
+		let execution = Sys.command !script_line in
+		if execution != 0 then
+			(print_error ("Something went wrong in the command. Exit code: " ^ (string_of_int execution) ^ ". Maybe you forgot to install the 'graph' utility."); abort_program());
+		print_message Debug_high ("Result of the cartography execution: exit code " ^ (string_of_int execution))
 	)
 
 

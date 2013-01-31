@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2009/09/07
- * Last modified: 2012/10/24
+ * Last modified: 2013/01/30
  *
  **************************************************)
 
@@ -331,6 +331,7 @@ if (options#imitator_mode = Reachability_analysis || options#imitator_mode = Tra
 
 
 
+
 (**************************************************)
 (* Timed mode *)
 (**************************************************)
@@ -465,6 +466,16 @@ if options#pta2jpg then(
 
 
 (**************************************************)
+(* Preliminary checks *)
+(**************************************************)
+if (options#imitator_mode = Border_cartography && program.bad = Nobad) then(
+	print_error ("In border cartography mode, a bad state must be defined.");
+	abort_program();
+);
+
+
+
+(**************************************************)
 (* EXPERIMENTAL: dynamic clock elimination *)
 (**************************************************)
 (* Need to be called before initial state is created! *)
@@ -519,6 +530,35 @@ print_message Debug_medium ("\nInitial state after time-elapsing:\n" ^ (ModelPri
 
 
 
+
+
+
+(*(* TESTS *) 
+print_message Debug_standard ("\nInitial constraint:\n" ^ (LinearConstraint.string_of_linear_constraint program.variable_names initial_constraint_after_time_elapsing) ^ "\n");
+
+(*let n = ref 1 in
+
+List.iter (fun parameter_id ->
+	LinearConstraint.time_elapse_assign [parameter_id] (list_diff program.parameters [parameter_id]) initial_constraint_after_time_elapsing;
+	
+	print_message Debug_standard ("\nAfter time elapsing #" ^ (string_of_int !n) ^ " on parameter '" ^ (program.variable_names parameter_id) ^ "' :\n" ^ (LinearConstraint.string_of_linear_constraint program.variable_names initial_constraint_after_time_elapsing) ^ "\n");
+	
+	Graphics.cartography program v0 [Convex_constraint initial_constraint_after_time_elapsing] (options#file ^ "-carto" ^ (string_of_int !n));
+
+	n := !n + 1;
+
+) program.parameters;
+(* Graphics.cartography program v0 [Convex_constraint initial_constraint_after_time_elapsing] (options#file ^ "-carto"); *)
+terminate_program();*)
+
+
+LinearConstraint.grow_to_zero_assign program.parameters program.clocks_and_discrete initial_constraint_after_time_elapsing;
+print_message Debug_standard ("\nFinal constraint:\n" ^ (LinearConstraint.string_of_linear_constraint program.variable_names initial_constraint_after_time_elapsing) ^ "\n");
+Graphics.cartography program v0 [Convex_constraint initial_constraint_after_time_elapsing] (options#file ^ "-cartoz");
+terminate_program();*)
+
+
+
 (*(**************************************************)
 (* EXPERIMENTAL: branch and bound *)
 (**************************************************)
@@ -535,6 +575,7 @@ if options#imitator_mode = Inverse_method && options#branch_and_bound then(
 (* Execute IMITATOR *)
 (**************************************************)
 
+begin
 try(
 	let zones =
 	match options#imitator_mode with
@@ -571,7 +612,7 @@ try(
 	;
 ) with
 | InternalError e -> (print_error ("Internal error: " ^ e ^ "\nPlease kindly insult the developers."); abort_program (); exit 0);
-
+end;
 
 
 (**************************************************)

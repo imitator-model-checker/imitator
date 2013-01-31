@@ -301,7 +301,7 @@ type returned_constraint =
 	(** Disjunction of constraints *)
 	| Union_of_constraints of LinearConstraint.linear_constraint list*)
 let string_of_returned_constraint variable_names = function 
-	| Convex_constraint linear_constraint -> LinearConstraint.string_of_linear_constraint variable_names linear_constraint
+	| Convex_constraint (linear_constraint , _) -> LinearConstraint.string_of_linear_constraint variable_names linear_constraint
 	(** Disjunction of constraints *)
-	| Union_of_constraints k_list -> string_of_list_of_string_with_sep "\n OR \n" (List.map (LinearConstraint.string_of_linear_constraint variable_names) k_list)
+	| Union_of_constraints (k_list,_) -> string_of_list_of_string_with_sep "\n OR \n" (List.map (LinearConstraint.string_of_linear_constraint variable_names) k_list)
 

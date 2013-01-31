@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2010/03/04
- * Last modified: 2013/01/18
+ * Last modified: 2013/01/30
  *
  ****************************************************************)
 
@@ -980,12 +980,13 @@ let rename_variables list_of_couples linear_constraint =
 	poly
 
 
-(* Time elapsing function *)
-let time_elapse_assign variable_elapse variable_constant linear_constraint =
+(* Generic time elapsing function *)
+(* 'reverse_direction' should be minus_one for growing, one for decreasing *)
+let time_elapse_gen_assign reverse_direction variable_elapse variable_constant linear_constraint =
 	(* Create the inequalities var = 1, for var in variable_elapse *)
 	let inequalities_elapse = List.map (fun variable ->
 		(* Create a linear term *)
-		let linear_term = make_linear_term [(NumConst.one, variable)] NumConst.minus_one in
+		let linear_term = make_linear_term [(NumConst.one, variable)] reverse_direction in
 		(* Create the inequality *)
 		make_linear_inequality linear_term Op_eq
 	) variable_elapse in
@@ -1007,6 +1008,8 @@ let time_elapse_assign variable_elapse variable_constant linear_constraint =
 	(* Statistics *)
 	ppl_t_elapse := !ppl_t_elapse +. (Unix.gettimeofday() -. start)
 
+(** Time elapsing function *)
+let time_elapse_assign = time_elapse_gen_assign NumConst.minus_one
 
 let time_elapse variable_elapse variable_constant linear_constraint =
 	let linear_constraint = copy linear_constraint in
@@ -1014,7 +1017,7 @@ let time_elapse variable_elapse variable_constant linear_constraint =
 	linear_constraint
 
 	
-(** substitutes all variables in a linear term.
+(*(** substitutes all variables in a linear term.
 		The substitution is given as a function sub: var -> linear_term *)
 let rec substitute_variables_in_term sub linear_term =
 	match linear_term with		
@@ -1054,8 +1057,41 @@ let substitute_variables sub linear_inequality =
 		| Greater_Or_Equal (lterm, rterm) -> (
 				let lsub = substitute_variables_in_term sub lterm in
 				let rsub = substitute_variables_in_term sub rterm in
-				Greater_Or_Equal (lsub, rsub))
-		
+				Greater_Or_Equal (lsub, rsub))*)
+
+(** Time elapsing function, in backward direction *)
+let time_backward_assign = time_elapse_gen_assign NumConst.one
+
+
+
+(** Perform an operation (?) on a set of variables: the first variable list will elapse, the second will remain constant *)
+(** TODO: describe better *)
+(** WARNING: this function is certainly not optimized at all! somehow we don't care considering it's not called "often" in IMITATOR *)
+let grow_to_infinite_assign variables_elapse variables_constant linear_constraint =
+	(* Compute all variables *)
+	let all_variables = List.rev_append variables_elapse variables_constant in
+	(* Perform time elapsing on each variable *)
+	List.iter (fun variable ->
+		time_elapse_assign [variable] (list_diff all_variables [variable]) linear_constraint;
+	) variables_elapse;
+	(* The end *)
+	()
+
+
+(** Perform an operation (?) on a set of variables: the first variable list will elapse, the second will remain constant *)
+(** TODO: describe better *)
+(** WARNING: this function is certainly not optimized at all! somehow we don't care considering it's not called "often" in IMITATOR *)
+let grow_to_zero_assign variables_elapse variables_constant linear_constraint =
+	(* Compute all variables *)
+	let all_variables = List.rev_append variables_elapse variables_constant in
+	(* Perform time elapsing on each variable *)
+	List.iter (fun variable ->
+		time_backward_assign [variable] (list_diff all_variables [variable]) linear_constraint;
+	) variables_elapse;
+	(* The end *)
+	()
+
+
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
 (** {3 Conversion to GML} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)

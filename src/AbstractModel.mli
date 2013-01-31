@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2009/09/11
- * Last modified: 2013/01/28
+ * Last modified: 2013/01/31
  *
  ****************************************************************)
 
@@ -179,17 +179,6 @@ type abstract_program = {
 }
 
 
-(****************************************************************)
-(** Result *)
-(****************************************************************)
-
-(** Constraint returned by the inverse method *)
-type returned_constraint =
-	(** Constraint under convex form *)
-	| Convex_constraint of LinearConstraint.linear_constraint
-	(** Disjunction of constraints *)
-	| Union_of_constraints of LinearConstraint.linear_constraint list
-
 
 (****************************************************************)
 (** Nature of the tiles *)
@@ -198,3 +187,16 @@ type tile_nature =
 	| Good
 	| Bad
 	| Unknown
+
+
+(****************************************************************)
+(** Result *)
+(****************************************************************)
+
+(** Constraint returned by the inverse method *)
+type returned_constraint =
+	(** Constraint under convex form *)
+	| Convex_constraint of LinearConstraint.linear_constraint * tile_nature
+	(** Disjunction of constraints *)
+	| Union_of_constraints of LinearConstraint.linear_constraint list * tile_nature
+

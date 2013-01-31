@@ -4,10 +4,17 @@
 --
 --   Modeling of the circuit described in "Verification of timed circuits with symbolic delays" (Clariso -- Cortadella)
 --
+--   Fork of flipflop.imi
+--   Added an observer checking that qUp occurs before ckDown
+--
 --   Etienne ANDRE and Laurent FRIBOURG
 --
---   Created      : 2007/11
---   Last modified: 2010/04/01
+--   Created         : 2007/11
+--   Last modified   : 2010/04/01
+--   Fork            : 2013/01/30
+--   Last modified   : 2013/01/30
+--
+--   IMITATOR version: 2.5.1
 --****************************************************--
 --****************************************************--
 
@@ -36,9 +43,7 @@ var 	s, ckG1, ckG2, ckG3, ckG4
 	dG4_u -- = 3 .. 30 -- 7
 	: parameter;
 
--- 	tCKQ,
 	qLevel
--- 	ckLevel
 			: discrete;
 
 
@@ -345,13 +350,36 @@ end -- g4
 
 
 
+
+
+--****************************************************--
+  automaton observer
+--****************************************************--
+(* Small approximation here: the state is bad only if ckDown occurs before qUp *)
+(* We also assume that each such action can occur only once *)
+synclabs: qUp, ckDown;
+initially observer1;
+
+loc observer1: while True wait {}
+	when True sync qUp goto observerOK;
+	when True sync ckDown goto observerNOK;
+
+loc observerOK: while True wait {}
+	when True sync ckDown goto observerEnd;
+
+loc observerNOK: while True wait {}
+	when True sync qUp goto observerEnd;
+
+loc observerEnd: while True wait {}
+
+end -- observer
+
+
 --****************************************************--
 --****************************************************--
 -- ANALYSIS
 --****************************************************--
 --****************************************************--
-
-var init : region;
 
 init := True
 	----------------------
@@ -362,10 +390,11 @@ init := True
 	& loc[g2] = G2101
 	& loc[g3] = G30011
 	& loc[g4] = G410
+	& loc[observer] = observer1
+
 	& s = 0
 	& qLevel = 0
--- 	& ckLevel = 1 -- actually initially CK = 0, then raise to 1, then go back to 0: we are here only interested in the last fall of CK
-
+	
 	----------------------
 	-- Clocks
 	----------------------
@@ -429,5 +458,4 @@ init := True
  -- 	& dG4_u  = 7 -- 3 .. 30
 ;
 
--- print (hide non_parameters in (reach forward from init endreach) endhide);
-print (reach forward from init endreach);
+bad := exists_location loc[observer] = observerNOK;

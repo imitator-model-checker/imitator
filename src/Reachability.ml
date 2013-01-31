@@ -2250,7 +2250,7 @@ let inverse_method_gen program init_state =
 	(* Case IM standard : return the intersection *)
 	if (*options#dynamic ||*) (not options#union && not options#pi_compatible) then (
 		print_message Debug_total ("\nMode: IM standard.");
-		Convex_constraint !k_result
+		Convex_constraint (!k_result, !tile_nature)
 	) else (
 	(* Case union : return the constraint on the parameters associated to slast*)
 		if options#union then (
@@ -2264,13 +2264,13 @@ let inverse_method_gen program init_state =
 				(* Eliminate clocks *)
 				in LinearConstraint.hide program.clocks_and_discrete current_constraint
 			) !slast
-			in Union_of_constraints list_of_constraints
+			in Union_of_constraints (list_of_constraints, !tile_nature)
 		)
 	(* Case IMorig : return only the current constraint, viz., the constraint of the first state *)
 		else if options#pi_compatible then (
 			let (_ , k_constraint) = get_state reachability_graph 0 in
 				print_message Debug_total ("\nMode: IMorig.");
-				Convex_constraint (LinearConstraint.hide program.clocks_and_discrete k_constraint) 
+				Convex_constraint (LinearConstraint.hide program.clocks_and_discrete k_constraint , !tile_nature) 
 		) else (
 			raise (InternalError ("This code should be unreachable (in end of inverse_method, when returning the constraint)."));
 		)
@@ -2305,7 +2305,7 @@ let inverse_method program init_state =
 			else (
 				let linear_constraint =
 				match returned_constraint with
-					| Convex_constraint linear_constraint -> linear_constraint
+					| Convex_constraint (linear_constraint , _) -> linear_constraint
 					| _ -> raise (InternalError "Impossible situation in inverse_method: a returned_constraint is not under convex form although union mode is not enabled.");
 				in
 				" (" ^ (string_of_int (LinearConstraint.nb_inequalities linear_constraint)) ^ " inequalities)"

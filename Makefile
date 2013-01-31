@@ -333,7 +333,11 @@ exe:
 # 	$(TARGET) $(EXAMPLE_PATH)/Flipflop/flipflop.imi $(EXAMPLE_PATH)/Flipflop/flipflop.pi0 -no-dot -no-log -statistics -tree
 # 	$(TARGET) $(EXAMPLE_PATH)/Flipflop/flipflop.imi $(EXAMPLE_PATH)/Flipflop/flipflop.pi0 -no-dot -no-log -statistics -dynamic
 # 	$(TARGET) $(EXAMPLE_PATH)/Flipflop/flipflop.imi $(EXAMPLE_PATH)/Flipflop/flipflop.pi0 -no-dot -no-log -statistics -jobshop
-# 	./IMITATOR Examples/Flipflop/flipflop.imi Examples/Flipflop/flipflop.v0 -mode cover -log-prefix Examples/Flipflop/carto_d3_d4/carto_d3_d4
+
+# 	$(TARGET) $(EXAMPLE_PATH)/Flipflop/flipflop.imi $(EXAMPLE_PATH)/Flipflop/flipflop.v0 -mode cover -cart
+# 	$(TARGET) $(EXAMPLE_PATH)/Flipflop/flipflop-observer.imi $(EXAMPLE_PATH)/Flipflop/flipflop.v0 -mode cover -cart
+	$(TARGET) $(EXAMPLE_PATH)/Flipflop/flipflop-observer.imi $(EXAMPLE_PATH)/Flipflop/flipflop.v0 -mode border -cart
+# 	$(TARGET) $(EXAMPLE_PATH)/Flipflop/flipflop.imi $(EXAMPLE_PATH)/Flipflop/flipflop.v0 -mode border -cart
 # 	./IMITATOR Examples/Flipflop/flipflop.imi Examples/Flipflop/flipflop.v0 -mode random1000  -log-prefix Examples/Flipflop/test2/test
 # 	./IMITATOR Examples/Flipflop/flipflop.imi Examples/Flipflop/flipflop.v0 -mode cover
 # 	# 	./IMITATOR Examples/Flipflop/flipflop.imi Examples/Flipflop/flipflop.v0 -mode cover -no-log -time-limit 1 -depth-limit 25
@@ -610,7 +614,9 @@ exe:
 # 	$(TARGET) $(EXAMPLE_PATH)/Scheduling/preemptive_maler.imi -PTA2JPG
 # 	$(TARGET) $(EXAMPLE_PATH)/Scheduling/preemptive_maler.imi $(EXAMPLE_PATH)/Scheduling/preemptive_maler.pi0 -with-merging -with-dot -with-log
 
-	$(TARGET) $(EXAMPLE_PATH)/Others/giuseppe.imi $(EXAMPLE_PATH)/Others/giuseppe.v0 -mode border -incl -merge -depth-limit 15
+# 	$(TARGET) $(EXAMPLE_PATH)/Polyhedra/polyhedron1.imi $(EXAMPLE_PATH)/Polyhedra/polyhedron1.v0 -mode cover -cart
+
+# 	$(TARGET) $(EXAMPLE_PATH)/Others/giuseppe.imi $(EXAMPLE_PATH)/Others/giuseppe.v0 -mode border -incl -merge -depth-limit 15
 # 	$(TARGET) $(EXAMPLE_PATH)/Others/giuseppe3.imi $(EXAMPLE_PATH)/Others/giuseppe3.v0 -mode cover -incl -merge -timed 
 # 	$(TARGET) $(EXAMPLE_PATH)/Others/giuseppe_opt.imi $(EXAMPLE_PATH)/Others/giuseppe_opt.v0 -mode cover -incl -merge
 
