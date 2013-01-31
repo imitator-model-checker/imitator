@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2009/09/08
- * Last modified: 2013/01/30
+ * Last modified: 2013/01/31
  *
  ****************************************************************)
 
@@ -374,20 +374,6 @@ let evaluate_or a b =
 	a || b
 
 
-(**************************************************)
-(** System functions *)
-(**************************************************)
-
-let write_to_file file_name file_content =
-	let oc = open_out file_name in
-	(* Write file *)
-	output_string oc file_content;
-	(* Close channel *)
-	close_out oc;
-	()
-
-
-
 (****************************************************************)
 (** Messages *)
 (****************************************************************)
@@ -436,6 +422,34 @@ let print_error message =
 	let formatted_message = spaces ^ "*** ERROR: " ^ (Str.global_replace (Str.regexp "\n") ("\n" ^ spaces) message) in
 	(* Print *)
 	print_message_generic formatted_message
+
+
+
+(**************************************************)
+(** System functions *)
+(**************************************************)
+
+let write_to_file file_name file_content =
+	let oc = open_out file_name in
+	(* Write file *)
+	output_string oc file_content;
+	(* Close channel *)
+	close_out oc;
+	()
+
+
+(* Delete a file, and print a message if not found *)
+let delete_file file_name =
+	try (
+		(* Delete the file *)
+		Sys.remove file_name;
+		(* Confirm *)
+		print_message Debug_total ("Removed file " ^ file_name ^ " successfully.");
+	)
+	with Sys_error e ->
+		print_error ("File " ^ file_name ^ " could not be removed. System says: '" ^ e ^ "'.")
+
+	
 
 
 (****************************************************************)

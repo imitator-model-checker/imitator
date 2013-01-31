@@ -691,7 +691,8 @@ let cover_behavioral_cartography program v0 init_state =
 
 		| Border_cartography ->
 			(* The function depends whether the zone is good or bad *)
-			let grow =
+			let nb_enlargements = ref 0 in
+			let enlarge =
 				match tile_nature with
 				(* If good: take all points from zero *)
 				| Good -> LinearConstraint.grow_to_zero_assign
@@ -701,12 +702,24 @@ let cover_behavioral_cartography program v0 init_state =
 			in
 			(* Apply this to the constraint(s) *)
 			begin match returned_constraint with
-				| Convex_constraint (k, _) -> grow program.parameters program.clocks_and_discrete k
+				| Convex_constraint (k, _) ->
+					(** NOTE: Quite costly test, but interesting for statistics and readability *)
+					let old_k = LinearConstraint.copy k in
+					enlarge program.parameters program.clocks_and_discrete k;
+					if not (LinearConstraint.is_equal k old_k) then nb_enlargements := !nb_enlargements + 1;
 				| Union_of_constraints (k_list, _) ->
-					List.iter (grow program.parameters program.clocks_and_discrete) k_list
+					List.iter (fun k ->
+						(** NOTE: Quite costly test, but interesting for statistics and readability *)
+						let old_k = LinearConstraint.copy k in
+						enlarge program.parameters program.clocks_and_discrete k;
+						if not (LinearConstraint.is_equal k old_k) then nb_enlargements := !nb_enlargements + 1;
+					) k_list
 			end;
-			print_message Debug_standard ("Constraint after enlarging:");
-			print_message Debug_standard (ModelPrinter.string_of_returned_constraint program.variable_names returned_constraint);
+			
+			if !nb_enlargements > 0 then(
+				print_message Debug_standard ("Constraint after enlarging:" ^ (if !nb_enlargements > 1 then " ("  ^ (string_of_int !nb_enlargements) ^ " enlargements)" else ""));
+				print_message Debug_standard (ModelPrinter.string_of_returned_constraint program.variable_names returned_constraint);
+			);
 
 		| _ -> raise (InternalError("In function 'cover_behavioral_cartography', the mode should be a cover / border cartography only."))
 		end; (* end process constraint *)
@@ -762,9 +775,9 @@ let cover_behavioral_cartography program v0 init_state =
 	print_message Debug_standard ("" ^ (string_of_int nb_tiles) ^ " different constraints were computed.");
 	print_message Debug_standard ("Average number of states     : " ^ (string_of_float nb_states) ^ "");
 	print_message Debug_standard ("Average number of transitions: " ^ (string_of_float nb_transitions) ^ "");
-	print_message Debug_standard ("Global time spent    : " ^ (string_of_float global_time) ^ "");
-	print_message Debug_standard ("Time spent on IM     : " ^ (string_of_float (!time_spent_on_IM)) ^ "");
-	print_message Debug_standard ("Time spent on BC only: " ^ (string_of_float (time_spent_on_BC)) ^ "");
+	print_message Debug_standard ("Global time spent    : " ^ (string_of_float global_time) ^ " s");
+	print_message Debug_standard ("Time spent on IM     : " ^ (string_of_float (!time_spent_on_IM)) ^ " s");
+	print_message Debug_standard ("Time spent on BC only: " ^ (string_of_float (time_spent_on_BC)) ^ " s");
 	print_message Debug_standard ("**************************************************");
 	
 	if options#statistics then (

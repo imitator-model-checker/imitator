@@ -180,7 +180,7 @@ let message = match options#imitator_mode with
 	| Reachability_analysis -> "parametric reachability analysis"
 	| Inverse_method -> "inverse method"
 	| Cover_cartography -> "behavioral cartography algorithm with full coverage and step " ^ (NumConst.string_of_numconst options#step)
-	| Border_cartography -> "behavioral cartography algorithm with border detection (WORK IN PROGRESS) and step " ^ (NumConst.string_of_numconst options#step)
+	| Border_cartography -> "behavioral cartography algorithm with border detection (experimental) and step " ^ (NumConst.string_of_numconst options#step)
 	| Random_cartography nb -> "behavioral cartography algorithm with " ^ (string_of_int nb) ^ " random iterations and step " ^ (NumConst.string_of_numconst options#step)
 in print_message Debug_standard ("Mode: " ^ message ^ ".");
 
@@ -604,7 +604,7 @@ try(
 
 	(* Computation of the cartography *)
 	if options#cart then ( 
-			print_message Debug_standard ("Graphical cartography started " ^ (after_seconds ()) ^ "\n");
+			print_message Debug_standard ("Generation of the graphical cartography...\n");
 			Graphics.cartography program v0 zones (options#program_prefix ^ "_cart")
 		) else (
 			print_message Debug_total "Not in cartography mode: no graph for the cartography."

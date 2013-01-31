@@ -38,7 +38,9 @@ let states_file_extension = "states"
 (* Plot (graph) Functions *)
 (**************************************************)
 
+(*------------------------------------------------------------*)
 (* Convert a tile_index into a color for graph (actually an integer from 1 to 5) *)
+(*------------------------------------------------------------*)
 let graph_color_of_int tile_index tile_nature dotted =
 	(* Retrieve program *)
 	let program = Input.get_program() in
@@ -60,10 +62,20 @@ let graph_color_of_int tile_index tile_nature dotted =
 	in
 	(* Add an offset of 20 for dotted, and convert to string *)
 	string_of_int (color_index + (if dotted then 20 else 0))
-	
 
 
+
+(*------------------------------------------------------------*)
+(* Create a file name with radical cartography_name and number file_index *)
+(*------------------------------------------------------------*)
+let make_file_name cartography_name file_index =
+	cartography_name ^ "_points_" ^ (string_of_int file_index) ^ ".txt"
+
+
+
+(*------------------------------------------------------------*)
 (* print the cartography which correspond to the list of constraint *)
+(*------------------------------------------------------------*)
 let cartography program pi0cube returned_constraint_list cartography_name =
 	(* Retrieve the input options *)
 	let options = Input.get_options () in
@@ -210,10 +222,13 @@ let cartography program pi0cube returned_constraint_list cartography_name =
 		(* Creation of files (Daphne wrote this?) *)
 		let create_file_for_constraint k tile_nature =
 		
+			(* Increment the file index *)
+			file_index := !file_index + 1;
+
 			(* Print some information *)
-			print_message Debug_standard ("Computing points for constraint " ^ (string_of_int !tile_index) ^ " \n " ^ (LinearConstraint.string_of_linear_constraint program.variable_names k) ^ "."); 
+			print_message Debug_low ("Computing points for constraint " ^ (string_of_int !tile_index) ^ " \n " ^ (LinearConstraint.string_of_linear_constraint program.variable_names k) ^ "."); 
 			
-			let file_name = cartography_name ^ "_points_" ^ (string_of_int !file_index) ^ ".txt" in
+			let file_name = make_file_name cartography_name !file_index in
 			let file_out = open_out file_name in
 			
 (*			(* Remove all non-parameter dimensions (the n highest) *)
@@ -228,7 +243,7 @@ let cartography program pi0cube returned_constraint_list cartography_name =
 			output_string file_out (snd s);
 
 			(* Print some information *)
-			print_message Debug_standard ("  Points \n " ^ (snd s) ^ ""); 
+			print_message Debug_low ("  Points \n " ^ (snd s) ^ ""); 
 			
 			(* close the file and open it in a reading mode to read the first line *)
 			close_out file_out;
@@ -245,8 +260,6 @@ let cartography program pi0cube returned_constraint_list cartography_name =
 				then script_line := !script_line ^ "-m " ^ (graph_color_of_int !tile_index tile_nature true) ^ " -q 0.3 " ^ file_name ^ " "
 				else script_line := !script_line ^ "-m " ^ (graph_color_of_int !tile_index tile_nature false) ^ " -q 0.7 " ^ file_name ^ " "
 			;
-			(* Increment the file index *)
-			file_index := !file_index + 1;
 		in
 
 		(* For all returned_constraint *)
@@ -272,7 +285,24 @@ let cartography program pi0cube returned_constraint_list cartography_name =
 		let execution = Sys.command !script_line in
 		if execution != 0 then
 			(print_error ("Something went wrong in the command. Exit code: " ^ (string_of_int execution) ^ ". Maybe you forgot to install the 'graph' utility."); abort_program());
-		print_message Debug_high ("Result of the cartography execution: exit code " ^ (string_of_int execution))
+		
+		(* Print some information *)
+		print_message Debug_high ("Result of the cartography execution: exit code " ^ (string_of_int execution));
+
+		(* Remove files *)
+		(** WARNING: using with_dot_source which does not exactly correspond to this usage *)
+		if not options#with_dot_source then(
+			print_message Debug_medium ("Removing V0 file...");
+			delete_file file_v0_name;
+			print_message Debug_medium ("Removing script file...");
+			delete_file script_name;
+			(* Removing all point files *)
+			for i = 1 to !file_index do
+				print_message Debug_medium ("Removing points file #" ^ (string_of_int i) ^ "...");
+				delete_file (make_file_name cartography_name i);
+			done;
+		);
+			
 	)
 
 
@@ -494,7 +524,7 @@ let dot program radical dot_source_file =
 			(* Removing dot file (except if option) *)
 			if not options#with_dot_source then(
 				print_message Debug_medium ("Removing dot file...");
-				Sys.remove dot_file_name;
+				delete_file dot_file_name;
 			);
 		);
 	)
@@ -540,7 +570,7 @@ let generate_graph program reachability_graph radical =
 			(* Removing dot file (except if option) *)
 			if not options#with_dot_source then(
 				print_message Debug_medium ("Removing dot file...");
-				Sys.remove dot_file_name;
+				delete_file dot_file_name;
 			);
 		);*)
 			

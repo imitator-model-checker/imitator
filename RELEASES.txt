@@ -2,18 +2,19 @@
 release 2.5.1    (COMING SOON)
 
 Features:
+- Added a new cartography mode with border detection
+- Changed and improved bad state definition (that was not really used anyway)
+- Cartography can color in green and red according to the bad state definition
 - Added dynamic clock elimination (ongoing work)
 - Added branch and bound (ongoing work)
-- Added a new cartography mode (ongoing work)
-- Changed and improved bad state definition (that was not really used anyway)
 
 Syntax:
 - region declaration not compulsory anymore (was not used anyway, just for Hytech retrocompatibility)
 - -IMorig becomes -IMK
 - -debug becomes -verbose
 - Merging option becomes (again?) "-merge"
-- Added -bab option (for branch and bound)
-- Added -counterex option (stops the analysis as soon as a counterexample is found)
+- Added -bab option (for branch and bound), work in progress
+- Added -counterex option (stops the analysis as soon as a counterexample is found), work in progress
 
 Internal
 - Refactored BC code

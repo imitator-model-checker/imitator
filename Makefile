@@ -342,7 +342,7 @@ exe:
 # 	./IMITATOR Examples/Flipflop/flipflop.imi Examples/Flipflop/flipflop.v0 -mode cover -no-log -no-dot
 
 # 	$(TARGET) $(EXAMPLE_PATH)/Flipflop/flipflop-observer.imi $(EXAMPLE_PATH)/Flipflop/flipflop.v0 -mode cover -cart
-	OCAMLRUNPARAM=b $(TARGET) $(EXAMPLE_PATH)/Flipflop/flipflop-observer.imi $(EXAMPLE_PATH)/Flipflop/flipflop.v0 -mode border -cart
+# 	$(TARGET) $(EXAMPLE_PATH)/Flipflop/flipflop-observer.imi $(EXAMPLE_PATH)/Flipflop/flipflop.v0 -mode border -cart
 
 # 	./IMITATOR Examples/Flipflop/flipflop_CC.imi -mode reachability -with-parametric-log
 # 	./IMITATOR Examples/Flipflop/flipflop_CC.imi Examples/Flipflop/flipflop_CC.pi0
@@ -549,6 +549,9 @@ exe:
 
 # 	$(TARGET) $(EXAMPLE_PATH)/Others/test.imi $(EXAMPLE_PATH)/Others/test.v0 -mode border -incl -merge -cart -with-dot
 # 	$(TARGET) $(EXAMPLE_PATH)/Others/test2.imi $(EXAMPLE_PATH)/Others/test2.v0 -mode cover -incl -merge -cart -with-dot
+# 	$(TARGET) $(EXAMPLE_PATH)/Others/test3.imi $(EXAMPLE_PATH)/Others/test3.v0 -mode cover -merge -cart
+# 	$(TARGET) $(EXAMPLE_PATH)/Others/test3.imi $(EXAMPLE_PATH)/Others/test3.v0 -mode border -merge -cart
+	$(TARGET) $(EXAMPLE_PATH)/Others/test4.imi $(EXAMPLE_PATH)/Others/test4.v0 -mode border -merge -cart
 # 	$(TARGET) $(EXAMPLE_PATH)/Others/giuseppe.imi $(EXAMPLE_PATH)/Others/giuseppe.v0 -mode border -incl -merge -depth-limit 15
 # 	$(TARGET) $(EXAMPLE_PATH)/Others/giuseppe3.imi $(EXAMPLE_PATH)/Others/giuseppe3.v0 -mode cover -incl -merge -timed 
 # 	$(TARGET) $(EXAMPLE_PATH)/Others/giuseppe_opt.imi $(EXAMPLE_PATH)/Others/giuseppe_opt.v0 -mode cover -incl -merge

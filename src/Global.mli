@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2009/09/08
- * Last modified: 2013/01/30
+ * Last modified: 2013/01/31
  *
  ****************************************************************)
 
@@ -203,6 +203,8 @@ val evaluate_or : bool -> bool -> bool
 
 val write_to_file : string -> string -> unit
 
+
+val delete_file : string -> unit
 
 (****************************************************************)
 (** Messages *)
