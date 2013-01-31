@@ -10,9 +10,9 @@
 #  Ocaml version: 3.12.1
 ###############################################################
 
-# flags for ocaml compiler
-#OCAMLC_FLAGS = -g
-OCAMLC_FLAGS = 
+# Flags for ocaml compiler (-g for exception stack trace)
+OCAMLC_FLAGS = -g
+# OCAMLC_FLAGS = 
 
 # ocaml compiler
 OCAMLC = ocamlc $(OCAMLC_FLAGS)
@@ -135,7 +135,7 @@ $(IMILIB): header parser $(OBJS)
 $(TARGET): $(IMILIB) $(MAIN)
 	@ echo [LINK] $(TARGET)
 	@ $(OCAMLC) $(INCLUDE) $(LIBS) $(IMILIB) $(MAIN) -o $(TARGET)
-	@ echo [LN]  $(TARGET_PATH)$(TARGET_NAME)$(VERSION)
+	@ echo [LN] $(TARGET_PATH)$(TARGET_NAME)$(VERSION)
 	@ cd $(TARGET_PATH) ; rm $(TARGET_NAME)$(VERSION) ; ln $(TARGET_NAME) $(TARGET_NAME)$(VERSION) -s
 	
 $(TARGET_STATIC32): $(IMILIB) $(MAIN)
@@ -335,13 +335,14 @@ exe:
 # 	$(TARGET) $(EXAMPLE_PATH)/Flipflop/flipflop.imi $(EXAMPLE_PATH)/Flipflop/flipflop.pi0 -no-dot -no-log -statistics -jobshop
 
 # 	$(TARGET) $(EXAMPLE_PATH)/Flipflop/flipflop.imi $(EXAMPLE_PATH)/Flipflop/flipflop.v0 -mode cover -cart
-# 	$(TARGET) $(EXAMPLE_PATH)/Flipflop/flipflop-observer.imi $(EXAMPLE_PATH)/Flipflop/flipflop.v0 -mode cover -cart
-	$(TARGET) $(EXAMPLE_PATH)/Flipflop/flipflop-observer.imi $(EXAMPLE_PATH)/Flipflop/flipflop.v0 -mode border -cart
 # 	$(TARGET) $(EXAMPLE_PATH)/Flipflop/flipflop.imi $(EXAMPLE_PATH)/Flipflop/flipflop.v0 -mode border -cart
 # 	./IMITATOR Examples/Flipflop/flipflop.imi Examples/Flipflop/flipflop.v0 -mode random1000  -log-prefix Examples/Flipflop/test2/test
 # 	./IMITATOR Examples/Flipflop/flipflop.imi Examples/Flipflop/flipflop.v0 -mode cover
 # 	# 	./IMITATOR Examples/Flipflop/flipflop.imi Examples/Flipflop/flipflop.v0 -mode cover -no-log -time-limit 1 -depth-limit 25
 # 	./IMITATOR Examples/Flipflop/flipflop.imi Examples/Flipflop/flipflop.v0 -mode cover -no-log -no-dot
+
+# 	$(TARGET) $(EXAMPLE_PATH)/Flipflop/flipflop-observer.imi $(EXAMPLE_PATH)/Flipflop/flipflop.v0 -mode cover -cart
+	OCAMLRUNPARAM=b $(TARGET) $(EXAMPLE_PATH)/Flipflop/flipflop-observer.imi $(EXAMPLE_PATH)/Flipflop/flipflop.v0 -mode border -cart
 
 # 	./IMITATOR Examples/Flipflop/flipflop_CC.imi -mode reachability -with-parametric-log
 # 	./IMITATOR Examples/Flipflop/flipflop_CC.imi Examples/Flipflop/flipflop_CC.pi0
@@ -382,12 +383,6 @@ exe:
 # 	$(TARGET) $(EXAMPLE_PATH)/Train/TrainAHV93.imi $(EXAMPLE_PATH)/Train/TrainAHV93.pi0 -incl
 # 	$(TARGET) $(EXAMPLE_PATH)/Train/TrainAHV93.imi $(EXAMPLE_PATH)/Train/TrainAHV93.pi0 -bab
 # 	bin/IMITATOR2.41 $(EXAMPLE_PATH)/Train/TrainAHV93.imi $(EXAMPLE_PATH)/Train/TrainAHV93.pi0 -incl -no-dot -no-log
-# 	bin/IMITATOR2.4 $(EXAMPLE_PATH)/Train/TrainAHV93.imi $(EXAMPLE_PATH)/Train/TrainAHV93.pi0 -incl -no-dot -no-log -jobshop
-# 	bin/IMITATOR2.375 $(EXAMPLE_PATH)/Train/TrainAHV93.imi $(EXAMPLE_PATH)/Train/TrainAHV93.pi0 -incl -no-dot -no-log -jobshop
-# 	bin/IMITATOR2.374 $(EXAMPLE_PATH)/Train/TrainAHV93.imi $(EXAMPLE_PATH)/Train/TrainAHV93.pi0 -incl -no-dot -no-log -jobshop
-# 	bin/IMITATOR2.371 $(EXAMPLE_PATH)/Train/TrainAHV93.imi $(EXAMPLE_PATH)/Train/TrainAHV93.pi0 -incl -no-dot -no-log -statistics
-# 	bin/IMITATOR2.370 $(EXAMPLE_PATH)/Train/TrainAHV93.imi $(EXAMPLE_PATH)/Train/TrainAHV93.pi0 -incl -no-dot -no-log -statistics
-# 	bin/IMITATOR2.34.111115 $(EXAMPLE_PATH)/Train/TrainAHV93.imi $(EXAMPLE_PATH)/Train/TrainAHV93.pi0 -IMincl -no-dot -no-log -statistics
 
 
 ##### CASE STUDIES : PROTOCOLS #####
@@ -416,17 +411,6 @@ exe:
 # 	$(TARGET) $(EXAMPLE_PATH)/BRP/brp.imi $(EXAMPLE_PATH)/BRP/brp.pi0 -dynamic-elimination
 # 	$(TARGET) $(EXAMPLE_PATH)/BRP/brp.imi $(EXAMPLE_PATH)/BRP/brp.pi0 -bab
 # 	$(TARGET) $(EXAMPLE_PATH)/BRP/brp.imi $(EXAMPLE_PATH)/BRP/brp.pi0 -no-dot -no-log -statistics -dynamic
-# 	$(TARGET) $EXAMPLE_PATH)/BRP/brp.imi $(EXAMPLE_PATH)/BRP/brp.pi0 -no-dot -no-log
-# 	bin/IMITATOR2.41 $(EXAMPLE_PATH)/BRP/brp.imi $(EXAMPLE_PATH)/BRP/brp.pi0 -no-dot -no-log
-# 	bin/IMITATOR2.4 $(EXAMPLE_PATH)/BRP/brp.imi $(EXAMPLE_PATH)/BRP/brp.pi0 -no-dot -no-log -jobshop
-# 	bin/IMITATOR2.375 $(EXAMPLE_PATH)/BRP/brp.imi $(EXAMPLE_PATH)/BRP/brp.pi0 -no-dot -no-log -jobshop
-# 	bin/IMITATOR2.374 $(EXAMPLE_PATH)/BRP/brp.imi $(EXAMPLE_PATH)/BRP/brp.pi0 -no-dot -no-log -jobshop
-# 	bin/IMITATOR2.371 $(EXAMPLE_PATH)/BRP/brp.imi $(EXAMPLE_PATH)/BRP/brp.pi0 -no-dot -no-log -statistics
-# 	bin/IMITATOR2.370 $(EXAMPLE_PATH)/BRP/brp.imi $(EXAMPLE_PATH)/BRP/brp.pi0 -no-dot -no-log -statistics
-# 	bin/IMITATOR2.35 $(EXAMPLE_PATH)/BRP/brp.imi $(EXAMPLE_PATH)/BRP/brp.pi0 -no-dot -no-log -statistics
-# 	bin/IMITATOR2.34.111115 $(EXAMPLE_PATH)/BRP/brp.imi $(EXAMPLE_PATH)/BRP/brp.pi0 -no-dot -no-log 
-# 	./IMITATOR Examples/BRP/brp.imi Examples/BRP/brp.pi0 -depth-limit 10 -time-limit 2
-# 	./IMITATOR Examples/BRP/brp.imi Examples/BRP/brp.v0 -mode cover
 
 # 	$(TARGET) $(EXAMPLE_PATH)/RCP/RCP.imi -mode reachability -PTA2GML
 # 	$(TARGET) $(EXAMPLE_PATH)/RCP/RCP.imi $(EXAMPLE_PATH)/RCP/RCP.pi0
@@ -434,16 +418,6 @@ exe:
 # 	$(TARGET) $(EXAMPLE_PATH)/RCP/RCP.imi $(EXAMPLE_PATH)/RCP/RCP.pi0 -bab # PROBLEM BAB
 # 	$(TARGET) $(EXAMPLE_PATH)/RCP/RCP.imi $(EXAMPLE_PATH)/RCP/RCP.pi0 -bab -no-merging
 # 	$(TARGET) $(EXAMPLE_PATH)/RCP/RCP.imi $(EXAMPLE_PATH)/RCP/RCP.pi0 -no-dot -no-log -statistics -dynamic
-# 	$(TARGET) $(EXAMPLE_PATH)/RCP/RCP.imi $(EXAMPLE_PATH)/RCP/RCP.pi0 -no-dot -no-log
-# 	bin/IMITATOR2.41 $(EXAMPLE_PATH)/RCP/RCP.imi $(EXAMPLE_PATH)/RCP/RCP.pi0 -no-dot -no-log
-# 	bin/IMITATOR2.4 $(EXAMPLE_PATH)/RCP/RCP.imi $(EXAMPLE_PATH)/RCP/RCP.pi0 -no-dot -no-log -jobshop
-# 	bin/IMITATOR2.375 $(EXAMPLE_PATH)/RCP/RCP.imi $(EXAMPLE_PATH)/RCP/RCP.pi0 -no-dot -no-log -jobshop
-# 	bin/IMITATOR2.374 $(EXAMPLE_PATH)/RCP/RCP.imi $(EXAMPLE_PATH)/RCP/RCP.pi0 -no-dot -no-log -jobshop 
-# 	bin/IMITATOR2.371 $(EXAMPLE_PATH)/RCP/RCP.imi $(EXAMPLE_PATH)/RCP/RCP.pi0 -no-dot -no-log -statistics
-# 	bin/IMITATOR2.370 $(EXAMPLE_PATH)/RCP/RCP.imi $(EXAMPLE_PATH)/RCP/RCP.pi0 -no-dot -no-log -statistics
-# 	bin/IMITATOR2.35 $(EXAMPLE_PATH)/RCP/RCP.imi $(EXAMPLE_PATH)/RCP/RCP.pi0 -no-dot -no-log -statistics
-# 	bin/IMITATOR2.34.111115 $(EXAMPLE_PATH)/RCP/RCP.imi $(EXAMPLE_PATH)/RCP/RCP.pi0 -no-dot -no-log
-# 	./IMITATOR Examples/RCP/RCP.imi Examples/RCP/RCP.v0 -mode cover -no-dot -log-prefix Examples/RCP/temp/RCP -no-log
 
 # 	./IMITATOR Examples/RCP/RCP_bounded.imi Examples/RCP/RCP_bounded.pi0 -no-dot -no-log
 
@@ -455,11 +429,6 @@ exe:
 # 	$(TARGET) $(EXAMPLE_PATH)/CSMACD/csmacdPrism.imi $(EXAMPLE_PATH)/CSMACD/csmacdPrism.pi0
 # 	$(TARGET) $(EXAMPLE_PATH)/CSMACD/csmacdPrism.imi $(EXAMPLE_PATH)/CSMACD/csmacdPrism.pi0 -dynamic-elimination
 # 	$(TARGET) $(EXAMPLE_PATH)/CSMACD/csmacdPrism.imi $(EXAMPLE_PATH)/CSMACD/csmacdPrism.pi0 -bab
-# 	bin/IMITATOR2.41 $(EXAMPLE_PATH)/CSMACD/csmacdPrism.imi $(EXAMPLE_PATH)/CSMACD/csmacdPrism.pi0 -no-dot -no-log
-# 	bin/IMITATOR2.4 $(EXAMPLE_PATH)/CSMACD/csmacdPrism.imi $(EXAMPLE_PATH)/CSMACD/csmacdPrism.pi0 -no-dot -no-log -jobshop
-# 	bin/IMITATOR2.375 $(EXAMPLE_PATH)/CSMACD/csmacdPrism.imi $(EXAMPLE_PATH)/CSMACD/csmacdPrism.pi0 -no-dot -no-log -jobshop
-# 	bin/IMITATOR2.374 $(EXAMPLE_PATH)/CSMACD/csmacdPrism.imi $(EXAMPLE_PATH)/CSMACD/csmacdPrism.pi0 -no-dot -no-log -jobshop
-# 	bin/IMITATOR2.370 $(EXAMPLE_PATH)/CSMACD/csmacdPrism.imi $(EXAMPLE_PATH)/CSMACD/csmacdPrism.pi0 -no-dot -no-log -statistics
 
 #	### WARNING: the prism model seems odd!!
 # 	$(TARGET) $(EXAMPLE_PATH)/CSMACD/csmacdPrism_with_renamed_actions.imi -mode reachability -no-merging
@@ -486,14 +455,6 @@ exe:
 # 	$(TARGET) $(EXAMPLE_PATH)/Wlan/wlan.imi $(EXAMPLE_PATH)/Wlan/wlan.pi0 -depth-limit 10 -no-dot -no-log -statistics 
 # 	$(TARGET) $(EXAMPLE_PATH)/Wlan/wlan.imi $(EXAMPLE_PATH)/Wlan/wlan.pi0 -depth-limit 10 -no-dot -no-log -statistics -dynamic
 # 	$(TARGET) $(EXAMPLE_PATH)/Wlan/wlan.imi $(EXAMPLE_PATH)/Wlan/wlan.pi0 -depth-limit 10 -no-dot -no-log
-# 	bin/IMITATOR2.41 $(EXAMPLE_PATH)/Wlan/wlan.imi $(EXAMPLE_PATH)/Wlan/wlan.pi0 -depth-limit 10 -no-dot -no-log
-# 	bin/IMITATOR2.4 $(EXAMPLE_PATH)/Wlan/wlan.imi $(EXAMPLE_PATH)/Wlan/wlan.pi0 -depth-limit 10 -no-dot -no-log -jobshop
-# 	bin/IMITATOR2.375 $(EXAMPLE_PATH)/Wlan/wlan.imi $(EXAMPLE_PATH)/Wlan/wlan.pi0 -depth-limit 10 -no-dot -no-log -jobshop
-# 	bin/IMITATOR2.374 $(EXAMPLE_PATH)/Wlan/wlan.imi $(EXAMPLE_PATH)/Wlan/wlan.pi0 -depth-limit 10 -no-dot -no-log -jobshop
-# 	bin/IMITATOR2.371 $(EXAMPLE_PATH)/Wlan/wlan.imi $(EXAMPLE_PATH)/Wlan/wlan.pi0 -depth-limit 10 -no-dot -no-log -statistics
-# 	bin/IMITATOR2.370 $(EXAMPLE_PATH)/Wlan/wlan.imi $(EXAMPLE_PATH)/Wlan/wlan.pi0 -depth-limit 10 -no-dot -no-log -statistics
-# 	bin/IMITATOR2.35 $(EXAMPLE_PATH)/Wlan/wlan.imi $(EXAMPLE_PATH)/Wlan/wlan.pi0 -depth-limit 10 -no-dot -no-log -statistics
-# 	bin/IMITATOR2.34.111115 $(EXAMPLE_PATH)/Wlan/wlan.imi $(EXAMPLE_PATH)/Wlan/wlan.pi0 -depth-limit 10 -no-dot -no-log
 
 # 	$(TARGET) $(EXAMPLE_PATH)/Wlan/wlan2_without_asap.imi $(EXAMPLE_PATH)/Wlan/wlan2_without_asap.pi0
 # 	$(TARGET) $(EXAMPLE_PATH)/Wlan/wlan2_without_asap_without_minmax.imi $(EXAMPLE_PATH)/Wlan/wlan2_without_asap_without_minmax.pi0 -no-dot -no-log
@@ -515,15 +476,6 @@ exe:
 # 	$(TARGET) $(EXAMPLE_PATH)/Valmem/spsmall.imi $(EXAMPLE_PATH)/Valmem/spsmall.pi0 -no-dot -no-log -statistics -acyclic
 # 	$(TARGET) $(EXAMPLE_PATH)/Valmem/spsmall.imi $(EXAMPLE_PATH)/Valmem/spsmall.pi0 -no-dot -no-log -statistics -tree -acyclic
 # 	$(TARGET) $(EXAMPLE_PATH)/Valmem/spsmall.imi $(EXAMPLE_PATH)/Valmem/spsmall.pi0 -no-dot -no-log -statistics -dynamic
-# 	bin/IMITATOR2.41 $(EXAMPLE_PATH)/Valmem/spsmall.imi $(EXAMPLE_PATH)/Valmem/spsmall.pi0 -no-dot -no-log
-# 	bin/IMITATOR2.4 $(EXAMPLE_PATH)/Valmem/spsmall.imi $(EXAMPLE_PATH)/Valmem/spsmall.pi0 -no-dot -no-log -jobshop
-# 	bin/IMITATOR2.375 $(EXAMPLE_PATH)/Valmem/spsmall.imi $(EXAMPLE_PATH)/Valmem/spsmall.pi0 -no-dot -no-log -jobshop
-# 	bin/IMITATOR2.374 $(EXAMPLE_PATH)/Valmem/spsmall.imi $(EXAMPLE_PATH)/Valmem/spsmall.pi0 -no-dot -no-log -jobshop
-# 	bin/IMITATOR2.371 $(EXAMPLE_PATH)/Valmem/spsmall.imi $(EXAMPLE_PATH)/Valmem/spsmall.pi0 -no-dot -no-log -statistics
-# 	bin/IMITATOR2.370 $(EXAMPLE_PATH)/Valmem/spsmall.imi $(EXAMPLE_PATH)/Valmem/spsmall.pi0 -no-dot -no-log -statistics
-# 	bin/IMITATOR2.35 $(EXAMPLE_PATH)/Valmem/spsmall.imi $(EXAMPLE_PATH)/Valmem/spsmall.pi0 -no-dot -no-log -statistics
-# 	bin/IMITATOR2.34.111115 $(EXAMPLE_PATH)/Valmem/spsmall.imi $(EXAMPLE_PATH)/Valmem/spsmall.pi0 -no-dot -no-log
-# 	./IMITATOR Examples/Valmem/spsmall.imi Examples/Valmem/spsmall.v0 -mode cover -no-dot -no-log
 
 # 	./IMITATOR Examples/Valmem/spsmall_obs.imi -mode reachability -with-parametric-log
 # 	./IMITATOR Examples/Valmem/spsmall_obs.imi Examples/Valmem/spsmall.pi0
@@ -532,17 +484,6 @@ exe:
 # 	$(TARGET) $(EXAMPLE_PATH)/Valmem/LSV.imi $(EXAMPLE_PATH)/Valmem/delais1_hy.pi0 -no-dot -no-log -statistics 
 # 	$(TARGET) $(EXAMPLE_PATH)/Valmem/LSV.imi $(EXAMPLE_PATH)/Valmem/delais1_hy.pi0 -no-dot -no-log -depth-limit 31 -jobshop -verbose medium
 # 	$(TARGET) $(EXAMPLE_PATH)/Valmem/LSV.imi $(EXAMPLE_PATH)/Valmem/delais1_hy.pi0 -no-dot -no-log -statistics -acyclic -dynamic
-# 	bin/IMITATOR2.34.111115 $(EXAMPLE_PATH)/Valmem/LSV.imi $(EXAMPLE_PATH)/Valmem/delais1_hy.pi0 -no-dot -no-log -dynamic
-# 	$(TARGET) $(EXAMPLE_PATH)/Valmem/LSV.imi $(EXAMPLE_PATH)/Valmem/delais1_hy.pi0 -no-dot -no-log -depth-limit 13 -no-random
-# 	bin/IMITATOR2.41 $(EXAMPLE_PATH)/Valmem/LSV.imi $(EXAMPLE_PATH)/Valmem/delais1_hy.pi0 -no-dot -no-log -depth-limit 13 -no-random
-# 	bin/IMITATOR2.4 $(EXAMPLE_PATH)/Valmem/LSV.imi $(EXAMPLE_PATH)/Valmem/delais1_hy.pi0 -no-dot -no-log -depth-limit 13 -no-random -jobshop
-# 	bin/IMITATOR2.375 $(EXAMPLE_PATH)/Valmem/LSV.imi $(EXAMPLE_PATH)/Valmem/delais1_hy.pi0 -no-dot -no-log -depth-limit 13 -no-random -jobshop
-# 	bin/IMITATOR2.374 $(EXAMPLE_PATH)/Valmem/LSV.imi $(EXAMPLE_PATH)/Valmem/delais1_hy.pi0 -no-dot -no-log -depth-limit 13 -jobshop
-# 	bin/IMITATOR2.371 $(EXAMPLE_PATH)/Valmem/LSV.imi $(EXAMPLE_PATH)/Valmem/delais1_hy.pi0 -no-dot -no-log -statistics -depth-limit 13
-# 	bin/IMITATOR2.370 $(EXAMPLE_PATH)/Valmem/LSV.imi $(EXAMPLE_PATH)/Valmem/delais1_hy.pi0 -no-dot -no-log -statistics -depth-limit 13
-# 	bin/IMITATOR2.36 $(EXAMPLE_PATH)/Valmem/LSV.imi $(EXAMPLE_PATH)/Valmem/delais1_hy.pi0 -no-dot -no-log -statistics -depth-limit 13
-# 	bin/IMITATOR2.35 $(EXAMPLE_PATH)/Valmem/LSV.imi $(EXAMPLE_PATH)/Valmem/delais1_hy.pi0 -no-dot -no-log -statistics -depth-limit 13
-# 	bin/IMITATOR2.34.111115 $(EXAMPLE_PATH)/Valmem/LSV.imi $(EXAMPLE_PATH)/Valmem/delais1_hy.pi0 -no-dot -no-log -depth-limit 13
 # 	$(TARGET) $(EXAMPLE_PATH)/Valmem/sp_1x2_md_no.imi Examples/Valmem/sp_1x2_md_no.pi0 
 
 ##### CASE STUDIES : SIMOP #####
@@ -560,16 +501,6 @@ exe:
 	
 # 	$(TARGET) $(EXAMPLE_PATH)/SIMOP/simop.imi $(EXAMPLE_PATH)/SIMOP/simop.pi0 -with-log -with-dot -fancy
 # 	$(TARGET) $(EXAMPLE_PATH)/SIMOP/simop.imi $(EXAMPLE_PATH)/SIMOP/simop.pi0 -incl -no-dot -no-log -statistics -dynamic
-# 	$(TARGET) $(EXAMPLE_PATH)/SIMOP/simop.imi $(EXAMPLE_PATH)/SIMOP/simop.pi0 -incl
-# 	bin/IMITATOR2.41 $(EXAMPLE_PATH)/SIMOP/simop.imi $(EXAMPLE_PATH)/SIMOP/simop.pi0 -incl -no-dot -no-log
-# 	bin/IMITATOR2.4 $(EXAMPLE_PATH)/SIMOP/simop.imi $(EXAMPLE_PATH)/SIMOP/simop.pi0 -incl -no-dot -no-log -jobshop
-# 	bin/IMITATOR2.375 $(EXAMPLE_PATH)/SIMOP/simop.imi $(EXAMPLE_PATH)/SIMOP/simop.pi0 -incl -no-dot -no-log -jobshop
-# 	bin/IMITATOR2.374 $(EXAMPLE_PATH)/SIMOP/simop.imi $(EXAMPLE_PATH)/SIMOP/simop.pi0 -incl -no-dot -no-log -jobshop
-# 	bin/IMITATORsafeJS $(EXAMPLE_PATH)/SIMOP/simop.imi $(EXAMPLE_PATH)/SIMOP/simop.pi0 -incl -no-dot -no-log -jobshop -statistics
-# 	bin/IMITATOR2.370 $(EXAMPLE_PATH)/SIMOP/simop.imi $(EXAMPLE_PATH)/SIMOP/simop.pi0 -incl -no-dot -no-log -statistics
-# 	bin/IMITATOR2.36 $(EXAMPLE_PATH)/SIMOP/simop.imi $(EXAMPLE_PATH)/SIMOP/simop.pi0 -incl -no-dot -no-log -statistics
-# 	bin/IMITATOR2.35 $(EXAMPLE_PATH)/SIMOP/simop.imi $(EXAMPLE_PATH)/SIMOP/simop.pi0 -incl -no-dot -no-log -statistics
-# 	bin/IMITATOR2.34.111115 $(EXAMPLE_PATH)/SIMOP/simop.imi $(EXAMPLE_PATH)/SIMOP/simop.pi0 -IMincl -no-dot -no-log
 
 
 ##### SCHEDULING #####
@@ -616,21 +547,14 @@ exe:
 
 # 	$(TARGET) $(EXAMPLE_PATH)/Polyhedra/polyhedron1.imi $(EXAMPLE_PATH)/Polyhedra/polyhedron1.v0 -mode cover -cart
 
+# 	$(TARGET) $(EXAMPLE_PATH)/Others/test.imi $(EXAMPLE_PATH)/Others/test.v0 -mode border -incl -merge -cart -with-dot
+# 	$(TARGET) $(EXAMPLE_PATH)/Others/test2.imi $(EXAMPLE_PATH)/Others/test2.v0 -mode cover -incl -merge -cart -with-dot
 # 	$(TARGET) $(EXAMPLE_PATH)/Others/giuseppe.imi $(EXAMPLE_PATH)/Others/giuseppe.v0 -mode border -incl -merge -depth-limit 15
 # 	$(TARGET) $(EXAMPLE_PATH)/Others/giuseppe3.imi $(EXAMPLE_PATH)/Others/giuseppe3.v0 -mode cover -incl -merge -timed 
 # 	$(TARGET) $(EXAMPLE_PATH)/Others/giuseppe_opt.imi $(EXAMPLE_PATH)/Others/giuseppe_opt.v0 -mode cover -incl -merge
 
 ##### JOB SHOP #####
 # 	$(TARGET) $(EXAMPLE_PATH)/Jobshop/maler_2_4.imi -mode reachability -incl 
-# 	bin/IMITATOR2.4 $(EXAMPLE_PATH)/Jobshop/maler_2_4.imi -mode reachability -no-dot -no-log -incl -jobshop
-# 	bin/IMITATOR2.375 $(EXAMPLE_PATH)/Jobshop/maler_2_4.imi -mode reachability -no-dot -no-log -incl -jobshop
-# 	bin/IMITATOR2.374 $(EXAMPLE_PATH)/Jobshop/maler_2_4.imi -mode reachability -no-dot -no-log -incl -jobshop
-# 	bin/IMITATOR2.371 $(EXAMPLE_PATH)/Jobshop/maler_2_4.imi -mode reachability -no-dot -no-log -incl -statistics
-# 	bin/IMITATOR2.370 $(EXAMPLE_PATH)/Jobshop/maler_2_4.imi -mode reachability -no-dot -no-log -incl -statistics
-# 	bin/IMITATOR2.36 $(EXAMPLE_PATH)/Jobshop/maler_2_4.ancien.imi -mode reachability -no-dot -no-log -incl -statistics
-# 	bin/IMITATOR2.35 $(EXAMPLE_PATH)/Jobshop/maler_2_4.imi -mode reachability -no-dot -no-log -incl -statistics
-# 	bin/IMITATOR2.35.111115 $(EXAMPLE_PATH)/Jobshop/maler_2_4.imi -mode reachability -no-dot -no-log -IMincl
-# 	bin/IMITATOR2.34.111115 $(EXAMPLE_PATH)/Jobshop/maler_2_4.ancien.imi -mode reachability -no-dot -no-log -IMincl
 
 # 	$(TARGET) $(EXAMPLE_PATH)/Jobshop/maler_2_4.imi $(EXAMPLE_PATH)/Jobshop/maler_2_4.pi0
 # 	$(TARGET) $(EXAMPLE_PATH)/Jobshop/maler_2_4.imi $(EXAMPLE_PATH)/Jobshop/maler_2_4.pi0 -with-merging

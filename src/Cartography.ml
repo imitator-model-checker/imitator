@@ -298,6 +298,7 @@ let find_next_pi0_cover program init_constraint min_bounds max_bounds nb_dimensi
 (** Compute the next pi0 and directly modify the variable 'current_pi0' (standard BC) *)
 (*------------------------------------------------------------*)
 let find_next_pi0_border program init_constraint min_bounds max_bounds nb_dimensions computed_constraints current_pi0 latest_nature current_intervals_min current_intervals_max =
+	find_next_pi0_cover program init_constraint min_bounds max_bounds nb_dimensions computed_constraints current_pi0 (*
 	(* Print some information *)
 	print_message Debug_standard "Entering function 'find_next_pi0_border'.";
 	
@@ -320,160 +321,169 @@ let find_next_pi0_border program init_constraint min_bounds max_bounds nb_dimens
 	(** !!!!! BOUCLE WHILE PROBABLEMENT A SUPPRIMER *)
 	
 (* 	while !more_pi0 && not !time_limit_reached && not !found_pi0 do *)
+			
+		(* 1) Compute the next pi0 (if any left) *)
 		
-	(* 1) Compute the next pi0 (if any left) *)
-	(** !!!!! PTET PAS 1, PTET SEULEMENT CA *)
-	
-	(* Start with the first dimension *)
-	let current_dimension = ref 0 in (** WARNING: should be sure that 0 is the first parameter dimension *)
-	(* The current dimension is not yet the maximum *)
-	let not_is_max = ref true in
-	
-	print_message Debug_standard ("Starting from dimension " ^ (string_of_int !current_dimension) ^ ".");
-	
-	begin
-	try
-	while !not_is_max do
-		(* Try to increment the local dimension *)
+		(* Start with the first dimension *)
+		let current_dimension = ref 0 in (** WARNING: should be sure that 0 is the first parameter dimension *)
+		(* The current dimension is not yet the maximum *)
+		let not_is_max = ref true in
 		
-		(** !!!!! AUTRE CHOSE A FAIRE *)
-(* 			let current_dimension_incremented = NumConst.add current_pi0.(!current_dimension) step in *)
-
-		(* 1) Dichotomy: find a point between a good and a bad zone *)
+		print_message Debug_standard ("Starting from dimension " ^ (string_of_int !current_dimension) ^ ".");
+		
+		begin
 		try
-		(* While current_max - current_min > step, there are some points in between *)
-		while true do
-			(* Find a multiple of step from min_bound in [current_min, current_max] *)
-			let current_min = current_intervals_min.(!current_dimension) in
-			let current_max = current_intervals_max.(!current_dimension) in
+		while !not_is_max do
 
-			print_message Debug_standard ("Looking for a multiple of step " ^ (NumConst.string_of_numconst step) ^ " from " ^ (NumConst.string_of_numconst min_bounds.(!current_dimension)) ^ " in [" ^ (NumConst.string_of_numconst current_min) ^ ", " ^ (NumConst.string_of_numconst current_max) ^ "].");
-	
-			(* Can raise Not_found, in which case we exit the loop *)
-			let middle_point = find_multiple_in_between_and_from min_bounds.(!current_dimension) current_min current_max step in
-			
-			(* Print some information *)
-			print_message Debug_standard ("Found " ^ (NumConst.string_of_numconst middle_point) ^ ".");
-	
-			(* Update our current and tentative pi0 *)
-			current_pi0.(!current_dimension) <- middle_point;
+			(* 1) Dichotomy: find a point between a good and a bad zone *)
+			try
+			(* While current_max - current_min > step, there are some points in between *)
+			while true do
+				(* Find a multiple of step from min_bound in [current_min, current_max] *)
+				let current_min = current_intervals_min.(!current_dimension) in
+				let current_max = current_intervals_max.(!current_dimension) in
 
-			(* Convert the current pi0 to functional representation *)
-			let pi0 = fun parameter -> current_pi0.(parameter) in
-			
-			(* Print some information *)
-			print_message Debug_standard ("Constructing a tentative point: " ^ (ModelPrinter.string_of_pi0 program pi0) ^ ".");
-	
-			print_message Debug_standard ("Checking whether this point belongs to a tile.");
+				print_message Debug_standard ("Looking for a multiple of step " ^ (NumConst.string_of_numconst step) ^ " from " ^ (NumConst.string_of_numconst min_bounds.(!current_dimension)) ^ " in [" ^ (NumConst.string_of_numconst current_min) ^ ", " ^ (NumConst.string_of_numconst current_max) ^ "] in dimension " ^ (string_of_int !current_dimension) ^ ".");
+		
+				(* Can raise Not_found, in which case we exit the loop *)
+				let middle_point = find_multiple_in_between_and_from min_bounds.(!current_dimension) current_min current_max step in
+				
+				(* Print some information *)
+				print_message Debug_standard ("Found " ^ (NumConst.string_of_numconst middle_point) ^ ".");
+		
+				(* Update our current and tentative pi0 *)
+				current_pi0.(!current_dimension) <- middle_point;
 
-			(* Check that the current pi0 does not belong to any constraint *)
-			if dynArray_exists (fun returned_constraint ->
-				(* If the point belongs to a tile *)
-				if pi0_in_returned_constraint pi0 returned_constraint then (
-					(* Print some information *)
-					print_message Debug_standard ("  Pi0 belongs to this tile.");
+				(* Convert the current pi0 to functional representation *)
+				let pi0 = fun parameter -> current_pi0.(parameter) in
+				
+				(* Print some information *)
+				print_message Debug_standard ("Constructing a tentative point: " ^ (ModelPrinter.string_of_pi0 program pi0) ^ ".");
+		
+				print_message Debug_standard ("Checking whether this point belongs to a tile.");
 
-					(* Get the tile nature *)
-					let tile_nature = tile_nature_of_returned_constraint returned_constraint in
-					
-					(* Print some information *)
-					print_message Debug_standard ("    This tile is " ^ (string_of_tile_nature tile_nature) ^ ".");
-					
-					begin
-					match tile_nature with
-					(* If this tile is good, reduce the interval from below: update to [middle_point + step ; current_max] *)
-					(** TODO: could be optimized by finding the nearest multiple of tile next to the border *)
-					| Good ->
-						current_intervals_min.(!current_dimension) <- NumConst.add middle_point step;
+				(* Check that the current pi0 does not belong to any constraint *)
+				if dynArray_exists (fun returned_constraint ->
+					(* If the point belongs to a tile *)
+					if pi0_in_returned_constraint pi0 returned_constraint then (
+						(* Print some information *)
+						print_message Debug_standard ("  Pi0 belongs to this tile.");
+
+						(* Get the tile nature *)
+						let tile_nature = tile_nature_of_returned_constraint returned_constraint in
 						
-					(* If this tile is bad, reduce the interval from above: update to [current_min ; middle_point - step ] *)
-					(** TODO: could be optimized by finding the nearest multiple of tile next to the border *)
-					| Bad ->
-						current_intervals_max.(!current_dimension) <- NumConst.sub middle_point step;
+						(* Print some information *)
+						print_message Debug_standard ("    This tile is " ^ (string_of_tile_nature tile_nature) ^ ".");
+						
+						begin
+						match tile_nature with
+						(* If this tile is good, reduce the interval from below: update to [middle_point + step ; current_max] *)
+						(** TODO: could be optimized by finding the nearest multiple of tile next to the border *)
+						| Good ->
+							current_intervals_min.(!current_dimension) <- NumConst.add middle_point step;
+							
+						(* If this tile is bad, reduce the interval from above: update to [current_min ; middle_point - step ] *)
+						(** TODO: could be optimized by finding the nearest multiple of tile next to the border *)
+						| Bad ->
+							current_intervals_max.(!current_dimension) <- NumConst.sub middle_point step;
+						
+						| _ -> raise (InternalError ("Tile nature should be good or bad only at this point "));
+						end;
+						
+						(* Print some information *)
+						print_message Debug_standard ("    Reducing the interval to [" ^ (NumConst.string_of_numconst current_intervals_min.(!current_dimension)) ^ ", " ^ (NumConst.string_of_numconst current_intervals_max.(!current_dimension)) ^ "] in dimension " ^ (string_of_int !current_dimension) ^ ".");
+						
+						(* Return true because we found a tile *)
+						true
+					)else(
+						(* This tile has not yet been found *)
+						print_message Debug_standard ("  Pi0 does not belong to this tile.");
+						false
+					)
+				) computed_constraints then (
+					(* Update the number of unsuccessful points *)
+					nb_useless_points := !nb_useless_points + 1;
+					if debug_mode_greater Debug_medium then (
+						print_message Debug_medium "The following pi0 is already included in a constraint.";
+						print_message Debug_medium (ModelPrinter.string_of_pi0 program pi0);
+					);
 					
-					| _ -> raise (InternalError ("Tile nature should be good or bad only at this point "));
-					end;
-					
-					(* Print some information *)
-					print_message Debug_standard ("    Reducing the interval to [" ^ (NumConst.string_of_numconst current_intervals_min.(!current_dimension)) ^ ", " ^ (NumConst.string_of_numconst current_intervals_max.(!current_dimension)) ^ "].");
-					
-					(* Return true because we found a tile *)
-					true
-				)else(
-					(* This tile has not yet been found *)
-					print_message Debug_standard ("  Pi0 does not belong to this tile.");
-					false
-				)
-			) computed_constraints then (
-				(* Update the number of unsuccessful points *)
-				nb_useless_points := !nb_useless_points + 1;
-				if debug_mode_greater Debug_medium then (
-					print_message Debug_medium "The following pi0 is already included in a constraint.";
-					print_message Debug_medium (ModelPrinter.string_of_pi0 program pi0);
+				) else (
+					(* Found a point not covered by any constraint! *)
+					(** WARNING: should test compatibility with initial constraint (and might be quite tricky, now) *)
+					raise Found
 				);
-				
-			) else (
-				(* Found a point not covered by any constraint! *)
-				(** WARNING: should test compatibility with initial constraint (and might be quite tricky, now) *)
-				raise Found
-			);
+
+			done; (* end while *)
+			with Not_found -> (); (* at this point, there is no multiple of step between min and max for this dimension *)
+			(* Print some information *)
+			print_message Debug_standard ("No multiple found in the interval.");
 			
-			
-		(* 1c) Check it from all constraints *)
-			
-				(* 1a) Start by updating the interval *)
-				(* If last tile was good, reduce from below *)
-				(*match latest_nature with
-					(** TODO: could be optimized by finding the nearest multiple of tile next to the border *)
-					| Good -> 
-					(* If last tile was bad, reduce from above *)
-					(** TODO: could be optimized by finding the nearest multiple of tile next to the border *)
-					| Bad ->
-					| _ -> raise (InternalError ("Tile nature should be good or bad only at this point "))*)
-				
-		(* 1b) Then find the middle point *)
-(* 			() *)
-			(* Otherwise found *)
-			
-		done; (* end while *)
-		with Not_found -> (); (* at this point, there is no multiple of step between min and max for this dimension *)
-		(* Print some information *)
-		print_message Debug_standard ("No multiple found in the interval.");
-			
-		(** !!!!! AUTRE TEST A FAIRE *)
-		(*if current_dimension_incremented <= max_bounds.(!current_dimension) then (
-			(* Increment this dimension *)
-			(** !!!!! OU DECREMENTE **)
-			current_pi0.(!current_dimension) <- current_dimension_incremented;
-			(* Reset the smaller dimensions to the low bound *)
-			for i = 0 to !current_dimension - 1 do
-				(** !!!!! REINITIALISER A CHAQUE FOIS LEUR INTERVALLE ? (attention, la borne sup minimal est connue, c'est la meme qu'au coup precedent) **)
-				(** !!!!! PAR CONTRE, NE PAS TOUCHER PI0 ? **)
-				current_pi0.(i) <- min_bounds.(i);
-			done;
-			(* Stop the loop *)
-			not_is_max := false;
-		)
-		(* Else: try the next dimension *)
-		else ( 
+			(* Switch to the next *)
 			current_dimension := !current_dimension + 1;
+
+			(* Print some information *)
+			print_message Debug_standard ("Now increasing to dimension " ^ (string_of_int !current_dimension) ^ ".");
+		
 			(* If last dimension: the end! *)
 			if !current_dimension >= nb_dimensions then(
-				more_pi0 := false;
+	(* 			more_pi0 := false; *)
+				not_is_max := false;
+				
+				(* Print some information *)
+				print_message Debug_standard ("Maximum dimension " ^ (string_of_int nb_dimensions) ^ " has been reached.");
+		
+			)else(
+				(* Reset the intervals of the smaller dimensions to the initial min / max bounds *)
+				for i = 0 to !current_dimension - 1 do
+					(* On ne touche pas pi0 *)
+					(*current_pi0.(i) <- min_bounds.(i);*)
+					
+					(* Mais on peut conserver le max *)
+					current_intervals_min.(i) <- min_bounds.(i);
+					
+					(* Print some information *)
+					print_message Debug_standard ("  New interval for dimension " ^ (string_of_int i) ^ ": [" ^ (NumConst.string_of_numconst current_intervals_min.(i)) ^ ", " ^ (NumConst.string_of_numconst current_intervals_max.(i)) ^ "].");
+		
+				done;
+			
+			
+			); (* end if last dimension *)
+				
+			(** !!!!! AUTRE TEST A FAIRE *)
+			(*if current_dimension_incremented <= max_bounds.(!current_dimension) then (
+				(* Increment this dimension *)
+				(** !!!!! OU DECREMENTE **)
+				current_pi0.(!current_dimension) <- current_dimension_incremented;
+				(* Reset the smaller dimensions to the low bound *)
+				for i = 0 to !current_dimension - 1 do
+					(** !!!!! REINITIALISER A CHAQUE FOIS LEUR INTERVALLE ? (attention, la borne sup minimal est connue, c'est la meme qu'au coup precedent) **)
+					(** !!!!! PAR CONTRE, NE PAS TOUCHER PI0 ? **)
+					current_pi0.(i) <- min_bounds.(i);
+				done;
+				(* Stop the loop *)
 				not_is_max := false;
 			)
-		);*)
-	done; (* while not is max *)
-	(* 2) Check that this pi0 is new *)
+			(* Else: try the next dimension *)
+			else ( 
+				current_dimension := !current_dimension + 1;
+				(* If last dimension: the end! *)
+				if !current_dimension >= nb_dimensions then(
+					more_pi0 := false;
+					not_is_max := false;
+				)
+			);*)
+		done; (* while not is max *)
+
 		
 (* 	done; (* while more pi0 and so on *) *)
 
-	raise (InternalError("Not implemented."))
+	(*!found_pi0 *)false, (*!time_limit_reached*) false , !nb_useless_points
 
 	with Found -> (*!found_pi0 *)true, (*!time_limit_reached*) false , !nb_useless_points
 	end
 
-	
+	*)
 
 
 (**************************************************)
@@ -495,13 +505,26 @@ let cover_behavioral_cartography program v0 init_state =
 	(* Retrieve the input options *)
 	let options = Input.get_options () in
 
+	(* Print some information *)
+	print_message Debug_medium ("Starting preprocessing for the behavioral cartography");
+
 	(* Time counter for recording the globl time spent on BC *)
 	let time_spent_on_IM = ref 0. in
 	(* Record start time to compute the time spent only on calling IM *)
 	let start_time = Unix.gettimeofday() in
 
-	(* Dimension of the system *)
-	let dimension = Array.length v0 in
+	(* Number of dimensions in the system *)
+	let nb_dimensions = Array.length v0 in
+	
+	(* Print some information *)
+	print_message Debug_medium ("Number of dimensions: " ^ (string_of_int nb_dimensions));
+
+	(* Check that the cartography is not applied to 0 dimension! *)
+	if nb_dimensions = 0 then(
+		print_error "The cartography has 0 dimension in V0, and cannot be applied.";
+		abort_program();
+	);
+	
 	(* Min & max bounds for the parameters *)
 	let min_bounds = Array.map (fun (low, high) -> NumConst.numconst_of_int low) v0 in
 	let max_bounds = Array.map (fun (low, high) -> NumConst.numconst_of_int high) v0 in
@@ -651,7 +674,7 @@ let cover_behavioral_cartography program v0 init_state =
 		print_message Debug_low ("Constraint K0 computed:");
 		print_message Debug_standard (ModelPrinter.string_of_returned_constraint program.variable_names returned_constraint);
 		if program.bad <> Nobad then(
-			print_message Debug_standard ("This zone is " ^ (string_of_tile_nature tile_nature) ^ ".");
+			print_message Debug_standard ("This tile is " ^ (string_of_tile_nature tile_nature) ^ ".");
 		);
 
 
@@ -699,10 +722,10 @@ let cover_behavioral_cartography program v0 init_state =
 			(* Branching *)
 			match options#imitator_mode with
 			| Cover_cartography ->
-				find_next_pi0_cover program init_constraint min_bounds max_bounds dimension computed_constraints current_pi0
+				find_next_pi0_cover program init_constraint min_bounds max_bounds nb_dimensions computed_constraints current_pi0
 
 			| Border_cartography ->
-				find_next_pi0_border program init_constraint min_bounds max_bounds dimension computed_constraints current_pi0 tile_nature current_intervals_min current_intervals_max
+				find_next_pi0_border program init_constraint min_bounds max_bounds nb_dimensions computed_constraints current_pi0 tile_nature current_intervals_min current_intervals_max
 
 			| _ -> raise (InternalError("In function 'cover_behavioral_cartography', the mode should be a cover / border cartography only."))
 		in
@@ -743,6 +766,14 @@ let cover_behavioral_cartography program v0 init_state =
 	print_message Debug_standard ("Time spent on IM     : " ^ (string_of_float (!time_spent_on_IM)) ^ "");
 	print_message Debug_standard ("Time spent on BC only: " ^ (string_of_float (time_spent_on_BC)) ^ "");
 	print_message Debug_standard ("**************************************************");
+	
+	if options#statistics then (
+		(* PPL *)
+		print_message Debug_standard "--------------------";
+		print_message Debug_standard "Statistics on PPL";
+		print_message Debug_standard ("--------------------" ^ (LinearConstraint.get_statistics ()));
+	);
+		
 
 	(* Return a list of the generated zones *)
 	let zones = DynArray.to_list computed_constraints in

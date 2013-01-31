@@ -35,12 +35,39 @@ let states_file_extension = "states"
 
 
 (**************************************************)
-(* Plot Functions *)
+(* Plot (graph) Functions *)
 (**************************************************)
+
+(* Convert a tile_index into a color for graph (actually an integer from 1 to 5) *)
+let graph_color_of_int tile_index tile_nature dotted =
+	(* Retrieve program *)
+	let program = Input.get_program() in
+	
+	(* Definition of the color *)
+	let color_index =
+	(* If bad state defined *)
+	if program.bad != Nobad then(
+		(* Go for a good / bad coloring *)
+		match tile_nature with
+		| Good -> 2 (* green *)
+		| Bad -> 1 (* red *)
+		| Unknown -> 5 (* cyan *)
+	(* Else random coloring *)
+	)else(
+		(* Only 5 colors from 1 to 5 *)
+		(tile_index mod 5) + 1
+	)
+	in
+	(* Add an offset of 20 for dotted, and convert to string *)
+	string_of_int (color_index + (if dotted then 20 else 0))
+	
 
 
 (* print the cartography which correspond to the list of constraint *)
 let cartography program pi0cube returned_constraint_list cartography_name =
+	(* Retrieve the input options *)
+	let options = Input.get_options () in
+	
 	(* Replace strict inequalities with large inequalities *)
 
 	(* Local function to replace strict inequalities within a linear_constraint *)
@@ -181,27 +208,43 @@ let cartography program pi0cube returned_constraint_list cartography_name =
 		let file_index = ref 0 in
 		let tile_index = ref 0 in
 		(* Creation of files (Daphne wrote this?) *)
-		let create_file_for_constraint k =
-			let file_name = cartography_name^"_points_"^(string_of_int !file_index) ^ ".txt" in
+		let create_file_for_constraint k tile_nature =
+		
+			(* Print some information *)
+			print_message Debug_standard ("Computing points for constraint " ^ (string_of_int !tile_index) ^ " \n " ^ (LinearConstraint.string_of_linear_constraint program.variable_names k) ^ "."); 
+			
+			let file_name = cartography_name ^ "_points_" ^ (string_of_int !file_index) ^ ".txt" in
 			let file_out = open_out file_name in
+			
+			(* Remove all non-parameter dimensions (the n highest) *)
+			print_message Debug_standard ("Removing the " ^ (string_of_int (program.nb_discrete + program.nb_clocks)) ^ " highest (clocks and discrete) dimensions in the constraint, to keep only the " ^ (string_of_int (program.nb_parameters)) ^ " lowest."); 
+			
+			(* Should be done already ?!! *)
+			hide_assign program.clocks_and_discrete k;
+			remove_dimensions (program.nb_discrete + program.nb_clocks) k ;
+			
 			(* find the points satisfying the constraint *)
-			let s=plot_2d (x_param) (y_param) k min_abs min_ord max_abs max_ord in
+			let s = plot_2d x_param y_param k min_abs min_ord max_abs max_ord in
 			(* print in the file the coordinates of the points *)
 			output_string file_out (snd s);
+
+			(* Print some information *)
+			print_message Debug_standard ("  Points \n " ^ (snd s) ^ ""); 
+			
 			(* close the file and open it in a reading mode to read the first line *)
-			close_out file_out;			
+			close_out file_out;
 			let file_in = open_in file_name in
 			let s2 = input_line file_in in
 			(* close the file and open it in a writting mode to copy the whole string in it and ensure that the polygon is closed*)
 			close_in file_in;
 			let file_out_bis = open_out file_name in
-			output_string file_out_bis ((snd s)^s2);
+			output_string file_out_bis ((snd s) ^ s2);
 			close_out file_out_bis;
 			(* instructions to have the zones colored. If fst s = true then the zone is infinite *)
 			if fst s
 				(*** TO DO : same color for one disjunctive tile *)
-				then script_line := !script_line^"-m "^(string_of_int(((!tile_index) mod 5)+1+20))^" -q 0.3 "^file_name^" "
-				else script_line := !script_line^"-m "^(string_of_int(((!tile_index) mod 5)+1))^" -q 0.7 "^file_name^" "
+				then script_line := !script_line ^ "-m " ^ (graph_color_of_int !tile_index tile_nature true) ^ " -q 0.3 " ^ file_name ^ " "
+				else script_line := !script_line ^ "-m " ^ (graph_color_of_int !tile_index tile_nature false) ^ " -q 0.7 " ^ file_name ^ " "
 			;
 			(* Increment the file index *)
 			file_index := !file_index + 1;
@@ -209,19 +252,19 @@ let cartography program pi0cube returned_constraint_list cartography_name =
 
 		(* For all returned_constraint *)
 		List.iter (function
-			| Convex_constraint (k, _) -> tile_index := !tile_index + 1; create_file_for_constraint k
-			| Union_of_constraints (list_of_k, _) ->
-				List.iter (fun k -> tile_index := !tile_index + 1; create_file_for_constraint k) list_of_k
+			| Convex_constraint (k, tn) -> tile_index := !tile_index + 1; create_file_for_constraint k tn
+			| Union_of_constraints (list_of_k, tn) ->
+				List.iter (fun k -> tile_index := !tile_index + 1; create_file_for_constraint k tn) list_of_k
 		) new_returned_constraint_list;
 
 		
 		(* File in which the cartography will be printed *)
 		let final_name = cartography_name^".ps" in
 		(* last part of the script *)	
-		script_line := !script_line^" -C -m 2 -q -1 "^file_v0_name^" > "^final_name;
+		script_line := !script_line^" -C -m 2 -q -1 " ^ file_v0_name ^ " -L \"" ^ options#file ^ "\" > "^final_name;
 		(* write the script into a file *)
 		output_string script !script_line;
-		(* Debug output *)
+		(* Print some information *)
 		print_message Debug_standard (
 			"Plot cartography projected on parameters " ^ x_name ^ ", " ^ y_name
 			^ " to file '" ^ final_name ^ "'"); 
