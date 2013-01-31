@@ -216,12 +216,11 @@ let cartography program pi0cube returned_constraint_list cartography_name =
 			let file_name = cartography_name ^ "_points_" ^ (string_of_int !file_index) ^ ".txt" in
 			let file_out = open_out file_name in
 			
-			(* Remove all non-parameter dimensions (the n highest) *)
+(*			(* Remove all non-parameter dimensions (the n highest) *)
 			print_message Debug_standard ("Removing the " ^ (string_of_int (program.nb_discrete + program.nb_clocks)) ^ " highest (clocks and discrete) dimensions in the constraint, to keep only the " ^ (string_of_int (program.nb_parameters)) ^ " lowest."); 
-			
 			(* Should be done already ?!! *)
 			hide_assign program.clocks_and_discrete k;
-			remove_dimensions (program.nb_discrete + program.nb_clocks) k ;
+			remove_dimensions (program.nb_discrete + program.nb_clocks) k ;*)
 			
 			(* find the points satisfying the constraint *)
 			let s = plot_2d x_param y_param k min_abs min_ord max_abs max_ord in
