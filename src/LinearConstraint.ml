@@ -989,21 +989,21 @@ let rename_variables list_of_couples linear_constraint =
 
 (* Generic time elapsing function *)
 (* 'reverse_direction' should be minus_one for growing, one for decreasing *)
-let time_elapse_gen_assign reverse_direction variable_elapse variable_constant linear_constraint =
-	(* Create the inequalities var = 1, for var in variable_elapse *)
+let time_elapse_gen_assign reverse_direction variables_elapse variables_constant linear_constraint =
+	(* Create the inequalities var = 1, for var in variables_elapse *)
 	let inequalities_elapse = List.map (fun variable ->
 		(* Create a linear term *)
 		let linear_term = make_linear_term [(NumConst.one, variable)] reverse_direction in
 		(* Create the inequality *)
 		make_linear_inequality linear_term Op_eq
-	) variable_elapse in
-	(* Create the inequalities var = 0, for var in variable_constant *)
+	) variables_elapse in
+	(* Create the inequalities var = 0, for var in variables_constant *)
 	let inequalities_constant = List.map (fun variable ->
 		(* Create a linear term *)
 		let linear_term = make_linear_term [(NumConst.one, variable)] NumConst.zero in
 		(* Create the inequality *)
 		make_linear_inequality linear_term Op_eq
-	) variable_constant in
+	) variables_constant in
 	(* Convert both sets of inequalities to a constraint *)
 	let linear_constraint_time = make (List.rev_append inequalities_elapse inequalities_constant) in
 	(* Assign the time elapsing using PPL *)
@@ -1018,9 +1018,9 @@ let time_elapse_gen_assign reverse_direction variable_elapse variable_constant l
 (** Time elapsing function *)
 let time_elapse_assign = time_elapse_gen_assign NumConst.minus_one
 
-let time_elapse variable_elapse variable_constant linear_constraint =
+let time_elapse variables_elapse variables_constant linear_constraint =
 	let linear_constraint = copy linear_constraint in
-	time_elapse_assign variable_elapse variable_constant linear_constraint;
+	time_elapse_assign variables_elapse variables_constant linear_constraint;
 	linear_constraint
 
 	
@@ -1067,7 +1067,21 @@ let substitute_variables sub linear_inequality =
 				Greater_Or_Equal (lsub, rsub))*)
 
 (** Time elapsing function, in backward direction *)
-let time_backward_assign = time_elapse_gen_assign NumConst.one
+let time_backward_assign variables_elapse variables_constant linear_constraint =
+	(* 1) Apply generic function *)
+	time_elapse_gen_assign NumConst.one variables_elapse variables_constant linear_constraint;
+	
+	(* 2) Constrain the elapsing variables to be non-negative! *)
+	(* Create the inequalities var >= 0, for var in variables_elapse *)
+	let inequalities_nonnegative = List.map (fun variable ->
+		(* Create a linear term *)
+		let linear_term = make_linear_term [(NumConst.one, variable)] NumConst.zero in
+		(* Create the inequality *)
+		make_linear_inequality linear_term Op_ge
+	) variables_elapse in
+	(* Take intersection *)
+	intersection_assign linear_constraint [(make inequalities_nonnegative)]
+	
 
 
 
@@ -1423,6 +1437,7 @@ let generate_points x y linear_constraint min_abs min_ord max_abs max_ord =
 
 	
 (* returns a string which indicate if some points have been found from ray and a string with 2d points of the given constraint *)
+(*** WARNING: does not work if parameters are negative (which should not happen but...) *)
 let plot_2d x y linear_constraint min_abs min_ord max_abs max_ord =
 
 	(* Print some information *)
@@ -1434,3 +1449,4 @@ let plot_2d x y linear_constraint min_abs min_ord max_abs max_ord =
 		s ^ (string_of_float x) ^ " " ^ (string_of_float y) ^ "\n"
 	) "" (snd shape) in 
 	((fst shape), str)
+

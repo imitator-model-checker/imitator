@@ -7,7 +7,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Ulrich Kuehne, Etienne Andre
  * Created:       2010
- * Last modified: 2013/01/28
+ * Last modified: 2013/01/31
  *
  ****************************************************************)
  
@@ -46,7 +46,7 @@ class imitator_options =
 		(* Print graph of reachable states *)
 		val mutable with_dot = ref false
 		(* Keep the source file used for dot *)
-		val mutable with_dot_source = ref false
+		val mutable with_graphics_source = ref false
 		(* Print logs *)
 		val mutable with_log = ref false
 		(* print parametric logs *)
@@ -134,7 +134,7 @@ class imitator_options =
 		method tree = !tree
 		method union = !union
 		method with_dot = !with_dot
-		method with_dot_source = !with_dot_source
+		method with_graphics_source = !with_graphics_source
 		method with_log = !with_log
 		method with_parametric_log = !with_parametric_log
 
@@ -214,7 +214,7 @@ class imitator_options =
 				("-verbose", String set_debug_mode_ref, " Print more or less information. Can be set to 'mute', 'standard', 'low', 'medium', 'high', 'total'. Default: 'standard'");
 				("-version", Unit (fun _ -> print_version_string (); exit 0), " Print version number and exit.");
 				("-with-dot", Set with_dot, " Trace set under a graphical form (using 'dot'). Default: false.");
-				("-with-dot-source", Set with_dot_source, " Keep file used for generating graphical output. Default: false.");
+				("-with-graphics-source", Set with_graphics_source, " Keep file(s) used for generating graphical output. Default: false.");
 				("-with-log", Set with_log, " Generation of log files (description of states). Default: false.");
 				("-with-parametric-log", Set with_parametric_log, " Adds the elimination of the clock variables in the constraints in the log files. Default: false.");
 

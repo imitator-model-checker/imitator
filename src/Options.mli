@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2012/05/10
- * Last modified: 2013/01/23
+ * Last modified: 2013/01/31
  *
  ****************************************************************)
 
@@ -43,7 +43,7 @@ class imitator_options :
 		val mutable tree : bool ref
 		val mutable union : bool ref
 		val mutable with_dot : bool ref
-		val mutable with_dot_source : bool ref
+		val mutable with_graphics_source : bool ref
 		val mutable with_log : bool ref
 		val mutable with_parametric_log : bool ref
 		
@@ -80,7 +80,7 @@ class imitator_options :
 		method tree : bool
 		method union : bool
 		method with_dot : bool
-		method with_dot_source : bool
+		method with_graphics_source : bool
 		method with_log : bool
 		method with_parametric_log : bool
 		method parse : unit

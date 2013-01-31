@@ -284,14 +284,13 @@ let cartography program pi0cube returned_constraint_list cartography_name =
 		(** TODO: Improve! Should perform an automatic detection of the program! *)
 		let execution = Sys.command !script_line in
 		if execution != 0 then
-			(print_error ("Something went wrong in the command. Exit code: " ^ (string_of_int execution) ^ ". Maybe you forgot to install the 'graph' utility."); abort_program());
+			(print_error ("Something went wrong in the command. Exit code: " ^ (string_of_int execution) ^ ". Maybe you forgot to install the 'graph' utility."););
 		
 		(* Print some information *)
 		print_message Debug_high ("Result of the cartography execution: exit code " ^ (string_of_int execution));
 
 		(* Remove files *)
-		(** WARNING: using with_dot_source which does not exactly correspond to this usage *)
-		if not options#with_dot_source then(
+		if not options#with_graphics_source then(
 			print_message Debug_medium ("Removing V0 file...");
 			delete_file file_v0_name;
 			print_message Debug_medium ("Removing script file...");
@@ -508,7 +507,7 @@ let dot program radical dot_source_file =
 
 		if options#with_dot then (
 			(* Write dot file *)
-			if options#with_dot_source then(
+			if options#with_graphics_source then(
 				print_message Debug_standard ("Creating source file for dot...");
 			)else(
 				print_message Debug_medium ("Writing to dot file...");
@@ -521,8 +520,11 @@ let dot program radical dot_source_file =
 			let command_result = Sys.command (dot_command ^ " -T" ^ dot_image_extension ^ " " ^ dot_file_name ^ " -o " ^ image_file_name ^ "") in
 			print_message Debug_medium ("Result of the 'dot' command: " ^ (string_of_int command_result));
 			
+			if command_result != 0 then
+				print_error ("Something went wrong in the command. Exit code: " ^ (string_of_int command_result) ^ ". Maybe you forgot to install the 'dot' utility.");
+			
 			(* Removing dot file (except if option) *)
-			if not options#with_dot_source then(
+			if not options#with_graphics_source then(
 				print_message Debug_medium ("Removing dot file...");
 				delete_file dot_file_name;
 			);
