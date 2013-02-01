@@ -7,17 +7,25 @@ Features:
 - Cartography can color in green and red according to the bad state definition
 - Added dynamic clock elimination (ongoing work)
 - Added branch and bound (ongoing work)
+- The random cartography is temporarily suspended
 
-Syntax:
-- region declaration not compulsory anymore (was not used anyway, just for Hytech retrocompatibility)
+Syntax in options:
 - -IMorig becomes -IMK
 - -debug becomes -verbose
+- -with-dot-source becomes -with-graphics-source
 - Merging option becomes (again?) "-merge"
 - Added -bab option (for branch and bound), work in progress
 - Added -counterex option (stops the analysis as soon as a counterexample is found), work in progress
 
+Syntax in model:
+- region declaration not compulsory anymore (was not used anyway, just for Hytech backward compatibility)
+- bad state definition added
+- Not everything allowed anymore at the end of the file! (before, everything was allowed for backward compatibility with HyTech) Need to add (optional) keyword "end" first
+
 Internal
 - Refactored BC code
+- The bounds for V0 are now NumConst (not "int" anymore)
+
 
 *******************************************************
 release 2.5.0    (2012-08-21)

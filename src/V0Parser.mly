@@ -5,15 +5,15 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created       : 2010/01/04
- * Last modified : 2010/03/04
+ * Last modified : 2013/02/01
 ***********************************************/
 
 %{
 
 %}
 
-%token <int> INT
-%token <float> FLOAT
+%token <NumConst.t> INT
+// %token <float> FLOAT
 %token <string> NAME
 
 %token OP_PLUS OP_MINUS OP_MULT OP_DIV
@@ -70,23 +70,23 @@ semicolon:
 ***********************************************/
 
 arithmetic_expr:
-	arithmetic_expr OP_PLUS expr_mult { $1 + $3 }
-	| arithmetic_expr OP_MINUS expr_mult { $1 - $3 }
+	arithmetic_expr OP_PLUS expr_mult { NumConst.add $1 $3 }
+	| arithmetic_expr OP_MINUS expr_mult { NumConst.sub $1 $3 }
 	| expr_mult { $1 }
 ;
 
 expr_mult:
-	expr_mult OP_MULT neg_atom { $1 * $3 }
-	| expr_mult OP_DIV neg_atom { $1 / $3 } // Divison par zero !!
-	| neg_atom { $1 }
-;
-
-neg_atom:
-	atom { $1 }
-	| OP_MINUS atom { 0 - $2 }
+	expr_mult OP_MULT atom { NumConst.mul $1 $3 }
+	| expr_mult OP_DIV atom { NumConst.div $1 $3 } // WARNING: Possible divison par zero !!
+	| atom { $1 }
 ;
 
 atom:
+	positive_atom { $1 }
+	| OP_MINUS positive_atom { NumConst.neg $2 }
+;
+
+positive_atom:
 	LPAREN arithmetic_expr RPAREN { $2 }
 	| number { $1 }
 ;

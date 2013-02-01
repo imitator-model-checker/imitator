@@ -135,7 +135,8 @@ let pi0_in_returned_constraint pi0 = function
 (* Generate a random pi0 in a given interval for each parameter (array view!) *)
 (*------------------------------------------------------------*)
 let random_pi0 program pi0 =
-	(* Create the pi0 *)
+	raise (InternalError "not implemented")
+(*	(* Create the pi0 *)
 	let random_pi0 = Array.make program.nb_parameters NumConst.zero in
 	(* Fill it *)
 	for i = 0 to program.nb_parameters - 1 do
@@ -149,7 +150,7 @@ let random_pi0 program pi0 =
 		random_pi0.(i) <- NumConst.numconst_of_int random_value;
 	done;
 	(* Return the result as an array *)
-	random_pi0
+	random_pi0*)
 
 
 (**************************************************)
@@ -526,8 +527,8 @@ let cover_behavioral_cartography program v0 init_state =
 	);
 	
 	(* Min & max bounds for the parameters *)
-	let min_bounds = Array.map (fun (low, high) -> NumConst.numconst_of_int low) v0 in
-	let max_bounds = Array.map (fun (low, high) -> NumConst.numconst_of_int high) v0 in
+	let min_bounds = Array.map (fun (low, high) -> low) v0 in
+	let max_bounds = Array.map (fun (low, high) -> high) v0 in
 	
 	(* Compute the (actually slightly approximate) number of points in V0 (for information purpose) *)
 	let nb_points = Array.fold_left (fun current_number (low, high) ->
@@ -536,10 +537,7 @@ let cover_behavioral_cartography program v0 init_state =
 			current_number
 			(NumConst.div
 				(NumConst.add
-					(NumConst.sub 
-						(NumConst.numconst_of_int high)
-						(NumConst.numconst_of_int low)
-					)
+					(NumConst.sub high low)
 					NumConst.one
 				)
 				options#step

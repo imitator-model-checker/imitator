@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created       : 2011/11/23
- * Last modified : 2012/10/24
+ * Last modified : 2013/01/31
 ************************************************************/
 
 
@@ -187,12 +187,13 @@ main : models EOF {$1}
 
 models : model {$1} |  models model 
        {      
-	 let declarations, automata, init_definitions, _  = $1 in
-	 let local_declarations, local_automaton, local_init_definitions, _  = $2 in
+	 let declarations, automata, init_definitions, _, _  = $1 in
+	 let local_declarations, local_automaton, local_init_definitions, _ , _ = $2 in
 	 let all_declarations = merge_declarations local_declarations declarations  in
 	 let all_automata = merge_automata local_automaton automata in
 	 let all_init_definitions = merge_init_definitions local_init_definitions init_definitions in 
-	  		  all_declarations, all_automata, all_init_definitions, []
+			(*** HACK: need to consider bad and carto as well (or?) *)
+	  		  all_declarations, all_automata, all_init_definitions, [], ([] , (NumConst.zero,NumConst.zero) , (NumConst.zero,NumConst.zero))
 	}	
 
 /************************************************************
@@ -203,7 +204,8 @@ model:
 	{
 		let declarations, states, transitions = $2 in
 		let automata, init_definition = convert declarations states transitions in
-		declarations, automata, init_definition, []
+		(*** HACK: need to consider bad and carto as well (or?) *)
+		declarations, automata, init_definition, [], ([] , (NumConst.zero,NumConst.zero) , (NumConst.zero,NumConst.zero))
 	}
 ;
 

@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2009/09/08
- * Last modified: 2013/01/31
+ * Last modified: 2013/02/01
  *
  ****************************************************************)
 
@@ -15,6 +15,16 @@
 
 let program_name = "IMITATOR"
 let version_string = "2.5.1 (unstable)"
+
+let header_string =
+	"************************************************************\n"
+	^ "*  IMITATOR " ^ version_string ^ " *\n"
+	^ "*                                                          *\n"
+	^ "*             Etienne ANDRE, Ulrich KUEHNE, Romain SOULAT  *\n"
+	^ "*                                             2009 - 2013  *\n"
+	^ "*                       LSV, ENS de Cachan & CNRS, France  *\n"
+	^ "*  LIPN, Universite Paris 13, Sorbonne Paris Cite, France  *\n"
+	^ "************************************************************"
 
 let print_version_string _ = 
 	print_string (program_name ^ " " ^ version_string ^ "\n");

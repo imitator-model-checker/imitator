@@ -203,9 +203,21 @@ let g  = ( >/ )
 (**************************************************)
 let is_integer n =
 	(* Zero is an integer! *)
-	equal n zero ||
+	(*** WARNING: added one as well, because the cmp test below did not work for one *)
+	equal n zero || equal n one ||
 	(* Then check denominator = numerator *)
-	(get_num n) = (get_den n)
+	(
+		(*print_string (Gmp.Z.to_string (get_num n));
+		print_string "/";
+		print_string (Gmp.Z.to_string (get_num n));
+		print_string "\n";
+		print_string ("  Check num = den: " ^ (string_of_bool ((get_num n) = (get_den n))));
+		print_string "\n";
+		print_string ("  Check cmp (num , den): " ^ (string_of_int (Gmp.Z.cmp (get_num n) (get_den n))));
+		print_string "\n";*)
+		(*** WARNING: should not use directly (get_num n) = (get_den n), because got strange results *)
+		(Gmp.Z.cmp (get_num n) (get_den n)) > 0
+	)
 
 
 

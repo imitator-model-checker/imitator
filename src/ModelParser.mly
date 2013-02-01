@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created       : 2009/09/07
- * Last modified : 2013/01/28
+ * Last modified : 2013/01/31
 ***********************************************/
 
 %{
@@ -38,11 +38,11 @@ let parse_error s =
 %token
 	CT_AND CT_AUTOMATON
 	CT_BAD
-	CT_CLOCK
+	CT_CARTO CT_CLOCK
 	CT_DISCRETE CT_DO
 	CT_END CT_EXISTS_ACTION CT_EXISTS_LOCATION
 	CT_FALSE
-	CT_GOTO
+	CT_GOOD CT_GOTO
 	CT_IF CT_INIT CT_INITIALLY
 	CT_LOC CT_LOCATIONS
 	CT_NOT
@@ -51,6 +51,7 @@ let parse_error s =
 	CT_REGION
 	CT_STOP CT_SYNC CT_SYNCLABS
 	CT_TRUE
+	CT_UNKNOWN
 	CT_VAR
 	CT_WAIT CT_WHEN CT_WHILE
 
@@ -71,8 +72,8 @@ main:
 	 automata_descriptions commands EOF
 	{
 		let decl, automata = $1 in
-		let init, bad = $2 in
-		decl, automata, init, bad
+		let init, bad, carto = $2 in
+		decl, automata, init, bad, carto
 	}
 ;
 
@@ -314,6 +315,7 @@ linear_term:
 	rational { Constant $1 }
 	| rational NAME { Variable ($1, $2) }
 	| rational OP_MUL NAME { Variable ($1, $3) }
+	| OP_MINUS NAME { Variable (NumConst.minus_one, $2) }
 	| NAME { Variable (NumConst.one, $1) }
 // 	| LPAREN linear_expression RPAREN { $2 }
 	| LPAREN linear_term RPAREN { $2 }
@@ -378,8 +380,8 @@ pos_float:
 ***********************************************/
 
 commands:
-	| init_declaration_opt init_definition bad_definition rest_of_commands { ($2, $3) }
-	| init_declaration_opt init_definition rest_of_commands { ($2, []) }
+	| init_declaration_opt init_definition bad_definition carto_definition rest_of_commands_opt { ($2, $3, $4) }
+// 	| init_declaration_opt init_definition bad_definition { ($2, $3, ([] , (NumConst.zero,NumConst.zero) , (NumConst.zero,NumConst.zero))) }
 ;
 
 
@@ -413,6 +415,14 @@ region_name:
 	| CT_BAD { }
 ;
 
+rest_of_commands_opt:
+	/* print (reach forward from init endreach); */
+/*	| CT_PRINT LPAREN CT_REACH CT_FORWARD CT_FROM region_name CT_ENDREACH RPAREN SEMICOLON { }
+	| { }*/
+	/* Allow anything from here! (to ensure compatibility with HyTech or other similar tools) */
+	| CT_END rest_of_commands { }
+	| { }
+
 rest_of_commands:
 	/* print (reach forward from init endreach); */
 /*	| CT_PRINT LPAREN CT_REACH CT_FORWARD CT_FROM region_name CT_ENDREACH RPAREN SEMICOLON { }
@@ -436,14 +446,41 @@ init_definition:
 bad_definition:
 // TODO: improve the bad definitions
 	// Case: action
-	| CT_BAD OP_ASSIGN CT_EXISTS_ACTION NAME SEMICOLON { [Exists_action $4] }
+	// TODO: reintroduce
+// 	| CT_BAD OP_ASSIGN CT_EXISTS_ACTION NAME SEMICOLON { [Exists_action $4] }
 	// Case: location
-	| CT_BAD OP_ASSIGN CT_EXISTS_LOCATION loc_predicate { let a,b = $4 in [(Exists_location (a , b))] }
+	| CT_BAD OP_ASSIGN CT_EXISTS_LOCATION loc_predicate SEMICOLON { let a,b = $4 in [(Exists_location (a , b))] }
+	// Case: no bad region
+	|  { [] }
 	// NOTE: Old version
 // 	| CT_BAD OP_ASSIGN loc_expression SEMICOLON { $3 }
 ;
 
-// NOTE: Old version
+convex_predicate_with_nature:
+	// TODO WARNING BUG 
+// 	| convex_predicate LBRACE CT_GOOD RBRACE { $1, Good }
+// 	| convex_predicate LBRACE CT_BAD RBRACE { $1, Bad }
+// 	| convex_predicate LBRACE CT_UNKNOWN RBRACE { $1, Unknown }
+// 	| convex_predicate LBRACE RBRACE { $1, Unknown }
+	| convex_predicate { $1, Unknown }
+
+carto_definition:
+	| CT_CARTO OP_ASSIGN carto_definition_interval OP_MUL carto_definition_interval convex_predicate_with_nature carto_definition_foll SEMICOLON { $6 :: $7 , $3 , $5 }
+// 	| CT_CARTO OP_ASSIGN convex_predicate_with_nature carto_definition_foll SEMICOLON { $3 :: $4 , (NumConst.zero,NumConst.zero) , (NumConst.zero,NumConst.zero) }
+// 	| CT_CARTO OP_ASSIGN   SEMICOLON { [] , (NumConst.zero,NumConst.zero) , (NumConst.zero,NumConst.zero) }
+	// WARNING: bad prog below
+	|  { [] , (NumConst.zero,NumConst.zero) , (NumConst.zero,NumConst.zero) }
+;
+
+carto_definition_interval:
+	| LPAREN pos_integer COMMA pos_integer RPAREN { ($2,$4) }
+;
+
+carto_definition_foll:
+	| PIPE convex_predicate_with_nature carto_definition_foll { $2 :: $3 }
+	| { [] }
+
+//// NOTE: Old version
 // loc_expression:
 // 	| loc_predicate { [ $1 ] }
 // 	| loc_predicate AMPERSAND loc_expression { $1 :: $3 }

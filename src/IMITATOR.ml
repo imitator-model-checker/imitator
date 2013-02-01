@@ -136,6 +136,15 @@ let parser_lexer_from_string the_parser the_lexer the_string =
 (**************************************************)
 
 
+(**************************************************)
+(**************************************************)
+(* Print startup message *)
+(**************************************************)
+(**************************************************)
+
+print_message Debug_standard header_string;
+
+
 
 (**************************************************)
 (* Get the arguments *)
@@ -148,23 +157,6 @@ options#parse;
 (* Set the options (for other modules) *)
 Input.set_options options;
 
-
-(**************************************************)
-(**************************************************)
-(* Print startup message *)
-(**************************************************)
-(**************************************************)
-
-print_message Debug_standard
-	( "************************************************************");
-Printf.printf " *  IMITATOR %-46s *\n" version_string;
-print_message Debug_standard
-	( "*                                                          *\n"
-	^ "*             Etienne ANDRE, Ulrich KUEHNE, Romain SOULAT  *\n"
-	^ "*                                             2009 - 2013  *\n"
-	^ "*                       LSV, ENS de Cachan & CNRS, France  *\n"
-	^ "*  LIPN, Universite Paris 13, Sorbonne Paris Cite, France  *\n"
-	^ "************************************************************");
 
 
 (**************************************************)
@@ -462,6 +454,22 @@ if options#pta2jpg then(
 	Graphics.dot program options#file translated_model;
 	terminate_program()
 );
+
+(* Direct cartography output *)
+if options#cartonly then(
+	print_message Debug_standard ("Direct output of a cartography (no analysis will be run).");
+	(* Get the parameters *)
+	let constraints , (p1_min , p1_max) , (p2_min , p2_max) = program.carto in
+	(* Transform the constraint for cartography *)
+	let constraints = List.map (fun (linear_constraint , tile_nature) ->
+		Convex_constraint (linear_constraint , tile_nature)
+	) constraints in
+	(* Call the cartography *)
+	Graphics.cartography program [| (p1_min , p1_max); (p2_min , p2_max) |] constraints options#file;
+	(* The end *)
+	terminate_program()
+);
+(* 		| End_of_file -> print_error ("Parsing error in file " ^ file_name ^ ": unexpected end of file."); abort_program (); exit(0) *)
 
 
 

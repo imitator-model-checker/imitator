@@ -245,8 +245,8 @@ let string_of_v0 program v0 =
 			^ " = "
 			^ (let min_bound, max_bound = v0.(parameter) in
 				if min_bound = max_bound
-					then string_of_int min_bound
-					else (string_of_int min_bound) ^ ".." ^ (string_of_int max_bound)
+					then NumConst.string_of_numconst min_bound
+					else (NumConst.string_of_numconst min_bound) ^ ".." ^ (NumConst.string_of_numconst max_bound)
 			)
 		) program.parameters
 	)

@@ -37,7 +37,7 @@ type action_name = string
 (* type pi0 = NumConst.t array *)
 type pi0 = variable_index -> NumConst.t
 
-type v0 = (int * int) array
+type v0 = (NumConst.t * NumConst.t) array
 
 
 (****************************************************************)
@@ -100,6 +100,15 @@ type bad_predicate =
 
 (* TODO: allow several definitions *)
 type bad_definition  = bad_predicate (*list*)
+
+
+(****************************************************************)
+(** Nature of the tiles *)
+(****************************************************************)
+type tile_nature =
+	| Good
+	| Bad
+	| Unknown
 
 
 (****************************************************************)
@@ -174,19 +183,12 @@ type abstract_program = {
 	(* Init : the initial state *)
 	initial_constraint : linear_constraint;
 
-	(* bad states *)
-	bad : bad_definition (*(automaton_index * location_index) list*);
+	(* Bad states *)
+	bad : bad_definition;
+	(* Set of polyhedra (only used for direct cartography without running the model) *)
+	carto : (linear_constraint * tile_nature) list * (NumConst.t * NumConst.t) * (NumConst.t * NumConst.t);
 }
 
-
-
-(****************************************************************)
-(** Nature of the tiles *)
-(****************************************************************)
-type tile_nature =
-	| Good
-	| Bad
-	| Unknown
 
 
 (****************************************************************)

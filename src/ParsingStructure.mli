@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2009/09/08
- * Last modified: 2013/01/28
+ * Last modified: 2013/01/31
  *
  ****************************************************************)
 
@@ -117,12 +117,24 @@ type bad_predicate =
 
 type bad_definition  = bad_predicate list
 
+(****************************************************************)
+(** Carto definition *)
+(****************************************************************)
+
+type tile_nature =
+	| Good
+	| Bad
+	| Unknown
+
+(*** BADPROG: should not mix AbstractModel here (but it's easier) *)
+type carto_definition  = (convex_predicate * tile_nature) list * (NumConst.t * NumConst.t) * (NumConst.t * NumConst.t)
+
 
 (****************************************************************)
 (** Input program *)
 (****************************************************************)
 
-type parsing_structure = variable_declarations * automata * init_definition * bad_definition
+type parsing_structure = variable_declarations * automata * init_definition * bad_definition * carto_definition
 
 (****************************************************************)
 (** Input pi0 *)
@@ -130,4 +142,4 @@ type parsing_structure = variable_declarations * automata * init_definition * ba
 
 type pi0 = (string *  NumConst.t) list
 
-type v0 = (string * int * int) list
+type v0 = (string * NumConst.t * NumConst.t) list

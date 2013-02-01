@@ -7,7 +7,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2009/09/09
- * Last modified: 2013/01/28
+ * Last modified: 2013/01/31
  *
  ****************************************************************)
 
@@ -38,6 +38,15 @@ exception InvalidPi0
 
 (* For constraint conversion *)
 exception False_exception
+
+
+(*--------------------------------------------------*)
+(* Convert a ParsingStructure.tile_nature into a AbstractModel.tile_nature *)
+(*--------------------------------------------------*)
+let convert_tile_nature = function
+	| ParsingStructure.Good -> AbstractModel.Good
+	| ParsingStructure.Bad -> AbstractModel.Bad
+	| ParsingStructure.Unknown -> AbstractModel.Unknown
 
 
 (*--------------------------------------------------*)
@@ -861,9 +870,9 @@ let check_v0 v0 parameters_names =
 	(* Check that the intervals are not null *)
 	let all_intervals_ok = List.fold_left
 		(fun all_intervals_ok (variable_name, a, b) ->
-			if a <= b then all_intervals_ok
+			if NumConst.le a b then all_intervals_ok
 			else (
-				print_error ("The interval [" ^ (string_of_int a) ^ ", " ^ (string_of_int b) ^ "] is null for parameter '" ^ variable_name ^ "' in v0.");
+				print_error ("The interval [" ^ (NumConst.string_of_numconst a) ^ ", " ^ (NumConst.string_of_numconst b) ^ "] is null for parameter '" ^ variable_name ^ "' in v0.");
 				false
 			)
 		)
@@ -1303,7 +1312,7 @@ let make_pi0 parsed_pi0 variables nb_parameters =
 	pi0
 
 let make_v0 parsed_v0 index_of_variables nb_parameters =
-	let v0 = Array.make nb_parameters (0, 0) in
+	let v0 = Array.make nb_parameters (NumConst.zero, NumConst.zero) in
 	List.iter (fun (variable_name, a, b) ->
 		try
 		(* Get the variable index *)
@@ -1349,7 +1358,7 @@ let get_clocks_in_updates : clock_updates -> Automaton.clock_index list = functi
 (*--------------------------------------------------*)
 (* Convert the parsing structure into an abstract program *)
 (*--------------------------------------------------*)
-let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_automata, parsed_init_definition, parsed_bad_definition) parsed_pi0 parsed_v0 options =
+let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_automata, parsed_init_definition, parsed_bad_definition, parsed_carto_definition) parsed_pi0 parsed_v0 options =
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Debug functions *) 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -1578,7 +1587,7 @@ let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_
 
 	
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* check bad state definition *)
+	(* Check bad state definition *)
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* WARNING: might be a problem if the check_automata test fails *)
 	let bad, well_formed_bad =
@@ -1586,9 +1595,30 @@ let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_
 		
 		
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(* Check polyhedra definition in (optional) carto mode *)
+	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	let well_formed_carto = ref true in
+	let parsed_constraints , (p1_min , p1_max) , (p2_min , p2_max)  = parsed_carto_definition in
+	let carto_linear_constraints = List.map (fun (parsed_convex_predicate , tile_nature) ->
+		(* Check well-formedness *)
+		if check_convex_predicate variable_names constants parsed_convex_predicate then(
+			(* Convert to a AbstractModel.linear_constraint *)
+			linear_constraint_of_convex_predicate index_of_variables constants parsed_convex_predicate
+			,
+			(* Convert the tile nature *)
+			convert_tile_nature tile_nature
+		)else(
+			(* Set well-formedness to false *)
+			well_formed_carto := false;
+			(* Return anything *)
+			LinearConstraint.false_constraint () , AbstractModel.Unknown
+		)
+	) parsed_constraints in
+	
+	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* exit if not well formed *)
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	if not (well_formed_automata && well_formed_bad && well_formed_init)
+	if not (well_formed_automata && well_formed_bad && well_formed_init && !well_formed_carto)
 		then raise InvalidModel;
 
 
@@ -1600,10 +1630,10 @@ let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_
 		match options#imitator_mode with
 		| Translation -> 
 			(* Return blank values *)
-			Array.make 0 NumConst.zero, Array.make 0 (0, 0)
+			Array.make 0 NumConst.zero, Array.make 0 (NumConst.zero, NumConst.zero)
 		| Reachability_analysis -> 
 			(* Return blank values *)
-			Array.make 0 NumConst.zero, Array.make 0 (0, 0)
+			Array.make 0 NumConst.zero, Array.make 0 (NumConst.zero, NumConst.zero)
 		| Inverse_method -> 
 			print_message Debug_total ("*** Building reference valuation...");
 			(* Verification of the pi_0 *)
@@ -1611,7 +1641,7 @@ let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_
 			(* Construction of the pi_0 *)
 			let pi0 = make_pi0 parsed_pi0 variables nb_parameters in
 			(* Return the pair *)
-			pi0, Array.make 0 (0, 0)
+			pi0, Array.make 0 (NumConst.zero, NumConst.zero)
 		| _ -> 
 			print_message Debug_total ("*** Building reference rectangle...");
 			(* Verification of the pi_0 *)
@@ -1755,7 +1785,7 @@ let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_
 			print_message Debug_medium ("\n*** Reference rectangle V0:");
 			Array.iteri (fun i (a, b) ->
 				print_message Debug_medium (
-					variables.(i) ^ " : [" ^ (string_of_int a) ^ ", " ^ (string_of_int b) ^ "]"
+					variables.(i) ^ " : [" ^ (NumConst.string_of_numconst a) ^ ", " ^ (NumConst.string_of_numconst b) ^ "]"
 				)
 			) v0
 	);
@@ -1832,6 +1862,8 @@ let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_
 	initial_constraint = initial_constraint;
 	(* Bad states *)
 	bad = (*bad_state_pairs*) bad;
+	(* Optional polyhedra *)
+	carto = carto_linear_constraints , (p1_min , p1_max) , (p2_min , p2_max);
 	}
 
 	,

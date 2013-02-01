@@ -76,7 +76,7 @@ let make_file_name cartography_name file_index =
 (*------------------------------------------------------------*)
 (* print the cartography which correspond to the list of constraint *)
 (*------------------------------------------------------------*)
-let cartography program pi0cube returned_constraint_list cartography_name =
+let cartography program v0 returned_constraint_list cartography_name =
 	(* Retrieve the input options *)
 	let options = Input.get_options () in
 	
@@ -116,8 +116,8 @@ let cartography program pi0cube returned_constraint_list cartography_name =
 	(* find indices of first two variables with a parameter range *)
 	let range_params = ref [] in
 	Array.iteri (fun index (a,b) -> 
-		if a <> b then range_params := index :: !range_params
-	) pi0cube;
+		if NumConst.neq a b then range_params := index :: !range_params
+	) v0;
 	range_params := List.rev !range_params;
 
 	if (List.length !range_params) < 2 then
@@ -135,7 +135,30 @@ let cartography program pi0cube returned_constraint_list cartography_name =
 		(* Find the V0 zone *)
 		let file_v0_name = cartography_name^"_v0.txt" in
 		let file_zone = open_out file_v0_name in
-		let str_zone = ((string_of_float (float_of_int (fst (pi0cube.(x_param)))))^" "^(string_of_float (float_of_int (snd (pi0cube.(y_param)))))^"\n"^	(string_of_float (float_of_int (snd (pi0cube.(x_param)))))^" "^(string_of_float (float_of_int (snd (pi0cube.(y_param)))))^"\n"^	(string_of_float (float_of_int (snd (pi0cube.(x_param)))))^" "^(string_of_float (float_of_int (fst (pi0cube.(y_param)))))^"\n"^	(string_of_float (float_of_int (fst (pi0cube.(x_param)))))^" "^(string_of_float (float_of_int (fst (pi0cube.(y_param)))))^"\n"^	(string_of_float (float_of_int (fst (pi0cube.(x_param)))))^" "^(string_of_float (float_of_int (snd (pi0cube.(y_param)))))) in
+		
+		
+		(* Convert a num_const to a string, specifically for Graph *)
+		let graph_string_of_numconst n = 
+			(* Check that it is an integer *)
+			if not (NumConst.is_integer n) then(
+				raise (InternalError("Only integers can be handled for the cartography, so far. Found: '" ^ (NumConst.string_of_numconst n) ^ "'"))
+			);
+			(* Convert to a string, and add a "." at the end *)
+			(NumConst.string_of_numconst n) ^ "."
+		in
+		
+		let str_zone =
+			     (graph_string_of_numconst (fst (v0.(x_param))))
+			^" "^(graph_string_of_numconst (snd (v0.(y_param))))
+			^"\n"^(graph_string_of_numconst (snd (v0.(x_param))))
+			^" "^ (graph_string_of_numconst (snd (v0.(y_param))))
+			^"\n"^(graph_string_of_numconst (snd (v0.(x_param))))
+			^" "^ (graph_string_of_numconst (fst (v0.(y_param))))
+			^"\n"^(graph_string_of_numconst (fst (v0.(x_param))))
+			^" "^ (graph_string_of_numconst (fst (v0.(y_param))))
+			^"\n"^(graph_string_of_numconst (fst (v0.(x_param))))
+			^" "^ (graph_string_of_numconst (snd (v0.(y_param))))
+		in
 		output_string file_zone str_zone;
 		close_out file_zone;
 		(* Beginning of the script *)
@@ -143,8 +166,8 @@ let cartography program pi0cube returned_constraint_list cartography_name =
 		(* find the minimum and maximum abscissa and ordinate for each constraint and store them in a list *)
 		
 		(* get corners of v0 *)
-		let init_min_abs, init_max_abs = pi0cube.(x_param) in
-		let init_min_ord, init_max_ord = pi0cube.(y_param) in
+		let init_min_abs, init_max_abs = v0.(x_param) in
+		let init_min_ord, init_max_ord = v0.(y_param) in
 (*		(* convert to float *)
 		let init_min_abs = float_of_int init_min_abs in
 		let init_max_abs = float_of_int init_max_abs in
@@ -165,11 +188,16 @@ let cartography program pi0cube returned_constraint_list cartography_name =
 			) limits points  		 
 		) (init_min_abs, init_max_abs, init_min_ord, init_max_ord) new_returned_constraint_list in*)
 
+		(* Conversion to float, because all functions handle floats *)
+		
+		(*** WARNING! very dangerous here! may not work for big integers *)
+		let bad_float_of_num_const n = float_of_string (NumConst.string_of_numconst n) in
+
 		(* Find mininma and maxima for axes (version Etienne, who finds imperative here better ) *)
-		let min_abs = ref (float_of_int init_min_abs) in
-		let max_abs = ref (float_of_int init_max_abs) in
-		let min_ord = ref (float_of_int init_min_ord) in
-		let max_ord = ref (float_of_int init_max_ord) in
+		let min_abs = ref (bad_float_of_num_const init_min_abs) in
+		let max_abs = ref (bad_float_of_num_const init_max_abs) in
+		let min_ord = ref (bad_float_of_num_const init_min_ord) in
+		let max_ord = ref (bad_float_of_num_const init_max_ord) in
 		(* Update min / max for ONE linear_constraint *)
 		let update_min_max linear_constraint =
 			let points, _ = shape_of_poly x_param y_param linear_constraint in
@@ -217,6 +245,7 @@ let cartography program pi0cube returned_constraint_list cartography_name =
 		done;*)
 
 		(*** BAD PROG : bouh pas beau *)
+		(*** WARNING: it looks like file_index = tile_index, always! *)
 		let file_index = ref 0 in
 		let tile_index = ref 0 in
 		(* Creation of files (Daphne wrote this?) *)
@@ -261,12 +290,28 @@ let cartography program pi0cube returned_constraint_list cartography_name =
 				else script_line := !script_line ^ "-m " ^ (graph_color_of_int !tile_index tile_nature false) ^ " -q 0.7 " ^ file_name ^ " "
 			;
 		in
-
+		
 		(* For all returned_constraint *)
 		List.iter (function
-			| Convex_constraint (k, tn) -> tile_index := !tile_index + 1; create_file_for_constraint k tn
+			| Convex_constraint (k, tn) ->
+				(*** WARNING: duplicate code *)
+				(* Test just in case ! (otherwise an exception arises *)
+				if LinearConstraint.is_false k then(
+					print_warning " Found a false constraint when computing the cartography. Ignored."
+				)else(
+					tile_index := !tile_index + 1;
+					create_file_for_constraint k tn
+				)
 			| Union_of_constraints (list_of_k, tn) ->
-				List.iter (fun k -> tile_index := !tile_index + 1; create_file_for_constraint k tn) list_of_k
+				List.iter (fun k -> 
+					(*** WARNING: duplicate code *)
+					(* Test just in case ! (otherwise an exception arises *)
+					if LinearConstraint.is_false k then(
+						print_warning " Found a false constraint when computing the cartography. Ignored."
+					)else(
+						tile_index := !tile_index + 1;
+						create_file_for_constraint k tn
+					)				) list_of_k
 		) new_returned_constraint_list;
 
 		
@@ -279,7 +324,7 @@ let cartography program pi0cube returned_constraint_list cartography_name =
 		(* Print some information *)
 		print_message Debug_standard (
 			"Plot cartography projected on parameters " ^ x_name ^ ", " ^ y_name
-			^ " to file '" ^ final_name ^ "'"); 
+			^ " to file '" ^ final_name ^ "'."); 
 		(* execute the script *)
 		(** TODO: Improve! Should perform an automatic detection of the program! *)
 		let execution = Sys.command !script_line in

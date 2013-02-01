@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created       : 2009/09/07
- * Last modified : 2013/01/28
+ * Last modified : 2013/01/31
 *****************************************************************)
 
 {
@@ -42,6 +42,7 @@ rule token = parse
 (* 	| "backward"       { CT_BACKWARD } *)
 (* 	| "cldiff"         { CT_CLDIFF } *)
 	| "bad"            { CT_BAD }
+	| "carto"          { CT_CARTO }
 	| "clock"          { CT_CLOCK }
 (*	| "d"              { CT_D }*)
 	| "discrete"       { CT_DISCRETE }
@@ -59,6 +60,7 @@ rule token = parse
 (* 	| "forward"        { CT_FORWARD } *)
 (* 	| "free"           { CT_FREE } *)
 (* 	| "from"           { CT_FROM } *)
+	| "good"           { CT_GOOD }
 	| "goto"           { CT_GOTO }
 (* 	| "hide"           { CT_HIDE } *)
 (* 	| "hull"           { CT_HULL } *)
@@ -90,6 +92,7 @@ rule token = parse
 (* 	| "to"             { CT_TO } *)
 (* 	| "trace"          { CT_TRACE } *)
 	| "True"           { CT_TRUE }
+(* 	| "unknown"        { CT_UNKNOWN } *)
 (* 	| "using"          { CT_USING } *)
 	| "var"            { CT_VAR }
 	| "wait"           { CT_WAIT }

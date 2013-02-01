@@ -35,6 +35,8 @@ class imitator_options =
 		
 		(* plot cartography *)
 		val mutable cart = ref false
+		(* only plot cartography *)
+		val mutable cartonly = ref false
 		(* plot fancy states in dot *)
 		val mutable fancy = ref false
 		(* prefix for output files *)
@@ -107,6 +109,7 @@ class imitator_options =
 		method branch_and_bound = !branch_and_bound
 		method branch_and_bound_unset = (branch_and_bound := false)
 		method cart = !cart
+		method cartonly = !cartonly
 		method counterex = !counterex
 		(* method dynamic = !dynamic *)
 		method dynamic_clock_elimination = !dynamic_clock_elimination
@@ -175,7 +178,7 @@ class imitator_options =
 					(* Find the number *)
 					let number = String.sub mode 6 (String.length mode - 6) in
 					imitator_mode := (Random_cartography (int_of_string number))
-				) with Failure _ -> (
+				) with Failure _ | Invalid_argument _-> (
 					print_error ("The mode '" ^ mode ^ "' is not valid.");
 					Arg.usage speclist usage_msg;
 					abort_program ();
@@ -185,8 +188,9 @@ class imitator_options =
 			(* Options *)
 			and speclist = [
 				("-acyclic", Set acyclic, " Test if a new state was already encountered only with states of the same depth. To be set only if the system is fully acyclic (no backward branching, i.e., no cycle). Default: 'false'");
-				("-bab", Set branch_and_bound, " Experimental new feature of IMITATOR, based on cost optimization. Default: 'false'");
+				("-bab", Set branch_and_bound, " Experimental new feature of IMITATOR, based on cost optimization (WORK IN PROGRESS). Default: 'false'");
 				("-cart", Set cart, " Plot cartography before terminating the program. Uses the first two parameters with ranges. Default: false.");
+				("-cartonly", Unit (fun _ -> cart := true; cartonly := true; imitator_mode := Translation), " Only prints a cartography. Default: false.");
 (* 				("-dynamic", Set dynamic, "Perform the on-the-fly intersection. Defaut : 'false'"); *)
 				("-counterex", Set counterex, " Stop the analysis as soon as a bad state is discovered (work in progress). Default: false.");
 				("-depth-limit", Int (fun i -> post_limit := Some i), " Limits the depth of the exploration of the reachability graph. Default: no limit.");

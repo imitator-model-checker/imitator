@@ -15,6 +15,7 @@ class imitator_options :
 		val mutable acyclic : bool ref
 		val mutable branch_and_bound : bool ref
 		val mutable cart : bool ref
+		val mutable cartonly : bool ref
 		val mutable counterex : bool ref
 (* 		val mutable dynamic : bool ref *)
 		val mutable dynamic_clock_elimination : bool ref
@@ -52,6 +53,7 @@ class imitator_options :
 		method branch_and_bound : bool
 		method branch_and_bound_unset : unit
 		method cart : bool
+		method cartonly : bool
 		method counterex : bool
 (* 		method dynamic : bool *)
 		method dynamic_clock_elimination : bool
