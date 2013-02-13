@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Ulrich Kuehne, Etienne Andre
  * Created:       2010/07/22
- * Last modified: 2013/01/28
+ * Last modified: 2013/02/13
  *
  ************************************************************)
 
@@ -1370,6 +1370,8 @@ let inverse_method_check_constraint program reachability_graph constr =
 		print_message Debug_low ("\nFound a pi0-incompatible state.");
 		(* Print some information *)
 		if debug_mode_greater Debug_medium then(
+			print_message Debug_high ("Associated constraint:");
+			print_message Debug_high (LinearConstraint.string_of_linear_constraint program.variable_names constr);
 			print_message Debug_medium ("\nThe following inequalities are pi0-incompatible:");
 			List.iter (fun inequality -> print_message Debug_medium (LinearConstraint.string_of_linear_inequality program.variable_names inequality)) incompatible;
 		);
@@ -1618,6 +1620,15 @@ let post program reachability_graph orig_state_index =
 					) else (
 						inverse_method_check_constraint program reachability_graph final_constraint
 					) in
+					
+					(* Print some debug information *)
+					if debug_mode_greater Debug_high then(
+						(* Means state was not compatible *)
+						if not add_new_state then(
+							let new_state = location, final_constraint in
+							print_message Debug_high ("The pi-incompatible state had been computed through action '" ^ (program.action_names action_index) ^ "', and was:\n" ^ (string_of_state program new_state));
+						);
+					);
 					
 					if add_new_state then (
 						(* Create the state *)

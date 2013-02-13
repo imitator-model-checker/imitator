@@ -163,6 +163,9 @@ Input.set_options options;
 (* Recall the arguments *)
 (**************************************************)
 
+(* Print date *)
+print_message Debug_standard ("Analysis time: " ^ (now()) ^ "\n");
+
 (* File *)
 print_message Debug_standard ("Model: " ^ options#file);
 

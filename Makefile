@@ -549,7 +549,7 @@ exe:
 
 # 	$(TARGET) $(EXAMPLE_PATH)/Tests/testpoly.imi -cartonly
 
-	$(TARGET) $(EXAMPLE_PATH)/Others/test.imi $(EXAMPLE_PATH)/Others/test.pi0 -with-dot-with-log -with-parametric-log
+	$(TARGET) $(EXAMPLE_PATH)/Others/test.imi $(EXAMPLE_PATH)/Others/test.pi0 -with-dot -with-log -with-parametric-log -depth-limit 7 -verbose high -fancy
 # 	$(TARGET) $(EXAMPLE_PATH)/Others/test2.imi $(EXAMPLE_PATH)/Others/test2.v0 -mode cover -incl -merge -cart -with-dot
 # 	$(TARGET) $(EXAMPLE_PATH)/Others/test3.imi $(EXAMPLE_PATH)/Others/test3.v0 -mode cover -merge -cart
 # 	$(TARGET) $(EXAMPLE_PATH)/Others/test3.imi $(EXAMPLE_PATH)/Others/test3.v0 -mode border -merge -cart -step 0.1

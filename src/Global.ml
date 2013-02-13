@@ -5,9 +5,19 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2009/09/08
- * Last modified: 2013/02/01
+ * Last modified: 2013/02/13
  *
  ****************************************************************)
+
+ 
+ 
+(****************************************************************)
+(** Modules *)
+(****************************************************************)
+
+open Unix
+(*  open Printf  *)
+ 
 
 (****************************************************************)
 (** Version string *)
@@ -15,16 +25,6 @@
 
 let program_name = "IMITATOR"
 let version_string = "2.5.1 (unstable)"
-
-let header_string =
-	"************************************************************\n"
-	^ "*  IMITATOR " ^ version_string ^ " *\n"
-	^ "*                                                          *\n"
-	^ "*             Etienne ANDRE, Ulrich KUEHNE, Romain SOULAT  *\n"
-	^ "*                                             2009 - 2013  *\n"
-	^ "*                       LSV, ENS de Cachan & CNRS, France  *\n"
-	^ "*  LIPN, Universite Paris 13, Sorbonne Paris Cite, France  *\n"
-	^ "************************************************************"
 
 let print_version_string _ = 
 	print_string (program_name ^ " " ^ version_string ^ "\n");
@@ -162,6 +162,50 @@ let after_seconds () =
 (** Set the timed mode *)
 let set_timed_mode () =
 	timed_mode := true
+
+
+
+
+(****************************************************************)
+(** Date functions *)
+(****************************************************************)
+
+let days = [| "Sun"; "Mon"; "Tue"; "Wed"; "Thu"; "Fri"; "Sat" |]
+let months = [| "Jan"; "Feb"; "Mar"; "Apr"; "May"; "Jun";
+				"Jul"; "Aug"; "Sep"; "Oct"; "Nov"; "Dec" |]
+
+(* Adds a zero if a number has only 1 digit *)
+let two_digits i =
+	(* Add a 0 if needed *)
+	(if i <= 9 then "0" else "")
+	^ (string_of_int i)
+
+let format_time time =
+  let tm = localtime time in
+(*  sprintf "%s %s %2d %02d:%02d:%02d %04d"
+    days.(tm.tm_wday)
+    months.(tm.tm_mon)
+    tm.tm_mday
+    tm.tm_hour
+    tm.tm_min
+    tm.tm_sec
+    (tm.tm_year + 1900)*)
+    (days.(tm.tm_wday))
+    ^ " " ^ (months.(tm.tm_mon))
+    ^ " " ^ (string_of_int tm.tm_mday)
+    ^ ", " ^ (string_of_int (tm.tm_year + 1900))
+    ^ " " ^ (two_digits tm.tm_hour)
+    ^ ":" ^ (two_digits tm.tm_min)
+    ^ ":" ^ (two_digits tm.tm_sec)
+ 
+(*let time = fst (Unix.mktime {tm_sec=50; tm_min=45; tm_hour=3;
+		tm_mday=18; tm_mon=0; tm_year=73;
+		tm_wday=0; tm_yday=0; tm_isdst=false})*)
+
+(* Print the current date and time under the form of a string *)
+let now () = "" ^ (format_time (Unix.gettimeofday ()))
+(* printf "format_time gives: %s\n" (format_time time) *)
+
 
 
 (****************************************************************)
@@ -396,7 +440,7 @@ let print_message_generic message =
 	(* Print message *)
 	print_string (message ^ time_info ^ "\n");
 	(* Flush! *)
-	flush stdout
+	flush Pervasives.stdout
 
 
 (* Print a message if global_debug_mode >= message_debug_mode *)
@@ -435,6 +479,23 @@ let print_error message =
 
 
 
+
+
+
+let header_string =
+	"************************************************************\n"
+	^ "*  IMITATOR " ^ version_string ^ (string_n_times (46 - (String.length version_string)) " ") ^ " *\n"
+	^ "*                                                          *\n"
+	^ "*             Etienne ANDRE, Ulrich KUEHNE, Romain SOULAT  *\n"
+	^ "*                                             2009 - " ^ (string_of_int ((localtime (Unix.gettimeofday ())).tm_year + 1900))
+ ^ "  *\n"
+	^ "*                       LSV, ENS de Cachan & CNRS, France  *\n"
+	^ "*  LIPN, Universite Paris 13, Sorbonne Paris Cite, France  *\n"
+(* 	^ "*  Build: " ^ (now())  ^ "                        *\n" *)
+	^ "************************************************************"
+
+
+
 (**************************************************)
 (** System functions *)
 (**************************************************)
@@ -470,7 +531,7 @@ let delete_file file_name =
 let abort_program () =
 	print_error (program_name ^ " aborted (" ^ (after_seconds ()) ^ ")");
 	print_newline();
-	flush stdout;
+	flush Pervasives.stdout;
 	exit(0)
 
 (* Terminate program *)
@@ -478,6 +539,6 @@ let terminate_program () =
 	print_newline();
 	print_message Debug_standard (program_name ^ " successfully terminated (" ^ (after_seconds ()) ^ ")");
 	print_newline();
-	flush stdout;
+	flush Pervasives.stdout;
 	exit(0)
 

@@ -141,3 +141,4 @@ init:= loc[observer] = ObserverOK &
 	Token_32 = 0 & 
 	True;
 bad := exists_location loc[observer] = ObserverNOK;
+ 

@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2009/09/08
- * Last modified: 2013/02/01
+ * Last modified: 2013/02/13
  *
  ****************************************************************)
 
@@ -103,6 +103,14 @@ val after_seconds : unit -> string
 (** Set the timed mode *)
 val set_timed_mode : unit -> unit
 
+
+
+(****************************************************************)
+(** Date functions *)
+(****************************************************************)
+
+(** Print the current date and time under the form of a string *)
+val now : unit -> string
 
 (****************************************************************)
 (** Useful functions on lists *)
