@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2012/05/10
- * Last modified: 2013/01/31
+ * Last modified: 2013/02/13
  *
  ****************************************************************)
 
@@ -21,6 +21,7 @@ class imitator_options :
 		val mutable dynamic_clock_elimination : bool ref
 		val mutable fancy : bool ref
 		val mutable file : string ref
+		val mutable files_prefix : string ref
 		val mutable forcePi0 : bool ref
 		val mutable fromGML : bool ref
 		val mutable imitator_mode : Global.imitator_mode ref
@@ -31,7 +32,6 @@ class imitator_options :
 		val mutable pi0file : string ref
 		val mutable pi_compatible : bool ref
 		val mutable post_limit : int option ref
-		val mutable program_prefix : string ref
 		val mutable pta2clp : bool ref
 		val mutable pta2gml : bool ref
 		val mutable pta2jpg : bool ref
@@ -59,6 +59,7 @@ class imitator_options :
 		method dynamic_clock_elimination : bool
 		method fancy : bool
 		method file : string
+		method files_prefix : string
 		method forcePi0 : bool
 		method fromGML : bool
 		method imitator_mode : Global.imitator_mode
@@ -69,7 +70,6 @@ class imitator_options :
 		method pi0file : string
 		method pi_compatible : bool
 		method post_limit : int option
-		method program_prefix : string
 		method pta2clp : bool
 		method pta2gml : bool
 		method pta2jpg : bool

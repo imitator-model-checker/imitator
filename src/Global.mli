@@ -19,7 +19,10 @@ val version_string: string
 
 val header_string: string
 
-val print_version_string: unit -> unit
+(* val print_version_string: unit -> unit *)
+
+(* Extension for input model files *)
+val model_extension: string
 
 
 (****************************************************************)

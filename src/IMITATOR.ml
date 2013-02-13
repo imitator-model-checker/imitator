@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2009/09/07
- * Last modified: 2013/01/30
+ * Last modified: 2013/02/13
  *
  **************************************************)
 
@@ -168,6 +168,8 @@ print_message Debug_standard ("Analysis time: " ^ (now()) ^ "\n");
 
 (* File *)
 print_message Debug_standard ("Model: " ^ options#file);
+(* File prefix *)
+print_message Debug_low ("Prefix for output files: " ^ options#files_prefix);
 
 (* Global mode *)
 let message = match options#imitator_mode with
@@ -354,7 +356,6 @@ let parsing_structure =
 	else parser_lexer_from_file ModelParser.main ModelLexer.token options#file
 in 
 
-print_message Debug_medium ("Considering program prefix " ^ options#program_prefix ^ ".");
 
 if options#imitator_mode != Reachability_analysis && options#imitator_mode != Translation then
 	print_message Debug_low ("Considering reference valuation in file " ^ options#pi0file ^ ".");
@@ -442,7 +443,7 @@ if options#pta2gml then(
 	print_message Debug_standard ("Translating program to GrML.");
 	print_warning ("Experimental translation!");
 	let translated_model = PTA2GML.string_of_program program in
-	let gml_file = options#file ^ ".grml" in
+	let gml_file = options#files_prefix ^ ".grml" in
 	print_message Debug_total ("\n" ^ translated_model ^ "\n");
 	(* Write *)
 	write_to_file gml_file translated_model;
@@ -454,7 +455,7 @@ if options#pta2jpg then(
 	print_message Debug_standard ("Translating program to a graphics.");
 	let translated_model = PTA2JPG.string_of_program program in
 	print_message Debug_high ("\n" ^ translated_model ^ "\n");
-	Graphics.dot program options#file translated_model;
+	Graphics.dot program options#files_prefix translated_model;
 	terminate_program()
 );
 
@@ -468,7 +469,7 @@ if options#cartonly then(
 		Convex_constraint (linear_constraint , tile_nature)
 	) constraints in
 	(* Call the cartography *)
-	Graphics.cartography program [| (p1_min , p1_max); (p2_min , p2_max) |] constraints options#file;
+	Graphics.cartography program [| (p1_min , p1_max); (p2_min , p2_max) |] constraints options#files_prefix;
 	(* The end *)
 	terminate_program()
 );
@@ -616,7 +617,7 @@ try(
 	(* Computation of the cartography *)
 	if options#cart then ( 
 			print_message Debug_standard ("Generation of the graphical cartography...\n");
-			Graphics.cartography program v0 zones (options#program_prefix ^ "_cart")
+			Graphics.cartography program v0 zones (options#files_prefix ^ "_cart")
 		) else (
 			print_message Debug_total "Not in cartography mode: no graph for the cartography."
 		)

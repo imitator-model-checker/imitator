@@ -22,6 +22,9 @@ Syntax in model:
 - bad state definition added
 - Not everything allowed anymore at the end of the file! (before, everything was allowed for backward compatibility with HyTech) Need to add (optional) keyword "end" first
 
+Misc
+- output files for model "XXXX.imi" are now "XXXX.ext" instead of "XXXX.imi.ext"
+
 Internal
 - Refactored BC code
 - The bounds for V0 are now NumConst (not "int" anymore)

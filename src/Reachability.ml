@@ -2176,7 +2176,7 @@ let full_reachability program init_state =
 	print_statistics reachability_graph;
 	
 	(* Generate graphics *)
-	let radical = options#program_prefix in
+	let radical = options#files_prefix in
 	Graphics.generate_graph program reachability_graph radical;
 	
 	(* The end*)
@@ -2333,7 +2333,7 @@ let inverse_method program init_state =
 	);
 	
 	(* Generate graphics *)
-	let radical = options#program_prefix in
+	let radical = options#files_prefix in
 	Graphics.generate_graph program reachability_graph radical;
 	
 	(* Print statistics *)

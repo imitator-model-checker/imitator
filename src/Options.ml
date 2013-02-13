@@ -7,7 +7,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Ulrich Kuehne, Etienne Andre
  * Created:       2010
- * Last modified: 2013/01/31
+ * Last modified: 2013/02/13
  *
  ****************************************************************)
  
@@ -40,7 +40,7 @@ class imitator_options =
 		(* plot fancy states in dot *)
 		val mutable fancy = ref false
 		(* prefix for output files *)
-		val mutable program_prefix = ref ""
+		val mutable files_prefix = ref ""
 		(* Gives statistics on number of calls *)
 		val mutable statistics = ref false
 		(* print time stamps *)
@@ -115,6 +115,7 @@ class imitator_options =
 		method dynamic_clock_elimination = !dynamic_clock_elimination
 		method fancy = !fancy
 		method file = !file
+		method files_prefix = !files_prefix
 		method forcePi0 = !forcePi0
 		method fromGML = !fromGML
 		method imitator_mode = !imitator_mode
@@ -124,7 +125,6 @@ class imitator_options =
 		method no_random = !no_random
 		method pi_compatible = !pi_compatible
 		method post_limit = !post_limit
-		method program_prefix = !program_prefix
 		method pta2clp = !pta2clp
 		method pta2gml = !pta2gml
 		method pta2jpg = !pta2jpg
@@ -196,12 +196,12 @@ class imitator_options =
 				("-depth-limit", Int (fun i -> post_limit := Some i), " Limits the depth of the exploration of the reachability graph. Default: no limit.");
 				("-dynamic-elimination", Set dynamic_clock_elimination, " Dynamic clock elimination (experimental). Default: false.");
 				("-fancy", Set fancy, " Generate detailed state information for dot output. Default: false.");
-				("-forcePi0", Set forcePi0, "Create a predefined pi0 file of the form p1 = 1, p2 = 2, etc. Defaut : 'false'");
+(* 				("-forcePi0", Set forcePi0, "Create a predefined pi0 file of the form p1 = 1, p2 = 2, etc. Defaut : 'false'"); *)
 				("-fromGrML", Set fromGML, "GrML syntax for input files (experimental). Defaut : 'false'");
 				("-incl", Set inclusion, " Consider an inclusion of region instead of the equality when performing the Post operation (e.g., as in algorithm IMincl defined in [AS11]). Default: 'false'");
 				("-IMK", Set pi_compatible, " Algorithm IMoriginal (defined in [AS11]): return a constraint such that no pi-incompatible state can be reached. Default: 'false'");
 				("-IMunion", Set union, " Algorithm IMUnion (defined in [AS11]): Returns the union of the constraint on the parameters associated to the last state of each trace. Default: 'false'");
-				("-log-prefix", Set_string program_prefix, " Sets the prefix for log files. Default: [model].");
+				("-log-prefix", Set_string files_prefix, " Sets the prefix for output files. Default: [model].");
 				("-merge", Clear no_merging, " Use the merging technique of [AFS12]. Default: 'false' (disable)");
 				("-mode", String set_mode, " Mode for " ^ program_name ^ ". Use 'reachability' for a parametric reachability analysis (no pi0 needed). Use 'inversemethod' for the inverse method. For the behavioral cartography algorithm, use 'cover' to cover all the points within V0, 'border' to find the border between a small-valued good and a large-valued bad zone (experimental), or 'randomXX' where XX is a number to iterate randomly algorithm (e.g., random5 or random100). Default: 'inversemethod'.");
 				("-no-random", Set no_random, " No random selection of the pi0-incompatible inequality (select the first found). Default: false.");
@@ -216,7 +216,7 @@ class imitator_options =
 				("-timed", Set timed_mode, " Adds a timing information to each output of the program. Default: none.");
 				("-tree", Set tree, " Does not test if a new state was already encountered. To be set ONLY if the reachability graph is a tree (otherwise analysis may loop). Default: 'false'");
 				("-verbose", String set_debug_mode_ref, " Print more or less information. Can be set to 'mute', 'standard', 'low', 'medium', 'high', 'total'. Default: 'standard'");
-				("-version", Unit (fun _ -> print_version_string (); exit 0), " Print version number and exit.");
+				("-version", Unit (fun _ -> print_string ("\n" ^ program_name ^ " " ^ version_string); exit 0), " Print version number and exit.");
 				("-with-dot", Set with_dot, " Trace set under a graphical form (using 'dot'). Default: false.");
 				("-with-graphics-source", Set with_graphics_source, " Keep file(s) used for generating graphical output. Default: false.");
 				("-with-log", Set with_log, " Generation of log files (description of states). Default: false.");
@@ -258,9 +258,23 @@ class imitator_options =
 				abort_program (); exit(0)
 			);
 			
-			(* set program prefix *)
-			if !program_prefix = "" then
+			
+			(* Set prefix for files *)
+			if !files_prefix = "" then
 				(* WHAT ? *)
-			  program_prefix := !file
+			  files_prefix := !file
+			;
+			  
+			(* Remove the ".imi" at the end of the program prefix, if any *)
+			let model_extension_size = String.length model_extension in
+			if String.length !files_prefix > model_extension_size then(
+				(* Get the last signs *)
+				let last = String.sub !files_prefix ((String.length !files_prefix) - model_extension_size) model_extension_size in
+				(* Check if it corresponds to ".imi" *)
+				if last = model_extension then(
+					(* Remove the last signs *)
+					files_prefix := String.sub !files_prefix 0 ((String.length !files_prefix) - model_extension_size);
+				);
+			);
 
 	end

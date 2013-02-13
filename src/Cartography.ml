@@ -658,7 +658,7 @@ let cover_behavioral_cartography program v0 init_state =
 			^ (string_of_int current_nb_transitions) ^ " transition" ^ (s_of_int current_nb_transitions) ^ ".");
 		
 		(* Generate the dot graph (will not be performed if options are not suitable) *)
-		let radical = options#program_prefix ^ "_" ^ (string_of_int !current_iteration) in
+		let radical = options#files_prefix ^ "_" ^ (string_of_int !current_iteration) in
 			Graphics.generate_graph program graph radical;
 		
 
@@ -886,7 +886,7 @@ let random_behavioral_cartography program v0 init_state nb =
 				pi0_computed.(!i - 1) <- pi0;
 
 				(* Generate the dot graph *)
-				let radical = options#program_prefix ^ "_" ^ (string_of_int !i) in
+				let radical = options#files_prefix ^ "_" ^ (string_of_int !i) in
 				Graphics.generate_graph program graph radical;
 				(* Add the index to the interesting list *)
 				interesting_interations := !i :: !interesting_interations;

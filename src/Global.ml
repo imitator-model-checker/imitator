@@ -27,7 +27,12 @@ let program_name = "IMITATOR"
 let version_string = "2.5.1 (unstable)"
 
 let print_version_string _ = 
-	print_string (program_name ^ " " ^ version_string ^ "\n");
+	print_string (program_name ^ " " ^ version_string ^ "\n")
+
+
+(* Extension for input model files *)
+let model_extension = ".imi"
+
 
 (****************************************************************)
 (** Exceptions *)
@@ -484,7 +489,7 @@ let print_error message =
 
 let header_string =
 	"************************************************************\n"
-	^ "*  IMITATOR " ^ version_string ^ (string_n_times (46 - (String.length version_string)) " ") ^ " *\n"
+	^ "*  " ^ program_name ^ " " ^ version_string ^ (string_n_times (46 - (String.length version_string)) " ") ^ " *\n"
 	^ "*                                                          *\n"
 	^ "*             Etienne ANDRE, Ulrich KUEHNE, Romain SOULAT  *\n"
 	^ "*                                             2009 - " ^ (string_of_int ((localtime (Unix.gettimeofday ())).tm_year + 1900))
