@@ -18,10 +18,10 @@ var
 	T_pipeline_3=40:parameter;
 	D_pipeline_3=40:parameter;
 	t_task_31:clock;
-	C_task_31=2:parameter;
+	C_task_31:parameter;
 	Token_31:discrete;
 	t_task_32:clock;
-	C_task_32=6:parameter;
+	C_task_32:parameter;
 	Token_32:discrete;
 
 
