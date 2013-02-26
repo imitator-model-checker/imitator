@@ -206,13 +206,6 @@ exe:
 
 # 	./IMITATOR Examples/Gates/NorGate.imi -mode reachability -with-parametric-log
 
-##### TRAINS #####
-
-# 	$(TARGET) $(EXAMPLE_PATH)/Train/Train1PTA.imi -mode reachability -incl
-# 	$(TARGET) $(EXAMPLE_PATH)/Train/Train1PTA.imi $(EXAMPLE_PATH)/Train/Train1PTA.pi0
-# 	$(TARGET) $(EXAMPLE_PATH)/Train/Train1PTA.imi -PTA2GML
-# 	$(TARGET) $(EXAMPLE_PATH)/Train/Train1PTA.gml -fromGML -mode reachability
-
 ##### TESTS FOR SYNTAX #####
 
 # 	$(TARGET) $(EXAMPLE_PATH)/Tests/test.gml -mode reachability -verbose high -fromGML
@@ -376,9 +369,14 @@ exe:
 
 ##### CASE STUDIES : TRAINS #####
 
-# 	$(TARGET) $(EXAMPLE_PATH)/Train/TrainAHV93.imi -mode reachability
+	$(TARGET) $(EXAMPLE_PATH)/Train/Train1PTA.imi -PTA2JPG
+# 	$(TARGET) $(EXAMPLE_PATH)/Train/Train1PTA.imi -mode reachability -incl
+# 	$(TARGET) $(EXAMPLE_PATH)/Train/Train1PTA.imi $(EXAMPLE_PATH)/Train/Train1PTA.pi0
+# 	$(TARGET) $(EXAMPLE_PATH)/Train/Train1PTA.imi -PTA2GML
+# 	$(TARGET) $(EXAMPLE_PATH)/Train/Train1PTA.gml -fromGML -mode reachability
+
+	$(TARGET) $(EXAMPLE_PATH)/Train/TrainAHV93.imi -PTA2JPG
 # 	bin/IMITATOR2.34.111115 $(EXAMPLE_PATH)/Train/TrainAHV93.imi -mode reachability
-# 	
 # 	$(TARGET) $(EXAMPLE_PATH)/Train/TrainAHV93.imi $(EXAMPLE_PATH)/Train/TrainAHV93.pi0
 # 	$(TARGET) $(EXAMPLE_PATH)/Train/TrainAHV93.imi $(EXAMPLE_PATH)/Train/TrainAHV93.pi0 -incl
 # 	$(TARGET) $(EXAMPLE_PATH)/Train/TrainAHV93.imi $(EXAMPLE_PATH)/Train/TrainAHV93.pi0 -bab
@@ -549,7 +547,7 @@ exe:
 
 # 	$(TARGET) $(EXAMPLE_PATH)/Tests/testpoly.imi -cartonly
 
-	$(TARGET) $(EXAMPLE_PATH)/Others/test.imi $(EXAMPLE_PATH)/Others/test.pi0 -with-dot -with-log -with-parametric-log -depth-limit 7 -verbose high -fancy
+# 	$(TARGET) $(EXAMPLE_PATH)/Others/test.imi $(EXAMPLE_PATH)/Others/test.pi0 -with-dot -with-log -with-parametric-log -depth-limit 7 -verbose high -fancy
 # 	$(TARGET) $(EXAMPLE_PATH)/Others/test2.imi $(EXAMPLE_PATH)/Others/test2.v0 -mode cover -incl -merge -cart -with-dot
 # 	$(TARGET) $(EXAMPLE_PATH)/Others/test3.imi $(EXAMPLE_PATH)/Others/test3.v0 -mode cover -merge -cart
 # 	$(TARGET) $(EXAMPLE_PATH)/Others/test3.imi $(EXAMPLE_PATH)/Others/test3.v0 -mode border -merge -cart -step 0.1

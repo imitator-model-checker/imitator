@@ -9,7 +9,8 @@
 --   Laboratoire d'Informatique de Paris Nord
 --
 --                                Created : 2012/03/13
---                          Last modified : 2012/03/13
+--                          Last modified : 2013/02/20
+--                       IMITATOR version : 2.5.1
 --************************************************************--
 --************************************************************--
 
@@ -83,6 +84,9 @@ init := True
 	----------------------
 
 ;
+
+end
+
 
 print(reach forward from init endreach);
 

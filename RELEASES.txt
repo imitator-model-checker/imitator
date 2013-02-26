@@ -1,8 +1,9 @@
 *******************************************************
-release 2.5.1    (COMING SOON)
+release 2.6.0    (2013-02-25)
 
 Features:
-- Added a new cartography mode with border detection
+- Added observer patterns
+- Added a new cartography mode with border detection (ongoing work)
 - Changed and improved bad state definition (that was not really used anyway)
 - Cartography can color in green and red according to the bad state definition
 - Added dynamic clock elimination (ongoing work)
@@ -18,9 +19,9 @@ Syntax in options:
 - Added -counterex option (stops the analysis as soon as a counterexample is found), work in progress
 
 Syntax in model:
-- region declaration not compulsory anymore (was not used anyway, just for Hytech backward compatibility)
+- region declaration not compulsory anymore (that was only used for Hytech backward compatibility)
 - bad state definition added
-- Not everything allowed anymore at the end of the file! (before, everything was allowed for backward compatibility with HyTech) Need to add (optional) keyword "end" first
+- Not everything allowed anymore at the end of the file! (before, everything was allowed for backward compatibility with HyTech) Now need to add (optional) keyword "end" first
 
 Misc
 - output files for model "XXXX.imi" are now "XXXX.ext" instead of "XXXX.imi.ext"
@@ -83,5 +84,11 @@ release 2.1    (2010-05-31)
 *******************************************************
 release 2.0    (2010-05-17)
 
-Base version
+- Tool completely rewritten in OCaml
+- Polyhedra handled thanks to APRON
+
+*******************************************************
+release 1.0    (2008)
+
+First version (in Python)
 *******************************************************
