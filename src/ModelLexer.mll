@@ -3,9 +3,10 @@
  *                     IMITATOR II
  * 
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
+ * Universite Paris 13, Sorbonne Paris Cite, LIPN (France)
  * Author:        Etienne Andre
  * Created       : 2009/09/07
- * Last modified : 2013/01/31
+ * Last modified : 2013/02/28
 *****************************************************************)
 
 {
@@ -35,16 +36,16 @@ rule token = parse
 		token lexbuf }
 
 (* 	| "all"            { CT_ALL } *)
+ 	| "always"         { CT_ALWAYS }
 (* 	| "analog"         { CT_ANALOG } *)
 	| "and"            { CT_AND }
 (* 	| "asap"           { CT_ASAP } *)
 	| "automaton"      { CT_AUTOMATON }
 (* 	| "backward"       { CT_BACKWARD } *)
-(* 	| "cldiff"         { CT_CLDIFF } *)
+ 	| "before"         { CT_BEFORE }
 	| "bad"            { CT_BAD }
 	| "carto"          { CT_CARTO }
 	| "clock"          { CT_CLOCK }
-(*	| "d"              { CT_D }*)
 	| "discrete"       { CT_DISCRETE }
 	| "do"             { CT_DO }
 (* 	| "else"           { CT_ELSE } *)
@@ -54,6 +55,8 @@ rule token = parse
 (* 	| "endif"          { CT_ENDIF } *)
 (* 	| "endreach"       { CT_ENDREACH } *)
 (* 	| "endwhile"       { CT_ENDWHILE } *)
+ 	| "eventually"     { CT_EVENTUALLY }
+ 	| "everytime"      { CT_EVERYTIME }
  	| "exists_action"  { CT_EXISTS_ACTION }
  	| "exists_location"{ CT_EXISTS_LOCATION }
 	| "False"          { CT_FALSE }
@@ -62,6 +65,8 @@ rule token = parse
 (* 	| "from"           { CT_FROM } *)
 	| "good"           { CT_GOOD }
 	| "goto"           { CT_GOTO }
+ 	| "happened"       { CT_HAPPENED }
+ 	| "has"            { CT_HAS }
 (* 	| "hide"           { CT_HIDE } *)
 (* 	| "hull"           { CT_HULL } *)
 	| "if"             { CT_IF }
@@ -72,27 +77,32 @@ rule token = parse
 (* 	| "iterate"        { CT_ITERATE } *)
 	| "loc"            { CT_LOC }
 	| "locations"      { CT_LOCATIONS }
+	| "next"           { CT_NEXT }
 (* 	| "non_parameters" { CT_NON_PARAMETERS } *)
 	| "not"            { CT_NOT }
 (* 	| "omit"           { CT_OMIT } *)
+ 	| "once"           { CT_ONCE }
 	| "or"             { CT_OR }
 	| "parameter"      { CT_PARAMETER }
 (* 	| "post"           { CT_POST } *)
 (* 	| "pre"            { CT_PRE } *)
 (* 	| "print"          { CT_PRINT } *)
 (* 	| "prints"         { CT_PRINTS } *)
+ 	| "property"       { CT_PROPERTY }
 (* 	| "printsize"      { CT_PRINTSIZE } *)
 (* 	| "reach"          { CT_REACH } *)
 	| "region"         { CT_REGION }
+	| "sequence"       { CT_SEQUENCE }
 	| "stop"           { CT_STOP }
 (* 	| "stopwatch"      { CT_STOPWATCH } *)
 	| "sync"           { CT_SYNC }
 	| "synclabs"       { CT_SYNCLABS }
-(* 	| "then"           { CT_THEN } *)
+ 	| "then"           { CT_THEN }
 (* 	| "to"             { CT_TO } *)
 (* 	| "trace"          { CT_TRACE } *)
 	| "True"           { CT_TRUE }
 (* 	| "unknown"        { CT_UNKNOWN } *)
+ 	| "unreachable"     { CT_UNREACHABLE }
 (* 	| "using"          { CT_USING } *)
 	| "var"            { CT_VAR }
 	| "wait"           { CT_WAIT }
@@ -102,6 +112,7 @@ rule token = parse
 (* 	| "weakle"         { CT_WEAKLE } *)
 	| "when"           { CT_WHEN }
 	| "while"          { CT_WHILE }
+	| "whithin"        { CT_WHITHIN }
 
 	| ['a'-'z''A'-'Z']['a'-'z''A'-'Z''_''0'-'9']* as lxm { NAME lxm }
 	| ['0'-'9']*'.'['0'-'9']+ as lxm { FLOAT lxm } 
