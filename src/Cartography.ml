@@ -1,18 +1,24 @@
 (*****************************************************************
  *
- *                     IMITATOR II
+ *                       IMITATOR
  * 
+ * Convert a parsing structure into an abstract program
+ *
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
- * Author:        Etienne Andre
+ * Universite Paris 13, Sorbonne Paris Cite, LIPN (France)
+ * 
+ * Author:        Ulrich Kuehne, Etienne Andre
+ * 
  * Created:       2012/06/18
- * Last modified: 2013/01/31
+ * Last modified: 2013/03/01
  *
  ****************************************************************)
 
- open Global
- open AbstractModel
- open Graph
- open Reachability
+
+open Global
+open AbstractModel
+open Graph
+open Reachability
  
 
  
@@ -671,7 +677,7 @@ let cover_behavioral_cartography program v0 init_state =
 (* 			let bad_string = if Graph.is_bad program graph then "BAD." else "GOOD." in *)
 		print_message Debug_low ("Constraint K0 computed:");
 		print_message Debug_standard (ModelPrinter.string_of_returned_constraint program.variable_names returned_constraint);
-		if program.bad <> Nobad then(
+		if program.property <> Noproperty then(
 			print_message Debug_standard ("This tile is " ^ (string_of_tile_nature tile_nature) ^ ".");
 		);
 

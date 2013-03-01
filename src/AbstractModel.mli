@@ -1,11 +1,14 @@
 (*****************************************************************
  *
- *                     IMITATOR II
+ *                       IMITATOR
  * 
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
+ * Universite Paris 13, Sorbonne Paris Cite, LIPN (France)
+ * 
  * Author:        Etienne Andre
+ * 
  * Created:       2009/09/11
- * Last modified: 2013/01/31
+ * Last modified: 2013/03/01
  *
  ****************************************************************)
 
@@ -87,19 +90,21 @@ type transition = guard * clock_updates * discrete_update list * location_index
 
 
 (****************************************************************)
-(** Bad definition *)
+(** Definition of correctness property *)
 (****************************************************************)
 (** predicates for bad definition *)
 
-type bad_predicate =
-(* 	| Loc_assignment of automaton_name * location_name *)
-	| Exists_action of action_index
-	| Exists_location of automaton_index * location_index
-	| Nobad
+type property =
+	(* DEPRECATED *)
+(* 	| Exists_action of action_index *)
+
+	| Unreachable_location of automaton_index * location_index
+	
+	| Noproperty
 
 
 (* TODO: allow several definitions *)
-type bad_definition  = bad_predicate (*list*)
+type property_definition  = property (*list*)
 
 
 (****************************************************************)
@@ -184,7 +189,7 @@ type abstract_program = {
 	initial_constraint : linear_constraint;
 
 	(* Bad states *)
-	bad : bad_definition;
+	property : property_definition;
 	(* Set of polyhedra (only used for direct cartography without running the model) *)
 	carto : (linear_constraint * tile_nature) list * (NumConst.t * NumConst.t) * (NumConst.t * NumConst.t);
 }

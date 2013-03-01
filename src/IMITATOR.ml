@@ -1,13 +1,18 @@
-(***************************************************
+(*****************************************************************
  *
- *                     IMITATOR II
+ *                       IMITATOR
  * 
- * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
- * Author:        Etienne Andre
- * Created:       2009/09/07
- * Last modified: 2013/02/13
+ * Convert a parsing structure into an abstract program
  *
- **************************************************)
+ * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
+ * Universite Paris 13, Sorbonne Paris Cite, LIPN (France)
+ * 
+ * Author:        Ulrich Kuehne, Etienne Andre
+ * 
+ * Created:       2009/09/07
+ * Last modified: 2013/03/01
+ *
+ ****************************************************************)
 
 
 (**************************************************)
@@ -480,8 +485,8 @@ if options#cartonly then(
 (**************************************************)
 (* Preliminary checks *)
 (**************************************************)
-if (options#imitator_mode = Border_cartography && program.bad = Nobad) then(
-	print_error ("In border cartography mode, a bad state must be defined.");
+if (options#imitator_mode = Border_cartography && program.property = Noproperty) then(
+	print_error ("In border cartography mode, a correctness property must be defined.");
 	abort_program();
 );
 

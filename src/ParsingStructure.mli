@@ -1,11 +1,14 @@
 (*****************************************************************
  *
- *                     IMITATOR II
+ *                       IMITATOR
  * 
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
+ * Universite Paris 13, Sorbonne Paris Cite, LIPN (France)
+ *
  * Author:        Etienne Andre
+ *
  * Created:       2009/09/08
- * Last modified: 2013/01/31
+ * Last modified: 2013/03/01
  *
  ****************************************************************)
 
@@ -106,16 +109,17 @@ type init_definition = state_predicate list
 
 
 (****************************************************************)
-(** Bad definition *)
+(** Definition of the property *)
 (****************************************************************)
 
-(** predicates for bad definition *)
+(** Predicates for the definition of the correctness property *)
 
-type bad_predicate =
-	| Exists_location of automaton_name * location_name
-	| Exists_action of sync_name
+type property =
+	| Unreachable_location of automaton_name * location_name
+	(* DEPRECATED *)
+(* 	| Unreachable_action of sync_name *)
 
-type bad_definition  = bad_predicate list
+type bad_definition  = property list
 
 (****************************************************************)
 (** Carto definition *)

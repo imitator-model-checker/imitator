@@ -1,12 +1,14 @@
 /***********************************************
  *
- *                     IMITATOR II
+ *                     IMITATOR
  * 
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Universite Paris 13, Sorbonne Paris Cite, LIPN (France)
+ * 
  * Author:        Etienne Andre
+ * 
  * Created       : 2009/09/07
- * Last modified : 2013/02/28
+ * Last modified : 2013/03/01
 ***********************************************/
 
 %{
@@ -377,12 +379,12 @@ pos_float:
 	} 
 ;
 
-/***********************************************
-  ANALYSIS COMMANDS
-***********************************************/
+/***********************************************/
+/** ANALYSIS COMMANDS */
+/***********************************************/
 
 commands:
-	| init_declaration_opt init_definition bad_definition carto_definition rest_of_commands_opt { ($2, $3, $4) }
+	| init_declaration_opt init_definition property_definition carto_definition rest_of_commands_opt { ($2, $3, $4) }
 // 	| init_declaration_opt init_definition bad_definition { ($2, $3, ([] , (NumConst.zero,NumConst.zero) , (NumConst.zero,NumConst.zero))) }
 ;
 
@@ -445,17 +447,36 @@ init_definition:
 	CT_INIT OP_ASSIGN region_expression SEMICOLON { $3 }
 ;
 
-bad_definition:
+property_definition:
 // TODO: improve the bad definitions
+	// NOTE: Old version
+// 	| CT_BAD OP_ASSIGN loc_expression SEMICOLON { $3 }
+
 	// Case: action
 	// TODO: reintroduce
 // 	| CT_BAD OP_ASSIGN CT_EXISTS_ACTION NAME SEMICOLON { [Exists_action $4] }
+
+	// NOTE: only one allowed before version 2.6 and ICECCS paper
 	// Case: location
-	| CT_BAD OP_ASSIGN CT_EXISTS_LOCATION loc_predicate SEMICOLON { let a,b = $4 in [(Exists_location (a , b))] }
+	// | CT_BAD OP_ASSIGN CT_EXISTS_LOCATION loc_predicate SEMICOLON { let a,b = $4 in [(Exists_location (a , b))] }
+	
+	// Pattern
+	| CT_PROPERTY OP_ASSIGN pattern { $3 }
+	
 	// Case: no bad region
 	|  { [] }
-	// NOTE: Old version
-// 	| CT_BAD OP_ASSIGN loc_expression SEMICOLON { $3 }
+	
+;
+
+// List of patterns
+pattern:
+	| CT_UNREACHABLE bad_definition { $2 };
+;
+
+
+bad_definition:
+	// TODO: add more?
+	| loc_predicate { let a,b = $1 in [(Unreachable_location (a , b))] }
 ;
 
 convex_predicate_with_nature:

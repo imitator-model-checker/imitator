@@ -1,14 +1,18 @@
 (*****************************************************************
  *
- *                     IMITATOR
+ *                       IMITATOR
  * 
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
+ * Universite Paris 13, Sorbonne Paris Cite, LIPN (France)
+ * 
  * Author:        Etienne Andre, Ulrich Kuehne
+ * 
  * Created:       2010/07/05
- * Last modified: 2013/02/13
+ * Last modified: 2013/03/01
  *
  ****************************************************************)
-
+ 
+ 
 (**************************************************)
 (* Modules *)
 (**************************************************)
@@ -48,7 +52,7 @@ let graph_color_of_int tile_index tile_nature dotted =
 	(* Definition of the color *)
 	let color_index =
 	(* If bad state defined *)
-	if program.bad != Nobad then(
+	if program.property != Noproperty then(
 		(* Go for a good / bad coloring *)
 		match tile_nature with
 		| Good -> 2 (* green *)

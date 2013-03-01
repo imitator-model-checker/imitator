@@ -1,20 +1,23 @@
 (*****************************************************************
  *
- *                     IMITATOR II
- *
+ *                       IMITATOR
+ * 
  * Convert a parsing structure into an abstract program
  *
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
+ * Universite Paris 13, Sorbonne Paris Cite, LIPN (France)
+ * 
  * Author:        Etienne Andre
+ * 
  * Created:       2009/09/09
- * Last modified: 2013/01/31
+ * Last modified: 2013/03/01
  *
  ****************************************************************)
 
 
 (**************************************************)
 (* OPTIMISATIONS A FAIRE POUR LA CONVERSION
-
+ TODO
 - eviter deux parcours des listes de parametres, horloges, etc., dans ProgramConverter.ml
 
 **************************************************)
@@ -771,8 +774,9 @@ let check_bad index_of_labels index_of_automata index_of_locations parsed_bad_de
 	(!state_pairs, !well_formed)*)
 (*	let action_index =*)
 	match parsed_bad_definition with
-		| [] -> ((*well_formed := false; *)Nobad , true)
-		| [ParsingStructure.Exists_action action_name] -> 
+		| [] -> ((*well_formed := false; *)Noproperty , true)
+		(* DEPRECATED *)
+		(*| [ParsingStructure.Unreachable_action action_name] -> 
 			(* Check the existence and Return the index *)
 			begin
 			try (
@@ -781,16 +785,16 @@ let check_bad index_of_labels index_of_automata index_of_locations parsed_bad_de
 			) with Not_found ->
 				print_error ("The action '" ^ action_name ^ "' used in the bad definition was not declared.");
 				((*well_formed := false; *)Nobad , false)
-			end
-		| [ParsingStructure.Exists_location (automaton_name , location_name)] -> 
+			end*)
+		| [ParsingStructure.Unreachable_location (automaton_name , location_name)] -> 
 			begin
 			try (
 				let automaton_index = Hashtbl.find index_of_automata automaton_name in
 				let location_index = Hashtbl.find index_of_locations.(automaton_index) location_name in
-					AbstractModel.Exists_location (automaton_index, location_index) , true
+					AbstractModel.Unreachable_location (automaton_index, location_index) , true
 			) with Not_found -> 
 				print_error ("The location '" ^ location_name ^ "' for automaton '" ^ automaton_name ^ "' used in the bad definition is not declared.");
-				((*well_formed := false; *)Nobad , false)
+				((*well_formed := false; *)Noproperty , false)
 			end
 		| _ -> raise (InternalError ("In the bad definition, not all possibilities are implemented yet."))
 (*	in
@@ -1861,7 +1865,7 @@ let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_
 	initial_location = initial_location;
 	initial_constraint = initial_constraint;
 	(* Bad states *)
-	bad = (*bad_state_pairs*) bad;
+	property = (*bad_state_pairs*) bad;
 	(* Optional polyhedra *)
 	carto = carto_linear_constraints , (p1_min , p1_max) , (p2_min , p2_max);
 	}

@@ -1,13 +1,18 @@
-(************************************************************
+(*****************************************************************
  *
- *                     IMITATOR II
+ *                       IMITATOR
  * 
- * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
- * Author:        Ulrich Kuehne, Etienne Andre
- * Created:       2010/07/22
- * Last modified: 2013/02/13
+ * Convert a parsing structure into an abstract program
  *
- ************************************************************)
+ * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
+ * Universite Paris 13, Sorbonne Paris Cite, LIPN (France)
+ * 
+ * Author:        Ulrich Kuehne, Etienne Andre
+ * 
+ * Created:       2010/07/22
+ * Last modified: 2013/03/01
+ *
+ ****************************************************************)
 
 
 (**************************************************************)
@@ -401,9 +406,9 @@ let prepare_clocks_elimination program =
 let update_tile_nature (location, (*linear_constraint*)_) =
 	(* Get the program *)
 	let program = Input.get_program() in
-	match program.bad with
-	| Nobad -> ()
-	| Exists_location (bad_automaton_index , bad_location_index) ->
+	match program.property with
+	| Noproperty -> ()
+	| Unreachable_location (bad_automaton_index , bad_location_index) ->
 		(* Check if the local location is the same as the bad one *)
 		let is_bad = (Automaton.get_location location bad_automaton_index) = bad_location_index in
 			if is_bad then tile_nature := Bad;
@@ -2230,9 +2235,9 @@ let inverse_method_gen program init_state =
 	
 	(* For now, the tile is good by default *)
 	begin
-	match program.bad with
-		| Nobad -> ()
-		| Exists_location _ -> tile_nature := Good
+	match program.property with
+		| Noproperty -> ()
+		| Unreachable_location _ -> tile_nature := Good
 		| _ -> raise (InternalError("Only the bad location is implemented to define a bad tile."))
 	end;
 	
