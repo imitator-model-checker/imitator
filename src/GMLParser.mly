@@ -1,12 +1,16 @@
-/************************************************************
+/*****************************************************************
  *
- *                     IMITATOR II
+ *                       IMITATOR
  * 
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
+ * Universite Paris 13, Sorbonne Paris Cite, LIPN (France)
+ * 
  * Author:        Etienne Andre
+ * 
  * Created       : 2011/11/23
- * Last modified : 2013/01/31
-************************************************************/
+ * Last modified : 2013/03/01
+ *
+ ****************************************************************/
 
 
 %{
@@ -193,7 +197,7 @@ models : model {$1} |  models model
 	 let all_automata = merge_automata local_automaton automata in
 	 let all_init_definitions = merge_init_definitions local_init_definitions init_definitions in 
 			(*** HACK: need to consider bad and carto as well (or?) *)
-	  		  all_declarations, all_automata, all_init_definitions, [], ([] , (NumConst.zero,NumConst.zero) , (NumConst.zero,NumConst.zero))
+	  		  all_declarations, all_automata, all_init_definitions, None, ([] , (NumConst.zero,NumConst.zero) , (NumConst.zero,NumConst.zero))
 	}	
 
 /************************************************************
@@ -205,7 +209,7 @@ model:
 		let declarations, states, transitions = $2 in
 		let automata, init_definition = convert declarations states transitions in
 		(*** HACK: need to consider bad and carto as well (or?) *)
-		declarations, automata, init_definition, [], ([] , (NumConst.zero,NumConst.zero) , (NumConst.zero,NumConst.zero))
+		declarations, automata, init_definition, None, ([] , (NumConst.zero,NumConst.zero) , (NumConst.zero,NumConst.zero))
 	}
 ;
 

@@ -461,10 +461,10 @@ property_definition:
 	// | CT_BAD OP_ASSIGN CT_EXISTS_LOCATION loc_predicate SEMICOLON { let a,b = $4 in [(Exists_location (a , b))] }
 	
 	// Pattern
-	| CT_PROPERTY OP_ASSIGN pattern { $3 }
+	| CT_PROPERTY OP_ASSIGN pattern { Some $3 }
 	
-	// Case: no bad region
-	|  { [] }
+	// Case: no property
+	|  { None }
 	
 ;
 
@@ -476,7 +476,7 @@ pattern:
 
 bad_definition:
 	// TODO: add more?
-	| loc_predicate { let a,b = $1 in [(Unreachable_location (a , b))] }
+	| loc_predicate { let a,b = $1 in (Unreachable_location (a , b)) }
 ;
 
 convex_predicate_with_nature:

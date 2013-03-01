@@ -94,12 +94,51 @@ type transition = guard * clock_updates * discrete_update list * location_index
 (****************************************************************)
 (** predicates for bad definition *)
 
+type duration = NumConst.t
+
 type property =
 	(* DEPRECATED *)
 (* 	| Exists_action of action_index *)
 
 	| Unreachable_location of automaton_index * location_index
+
+	(* if a2 then a1 has happened before *)
+	| Action_precedence_acyclic of action_index * action_index
+	(* everytime a2 then a1 has happened before *)
+	| Action_precedence_cyclic of action_index * action_index
+	(* everytime a2 then a1 has happened exactly once before *)
+	| Action_precedence_cyclicstrict of action_index * action_index
+
+	(* if a1 then eventually a2 *)
+	| Eventual_response_acyclic of action_index * action_index
+	(* everytime a1 then eventually a2 *)
+	| Eventual_response_cyclic of action_index * action_index
+	(* everytime a1 then eventually a2 once before next *)
+	| Eventual_response_cyclicstrict of action_index * action_index
+
+	(* a no later than d *)
+	| Action_deadline of action_index * duration
+
+	(* if a2 then a1 happened within d before *)
+	| TB_Action_precedence_acyclic of action_index * action_index * duration
+	(* everytime a2 then a1 happened within d before *)
+	| TB_Action_precedence_cyclic of action_index * action_index * duration
+	(* everytime a2 then a1 happened once within d before *)
+	| TB_Action_precedence_cyclicstrict of action_index * action_index * duration
 	
+	(* if a1 then eventually a2 within d *)
+	| TB_response_acyclic of action_index * action_index * duration
+	(* everytime a1 then eventually a2 within d *)
+	| TB_response_cyclic of action_index * action_index * duration
+	(* everytime a1 then eventually a2 within d once before next *)
+	| TB_response_cyclicstrict of action_index * action_index * duration
+
+	(* sequence: a1, ..., an *)
+	| Sequence_acyclic of action_index list
+	(* sequence: always a1, ..., an *)
+	| Sequence_cyclic of action_index list
+	
+	(* Would be better to have a "option" type *)
 	| Noproperty
 
 
@@ -117,7 +156,7 @@ type tile_nature =
 
 
 (****************************************************************)
-(** The abstract program *)
+(** The abstract model *)
 (****************************************************************)
 type abstract_program = {
 	(* Cardinality *)

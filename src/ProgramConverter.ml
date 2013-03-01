@@ -15,12 +15,12 @@
  ****************************************************************)
 
 
-(**************************************************)
-(* OPTIMISATIONS A FAIRE POUR LA CONVERSION
- TODO
+(****************************************************************)
+(** OPTIMISATIONS A FAIRE POUR LA CONVERSION *)
+(* TODO
 - eviter deux parcours des listes de parametres, horloges, etc., dans ProgramConverter.ml
-
-**************************************************)
+*)
+(****************************************************************)
 
 
 (****************************************************************)
@@ -41,6 +41,9 @@ exception InvalidPi0
 
 (* For constraint conversion *)
 exception False_exception
+
+(*(* When a particular string is not found *)
+exception String_not_found of string*)
 
 
 (*--------------------------------------------------*)
@@ -749,9 +752,9 @@ let check_init discrete variable_names constants index_of_variables type_of_vari
 
 
 (*--------------------------------------------------*)
-(* Check the bad state declaration                  *)
+(* Check the correctness property declaration       *)
 (*--------------------------------------------------*)
-let check_bad index_of_labels index_of_automata index_of_locations parsed_bad_definition =
+let check_and_convert_property index_of_labels index_of_automata index_of_locations parsed_property_definition =
 (* 	let well_formed = ref true in *)
 	(*(*CASE LIST OF LOCATIONS*)
 	(* convert to pairs of automata indices and location indices *)
@@ -773,20 +776,97 @@ let check_bad index_of_labels index_of_automata index_of_locations parsed_bad_de
 	well_formed := !well_formed && unique !state_pairs;			
 	(!state_pairs, !well_formed)*)
 (*	let action_index =*)
-	match parsed_bad_definition with
-		| [] -> ((*well_formed := false; *)Noproperty , true)
-		(* DEPRECATED *)
-		(*| [ParsingStructure.Unreachable_action action_name] -> 
-			(* Check the existence and Return the index *)
-			begin
-			try (
-				let action_index = Hashtbl.find index_of_labels action_name in
-				AbstractModel.Exists_action action_index , true
-			) with Not_found ->
-				print_error ("The action '" ^ action_name ^ "' used in the bad definition was not declared.");
-				((*well_formed := false; *)Nobad , false)
-			end*)
-		| [ParsingStructure.Unreachable_location (automaton_name , location_name)] -> 
+
+	(* Boolean to perform multiple checks *)
+(* 	let well_formed = ref true in *)
+
+	(* Local function checking existence of a name *)
+	let check_automaton_name automaton_name =
+		if not (Hashtbl.mem index_of_automata automaton_name)
+		then (
+			print_error ("The automaton name '" ^ automaton_name ^ "' used in the correctness property does not exist.");
+			false
+		)
+		else true
+	in
+	(* Local function checking existence of a name *)
+	let check_location_name automaton_index automaton_name location_name =
+		if not (Hashtbl.mem index_of_locations.(automaton_index) location_name)
+		then (
+			print_error ("The location name '" ^ location_name ^ "' used in the correctness property does not exist in automaton '" ^ automaton_name ^ "'.");
+			false
+		)
+		else true
+	in
+	(* Local function checking existence of a name *)
+	let check_action_name action_name =
+		if not (Hashtbl.mem index_of_labels action_name)
+		then (
+			print_error ("The action '" ^ action_name ^ "' used in the correctness property does not exist in this model.");
+			false
+		)
+		else true
+	in
+	
+	(* Generic check and conversion function for 2 actions *)
+	let gen_check_and_convert_2act property a1 a2 =
+		(* Check action names *)
+		if not (check_action_name a1 && check_action_name a2)
+		then (Noproperty , false)
+		else (
+			(* Get action indexes *)
+			let action_index1 = Hashtbl.find index_of_labels a1 in 
+			let action_index2 = Hashtbl.find index_of_labels a2 in
+			(** BADPROG (but couldn't see how to do better!) *)
+			(* Match again and create the property *)
+			match property with 
+			| ParsingStructure.Action_precedence_acyclic _ -> AbstractModel.Action_precedence_acyclic (action_index1, action_index2), true
+			| ParsingStructure.Action_precedence_cyclic _ -> AbstractModel.Action_precedence_cyclic (action_index1, action_index2), true
+			| ParsingStructure.Action_precedence_cyclicstrict _ -> AbstractModel.Action_precedence_cyclicstrict (action_index1, action_index2), true
+			| ParsingStructure.Eventual_response_acyclic _ -> AbstractModel.Eventual_response_acyclic (action_index1, action_index2), true
+			| ParsingStructure.Eventual_response_cyclic _ -> AbstractModel.Eventual_response_cyclic (action_index1, action_index2), true
+			| ParsingStructure.Eventual_response_cyclicstrict _ -> AbstractModel.Eventual_response_cyclicstrict (action_index1, action_index2), true
+			| _ -> raise (InternalError ("Impossible case while looking for properties with 2 actions; all cases should have been taken into account."))
+		)
+	in
+	
+	
+	(* Check and convert *)
+	match parsed_property_definition with
+	| None -> ((*well_formed := false; *)Noproperty , true)
+	(* DEPRECATED *)
+	(*| [ParsingStructure.Unreachable_action action_name] -> 
+		(* Check the existence and Return the index *)
+		begin
+		try (
+			let action_index = Hashtbl.find index_of_labels action_name in
+			AbstractModel.Exists_action action_index , true
+		) with Not_found ->
+			print_error ("The action '" ^ action_name ^ "' used in the bad definition was not declared.");
+			((*well_formed := false; *)Nobad , false)
+		end*)
+	| Some property ->
+	begin
+		match property with
+		
+		(* CASE NON-REACHABILITY *)
+		| ParsingStructure.Unreachable_location (automaton_name , location_name) -> 
+			(* First check automaton name *)
+			if not (check_automaton_name automaton_name)
+			then (Noproperty , false)
+			else (
+				(* Get automaton index *)
+				let automaton_index = Hashtbl.find index_of_automata automaton_name in
+				(* Check location name *)
+				if not (check_location_name automaton_index automaton_name location_name)
+					then (Noproperty , false)
+					else (
+						(* Get location index *)
+						let location_index = Hashtbl.find index_of_locations.(automaton_index) location_name in
+						(* Return the property *)
+						AbstractModel.Unreachable_location (automaton_index, location_index) , true
+					)
+				)(*
 			begin
 			try (
 				let automaton_index = Hashtbl.find index_of_automata automaton_name in
@@ -794,9 +874,28 @@ let check_bad index_of_labels index_of_automata index_of_locations parsed_bad_de
 					AbstractModel.Unreachable_location (automaton_index, location_index) , true
 			) with Not_found -> 
 				print_error ("The location '" ^ location_name ^ "' for automaton '" ^ automaton_name ^ "' used in the bad definition is not declared.");
-				((*well_formed := false; *)Noproperty , false)
-			end
+				(Noproperty , false)
+			end*)
+
+		(* CASE TWO ACTIONS *)
+		(* if a2 then a1 has happened before *)
+		| ParsingStructure.Action_precedence_acyclic ( a2 , a1 )
+		(* everytime a2 then a1 has happened before *)
+		| ParsingStructure.Action_precedence_cyclic ( a2 , a1 )
+		(* everytime a2 then a1 has happened exactly once before *)
+		| ParsingStructure.Action_precedence_cyclicstrict ( a2 , a1 )
+
+		(* if a1 then eventually a2 *)
+		| ParsingStructure.Eventual_response_acyclic ( a1 , a2 )
+		(* everytime a1 then eventually a2 *)
+		| ParsingStructure.Eventual_response_cyclic ( a1 , a2 )
+		(* everytime a1 then eventually a2 once before next *)
+		| ParsingStructure.Eventual_response_cyclicstrict ( a1 , a2 )
+			-> gen_check_and_convert_2act property a1 a2
+		
+		(* Otherwise : error ! *)
 		| _ -> raise (InternalError ("In the bad definition, not all possibilities are implemented yet."))
+	end
 (*	in
 	[n action_index], !well_formed*)
 
@@ -1362,7 +1461,7 @@ let get_clocks_in_updates : clock_updates -> Automaton.clock_index list = functi
 (*--------------------------------------------------*)
 (* Convert the parsing structure into an abstract program *)
 (*--------------------------------------------------*)
-let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_automata, parsed_init_definition, parsed_bad_definition, parsed_carto_definition) parsed_pi0 parsed_v0 options =
+let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_automata, parsed_init_definition, parsed_property_definition, parsed_carto_definition) parsed_pi0 parsed_v0 options =
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Debug functions *) 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -1595,7 +1694,7 @@ let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* WARNING: might be a problem if the check_automata test fails *)
 	let bad, well_formed_bad =
-		check_bad index_of_labels index_of_automata index_of_locations parsed_bad_definition in
+		check_and_convert_property index_of_labels index_of_automata index_of_locations parsed_property_definition in
 		
 		
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
