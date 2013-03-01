@@ -777,9 +777,6 @@ let check_and_convert_property index_of_labels index_of_automata index_of_locati
 	(!state_pairs, !well_formed)*)
 (*	let action_index =*)
 
-	(* Boolean to perform multiple checks *)
-(* 	let well_formed = ref true in *)
-
 	(* Local function checking existence of a name *)
 	let check_automaton_name automaton_name =
 		if not (Hashtbl.mem index_of_automata automaton_name)
@@ -830,21 +827,49 @@ let check_and_convert_property index_of_labels index_of_automata index_of_locati
 		)
 	in
 	
+	(* Generic check and conversion function for 2 actions and one deadline *)
+	let gen_check_and_convert_2actd property a1 a2 d =
+		(* Check action names *)
+		if not (check_action_name a1 && check_action_name a2)
+		then (Noproperty , false)
+		else (
+			(* Get action indexes *)
+			let action_index1 = Hashtbl.find index_of_labels a1 in 
+			let action_index2 = Hashtbl.find index_of_labels a2 in
+			(** BADPROG (but couldn't see how to do better!) *)
+			(* Match again and create the property *)
+			match property with 
+			| ParsingStructure.TB_Action_precedence_acyclic _ -> AbstractModel.TB_Action_precedence_acyclic (action_index1, action_index2, d), true
+			| ParsingStructure.TB_Action_precedence_cyclic _ -> AbstractModel.TB_Action_precedence_cyclic (action_index1, action_index2, d), true
+			| ParsingStructure.TB_Action_precedence_cyclicstrict _ -> AbstractModel.TB_Action_precedence_cyclicstrict (action_index1, action_index2, d), true
+			| ParsingStructure.TB_response_acyclic _ -> AbstractModel.TB_response_acyclic (action_index1, action_index2, d), true
+			| ParsingStructure.TB_response_cyclic _ -> AbstractModel.TB_response_cyclic (action_index1, action_index2, d), true
+			| ParsingStructure.TB_response_cyclicstrict _ -> AbstractModel.TB_response_cyclicstrict (action_index1, action_index2, d), true
+			| _ -> raise (InternalError ("Impossible case while looking for properties with 2 actions and a deadline; all cases should have been taken into account."))
+		)
+	in
+	
+	(* Generic check and conversion function for a list of actions *)
+	let gen_check_and_convert_list property actions_list =
+		(* Check action names (use a fold_left instead of forall to ensure that all actions will be checked) *)
+		if not (List.fold_left (fun current_result a -> check_action_name a && current_result) true actions_list)
+		then (Noproperty , false)
+		else (
+			(* Get action indexes *)
+			let action_index_list = List.map (Hashtbl.find index_of_labels) actions_list in
+			(** BADPROG (but couldn't see how to do better!) *)
+			(* Match again and create the property *)
+			match property with 
+			| ParsingStructure.Sequence_acyclic _ -> AbstractModel.Sequence_acyclic action_index_list, true
+			| ParsingStructure.Sequence_cyclic _ -> AbstractModel.Sequence_cyclic action_index_list, true
+			| _ -> raise (InternalError ("Impossible case while looking for properties with a sequence; all cases should have been taken into account."))
+		)
+	in
+	
 	
 	(* Check and convert *)
 	match parsed_property_definition with
-	| None -> ((*well_formed := false; *)Noproperty , true)
-	(* DEPRECATED *)
-	(*| [ParsingStructure.Unreachable_action action_name] -> 
-		(* Check the existence and Return the index *)
-		begin
-		try (
-			let action_index = Hashtbl.find index_of_labels action_name in
-			AbstractModel.Exists_action action_index , true
-		) with Not_found ->
-			print_error ("The action '" ^ action_name ^ "' used in the bad definition was not declared.");
-			((*well_formed := false; *)Nobad , false)
-		end*)
+	| None -> (Noproperty , true)
 	| Some property ->
 	begin
 		match property with
@@ -866,16 +891,7 @@ let check_and_convert_property index_of_labels index_of_automata index_of_locati
 						(* Return the property *)
 						AbstractModel.Unreachable_location (automaton_index, location_index) , true
 					)
-				)(*
-			begin
-			try (
-				let automaton_index = Hashtbl.find index_of_automata automaton_name in
-				let location_index = Hashtbl.find index_of_locations.(automaton_index) location_name in
-					AbstractModel.Unreachable_location (automaton_index, location_index) , true
-			) with Not_found -> 
-				print_error ("The location '" ^ location_name ^ "' for automaton '" ^ automaton_name ^ "' used in the bad definition is not declared.");
-				(Noproperty , false)
-			end*)
+				)
 
 		(* CASE TWO ACTIONS *)
 		(* if a2 then a1 has happened before *)
@@ -884,7 +900,6 @@ let check_and_convert_property index_of_labels index_of_automata index_of_locati
 		| ParsingStructure.Action_precedence_cyclic ( a2 , a1 )
 		(* everytime a2 then a1 has happened exactly once before *)
 		| ParsingStructure.Action_precedence_cyclicstrict ( a2 , a1 )
-
 		(* if a1 then eventually a2 *)
 		| ParsingStructure.Eventual_response_acyclic ( a1 , a2 )
 		(* everytime a1 then eventually a2 *)
@@ -893,11 +908,44 @@ let check_and_convert_property index_of_labels index_of_automata index_of_locati
 		| ParsingStructure.Eventual_response_cyclicstrict ( a1 , a2 )
 			-> gen_check_and_convert_2act property a1 a2
 		
-		(* Otherwise : error ! *)
-		| _ -> raise (InternalError ("In the bad definition, not all possibilities are implemented yet."))
+		(* CASE ACTION + DEADLINE *)
+		| ParsingStructure.Action_deadline ( a , d )
+			-> if not (check_action_name a)
+				then (Noproperty , false)
+				else (
+					(* Get action indexes *)
+					let action_index = Hashtbl.find index_of_labels a in
+					AbstractModel.Action_deadline ( action_index , d ), true
+				)
+		
+		(* CASE 2 ACTIONS + DEADLINE *)
+		(* if a2 then a1 happened within d before *)
+		| ParsingStructure.TB_Action_precedence_acyclic (a1, a2, d)
+		(* everytime a2 then a1 happened within d before *)
+		| ParsingStructure.TB_Action_precedence_cyclic (a1, a2, d)
+		(* everytime a2 then a1 happened once within d before *)
+		| ParsingStructure.TB_Action_precedence_cyclicstrict (a1, a2, d)
+		(* if a1 then eventually a2 within d *)
+		| ParsingStructure.TB_response_acyclic (a1, a2, d)
+		(* everytime a1 then eventually a2 within d *)
+		| ParsingStructure.TB_response_cyclic (a1, a2, d)
+		(* everytime a1 then eventually a2 within d once before next *)
+		| ParsingStructure.TB_response_cyclicstrict (a1, a2, d)
+			-> gen_check_and_convert_2actd property a1 a2 d
+	
+		(* CASE SEQUENCES (list of actions) *)
+		(* sequence: a1, ..., an *)
+		| ParsingStructure.Sequence_acyclic (actions_list)
+		(* sequence: always a1, ..., an *)
+		| ParsingStructure.Sequence_cyclic (actions_list)
+			-> gen_check_and_convert_list property actions_list
+	
+	(*		(* Otherwise : error ! *)
+		| _ -> raise (InternalError ("In the bad definition, not all possibilities are implemented yet."))*)
 	end
 (*	in
 	[n action_index], !well_formed*)
+
 
 
 (*--------------------------------------------------*)

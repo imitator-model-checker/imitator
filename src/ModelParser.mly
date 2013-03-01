@@ -57,7 +57,7 @@ let parse_error s =
 	CT_THEN CT_TRUE
 	CT_UNKNOWN CT_UNREACHABLE
 	CT_VAR
-	CT_WAIT CT_WHEN CT_WHILE CT_WHITHIN
+	CT_WAIT CT_WHEN CT_WHILE CT_WITHIN
 
 
 %token EOF
@@ -470,7 +470,44 @@ property_definition:
 
 // List of patterns
 pattern:
-	| CT_UNREACHABLE bad_definition { $2 };
+	// Unreachability
+	| CT_UNREACHABLE bad_definition { $2 }
+	
+	/* if a2 then a1 has happened before */
+	| CT_IF NAME CT_THEN NAME CT_HAS CT_HAPPENED CT_BEFORE { Action_precedence_acyclic ($2, $4) }
+	/* everytime a2 then a1 has happened before */
+	| CT_EVERYTIME NAME CT_THEN NAME CT_HAS CT_HAPPENED CT_BEFORE { Action_precedence_cyclic ($2, $4) }
+	/* everytime a2 then a1 has happened once before */
+	| CT_EVERYTIME NAME CT_THEN NAME CT_HAS CT_HAPPENED CT_ONCE CT_BEFORE { Action_precedence_cyclicstrict ($2, $4) }
+	
+	/* if a1 then eventually a2 */
+	| CT_IF NAME CT_THEN CT_EVENTUALLY NAME { Eventual_response_acyclic ($2, $5) }
+	/* everytime a1 then eventually a2 */
+	| CT_EVERYTIME NAME CT_THEN CT_EVENTUALLY NAME { Eventual_response_cyclic ($2, $5) }
+	/* everytime a1 then eventually a2 once before next */
+	| CT_EVERYTIME NAME CT_THEN CT_EVENTUALLY NAME CT_ONCE CT_BEFORE CT_NEXT { Eventual_response_cyclicstrict ($2, $5) }
+	
+	/* a within d */
+	| NAME CT_WITHIN rational { Action_deadline ($1, $3) }
+	
+	/* if a2 then a1 happened within d before */
+	| CT_IF NAME CT_THEN NAME CT_HAS CT_HAPPENED CT_WITHIN rational CT_BEFORE { TB_Action_precedence_acyclic ($2, $4, $8) }
+	/* everytime a2 then a1 happened within d before */
+	| CT_EVERYTIME NAME CT_THEN NAME CT_HAS CT_HAPPENED CT_WITHIN rational CT_BEFORE { TB_Action_precedence_cyclic ($2, $4, $8) }
+	/* everytime a2 then a1 happened once within d before */
+	| CT_EVERYTIME NAME CT_THEN NAME CT_HAS CT_HAPPENED CT_ONCE CT_WITHIN rational CT_BEFORE { TB_Action_precedence_cyclic ($2, $4, $9) }
+	
+	/* if a1 then eventually a2 within d */
+	| CT_IF NAME CT_THEN CT_EVENTUALLY NAME CT_WITHIN rational { TB_response_acyclic ($2, $5, $7) }
+	/* everytime a1 then eventually a2 within d */
+	| CT_EVERYTIME NAME CT_THEN CT_EVENTUALLY NAME CT_WITHIN rational { TB_response_cyclic ($2, $5, $7) }
+	/* everytime a1 then eventually a2 within d once before next */
+	| CT_IF NAME CT_THEN CT_EVENTUALLY NAME CT_WITHIN rational CT_ONCE CT_BEFORE CT_NEXT { TB_response_cyclicstrict ($2, $5, $7) }
+	
+	/* sequence: a1, ..., an */
+	| CT_SEQUENCE COLON name_list { Sequence_acyclic ($3) }
+	/* sequence: always a1, ..., an */
+	| CT_SEQUENCE COLON CT_ALWAYS name_list { Sequence_cyclic ($4) }
 ;
 
 
@@ -478,6 +515,7 @@ bad_definition:
 	// TODO: add more?
 	| loc_predicate { let a,b = $1 in (Unreachable_location (a , b)) }
 ;
+
 
 convex_predicate_with_nature:
 	// TODO WARNING BUG 

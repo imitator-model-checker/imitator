@@ -114,7 +114,7 @@ rule token = parse
 (* 	| "weakle"         { CT_WEAKLE } *)
 	| "when"           { CT_WHEN }
 	| "while"          { CT_WHILE }
-	| "whithin"        { CT_WHITHIN }
+	| "within"         { CT_WITHIN }
 
 	| ['a'-'z''A'-'Z']['a'-'z''A'-'Z''_''0'-'9']* as lxm { NAME lxm }
 	| ['0'-'9']*'.'['0'-'9']+ as lxm { FLOAT lxm } 
