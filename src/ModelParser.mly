@@ -461,7 +461,7 @@ property_definition:
 	// | CT_BAD OP_ASSIGN CT_EXISTS_LOCATION loc_predicate SEMICOLON { let a,b = $4 in [(Exists_location (a , b))] }
 	
 	// Pattern
-	| CT_PROPERTY OP_ASSIGN pattern { Some $3 }
+	| CT_PROPERTY OP_ASSIGN pattern semicolon_opt { Some $3 }
 	
 	// Case: no property
 	|  { None }
@@ -570,6 +570,11 @@ state_predicate:
 
 comma_opt:
 	| COMMA { }
+	| { }
+;
+
+semicolon_opt:
+	| SEMICOLON { }
 	| { }
 ;
 

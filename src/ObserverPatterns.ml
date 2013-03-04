@@ -33,7 +33,10 @@ let location_prefix = "locobs_"
 let location_name location_index =
 	location_prefix ^ (string_of_int location_index)
 
+(** Shortcuts *)
 let truec = LinearConstraint.true_constraint
+
+let untimedt destination_index = [truec (), No_update, [], destination_index]
 
 
 (****************************************************************)
@@ -118,10 +121,10 @@ let get_locations property =
 	- Invariants
 *)
 (*------------------------------------------------------------*)
-let get_automaton property = 
+let get_automaton nb_actions property = 
 	(* Create the common structures *)
 	let initialize_structures nb_locations all_actions =
-		let nb_actions = List.length all_actions in
+(* 		let nb_observer_actions = List.length all_actions in *)
 		(*Array for actions for location *)
 		let actions_per_location = 	Array.make nb_locations [] in
 		(* All observers are complete: fill *)
@@ -133,38 +136,82 @@ let get_automaton property =
 		(* Array for invariants *)
 		Array.make nb_locations (truec ()),
 		(* Array for transitions *)
-		Array.make nb_locations (Array.make nb_actions []),
-		(* The array of transitions for locations who allow all actions *)
-		function location_index -> Array.make nb_actions [truec (), No_update , [], location_index]
+		(let transitions = Array.make nb_locations (Array.make nb_actions []) in
+			(* Initialize transitions ! Otherwise pointers problems *)
+			for location_index = 0 to nb_locations - 1 do
+				transitions.(location_index) <- Array.make nb_actions [];
+			done;
+		transitions
+		)
+		,
+		(* The array of transitions for locations who allow all declared observer actions for a location, as self-loops *)
+		function location_index ->
+			let allow_all = Array.make nb_actions [] in
+			List.iter (fun action_index -> allow_all.(action_index) <- untimedt location_index) all_actions;
+			allow_all
 	in
+	
 	match property with
-	| Noproperty -> raise (InternalError("The function 'get_automaton property' should not be called in case of no observer."))
+	| Noproperty -> raise (InternalError("The function 'get_automaton' should not be called in case of no observer."))
 	(* Not a real observer: does not build anything *)
-	| Unreachable_location _ -> raise (InternalError("The function 'get_automaton property' should not be called in case of a degenerate observer."))
+	| Unreachable_location _ -> raise (InternalError("The function 'get_automaton' should not be called in case of a degenerate observer."))
 	
 	
 	| Action_precedence_acyclic (a1, a2) -> 
+		let nb_locations = 3 in
 		let all_actions = [a1;a2] in
 		(* Initialize *)
-		let actions_per_location, invariants, transitions, allow_all = initialize_structures 3 all_actions in
+		let actions_per_location, invariants, transitions, allow_all = initialize_structures nb_locations all_actions in
 		(* Compute transitions *)
-		transitions.(0).(a1) <- [truec (), No_update, [], 1];
-(* 		transitions.(1) <- allow_all 1; *)
-		(* Actions *)
-		all_actions
-		,
-		actions_per_location
-		,
-		invariants
-		,
-		transitions
+		transitions.(0).(a1) <- untimedt 1;
+		transitions.(0).(a2) <- untimedt 2;
+		transitions.(1) <- allow_all 1;
+		transitions.(2) <- allow_all 2;
+		(* Return structure *)
+		all_actions, actions_per_location, invariants, transitions
+	
+	
+	| Action_precedence_cyclic (a1, a2) -> 
+		let nb_locations = 3 in
+		let all_actions = [a1;a2] in
+		(* Initialize *)
+		let actions_per_location, invariants, transitions, allow_all = initialize_structures nb_locations all_actions in
+		(* Compute transitions *)
+		transitions.(0).(a1) <- untimedt 1;
+		transitions.(0).(a2) <- untimedt 2;
+		transitions.(1).(a1) <- untimedt 1;
+		transitions.(1).(a2) <- untimedt 0;
+		transitions.(2) <- allow_all 2;
+		(*print_message Debug_standard ("Index of a1: " ^ (string_of_int a1) ^ " ; index of a2: " ^ (string_of_int a2) ^ "");
+		for location_index = 0 to nb_locations - 1 do
+			for action_index = 0 to nb_actions - 1 do
+				let t = transitions.(location_index).(action_index) in
+				match t with
+				| [] -> print_message Debug_standard ("Location " ^ (string_of_int location_index) ^ "  -> action " ^ (string_of_int action_index) ^ " : nothing")
+				| [(_, _, _, destination_index)] -> print_message Debug_standard ("Location " ^ (string_of_int location_index) ^ "  -> action " ^ (string_of_int action_index) ^ " : " ^ (string_of_int destination_index) ^ "")
+				| _ -> print_message Debug_standard ("Location " ^ (string_of_int location_index) ^ "  -> action " ^ (string_of_int action_index) ^ " : something else")
+			done;
+		done;*)
+		(* Return structure *)
+		all_actions, actions_per_location, invariants, transitions
+	
+	
+	| Action_precedence_cyclicstrict (a1, a2) -> 
+		let nb_locations = 3 in
+		let all_actions = [a1;a2] in
+		(* Initialize *)
+		let actions_per_location, invariants, transitions, allow_all = initialize_structures nb_locations all_actions in
+		(* Compute transitions *)
+		transitions.(0).(a1) <- untimedt 1;
+		transitions.(0).(a2) <- untimedt 2;
+		transitions.(1).(a1) <- untimedt 2;
+		transitions.(1).(a2) <- untimedt 0;
+		transitions.(2) <- allow_all 2;
+		(* Return structure *)
+		all_actions, actions_per_location, invariants, transitions
 		
 	
-	
-(*		| Action_precedence_acyclic _
-	| Action_precedence_cyclic _
-	| Action_precedence_cyclicstrict _
-		-> 3
+(*	
 	| Eventual_response_acyclic _ -> 3
 	| Eventual_response_cyclic _ -> 2
 	| Eventual_response_cyclicstrict _ -> 3

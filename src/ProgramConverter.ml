@@ -593,7 +593,7 @@ let check_automata index_of_variables type_of_variables variable_names index_of_
 (*--------------------------------------------------*)
 (* Check that the init_definition are well-formed *)
 (*--------------------------------------------------*)
-let check_init discrete variable_names constants index_of_variables type_of_variables automata automata_names index_of_automata locations_per_automaton init_definition =
+let check_init discrete variable_names constants index_of_variables type_of_variables automata automata_names index_of_automata locations_per_automaton init_definition observer_automaton =
 	let well_formed = ref true in
 	(* Check that (automaton / location / variable) names exist in each predicate *)
 	List.iter (function
@@ -642,35 +642,23 @@ let check_init discrete variable_names constants index_of_variables type_of_vari
 	) initial_locations;
 	(* Check that every automaton is given at least one initial location *)
 	List.iter (fun automaton_index -> 
-		(* Get the name *)
-		let automaton_name = automata_names automaton_index in
-		(* Look for it in the hash table *)
-		if not (Hashtbl.mem init_locations_for_automata automaton_name) then (
-			(* Error *)
-			print_error ("The automaton '" ^ automaton_name ^ "' is not given any initial location in the init definition.");
-			well_formed := false;
+		let is_observer i = match observer_automaton with
+			| None -> false
+			| Some observer_id -> i = observer_id
+		in
+		(* No check for the observer (will be added later) *)
+		if not (is_observer automaton_index) then (
+			(* Get the name *)
+			let automaton_name = automata_names automaton_index in
+			(* Look for it in the hash table *)
+			if not (Hashtbl.mem init_locations_for_automata automaton_name) then (
+				(* Error *)
+				print_error ("The automaton '" ^ automaton_name ^ "' is not given any initial location in the init definition.");
+				well_formed := false;
+			);
 		);
 	) automata;
 	
-	(*
-	(* Only keep the automaton_names *)
-	let automata_with_initial_locations, _ = List.split initial_locations in
-	List.iter (fun automaton_index -> 
-		(* Find the name *)
-		let automaton_name = automata_names automaton_index in
-		(* Filter the initial locations for automaton_name *)
-		(**** TO OPTIMIZE !!!! : here exponential instead of linear ****)
-		let initial_locations_for_this_automaton =
-			List.filter (fun name -> name = automaton_name) automata_with_initial_locations
-		in
-		let nb_locations = List.length initial_locations_for_this_automaton in
-		if nb_locations = 0 then (
-			print_error ("The automaton '" ^ automaton_name ^ "' is not given any initial location in the init definition."); well_formed := false
-		)else (if nb_locations >= 2 then (
-			print_error ("The automaton '" ^ automaton_name ^ "' must be given only one initial location in the init definition; here, " ^ (string_of_int nb_locations) ^ " are given."); well_formed := false
-		))
-	) automata;*)
-
 	(* Partition the init inequalities between the discrete init assignments, and other inequalities *)
 	let discrete_init, other_inequalities = List.partition (function
 		(* Check if the left part is only a variable name *)
@@ -807,8 +795,10 @@ let check_and_convert_property index_of_actions index_of_automata index_of_locat
 	
 	(* Generic check and conversion function for 2 actions *)
 	let gen_check_and_convert_2act property a1 a2 =
-		(* Check action names *)
-		if not (check_action_name a1 && check_action_name a2)
+		(* Check action names (perform 2 even if one fails) *)
+		let check1 = check_action_name a1 in
+		let check2 = check_action_name a2 in
+		if not (check1 && check2)
 		then (Noproperty , false)
 		else (
 			(* Get action indexes *)
@@ -829,8 +819,10 @@ let check_and_convert_property index_of_actions index_of_automata index_of_locat
 	
 	(* Generic check and conversion function for 2 actions and one deadline *)
 	let gen_check_and_convert_2actd property a1 a2 d =
-		(* Check action names *)
-		if not (check_action_name a1 && check_action_name a2)
+		(* Check action names (perform 2 even if one fails) *)
+		let check1 = check_action_name a1 in
+		let check2 = check_action_name a2 in
+		if not (check1 && check2)
 		then (Noproperty , false)
 		else (
 			(* Get action indexes *)
@@ -1343,6 +1335,10 @@ let convert_transitions nb_actions index_of_variables constants type_of_variable
 		(* Iterate on locations *)
 		Array.iteri (fun location_index transitions_for_this_location ->
 			(* Set the array for this location *)
+			
+			(** WARNING !!! Here, a BIG array is created (as big as the number of actions !! *)
+			(** TODO: convert to HashTbl ? (test efficiency?) *)
+			
 			array_of_transitions.(automaton_index).(location_index) <- Array.make nb_actions [];
 			(* Iterate on transitions *)
 			List.iter (fun (action_index, guard, updates, dest_location_index) ->
@@ -1591,18 +1587,18 @@ let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_
 	
 	(* Print some information *)
 	if debug_mode_greater Debug_high then(
-	begin
-		match observer_automaton with
-		| None -> ()
-		| Some observer_automaton -> print_message Debug_high ("Adding extra automaton '" ^ observer_automaton ^ "' for the observer.");
-	end;
-	begin
-		match observer_clock with
-		| None -> ()
-		| Some observer_clock -> print_message Debug_high ("Adding extra clock '" ^ observer_clock ^ "' for the observer.");
-	end;
+		begin
+			match observer_automaton with
+			| None -> ()
+			| Some observer_automaton -> print_message Debug_high ("Adding extra automaton '" ^ observer_automaton ^ "' for the observer.");
+		end;
+		begin
+			match observer_clock with
+			| None -> ()
+			| Some observer_clock -> print_message Debug_high ("Adding extra clock '" ^ observer_clock ^ "' for the observer.");
+		end;
 	);
-
+	
 	
 	
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -1633,6 +1629,13 @@ let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_
 	let nb_discrete = List.length discrete_names in
 	let nb_parameters = List.length parameters_names in
 	let nb_variables = List.length variable_names in
+	
+	
+	(* Compute the index for the observer automaton *)
+	let observer_automaton = match observer_automaton with
+		| None -> None
+		| Some _ -> Some (nb_automata-1)
+	in
 	
 
 
@@ -1740,8 +1743,6 @@ let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_
 	(* Check that all the location names of an automaton are different *)
 	if not (all_locations_different parsed_automata) then raise InvalidModel;
 
-	print_message Debug_high ("\n*** CHECK 1");
-
 	(* Get all the locations for each automaton: automaton_index -> location_index -> location_name *)
 	let array_of_location_names = make_locations_per_automaton index_of_automata parsed_automata nb_automata in
 	(* Add the observer locations *)
@@ -1749,11 +1750,10 @@ let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_
 	match observer_automaton with
 		| None -> ()
 			(** WARNING: we assume here that observer automaton is the last one ! *)
-		| Some _ ->
+		| Some automaton_index ->
 			print_message Debug_high ("Adding the observer locations.");
-			array_of_location_names.(nb_automata) <- ObserverPatterns.get_locations parsed_property_definition
+			array_of_location_names.(automaton_index) <- ObserverPatterns.get_locations parsed_property_definition
 	end;
-	
 	
 	(* A (constant) array of hash tables 'automaton_index -> location_name -> location_index' *)
 	let index_of_locations = Array.create nb_automata (Hashtbl.create 0) in
@@ -1789,6 +1789,8 @@ let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_
 	);
 	
 	
+	
+	
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Check the automata *) 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -1803,7 +1805,7 @@ let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_
 	(* Get couples for the initialisation of the discrete variables, and check the init definition *)
 	(* WARNING: might be a problem if the check_automata test fails *)
 	let init_discrete_couples, well_formed_init =
-		check_init discrete variable_names constants index_of_variables type_of_variables automata automata_names index_of_automata array_of_location_names parsed_init_definition in
+		check_init discrete variable_names constants index_of_variables type_of_variables automata automata_names index_of_automata array_of_location_names parsed_init_definition observer_automaton in
 
 	
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -1898,13 +1900,11 @@ let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_
 	begin
 	match observer_automaton with
 	| None -> print_message Debug_total ("*** (No observer)"); ()
-	| Some _ -> 
+	| Some observer_id -> 
 		print_message Debug_low ("*** Generating the observer...");
-		(** WARNING / HACK: assume that observer_id = nb_automata, if any *)
-		let observer_id = nb_automata in
 		(* Get the info from the observer pattern *)
 		let observer_actions, observer_actions_per_location, observer_invariants, observer_transitions =
-			ObserverPatterns.get_automaton property in
+			ObserverPatterns.get_automaton nb_actions property in
 		(* Update actions *)
 		actions_per_automaton.(observer_id) <- observer_actions;
 		(* Update actions per location *)
@@ -1914,6 +1914,19 @@ let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_
 		(* Update invariants *)
 		invariants.(observer_id) <- observer_invariants;
 	end;
+
+	
+	
+	
+	
+	
+	(* TODO : perform init for observer (location + clock !!!) *)
+	
+	
+	
+	
+	
+	
 	
 	
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)

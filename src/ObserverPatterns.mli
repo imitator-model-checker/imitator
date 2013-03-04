@@ -36,7 +36,7 @@ val new_elements : ParsingStructure.property_definition ->  (string option * str
 val get_locations : ParsingStructure.property_definition ->  (location_name array)
 
 (* Create the observer; returns all information *)
-val get_automaton : (*(action_name, action_index) Hashtbl.t ->*) property -> 
+val get_automaton : int -> (*(action_name, action_index) Hashtbl.t ->*) property -> 
 	(* Actions per automaton *)
 	  action_index list
 	(* Actions per location *)
