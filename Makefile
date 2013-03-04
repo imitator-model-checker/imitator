@@ -6,7 +6,7 @@
 #
 #  Author:        Etienne Andre
 #  Created:       2009/09/07
-#  Last modified: 2013/02/01
+#  Last modified: 2013/03/04
 #  Ocaml version: 3.12.1
 ###############################################################
 
@@ -77,10 +77,10 @@ MAIN = $(SRC)/IMITATOR.cmo
 # MAIN_OPT = $(MAIN:.cmo=.cmx)
 
 # modules to compile
-MODULES = Global NumConst ReachabilityTree Options LinearConstraint Automaton Cache Input Pi0Lexer Pi0Parser V0Lexer V0Parser ModelLexer ModelParser GMLLexer GMLParser ModelPrinter Graph PTA2CLP PTA2GML ProgramConverter Graphics PTA2JPG Reachability Cartography
+MODULES = Global NumConst ReachabilityTree Options LinearConstraint Automaton Cache Input Pi0Lexer Pi0Parser V0Lexer V0Parser ModelLexer ModelParser GMLLexer GMLParser Graph ModelPrinter ObserverPatterns PTA2CLP PTA2GML ProgramConverter Graphics PTA2JPG Reachability Cartography
 
 # interfaces
-HEADERS = Global NumConst ReachabilityTree Options LinearConstraint Automaton Cache ParsingStructure AbstractModel Input Graph ModelPrinter PTA2CLP PTA2GML  ProgramConverter Graphics PTA2JPG Reachability Cartography
+HEADERS = Global NumConst ReachabilityTree Options LinearConstraint Automaton Cache ParsingStructure AbstractModel Input Graph ModelPrinter ObserverPatterns PTA2CLP PTA2GML  ProgramConverter Graphics PTA2JPG Reachability Cartography
 
 CMIS = $(addprefix $(SRC)/, $(addsuffix .cmi, $(HEADERS)))
 OBJS = $(addprefix $(SRC)/, $(addsuffix .cmo, $(MODULES)))
@@ -294,7 +294,7 @@ exe:
 # 	$(TARGET) $(EXAMPLE_PATH)/AndOr/AndOr2.imi $(EXAMPLE_PATH)/AndOr/AndOr.pi0
 # 	$(TARGET) $(EXAMPLE_PATH)/AndOr/AndOr2.imi $(EXAMPLE_PATH)/AndOr/AndOr.pi0 -dynamic-elimination -verbose low
 
-# 	$(TARGET) $(EXAMPLE_PATH)/AndOr/AndOr.imi $(EXAMPLE_PATH)/AndOr/AndOr.pi0
+	$(TARGET) $(EXAMPLE_PATH)/AndOr/AndOr.imi $(EXAMPLE_PATH)/AndOr/AndOr.pi0
 # 	$(TARGET) $(EXAMPLE_PATH)/AndOr/AndOr.imi $(EXAMPLE_PATH)/AndOr/AndOr.pi0 -bab
 # 	$(TARGET) $(EXAMPLE_PATH)/AndOr/AndOr.imi $(EXAMPLE_PATH)/AndOr/AndOr.pi0 -with-dot -with-dot-source -fancy
 # 	$(TARGET) $(EXAMPLE_PATH)/AndOr/AndOr.imi $(EXAMPLE_PATH)/AndOr/AndOr.pi0 -no-dot -no-log -statistics 
@@ -369,13 +369,13 @@ exe:
 
 ##### CASE STUDIES : TRAINS #####
 
-	$(TARGET) $(EXAMPLE_PATH)/Train/Train1PTA.imi -PTA2JPG
+# 	$(TARGET) $(EXAMPLE_PATH)/Train/Train1PTA.imi -PTA2JPG
 # 	$(TARGET) $(EXAMPLE_PATH)/Train/Train1PTA.imi -mode reachability -incl
 # 	$(TARGET) $(EXAMPLE_PATH)/Train/Train1PTA.imi $(EXAMPLE_PATH)/Train/Train1PTA.pi0
 # 	$(TARGET) $(EXAMPLE_PATH)/Train/Train1PTA.imi -PTA2GML
 # 	$(TARGET) $(EXAMPLE_PATH)/Train/Train1PTA.gml -fromGML -mode reachability
 
-	$(TARGET) $(EXAMPLE_PATH)/Train/TrainAHV93.imi -PTA2JPG
+# 	$(TARGET) $(EXAMPLE_PATH)/Train/TrainAHV93.imi -PTA2JPG
 # 	bin/IMITATOR2.34.111115 $(EXAMPLE_PATH)/Train/TrainAHV93.imi -mode reachability
 # 	$(TARGET) $(EXAMPLE_PATH)/Train/TrainAHV93.imi $(EXAMPLE_PATH)/Train/TrainAHV93.pi0
 # 	$(TARGET) $(EXAMPLE_PATH)/Train/TrainAHV93.imi $(EXAMPLE_PATH)/Train/TrainAHV93.pi0 -incl

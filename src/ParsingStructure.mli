@@ -8,7 +8,7 @@
  * Author:        Etienne Andre
  *
  * Created:       2009/09/08
- * Last modified: 2013/03/01
+ * Last modified: 2013/03/04
  *
  ****************************************************************)
 
@@ -82,12 +82,13 @@ type sync =
 type update = variable_name * linear_expression
 
 type guard = convex_predicate
+type invariant = convex_predicate
 
 (* Transition = Guard * update * sync label * destination location *)
 type transition = guard * update list * sync * location_name
 
 (* Location = Name * Cost * Invariant * list of stopped clocks * transitions *)
-type location = location_name * linear_expression option * convex_predicate * (variable_name list) * (transition list)
+type location = location_name * linear_expression option * invariant * (variable_name list) * (transition list)
 
 type automaton = automaton_name * sync_name list * location list
 

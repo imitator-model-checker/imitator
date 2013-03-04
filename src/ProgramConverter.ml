@@ -10,7 +10,7 @@
  * Author:        Etienne Andre
  * 
  * Created:       2009/09/09
- * Last modified: 2013/03/01
+ * Last modified: 2013/03/04
  *
  ****************************************************************)
 
@@ -754,7 +754,7 @@ let check_init discrete variable_names constants index_of_variables type_of_vari
 (*--------------------------------------------------*)
 (* Check the correctness property declaration       *)
 (*--------------------------------------------------*)
-let check_and_convert_property index_of_labels index_of_automata index_of_locations parsed_property_definition =
+let check_and_convert_property index_of_actions index_of_automata index_of_locations parsed_property_definition =
 (* 	let well_formed = ref true in *)
 	(*(*CASE LIST OF LOCATIONS*)
 	(* convert to pairs of automata indices and location indices *)
@@ -797,7 +797,7 @@ let check_and_convert_property index_of_labels index_of_automata index_of_locati
 	in
 	(* Local function checking existence of a name *)
 	let check_action_name action_name =
-		if not (Hashtbl.mem index_of_labels action_name)
+		if not (Hashtbl.mem index_of_actions action_name)
 		then (
 			print_error ("The action '" ^ action_name ^ "' used in the correctness property does not exist in this model.");
 			false
@@ -812,8 +812,8 @@ let check_and_convert_property index_of_labels index_of_automata index_of_locati
 		then (Noproperty , false)
 		else (
 			(* Get action indexes *)
-			let action_index1 = Hashtbl.find index_of_labels a1 in 
-			let action_index2 = Hashtbl.find index_of_labels a2 in
+			let action_index1 = Hashtbl.find index_of_actions a1 in 
+			let action_index2 = Hashtbl.find index_of_actions a2 in
 			(** BADPROG (but couldn't see how to do better!) *)
 			(* Match again and create the property *)
 			match property with 
@@ -834,8 +834,8 @@ let check_and_convert_property index_of_labels index_of_automata index_of_locati
 		then (Noproperty , false)
 		else (
 			(* Get action indexes *)
-			let action_index1 = Hashtbl.find index_of_labels a1 in 
-			let action_index2 = Hashtbl.find index_of_labels a2 in
+			let action_index1 = Hashtbl.find index_of_actions a1 in 
+			let action_index2 = Hashtbl.find index_of_actions a2 in
 			(** BADPROG (but couldn't see how to do better!) *)
 			(* Match again and create the property *)
 			match property with 
@@ -856,7 +856,7 @@ let check_and_convert_property index_of_labels index_of_automata index_of_locati
 		then (Noproperty , false)
 		else (
 			(* Get action indexes *)
-			let action_index_list = List.map (Hashtbl.find index_of_labels) actions_list in
+			let action_index_list = List.map (Hashtbl.find index_of_actions) actions_list in
 			(** BADPROG (but couldn't see how to do better!) *)
 			(* Match again and create the property *)
 			match property with 
@@ -914,7 +914,7 @@ let check_and_convert_property index_of_labels index_of_automata index_of_locati
 				then (Noproperty , false)
 				else (
 					(* Get action indexes *)
-					let action_index = Hashtbl.find index_of_labels a in
+					let action_index = Hashtbl.find index_of_actions a in
 					AbstractModel.Action_deadline ( action_index , d ), true
 				)
 		
@@ -1080,7 +1080,7 @@ let make_constants constants =
 (*--------------------------------------------------*)
 (* Get all the declared actions for every automaton *)
 (*--------------------------------------------------*)
-let make_actions_per_automaton index_of_labels index_of_automata automata =
+let make_actions_per_automaton index_of_actions index_of_automata automata =
 	(* Create an empty array for every automaton *)
 	let actions_per_automaton = Array.make (List.length automata) [] in
 	(* Fill it *)
@@ -1091,7 +1091,7 @@ let make_actions_per_automaton index_of_labels index_of_automata automata =
 		actions_per_automaton.(automaton_index) <-
 			List.map (fun sync_name ->
 			(* Get the index of the label *)
-			let label_index = Hashtbl.find index_of_labels sync_name in
+			let label_index = Hashtbl.find index_of_actions sync_name in
 			(* Return the label index *)
 			label_index
 			) sync_name_list;
@@ -1103,28 +1103,65 @@ let make_actions_per_automaton index_of_labels index_of_automata automata =
 (*--------------------------------------------------*)
 (* Get all the locations for every automaton *)
 (*--------------------------------------------------*)
-let make_locations_per_automaton index_of_automata automata =
+let make_locations_per_automaton index_of_automata parsed_automata nb_automata =
 	(* Create an empty array for every automaton *)
-	let locations_per_automaton = Array.make (Hashtbl.length index_of_automata) (Array.make 0 "") in
+	let locations_per_automaton = Array.make nb_automata (Array.make 0 "") in
 	(* For each automaton: *)
 	List.iter
 		(fun (automaton_name, _, transitions) ->
 			(* Get the index of the automaton *)
-			let index = Hashtbl.find index_of_automata automaton_name in
+			let index = try(Hashtbl.find index_of_automata automaton_name)
+				with Not_found -> raise (InternalError ("Automaton name '" ^ automaton_name ^ "' not found in function 'make_locations_per_automaton' although this had been checked before."))
+			in
 			(* Get the location names *)
 			let location_names = List.map (fun (location_name, _, _, _, _) -> location_name) transitions in
 			(* Update the array *)
 			locations_per_automaton.(index) <- Array.of_list location_names
 		)
-		automata;
-	(* Return a functional view *)
+		parsed_automata;
+	(* Return the array *)
 	locations_per_automaton
+
+
+
+
+(*(*--------------------------------------------------*)
+(* Convert the costs *)
+(** TODO: do not call if actually no cost! *)
+(*--------------------------------------------------*)
+(* Convert the structure: 'automaton_index -> location_index -> ParsingStructure.linear_expression' into a structure: 'automaton_index -> location_index -> Constraint.linear_expression' *)
+let convert_costs index_of_variables constants costs =
+	(* Convert for each automaton *)
+	let costs = Array.map (
+		(* Convert for each location *)
+		Array.map (
+			function
+			| None -> None
+			| Some cost -> Some (linear_term_of_linear_expression index_of_variables constants cost)
+		)
+	) costs in
+	(* Functional representation *)
+	fun automaton_index location_index -> costs.(automaton_index).(location_index)*)
+
+
+(*(*--------------------------------------------------*)
+(* Convert the invariants *)
+(*--------------------------------------------------*)
+(* Convert the structure: 'automaton_index -> location_index -> ParsingStructure.convex_predicate' into a structure: 'automaton_index -> location_index -> Constraint.linear_constraint' *)
+let convert_invariants index_of_variables constants invariants =
+	(* Convert for each automaton *)
+	let invariants = Array.map (
+		(* Convert for each location *)
+		Array.map (linear_constraint_of_convex_predicate index_of_variables constants)
+	) invariants in
+	(* Functional representation *)
+	fun automaton_index location_index -> invariants.(automaton_index).(location_index)*)
 
 
 (*--------------------------------------------------*)
 (* Get all the possible actions for every location of every automaton *)
 (*--------------------------------------------------*)
-let make_automata index_of_variables index_of_automata index_of_locations labels index_of_labels removed_synclab_names automata =
+let make_automata index_of_variables constants index_of_automata index_of_locations labels index_of_actions removed_synclab_names parsed_automata =
 	(* Number of automata *)
 	let nb_automata = Hashtbl.length index_of_automata in
 	(* Create an empty array for the actions of every automaton *)
@@ -1136,7 +1173,7 @@ let make_automata index_of_variables index_of_automata index_of_locations labels
 	(* Create an empty array for the transitions *)
 	let transitions = Array.make nb_automata (Array.make 0 []) in
 	(* Create an empty array for the invariants *)
-	let invariants = Array.make nb_automata (Array.make 0 []) in
+	let invariants = Array.make nb_automata (Array.make 0 (LinearConstraint.false_constraint ())) in
 	(* Create an empty array for the invariants *)
 	let stopwatches_array = Array.make nb_automata (Array.make 0 []) in
 	(* Does the program has any stopwatch? *)
@@ -1144,7 +1181,7 @@ let make_automata index_of_variables index_of_automata index_of_locations labels
 	(* Maintain the index of no_sync *)
 	let no_sync_index = ref (Array.length labels) in
 	
-	(* For each automaton: *)
+	(* For each automaton (except the observer, if any): *)
 	List.iter
 	(fun (automaton_name, _, locations) ->
 		(* Get the index of the automaton *)
@@ -1159,7 +1196,7 @@ let make_automata index_of_variables index_of_automata index_of_locations labels
 		(* Create the array of list of transitions for this automaton *)
 		transitions.(automaton_index) <- Array.make nb_locations [];
 		(* Create the array of invariants for this automaton *)
-		invariants.(automaton_index) <- Array.make nb_locations [];
+		invariants.(automaton_index) <- Array.make nb_locations (LinearConstraint.false_constraint ());
 		(* Create the array of stopwatches for this automaton *)
 		stopwatches_array.(automaton_index) <- Array.make nb_locations [];
 		
@@ -1184,7 +1221,7 @@ let make_automata index_of_variables index_of_automata index_of_locations labels
 					) else (
 						(* Get the action index *)
 						let action_index =
-							try (Hashtbl.find index_of_labels action_name) with Not_found -> raise (InternalError ("Impossible to find the index of action '" ^ action_name ^ "'."))
+							try (Hashtbl.find index_of_actions action_name) with Not_found -> raise (InternalError ("Impossible to find the index of action '" ^ action_name ^ "'."))
 						in
 						(* Compute the list of actions *)
 						(action_index :: current_list_of_actions)
@@ -1211,7 +1248,7 @@ let make_automata index_of_variables index_of_automata index_of_locations labels
 			begin
 			match cost with
 				| Some cost -> 
-					costs.(automaton_index).(location_index) <- Some cost;
+					costs.(automaton_index).(location_index) <- Some (linear_term_of_linear_expression index_of_variables constants cost);
 				| None -> ()
 			end;
 			
@@ -1219,7 +1256,7 @@ let make_automata index_of_variables index_of_automata index_of_locations labels
 			transitions.(automaton_index).(location_index) <- (List.rev list_of_transitions);
 			
 			(* Update the array of invariants *)
-			invariants.(automaton_index).(location_index) <- invariant;
+			invariants.(automaton_index).(location_index) <- linear_constraint_of_convex_predicate index_of_variables constants invariant;
 			
 			(* Does the program has stopwatches? *)
 			if stopwatches != [] then has_stopwatches := true;
@@ -1237,8 +1274,10 @@ let make_automata index_of_variables index_of_automata index_of_locations labels
 			list_union list_of_all_actions list_of_actions
 		) [] actions_per_location.(automaton_index) in
 		actions_per_automaton.(automaton_index) <- all_actions_for_this_automaton
-	) automata;
-
+	) parsed_automata;
+	
+	
+	
 	(* Create the array of action names *)
 	let nb_actions = !no_sync_index in
 	let array_of_action_names = Array.make nb_actions "" in
@@ -1261,15 +1300,11 @@ let make_automata index_of_variables index_of_automata index_of_locations labels
 		try (array_of_action_names.(action_index))
 		with _ -> raise (InternalError ("Action index " ^ (string_of_int action_index) ^ " does not exist in the program."))
 	in
-	(* Create the functional representation for action types *)
-	let action_types = fun action_index -> array_of_action_types.(action_index) in
-	(* Create the functional representation for the actions of every automaton *)
-	let actions_per_automaton = fun automaton_index -> actions_per_automaton.(automaton_index) in
-	(* Create an empty array for the actions of every location of every automaton *)
-	let actions_per_location = fun automaton_index location_index -> actions_per_location.(automaton_index).(location_index) in
-
+	
+	
 	(* Return all the structures in a functional representation *)
-	actions, action_names, action_types, actions_per_automaton, actions_per_location, costs, invariants, stopwatches_array, !has_stopwatches, transitions
+	actions, action_names, array_of_action_types, actions_per_automaton, actions_per_location, costs, invariants, stopwatches_array, !has_stopwatches, transitions
+
 
 
 (*--------------------------------------------------*)
@@ -1291,38 +1326,6 @@ let make_automata_per_action actions_per_automaton nb_automata nb_actions =
 	(* Return a functional representation *)
 	fun automaton_index -> automata_per_action.(automaton_index)
 	
-
-(*--------------------------------------------------*)
-(* Convert the costs *)
-(** TODO: do not call if actually no cost! *)
-(*--------------------------------------------------*)
-(* Convert the structure: 'automaton_index -> location_index -> ParsingStructure.linear_expression' into a structure: 'automaton_index -> location_index -> Constraint.linear_expression' *)
-let convert_costs index_of_variables constants costs =
-	(* Convert for each automaton *)
-	let costs = Array.map (
-		(* Convert for each location *)
-		Array.map (
-			function
-			| None -> None
-			| Some cost -> Some (linear_term_of_linear_expression index_of_variables constants cost)
-		)
-	) costs in
-	(* Functional representation *)
-	fun automaton_index location_index -> costs.(automaton_index).(location_index)
-
-
-(*--------------------------------------------------*)
-(* Convert the invariants *)
-(*--------------------------------------------------*)
-(* Convert the structure: 'automaton_index -> location_index -> ParsingStructure.convex_predicate' into a structure: 'automaton_index -> location_index -> Constraint.linear_constraint' *)
-let convert_invariants index_of_variables constants invariants =
-	(* Convert for each automaton *)
-	let invariants = Array.map (
-		(* Convert for each location *)
-		Array.map (linear_constraint_of_convex_predicate index_of_variables constants)
-	) invariants in
-	(* Functional representation *)
-	fun automaton_index location_index -> invariants.(automaton_index).(location_index)
 
 
 (*--------------------------------------------------*)
@@ -1387,8 +1390,9 @@ let convert_transitions nb_actions index_of_variables constants type_of_variable
 			) transitions_for_this_location;
 		) transitions_for_this_automaton;
 	) transitions;
-	(* Return a functional representation *)
-	fun automaton_index location_index action_index -> array_of_transitions.(automaton_index).(location_index).(action_index)
+	(* Return transitions *)
+	array_of_transitions
+
 
 
 
@@ -1514,9 +1518,9 @@ let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_
 	(* Debug functions *) 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Debug print function for arrays *)
-	let debug_print_array =
+	let debug_print_array debug_level =
 		Array.iteri (fun i e ->
-			print_message Debug_high ((string_of_int i) ^ " -> " ^ e)
+			print_message debug_level ((string_of_int i) ^ " -> " ^ e)
 		)
 	in
 
@@ -1530,6 +1534,14 @@ let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_
 	(* Get the declared synclabs names *)
 	let synclabs_names = get_declared_synclabs_names parsed_automata in
 
+	
+	
+	(* Print some information *)
+	if debug_mode_greater Debug_total then(
+		print_message Debug_total ("Automata names : " ^ (string_of_list_of_string_with_sep ", " declared_automata_names));
+	);
+
+	
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Check the synclabs declarations *) 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -1557,13 +1569,62 @@ let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_
 	(* Check that all automata names are different *)
 	let all_automata_different = check_declared_automata_names declared_automata_names in
 
-	(* Keep every element only once in those 4 lists *)	
-	let clock_names = list_only_once clock_names in
+	
+ 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(* Exit if not well formed *) 
+	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(* Check that at least one automaton is defined *)
+	let at_least_one_automaton =
+		if List.length declared_automata_names = 0 then (
+			print_error ("At least one automaton should be declared."); false
+		) else true in
+	
+	(* Stop here if model not well formed *)
+ 	if not (constants_consistent && all_variables_different && all_automata_different && at_least_one_automaton) then raise InvalidModel;
+
+ 	
+ 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(* Add clock and automaton for the observer *) 
+	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(* Note that the observer has not been checked yet, but it doesn't matter *)
+	let observer_automaton, observer_clock = ObserverPatterns.new_elements parsed_property_definition in
+	
+	(* Print some information *)
+	if debug_mode_greater Debug_high then(
+	begin
+		match observer_automaton with
+		| None -> ()
+		| Some observer_automaton -> print_message Debug_high ("Adding extra automaton '" ^ observer_automaton ^ "' for the observer.");
+	end;
+	begin
+		match observer_clock with
+		| None -> ()
+		| Some observer_clock -> print_message Debug_high ("Adding extra clock '" ^ observer_clock ^ "' for the observer.");
+	end;
+	);
+
+	
+	
+	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(* Start building variable lists *) 
+	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	
+	(* Keep every element only once in those 4 lists (and add the observer clock, if any) *)
+	let clock_names = match observer_clock with
+		| None -> list_only_once clock_names
+		| Some clock_obs -> list_append (list_only_once clock_names) [clock_obs]
+	in
 	let discrete_names = list_only_once discrete_names in
 	let parameters_names = list_only_once parameters_names in
 	
 	(* Make only one list for all variables *)
 	let variable_names = list_append (list_append parameters_names clock_names) discrete_names in
+	
+	(* Update automata names with the observer automaton *)
+	let declared_automata_names = match observer_automaton with
+		| None -> declared_automata_names
+		| Some automaton_obs -> list_append declared_automata_names [automaton_obs]
+	in
 	
 	(* Numbers *)
 	let nb_automata = List.length declared_automata_names in
@@ -1573,14 +1634,6 @@ let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_
 	let nb_parameters = List.length parameters_names in
 	let nb_variables = List.length variable_names in
 	
-	(* Check that at least one automaton is defined *)
-	let at_least_one_automaton =
-		if nb_automata = 0 then (
-			print_error ("At least one automaton should be declared."); false
-		) else true in
-	
-	(* Perform intersection and may raise exception *)
- 	if not (constants_consistent && all_variables_different && all_automata_different && at_least_one_automaton) then raise InvalidModel;
 
 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -1592,7 +1645,7 @@ let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_
 
 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Construct the arrays *) 
+	(* Construct the arrays of automata, variables and actions *) 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	
 	(* The list of automata *)
@@ -1612,9 +1665,9 @@ let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_
 	(* The array of labels ; index -> label name *)
 	let labels = Array.of_list synclabs_names in
 	(* A (constant) hash table 'label name -> index' *)
-	let index_of_labels = Hashtbl.create nb_labels in
+	let index_of_actions = Hashtbl.create nb_labels in
 	for i = 0 to nb_labels - 1 do
-		Hashtbl.add index_of_labels labels.(i) i;
+		Hashtbl.add index_of_actions labels.(i) i;
 	done;
 	
 	(* The array of variables names ; index -> variable name *)
@@ -1649,6 +1702,7 @@ let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_
 	let is_clock = (fun variable_index -> try (type_of_variables variable_index = Var_type_clock) with Invalid_argument _ ->  false) in
 	let is_discrete = (fun variable_index -> try (type_of_variables variable_index = Var_type_discrete) with Invalid_argument _ ->  false) in
 	
+	
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Debug prints *)
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -1664,19 +1718,20 @@ let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_
 	);
 	
 	(* Automata *)
-	print_message Debug_high ("\n*** Array of automata names:");
-	debug_print_array array_of_automata_names;
+	if debug_mode_greater Debug_high then(
+		print_message Debug_high ("\n*** Array of automata names:");
+		debug_print_array Debug_high array_of_automata_names;
 
-	(* Labels *)
-	print_message Debug_high ("\n*** Array of declared label names:");
-	debug_print_array labels;
+		(* Labels *)
+		print_message Debug_high ("\n*** Array of declared label names:");
+		debug_print_array Debug_high labels;
 
-	(* Variables *)
-	print_message Debug_high ("\n*** Variables:");
-	Array.iteri (fun i e ->
-		print_message Debug_high ((string_of_int i) ^ " -> " ^ e ^ " : " ^ (string_of_var_type (type_of_variables i)))
-	) variables;
-
+		(* Variables *)
+		print_message Debug_total ("\n*** Variable names:");
+		Array.iteri (fun i e ->
+			print_message Debug_total ((string_of_int i) ^ " -> " ^ e ^ " : " ^ (string_of_var_type (type_of_variables i)))
+		) variables;
+	);
 	
 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -1684,9 +1739,22 @@ let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Check that all the location names of an automaton are different *)
 	if not (all_locations_different parsed_automata) then raise InvalidModel;
-	
+
+	print_message Debug_high ("\n*** CHECK 1");
+
 	(* Get all the locations for each automaton: automaton_index -> location_index -> location_name *)
-	let array_of_location_names = make_locations_per_automaton index_of_automata parsed_automata in
+	let array_of_location_names = make_locations_per_automaton index_of_automata parsed_automata nb_automata in
+	(* Add the observer locations *)
+	begin
+	match observer_automaton with
+		| None -> ()
+			(** WARNING: we assume here that observer automaton is the last one ! *)
+		| Some _ ->
+			print_message Debug_high ("Adding the observer locations.");
+			array_of_location_names.(nb_automata) <- ObserverPatterns.get_locations parsed_property_definition
+	end;
+	
+	
 	(* A (constant) array of hash tables 'automaton_index -> location_name -> location_index' *)
 	let index_of_locations = Array.create nb_automata (Hashtbl.create 0) in
 	for automaton_index = 0 to nb_automata - 1 do
@@ -1708,17 +1776,18 @@ let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_
 	let location_names = fun automaton_index location_index -> array_of_location_names.(automaton_index).(location_index) in
 
 
-
 	(* Debug print *)
-	print_message Debug_high ("\n*** Locations per automaton:");
-	List.iter (fun automaton_index ->
-		print_message Debug_high ((automata_names automaton_index) ^ " : ");
-		List.iter (fun location_index ->
-			print_message Debug_high ("    " ^ (string_of_int location_index) ^ " -> " ^ (location_names automaton_index location_index) ^ "");
-		)
-		(locations_per_automaton automaton_index);
-	) automata;
-
+	if debug_mode_greater Debug_high then(
+		print_message Debug_high ("\n*** Locations per automaton:");
+		List.iter (fun automaton_index ->
+			print_message Debug_high ((automata_names automaton_index) ^ " : ");
+			List.iter (fun location_index ->
+				print_message Debug_high ("    " ^ (string_of_int location_index) ^ " -> " ^ (location_names automaton_index location_index) ^ "");
+			)
+			(locations_per_automaton automaton_index);
+		) automata;
+	);
+	
 	
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Check the automata *) 
@@ -1738,11 +1807,11 @@ let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_
 
 	
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Check bad state definition *)
+	(* Check property definition *)
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* WARNING: might be a problem if the check_automata test fails *)
-	let bad, well_formed_bad =
-		check_and_convert_property index_of_labels index_of_automata index_of_locations parsed_property_definition in
+	let property, well_formed_property =
+		check_and_convert_property index_of_actions index_of_automata index_of_locations parsed_property_definition in
 		
 		
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -1766,10 +1835,11 @@ let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_
 		)
 	) parsed_constraints in
 	
+	
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* exit if not well formed *)
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	if not (well_formed_automata && well_formed_bad && well_formed_init && !well_formed_carto)
+	if not (well_formed_automata && well_formed_property && well_formed_init && !well_formed_carto)
 		then raise InvalidModel;
 
 
@@ -1812,29 +1882,78 @@ let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	print_message Debug_total ("*** Building automata...");
 	(* Get all the possible actions for every location of every automaton *)
-	let actions, action_names, action_types, actions_per_automaton, actions_per_location, costs, invariants, stopwatches, has_stopwatches, transitions =
-		make_automata index_of_variables index_of_automata index_of_locations labels index_of_labels removed_synclab_names parsed_automata in
+	let actions, action_names, action_types, actions_per_automaton, actions_per_location, costs, invariants, stopwatches_array, has_stopwatches, transitions =
+		make_automata index_of_variables constants index_of_automata index_of_locations labels index_of_actions removed_synclab_names parsed_automata  in
 	let nb_actions = List.length actions in
+	
+	(* Convert the transitions *)
+	(** TODO: integrate inside 'make_automata' *)
+	print_message Debug_total ("*** Building transitions...");
+	let transitions = convert_transitions nb_actions index_of_variables constants type_of_variables transitions in
+	
+	
+	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(* Handle the observer here *)
+	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	begin
+	match observer_automaton with
+	| None -> print_message Debug_total ("*** (No observer)"); ()
+	| Some _ -> 
+		print_message Debug_low ("*** Generating the observer...");
+		(** WARNING / HACK: assume that observer_id = nb_automata, if any *)
+		let observer_id = nb_automata in
+		(* Get the info from the observer pattern *)
+		let observer_actions, observer_actions_per_location, observer_invariants, observer_transitions =
+			ObserverPatterns.get_automaton property in
+		(* Update actions *)
+		actions_per_automaton.(observer_id) <- observer_actions;
+		(* Update actions per location *)
+		actions_per_location.(observer_id) <- observer_actions_per_location;
+		(* Update transitions *)
+		transitions.(observer_id) <- observer_transitions;
+		(* Update invariants *)
+		invariants.(observer_id) <- observer_invariants;
+	end;
+	
+	
+	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(* Convert to functional view *)
+	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(* Create the functional representation for action types *)
+	let action_types = fun action_index -> action_types.(action_index) in
+	(* Create the functional representation for the actions of every automaton *)
+	let actions_per_automaton = fun automaton_index -> actions_per_automaton.(automaton_index) in
+	(* Create the functional representation for the actions of every location of every automaton *)
+	let actions_per_location = fun automaton_index location_index -> actions_per_location.(automaton_index).(location_index) in
+	(* Invariants *)
+	let invariants = fun automaton_index location_index -> invariants.(automaton_index).(location_index) in
+	(* Costs *)
+	let costs = fun automaton_index location_index -> costs.(automaton_index).(location_index) in
+	(* Stopwatches *)
+	let stopwatches = (fun automaton_index location_index -> stopwatches_array.(automaton_index).(location_index)) in
+	(* Transitions *)
+	let transitions = fun automaton_index location_index action_index -> transitions.(automaton_index).(location_index).(action_index) in
+	
+
+	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(* Compute the automata per action *)
+	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 	(* List of automata for every action *)
 	print_message Debug_total ("*** Building automata per action...");
 	let automata_per_action = make_automata_per_action actions_per_automaton nb_automata nb_actions in
 
-	(* Convert the costs *)
+(*	(* Convert the costs *)
 	print_message Debug_total ("*** Building costs (if any)...");
-	let costs = convert_costs index_of_variables constants costs in
+	let costs = convert_costs index_of_variables constants costs in*)
   	
-	(* Convert the invariants *)
+(*	(* Convert the invariants *)
 	print_message Debug_total ("*** Building invariants...");
-	let invariants = convert_invariants index_of_variables constants invariants in
+	let invariants = convert_invariants index_of_variables constants invariants in*)
   	
-	(* Convert the transitions *)
-	print_message Debug_total ("*** Building transitions...");
-	let transitions = convert_transitions nb_actions index_of_variables constants type_of_variables transitions in
-	
 	(* Convert the stopwatches *)
-	print_message Debug_total ("*** Building stopwatches...");
-	let stopwatches_fun = (fun automaton_index location_index -> stopwatches.(automaton_index).(location_index)) in
+(* 	print_message Debug_total ("*** Building stopwatches..."); *)
+(*	let stopwatches_fun = (fun automaton_index location_index -> stopwatches.(automaton_index).(location_index)) in*)
 
 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -1844,7 +1963,7 @@ let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_
 	let max_discrete_index = nb_variables - 1 in
 	Automaton.initialize nb_automata min_discrete_index max_discrete_index;
 
-
+	
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Construct the initial state *) 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -1857,21 +1976,31 @@ let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_
 		array_of_variable_names.(variable_index) <- variables.(variable_index);
 	done;
 
-	 (* Create the functional representation *)
+	
+	
+	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(* Functional view of variables *) 
+	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	
+	(* Create the functional representation *)
 	let variable_names = fun i -> array_of_variable_names.(i) in
 
-	(* Variables *)
-	print_message Debug_high ("\n*** Variables:");
-	for i = 0 to nb_variables - 1 do
-		print_message Debug_high ("  "
-			^ (string_of_int i) ^ " : " ^ (variable_names i)
-(* 			^ (if is_renamed_clock i then " (renamed clock)" else "") *)
-		);
-	done;
-
+	
+	
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Debug prints *) 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(* Variables *)
+	if debug_mode_greater Debug_high then(
+		print_message Debug_high ("\n*** All variables:");
+		for i = 0 to nb_variables - 1 do
+			print_message Debug_high ("  "
+				^ (string_of_int i) ^ " : " ^ (variable_names i)
+	(* 			^ (if is_renamed_clock i then " (renamed clock)" else "") *)
+			);
+		done;
+	);
+	
 	if debug_mode_greater Debug_total then(
 		(* All action names *)
 		print_message Debug_total ("\n*** All action names:");
@@ -1944,7 +2073,9 @@ let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_
 	
 	
 	
-	(* Make the structure *)
+	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(* Build the final structure *)
+	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	{
 	(* Cardinality *)
 	nb_automata = nb_automata;
@@ -2004,7 +2135,7 @@ let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_
 	(* The transitions for each automaton and each location and each action *)
 	transitions = transitions;
 	(* The list of clocks stopped for each automaton and each location *)
-	stopwatches = stopwatches_fun;
+	stopwatches = stopwatches;
 	(* Is there any stopwatch in the program? *)
 	has_stopwatches = has_stopwatches;
 
@@ -2012,7 +2143,7 @@ let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_
 	initial_location = initial_location;
 	initial_constraint = initial_constraint;
 	(* Bad states *)
-	property = (*bad_state_pairs*) bad;
+	property = (*bad_state_pairs*) property;
 	(* Optional polyhedra *)
 	carto = carto_linear_constraints , (p1_min , p1_max) , (p2_min , p2_max);
 	}
