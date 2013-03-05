@@ -677,7 +677,7 @@ let cover_behavioral_cartography program v0 init_state =
 (* 			let bad_string = if Graph.is_bad program graph then "BAD." else "GOOD." in *)
 		print_message Debug_low ("Constraint K0 computed:");
 		print_message Debug_standard (ModelPrinter.string_of_returned_constraint program.variable_names returned_constraint);
-		if program.property <> Noproperty then(
+		if program.correctness_condition <> None then(
 			print_message Debug_standard ("This tile is " ^ (string_of_tile_nature tile_nature) ^ ".");
 		);
 

@@ -1,15 +1,20 @@
 /***********************************************
  *
- *                     IMITATOR II
+ *                     IMITATOR
  * 
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
+ * Universite Paris 13, Sorbonne Paris Cite, LIPN (France)
+ * 
  * Author:        Etienne Andre
+ * 
  * Created       : 2010/01/04
- * Last modified : 2013/02/01
+ * Last modified : 2013/03/05
 ***********************************************/
 
 %{
 
+	(* open Global *)
+	
 %}
 
 %token <NumConst.t> INT
@@ -33,10 +38,12 @@
 
 /**********************************************/
 main:
-	 declarations semicolon EOF
+	 declarations semicolon_opt EOF
 	{
 		$1
 	}
+	/* | EOF
+	{ raise (InternalError "ploum"); } */
 ;
 
 /**********************************************/
@@ -49,18 +56,18 @@ declarations:
 /**********************************************/
 
 declaration:
-	| ampersand NAME OP_EQ arithmetic_expr DOUBLEDOT arithmetic_expr { ($2, $4, $6) }
-	| ampersand NAME OP_EQ arithmetic_expr { ($2, $4, $4) }
+	| ampersand_opt NAME OP_EQ arithmetic_expr DOUBLEDOT arithmetic_expr { ($2, $4, $6) }
+	| ampersand_opt NAME OP_EQ arithmetic_expr { ($2, $4, $4) }
 ;
 
 /**********************************************/
 
-ampersand:
+ampersand_opt:
 	AMPERSAND {}
 	| {}
 ;
 
-semicolon:
+semicolon_opt:
 	SEMICOLON {}
 	| {}
 ;

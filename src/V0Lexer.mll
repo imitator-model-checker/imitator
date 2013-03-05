@@ -1,23 +1,29 @@
 (*****************************************************************
  *
- *                     IMITATOR II
+ *                       IMITATOR
  * 
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
+ * Universite Paris 13, Sorbonne Paris Cite, LIPN (France)
+ * 
  * Author:        Etienne Andre
+ * 
  * Created       : 2010/01/04
- * Last modified : 2013/02/01
+ * Last modified : 2013/03/05
 *****************************************************************)
-
 
 {
 open V0Parser
+open Global
 
 (* OCaml style comments *)
 let comment_depth = ref 0;;
 
+(* exception Unexpected_token *)
+
 }
 
-rule token = parse
+rule token =
+	parse
 	[' ' '\t' '\n']     { token lexbuf }     (* skip blanks *)
 	| "--" [^'\n']* '\n'     { token lexbuf }     (* skip Hytech-style comments *)
 
@@ -34,7 +40,6 @@ rule token = parse
 
 
 	| ['a'-'z''A'-'Z']['a'-'z''A'-'Z''_''0'-'9']* as lxm { NAME lxm }
-(* 	| ['0'-'9']+'.'['0'-'9']+ as lxm { FLOAT(float_of_string lxm) } *)
 	| ['0'-'9']+ as lxm { INT(NumConst.numconst_of_string lxm) }
 
 	| '='              { OP_EQ }
@@ -52,7 +57,8 @@ rule token = parse
 	| ';'              { SEMICOLON }
 
 	| eof              { EOF}
-
+	| _ as c           { raise (UnexpectedToken c) }
+	
 
 (* C style comments *)
 and comment_c = parse

@@ -8,7 +8,7 @@
  * Author:        Etienne Andre, Ulrich Kuehne
  * 
  * Created:       2010/07/05
- * Last modified: 2013/03/01
+ * Last modified: 2013/03/05
  *
  ****************************************************************)
  
@@ -52,7 +52,7 @@ let graph_color_of_int tile_index tile_nature dotted =
 	(* Definition of the color *)
 	let color_index =
 	(* If bad state defined *)
-	if program.property != Noproperty then(
+	if program.correctness_condition <> None then(
 		(* Go for a good / bad coloring *)
 		match tile_nature with
 		| Good -> 2 (* green *)

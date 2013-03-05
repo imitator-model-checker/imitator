@@ -10,7 +10,7 @@
  * Author:        Ulrich Kuehne, Etienne Andre
  * 
  * Created:       2009/09/07
- * Last modified: 2013/03/01
+ * Last modified: 2013/03/05
  *
  ****************************************************************)
 
@@ -90,8 +90,9 @@ let parser_lexer_gen the_parser the_lexer lexbuf string_of_input file_name =
 				else "somewhere in the file, most probably in the very beginning."
 			in
 			(* Print the error message *)
-			print_error ("Parsing error in file " ^ file_name ^ " " ^ error_message); abort_program (); exit(0)
-		| Failure f -> print_error ("Parsing error in file " ^ file_name ^ ": " ^ f); abort_program (); exit(0)
+			print_error ("Parsing error in file " ^ file_name ^ " " ^ error_message); abort_program (); exit(1)
+		| UnexpectedToken c -> print_error ("Parsing error in file " ^ file_name ^ ": unexpected token '" ^ (Char.escaped c) ^ "'."); abort_program (); exit(1)
+		| Failure f -> print_error ("Parsing error ('failure') in file " ^ file_name ^ ": " ^ f); abort_program (); exit(1)
 	in
 	parsing_structure
 
@@ -100,11 +101,11 @@ let parser_lexer_gen the_parser the_lexer lexbuf string_of_input file_name =
 let parser_lexer_from_file the_parser the_lexer file_name =
 	(* Open file *)
 	let in_channel = try (open_in file_name) with
-		| Sys_error e -> print_error ("The file " ^ file_name ^ " could not be opened.\n" ^ e); abort_program (); exit(0)
+		| Sys_error e -> print_error ("The file " ^ file_name ^ " could not be opened.\n" ^ e); abort_program (); exit(1)
 	in
 	(* Lexing *)
 	let lexbuf = try (Lexing.from_channel in_channel) with
-		| Failure f -> print_error ("Lexing error in file " ^ file_name ^ ": " ^ f); abort_program (); exit(0)
+		| Failure f -> print_error ("Lexing error in file " ^ file_name ^ ": " ^ f); abort_program (); exit(1)
 	in
 	(* Function to convert a in_channel to a string (in case of parsing error) *)
 	let string_of_input () =
@@ -120,8 +121,8 @@ let parser_lexer_from_file the_parser the_lexer file_name =
 let parser_lexer_from_string the_parser the_lexer the_string =
 	(* Lexing *)
 	let lexbuf = try (Lexing.from_string the_string) with
-		| Failure f -> print_error ("Lexing error: " ^ f ^ "\n The string was: \n" ^ the_string ^ ""); abort_program (); exit(0)
-(* 		| Parsing.Parse_error -> print_error ("Parsing error\n The string was: \n" ^ the_string ^ ""); abort_program (); exit(0) *)
+		| Failure f -> print_error ("Lexing error: " ^ f ^ "\n The string was: \n" ^ the_string ^ ""); abort_program (); exit(1)
+(* 		| Parsing.Parse_error -> print_error ("Parsing error\n The string was: \n" ^ the_string ^ ""); abort_program (); exit(1) *)
 	in
 	(* Function to convert a in_channel to a string (in case of parsing error) *)
 	let string_of_input () = the_string in
@@ -185,6 +186,9 @@ let message = match options#imitator_mode with
 	| Border_cartography -> "behavioral cartography algorithm with border detection (experimental) and step " ^ (NumConst.string_of_numconst options#step)
 	| Random_cartography nb -> "behavioral cartography algorithm with " ^ (string_of_int nb) ^ " random iterations and step " ^ (NumConst.string_of_numconst options#step)
 in print_message Debug_standard ("Mode: " ^ message ^ ".");
+
+
+(* TODO : print the user-defined correctness condition, if any *)
 
 
 (**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -478,14 +482,14 @@ if options#cartonly then(
 	(* The end *)
 	terminate_program()
 );
-(* 		| End_of_file -> print_error ("Parsing error in file " ^ file_name ^ ": unexpected end of file."); abort_program (); exit(0) *)
+(* 		| End_of_file -> print_error ("Parsing error in file " ^ file_name ^ ": unexpected end of file."); abort_program (); exit(1) *)
 
 
 
 (**************************************************)
 (* Preliminary checks *)
 (**************************************************)
-if (options#imitator_mode = Border_cartography && program.property = Noproperty) then(
+if (options#imitator_mode = Border_cartography && program.correctness_condition = None) then(
 	print_error ("In border cartography mode, a correctness property must be defined.");
 	abort_program();
 );

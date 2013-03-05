@@ -328,4 +328,3 @@ init := loc[sender]=idleS
 
 ;
 
-print(reach forward from init endreach);

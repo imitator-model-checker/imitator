@@ -10,7 +10,7 @@
  * Author:        Ulrich Kuehne, Etienne Andre
  * 
  * Created:       2010/07/22
- * Last modified: 2013/03/01
+ * Last modified: 2013/03/05
  *
  ****************************************************************)
 
@@ -406,13 +406,13 @@ let prepare_clocks_elimination program =
 let update_tile_nature (location, (*linear_constraint*)_) =
 	(* Get the program *)
 	let program = Input.get_program() in
-	match program.property with
-	| Noproperty -> ()
-	| Unreachable_location (bad_automaton_index , bad_location_index) ->
+	match program.correctness_condition with
+	| None -> ()
+	| Some (Unreachable (bad_automaton_index , bad_location_index)) ->
 		(* Check if the local location is the same as the bad one *)
 		let is_bad = (Automaton.get_location location bad_automaton_index) = bad_location_index in
 			if is_bad then tile_nature := Bad;
-	| _ -> raise (InternalError("Mechanism for checking good or bad states not fully implemented yet."))
+	| _ -> raise (InternalError("IMITATOR currently ony implements the non-reachability-like properties."))
 
 
 
@@ -2235,10 +2235,10 @@ let inverse_method_gen program init_state =
 	
 	(* For now, the tile is good by default *)
 	begin
-	match program.property with
-		| Noproperty -> ()
-		| Unreachable_location _ -> tile_nature := Good
-		| _ -> raise (InternalError("Only the bad location is implemented to define a bad tile."))
+	match program.correctness_condition with
+		| None -> ()
+		| Some (Unreachable _) -> tile_nature := Good
+		| _ -> raise (InternalError("IMITATOR currently ony implements the non-reachability-like properties."))
 	end;
 	
 	(* Choose the correct algorithm *)

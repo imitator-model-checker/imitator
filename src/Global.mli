@@ -1,16 +1,21 @@
 (*****************************************************************
  *
- *                     IMITATOR II
- *
+ *                       IMITATOR
+ * 
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
+ * Universite Paris 13, Sorbonne Paris Cite, LIPN (France)
+ * 
  * Author:        Etienne Andre
+ * 
  * Created:       2009/09/08
- * Last modified: 2013/02/13
+ * Last modified: 2013/03/05
  *
  ****************************************************************)
 
+
+
 (****************************************************************)
-(** Version string *)
+(** Constants *)
 (****************************************************************)
 
 val program_name: string
@@ -31,6 +36,7 @@ val model_extension: string
 exception InternalError of string
 exception Found
 exception InvalidModel
+exception UnexpectedToken of char
 
 (** Parsing exception: starting position of the error symbol, ending position of the error symbol *)
 exception ParsingError of (int * int)

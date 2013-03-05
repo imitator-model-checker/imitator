@@ -8,7 +8,7 @@
  * Author:        Etienne Andre
  * 
  * Created:       2009/09/11
- * Last modified: 2013/03/01
+ * Last modified: 2013/03/05
  *
  ****************************************************************)
 
@@ -96,6 +96,7 @@ type transition = guard * clock_updates * discrete_update list * location_index
 
 type duration = NumConst.t
 
+(** Definition of the property by the end user *)
 type property =
 	(* DEPRECATED *)
 (* 	| Exists_action of action_index *)
@@ -144,6 +145,20 @@ type property =
 
 (* TODO: allow several definitions *)
 type property_definition  = property (*list*)
+
+
+(** Reduction to (non-)reachability checking *)
+
+type reachability_property =
+	(* Location never reachable *)
+	| Unreachable of automaton_index * location_index
+	(* Location reachable for each trace *)
+	| Reachable of automaton_index * location_index
+	(* Combining the two properties *)
+	| Unreachable_and_reachable of automaton_index * location_index * automaton_index * location_index
+
+
+type correctness_condition = reachability_property option
 
 
 (****************************************************************)
@@ -227,8 +242,10 @@ type abstract_program = {
 	(* Init : the initial state *)
 	initial_constraint : linear_constraint;
 
-	(* Bad states *)
-	property : property_definition;
+	(* Property defined by the user *)
+	user_property : property_definition;
+	(* Property defined by the program *)
+	correctness_condition : correctness_condition;
 	(* Set of polyhedra (only used for direct cartography without running the model) *)
 	carto : (linear_constraint * tile_nature) list * (NumConst.t * NumConst.t) * (NumConst.t * NumConst.t);
 }

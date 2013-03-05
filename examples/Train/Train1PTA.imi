@@ -6,11 +6,11 @@
 --   Simple model with 1 PTA only
 --
 --   Etienne ANDRE
---   Laboratoire d'Informatique de Paris Nord
+--   Universite Paris 13, Sorbonne Paris Cite, LIPN (France)
 --
 --                                Created : 2012/03/13
---                          Last modified : 2013/02/20
---                       IMITATOR version : 2.5.1
+--                          Last modified : 2013/03/05
+--                       IMITATOR version : 2.6.1
 --************************************************************--
 --************************************************************--
 
@@ -22,7 +22,7 @@ var
 
 	dApproach, -- time between the approach and the passing
 	dStartDown, -- time between the approach and the gate starting to go down
-	dGetDown -- time between the gate starts to lower, and the gate is closed
+	dGetDown = 2 -- time between the gate starts to lower, and the gate is closed
 			: parameter;
 
 
@@ -85,8 +85,5 @@ init := True
 
 ;
 
-end
-
-
-print(reach forward from init endreach);
+property := unreachable loc[system] = Crash;
 

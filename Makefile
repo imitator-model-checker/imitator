@@ -6,7 +6,7 @@
 #
 #  Author:        Etienne Andre
 #  Created:       2009/09/07
-#  Last modified: 2013/03/04
+#  Last modified: 2013/03/05
 #  Ocaml version: 3.12.1
 ###############################################################
 
@@ -295,7 +295,7 @@ exe:
 # 	$(TARGET) $(EXAMPLE_PATH)/AndOr/AndOr2.imi $(EXAMPLE_PATH)/AndOr/AndOr.pi0 -dynamic-elimination -verbose low
 
 # 	$(TARGET) $(EXAMPLE_PATH)/Tests/AndOrTest.imi $(EXAMPLE_PATH)/Tests/AndOrTest.pi0 -verbose high
-	$(TARGET) $(EXAMPLE_PATH)/Tests/AndOrTest.imi -PTA2JPG
+# 	$(TARGET) $(EXAMPLE_PATH)/Tests/AndOrTest.imi -PTA2JPG
 
 	# 	$(TARGET) $(EXAMPLE_PATH)/AndOr/AndOr.imi $(EXAMPLE_PATH)/AndOr/AndOr.pi0
 # 	$(TARGET) $(EXAMPLE_PATH)/AndOr/AndOr.imi $(EXAMPLE_PATH)/AndOr/AndOr.pi0 -bab
@@ -360,7 +360,7 @@ exe:
 # 	$(TARGET) $(EXAMPLE_PATH)/SRlatch/SRlatch.imi -mode reachability
 # 	$(TARGET) $(EXAMPLE_PATH)/SRlatch/SRlatch.imi $(EXAMPLE_PATH)/SRlatch/SRlatch.pi0 -with-dot-source -with-dot
 # 	$(TARGET) $(EXAMPLE_PATH)/SRlatch/SRlatch.imi $(EXAMPLE_PATH)/SRlatch/SRlatch.pi0 -bab
-# 	./IMITATOR $(EXAMPLE_PATH)/SRlatch/SRlatch.imi $(EXAMPLE_PATH)/SRlatch/SRlatch.v0 -mode cover
+# 	$(TARGET) $(EXAMPLE_PATH)/SRlatch/SRlatch.imi $(EXAMPLE_PATH)/SRlatch/SRlatch.v0 -mode cover
 
 # 	./IMITATOR Examples/SRlatch/SRlatch_delais_fixes.imi -mode reachability
 # 	./IMITATOR Examples/SRlatch/SRlatch_delais_fixes.imi Examples/SRlatch/SRlatch_delais_fixes.pi0
@@ -375,6 +375,8 @@ exe:
 # 	$(TARGET) $(EXAMPLE_PATH)/Train/Train1PTA.imi -PTA2JPG
 # 	$(TARGET) $(EXAMPLE_PATH)/Train/Train1PTA.imi -mode reachability -incl
 # 	$(TARGET) $(EXAMPLE_PATH)/Train/Train1PTA.imi $(EXAMPLE_PATH)/Train/Train1PTA.pi0
+# 	$(TARGET) $(EXAMPLE_PATH)/Train/Train1PTA.imi $(EXAMPLE_PATH)/Train/Train1PTA.v0 -mode border -cart
+	$(TARGET) $(EXAMPLE_PATH)/Train/Train1PTA.imi $(EXAMPLE_PATH)/Train/Train1PTA.v0 -mode cover -cart
 # 	$(TARGET) $(EXAMPLE_PATH)/Train/Train1PTA.imi -PTA2GML
 # 	$(TARGET) $(EXAMPLE_PATH)/Train/Train1PTA.gml -fromGML -mode reachability
 
@@ -616,16 +618,16 @@ exe:
 
 
 count: clean
-	@ for f in src/*.ml src/*.mli; do wc -l $$f; done | sort -n -r -
+	@ for f in src/*.ml src/*.mli ; do wc -l $$f; done | sort -n -r -
 
 
 clean: rmtpf rmuseless
 	@rm -rf $(OBJS) $(OBJS_OPT) $(CMIS)  $(PAR_ML) $(PAR_CMI) $(OBJS:.cmo=.o)
 	@rm -rf $(LEX_CMI) $(LEX_ML)
+	@for f in $(PARSERS); do rm -rf src/$$f.mli; done
 	@rm -rf $(TARGET) $(IMILIB) $(TARGET_OPT) $(IMILIB_OPT)
 	@rm -rf .depend
-	@cd test; make clean
-
+	@echo [Now clean]
 
 rmtpf:
 	@rm -rf *~

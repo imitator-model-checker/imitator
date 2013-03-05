@@ -114,14 +114,16 @@ let get_locations property =
 	)
 
 (*------------------------------------------------------------*)
-(* Create the observer; returns:
+(* Create the observer; 
+	Takes as parameters the number of actions, and the automaton_index
+	Returns:
 	- Actions per automaton
 	- Actions per location
 	- Transitions
 	- Invariants
 *)
 (*------------------------------------------------------------*)
-let get_automaton nb_actions property = 
+let get_automaton nb_actions automaton_index property = 
 	(* Create the common structures *)
 	let initialize_structures nb_locations all_actions =
 (* 		let nb_observer_actions = List.length all_actions in *)
@@ -168,7 +170,9 @@ let get_automaton nb_actions property =
 		transitions.(1) <- allow_all 1;
 		transitions.(2) <- allow_all 2;
 		(* Return structure *)
-		all_actions, actions_per_location, invariants, transitions
+		all_actions, actions_per_location, invariants, transitions,
+		(* Reduce to reachability property *)
+		Unreachable (automaton_index, 2)
 	
 	
 	| Action_precedence_cyclic (a1, a2) -> 
@@ -193,7 +197,9 @@ let get_automaton nb_actions property =
 			done;
 		done;*)
 		(* Return structure *)
-		all_actions, actions_per_location, invariants, transitions
+		all_actions, actions_per_location, invariants, transitions,
+		(* Reduce to reachability property *)
+		Unreachable (automaton_index, 2)
 	
 	
 	| Action_precedence_cyclicstrict (a1, a2) -> 
@@ -208,7 +214,9 @@ let get_automaton nb_actions property =
 		transitions.(1).(a2) <- untimedt 0;
 		transitions.(2) <- allow_all 2;
 		(* Return structure *)
-		all_actions, actions_per_location, invariants, transitions
+		all_actions, actions_per_location, invariants, transitions,
+		(* Reduce to reachability property *)
+		Unreachable (automaton_index, 2)
 		
 	
 (*	

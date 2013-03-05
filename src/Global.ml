@@ -1,14 +1,16 @@
 (*****************************************************************
  *
- *                     IMITATOR II
+ *                       IMITATOR
  * 
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
+ * Universite Paris 13, Sorbonne Paris Cite, LIPN (France)
+ * 
  * Author:        Etienne Andre
+ * 
  * Created:       2009/09/08
- * Last modified: 2013/02/26
+ * Last modified: 2013/03/05
  *
  ****************************************************************)
-
  
  
 (****************************************************************)
@@ -20,11 +22,11 @@ open Unix
  
 
 (****************************************************************)
-(** Version string *)
+(** Constants *)
 (****************************************************************)
 
 let program_name = "IMITATOR"
-let version_string = "2.6.0"
+let version_string = "2.6.1"
 
 let print_version_string _ = 
 	print_string (program_name ^ " " ^ version_string ^ "\n")
@@ -40,6 +42,7 @@ let model_extension = ".imi"
 exception InternalError of string
 exception Found
 exception InvalidModel
+exception UnexpectedToken of char
 
 (** Parsing exception: starting position of the error symbol, ending position of the error symbol *)
 exception ParsingError of (int * int)
@@ -537,7 +540,7 @@ let abort_program () =
 	print_error (program_name ^ " aborted (" ^ (after_seconds ()) ^ ")");
 	print_newline();
 	flush Pervasives.stdout;
-	exit(0)
+	exit(1)
 
 (* Terminate program *)
 let terminate_program () =

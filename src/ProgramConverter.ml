@@ -10,7 +10,7 @@
  * Author:        Etienne Andre
  * 
  * Created:       2009/09/09
- * Last modified: 2013/03/04
+ * Last modified: 2013/03/05
  *
  ****************************************************************)
 
@@ -1897,14 +1897,20 @@ let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Handle the observer here *)
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	begin
+	let correctness_condition =
 	match observer_automaton with
-	| None -> print_message Debug_total ("*** (No observer)"); ()
+	| None -> print_message Debug_total ("*** (No observer)");
+		(* Still check the case of non-reachability user-defined property *)
+		begin
+		match property with
+			| Unreachable_location (automaton_index, location_index) -> Some (Unreachable (automaton_index, location_index))
+			| _ -> None
+		end
 	| Some observer_id -> 
 		print_message Debug_low ("*** Generating the observer...");
 		(* Get the info from the observer pattern *)
-		let observer_actions, observer_actions_per_location, observer_invariants, observer_transitions =
-			ObserverPatterns.get_automaton nb_actions property in
+		let observer_actions, observer_actions_per_location, observer_invariants, observer_transitions, correctness_condition =
+			ObserverPatterns.get_automaton nb_actions observer_id property in
 		(* Update actions *)
 		actions_per_automaton.(observer_id) <- observer_actions;
 		(* Update actions per location *)
@@ -1913,10 +1919,11 @@ let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_
 		transitions.(observer_id) <- observer_transitions;
 		(* Update invariants *)
 		invariants.(observer_id) <- observer_invariants;
-	end;
-
+		(* Set the correctness_condition *)
+		Some correctness_condition
+	in
 	
-	
+	(*TODO: handle correctness_condition, and also in the case where the automaton is undefined*)
 	
 	
 	
@@ -1981,7 +1988,8 @@ let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_
 	(* Construct the initial state *) 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	print_message Debug_total ("*** Building initial state...");
-	let (initial_location, initial_constraint) = make_initial_state index_of_automata array_of_location_names index_of_locations index_of_variables constants type_of_variables init_discrete_couples parsed_init_definition in
+	let (initial_location, initial_constraint) =
+		make_initial_state index_of_automata array_of_location_names index_of_locations index_of_variables constants type_of_variables init_discrete_couples parsed_init_definition in
 
 	let array_of_variable_names = Array.make nb_variables "" in
 	(* Add normal names *)
@@ -2155,8 +2163,11 @@ let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_
 	(* Init : the initial state *)
 	initial_location = initial_location;
 	initial_constraint = initial_constraint;
-	(* Bad states *)
-	property = (*bad_state_pairs*) property;
+	
+	(* Property defined by the user *)
+	user_property = property;
+	(* Property defined by the program *)
+	correctness_condition = correctness_condition;
 	(* Optional polyhedra *)
 	carto = carto_linear_constraints , (p1_min , p1_max) , (p2_min , p2_max);
 	}
