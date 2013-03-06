@@ -232,7 +232,9 @@ exe:
 
 # 	$(TARGET) $(EXAMPLE_PATH)/Tests/testCosts.imi $(EXAMPLE_PATH)/Tests/testCosts.pi0 -verbose total -bab -time-limit 1
 
-	$(TARGET) $(EXAMPLE_PATH)/Tests/TestPattern1.imi $(EXAMPLE_PATH)/Tests/TestPattern1.v0 -mode cover -cart
+# 	$(TARGET) $(EXAMPLE_PATH)/Tests/TestPattern1.imi $(EXAMPLE_PATH)/Tests/TestPattern1.v0 -mode cover -cart
+# 	$(TARGET) $(EXAMPLE_PATH)/Tests/TestPattern2.imi -PTA2JPG
+	$(TARGET) $(EXAMPLE_PATH)/Tests/TestPattern2.imi $(EXAMPLE_PATH)/Tests/TestPattern2.v0 -mode cover -cart -fancy -with-dot
 
 
 
