@@ -17,6 +17,7 @@
  
 
 # Name of the destination directory
+# NOTE: everything will be erased (if anything exists before the script)
 DESTDIR="/home/etienne/ephemere/release/"
 
 
