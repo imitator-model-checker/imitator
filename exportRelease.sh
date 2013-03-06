@@ -1,12 +1,34 @@
 #!/bin/sh
 
-# Export files for IMITATOR
+#################################################################
+ #
+ #                       RELEASATOR
+ # 
+ # Small script to export releases from IMITATOR
+ #
+ # Universite Paris 13, Sorbonne Paris Cite, LIPN (France)
+ # 
+ # Author:        Etienne Andre
+ # 
+ # Created:       2013/03/06
+ # Last modified: 2013/03/06
+ #
+################################################################
+ 
 
+# Name of the destination directory
 DESTDIR="/home/etienne/ephemere/release/"
+
+
+echo "\n STARTING RELEASATOR"
 
 # Create the directory
 echo "Creating $DESTDIR"
 mkdir $DESTDIR
+
+# Remove everything in the directory (just in case)
+echo "First cleaning $DESTDIR"
+rm -rf $DESTDIR/*
 
 # Copy root files
 for file in GNU.txt INSTALL.txt Makefile RELEASES.txt; do
