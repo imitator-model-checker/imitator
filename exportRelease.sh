@@ -26,14 +26,19 @@ for directory in bin lib; do
 	mkdir $DESTDIR$directory
 done
 
-# Delete SVN files ; the "cd" command is very important! otherwise SVN files are deleted in the source...
+# WARNING: The "cd" command is very important! otherwise files are deleted in the source...
 echo "cd $DESTDIR"
 cd $DESTDIR
 
-# pwd
+# Delete useless files
+for extension in .jpg "~" .cmi .cmo .states .ps; do
+	# Remplacer "-exec" par "-ok" demande confirmation a chaque fichier
+	echo "Deleting files with extension \"$extension\" ..."
+	find . -iname "*$extension" -exec rm '{}' ';'
+done
 
+# Delete SVN files
+echo "Deleting .svn directories..."
 find -type d -name '.svn' -exec rm -rfv {} \; 
 
-for extension in jpg pdf ; do
-# 	find . -iname "*.$extension" -ok rm '{}' ';'
-done
+echo "The end!"
