@@ -104,7 +104,7 @@ rule token = parse
 (* 	| "trace"          { CT_TRACE } *)
 	| "True"           { CT_TRUE }
 (* 	| "unknown"        { CT_UNKNOWN } *)
- 	| "unreachable"     { CT_UNREACHABLE }
+ 	| "unreachable"    { CT_UNREACHABLE }
 (* 	| "using"          { CT_USING } *)
 	| "var"            { CT_VAR }
 	| "wait"           { CT_WAIT }

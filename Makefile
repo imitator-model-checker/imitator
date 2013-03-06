@@ -202,11 +202,7 @@ tests:
 
 exe:
 
-##### GATES #####
-
-# 	./IMITATOR Examples/Gates/NorGate.imi -mode reachability -with-parametric-log
-
-##### TESTS FOR SYNTAX #####
+##### TESTS FOR SYNTAX AND FEATURES #####
 
 # 	$(TARGET) $(EXAMPLE_PATH)/Tests/test.gml -mode reachability -verbose high -fromGML
 
@@ -235,6 +231,11 @@ exe:
 # 	$(TARGET) $(EXAMPLE_PATH)/Tests/model2.imi $(EXAMPLE_PATH)/Tests/model2.pi0 -verbose total
 
 # 	$(TARGET) $(EXAMPLE_PATH)/Tests/testCosts.imi $(EXAMPLE_PATH)/Tests/testCosts.pi0 -verbose total -bab -time-limit 1
+
+	$(TARGET) $(EXAMPLE_PATH)/Tests/TestPattern1.imi $(EXAMPLE_PATH)/Tests/TestPattern1.v0 -mode cover -cart
+
+
+
 ##### TESTS FOR PROPERTIES #####
 
 # 	$(TARGET) $(EXAMPLE_PATH)/Proprietes/exCTL.imi -mode reachability -with-dot -with-log
@@ -376,7 +377,7 @@ exe:
 # 	$(TARGET) $(EXAMPLE_PATH)/Train/Train1PTA.imi -mode reachability -incl
 # 	$(TARGET) $(EXAMPLE_PATH)/Train/Train1PTA.imi $(EXAMPLE_PATH)/Train/Train1PTA.pi0
 # 	$(TARGET) $(EXAMPLE_PATH)/Train/Train1PTA.imi $(EXAMPLE_PATH)/Train/Train1PTA.v0 -mode border -cart
-	$(TARGET) $(EXAMPLE_PATH)/Train/Train1PTA.imi $(EXAMPLE_PATH)/Train/Train1PTA.v0 -mode cover -cart
+# 	$(TARGET) $(EXAMPLE_PATH)/Train/Train1PTA.imi $(EXAMPLE_PATH)/Train/Train1PTA.v0 -mode cover -cart
 # 	$(TARGET) $(EXAMPLE_PATH)/Train/Train1PTA.imi -PTA2GML
 # 	$(TARGET) $(EXAMPLE_PATH)/Train/Train1PTA.gml -fromGML -mode reachability
 
