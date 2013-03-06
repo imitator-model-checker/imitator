@@ -505,9 +505,9 @@ pattern:
 	| CT_EVERYTIME NAME CT_THEN CT_EVENTUALLY NAME CT_WITHIN linear_expression CT_ONCE CT_BEFORE CT_NEXT { TB_response_cyclicstrict ($2, $5, $7) }
 	
 	/* sequence: a1, ..., an */
-	| CT_SEQUENCE COLON name_list { Sequence_acyclic ($3) }
+	| CT_SEQUENCE name_nonempty_list { Sequence_acyclic ($2) }
 	/* sequence: always a1, ..., an */
-	| CT_SEQUENCE COLON CT_ALWAYS name_list { Sequence_cyclic ($4) }
+	| CT_SEQUENCE CT_ALWAYS name_nonempty_list { Sequence_cyclic ($3) }
 ;
 
 

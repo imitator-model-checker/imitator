@@ -441,12 +441,88 @@ let get_automaton nb_actions automaton_index nosync_index x_obs property =
 		None,
 		(* Reduce to reachability property *)
 		Unreachable (automaton_index, 2)
-						(*	
-	|TB_response_acyclic _ -> 4
-	| TB_response_cyclic _ -> 3
-	| TB_response_cyclicstrict _ -> 3
-	| Sequence_acyclic list_of_actions -> (List.length list_of_actions) + 2
-	| Sequence_cyclic list_of_actions -> (List.length list_of_actions) + 1*)
-	| _ -> raise (InternalError("Not implemented"))
+
+
+	| Sequence_acyclic list_of_actions -> 
+		let nb_locations = (List.length list_of_actions) + 2 in
+		let all_actions = list_of_actions in
+		(* Initialize *)
+		let actions_per_location, invariants, transitions, allow_all = initialize_structures nb_locations all_actions in
+		
+		(* Define 2 useful location indexes *)
+		let lf = nb_locations - 2 in
+		let lbad = nb_locations - 1 in
+
+		(* No need to update actions per location (no silent action here) *)
+		
+		(* No need to update invariants *)
+		
+		(* Compute transitions *)
+		for i = 0 to lf-1 do
+			(* Add the action l_i --{a_i}--> l_i+1 *)
+			let a_i = List.nth list_of_actions i in
+			transitions.(i).(a_i) <- untimedt (i+1);
+			(* Add the transitions to bad *)
+			List.iter(fun action_index ->
+				if action_index <> a_i then (
+					transitions.(i).(action_index) <- untimedt (lbad);
+				);
+			) list_of_actions;
+		done;
+		(* Add self-loops *)
+		transitions.(lf) <- allow_all lf;
+		transitions.(lbad) <- allow_all lbad;
+		
+		(* Return structure *)
+		all_actions, actions_per_location, invariants, transitions,
+		(* No init constraint *)
+		None,
+		(* Reduce to reachability property *)
+		Unreachable (automaton_index, lbad)
+	
+	
+	| Sequence_cyclic list_of_actions -> 
+		let nb_locations = (List.length list_of_actions) + 1 in
+		let all_actions = list_of_actions in
+		(* Initialize *)
+		let actions_per_location, invariants, transitions, allow_all = initialize_structures nb_locations all_actions in
+		
+		(* Define 2 useful location indexes *)
+		let lbad = nb_locations - 1 in
+
+		(* No need to update actions per location (no silent action here) *)
+		
+		(* No need to update invariants *)
+		
+		(* Compute transitions *)
+		(* Locations 0 to n-2 *)
+		for i = 0 to lbad-1 do
+			let a_i = List.nth list_of_actions i in
+			(* Add the action l_i --{a_i}--> l_i+1, except for location n-1 *)
+			if i <> lbad-1 then(
+				transitions.(i).(a_i) <- untimedt (i+1);
+			);
+			(* Add the transitions to bad *)
+			List.iter(fun action_index ->
+				if action_index <> a_i then (
+					transitions.(i).(action_index) <- untimedt (lbad);
+				);
+			) list_of_actions;
+		done;
+		(* Location n-1: add the loop back to loc_0 *)
+		let a_n = List.nth list_of_actions (List.length list_of_actions - 1) in
+		transitions.(lbad-1).(a_n) <- untimedt (0);
+		(* Add self-loops *)
+		transitions.(lbad) <- allow_all lbad;
+		
+		(* Return structure *)
+		all_actions, actions_per_location, invariants, transitions,
+		(* No init constraint *)
+		None,
+		(* Reduce to reachability property *)
+		Unreachable (automaton_index, lbad)
+	
+	
+(* 	| _ -> raise (InternalError("Not implemented")) *)
 
 
