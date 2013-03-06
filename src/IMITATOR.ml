@@ -418,6 +418,7 @@ if program.has_stopwatches then
 else
 	print_message Debug_low ("The model is purely timed (no stopwatches).");
 
+(* Ugly line break *)
 print_message Debug_standard "";
 
 

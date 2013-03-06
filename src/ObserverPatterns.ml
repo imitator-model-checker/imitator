@@ -284,7 +284,7 @@ let get_automaton nb_actions automaton_index nosync_index x_obs property =
 		let all_actions = [a] in
 		(* Initialize *)
 		let actions_per_location, invariants, transitions, allow_all = initialize_structures nb_locations all_actions in
-		(* Update actions per location for the nosync action *)
+		(* Update actions per location for the silent action *)
 		actions_per_location.(0) <- nosync_index :: all_actions;
 		(* Update invariants *)
 		invariants.(0) <- ct_x_leq_d x_obs d;
@@ -293,8 +293,7 @@ let get_automaton nb_actions automaton_index nosync_index x_obs property =
 		transitions.(0).(nosync_index) <- [ct_x_eq_d x_obs d, No_update, [], 2];
 		transitions.(1) <- allow_all 1;
 		transitions.(2) <- allow_all 2;
-		(* Return structure *)
-		(*** WARNING: not sure whether nosync_index should be added here? ***)
+		(* Return structure (and add silent action) *)
 		nosync_index :: all_actions, actions_per_location, invariants, transitions,
 		(* Return x_obs = 0 *)
 		Some (lc_x_eq_0 x_obs),
@@ -371,10 +370,79 @@ let get_automaton nb_actions automaton_index nosync_index x_obs property =
 		(* Reduce to reachability property *)
 		Unreachable (automaton_index, 2)
 		
-				(*	
-	|TB_Action_precedence_cyclic _ -> 3
-	| TB_Action_precedence_cyclicstrict _ -> 3
-	| TB_response_acyclic _ -> 4
+
+	| TB_response_acyclic (a1, a2, d) -> 
+		let nb_locations = 4 in
+		let all_actions = [a1; a2] in
+		(* Initialize *)
+		let actions_per_location, invariants, transitions, allow_all = initialize_structures nb_locations all_actions in
+		(* Update actions per location for the silent action *)
+		actions_per_location.(1) <- nosync_index :: all_actions;
+		(* Update invariants *)
+		invariants.(1) <- ct_x_leq_d x_obs d;
+		(* Compute transitions *)
+		transitions.(0).(a1) <- [truec (), Resets [x_obs], [], 1];
+		transitions.(0).(a2) <- untimedt 0;
+		transitions.(1).(a1) <- untimedt 1;
+		transitions.(1).(a2) <- untimedt 2;
+		transitions.(1).(nosync_index) <- [ct_x_eq_d x_obs d, No_update, [], 3];
+		transitions.(2) <- allow_all 2;
+		transitions.(3) <- allow_all 3;
+		(* Return structure (and add silent action) *)
+		nosync_index :: all_actions, actions_per_location, invariants, transitions,
+		(* No init constraint *)
+		None,
+		(* Reduce to reachability property *)
+		Unreachable (automaton_index, 3)
+		
+	| TB_response_cyclic (a1, a2, d) -> 
+		let nb_locations = 3 in
+		let all_actions = [a1; a2] in
+		(* Initialize *)
+		let actions_per_location, invariants, transitions, allow_all = initialize_structures nb_locations all_actions in
+		(* Update actions per location for the silent action *)
+		actions_per_location.(1) <- nosync_index :: all_actions;
+		(* Update invariants *)
+		invariants.(1) <- ct_x_leq_d x_obs d;
+		(* Compute transitions *)
+		transitions.(0).(a1) <- [truec (), Resets [x_obs], [], 1];
+		transitions.(0).(a2) <- untimedt 0;
+		transitions.(1).(a1) <- untimedt 1;
+		transitions.(1).(a2) <- untimedt 0;
+		transitions.(1).(nosync_index) <- [ct_x_eq_d x_obs d, No_update, [], 2];
+		transitions.(2) <- allow_all 2;
+		(* Return structure (and add silent action) *)
+		nosync_index :: all_actions, actions_per_location, invariants, transitions,
+		(* No init constraint *)
+		None,
+		(* Reduce to reachability property *)
+		Unreachable (automaton_index, 2)
+	
+	
+	| TB_response_cyclicstrict (a1, a2, d) -> 
+		let nb_locations = 3 in
+		let all_actions = [a1; a2] in
+		(* Initialize *)
+		let actions_per_location, invariants, transitions, allow_all = initialize_structures nb_locations all_actions in
+		(* Update actions per location for the silent action *)
+		actions_per_location.(1) <- nosync_index :: all_actions;
+		(* Update invariants *)
+		invariants.(1) <- ct_x_leq_d x_obs d;
+		(* Compute transitions *)
+		transitions.(0).(a1) <- [truec (), Resets [x_obs], [], 1];
+		transitions.(0).(a2) <- untimedt 2;
+		transitions.(1).(a1) <- untimedt 2;
+		transitions.(1).(a2) <- untimedt 0;
+		transitions.(1).(nosync_index) <- [ct_x_eq_d x_obs d, No_update, [], 2];
+		transitions.(2) <- allow_all 2;
+		(* Return structure (and add silent action) *)
+		nosync_index :: all_actions, actions_per_location, invariants, transitions,
+		(* No init constraint *)
+		None,
+		(* Reduce to reachability property *)
+		Unreachable (automaton_index, 2)
+						(*	
+	|TB_response_acyclic _ -> 4
 	| TB_response_cyclic _ -> 3
 	| TB_response_cyclicstrict _ -> 3
 	| Sequence_acyclic list_of_actions -> (List.length list_of_actions) + 2

@@ -1929,13 +1929,19 @@ let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_
 		(* Get the info from the observer pattern *)
 		let observer_actions, observer_actions_per_location, observer_invariants, observer_transitions, initial_observer_constraint, correctness_condition =
 			ObserverPatterns.get_automaton nb_actions observer_id nosync_obs clock_obs property in
-		actions_per_automaton.(observer_id) <- nosync_obs :: observer_actions;
+		(* Retrieve the number of locations of the observer *)
+		let nb_locations = Array.length observer_actions_per_location in
+		(* Update actions per automaton *)
+		actions_per_automaton.(observer_id) <- observer_actions;
 		(* Update actions per location *)
 		actions_per_location.(observer_id) <- observer_actions_per_location;
 		(* Update transitions *)
 		transitions.(observer_id) <- observer_transitions;
 		(* Update invariants *)
 		invariants.(observer_id) <- observer_invariants;
+		(* Update costs (no costs in observers) *)
+		costs.(observer_id) <- Array.make nb_locations None;
+
 		(* Set the correctness_condition *)
 		Some correctness_condition, initial_observer_constraint
 	in

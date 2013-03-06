@@ -198,7 +198,7 @@ let string_of_program program =
 	string_of_header program
 	^  "\n" ^ string_of_declarations program
 	^  "\n" ^ string_of_automata program
-	(** TODO: the initial constraint !! *)
+	(*** TODO: the initial constraint !! ***)
 
 
 (**************************************************)

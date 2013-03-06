@@ -502,7 +502,7 @@ pattern:
 	/* everytime a1 then eventually a2 within d */
 	| CT_EVERYTIME NAME CT_THEN CT_EVENTUALLY NAME CT_WITHIN linear_expression { TB_response_cyclic ($2, $5, $7) }
 	/* everytime a1 then eventually a2 within d once before next */
-	| CT_IF NAME CT_THEN CT_EVENTUALLY NAME CT_WITHIN linear_expression CT_ONCE CT_BEFORE CT_NEXT { TB_response_cyclicstrict ($2, $5, $7) }
+	| CT_EVERYTIME NAME CT_THEN CT_EVENTUALLY NAME CT_WITHIN linear_expression CT_ONCE CT_BEFORE CT_NEXT { TB_response_cyclicstrict ($2, $5, $7) }
 	
 	/* sequence: a1, ..., an */
 	| CT_SEQUENCE COLON name_list { Sequence_acyclic ($3) }
