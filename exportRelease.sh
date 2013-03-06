@@ -20,7 +20,20 @@ for directory in doc examples src; do
 	cp -R $directory $DESTDIR$directory
 done
 
-# Delete SVN files
+# Create bin and lib
+for directory in bin lib; do
+	echo "Creating $directory ..."
+	mkdir $DESTDIR$directory
+done
+
+# Delete SVN files ; the "cd" command is very important! otherwise SVN files are deleted in the source...
+echo "cd $DESTDIR"
 cd $DESTDIR
-pwd
-# find -type d -name '.svn' -exec rm -rfv {} \; 
+
+# pwd
+
+find -type d -name '.svn' -exec rm -rfv {} \; 
+
+for extension in jpg pdf ; do
+# 	find . -iname "*.$extension" -ok rm '{}' ';'
+done
