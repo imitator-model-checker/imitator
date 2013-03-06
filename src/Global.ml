@@ -8,7 +8,7 @@
  * Author:        Etienne Andre
  * 
  * Created:       2009/09/08
- * Last modified: 2013/03/05
+ * Last modified: 2013/03/06
  *
  ****************************************************************)
  
@@ -26,7 +26,7 @@ open Unix
 (****************************************************************)
 
 let program_name = "IMITATOR"
-let version_string = "2.6.1"
+let version_string = "2.6.0 unstable"
 
 let print_version_string _ = 
 	print_string (program_name ^ " " ^ version_string ^ "\n")

@@ -10,7 +10,7 @@
  * Author:        Etienne Andre
  * 
  * Created:       2009/09/09
- * Last modified: 2013/03/05
+ * Last modified: 2013/03/06
  *
  ****************************************************************)
 
@@ -222,11 +222,6 @@ let linear_inequality_of_linear_constraint index_of_variables constants (le1, re
 (*--------------------------------------------------*)
 (* Convert a ParsingStructure.convex_predicate into a Constraint.linear_constraint *)
 (*--------------------------------------------------*)
-
-
-(* let i = ref 0 *)
-
-
 let linear_constraint_of_convex_predicate index_of_variables constants convex_predicate =
 	try(
 	(* Compute a list of inequalities *)
@@ -403,6 +398,20 @@ let check_convex_predicate variable_names constants =
 	true
 
 (*--------------------------------------------------*)
+(* Generic function to test something in linear expressions *)
+(*--------------------------------------------------*)
+let rec check_f_in_linear_expression f index_of_variables type_of_variables constants = function
+	| Linear_term linear_term ->
+		f index_of_variables type_of_variables constants linear_term
+	| Linear_plus_expression (linear_expression, linear_term) ->
+		check_f_in_linear_expression f index_of_variables type_of_variables constants linear_expression
+		&& f index_of_variables type_of_variables constants linear_term
+	| Linear_minus_expression (linear_expression, linear_term) ->
+	check_f_in_linear_expression f index_of_variables type_of_variables constants linear_expression
+	&& f index_of_variables type_of_variables constants linear_term
+
+
+(*--------------------------------------------------*)
 (* Check that a linear expression contains only discrete variables and constants *)
 (*--------------------------------------------------*)
 let only_discrete_in_linear_term index_of_variables type_of_variables constants = function
@@ -415,15 +424,23 @@ let only_discrete_in_linear_term index_of_variables type_of_variables constants 
 		let variable_index = Hashtbl.find index_of_variables variable_name in
 			type_of_variables variable_index = Var_type_discrete
 
-let rec only_discrete_in_linear_expression index_of_variables type_of_variables constants = function
-	| Linear_term linear_term ->
-		only_discrete_in_linear_term index_of_variables type_of_variables constants linear_term
-	| Linear_plus_expression (linear_expression, linear_term) ->
-		only_discrete_in_linear_expression index_of_variables type_of_variables constants linear_expression
-		&& only_discrete_in_linear_term index_of_variables type_of_variables constants linear_term
-	| Linear_minus_expression (linear_expression, linear_term) ->
-	only_discrete_in_linear_expression index_of_variables type_of_variables constants linear_expression
-	&& only_discrete_in_linear_term index_of_variables type_of_variables constants linear_term
+let only_discrete_in_linear_expression = check_f_in_linear_expression only_discrete_in_linear_term
+
+(*--------------------------------------------------*)
+(* Check that a linear expression contains no variables (neither discrete nor clock) *)
+(*--------------------------------------------------*)
+let no_variables_in_linear_term index_of_variables type_of_variables constants = function
+	| Constant _ -> true
+	| Variable (_, variable_name) ->
+		(* Constants are allowed *)
+		(Hashtbl.mem constants variable_name)
+		(* Or parameter *)
+		||
+		let variable_index = Hashtbl.find index_of_variables variable_name in
+			type_of_variables variable_index = Var_type_parameter
+
+let no_variables_in_linear_expression = check_f_in_linear_expression no_variables_in_linear_term
+
 
 
 (*--------------------------------------------------*)
@@ -742,29 +759,7 @@ let check_init discrete variable_names constants index_of_variables type_of_vari
 (*--------------------------------------------------*)
 (* Check the correctness property declaration       *)
 (*--------------------------------------------------*)
-let check_and_convert_property index_of_actions index_of_automata index_of_locations parsed_property_definition =
-(* 	let well_formed = ref true in *)
-	(*(*CASE LIST OF LOCATIONS*)
-	(* convert to pairs of automata indices and location indices *)
-	let state_pairs = ref [] in
-	List.iter (fun bad_def -> 
-		match bad_def with
-			| Loc_assignment (aut, loc) -> (
-					try (
-						let aut_index = Hashtbl.find index_of_automata aut in
-						let loc_index = Hashtbl.find index_of_locations.(aut_index) loc in
-						state_pairs := (aut_index, loc_index) :: !state_pairs
-					) with Not_found -> well_formed := false )					
-			| _ -> well_formed := false
-	) parsed_bad_definition;
-	(* check that each automaton index appears at most once *)
-	let rec unique = function
-		| [] -> true
-		| (i, _) :: tail -> (not (List.exists (fun (j, _) -> i=j) tail)) && unique tail in  
-	well_formed := !well_formed && unique !state_pairs;			
-	(!state_pairs, !well_formed)*)
-(*	let action_index =*)
-
+let check_and_convert_property index_of_variables type_of_variables variable_names constants index_of_actions index_of_automata index_of_locations parsed_property_definition =
 	(* Local function checking existence of a name *)
 	let check_automaton_name automaton_name =
 		if not (Hashtbl.mem index_of_automata automaton_name)
@@ -819,15 +814,22 @@ let check_and_convert_property index_of_actions index_of_automata index_of_locat
 	
 	(* Generic check and conversion function for 2 actions and one deadline *)
 	let gen_check_and_convert_2actd property a1 a2 d =
-		(* Check action names (perform 2 even if one fails) *)
+		(* Check action names and deadline (perform 3 even if one fails) *)
 		let check1 = check_action_name a1 in
 		let check2 = check_action_name a2 in
-		if not (check1 && check2)
+		let check3 = check_linear_expression variable_names constants d in
+		let check4 = (if no_variables_in_linear_expression index_of_variables type_of_variables constants d
+						then true
+						else (print_error("No variable is allowed in the property definition (only constants and parameters)."); false))
+		in
+		if not (check1 && check2 && check3 && check4)
 		then (Noproperty , false)
 		else (
 			(* Get action indexes *)
 			let action_index1 = Hashtbl.find index_of_actions a1 in 
 			let action_index2 = Hashtbl.find index_of_actions a2 in
+			(* Convert deadline *)
+			let d = linear_term_of_linear_expression index_of_variables constants d in
 			(** BADPROG (but couldn't see how to do better!) *)
 			(* Match again and create the property *)
 			match property with 
@@ -902,13 +904,23 @@ let check_and_convert_property index_of_actions index_of_automata index_of_locat
 		
 		(* CASE ACTION + DEADLINE *)
 		| ParsingStructure.Action_deadline ( a , d )
-			-> if not (check_action_name a)
-				then (Noproperty , false)
-				else (
-					(* Get action indexes *)
-					let action_index = Hashtbl.find index_of_actions a in
-					AbstractModel.Action_deadline ( action_index , d ), true
-				)
+			-> 
+			(* Check action name and deadline (perform 2 even if one fails) *)
+			let check1 = check_action_name a in
+			let check2 = check_linear_expression variable_names constants d in
+			let check3 = check_linear_expression variable_names constants d in
+			let check4 = (if no_variables_in_linear_expression index_of_variables type_of_variables constants d
+							then true
+							else (print_error("No variable is allowed in the property definition (only constants and parameters)."); false))
+			in
+			if not (check1 && check2 && check3 && check4) then (Noproperty , false)
+			else (
+				(* Get action indexes *)
+				let action_index = Hashtbl.find index_of_actions a in
+				(* Convert deadline *)
+				let d = linear_term_of_linear_expression index_of_variables constants d in
+				AbstractModel.Action_deadline ( action_index , d ), true
+			)
 		
 		(* CASE 2 ACTIONS + DEADLINE *)
 		(* if a2 then a1 happened within d before *)
@@ -1153,7 +1165,7 @@ let convert_invariants index_of_variables constants invariants =
 (*--------------------------------------------------*)
 (* Get all the possible actions for every location of every automaton *)
 (*--------------------------------------------------*)
-let make_automata index_of_variables constants index_of_automata index_of_locations labels index_of_actions removed_synclab_names parsed_automata =
+let make_automata index_of_variables constants index_of_automata index_of_locations labels index_of_actions removed_synclab_names parsed_automata with_observer_action =
 	(* Number of automata *)
 	let nb_automata = Hashtbl.length index_of_automata in
 	(* Create an empty array for the actions of every automaton *)
@@ -1253,7 +1265,7 @@ let make_automata index_of_variables constants index_of_automata index_of_locati
 			(* Does the program has stopwatches? *)
 			if stopwatches != [] then has_stopwatches := true;
 			(* Convert the stopwatches names into variables *)
-			let list_of_stopwatch_names = list_only_once(stopwatches) in
+			let list_of_stopwatch_names = list_only_once stopwatches in
 			(* Update the array of stopwatches *)
 			stopwatches_array.(automaton_index).(location_index) <- List.map (fun stopwatch_index -> 
 					Hashtbl.find index_of_variables stopwatch_index
@@ -1269,9 +1281,8 @@ let make_automata index_of_variables constants index_of_automata index_of_locati
 	) parsed_automata;
 	
 	
-	
-	(* Create the array of action names *)
-	let nb_actions = !no_sync_index in
+	(* Create the array of action names; add 1 no_sync for the observer, if any *)
+	let nb_actions = !no_sync_index + (if with_observer_action then 1 else 0) in
 	let array_of_action_names = Array.make nb_actions "" in
 	(* Create the array of action types (sync / no_sync) *)
 	let array_of_action_types = Array.make nb_actions Action_type_sync in
@@ -1280,22 +1291,21 @@ let make_automata index_of_variables constants index_of_automata index_of_locati
 		array_of_action_names.(i) <- labels.(i);
 	done;
 	(* Fill the no sync actions *)
-	for i = Array.length labels to nb_actions - 1 do
+	for i = Array.length labels to nb_actions - 1 - (if with_observer_action then 1 else 0) do
 		array_of_action_names.(i) <- ("nosync_" ^ (string_of_int (i - (Array.length labels) + 1)));
 		array_of_action_types.(i) <- Action_type_nosync;
-
 	done;
+	(* Fill the array for the observer no_sync *)
+	if with_observer_action then(
+		array_of_action_names.(nb_actions - 1) <- ("nosync_obs");
+		array_of_action_types.(nb_actions - 1) <- Action_type_nosync;
+	);
+	
 	(* Create the action list *)
 	let actions = list_of_interval 0 (nb_actions - 1) in
-	(* Create the functional representation for action names *)
-	let action_names = fun action_index ->
-		try (array_of_action_names.(action_index))
-		with _ -> raise (InternalError ("Action index " ^ (string_of_int action_index) ^ " does not exist in the program."))
-	in
-	
-	
+		
 	(* Return all the structures in a functional representation *)
-	actions, action_names, array_of_action_types, actions_per_automaton, actions_per_location, costs, invariants, stopwatches_array, !has_stopwatches, transitions
+	actions, array_of_action_names, array_of_action_types, actions_per_automaton, actions_per_location, costs, invariants, stopwatches_array, !has_stopwatches, transitions, (if with_observer_action then Some (nb_actions - 1) else None)
 
 
 
@@ -1395,7 +1405,7 @@ let convert_transitions nb_actions index_of_variables constants type_of_variable
 (*--------------------------------------------------*)
 (* Create the initial state *)
 (*--------------------------------------------------*)
-let make_initial_state index_of_automata locations_per_automaton index_of_locations index_of_variables constants type_of_variables init_discrete init_definition =
+let make_initial_state index_of_automata locations_per_automaton index_of_locations index_of_variables constants type_of_variables init_discrete  init_definition =
 	(* Get the location initialisations and the constraint *)
 	let loc_assignments, linear_predicates = List.partition (function
 		| Loc_assignment _ -> true
@@ -1583,7 +1593,7 @@ let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_
 	(* Add clock and automaton for the observer *) 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Note that the observer has not been checked yet, but it doesn't matter *)
-	let observer_automaton, observer_clock = ObserverPatterns.new_elements parsed_property_definition in
+	let observer_automaton, observer_clock_option = ObserverPatterns.new_elements parsed_property_definition in
 	
 	(* Print some information *)
 	if debug_mode_greater Debug_high then(
@@ -1593,9 +1603,9 @@ let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_
 			| Some observer_automaton -> print_message Debug_high ("Adding extra automaton '" ^ observer_automaton ^ "' for the observer.");
 		end;
 		begin
-			match observer_clock with
+			match observer_clock_option with
 			| None -> ()
-			| Some observer_clock -> print_message Debug_high ("Adding extra clock '" ^ observer_clock ^ "' for the observer.");
+			| Some observer_clock_name -> print_message Debug_high ("Adding extra clock '" ^ observer_clock_name ^ "' for the observer.");
 		end;
 	);
 	
@@ -1606,9 +1616,9 @@ let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	
 	(* Keep every element only once in those 4 lists (and add the observer clock, if any) *)
-	let clock_names = match observer_clock with
+	let clock_names = match observer_clock_option with
 		| None -> list_only_once clock_names
-		| Some clock_obs -> list_append (list_only_once clock_names) [clock_obs]
+		| Some observer_clock_name -> list_append (list_only_once clock_names) [observer_clock_name]
 	in
 	let discrete_names = list_only_once discrete_names in
 	let parameters_names = list_only_once parameters_names in
@@ -1813,7 +1823,7 @@ let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* WARNING: might be a problem if the check_automata test fails *)
 	let property, well_formed_property =
-		check_and_convert_property index_of_actions index_of_automata index_of_locations parsed_property_definition in
+		check_and_convert_property index_of_variables type_of_variables variable_names constants index_of_actions index_of_automata index_of_locations parsed_property_definition in
 		
 		
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -1846,7 +1856,7 @@ let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_
 
 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Constuct the pi0 *) 
+	(* Constuct the pi0 *)
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 	let pi0, v0 =
@@ -1884,8 +1894,8 @@ let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	print_message Debug_total ("*** Building automata...");
 	(* Get all the possible actions for every location of every automaton *)
-	let actions, action_names, action_types, actions_per_automaton, actions_per_location, costs, invariants, stopwatches_array, has_stopwatches, transitions =
-		make_automata index_of_variables constants index_of_automata index_of_locations labels index_of_actions removed_synclab_names parsed_automata  in
+	let actions, array_of_action_names, action_types, actions_per_automaton, actions_per_location, costs, invariants, stopwatches_array, has_stopwatches, transitions, nosync_obs =
+		make_automata index_of_variables constants index_of_automata index_of_locations labels index_of_actions removed_synclab_names parsed_automata (observer_automaton != None) in
 	let nb_actions = List.length actions in
 	
 	(* Convert the transitions *)
@@ -1897,22 +1907,29 @@ let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Handle the observer here *)
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	let correctness_condition =
+	let correctness_condition, initial_observer_constraint =
 	match observer_automaton with
 	| None -> print_message Debug_total ("*** (No observer)");
 		(* Still check the case of non-reachability user-defined property *)
 		begin
 		match property with
-			| Unreachable_location (automaton_index, location_index) -> Some (Unreachable (automaton_index, location_index))
-			| _ -> None
+			| Unreachable_location (automaton_index, location_index) -> Some (Unreachable (automaton_index, location_index)), None
+			| _ -> None, None
 		end
 	| Some observer_id -> 
 		print_message Debug_low ("*** Generating the observer...");
+		(* Get the silent action index for the observer *)
+		let nosync_obs = match nosync_obs with
+			| Some nosync_obs -> nosync_obs
+			| None -> raise (InternalError ("An observer action should have been defined."))
+		in
+		(* Get the local clock for the observer *)
+		(*** WARNING: quite a HACK, here ***)
+		let clock_obs = nb_parameters + nb_clocks - 1 in
 		(* Get the info from the observer pattern *)
-		let observer_actions, observer_actions_per_location, observer_invariants, observer_transitions, correctness_condition =
-			ObserverPatterns.get_automaton nb_actions observer_id property in
-		(* Update actions *)
-		actions_per_automaton.(observer_id) <- observer_actions;
+		let observer_actions, observer_actions_per_location, observer_invariants, observer_transitions, initial_observer_constraint, correctness_condition =
+			ObserverPatterns.get_automaton nb_actions observer_id nosync_obs clock_obs property in
+		actions_per_automaton.(observer_id) <- nosync_obs :: observer_actions;
 		(* Update actions per location *)
 		actions_per_location.(observer_id) <- observer_actions_per_location;
 		(* Update transitions *)
@@ -1920,16 +1937,13 @@ let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_
 		(* Update invariants *)
 		invariants.(observer_id) <- observer_invariants;
 		(* Set the correctness_condition *)
-		Some correctness_condition
+		Some correctness_condition, initial_observer_constraint
 	in
 	
-	(*TODO: handle correctness_condition, and also in the case where the automaton is undefined*)
 	
 	
 	
-	(* TODO : perform init for observer (location + clock !!!) *)
-	
-	
+	(* TODO : perform init for observer (location) *)
 	
 	
 	
@@ -1939,6 +1953,15 @@ let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Convert to functional view *)
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	
+	let array_of_variable_names = Array.make nb_variables "" in
+	(* Add normal names *)
+	for variable_index = 0 to nb_variables - 1 do
+		array_of_variable_names.(variable_index) <- variables.(variable_index);
+	done;
+	
+	(* Create the functional representation *)
+	let variable_names = fun i -> array_of_variable_names.(i) in
 	(* Create the functional representation for action types *)
 	let action_types = fun action_index -> action_types.(action_index) in
 	(* Create the functional representation for the actions of every automaton *)
@@ -1953,8 +1976,21 @@ let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_
 	let stopwatches = (fun automaton_index location_index -> stopwatches_array.(automaton_index).(location_index)) in
 	(* Transitions *)
 	let transitions = fun automaton_index location_index action_index -> transitions.(automaton_index).(location_index).(action_index) in
+	(* Actions *)
+	let action_names = fun action_index ->
+		try (array_of_action_names.(action_index))
+		with _ -> raise (InternalError ("Action index " ^ (string_of_int action_index) ^ " does not exist in the program."))
+	in
 	
+	
+	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(* Set the number of discrete variables *) 
+	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	let min_discrete_index = first_discrete_index in
+	let max_discrete_index = nb_variables - 1 in
+	Automaton.initialize nb_automata min_discrete_index max_discrete_index;
 
+	
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Compute the automata per action *)
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -1977,35 +2013,19 @@ let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_
 
 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Set the number of discrete variables *) 
-	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	let min_discrete_index = first_discrete_index in
-	let max_discrete_index = nb_variables - 1 in
-	Automaton.initialize nb_automata min_discrete_index max_discrete_index;
-
-	
-	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Construct the initial state *) 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	print_message Debug_total ("*** Building initial state...");
 	let (initial_location, initial_constraint) =
 		make_initial_state index_of_automata array_of_location_names index_of_locations index_of_variables constants type_of_variables init_discrete_couples parsed_init_definition in
-
-	let array_of_variable_names = Array.make nb_variables "" in
-	(* Add normal names *)
-	for variable_index = 0 to nb_variables - 1 do
-		array_of_variable_names.(variable_index) <- variables.(variable_index);
-	done;
-
 	
+	(* Add the observer initial constraint *)
+	begin
+	match initial_observer_constraint with
+		| None -> ()
+		| Some c -> LinearConstraint.intersection_assign initial_constraint [c];
+	end;
 	
-	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Functional view of variables *) 
-	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	
-	(* Create the functional representation *)
-	let variable_names = fun i -> array_of_variable_names.(i) in
-
 	
 	
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)

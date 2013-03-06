@@ -10,7 +10,7 @@
  * Author:        Etienne Andre
  * 
  * Created:       2013/02/04
- * Last modified: 2013/03/04
+ * Last modified: 2013/03/06
  *
  ****************************************************************)
 
@@ -20,6 +20,7 @@
 (****************************************************************)
 open Global
 open AbstractModel
+open LinearConstraint
 
 
 (****************************************************************)
@@ -36,7 +37,41 @@ let location_name location_index =
 (** Shortcuts *)
 let truec = LinearConstraint.true_constraint
 
+
+(****************************************************************)
+(** Useful (parameterized) constants *)
+(****************************************************************)
 let untimedt destination_index = [truec (), No_update, [], destination_index]
+
+(* Constraint x <= d, with d linear_term : d - x >= 0 *)
+let ct_x_leq_d x d =
+	(* Build the linear term *)
+	let lt = add_linear_terms d (LinearConstraint.make_linear_term [NumConst.minus_one, x] NumConst.zero) in
+	(* Build constraint *)
+	LinearConstraint.make [LinearConstraint.make_linear_inequality lt LinearConstraint.Op_ge]
+
+
+(* Linear inequality x = d, with d linear_term : d - x >= 0 *)
+let lt_x_eq_d x d =
+	(* Build the linear term *)
+	let lt = add_linear_terms d (LinearConstraint.make_linear_term [NumConst.minus_one, x] NumConst.zero) in
+	(* Build linear inequality *)
+	LinearConstraint.make_linear_inequality lt LinearConstraint.Op_eq
+
+
+(* Constraint x = d, with d linear_term : d - x >= 0 *)
+let ct_x_eq_d x d =
+	(* Build constraint *)
+	LinearConstraint.make [lt_x_eq_d x d]
+
+
+(* Linear constraint x = 0 *)
+let lc_x_eq_0 x =
+	(* Build the linear term *)
+	let lt = (LinearConstraint.make_linear_term [NumConst.minus_one, x] NumConst.zero) in
+	(* Build linear constraint *)
+	LinearConstraint.make [LinearConstraint.make_linear_inequality lt LinearConstraint.Op_eq]
+
 
 
 (****************************************************************)
@@ -115,7 +150,7 @@ let get_locations property =
 
 (*------------------------------------------------------------*)
 (* Create the observer; 
-	Takes as parameters the number of actions, and the automaton_index
+	Takes as parameters the number of actions, the automaton_index, the nosync index for the observer, the local clock id for the observer
 	Returns:
 	- Actions per automaton
 	- Actions per location
@@ -123,10 +158,9 @@ let get_locations property =
 	- Invariants
 *)
 (*------------------------------------------------------------*)
-let get_automaton nb_actions automaton_index property = 
+let get_automaton nb_actions automaton_index nosync_index x_obs property = 
 	(* Create the common structures *)
 	let initialize_structures nb_locations all_actions =
-(* 		let nb_observer_actions = List.length all_actions in *)
 		(*Array for actions for location *)
 		let actions_per_location = 	Array.make nb_locations [] in
 		(* All observers are complete: fill *)
@@ -164,6 +198,8 @@ let get_automaton nb_actions automaton_index property =
 		let all_actions = [a1;a2] in
 		(* Initialize *)
 		let actions_per_location, invariants, transitions, allow_all = initialize_structures nb_locations all_actions in
+		(* No need to update actions per location (no nosync action here) *)
+		
 		(* Compute transitions *)
 		transitions.(0).(a1) <- untimedt 1;
 		transitions.(0).(a2) <- untimedt 2;
@@ -171,6 +207,8 @@ let get_automaton nb_actions automaton_index property =
 		transitions.(2) <- allow_all 2;
 		(* Return structure *)
 		all_actions, actions_per_location, invariants, transitions,
+		(* No init inequality *)
+		None,
 		(* Reduce to reachability property *)
 		Unreachable (automaton_index, 2)
 	
@@ -180,6 +218,8 @@ let get_automaton nb_actions automaton_index property =
 		let all_actions = [a1;a2] in
 		(* Initialize *)
 		let actions_per_location, invariants, transitions, allow_all = initialize_structures nb_locations all_actions in
+		(* No need to update actions per location (no nosync action here) *)
+
 		(* Compute transitions *)
 		transitions.(0).(a1) <- untimedt 1;
 		transitions.(0).(a2) <- untimedt 2;
@@ -198,6 +238,8 @@ let get_automaton nb_actions automaton_index property =
 		done;*)
 		(* Return structure *)
 		all_actions, actions_per_location, invariants, transitions,
+		(* No init inequality *)
+		None,
 		(* Reduce to reachability property *)
 		Unreachable (automaton_index, 2)
 	
@@ -207,6 +249,8 @@ let get_automaton nb_actions automaton_index property =
 		let all_actions = [a1;a2] in
 		(* Initialize *)
 		let actions_per_location, invariants, transitions, allow_all = initialize_structures nb_locations all_actions in
+		(* No need to update actions per location (no nosync action here) *)
+		
 		(* Compute transitions *)
 		transitions.(0).(a1) <- untimedt 1;
 		transitions.(0).(a2) <- untimedt 2;
@@ -215,14 +259,41 @@ let get_automaton nb_actions automaton_index property =
 		transitions.(2) <- allow_all 2;
 		(* Return structure *)
 		all_actions, actions_per_location, invariants, transitions,
+		(* No init inequality *)
+		None,
 		(* Reduce to reachability property *)
 		Unreachable (automaton_index, 2)
 		
 	
-(*	
-	| Eventual_response_acyclic _ -> 3
-	| Eventual_response_cyclic _ -> 2
-	| Eventual_response_cyclicstrict _ -> 3
+	| Eventual_response_acyclic (a1, a2)
+	| Eventual_response_cyclic (a1, a2)
+	| Eventual_response_cyclicstrict (a1, a2)
+		-> raise (InternalError("Oups"))
+	
+	
+	| Action_deadline (a, d) -> 
+		let nb_locations = 3 in
+		let all_actions = [a] in
+		(* Initialize *)
+		let actions_per_location, invariants, transitions, allow_all = initialize_structures nb_locations all_actions in
+		(* Update actions per location for the nosync action *)
+		actions_per_location.(0) <- nosync_index :: all_actions;
+		(* Update invariants *)
+		invariants.(0) <- ct_x_leq_d x_obs d;
+		(* Compute transitions *)
+		transitions.(0).(a) <- untimedt 1;
+		transitions.(0).(nosync_index) <- [ct_x_eq_d x_obs d, No_update, [], 2];
+		transitions.(1) <- allow_all 1;
+		transitions.(2) <- allow_all 2;
+		(* Return structure *)
+		all_actions, actions_per_location, invariants, transitions,
+		(* Return x_obs = 0 *)
+		Some (lc_x_eq_0 x_obs),
+		(* Reduce to reachability property *)
+		Unreachable (automaton_index, 2)
+		
+	
+		(*	
 	| Action_deadline _ -> 3
 	| TB_Action_precedence_acyclic _ -> 4
 	| TB_Action_precedence_cyclic _ -> 3

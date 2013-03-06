@@ -8,7 +8,7 @@
  * Author:        Etienne Andre
  * 
  * Created:       2009/09/11
- * Last modified: 2013/03/05
+ * Last modified: 2013/03/06
  *
  ****************************************************************)
 
@@ -94,7 +94,7 @@ type transition = guard * clock_updates * discrete_update list * location_index
 (****************************************************************)
 (** predicates for bad definition *)
 
-type duration = NumConst.t
+type duration = LinearConstraint.linear_term
 
 (** Definition of the property by the end user *)
 type property =

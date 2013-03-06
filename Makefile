@@ -234,7 +234,11 @@ exe:
 
 # 	$(TARGET) $(EXAMPLE_PATH)/Tests/TestPattern1.imi $(EXAMPLE_PATH)/Tests/TestPattern1.v0 -mode cover -cart
 # 	$(TARGET) $(EXAMPLE_PATH)/Tests/TestPattern2.imi -PTA2JPG
-	$(TARGET) $(EXAMPLE_PATH)/Tests/TestPattern2.imi $(EXAMPLE_PATH)/Tests/TestPattern2.v0 -mode cover -cart -fancy -with-dot
+# 	$(TARGET) $(EXAMPLE_PATH)/Tests/TestPattern2.imi $(EXAMPLE_PATH)/Tests/TestPattern2.v0 -mode cover -cart -with-dot -fancy
+# 	$(TARGET) $(EXAMPLE_PATH)/Tests/TestPattern3.imi -PTA2JPG
+# 	$(TARGET) $(EXAMPLE_PATH)/Tests/TestPattern3.imi $(EXAMPLE_PATH)/Tests/TestPattern3.v0 -mode cover -cart
+# 	$(TARGET) $(EXAMPLE_PATH)/Tests/TestPattern4.imi -PTA2JPG
+	$(TARGET) $(EXAMPLE_PATH)/Tests/TestPattern4.imi $(EXAMPLE_PATH)/Tests/TestPattern4.v0 -mode cover -cart -with-dot -fancy -with-log -with-parametric-log
 
 
 

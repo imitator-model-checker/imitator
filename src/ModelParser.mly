@@ -488,21 +488,21 @@ pattern:
 	| CT_EVERYTIME NAME CT_THEN CT_EVENTUALLY NAME CT_ONCE CT_BEFORE CT_NEXT { Eventual_response_cyclicstrict ($2, $5) }
 	
 	/* a within d */
-	| NAME CT_WITHIN rational { Action_deadline ($1, $3) }
+	| NAME CT_WITHIN linear_expression { Action_deadline ($1, $3) }
 	
 	/* if a2 then a1 happened within d before */
-	| CT_IF NAME CT_THEN NAME CT_HAS CT_HAPPENED CT_WITHIN rational CT_BEFORE { TB_Action_precedence_acyclic ($2, $4, $8) }
+	| CT_IF NAME CT_THEN NAME CT_HAS CT_HAPPENED CT_WITHIN linear_expression CT_BEFORE { TB_Action_precedence_acyclic ($2, $4, $8) }
 	/* everytime a2 then a1 happened within d before */
-	| CT_EVERYTIME NAME CT_THEN NAME CT_HAS CT_HAPPENED CT_WITHIN rational CT_BEFORE { TB_Action_precedence_cyclic ($2, $4, $8) }
+	| CT_EVERYTIME NAME CT_THEN NAME CT_HAS CT_HAPPENED CT_WITHIN linear_expression CT_BEFORE { TB_Action_precedence_cyclic ($2, $4, $8) }
 	/* everytime a2 then a1 happened once within d before */
-	| CT_EVERYTIME NAME CT_THEN NAME CT_HAS CT_HAPPENED CT_ONCE CT_WITHIN rational CT_BEFORE { TB_Action_precedence_cyclic ($2, $4, $9) }
+	| CT_EVERYTIME NAME CT_THEN NAME CT_HAS CT_HAPPENED CT_ONCE CT_WITHIN linear_expression CT_BEFORE { TB_Action_precedence_cyclic ($2, $4, $9) }
 	
 	/* if a1 then eventually a2 within d */
-	| CT_IF NAME CT_THEN CT_EVENTUALLY NAME CT_WITHIN rational { TB_response_acyclic ($2, $5, $7) }
+	| CT_IF NAME CT_THEN CT_EVENTUALLY NAME CT_WITHIN linear_expression { TB_response_acyclic ($2, $5, $7) }
 	/* everytime a1 then eventually a2 within d */
-	| CT_EVERYTIME NAME CT_THEN CT_EVENTUALLY NAME CT_WITHIN rational { TB_response_cyclic ($2, $5, $7) }
+	| CT_EVERYTIME NAME CT_THEN CT_EVENTUALLY NAME CT_WITHIN linear_expression { TB_response_cyclic ($2, $5, $7) }
 	/* everytime a1 then eventually a2 within d once before next */
-	| CT_IF NAME CT_THEN CT_EVENTUALLY NAME CT_WITHIN rational CT_ONCE CT_BEFORE CT_NEXT { TB_response_cyclicstrict ($2, $5, $7) }
+	| CT_IF NAME CT_THEN CT_EVENTUALLY NAME CT_WITHIN linear_expression CT_ONCE CT_BEFORE CT_NEXT { TB_response_cyclicstrict ($2, $5, $7) }
 	
 	/* sequence: a1, ..., an */
 	| CT_SEQUENCE COLON name_list { Sequence_acyclic ($3) }

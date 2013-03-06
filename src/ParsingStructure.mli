@@ -113,7 +113,7 @@ type init_definition = state_predicate list
 (** Definition of the property *)
 (****************************************************************)
 
-type duration = NumConst.t
+type duration = linear_expression
 
 (** Predicates for the definition of the correctness property *)
 
