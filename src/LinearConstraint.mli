@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2010/03/04
- * Last modified: 2013/01/30
+ * Last modified: 2013/03/06
  *
  ****************************************************************)
  
@@ -48,6 +48,9 @@ val make_linear_term : (coef * variable) list -> coef -> linear_term
 
 (** Add two linear terms *)
 val add_linear_terms : linear_term -> linear_term -> linear_term
+
+(** Perform linear_term1 - linear_term2 *)
+val sub_linear_terms : linear_term -> linear_term -> linear_term
 
 (** Evaluate a linear term with a function assigning a value to each variable. *)
 val evaluate_linear_term : (variable -> coef) -> linear_term -> coef

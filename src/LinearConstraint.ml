@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2010/03/04
- * Last modified: 2013/01/31
+ * Last modified: 2013/03/06
  *
  ****************************************************************)
 
@@ -318,6 +318,10 @@ let make_linear_term members coef =
 (** Add two linear terms *)
 let add_linear_terms lt1 lt2 =
 	Pl (lt1, lt2)
+
+(** Substract two linear terms *)
+let sub_linear_terms lt1 lt2 =
+	Mi (lt1, lt2)
 
 
 (*--------------------------------------------------*)

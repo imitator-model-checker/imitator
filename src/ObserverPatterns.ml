@@ -51,6 +51,14 @@ let ct_x_leq_d x d =
 	LinearConstraint.make [LinearConstraint.make_linear_inequality lt LinearConstraint.Op_ge]
 
 
+(* Constraint x >= d, with d linear_term : x - d >= 0 *)
+let ct_x_geq_d x d =
+	(* Build the linear term *)
+	let lt = sub_linear_terms (LinearConstraint.make_linear_term [NumConst.one, x] NumConst.zero) d in
+	(* Build constraint *)
+	LinearConstraint.make [LinearConstraint.make_linear_inequality lt LinearConstraint.Op_ge]
+
+
 (* Linear inequality x = d, with d linear_term : d - x >= 0 *)
 let lt_x_eq_d x d =
 	(* Build the linear term *)
@@ -268,7 +276,7 @@ let get_automaton nb_actions automaton_index nosync_index x_obs property =
 	| Eventual_response_acyclic (a1, a2)
 	| Eventual_response_cyclic (a1, a2)
 	| Eventual_response_cyclicstrict (a1, a2)
-		-> raise (InternalError("Oups"))
+		-> raise (InternalError("???"))
 	
 	
 	| Action_deadline (a, d) -> 
@@ -286,17 +294,85 @@ let get_automaton nb_actions automaton_index nosync_index x_obs property =
 		transitions.(1) <- allow_all 1;
 		transitions.(2) <- allow_all 2;
 		(* Return structure *)
-		all_actions, actions_per_location, invariants, transitions,
+		(*** WARNING: not sure whether nosync_index should be added here? ***)
+		nosync_index :: all_actions, actions_per_location, invariants, transitions,
 		(* Return x_obs = 0 *)
 		Some (lc_x_eq_0 x_obs),
 		(* Reduce to reachability property *)
 		Unreachable (automaton_index, 2)
 		
 	
-		(*	
-	| Action_deadline _ -> 3
-	| TB_Action_precedence_acyclic _ -> 4
-	| TB_Action_precedence_cyclic _ -> 3
+	| TB_Action_precedence_acyclic (a1, a2, d) -> 
+		let nb_locations = 4 in
+		let all_actions = [a1; a2] in
+		(* Initialize *)
+		let actions_per_location, invariants, transitions, allow_all = initialize_structures nb_locations all_actions in
+		(* No need to update actions per location (no silent action here) *)
+		(* Compute transitions *)
+		transitions.(0).(a1) <- [truec (), Resets [x_obs], [], 1];
+		transitions.(0).(a2) <- untimedt 3;
+		transitions.(1).(a1) <- [truec (), Resets [x_obs], [], 1];
+		transitions.(1).(a2) <- [
+			ct_x_leq_d x_obs d, No_update, [], 2;
+			ct_x_geq_d x_obs d, No_update, [], 3
+			];
+		transitions.(2) <- allow_all 2;
+		transitions.(3) <- allow_all 3;
+		(* Return structure *)
+		all_actions, actions_per_location, invariants, transitions,
+		(* No init constraint *)
+		None,
+		(* Reduce to reachability property *)
+		Unreachable (automaton_index, 3)
+	
+	
+	| TB_Action_precedence_cyclic (a1, a2, d) -> 
+		let nb_locations = 3 in
+		let all_actions = [a1; a2] in
+		(* Initialize *)
+		let actions_per_location, invariants, transitions, allow_all = initialize_structures nb_locations all_actions in
+		(* No need to update actions per location (no silent action here) *)
+		(* Compute transitions *)
+		transitions.(0).(a1) <- [truec (), Resets [x_obs], [], 1];
+		transitions.(0).(a2) <- untimedt 2;
+		transitions.(1).(a1) <- [truec (), Resets [x_obs], [], 1];
+		transitions.(1).(a2) <- [
+			ct_x_leq_d x_obs d, No_update, [], 0;
+			ct_x_geq_d x_obs d, No_update, [], 2
+			];
+		transitions.(2) <- allow_all 2;
+		(* Return structure *)
+		all_actions, actions_per_location, invariants, transitions,
+		(* No init constraint *)
+		None,
+		(* Reduce to reachability property *)
+		Unreachable (automaton_index, 2)
+		
+		
+	| TB_Action_precedence_cyclicstrict (a1, a2, d) -> 
+		let nb_locations = 3 in
+		let all_actions = [a1; a2] in
+		(* Initialize *)
+		let actions_per_location, invariants, transitions, allow_all = initialize_structures nb_locations all_actions in
+		(* No need to update actions per location (no silent action here) *)
+		(* Compute transitions *)
+		transitions.(0).(a1) <- [truec (), Resets [x_obs], [], 1];
+		transitions.(0).(a2) <- untimedt 2;
+		transitions.(1).(a1) <- untimedt 2;
+		transitions.(1).(a2) <- [
+			ct_x_leq_d x_obs d, No_update, [], 0;
+			ct_x_geq_d x_obs d, No_update, [], 2
+			];
+		transitions.(2) <- allow_all 2;
+		(* Return structure *)
+		all_actions, actions_per_location, invariants, transitions,
+		(* No init constraint *)
+		None,
+		(* Reduce to reachability property *)
+		Unreachable (automaton_index, 2)
+		
+				(*	
+	|TB_Action_precedence_cyclic _ -> 3
 	| TB_Action_precedence_cyclicstrict _ -> 3
 	| TB_response_acyclic _ -> 4
 	| TB_response_cyclic _ -> 3
