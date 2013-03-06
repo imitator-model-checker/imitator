@@ -8,7 +8,8 @@
 --   Laboratoire Specification et Verification
 --
 --                                Created : 2008/01/10
---                          Last modified : 2010/04/28
+--                          Last modified : 2013/03/06
+--                       IMITATOR version : 2.6.0
 --****************************************************--
 --****************************************************--
 
@@ -338,4 +339,3 @@ init := True
 
 ;
 
-print(reach forward from init endreach);

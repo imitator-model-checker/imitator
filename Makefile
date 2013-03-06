@@ -277,7 +277,7 @@ exe:
 
 ##### CASE STUDIES : EXAMPLES #####
 # 	$(TARGET) $(EXAMPLE_PATH)/Examples/exSITH.imi -mode reachability -PTA2GrML
-# 	$(TARGET) $(EXAMPLE_PATH)/Examples/exSITH.imi $(EXAMPLE_PATH)/Examples/exSITH.pi0 -bab -with-merging
+# 	$(TARGET) $(EXAMPLE_PATH)/Examples/exSITH.imi $(EXAMPLE_PATH)/Examples/exSITH.pi0 -bab -merge
 # 	$(TARGET) $(EXAMPLE_PATH)/Examples/exSITH.imi $(EXAMPLE_PATH)/Examples/exSITH.pi0 -bab
 # 	$(TARGET) $(EXAMPLE_PATH)/Examples/exSITH.imi $(EXAMPLE_PATH)/Examples/exSITH.pi0
 
@@ -310,7 +310,7 @@ exe:
 # 	$(TARGET) $(EXAMPLE_PATH)/Tests/AndOrTest.imi $(EXAMPLE_PATH)/Tests/AndOrTest.pi0 -verbose high
 # 	$(TARGET) $(EXAMPLE_PATH)/Tests/AndOrTest.imi -PTA2JPG
 
-	# 	$(TARGET) $(EXAMPLE_PATH)/AndOr/AndOr.imi $(EXAMPLE_PATH)/AndOr/AndOr.pi0
+# 	$(TARGET) $(EXAMPLE_PATH)/AndOr/AndOr.imi $(EXAMPLE_PATH)/AndOr/AndOr.pi0
 # 	$(TARGET) $(EXAMPLE_PATH)/AndOr/AndOr.imi $(EXAMPLE_PATH)/AndOr/AndOr.pi0 -bab
 # 	$(TARGET) $(EXAMPLE_PATH)/AndOr/AndOr.imi $(EXAMPLE_PATH)/AndOr/AndOr.pi0 -with-dot -with-dot-source -fancy
 # 	$(TARGET) $(EXAMPLE_PATH)/AndOr/AndOr.imi $(EXAMPLE_PATH)/AndOr/AndOr.pi0 -no-dot -no-log -statistics 
@@ -336,6 +336,7 @@ exe:
 # 	$(TARGET) $(EXAMPLE_PATH)/Flipflop/flipflop.imi -mode reachability -acyclic -verbose low
 # 		$(TARGET) $(EXAMPLE_PATH)/Flipflop/flipflop.imi $(EXAMPLE_PATH)/Flipflop/flipflop.pi0 -no-dot -no-log -jobshop -no-random
 # 		bin/IMITATOR2.4 $(EXAMPLE_PATH)/Flipflop/flipflop.imi $(EXAMPLE_PATH)/Flipflop/flipflop.pi0 -no-dot -no-log -jobshop -no-random
+
 # 	$(TARGET) $(EXAMPLE_PATH)/Flipflop/flipflop.imi $(EXAMPLE_PATH)/Flipflop/flipflop.pi0
 # 	$(TARGET) $(EXAMPLE_PATH)/Flipflop/flipflop.imi $(EXAMPLE_PATH)/Flipflop/flipflop.pi0 -bab
 # 	$(TARGET) $(EXAMPLE_PATH)/Flipflop/flipflop.imi $(EXAMPLE_PATH)/Flipflop/flipflop.pi0 -no-dot -no-log -statistics -acyclic
@@ -422,11 +423,11 @@ exe:
 	
 # 	$(TARGET) $(EXAMPLE_PATH)/BRP/brp.imi -PTA2JPG
 # 	$(TARGET) $(EXAMPLE_PATH)/BRP/brp.imi -mode reachability 
-# 	$(TARGET) $(EXAMPLE_PATH)/BRP/brp.imi $(EXAMPLE_PATH)/BRP/brp.pi0 -statistics
 # 	$(TARGET) $(EXAMPLE_PATH)/BRP/brp.imi $(EXAMPLE_PATH)/BRP/brp.pi0
+# 	$(TARGET) $(EXAMPLE_PATH)/BRP/brp.imi $(EXAMPLE_PATH)/BRP/brp.pi0 -statistics
+# 	$(TARGET) $(EXAMPLE_PATH)/BRP/brp.imi $(EXAMPLE_PATH)/BRP/brp.pi0 -with-dot
 # 	$(TARGET) $(EXAMPLE_PATH)/BRP/brp.imi $(EXAMPLE_PATH)/BRP/brp.pi0 -dynamic-elimination
 # 	$(TARGET) $(EXAMPLE_PATH)/BRP/brp.imi $(EXAMPLE_PATH)/BRP/brp.pi0 -bab
-# 	$(TARGET) $(EXAMPLE_PATH)/BRP/brp.imi $(EXAMPLE_PATH)/BRP/brp.pi0 -no-dot -no-log -statistics -dynamic
 
 # 	$(TARGET) $(EXAMPLE_PATH)/RCP/RCP.imi -mode reachability -PTA2GML
 # 	$(TARGET) $(EXAMPLE_PATH)/RCP/RCP.imi $(EXAMPLE_PATH)/RCP/RCP.pi0
@@ -464,7 +465,7 @@ exe:
 
 # 	$(TARGET) $(EXAMPLE_PATH)/Wlan/wlan.imi -PTA2JPG
 # 	$(TARGET) $(EXAMPLE_PATH)/Wlan/wlan.imi -mode reachability
-# 	$(TARGET) $(EXAMPLE_PATH)/Wlan/wlan.imi $(EXAMPLE_PATH)/Wlan/wlan.pi0
+# 	$(TARGET) $(EXAMPLE_PATH)/Wlan/wlan.imi $(EXAMPLE_PATH)/Wlan/wlan.pi0 -merge
 # 	$(TARGET) $(EXAMPLE_PATH)/Wlan/wlan.imi $(EXAMPLE_PATH)/Wlan/wlan.pi0 -dynamic-elimination
 # 	$(TARGET) $(EXAMPLE_PATH)/Wlan/wlan.imi $(EXAMPLE_PATH)/Wlan/wlan.pi0 -no-merging
 # 	$(TARGET) $(EXAMPLE_PATH)/Wlan/wlan.imi $(EXAMPLE_PATH)/Wlan/wlan.pi0 -bab
@@ -485,6 +486,7 @@ exe:
 # 	$(TARGET) $(EXAMPLE_PATH)/Valmem/spsmall.imi -PTA2JPG 
 # 	$(TARGET) $(EXAMPLE_PATH)/Valmem/spsmall.imi -mode reachability -verbose total
 # 	$(TARGET) $(EXAMPLE_PATH)/Valmem/spsmall.imi $(EXAMPLE_PATH)/Valmem/spsmall.pi0
+# 	$(TARGET) $(EXAMPLE_PATH)/Valmem/spsmall.imi $(EXAMPLE_PATH)/Valmem/spsmall.pi0 -merge
 # 	$(TARGET) $(EXAMPLE_PATH)/Valmem/spsmall.imi $(EXAMPLE_PATH)/Valmem/spsmall.pi0 -no-random -bab
 # 	$(TARGET) $(EXAMPLE_PATH)/Valmem/spsmall.imi $(EXAMPLE_PATH)/Valmem/spsmall.pi0 -with-dot -with-dot-source -fancy
 # 	$(TARGET) $(EXAMPLE_PATH)/Valmem/spsmall.imi $(EXAMPLE_PATH)/Valmem/spsmall.pi0 -no-dot -no-log -PTA2GML
@@ -507,8 +509,8 @@ exe:
 # 	$(TARGET) $(EXAMPLE_PATH)/SIMOP/simop.imi -mode reachability 
 
 # 	$(TARGET) $(EXAMPLE_PATH)/SIMOP/simop.imi $(EXAMPLE_PATH)/SIMOP/simop.pi0
-# 	$(TARGET) $(EXAMPLE_PATH)/SIMOP/simop.imi $(EXAMPLE_PATH)/SIMOP/simop.pi0 -with-merging
-# 	$(TARGET) $(EXAMPLE_PATH)/SIMOP/simop.imi $(EXAMPLE_PATH)/SIMOP/simop.pi0 -with-merging -dynamic-elimination
+	$(TARGET) $(EXAMPLE_PATH)/SIMOP/simop.imi $(EXAMPLE_PATH)/SIMOP/simop.pi0 -merge
+# 	$(TARGET) $(EXAMPLE_PATH)/SIMOP/simop.imi $(EXAMPLE_PATH)/SIMOP/simop.pi0 -merge -dynamic-elimination
 # 	$(TARGET) $(EXAMPLE_PATH)/SIMOP/simop.imi $(EXAMPLE_PATH)/SIMOP/simop.pi0 -no-merging -incl -statistics
 # 	$(TARGET) $(EXAMPLE_PATH)/SIMOP/simopTest.imi $(EXAMPLE_PATH)/SIMOP/simopTest.pi0 -bab -no-merging -incl -no-random -with-log -states-limit 30 -with-parametric-log # PROBLEM BAB
 
@@ -522,44 +524,44 @@ exe:
 ##### SCHEDULING #####
 # 	$(TARGET) $(EXAMPLE_PATH)/Scheduling/am02.imi -PTA2JPG
 # 	$(TARGET) $(EXAMPLE_PATH)/Scheduling/am02.imi -mode reachability 
-# 	$(TARGET) $(EXAMPLE_PATH)/Scheduling/am02.imi $(EXAMPLE_PATH)/Scheduling/am02.pi0 -with-merging -with-dot -with-log
+# 	$(TARGET) $(EXAMPLE_PATH)/Scheduling/am02.imi $(EXAMPLE_PATH)/Scheduling/am02.pi0 -merge -with-dot -with-log
 # 	$(TARGET) $(EXAMPLE_PATH)/Scheduling/am02.imi $(EXAMPLE_PATH)/Scheduling/am02.pi0 -bab # PROBLEM BAB
 # 	$(TARGET) $(EXAMPLE_PATH)/Scheduling/am02.imi $(EXAMPLE_PATH)/Scheduling/am02.pi0 -bab -no-merging
 
 # 	$(TARGET) $(EXAMPLE_PATH)/Scheduling/astrium_basic_thermal_fp.imi -PTA2JPG
-# 	$(TARGET) $(EXAMPLE_PATH)/Scheduling/astrium_basic_thermal_fp.imi $(EXAMPLE_PATH)/Scheduling/astrium_basic_thermal_fp.pi0 -with-merging -with-dot -with-log
+# 	$(TARGET) $(EXAMPLE_PATH)/Scheduling/astrium_basic_thermal_fp.imi $(EXAMPLE_PATH)/Scheduling/astrium_basic_thermal_fp.pi0 -merge -with-dot -with-log
 
 # 	$(TARGET) $(EXAMPLE_PATH)/Scheduling/bb.imi -PTA2JPG
-# 	$(TARGET) $(EXAMPLE_PATH)/Scheduling/bb.imi $(EXAMPLE_PATH)/Scheduling/bb.pi0 -with-merging -with-dot -with-log
+# 	$(TARGET) $(EXAMPLE_PATH)/Scheduling/bb.imi $(EXAMPLE_PATH)/Scheduling/bb.pi0 -merge -with-dot -with-log
 	
 # 	$(TARGET) $(EXAMPLE_PATH)/Scheduling/concurent_tasks_chain.imi -PTA2JPG
-# 	$(TARGET) $(EXAMPLE_PATH)/Scheduling/concurent_tasks_chain.imi $(EXAMPLE_PATH)/Scheduling/concurent_tasks_chain.pi0 -with-merging -with-dot -with-log
+# 	$(TARGET) $(EXAMPLE_PATH)/Scheduling/concurent_tasks_chain.imi $(EXAMPLE_PATH)/Scheduling/concurent_tasks_chain.pi0 -merge -with-dot -with-log
 	
 # 	$(TARGET) $(EXAMPLE_PATH)/Scheduling/full_cpr08.imi -PTA2JPG
-# 	$(TARGET) $(EXAMPLE_PATH)/Scheduling/full_cpr08.imi $(EXAMPLE_PATH)/Scheduling/full_cpr08.pi0 -with-merging -with-dot -with-log -depth-limit 30
+# 	$(TARGET) $(EXAMPLE_PATH)/Scheduling/full_cpr08.imi $(EXAMPLE_PATH)/Scheduling/full_cpr08.pi0 -merge -with-dot -with-log -depth-limit 30
 
 # 	$(TARGET) $(EXAMPLE_PATH)/Scheduling/generic_edf.imi -PTA2JPG
-# 	$(TARGET) $(EXAMPLE_PATH)/Scheduling/generic_edf.imi $(EXAMPLE_PATH)/Scheduling/generic_edf.pi0 -with-merging -with-dot -with-log
+# 	$(TARGET) $(EXAMPLE_PATH)/Scheduling/generic_edf.imi $(EXAMPLE_PATH)/Scheduling/generic_edf.pi0 -merge -with-dot -with-log
 
 # 	$(TARGET) $(EXAMPLE_PATH)/Scheduling/generic_fp.imi -PTA2JPG
-# 	$(TARGET) $(EXAMPLE_PATH)/Scheduling/generic_fp.imi $(EXAMPLE_PATH)/Scheduling/generic_fp.pi0 -with-merging -with-dot -with-log
+# 	$(TARGET) $(EXAMPLE_PATH)/Scheduling/generic_fp.imi $(EXAMPLE_PATH)/Scheduling/generic_fp.pi0 -merge -with-dot -with-log
 
 # 	$(TARGET) $(EXAMPLE_PATH)/Scheduling/hppr10_audio.imi -PTA2JPG
-# 	$(TARGET) $(EXAMPLE_PATH)/Scheduling/hppr10_audio.imi $(EXAMPLE_PATH)/Scheduling/hppr10_audio.pi0 -with-merging -with-dot -with-log
+# 	$(TARGET) $(EXAMPLE_PATH)/Scheduling/hppr10_audio.imi $(EXAMPLE_PATH)/Scheduling/hppr10_audio.pi0 -merge -with-dot -with-log
 	
 # 	$(TARGET) $(EXAMPLE_PATH)/Scheduling/LA02_2.imi -PTA2JPG
-# 	$(TARGET) $(EXAMPLE_PATH)/Scheduling/LA02_2.imi $(EXAMPLE_PATH)/Scheduling/LA02_2.pi0 -with-merging -with-dot -with-log
+# 	$(TARGET) $(EXAMPLE_PATH)/Scheduling/LA02_2.imi $(EXAMPLE_PATH)/Scheduling/LA02_2.pi0 -merge -with-dot -with-log
 # 	bin/IMITATOR2.41 $(EXAMPLE_PATH)/Scheduling/LA02_2.imi $(EXAMPLE_PATH)/Scheduling/LA02_2.pi0 -incl
 # 	bin/IMITATOR2.4 $(EXAMPLE_PATH)/Scheduling/LA02_2.imi $(EXAMPLE_PATH)/Scheduling/LA02_2.pi0 -incl -jobshop
 
 # 	$(TARGET) $(EXAMPLE_PATH)/Scheduling/LA02_2_2.5.imi -PTA2JPG
-# 	$(TARGET) $(EXAMPLE_PATH)/Scheduling/LA02_2_2.5.imi $(EXAMPLE_PATH)/Scheduling/LA02_2.pi0 -with-merging -with-dot -with-log
+# 	$(TARGET) $(EXAMPLE_PATH)/Scheduling/LA02_2_2.5.imi $(EXAMPLE_PATH)/Scheduling/LA02_2.pi0 -merge -with-dot -with-log
 
 # 	$(TARGET) $(EXAMPLE_PATH)/Scheduling/LA02_3.imi -PTA2JPG
-# 	$(TARGET) $(EXAMPLE_PATH)/Scheduling/LA02_3.imi $(EXAMPLE_PATH)/Scheduling/LA02_3.pi0 -with-merging
+# 	$(TARGET) $(EXAMPLE_PATH)/Scheduling/LA02_3.imi $(EXAMPLE_PATH)/Scheduling/LA02_3.pi0 -merge
 
 # 	$(TARGET) $(EXAMPLE_PATH)/Scheduling/preemptive_maler.imi -PTA2JPG
-# 	$(TARGET) $(EXAMPLE_PATH)/Scheduling/preemptive_maler.imi $(EXAMPLE_PATH)/Scheduling/preemptive_maler.pi0 -with-merging -with-dot -with-log
+# 	$(TARGET) $(EXAMPLE_PATH)/Scheduling/preemptive_maler.imi $(EXAMPLE_PATH)/Scheduling/preemptive_maler.pi0 -merge -with-dot -with-log
 
 # 	$(TARGET) $(EXAMPLE_PATH)/Polyhedra/polyhedron1.imi $(EXAMPLE_PATH)/Polyhedra/polyhedron1.v0 -mode cover -cart
 
@@ -578,9 +580,9 @@ exe:
 # 	$(TARGET) $(EXAMPLE_PATH)/Jobshop/maler_2_4.imi -mode reachability -incl 
 
 # 	$(TARGET) $(EXAMPLE_PATH)/Jobshop/maler_2_4.imi $(EXAMPLE_PATH)/Jobshop/maler_2_4.pi0
-# 	$(TARGET) $(EXAMPLE_PATH)/Jobshop/maler_2_4.imi $(EXAMPLE_PATH)/Jobshop/maler_2_4.pi0 -with-merging
+# 	$(TARGET) $(EXAMPLE_PATH)/Jobshop/maler_2_4.imi $(EXAMPLE_PATH)/Jobshop/maler_2_4.pi0 -merge
 # 	$(TARGET) $(EXAMPLE_PATH)/Jobshop/maler_2_4.imi $(EXAMPLE_PATH)/Jobshop/maler_2_4.pi0 -dynamic-elimination
-# 	$(TARGET) $(EXAMPLE_PATH)/Jobshop/maler_2_4.imi $(EXAMPLE_PATH)/Jobshop/maler_2_4.pi0 -with-merging -dynamic-elimination
+# 	$(TARGET) $(EXAMPLE_PATH)/Jobshop/maler_2_4.imi $(EXAMPLE_PATH)/Jobshop/maler_2_4.pi0 -merge -dynamic-elimination
 # 	$(TARGET) $(EXAMPLE_PATH)/Jobshop/maler_2_4.imi $(EXAMPLE_PATH)/Jobshop/maler_2_4.pi0 -acyclic -statistics
 # 	$(TARGET) $(EXAMPLE_PATH)/Jobshop/maler_2_4.imi $(EXAMPLE_PATH)/Jobshop/maler_2_4.pi0 -incl
 # 	$(TARGET) $(EXAMPLE_PATH)/Jobshop/maler_2_4.imi $(EXAMPLE_PATH)/Jobshop/maler_2_4.pi0 -bab # PROBLEM BAB
