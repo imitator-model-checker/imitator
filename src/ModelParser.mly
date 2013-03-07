@@ -43,9 +43,9 @@ let parse_error s =
 	CT_BAD CT_BEFORE
 	CT_CARTO CT_CLOCK
 	CT_DISCRETE CT_DO
-	CT_END CT_EVENTUALLY CT_EVERYTIME CT_EXISTS_ACTION CT_EXISTS_LOCATION
+	CT_END CT_EVENTUALLY CT_EVERYTIME
 	CT_FALSE
-	CT_GOOD CT_GOTO
+	CT_GOTO
 	CT_HAPPENED CT_HAS
 	CT_IF CT_INIT CT_INITIALLY
 	CT_LOC CT_LOCATIONS
@@ -504,9 +504,9 @@ pattern:
 	/* everytime a1 then eventually a2 within d once before next */
 	| CT_EVERYTIME NAME CT_THEN CT_EVENTUALLY NAME CT_WITHIN linear_expression CT_ONCE CT_BEFORE CT_NEXT { TB_response_cyclicstrict ($2, $5, $7) }
 	
-	/* sequence: a1, ..., an */
+	/* sequence a1, ..., an */
 	| CT_SEQUENCE name_nonempty_list { Sequence_acyclic ($2) }
-	/* sequence: always a1, ..., an */
+	/* sequence always a1, ..., an */
 	| CT_SEQUENCE CT_ALWAYS name_nonempty_list { Sequence_cyclic ($3) }
 ;
 

@@ -44,8 +44,8 @@ rule token = parse
 (* 	| "asap"           { CT_ASAP } *)
 	| "automaton"      { CT_AUTOMATON }
 (* 	| "backward"       { CT_BACKWARD } *)
- 	| "before"         { CT_BEFORE }
 	| "bad"            { CT_BAD }
+ 	| "before"         { CT_BEFORE }
 	| "carto"          { CT_CARTO }
 	| "clock"          { CT_CLOCK }
 	| "discrete"       { CT_DISCRETE }
@@ -59,14 +59,12 @@ rule token = parse
 (* 	| "endwhile"       { CT_ENDWHILE } *)
  	| "eventually"     { CT_EVENTUALLY }
  	| "everytime"      { CT_EVERYTIME }
- 	| "exists_action"  { CT_EXISTS_ACTION }
- 	| "exists_location"{ CT_EXISTS_LOCATION }
 	| "False"          { CT_FALSE }
 (* 	| "forward"        { CT_FORWARD } *)
 (* 	| "free"           { CT_FREE } *)
 (* 	| "from"           { CT_FROM } *)
 	| "good"           { CT_GOOD }
-	| "goto"           { CT_GOTO }
+(*	| "goto"           { CT_GOTO } *)
  	| "happened"       { CT_HAPPENED }
  	| "has"            { CT_HAS }
 (* 	| "hide"           { CT_HIDE } *)

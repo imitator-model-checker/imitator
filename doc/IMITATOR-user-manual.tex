@@ -142,7 +142,7 @@
 % \newcommand{\uppaal}{\textsc{Uppaal}}
 
 % Current version
-\newcommand{\imitatorversion}{2.5.0}
+\newcommand{\imitatorversion}{2.6.0}
 
 
 
@@ -218,7 +218,7 @@ and, automaton, clock, discrete, do, end, endreach, False, forward, from, goto, 
 \bigskip
 
 \begin{center}
-	\includegraphics[width=0.40\textwidth]{include/monkey.png}
+	\includegraphics[width=0.40\textwidth]{include/logo.jpg}
 \end{center}
 
 \bigskip
@@ -253,9 +253,10 @@ We give here the installation requirements and the launching commands of \imitat
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
-\imitator{} 2.5 (for \emph{Inverse Method for Inferring Time AbstracT behaviOR}) is a tool for parameter synthesis in the framework of real-time systems based on the inverse method~$\IM$ for Parametric Timed Automata (PTAs) augmented with stopwatches~\cite{AFKS12}.  % ,~\cite{ad94}
-Different from CEGAR-based methods (see \cite{cgjlv00}), this algorithm for parameter synthesis makes use of a ``good'' parameter valuation~$\pio$ instead of a set of ``bad'' states~\cite{acef09}.
-\imitator{} takes as input a network of PTAs with stopwatches
+\imitator{}~\cite{AFKS12} (for \emph{Inverse Method for Inferring Time AbstracT behaviOR}) is a tool for parameter synthesis in the framework of real-time systems based on the inverse method~$\IM$ for Parametric Timed Automata (PTAs) augmented with stopwatches~\cite{AHV93,AM02}.
+Different from CEGAR-based methods (see \cite{cgjlv00}), this algorithm for parameter synthesis makes use of a ``good'' parameter valuation~$\pio$ instead of a set of ``bad'' states~\cite{AS13}.
+
+When executing the inverse method, \imitator{} takes as input a network of PTAs with stopwatches
 and a reference valuation~$\pio$; it synthesizes a constraint~$\Ko$ on the parameters such that (1) $\pio \models \Ko$ and (2) for all parameter valuation~$\piprime$ satisfying $\Ko$, the trace set (i.e., the discrete behavior) of~$\A$ under~$\piprime$ is the same as for~$\A$ under~$\pio$.
 %This preserves in particular linear time properties, 
 This provides the system with a criterion of \emph{robustness} (see, e.g., \cite{Markey11})
@@ -340,7 +341,7 @@ around~$\pio$.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-Sources, binaries for Linux platforms, and installation instructions are available on \imitator{}'s Web page \cite{imitator_web}.
+Sources, binaries for Linux platforms, and installation instructions are available on \imitator{}'s Web page \cite{imitator}.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -506,7 +507,7 @@ In short, \imitator{} is written in \ocaml{}, and makes use of the following lib
         \item The GNU Multiple Precision Arithmetic Library (GMP)
 \end{itemize}
 
-Binaries and source code packages are available on \imitator{}'s Web page~\cite{imitator_web}.
+Binaries and source code packages are available on \imitator{}'s Web page~\cite{imitator}.
 
 
 
@@ -514,7 +515,7 @@ Binaries and source code packages are available on \imitator{}'s Web page~\cite{
 \subsection{The \imitator{} Input File}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-Examples of input files can be found on \imitator{}'s Web page~\cite{imitator_web}.
+Examples of input files can be found on \imitator{}'s Web page~\cite{imitator}.
 A complete example is given in Appendix~\ref{app:source}.
 A tentative grammar is given in Appendix~\ref{app:grammar}.
 
@@ -558,7 +559,7 @@ See Appendix~\ref{app:grammar}.
 
 \begin{enumerate}
 	\item Reachability analysis: given a PTA~$\A$, compute the whole set of reachable states from a given initial state.
-	\item Inverse Method: given a PTA~$\A$ and a valuation~$\pi_0$ of the parameters, compute a constraint on the parameters guaranteeing the same behavior as under~$\pi_0$~\cite{acef09}.
+	\item Inverse Method: given a PTA~$\A$ and a valuation~$\pi_0$ of the parameters, compute a constraint on the parameters guaranteeing the same behavior as under~$\pi_0$~\cite{AS13}.
 	\item Behavioral Cartography Algorithm: given a PTA~$\A$ and a rectangle~$V_0$ (bounded interval of values for each parameter), compute a cartography of the system~\cite{af10}.
 \end{enumerate}
 
@@ -585,14 +586,14 @@ Note that there is no need to provide a $\pi_0$ or $V_0$ file in this case (if o
 \subsubsection{Inverse Method} \label{ss:mode_inversemethod}
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
 
-Given a PTA~$\A$ and a valuation~$\pi_0$ of the parameters, the inverse method compute a constraint $K_0$ on the parameters guaranteeing that, for any $\pi \models K_0$, the trace sets of $\A[\pi]$ and $\A[\pi_0]$ are the same~\cite{acef09}.
+Given a PTA~$\A$ and a valuation~$\pi_0$ of the parameters, the inverse method compute a constraint $K_0$ on the parameters guaranteeing that, for any $\pi \models K_0$, the trace sets of $\A[\pi]$ and $\A[\pi_0]$ are the same~\cite{AS13}.
 The syntax in this case is the following one:
 
 \code{\imitatorExec{} <input\_file> <pi0\_file> [-mode inversemethod] [options]}
 
 Note that the \code{-mode inversemethod} option is not necessary, since the default value for \code{-mode} is precisely \code{inversemethod}.
 
-Note that, unlike the algorithm given in~\cite{acef09}, at a given iteration, the $\pi_0$-incompatible state is selected deterministically, for efficiency reasons.
+Note that, unlike the algorithm given in~\cite{AS13}, at a given iteration, the $\pi_0$-incompatible state is selected deterministically, for efficiency reasons.
 However, the $\pi_0$-incompatible inequality within a $\pi_0$-incompatible state is selected randomly, unless the \code{-no-random} option is activated.
 
 In this case, \imitator{} outputs the resulting constraint $K_0$ on the standard output.
@@ -618,6 +619,36 @@ Two possible variants of the algorithm can be used:
 	If a point belongs to one of the tiles computed before, the inverse method is not called neither.
 	Therefore, in practice, the number of tiles generated is smaller than~\code{X}.
 \end{enumerate}
+
+When in behavioral cartography mode, one can generate the cartography in a graphical form (for 2 dimensions) using option \code{-cart} (see below).
+In that case, an image will be output.
+
+It is also possible to automatically color this cartography (in green and red) according to a property to be verified.
+The property must be defined at the end of the \code{.imi} model file, using the following syntax:
+
+\code{property := [PROP]}
+
+\code{[PROP]} must conform to one of the following patterns, where \code{AUTOMATON} is an automaton name, \code{LOCATION} is a location name, \code{a}, \code{a1}, \code{a2} are actions, and the deadline \code{d} is a (possibly parametric) linear expression:
+
+\begin{itemize}
+	\item \code{property := unreachable loc[AUTOMATON] = LOCATION}
+	\item \code{property := if a2 then a1 has happened before}
+	\item \code{property := everytime a2 then a1 has happened before}
+	\item \code{property := everytime a2 then a1 has happened once before}
+	\item \code{property := if a1 then eventually a2}
+	\item \code{property := everytime a1 then eventually a2}
+	\item \code{property := everytime a1 then eventually a2 once before next}
+	\item \code{property := a within d}
+	\item \code{property := if a2 then a1 has happened within d before}
+	\item \code{property := everytime a2 then a1 has happened within d before}
+	\item \code{property := everytime a2 then a1 has happened once within d before}
+	\item \code{property := if a1 then eventually a2 within d}
+	\item \code{property := everytime a1 then eventually a2 within~d}
+	\item \code{property := if a1 then eventually a2 within d once before next}
+	\item \code{property := sequence a1, \dots, an}
+	\item \code{property := always sequence a1, \dots, an}
+% 	\item \code{}
+\end{itemize}
 
 
 
@@ -664,23 +695,6 @@ platforms. The generated files will be located in the same directory
 as the source files, unless option \code{-log-prefix} is used.
 
 %------------------------------------------------------------
-\paragraph{\code{-debug} (default: \code{standard})}
-%------------------------------------------------------------
-
-Give some debugging information, that may also be useful to have more details on the way \imitator{} works.
-The admissible values for \code{-debug} are given below:
-
-\begin{tabular}{@{} l @{\ \ } l}
- \code{nodebug} & Give only the resulting constraint \\
- \code{standard} & Give little information (number of steps, computation time)\\
- \code{low} & Give little additional debugging information\\
- \code{medium} & Give quite a lot of debugging information\\
- \code{high} & Give much debugging information\\
- \code{total} & Give really too much information\\
-\end{tabular}
-
-
-%------------------------------------------------------------
 \paragraph{\code{-depth-limit <limit>} (default: \code{none})}
 %------------------------------------------------------------
 Limits the number of iterations in the $\mathit{Post}$ exploration, i.e., the depth of the traces.
@@ -695,9 +709,32 @@ provide detailed information on the local states of the composed automata.
 
 
 %------------------------------------------------------------
-\paragraph{\code{-inclusion} (default: \code{false})}
+\paragraph{\code{-fromGrML} (default: \code{false})}
 %------------------------------------------------------------
-Consider an inclusion of region instead of the equality when performing the $\mathit{Post}$ operation.
+
+Does not use the standard input syntax described here, but a GrML input syntax.
+This is used when interfacing \imitator{} with the CosyVerif platform.
+Note that, in that case, not all syntactic features of \imitator{} are supported.
+
+
+
+%------------------------------------------------------------
+\paragraph{\code{-IMK} (default: \code{false})}
+%------------------------------------------------------------
+Uses a variant of the inverse method that returns a constraint such that no $\pio$-compatible state is reached; it does not guarantee however that any ``good'' state will be reached (see~\cite{AS13}).
+
+
+
+%------------------------------------------------------------
+\paragraph{\code{-IMunion} (default: \code{false})}
+%------------------------------------------------------------
+Uses a variant of the inverse method that returns the union of the constraints associated to the last state of each path (see~\cite{AS13}).
+
+
+%------------------------------------------------------------
+\paragraph{\code{-incl} (default: \code{false})}
+%------------------------------------------------------------
+Consider an inclusion of region instead of the equality when performing the $\textit{Post}$ operation.
 In other terms, when encountering a new state, \imitator{} checks if the same state (same location and same constraint) has been encountered before and, if yes, does not consider this ``new'' state.
 However, when the \code{-inclusion} option is activated, it suffices that a previous state with the same location and a constraint \emph{greater or equal} to the constraint of the new state has been encountered to stop the analysis.
 This option corresponds to the way that, e.g., \hytech{} works, and suffices when one wants to check the \emph{non-reachability} of a given bad state.
@@ -706,7 +743,14 @@ This option corresponds to the way that, e.g., \hytech{} works, and suffices whe
 %------------------------------------------------------------
 \paragraph{\code{-log-prefix} (default: \code{<input\_file>})}
 %------------------------------------------------------------
-Set the prefix for log (\code{.states}) and graphical (\code{.gif}) files.
+Set the prefix for log (\code{.states}) and graphical (\code{.jpg}) files.
+
+
+%------------------------------------------------------------
+\paragraph{\code{-merge} (default: \code{false})}
+%------------------------------------------------------------
+Use the merging technique of \cite{AFS12}.
+Note that, in that case, not all the properties of the inverse method are preserved.
 
 
 %------------------------------------------------------------
@@ -732,6 +776,19 @@ The mode for \imitator{}.
 %------------------------------------------------------------
 No random selection of the $\pi_0$-incompatible inequality (select the first found).
 By default, select an inequality in a random manner.
+
+
+
+%------------------------------------------------------------
+\paragraph{\code{-PTA2GrML} (default: \code{false})}
+%------------------------------------------------------------
+Translates the input model to a GrML format, and exits.
+
+
+%------------------------------------------------------------
+\paragraph{\code{-PTA2JPG} (default: \code{false})}
+%------------------------------------------------------------
+Translates the input model to a graphical, human-readable form (in \code{.jpg} format), and exits.
 
 
 %------------------------------------------------------------
@@ -779,6 +836,24 @@ Add a timing information to each output of the program.
 
 
 %------------------------------------------------------------
+\paragraph{\code{-verbose} (default: \code{standard})}
+%------------------------------------------------------------
+
+Give some debugging information, that may also be useful to have more details on the way \imitator{} works.
+The admissible values for \code{-verbose} are given below:
+
+\begin{tabular}{@{} l @{\ \ } l}
+ \code{nodebug} & Give only the resulting constraint \\
+ \code{standard} & Give little information (number of steps, computation time)\\
+ \code{low} & Give little additional information\\
+ \code{medium} & Give quite a lot of information\\
+ \code{high} & Give much information\\
+ \code{total} & Give really too much information\\
+\end{tabular}
+
+
+
+%------------------------------------------------------------
 \paragraph{\code{-with-dot} (default: \code{false})}
 %------------------------------------------------------------
 Graphical output using \gdot{}.
@@ -787,6 +862,11 @@ In this case, \imitator{} outputs a file \code{<input\_file>.jpg}, which is a gr
 
 Note that the location and the name of those two files can be changed using the \code{-log-prefix} option.
 
+
+%------------------------------------------------------------
+\paragraph{\code{-with-graphics-source} (default: \code{false})}
+%------------------------------------------------------------
+Keep file(s) generated for the graphical outputs.
 
 
 %------------------------------------------------------------
@@ -799,16 +879,11 @@ This file also contains the source for the generation of the graphical file, usi
 
 
 %------------------------------------------------------------
-\paragraph{\code{-with-merging} (default: \code{false})}
-%------------------------------------------------------------
-Use the merging technique of \cite{AFS12}.
-
-
-%------------------------------------------------------------
 \paragraph{\code{-with-parametric-log } (default: \code{false})}
 %------------------------------------------------------------
 For any constraint on the clocks and the parameters in the description of the states in the log files,
 add the constraint on the parameters only (i.e., eliminate clock variables).
+
 
 
 
@@ -930,7 +1005,7 @@ The program will generate $n$ files of the form \code{SRlatch.imi\_$i$.jpg} givi
 \end{figure}
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
 
-We consider a SR-latch described in, e.g., \cite{hh07}, and depicted on Fig.~\ref{fig:srlatch} left.
+We consider a SR-latch described in, e.g., \cite{hh07}, and depicted on Figure~\ref{fig:srlatch} left.
 The possible configurations of the latch are the following ones:
 
 \smallskip
@@ -958,7 +1033,7 @@ The possible configurations of the latch are the following ones:
 \medskip
 
 We consider an initial configuration with $R = S = 1$ and $Q = \overline{Q} = 0$.
-As depicted in Fig.~\ref{fig:srlatch}, the signal~$S$ first goes down.
+As depicted in Figure~\ref{fig:srlatch}, the signal~$S$ first goes down.
 Then, the signal~$R$ goes down after a time~$t^\downarrow$.
 
 
@@ -975,7 +1050,7 @@ The launch command for \imitator{} is the following one:
 
 \code{\imitatorExec{} SRlatch.imi -mode reachability}
 
-Considering this environment, the trace set of this system is given in Fig.~\ref{fig:sr_parametric}, where the states $q_i$, $i = 0, \dots, 6$ correspond to the following values for each signal:
+Considering this environment, the trace set of this system is given in Figure~\ref{fig:sr_parametric}, where the states $q_i$, $i = 0, \dots, 6$ correspond to the following values for each signal:
 
 \smallskip
 
@@ -1097,7 +1172,7 @@ Considering this environment, the trace set of this system is given in Fig.~\ref
 % 
 % }
 % 
-% Considering this environment and this reference valuation, the trace set is given in Fig.~\commentaire{to do}.
+% Considering this environment and this reference valuation, the trace set is given in Figure~\commentaire{to do}.
 % 
 % The constraint $K_0$ output by \imitator{} is the following one:
 % 
@@ -1172,7 +1247,7 @@ $$ t^\downarrow = \delta_2
 \ \ \land \ \ 
  \delta_1 = 0 $$
 
-The trace set of this tile is given in Fig.~\ref{fig:sr_tile_1}.
+The trace set of this tile is given in Figure~\ref{fig:sr_tile_1}.
 
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
 \begin{figure}[ht]
@@ -1219,7 +1294,7 @@ $$ t^\downarrow = \delta_2
 \ \ \land \ \ 
 \delta_1 > 0 $$
 
-The trace set of this tile is given in Fig.~\ref{fig:sr_tile_2}.
+The trace set of this tile is given in Figure~\ref{fig:sr_tile_2}.
 
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
 \begin{figure}[ht]
@@ -1264,7 +1339,7 @@ This tile corresponds to the values of the parameters verifying the following co
 
 $$ \delta_2 > t^\downarrow + \delta_1 $$
 
-The trace set of this tile is given in Fig.~\ref{fig:sr_tile_3}.
+The trace set of this tile is given in Figure~\ref{fig:sr_tile_3}.
 
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
 \begin{figure}[ht]
@@ -1313,7 +1388,7 @@ This tile corresponds to the values of the parameters verifying the following co
 
 $$ t^\downarrow + \delta_1 = \delta_2 \ \ \land \ \ \delta_2 \geq \delta_1 \ \ \land \ \ \delta_1 > 0$$
 
-The trace set of this tile is given in Fig.~\ref{fig:sr_tile_4}.
+The trace set of this tile is given in Figure~\ref{fig:sr_tile_4}.
 
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
 \begin{figure}[ht]
@@ -1363,7 +1438,7 @@ $$ \delta_2 > t^\downarrow
 \ \ \land \ \ 
  t^\downarrow + \delta_1 > \delta_2 $$
 
-The trace set of this tile is given in Fig.~\ref{fig:sr_tile_5}.
+The trace set of this tile is given in Figure~\ref{fig:sr_tile_5}.
 
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
 \begin{figure}[ht]
@@ -1411,7 +1486,7 @@ This tile corresponds to the values of the parameters verifying the following co
  
 $$ t^\downarrow > \delta_2$$
 
-The trace set of this tile is given in Fig.~\ref{fig:sr_tile_6}.
+The trace set of this tile is given in Figure~\ref{fig:sr_tile_6}.
 
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
 \begin{figure}[ht]
@@ -1452,7 +1527,7 @@ The system is then stable.
 \paragraph*{Cartography.}
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
 
-We give in Fig.~\ref{fig:sr_cartography} the cartography of the SR latch example.
+We give in Figure~\ref{fig:sr_cartography} the cartography of the SR latch example.
 For the sake of simplicity of representation, we consider only parameters $\delta_1$ and $\delta_2$.
 Therefore, we set $t^\downarrow = 1$.
 
@@ -1552,7 +1627,7 @@ The source code of this example is available in Appendix~\ref{app:source}.
 Emmanuelle~Encrenaz and Laurent~Fribourg have been great contributors of \imitator{}, on a theoretical point of view, and to find applications both from the literature and real case studies.
 Abdelrezzak~Bara provided several examples from the hardware literature.
 Jeremy~Sproston provided examples from the probabilistic community.
-Bertrand~Jeannet has been of great help on the linking with Apron~\cite{jm09} on a previous version of \imitator{}.
+% Bertrand~Jeannet has been of great help on the linking with Apron~\cite{jm09} on a previous version of \imitator{}.
 Ulrich~K\"uhne made several important improvements to \imitator{}, and linked the tool to PPL.
 Daphne~Dussaud implemented the graphical output of the behavioral cartography.
 Romain~Soulat implemented powerful algorithmic optimizations, and brought many case studies.
@@ -1935,8 +2010,7 @@ We define each of those two components below.
 \regleGrammaire{init}
 %------------------------------------------------------------
 \begin{tabular}{l l}
-	& \npec{\nt{init\_declaration}} \nt{init\_definition} \nt{bad\_definition} \npec{\nt{reach\_command}} \\
-	$|$  & \npec{\nt{init\_declaration}} \nt{init\_definition} \npec{\nt{reach\_command}} \\
+	& \npec{\nt{init\_declaration}} \nt{init\_definition} \nt{property\_definition} \npec{\nt{reach\_command}} \\
 \end{tabular}
 
 %------------------------------------------------------------
@@ -1980,10 +2054,33 @@ We define each of those two components below.
 \end{tabular}
 
 %------------------------------------------------------------
-\regleGrammaire{bad\_definition}
+\regleGrammaire{property\_definition}
 %------------------------------------------------------------
 \begin{tabular}{l l}
-	\  & \code{bad := } \nt{loc\_expression} \code{;} \\
+	\  & \code{property := } \nt{pattern} \code{;} \\
+	$|$ & \emptystring \\
+\end{tabular}
+
+%------------------------------------------------------------
+\regleGrammaire{pattern}
+%------------------------------------------------------------
+\begin{tabular}{l l}
+	\  & \code{unreachable} \nt{loc\_predicate} \\
+	$|$ & \code{if <name> then <name> has happened before} \\
+	$|$ & \code{everytime <name> then <name> has happened before} \\
+	$|$ & \code{everytime <name> then <name> has happened once before} \\
+	$|$ & \code{if <name> then eventually <name>} \\
+	$|$ & \code{everytime <name> then eventually <name>} \\
+	$|$ & \code{everytime <name> then eventually <name> once before next} \\
+	$|$ & \code{<name> within }\nt{linear\_expression} \code{} \\
+	$|$ & \code{if <name> then <name> happened within }\nt{linear\_expression} \code{ before} \\
+	$|$ & \code{everytime <name> then <name> happened within }\nt{linear\_expression} \code{ before} \\
+	$|$ & \code{everytime <name> then <name> happened once within }\nt{linear\_expression} \code{ before} \\
+	$|$ & \code{if <name> then eventually <name> within }\nt{linear\_expression} \code{} \\
+	$|$ & \code{everytime <name> then eventually <name> within }\nt{linear\_expression} \code{} \\
+	$|$ & \code{everytime <name> then eventually <name> within }\nt{linear\_expression} \code{ once before next} \\
+	$|$ & \code{sequence} \nt{var\_list} \\
+	$|$ & \code{sequence always} \nt{var\_list} \\
 \end{tabular}
 
 %------------------------------------------------------------
@@ -2020,38 +2117,50 @@ We define each of those two components below.
 
 The following words are keywords and cannot be used as names for automata, variables, synchronization labels or locations. 
 
+\code{always},
 \code{and},
 \code{automaton},
 \code{bad},
+\code{before},
+\code{carto},
 \code{clock},
 \code{discrete},
 \code{do},
 \code{end},
-% \code{endreach},
+\code{eventually},
+\code{everytime},
 \code{False},
 % \code{forward},
 % \code{from},
 \code{goto},
+\code{happened},
+\code{has},
 \code{if},
 % \code{in},
 \code{init},
 \code{initially},
 \code{loc},
 \code{locations},
+\code{next},
 \code{not},
+\code{once},
 \code{or},
 \code{parameter},
-% \code{print},
+\code{property},
 % \code{reach},
 \code{region},
-\code{sync},
+\code{sequence},
 \code{stop},
+\code{sync},
 \code{synclabs},
+\code{then},
 \code{True},
+\code{unreachable},
 \code{var},
 \code{wait},
 \code{when},
-\code{while}
+\code{while},
+\code{within}
 
 \end{document}
 

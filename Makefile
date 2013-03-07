@@ -23,11 +23,9 @@ ifndef EXTLIB_PATH
   EXTLIB_PATH = /usr/lib/ocaml/extlib
 endif
 ifndef OCAML_PPL_PATH
-  #OCAML_PPL_PATH = $(HOME)/local/lib/ppl
 	OCAML_PPL_PATH = /usr/lib/ppl
 endif 
 ifndef OCAML_GMP_PATH
- #OCAML_GMP_PATH = $(HOME)/local/lib
 	OCAML_GMP_PATH = /usr/lib/ocaml/gmp
 endif
 ifndef CLIB_PATH
@@ -69,7 +67,6 @@ export STATIC64LIBS = $(STATIC64CLIBS) $(OLIBS)
 SRC = src
 
 # Example files for execution directly from the makefile
-# EXAMPLE_PATH = /home/etienne/Developpement/IMITATOR2_Examples
 EXAMPLE_PATH = examples
 
 # main object
@@ -509,7 +506,7 @@ exe:
 # 	$(TARGET) $(EXAMPLE_PATH)/SIMOP/simop.imi -mode reachability 
 
 # 	$(TARGET) $(EXAMPLE_PATH)/SIMOP/simop.imi $(EXAMPLE_PATH)/SIMOP/simop.pi0
-	$(TARGET) $(EXAMPLE_PATH)/SIMOP/simop.imi $(EXAMPLE_PATH)/SIMOP/simop.pi0 -merge
+# 	$(TARGET) $(EXAMPLE_PATH)/SIMOP/simop.imi $(EXAMPLE_PATH)/SIMOP/simop.pi0 -merge
 # 	$(TARGET) $(EXAMPLE_PATH)/SIMOP/simop.imi $(EXAMPLE_PATH)/SIMOP/simop.pi0 -merge -dynamic-elimination
 # 	$(TARGET) $(EXAMPLE_PATH)/SIMOP/simop.imi $(EXAMPLE_PATH)/SIMOP/simop.pi0 -no-merging -incl -statistics
 # 	$(TARGET) $(EXAMPLE_PATH)/SIMOP/simopTest.imi $(EXAMPLE_PATH)/SIMOP/simopTest.pi0 -bab -no-merging -incl -no-random -with-log -states-limit 30 -with-parametric-log # PROBLEM BAB
@@ -605,7 +602,7 @@ exe:
 # 	bin/IMITATOR2.35 $(EXAMPLE_PATH)/Jobshop/maler_3_4.imi -mode reachability -no-dot -no-log -incl -statistics -depth-limit 10
 # 	bin/IMITATOR2.34.111115 $(EXAMPLE_PATH)/Jobshop/maler_3_4_inst.imi -mode reachability -no-dot -no-log -IMincl
 
-# 	$(TARGET) $(EXAMPLE_PATH)/Jobshop/maler_3_4.imi $(EXAMPLE_PATH)/Jobshop/maler_3_4.pi0 -incl
+	$(TARGET) $(EXAMPLE_PATH)/Jobshop/maler_3_4.imi $(EXAMPLE_PATH)/Jobshop/maler_3_4.pi0 -incl -merge
 # 	bin/IMITATOR2.41 $(EXAMPLE_PATH)/Jobshop/maler_3_4.imi $(EXAMPLE_PATH)/Jobshop/maler_3_4.pi0 -no-dot -no-log -incl
 # 	bin/IMITATOR2.4 $(EXAMPLE_PATH)/Jobshop/maler_3_4.imi $(EXAMPLE_PATH)/Jobshop/maler_3_4.pi0 -no-dot -no-log -incl -jobshop
 # 	bin/IMITATOR2.375 $(EXAMPLE_PATH)/Jobshop/maler_3_4.imi $(EXAMPLE_PATH)/Jobshop/maler_3_4.pi0 -no-dot -no-log -incl -jobshop
