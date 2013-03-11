@@ -8,7 +8,7 @@
  * Author:        Etienne Andre
  * 
  * Created       : 2009/09/07
- * Last modified : 2013/03/01
+ * Last modified : 2013/03/11
 *****************************************************************)
 
 {
@@ -63,7 +63,7 @@ rule token = parse
 (* 	| "forward"        { CT_FORWARD } *)
 (* 	| "free"           { CT_FREE } *)
 (* 	| "from"           { CT_FROM } *)
-	| "good"           { CT_GOOD }
+(* 	| "good"           { CT_GOOD } *)
 (*	| "goto"           { CT_GOTO } *)
  	| "happened"       { CT_HAPPENED }
  	| "has"            { CT_HAS }
