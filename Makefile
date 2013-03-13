@@ -254,6 +254,9 @@ exe:
 # 	$(TARGET) $(EXAMPLE_PATH)/Merging/StrangeMergingBehavior.imi $(EXAMPLE_PATH)/Merging/StrangeMergingBehavior.pi0
 # 	$(TARGET) $(EXAMPLE_PATH)/Merging/exMerging.imi $(EXAMPLE_PATH)/Merging/exMerging.pi0 -with-dot
 
+	$(TARGET) $(EXAMPLE_PATH)/Merging/exMergingSimple.imi -mode reachability -with-dot
+# 	$(TARGET) $(EXAMPLE_PATH)/Merging/exMergingSimple.imi $(EXAMPLE_PATH)/Merging/exMergingSimple.pi0 -with-dot -merge
+
 # 	$(TARGET) $(EXAMPLE_PATH)/Proprietes/contrexTermination.imi -mode reachability -no-merging -with-dot -with-log -with-parametric-log
 # 	$(TARGET) $(EXAMPLE_PATH)/Proprietes/contrexTermination.imi $(EXAMPLE_PATH)/Proprietes/contrexTermination.pi0 -with-parametric-log -with-log -states-limit 8 -with-dot
 

@@ -4,11 +4,11 @@
 --
 --   Merging bug
 --
---   Romain Soulat
+--   Romain Soulat, Etienne Andre
 --
---   Created       : 2011 (?)
---   Last modified : 02/12/2011
---   Conform with IMITATOR >= 2.37
+--                                Created : 2011 (?)
+--                          Last modified : 2013/03/06
+--                       IMITATOR version : 2.6.0
 --****************************************************--
 --****************************************************--
 
@@ -37,6 +37,7 @@ loc b1b2_seen: while True wait{}
 
 end
 
+
 --****************************************************--
   automaton job1
 --****************************************************--
@@ -64,12 +65,9 @@ loc I1: while True wait {}
 	when  True  sync job2_start do {x2' = 0} goto J1;  
 
 loc J1: while x2<= d2 wait {}
-	when  x2 = d2 sync job2_finish goto K1;   
+	when  x2 = d2 sync job2_finish goto K1;
 
 loc K1: while True wait {}
---   when x1 > x2 sync BAD do {x1'=0,x2'=0} goto BAD;
-
-loc BAD: while True wait {}
 
 end
 
