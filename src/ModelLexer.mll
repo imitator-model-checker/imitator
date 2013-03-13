@@ -64,7 +64,7 @@ rule token = parse
 (* 	| "free"           { CT_FREE } *)
 (* 	| "from"           { CT_FROM } *)
 (* 	| "good"           { CT_GOOD } *)
-(*	| "goto"           { CT_GOTO } *)
+	| "goto"           { CT_GOTO }
  	| "happened"       { CT_HAPPENED }
  	| "has"            { CT_HAS }
 (* 	| "hide"           { CT_HIDE } *)

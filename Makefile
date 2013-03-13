@@ -251,6 +251,9 @@ exe:
 # 	$(TARGET) $(EXAMPLE_PATH)/Proprietes/exCTL.imi $(EXAMPLE_PATH)/Proprietes/exCTL.pi0
 # 	$(TARGET) $(EXAMPLE_PATH)/Proprietes/exCTL.imi $(EXAMPLE_PATH)/Proprietes/exCTL.pi0 -PTA2CLP
 
+# 	$(TARGET) $(EXAMPLE_PATH)/Merging/StrangeMergingBehavior.imi $(EXAMPLE_PATH)/Merging/StrangeMergingBehavior.pi0
+# 	$(TARGET) $(EXAMPLE_PATH)/Merging/exMerging.imi $(EXAMPLE_PATH)/Merging/exMerging.pi0 -with-dot
+
 # 	$(TARGET) $(EXAMPLE_PATH)/Proprietes/contrexTermination.imi -mode reachability -no-merging -with-dot -with-log -with-parametric-log
 # 	$(TARGET) $(EXAMPLE_PATH)/Proprietes/contrexTermination.imi $(EXAMPLE_PATH)/Proprietes/contrexTermination.pi0 -with-parametric-log -with-log -states-limit 8 -with-dot
 
@@ -602,7 +605,7 @@ exe:
 # 	bin/IMITATOR2.35 $(EXAMPLE_PATH)/Jobshop/maler_3_4.imi -mode reachability -no-dot -no-log -incl -statistics -depth-limit 10
 # 	bin/IMITATOR2.34.111115 $(EXAMPLE_PATH)/Jobshop/maler_3_4_inst.imi -mode reachability -no-dot -no-log -IMincl
 
-	$(TARGET) $(EXAMPLE_PATH)/Jobshop/maler_3_4.imi $(EXAMPLE_PATH)/Jobshop/maler_3_4.pi0 -incl -merge
+# 	$(TARGET) $(EXAMPLE_PATH)/Jobshop/maler_3_4.imi $(EXAMPLE_PATH)/Jobshop/maler_3_4.pi0 -incl -merge
 # 	bin/IMITATOR2.41 $(EXAMPLE_PATH)/Jobshop/maler_3_4.imi $(EXAMPLE_PATH)/Jobshop/maler_3_4.pi0 -no-dot -no-log -incl
 # 	bin/IMITATOR2.4 $(EXAMPLE_PATH)/Jobshop/maler_3_4.imi $(EXAMPLE_PATH)/Jobshop/maler_3_4.pi0 -no-dot -no-log -incl -jobshop
 # 	bin/IMITATOR2.375 $(EXAMPLE_PATH)/Jobshop/maler_3_4.imi $(EXAMPLE_PATH)/Jobshop/maler_3_4.pi0 -no-dot -no-log -incl -jobshop
