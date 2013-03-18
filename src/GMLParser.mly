@@ -211,7 +211,7 @@ model:
 	header body footer
 	 
 	{
-		let declarations, states, transitions = (*$2*)[], [] , [] in
+		let declarations, states, transitions = $2 in
 		let automata, init_definition = convert declarations states transitions in
 		(*** HACK: need to consider bad and carto as well (or?) *)
 		declarations, automata, init_definition, None, ([] , (NumConst.zero,NumConst.zero) , (NumConst.zero,NumConst.zero))
@@ -232,16 +232,6 @@ header:
 	{}
 ;
 
-// standalone_opt:
-// 	/* standalone="yes" */
-// 	| NAME OP_EQ ANYSTRING {}
-// 	| {}
-// ;
-
-// formalism_opt:
-// 	| CT_XMLNS OP_EQ ANYSTRING {}
-// 	| {}
-// ;
 
 footer:
 	OPEN_END_MODEL CLOSE { }
@@ -657,15 +647,6 @@ bool_expr_true:
 	TRUE
 	close_attribute { [] }
 ;
-
-/*
-str_true:
-	// BUG!! STR_TRUE doesn't work !
-	NAME { 	if $1 <> "true"
-				then raise (InternalError ("'true' expected, seen: '" ^ $1 ^ "'"))
-			; $1
-	}
-;*/
 
 
 conjunction:

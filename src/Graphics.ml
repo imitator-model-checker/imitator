@@ -8,7 +8,7 @@
  * Author:        Etienne Andre, Ulrich Kuehne
  * 
  * Created:       2010/07/05
- * Last modified: 2013/03/05
+ * Last modified: 2013/03/18
  *
  ****************************************************************)
  
@@ -33,7 +33,7 @@ let dot_command = "dot"
 let dot_image_extension = "jpg"
 let dot_file_extension = "dot"
 let states_file_extension = "states"
-
+let cartography_extension = "png"
 
 
 
@@ -166,7 +166,7 @@ let cartography program v0 returned_constraint_list cartography_name =
 		output_string file_zone str_zone;
 		close_out file_zone;
 		(* Beginning of the script *)
-		let script_line = ref ("graph -T ps -C -X \"" ^ x_name ^ "\" -Y \"" ^ y_name ^ "\" ") in
+		let script_line = ref ("graph -T " ^ cartography_extension ^ " -C -X \"" ^ x_name ^ "\" -Y \"" ^ y_name ^ "\" ") in
 		(* find the minimum and maximum abscissa and ordinate for each constraint and store them in a list *)
 		
 		(* get corners of v0 *)
@@ -320,7 +320,7 @@ let cartography program v0 returned_constraint_list cartography_name =
 
 		
 		(* File in which the cartography will be printed *)
-		let final_name = cartography_name ^ ".ps" in
+		let final_name = cartography_name ^ "." ^ cartography_extension in
 		(* last part of the script *)	
 		script_line := !script_line^" -C -m 2 -q -1 " ^ file_v0_name ^ " -L \"" ^ options#files_prefix ^ "\" > "^final_name;
 		(* write the script into a file *)

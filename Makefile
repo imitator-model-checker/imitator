@@ -254,7 +254,7 @@ exe:
 # 	$(TARGET) $(EXAMPLE_PATH)/Merging/StrangeMergingBehavior.imi $(EXAMPLE_PATH)/Merging/StrangeMergingBehavior.pi0
 # 	$(TARGET) $(EXAMPLE_PATH)/Merging/exMerging.imi $(EXAMPLE_PATH)/Merging/exMerging.pi0 -with-dot
 
-	$(TARGET) $(EXAMPLE_PATH)/Merging/exMergingSimple.imi -mode reachability -with-dot
+# 	$(TARGET) $(EXAMPLE_PATH)/Merging/exMergingSimple.imi -mode reachability -with-dot
 # 	$(TARGET) $(EXAMPLE_PATH)/Merging/exMergingSimple.imi $(EXAMPLE_PATH)/Merging/exMergingSimple.pi0 -with-dot -merge
 
 # 	$(TARGET) $(EXAMPLE_PATH)/Proprietes/contrexTermination.imi -mode reachability -no-merging -with-dot -with-log -with-parametric-log
@@ -347,7 +347,7 @@ exe:
 # 	$(TARGET) $(EXAMPLE_PATH)/Flipflop/flipflop.imi $(EXAMPLE_PATH)/Flipflop/flipflop.pi0 -no-dot -no-log -statistics -dynamic
 # 	$(TARGET) $(EXAMPLE_PATH)/Flipflop/flipflop.imi $(EXAMPLE_PATH)/Flipflop/flipflop.pi0 -no-dot -no-log -statistics -jobshop
 
-# 	$(TARGET) $(EXAMPLE_PATH)/Flipflop/flipflop.imi $(EXAMPLE_PATH)/Flipflop/flipflop.v0 -mode cover -cart
+	$(TARGET) $(EXAMPLE_PATH)/Flipflop/flipflop.imi $(EXAMPLE_PATH)/Flipflop/flipflop.v0 -mode cover -cart
 # 	$(TARGET) $(EXAMPLE_PATH)/Flipflop/flipflop.imi $(EXAMPLE_PATH)/Flipflop/flipflop.v0 -mode border -cart
 # 	./IMITATOR Examples/Flipflop/flipflop.imi Examples/Flipflop/flipflop.v0 -mode random1000  -log-prefix Examples/Flipflop/test2/test
 # 	./IMITATOR Examples/Flipflop/flipflop.imi Examples/Flipflop/flipflop.v0 -mode cover

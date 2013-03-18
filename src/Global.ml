@@ -26,7 +26,7 @@ open Unix
 (****************************************************************)
 
 let program_name = "IMITATOR"
-let version_string = "2.6.0 unstable"
+let version_string = "2.6.1 unstable"
 
 let print_version_string _ = 
 	print_string (program_name ^ " " ^ version_string ^ "\n")
