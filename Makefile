@@ -201,7 +201,7 @@ exe:
 
 ##### TESTS FOR SYNTAX AND FEATURES #####
 
-# 	$(TARGET) $(EXAMPLE_PATH)/Tests/test.gml -mode reachability -verbose high -fromGML
+# 	$(TARGET) $(EXAMPLE_PATH)/Tests/test.gml -mode reachability -verbose high -fromGrML
 
 # 	$(TARGET) $(EXAMPLE_PATH)/Tests/test.imi -PTA2GML
 
@@ -217,9 +217,9 @@ exe:
 # 	$(TARGET) $(EXAMPLE_PATH)/Tests/exPourGML.imi -PTA2GML
 
 # 	$(TARGET) $(EXAMPLE_PATH)/Tests/exPourGML.imi -mode reachability
-# 	$(TARGET) $(EXAMPLE_PATH)/Tests/SynthesizedGML.gml -fromGML -mode reachability
+# 	$(TARGET) $(EXAMPLE_PATH)/Tests/SynthesizedGML.gml -fromGrML -mode reachability
 
-# 	$(TARGET) $(EXAMPLE_PATH)/Tests/model2.gml -fromGML -forcePi0
+# 	$(TARGET) $(EXAMPLE_PATH)/Tests/model2.gml -fromGrML -forcePi0
 # 	$(TARGET) $(EXAMPLE_PATH)/Tests/model2.imi -forcePi0
 
 # 	$(TARGET) $(EXAMPLE_PATH)/Tests/model2.imi $(EXAMPLE_PATH)/Tests/model2.pi0 -verbose total
@@ -347,7 +347,7 @@ exe:
 # 	$(TARGET) $(EXAMPLE_PATH)/Flipflop/flipflop.imi $(EXAMPLE_PATH)/Flipflop/flipflop.pi0 -no-dot -no-log -statistics -dynamic
 # 	$(TARGET) $(EXAMPLE_PATH)/Flipflop/flipflop.imi $(EXAMPLE_PATH)/Flipflop/flipflop.pi0 -no-dot -no-log -statistics -jobshop
 
-	$(TARGET) $(EXAMPLE_PATH)/Flipflop/flipflop.imi $(EXAMPLE_PATH)/Flipflop/flipflop.v0 -mode cover -cart
+# 	$(TARGET) $(EXAMPLE_PATH)/Flipflop/flipflop.imi $(EXAMPLE_PATH)/Flipflop/flipflop.v0 -mode cover -cart
 # 	$(TARGET) $(EXAMPLE_PATH)/Flipflop/flipflop.imi $(EXAMPLE_PATH)/Flipflop/flipflop.v0 -mode border -cart
 # 	./IMITATOR Examples/Flipflop/flipflop.imi Examples/Flipflop/flipflop.v0 -mode random1000  -log-prefix Examples/Flipflop/test2/test
 # 	./IMITATOR Examples/Flipflop/flipflop.imi Examples/Flipflop/flipflop.v0 -mode cover
@@ -394,8 +394,9 @@ exe:
 # 	$(TARGET) $(EXAMPLE_PATH)/Train/Train1PTA.imi $(EXAMPLE_PATH)/Train/Train1PTA.pi0
 # 	$(TARGET) $(EXAMPLE_PATH)/Train/Train1PTA.imi $(EXAMPLE_PATH)/Train/Train1PTA.v0 -mode border -cart
 # 	$(TARGET) $(EXAMPLE_PATH)/Train/Train1PTA.imi $(EXAMPLE_PATH)/Train/Train1PTA.v0 -mode cover -cart
-# 	$(TARGET) $(EXAMPLE_PATH)/Train/Train1PTA.imi -PTA2GML
-# 	$(TARGET) $(EXAMPLE_PATH)/Train/Train1PTA.gml -fromGML -mode reachability
+# 	$(TARGET) $(EXAMPLE_PATH)/Train/Train1PTA.imi -PTA2GrML
+# 	$(TARGET) $(EXAMPLE_PATH)/Train/Train1PTA.grml -fromGrML -mode reachability
+	$(TARGET) $(EXAMPLE_PATH)/Train/Train1PTA.grml $(EXAMPLE_PATH)/Train/Train1PTA.pi0 -fromGrML
 
 # 	$(TARGET) $(EXAMPLE_PATH)/Train/TrainAHV93.imi -PTA2JPG
 # 	bin/IMITATOR2.34.111115 $(EXAMPLE_PATH)/Train/TrainAHV93.imi -mode reachability

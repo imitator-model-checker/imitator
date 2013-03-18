@@ -1124,7 +1124,7 @@ let grow_to_zero_assign variables_elapse variables_constant linear_constraint =
 (** Convert a linear term (PPL) into a string *)								
 let rec gml_of_linear_term_ppl names t_level = function
 	| Coefficient z ->
-		"\n" ^ (string_n_times t_level "\t") ^ "<attribute name=\"const\">" ^ (if Gmp.Z.equal z (Gmp.Z.from_int 0) then "0" else Gmp.Z.string_from z) ^ "</attribute>" 
+		"\n" ^ (string_n_times t_level "\t") ^ "<attribute name=\"numValue\">" ^ (if Gmp.Z.equal z (Gmp.Z.from_int 0) then "0" else Gmp.Z.string_from z) ^ "</attribute>" 
 	
 	| Variable v ->
 		"\n" ^ (string_n_times t_level "\t") ^ "<attribute name=\"name\">" ^ (names v) ^ "</attribute>" 
@@ -1134,7 +1134,7 @@ let rec gml_of_linear_term_ppl names t_level = function
 
 	| Unary_Minus t -> 
 		"\n" ^ (string_n_times t_level "\t") ^ "<attribute name=\"-\">"
-		^ "\n" ^ (string_n_times (t_level + 1) "\t") ^ "<attribute name=\"const\">0</attribute>"
+		^ "\n" ^ (string_n_times (t_level + 1) "\t") ^ "<attribute name=\"numValue\">0</attribute>"
 		^ (gml_of_linear_term_ppl names (t_level + 1) t)
 		^ "\n" ^ (string_n_times t_level "\t") ^ "</attribute>"
 	
@@ -1167,7 +1167,7 @@ let rec gml_of_linear_term_ppl names t_level = function
 				gml_of_linear_term_ppl names t_level rterm
 			else 
 				"\n" ^ (string_n_times t_level "\t") ^ "<attribute name=\"*\">"
-				^ "\n" ^ (string_n_times (t_level + 1) "\t") ^ "<attribute name=\"const\">" ^ (Gmp.Z.string_from z) ^ "</attribute>" 
+				^ "\n" ^ (string_n_times (t_level + 1) "\t") ^ "<attribute name=\"numValue\">" ^ (Gmp.Z.string_from z) ^ "</attribute>" 
 				^ (gml_of_linear_term_ppl names (t_level + 1) rterm)
 				^ "\n" ^ (string_n_times t_level "\t") ^ "</attribute>"
 
@@ -1184,10 +1184,16 @@ let gml_of_linear_inequality names t_level linear_inequality =
 		| Equal_RS -> "equal"
 		| Greater_Than_RS -> "greater"
 		| Greater_Or_Equal_RS -> "greaterEqual" in
-	  "\n" ^ (string_n_times t_level "\t") ^ "<attribute name=\"" ^ opstr ^ "\">"
-	^ "\n" ^ (string_n_times (t_level + 1) "\t") ^ "<attribute name=\"expr\">" ^ lstr ^ "\n" ^ (string_n_times (t_level + 1) "\t") ^ "</attribute>"
-	^ "\n" ^ (string_n_times (t_level + 1) "\t") ^ "<attribute name=\"expr\">" ^ rstr ^ "\n" ^ (string_n_times (t_level + 1) "\t") ^ "</attribute>"
-	^ "\n" ^ (string_n_times t_level "\t") ^ "</attribute>"
+		""
+	^ "\n" ^ (string_n_times (t_level) "\t") ^ "<attribute name=\"boolExpr\">"
+	^ "\n" ^ (string_n_times (t_level + 1) "\t") ^ "<attribute name=\"" ^ opstr ^ "\">"
+	  
+	^ "\n" ^ (string_n_times (t_level + 2) "\t") ^ "<attribute name=\"expr\">" ^ lstr ^ "\n" ^ (string_n_times (t_level + 2) "\t") ^ "</attribute>"
+	
+	^ "\n" ^ (string_n_times (t_level + 2) "\t") ^ "<attribute name=\"expr\">" ^ rstr ^ "\n" ^ (string_n_times (t_level + 2) "\t") ^ "</attribute>"
+
+	^ "\n" ^ (string_n_times (t_level + 1) "\t") ^ "</attribute>"
+	^ "\n" ^ (string_n_times (t_level) "\t") ^ "</attribute>"
 
 (** Convert a linear term into a string *)
 let gml_of_linear_term names t_level linear_term =
@@ -1199,8 +1205,8 @@ let gml_of_linear_term names t_level linear_term =
 (** Convert a linear constraint into a string *)
 let gml_of_linear_constraint names t_level linear_constraint =
 	(* First check if true or false *)
-	if is_true linear_constraint then "<attribute name=\"boolValue\">true</attribute>"
-	else (if is_false linear_constraint then "<attribute name=\"boolValue\">false</attribute>"
+	if is_true linear_constraint then "<attribute name=\"boolExpr\"><attribute name=\"boolValue\">true</attribute></attribute>"
+	else (if is_false linear_constraint then "<attribute name=\"boolExpr\"><attribute name=\"boolValue\">false</attribute></attribute>"
 	else (
 		(* Get a list of linear inequalities *)
 		let list_of_inequalities = get_constraints linear_constraint in
@@ -1210,7 +1216,10 @@ let gml_of_linear_constraint names t_level linear_constraint =
 			let several_inequalities = List.length rest > 0 in
 			(* Conjunction : start *)
 			(if several_inequalities then
-				("\n" ^ (string_n_times t_level "\t") ^ "<attribute name=\"and\">"
+				(
+					""
+					^ "\n" ^ (string_n_times (t_level) "\t") ^ "<attribute name=\"boolExpr\">"
+					^ "\n" ^ (string_n_times (t_level+1) "\t") ^ "<attribute name=\"and\">"
 			) else "")
 			^
 			(* Convert rest *)
@@ -1224,7 +1233,10 @@ let gml_of_linear_constraint names t_level linear_constraint =
 			^
 			(* Conjunction : end *)
 			(if several_inequalities then
-				("\n" ^ (string_n_times t_level "\t") ^ "</attribute>"
+				(
+					""
+					^ "\n" ^ (string_n_times (t_level+1) "\t") ^ "</attribute>"
+					^ "\n" ^ (string_n_times (t_level) "\t") ^ "</attribute>"
 			) else "")
 		in gml_of_linear_constraint_rec t_level list_of_inequalities
 	))

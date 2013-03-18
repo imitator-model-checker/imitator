@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2011/11/22
- * Last modified: 2012/10/24
+ * Last modified: 2013/03/18
  *
  ************************************************************)
 
@@ -66,8 +66,8 @@ let string_of_declarations program =
 	let string_of_variables type_string list_of_variables =
 		string_of_list_of_string (List.map (fun variable_index ->
 			  "\n\t\t\t\t<attribute name=\"" ^ type_string ^ "\">"
-			(*^ "\n\t\t\t\t\t<attribute name=\"name\">"*) ^ (program.variable_names variable_index) (*^ "</attribute>"*)
-			^ "</attribute>"
+			^ "\n\t\t\t\t\t<attribute name=\"name\">" ^ (program.variable_names variable_index) ^ "</attribute>"
+			^ "\n\t\t\t\t</attribute>"
 		) list_of_variables)
 	in
 	"\n\n\t" ^ " <attribute name=\"declaration\">"
@@ -118,7 +118,7 @@ let string_of_clock_updates program = function
 		"\n\t\t\t<attribute name=\"update\">"
 		^ "\n\t\t\t\t<attribute name=\"name\">" ^ (program.variable_names variable_index) ^ "</attribute>"
 		^ "\n\t\t\t\t<attribute name=\"expr\">"
-		^ "\n\t\t\t\t\t<attribute name=\"const\">0</attribute>"
+		^ "\n\t\t\t\t\t<attribute name=\"numValue\">0</attribute>"
 		^ "\n\t\t\t\t</attribute>"
 		^ "\n\t\t\t</attribute> <!-- end update -->"
 	) list_of_clocks)
@@ -176,7 +176,7 @@ let string_of_transition program automaton_index action_index location_index (gu
 	id_transition := !id_transition + 1;
 	
 	(* Convert source and dest *)
-	"\n\t<arc id=\"" ^ (string_of_int !id_transition) ^ "\" arcType=\"transition\" source=\"" ^ (string_of_int location_index) ^ "\" target=\"" ^ (string_of_int destination_location) ^ "\">"
+	"\n\t<arc id=\"" ^ (string_of_int !id_transition) ^ "\" arcType=\"Transition\" source=\"" ^ (string_of_int location_index) ^ "\" target=\"" ^ (string_of_int destination_location) ^ "\">"
 	
 	^
 	(* Convert the updates if any*)
@@ -191,9 +191,9 @@ let string_of_transition program automaton_index action_index location_index (gu
 	(* Convert the guard if any *)
 	(if not (LinearConstraint.is_true guard) then (
 		"\n\t\t<attribute name=\"guard\">"
-		^ "\n\t\t\t<attribute name=\"boolExpr\">"
-		^ (LinearConstraint.gml_of_linear_constraint program.variable_names 4 guard)
-		^ "\n\t\t\t</attribute>"
+(* 		^ "\n\t\t\t<attribute name=\"boolExpr\">" *)
+		^ (LinearConstraint.gml_of_linear_constraint program.variable_names 3 guard)
+(* 		^ "\n\t\t\t</attribute>" *)
 		^ "\n\t\t</attribute> <!-- end guard -->"
 	) else "")
 
@@ -239,9 +239,9 @@ let string_of_location program automaton_index location_index =
 	let invariant = program.invariants automaton_index location_index in
 	(if (not (LinearConstraint.is_true invariant)) then (
 		  "\n\t\t<attribute name=\"invariant\">"
-		^ "\n\t\t\t<attribute name=\"boolExpr\">"
-		^ (LinearConstraint.gml_of_linear_constraint program.variable_names 4 invariant)
-		^ "\n\t\t\t</attribute>"
+(* 		^ "\n\t\t\t<attribute name=\"boolExpr\">" *)
+		^ (LinearConstraint.gml_of_linear_constraint program.variable_names 3 invariant)
+(* 		^ "\n\t\t\t</attribute>" *)
 		^ "\n\t\t</attribute> <!-- end invariant -->"
 	) else "")
 	

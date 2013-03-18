@@ -441,7 +441,7 @@ state_attributes:
 /* WARNING: 1 shift/reduce conflict here because of non-empty invariant  */
 // 	| name state_type state_invariant { $1, $2, $3 }
 	| state_invariant state_name state_type { $2, $3, $1 }
-// 	| name state_type { $1, $2, [] }
+	| state_name state_type { $1, $2, [] }
 // 	| name state_invariant { $1, (false, false), $2 }
 // 	| name { $1, (false, false), [] }
 ;
@@ -556,12 +556,14 @@ transition_body:
 	/* TODO: TO IMPROVE ! */
 // 	| label guard updates { $1, $2, $3 }
 	| updates guard label_name { $3, $2, $1 }
-// 	| label guard { $1, $2, [] }
-// 	| label updates { $1, [], $2 }
-// 	| guard updates { NoSync, $1, $2 }
-// 	| label { $1, [], [] }
-// 	| guard { NoSync, $1, [] }
-// 	| updates { NoSync, [], $1 }
+	| updates guard { NoSync, $2, $1 }
+	| updates label_name { $2, [], $1 }
+	| label_name guard { $1, $2, [] }
+	| label_name updates { $1, [], $2 }
+	| guard updates { NoSync, $1, $2 }
+	| label_name { $1, [], [] }
+	| guard { NoSync, $1, [] }
+	| updates { NoSync, [], $1 }
 // 	| { NoSync, [], [] }
 ;
 
@@ -592,7 +594,7 @@ guard:
 
 	| open_attribute STR_GUARD SINGLE_CLOSE { [] }
 
-/* 	| { [] } */
+/* 	| { [] }
 ;
 
 

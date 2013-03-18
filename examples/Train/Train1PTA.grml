@@ -1,0 +1,248 @@
+<!-- ************************************************************
+ * Program examples/Train/Train1PTA.imi
+ * Converted by IMITATOR 2.6.1 unstable
+ ************************************************************ -->
+
+<!-- ************************************************************
+ * !! Experimental translation !!
+ *   - All automata are defined into one file (but in independent GrML structures)
+ *   - All variables are declared in all automata.
+ *   - Initial constraint (on all variables) is added to each automaton.
+ *   - We suppose that automata synchronize on variables and actions sharing the same names (common behavior).
+ * This translation will be improved by the definition of synchronization rules conform with FML. Work in progress.
+ ************************************************************ -->
+
+<?xml version="1.0" encoding="UTF-8"?>
+<model formalismUrl="http://formalisms.cosyverif.org/parametric-timed-automaton.fml"
+    xmlns="http://cosyverif.org/ns/model">
+<!-- ************************************************************
+ automaton system
+ ************************************************************ -->
+
+	 <attribute name="declaration">
+		 <attribute name="variables">
+			 <attribute name="clocks">
+				<attribute name="clock">
+					<attribute name="name">x</attribute>
+				</attribute>
+				<attribute name="clock">
+					<attribute name="name">y</attribute>
+				</attribute>
+			</attribute> <!-- end clocks -->
+		</attribute> <!-- end discretes -->
+
+		 <attribute name="constants">
+			 <attribute name="parameters">
+				<attribute name="parameter">
+					<attribute name="name">dApproach</attribute>
+				</attribute>
+				<attribute name="parameter">
+					<attribute name="name">dStartDown</attribute>
+				</attribute>
+			</attribute>
+		</attribute> <!-- end constants -->
+	 </attribute> <!-- end declaration -->
+ 
+	<node id="0" nodeType="state">
+		<attribute name="name">Far</attribute>
+		<attribute name="type">initialState</attribute>
+	</node>
+ 
+	<node id="1" nodeType="state">
+		<attribute name="invariant">
+			<attribute name="boolExpr">
+				<attribute name="and">
+				<attribute name="boolExpr">
+					<attribute name="greaterEqual">
+						<attribute name="expr">
+						<attribute name="name">dStartDown</attribute>
+						</attribute>
+						<attribute name="expr">
+						<attribute name="name">x</attribute>
+						</attribute>
+					</attribute>
+				</attribute>
+				<attribute name="boolExpr">
+					<attribute name="greaterEqual">
+						<attribute name="expr">
+						<attribute name="name">dApproach</attribute>
+						</attribute>
+						<attribute name="expr">
+						<attribute name="name">x</attribute>
+						</attribute>
+					</attribute>
+				</attribute>
+				</attribute>
+			</attribute>
+		</attribute> <!-- end invariant -->
+		<attribute name="name">Approaching</attribute>
+		<attribute name="type"></attribute>
+	</node>
+ 
+	<node id="2" nodeType="state">
+		<attribute name="name">Crash</attribute>
+		<attribute name="type"></attribute>
+	</node>
+ 
+	<node id="3" nodeType="state">
+		<attribute name="invariant">
+			<attribute name="boolExpr">
+				<attribute name="and">
+				<attribute name="boolExpr">
+					<attribute name="greaterEqual">
+						<attribute name="expr">
+						<attribute name="numValue">2</attribute>
+						</attribute>
+						<attribute name="expr">
+						<attribute name="name">y</attribute>
+						</attribute>
+					</attribute>
+				</attribute>
+				<attribute name="boolExpr">
+					<attribute name="greaterEqual">
+						<attribute name="expr">
+						<attribute name="name">dApproach</attribute>
+						</attribute>
+						<attribute name="expr">
+						<attribute name="name">x</attribute>
+						</attribute>
+					</attribute>
+				</attribute>
+				</attribute>
+			</attribute>
+		</attribute> <!-- end invariant -->
+		<attribute name="name">Lowering</attribute>
+		<attribute name="type"></attribute>
+	</node>
+ 
+	<node id="4" nodeType="state">
+		<attribute name="invariant">
+			<attribute name="boolExpr">
+				<attribute name="greaterEqual">
+					<attribute name="expr">
+					<attribute name="name">dApproach</attribute>
+					</attribute>
+					<attribute name="expr">
+					<attribute name="name">x</attribute>
+					</attribute>
+				</attribute>
+			</attribute>
+		</attribute> <!-- end invariant -->
+		<attribute name="name">Safe</attribute>
+		<attribute name="type"></attribute>
+	</node>
+ 
+	<arc id="1" arcType="Transition" source="0" target="1">
+		<attribute name="updates">
+			<attribute name="update">
+				<attribute name="name">x</attribute>
+				<attribute name="expr">
+					<attribute name="numValue">0</attribute>
+				</attribute>
+			</attribute> <!-- end update -->
+		</attribute> <!-- end updates -->
+		<!-- Nosync approach -->
+	</arc>
+
+	<arc id="2" arcType="Transition" source="1" target="3">
+		<attribute name="updates">
+			<attribute name="update">
+				<attribute name="name">y</attribute>
+				<attribute name="expr">
+					<attribute name="numValue">0</attribute>
+				</attribute>
+			</attribute> <!-- end update -->
+		</attribute> <!-- end updates -->
+		<attribute name="guard">
+			<attribute name="boolExpr">
+				<attribute name="equal">
+					<attribute name="expr">
+					<attribute name="name">dStartDown</attribute>
+					</attribute>
+					<attribute name="expr">
+					<attribute name="name">x</attribute>
+					</attribute>
+				</attribute>
+			</attribute>
+		</attribute> <!-- end guard -->
+		<!-- Nosync startDown -->
+	</arc>
+	
+	<arc id="3" arcType="Transition" source="1" target="2">
+		<attribute name="guard">
+			<attribute name="boolExpr">
+				<attribute name="equal">
+					<attribute name="expr">
+					<attribute name="name">dApproach</attribute>
+					</attribute>
+					<attribute name="expr">
+					<attribute name="name">x</attribute>
+					</attribute>
+				</attribute>
+			</attribute>
+		</attribute> <!-- end guard -->
+		<!-- Nosync pass -->
+	</arc>
+
+
+	<arc id="4" arcType="Transition" source="3" target="2">
+		<attribute name="guard">
+			<attribute name="boolExpr">
+				<attribute name="equal">
+					<attribute name="expr">
+					<attribute name="name">dApproach</attribute>
+					</attribute>
+					<attribute name="expr">
+					<attribute name="name">x</attribute>
+					</attribute>
+				</attribute>
+			</attribute>
+		</attribute> <!-- end guard -->
+		<!-- Nosync pass -->
+	</arc>
+	<arc id="5" arcType="Transition" source="3" target="4">
+		<attribute name="guard">
+			<attribute name="boolExpr">
+				<attribute name="equal">
+					<attribute name="expr">
+					<attribute name="name">y</attribute>
+					</attribute>
+					<attribute name="expr">
+					<attribute name="numValue">2</attribute>
+					</attribute>
+				</attribute>
+			</attribute>
+		</attribute> <!-- end guard -->
+		<!-- Nosync endDown -->
+	</arc>
+
+	<arc id="6" arcType="Transition" source="4" target="0">
+		<attribute name="updates">
+			<attribute name="update">
+				<attribute name="name">x</attribute>
+				<attribute name="expr">
+					<attribute name="numValue">0</attribute>
+				</attribute>
+			</attribute> <!-- end update -->
+			<attribute name="update">
+				<attribute name="name">y</attribute>
+				<attribute name="expr">
+					<attribute name="numValue">0</attribute>
+				</attribute>
+			</attribute> <!-- end update -->
+		</attribute> <!-- end updates -->
+		<attribute name="guard">
+			<attribute name="boolExpr">
+				<attribute name="equal">
+					<attribute name="expr">
+					<attribute name="name">dApproach</attribute>
+					</attribute>
+					<attribute name="expr">
+					<attribute name="name">x</attribute>
+					</attribute>
+				</attribute>
+			</attribute>
+		</attribute> <!-- end guard -->
+		<!-- Nosync pass -->
+	</arc>
+</model>
