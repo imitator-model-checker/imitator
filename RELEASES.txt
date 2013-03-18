@@ -25,6 +25,7 @@ Syntax in model:
 
 Misc
 - output files for model "XXXX.imi" are now "XXXX.ext" instead of "XXXX.imi.ext"
+- graphic cartography is now .png instead of .ps
 
 Internal
 - Refactored BC code
