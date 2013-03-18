@@ -8,7 +8,7 @@
  * Author:        Etienne Andre
  * 
  * Created       : 2011/11/23
- * Last modified : 2013/03/01
+ * Last modified : 2013/03/18
  *
  ****************************************************************/
 
@@ -327,7 +327,9 @@ list_of_clocks:
 
 clock:
 	| open_attribute STR_CLOCK CLOSE
-		NAME
+		/* Modified 2013/03/18 with Alban */
+// 		NAME
+		name
 		close_attribute
 			{ ($4, None) }
 ;
@@ -349,7 +351,9 @@ list_of_discretes:
 
 discrete:
 	| open_attribute STR_DISCRETE CLOSE
-		NAME
+		/* Modified 2013/03/18 with Alban */
+// 		NAME
+		name
 		close_attribute
 			{ ($4, None) }
 ;
@@ -384,7 +388,9 @@ list_of_parameters:
 
 parameter:
 	| open_attribute STR_PARAMETER CLOSE
-		NAME
+		/* Modified 2013/03/18 with Alban */
+// 		NAME
+		name
 		close_attribute
 			{ ($4, None) }
 ;
