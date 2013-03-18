@@ -361,7 +361,7 @@ let parsing_structure =
 	(* Branching between 2 input syntaxes *)
 	if options#fromGML then
 		try parser_lexer_from_file GMLParser.main GMLLexer.token options#file
-		with InvalidModel -> (print_error ("GrML input contains error. Please check it again."); abort_program (); exit 0)
+		with InvalidModel -> (print_error ("GrML input contains error. Please check it again."); abort_program (); exit 1)
 	else parser_lexer_from_file ModelParser.main ModelLexer.token options#file
 in 
 
@@ -402,9 +402,9 @@ try (
 	ProgramConverter.abstract_program_of_parsing_structure
 		parsing_structure pi0_parsed v0_parsed options
 ) with 
-	| InvalidModel -> (print_error ("The input program contains errors. Please check it again."); abort_program (); exit 0)
-	| ProgramConverter.InvalidPi0 -> (print_error ("The input pi_0 file contains errors. Please check it again."); abort_program (); exit 0)
-	| InternalError e -> (print_error ("Internal error: " ^ e ^ "\nPlease kindly insult the developers."); abort_program (); exit 0)
+	| InvalidModel -> (print_error ("The input program contains errors. Please check it again."); abort_program (); exit 1)
+	| ProgramConverter.InvalidPi0 -> (print_error ("The input pi_0 file contains errors. Please check it again."); abort_program (); exit 1)
+	| InternalError e -> (print_error ("Internal error: " ^ e ^ "\nPlease kindly insult the developers."); abort_program (); exit 1)
 	in
 
 let gc_stat = Gc.stat () in
@@ -633,7 +633,7 @@ try(
 		)
 	;
 ) with
-| InternalError e -> (print_error ("Internal error: " ^ e ^ "\nPlease kindly insult the developers."); abort_program (); exit 0);
+| InternalError e -> (print_error ("Internal error: " ^ e ^ "\nPlease kindly insult the developers."); abort_program (); exit 1);
 end;
 
 

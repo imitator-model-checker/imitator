@@ -7,7 +7,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Ulrich Kuehne, Etienne Andre
  * Created:       2010
- * Last modified: 2013/02/13
+ * Last modified: 2013/03/18
  *
  ****************************************************************)
  
@@ -154,7 +154,7 @@ class imitator_options =
 						print_error ("The debug mode '" ^ debug_mode ^ "' is not valid.");
 						Arg.usage speclist usage_msg;
 						abort_program ();
-						exit(0); in
+						exit(1); in
 					set_debug_mode mode
 
 			(* Get the mode *)
@@ -182,7 +182,7 @@ class imitator_options =
 					print_error ("The mode '" ^ mode ^ "' is not valid.");
 					Arg.usage speclist usage_msg;
 					abort_program ();
-					exit(0);
+					exit(1);
 				)
 
 			(* Options *)
@@ -248,14 +248,14 @@ class imitator_options =
 			if nb_args < 1 then(
 				print_error ("Please give a file name for the model.");
 				Arg.usage speclist usage_msg;
-				abort_program (); exit(0)
+				abort_program (); exit(1)
 			);
 			
 			(* Case no pi0 file *)
 			if nb_args = 1 && (!imitator_mode != Reachability_analysis) && (!imitator_mode != Translation) && not !forcePi0 then(
 				print_error ("Please give a file name for the reference valuation.");
 				Arg.usage speclist usage_msg;
-				abort_program (); exit(0)
+				abort_program (); exit(1)
 			);
 			
 			
