@@ -77,8 +77,8 @@ let parser_lexer_gen the_parser the_lexer lexbuf string_of_input file_name =
 					let error_symbol = (String.sub file_string symbol_start (symbol_end - symbol_start)) in
 					(* Resize it if too big *)
 					let error_symbol =
-						if (String.length error_symbol > 15) then
-							"..." ^ (String.sub error_symbol (String.length error_symbol - 15) 15)
+						if (String.length error_symbol > 25) then
+							"..." ^ (String.sub error_symbol (String.length error_symbol - 25) 25)
 						else error_symbol
 					in
 					(* Get the line *)

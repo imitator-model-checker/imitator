@@ -161,18 +161,20 @@ let convert declarations locations transitions =
 
   
 
-%token OPEN_ARC OPEN_ATTRIBUTE OPEN_MODEL OPEN_NODE OPEN_XML
+%token OPEN_ARC OPEN_ATTRIBUTE /*OPEN_MODEL*/ OPEN_NODE OPEN_XML
 %token OPEN_END_ARC OPEN_END_ATTRIBUTE OPEN_END_MODEL OPEN_END_NODE
 %token CLOSE CLOSE_XML
 %token SINGLE_CLOSE 
 
 %token INITIAL NORMAL FINAL TRUE
 
-%token STR_AND STR_BOOLEXPR STR_BOOLVALUE STR_CLOCK STR_CLOCKS STR_CONST STR_CONSTANTS STR_DECLARATION STR_GLOBALCONSTANTS STR_DISCRETE STR_DISCRETES STR_EXPR STR_FORMALISM_URL STR_GUARD STR_INITIALCONSTRAINT STR_INVARIANT STR_LABEL STR_NAME STR_PARAMETER STR_PARAMETERS STR_STATE STR_TRANSITION STR_TYPE STR_UPDATE STR_UPDATES STR_UTF8 STR_VARIABLES STR_XMLNS
+// %token ANYSTRING
+%token XML_HEADER MODEL_HEADER
+%token STR_AND STR_BOOLEXPR STR_BOOLVALUE STR_CLOCK STR_CLOCKS STR_CONST STR_CONSTANTS STR_DECLARATION STR_GLOBALCONSTANTS STR_DISCRETE STR_DISCRETES STR_EXPR STR_GUARD STR_INITIALCONSTRAINT STR_INVARIANT STR_LABEL STR_NAME STR_PARAMETER STR_PARAMETERS STR_STATE STR_TRANSITION STR_TYPE STR_UPDATE STR_UPDATES /*STR_UTF8*/ STR_VARIABLES
 %token STR_OPL STR_OPLEQ STR_OPEQ STR_OPGEQ STR_OPG
 %token STR_OPMUL
 
-%token CT_ARCTYPE CT_ENCODING CT_FORMALISMURL CT_ID CT_NAME CT_NODETYPE CT_SOURCE CT_TARGET CT_VERSION CT_XMLNS
+%token CT_ARCTYPE /*CT_ENCODING CT_FORMALISMURL*/ CT_ID CT_NAME CT_NODETYPE CT_SOURCE CT_TARGET /*CT_VERSION CT_XMLNS*/
 
 %token EOF
 
@@ -188,6 +190,7 @@ let convert declarations locations transitions =
 ************************************************************/
 
 main : models EOF {$1}
+;
 
 models : model {$1} |  models model 
        {      
@@ -199,14 +202,16 @@ models : model {$1} |  models model
 			(*** HACK: need to consider bad and carto as well (or?) *)
 	  		  all_declarations, all_automata, all_init_definitions, None, ([] , (NumConst.zero,NumConst.zero) , (NumConst.zero,NumConst.zero))
 	}	
+;
 
 /************************************************************
   MAIN - One automaton
 ************************************************************/
 model:
-	 header body footer
+	header body footer
+	 
 	{
-		let declarations, states, transitions = $2 in
+		let declarations, states, transitions = (*$2*)[], [] , [] in
 		let automata, init_definition = convert declarations states transitions in
 		(*** HACK: need to consider bad and carto as well (or?) *)
 		declarations, automata, init_definition, None, ([] , (NumConst.zero,NumConst.zero) , (NumConst.zero,NumConst.zero))
@@ -219,10 +224,24 @@ model:
 
 header:
 /* <?xml version="1.0" encoding="UTF-8"?> */
-	OPEN_XML CT_VERSION OP_EQ STR_FLOAT CT_ENCODING OP_EQ STR_UTF8 CLOSE_XML
+// 	OPEN_XML CT_VERSION OP_EQ STR_FLOAT CT_ENCODING OP_EQ STR_UTF8 standalone_opt CLOSE_XML
+	XML_HEADER
 /* <model formalismUrl="http://alligator.lip6.fr/timed-automata.fml" xmlns="http://gml.lip6.fr/model"> */
-	OPEN_MODEL CT_FORMALISMURL OP_EQ STR_FORMALISM_URL CT_XMLNS OP_EQ STR_XMLNS CLOSE { }
+// 	OPEN_MODEL CT_FORMALISMURL OP_EQ ANYSTRING CT_XMLNS OP_EQ ANYSTRING formalism_opt CLOSE { }
+	MODEL_HEADER
+	{}
 ;
+
+// standalone_opt:
+// 	/* standalone="yes" */
+// 	| NAME OP_EQ ANYSTRING {}
+// 	| {}
+// ;
+
+// formalism_opt:
+// 	| CT_XMLNS OP_EQ ANYSTRING {}
+// 	| {}
+// ;
 
 footer:
 	OPEN_END_MODEL CLOSE { }
@@ -420,9 +439,10 @@ states:
 
 state:
 /* <node id="2" nodeType="state"> */
-	| OPEN_NODE CT_ID OP_EQ STR_INT CT_NODETYPE OP_EQ STR_STATE coordinates_opt CLOSE
+ 	/* (MOCHE) 2 'coordinates_opt' to allow different orders */
+	| OPEN_NODE CT_ID OP_EQ STR_INT coordinates_opt CT_NODETYPE OP_EQ STR_STATE coordinates_opt CLOSE
 		state_attributes
-		OPEN_END_NODE CLOSE { $4, $10 }
+		OPEN_END_NODE CLOSE { $4, $11 }
 ;
 
 state_attributes:
@@ -526,10 +546,20 @@ transitions:
 ;
 
 transition:
+	/* WARNING: tres tres moche */
     /*<arc id="5" arcType="transition" source="1" target="2">*/
-	| OPEN_ARC CT_ID OP_EQ STR_INT CT_ARCTYPE OP_EQ STR_TRANSITION CT_SOURCE OP_EQ STR_INT CT_TARGET OP_EQ STR_INT CLOSE
+	| OPEN_ARC CT_ID OP_EQ STR_INT arc_type_opt CT_SOURCE OP_EQ STR_INT arc_type_opt CT_TARGET OP_EQ STR_INT arc_type_opt CLOSE
 	transition_body
-	OPEN_END_ARC CLOSE { $10, $13, $15 }
+	OPEN_END_ARC CLOSE { $8, $12, $15 }
+	
+	| OPEN_ARC CT_ID OP_EQ STR_INT arc_type_opt CT_TARGET OP_EQ STR_INT arc_type_opt CT_SOURCE OP_EQ STR_INT arc_type_opt CLOSE
+	transition_body
+	OPEN_END_ARC CLOSE { $12, $8, $15 }
+;
+
+arc_type_opt:
+	| CT_ARCTYPE OP_EQ STR_TRANSITION {}
+	| {}
 ;
 
 transition_body:

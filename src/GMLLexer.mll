@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created       : 2011/11/23
- * Last modified : 2012/10/24
+ * Last modified : 2013/03/18
 *****************************************************************)
 
 {
@@ -30,18 +30,34 @@ rule token = parse
 		comment_ocaml lexbuf;
 		token lexbuf }
 
- 	| "<?xml"		{ OPEN_XML } 	
-	| "?>"			{ CLOSE_XML }
+(* 	| "<?xml"		{ OPEN_XML } 	
+	| "?>"			{ CLOSE_XML }*)
+ 	| "<?xml" [^ '?']+ "?>"			{ XML_HEADER } (*WARNING: il faudrait plutot specifier "touf sauf '?>' " *)
 
-	| "<arc"		{ OPEN_ARC }
+ 	| "<model" [^ '>']+ ">"						{ MODEL_HEADER }
+ 	| "<ns" ['0'-'9']+ ":model" [^ '>']+ ">"	{ MODEL_HEADER }
+
+ 	| "<arc"		{ OPEN_ARC }
 	| "<attribute"	{ OPEN_ATTRIBUTE }
- 	| "<model"		{ OPEN_MODEL }
 	| "<node"		{ OPEN_NODE }
+
+	(* WARNING: un peu moche *)
+	| "<ns" ['0'-'9']+ ":arc"			{ OPEN_ARC }
+	| "<ns" ['0'-'9']+ ":attribute"	{ OPEN_ATTRIBUTE }
+	| "<ns" ['0'-'9']+ ":node"			{ OPEN_NODE }
  	
 	| "</arc"		{ OPEN_END_ARC }
 	| "</attribute"	{ OPEN_END_ATTRIBUTE }
 	| "</model"		{ OPEN_END_MODEL }
 	| "</node"		{ OPEN_END_NODE }
+	
+	| "</ns" ['0'-'9']+ ":arc"		{ OPEN_END_ARC }
+	| "</ns" ['0'-'9']+ ":attribute"	{ OPEN_END_ATTRIBUTE }
+	| "</ns" ['0'-'9']+ ":model"		{ OPEN_END_MODEL }
+	| "</ns" ['0'-'9']+ ":node"		{ OPEN_END_NODE }
+
+
+
 	
 	| ">"			{ CLOSE }
 	| "/>"			{ SINGLE_CLOSE }
@@ -75,7 +91,7 @@ rule token = parse
 	| "\"Transition\""		{ STR_TRANSITION }
 	| "\"update\""			{ STR_UPDATE }
 	| "\"updates\""			{ STR_UPDATES }
-	| "\"UTF-8\""			{ STR_UTF8 }
+(* 	| "\"UTF-8\""			{ STR_UTF8 } *)
 	| "\"variables\""		{ STR_VARIABLES }
 
 	| "\"less\""			{ STR_OPL }
@@ -86,9 +102,8 @@ rule token = parse
 	
 	| "\"*\""				{ STR_OPMUL }
 	
-	| "\"http://formalisms.cosyverif.org/parametric-timed-automaton.fml\"" { STR_FORMALISM_URL }
-	| "\"http://cosyverif.org/ns/model\"" { STR_XMLNS }
-	
+(* 	| "\"http://formalisms.cosyverif.org/parametric-timed-automaton.fml\"" { STR_FORMALISM_URL } (*NOTE: vraiment moche (on devrait autoriser n'importe quoi) *) *)
+(* 	| "\"http://cosyverif.org/ns/model\"" { STR_XMLNS } (*NOTE: vraiment moche (on devrait autoriser n'importe quoi) *) *)
 	
 	
 	| '"' ['0'-'9']+ '"' as lxm { 
@@ -102,22 +117,25 @@ rule token = parse
 		STR_FLOAT digits
 		} 
 
+(* 	| "\"" [^'"']* "\"" { ANYSTRING } *)
+
 	| "arcType"			{ CT_ARCTYPE }
-	| "encoding"		{ CT_ENCODING }
-	| "formalismUrl"	{ CT_FORMALISMURL }
+(* 	| "encoding"		{ CT_ENCODING } *)
+(* 	| "formalismUrl"	{ CT_FORMALISMURL } *)
 	| "id"				{ CT_ID }
 	| "name"			{ CT_NAME }
 	| "nodeType"		{ CT_NODETYPE }
 	| "source"			{ CT_SOURCE }
 	| "target"			{ CT_TARGET }
-	| "version"			{ CT_VERSION }
-	| "xmlns"			{ CT_XMLNS }
+(* 	| "version"			{ CT_VERSION } *)
+(* 	| "xmlns"			{ CT_XMLNS } *)
+(* 	| "xmlns:ns" ['0'-'9']+ ""			{ CT_XMLNS } *)
 
 	| ['0'-'9']+ as lxm { INT(NumConst.numconst_of_string lxm) }
 
 	| ['a'-'z''A'-'Z''_''0'-'9']+ as lxm { NAME lxm }
 	| ['0'-'9']*'.'['0'-'9']+ as lxm { FLOAT lxm } 
-
+	
 	| '='              { OP_EQ }
 
 (*	| '+'              { OP_PLUS }
