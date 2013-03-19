@@ -1,10 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<model formalismUrl="http://formalisms.cosyverif.org/parametric-timed-automaton.fml"
+    xmlns="http://cosyverif.org/ns/model">
 <!-- ************************************************************
- * Program examples/Train/Train1PTA.imi
+ * Model examples/Train/Train1PTA.imi
  * Converted by IMITATOR 2.6.1 unstable
+ * Generated Tue Mar 19, 2013 09:43:20
  ************************************************************ -->
 
 <!-- ************************************************************
- * !! Experimental translation !!
+ * Translation rules:
  *   - All automata are defined into one file (but in independent GrML structures)
  *   - All variables are declared in all automata.
  *   - Initial constraint (on all variables) is added to each automaton.
@@ -12,9 +16,6 @@
  * This translation will be improved by the definition of synchronization rules conform with FML. Work in progress.
  ************************************************************ -->
 
-<?xml version="1.0" encoding="UTF-8"?>
-<model formalismUrl="http://formalisms.cosyverif.org/parametric-timed-automaton.fml"
-    xmlns="http://cosyverif.org/ns/model">
 <!-- ************************************************************
  automaton system
  ************************************************************ -->
@@ -167,7 +168,6 @@
 		</attribute> <!-- end guard -->
 		<!-- Nosync startDown -->
 	</arc>
-	
 	<arc id="3" arcType="Transition" source="1" target="2">
 		<attribute name="guard">
 			<attribute name="boolExpr">

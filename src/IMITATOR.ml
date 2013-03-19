@@ -247,7 +247,7 @@ else
 
 (* Syntax *)
 if options#fromGML then
-	print_warning ("GrML syntax used (experimental!).");
+	print_message Debug_standard ("GrML syntax used.");
 
 (* Syntax *)
 if options#forcePi0 then
@@ -451,7 +451,6 @@ if options#pta2clp then(
 (* Translation to GrML (experimental) *)
 if options#pta2gml then(
 	print_message Debug_standard ("Translating program to GrML.");
-	print_warning ("Experimental translation!");
 	let translated_model = PTA2GML.string_of_program program in
 	let gml_file = options#files_prefix ^ ".grml" in
 	print_message Debug_total ("\n" ^ translated_model ^ "\n");

@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2011/11/22
- * Last modified: 2013/03/18
+ * Last modified: 2013/03/19
  *
  ************************************************************)
 
@@ -37,13 +37,13 @@ let string_of_header program =
 	(* Retrieve the input options *)
 	let options = Input.get_options () in
 	          "<!-- ************************************************************"
-	^ "\n" ^" * Program " ^ options#file
+	^ "\n" ^" * Model " ^ options#file
 	^ "\n" ^" * Converted by " ^ program_name ^ " " ^ version_string
-(* 	^ "\n" ^" * Generated at time " ^ time? *)
+	^ "\n" ^" * Generated " ^ (now())
 	^ "\n" ^" ************************************************************ -->"
 	^ "\n"
 	^ "\n" ^ "<!-- ************************************************************"
-	^ "\n" ^" * !! Experimental translation !!"
+	^ "\n" ^" * Translation rules:"
 	^ "\n" ^" *   - All automata are defined into one file (but in independent GrML structures)"
 	^ "\n" ^" *   - All variables are declared in all automata."
 	^ "\n" ^" *   - Initial constraint (on all variables) is added to each automaton."
@@ -270,6 +270,8 @@ let string_of_automaton program declarations_string automaton_index =
 	^ "\n" ^ "<model formalismUrl=\"http://formalisms.cosyverif.org/parametric-timed-automaton.fml\""
 	^ "\n" ^ "    xmlns=\"http://cosyverif.org/ns/model\">"
 
+	^ "\n" ^ string_of_header program
+
 	^ "\n<!-- ************************************************************"
 	^ "\n automaton " ^ (program.automata_names automaton_index)
 	^ "\n ************************************************************ -->"
@@ -295,8 +297,7 @@ let string_of_automata program declarations_string =
 let string_of_program program =
 	(* Compute the declarations *)
 	let declarations_string = string_of_declarations program in
-	string_of_header program
-	^ "\n" ^ string_of_automata program declarations_string
+		string_of_automata program declarations_string
 
 
 (**************************************************)
