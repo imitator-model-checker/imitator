@@ -39,7 +39,7 @@ exception Unsat_exception
 (* Constants *)
 (**************************************************************)
 (* Experimental try to merge states earlier (may be more efficient and more interesting!) *)
-let merge_after = false
+(* let options#merge_before = false *)
 
 
 (**************************************************************)
@@ -481,7 +481,7 @@ let nb_unsat2 = ref 0
 
 
 (**************************************************************)
-(* Fusion functions *)
+(* Merging functions *)
 (**************************************************************)
 (** Check if two states are mergeable: return True if the convex hull is equal to the union, False otherwise*)
 (*let state_mergeable state1 state2 =
@@ -491,6 +491,96 @@ let nb_unsat2 = ref 0
 		LinearConstraint.hull_assign_if_exact constr1 constr2 
 	)*)
 
+(*--------------------------------------------------*)
+(* Check whether two states (location1 , constraint1) and (location2 , constraint2) are mergeable*)
+(* Warning! Performs the merging constraint1 := constraint1 U constraint2 if indeed mergeable *)
+(*--------------------------------------------------*)
+let try_to_merge location1 constraint1 location2 constraint2 =
+	(* First check equality of locations *)
+	if location1 = location2 then true
+	else(
+		(* Check convex union of constraints *)
+		LinearConstraint.hull_assign_if_exact constraint1 constraint2
+	)
+
+(*--------------------------------------------------*)
+(* Merge states in a list (action_index, location, constraint) *)
+(* Return the updated list *)
+(*--------------------------------------------------*)
+(*** WARNING: horrible imperative style (and probably not efficient and not tail-recursive at all!) programming in this function *)
+let merge action_and_state_list =
+
+	(* Print some information *)
+	print_message Debug_low ("\nStarting merging algorithm (before pi0-compatibility test) on a list of " ^ (string_of_int (List.length (!action_and_state_list))) ^ " state" ^ (s_of_int (List.length (!action_and_state_list))) ^ "");
+
+	(* Number of eated states (for printing purpose) *)
+	let nb_eated = ref 0 in
+
+	(* Outer loop: iterate on potential eaters *)
+	let eater_index = ref 0 in
+	(* while eater_index is in the list *)
+	while !eater_index < List.length (!action_and_state_list) do
+		(* Print some information *)
+		print_message Debug_high ("\n eater = " ^ (string_of_int !eater_index));
+
+		(* Retrieve the eater *)
+		let _, eater_location, eater_constraint = List.nth !action_and_state_list !eater_index in
+		
+		(* Inner loop: iterate on potential eated *)
+		let eated_index = ref 0 in
+		while !eated_index < List.length (!action_and_state_list) do
+			(* Print some information *)
+			print_message Debug_high ("\n eater = " ^ (string_of_int !eater_index));
+			
+			(* Don't eat yourself *)
+			if !eater_index <> !eated_index then(
+				(* Retrieve the potential eated *)
+				let _, eated_location, eated_constraint = List.nth !action_and_state_list !eated_index in
+				
+				(* If mergeable *)
+				if try_to_merge eater_location eater_constraint eated_location eated_constraint then(
+					(* Due to side effects in try_to_merge, the merging is already performed at this point! *)
+					
+					(* Now remove the eated *)
+					action_and_state_list := list_delete_at !eated_index !action_and_state_list;
+					
+					(* If eated_index < eater_index, then decrement the eater index since the list is now shorter on the left side *)
+					if !eated_index < !eater_index then(
+(* 						eated_index := !eated_index - 1; *)
+						eater_index := !eater_index - 1;
+					);
+					
+					(* Update the counter *)
+					nb_eated := !nb_eated + 1;
+					
+					(* Try again to eat from the beginning *)
+					eated_index := 0;
+				) (* end if mergeable *)
+				else(
+					(* Otherwise: Go to the next eated state *)
+					eated_index := !eated_index + 1;
+				) (* end if not mergeable *)
+
+			) (* end don't eat yourself *)
+			else(
+				(* Otherwise: Go to the next eated state *)
+				eated_index := !eated_index + 1;
+			);
+		done; (* end inner loop *)
+		
+		(* Go to the next eater *)
+		eater_index := !eater_index + 1;
+	done; (* end outer loop *)
+	
+	(* Print some information *)
+	if !nb_eated > 0 then
+		print_message Debug_standard ("  " ^ (string_of_int !nb_eated) ^ " state" ^ (s_of_int !nb_eated) ^ " merged before pi0-compatibility test.")
+	else
+		print_message Debug_low ("  (No state merged before pi0-compatibility test)")
+	;
+	
+	
+	!action_and_state_list
 
 (*let rec merging_of_states graph index_state list_index_states list_new_states =
 	match list_index_states with
@@ -921,7 +1011,7 @@ let create_initial_state model =
 	print_message Debug_high ("\nComputing initial invariant I_q0(X)");
 	(* Create the invariant *)
 	let invariant = compute_plain_invariant model initial_location in
-	(* Debug *)
+	(* Print some information *)
 	if debug_mode_greater Debug_total then
 		print_message Debug_total (LinearConstraint.string_of_linear_constraint model.variable_names invariant);
 	
@@ -930,14 +1020,14 @@ let create_initial_state model =
 	let discrete_values = List.map (fun discrete_index -> discrete_index, (Automaton.get_discrete_value initial_location discrete_index)) model.discrete in
 	(* Constraint of the form D_i = d_i *)
 	let discrete_constraint = instantiate_discrete discrete_values in
-	(* Debug *)
+	(* Print some information *)
 	if debug_mode_greater Debug_total then
 		print_message Debug_total (LinearConstraint.string_of_linear_constraint model.variable_names discrete_constraint);
 	
 	(* Perform intersection of C(X) and I_q0(X) and D_i = d_i *)
 	print_message Debug_high ("Performing intersection of C0(X) and I_q0(X) and D_i = d_i");
 	let current_constraint = LinearConstraint.intersection [initial_constraint ; invariant ; discrete_constraint (** To optimize: could be removed *)] in
-	(* Debug *)
+	(* Print some information *)
 	if debug_mode_greater Debug_total then
 		print_message Debug_total (LinearConstraint.string_of_linear_constraint model.variable_names current_constraint);
 		
@@ -958,21 +1048,21 @@ let create_initial_state model =
 		(List.rev_append stopped_clocks model.parameters_and_discrete)
 		current_constraint
 	;
-	(* Debug *)
+	(* Print some information *)
 	if debug_mode_greater Debug_total then
 		print_message Debug_total (LinearConstraint.string_of_linear_constraint model.variable_names current_constraint);
 	
 	(* Perform intersection of [C(X) and I_q0(X) and D_i = d_i]time with I_q0(X) and D_i = d_i *)
 	print_message Debug_high ("Performing intersection of [C0(X) and I_q0(X) and D_i = d_i]time and I_q0(X) and D_i = d_i");
 	LinearConstraint.intersection_assign current_constraint [invariant ; discrete_constraint];
-	(* Debug *)
+	(* Print some information *)
 	if debug_mode_greater Debug_total then
 		print_message Debug_total (LinearConstraint.string_of_linear_constraint model.variable_names current_constraint);
 	
 	(* Hide discrete *)
 	print_message Debug_high ("Hide discrete");
 	LinearConstraint.hide_assign model.discrete current_constraint;
-	(* Debug *)
+	(* Print some information *)
 	if debug_mode_greater Debug_total then
 		print_message Debug_total (LinearConstraint.string_of_linear_constraint model.variable_names current_constraint);
 		
@@ -1162,7 +1252,7 @@ let compute_new_constraint model orig_constraint discrete_constr orig_location d
 	try (
 		let current_constraint = LinearConstraint.copy discrete_constr in
 
-		(* Debug *)
+		(* Print some information *)
 		if debug_mode_greater Debug_total then(
 			print_message Debug_total ("\nComputing the guards g(x)");
 			List.iter (fun guard -> 
@@ -1590,7 +1680,7 @@ let add_a_new_state model reachability_graph orig_state_index new_states_indexes
 (*-----------------------------------------------------*)
 (* returns a list of (really) new states               *)
 (*-----------------------------------------------------*)
-let post model reachability_graph orig_state_index =
+let post_from_one_state model reachability_graph orig_state_index =
 	(* Retrieve the input options *)
 	let options = Input.get_options () in
 	(* Original location: static *)
@@ -1621,8 +1711,13 @@ let post model reachability_graph orig_state_index =
 		print_message Debug_high ("Possible synchronized actions are: " ^ (string_of_list_of_string_with_sep ", " actions_string));
 	);
 
-	(* build the list of new states *)
+	(* Build the list of new states indexes *)
 	let new_states_indexes = ref [] in
+	
+	(* Build the list of new states (for variant of merging only) *)
+	(* EXPERIMENTAL BRANCHING: MERGE BEFORE OR AFTER? *)
+	let new_action_and_state_list = ref [] in
+	
 
 	(* Create a constraint D_i = d_i for the discrete variables *)
 	let discrete_values = List.map (fun discrete_index -> discrete_index, (Automaton.get_discrete_value original_location discrete_index)) model.discrete in
@@ -1671,7 +1766,7 @@ let post model reachability_graph orig_state_index =
 		let debug_i = ref 0 in
 		while !more_combinations do
 			debug_i := !debug_i +1;
-			(* Debug *)
+			(* Print some information *)
 			if debug_mode_greater Debug_total then (
 				let local_indexes = string_of_array_of_string_with_sep "\n\t" (
 				Array.mapi (fun local_index real_index ->
@@ -1709,24 +1804,25 @@ let post model reachability_graph orig_state_index =
 					(* EXPERIMENTAL BRANCHING: MERGE BEFORE OR AFTER? *)
 					(**************************************************************)
 					(* EXPERIMENTAL BRANCHING: CASE MERGE AFTER (this new version may be better?) *)
-					if options#imitator_mode <> Reachability_analysis && merge_after then(
+					if options#imitator_mode <> Reachability_analysis && options#merge_before then(
 					
 						(* Only add to the local list of new states *)
-(* 						new_states := new_state_index :: !new_states; *)
-					
+						new_action_and_state_list := (action_index, location, final_constraint) :: !new_action_and_state_list;
 					
 					(* EXPERIMENTAL BRANCHING: END CASE MERGE AFTER *)
 					)else(
+					
 					(* EXPERIMENTAL BRANCHING: CASE MERGE BEFORE (classical version) *)
 						add_a_new_state model reachability_graph orig_state_index new_states_indexes action_index location final_constraint;
+						
 					); (* EXPERIMENTAL BRANCHING: END CASE MERGE BEFORE (classical version) *)
 					
 				); (* end if satisfiable *)
 			); (* end if Some constraint *)
 			end; (* end match constraint *)
 		
-			(* get the next combination *)
-			more_combinations := next_combination current_indexes max_indexes;	
+			(* Update the next combination *)
+			more_combinations := next_combination current_indexes max_indexes;
 			
 		done; (* while more new states *)
 	) list_of_possible_actions;
@@ -1737,6 +1833,24 @@ let post model reachability_graph orig_state_index =
 		(* Adding the state *)
 		slast := orig_state_index :: !slast;
 	);
+	
+	
+	(**************************************************************)
+	(* EXPERIMENTAL BRANCHING: MERGE BEFORE OR AFTER? *)
+	(**************************************************************)
+	(* EXPERIMENTAL BRANCHING: CASE MERGE AFTER (this new version may be better?) *)
+	if options#imitator_mode <> Reachability_analysis && options#merge_before then(
+	
+		(* Merge *)
+		new_action_and_state_list := merge new_action_and_state_list;
+		
+		(* Add the remaining states *)
+		List.iter (fun (action_index, location, final_constraint) ->
+			add_a_new_state model reachability_graph orig_state_index new_states_indexes action_index location final_constraint;
+		) !new_action_and_state_list
+		
+	); (* EXPERIMENTAL BRANCHING: END CASE MERGE AFTER *)
+	
 	
 	(* Return the list of (really) new states *)
 	(*** NOTE: List.rev really useful??!!!! ***)
@@ -1900,7 +2014,7 @@ let branch_and_bound model init_state =
 		);
 		
 		(* Now compute successors *)
-		let new_states = post model reachability_graph !current_state_index in
+		let new_states = post_from_one_state model reachability_graph !current_state_index in
 		
 		
 		(* Merge states ! *)
@@ -1921,7 +2035,7 @@ let branch_and_bound model init_state =
 		ReachabilityTree.add_children !current_state_index new_states rtree;
 		ReachabilityTree.set_visited !current_state_index rtree;
 		
-		(* Debug *)
+		(* Print some information *)
 		if debug_mode_greater Debug_medium then (
 			let beginning_message = if new_states = [] then "\nFound no new state" else ("\nFound " ^ (string_of_int (List.length new_states)) ^ " new state" ^ (s_of_int (List.length new_states)) ^ "") in
 			print_message Debug_medium (beginning_message ^ ".\n");
@@ -2022,6 +2136,7 @@ let post_star model init_state =
 	(* Add the initial state to the reachable states *)
 	let init_state_index, _ = Graph.add_state model reachability_graph init_state in
 	
+	
 	(*--------------------------------------------------*)
 	(* Perform the post^* *)
 	(*--------------------------------------------------*)
@@ -2048,9 +2163,8 @@ let post_star model init_state =
 			(* Count the states for debug purpose: *)
 			num_state := !num_state + 1;
 			(* Perform the post *)
-			let new_states = post model reachability_graph orig_state_index in
-(* 			let new_states = post in *)
-			(* Debug *)
+			let new_states = post_from_one_state model reachability_graph orig_state_index in
+			(* Print some information *)
 			if debug_mode_greater Debug_medium then (
 				let beginning_message = if new_states = [] then "Found no new state" else ("Found " ^ (string_of_int (List.length new_states)) ^ " new state" ^ (s_of_int (List.length new_states)) ^ "") in
 				print_message Debug_medium (beginning_message ^ " for the post of state " ^ (string_of_int !num_state) ^ " / " ^ (string_of_int nb_states) ^ " in post^" ^ (string_of_int (!nb_iterations)) ^ ".\n");
@@ -2062,23 +2176,10 @@ let post_star model init_state =
 		) [] !newly_found_new_states in
 
 
-		(*
-			(* TO CHECK: Etienne' version should replace Romain's version *)
-			let rec try_to_merge = function
-				(* If empty list: do nothing *)
-				| [] -> []
-				(* Otherwise: *)
-				| first :: rest -> (
-					let (result, state_merged) = merging_of_states reachability_graph first rest [] in
-						if result then try_to_merge rest else first :: (try_to_merge rest)
-					)
-			in
-			newly_found_new_states := try_to_merge new_newly_found_new_states;*)
-
-
-		(* Merge states ! *)
+		(* Merge states! *)
 		let new_states_after_merging = ref new_newly_found_new_states in
-		if options#merge then (
+		(*** HACK here! For #merge_before, we should ONLY merge here; but, in order not to change the full structure of the post computation, we first merge locally before the pi0-compatibility test, then again here *)
+		if options#merge || options#merge_before then (
 (* 			new_states_after_merging := try_to_merge_states reachability_graph !new_states_after_merging; *)
 			(* New version *)
 			let eaten_states = Graph.merge reachability_graph !new_states_after_merging in
@@ -2088,7 +2189,7 @@ let post_star model init_state =
 
 		(* Update the newly_found_new_states *)
 		newly_found_new_states := !new_states_after_merging;
-		(* Debug *)
+		(* Print some information *)
 		if debug_mode_greater Debug_medium then (
 			let beginning_message = if !newly_found_new_states = [] then "\nFound no new state" else ("\nFound " ^ (string_of_int (List.length !newly_found_new_states)) ^ " new state" ^ (s_of_int (List.length !newly_found_new_states)) ^ "") in
 			print_message Debug_medium (beginning_message ^ " for post^" ^ (string_of_int (!nb_iterations)) ^ ".\n");
@@ -2101,7 +2202,7 @@ let post_star model init_state =
 		);
 		
 		(* Clean up a little *)
-		(** LOOKS LIKE COMPLETELY USELESS !!! it even increases memory x-( *)
+		(*** NOTE: LOOKS LIKE COMPLETELY USELESS !!! it even increases memory x-( ***)
 		Gc.major ();
 		
 		(* Iterate *)

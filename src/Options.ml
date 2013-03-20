@@ -101,6 +101,8 @@ class imitator_options =
 		(* SPECIALIZED OPTIONS*)
 		(* Merging states on the fly *)
 		val mutable merge = ref false
+		(* Merging states on the fly (after pi0-compatibility check) *)
+		val mutable merge_before = ref false
 
 
 		
@@ -122,6 +124,7 @@ class imitator_options =
 		method inclusion = !inclusion
 		method nb_args = nb_args
 		method merge = !merge
+		method merge_before = !merge_before
 		method no_random = !no_random
 		method pi_compatible = !pi_compatible
 		method post_limit = !post_limit
@@ -203,6 +206,7 @@ class imitator_options =
 				("-IMunion", Set union, " Algorithm IMUnion (defined in [AS11]): Returns the union of the constraint on the parameters associated to the last state of each trace. Default: 'false'");
 				("-log-prefix", Set_string files_prefix, " Sets the prefix for output files. Default: [model].");
 				("-merge", Set merge, " Use the merging technique of [AFS12]. Default: 'false' (disable)");
+				("-merge-before", Set merge_before , " Use the merging technique of [AFS12] but merges states before pi0-compatibility test (EXPERIMENTAL). Default: 'false' (disable)");
 				("-mode", String set_mode, " Mode for " ^ program_name ^ ". Use 'reachability' for a parametric reachability analysis (no pi0 needed). Use 'inversemethod' for the inverse method. For the behavioral cartography algorithm, use 'cover' to cover all the points within V0, 'border' to find the border between a small-valued good and a large-valued bad zone (experimental), or 'randomXX' where XX is a number to iterate randomly algorithm (e.g., random5 or random100). Default: 'inversemethod'.");
 				("-no-random", Set no_random, " No random selection of the pi0-incompatible inequality (select the first found). Default: false.");
 (* 				("-PTA2CLP", Unit (fun _ -> pta2clp := true; imitator_mode := Translation), "Translate PTA into a CLP program, and exit without performing any analysis. Work in progress! Defaut : 'false'"); *)

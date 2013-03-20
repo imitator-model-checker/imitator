@@ -254,10 +254,15 @@ if options#forcePi0 then
 
 (* OPTIONS *)
 
-if options#merge then
-	print_message Debug_standard ("Merging technique of [AFS12] enabled.")
-else
+if options#merge then (
+	print_message Debug_standard ("Merging technique of [AFS12] enabled.");
+) else
 	print_message Debug_medium ("Merging technique of [AFS12] disabled (default).")
+;
+if options#merge_before then
+	print_message Debug_standard ("Variant of the merging technique of [AFS12] enabled. States will be merged before pi0-compatibility test.")
+else
+	print_message Debug_medium ("Variant of the merging technique of [AFS12] enabled.")
 ;
 
 (*if options#dynamic then

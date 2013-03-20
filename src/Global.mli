@@ -8,7 +8,7 @@
  * Author:        Etienne Andre
  * 
  * Created:       2009/09/08
- * Last modified: 2013/03/05
+ * Last modified: 2013/03/20
  *
  ****************************************************************)
 
@@ -155,6 +155,9 @@ val elements_existing_several_times : 'a list -> 'a list
 
 (** Remove the first occurence of element e in list l; return the list unchanged if not found *)
 val list_remove_first_occurence : 'a -> 'a list -> 'a list
+
+(** Remove the ith element of a list *)
+val list_delete_at : int -> 'a list -> 'a list
 
 
 (****************************************************************)

@@ -28,6 +28,7 @@ class imitator_options :
 		val mutable inclusion : bool ref
 		val mutable nb_args : int
 		val mutable merge : bool ref
+		val mutable merge_before : bool ref
 		val mutable no_random : bool ref
 		val mutable pi0file : string ref
 		val mutable pi_compatible : bool ref
@@ -66,6 +67,7 @@ class imitator_options :
 		method inclusion : bool
 		method nb_args : int
 		method merge : bool
+		method merge_before : bool
 		method no_random : bool
 		method pi0file : string
 		method pi_compatible : bool

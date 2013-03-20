@@ -8,7 +8,7 @@
  * Author:        Etienne Andre
  * 
  * Created:       2009/09/08
- * Last modified: 2013/03/19
+ * Last modified: 2013/03/20
  *
  ****************************************************************)
  
@@ -324,6 +324,19 @@ let rec list_remove_first_occurence e = function
 	| [] -> []
 	| first :: rest -> if e = first then rest
 		else first :: (list_remove_first_occurence e rest)
+
+
+(** Remove the ith element of a list *)
+let list_delete_at i al =
+	(* First check the arguments *)
+	if i < 0 then raise (Invalid_argument "list_delete_at");
+	if i >= List.length al  then raise (Failure "list_delete_at");
+	let rec del i = function
+		| [] -> []
+		| h::t when i = 0 -> t
+		| h::t -> h :: del (i - 1) t
+	in
+	del i al
 
 
 (****************************************************************)

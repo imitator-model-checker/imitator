@@ -709,7 +709,7 @@ let merge graph new_states =
 	let nb_eaten = List.length eaten in
 	let nb_orig = List.length new_states in
 	if nb_eaten > 0 then
-		print_message Debug_low ("" ^ (string_of_int nb_eaten) ^ " state" ^ (s_of_int nb_eaten) ^ " merged within " ^ (string_of_int nb_orig) ^ " state" ^ (s_of_int nb_orig) ^ ".");
+		print_message Debug_standard ("  " ^ (string_of_int nb_eaten) ^ " state" ^ (s_of_int nb_eaten) ^ " merged within " ^ (string_of_int nb_orig) ^ " state" ^ (s_of_int nb_orig) ^ ".");
 	
 	(* return eaten states *)
 	(*list_diff new_states*) eaten
