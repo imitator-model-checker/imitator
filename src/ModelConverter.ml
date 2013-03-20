@@ -2,7 +2,7 @@
  *
  *                       IMITATOR
  * 
- * Convert a parsing structure into an abstract program
+ * Convert a parsing structure into an abstract model
  *
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Universite Paris 13, Sorbonne Paris Cite, LIPN (France)
@@ -10,7 +10,7 @@
  * Author:        Etienne Andre
  * 
  * Created:       2009/09/09
- * Last modified: 2013/03/06
+ * Last modified: 2013/03/20
  *
  ****************************************************************)
 
@@ -18,7 +18,7 @@
 (****************************************************************)
 (** OPTIMISATIONS A FAIRE POUR LA CONVERSION *)
 (* TODO
-- eviter deux parcours des listes de parametres, horloges, etc., dans ProgramConverter.ml
+- eviter deux parcours des listes de parametres, horloges, etc., dans ModelConverter.ml
 *)
 (****************************************************************)
 
@@ -362,7 +362,7 @@ let all_locations_different =
 let check_linear_term variable_names constants = function
 	| Constant _ -> true
 	| Variable (_, variable_name) -> if not (List.mem variable_name variable_names) && not (Hashtbl.mem constants variable_name) then(
-		print_error ("The variable '" ^ variable_name ^ "' used in the program was not declared."); false
+		print_error ("The variable '" ^ variable_name ^ "' used in the model was not declared."); false
 		) else true
 
 (*--------------------------------------------------*)
@@ -953,7 +953,7 @@ let check_and_convert_property index_of_variables type_of_variables variable_nam
 
 
 (*--------------------------------------------------*)
-(* Check the pi0 w.r.t. the program parameters *)
+(* Check the pi0 w.r.t. the model parameters *)
 (*--------------------------------------------------*)
 let check_pi0 pi0 parameters_names =
 	(* Compute the list of variable names *)
@@ -997,7 +997,7 @@ let check_pi0 pi0 parameters_names =
 
 
 (*--------------------------------------------------*)
-(* Check the pi0 cube w.r.t. the program parameters *)
+(* Check the pi0 cube w.r.t. the model parameters *)
 (*--------------------------------------------------*)
 let check_v0 v0 parameters_names =
 	(* Compute the list of variable names *)
@@ -1078,7 +1078,7 @@ let make_constants constants =
 
 
 (****************************************************************)
-(** PROGRAM CONVERSION *)
+(** MODEL CONVERSION *)
 (****************************************************************)
 
 (*--------------------------------------------------*)
@@ -1180,7 +1180,7 @@ let make_automata index_of_variables constants index_of_automata index_of_locati
 	let invariants = Array.make nb_automata (Array.make 0 (LinearConstraint.false_constraint ())) in
 	(* Create an empty array for the invariants *)
 	let stopwatches_array = Array.make nb_automata (Array.make 0 []) in
-	(* Does the program has any stopwatch? *)
+	(* Does the model has any stopwatch? *)
 	let has_stopwatches = ref false in
 	(* Maintain the index of no_sync *)
 	let no_sync_index = ref (Array.length labels) in
@@ -1262,7 +1262,7 @@ let make_automata index_of_variables constants index_of_automata index_of_locati
 			(* Update the array of invariants *)
 			invariants.(automaton_index).(location_index) <- linear_constraint_of_convex_predicate index_of_variables constants invariant;
 			
-			(* Does the program has stopwatches? *)
+			(* Does the model has stopwatches? *)
 			if stopwatches != [] then has_stopwatches := true;
 			(* Convert the stopwatches names into variables *)
 			let list_of_stopwatch_names = list_only_once stopwatches in
@@ -1517,9 +1517,9 @@ let get_clocks_in_updates : clock_updates -> Automaton.clock_index list = functi
 
 
 (*--------------------------------------------------*)
-(* Convert the parsing structure into an abstract program *)
+(* Convert the parsing structure into an abstract model *)
 (*--------------------------------------------------*)
-let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_automata, parsed_init_definition, parsed_property_definition, parsed_carto_definition) parsed_pi0 parsed_v0 options =
+let abstract_model_of_parsing_structure (parsed_variable_declarations, parsed_automata, parsed_init_definition, parsed_property_definition, parsed_carto_definition) parsed_pi0 parsed_v0 options =
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Debug functions *) 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -1985,7 +1985,7 @@ let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_
 	(* Actions *)
 	let action_names = fun action_index ->
 		try (array_of_action_names.(action_index))
-		with _ -> raise (InternalError ("Action index " ^ (string_of_int action_index) ^ " does not exist in the program."))
+		with _ -> raise (InternalError ("Action index " ^ (string_of_int action_index) ^ " does not exist in the model."))
 	in
 	
 	
@@ -2183,7 +2183,7 @@ let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_
 	transitions = transitions;
 	(* The list of clocks stopped for each automaton and each location *)
 	stopwatches = stopwatches;
-	(* Is there any stopwatch in the program? *)
+	(* Is there any stopwatch in the model? *)
 	has_stopwatches = has_stopwatches;
 
 	(* Init : the initial state *)
@@ -2192,7 +2192,7 @@ let abstract_program_of_parsing_structure (parsed_variable_declarations, parsed_
 	
 	(* Property defined by the user *)
 	user_property = property;
-	(* Property defined by the program *)
+	(* Property defined by the model *)
 	correctness_condition = correctness_condition;
 	(* Optional polyhedra *)
 	carto = carto_linear_constraints , (p1_min , p1_max) , (p2_min , p2_max);

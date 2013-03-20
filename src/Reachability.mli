@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre, Ulrich Kuehne, Romain Soulat
  * Created:       2010/07/22
- * Last modified: 2013/01/28
+ * Last modified: 2013/03/20
  *
  **************************************************)
 
@@ -16,19 +16,19 @@ open Graph
 open LinearConstraint
 
 
-val create_initial_state : abstract_program -> state
+val create_initial_state : abstract_model -> state
 
-(* val post : abstract_program -> pi0 -> reachability_graph -> state_index -> state_index list *)
+(* val post : abstract_model -> pi0 -> reachability_graph -> state_index -> state_index list *)
 
 (*val post_star :
-	abstract_program -> pi0 -> state ->
+	abstract_model -> pi0 -> state ->
 	(* K0 * reachability_graph * nb_iterations * counter_value *)
 	returned_constraint * Graph.reachability_graph * int * float*)
 
 
 
 (*val branch_and_bound :
-	abstract_program -> pi0 -> state -> unit*)
+	abstract_model -> pi0 -> state -> unit*)
 
 val print_stats: unit -> unit
 
@@ -38,17 +38,17 @@ val print_stats: unit -> unit
 (************************************************************)
 (* Create data structures for detecting useless clocks (to be called once per model) *)
 (** WARNING: should maybe be somewhere else? *)
-val prepare_clocks_elimination : abstract_program -> unit
+val prepare_clocks_elimination : abstract_model -> unit
 
 
 (************************************************************)
 (* Full reachability analysis *)
 (************************************************************)
-val full_reachability : abstract_program -> state -> unit
+val full_reachability : abstract_model -> state -> unit
 
 
 (************************************************************)
 (* Main inverse method function *)
 (************************************************************)
-val inverse_method_gen : abstract_program -> state -> returned_constraint * Graph.reachability_graph * tile_nature * bool * int * float
-val inverse_method : abstract_program -> state -> unit
+val inverse_method_gen : abstract_model -> state -> returned_constraint * Graph.reachability_graph * tile_nature * bool * int * float
+val inverse_method : abstract_model -> state -> unit

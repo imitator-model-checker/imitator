@@ -32,5 +32,5 @@ exception InvalidPi0
 (****************************************************************)
 (** Functions *)
 (****************************************************************)
-(* Convert the parsing structure into an abstract program *)
-val abstract_program_of_parsing_structure : ParsingStructure.parsing_structure ->  ParsingStructure.pi0 -> ParsingStructure.v0 ->  imitator_options -> (abstract_program * pi0 * v0)
+(* Convert the parsing structure into an abstract model *)
+val abstract_model_of_parsing_structure : ParsingStructure.parsing_structure ->  ParsingStructure.pi0 -> ParsingStructure.v0 ->  imitator_options -> (abstract_model * pi0 * v0)

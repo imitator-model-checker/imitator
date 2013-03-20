@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2012/06/15
- * Last modified: 2012/06/15
+ * Last modified: 2013/03/20
  *
  ****************************************************************)
 
@@ -15,7 +15,7 @@ open Global
 open AbstractModel
 
 (* internal references to global data structures *)
-let program_ref = ref None
+let model_ref = ref None
 let pi0_ref = ref None
 let v0_ref = ref None
 let options_ref = ref None
@@ -23,14 +23,14 @@ let options_ref = ref None
 let abstract_reachability_graph_ref = ref None*)
 
 
-let get_program _ =
-	match !program_ref with
+let get_model _ =
+	match !model_ref with
 		| None ->
-			raise (InternalError "Input program not available");
-		| Some program -> program
+			raise (InternalError "Input model not available");
+		| Some model -> model
 
-let set_program program =
-	program_ref := Some program
+let set_model model =
+	model_ref := Some model
 
 let get_pi0 _ =
 	match !pi0_ref with

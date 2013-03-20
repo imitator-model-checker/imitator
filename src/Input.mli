@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2012/06/15
- * Last modified: 2012/06/15
+ * Last modified: 2013/03/20
  *
  ****************************************************************)
 
@@ -14,8 +14,8 @@ open AbstractModel
 (* open Graph *)
 open Options
 
-val get_program: unit -> abstract_program
-val set_program: abstract_program -> unit
+val get_model: unit -> abstract_model
+val set_model: abstract_model -> unit
 
 val get_pi0: unit -> pi0
 val set_pi0: pi0 -> unit

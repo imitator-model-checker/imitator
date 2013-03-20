@@ -2,8 +2,6 @@
  *
  *                       IMITATOR
  * 
- * Convert a parsing structure into an abstract program
- *
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Universite Paris 13, Sorbonne Paris Cite, LIPN (France)
  * 
@@ -356,7 +354,7 @@ if options#timed_mode then (
 (* Parsing *)
 (**************************************************)
 
-(* Parsing the main program *)
+(* Parsing the main model *)
 print_message Debug_low ("Considering file " ^ options#file ^ ".");
 let parsing_structure = 
 	(* Branching between 2 input syntaxes *)
@@ -395,26 +393,26 @@ print_message Debug_standard ("\nParsing completed " ^ (after_seconds ()) ^ ".")
 
 
 (**************************************************)
-(* Conversion to an abstract program *)
+(* Conversion to an abstract model *)
 (**************************************************)
 
-let program, pi0, v0 = 
+let model, pi0, v0 = 
 try (
-	ProgramConverter.abstract_program_of_parsing_structure
+	ModelConverter.abstract_model_of_parsing_structure
 		parsing_structure pi0_parsed v0_parsed options
 ) with 
-	| InvalidModel -> (print_error ("The input program contains errors. Please check it again."); abort_program (); exit 1)
-	| ProgramConverter.InvalidPi0 -> (print_error ("The input pi_0 file contains errors. Please check it again."); abort_program (); exit 1)
+	| InvalidModel -> (print_error ("The input model contains errors. Please check it again."); abort_program (); exit 1)
+	| ModelConverter.InvalidPi0 -> (print_error ("The input pi_0 file contains errors. Please check it again."); abort_program (); exit 1)
 	| InternalError e -> (print_error ("Internal error: " ^ e ^ "\nPlease kindly insult the developers."); abort_program (); exit 1)
 	in
 
 let gc_stat = Gc.stat () in
 let nb_words = gc_stat.minor_words +. gc_stat.major_words -. gc_stat.promoted_words in
 let nb_ko = nb_words *. 4.0 /. 1024.0 in
-print_message Debug_standard ("Memory for abstract program: " ^ (string_of_float nb_ko) ^ " KB (i.e., " ^ (string_of_float nb_words) ^ " words)");
+print_message Debug_standard ("Memory for abstract model: " ^ (string_of_float nb_ko) ^ " KB (i.e., " ^ (string_of_float nb_words) ^ " words)");
 
 (* With or without stopwatches *)
-if program.has_stopwatches then
+if model.has_stopwatches then
 	print_message Debug_standard ("The model contains stopwatches.")
 else
 	print_message Debug_low ("The model is purely timed (no stopwatches).");
@@ -424,17 +422,17 @@ print_message Debug_standard "";
 
 
 (**************************************************)
-(* Set program and pi0 *)
+(* Set model and pi0 *)
 (**************************************************)
-Input.set_program program;
+Input.set_model model;
 Input.set_pi0 pi0;
 
 
 (**************************************************)
-(* Debug print: program *)
+(* Debug print: model *)
 (**************************************************)
 if debug_mode_greater Debug_total then
-	print_message Debug_total ("\nProgram:\n" ^ (ModelPrinter.string_of_program program) ^ "\n");
+	print_message Debug_total ("\nModel:\n" ^ (ModelPrinter.string_of_model model) ^ "\n");
 
 
 (**************************************************)
@@ -443,16 +441,16 @@ if debug_mode_greater Debug_total then
 
 (* Translation to CLP (work in progress) *)
 if options#pta2clp then(
-	print_message Debug_standard ("Translating program to CLP.");
+	print_message Debug_standard ("Translating model to CLP.");
 	print_warning ("Work in progress!!!!");
-	print_message Debug_standard ("\nProgram in CLP:\n" ^ (PTA2CLP.string_of_program program) ^ "\n");
+	print_message Debug_standard ("\nmodel in CLP:\n" ^ (PTA2CLP.string_of_model model) ^ "\n");
 	terminate_program()
 );
 
 (* Translation to GrML (experimental) *)
 if options#pta2gml then(
-	print_message Debug_standard ("Translating program to GrML.");
-	let translated_model = PTA2GML.string_of_program program in
+	print_message Debug_standard ("Translating model to GrML.");
+	let translated_model = PTA2GML.string_of_model model in
 	let gml_file = options#files_prefix ^ ".grml" in
 	print_message Debug_total ("\n" ^ translated_model ^ "\n");
 	(* Write *)
@@ -462,10 +460,10 @@ if options#pta2gml then(
 
 (* Translation to JPG *)
 if options#pta2jpg then(
-	print_message Debug_standard ("Translating program to a graphics.");
-	let translated_model = PTA2JPG.string_of_program program in
+	print_message Debug_standard ("Translating model to a graphics.");
+	let translated_model = PTA2JPG.string_of_model model in
 	print_message Debug_high ("\n" ^ translated_model ^ "\n");
-	Graphics.dot program options#files_prefix translated_model;
+	Graphics.dot model options#files_prefix translated_model;
 	terminate_program()
 );
 
@@ -473,13 +471,13 @@ if options#pta2jpg then(
 if options#cartonly then(
 	print_message Debug_standard ("Direct output of a cartography (no analysis will be run).");
 	(* Get the parameters *)
-	let constraints , (p1_min , p1_max) , (p2_min , p2_max) = program.carto in
+	let constraints , (p1_min , p1_max) , (p2_min , p2_max) = model.carto in
 	(* Transform the constraint for cartography *)
 	let constraints = List.map (fun (linear_constraint , tile_nature) ->
 		Convex_constraint (linear_constraint , tile_nature)
 	) constraints in
 	(* Call the cartography *)
-	Graphics.cartography program [| (p1_min , p1_max); (p2_min , p2_max) |] constraints options#files_prefix;
+	Graphics.cartography model [| (p1_min , p1_max); (p2_min , p2_max) |] constraints options#files_prefix;
 	(* The end *)
 	terminate_program()
 );
@@ -490,7 +488,7 @@ if options#cartonly then(
 (**************************************************)
 (* Preliminary checks *)
 (**************************************************)
-if (options#imitator_mode = Border_cartography && program.correctness_condition = None) then(
+if (options#imitator_mode = Border_cartography && model.correctness_condition = None) then(
 	print_error ("In border cartography mode, a correctness property must be defined.");
 	abort_program();
 );
@@ -502,7 +500,7 @@ if (options#imitator_mode = Border_cartography && program.correctness_condition 
 (**************************************************)
 (* Need to be called before initial state is created! *)
 if options#dynamic_clock_elimination then (
-	Reachability.prepare_clocks_elimination program
+	Reachability.prepare_clocks_elimination model
 );
 
 
@@ -511,22 +509,22 @@ if options#dynamic_clock_elimination then (
 (**************************************************)
 
 (* Print the initial state *)
-print_message Debug_medium ("\nInitial state:\n" ^ (ModelPrinter.string_of_state program (program.initial_location, program.initial_constraint)) ^ "\n");
+print_message Debug_medium ("\nInitial state:\n" ^ (ModelPrinter.string_of_state model (model.initial_location, model.initial_constraint)) ^ "\n");
 
 (* Check the satisfiability *)
-if not (LinearConstraint.is_satisfiable program.initial_constraint) then (
-	print_warning "The initial constraint of the program is not satisfiable.";
+if not (LinearConstraint.is_satisfiable model.initial_constraint) then (
+	print_warning "The initial constraint of the model is not satisfiable.";
 	terminate_program();
 )else(
-	print_message Debug_total ("\nThe initial constraint of the program is satisfiable.");
+	print_message Debug_total ("\nThe initial constraint of the model is satisfiable.");
 );
 
 (* Get the initial state after time elapsing *)
-let init_state_after_time_elapsing = Reachability.create_initial_state program in
+let init_state_after_time_elapsing = Reachability.create_initial_state model in
 let _, initial_constraint_after_time_elapsing = init_state_after_time_elapsing in
 
 (*(* COMPARISON *)
-let init_state_after_time_elapsing2 = Reachability.create_initial_state2 program in
+let init_state_after_time_elapsing2 = Reachability.create_initial_state2 model in
 let _, initial_constraint_after_time_elapsing2 = init_state_after_time_elapsing2 in
 
 if(LinearConstraint.is_equal initial_constraint_after_time_elapsing initial_constraint_after_time_elapsing2) then(
@@ -534,21 +532,21 @@ if(LinearConstraint.is_equal initial_constraint_after_time_elapsing initial_cons
 	terminate_program ();
 )else (
 	print_error ("\n INITIAL STATES DIFFERENT.");
-	print_message Debug_standard ("\n 1) \n" ^ (LinearConstraint.string_of_linear_constraint program.variable_names initial_constraint_after_time_elapsing));
-	print_message Debug_standard ("\n 2) \n" ^ (LinearConstraint.string_of_linear_constraint program.variable_names initial_constraint_after_time_elapsing2));
+	print_message Debug_standard ("\n 1) \n" ^ (LinearConstraint.string_of_linear_constraint model.variable_names initial_constraint_after_time_elapsing));
+	print_message Debug_standard ("\n 2) \n" ^ (LinearConstraint.string_of_linear_constraint model.variable_names initial_constraint_after_time_elapsing2));
 	abort_program ();
 );*)
 
 
 (* Check the satisfiability *)
 if not (LinearConstraint.is_satisfiable initial_constraint_after_time_elapsing) then (
-	print_warning "The initial constraint of the program after time elapsing is not satisfiable.";
+	print_warning "The initial constraint of the model after time elapsing is not satisfiable.";
 	terminate_program();
 )else(
-	print_message Debug_total ("\nThe initial constraint of the program after time elapsing is satisfiable.");
+	print_message Debug_total ("\nThe initial constraint of the model after time elapsing is satisfiable.");
 );
 (* Print the initial state after time elapsing *)
-print_message Debug_medium ("\nInitial state after time-elapsing:\n" ^ (ModelPrinter.string_of_state program init_state_after_time_elapsing) ^ "\n");
+print_message Debug_medium ("\nInitial state after time-elapsing:\n" ^ (ModelPrinter.string_of_state model init_state_after_time_elapsing) ^ "\n");
 
 
 
@@ -556,27 +554,27 @@ print_message Debug_medium ("\nInitial state after time-elapsing:\n" ^ (ModelPri
 
 
 (*(* TESTS *) 
-print_message Debug_standard ("\nInitial constraint:\n" ^ (LinearConstraint.string_of_linear_constraint program.variable_names initial_constraint_after_time_elapsing) ^ "\n");
+print_message Debug_standard ("\nInitial constraint:\n" ^ (LinearConstraint.string_of_linear_constraint model.variable_names initial_constraint_after_time_elapsing) ^ "\n");
 
 (*let n = ref 1 in
 
 List.iter (fun parameter_id ->
-	LinearConstraint.time_elapse_assign [parameter_id] (list_diff program.parameters [parameter_id]) initial_constraint_after_time_elapsing;
+	LinearConstraint.time_elapse_assign [parameter_id] (list_diff model.parameters [parameter_id]) initial_constraint_after_time_elapsing;
 	
-	print_message Debug_standard ("\nAfter time elapsing #" ^ (string_of_int !n) ^ " on parameter '" ^ (program.variable_names parameter_id) ^ "' :\n" ^ (LinearConstraint.string_of_linear_constraint program.variable_names initial_constraint_after_time_elapsing) ^ "\n");
+	print_message Debug_standard ("\nAfter time elapsing #" ^ (string_of_int !n) ^ " on parameter '" ^ (model.variable_names parameter_id) ^ "' :\n" ^ (LinearConstraint.string_of_linear_constraint model.variable_names initial_constraint_after_time_elapsing) ^ "\n");
 	
-	Graphics.cartography program v0 [Convex_constraint initial_constraint_after_time_elapsing] (options#file ^ "-carto" ^ (string_of_int !n));
+	Graphics.cartography model v0 [Convex_constraint initial_constraint_after_time_elapsing] (options#file ^ "-carto" ^ (string_of_int !n));
 
 	n := !n + 1;
 
-) program.parameters;
-(* Graphics.cartography program v0 [Convex_constraint initial_constraint_after_time_elapsing] (options#file ^ "-carto"); *)
+) model.parameters;
+(* Graphics.cartography model v0 [Convex_constraint initial_constraint_after_time_elapsing] (options#file ^ "-carto"); *)
 terminate_program();*)
 
 
-LinearConstraint.grow_to_zero_assign program.parameters program.clocks_and_discrete initial_constraint_after_time_elapsing;
-print_message Debug_standard ("\nFinal constraint:\n" ^ (LinearConstraint.string_of_linear_constraint program.variable_names initial_constraint_after_time_elapsing) ^ "\n");
-Graphics.cartography program v0 [Convex_constraint initial_constraint_after_time_elapsing] (options#file ^ "-cartoz");
+LinearConstraint.grow_to_zero_assign model.parameters model.clocks_and_discrete initial_constraint_after_time_elapsing;
+print_message Debug_standard ("\nFinal constraint:\n" ^ (LinearConstraint.string_of_linear_constraint model.variable_names initial_constraint_after_time_elapsing) ^ "\n");
+Graphics.cartography model v0 [Convex_constraint initial_constraint_after_time_elapsing] (options#file ^ "-cartoz");
 terminate_program();*)
 
 
@@ -586,7 +584,7 @@ terminate_program();*)
 (**************************************************)
 
 if options#imitator_mode = Inverse_method && options#branch_and_bound then(
-	Reachability.branch_and_bound program pi0 init_state_after_time_elapsing;
+	Reachability.branch_and_bound model pi0 init_state_after_time_elapsing;
 	terminate_program();
 );*)
 
@@ -604,22 +602,22 @@ try(
 		| Translation -> raise (InternalError "Translation can't be executed; program should have terminated before.");
 
 		| Reachability_analysis ->
-			Reachability.full_reachability program init_state_after_time_elapsing;
+			Reachability.full_reachability model init_state_after_time_elapsing;
 			[]
 		
 		(* Inverse Method *)
 		| Inverse_method ->
-				Reachability.inverse_method program init_state_after_time_elapsing;
+				Reachability.inverse_method model init_state_after_time_elapsing;
 			[]
 
 
 		| Cover_cartography | Border_cartography ->
 		(* Behavioral cartography algorithm with full coverage *)
-			Cartography.cover_behavioral_cartography program v0 init_state_after_time_elapsing
+			Cartography.cover_behavioral_cartography model v0 init_state_after_time_elapsing
 			
 		| Random_cartography nb ->
 		(* Behavioral cartography algorithm with random iterations *)
-			Cartography.random_behavioral_cartography program v0 init_state_after_time_elapsing nb;
+			Cartography.random_behavioral_cartography model v0 init_state_after_time_elapsing nb;
 
 			
 	in
@@ -627,7 +625,7 @@ try(
 	(* Computation of the cartography *)
 	if options#cart then ( 
 			print_message Debug_standard ("Generation of the graphical cartography...\n");
-			Graphics.cartography program v0 zones (options#files_prefix ^ "_cart")
+			Graphics.cartography model v0 zones (options#files_prefix ^ "_cart")
 		) else (
 			print_message Debug_total "Not in cartography mode: no graph for the cartography."
 		)

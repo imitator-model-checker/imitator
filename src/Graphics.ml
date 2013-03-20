@@ -46,13 +46,13 @@ let cartography_extension = "png"
 (* Convert a tile_index into a color for graph (actually an integer from 1 to 5) *)
 (*------------------------------------------------------------*)
 let graph_color_of_int tile_index tile_nature dotted =
-	(* Retrieve program *)
-	let program = Input.get_program() in
+	(* Retrieve model *)
+	let model = Input.get_model() in
 	
 	(* Definition of the color *)
 	let color_index =
 	(* If bad state defined *)
-	if program.correctness_condition <> None then(
+	if model.correctness_condition <> None then(
 		(* Go for a good / bad coloring *)
 		match tile_nature with
 		| Good -> 2 (* green *)
@@ -80,7 +80,7 @@ let make_file_name cartography_name file_index =
 (*------------------------------------------------------------*)
 (* print the cartography which correspond to the list of constraint *)
 (*------------------------------------------------------------*)
-let cartography program v0 returned_constraint_list cartography_name =
+let cartography model v0 returned_constraint_list cartography_name =
 	(* Retrieve the input options *)
 	let options = Input.get_options () in
 	
@@ -131,8 +131,8 @@ let cartography program v0 returned_constraint_list cartography_name =
 		let x_param = List.nth !range_params 0 in
 		let y_param = List.nth !range_params 1 in
 	
-		let x_name = program.variable_names x_param in
-		let y_name = program.variable_names y_param in
+		let x_name = model.variable_names x_param in
+		let y_name = model.variable_names y_param in
 		(* Create a script that will print the cartography *)
 		let script_name = cartography_name ^ ".sh" in
 		let script = open_out script_name in
@@ -259,16 +259,16 @@ let cartography program v0 returned_constraint_list cartography_name =
 			file_index := !file_index + 1;
 
 			(* Print some information *)
-			print_message Debug_low ("Computing points for constraint " ^ (string_of_int !tile_index) ^ " \n " ^ (LinearConstraint.string_of_linear_constraint program.variable_names k) ^ "."); 
+			print_message Debug_low ("Computing points for constraint " ^ (string_of_int !tile_index) ^ " \n " ^ (LinearConstraint.string_of_linear_constraint model.variable_names k) ^ "."); 
 			
 			let file_name = make_file_name cartography_name !file_index in
 			let file_out = open_out file_name in
 			
 (*			(* Remove all non-parameter dimensions (the n highest) *)
-			print_message Debug_standard ("Removing the " ^ (string_of_int (program.nb_discrete + program.nb_clocks)) ^ " highest (clocks and discrete) dimensions in the constraint, to keep only the " ^ (string_of_int (program.nb_parameters)) ^ " lowest."); 
+			print_message Debug_standard ("Removing the " ^ (string_of_int (model.nb_discrete + model.nb_clocks)) ^ " highest (clocks and discrete) dimensions in the constraint, to keep only the " ^ (string_of_int (model.nb_parameters)) ^ " lowest."); 
 			(* Should be done already ?!! *)
-			hide_assign program.clocks_and_discrete k;
-			remove_dimensions (program.nb_discrete + program.nb_clocks) k ;*)
+			hide_assign model.clocks_and_discrete k;
+			remove_dimensions (model.nb_discrete + model.nb_clocks) k ;*)
 			
 			(* find the points satisfying the constraint *)
 			let s = plot_2d x_param y_param k min_abs min_ord max_abs max_ord in
@@ -330,7 +330,7 @@ let cartography program v0 returned_constraint_list cartography_name =
 			"Plot cartography projected on parameters " ^ x_name ^ ", " ^ y_name
 			^ " to file '" ^ final_name ^ "'."); 
 		(* execute the script *)
-		(** TODO: Improve! Should perform an automatic detection of the program! *)
+		(** TODO: Improve! Should perform an automatic detection of the model! *)
 		let execution = Sys.command !script_line in
 		if execution != 0 then
 			(print_error ("Something went wrong in the command. Exit code: " ^ (string_of_int execution) ^ ". Maybe you forgot to install the 'graph' utility."););
@@ -375,7 +375,7 @@ let dot_colors = [
 open Graph
 
 (* Convert a graph to a dot file *)
-let dot_of_graph program reachability_graph ~fancy =
+let dot_of_graph model reachability_graph ~fancy =
 	(* Retrieve the input options *)
 	let options = Input.get_options () in
 	let transitions = get_transitions reachability_graph in
@@ -397,7 +397,7 @@ let dot_of_graph program reachability_graph ~fancy =
 			let pi0 = Input.get_pi0 () in
 			  "\n *"
 			^ "\n * The following pi0 was considered:"
-			^ "\n" ^ (ModelPrinter.string_of_pi0 program pi0)
+			^ "\n" ^ (ModelPrinter.string_of_pi0 model pi0)
 		))
 		^ "\n *"
 		^ "\n * " ^ (string_of_int (nb_states reachability_graph)) ^ " states and "
@@ -409,7 +409,7 @@ let dot_of_graph program reachability_graph ~fancy =
 	in
 	
 	(* Retrieve the states *)
-	let state_indexes = Graph.all_state_indexes program reachability_graph in
+	let state_indexes = Graph.all_state_indexes model reachability_graph in
 	
 	(* Sort the list (for better presentation in the file) *)
 	let state_indexes = List.sort (fun a b -> if a = b then 0 else if a < b then -1 else 1) state_indexes in
@@ -428,13 +428,13 @@ let dot_of_graph program reachability_graph ~fancy =
 			string_states := !string_states
 				(* Add the state *)
 				^ "\n\n  STATE " ^ (string_of_int state_index) ^ ":"
-				^ "\n  " ^ (ModelPrinter.string_of_state program (global_location, linear_constraint))
+				^ "\n  " ^ (ModelPrinter.string_of_state model (global_location, linear_constraint))
 				(* Add the constraint with no clocks (option only) *)
 				^ (if options#with_parametric_log then (
 					(* Eliminate clocks *)
-					let parametric_constraint = LinearConstraint.hide program.clocks linear_constraint in
+					let parametric_constraint = LinearConstraint.hide model.clocks linear_constraint in
 					"\n\n  After clock elimination:"
-					^ "\n  " ^ (LinearConstraint.string_of_linear_constraint program.variable_names parametric_constraint);
+					^ "\n  " ^ (LinearConstraint.string_of_linear_constraint model.variable_names parametric_constraint);
 				) else "");
 			) state_indexes;
 		!string_states)
@@ -449,7 +449,7 @@ let dot_of_graph program reachability_graph ~fancy =
 			let is_nosync action =
 				String.length action >= 7 &&
 				String.sub action 0 7 = "nosync_" in
-			let action = program.action_names action_index in
+			let action = model.action_names action_index in
 			let label = if is_nosync action then (
 				""
 			) else (
@@ -473,7 +473,7 @@ let dot_of_graph program reachability_graph ~fancy =
 			let is_nosync action =
 				String.length action >= 7 &&
 				String.sub action 0 7 = "nosync_" in
-			let action = program.action_names action_index in
+			let action = model.action_names action_index in
 			let label = if is_nosync action then (
 				";"
 			) else (
@@ -514,8 +514,8 @@ let dot_of_graph program reachability_graph ~fancy =
 				(* create record label with location names *)			
 				let loc_names = List.map (fun aut_index -> 
 					let loc_index = Automaton.get_location global_location aut_index in
-					program.location_names aut_index loc_index
-				) program.automata in
+					model.location_names aut_index loc_index
+				) model.automata in
 				let label = string_of_list_of_string_with_sep "|" loc_names in
 				(* Create the command *)
 				string_colors := !string_colors
@@ -542,7 +542,7 @@ let dot_of_graph program reachability_graph ~fancy =
 	header ^ states_description ^ transitions_description
 
 
-let dot program radical dot_source_file =
+let dot model radical dot_source_file =
 	(* Retrieve the input options *)
 	let options = Input.get_options () in
 
@@ -586,15 +586,15 @@ let dot program radical dot_source_file =
 	
 
 (* Create a jpg graph using dot *)
-let generate_graph program reachability_graph radical =
+let generate_graph model reachability_graph radical =
 	(* Retrieve the input options *)
 	let options = Input.get_options () in
 	
 	(* Do not write if no dot AND no log *)
 	if options#with_dot || options#with_log then (
-		let dot_program, states = dot_of_graph program reachability_graph ~fancy:options#fancy in
+		let dot_model, states = dot_of_graph model reachability_graph ~fancy:options#fancy in
 		
-		dot program radical dot_program;
+		dot model radical dot_model;
 		
 		(*(* Get the file names *)
 		let dot_file_name = (radical ^ "." ^ dot_file_extension) in
@@ -614,7 +614,7 @@ let generate_graph program reachability_graph radical =
 			)else(
 				print_message Debug_medium ("Writing to dot file...");
 			);
-			write_to_file dot_file_name dot_program;
+			write_to_file dot_file_name dot_model;
 
 			(* Generate gif file using dot *)
 			print_message Debug_standard "Generating graphical output...";

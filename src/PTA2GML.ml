@@ -294,7 +294,7 @@ let string_of_automata program declarations_string =
 
 
 (* Convert an automaton into a string *)
-let string_of_program program =
+let string_of_model program =
 	(* Compute the declarations *)
 	let declarations_string = string_of_declarations program in
 		string_of_automata program declarations_string

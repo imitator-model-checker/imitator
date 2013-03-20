@@ -18,8 +18,8 @@ open Graph
 (** Program *)
 (**************************************************)
 (* Convert a pi0 into a string *)
-val string_of_pi0 : abstract_program -> pi0 -> string
+val string_of_pi0 : abstract_model -> pi0 -> string
 
 (* Convert a program into a string *)
-val string_of_program : abstract_program -> string
+val string_of_model : abstract_model -> string
 

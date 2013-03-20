@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2012/08/24
- * Last modified: 2012/08/24
+ * Last modified: 2013/03/20
  *
  ************************************************************)
 
@@ -268,7 +268,7 @@ let string_of_automata program =
 	^ "\n}"
 
 (* Convert an automaton into a string *)
-let string_of_program program =
+let string_of_model program =
 	string_of_header program
 (* 	^  "\n" ^ string_of_declarations program *)
 	^  "\n" ^ string_of_automata program

@@ -23,5 +23,5 @@ open AbstractModel
 (**************************************************)
 
 (* Convert a program into a string *)
-val string_of_program : abstract_program -> string
+val string_of_model : abstract_model -> string
 

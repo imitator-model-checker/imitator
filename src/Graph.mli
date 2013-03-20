@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2009/12/08
- * Last modified: 2012/06/21
+ * Last modified: 2013/03/20
  *
  ****************************************************************)
 
@@ -78,13 +78,13 @@ val get_state : reachability_graph -> state_index -> state
 val get_transitions : reachability_graph -> ((state_index * action_index), state_index) Hashtbl.t
 
 (** Return the list of all state indexes *)
-val all_state_indexes : abstract_program -> reachability_graph -> state_index list
+val all_state_indexes : abstract_model -> reachability_graph -> state_index list
 
 (** Return the list of all constraints on the parameters associated to the states of a graph *)
-val all_p_constraints : abstract_program -> reachability_graph -> LinearConstraint.linear_constraint list
+val all_p_constraints : abstract_model -> reachability_graph -> LinearConstraint.linear_constraint list
 
 (** Returns the intersection of all parameter constraints, thereby destroying all constraints *)
-(* val compute_k0_destructive : abstract_program -> reachability_graph -> LinearConstraint.linear_constraint *)
+(* val compute_k0_destructive : abstract_model -> reachability_graph -> LinearConstraint.linear_constraint *)
 
 (** Check if two states are equal *)
 val states_equal: state -> state -> bool
@@ -99,10 +99,10 @@ val exists_state: (state -> bool) -> reachability_graph -> bool
 val forall_state: (state -> bool) -> reachability_graph -> bool*)
 
 (** Find all "last" states on finite or infinite runs *)
-val last_states: abstract_program -> reachability_graph -> state_index list 
+val last_states: abstract_model -> reachability_graph -> state_index list 
 
 (** Check if bad states are reached *)
-(* val is_bad: abstract_program -> reachability_graph -> bool *)
+(* val is_bad: abstract_model -> reachability_graph -> bool *)
 
 
 (****************************************************************)
@@ -110,10 +110,10 @@ val last_states: abstract_program -> reachability_graph -> state_index list
 (****************************************************************)
 
 (** Add a state to a graph: return (state_index, added), where state_index is the index of the state, and 'added' is false if the state was already in the graph, true otherwise *)
-val add_state : AbstractModel.abstract_program -> reachability_graph -> state -> (state_index * bool)
+val add_state : AbstractModel.abstract_model -> reachability_graph -> state -> (state_index * bool)
 
 (**Add a state to a graph dynamically**)
-(* val add_state_dyn : AbstractModel.abstract_program -> reachability_graph -> state -> LinearConstraint.linear_constraint -> (state_index * bool) *)
+(* val add_state_dyn : AbstractModel.abstract_model -> reachability_graph -> state -> LinearConstraint.linear_constraint -> (state_index * bool) *)
 
 (** Add a transition to the graph *)
 val add_transition : reachability_graph -> (state_index * action_index * state_index) -> unit

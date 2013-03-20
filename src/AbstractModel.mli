@@ -173,7 +173,7 @@ type tile_nature =
 (****************************************************************)
 (** The abstract model *)
 (****************************************************************)
-type abstract_program = {
+type abstract_model = {
 	(* Cardinality *)
 	nb_automata : int;
 	nb_actions : int;
@@ -234,7 +234,7 @@ type abstract_program = {
 	transitions : automaton_index -> location_index -> action_index -> (transition list);
 	(* The list of clocks stopped for each automaton and each location *)
 	stopwatches : automaton_index -> location_index -> clock_index list;
-	(* Is there any stopwatch in the program? *)
+	(* Is there any stopwatch in the model? *)
 	has_stopwatches : bool;
 
 	(* Init : the initial state *)
@@ -244,7 +244,7 @@ type abstract_program = {
 
 	(* Property defined by the user *)
 	user_property : property_definition;
-	(* Property defined by the program *)
+	(* Property defined by the model *)
 	correctness_condition : correctness_condition;
 	(* Set of polyhedra (only used for direct cartography without running the model) *)
 	carto : (linear_constraint * tile_nature) list * (NumConst.t * NumConst.t) * (NumConst.t * NumConst.t);

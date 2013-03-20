@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2009/12/02
- * Last modified: 2013/01/23
+ * Last modified: 2013/03/20
  *
  ****************************************************************)
 
@@ -23,7 +23,7 @@ val string_of_var_type : var_type -> string
 (** State *)
 (**************************************************)
 (* Convert a state into a string *)
-val string_of_state : abstract_program -> (Automaton.global_location * LinearConstraint.linear_constraint) -> string
+val string_of_state : abstract_model -> (Automaton.global_location * LinearConstraint.linear_constraint) -> string
 
 (**************************************************)
 (** Result *)
@@ -33,14 +33,14 @@ val string_of_returned_constraint : (int -> string) -> returned_constraint -> st
 
 
 (**************************************************)
-(** Program *)
+(** model *)
 (**************************************************)
 (* Convert a pi0 into a string *)
-val string_of_pi0 : abstract_program -> pi0 -> string
+val string_of_pi0 : abstract_model -> pi0 -> string
 
 (* Convert a v0 into a string *)
-val string_of_v0 : abstract_program -> v0 -> string
+val string_of_v0 : abstract_model -> v0 -> string
 
-(* Convert a program into a string *)
-val string_of_program : abstract_program -> string
+(* Convert a model into a string *)
+val string_of_model : abstract_model -> string
 
