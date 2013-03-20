@@ -338,6 +338,18 @@ let list_delete_at i al =
 	in
 	del i al
 
+(** Replace the ith element of a list *)
+let list_set_nth i elem l =
+	(* First check the arguments *)
+	if i < 0 then raise (Invalid_argument "list_set_nth");
+	if i >= List.length l  then raise (Failure "list_set_nth");
+	let rec set i elem = function
+		| [] -> []
+		| h::t when i = 0 -> elem::t
+		| h::t -> h :: set (i - 1) elem t
+	in
+	set i elem l
+
 
 (****************************************************************)
 (** Useful functions on arrays *)

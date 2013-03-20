@@ -497,7 +497,7 @@ let nb_unsat2 = ref 0
 (*--------------------------------------------------*)
 let try_to_merge location1 constraint1 location2 constraint2 =
 	(* First check equality of locations *)
-	if location1 = location2 then true
+	if location1 <> location2 then false
 	else(
 		(* Check convex union of constraints *)
 		LinearConstraint.hull_assign_if_exact constraint1 constraint2
@@ -508,11 +508,11 @@ let try_to_merge location1 constraint1 location2 constraint2 =
 (* Return the updated list *)
 (*--------------------------------------------------*)
 (*** WARNING: horrible imperative style (and probably not efficient and not tail-recursive at all!) programming in this function *)
-let merge action_and_state_list =
+let merge model action_and_state_list =
 
 	(* Print some information *)
 	print_message Debug_low ("\nStarting merging algorithm (before pi0-compatibility test) on a list of " ^ (string_of_int (List.length (!action_and_state_list))) ^ " state" ^ (s_of_int (List.length (!action_and_state_list))) ^ "");
-
+	
 	(* Number of eated states (for printing purpose) *)
 	let nb_eated = ref 0 in
 
@@ -524,7 +524,7 @@ let merge action_and_state_list =
 		print_message Debug_high ("\n eater = " ^ (string_of_int !eater_index));
 
 		(* Retrieve the eater *)
-		let _, eater_location, eater_constraint = List.nth !action_and_state_list !eater_index in
+		let eater_actions, eater_location, eater_constraint = List.nth !action_and_state_list !eater_index in
 		
 		(* Inner loop: iterate on potential eated *)
 		let eated_index = ref 0 in
@@ -535,14 +535,32 @@ let merge action_and_state_list =
 			(* Don't eat yourself *)
 			if !eater_index <> !eated_index then(
 				(* Retrieve the potential eated *)
-				let _, eated_location, eated_constraint = List.nth !action_and_state_list !eated_index in
+				let eated_actions, eated_location, eated_constraint = List.nth !action_and_state_list !eated_index in
 				
 				(* If mergeable *)
+
+				(* Print some information *)
+				if debug_mode_greater Debug_total then (
+					print_message Debug_total ("\nConstraint of the eated before merging attempt...\n" ^ (LinearConstraint.string_of_linear_constraint model.variable_names eated_constraint));
+					print_message Debug_total ("\nConstraint of the eater before merging attempt...\n" ^ (LinearConstraint.string_of_linear_constraint model.variable_names eater_constraint));
+				);
+
+				
 				if try_to_merge eater_location eater_constraint eated_location eated_constraint then(
+					if debug_mode_greater Debug_total then (
+						(* Print some information *)
+						print_message Debug_total ("\nConstraint of the eater after merging...\n" ^ (LinearConstraint.string_of_linear_constraint model.variable_names eater_constraint));
+					);
+						
 					(* Due to side effects in try_to_merge, the merging is already performed at this point! *)
 					
+					(* Set the actions of the eated to the eater *)
+					(*** TODO: first check that some actions in the eated do not appear in the eater *)
+					action_and_state_list := list_set_nth !eater_index (list_union eater_actions eated_actions, eater_location, eater_constraint) !action_and_state_list;
+
 					(* Now remove the eated *)
 					action_and_state_list := list_delete_at !eated_index !action_and_state_list;
+					
 					
 					(* If eated_index < eater_index, then decrement the eater index since the list is now shorter on the left side *)
 					if !eated_index < !eater_index then(
@@ -1807,7 +1825,7 @@ let post_from_one_state model reachability_graph orig_state_index =
 					if options#imitator_mode <> Reachability_analysis && options#merge_before then(
 					
 						(* Only add to the local list of new states *)
-						new_action_and_state_list := (action_index, location, final_constraint) :: !new_action_and_state_list;
+						new_action_and_state_list := ([action_index], location, final_constraint) :: !new_action_and_state_list;
 					
 					(* EXPERIMENTAL BRANCHING: END CASE MERGE AFTER *)
 					)else(
@@ -1842,11 +1860,15 @@ let post_from_one_state model reachability_graph orig_state_index =
 	if options#imitator_mode <> Reachability_analysis && options#merge_before then(
 	
 		(* Merge *)
-		new_action_and_state_list := merge new_action_and_state_list;
+		new_action_and_state_list := merge model new_action_and_state_list;
 		
 		(* Add the remaining states *)
-		List.iter (fun (action_index, location, final_constraint) ->
-			add_a_new_state model reachability_graph orig_state_index new_states_indexes action_index location final_constraint;
+		List.iter (fun (action_index_list, location, final_constraint) ->
+			(* Iterate on all actions *)
+			(*** WARNING: not very beautiful !! ***)
+			List.iter (fun action_index ->
+				add_a_new_state model reachability_graph orig_state_index new_states_indexes action_index location final_constraint;
+			) action_index_list;
 		) !new_action_and_state_list
 		
 	); (* EXPERIMENTAL BRANCHING: END CASE MERGE AFTER *)

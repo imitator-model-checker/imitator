@@ -159,6 +159,9 @@ val list_remove_first_occurence : 'a -> 'a list -> 'a list
 (** Remove the ith element of a list *)
 val list_delete_at : int -> 'a list -> 'a list
 
+(** Replace the ith element of a list *)
+val list_set_nth : int -> 'a -> 'a list -> 'a list
+
 
 (****************************************************************)
 (** Useful functions on arrays *)
