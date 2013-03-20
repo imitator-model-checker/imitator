@@ -2041,7 +2041,7 @@ let branch_and_bound model init_state =
 		
 		(* Merge states ! *)
 		let new_states =
-		if options#merge then (
+		if options#merge || options#merge_before then (
 			let eaten_states = Graph.merge reachability_graph new_states in
 			
 			
