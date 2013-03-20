@@ -395,7 +395,7 @@ exe:
 # 	$(TARGET) $(EXAMPLE_PATH)/Train/Train1PTA.imi $(EXAMPLE_PATH)/Train/Train1PTA.v0 -mode border -cart
 # 	$(TARGET) $(EXAMPLE_PATH)/Train/Train1PTA.imi $(EXAMPLE_PATH)/Train/Train1PTA.v0 -mode cover -cart
 # 	$(TARGET) $(EXAMPLE_PATH)/Train/Train1PTA.imi -PTA2GrML
-	$(TARGET) $(EXAMPLE_PATH)/Train/Train1PTA.grml -fromGrML -mode reachability
+# 	$(TARGET) $(EXAMPLE_PATH)/Train/Train1PTA.grml -fromGrML -mode reachability
 # 	$(TARGET) $(EXAMPLE_PATH)/Train/Train1PTA.grml $(EXAMPLE_PATH)/Train/Train1PTA.pi0 -fromGrML
 
 # 	$(TARGET) $(EXAMPLE_PATH)/Train/TrainAHV93.imi -PTA2JPG

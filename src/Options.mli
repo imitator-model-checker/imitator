@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2012/05/10
- * Last modified: 2013/02/13
+ * Last modified: 2013/03/20
  *
  ****************************************************************)
 
@@ -27,7 +27,7 @@ class imitator_options :
 		val mutable imitator_mode : Global.imitator_mode ref
 		val mutable inclusion : bool ref
 		val mutable nb_args : int
-		val mutable no_merging : bool ref
+		val mutable merge : bool ref
 		val mutable no_random : bool ref
 		val mutable pi0file : string ref
 		val mutable pi_compatible : bool ref
@@ -65,7 +65,7 @@ class imitator_options :
 		method imitator_mode : Global.imitator_mode
 		method inclusion : bool
 		method nb_args : int
-		method no_merging : bool
+		method merge : bool
 		method no_random : bool
 		method pi0file : string
 		method pi_compatible : bool

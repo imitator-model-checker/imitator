@@ -7,7 +7,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Ulrich Kuehne, Etienne Andre
  * Created:       2010
- * Last modified: 2013/03/18
+ * Last modified: 2013/03/20
  *
  ****************************************************************)
  
@@ -99,8 +99,8 @@ class imitator_options =
 		val mutable pta2jpg = ref false
 
 		(* SPECIALIZED OPTIONS*)
-		(* Merging of states (former jobshop option) *)
-		val mutable no_merging = ref true
+		(* Merging states on the fly *)
+		val mutable merge = ref false
 
 
 		
@@ -121,7 +121,7 @@ class imitator_options =
 		method imitator_mode = !imitator_mode
 		method inclusion = !inclusion
 		method nb_args = nb_args
-		method no_merging = !no_merging
+		method merge = !merge
 		method no_random = !no_random
 		method pi_compatible = !pi_compatible
 		method post_limit = !post_limit
@@ -202,7 +202,7 @@ class imitator_options =
 				("-IMK", Set pi_compatible, " Algorithm IMoriginal (defined in [AS11]): return a constraint such that no pi-incompatible state can be reached. Default: 'false'");
 				("-IMunion", Set union, " Algorithm IMUnion (defined in [AS11]): Returns the union of the constraint on the parameters associated to the last state of each trace. Default: 'false'");
 				("-log-prefix", Set_string files_prefix, " Sets the prefix for output files. Default: [model].");
-				("-merge", Clear no_merging, " Use the merging technique of [AFS12]. Default: 'false' (disable)");
+				("-merge", Set merge, " Use the merging technique of [AFS12]. Default: 'false' (disable)");
 				("-mode", String set_mode, " Mode for " ^ program_name ^ ". Use 'reachability' for a parametric reachability analysis (no pi0 needed). Use 'inversemethod' for the inverse method. For the behavioral cartography algorithm, use 'cover' to cover all the points within V0, 'border' to find the border between a small-valued good and a large-valued bad zone (experimental), or 'randomXX' where XX is a number to iterate randomly algorithm (e.g., random5 or random100). Default: 'inversemethod'.");
 				("-no-random", Set no_random, " No random selection of the pi0-incompatible inequality (select the first found). Default: false.");
 (* 				("-PTA2CLP", Unit (fun _ -> pta2clp := true; imitator_mode := Translation), "Translate PTA into a CLP program, and exit without performing any analysis. Work in progress! Defaut : 'false'"); *)

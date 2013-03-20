@@ -10,7 +10,7 @@
  * Author:        Ulrich Kuehne, Etienne Andre
  * 
  * Created:       2009/09/07
- * Last modified: 2013/03/05
+ * Last modified: 2013/03/20
  *
  ****************************************************************)
 
@@ -256,10 +256,11 @@ if options#forcePi0 then
 
 (* OPTIONS *)
 
-if options#no_merging then
-	print_message Debug_medium ("Merging technique of [AFS12] disabled (default).")
+if options#merge then
+	print_message Debug_standard ("Merging technique of [AFS12] enabled.")
 else
-	print_message Debug_standard ("Merging technique of [AFS12] enabled.");
+	print_message Debug_medium ("Merging technique of [AFS12] disabled (default).")
+;
 
 (*if options#dynamic then
 	print_message Debug_standard ("Dynamic mode (optimization by RS).")

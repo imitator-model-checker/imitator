@@ -10,7 +10,7 @@
  * Author:        Ulrich Kuehne, Etienne Andre
  * 
  * Created:       2010/07/22
- * Last modified: 2013/03/05
+ * Last modified: 2013/03/20
  *
  ****************************************************************)
 
@@ -33,6 +33,13 @@ open Gc
 exception Unsat_exception
 
 
+
+
+(**************************************************************)
+(* Constants *)
+(**************************************************************)
+(* Experimental try to merge states earlier (may be more efficient and more interesting!) *)
+let merge_after = false
 
 
 (**************************************************************)
@@ -1405,7 +1412,7 @@ let inverse_method_check_constraint program reachability_graph constr =
 		print_message Debug_standard ("  " ^ (LinearConstraint.string_of_linear_inequality program.variable_names negated_inequality));
 		
 		
-		(* Add the p_constraint to the result (except if case variants) *)
+		(* Add the p_constraint to the result (except in case of variants) *)
 		if not (options#pi_compatible || options#union) then(
 			print_message Debug_high ("Updating k_result with the negated inequality");
 			LinearConstraint.intersection_assign !k_result [LinearConstraint.make [negated_inequality]];
@@ -1492,8 +1499,90 @@ let compute_transitions program location constr action_index automata aut_table 
 
 
 (************************************************************)
-(* Post function *)
+(* Post functions *)
 (************************************************************)
+(*-----------------------------------------------------*)
+(* Add a new state to the reachability_graph (if indeed needed) *)
+(* Also update tile_nature and slast *)
+(*-----------------------------------------------------*)
+let add_a_new_state program reachability_graph orig_state_index new_states_indexes action_index location final_constraint =
+	(* Retrieve the input options *)
+	let options = Input.get_options () in
+
+	let add_new_state, p_constraint =
+	(*------------------------------------------------------------*)
+	(* Branching between 2 algorithms: reachability or IM *)
+	(*------------------------------------------------------------*)
+	if options#imitator_mode = Reachability_analysis then ( 
+		true, (LinearConstraint.true_constraint ())
+	) else (
+		inverse_method_check_constraint program reachability_graph final_constraint
+	) in
+	
+	(* Print some information *)
+	if debug_mode_greater Debug_high then(
+		(* Means state was not compatible *)
+		if not add_new_state then(
+			let new_state = location, final_constraint in
+			print_message Debug_high ("The pi-incompatible state had been computed through action '" ^ (program.action_names action_index) ^ "', and was:\n" ^ (string_of_state program new_state));
+		);
+	);
+	
+	(* Only add the new state if needed *)
+	if add_new_state then (
+		(* Create the state *)
+		let new_state = location, final_constraint in
+
+		(* Print some information *)
+		if debug_mode_greater Debug_total then(
+			print_message Debug_total ("Consider the state \n" ^ (string_of_state program new_state));
+		);
+
+		(* If IM: Add the p_constraint to the result (except if case variants) *)
+		if options#imitator_mode != Reachability_analysis && not (options#pi_compatible || options#union) then(
+			print_message Debug_high ("Updating k_result");
+			LinearConstraint.intersection_assign !k_result [p_constraint];
+		);
+		
+		(* Try to add this new state to the graph *)
+		let new_state_index, added = (
+		(*if options#dynamic then (
+		Graph.add_state_dyn program reachability_graph new_state !k_result
+		)
+		else ( *)
+			Graph.add_state program reachability_graph new_state
+(* 						  ) *)
+		) in
+		(* If this is really a new state *)
+		if added then (
+			(* Add the state_index to the list of new states *)
+			new_states_indexes := new_state_index :: !new_states_indexes;
+			(* Now check whether this is a bad tile according to the property and the nature of the state *)
+			update_tile_nature new_state;
+		)
+		(* ELSE : add to SLAST if mode union *)
+		else (
+			if options#union then (
+				print_message Debug_low ("\nMode union: adding a looping state to SLast.");
+				(* Adding the state *)
+				(* TO CHECK: what if new_state_index is already in slast?!! *)
+				slast := new_state_index :: !slast;
+			);
+		);
+		
+		(* Update the transitions *)
+		Graph.add_transition reachability_graph (orig_state_index, action_index, new_state_index);
+		(* Print some information *)
+		if debug_mode_greater Debug_high then (
+			let beginning_message = (if added then "NEW STATE" else "Old state") in
+			print_message Debug_high ("\n" ^ beginning_message ^ " reachable through action '" ^ (program.action_names action_index) ^ "': ");
+			print_message Debug_high (string_of_state program new_state);
+		);
+	); (* end if add new state *)
+	(* Return void *)
+	()
+
+
 
 (*-----------------------------------------------------*)
 (* Compute the list of possible destination states     *)
@@ -1533,7 +1622,7 @@ let post program reachability_graph orig_state_index =
 	);
 
 	(* build the list of new states *)
-	let new_states = ref [] in
+	let new_states_indexes = ref [] in
 
 	(* Create a constraint D_i = d_i for the discrete variables *)
 	let discrete_values = List.map (fun discrete_index -> discrete_index, (Automaton.get_discrete_value original_location discrete_index)) program.discrete in
@@ -1616,78 +1705,25 @@ let post program reachability_graph orig_state_index =
 						print_message Debug_high ("\nThis constraint is not satisfiable ('Some unsatisfiable').");
 					) else (
 			
-					let add_new_state, p_constraint =
-					(*------------------------------------------------------------*)
-					(* Branching between 2 algorithms here *)
-					(*------------------------------------------------------------*)
-					if options#imitator_mode = Reachability_analysis then ( 
-						true, (LinearConstraint.true_constraint ())
-					) else (
-						inverse_method_check_constraint program reachability_graph final_constraint
-					) in
+					(**************************************************************)
+					(* EXPERIMENTAL BRANCHING: MERGE BEFORE OR AFTER? *)
+					(**************************************************************)
+					(* EXPERIMENTAL BRANCHING: CASE MERGE AFTER (this new version may be better?) *)
+					if options#imitator_mode <> Reachability_analysis && merge_after then(
 					
-					(* Print some debug information *)
-					if debug_mode_greater Debug_high then(
-						(* Means state was not compatible *)
-						if not add_new_state then(
-							let new_state = location, final_constraint in
-							print_message Debug_high ("The pi-incompatible state had been computed through action '" ^ (program.action_names action_index) ^ "', and was:\n" ^ (string_of_state program new_state));
-						);
-					);
+						(* Only add to the local list of new states *)
+(* 						new_states := new_state_index :: !new_states; *)
 					
-					if add_new_state then (
-						(* Create the state *)
-						let new_state = location, final_constraint in
-				  
-						(* Print some information *)
-						if debug_mode_greater Debug_total then(
-							print_message Debug_total ("Consider the state \n" ^ (string_of_state program new_state));
-						);
-
-						(* If IM: Add the p_constraint to the result (except if case variants) *)
-						if options#imitator_mode != Reachability_analysis && not (options#pi_compatible || options#union) then(
-							print_message Debug_high ("Updating k_result");
-							LinearConstraint.intersection_assign !k_result [p_constraint];
-						);
-						
-						(* Try to add this new state to the graph *)
-						let new_state_index, added = (
-						(*if options#dynamic then (
-						  Graph.add_state_dyn program reachability_graph new_state !k_result
-						  )
-						  else ( *)
-						    Graph.add_state program reachability_graph new_state
-(* 						  ) *)
-						) in
-						(* If this is really a new state *)
-						if added then (
-							(* Add the state_index to the list of new states *)
-							new_states := new_state_index :: !new_states;
-							(* Now check whether this is a bad tile according to the property and the nature of the state *)
-							update_tile_nature new_state;
-						)
-						(* ELSE : add to SLAST if mode union *)
-						else (
-							if options#union then (
-								print_message Debug_low ("\nMode union: adding a looping state to SLast.");
-								(* Adding the state *)
-								(* TO CHECK: what if new_state_index is already in slast?!! *)
-								slast := new_state_index :: !slast;
-							);
-						);
-						
-						(* Update the transitions *)
-						Graph.add_transition reachability_graph (orig_state_index, action_index, new_state_index);
-						(* Print some information *)
-						if debug_mode_greater Debug_high then (
-							let beginning_message = (if added then "NEW STATE" else "Old state") in
-							print_message Debug_high ("\n" ^ beginning_message ^ " reachable through action '" ^ (program.action_names action_index) ^ "': ");
-							print_message Debug_high (string_of_state program new_state);
-						);
-					); (* end if pi0 incompatible *)
+					
+					(* EXPERIMENTAL BRANCHING: END CASE MERGE AFTER *)
+					)else(
+					(* EXPERIMENTAL BRANCHING: CASE MERGE BEFORE (classical version) *)
+						add_a_new_state program reachability_graph orig_state_index new_states_indexes action_index location final_constraint;
+					); (* EXPERIMENTAL BRANCHING: END CASE MERGE BEFORE (classical version) *)
+					
 				); (* end if satisfiable *)
 			); (* end if Some constraint *)
-			end;
+			end; (* end match constraint *)
 		
 			(* get the next combination *)
 			more_combinations := next_combination current_indexes max_indexes;	
@@ -1696,15 +1732,15 @@ let post program reachability_graph orig_state_index =
 	) list_of_possible_actions;
 	
 	(* If new_states is empty : the current state is a last state *)
-	if options#union && !new_states = [] then (
+	if options#union && !new_states_indexes = [] then (
 		print_message Debug_low ("\nMode union: adding a state without successor to SLast.");
 		(* Adding the state *)
 		slast := orig_state_index :: !slast;
 	);
 	
 	(* Return the list of (really) new states *)
-	(** TO DO: List.rev really useful??!!!! *)
-	List.rev (!new_states)
+	(*** NOTE: List.rev really useful??!!!! ***)
+	List.rev (!new_states_indexes)
 
 
 
@@ -1869,7 +1905,7 @@ let branch_and_bound program init_state =
 		
 		(* Merge states ! *)
 		let new_states =
-		if not options#no_merging then (
+		if options#merge then (
 			let eaten_states = Graph.merge reachability_graph new_states in
 			
 			
@@ -2042,7 +2078,7 @@ let post_star program init_state =
 
 		(* Merge states ! *)
 		let new_states_after_merging = ref new_newly_found_new_states in
-		if not options#no_merging then (
+		if options#merge then (
 (* 			new_states_after_merging := try_to_merge_states reachability_graph !new_states_after_merging; *)
 			(* New version *)
 			let eaten_states = Graph.merge reachability_graph !new_states_after_merging in
