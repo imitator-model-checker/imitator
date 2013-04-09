@@ -429,10 +429,15 @@ states:
 
 state:
 /* <node id="2" nodeType="state"> */
+
  	/* (MOCHE) 2 'coordinates_opt' to allow different orders */
+	/* WARNING: moche!! (on considere differents ordres...) */
 	| OPEN_NODE CT_ID OP_EQ STR_INT coordinates_opt CT_NODETYPE OP_EQ STR_STATE coordinates_opt CLOSE
 		state_attributes
 		OPEN_END_NODE CLOSE { $4, $11 }
+	| OPEN_NODE CT_NODETYPE OP_EQ STR_STATE coordinates_opt CT_ID OP_EQ STR_INT coordinates_opt CLOSE
+		state_attributes
+		OPEN_END_NODE CLOSE { $8, $11 }
 ;
 
 state_attributes:
@@ -536,15 +541,24 @@ transitions:
 ;
 
 transition:
-	/* WARNING: tres tres moche */
     /*<arc id="5" arcType="transition" source="1" target="2">*/
-	| OPEN_ARC CT_ID OP_EQ STR_INT arc_type_opt CT_SOURCE OP_EQ STR_INT arc_type_opt CT_TARGET OP_EQ STR_INT arc_type_opt CLOSE
-	transition_body
-	OPEN_END_ARC CLOSE { $8, $12, $15 }
+
+	/* WARNING: tres tres moche: on considere differents ordres... */
 	
-	| OPEN_ARC CT_ID OP_EQ STR_INT arc_type_opt CT_TARGET OP_EQ STR_INT arc_type_opt CT_SOURCE OP_EQ STR_INT arc_type_opt CLOSE
+	| OPEN_ARC arc_id_opt arc_type_opt CT_SOURCE OP_EQ STR_INT arc_type_opt CT_TARGET OP_EQ STR_INT arc_id_opt arc_type_opt CLOSE
 	transition_body
-	OPEN_END_ARC CLOSE { $12, $8, $15 }
+	OPEN_END_ARC CLOSE { $6, $10, $14 }
+	
+	| OPEN_ARC arc_id_opt arc_type_opt CT_TARGET OP_EQ STR_INT arc_type_opt CT_SOURCE OP_EQ STR_INT arc_id_opt arc_type_opt CLOSE
+	transition_body
+	OPEN_END_ARC CLOSE { $10, $6, $14 }
+
+	/* <ns2:arc arcType="Transition" source="3" target="4" id="6"> */
+;
+
+arc_id_opt:
+	| CT_ID OP_EQ STR_INT {}
+	| {}
 ;
 
 arc_type_opt:

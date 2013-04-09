@@ -523,7 +523,7 @@ let header_string =
 	^ "*                                             2009 - " ^ (string_of_int ((localtime (Unix.gettimeofday ())).tm_year + 1900))
  ^ "  *\n"
 	^ "*                       LSV, ENS de Cachan & CNRS, France  *\n"
-	^ "*  LIPN, Universite Paris 13, Sorbonne Paris Cite, France  *\n"
+	^ "*  Universite Paris 13, Sorbonne Paris Cite, LIPN, France  *\n"
 (* 	^ "*  Build: " ^ (now())  ^ "                        *\n" *)
 	^ "************************************************************"
 
