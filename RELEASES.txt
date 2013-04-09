@@ -1,4 +1,13 @@
 *******************************************************
+release 2.6.1    (TO COME)
+
+Features:
+- tile nature now written in the source file for plot in border cartography (available with option -with-graphics-source)
+- GrML input / output is no longer "experimental", and now fully integrated
+- graphic cartography is now .png instead of .ps
+
+
+*******************************************************
 release 2.6.0    (2013-02-25)
 
 Features:
@@ -15,8 +24,8 @@ Syntax in options:
 - -debug becomes -verbose
 - -with-dot-source becomes -with-graphics-source
 - Merging option becomes (again?) "-merge"
-- Added -bab option (for branch and bound), work in progress
-- Added -counterex option (stops the analysis as soon as a counterexample is found), work in progress
+- Added -bab option (for branch and bound) [work in progress]
+- Added -counterex option (stops the analysis as soon as a counterexample is found) [work in progress]
 
 Syntax in model:
 - region declaration not compulsory anymore (that was only used for Hytech backward compatibility)
@@ -25,8 +34,6 @@ Syntax in model:
 
 Misc
 - output files for model "XXXX.imi" are now "XXXX.ext" instead of "XXXX.imi.ext"
-- graphic cartography is now .png instead of .ps
-- GrML input / output is no longer "experimental", and now fully integrated
 
 Internal
 - Refactored BC code

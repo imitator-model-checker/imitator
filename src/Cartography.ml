@@ -31,7 +31,8 @@ open Reachability
 	(* Convert to string *)
 	ModelPrinter.string_of_pi0 program pi0_functional
 	*)
-(* TODO: move this translation somewhere else *)
+(* TODO: move this translation somewhere else
+   WARNING: code duplicated *)
 let string_of_tile_nature = function
 	| Good -> "good"
 	| Bad -> "bad"
