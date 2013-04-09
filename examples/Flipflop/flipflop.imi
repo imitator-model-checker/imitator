@@ -7,7 +7,7 @@
 --   Etienne ANDRE and Laurent FRIBOURG
 --
 --   Created      : 2007/11
---   Last modified: 2010/04/01
+--   Last modified: 2013/04/09
 --****************************************************--
 --****************************************************--
 
@@ -429,7 +429,9 @@ init := True
  -- 	& dG4_u  = 7 -- 3 .. 30
 ;
 
+(* Not exactly the property that we would like! The real property is qUp and ckDown always occur, and qUp occurs before ckDown *)
+(* property := if qUp then eventually ckDown *)
+property := if ckDown then qUp has happened before;
+
 end
 
--- print (hide non_parameters in (reach forward from init endreach) endhide);
-print (reach forward from init endreach);
