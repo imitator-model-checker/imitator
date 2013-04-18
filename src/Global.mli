@@ -8,7 +8,7 @@
  * Author:        Etienne Andre
  * 
  * Created:       2009/09/08
- * Last modified: 2013/03/20
+ * Last modified: 2013/04/18
  *
  ****************************************************************)
 
@@ -232,6 +232,10 @@ val write_to_file : string -> string -> unit
 
 
 val delete_file : string -> unit
+
+(** Print info on the memory used *)
+val print_memory_used : debug_mode -> unit
+
 
 (****************************************************************)
 (** Messages *)

@@ -2294,10 +2294,7 @@ let print_statistics reachability_graph =
 		print_message Debug_standard "--------------------";
 		print_message Debug_standard "Statistics on memory";
 		print_message Debug_standard "--------------------";
-		let gc_stat = Gc.stat () in
-		let nb_words = gc_stat.minor_words +. gc_stat.major_words -. gc_stat.promoted_words in
-		let nb_ko = nb_words *. 4.0 /. 1024.0 in
-		print_message Debug_standard ("Total memory: " ^ (string_of_float nb_ko) ^ " KB (i.e., " ^ (string_of_float nb_words) ^ " words)");
+		print_memory_used Debug_standard;
 		Gc.print_stat stdout;
 (*		print_message Debug_standard "--------------------";
 		Gc.major();
@@ -2491,6 +2488,10 @@ let inverse_method model init_state =
 	print_message Debug_standard (
 		"\nInverse method successfully finished " ^ (after_seconds ()) ^ "."
 	);
+	
+	(* Print memory information *)
+	print_memory_used Debug_standard;
+	
 	print_message Debug_low (
 		"Computation time for IM only: "
 		^ (string_of_seconds total_time) ^ "."

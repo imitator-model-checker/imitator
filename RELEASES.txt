@@ -6,6 +6,9 @@ Features:
 - GrML input / output is no longer "experimental", and now fully integrated
 - graphic cartography is now .png instead of .ps
 
+Bug correction:
+- Correction of the memory used in 64 bits (before, gave the same number as in 32 bits)
+
 
 *******************************************************
 release 2.6.0    (2013-02-25)

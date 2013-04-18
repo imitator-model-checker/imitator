@@ -8,7 +8,7 @@
  * Author:        Etienne Andre
  * 
  * Created:       2009/09/08
- * Last modified: 2013/03/20
+ * Last modified: 2013/04/18
  *
  ****************************************************************)
  
@@ -17,6 +17,7 @@
 (** Modules *)
 (****************************************************************)
 
+open Gc
 open Unix
 (*  open Printf  *)
  
@@ -553,7 +554,17 @@ let delete_file file_name =
 	with Sys_error e ->
 		print_error ("File " ^ file_name ^ " could not be removed. System says: '" ^ e ^ "'.")
 
-	
+
+(** Print info on the memory used *)
+let print_memory_used debug_level =
+	(* Print memory information *)
+	let gc_stat = Gc.stat () in
+	let nb_words = gc_stat.minor_words +. gc_stat.major_words -. gc_stat.promoted_words in
+	(* Compute the word size in bytes *)
+	let word_size = (*4.0*)Sys.word_size / 8 in
+	let nb_ko = nb_words *. (float_of_int word_size) /. 1024.0 in
+		print_message debug_level ("Estimated memory used: " ^ (string_of_float nb_ko) ^ " KiB (i.e., " ^ (string_of_float nb_words) ^ " words of size " ^ (string_of_int word_size) ^ ")")
+
 
 
 (****************************************************************)
@@ -571,6 +582,9 @@ let abort_program () =
 let terminate_program () =
 	print_newline();
 	print_message Debug_standard (program_name ^ " successfully terminated (" ^ (after_seconds ()) ^ ")");
+	(* Print memory info *)
+	print_memory_used Debug_standard;
+	(* The end *)
 	print_newline();
 	flush Pervasives.stdout;
 	exit(0)
