@@ -1,6 +1,6 @@
 --****************************************************--
 --****************************************************--
---   Circuit described in
+--   Protocol described in
 --   "Parameterized Reachability Analysis of the IEEE 1394 Root Contention Protocol using TReX"
 --   Collomb-Annichini, Sighireanu (RTTOOLS 2001)
 --
@@ -8,7 +8,7 @@
 --   Laboratoire Specification et Verification
 --
 --                                Created : 2008/01/10
---                          Last modified : 2013/03/06
+--                          Last modified : 2013/04/19
 --                       IMITATOR version : 2.6.0
 --****************************************************--
 --****************************************************--

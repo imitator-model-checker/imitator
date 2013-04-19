@@ -4,7 +4,9 @@
 -- discrete time model
 -- gxn/jzs 20/02/02
 --
---   Last modified: 2010/05/03
+--                                Created : < 2010/05/03
+--                          Last modified : 2013/04/19
+--                       IMITATOR version : 2.6.0
 --****************************************************--
 --****************************************************--
 
@@ -17,16 +19,16 @@ var     x1, x2
 
 -- TIMING CONSTRAINTS
 
-ASLOTTIME, --= 1;
-DIFS, --= 3; -- due to scaling can be non-deterministically either 2 or 3
-VULN, --= 1; -- due to scaling can be non-deterministically either 0 or 1
-TRANS_TIME_MAX, --= 315; -- scaling up
-TRANS_TIME_MIN, --= 4; -- scaling down
-ACK_TO, --= 6; 
-ACK, --= 4; -- due to scaling can be non-deterministically either 3 or 4
-SIFS, --= 1; -- due to scaling can be non-deterministically either 0 or 1
--- TIME_MAX, --= 315; -- maximum constant used in timing constraints + 1
-BOFF --= 6; -- max backoff (since contention window is [15,1023])
+	ASLOTTIME, --= 1;
+	DIFS, --= 3; -- due to scaling can be non-deterministically either 2 or 3
+	VULN, --= 1; -- due to scaling can be non-deterministically either 0 or 1
+	TRANS_TIME_MAX, --= 315; -- scaling up
+	TRANS_TIME_MIN, --= 4; -- scaling down
+	ACK_TO, --= 6; 
+	ACK, --= 4; -- due to scaling can be non-deterministically either 3 or 4
+	SIFS, --= 1; -- due to scaling can be non-deterministically either 0 or 1
+	-- TIME_MAX, --= 315; -- maximum constant used in timing constraints + 1
+	BOFF = 6 (*max backoff (since contention window is [15,1023])*)
 	: parameter;
 
 	col, -- : [0..8]; -- number of collisions
@@ -1477,7 +1479,7 @@ init := True
 	-- Constraints
 	----------------------
 	& TRANS_TIME_MIN <= TRANS_TIME_MAX
-	& BOFF           = 6
+(* 	& BOFF           = 6 *)
 
 	---START PI0---
 --	& ASLOTTIME      = 1

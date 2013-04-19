@@ -1,4 +1,8 @@
 [Dolphin]
+PreviewsShown=true
 ShowPreview=false
-Timestamp=2010,3,24,17,54,34
+SortOrder=1
+SortRole=date
+Timestamp=2013,4,19,10,35,51
+Version=3
 ViewMode=1

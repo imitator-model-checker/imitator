@@ -41,7 +41,7 @@
 	& ACK_TO         = 6
 	& ACK            = 4
 	& SIFS           = 1
-	& BOFF           = 6
+	-- & BOFF           = 6
 
 -- TIME_MAX, --= 315; -- maximum constant used in timing constraints + 1
 

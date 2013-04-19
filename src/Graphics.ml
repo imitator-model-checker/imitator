@@ -591,11 +591,14 @@ let dot model radical dot_source_file =
 			(* Generate gif file using dot *)
 			print_message Debug_standard ("Generating graphical output to '" ^ image_file_name ^ "'...");
 			print_message Debug_medium ("Calling dot...");
-			let command_result = Sys.command (dot_command ^ " -T" ^ dot_image_extension ^ " " ^ dot_file_name ^ " -o " ^ image_file_name ^ "") in
-			print_message Debug_medium ("Result of the 'dot' command: " ^ (string_of_int command_result));
-			
-			if command_result != 0 then
-				print_error ("Something went wrong in the command. Exit code: " ^ (string_of_int command_result) ^ ". Maybe you forgot to install the 'dot' utility.");
+			try (
+				let command_result = Sys.command (dot_command ^ " -T" ^ dot_image_extension ^ " " ^ dot_file_name ^ " -o " ^ image_file_name ^ "") in
+				print_message Debug_medium ("Result of the 'dot' command: " ^ (string_of_int command_result));
+				
+				if command_result != 0 then
+					print_error ("Something went wrong in the command. Exit code: " ^ (string_of_int command_result) ^ ". Maybe you forgot to install the 'dot' utility.");
+			) with 
+				| Sys_error error_message -> print_error ("Something went wrong in the command. Error message: '" ^ error_message ^ "'.");
 			
 			(* Removing dot file (except if option) *)
 			if not options#with_graphics_source then(
