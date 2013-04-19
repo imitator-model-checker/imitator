@@ -135,17 +135,18 @@ x_3 = 0 &
 t_1 = 0 &
 t_2 = 0 &
 --t_3 = 0 &
-time = 0 & 
-deadlineBasic = 24 &
+time = 0 
+-- & deadlineBasic = 24
+-- &
 ---------
 --Etude 1--
 --WCET_1 = 1 &
 --WCET_2 = 2 &
 --WCET_3 = 6 &
-per1 = 3 &
-per2 = 8 &
+--per1 = 3 &
+--per2 = 8 &
 --per3 = 20 &
-Off1 = 0 &
-Off2 = 0 
+--Off1 = 0 &
+--Off2 = 0 
 --& Off3 = 0
 ;
