@@ -465,8 +465,8 @@ exe:
 
 # 	$(TARGET) $(EXAMPLE_PATH)/CSMACD/csmacdPrism_with_renamed_actionsBC5.imi $(EXAMPLE_PATH)/CSMACD/csmacdPrism.pi0 -no-merging
 	
-	$(TARGET) $(EXAMPLE_PATH)/CSMACD/csmacdPrism_with_renamed_actionsBC6.imi $(EXAMPLE_PATH)/CSMACD/csmacdPrism.pi0 -with-log
-	$(TARGET) $(EXAMPLE_PATH)/CSMACD/csmacdPrism_with_renamed_actionsBC6.imi $(EXAMPLE_PATH)/CSMACD/csmacdPrism.pi0 -merge -with-log -log-prefix $(EXAMPLE_PATH)/CSMACD/csmacdPrism_with_renamed_actionsBC6-merge
+# 	$(TARGET) $(EXAMPLE_PATH)/CSMACD/csmacdPrism_with_renamed_actionsBC6.imi $(EXAMPLE_PATH)/CSMACD/csmacdPrism.pi0 -with-log
+# 	$(TARGET) $(EXAMPLE_PATH)/CSMACD/csmacdPrism_with_renamed_actionsBC6.imi $(EXAMPLE_PATH)/CSMACD/csmacdPrism.pi0 -merge -with-log -log-prefix $(EXAMPLE_PATH)/CSMACD/csmacdPrism_with_renamed_actionsBC6-merge
 
 # 	$(TARGET) $(EXAMPLE_PATH)/CSMACD/csmacdPrism_with_renamed_actionsBC9.imi $(EXAMPLE_PATH)/CSMACD/csmacdPrism.pi0 -merge
 # 	$(TARGET) $(EXAMPLE_PATH)/CSMACD/csmacdPrism_with_renamed_actionsBC10.imi $(EXAMPLE_PATH)/CSMACD/csmacdPrism.pi0 -no-merging
@@ -512,7 +512,7 @@ exe:
 # 	./IMITATOR Examples/Valmem/spsmall_obs.imi Examples/Valmem/spsmall.pi0
 # 	./IMITATOR Examples/Valmem/spsmall_obs.imi Examples/Valmem/spsmall.v0 -mode cover -log-prefix Examples/Valmem/carto/spsmall
 
-# 	$(TARGET) $(EXAMPLE_PATH)/Valmem/LSV.imi $(EXAMPLE_PATH)/Valmem/delais1_hy.pi0 -merge -with-dot -with-log -log-prefix $(EXAMPLE_PATH)/Valmem/LSV-merge
+	$(TARGET) $(EXAMPLE_PATH)/Valmem/LSV.imi $(EXAMPLE_PATH)/Valmem/delais1_hy.pi0 -merge -incl -with-log -log-prefix $(EXAMPLE_PATH)/Valmem/LSV-merge
 # 	$(TARGET) $(EXAMPLE_PATH)/Valmem/LSV.imi $(EXAMPLE_PATH)/Valmem/delais1_hy.pi0 -no-dot -no-log -depth-limit 31 -jobshop -verbose medium
 # 	$(TARGET) $(EXAMPLE_PATH)/Valmem/LSV.imi $(EXAMPLE_PATH)/Valmem/delais1_hy.pi0 -no-dot -no-log -statistics -acyclic -dynamic
 # 	$(TARGET) $(EXAMPLE_PATH)/Valmem/sp_1x2_md_no.imi Examples/Valmem/sp_1x2_md_no.pi0 
