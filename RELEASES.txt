@@ -1,5 +1,5 @@
 *******************************************************
-release 2.6.1    (TO COME)
+release 2.6.1    (2013-05-01)
 
 Features:
 - tile nature now written in the source file for plot in border cartography (available with option -with-graphics-source)
