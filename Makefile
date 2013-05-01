@@ -201,7 +201,8 @@ exe:
 
 ##### TESTS FOR SYNTAX AND FEATURES #####
 
-# 	$(TARGET) temp/model.grml temp/machin.txt -fromGrML -verbose standard -depth-limit 2 -merge -statistics
+	$(TARGET) temp/test2.imi temp/test.v0 -mode border -incl -merge -cart -with-graphics-source
+
 
 # 	$(TARGET) $(EXAMPLE_PATH)/Tests/test.gml -mode reachability -verbose high -fromGrML
 
