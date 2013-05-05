@@ -7,7 +7,7 @@
 --   Etienne ANDRE
 --
 --   Created:        2010/03/19
---   Last modified : 2010/03/24
+--   Last modified : 2013/05/05
 --************************************************************--
 --************************************************************--
 
@@ -242,4 +242,4 @@ init := True
 -- 	& t_S_down	= 10
 ;
 
-print (reach forward from init endreach);
+(* print (reach forward from init endreach); *)
