@@ -275,8 +275,12 @@ exe:
 # 	$(TARGET) $(EXAMPLE_PATH)/Proprietes/exNonTerminationDFS.imi $(EXAMPLE_PATH)/Proprietes/exNonTerminationDFS.pi0 -bab -no-merging -incl -with-log -states-limit 30 -with-parametric-log # PROBLEM BAB
 # 	$(TARGET) $(EXAMPLE_PATH)/Proprietes/exNonTerminationDFS.imi $(EXAMPLE_PATH)/Proprietes/exNonTerminationDFS.pi0 -no-merging -incl -with-parametric-log -with-log -states-limit 30 -with-dot
 
-	$(TARGETV) $(EXAMPLE_PATH)/Examples/loopingDynamic.imi $(EXAMPLE_PATH)/Examples/loopingDynamic.pi0 -depth-limit 20
-	$(TARGETV) $(EXAMPLE_PATH)/Examples/loopingDynamic.imi $(EXAMPLE_PATH)/Examples/loopingDynamic.pi0 -dynamic-elimination -with-log -with-dot -log-prefix $(EXAMPLE_PATH)/Examples/loopingDynamic-dynamic
+# 	$(TARGETV) $(EXAMPLE_PATH)/Examples/loopingDynamic.imi $(EXAMPLE_PATH)/Examples/loopingDynamic.pi0 -depth-limit 20
+# 	$(TARGETV) $(EXAMPLE_PATH)/Examples/loopingDynamic.imi $(EXAMPLE_PATH)/Examples/loopingDynamic.pi0 -dynamic-elimination -with-log -with-dot -log-prefix $(EXAMPLE_PATH)/Examples/loopingDynamic-dynamic
+
+# 	$(TARGETV) $(EXAMPLE_PATH)/Examples/exClockElimination.imi -verbose medium -mode reachability -depth-limit 2 -dynamic-elimination
+# 	$(TARGETV) $(EXAMPLE_PATH)/Examples/exClockElimination.imi $(EXAMPLE_PATH)/Examples/exClockElimination.pi0
+	$(TARGETV) $(EXAMPLE_PATH)/Examples/exClockElimination.imi $(EXAMPLE_PATH)/Examples/exClockElimination.pi0 -dynamic-elimination -with-log -with-dot -log-prefix $(EXAMPLE_PATH)/Examples/exClockElimination-dynamic
 
 # 	$(TARGET) $(EXAMPLE_PATH)/Examples/testBoucleAvecDiscrete.imi -mode reachability -statistics -depth-limit 200 -no-dot -no-log
 # 	$(TARGET) $(EXAMPLE_PATH)/Examples/testBoucleAvecDiscrete.imi -mode reachability -statistics -depth-limit 200 -no-dot -no-log -dynamic
@@ -414,7 +418,7 @@ exe:
 # 	$(TARGET) $(EXAMPLE_PATH)/Fischer/fischerPAT.imi $(EXAMPLE_PATH)/Fischer/fischerPAT.pi0 -depth-limit 12 -with-log -with-dot
 # 	$(TARGET) $(EXAMPLE_PATH)/Fischer/fischerPAT.imi -PTA2JPG
 # 	$(TARGET) $(EXAMPLE_PATH)/Fischer/fischerPAT.imi $(EXAMPLE_PATH)/Fischer/fischerPAT.pi0 -depth-limit 20
-# 	$(TARGET) $(EXAMPLE_PATH)/Fischer/fischerPAT.imi $(EXAMPLE_PATH)/Fischer/fischerPAT.pi0 -dynamic-elimination -verbose low -depth-limit 20 -with-log 
+# 	$(TARGETV) $(EXAMPLE_PATH)/Fischer/fischerPAT.imi $(EXAMPLE_PATH)/Fischer/fischerPAT.pi0 -dynamic-elimination -verbose low -depth-limit 60 -with-log 
 
 # 	$(TARGET) $(EXAMPLE_PATH)/BangOlufsen/BangOlufsen.imi -mode reachability 
 # 	$(TARGET) $(EXAMPLE_PATH)/BangOlufsen/BangOlufsen.imi $(EXAMPLE_PATH)/BangOlufsen/BangOlufsen.pi0 -depth-limit 12 -incl -statistics
