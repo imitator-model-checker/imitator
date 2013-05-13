@@ -70,7 +70,7 @@ class imitator_options =
 		(* limit on runtime *)
 		val mutable time_limit = ref None
 		(* imitator mode *)
-		val mutable imitator_mode = ref Inverse_method
+		val mutable imitator_mode = ref Global.Inverse_method
 		(* acyclic mode: only compare inclusion or equality of a new state with former states of the same iteration (graph depth) *)
 		val mutable acyclic = ref false 
 		(* tree mode: never compare inclusion or equality of any new state with a former state *)

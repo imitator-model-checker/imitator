@@ -4,7 +4,7 @@
  #
  #                       BUILDATOR
  # 
- # Small script to build IMITATOR
+ # Small script to build IMITATOR (tentative !!!)
  #
  # Universite Paris 13, Sorbonne Paris Cite, LIPN (France)
  # 
@@ -18,7 +18,9 @@
 set -e
 
 TARGET=src/IMITATOR
-FLAGS="-cflags -I,/usr/lib/ocaml/gmp,-I,/usr/lib/ocaml/extlib -Is src -libs gmp,str,extLib,bigarray"
+# FLAGS="-libs str,nums,unix,/usr/lib/ocaml/extlib/extLib"
+FLAGS="-libs str,unix,/usr/lib/ocaml/extlib/extLib,/usr/lib/ocaml/extlib/dynArray -cflags -I,/usr/lib/ocaml/extlib/,-I,/usr/lib/ocaml/gmp,-I,/usr/lib/ppl -classic-display -Is src -verbose 1"
+# , -libs str,unix,extLib,bigarray,gmp,ppl_ocaml
 OCAMLBUILD=ocamlbuild
 
 ocb()

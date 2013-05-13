@@ -26,7 +26,7 @@ class imitator_options :
 		val mutable files_prefix : string ref
 		val mutable forcePi0 : bool ref
 		val mutable fromGML : bool ref
-		val mutable imitator_mode : imitator_mode ref
+		val mutable imitator_mode : Global.imitator_mode ref
 		val mutable inclusion : bool ref
 		val mutable nb_args : int
 		val mutable merge : bool ref
