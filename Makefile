@@ -34,6 +34,8 @@ endif
 
 INCLUDE = -I $(SRC) -I $(EXTLIB_PATH) -I $(OCAML_PPL_PATH) -I $(OCAML_GMP_PATH)
 
+# -I /usr/lib/i386-linux-gnu/
+
 # native c libraries (old version)
 # CLIBS = -cclib -lpwl -cclib -lm -cclib -lgmpxx -cclib -lgmp -cclib -lppl
 

@@ -5,9 +5,11 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2012/05/10
- * Last modified: 2013/03/20
+ * Last modified: 2013/05/13
  *
  ****************************************************************)
+ 
+open Global
 
 class imitator_options :
 	object
@@ -24,7 +26,7 @@ class imitator_options :
 		val mutable files_prefix : string ref
 		val mutable forcePi0 : bool ref
 		val mutable fromGML : bool ref
-		val mutable imitator_mode : Global.imitator_mode ref
+		val mutable imitator_mode : imitator_mode ref
 		val mutable inclusion : bool ref
 		val mutable nb_args : int
 		val mutable merge : bool ref
@@ -63,7 +65,7 @@ class imitator_options :
 		method files_prefix : string
 		method forcePi0 : bool
 		method fromGML : bool
-		method imitator_mode : Global.imitator_mode
+		method imitator_mode : imitator_mode
 		method inclusion : bool
 		method nb_args : int
 		method merge : bool
