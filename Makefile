@@ -40,14 +40,17 @@ INCLUDE = -I $(SRC) -I $(EXTLIB_PATH) -I $(OCAML_PPL_PATH) -I $(OCAML_GMP_PATH)
 # CLIBS = -cclib -lpwl -cclib -lm -cclib -lgmpxx -cclib -lgmp -cclib -lppl
 
 # native c libraries (updated 2012/06/07)
-CLIBS = -cclib -lppl
+# NOTE: non-static compiling does not work anymore since June 2013: go for static instead
+CLIBS = -cclib -lppl 
+# -lstdc++
+# -L/usr/lib64 -lstdc++ ?
 
 # For 32 bits compiling
 STATIC32CLIBS = -cclib '-static -lppl -lcamlrun -ltinfo -lppl_ocaml -lstdc++ -lgmp -lgmpxx'
 # CLIBS = -cclib '-static -lppl -lpwl -lcamlrun -ltinfo -lppl_ocaml -lstdc++ -lmlgmp -lmpfr -lgmp -lgmpxx'
 
 # For 64 bits compiling
-STATIC64CLIBS = -cclib '-static -ldl -lppl -lcamlrun -ltinfo -lppl_ocaml -lstdc++ -lgmpxx'
+STATIC64CLIBS = -cclib '-static -lppl -lcamlrun -ltinfo -lppl_ocaml -lstdc++ -lgmpxx'
 # -ldl : inutile
 # CLIBS = -cclib '-static -lppl -lpwl -lppl_ocaml -lstdc++ -lmlgmp -lmpfr -lgmp -lgmpxx'
 
@@ -141,10 +144,14 @@ $(TARGET): $(IMILIB) $(MAIN)
 $(TARGET_STATIC32): $(IMILIB) $(MAIN)
 	@ echo [LINK] $(TARGET_STATIC32)
 	@ $(OCAMLC) -custom $(INCLUDE) -I $(CLIB_PATH) $(STATIC32LIBS) $(IMILIB) $(MAIN) -o $(TARGET_STATIC32) 
+	@ echo [LN] $(TARGETV)
+	@ cd $(TARGET_PATH) ; rm $(TARGET_NAME)$(VERSION) ; ln $(TARGET_STATIC32) $(TARGET_NAME)$(VERSION) -s
 	
 $(TARGET_STATIC64): $(IMILIB) $(MAIN)
 	@ echo [LINK] $(TARGET_STATIC64)
 	@ $(OCAMLC) -custom $(INCLUDE) -I $(CLIB_PATH) $(STATIC64LIBS) $(IMILIB) $(MAIN) -o $(TARGET_STATIC64)
+	@ echo [LN] $(TARGETV)
+	@ cd $(TARGET_PATH) ; rm $(TARGET_NAME)$(VERSION) ; ln $(TARGET_NAME)64 $(TARGET_NAME)$(VERSION) -s
 
 	
 	# $(TARGET_OPT): $(IMILIB_OPT) $(MAIN_OPT)
@@ -282,7 +289,7 @@ exe:
 
 # 	$(TARGETV) $(EXAMPLE_PATH)/Examples/exClockElimination.imi -verbose medium -mode reachability -depth-limit 2 -dynamic-elimination
 # 	$(TARGETV) $(EXAMPLE_PATH)/Examples/exClockElimination.imi $(EXAMPLE_PATH)/Examples/exClockElimination.pi0
-	$(TARGETV) $(EXAMPLE_PATH)/Examples/exClockElimination.imi $(EXAMPLE_PATH)/Examples/exClockElimination.pi0 -dynamic-elimination -with-log -with-dot -log-prefix $(EXAMPLE_PATH)/Examples/exClockElimination-dynamic
+# 	$(TARGETV) $(EXAMPLE_PATH)/Examples/exClockElimination.imi $(EXAMPLE_PATH)/Examples/exClockElimination.pi0 -dynamic-elimination -with-log -with-dot -log-prefix $(EXAMPLE_PATH)/Examples/exClockElimination-dynamic
 
 # 	$(TARGET) $(EXAMPLE_PATH)/Examples/testBoucleAvecDiscrete.imi -mode reachability -statistics -depth-limit 200 -no-dot -no-log
 # 	$(TARGET) $(EXAMPLE_PATH)/Examples/testBoucleAvecDiscrete.imi -mode reachability -statistics -depth-limit 200 -no-dot -no-log -dynamic
@@ -460,6 +467,7 @@ exe:
 # 	$(TARGETV) $(EXAMPLE_PATH)/CSMACD/csmacdPrism.imi $(EXAMPLE_PATH)/CSMACD/csmacdPrism.pi0 -dynamic-elimination -with-dot -with-log -log-prefix $(EXAMPLE_PATH)/CSMACD/csmacdPrism-dynamic
 # 	$(TARGET) $(EXAMPLE_PATH)/CSMACD/csmacdPrism.imi $(EXAMPLE_PATH)/CSMACD/csmacdPrism.pi0 -dynamic-elimination
 # 	$(TARGET) $(EXAMPLE_PATH)/CSMACD/csmacdPrism.imi $(EXAMPLE_PATH)/CSMACD/csmacdPrism.pi0 -bab
+	$(TARGETV) $(EXAMPLE_PATH)/CSMACD/csmacdPrism.imi $(EXAMPLE_PATH)/CSMACD/csmacdPrism.pi0 -statistics
 
 #	### WARNING: the prism model seems odd!!
 # 	$(TARGET) $(EXAMPLE_PATH)/CSMACD/csmacdPrism_with_renamed_actions.imi -mode reachability -no-merging

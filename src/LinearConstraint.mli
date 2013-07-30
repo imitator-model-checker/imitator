@@ -175,6 +175,7 @@ val is_equal : linear_constraint -> linear_constraint -> bool
 (** Check if a constraint is included in another one *)
 val is_leq : linear_constraint -> linear_constraint -> bool
 
+
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
 (** {3 Pi0-compatibility} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)

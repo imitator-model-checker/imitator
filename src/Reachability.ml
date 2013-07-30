@@ -817,6 +817,13 @@ let rho_assign model linear_constraint clock_updates =
 		(* CASE 2: only resets *)
 		)else(if not !arbitrary_updates then(
 		
+		
+		
+		
+		
+			(* TODO : add "reset" function to LinearConstraint *)
+			
+		
 			(** TO OPTIMIZE: Hashtbl.fold and List.map should be merged into one function *)
 			
 			(* Compute the list of clocks to update from the hashtable *)
@@ -859,6 +866,12 @@ let rho_assign model linear_constraint clock_updates =
 			
 		(* CASE 3: updates to linear terms *)
 		)else(
+		
+		
+			(* TODO (not urgent) : add "update" function to LinearConstraint *)
+		
+		
+		
 			(* Compute the couples (X_i , = linear_term) from the hashtable *)
 			let updates = Hashtbl.fold (fun clock_id linear_term current_updates -> (clock_id, linear_term) :: current_updates) clocks_hash [] in
 			(** TO OPTIMIZE (?): could be performed statically (when converting the model).
@@ -1245,7 +1258,7 @@ let compute_new_location model aut_table trans_table action_index original_locat
 	
 
 
-(*--------------------------------------------------*)	
+(*--------------------------------------------------*)
 (* Compute the new constraint for a transition      *)
 (* orig_constraint : contraint in source location   *)
 (* discrete_constr : contraint D_i = d_i in source location (discrete variables) *)
