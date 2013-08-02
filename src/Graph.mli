@@ -122,7 +122,6 @@ val add_state : AbstractModel.abstract_model -> reachability_graph -> state -> (
 val add_transition : reachability_graph -> (state_index * action_index * state_index) -> unit
 
 (** Add a p_inequality to all the states of the graph *)
-(*** FORMERLY : add_inequality_to_states *)
 val add_p_constraint_to_states : reachability_graph -> LinearConstraint.p_linear_constraint -> unit
 
 

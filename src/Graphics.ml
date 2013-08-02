@@ -8,7 +8,7 @@
  * Author:        Etienne Andre, Ulrich Kuehne
  * 
  * Created:       2010/07/05
- * Last modified: 2013/03/18
+ * Last modified: 2013/08/02
  *
  ****************************************************************)
  
@@ -18,7 +18,7 @@
 (**************************************************)
 
 open Global
-open LinearConstraint
+(* open LinearConstraint *)
 open AbstractModel
 
 
@@ -93,26 +93,16 @@ let cartography model v0 returned_constraint_list cartography_name =
 	(* Retrieve the input options *)
 	let options = Input.get_options () in
 	
-	(* Replace strict inequalities with large inequalities *)
-
-	(* Local function to replace strict inequalities within a linear_constraint *)
-	let replace_strict_inequalities_in_k k =
-		(* Get the list of inequalities *)
-		let inequality_list = get_inequalities k in 
-		(* Replace inequelities and convert back to a linear_constraint *)
-			make (List.map strict_to_not_strict_inequality inequality_list)
-	in
-
 	(* For all returned_constraint *)
 	let new_returned_constraint_list = List.map (
 		fun returned_constraint -> match returned_constraint with
-			| Convex_constraint (k, tn) -> Convex_constraint (replace_strict_inequalities_in_k k , tn)
-			| Union_of_constraints (list_of_k, tn) -> Union_of_constraints (List.map replace_strict_inequalities_in_k list_of_k , tn)
+			| Convex_constraint (k, tn) -> Convex_constraint (LinearConstraint.render_non_strict_p_linear_constraint k , tn)
+			| Union_of_constraints (list_of_k, tn) -> Union_of_constraints (List.map LinearConstraint.render_non_strict_p_linear_constraint list_of_k , tn)
 	) returned_constraint_list
 	in
 
 
-(*	(**** HORRIBLE IMPERATIVE (and not tail recursive) programming !!!!! ******)
+(*	(*** HORRIBLE IMPERATIVE (and not tail recursive) programming !!!!! ***)
 	(* For all returned_constraint *)
 	for k = 0 to List.length returned_constraint_list -1 do
 		(* For all linear_constraint *)
@@ -213,7 +203,7 @@ let cartography model v0 returned_constraint_list cartography_name =
 		let max_ord = ref (bad_float_of_num_const init_max_ord) in
 		(* Update min / max for ONE linear_constraint *)
 		let update_min_max linear_constraint =
-			let points, _ = shape_of_poly x_param y_param linear_constraint in
+			let points, _ = LinearConstraint.shape_of_poly x_param y_param linear_constraint in
 			List.iter (fun (x,y) ->
 				min_abs := min !min_abs x;
 				max_abs := max !max_abs x;
@@ -268,7 +258,9 @@ let cartography model v0 returned_constraint_list cartography_name =
 			file_index := !file_index + 1;
 
 			(* Print some information *)
-			print_message Debug_low ("Computing points for constraint " ^ (string_of_int !tile_index) ^ " \n " ^ (LinearConstraint.string_of_linear_constraint model.variable_names k) ^ "."); 
+			if debug_mode_greater Debug_low then(
+				print_message Debug_low ("Computing points for constraint " ^ (string_of_int !tile_index) ^ " \n " ^ (LinearConstraint.string_of_p_linear_constraint model.variable_names k) ^ ".");
+			);
 			
 			let file_name = make_file_name cartography_name !file_index in
 			let file_out = open_out file_name in
@@ -280,14 +272,16 @@ let cartography model v0 returned_constraint_list cartography_name =
 			remove_dimensions (model.nb_discrete + model.nb_clocks) k ;*)
 			
 			(* find the points satisfying the constraint *)
-			let s = plot_2d x_param y_param k min_abs min_ord max_abs max_ord in
+			let s = LinearConstraint.plot_2d x_param y_param k min_abs min_ord max_abs max_ord in
 			(* Get the points *)
 			let the_points = snd s in
 			(* print in the file the coordinates of the points *)
 			output_string file_out the_points;
 
 			(* Print some information *)
-			print_message Debug_low ("  Points \n " ^ the_points ^ ""); 
+			if debug_mode_greater Debug_low then(
+				print_message Debug_low ("  Points \n " ^ the_points ^ "");
+			);
 			
 			(* Prepare the comments at the end of the file *)
 			let comments =
@@ -321,7 +315,7 @@ let cartography model v0 returned_constraint_list cartography_name =
 			| Convex_constraint (k, tn) ->
 				(*** WARNING: duplicate code *)
 				(* Test just in case ! (otherwise an exception arises *)
-				if LinearConstraint.is_false k then(
+				if LinearConstraint.p_is_false k then(
 					print_warning " Found a false constraint when computing the cartography. Ignored."
 				)else(
 					tile_index := !tile_index + 1;
@@ -331,7 +325,7 @@ let cartography model v0 returned_constraint_list cartography_name =
 				List.iter (fun k -> 
 					(*** WARNING: duplicate code *)
 					(* Test just in case ! (otherwise an exception arises *)
-					if LinearConstraint.is_false k then(
+					if LinearConstraint.p_is_false k then(
 						print_warning " Found a false constraint when computing the cartography. Ignored."
 					)else(
 						tile_index := !tile_index + 1;
@@ -453,9 +447,9 @@ let dot_of_graph model reachability_graph ~fancy =
 				(* Add the constraint with no clocks (option only) *)
 				^ (if options#with_parametric_log then (
 					(* Eliminate clocks *)
-					let parametric_constraint = LinearConstraint.hide model.clocks linear_constraint in
+					let parametric_constraint = LinearConstraint.px_hide_nonparameters (*model.clocks*) linear_constraint in
 					"\n\n  After clock elimination:"
-					^ "\n  " ^ (LinearConstraint.string_of_linear_constraint model.variable_names parametric_constraint);
+					^ "\n  " ^ (LinearConstraint.string_of_p_linear_constraint model.variable_names parametric_constraint);
 				) else "");
 			) state_indexes;
 		!string_states)

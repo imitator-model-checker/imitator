@@ -59,12 +59,15 @@ val make_pxd_linear_term : (coef * variable) list -> coef -> pxd_linear_term
 
 (** Add two linear terms *)
 (* val add_linear_terms : linear_term -> linear_term -> linear_term *)
+val add_pxd_linear_terms : pxd_linear_term -> pxd_linear_term -> pxd_linear_term
+
 
 (** Perform linear_term1 - linear_term2 *)
 (* val sub_linear_terms : linear_term -> linear_term -> linear_term *)
 
 (** Evaluate a linear term with a function assigning a value to each variable. *)
-(* val evaluate_linear_term : (variable -> coef) -> linear_term -> coef *)
+val evaluate_p_linear_term : (variable -> coef) -> p_linear_term -> coef
+val evaluate_pxd_linear_term : (variable -> coef) -> pxd_linear_term -> coef
 
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
@@ -116,7 +119,7 @@ val make_pxd_linear_inequality : pxd_linear_term -> op -> pxd_linear_inequality
 (* val is_pi0_compatible_inequality : (variable -> coef) -> linear_inequality -> bool *)
 
 (** Negate a linear inequality; for an equality, perform the pi0-compatible negation *)
-(* val negate_wrt_pi0 : (variable -> coef) -> linear_inequality -> linear_inequality *)
+val negate_wrt_pi0 : (variable -> coef) -> p_linear_inequality -> p_linear_inequality
 
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
@@ -125,6 +128,7 @@ val make_pxd_linear_inequality : pxd_linear_term -> op -> pxd_linear_inequality
 
 (** Convert a linear inequality into a string *)
 (* val string_of_linear_inequality : (variable -> string) -> linear_inequality -> string *)
+val string_of_p_linear_inequality : (variable -> string) -> p_linear_inequality -> string
 
 
 (************************************************************)
@@ -163,6 +167,7 @@ val set_manager : int -> int -> unit
 
 (** Create a linear constraint from a list of linear inequalities *)
 (* val make : linear_inequality list -> linear_constraint *)
+val make_p_constraint : p_linear_inequality list -> p_linear_constraint
 val make_px_constraint : px_linear_inequality list -> px_linear_constraint
 val make_pxd_constraint : pxd_linear_inequality list -> pxd_linear_constraint
 
@@ -173,9 +178,12 @@ val pxd_false_constraint : unit -> pxd_linear_constraint
 
 (** Create a true constraint *)
 (* val true_constraint : unit -> linear_constraint *)
+val p_true_constraint : unit -> p_linear_constraint
+val px_true_constraint : unit -> px_linear_constraint
 val pxd_true_constraint : unit -> pxd_linear_constraint
 
 (** "pxd_linear_constraint_of_clock_and_parameters x ~ d neg" will create a linear_constraint x ~ d, with x a clock, d a p_linear_term, and "neg" indicates whether x and d should be kept in this direction or reversed (viz., "x < p1 true" generates "x < p1" whereas "x <= p1+p2 false" generates "p1+p2 <= x" *)
+val px_linear_constraint_of_clock_and_parameters : variable -> op -> p_linear_term -> bool -> px_linear_constraint
 val pxd_linear_constraint_of_clock_and_parameters : variable -> op -> p_linear_term -> bool -> pxd_linear_constraint
 
 
@@ -191,7 +199,7 @@ val pxd_linear_constraint_of_clock_and_parameters : variable -> op -> p_linear_t
 (* val get_inequalities : linear_constraint -> linear_inequality list *)
 
 (** Return true if the variable is constrained in a linear_constraint *)
-(* val is_constrained : linear_constraint -> variable -> bool *)
+val pxd_is_constrained : pxd_linear_constraint -> variable -> bool
 
 (** Return the list of variables from l that are constrained in the constraint *)
 (* val find_variables : variable list -> linear_constraint -> variable list *)
@@ -204,6 +212,7 @@ val pxd_find_variables : variable list -> pxd_linear_constraint -> variable list
 
 (** Check if a constraint is false *)
 (* val is_false : linear_constraint -> bool *)
+val p_is_false : p_linear_constraint -> bool
 
 (** Check if a constraint is true *)
 (* val is_true : linear_constraint -> bool *)
@@ -211,6 +220,8 @@ val pxd_is_true : pxd_linear_constraint -> bool
 
 (** Check if a constraint is satisfiable *)
 (* val is_satisfiable : linear_constraint -> bool *)
+val px_is_satisfiable : px_linear_constraint -> bool
+val pxd_is_satisfiable : pxd_linear_constraint -> bool
 
 (** Check if 2 constraints are equal *)
 (* val is_equal : linear_constraint -> linear_constraint -> bool *)
@@ -234,9 +245,11 @@ val px_is_leq : px_linear_constraint -> px_linear_constraint -> bool
 
 (** Performs the intersection of a list of linear constraints *)
 (* val intersection : linear_constraint list -> linear_constraint *)
+val pxd_intersection : pxd_linear_constraint list -> pxd_linear_constraint
 
 (** Performs the intersection of a list of linear constraints with sideeffect *)
 (* val intersection_assign : linear_constraint -> linear_constraint list -> unit *)
+val p_intersection_assign : p_linear_constraint -> p_linear_constraint list -> unit
 val px_intersection_assign : px_linear_constraint -> px_linear_constraint list -> unit
 val pxd_intersection_assign : pxd_linear_constraint -> pxd_linear_constraint list -> unit
 
@@ -256,26 +269,36 @@ val px_hull_assign_if_exact : px_linear_constraint -> px_linear_constraint -> bo
 (** Eliminate (using existential quantification) all non-parameters (clocks and discrete) in a px_linear constraint *)
 val px_hide_nonparameters : px_linear_constraint -> p_linear_constraint
 
+(** Eliminate (using existential quantification) the discrete variables in a pxd_linear constraint, and remove the corresponding dimensions *)
+val pxd_hide_discrete_and_collapse : pxd_linear_constraint -> px_linear_constraint
+
 (** Eliminate (using existential quantification) a set of variables in a linear constraint, with side effects *)
 (* val hide_assign : variable list -> linear_constraint -> unit *)
+val px_hide_assign : variable list -> px_linear_constraint -> unit
+val pxd_hide_assign : variable list -> pxd_linear_constraint -> unit
 
 (** Add nb_dimensions to a linear_constraint *)
 (* val add_dimensions : int -> linear_constraint -> unit *)
+val pxd_add_dimensions : int -> pxd_linear_constraint -> unit
 
 (** Remove the highest nb_dimensions from a linear_constraint *)
 (* val remove_dimensions : int -> linear_constraint -> unit *)
+val pxd_remove_dimensions : int -> pxd_linear_constraint -> unit
 
 (** 'rename_variables renaming_couples c' renames all variables according to the couples of the form (old, new) *)
 (* val rename_variables : (variable * variable) list -> linear_constraint -> linear_constraint *)
+(* val rename_variables : (variable * variable) list -> pxd_linear_constraint -> pxd_linear_constraint *)
 
 (** 'rename_variables renaming_couples c' renames all variables according to the couples of the form (old, new), with side effects *)
 (* val rename_variables_assign : (variable * variable) list -> linear_constraint -> unit *)
+val pxd_rename_variables_assign : (variable * variable) list -> pxd_linear_constraint -> unit
 
 (** Perform time elapsing on a set of variables: the first variable list will elapse, the second will remain constant *)
 (* val time_elapse  : variable list -> variable list -> linear_constraint -> linear_constraint *)
 
 (** 'time_elapse_assign variables_elapse variables_constant linear_constraint' performs time elapsing on a set of variables variables_elapse; other variables remain constant; version with side effects; behavior is unspecified if some variables within linear_constraint do not appear in any set of variables *)
-(* val time_elapse_assign  : variable list -> variable list -> linear_constraint -> unit *)
+(* val time_elapse_assign : variable list -> variable list -> linear_constraint -> unit *)
+val pxd_time_elapse_assign : variable list -> variable list -> pxd_linear_constraint -> unit
 
 (** Perform an operation (?) on a set of variables: the first variable list will elapse, the second will remain constant *)
 (** TODO: describe better *)
@@ -286,6 +309,11 @@ val px_hide_nonparameters : px_linear_constraint -> p_linear_constraint
 (* val grow_to_zero_assign : variable list -> variable list -> linear_constraint -> unit *)
 
 
+(** Replace all strict inequalities with non-strict (and keeps others unchanged) within a p_linear_constraint *)
+val render_non_strict_p_linear_constraint : p_linear_constraint -> p_linear_constraint
+
+
+
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
 (** {3 Pi0-compatibility} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
@@ -294,7 +322,27 @@ val px_hide_nonparameters : px_linear_constraint -> p_linear_constraint
 (* val is_pi0_compatible : (variable -> coef) -> linear_constraint -> bool *)
 
 (** Compute the pi0-compatible and pi0-incompatible inequalities within a constraint *)
-(* val partition_pi0_compatible : (variable -> coef) -> linear_constraint -> (linear_inequality list * linear_inequality list) *)
+val partition_pi0_compatible : (variable -> coef) -> p_linear_constraint -> (p_linear_inequality list * p_linear_inequality list)
+
+
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+(** {3 Conversion between types of constraints } *)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+val instantiate_discrete : (variable -> coef) -> pxd_linear_constraint -> px_linear_constraint
+
+(** Convert a PX into a PXD constraint by extending the number of dimensions *)
+val pxd_of_px_constraint : px_linear_constraint -> pxd_linear_constraint
+
+
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+(** {3 Brute-force casts (argh) } *)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+
+(** "cast_p_of_pxd_linear_term p c" converts a PXD-term p to a P-term ; if c then a test if performed to check casting validity *)
+val cast_p_of_pxd_linear_term : pxd_linear_term -> bool -> p_linear_term
+val cast_p_of_pxd_linear_constraint : pxd_linear_constraint -> bool -> p_linear_constraint
+
+
 
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
@@ -330,25 +378,11 @@ val grml_of_pxd_linear_constraint : (variable -> string) -> int -> pxd_linear_co
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
 
 (** converts a linear_constraint to a set of 2d points wrt. the variables x,y *)
-(* val shape_of_poly : variable -> variable -> linear_constraint -> (float*float) list *(float*float) list *)
+val shape_of_poly : variable -> variable -> p_linear_constraint -> (float*float) list *(float*float) list
 
 (** Plot polyhedron corresponding to a convex constraint, projected on the two given variables *)
-(* val plot_2d : variable -> variable -> linear_constraint -> float -> float -> float -> float -> bool*string *)
+val plot_2d : variable -> variable -> p_linear_constraint -> float -> float -> float -> float -> bool*string
 
-
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
-(** {3 Conversion between types of constraints } *)
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
-val instantiate_discrete : (variable -> coef) -> pxd_linear_constraint -> px_linear_constraint
-
-
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
-(** {3 Brute-force casts (argh) } *)
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
-
-(** "cast_p_of_pxd_linear_term p c" converts a PXD-term p to a P-term ; if c then a test if performed to check casting validity *)
-val cast_p_of_pxd_linear_term : pxd_linear_term -> bool -> p_linear_term
-val cast_p_of_pxd_linear_constraint : pxd_linear_constraint -> bool -> p_linear_constraint
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
 (** {3 Statistics on performances} *)

@@ -2052,7 +2052,7 @@ let abstract_model_of_parsing_structure (parsed_variable_declarations, parsed_au
 	begin
 	match initial_observer_constraint with
 		| None -> ()
-		| Some c -> LinearConstraint.pxd_intersection_assign initial_constraint [c];
+		| Some c -> LinearConstraint.px_intersection_assign initial_constraint [c];
 	end;
 	
 	

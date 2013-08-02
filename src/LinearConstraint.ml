@@ -345,6 +345,9 @@ let make_pxd_linear_term = make_linear_term
 let add_linear_terms lt1 lt2 =
 	Pl (lt1, lt2)
 
+let add_pxd_linear_terms = add_linear_terms
+
+
 (** Substract two linear terms *)
 let sub_linear_terms lt1 lt2 =
 	Mi (lt1, lt2)
@@ -372,6 +375,10 @@ let rec evaluate_linear_term valuation_function linear_term =
 		| Ti (fac, rterm) -> ( 
 				let rval = evaluate_linear_term valuation_function rterm in
 				NumConst.mul fac rval)
+
+let evaluate_p_linear_term = evaluate_linear_term
+let evaluate_pxd_linear_term = evaluate_linear_term
+
 
 
 (** Evaluate a linear term (PPL) with a function assigning a value to each variable. *)
@@ -539,6 +546,8 @@ let strict_to_not_strict_inequality inequality =
 		|_ -> inequality
 
 
+
+
 (*--------------------------------------------------*)
 (* Pi0-compatibility *)
 (*--------------------------------------------------*)
@@ -649,6 +658,8 @@ let string_of_linear_inequality names linear_inequality =
 		| Greater_Or_Equal_RS -> " >= " in
 	lstr ^ opstr ^ rstr
 
+let string_of_p_linear_inequality = string_of_linear_inequality
+
 
 (************************************************************)
 (** {2 Linear Constraints} *)
@@ -700,6 +711,8 @@ let true_constraint () =
 	(* Return result *)
 	result
 
+let p_true_constraint = true_constraint
+let px_true_constraint = true_constraint
 let pxd_true_constraint = true_constraint
 
 
@@ -710,8 +723,12 @@ let make inequalities =
 	assert_dimensions poly;
   poly
 
+
+let make_p_constraint = make
 let make_px_constraint = make
 let make_pxd_constraint = make
+
+
 
 (** "linear_constraint_of_clock_and_parameters x ~ d neg" will create a linear_constraint x ~ d, with "x" a clock, "~" in {>, >=, =}, "d" a PConstraint.linear_term, and "neg" indicates whether x and d should be kept in this direction or reversed (viz., "x > p1 true" generates "x > p1" whereas "x >= p1+p2 false" generates "p1+p2 >= x" *)
 let linear_constraint_of_clock_and_parameters (x : variable) (op : op) (d : linear_term) (direction : bool) =
@@ -726,6 +743,7 @@ let linear_constraint_of_clock_and_parameters (x : variable) (op : op) (d : line
 	(* Create the constraint with the operator *)
 	make [make_linear_inequality lt op]
 
+let px_linear_constraint_of_clock_and_parameters = linear_constraint_of_clock_and_parameters
 let pxd_linear_constraint_of_clock_and_parameters = linear_constraint_of_clock_and_parameters
 
 
@@ -745,6 +763,9 @@ let is_false c =
 	(* Return result *)
 	result
 
+let p_is_false = is_false
+
+
 (** Check if a constraint is true *)
 let is_true c =
 	(* Statistics *)
@@ -763,6 +784,8 @@ let pxd_is_true = is_true
 
 (** Check if a constraint is satisfiable *)
 let is_satisfiable c = not (is_false c)
+let px_is_satisfiable = is_satisfiable
+let pxd_is_satisfiable = is_satisfiable
 
 (** Check if 2 constraints are equal *)
 let is_equal c1 c2 =
@@ -809,12 +832,16 @@ let nb_inequalities linear_constraint =
 
 (** Get the linear inequalities *)
 let get_inequalities =
+(*** TODO: add counter ***)
 	ppl_Polyhedron_get_constraints
 
 
 (** Return true if the variable is constrained in a linear_constraint *)
+(*** TODO: add counter ***)
 let is_constrained =
 	ppl_Polyhedron_constrains
+
+let pxd_is_constrained = is_constrained
 
 
 (** Return the list of variables from l that are constrained in the constraint *)
@@ -890,6 +917,7 @@ let intersection_assign linear_constraint constrs =
 	(* If false: stop *)
 (* 	) with Unsat_exception -> () *)
 
+let p_intersection_assign = intersection_assign
 let px_intersection_assign = intersection_assign
 let pxd_intersection_assign = intersection_assign
 
@@ -910,6 +938,7 @@ let intersection linear_constraints =
 		result_poly
 	) with Unsat_exception -> false_constraint ()*)
 
+let pxd_intersection = intersection
 
 (** Perform the hull (version with side effect) *)
 let hull_assign linear_constraint1 linear_constraint2 =
@@ -971,6 +1000,9 @@ let hide_assign variables linear_constraint =
 		assert_dimensions linear_constraint
 	)
 
+let px_hide_assign = hide_assign
+let pxd_hide_assign = hide_assign
+
 
 (** Eliminate (using existential quantification) a set of variables in a linear constraint *)
 let hide variables linear_constraint =
@@ -990,8 +1022,14 @@ let hide variables linear_constraint =
 (*** TO IMPLEMENT !!! ***)
 
 let px_hide_nonparameters = 
-	raise (InternalError "Not implemented!")
+	raise (InternalError "Not implemented!!!")
 
+
+
+(*** TO IMPLEMENT !!! ***)
+
+let pxd_hide_discrete_and_collapse = 
+	raise (InternalError "Not implemented!!!")
 
 
 
@@ -1004,6 +1042,10 @@ let add_dimensions nb_dimensions linear_constraint =
 	(* TODO: add a counter *)
 	
 	ppl_Polyhedron_add_space_dimensions_and_project linear_constraint nb_dimensions
+
+
+let pxd_add_dimensions = add_dimensions
+
 
 
 
@@ -1023,6 +1065,9 @@ let remove_dimensions nb_dimensions linear_constraint =
 	
 	(* Projects the polyhedron referenced to by handle onto the first space_dimension dimensions *)
 	ppl_Polyhedron_remove_higher_space_dimensions linear_constraint new_space_dimension
+
+let pxd_remove_dimensions = remove_dimensions
+
 
 
 (** rename variables in a constraint, with side effects *)
@@ -1057,7 +1102,9 @@ let rename_variables_assign list_of_couples linear_constraint =
 	ppl_t_map := !ppl_t_map +. (Unix.gettimeofday() -. start);
 	assert_dimensions linear_constraint
 
-	
+let pxd_rename_variables_assign = rename_variables_assign
+
+
 (** Rename variables in a constraint *)
 let rename_variables list_of_couples linear_constraint =
 	(* copy polyhedron, as ppl function has sideeffects *)
@@ -1065,6 +1112,7 @@ let rename_variables list_of_couples linear_constraint =
 	rename_variables_assign list_of_couples poly;
 	poly
 
+(* let pxd_rename_variables = rename_variables *)
 
 (* Generic time elapsing function *)
 (* 'reverse_direction' should be minus_one for growing, one for decreasing *)
@@ -1096,6 +1144,10 @@ let time_elapse_gen_assign reverse_direction variables_elapse variables_constant
 
 (** Time elapsing function *)
 let time_elapse_assign = time_elapse_gen_assign NumConst.minus_one
+
+let pxd_time_elapse_assign = time_elapse_assign
+
+
 
 let time_elapse variables_elapse variables_constant linear_constraint =
 	let linear_constraint = copy linear_constraint in
@@ -1190,6 +1242,15 @@ let grow_to_zero_assign variables_elapse variables_constant linear_constraint =
 	) variables_elapse;
 	(* The end *)
 	()
+
+
+
+(** Replace all strict inequalities with non-strict (and keeps others unchanged) within a p_linear_constraint *)
+let render_non_strict_p_linear_constraint k =
+	(* Get the list of inequalities *)
+	let inequality_list = get_inequalities k in 
+	(* Replace inequelities and convert back to a linear_constraint *)
+	make_p_constraint (List.map strict_to_not_strict_inequality inequality_list)
 
 
 
@@ -1355,7 +1416,8 @@ let instantiate_discrete discrete_values pxd_linear_constraint =
 	raise (InternalError "Not implemented!!")
 
 
-
+(** Convert a PX into a PXD constraint by extending the number of dimensions *)
+let pxd_of_px_constraint c = c
 
 
 

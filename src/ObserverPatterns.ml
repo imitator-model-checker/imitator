@@ -79,7 +79,7 @@ let ct_x_eq_d x d =
 (* Linear constraint x = 0 *)
 let lc_x_eq_0 x =
 	let d = LinearConstraint.make_p_linear_term [] NumConst.zero in
-	LinearConstraint.pxd_linear_constraint_of_clock_and_parameters x LinearConstraint.Op_ge d true
+	LinearConstraint.px_linear_constraint_of_clock_and_parameters x LinearConstraint.Op_ge d true
 (*	(* Build the linear term *)
 	let lt = (LinearConstraint.make_linear_term [NumConst.minus_one, x] NumConst.zero) in
 	(* Build linear constraint *)
@@ -292,8 +292,7 @@ let get_automaton nb_actions automaton_index nosync_index x_obs property =
 		(* Update actions per location for the silent action *)
 		actions_per_location.(0) <- nosync_index :: all_actions;
 		(* Update invariants *)
-		let test : LinearConstraint.pxd_linear_constraint = ct_x_leq_d x_obs d in
-		invariants.(0) <- test;
+		invariants.(0) <- ct_x_leq_d x_obs d ;
 		(* Compute transitions *)
 		transitions.(0).(a) <- untimedt 1;
 		transitions.(0).(nosync_index) <- [ct_x_eq_d x_obs d, No_update, [], 2];

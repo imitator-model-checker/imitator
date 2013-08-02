@@ -76,6 +76,9 @@ type clock_updates =
 
 
 (** update: variable_index := linear_term *)
+
+(*** TO OPTIMIZE (in terms of dimensions!) ***)
+
 type discrete_update = discrete_index * LinearConstraint.pxd_linear_term
 
 (** Guard: linear constraint *)

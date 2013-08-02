@@ -83,7 +83,7 @@ let string_of_clock_updates program = function
 		string_of_list_of_string_with_sep "\\n" (List.map (fun (variable_index, linear_term) ->
 			(program.variable_names variable_index)
 			^ ":="
-			^ (LinearConstraint.string_of_linear_term program.variable_names linear_term)
+			^ (LinearConstraint.string_of_pxd_linear_term program.variable_names linear_term)
 		) list_of_clocks_lt)
 
 	
@@ -94,7 +94,7 @@ let string_of_updates program updates =
 		(program.variable_names variable_index)
 		^ ":="
 		(* Convert the linear_term *)
-		^ (LinearConstraint.string_of_linear_term program.variable_names linear_term)
+		^ (LinearConstraint.string_of_pxd_linear_term program.variable_names linear_term)
 	) updates)
 
 
@@ -119,8 +119,8 @@ let string_of_transition program automaton_index source_location action_index (g
 	^ "label=\""
 	(* Guard *)
 	^ (
-		if not (LinearConstraint.is_true guard) then
-			(escape_string_for_dot (LinearConstraint.string_of_linear_constraint program.variable_names guard)) ^ "\\n"
+		if not (LinearConstraint.pxd_is_true guard) then
+			(escape_string_for_dot (LinearConstraint.string_of_pxd_linear_constraint program.variable_names guard)) ^ "\\n"
 		else ""
 		)
 	(* Sync *)
@@ -176,7 +176,7 @@ let string_of_location program automaton_index location_index =
 	(* Label: name *)
 	^ ", label=\"" ^ (program.location_names automaton_index location_index)
 	(* Label: invariant *)
-	^ "|{" ^ (escape_string_for_dot (LinearConstraint.string_of_linear_constraint program.variable_names (program.invariants automaton_index location_index)))
+	^ "|{" ^ (escape_string_for_dot (LinearConstraint.string_of_pxd_linear_constraint program.variable_names (program.invariants automaton_index location_index)))
 	(* Label: stopwatches *)
 	^ (if program.has_stopwatches then (
 		let stopwatches = program.stopwatches automaton_index location_index in
@@ -253,7 +253,7 @@ let string_of_automata program =
 	^ (if program.discrete != [] then
 		"|{Discrete|" ^ (vertical_string_of_list_of_variables program.discrete) ^ "}"
 		else "")
-	^ "|{Initial|" ^ (escape_string_for_dot (LinearConstraint.string_of_linear_constraint program.variable_names program.initial_constraint)) ^ "}"
+	^ "|{Initial|" ^ (escape_string_for_dot (LinearConstraint.string_of_px_linear_constraint program.variable_names program.initial_constraint)) ^ "}"
 	^ "\"];" (*}*)
 	(* To ensure that the name is above general info *)
 	^ "\n name -> general_info [color=white];"
@@ -301,7 +301,7 @@ type returned_constraint =
 	(** Disjunction of constraints *)
 	| Union_of_constraints of LinearConstraint.linear_constraint list*)
 let string_of_returned_constraint variable_names = function 
-	| Convex_constraint (linear_constraint , _) -> LinearConstraint.string_of_linear_constraint variable_names linear_constraint
+	| Convex_constraint (linear_constraint , _) -> LinearConstraint.string_of_p_linear_constraint variable_names linear_constraint
 	(** Disjunction of constraints *)
-	| Union_of_constraints (k_list,_) -> string_of_list_of_string_with_sep "\n OR \n" (List.map (LinearConstraint.string_of_linear_constraint variable_names) k_list)
+	| Union_of_constraints (k_list,_) -> string_of_list_of_string_with_sep "\n OR \n" (List.map (LinearConstraint.string_of_p_linear_constraint variable_names) k_list)
 

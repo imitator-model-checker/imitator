@@ -10,7 +10,7 @@
  * Author:        Ulrich Kuehne, Etienne Andre
  * 
  * Created:       2010/07/22
- * Last modified: 2013/03/20
+ * Last modified: 2013/08/02
  *
  ****************************************************************)
 
@@ -47,7 +47,7 @@ exception Unsat_exception
 (**************************************************************)
 
 (* Constraint for result *)
-let k_result = ref ( LinearConstraint.true_constraint () )
+let k_result = ref ( LinearConstraint.p_true_constraint () )
 
 (* List of last states (of runs) : used for the union mode *)
 let slast = ref []
@@ -82,7 +82,7 @@ let instantiate_costs model pi0 =
 			(* Instantiate it *)
 			let instantiated_cost = match cost with 
 				| None -> NumConst.zero 
-				| Some cost -> LinearConstraint.evaluate_linear_term pi0 cost in
+				| Some cost -> LinearConstraint.evaluate_p_linear_term pi0 cost in
 			(* Save it *)
 			costs.(automaton_index).(location_index) <- instantiated_cost;
 		done;
@@ -137,7 +137,7 @@ let find_local_clocks model =
 		let clocks_for_locations = List.fold_left (fun list_of_clocks_for_previous_locations location_index ->
 			(* Get the clocks in the invariant *)
 			let invariant = model.invariants automaton_index location_index in
-			let clocks_in_invariant = LinearConstraint.find_variables model.clocks invariant in
+			let clocks_in_invariant = LinearConstraint.pxd_find_variables model.clocks invariant in
 			(* Get the clocks from the stopwatches *)
 			let clocks_in_stopwatches = model.stopwatches automaton_index location_index in
 			
@@ -150,7 +150,7 @@ let find_local_clocks model =
 				let clocks_for_transitions = List.fold_left (fun list_of_clocks_for_previous_transitions transition ->
 					(* Name the elements in the transition *)
 					let guard , clock_updates , _ , _ = transition in
-					let clocks_in_guards = LinearConstraint.find_variables model.clocks guard in
+					let clocks_in_guards = LinearConstraint.pxd_find_variables model.clocks guard in
 					let clocks_in_updates = get_clocks_in_updates clock_updates in
 						(* Add these 2 new lists to the current list *)
 						List.rev_append (List.rev_append clocks_in_guards clocks_in_updates) list_of_clocks_for_previous_transitions
@@ -269,7 +269,7 @@ let find_useless_clocks_in_automata model local_clocks_per_automaton =
 					(* Retrieve the invariant *)
 					let invariant = model.invariants automaton_index location_index in
 					(* Check if the clock is present in the invariant *)
-					let constrained = LinearConstraint.is_constrained invariant clock_index in
+					let constrained = LinearConstraint.pxd_is_constrained invariant clock_index in
 					(* Print some information *)
 					print_message Debug_total ("Clock '" ^ (model.variable_names clock_index) ^ "' is " ^ (if constrained then "" else "NOT ") ^ "constrained in invariant of location '" ^ (model.location_names automaton_index location_index) ^ "'");
 					(* Return true or false *)
@@ -289,7 +289,7 @@ let find_useless_clocks_in_automata model local_clocks_per_automaton =
 							(* Check if there exists a guard in an outgoing transition where the clock is constrained *)
 							let exists_guard = List.exists (fun (guard , (*clock_updates*)_ , (*discrete_update_list*)_ , (*destination_index*)_) ->
 								(* Check if the clock is present in the guard *)
-								let constrained = LinearConstraint.is_constrained guard clock_index in
+								let constrained = LinearConstraint.pxd_is_constrained guard clock_index in
 								(* Print some information *)
 								if constrained then (
 									print_message Debug_high ("Found a transition where clock '" ^ (model.variable_names clock_index) ^ "' is constrained in guard from location '" ^ (model.location_names automaton_index location_index) ^ "', through '" ^ (model.action_names action_index) ^ "'");
@@ -500,7 +500,7 @@ let try_to_merge location1 constraint1 location2 constraint2 =
 	if location1 <> location2 then false
 	else(
 		(* Check convex union of constraints *)
-		LinearConstraint.hull_assign_if_exact constraint1 constraint2
+		LinearConstraint.px_hull_assign_if_exact constraint1 constraint2
 	)
 
 (*--------------------------------------------------*)
@@ -541,15 +541,15 @@ let merge model action_and_state_list =
 
 				(* Print some information *)
 				if debug_mode_greater Debug_total then (
-					print_message Debug_total ("\nConstraint of the eated before merging attempt...\n" ^ (LinearConstraint.string_of_linear_constraint model.variable_names eated_constraint));
-					print_message Debug_total ("\nConstraint of the eater before merging attempt...\n" ^ (LinearConstraint.string_of_linear_constraint model.variable_names eater_constraint));
+					print_message Debug_total ("\nConstraint of the eated before merging attempt...\n" ^ (LinearConstraint.string_of_px_linear_constraint model.variable_names eated_constraint));
+					print_message Debug_total ("\nConstraint of the eater before merging attempt...\n" ^ (LinearConstraint.string_of_px_linear_constraint model.variable_names eater_constraint));
 				);
 
 				
 				if try_to_merge eater_location eater_constraint eated_location eated_constraint then(
 					if debug_mode_greater Debug_total then (
 						(* Print some information *)
-						print_message Debug_total ("\nConstraint of the eater after merging...\n" ^ (LinearConstraint.string_of_linear_constraint model.variable_names eater_constraint));
+						print_message Debug_total ("\nConstraint of the eater after merging...\n" ^ (LinearConstraint.string_of_px_linear_constraint model.variable_names eater_constraint));
 					);
 						
 					(* Due to side effects in try_to_merge, the merging is already performed at this point! *)
@@ -741,7 +741,7 @@ let compute_plain_invariant model location =
 		model.invariants automaton_index location_index
 	) model.automata in
 	(* Perform the intersection *)
-	LinearConstraint.intersection invariants
+	LinearConstraint.pxd_intersection invariants
 
 
 (*--------------------------------------------------*)
@@ -767,7 +767,7 @@ let compute_invariant model location =
 (* Compute the polyhedron p projected onto rho(X) *)
 (*--------------------------------------------------*)
 (*** TO OPTIMIZE: use cache (?) *)
-let rho_assign model linear_constraint clock_updates =
+let rho_assign model (linear_constraint : LinearConstraint.pxd_linear_constraint) clock_updates =
 	if clock_updates != [] then(
 		(* Merge updates *)
 		
@@ -784,7 +784,7 @@ let rho_assign model linear_constraint clock_updates =
 				(* Iterate on the clocks, for a given automaton *)
 				List.iter (fun clock_id -> 
 					(* Assign this clock to true in the table *)
-					Hashtbl.replace clocks_hash clock_id (LinearConstraint.make_linear_term [] NumConst.zero);
+					Hashtbl.replace clocks_hash clock_id (LinearConstraint.make_pxd_linear_term [] NumConst.zero);
 				) list_of_clocks;
 			| Updates list_of_clocks_lt ->
 				(* Set the flag *)
@@ -837,31 +837,31 @@ let rho_assign model linear_constraint clock_updates =
 					match model.type_of_variables variable_index with
 					(* Clocks: X = 0 *)
 					| Var_type_clock -> 
-						let x_lt = LinearConstraint.make_linear_term [
+						let x_lt = LinearConstraint.make_pxd_linear_term [
 							NumConst.one, variable_index;
 						] NumConst.zero in
-						LinearConstraint.make_linear_inequality x_lt LinearConstraint.Op_eq
+						LinearConstraint.make_pxd_linear_inequality x_lt LinearConstraint.Op_eq
 					| _ -> raise (InternalError "Only clocks can be updated.")
 				) list_of_clocks_to_update) in
 			(* Create the constraint *)
-			let updates = LinearConstraint.make updates in
+			let updates = LinearConstraint.make_pxd_constraint updates in
 			(* Print some information *)
 			if debug_mode_greater Debug_total then(
-				print_message Debug_total (LinearConstraint.string_of_linear_constraint model.variable_names updates);
+				print_message Debug_total (LinearConstraint.string_of_pxd_linear_constraint model.variable_names updates);
 			);
 			
 			(* Hide clocks updated within the linear constraint, viz., exists X' : lc, for X' in rho(X) *)
 			print_message Debug_total ("\n -- Computing exists X : lc for reset clocks");
-			LinearConstraint.hide_assign list_of_clocks_to_update linear_constraint;
+			LinearConstraint.pxd_hide_assign list_of_clocks_to_update linear_constraint;
 			if debug_mode_greater Debug_total then(
-				print_message Debug_total (LinearConstraint.string_of_linear_constraint model.variable_names linear_constraint);
+				print_message Debug_total (LinearConstraint.string_of_pxd_linear_constraint model.variable_names linear_constraint);
 			);
 			
 			(* Add the constraints X = 0 *)
 			print_message Debug_total ("\n -- Adding X = 0 for reset clocks");
-			LinearConstraint.intersection_assign linear_constraint [updates];
+			LinearConstraint.pxd_intersection_assign linear_constraint [updates];
 			if debug_mode_greater Debug_total then(
-				print_message Debug_total (LinearConstraint.string_of_linear_constraint model.variable_names linear_constraint);
+				print_message Debug_total (LinearConstraint.string_of_pxd_linear_constraint model.variable_names linear_constraint);
 			)
 			
 		(* CASE 3: updates to linear terms *)
@@ -899,23 +899,23 @@ let rho_assign model linear_constraint clock_updates =
 			print_message Debug_total ("\nNew dimension for constraints: " ^ (string_of_int new_max_dimension) ^ "; extra dimensions : " ^ (string_of_int extra_dimensions) ^ ".");
 			(* Extend the number of dimensions *)
 			LinearConstraint.set_manager 0 new_max_dimension;
-			LinearConstraint.add_dimensions extra_dimensions linear_constraint;
+			LinearConstraint.pxd_add_dimensions extra_dimensions linear_constraint;
 
 			(* Create constraints X_i' = linear_term *)
 			let inequalities = List.map (fun (clock_id, linear_term) ->
 				(* Build linear_term - clock_id' = 0 *)
-				LinearConstraint.make_linear_inequality (
-					LinearConstraint.add_linear_terms
+				LinearConstraint.make_pxd_linear_inequality (
+					LinearConstraint.add_pxd_linear_terms
 						(* 1: The update linear term *)
 						linear_term
 						(* 2: - clock_id' *)
-						(LinearConstraint.make_linear_term [
+						(LinearConstraint.make_pxd_linear_term [
 								NumConst.minus_one, (Hashtbl.find prime_of_variable clock_id);
 							] NumConst.zero)
 				) LinearConstraint.Op_eq
 			) updates in
 			(* Create the constraint *)
-			let inequalities = LinearConstraint.make inequalities in
+			let inequalities = LinearConstraint.make_pxd_constraint inequalities in
 			(* Print some information *)
 			let print_constraint c = 
 				if debug_mode_greater Debug_total then(
@@ -925,7 +925,7 @@ let rho_assign model linear_constraint clock_updates =
 						else
 							(model.variable_names (Hashtbl.find variable_of_prime variable_id)) ^ "'"
 					in
-					print_message Debug_total (LinearConstraint.string_of_linear_constraint all_variable_names c);
+					print_message Debug_total (LinearConstraint.string_of_pxd_linear_constraint all_variable_names c);
 				)else(
 					()
 				)
@@ -934,7 +934,7 @@ let rho_assign model linear_constraint clock_updates =
 
 			(* Add the constraints X_i' = linear_term *)
 			print_message Debug_total ("\n -- Adding X_i' = linear_term for updated clocks");
-			LinearConstraint.intersection_assign linear_constraint [inequalities];
+			LinearConstraint.pxd_intersection_assign linear_constraint [inequalities];
 			(* Print some information *)
 			print_constraint linear_constraint;
 			
@@ -942,7 +942,7 @@ let rho_assign model linear_constraint clock_updates =
 			let list_of_clocks_to_hide, _ = List.split updates in
 			(* Hide clocks updated within the linear constraint, viz., exists X_i : lc, for X_i in rho(X) *)
 			print_message Debug_total ("\n -- Computing exists X : lc for updated clocks");
-			LinearConstraint.hide_assign list_of_clocks_to_hide linear_constraint;
+			LinearConstraint.pxd_hide_assign list_of_clocks_to_hide linear_constraint;
 			(* Print some information *)
 			if debug_mode_greater Debug_total then(
 				print_constraint linear_constraint;
@@ -953,7 +953,7 @@ let rho_assign model linear_constraint clock_updates =
 			(* Compute couples (X_i', X_i) *)
 			let clocks_and_primes = Hashtbl.fold (fun clock_id clock_prime_id couples -> (clock_id, clock_prime_id) :: couples) prime_of_variable [] in
 			print_message Debug_total ("\n -- Renaming clocks X_i' into X_i for updated clocks");
-			LinearConstraint.rename_variables_assign clocks_and_primes linear_constraint;
+			LinearConstraint.pxd_rename_variables_assign clocks_and_primes linear_constraint;
 			(* Print some information *)
 			if debug_mode_greater Debug_total then(
 				print_constraint linear_constraint;
@@ -962,7 +962,7 @@ let rho_assign model linear_constraint clock_updates =
 			(* Go back to the original number of dimensions *)
 			print_message Debug_total ("\nGo back to standard dimension for constraints: " ^ (string_of_int model.nb_variables) ^ ".");
 			LinearConstraint.set_manager 0 model.nb_variables;
-			LinearConstraint.remove_dimensions extra_dimensions linear_constraint;
+			LinearConstraint.pxd_remove_dimensions extra_dimensions linear_constraint;
 			(* Print some information *)
 			if debug_mode_greater Debug_total then(
 				print_constraint linear_constraint;
@@ -980,15 +980,15 @@ let rho_assign model linear_constraint clock_updates =
 let instantiate_discrete discrete_values =
 	let inequalities = List.map (fun (discrete_index, discrete_value) ->
 		(* Create a linear term 'D - d' *)
-		let linear_term = LinearConstraint.make_linear_term
+		let linear_term = LinearConstraint.make_pxd_linear_term
 			[(NumConst.one, discrete_index)]
 			(NumConst.neg discrete_value)
 		in
 		(* Create a linear equality *)
-		LinearConstraint.make_linear_inequality linear_term LinearConstraint.Op_eq
+		LinearConstraint.make_pxd_linear_inequality linear_term LinearConstraint.Op_eq
 	) discrete_values in
 	(* Create the linear constraint *)
-	LinearConstraint.make inequalities
+	LinearConstraint.make_pxd_constraint inequalities
 
 
 (*--------------------------------------------------*)
@@ -1038,13 +1038,16 @@ let create_initial_state model =
 	let initial_location = model.initial_location in
 	let initial_constraint = model.initial_constraint in
 	
+	(* Extend dimensions for discrete *)
+	let initial_constraint = LinearConstraint.pxd_of_px_constraint initial_constraint in
+	
 	(* Compute the invariants I_q0(X) for the initial locations *)
 	print_message Debug_high ("\nComputing initial invariant I_q0(X)");
 	(* Create the invariant *)
 	let invariant = compute_plain_invariant model initial_location in
 	(* Print some information *)
 	if debug_mode_greater Debug_total then
-		print_message Debug_total (LinearConstraint.string_of_linear_constraint model.variable_names invariant);
+		print_message Debug_total (LinearConstraint.string_of_pxd_linear_constraint model.variable_names invariant);
 	
 	(* Compute constraint for assigning a (constant) value to discrete variables *)
 	print_message Debug_high ("Computing constraint for discrete variables");
@@ -1053,14 +1056,14 @@ let create_initial_state model =
 	let discrete_constraint = instantiate_discrete discrete_values in
 	(* Print some information *)
 	if debug_mode_greater Debug_total then
-		print_message Debug_total (LinearConstraint.string_of_linear_constraint model.variable_names discrete_constraint);
+		print_message Debug_total (LinearConstraint.string_of_pxd_linear_constraint model.variable_names discrete_constraint);
 	
 	(* Perform intersection of C(X) and I_q0(X) and D_i = d_i *)
 	print_message Debug_high ("Performing intersection of C0(X) and I_q0(X) and D_i = d_i");
-	let current_constraint = LinearConstraint.intersection [initial_constraint ; invariant ; discrete_constraint (** To optimize: could be removed *)] in
+	let current_constraint = LinearConstraint.pxd_intersection [initial_constraint ; invariant ; discrete_constraint (*** TO OPTIMIZE: could be removed ***)] in
 	(* Print some information *)
 	if debug_mode_greater Debug_total then
-		print_message Debug_total (LinearConstraint.string_of_linear_constraint model.variable_names current_constraint);
+		print_message Debug_total (LinearConstraint.string_of_pxd_linear_constraint model.variable_names current_constraint);
 		
 	(* Compute the list of stopwatches *)
 	let stopped_clocks, elapsing_clocks = compute_stopwatches model initial_location in
@@ -1074,28 +1077,28 @@ let create_initial_state model =
 	
 	(* Perform time elapsing *)
 	print_message Debug_high ("Performing time elapsing on [ C0(X) and I_q0(X) and D_i = d_i ]");
-	LinearConstraint.time_elapse_assign (*model.clocks model.parameters_and_discrete*)
+	LinearConstraint.pxd_time_elapse_assign (*model.clocks model.parameters_and_discrete*)
 		elapsing_clocks
 		(List.rev_append stopped_clocks model.parameters_and_discrete)
 		current_constraint
 	;
 	(* Print some information *)
 	if debug_mode_greater Debug_total then
-		print_message Debug_total (LinearConstraint.string_of_linear_constraint model.variable_names current_constraint);
+		print_message Debug_total (LinearConstraint.string_of_pxd_linear_constraint model.variable_names current_constraint);
 	
 	(* Perform intersection of [C(X) and I_q0(X) and D_i = d_i]time with I_q0(X) and D_i = d_i *)
 	print_message Debug_high ("Performing intersection of [C0(X) and I_q0(X) and D_i = d_i]time and I_q0(X) and D_i = d_i");
-	LinearConstraint.intersection_assign current_constraint [invariant ; discrete_constraint];
+	LinearConstraint.pxd_intersection_assign current_constraint [invariant ; discrete_constraint];
 	(* Print some information *)
 	if debug_mode_greater Debug_total then
-		print_message Debug_total (LinearConstraint.string_of_linear_constraint model.variable_names current_constraint);
+		print_message Debug_total (LinearConstraint.string_of_pxd_linear_constraint model.variable_names current_constraint);
 	
 	(* Hide discrete *)
 	print_message Debug_high ("Hide discrete");
-	LinearConstraint.hide_assign model.discrete current_constraint;
+	let current_constraint = LinearConstraint.pxd_hide_discrete_and_collapse (*model.discrete*) current_constraint in
 	(* Print some information *)
 	if debug_mode_greater Debug_total then
-		print_message Debug_total (LinearConstraint.string_of_linear_constraint model.variable_names current_constraint);
+		print_message Debug_total (LinearConstraint.string_of_px_linear_constraint model.variable_names current_constraint);
 		
 		
 	(* Remove useless clocks (if option activated) *)
@@ -1114,10 +1117,10 @@ let create_initial_state model =
 		);
 		
 		print_message Debug_high ("\nRemoving useless clocks ");
-		LinearConstraint.hide_assign clocks_to_remove current_constraint;
+		LinearConstraint.px_hide_assign clocks_to_remove current_constraint;
 		(* Print some information *)
 		if debug_mode_greater Debug_total then(
-			print_message Debug_total (LinearConstraint.string_of_linear_constraint model.variable_names current_constraint);
+			print_message Debug_total (LinearConstraint.string_of_px_linear_constraint model.variable_names current_constraint);
 		);
 	);
 	
@@ -1216,7 +1219,10 @@ let compute_new_location model aut_table trans_table action_index original_locat
 		(* Update discrete *)
 		List.iter (fun (discrete_index, linear_term) ->
 			(* Compute its new value *)
-			let new_value = LinearConstraint.evaluate_linear_term (Automaton.get_discrete_value original_location) linear_term in
+
+			(*** TO OPTIMIZE (in terms of dimensions) ***)
+			
+			let new_value = LinearConstraint.evaluate_pxd_linear_term (Automaton.get_discrete_value original_location) linear_term in
 			(* Check if already updated *)
 			if Hashtbl.mem updated_discrete discrete_index then (
 				(* Find its value *)
@@ -1277,29 +1283,29 @@ let compute_new_constraint model orig_constraint discrete_constr orig_location d
 		print_message Debug_total ("\n***********************************");
 		print_message Debug_total ("Entering compute_new_constraint");	
 		print_message Debug_total ("***********************************");
-		print_message Debug_total ("C = " ^ (LinearConstraint.string_of_linear_constraint model.variable_names (orig_constraint ())));
+		print_message Debug_total ("C = " ^ (LinearConstraint.string_of_px_linear_constraint model.variable_names (orig_constraint ())));
 	);
-	(* The constraint is checked on the fly for satisfyability -> exception mechanism *)
+	(* The constraint is checked on the fly for satisfiability -> exception mechanism *)
 	try (
-		let current_constraint = LinearConstraint.copy discrete_constr in
+		let current_constraint = LinearConstraint.pxd_of_px_constraint discrete_constr in
 
 		(* Print some information *)
 		if debug_mode_greater Debug_total then(
 			print_message Debug_total ("\nComputing the guards g(x)");
 			List.iter (fun guard -> 
-				print_message Debug_total (LinearConstraint.string_of_linear_constraint model.variable_names guard);
+				print_message Debug_total (LinearConstraint.string_of_pxd_linear_constraint model.variable_names guard);
 			) guards;
 		);
 		print_message Debug_total ("\nPerforming intersection of Di = di and C(X) and g(X)");
 		(* Add the (old) value for discrete to the guards D_i = d_i and g(X) *)
-		LinearConstraint.intersection_assign current_constraint ((orig_constraint ()) :: guards);
+		LinearConstraint.pxd_intersection_assign current_constraint ((LinearConstraint.pxd_of_px_constraint (orig_constraint ())) :: guards);
 		(* Print some information *)
 		if debug_mode_greater Debug_total then(
-			print_message Debug_total (LinearConstraint.string_of_linear_constraint model.variable_names current_constraint);
+			print_message Debug_total (LinearConstraint.string_of_pxd_linear_constraint model.variable_names current_constraint);
 		);
 		
 		(* Check here for unsatisfiability *)
-		if not (LinearConstraint.is_satisfiable current_constraint) then (
+		if not (LinearConstraint.pxd_is_satisfiable current_constraint) then (
 			(* Statistics *)
 			nb_unsat1 := !nb_unsat1 + 1;
 			print_message Debug_high "skip transition";
@@ -1308,10 +1314,10 @@ let compute_new_constraint model orig_constraint discrete_constr orig_location d
 		
 		print_message Debug_total ("\nEliminate the discrete variables in C(X) and g(X)");
 		(* Remove the discrete variables (Exists D_i : D_i = d_i and g(X)) *)
-		LinearConstraint.hide_assign model.discrete current_constraint;
+		LinearConstraint.pxd_hide_assign model.discrete current_constraint;
 		(* Print some information *)
 		if debug_mode_greater Debug_total then(
-			print_message Debug_total (LinearConstraint.string_of_linear_constraint model.variable_names current_constraint);
+			print_message Debug_total (LinearConstraint.string_of_pxd_linear_constraint model.variable_names current_constraint);
 		);
 		
 		print_message Debug_total ("\nProjecting C(X) and g(X) onto rho");
@@ -1319,7 +1325,7 @@ let compute_new_constraint model orig_constraint discrete_constr orig_location d
 		(* Print some information *)
 		if debug_mode_greater Debug_total then(
 			print_message Debug_total ("\nResult:");
-			print_message Debug_total (LinearConstraint.string_of_linear_constraint model.variable_names current_constraint);
+			print_message Debug_total (LinearConstraint.string_of_pxd_linear_constraint model.variable_names current_constraint);
 		);
 
 		(* Compute the invariant in the destination location I_q(X) *)
@@ -1327,17 +1333,17 @@ let compute_new_constraint model orig_constraint discrete_constr orig_location d
 		let invariant = compute_invariant model dest_location in
 		(* Print some information *)
 		if debug_mode_greater Debug_total then(
-			print_message Debug_total (LinearConstraint.string_of_linear_constraint model.variable_names invariant);
+			print_message Debug_total (LinearConstraint.string_of_pxd_linear_constraint model.variable_names invariant);
 		);
 
 		(* Perform the intersection *)
 		print_message Debug_total ("\nPerforming intersection of [C(X) and g(X)] rho and I_q(X)");
 		(* (Exists D_i : D_i = d_i and g(X)) *)
-		LinearConstraint.intersection_assign current_constraint [invariant];
+		LinearConstraint.pxd_intersection_assign current_constraint [invariant];
 		(* Print some information *)
 		if debug_mode_greater Debug_total then(
-			print_message Debug_total (LinearConstraint.string_of_linear_constraint model.variable_names current_constraint);
-			if not (LinearConstraint.is_satisfiable current_constraint) then
+			print_message Debug_total (LinearConstraint.string_of_pxd_linear_constraint model.variable_names current_constraint);
+			if not (LinearConstraint.pxd_is_satisfiable current_constraint) then
 				print_message Debug_total ("This constraint is NOT satisfiable (after intersection of [C(X) and g(X)] rho and I_q(X) ).");
 		);
 
@@ -1355,14 +1361,14 @@ let compute_new_constraint model orig_constraint discrete_constr orig_location d
 		
 		(* Perform time elapsing *)
 		print_message Debug_total ("\nPerforming time elapsing on [C(X) and g(X)] rho and I_q(X)");
-		LinearConstraint.time_elapse_assign (*model.clocks model.parameters_and_discrete*)
+		LinearConstraint.pxd_time_elapse_assign (*model.clocks model.parameters_and_discrete*)
 			elapsing_clocks
 			(List.rev_append stopped_clocks model.parameters_and_discrete)
 			current_constraint
 		;
 		(* Print some information *)
 		if debug_mode_greater Debug_total then(
-			print_message Debug_total (LinearConstraint.string_of_linear_constraint model.variable_names current_constraint);
+			print_message Debug_total (LinearConstraint.string_of_pxd_linear_constraint model.variable_names current_constraint);
 		);
 
 		(* Compute the equalities for the discrete variables (in destination location) *)
@@ -1372,15 +1378,15 @@ let compute_new_constraint model orig_constraint discrete_constr orig_location d
 		
 		(* Perform the intersection *)
 		print_message Debug_total ("\nPerforming intersection of the constraint with D_i = d_i and I_q(X) ");
-		LinearConstraint.intersection_assign current_constraint
+		LinearConstraint.pxd_intersection_assign current_constraint
 			[
 				discrete_constraint;
 				invariant;
 			];
 		(* Print some information *)
 		if debug_mode_greater Debug_total then(
-			print_message Debug_total (LinearConstraint.string_of_linear_constraint model.variable_names current_constraint);
-			if not (LinearConstraint.is_satisfiable current_constraint) then
+			print_message Debug_total (LinearConstraint.string_of_pxd_linear_constraint model.variable_names current_constraint);
+			if not (LinearConstraint.pxd_is_satisfiable current_constraint) then
 				print_message Debug_total ("This constraint is NOT satisfiable (after intersection of the constraint with D_i = d_i and I_q(X)).");
 		);
 		
@@ -1396,11 +1402,11 @@ let compute_new_constraint model orig_constraint discrete_constr orig_location d
 
 		(* Hide discrete' *)
 		print_message Debug_total ("\nHide discrete variables ");
-		LinearConstraint.hide_assign (model.discrete) current_constraint;
+		let current_constraint = LinearConstraint.pxd_hide_discrete_and_collapse (*(model.discrete)*) current_constraint in
 		(* Print some information *)
 		if debug_mode_greater Debug_total then(
-			print_message Debug_total (LinearConstraint.string_of_linear_constraint model.variable_names current_constraint);
-			if not (LinearConstraint.is_satisfiable current_constraint) then
+			print_message Debug_total (LinearConstraint.string_of_px_linear_constraint model.variable_names current_constraint);
+			if not (LinearConstraint.px_is_satisfiable current_constraint) then
 				print_message Debug_total ("This constraint is NOT satisfiable (after hiding discrete variables).");
 		);
 		
@@ -1421,10 +1427,10 @@ let compute_new_constraint model orig_constraint discrete_constr orig_location d
 			);
 			
 			print_message Debug_high ("\nRemoving useless clocks ");
-			LinearConstraint.hide_assign clocks_to_remove current_constraint;
+			LinearConstraint.px_hide_assign clocks_to_remove current_constraint;
 			(* Print some information *)
 			if debug_mode_greater Debug_total then(
-				print_message Debug_total (LinearConstraint.string_of_linear_constraint model.variable_names current_constraint);
+				print_message Debug_total (LinearConstraint.string_of_px_linear_constraint model.variable_names current_constraint);
 			);
 		);
 		
@@ -1487,12 +1493,12 @@ let inverse_method_check_constraint model reachability_graph constr =
 	(* Retrieve the pi0 (dynamic!) *)
 	let pi0 = Input.get_pi0 () in
 	
-	(* Hide non parameters (X) *)
+	(* Hide non-parameters *)
 	print_message Debug_high ("\nHiding non parameters:");
-	let p_constraint = LinearConstraint.hide model.clocks_and_discrete constr in
+	let p_constraint = LinearConstraint.px_hide_nonparameters (*model.clocks_and_discrete*) constr in
 	(* Print some information *)
 	if debug_mode_greater Debug_high then(
-		print_message Debug_high (LinearConstraint.string_of_linear_constraint model.variable_names p_constraint);
+		print_message Debug_high (LinearConstraint.string_of_p_linear_constraint model.variable_names p_constraint);
 	);
 	(* Check the pi0-compatibility *)
 	let compatible, incompatible = LinearConstraint.partition_pi0_compatible pi0 p_constraint in
@@ -1504,12 +1510,12 @@ let inverse_method_check_constraint model reachability_graph constr =
 		(* Print some information *)
 		if debug_mode_greater Debug_medium then(
 			print_message Debug_high ("Associated constraint:");
-			print_message Debug_high (LinearConstraint.string_of_linear_constraint model.variable_names constr);
+			print_message Debug_high (LinearConstraint.string_of_px_linear_constraint model.variable_names constr);
 			print_message Debug_medium ("\nThe following inequalities are pi0-incompatible:");
-			List.iter (fun inequality -> print_message Debug_medium (LinearConstraint.string_of_linear_inequality model.variable_names inequality)) incompatible;
+			List.iter (fun inequality -> print_message Debug_medium (LinearConstraint.string_of_p_linear_inequality model.variable_names inequality)) incompatible;
 		);
 
-		let inequality =
+		let p_inequality =
 			(* If random selection: pick up a random inequality *)
 			if not options#no_random then random_element incompatible
 			(* Else select the first one *)
@@ -1518,31 +1524,35 @@ let inverse_method_check_constraint model reachability_graph constr =
 		(* Print some information *)
 		if debug_mode_greater  Debug_medium then(
 			print_message Debug_medium ("\nSelecting the following pi0-incompatible inequality:");
-			print_message Debug_medium (LinearConstraint.string_of_linear_inequality model.variable_names inequality);
+			print_message Debug_medium (LinearConstraint.string_of_p_linear_inequality model.variable_names p_inequality);
 		);
 
 		(* Update counter *)
 		if List.length incompatible > 1 then nb_random_selections := !nb_random_selections + 1;
 		
 		(* Negate the inequality *)
-		let negated_inequality = LinearConstraint.negate_wrt_pi0 pi0 inequality in
+		let negated_inequality = LinearConstraint.negate_wrt_pi0 pi0 p_inequality in
 		(* Print some information *)
 		let randomly = if not options#no_random then "randomly " else "" in
 		let among = if List.length incompatible > 1 then (" (" ^ randomly ^ "selected among " ^ (string_of_int (List.length incompatible)) ^ " inequalities)") else "" in
 		print_message Debug_standard ("  Adding the following inequality" ^ among ^ ":");
-		print_message Debug_standard ("  " ^ (LinearConstraint.string_of_linear_inequality model.variable_names negated_inequality));
+		print_message Debug_standard ("  " ^ (LinearConstraint.string_of_p_linear_inequality model.variable_names negated_inequality));
+		
+		
+		(* Transform to constraint *)
+		let negated_constraint = LinearConstraint.make_p_constraint [negated_inequality] in
 		
 		
 		(* Add the p_constraint to the result (except in case of variants) *)
 		if not (options#pi_compatible || options#union) then(
 			print_message Debug_high ("Updating k_result with the negated inequality");
-			LinearConstraint.intersection_assign !k_result [LinearConstraint.make [negated_inequality]];
+			LinearConstraint.p_intersection_assign !k_result [negated_constraint];
 		);
 		
 
 		(* Update the previous states (including the 'new_states' and the 'orig_state') *)
 		print_message Debug_medium ("\nUpdating all the previous states.\n");
-		Graph.add_inequality_to_states reachability_graph negated_inequality;
+		Graph.add_p_constraint_to_states reachability_graph negated_constraint;
 		
 		(* If pi-incompatible *)
 		(false, p_constraint)
@@ -1575,6 +1585,7 @@ let compute_transitions model location constr action_index automata aut_table ma
 			let location_index = Automaton.get_location location automaton_index in
 			(* Get transitions for this automaton *)
 			let transitions = model.transitions automaton_index location_index action_index in
+			
 			(* REMOVED 2011/11/21 : computation always slower ; might be faster for strongly branching systems? EXCEPT FOR LSV.imi --> put it back! *)
 			(* Keep only possible transitions *)
 			let is_possible = fun trans -> (
