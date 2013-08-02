@@ -9,7 +9,7 @@
 *****************************************************************)
 
 {
-open GMLParser
+open GrMLParser
 
 (* Intricated comments *)
 let comment_depth = ref 0;;

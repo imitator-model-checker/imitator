@@ -1,17 +1,23 @@
 (*****************************************************************
  *
- *                     IMITATOR II
+ *                       IMITATOR
  * 
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
- * Author:        Etienne Andre
- * Created:       2010/03/04
- * Last modified: 2013/03/06
+ * Universite Paris 13, Sorbonne Paris Cite, LIPN (France)
  *
- ****************************************************************)
+ * Description: common definitions for linear terms and constraints (based on PPL)
+ *
+ * Author:        Etienne Andre
+ * 
+ * Created:       2010/03/04
+ * Last modified: 2013/08/02
+ *
+ ****************************************************************) 
+ 
 
-(**************************************************)
+(************************************************************)
 (* Modules *)
-(**************************************************)
+(************************************************************)
 (*open Apron   *)
 (*open Lincons0*)
 
@@ -24,9 +30,9 @@ open Gmp.Z.Infixes
 
 exception Unsat_exception
 
-(**************************************************)
+(************************************************************)
 (* Statistics for the use of PPL *)
-(**************************************************)
+(************************************************************)
 let ppl_nb_space_dimension = ref 0
 	let ppl_t_space_dimension = ref 0.0
 
@@ -112,9 +118,9 @@ let get_statistics () =
 
 
 
-(**************************************************)
+(************************************************************)
 (* TYPES *)
-(**************************************************)
+(************************************************************)
 
 type variable = int
 type coef = NumConst.t
@@ -132,16 +138,29 @@ type linear_term =
 	| Mi of linear_term * linear_term
 	| Ti of coef * linear_term
 
+type p_linear_term = linear_term
+type px_linear_term = linear_term
+type pxd_linear_term = linear_term
+
+
 type op =
 	| Op_g
 	| Op_ge
 	| Op_eq
 
-(*type linear_inequality = Lincons0.t*)
-type linear_inequality = Ppl.linear_constraint
 
-(*type linear_constraint = Polka.strict Polka.t Abstract0.t *)
+type linear_inequality = Ppl.linear_constraint
+type p_linear_inequality = linear_inequality
+type px_linear_inequality = linear_inequality
+type pxd_linear_inequality = linear_inequality
+
+
 type linear_constraint = Ppl.polyhedron
+
+type p_linear_constraint = linear_constraint
+type px_linear_constraint = linear_constraint
+type pxd_linear_constraint = linear_constraint
+
 
 (* In order to convert a linear_term (with rational coefficients) *)
 (* to the corresponding PPL data structure, it is normalized such *)
@@ -193,9 +212,9 @@ let string_of_var names variable =
 	"V_" ^ (names variable)
 
 	
-(**************************************************)
+(************************************************************)
 (** Global variables *)
-(**************************************************)
+(************************************************************)
 
 (* The manager *)
 (*let manager = Polka.manager_alloc_strict ()*)
@@ -210,9 +229,9 @@ let real_dim = ref 0
 let total_dim = ref 0
 
 
-(**************************************************)
+(************************************************************)
 (* Encapsulation of PPL functions *)
-(**************************************************)
+(************************************************************)
 let space_dimension x =
 	(* Statistics *)
 	ppl_nb_space_dimension := !ppl_nb_space_dimension + 1;
@@ -282,26 +301,27 @@ let ppl_remove_dim poly remove =
 
 	
 	
-(**************************************************)
+(************************************************************)
 (* Useful Functions *)
-(**************************************************)
+(************************************************************)
 
 (** check the dimensionality of a polyhedron *)
 let assert_dimensions poly =
 	let ndim = space_dimension poly in
 	if not (ndim = !total_dim) then (
 		print_error ("Polyhedron has too few dimensions (" ^ (string_of_int ndim) ^ " / " ^ (string_of_int !total_dim) ^ ")");
-		raise (InternalError "Inconsistent polyhedron found")	
+		raise (InternalError "Inconsistent polyhedron found")
 	)
 
-(**************************************************)
+(************************************************************)
 (** {2 Linear terms} *)
-(**************************************************)
+(************************************************************)
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
 (** {3 Creation} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
 
+(** Create a linear term from its list of members and its constant coefficient *)
 let make_linear_term members coef =
 	List.fold_left (fun term head ->
 		let (c, v) = head in 
@@ -310,6 +330,12 @@ let make_linear_term members coef =
 			else
 				Pl ((Ti (c, Var v), term))
 	)	(Coef coef) members
+
+
+let make_p_linear_term = make_linear_term
+let make_pxd_linear_term = make_linear_term
+
+
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
 (** {3 Functions} *)
@@ -397,10 +423,12 @@ let rec string_of_linear_term names linear_term =
 				match rterm with
 					| Coef _ -> fstr ^ "*" ^ tstr
 					| Var  _ -> fstr ^ "*" ^ tstr
-					| _ -> fstr ^ " * (" ^ tstr ^ ")" ) 				
+					| _ -> fstr ^ " * (" ^ tstr ^ ")" )
 
+let string_of_p_linear_term = string_of_linear_term 
+let string_of_pxd_linear_term = string_of_linear_term 
 
-(** Convert a linear term (PPL) into a string *)								
+(** Convert a linear term (PPL) into a string *)
 let rec string_of_linear_term_ppl names linear_term =
 	match linear_term with
 		| Coefficient z -> Gmp.Z.string_from z
@@ -429,9 +457,9 @@ let rec string_of_linear_term_ppl names linear_term =
 						| _ -> fstr ^ " * (" ^ tstr ^ ")" ) 				
 				
 
-(**************************************************)
+(************************************************************)
 (** {2 Linear inequalities} *)
-(**************************************************)
+(************************************************************)
 
 (************** TO DO : minimize inequalities as soon as they have been created / changed *)
 
@@ -453,7 +481,9 @@ let make_linear_inequality linear_term op =
 		| Op_g -> Greater_Than (lin_term, zero_term)
 		| Op_ge -> Greater_Or_Equal (lin_term, zero_term)
 		| Op_eq -> Equal (lin_term, zero_term)
-	
+
+
+let make_pxd_linear_inequality = make_linear_inequality
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
 (** {3 Functions} *)
@@ -620,9 +650,21 @@ let string_of_linear_inequality names linear_inequality =
 	lstr ^ opstr ^ rstr
 
 
-(**************************************************)
+(************************************************************)
 (** {2 Linear Constraints} *)
-(**************************************************)
+(************************************************************)
+
+
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+(** {3 Initialization} *)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+
+(** Set the constraint manager *)
+let set_manager int_d real_d =
+	int_dim := int_d;
+	real_dim := real_d;
+	total_dim := int_d + real_d
+
 
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
@@ -639,8 +681,12 @@ let false_constraint () =
 	(* Statistics *)
 	ppl_t_false_constraint := !ppl_t_false_constraint +. (Unix.gettimeofday() -. start);
 	(* Return result *)
-	result	
-	
+	result
+
+let p_false_constraint = false_constraint
+let pxd_false_constraint = false_constraint
+
+
 
 (** Create a true constraint *)
 let true_constraint () = 
@@ -653,21 +699,34 @@ let true_constraint () =
 	ppl_t_true_constraint := !ppl_t_true_constraint +. (Unix.gettimeofday() -. start);
 	(* Return result *)
 	result
-	
-	
+
+let pxd_true_constraint = true_constraint
+
+
 (** Create a linear constraint from a list of linear inequalities *)
 let make inequalities = 
 	let poly = true_constraint () in
 	add_constraints poly inequalities;
 	assert_dimensions poly;
   poly
-	
-(** Set the constraint manager *)
-let set_manager int_d real_d =
-	int_dim := int_d;
-	real_dim := real_d;
-	total_dim := int_d + real_d 
 
+let make_px_constraint = make
+let make_pxd_constraint = make
+
+(** "linear_constraint_of_clock_and_parameters x ~ d neg" will create a linear_constraint x ~ d, with "x" a clock, "~" in {>, >=, =}, "d" a PConstraint.linear_term, and "neg" indicates whether x and d should be kept in this direction or reversed (viz., "x > p1 true" generates "x > p1" whereas "x >= p1+p2 false" generates "p1+p2 >= x" *)
+let linear_constraint_of_clock_and_parameters (x : variable) (op : op) (d : linear_term) (direction : bool) =
+	(* Create a linear term made of x *)
+	let lt_x = make_linear_term [NumConst.one, x] NumConst.zero in
+	(* Handle order *)
+	let lt =
+		if direction
+			then sub_linear_terms d lt_x
+		else sub_linear_terms lt_x d
+	in
+	(* Create the constraint with the operator *)
+	make [make_linear_inequality lt op]
+
+let pxd_linear_constraint_of_clock_and_parameters = linear_constraint_of_clock_and_parameters
 
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
@@ -698,6 +757,10 @@ let is_true c =
 	(* Return result *)
 	result
 
+let pxd_is_true = is_true
+
+
+
 (** Check if a constraint is satisfiable *)
 let is_satisfiable c = not (is_false c)
 
@@ -713,6 +776,7 @@ let is_equal c1 c2 =
 	(* Return result *)
 	result
 
+let px_is_equal = is_equal
 
 (** Check if a constraint is included in another one *)
 let is_leq x y =
@@ -726,6 +790,7 @@ let is_leq x y =
 	(* Return result *)
 	result
 
+let px_is_leq = is_leq
 
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
@@ -754,31 +819,14 @@ let is_constrained =
 
 (** Return the list of variables from l that are constrained in the constraint *)
 (* WARNING: no idea of the efficiency of this way of doing *)
-(* (but not crucial because only called for preprocessing in IMITATOR) *)
+(* (but not crucial because only called for preprocessing) *)
 let find_variables variables_list linear_constraint =
 	List.filter (fun variable ->
 		is_constrained linear_constraint variable
 	) variables_list
 
 
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
-(** {3 Pi0-compatibility} *)
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
-
-(** Check if a linear constraint is pi0-compatible *)
-let is_pi0_compatible pi0 linear_constraint =
-	(* Get a list of linear inequalities *)
-	let list_of_inequalities = get_constraints linear_constraint in
-	(* Check the pi0-compatibility for all *)
-	List.for_all (is_pi0_compatible_inequality pi0) list_of_inequalities
-
-
-(** Compute the pi0-compatible and pi0-incompatible inequalities within a constraint *)
-let partition_pi0_compatible pi0 linear_constraint =
-	(* Get a list of linear inequalities *)
-	let list_of_inequalities = get_constraints linear_constraint in
-	(* Partition *)
-	List.partition (is_pi0_compatible_inequality pi0) list_of_inequalities
+let pxd_find_variables = find_variables
 
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
@@ -807,6 +855,10 @@ let string_of_linear_constraint names linear_constraint =
 		"\n& "
 		(List.map (string_of_linear_inequality names) list_of_inequalities)
 	)
+
+let string_of_p_linear_constraint = string_of_linear_constraint 
+let string_of_px_linear_constraint = string_of_linear_constraint 
+let string_of_pxd_linear_constraint = string_of_linear_constraint 
 
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
@@ -837,6 +889,11 @@ let intersection_assign linear_constraint constrs =
 		assert_dimensions linear_constraint
 	(* If false: stop *)
 (* 	) with Unsat_exception -> () *)
+
+let px_intersection_assign = intersection_assign
+let pxd_intersection_assign = intersection_assign
+
+let px_intersection_assign_p = intersection_assign
 
 
 (** Performs the intersection of a list of linear constraints *)
@@ -879,6 +936,8 @@ let hull_assign_if_exact linear_constraint1 linear_constraint2 =
 	(* Return result *)
 	result
 
+let px_hull_assign_if_exact = hull_assign_if_exact
+
 
 (** Perform difference (version with side effect) *)
 let difference_assign linear_constraint1 linear_constraint2 =
@@ -920,8 +979,24 @@ let hide variables linear_constraint =
 	(* Call the function with side-effects *)
 	hide_assign variables poly;
 	poly
-	
-	
+
+(* let px_hide = hide *)
+
+
+
+
+
+
+(*** TO IMPLEMENT !!! ***)
+
+let px_hide_nonparameters = 
+	raise (InternalError "Not implemented!")
+
+
+
+
+
+
 
 (** Add nb_dimensions to a linear_constraint *)
 let add_dimensions nb_dimensions linear_constraint =
@@ -1117,12 +1192,34 @@ let grow_to_zero_assign variables_elapse variables_constant linear_constraint =
 	()
 
 
+
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
-(** {3 Conversion to GML} *)
+(** {3 Pi0-compatibility} *)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+
+(** Check if a linear constraint is pi0-compatible *)
+let is_pi0_compatible pi0 linear_constraint =
+	(* Get a list of linear inequalities *)
+	let list_of_inequalities = get_constraints linear_constraint in
+	(* Check the pi0-compatibility for all *)
+	List.for_all (is_pi0_compatible_inequality pi0) list_of_inequalities
+
+
+(** Compute the pi0-compatible and pi0-incompatible inequalities within a constraint *)
+let partition_pi0_compatible pi0 linear_constraint =
+	(* Get a list of linear inequalities *)
+	let list_of_inequalities = get_constraints linear_constraint in
+	(* Partition *)
+	List.partition (is_pi0_compatible_inequality pi0) list_of_inequalities
+
+
+
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+(** {3 Conversion to GrML} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
 
 (** Convert a linear term (PPL) into a string *)								
-let rec gml_of_linear_term_ppl names t_level = function
+let rec grml_of_linear_term_ppl names t_level = function
 	| Coefficient z ->
 		"\n" ^ (string_n_times t_level "\t") ^ "<attribute name=\"numValue\">" ^ (if Gmp.Z.equal z (Gmp.Z.from_int 0) then "0" else Gmp.Z.string_from z) ^ "</attribute>" 
 	
@@ -1130,12 +1227,12 @@ let rec gml_of_linear_term_ppl names t_level = function
 		"\n" ^ (string_n_times t_level "\t") ^ "<attribute name=\"name\">" ^ (names v) ^ "</attribute>" 
 	
 	| Unary_Plus t ->
-		gml_of_linear_term_ppl names t_level t
+		grml_of_linear_term_ppl names t_level t
 
 	| Unary_Minus t -> 
 		"\n" ^ (string_n_times t_level "\t") ^ "<attribute name=\"-\">"
 		^ "\n" ^ (string_n_times (t_level + 1) "\t") ^ "<attribute name=\"numValue\">0</attribute>"
-		^ (gml_of_linear_term_ppl names (t_level + 1) t)
+		^ (grml_of_linear_term_ppl names (t_level + 1) t)
 		^ "\n" ^ (string_n_times t_level "\t") ^ "</attribute>"
 	
 	| Plus (lterm, rterm) ->
@@ -1147,37 +1244,37 @@ let rec gml_of_linear_term_ppl names t_level = function
 			| _ -> false
 		in
 		(* If no right attribute: discard '+' *)
-		if rightnull then gml_of_linear_term_ppl names t_level lterm
+		if rightnull then grml_of_linear_term_ppl names t_level lterm
 		else
 		(* Else *)
 		"\n" ^ (string_n_times t_level "\t") ^ "<attribute name=\"+\">"
-		^ (gml_of_linear_term_ppl names (t_level + 1) lterm)
-		^ (gml_of_linear_term_ppl names (t_level + 1) rterm)
+		^ (grml_of_linear_term_ppl names (t_level + 1) lterm)
+		^ (grml_of_linear_term_ppl names (t_level + 1) rterm)
 		^ "\n" ^ (string_n_times t_level "\t") ^ "</attribute>"
 
 	| Minus (lterm, rterm) ->
 		"\n" ^ (string_n_times t_level "\t") ^ "<attribute name=\"-\">"
-		^ (gml_of_linear_term_ppl names (t_level + 1) lterm)
-		^ (gml_of_linear_term_ppl names (t_level + 1) rterm)
+		^ (grml_of_linear_term_ppl names (t_level + 1) lterm)
+		^ (grml_of_linear_term_ppl names (t_level + 1) rterm)
 		^ "\n" ^ (string_n_times t_level "\t") ^ "</attribute>"
 	
 	| Times (z, rterm) ->
 			(* Check that multiplication is not by one *)
 			if (Gmp.Z.equal z (Gmp.Z.one)) then
-				gml_of_linear_term_ppl names t_level rterm
+				grml_of_linear_term_ppl names t_level rterm
 			else 
 				"\n" ^ (string_n_times t_level "\t") ^ "<attribute name=\"*\">"
 				^ "\n" ^ (string_n_times (t_level + 1) "\t") ^ "<attribute name=\"numValue\">" ^ (Gmp.Z.string_from z) ^ "</attribute>" 
-				^ (gml_of_linear_term_ppl names (t_level + 1) rterm)
+				^ (grml_of_linear_term_ppl names (t_level + 1) rterm)
 				^ "\n" ^ (string_n_times t_level "\t") ^ "</attribute>"
 
 
 (** Convert a linear inequality into a string *)
-let gml_of_linear_inequality names t_level linear_inequality =
+let grml_of_linear_inequality names t_level linear_inequality =
 	let normal_ineq = normalize_inequality linear_inequality in
 	let lterm, rterm, op = split_linear_inequality normal_ineq in
-	let lstr = gml_of_linear_term_ppl names (t_level + 2) lterm in
-	let rstr = gml_of_linear_term_ppl names (t_level + 2) rterm in
+	let lstr = grml_of_linear_term_ppl names (t_level + 2) lterm in
+	let rstr = grml_of_linear_term_ppl names (t_level + 2) rterm in
 	let opstr = match op with
 		| Less_Than_RS -> "less"
 		| Less_Or_Equal_RS -> "lessEqual"
@@ -1196,21 +1293,22 @@ let gml_of_linear_inequality names t_level linear_inequality =
 	^ "\n" ^ (string_n_times (t_level) "\t") ^ "</attribute>"
 
 (** Convert a linear term into a string *)
-let gml_of_linear_term names t_level linear_term =
+let grml_of_linear_term names t_level linear_term =
 	let linear_term, coef = normalize_linear_term linear_term in
-(* 	gml_of_linear_term_ppl names t_level linear_term *)
-	gml_of_linear_term_ppl names t_level linear_term
-	
+(* 	grml_of_linear_term_ppl names t_level linear_term *)
+	grml_of_linear_term_ppl names t_level linear_term
+
+let grml_of_pxd_linear_term = grml_of_linear_term
 
 (** Convert a linear constraint into a string *)
-let gml_of_linear_constraint names t_level linear_constraint =
+let grml_of_linear_constraint names t_level linear_constraint =
 	(* First check if true or false *)
 	if is_true linear_constraint then "<attribute name=\"boolExpr\"><attribute name=\"boolValue\">true</attribute></attribute>"
 	else (if is_false linear_constraint then "<attribute name=\"boolExpr\"><attribute name=\"boolValue\">false</attribute></attribute>"
 	else (
 		(* Get a list of linear inequalities *)
 		let list_of_inequalities = get_constraints linear_constraint in
-		let rec gml_of_linear_constraint_rec t_level = function
+		let rec grml_of_linear_constraint_rec t_level = function
 		| [] -> ""
 		| first :: rest ->
 			let several_inequalities = List.length rest > 0 in
@@ -1224,12 +1322,12 @@ let gml_of_linear_constraint names t_level linear_constraint =
 			^
 			(* Convert rest *)
 			(*(string_of_list_of_string
-				(List.map (gml_of_linear_inequality names (if several_inequalities then t_level + 1 else t_level)) list_of_inequalities)
+				(List.map (grml_of_linear_inequality names (if several_inequalities then t_level + 1 else t_level)) list_of_inequalities)
 			)*)
-			(gml_of_linear_constraint_rec (t_level+1) rest)
+			(grml_of_linear_constraint_rec (t_level+1) rest)
 			^
 			(* Convert first *)
-			(gml_of_linear_inequality names (if several_inequalities then t_level + 1 else t_level) first)
+			(grml_of_linear_inequality names (if several_inequalities then t_level + 1 else t_level) first)
 			^
 			(* Conjunction : end *)
 			(if several_inequalities then
@@ -1238,8 +1336,36 @@ let gml_of_linear_constraint names t_level linear_constraint =
 					^ "\n" ^ (string_n_times (t_level+1) "\t") ^ "</attribute>"
 					^ "\n" ^ (string_n_times (t_level) "\t") ^ "</attribute>"
 			) else "")
-		in gml_of_linear_constraint_rec t_level list_of_inequalities
+		in grml_of_linear_constraint_rec t_level list_of_inequalities
 	))
+
+let grml_of_pxd_linear_constraint = grml_of_linear_constraint
+
+
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+(** {3 Conversion between types of constraints } *)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+
+
+
+
+(*** TO IMPLEMENT !!! ***)
+
+let instantiate_discrete discrete_values pxd_linear_constraint =
+	raise (InternalError "Not implemented!!")
+
+
+
+
+
+
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+(** {3 Brute-force casts (argh) } *)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+
+(** "cast_p_of_pxd_linear_term p c" converts a PXD-constraint p to a P-constraint ; if c then a test if performed to check casting validity *)
+let cast_p_of_pxd_linear_term p c = p
+let cast_p_of_pxd_linear_constraint p c = p
 
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)

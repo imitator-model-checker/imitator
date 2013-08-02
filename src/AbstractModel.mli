@@ -8,7 +8,7 @@
  * Author:        Etienne Andre
  * 
  * Created:       2009/09/11
- * Last modified: 2013/03/06
+ * Last modified: 2013/08/02
  *
  ****************************************************************)
 
@@ -18,7 +18,6 @@
 (* Modules *)
 (****************************************************************)
 open Global
-open LinearConstraint
 open Automaton
 open Options
 
@@ -73,17 +72,17 @@ type clock_updates =
 	(* Reset to 0 only *)
 	| Resets of clock_update list
 	(* Reset to arbitrary value (including discrete, parameters and clocks) *)
-	| Updates of (clock_update * linear_term) list
+	| Updates of (clock_update * LinearConstraint.pxd_linear_term) list
 
 
 (** update: variable_index := linear_term *)
-type discrete_update = discrete_index * linear_term
+type discrete_update = discrete_index * LinearConstraint.pxd_linear_term
 
 (** Guard: linear constraint *)
-type guard = linear_constraint
+type guard = LinearConstraint.pxd_linear_constraint
 
 (** Invariant: linear constraint *)
-type invariant = linear_constraint
+type invariant = LinearConstraint.pxd_linear_constraint
 
 (** Transition: guard, updates, destination location *)
 type transition = guard * clock_updates * discrete_update list * location_index
@@ -94,7 +93,7 @@ type transition = guard * clock_updates * discrete_update list * location_index
 (****************************************************************)
 (** predicates for bad definition *)
 
-type duration = LinearConstraint.linear_term
+type duration = LinearConstraint.p_linear_term
 
 (** Definition of the property by the end user *)
 type property =
@@ -225,7 +224,7 @@ type abstract_model = {
 	actions_per_location : automaton_index -> location_index -> (action_index list);
 
 	(* The cost for each automaton and each location *)
-	costs : automaton_index -> location_index -> linear_term option;
+	costs : automaton_index -> location_index -> LinearConstraint.p_linear_term option;
 	
 	(* The invariant for each automaton and each location *)
 	invariants : automaton_index -> location_index -> invariant;
@@ -240,14 +239,14 @@ type abstract_model = {
 	(* Init : the initial state *)
 	initial_location : global_location;
 	(* Init : the initial state *)
-	initial_constraint : linear_constraint;
+	initial_constraint : LinearConstraint.px_linear_constraint;
 
 	(* Property defined by the user *)
 	user_property : property_definition;
 	(* Property defined by the model *)
 	correctness_condition : correctness_condition;
 	(* Set of polyhedra (only used for direct cartography without running the model) *)
-	carto : (linear_constraint * tile_nature) list * (NumConst.t * NumConst.t) * (NumConst.t * NumConst.t);
+	carto : (LinearConstraint.p_linear_constraint * tile_nature) list * (NumConst.t * NumConst.t) * (NumConst.t * NumConst.t);
 }
 
 
@@ -259,7 +258,6 @@ type abstract_model = {
 (** Constraint returned by the inverse method *)
 type returned_constraint =
 	(** Constraint under convex form *)
-	| Convex_constraint of LinearConstraint.linear_constraint * tile_nature
+	| Convex_constraint of LinearConstraint.p_linear_constraint * tile_nature
 	(** Disjunction of constraints *)
-	| Union_of_constraints of LinearConstraint.linear_constraint list * tile_nature
-
+	| Union_of_constraints of LinearConstraint.p_linear_constraint list * tile_nature

@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2009/12/08
- * Last modified: 2013/03/20
+ * Last modified: 2013/08/02
  *
  ****************************************************************)
 
@@ -22,9 +22,9 @@ type state_index = int
 type location_index = int
 
 (** State: location and constraint *)
-type state = Automaton.global_location * LinearConstraint.linear_constraint
+type state = Automaton.global_location * LinearConstraint.px_linear_constraint
 
-type abstract_state = location_index * LinearConstraint.linear_constraint
+type abstract_state = location_index * LinearConstraint.px_linear_constraint
 
 (****************************************************************)
 (** Graph structure *)
@@ -80,8 +80,11 @@ val get_transitions : reachability_graph -> ((state_index * action_index), state
 (** Return the list of all state indexes *)
 val all_state_indexes : abstract_model -> reachability_graph -> state_index list
 
+
+(*** WARNING: big memory, here! Why not perform intersection on the fly? *)
+
 (** Return the list of all constraints on the parameters associated to the states of a graph *)
-val all_p_constraints : abstract_model -> reachability_graph -> LinearConstraint.linear_constraint list
+val all_p_constraints : abstract_model -> reachability_graph -> LinearConstraint.p_linear_constraint list
 
 (** Returns the intersection of all parameter constraints, thereby destroying all constraints *)
 (* val compute_k0_destructive : abstract_model -> reachability_graph -> LinearConstraint.linear_constraint *)
@@ -90,7 +93,7 @@ val all_p_constraints : abstract_model -> reachability_graph -> LinearConstraint
 val states_equal: state -> state -> bool
 
 (** Check dynamically if two states are equal, i.e., if the first one + constraint equals second one + constraint *)
-val states_equal_dyn: state -> state -> LinearConstraint.linear_constraint -> bool
+val states_equal_dyn: state -> state -> LinearConstraint.px_linear_constraint -> bool
 
 (*(** Test if a state exists satisfying predicate s *)
 val exists_state: (state -> bool) -> reachability_graph -> bool
@@ -118,8 +121,10 @@ val add_state : AbstractModel.abstract_model -> reachability_graph -> state -> (
 (** Add a transition to the graph *)
 val add_transition : reachability_graph -> (state_index * action_index * state_index) -> unit
 
-(** Add an inequality to all the states of the graph *)
-val add_inequality_to_states : reachability_graph -> LinearConstraint.linear_inequality -> unit
+(** Add a p_inequality to all the states of the graph *)
+(*** FORMERLY : add_inequality_to_states *)
+val add_p_constraint_to_states : reachability_graph -> LinearConstraint.p_linear_constraint -> unit
+
 
 (** Replace the constraint of a state in a graph by another one (the constraint is copied to avoid side-effects later) *)
 (* val replace_constraint : reachability_graph -> LinearConstraint.linear_constraint -> state_index -> unit *)

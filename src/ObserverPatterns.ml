@@ -10,7 +10,7 @@
  * Author:        Etienne Andre
  * 
  * Created:       2013/02/04
- * Last modified: 2013/03/06
+ * Last modified: 2013/08/02
  *
  ****************************************************************)
 
@@ -20,7 +20,7 @@
 (****************************************************************)
 open Global
 open AbstractModel
-open LinearConstraint
+(* open LinearConstraint *)
 
 
 (****************************************************************)
@@ -35,7 +35,7 @@ let location_name location_index =
 	location_prefix ^ (string_of_int location_index)
 
 (** Shortcuts *)
-let truec = LinearConstraint.true_constraint
+let truec = LinearConstraint.pxd_true_constraint
 
 
 (****************************************************************)
@@ -43,42 +43,47 @@ let truec = LinearConstraint.true_constraint
 (****************************************************************)
 let untimedt destination_index = [truec (), No_update, [], destination_index]
 
-(* Constraint x <= d, with d linear_term : d - x >= 0 *)
+(* Constraint x <= d, with d LinearConstraint.p_linear_term : d - x >= 0 *)
 let ct_x_leq_d x d =
-	(* Build the linear term *)
-	let lt = add_linear_terms d (LinearConstraint.make_linear_term [NumConst.minus_one, x] NumConst.zero) in
+	LinearConstraint.pxd_linear_constraint_of_clock_and_parameters x LinearConstraint.Op_ge d false
+(*	(* Build the linear term *)
+	let lt = LinearConstraint.add_linear_terms d (LinearConstraint.make_linear_term [NumConst.minus_one, x] NumConst.zero) in
 	(* Build constraint *)
-	LinearConstraint.make [LinearConstraint.make_linear_inequality lt LinearConstraint.Op_ge]
+	LinearConstraint.make [LinearConstraint.make_linear_inequality lt LinearConstraint.Op_ge]*)
 
 
-(* Constraint x >= d, with d linear_term : x - d >= 0 *)
+(* Constraint x >= d, with d LinearConstraint.p_linear_term : x - d >= 0 *)
 let ct_x_geq_d x d =
-	(* Build the linear term *)
-	let lt = sub_linear_terms (LinearConstraint.make_linear_term [NumConst.one, x] NumConst.zero) d in
+	LinearConstraint.pxd_linear_constraint_of_clock_and_parameters x LinearConstraint.Op_ge d true
+(*	(* Build the linear term *)
+	let lt = LinearConstraint.sub_linear_terms (LinearConstraint.make_linear_term [NumConst.one, x] NumConst.zero) d in
 	(* Build constraint *)
-	LinearConstraint.make [LinearConstraint.make_linear_inequality lt LinearConstraint.Op_ge]
+	LinearConstraint.make [LinearConstraint.make_linear_inequality lt LinearConstraint.Op_ge]*)
 
 
-(* Linear inequality x = d, with d linear_term : d - x >= 0 *)
+(*(* Linear inequality x = d, with d LinearConstraint.p_linear_term : d - x = 0 *)
 let lt_x_eq_d x d =
 	(* Build the linear term *)
-	let lt = add_linear_terms d (LinearConstraint.make_linear_term [NumConst.minus_one, x] NumConst.zero) in
+	let lt = LinearConstraint.add_linear_terms d (LinearConstraint.make_linear_term [NumConst.minus_one, x] NumConst.zero) in
 	(* Build linear inequality *)
-	LinearConstraint.make_linear_inequality lt LinearConstraint.Op_eq
+	LinearConstraint.make_linear_inequality lt LinearConstraint.Op_eq*)
 
 
-(* Constraint x = d, with d linear_term : d - x >= 0 *)
+(* Constraint x = d, with d LinearConstraint.p_linear_term : d - x = 0 *)
 let ct_x_eq_d x d =
+	LinearConstraint.pxd_linear_constraint_of_clock_and_parameters x LinearConstraint.Op_eq d true
 	(* Build constraint *)
-	LinearConstraint.make [lt_x_eq_d x d]
+(* 	LinearConstraint.make [lt_x_eq_d x d] *)
 
 
 (* Linear constraint x = 0 *)
 let lc_x_eq_0 x =
-	(* Build the linear term *)
+	let d = LinearConstraint.make_p_linear_term [] NumConst.zero in
+	LinearConstraint.pxd_linear_constraint_of_clock_and_parameters x LinearConstraint.Op_ge d true
+(*	(* Build the linear term *)
 	let lt = (LinearConstraint.make_linear_term [NumConst.minus_one, x] NumConst.zero) in
 	(* Build linear constraint *)
-	LinearConstraint.make [LinearConstraint.make_linear_inequality lt LinearConstraint.Op_eq]
+	LinearConstraint.make [LinearConstraint.make_linear_inequality lt LinearConstraint.Op_eq]*)
 
 
 
@@ -287,7 +292,8 @@ let get_automaton nb_actions automaton_index nosync_index x_obs property =
 		(* Update actions per location for the silent action *)
 		actions_per_location.(0) <- nosync_index :: all_actions;
 		(* Update invariants *)
-		invariants.(0) <- ct_x_leq_d x_obs d;
+		let test : LinearConstraint.pxd_linear_constraint = ct_x_leq_d x_obs d in
+		invariants.(0) <- test;
 		(* Compute transitions *)
 		transitions.(0).(a) <- untimedt 1;
 		transitions.(0).(nosync_index) <- [ct_x_eq_d x_obs d, No_update, [], 2];

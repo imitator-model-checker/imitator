@@ -49,6 +49,6 @@ val get_automaton : int -> automaton_index -> action_index -> clock_index -> pro
 	(* Transitions *)
 	* ((AbstractModel.transition list) array) array
 	(* Initial inequalities (if any) *)
-	* LinearConstraint.linear_constraint option
+	* LinearConstraint.pxd_linear_constraint option
 	(* The reduced reachability property *)
 	* reachability_property

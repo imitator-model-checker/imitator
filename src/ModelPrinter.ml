@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2009/12/02
- * Last modified: 2013/03/20
+ * Last modified: 2013/08/02
  *
  **************************************************)
 
@@ -77,7 +77,7 @@ let string_of_initially model automaton_index =
 (* Convert the invariant of a location into a string *)
 let string_of_invariant model automaton_index location_index =
 	"while "
-	^ (LinearConstraint.string_of_linear_constraint model.variable_names (model.invariants automaton_index location_index))
+	^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names (model.invariants automaton_index location_index))
 	^ " wait"
 
 
@@ -100,7 +100,7 @@ let string_of_clock_updates model = function
 		string_of_list_of_string_with_sep ", " (List.map (fun (variable_index, linear_term) ->
 			(model.variable_names variable_index)
 			^ "' = "
-			^ (LinearConstraint.string_of_linear_term model.variable_names linear_term)
+			^ (LinearConstraint.string_of_pxd_linear_term model.variable_names linear_term)
 		) list_of_clocks_lt)
 
 	
@@ -112,7 +112,7 @@ let string_of_updates model updates =
 		(model.variable_names variable_index)
 		^ "' = "
 		(* Convert the linear_term *)
-		^ (LinearConstraint.string_of_linear_term model.variable_names linear_term)
+		^ (LinearConstraint.string_of_pxd_linear_term model.variable_names linear_term)
 	) updates)
 
 
@@ -120,7 +120,7 @@ let string_of_updates model updates =
 let string_of_transition model automaton_index action_index (guard, clock_updates, discrete_updates, destination_location) =
 	"\n\t" ^ "when "
 	(* Convert the guard *)
-	^ (LinearConstraint.string_of_linear_constraint model.variable_names guard)
+	^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names guard)
 
 	(* Convert the updates *)
 	^ " do {"
@@ -161,7 +161,7 @@ let string_of_location model automaton_index location_index =
 	^ (model.location_names automaton_index location_index)
 	^ (match model.costs automaton_index location_index with
 		| None -> ""
-		| Some cost -> "[" ^ (LinearConstraint.string_of_linear_term model.variable_names cost) ^ "]"
+		| Some cost -> "[" ^ (LinearConstraint.string_of_p_linear_term model.variable_names cost) ^ "]"
 	)
 	^ ": "
 	^ (string_of_invariant model automaton_index location_index)
@@ -214,7 +214,7 @@ let string_of_model model =
 
 (* Convert a state into a string *)
 let string_of_state model (global_location, linear_constraint) =
-	"" ^ (Automaton.string_of_location model.automata_names model.location_names model.variable_names global_location) ^ " ==> \n&" ^ (LinearConstraint.string_of_linear_constraint model.variable_names linear_constraint) ^ "" 
+	"" ^ (Automaton.string_of_location model.automata_names model.location_names model.variable_names global_location) ^ " ==> \n&" ^ (LinearConstraint.string_of_px_linear_constraint model.variable_names linear_constraint) ^ "" 
 
 
 (**************************************************)
@@ -264,7 +264,7 @@ type returned_constraint =
 	(** Disjunction of constraints *)
 	| Union_of_constraints of LinearConstraint.linear_constraint list*)
 let string_of_returned_constraint variable_names = function 
-	| Convex_constraint (linear_constraint, _) -> LinearConstraint.string_of_linear_constraint variable_names linear_constraint
+	| Convex_constraint (linear_constraint, _) -> LinearConstraint.string_of_p_linear_constraint variable_names linear_constraint
 	(** Disjunction of constraints *)
-	| Union_of_constraints (k_list, _) -> string_of_list_of_string_with_sep "\n OR \n" (List.map (LinearConstraint.string_of_linear_constraint variable_names) k_list)
+	| Union_of_constraints (k_list, _) -> string_of_list_of_string_with_sep "\n OR \n" (List.map (LinearConstraint.string_of_p_linear_constraint variable_names) k_list)
 

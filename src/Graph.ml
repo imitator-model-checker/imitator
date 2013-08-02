@@ -24,9 +24,9 @@ type state_index = int
 type location_index = int
 
 (** State: location and constraint *)
-type state = Automaton.global_location * LinearConstraint.linear_constraint
+type state = Automaton.global_location * LinearConstraint.px_linear_constraint
 
-type abstract_state = location_index * LinearConstraint.linear_constraint
+type abstract_state = location_index * LinearConstraint.px_linear_constraint
 
 (****************************************************************)
 (** Graph structure *)
@@ -140,11 +140,13 @@ let all_state_indexes program graph =
 
 	
 
+(*** WARNING: big memory, here! Why not perform intersection on the fly? *)
+
 (** Return the list of all constraints on the parameters associated to the states of a graph *)
 let all_p_constraints program graph =
 	Hashtbl.fold
 		(fun _ (_, linear_constraint) current_list ->
-			let p_constraint = LinearConstraint.hide program.clocks_and_discrete linear_constraint in
+			let p_constraint = LinearConstraint.px_hide_nonparameters (*program.clocks_and_discrete*) linear_constraint in
 			p_constraint :: current_list)
 		graph.all_states []
 
@@ -161,7 +163,7 @@ let compute_k0_destructive program graph =
 	let k0 = LinearConstraint.true_constraint () in
 	iterate_on_states (fun _ (_, constr) -> 
 		LinearConstraint.hide_assign program.clocks_and_discrete constr;
-		LinearConstraint.intersection_assign k0 [constr];
+		LinearConstraint.px_intersection_assign k0 [constr];
 
 	) graph;
 	k0*)
@@ -277,7 +279,7 @@ let states_equal state1 state2 =
 		print_message Debug_high ("About to compare equality between two constraints.");
 		nb_constraint_comparisons := !nb_constraint_comparisons + 1;
 		print_message Debug_high ("Already performed " ^ (string_of_int (!nb_constraint_comparisons)) ^ " constraint comparisons.");
-		LinearConstraint.is_equal constr1 constr2
+		LinearConstraint.px_is_equal constr1 constr2
 	)
 	
 (* Check dynamically if two states are equal*)
@@ -289,10 +291,10 @@ let states_equal_dyn state1 state2 constr =
 		print_message Debug_high ("About to compare (dynamic) equality between two constraints.");
 		nb_constraint_comparisons := !nb_constraint_comparisons + 1;
 		print_message Debug_high ("Already performed " ^ (string_of_int (!nb_constraint_comparisons)) ^ " constraint comparisons.");
-		(* WARNING!!! Really sure that one wants do MODIFY the constraints here?!!! *)
-		LinearConstraint.intersection_assign constr1  [constr];
-		LinearConstraint.intersection_assign constr2 [constr];
-		LinearConstraint.is_equal constr1 constr2
+		(*** WARNING!!! Really sure that one wants do MODIFY the constraints here?!!! ***)
+		LinearConstraint.px_intersection_assign constr1  [constr];
+		LinearConstraint.px_intersection_assign constr2 [constr];
+		LinearConstraint.px_is_equal constr1 constr2
 	)
 
 
@@ -306,7 +308,7 @@ let state_included state1 state2 =
 		print_message Debug_high ("About to compare inclusion between two constraints.");
 		nb_constraint_comparisons := !nb_constraint_comparisons + 1;
 		print_message Debug_high ("Already performed " ^ (string_of_int (!nb_constraint_comparisons)) ^ " constraint comparisons.");
-		LinearConstraint.is_leq constr1 constr2
+		LinearConstraint.px_is_leq constr1 constr2
 	)
 
 
@@ -474,11 +476,11 @@ let add_transition reachability_graph (orig_state_index, action_index, dest_stat
 
 
 (** Add an inequality to all the states of the graph *)
-let add_inequality_to_states graph inequality =
-	let constraint_to_add = LinearConstraint.make [inequality] in
+let add_p_constraint_to_states graph p_constraint =
+(* 	let constraint_to_add = LinearConstraint.make_p_constraint [inequality] in *)
 	(* For all state: *)
 	iterate_on_states (fun _ (_, constr) ->
-		 LinearConstraint.intersection_assign constr [constraint_to_add]
+		 LinearConstraint.px_intersection_assign_p constr [p_constraint]
 	) graph
 
 
@@ -653,7 +655,7 @@ module IntSet = Set.Make(
 
 (* Try to merge new states with existing ones. Returns list of merged states (ULRICH) *)
 let merge graph new_states =
-	let mergeable = LinearConstraint.hull_assign_if_exact in
+	let mergeable = LinearConstraint.px_hull_assign_if_exact in
 	
 	(* function for merging one state with its siblings *)
 	let merge_state si =

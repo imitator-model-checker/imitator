@@ -10,7 +10,7 @@
  * Author:        Etienne Andre
  * 
  * Created:       2009/09/09
- * Last modified: 2013/03/20
+ * Last modified: 2013/08/02
  *
  ****************************************************************)
 
@@ -122,7 +122,7 @@ let linear_term_of_array (array_of_coef, constant) =
 		);
 	) array_of_coef;
 	(* Create the linear term *)
-	LinearConstraint.make_linear_term !members constant
+	LinearConstraint.make_pxd_linear_term !members constant
 	
 
 (*--------------------------------------------------*)
@@ -166,7 +166,7 @@ let linear_inequality_of_linear_constraint index_of_variables constants (le1, re
 		(* Create the linear_term *)
 		let linear_term = linear_term_of_array (array12, constant12) in
 		(* Return the linear_inequality *)
-		LinearConstraint.make_linear_inequality linear_term LinearConstraint.Op_g
+		LinearConstraint.make_pxd_linear_inequality linear_term LinearConstraint.Op_g
 (* 	(Constraint.substract_linear_terms lt2 lt1), Constraint.Op_g *)
 
 	(* a <= b <=> b - a >= 0 *)
@@ -178,7 +178,7 @@ let linear_inequality_of_linear_constraint index_of_variables constants (le1, re
 		(* Create the linear_term *)
 		let linear_term = linear_term_of_array (array12, constant12) in
 		(* Return the linear_inequality *)
-		LinearConstraint.make_linear_inequality linear_term LinearConstraint.Op_ge
+		LinearConstraint.make_pxd_linear_inequality linear_term LinearConstraint.Op_ge
 (* 	(Constraint.substract_linear_terms lt2 lt1), Constraint.Op_ge *)
 
 (* a = b <=> b - a = 0 *)
@@ -190,7 +190,7 @@ let linear_inequality_of_linear_constraint index_of_variables constants (le1, re
 		(* Create the linear_term *)
 		let linear_term = linear_term_of_array (array12, constant12) in
 		(* Return the linear_inequality *)
-		LinearConstraint.make_linear_inequality linear_term LinearConstraint.Op_eq
+		LinearConstraint.make_pxd_linear_inequality linear_term LinearConstraint.Op_eq
 	
 (* 	(Constraint.substract_linear_terms lt1 lt2), Constraint.Op_eq *)
 
@@ -203,7 +203,7 @@ let linear_inequality_of_linear_constraint index_of_variables constants (le1, re
 		(* Create the linear_term *)
 		let linear_term = linear_term_of_array (array12, constant12) in
 		(* Return the linear_inequality *)
-		LinearConstraint.make_linear_inequality linear_term LinearConstraint.Op_ge
+		LinearConstraint.make_pxd_linear_inequality linear_term LinearConstraint.Op_ge
 (* (Constraint.substract_linear_terms lt1 lt2), Constraint.Op_ge *)
 
 	(* a > b <=> a - b > 0 *)
@@ -215,7 +215,7 @@ let linear_inequality_of_linear_constraint index_of_variables constants (le1, re
 		(* Create the linear_term *)
 		let linear_term = linear_term_of_array (array12, constant12) in
 		(* Return the linear_inequality *)
-		LinearConstraint.make_linear_inequality linear_term LinearConstraint.Op_g
+		LinearConstraint.make_pxd_linear_inequality linear_term LinearConstraint.Op_g
 (* (Constraint.substract_linear_terms lt1 lt2), Constraint.Op_g *)
 
 
@@ -232,9 +232,9 @@ let linear_constraint_of_convex_predicate index_of_variables constants convex_pr
 		| False_constraint -> raise False_exception
 		| Linear_constraint (le1, relop, le2) -> (linear_inequality_of_linear_constraint index_of_variables constants (le1, relop, le2)) :: linear_inequalities
 	) [] convex_predicate
-	in LinearConstraint.make linear_inequalities
+	in LinearConstraint.make_pxd_constraint linear_inequalities
 	(* Stop if any false constraint is found *)
-	) with False_exception -> LinearConstraint.false_constraint ()
+	) with False_exception -> LinearConstraint.pxd_false_constraint ()
 
 
 (****************************************************************)
@@ -578,10 +578,14 @@ let check_automata index_of_variables type_of_variables variable_names index_of_
 			print_message Debug_total ("          Checking possible stopwatches");
 			if not (check_stopwatches index_of_variables type_of_variables stopwatches) then well_formed := false;
 			
+			
 			(* Check the convex predicate *)
-			(* TODO: preciser quel automate et quelle location en cas d'erreur *)
+			
+			(*** TODO: preciser quel automate et quelle location en cas d'erreur ***)
+			
 			print_message Debug_total ("          Checking convex predicate");
 			if not (check_convex_predicate variable_names constants convex_predicate) then well_formed := false;
+			
 			
 			(* Check transitions *)
 			print_message Debug_total ("          Checking transitions");
@@ -631,7 +635,7 @@ let check_init discrete variable_names constants index_of_variables type_of_vari
 		| Loc_assignment _ -> true
 		| Linear_predicate _ -> false
 	) init_definition in
-	(* Make couples (automaton_name, location_name) *)
+	(* Make pairs (automaton_name, location_name) *)
 	let initial_locations = List.map (function
 		| Loc_assignment (automaton_name, location_name) -> (automaton_name, location_name)
 		| _ -> raise (InternalError "Something else than a Loc_assignment was found in a Loc_assignment list")
@@ -742,8 +746,8 @@ let check_init discrete variable_names constants index_of_variables type_of_vari
 		);
 	) discrete;
 
-	(* Convert the Hashtbl to couples (discrete_index, init_value) *)
-	let discrete_values_couples =
+	(* Convert the Hashtbl to pairs (discrete_index, init_value) *)
+	let discrete_values_pairs =
 		List.map (fun discrete_index ->
 			discrete_index, Hashtbl.find init_values_for_discrete discrete_index
 		) discrete
@@ -753,7 +757,7 @@ let check_init discrete variable_names constants index_of_variables type_of_vari
 	(**** TO DO ****) (*use 'other_inequalities' *)
 
 	(* Return whether the init declaration passed the tests *)
-	discrete_values_couples, !well_formed
+	discrete_values_pairs, !well_formed
 
 
 (*--------------------------------------------------*)
@@ -799,7 +803,7 @@ let check_and_convert_property index_of_variables type_of_variables variable_nam
 			(* Get action indexes *)
 			let action_index1 = Hashtbl.find index_of_actions a1 in 
 			let action_index2 = Hashtbl.find index_of_actions a2 in
-			(** BADPROG (but couldn't see how to do better!) *)
+			(*** BADPROG (but couldn't see how to do better!) *)
 			(* Match again and create the property *)
 			match property with 
 			| ParsingStructure.Action_precedence_acyclic _ -> AbstractModel.Action_precedence_acyclic (action_index1, action_index2), true
@@ -829,8 +833,11 @@ let check_and_convert_property index_of_variables type_of_variables variable_nam
 			let action_index1 = Hashtbl.find index_of_actions a1 in 
 			let action_index2 = Hashtbl.find index_of_actions a2 in
 			(* Convert deadline *)
-			let d = linear_term_of_linear_expression index_of_variables constants d in
-			(** BADPROG (but couldn't see how to do better!) *)
+			let d = LinearConstraint.cast_p_of_pxd_linear_term (linear_term_of_linear_expression index_of_variables constants d) true in
+			
+			
+			(*** BADPROG (but couldn't see how to do better!) ***)
+			
 			(* Match again and create the property *)
 			match property with 
 			| ParsingStructure.TB_Action_precedence_acyclic _ -> AbstractModel.TB_Action_precedence_acyclic (action_index1, action_index2, d), true
@@ -851,7 +858,7 @@ let check_and_convert_property index_of_variables type_of_variables variable_nam
 		else (
 			(* Get action indexes *)
 			let action_index_list = List.map (Hashtbl.find index_of_actions) actions_list in
-			(** BADPROG (but couldn't see how to do better!) *)
+			(*** BADPROG (but couldn't see how to do better!) ***)
 			(* Match again and create the property *)
 			match property with 
 			| ParsingStructure.Sequence_acyclic _ -> AbstractModel.Sequence_acyclic action_index_list, true
@@ -918,7 +925,7 @@ let check_and_convert_property index_of_variables type_of_variables variable_nam
 				(* Get action indexes *)
 				let action_index = Hashtbl.find index_of_actions a in
 				(* Convert deadline *)
-				let d = linear_term_of_linear_expression index_of_variables constants d in
+				let d = LinearConstraint.cast_p_of_pxd_linear_term (linear_term_of_linear_expression index_of_variables constants d) true in
 				AbstractModel.Action_deadline ( action_index , d ), true
 			)
 		
@@ -964,7 +971,8 @@ let check_pi0 pi0 parameters_names =
 	let multiply_defined_variables = elements_existing_several_times list_of_variables in
 	(* Print an error for each of them *)
 	List.iter (fun variable_name -> print_error ("The parameter '" ^ variable_name ^ "' was assigned several times a valuation in pi0.")) multiply_defined_variables;
-	(* TODO: only warns if it is always defined to the same value *)
+
+	(*** TODO: only warns if it is always defined to the same value ***)
 
 	(* Check if the variables are all defined *)
 	let all_defined = List.fold_left
@@ -1007,7 +1015,8 @@ let check_v0 v0 parameters_names =
 	let multiply_defined_variables = elements_existing_several_times list_of_variables in
 	(* Print an error for each of them *)
 	List.iter (fun variable_name -> print_error ("The parameter '" ^ variable_name ^ "' was assigned several times a valuation in v0.")) multiply_defined_variables;
-	(* TODO: only warns if it is always defined to the same value *)
+	
+	(*** TODO: only warns if it is always defined to the same value ***)
 
 	(* Check if the variables are all defined *)
 	let all_defined = List.fold_left
@@ -1131,7 +1140,7 @@ let make_locations_per_automaton index_of_automata parsed_automata nb_automata =
 
 (*(*--------------------------------------------------*)
 (* Convert the costs *)
-(** TODO: do not call if actually no cost! *)
+(*** TODO: do not call if actually no cost! ***)
 (*--------------------------------------------------*)
 (* Convert the structure: 'automaton_index -> location_index -> ParsingStructure.linear_expression' into a structure: 'automaton_index -> location_index -> Constraint.linear_expression' *)
 let convert_costs index_of_variables constants costs =
@@ -1177,7 +1186,7 @@ let make_automata index_of_variables constants index_of_automata index_of_locati
 	(* Create an empty array for the transitions *)
 	let transitions = Array.make nb_automata (Array.make 0 []) in
 	(* Create an empty array for the invariants *)
-	let invariants = Array.make nb_automata (Array.make 0 (LinearConstraint.false_constraint ())) in
+	let invariants = Array.make nb_automata (Array.make 0 (LinearConstraint.pxd_false_constraint ())) in
 	(* Create an empty array for the invariants *)
 	let stopwatches_array = Array.make nb_automata (Array.make 0 []) in
 	(* Does the model has any stopwatch? *)
@@ -1200,7 +1209,7 @@ let make_automata index_of_variables constants index_of_automata index_of_locati
 		(* Create the array of list of transitions for this automaton *)
 		transitions.(automaton_index) <- Array.make nb_locations [];
 		(* Create the array of invariants for this automaton *)
-		invariants.(automaton_index) <- Array.make nb_locations (LinearConstraint.false_constraint ());
+		invariants.(automaton_index) <- Array.make nb_locations (LinearConstraint.pxd_false_constraint ());
 		(* Create the array of stopwatches for this automaton *)
 		stopwatches_array.(automaton_index) <- Array.make nb_locations [];
 		
@@ -1252,7 +1261,11 @@ let make_automata index_of_variables constants index_of_automata index_of_locati
 			begin
 			match cost with
 				| Some cost -> 
-					costs.(automaton_index).(location_index) <- Some (linear_term_of_linear_expression index_of_variables constants cost);
+					costs.(automaton_index).(location_index) <- Some (
+						LinearConstraint.cast_p_of_pxd_linear_term
+							(linear_term_of_linear_expression index_of_variables constants cost)
+							true
+					);
 				| None -> ()
 			end;
 			
@@ -1346,8 +1359,8 @@ let convert_transitions nb_actions index_of_variables constants type_of_variable
 		Array.iteri (fun location_index transitions_for_this_location ->
 			(* Set the array for this location *)
 			
-			(** WARNING !!! Here, a BIG array is created (as big as the number of actions !! *)
-			(** TODO: convert to HashTbl ? (test efficiency?) *)
+			(*** WARNING !!! Here, a BIG array is created (as big as the number of actions !!) ***)
+			(*** TODO: convert to HashTbl ? (test efficiency?) ***)
 			
 			array_of_transitions.(automaton_index).(location_index) <- Array.make nb_actions [];
 			(* Iterate on transitions *)
@@ -1367,7 +1380,7 @@ let convert_transitions nb_actions index_of_variables constants type_of_variable
 				let clock_updates, discrete_updates = List.partition (fun (variable_index, linear_term) ->
 					if type_of_variables variable_index = Var_type_clock then(
 						(* Update flag *)
-						if linear_term <> (LinearConstraint.make_linear_term [] NumConst.zero) then(
+						if linear_term <> (LinearConstraint.make_pxd_linear_term [] NumConst.zero) then(
 							only_resets := false;
 						);
 						true
@@ -1411,12 +1424,12 @@ let make_initial_state index_of_automata locations_per_automaton index_of_locati
 		| Loc_assignment _ -> true
 		| _ -> false
 	) init_definition in
-	(* Make couples (automaton_name, location_name) *)
+	(* Make pairs (automaton_name, location_name) *)
 	let initial_locations = List.map (function
 		| Loc_assignment (automaton_name, location_name) -> (automaton_name, location_name)
 		| _ -> raise (InternalError "Something else than a Loc_assignment was found in a Loc_assignment list")
 	) loc_assignments in
-	(* Convert the couples to automaton_index, location_index *)
+	(* Convert the pairs to automaton_index, location_index *)
 	let locations = List.map (fun (automaton_name, location_name) ->
 		(* Find the automaton index *)
 		let automaton_index = Hashtbl.find index_of_automata automaton_name in
@@ -1451,7 +1464,13 @@ let make_initial_state index_of_automata locations_per_automaton index_of_locati
 		| Linear_predicate lp -> lp
 		| _ -> raise (InternalError "Something else than a Linear_predicate was found in a Linear_predicate list.")
 	) other_inequalities in
-	let initial_constraint = linear_constraint_of_convex_predicate index_of_variables constants convex_predicate in
+	let initial_constraint =
+	
+		(*** TO IMPLEMENT ***)
+		LinearConstraint.instantiate_discrete
+			(fun x -> raise (InternalError ("Not implemented !!!!")))
+			(linear_constraint_of_convex_predicate index_of_variables constants convex_predicate)
+	in
 	(* Return the initial state *)
 	initial_location, initial_constraint
 
@@ -1501,10 +1520,10 @@ let get_clocks_in_linear_constraint clocks =
 	in
 	(* Simplify *)
 	list_only_once list_of_clocks*)
-	LinearConstraint.find_variables clocks
+	LinearConstraint.pxd_find_variables clocks
 
 
-(** WARNING: duplicate function in Reachability *)
+(*** WARNING: duplicate function in Reachability ***)
 let get_clocks_in_updates : clock_updates -> Automaton.clock_index list = function
 	(* No update at all *)
 	| No_update -> []
@@ -1759,7 +1778,7 @@ let abstract_model_of_parsing_structure (parsed_variable_declarations, parsed_au
 	begin
 	match observer_automaton with
 		| None -> ()
-			(** WARNING: we assume here that observer automaton is the last one ! *)
+			(*** WARNING: we assume here that observer automaton is the last one ! ***)
 		| Some automaton_index ->
 			print_message Debug_high ("Adding the observer locations.");
 			array_of_location_names.(automaton_index) <- ObserverPatterns.get_locations parsed_property_definition
@@ -1812,16 +1831,18 @@ let abstract_model_of_parsing_structure (parsed_variable_declarations, parsed_au
 	(* Check the init_definition *) 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	print_message Debug_total ("*** Checking init definition...");
-	(* Get couples for the initialisation of the discrete variables, and check the init definition *)
-	(* WARNING: might be a problem if the check_automata test fails *)
-	let init_discrete_couples, well_formed_init =
+	(* Get pairs for the initialisation of the discrete variables, and check the init definition *)
+
+	(*** WARNING: might be a problem if the check_automata test fails ***)
+	
+	let init_discrete_pairs, well_formed_init =
 		check_init discrete variable_names constants index_of_variables type_of_variables automata automata_names index_of_automata array_of_location_names parsed_init_definition observer_automaton in
 
 	
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Check property definition *)
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* WARNING: might be a problem if the check_automata test fails *)
+	(*** WARNING: might be a problem if the check_automata test fails ***)
 	let property, well_formed_property =
 		check_and_convert_property index_of_variables type_of_variables variable_names constants index_of_actions index_of_automata index_of_locations parsed_property_definition in
 		
@@ -1835,7 +1856,7 @@ let abstract_model_of_parsing_structure (parsed_variable_declarations, parsed_au
 		(* Check well-formedness *)
 		if check_convex_predicate variable_names constants parsed_convex_predicate then(
 			(* Convert to a AbstractModel.linear_constraint *)
-			linear_constraint_of_convex_predicate index_of_variables constants parsed_convex_predicate
+			LinearConstraint.cast_p_of_pxd_linear_constraint (linear_constraint_of_convex_predicate index_of_variables constants parsed_convex_predicate) true
 			,
 			(* Convert the tile nature *)
 			convert_tile_nature tile_nature
@@ -1843,7 +1864,7 @@ let abstract_model_of_parsing_structure (parsed_variable_declarations, parsed_au
 			(* Set well-formedness to false *)
 			well_formed_carto := false;
 			(* Return anything *)
-			LinearConstraint.false_constraint () , AbstractModel.Unknown
+			LinearConstraint.p_false_constraint () , AbstractModel.Unknown
 		)
 	) parsed_constraints in
 	
@@ -1899,7 +1920,9 @@ let abstract_model_of_parsing_structure (parsed_variable_declarations, parsed_au
 	let nb_actions = List.length actions in
 	
 	(* Convert the transitions *)
-	(** TODO: integrate inside 'make_automata' *)
+	
+	(*** TODO: integrate inside 'make_automata' ***)
+	
 	print_message Debug_total ("*** Building transitions...");
 	let transitions = convert_transitions nb_actions index_of_variables constants type_of_variables transitions in
 	
@@ -1949,7 +1972,7 @@ let abstract_model_of_parsing_structure (parsed_variable_declarations, parsed_au
 	
 	
 	
-	(* TODO : perform init for observer (location) *)
+	(*** TODO : perform init for observer (location) ***)
 	
 	
 	
@@ -2023,13 +2046,13 @@ let abstract_model_of_parsing_structure (parsed_variable_declarations, parsed_au
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	print_message Debug_total ("*** Building initial state...");
 	let (initial_location, initial_constraint) =
-		make_initial_state index_of_automata array_of_location_names index_of_locations index_of_variables constants type_of_variables init_discrete_couples parsed_init_definition in
+		make_initial_state index_of_automata array_of_location_names index_of_locations index_of_variables constants type_of_variables init_discrete_pairs parsed_init_definition in
 	
 	(* Add the observer initial constraint *)
 	begin
 	match initial_observer_constraint with
 		| None -> ()
-		| Some c -> LinearConstraint.intersection_assign initial_constraint [c];
+		| Some c -> LinearConstraint.pxd_intersection_assign initial_constraint [c];
 	end;
 	
 	

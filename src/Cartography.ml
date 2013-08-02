@@ -128,9 +128,9 @@ let find_multiple_in_between_and_from min_bound min max step =
 (** Check if a pi_0 belongs to a 'returned_constraint'*)
 (*------------------------------------------------------------*)
 let pi0_in_returned_constraint pi0 = function
-	| Convex_constraint (k,_) -> LinearConstraint.is_pi0_compatible pi0 k
+	| Convex_constraint (k,_) -> PConstraint.is_pi0_compatible pi0 k
 	(** Disjunction of constraints *)
-	| Union_of_constraints (k_list , _) -> List.exists (LinearConstraint.is_pi0_compatible pi0) k_list
+	| Union_of_constraints (k_list , _) -> List.exists (PConstraint.is_pi0_compatible pi0) k_list
 
 
 

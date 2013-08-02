@@ -1,4 +1,10 @@
 *******************************************************
+release 2.6.1.1    (2013-08-02) PRIVATE RELEASE
+
+Nothing really new, just a backup before refactoring constraints
+
+
+*******************************************************
 release 2.6.1    (2013-05-01)
 
 Features:

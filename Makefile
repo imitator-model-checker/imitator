@@ -4,9 +4,9 @@
 #
 #  Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
 #
-#  Author:        Etienne Andre
+#  Author:        Ulrich Kuehne, Etienne Andre
 #  Created:       2009/09/07
-#  Last modified: 2013/03/05
+#  Last modified: 2013/08/02
 #  Ocaml version: 3.12.1
 ###############################################################
 
@@ -79,18 +79,20 @@ MAIN = $(SRC)/IMITATOR.cmo
 # MAIN_OPT = $(MAIN:.cmo=.cmx)
 
 # modules to compile
-MODULES = Global NumConst ReachabilityTree Options LinearConstraint Automaton Cache Input Pi0Lexer Pi0Parser V0Lexer V0Parser ModelLexer ModelParser GMLLexer GMLParser Graph ModelPrinter ObserverPatterns PTA2CLP PTA2GML ModelConverter Graphics PTA2JPG Reachability Cartography
+MODULES = Global NumConst ReachabilityTree Options LinearConstraint Automaton Cache Input Pi0Lexer Pi0Parser V0Lexer V0Parser ModelLexer ModelParser GrMLLexer GrMLParser Graph ModelPrinter ObserverPatterns PTA2CLP PTA2GrML ModelConverter Graphics PTA2JPG Reachability Cartography
+
+### P Constraint P XConstraint P XDConstraint 
 
 # interfaces
-HEADERS = Global NumConst ReachabilityTree Options LinearConstraint Automaton Cache ParsingStructure AbstractModel Input Graph ModelPrinter ObserverPatterns PTA2CLP PTA2GML  ModelConverter Graphics PTA2JPG Reachability Cartography
+HEADERS = Global NumConst ReachabilityTree Options LinearConstraint Automaton Cache ParsingStructure AbstractModel Input Graph ModelPrinter ObserverPatterns PTA2CLP PTA2GrML  ModelConverter Graphics PTA2JPG Reachability Cartography
 
 CMIS = $(addprefix $(SRC)/, $(addsuffix .cmi, $(HEADERS)))
 OBJS = $(addprefix $(SRC)/, $(addsuffix .cmo, $(MODULES)))
 # OBJS_OPT = $(addprefix $(SRC)/, $(addsuffix .cmx, $(MODULES)))
 
 # parsers and lexers 
-LEXERS = Pi0Lexer V0Lexer ModelLexer GMLLexer
-PARSERS = Pi0Parser V0Parser ModelParser GMLParser
+LEXERS = Pi0Lexer V0Lexer ModelLexer GrMLLexer
+PARSERS = Pi0Parser V0Parser ModelParser GrMLParser
 
 LEX_ML = $(addprefix $(SRC)/, $(addsuffix .ml, $(LEXERS)))
 LEX_CMI = $(addprefix $(SRC)/, $(addsuffix .cmi, $(LEXERS)))
@@ -104,7 +106,7 @@ IMILIB = lib/imitator.cma
 # target executable
 TARGET_PATH = bin/
 TARGET_NAME = IMITATOR
-VERSION = 2.6.1
+VERSION = 2.6.1.1
 TARGET = $(TARGET_PATH)$(TARGET_NAME)
 TARGETV = $(TARGET)$(VERSION)
 # TARGET_OPT = bin/IMITATOR.opt
@@ -216,7 +218,7 @@ exe:
 
 # 	$(TARGET) $(EXAMPLE_PATH)/Tests/test.gml -mode reachability -verbose high -fromGrML
 
-# 	$(TARGET) $(EXAMPLE_PATH)/Tests/test.imi -PTA2GML
+# 	$(TARGET) $(EXAMPLE_PATH)/Tests/test.imi -PTA2GrML
 
 # 	$(TARGET) $(EXAMPLE_PATH)/Tests/testPost.imi -mode reachability
 # 	$(TARGET) $(EXAMPLE_PATH)/Tests/testPostSW.imi -mode reachability
@@ -227,7 +229,7 @@ exe:
 # 	$(TARGET) $(EXAMPLE_PATH)/Tests/testPostSW.imi -mode reachability -verbose total -depth-limit 2
 # 	$(TARGET) $(EXAMPLE_PATH)/Tests/testPostSansDiscrete.imi -mode reachability -statistics -verbose total
 
-# 	$(TARGET) $(EXAMPLE_PATH)/Tests/exPourGML.imi -PTA2GML
+# 	$(TARGET) $(EXAMPLE_PATH)/Tests/exPourGML.imi -PTA2GrML
 
 # 	$(TARGET) $(EXAMPLE_PATH)/Tests/exPourGML.imi -mode reachability
 # 	$(TARGET) $(EXAMPLE_PATH)/Tests/SynthesizedGML.gml -fromGrML -mode reachability
@@ -446,7 +448,7 @@ exe:
 # 	$(TARGET) $(EXAMPLE_PATH)/BRP/brp.imi $(EXAMPLE_PATH)/BRP/brp.pi0 -merge-before
 # 	$(TARGET) $(EXAMPLE_PATH)/BRP/brp.imi $(EXAMPLE_PATH)/BRP/brp.pi0 -bab
 
-# 	$(TARGET) $(EXAMPLE_PATH)/RCP/RCP.imi -mode reachability -PTA2GML
+# 	$(TARGET) $(EXAMPLE_PATH)/RCP/RCP.imi -mode reachability -PTA2GrML
 # 	$(TARGET) $(EXAMPLE_PATH)/RCP/RCP.imi $(EXAMPLE_PATH)/RCP/RCP.pi0
 # 	$(TARGETV) $(EXAMPLE_PATH)/RCP/RCP.imi $(EXAMPLE_PATH)/RCP/RCP.pi0 -with-dot -with-log
 # 	$(TARGETV) $(EXAMPLE_PATH)/RCP/RCP.imi $(EXAMPLE_PATH)/RCP/RCP.pi0 -dynamic-elimination -with-dot -with-log -log-prefix $(EXAMPLE_PATH)/RCP/RCP-dynamic
@@ -508,7 +510,7 @@ exe:
 # 	$(TARGETV) $(EXAMPLE_PATH)/Valmem/spsmall.imi $(EXAMPLE_PATH)/Valmem/spsmall.pi0 -dynamic-elimination -with-dot -with-log -log-prefix $(EXAMPLE_PATH)/Valmem/spsmall-dynamic
 # 	$(TARGET) $(EXAMPLE_PATH)/Valmem/spsmall.imi $(EXAMPLE_PATH)/Valmem/spsmall.pi0 -no-random -bab
 # 	$(TARGET) $(EXAMPLE_PATH)/Valmem/spsmall.imi $(EXAMPLE_PATH)/Valmem/spsmall.pi0 -with-dot -with-dot-source -fancy
-# 	$(TARGET) $(EXAMPLE_PATH)/Valmem/spsmall.imi $(EXAMPLE_PATH)/Valmem/spsmall.pi0 -no-dot -no-log -PTA2GML
+# 	$(TARGET) $(EXAMPLE_PATH)/Valmem/spsmall.imi $(EXAMPLE_PATH)/Valmem/spsmall.pi0 -no-dot -no-log -PTA2GrML
 # 	$(TARGET) $(EXAMPLE_PATH)/Valmem/spsmall.imi $(EXAMPLE_PATH)/Valmem/spsmall.pi0 -no-dot -no-log -statistics
 # 	$(TARGET) $(EXAMPLE_PATH)/Valmem/spsmall.imi $(EXAMPLE_PATH)/Valmem/spsmall.pi0 -no-dot -no-log -statistics -acyclic
 # 	$(TARGET) $(EXAMPLE_PATH)/Valmem/spsmall.imi $(EXAMPLE_PATH)/Valmem/spsmall.pi0 -no-dot -no-log -statistics -tree -acyclic
@@ -651,7 +653,7 @@ exe:
 # 	bin/IMITATOR2.34.111115 $(EXAMPLE_PATH)/Jobshop/maler_3_4.imi -mode reachability -no-dot -no-log -IMincl
 
 
-# 	$(TARGET) $(EXAMPLE_PATH)/Jobshop/maler_4_4.imi -mode reachability -no-dot -no-log -incl -statistics -PTA2GML
+# 	$(TARGET) $(EXAMPLE_PATH)/Jobshop/maler_4_4.imi -mode reachability -no-dot -no-log -incl -statistics -PTA2GrML
 # 	$(TARGET) $(EXAMPLE_PATH)/Jobshop/maler_4_4.imi -mode reachability -no-dot -no-log -incl -acyclic -depth-limit 10
 # 	bin/IMITATOR2.375 $(EXAMPLE_PATH)/Jobshop/maler_4_4.imi -mode reachability -no-dot -no-log -incl -acyclic -depth-limit 10
 # 	bin/IMITATOR2.370 $(EXAMPLE_PATH)/Jobshop/maler_4_4.imi -mode reachability -no-dot -no-log -incl -statistics -depth-limit 8
