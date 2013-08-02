@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<model formalismUrl="http://formalisms.cosyverif.org/parametric-timed-automaton.fml" xmlns="http://cosyverif.org/ns/model">
+  <attribute name="declaration">
+    <attribute name="variables">
+      <attribute name="discretes">
+        <attribute name="discrete">
+          d1
+        </attribute>
+      </attribute>
+      <attribute name="clocks">
+        <attribute name="clock">
+          c1
+        </attribute>
+      </attribute>
+    </attribute>
+    <attribute name="constants">
+      <attribute name="parameters">
+        <attribute name="parameter">
+          p1
+        </attribute>
+        <attribute name="parameter">
+          p2
+        </attribute>
+      </attribute>
+    </attribute>
+  </attribute>
+  <attribute name="initialConstraint">
+    <attribute name="boolExpr"><attribute name="boolValue">
+      true
+    </attribute></attribute>
+  </attribute>
+  <node id="3" nodeType="state" x="237" y="169">
+    <attribute name="invariant">
+      <attribute name="boolExpr"><attribute name="boolValue">
+        true
+      </attribute></attribute>
+    </attribute>
+    <attribute name="name">
+      l1
+    </attribute>
+    <attribute name="type">
+      initialState
+    </attribute>
+  </node>
+  <node id="4" nodeType="state" x="384" y="92">
+    <attribute name="invariant">
+      <attribute name="boolExpr"><attribute name="boolValue">
+        true
+      </attribute></attribute>
+    </attribute>
+    <attribute name="name">
+      l2
+    </attribute>
+    <attribute name="type">
+    </attribute>
+  </node>
+  <node id="5" nodeType="state" x="548" y="177">
+    <attribute name="invariant">
+      <attribute name="boolExpr"><attribute name="boolValue">
+        true
+      </attribute></attribute>
+    </attribute>
+    <attribute name="name">
+      l3
+    </attribute>
+    <attribute name="type">
+      finalState
+    </attribute>
+  </node>
+  <arc id="6" arcType="Transition" source="3" target="4">
+    <attribute name="updates">
+    </attribute>
+    <attribute name="guard">
+      <attribute name="boolExpr"><attribute name="boolValue">
+        true
+      </attribute></attribute>
+    </attribute>
+    <attribute name="label">
+      t1
+    </attribute>
+  </arc>
+  <arc id="7" arcType="Transition" source="4" target="5">
+    <attribute name="updates">
+    </attribute>
+    <attribute name="guard">
+      <attribute name="boolExpr"><attribute name="boolValue">
+        true
+      </attribute></attribute>
+    </attribute>
+    <attribute name="label">
+      t2
+    </attribute>
+  </arc>
+</model>

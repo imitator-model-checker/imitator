@@ -1,0 +1,19 @@
+--****************************************************--
+--****************************************************--
+--   Laboratoire Specification et Verification
+--
+--   Program to show the necessity of considering the equality and not the inclusion of constraints in IMITATOR
+--   (idea by Laurent Doyen)
+--
+--   Etienne ANDRE and Jeremy SPROSTON
+--
+--   Created       : 2010/07/02
+--   Last modified : 2010/07/02
+--****************************************************--
+--****************************************************--
+
+	----------------------
+	-- Pi0
+	----------------------
+	& p1 = 3
+	& p2 = 1

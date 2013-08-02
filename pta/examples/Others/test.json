@@ -1,0 +1,40 @@
+{
+    "CPUS": [
+        {
+            "id": "1",
+            "type": "preemptive"
+            
+        },
+        {
+            "id": "2",
+            "type": "preemptive"
+            
+        }
+    ],
+    "PIPELINES": [
+	{   "id": "1",
+	    "period": "10",
+	    "dline": "10",
+	    "TASKS": [
+		{ "id": "1", "wcet": "3", "prio": "2", "cpu": "1", "seq" : "0" }
+	    ]
+	},
+	{
+	    "id":"2",
+	    "period":"20",
+	    "dline":"20",
+	    "TASKS" : [
+		{ "id": "2", "wcet": "3", "prio": "2", "cpu": "2", "seq":"0" }
+	    ]
+	},
+	{
+	    "id":"3", 
+	    "period":"40",
+	    "dline":"40",
+	    "TASKS" : [
+		{ "id": "31", "wcet": "1", "prio": "1", "cpu": "1", "seq":"0" },
+		{ "id": "32", "wcet": "1", "prio": "1", "cpu": "2", "seq":"0" }
+	    ]
+	}
+    ]
+}

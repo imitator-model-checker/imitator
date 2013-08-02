@@ -1,0 +1,31 @@
+--****************************************************--
+--****************************************************--
+--   Laboratoire Specification et Verification
+--
+--   Modeling of the circuit described in "Verification of timed circuits with symbolic delays" (Clariso -- Cortadella)
+--   Precise Model of CC07, including the synthesis of tCKQ
+--
+--   Etienne ANDRE and Laurent FRIBOURG
+--
+--   Created      : 2010/03/29
+--   Last modified: 2010/03/29
+--****************************************************--
+--****************************************************--
+
+
+
+----- IJFCS + tCKQ -----
+	& tHI    = 24
+	& tLO    = 15
+	& tSetup = 10
+	& tHold  = 17
+	& dG1_l  = 7
+	& dG1_u  = 7
+	& dG2_l  = 5
+	& dG2_u  = 6
+	& dG3_l  = 8
+	& dG3_u  = 8 .. 40 -- 10
+	& dG4_l  = 3
+	& dG4_u  = 3 .. 40 -- 7
+	& tCKQ   = 16
+

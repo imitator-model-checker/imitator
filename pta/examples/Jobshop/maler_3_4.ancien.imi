@@ -1,0 +1,172 @@
+--****************************************************--
+--****************************************************--
+--   Laboratoire Specification et Verification
+--
+--   Scheduling example
+--
+--   Romain Soulat
+--
+--   Last modified : 25/10/2011
+--****************************************************--
+--****************************************************--
+--
+--Job2_4: solution = 27
+--
+--J1: m3(1),m1(3),m2(6),m4(7)
+--J2: m2(8),m3(5),m1(10),m4(4)
+--
+--****************************************************--
+--****************************************************--
+
+var 	x1, x2, x3, s
+		: clock;
+
+	m1,m2,m3,m4
+		: discrete;
+
+	d11,d12,d13,d14,d21,d22,d23,d24,d31,d32,d33,d34
+		: parameter;
+
+--****************************************************--
+  automaton job1
+--****************************************************--
+synclabs: b1;
+initially I1;
+
+loc I1: while True wait {}
+	when  m3=0  sync b1 do {x1' = 0, m3'=1} goto J1;  
+
+loc J1: while x1<= d13 wait {}
+	when  x1 = d13 sync b1 do {m3'=0} goto K1;   
+
+loc K1: while True wait {}
+	when  m1=0 sync b1 do {x1'=0,m1'=1} goto L1;   
+
+loc L1: while x1 <= d11 wait {}
+	when  x1=d11 sync b1 do {m1'=0} goto M1;   
+
+loc M1: while True wait {}
+	when  m2=0 sync b1 do {x1'=0,m2'=1} goto N1;   
+
+loc N1: while x1 <= d12 wait {}
+	when  x1=d12 sync b1 do {m3'=0} goto P1;   
+
+loc P1: while True wait {}
+	when  m4=0 sync b1 do {x1'=0,m4'=1} goto Q1;   
+
+loc Q1: while x1 <= d14 wait {}
+	when  x1=d14 sync b1 do {m3'=0} goto End1;   
+
+loc End1: while True wait {} 
+
+end -- job1
+
+--****************************************************--
+  automaton job2
+--****************************************************--
+synclabs: b2;
+initially I2;
+
+loc I2: while True wait {}
+	when  m2=0 sync b2 do {x2'=0,m2'=1} goto J2;  
+
+loc J2: while x2<= d22 wait {}
+	when  x2 = d22 sync b2 do {m2'=0} goto K2;   
+
+loc K2: while True wait {}
+	when  m3=0 sync b2 do {x2'=0,m3'=1} goto L2;   
+
+loc L2: while x2 <= d23 wait {}
+	when  x2=d23 sync b2 do {m3'=0} goto M2;   
+
+loc M2: while True wait {}
+	when  m1=0 sync b2 do {x2'=0,m1'=1} goto N2;   
+
+loc N2: while x2 <= d21 wait {}
+	when  x2=d21 sync b2 do {m1'=0} goto P2;   
+
+loc P2: while True wait {}
+	when  m4=0 sync b2 do {x2'=0,m4'=1} goto Q2;   
+
+loc Q2: while x2 <= d24 wait {}
+	when  x2=d24 sync b2 do {m4'=0} goto End2;   
+
+loc End2: while True wait {} 
+
+end -- job2
+--****************************************************--
+  automaton job3
+--****************************************************--
+synclabs: b3;
+initially I3;
+
+loc I3: while True wait {}
+	when  m3=0 sync b3 do {x3'=0,m3'=1} goto J3;  
+
+loc J3: while x3<= d33 wait {}
+	when  x3 = d33 sync b3 do {m3'=0} goto K3;  
+
+loc K3: while True wait {}
+	when  m4=0 sync b3 do {x3'=0,m4'=1} goto L3;   
+
+loc L3: while x3 <= d34 wait {}
+	when  x3=d34 sync b3 do {m4'=0} goto M3;
+
+loc M3: while True wait {}
+	when  m1=0 sync b3 do {x3'=0,m1'=1} goto N3;
+
+loc N3: while x3 <= d31 wait {}
+	when  x3=d31 sync b3 do {m1'=0} goto P3;
+
+loc P3: while True wait {}
+	when  m2=0 sync b3 do {x3'=0,m2'=1} goto Q3;
+
+loc Q3: while x3 <= d32 wait {}
+	when  x3=d32 sync b3 do {m2'=0} goto End3;
+
+loc End3: while True wait {} 
+
+end -- job3
+
+
+
+--****************************************************--
+--****************************************************--
+-- ANALYSIS
+--****************************************************--
+--****************************************************--
+
+var init	: region;
+
+init :=
+	----------------------
+	-- Initial locations
+	----------------------
+	  loc[job1] = I1
+	& loc[job2] = I2
+	& loc[job3] = I3
+
+	& m1=0 & m2=0 	& m3=0 & m4=0 
+	----------------------
+	-- Clocks
+	----------------------
+	& x1=0 
+	& x2=0
+	& x3=0
+	& s=0
+	----------------------
+	-- Durations 
+	----------------------
+	& d11=1
+	& d12=3
+	& d13=6
+	& d14=7
+	& d21=8
+	& d22=5
+	& d23=10
+	& d24=4
+	& d31=5
+	& d32=4
+	& d33=9
+	& d34=1
+;

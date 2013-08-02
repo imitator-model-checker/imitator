@@ -1,0 +1,34 @@
+var t     : clock;
+    x     : analog;
+    m,
+    M,
+    T,
+    x_min,
+    x_max : parameter;
+
+automaton tank
+
+synclabs: start1, start2, waiting, open, close, err;
+initially ini;
+
+loc ini: while x <= M wait {x' = 0}
+      when m <= x & x <= M sync start1 do {t' = 0} goto fill;
+      when m <= x & x <= M sync start2 do {t' = 0} goto drain;
+
+loc fill: while t <= T wait {x' = 4}
+      when x <= M sync waiting do {t' = 0} goto fill;
+      when x >  M sync open do {} goto drain;
+      when x >= x_max sync err do {} goto error;
+
+loc drain: while t <= T wait {x' = -4}
+      when x >= m sync waiting do {t' = 0} goto drain;
+      when x <  m sync close do {} goto fill;
+      when x <= x_min sync err do {} goto error;	  
+
+loc error: while True wait {x' = 0}
+      when True sync err do {} goto error;
+
+end
+
+var init: region;
+init := loc[tank] = ini & t = 0 & x >= m & x <= M;

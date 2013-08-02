@@ -1,0 +1,288 @@
+--****************************************************--
+--****************************************************--
+--   VALMEM Project
+--
+--   Sample latch circuit by Remy (ST-Microelectronics)
+--   Times by Patricia Renault (LIP6)
+--   Modeling by Etienne ANDRE (LSV)
+--
+--   Version with no L-U
+--
+--   Created       : 2007/12
+--   Last modified : 2010/03/17
+--****************************************************--
+--****************************************************--
+
+var 	s, ckClock, ckD, ckNot1, ckNot2, ckXor, ckAnd, ckLatch
+		: clock;
+
+-- 	tNot1Down1,
+-- 	tNot2Up1,
+-- 	tXorUp1, tXorDown1,
+-- 	tAndUp1, tAndDown1,
+-- 	tLatchUp1,
+	q
+		: discrete;
+
+	dClockHigh, dClockLow,
+	dSetup, dHold,
+	dNot1Down, dNot1Up,
+	dNot2Down, dNot2Up,
+	dXorDown1Up, dXorUp2Up,
+	dAndUp2, dAndDown1,
+	dLatchUp
+			: parameter;
+	
+--****************************************************--
+--****************************************************--
+-- AUTOMATA
+--****************************************************--
+--****************************************************--
+
+
+--****************************************************--
+automaton clock1
+--****************************************************--
+synclabs: clockUp1;
+initially ClockLow1;
+
+loc ClockLow1: while ckClock <= dClockLow wait {}
+	when ckClock >= dClockLow sync clockUp1 do {ckClock' = 0} goto ClockHigh1;
+
+loc ClockHigh1: while ckClock <= dClockHigh wait {}
+-- 	when True do {} goto ClockHigh1;
+end -- clock1
+
+
+--****************************************************--
+automaton d1
+--****************************************************--
+synclabs: clockUp1, dUp1, dDown1;
+initially DLow1;
+
+loc DLow1: while ckD<=dClockLow-dSetup wait {}
+		when ckD=dClockLow-dSetup sync dUp1 do {ckD' = 0} goto DHigh1;
+
+loc DHigh1: while ckD<=dSetup wait {}
+	when ckD=dSetup sync clockUp1 do {ckD' = 0} goto DHigh2;
+
+loc DHigh2: while ckD<=dHold wait {}
+	when ckD=dHold sync dDown1 do {} goto DLow2;
+
+loc DLow2: while ckD >= 0 wait {}
+-- 	when True do {} goto DLow2;
+
+end -- d1
+
+
+--****************************************************--
+automaton not1
+--****************************************************--
+synclabs: clockUp1,
+	not1Down1;
+initially Not1High1;
+
+loc Not1High1: while ckNot1 >= 0 wait {}
+	when True sync clockUp1 do {ckNot1' = 0} goto Not1High1bis;
+
+loc Not1High1bis: while ckNot1 <= dNot1Down wait {}
+	when ckNot1 >= dNot1Down sync not1Down1 do {(*tNot1Down1' = s*)} goto Not1Low1;
+
+loc Not1Low1: while ckNot1 >= 0 wait {}
+-- 	when True do {} goto Not1Low1;
+end -- not1
+
+
+--****************************************************--
+automaton not2
+--****************************************************--
+synclabs: not1Down1,
+	not2Up1;
+initially Not2Low1;
+
+loc Not2Low1: while ckNot2 >= 0 wait {}
+	when True sync not1Down1 do {ckNot2' = 0} goto Not2Low1bis;
+
+loc Not2Low1bis: while ckNot2 <= dNot2Up wait {}
+	when ckNot2 >= dNot2Up sync not2Up1 do {(*tNot2Up1' = s*)} goto Not2High1;
+
+loc Not2High1: while ckNot2 >= 0 wait {}
+-- 	when True do {} goto Not2High1;
+end -- not2
+
+
+--****************************************************--
+automaton xor1
+--****************************************************--
+synclabs: clockUp1, not2Up1,
+	xorUp1, xorDown1;
+initially XorLow1;
+
+loc XorLow1: while ckXor >= 0 wait {}
+	when True sync clockUp1 do {ckXor' = 0} goto XorLow1bis;
+
+loc XorLow1bis: while ckXor <= dXorUp2Up wait {}
+	when ckXor >= dXorUp2Up sync xorUp1 do {(*tXorUp1' = s*)} goto XorHigh1;
+
+loc XorHigh1: while ckXor >= 0 wait {}
+	when True sync not2Up1 do {ckXor' = 0} goto XorHigh1bis;
+
+loc XorHigh1bis: while ckXor <= dXorDown1Up wait {}
+	when ckXor >= dXorDown1Up sync xorDown1 do {(*tXorDown1' = s*)} goto XorLow2;
+
+loc XorLow2: while ckXor >= 0 wait {}
+-- 	when True do {} goto XorLow2;
+end -- xor1
+
+
+--****************************************************--
+automaton and1
+--****************************************************--
+synclabs: clockUp1, xorDown1,
+	andUp1, andDown1;
+initially AndLow1;
+
+loc AndLow1: while ckAnd >= 0 wait {}
+	when True sync clockUp1 do {ckAnd' = 0} goto AndLow1bis;
+
+loc AndLow1bis: while ckAnd <= dAndUp2 wait {}
+	when ckAnd >= dAndUp2 sync andUp1 do {(*tAndUp1' = s*)} goto AndHigh1;
+
+loc AndHigh1: while ckAnd >= 0 wait {}
+	when True sync xorDown1 do {ckAnd' = 0} goto AndHigh1bis;
+
+loc AndHigh1bis: while ckAnd <= dAndDown1 wait {}
+	when ckAnd >= dAndDown1 sync andDown1 do {(*tAndDown1' = s*)} goto AndLow2;
+
+loc AndLow2: while ckAnd >= 0 wait {}
+-- 	when True do {} goto AndLow2;
+end -- and1
+
+
+--****************************************************--
+automaton latch1
+--****************************************************--
+synclabs: dUp1, dDown1, andUp1, andDown1,
+	latchUp1;
+initially LatchD0E0;
+
+loc LatchD0E0: while ckLatch >= 0 wait {}
+	when True sync dUp1 do {} goto LatchD1E0;
+	when True sync andUp1 do {ckLatch' = 0} goto LatchD0E1;
+
+loc LatchD0E1: while ckLatch >= 0 wait {} -- simplification : Q can not go down in our case
+	when True sync dUp1 do {ckLatch' = 0} goto LatchD1E1;
+	when True sync andDown1 do {} goto LatchD0E0;
+
+loc LatchD1E0: while ckLatch >= 0 wait {}
+	when True sync andUp1 do {ckLatch' = 0} goto LatchD1E1;
+	when True sync dDown1 do {} goto LatchD0E0;
+
+loc LatchD1E1: while ckLatch <= dLatchUp wait {}
+	when ckLatch >= dLatchUp sync latchUp1 do {(*tLatchUp1' = s, *) q'=1} 
+			goto LatchD1E1B;
+	when True sync dDown1 do {} goto LatchD0E1;
+	when True sync andDown1 do {} goto LatchD1E0;
+
+loc LatchD1E1B: while ckLatch >= 0 wait {}
+	when True sync andDown1 do {} goto LatchD1E0;
+	when True sync dDown1 do {} goto LatchD0E1;
+end -- latch1
+
+
+
+
+--****************************************************--
+--****************************************************--
+-- ANALYSIS
+--****************************************************--
+--****************************************************--
+
+var init : region;
+
+init :=
+	----------------------
+	-- Initial locations
+	----------------------
+	  loc[clock1] = ClockLow1
+	& loc[d1] = DLow1
+	& loc[not1] = Not1High1
+	& loc[not2] = Not2Low1
+	& loc[xor1] = XorLow1
+	& loc[and1] = AndLow1 
+	& loc[latch1] = LatchD0E0
+
+	----------------------
+	-- Clocks
+	----------------------
+	& s       = 0
+	& ckClock = 0
+	& ckD     = 0
+	& ckNot1  = 0
+	& ckNot2  = 0
+	& ckXor   = 0
+	& ckAnd   = 0
+	& ckLatch = 0
+
+	& q=2
+
+	----------------------
+	-- Parameters
+	----------------------
+--	& dLatchUp>0
+--	& dAndUp2 >0
+--	& dNot2Down>0
+--	& dNot1Up>0
+--	& dNot1Down>0
+--	& dXorDown1Up>0
+--	& dAndDown1>0
+--	& dSetup>0
+
+-- 	& dNot1Down = dNot1Down
+-- 	& dNot1Up = dNot1Up
+-- 	& dNot2Down = dNot2Down
+-- 	& dNot2Up = dNot2Up
+-- 	& dXorUp2Up = dXorUp2Up
+-- 	& dXorDown1Up = dXorDown1Up
+-- 	& dAndUp2 = dAndUp2
+-- 	& dAndDown1 = dAndDown1
+-- 	& dLatchUp = dLatchUp
+
+	----------------------
+	-- Resulting times and durations (in ps)
+	----------------------
+-- 	& tNot1Down1 = 0
+-- 
+-- 	& tNot2Up1 = 0
+-- 
+-- 	& tXorUp1 = 0
+-- 	& tXorDown1 = 0
+-- 
+-- 	& tAndUp1 = 0
+-- 	& tAndDown1 = 0
+-- 
+-- 	& tLatchUp1 = 0
+
+
+	----------------------
+	-- INSTANTIATIONS
+	----------------------
+-- 	& dClockHigh = 1000
+-- 	& dClockLow = 1000
+-- 
+-- 	& dNot1Down = 147
+-- 	& dNot1Up = 219
+-- 	& dNot2Down = 163
+-- 	& dNot2Up = 155
+-- 	& dXorUp2Up = 147
+-- 	& dXorDown1Up = 416
+-- -- 	& dAndUp2 = 80
+-- 	& dAndUp2 >= 0
+-- 	& dAndDown1 = 155
+-- 	& dLatchUp = 240
+-- -- 	& dHold = 350
+-- 	& dHold >= 0
+-- 	& dSetup = 1
+;
+
+-- print (reach forward from init endreach);

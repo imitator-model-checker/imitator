@@ -1,0 +1,60 @@
+--**************************************************--
+--**************************************************--
+--
+--            Test of input file for IMITATOR
+--
+--  Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
+--  Author:        Etienne Andre
+--  Created:       2009/12/21
+--  Last modified: 2012/02/20
+--****************************************************--
+--****************************************************--
+
+var
+	p1, p2, p3, c1 = 1
+		: parameter;
+	x, y
+		: clock;
+	i, j
+		: discrete;
+
+--****************************************************--
+--****************************************************--
+-- AUTOMATA
+--****************************************************--
+--****************************************************--
+
+--****************************************************--
+automaton automaton1
+--****************************************************--
+synclabs: action1, action2, action3;
+
+loc A1: while x <= p1 stop {x, x} wait {}
+	when x >= p2 sync action1 do {x' = 2 c1} goto A2;
+
+loc A2: while x <= p3 wait {}
+	when True do {} goto A2;
+end -- automaton1
+
+
+--****************************************************--
+automaton automaton2
+--****************************************************--
+synclabs: action1, action3;
+
+loc B1: while y <= i stop{} wait
+	when y = i & i < 5 do {y' = 0, i' = i + 1} goto B1; 
+	when y = 3 sync action1 do {} goto B2; 
+
+loc B2: while True wait{}
+	when True sync action3 goto B2; -- impossible to take
+end -- automaton2
+
+
+init := True
+	& loc[automaton1] = A1
+	& loc[automaton2] = B1
+	& x = 1/4
+	& y = 1/4
+	& i = 1 (*26 * 25 * 24 * 23 * 22 * 21 * 20 * 19 * 18 * 17 * 16 * 15 * 14 * 13 * 12 * 11 * 10 * 9 * 8 * 7 * 6 * 5 * 4 * 3 * 2 * 1*)
+;

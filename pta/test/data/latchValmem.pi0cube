@@ -1,0 +1,69 @@
+(*****************************************************--
+--****************************************************--
+--   VALMEM Project
+--
+--   Sample latch circuit by Remy (ST-Microelectronics)
+--   Times by Patricia Renault (LIP6)
+--   Modeling by Etienne ANDRE (LSV)
+--
+--   Created       : 2009/12/28
+--   Last modified : 2010/01/14
+--****************************************************--
+--*****************************************************)
+
+	(**************************************************
+	  TOUT PARAMETRE
+	 **************************************************)
+
+(*	& dClockHigh = 0 .. 1500 (*1000*)
+	& dClockLow = 0 .. 1500 (*1000*)
+
+	& dNot1Down = 0 .. 200 (*147*)
+
+	& dNot1Up= 0 .. 300 (*219*)
+
+	& dNot2Down = 0 .. 200 (*163*)
+
+	& dNot2Up = 0 .. 200 (*155*)
+
+	& dXorUp2Up = 0 .. 200 (*147*)
+
+	& dXorDown1Up = 0 .. 500 (*416*)
+	
+	& dAndUp2 = 0 .. 200 (*80*) 
+
+	& dAndDown1 = 0 .. 200 (*155*)
+
+	& dLatchUp = 0 .. 300 (*240*)
+
+	& dHold = 0 .. 500 (*350*)
+	& dSetup = 0 .. 200 (*1*)*)
+(* --	& dSetup = 140 -- valeur PATRICIA *)
+(* --	& dHold = -57 (!!!) -- valeur PATRICIA *)
+
+	(**************************************************
+	  TOUT INSTANCIE SAUF dAnd2up et dHold
+	 **************************************************)
+	& dClockHigh = 1000
+	& dClockLow = 1000
+
+	& dNot1Down = 147
+
+	& dNot1Up= 219
+
+	& dNot2Down = 163
+
+	& dNot2Up = 155
+
+	& dXorUp2Up = 147
+
+	& dXorDown1Up = 416
+	
+	& dAndUp2 = 0 .. 1500 (*80*)
+
+	& dAndDown1 = 155
+
+	& dLatchUp = 240
+
+	& dHold = 0 .. 1500 (*350*)
+	& dSetup = 1

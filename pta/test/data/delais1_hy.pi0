@@ -1,0 +1,42 @@
+	delta0_1_reg_mux_output = 0 & delta1_1_reg_mux_output = 0 &
+	delta0_2_reg_mux_output = 0 & delta1_2_reg_mux_output = 0 &
+	delta0_reg_mux_output = 0 & delta1_reg_mux_output = 0 &
+
+	delta0_passa = 6 & delta1_passa = 6 &
+
+	delta0_1_reg_mem_point = 9 & delta1_1_reg_mem_point = 9 &		--	(up:8,6 - dn:8,6)
+	delta0_reg_mem_point = 9 & delta1_reg_mem_point = 9 &
+
+	delta0_rowa = 23 & delta1_rowa = 23 &
+	delta0_d_int_h = 6 & delta1_d_int_h = 6 & 	--	(up:5,2 - dn:5,2)
+	delta0_d_inta = 45 & delta1_d_inta = 22 &
+	delta0_ema = 0 & delta1_ema = 0 &
+	delta0_row = 0 & delta1_row = 0 &
+	delta0_welb = 0 & delta1_welb = 0 &
+	delta0_wela = 22 & delta1_wela = 0 &			--	(up:0 - dn:21,5)
+	delta0_net45a = 4 & delta1_net45a = 5 &		--	(up:4,3 - dn:3,2)
+
+	delta0_net13f = 31 & delta1_net13f = 45 &
+	delta0_net13e = 2 & delta1_net13e = 5 &
+	delta0_net13d = 2 & delta1_net13d = 5 &
+	delta0_net13a = 13 & delta1_net13a = 19 &
+
+	delta0_1_reg_latch_a = 31 & delta1_1_reg_latch_a = 31 &
+	delta0_reg_latch_a = 31 & delta1_reg_latch_a = 31 &
+
+	delta0_1_reg_latchwen = 22 & delta1_1_reg_latchwen = 21 &
+	delta0_reg_latchwen = 22 & delta1_reg_latchwen = 21 &
+
+	delta0_1_reg_latchd = 18 & delta1_1_reg_latchd = 14 &
+	delta0_reg_latchd = 18 & delta1_reg_latchd = 14 &
+
+	delta0_en_latchd = 32 & delta1_en_latchd = 28 &
+	delta0_en_latcha = 14 & delta1_en_latcha = 20 &
+	delta0_en_latchwen = 4 & delta1_en_latchwen = 5 &
+
+	delta0_a_h = 15 & delta1_a_h = 16 &
+	delta0_wen_h = 8 & delta1_wen_h = 11 &
+	delta0_d_h =66 & delta1_d_h = 95 &
+
+	delta0_q_0 = 20 & delta1_q_0 = 21;
+

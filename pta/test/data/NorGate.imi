@@ -1,0 +1,101 @@
+--****************************************************--
+--****************************************************--
+--   Laboratoire Specification et Verification
+--
+--   Modeling of a "NOR" logical gate
+--
+--   Etienne ANDRE
+--
+--   Created:        2010/03/19
+--   Last modified : 2010/03/19
+--****************************************************--
+--****************************************************--
+
+var 	ckNor
+		: clock;
+
+	dNor_l, dNor_u
+			: parameter;
+
+
+--****************************************************--
+  automaton norGate
+--****************************************************--
+synclabs: aUp, aDown, bUp, bDown,
+	qUp, qDown;
+initially Nor001;
+
+-- UNSTABLE
+loc Nor000: while ckNor <= dNor_u wait {}
+	when True sync aUp do {} goto Nor100;
+	when True sync bUp do {} goto Nor010;
+	when ckNor >= dNor_l sync qUp do {} goto Nor001;
+
+-- STABLE
+loc Nor001: while True wait {}
+	when True sync aUp do {ckNor' = 0} goto Nor101;
+	when True sync bUp do {ckNor' = 0} goto Nor011;
+
+-- STABLE
+loc Nor010: while True wait {}
+	when True sync aUp do {} goto Nor110;
+	when True sync bDown do {ckNor' = 0} goto Nor000;
+
+-- UNSTABLE
+loc Nor011: while ckNor <= dNor_u wait {}
+	when True sync aUp do {ckNor' = 0} goto Nor111;
+	when True sync bDown do {} goto Nor001;
+	when ckNor >= dNor_l sync qDown do {} goto Nor010;
+
+-- STABLE
+loc Nor100: while True wait {}
+	when True sync aDown do {ckNor' = 0} goto Nor000;
+	when True sync bUp do {} goto Nor110;
+
+-- UNSTABLE
+loc Nor101: while ckNor <= dNor_u wait {}
+	when True sync aDown do {} goto Nor001;
+	when True sync bUp do {ckNor' = 0} goto Nor111;
+	when ckNor >= dNor_l sync qDown do {} goto Nor100;
+
+-- STABLE
+loc Nor110: while True wait {}
+	when True sync aDown do {} goto Nor010;
+	when True sync bDown do {} goto Nor100;
+
+-- UNSTABLE
+loc Nor111: while ckNor <= dNor_u wait {}
+	when True sync aDown do {ckNor' = 0} goto Nor011;
+	when True sync bDown do {ckNor' = 0} goto Nor101;
+	when ckNor >= dNor_l sync qDown do {} goto Nor110;
+
+end -- norGate
+
+
+
+--****************************************************--
+-- ANALYSIS
+--****************************************************--
+
+var init : region;
+
+init := 
+	------------------------------------------------------------
+	-- INITIAL LOCATION
+	------------------------------------------------------------
+	loc[norGate] = Nor001
+
+	------------------------------------------------------------
+	-- INITIAL CONSTRAINTS
+	------------------------------------------------------------
+	& ckNor = 0
+
+	& dNor_l >= 0
+
+	& dNor_l <= dNor_u
+;
+
+-- var init_reg
+-- 	: region;
+
+-- prints "LSV";
