@@ -341,6 +341,7 @@ let cartography model v0 returned_constraint_list cartography_name =
 		(* write the script into a file *)
 		output_string script !script_line;
 		(* Print some information *)
+		(** TODO one day: change this string and update IMITATOR service in CosyVerif *)
 		print_message Debug_standard (
 			"Plot cartography projected on parameters " ^ x_name ^ ", " ^ y_name
 			^ " to file '" ^ final_name ^ "'."); 
@@ -583,6 +584,8 @@ let dot model radical dot_source_file =
 			write_to_file dot_file_name dot_source_file;
 
 			(* Generate gif file using dot *)
+			(*** WARNING: don't change this string (parsed by CosyVerif) **)
+			(*** TODO: add CosyVerif mode with output of the form "key : value" **)
 			print_message Debug_standard ("Generating graphical output to '" ^ image_file_name ^ "'...");
 			print_message Debug_medium ("Calling dot...");
 			begin
