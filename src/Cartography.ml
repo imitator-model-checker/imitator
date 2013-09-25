@@ -128,9 +128,9 @@ let find_multiple_in_between_and_from min_bound min max step =
 (** Check if a pi_0 belongs to a 'returned_constraint'*)
 (*------------------------------------------------------------*)
 let pi0_in_returned_constraint pi0 = function
-	| Convex_constraint (k,_) -> PConstraint.is_pi0_compatible pi0 k
+	| Convex_constraint (k,_) -> LinearConstraint.is_pi0_compatible pi0 k
 	(** Disjunction of constraints *)
-	| Union_of_constraints (k_list , _) -> List.exists (PConstraint.is_pi0_compatible pi0) k_list
+	| Union_of_constraints (k_list , _) -> List.exists (LinearConstraint.is_pi0_compatible pi0) k_list
 
 
 
@@ -557,7 +557,7 @@ let cover_behavioral_cartography program v0 init_state =
 	(* Initial constraint of the program *)
 	let _, init_constraint = init_state in
 	(* Hide non parameters *)
-	let init_constraint = LinearConstraint.hide program.clocks_and_discrete init_constraint in
+	let init_constraint = LinearConstraint.px_hide_nonparameters_and_collapse init_constraint in
 
 (*	(* (Dynamic) Array for the pi0 (USELESS SO FAR) *)
 	let pi0_computed = DynArray.create() in*)
@@ -709,15 +709,15 @@ let cover_behavioral_cartography program v0 init_state =
 			begin match returned_constraint with
 				| Convex_constraint (k, _) ->
 					(** NOTE: Quite costly test, but interesting for statistics and readability *)
-					let old_k = LinearConstraint.copy k in
+					let old_k = LinearConstraint.p_copy k in
 					enlarge program.parameters program.clocks_and_discrete k;
-					if not (LinearConstraint.is_equal k old_k) then nb_enlargements := !nb_enlargements + 1;
+					if not (LinearConstraint.p_is_equal k old_k) then nb_enlargements := !nb_enlargements + 1;
 				| Union_of_constraints (k_list, _) ->
 					List.iter (fun k ->
 						(** NOTE: Quite costly test, but interesting for statistics and readability *)
-						let old_k = LinearConstraint.copy k in
+						let old_k = LinearConstraint.p_copy k in
 						enlarge program.parameters program.clocks_and_discrete k;
-						if not (LinearConstraint.is_equal k old_k) then nb_enlargements := !nb_enlargements + 1;
+						if not (LinearConstraint.p_is_equal k old_k) then nb_enlargements := !nb_enlargements + 1;
 					) k_list
 			end;
 			
@@ -813,7 +813,7 @@ let random_behavioral_cartography program v0 init_state nb =
 	let pi0_computed = Array.make nb (random_pi0 program v0) in
 	(* Array for the results *)
 	(***** TO OPTIMIZE: why create such a big array?! *****)
-	let results = Array.make nb (Convex_constraint (LinearConstraint.false_constraint (), Unknown)) in
+	let results = Array.make nb (Convex_constraint (LinearConstraint.p_false_constraint (), Unknown)) in
 	(* Index of the iterations where we really found different constraints *)
 	let interesting_interations = ref [] in
 	(* Debug mode *)
@@ -823,7 +823,7 @@ let random_behavioral_cartography program v0 init_state nb =
 	(* Initial constraint of the program *)
 	let _, init_constraint = init_state in
 	(* Hide non parameters *)
-	let init_constraint = LinearConstraint.hide (List.rev_append program.discrete program.clocks) init_constraint in
+	let init_constraint = LinearConstraint.px_hide_nonparameters_and_collapse init_constraint in
 
 	(* Current iteration *)
 	let i = ref 1 in

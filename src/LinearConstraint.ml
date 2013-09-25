@@ -10,7 +10,7 @@
  * Author:        Etienne Andre
  * 
  * Created:       2010/03/04
- * Last modified: 2013/08/02
+ * Last modified: 2013/09/25
  *
  ****************************************************************) 
  
@@ -216,17 +216,17 @@ let string_of_var names variable =
 (** Global variables *)
 (************************************************************)
 
-(* The manager *)
-(*let manager = Polka.manager_alloc_strict ()*)
-
 (* The number of integer dimensions *)
-let int_dim = ref 0
+(* let int_dim = ref 0 *)
 
 (* The number of real dimensions *)
-let real_dim = ref 0
+(* let real_dim = ref 0 *)
 
 (* Total number of dimensions *)
-let total_dim = ref 0
+let nb_parameters	= ref 0
+let nb_clocks		= ref 0
+let nb_discrete		= ref 0
+let total_dim		= ref 0
 
 
 (************************************************************)
@@ -670,12 +670,20 @@ let string_of_p_linear_inequality = string_of_linear_inequality
 (** {3 Initialization} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
 
-(** Set the constraint manager *)
-let set_manager int_d real_d =
-	int_dim := int_d;
-	real_dim := real_d;
-	total_dim := int_d + real_d
-
+(** Set the number of dimensions *)
+let set_dimensions nb_p nb_c nb_d =
+	nb_parameters	:= nb_p;
+	nb_clocks 		:= nb_c;
+	nb_discrete		:= nb_d;
+	total_dim		:= nb_p + nb_c + nb_d;
+	if debug_mode_greater Debug_high then(
+		print_message Debug_high ("\nDimensions set");
+		print_message Debug_high ("  nb_parameters := " ^ (string_of_int !nb_parameters));
+		print_message Debug_high ("  nb_clocks := " ^ (string_of_int !nb_clocks));
+		print_message Debug_high ("  nb_discrete := " ^ (string_of_int !nb_discrete));
+		print_message Debug_high ("  total_dim := " ^ (string_of_int !total_dim));
+	);
+	()
 
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
@@ -778,6 +786,7 @@ let is_true c =
 	(* Return result *)
 	result
 
+let p_is_true = is_true
 let pxd_is_true = is_true
 
 
@@ -799,6 +808,7 @@ let is_equal c1 c2 =
 	(* Return result *)
 	result
 
+let p_is_equal = is_equal
 let px_is_equal = is_equal
 
 (** Check if a constraint is included in another one *)
@@ -823,11 +833,15 @@ let px_is_leq = is_leq
 (** Get the number of inequalities of a constraint *)
 let nb_inequalities linear_constraint = 
 	(* First check if true *)
-	if is_true linear_constraint || is_false linear_constraint then 0
+	if p_is_true linear_constraint || p_is_false linear_constraint then 0
 	else
 	(* Get a list of linear inequalities *)
 	let list_of_inequalities = get_constraints linear_constraint in
 	List.length list_of_inequalities
+
+let p_nb_inequalities = nb_inequalities
+
+
 
 
 (** Get the linear inequalities *)
@@ -902,6 +916,9 @@ let copy linear_constraint =
 	(* Return result *)
 	result
 
+
+let p_copy = copy
+let px_copy = copy
 
 (** Perform the intersection of a linear constrain with a list of constraints (with side effect) *)
 let intersection_assign linear_constraint constrs =
@@ -987,8 +1004,8 @@ let hide_assign variables linear_constraint =
 	if List.length variables > 0 then (
 		(* debug output *)
 		if debug_mode_greater Debug_total then (
-			print_message Debug_high "hide:";
-			List.iter (fun v -> print_message Debug_high ("  - v" ^ string_of_int v)) variables;
+			print_message Debug_total "hide:";
+			List.iter (fun v -> print_message Debug_total ("  - v" ^ string_of_int v)) variables;
 		);
 		(* Statistics *)
 		ppl_nb_unconstrain := !ppl_nb_unconstrain + 1;
@@ -1006,31 +1023,44 @@ let pxd_hide_assign = hide_assign
 
 (** Eliminate (using existential quantification) a set of variables in a linear constraint *)
 let hide variables linear_constraint =
+
+
+
+	(*** TO OPTIMIZE: check if variables is different from [] ***)
+	
+	
+	
 	(* copy polyhedron, as PPL function has sideeffects *)
 	let poly = copy linear_constraint in
 	(* Call the function with side-effects *)
 	hide_assign variables poly;
 	poly
 
-(* let px_hide = hide *)
 
 
 
 
 
+
+(** Eliminate (using existential quantification) all non-parameters (clocks and discrete) in a px_linear constraint *)
+let px_hide_nonparameters_and_collapse linear_constraint = 
+	let nonparameters = list_of_interval !nb_parameters (!total_dim - 1) in
+	hide nonparameters linear_constraint 
+
+
+
+let pxd_hide_discrete_and_collapse linear_constraint = 
+	let discretes = list_of_interval (!nb_parameters + !nb_clocks) (!total_dim - 1) in
+	hide discretes linear_constraint
+
+
+
+(*(** Eliminate (using existential quantification) the non-parameters in a pxd_linear constraint, and remove the corresponding dimensions *)
 
 (*** TO IMPLEMENT !!! ***)
 
-let px_hide_nonparameters = 
-	raise (InternalError "Not implemented!!!")
-
-
-
-(*** TO IMPLEMENT !!! ***)
-
-let pxd_hide_discrete_and_collapse = 
-	raise (InternalError "Not implemented!!!")
-
+let pxd_hide_nonparameters_and_collapse = 
+	raise (InternalError "Not implemented!!!")*)
 
 
 
@@ -1407,13 +1437,21 @@ let grml_of_pxd_linear_constraint = grml_of_linear_constraint
 (** {3 Conversion between types of constraints } *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
 
-
-
-
-(*** TO IMPLEMENT !!! ***)
-
-let instantiate_discrete discrete_values pxd_linear_constraint =
-	raise (InternalError "Not implemented!!")
+(** Create a pxd_linear_constraint from a set of pairs (discrete variable, value) *)
+let pxd_constraint_of_discrete_values (discrete_values : (variable * coef) list) =
+(* 	raise (InternalError "Not implemented!!") *)
+(* let instantiate_discrete discrete_values = *)
+	let inequalities = List.map (fun (discrete_index, discrete_value) ->
+		(* Create a linear term 'D - d' *)
+		let linear_term = make_pxd_linear_term
+			[(NumConst.one, discrete_index)]
+			(NumConst.neg discrete_value)
+		in
+		(* Create a linear equality *)
+		make_pxd_linear_inequality linear_term Op_eq
+	) discrete_values in
+	(* Create the linear constraint *)
+	make_pxd_constraint inequalities
 
 
 (** Convert a PX into a PXD constraint by extending the number of dimensions *)

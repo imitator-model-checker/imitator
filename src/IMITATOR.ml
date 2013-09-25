@@ -364,7 +364,7 @@ print_message Debug_low ("Considering file " ^ options#file ^ ".");
 let parsing_structure = 
 	(* Branching between 2 input syntaxes *)
 	if options#fromGML then
-		try parser_lexer_from_file GMLParser.main GMLLexer.token options#file
+		try parser_lexer_from_file GrMLParser.main GrMLLexer.token options#file
 		with InvalidModel -> (print_error ("GrML input contains error. Please check it again."); abort_program (); exit 1)
 	else parser_lexer_from_file ModelParser.main ModelLexer.token options#file
 in 
@@ -455,7 +455,7 @@ if options#pta2clp then(
 (* Translation to GrML (experimental) *)
 if options#pta2gml then(
 	print_message Debug_standard ("Translating model to GrML.");
-	let translated_model = PTA2GML.string_of_model model in
+	let translated_model = PTA2GrML.string_of_model model in
 	let gml_file = options#files_prefix ^ ".grml" in
 	print_message Debug_total ("\n" ^ translated_model ^ "\n");
 	(* Write *)
@@ -517,7 +517,7 @@ if options#dynamic_clock_elimination then (
 print_message Debug_medium ("\nInitial state:\n" ^ (ModelPrinter.string_of_state model (model.initial_location, model.initial_constraint)) ^ "\n");
 
 (* Check the satisfiability *)
-if not (LinearConstraint.is_satisfiable model.initial_constraint) then (
+if not (LinearConstraint.px_is_satisfiable model.initial_constraint) then (
 	print_warning "The initial constraint of the model is not satisfiable.";
 	terminate_program();
 )else(
@@ -544,7 +544,7 @@ if(LinearConstraint.is_equal initial_constraint_after_time_elapsing initial_cons
 
 
 (* Check the satisfiability *)
-if not (LinearConstraint.is_satisfiable initial_constraint_after_time_elapsing) then (
+if not (LinearConstraint.px_is_satisfiable initial_constraint_after_time_elapsing) then (
 	print_warning "The initial constraint of the model after time elapsing is not satisfiable.";
 	terminate_program();
 )else(

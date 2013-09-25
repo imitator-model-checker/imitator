@@ -146,7 +146,7 @@ let all_state_indexes program graph =
 let all_p_constraints program graph =
 	Hashtbl.fold
 		(fun _ (_, linear_constraint) current_list ->
-			let p_constraint = LinearConstraint.px_hide_nonparameters (*program.clocks_and_discrete*) linear_constraint in
+			let p_constraint = LinearConstraint.px_hide_nonparameters_and_collapse (*program.clocks_and_discrete*) linear_constraint in
 			p_constraint :: current_list)
 		graph.all_states []
 

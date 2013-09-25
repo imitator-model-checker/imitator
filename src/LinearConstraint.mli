@@ -156,8 +156,8 @@ type pxd_linear_constraint
 (** {3 Initialization} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
 
-(** 'set_manager int_dim real_dim' sets the constraint manager by giving the number of dimensions. *)
-val set_manager : int -> int -> unit
+(** Set the number of dimensions *)
+val set_dimensions : int -> int -> int -> unit
 
 
 
@@ -193,6 +193,7 @@ val pxd_linear_constraint_of_clock_and_parameters : variable -> op -> p_linear_t
 
 (** Get the number of inequalities of a constraint *)
 (* val nb_inequalities : linear_constraint -> int *)
+val p_nb_inequalities : p_linear_constraint -> int
 
 (** Get the linear inequalities *)
 (* WARNING: NOT SO BEAUTIFUL, is only needed by Graphics, and should be removed *)
@@ -216,6 +217,7 @@ val p_is_false : p_linear_constraint -> bool
 
 (** Check if a constraint is true *)
 (* val is_true : linear_constraint -> bool *)
+val p_is_true : p_linear_constraint -> bool
 val pxd_is_true : pxd_linear_constraint -> bool
 
 (** Check if a constraint is satisfiable *)
@@ -225,6 +227,7 @@ val pxd_is_satisfiable : pxd_linear_constraint -> bool
 
 (** Check if 2 constraints are equal *)
 (* val is_equal : linear_constraint -> linear_constraint -> bool *)
+val p_is_equal : p_linear_constraint -> p_linear_constraint -> bool
 val px_is_equal : px_linear_constraint -> px_linear_constraint -> bool
 
 (** Check if a constraint is included in another one *)
@@ -239,6 +242,8 @@ val px_is_leq : px_linear_constraint -> px_linear_constraint -> bool
 
 (** makes a copy of a constraint *)
 (* val copy : linear_constraint -> linear_constraint *)
+val p_copy : p_linear_constraint -> p_linear_constraint
+val px_copy : px_linear_constraint -> px_linear_constraint
 
 (** Perform difference (version with side effect) *)
 (* val difference_assign : linear_constraint -> linear_constraint -> unit *)
@@ -267,10 +272,13 @@ val px_hull_assign_if_exact : px_linear_constraint -> px_linear_constraint -> bo
 (* val px_hide : variable list -> px_linear_constraint -> px_linear_constraint *)
 
 (** Eliminate (using existential quantification) all non-parameters (clocks and discrete) in a px_linear constraint *)
-val px_hide_nonparameters : px_linear_constraint -> p_linear_constraint
+val px_hide_nonparameters_and_collapse : px_linear_constraint -> p_linear_constraint
 
 (** Eliminate (using existential quantification) the discrete variables in a pxd_linear constraint, and remove the corresponding dimensions *)
 val pxd_hide_discrete_and_collapse : pxd_linear_constraint -> px_linear_constraint
+
+(** Eliminate (using existential quantification) the non-parameters in a pxd_linear constraint, and remove the corresponding dimensions *)
+(* val pxd_hide_nonparameters_and_collapse : pxd_linear_constraint -> p_linear_constraint *)
 
 (** Eliminate (using existential quantification) a set of variables in a linear constraint, with side effects *)
 (* val hide_assign : variable list -> linear_constraint -> unit *)
@@ -302,11 +310,11 @@ val pxd_time_elapse_assign : variable list -> variable list -> pxd_linear_constr
 
 (** Perform an operation (?) on a set of variables: the first variable list will elapse, the second will remain constant *)
 (** TODO: describe better *)
-(* val grow_to_infinite_assign : variable list -> variable list -> linear_constraint -> unit *)
+val grow_to_infinite_assign : variable list -> variable list -> p_linear_constraint -> unit
 
 (** Perform an operation (?) on a set of variables: the first variable list will elapse, the second will remain constant *)
 (** TODO: describe better *)
-(* val grow_to_zero_assign : variable list -> variable list -> linear_constraint -> unit *)
+val grow_to_zero_assign : variable list -> variable list -> p_linear_constraint -> unit
 
 
 (** Replace all strict inequalities with non-strict (and keeps others unchanged) within a p_linear_constraint *)
@@ -319,7 +327,7 @@ val render_non_strict_p_linear_constraint : p_linear_constraint -> p_linear_cons
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
 
 (** Check if a linear constraint is pi0-compatible *)
-(* val is_pi0_compatible : (variable -> coef) -> linear_constraint -> bool *)
+val is_pi0_compatible : (variable -> coef) -> p_linear_constraint -> bool
 
 (** Compute the pi0-compatible and pi0-incompatible inequalities within a constraint *)
 val partition_pi0_compatible : (variable -> coef) -> p_linear_constraint -> (p_linear_inequality list * p_linear_inequality list)
@@ -328,7 +336,8 @@ val partition_pi0_compatible : (variable -> coef) -> p_linear_constraint -> (p_l
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
 (** {3 Conversion between types of constraints } *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
-val instantiate_discrete : (variable -> coef) -> pxd_linear_constraint -> px_linear_constraint
+(** Create a pxd_linear_constraint from a set of pairs (discrete variable, value) *)
+val pxd_constraint_of_discrete_values : (variable * coef) list -> pxd_linear_constraint
 
 (** Convert a PX into a PXD constraint by extending the number of dimensions *)
 val pxd_of_px_constraint : px_linear_constraint -> pxd_linear_constraint

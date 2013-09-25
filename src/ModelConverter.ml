@@ -1418,7 +1418,7 @@ let convert_transitions nb_actions index_of_variables constants type_of_variable
 (*--------------------------------------------------*)
 (* Create the initial state *)
 (*--------------------------------------------------*)
-let make_initial_state index_of_automata locations_per_automaton index_of_locations index_of_variables constants type_of_variables init_discrete  init_definition =
+let make_initial_state index_of_automata locations_per_automaton index_of_locations index_of_variables constants type_of_variables init_discrete_pairs  init_definition =
 	(* Get the location initialisations and the constraint *)
 	let loc_assignments, linear_predicates = List.partition (function
 		| Loc_assignment _ -> true
@@ -1438,7 +1438,7 @@ let make_initial_state index_of_automata locations_per_automaton index_of_locati
  		Hashtbl.find index_of_locations.(automaton_index) location_name
 	) initial_locations in
 	(* Construct the initial location *)
-	let initial_location = Automaton.make_location locations init_discrete in
+	let initial_location = Automaton.make_location locations init_discrete_pairs in
 	(* Remove the init definitions for discrete variables *)
 	let other_inequalities = List.filter (function
 		(* Check if the left part is only a variable name *)
@@ -1464,12 +1464,22 @@ let make_initial_state index_of_automata locations_per_automaton index_of_locati
 		| Linear_predicate lp -> lp
 		| _ -> raise (InternalError "Something else than a Linear_predicate was found in a Linear_predicate list.")
 	) other_inequalities in
-	let initial_constraint =
+	let initial_constraint : LinearConstraint.px_linear_constraint =
 	
-		(*** TO IMPLEMENT ***)
-		LinearConstraint.instantiate_discrete
-			(fun x -> raise (InternalError ("Not implemented !!!!")))
-			(linear_constraint_of_convex_predicate index_of_variables constants convex_predicate)
+		(* Create pairs of (index , value) for discrete variables *)
+(* 		let discrete_values = List.map (fun discrete_index -> discrete_index, (Automaton.get_discrete_value initial_location discrete_index)) model.discrete in *)
+
+		(* Create a constraint encoding the value of the discretes *)
+		let discretes = LinearConstraint.pxd_constraint_of_discrete_values init_discrete_pairs in
+		
+		(* Create initial constraint (through parsing) *)
+		let initial_constraint = (linear_constraint_of_convex_predicate index_of_variables constants convex_predicate) in
+		
+		(* Intersects initial constraint with discretes *)
+		LinearConstraint.pxd_intersection_assign initial_constraint [discretes];
+		
+		(* Remove discretes *)
+		LinearConstraint.pxd_hide_discrete_and_collapse initial_constraint
 	in
 	(* Return the initial state *)
 	initial_location, initial_constraint
@@ -1669,12 +1679,11 @@ let abstract_model_of_parsing_structure (parsed_variable_declarations, parsed_au
 
 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Set the LinearConstraint manager *) 
+	(* Set the LinearConstraint dimensions *) 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	let nb_integer_variables = 0 in
-	let nb_real_variables = nb_clocks  + nb_discrete + nb_parameters in
-	LinearConstraint.set_manager nb_integer_variables nb_real_variables;
-
+	print_message Debug_high ("\nSetting dimensions...");
+	LinearConstraint.set_dimensions nb_parameters nb_clocks nb_discrete;
+	
 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Construct the arrays of automata, variables and actions *) 

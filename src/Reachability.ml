@@ -10,7 +10,7 @@
  * Author:        Ulrich Kuehne, Etienne Andre
  * 
  * Created:       2010/07/22
- * Last modified: 2013/08/02
+ * Last modified: 2013/09/25
  *
  ****************************************************************)
 
@@ -898,7 +898,8 @@ let rho_assign model (linear_constraint : LinearConstraint.pxd_linear_constraint
 			let extra_dimensions = new_max_dimension - model.nb_variables in
 			print_message Debug_total ("\nNew dimension for constraints: " ^ (string_of_int new_max_dimension) ^ "; extra dimensions : " ^ (string_of_int extra_dimensions) ^ ".");
 			(* Extend the number of dimensions *)
-			LinearConstraint.set_manager 0 new_max_dimension;
+(* 			LinearConstraint.set_manager 0 new_max_dimension; *)
+			LinearConstraint.set_dimensions model.nb_parameters (model.nb_clocks + extra_dimensions) model.nb_discrete;
 			LinearConstraint.pxd_add_dimensions extra_dimensions linear_constraint;
 
 			(* Create constraints X_i' = linear_term *)
@@ -961,7 +962,8 @@ let rho_assign model (linear_constraint : LinearConstraint.pxd_linear_constraint
 
 			(* Go back to the original number of dimensions *)
 			print_message Debug_total ("\nGo back to standard dimension for constraints: " ^ (string_of_int model.nb_variables) ^ ".");
-			LinearConstraint.set_manager 0 model.nb_variables;
+(* 			LinearConstraint.set_manager 0 model.nb_variables; *)
+			LinearConstraint.set_dimensions model.nb_parameters model.nb_clocks model.nb_discrete;
 			LinearConstraint.pxd_remove_dimensions extra_dimensions linear_constraint;
 			(* Print some information *)
 			if debug_mode_greater Debug_total then(
@@ -977,6 +979,12 @@ let rho_assign model (linear_constraint : LinearConstraint.pxd_linear_constraint
 (*--------------------------------------------------*)
 (* Create a fresh constraint of the form 'D = d' for any discrete variable D with value d *)
 (*--------------------------------------------------*)
+
+
+(*** SHALL BE REMPLACED WITH THE LINEAR_CONSTRAINT FUNCTION ***)
+
+
+
 let instantiate_discrete discrete_values =
 	let inequalities = List.map (fun (discrete_index, discrete_value) ->
 		(* Create a linear term 'D - d' *)
@@ -1275,10 +1283,10 @@ let compute_new_location model aut_table trans_table action_index original_locat
 (* guards          : guard constraints per automaton*)
 (* clock_updates   : updated clock variables        *)
 (*--------------------------------------------------*)
-let compute_new_constraint model orig_constraint discrete_constr orig_location dest_location guards clock_updates =
+let compute_new_constraint model orig_constraint (discrete_constr : LinearConstraint.pxd_linear_constraint) orig_location dest_location guards clock_updates =
 	(* Retrieve the input options *)
 	let options = Input.get_options () in
-
+	
 	if debug_mode_greater Debug_total then(
 		print_message Debug_total ("\n***********************************");
 		print_message Debug_total ("Entering compute_new_constraint");	
@@ -1287,7 +1295,7 @@ let compute_new_constraint model orig_constraint discrete_constr orig_location d
 	);
 	(* The constraint is checked on the fly for satisfiability -> exception mechanism *)
 	try (
-		let current_constraint = LinearConstraint.pxd_of_px_constraint discrete_constr in
+		let current_constraint = (*LinearConstraint.pxd_of_px_constraint*) discrete_constr in
 
 		(* Print some information *)
 		if debug_mode_greater Debug_total then(
@@ -1494,13 +1502,15 @@ let inverse_method_check_constraint model reachability_graph constr =
 	let pi0 = Input.get_pi0 () in
 	
 	(* Hide non-parameters *)
-	print_message Debug_high ("\nHiding non parameters:");
-	let p_constraint = LinearConstraint.px_hide_nonparameters (*model.clocks_and_discrete*) constr in
+	print_message Debug_high ("\nHiding non parameters...");
+	let p_constraint = LinearConstraint.px_hide_nonparameters_and_collapse (*model.clocks_and_discrete*) constr in
+	print_message Debug_high ("\nParameters now hidden:");
 	(* Print some information *)
 	if debug_mode_greater Debug_high then(
 		print_message Debug_high (LinearConstraint.string_of_p_linear_constraint model.variable_names p_constraint);
 	);
 	(* Check the pi0-compatibility *)
+	print_message Debug_high ("\nChecking pi-compatibility:");
 	let compatible, incompatible = LinearConstraint.partition_pi0_compatible pi0 p_constraint in
 	let is_pi0_incompatible = incompatible != [] in
 	
@@ -1590,8 +1600,8 @@ let compute_transitions model location constr action_index automata aut_table ma
 			(* Keep only possible transitions *)
 			let is_possible = fun trans -> (
 				let guard, _, _, _ = trans in
-				let constr_and_guard = LinearConstraint.intersection [constr; guard] in
- 				let is_possible = LinearConstraint.is_satisfiable constr_and_guard in 
+				let constr_and_guard = LinearConstraint.pxd_intersection [constr; guard] in
+ 				let is_possible = LinearConstraint.pxd_is_satisfiable constr_and_guard in 
 				if not is_possible then (
 					(* Statistics *)
 					nb_early_unsatisfiable := !nb_early_unsatisfiable + 1;
@@ -1637,7 +1647,7 @@ let compute_transitions model location constr action_index automata aut_table ma
 (* Add a new state to the reachability_graph (if indeed needed) *)
 (* Also update tile_nature and slast *)
 (*-----------------------------------------------------*)
-let add_a_new_state model reachability_graph orig_state_index new_states_indexes action_index location final_constraint =
+let add_a_new_state model reachability_graph orig_state_index new_states_indexes action_index location (final_constraint : LinearConstraint.px_linear_constraint) =
 	(* Retrieve the input options *)
 	let options = Input.get_options () in
 
@@ -1646,7 +1656,7 @@ let add_a_new_state model reachability_graph orig_state_index new_states_indexes
 	(* Branching between 2 algorithms: reachability or IM *)
 	(*------------------------------------------------------------*)
 	if options#imitator_mode = Reachability_analysis then ( 
-		true, (LinearConstraint.true_constraint ())
+		true, (LinearConstraint.p_true_constraint ())
 	) else (
 		inverse_method_check_constraint model reachability_graph final_constraint
 	) in
@@ -1673,7 +1683,7 @@ let add_a_new_state model reachability_graph orig_state_index new_states_indexes
 		(* If IM: Add the p_constraint to the result (except if case variants) *)
 		if options#imitator_mode != Reachability_analysis && not (options#pi_compatible || options#union) then(
 			print_message Debug_high ("Updating k_result");
-			LinearConstraint.intersection_assign !k_result [p_constraint];
+			LinearConstraint.p_intersection_assign !k_result [p_constraint];
 		);
 		
 		(* Try to add this new state to the graph *)
@@ -1727,7 +1737,7 @@ let post_from_one_state model reachability_graph orig_state_index =
 	let options = Input.get_options () in
 	(* Original location: static *)
 	let original_location, _ = Graph.get_state reachability_graph orig_state_index in
-	(* Dynamic version of the orig_constraint (can change!) *)
+	(* Dynamic version of the original px_constraint (can change!) *)
 	let orig_constraint () =
 		let _, orig_constraint = Graph.get_state reachability_graph orig_state_index in
 		orig_constraint
@@ -1737,11 +1747,11 @@ let post_from_one_state model reachability_graph orig_state_index =
 	if debug_mode_greater Debug_high then(
 		let orig_state = Graph.get_state reachability_graph orig_state_index in
 		let _, orig_constraint = orig_state in
-		let orig_constraint_projection = LinearConstraint.hide model.clocks_and_discrete orig_constraint in
+		let orig_constraint_projection = LinearConstraint.px_hide_nonparameters_and_collapse orig_constraint in
 		print_message Debug_high ("Performing post from state:");
 		print_message Debug_high (string_of_state model orig_state);
 		print_message Debug_high ("\nThe projection of this constraint onto the parameters is:");
-		print_message Debug_high (LinearConstraint.string_of_linear_constraint model.variable_names orig_constraint_projection);
+		print_message Debug_high (LinearConstraint.string_of_p_linear_constraint model.variable_names orig_constraint_projection);
 	);
 
 	(* get possible actions originating from current state *)
@@ -1779,7 +1789,8 @@ let post_from_one_state model reachability_graph orig_state_index =
 		(*------------------------------------------------*)
 		
 		(* Compute conjunction with current constraint *)
-		let orig_plus_discrete = LinearConstraint.intersection [orig_constraint (); discrete_constr] in
+		(*** To optimize: it seems intersection_assign could be used instead ***)
+		let orig_plus_discrete = LinearConstraint.pxd_intersection [LinearConstraint.pxd_of_px_constraint (orig_constraint ()); discrete_constr] in
 		
 		(* Give a new index to those automata *)
 		let real_indexes = Array.make nb_automata_for_this_action 0 in
@@ -1798,7 +1809,7 @@ let post_from_one_state model reachability_graph orig_state_index =
 		(* Debug: compute the number of combinations *)
 		if debug_mode_greater Debug_medium || options#statistics then(
 			let new_nb_combinations = Array.fold_left (fun sum max -> sum * (max + 1)) 1 max_indexes in
-			print_message Debug_medium ("I will consider " ^ (string_of_int new_nb_combinations) ^ " combination" ^ (s_of_int new_nb_combinations) ^ " for this state and this action\n");
+			print_message Debug_medium ("" ^ (string_of_int new_nb_combinations) ^ " combination" ^ (s_of_int new_nb_combinations) ^ " will be considered for this state and this action\n");
 			(* Update for statistics *)
 			nb_combinations := !nb_combinations + new_nb_combinations;
 		);
@@ -1835,8 +1846,8 @@ let post_from_one_state model reachability_graph orig_state_index =
 					(* Statistics *)
 					nb_unsatisfiable := !nb_unsatisfiable + 1;
 					print_message Debug_high ("\nThis constraint is not satisfiable ('None').");
-				| Some final_constraint -> (
-					if not (LinearConstraint.is_satisfiable final_constraint) then(
+				| Some (final_constraint : LinearConstraint.px_linear_constraint) -> (
+					if not (LinearConstraint.px_is_satisfiable final_constraint) then(
 						(* Statistics *)
 						nb_unsatisfiable := !nb_unsatisfiable + 1;
 						print_message Debug_high ("\nThis constraint is not satisfiable ('Some unsatisfiable').");
@@ -1982,10 +1993,10 @@ let branch_and_bound model init_state =
 
 	(* copy init state, as it might be destroyed later *)
 	let init_loc, init_constr = init_state in
-	let init_state = (init_loc, LinearConstraint.copy init_constr) in
+	let init_state = (init_loc, LinearConstraint.px_copy init_constr) in
 
 	(*Initialization of k_result*)
-	k_result := LinearConstraint.hide model.clocks_and_discrete init_constr;
+	k_result := LinearConstraint.px_hide_nonparameters_and_collapse init_constr;
 
 	print_message Debug_standard ("START BRANCH AND BOUND");
 	
@@ -2156,11 +2167,11 @@ let post_star model init_state =
 
 	(* copy init state, as it might be destroyed later *)
 	let init_loc, init_constr = init_state in
-	let init_state = (init_loc, LinearConstraint.copy init_constr) in
+	let init_state = (init_loc, LinearConstraint.px_copy init_constr) in
 
 	(*Initialization of k_result*)
 (* 	k_result := LinearConstraint.true_constraint (); *)
-	k_result := LinearConstraint.hide model.clocks_and_discrete init_constr;
+	k_result := LinearConstraint.px_hide_nonparameters_and_collapse init_constr;
 
 	(*Initialization of slast : used in union mode only*)
 	slast := [];
@@ -2458,15 +2469,15 @@ let inverse_method_gen model init_state =
 				let (_, current_constraint) =
 					Graph.get_state reachability_graph state_index
 				(* Eliminate clocks *)
-				in LinearConstraint.hide model.clocks_and_discrete current_constraint
+				in LinearConstraint.px_hide_nonparameters_and_collapse current_constraint
 			) !slast
 			in Union_of_constraints (list_of_constraints, !tile_nature)
 		)
 	(* Case IMorig : return only the current constraint, viz., the constraint of the first state *)
 		else if options#pi_compatible then (
-			let (_ , k_constraint) = get_state reachability_graph 0 in
+			let (_ , px_constraint) = get_state reachability_graph 0 in
 				print_message Debug_total ("\nMode: IMorig.");
-				Convex_constraint (LinearConstraint.hide model.clocks_and_discrete k_constraint , !tile_nature) 
+				Convex_constraint (LinearConstraint.px_hide_nonparameters_and_collapse px_constraint , !tile_nature) 
 		) else (
 			raise (InternalError ("This code should be unreachable (in end of inverse_method, when returning the constraint)."));
 		)
@@ -2499,12 +2510,12 @@ let inverse_method model init_state =
 		^ (if options#union
 			then "(under disjunctive form) "
 			else (
-				let linear_constraint =
+				let p_linear_constraint =
 				match returned_constraint with
-					| Convex_constraint (linear_constraint , _) -> linear_constraint
+					| Convex_constraint (p_linear_constraint , _) -> p_linear_constraint
 					| _ -> raise (InternalError "Impossible situation in inverse_method: a returned_constraint is not under convex form although union mode is not enabled.");
 				in
-				" (" ^ (string_of_int (LinearConstraint.nb_inequalities linear_constraint)) ^ " inequalities)"
+				" (" ^ (string_of_int (LinearConstraint.p_nb_inequalities p_linear_constraint)) ^ " inequalities)"
 			)
 		)
 		^ ":");

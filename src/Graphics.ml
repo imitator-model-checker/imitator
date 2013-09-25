@@ -448,7 +448,7 @@ let dot_of_graph model reachability_graph ~fancy =
 				(* Add the constraint with no clocks (option only) *)
 				^ (if options#with_parametric_log then (
 					(* Eliminate clocks *)
-					let parametric_constraint = LinearConstraint.px_hide_nonparameters (*model.clocks*) linear_constraint in
+					let parametric_constraint = LinearConstraint.px_hide_nonparameters_and_collapse (*model.clocks*) linear_constraint in
 					"\n\n  After clock elimination:"
 					^ "\n  " ^ (LinearConstraint.string_of_p_linear_constraint model.variable_names parametric_constraint);
 				) else "");
