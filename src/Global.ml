@@ -518,6 +518,9 @@ let print_error message =
 
 
 let header_string =
+	(* Build info *)
+	let build_info = "Build: " ^ BuildInfo.build_number ^ " (" ^ BuildInfo.build_time ^ ")" in
+	
 	"************************************************************\n"
 	^ "*  " ^ program_name ^ " " ^ version_string ^ (string_n_times (46 - (String.length version_string)) " ") ^ " *\n"
 	^ "*                                                          *\n"
@@ -526,7 +529,8 @@ let header_string =
  ^ "  *\n"
 	^ "*                       LSV, ENS de Cachan & CNRS, France  *\n"
 	^ "*  Universite Paris 13, Sorbonne Paris Cite, LIPN, France  *\n"
-(* 	^ "*  Build: " ^ (now())  ^ "                        *\n" *)
+	^ "*                                                          *\n"
+	^ "*  " ^ (string_n_times (55 - (String.length build_info)) " ") ^ build_info ^ " *\n"
 	^ "************************************************************"
 
 

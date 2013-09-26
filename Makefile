@@ -6,7 +6,7 @@
 #
 #  Author:        Ulrich Kuehne, Etienne Andre
 #  Created:       2009/09/07
-#  Last modified: 2013/08/02
+#  Last modified: 2013/09/26
 #  Ocaml version: 3.12.1
 ###############################################################
 
@@ -79,12 +79,12 @@ MAIN = $(SRC)/IMITATOR.cmo
 # MAIN_OPT = $(MAIN:.cmo=.cmx)
 
 # modules to compile
-MODULES = Global NumConst ReachabilityTree Options LinearConstraint Automaton Cache Input Pi0Lexer Pi0Parser V0Lexer V0Parser ModelLexer ModelParser GrMLLexer GrMLParser Graph ModelPrinter ObserverPatterns PTA2CLP PTA2GrML ModelConverter Graphics PTA2JPG Reachability Cartography
+MODULES = BuildInfo Global NumConst ReachabilityTree Options LinearConstraint Automaton Cache Input Pi0Lexer Pi0Parser V0Lexer V0Parser ModelLexer ModelParser GrMLLexer GrMLParser Graph ModelPrinter ObserverPatterns PTA2CLP PTA2GrML ModelConverter Graphics PTA2JPG Reachability Cartography
 
 ### P Constraint P XConstraint P XDConstraint 
 
 # interfaces
-HEADERS = Global NumConst ReachabilityTree Options LinearConstraint Automaton Cache ParsingStructure AbstractModel Input Graph ModelPrinter ObserverPatterns PTA2CLP PTA2GrML  ModelConverter Graphics PTA2JPG Reachability Cartography
+HEADERS = BuildInfo Global NumConst ReachabilityTree Options LinearConstraint Automaton Cache ParsingStructure AbstractModel Input Graph ModelPrinter ObserverPatterns PTA2CLP PTA2GrML  ModelConverter Graphics PTA2JPG Reachability Cartography
 
 CMIS = $(addprefix $(SRC)/, $(addsuffix .cmi, $(HEADERS)))
 OBJS = $(addprefix $(SRC)/, $(addsuffix .cmo, $(MODULES)))
@@ -114,14 +114,28 @@ TARGET_STATIC32 = bin/IMITATOR32
 TARGET_STATIC64 = bin/IMITATOR64
 
 
-default all: $(TARGET)
+BUILDINFO = python gen_build_info.py
+
+default all:
+	$(BUILDINFO)
+	make $(TARGET)
 # opt: $(TARGET_OPT)
-static32: $(TARGET_STATIC32)
-static64: $(TARGET_STATIC64)
+
+static32:
+	$(BUILDINFO)
+	make $(TARGET_STATIC32)
+
+static64:
+	$(BUILDINFO)
+	make $(TARGET_STATIC64)
 
 
 header: $(CMIS)
 parser: $(PAR_ML) $(LEX_ML) header $(PAR_CMI)
+
+
+$(BUILDINFO): python gen_build_info.py
+	@ echo [MKLIB] $@
 
 
 $(IMILIB): header parser $(OBJS)
@@ -140,18 +154,22 @@ $(IMILIB): header parser $(OBJS)
 $(TARGET): $(IMILIB) $(MAIN)
 	@ echo [LINK] $(TARGET)
 	@ $(OCAMLC) $(INCLUDE) $(LIBS) $(IMILIB) $(MAIN) -o $(TARGET)
+	@ python incrementer.py
 	@ echo [LN] $(TARGETV)
 	@ cd $(TARGET_PATH) ; rm $(TARGET_NAME)$(VERSION) ; ln $(TARGET_NAME) $(TARGET_NAME)$(VERSION) -s
 	
 $(TARGET_STATIC32): $(IMILIB) $(MAIN)
 	@ echo [LINK] $(TARGET_STATIC32)
 	@ $(OCAMLC) -custom $(INCLUDE) -I $(CLIB_PATH) $(STATIC32LIBS) $(IMILIB) $(MAIN) -o $(TARGET_STATIC32) 
+	@ python incrementer.py
 	@ echo [LN] $(TARGETV)
 	@ cd $(TARGET_PATH) ; rm $(TARGET_NAME)$(VERSION) ; ln $(TARGET_STATIC32) $(TARGET_NAME)$(VERSION) -s
 	
 $(TARGET_STATIC64): $(IMILIB) $(MAIN)
+	@ python gen_build_info.py
 	@ echo [LINK] $(TARGET_STATIC64)
 	@ $(OCAMLC) -custom $(INCLUDE) -I $(CLIB_PATH) $(STATIC64LIBS) $(IMILIB) $(MAIN) -o $(TARGET_STATIC64)
+	@ python incrementer.py
 	@ echo [LN] $(TARGETV)
 	@ cd $(TARGET_PATH) ; rm $(TARGET_NAME)$(VERSION) ; ln $(TARGET_NAME)64 $(TARGET_NAME)$(VERSION) -s
 
