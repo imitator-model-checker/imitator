@@ -414,7 +414,7 @@ try (
 let gc_stat = Gc.stat () in
 let nb_words = gc_stat.minor_words +. gc_stat.major_words -. gc_stat.promoted_words in
 let nb_ko = nb_words *. 4.0 /. 1024.0 in
-print_message Debug_standard ("Memory for abstract model: " ^ (round3_float nb_ko) ^ " KB (i.e., " ^ (string_of_int (int_of_float nb_words)) ^ " words)");
+print_message Debug_standard ("Memory for abstract model: " ^ (round3_float nb_ko) ^ " KiB (i.e., " ^ (string_of_int (int_of_float nb_words)) ^ " words)");
 
 (* With or without stopwatches *)
 if model.has_stopwatches then
