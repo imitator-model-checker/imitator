@@ -1295,7 +1295,7 @@ let compute_new_constraint model orig_constraint (discrete_constr : LinearConstr
 	);
 	(* The constraint is checked on the fly for satisfiability -> exception mechanism *)
 	try (
-		let current_constraint = (*LinearConstraint.pxd_of_px_constraint*) discrete_constr in
+		let current_constraint = LinearConstraint.pxd_copy discrete_constr in
 
 		(* Print some information *)
 		if debug_mode_greater Debug_total then(

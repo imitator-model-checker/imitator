@@ -10,7 +10,7 @@
  * Author:        Etienne Andre
  * 
  * Created:       2010/03/04
- * Last modified: 2013/09/25
+ * Last modified: 2013/10/08
  *
  ****************************************************************) 
  
@@ -919,6 +919,7 @@ let copy linear_constraint =
 
 let p_copy = copy
 let px_copy = copy
+let pxd_copy = copy
 
 (** Perform the intersection of a linear constrain with a list of constraints (with side effect) *)
 let intersection_assign linear_constraint constrs =
@@ -1004,7 +1005,7 @@ let hide_assign variables linear_constraint =
 	if List.length variables > 0 then (
 		(* debug output *)
 		if debug_mode_greater Debug_total then (
-			print_message Debug_total "hide:";
+			print_message Debug_total "About to hide:";
 			List.iter (fun v -> print_message Debug_total ("  - v" ^ string_of_int v)) variables;
 		);
 		(* Statistics *)
@@ -1045,7 +1046,13 @@ let hide variables linear_constraint =
 (** Eliminate (using existential quantification) all non-parameters (clocks and discrete) in a px_linear constraint *)
 let px_hide_nonparameters_and_collapse linear_constraint = 
 	let nonparameters = list_of_interval !nb_parameters (!total_dim - 1) in
-	hide nonparameters linear_constraint 
+		if debug_mode_greater Debug_total then
+			print_message Debug_total (
+				"Function 'LinearConstraint.px_hide_nonparameters_and_collapse': hiding variables "
+				^ (string_of_list_of_string_with_sep ", " (List.map string_of_int nonparameters) )
+				^ "."
+			);
+		hide nonparameters linear_constraint 
 
 
 
@@ -1455,7 +1462,7 @@ let pxd_constraint_of_discrete_values (discrete_values : (variable * coef) list)
 
 
 (** Convert a PX into a PXD constraint by extending the number of dimensions *)
-let pxd_of_px_constraint c = c
+let pxd_of_px_constraint c = copy c
 
 
 
@@ -1464,8 +1471,8 @@ let pxd_of_px_constraint c = c
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
 
 (** "cast_p_of_pxd_linear_term p c" converts a PXD-constraint p to a P-constraint ; if c then a test if performed to check casting validity *)
-let cast_p_of_pxd_linear_term p c = p
-let cast_p_of_pxd_linear_constraint p c = p
+let cast_p_of_pxd_linear_term p c = p (*** WARNING! should be copied here! *)
+let cast_p_of_pxd_linear_constraint p c = copy p
 
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)

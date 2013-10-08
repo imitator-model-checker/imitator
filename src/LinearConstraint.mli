@@ -10,7 +10,7 @@
  * Author:        Etienne Andre
  * 
  * Created:       2010/03/04
- * Last modified: 2013/08/02
+ * Last modified: 2013/10/08
  *
  ****************************************************************) 
  
@@ -244,6 +244,7 @@ val px_is_leq : px_linear_constraint -> px_linear_constraint -> bool
 (* val copy : linear_constraint -> linear_constraint *)
 val p_copy : p_linear_constraint -> p_linear_constraint
 val px_copy : px_linear_constraint -> px_linear_constraint
+val pxd_copy : pxd_linear_constraint -> pxd_linear_constraint
 
 (** Perform difference (version with side effect) *)
 (* val difference_assign : linear_constraint -> linear_constraint -> unit *)

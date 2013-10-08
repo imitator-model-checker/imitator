@@ -426,8 +426,8 @@ exe:
 
 # 	$(TARGETV) $(EXAMPLE_PATH)/Train/Train1PTA.imi -PTA2JPG
 # 	$(TARGET) $(EXAMPLE_PATH)/Train/Train1PTA.imi -mode reachability -incl
-	bin/IMITATOR2.6.1 $(EXAMPLE_PATH)/Train/Train1PTA.imi $(EXAMPLE_PATH)/Train/Train1PTA.pi0
-	$(TARGETV) $(EXAMPLE_PATH)/Train/Train1PTA.imi $(EXAMPLE_PATH)/Train/Train1PTA.pi0
+	bin/IMITATOR2.6.1 $(EXAMPLE_PATH)/Train/Train1PTA.imi $(EXAMPLE_PATH)/Train/Train1PTA.pi0  -verbose low
+	$(TARGETV) $(EXAMPLE_PATH)/Train/Train1PTA.imi $(EXAMPLE_PATH)/Train/Train1PTA.pi0 -verbose low
 # 	$(TARGET) $(EXAMPLE_PATH)/Train/Train1PTA.imi $(EXAMPLE_PATH)/Train/Train1PTA.v0 -mode border -cart
 # 	$(TARGET) $(EXAMPLE_PATH)/Train/Train1PTA.imi $(EXAMPLE_PATH)/Train/Train1PTA.v0 -mode cover -cart
 # 	$(TARGET) $(EXAMPLE_PATH)/Train/Train1PTA.imi -PTA2GrML
