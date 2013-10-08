@@ -162,9 +162,12 @@ class imitator_options =
 
 			(* Get the mode *)
 			and set_mode mode =
-				(* Case: 'reachability' *)
-				if mode = "reachability" then 
-					imitator_mode := Reachability_analysis
+				(* Case: state space exploration *)
+				if mode = "statespace" then 
+					imitator_mode := State_space_exploration
+				(* Case: EF-synthesis *)
+				else if mode = "EF" then 
+					imitator_mode := EF_synthesis
 				(* Case: inverse method *)
 				else if mode = "inversemethod" then 
 					imitator_mode := Inverse_method
@@ -207,7 +210,11 @@ class imitator_options =
 				("-log-prefix", Set_string files_prefix, " Sets the prefix for output files. Default: [model].");
 				("-merge", Set merge, " Use the merging technique of [AFS12]. Default: 'false' (disable)");
 				("-merge-before", Set merge_before , " Use the merging technique of [AFS12] but merges states before pi0-compatibility test (EXPERIMENTAL). Default: 'false' (disable)");
-				("-mode", String set_mode, " Mode for " ^ program_name ^ ". Use 'reachability' for a parametric reachability analysis (no pi0 needed). Use 'inversemethod' for the inverse method. For the behavioral cartography algorithm, use 'cover' to cover all the points within V0, 'border' to find the border between a small-valued good and a large-valued bad zone (experimental), or 'randomXX' where XX is a number to iterate randomly algorithm (e.g., random5 or random100). Default: 'inversemethod'.");
+				("-mode", String set_mode, " Mode for " ^ program_name ^ ".
+        Use 'statespace' for a parametric state space exploration (no pi0 needed).
+        Use 'EF' for a parametric non-reachability analysis (no pi0 needed).
+        Use 'inversemethod' for the inverse method.
+        For the behavioral cartography algorithm, use 'cover' to cover all the points within V0, 'border' to find the border between a small-valued good and a large-valued bad zone (experimental), or 'randomXX' where XX is a number to iterate randomly algorithm (e.g., random5 or random100). Default: 'inversemethod'.");
 				("-no-random", Set no_random, " No random selection of the pi0-incompatible inequality (select the first found). Default: false.");
 (* 				("-PTA2CLP", Unit (fun _ -> pta2clp := true; imitator_mode := Translation), "Translate PTA into a CLP program, and exit without performing any analysis. Work in progress! Defaut : 'false'"); *)
 				("-PTA2GrML", Unit (fun _ -> pta2gml := true; imitator_mode := Translation), "Translate PTA into a GrML program, and exit without performing any analysis. Defaut : 'false'");
@@ -256,7 +263,7 @@ class imitator_options =
 			);
 			
 			(* Case no pi0 file *)
-			if nb_args = 1 && (!imitator_mode != Reachability_analysis) && (!imitator_mode != Translation) && not !forcePi0 then(
+			if nb_args = 1 && (!imitator_mode != State_space_exploration) && (!imitator_mode != EF_synthesis) && (!imitator_mode != Translation) && not !forcePi0 then(
 				print_error ("Please give a file name for the reference valuation.");
 				Arg.usage speclist usage_msg;
 				abort_program (); exit(1)

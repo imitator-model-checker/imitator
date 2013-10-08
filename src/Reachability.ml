@@ -1655,7 +1655,7 @@ let add_a_new_state model reachability_graph orig_state_index new_states_indexes
 	(*------------------------------------------------------------*)
 	(* Branching between 2 algorithms: reachability or IM *)
 	(*------------------------------------------------------------*)
-	if options#imitator_mode = Reachability_analysis then ( 
+	if options#imitator_mode = State_space_exploration then ( 
 		true, (LinearConstraint.p_true_constraint ())
 	) else (
 		inverse_method_check_constraint model reachability_graph final_constraint
@@ -1681,7 +1681,7 @@ let add_a_new_state model reachability_graph orig_state_index new_states_indexes
 		);
 
 		(* If IM: Add the p_constraint to the result (except if case variants) *)
-		if options#imitator_mode != Reachability_analysis && not (options#pi_compatible || options#union) then(
+		if options#imitator_mode != State_space_exploration && not (options#pi_compatible || options#union) then(
 			print_message Debug_high ("Updating k_result");
 			LinearConstraint.p_intersection_assign !k_result [p_constraint];
 		);
@@ -1857,7 +1857,7 @@ let post_from_one_state model reachability_graph orig_state_index =
 					(* EXPERIMENTAL BRANCHING: MERGE BEFORE OR AFTER? *)
 					(**************************************************************)
 					(* EXPERIMENTAL BRANCHING: CASE MERGE AFTER (this new version may be better?) *)
-					if options#imitator_mode <> Reachability_analysis && options#merge_before then(
+					if options#imitator_mode <> State_space_exploration && options#merge_before then(
 					
 						(* Only add to the local list of new states *)
 						new_action_and_state_list := ([action_index], location, final_constraint) :: !new_action_and_state_list;
@@ -1892,7 +1892,7 @@ let post_from_one_state model reachability_graph orig_state_index =
 	(* EXPERIMENTAL BRANCHING: MERGE BEFORE OR AFTER? *)
 	(**************************************************************)
 	(* EXPERIMENTAL BRANCHING: CASE MERGE AFTER (this new version may be better?) *)
-	if options#imitator_mode <> Reachability_analysis && options#merge_before then(
+	if options#imitator_mode <> State_space_exploration && options#merge_before then(
 	
 		(* Merge *)
 		new_action_and_state_list := merge model new_action_and_state_list;

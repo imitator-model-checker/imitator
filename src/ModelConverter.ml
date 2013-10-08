@@ -10,7 +10,7 @@
  * Author:        Etienne Andre
  * 
  * Created:       2009/09/09
- * Last modified: 2013/08/02
+ * Last modified: 2013/10/08
  *
  ****************************************************************)
 
@@ -1894,7 +1894,7 @@ let abstract_model_of_parsing_structure (parsed_variable_declarations, parsed_au
 		| Translation -> 
 			(* Return blank values *)
 			Array.make 0 NumConst.zero, Array.make 0 (NumConst.zero, NumConst.zero)
-		| Reachability_analysis -> 
+		| State_space_exploration -> 
 			(* Return blank values *)
 			Array.make 0 NumConst.zero, Array.make 0 (NumConst.zero, NumConst.zero)
 		| Inverse_method -> 
@@ -2132,7 +2132,7 @@ let abstract_model_of_parsing_structure (parsed_variable_declarations, parsed_au
 	if debug_mode_greater Debug_medium then(
 		match options#imitator_mode with
 		| Translation -> ()
-		| Reachability_analysis -> ()
+		| State_space_exploration -> ()
 		| Inverse_method -> 
 			print_message Debug_medium ("\n*** Reference valuation pi0:");
 			List.iter (fun parameter ->

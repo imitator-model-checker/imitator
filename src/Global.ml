@@ -129,8 +129,10 @@ let get_debug_mode () =
 type imitator_mode =
 	(** Translation to another language: no analysis *)
 	| Translation
-	(** Classical parametric reachability analysis *)
-	| Reachability_analysis
+	(** Classical state space exploration *)
+	| State_space_exploration
+	(** EF-synthesis *)
+	| EF_synthesis
 	(** Classical inverse method *)
 	| Inverse_method
 	(** Cover the whole cartography *)

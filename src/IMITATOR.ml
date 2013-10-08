@@ -8,7 +8,7 @@
  * Author:        Ulrich Kuehne, Etienne Andre
  * 
  * Created:       2009/09/07
- * Last modified: 2013/03/20
+ * Last modified: 2013/10/08
  *
  ****************************************************************)
 
@@ -178,7 +178,8 @@ print_message Debug_low ("Prefix for output files: " ^ options#files_prefix);
 (* Global mode *)
 let message = match options#imitator_mode with
 	| Translation -> "translation"
-	| Reachability_analysis -> "parametric reachability analysis"
+	| State_space_exploration -> "parametric state space exploration"
+	| EF_synthesis -> print_error "EF-synthesis not implemented"; abort_program(); raise (InternalError "bye")
 	| Inverse_method -> "inverse method"
 	| Cover_cartography -> "behavioral cartography algorithm with full coverage and step " ^ (NumConst.string_of_numconst options#step)
 	| Border_cartography -> "behavioral cartography algorithm with border detection (experimental) and step " ^ (NumConst.string_of_numconst options#step)
@@ -193,8 +194,8 @@ in print_message Debug_standard ("Mode: " ^ message ^ ".");
 (* Check compatibility between options *) 
 (**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 if options#nb_args = 2 then(
-	if options#imitator_mode = Reachability_analysis then
-		print_warning ("The pi0 file " ^ options#pi0file ^ " will be ignored since this is a reachability analysis.")
+	if options#imitator_mode = State_space_exploration then
+		print_warning ("The pi0 file " ^ options#pi0file ^ " will be ignored since this is a state space exploration.")
 	;
 	if options#imitator_mode = Translation then
 		print_warning ("The pi0 file " ^ options#pi0file ^ " will be ignored since this is a translation.")
@@ -332,11 +333,11 @@ in ();
 
 (* Verification of incompatibilities between options *)
 
-if (options#imitator_mode = Reachability_analysis || options#imitator_mode = Translation) && (options#union || options#pi_compatible) then
-	print_warning ("The program will be launched in reachability mode; options regarding to the variant of the inverse method will thus be ignored.");
+if (options#imitator_mode = State_space_exploration || options#imitator_mode = Translation) && (options#union || options#pi_compatible) then
+	print_warning ("The program will be launched in state space exploration mode; options regarding to the variant of the inverse method will thus be ignored.");
 
-if (options#imitator_mode = Reachability_analysis || options#imitator_mode = Translation || options#imitator_mode = Inverse_method) && (NumConst.neq options#step NumConst.one) then
-	print_warning ("The program will be launched in reachability mode; option regarding to the step of the cartography algorithm will thus be ignored.");
+if (options#imitator_mode = State_space_exploration || options#imitator_mode = Translation || options#imitator_mode = Inverse_method) && (NumConst.neq options#step NumConst.one) then
+	print_warning ("The program will be launched in state space exploration mode; option regarding to the step of the cartography algorithm will thus be ignored.");
 
 
 
@@ -370,7 +371,7 @@ let parsing_structure =
 in 
 
 
-if options#imitator_mode != Reachability_analysis && options#imitator_mode != Translation then
+if options#imitator_mode != State_space_exploration && options#imitator_mode != Translation then
 	print_message Debug_low ("Considering reference valuation in file " ^ options#pi0file ^ ".");
 
 (* Pi0 Parsing *)
@@ -379,8 +380,12 @@ let pi0_parsed, v0_parsed =
 	match options#imitator_mode with
 		(* If translation: no pi0 *)
 		| Translation -> [], []
+		
 		(* If reachability: no pi0 *)
-		| Reachability_analysis -> [], []
+		| State_space_exploration -> [], []
+		
+		| EF_synthesis -> print_error "EF-synthesis not implemented"; abort_program(); raise (InternalError "bye")
+		
 		(* Inverse method : pi0 *)
 		| Inverse_method ->
 			(* Case forcePi0 *)
@@ -606,10 +611,12 @@ try(
 	match options#imitator_mode with
 		| Translation -> raise (InternalError "Translation can't be executed; program should have terminated before.");
 
-		| Reachability_analysis ->
+		| State_space_exploration ->
 			Reachability.full_reachability model init_state_after_time_elapsing;
 			[]
 		
+		| EF_synthesis -> print_error "EF-synthesis not implemented"; abort_program(); raise (InternalError "bye")
+
 		(* Inverse Method *)
 		| Inverse_method ->
 				Reachability.inverse_method model init_state_after_time_elapsing;
