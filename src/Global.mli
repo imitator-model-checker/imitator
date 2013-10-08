@@ -8,7 +8,7 @@
  * Author:        Etienne Andre
  * 
  * Created:       2009/09/08
- * Last modified: 2013/05/13
+ * Last modified: 2013/10/08
  *
  ****************************************************************)
 
@@ -117,6 +117,11 @@ val after_seconds : unit -> string
 (** Set the timed mode *)
 val set_timed_mode : unit -> unit
 
+(****************************************************************)
+(** Useful functions on float *)
+(****************************************************************)
+(** Round a float with 3 digits after comma, and convert to string *)
+val round3_float : float -> string
 
 
 (****************************************************************)

@@ -1,4 +1,14 @@
 *******************************************************
+release 2.6.2    (2013-XX-XX) FUTURE RELEASE
+
+Misc
+- Improve printing floating numbers (time and memory)
+- Now IMITATOR has a build number
+
+Internal
+- Refactored constraints
+
+*******************************************************
 release 2.6.1.1    (2013-08-02) PRIVATE RELEASE
 
 Nothing really new, just a backup before refactoring constraints

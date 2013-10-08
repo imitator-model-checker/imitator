@@ -8,7 +8,7 @@
  * Author:        Etienne Andre
  * 
  * Created:       2009/09/08
- * Last modified: 2013/05/13
+ * Last modified: 2013/10/08
  *
  ****************************************************************)
  
@@ -140,81 +140,14 @@ type imitator_mode =
 	(** Randomly pick up values for a given number of iterations *)
 	| Random_cartography of int
 
-	
+
+
 (****************************************************************)
 (** Global time counter *)
 (****************************************************************)
 let counter = ref (Unix.gettimeofday())
 
-(* Compute a duration in ms *)
-let duration_of_float d =
-	((float_of_int) (int_of_float (d *. 1000.0))) /. 1000.0
 
-(** Get the value of the counter *)
-let get_time() =
-	(Unix.gettimeofday()) -. (!counter)
-
-(* Compute the duration since time t *)
-let time_from t =
-	(Unix.gettimeofday()) -. t
-
-(* Print a number of seconds *)
-let string_of_seconds nb_seconds =
-	let duration = duration_of_float nb_seconds in
-	let plural = (if duration <= 1.0 then "" else "s") in
-	(string_of_float duration) ^ " second" ^ plural
-
-
-(* Create a string of the form 'after x seconds', where x is the time since the program started *)
-let after_seconds () =
-	"after " ^ (string_of_seconds (get_time()))
-
-(** Set the timed mode *)
-let set_timed_mode () =
-	timed_mode := true
-
-
-
-
-(****************************************************************)
-(** Date functions *)
-(****************************************************************)
-
-let days = [| "Sun"; "Mon"; "Tue"; "Wed"; "Thu"; "Fri"; "Sat" |]
-let months = [| "Jan"; "Feb"; "Mar"; "Apr"; "May"; "Jun";
-				"Jul"; "Aug"; "Sep"; "Oct"; "Nov"; "Dec" |]
-
-(* Adds a zero if a number has only 1 digit *)
-let two_digits i =
-	(* Add a 0 if needed *)
-	(if i <= 9 then "0" else "")
-	^ (string_of_int i)
-
-let format_time time =
-  let tm = localtime time in
-(*  sprintf "%s %s %2d %02d:%02d:%02d %04d"
-    days.(tm.tm_wday)
-    months.(tm.tm_mon)
-    tm.tm_mday
-    tm.tm_hour
-    tm.tm_min
-    tm.tm_sec
-    (tm.tm_year + 1900)*)
-    (days.(tm.tm_wday))
-    ^ " " ^ (months.(tm.tm_mon))
-    ^ " " ^ (string_of_int tm.tm_mday)
-    ^ ", " ^ (string_of_int (tm.tm_year + 1900))
-    ^ " " ^ (two_digits tm.tm_hour)
-    ^ ":" ^ (two_digits tm.tm_min)
-    ^ ":" ^ (two_digits tm.tm_sec)
- 
-(*let time = fst (Unix.mktime {tm_sec=50; tm_min=45; tm_hour=3;
-		tm_mday=18; tm_mon=0; tm_year=73;
-		tm_wday=0; tm_yday=0; tm_isdst=false})*)
-
-(* Print the current date and time under the form of a string *)
-let now () = "" ^ (format_time (Unix.gettimeofday ()))
-(* printf "format_time gives: %s\n" (format_time time) *)
 
 
 
@@ -419,6 +352,10 @@ let dynArray_exists p a =
 let string_of_array_of_string =
 	Array.fold_left (fun the_string s -> the_string ^ s) ""
 
+(* Returns a fresh string made of 'n' times 's' *)
+let string_n_times n s =
+	string_of_array_of_string (Array.make n s)
+
 (* Convert a list of string into a string *)
 let string_of_list_of_string =
 	List.fold_left (fun the_string s -> the_string ^ s) ""
@@ -439,10 +376,6 @@ let string_of_list_of_string_with_sep sep l =
 	string_of_array_of_string_with_sep sep (Array.of_list l)
 
 
-(* Returns a fresh string made of 'n' times 's' *)
-let string_n_times n s =
-	string_of_array_of_string (Array.make n s)
-
 
 (* 's_of_int i' Return "s" if i > 1, "" otherwise *)
 let s_of_int i =
@@ -461,6 +394,98 @@ let evaluate_and a b =
 (* Evaluate both part of an 'or' comparison and return the disjunction *)
 let evaluate_or a b =
 	a || b
+
+
+
+
+(****************************************************************)
+(** Printing time functions *)
+(****************************************************************)
+let days = [| "Sun"; "Mon"; "Tue"; "Wed"; "Thu"; "Fri"; "Sat" |]
+let months = [| "Jan"; "Feb"; "Mar"; "Apr"; "May"; "Jun";
+				"Jul"; "Aug"; "Sep"; "Oct"; "Nov"; "Dec" |]
+
+(* 'add_digits n i' adds (m-n) '0' in front of 'i', if 'i' is an integer with only 'm' digits; result is always a string *)
+let add_digits n i =
+	(* Convert to string *)
+	let str_i = string_of_int i in
+	(* Count the number of digits *)
+	let size_i = String.length str_i in
+	(
+		(* Add more *)
+		if size_i <= n then
+			(string_n_times (n - size_i) "0")
+		(* Otherwise keep unchanged *)
+		else ""
+	) ^ str_i
+
+
+(* Adds a zero if a number has only 1 digit *)
+let two_digits = add_digits 2
+(*	(* Add a 0 if needed *)
+	(if i <= 9 then "0" else "")
+	^ (string_of_int i)*)
+
+let format_time time =
+  let tm = localtime time in
+(*  sprintf "%s %s %2d %02d:%02d:%02d %04d"
+    days.(tm.tm_wday)
+    months.(tm.tm_mon)
+    tm.tm_mday
+    tm.tm_hour
+    tm.tm_min
+    tm.tm_sec
+    (tm.tm_year + 1900)*)
+    (days.(tm.tm_wday))
+    ^ " " ^ (months.(tm.tm_mon))
+    ^ " " ^ (string_of_int tm.tm_mday)
+    ^ ", " ^ (string_of_int (tm.tm_year + 1900))
+    ^ " " ^ (two_digits tm.tm_hour)
+    ^ ":" ^ (two_digits tm.tm_min)
+    ^ ":" ^ (two_digits tm.tm_sec)
+ 
+(*let time = fst (Unix.mktime {tm_sec=50; tm_min=45; tm_hour=3;
+		tm_mday=18; tm_mon=0; tm_year=73;
+		tm_wday=0; tm_yday=0; tm_isdst=false})*)
+
+(* Print the current date and time under the form of a string *)
+let now () = "" ^ (format_time (Unix.gettimeofday ()))
+(* printf "format_time gives: %s\n" (format_time time) *)
+
+
+(* Round a float with 3 digits after comma, and convert to string *)
+let round3_float d =
+(* 	((float_of_int) (int_of_float (d *. 1000.0))) /. 1000.0 *)
+	(* Integer part *)
+	let int_part = string_of_int (int_of_float (floor d)) in
+	(* Floating part on 3 digits *)
+	let real_part = add_digits 3 ((int_of_float (d *. 1000.0)) mod 1000) in
+	(* Concatenate both *)
+	int_part ^ "." ^ real_part
+
+(** Get the value of the counter *)
+let get_time() =
+	(Unix.gettimeofday()) -. (!counter)
+
+(* Compute the duration since time t *)
+let time_from t =
+	(Unix.gettimeofday()) -. t
+
+(* Print a number of seconds *)
+let string_of_seconds nb_seconds =
+	let duration = round3_float nb_seconds in
+	let plural = (if nb_seconds <= 1.0 then "" else "s") in
+	duration ^ " second" ^ plural
+
+
+(* Create a string of the form 'after x seconds', where x is the time since the program started *)
+let after_seconds () =
+	"after " ^ (string_of_seconds (get_time()))
+
+(** Set the timed mode *)
+let set_timed_mode () =
+	timed_mode := true
+
 
 
 (****************************************************************)
@@ -568,7 +593,7 @@ let print_memory_used debug_level =
 	(* Compute the word size in bytes *)
 	let word_size = (*4.0*)Sys.word_size / 8 in
 	let nb_ko = nb_words *. (float_of_int word_size) /. 1024.0 in
-		print_message debug_level ("Estimated memory used: " ^ (string_of_float nb_ko) ^ " KiB (i.e., " ^ (string_of_float nb_words) ^ " words of size " ^ (string_of_int word_size) ^ ")")
+		print_message debug_level ("Estimated memory used: " ^ (round3_float nb_ko) ^ " KiB (i.e., " ^ (string_of_int (int_of_float nb_words)) ^ " words of size " ^ (string_of_int word_size) ^ ")")
 
 
 
