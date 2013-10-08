@@ -612,7 +612,7 @@ try(
 		| Translation -> raise (InternalError "Translation can't be executed; program should have terminated before.");
 
 		| State_space_exploration ->
-			Reachability.full_reachability model init_state_after_time_elapsing;
+			Reachability.full_state_space_exploration model init_state_after_time_elapsing;
 			[]
 		
 		| EF_synthesis -> print_error "EF-synthesis not implemented"; abort_program(); raise (InternalError "bye")

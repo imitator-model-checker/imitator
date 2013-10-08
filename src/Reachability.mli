@@ -42,9 +42,9 @@ val prepare_clocks_elimination : abstract_model -> unit
 
 
 (************************************************************)
-(* Full reachability analysis *)
+(* Full state space exploration *)
 (************************************************************)
-val full_reachability : abstract_model -> state -> unit
+val full_state_space_exploration : abstract_model -> state -> unit
 
 
 (************************************************************)

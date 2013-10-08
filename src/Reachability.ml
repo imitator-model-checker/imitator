@@ -2353,7 +2353,7 @@ let print_statistics reachability_graph =
 (************************************************************)
 (* Full reachability analysis *)
 (************************************************************)
-let full_reachability model init_state =
+let full_state_space_exploration model init_state =
 	(* Retrieve the input options *)
 	let options = Input.get_options () in
 
