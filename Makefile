@@ -426,8 +426,8 @@ exe:
 
 # 	$(TARGETV) $(EXAMPLE_PATH)/Train/Train1PTA.imi -PTA2JPG
 # 	$(TARGET) $(EXAMPLE_PATH)/Train/Train1PTA.imi -mode reachability -incl
-	bin/IMITATOR2.6.1 $(EXAMPLE_PATH)/Train/Train1PTA.imi $(EXAMPLE_PATH)/Train/Train1PTA.pi0  -verbose low
-	$(TARGETV) $(EXAMPLE_PATH)/Train/Train1PTA.imi $(EXAMPLE_PATH)/Train/Train1PTA.pi0 -verbose low
+# 	bin/IMITATOR2.6.1 $(EXAMPLE_PATH)/Train/Train1PTA.imi $(EXAMPLE_PATH)/Train/Train1PTA.pi0
+# 	$(TARGETV) $(EXAMPLE_PATH)/Train/Train1PTA.imi $(EXAMPLE_PATH)/Train/Train1PTA.pi0
 # 	$(TARGET) $(EXAMPLE_PATH)/Train/Train1PTA.imi $(EXAMPLE_PATH)/Train/Train1PTA.v0 -mode border -cart
 # 	$(TARGET) $(EXAMPLE_PATH)/Train/Train1PTA.imi $(EXAMPLE_PATH)/Train/Train1PTA.v0 -mode cover -cart
 # 	$(TARGET) $(EXAMPLE_PATH)/Train/Train1PTA.imi -PTA2GrML
@@ -448,7 +448,7 @@ exe:
 # 	$(TARGET) $(EXAMPLE_PATH)/Fischer/fischerPAT.imi -mode reachability -depth-limit 80 -with-log
 # 	$(TARGET) $(EXAMPLE_PATH)/Fischer/fischerPAT.imi $(EXAMPLE_PATH)/Fischer/fischerPAT.pi0 -depth-limit 12 -with-log -with-dot
 # 	$(TARGET) $(EXAMPLE_PATH)/Fischer/fischerPAT.imi -PTA2JPG
-# 	$(TARGET) $(EXAMPLE_PATH)/Fischer/fischerPAT.imi $(EXAMPLE_PATH)/Fischer/fischerPAT.pi0 -depth-limit 20
+# 	$(TARGETV) $(EXAMPLE_PATH)/Fischer/fischerPAT.imi $(EXAMPLE_PATH)/Fischer/fischerPAT.pi0 -depth-limit 20
 # 	$(TARGETV) $(EXAMPLE_PATH)/Fischer/fischerPAT.imi $(EXAMPLE_PATH)/Fischer/fischerPAT.pi0 -dynamic-elimination -verbose low -depth-limit 60 -with-log 
 
 # 	$(TARGET) $(EXAMPLE_PATH)/BangOlufsen/BangOlufsen.imi -mode reachability 
@@ -464,6 +464,8 @@ exe:
 # 	$(TARGET) $(EXAMPLE_PATH)/BRP/brp.imi -mode reachability 
 # 	$(TARGETV) $(EXAMPLE_PATH)/BRP/brp.imi $(EXAMPLE_PATH)/BRP/brp.pi0 -with-dot -with-log
 # 	$(TARGETV) $(EXAMPLE_PATH)/BRP/brp.imi $(EXAMPLE_PATH)/BRP/brp.pi0 -dynamic-elimination -with-dot -with-log -log-prefix $(EXAMPLE_PATH)/BRP/brp-dynamic
+	bin/IMITATOR2.6.1 $(EXAMPLE_PATH)/BRP/brp.imi $(EXAMPLE_PATH)/BRP/brp.pi0
+# 	$(TARGETV) $(EXAMPLE_PATH)/BRP/brp.imi $(EXAMPLE_PATH)/BRP/brp.pi0
 # 	$(TARGET) $(EXAMPLE_PATH)/BRP/brp.imi $(EXAMPLE_PATH)/BRP/brp.pi0 -merge
 # 	$(TARGET) $(EXAMPLE_PATH)/BRP/brp.imi $(EXAMPLE_PATH)/BRP/brp.pi0 -merge-before
 # 	$(TARGET) $(EXAMPLE_PATH)/BRP/brp.imi $(EXAMPLE_PATH)/BRP/brp.pi0 -bab
