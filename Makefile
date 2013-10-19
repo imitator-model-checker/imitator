@@ -307,6 +307,8 @@ exe:
 # 	$(TARGETV) $(EXAMPLE_PATH)/Examples/loopingDynamic.imi $(EXAMPLE_PATH)/Examples/loopingDynamic.pi0 -depth-limit 20
 # 	$(TARGETV) $(EXAMPLE_PATH)/Examples/loopingDynamic.imi $(EXAMPLE_PATH)/Examples/loopingDynamic.pi0 -dynamic-elimination -with-log -with-dot -log-prefix $(EXAMPLE_PATH)/Examples/loopingDynamic-dynamic
 
+	$(TARGETV) $(EXAMPLE_PATH)/Examples/JLR13.imi -mode statespace -with-log
+
 # 	$(TARGETV) $(EXAMPLE_PATH)/Examples/exClockElimination.imi -verbose medium -mode reachability -depth-limit 2 -dynamic-elimination
 # 	$(TARGETV) $(EXAMPLE_PATH)/Examples/exClockElimination.imi $(EXAMPLE_PATH)/Examples/exClockElimination.pi0
 # 	$(TARGETV) $(EXAMPLE_PATH)/Examples/exClockElimination.imi $(EXAMPLE_PATH)/Examples/exClockElimination.pi0 -dynamic-elimination -with-log -with-dot -log-prefix $(EXAMPLE_PATH)/Examples/exClockElimination-dynamic
@@ -593,8 +595,8 @@ exe:
 # 	$(TARGETV) $(EXAMPLE_PATH)/Scheduling/bb.imi $(EXAMPLE_PATH)/Scheduling/bb.pi0 -dynamic-elimination -with-dot -with-log -log-prefix $(EXAMPLE_PATH)/Scheduling/bb-dynamic
 	
 # 	$(TARGET) $(EXAMPLE_PATH)/Scheduling/concurent_tasks_chain.imi -PTA2JPG
-	bin/IMITATOR2.6.1 $(EXAMPLE_PATH)/Scheduling/concurent_tasks_chain.imi $(EXAMPLE_PATH)/Scheduling/concurent_tasks_chain.pi0
-	$(TARGETV) $(EXAMPLE_PATH)/Scheduling/concurent_tasks_chain.imi $(EXAMPLE_PATH)/Scheduling/concurent_tasks_chain.pi0
+# 	bin/IMITATOR2.6.1 $(EXAMPLE_PATH)/Scheduling/concurent_tasks_chain.imi $(EXAMPLE_PATH)/Scheduling/concurent_tasks_chain.pi0
+# 	$(TARGETV) $(EXAMPLE_PATH)/Scheduling/concurent_tasks_chain.imi $(EXAMPLE_PATH)/Scheduling/concurent_tasks_chain.pi0
 # 	$(TARGETV) $(EXAMPLE_PATH)/Scheduling/concurent_tasks_chain.imi $(EXAMPLE_PATH)/Scheduling/concurent_tasks_chain.pi0 -with-dot -with-log
 # 	$(TARGETV) $(EXAMPLE_PATH)/Scheduling/concurent_tasks_chain.imi $(EXAMPLE_PATH)/Scheduling/concurent_tasks_chain.pi0 -dynamic-elimination -with-dot -with-log -log-prefix $(EXAMPLE_PATH)/Scheduling/concurent_tasks_chain-dynamic
 # 	$(TARGETV) $(EXAMPLE_PATH)/Scheduling/concurent_tasks_chain.imi $(EXAMPLE_PATH)/Scheduling/concurent_tasks_chain.pi0 -merge -dynamic-elimination -with-dot -with-log -log-prefix $(EXAMPLE_PATH)/Scheduling/concurent_tasks_chain-dynamic-merge
