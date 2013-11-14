@@ -295,11 +295,13 @@ exe:
 	# 	$(TARGET) $(EXAMPLE_PATH)/Merging/exMergingSimple.imi -mode reachability -with-dot
 # 	$(TARGET) $(EXAMPLE_PATH)/Merging/exMergingSimple.imi $(EXAMPLE_PATH)/Merging/exMergingSimple.pi0 -with-dot -merge
 
-# 	$(TARGET) $(EXAMPLE_PATH)/Proprietes/contrexTermination.imi -mode reachability -no-merging -with-dot -with-log -with-parametric-log
-# 	$(TARGET) $(EXAMPLE_PATH)/Proprietes/contrexTermination.imi $(EXAMPLE_PATH)/Proprietes/contrexTermination.pi0 -with-parametric-log -with-log -states-limit 8 -with-dot
+# 	$(TARGETV) $(EXAMPLE_PATH)/Proprietes/contrexTermination.imi -mode statespace -with-dot
+# 	$(TARGETV) $(EXAMPLE_PATH)/Proprietes/contrexTermination.imi $(EXAMPLE_PATH)/Proprietes/contrexTermination.pi0 -with-dot -depth-limit 7
 
-# 	$(TARGET) $(EXAMPLE_PATH)/Proprietes/contrexTerminationGlobalClockIMincl.imi -mode reachability -no-merging -incl
-# 	$(TARGET) $(EXAMPLE_PATH)/Proprietes/contrexTerminationGlobalClockIMincl.imi $(EXAMPLE_PATH)/Proprietes/contrexTerminationGlobalClockIMincl.pi0 -no-merging -incl -with-parametric-log -with-log -states-limit 30 -with-dot
+# 	$(TARGETV) $(EXAMPLE_PATH)/Proprietes/contrexTerminationGlobalClockIMincl.imi -mode statespace -no-merging -incl
+# 	$(TARGETV) $(EXAMPLE_PATH)/Proprietes/contrexTerminationGlobalClockIMincl.imi $(EXAMPLE_PATH)/Proprietes/contrexTerminationGlobalClockIMincl.pi0 -depth-limit 30 -with-dot -with-log -with-parametric-log
+
+	$(TARGETV) $(EXAMPLE_PATH)/Examples/JLR-TACAS13.imi $(EXAMPLE_PATH)/Examples/JLR-TACAS13.pi0 -with-dot -depth-limit 20 -with-log -with-parametric-log
 
 # 	$(TARGET) $(EXAMPLE_PATH)/Proprietes/exNonTerminationDFS.imi $(EXAMPLE_PATH)/Proprietes/exNonTerminationDFS.pi0 -bab -no-merging -incl -with-log -states-limit 30 -with-parametric-log # PROBLEM BAB
 # 	$(TARGET) $(EXAMPLE_PATH)/Proprietes/exNonTerminationDFS.imi $(EXAMPLE_PATH)/Proprietes/exNonTerminationDFS.pi0 -no-merging -incl -with-parametric-log -with-log -states-limit 30 -with-dot
@@ -307,15 +309,15 @@ exe:
 # 	$(TARGETV) $(EXAMPLE_PATH)/Examples/loopingDynamic.imi $(EXAMPLE_PATH)/Examples/loopingDynamic.pi0 -depth-limit 20
 # 	$(TARGETV) $(EXAMPLE_PATH)/Examples/loopingDynamic.imi $(EXAMPLE_PATH)/Examples/loopingDynamic.pi0 -dynamic-elimination -with-log -with-dot -log-prefix $(EXAMPLE_PATH)/Examples/loopingDynamic-dynamic
 
-	$(TARGETV) $(EXAMPLE_PATH)/Examples/JLR13.imi -mode statespace -with-log
+# 	$(TARGETV) $(EXAMPLE_PATH)/Examples/JLR13.imi -mode statespace -with-log
 
-# 	$(TARGETV) $(EXAMPLE_PATH)/Examples/exClockElimination.imi -verbose medium -mode reachability -depth-limit 2 -dynamic-elimination
+# 	$(TARGETV) $(EXAMPLE_PATH)/Examples/exClockElimination.imi -verbose medium -mode statespace -depth-limit 2 -dynamic-elimination
 # 	$(TARGETV) $(EXAMPLE_PATH)/Examples/exClockElimination.imi $(EXAMPLE_PATH)/Examples/exClockElimination.pi0
 # 	$(TARGETV) $(EXAMPLE_PATH)/Examples/exClockElimination.imi $(EXAMPLE_PATH)/Examples/exClockElimination.pi0 -dynamic-elimination -with-log -with-dot -log-prefix $(EXAMPLE_PATH)/Examples/exClockElimination-dynamic
 
-# 	$(TARGET) $(EXAMPLE_PATH)/Examples/testBoucleAvecDiscrete.imi -mode reachability -statistics -depth-limit 200 -no-dot -no-log
-# 	$(TARGET) $(EXAMPLE_PATH)/Examples/testBoucleAvecDiscrete.imi -mode reachability -statistics -depth-limit 200 -no-dot -no-log -dynamic
-# 	$(TARGET) $(EXAMPLE_PATH)/Examples/testBoucleAvecDiscrete.imi -mode reachability -depth-limit 200 -no-dot -no-log
+# 	$(TARGET) $(EXAMPLE_PATH)/Examples/testBoucleAvecDiscrete.imi -mode statespace -statistics -depth-limit 200 -no-dot -no-log
+# 	$(TARGET) $(EXAMPLE_PATH)/Examples/testBoucleAvecDiscrete.imi -mode statespace -statistics -depth-limit 200 -no-dot -no-log -dynamic
+# 	$(TARGET) $(EXAMPLE_PATH)/Examples/testBoucleAvecDiscrete.imi -mode statespace -depth-limit 200 -no-dot -no-log
 # 	bin/IMITATOR2.41 $(EXAMPLE_PATH)/Examples/testBoucleAvecDiscrete.imi -mode reachability -depth-limit 200 -no-dot -no-log
 # 	bin/IMITATOR2.4 $(EXAMPLE_PATH)/Examples/testBoucleAvecDiscrete.imi -mode reachability -depth-limit 200 -no-dot -no-log -jobshop
 # 	bin/IMITATOR2.375 $(EXAMPLE_PATH)/Examples/testBoucleAvecDiscrete.imi -mode reachability -depth-limit 200 -no-dot -no-log -jobshop
@@ -326,7 +328,7 @@ exe:
 # 	bin/IMITATOR2.34.111115 $(EXAMPLE_PATH)/Examples/testBoucleAvecDiscrete.imi -mode reachability -depth-limit 200 -no-dot -no-log
 
 ##### CASE STUDIES : EXAMPLES #####
-# 	$(TARGET) $(EXAMPLE_PATH)/Examples/exSITH.imi -mode reachability -PTA2GrML
+# 	$(TARGET) $(EXAMPLE_PATH)/Examples/exSITH.imi -mode statespace -PTA2GrML
 # 	$(TARGET) $(EXAMPLE_PATH)/Examples/exSITH.imi $(EXAMPLE_PATH)/Examples/exSITH.pi0 -bab -merge
 # 	$(TARGET) $(EXAMPLE_PATH)/Examples/exSITH.imi $(EXAMPLE_PATH)/Examples/exSITH.pi0 -bab
 # 	$(TARGET) $(EXAMPLE_PATH)/Examples/exSITH.imi $(EXAMPLE_PATH)/Examples/exSITH.pi0
@@ -334,7 +336,7 @@ exe:
 # 	$(TARGET) $(EXAMPLE_PATH)/Examples/contrexPPTA.imi $(EXAMPLE_PATH)/Examples/contrexPPTA.pi0
 # 	$(TARGET) $(EXAMPLE_PATH)/Examples/contrexPPTA.imi $(EXAMPLE_PATH)/Examples/contrexPPTA.pi0 -bab
 
-# 	$(TARGET) $(EXAMPLE_PATH)/Examples/contrexPPTA2.imi -mode reachability
+# 	$(TARGET) $(EXAMPLE_PATH)/Examples/contrexPPTA2.imi -mode statespace
 # 	$(TARGET) $(EXAMPLE_PATH)/Examples/contrexPPTA2.imi $(EXAMPLE_PATH)/Examples/contrexPPTA2.pi0
 # 	$(TARGET) $(EXAMPLE_PATH)/Examples/contrexPPTA2.imi $(EXAMPLE_PATH)/Examples/contrexPPTA2.pi0 -bab
  	
@@ -344,15 +346,15 @@ exe:
 
 ##### CASE STUDIES : HARDWARE #####
 
-# 	$(TARGET) $(EXAMPLE_PATH)/GML/testtemp.grml -fromGrML -mode reachability
-# 	$(TARGET) $(EXAMPLE_PATH)/GML/pta1.grml -fromGrML -mode reachability
+# 	$(TARGET) $(EXAMPLE_PATH)/GML/testtemp.grml -fromGrML -mode statespace
+# 	$(TARGET) $(EXAMPLE_PATH)/GML/pta1.grml -fromGrML -mode statespace
 # 	$(TARGET) $(EXAMPLE_PATH)/AndOr/AndOr.imi -PTA2GrML
-# 	$(TARGET) $(EXAMPLE_PATH)/AndOr/AndOr.imi.grml -fromGrML -mode reachability
+# 	$(TARGET) $(EXAMPLE_PATH)/AndOr/AndOr.imi.grml -fromGrML -mode statespace
 
-# 	$(TARGET) $(EXAMPLE_PATH)/AndOr/AndOr.imi -mode reachability -dynamic-elimination -verbose total
+# 	$(TARGET) $(EXAMPLE_PATH)/AndOr/AndOr.imi -mode statespace -dynamic-elimination -verbose total
 # 	$(TARGET) $(EXAMPLE_PATH)/AndOr/AndOr2.imi -PTA2JPG
-# 	$(TARGET) $(EXAMPLE_PATH)/AndOr/AndOr.imi -mode reachability -states-limit 10
-# 	$(TARGET) $(EXAMPLE_PATH)/AndOr/AndOr.imi -mode reachability -time-limit 10
+# 	$(TARGET) $(EXAMPLE_PATH)/AndOr/AndOr.imi -mode statespace -states-limit 10
+# 	$(TARGET) $(EXAMPLE_PATH)/AndOr/AndOr.imi -mode statespace -time-limit 10
 
 # 	$(TARGET) $(EXAMPLE_PATH)/Tests/AndOrTest.imi $(EXAMPLE_PATH)/Tests/AndOrTest.pi0 -verbose high
 # 	$(TARGET) $(EXAMPLE_PATH)/Tests/AndOrTest.imi -PTA2JPG
@@ -369,7 +371,7 @@ exe:
 
 	# 	$(TARGET) $(EXAMPLE_PATH)/AndOr/AndOr.imi $(EXAMPLE_PATH)/AndOr/AndOr.v0 -mode cover
 
-# 	$(TARGET) $(EXAMPLE_PATH)/Flipflop/flipflop.imi -mode reachability 
+# 	$(TARGET) $(EXAMPLE_PATH)/Flipflop/flipflop.imi -mode statespace 
 # 	bin/IMITATOR2.4 $(EXAMPLE_PATH)/Flipflop/flipflop.imi -mode reachability -no-dot -no-log -jobshop
 # 	bin/IMITATOR2.375 $(EXAMPLE_PATH)/Flipflop/flipflop.imi -mode reachability -no-dot -no-log -jobshop
 # 	bin/IMITATOR2.374 $(EXAMPLE_PATH)/Flipflop/flipflop.imi -mode reachability -no-dot -no-log -jobshop
