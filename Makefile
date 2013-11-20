@@ -234,23 +234,23 @@ exe:
 # 	$(TARGET) temp/test2.imi temp/test.v0 -mode border -incl -merge -cart -with-graphics-source
 
 
-# 	$(TARGET) $(EXAMPLE_PATH)/Tests/test.gml -mode reachability -verbose high -fromGrML
+# 	$(TARGET) $(EXAMPLE_PATH)/Tests/test.gml -mode statespace -verbose high -fromGrML
 
 # 	$(TARGET) $(EXAMPLE_PATH)/Tests/test.imi -PTA2GrML
 
-# 	$(TARGET) $(EXAMPLE_PATH)/Tests/testPost.imi -mode reachability
-# 	$(TARGET) $(EXAMPLE_PATH)/Tests/testPostSW.imi -mode reachability
-# 	bin/IMITATOR2.4 $(EXAMPLE_PATH)/Tests/testPostSW.imi -mode reachability
-# 	$(TARGET) $(EXAMPLE_PATH)/Tests/testPostUpdates.imi -mode reachability -no-merging
-# 	bin/IMITATOR2.4 $(EXAMPLE_PATH)/Tests/testPostUpdates.imi -mode reachability
-# 	$(TARGET) $(EXAMPLE_PATH)/Tests/testPostUpdates1PTA.imi -mode reachability
-# 	$(TARGET) $(EXAMPLE_PATH)/Tests/testPostSW.imi -mode reachability -verbose total -depth-limit 2
-# 	$(TARGET) $(EXAMPLE_PATH)/Tests/testPostSansDiscrete.imi -mode reachability -statistics -verbose total
+# 	$(TARGET) $(EXAMPLE_PATH)/Tests/testPost.imi -mode statespace
+# 	$(TARGET) $(EXAMPLE_PATH)/Tests/testPostSW.imi -mode statespace
+# 	bin/IMITATOR2.4 $(EXAMPLE_PATH)/Tests/testPostSW.imi -mode statespace
+# 	$(TARGET) $(EXAMPLE_PATH)/Tests/testPostUpdates.imi -mode statespace -no-merging
+# 	bin/IMITATOR2.4 $(EXAMPLE_PATH)/Tests/testPostUpdates.imi -mode statespace
+# 	$(TARGET) $(EXAMPLE_PATH)/Tests/testPostUpdates1PTA.imi -mode statespace
+# 	$(TARGET) $(EXAMPLE_PATH)/Tests/testPostSW.imi -mode statespace -verbose total -depth-limit 2
+# 	$(TARGET) $(EXAMPLE_PATH)/Tests/testPostSansDiscrete.imi -mode statespace -statistics -verbose total
 
 # 	$(TARGET) $(EXAMPLE_PATH)/Tests/exPourGML.imi -PTA2GrML
 
-# 	$(TARGET) $(EXAMPLE_PATH)/Tests/exPourGML.imi -mode reachability
-# 	$(TARGET) $(EXAMPLE_PATH)/Tests/SynthesizedGML.gml -fromGrML -mode reachability
+# 	$(TARGET) $(EXAMPLE_PATH)/Tests/exPourGML.imi -mode statespace
+# 	$(TARGET) $(EXAMPLE_PATH)/Tests/SynthesizedGML.gml -fromGrML -mode statespace
 
 # 	$(TARGET) $(EXAMPLE_PATH)/Tests/model2.gml -fromGrML -forcePi0
 # 	$(TARGET) $(EXAMPLE_PATH)/Tests/model2.imi -forcePi0
@@ -280,7 +280,7 @@ exe:
 
 ##### TESTS FOR PROPERTIES #####
 
-# 	$(TARGET) $(EXAMPLE_PATH)/Proprietes/exCTL.imi -mode reachability -with-dot -with-log
+# 	$(TARGET) $(EXAMPLE_PATH)/Proprietes/exCTL.imi -mode statespace -with-dot -with-log
 # 	$(TARGET) $(EXAMPLE_PATH)/Proprietes/exCTL.imi $(EXAMPLE_PATH)/Proprietes/exCTL.pi0
 # 	$(TARGET) $(EXAMPLE_PATH)/Proprietes/exCTL.imi $(EXAMPLE_PATH)/Proprietes/exCTL.pi0 -PTA2CLP
 
@@ -292,7 +292,7 @@ exe:
 # 	$(TARGET) $(EXAMPLE_PATH)/Merging/exActionsNonPreserved.imi $(EXAMPLE_PATH)/Merging/exActionsNonPreserved.pi0 -merge -with-dot
 # 	$(TARGET) $(EXAMPLE_PATH)/Merging/exActionsNonPreserved.imi $(EXAMPLE_PATH)/Merging/exActionsNonPreserved.pi0 -merge-before -with-dot
 
-	# 	$(TARGET) $(EXAMPLE_PATH)/Merging/exMergingSimple.imi -mode reachability -with-dot
+	# 	$(TARGET) $(EXAMPLE_PATH)/Merging/exMergingSimple.imi -mode statespace -with-dot
 # 	$(TARGET) $(EXAMPLE_PATH)/Merging/exMergingSimple.imi $(EXAMPLE_PATH)/Merging/exMergingSimple.pi0 -with-dot -merge
 
 # 	$(TARGETV) $(EXAMPLE_PATH)/Proprietes/contrexTermination.imi -mode statespace -with-dot
@@ -301,7 +301,7 @@ exe:
 # 	$(TARGETV) $(EXAMPLE_PATH)/Proprietes/contrexTerminationGlobalClockIMincl.imi -mode statespace -no-merging -incl
 # 	$(TARGETV) $(EXAMPLE_PATH)/Proprietes/contrexTerminationGlobalClockIMincl.imi $(EXAMPLE_PATH)/Proprietes/contrexTerminationGlobalClockIMincl.pi0 -depth-limit 30 -with-dot -with-log -with-parametric-log
 
-	$(TARGETV) $(EXAMPLE_PATH)/Examples/JLR-TACAS13.imi $(EXAMPLE_PATH)/Examples/JLR-TACAS13.pi0 -with-dot -depth-limit 20 -with-log -with-parametric-log
+# 	$(TARGETV) $(EXAMPLE_PATH)/Examples/JLR-TACAS13.imi $(EXAMPLE_PATH)/Examples/JLR-TACAS13.pi0 -with-dot -depth-limit 20 -with-log -with-parametric-log
 
 # 	$(TARGET) $(EXAMPLE_PATH)/Proprietes/exNonTerminationDFS.imi $(EXAMPLE_PATH)/Proprietes/exNonTerminationDFS.pi0 -bab -no-merging -incl -with-log -states-limit 30 -with-parametric-log # PROBLEM BAB
 # 	$(TARGET) $(EXAMPLE_PATH)/Proprietes/exNonTerminationDFS.imi $(EXAMPLE_PATH)/Proprietes/exNonTerminationDFS.pi0 -no-merging -incl -with-parametric-log -with-log -states-limit 30 -with-dot
@@ -318,14 +318,14 @@ exe:
 # 	$(TARGET) $(EXAMPLE_PATH)/Examples/testBoucleAvecDiscrete.imi -mode statespace -statistics -depth-limit 200 -no-dot -no-log
 # 	$(TARGET) $(EXAMPLE_PATH)/Examples/testBoucleAvecDiscrete.imi -mode statespace -statistics -depth-limit 200 -no-dot -no-log -dynamic
 # 	$(TARGET) $(EXAMPLE_PATH)/Examples/testBoucleAvecDiscrete.imi -mode statespace -depth-limit 200 -no-dot -no-log
-# 	bin/IMITATOR2.41 $(EXAMPLE_PATH)/Examples/testBoucleAvecDiscrete.imi -mode reachability -depth-limit 200 -no-dot -no-log
-# 	bin/IMITATOR2.4 $(EXAMPLE_PATH)/Examples/testBoucleAvecDiscrete.imi -mode reachability -depth-limit 200 -no-dot -no-log -jobshop
-# 	bin/IMITATOR2.375 $(EXAMPLE_PATH)/Examples/testBoucleAvecDiscrete.imi -mode reachability -depth-limit 200 -no-dot -no-log -jobshop
-# 	bin/IMITATOR2.374 $(EXAMPLE_PATH)/Examples/testBoucleAvecDiscrete.imi -mode reachability -depth-limit 200 -no-dot -no-log -jobshop
-# 	bin/IMITATOR2.370 $(EXAMPLE_PATH)/Examples/testBoucleAvecDiscrete.imi -mode reachability -statistics -depth-limit 200 -no-dot -no-log
-# 	bin/IMITATOR2.36 $(EXAMPLE_PATH)/Examples/testBoucleAvecDiscrete.imi -mode reachability -statistics -depth-limit 200 -no-dot -no-log
-# 	bin/IMITATOR2.35 $(EXAMPLE_PATH)/Examples/testBoucleAvecDiscrete.imi -mode reachability -statistics -depth-limit 200 -no-dot -no-log
-# 	bin/IMITATOR2.34.111115 $(EXAMPLE_PATH)/Examples/testBoucleAvecDiscrete.imi -mode reachability -depth-limit 200 -no-dot -no-log
+# 	bin/IMITATOR2.41 $(EXAMPLE_PATH)/Examples/testBoucleAvecDiscrete.imi -mode statespace -depth-limit 200 -no-dot -no-log
+# 	bin/IMITATOR2.4 $(EXAMPLE_PATH)/Examples/testBoucleAvecDiscrete.imi -mode statespace -depth-limit 200 -no-dot -no-log -jobshop
+# 	bin/IMITATOR2.375 $(EXAMPLE_PATH)/Examples/testBoucleAvecDiscrete.imi -mode statespace -depth-limit 200 -no-dot -no-log -jobshop
+# 	bin/IMITATOR2.374 $(EXAMPLE_PATH)/Examples/testBoucleAvecDiscrete.imi -mode statespace -depth-limit 200 -no-dot -no-log -jobshop
+# 	bin/IMITATOR2.370 $(EXAMPLE_PATH)/Examples/testBoucleAvecDiscrete.imi -mode statespace -statistics -depth-limit 200 -no-dot -no-log
+# 	bin/IMITATOR2.36 $(EXAMPLE_PATH)/Examples/testBoucleAvecDiscrete.imi -mode statespace -statistics -depth-limit 200 -no-dot -no-log
+# 	bin/IMITATOR2.35 $(EXAMPLE_PATH)/Examples/testBoucleAvecDiscrete.imi -mode statespace -statistics -depth-limit 200 -no-dot -no-log
+# 	bin/IMITATOR2.34.111115 $(EXAMPLE_PATH)/Examples/testBoucleAvecDiscrete.imi -mode statespace -depth-limit 200 -no-dot -no-log
 
 ##### CASE STUDIES : EXAMPLES #####
 # 	$(TARGET) $(EXAMPLE_PATH)/Examples/exSITH.imi -mode statespace -PTA2GrML
@@ -372,17 +372,17 @@ exe:
 	# 	$(TARGET) $(EXAMPLE_PATH)/AndOr/AndOr.imi $(EXAMPLE_PATH)/AndOr/AndOr.v0 -mode cover
 
 # 	$(TARGET) $(EXAMPLE_PATH)/Flipflop/flipflop.imi -mode statespace 
-# 	bin/IMITATOR2.4 $(EXAMPLE_PATH)/Flipflop/flipflop.imi -mode reachability -no-dot -no-log -jobshop
-# 	bin/IMITATOR2.375 $(EXAMPLE_PATH)/Flipflop/flipflop.imi -mode reachability -no-dot -no-log -jobshop
-# 	bin/IMITATOR2.374 $(EXAMPLE_PATH)/Flipflop/flipflop.imi -mode reachability -no-dot -no-log -jobshop
-# 	bin/IMITATOR2.371 $(EXAMPLE_PATH)/Flipflop/flipflop.imi -mode reachability -no-dot -no-log -statistics
-# 	bin/IMITATOR2.370 $(EXAMPLE_PATH)/Flipflop/flipflop.imi -mode reachability
-# 	bin/IMITATOR2.35.111115 $(EXAMPLE_PATH)/Flipflop/flipflop.imi -mode reachability
-# 	bin/IMITATOR2.35 $(EXAMPLE_PATH)/Flipflop/flipflop.imi -mode reachability -no-dot -no-log -statistics
-# 	bin/IMITATOR2.34.111115 $(EXAMPLE_PATH)/Flipflop/flipflop.imi -mode reachability -no-dot -no-log 
+# 	bin/IMITATOR2.4 $(EXAMPLE_PATH)/Flipflop/flipflop.imi -mode statespace -no-dot -no-log -jobshop
+# 	bin/IMITATOR2.375 $(EXAMPLE_PATH)/Flipflop/flipflop.imi -mode statespace -no-dot -no-log -jobshop
+# 	bin/IMITATOR2.374 $(EXAMPLE_PATH)/Flipflop/flipflop.imi -mode statespace -no-dot -no-log -jobshop
+# 	bin/IMITATOR2.371 $(EXAMPLE_PATH)/Flipflop/flipflop.imi -mode statespace -no-dot -no-log -statistics
+# 	bin/IMITATOR2.370 $(EXAMPLE_PATH)/Flipflop/flipflop.imi -mode statespace
+# 	bin/IMITATOR2.35.111115 $(EXAMPLE_PATH)/Flipflop/flipflop.imi -mode statespace
+# 	bin/IMITATOR2.35 $(EXAMPLE_PATH)/Flipflop/flipflop.imi -mode statespace -no-dot -no-log -statistics
+# 	bin/IMITATOR2.34.111115 $(EXAMPLE_PATH)/Flipflop/flipflop.imi -mode statespace -no-dot -no-log 
 
-# 	$(TARGET) $(EXAMPLE_PATH)/Flipflop/flipflop.imi -mode reachability -tree -verbose low
-# 	$(TARGET) $(EXAMPLE_PATH)/Flipflop/flipflop.imi -mode reachability -acyclic -verbose low
+# 	$(TARGET) $(EXAMPLE_PATH)/Flipflop/flipflop.imi -mode statespace -tree -verbose low
+# 	$(TARGET) $(EXAMPLE_PATH)/Flipflop/flipflop.imi -mode statespace -acyclic -verbose low
 # 		$(TARGET) $(EXAMPLE_PATH)/Flipflop/flipflop.imi $(EXAMPLE_PATH)/Flipflop/flipflop.pi0 -no-dot -no-log -jobshop -no-random
 # 		bin/IMITATOR2.4 $(EXAMPLE_PATH)/Flipflop/flipflop.imi $(EXAMPLE_PATH)/Flipflop/flipflop.pi0 -no-dot -no-log -jobshop -no-random
 
@@ -401,7 +401,7 @@ exe:
 # 	$(TARGET) $(EXAMPLE_PATH)/Flipflop/flipflop-observer.imi $(EXAMPLE_PATH)/Flipflop/flipflop.v0 -mode cover -cart
 # 	$(TARGET) $(EXAMPLE_PATH)/Flipflop/flipflop-observer.imi $(EXAMPLE_PATH)/Flipflop/flipflop.v0 -mode border -cart
 
-# 	./IMITATOR Examples/Flipflop/flipflop_CC.imi -mode reachability -with-parametric-log
+# 	./IMITATOR Examples/Flipflop/flipflop_CC.imi -mode statespace -with-parametric-log
 # 	./IMITATOR Examples/Flipflop/flipflop_CC.imi Examples/Flipflop/flipflop_CC.pi0
 # 	./IMITATOR Examples/Flipflop/flipflop_CC.imi Examples/Flipflop/flipflop_CC.v0 -mode cover -log-prefix Examples/Flipflop/carto1/carto
 
@@ -412,34 +412,37 @@ exe:
 	
 	# 	$(TARGET) $(EXAMPLE_PATH)/Latch/latchValmem.imi $(EXAMPLE_PATH)/Latch/latchValmem.pi0 -bab
 
-# 	$(TARGET) $(EXAMPLE_PATH)/SRlatch/SRlatch.imi -mode reachability
+# 	$(TARGET) $(EXAMPLE_PATH)/SRlatch/SRlatch.imi -mode statespace
 # 	$(TARGETV) $(EXAMPLE_PATH)/SRlatch/SRlatch.imi $(EXAMPLE_PATH)/SRlatch/SRlatch.pi0
 # 	$(TARGETV) $(EXAMPLE_PATH)/SRlatch/SRlatch.imi $(EXAMPLE_PATH)/SRlatch/SRlatch.pi0 -dynamic-elimination
 # 	$(TARGET) $(EXAMPLE_PATH)/SRlatch/SRlatch.imi $(EXAMPLE_PATH)/SRlatch/SRlatch.pi0 -bab
 # 	$(TARGET) $(EXAMPLE_PATH)/SRlatch/SRlatch.imi $(EXAMPLE_PATH)/SRlatch/SRlatch.v0 -mode cover
 
-# 	./IMITATOR Examples/SRlatch/SRlatch_delais_fixes.imi -mode reachability
+# 	./IMITATOR Examples/SRlatch/SRlatch_delais_fixes.imi -mode statespace
 # 	./IMITATOR Examples/SRlatch/SRlatch_delais_fixes.imi Examples/SRlatch/SRlatch_delais_fixes.pi0
 # 	./IMITATOR Examples/SRlatch/SRlatch_delais_fixes.imi Examples/SRlatch/SRlatch_delais_fixes.v0 -mode cover -no-dot
 
-# 	./IMITATOR Examples/SRlatch/sr_latch.hy -mode reachability
-# 	./IMITATOR Examples/SRlatch/sr_latch_nand.hy -mode reachability
+# 	./IMITATOR Examples/SRlatch/sr_latch.hy -mode statespace
+# 	./IMITATOR Examples/SRlatch/sr_latch_nand.hy -mode statespace
 
 
 ##### CASE STUDIES : TRAINS #####
 
 # 	$(TARGETV) $(EXAMPLE_PATH)/Train/Train1PTA.imi -PTA2JPG
-# 	$(TARGET) $(EXAMPLE_PATH)/Train/Train1PTA.imi -mode reachability -incl
+
+# 	$(TARGETV) $(EXAMPLE_PATH)/Train/Train1PTA.imi -mode statespace -with-dot -with-log -with-parametric-log
+	$(TARGETV) $(EXAMPLE_PATH)/Train/Train1PTA.imi -mode EF -with-dot -with-log -with-parametric-log -verbose high -cart
+
 # 	bin/IMITATOR2.6.1 $(EXAMPLE_PATH)/Train/Train1PTA.imi $(EXAMPLE_PATH)/Train/Train1PTA.pi0
 # 	$(TARGETV) $(EXAMPLE_PATH)/Train/Train1PTA.imi $(EXAMPLE_PATH)/Train/Train1PTA.pi0
 # 	$(TARGET) $(EXAMPLE_PATH)/Train/Train1PTA.imi $(EXAMPLE_PATH)/Train/Train1PTA.v0 -mode border -cart
 # 	$(TARGET) $(EXAMPLE_PATH)/Train/Train1PTA.imi $(EXAMPLE_PATH)/Train/Train1PTA.v0 -mode cover -cart
 # 	$(TARGET) $(EXAMPLE_PATH)/Train/Train1PTA.imi -PTA2GrML
-# 	$(TARGET) $(EXAMPLE_PATH)/Train/Train1PTA.grml -fromGrML -mode reachability
+# 	$(TARGET) $(EXAMPLE_PATH)/Train/Train1PTA.grml -fromGrML -mode statespace
 # 	$(TARGET) $(EXAMPLE_PATH)/Train/Train1PTA.grml $(EXAMPLE_PATH)/Train/Train1PTA.pi0 -fromGrML
 
 # 	$(TARGET) $(EXAMPLE_PATH)/Train/TrainAHV93.imi -PTA2JPG
-# 	bin/IMITATOR2.34.111115 $(EXAMPLE_PATH)/Train/TrainAHV93.imi -mode reachability
+# 	bin/IMITATOR2.34.111115 $(EXAMPLE_PATH)/Train/TrainAHV93.imi -mode statespace
 # 	$(TARGETV) $(EXAMPLE_PATH)/Train/TrainAHV93.imi $(EXAMPLE_PATH)/Train/TrainAHV93.pi0 -with-dot -with-log
 # 	$(TARGETV) $(EXAMPLE_PATH)/Train/TrainAHV93.imi $(EXAMPLE_PATH)/Train/TrainAHV93.pi0 -with-dot -with-log -dynamic-elimination -log-prefix $(EXAMPLE_PATH)/Train/TrainAHV93-dynamic
 # 	$(TARGET) $(EXAMPLE_PATH)/Train/TrainAHV93.imi $(EXAMPLE_PATH)/Train/TrainAHV93.pi0 -bab
@@ -447,25 +450,25 @@ exe:
 
 ##### CASE STUDIES : PROTOCOLS #####
 
-# 	$(TARGET) $(EXAMPLE_PATH)/Fischer/fischerPAT.imi -mode reachability -verbose total
-# 	$(TARGET) $(EXAMPLE_PATH)/Fischer/fischerPAT.imi -mode reachability -with-log -with-dot -incl -fancy
-# 	$(TARGET) $(EXAMPLE_PATH)/Fischer/fischerPAT.imi -mode reachability -depth-limit 80 -with-log
+# 	$(TARGET) $(EXAMPLE_PATH)/Fischer/fischerPAT.imi -mode statespace -verbose total
+# 	$(TARGET) $(EXAMPLE_PATH)/Fischer/fischerPAT.imi -mode statespace -with-log -with-dot -incl -fancy
+# 	$(TARGET) $(EXAMPLE_PATH)/Fischer/fischerPAT.imi -mode statespace -depth-limit 80 -with-log
 # 	$(TARGET) $(EXAMPLE_PATH)/Fischer/fischerPAT.imi $(EXAMPLE_PATH)/Fischer/fischerPAT.pi0 -depth-limit 12 -with-log -with-dot
 # 	$(TARGET) $(EXAMPLE_PATH)/Fischer/fischerPAT.imi -PTA2JPG
 # 	$(TARGETV) $(EXAMPLE_PATH)/Fischer/fischerPAT.imi $(EXAMPLE_PATH)/Fischer/fischerPAT.pi0 -depth-limit 20
 # 	$(TARGETV) $(EXAMPLE_PATH)/Fischer/fischerPAT.imi $(EXAMPLE_PATH)/Fischer/fischerPAT.pi0 -dynamic-elimination -verbose low -depth-limit 60 -with-log 
 
-# 	$(TARGET) $(EXAMPLE_PATH)/BangOlufsen/BangOlufsen.imi -mode reachability 
+# 	$(TARGET) $(EXAMPLE_PATH)/BangOlufsen/BangOlufsen.imi -mode statespace 
 # 	$(TARGET) $(EXAMPLE_PATH)/BangOlufsen/BangOlufsen.imi $(EXAMPLE_PATH)/BangOlufsen/BangOlufsen.pi0 -depth-limit 12 -incl -statistics
 # 	$(TARGET) $(EXAMPLE_PATH)/BangOlufsen/BangOlufsen.imi $(EXAMPLE_PATH)/BangOlufsen/BangOlufsen.pi0 -depth-limit 12 -incl -no-dot -no-log -statistics -dynamic
 # 	$(TARGET) $(EXAMPLE_PATH)/BangOlufsen/BangOlufsen.imi $(EXAMPLE_PATH)/BangOlufsen/BangOlufsen.pi0 -depth-limit 12 -incl -no-dot -no-log -statistics -jobshop
 
-# 	./IMITATOR Examples/BangOlufsen/BangOlufsen2.imi -mode reachability -no-dot
-# 	./IMITATOR Examples/BangOlufsen/BangOlufsen2.imi -mode reachability -no-dot -depth-limit 30 -verbose low
+# 	./IMITATOR Examples/BangOlufsen/BangOlufsen2.imi -mode statespace -no-dot
+# 	./IMITATOR Examples/BangOlufsen/BangOlufsen2.imi -mode statespace -no-dot -depth-limit 30 -verbose low
 
 	
 # 	$(TARGET) $(EXAMPLE_PATH)/BRP/brp.imi -PTA2JPG
-# 	$(TARGET) $(EXAMPLE_PATH)/BRP/brp.imi -mode reachability 
+# 	$(TARGET) $(EXAMPLE_PATH)/BRP/brp.imi -mode statespace 
 # 	$(TARGETV) $(EXAMPLE_PATH)/BRP/brp.imi $(EXAMPLE_PATH)/BRP/brp.pi0 -with-dot -with-log
 # 	$(TARGETV) $(EXAMPLE_PATH)/BRP/brp.imi $(EXAMPLE_PATH)/BRP/brp.pi0 -dynamic-elimination -with-dot -with-log -log-prefix $(EXAMPLE_PATH)/BRP/brp-dynamic
 # 	bin/IMITATOR2.6.1 $(EXAMPLE_PATH)/BRP/brp.imi $(EXAMPLE_PATH)/BRP/brp.pi0
@@ -474,7 +477,7 @@ exe:
 # 	$(TARGET) $(EXAMPLE_PATH)/BRP/brp.imi $(EXAMPLE_PATH)/BRP/brp.pi0 -merge-before
 # 	$(TARGET) $(EXAMPLE_PATH)/BRP/brp.imi $(EXAMPLE_PATH)/BRP/brp.pi0 -bab
 
-# 	$(TARGET) $(EXAMPLE_PATH)/RCP/RCP.imi -mode reachability -PTA2GrML
+# 	$(TARGET) $(EXAMPLE_PATH)/RCP/RCP.imi -mode statespace -PTA2GrML
 # 	bin/IMITATOR2.6.1 $(EXAMPLE_PATH)/RCP/RCP.imi $(EXAMPLE_PATH)/RCP/RCP.pi0 -merge
 # 	$(TARGETV) $(EXAMPLE_PATH)/RCP/RCP.imi $(EXAMPLE_PATH)/RCP/RCP.pi0 -merge
 # 	$(TARGETV) $(EXAMPLE_PATH)/RCP/RCP.imi $(EXAMPLE_PATH)/RCP/RCP.pi0 -with-dot -with-log
@@ -491,7 +494,7 @@ exe:
 # 	### WARNING: the prism model seems odd!!
 	
 # 	$(TARGET) $(EXAMPLE_PATH)/CSMACD/csmacdPrism.imi -PTA2JPG
-# 	$(TARGET) $(EXAMPLE_PATH)/CSMACD/csmacdPrism.imi -mode reachability 
+# 	$(TARGET) $(EXAMPLE_PATH)/CSMACD/csmacdPrism.imi -mode statespace 
 
 # 	bin/IMITATOR2.6.1 $(EXAMPLE_PATH)/CSMACD/csmacdPrism.imi $(EXAMPLE_PATH)/CSMACD/csmacdPrism.pi0
 # 	$(TARGETV) $(EXAMPLE_PATH)/CSMACD/csmacdPrism.imi $(EXAMPLE_PATH)/CSMACD/csmacdPrism.pi0
@@ -501,7 +504,7 @@ exe:
 # 	$(TARGETV) $(EXAMPLE_PATH)/CSMACD/csmacdPrism.imi $(EXAMPLE_PATH)/CSMACD/csmacdPrism.pi0 -statistics
 
 #	### WARNING: the prism model seems odd!!
-# 	$(TARGET) $(EXAMPLE_PATH)/CSMACD/csmacdPrism_with_renamed_actions.imi -mode reachability -no-merging
+# 	$(TARGET) $(EXAMPLE_PATH)/CSMACD/csmacdPrism_with_renamed_actions.imi -mode statespace -no-merging
 # 	$(TARGET) $(EXAMPLE_PATH)/CSMACD/csmacdPrism_with_renamed_actions.imi $(EXAMPLE_PATH)/CSMACD/csmacdPrism.pi0 -no-merging
 
 # 	$(TARGET) $(EXAMPLE_PATH)/CSMACD/csmacdPrism_with_renamed_actionsBC5.imi $(EXAMPLE_PATH)/CSMACD/csmacdPrism.pi0 -no-merging
@@ -512,12 +515,12 @@ exe:
 # 	$(TARGET) $(EXAMPLE_PATH)/CSMACD/csmacdPrism_with_renamed_actionsBC9.imi $(EXAMPLE_PATH)/CSMACD/csmacdPrism.pi0 -merge
 # 	$(TARGET) $(EXAMPLE_PATH)/CSMACD/csmacdPrism_with_renamed_actionsBC10.imi $(EXAMPLE_PATH)/CSMACD/csmacdPrism.pi0 -no-merging
 
-	# 	./IMITATOR Examples/CSMACD/csmacdPrism_2p.imi -mode reachability
+	# 	./IMITATOR Examples/CSMACD/csmacdPrism_2p.imi -mode statespace
 # 	./IMITATOR Examples/CSMACD/csmacdPrism_2p.imi Examples/CSMACD/csmacdPrism_2p.pi0 
 # 	./IMITATOR Examples/CSMACD/csmacdPrism_2p.imi Examples/CSMACD/csmacdPrism_2p.v0 -mode cover -log-prefix Examples/CSMACD/carto_2p/csmacdPrism_2p
 
 # 	$(TARGET) $(EXAMPLE_PATH)/Wlan/wlan.imi -PTA2JPG
-# 	$(TARGET) $(EXAMPLE_PATH)/Wlan/wlan.imi -mode reachability
+# 	$(TARGET) $(EXAMPLE_PATH)/Wlan/wlan.imi -mode statespace
 # 	$(TARGETV) $(EXAMPLE_PATH)/Wlan/wlan.imi $(EXAMPLE_PATH)/Wlan/wlan.pi0
 # 	$(TARGETV) $(EXAMPLE_PATH)/Wlan/wlan.imi $(EXAMPLE_PATH)/Wlan/wlan.pi0 -with-dot -with-log
 # 	$(TARGETV) $(EXAMPLE_PATH)/Wlan/wlan.imi $(EXAMPLE_PATH)/Wlan/wlan.pi0 -dynamic-elimination -with-dot -with-log -log-prefix $(EXAMPLE_PATH)/Wlan/wlan-dynamic
@@ -529,13 +532,13 @@ exe:
 
 # 	./IMITATOR Examples/Wlan/wlan_boff2.imi Examples/Wlan/wlan_boff2.pi0 -timed
 
-# 	./IMITATOR Examples/Wlan/wlan2_for_im2.imi -mode reachability -verbose low
+# 	./IMITATOR Examples/Wlan/wlan2_for_im2.imi -mode statespace -verbose low
 # 	./IMITATOR Examples/Wlan/wlan2_for_im2.imi Examples/Wlan/wlan2_for_im2.pi0 -timed
 
 ##### CASE STUDIES : VALMEM #####
 
 # 	$(TARGET) $(EXAMPLE_PATH)/Valmem/spsmall.imi -PTA2JPG 
-# 	$(TARGET) $(EXAMPLE_PATH)/Valmem/spsmall.imi -mode reachability -verbose total
+# 	$(TARGET) $(EXAMPLE_PATH)/Valmem/spsmall.imi -mode statespace -verbose total
 # 	$(TARGETV) $(EXAMPLE_PATH)/Valmem/spsmall.imi $(EXAMPLE_PATH)/Valmem/spsmall.pi0 -with-dot -with-log
 # 	$(TARGETV) $(EXAMPLE_PATH)/Valmem/spsmall.imi $(EXAMPLE_PATH)/Valmem/spsmall.pi0 -dynamic-elimination -with-dot -with-log -log-prefix $(EXAMPLE_PATH)/Valmem/spsmall-dynamic
 # 	$(TARGETV) $(EXAMPLE_PATH)/Valmem/spsmall.imi $(EXAMPLE_PATH)/Valmem/spsmall.pi0
@@ -548,7 +551,7 @@ exe:
 # 	$(TARGET) $(EXAMPLE_PATH)/Valmem/spsmall.imi $(EXAMPLE_PATH)/Valmem/spsmall.pi0 -no-dot -no-log -statistics -tree -acyclic
 # 	$(TARGET) $(EXAMPLE_PATH)/Valmem/spsmall.imi $(EXAMPLE_PATH)/Valmem/spsmall.pi0 -no-dot -no-log -statistics -dynamic
 
-# 	./IMITATOR Examples/Valmem/spsmall_obs.imi -mode reachability -with-parametric-log
+# 	./IMITATOR Examples/Valmem/spsmall_obs.imi -mode statespace -with-parametric-log
 # 	./IMITATOR Examples/Valmem/spsmall_obs.imi Examples/Valmem/spsmall.pi0
 # 	./IMITATOR Examples/Valmem/spsmall_obs.imi Examples/Valmem/spsmall.v0 -mode cover -log-prefix Examples/Valmem/carto/spsmall
 
@@ -559,7 +562,7 @@ exe:
 
 ##### CASE STUDIES : SIMOP #####
 # 	$(TARGET) $(EXAMPLE_PATH)/SIMOP/simop.imi -PTA2JPG
-# 	$(TARGET) $(EXAMPLE_PATH)/SIMOP/simop.imi -mode reachability 
+# 	$(TARGET) $(EXAMPLE_PATH)/SIMOP/simop.imi -mode statespace 
 
 # 	bin/IMITATOR2.6.1 $(EXAMPLE_PATH)/SIMOP/simop.imi $(EXAMPLE_PATH)/SIMOP/simop.pi0 -merge
 # 	$(TARGETV) $(EXAMPLE_PATH)/SIMOP/simop.imi $(EXAMPLE_PATH)/SIMOP/simop.pi0 -merge
@@ -578,7 +581,7 @@ exe:
 
 ##### SCHEDULING #####
 # 	$(TARGET) $(EXAMPLE_PATH)/Scheduling/am02.imi -PTA2JPG
-# 	$(TARGET) $(EXAMPLE_PATH)/Scheduling/am02.imi -mode reachability 
+# 	$(TARGET) $(EXAMPLE_PATH)/Scheduling/am02.imi -mode statespace 
 # 	$(TARGETV) $(EXAMPLE_PATH)/Scheduling/am02.imi $(EXAMPLE_PATH)/Scheduling/am02.pi0 -with-dot -with-log
 # 	$(TARGETV) $(EXAMPLE_PATH)/Scheduling/am02.imi $(EXAMPLE_PATH)/Scheduling/am02.pi0 -dynamic-elimination -with-dot -with-log -log-prefix $(EXAMPLE_PATH)/Scheduling/am02-dynamic
 # 	bin/IMITATOR2.6.1 $(EXAMPLE_PATH)/Scheduling/am02.imi $(EXAMPLE_PATH)/Scheduling/am02.pi0 -merge
@@ -649,7 +652,7 @@ exe:
 # 	$(TARGET) $(EXAMPLE_PATH)/Others/giuseppe_opt.imi $(EXAMPLE_PATH)/Others/giuseppe_opt.v0 -mode cover -incl -merge
 
 ##### JOB SHOP #####
-# 	$(TARGET) $(EXAMPLE_PATH)/Jobshop/maler_2_4.imi -mode reachability -incl 
+# 	$(TARGET) $(EXAMPLE_PATH)/Jobshop/maler_2_4.imi -mode statespace -incl 
 
 # 	$(TARGET) $(EXAMPLE_PATH)/Jobshop/maler_2_4.imi $(EXAMPLE_PATH)/Jobshop/maler_2_4.pi0
 # 	$(TARGETV) $(EXAMPLE_PATH)/Jobshop/maler_2_4.imi $(EXAMPLE_PATH)/Jobshop/maler_2_4.pi0 -with-dot -with-log
@@ -660,15 +663,15 @@ exe:
 # 	$(TARGET) $(EXAMPLE_PATH)/Jobshop/maler_2_4.imi $(EXAMPLE_PATH)/Jobshop/maler_2_4.pi0 -bab # PROBLEM BAB
 
 
-# 	$(TARGET) $(EXAMPLE_PATH)/Jobshop/maler_3_4.imi -mode reachability -no-dot -no-log -incl -acyclic -statistics -dynamic
-# 	$(TARGET) $(EXAMPLE_PATH)/Jobshop/maler_3_4.imi -mode reachability -no-dot -no-log -incl -acyclic -jobshop -statistics
-# 	bin/IMITATOR2.4 $(EXAMPLE_PATH)/Jobshop/maler_3_4.imi -mode reachability -no-dot -no-log -incl -acyclic -jobshop -statistics
-# 	bin/IMITATOR2.375 $(EXAMPLE_PATH)/Jobshop/maler_3_4.imi -mode reachability -no-dot -no-log -incl -acyclic -jobshop
-# 	bin/IMITATOR2.374 $(EXAMPLE_PATH)/Jobshop/maler_3_4.imi -mode reachability -no-dot -no-log -incl -acyclic -jobshop
-# 	bin/IMITATOR2.371 $(EXAMPLE_PATH)/Jobshop/maler_3_4.imi -mode reachability -no-dot -no-log -incl -acyclic -statistics -jobshop
-# 	bin/IMITATOR2.36 $(EXAMPLE_PATH)/Jobshop/maler_3_4_inst.imi -mode reachability -no-dot -no-log -incl -acyclic -statistics
-# 	bin/IMITATOR2.35 $(EXAMPLE_PATH)/Jobshop/maler_3_4.imi -mode reachability -no-dot -no-log -incl -statistics -depth-limit 10
-# 	bin/IMITATOR2.34.111115 $(EXAMPLE_PATH)/Jobshop/maler_3_4_inst.imi -mode reachability -no-dot -no-log -IMincl
+# 	$(TARGET) $(EXAMPLE_PATH)/Jobshop/maler_3_4.imi -mode statespace -no-dot -no-log -incl -acyclic -statistics -dynamic
+# 	$(TARGET) $(EXAMPLE_PATH)/Jobshop/maler_3_4.imi -mode statespace -no-dot -no-log -incl -acyclic -jobshop -statistics
+# 	bin/IMITATOR2.4 $(EXAMPLE_PATH)/Jobshop/maler_3_4.imi -mode statespace -no-dot -no-log -incl -acyclic -jobshop -statistics
+# 	bin/IMITATOR2.375 $(EXAMPLE_PATH)/Jobshop/maler_3_4.imi -mode statespace -no-dot -no-log -incl -acyclic -jobshop
+# 	bin/IMITATOR2.374 $(EXAMPLE_PATH)/Jobshop/maler_3_4.imi -mode statespace -no-dot -no-log -incl -acyclic -jobshop
+# 	bin/IMITATOR2.371 $(EXAMPLE_PATH)/Jobshop/maler_3_4.imi -mode statespace -no-dot -no-log -incl -acyclic -statistics -jobshop
+# 	bin/IMITATOR2.36 $(EXAMPLE_PATH)/Jobshop/maler_3_4_inst.imi -mode statespace -no-dot -no-log -incl -acyclic -statistics
+# 	bin/IMITATOR2.35 $(EXAMPLE_PATH)/Jobshop/maler_3_4.imi -mode statespace -no-dot -no-log -incl -statistics -depth-limit 10
+# 	bin/IMITATOR2.34.111115 $(EXAMPLE_PATH)/Jobshop/maler_3_4_inst.imi -mode statespace -no-dot -no-log -IMincl
 
 # 	$(TARGET) $(EXAMPLE_PATH)/Jobshop/maler_3_4.imi $(EXAMPLE_PATH)/Jobshop/maler_3_4.pi0 -merge -timed
 # 	$(TARGET) $(EXAMPLE_PATH)/Jobshop/maler_3_4.imi $(EXAMPLE_PATH)/Jobshop/maler_3_4.pi0 -incl -merge-before -timed
@@ -677,24 +680,24 @@ exe:
 # 	bin/IMITATOR2.375 $(EXAMPLE_PATH)/Jobshop/maler_3_4.imi $(EXAMPLE_PATH)/Jobshop/maler_3_4.pi0 -no-dot -no-log -incl -jobshop
 # 	bin/IMITATOR2.371 $(EXAMPLE_PATH)/Jobshop/maler_3_4.imi $(EXAMPLE_PATH)/Jobshop/maler_3_4.pi0 -no-dot -no-log -incl -statistics -depth-limit 9
 
-# 	$(TARGET) $(EXAMPLE_PATH)/Jobshop/maler_3_4_inst.imi -mode reachability -no-dot -no-log -incl -statistics
-# 	bin/IMITATOR2.36 $(EXAMPLE_PATH)/Jobshop/maler_3_4_inst.imi -mode reachability -no-dot -no-log -incl -statistics
-# 	bin/IMITATOR2.35 $(EXAMPLE_PATH)/Jobshop/maler_3_4.imi_inst -mode reachability -no-dot -no-log -incl -statistics
-# 	bin/IMITATOR2.34.111115 $(EXAMPLE_PATH)/Jobshop/maler_3_4_inst.imi -mode reachability -no-dot -no-log -IMincl
+# 	$(TARGET) $(EXAMPLE_PATH)/Jobshop/maler_3_4_inst.imi -mode statespace -no-dot -no-log -incl -statistics
+# 	bin/IMITATOR2.36 $(EXAMPLE_PATH)/Jobshop/maler_3_4_inst.imi -mode statespace -no-dot -no-log -incl -statistics
+# 	bin/IMITATOR2.35 $(EXAMPLE_PATH)/Jobshop/maler_3_4.imi_inst -mode statespace -no-dot -no-log -incl -statistics
+# 	bin/IMITATOR2.34.111115 $(EXAMPLE_PATH)/Jobshop/maler_3_4_inst.imi -mode statespace -no-dot -no-log -IMincl
 
-# 	$(TARGET) $(EXAMPLE_PATH)/Jobshop/maler_3_4.imi -mode reachability -no-dot -no-log -incl -statistics
-# 	bin/IMITATOR2.371 $(EXAMPLE_PATH)/Jobshop/maler_3_4.imi -mode reachability -no-dot -no-log -incl -statistics
-# 	bin/IMITATOR2.370 $(EXAMPLE_PATH)/Jobshop/maler_3_4.imi -mode reachability -no-dot -no-log -incl -statistics
-# 	bin/IMITATOR2.36 $(EXAMPLE_PATH)/Jobshop/maler_3_4.ancien.imi -mode reachability -no-dot -no-log -incl -statistics
-# 	bin/IMITATOR2.35 $(EXAMPLE_PATH)/Jobshop/maler_3_4.imi -mode reachability -no-dot -no-log -incl -statistics
-# 	bin/IMITATOR2.34.111115 $(EXAMPLE_PATH)/Jobshop/maler_3_4.imi -mode reachability -no-dot -no-log -IMincl
+# 	$(TARGET) $(EXAMPLE_PATH)/Jobshop/maler_3_4.imi -mode statespace -no-dot -no-log -incl -statistics
+# 	bin/IMITATOR2.371 $(EXAMPLE_PATH)/Jobshop/maler_3_4.imi -mode statespace -no-dot -no-log -incl -statistics
+# 	bin/IMITATOR2.370 $(EXAMPLE_PATH)/Jobshop/maler_3_4.imi -mode statespace -no-dot -no-log -incl -statistics
+# 	bin/IMITATOR2.36 $(EXAMPLE_PATH)/Jobshop/maler_3_4.ancien.imi -mode statespace -no-dot -no-log -incl -statistics
+# 	bin/IMITATOR2.35 $(EXAMPLE_PATH)/Jobshop/maler_3_4.imi -mode statespace -no-dot -no-log -incl -statistics
+# 	bin/IMITATOR2.34.111115 $(EXAMPLE_PATH)/Jobshop/maler_3_4.imi -mode statespace -no-dot -no-log -IMincl
 
 
-# 	$(TARGET) $(EXAMPLE_PATH)/Jobshop/maler_4_4.imi -mode reachability -no-dot -no-log -incl -statistics -PTA2GrML
-# 	$(TARGET) $(EXAMPLE_PATH)/Jobshop/maler_4_4.imi -mode reachability -no-dot -no-log -incl -acyclic -depth-limit 10
-# 	bin/IMITATOR2.375 $(EXAMPLE_PATH)/Jobshop/maler_4_4.imi -mode reachability -no-dot -no-log -incl -acyclic -depth-limit 10
-# 	bin/IMITATOR2.370 $(EXAMPLE_PATH)/Jobshop/maler_4_4.imi -mode reachability -no-dot -no-log -incl -statistics -depth-limit 8
-# 	bin/IMITATOR2.36 $(EXAMPLE_PATH)/Jobshop/maler_4_4.imi -mode reachability -no-dot -no-log -incl -statistics
+# 	$(TARGET) $(EXAMPLE_PATH)/Jobshop/maler_4_4.imi -mode statespace -no-dot -no-log -incl -statistics -PTA2GrML
+# 	$(TARGET) $(EXAMPLE_PATH)/Jobshop/maler_4_4.imi -mode statespace -no-dot -no-log -incl -acyclic -depth-limit 10
+# 	bin/IMITATOR2.375 $(EXAMPLE_PATH)/Jobshop/maler_4_4.imi -mode statespace -no-dot -no-log -incl -acyclic -depth-limit 10
+# 	bin/IMITATOR2.370 $(EXAMPLE_PATH)/Jobshop/maler_4_4.imi -mode statespace -no-dot -no-log -incl -statistics -depth-limit 8
+# 	bin/IMITATOR2.36 $(EXAMPLE_PATH)/Jobshop/maler_4_4.imi -mode statespace -no-dot -no-log -incl -statistics
 
 
 

@@ -10,7 +10,7 @@
  * Author:        Etienne Andre
  * 
  * Created:       2009/09/09
- * Last modified: 2013/10/08
+ * Last modified: 2013/11/20
  *
  ****************************************************************)
 
@@ -1891,12 +1891,12 @@ let abstract_model_of_parsing_structure (parsed_variable_declarations, parsed_au
 
 	let pi0, v0 =
 		match options#imitator_mode with
-		| Translation -> 
+		(* No pi0 / v0 *)
+		| Translation | State_space_exploration | EF_synthesis ->
 			(* Return blank values *)
 			Array.make 0 NumConst.zero, Array.make 0 (NumConst.zero, NumConst.zero)
-		| State_space_exploration -> 
-			(* Return blank values *)
-			Array.make 0 NumConst.zero, Array.make 0 (NumConst.zero, NumConst.zero)
+
+		(* IM : Pi0 *)
 		| Inverse_method -> 
 			print_message Debug_total ("*** Building reference valuation...");
 			(* Verification of the pi_0 *)
@@ -1905,7 +1905,9 @@ let abstract_model_of_parsing_structure (parsed_variable_declarations, parsed_au
 			let pi0 = make_pi0 parsed_pi0 variables nb_parameters in
 			(* Return the pair *)
 			pi0, Array.make 0 (NumConst.zero, NumConst.zero)
-		| _ -> 
+			
+		(* BC : V0 *)
+		| Cover_cartography | Random_cartography _ | Border_cartography -> 
 			print_message Debug_total ("*** Building reference rectangle...");
 			(* Verification of the pi_0 *)
 			if not (check_v0 parsed_v0 parameters_names) then raise InvalidPi0;

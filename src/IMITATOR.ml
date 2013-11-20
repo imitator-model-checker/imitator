@@ -8,7 +8,7 @@
  * Author:        Ulrich Kuehne, Etienne Andre
  * 
  * Created:       2009/09/07
- * Last modified: 2013/10/08
+ * Last modified: 2013/11/20
  *
  ****************************************************************)
 
@@ -179,7 +179,7 @@ print_message Debug_low ("Prefix for output files: " ^ options#files_prefix);
 let message = match options#imitator_mode with
 	| Translation -> "translation"
 	| State_space_exploration -> "parametric state space exploration"
-	| EF_synthesis -> print_error "EF-synthesis not implemented"; abort_program(); raise (InternalError "bye")
+	| EF_synthesis -> "EF-synthesis"
 	| Inverse_method -> "inverse method"
 	| Cover_cartography -> "behavioral cartography algorithm with full coverage and step " ^ (NumConst.string_of_numconst options#step)
 	| Border_cartography -> "behavioral cartography algorithm with border detection (experimental) and step " ^ (NumConst.string_of_numconst options#step)
@@ -194,11 +194,14 @@ in print_message Debug_standard ("Mode: " ^ message ^ ".");
 (* Check compatibility between options *) 
 (**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 if options#nb_args = 2 then(
+	if options#imitator_mode = Translation then
+		print_warning ("The pi0 file " ^ options#pi0file ^ " will be ignored since this is a translation.")
+	;
 	if options#imitator_mode = State_space_exploration then
 		print_warning ("The pi0 file " ^ options#pi0file ^ " will be ignored since this is a state space exploration.")
 	;
-	if options#imitator_mode = Translation then
-		print_warning ("The pi0 file " ^ options#pi0file ^ " will be ignored since this is a translation.")
+	if options#imitator_mode = EF_synthesis then
+		print_warning ("The pi0 file " ^ options#pi0file ^ " will be ignored since this is a synthesis with respect to a property.")
 	;
 	if options#forcePi0 then
 		print_warning ("The pi0 file " ^ options#pi0file ^ " will be ignored since this the pi0 file is automatically generated.")
@@ -213,6 +216,7 @@ if options#acyclic && options#tree then (
 if options#with_parametric_log && not options#with_log then (
 	print_warning ("Parametric log was asked, but log was not asked. No log will be output.");
 );
+
 
 
 (**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -309,6 +313,11 @@ if options#with_log then
 else
 	print_message Debug_medium ("No state description (default).");
 
+if options#with_parametric_log then
+	print_message Debug_standard ("Parametric description of states will be generated.")
+else
+	print_message Debug_medium ("No parametric description of states (default).");
+
 (* LIMIT OF POST *)
 let _ =
 match options#post_limit with
@@ -378,13 +387,11 @@ if options#imitator_mode != State_space_exploration && options#imitator_mode != 
 let pi0_parsed, v0_parsed =
 	(* Depending on which operation we are performing *)
 	match options#imitator_mode with
-		(* If translation: no pi0 *)
-		| Translation -> [], []
-		
-		(* If reachability: no pi0 *)
-		| State_space_exploration -> [], []
-		
-		| EF_synthesis -> print_error "EF-synthesis not implemented"; abort_program(); raise (InternalError "bye")
+		(* If translation, reachability, synthesis: no pi0 *)
+		| Translation
+		| State_space_exploration
+		| EF_synthesis
+			-> [], []
 		
 		(* Inverse method : pi0 *)
 		| Inverse_method ->
@@ -429,6 +436,8 @@ else
 
 (* Ugly line break *)
 print_message Debug_standard "";
+
+
 
 
 (**************************************************)
@@ -498,6 +507,16 @@ if options#cartonly then(
 (**************************************************)
 (* Preliminary checks *)
 (**************************************************)
+
+if options#imitator_mode = EF_synthesis then(
+	match model.correctness_condition with
+		(* Synthesis only works w.r.t. (un)reachability *)
+		| Some (Unreachable _) -> ()
+		| _ -> print_error ("EF-synthesis can only be run if an unreachability property is defined in the model.");
+			abort_program();
+);
+
+
 if (options#imitator_mode = Border_cartography && model.correctness_condition = None) then(
 	print_error ("In border cartography mode, a correctness property must be defined.");
 	abort_program();
@@ -609,14 +628,15 @@ begin
 try(
 	let zones =
 	match options#imitator_mode with
-		| Translation -> raise (InternalError "Translation can't be executed; program should have terminated before.");
+		| Translation -> raise (InternalError "Translation cannot be executed here; program should already have terminated at this point.");
 
-		| State_space_exploration ->
+		(* Exploration *)
+		| State_space_exploration
+		| EF_synthesis 
+			->
 			Reachability.full_state_space_exploration model init_state_after_time_elapsing;
 			[]
 		
-		| EF_synthesis -> print_error "EF-synthesis not implemented"; abort_program(); raise (InternalError "bye")
-
 		(* Inverse Method *)
 		| Inverse_method ->
 				Reachability.inverse_method model init_state_after_time_elapsing;
@@ -636,14 +656,14 @@ try(
 
 	(* Computation of the cartography *)
 	if options#cart then ( 
-			print_message Debug_standard ("Generation of the graphical cartography...\n");
+			print_message Debug_standard ("\nGeneration of the graphical cartography...\n");
 			Graphics.cartography model v0 zones (options#files_prefix ^ "_cart")
 		) else (
-			print_message Debug_total "Not in cartography mode: no graph for the cartography."
+			print_message Debug_high "Graphical cartography not ask: graph not generated."
 		)
 	;
 ) with
-| InternalError e -> (print_error ("Internal error: " ^ e ^ "\nPlease kindly insult the developers."); abort_program (); exit 1);
+	| InternalError e -> (print_error ("Internal error: " ^ e ^ "\nPlease (kindly) insult the developers."); abort_program (); exit 1);
 end;
 
 

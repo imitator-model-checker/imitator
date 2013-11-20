@@ -10,7 +10,7 @@
  * Author:        Ulrich Kuehne, Etienne Andre
  * 
  * Created:       2010/07/22
- * Last modified: 2013/09/25
+ * Last modified: 2013/11/20
  *
  ****************************************************************)
 
@@ -46,8 +46,11 @@ exception Unsat_exception
 (* Global variables *)
 (**************************************************************)
 
-(* Constraint for result *)
+(* Constraint for result (used for IM) *)
 let k_result = ref ( LinearConstraint.p_true_constraint () )
+
+(* List of constraints for result (used for EF_synthesis) *)
+let p_constraints = ref []
 
 (* List of last states (of runs) : used for the union mode *)
 let slast = ref []
@@ -1651,28 +1654,29 @@ let add_a_new_state model reachability_graph orig_state_index new_states_indexes
 	(* Retrieve the input options *)
 	let options = Input.get_options () in
 
-	let add_new_state, p_constraint =
+	let add_new_state, inequality =
 	(*------------------------------------------------------------*)
-	(* Branching between 2 algorithms: reachability or IM *)
+	(* Branching between algorithms: reachability, synthesis or IM *)
 	(*------------------------------------------------------------*)
-	if options#imitator_mode = State_space_exploration then ( 
-		true, (LinearConstraint.p_true_constraint ())
-	) else (
-		inverse_method_check_constraint model reachability_graph final_constraint
-	) in
+	match options#imitator_mode with 
+		| State_space_exploration -> true, (LinearConstraint.p_true_constraint ())
+		| EF_synthesis -> true, (LinearConstraint.p_true_constraint ())
+		| _ -> inverse_method_check_constraint model reachability_graph final_constraint
+	in
 	
 	(* Print some information *)
 	if debug_mode_greater Debug_high then(
 		(* Means state was not compatible *)
 		if not add_new_state then(
 			let new_state = location, final_constraint in
-			print_message Debug_high ("The pi-incompatible state had been computed through action '" ^ (model.action_names action_index) ^ "', and was:\n" ^ (string_of_state model new_state));
+			if debug_mode_greater Debug_high then
+				print_message Debug_high ("The pi-incompatible state had been computed through action '" ^ (model.action_names action_index) ^ "', and was:\n" ^ (string_of_state model new_state));
 		);
 	);
 	
 	(* Only add the new state if needed *)
 	if add_new_state then (
-		(* Create the state *)
+		(* Build the state *)
 		let new_state = location, final_constraint in
 
 		(* Print some information *)
@@ -1680,11 +1684,19 @@ let add_a_new_state model reachability_graph orig_state_index new_states_indexes
 			print_message Debug_total ("Consider the state \n" ^ (string_of_state model new_state));
 		);
 
-		(* If IM: Add the p_constraint to the result (except if case variants) *)
-		if options#imitator_mode != State_space_exploration && not (options#pi_compatible || options#union) then(
-			print_message Debug_high ("Updating k_result");
-			LinearConstraint.p_intersection_assign !k_result [p_constraint];
-		);
+		(* If IM or BC: Add the inequality to the result (except if case variants) *)
+		begin
+		match options#imitator_mode with 
+			(* Case state space / synthesis: do nothing *)
+			| State_space_exploration
+			| EF_synthesis
+				-> ()
+			(* Case IM / BC: *)
+			| _ -> if not (options#pi_compatible || options#union) then(
+					print_message Debug_high ("Updating k_result");
+					LinearConstraint.p_intersection_assign !k_result [inequality];
+				);
+		end;
 		
 		(* Try to add this new state to the graph *)
 		let new_state_index, added = (
@@ -1697,11 +1709,50 @@ let add_a_new_state model reachability_graph orig_state_index new_states_indexes
 		) in
 		(* If this is really a new state *)
 		if added then (
-			(* Add the state_index to the list of new states *)
-			new_states_indexes := new_state_index :: !new_states_indexes;
-			(* Now check whether this is a bad tile according to the property and the nature of the state *)
+			(* First check whether this is a bad tile according to the property and the nature of the state *)
 			update_tile_nature new_state;
-		)
+			
+			(* Will the state be added to the list of new states (the successors of which will be computed)? *)
+			let to_be_added = ref true in
+			
+			(* If synthesis: add the constraint to the list of successful constraints if this corresponds to a bad location *)
+			if options#imitator_mode = EF_synthesis then(
+			match model.correctness_condition with
+				| None -> raise (InternalError("[EF-synthesis] A correctness property must be defined to perform EF-synthesis. This should have been checked before."))
+				| Some (Unreachable (unreachable_automaton_index , unreachable_location_index)) ->
+					(* Get the location of unreachable_automaton_index in the new state *)
+					let new_location_index = Automaton.get_location location unreachable_automaton_index in
+					(* Check if this is the same as the "unreachable" one *)
+					if new_location_index = unreachable_location_index then(
+						(* Print some information *)
+						print_message Debug_standard "  EF-synthesis: Found a state violating the property.";
+						
+						(* Project onto the parameters *)
+						let p_constraint = LinearConstraint.px_hide_nonparameters_and_collapse final_constraint in
+						
+						(* Add the constraint to the list of constraints *)
+						p_constraints := p_constraint :: !p_constraints;
+						
+						(* Do NOT compute its successors *)
+						to_be_added := false;
+						
+						(* Print some information *)
+						if debug_mode_greater Debug_low then(
+							print_message Debug_low "Adding the following constraint:";
+							print_message Debug_low (LinearConstraint.string_of_p_linear_constraint model.variable_names p_constraint);
+						);
+						
+					)else(
+						print_message Debug_medium "EF-synthesis: State not corresponding to the one wanted.";					
+					);
+				| _ -> raise (InternalError("[EF-synthesis] IMITATOR currently ony implements the non-reachability-like properties. This should have been checked before."))
+			); (* end if EF_synthesis *)
+
+			(* Add the state_index to the list of new states (used to compute their successors at the next iteration) *)
+			if !to_be_added then
+				new_states_indexes := new_state_index :: !new_states_indexes;
+			
+		) (* end if new state *)
 		(* ELSE : add to SLAST if mode union *)
 		else (
 			if options#union then (
@@ -2351,7 +2402,7 @@ let print_statistics reachability_graph =
 
 
 (************************************************************)
-(* Full reachability analysis *)
+(* State space exploration analyses *)
 (************************************************************)
 let full_state_space_exploration model init_state =
 	(* Retrieve the input options *)
@@ -2361,10 +2412,19 @@ let full_state_space_exploration model init_state =
 	let reachability_graph , _ , total_time ,  _ = post_star model init_state in
 	
 	print_message Debug_standard (
-		"\nReachabiliy analysis completed " ^ (after_seconds ()) ^ "."
+		"\nState space exploration completed " ^ (after_seconds ()) ^ "."
 	);
+	
+	(* Print the result *)
+	if options#imitator_mode = EF_synthesis then(
+		print_message Debug_standard "\nFinal constraint such that the property is *violated*: ";
+		print_message Debug_standard (string_of_list_of_string_with_sep "\n OR \n" (List.map (LinearConstraint.string_of_p_linear_constraint model.variable_names) !p_constraints));
+	);
+	
+	
+	
 	print_message Debug_low (
-		"Computation time for reachability analysis: "
+		"Computation time: "
 		^ (string_of_seconds total_time) ^ "."
 	);
 

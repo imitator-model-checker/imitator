@@ -115,204 +115,262 @@ let cartography model v0 returned_constraint_list cartography_name =
 			new_constraint_list := make !new_inequality_list::!new_constraint_list;
 		done;
 	done;*)
-
-	(* find indices of first two variables with a parameter range *)
-	let range_params = ref [] in
-	Array.iteri (fun index (a,b) -> 
-		if NumConst.neq a b then range_params := index :: !range_params
-	) v0;
-	range_params := List.rev !range_params;
-
-	if (List.length !range_params) < 2 then
-		print_error "Could not plot cartography (region of interest has too few dimensions)"
-	else ( 
-
-		let x_param = List.nth !range_params 0 in
-		let y_param = List.nth !range_params 1 in
 	
-		let x_name = model.variable_names x_param in
-		let y_name = model.variable_names y_param in
-		(* Create a script that will print the cartography *)
-		let script_name = cartography_name ^ ".sh" in
-		let script = open_out script_name in
-		(* Find the V0 zone *)
-		let file_v0_name = cartography_name^"_v0.txt" in
-		let file_zone = open_out file_v0_name in
-		
-		
-		(* Convert a num_const to a string, specifically for Graph *)
-		let graph_string_of_numconst n = 
-			(* Check that it is an integer *)
-			if not (NumConst.is_integer n) then(
-				raise (InternalError("Only integers can be handled for the cartography, so far. Found: '" ^ (NumConst.string_of_numconst n) ^ "'"))
+	
+	
+	(***** WARNING: returned_constraint_list is not updated if EF-synthesis !!!! *)
+	
+	
+	
+	let x_index = 0 in
+	let y_index = 1 in
+
+	(* First find the dimensions *)
+	let range_params : int list ref = ref [] in
+	let bounds = ref (Array.make 2 (NumConst.zero, NumConst.zero)) in
+
+	(* If EF-synthesis: choose the first two parameters *)
+	begin
+	match options#imitator_mode with
+		| EF_synthesis ->
+			(* First check that there are at least 2 parameters *)
+			if model.nb_parameters < 2 then(
+				print_error "Could not plot cartography (which requires 2 parameters)";
+				abort_program();
 			);
-			(* Convert to a string, and add a "." at the end *)
-			(NumConst.string_of_numconst n) ^ "."
-		in
+			(* Choose the first 2 *)
+			range_params := [ List.nth model.parameters 0 ; List.nth model.parameters 1];
+			
+			(** WARNING: quite random thing here ! *)
+			!bounds.(0) <- (NumConst.numconst_of_int 0, NumConst.numconst_of_int 50);
+			!bounds.(1) <- (NumConst.numconst_of_int 0, NumConst.numconst_of_int 50);
+	
+	(* If cartography: find indices of first two variables with a parameter range *)
+		| Cover_cartography | Random_cartography _ | Border_cartography ->
+			Array.iteri (fun index (a,b) -> 
+				if NumConst.neq a b then(
+					(* Add one more parameter *)
+					range_params := index :: !range_params;
+				)
+			) v0;
+			range_params := List.rev !range_params;
+
+			if (List.length !range_params) < 2 then(
+				print_error "Could not plot cartography (region of interest has too few dimensions)";
+				abort_program();
+			);
+
+			(* Update bounds *)
+			!bounds.(x_index) <- v0.(List.nth !range_params 0);
+			!bounds.(y_index) <- v0.(List.nth !range_params 1);
+
 		
-		let str_zone =
-			     (graph_string_of_numconst (fst (v0.(x_param))))
-			^" "^(graph_string_of_numconst (snd (v0.(y_param))))
-			^"\n"^(graph_string_of_numconst (snd (v0.(x_param))))
-			^" "^ (graph_string_of_numconst (snd (v0.(y_param))))
-			^"\n"^(graph_string_of_numconst (snd (v0.(x_param))))
-			^" "^ (graph_string_of_numconst (fst (v0.(y_param))))
-			^"\n"^(graph_string_of_numconst (fst (v0.(x_param))))
-			^" "^ (graph_string_of_numconst (fst (v0.(y_param))))
-			^"\n"^(graph_string_of_numconst (fst (v0.(x_param))))
-			^" "^ (graph_string_of_numconst (snd (v0.(y_param))))
-		in
-		output_string file_zone str_zone;
-		close_out file_zone;
-		(* Beginning of the script *)
-		let script_line = ref ("graph -T " ^ cartography_extension ^ " -C -X \"" ^ x_name ^ "\" -Y \"" ^ y_name ^ "\" ") in
-		(* find the minimum and maximum abscissa and ordinate for each constraint and store them in a list *)
-		
-		(* get corners of v0 *)
-		let init_min_abs, init_max_abs = v0.(x_param) in
-		let init_min_ord, init_max_ord = v0.(y_param) in
+	(* Else: no reason to draw a cartography *)
+	(** TODO: could be allowed for IM, after all *)
+		| _ -> 
+			print_error "Cartography can only be drawn while in cartography or EF-synthesis mode.";
+			abort_program();
+	end;
+
+	
+	(* Now start *)
+	
+	let x_param = List.nth !range_params 0 in
+	let y_param = List.nth !range_params 1 in
+
+	let x_name = model.variable_names x_param in
+	let y_name = model.variable_names y_param in
+	(* Create a script that will print the cartography *)
+	let script_name = cartography_name ^ ".sh" in
+	let script = open_out script_name in
+	(* Find the V0 zone *)
+	let file_v0_name = cartography_name^"_v0.txt" in
+	let file_zone = open_out file_v0_name in
+	
+	
+	(* Convert a num_const to a string, specifically for Graph *)
+	let graph_string_of_numconst n = 
+		(* Check that it is an integer *)
+		if not (NumConst.is_integer n) then(
+			raise (InternalError("Only integers can be handled for the cartography, so far. Found: '" ^ (NumConst.string_of_numconst n) ^ "'"))
+		);
+		(* Convert to a string, and add a "." at the end *)
+		(NumConst.string_of_numconst n) ^ "."
+	in
+	
+	let str_zone =
+				(graph_string_of_numconst (fst (!bounds.(x_param))))
+		^" "^(graph_string_of_numconst (snd (!bounds.(y_param))))
+		^"\n"^(graph_string_of_numconst (snd (!bounds.(x_param))))
+		^" "^ (graph_string_of_numconst (snd (!bounds.(y_param))))
+		^"\n"^(graph_string_of_numconst (snd (!bounds.(x_param))))
+		^" "^ (graph_string_of_numconst (fst (!bounds.(y_param))))
+		^"\n"^(graph_string_of_numconst (fst (!bounds.(x_param))))
+		^" "^ (graph_string_of_numconst (fst (!bounds.(y_param))))
+		^"\n"^(graph_string_of_numconst (fst (!bounds.(x_param))))
+		^" "^ (graph_string_of_numconst (snd (!bounds.(y_param))))
+	in
+	output_string file_zone str_zone;
+	close_out file_zone;
+	(* Beginning of the script *)
+	let script_line = ref ("graph -T " ^ cartography_extension ^ " -C -X \"" ^ x_name ^ "\" -Y \"" ^ y_name ^ "\" ") in
+	(* find the minimum and maximum abscissa and ordinate for each constraint and store them in a list *)
+	
+	(* get corners of bounds *)
+	let init_min_abs, init_max_abs = !bounds.(x_param) in
+	let init_min_ord, init_max_ord = !bounds.(y_param) in
 (*		(* convert to float *)
-		let init_min_abs = float_of_int init_min_abs in
-		let init_max_abs = float_of_int init_max_abs in
-		let init_min_ord = float_of_int init_min_ord in
-		let init_max_ord = float_of_int init_max_ord in
-		
-		(* find mininma and maxima for axes (version Daphne) *)
-		let min_abs, max_abs, min_ord, max_ord =
-		List.fold_left (fun limits constr -> 
-			let points, _ = shape_of_poly x_param y_param constr in			
-			List.fold_left (fun limits (x,y) ->
-				let current_min_abs, current_max_abs, current_min_ord, current_max_ord = limits in
-				let new_min_abs = min current_min_abs x in
-				let new_max_abs = max current_max_abs x in
-				let new_min_ord = min current_min_ord y in
-				let new_max_ord = max current_max_ord y in
-				(new_min_abs, new_max_abs, new_min_ord, new_max_ord) 
-			) limits points  		 
-		) (init_min_abs, init_max_abs, init_min_ord, init_max_ord) new_returned_constraint_list in*)
+	let init_min_abs = float_of_int init_min_abs in
+	let init_max_abs = float_of_int init_max_abs in
+	let init_min_ord = float_of_int init_min_ord in
+	let init_max_ord = float_of_int init_max_ord in
+	
+	(* find mininma and maxima for axes (version Daphne) *)
+	let min_abs, max_abs, min_ord, max_ord =
+	List.fold_left (fun limits constr -> 
+		let points, _ = shape_of_poly x_param y_param constr in			
+		List.fold_left (fun limits (x,y) ->
+			let current_min_abs, current_max_abs, current_min_ord, current_max_ord = limits in
+			let new_min_abs = min current_min_abs x in
+			let new_max_abs = max current_max_abs x in
+			let new_min_ord = min current_min_ord y in
+			let new_max_ord = max current_max_ord y in
+			(new_min_abs, new_max_abs, new_min_ord, new_max_ord) 
+		) limits points  		 
+	) (init_min_abs, init_max_abs, init_min_ord, init_max_ord) new_returned_constraint_list in*)
 
-		(* Conversion to float, because all functions handle floats *)
-		
-		(*** WARNING! very dangerous here! may not work for big integers *)
-		let bad_float_of_num_const n = float_of_string (NumConst.string_of_numconst n) in
+	(* Conversion to float, because all functions handle floats *)
+	
+	(*** WARNING! very dangerous here! may not work for big integers *)
+	let bad_float_of_num_const n = float_of_string (NumConst.string_of_numconst n) in
 
-		(* Find mininma and maxima for axes (version Etienne, who finds imperative here better ) *)
-		let min_abs = ref (bad_float_of_num_const init_min_abs) in
-		let max_abs = ref (bad_float_of_num_const init_max_abs) in
-		let min_ord = ref (bad_float_of_num_const init_min_ord) in
-		let max_ord = ref (bad_float_of_num_const init_max_ord) in
-		(* Update min / max for ONE linear_constraint *)
-		let update_min_max linear_constraint =
-			let points, _ = LinearConstraint.shape_of_poly x_param y_param linear_constraint in
-			List.iter (fun (x,y) ->
-				min_abs := min !min_abs x;
-				max_abs := max !max_abs x;
-				min_ord := min !min_ord y;
-				max_ord := max !max_ord y;
-			) points;
-		in
-		(* Update min / max for all returned constraint *)
-		List.iter (function
-			| Convex_constraint (k, _) -> update_min_max k
-			| Union_of_constraints (list_of_k, _) -> List.iter update_min_max list_of_k
-		) new_returned_constraint_list;
+	(* Find mininma and maxima for axes (version Etienne, who finds imperative here better ) *)
+	let min_abs = ref (bad_float_of_num_const init_min_abs) in
+	let max_abs = ref (bad_float_of_num_const init_max_abs) in
+	let min_ord = ref (bad_float_of_num_const init_min_ord) in
+	let max_ord = ref (bad_float_of_num_const init_max_ord) in
+	(* Update min / max for ONE linear_constraint *)
+	let update_min_max linear_constraint =
+		let points, _ = LinearConstraint.shape_of_poly x_param y_param linear_constraint in
+		List.iter (fun (x,y) ->
+			min_abs := min !min_abs x;
+			max_abs := max !max_abs x;
+			min_ord := min !min_ord y;
+			max_ord := max !max_ord y;
+		) points;
+	in
+	(* Update min / max for all returned constraint *)
+	List.iter (function
+		| Convex_constraint (k, _) -> update_min_max k
+		| Union_of_constraints (list_of_k, _) -> List.iter update_min_max list_of_k
+	) new_returned_constraint_list;
 
-		(* Add a margin of 1 unit *)
-		let min_abs = !min_abs -. 1.0 in
-		let max_abs = !max_abs +. 1.0 in
-		let min_ord = !min_ord -. 1.0 in
-		let max_ord = !max_ord +. 1.0 in
-		
-		(* print_message Debug_standard ((string_of_float !min_abs)^"  "^(string_of_float !min_ord)); *)
-		(* Create a new file for each constraint *)
+	(* Add a margin of 1 unit *)
+	let min_abs = !min_abs -. 1.0 in
+	let max_abs = !max_abs +. 1.0 in
+	let min_ord = !min_ord -. 1.0 in
+	let max_ord = !max_ord +. 1.0 in
+	
+	(* print_message Debug_standard ((string_of_float !min_abs)^"  "^(string_of_float !min_ord)); *)
+	(* Create a new file for each constraint *)
 (*		for i=0 to List.length !new_constraint_list-1 do
-			let file_name = cartography_name^"_points_"^(string_of_int i)^".txt" in
-			let file_out = open_out file_name in
-			(* find the points satisfying the constraint *)
-			let s=plot_2d (x_param) (y_param) (List.nth !new_constraint_list i) min_abs min_ord max_abs max_ord in
-			(* print in the file the coordinates of the points *)
-			output_string file_out (snd s);
-			(* close the file and open it in a reading mode to read the first line *)
-			close_out file_out;			
-			let file_in = open_in file_name in
-			let s2 = input_line file_in in
-			(* close the file and open it in a writting mode to copy the whole string in it and ensure that the polygon is closed*)
-			close_in file_in;
-			let file_out_bis = open_out file_name in
-			output_string file_out_bis ((snd s)^s2);
-			close_out file_out_bis;
-			(* instructions to have the zones colored. If fst s = true then the zone is infinite *)
-			if fst s
-				then script_line := !script_line^"-m "^(string_of_int((i mod 5)+1+20))^" -q 0.3 "^file_name^" "
-				else script_line := !script_line^"-m "^(string_of_int((i mod 5)+1))^" -q 0.7 "^file_name^" "
-		done;*)
+		let file_name = cartography_name^"_points_"^(string_of_int i)^".txt" in
+		let file_out = open_out file_name in
+		(* find the points satisfying the constraint *)
+		let s=plot_2d (x_param) (y_param) (List.nth !new_constraint_list i) min_abs min_ord max_abs max_ord in
+		(* print in the file the coordinates of the points *)
+		output_string file_out (snd s);
+		(* close the file and open it in a reading mode to read the first line *)
+		close_out file_out;			
+		let file_in = open_in file_name in
+		let s2 = input_line file_in in
+		(* close the file and open it in a writting mode to copy the whole string in it and ensure that the polygon is closed*)
+		close_in file_in;
+		let file_out_bis = open_out file_name in
+		output_string file_out_bis ((snd s)^s2);
+		close_out file_out_bis;
+		(* instructions to have the zones colored. If fst s = true then the zone is infinite *)
+		if fst s
+			then script_line := !script_line^"-m "^(string_of_int((i mod 5)+1+20))^" -q 0.3 "^file_name^" "
+			else script_line := !script_line^"-m "^(string_of_int((i mod 5)+1))^" -q 0.7 "^file_name^" "
+	done;*)
 
-		(*** BAD PROG : bouh pas beau *)
-		(*** WARNING: it looks like file_index = tile_index, always! *)
-		let file_index = ref 0 in
-		let tile_index = ref 0 in
-		(* Creation of files (Daphne wrote this?) *)
-		let create_file_for_constraint k tile_nature =
+	(*** BAD PROG : bouh pas beau *)
+	(*** WARNING: it looks like file_index = tile_index, always! *)
+	let file_index = ref 0 in
+	let tile_index = ref 0 in
+	(* Creation of files (Daphne wrote this?) *)
+	let create_file_for_constraint k tile_nature =
+	
+		(* Increment the file index *)
+		file_index := !file_index + 1;
+
+		(* Print some information *)
+		if debug_mode_greater Debug_low then(
+			print_message Debug_low ("Computing points for constraint " ^ (string_of_int !tile_index) ^ " \n " ^ (LinearConstraint.string_of_p_linear_constraint model.variable_names k) ^ ".");
+		);
 		
-			(* Increment the file index *)
-			file_index := !file_index + 1;
-
-			(* Print some information *)
-			if debug_mode_greater Debug_low then(
-				print_message Debug_low ("Computing points for constraint " ^ (string_of_int !tile_index) ^ " \n " ^ (LinearConstraint.string_of_p_linear_constraint model.variable_names k) ^ ".");
-			);
-			
-			let file_name = make_file_name cartography_name !file_index in
-			let file_out = open_out file_name in
-			
+		let file_name = make_file_name cartography_name !file_index in
+		let file_out = open_out file_name in
+		
 (*			(* Remove all non-parameter dimensions (the n highest) *)
-			print_message Debug_standard ("Removing the " ^ (string_of_int (model.nb_discrete + model.nb_clocks)) ^ " highest (clocks and discrete) dimensions in the constraint, to keep only the " ^ (string_of_int (model.nb_parameters)) ^ " lowest."); 
-			(* Should be done already ?!! *)
-			hide_assign model.clocks_and_discrete k;
-			remove_dimensions (model.nb_discrete + model.nb_clocks) k ;*)
-			
-			(* find the points satisfying the constraint *)
-			let s = LinearConstraint.plot_2d x_param y_param k min_abs min_ord max_abs max_ord in
-			(* Get the points *)
-			let the_points = snd s in
-			(* print in the file the coordinates of the points *)
-			output_string file_out the_points;
+		print_message Debug_standard ("Removing the " ^ (string_of_int (model.nb_discrete + model.nb_clocks)) ^ " highest (clocks and discrete) dimensions in the constraint, to keep only the " ^ (string_of_int (model.nb_parameters)) ^ " lowest."); 
+		(* Should be done already ?!! *)
+		hide_assign model.clocks_and_discrete k;
+		remove_dimensions (model.nb_discrete + model.nb_clocks) k ;*)
+		
+		(* find the points satisfying the constraint *)
+		let s = LinearConstraint.plot_2d x_param y_param k min_abs min_ord max_abs max_ord in
+		(* Get the points *)
+		let the_points = snd s in
+		(* print in the file the coordinates of the points *)
+		output_string file_out the_points;
 
-			(* Print some information *)
-			if debug_mode_greater Debug_low then(
-				print_message Debug_low ("  Points \n " ^ the_points ^ "");
-			);
-			
-			(* Prepare the comments at the end of the file *)
-			let comments =
-				"\n# File automatically generated by " ^ program_name ^ " " ^ version_string ^ " for model '" ^ options#file ^ "'"
-				^ "\n# Generated " ^ (now()) ^ ""
-				(* This line is used by Giuseppe Lipari: do not change without prior agreement *)
-				^ (if model.correctness_condition <> None then( 
-					"\n# Tile nature: " ^ (string_of_tile_nature tile_nature) ^ ""
-				) else "")
-			in
-			
-			(* close the file and open it in a reading mode to read the first line *)
-			close_out file_out;
-			let file_in = open_in file_name in
-			let s2 = input_line file_in in
-			(* close the file and open it in a writting mode to copy the whole string in it and ensure that the polygon is closed*)
-			close_in file_in;
-			let file_out_bis = open_out file_name in
-			output_string file_out_bis (the_points ^ s2 ^ comments);
-			close_out file_out_bis;
-			(* instructions to have the zones colored. If fst s = true then the zone is infinite *)
-			if fst s
-				(*** TO DO : same color for one disjunctive tile *)
-				then script_line := !script_line ^ "-m " ^ (graph_color_of_int !tile_index tile_nature true) ^ " -q 0.3 " ^ file_name ^ " "
-				else script_line := !script_line ^ "-m " ^ (graph_color_of_int !tile_index tile_nature false) ^ " -q 0.7 " ^ file_name ^ " "
-			;
+		(* Print some information *)
+		if debug_mode_greater Debug_low then(
+			print_message Debug_low ("  Points \n " ^ the_points ^ "");
+		);
+		
+		(* Prepare the comments at the end of the file *)
+		let comments =
+			"\n# File automatically generated by " ^ program_name ^ " " ^ version_string ^ " for model '" ^ options#file ^ "'"
+			^ "\n# Generated " ^ (now()) ^ ""
+			(* This line is used by Giuseppe Lipari: do not change without prior agreement *)
+			^ (if model.correctness_condition <> None then( 
+				"\n# Tile nature: " ^ (string_of_tile_nature tile_nature) ^ ""
+			) else "")
 		in
 		
-		(* For all returned_constraint *)
-		List.iter (function
-			| Convex_constraint (k, tn) ->
+		(* close the file and open it in a reading mode to read the first line *)
+		close_out file_out;
+		let file_in = open_in file_name in
+		let s2 = input_line file_in in
+		(* close the file and open it in a writting mode to copy the whole string in it and ensure that the polygon is closed*)
+		close_in file_in;
+		let file_out_bis = open_out file_name in
+		output_string file_out_bis (the_points ^ s2 ^ comments);
+		close_out file_out_bis;
+		(* instructions to have the zones colored. If fst s = true then the zone is infinite *)
+		if fst s
+			(*** TO DO : same color for one disjunctive tile *)
+			then script_line := !script_line ^ "-m " ^ (graph_color_of_int !tile_index tile_nature true) ^ " -q 0.3 " ^ file_name ^ " "
+			else script_line := !script_line ^ "-m " ^ (graph_color_of_int !tile_index tile_nature false) ^ " -q 0.7 " ^ file_name ^ " "
+		;
+	in
+	
+	(* For all returned_constraint *)
+	List.iter (function
+		| Convex_constraint (k, tn) ->
+			(*** WARNING: duplicate code *)
+			(* Test just in case ! (otherwise an exception arises *)
+			if LinearConstraint.p_is_false k then(
+				print_warning " Found a false constraint when computing the cartography. Ignored."
+			)else(
+				tile_index := !tile_index + 1;
+				create_file_for_constraint k tn
+			)
+		| Union_of_constraints (list_of_k, tn) ->
+			List.iter (fun k -> 
 				(*** WARNING: duplicate code *)
 				(* Test just in case ! (otherwise an exception arises *)
 				if LinearConstraint.p_is_false k then(
@@ -320,54 +378,42 @@ let cartography model v0 returned_constraint_list cartography_name =
 				)else(
 					tile_index := !tile_index + 1;
 					create_file_for_constraint k tn
-				)
-			| Union_of_constraints (list_of_k, tn) ->
-				List.iter (fun k -> 
-					(*** WARNING: duplicate code *)
-					(* Test just in case ! (otherwise an exception arises *)
-					if LinearConstraint.p_is_false k then(
-						print_warning " Found a false constraint when computing the cartography. Ignored."
-					)else(
-						tile_index := !tile_index + 1;
-						create_file_for_constraint k tn
-					)				) list_of_k
-		) new_returned_constraint_list;
+				)				) list_of_k
+	) new_returned_constraint_list;
 
-		
-		(* File in which the cartography will be printed *)
-		let final_name = cartography_name ^ "." ^ cartography_extension in
-		(* last part of the script *)	
-		script_line := !script_line^" -C -m 2 -q -1 " ^ file_v0_name ^ " -L \"" ^ options#files_prefix ^ "\" > "^final_name;
-		(* write the script into a file *)
-		output_string script !script_line;
-		(* Print some information *)
-		(** TODO one day: change this string and update IMITATOR service in CosyVerif *)
-		print_message Debug_standard (
-			"Plot cartography projected on parameters " ^ x_name ^ ", " ^ y_name
-			^ " to file '" ^ final_name ^ "'."); 
-		(* execute the script *)
-		(** TODO: Improve! Should perform an automatic detection of the model! *)
-		let execution = Sys.command !script_line in
-		if execution != 0 then
-			(print_error ("Something went wrong in the command. Exit code: " ^ (string_of_int execution) ^ ". Maybe you forgot to install the 'graph' utility."););
-		
-		(* Print some information *)
-		print_message Debug_high ("Result of the cartography execution: exit code " ^ (string_of_int execution));
+	
+	(* File in which the cartography will be printed *)
+	let final_name = cartography_name ^ "." ^ cartography_extension in
+	(* last part of the script *)	
+	script_line := !script_line^" -C -m 2 -q -1 " ^ file_v0_name ^ " -L \"" ^ options#files_prefix ^ "\" > "^final_name;
+	(* write the script into a file *)
+	output_string script !script_line;
+	(* Print some information *)
+	(** TODO one day: change this string and update IMITATOR service in CosyVerif *)
+	print_message Debug_standard (
+		"Plot cartography projected on parameters " ^ x_name ^ ", " ^ y_name
+		^ " to file '" ^ final_name ^ "'."); 
+	(* execute the script *)
+	(** TODO: Improve! Should perform an automatic detection of the model! *)
+	let execution = Sys.command !script_line in
+	if execution != 0 then
+		(print_error ("Something went wrong in the command. Exit code: " ^ (string_of_int execution) ^ ". Maybe you forgot to install the 'graph' utility."););
+	
+	(* Print some information *)
+	print_message Debug_high ("Result of the cartography execution: exit code " ^ (string_of_int execution));
 
-		(* Remove files *)
-		if not options#with_graphics_source then(
-			print_message Debug_medium ("Removing V0 file...");
-			delete_file file_v0_name;
-			print_message Debug_medium ("Removing script file...");
-			delete_file script_name;
-			(* Removing all point files *)
-			for i = 1 to !file_index do
-				print_message Debug_medium ("Removing points file #" ^ (string_of_int i) ^ "...");
-				delete_file (make_file_name cartography_name i);
-			done;
-		);
-			
-	)
+	(* Remove files *)
+	if not options#with_graphics_source then(
+		print_message Debug_medium ("Removing V0 file...");
+		delete_file file_v0_name;
+		print_message Debug_medium ("Removing script file...");
+		delete_file script_name;
+		(* Removing all point files *)
+		for i = 1 to !file_index do
+			print_message Debug_medium ("Removing points file #" ^ (string_of_int i) ^ "...");
+			delete_file (make_file_name cartography_name i);
+		done;
+	); ()
 
 
 
@@ -405,16 +451,23 @@ let dot_of_graph model reachability_graph ~fancy =
 (*	(* Array location_index -> location *)
 	let locations = DynArray.create () in*)
 	
+	print_message Debug_high "\n[dot_of_graph] Starting to convert states to a graphics.";
+	
 	let header =
 		(* Header *)
 		"/***************************************************"
 		^ "\n * File automatically generated by " ^ program_name ^ " " ^ version_string ^ " for model '" ^ options#file ^ "'"
-		^ (if options#imitator_mode = State_space_exploration then "\n * State space exploration" else (
-			let pi0 = Input.get_pi0 () in
-			  "\n *"
-			^ "\n * The following pi0 was considered:"
-			^ "\n" ^ (ModelPrinter.string_of_pi0 model pi0)
-		))
+		^ (
+			match options#imitator_mode with
+				| State_space_exploration -> "\n * State space exploration"
+				| EF_synthesis -> "\n * EF-synthesis"
+				(* Otherwise: IM / BC *)
+				| _ -> 
+					let pi0 = Input.get_pi0 () in
+					"\n *"
+					^ "\n * The following pi0 was considered:"
+					^ "\n" ^ (ModelPrinter.string_of_pi0 model pi0)
+		)
 		^ "\n *"
 		^ "\n * " ^ (string_of_int (nb_states reachability_graph)) ^ " states and "
 			^ (string_of_int (Hashtbl.length transitions)) ^ " transitions"
@@ -424,12 +477,18 @@ let dot_of_graph model reachability_graph ~fancy =
 		^ "\n***************************************************/"
 	in
 	
+	print_message Debug_high "[dot_of_graph] Header completed.";
+
+	print_message Debug_high "[dot_of_graph] Retrieving states indexes...";
+
 	(* Retrieve the states *)
 	let state_indexes = Graph.all_state_indexes model reachability_graph in
 	
 	(* Sort the list (for better presentation in the file) *)
 	let state_indexes = List.sort (fun a b -> if a = b then 0 else if a < b then -1 else 1) state_indexes in
 	
+	print_message Debug_high "[dot_of_graph] Starting to convert states...";
+
 	let states_description =	
 		(* Give the state indexes in comments *)
 		  "\n"
@@ -440,6 +499,9 @@ let dot_of_graph model reachability_graph ~fancy =
 			List.iter (fun state_index ->
 			(* Retrieve location and constraint *)
 			let global_location, linear_constraint = Graph.get_state reachability_graph state_index in
+
+			print_message Debug_high ("[dot_of_graph] Converting state " ^ (string_of_int state_index) ^ "");
+
 			(* Construct the string *)
 			string_states := !string_states
 				(* Add the state *)
@@ -457,6 +519,8 @@ let dot_of_graph model reachability_graph ~fancy =
 		^ "\n"
 	in
 	
+	print_message Debug_high "[dot_of_graph] Starting to convert transitions...";
+
 	
 	let transitions_description =
 		(* Convert the transitions for human *)
@@ -481,6 +545,7 @@ let dot_of_graph model reachability_graph ~fancy =
 		^ "\n"
 	in
 	
+	print_message Debug_high "[dot_of_graph] Generating dot file...";
 	
 	let dot_file =
 		"\n\ndigraph G {"
@@ -552,6 +617,8 @@ let dot_of_graph model reachability_graph ~fancy =
 		^ "\n}"
 
 	in
+	print_message Debug_high "[dot_of_graph] Done.";
+
 	(* Dot file *)
 	header ^ dot_file,
 	(* Description of the states (for human) *)
