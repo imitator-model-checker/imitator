@@ -79,12 +79,12 @@ MAIN = $(SRC)/IMITATOR.cmo
 # MAIN_OPT = $(MAIN:.cmo=.cmx)
 
 # modules to compile
-MODULES = BuildInfo Global NumConst ReachabilityTree Options LinearConstraint Automaton Cache Input Pi0Lexer Pi0Parser V0Lexer V0Parser ModelLexer ModelParser GrMLLexer GrMLParser Graph ModelPrinter ObserverPatterns PTA2CLP PTA2GrML ModelConverter Graphics PTA2JPG Reachability Cartography
+MODULES = BuildInfo Global NumConst ReachabilityTree Options LinearConstraint Automaton Cache Input Pi0Lexer Pi0Parser V0Lexer V0Parser ModelLexer ModelParser GrMLLexer GrMLParser StateSpace ModelPrinter ObserverPatterns PTA2CLP PTA2GrML ModelConverter Graphics PTA2JPG Reachability Cartography
 
 ### P Constraint P XConstraint P XDConstraint 
 
 # interfaces
-HEADERS = BuildInfo Global NumConst ReachabilityTree Options LinearConstraint Automaton Cache ParsingStructure AbstractModel Input Graph ModelPrinter ObserverPatterns PTA2CLP PTA2GrML  ModelConverter Graphics PTA2JPG Reachability Cartography
+HEADERS = BuildInfo Global NumConst ReachabilityTree Options LinearConstraint Automaton Cache ParsingStructure AbstractModel Input StateSpace ModelPrinter ObserverPatterns PTA2CLP PTA2GrML  ModelConverter Graphics PTA2JPG Reachability Cartography
 
 CMIS = $(addprefix $(SRC)/, $(addsuffix .cmi, $(HEADERS)))
 OBJS = $(addprefix $(SRC)/, $(addsuffix .cmo, $(MODULES)))

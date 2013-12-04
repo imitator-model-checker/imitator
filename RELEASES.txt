@@ -15,6 +15,7 @@ Misc
 
 Internal
 - Refactored constraints
+- Renamed "Graph.ml" with "StateSpace.ml"
 
 *******************************************************
 release 2.6.1.1    (2013-08-02) PRIVATE RELEASE
