@@ -84,12 +84,12 @@ synclabs : set1,release1,
 	   tau;
 	   
 
-loc always: while True wait {}
-	when True sync set1 do {} goto always;
-	when True sync release1 do {} goto always;
-	when True sync set2 do {} goto always;
-	when True sync release2 do {} goto always;
-	when True sync tau do {} goto always;
+loc arbitrer_loc: while True wait {}
+	when True sync set1 do {} goto arbitrer_loc;
+	when True sync release1 do {} goto arbitrer_loc;
+	when True sync set2 do {} goto arbitrer_loc;
+	when True sync release2 do {} goto arbitrer_loc;
+	when True sync tau do {} goto arbitrer_loc;
 end
 
 
@@ -111,7 +111,7 @@ init:=
 	----------------------
 	  loc[proc1] = idle
 	& loc[proc2] = idle
-	& loc[arbiter] = always
+	& loc[arbiter] = arbitrer_loc
 	
 	----------------------
 	-- Clocks

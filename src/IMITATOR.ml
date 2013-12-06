@@ -630,13 +630,18 @@ try(
 	match options#imitator_mode with
 		| Translation -> raise (InternalError "Translation cannot be executed here; program should already have terminated at this point.");
 
+		
 		(* Exploration *)
 		| State_space_exploration
+			-> Reachability.full_state_space_exploration model init_state_after_time_elapsing;
+			[]
+			
+		(* Synthesis *)
 		| EF_synthesis 
 			->
-			Reachability.full_state_space_exploration model init_state_after_time_elapsing;
-			[]
-		
+			[Reachability.ef_synthesis model init_state_after_time_elapsing]
+
+			
 		(* Inverse Method *)
 		| Inverse_method ->
 				Reachability.inverse_method model init_state_after_time_elapsing;
@@ -647,6 +652,7 @@ try(
 		(* Behavioral cartography algorithm with full coverage *)
 			Cartography.cover_behavioral_cartography model v0 init_state_after_time_elapsing
 			
+			
 		| Random_cartography nb ->
 		(* Behavioral cartography algorithm with random iterations *)
 			Cartography.random_behavioral_cartography model v0 init_state_after_time_elapsing nb;
@@ -655,11 +661,16 @@ try(
 	in
 
 	(* Computation of the cartography *)
-	if options#cart then ( 
-			print_message Debug_standard ("\nGeneration of the graphical cartography...\n");
-			Graphics.cartography model v0 zones (options#files_prefix ^ "_cart")
+	if options#cart then (
+			(* No cartography if no zone *)
+			if zones = [] then(
+				print_message Debug_standard ("\nNo cartography can be generated since the list of constraints is empty.\n");
+			)else(
+				print_message Debug_standard ("\nGeneration of the graphical cartography...\n");
+				Graphics.cartography model v0 zones (options#files_prefix ^ "_cart")
+			)
 		) else (
-			print_message Debug_high "Graphical cartography not ask: graph not generated."
+			print_message Debug_high "Graphical cartography not asked: graph not generated."
 		)
 	;
 ) with

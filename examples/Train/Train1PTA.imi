@@ -77,7 +77,8 @@ init := True
 	----------------------
 	& dApproach >= 0
 	& dStartDown >= 0
-	& dGetDown >= 0
+(* 	& dGetDown >= 0 *)
+	& dGetDown = 5
 
 	----------------------
 	-- Instantiations

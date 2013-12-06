@@ -118,7 +118,7 @@ let cartography model v0 returned_constraint_list cartography_name =
 	
 	
 	
-	(***** WARNING: returned_constraint_list is not updated if EF-synthesis !!!! *)
+	(***** TODO!!! for EF-synthesis, first draw a green background, since the non-red is necessarily green (well, unless approximations are used) *)
 	
 	
 	

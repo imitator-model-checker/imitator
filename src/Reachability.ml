@@ -10,7 +10,7 @@
  * Author:        Ulrich Kuehne, Etienne Andre
  * 
  * Created:       2010/07/22
- * Last modified: 2013/11/20
+ * Last modified: 2013/12/06
  *
  ****************************************************************)
 
@@ -2402,7 +2402,7 @@ let print_statistics reachability_graph =
 
 
 (************************************************************)
-(* State space exploration analyses *)
+(* State space exploration analysis *)
 (************************************************************)
 let full_state_space_exploration model init_state =
 	(* Retrieve the input options *)
@@ -2414,15 +2414,7 @@ let full_state_space_exploration model init_state =
 	print_message Debug_standard (
 		"\nState space exploration completed " ^ (after_seconds ()) ^ "."
 	);
-	
-	(* Print the result *)
-	if options#imitator_mode = EF_synthesis then(
-		print_message Debug_standard "\nFinal constraint such that the property is *violated*: ";
-		print_message Debug_standard (string_of_list_of_string_with_sep "\n OR \n" (List.map (LinearConstraint.string_of_p_linear_constraint model.variable_names) !p_constraints));
-	);
-	
-	
-	
+		
 	print_message Debug_low (
 		"Computation time: "
 		^ (string_of_seconds total_time) ^ "."
@@ -2438,6 +2430,44 @@ let full_state_space_exploration model init_state =
 	(* The end*)
 	()
 
+
+
+(************************************************************)
+(* EF-synthesis *)
+(************************************************************)
+let ef_synthesis model init_state =
+	(* Retrieve the input options *)
+	let options = Input.get_options () in
+
+	(* Call to generic function *)
+	let reachability_graph , _ , total_time ,  _ = post_star model init_state in
+	
+	print_message Debug_standard (
+		"\nState space exploration completed " ^ (after_seconds ()) ^ "."
+	);
+	
+	(* Print the result *)
+	print_message Debug_standard ("\nFinal constraint such that the property is *violated* (" ^ (string_of_int (List.length !p_constraints)) ^ " inequalities): ");
+	print_message Debug_standard (string_of_list_of_string_with_sep "\n OR \n" (List.map (LinearConstraint.string_of_p_linear_constraint model.variable_names) !p_constraints));
+	
+	print_message Debug_low (
+		"Computation time: "
+		^ (string_of_seconds total_time) ^ "."
+	);
+
+	(* Print statistics *)
+	print_statistics reachability_graph;
+	
+	(* Generate graphics *)
+	let radical = options#files_prefix in
+	Graphics.generate_graph model reachability_graph radical;
+	
+	(* Return the constraints in the following form: list of Union_of_constraints of LinearConstraint.p_linear_constraint list * tile_nature *)
+	(* Return the constraints *)
+(*	List.map (fun p_constraint -> Union_of_constraints ([p_constraint], Bad) )
+	!p_constraints*)
+	Union_of_constraints (!p_constraints, Bad)
+	
 
 
 (************************************************************)

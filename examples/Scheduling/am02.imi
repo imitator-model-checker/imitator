@@ -123,14 +123,25 @@ init:= 	loc[checker] = nop &
 			c1 = 0 &	
 			c2 = 0 &
 			time = 0 &
+			
+			(* Positive parameters *)
+			wcet_m1_job1 >= 0 &
+			wcet_m2_job1 >= 0 &
+			wcet_m3_job1 >= 0 &
+			wcet_m2_job2 >= 0 &
+
 			-----------------
 			--	PI 0 			--
 			-----------------
 --			wcet_m1_job1 = 3 &
 --			wcet_m2_job1 = 2 &
---			wcet_m3_job1 = 4 &
---			wcet_m2_job2 = 5 &
+			wcet_m3_job1 = 4 &
+			wcet_m2_job2 = 5 &
 
 			-----------------
 			True
 ;
+
+
+
+property := unreachable loc[checker] = error;

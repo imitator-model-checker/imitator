@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre, Ulrich Kuehne, Romain Soulat
  * Created:       2010/07/22
- * Last modified: 2013/03/20
+ * Last modified: 2013/12/06
  *
  **************************************************)
 
@@ -30,13 +30,12 @@ val prepare_clocks_elimination : abstract_model -> unit
 
 
 (************************************************************)
-(* Full state space exploration *)
+(* Algorithms *)
 (************************************************************)
 val full_state_space_exploration : abstract_model -> state -> unit
 
+val ef_synthesis : abstract_model -> state -> returned_constraint
 
-(************************************************************)
-(* Main inverse method function *)
-(************************************************************)
 val inverse_method_gen : abstract_model -> state -> returned_constraint * StateSpace.reachability_graph * tile_nature * bool * int * float
+
 val inverse_method : abstract_model -> state -> unit
