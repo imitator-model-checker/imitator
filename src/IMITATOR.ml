@@ -8,7 +8,7 @@
  * Author:        Ulrich Kuehne, Etienne Andre
  * 
  * Created:       2009/09/07
- * Last modified: 2013/11/20
+ * Last modified: 2013/12/06
  *
  ****************************************************************)
 
@@ -20,7 +20,7 @@ open Global
 open AbstractModel
 open Arg
 open ModelPrinter
-open Graph
+(* open Graph *)
 open Options
 open Reachability
 open Gc

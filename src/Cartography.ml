@@ -17,7 +17,7 @@
 
 open Global
 open AbstractModel
-open Graph
+open StateSpace
 open Reachability
  
 
@@ -648,8 +648,8 @@ let cover_behavioral_cartography program v0 init_state =
 		set_debug_mode global_debug_mode;
 		
 		(* Retrieve some info *)
-		let current_nb_states = Graph.nb_states graph in
-		let current_nb_transitions = Graph.nb_transitions graph in
+		let current_nb_states = StateSpace.nb_states graph in
+		let current_nb_transitions = StateSpace.nb_transitions graph in
 		
 		(* Update the counters *)
 		nb_states := !nb_states + current_nb_states;
@@ -675,7 +675,7 @@ let cover_behavioral_cartography program v0 init_state =
 		(** NOTE: it may actually be more clever to check the tile nature from the graph, especially if we go for more complicated properties!! *)
 		
 		
-(* 			let bad_string = if Graph.is_bad program graph then "BAD." else "GOOD." in *)
+(* 			let bad_string = if StateSpace.is_bad program graph then "BAD." else "GOOD." in *)
 		print_message Debug_low ("Constraint K0 computed:");
 		print_message Debug_standard (ModelPrinter.string_of_returned_constraint program.variable_names returned_constraint);
 		if program.correctness_condition <> None then(
@@ -878,8 +878,8 @@ let random_behavioral_cartography program v0 init_state nb =
 				set_debug_mode global_debug_mode;
 
 				(* Retrieve some info *)
-				let current_nb_states = Graph.nb_states graph in
-				let current_nb_transitions = Graph.nb_transitions graph in
+				let current_nb_states = StateSpace.nb_states graph in
+				let current_nb_transitions = StateSpace.nb_transitions graph in
 				
 				print_message Debug_standard (
 					"\nK" ^ (string_of_int !i) ^ " computed using algorithm InverseMethod after "
@@ -901,7 +901,7 @@ let random_behavioral_cartography program v0 init_state nb =
 				(* compute k0 *)
 (*				let k0 =  if options#dynamic || options#union then ( returned_constraint )
 				else  match returned_constraint with 
-					| Convex_constraint _ -> Convex_constraint (Graph.compute_k0_destructive program graph)
+					| Convex_constraint _ -> Convex_constraint (StateSpace.compute_k0_destructive program graph)
 					| _ -> print_error ("Internal error when getting the result of post_star in cover: 'options#dynamic' is activated but the constraint returned is not convex (type 'Convex_constraint')."); abort_program (); exit(0)
 
 				in*)

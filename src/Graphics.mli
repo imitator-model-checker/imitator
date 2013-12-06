@@ -36,7 +36,7 @@ val cartography : abstract_model ->  v0 -> returned_constraint list ->  string -
 
 val dot : abstract_model -> string -> string -> unit
 
-val generate_graph : abstract_model -> Graph.reachability_graph -> string -> unit
+val generate_graph : abstract_model -> StateSpace.reachability_graph -> string -> unit
 
 (* Convert a graph to a dot file *)
 (* val dot_of_graph : AbstractModel.abstract_model -> reachability_graph -> fancy:bool -> (string * string) *)

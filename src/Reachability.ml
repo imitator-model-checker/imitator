@@ -22,7 +22,7 @@ open Options
 open Global
 open AbstractModel
 open ModelPrinter
-open Graph
+open StateSpace
 open Gc
 
 
@@ -650,7 +650,7 @@ let merge model action_and_state_list =
 				(* Try to merge eater with current_element *)
 				if state_mergeable s1 s2 then (
 					print_message Debug_total ("Found a mergeable state");
-					Graph.merge_2_states graph eater current_element;
+					StateSpace.merge_2_states graph eater current_element;
 					print_message Debug_total ("States successfully merged");
 					(** Optimized: hull already performed in state_mergeable !! *)
 					(* Update flags (we will have to start everything again) *)
@@ -1565,7 +1565,7 @@ let inverse_method_check_constraint model reachability_graph constr =
 
 		(* Update the previous states (including the 'new_states' and the 'orig_state') *)
 		print_message Debug_medium ("\nUpdating all the previous states.\n");
-		Graph.add_p_constraint_to_states reachability_graph negated_constraint;
+		StateSpace.add_p_constraint_to_states reachability_graph negated_constraint;
 		
 		(* If pi-incompatible *)
 		(false, p_constraint)
@@ -1701,10 +1701,10 @@ let add_a_new_state model reachability_graph orig_state_index new_states_indexes
 		(* Try to add this new state to the graph *)
 		let new_state_index, added = (
 		(*if options#dynamic then (
-		Graph.add_state_dyn model reachability_graph new_state !k_result
+		StateSpace.add_state_dyn model reachability_graph new_state !k_result
 		)
 		else ( *)
-			Graph.add_state model reachability_graph new_state
+			StateSpace.add_state model reachability_graph new_state
 (* 						  ) *)
 		) in
 		(* If this is really a new state *)
@@ -1764,7 +1764,7 @@ let add_a_new_state model reachability_graph orig_state_index new_states_indexes
 		);
 		
 		(* Update the transitions *)
-		Graph.add_transition reachability_graph (orig_state_index, action_index, new_state_index);
+		StateSpace.add_transition reachability_graph (orig_state_index, action_index, new_state_index);
 		(* Print some information *)
 		if debug_mode_greater Debug_high then (
 			let beginning_message = (if added then "NEW STATE" else "Old state") in
@@ -1787,16 +1787,16 @@ let post_from_one_state model reachability_graph orig_state_index =
 	(* Retrieve the input options *)
 	let options = Input.get_options () in
 	(* Original location: static *)
-	let original_location, _ = Graph.get_state reachability_graph orig_state_index in
+	let original_location, _ = StateSpace.get_state reachability_graph orig_state_index in
 	(* Dynamic version of the original px_constraint (can change!) *)
 	let orig_constraint () =
-		let _, orig_constraint = Graph.get_state reachability_graph orig_state_index in
+		let _, orig_constraint = StateSpace.get_state reachability_graph orig_state_index in
 		orig_constraint
 	in
 
 	(* Debug prints *)
 	if debug_mode_greater Debug_high then(
-		let orig_state = Graph.get_state reachability_graph orig_state_index in
+		let orig_state = StateSpace.get_state reachability_graph orig_state_index in
 		let _, orig_constraint = orig_state in
 		let orig_constraint_projection = LinearConstraint.px_hide_nonparameters_and_collapse orig_constraint in
 		print_message Debug_high ("Performing post from state:");
@@ -2088,10 +2088,10 @@ let branch_and_bound model init_state =
 	print_message Debug_total ("I guess I will reach about " ^ (string_of_int guessed_nb_states) ^ " states with " ^ (string_of_int guessed_nb_transitions) ^ " transitions.");
 
 	(* Create the reachability graph *)
-	let reachability_graph = Graph.make guessed_nb_transitions in
+	let reachability_graph = StateSpace.make guessed_nb_transitions in
 
 	(* Add the initial state to the reachable states *)
-	let init_state_index, _ = Graph.add_state model reachability_graph init_state in
+	let init_state_index, _ = StateSpace.add_state model reachability_graph init_state in
 	
 	(* Create the tree for exploration *)
 	let rtree = ReachabilityTree.create guessed_nb_states init_state_index in
@@ -2117,7 +2117,7 @@ let branch_and_bound model init_state =
 			print_message Debug_low ("\n");
 			print_message Debug_standard ("Computing successors of state " ^ (string_of_int !current_state_index));
 			if debug_mode_greater Debug_medium then (
-				print_message Debug_medium (string_of_state model (Graph.get_state reachability_graph !current_state_index ));
+				print_message Debug_medium (string_of_state model (StateSpace.get_state reachability_graph !current_state_index ));
 			);
 		);
 		
@@ -2128,7 +2128,7 @@ let branch_and_bound model init_state =
 		(* Merge states ! *)
 		let new_states =
 		if options#merge || options#merge_before then (
-			let eaten_states = Graph.merge reachability_graph new_states in
+			let eaten_states = StateSpace.merge reachability_graph new_states in
 			
 			
 			(* TODO: remove states from rtree !! (and big problem if some previous states have been removed due to merging.....) *)
@@ -2182,18 +2182,18 @@ let branch_and_bound model init_state =
 		);
 		
 		(* Check if the limit has been reached according to the options *)
-		limit_reached := check_limit 0 (** TODO: check depth *) (Graph.nb_states reachability_graph) (time_from start_time);
+		limit_reached := check_limit 0 (** TODO: check depth *) (StateSpace.nb_states reachability_graph) (time_from start_time);
 	done;
 	
 	(* Check whether there are still states to explore *)
 	if !limit_reached && !nb_states_to_visit > 0 then(
-		print_warnings_limit 0 (** TODO: check depth *) (Graph.nb_states reachability_graph) (time_from start_time) !nb_states_to_visit;
+		print_warnings_limit 0 (** TODO: check depth *) (StateSpace.nb_states reachability_graph) (time_from start_time) !nb_states_to_visit;
 	);
 	
 	
 	print_message Debug_standard (
-		let nb_states = Graph.nb_states reachability_graph in
-		let nb_transitions = Graph.nb_transitions reachability_graph in
+		let nb_states = StateSpace.nb_states reachability_graph in
+		let nb_transitions = StateSpace.nb_transitions reachability_graph in
 		"\nFixpoint reached: "
 		^ (string_of_int nb_states) ^ " reachable state" ^ (s_of_int nb_states)
 		^ " with "
@@ -2239,10 +2239,10 @@ let post_star model init_state =
 	let guessed_nb_transitions = guessed_nb_states * nb_actions in 
 	print_message Debug_total ("I guess I will reach about " ^ (string_of_int guessed_nb_states) ^ " states with " ^ (string_of_int guessed_nb_transitions) ^ " transitions.");
 	(* Create the reachability graph *)
-	let reachability_graph = Graph.make guessed_nb_transitions in
+	let reachability_graph = StateSpace.make guessed_nb_transitions in
 	
 	(* Add the initial state to the reachable states *)
-	let init_state_index, _ = Graph.add_state model reachability_graph init_state in
+	let init_state_index, _ = StateSpace.add_state model reachability_graph init_state in
 	
 	
 	(*--------------------------------------------------*)
@@ -2290,7 +2290,7 @@ let post_star model init_state =
 		if options#merge || options#merge_before then (
 (* 			new_states_after_merging := try_to_merge_states reachability_graph !new_states_after_merging; *)
 			(* New version *)
-			let eaten_states = Graph.merge reachability_graph !new_states_after_merging in
+			let eaten_states = StateSpace.merge reachability_graph !new_states_after_merging in
 			new_states_after_merging := Global.list_diff !new_states_after_merging eaten_states;
 		);
 
@@ -2317,17 +2317,17 @@ let post_star model init_state =
 		nb_iterations := !nb_iterations + 1;
 		
 		(* Check if the limit has been reached *)
-		limit_reached := check_limit !nb_iterations (Graph.nb_states reachability_graph) (time_from start_time);
+		limit_reached := check_limit !nb_iterations (StateSpace.nb_states reachability_graph) (time_from start_time);
 	done;
 	
 	(* There were still states to explore *)
 	if !limit_reached && !newly_found_new_states != [] then(
-		print_warnings_limit !nb_iterations (Graph.nb_states reachability_graph) (time_from start_time) (List.length !newly_found_new_states);
+		print_warnings_limit !nb_iterations (StateSpace.nb_states reachability_graph) (time_from start_time) (List.length !newly_found_new_states);
 	);
 
 	print_message Debug_standard (
-		let nb_states = Graph.nb_states reachability_graph in
-		let nb_transitions = Graph.nb_transitions reachability_graph in
+		let nb_states = StateSpace.nb_states reachability_graph in
+		let nb_transitions = StateSpace.nb_transitions reachability_graph in
 		"\nFixpoint reached after "
 		^ (string_of_int !nb_iterations) ^ " iteration" ^ (s_of_int !nb_iterations) ^ ""
 (* 		^ " in " ^ (string_of_seconds (time_from !counter)) *)
@@ -2359,8 +2359,8 @@ let print_statistics reachability_graph =
 		print_message Debug_standard "--------------------";
 		print_message Debug_standard "Statistics on Graph";
 		print_message Debug_standard "--------------------";
-		print_message Debug_standard (Graph.get_statistics ());
-		print_message Debug_standard (Graph.get_statistics_states reachability_graph);
+		print_message Debug_standard (StateSpace.get_statistics ());
+		print_message Debug_standard (StateSpace.get_statistics_states reachability_graph);
 		
 		print_message Debug_standard "--------------------";
 		print_message Debug_standard "Statistics on Cache";
@@ -2527,7 +2527,7 @@ let inverse_method_gen model init_state =
 				print_message Debug_medium ("\nOne state found.");
 				(* Get the constraint on clocks and parameters *)
 				let (_, current_constraint) =
-					Graph.get_state reachability_graph state_index
+					StateSpace.get_state reachability_graph state_index
 				(* Eliminate clocks *)
 				in LinearConstraint.px_hide_nonparameters_and_collapse current_constraint
 			) !slast
@@ -2544,7 +2544,7 @@ let inverse_method_gen model init_state =
 (*		(* Case IM : intersection *)
 		else (
 			(** HERE PROBLEM IF ONE WANTS TO COMPUTE THE states FILE AFTER (destruction of the states) **)
-			Convex_constraint (Graph.compute_k0_destructive model reachability_graph)
+			Convex_constraint (StateSpace.compute_k0_destructive model reachability_graph)
 		)*)
 	)
 	in

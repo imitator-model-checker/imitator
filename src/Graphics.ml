@@ -434,7 +434,7 @@ let dot_colors = [
 "indianred2"; "blanchedalmond"; "gold4"; "paleturquoise3"; "honeydew"; "bisque2"; "bisque3"; "snow3"; "brown"; "deeppink1"; "dimgrey"; "lightgoldenrod2"; "lightskyblue2"; "navajowhite2"; "seashell"; "black"; "cadetblue1"; "cadetblue2"; "darkslategray"; "wheat2"; "burlywood"; "brown1"; "deepskyblue4"; "darkslateblue"; "deepskyblue1"; "slategray2"; "darksalmon"; "burlywood3"; "dodgerblue"; "turquoise1"; "grey"; "ghostwhite"; "thistle"; "blue4"; "cornsilk"; "azure"; "darkgoldenrod2"; "darkslategray2"; "beige"; "burlywood2"; "coral3"; "indigo"; "darkorchid4"; "coral"; "burlywood4"; "brown3"; "cornsilk4"; "wheat4"; "darkgoldenrod4"; "cadetblue4"; "brown4"; "cadetblue"; "azure4"; "darkolivegreen2"; "rosybrown3"; "coral4"; "azure2"; "blue3"; "chartreuse1"; "bisque1"; "aquamarine1"; "azure1"; "bisque"; "aquamarine4"; "antiquewhite3"; "antiquewhite2"; "darkorchid3"; "antiquewhite4"; "aquamarine3"; "aquamarine"; "antiquewhite"; "antiquewhite1"; "aliceblue"
 ]
 
-open Graph
+open StateSpace
 
 (* Convert a graph to a dot file *)
 let dot_of_graph model reachability_graph ~fancy =
@@ -482,7 +482,7 @@ let dot_of_graph model reachability_graph ~fancy =
 	print_message Debug_high "[dot_of_graph] Retrieving states indexes...";
 
 	(* Retrieve the states *)
-	let state_indexes = Graph.all_state_indexes model reachability_graph in
+	let state_indexes = StateSpace.all_state_indexes model reachability_graph in
 	
 	(* Sort the list (for better presentation in the file) *)
 	let state_indexes = List.sort (fun a b -> if a = b then 0 else if a < b then -1 else 1) state_indexes in
@@ -498,7 +498,7 @@ let dot_of_graph model reachability_graph ~fancy =
 		(let string_states = ref "" in
 			List.iter (fun state_index ->
 			(* Retrieve location and constraint *)
-			let global_location, linear_constraint = Graph.get_state reachability_graph state_index in
+			let global_location, linear_constraint = StateSpace.get_state reachability_graph state_index in
 
 			print_message Debug_high ("[dot_of_graph] Converting state " ^ (string_of_int state_index) ^ "");
 

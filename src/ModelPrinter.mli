@@ -11,7 +11,6 @@
 
 
 open AbstractModel
-open Graph
 
 (****************************************************************)
 (** Local printings *)
