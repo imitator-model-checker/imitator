@@ -1,0 +1,21 @@
+--************************************************************--
+--************************************************************--
+--
+--   Fischer's mutual exclusion protocol
+--
+--   From "Linear Parametric Model Checking of Timed Automata"
+--                   Hune, Romijn, Stoelinga, Vaandrager, 2002
+--
+--                                Created : 2013/12/10
+--                          Last modified : 2013/12/10
+--************************************************************--
+--************************************************************--
+
+(* Random pi0 satisfying max_rw <= min_delay *)
+
+	& min_rw = 1
+	& max_rw = 2
+	& min_delay = 3
+	& max_delay = 4
+
+

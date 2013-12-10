@@ -10,7 +10,7 @@
  * Author:        Etienne Andre
  * 
  * Created:       2010/03/04
- * Last modified: 2013/10/08
+ * Last modified: 2013/12/10
  *
  ****************************************************************) 
  
@@ -956,6 +956,7 @@ let intersection linear_constraints =
 		result_poly
 	) with Unsat_exception -> false_constraint ()*)
 
+let px_intersection = intersection
 let pxd_intersection = intersection
 
 (** Perform the hull (version with side effect) *)
@@ -1699,3 +1700,70 @@ let plot_2d x y linear_constraint min_abs min_ord max_abs max_ord =
 	) "" (snd shape) in 
 	((fst shape), str)
 
+
+
+(************************************************************)
+(** {2 PDBMs} *)
+(************************************************************)
+(** WARNING! work in progress *)
+
+(* Relationship used in PDBMs *)
+type pdbm_rel =
+	(* <= *)
+	| PDBM_leq
+	(* < *)
+	| PDBM_l
+
+(* The actual PDBM: a matrix of size nb_clocks+1 *)
+(* The 0-clock is the LAST clock for readability issues *)
+type pdbm = (px_linear_term * pdbm_rel) array array
+
+
+(* Constrained PDBM = (C, D) *)
+type cpdbm = p_linear_constraint * pdbm
+
+(** Create a CPDBM with nb_clocks clocks *)
+let make_cpdbm nb_clocks =
+	(* All elements initialized with ( 0 , <= ) *)
+	(** WARNING: check that all elements are different ! *)
+	let init_element() =
+		make_p_linear_term [] NumConst.zero
+		,
+		PDBM_leq
+	in
+	p_true_constraint()
+	,
+	Array.make_matrix (nb_clocks+1) (nb_clocks+1) (init_element())
+
+(* Convert a PDBM into a linear constraint *)
+let px_linear_constraint_of_pdbm pdbm =
+	let nb_clocks = Array.length pdbm in
+	(* Convert PDBM relationship to linear_constraint relationship *)
+	(*** BADPROG / WARNING: not the same direction! so bad..... *)
+	let op_of_pdbm_rel = function
+		| PDBM_leq -> Op_ge
+		| PDBM_l -> Op_g
+	in
+	
+	()
+(*	(* 1) Convert all inequalities (eij, ~) into xi - xj ~ eij *)
+	(* CHECK EFFICIENCY (alternative: gather all inequalities, then intersect using px_intersection) *)
+	let linear_constraint = px_true_constraint () in
+	(* For each row *)
+	for i = 0 to nb_clocks - 1 do
+		(* For each column *)
+		for j = 0 to nb_clocks - 1 do
+			(* Create the inequality *)
+			(*** BADPROG / WARNING: reverse order because operators not in the same direction! so bad..... *)
+			let inequality = make_pxd_linear_inequality SOMETHING 
+			(***** JE SUIS LAAAAAA !!!!!!!!!!!! ****)
+			px_intersection_assign linear_constraint []
+		done;
+
+	done;
+	
+	let inequalities = Array.to_list(
+		Array.map (fun row -> )
+	px_intersection*)
+	
+	(* 2) Convert the last row and last column corresponding to the 0-clock *)

@@ -452,6 +452,8 @@ exe:
 
 # 	$(TARGETV) $(EXAMPLE_PATH)/Fischer/fischer_2.imi $(EXAMPLE_PATH)/Fischer/fischer_2.pi0
 
+# 	$(TARGETV) $(EXAMPLE_PATH)/Fischer/fischerHRSV02.imi $(EXAMPLE_PATH)/Fischer/fischerHRSV02.pi0
+	
 # 	$(TARGET) $(EXAMPLE_PATH)/Fischer/fischerPAT.imi -mode statespace -verbose total
 # 	$(TARGET) $(EXAMPLE_PATH)/Fischer/fischerPAT.imi -mode statespace -with-log -with-dot -incl -fancy
 # 	$(TARGET) $(EXAMPLE_PATH)/Fischer/fischerPAT.imi -mode statespace -depth-limit 80 -with-log
