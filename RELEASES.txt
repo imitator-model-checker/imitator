@@ -10,10 +10,11 @@ Changes in options syntax:
 - "reachability" becomes "statespace"
 
 Misc
-- Improve printing floating numbers (time and memory)
+- Improve printing floating numbers (in time and memory statistics)
 - Now IMITATOR has a build number
 
 Internal
+- replaced Makefile with _oasis
 - Refactored constraints
 - Renamed "Graph.ml" with "StateSpace.ml"
 

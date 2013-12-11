@@ -28,7 +28,7 @@ open DynArray
 (****************************************************************)
 
 let program_name = "IMITATOR"
-let version_string = "2.6.1.1"
+let version_string = "2.6.1.2"
 
 let print_version_string _ = 
 	print_string (program_name ^ " " ^ version_string ^ "\n")

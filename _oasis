@@ -1,0 +1,41 @@
+###############################################################
+#
+#                       IMITATOR
+#
+#  Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
+#  Laboratoire d'Informatique de Paris Nord (Paris 13, France)
+#
+#  _oasis authors: Etienne Andre, Alban Linard
+#  Created:        2013/12/11
+#  Last modified:  2013/12/11
+###############################################################
+
+OASISFormat: 0.3
+Name:        IMITATOR
+Version:     2.6.1.2
+Synopsis:    shortdescription
+Authors:     Etienne Andre, Ulrich Kuehne, Romain Soulat
+License:     GPL-3.0
+
+# Handling build number (using Python)
+PreBuildCommand: python gen_build_info.py
+PostBuildCommand: python incrementer.py
+
+
+Executable imitator
+  Path:       .
+  BuildTools: ocamlbuild
+  MainIs:     src/IMITATOR.ml
+  BuildDepends: gmp, extlib, ppl, str, unix
+  CCLib: -lppl -ltinfo -lppl_ocaml -lstdc++ -lgmp -lgmpxx
+# -static pour compil statique (+ ' ' autour)
+# j'ai viré -lcamlrun car j'ai mis "best" à la place de "byte"
+  CompiledObject: best
+
+Test testFlipFlop2
+  Command: ./IMITATOR.native examples/Flipflop/flipflop.imi -mode statespace -depth-limit 2
+Test test2
+  Command: ./IMITATOR.native examples/Flipflop/flipflop.imi -mode statespace -depth-limit 5
+
+# LE TRUC POUR COMPILER OASIS:
+# oasis setup && ocaml setup.ml -configure --enable-tests && ocaml setup.ml -all
