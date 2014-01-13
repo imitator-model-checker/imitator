@@ -7,7 +7,7 @@
 #
 #  _oasis authors: Etienne Andre, Alban Linard
 #  Created:        2013/12/11
-#  Last modified:  2013/12/11
+#  Last modified:  2014/01/13
 ###############################################################
 
 OASISFormat: 0.3
@@ -32,10 +32,14 @@ Executable imitator
 # j'ai viré -lcamlrun car j'ai mis "best" à la place de "byte"
   CompiledObject: best
 
+Test startingcomment
+  Command: echo "\n********** STARTING TESTS **********\n"
 Test testFlipFlop2
   Command: ./IMITATOR.native examples/Flipflop/flipflop.imi -mode statespace -depth-limit 2
 Test test2
   Command: ./IMITATOR.native examples/Flipflop/flipflop.imi -mode statespace -depth-limit 5
+Test finalcomment
+  Command: echo "\n********** END TESTS **********\n"
 
 # LE TRUC POUR COMPILER OASIS:
 # oasis setup && ocaml setup.ml -configure --enable-tests && ocaml setup.ml -all

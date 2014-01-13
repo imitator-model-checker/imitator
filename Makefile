@@ -655,6 +655,7 @@ exe:
 # 	$(TARGET) $(EXAMPLE_PATH)/Others/giuseppe.imi $(EXAMPLE_PATH)/Others/giuseppe.v0 -mode border -incl -merge -depth-limit 15
 # 	$(TARGET) $(EXAMPLE_PATH)/Others/giuseppe3.imi $(EXAMPLE_PATH)/Others/giuseppe3.v0 -mode cover -incl -merge -timed 
 # 	$(TARGET) $(EXAMPLE_PATH)/Others/giuseppe_opt.imi $(EXAMPLE_PATH)/Others/giuseppe_opt.v0 -mode cover -incl -merge
+	$(TARGETV) $(EXAMPLE_PATH)/Scheduling/example-miss.imi $(EXAMPLE_PATH)/Scheduling/example-miss.v0 -mode prout -incl -merge
 
 ##### JOB SHOP #####
 # 	$(TARGET) $(EXAMPLE_PATH)/Jobshop/maler_2_4.imi -mode statespace -incl 
