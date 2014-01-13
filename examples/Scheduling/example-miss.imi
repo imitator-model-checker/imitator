@@ -128,4 +128,5 @@ init :=     loc[Task_t1] = t1_loc_idle &
     stop_flag = 0 &
     loc[OBS_dline] = dline_loc_nomiss &
     True;
+    
 property := unreachable loc[OBS_dline] = dline_loc_miss

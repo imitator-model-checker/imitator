@@ -19,7 +19,7 @@ License:     GPL-3.0
 
 # Handling build number (using Python)
 PreBuildCommand: python gen_build_info.py
-PostBuildCommand: python incrementer.py
+PostBuildCommand: python incrementer.py ; echo "Copying main binary file to bin/IMITATOR ..." ; cp _build/src/IMITATOR.native bin/IMITATOR
 
 
 Executable imitator
@@ -28,6 +28,7 @@ Executable imitator
   MainIs:     src/IMITATOR.ml
   BuildDepends: gmp, extlib, ppl, str, unix
   CCLib: -lppl -ltinfo -lppl_ocaml -lstdc++ -lgmp -lgmpxx
+#  CCLib: -static '-lppl -ltinfo -lppl_ocaml -lstdc++ -lgmp -lgmpxx'
 # -static pour compil statique (+ ' ' autour)
 # j'ai viré -lcamlrun car j'ai mis "best" à la place de "byte"
   CompiledObject: best
