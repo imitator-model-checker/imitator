@@ -2311,6 +2311,7 @@ let post_star model init_state =
 		
 		(* If check-point option: check if the constraint is equal to pi0 *)
 		(** TO OPTIMIZE !!! (at least compute pi0_constraint once for all) *)
+		(** WARNING!! ONLY works for the classical inverse method (not for variants) *)s
 		if options#check_point then(
 			print_message Debug_low ("\nMode check-point: checking whether the resulting constraint is restricted to pi0...");
 			(* Get all constraints *)
