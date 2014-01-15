@@ -1,4 +1,16 @@
 ALGORITHMIC FEATURES
 - add urgent locations
+- allow for reversed -border mode
+
+MODEL FEATURES
+- allow DISCRETE * parameters in clock updates (and more generally DISCRETE * anything)
+	needed by Giuseppe
+- have several locations in the "bad" definition (avoids to create a global deadline-miss-observer in the case of scheduling problems)
 
 USER INTERFACE
+
+
+
+
+THEORETICAL QUESTIONS
+- 
