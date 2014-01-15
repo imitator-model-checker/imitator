@@ -8,7 +8,7 @@
  * Author:        Ulrich Kuehne, Etienne Andre
  * 
  * Created:       2009/09/07
- * Last modified: 2013/12/06
+ * Last modified: 2014/01/15
  *
  ****************************************************************)
 
@@ -300,6 +300,10 @@ if options#dynamic_clock_elimination then
 else
 	print_message Debug_medium ("No dynamic clock elimination (default).");
 
+if options#check_point then
+	print_message Debug_standard ("At each iteration, it will be checked whether the constraint is restricted to the sole pi0 point (experimental and costly!).")
+else
+	print_message Debug_medium ("No check of the constraint equality with pi0 (default).");
 
 (* Output *)
 

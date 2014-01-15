@@ -10,7 +10,7 @@
  * Author:        Etienne Andre
  * 
  * Created:       2010/03/04
- * Last modified: 2013/10/08
+ * Last modified: 2014/01/15
  *
  ****************************************************************) 
  
@@ -171,6 +171,9 @@ val make_p_constraint : p_linear_inequality list -> p_linear_constraint
 val make_px_constraint : px_linear_inequality list -> px_linear_constraint
 val make_pxd_constraint : pxd_linear_inequality list -> pxd_linear_constraint
 
+(** Create a linear constraint from a single point *)
+val p_constraint_of_point : (variable * coef) list -> p_linear_constraint
+
 (** Create a false constraint *)
 (* val false_constraint : unit -> linear_constraint *)
 val p_false_constraint : unit -> p_linear_constraint
@@ -232,6 +235,7 @@ val px_is_equal : px_linear_constraint -> px_linear_constraint -> bool
 
 (** Check if a constraint is included in another one *)
 (* val is_leq : linear_constraint -> linear_constraint -> bool *)
+val p_is_leq : p_linear_constraint -> p_linear_constraint -> bool
 val px_is_leq : px_linear_constraint -> px_linear_constraint -> bool
 
 
@@ -251,6 +255,7 @@ val pxd_copy : pxd_linear_constraint -> pxd_linear_constraint
 
 (** Performs the intersection of a list of linear constraints *)
 (* val intersection : linear_constraint list -> linear_constraint *)
+val p_intersection : p_linear_constraint list -> p_linear_constraint
 val pxd_intersection : pxd_linear_constraint list -> pxd_linear_constraint
 
 (** Performs the intersection of a list of linear constraints with sideeffect *)

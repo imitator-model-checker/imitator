@@ -7,7 +7,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Ulrich Kuehne, Etienne Andre
  * Created:       2010
- * Last modified: 2013/03/20
+ * Last modified: 2014/01/15
  *
  ****************************************************************)
  
@@ -61,7 +61,9 @@ class imitator_options =
 		val mutable branch_and_bound = ref false
 		(* stop the analysis as soon as a counterexample is found *)
 		val mutable counterex = ref false
-		(* yet another (testing) mode *)
+		(* Check whether the accumulated constraint is restricted to pi0 *)
+		val mutable check_point = ref false
+		(* Remove useless clocks (slightly experimental) *)
 		val mutable dynamic_clock_elimination = ref false
 		(* limit number of states *)
 		val mutable states_limit = ref None
@@ -112,6 +114,7 @@ class imitator_options =
 		method branch_and_bound_unset = (branch_and_bound := false)
 		method cart = !cart
 		method cartonly = !cartonly
+		method check_point = !check_point
 		method counterex = !counterex
 		(* method dynamic = !dynamic *)
 		method dynamic_clock_elimination = !dynamic_clock_elimination
@@ -194,43 +197,79 @@ class imitator_options =
 			(* Options *)
 			and speclist = [
 				("-acyclic", Set acyclic, " Test if a new state was already encountered only with states of the same depth. To be set only if the system is fully acyclic (no backward branching, i.e., no cycle). Default: 'false'");
+				
 				("-bab", Set branch_and_bound, " Experimental new feature of IMITATOR, based on cost optimization (WORK IN PROGRESS). Default: 'false'");
+				
 				("-cart", Set cart, " Plot cartography before terminating the program. Uses the first two parameters with ranges. Default: false.");
+				
 				("-cartonly", Unit (fun _ -> cart := true; cartonly := true; imitator_mode := Translation), " Only prints a cartography. Default: false.");
-(* 				("-dynamic", Set dynamic, "Perform the on-the-fly intersection. Defaut : 'false'"); *)
+
+				(* 				("-dynamic", Set dynamic, "Perform the on-the-fly intersection. Defaut : 'false'"); *)
+				
+				("-check-point", Set check_point, " Check at each iteration whether the accumulated constraint is restricted to pi0 (warning! very costly)");
+				
 				("-counterex", Set counterex, " Stop the analysis as soon as a bad state is discovered (work in progress). Default: false.");
+				
 				("-depth-limit", Int (fun i -> post_limit := Some i), " Limits the depth of the exploration of the reachability graph. Default: no limit.");
+				
 				("-dynamic-elimination", Set dynamic_clock_elimination, " Dynamic clock elimination (experimental). Default: false.");
+				
 				("-fancy", Set fancy, " Generate detailed state information for dot output. Default: false.");
-(* 				("-forcePi0", Set forcePi0, "Create a predefined pi0 file of the form p1 = 1, p2 = 2, etc. Defaut : 'false'"); *)
+
+				(* 				("-forcePi0", Set forcePi0, "Create a predefined pi0 file of the form p1 = 1, p2 = 2, etc. Defaut : 'false'"); *)
+				
 				("-fromGrML", Set fromGML, "GrML syntax for input files (experimental). Defaut : 'false'");
+				
 				("-incl", Set inclusion, " Consider an inclusion of region instead of the equality when performing the Post operation (e.g., as in algorithm IMincl defined in [AS11]). Default: 'false'");
+				
 				("-IMK", Set pi_compatible, " Algorithm IMoriginal (defined in [AS11]): return a constraint such that no pi-incompatible state can be reached. Default: 'false'");
+				
 				("-IMunion", Set union, " Algorithm IMUnion (defined in [AS11]): Returns the union of the constraint on the parameters associated to the last state of each trace. Default: 'false'");
+				
 				("-log-prefix", Set_string files_prefix, " Sets the prefix for output files. Default: [model].");
+				
 				("-merge", Set merge, " Use the merging technique of [AFS12]. Default: 'false' (disable)");
+				
 				("-merge-before", Set merge_before , " Use the merging technique of [AFS12] but merges states before pi0-compatibility test (EXPERIMENTAL). Default: 'false' (disable)");
+				
 				("-mode", String set_mode, " Mode for " ^ program_name ^ ".
         Use 'statespace' for a parametric state space exploration (no pi0 needed).
         Use 'EF' for a parametric non-reachability analysis (no pi0 needed).
         Use 'inversemethod' for the inverse method.
         For the behavioral cartography algorithm, use 'cover' to cover all the points within V0, 'border' to find the border between a small-valued good and a large-valued bad zone (experimental), or 'randomXX' where XX is a number to iterate randomly algorithm (e.g., random5 or random100). Default: 'inversemethod'.");
+				
 				("-no-random", Set no_random, " No random selection of the pi0-incompatible inequality (select the first found). Default: false.");
-(* 				("-PTA2CLP", Unit (fun _ -> pta2clp := true; imitator_mode := Translation), "Translate PTA into a CLP program, and exit without performing any analysis. Work in progress! Defaut : 'false'"); *)
+
+				(* 				("-PTA2CLP", Unit (fun _ -> pta2clp := true; imitator_mode := Translation), "Translate PTA into a CLP program, and exit without performing any analysis. Work in progress! Defaut : 'false'"); *)
+				
 				("-PTA2GrML", Unit (fun _ -> pta2gml := true; imitator_mode := Translation), "Translate PTA into a GrML program, and exit without performing any analysis. Defaut : 'false'");
+				
 				("-PTA2JPG", Unit (fun _ -> pta2jpg := true; with_dot:= true; imitator_mode := Translation), "Translate PTA into a graphics, and exit without performing any analysis. Defaut : 'false'");
+				
 				("-states-limit", Int (fun i -> states_limit := Some i), " States limit: will try to stop after reaching this number of states. Warning: the program may have to first finish computing the current iteration before stopping. Default: no limit.");
+				
 				("-statistics", Set statistics, " Print info on number of calls to PPL, and other statistics. Default: 'false'");
+				
 				("-step", String (fun i -> (* TODO: SHOULD CHECK HERE THAT STEP IS EITHER A FLOAT OR AN INT *) step := (NumConst.numconst_of_string i)), " Step for the cartography. Default: 1/1.");
+				
 				("-sync-auto-detect", Set sync_auto_detection, " Detect automatically the synchronized actions in each automaton. Default: false (consider the actions declared by the user)");
+				
 				("-time-limit", Int (fun i -> time_limit := Some i), " Time limit in seconds. Warning: no guarantee that the program will stop exactly after the given amount of time. Default: no limit.");
+				
 				("-timed", Set timed_mode, " Adds a timing information to each output of the program. Default: none.");
+				
 				("-tree", Set tree, " Does not test if a new state was already encountered. To be set ONLY if the reachability graph is a tree (otherwise analysis may loop). Default: 'false'");
+				
 				("-verbose", String set_debug_mode_ref, " Print more or less information. Can be set to 'mute', 'standard', 'low', 'medium', 'high', 'total'. Default: 'standard'");
+				
 				("-version", Unit (fun _ -> print_string ("\n" ^ program_name ^ " " ^ version_string); exit 0), " Print version number and exit.");
+				
 				("-with-dot", Set with_dot, " Trace set under a graphical form (using 'dot'). Default: false.");
+				
 				("-with-graphics-source", Set with_graphics_source, " Keep file(s) used for generating graphical output. Default: false.");
+				
 				("-with-log", Set with_log, " Generation of log files (description of states). Default: false.");
+				
 				("-with-parametric-log", Set with_parametric_log, " Adds the elimination of the clock variables in the constraints in the log files. Default: false.");
 
 			] in

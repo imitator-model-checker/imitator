@@ -10,7 +10,7 @@
  * Author:        Etienne Andre
  * 
  * Created:       2010/03/04
- * Last modified: 2013/12/10
+ * Last modified: 2014/01/15
  *
  ****************************************************************) 
  
@@ -737,6 +737,21 @@ let make_px_constraint = make
 let make_pxd_constraint = make
 
 
+(** Create a linear constraint from a single point *)
+(* WARNING: non-robust (no check for variable existence) *)
+let p_constraint_of_point (thepoint : (variable * coef) list) =
+	let inequalities =
+	List.map (fun (variable , value) ->
+		(* Create linear inequality "variable = value" *)
+		make_linear_inequality
+			(* Create linear term "variable - value" *)
+			(make_p_linear_term [NumConst.one, variable] (NumConst.neg value))
+			Op_eq
+	) thepoint
+	in
+	make_p_constraint inequalities
+
+
 
 (** "linear_constraint_of_clock_and_parameters x ~ d neg" will create a linear_constraint x ~ d, with "x" a clock, "~" in {>, >=, =}, "d" a PConstraint.linear_term, and "neg" indicates whether x and d should be kept in this direction or reversed (viz., "x > p1 true" generates "x > p1" whereas "x >= p1+p2 false" generates "p1+p2 >= x" *)
 let linear_constraint_of_clock_and_parameters (x : variable) (op : op) (d : linear_term) (direction : bool) =
@@ -823,6 +838,7 @@ let is_leq x y =
 	(* Return result *)
 	result
 
+let p_is_leq = is_leq
 let px_is_leq = is_leq
 
 
@@ -956,6 +972,7 @@ let intersection linear_constraints =
 		result_poly
 	) with Unsat_exception -> false_constraint ()*)
 
+let p_intersection = intersection
 let px_intersection = intersection
 let pxd_intersection = intersection
 

@@ -10,7 +10,7 @@
  * Author:        Ulrich Kuehne, Etienne Andre
  * 
  * Created:       2010/07/22
- * Last modified: 2013/12/06
+ * Last modified: 2014/01/15
  *
  ****************************************************************)
 
@@ -2309,6 +2309,33 @@ let post_star model init_state =
 			empty_states_for_comparison reachability_graph;
 		);
 		
+		(* If check-point option: check if the constraint is equal to pi0 *)
+		(** TO OPTIMIZE !!! (at least compute pi0_constraint once for all) *)
+		if options#check_point then(
+			print_message Debug_low ("\nMode check-point: checking whether the resulting constraint is restricted to pi0...");
+			(* Get all constraints *)
+			let all_p_constraints = StateSpace.all_p_constraints model reachability_graph in
+			(* Computing the constraint intersection *)
+			let current_intersection = LinearConstraint.p_intersection all_p_constraints in
+			(* Get pi0 *)
+			let pi0 = Input.get_pi0() in
+			(* Converting pi0 to a list *)
+			let pi0_list = List.map (fun p -> (p, pi0 p)) model.	parameters in
+			(* Converting pi0 to a constraint *)
+			let pi0_constraint = LinearConstraint.p_constraint_of_point pi0_list in
+			(* Print *)
+			if debug_mode_greater Debug_medium then(
+				print_message Debug_medium ("\nPi0: " ^ (LinearConstraint.string_of_p_linear_constraint model.variable_names pi0_constraint));
+			);
+			(* Checking whether the constraint is *included* within pi0 *)
+			if LinearConstraint.p_is_leq current_intersection pi0_constraint then(
+				(* Print message *)
+				print_message Debug_standard ("\nCurrent accumulated constraint is now restricted to pi0. Analysis can safely terminate.");
+				(* Stop *)
+				limit_reached := true;
+			);
+		);
+		
 		(* Clean up a little *)
 		(*** NOTE: LOOKS LIKE COMPLETELY USELESS !!! it even increases memory x-( ***)
 		Gc.major ();
@@ -2317,7 +2344,7 @@ let post_star model init_state =
 		nb_iterations := !nb_iterations + 1;
 		
 		(* Check if the limit has been reached *)
-		limit_reached := check_limit !nb_iterations (StateSpace.nb_states reachability_graph) (time_from start_time);
+		limit_reached := !limit_reached or (check_limit !nb_iterations (StateSpace.nb_states reachability_graph) (time_from start_time));
 	done;
 	
 	(* There were still states to explore *)
