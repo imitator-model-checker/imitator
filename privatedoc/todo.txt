@@ -1,19 +1,37 @@
+************************************************************
 ALGORITHMIC FEATURES
-[!!!] test if the so-far resulting constraint is equal to just pi0
+************************************************************
+[!!!] PDBMs
+
+[!!] EF-synthesis to finish
+
 [!!] add urgent locations
+
+[!!] Carto Giuseppe spéciale
+
+[!] patterns to finish
+
 [?] allow for reversed -border mode
 
+
+
 MODEL FEATURES
-- allow DISCRETE * parameters in clock updates (and more generally DISCRETE * anything)
+[!!!] allow DISCRETE * parameters in clock updates (and more generally DISCRETE * anything)
 	needed by Giuseppe
 [?] have several locations in the "bad" definition (avoids to create a global deadline-miss-observer in the case of scheduling problems)
 
 
 OUTPUT FEATURES
-- allow cartography for inverse method
+[ ] allow cartography for inverse method
 
 USER INTERFACE
 
+
+INTERNAL
+[!] Test platform
+
+ADMINISTRATIVE
+[!!] GPL license
 
 
 
