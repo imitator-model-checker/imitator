@@ -10,7 +10,7 @@
  * Author:        Etienne Andre
  * 
  * Created:       2010/03/04
- * Last modified: 2014/01/15
+ * Last modified: 2014/01/17
  *
  ****************************************************************) 
  
@@ -333,6 +333,7 @@ let make_linear_term members coef =
 
 
 let make_p_linear_term = make_linear_term
+let make_px_linear_term = make_linear_term
 let make_pxd_linear_term = make_linear_term
 
 
@@ -490,6 +491,7 @@ let make_linear_inequality linear_term op =
 		| Op_eq -> Equal (lin_term, zero_term)
 
 
+let make_px_linear_inequality = make_linear_inequality
 let make_pxd_linear_inequality = make_linear_inequality
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
@@ -1733,7 +1735,7 @@ type pdbm_rel =
 
 (* The actual PDBM: a matrix of size nb_clocks+1 *)
 (* The 0-clock is the LAST clock for readability issues *)
-type pdbm = (px_linear_term * pdbm_rel) array array
+type pdbm = (p_linear_term * pdbm_rel) array array
 
 
 (* Constrained PDBM = (C, D) *)
@@ -1754,7 +1756,8 @@ let make_cpdbm nb_clocks =
 
 (* Convert a PDBM into a linear constraint *)
 let px_linear_constraint_of_pdbm pdbm =
-	let nb_clocks = Array.length pdbm in
+	(* Number of regular clocks (excluding the 0-clock) *)
+	let nb_clocks = Array.length pdbm - 1 in
 	(* Convert PDBM relationship to linear_constraint relationship *)
 	(*** BADPROG / WARNING: not the same direction! so bad..... *)
 	let op_of_pdbm_rel = function
@@ -1762,25 +1765,70 @@ let px_linear_constraint_of_pdbm pdbm =
 		| PDBM_l -> Op_g
 	in
 	
-	()
-(*	(* 1) Convert all inequalities (eij, ~) into xi - xj ~ eij *)
+	let zeroclock = nb_clocks in
+
+	(* Convert all inequalities (eij, ~) into xi - xj ~ eij *)
 	(* CHECK EFFICIENCY (alternative: gather all inequalities, then intersect using px_intersection) *)
-	let linear_constraint = px_true_constraint () in
-	(* For each row *)
-	for i = 0 to nb_clocks - 1 do
-		(* For each column *)
-		for j = 0 to nb_clocks - 1 do
-			(* Create the inequality *)
+	let linear_constraint : px_linear_constraint = px_true_constraint () in
+	(* For each row (including the 0-clock)*)
+	for i = 0 to nb_clocks do
+		(* For each column (including the 0-clock) *)
+		for j = 0 to nb_clocks do
+		
+			(* Get the linear term and the operator *)
+			let p_linear_term, op = pdbm.(i).(j) in
+		
+			(* Create xi - xj *)
+			let xixj_linear_term = make_px_linear_term
+				(* Particular case with the 0-clock *)
+				(
+				if i = zeroclock && j = zeroclock then [] (* WARNING! check that no problem here? *)
+				else if i = zeroclock  then [(NumConst.minus_one, j)]
+				else if j = zeroclock then [(NumConst.one, i)]
+				else [(NumConst.one, i) ; (NumConst.minus_one, j)]
+				)
+			NumConst.zero in 
+			
+			(* Substract eij, so as to get " xi - xj - eij " *)
+			let linear_term = sub_linear_terms xixj_linear_term p_linear_term in
+			
 			(*** BADPROG / WARNING: reverse order because operators not in the same direction! so bad..... *)
-			let inequality = make_pxd_linear_inequality SOMETHING 
-			(***** JE SUIS LAAAAAA !!!!!!!!!!!! ****)
-			px_intersection_assign linear_constraint []
+			
+			(* Create linear inequality *)
+			let inequality : px_linear_inequality = make_px_linear_inequality linear_term (op_of_pdbm_rel op) in
+			
+			(* Intersect with the current constraint *)
+			(** WARNING / BADPROG: very unefficient ! *)
+			px_intersection_assign linear_constraint [make_px_constraint [inequality]];
 		done;
 
 	done;
 	
-	let inequalities = Array.to_list(
-		Array.map (fun row -> )
-	px_intersection*)
+(*	(* 2) Convert the last row and last column corresponding to the 0-clock *)
+	(* Last row *)
+	for i = 0 to nb_clocks - 1 do
 	
-	(* 2) Convert the last row and last column corresponding to the 0-clock *)
+		(* Get the linear term and the operator *)
+		let p_linear_term, op = pdbm.(i).(zeroclock) in
+	
+		(* Create the inequality *)
+		(*** BADPROG / WARNING: reverse order because operators not in the same direction! so bad..... *)
+		
+		(* Create xi - xj *)
+		let xixj_linear_term = make_px_linear_term [(NumConst.one, i) ; (NumConst.minus_one, j)] NumConst.zero in 
+		
+		(* Substract eij, so as to get " xi - xj - eij " *)
+		let linear_term = sub_linear_terms xixj_linear_term p_linear_term in
+		
+		(* Create linear inequality *)
+		let inequality : px_linear_inequality = make_px_linear_inequality linear_term (op_of_pdbm_rel op) in
+		
+		(* Intersect with the current constraint *)
+		(** WARNING / BADPROG: very unefficient ! *)
+		px_intersection_assign linear_constraint [make_px_constraint [inequality]];*)
+	
+	(* Return the constraint *)
+	linear_constraint
+
+	
+	(* TODO : test !!! then add intersection, etc. *)
