@@ -1792,7 +1792,7 @@ let pdbm_time_elapsing pdbm =
 	let _, matrix = pdbm in
 
 	(* Number of regular clocks (excluding the 0-clock) *)
-	let nb_clocks = Array.length pdbm - 1 in
+	let nb_clocks = Array.length matrix - 1 in
 	let zeroclock = nb_clocks in
 
 	(* Set (xi - xz) to (inf, <) for all i != zero_clock *)
@@ -1974,6 +1974,15 @@ let test_PDBMs () =
 		()
 	in
 	
+	
+	let print_cpdbm cpdbm =
+		let _ , matrix = cpdbm in
+		print_string "\nMatrix:";
+		print_matrix matrix;
+		print_string "\nConstraint:";
+		print_px_constraint (px_linear_constraint_of_cpdbm test_nb_parameters cpdbm);
+		()
+	in
 
 	let zero_clock = test_nb_clocks in
 	
@@ -1982,10 +1991,7 @@ let test_PDBMs () =
 	print_string "\n\nEmpty PDBM";
 	let cpdbm_void = make_zero_cpdbm test_nb_clocks in
 	let _ , pdbm_void = cpdbm_void in
-	print_string "\nMatrix:";
-	print_matrix pdbm_void;
-	print_string "\nConstraint:";
-	print_px_constraint (px_linear_constraint_of_cpdbm test_nb_parameters cpdbm_void);
+	print_cpdbm cpdbm_void;
 	
 	(* Add pconstraint *)
 	print_string "\n\nEmpty PDBM with p-constraint";
@@ -1995,36 +2001,45 @@ let test_PDBMs () =
 	print_string "\nP-constraint:";
 	print_string (string_of_p_linear_constraint variable_names pc1);
 	let cpdbm1 = (pc1, pdbm_void) in
-	print_string "\nConstraint:";
-	print_px_constraint (px_linear_constraint_of_cpdbm test_nb_parameters cpdbm1);
+	print_cpdbm cpdbm1;
 	
 	(* True PDBM *)
 	print_string "\n\nTrue PDBM";
 	let cpdbm_true = make_true_cpdbm test_nb_clocks in
 	let _ , pdbm_true = cpdbm_true in
-	print_string "\nMatrix:";
-	print_matrix pdbm_true;
-	print_string "\nConstraint:";
-	print_px_constraint (px_linear_constraint_of_cpdbm test_nb_parameters cpdbm_true);
+	print_cpdbm cpdbm_true;
+
 	
 	(* Change some linear term *)
-	print_string "\n\nPDBM with modified linear terms";
-	(* x1 - x2 <= 2p0 + p2 *)
+	print_string "\n\nAdding x1 - x2 <= 2p0 + p2";
 	pdbm_true.(1).(2) <- Eij (
 		make_p_linear_term [(NumConst.numconst_of_int 2, 0); (NumConst.one, 2)] (NumConst.zero) 
 	) , PDBM_leq ;
-	(* x2 - x1 < 3p1 + 2 *)
+	print_cpdbm cpdbm_true;
+
+	print_string "\n\nAdding x2 - x1 < 3p1 + 2";
 	pdbm_true.(2).(1) <- Eij (
 		make_p_linear_term [(NumConst.numconst_of_int 3, 1)] (NumConst.numconst_of_int 2) 
 	) , PDBM_l ;
+	print_cpdbm cpdbm_true;
+
+	print_string "\n\nAdding x0 < p0";
+	pdbm_true.(0).(zero_clock) <- Eij (
+		make_p_linear_term [(NumConst.one, 0)] (NumConst.zero)
+	) , PDBM_l ;
+	print_cpdbm cpdbm_true;
+
+	print_string "\n\nAdding x0 >= 5";
+	(* x0 >= 5 (i.e., xz - x0 <= -5 *)
+	pdbm_true.(zero_clock).(0) <- Eij (
+		make_p_linear_term [] (NumConst.numconst_of_int (-5))
+	) , PDBM_leq ;
+	print_cpdbm cpdbm_true;
 
 	(* Apply time elapsing *)
 	print_string "\n\nPDBM after time elapsing";
 	pdbm_time_elapsing cpdbm_true;
-	print_string "\nMatrix:";
-	print_matrix pdbm_true;
-	print_string "\nConstraint:";
-	print_px_constraint (px_linear_constraint_of_cpdbm test_nb_parameters cpdbm_true);
+	print_cpdbm cpdbm_true;
 	
 	print_string "\n*%*%*%*%*%*% ENDING PDBMs TESTS *%*%*%*%*%*%";
 	()
