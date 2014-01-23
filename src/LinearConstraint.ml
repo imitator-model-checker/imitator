@@ -1753,7 +1753,8 @@ type cpdbm = p_linear_constraint * pdbm
 (** Creation *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
-(** Create a CPDBM with nb_clocks clocks, such that all clocks are set to 0 *)
+(** Create a CPDBM with nb_clocks clocks, such that all clocks are set to 0;
+	This CPDBM is called "E" in the init state definition of [HRSV02, p.20]*)
 let make_zero_cpdbm (nb_clocks : int) =
 	(* All elements initialized with ( 0 , <= ) *)
 	let init_element() =

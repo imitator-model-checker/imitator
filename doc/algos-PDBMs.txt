@@ -54,13 +54,14 @@ Algo
 ************************************************************
 3) RESET
 ************************************************************
-Consider xi := b
+Consider xi := b, with b \in N
 
 For all j != i: (what about zeroclock ?)
 	Dij <- (e0j + b), ~0j
 	Dji <- (ej0 - b), ~j0
 
-Note : reset preserves canonicalization :=)
+Note : reset preserves canonicalization :-)
+
 
 ************************************************************
 4) Time elapsing
