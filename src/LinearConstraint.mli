@@ -403,3 +403,9 @@ val plot_2d : variable -> variable -> p_linear_constraint -> float -> float -> f
 (** {3 Statistics on performances} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
 val get_statistics : unit -> string
+
+
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+(** {3 Debug} *)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+val test_PDBMs : unit -> unit

@@ -1733,29 +1733,62 @@ type pdbm_rel =
 	(* < *)
 	| PDBM_l
 
+(* Actual value of e_ij *)
+type pdbm_eij =
+	| Infinity
+	| Eij of p_linear_term
+
 (* The actual PDBM: a matrix of size nb_clocks+1 *)
 (* The 0-clock is the LAST clock for readability issues *)
-type pdbm = (p_linear_term * pdbm_rel) array array
+type pdbm = (pdbm_eij * pdbm_rel) array array
 
 
 (* Constrained PDBM = (C, D) *)
 type cpdbm = p_linear_constraint * pdbm
 
-(** Create a CPDBM with nb_clocks clocks *)
-let make_cpdbm nb_clocks =
+(** Create a CPDBM with nb_clocks clocks, such that all clocks are set to 0 *)
+let make_zero_cpdbm (nb_clocks : int) =
 	(* All elements initialized with ( 0 , <= ) *)
-	(** WARNING: check that all elements are different ! *)
 	let init_element() =
-		make_p_linear_term [] NumConst.zero
+		Eij (make_p_linear_term [] NumConst.zero)
 		,
 		PDBM_leq
 	in
+	(** TODO: canonicalize ?!!! *)
 	p_true_constraint()
 	,
 	Array.make_matrix (nb_clocks+1) (nb_clocks+1) (init_element())
 
+
+(** Create a CPDBM with nb_clocks clocks, such that it is equivalent to True *)
+let make_true_cpdbm (nb_clocks : int) =
+
+(* All elements first initialized with ( inf , <= ) *)
+	let init_element() =
+		Infinity
+		,
+		PDBM_leq
+	in
+	
+	let matrix = Array.make_matrix (nb_clocks+1) (nb_clocks+1) (init_element()) in
+
+	(* Process special values *)
+	let zero_clock = nb_clocks in
+	for i = 0 to nb_clocks - 1 do
+		(* Add clocks >= 0, i.e., zero_clock - x_i <= 0 *)
+		matrix.(zero_clock).(i) <- Eij (make_px_linear_term [] NumConst.zero) , PDBM_leq;
+		(* Generate correct diagonals, i.e., x_i - x_i <= 0 *)
+		matrix.(i).(i) <- Eij (make_px_linear_term [] NumConst.zero) , PDBM_leq;
+	done;
+	
+	(* Return PDBM *)
+	p_true_constraint()
+	,
+	(** TODO: canonicalize ?!!! *)
+	matrix
+
 (* Convert a PDBM into a linear constraint *)
-let px_linear_constraint_of_pdbm pdbm =
+let px_linear_constraint_of_pdbm clock_offset pdbm =
 	(* Number of regular clocks (excluding the 0-clock) *)
 	let nb_clocks = Array.length pdbm - 1 in
 	(* Convert PDBM relationship to linear_constraint relationship *)
@@ -1764,6 +1797,9 @@ let px_linear_constraint_of_pdbm pdbm =
 		| PDBM_leq -> Op_ge
 		| PDBM_l -> Op_g
 	in
+	
+	(* Convert a PDBM clock into a linear_constraint variable *)
+	let variable_of_clock clock = clock + clock_offset in
 	
 	let zeroclock = nb_clocks in
 
@@ -1776,23 +1812,31 @@ let px_linear_constraint_of_pdbm pdbm =
 		for j = 0 to nb_clocks do
 		
 			(* Get the linear term and the operator *)
-			let p_linear_term, op = pdbm.(i).(j) in
-		
-			(* Create xi - xj *)
+			let eij, op = pdbm.(i).(j) in
+			
+			(* Does eij = infinity? *)
+			begin
+			match eij with 
+			| Infinity ->
+				(* xi - xj <= infinity means nothing *)
+				()
+			| Eij p_linear_term ->(
+			(* Create xi - xj <= eij, i.e., xi - xj - eij <= 0 *)
+			(*** BADPROG / WARNING: reverse order because operators not in the same direction! so bad..... *)
+			(* Since the operators are reversed, we will create xj - xi + eij >= 0 *)
+			
 			let xixj_linear_term = make_px_linear_term
 				(* Particular case with the 0-clock *)
 				(
 				if i = zeroclock && j = zeroclock then [] (* WARNING! check that no problem here? *)
-				else if i = zeroclock  then [(NumConst.minus_one, j)]
-				else if j = zeroclock then [(NumConst.one, i)]
-				else [(NumConst.one, i) ; (NumConst.minus_one, j)]
+				else if i = zeroclock  then [(NumConst.one, (variable_of_clock j))]
+				else if j = zeroclock then [(NumConst.minus_one, (variable_of_clock i))]
+				else [(NumConst.minus_one, (variable_of_clock i)) ; (NumConst.one, (variable_of_clock j))]
 				)
-			NumConst.zero in 
+			NumConst.zero in
 			
-			(* Substract eij, so as to get " xi - xj - eij " *)
-			let linear_term = sub_linear_terms xixj_linear_term p_linear_term in
-			
-			(*** BADPROG / WARNING: reverse order because operators not in the same direction! so bad..... *)
+			(* Add eij, so as to get " xj - xi + eij " *)
+			let linear_term = add_linear_terms xixj_linear_term p_linear_term in
 			
 			(* Create linear inequality *)
 			let inequality : px_linear_inequality = make_px_linear_inequality linear_term (op_of_pdbm_rel op) in
@@ -1800,8 +1844,9 @@ let px_linear_constraint_of_pdbm pdbm =
 			(* Intersect with the current constraint *)
 			(** WARNING / BADPROG: very unefficient ! *)
 			px_intersection_assign linear_constraint [make_px_constraint [inequality]];
+			);
+			end
 		done;
-
 	done;
 	
 (*	(* 2) Convert the last row and last column corresponding to the 0-clock *)
@@ -1831,4 +1876,133 @@ let px_linear_constraint_of_pdbm pdbm =
 	linear_constraint
 
 	
+(* Convert a PDBM into a linear constraint *)
+let px_linear_constraint_of_cpdbm clock_offset cpdbm =
+	(* Expand *)
+	let p_linear_constraint , pdbm = cpdbm in
+	(* Convert PDBM *)
+	let px_linear_constraint = px_linear_constraint_of_pdbm clock_offset pdbm in
+	(* Intersect *)
+	intersection_assign px_linear_constraint [p_linear_constraint];
+	(* Return *)
+	px_linear_constraint
+
+
+
 	(* TODO : test !!! then add intersection, etc. *)
+
+
+let test_PDBMs () = 
+	(* Keep constant number of clocks and parameters *)
+	let test_nb_clocks = 4 in
+	let test_nb_parameters = 3 in
+	
+	(* Set dimensions *)
+	set_dimensions test_nb_parameters test_nb_clocks 0;
+	
+	(* Make variable names *)
+	let variable_names variable_index =
+		(if (variable_index < test_nb_parameters) then "p" else "x")
+		^
+		(string_of_int variable_index)
+	in
+	
+	(* Convert an op to a string *)
+	let string_of_op = function
+		| PDBM_leq -> "<="
+		| PDBM_l -> "<"
+	in
+	
+	(* Print a px constraint *)
+	let print_px_constraint px_c =
+		let stringpxc = string_of_px_linear_constraint variable_names px_c in
+		print_string ("\n" ^ stringpxc)
+	in
+	
+	(* Print a PDBM matrix *)
+	let print_matrix pdbm =
+		let nb_clocks = Array.length pdbm - 1 in
+		
+		let zeroclock = nb_clocks in
+		
+		print_string ("\nPrinting a PDBM of dimension " ^ (string_of_int nb_clocks) ^ " (+1) clocks");
+
+		(* For each row (including the 0-clock)*)
+		for i = 0 to nb_clocks do
+			print_string "\n================\n";
+			print_string ((if i = zeroclock then "z" else (string_of_int i)) ^ ":");
+
+			(* For each column (including the 0-clock) *)
+			for j = 0 to nb_clocks do
+				(* Get the linear term and the operator *)
+				let eij, op = pdbm.(i).(j) in
+
+				(* Convert to strings *)
+				let stringp = match eij with
+				| Infinity -> "inf"
+				| Eij p_linear_term ->
+					string_of_p_linear_term variable_names p_linear_term
+				in
+				let stringop = string_of_op op in
+				
+				(* Print *)
+				print_string (" | (" ^ stringp ^ " , " ^ stringop ^ ")")
+			done;
+
+			print_string " |";
+		done;
+		print_string "\n================\n";
+		()
+	in
+	
+
+	let zero_clock = test_nb_clocks in
+	
+	print_string "\n*%*%*%*%*%*% STARTING PDBMs TESTS *%*%*%*%*%*%";
+	(* Zero-PDBM *)
+	print_string "\n\nEmpty PDBM";
+	let cpdbm_void = make_zero_cpdbm test_nb_clocks in
+	let _ , pdbm_void = cpdbm_void in
+	print_string "\nMatrix:";
+	print_matrix pdbm_void;
+	print_string "\nConstraint:";
+	print_px_constraint (px_linear_constraint_of_cpdbm test_nb_parameters cpdbm_void);
+	
+	(* Add pconstraint *)
+	print_string "\n\nEmpty PDBM with p-constraint";
+	(* p0 + 1 >= p1 *)
+	let plt1 = make_px_linear_term [(NumConst.one, 0); (NumConst.minus_one, 1)] (NumConst.one) in
+	let pc1 = make_px_constraint [make_px_linear_inequality plt1 Op_ge] in
+	print_string "\nP-constraint:";
+	print_string (string_of_p_linear_constraint variable_names pc1);
+	let cpdbm1 = (pc1, pdbm_void) in
+	print_string "\nConstraint:";
+	print_px_constraint (px_linear_constraint_of_cpdbm test_nb_parameters cpdbm1);
+	
+	(* True PDBM *)
+	print_string "\n\nTrue PDBM";
+	let cpdbm_true = make_true_cpdbm test_nb_clocks in
+	let _ , pdbm_true = cpdbm_true in
+	print_string "\nMatrix:";
+	print_matrix pdbm_true;
+	print_string "\nConstraint:";
+	print_px_constraint (px_linear_constraint_of_cpdbm test_nb_parameters cpdbm_true);
+	
+	(* Change some linear term *)
+	print_string "\n\nPDBM with modified linear terms";
+	(* x1 - x2 <= 2p0 + p2 *)
+	pdbm_true.(1).(2) <- Eij (
+		make_p_linear_term [(NumConst.numconst_of_int 2, 0); (NumConst.one, 2)] (NumConst.zero) 
+	) , PDBM_leq ;
+	(* x2 - x1 < 3p1 + 2 *)
+	pdbm_true.(2).(1) <- Eij (
+		make_p_linear_term [(NumConst.numconst_of_int 3, 1)] (NumConst.numconst_of_int 2) 
+	) , PDBM_l ;
+
+	print_string "\nMatrix:";
+	print_matrix pdbm_true;
+	print_string "\nConstraint:";
+	print_px_constraint (px_linear_constraint_of_cpdbm test_nb_parameters cpdbm_true);
+	
+	print_string "\n*%*%*%*%*%*% ENDING PDBMs TESTS *%*%*%*%*%*%";
+	()

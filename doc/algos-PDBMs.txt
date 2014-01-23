@@ -7,6 +7,8 @@ Structure of a PDBM D:
 	- n+1 rows, n+1 columns, with n: number of clocks
 	- the value (eij, ~) of Dij denotes xi - xj ~ eij
 	- for all i, Dii = (0, ~)
+	
+	eij is a p-linear-term U {infini}
 
 
 ************************************************************
