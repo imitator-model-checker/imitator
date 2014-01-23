@@ -1767,7 +1767,7 @@ let make_true_cpdbm (nb_clocks : int) =
 	let init_element() =
 		Infinity
 		,
-		PDBM_leq
+		PDBM_l
 	in
 	
 	let matrix = Array.make_matrix (nb_clocks+1) (nb_clocks+1) (init_element()) in
@@ -1786,6 +1786,25 @@ let make_true_cpdbm (nb_clocks : int) =
 	,
 	(** TODO: canonicalize ?!!! *)
 	matrix
+
+
+let pdbm_time_elapsing pdbm =
+	let _, matrix = pdbm in
+
+	(* Number of regular clocks (excluding the 0-clock) *)
+	let nb_clocks = Array.length pdbm - 1 in
+	let zeroclock = nb_clocks in
+
+	(* Set (xi - xz) to (inf, <) for all i != zero_clock *)
+	for i = 0 to nb_clocks - 1 do
+		matrix.(i).(zeroclock) <- Infinity , PDBM_l;
+	done
+
+let cpdbm_time_elapsing cpdbm =
+	let lt, pdbm = cpdbm in
+	lt, (pdbm_time_elapsing pdbm)
+
+
 
 (* Convert a PDBM into a linear constraint *)
 let px_linear_constraint_of_pdbm clock_offset pdbm =
@@ -1999,6 +2018,9 @@ let test_PDBMs () =
 		make_p_linear_term [(NumConst.numconst_of_int 3, 1)] (NumConst.numconst_of_int 2) 
 	) , PDBM_l ;
 
+	(* Apply time elapsing *)
+	print_string "\n\nPDBM after time elapsing";
+	pdbm_time_elapsing cpdbm_true;
 	print_string "\nMatrix:";
 	print_matrix pdbm_true;
 	print_string "\nConstraint:";

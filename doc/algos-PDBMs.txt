@@ -46,3 +46,25 @@ Definition
 	if for all i,j,k
 		C |= eij (~ij ==> ~ik ^ ~ikj) eik + ekj
 
+
+		
+		
+************************************************************
+Time elapsing
+************************************************************
+As for DBMs, set (xi - x0) to (inf, <) for i != 0
+and leave all other bounds unchanged
+Requires canonicalization?
+
+
+
+
+
+
+
+
+
+
+
+
+
