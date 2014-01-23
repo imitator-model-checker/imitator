@@ -1726,6 +1726,9 @@ let plot_2d x y linear_constraint min_abs min_ord max_abs max_ord =
 (************************************************************)
 (** WARNING! work in progress *)
 
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+(** Types *)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 (* Relationship used in PDBMs *)
 type pdbm_rel =
 	(* <= *)
@@ -1742,9 +1745,13 @@ type pdbm_eij =
 (* The 0-clock is the LAST clock for readability issues *)
 type pdbm = (pdbm_eij * pdbm_rel) array array
 
-
 (* Constrained PDBM = (C, D) *)
 type cpdbm = p_linear_constraint * pdbm
+
+
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+(** Creation *)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 (** Create a CPDBM with nb_clocks clocks, such that all clocks are set to 0 *)
 let make_zero_cpdbm (nb_clocks : int) =
@@ -1788,6 +1795,65 @@ let make_true_cpdbm (nb_clocks : int) =
 	matrix
 
 
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+(** Canonicalization *)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+
+
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+(** Adding guard *)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+
+
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+(** Reset *)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+(* Addition / substraction of PDBM matrix values *)
+let pdbm_add_linear_terms eij1 eij2 = match (eij1, eij2) with
+	| _, Infinity -> Infinity
+	| Infinity, _ -> Infinity
+	| Eij lt1, Eij lt2 -> Eij (add_linear_terms lt1 lt2)
+
+let pdbm_sub_linear_terms eij1 eij2 = match (eij1, eij2) with
+	| Infinity, _ -> Infinity
+	| _, Infinity -> raise (InternalError "[PDBMs] Not sure what to do with 'lt - infinity'; such case shall never happen anyway.")
+	| Eij lt1, Eij lt2 -> Eij (sub_linear_terms lt1 lt2)
+
+
+(* Update a clock i to a p_linear_term b ("i := b" as in [HRSV02]) *)
+let pdbm_update i (b:linear_term) pdbm =
+	(* Number of regular clocks (excluding the 0-clock) *)
+	let nb_clocks = Array.length pdbm - 1 in
+	let zeroclock = nb_clocks in
+
+ 	(* for all j != i: ( *** WARNING: what about zeroclock ? I assume it should be included too) *)
+	for j = 0 to nb_clocks (* - 1 *) do
+		if j != i then(
+			(* Dij <- (e0j + b), ~0j *)
+			let (e0j : pdbm_eij), op0j = pdbm.(zeroclock).(j) in
+			pdbm.(i).(j) <- pdbm_add_linear_terms e0j (Eij b), op0j;
+
+			(* Dji <- (ej0 - b), ~j0 *)
+			let (ej0 : pdbm_eij), opj0 = pdbm.(j).(zeroclock) in
+			pdbm.(j).(i) <- pdbm_sub_linear_terms ej0 (Eij b), opj0;
+		)
+	done
+
+
+(* Reset one clock *)
+let cpdbm_reset clocki cpdbm =
+	let _, pdbm = cpdbm in
+	pdbm_update clocki (make_linear_term [] NumConst.zero) pdbm
+
+
+(*** TODO: update to p_linear_term ; reset/update several clocks *)
+
+
+
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+(** Time elapsing *)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+
 let pdbm_time_elapsing pdbm =
 	let _, matrix = pdbm in
 
@@ -1800,12 +1866,16 @@ let pdbm_time_elapsing pdbm =
 		matrix.(i).(zeroclock) <- Infinity , PDBM_l;
 	done
 
+
 let cpdbm_time_elapsing cpdbm =
 	let lt, pdbm = cpdbm in
 	lt, (pdbm_time_elapsing pdbm)
 
 
 
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+(** Conversion *)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 (* Convert a PDBM into a linear constraint *)
 let px_linear_constraint_of_pdbm clock_offset pdbm =
 	(* Number of regular clocks (excluding the 0-clock) *)
@@ -1908,9 +1978,9 @@ let px_linear_constraint_of_cpdbm clock_offset cpdbm =
 
 
 
-	(* TODO : test !!! then add intersection, etc. *)
-
-
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+(** Tests *)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 let test_PDBMs () = 
 	(* Keep constant number of clocks and parameters *)
 	let test_nb_clocks = 4 in
@@ -1921,9 +1991,9 @@ let test_PDBMs () =
 	
 	(* Make variable names *)
 	let variable_names variable_index =
-		(if (variable_index < test_nb_parameters) then "p" else "x")
-		^
-		(string_of_int variable_index)
+		if (variable_index < test_nb_parameters)
+			then "p" ^ (string_of_int variable_index)
+			else "x" ^ (string_of_int (variable_index - test_nb_parameters))
 	in
 	
 	(* Convert an op to a string *)
@@ -2005,9 +2075,9 @@ let test_PDBMs () =
 	
 	(* True PDBM *)
 	print_string "\n\nTrue PDBM";
-	let cpdbm_true = make_true_cpdbm test_nb_clocks in
-	let _ , pdbm_true = cpdbm_true in
-	print_cpdbm cpdbm_true;
+	let cpdbm2 = make_true_cpdbm test_nb_clocks in
+	let _ , pdbm_true = cpdbm2 in
+	print_cpdbm cpdbm2;
 
 	
 	(* Change some linear term *)
@@ -2015,31 +2085,36 @@ let test_PDBMs () =
 	pdbm_true.(1).(2) <- Eij (
 		make_p_linear_term [(NumConst.numconst_of_int 2, 0); (NumConst.one, 2)] (NumConst.zero) 
 	) , PDBM_leq ;
-	print_cpdbm cpdbm_true;
+	print_cpdbm cpdbm2;
 
 	print_string "\n\nAdding x2 - x1 < 3p1 + 2";
 	pdbm_true.(2).(1) <- Eij (
 		make_p_linear_term [(NumConst.numconst_of_int 3, 1)] (NumConst.numconst_of_int 2) 
 	) , PDBM_l ;
-	print_cpdbm cpdbm_true;
+	print_cpdbm cpdbm2;
 
 	print_string "\n\nAdding x0 < p0";
 	pdbm_true.(0).(zero_clock) <- Eij (
 		make_p_linear_term [(NumConst.one, 0)] (NumConst.zero)
 	) , PDBM_l ;
-	print_cpdbm cpdbm_true;
+	print_cpdbm cpdbm2;
 
 	print_string "\n\nAdding x0 >= 5";
 	(* x0 >= 5 (i.e., xz - x0 <= -5 *)
 	pdbm_true.(zero_clock).(0) <- Eij (
 		make_p_linear_term [] (NumConst.numconst_of_int (-5))
 	) , PDBM_leq ;
-	print_cpdbm cpdbm_true;
+	print_cpdbm cpdbm2;
 
 	(* Apply time elapsing *)
 	print_string "\n\nPDBM after time elapsing";
-	pdbm_time_elapsing cpdbm_true;
-	print_cpdbm cpdbm_true;
+	pdbm_time_elapsing cpdbm2;
+	print_cpdbm cpdbm2;
+	
+	(* Reset x6 *)
+	print_string "\n\nResetting...";
+	cpdbm_reset 3 cpdbm2;
+	print_cpdbm cpdbm2;
 	
 	print_string "\n*%*%*%*%*%*% ENDING PDBMs TESTS *%*%*%*%*%*%";
 	()

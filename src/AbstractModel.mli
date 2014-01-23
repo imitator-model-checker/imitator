@@ -71,6 +71,7 @@ type clock_updates =
 	| No_update
 	(* Reset to 0 only *)
 	| Resets of clock_update list
+	(** TO ADD: reset to constants / discrete and parameters (to allow for support by PDBM) *)
 	(* Reset to arbitrary value (including discrete, parameters and clocks) *)
 	| Updates of (clock_update * LinearConstraint.pxd_linear_term) list
 
