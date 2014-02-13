@@ -63,6 +63,8 @@ class imitator_options =
 		val mutable counterex = ref false
 		(* Check whether the accumulated constraint is restricted to pi0 *)
 		val mutable check_point = ref false
+		(* Complete version of IM (experimental) *)
+		val mutable completeIM = ref false
 		(* Remove useless clocks (slightly experimental) *)
 		val mutable dynamic_clock_elimination = ref false
 		(* limit number of states *)
@@ -115,6 +117,7 @@ class imitator_options =
 		method cart = !cart
 		method cartonly = !cartonly
 		method check_point = !check_point
+		method completeIM = !completeIM
 		method counterex = !counterex
 		(* method dynamic = !dynamic *)
 		method dynamic_clock_elimination = !dynamic_clock_elimination
@@ -207,6 +210,8 @@ class imitator_options =
 				(* 				("-dynamic", Set dynamic, "Perform the on-the-fly intersection. Defaut : 'false'"); *)
 				
 				("-check-point", Set check_point, " Check at each iteration whether the accumulated constraint is restricted to pi0 (warning! very costly)");
+				
+				("-completeIM", Set completeIM, " Experimental version of IM that outputs a complete (full) result. Default: false.");
 				
 				("-counterex", Set counterex, " Stop the analysis as soon as a bad state is discovered (work in progress). Default: false.");
 				

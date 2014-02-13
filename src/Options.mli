@@ -19,6 +19,7 @@ class imitator_options :
 		val mutable cart : bool ref
 		val mutable cartonly : bool ref
 		val mutable check_point : bool ref
+		val mutable completeIM : bool ref
 		val mutable counterex : bool ref
 (* 		val mutable dynamic : bool ref *)
 		val mutable dynamic_clock_elimination : bool ref
@@ -59,6 +60,7 @@ class imitator_options :
 		method cart : bool
 		method cartonly : bool
 		method check_point : bool
+		method completeIM : bool
 		method counterex : bool
 (* 		method dynamic : bool *)
 		method dynamic_clock_elimination : bool

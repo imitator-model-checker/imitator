@@ -267,6 +267,13 @@ if options#forcePi0 then
 
 (* OPTIONS *)
 
+if options#completeIM then (
+	print_message Debug_standard ("IM will output a complete, possibly non-convex, constraint.");
+) else
+	print_message Debug_medium ("IM will output a possibly incomplete, but convex, constraint (default).")
+;
+
+
 if options#merge then (
 	print_message Debug_standard ("Merging technique of [AFS12] enabled.");
 ) else
