@@ -257,14 +257,15 @@ let string_of_v0 model v0 =
 (**************************************************************)
 (* Result *)
 (**************************************************************)
-(*(** Constraint returned by the inverse method *)
-type returned_constraint =
-	(** Constraint under convex form *)
-	| Convex_constraint of LinearConstraint.linear_constraint
-	(** Disjunction of constraints *)
-	| Union_of_constraints of LinearConstraint.linear_constraint list*)
 let string_of_returned_constraint variable_names = function 
 	| Convex_constraint (linear_constraint, _) -> LinearConstraint.string_of_p_linear_constraint variable_names linear_constraint
+	
 	(** Disjunction of constraints *)
 	| Union_of_constraints (k_list, _) -> string_of_list_of_string_with_sep "\n OR \n" (List.map (LinearConstraint.string_of_p_linear_constraint variable_names) k_list)
-
+	
+	| NNCConstraint (k_good, k_bad, _) -> 
+	(
+		string_of_list_of_string_with_sep "\n AND \n" (List.map (LinearConstraint.string_of_p_linear_constraint variable_names) k_good)
+	) ^ (
+		string_of_list_of_string_with_sep "\n AND NOT \n" (List.map (LinearConstraint.string_of_p_linear_constraint variable_names) k_bad)
+	)

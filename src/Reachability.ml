@@ -10,7 +10,7 @@
  * Author:        Ulrich Kuehne, Etienne Andre
  * 
  * Created:       2010/07/22
- * Last modified: 2014/01/15
+ * Last modified: 2014/02/13
  *
  ****************************************************************)
 
@@ -48,6 +48,9 @@ exception Unsat_exception
 
 (* Constraint for result (used for IM) *)
 let k_result = ref ( LinearConstraint.p_true_constraint () )
+
+(* Constraint to store the bad constraints to be negated (used for IM-complete) *)
+let k_bad = ref []
 
 (* List of constraints for result (used for EF_synthesis) *)
 let p_constraints = ref []
@@ -1498,6 +1501,8 @@ let next_combination combination max_indexes =
 (*-----------------------------------------------------*)
 (* returns (true, p_constraint) iff the state is pi0-compatible (false, _) otherwise *)
 (*-----------------------------------------------------*)
+(* side effect: add the negation of the p_constraint to all computed states *)
+(*-----------------------------------------------------*)
 let inverse_method_check_constraint model reachability_graph constr =
 	(* Retrieve the input options *)
 	let options = Input.get_options () in
@@ -1573,6 +1578,34 @@ let inverse_method_check_constraint model reachability_graph constr =
 	) else (true, p_constraint)
 
 
+(*-----------------------------------------------------*)
+(* Checks a new state for pi0-compatibility, and add its projection onto the parameters if incompatible.*)
+(* pi0               : reference valuation             *)
+(* rechability_graph : current reachability graph      *)
+(* constr            : new state constraint            *)
+(*-----------------------------------------------------*)
+(* returns (true, _) if the state is pi0-compatible (false, p_constraint) otherwise *)
+(*-----------------------------------------------------*)
+let completeIM_check_constraint model reachability_graph constr =
+	(* Retrieve the input options *)
+(* 	let options = Input.get_options () in *)
+	(* Retrieve the pi0 (dynamic!) *)
+	let pi0 = Input.get_pi0 () in
+	
+	(* Hide non-parameters *)
+	print_message Debug_high ("\nHiding non parameters...");
+	let p_constraint = LinearConstraint.px_hide_nonparameters_and_collapse constr in
+	print_message Debug_high ("\nParameters now hidden:");
+	(* Print some information *)
+	if debug_mode_greater Debug_high then(
+		print_message Debug_high (LinearConstraint.string_of_p_linear_constraint model.variable_names p_constraint);
+	);
+	(* Check the pi0-compatibility *)
+	print_message Debug_high ("\nChecking pi-compatibility:");
+	let is_compatible = LinearConstraint.is_pi0_compatible pi0 p_constraint in
+	(* Return the pi0-compatibility and the p_constraint *)
+	is_compatible , p_constraint
+	
 
 (*-------------------------------------------------------*)
 (* Computes all possible transition combinations for the *)
@@ -1654,28 +1687,63 @@ let add_a_new_state model reachability_graph orig_state_index new_states_indexes
 	(* Retrieve the input options *)
 	let options = Input.get_options () in
 
-	let add_new_state, inequality =
+	(* Is the new state valid? *)
+	let valid_new_state =
 	(*------------------------------------------------------------*)
 	(* Branching between algorithms: reachability, synthesis or IM *)
 	(*------------------------------------------------------------*)
 	match options#imitator_mode with 
-		| State_space_exploration -> true, (LinearConstraint.p_true_constraint ())
-		| EF_synthesis -> true, (LinearConstraint.p_true_constraint ())
-		| _ -> inverse_method_check_constraint model reachability_graph final_constraint
+	(* Pure state space exploration *)
+	| State_space_exploration -> true
+	(* Synthesis *)
+	| EF_synthesis -> true
+		
+	(* Inverse method and the like *)
+	| _ ->
+		let valid_new_state =
+		
+		(* 1) Complete version of IM *)
+		if options#completeIM then(
+			let valid_new_state, bad_p_constraint = completeIM_check_constraint model reachability_graph final_constraint in
+			(* Update the set of bad polyhedra *)
+			k_bad := bad_p_constraint :: !k_bad;
+			(* Return locally the result *)
+			valid_new_state
+		
+		(* 2) Regular IM *)
+		)else(
+			(*** NOTE: the addition of neg J to all reached states is performed as a side effect inside the following function ***)
+			(*** BADPROG: same reason ***)
+			let valid_new_state, new_p_constraint = inverse_method_check_constraint model reachability_graph final_constraint
+			in
+			
+			(* If pi-compatible state: add the new state's p_constraint to the on-the-fly computation of the result of IMss *)
+			if valid_new_state && not (options#pi_compatible || options#union) then(
+				print_message Debug_high ("Updating k_result");
+				LinearConstraint.p_intersection_assign !k_result [new_p_constraint];
+			);
+			(* Return locally the result *)
+			valid_new_state
+		
+		)
+		in
+
+		(* Print some information *)
+		if debug_mode_greater Debug_high then(
+			(* Means state was not compatible *)
+			if not valid_new_state then(
+				let new_state = location, final_constraint in
+				if debug_mode_greater Debug_high then
+					print_message Debug_high ("The pi-incompatible state had been computed through action '" ^ (model.action_names action_index) ^ "', and was:\n" ^ (string_of_state model new_state));
+			);
+		);
+		(* Return *)
+		valid_new_state
+	(* end match algorithm *)
 	in
 	
-	(* Print some information *)
-	if debug_mode_greater Debug_high then(
-		(* Means state was not compatible *)
-		if not add_new_state then(
-			let new_state = location, final_constraint in
-			if debug_mode_greater Debug_high then
-				print_message Debug_high ("The pi-incompatible state had been computed through action '" ^ (model.action_names action_index) ^ "', and was:\n" ^ (string_of_state model new_state));
-		);
-	);
-	
-	(* Only add the new state if needed *)
-	if add_new_state then (
+	(* Only add the new state if it is actually valid *)
+	if valid_new_state then (
 		(* Build the state *)
 		let new_state = location, final_constraint in
 
@@ -1685,7 +1753,7 @@ let add_a_new_state model reachability_graph orig_state_index new_states_indexes
 		);
 
 		(* If IM or BC: Add the inequality to the result (except if case variants) *)
-		begin
+(*		begin
 		match options#imitator_mode with 
 			(* Case state space / synthesis: do nothing *)
 			| State_space_exploration
@@ -1696,7 +1764,7 @@ let add_a_new_state model reachability_graph orig_state_index new_states_indexes
 					print_message Debug_high ("Updating k_result");
 					LinearConstraint.p_intersection_assign !k_result [inequality];
 				);
-		end;
+		end;*)
 		
 		(* Try to add this new state to the graph *)
 		let new_state_index, added = (
@@ -2497,10 +2565,49 @@ let ef_synthesis model init_state =
 	Union_of_constraints (!p_constraints, Bad)
 	
 
+(*--------------------------------------------------*)
+(* Auxiliary function *)
+(*--------------------------------------------------*)
+(* Try to remove useless "bad" constraints *)
+let process_result_IMcomplete original_k_good original_k_bad =
+	(* Print some information *)
+	print_message Debug_standard ("Trying to simplify some of the " ^ (string_of_int (List.length original_k_bad)) ^ " bad constraint" ^ (s_of_int (List.length original_k_bad)) ^ "...");
+
+	(*	let k_good = match original_k_good with
+	| [k_good] -> k_good
+	| _ ->raise(InternalError ("When simplifying the constraints, one must have only 1 good constraint"))
+	in*)
+	(* Eliminate useless constraints *)
+	let nb_useless = ref 0 in
+	let k_bad = List.filter (fun k ->
+		(* Only keep if intersection with k_good is not empty *)
+		if LinearConstraint.p_is_satisfiable (
+			LinearConstraint.p_intersection [original_k_good; k]
+		)
+		then (
+			true
+			)
+		else (
+			nb_useless := !nb_useless + 1;
+			false
+		)
+	) original_k_bad
+	
+	in
+	
+	(* Print some information *)
+	print_message Debug_standard ((string_of_int !nb_useless) ^ " bad constraint" ^ (s_of_int !nb_useless) ^ " have been deleted.");
+	
+	(*** TODO: merge!! ***)
+	
+	(* Return the remaining constraints *)
+	original_k_good, k_bad
+
 
 (************************************************************)
 (* Main inverse method functions *)
 (************************************************************)
+
 
 (*--------------------------------------------------*)
 (* Encapsulation function for IM, called by the real inverse method function, and by the cartography algorithms *)
@@ -2573,7 +2680,7 @@ let inverse_method_gen model init_state =
 	(*--------------------------------------------------*)
 	let returned_constraint =
 	(* Case IM standard : return the intersection *)
-	if (*options#dynamic ||*) (not options#union && not options#pi_compatible) then (
+	if (*options#dynamic ||*) (not options#union && not options#pi_compatible && not options#completeIM) then (
 		print_message Debug_total ("\nMode: IM standard.");
 		Convex_constraint (!k_result, !tile_nature)
 	) else (
@@ -2596,6 +2703,10 @@ let inverse_method_gen model init_state =
 			let (_ , px_constraint) = get_state reachability_graph 0 in
 				print_message Debug_total ("\nMode: IMorig.");
 				Convex_constraint (LinearConstraint.px_hide_nonparameters_and_collapse px_constraint , !tile_nature) 
+		) else if options#completeIM then (
+				print_message Debug_total ("\nMode: IMcomplete.");
+				let k_good, k_bad = process_result_IMcomplete !k_result !k_bad in
+				NNCConstraint ([k_good] , k_bad, !tile_nature)
 		) else (
 			raise (InternalError ("This code should be unreachable (in end of inverse_method, when returning the constraint)."));
 		)
@@ -2621,19 +2732,17 @@ let inverse_method model init_state =
 	let options = Input.get_options () in
 
 	(* Call the inverse method *)
-	let returned_constraint, reachability_graph, tile_nature, deterministic, nb_iterations, total_time = inverse_method_gen model init_state in
+	let (returned_constraint : AbstractModel.returned_constraint), reachability_graph, tile_nature, deterministic, nb_iterations, total_time = inverse_method_gen model init_state in
 	
 	(* Here comes the result *)
 	print_message Debug_standard ("\nFinal constraint K0 "
 		^ (if options#union
 			then "(under disjunctive form) "
 			else (
-				let p_linear_constraint =
 				match returned_constraint with
-					| Convex_constraint (p_linear_constraint , _) -> p_linear_constraint
+					| Convex_constraint (p_linear_constraint , _) -> " (" ^ (string_of_int (LinearConstraint.p_nb_inequalities p_linear_constraint)) ^ " inequalities)"
+					| NNCConstraint _ (*(k_good, k_bad, tile_nature)*) -> " (in \"good - bad\" form)"
 					| _ -> raise (InternalError "Impossible situation in inverse_method: a returned_constraint is not under convex form although union mode is not enabled.");
-				in
-				" (" ^ (string_of_int (LinearConstraint.p_nb_inequalities p_linear_constraint)) ^ " inequalities)"
 			)
 		)
 		^ ":");
@@ -2659,5 +2768,4 @@ let inverse_method model init_state =
 
 	(* The end *)
 	()
-
 

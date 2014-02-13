@@ -386,7 +386,8 @@ exe:
 # 		$(TARGET) $(EXAMPLE_PATH)/Flipflop/flipflop.imi $(EXAMPLE_PATH)/Flipflop/flipflop.pi0 -no-dot -no-log -jobshop -no-random
 # 		bin/IMITATOR2.4 $(EXAMPLE_PATH)/Flipflop/flipflop.imi $(EXAMPLE_PATH)/Flipflop/flipflop.pi0 -no-dot -no-log -jobshop -no-random
 
-# 	$(TARGETV) $(EXAMPLE_PATH)/Flipflop/flipflop.imi $(EXAMPLE_PATH)/Flipflop/flipflop.pi0 -with-dot -with-log
+	$(TARGET) $(EXAMPLE_PATH)/Flipflop/flipflop.imi $(EXAMPLE_PATH)/Flipflop/flipflop.pi0
+	$(TARGET) $(EXAMPLE_PATH)/Flipflop/flipflop.imi $(EXAMPLE_PATH)/Flipflop/flipflop.pi0 -completeIM
 # 	$(TARGETV) $(EXAMPLE_PATH)/Flipflop/flipflop.imi $(EXAMPLE_PATH)/Flipflop/flipflop.pi0 -dynamic-elimination -with-dot -with-log -log-prefix $(EXAMPLE_PATH)/Flipflop/flipflop-dynamic
 # 	$(TARGET) $(EXAMPLE_PATH)/Flipflop/flipflop.imi $(EXAMPLE_PATH)/Flipflop/flipflop.pi0 -bab
 
@@ -657,7 +658,7 @@ exe:
 # 	$(TARGET) $(EXAMPLE_PATH)/Others/giuseppe_opt.imi $(EXAMPLE_PATH)/Others/giuseppe_opt.v0 -mode cover -incl -merge
 # 	$(TARGET) $(EXAMPLE_PATH)/Scheduling/example-miss.imi $(EXAMPLE_PATH)/Scheduling/example-miss.v0 -mode cover -incl -merge -depth-limit 100 -cart
 #	$(TARGET) $(EXAMPLE_PATH)/Scheduling/example-miss.imi $(EXAMPLE_PATH)/Scheduling/example-miss.pi0 -incl -merge -cart -depth-limit 100
-	$(TARGET) $(EXAMPLE_PATH)/Scheduling/example-miss.imi -mode EF -merge -depth-limit 15 -cart
+# 	$(TARGET) $(EXAMPLE_PATH)/Scheduling/example-miss.imi -mode EF -merge -depth-limit 15 -cart
 
 ##### JOB SHOP #####
 # 	$(TARGET) $(EXAMPLE_PATH)/Jobshop/maler_2_4.imi -mode statespace -incl 

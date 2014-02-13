@@ -23,6 +23,9 @@ open DynArray
 (** Constants *)
 (****************************************************************)
 
+(*** TODO: separate global wrt Ocaml from global wrt IMITATOR ***)
+
+
 val program_name: string
 
 val version_string: string

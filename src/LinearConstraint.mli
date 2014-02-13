@@ -10,7 +10,7 @@
  * Author:        Etienne Andre
  * 
  * Created:       2010/03/04
- * Last modified: 2014/01/15
+ * Last modified: 2014/02/13
  *
  ****************************************************************) 
  
@@ -225,6 +225,7 @@ val pxd_is_true : pxd_linear_constraint -> bool
 
 (** Check if a constraint is satisfiable *)
 (* val is_satisfiable : linear_constraint -> bool *)
+val p_is_satisfiable : p_linear_constraint -> bool
 val px_is_satisfiable : px_linear_constraint -> bool
 val pxd_is_satisfiable : pxd_linear_constraint -> bool
 

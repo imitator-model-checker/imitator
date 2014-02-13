@@ -98,6 +98,7 @@ let cartography model v0 returned_constraint_list cartography_name =
 		fun returned_constraint -> match returned_constraint with
 			| Convex_constraint (k, tn) -> Convex_constraint (LinearConstraint.render_non_strict_p_linear_constraint k , tn)
 			| Union_of_constraints (list_of_k, tn) -> Union_of_constraints (List.map LinearConstraint.render_non_strict_p_linear_constraint list_of_k , tn)
+			| NNCConstraint _ -> raise (InternalError ("NNCCs are not available everywhere yet."))
 	) returned_constraint_list
 	in
 
@@ -263,6 +264,7 @@ let cartography model v0 returned_constraint_list cartography_name =
 	List.iter (function
 		| Convex_constraint (k, _) -> update_min_max k
 		| Union_of_constraints (list_of_k, _) -> List.iter update_min_max list_of_k
+		| NNCConstraint _ -> raise (InternalError ("NNCCs are not available everywhere yet."))
 	) new_returned_constraint_list;
 
 	(* Add a margin of 1 unit *)
@@ -378,7 +380,9 @@ let cartography model v0 returned_constraint_list cartography_name =
 				)else(
 					tile_index := !tile_index + 1;
 					create_file_for_constraint k tn
-				)				) list_of_k
+				)
+			) list_of_k
+		| NNCConstraint _ -> raise (InternalError ("NNCCs are not available everywhere yet."))
 	) new_returned_constraint_list;
 
 	

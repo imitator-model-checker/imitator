@@ -144,8 +144,8 @@ let parser_lexer_from_string the_parser the_lexer the_string =
 
 
 (* TEST !! *)
-LinearConstraint.test_PDBMs();
-terminate_program();
+(*LinearConstraint.test_PDBMs();
+terminate_program();*)
 
 
 (**************************************************)

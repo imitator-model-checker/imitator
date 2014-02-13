@@ -42,6 +42,7 @@ let string_of_tile_nature = function
 let tile_nature_of_returned_constraint = function
 	| Convex_constraint (_ , tn) -> tn
 	| Union_of_constraints (_ , tn) -> tn
+	| NNCConstraint _ -> raise (InternalError ("NNCCs are not available everywhere yet."))
 
 
 (**************************************************)
@@ -131,6 +132,7 @@ let pi0_in_returned_constraint pi0 = function
 	| Convex_constraint (k,_) -> LinearConstraint.is_pi0_compatible pi0 k
 	(** Disjunction of constraints *)
 	| Union_of_constraints (k_list , _) -> List.exists (LinearConstraint.is_pi0_compatible pi0) k_list
+	| NNCConstraint _ -> raise (InternalError ("NNCCs are not available everywhere yet."))
 
 
 
@@ -719,6 +721,7 @@ let cover_behavioral_cartography program v0 init_state =
 						enlarge program.parameters program.clocks_and_discrete k;
 						if not (LinearConstraint.p_is_equal k old_k) then nb_enlargements := !nb_enlargements + 1;
 					) k_list
+				| NNCConstraint _ -> raise (InternalError ("NNCCs are not available everywhere yet."))
 			end;
 			
 			if !nb_enlargements > 0 then(

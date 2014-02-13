@@ -10,7 +10,7 @@
  * Author:        Etienne Andre
  * 
  * Created:       2010/03/04
- * Last modified: 2014/01/17
+ * Last modified: 2014/02/13
  *
  ****************************************************************) 
  
@@ -810,6 +810,7 @@ let pxd_is_true = is_true
 
 (** Check if a constraint is satisfiable *)
 let is_satisfiable c = not (is_false c)
+let p_is_satisfiable = is_satisfiable
 let px_is_satisfiable = is_satisfiable
 let pxd_is_satisfiable = is_satisfiable
 
