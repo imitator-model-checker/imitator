@@ -1523,6 +1523,12 @@ let inverse_method_check_constraint model reachability_graph constr =
 	let is_pi0_incompatible = incompatible != [] in
 	
 	(* If pi0-incompatible: select an inequality *)
+	
+	
+	
+	(*** TODO: not for EFIM if already bad ***)
+	
+	
 	if is_pi0_incompatible then (
 		print_message Debug_low ("\nFound a pi0-incompatible state.");
 		(* Print some information *)

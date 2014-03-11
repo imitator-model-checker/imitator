@@ -7,7 +7,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Ulrich Kuehne, Etienne Andre
  * Created:       2010
- * Last modified: 2014/01/15
+ * Last modified: 2014/03/11
  *
  ****************************************************************)
  
@@ -21,88 +21,134 @@ class imitator_options =
 	
 		(* INPUT OPTIONS *)
 		
-		(* imitator program file *)
+		(* imitator model input file *)
 		val mutable file = ref ""
+		
 		(* pi0 file *)
 		val mutable pi0file = ref ""
-		(* Create a "fake" pi0 file *)
+		
+		(* Create a "fake" pi0 file (USELESS) *)
 		val mutable forcePi0 = ref false
+		
 		(* GML syntax *)
 		val mutable fromGML = ref false
+		
 		
 	
 		(* OUTPUT OPTIONS *)
 		
 		(* plot cartography *)
 		val mutable cart = ref false
+		
 		(* only plot cartography *)
 		val mutable cartonly = ref false
+		
 		(* plot fancy states in dot *)
 		val mutable fancy = ref false
+		
 		(* prefix for output files *)
 		val mutable files_prefix = ref ""
+		
 		(* Gives statistics on number of calls *)
 		val mutable statistics = ref false
+		
 		(* print time stamps *)
 		val mutable timed_mode = ref false
+		
 		(* Print graph of reachable states *)
 		val mutable with_dot = ref false
+		
 		(* Keep the source file used for dot *)
 		val mutable with_graphics_source = ref false
+		
 		(* Print logs *)
 		val mutable with_log = ref false
+		
 		(* print parametric logs *)
 		val mutable with_parametric_log = ref false
 
 
-		(* ANALYSIS OPTIONS *)
+		
+		(* ALGORITHIMS *)
 
 		(* yet another (testing) mode *)
 		val mutable branch_and_bound = ref false
-		(* stop the analysis as soon as a counterexample is found *)
-		val mutable counterex = ref false
-		(* Check whether the accumulated constraint is restricted to pi0 *)
-		val mutable check_point = ref false
+		
 		(* Complete version of IM (experimental) *)
 		val mutable completeIM = ref false
-		(* Remove useless clocks (slightly experimental) *)
-		val mutable dynamic_clock_elimination = ref false
-		(* limit number of states *)
-		val mutable states_limit = ref None
-		(* limit number of iterations *)
-		val mutable post_limit = ref None
-		(* limit on runtime *)
-		val mutable time_limit = ref None
+		
 		(* imitator mode *)
 		val mutable imitator_mode = ref Global.Inverse_method
+
+		
+		
+		(* ANALYSIS OPTIONS *)
+
 		(* acyclic mode: only compare inclusion or equality of a new state with former states of the same iteration (graph depth) *)
 		val mutable acyclic = ref false 
-		(* tree mode: never compare inclusion or equality of any new state with a former state *)
-		val mutable tree = ref false 
+		
+		(* stop the analysis as soon as a counterexample is found *)
+		val mutable counterex = ref false
+
+		(* Check whether the accumulated constraint is restricted to pi0 *)
+		val mutable check_point = ref false
+		
+		(* On-the-fly intersection (DEPRECATED) *)
+(* 		val mutable dynamic = ref false *)
+		
+		(* Remove useless clocks (slightly experimental) *)
+		val mutable dynamic_clock_elimination = ref false
+		
+		(* New algorithm by Etienne and Youcheng *)
+		val mutable efim = ref false
+		
 		(* inclusion mode *)
 		val mutable inclusion = ref false
+		
 		(* do not use random values *)
 		val mutable no_random = ref false
+		
+		(* Returns contraint K ("algo IMK") *)
+		val mutable pi_compatible = ref false 
+		
+		(* limit number of iterations *)
+		val mutable post_limit = ref None
+		
+		(* limit number of states *)
+		val mutable states_limit = ref None
+		
 		(* autodetect sync actions *)
 		val mutable sync_auto_detection = ref false
-		(*On-the-fly intersection*)
-		val mutable dynamic = ref false
-		(*Union of last states*)
+		
+		(* limit on runtime *)
+		val mutable time_limit = ref None
+		
+		(* tree mode: never compare inclusion or equality of any new state with a former state *)
+		val mutable tree = ref false 
+		
+		(* Union of last states (algo "IMunion") *)
 		val mutable union = ref false
-		(*Returns contraint K*)
-		val mutable pi_compatible = ref false 
+		
 		(* Step for the cartography *)
 		val mutable step = ref NumConst.one
 
+		
+		
 		(* TRANSLATION *)
+		
 		(* Translate PTA into a CLP program *)
 		val mutable pta2clp = ref false
+		
 		(* Translate PTA into a GML program *)
 		val mutable pta2gml = ref false
+		
 		(* Translate PTA into a graphics *)
 		val mutable pta2jpg = ref false
 
+		
+		
 		(* SPECIALIZED OPTIONS*)
+		
 		(* Merging states on the fly *)
 		val mutable merge = ref false
 		(* Merging states on the fly (after pi0-compatibility check) *)
@@ -121,6 +167,7 @@ class imitator_options =
 		method counterex = !counterex
 		(* method dynamic = !dynamic *)
 		method dynamic_clock_elimination = !dynamic_clock_elimination
+		method efim = !efim
 		method fancy = !fancy
 		method file = !file
 		method files_prefix = !files_prefix
@@ -201,7 +248,8 @@ class imitator_options =
 			and speclist = [
 				("-acyclic", Set acyclic, " Test if a new state was already encountered only with states of the same depth. To be set only if the system is fully acyclic (no backward branching, i.e., no cycle). Default: 'false'");
 				
-				("-bab", Set branch_and_bound, " Experimental new feature of IMITATOR, based on cost optimization (WORK IN PROGRESS). Default: 'false'");
+(* 				Temporarily disabled (March 2014) *)
+(* 				("-bab", Set branch_and_bound, " Experimental new feature of IMITATOR, based on cost optimization (WORK IN PROGRESS). Default: 'false'"); *)
 				
 				("-cart", Set cart, " Plot cartography before terminating the program. Uses the first two parameters with ranges. Default: false.");
 				
@@ -217,7 +265,9 @@ class imitator_options =
 				
 				("-depth-limit", Int (fun i -> post_limit := Some i), " Limits the depth of the exploration of the reachability graph. Default: no limit.");
 				
-				("-dynamic-elimination", Set dynamic_clock_elimination, " Dynamic clock elimination (experimental). Default: false.");
+				("-dynamic-elimination", Set dynamic_clock_elimination, " Dynamic clock elimination [FSFMA13]. Default: false.");
+				
+				("-efim", Set efim, " New algorithm in between IM and EF (WORK IN PROGRESS). Default: false.");
 				
 				("-fancy", Set fancy, " Generate detailed state information for dot output. Default: false.");
 

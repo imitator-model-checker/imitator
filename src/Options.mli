@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2012/05/10
- * Last modified: 2014/01/15
+ * Last modified: 2014/03/11
  *
  ****************************************************************)
  
@@ -23,6 +23,7 @@ class imitator_options :
 		val mutable counterex : bool ref
 (* 		val mutable dynamic : bool ref *)
 		val mutable dynamic_clock_elimination : bool ref
+		val mutable efim : bool ref
 		val mutable fancy : bool ref
 		val mutable file : string ref
 		val mutable files_prefix : string ref
@@ -64,6 +65,7 @@ class imitator_options :
 		method counterex : bool
 (* 		method dynamic : bool *)
 		method dynamic_clock_elimination : bool
+		method efim : bool
 		method fancy : bool
 		method file : string
 		method files_prefix : string

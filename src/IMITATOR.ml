@@ -249,6 +249,15 @@ else
 
 (* Should add a warning in case of incompatible mode (IMoriginal incompatible with IMunion) + VARIANT ROMAIN *)
 
+
+if options#efim then
+	print_message Debug_standard ("Considering special algorithm EFIM (experimental).")
+else
+	print_message Debug_medium ("No EFIM algorithm (default).")
+;
+
+
+	
 if options#branch_and_bound then
 	print_message Debug_standard ("Considering branch and bound (experimental!).")
 else
