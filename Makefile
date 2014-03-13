@@ -340,6 +340,7 @@ exe:
 # 	$(TARGET) $(EXAMPLE_PATH)/Examples/contrexPPTA2.imi $(EXAMPLE_PATH)/Examples/contrexPPTA2.pi0
 # 	$(TARGET) $(EXAMPLE_PATH)/Examples/contrexPPTA2.imi $(EXAMPLE_PATH)/Examples/contrexPPTA2.pi0 -bab
  	
+ 	$(TARGET) $(EXAMPLE_PATH)/Examples/exERAKK.imi -mode statespace -with-log -with-dot
 
 # 	$(TARGET) $(EXAMPLE_PATH)/Examples/contrexPPTA3.imi $(EXAMPLE_PATH)/Examples/contrexPPTA.pi0
 # 	$(TARGET) $(EXAMPLE_PATH)/Examples/contrexPPTA3.imi $(EXAMPLE_PATH)/Examples/contrexPPTA.pi0 -bab
@@ -386,8 +387,8 @@ exe:
 # 		$(TARGET) $(EXAMPLE_PATH)/Flipflop/flipflop.imi $(EXAMPLE_PATH)/Flipflop/flipflop.pi0 -no-dot -no-log -jobshop -no-random
 # 		bin/IMITATOR2.4 $(EXAMPLE_PATH)/Flipflop/flipflop.imi $(EXAMPLE_PATH)/Flipflop/flipflop.pi0 -no-dot -no-log -jobshop -no-random
 
-	$(TARGET) $(EXAMPLE_PATH)/Flipflop/flipflop.imi $(EXAMPLE_PATH)/Flipflop/flipflop.pi0
-	$(TARGET) $(EXAMPLE_PATH)/Flipflop/flipflop.imi $(EXAMPLE_PATH)/Flipflop/flipflop.pi0 -completeIM
+# 	$(TARGET) $(EXAMPLE_PATH)/Flipflop/flipflop.imi $(EXAMPLE_PATH)/Flipflop/flipflop.pi0
+# 	$(TARGET) $(EXAMPLE_PATH)/Flipflop/flipflop.imi $(EXAMPLE_PATH)/Flipflop/flipflop.pi0 -completeIM
 # 	$(TARGETV) $(EXAMPLE_PATH)/Flipflop/flipflop.imi $(EXAMPLE_PATH)/Flipflop/flipflop.pi0 -dynamic-elimination -with-dot -with-log -log-prefix $(EXAMPLE_PATH)/Flipflop/flipflop-dynamic
 # 	$(TARGET) $(EXAMPLE_PATH)/Flipflop/flipflop.imi $(EXAMPLE_PATH)/Flipflop/flipflop.pi0 -bab
 
