@@ -1,0 +1,147 @@
+--************************************************************--
+--************************************************************--
+--
+--   Fischer's mutual exclusion protocol
+--
+--   From the PAT version of the protocol
+--
+--                                Created : 2012/10/08
+--                          Last modified : 2012/10/08
+--************************************************************--
+--************************************************************--
+
+(*
+
+Strange (but interesting) behavior :
+	$(TARGET) $(EXAMPLE_PATH)/Fischer/fischerPAT.imi -mode reachability -depth-limit 15 -with-log -with-dot -with-merging
+		gives 21 reachable states with 30 transitions
+
+	$(TARGET) $(EXAMPLE_PATH)/Fischer/fischerPAT.imi -mode reachability -depth-limit 16 -with-log -with-dot -with-merging
+		gives 15 reachable states with 24 transitions
+
+	$(TARGET) $(EXAMPLE_PATH)/Fischer/fischerPAT.imi -mode reachability -depth-limit 17 -with-log -with-dot -with-merging
+		gives 7 reachable states with 8 transitions
+
+	(and same for depth limit > 17)
+
+*)
+
+
+
+var 
+	x1, -- P1's clock
+	x2, -- P2's clock
+		:clock;
+	
+
+	turn,
+	counter
+		: discrete;
+
+	delta,
+	epsilon
+		: parameter;
+		
+
+	IDLE = -1 -- (constant)
+		: parameter; 
+
+(*
+--************************************************************--
+automaton procGEN
+--************************************************************--
+loc idle: while True wait {}
+	when turn = IDLE do {turn' = GEN} goto start;
+
+loc start: while xGEN <= delta wait {}
+	when xGEN >= epsilon do {xGEN' = 0} goto check;
+
+loc check: while xGEN = 0 wait {}
+	when turn = GEN do {counter' = counter + 1} goto CS;
+	when turn < GEN goto idle;
+	when turn > GEN goto idle; -- oops, no "<>" operator here!
+
+loc CS: while True wait {}
+	when True do {counter' = counter - 1, turn' = IDLE} goto idle;
+
+end -- procGEN
+*)
+
+--************************************************************--
+automaton proc1
+--************************************************************--
+loc idle: while True wait {}
+	when turn = IDLE do {turn' = 1} goto start;
+
+loc start: while x1 <= delta wait {}
+	when x1 >= epsilon do {x1' = 0} goto check;
+
+loc check: while x1 = 0 wait {}
+	when turn = 1 do {counter' = counter + 1} goto CS;
+	when turn < 1 goto idle;
+	when turn > 1 goto idle; -- oops, no "<>" operator here!
+
+loc CS: while True wait {}
+	when True do {counter' = counter - 1, turn' = IDLE} goto idle;
+
+end -- proc1
+
+
+
+--************************************************************--
+automaton proc2
+--************************************************************--
+loc idle: while True wait {}
+	when turn = IDLE do {turn' = 2} goto start;
+
+loc start: while x2 <= delta wait {}
+	when x2 >= epsilon do {x2' = 0} goto check;
+
+loc check: while x2 = 0 wait {}
+	when turn = 2 do {counter' = counter + 1} goto CS;
+	when turn < 2 goto idle;
+	when turn > 2 goto idle; -- oops, no "<>" operator here!
+
+loc CS: while True wait {}
+	when True do {counter' = counter - 1, turn' = IDLE} goto idle;
+
+end -- proc2
+
+
+--************************************************************--
+--************************************************************--
+-- ANALYSIS
+--************************************************************--
+--************************************************************--
+
+
+var 
+   init: region;
+
+   
+init :=
+	----------------------
+	-- Initial locations
+	----------------------
+	& loc[proc1] = idle
+	& loc[proc2] = idle
+	
+	----------------------
+	-- Clocks
+	----------------------
+	& x1 = 0
+	& x2 = 0
+	
+	----------------------
+	-- Discrete
+	----------------------
+	& turn = IDLE
+	& counter = 0
+
+	----------------------
+	-- Parameters
+	----------------------
+	& epsilon = 3
+	& delta   = 4
+;
+

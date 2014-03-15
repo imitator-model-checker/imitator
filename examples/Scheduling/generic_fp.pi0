@@ -1,0 +1,34 @@
+ deadlineBasic = 30 &
+---------
+--Etude 1--
+--WCET_1 = 20 &
+--WCET_2 = 40 &
+--WCET_3 = 100 &
+--per1 = 100 &
+--per2 = 150 &
+--per3 = 350
+--Off1 = 0
+--Off2 = 0
+--Off3 = 0
+------------
+-- Etude 2--
+WCET_1 = 1 &
+WCET_2 = 1 &
+WCET_3 = 2 &
+per1 = 3 &
+per2 = 5 &
+per3 = 10
+Off1 = 0
+Off2 = 0
+Off3 = 0
+------------
+-- Etude 3--
+--WCET_1 = 20 &
+--WCET_2 = 40 &
+--WCET_3 = 20 &
+--per1 = 100 &
+--per2 = 150 &
+--per3 = 160
+--Off1 = 0
+--Off2 = 0
+--Off3 = 0

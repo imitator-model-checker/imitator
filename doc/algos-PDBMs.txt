@@ -1,0 +1,85 @@
+************************************************************
+Structure of constrained PDBMs :
+************************************************************
+	- C, D, with C: constraint on P, and D: PDBM (DBM-like matrix)
+
+Structure of a PDBM D:
+	- n+1 rows, n+1 columns, with n: number of clocks
+	- the value (eij, ~) of Dij denotes xi - xj ~ eij
+	- for all i, Dii = (0, ~)
+	
+	eij is a p-linear-term U {infini}
+
+
+************************************************************
+1) Guards
+************************************************************
+Let Dij = (eij, ~ij)
+Let f = (e, ~)
+
+ALGORITHM AddGuard((C, D), f)
+BEGIN
+	If Oracle says eij (~ij ==> ~) e with C = YES
+		// eij is already stronger than e
+	then UNCHANGED [RULE R1]
+	else
+		If Oracle says eij (~ij ==> ~) e with C = NO
+			// e is stronger than eij
+		then RETURN D[f], that is, D where Dij is replaced with f [RULE R2]
+		else
+			// e and eij are incomparable: consider the union of both options
+			RETURN
+				AddGuard((C U { eij (~ij ==> ~) e }, D), f) [RULE R3]
+				U
+				AddGuard((C U { neg eij (~ij ==> ~) e }, D[f]), f) [RULE R4]
+END
+
+Problem: where and how to handle unsatisfiability? (adding guard p => x to x > p)
+automatic?
+
+
+
+************************************************************
+2) Canonical form
+************************************************************
+Definition
+	if for all i,j,k
+		C |= eij (~ij ==> ~ik ^ ~ikj) eik + ekj
+	
+Algo
+	TODO !!!
+
+		
+		
+************************************************************
+3) RESET
+************************************************************
+Consider xi := b, with b \in N
+
+For all j != i: (what about zeroclock ?)
+	Dij <- (e0j + b), ~0j
+	Dji <- (ej0 - b), ~j0
+
+Note : reset preserves canonicalization :-)
+
+
+************************************************************
+4) Time elapsing
+************************************************************
+As for DBMs, set (xi - x0) to (inf, <) for i != 0
+and leave all other bounds unchanged
+
+WARNING: Requires canonicalization?
+
+
+
+
+
+
+
+
+
+
+
+
+

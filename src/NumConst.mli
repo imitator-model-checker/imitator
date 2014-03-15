@@ -1,11 +1,11 @@
 (*****************************************************************
  *
- *                     HYMITATOR
+ *                     IMITATOR II
  * 
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2010/03/04
- * Last modified: 2010/03/09
+ * Last modified: 2013/01/30
  *
  ****************************************************************)
  
@@ -15,7 +15,6 @@
 
 type t
 
-exception Arithmetic_exception of string
 
 (**************************************************)
 (* Functions *)
@@ -43,13 +42,10 @@ val numconst_of_mpq : Gmp.Q.t -> t
 val numconst_of_mpz : Gmp.Z.t -> t
 
 val mpq_of_numconst : t -> Gmp.Q.t
-val float_of_numconst : t -> float
 val string_of_numconst : t -> string
 
 val get_num : t -> Gmp.Z.t
 val get_den : t -> Gmp.Z.t
-
-val random : t -> t -> t
 
 (**************************************************)
 (** {2 Arithmetic Functions} *)
@@ -58,11 +54,14 @@ val random : t -> t -> t
 val add : t -> t -> t
 val sub : t -> t -> t
 val mul : t -> t -> t
-val pow : t -> t -> t
 val div : t -> t -> t
 val neg : t -> t
 val abs : t -> t
 
+(** Find the closest multiple of step from base_number below (or equal to) number *)
+val find_multiple_below : t -> t -> t -> t
+(** Find the closest multiple of step from base_number above (or equal to) number *)
+val find_multiple_above : t -> t -> t -> t
 
 (**************************************************)
 (** {2 Comparison Functions} *)
@@ -73,3 +72,8 @@ val l : t -> t -> bool
 val le : t -> t -> bool
 val ge : t -> t -> bool
 val g : t -> t -> bool
+
+(**************************************************)
+(** {2 Test Functions} *)
+(**************************************************)
+val is_integer : t -> bool

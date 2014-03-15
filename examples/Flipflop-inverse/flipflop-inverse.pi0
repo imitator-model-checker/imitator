@@ -1,0 +1,29 @@
+(* Flip flop *)
+
+
+(*	& tHI = 40
+	& tLO = 20
+	& tSetup = 19
+	& tHold = 18 (*6*)
+	& dG1_u = 18
+	& dG1_l = 18
+	& dG2_l = 5
+	& dG2_u = 36 (*19*)
+	& dG3_l = 8
+	& dG3_u = 10
+	& dG4_l = 3
+	& dG4_u = 7
+	*)
+	
+	& tHI = 40
+	& tLO = 20
+	& tSetup = 19
+	& tHold = 6
+	& dG1_u = 18
+	& dG1_l = 18
+	& dG2_l = 5
+ 	& dG2_u = 19
+	& dG3_l = 8
+ 	& dG3_u = 10
+	& dG4_l = 3
+	& dG4_u = 7

@@ -1,503 +1,890 @@
 (*****************************************************************
  *
- *                     HYMITATOR
+ *                       IMITATOR
  * 
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
+ * Universite Paris 13, Sorbonne Paris Cite, LIPN (France)
+ * 
  * Author:        Etienne Andre, Ulrich Kuehne
+ * 
  * Created:       2010/07/05
- * Last modified: 2010/07/13 
+ * Last modified: 2013/10/08
  *
  ****************************************************************)
-
+ 
+ 
 (**************************************************)
 (* Modules *)
 (**************************************************)
 
 open Global
-open LinearConstraint
-module Ppl = Ppl_ocaml
-open Ppl
+(* open LinearConstraint *)
 open AbstractModel
 
-let unit_vector i =
- 	fun j -> if i = j then NumConst.one else NumConst.zero
-
-let simple_varnames i = "x" ^ (string_of_int i)
-
-
-(* converts a generator to a 2d point wrt. the two given variables *)
-let point_of_generator = function
-	| Closure_Point (expr, c) 
-	| Point (expr, c) ->  
-			let x, y = 
-				(evaluate_linear_term_ppl (unit_vector 0) expr,
-				 evaluate_linear_term_ppl (unit_vector 1) expr) in
-			let q = NumConst.numconst_of_mpz c in
-			let xf = Gmp.Q.to_float (NumConst.mpq_of_numconst (NumConst.div x q)) in
-			let yf = Gmp.Q.to_float (NumConst.mpq_of_numconst (NumConst.div y q)) in
-			Some (xf, yf)
-	| _ -> 
-			print_message Debug_standard "No point";
-			None
-
-(* new type : FG_Point if the couple represent a Point and Vector if the couple represent a Ray *)
-type float_generator = 
-	| FG_Point of float*float
-	| FG_Ray of float*float
-	| FG_None
-
-(* converts a generator to floating point representation *)
-let convert_generator = function
-	| Point (expr, c) -> 
-			let x, y = 
-				(evaluate_linear_term_ppl (unit_vector 0) expr,
-				 evaluate_linear_term_ppl (unit_vector 1) expr) in
-			let q = NumConst.numconst_of_mpz c in
-			let xf = Gmp.Q.to_float (NumConst.mpq_of_numconst (NumConst.div x q)) in
-			let yf = Gmp.Q.to_float (NumConst.mpq_of_numconst (NumConst.div y q)) in
-			FG_Point (xf, yf)
-	| Ray (expr) -> 
-			let x, y = 
-				(evaluate_linear_term_ppl (unit_vector 0) expr,
-				 evaluate_linear_term_ppl (unit_vector 1) expr) in
-			let xf = Gmp.Q.to_float (NumConst.mpq_of_numconst x) in
-			let yf = Gmp.Q.to_float (NumConst.mpq_of_numconst y) in
-			FG_Ray (xf, yf)
-	| _ -> FG_None
-	
-
-(* cosine of the angle between the x-axis and the *)
-(* vector from (x0, y0) to (x,y)                  *)			
-let cosine (x0, y0) (x, y) =
-	if x0 = x && y0 = y then 1. else
-		let vx = x -. x0 in
-		let vy = y -. y0 in
-		let len = sqrt (vx *. vx +. vy *. vy) in
-		vx /. len 
-					
-(* compare two points wrt. their angle to the x-axis *)					
-let cosine_compare p0 p1 p2 =
-	let cmp = (cosine p0 p2) -. (cosine p0 p1) in
-	if cmp > 0. then 1 else
-		if cmp < 0. then -1 else 0
-
-type alignment_type = 
-	| Left_turn
-	| Right_turn
-	| Collinear
-
-let alignment (x1, y1) (x2, y2) (x3, y3) =
-	let cmp = (x2 -. x1) *. (y3 -. y1) -. (y2 -. y1) *. (x3 -. x1) in
-	if cmp > 0. then Left_turn else
-		if cmp < 0. then Right_turn else Collinear
-	
-(* returns true if p1 is closer to p0 than p2 to p0 *)
-let dist_leq (x0, y0) (x1, y1) (x2, y2) =
-	let d1 = (x1 -. x0)*.(x1 -. x0) +. (y1 -. y0)*.(y1 -. y0) in
-	let d2 = (x2 -. x0)*.(x2 -. x0) +. (y2 -. y0)*.(y2 -. y0) in
-	d1 <= d2
-
-
-(* build the convex hull for a list of points *)
-let graham_hull points =
-	(* remove duplicate points *)
-	let points = list_only_once points in
-	(* find the lowest leftmost point and remove it from the list *)
-	let p0 = List.fold_left (fun (x0, y0) (x, y) -> 
-		if y < y0 || (y = y0 && x < x0) then (x, y) else (x0, y0)
-	) (List.hd points) (List.tl points)	in
-	(* sort the list wrt. to the angle to p0 *)
-	let points = List.sort (cosine_compare p0) (List.filter ((<>) p0) points) in
-	(* move pivot point to head of the list *)
-	let points =  p0 :: points in
-	(* iterate on points, discard points that induce a right-turn *)
-	let rec make_hull p1 p2 hull rest =
-		if rest = [] then
-			p2 :: p1 :: hull
-		else (
-			let p3 = List.hd rest in
-			match alignment p1 p2 p3 with
-				| Left_turn  ->
-						(* store first point, move on *) 
-						make_hull p2 p3 (p1 :: hull) (List.tl rest)				
-				| Right_turn ->
-						(* discard middle point, go on or backtrack *) 
-						if hull = [] then 
-							make_hull p1 p3 hull (List.tl rest)
-						else
-							(* backtrack to detect long "inward bended" point sequences *)
-							make_hull (List.hd hull) p1 (List.tl hull) rest
-				| Collinear  ->
-					(* discard closest point, go on *) 
-					if dist_leq p1 p2 p3 then 
-						make_hull p1 p3 hull (List.tl rest)
-					else
-						make_hull p1 p2 hull (List.tl rest)
-		)	in		 
-	(* close polygon *)
-	let points = List.append points [List.hd points] in
-	(* build hull *)
-	match points with
-		| p1 :: p2 :: rest ->
-			(* first two points must be on hull *)
-			make_hull p1 p2 [] rest
-		| _ -> points
-	
-						
-(* converts a linear_constraint to a set of 2d points wrt. the first two variables *)
-let poly_to_points x y linear_constraint =
-	(* copy constraint and replace strict operators by non-strict ones *)
-	let poly = ppl_new_NNC_Polyhedron_from_NNC_Polyhedron (to_ppl_polyhedron (non_strictify linear_constraint)) in
-	(* project to variables x,y *)
-	project_to [x; y] poly;
-	let generators = ppl_Polyhedron_get_minimized_generators poly in
-	(* collect points for the generators *)
-	let points = List.fold_left (fun ps gen ->
-		let p = point_of_generator gen in 
-		match p with
-			| None -> ps
-			| Some point -> point :: ps
-	) [] generators in
-	(* swap coordinates if necessary *)
-	let points = if x < y then points else (
-		List.map (fun (x,y) -> (y,x)) points
-	) in
-	graham_hull points
-
-	
-	
-(* create a straight line from a point and a ray *)
-let make_straight_line_ray r p =
-	match (r,p) with
-		| (FG_Ray  (a,b), FG_Point (c,d)) -> (let k=((a*.d)-.(b*.c)) in (b,(0.-.a),k))
-		|_ -> (0.,0.,0.)
-
-
-(* create a straight line from two points having the same abscissa or ordinate *)
-let make_straight_line_points p1 p2 = 
-	match (p1,p2) with
-		|(FG_Point (a,b), FG_Point (c,d)) when a=c -> (1.,0.,0.-.a)
-		|(FG_Point (a,b), FG_Point (c,d)) when b=d -> (0.,0.-.1.,b)
-		|_ -> (0.,0.,0.)
-
-
-(* find the intersection between two straight line *)
-let intersection_straight_line d1 d2 =
-	match (d1,d2) with
-		|((0.,0.,0.),(d,e,f)) -> FG_Point ((0.),(0.))
-		|((a,b,c),(0.,0.,0.)) -> FG_Point ((0.),(0.))
-		|((a,b,c),(d,e,f)) -> (if b <> 0. then FG_Point ((((b*.f)-.(e*.c))/.((a*.e)-.(b*.d))),0.-.((c/.b)+.(((a*.b*.f)-.(a*.e*.c))/.((b*.a*.e)-.(b*.b*.d)))))
-						else if e<>0. then FG_Point ((((b*.f)-.(e*.c))/.((a*.e)-.(b*.d))),0.-.((f/.e)+.(((d*.b*.f)-.(d*.e*.c))/.((e*.a*.e)-.(e*.b*.d)))))
-						else FG_Point (0.,0.))
-
-(* test if a point belong to a square line *)
-let point_on_line p min_abs min_ord max_abs max_ord =
-	match p with 
-		|FG_Point (a,b) when ((min_abs <= a) & (a <= max_abs) & (min_ord <= b) & (b <= max_ord)) -> true
-		|_ -> false
-
-
-(* convert a linear constraint into two lists, one containing the points and the other containing the rays *)
-let shape_of_poly x y linear_constraint =
-	let poly = ppl_new_NNC_Polyhedron_from_NNC_Polyhedron linear_constraint in
-	project_to [x; y] poly;
-	(* get the generators *)
-	let generators = ppl_Polyhedron_get_generators poly in
-	(* convert generators to floating point format *)
-	let float_generators = List.map convert_generator generators in
-	(* split into points and rays *)
-	let points, rays = List.fold_left (fun (ps, rs) fg -> 
-		match fg with
-			| FG_Point (x,y) -> ((x,y) :: ps, rs)
-			| FG_Ray   (x,y) -> (ps, (x,y) :: rs)
-			| FG_None -> (ps, rs)
-	) ([], []) float_generators in
-	(points, rays)
-
-
-type direction =
-	| Nowhere
-	| North
-	| South
-	| East
-	| West
-
-
-(* convert a linear constraint to a set of 2d points wrt. the variables x,y *)
-let points_of_zone x y linear_constraint min_abs min_ord max_abs max_ord =
-	let points,ray = shape_of_poly x y linear_constraint in
-	(* add to points some new points generated by the ray elements *)
-	let point_list = ref points in
-	for i=0 to List.length points -1 do 
-		for j=0 to List.length ray -1 do
-			match List.nth ray j with
-				|(u,v) when ((u>=0.) & (v>=0.)) -> point_list:=(max ((max_abs)*.(fst(List.nth ray j))) (fst (List.nth points i)) , max ((max_ord)*.(snd(List.nth ray j))) (snd (List.nth points i)))::!point_list
-				|(u,v) when ((u<0.) & (v>=0.)) -> point_list:=(min ((min_abs)*.(fst(List.nth ray j))) (fst (List.nth points i)) , max ((max_ord)*.(snd(List.nth ray j))) (snd (List.nth points i)))::!point_list
-				|(u,v) when ((u>=0.) & (v<0.)) -> point_list:=(max ((max_abs)*.(fst(List.nth ray j))) (fst (List.nth points i)) , min ((min_ord)*.(snd(List.nth ray j))) (snd (List.nth points i)))::!point_list
-				|(u,v) when ((u<0.) & (v<0.)) -> point_list:=(min ((min_abs)*.(fst(List.nth ray j))) (fst (List.nth points i)) , min ((min_ord)*.(snd(List.nth ray j))) (snd (List.nth points i)))::!point_list
-				| _ -> ()
-		done
-	done;
-	(* add a point if there is two ray that cross two differents borders *)
-	if List.length ray <> 0 then (
-		(* create a point that will say which point is to be added *)
-		let add_point = ref (Nowhere,Nowhere) in
-		(* create a straight line for each side of the v0 space *)
-		let high_border = make_straight_line_points (FG_Point (min_abs,max_ord)) (FG_Point (max_abs,max_ord)) in
-		let right_border = make_straight_line_points (FG_Point (max_abs,min_ord)) (FG_Point (max_abs,max_ord)) in
-		let low_border = make_straight_line_points (FG_Point (min_abs,min_ord)) (FG_Point (max_abs,min_ord)) in
-		let left_border = make_straight_line_points (FG_Point (min_abs,min_ord)) (FG_Point (min_abs,max_ord)) in
-		let i = ref 0 in
-		(* lists in which the intersections points will be stored *)
-		let l1 = ref [] in
-		let l2 = ref [] in
-		let l3 = ref [] in
-		let l4 = ref [] in
-		while !i <= (List.length ray -1) & (!add_point = (Nowhere,Nowhere)) do 
-			let j = ref 0 in
-			while !j <= (List.length points -1) do
-				(* make the straight line to test from a point and a vector *)
-				let straight_line = make_straight_line_ray (FG_Ray (fst (List.nth ray !i), snd (List.nth ray !i))) (FG_Point (fst (List.nth points !j),snd (List.nth points !j))) in
-				(* find the intersection between each v0 border and line to be checked *)
-				let k1 = intersection_straight_line high_border straight_line in
-				let k2 = intersection_straight_line right_border straight_line in
-				let k3 = intersection_straight_line low_border straight_line in
-				let k4 = intersection_straight_line left_border straight_line in
-				(* store the intersection point into a list if it belongs to the v0 space *)
-				if (point_on_line k1 min_abs min_ord max_abs max_ord) then l1:=k1::!l1
-				else if (point_on_line k2 min_abs min_ord max_abs max_ord) then l2:=k2::!l2
-				else if (point_on_line k3 min_abs min_ord max_abs max_ord) then l3:=k3::!l3
-				else if (point_on_line k4 min_abs min_ord max_abs max_ord) then l4:=k4::!l4;
-				j:=!j+1
-			done;
-			(* if two intersection points are on two consecutives border then mark it in add_point *)
-			if List.length !l1 <> 0 & List.length !l2 <> 0 then add_point:=(North,East)
-			else if List.length !l2 <> 0 & List.length !l3 <> 0 then add_point:=(East,South)
-			else if List.length !l3 <> 0 & List.length !l4 <> 0 then add_point:=(South,West)
-			else if List.length !l4 <> 0 & List.length !l4 <> 0 then add_point:=(West,North)
-			(* if two intersection points are on two opposite border then mark it in add_point *)
-			else if List.length !l1 <> 0 & List.length !l3 <> 0 then add_point:=(North,South)
-			else if List.length !l2 <> 0 & List.length !l4 <> 0 then add_point:=(East,West)
-			else if List.length !l3 <> 0 & List.length !l1 <> 0 then add_point:=(South,North)
-			else if List.length !l4 <> 0 & List.length !l2 <> 0 then add_point:=(West,East);
-			i:=!i+1
-		done;
-		(* add the intersection points between the border specified by add_point to point_list *)
-		if !add_point = (North,East) then point_list:=(max_abs,max_ord)::!point_list
-		else if !add_point = (East,South) then point_list:=(max_abs,min_ord)::!point_list
-		else if !add_point = (South,West) then point_list:=(min_abs,min_ord)::!point_list
-		else if !add_point = (West,North) then point_list:=(min_abs,max_ord)::!point_list
-		else if !add_point = (North,South) then point_list:=(max_abs,max_ord)::(max_abs,min_ord)::!point_list
-		else if !add_point = (East,West) then point_list:=(max_abs,min_ord)::(min_abs,min_ord)::!point_list
-		else if !add_point = (South,North) then point_list:=(min_abs,min_ord)::(min_abs,max_ord)::!point_list
-		else if !add_point = (West,East) then point_list:=(min_abs,max_ord)::(max_abs,max_ord)::!point_list;
-	);
-	(* swap coordinates if necessary *)
-	let point_list = if x < y then !point_list else (
-		List.map (fun (x,y) -> (y,x)) !point_list
-	) in
-	let is_infinite = (List.length ray) > 0 in
-	(is_infinite, graham_hull point_list)
 
 
 (**************************************************)
-(* Public Functions *)
+(**************************************************)
+(* GLOBAL CONSTANTS *)
+(**************************************************)
 (**************************************************)
 
-(* returns a string with 2d points of the given constraint *)
-let plot_2d x y linear_constraint =
-	let shape = poly_to_points x y linear_constraint in
-	List.fold_left (fun s (px, py) -> 
-		s ^ (string_of_float px) ^ " " ^ (string_of_float py) ^ "\n"
-	) "" shape	
+let dot_command = "dot"
+let dot_image_extension = "jpg"
+let dot_file_extension = "dot"
+let states_file_extension = "states"
+let cartography_extension = "png"
 
 
-let parameter_pairs pi0cube =
-	let parameters = ref [] in
-	for i=0 to Array.length pi0cube-1 do
-		let min, max, _ = pi0cube.(i) in
-		if NumConst.neq min max then parameters := i :: !parameters
-	done;
-	let rec make_pairs head tail =
-		match tail with
-			| [] -> []
-			| _ -> List.rev_append 
-				(List.map (fun b -> (head,b)) tail)
-				(make_pairs (List.hd tail) (List.tl tail)) in
-	make_pairs (List.hd !parameters) (List.tl !parameters)
 
 
+
+(* TODO: move this translation somewhere else
+   WARNING: code duplicated *)
+let string_of_tile_nature = function
+	| Good -> "good"
+	| Bad -> "bad"
+	| _ -> raise (InternalError ("Tile nature should be good or bad only, so far "))
+
+
+(**************************************************)
+(* Plot (graph) Functions *)
+(**************************************************)
+
+(*------------------------------------------------------------*)
+(* Convert a tile_index into a color for graph (actually an integer from 1 to 5) *)
+(*------------------------------------------------------------*)
+let graph_color_of_int tile_index tile_nature dotted =
+	(* Retrieve model *)
+	let model = Input.get_model() in
+	
+	(* Definition of the color *)
+	let color_index =
+	(* If bad state defined *)
+	if model.correctness_condition <> None then(
+		(* Go for a good / bad coloring *)
+		match tile_nature with
+		| Good -> 2 (* green *)
+		| Bad -> 1 (* red *)
+		| Unknown -> 5 (* cyan *)
+	(* Else random coloring *)
+	)else(
+		(* Only 5 colors from 1 to 5 *)
+		(tile_index mod 5) + 1
+	)
+	in
+	(* Add an offset of 20 for dotted, and convert to string *)
+	string_of_int (color_index + (if dotted then 20 else 0))
+
+
+
+(*------------------------------------------------------------*)
+(* Create a file name with radical cartography_name and number file_index *)
+(*------------------------------------------------------------*)
+let make_file_name cartography_name file_index =
+	cartography_name ^ "_points_" ^ (string_of_int file_index) ^ ".txt"
+
+
+
+(*------------------------------------------------------------*)
 (* print the cartography which correspond to the list of constraint *)
-let cartography constraint_list badlist nb_variables_projected cartography_name =
-	let program = Program.get_program () in
-	let pi0cube = Program.get_pi0cube () in
+(*------------------------------------------------------------*)
+let cartography model v0 returned_constraint_list cartography_name =
+	(* Retrieve the input options *)
+	let options = Input.get_options () in
 	
-	(* replace strict inequalities *)
-	let new_constraint_list = List.map LinearConstraint.non_strictify constraint_list in
+	(* For all returned_constraint *)
+	let new_returned_constraint_list = List.map (
+		fun returned_constraint -> match returned_constraint with
+			| Convex_constraint (k, tn) -> Convex_constraint (LinearConstraint.render_non_strict_p_linear_constraint k , tn)
+			| Union_of_constraints (list_of_k, tn) -> Union_of_constraints (List.map LinearConstraint.render_non_strict_p_linear_constraint list_of_k , tn)
+			| NNCConstraint _ -> raise (InternalError ("NNCCs are not available everywhere yet."))
+	) returned_constraint_list
+	in
 
-	(* Find indexes of the projected variables *)
-	let idx = DynArray.create () in
-	let i = ref 0 in
-	let nb = ref 0 in
-	while !nb < nb_variables_projected && !i < (Array.length pi0cube) do
-		match pi0cube.(!i) with
-			| (x,y,_) when NumConst.neq x y -> (DynArray.insert idx !nb !i; nb := !nb + 1; i := !i + 1)
-			|_-> i := !i + 1
-	done;
 
-	(* create an Array with all couple possible *)
-	let couple_list = ref [] in
-	for i=0 to DynArray.length idx -1 do
-		for j=i to DynArray.length idx -1 do
-			couple_list := (DynArray.get idx i,DynArray.get idx j)::!couple_list;
-		done
-	done;
-
-	(* Keep only couple with diffrent values *)
-	couple_list := List.filter ( fun (a,b) -> a<>b) !couple_list;
-
-	(* make a cartography for each element of the couple_list *)
-	let k = ref 0 in
-	List.iter (fun (x_param, y_param) ->
-		let x_name = program.variable_names x_param in
-		let y_name = program.variable_names y_param in
-		(* Create a script that will print the cartography *)
-		let script_name = cartography_name^"_"^(string_of_int !k)^".sh" in
-		let script = open_out script_name in
-		(* Find the V0 zone *)
-		let file_v0_name = cartography_name^"_v0_"^(string_of_int !k)^".txt" in
-		let file_zone = open_out file_v0_name in
-		let x_min, x_max, _ = pi0cube.(x_param) in
-		let y_min, y_max, _ = pi0cube.(y_param) in
-		let fstring numc = string_of_float (Gmp.Q.to_float (NumConst.mpq_of_numconst numc)) in
-		let str_zone = 
-				(fstring x_min)^" "^(fstring y_max)^"\n"
-			^	(fstring x_max)^" "^(fstring y_max)^"\n"
-			^	(fstring x_max)^" "^(fstring y_min)^"\n"
-			^	(fstring x_min)^" "^(fstring y_min)^"\n"
-			^	(fstring x_min)^" "^(fstring y_max)^"\n" in
-		output_string file_zone str_zone;
-		close_out file_zone;
-		
-		(* Beginning of the script *)
-		let script_line = ref ("graph -T ps -C -X \"" ^ x_name ^ "\" -Y \"" ^ y_name ^ "\" ") in
-		(* get corners of v0 *)
-		let init_min_abs, init_max_abs, _ = pi0cube.(x_param) in
-		let init_min_ord, init_max_ord, _ = pi0cube.(y_param) in
-		(* convert to float *)
-		let init_min_abs = NumConst.float_of_numconst init_min_abs in
-		let init_max_abs = NumConst.float_of_numconst init_max_abs in
-		let init_min_ord = NumConst.float_of_numconst init_min_ord in
-		let init_max_ord = NumConst.float_of_numconst init_max_ord in
-
-		(* find mininma and maxima for axes *)
-		let min_abs, max_abs, min_ord, max_ord =
-		List.fold_left (fun limits constr ->
-			let points, _ = shape_of_poly x_param y_param (from_ppl_polyhedron constr) in
-			List.fold_left (fun limits (x,y) ->
-				let current_min_abs, current_max_abs, current_min_ord, current_max_ord = limits in
-				let new_min_abs = min current_min_abs x in
-				let new_max_abs = max current_max_abs x in
-				let new_min_ord = min current_min_ord y in
-				let new_max_ord = max current_max_ord y in
-				(new_min_abs, new_max_abs, new_min_ord, new_max_ord)
-			) limits points
-		) (init_min_abs, init_max_abs, init_min_ord, init_max_ord) new_constraint_list in
-		(* add a margin of 1 unit *)
-		let min_abs = min_abs -. 1.0 in
-		let max_abs = max_abs +. 1.0 in
-		let min_ord = min_ord -. 1.0 in
-		let max_ord = max_ord +. 1.0 in
-
-		(* print_message Debug_standard ((string_of_float !min_abs)^"  "^(string_of_float !min_ord)); *)
-		(* Create a new file for each constraint *)
-		for i=0 to List.length new_constraint_list-1 do
-			(* find the points satisfying the constraint *)
-			let is_infinite, vertices = points_of_zone (x_param) (y_param) (from_ppl_polyhedron (List.nth new_constraint_list i)) min_abs min_ord max_abs max_ord in
-			(* print in the file the coordinates of the points *)
-			let s = List.fold_left (fun s (px, py) -> 
-				s ^ (string_of_float px) ^ " " ^ (string_of_float py) ^ "\n"
-			) "" vertices in
-			(* write to file *)
-			let file_name = cartography_name^".zone_"^(string_of_int !k)^"_"^(string_of_int i) in
-			let file_out = open_out file_name in			
-			output_string file_out s;
-			close_out file_out;
-			(* instructions to have the zones colored. If fst s = true then the zone is infinite *)
-			let color = if (List.mem i badlist) then 1 else 2 in
-			let shade = (float_of_int (i mod 6) +. 2.0) *. 0.1 in  
-			if is_infinite
-				then script_line := !script_line ^ "-m " ^ (string_of_int(color + 20)) ^ " -q " ^ (string_of_float shade) ^ " " 
-				else script_line := !script_line ^ "-m " ^ (string_of_int(color)) ^ " -q " ^ (string_of_float shade) ^ " "; 
-			script_line := !script_line ^ file_name ^ " ";	
+(*	(*** HORRIBLE IMPERATIVE (and not tail recursive) programming !!!!! ***)
+	(* For all returned_constraint *)
+	for k = 0 to List.length returned_constraint_list -1 do
+		(* For all linear_constraint *)
+		for i=0 to List.length constraint_list -1 do
+			let inequality_list = ppl_Polyhedron_get_constraints (List.nth constraint_list i) in 
+			let new_inequality_list = ref [] in
+			for j=0 to List.length inequality_list -1 do 
+				new_inequality_list := (strict_to_not_strict_inequality (List.nth inequality_list j))::!new_inequality_list;
+			done;
+			new_constraint_list := make !new_inequality_list::!new_constraint_list;
 		done;
-
-		(* File in which the cartography will be printed *)
-		let final_name = cartography_name^".cart_"^(string_of_int !k)^".ps" in
-		(* last part of the script *)
-		script_line := !script_line^" -C -m 2 -q -1 -W 0.0035 "^file_v0_name^" > "^final_name;
-		(* write the script into a file *)
-		output_string script !script_line;
-		(* Debug output *)
-		print_message Debug_standard (
-			"Plot cartography projected on parameters " ^ x_name ^ ", " ^ y_name
-			^ " to file '" ^ final_name ^ "'");
-		(* execute the script *)
-		let execution = Sys.command !script_line in
-		print_message Debug_high ("Result of the cartography execution: exit code "^(string_of_int execution));
-		k := !k + 1
-	) !couple_list
-
+	done;*)
 	
-(* Compute the area of a convex polyhedron, given as a sorted list of points *)
-let area_of_poly vertices = 
-	if 3 > List.length vertices then 0.0 else
-	match vertices with
-		| (px, py) :: ps ->
-			let last_x = ref px in
-			let last_y = ref py in
-			let det = List.fold_left (fun s (x, y) -> 
-				let sum = s +. (!last_x *. y) -. (!last_y *. x) in
-				last_x := x;
-				last_y := y;
-				sum
-			) 0.0 ps in
-			let area = det /. 2.0 in
-			if area > 0. then area else 0. -. area 
-		| _ -> 0.0
+	
+	
+	(***** TODO!!! for EF-synthesis, first draw a green background, since the non-red is necessarily green (well, unless approximations are used) *)
+	
+	
+	
+	let x_index = 0 in
+	let y_index = 1 in
+
+	(* First find the dimensions *)
+	let range_params : int list ref = ref [] in
+	let bounds = ref (Array.make 2 (NumConst.zero, NumConst.zero)) in
+
+	(* If EF-synthesis: choose the first two parameters *)
+	begin
+	match options#imitator_mode with
+		| EF_synthesis ->
+			(* First check that there are at least 2 parameters *)
+			if model.nb_parameters < 2 then(
+				print_error "Could not plot cartography (which requires 2 parameters)";
+				abort_program();
+			);
+			(* Choose the first 2 *)
+			range_params := [ List.nth model.parameters 0 ; List.nth model.parameters 1];
 			
+			(** WARNING: quite random thing here ! *)
+			!bounds.(0) <- (NumConst.numconst_of_int 0, NumConst.numconst_of_int 50);
+			!bounds.(1) <- (NumConst.numconst_of_int 0, NumConst.numconst_of_int 50);
 	
-let coverage constraint_list =
-	let pi0cube = Program.get_pi0cube () in
+	(* If cartography: find indices of first two variables with a parameter range *)
+		| Cover_cartography | Random_cartography _ | Border_cartography ->
+			Array.iteri (fun index (a,b) -> 
+				if NumConst.neq a b then(
+					(* Add one more parameter *)
+					range_params := index :: !range_params;
+				)
+			) v0;
+			range_params := List.rev !range_params;
+
+			if (List.length !range_params) < 2 then(
+				print_error "Could not plot cartography (region of interest has too few dimensions)";
+				abort_program();
+			);
+
+			(* Update bounds *)
+			!bounds.(x_index) <- v0.(List.nth !range_params 0);
+			!bounds.(y_index) <- v0.(List.nth !range_params 1);
+
+		
+	(* Else: no reason to draw a cartography *)
+	(** TODO: could be allowed for IM, after all *)
+		| _ -> 
+			print_error "Cartography can only be drawn while in cartography or EF-synthesis mode.";
+			abort_program();
+	end;
+
 	
-	(* get the (first) pair of parameters for the analysis *)
-	let x_param, y_param = List.hd (parameter_pairs pi0cube) in
-	(* build a constraint representing the rectangle v0 *)
-	let x_min, x_max, _ = pi0cube.(x_param) in
-	let y_min, y_max, _ = pi0cube.(y_param) in
-	let inequalities = [
-		make_linear_inequality_ppl (Var x_param) Greater_Or_Equal_RS (Coef x_min);
-		make_linear_inequality_ppl (Var x_param) Less_Or_Equal_RS (Coef x_max);
-		make_linear_inequality_ppl (Var y_param) Greater_Or_Equal_RS (Coef y_min);
-		make_linear_inequality_ppl (Var y_param) Less_Or_Equal_RS (Coef y_max);
-	] in
-	let v0 = make inequalities in
-	(* intersect all zones with v0 *)
-	let trimmed_constraints = List.map (fun constr -> 
-		intersection [v0; constr]
-	) constraint_list in
-	(* get floating point vertices for zones *)
-	let shapes = List.map (fun constr ->
-		if not (LinearConstraint.is_satisfiable constr) then [] else
-		poly_to_points x_param y_param constr
-	) trimmed_constraints in
-	(* get the area of v0 *)
-	let v0_area = 
-		((NumConst.float_of_numconst x_max) -. (NumConst.float_of_numconst x_min)) *. 
-		((NumConst.float_of_numconst y_max) -. (NumConst.float_of_numconst y_min)) in
-	(* compute the area of the zones *)
-	let areas = List.map area_of_poly shapes in
-	(* sum it up *)
-	let area = List.fold_left (+.) 0.0 areas in
-	(* compute the ratio *)
-	area /. v0_area
+	(* Now start *)
+	
+	let x_param = List.nth !range_params 0 in
+	let y_param = List.nth !range_params 1 in
+
+	let x_name = model.variable_names x_param in
+	let y_name = model.variable_names y_param in
+	(* Create a script that will print the cartography *)
+	let script_name = cartography_name ^ ".sh" in
+	let script = open_out script_name in
+	(* Find the V0 zone *)
+	let file_v0_name = cartography_name^"_v0.txt" in
+	let file_zone = open_out file_v0_name in
+	
+	
+	(* Convert a num_const to a string, specifically for Graph *)
+	let graph_string_of_numconst n = 
+		(* Check that it is an integer *)
+		if not (NumConst.is_integer n) then(
+			raise (InternalError("Only integers can be handled for the cartography, so far. Found: '" ^ (NumConst.string_of_numconst n) ^ "'"))
+		);
+		(* Convert to a string, and add a "." at the end *)
+		(NumConst.string_of_numconst n) ^ "."
+	in
+	
+	let str_zone =
+				(graph_string_of_numconst (fst (!bounds.(x_param))))
+		^" "^(graph_string_of_numconst (snd (!bounds.(y_param))))
+		^"\n"^(graph_string_of_numconst (snd (!bounds.(x_param))))
+		^" "^ (graph_string_of_numconst (snd (!bounds.(y_param))))
+		^"\n"^(graph_string_of_numconst (snd (!bounds.(x_param))))
+		^" "^ (graph_string_of_numconst (fst (!bounds.(y_param))))
+		^"\n"^(graph_string_of_numconst (fst (!bounds.(x_param))))
+		^" "^ (graph_string_of_numconst (fst (!bounds.(y_param))))
+		^"\n"^(graph_string_of_numconst (fst (!bounds.(x_param))))
+		^" "^ (graph_string_of_numconst (snd (!bounds.(y_param))))
+	in
+	output_string file_zone str_zone;
+	close_out file_zone;
+	(* Beginning of the script *)
+	let script_line = ref ("graph -T " ^ cartography_extension ^ " -C -X \"" ^ x_name ^ "\" -Y \"" ^ y_name ^ "\" ") in
+	(* find the minimum and maximum abscissa and ordinate for each constraint and store them in a list *)
+	
+	(* get corners of bounds *)
+	let init_min_abs, init_max_abs = !bounds.(x_param) in
+	let init_min_ord, init_max_ord = !bounds.(y_param) in
+(*		(* convert to float *)
+	let init_min_abs = float_of_int init_min_abs in
+	let init_max_abs = float_of_int init_max_abs in
+	let init_min_ord = float_of_int init_min_ord in
+	let init_max_ord = float_of_int init_max_ord in
+	
+	(* find mininma and maxima for axes (version Daphne) *)
+	let min_abs, max_abs, min_ord, max_ord =
+	List.fold_left (fun limits constr -> 
+		let points, _ = shape_of_poly x_param y_param constr in			
+		List.fold_left (fun limits (x,y) ->
+			let current_min_abs, current_max_abs, current_min_ord, current_max_ord = limits in
+			let new_min_abs = min current_min_abs x in
+			let new_max_abs = max current_max_abs x in
+			let new_min_ord = min current_min_ord y in
+			let new_max_ord = max current_max_ord y in
+			(new_min_abs, new_max_abs, new_min_ord, new_max_ord) 
+		) limits points  		 
+	) (init_min_abs, init_max_abs, init_min_ord, init_max_ord) new_returned_constraint_list in*)
+
+	(* Conversion to float, because all functions handle floats *)
+	
+	(*** WARNING! very dangerous here! may not work for big integers *)
+	let bad_float_of_num_const n = float_of_string (NumConst.string_of_numconst n) in
+
+	(* Find mininma and maxima for axes (version Etienne, who finds imperative here better ) *)
+	let min_abs = ref (bad_float_of_num_const init_min_abs) in
+	let max_abs = ref (bad_float_of_num_const init_max_abs) in
+	let min_ord = ref (bad_float_of_num_const init_min_ord) in
+	let max_ord = ref (bad_float_of_num_const init_max_ord) in
+	(* Update min / max for ONE linear_constraint *)
+	let update_min_max linear_constraint =
+		let points, _ = LinearConstraint.shape_of_poly x_param y_param linear_constraint in
+		List.iter (fun (x,y) ->
+			min_abs := min !min_abs x;
+			max_abs := max !max_abs x;
+			min_ord := min !min_ord y;
+			max_ord := max !max_ord y;
+		) points;
+	in
+	(* Update min / max for all returned constraint *)
+	List.iter (function
+		| Convex_constraint (k, _) -> update_min_max k
+		| Union_of_constraints (list_of_k, _) -> List.iter update_min_max list_of_k
+		| NNCConstraint _ -> raise (InternalError ("NNCCs are not available everywhere yet."))
+	) new_returned_constraint_list;
+
+	(* Add a margin of 1 unit *)
+	let min_abs = !min_abs -. 1.0 in
+	let max_abs = !max_abs +. 1.0 in
+	let min_ord = !min_ord -. 1.0 in
+	let max_ord = !max_ord +. 1.0 in
+	
+	(* print_message Debug_standard ((string_of_float !min_abs)^"  "^(string_of_float !min_ord)); *)
+	(* Create a new file for each constraint *)
+(*		for i=0 to List.length !new_constraint_list-1 do
+		let file_name = cartography_name^"_points_"^(string_of_int i)^".txt" in
+		let file_out = open_out file_name in
+		(* find the points satisfying the constraint *)
+		let s=plot_2d (x_param) (y_param) (List.nth !new_constraint_list i) min_abs min_ord max_abs max_ord in
+		(* print in the file the coordinates of the points *)
+		output_string file_out (snd s);
+		(* close the file and open it in a reading mode to read the first line *)
+		close_out file_out;			
+		let file_in = open_in file_name in
+		let s2 = input_line file_in in
+		(* close the file and open it in a writting mode to copy the whole string in it and ensure that the polygon is closed*)
+		close_in file_in;
+		let file_out_bis = open_out file_name in
+		output_string file_out_bis ((snd s)^s2);
+		close_out file_out_bis;
+		(* instructions to have the zones colored. If fst s = true then the zone is infinite *)
+		if fst s
+			then script_line := !script_line^"-m "^(string_of_int((i mod 5)+1+20))^" -q 0.3 "^file_name^" "
+			else script_line := !script_line^"-m "^(string_of_int((i mod 5)+1))^" -q 0.7 "^file_name^" "
+	done;*)
+
+	(*** BAD PROG : bouh pas beau *)
+	(*** WARNING: it looks like file_index = tile_index, always! *)
+	let file_index = ref 0 in
+	let tile_index = ref 0 in
+	(* Creation of files (Daphne wrote this?) *)
+	let create_file_for_constraint k tile_nature =
+	
+		(* Increment the file index *)
+		file_index := !file_index + 1;
+
+		(* Print some information *)
+		if debug_mode_greater Debug_low then(
+			print_message Debug_low ("Computing points for constraint " ^ (string_of_int !tile_index) ^ " \n " ^ (LinearConstraint.string_of_p_linear_constraint model.variable_names k) ^ ".");
+		);
+		
+		let file_name = make_file_name cartography_name !file_index in
+		let file_out = open_out file_name in
+		
+(*			(* Remove all non-parameter dimensions (the n highest) *)
+		print_message Debug_standard ("Removing the " ^ (string_of_int (model.nb_discrete + model.nb_clocks)) ^ " highest (clocks and discrete) dimensions in the constraint, to keep only the " ^ (string_of_int (model.nb_parameters)) ^ " lowest."); 
+		(* Should be done already ?!! *)
+		hide_assign model.clocks_and_discrete k;
+		remove_dimensions (model.nb_discrete + model.nb_clocks) k ;*)
+		
+		(* find the points satisfying the constraint *)
+		let s = LinearConstraint.plot_2d x_param y_param k min_abs min_ord max_abs max_ord in
+		(* Get the points *)
+		let the_points = snd s in
+		(* print in the file the coordinates of the points *)
+		output_string file_out the_points;
+
+		(* Print some information *)
+		if debug_mode_greater Debug_low then(
+			print_message Debug_low ("  Points \n " ^ the_points ^ "");
+		);
+		
+		(* Prepare the comments at the end of the file *)
+		let comments =
+			"\n# File automatically generated by " ^ program_name ^ " " ^ version_string ^ " for model '" ^ options#file ^ "'"
+			^ "\n# Generated " ^ (now()) ^ ""
+			(* This line is used by Giuseppe Lipari: do not change without prior agreement *)
+			^ (if model.correctness_condition <> None then( 
+				"\n# Tile nature: " ^ (string_of_tile_nature tile_nature) ^ ""
+			) else "")
+		in
+		
+		(* close the file and open it in a reading mode to read the first line *)
+		close_out file_out;
+		let file_in = open_in file_name in
+		let s2 = input_line file_in in
+		(* close the file and open it in a writting mode to copy the whole string in it and ensure that the polygon is closed*)
+		close_in file_in;
+		let file_out_bis = open_out file_name in
+		output_string file_out_bis (the_points ^ s2 ^ comments);
+		close_out file_out_bis;
+		(* instructions to have the zones colored. If fst s = true then the zone is infinite *)
+		if fst s
+			(*** TO DO : same color for one disjunctive tile *)
+			then script_line := !script_line ^ "-m " ^ (graph_color_of_int !tile_index tile_nature true) ^ " -q 0.3 " ^ file_name ^ " "
+			else script_line := !script_line ^ "-m " ^ (graph_color_of_int !tile_index tile_nature false) ^ " -q 0.7 " ^ file_name ^ " "
+		;
+	in
+	
+	(* For all returned_constraint *)
+	List.iter (function
+		| Convex_constraint (k, tn) ->
+			(*** WARNING: duplicate code *)
+			(* Test just in case ! (otherwise an exception arises *)
+			if LinearConstraint.p_is_false k then(
+				print_warning " Found a false constraint when computing the cartography. Ignored."
+			)else(
+				tile_index := !tile_index + 1;
+				create_file_for_constraint k tn
+			)
+		| Union_of_constraints (list_of_k, tn) ->
+			List.iter (fun k -> 
+				(*** WARNING: duplicate code *)
+				(* Test just in case ! (otherwise an exception arises *)
+				if LinearConstraint.p_is_false k then(
+					print_warning " Found a false constraint when computing the cartography. Ignored."
+				)else(
+					tile_index := !tile_index + 1;
+					create_file_for_constraint k tn
+				)
+			) list_of_k
+		| NNCConstraint _ -> raise (InternalError ("NNCCs are not available everywhere yet."))
+	) new_returned_constraint_list;
+
+	
+	(* File in which the cartography will be printed *)
+	let final_name = cartography_name ^ "." ^ cartography_extension in
+	(* last part of the script *)	
+	script_line := !script_line^" -C -m 2 -q -1 " ^ file_v0_name ^ " -L \"" ^ options#files_prefix ^ "\" > "^final_name;
+	(* write the script into a file *)
+	output_string script !script_line;
+	(* Print some information *)
+	(** TODO one day: change this string and update IMITATOR service in CosyVerif *)
+	print_message Debug_standard (
+		"Plot cartography projected on parameters " ^ x_name ^ ", " ^ y_name
+		^ " to file '" ^ final_name ^ "'."); 
+	(* execute the script *)
+	(** TODO: Improve! Should perform an automatic detection of the model! *)
+	let execution = Sys.command !script_line in
+	if execution != 0 then
+		(print_error ("Something went wrong in the command. Exit code: " ^ (string_of_int execution) ^ ". Maybe you forgot to install the 'graph' utility."););
+	
+	(* Print some information *)
+	print_message Debug_high ("Result of the cartography execution: exit code " ^ (string_of_int execution));
+
+	(* Remove files *)
+	if not options#with_graphics_source then(
+		print_message Debug_medium ("Removing V0 file...");
+		delete_file file_v0_name;
+		print_message Debug_medium ("Removing script file...");
+		delete_file script_name;
+		(* Removing all point files *)
+		for i = 1 to !file_index do
+			print_message Debug_medium ("Removing points file #" ^ (string_of_int i) ^ "...");
+			delete_file (make_file_name cartography_name i);
+		done;
+	); ()
+
+
+
+
+(**************************************************)
+(* Dot Functions *)
+(**************************************************)
+
+let dot_colors = [
+(* I ordered the first colors *)
+"red" ; "green" ; "blue" ; "yellow" ; "cyan" ; "magenta" ;
+(* The rest : random ! *)
+"paleturquoise2"; "indianred1"; "goldenrod3"; "darkolivegreen4"; "slategray4"; "turquoise4"; "lightpink"; "salmon"; "pink3"; "chocolate4"; "lightslateblue"; "yellow3"; "red4"; "seashell3"; "cyan2"; "darkgoldenrod3"; "gainsboro"; "yellowgreen"; "peachpuff1"; "oldlace"; "khaki"; "deepskyblue"; "maroon3"; "gold3"; "tan"; "mediumblue"; "lightyellow"; "ivory"; "lightcyan"; "lightsalmon4"; "maroon2"; "maroon4"; "tan3"; "green2"; "ivory2"; "navyblue"; "wheat1"; "navajowhite3"; "darkkhaki"; "whitesmoke"; "goldenrod"; "gold1"; "sandybrown"; "springgreen3"; "magenta2"; "lightskyblue1"; "lightcyan3"; "khaki2"; "khaki3"; "lavender"; "orchid1"; "wheat"; "lavenderblush1"; "firebrick2"; "navajowhite4"; "darkslategray3"; "palegreen2"; "lavenderblush3"; "skyblue3"; "deepskyblue3"; "darkorange"; "magenta1"; "darkorange3"; "violetred1"; "lawngreen"; "deeppink3"; "darkolivegreen1"; "darkorange1"; "darkorchid1"; "limegreen"; "lightslategray"; "deeppink"; "red2"; "goldenrod1"; "mediumorchid4"; "cornsilk1"; 
+"lemonchiffon3"; "gold"; "orchid"; "yellow2"; "lightpink4"; "violetred2"; "mediumpurple"; "lightslategrey"; "lightsalmon1"; "violetred"; "coral2"; "slategray"; "plum2"; "turquoise3"; "lightyellow3"; "green4"; "mediumorchid1"; "lightcyan1"; "lightsalmon3"; "green3"; "lightseagreen"; "mediumpurple1"; "lightskyblue"; "lightyellow2"; "firebrick"; "honeydew2"; "slateblue3"; "navajowhite"; "seagreen1"; "springgreen4"; "peru"; "springgreen2"; "mediumvioletred"; "ivory4"; "olivedrab3"; "lightyellow1"; "hotpink"; "sienna4"; "lightcyan4"; "chartreuse4"; "lemonchiffon4"; "indianred3"; "hotpink4"; "sienna1"; "slategray3"; "darkseagreen2"; "tomato3"; "honeydew3"; "mistyrose2"; "rosybrown1"; "pink2"; "powderblue"; "cornflowerblue"; "tan1"; "indianred4"; "slateblue2"; "palevioletred3"; "ivory1"; "honeydew4"; "white"; "wheat3"; "steelblue4"; "purple2"; "deeppink4"; "royalblue4"; "lightgrey"; "forestgreen"; "palegreen"; "darkorange4"; "lightsteelblue2"; "tomato4"; "royalblue1"; "hotpink1"; "hotpink3";
+"palegoldenrod"; "orange3"; "yellow1"; "orange2"; "slateblue"; "lightblue"; "lavenderblush2"; "chartreuse3"; "hotpink2"; "lightblue1"; "coral1"; "orange1"; "gold2"; "lightcoral"; "mediumseagreen"; "darkgreen"; "dodgerblue1"; "khaki1"; "khaki4"; "lightblue4"; "lightyellow4"; "firebrick3"; "crimson"; "olivedrab2"; "mistyrose3"; "lightsteelblue4"; "mediumpurple3"; "maroon"; "purple1"; "mediumorchid3"; "lightblue3"; "snow4"; "pink4"; "lightgray"; "lightsteelblue1"; "mistyrose"; "lightgoldenrodyellow"; "slategray1"; "peachpuff4"; "lightsalmon2"; "lightgoldenrod4"; "linen"; "darkgoldenrod1"; "goldenrod4"; "navy"; "lightcyan2"; "darkgoldenrod"; "mediumorchid2"; "lightsalmon"; "sienna"; "lightgoldenrod"; "plum1"; "orangered4"; "mistyrose1"; "mediumorchid"; "salmon1"; "chocolate3"; "palevioletred"; "purple3"; "turquoise"; "snow"; "paleturquoise"; "darkolivegreen"; "deepskyblue2"; "honeydew1"; "midnightblue"; "steelblue2"; "darkturquoise"; "dimgray"; "mediumpurple4"; "darkorchid"; "seashell2"; "cyan2";
+"olivedrab1"; "royalblue2"; "violet"; "seagreen2"; "thistle3"; "cornsilk3"; "moccasin"; "magenta3"; "mediumslateblue"; "cadetblue3"; "mediumaquamarine"; "magenta4"; "mintcream"; "orangered3"; "mistyrose4"; "darkseagreen4"; "orangered"; "palegreen4"; "mediumspringgreen"; "saddlebrown"; "plum3"; "palegreen3"; "darkviolet"; "violetred3"; "orange"; "seagreen"; "springgreen1"; "deeppink2"; "navajowhite1"; "paleturquoise4"; "tan4"; "slategrey"; "lightsteelblue"; "azure3"; "salmon4"; "olivedrab4"; "darkorchid2"; "rosybrown"; "peachpuff2"; "springgreen"; "thistle2"; "tan2"; "aquamarine2"; "rosybrown4"; "palevioletred2"; "slateblue4"; "cyan4"; "red1"; "slateblue1"; "cornsilk2"; "ivory3"; "lightpink2"; "mediumpurple2"; "sienna2"; "chocolate1"; "lightsteelblue3"; "lightgoldenrod3"; "blueviolet"; "sienna3"; "orangered1"; "lightpink3"; "mediumturquoise"; "darkorange2"; "skyblue1"; "steelblue"; "seashell4"; "salmon2"; "lightpink1"; "skyblue4"; "darkslategray4"; "palevioletred4"; "orchid2"; "blue2"; "orchid3";
+"peachpuff3"; "transparent"; "lavenderblush4"; "darkslategray1"; "lemonchiffon"; "papayawhip"; "maroon1"; "skyblue"; "chocolate"; "snow2"; "pink1"; "peachpuff"; "tomato1"; "blue1"; "dodgerblue2"; "orchid4"; "plum"; "orange4"; "purple"; "royalblue3"; "pink"; "floralwhite"; "palegreen1"; "dodgerblue4"; "chartreuse"; "bisque4"; "plum4"; "darkseagreen3"; "lightskyblue3"; "darkseagreen1"; "lightblue2"; "royalblue"; "red3"; "salmon3"; "palevioletred1"; "purple4"; "burlywood1"; "chocolate2"; "darkolivegreen3"; "goldenrod2"; "seashell1"; "indianred"; "brown2"; "lemonchiffon1"; "steelblue1"; "thistle1"; "yellow4"; "lightskyblue4"; "skyblue2"; "lemonchiffon2"; "thistle4"; "tomato2"; "violetred4"; "green1"; "greenyellow"; "paleturquoise1"; "chartreuse2"; "darkseagreen"; "turquoise2"; "cyan3"; "olivedrab"; "darkslategrey"; "firebrick4"; "lightgoldenrod1"; "seagreen3"; "seagreen4"; "tomato"; "firebrick1"; "steelblue3"; "orangered2"; "lavenderblush"; "cyan1"; "snow1"; "dodgerblue3"; "rosybrown2";
+"indianred2"; "blanchedalmond"; "gold4"; "paleturquoise3"; "honeydew"; "bisque2"; "bisque3"; "snow3"; "brown"; "deeppink1"; "dimgrey"; "lightgoldenrod2"; "lightskyblue2"; "navajowhite2"; "seashell"; "black"; "cadetblue1"; "cadetblue2"; "darkslategray"; "wheat2"; "burlywood"; "brown1"; "deepskyblue4"; "darkslateblue"; "deepskyblue1"; "slategray2"; "darksalmon"; "burlywood3"; "dodgerblue"; "turquoise1"; "grey"; "ghostwhite"; "thistle"; "blue4"; "cornsilk"; "azure"; "darkgoldenrod2"; "darkslategray2"; "beige"; "burlywood2"; "coral3"; "indigo"; "darkorchid4"; "coral"; "burlywood4"; "brown3"; "cornsilk4"; "wheat4"; "darkgoldenrod4"; "cadetblue4"; "brown4"; "cadetblue"; "azure4"; "darkolivegreen2"; "rosybrown3"; "coral4"; "azure2"; "blue3"; "chartreuse1"; "bisque1"; "aquamarine1"; "azure1"; "bisque"; "aquamarine4"; "antiquewhite3"; "antiquewhite2"; "darkorchid3"; "antiquewhite4"; "aquamarine3"; "aquamarine"; "antiquewhite"; "antiquewhite1"; "aliceblue"
+]
+
+open StateSpace
+
+(* Convert a graph to a dot file *)
+let dot_of_graph model reachability_graph ~fancy =
+	(* Retrieve the input options *)
+	let options = Input.get_options () in
+	let transitions = get_transitions reachability_graph in
+	(* Create the array of dot colors *)
+	let dot_colors = Array.of_list dot_colors in
+	(* Coloring function for each location *)
+	let color = fun location_index ->
+		(* If more colors than our array: white *)
+		try dot_colors.(location_index) with Invalid_argument _ -> "white"
+	in
+(*	(* Array location_index -> location *)
+	let locations = DynArray.create () in*)
+	
+	print_message Debug_high "\n[dot_of_graph] Starting to convert states to a graphics.";
+	
+	let header =
+		(* Header *)
+		"/***************************************************"
+		^ "\n * File automatically generated by " ^ program_name ^ " " ^ version_string ^ " for model '" ^ options#file ^ "'"
+		^ (
+			match options#imitator_mode with
+				| State_space_exploration -> "\n * State space exploration"
+				| EF_synthesis -> "\n * EF-synthesis"
+				(* Otherwise: IM / BC *)
+				| _ -> 
+					let pi0 = Input.get_pi0 () in
+					"\n *"
+					^ "\n * The following pi0 was considered:"
+					^ "\n" ^ (ModelPrinter.string_of_pi0 model pi0)
+		)
+		^ "\n *"
+		^ "\n * " ^ (string_of_int (nb_states reachability_graph)) ^ " states and "
+			^ (string_of_int (Hashtbl.length transitions)) ^ " transitions"
+		^ "\n *" 
+		^ "\n * Program terminated " ^ (after_seconds ())
+		^ "\n * File generated: " ^ (now())
+		^ "\n***************************************************/"
+	in
+	
+	print_message Debug_high "[dot_of_graph] Header completed.";
+
+	print_message Debug_high "[dot_of_graph] Retrieving states indexes...";
+
+	(* Retrieve the states *)
+	let state_indexes = StateSpace.all_state_indexes model reachability_graph in
+	
+	(* Sort the list (for better presentation in the file) *)
+	let state_indexes = List.sort (fun a b -> if a = b then 0 else if a < b then -1 else 1) state_indexes in
+	
+	print_message Debug_high "[dot_of_graph] Starting to convert states...";
+
+	let states_description =	
+		(* Give the state indexes in comments *)
+		  "\n"
+		^ "\n  DESCRIPTION OF THE STATES"
+		^
+		(**** BAD PROG ****)
+		(let string_states = ref "" in
+			List.iter (fun state_index ->
+			(* Retrieve location and constraint *)
+			let global_location, linear_constraint = StateSpace.get_state reachability_graph state_index in
+
+			print_message Debug_high ("[dot_of_graph] Converting state " ^ (string_of_int state_index) ^ "");
+
+			(* Construct the string *)
+			string_states := !string_states
+				(* Add the state *)
+				^ "\n\n  STATE " ^ (string_of_int state_index) ^ ":"
+				^ "\n  " ^ (ModelPrinter.string_of_state model (global_location, linear_constraint))
+				(* Add the constraint with no clocks (option only) *)
+				^ (if options#with_parametric_log then (
+					(* Eliminate clocks *)
+					let parametric_constraint = LinearConstraint.px_hide_nonparameters_and_collapse (*model.clocks*) linear_constraint in
+					"\n\n  After clock elimination:"
+					^ "\n  " ^ (LinearConstraint.string_of_p_linear_constraint model.variable_names parametric_constraint);
+				) else "");
+			) state_indexes;
+		!string_states)
+		^ "\n"
+	in
+	
+	print_message Debug_high "[dot_of_graph] Starting to convert transitions...";
+
+	
+	let transitions_description =
+		(* Convert the transitions for human *)
+		"\n  DESCRIPTION OF THE TRANSITIONS"
+		^ (Hashtbl.fold (fun (orig_state_index, action_index) dest_state_index my_string ->
+			let is_nosync action =
+				String.length action >= 7 &&
+				String.sub action 0 7 = "nosync_" in
+			let action = model.action_names action_index in
+			let label = if is_nosync action then (
+				""
+			) else (
+				" via \"" ^ action ^ "\""
+			) in
+			my_string
+			^ "\n  "
+			^ "s_" ^ (string_of_int orig_state_index)
+			^ " -> "
+			^ "s_" ^ (string_of_int dest_state_index)
+			^ label
+		) transitions "")
+		^ "\n"
+	in
+	
+	print_message Debug_high "[dot_of_graph] Generating dot file...";
+	
+	let dot_file =
+		"\n\ndigraph G {"
+		(* Convert the transitions for dot *)
+		^ (Hashtbl.fold (fun (orig_state_index, action_index) dest_state_index my_string ->
+			let is_nosync action =
+				String.length action >= 7 &&
+				String.sub action 0 7 = "nosync_" in
+			let action = model.action_names action_index in
+			let label = if is_nosync action then (
+				";"
+			) else (
+				" [label=\"" ^ action ^ "\"];"
+			) in
+			my_string
+			^ "\n  "
+			^ "s_" ^ (string_of_int orig_state_index)
+			^ " -> "
+			^ "s_" ^ (string_of_int dest_state_index)
+			^ label
+		) transitions "")
+
+	(*	(* Add a nice color *)
+		^ "\n\n  q_0 [color=red, style=filled];"
+		^ "\n}"*)
+		(* Add nice colors *)
+		^ "\n/*Colors*/\n" ^
+		(**** BAD PROG ****)
+		(let string_colors = ref "" in
+			iterate_on_states (fun state_index (location_index, _) ->
+(*			(* Find the location index *)
+			let location_index = try
+				(**** BAD PROG: should be hashed ****)
+				(* If the location index exists: return it *)
+				DynArray.index_of (fun some_location -> some_location = location) locations
+				(* Else add the location *)
+				with Not_found -> (DynArray.add locations location; DynArray.length locations - 1)
+			in*)
+			(* Find the location color *)
+			let location_color = color location_index in
+			(* create node index *)
+			let node_index = "s_" ^ (string_of_int state_index) in
+
+			if fancy then (
+				(* Get the location *)
+				let global_location = get_location reachability_graph location_index in
+				(* create record label with location names *)			
+				let loc_names = List.map (fun aut_index -> 
+					let loc_index = Automaton.get_location global_location aut_index in
+					model.location_names aut_index loc_index
+				) model.automata in
+				let label = string_of_list_of_string_with_sep "|" loc_names in
+				(* Create the command *)
+				string_colors := !string_colors
+					^ "\n  " ^ node_index
+					^ "[fillcolor=" ^ location_color
+					^ ", style=filled, shape=Mrecord, label=\"" 
+					^ node_index ^ "|{" 
+					^ label ^ "}\"];";
+			) else (
+				(* Create the command *)
+				string_colors := !string_colors
+					^ "\n  " ^ node_index
+					^ " [color=" ^ location_color
+					^ ", style=filled];";				
+			)
+			) reachability_graph;
+		!string_colors)
+		^ "\n}"
+
+	in
+	print_message Debug_high "[dot_of_graph] Done.";
+
+	(* Dot file *)
+	header ^ dot_file,
+	(* Description of the states (for human) *)
+	header ^ states_description ^ transitions_description
+
+
+let dot model radical dot_source_file =
+	(* Retrieve the input options *)
+	let options = Input.get_options () in
+
+	(* Do not write if no dot AND no log *)
+	if options#with_dot || options#with_log then (
+		(* Get the file names *)
+		let dot_file_name = (radical ^ "." ^ dot_file_extension) in
+		let image_file_name = (radical ^ "." ^ dot_image_extension) in
+		
+		(* New line *)
+		print_message Debug_standard "";
+		
+		(* Create the input file *)
+		print_message Debug_medium ("Creating input file for dot...");
+
+		if options#with_dot then (
+			(* Write dot file *)
+			if options#with_graphics_source then(
+				print_message Debug_standard ("Creating source file for dot...");
+			)else(
+				print_message Debug_medium ("Writing to dot file...");
+			);
+			write_to_file dot_file_name dot_source_file;
+
+			(* Generate gif file using dot *)
+			(*** WARNING: don't change this string (parsed by CosyVerif) **)
+			(*** TODO: add CosyVerif mode with output of the form "key : value" **)
+			print_message Debug_standard ("Generating graphical output to '" ^ image_file_name ^ "'...");
+			print_message Debug_medium ("Calling dot...");
+			begin
+			try (
+				let command_result = Sys.command (dot_command ^ " -T" ^ dot_image_extension ^ " " ^ dot_file_name ^ " -o " ^ image_file_name ^ "") in
+				print_message Debug_medium ("Result of the 'dot' command: " ^ (string_of_int command_result));
+				
+				if command_result != 0 then
+					print_error ("Something went wrong when calling 'dot'. Exit code: " ^ (string_of_int command_result) ^ ". Maybe you forgot to install the 'dot' utility.");
+			) with 
+				| Sys_error error_message -> print_error ("System error while calling 'dot'. Error message: '" ^ error_message ^ "'.");
+			end;
+			
+			(* Removing dot file (except if option) *)
+			if not options#with_graphics_source then(
+				print_message Debug_medium ("Removing dot file...");
+				delete_file dot_file_name;
+			);
+		);
+	)
+	
+
+(* Create a jpg graph using dot *)
+let generate_graph model reachability_graph radical =
+	(* Retrieve the input options *)
+	let options = Input.get_options () in
+	
+	(* Do not write if no dot AND no log *)
+	if options#with_dot || options#with_log then (
+		let dot_model, states = dot_of_graph model reachability_graph ~fancy:options#fancy in
+		
+		dot model radical dot_model;
+		
+		(*(* Get the file names *)
+		let dot_file_name = (radical ^ "." ^ dot_file_extension) in
+		let states_file_name = (radical ^ "." ^ states_file_extension) in
+		let gif_file_name = (radical ^ "." ^ dot_image_extension) in
+		
+		(* New line *)
+		print_message Debug_standard "";
+		
+		(* Create the input file *)
+		print_message Debug_medium ("Creating input file for dot...");
+
+		if options#with_dot then (
+			(* Write dot file *)
+			if options#with_dot_source then(
+				print_message Debug_standard ("Creating source file for dot...");
+			)else(
+				print_message Debug_medium ("Writing to dot file...");
+			);
+			write_to_file dot_file_name dot_model;
+
+			(* Generate gif file using dot *)
+			print_message Debug_standard "Generating graphical output...";
+			print_message Debug_medium ("Calling dot...");
+			let command_result = Sys.command (dot_command ^ " -T" ^ dot_image_extension ^ " " ^ dot_file_name ^ " -o " ^ gif_file_name ^ "") in
+			print_message Debug_medium ("Result of the 'dot' command: " ^ (string_of_int command_result));
+			
+			(* Removing dot file (except if option) *)
+			if not options#with_dot_source then(
+				print_message Debug_medium ("Removing dot file...");
+				delete_file dot_file_name;
+			);
+		);*)
+			
+		(* Write states file *)
+		if options#with_log then (
+			let states_file_name = (radical ^ "." ^ states_file_extension) in
+			print_message Debug_standard ("Writing the states description to file '" ^ states_file_name ^ "'...");
+			write_to_file states_file_name states;
+		);
+	)
+
+
+
+
+(**************************************************)
+(* Meta programming (could have been written in Python for example) *)
+(**************************************************)
+
+
+(*let dot_colors = [
+
+(* Then all the other one by alphabetic order *)
+"aliceblue" ; "antiquewhite" ; "antiquewhite1" ; "antiquewhite2" ; "antiquewhite3" ;
+"antiquewhite4" ; "aquamarine" ; "aquamarine1" ; "aquamarine2" ; "aquamarine3" ; 
+"aquamarine4" ; "azure" ; "azure1" ; "azure2" ; "azure3" ; 
+"azure4" ; "beige" ; "bisque" ; "bisque1" ; "bisque2" ; 
+"bisque3" ; "bisque4" ; "black" ; "blanchedalmond" ; (*"blue" ;*) 
+"blue1" ; "blue2" ; "blue3" ; "blue4" ; "blueviolet" ; 
+"brown" ; "brown1" ; "brown2" ; "brown3" ; "brown4" ; 
+"burlywood" ; "burlywood1" ; "burlywood2" ; "burlywood3" ; "burlywood4" ; 
+"cadetblue" ; "cadetblue1" ; "cadetblue2" ; "cadetblue3" ; "cadetblue4" ; 
+"chartreuse" ; "chartreuse1" ; "chartreuse2" ; "chartreuse3" ; "chartreuse4" ; 
+"chocolate" ; "chocolate1" ; "chocolate2" ; "chocolate3" ; "chocolate4" ; 
+"coral" ; "coral1" ; "coral2" ; "coral3" ; "coral4" ; 
+"cornflowerblue" ; "cornsilk" ; "cornsilk1" ; "cornsilk2" ; "cornsilk3" ; 
+"cornsilk4" ; "crimson" ; "cyan" ; "cyan1" ; "cyan2" ; 
+"cyan3" ; "cyan4" ; "darkgoldenrod" ; "darkgoldenrod1" ; "darkgoldenrod2" ; 
+"darkgoldenrod3" ; "darkgoldenrod4" ; "darkgreen" ; "darkkhaki" ; "darkolivegreen" ; 
+"darkolivegreen1" ; "darkolivegreen2" ; "darkolivegreen3" ; "darkolivegreen4" ; "darkorange" ; 
+"darkorange1" ; "darkorange2" ; "darkorange3" ; "darkorange4" ; "darkorchid" ; 
+"darkorchid1" ; "darkorchid2" ; "darkorchid3" ; "darkorchid4" ; "darksalmon" ; 
+"darkseagreen" ; "darkseagreen1" ; "darkseagreen2" ; "darkseagreen3" ; "darkseagreen4" ; 
+"darkslateblue" ; "darkslategray" ; "darkslategray1" ; "darkslategray2" ; "darkslategray3" ; 
+"darkslategray4" ; "darkslategrey" ; "darkturquoise" ; "darkviolet" ; "deeppink" ; 
+"deeppink1" ; "deeppink2" ; "deeppink3" ; "deeppink4" ; "deepskyblue" ; 
+"deepskyblue1" ; "deepskyblue2" ; "deepskyblue3" ; "deepskyblue4" ; "dimgray" ; 
+"dimgrey" ; "dodgerblue" ; "dodgerblue1" ; "dodgerblue2" ; "dodgerblue3" ; 
+"dodgerblue4" ; "firebrick" ; "firebrick1" ; "firebrick2" ; "firebrick3" ; 
+"firebrick4" ; "floralwhite" ; "forestgreen" ; "gainsboro" ; "ghostwhite" ; 
+"   gold   " ; "gold1" ; "gold2" ; "gold3" ; "gold4" ; 
+"goldenrod" ; "goldenrod1" ; "goldenrod2" ; "goldenrod3" ; "goldenrod4" ; 
+(*"   gray   " ; "gray0" ; "gray1" ; "gray2" ; "gray3" ; 
+"gray4" ; "gray5" ; "gray6" ; "gray7" ; "gray8" ; 
+"gray9" ; "gray10" ; "gray11" ; "gray12" ; "gray13" ; 
+"gray14" ; "gray15" ; "gray16" ; "gray17" ; "gray18" ; 
+"gray19" ; "gray20" ; "gray21" ; "gray22" ; "gray23" ; 
+"gray24" ; "gray25" ; "gray26" ; "gray27" ; "gray28" ; 
+"gray29" ; "gray30" ; "gray31" ; "gray32" ; "gray33" ; 
+"gray34" ; "gray35" ; "gray36" ; "gray37" ; "gray38" ; 
+"gray39" ; "gray40" ; "gray41" ; "gray42" ; "gray43" ; 
+"gray44" ; "gray45" ; "gray46" ; "gray47" ; "gray48" ; 
+"gray49" ; "gray50" ; "gray51" ; "gray52" ; "gray53" ; 
+"gray54" ; "gray55" ; "gray56" ; "gray57" ; "gray58" ; 
+"gray59" ; "gray60" ; "gray61" ; "gray62" ; "gray63" ; 
+"gray64" ; "gray65" ; "gray66" ; "gray67" ; "gray68" ; 
+"gray69" ; "gray70" ; "gray71" ; "gray72" ; "gray73" ; 
+"gray74" ; "gray75" ; "gray76" ; "gray77" ; "gray78" ; 
+"gray79" ; "gray80" ; "gray81" ; "gray82" ; "gray83" ; 
+"gray84" ; "gray85" ; "gray86" ; "gray87" ; "gray88" ; 
+"gray89" ; "gray90" ; "gray91" ; "gray92" ; "gray93" ; 
+"gray94" ; "gray95" ; "gray96" ; "gray97" ; "gray98" ; 
+"gray99" ; "gray100" ;*) (*"green" ;*) "green1" ; "green2" ; 
+"green3" ; "green4" ; "greenyellow" ; "grey"; (* "grey0" ; 
+"grey1" ; "grey2" ; "grey3" ; "grey4" ; "grey5" ; 
+"grey6" ; "grey7" ; "grey8" ; "grey9" ; "grey10" ; 
+"grey11" ; "grey12" ; "grey13" ; "grey14" ; "grey15" ; 
+"grey16" ; "grey17" ; "grey18" ; "grey19" ; "grey20" ; 
+"grey21" ; "grey22" ; "grey23" ; "grey24" ; "grey25" ; 
+"grey26" ; "grey27" ; "grey28" ; "grey29" ; "grey30" ; 
+"grey31" ; "grey32" ; "grey33" ; "grey34" ; "grey35" ; 
+"grey36" ; "grey37" ; "grey38" ; "grey39" ; "grey40" ; 
+"grey41" ; "grey42" ; "grey43" ; "grey44" ; "grey45" ; 
+"grey46" ; "grey47" ; "grey48" ; "grey49" ; "grey50" ; 
+"grey51" ; "grey52" ; "grey53" ; "grey54" ; "grey55" ; 
+"grey56" ; "grey57" ; "grey58" ; "grey59" ; "grey60" ; 
+"grey61" ; "grey62" ; "grey63" ; "grey64" ; "grey65" ; 
+"grey66" ; "grey67" ; "grey68" ; "grey69" ; "grey70" ; 
+"grey71" ; "grey72" ; "grey73" ; "grey74" ; "grey75" ; 
+"grey76" ; "grey77" ; "grey78" ; "grey79" ; "grey80" ; 
+"grey81" ; "grey82" ; "grey83" ; "grey84" ; "grey85" ; 
+"grey86" ; "grey87" ; "grey88" ; "grey89" ; "grey90" ; 
+"grey91" ; "grey92" ; "grey93" ; "grey94" ; "grey95" ; 
+"grey96" ; "grey97" ; "grey98" ; "grey99" ; "grey100" ; *)
+"honeydew" ; "honeydew1" ; "honeydew2" ; "honeydew3" ; "honeydew4" ; 
+"hotpink" ; "hotpink1" ; "hotpink2" ; "hotpink3" ; "hotpink4" ; 
+"indianred" ; "indianred1" ; "indianred2" ; "indianred3" ; "indianred4" ; 
+"indigo" ; "ivory" ; "ivory1" ; "ivory2" ; "ivory3" ; 
+"ivory4" ; "khaki" ; "khaki1" ; "khaki2" ; "khaki3" ; 
+"khaki4" ; "lavender" ; "lavenderblush" ; "lavenderblush1" ; "lavenderblush2" ; 
+"lavenderblush3" ; "lavenderblush4" ; "lawngreen" ; "lemonchiffon" ; "lemonchiffon1" ; 
+"lemonchiffon2" ; "lemonchiffon3" ; "lemonchiffon4" ; "lightblue" ; "lightblue1" ; 
+"lightblue2" ; "lightblue3" ; "lightblue4" ; "lightcoral" ; "lightcyan" ; 
+"lightcyan1" ; "lightcyan2" ; "lightcyan3" ; "lightcyan4" ; "lightgoldenrod" ; 
+"lightgoldenrod1" ; "lightgoldenrod2" ; "lightgoldenrod3" ; "lightgoldenrod4" ; "lightgoldenrodyellow" ; 
+"lightgray" ; "lightgrey" ; "lightpink" ; "lightpink1" ; "lightpink2" ; 
+"lightpink3" ; "lightpink4" ; "lightsalmon" ; "lightsalmon1" ; "lightsalmon2" ; 
+"lightsalmon3" ; "lightsalmon4" ; "lightseagreen" ; "lightskyblue" ; "lightskyblue1" ; 
+"lightskyblue2" ; "lightskyblue3" ; "lightskyblue4" ; "lightslateblue" ; "lightslategray" ; 
+"lightslategrey" ; "lightsteelblue" ; "lightsteelblue1" ; "lightsteelblue2" ; "lightsteelblue3" ; 
+"lightsteelblue4" ; "lightyellow" ; "lightyellow1" ; "lightyellow2" ; "lightyellow3" ; 
+"lightyellow4" ; "limegreen" ; "linen" ; (*"magenta" ;*) "magenta1" ; 
+"magenta2" ; "magenta3" ; "magenta4" ; "maroon" ; "maroon1" ; 
+"maroon2" ; "maroon3" ; "maroon4" ; "mediumaquamarine" ; "mediumblue" ; 
+"mediumorchid" ; "mediumorchid1" ; "mediumorchid2" ; "mediumorchid3" ; "mediumorchid4" ; 
+"mediumpurple" ; "mediumpurple1" ; "mediumpurple2" ; "mediumpurple3" ; "mediumpurple4" ; 
+"mediumseagreen" ; "mediumslateblue" ; "mediumspringgreen" ; "mediumturquoise" ; "mediumvioletred" ; 
+"midnightblue" ; "mintcream" ; "mistyrose" ; "mistyrose1" ; "mistyrose2" ; 
+"mistyrose3" ; "mistyrose4" ; "moccasin" ; "navajowhite" ; "navajowhite1" ; 
+"navajowhite2" ; "navajowhite3" ; "navajowhite4" ; "   navy   " ; "navyblue" ; 
+"oldlace" ; "olivedrab" ; "olivedrab1" ; "olivedrab2" ; "olivedrab3" ; 
+"olivedrab4" ; "orange" ; "orange1" ; "orange2" ; "orange3" ; 
+"orange4" ; "orangered" ; "orangered1" ; "orangered2" ; "orangered3" ; 
+"orangered4" ; "orchid" ; "orchid1" ; "orchid2" ; "orchid3" ; 
+"orchid4" ; "palegoldenrod" ; "palegreen" ; "palegreen1" ; "palegreen2" ; 
+"palegreen3" ; "palegreen4" ; "paleturquoise" ; "paleturquoise1" ; "paleturquoise2" ; 
+"paleturquoise3" ; "paleturquoise4" ; "palevioletred" ; "palevioletred1" ; "palevioletred2" ; 
+"palevioletred3" ; "palevioletred4" ; "papayawhip" ; "peachpuff" ; "peachpuff1" ; 
+"peachpuff2" ; "peachpuff3" ; "peachpuff4" ; "   peru   " ; "   pink   " ; 
+"pink1" ; "pink2" ; "pink3" ; "pink4" ; "   plum   " ; 
+"plum1" ; "plum2" ; "plum3" ; "plum4" ; "powderblue" ; 
+"purple" ; "purple1" ; "purple2" ; "purple3" ; "purple4" ; 
+(*"red" ;*) "red1" ; "   red2   " ; "   red3   " ; "   red4   " ; 
+"rosybrown" ; "rosybrown1" ; "rosybrown2" ; "rosybrown3" ; "rosybrown4" ; 
+"royalblue" ; "royalblue1" ; "royalblue2" ; "royalblue3" ; "royalblue4" ; 
+"saddlebrown" ; "salmon" ; "salmon1" ; "salmon2" ; "salmon3" ; 
+"salmon4" ; "sandybrown" ; "seagreen" ; "seagreen1" ; "seagreen2" ; 
+"seagreen3" ; "seagreen4" ; "seashell" ; "seashell1" ; "seashell2" ; 
+"seashell3" ; "seashell4" ; "sienna" ; "sienna1" ; "sienna2" ; 
+"sienna3" ; "sienna4" ; "skyblue" ; "skyblue1" ; "skyblue2" ; 
+"skyblue3" ; "skyblue4" ; "slateblue" ; "slateblue1" ; "slateblue2" ; 
+"slateblue3" ; "slateblue4" ; "slategray" ; "slategray1" ; "slategray2" ; 
+"slategray3" ; "slategray4" ; "slategrey" ; "   snow   " ; "snow1" ; 
+"snow2" ; "snow3" ; "snow4" ; "springgreen" ; "springgreen1" ; 
+"springgreen2" ; "springgreen3" ; "springgreen4" ; "steelblue" ; "steelblue1" ; 
+"steelblue2" ; "steelblue3" ; "steelblue4" ; "   tan   " ; "   tan1   " ; 
+"   tan2   " ; "   tan3   " ; "   tan4   " ; "thistle" ; "thistle1" ; 
+"thistle2" ; "thistle3" ; "thistle4" ; "tomato" ; "tomato1" ; 
+"tomato2" ; "tomato3" ; "tomato4" ; "transparent" ; "turquoise" ; 
+"turquoise1" ; "turquoise2" ; "turquoise3" ; "turquoise4" ; "violet" ; 
+"violetred" ; "violetred1" ; "violetred2" ; "violetred3" ; "violetred4" ; 
+"wheat" ; "wheat1" ; "wheat2" ; "wheat3" ; "wheat4" ; 
+"white" ; "whitesmoke" ; (*"yellow" ;*) "yellow1" ; "yellow2" ; 
+"yellow3" ; "yellow4" ; "yellowgreen"
+]*)
+
+
+(*(* Shuffle dot colors: should be executed only once!! *)
+let shuffle_dot_colors =
+	let shuffle = 
+		Array.sort (fun _ _ -> (Random.int 3) - 1)
+	in
+	let colors = Array.of_list dot_colors in
+	shuffle colors;
+	Array.iter (fun color ->
+		print_string ("\"" ^ color ^ "\"; ");
+	) colors;
+	terminate_program();*)
+

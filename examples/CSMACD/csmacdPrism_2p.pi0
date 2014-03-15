@@ -1,0 +1,27 @@
+--****************************************************--
+--****************************************************--
+--   CSMA/CD Protocol
+--
+--   Non-probabilistic model deduced from the probabilistic model in
+--   "Symbolic Model Checking for Probabilistic Timed Automata"
+--   (M. Kwiatkowska, G. Norman, J. Sproston and F. Wang., FORMATS/FTRTFT'2004)
+--
+--   See figures on http://www.prismmodelchecker.org/casestudies/csma.php
+--
+--   Modeling by Laurent Fribourg and Etienne Andre (LSV)
+--
+--   Version with 2 parameters, with slot = 2 sigma
+--
+--   Created       : 2010/04/08
+--   Last modified : 2010/04/08
+--****************************************************--
+--****************************************************--
+
+
+	---START PI0---
+	& lambda   = 808
+	& sigma    = 26
+	---END PI0---
+
+--	& lambda=96
+--	& sigma=3

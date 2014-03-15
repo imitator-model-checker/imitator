@@ -1,11 +1,11 @@
 (*****************************************************************
  *
- *                     HYMITATOR
+ *                     IMITATOR II
  * 
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2010/03/10
- * Last modified: 2010/03/16
+ * Last modified: 2011/11/20
  *
  ****************************************************************)
 
@@ -43,16 +43,17 @@ type locations = location_index array
 (* Array discrete_index -> NumConst.t *)
 type discrete = NumConst.t array
 
-type location = locations * discrete
+(* Global location: location for each automaton + value of the discrete *)
+type global_location = locations * discrete
+
 
 exception NotEqual
 
 let location_equal loc1 loc2 =
 	let (locs1, discr1) = loc1 in
 	let (locs2, discr2) = loc2 in
-	(* can use polymorphic = for locations here *)
+	(* can use polymorphic = here *)
 	if not (locs1 = locs2) then false else (
-		(* check all discrete values *)
 		if not ((Array.length discr1) = (Array.length discr2)) then false else (
 			try (
 				Array.iteri (fun i d1 -> 
@@ -91,9 +92,15 @@ let nb_automata = ref 0
 (** Useful functions *)
 (**************************************************)
 
-let get_locations (locations, _) = locations
+let get_locations (locations, _) =	locations
 
 let get_discrete (_, discrete) = discrete
+
+let location_hash_code location =
+	let locations = get_locations location in
+	Array.fold_left (fun h loc -> 
+		7919 * h + loc
+	) 0 locations
 
 let hash_code location =
 	let locations, discrete = location in

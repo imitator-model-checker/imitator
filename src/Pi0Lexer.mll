@@ -1,15 +1,19 @@
 (*****************************************************************
  *
- *                     IMITATOR II
+ *                       IMITATOR
  * 
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
+ * Universite Paris 13, Sorbonne Paris Cite, LIPN (France)
+ * 
  * Author:        Etienne Andre
+ * 
  * Created       : 2009/11/02
- * Last modified : 2010/04/22
+ * Last modified : 2013/03/05
 *****************************************************************)
 
 
 {
+open Global
 open Pi0Parser
 
 (* OCaml style comments *)
@@ -50,19 +54,12 @@ rule token = parse
 
 	| '('              { LPAREN }
 	| ')'              { RPAREN }
-(*	| '{'              { LBRACE }
-	| '}'              { RBRACE }
-	| '['              { LSQBRA }
-	| ']'              { RSQBRA }*)
 
 	| '&'              { AMPERSAND }
-(*	| ','              { COMMA }
-	| '\''             { APOSTROPHE }
-	| '|'              { PIPE }
-	| ':'              { COLON }*)
 	| ';'              { SEMICOLON }
 
 	| eof              { EOF}
+ 	| _ as c           { raise (UnexpectedToken c) }
 
 
 (* C style comments *)

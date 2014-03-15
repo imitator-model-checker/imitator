@@ -1,10 +1,120 @@
 *******************************************************
-release HYMITATOR 1.0    (2011-06-09)
+release 2.6.2    (201X-XX-XX) FUTURE RELEASE
 
-- Branch for linear hybrid automata
+Major features:
+- [WORK IN PROGRESS] Added EF-synthesis (option "-EF"): synthesize all parameter valuations such that XXXX
+
+Minor features:
+
+Changes in options syntax:
+- "reachability" becomes "statespace"
+
+Misc
+- Improve printing floating numbers (in time and memory statistics)
+- Now IMITATOR has a build number
+
+Internal
+- replaced Makefile with _oasis
+- Refactored constraints
+- Renamed "Graph.ml" with "StateSpace.ml"
 
 *******************************************************
-release IMITATOR 2.2    (2010-07-30)
+release 2.6.1.1    (2013-08-02) PRIVATE RELEASE
+
+Nothing really new, just a backup before refactoring constraints
+
+
+*******************************************************
+release 2.6.1    (2013-05-01)
+
+Major features:
+- dynamic clock elimination now implemented (option "-dynamic")
+
+Minor features:
+- tile nature now written in the source file for plot in border cartography (available with option -with-graphics-source)
+- GrML input / output is no longer "experimental", and now fully integrated
+- graphic cartography is now .png instead of .ps
+
+Bug correction:
+- Correction of the memory used in 64 bits (before, gave the same number as in 32 bits)
+
+
+*******************************************************
+release 2.6.0    (2013-02-25)
+
+Major features:
+- Added observer patterns
+- Changed and improved bad state definition (that was not really used anyway)
+- The random cartography is temporarily suspended
+
+Minor features:
+- Cartography can color in green and red according to the bad state definition
+
+Ongoing work:
+- Added a new cartography mode with border detection (ongoing work)
+- Added dynamic clock elimination (ongoing work)
+- Added branch and bound (ONGOING WORK)
+
+Syntax in options:
+- -IMorig becomes -IMK
+- -debug becomes -verbose
+- -with-dot-source becomes -with-graphics-source
+- Merging option becomes (again?) "-merge"
+- Added -bab option (for branch and bound) [work in progress]
+- Added -counterex option (stops the analysis as soon as a counterexample is found) [work in progress]
+
+Syntax in model:
+- region declaration not compulsory anymore (that was only used for Hytech backward compatibility)
+- bad state definition added
+- Not everything allowed anymore at the end of the file! (before, everything was allowed for backward compatibility with HyTech) Now need to add (optional) keyword "end" first
+
+Misc
+- output files for model "XXXX.imi" are now "XXXX.ext" instead of "XXXX.imi.ext"
+
+Internal
+- Refactored BC code
+- The bounds for V0 are now NumConst (not "int" anymore)
+
+
+*******************************************************
+release 2.5.0    (2012-08-21)
+
+- Added arbitrary clock updates (not only to 0).
+- Partial code refactoring.
+- Options: Merging is still not enabled by default; inverted options "-no-log" and "-no-log" to "-with-dot" and "-with-log". "-post-limit" becomes "-depth-limit".
+- Added experimental and ongoing features (import from and export to GML, depth first exploration).
+
+*******************************************************
+release 2.4    (2012-02-20)
+
+- Added stopwatches. Syntax, semantics and computation time are backward-compatible for models without stopwatches.
+
+*******************************************************
+release 2.375    (2012-02-20) PRIVATE RELEASE
+
+- Added merging of states (publication at NFM2012), several optimizations; added and changed input options
+
+*******************************************************
+release 2.36    (2011-11-20) PRIVATE RELEASE
+
+- Fully removed "X' and d" variables: large gain in both memory and time
+
+*******************************************************
+release 2.35    (2011-11-17) PRIVATE RELEASE
+
+- Starting removing "X' and d" variables
+- Addition of an optional optimization of the inverse method algorithm
+- Several optimizations to speed up post image computation, including a simple but efficient one for programs with discrete variables
+
+*******************************************************
+release 2.3    (2011-06-06)
+
+- Addition of variants of the inverse method algorithm
+- Addition of an optional optimization of the inverse method algorithm
+- Several optimizations to speed up post image computation
+
+*******************************************************
+release 2.2    (2010-07-30)
 
 - Several optimizations to speed up post image computation
 - More detailed presentation of reachability graph
@@ -12,12 +122,18 @@ release IMITATOR 2.2    (2010-07-30)
 - Refactoring of source code to improve maintainability
 
 *******************************************************
-release IMITATOR 2.1    (2010-05-31)
+release 2.1    (2010-05-31)
 
 - Replaced APRON and POLKA libraries by PPL (Parma Polyhedra Library)
 
 *******************************************************
-release IMITATOR 2.0    (2010-05-17)
+release 2.0    (2010-05-17)
 
-Base version
+- Tool completely rewritten in OCaml
+- Polyhedra handled thanks to APRON
+
+*******************************************************
+release 1.0    (2008)
+
+First version (in Python)
 *******************************************************

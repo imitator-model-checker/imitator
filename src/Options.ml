@@ -1,96 +1,208 @@
+(*****************************************************************
+ *
+ *                     IMITATOR II
+ *
+ * Convert a parsing structure into an abstract program
+ *
+ * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
+ * Author:        Ulrich Kuehne, Etienne Andre
+ * Created:       2010
+ * Last modified: 2014/03/11
+ *
+ ****************************************************************)
+ 
 open Arg
 open Global
-
 
 class imitator_options =
 	object
 		val mutable nb_args = 0
 	
-		(* imitator program file *)
+	
+		(* INPUT OPTIONS *)
+		
+		(* imitator model input file *)
 		val mutable file = ref ""
+		
 		(* pi0 file *)
 		val mutable pi0file = ref ""
+		
+		(* Create a "fake" pi0 file (USELESS) *)
+		val mutable forcePi0 = ref false
+		
+		(* GML syntax *)
+		val mutable fromGML = ref false
+		
+		
 	
-		(* print logs *)
-		val mutable no_log = ref false
-		(* print dot of reachable states *)
-		val mutable no_dot = ref false
-		(* plot fancy states in dot *)
-		val mutable fancy = ref false
-		(* limit number of iterations *)		
-		val mutable post_limit = ref None
-		(* limit on runtime *)
-		val mutable time_limit = ref None
-		(* limit on refinement steps *)
-		val mutable cegar_limit = ref None
-		(* imitator mode *)
-		val mutable imitator_mode = ref Inverse_method
-		(* acyclic mode *)
-		val mutable acyclic = ref false 
-		(* inclusion mode *)
-		val mutable inclusion = ref false
-		(* merging mode *)
-		val mutable merge = ref false
-  	(* union mode *)
-		val mutable union = ref false
-		(* prefix for output files *)
-		val mutable program_prefix = ref ""
-		(* do not use random values *)
-		val mutable no_random = ref false
-		(* autodetect sync actions *)
-		val mutable sync_auto_detection = ref false
-		(* print time stamps *)
-		val mutable timed_mode = ref false
-		(* print parametric logs *)
-		val mutable with_parametric_log = ref false 
+		(* OUTPUT OPTIONS *)
+		
 		(* plot cartography *)
 		val mutable cart = ref false
-		(* pre-image *)
-		val mutable pre = ref false
-		(* On-the-fly intersection*)
-		val mutable dynamic = ref false
-		(* variables to plot *)
-		val mutable plot_vars = ref []
-		(* limits for plots *)
-		val mutable plot_limits = ref (Hashtbl.create 0)
-		(* number of partitions for affine variables *)
-		val mutable nb_part = ref 4;
-				
-		method nb_args = nb_args
-		method file = !file
-		method pi0file = !pi0file
-		method no_dot = !no_dot
-		method no_log = !no_log
+		
+		(* only plot cartography *)
+		val mutable cartonly = ref false
+		
+		(* plot fancy states in dot *)
+		val mutable fancy = ref false
+		
+		(* prefix for output files *)
+		val mutable files_prefix = ref ""
+		
+		(* Gives statistics on number of calls *)
+		val mutable statistics = ref false
+		
+		(* print time stamps *)
+		val mutable timed_mode = ref false
+		
+		(* Print graph of reachable states *)
+		val mutable with_dot = ref false
+		
+		(* Keep the source file used for dot *)
+		val mutable with_graphics_source = ref false
+		
+		(* Print logs *)
+		val mutable with_log = ref false
+		
+		(* print parametric logs *)
+		val mutable with_parametric_log = ref false
+
+
+		
+		(* ALGORITHIMS *)
+
+		(* yet another (testing) mode *)
+		val mutable branch_and_bound = ref false
+		
+		(* Complete version of IM (experimental) *)
+		val mutable completeIM = ref false
+		
+		(* imitator mode *)
+		val mutable imitator_mode = ref Global.Inverse_method
+
+		
+		
+		(* ANALYSIS OPTIONS *)
+
+		(* acyclic mode: only compare inclusion or equality of a new state with former states of the same iteration (graph depth) *)
+		val mutable acyclic = ref false 
+		
+		(* stop the analysis as soon as a counterexample is found *)
+		val mutable counterex = ref false
+
+		(* Check whether the accumulated constraint is restricted to pi0 *)
+		val mutable check_point = ref false
+		
+		(* On-the-fly intersection (DEPRECATED) *)
+(* 		val mutable dynamic = ref false *)
+		
+		(* Remove useless clocks (slightly experimental) *)
+		val mutable dynamic_clock_elimination = ref false
+		
+		(* New algorithm by Etienne and Youcheng *)
+		val mutable efim = ref false
+		
+		(* inclusion mode *)
+		val mutable inclusion = ref false
+		
+		(* do not use random values *)
+		val mutable no_random = ref false
+		
+		(* Returns contraint K ("algo IMK") *)
+		val mutable pi_compatible = ref false 
+		
+		(* limit number of iterations *)
+		val mutable post_limit = ref None
+		
+		(* limit number of states *)
+		val mutable states_limit = ref None
+		
+		(* autodetect sync actions *)
+		val mutable sync_auto_detection = ref false
+		
+		(* limit on runtime *)
+		val mutable time_limit = ref None
+		
+		(* tree mode: never compare inclusion or equality of any new state with a former state *)
+		val mutable tree = ref false 
+		
+		(* Union of last states (algo "IMunion") *)
+		val mutable union = ref false
+		
+		(* Step for the cartography *)
+		val mutable step = ref NumConst.one
+
+		
+		
+		(* TRANSLATION *)
+		
+		(* Translate PTA into a CLP program *)
+		val mutable pta2clp = ref false
+		
+		(* Translate PTA into a GML program *)
+		val mutable pta2gml = ref false
+		
+		(* Translate PTA into a graphics *)
+		val mutable pta2jpg = ref false
+
+		
+		
+		(* SPECIALIZED OPTIONS*)
+		
+		(* Merging states on the fly *)
+		val mutable merge = ref false
+		(* Merging states on the fly (after pi0-compatibility check) *)
+		val mutable merge_before = ref false
+
+
+		
+		method acyclic = !acyclic
+		method acyclic_unset = (acyclic := false)
+		method branch_and_bound = !branch_and_bound
+		method branch_and_bound_unset = (branch_and_bound := false)
+		method cart = !cart
+		method cartonly = !cartonly
+		method check_point = !check_point
+		method completeIM = !completeIM
+		method counterex = !counterex
+		(* method dynamic = !dynamic *)
+		method dynamic_clock_elimination = !dynamic_clock_elimination
+		method efim = !efim
 		method fancy = !fancy
-		method with_parametric_log = !with_parametric_log
-		method post_limit = !post_limit
-		method time_limit = !time_limit
-		method cegar_limit = !cegar_limit
-		method program_prefix = !program_prefix
+		method file = !file
+		method files_prefix = !files_prefix
+		method forcePi0 = !forcePi0
+		method fromGML = !fromGML
 		method imitator_mode = !imitator_mode
 		method inclusion = !inclusion
+		method nb_args = nb_args
 		method merge = !merge
-		method union = !union
-		method acyclic = !acyclic
-		method sync_auto_detection = !sync_auto_detection
+		method merge_before = !merge_before
 		method no_random = !no_random
+		method pi_compatible = !pi_compatible
+		method post_limit = !post_limit
+		method pta2clp = !pta2clp
+		method pta2gml = !pta2gml
+		method pta2jpg = !pta2jpg
+		method states_limit = !states_limit
+		method statistics = !statistics
+		method step = !step
+		method sync_auto_detection = !sync_auto_detection
+		method time_limit = !time_limit
 		method timed_mode = !timed_mode
-		method cart = !cart
-		method pre = !pre
-		method dynamic = !dynamic
-		method plot_vars = !plot_vars
-		method plot_limits = !plot_limits
-		method nb_partitions = !nb_part
+		method tree = !tree
+		method union = !union
+		method with_dot = !with_dot
+		method with_graphics_source = !with_graphics_source
+		method with_log = !with_log
+		method with_parametric_log = !with_parametric_log
+
+		method pi0file = !pi0file
+
 		
 		method parse =
-			let usage_msg = "Usage: ./" ^ program_name ^ " model [pi0_file] [options]" in
-			
-			(* auxiliary variables *)
-			let plot_vars_x = ref [] in
-			let plot_vars_y = ref [] in
-			let limit_var = ref "" in
-			let limit_lower = ref "" in
-			
+			let usage_msg = "Usage: " ^ program_name ^ " model.imi [reference_valuation.pi0] [options]" in
+
 			(* Get the debug mode *)
 			let rec set_debug_mode_ref debug_mode =
 					let mode = try debug_mode_of_string debug_mode
@@ -98,71 +210,123 @@ class imitator_options =
 						print_error ("The debug mode '" ^ debug_mode ^ "' is not valid.");
 						Arg.usage speclist usage_msg;
 						abort_program ();
-						exit(0); in
+						exit(1); in
 					set_debug_mode mode
 
 			(* Get the mode *)
 			and set_mode mode =
-				(* Case: 'reachability' *)
-				if mode = "reachability" then 
-					imitator_mode := Reachability_analysis
+				(* Case: state space exploration *)
+				if mode = "statespace" then 
+					imitator_mode := State_space_exploration
+				(* Case: EF-synthesis *)
+				else if mode = "EF" then 
+					imitator_mode := EF_synthesis
 				(* Case: inverse method *)
 				else if mode = "inversemethod" then 
 					imitator_mode := Inverse_method
 				(* Case: cover *)
 				else if mode = "cover" then 
 					imitator_mode := Cover_cartography
+				(* Case: border *)
+				else if mode = "border" then 
+					imitator_mode := Border_cartography
 				(* Case: number of iterations *)
-				else if mode = "cegar" then
-					imitator_mode := AbstractReachability
 				else try (
 					(* Find the 'random' string *)
 					if not (String.sub mode 0 6 = "random") then raise (Failure "toto");
 					(* Find the number *)
 					let number = String.sub mode 6 (String.length mode - 6) in
 					imitator_mode := (Random_cartography (int_of_string number))
-				) with _ -> (
+				) with Failure _ | Invalid_argument _-> (
 					print_error ("The mode '" ^ mode ^ "' is not valid.");
 					Arg.usage speclist usage_msg;
 					abort_program ();
-					exit(0);
+					exit(1);
 				)
-
-			and add_plot_x var_x =
-				plot_vars_x := var_x :: !plot_vars_x
-
-			and add_plot_y var_y =
-				plot_vars_y := var_y :: !plot_vars_y
-
-			and add_plot_limit upper =
-				Hashtbl.add !plot_limits !limit_var (!limit_lower, upper)								
 
 			(* Options *)
 			and speclist = [
-				("-acyclic", Set acyclic, " Does not test if a new state was already encountered. To be set ONLY if the system is acyclic. Default: 'false'");		
-				("-debug", String set_debug_mode_ref, " Print more or less debug information. Can be set to 'nodebug', 'standard', 'low', 'medium', 'high', 'total'. Default: 'standard'");
-				("-inclusion", Set inclusion, " Consider an inclusion of region instead of the equality when performing the Post operation. Default: 'false'");
-				("-union", Set union, " Consider last states for deriving constraint K. Default: 'false'");
-				("-merge", Set merge, " Try to merge states when performing the Post operation. Default: 'false'");
-				("-log-prefix", Set_string program_prefix, " Sets the prefix for log files. Default: [model].");
-				("-mode", String set_mode, " Mode for " ^ program_name ^ ". Use 'reachability' for a parametric reachability analysis (no pi0 needed). Use 'inversemethod' for the inverse method. For the behavioral cartography algorithm, use 'cover' to cover all the points within V0, or 'randomXX' where XX is a number to iterate randomly algorithm. Use 'cegar' for reachability based on counterexample guided abstraction refinement. Default: 'inversemethod'.");
-				("-pre", Set pre, " Use pre-image instead of post-image computation. Default: false.");
-				("-no-dot", Set no_dot, " No graphical output using 'dot'. Default: false.");
-				("-no-log", Set no_log, " No generation of log files. Default: false.");
+				("-acyclic", Set acyclic, " Test if a new state was already encountered only with states of the same depth. To be set only if the system is fully acyclic (no backward branching, i.e., no cycle). Default: 'false'");
+				
+(* 				Temporarily disabled (March 2014) *)
+(* 				("-bab", Set branch_and_bound, " Experimental new feature of IMITATOR, based on cost optimization (WORK IN PROGRESS). Default: 'false'"); *)
+				
 				("-cart", Set cart, " Plot cartography before terminating the program. Uses the first two parameters with ranges. Default: false.");
-				("-plot", Tuple [String add_plot_x; String add_plot_y], " Generate 2D plot of rechable states projected on the two given variables. Default: false.");
-				("-limits", Tuple [Set_string limit_var; Set_string limit_lower; String add_plot_limit], " Set limits of the displayed plot area for a variable. Default: automatic");
-				("-part", Int (fun i -> nb_part := i), " Number of partitions for each affine variable. Default: 4.");
+				
+				("-cartonly", Unit (fun _ -> cart := true; cartonly := true; imitator_mode := Translation), " Only prints a cartography. Default: false.");
+
+				(* 				("-dynamic", Set dynamic, "Perform the on-the-fly intersection. Defaut : 'false'"); *)
+				
+				("-check-point", Set check_point, " Check at each iteration whether the accumulated constraint is restricted to pi0 (warning! very costly)");
+				
+				("-completeIM", Set completeIM, " Experimental version of IM that outputs a complete (full) result. Default: false.");
+				
+				("-counterex", Set counterex, " Stop the analysis as soon as a bad state is discovered (work in progress). Default: false.");
+				
+				("-depth-limit", Int (fun i -> post_limit := Some i), " Limits the depth of the exploration of the reachability graph. Default: no limit.");
+				
+				("-dynamic-elimination", Set dynamic_clock_elimination, " Dynamic clock elimination [FSFMA13]. Default: false.");
+				
+				("-efim", Set efim, " New algorithm in between IM and EF (WORK IN PROGRESS). Default: false.");
+				
 				("-fancy", Set fancy, " Generate detailed state information for dot output. Default: false.");
+
+				(* 				("-forcePi0", Set forcePi0, "Create a predefined pi0 file of the form p1 = 1, p2 = 2, etc. Defaut : 'false'"); *)
+				
+				("-fromGrML", Set fromGML, "GrML syntax for input files (experimental). Defaut : 'false'");
+				
+				("-incl", Set inclusion, " Consider an inclusion of region instead of the equality when performing the Post operation (e.g., as in algorithm IMincl defined in [AS11]). Default: 'false'");
+				
+				("-IMK", Set pi_compatible, " Algorithm IMoriginal (defined in [AS11]): return a constraint such that no pi-incompatible state can be reached. Default: 'false'");
+				
+				("-IMunion", Set union, " Algorithm IMUnion (defined in [AS11]): Returns the union of the constraint on the parameters associated to the last state of each trace. Default: 'false'");
+				
+				("-log-prefix", Set_string files_prefix, " Sets the prefix for output files. Default: [model].");
+				
+				("-merge", Set merge, " Use the merging technique of [AFS12]. Default: 'false' (disable)");
+				
+				("-merge-before", Set merge_before , " Use the merging technique of [AFS12] but merges states before pi0-compatibility test (EXPERIMENTAL). Default: 'false' (disable)");
+				
+				("-mode", String set_mode, " Mode for " ^ program_name ^ ".
+        Use 'statespace' for a parametric state space exploration (no pi0 needed).
+        Use 'EF' for a parametric non-reachability analysis (no pi0 needed).
+        Use 'inversemethod' for the inverse method.
+        For the behavioral cartography algorithm, use 'cover' to cover all the points within V0, 'border' to find the border between a small-valued good and a large-valued bad zone (experimental), or 'randomXX' where XX is a number to iterate randomly algorithm (e.g., random5 or random100). Default: 'inversemethod'.");
+				
 				("-no-random", Set no_random, " No random selection of the pi0-incompatible inequality (select the first found). Default: false.");
+
+				(* 				("-PTA2CLP", Unit (fun _ -> pta2clp := true; imitator_mode := Translation), "Translate PTA into a CLP program, and exit without performing any analysis. Work in progress! Defaut : 'false'"); *)
+				
+				("-PTA2GrML", Unit (fun _ -> pta2gml := true; imitator_mode := Translation), "Translate PTA into a GrML program, and exit without performing any analysis. Defaut : 'false'");
+				
+				("-PTA2JPG", Unit (fun _ -> pta2jpg := true; with_dot:= true; imitator_mode := Translation), "Translate PTA into a graphics, and exit without performing any analysis. Defaut : 'false'");
+				
+				("-states-limit", Int (fun i -> states_limit := Some i), " States limit: will try to stop after reaching this number of states. Warning: the program may have to first finish computing the current iteration before stopping. Default: no limit.");
+				
+				("-statistics", Set statistics, " Print info on number of calls to PPL, and other statistics. Default: 'false'");
+				
+				("-step", String (fun i -> (* TODO: SHOULD CHECK HERE THAT STEP IS EITHER A FLOAT OR AN INT *) step := (NumConst.numconst_of_string i)), " Step for the cartography. Default: 1/1.");
+				
 				("-sync-auto-detect", Set sync_auto_detection, " Detect automatically the synchronized actions in each automaton. Default: false (consider the actions declared by the user)");
+				
 				("-time-limit", Int (fun i -> time_limit := Some i), " Time limit in seconds. Warning: no guarantee that the program will stop exactly after the given amount of time. Default: no limit.");
-				("-post-limit", Int (fun i -> post_limit := Some i), " Limits the depth of the Post exploration. Default: no limit.");
-				("-cegar-limit", Int (fun i -> cegar_limit := Some i), " Limits the number of refinement steps in CEGAR mode. Default: no limit.");				
+				
 				("-timed", Set timed_mode, " Adds a timing information to each output of the program. Default: none.");
+				
+				("-tree", Set tree, " Does not test if a new state was already encountered. To be set ONLY if the reachability graph is a tree (otherwise analysis may loop). Default: 'false'");
+				
+				("-verbose", String set_debug_mode_ref, " Print more or less information. Can be set to 'mute', 'standard', 'low', 'medium', 'high', 'total'. Default: 'standard'");
+				
+				("-version", Unit (fun _ -> print_string ("\n" ^ program_name ^ " " ^ version_string); exit 0), " Print version number and exit.");
+				
+				("-with-dot", Set with_dot, " Trace set under a graphical form (using 'dot'). Default: false.");
+				
+				("-with-graphics-source", Set with_graphics_source, " Keep file(s) used for generating graphical output. Default: false.");
+				
+				("-with-log", Set with_log, " Generation of log files (description of states). Default: false.");
+				
 				("-with-parametric-log", Set with_parametric_log, " Adds the elimination of the clock variables in the constraints in the log files. Default: false.");
-				("-version", Unit (fun _ -> print_version_string (); exit 0), " Print version string and exit.");
-				("-dynamic", Set dynamic, "Perform the on-the-fly intersection. Currently : Does not work. Defaut : 'false'");
+
 			] in
 					
 			(* function for parsing arguments *)
@@ -179,36 +343,43 @@ class imitator_options =
 				)
 				(* If more than one argument : warns *)
 				else (
-					print_warning ("The program argument '" ^ arg ^ "' will be ignored.");
+					print_warning ("The argument '" ^ arg ^ "' will be ignored.");
 				)
 			) in
 
-			let usage_msg = "Usage: ./" ^ program_name ^ " model [pi0_file] [options]" in
-			
-			(* set default debug level *)
-			set_debug_mode Debug_standard;
-			
 			Arg.parse speclist anon_fun usage_msg;
 
-		  (* merge plot variables *)
-			plot_vars := List.combine !plot_vars_x !plot_vars_y;
-
-			(* Case no file *)
+			(* Case no file (except case translation) *)
 			if nb_args < 1 then(
-				print_error ("Please give a source file name.");
+				print_error ("Please give a file name for the model.");
 				Arg.usage speclist usage_msg;
-				abort_program (); exit(0)
+				abort_program (); exit(1)
 			);
 			
 			(* Case no pi0 file *)
-			if nb_args = 1 && (!imitator_mode != Reachability_analysis && !imitator_mode != AbstractReachability) then(
-				print_error ("Please give a reference valuation file name.");
+			if nb_args = 1 && (!imitator_mode != State_space_exploration) && (!imitator_mode != EF_synthesis) && (!imitator_mode != Translation) && not !forcePi0 then(
+				print_error ("Please give a file name for the reference valuation.");
 				Arg.usage speclist usage_msg;
-				abort_program (); exit(0)
+				abort_program (); exit(1)
 			);
 			
-			(* set program prefix *)
-			if !program_prefix = "" then
-			  program_prefix := !file
+			
+			(* Set prefix for files *)
+			if !files_prefix = "" then
+				(* WHAT ? *)
+			  files_prefix := !file
+			;
+			  
+			(* Remove the ".imi" at the end of the program prefix, if any *)
+			let model_extension_size = String.length model_extension in
+			if String.length !files_prefix > model_extension_size then(
+				(* Get the last signs *)
+				let last = String.sub !files_prefix ((String.length !files_prefix) - model_extension_size) model_extension_size in
+				(* Check if it corresponds to ".imi" *)
+				if last = model_extension then(
+					(* Remove the last signs *)
+					files_prefix := String.sub !files_prefix 0 ((String.length !files_prefix) - model_extension_size);
+				);
+			);
 
 	end

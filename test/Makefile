@@ -48,21 +48,21 @@ regr_cov: $(COV_RESULTS)
 
 log/%.rea.log: data/%.imi
 	@ echo [TEST] Testing reachability analysis for \'$*\' 
-	@ memtime $(IMITATOR) data/$*.imi -mode reachability $(IMITATOR_MISC_OPTIONS) > $@
+	@ $(IMITATOR) data/$*.imi -mode reachability $(IMITATOR_MISC_OPTIONS) > $@
 	@ if ( ! fgrep -s "IMITATOR II successfully terminated" $@ > /dev/null ); then \
 	  echo [FAIL] Test did not terminate successfully. Check log file \'$@\' ; \
 	  touch fail; fi	  
 
 log/%.inv.log: data/%.imi data/%.pi0
 	@ echo [TEST] Testing inverse method for \'$*\' 
-	@ memtime $(IMITATOR) data/$*.imi data/$*.pi0 -mode inversemethod $(IMITATOR_MISC_OPTIONS) > $@
+	@ $(IMITATOR) data/$*.imi data/$*.pi0 -mode inversemethod $(IMITATOR_MISC_OPTIONS) > $@
 	@ if ( ! fgrep -s "IMITATOR II successfully terminated" $@ > /dev/null ); then \
 	  echo [FAIL] Test did not terminate successfully. Check log file \'$@\' ; \
 	  touch fail; fi	  
 
 log/%.cov.log: data/%.imi data/%.v0
 	@ echo [TEST] Testing cartography for \'$*\' 
-	@ memtime $(IMITATOR) data/$*.imi data/$*.v0 -mode cover $(IMITATOR_MISC_OPTIONS) > $@
+	@ $(IMITATOR) data/$*.imi data/$*.v0 -mode cover $(IMITATOR_MISC_OPTIONS) > $@
 	@ if ( ! fgrep -s "IMITATOR II successfully terminated" $@ > /dev/null ); then \
 	  echo [FAIL] Test did not terminate successfully. Check log file \'$@\' ; \
 	  touch fail; fi

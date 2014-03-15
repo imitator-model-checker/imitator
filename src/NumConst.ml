@@ -1,11 +1,11 @@
 (*****************************************************************
  *
- *                     HYMITATOR
+ *                     IMITATOR II
  * 
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2010/03/04
- * Last modified: 2010/03/09
+ * Last modified: 2013/01/30
  *
  ****************************************************************)
 
@@ -14,22 +14,18 @@
 (**************************************************)
 
 open Gmp.Q.Infixes
-open Gmp.Z.Infixes
-
-(* type t *)
 
 (*type t =          *)
 (*  | Mpq of Gmp.Q.t*)
 type t = Gmp.Q.t
 
-exception Arithmetic_exception of string
+exception Unknown_numconst of string
+
 
 (**************************************************)
 (* Functions *)
 (**************************************************)
 
-(*let get_mpq = function*)
-(*	| Mpq a -> a        *)
 let get_mpq a = a
 
 (**************************************************)
@@ -46,33 +42,63 @@ let numconst_of_frac i j = (Gmp.Q.from_ints i j)
 
 let numconst_of_zfrac i j = (Gmp.Q.from_zs i j)
 
+(* Cannot string_of_int (can overflow) ; behavior unspecified if no integer string *)
+let numconst_of_int_string s =
+	Gmp.Q.from_z (Gmp.Z.from_string s)
+
+
 let numconst_of_float f = (* Mpq (Mpq.of_float i) DOES NOT WORK WELL *)
 	(* Split the float in integer and fractional part *)
 	let (fractional, integer) = modf f in
-	let integer = int_of_float integer in
+	let integer = numconst_of_int (int_of_float integer) in
 	(* Case of an integer *)
-	if fractional = 0.0 then numconst_of_int integer
+	if fractional = 0.0 then integer
 	else(
 		let fractional = string_of_float fractional in
 		(* Remove the "0." in front of the fractional part *)
 		let fractional = String.sub fractional 2 (String.length fractional -2) in
 		(* Find the denominator *)
-		let denominator = int_of_string ("1" ^ (String.make (String.length fractional) '0')) in
-		let fractional = int_of_string fractional in
+		let denominator = numconst_of_int_string ("1" ^ (String.make (String.length fractional) '0')) in
+		let fractional = numconst_of_int_string fractional in
 		(* Create the fraction *)
-		 numconst_of_frac (integer * denominator + fractional) denominator
+		 (integer */ denominator +/ fractional) // denominator
 	)
 	
 let numconst_of_string str =
-	Gmp.Q.from_z (Gmp.Z.from_string str)
+	(* Case int *)
+	if Str.string_match (Str.regexp "^[0-9]+$") str 0 then
+		numconst_of_int_string str
+	(* Case fraction *)
+	else if Str.string_match (Str.regexp "^[0-9]+/[0-9]+$") str 0 then
+		let parts = Str.split (Str.regexp_string "/") str in
+		let denominator =  numconst_of_int_string (List.nth parts 0) in
+		let fractional = numconst_of_int_string(List.nth parts 1) in
+		denominator // fractional
+	(* Case float *)
+	else if Str.string_match (Str.regexp "^[0-9]+.[0-9]+$") str 0 then numconst_of_float (float_of_string str)
+	(* Otherwise *)
+	else raise (Unknown_numconst ("Impossible to cast the string '" ^ str ^ "' to a NumConst in function numconst_of_string. Unknown type."))
+	(* 	Gmp.Q.from_z (Gmp.Z.from_string str) *)
+	
 
+	
 let numconst_of_mpq m = m
 
 let numconst_of_mpz z = Gmp.Q.from_z z
 
 let mpq_of_numconst = get_mpq
 
-let float_of_numconst = Gmp.Q.to_float
+let string_of_numconst a =
+	(* Avoid 0/1 *)
+	if a =/ (Gmp.Q.zero) then "0" else(
+		(* Avoid 1/1 *)
+		let den = get_den a in 
+		if den = (Gmp.Z.from_int 1) then
+			Gmp.Z.to_string (get_num a)
+		else
+			(* Nice predefined function *)
+			Gmp.Q.to_string (get_mpq a)
+	)
 
 (**************************************************)
 (** {2 Constants} *)
@@ -83,24 +109,17 @@ let zero = Gmp.Q.zero
 let one = numconst_of_int 1
 let minus_one = numconst_of_int (-1)
 
-let string_of_numconst a =
-	let q = get_den a in
-	if q =! Gmp.Z.one then  		
-		Gmp.Z.to_string (get_num a)
-	else
-		Gmp.Q.to_string (get_mpq a)
-
 
 (**************************************************)
 (** {2 Arithmetic Functions} *)
 (**************************************************)
 
-let arithmetic_gen op a b =
+(*let arithmetic_gen op a b =
 	let a = get_mpq a in
 	let b = get_mpq b in
 	let result = Gmp.Q.create () in
 	op result a b;
-	result
+	result*)
 
 let add = ( +/ ) 
 (*	arithmetic_gen Gmp.Q.add*)
@@ -114,17 +133,6 @@ let mul = ( */ )
 let div = ( // ) 
 (*	arithmetic_gen Gmp.Q.div*)
 
-
-let pow x y =
-	(* only for integer exponents *)
-	let p = get_num y in
-	let q = get_den y in
-	if q <>! Gmp.Z.one then raise (Arithmetic_exception "exponent is non-integer");
-	let e = Gmp.Z.abs p in
-	let rec power b ex =	if ex <=! Gmp.Z.zero then one else mul b (power b (ex -! Gmp.Z.one)) in
-	let res = power x e in
-	if y </ zero then div one res else res 
-
 let neg a = Gmp.Q.neg a	
 (*	let a = get_mpq a in           *)
 (*	let result = Gmp.Q.create () in*)
@@ -135,18 +143,49 @@ let abs a =
 	if Gmp.Q.cmp (get_mpq a) (Gmp.Q.zero) >= 0 then a
 	else neg a
 
-let random a b =
-	let range = sub b a in
-	let frnd  = Random.float 1.0 in
-	let qrnd  = Gmp.Q.from_float frnd in
-	add a (mul range qrnd)
+
+
+(** WARNING: not really tested !!! *)
+let find_multiple_gen tcdiv_q base_number step number =
+	(* 1) Compute m = number - base_number *)
+	let m = sub number base_number in
+	
+	(* 2) Compute d = m / step (hence, m = n * step) *)
+	let d = div m step in
+	
+	(* 3) Find the closest integer k below d *)
+		(* 3a) Extract numerator and denominator (integers) *)
+	let d_num = get_num d in
+	let d_den = get_den d in
+		(* 3b) Use integer division (rounded above/below) *)
+	let k = tcdiv_q d_num d_den in
+	
+	(* 4) Return n = k * step + base_number *)
+	add
+		(mul 
+			(Gmp.Q.from_z k)
+			step
+		)
+		base_number
+
+(** WARNING: not really tested !!! *)
+(** Find the closest multiple of step from base_number below (or equal to) number *)
+(* That is: find the largest n s.t. n = k * step + base_number, with k integer, and n <= number *)
+let find_multiple_below =
+	find_multiple_gen Gmp.Z.tdiv_q
+		
+
+(** WARNING: not really tested !!! *)
+(** Find the closest multiple of step from base_number above (or equal to) number *)
+(* That is: find the smallest n s.t. n = k * step + base_number, with k integer, and n >= number *)
+let find_multiple_above =
+	find_multiple_gen Gmp.Z.cdiv_q
+		
+
 
 (**************************************************)
 (** {2 Comparison Functions} *)
 (**************************************************)
-let comparison_gen op a b =
-	op (Gmp.Q.cmp (get_mpq a) (get_mpq b)) 0
-	
 let equal a b =
 	Gmp.Q.equal (get_mpq a) (get_mpq b)
 
@@ -158,13 +197,28 @@ let le = ( <=/ )
 let ge = ( >=/ )
 let g  = ( >/ )
 
-(*let l = comparison_gen (<)  *)
-(*                            *)
-(*let le = comparison_gen (<=)*)
-(*                            *)
-(*let ge = comparison_gen (>=)*)
-(*                            *)
-(*let g = comparison_gen (>)  *)
+
+(**************************************************)
+(** {2 Test Functions} *)
+(**************************************************)
+let is_integer n =
+	(* Zero is an integer! *)
+	(*** WARNING: added one as well, because the cmp test below did not work for one *)
+	equal n zero || equal n one ||
+	(* Then check denominator = numerator *)
+	(
+		(*print_string (Gmp.Z.to_string (get_num n));
+		print_string "/";
+		print_string (Gmp.Z.to_string (get_num n));
+		print_string "\n";
+		print_string ("  Check num = den: " ^ (string_of_bool ((get_num n) = (get_den n))));
+		print_string "\n";
+		print_string ("  Check cmp (num , den): " ^ (string_of_int (Gmp.Z.cmp (get_num n) (get_den n))));
+		print_string "\n";*)
+		(*** WARNING: should not use directly (get_num n) = (get_den n), because got strange results *)
+		(Gmp.Z.cmp (get_num n) (get_den n)) > 0
+	)
+
 
 
 (**************************************************)

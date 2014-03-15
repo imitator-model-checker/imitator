@@ -7,7 +7,7 @@
 --   Etienne ANDRE
 --
 --   Created:        2010/03/19
---   Last modified : 2010/03/24
+--   Last modified : 2013/03/07
 --************************************************************--
 --************************************************************--
 
@@ -25,7 +25,6 @@ var 	ckNor1, ckNor2, s
 --************************************************************--
 synclabs: R_Up, R_Down, overQ_Up, overQ_Down,
 	Q_Up, Q_Down;
-initially Nor1_110;
 
 -- UNSTABLE
 loc Nor1_000: while ckNor1 <= dNor1_u wait {}
@@ -80,7 +79,6 @@ end -- norGate1
 synclabs: Q_Up, Q_Down, S_Up, S_Down,
 	overQ_Up, overQ_Down;
 -- initially Nor2_110;
-initially Nor2_001;
 
 -- UNSTABLE
 loc Nor2_000: while ckNor2 <= dNor2_u wait {}
@@ -133,7 +131,6 @@ end -- norGate2
   automaton env
 --************************************************************--
 synclabs: R_Down, R_Up, S_Down, S_Up;
-initially env_11;
 
 -- ENVIRONMENT : first S then R at constant time
 loc env_11: while True wait {}
@@ -149,8 +146,6 @@ end -- env
 --************************************************************--
 -- ANALYSIS
 --************************************************************--
-
-var init : region;
 
 init := True
 	------------------------------------------------------------

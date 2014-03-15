@@ -1,26 +1,42 @@
-(*****************************************************************
+(************************************************************
  *
- *                     HYMITATOR
+ *                     IMITATOR
  * 
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre, Ulrich Kuehne
  * Created:       2010/07/05
- * Last modified: 2010/07/13
+ * Last modified: 2013/03/20
  *
- ****************************************************************)
+ ************************************************************)
 
-(**************************************************)
-(* Functions *)
-(**************************************************)
+(************************************************************)
+(* Modules *)
+(************************************************************)
+
+open Global
 open LinearConstraint
 open AbstractModel
 
 
-(** Plot polyhedron corresponding to a convex constraint, projected onto the first two variables *)
-val plot_2d : variable -> variable -> linear_constraint -> string
 
-(** Plot the cartography *)
-val cartography : linear_constraint list ->  int list->  int -> string -> unit
+(************************************************************)
+(* Constants *)
+(************************************************************)
+val dot_image_extension : string
 
-(** Compute the coverage of the rectangle v0 by a list of zones (constraints) *)
-val coverage : linear_constraint list -> float
+val dot_colors : string list
+
+
+(************************************************************)
+(* Functions *)
+(************************************************************)
+
+
+val cartography : abstract_model ->  v0 -> returned_constraint list ->  string -> unit
+
+val dot : abstract_model -> string -> string -> unit
+
+val generate_graph : abstract_model -> StateSpace.reachability_graph -> string -> unit
+
+(* Convert a graph to a dot file *)
+(* val dot_of_graph : AbstractModel.abstract_model -> reachability_graph -> fancy:bool -> (string * string) *)

@@ -1,0 +1,144 @@
+var 
+	t_asap_1:clock;
+	t_pipeline_1:clock;
+	T_pipeline_1=10:parameter;
+	D_pipeline_1=10:parameter;
+	t_task_1:clock;
+	C_task_1=3:parameter;
+	Token_1:discrete;
+	t_asap_2:clock;
+	t_pipeline_2:clock;
+	T_pipeline_2=20:parameter;
+	D_pipeline_2=20:parameter;
+	t_task_2:clock;
+	C_task_2=3:parameter;
+	Token_2:discrete;
+	t_asap_3:clock;
+	t_pipeline_3:clock;
+	T_pipeline_3=40:parameter;
+	D_pipeline_3=40:parameter;
+	t_task_31:clock;
+	C_task_31:parameter;
+	Token_31:discrete;
+	t_task_32:clock;
+	C_task_32:parameter;
+	Token_32:discrete;
+
+
+automaton observer
+	synclabs:DEADLINE_MISSED_1,DEADLINE_MISSED_2;
+
+
+loc ObserverOK: while True wait
+		when True sync DEADLINE_MISSED_1 goto ObserverNOK;
+		when True sync DEADLINE_MISSED_2 goto ObserverNOK;
+
+loc ObserverNOK: while True wait
+
+end
+
+automaton pipeline_1
+	synclabs:pipeline_restart_1,task_1_act,task_1_done;
+
+	loc P1_1: while t_asap_1 <= 0 wait
+		 when t_asap_1=0 sync task_1_act goto P1_2;
+	loc P1_2: while t_pipeline_1 <= D_pipeline_1 wait
+		 when t_pipeline_1 <= D_pipeline_1 sync task_1_done do {t_asap_1'=0} goto P1_3;
+	loc P1_3: while t_pipeline_1 <= T_pipeline_1 wait
+		 when t_pipeline_1 = T_pipeline_1 do {t_pipeline_1'=0,t_asap_1'=0} sync pipeline_restart_1 goto P1_1;
+end
+
+automaton pipeline_2
+	synclabs:pipeline_restart_2,task_2_act,task_2_done;
+
+	loc P2_1: while t_asap_2 <= 0 wait
+		 when t_asap_2=0 sync task_2_act goto P2_2;
+	loc P2_2: while t_pipeline_2 <= D_pipeline_2 wait
+		 when t_pipeline_2 <= D_pipeline_2 sync task_2_done do {t_asap_2'=0} goto P2_3;
+	loc P2_3: while t_pipeline_2 <= T_pipeline_2 wait
+		 when t_pipeline_2 = T_pipeline_2 do {t_pipeline_2'=0,t_asap_2'=0} sync pipeline_restart_2 goto P2_1;
+end
+
+automaton pipeline_3
+	synclabs:pipeline_restart_3,task_31_act,task_31_done,task_32_act,task_32_done;
+
+	loc P3_1: while t_asap_3 <= 0 wait
+		 when t_asap_3=0 sync task_31_act goto P3_2;
+	loc P3_2: while t_pipeline_3 <= D_pipeline_3 wait
+		 when t_pipeline_3 <= D_pipeline_3 sync task_31_done do {t_asap_3'=0} goto P3_3;
+	loc P3_3: while t_asap_3 <= 0 wait
+		 when t_asap_3=0 sync task_32_act goto P3_4;
+	loc P3_4: while t_pipeline_3 <= D_pipeline_3 wait
+		 when t_pipeline_3 <= D_pipeline_3 sync task_32_done do {t_asap_3'=0} goto P3_5;
+	loc P3_5: while t_pipeline_3 <= T_pipeline_3 wait
+		 when t_pipeline_3 = T_pipeline_3 do {t_pipeline_3'=0,t_asap_3'=0} sync pipeline_restart_3 goto P3_1;
+end
+
+automaton proc_1
+	 synclabs: DEADLINE_MISSED_1, task_1_act,task_1_done,task_31_act,task_31_done;
+
+	loc DEADLINE_MISS: while True wait
+	loc proc_1_00: while True stop {t_task_1,t_task_31} wait
+		when True sync task_1_act do {t_task_1'=0} goto proc_1_10;
+		when True sync task_31_act do {t_task_31'=0} goto proc_1_01;
+	loc proc_1_10: while t_task_1 <= C_task_1 stop {t_task_31} wait
+		when t_task_1 < C_task_1 & t_pipeline_1 = D_pipeline_1 sync DEADLINE_MISSED_1 goto DEADLINE_MISS;
+		when t_task_1 = C_task_1 sync task_1_done goto proc_1_00;
+		when t_task_1 < C_task_1 sync task_31_act do {t_task_31'=0} goto proc_1_11;
+	loc proc_1_01: while t_task_31 <= C_task_31 stop {t_task_1} wait
+		when t_task_31 < C_task_31 & t_pipeline_3 = D_pipeline_3 sync DEADLINE_MISSED_1 goto DEADLINE_MISS;
+		when t_task_31 < C_task_31 sync task_1_act do {t_task_1'=0} goto proc_1_11;
+		when t_task_31 = C_task_31 sync task_31_done goto proc_1_00;
+	loc proc_1_11: while t_task_1 <= C_task_1 stop {t_task_31} wait
+		when t_task_1 < C_task_1 & t_pipeline_1 = D_pipeline_1 sync DEADLINE_MISSED_1 goto DEADLINE_MISS;
+		when t_task_31 < C_task_31 & t_pipeline_3 = D_pipeline_3 sync DEADLINE_MISSED_1 goto DEADLINE_MISS;
+		when t_task_1 = C_task_1 sync task_1_done goto proc_1_01;
+		when t_task_31 = C_task_31 sync task_31_done goto proc_1_10;
+end
+
+automaton proc_2
+	 synclabs: DEADLINE_MISSED_2, task_2_act,task_2_done,task_32_act,task_32_done;
+
+	loc DEADLINE_MISS: while True wait
+	loc proc_2_00: while True stop {t_task_2,t_task_32} wait
+		when True sync task_2_act do {t_task_2'=0} goto proc_2_10;
+		when True sync task_32_act do {t_task_32'=0} goto proc_2_01;
+	loc proc_2_10: while t_task_2 <= C_task_2 stop {t_task_32} wait
+		when t_task_2 < C_task_2 & t_pipeline_2 = D_pipeline_2 sync DEADLINE_MISSED_2 goto DEADLINE_MISS;
+		when t_task_2 = C_task_2 sync task_2_done goto proc_2_00;
+		when t_task_2 < C_task_2 sync task_32_act do {t_task_32'=0} goto proc_2_11;
+	loc proc_2_01: while t_task_32 <= C_task_32 stop {t_task_2} wait
+		when t_task_32 < C_task_32 & t_pipeline_3 = D_pipeline_3 sync DEADLINE_MISSED_2 goto DEADLINE_MISS;
+		when t_task_32 < C_task_32 sync task_2_act do {t_task_2'=0} goto proc_2_11;
+		when t_task_32 = C_task_32 sync task_32_done goto proc_2_00;
+	loc proc_2_11: while t_task_2 <= C_task_2 stop {t_task_32} wait
+		when t_task_2 < C_task_2 & t_pipeline_2 = D_pipeline_2 sync DEADLINE_MISSED_2 goto DEADLINE_MISS;
+		when t_task_32 < C_task_32 & t_pipeline_3 = D_pipeline_3 sync DEADLINE_MISSED_2 goto DEADLINE_MISS;
+		when t_task_2 = C_task_2 sync task_2_done goto proc_2_01;
+		when t_task_32 = C_task_32 sync task_32_done goto proc_2_10;
+end
+
+var init:region;
+init:= loc[observer] = ObserverOK &
+	loc[proc_1]= proc_1_00 &
+	loc[proc_2]= proc_2_00 &
+	loc[pipeline_1]=P1_1 &
+	loc[pipeline_2]=P2_1 &
+	loc[pipeline_3]=P3_1 &
+	t_asap_1 = 0 &
+	t_pipeline_1 = 0 &
+	t_task_1 = 0 & 
+	t_asap_2 = 0 &
+	t_pipeline_2 = 0 &
+	t_task_2 = 0 & 
+	t_asap_3 = 0 &
+	t_pipeline_3 = 0 &
+	t_task_31 = 0 & 
+	t_task_32 = 0 & 
+	Token_1 = 0 & 
+	Token_2 = 0 & 
+	Token_31 = 0 & 
+	Token_32 = 0 & 
+	True;
+bad := exists_location loc[observer] = ObserverNOK;
+ 

@@ -1,0 +1,17 @@
+--************************************************************--
+--************************************************************--
+--
+--   Looping Automaton
+--   (Analysis possible using dynamic clock elimination only)
+--
+--   Etienne ANDRE
+--   Universite Paris 13, Sorbonne Paris Cite, LIPN (France)
+--
+--                                Created : 2013
+--                          Last modified : 2013/05/05
+--                       IMITATOR version : 2.6.1
+--************************************************************--
+--************************************************************--
+
+p1 = 1
+& p2 = 2

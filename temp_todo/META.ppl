@@ -1,0 +1,7 @@
+name="ppl"
+version="20021123"
+description="bindings to PPL library (manual entry)"
+archive(byte)="ppl_ocaml.cma"
+archive(native)="ppl_ocaml.cmxa"
+requires=""
+directory="/usr/lib/ppl"

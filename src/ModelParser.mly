@@ -1,46 +1,26 @@
 /***********************************************
  *
- *                     HYMITATOR
+ *                     IMITATOR
  * 
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
+ * Universite Paris 13, Sorbonne Paris Cite, LIPN (France)
+ * 
  * Author:        Etienne Andre
+ * 
  * Created       : 2009/09/07
- * Last modified : 2010/05/07
+ * Last modified : 2013/03/01
 ***********************************************/
 
 %{
 open ParsingStructure;;
 open Global;;
 open NumConst;;
-		  
-(* global reference to collect all local variables in all automata *)
-(* as triples (type, varname, scope).                              *)
-let declarations = ref [];;	
-
-(* global reference to constants defined in the header *)
-let constants = ref [];;
+  
   
 let parse_error s =
 	let symbol_start = symbol_start () in
 	let symbol_end = symbol_end () in
-	print_error s;
 	raise (ParsingError (symbol_start, symbol_end))
-;;
-
-let check_constant name =
-	List.iter (fun (n,_) -> 
-		if n = name then ( 
-			parse_error ("constant '" ^ n ^ "' already defined")	
-		)
-	) !constants
-;;
-
-let get_constant name =
-	let rec get_const name clist =
-		match clist with
-			| [] -> None
-			| (n, c) :: rest -> if name = n then Some c else get_const name rest in
-	get_const name !constants
 ;;
  
 %}
@@ -50,7 +30,7 @@ let get_constant name =
 %token <string> NAME
 %token <string> STRING
 
-%token OP_PLUS OP_MINUS OP_MUL OP_DIV OP_POW
+%token OP_PLUS OP_MINUS OP_MUL OP_DIV
 %token OP_L OP_LEQ OP_EQ OP_GEQ OP_G OP_ASSIGN
 
 %token LPAREN RPAREN LBRACE RBRACE LSQBRA RSQBRA
@@ -58,23 +38,33 @@ let get_constant name =
 
 /* CT_ALL CT_ANALOG CT_ASAP CT_BACKWARD CT_CLDIFF CT_D  CT_ELSE CT_EMPTY  CT_ENDHIDE CT_ENDIF CT_ENDREACH CT_ENDWHILE CT_FORWARD CT_FREE CT_FROM  CT_HIDE CT_HULL CT_INTEGRATOR CT_ITERATE CT_NON_PARAMETERS CT_OMIT CT_POST CT_PRE CT_PRINT CT_PRINTS CT_PRINTSIZE CT_REACH  CT_STOPWATCH CT_THEN CT_TO CT_TRACE CT_USING  CT_WEAKDIFF CT_WEAKEQ CT_WEAKGE CT_WEAKLE  */
 
-%token CT_AND CT_AUTOMATON CT_ANALOG CT_BAD CT_CLOCK CT_CONST CT_DISCRETE CT_DO CT_DOMAIN CT_END CT_ENDREACH CT_FALSE CT_FORWARD CT_FROM CT_GOTO CT_IF CT_INIT CT_INITIALLY CT_IN CT_LOC CT_LOCATIONS CT_NOT CT_OR CT_PARAMETER CT_PREDICATES CT_PRINT CT_REACH CT_REGION CT_SYNC CT_SYNCLABS CT_TRUE CT_VAR CT_WAIT CT_WHEN CT_WHILE
+%token
+	CT_ALWAYS CT_AND CT_AUTOMATON
+	CT_BAD CT_BEFORE
+	CT_CARTO CT_CLOCK
+	CT_DISCRETE CT_DO
+	CT_END CT_EVENTUALLY CT_EVERYTIME
+	CT_FALSE
+	CT_GOTO
+	CT_HAPPENED CT_HAS
+	CT_IF CT_INIT CT_INITIALLY
+	CT_LOC CT_LOCATIONS
+	CT_NEXT CT_NOT
+	CT_ONCE CT_OR
+	CT_PARAMETER CT_PROPERTY
+	CT_REGION
+	CT_SEQUENCE CT_STOP CT_SYNC CT_SYNCLABS
+	CT_THEN CT_TRUE
+	CT_UNKNOWN CT_UNREACHABLE
+	CT_VAR
+	CT_WAIT CT_WHEN CT_WHILE CT_WITHIN
+
 
 %token EOF
-
-/*%left OP_L OP_LEQ OP_EQ OP_GEQ OP_G*/
-%right SEMICOLON
 
 %left PIPE CT_OR        /* lowest precedence */
 %left AMPERSAND CT_AND  /* medium precedence */
 %nonassoc CT_NOT        /* highest precedence */
-
-%nonassoc OP_L OP_LEQ OP_EQ OP_GEQ OP_G OP_ASSIGN
-
-%left OP_PLUS OP_MINUS /* lowest precedence */
-%left OP_DIV  OP_MUL   /* medium precedence */
-%left OP_POW           /* high precedence   */
-%nonassoc UMINUS       /* highest precedence */
 
 
 %start main             /* the entry point */
@@ -83,23 +73,11 @@ let get_constant name =
 
 /**********************************************/
 main:
-	 const_declarations declarations automata commands EOF
+	 automata_descriptions commands EOF
 	{
-		(* store constants in header *)
-		$1;
-		List.iter (fun (n, c)  -> print_message Debug_low ("const " ^ n ^ " = " ^ (NumConst.string_of_numconst c))) !constants;
-		(* get declarations in header *)
-		let decls = $2 in
-		(* tag as global *)
-		let global_decls = List.map (fun (v,t) -> (v,t,Global)) decls in
-		(* store in declaration list *)
-		declarations := List.append !declarations global_decls;
-		(* parse automata *)
-		let automata = $3 in 
-		(* parse commands *)
-		let init,bad,preds,domain = $4 in
-		(* return global and local variables, automata and commands *)
-		!declarations, automata, init, bad, preds, domain
+		let decl, automata = $1 in
+		let init, bad, carto = $2 in
+		decl, automata, init, bad, carto
 	}
 ;
 
@@ -107,51 +85,14 @@ main:
   MAIN DEFINITIONS
 ***********************************************/
 
-/**********************************************/
-
-const_declarations:
-	| const_declarations const_decl {
-		 let (n,c) = $2 in
-			check_constant n;
-			constants := (n,c) :: !constants;
-			$1 } 
-	| { () }
-;
-
-const_decl:
-	CT_CONST NAME OP_EQ const_expr SEMICOLON { ($2, $4) }
-;
-
-const_expr:
-	| integer { $1 }
-	| float { $1 }
-	| const_id { $1 }
-	| const_expr OP_PLUS const_expr { NumConst.add $1 $3 }
-	| const_expr OP_MINUS const_expr { NumConst.sub $1 $3 }
-	| const_expr OP_MUL const_expr { NumConst.mul $1 $3 }
-	| const_expr OP_DIV const_expr { NumConst.div $1 $3 }
-	| const_expr OP_POW const_expr {
-			try (
-				NumConst.pow $1 $3
-			) with Arithmetic_exception e -> parse_error e 
-		}
-	| LPAREN const_expr RPAREN { $2 }
-;
-
-const_id:
-	NAME { 
-		let name = $1 in
-		match get_constant name with
-		| None -> parse_error ("Unknown constant '" ^ name ^ "'")
-		| Some c -> c
-	} 
+automata_descriptions:
+	declarations automata { $1, $2 }
 ;
 
 /**********************************************/
 
 declarations:
-	CT_VAR var_lists { $2	}
-	| { [] }
+	CT_VAR decl_var_lists { $2 }
 ;
 
 
@@ -159,27 +100,24 @@ declarations:
 
 /**********************************************/
 
-var_lists:
-	var_list COLON var_type SEMICOLON var_lists {
-		let t = $3 in
-		let vars = $1 in
-		let decls = List.map (fun v -> (t, v)) vars in
-		List.append decls $5
-	}
+decl_var_lists:
+	decl_var_list COLON var_type SEMICOLON decl_var_lists { (($3, $1) :: $5) }
 	| { [] }
 ;
 
 /**********************************************/
 
-var_list:
-	  NAME { [$1] }
-	| NAME COMMA var_list { $1 :: $3 }
+decl_var_list:
+	| NAME comma_opt { [($1, None)] }
+	| NAME OP_EQ rational comma_opt { [($1, Some $3)] }
+	
+	| NAME COMMA decl_var_list { ($1, None) :: $3 }
+	| NAME OP_EQ rational COMMA decl_var_list { ($1, Some $3) :: $5 }
 ;
 
 /**********************************************/
 
 var_type:
-  | CT_ANALOG { Var_type_analog }
 	| CT_CLOCK { Var_type_clock }
 	| CT_DISCRETE { Var_type_discrete }
 	| CT_PARAMETER { Var_type_parameter }
@@ -199,22 +137,18 @@ automata:
 automaton:
 	CT_AUTOMATON NAME prolog locations CT_END
 	{
-		let aut_name = $2 in
-		let decls, labels = $3 in
-		(* tag declarations as local with automaton name *)
-		let ext_decls = List.map (fun (t, v) -> (t, v, Local aut_name)) decls in
-		(* store declarations in global list *)
-		declarations := List.append !declarations ext_decls; 		
-		(aut_name, labels, $4)
+		($2, $3, $4)
 	}
 ;
 
 /**********************************************/
 
 prolog:
-	| declarations initialization sync_labels { $1, $3 }
-	| declarations sync_labels initialization { $1, $2 }
-	| declarations sync_labels { $1, $2 } /* L'initialisation n'est pas prise en compte, et est donc facultative */
+	| initialization sync_labels { $2 }
+	| sync_labels initialization { $1 }
+	| sync_labels { $1 } /* L'initialisation n'est pas prise en compte, et est donc facultative */
+	| initialization { [] }
+	| { [] }
 ;
 
 /**********************************************/
@@ -233,21 +167,21 @@ state_initialization:
 /**********************************************/
 
 sync_labels:
-	CT_SYNCLABS COLON sync_var_list SEMICOLON { $3 }
+	CT_SYNCLABS COLON name_list SEMICOLON { $3 }
 ;
 
 /**********************************************/
 
-sync_var_list:
-	sync_var_nonempty_list { $1 }
+name_list:
+	name_nonempty_list { $1 }
 	| { [] }
 ;
 
 /**********************************************/
 
-sync_var_nonempty_list:
-	NAME COMMA sync_var_nonempty_list { $1 :: $3}
-	| NAME { [$1] }
+name_nonempty_list:
+	NAME COMMA name_nonempty_list { $1 :: $3}
+	| NAME comma_opt { [$1] }
 ;
 
 /**********************************************/
@@ -260,15 +194,32 @@ locations:
 /**********************************************/
 
 location:
-  CT_LOC NAME COLON CT_WHILE convex_predicate CT_WAIT LBRACE rate_info RBRACE transitions { $2, $5, $8, $10 }
+// 	| CT_LOC location_name COLON CT_WHILE convex_predicate stopwatches CT_WAIT braces_opt transitions {
+	| CT_LOC location_name COLON CT_WHILE convex_predicate stopwatches wait_opt transitions {
+		let name, cost = $2 in
+			name, cost, $5, $6, $8
+		}
+;
+
+location_name:
+	| NAME { $1, None }
+	| NAME LSQBRA linear_expression RSQBRA { $1, Some $3 }
+;
+
+wait_opt:
+	| CT_WAIT { }
+	| CT_WAIT LBRACE RBRACE { }
+	| LBRACE RBRACE { }
+	| { }
 ;
 
 /**********************************************/
-rate_info:
-	ext_convex_predicate { $1 }
+
+stopwatches:
+	| CT_STOP LBRACE name_list RBRACE { $3 }
 	| { [] }
 ;
- 
+
 /**********************************************/
 
 transitions:
@@ -306,8 +257,21 @@ updates:
 /**********************************************/
 
 update_list:
-	upd_convex_predicate { $1 }
+	update_nonempty_list { $1 }
 	| { [] }
+;
+
+/**********************************************/
+
+update_nonempty_list:
+	update COMMA update_nonempty_list { $1 :: $3}
+	| update { [$1] }
+;
+
+/**********************************************/
+
+update:
+	NAME APOSTROPHE OP_EQ linear_expression { ($1, $4) }
 ;
 
 /**********************************************/
@@ -317,54 +281,24 @@ syn_label:
 ;
 
 
-/***********************************************
-  RATIONALS, LINEAR TERMS, LINEAR CONSTRAINTS AND CONVEX PREDICATES
-***********************************************/
+/**********************************************/
+/** RATIONALS, LINEAR TERMS, LINEAR CONSTRAINTS AND CONVEX PREDICATES */
+/***********************************************/
 
+/* We allow an optional "&" at the beginning of a convex predicate (sometimes useful) */
 convex_predicate:
-	linear_constraint AMPERSAND convex_predicate { List.append $1 $3 }
-	| linear_constraint { $1 }
+	ampersand_opt convex_predicate_fol { $2 }
 ;
 
-ext_convex_predicate:
-	ext_linear_constraint AMPERSAND ext_convex_predicate { List.append $1 $3 }
-	| ext_linear_constraint { $1 }
+convex_predicate_fol:
+	linear_constraint AMPERSAND convex_predicate { $1 :: $3 }
+	| linear_constraint { [$1] }
 ;
-
-upd_convex_predicate:
-	ext_linear_constraint COMMA upd_convex_predicate { List.append $1 $3 }
-	| ext_linear_constraint { $1 }
-;
-
 
 linear_constraint:
-	linear_expression relop linear_expression { [ Linear_constraint ($1, $2, $3) ] }
-	| interval_expression { $1 }
-	| CT_TRUE  { [ True_constraint  ] }
-	| CT_FALSE { [ False_constraint ]}
-;
-
-ext_linear_constraint:
-	ext_linear_expression relop ext_linear_expression { [ Linear_constraint ($1, $2, $3) ] }
-	| ext_interval_expression { $1 }
-;
-
-interval_expression:
-	linear_expression CT_IN LSQBRA const_expr COMMA const_expr RSQBRA {
-		[
-			Linear_constraint ($1, OP_GEQ, Linear_term(Constant $4));
-			Linear_constraint ($1, OP_LEQ, Linear_term(Constant $6))
-		]			
-	}
-;
-
-ext_interval_expression:
-	ext_linear_expression CT_IN LSQBRA const_expr COMMA const_expr RSQBRA {
-		[
-			Linear_constraint ($1, OP_GEQ, Linear_term(Constant $4));
-			Linear_constraint ($1, OP_LEQ, Linear_term(Constant $6))
-		]	
-	}
+	linear_expression relop linear_expression { Linear_constraint ($1, $2, $3) }
+	| CT_TRUE { True_constraint }
+	| CT_FALSE { False_constraint }
 ;
 
 relop:
@@ -381,105 +315,25 @@ linear_expression:
 	| linear_expression OP_MINUS linear_term { Linear_minus_expression ($1, $3) } /* linear_term a la deuxieme place */
 ;
 
-ext_linear_expression:
-	ext_linear_term { Linear_term $1 }
-	| ext_linear_expression OP_PLUS ext_linear_term { Linear_plus_expression ($1, $3) }
-	| ext_linear_expression OP_MINUS ext_linear_term { Linear_minus_expression ($1, $3) } /* linear_term a la deuxieme place */
-;
-
 linear_term:
-	| atom { $1 }
-	| linear_term OP_MUL linear_term { 
-		let a1 = $1 in
-		let a2 = $3 in
-		match (a1, a2) with
-			| (Constant x, Constant y) -> Constant (NumConst.mul x y)
-			| (Variable (x, v), Constant y) -> Variable ((NumConst.mul x y), v)
-			| (Constant x, Variable (y, v)) -> Variable ((NumConst.mul x y), v)
-			| _ -> parse_error "expression is not linear"
-	}
-	| linear_term OP_DIV linear_term {
-		let a1 = $1 in
-		let a2 = $3 in
-		match (a1, a2) with
-			| (Constant x, Constant y) -> Constant (NumConst.div x y)
-			| (Variable (x, v), Constant y) -> Variable ((NumConst.div x y), v)
-			| _ -> parse_error "expression is not linear"		
-	}
-	| linear_term OP_POW linear_term {
-		let a1 = $1 in
-		let a2 = $3 in
-		match (a1, a2) with
-			| (Constant x, Constant y) -> (try (
-					Constant (NumConst.pow x y)
-				) with Arithmetic_exception e -> parse_error e) 
-			| _ -> parse_error "expression is not linear"
-	}
+	rational { Constant $1 }
+	| rational NAME { Variable ($1, $2) }
+	| rational OP_MUL NAME { Variable ($1, $3) }
+	| OP_MINUS NAME { Variable (NumConst.minus_one, $2) }
+	| NAME { Variable (NumConst.one, $1) }
+// 	| LPAREN linear_expression RPAREN { $2 }
 	| LPAREN linear_term RPAREN { $2 }
 ;
 
-atom:
-	| integer { Constant $1 }
-	| float { Constant $1 }
-	| NAME {
-			let id = $1 in
-			let c = get_constant id in
-			match c with
-				| Some x -> Constant x
-				| None -> Variable (NumConst.one, $1) 
-		}
-;
-
-ext_linear_term:
-	| ext_atom { $1 }
-	| ext_linear_term OP_MUL ext_linear_term { 
-		let a1 = $1 in
-		let a2 = $3 in
-		match (a1, a2) with
-			| (Constant x, Constant y) -> Constant (NumConst.mul x y)
-			| (Variable (x, v), Constant y) -> Variable ((NumConst.mul x y), v)
-			| (Constant x, Variable (y, v)) -> Variable ((NumConst.mul x y), v)
- 			| (PrimedVariable (x, v), Constant y) -> PrimedVariable ((NumConst.mul x y), v)
-			| (Constant x, PrimedVariable (y, v)) -> PrimedVariable ((NumConst.mul x y), v)
-			| _ -> parse_error "expression is not linear"
-	}
-	| ext_linear_term OP_DIV ext_linear_term {
-		let a1 = $1 in
-		let a2 = $3 in
-		match (a1, a2) with
-			| (Constant x, Constant y) -> Constant (NumConst.div x y)
-			| (Variable (x, v), Constant y) -> Variable ((NumConst.div x y), v)
-			| (PrimedVariable (x, v), Constant y) -> PrimedVariable ((NumConst.div x y), v)
-			| _ -> parse_error "expression is not linear"		
-	}
-	| ext_linear_term OP_POW ext_linear_term {
-		let a1 = $1 in
-		let a2 = $3 in
-		match (a1, a2) with
-			| (Constant x, Constant y) -> (try (
-					Constant (NumConst.pow x y)
-				) with Arithmetic_exception e -> parse_error e) 
-			| _ -> parse_error "expression is not linear"
-	}
-	| LPAREN ext_linear_term RPAREN { $2 }
-;
-
-ext_atom:
-	| integer { Constant $1 }
-	| float { Constant $1 }
-	| NAME {
-			let id = $1 in
-			let c = get_constant id in
-			match c with
-				| Some x -> Constant x
-				| None -> Variable (NumConst.one, $1) 
-		}
-	| NAME APOSTROPHE { PrimedVariable (NumConst.one, $1) }
+rational:
+	integer { $1 }
+	| float { $1 }
+	| integer OP_DIV pos_integer { (NumConst.div $1 $3) }
 ;
 
 integer:
 	pos_integer { $1 }
-	| OP_MINUS pos_integer %prec UMINUS { NumConst.neg $2 }
+	| OP_MINUS pos_integer { NumConst.neg $2 }
 ;
 
 pos_integer:
@@ -488,7 +342,7 @@ pos_integer:
 
 float:
   pos_float { $1 }
-	| OP_MINUS pos_float %prec UMINUS { NumConst.neg $2 }  
+	| OP_MINUS pos_float { NumConst.neg $2 }  
 ;
 
 pos_float:
@@ -512,7 +366,7 @@ pos_float:
 			| '7' -> NumConst.numconst_of_int 7
 			| '8' -> NumConst.numconst_of_int 8
 			| '9' -> NumConst.numconst_of_int 9
-			| _ ->  parse_error ("illegal floating point number") in
+			| _ ->  raise (ParsingError (0,0)) in
 		let ten = NumConst.numconst_of_int 10 in
 		let dec = ref (NumConst.numconst_of_frac 1 10) in
 		for i = point+1 to (String.length fstr) - 1 do
@@ -525,76 +379,206 @@ pos_float:
 	} 
 ;
 
-/***********************************************
-  ANALYSIS COMMANDS
-***********************************************/
+/***********************************************/
+/** ANALYSIS COMMANDS */
+/***********************************************/
 
 commands:
-	| init_declaration init_definition bad_declaration bad_definition reach_command predicate_abstraction_info 
-		{	let preds, domain = $6 in	($2, $4, preds, domain) }
+	| init_declaration_opt init_definition property_definition carto_definition rest_of_commands_opt { ($2, $3, $4) }
+// 	| init_declaration_opt init_definition bad_definition { ($2, $3, ([] , (NumConst.zero,NumConst.zero) , (NumConst.zero,NumConst.zero))) }
 ;
 
 
-init_declaration:
-	| CT_VAR CT_INIT COLON CT_REGION SEMICOLON { }
+// For retrocompatibility with HyTech only
+init_declaration_opt:
+	| init_declaration_useless { }
 	| { }
 ;
 
-reach_command:
+// For retrocompatibility with HyTech only
+init_declaration_useless:
+	| CT_VAR regions COLON CT_REGION SEMICOLON { }
+;
+
+// For retrocompatibility with HyTech only
+regions:
+	| { }
+	| region_names { }
+;
+
+// For retrocompatibility with HyTech only
+region_names:
+	| region_name COMMA region_names { }
+	| region_name { }
+;
+
+// For retrocompatibility with HyTech only
+region_name:
+	| NAME { }
+	| CT_INIT { }
+	| CT_BAD { }
+;
+
+rest_of_commands_opt:
 	/* print (reach forward from init endreach); */
-	| CT_PRINT LPAREN CT_REACH CT_FORWARD CT_FROM CT_INIT CT_ENDREACH RPAREN SEMICOLON { }
+/*	| CT_PRINT LPAREN CT_REACH CT_FORWARD CT_FROM region_name CT_ENDREACH RPAREN SEMICOLON { }
+	| { }*/
+	/* Allow anything from here! (to ensure compatibility with HyTech or other similar tools) */
+	| CT_END rest_of_commands { }
+	| { }
+
+rest_of_commands:
+	/* print (reach forward from init endreach); */
+/*	| CT_PRINT LPAREN CT_REACH CT_FORWARD CT_FROM region_name CT_ENDREACH RPAREN SEMICOLON { }
+	| { }*/
+	/* Allow anything from here! (to ensure compatibility with HyTech or other similar tools) */
+	| anything rest_of_commands { }
 	| { }
 ;
 
+anything:
+	| LPAREN { }
+	| region_name { }
+	| RPAREN { }
+	| SEMICOLON { }
+;
 
 init_definition:
 	CT_INIT OP_ASSIGN region_expression SEMICOLON { $3 }
 ;
 
-bad_declaration:
-	| CT_VAR CT_BAD COLON CT_REGION SEMICOLON { }
-	| { }
+property_definition:
+// TODO: improve the bad definitions
+	// NOTE: Old version
+// 	| CT_BAD OP_ASSIGN loc_expression SEMICOLON { $3 }
+
+	// Case: action
+	// TODO: reintroduce
+// 	| CT_BAD OP_ASSIGN CT_EXISTS_ACTION NAME SEMICOLON { [Exists_action $4] }
+
+	// NOTE: only one allowed before version 2.6 and ICECCS paper
+	// Case: location
+	// | CT_BAD OP_ASSIGN CT_EXISTS_LOCATION loc_predicate SEMICOLON { let a,b = $4 in [(Exists_location (a , b))] }
+	
+	// Pattern
+	| CT_PROPERTY OP_ASSIGN pattern semicolon_opt { Some $3 }
+	
+	// Case: no property
+	|  { None }
+	
 ;
+
+// List of patterns
+pattern:
+	// Unreachability
+	| CT_UNREACHABLE bad_definition { $2 }
+	
+	/* if a2 then a1 has happened before */
+	| CT_IF NAME CT_THEN NAME CT_HAS CT_HAPPENED CT_BEFORE { Action_precedence_acyclic ($4, $2) }
+	/* everytime a2 then a1 has happened before */
+	| CT_EVERYTIME NAME CT_THEN NAME CT_HAS CT_HAPPENED CT_BEFORE { Action_precedence_cyclic ($4, $2) }
+	/* everytime a2 then a1 has happened once before */
+	| CT_EVERYTIME NAME CT_THEN NAME CT_HAS CT_HAPPENED CT_ONCE CT_BEFORE { Action_precedence_cyclicstrict ($4, $2) }
+	
+	/* if a1 then eventually a2 */
+	| CT_IF NAME CT_THEN CT_EVENTUALLY NAME { Eventual_response_acyclic ($2, $5) }
+	/* everytime a1 then eventually a2 */
+	| CT_EVERYTIME NAME CT_THEN CT_EVENTUALLY NAME { Eventual_response_cyclic ($2, $5) }
+	/* everytime a1 then eventually a2 once before next */
+	| CT_EVERYTIME NAME CT_THEN CT_EVENTUALLY NAME CT_ONCE CT_BEFORE CT_NEXT { Eventual_response_cyclicstrict ($2, $5) }
+	
+	/* a within d */
+	| NAME CT_WITHIN linear_expression { Action_deadline ($1, $3) }
+	
+	/* if a2 then a1 happened within d before */
+	| CT_IF NAME CT_THEN NAME CT_HAS CT_HAPPENED CT_WITHIN linear_expression CT_BEFORE { TB_Action_precedence_acyclic ($4, $2, $8) }
+	/* everytime a2 then a1 happened within d before */
+	| CT_EVERYTIME NAME CT_THEN NAME CT_HAS CT_HAPPENED CT_WITHIN linear_expression CT_BEFORE { TB_Action_precedence_cyclic ($4, $2, $8) }
+	/* everytime a2 then a1 happened once within d before */
+	| CT_EVERYTIME NAME CT_THEN NAME CT_HAS CT_HAPPENED CT_ONCE CT_WITHIN linear_expression CT_BEFORE { TB_Action_precedence_cyclicstrict ($4, $2, $9) }
+	
+	/* if a1 then eventually a2 within d */
+	| CT_IF NAME CT_THEN CT_EVENTUALLY NAME CT_WITHIN linear_expression { TB_response_acyclic ($2, $5, $7) }
+	/* everytime a1 then eventually a2 within d */
+	| CT_EVERYTIME NAME CT_THEN CT_EVENTUALLY NAME CT_WITHIN linear_expression { TB_response_cyclic ($2, $5, $7) }
+	/* everytime a1 then eventually a2 within d once before next */
+	| CT_EVERYTIME NAME CT_THEN CT_EVENTUALLY NAME CT_WITHIN linear_expression CT_ONCE CT_BEFORE CT_NEXT { TB_response_cyclicstrict ($2, $5, $7) }
+	
+	/* sequence a1, ..., an */
+	| CT_SEQUENCE name_nonempty_list { Sequence_acyclic ($2) }
+	/* sequence always a1, ..., an */
+	| CT_SEQUENCE CT_ALWAYS name_nonempty_list { Sequence_cyclic ($3) }
+;
+
 
 bad_definition:
-	| CT_BAD OP_ASSIGN loc_expression SEMICOLON { $3 }
-	| { [] } 
+	// TODO: add more?
+	| loc_predicate { let a,b = $1 in (Unreachable_location (a , b)) }
 ;
 
-loc_expression:
-	| loc_predicate { $1 }
-	| loc_expression AMPERSAND loc_expression { $1 @ $3 }
+
+convex_predicate_with_nature:
+	// TODO WARNING BUG 
+// 	| convex_predicate LBRACE CT_GOOD RBRACE { $1, Good }
+// 	| convex_predicate LBRACE CT_BAD RBRACE { $1, Bad }
+// 	| convex_predicate LBRACE CT_UNKNOWN RBRACE { $1, Unknown }
+// 	| convex_predicate LBRACE RBRACE { $1, Unknown }
+	| convex_predicate { $1, Unknown }
+
+carto_definition:
+	| CT_CARTO OP_ASSIGN carto_definition_interval OP_MUL carto_definition_interval convex_predicate_with_nature carto_definition_foll SEMICOLON { $6 :: $7 , $3 , $5 }
+// 	| CT_CARTO OP_ASSIGN convex_predicate_with_nature carto_definition_foll SEMICOLON { $3 :: $4 , (NumConst.zero,NumConst.zero) , (NumConst.zero,NumConst.zero) }
+// 	| CT_CARTO OP_ASSIGN   SEMICOLON { [] , (NumConst.zero,NumConst.zero) , (NumConst.zero,NumConst.zero) }
+	// WARNING: bad prog below
+	|  { [] , (NumConst.zero,NumConst.zero) , (NumConst.zero,NumConst.zero) }
 ;
 
+carto_definition_interval:
+	| LPAREN pos_integer COMMA pos_integer RPAREN { ($2,$4) }
+;
+
+carto_definition_foll:
+	| PIPE convex_predicate_with_nature carto_definition_foll { $2 :: $3 }
+	| { [] }
+
+//// NOTE: Old version
+// loc_expression:
+// 	| loc_predicate { [ $1 ] }
+// 	| loc_predicate AMPERSAND loc_expression { $1 :: $3 }
+// 	| loc_predicate loc_expression { $1 :: $2 }
+// ;
+
+// We allow here an optional "&" at the beginning
 region_expression:
-	| state_predicate { $1 }
-	| LPAREN region_expression RPAREN { $2 }
-	| region_expression AMPERSAND region_expression { $1 @ $3 }
+	ampersand_opt region_expression_fol { $2 }
+;
+
+region_expression_fol:
+	| state_predicate { [ $1 ] }
+	| LPAREN region_expression_fol RPAREN { $2 }
+	| region_expression_fol AMPERSAND region_expression_fol { $1 @ $3 }
 ;
 
 loc_predicate:
-	CT_LOC LSQBRA NAME RSQBRA OP_EQ NAME { [ Loc_assignment ($3, $6) ] }
+	CT_LOC LSQBRA NAME RSQBRA OP_EQ NAME { ($3, $6) }
 ;
 
 state_predicate:
-	| loc_predicate { $1 } 
-	| linear_constraint { List.map (fun x -> Linear_predicate x) $1 }
+	| loc_predicate { let a,b = $1 in (Loc_assignment (a,b)) } 
+	| linear_constraint { Linear_predicate $1 }
 ;
 
-predicate_abstraction_info:
-	| predicates domain { $1, $2 }
-	| domain predicates { $2, $1 }
-
-predicates:
-	| CT_PREDICATES COLON predicate_list SEMICOLON { $3 }
-	| { [] }
+comma_opt:
+	| COMMA { }
+	| { }
 ;
 
-predicate_list:
-	linear_constraint COMMA predicate_list { $1 @ $3 }
-	| linear_constraint { $1 }
+semicolon_opt:
+	| SEMICOLON { }
+	| { }
+;
 
-domain:
-	CT_DOMAIN COLON convex_predicate SEMICOLON { $3 }
-	| { [] }
+ampersand_opt:
+	| AMPERSAND { }
+	| { }
 ;

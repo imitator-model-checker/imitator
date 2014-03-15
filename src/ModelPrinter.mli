@@ -1,11 +1,11 @@
 (*****************************************************************
  *
- *                     HYMITATOR
+ *                     IMITATOR II
  * 
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2009/12/02
- * Last modified: 2010/01/04
+ * Last modified: 2013/08/02
  *
  ****************************************************************)
 
@@ -22,16 +22,24 @@ val string_of_var_type : var_type -> string
 (** State *)
 (**************************************************)
 (* Convert a state into a string *)
-val string_of_state : state -> string
+val string_of_state : abstract_model -> (Automaton.global_location * LinearConstraint.px_linear_constraint) -> string
 
 (**************************************************)
-(** Program *)
+(** Result *)
+(**************************************************)
+val string_of_returned_constraint : (int -> string) -> returned_constraint -> string
+
+
+
+(**************************************************)
+(** model *)
 (**************************************************)
 (* Convert a pi0 into a string *)
-val string_of_pi0 : pi0 -> string
+val string_of_pi0 : abstract_model -> pi0 -> string
 
-(* Convert a program into a string *)
-val string_of_program : abstract_program -> string
+(* Convert a v0 into a string *)
+val string_of_v0 : abstract_model -> v0 -> string
 
-(* Convert discrete updates into a string *)
-val string_of_discrete_updates : discrete_update list -> string
+(* Convert a model into a string *)
+val string_of_model : abstract_model -> string
+

@@ -1,0 +1,81 @@
+--************************************************************--
+--************************************************************--
+--
+--   Counter-example for Inverse method applied to PPTA
+--   (shows that the Theorem from [AFS09] is wrong even if time and probabilities are separated)
+--
+--   Etienne ANDRE
+--   Laboratoire d'Informatique de Paris Nord
+--
+--                                Created : 2012/05/23
+--                          Last modified : 2012/05/23
+--************************************************************--
+--************************************************************--
+
+var
+ 	x, y
+		: clock;
+
+	p1, p2, p3, p4
+		: parameter;
+
+
+--************************************************************--
+  automaton A
+--************************************************************--
+synclabs: prob1_2;
+
+loc q0: while True wait {}
+	when True sync prob1_2 goto q1;
+	when True sync prob1_2 goto q2;
+
+loc q1: while True wait {}
+	when True goto q3;
+
+loc q2: while True wait {}
+	when True goto q4;
+
+loc q3: while x <= p2 wait {}
+	when x >= p1 goto q5;
+
+loc q4: while y <= p4 wait {}
+	when y >= p3 goto q5;
+
+loc q5: while True wait {}
+end -- A
+
+
+--************************************************************--
+--************************************************************--
+-- ANALYSIS
+--************************************************************--
+--************************************************************--
+
+var init : region;
+
+init := True
+	----------------------
+	-- Initial locations
+	----------------------
+	& loc[A]      = q0
+
+	----------------------
+	-- Clocks
+	----------------------
+	& x = 0
+	& y = 0
+	
+	----------------------
+	-- Given constraints
+	----------------------
+	& p1 >= 0
+	& p2 >= 0
+	& p3 >= 0
+	& p4 >= 0
+
+	----------------------
+	-- Instantiations
+	----------------------
+
+;
+

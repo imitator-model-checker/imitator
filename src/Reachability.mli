@@ -1,29 +1,41 @@
 (***************************************************
  *
- *                     HYMITATOR
+ *                     IMITATOR II
  * 
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
- * Author:        Etienne Andre, Ulrich Kuehne
+ * Author:        Etienne Andre, Ulrich Kuehne, Romain Soulat
  * Created:       2010/07/22
- * Last modified: 2010/07/22
+ * Last modified: 2013/12/06
  *
  **************************************************)
 
-open Automaton
+open Global
 open AbstractModel
-open Graph
 open Options
+open StateSpace
 open LinearConstraint
 
-(** Function to look up states by an index *)
-type lookup_function = state_index -> state
 
-val create_initial_state : unit -> state
+val create_initial_state : abstract_model -> state
 
-val post : lookup_function -> state_index -> state_index list
-
-val post_star : state -> linear_constraint * int * float
-	
 val print_stats: unit -> unit
 
-val verify_path : state -> abstract_path -> linear_inequality option
+
+(************************************************************)
+(* Clock elimination *)
+(************************************************************)
+(* Create data structures for detecting useless clocks (to be called once per model) *)
+(** WARNING: should maybe be somewhere else? *)
+val prepare_clocks_elimination : abstract_model -> unit
+
+
+(************************************************************)
+(* Algorithms *)
+(************************************************************)
+val full_state_space_exploration : abstract_model -> state -> unit
+
+val ef_synthesis : abstract_model -> state -> returned_constraint
+
+val inverse_method_gen : abstract_model -> state -> returned_constraint * StateSpace.reachability_graph * tile_nature * bool * int * float
+
+val inverse_method : abstract_model -> state -> unit

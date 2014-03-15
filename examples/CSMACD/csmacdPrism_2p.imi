@@ -1,0 +1,206 @@
+--****************************************************--
+--****************************************************--
+--   CSMA/CD Protocol
+--
+--   Non-probabilistic model deduced from the probabilistic model in
+--   "Symbolic Model Checking for Probabilistic Timed Automata"
+--   (M. Kwiatkowska, G. Norman, J. Sproston and F. Wang., FORMATS/FTRTFT'2004)
+--
+--   See figures on http://www.prismmodelchecker.org/casestudies/csma.php
+--
+--   Modeling by Laurent Fribourg and Etienne Andre (LSV)
+--
+--   Version with 2 parameters, with slot = 2 sigma
+--
+--   Created       : 2010/04/08
+--   Last modified : 2010/04/08
+--****************************************************--
+--****************************************************--
+
+-- CLOCKS
+var
+	x1,
+	x2,
+	y
+		: clock;
+
+-- PARAMETERS
+	lambda,    --length of a message
+	sigma     --propagation time of a message
+	-- timeslot = 2 * sigma
+		: parameter;
+
+
+
+--****************************************************--
+--****************************************************--
+-- AUTOMATA
+--****************************************************--
+--****************************************************--
+
+
+--****************************************************--
+  automaton medium
+--****************************************************--
+synclabs: send1, send2, end1, end2, busy1, busy2, cd;
+
+initially Init;
+
+loc Init: while True wait {}
+		when True sync send1 do {y' = 0} goto Transmit;
+		when True sync send2 do {y' = 0} goto Transmit;
+
+loc Transmit: while True wait {}
+		when y <= sigma sync send1 do {y' = 0} goto Collide;
+		when y <= sigma sync send2 do {y' = 0} goto Collide;
+
+		when y >= sigma sync busy1 do {} goto Transmit;
+		when y >= sigma sync busy2 do {} goto Transmit;
+
+		when True sync end1 do {y' = 0} goto Init;
+		when True sync end2 do {y' = 0} goto Init;
+
+loc Collide: while y <= sigma wait {}
+		when y <= sigma sync cd do {y' = 0} goto Init;
+
+end -- medium
+
+
+
+--****************************************************--
+  automaton sender1
+--****************************************************--
+
+synclabs: send1, end1, busy1, cd;
+
+initially Init1;
+
+
+loc Init1: while True wait {}
+	when True sync send1 do {} goto Transmit1;
+
+loc Transmit1: while x1 <= lambda wait {}
+	when x1 = lambda sync end1 do {x1' = 0} goto Done1;
+	
+	when True sync cd do {x1' = 0} goto Collide1;
+
+loc Collide1: while x1 <= 0 wait {}
+	when True do {} goto Wait1_0;
+	when True do {} goto Wait1_1;
+	when True do {} goto Wait1_2;
+	when True do {} goto Wait1_3;
+
+-- 0 * timeslot
+loc Wait1_0: while x1 <= 0 wait {}
+	when x1 = 0 sync busy1 do {x1' = 0} goto Collide1;
+	when x1 = 0 sync send1 do {x1' = 0} goto Transmit1;
+
+-- 1 * timeslot
+loc Wait1_1: while x1 <= (2 * sigma) wait {}
+	when x1 = (2 * sigma) sync busy1 do {x1' = 0} goto Collide1;
+	when x1 = (2 * sigma) sync send1 do {x1' = 0} goto Transmit1;
+
+-- 2 * timeslot
+loc Wait1_2: while x1 <= (4 * sigma) wait {}
+	when x1 = (4 * sigma) sync busy1 do {x1' = 0} goto Collide1;
+	when x1 = (4 * sigma) sync send1 do {x1' = 0} goto Transmit1;
+
+-- 3 * timeslot
+loc Wait1_3: while x1 <= (6 * sigma) wait {}
+	when x1 = (6 * sigma) sync busy1 do {x1' = 0} goto Collide1;
+	when x1 = (6 * sigma) sync send1 do {x1' = 0} goto Transmit1;
+
+loc Done1: while x1 <= 0 wait {}
+
+end -- sender1
+
+
+
+
+--****************************************************--
+  automaton sender2
+--****************************************************--
+
+synclabs: send2, end2, busy2, cd;
+
+initially Init2;
+
+
+loc Init2: while True wait {}
+	when True sync send2 do {} goto Transmit2;
+
+loc Transmit2: while x2 <= lambda wait {}
+	when x2 = lambda sync end2 do {x2' = 0} goto Done2;
+	
+	when True sync cd do {x2' = 0} goto Collide2;
+
+loc Collide2: while x2 <= 0 wait {}
+	when True do {} goto Wait2_0;
+	when True do {} goto Wait2_1;
+	when True do {} goto Wait2_2;
+	when True do {} goto Wait2_3;
+
+-- 0 * timeslot
+loc Wait2_0: while x2 <= 0 wait {}
+	when x2 = 0 sync busy2 do {x2' = 0} goto Collide2;
+	when x2 = 0 sync send2 do {x2' = 0} goto Transmit2;
+
+-- 1 * timeslot
+loc Wait2_1: while x2 <= (2 * sigma) wait {}
+	when x2 = (2 * sigma) sync busy2 do {x2' = 0} goto Collide2;
+	when x2 = (2 * sigma) sync send2 do {x2' = 0} goto Transmit2;
+
+-- 2 * timeslot
+loc Wait2_2: while x2 <= (4 * sigma) wait {}
+	when x2 = (4 * sigma) sync busy2 do {x2' = 0} goto Collide2;
+	when x2 = (4 * sigma) sync send2 do {x2' = 0} goto Transmit2;
+
+-- 3 * timeslot
+loc Wait2_3: while x2 <= (6 * sigma) wait {}
+	when x2 = (6 * sigma) sync busy2 do {x2' = 0} goto Collide2;
+	when x2 = (6 * sigma) sync send2 do {x2' = 0} goto Transmit2;
+
+loc Done2: while x2 <= 0 wait {}
+
+end -- sender2
+
+
+--****************************************************--
+--****************************************************--
+-- ANALYSIS
+--****************************************************--
+--****************************************************--
+
+var init : region;
+
+init := True
+	----------------------
+	-- Locations
+	----------------------
+	& loc[medium]  = Init
+	& loc[sender1] = Init1
+	& loc[sender2] = Init2
+
+	----------------------
+	-- Clocks
+	----------------------
+	& x1 = 0
+	& x2 = 0
+	& y  = 0
+
+	----------------------
+	-- Constraints
+	----------------------
+	& lambda >=0
+	& sigma >= 0
+-- 	& timeslot = 2 sigma
+
+	----------------------
+	-- Instantiations
+	----------------------
+-- 	& lambda   = 808
+-- 	& sigma    = 26
+
+--	& lambda=96
+--	& sigma=3
+;

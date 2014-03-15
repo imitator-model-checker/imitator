@@ -1,0 +1,101 @@
+--****************************************************--
+--****************************************************--
+--   Laboratoire Specification et Verification
+--
+--   Modeling of the circuit in "Verification of timed circuits with symbolic delays" (Clariso -- Cortadella)
+--   Non deterministic trace with pi_0 verifying Clariso -- Cortadella's constraints
+--   INVERTED ENVIRONMENT
+--
+--   Etienne ANDRE and Laurent FRIBOURG
+--
+--   Created      : 2009/11/03 (after file flipflop.hy)
+--   Last modified: 2010/03/24
+--****************************************************--
+--****************************************************--
+
+	----- TOUT PARAMETRE -----
+-- 	& tHI = 0..30 (* 24 *)
+-- 	& tLO = 0..30 (*15*)
+-- 	& tSetup = 0..30 (*10*)
+-- 	& tHold = 0..30 (*17*)
+-- 	& dG1_u = 0..30 (*7*)
+-- 	& dG1_l = 0..30 (*7*)
+-- 	& dG2_l = 0..30 (*5*)
+-- 	& dG2_u = 0..30 (*6*)
+-- 	& dG3_l = 0..30 (*8*)
+-- 	& dG3_u = 0..30 (*10*)
+-- 	& dG4_l = 0..30 (*3*)
+-- 	& dG4_u = 0..30 (*7*)
+	
+	----- TOUT INSTANCIE SAUF dG2u et tHold -----
+	& tHI = 40
+	& tLO = 20
+	& tSetup = 19
+	& tHold = 0 .. 50 (*6*)
+	& dG1_u = 18
+	& dG1_l = 18
+	& dG2_l = 5
+	& dG2_u = 5 .. 40 (*19*)
+	& dG3_l = 8
+	& dG3_u = 10
+	& dG4_l = 3
+	& dG4_u = 7
+	
+	----- TOUT INSTANCIE SAUF dG2u et dG3u -----
+-- 	& tHI = 40
+-- 	& tLO = 20
+-- 	& tSetup = 19
+-- 	& tHold = 6
+-- 	& dG1_u = 18
+-- 	& dG1_l = 18
+-- 	& dG2_l = 5
+-- 	& dG2_u = 5 .. 40 (*19*)
+-- 	& dG3_l = 8
+-- 	& dG3_u = 8 .. 40 (*10*)
+-- 	& dG4_l = 3
+-- 	& dG4_u = 7
+
+(** C KOI CA ? *)
+(*
+	& tLO=20
+  & tSetup=19
+  & dG1_u=18
+  & dG3_l=8
+  & tHI=49
+  & dG2_l=5
+  & dG4_l=3
+  & dG4_u=17
+  & dG1_l=18
+  & tHold=6
+	& dG2_u = 5 .. 40 (*19*)
+	& dG3_u = 8 .. 40 (*10*)
+	*)
+
+	----- TOUT INSTANCIE SAUF dG2u et dg1l -----
+-- 	& tHI = 40
+-- 	& tLO = 20
+-- 	& tSetup = 19
+-- 	& tHold = 6
+-- 	& dG1_u = 18
+-- 	& dG1_l = 0 .. 18 (*18*)
+-- 	& dG2_l = 5
+-- 	& dG2_u = 5 .. 40 (*19*)
+-- 	& dG3_l = 8
+-- 	& dG3_u = 10
+-- 	& dG4_l = 3
+-- 	& dG4_u = 7
+	
+	
+	----- BORNES SUP PARAM -----
+-- 	& tHI = 0 .. 50 (*40*)
+-- 	& tLO = 0 .. 50 (*20*)
+-- 	& tSetup = 0 .. 50 (*19*)
+-- 	& tHold = 0 .. 50 (*6*)
+-- 	& dG1_l = 18
+-- 	& dG1_u = 18 .. 40 (*18*)
+-- 	& dG2_l = 5
+-- 	& dG2_u = 5 .. 40 (*19*)
+-- 	& dG3_l = 8
+-- 	& dG3_u = 8 .. 40 (*10*)
+-- 	& dG4_l = 3
+-- 	& dG4_u = 3 .. 40 (*7*)

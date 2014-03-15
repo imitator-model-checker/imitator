@@ -1,29 +1,41 @@
 (*****************************************************************
  *
- *                     HYMITATOR
+ *                       IMITATOR
  * 
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
+ * Universite Paris 13, Sorbonne Paris Cite, LIPN (France)
+ * 
  * Author:        Etienne Andre
+ * 
  * Created:       2009/09/08
- * Last modified: 2012/04/09
+ * Last modified: 2013/10/08
  *
  ****************************************************************)
-
-(****************************************************************)
-(** Version string *)
-(****************************************************************)
-
-let version_string = "1.0"
-
-let program_name = "HYMITATOR"
-
-let print_version_string _ = 
-	print_string (program_name ^ " " ^ version_string ^ "\n");
-
+ 
+ 
 (****************************************************************)
 (** Modules *)
 (****************************************************************)
-(* open ExtList *)
+
+open Gc
+open Unix
+(*  open Printf  *)
+open DynArray
+ 
+
+(****************************************************************)
+(** Constants *)
+(****************************************************************)
+
+let program_name = "IMITATOR"
+let version_string = "2.6.1.2"
+
+let print_version_string _ = 
+	print_string (program_name ^ " " ^ version_string ^ "\n")
+
+
+(* Extension for input model files *)
+let model_extension = ".imi"
 
 
 (****************************************************************)
@@ -31,22 +43,12 @@ let print_version_string _ =
 (****************************************************************)
 exception InternalError of string
 exception Found
+exception InvalidModel
+exception UnexpectedToken of char
 
 (** Parsing exception: starting position of the error symbol, ending position of the error symbol *)
 exception ParsingError of (int * int)
 
-(** Mode for IMITATOR *) 
-type imitator_mode =
-	(** Classical parametric reachability analysis *)
-	| Reachability_analysis
-	(** Reachability using predicate abstraction *)
-	| AbstractReachability
-	(** Classical inverse method *)
-	| Inverse_method
-	(** Cover the whole cartography *)
-	| Cover_cartography
-	(** Randomly pick up values for a given number of iterations *)
-	| Random_cartography of int
 
 
 (****************************************************************)
@@ -77,7 +79,8 @@ type global_debug_mode_type =
 	| Debug_mode_not_set
 	| Debug_mode_set of debug_mode
 
-let global_debug_mode = ref Debug_mode_not_set
+(* set to standard by default *)
+let global_debug_mode = ref (Debug_mode_set Debug_standard)
 
 let timed_mode = ref false
 
@@ -96,7 +99,7 @@ let debug_mode_greater debug_mode =
 
 (* Convert a string into a debug_mode; raise Not_found if not found *)
 let debug_mode_of_string debug_mode =
-	if debug_mode = "nodebug" then Debug_nodebug
+	if debug_mode = "mute" then Debug_nodebug
 	else if debug_mode = "standard" then Debug_standard
 	else if debug_mode = "low" then Debug_low
 	else if debug_mode = "medium" then Debug_medium
@@ -119,36 +122,35 @@ let get_debug_mode () =
 
 
 (****************************************************************)
+(** Global types *)
+(****************************************************************)
+
+(** Mode for IMITATOR *)
+type imitator_mode =
+	(** Translation to another language: no analysis *)
+	| Translation
+	(** Classical state space exploration *)
+	| State_space_exploration
+	(** EF-synthesis *)
+	| EF_synthesis
+	(** Classical inverse method *)
+	| Inverse_method
+	(** Cover the whole cartography *)
+	| Cover_cartography
+	(** Look for the border using the cartography*)
+	| Border_cartography
+	(** Randomly pick up values for a given number of iterations *)
+	| Random_cartography of int
+
+
+
+(****************************************************************)
 (** Global time counter *)
 (****************************************************************)
 let counter = ref (Unix.gettimeofday())
 
-(* Compute a duration in ms *)
-let duration_of_float d =
-	((float_of_int) (int_of_float (d *. 1000.0))) /. 1000.0
-
-(** Get the value of the counter *)
-let get_time() =
-	(Unix.gettimeofday()) -. (!counter)
-
-(* Compute the duration since time t *)
-let time_from t =
-	(Unix.gettimeofday()) -. t
-
-(* Print a number of seconds *)
-let string_of_seconds nb_seconds =
-	let duration = duration_of_float nb_seconds in
-	let plural = (if duration <= 1.0 then "" else "s") in
-	(string_of_float duration) ^ " second" ^ plural
 
 
-(* Create a string of the form 'after x seconds', where x is the time since the program started *)
-let after_seconds () =
-	"after " ^ (string_of_seconds (get_time()))
-
-(** Set the timed mode *)
-let set_timed_mode () =
-	timed_mode := true
 
 
 (****************************************************************)
@@ -156,19 +158,21 @@ let set_timed_mode () =
 (****************************************************************)
 
 (* Check if a list is empty *)
-let list_empty = function
-	| [] -> true
-	| _ -> false
-	
+let list_empty l =
+	l = []
+
 (* Return a random element in a list *)
 let random_element l =
 	Random.self_init();
 	let nth = Random.int (List.length l) in
 	List.nth l nth
 
-(* list_of_interval a b Create a fresh new list filled with elements [a, a+1, ..., b-1, b] *)
-let list_of_interval a b =
-	(* Check if the interval is valid *)
+(** list_of_interval l u Create a fresh new list filled with elements [l, l+1, ..., u-1, u] *)
+let rec list_of_interval l u =
+	if ( l > u )
+		then []
+	else l :: (list_of_interval ( l + 1 ) u)
+(*	(* Check if the interval is valid *)
 	if a > b then [] else(
 		(* Create an array (more efficient?) *)
 		let ar = Array.make (b - a + 1) a in
@@ -178,7 +182,7 @@ let list_of_interval a b =
 		done;
 		(* Return a list *)
 		Array.to_list ar
-	)
+	)*)
 
 (* Intersection of 2 lists (keeps the order of the elements as in l1) *)
 let list_inter l1 l2 =
@@ -192,12 +196,42 @@ let list_union l1 l2 =
 		l2
 	)
 
+
+(** Returns l1 minus l2, with assumption that all elements of l1 are different *)
+let list_diff (l1 : 'a list) (l2 : 'a list) : 'a list =
+(* 	print_message Debug_standard ("List diff : [" ^ (string_of_int (List.length l1)) ^ "] \ [" ^ (string_of_int (List.length l2)) ^ "]"); *)
+	(* Optimize a little *)
+	if l2 = [] then l1
+	else (if l1 = [] then []
+	else
+		List.filter (fun elt -> not (List.mem elt l2)) l1
+		(* NOTE: surprisingly much less efficient (some times 4 times slower!) to do the n log(n) solution below rather than the n2 solution above *)
+(*		let set_of_list l =
+			List.fold_left (fun set elt -> IntSet.add elt set) IntSet.empty l
+		in
+		(* Convert l1 *)
+		let s1 = set_of_list l1 in
+	(*	(* Convert l2 *)
+		let s2 = set_of_list l2 in
+		(* Performs set difference *)
+		let set_diff = IntSet.diff s1 s2 in*)
+		(* Remove elements from l2 *)
+		let set_diff =
+			List.fold_left (fun set elt -> IntSet.remove elt set) s1 l2
+		in
+		(* Return elements *)
+		IntSet.elements set_diff
+*)
+	)
+
+
 (* Tail-recursive function for 'append' *)
 let list_append l1 l2 =
 	ExtList.(@) l1 l2
 	
 
 (* Return a list where every element only appears once *)
+(** WARNING: exponential here *)
 let list_only_once l =
 	List.rev (List.fold_left
 		(fun current_list e -> if List.mem e current_list then current_list else e::current_list)
@@ -221,23 +255,38 @@ let elements_existing_several_times l =
 	in
 	List.rev (elements_existing_several_times_rec [] l)
 
-(****************************************************************)
-(** Variable sets *)
-(****************************************************************)
 
-type variable_index = int
-type clock_index = variable_index
-type parameter_index = variable_index
-type discrete_index = variable_index
-type variable_name = string
-type value = NumConst.t
+(* Remove the first occurence of element e in list l ; returns the list unchanged if not found *)
+let rec list_remove_first_occurence e = function
+	| [] -> []
+	| first :: rest -> if e = first then rest
+		else first :: (list_remove_first_occurence e rest)
 
-module VarKey = struct 
-	type t = variable_index
-	let compare = compare
-end 
 
-module VariableSet = Set.Make(VarKey)
+(** Remove the ith element of a list *)
+let list_delete_at i al =
+	(* First check the arguments *)
+	if i < 0 then raise (Invalid_argument "list_delete_at");
+	if i >= List.length al  then raise (Failure "list_delete_at");
+	let rec del i = function
+		| [] -> []
+		| h::t when i = 0 -> t
+		| h::t -> h :: del (i - 1) t
+	in
+	del i al
+
+(** Replace the ith element of a list *)
+let list_set_nth i elem l =
+	(* First check the arguments *)
+	if i < 0 then raise (Invalid_argument "list_set_nth");
+	if i >= List.length l  then raise (Failure "list_set_nth");
+	let rec set i elem = function
+		| [] -> []
+		| h::t when i = 0 -> elem::t
+		| h::t -> h :: set (i - 1) elem t
+	in
+	set i elem l
+
 
 (****************************************************************)
 (** Useful functions on arrays *)
@@ -305,6 +354,10 @@ let dynArray_exists p a =
 let string_of_array_of_string =
 	Array.fold_left (fun the_string s -> the_string ^ s) ""
 
+(* Returns a fresh string made of 'n' times 's' *)
+let string_n_times n s =
+	string_of_array_of_string (Array.make n s)
+
 (* Convert a list of string into a string *)
 let string_of_list_of_string =
 	List.fold_left (fun the_string s -> the_string ^ s) ""
@@ -323,6 +376,7 @@ let string_of_array_of_string_with_sep sep a =
 (* Convert a list of string into a string with separators *)
 let string_of_list_of_string_with_sep sep l =
 	string_of_array_of_string_with_sep sep (Array.of_list l)
+
 
 
 (* 's_of_int i' Return "s" if i > 1, "" otherwise *)
@@ -344,6 +398,98 @@ let evaluate_or a b =
 	a || b
 
 
+
+
+(****************************************************************)
+(** Printing time functions *)
+(****************************************************************)
+let days = [| "Sun"; "Mon"; "Tue"; "Wed"; "Thu"; "Fri"; "Sat" |]
+let months = [| "Jan"; "Feb"; "Mar"; "Apr"; "May"; "Jun";
+				"Jul"; "Aug"; "Sep"; "Oct"; "Nov"; "Dec" |]
+
+(* 'add_digits n i' adds (m-n) '0' in front of 'i', if 'i' is an integer with only 'm' digits; result is always a string *)
+let add_digits n i =
+	(* Convert to string *)
+	let str_i = string_of_int i in
+	(* Count the number of digits *)
+	let size_i = String.length str_i in
+	(
+		(* Add more *)
+		if size_i <= n then
+			(string_n_times (n - size_i) "0")
+		(* Otherwise keep unchanged *)
+		else ""
+	) ^ str_i
+
+
+(* Adds a zero if a number has only 1 digit *)
+let two_digits = add_digits 2
+(*	(* Add a 0 if needed *)
+	(if i <= 9 then "0" else "")
+	^ (string_of_int i)*)
+
+let format_time time =
+  let tm = localtime time in
+(*  sprintf "%s %s %2d %02d:%02d:%02d %04d"
+    days.(tm.tm_wday)
+    months.(tm.tm_mon)
+    tm.tm_mday
+    tm.tm_hour
+    tm.tm_min
+    tm.tm_sec
+    (tm.tm_year + 1900)*)
+    (days.(tm.tm_wday))
+    ^ " " ^ (months.(tm.tm_mon))
+    ^ " " ^ (string_of_int tm.tm_mday)
+    ^ ", " ^ (string_of_int (tm.tm_year + 1900))
+    ^ " " ^ (two_digits tm.tm_hour)
+    ^ ":" ^ (two_digits tm.tm_min)
+    ^ ":" ^ (two_digits tm.tm_sec)
+ 
+(*let time = fst (Unix.mktime {tm_sec=50; tm_min=45; tm_hour=3;
+		tm_mday=18; tm_mon=0; tm_year=73;
+		tm_wday=0; tm_yday=0; tm_isdst=false})*)
+
+(* Print the current date and time under the form of a string *)
+let now () = "" ^ (format_time (Unix.gettimeofday ()))
+(* printf "format_time gives: %s\n" (format_time time) *)
+
+
+(* Round a float with 3 digits after comma, and convert to string *)
+let round3_float d =
+(* 	((float_of_int) (int_of_float (d *. 1000.0))) /. 1000.0 *)
+	(* Integer part *)
+	let int_part = string_of_int (int_of_float (floor d)) in
+	(* Floating part on 3 digits *)
+	let real_part = add_digits 3 ((int_of_float (d *. 1000.0)) mod 1000) in
+	(* Concatenate both *)
+	int_part ^ "." ^ real_part
+
+(** Get the value of the counter *)
+let get_time() =
+	(Unix.gettimeofday()) -. (!counter)
+
+(* Compute the duration since time t *)
+let time_from t =
+	(Unix.gettimeofday()) -. t
+
+(* Print a number of seconds *)
+let string_of_seconds nb_seconds =
+	let duration = round3_float nb_seconds in
+	let plural = (if nb_seconds <= 1.0 then "" else "s") in
+	duration ^ " second" ^ plural
+
+
+(* Create a string of the form 'after x seconds', where x is the time since the program started *)
+let after_seconds () =
+	"after " ^ (string_of_seconds (get_time()))
+
+(** Set the timed mode *)
+let set_timed_mode () =
+	timed_mode := true
+
+
+
 (****************************************************************)
 (** Messages *)
 (****************************************************************)
@@ -356,7 +502,7 @@ let print_message_generic message =
 	(* Print message *)
 	print_string (message ^ time_info ^ "\n");
 	(* Flush! *)
-	flush stdout
+	flush Pervasives.stdout
 
 
 (* Print a message if global_debug_mode >= message_debug_mode *)
@@ -368,7 +514,7 @@ let print_message message_debug_mode message =
 		(* Find number of blanks for indentation *)
 		let nb_spaces = if debug_level-1 > 0 then debug_level-1 else 0 in
 		(* Create blanks proportionnally to the debug_level (at least one space) *)
-		let spaces = " " ^ string_of_array_of_string (Array.make nb_spaces "   ") in
+		let spaces = " " ^ (string_n_times nb_spaces "   ") in
 		(* Add new lines and blanks everywhere *)
 		let formatted_message = spaces ^ (Str.global_replace (Str.regexp "\n") ("\n" ^ spaces) message) in
 		(* Print *)
@@ -394,22 +540,84 @@ let print_error message =
 	print_message_generic formatted_message
 
 
+
+
+
+
+let header_string =
+	(* Build info *)
+	let build_info = "Build: " ^ BuildInfo.build_number ^ " (" ^ BuildInfo.build_time ^ ")" in
+	
+	"************************************************************\n"
+	^ "*  " ^ program_name ^ " " ^ version_string ^ (string_n_times (46 - (String.length version_string)) " ") ^ " *\n"
+	^ "*                                                          *\n"
+	^ "*             Etienne ANDRE, Ulrich KUEHNE, Romain SOULAT  *\n"
+	^ "*                                             2009 - " ^ (string_of_int ((localtime (Unix.gettimeofday ())).tm_year + 1900))
+ ^ "  *\n"
+	^ "*                       LSV, ENS de Cachan & CNRS, France  *\n"
+	^ "*  Universite Paris 13, Sorbonne Paris Cite, LIPN, France  *\n"
+	^ "*                                                          *\n"
+	^ "*  " ^ (string_n_times (55 - (String.length build_info)) " ") ^ build_info ^ " *\n"
+	^ "************************************************************"
+
+
+
+(**************************************************)
+(** System functions *)
+(**************************************************)
+
+let write_to_file file_name file_content =
+	let oc = open_out file_name in
+	(* Write file *)
+	output_string oc file_content;
+	(* Close channel *)
+	close_out oc;
+	()
+
+
+(* Delete a file, and print a message if not found *)
+let delete_file file_name =
+	try (
+		(* Delete the file *)
+		Sys.remove file_name;
+		(* Confirm *)
+		print_message Debug_total ("Removed file " ^ file_name ^ " successfully.");
+	)
+	with Sys_error e ->
+		print_error ("File " ^ file_name ^ " could not be removed. System says: '" ^ e ^ "'.")
+
+
+(** Print info on the memory used *)
+let print_memory_used debug_level =
+	(* Print memory information *)
+	let gc_stat = Gc.stat () in
+	let nb_words = gc_stat.minor_words +. gc_stat.major_words -. gc_stat.promoted_words in
+	(* Compute the word size in bytes *)
+	let word_size = (*4.0*)Sys.word_size / 8 in
+	let nb_ko = nb_words *. (float_of_int word_size) /. 1024.0 in
+		print_message debug_level ("Estimated memory used: " ^ (round3_float nb_ko) ^ " KiB (i.e., " ^ (string_of_int (int_of_float nb_words)) ^ " words of size " ^ (string_of_int word_size) ^ ")")
+
+
+
 (****************************************************************)
 (** Terminating functions *)
 (****************************************************************)
 
 (* Abort program *)
 let abort_program () =
-	print_error ("Program aborted (" ^ (after_seconds ()) ^ ")");
+	print_error (program_name ^ " aborted (" ^ (after_seconds ()) ^ ")");
 	print_newline();
-	flush stdout;
-	exit(0)
+	flush Pervasives.stdout;
+	exit(1)
 
 (* Terminate program *)
 let terminate_program () =
 	print_newline();
 	print_message Debug_standard (program_name ^ " successfully terminated (" ^ (after_seconds ()) ^ ")");
+	(* Print memory info *)
+	print_memory_used Debug_standard;
+	(* The end *)
 	print_newline();
-	flush stdout;
+	flush Pervasives.stdout;
 	exit(0)
 

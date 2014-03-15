@@ -1,0 +1,61 @@
+--****************************************************--
+--****************************************************--
+--
+--   Example for non termination of Inverse Method
+--
+--   LIPN
+--   ENS de Cachan, France
+--
+--                                Created : 02/07/2012
+--                          Last modified : 13/11/2013
+--****************************************************--
+--****************************************************--
+
+var 	x1, x2, x3
+	: clock;
+
+	p1, p2, p3
+	: parameter;
+
+
+--****************************************************--
+automaton COM
+--****************************************************--
+synclabs : a, b, c;
+
+loc Q1 : while True  wait{}
+	when x2 >= p1 sync a do {} goto Q2;
+
+loc Q2 : while x1 <= p3 wait{}
+	when True sync b do {x1'=0} goto Q3;
+
+loc Q3 : while x2 <= p2 wait{}
+	when x2 = p2 sync c do {x2'=0} goto Q1; (* replacing = with <= does still not ensure termination, but loses the divergence *)
+end -- COM
+
+
+
+--****************************************************--
+--****************************************************--
+-- ANALYSIS
+--****************************************************--
+--****************************************************--
+
+var init : region;
+
+init := loc[COM]= Q1
+
+	& x1 >= 0
+	& x2 >= 0
+	& x3 = 0 (* must be set to 0, otherwise IMincl terminates *)
+	
+	& p1 >= 0
+	& p2 >= 0
+	& p3 >= 0
+	
+(*	&	p1 = 1
+	&	p2 = 2
+	&	p3 = 3
+	*)
+
+;

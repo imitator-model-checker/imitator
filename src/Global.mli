@@ -1,42 +1,53 @@
 (*****************************************************************
  *
- *                     HYMITATOR
- *
+ *                       IMITATOR
+ * 
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
+ * Universite Paris 13, Sorbonne Paris Cite, LIPN (France)
+ * 
  * Author:        Etienne Andre
+ * 
  * Created:       2009/09/08
- * Last modified: 2012/04/09
+ * Last modified: 2013/10/08
  *
  ****************************************************************)
 
+
 (****************************************************************)
-(** Version string *)
+(** Modules *)
+(****************************************************************)
+open DynArray
+
+
+(****************************************************************)
+(** Constants *)
 (****************************************************************)
 
-val version_string: string
+(*** TODO: separate global wrt Ocaml from global wrt IMITATOR ***)
+
+
 val program_name: string
-val print_version_string: unit -> unit
+
+val version_string: string
+
+val header_string: string
+
+(* val print_version_string: unit -> unit *)
+
+(* Extension for input model files *)
+val model_extension: string
+
 
 (****************************************************************)
 (** Exceptions *)
 (****************************************************************)
 exception InternalError of string
+exception Found
+exception InvalidModel
+exception UnexpectedToken of char
 
 (** Parsing exception: starting position of the error symbol, ending position of the error symbol *)
 exception ParsingError of (int * int)
-
-(** Mode for IMITATOR *) 
-type imitator_mode =
-	(** Classical parametric reachability analysis *)
-	| Reachability_analysis
- 	(** Reachability using predicate abstraction *)
-	| AbstractReachability
-	(** Classical inverse method *)
-	| Inverse_method
-	(** Cover the whole cartography *)
-	| Cover_cartography
-	(** Randomly pick up values for a given number of iterations *)
-	| Random_cartography of int
 
 
 
@@ -68,8 +79,33 @@ val get_debug_mode : unit -> debug_mode
 
 
 (****************************************************************)
+(** Global types *)
+(****************************************************************)
+
+(** Mode for IMITATOR *)
+type imitator_mode =
+	(** Translation to another language: no analysis *)
+	| Translation
+	(** Classical state space exploration *)
+	| State_space_exploration
+	(** EF-synthesis *)
+	| EF_synthesis
+	(** Classical inverse method *)
+	| Inverse_method
+	(** Cover the whole cartography *)
+	| Cover_cartography
+	(** Look for the border using the cartography*)
+	| Border_cartography
+	(** Randomly pick up values for a given number of iterations *)
+	| Random_cartography of int
+
+
+(****************************************************************)
 (** Global time counter *)
 (****************************************************************)
+
+(* Compute the duration in ms between 2 times *)
+(* val duration : float -> float -> float *)
 
 (** Get the value of the counter *)
 val get_time : unit -> float
@@ -86,6 +122,19 @@ val after_seconds : unit -> string
 (** Set the timed mode *)
 val set_timed_mode : unit -> unit
 
+(****************************************************************)
+(** Useful functions on float *)
+(****************************************************************)
+(** Round a float with 3 digits after comma, and convert to string *)
+val round3_float : float -> string
+
+
+(****************************************************************)
+(** Date functions *)
+(****************************************************************)
+
+(** Print the current date and time under the form of a string *)
+val now : unit -> string
 
 (****************************************************************)
 (** Useful functions on lists *)
@@ -105,6 +154,11 @@ val list_inter : 'a list -> 'a list -> 'a list
 (** Union of 2 lists *)
 val list_union : 'a list -> 'a list -> 'a list
 
+
+(** Difference of 2 lists *)
+val list_diff : 'a list	 -> 'a list-> 'a list
+
+
 (** Tail-recursive function for 'append' *)
 val list_append : 'a list -> 'a list -> 'a list
 
@@ -114,18 +168,15 @@ val list_only_once : 'a list -> 'a list
 (** Filter the elements appearing several times in the list *)
 val elements_existing_several_times : 'a list -> 'a list
 
-(****************************************************************)
-(** Variable sets *)
-(****************************************************************)
+(** Remove the first occurence of element e in list l; return the list unchanged if not found *)
+val list_remove_first_occurence : 'a -> 'a list -> 'a list
 
-type variable_index = int
-type clock_index = variable_index
-type parameter_index = variable_index
-type discrete_index = variable_index
-type variable_name = string
-type value = NumConst.t
+(** Remove the ith element of a list *)
+val list_delete_at : int -> 'a list -> 'a list
 
-module VariableSet: Set.S with type elt=variable_index 
+(** Replace the ith element of a list *)
+val list_set_nth : int -> 'a -> 'a list -> 'a list
+
 
 (****************************************************************)
 (** Useful functions on arrays *)
@@ -139,6 +190,9 @@ val index_of : 'a -> 'a array -> int
 
 (* Return the list of the indexes whose value is true *)
 val true_indexes : bool array -> int list
+
+(* Shuffle an array *)
+(* val shuffle_array : 'a array -> unit *)
 
 (** exists p {a1; ...; an} checks if at least one element of the Array satisfies the predicate p. That is, it returns (p a1) || (p a2) || ... || (p an). *)
 val array_exists : ('a -> bool) -> 'a array -> bool
@@ -155,6 +209,9 @@ val dynArray_exists : ('a -> bool) -> 'a DynArray.t -> bool
 (****************************************************************)
 (** Useful functions on string *)
 (****************************************************************)
+(** Returns a fresh string made of 'n' times 's' *)
+val string_n_times : int -> string -> string
+
 (* Convert an array of string into a string *)
 val string_of_array_of_string : string array -> string
 
@@ -178,6 +235,21 @@ val evaluate_and : bool -> bool -> bool
 
 (* Evaluate both part of an 'or' comparison and return the disjunction *)
 val evaluate_or : bool -> bool -> bool
+
+
+
+
+(**************************************************)
+(** System functions *)
+(**************************************************)
+
+val write_to_file : string -> string -> unit
+
+
+val delete_file : string -> unit
+
+(** Print info on the memory used *)
+val print_memory_used : debug_mode -> unit
 
 
 (****************************************************************)

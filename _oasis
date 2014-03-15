@@ -1,0 +1,46 @@
+###############################################################
+#
+#                       IMITATOR
+#
+#  Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
+#  Laboratoire d'Informatique de Paris Nord (Paris 13, France)
+#
+#  _oasis authors: Etienne Andre, Alban Linard
+#  Created:        2013/12/11
+#  Last modified:  2014/02/13
+###############################################################
+
+OASISFormat: 0.3
+Name:        IMITATOR
+Version:     2.6.1.2
+Synopsis:    shortdescription
+Authors:     Etienne Andre, Ulrich Kuehne, Romain Soulat
+License:     GPL-3.0
+
+# Handling build number (using Python)
+PreBuildCommand: python gen_build_info.py
+PostBuildCommand: python incrementer.py ; echo "Copying main binary file to bin/IMITATOR ..." ; cp _build/src/IMITATOR.native bin/IMITATOR
+
+
+Executable imitator
+  Path:       .
+  BuildTools: ocamlbuild
+  MainIs:     src/IMITATOR.ml
+  BuildDepends: gmp, extlib, ppl, str, unix
+  CCLib: -lppl -ltinfo -lppl_ocaml -lstdc++ -lgmp -lgmpxx
+#  CCLib: -static '-lppl -ltinfo -lppl_ocaml -lstdc++ -lgmp -lgmpxx'
+# -static to have a static compiling (+ ' ' around)
+# I removed -lcamlrun because I wrote "best" instead of "byte"
+  CompiledObject: best
+
+Test startingcomment
+  Command: echo "\n********** STARTING TESTS **********\n"
+Test testFlipFlop2
+  Command: ./IMITATOR.native examples/Flipflop/flipflop.imi -mode statespace -depth-limit 2
+Test test2
+  Command: ./IMITATOR.native examples/Flipflop/flipflop.imi -mode statespace -depth-limit 5
+Test finalcomment
+  Command: echo "\n********** END TESTS **********\n"
+
+# THE MAIN COMMAND TO COMPILE OASIS IS:
+# oasis setup && ocaml setup.ml -configure --enable-tests && ocaml setup.ml -all

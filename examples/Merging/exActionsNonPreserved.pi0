@@ -1,0 +1,18 @@
+(*****************************************************************
+ *
+ *                       IMITATOR
+ *
+ * Example to show the non-preservation of the actions by the variant of merging
+ * (i.e., merging before pi0-compatibility test)
+ * 
+ * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
+ * Universite Paris 13, Sorbonne Paris Cite, LIPN (France)
+ * 
+ * Author:        Etienne Andre
+ * 
+ * Created         : 2013/03/20
+ * Last modified   : 2013/03/20
+ * IMITATOR version: 2.6.1
+ *
+ ****************************************************************)
+p = 1

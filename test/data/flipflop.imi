@@ -410,9 +410,9 @@ init := True
 	& dG2_l  = 5
 	& dG2_u  = 6
 	& dG3_l  = 8
- 	& dG3_u  = 10 -- 8 .. 30
+-- 	& dG3_u  = 10 -- 8 .. 30
 	& dG4_l  = 3
- 	& dG4_u  = 7 -- 3 .. 30
+-- 	& dG4_u  = 7 -- 3 .. 30
 ;
 
 -- print (hide non_parameters in (reach forward from init endreach) endhide);
