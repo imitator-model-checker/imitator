@@ -5,17 +5,19 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2012/06/15
- * Last modified: 2013/03/20
+ * Last modified: 2014/03/15
  *
  ****************************************************************)
 
 
 open AbstractModel
-(* open Graph *)
 open Options
 
+(** Compile the different files and set the models *)
+val compile: unit -> abstract_model
+
 val get_model: unit -> abstract_model
-val set_model: abstract_model -> unit
+(*val set_model: abstract_model -> unit*)
 
 val get_pi0: unit -> pi0
 val set_pi0: pi0 -> unit
