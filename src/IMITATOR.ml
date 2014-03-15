@@ -8,7 +8,7 @@
  * Author:        Ulrich Kuehne, Etienne Andre
  * 
  * Created:       2009/09/07
- * Last modified: 2014/01/15
+ * Last modified: 2014/03/15
  *
  ****************************************************************)
 
@@ -27,15 +27,6 @@ open Gc
 
 
 (**************************************************
-
-A FAIRE
-[ ] eviter les etats degeneres (avec "faux") : arrive dans le cas ou aucun etat n'est genere (init deja pas satisfiable) --> bouger le test de satisfiabilite dans le demarrage de InverseMethod ?
-
- OPTIMISATIONS A FAIRE POUR L'EXECUTION
-
-[ ] METTRE DES TABLES DE HASH et non des tableaux pour transitions, gardes, invariants, etc. Avantage : (beaucoup) moins de choses en memoire, execution a peine plus lente.
-
-
 
 TAGS POUR CHOSES A FAIRE
 - (**** TO DO ****)
@@ -157,6 +148,11 @@ terminate_program();*)
 print_message Debug_standard header_string;
 
 
+(* Print date *)
+print_message Debug_standard ("Analysis time: " ^ (now()) ^ "\n");
+
+
+
 
 (**************************************************)
 (* Get the arguments *)
@@ -174,223 +170,9 @@ Input.set_options options;
 (**************************************************)
 (* Recall the arguments *)
 (**************************************************)
-
-(* Print date *)
-print_message Debug_standard ("Analysis time: " ^ (now()) ^ "\n");
-
-(* File *)
-print_message Debug_standard ("Model: " ^ options#file);
-(* File prefix *)
-print_message Debug_low ("Prefix for output files: " ^ options#files_prefix);
-
-(* Global mode *)
-let message = match options#imitator_mode with
-	| Translation -> "translation"
-	| State_space_exploration -> "parametric state space exploration"
-	| EF_synthesis -> "EF-synthesis"
-	| Inverse_method -> "inverse method"
-	| Cover_cartography -> "behavioral cartography algorithm with full coverage and step " ^ (NumConst.string_of_numconst options#step)
-	| Border_cartography -> "behavioral cartography algorithm with border detection (experimental) and step " ^ (NumConst.string_of_numconst options#step)
-	| Random_cartography nb -> "behavioral cartography algorithm with " ^ (string_of_int nb) ^ " random iterations and step " ^ (NumConst.string_of_numconst options#step)
-in print_message Debug_standard ("Mode: " ^ message ^ ".");
+options#recall();
 
 
-(* TODO : print the user-defined correctness condition, if any *)
-
-
-(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-(* Check compatibility between options *) 
-(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-if options#nb_args = 2 then(
-	if options#imitator_mode = Translation then
-		print_warning ("The pi0 file " ^ options#pi0file ^ " will be ignored since this is a translation.")
-	;
-	if options#imitator_mode = State_space_exploration then
-		print_warning ("The pi0 file " ^ options#pi0file ^ " will be ignored since this is a state space exploration.")
-	;
-	if options#imitator_mode = EF_synthesis then
-		print_warning ("The pi0 file " ^ options#pi0file ^ " will be ignored since this is a synthesis with respect to a property.")
-	;
-	if options#forcePi0 then
-		print_warning ("The pi0 file " ^ options#pi0file ^ " will be ignored since this the pi0 file is automatically generated.")
-	;
-);
-
-if options#acyclic && options#tree then (
-	options#acyclic_unset;
-	print_warning ("Ayclic mode is set although tree mode is already set. Only tree mode will be considered.");
-);
-
-if options#with_parametric_log && not options#with_log then (
-	print_warning ("Parametric log was asked, but log was not asked. No log will be output.");
-);
-
-
-
-(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-(* Recall modes *) 
-(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-
-(* Variant of the inverse method *)
-if options#inclusion then
-	print_message Debug_standard ("Considering fixpoint variant with inclusion.")
-else
-	print_message Debug_medium ("No fixpoint variant (default).");
-
-if options#union then
-	print_message Debug_standard ("Considering return variant IMunion.")
-else
-	print_message Debug_medium ("No IMunion return variant (default).");
-
-if options#pi_compatible then
-	print_message Debug_standard ("Considering return variant IMoriginal.")
-else
-	print_message Debug_medium ("No IMoriginal return variant (default).");
-
-(* Should add a warning in case of incompatible mode (IMoriginal incompatible with IMunion) + VARIANT ROMAIN *)
-
-
-if options#efim then
-	print_message Debug_standard ("Considering special algorithm EFIM (experimental).")
-else
-	print_message Debug_medium ("No EFIM algorithm (default).")
-;
-
-
-	
-if options#branch_and_bound then
-	print_message Debug_standard ("Considering branch and bound (experimental!).")
-else
-	print_message Debug_medium ("No branch and bound mode (default).");
-
-
-
-(* Syntax *)
-if options#fromGML then
-	print_message Debug_standard ("GrML syntax used.");
-
-(* Syntax *)
-if options#forcePi0 then
-	print_warning ("Pi0 is automatically generated.");
-
-
-(* OPTIONS *)
-
-if options#completeIM then (
-	print_message Debug_standard ("IM will output a complete, possibly non-convex, constraint.");
-) else
-	print_message Debug_medium ("IM will output a possibly incomplete, but convex, constraint (default).")
-;
-
-
-if options#merge then (
-	print_message Debug_standard ("Merging technique of [AFS12] enabled.");
-) else
-	print_message Debug_medium ("Merging technique of [AFS12] disabled (default).")
-;
-if options#merge_before then
-	print_message Debug_standard ("Variant of the merging technique of [AFS12] enabled. States will be merged before pi0-compatibility test (EXPERIMENTAL).")
-else
-	print_message Debug_medium ("Variant of the merging technique of [AFS12] disabled.")
-;
-
-(*if options#dynamic then
-	print_message Debug_standard ("Dynamic mode (optimization by RS).")
-else
-	print_message Debug_medium ("No dynamic mode (default).");*)
-
-if options#sync_auto_detection then
-	print_message Debug_standard ("Auto-detection mode for sync actions.")
-else
-	print_message Debug_medium ("No auto-detection mode for sync actions (default).");
-
-if options#no_random then
-	print_message Debug_standard ("No random selection for pi0-incompatible inequalities.")
-else
-	print_message Debug_medium ("Standard random selection for pi0-incompatible inequalities (default).");
-
-if options#acyclic then
-	print_message Debug_standard ("Acyclic mode: will only check inclusion or equality of a new state into a former state of the same iteration (graph depth).")
-else
-	print_message Debug_medium ("No acyclic mode (default).");
-
-if options#tree then
-	print_message Debug_standard ("Tree mode: will never check inclusion or equality of a new state into a former state.")
-else
-	print_message Debug_medium ("No tree mode (default).");
-
-if options#dynamic_clock_elimination then
-	print_message Debug_standard ("Dynamic clock elimination activated.")
-else
-	print_message Debug_medium ("No dynamic clock elimination (default).");
-
-if options#check_point then
-	print_message Debug_standard ("At each iteration, it will be checked whether the constraint is restricted to the sole pi0 point (experimental and costly!).")
-else
-	print_message Debug_medium ("No check of the constraint equality with pi0 (default).");
-
-(* Output *)
-
-if options#with_dot then
-	print_message Debug_standard ("Graphical output will be generated.")
-else
-	print_message Debug_medium ("No graphical output (default).");
-	
-if options#with_log then
-	print_message Debug_standard ("Log (description of states) will be generated.")
-else
-	print_message Debug_medium ("No state description (default).");
-
-if options#with_parametric_log then
-	print_message Debug_standard ("Parametric description of states will be generated.")
-else
-	print_message Debug_medium ("No parametric description of states (default).");
-
-(* LIMIT OF POST *)
-let _ =
-match options#post_limit with
-	| None -> print_message Debug_medium "Considering no limit for the depth of the Post operation (default)."
-	| Some limit -> print_warning ("Considering a limit of " ^ (string_of_int limit) ^ " for the depth of the Post operation.")
-in ();
-
-(* LIMIT OF POST *)
-begin
-match options#states_limit with
-	| None -> print_message Debug_medium "Considering no limit for the number of states (default)."
-	| Some limit -> print_warning ("Considering a limit of " ^ (string_of_int limit) ^ " for the number of states.")
-end;
-
-(* TIME LIMIT *)
-let _ =
-match options#time_limit with
-	| None -> print_message Debug_medium "Considering no time limit (default)."
-	| Some limit -> print_warning ("The program will try to stop after " ^ (string_of_int limit) ^ " seconds.")
-in ();
-
-
-(* Verification of incompatibilities between options *)
-
-if (options#imitator_mode = State_space_exploration || options#imitator_mode = Translation) && (options#union || options#pi_compatible) then
-	print_warning ("The program will be launched in state space exploration mode; options regarding to the variant of the inverse method will thus be ignored.");
-
-if (options#imitator_mode = State_space_exploration || options#imitator_mode = Translation || options#imitator_mode = Inverse_method) && (NumConst.neq options#step NumConst.one) then
-	print_warning ("The program will be launched in state space exploration mode; option regarding to the step of the cartography algorithm will thus be ignored.");
-
-
-
-
-
-(**************************************************)
-(* Timed mode *)
-(**************************************************)
-if options#timed_mode then (
-	(* Debug *)
-	print_message Debug_standard ("Timed mode is on.");
-	(* Set the timed mode *)
-	set_timed_mode ();
-) else (
-	print_message Debug_medium ("Timed mode is off (default).");
-);
 
 
 (**************************************************)
@@ -423,11 +205,10 @@ let pi0_parsed, v0_parsed =
 		
 		(* Inverse method : pi0 *)
 		| Inverse_method ->
-			(* Case forcePi0 *)
-			(* HACK !! *)
+(*			(* Case forcePi0 *)
 			if options#forcePi0 then  parser_lexer_from_string Pi0Parser.main Pi0Lexer.token "p1 = 1 & p2 = 2 & p3 = 3 & p4 = 4 & p5 = 5", []
 			(* Normal case *)
-			else parser_lexer_from_file Pi0Parser.main Pi0Lexer.token options#pi0file, []
+			else*) parser_lexer_from_file Pi0Parser.main Pi0Lexer.token options#pi0file, []
 		(* Cartography : v0 *)
 		| _ -> [], parser_lexer_from_file V0Parser.main V0Lexer.token options#pi0file
 in
@@ -579,20 +360,6 @@ if not (LinearConstraint.px_is_satisfiable model.initial_constraint) then (
 (* Get the initial state after time elapsing *)
 let init_state_after_time_elapsing = Reachability.create_initial_state model in
 let _, initial_constraint_after_time_elapsing = init_state_after_time_elapsing in
-
-(*(* COMPARISON *)
-let init_state_after_time_elapsing2 = Reachability.create_initial_state2 model in
-let _, initial_constraint_after_time_elapsing2 = init_state_after_time_elapsing2 in
-
-if(LinearConstraint.is_equal initial_constraint_after_time_elapsing initial_constraint_after_time_elapsing2) then(
-	print_message Debug_standard ("\n INITIAL STATE OK :o)");
-	terminate_program ();
-)else (
-	print_error ("\n INITIAL STATES DIFFERENT.");
-	print_message Debug_standard ("\n 1) \n" ^ (LinearConstraint.string_of_linear_constraint model.variable_names initial_constraint_after_time_elapsing));
-	print_message Debug_standard ("\n 2) \n" ^ (LinearConstraint.string_of_linear_constraint model.variable_names initial_constraint_after_time_elapsing2));
-	abort_program ();
-);*)
 
 
 (* Check the satisfiability *)

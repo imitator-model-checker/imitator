@@ -15,25 +15,54 @@ ALGORITHMIC FEATURES
 
 
 
+************************************************************
+EFFICIENCY AND OPTIMIZATIONS
+************************************************************
+
+ OPTIMISATIONS A FAIRE POUR L'EXECUTION
+
+[ ] METTRE DES TABLES DE HASH et non des tableaux pour transitions, gardes, invariants, etc. Avantage : (beaucoup) moins de choses en memoire, execution a peine plus lente.
+
+
+
+
+************************************************************
 MODEL FEATURES
+************************************************************
 [!!!] allow DISCRETE * parameters in clock updates (and more generally DISCRETE * anything)
 	needed by Giuseppe
 [?] have several locations in the "bad" definition (avoids to create a global deadline-miss-observer in the case of scheduling problems)
 
 
+************************************************************
 OUTPUT FEATURES
+************************************************************
 [ ] allow cartography for inverse method
+[ ] always output a cartography when 2D, even for IM, and always colour it if some good/bad states have been defined
 
+************************************************************
 USER INTERFACE
+************************************************************
 
 
+************************************************************
 INTERNAL
+************************************************************
 [!] Test platform
 
+
+
+
+
+
+************************************************************
 ADMINISTRATIVE
+************************************************************
 [!!] GPL license
 
 
 
+************************************************************
 THEORETICAL QUESTIONS
+************************************************************
 - 

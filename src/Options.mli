@@ -27,7 +27,7 @@ class imitator_options :
 		val mutable fancy : bool ref
 		val mutable file : string ref
 		val mutable files_prefix : string ref
-		val mutable forcePi0 : bool ref
+(* 		val mutable forcePi0 : bool ref *)
 		val mutable fromGML : bool ref
 		val mutable imitator_mode : Global.imitator_mode ref
 		val mutable inclusion : bool ref
@@ -69,7 +69,7 @@ class imitator_options :
 		method fancy : bool
 		method file : string
 		method files_prefix : string
-		method forcePi0 : bool
+(* 		method forcePi0 : bool *)
 		method fromGML : bool
 		method imitator_mode : imitator_mode
 		method inclusion : bool
@@ -96,4 +96,8 @@ class imitator_options :
 		method with_log : bool
 		method with_parametric_log : bool
 		method parse : unit
+		
+		(* Recall options *)
+		method recall : unit -> unit
+		
 end
