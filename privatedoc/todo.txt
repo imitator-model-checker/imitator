@@ -45,6 +45,17 @@ USER INTERFACE
 ************************************************************
 
 
+
+************************************************************
+SOFTWARE ENGINEERING
+************************************************************
+[ ] One object class per algorithm
+	A function CheckOptions that checks consistency wrt this algorithm
+	An output as an object!
+
+[ ] Generic data structures
+
+
 ************************************************************
 INTERNAL
 ************************************************************

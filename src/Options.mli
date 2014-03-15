@@ -5,15 +5,22 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2012/05/10
- * Last modified: 2014/03/11
+ * Last modified: 2014/03/15
  *
  ****************************************************************)
  
 open Global
 
+
+type distribution_mode =
+	| Non_distributed
+	| Distributed
+
+
+
 class imitator_options :
 	object
-		val mutable nb_args : int 
+(*		val mutable nb_args : int 
 		val mutable acyclic : bool ref
 		val mutable branch_and_bound : bool ref
 		val mutable cart : bool ref
@@ -22,6 +29,7 @@ class imitator_options :
 		val mutable completeIM : bool ref
 		val mutable counterex : bool ref
 (* 		val mutable dynamic : bool ref *)
+		val mutable distributed : distribution_mode ref
 		val mutable dynamic_clock_elimination : bool ref
 		val mutable efim : bool ref
 		val mutable fancy : bool ref
@@ -52,7 +60,7 @@ class imitator_options :
 		val mutable with_dot : bool ref
 		val mutable with_graphics_source : bool ref
 		val mutable with_log : bool ref
-		val mutable with_parametric_log : bool ref
+		val mutable with_parametric_log : bool ref*)
 		
 		method acyclic : bool
 		method acyclic_unset : unit
@@ -64,6 +72,7 @@ class imitator_options :
 		method completeIM : bool
 		method counterex : bool
 (* 		method dynamic : bool *)
+		method distribution_mode : distribution_mode
 		method dynamic_clock_elimination : bool
 		method efim : bool
 		method fancy : bool

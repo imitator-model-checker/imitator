@@ -7,12 +7,17 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Ulrich Kuehne, Etienne Andre
  * Created:       2010
- * Last modified: 2014/03/11
+ * Last modified: 2014/03/15
  *
  ****************************************************************)
  
 open Arg
 open Global
+
+type distribution_mode =
+	| Non_distributed
+	| Distributed
+
 
 class imitator_options =
 	object
@@ -96,6 +101,9 @@ class imitator_options =
 		(* On-the-fly intersection (DEPRECATED) *)
 (* 		val mutable dynamic = ref false *)
 		
+		(* Distributed version of IMITATOR (TOTALLY EXPERIMENTAL) *)
+		val mutable distribution_mode = ref Non_distributed
+		
 		(* Remove useless clocks (slightly experimental) *)
 		val mutable dynamic_clock_elimination = ref false
 		
@@ -166,6 +174,7 @@ class imitator_options =
 		method completeIM = !completeIM
 		method counterex = !counterex
 		(* method dynamic = !dynamic *)
+		method distribution_mode = !distribution_mode
 		method dynamic_clock_elimination = !dynamic_clock_elimination
 		method efim = !efim
 		method fancy = !fancy
@@ -264,6 +273,8 @@ class imitator_options =
 				("-counterex", Set counterex, " Stop the analysis as soon as a bad state is discovered (work in progress). Default: false.");
 				
 				("-depth-limit", Int (fun i -> post_limit := Some i), " Limits the depth of the exploration of the reachability graph. Default: no limit.");
+				
+				("-distributed", Unit (fun _ -> distribution_mode := Distributed), " Distributed version of IMITATOR (work in progress). Default: non-distributed.");
 				
 				("-dynamic-elimination", Set dynamic_clock_elimination, " Dynamic clock elimination [FSFMA13]. Default: false.");
 				
@@ -466,6 +477,12 @@ class imitator_options =
 				print_message Debug_medium ("No EFIM algorithm (default).")
 			;
 
+
+			if !distribution_mode = Distributed then
+				print_message Debug_standard ("Considering a distributed version of IMITATOR (WORK IN PROGRESS).")
+			else
+				print_message Debug_medium ("Non-distributed version of IMITATOR (default).")
+			;
 
 				
 			if !branch_and_bound then

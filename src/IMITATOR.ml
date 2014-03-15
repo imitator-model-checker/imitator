@@ -100,6 +100,17 @@ if debug_mode_greater Debug_total then
 	print_message Debug_total ("\nModel:\n" ^ (ModelPrinter.string_of_model model) ^ "\n");
 
 
+(**************************************************)
+(* Case distributed *)
+(**************************************************)
+begin
+match options#distribution_mode with
+	(* Fork if distributed *)
+	| Distributed -> PaTATOR.run()
+	| _ -> ()
+end;
+
+
 
 (**************************************************)
 (* Case translation *)
