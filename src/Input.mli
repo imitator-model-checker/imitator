@@ -14,10 +14,10 @@ open AbstractModel
 open Options
 
 (** Compile the different files and set the models *)
-val compile: unit -> abstract_model
+(* val compile: unit -> abstract_model * pi0 * v0 *)
 
 val get_model: unit -> abstract_model
-(*val set_model: abstract_model -> unit*)
+val set_model: abstract_model -> unit
 
 val get_pi0: unit -> pi0
 val set_pi0: pi0 -> unit

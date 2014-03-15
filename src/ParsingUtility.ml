@@ -4,25 +4,19 @@
  * 
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
- * Created:       2012/06/15
+ * Created:       2014/03/15
  * Last modified: 2014/03/15
  *
  ****************************************************************)
 
 
-open Global
 open AbstractModel
-
-(* internal references to global data structures *)
-let model_ref = ref None
-let pi0_ref = ref None
-let v0_ref = ref None
-let options_ref = ref None
-(*let reachability_graph_ref = ref None
-let abstract_reachability_graph_ref = ref None*)
+open Gc
+open Global
+open Options
 
 
-(*
+
 (************************************************************)
 (* Local parsing function *)
 (************************************************************)
@@ -93,22 +87,14 @@ let parser_lexer_from_string the_parser the_lexer the_string =
 	(* Function to convert a in_channel to a string (in case of parsing error) *)
 	let string_of_input () = the_string in
 	(* Generic function *)
-	parser_lexer_gen the_parser the_lexer lexbuf string_of_input the_string*)
+	parser_lexer_gen the_parser the_lexer lexbuf string_of_input the_string
 
 
 
 (************************************************************)
 (** Compile the different files and set the models *)
 (************************************************************)
-(* Local set function *)
-let set_model model =
-	model_ref := Some model
-
-(*
-
-let compile() =
-	(* Retrieve the input options *)
-	let options = get_options () in
+let compile options =
 	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Parsing *)
@@ -180,75 +166,10 @@ let compile() =
 
 	(* Ugly line break *)
 	print_message Debug_standard "";
-
-
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Set model, pi0 and v0 *)
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	set_model model;
-	set_pi0 pi0;
-	set_v0 v0;
+	
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* return *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	model, pi0, v0*)
+	model, pi0, v0
 
-	
-	
-
-(************************************************************)
-(** Other get/set functions *)
-(************************************************************)
-let get_model _ =
-	match !model_ref with
-		| None ->
-			raise (InternalError "Input model not yet available");
-		| Some model -> model
-
-let get_pi0 _ =
-	match !pi0_ref with
-		| None ->
-			raise (InternalError "Input pi0 not available");
-		| Some pi0 -> pi0
-
-let set_pi0 pi0 =
-	pi0_ref := Some pi0
-
-let get_v0 _ =
-	match !v0_ref with
-		| None ->
-			raise (InternalError "Input v0 not available");
-		| Some v0 -> v0
-
-let set_v0 v0 =
-	v0_ref := Some v0
-
-let get_options _ =
-	match !options_ref with
-		| None ->
-			raise (InternalError "Options not yet available");
-		| Some options -> options
-
-let set_options options =
-	options_ref := Some options
-
-(*let get_reachability_graph _ =
-	match !reachability_graph_ref with
-		| None ->
-			raise (InternalError "Reachability graph not available");
-		| Some reachability_graph -> reachability_graph
-
-let set_reachability_graph reachability_graph =
-	reachability_graph_ref := Some reachability_graph
-				 
-let get_abstract_reachability_graph _ =
-	match !abstract_reachability_graph_ref with
-		| None ->
-			raise (InternalError "Abstract reachability graph not available");
-		| Some abstract_reachability_graph -> abstract_reachability_graph
-
-let set_abstract_reachability_graph abstract_reachability_graph =
-	abstract_reachability_graph_ref := Some abstract_reachability_graph
-				 *)
-	

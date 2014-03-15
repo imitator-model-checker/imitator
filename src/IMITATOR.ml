@@ -18,9 +18,8 @@
 (**************************************************)
 open Global
 open AbstractModel
-open Arg
+(* open Arg *)
 open ModelPrinter
-(* open Graph *)
 open Options
 open Reachability
 open Gc
@@ -88,10 +87,10 @@ options#recall();
 (**************************************************)
 (* Get input *)
 (**************************************************)
-(*Input.set_model model;
-Input.set_pi0 pi0;*)
-let model, pi0, v0 = Input.compile () in
+let model, pi0, v0 = ParsingUtility.compile options in
 
+Input.set_model model;
+Input.set_pi0 pi0;
 
 
 (**************************************************)
