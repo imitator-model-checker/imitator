@@ -1,0 +1,90 @@
+--************************************************************--
+--************************************************************--
+--
+--   Railroad Gate Controller
+--
+--   Simple model with 1 PTA only
+--
+--   Etienne ANDRE
+--   Universite Paris 13, Sorbonne Paris Cite, LIPN (France)
+--
+--                                Created : 2012/03/13
+--                          Last modified : 2013/03/05
+--                       IMITATOR version : 2.6.1
+--************************************************************--
+--************************************************************--
+
+
+
+var
+ 	x, y
+		: clock;
+
+	dApproach, -- time between the approach and the passing
+	dStartDown, -- time between the approach and the gate starting to go down
+	dGetDown -- time between the gate starts to lower, and the gate is closed
+			: parameter;
+
+
+--************************************************************--
+  automaton system
+--************************************************************--
+synclabs: approach, startDown, endDown, pass;
+initially Far;
+
+loc Far: while True wait {}
+	when True sync approach do {x' = 0} goto Approaching;
+
+loc Approaching: while x <= dApproach & x <= dStartDown wait {}
+	when x = dStartDown sync startDown do {y' = 0} goto Lowering;
+	when x = dApproach sync pass do {} goto Crash;
+
+loc Crash: while True wait {}
+
+loc Lowering: while x <= dApproach & y <= dGetDown wait {}
+	when x = dApproach sync pass do {} goto Crash;
+	when y = dGetDown sync endDown do {} goto Safe;
+
+loc Safe: while x <= dApproach wait {}
+	when x = dApproach sync pass do {x' = 0, y' = 0} goto Far;
+
+end -- system
+
+
+
+--************************************************************--
+--************************************************************--
+-- ANALYSIS
+--************************************************************--
+--************************************************************--
+
+var init : region;
+
+init := True
+	----------------------
+	-- Initial locations
+	----------------------
+	& loc[system]      = Far
+
+	----------------------
+	-- Clocks
+	----------------------
+	& x = 0
+	& y = 0
+
+	----------------------
+	-- Given constraints
+	----------------------
+	& dApproach >= 0
+	& dStartDown >= 0
+(* 	& dGetDown >= 0 *)
+	& dGetDown = 5
+
+	----------------------
+	-- Instantiations
+	----------------------
+
+;
+
+property := unreachable loc[system] = Crash;
+

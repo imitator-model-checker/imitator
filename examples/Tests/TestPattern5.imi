@@ -1,0 +1,89 @@
+--************************************************************--
+--************************************************************--
+--
+--   Test for testing observer patterns
+--
+--   Etienne ANDRE
+--   Laboratoire d'Informatique de Paris Nord
+--
+--                                Created : 2013/03/06
+--                          Last modified : 2013/03/06
+--                       IMITATOR version : 2.6.0
+--************************************************************--
+--************************************************************--
+
+var 	x1, x2
+		: clock;
+
+	p1, p2
+			: parameter;
+
+
+--****************************************************--
+--****************************************************--
+-- AUTOMATA
+--****************************************************--
+--****************************************************--
+
+
+--****************************************************--
+  automaton automaton1
+--****************************************************--
+
+synclabs: a1;
+
+loc locA1: while x1 <= p1 wait {}
+	when x1 = p1 sync a1 goto locA9; (* Good behavior because a2 doesn't happen at all *)
+	when p1 <= 3 do {x1' = 0} sync a1 goto locA2;
+
+loc locA2: while x1 <= 5 wait {}
+	when x1 = p1 sync a1 goto locA9; (*will be ok only if p1 <= 5 *)
+
+loc locA9: while True wait {}
+
+end -- automaton1
+
+--****************************************************--
+  automaton automaton2
+--****************************************************--
+
+synclabs: a2;
+
+loc locB1: while x2 <= 10 wait {}
+	when x2 = 10 sync a2 goto locB9;
+
+loc locB9: while True wait {}
+
+end -- automaton2
+
+
+--****************************************************--
+--****************************************************--
+-- ANALYSIS
+--****************************************************--
+--****************************************************--
+
+init := True
+	----------------------
+	-- Initial locations
+	----------------------
+	& loc[automaton1] = locA1
+	& loc[automaton2] = locB1
+
+
+	----------------------
+	-- Clocks
+	----------------------
+	& x1 = 0
+	& x2 = 0
+
+	----------------------
+	-- Constraints
+	----------------------
+
+;
+
+
+(* property := if a2 then a1 has happened within p2 before; *)
+(* property := everytime a2 then a1 has happened within p2 before; *)
+property := everytime a2 then a1 has happened once within p2 before;

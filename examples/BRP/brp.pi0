@@ -1,0 +1,24 @@
+--****************************************************--
+--****************************************************--
+--   Laboratoire Specification et Verification
+--
+--   BRP (Bounded Retransmission Protocol)
+--   after "The Bounded Retransmission Protocol Must Be on Time!"
+--
+--   Etienne ANDRE and Laurent FRIBOURG
+--
+--   Created       : 2010/01
+--   Last modified : 2010/04/01
+--****************************************************--
+--****************************************************--
+
+
+	---START PI0---
+	& MAX  = 2
+	& N    = 2 
+	& TD   = 1
+	& T1   = 3
+	& TR   = 16
+	& SYNC = 17
+	---END PI0---
+	

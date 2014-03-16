@@ -1,0 +1,973 @@
+--****************************************************--
+--****************************************************--
+--   Portion of the SPSMALL memory circuit ("spsmall_blueb_lsv")
+--
+--   Design by ST-Microelectronics
+--   Timings by LIP6
+--   Model by LSV
+--
+--   Created       : 2010/04/02 from spsmall_blueb_lsv.hy
+--   Last modified : 2010/04/02
+--****************************************************--
+--****************************************************--
+
+
+
+var
+	s,
+	x_q_0,
+	x_net27,
+	x_wela,
+	x_net13a,
+	x_net45,
+	x_d_int,
+	x_en_latchd,
+	x_en_latchwen,
+	x_wen_h,
+	x_d_h
+		:clock;
+
+	qD,qW,qwa,qQ
+		: discrete;
+
+	d_up_q_0,d_dn_q_0,
+	d_up_net27,d_dn_net27,
+	d_up_d_inta,d_dn_d_inta,
+	d_up_wela,d_dn_wela,
+	d_up_net45a,d_dn_net45a,
+	d_up_net13a,d_dn_net13a,
+	d_up_net45,d_dn_net45,
+	d_up_d_int,d_dn_d_int,
+	d_up_en_latchd,d_dn_en_latchd,
+	d_up_en_latchwen,d_dn_en_latchwen,
+	d_up_wen_h,d_dn_wen_h,
+	d_up_d_h,d_dn_d_h,
+	tHI, tLO, tsetupd, tsetupwen
+		:parameter;
+
+
+
+automaton abs_net27	-- ######### ABSTRACTION MANUELLE DE net27 #########
+	    		-- ######### et incorporation de retard_q0 #########
+			-- ######### ce qui supprime l'autom. ret_q_0 ######
+synclabs: down_wela, up_wela,
+	    down_d_inta, up_d_inta,
+ 	    down_net27, up_net27;
+initially init_abs_net27;
+
+loc  init_abs_net27 : while True wait {}
+	 when True sync up_d_inta goto A_abs_net27;
+ 	 when True sync down_wela goto C_abs_net27;
+ 	 when True sync up_wela goto init_abs_net27;
+ 	 when True sync down_d_inta goto init_abs_net27;
+
+loc  A_abs_net27 : while True wait {}
+	 when True sync down_wela do {x_net27'=0} goto B_abs_net27;
+	 when True sync up_wela goto A_abs_net27;
+ 	 when True sync up_d_inta goto A_abs_net27;
+	 when True sync down_d_inta goto C_abs_net27;
+
+loc  B_abs_net27 : while x_net27 <= d_up_net27 + d_up_q_0 wait {}
+	 when True sync down_wela  goto B_abs_net27;
+	 when True sync up_wela goto C_abs_net27;
+ 	 when True sync up_d_inta goto C_abs_net27;
+	 when True sync down_d_inta goto B_abs_net27;
+	 when x_net27 = d_up_net27+ d_up_q_0 --sync up_net27
+	      	      do {qQ' = s} goto C_abs_net27;
+
+loc  C_abs_net27 : while True wait{}
+       when True sync down_wela goto C_abs_net27;
+       when True sync up_wela goto C_abs_net27;     
+       when True sync down_d_inta goto C_abs_net27;     
+       when True sync up_d_inta goto C_abs_net27;
+
+end -- not_net27
+
+automaton f2_wela		-- wela <= net45a or net13a
+synclabs: up_net45a, down_net45a,
+      up_net13a, down_net13a,
+      up_wela, down_wela;
+
+
+initially e_01_1_wela;
+
+loc  e_00_0_wela : while True wait {}
+	 when True sync up_net45a  do {x_wela'=0} goto e_01_X_wela;
+	 when True sync up_net13a  do {x_wela'=0} goto e_10_X_wela;
+	 when True sync down_net45a  do {} goto e_00_0_wela;
+	 when True sync down_net13a  do {} goto e_00_0_wela;
+loc  e_01_1_wela : while True wait {}
+	 when True sync down_net45a  do {x_wela'=0} goto e_00_X_wela;
+	 when True sync up_net13a  do {x_wela'=0} goto e_11_X_wela;
+	 when True sync up_net45a  do {} goto e_01_1_wela;
+	 when True sync down_net13a  do {} goto e_01_1_wela;
+loc  e_10_1_wela : while True wait {}
+	 when True sync up_net45a  do {x_wela'=0} goto e_11_X_wela;
+	 when True sync down_net13a  do {x_wela'=0} goto e_00_X_wela;
+	 when True sync down_net45a  do {} goto e_10_1_wela;
+	 when True sync up_net13a  do {} goto e_10_1_wela;
+loc  e_11_1_wela : while True wait {}
+	 when True sync down_net45a  do {x_wela'=0} goto e_10_X_wela;
+	 when True sync down_net13a  do {x_wela'=0} goto e_01_X_wela;
+	 when True sync up_net45a  do {} goto e_11_1_wela;
+	 when True sync up_net13a  do {} goto e_11_1_wela;
+loc  e_00_X_wela: while x_wela <= d_dn_wela wait {}
+	 when True sync up_net45a do {x_wela'=0} goto e_01_X_wela;
+	 when True sync up_net13a do {x_wela'=0} goto e_10_X_wela;
+	 when True sync down_net45a do {} goto e_00_X_wela;
+	 when True sync down_net13a do {} goto e_00_X_wela;
+	 when x_wela = d_dn_wela sync down_wela 
+	      	       do {qwa'=s} goto e_00_0_wela;
+loc  e_01_X_wela: while x_wela <= d_up_wela wait {}
+	 when True sync down_net45a do {x_wela'=0} goto e_00_X_wela;
+	 when True sync up_net13a do {x_wela'=0} goto e_11_X_wela;
+	 when True sync up_net45a do {} goto e_01_X_wela;
+	 when True sync down_net13a do {} goto e_01_X_wela;
+	 when x_wela = d_up_wela sync up_wela 
+	      	       do {} goto e_01_1_wela;
+loc  e_10_X_wela: while x_wela <= d_up_wela wait {}
+	 when True sync up_net45a do {x_wela'=0} goto e_11_X_wela;
+	 when True sync down_net13a do {x_wela'=0} goto e_00_X_wela;
+	 when True sync down_net45a do {} goto e_10_X_wela;
+	 when True sync up_net13a do {} goto e_10_X_wela;
+	 when x_wela = d_up_wela sync up_wela 
+	      	       do {} goto e_10_1_wela;
+loc  e_11_X_wela: while x_wela <= d_up_wela wait {}
+	 when True sync down_net45a do {x_wela'=0} goto e_10_X_wela;
+	 when True sync down_net13a do {x_wela'=0} goto e_01_X_wela;
+	 when True sync up_net45a do {} goto e_11_X_wela;
+	 when True sync up_net13a do {} goto e_11_X_wela;
+	 when x_wela = d_up_wela sync up_wela 
+	      	       do {} goto e_11_1_wela;
+
+
+	 end -- f2_wela
+
+automaton not_net13a
+synclabs: down_ck, up_ck,
+ down_net13a, up_net13a;
+initially init_not_net13a;
+
+loc  init_not_net13a : while True wait {}
+	 when True sync up_ck do {x_net13a'=0} goto A_not_net13a;
+	 when True sync down_ck do {x_net13a'=0} goto B_not_net13a;
+
+loc  A_not_net13a : while x_net13a <= d_dn_net13a wait {}
+	 when True sync down_ck do {x_net13a'=0} goto B_not_net13a;
+	 when x_net13a = d_dn_net13a sync down_net13a goto init_not_net13a;
+
+loc  B_not_net13a : while x_net13a <= d_up_net13a wait {}
+	 when True sync up_ck do {x_net13a'=0} goto A_not_net13a;
+	 when x_net13a = d_up_net13a sync up_net13a goto init_not_net13a;
+
+end -- not_net13a
+
+
+--###########################################################################"
+--#### INCORPORATION delai net45a
+--#### entraine la suppression de l'automate retard_net45a
+automaton reg_net45
+synclabs: down_wen_h, up_wen_h,			-- inputs  (data)
+	  down_en_latchwen, up_en_latchwen,	-- inputs (enable)
+	  down_net45a, up_net45a ;		-- outputs
+initially e0d1_U_reg_net45;
+
+loc e0d0_U_reg_net45: while True wait {}
+   		     	when True sync down_en_latchwen do {} goto e0d0_U_reg_net45;
+  		     	when True sync down_wen_h do {} goto e0d0_U_reg_net45;
+			when True sync up_en_latchwen do {x_net45'=0} goto e1d0_X_reg_net45;
+			when True sync up_wen_h do {} goto e0d1_U_reg_net45;
+
+loc e1d0_X_reg_net45: while x_net45 <= d_dn_net45 + d_dn_net45a wait {}
+   		     	when True sync down_wen_h do {} goto e1d0_X_reg_net45;
+			when True sync up_en_latchwen do {} goto e1d0_X_reg_net45;
+			when True sync down_en_latchwen do {} goto e0d0_U_reg_net45;
+			when True sync up_wen_h do {x_net45'=0} goto e1d1_X_reg_net45;
+			when x_net45 = d_dn_net45 + d_dn_net45a sync down_net45a do {qW'=1} goto e1d0_0_reg_net45;
+
+loc e1d0_0_reg_net45: while True wait {}
+    		     	when True sync down_wen_h do {} goto e1d0_0_reg_net45;
+			when True sync down_en_latchwen do {} goto e0d0_U_reg_net45;
+			when True sync up_en_latchwen do {} goto e1d0_0_reg_net45;
+			when True sync up_wen_h do {x_net45'=0} goto e1d1_X_reg_net45;
+
+loc e0d1_U_reg_net45: while True wait {}
+    		     	when True sync up_wen_h do {} goto e0d1_U_reg_net45;
+			when True sync down_en_latchwen do {} goto e0d1_U_reg_net45;
+			when True sync up_en_latchwen do {x_net45'=0} goto e1d1_X_reg_net45;
+			when True sync down_wen_h do {} goto e0d0_U_reg_net45;
+
+loc e1d1_X_reg_net45: while x_net45 <= d_up_net45 + d_up_net45a wait {}
+			when True sync down_en_latchwen do {} goto e0d1_U_reg_net45;
+			when True sync up_wen_h do {} goto e1d1_X_reg_net45;
+			when True sync up_en_latchwen do {} goto e1d1_X_reg_net45;
+			when True sync down_wen_h do {x_net45'=0} goto e1d0_X_reg_net45;
+			when x_net45 = d_up_net45 + d_up_net45a sync up_net45a goto e1d1_1_reg_net45;
+
+loc e1d1_1_reg_net45: while True wait {}
+			when True sync down_en_latchwen do {} goto e0d1_U_reg_net45;
+			when True sync up_en_latchwen do {} goto e1d1_1_reg_net45;
+			when True sync down_wen_h do {x_net45'=0} goto e1d0_X_reg_net45;
+			when True sync up_wen_h do {} goto e1d1_1_reg_net45;
+ end -- reg_net45
+
+--###########################################################################"
+--#### INCORPORATION delai d_inta
+--#### entraine la suppression de l'automate retard_d_inta
+automaton reg_d_int
+synclabs: down_d_h, up_d_h,			-- inputs  (data)
+	  down_en_latchd, up_en_latchd,		-- inputs (enable)
+	  down_d_inta, up_d_inta ;		-- outputs
+initially e0d0_U_reg_d_int;
+
+loc e0d0_U_reg_d_int: while True wait {}
+    		     	when True sync down_en_latchd do {} goto e0d0_U_reg_d_int;
+   		     	when True sync down_d_h do {} goto e0d0_U_reg_d_int;
+			when True sync up_en_latchd do {x_d_int'=0} goto e1d0_X_reg_d_int;
+			when True sync up_d_h do {} goto e0d1_U_reg_d_int;
+
+loc e1d0_X_reg_d_int: while x_d_int <= d_dn_d_int + d_dn_d_inta wait {}
+    		     	when True sync down_d_h do {} goto e1d0_X_reg_d_int;
+			when True sync up_en_latchd do {} goto e1d0_X_reg_d_int;
+			when True sync down_en_latchd do {} goto e0d0_U_reg_d_int;
+			when True sync up_d_h do {x_d_int'=0} goto e1d1_X_reg_d_int;
+			when x_d_int = d_dn_d_int + d_dn_d_inta sync down_d_inta goto e1d0_0_reg_d_int;
+
+loc e1d0_0_reg_d_int: while True wait {}
+    		     	when True sync down_d_h do {} goto e1d0_0_reg_d_int;
+			when True sync down_en_latchd do {} goto e0d0_U_reg_d_int;
+			when True sync up_en_latchd do {} goto e1d0_0_reg_d_int;
+			when True sync up_d_h do {x_d_int'=0} goto e1d1_X_reg_d_int;
+
+loc e0d1_U_reg_d_int: while True wait {}
+    		     	when True sync up_d_h do {} goto e0d1_U_reg_d_int;
+			when True sync down_en_latchd do {} goto e0d1_U_reg_d_int;
+			when True sync up_en_latchd do {x_d_int'=0} goto e1d1_X_reg_d_int;
+			when True sync down_d_h do {} goto e0d0_U_reg_d_int;
+
+loc e1d1_X_reg_d_int: while x_d_int <= d_up_d_int + d_up_d_inta wait {}
+			when True sync down_en_latchd do {} goto e0d1_U_reg_d_int;
+			when True sync up_d_h do {} goto e1d1_X_reg_d_int;
+			when True sync up_en_latchd do {} goto e1d1_X_reg_d_int;
+			when True sync down_d_h do {x_d_int'=0} goto e1d0_X_reg_d_int;
+			when x_d_int = d_up_d_int + d_up_d_inta sync up_d_inta do {qD' = 1} goto e1d1_1_reg_d_int;
+
+loc e1d1_1_reg_d_int: while True wait {}
+			when True sync down_en_latchd do {} goto e0d1_U_reg_d_int;
+			when True sync up_en_latchd do {} goto e1d1_1_reg_d_int;
+			when True sync down_d_h do {x_d_int'=0} goto e1d0_X_reg_d_int;
+			when True sync up_d_h do {} goto e1d1_1_reg_d_int;
+ end -- reg_d_int
+
+
+automaton not_en_latchd
+synclabs: down_ck, up_ck,
+ down_en_latchd, up_en_latchd;
+initially init_not_en_latchd;
+
+loc  init_not_en_latchd : while True wait {}
+	 when True sync up_ck do {x_en_latchd'=0} goto A_not_en_latchd;
+	 when True sync down_ck do {x_en_latchd'=0} goto B_not_en_latchd;
+
+loc  A_not_en_latchd : while x_en_latchd <= d_dn_en_latchd wait {}
+	 when True sync down_ck do {x_en_latchd'=0} goto B_not_en_latchd;
+	 when x_en_latchd = d_dn_en_latchd sync down_en_latchd goto init_not_en_latchd;
+
+loc  B_not_en_latchd : while x_en_latchd <= d_up_en_latchd wait {}
+	 when True sync up_ck do {x_en_latchd'=0} goto A_not_en_latchd;
+	 when x_en_latchd = d_up_en_latchd sync up_en_latchd goto init_not_en_latchd;
+
+end -- not_en_latchd
+
+
+
+automaton not_en_latchwen
+synclabs: down_ck, up_ck,
+ down_en_latchwen, up_en_latchwen;
+initially init_not_en_latchwen;
+
+loc  init_not_en_latchwen : while True wait {}
+	 when True sync up_ck do {x_en_latchwen'=0} goto A_not_en_latchwen;
+	 when True sync down_ck do {x_en_latchwen'=0} goto B_not_en_latchwen;
+
+loc  A_not_en_latchwen : while x_en_latchwen <= d_dn_en_latchwen wait {}
+	 when True sync down_ck do {x_en_latchwen'=0} goto B_not_en_latchwen;
+	 when x_en_latchwen = d_dn_en_latchwen sync down_en_latchwen goto init_not_en_latchwen;
+
+loc  B_not_en_latchwen : while x_en_latchwen <= d_up_en_latchwen wait {}
+	 when True sync up_ck do {x_en_latchwen'=0} goto A_not_en_latchwen;
+	 when x_en_latchwen = d_up_en_latchwen sync up_en_latchwen goto init_not_en_latchwen;
+
+end -- not_en_latchwen
+
+
+automaton retard_wen_h
+synclabs: down_wen, up_wen,
+ down_wen_h, up_wen_h;
+initially init_ret_wen_h;
+
+loc  init_ret_wen_h : while True wait {}
+	 when True sync up_wen do {x_wen_h'=0} goto A_ret_wen_h;
+	 when True sync down_wen do {x_wen_h'=0} goto B_ret_wen_h;
+
+loc  A_ret_wen_h : while x_wen_h <= d_up_wen_h wait {}
+	 when True sync down_wen do {x_wen_h'=0} goto B_ret_wen_h;
+	 when x_wen_h = d_up_wen_h sync up_wen_h goto init_ret_wen_h;
+
+loc  B_ret_wen_h : while x_wen_h <= d_dn_wen_h wait {}
+	 when True sync up_wen do {x_wen_h'=0} goto A_ret_wen_h;
+	 when x_wen_h = d_dn_wen_h sync down_wen_h goto init_ret_wen_h;
+
+end -- not_wen_h
+
+
+
+automaton retard_d_h
+synclabs: down_d_0, up_d_0,
+ down_d_h, up_d_h;
+
+
+initially init_ret_d_h;
+
+loc  init_ret_d_h : while True wait {}
+	 when True sync up_d_0 do {x_d_h'=0} goto A_ret_d_h;
+	 when True sync down_d_0 do {x_d_h'=0} goto B_ret_d_h;
+
+loc  A_ret_d_h : while x_d_h <= d_up_d_h wait {}
+	 when True sync down_d_0 do {x_d_h'=0} goto B_ret_d_h;
+	 when x_d_h = d_up_d_h sync up_d_h goto init_ret_d_h;
+
+loc  B_ret_d_h : while x_d_h <= d_dn_d_h wait {}
+	 when True sync up_d_0 do {x_d_h'=0} goto A_ret_d_h;
+	 when x_d_h = d_dn_d_h sync down_d_h goto init_ret_d_h;
+
+end -- not_d_h
+
+automaton env
+synclabs: up_d_0, down_d_0, up_wen, down_wen,
+	  down_ck, up_ck;
+initially init_env;
+
+loc  init_env : while s <= tHI + tLO - tsetupd wait {}
+	 when s = tHI + tLO - tsetupd sync up_d_0 goto env1;
+
+loc  env1 : while s <= tHI  wait {}
+	 when s = tHI  sync down_ck goto env2;
+
+loc  env2 : while s <= tHI + tLO - tsetupwen wait {}
+	 when s = tHI + tLO - tsetupwen sync down_wen goto env3;
+
+loc  env3 : while s <= tHI + tLO wait {}
+	 when s = tHI + tLO sync up_ck goto env4;
+
+loc  env4 : while s <= 2 tHI + tLO wait {}
+	 when s = 2 tHI + tLO sync down_ck goto env5;
+
+loc  env5 : while s <= 2 tHI + 2 tLO wait {}
+	 when s = 2 tHI + 2 tLO sync up_ck goto env6;
+
+loc env6 : while True wait{}
+    	 when True goto env6;
+
+
+end -- not_d_h
+
+
+-- analysis commands
+
+var
+init_reg, post_reg,
+reached1, reached2, reached3, reached4, reached5, reached6, reached7,
+reached8, reached9, reached10, reached11, reached12, reached13, reached14,
+reached15, reached16, reached17, reached18, reached19, reached20, reached21,
+reached22, reached23, reached24, reached25, reached26, reached27, reached28,
+reached29, reached30, reached31, reached32,
+R1, R2, R3, R4, R5, R6, R7, R8, R9, R10,
+R11, R12, R13, R14, R15, R16, R17, R18, R19, R20,
+R21, R22, R23, R24, R25, R26, R27, R28, R29, R30,
+R31, R32 : region;
+
+init_reg := 
+	loc[env] = init_env
+
+ 	& loc[abs_net27] = init_abs_net27 
+	& loc[f2_wela]= e_01_1_wela		
+	& loc[not_net13a] = init_not_net13a
+	& loc[reg_net45] = e0d1_U_reg_net45
+	& loc[reg_d_int] = e0d0_U_reg_d_int
+	& loc[not_en_latchd] = init_not_en_latchd 
+	& loc[not_en_latchwen] = init_not_en_latchwen
+	& loc[retard_wen_h] = init_ret_wen_h
+	& loc[retard_d_h] = init_ret_d_h
+
+
+	& s = 0
+
+	& qD = 0
+	& qW = 0
+	& qwa = 0
+	& qQ = 0
+
+	& x_q_0 = 0 
+	& x_wela = 0 
+	& x_net13a = 0
+	& x_net45 = 0
+	& x_d_int = 0
+	& x_en_latchd = 0
+	& x_en_latchwen = 0
+	& x_wen_h = 0
+	& x_d_h	 = 0
+
+-- delais pour SP1 (cf. wseas06, Fig.5)
+
+	& d_up_q_0 = 21		& d_dn_q_0 = 20		-- delai_27
+	& d_up_net27 = 0	& d_dn_net27 = 0	-- delai_24
+	& d_up_d_inta = 22	& d_dn_d_inta = 45	-- delai_18 
+	& d_up_wela = 0		& d_dn_wela = 0 + 22	-- delai_9 + delai_13
+	& d_up_net45a = 5	& d_dn_net45a = 4	-- delai_28
+	& d_up_net13a = 5 + 14	& d_dn_net13a = 2 + 11	-- delai_4 + delai_7
+	& d_up_net45 = 21	& d_dn_net45 = 22	-- delai_6
+	& d_up_d_int = 14	& d_dn_d_int = 18	-- delai_15
+	& d_up_en_latchd = 5 + 23 & d_dn_en_latchd = 2 + 30 -- delai_4 + delai_16
+	& d_up_en_latchwen = 5 & d_dn_en_latchwen = 4   -- delai_3 
+	& d_up_wen_h = 11	& d_dn_wen_h = 8	-- delai_2
+	& d_up_d_h = 95  	& d_dn_d_h = 66		-- delai_1
+
+		
+	& tHI = 45 & tLO = 65 & tsetupd = 108 & tsetupwen = 48
+;
+
+prints "INITIAL REG:";
+
+print init_reg;
+
+post_reg := reach forward from init_reg endreach;
+
+print (hide
+	x_q_0,  x_d_int, x_en_latchd, x_d_h, x_wen_h, x_net45, 
+	x_net13a, x_en_latchwen,
+        d_up_q_0,d_dn_q_0, d_up_net27,d_dn_net27,
+	d_up_d_inta,d_dn_d_inta,
+	d_up_wela,d_dn_wela, d_up_net45a,d_dn_net45a,
+	d_up_net13a,d_dn_net13a,
+	d_up_net45,d_dn_net45,d_up_d_int,d_dn_d_int,d_up_en_latchd,d_dn_en_latchd,
+	d_up_en_latchwen,d_dn_en_latchwen,
+	d_up_wen_h,d_dn_wen_h, d_up_d_h,d_dn_d_h,
+
+	tHI, tLO, tsetupd, tsetupwen
+       in (post_reg & loc[env] = env6)
+       endhide);
+
+
+reached1 := post(init_reg);R1 := weakdiff(reached1,init_reg);
+reached2 := post(reached1);R2 := weakdiff(reached2,reached1);
+reached3 := post(reached2);R3 := weakdiff(reached3,reached2);
+reached4 := post(reached3);R4 := weakdiff(reached4,reached3);
+reached5 := post(reached4);R5 := weakdiff(reached5,reached4);
+reached6 := post(reached5);R6 := weakdiff(reached6,reached5);
+reached7 := post(reached6);R7 := weakdiff(reached7,reached6);
+reached8 := post(reached7);R8 := weakdiff(reached8,reached7);
+reached9 := post(reached8);R9 := weakdiff(reached9,reached8);
+reached10 := post(reached9);R10 := weakdiff(reached10,reached9);
+reached11 := post(reached10);R11 := weakdiff(reached11,reached10);
+reached12 := post(reached11);R12 := weakdiff(reached12,reached11);
+reached13 := post(reached12);R13 := weakdiff(reached13,reached12);
+reached14 := post(reached13);R14 := weakdiff(reached14,reached13);
+reached15 := post(reached14);R15 := weakdiff(reached15,reached14);
+reached16 := post(reached15);R16 := weakdiff(reached16,reached15);
+reached17 := post(reached16);R17 := weakdiff(reached17,reached16);
+reached18 := post(reached17);R18 := weakdiff(reached18,reached17);
+reached19 := post(reached18);R19 := weakdiff(reached19,reached18);
+reached20 := post(reached19);R20 := weakdiff(reached20,reached19);
+reached21 := post(reached20);R21 := weakdiff(reached21,reached20);
+reached22 := post(reached21);R22 := weakdiff(reached22,reached21);
+reached23 := post(reached22);R23 := weakdiff(reached23,reached22);
+reached24 := post(reached23);R24 := weakdiff(reached24,reached23);
+reached25 := post(reached24);R25 := weakdiff(reached25,reached24);
+reached26 := post(reached25);R26 := weakdiff(reached26,reached25);
+reached27 := post(reached26);R27 := weakdiff(reached27,reached26);
+reached28 := post(reached27);R28 := weakdiff(reached28,reached27);
+reached29 := post(reached28);R29 := weakdiff(reached29,reached28);
+reached30 := post(reached29);R30 := weakdiff(reached30,reached29);
+reached31 := post(reached30);R31 := weakdiff(reached31,reached30);
+reached32 := post(reached31);R32 := weakdiff(reached32,reached31);
+
+prints "REACHED1 :";
+print (hide
+	x_q_0,  x_d_int, x_en_latchd, x_d_h, 
+        d_up_q_0,d_dn_q_0, d_up_net27,d_dn_net27,
+	d_up_d_inta,d_dn_d_inta,
+	d_up_wela,d_dn_wela, d_up_net45a,d_dn_net45a,
+	d_up_net13a,d_dn_net13a,
+	d_up_net45,d_dn_net45,d_up_d_int,d_dn_d_int,d_up_en_latchd,d_dn_en_latchd,
+	d_up_en_latchwen,d_dn_en_latchwen,
+	d_up_wen_h,d_dn_wen_h, d_up_d_h,d_dn_d_h,
+
+	tHI, tLO, tsetupd, tsetupwen
+       in (R1)
+       endhide);
+
+prints "REACHED2 :";
+print (hide
+	x_q_0,  x_d_int, x_en_latchd, x_d_h,
+        d_up_q_0,d_dn_q_0, d_up_net27,d_dn_net27,
+	d_up_d_inta,d_dn_d_inta,
+	d_up_wela,d_dn_wela, d_up_net45a,d_dn_net45a,
+	d_up_net13a,d_dn_net13a,
+	d_up_net45,d_dn_net45,d_up_d_int,d_dn_d_int,d_up_en_latchd,d_dn_en_latchd,
+	d_up_en_latchwen,d_dn_en_latchwen,
+	d_up_wen_h,d_dn_wen_h, d_up_d_h,d_dn_d_h,
+
+	tHI, tLO, tsetupd, tsetupwen
+       in (R2)
+       endhide);
+
+prints "REACHED3 :";
+print (hide
+	x_q_0,  x_d_int, x_en_latchd, x_d_h,
+        d_up_q_0,d_dn_q_0, d_up_net27,d_dn_net27,
+	d_up_d_inta,d_dn_d_inta,
+	d_up_wela,d_dn_wela, d_up_net45a,d_dn_net45a,
+	d_up_net13a,d_dn_net13a,
+	d_up_net45,d_dn_net45,d_up_d_int,d_dn_d_int,d_up_en_latchd,d_dn_en_latchd,
+	d_up_en_latchwen,d_dn_en_latchwen,
+	d_up_wen_h,d_dn_wen_h, d_up_d_h,d_dn_d_h,
+
+	tHI, tLO, tsetupd, tsetupwen
+       in (R3)
+       endhide);
+
+prints "REACHED4 :";
+print (hide
+	x_q_0,  x_d_int, x_en_latchd, x_d_h,
+        d_up_q_0,d_dn_q_0, d_up_net27,d_dn_net27,
+	d_up_d_inta,d_dn_d_inta,
+	d_up_wela,d_dn_wela, d_up_net45a,d_dn_net45a,
+	d_up_net13a,d_dn_net13a,
+	d_up_net45,d_dn_net45,d_up_d_int,d_dn_d_int,d_up_en_latchd,d_dn_en_latchd,
+	d_up_en_latchwen,d_dn_en_latchwen,
+	d_up_wen_h,d_dn_wen_h, d_up_d_h,d_dn_d_h,
+
+	tHI, tLO, tsetupd, tsetupwen
+       in (R4)
+       endhide);
+
+prints "REACHED5 :";
+print (hide
+	x_q_0,  x_d_int, x_en_latchd, x_d_h,
+        d_up_q_0,d_dn_q_0, d_up_net27,d_dn_net27,
+	d_up_d_inta,d_dn_d_inta,
+	d_up_wela,d_dn_wela, d_up_net45a,d_dn_net45a,
+	d_up_net13a,d_dn_net13a,
+	d_up_net45,d_dn_net45,d_up_d_int,d_dn_d_int,d_up_en_latchd,d_dn_en_latchd,
+	d_up_en_latchwen,d_dn_en_latchwen,
+	d_up_wen_h,d_dn_wen_h, d_up_d_h,d_dn_d_h,
+
+	tHI, tLO, tsetupd, tsetupwen
+       in (R5)
+       endhide);
+
+prints "REACHED6 :";
+print (hide
+	x_q_0,  x_d_int, x_en_latchd, x_d_h,
+        d_up_q_0,d_dn_q_0, d_up_net27,d_dn_net27,
+	d_up_d_inta,d_dn_d_inta,
+	d_up_wela,d_dn_wela, d_up_net45a,d_dn_net45a,
+	d_up_net13a,d_dn_net13a,
+	d_up_net45,d_dn_net45,d_up_d_int,d_dn_d_int,d_up_en_latchd,d_dn_en_latchd,
+	d_up_en_latchwen,d_dn_en_latchwen,
+	d_up_wen_h,d_dn_wen_h, d_up_d_h,d_dn_d_h,
+
+	tHI, tLO, tsetupd, tsetupwen
+       in (R6)
+       endhide);
+
+prints "REACHED7 :";
+print (hide
+	x_q_0,  x_d_int, x_en_latchd, x_d_h,
+        d_up_q_0,d_dn_q_0, d_up_net27,d_dn_net27,
+	d_up_d_inta,d_dn_d_inta,
+	d_up_wela,d_dn_wela, d_up_net45a,d_dn_net45a,
+	d_up_net13a,d_dn_net13a,
+	d_up_net45,d_dn_net45,d_up_d_int,d_dn_d_int,d_up_en_latchd,d_dn_en_latchd,
+	d_up_en_latchwen,d_dn_en_latchwen,
+	d_up_wen_h,d_dn_wen_h, d_up_d_h,d_dn_d_h,
+
+	tHI, tLO, tsetupd, tsetupwen
+       in (R7)
+       endhide);
+
+prints "REACHED8 :";
+print (hide
+	x_q_0,  x_d_int, x_en_latchd, x_d_h,
+        d_up_q_0,d_dn_q_0, d_up_net27,d_dn_net27,
+	d_up_d_inta,d_dn_d_inta,
+	d_up_wela,d_dn_wela, d_up_net45a,d_dn_net45a,
+	d_up_net13a,d_dn_net13a,
+	d_up_net45,d_dn_net45,d_up_d_int,d_dn_d_int,d_up_en_latchd,d_dn_en_latchd,
+	d_up_en_latchwen,d_dn_en_latchwen,
+	d_up_wen_h,d_dn_wen_h, d_up_d_h,d_dn_d_h,
+
+	tHI, tLO, tsetupd, tsetupwen
+       in (R8)
+       endhide);
+
+prints "REACHED9 :";
+print (hide
+	x_q_0,  x_d_int, x_en_latchd, x_d_h,
+        d_up_q_0,d_dn_q_0, d_up_net27,d_dn_net27,
+	d_up_d_inta,d_dn_d_inta,
+	d_up_wela,d_dn_wela, d_up_net45a,d_dn_net45a,
+	d_up_net13a,d_dn_net13a,
+	d_up_net45,d_dn_net45,d_up_d_int,d_dn_d_int,d_up_en_latchd,d_dn_en_latchd,
+	d_up_en_latchwen,d_dn_en_latchwen,
+	d_up_wen_h,d_dn_wen_h, d_up_d_h,d_dn_d_h,
+
+	tHI, tLO, tsetupd, tsetupwen
+       in (R9)
+       endhide);
+
+prints "REACHED10 :";
+print (hide
+	x_q_0,  x_d_int, x_en_latchd, x_d_h,
+        d_up_q_0,d_dn_q_0, d_up_net27,d_dn_net27,
+	d_up_d_inta,d_dn_d_inta,
+	d_up_wela,d_dn_wela, d_up_net45a,d_dn_net45a,
+	d_up_net13a,d_dn_net13a,
+	d_up_net45,d_dn_net45,d_up_d_int,d_dn_d_int,d_up_en_latchd,d_dn_en_latchd,
+	d_up_en_latchwen,d_dn_en_latchwen,
+	d_up_wen_h,d_dn_wen_h, d_up_d_h,d_dn_d_h,
+
+	tHI, tLO, tsetupd, tsetupwen
+       in (R10)
+       endhide);
+
+prints "REACHED11 :";
+print (hide
+	x_q_0,  x_d_int, x_en_latchd, x_d_h, 
+        d_up_q_0,d_dn_q_0, d_up_net27,d_dn_net27,
+	d_up_d_inta,d_dn_d_inta,
+	d_up_wela,d_dn_wela, d_up_net45a,d_dn_net45a,
+	d_up_net13a,d_dn_net13a,
+	d_up_net45,d_dn_net45,d_up_d_int,d_dn_d_int,d_up_en_latchd,d_dn_en_latchd,
+	d_up_en_latchwen,d_dn_en_latchwen,
+	d_up_wen_h,d_dn_wen_h, d_up_d_h,d_dn_d_h,
+
+	tHI, tLO, tsetupd, tsetupwen
+       in (R11)
+       endhide);
+
+prints "REACHED12 :";
+print (hide
+	x_q_0,  x_d_int, x_en_latchd, x_d_h,
+        d_up_q_0,d_dn_q_0, d_up_net27,d_dn_net27,
+	d_up_d_inta,d_dn_d_inta,
+	d_up_wela,d_dn_wela, d_up_net45a,d_dn_net45a,
+	d_up_net13a,d_dn_net13a,
+	d_up_net45,d_dn_net45,d_up_d_int,d_dn_d_int,d_up_en_latchd,d_dn_en_latchd,
+	d_up_en_latchwen,d_dn_en_latchwen,
+	d_up_wen_h,d_dn_wen_h, d_up_d_h,d_dn_d_h,
+
+	tHI, tLO, tsetupd, tsetupwen
+       in (R12)
+       endhide);
+
+prints "REACHED13 :";
+print (hide
+	x_q_0,  x_d_int, x_en_latchd, x_d_h,
+        d_up_q_0,d_dn_q_0, d_up_net27,d_dn_net27,
+	d_up_d_inta,d_dn_d_inta,
+	d_up_wela,d_dn_wela, d_up_net45a,d_dn_net45a,
+	d_up_net13a,d_dn_net13a,
+	d_up_net45,d_dn_net45,d_up_d_int,d_dn_d_int,d_up_en_latchd,d_dn_en_latchd,
+	d_up_en_latchwen,d_dn_en_latchwen,
+	d_up_wen_h,d_dn_wen_h, d_up_d_h,d_dn_d_h,
+
+	tHI, tLO, tsetupd, tsetupwen
+       in (R13)
+       endhide);
+
+prints "REACHED14 :";
+print (hide
+	x_q_0,  x_d_int, x_en_latchd, x_d_h,
+        d_up_q_0,d_dn_q_0, d_up_net27,d_dn_net27,
+	d_up_d_inta,d_dn_d_inta,
+	d_up_wela,d_dn_wela, d_up_net45a,d_dn_net45a,
+	d_up_net13a,d_dn_net13a,
+	d_up_net45,d_dn_net45,d_up_d_int,d_dn_d_int,d_up_en_latchd,d_dn_en_latchd,
+	d_up_en_latchwen,d_dn_en_latchwen,
+	d_up_wen_h,d_dn_wen_h, d_up_d_h,d_dn_d_h,
+
+	tHI, tLO, tsetupd, tsetupwen
+       in (R14)
+       endhide);
+
+prints "REACHED15 :";
+print (hide
+	x_q_0,  x_d_int, x_en_latchd, x_d_h,
+        d_up_q_0,d_dn_q_0, d_up_net27,d_dn_net27,
+	d_up_d_inta,d_dn_d_inta,
+	d_up_wela,d_dn_wela, d_up_net45a,d_dn_net45a,
+	d_up_net13a,d_dn_net13a,
+	d_up_net45,d_dn_net45,d_up_d_int,d_dn_d_int,d_up_en_latchd,d_dn_en_latchd,
+	d_up_en_latchwen,d_dn_en_latchwen,
+	d_up_wen_h,d_dn_wen_h, d_up_d_h,d_dn_d_h,
+
+	tHI, tLO, tsetupd, tsetupwen
+       in (R15)
+       endhide);
+
+prints "REACHED16 :";
+print (hide
+	x_q_0,  x_d_int, x_en_latchd, x_d_h,
+        d_up_q_0,d_dn_q_0, d_up_net27,d_dn_net27,
+	d_up_d_inta,d_dn_d_inta,
+	d_up_wela,d_dn_wela, d_up_net45a,d_dn_net45a,
+	d_up_net13a,d_dn_net13a,
+	d_up_net45,d_dn_net45,d_up_d_int,d_dn_d_int,d_up_en_latchd,d_dn_en_latchd,
+	d_up_en_latchwen,d_dn_en_latchwen,
+	d_up_wen_h,d_dn_wen_h, d_up_d_h,d_dn_d_h,
+
+	tHI, tLO, tsetupd, tsetupwen
+       in (R16)
+       endhide);
+
+prints "REACHED17 :";
+print (hide
+	x_q_0,  x_d_int, x_en_latchd, x_d_h,
+        d_up_q_0,d_dn_q_0, d_up_net27,d_dn_net27,
+	d_up_d_inta,d_dn_d_inta,
+	d_up_wela,d_dn_wela, d_up_net45a,d_dn_net45a,
+	d_up_net13a,d_dn_net13a,
+	d_up_net45,d_dn_net45,d_up_d_int,d_dn_d_int,d_up_en_latchd,d_dn_en_latchd,
+	d_up_en_latchwen,d_dn_en_latchwen,
+	d_up_wen_h,d_dn_wen_h, d_up_d_h,d_dn_d_h,
+
+	tHI, tLO, tsetupd, tsetupwen
+       in (R17)
+       endhide);
+
+prints "REACHED18 :";
+print (hide
+	x_q_0,  x_d_int, x_en_latchd, x_d_h,
+        d_up_q_0,d_dn_q_0, d_up_net27,d_dn_net27,
+	d_up_d_inta,d_dn_d_inta,
+	d_up_wela,d_dn_wela, d_up_net45a,d_dn_net45a,
+	d_up_net13a,d_dn_net13a,
+	d_up_net45,d_dn_net45,d_up_d_int,d_dn_d_int,d_up_en_latchd,d_dn_en_latchd,
+	d_up_en_latchwen,d_dn_en_latchwen,
+	d_up_wen_h,d_dn_wen_h, d_up_d_h,d_dn_d_h,
+
+	tHI, tLO, tsetupd, tsetupwen
+       in (R18)
+       endhide);
+
+prints "REACHED19 :";
+print (hide
+	x_q_0,  x_d_int, x_en_latchd, x_d_h,
+        d_up_q_0,d_dn_q_0, d_up_net27,d_dn_net27,
+	d_up_d_inta,d_dn_d_inta,
+	d_up_wela,d_dn_wela, d_up_net45a,d_dn_net45a,
+	d_up_net13a,d_dn_net13a,
+	d_up_net45,d_dn_net45,d_up_d_int,d_dn_d_int,d_up_en_latchd,d_dn_en_latchd,
+	d_up_en_latchwen,d_dn_en_latchwen,
+	d_up_wen_h,d_dn_wen_h, d_up_d_h,d_dn_d_h,
+
+	tHI, tLO, tsetupd, tsetupwen
+       in (R19)
+       endhide);
+
+prints "REACHED20 :";
+print (hide
+	x_q_0,  x_d_int, x_en_latchd, x_d_h,
+        d_up_q_0,d_dn_q_0, d_up_net27,d_dn_net27,
+	d_up_d_inta,d_dn_d_inta,
+	d_up_wela,d_dn_wela, d_up_net45a,d_dn_net45a,
+	d_up_net13a,d_dn_net13a,
+	d_up_net45,d_dn_net45,d_up_d_int,d_dn_d_int,d_up_en_latchd,d_dn_en_latchd,
+	d_up_en_latchwen,d_dn_en_latchwen,
+	d_up_wen_h,d_dn_wen_h, d_up_d_h,d_dn_d_h,
+
+	tHI, tLO, tsetupd, tsetupwen
+       in (R20)
+       endhide);
+
+prints "REACHED21 :";
+print (hide
+	x_q_0,  x_d_int, x_en_latchd, x_d_h, 
+        d_up_q_0,d_dn_q_0, d_up_net27,d_dn_net27,
+	d_up_d_inta,d_dn_d_inta,
+	d_up_wela,d_dn_wela, d_up_net45a,d_dn_net45a,
+	d_up_net13a,d_dn_net13a,
+	d_up_net45,d_dn_net45,d_up_d_int,d_dn_d_int,d_up_en_latchd,d_dn_en_latchd,
+	d_up_en_latchwen,d_dn_en_latchwen,
+	d_up_wen_h,d_dn_wen_h, d_up_d_h,d_dn_d_h,
+
+	tHI, tLO, tsetupd, tsetupwen
+       in (R21)
+       endhide);
+
+prints "REACHED22 :";
+print (hide
+	x_q_0,  x_d_int, x_en_latchd, x_d_h,
+        d_up_q_0,d_dn_q_0, d_up_net27,d_dn_net27,
+	d_up_d_inta,d_dn_d_inta,
+	d_up_wela,d_dn_wela, d_up_net45a,d_dn_net45a,
+	d_up_net13a,d_dn_net13a,
+	d_up_net45,d_dn_net45,d_up_d_int,d_dn_d_int,d_up_en_latchd,d_dn_en_latchd,
+	d_up_en_latchwen,d_dn_en_latchwen,
+	d_up_wen_h,d_dn_wen_h, d_up_d_h,d_dn_d_h,
+
+	tHI, tLO, tsetupd, tsetupwen
+       in (R22)
+       endhide);
+
+prints "REACHED23 :";
+print (hide
+	x_q_0,  x_d_int, x_en_latchd, x_d_h,
+        d_up_q_0,d_dn_q_0, d_up_net27,d_dn_net27,
+	d_up_d_inta,d_dn_d_inta,
+	d_up_wela,d_dn_wela, d_up_net45a,d_dn_net45a,
+	d_up_net13a,d_dn_net13a,
+	d_up_net45,d_dn_net45,d_up_d_int,d_dn_d_int,d_up_en_latchd,d_dn_en_latchd,
+	d_up_en_latchwen,d_dn_en_latchwen,
+	d_up_wen_h,d_dn_wen_h, d_up_d_h,d_dn_d_h,
+
+	tHI, tLO, tsetupd, tsetupwen
+       in (R23)
+       endhide);
+
+prints "REACHED24 :";
+print (hide
+	x_q_0,  x_d_int, x_en_latchd, x_d_h,
+        d_up_q_0,d_dn_q_0, d_up_net27,d_dn_net27,
+	d_up_d_inta,d_dn_d_inta,
+	d_up_wela,d_dn_wela, d_up_net45a,d_dn_net45a,
+	d_up_net13a,d_dn_net13a,
+	d_up_net45,d_dn_net45,d_up_d_int,d_dn_d_int,d_up_en_latchd,d_dn_en_latchd,
+	d_up_en_latchwen,d_dn_en_latchwen,
+	d_up_wen_h,d_dn_wen_h, d_up_d_h,d_dn_d_h,
+
+	tHI, tLO, tsetupd, tsetupwen
+       in (R24)
+       endhide);
+
+prints "REACHED25 :";
+print (hide
+	x_q_0,  x_d_int, x_en_latchd, x_d_h,
+        d_up_q_0,d_dn_q_0, d_up_net27,d_dn_net27,
+	d_up_d_inta,d_dn_d_inta,
+	d_up_wela,d_dn_wela, d_up_net45a,d_dn_net45a,
+	d_up_net13a,d_dn_net13a,
+	d_up_net45,d_dn_net45,d_up_d_int,d_dn_d_int,d_up_en_latchd,d_dn_en_latchd,
+	d_up_en_latchwen,d_dn_en_latchwen,
+	d_up_wen_h,d_dn_wen_h, d_up_d_h,d_dn_d_h,
+
+	tHI, tLO, tsetupd, tsetupwen
+       in (R25)
+       endhide);
+
+prints "REACHED26 :";
+print (hide
+	x_q_0,  x_d_int, x_en_latchd, x_d_h,
+        d_up_q_0,d_dn_q_0, d_up_net27,d_dn_net27,
+	d_up_d_inta,d_dn_d_inta,
+	d_up_wela,d_dn_wela, d_up_net45a,d_dn_net45a,
+	d_up_net13a,d_dn_net13a,
+	d_up_net45,d_dn_net45,d_up_d_int,d_dn_d_int,d_up_en_latchd,d_dn_en_latchd,
+	d_up_en_latchwen,d_dn_en_latchwen,
+	d_up_wen_h,d_dn_wen_h, d_up_d_h,d_dn_d_h,
+
+	tHI, tLO, tsetupd, tsetupwen
+       in (R26)
+       endhide);
+
+prints "REACHED27 :";
+print (hide
+	x_q_0,  x_d_int, x_en_latchd, x_d_h,
+        d_up_q_0,d_dn_q_0, d_up_net27,d_dn_net27,
+	d_up_d_inta,d_dn_d_inta,
+	d_up_wela,d_dn_wela, d_up_net45a,d_dn_net45a,
+	d_up_net13a,d_dn_net13a,
+	d_up_net45,d_dn_net45,d_up_d_int,d_dn_d_int,d_up_en_latchd,d_dn_en_latchd,
+	d_up_en_latchwen,d_dn_en_latchwen,
+	d_up_wen_h,d_dn_wen_h, d_up_d_h,d_dn_d_h,
+
+	tHI, tLO, tsetupd, tsetupwen
+       in (R27)
+       endhide);
+
+prints "REACHED28 :";
+print (hide
+	x_q_0,  x_d_int, x_en_latchd, x_d_h,
+        d_up_q_0,d_dn_q_0, d_up_net27,d_dn_net27,
+	d_up_d_inta,d_dn_d_inta,
+	d_up_wela,d_dn_wela, d_up_net45a,d_dn_net45a,
+	d_up_net13a,d_dn_net13a,
+	d_up_net45,d_dn_net45,d_up_d_int,d_dn_d_int,d_up_en_latchd,d_dn_en_latchd,
+	d_up_en_latchwen,d_dn_en_latchwen,
+	d_up_wen_h,d_dn_wen_h, d_up_d_h,d_dn_d_h,
+
+	tHI, tLO, tsetupd, tsetupwen
+       in (R28)
+       endhide);
+
+prints "REACHED29 :";
+print (hide
+	x_q_0,  x_d_int, x_en_latchd, x_d_h,
+        d_up_q_0,d_dn_q_0, d_up_net27,d_dn_net27,
+	d_up_d_inta,d_dn_d_inta,
+	d_up_wela,d_dn_wela, d_up_net45a,d_dn_net45a,
+	d_up_net13a,d_dn_net13a,
+	d_up_net45,d_dn_net45,d_up_d_int,d_dn_d_int,d_up_en_latchd,d_dn_en_latchd,
+	d_up_en_latchwen,d_dn_en_latchwen,
+	d_up_wen_h,d_dn_wen_h, d_up_d_h,d_dn_d_h,
+
+	tHI, tLO, tsetupd, tsetupwen
+       in (R29)
+       endhide);
+
+prints "REACHED30 :";
+print (hide
+	x_q_0,  x_d_int, x_en_latchd, x_d_h,
+        d_up_q_0,d_dn_q_0, d_up_net27,d_dn_net27,
+	d_up_d_inta,d_dn_d_inta,
+	d_up_wela,d_dn_wela, d_up_net45a,d_dn_net45a,
+	d_up_net13a,d_dn_net13a,
+	d_up_net45,d_dn_net45,d_up_d_int,d_dn_d_int,d_up_en_latchd,d_dn_en_latchd,
+	d_up_en_latchwen,d_dn_en_latchwen,
+	d_up_wen_h,d_dn_wen_h, d_up_d_h,d_dn_d_h,
+
+	tHI, tLO, tsetupd, tsetupwen
+       in (R30)
+       endhide);
+
+prints "REACHED31 :";
+print (hide
+	x_q_0,  x_d_int, x_en_latchd, x_d_h,
+        d_up_q_0,d_dn_q_0, d_up_net27,d_dn_net27,
+	d_up_d_inta,d_dn_d_inta,
+	d_up_wela,d_dn_wela, d_up_net45a,d_dn_net45a,
+	d_up_net13a,d_dn_net13a,
+	d_up_net45,d_dn_net45,d_up_d_int,d_dn_d_int,d_up_en_latchd,d_dn_en_latchd,
+	d_up_en_latchwen,d_dn_en_latchwen,
+	d_up_wen_h,d_dn_wen_h, d_up_d_h,d_dn_d_h,
+
+	tHI, tLO, tsetupd, tsetupwen
+       in (R31)
+       endhide);
+
+prints "REACHED32 :";
+print (hide
+	x_q_0,  x_d_int, x_en_latchd, x_d_h,
+        d_up_q_0,d_dn_q_0, d_up_net27,d_dn_net27,
+	d_up_d_inta,d_dn_d_inta,
+	d_up_wela,d_dn_wela, d_up_net45a,d_dn_net45a,
+	d_up_net13a,d_dn_net13a,
+	d_up_net45,d_dn_net45,d_up_d_int,d_dn_d_int,d_up_en_latchd,d_dn_en_latchd,
+	d_up_en_latchwen,d_dn_en_latchwen,
+	d_up_wen_h,d_dn_wen_h, d_up_d_h,d_dn_d_h,
+
+	tHI, tLO, tsetupd, tsetupwen
+       in (R32)
+       endhide);

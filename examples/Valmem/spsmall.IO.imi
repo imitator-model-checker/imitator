@@ -1,0 +1,70 @@
+--****************************************************--
+  automaton abs_net27	-- ######### ABSTRACTION MANUELLE DE net27 #########
+	    		-- ######### et incorporation de retard_q0 #########
+			-- ######### ce qui supprime l'autom. ret_q_0 ######
+--****************************************************--
+synclabs: down_wela, up_wela,
+	    down_d_inta, up_d_inta;
+	    
+--****************************************************--
+automaton f2_wela		-- wela <= net45a or net13a
+--****************************************************--
+synclabs: up_net45a, down_net45a,
+      up_net13a, down_net13a,
+      up_wela, down_wela;
+
+--****************************************************--
+automaton not_net13a
+--****************************************************--
+synclabs: down_ck, up_ck,
+ down_net13a, up_net13a;
+
+--###########################################################################"
+--#### INCORPORATION delai net45a
+--#### entraine la suppression de l'automate retard_net45a
+--****************************************************--
+automaton reg_net45
+--****************************************************--
+synclabs: down_wen_h, up_wen_h,			-- inputs  (data)
+	  down_en_latchwen, up_en_latchwen,	-- inputs (enable)
+	  down_net45a, up_net45a ;		-- outputs
+
+--###########################################################################"
+--#### INCORPORATION delai d_inta
+--#### entraine la suppression de l'automate retard_d_inta
+--****************************************************--
+automaton reg_d_int
+--****************************************************--
+synclabs: down_d_h, up_d_h,			-- inputs  (data)
+	  down_en_latchd, up_en_latchd,		-- inputs (enable)
+	  down_d_inta, up_d_inta ;		-- outputs
+
+--****************************************************--
+automaton not_en_latchd
+--****************************************************--
+synclabs: down_ck, up_ck,
+ down_en_latchd, up_en_latchd;
+
+--****************************************************--
+automaton not_en_latchwen
+--****************************************************--
+synclabs: down_ck, up_ck,
+ down_en_latchwen, up_en_latchwen;
+
+--****************************************************--
+automaton retard_wen_h
+--****************************************************--
+synclabs: down_wen, up_wen,
+ down_wen_h, up_wen_h;
+
+--****************************************************--
+automaton retard_d_h
+--****************************************************--
+synclabs: down_d_0, up_d_0,
+ down_d_h, up_d_h;
+
+--****************************************************--
+automaton env
+--****************************************************--
+synclabs: up_d_0, down_d_0, up_wen, down_wen,
+	  down_ck, up_ck;

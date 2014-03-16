@@ -1,0 +1,46 @@
+(*****************************************************************
+ *
+ *                       IMITATOR
+ *
+ * Example to show the non-preservation of the actions by the variant of merging
+ * (i.e., merging before pi0-compatibility test)
+ * 
+ * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
+ * Universite Paris 13, Sorbonne Paris Cite, LIPN (France)
+ * 
+ * Author:        Etienne Andre
+ * 
+ * Created         : 2013/03/20
+ * Last modified   : 2013/03/20
+ * IMITATOR version: 2.6.1
+ *
+ ****************************************************************)
+var 	x: clock;
+		p: parameter;
+
+
+
+--****************************************************--
+  automaton auto
+--****************************************************--
+synclabs: a, b;
+initially L1;
+
+	loc L1: while x <= 2 wait {}
+		when x = 2 & x >= p sync a goto L2; (* i.e., p <= 2 *)
+		when x = 2 & x <= p sync b goto L2; (* i.e., p >= 2 *)
+
+	loc L2: while True wait {}
+end
+
+
+--****************************************************--
+-- ANALYSIS
+--****************************************************--
+init :=
+	----------------------
+	-- Initial locations
+	----------------------
+	  loc[auto] = L1
+	& x = 0
+;

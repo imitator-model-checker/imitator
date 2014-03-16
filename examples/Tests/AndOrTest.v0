@@ -1,0 +1,61 @@
+--****************************************************--
+--****************************************************--
+--   Laboratoire Specification et Verification
+--
+--   Modeling of an "AND" and an "OR" logical gate
+--   From "Verification of Concurrent Systems with Parametric Delays Using Octahedra" by Clariso and Cortadella
+--
+--   Modeling: Etienne ANDRE and Laurent FRIBOURG
+--
+--   Created       : 2010/03/30
+--   Last modified : 2013/01/23
+--****************************************************--
+--****************************************************--
+
+
+	--- FIRST TRY ---
+-- 	& dA_High_l = 13
+-- 	& dA_High_u = 14
+-- 	& dA_Low_l = 16
+-- 	& dA_Low_u = 16 .. 30 -- 18
+-- -- 	& dB_High_l = 10
+-- -- 	& dB_High_u = 12
+-- 	& dB_High_l = 7
+-- 	& dB_High_u = 8
+-- 	& dB_Low_l = 19
+-- 	& dB_Low_u = 19 .. 40 -- 20
+-- 	& dAnd_l = 3
+-- 	& dAnd_u = 4
+-- 	& dOr_l = 1
+-- 	& dOr_u = 2
+
+(*
+-- WARNING (2013/01/23): does not give 4 tiles anymore!!!!! BUG in IMITATOR since? input file changed??
+	--- GIVES 4 TILES (cf. INFINITY '10) ---
+	& dA_High_l = 13
+	& dA_High_u = 13 .. 30 -- 14
+	& dA_Low_l = 16
+	& dA_Low_u = 16 .. 30 -- 16 .. 25 -- 18
+	& dB_High_l = 7
+	& dB_High_u = 7 .. 20 --7 .. 15 -- 8
+	& dB_Low_l = 19
+	& dB_Low_u = 20 -- 19 .. 25 -- 20
+	& dAnd_l = 3
+	& dAnd_u = 3 .. 10 -- 3 .. 5 -- 4
+	& dOr_l = 1
+	& dOr_u = 1 .. 5 -- 1 .. 5 -- 2
+*)
+	
+	--- GIVES 4 TILES (as of 2013/01/23) ---
+	& dA_High_l = 13
+	& dA_High_u = 14 -- 14
+	& dA_Low_l = 16
+	& dA_Low_u = 16 .. 30 -- 16 .. 25 -- 18
+	& dB_High_l = 7
+	& dB_High_u = 7 .. 20 --7 .. 15 -- 8
+	& dB_Low_l = 19
+	& dB_Low_u = 20 -- 19 .. 25 -- 20
+	& dAnd_l = 3
+	& dAnd_u = 3 .. 10 -- 3 .. 5 -- 4
+	& dOr_l = 1
+	& dOr_u = 1 .. 5 -- 1 .. 5 -- 2

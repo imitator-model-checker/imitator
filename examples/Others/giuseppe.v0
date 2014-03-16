@@ -1,0 +1,16 @@
+	T_pipeline_1 = 20 &
+	D_pipeline_1 = 20 &
+	C_task_11 = 0..12 & 
+	T_pipeline_2 = 150 &
+	D_pipeline_2 = 150 &
+	C_task_21 = 0..45 & 
+	C_task_22 = 25 & 
+	C_task_23 = 15 & 
+	C_task_24 = 34 & 
+	C_task_25 = 30 & 
+	T_pipeline_3 = 30 &
+	D_pipeline_3 = 30 &
+	C_task_31 = 5 & 
+	T_pipeline_4 = 200 &
+	D_pipeline_4 = 200 &
+	C_task_41 = 100

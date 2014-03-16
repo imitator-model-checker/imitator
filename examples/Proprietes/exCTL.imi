@@ -1,0 +1,95 @@
+--****************************************************--
+--****************************************************--
+--   Laboratoire Specification et Verification
+--
+--   Program to show the non-preservation of CTL formulae by the Inverse Method of ACEF09
+--
+--   Etienne ANDRE and Jeremy SPROSTON
+--
+--   Created       : 2009/07/10
+--   Last modified : 2010/04/12
+--****************************************************--
+--****************************************************--
+
+var 	x, y
+		: clock;
+	p1, p2
+		: parameter;
+
+
+--****************************************************--
+--****************************************************--
+-- AUTOMATA
+--****************************************************--
+--****************************************************--
+
+
+--****************************************************--
+  automaton aa
+--****************************************************--
+synclabs: ;
+initially Q1;
+
+loc Q1: while x <= 1 wait {}
+	when x <= 1 do {y' = 0} goto Q2;
+
+loc Q2: while True wait {}
+	when x = p1 & y = p2 do {} goto Q3;
+	when x = p2 & y = p2 do {} goto Q4;
+	-- when True do {} goto Q4;
+
+loc Q3: while y >= 0 wait {}
+
+loc Q4: while y >= 0 wait {}
+end -- aa
+
+
+
+--****************************************************--
+--****************************************************--
+-- ANALYSIS
+--****************************************************--
+--****************************************************--
+
+var init
+	: region;
+
+init :=
+	----------------------
+	-- Initial locations
+	----------------------
+	  loc[aa] = Q1
+
+	----------------------
+	-- Clocks
+	----------------------
+	& x = 0
+	& y = 0
+
+	----------------------
+	-- Parameters
+	----------------------
+	-- PI0
+	-- & p1 = 2
+	-- & p2 = 1
+	
+	-- PI'
+	-- & p1 = 1
+	-- & p2 = 1
+;
+
+-- init := reach forward from init endreach;
+
+
+--****************************************************--
+-- COMMENTS ABOUT NON-BISIMULATION:
+
+-- The constraint that IMITATOR should output is:
+-- p2 <= p1
+
+-- (Due to a bug in HyTech, the constraint really output is stronger)
+
+-- The formula exists X (exists X Q3 and exists X Q4) holds for any p1 = p2.
+-- However, this formula does not hold for p2 < p1.
+-- This provides us with a counter-example for CTL formulas.
+--****************************************************--

@@ -1,0 +1,18 @@
+--************************************************************--
+--************************************************************--
+--
+--   Counter-example for Inverse method applied to PPTA
+--   (shows that the Theorem from [AFS09] is wrong even if time and probabilities are separated)
+--
+--   Etienne ANDRE
+--   Laboratoire d'Informatique de Paris Nord
+--
+--                                Created : 2012/05/23
+--                          Last modified : 2012/05/23
+--************************************************************--
+--************************************************************--
+
+	& p1 = 1
+	& p2 = 2
+	& p3 = 3
+	& p4 = 4

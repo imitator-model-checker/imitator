@@ -1,0 +1,708 @@
+--****************************************************--
+--****************************************************--
+-- WLAN PROTOCOL (two stations)
+-- discrete time model
+-- gxn/jzs 20/02/02
+--
+--   Copied from wlan.imi: 2010/05/03
+--   Last modified       : 2010/05/03
+--****************************************************--
+--****************************************************--
+
+
+
+	-- clock for station 1,2
+	
+var     x1, x2            
+           : clock;
+
+-- TIMING CONSTRAINTS
+
+ASLOTTIME, --= 1;
+DIFS, --= 3; -- due to scaling can be non-deterministically either 2 or 3
+VULN, --= 1; -- due to scaling can be non-deterministically either 0 or 1
+TRANS_TIME_MAX, --= 315; -- scaling up
+TRANS_TIME_MIN, --= 4; -- scaling down
+ACK_TO, --= 6; 
+ACK, --= 4; -- due to scaling can be non-deterministically either 3 or 4
+SIFS, --= 1; -- due to scaling can be non-deterministically either 0 or 1
+-- TIME_MAX, --= 315; -- maximum constant used in timing constraints + 1
+BOFF --= 6; -- max backoff (since contention window is [15,1023])
+	: parameter;
+
+	col, -- : [0..8]; -- number of collisions
+			-- medium status 
+	c1, -- : [0..2];
+	c2,  --: [0..2];
+		-- ci corresponds to messages associated with station i
+		-- 0 nothing being sent
+		-- 1 being sent correctly
+		-- 2 being sent garbled	  
+
+	slot1, slot2, -- : [0..63]; 
+	backoff1, backoff2, --: [0..15];
+
+	bc1, bc2 -- : [0..BOFF];
+           : discrete;
+
+
+--****************************************************--
+--****************************************************--
+-- AUTOMATA
+--****************************************************--
+--****************************************************--
+
+
+--****************************************************--
+automaton medium
+--****************************************************--
+	
+synclabs: send1, send2, finish1, finish2;
+	
+initially Idle;
+
+loc Idle: while True wait {}
+
+	-- begin sending message and nothing else currently being sent
+	-- [send1] c1=0 & c2=0 -> (c1'=1);
+	when c1=0 & c2=0 sync send1 do {c1'=1} goto Idle;
+	-- [send2] c2=0 & c1=0 -> (c2'=1);
+	when c1=0 & c2=0 sync send2 do {c2'=1} goto Idle;
+
+	-- begin sending message and  something is already being sent
+	-- in this case both messages become garbled
+	-- [send1] c1=0 & c2>0 -> (c1'=2) & (c2'=2) & col'=min(col+1,8);
+	when c1=0 & c2>0 & col<8 sync send1 do {c1'=2,c2'=2,col'=col+1}
+				goto Idle;
+	when c1=0 & c2>0 & col=8 sync send1 do {c1'=2,c2'=2}
+				goto Idle;
+	-- [send2] c2=0 & c1>0 -> (c1'=2) & (c2'=2) & col'=min(col+1,8);
+	when c1>0 & c2=0 & col<8 sync send2 do {c1'=2,c2'=2,col'=col+1}
+				goto Idle;
+	when c1>0 & c2=0 & col=8 sync send2 do {c1'=2,c2'=2}
+				goto Idle;
+
+	-- finish sending message
+	-- [finish1] c1>0 -> (c1'=0);
+	when c1>0 sync finish1 do {c1'=0} goto Idle;
+	-- [finish2] c2>0 -> (c2'=0);
+	when c2>0 sync finish2 do {c2'=0} goto Idle;
+
+end -- medium
+
+
+
+--****************************************************--
+automaton station1
+--****************************************************--
+synclabs: send1, finish1;
+
+initially s1_1;
+
+
+	
+	-- local state
+--	s1 : [1..12];
+	-- 1 sense
+	-- 2 wait until free before setting backoff
+	-- 3 wait for DIFS then set slot
+	-- 4 set backoff 
+	-- 5 backoff
+	-- 6 wait until free in backoff
+	-- 7 wait for DIFS then resume backoff
+	-- 8 vulnerable 
+	-- 9 transmit
+	-- 11 wait for SIFS and then ACK
+	-- 10 wait for ACT_TO 
+	-- 12 done
+
+	-- SENSE
+loc s1_1: while x1 <= DIFS wait {}
+	-- let time pass
+	-- [time] s1=1 & x1<DIFS & free -> (x1'=min(x1+1,TIME_MAX));
+	-- ready to transmit
+	-- [] s1=1 & (x1=DIFS | x1=DIFS-1) -> (s1'=8) & (x1'=0);
+	when x1=DIFS do {x1'=0} goto s1_8;
+
+	-- found channel busy so wait until free
+	-- [] s1=1 & busy -> (s1'=2) & (x1'=0);
+	when c1>0 do {x1'=0} goto s1_2;
+	when c2>0 do {x1'=0} goto s1_2;
+
+loc s1_2: while x1 >=0 wait {}
+	-- WAIT UNTIL FREE BEFORE SETTING BACKOFF
+	-- let time pass (no need for the clock x1 to change)
+	-- [time] s1=2 & busy -> (s1'=2);
+	-- (CHANGES NOTHING)
+	
+	-- find that channel is free so check its free for DIFS before setting backoff
+	-- [] s1=2 & free -> (s1'=3);
+	when c1=0 & c2=0 goto s1_3;
+
+
+loc s1_3: while x1 <= DIFS wait {}
+	-- WAIT FOR DIFS THEN SET BACKOFF
+	-- let time pass
+	-- [time] s1=3 & x1<DIFS & free -> (x1'=min(x1+1,TIME_MAX));
+
+	-- found channel busy so wait until free
+	-- [] s1=3 & busy -> (s1'=2) & (x1'=0);
+	when c1>0 do {x1'=0} goto s1_2;
+	when c2>0 do {x1'=0} goto s1_2;
+
+	-- start backoff  first uniformly choose slot
+	-- backoff counter 0
+	-- [] s1=3 & (x1=DIFS | x1=DIFS-1) & bc1=0 ->
+	--	   (s1'=4) & (x1'=0) & (slot1'=0) & (bc1'=min(bc1+1,BOFF));
+	when x1=DIFS & bc1< BOFF & bc1=0 
+			do {x1'=0,slot1'=0, bc1'=bc1+1} goto s1_4;
+	when x1=DIFS & bc1=BOFF & bc1=0 
+			do {x1'=0,slot1'=0} goto s1_4;
+
+	-- backoff counter 1
+--	[] s1=3 & (x1=DIFS | x1=DIFS-1) & bc1=1 ->
+--		   1/2 : (s1'=4) & (x1'=0) & (slot1'=0) & (bc1'=min(bc1+1,BOFF))
+--		+ 1/2 : (s1'=4) & (x1'=0) & (slot1'=1) & (bc1'=min(bc1+1,BOFF));
+	when x1=DIFS & bc1=1 & bc1<BOFF do {x1'=0, slot1'=0, bc1'=bc1+1} goto s1_4;
+	when x1=DIFS & bc1=1 & bc1=BOFF do {x1'=0, slot1'=0} goto s1_4;
+
+
+	-- backoff counter 2
+--	[] s1=3 & (x1=DIFS | x1=DIFS-1) & bc1=2 ->
+--		   1/4 : (s1'=4) & (x1'=0) & (slot1'=0) & (bc1'=min(bc1+1,BOFF))
+--		+ 1/4 : (s1'=4) & (x1'=0) & (slot1'=1) & (bc1'=min(bc1+1,BOFF))
+--		+ 1/4 : (s1'=4) & (x1'=0) & (slot1'=2) & (bc1'=min(bc1+1,BOFF))
+--		+ 1/4 : (s1'=4) & (x1'=0) & (slot1'=3) & (bc1'=min(bc1+1,BOFF));
+
+-- 	when bc1=2 & bc1<BOFF do {x1'=0, slot1'=0, bc1'=bc1+1} goto s1_4;
+-- 	when bc1=2 & bc1<BOFF do {x1'=0, slot1'=1, bc1'=bc1+1} goto s1_4;
+-- 	when bc1=2 & bc1<BOFF do {x1'=0, slot1'=2, bc1'=bc1+1} goto s1_4;
+-- 	when bc1=2 & bc1<BOFF do {x1'=0, slot1'=3, bc1'=bc1+1} goto s1_4;
+	when x1=DIFS & bc1=2 & bc1=BOFF do {x1'=0, slot1'=0} goto s1_4;
+	when x1=DIFS & bc1=2 & bc1=BOFF do {x1'=0, slot1'=1} goto s1_4;
+	when x1=DIFS & bc1=2 & bc1=BOFF do {x1'=0, slot1'=2} goto s1_4;
+	when x1=DIFS & bc1=2 & bc1=BOFF do {x1'=0, slot1'=3} goto s1_4;
+
+
+	-- SET BACKOFF (no time can pass)
+	-- chosen slot now set backoff
+ loc s1_4: while x1 <= 0 wait {}
+
+--	[] s1=4 -> 1/16 : (s1'=6) & (backoff1'=0)
+--		    + 1/16 : (s1'=5) & (backoff1'=1)
+--		    + 1/16 : (s1'=5) & (backoff1'=2)
+--		    + 1/16 : (s1'=5) & (backoff1'=3)
+--		    + 1/16 : (s1'=5) & (backoff1'=4)
+--		    + 1/16 : (s1'=5) & (backoff1'=5)
+--		    + 1/16 : (s1'=5) & (backoff1'=6)
+--		    + 1/16 : (s1'=5) & (backoff1'=7)
+--		    + 1/16 : (s1'=5) & (backoff1'=8)
+--		    + 1/16 : (s1'=5) & (backoff1'=9)
+--		    + 1/16 : (s1'=5) & (backoff1'=10)
+--		    + 1/16 : (s1'=5) & (backoff1'=11)
+--		    + 1/16 : (s1'=5) & (backoff1'=12)
+--		    + 1/16 : (s1'=5) & (backoff1'=13)
+--		    + 1/16 : (s1'=5) & (backoff1'=14)
+--		    + 1/16 : (s1'=5) & (backoff1'=15);
+
+when True	do {backoff1'=0} goto s1_6;
+when True		do {backoff1'=1} goto s1_5;
+when True		do {backoff1'=2} goto s1_5;	
+when True		do {backoff1'=3} goto s1_5;
+when True		do {backoff1'=4} goto s1_5;
+when True		do {backoff1'=5} goto s1_5;
+when True		do {backoff1'=6} goto s1_5;
+when True		do {backoff1'=7} goto s1_5;
+when True		do {backoff1'=8} goto s1_5;
+when True		do {backoff1'=9} goto s1_5;
+when True		do {backoff1'=10} goto s1_5;
+when True		do {backoff1'=11} goto s1_5;
+when True		do {backoff1'=12} goto s1_5;
+when True		do {backoff1'=13} goto s1_5;
+when True		do {backoff1'=14} goto s1_5;
+when True		do {backoff1'=15} goto s1_5;
+
+
+
+	-- BACKOFF
+	-- let time pass
+	-- [time] s1=5 & x1<ASLOTTIME & free -> (x1'=min(x1+1,TIME_MAX));
+loc s1_5: while x1 <= ASLOTTIME wait {}
+	
+	-- decrement backoff
+	-- [] s1=5 & x1=ASLOTTIME & backoff1>0 -> (s1'=5) & (x1'=0) & (backoff1'=backoff1-1);	
+	when x1=ASLOTTIME & backoff1>0 
+		do {x1'=0, backoff1'=backoff1-1} goto s1_5;
+	-- [] s1=5 & x1=ASLOTTIME & backoff1=0 & slot1>0 ->
+ 	--		(s1'=5) & (x1'=0) & (backoff1'=15) & (slot1'=slot1-1);
+	when x1=ASLOTTIME & backoff1=0 & slot1>0
+		do {x1'=0, backoff1'=15, slot1'=slot1-1} goto s1_5;
+		
+	-- finish backoff 
+	-- [] s1=5 & x1=ASLOTTIME & backoff1=0 & slot1=0 -> (s1'=8) & (x1'=0);
+	when x1=ASLOTTIME & backoff1=0 & slot1=0
+		do {x1'=0} goto s1_8;
+	
+	-- found channel busy
+	-- [] s1=5 & busy -> (s1'=6) & (x1'=0);
+	when c1>0 do {x1'=0} goto s1_6;
+	when c2>0 do {x1'=0} goto s1_6;
+
+
+-- WAIT UNTIL FREE IN BACKOFF
+loc s1_6: while True wait {}
+
+	-- let time pass (no need for the clock x1 to change)
+	-- [time] s1=6 & busy -> (s1'=6);
+
+	-- find that channel is free
+	-- [] s1=6 & free -> (s1'=7);
+	when c1=0 & c2=0 do {} goto s1_7;
+
+-- WAIT FOR DIFS THEN RESUME BACKOFF
+loc s1_7: while x1 <= DIFS wait {}
+	-- let time pass
+	-- [time] s1=7 & x1<DIFS & free -> (x1'=min(x1+1,TIME_MAX));
+
+	-- resume backoff (start again from previous backoff)
+	-- [] s1=7 & (x1=DIFS | x1=DIFS-1) -> (s1'=5) & (x1'=0);
+	when x1=DIFS do {x1'=0} goto s1_5;
+
+	-- found channel busy
+	-- [] s1=7 & busy -> (s1'=6) & (x1'=0);
+	when c1>0 do {x1'=0} goto s1_6;
+	when c2>0 do {x1'=0} goto s1_6;
+	
+
+-- VULNERABLE
+loc s1_8: while x1 <= VULN wait {}
+	-- let time pass
+	-- [time] s1=8 & x1<VULN -> (x1'=min(x1+1,TIME_MAX));
+
+	-- move to transmit
+	-- [send1] s1=8 & (x1=VULN | x1=VULN-1) -> (s1'=9) & (x1'=0);
+	when x1=VULN sync send1 do {x1'=0} goto s1_9;
+
+-- TRANSMIT
+loc s1_9: while x1<= TRANS_TIME_MAX wait {}
+	-- let time pass
+	-- [time] s1=9 & x1<TRANS_TIME_MAX -> (x1'=min(x1+1,TIME_MAX));
+
+	-- finish transmission successful	
+	-- [finish1] s1=9 & x1>=TRANS_TIME_MIN & c1=1 -> (s1'=10) & (x1'=0);
+	when x1 >= TRANS_TIME_MIN & c1=1 sync finish1 do {x1'=0} goto s1_10;
+
+	-- finish transmission garbled
+	when x1 >= TRANS_TIME_MIN & c1=2 sync finish1 do {x1'=0} goto s1_11;
+
+-- WAIT FOR SIFS i.e. c1=0
+loc s1_10: while x1 <= 0 wait {}
+	-- check channel and busy: go into backoff
+	-- [] s1=10 & c1=0 & x1=0 & busy -> (s1'=2);
+	when x1=0 & c1=0 & c2>0 do {} goto s1_2;
+	-- // chack channel and free: let time pass
+	-- [time] s1=10 & c1=0 & x1=0 & free -> (x1'=min(x1+1,TIME_MAX));
+	when x1=0 & c1=0 & c2=0 do {} goto s1_10bis;
+	-- let time pass
+	-- [time] s1=10 & c1=0 & x1>0 & x1<SIFS -> (x1'=min(x1+1,TIME_MAX));
+	-- ack is sent after SIFS (since SIFS-1=0 add condition that channel is free)
+	-- [send1] s1=10 & c1=0 & (x1=SIFS | (x1=SIFS-1 & free)) -> (s1'=10) & (x1'=0);
+	when x1=SIFS & c1=0 & c2=0 sync send1 do {x1'=0} goto s1_10bis;
+
+
+loc s1_10bis: while x1<= SIFS  wait {}
+		when x1=SIFS & c1=0 do {x1'=0} goto s1_10ter;
+
+-- WAIT FOR ACK i.e. c1=1
+loc s1_10ter: while x1 <= ACK wait {}
+	-- let time pass
+	-- [time] s1=10 & c1=1 & x1<ACK -> (x1'=min(x1+1,TIME_MAX));
+
+	-- get acknowledgement so packet sent correctly and move to done
+	-- [finish1] s1=10 & c1=1 & (x1=ACK | x1=ACK-1) -> (s1'=12) & (x1'=0) & (bc1'=0);
+	when x1=ACK & c1=1 sync finish1 do {x1'=0, bc1'=0} goto s1_12;
+	
+
+-- WAIT FOR ACK_TO
+loc s1_11: while x1 <= ACK_TO wait {}
+	-- check channel and busy: go into backoff
+	-- [] s1=11 & x1=0 & busy -> (s1'=2);
+	when x1=0 & c1>0 do {} goto s1_2;
+	when x1=0 & c2>0 do {} goto s1_2;
+
+	-- check channel and free: let time pass
+	-- [time] s1=11 & x1=0 & free -> (x1'=min(x1+1,TIME_MAX));
+	when x1=0 & c1=0 & c2=0 do {} goto s1_11bis;
+
+	-- let time pass
+	-- [time] s1=11 & x1>0 & x1<ACK_TO -> (x1'=min(x1+1,TIME_MAX));
+
+
+loc s1_11bis: while x1 <= ACK_TO wait {}
+	-- no acknowledgement (go to backoff waiting DIFS first)
+	-- [] s1=11 & x1=ACK_TO -> (s1'=3) & (x1'=0);
+	when x1=ACK_TO do {x1'=0} goto s1_3; 
+
+
+-- DONE
+loc s1_12: while True wait {}
+	-- [time] s1=12 -> (s1'=12);
+	
+end -- STATION 1
+
+
+--****************************************************--
+automaton station2
+--****************************************************--
+synclabs: send2, finish2;
+
+initially s2_1;
+
+
+	
+	-- local state
+--	s1 : [1..12];
+	-- 1 sense
+	-- 2 wait until free before setting backoff
+	-- 3 wait for DIFS then set slot
+	-- 4 set backoff 
+	-- 5 backoff
+	-- 6 wait until free in backoff
+	-- 7 wait for DIFS then resume backoff
+	-- 8 vulnerable 
+	-- 9 transmit
+	-- 11 wait for SIFS and then ACK
+	-- 10 wait for ACT_TO 
+	-- 12 done
+
+	-- SENSE
+loc s2_1: while x2 <= DIFS wait {}
+	-- let time pass
+	-- [time] s2=1 & x2<DIFS & free -> (x2'=min(x2+1,TIME_MAX));
+	-- ready to transmit
+	-- [] s2=1 & (x2=DIFS | x2=DIFS-1) -> (s2'=8) & (x2'=0);
+	when x2=DIFS do {x2'=0} goto s2_8;
+
+	-- found channel busy so wait until free
+	-- [] s2=1 & busy -> (s2'=2) & (x2'=0);
+	when c2>0 do {x2'=0} goto s2_2;
+	when c1>0 do {x2'=0} goto s2_2;
+
+loc s2_2: while x2 >=0 wait {}
+	-- WAIT UNTIL FREE BEFORE SETTING BACKOFF
+	-- let time pass (no need for the clock x2 to change)
+	-- [time] s2=2 & busy -> (s2'=2);
+	-- (CHANGES NOTHING)
+	
+	-- find that channel is free so check its free for DIFS before setting backoff
+	-- [] s2=2 & free -> (s2'=3);
+	when c2=0 & c1=0 goto s2_3;
+
+
+loc s2_3: while x2 <= DIFS wait {}
+	-- WAIT FOR DIFS THEN SET BACKOFF
+	-- let time pass
+	-- [time] s2=3 & x2<DIFS & free -> (x2'=min(x2+1,TIME_MAX));
+
+	-- found channel busy so wait until free
+	-- [] s2=3 & busy -> (s2'=2) & (x2'=0);
+	when c2>0 do {x2'=0} goto s2_2;
+	when c1>0 do {x2'=0} goto s2_2;
+
+	-- start backoff  first uniformly choose slot
+	-- backoff counter 0
+	-- [] s2=3 & (x2=DIFS | x2=DIFS-1) & bc2=0 ->
+	--	   (s2'=4) & (x2'=0) & (slot2'=0) & (bc2'=min(bc2+1,BOFF));
+	when x2=DIFS & bc2< BOFF & bc2=0 
+			do {x2'=0,slot2'=0, bc2'=bc2+1} goto s2_4;
+	when x2=DIFS & bc2=BOFF & bc2=0 
+			do {x2'=0,slot2'=0} goto s2_4;
+
+	-- backoff counter 1
+--	[] s2=3 & (x2=DIFS | x2=DIFS-1) & bc2=1 ->
+--		   1/2 : (s2'=4) & (x2'=0) & (slot2'=0) & (bc2'=min(bc2+1,BOFF))
+--		+ 1/2 : (s2'=4) & (x2'=0) & (slot2'=1) & (bc2'=min(bc2+1,BOFF));
+	when x2=DIFS & bc2=1 & bc2<BOFF do {x2'=0, slot2'=0, bc2'=bc2+1} goto s2_4;
+	when x2=DIFS & bc2=1 & bc2=BOFF do {x2'=0, slot2'=0} goto s2_4;
+
+
+	-- backoff counter 2
+--	[] s2=3 & (x2=DIFS | x2=DIFS-1) & bc2=2 ->
+--		   1/4 : (s2'=4) & (x2'=0) & (slot2'=0) & (bc2'=min(bc2+1,BOFF))
+--		+ 1/4 : (s2'=4) & (x2'=0) & (slot2'=1) & (bc2'=min(bc2+1,BOFF))
+--		+ 1/4 : (s2'=4) & (x2'=0) & (slot2'=2) & (bc2'=min(bc2+1,BOFF))
+--		+ 1/4 : (s2'=4) & (x2'=0) & (slot2'=3) & (bc2'=min(bc2+1,BOFF));
+
+-- 	when bc2=2 & bc2<BOFF do {x2'=0, slot2'=0, bc2'=bc2+1} goto s2_4;
+-- 	when bc2=2 & bc2<BOFF do {x2'=0, slot2'=1, bc2'=bc2+1} goto s2_4;
+-- 	when bc2=2 & bc2<BOFF do {x2'=0, slot2'=2, bc2'=bc2+1} goto s2_4;
+-- 	when bc2=2 & bc2<BOFF do {x2'=0, slot2'=3, bc2'=bc2+1} goto s2_4;
+	when x2=DIFS & bc2=2 & bc2=BOFF do {x2'=0, slot2'=0} goto s2_4;
+	when x2=DIFS & bc2=2 & bc2=BOFF do {x2'=0, slot2'=1} goto s2_4;
+	when x2=DIFS & bc2=2 & bc2=BOFF do {x2'=0, slot2'=2} goto s2_4;
+	when x2=DIFS & bc2=2 & bc2=BOFF do {x2'=0, slot2'=3} goto s2_4;
+
+
+	-- SET BACKOFF (no time can pass)
+	-- chosen slot now set backoff
+ loc s2_4: while x2 <= 0 wait {}
+
+--	[] s2=4 -> 1/16 : (s2'=6) & (backoff2'=0)
+--		    + 1/16 : (s2'=5) & (backoff2'=1)
+--		    + 1/16 : (s2'=5) & (backoff2'=2)
+--		    + 1/16 : (s2'=5) & (backoff2'=3)
+--		    + 1/16 : (s2'=5) & (backoff2'=4)
+--		    + 1/16 : (s2'=5) & (backoff2'=5)
+--		    + 1/16 : (s2'=5) & (backoff2'=6)
+--		    + 1/16 : (s2'=5) & (backoff2'=7)
+--		    + 1/16 : (s2'=5) & (backoff2'=8)
+--		    + 1/16 : (s2'=5) & (backoff2'=9)
+--		    + 1/16 : (s2'=5) & (backoff2'=10)
+--		    + 1/16 : (s2'=5) & (backoff2'=11)
+--		    + 1/16 : (s2'=5) & (backoff2'=12)
+--		    + 1/16 : (s2'=5) & (backoff2'=13)
+--		    + 1/16 : (s2'=5) & (backoff2'=14)
+--		    + 1/16 : (s2'=5) & (backoff2'=15);
+
+when True	do {backoff2'=0} goto s2_6;
+when True		do {backoff2'=1} goto s2_5;
+when True		do {backoff2'=2} goto s2_5;	
+when True		do {backoff2'=3} goto s2_5;
+when True		do {backoff2'=4} goto s2_5;
+when True		do {backoff2'=5} goto s2_5;
+when True		do {backoff2'=6} goto s2_5;
+when True		do {backoff2'=7} goto s2_5;
+when True		do {backoff2'=8} goto s2_5;
+when True		do {backoff2'=9} goto s2_5;
+when True		do {backoff2'=10} goto s2_5;
+when True		do {backoff2'=11} goto s2_5;
+when True		do {backoff2'=12} goto s2_5;
+when True		do {backoff2'=13} goto s2_5;
+when True		do {backoff2'=14} goto s2_5;
+when True		do {backoff2'=15} goto s2_5;
+
+
+
+	-- BACKOFF
+	-- let time pass
+	-- [time] s2=5 & x2<ASLOTTIME & free -> (x2'=min(x2+1,TIME_MAX));
+loc s2_5: while x2 <= ASLOTTIME wait {}
+	
+	-- decrement backoff
+	-- [] s2=5 & x2=ASLOTTIME & backoff2>0 -> (s2'=5) & (x2'=0) & (backoff2'=backoff2-1);	
+	when x2=ASLOTTIME & backoff2>0 
+		do {x2'=0, backoff2'=backoff2-1} goto s2_5;
+	-- [] s2=5 & x2=ASLOTTIME & backoff2=0 & slot2>0 ->
+ 	--		(s2'=5) & (x2'=0) & (backoff2'=15) & (slot2'=slot2-1);
+	when x2=ASLOTTIME & backoff2=0 & slot2>0
+		do {x2'=0, backoff2'=15, slot2'=slot2-1} goto s2_5;
+		
+	-- finish backoff 
+	-- [] s2=5 & x2=ASLOTTIME & backoff2=0 & slot2=0 -> (s2'=8) & (x2'=0);
+	when x2=ASLOTTIME & backoff2=0 & slot2=0
+		do {x2'=0} goto s2_8;
+	
+	-- found channel busy
+	-- [] s2=5 & busy -> (s2'=6) & (x2'=0);
+	when c2>0 do {x2'=0} goto s2_6;
+	when c1>0 do {x2'=0} goto s2_6;
+
+
+-- WAIT UNTIL FREE IN BACKOFF
+loc s2_6: while True wait {}
+
+	-- let time pass (no need for the clock x2 to change)
+	-- [time] s2=6 & busy -> (s2'=6);
+
+	-- find that channel is free
+	-- [] s2=6 & free -> (s2'=7);
+	when c2=0 & c1=0 do {} goto s2_7;
+
+-- WAIT FOR DIFS THEN RESUME BACKOFF
+loc s2_7: while x2 <= DIFS wait {}
+	-- let time pass
+	-- [time] s2=7 & x2<DIFS & free -> (x2'=min(x2+1,TIME_MAX));
+
+	-- resume backoff (start again from previous backoff)
+	-- [] s2=7 & (x2=DIFS | x2=DIFS-1) -> (s2'=5) & (x2'=0);
+	when x2=DIFS do {x2'=0} goto s2_5;
+
+	-- found channel busy
+	-- [] s2=7 & busy -> (s2'=6) & (x2'=0);
+	when c2>0 do {x2'=0} goto s2_6;
+	when c1>0 do {x2'=0} goto s2_6;
+	
+
+-- VULNERABLE
+loc s2_8: while x2 <= VULN wait {}
+	-- let time pass
+	-- [time] s2=8 & x2<VULN -> (x2'=min(x2+1,TIME_MAX));
+
+	-- move to transmit
+	-- [send2] s2=8 & (x2=VULN | x2=VULN-1) -> (s2'=9) & (x2'=0);
+	when x2=VULN sync send2 do {x2'=0} goto s2_9;
+
+-- TRANSMIT
+loc s2_9: while x2<= TRANS_TIME_MAX wait {}
+	-- let time pass
+	-- [time] s2=9 & x2<TRANS_TIME_MAX -> (x2'=min(x2+1,TIME_MAX));
+
+	-- finish transmission successful	
+	-- [finish2] s2=9 & x2>=TRANS_TIME_MIN & c2=1 -> (s2'=10) & (x2'=0);
+	when x2 >= TRANS_TIME_MIN & c2=1 sync finish2 do {x2'=0} goto s2_10;
+
+	-- finish transmission garbled
+	when x2 >= TRANS_TIME_MIN & c2=2 sync finish2 do {x2'=0} goto s2_11;
+
+-- WAIT FOR SIFS i.e. c2=0
+loc s2_10: while x2 <= 0 wait {}
+	-- check channel and busy: go into backoff
+	-- [] s2=10 & c2=0 & x2=0 & busy -> (s2'=2);
+	when x2=0 & c2=0 & c1>0 do {} goto s2_2;
+	-- // chack channel and free: let time pass
+	-- [time] s2=10 & c2=0 & x2=0 & free -> (x2'=min(x2+1,TIME_MAX));
+	when x2=0 & c2=0 & c1=0 do {} goto s2_10bis;
+	-- let time pass
+	-- [time] s2=10 & c2=0 & x2>0 & x2<SIFS -> (x2'=min(x2+1,TIME_MAX));
+	-- ack is sent after SIFS (since SIFS-1=0 add condition that channel is free)
+	-- [send2] s2=10 & c2=0 & (x2=SIFS | (x2=SIFS-1 & free)) -> (s2'=10) & (x2'=0);
+	when x2=SIFS & c2=0 & c1=0 sync send2 do {x2'=0} goto s2_10bis;
+
+
+loc s2_10bis: while x2<= SIFS  wait {}
+		when x2=SIFS & c2=0 do {x2'=0} goto s2_10ter;
+
+-- WAIT FOR ACK i.e. c2=1
+loc s2_10ter: while x2 <= ACK wait {}
+	-- let time pass
+	-- [time] s2=10 & c2=1 & x2<ACK -> (x2'=min(x2+1,TIME_MAX));
+
+	-- get acknowledgement so packet sent correctly and move to done
+	-- [finish2] s2=10 & c2=1 & (x2=ACK | x2=ACK-1) -> (s2'=12) & (x2'=0) & (bc2'=0);
+	when x2=ACK & c2=1 sync finish2 do {x2'=0, bc2'=0} goto s2_12;
+	
+
+-- WAIT FOR ACK_TO
+loc s2_11: while x2 <= ACK_TO wait {}
+	-- check channel and busy: go into backoff
+	-- [] s2=11 & x2=0 & busy -> (s2'=2);
+	when x2=0 & c2>0 do {} goto s2_2;
+	when x2=0 & c1>0 do {} goto s2_2;
+
+	-- check channel and free: let time pass
+	-- [time] s2=11 & x2=0 & free -> (x2'=min(x2+1,TIME_MAX));
+	when x2=0 & c2=0 & c1=0 do {} goto s2_11bis;
+
+	-- let time pass
+	-- [time] s2=11 & x2>0 & x2<ACK_TO -> (x2'=min(x2+1,TIME_MAX));
+
+
+loc s2_11bis: while x2 <= ACK_TO wait {}
+	-- no acknowledgement (go to backoff waiting DIFS first)
+	-- [] s2=11 & x2=ACK_TO -> (s2'=3) & (x2'=0);
+	when x2=ACK_TO do {x2'=0} goto s2_3; 
+
+
+-- DONE
+loc s2_12: while True wait {}
+	-- [time] s2=12 -> (s2'=12);
+	
+end -- STATION 1
+
+
+--****************************************************--
+--****************************************************--
+-- ANALYSIS
+--****************************************************--
+--****************************************************--
+
+var init : region;
+
+init := True
+
+-- LOCATIONS
+	& loc[medium]   = Idle 
+	& loc[station1] = s1_1 
+	& loc[station2] = s2_1
+
+-- THE MEDIUM/CHANNEL
+
+	& c1 = 0
+	& c2 = 0
+
+	& col = 0 -- 1??? -- : [0..8]; -- number of collisions
+			-- medium status 
+
+	& slot1    = 0 
+	& slot2    = 0  -- : [0..63]; 
+	& backoff1 = 0 
+	& backoff2 = 0  --: [0..15];
+
+	& bc1 = 0 
+	& bc2 = 0 -- : [0..BOFF];
+
+	----------------------
+	-- Clocks
+	----------------------
+	& x1 = 0 
+	& x2 = 0 
+
+	----------------------
+	-- Constraints
+	----------------------
+-- 	& TRANS_TIME_MIN <= TRANS_TIME_MAX
+	& BOFF           = 2
+
+	---START PI0---
+--	& ASLOTTIME      = 1
+--	& DIFS           = 3 
+--	& VULN           = 1 
+--	& TRANS_TIME_MAX = 315
+--	& TRANS_TIME_MIN = 4 
+--	& ACK_TO         = 6
+--	& ACK            = 4 
+--	& SIFS           = 1
+--	& BOFF           = 6 
+	---END PI0---
+
+       -- STANDARD VALUES
+
+--	& ASLOTTIME      = 50
+--	& DIFS           = 128
+--	& VULN           = 48
+--	& TRANS_TIME_MAX = 15717
+--	& TRANS_TIME_MIN = 224
+--	& ACK_TO         = 300
+--	& ACK            = 205
+--	& SIFS           = 28
+--	& BOFF           = 6 
+
+        -- RESCALED VALUES FROM THE PRISM COMMUNITY
+
+--	& ASLOTTIME      = 1
+--	& DIFS           = 3 
+--	& VULN           = 1 
+--	& TRANS_TIME_MAX = 315
+--	& TRANS_TIME_MIN = 4 
+--	& ACK_TO         = 6
+--	& ACK            = 4 
+--	& SIFS           = 1
+--	& BOFF           = 6 
+
+        -- Parameters greater than 0
+	& ASLOTTIME      >= 0
+	& DIFS           >= 0
+	& VULN           >= 0 
+	& TRANS_TIME_MAX >= 0
+	& TRANS_TIME_MIN >= 0 
+	& ACK_TO         >= 0
+	& ACK            >= 0
+	& SIFS           >= 0
+	& BOFF           >= 0
+
+
+	---START---
+	---END---
+
+;
+

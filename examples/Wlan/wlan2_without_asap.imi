@@ -1,0 +1,613 @@
+--****************************************************--
+--****************************************************--
+-- WLAN PROTOCOL (two stations)
+-- New model by Etienne Andre & Jeremy Sproston
+--
+--   Created       : 2010/05/04
+--   Last modified : 2010/05/07
+--   Fork (to remove ASAP) : 2012/05/10
+--****************************************************--
+--****************************************************--
+
+
+
+var
+-- 	z,
+	x1, x2,
+	y1, y2,
+	x_u1 (* clock for urgency *)
+	, x_u2
+		: clock;
+
+-- TIMING CONSTRAINTS
+
+ASLOTTIME, --= 1;
+DIFS, --= 3; -- due to scaling can be non-deterministically either 2 or 3
+VULN, --= 1; -- due to scaling can be non-deterministically either 0 or 1
+TRANS_TIME_MAX, --= 315; -- scaling up
+TRANS_TIME_MIN, --= 4; -- scaling down
+ACK_TO, --= 6; 
+ACK, --= 4; -- due to scaling can be non-deterministically either 3 or 4
+SIFS, --= 1; -- due to scaling can be non-deterministically either 0 or 1
+-- TIME_MAX, --= 315; -- maximum constant used in timing constraints + 1
+BOFF = 1, --= 6; -- max backoff (since contention window is [15,1023])
+
+	MAXCOL = 2
+	
+		: parameter;
+
+	col, -- : [0..8]; -- number of collisions
+			-- medium status 
+--	c1, -- : [0..2];
+--	c2,  --: [0..2];
+--		-- ci corresponds to messages associated with station i
+--		-- 0 nothing being sent
+--		-- 1 being sent correctly
+--		-- 2 being sent garbled	  
+
+	slot1, slot2, -- : [0..63]; 
+	backoff1, backoff2, --: [0..15];
+
+	bc1, bc2 -- : [0..BOFF];
+           : discrete;
+
+
+--****************************************************--
+--****************************************************--
+-- AUTOMATA
+--****************************************************--
+--****************************************************--
+
+
+--****************************************************--
+automaton medium
+--****************************************************--
+	
+synclabs:
+	busy1, busy2,
+	end_ack_good1, end_ack_good2,
+	end_ack_bad1, end_ack_bad2,
+	f_collide1, f_collide2,
+	f_correct1, f_correct2,
+	free1, free2,
+	send1, send2,
+	start_ack1, start_ack2
+;
+	
+initially M00;
+
+-- INITIAL STATE
+loc M00: while True wait {}
+(*	when asap sync free1 goto M00;
+	when asap sync free2 goto M00;*)
+	when True sync free1 goto M00;
+	when True sync free2 goto M00;
+	when True sync send1 goto M10;
+	when True sync send2 goto M01;
+	when True sync start_ack1 goto M20;
+	when True sync start_ack2 goto M02;
+
+-- RIGHT PART
+loc M10: while True wait {}
+(*	when asap sync busy1 goto M10;
+	when asap sync busy2 goto M10;*)
+	when True sync busy1 goto M10;
+	when True sync busy2 goto M10;
+	when True sync f_correct1 goto M00;
+	when col < MAXCOL sync send2 do {col' = col + 1} goto M11;
+-- 	when col = MAXCOL sync send2 do {} goto M11;
+	when col < MAXCOL sync start_ack2 do {col' = col + 1} goto M12;
+-- 	when col = MAXCOL sync start_ack2 do {} goto M12;
+
+loc M01: while True wait {}
+(*	when asap sync busy1 goto M01;
+	when asap sync busy2 goto M01;*)
+	when True sync busy1 goto M01;
+	when True sync busy2 goto M01;
+	when True sync f_correct2 goto M00;
+	when col < MAXCOL sync send1 do {col' = col + 1} goto M11;
+-- 	when col = MAXCOL sync send1 do {} goto M11;
+	when col < MAXCOL sync start_ack1 do {col' = col + 1} goto M21;
+-- 	when col = MAXCOL sync start_ack1 do {} goto M21;
+
+loc M11: while True wait {}
+(*	when asap sync busy1 goto M11;
+	when asap sync busy2 goto M11;*)
+	when True sync busy1 goto M11;
+	when True sync busy2 goto M11;
+	when True sync f_collide2 goto M10bis;
+	when True sync f_collide1 goto M01bis;
+
+loc M12: while True wait {}
+(*	when asap sync busy1 goto M12;
+	when asap sync busy2 goto M12;*)
+	when True sync busy1 goto M12;
+	when True sync busy2 goto M12;
+	when True sync end_ack_bad2 goto M10bis;
+	when True sync f_collide1 goto M02bis;
+
+loc M21: while True wait {}
+(*	when asap sync busy1 goto M21;
+	when asap sync busy2 goto M21;*)
+	when True sync busy1 goto M21;
+	when True sync busy2 goto M21;
+	when True sync end_ack_bad1 goto M01bis;
+	when True sync f_collide2 goto M20bis;
+
+loc M10bis: while True wait {}
+(*	when asap sync busy1 goto M10bis;
+	when asap sync busy2 goto M10bis;*)
+	when True sync busy1 goto M10bis;
+	when True sync busy2 goto M10bis;
+	when col < MAXCOL sync send2 do {col' = col + 1} goto M11;
+	when col = MAXCOL sync send2 do {} goto M11;
+	when True sync f_collide1 goto M00;
+
+loc M01bis: while True wait {}
+(*	when asap sync busy1 goto M01bis;
+	when asap sync busy2 goto M01bis;*)
+	when True sync busy1 goto M01bis;
+	when True sync busy2 goto M01bis;
+	when col < MAXCOL sync send1 do {col' = col + 1} goto M11;
+-- 	when col = MAXCOL sync send1 do {} goto M11;
+	when True sync f_collide2 goto M00;
+
+-- LEFT PART
+loc M20: while True wait {}
+(*	when asap sync busy1 goto M20;
+	when asap sync busy2 goto M20;*)
+	when True sync busy1 goto M20;
+	when True sync busy2 goto M20;
+	when True sync end_ack_good1 goto M00;
+	when col < MAXCOL sync send2 do {col' = col + 1} goto M21bis;
+-- 	when col = MAXCOL sync send2 do {} goto M21bis;
+	when col < MAXCOL sync start_ack2 do {col' = col + 1} goto M22;
+-- 	when col = MAXCOL sync start_ack2 do {} goto M22;
+
+loc M02: while True wait {}
+(*	when asap sync busy1 goto M02;
+	when asap sync busy2 goto M02;*)
+	when True sync busy1 goto M02;
+	when True sync busy2 goto M02;
+	when True sync end_ack_good2 goto M00;
+	when col < MAXCOL sync send1 do {col' = col + 1} goto M12bis;
+-- 	when col = MAXCOL sync send1 do {} goto M12bis;
+	when col < MAXCOL sync start_ack1 do {col' = col + 1} goto M22;
+-- 	when col = MAXCOL sync start_ack1 do {} goto M22;
+
+loc M22: while True wait {}
+(*	when asap sync busy1 goto M22;
+	when asap sync busy2 goto M22;*)
+	when True sync busy1 goto M22;
+	when True sync busy2 goto M22;
+	when True sync end_ack_bad2 goto M20bis;
+	when True sync end_ack_bad1 goto M02bis;
+
+loc M21bis: while True wait {}
+(*	when asap sync busy1 goto M21bis;
+	when asap sync busy2 goto M21bis;*)
+	when True sync busy1 goto M21bis;
+	when True sync busy2 goto M21bis;
+	when True sync end_ack_bad1 goto M01bis;
+	when True sync f_collide2 goto M20bis;
+
+loc M12bis: while True wait {}
+(*	when asap sync busy1 goto M12bis;
+	when asap sync busy2 goto M12bis;*)
+	when True sync busy1 goto M12bis;
+	when True sync busy2 goto M12bis;
+	when True sync end_ack_bad2 goto M10bis;
+	when True sync f_collide1 goto M02bis;
+
+loc M20bis: while True wait {}
+(*	when asap sync busy1 goto M20bis;
+	when asap sync busy2 goto M20bis;*)
+	when True sync busy1 goto M20bis;
+	when True sync busy2 goto M20bis;
+	when col < MAXCOL sync start_ack2 do {col' = col + 1} goto M22;
+-- 	when col = MAXCOL sync start_ack2 do {} goto M22;
+	when True sync end_ack_bad1 goto M00;
+
+loc M02bis: while True wait {}
+(*	when asap sync busy1 goto M02bis;
+	when asap sync busy2 goto M02bis;*)
+	when True sync busy1 goto M02bis;
+	when True sync busy2 goto M02bis;
+	when col < MAXCOL sync start_ack1 do {col' = col + 1} goto M22;
+-- 	when col = MAXCOL sync start_ack1 do {} goto M22;
+	when True sync end_ack_bad2 goto M00;
+
+end -- medium
+
+
+
+--****************************************************--
+automaton station1
+--****************************************************--
+synclabs: busy1, end_ack_bad1, end_ack_good1, f_correct1, f_collide1, free1, send1;
+
+initially sense1;
+
+loc sense1: while x1 <= DIFS wait {}
+	when x1 = DIFS do {x1' = 0, x_u1' = 0} goto vulnerable1;
+	when (*True*) x_u1 = 0 sync busy1 do {x1' = 0, x_u1' = 0} goto wait_until_free1;
+
+
+loc wait_until_free1: while True wait {} -- the urgent transition is in medium
+	when (*True*) x_u1 = 0 sync free1 do {x1' = 0, x_u1' = 0} goto wait_for_difs1;
+	-- TO AVOID DEADLOCKS WITH BAD ACK
+	when True sync end_ack_bad1 do {x_u1' = 0} goto wait_until_free1;
+
+
+loc wait_for_difs1: while x1 <= DIFS wait {}
+	when (*True*) x_u1 = 0 sync busy1 do {x1' = 0, x_u1' = 0} goto wait_until_free1;
+	-- TO AVOID DEADLOCKS WITH BAD ACK
+	when True sync end_ack_bad1 do {x_u1' = 0} goto wait_for_difs1;
+
+	-- backoff counter 0
+	when x1 = DIFS & bc1 < BOFF & bc1 = 0 do {x1' = 0, slot1' = 0, bc1' = bc1 + 1, x_u1' = 0} goto set_backoff1;
+	when x1 = DIFS & bc1 = BOFF & bc1 = 0 do {x1' = 0, slot1' = 0, x_u1' = 0} goto set_backoff1;
+
+
+-- 	-- backoff counter 1
+	when x1 = DIFS & bc1 = 1 & bc1 < BOFF do {x1' = 0, slot1' = 0, bc1' = bc1 + 1, x_u1' = 0} goto set_backoff1;
+	when x1 = DIFS & bc1 = 1 & bc1 < BOFF do {x1' = 0, slot1' = 1, bc1' = bc1 + 1, x_u1' = 0} goto set_backoff1;
+	when x1 = DIFS & bc1 = 1 & bc1 = BOFF do {x1' = 0, slot1' = 0, x_u1' = 0} goto set_backoff1;
+	when x1 = DIFS & bc1 = 1 & bc1 = BOFF do {x1' = 0, slot1' = 1, x_u1' = 0} goto set_backoff1;
+-- 
+-- 
+-- 	-- backoff counter 2
+-- -- 	when bc1=2 & bc1<BOFF do {x1'=0, slot1'=0, bc1'=bc1+1} goto s1_4;
+-- -- 	when bc1=2 & bc1<BOFF do {x1'=0, slot1'=1, bc1'=bc1+1} goto s1_4;
+-- -- 	when bc1=2 & bc1<BOFF do {x1'=0, slot1'=2, bc1'=bc1+1} goto s1_4;
+-- -- 	when bc1=2 & bc1<BOFF do {x1'=0, slot1'=3, bc1'=bc1+1} goto s1_4;
+	when x1 = DIFS & bc1 = 2 & bc1 = BOFF do {x1' = 0, slot1' = 0, x_u1' = 0} goto set_backoff1;
+	when x1 = DIFS & bc1 = 2 & bc1 = BOFF do {x1' = 0, slot1' = 1, x_u1' = 0} goto set_backoff1;
+	when x1 = DIFS & bc1 = 2 & bc1 = BOFF do {x1' = 0, slot1' = 2, x_u1' = 0} goto set_backoff1;
+	when x1 = DIFS & bc1 = 2 & bc1 = BOFF do {x1' = 0, slot1' = 3, x_u1' = 0} goto set_backoff1;
+
+
+	-- we perform this in order for the first slot "ASLOTTIME * SLOT" to be incomplete
+loc set_backoff1: while x1 <= 0 wait {}
+	when True do {backoff1' = 0, x_u1' = 0} goto backoff1;
+-- 	when True do {backoff1' = 1, x_u1' = 0} goto backoff1;
+-- 	when True do {backoff1' = 2, x_u1' = 0} goto backoff1;
+-- 	when True do {backoff1' = 3, x_u1' = 0} goto backoff1;
+-- 	when True do {backoff1' = 4, x_u1' = 0} goto backoff1;
+-- 	when True do {backoff1' = 5, x_u1' = 0} goto backoff1;
+-- 	when True do {backoff1' = 6, x_u1' = 0} goto backoff1;
+-- 	when True do {backoff1' = 7, x_u1' = 0} goto backoff1;
+-- 	when True do {backoff1' = 8, x_u1' = 0} goto backoff1;
+-- 	when True do {backoff1' = 9, x_u1' = 0} goto backoff1;
+-- 	when True do {backoff1' = 10, x_u1' = 0} goto backoff1;
+-- 	when True do {backoff1' = 11, x_u1' = 0} goto backoff1;
+-- 	when True do {backoff1' = 12, x_u1' = 0} goto backoff1;
+-- 	when True do {backoff1' = 13, x_u1' = 0} goto backoff1;
+-- 	when True do {backoff1' = 14, x_u1' = 0} goto backoff1;
+-- 	when True do {backoff1' = 15, x_u1' = 0} goto backoff1;
+
+-- WAIT backoff1 * ASLOTTIME * slot1
+loc backoff1: while x1 <= ASLOTTIME wait {}
+(* 	-- MISTAKE W.R.T. TO THE PAPER: we should allow a 0 duration, which is not the case (but this is conform to the Prism model)	 *)
+	when x1 = ASLOTTIME & backoff1 > 0 do {x1'=0, backoff1' = backoff1 - 1, x_u1' = 0} goto backoff1;
+	when x1 = ASLOTTIME & backoff1 = 0 & slot1 > 0 do {x1' = 0, backoff1' = 3, slot1' = slot1 - 1, x_u1' = 0} goto backoff1; (*15 corresponds to "ACWmin + 1" (no "+1" because of the structure of this location, because at least one ASLOTTIME) SOMETHING WRONG HERE, TO SEE LATER*)
+	when x1 = ASLOTTIME & backoff1 = 0 & slot1 = 0 do {x1' = 0, x_u1' = 0} goto vulnerable1; -- MIGHT BE 0, but so in Prism
+	
+	when (*True*) x_u1 = 0 sync busy1 do {x1' = 0, x_u1' = 0} goto wait_until_free_bis1; -- the urgent transition is in medium
+
+	-- TO AVOID DEADLOCKS WITH BAD ACK
+	when True sync end_ack_bad1 do {x_u1' = 0} goto backoff1;
+
+
+loc wait_until_free_bis1: while True wait {}
+	when (*True*) x_u1 = 0 sync free1 do {x1' = 0, x_u1' = 0} goto wait_for_difs_bis1;
+	-- TO AVOID DEADLOCKS WITH BAD ACK
+	when True sync end_ack_bad1 do {x_u1' = 0} goto wait_until_free_bis1;
+
+
+loc wait_for_difs_bis1: while x1 <= DIFS wait {}
+	when (*True*) x_u1 = 0 sync busy1 do {x1' = 0, x_u1' = 0} goto wait_until_free_bis1;
+	when x1 = DIFS do {x1' = 0, x_u1' = 0} goto backoff1; (*SMALL MISTAKE W.R.T. TO THE PAPER because we do not start exactly from the same time as when we left backoff1 (because of the reset of x1)*)
+(* 	-- TO AVOID DEADLOCKS WITH BAD ACK *)
+	when True sync end_ack_bad1 do {x_u1' = 0} goto wait_for_difs_bis1;
+
+
+loc vulnerable1: while x1 <= VULN wait {}
+	when x1 = VULN sync send1 do {x1' = 0, x_u1' = 0} goto transmit1;
+	-- TO AVOID DEADLOCKS WITH BAD ACK
+	when True sync end_ack_bad1 do {x_u1' = 0} goto vulnerable1;
+
+
+loc transmit1: while x1 <= TRANS_TIME_MAX wait {}
+	when x1 >= TRANS_TIME_MIN sync f_correct1 do {x1' = 0, x_u1' = 0} goto test_channel1;
+	when x1 >= TRANS_TIME_MIN sync f_collide1 do {x1' = 0, x_u1' = 0} goto test_channel1;
+	-- TO AVOID DEADLOCKS WITH BAD ACK
+	when True sync end_ack_bad1 do {x_u1' = 0} goto transmit1;
+
+
+loc test_channel1: while x1 <= 0 wait {}
+	when (*True*) x_u1 = 0 sync busy1 do {x_u1' = 0} goto wait_until_free1;
+	when (*True*) x_u1 = 0 sync free1 do {x_u1' = 0} goto wait_for_ack_to1;
+
+
+loc wait_for_ack_to1: while x1 <= ACK_TO wait {}
+	when x1 = ACK_TO do {x1' = 0, x_u1' = 0} goto wait_until_free1;
+	when True sync end_ack_good1 do {x1' = 0, x_u1' = 0} goto done1;
+
+
+loc done1: while True wait {}
+
+end -- STATION1
+
+
+
+--****************************************************--
+automaton station2
+--****************************************************--
+synclabs: busy2, end_ack_bad2, end_ack_good2, f_correct2, f_collide2, free2, send2;
+
+initially sense2;
+
+loc sense2: while x2 <= DIFS wait {}
+	when x2 = DIFS do {x2' = 0, x_u2' = 0} goto vulnerable2;
+	when (*True*) x_u2 = 0 sync busy2 do {x2' = 0, x_u2' = 0} goto wait_until_free2;
+
+
+loc wait_until_free2: while True wait {} -- the urgent transition is in medium
+	when (*True*) x_u2 = 0 sync free2 do {x2' = 0, x_u2' = 0} goto wait_for_difs2;
+	-- TO AVOID DEADLOCKS WITH BAD ACK
+	when True sync end_ack_bad2 do {x_u2' = 0} goto wait_until_free2;
+
+
+loc wait_for_difs2: while x2 <= DIFS wait {}
+	when (*True*) x_u2 = 0 sync busy2 do {x2' = 0, x_u2' = 0} goto wait_until_free2;
+	-- TO AVOID DEADLOCKS WITH BAD ACK
+	when True sync end_ack_bad2 do {x_u2' = 0} goto wait_for_difs2;
+
+	-- backoff counter 0
+	when x2 = DIFS & bc2 < BOFF & bc2 = 0 do {x2' = 0, slot2' = 0, bc2' = bc2 + 1, x_u2' = 0} goto set_backoff2;
+	when x2 = DIFS & bc2 = BOFF & bc2 = 0 do {x2' = 0, slot2' = 0, x_u2' = 0} goto set_backoff2;
+
+
+	-- backoff counter 1
+	when x2 = DIFS & bc2 = 1 & bc2 < BOFF do {x2' = 0, slot2' = 0, bc2' = bc2 + 1, x_u2' = 0} goto set_backoff2;
+	when x2 = DIFS & bc2 = 1 & bc2 < BOFF do {x2' = 0, slot2' = 1, bc2' = bc2 + 1, x_u2' = 0} goto set_backoff2;
+	when x2 = DIFS & bc2 = 1 & bc2 = BOFF do {x2' = 0, slot2' = 0, x_u2' = 0} goto set_backoff2;
+	when x2 = DIFS & bc2 = 1 & bc2 = BOFF do {x2' = 0, slot2' = 2, x_u2' = 0} goto set_backoff2;
+
+
+	-- backoff counter 2
+-- 	when bc2=2 & bc2<BOFF do {x2'=0, slot2'=0, bc2'=bc2+1} goto s2_4;
+-- 	when bc2=2 & bc2<BOFF do {x2'=0, slot2'=2, bc2'=bc2+2} goto s2_4;
+-- 	when bc2=2 & bc2<BOFF do {x2'=0, slot2'=2, bc2'=bc2+2} goto s2_4;
+-- 	when bc2=2 & bc2<BOFF do {x2'=0, slot2'=3, bc2'=bc2+2} goto s2_4;
+	when x2 = DIFS & bc2 = 2 & bc2 = BOFF do {x2' = 0, slot2' = 0, x_u2' = 0} goto set_backoff2;
+	when x2 = DIFS & bc2 = 2 & bc2 = BOFF do {x2' = 0, slot2' = 1, x_u2' = 0} goto set_backoff2;
+	when x2 = DIFS & bc2 = 2 & bc2 = BOFF do {x2' = 0, slot2' = 2, x_u2' = 0} goto set_backoff2;
+	when x2 = DIFS & bc2 = 2 & bc2 = BOFF do {x2' = 0, slot2' = 3, x_u2' = 0} goto set_backoff2;
+
+
+	-- we perform this in order for the first slot "ASLOTTIME * SLOT" to be incomplete
+loc set_backoff2: while x2 <= 0 wait {}
+	when True do {backoff2' = 0, x_u2' = 0} goto backoff2;
+-- 	when True do {backoff2' = 1, x_u2' = 0} goto backoff2;
+-- 	when True do {backoff2' = 2, x_u2' = 0} goto backoff2;
+-- 	when True do {backoff2' = 3, x_u2' = 0} goto backoff2;
+-- 	when True do {backoff2' = 4, x_u2' = 0} goto backoff2;
+-- 	when True do {backoff2' = 5, x_u2' = 0} goto backoff2;
+-- 	when True do {backoff2' = 6, x_u2' = 0} goto backoff2;
+-- 	when True do {backoff2' = 7, x_u2' = 0} goto backoff2;
+-- 	when True do {backoff2' = 8, x_u2' = 0} goto backoff2;
+-- 	when True do {backoff2' = 9, x_u2' = 0} goto backoff2;
+-- 	when True do {backoff2' = 10, x_u2' = 0} goto backoff2;
+-- 	when True do {backoff2' = 11, x_u2' = 0} goto backoff2;
+-- 	when True do {backoff2' = 12, x_u2' = 0} goto backoff2;
+-- 	when True do {backoff2' = 13, x_u2' = 0} goto backoff2;
+-- 	when True do {backoff2' = 14, x_u2' = 0} goto backoff2;
+-- 	when True do {backoff2' = 15, x_u2' = 0} goto backoff2;
+
+
+loc backoff2: while x2 <= ASLOTTIME wait {}
+	-- MISTAKE W.R.T. TO THE PAPER: we should allow a 0 duration, which is not the case (but this is conform to the Prism model)	
+	when x2 = ASLOTTIME & backoff2 > 0 do {x2'=0, backoff2' = backoff2 - 1, x_u2' = 0} goto backoff2;
+	when x2 = ASLOTTIME & backoff2 = 0 & slot2 > 0 do {x2' = 0, backoff2' = 3, slot2' = slot2 - 1, x_u2' = 0} goto backoff2; -- 15 corresponds to "ACWmin + 1" (no "+1" because of the structure of this location, because at least one ASLOTTIME) SOMETHING WRONG HERE, TO SEE LATER
+	when x2 = ASLOTTIME & backoff2 = 0 & slot2 = 0 do {x2' = 0, x_u2' = 0} goto vulnerable2; -- MIGHT BE 0, but so in Prism
+	
+	when (*True*) x_u2 = 0 sync busy2 do {x2' = 0, x_u2' = 0} goto wait_until_free_bis2; -- the urgent transition is in medium
+	-- TO AVOID DEADLOCKS WITH BAD ACK
+	when True sync end_ack_bad2 do{x_u2' = 0} goto backoff2;
+
+
+loc wait_until_free_bis2: while True wait {}
+	when (*True*) x_u2 = 0 sync free2 do {x2' = 0, x_u2' = 0} goto wait_for_difs_bis2;
+	-- TO AVOID DEADLOCKS WITH BAD ACK
+	when True sync end_ack_bad2 do {x_u2' = 0} goto wait_until_free_bis2;
+
+
+loc wait_for_difs_bis2: while x2 <= DIFS wait {}
+	when (*True*) x_u2 = 0 sync busy2 do {x2' = 0, x_u2' = 0} goto wait_until_free_bis2;
+	when x2 = DIFS do {x2' = 0, x_u2' = 0} goto backoff2; -- SMALL MISTAKE W.R.T. TO THE PAPER because we do not start exactly from the same time as when we left backoff2 (because of the reset of x2)
+	-- TO AVOID DEADLOCKS WITH BAD ACK
+	when True sync end_ack_bad2 do {x_u2' = 0} goto wait_for_difs_bis2;
+
+
+loc vulnerable2: while x2 <= VULN wait {}
+	when x2 = VULN sync send2 do {x2' = 0, x_u2' = 0} goto transmit2;
+	-- TO AVOID DEADLOCKS WITH BAD ACK
+	when True sync end_ack_bad2 do {x_u2' = 0} goto vulnerable2;
+
+
+loc transmit2: while x2 <= TRANS_TIME_MAX wait {}
+	when x2 >= TRANS_TIME_MIN sync f_correct2 do {x2' = 0, x_u2' = 0} goto test_channel2;
+	when x2 >= TRANS_TIME_MIN sync f_collide2 do {x2' = 0, x_u2' = 0} goto test_channel2;
+	-- TO AVOID DEADLOCKS WITH BAD ACK
+	when True sync end_ack_bad2 do {x_u2' = 0} goto transmit2;
+
+
+loc test_channel2: while x2 <= 0 wait {}
+	when (*True*) x_u2 = 0 sync busy2 do {x_u2' = 0} goto wait_until_free2;
+	when (*True*) x_u2 = 0 sync free2 do {x_u2' = 0} goto wait_for_ack_to2;
+
+
+loc wait_for_ack_to2: while x2 <= ACK_TO wait {}
+	when x2 = ACK_TO do {x2' = 0, x_u2' = 0} goto wait_until_free2;
+	when True sync end_ack_good2 do {x2' = 0, x_u2' = 0} goto done2;
+
+
+loc done2: while True wait {}
+
+end -- STATION2
+
+
+--****************************************************--
+automaton receiver1
+--****************************************************--
+	
+synclabs: f_collide1, f_correct1, start_ack1, end_ack_bad1, end_ack_good1;
+
+initially waiting1;
+
+loc waiting1: while True wait {}
+	when True sync f_collide1 goto waiting1;
+	when True sync f_correct1 do {y1' = 0} goto wait_for_sifs1;
+
+loc wait_for_sifs1: while y1 <= SIFS wait {}
+	when y1 = SIFS sync start_ack1 do {y1' = 0} goto ack1;
+
+loc ack1: while y1 <= ACK wait{}
+	when y1 = ACK sync end_ack_bad1 do {y1' = 0} goto waiting1; -- reset of y1 in order to reduce the state space
+	when y1 = ACK sync end_ack_good1 do {y1' = 0} goto waiting1; -- reset of y1 in order to reduce the state space
+
+end -- receiver1
+
+
+--****************************************************--
+automaton receiver2
+--****************************************************--
+	
+synclabs: f_collide2, f_correct2, start_ack2, end_ack_bad2, end_ack_good2;
+
+initially waiting2;
+
+loc waiting2: while True wait {}
+	when True sync f_collide2 goto waiting2;
+	when True sync f_correct2 do {y2' = 0} goto wait_for_sifs2;
+
+loc wait_for_sifs2: while y2 <= SIFS wait {}
+	when y2 = SIFS sync start_ack2 do {y2' = 0} goto ack2;
+
+loc ack2: while y2 <= ACK wait{}
+	when y2 = ACK sync end_ack_bad2 do {y2' = 0} goto waiting2; -- reset of y2 in order to reduce the state space
+	when y2 = ACK sync end_ack_good2 do {y2' = 0} goto waiting2; -- reset of y2 in order to reduce the state space
+
+end -- receiver2
+
+
+
+--****************************************************--
+--****************************************************--
+-- ANALYSIS
+--****************************************************--
+--****************************************************--
+
+var init_reg, post_reg : region;
+
+init := True
+
+-- LOCATIONS
+	& loc[medium]    = M00
+	& loc[station1]  = sense1
+	& loc[station2]  = sense2
+	& loc[receiver1] = waiting1
+	& loc[receiver2] = waiting2
+
+-- THE MEDIUM/CHANNEL
+
+	& col = 0 -- 1??? -- : [0..8]; -- number of collisions
+			-- medium status 
+
+	& slot1    = 0 
+	& slot2    = 0  -- : [0..63]; 
+	& backoff1 = 0 
+	& backoff2 = 0  --: [0..15];
+
+	& bc1 = 0 
+	& bc2 = 0 -- : [0..BOFF];
+
+	----------------------
+	-- Clocks
+	----------------------
+-- 	& z  = 0
+	& x1 = 0
+	& x2 = 0
+	& y1 = 0
+	& y2 = 0
+	& x_u1 = 0
+	& x_u2 = 0
+
+	----------------------
+	-- Constraints
+	----------------------
+-- 	& TRANS_TIME_MIN <= TRANS_TIME_MAX
+
+	--- OLD START PI0---
+--	& ASLOTTIME      = 1
+--	& DIFS           = 3 
+--	& VULN           = 1 
+--	& TRANS_TIME_MAX = 315
+--	& TRANS_TIME_MIN = 4 
+--	& ACK_TO         = 6
+--	& ACK            = 4 
+--	& SIFS           = 1
+--	& BOFF           = 6 
+	--- OLD END PI0---
+
+       -- STANDARD VALUES
+
+	---START PI0---
+-- 	& ASLOTTIME      = 50
+-- 	& DIFS           = 128
+-- 	& VULN           = 48
+-- 	& TRANS_TIME_MAX = 15717
+-- 	& TRANS_TIME_MIN = 224
+-- 	& ACK_TO         = 300
+-- 	& ACK            = 205
+-- 	& SIFS           = 28
+(* 	& BOFF           = 1 *)
+(* 	& MAXCOL         = 2 *)
+	---END PI0---
+
+
+        -- RESCALED VALUES FROM THE PRISM COMMUNITY
+
+-- 	& ASLOTTIME      = 1
+-- 	& DIFS           = 3 
+-- 	& VULN           = 1 
+-- 	& TRANS_TIME_MAX = 7
+-- 	& TRANS_TIME_MIN = 4 
+-- 	& ACK_TO         = 6
+-- 	& ACK            = 4 
+-- 	& SIFS           = 1
+-- 	& BOFF           = 1
+-- 	& MAXCOL         = 4
+
+        -- Parameters greater than 0
+	& ASLOTTIME      >= 0
+	& DIFS           >= 0
+	& VULN           >= 0 
+	& TRANS_TIME_MAX >= 0
+	& TRANS_TIME_MIN >= 0 
+	& ACK_TO         >= 0
+	& ACK            >= 0
+	& SIFS           >= 0
+	& BOFF           >= 0
+
+;
+
+(* post_reg := reach forward from init_reg endreach; *)
+
+
+(*prints "---START LOG---";
+print (hide non_parameters in post_reg endhide);
+prints "---END LOG---";*)
+

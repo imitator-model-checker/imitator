@@ -1,0 +1,205 @@
+var time :clock;
+	  deadlineBasic: parameter;
+	x_1, x_2, x_3:clock;
+	WCET_3, WCET_2, WCET_1:parameter;
+ t_1:clock;
+	per1, Off1:parameter;
+ t_2:clock;
+	per2, Off2:parameter;
+ t_3:clock;
+	per3, Off3:parameter;
+
+-----------------------------------------
+-- STOPPER Used for Analysis Only		--
+-----------------------------------------
+automaton stopper
+synclabs: done1, require2, done2;
+
+loc f_1_r: while time<= deadlineBasic wait {}	
+	when True sync done1 goto f_2_r;
+	when True sync require2 goto f_1_r;
+	when True sync done2 goto f_1_r;
+
+loc f_2_r: while time<= deadlineBasic wait {}	
+	when True sync done1 goto f_3_r;
+	when True sync require2 goto f_2_r;
+	when True sync done2 goto f_2_r;
+
+loc f_3_r: while time<= deadlineBasic wait {}	
+	when True sync done1 goto f_4_r;
+	when True sync require2 goto f_3_r;
+	when True sync done2 goto f_3_r;
+
+loc f_4_r: while time<= deadlineBasic wait {}	
+	when True sync done1 goto f_5_r;
+	when True sync require2 goto f_4_r;
+	when True sync done2 goto f_4_r;
+
+loc f_5_r: while time<= deadlineBasic wait {}	
+	when True sync done1 goto f_6_r;
+	when True sync require2 goto f_5_r;
+	when True sync done2 goto f_5_r;
+
+loc f_6_r: while time<= deadlineBasic wait {}	
+	when True sync done1 goto f_7_r;
+	when True sync require2 goto f_6_r;
+	when True sync done2 goto f_6_r;
+
+loc f_7_r: while time<= deadlineBasic wait {}	
+	when True sync done1 goto f_8_r;
+	when True sync require2 goto f_7_r;
+	when True sync done2 goto f_7_r;
+
+loc f_8_r: while time<= deadlineBasic wait {}	
+	when True sync done1 goto f_9_r;
+	when True sync require2 goto f_8_r;
+	when True sync done2 goto f_8_r;
+
+loc f_9_r: while time<= deadlineBasic wait {}	
+	when True sync done1 goto f_10_r;
+	when True sync require2 goto f_9_r;
+	when True sync done2 goto f_9_r;
+
+loc f_10_r: while time<= deadlineBasic wait {}	
+	when True sync done1 goto f_10;
+	when True sync require2 goto f_10_r;
+	when True sync done2 goto f_10_r;
+
+loc f_10: while time <= deadlineBasic wait {}
+	when True sync require2 goto g_r;
+
+loc g_r: while time <= deadlineBasic wait {}
+	when True sync done2 goto lf_r;
+	when True sync done1 goto g_r;
+
+loc lf_r: while time <= deadlineBasic wait {}
+	when True sync done1 goto end_flow;
+
+loc end_flow: while time <= deadlineBasic wait {}
+
+end
+
+automaton scheduler_P_Application
+
+
+synclabs: require1, done1, require2, done2, require3, done3;
+
+initially active_non_1_non_2_non_3;
+
+loc active_non_1_non_2_non_3: while True stop{x_1,x_2,x_3} wait{}
+	when True sync require1  do {x_1' = x_1, x_2' = x_2, x_3' = x_3} goto active_1_non_2_non_3;
+	when True sync require2 do {x_1' = x_1, x_2' = x_2, x_3' = x_3} goto active_non_1_2_non_3;	
+	when True sync require3 do {x_1' = x_1, x_2' = x_2, x_3' = x_3} goto active_non_1_non_2_3;
+
+loc active_non_1_non_2_3: while True stop{x_1,x_2} wait{}
+	when x_3 < WCET_3 sync require1 do {x_1' = x_1, x_2' = x_2, x_3' = x_3} goto active_1_non_2_3;
+	when x_3 < WCET_3 sync require2 do {x_1' = x_1, x_2' = x_2, x_3' = x_3} goto active_non_1_2_3;
+	when x_3 = WCET_3 sync done3 do {x_3'=0,x_1' = x_1, x_2' = x_2} goto active_non_1_non_2_non_3;
+
+loc active_non_1_2_non_3: while True stop{x_1,x_3} wait{}
+	when x_2 < WCET_2 sync require1 do {x_1' = x_1, x_2' = x_2, x_3' = x_3} goto active_1_2_non_3;
+	when x_2 < WCET_2 sync require3 do {x_1' = x_1, x_2' = x_2, x_3' = x_3} goto active_non_1_2_3;
+	when x_2 = WCET_2 do {x_2'=0, x_1' = x_1, x_3' = x_3} sync done2 goto active_non_1_non_2_non_3;
+
+loc active_non_1_2_3: while True stop{x_1,x_3} wait{}
+	when x_2 < WCET_2 sync require1 do {x_1' = x_1, x_2' = x_2, x_3' = x_3} goto active_1_2_3;
+	when x_2 = WCET_2 sync done2 do {x_2'=0, x_1' = x_1, x_3' = x_3} goto active_non_1_non_2_3;
+
+loc active_1_non_2_non_3: while True stop{x_2,x_3} wait{}
+	when x_1 < WCET_1 sync require2 do {x_1' = x_1, x_2' = x_2, x_3' = x_3} goto active_1_2_non_3;	
+	when x_1 < WCET_1 sync require3 do {x_1' = x_1, x_2' = x_2, x_3' = x_3} goto active_1_non_2_3;
+	when x_1 = WCET_1 sync done1 do {x_1'=0, x_2' = x_2, x_3' = x_3} goto active_non_1_non_2_non_3;
+
+loc active_1_non_2_3: while True stop{x_2,x_3} wait{}
+	when x_1 < WCET_1 sync require2 do {x_1' = x_1, x_2' = x_2, x_3' = x_3} goto active_1_2_3;	
+	when x_1 = WCET_1 sync done1  do {x_1' = 0, x_2' = x_2, x_3' = x_3} goto active_non_1_non_2_3;
+
+loc active_1_2_non_3: while True stop{x_2,x_3} wait{}
+	when x_1 < WCET_1 sync require3 do {x_1' = x_1, x_2' = x_2, x_3' = x_3} goto active_1_2_3;
+	when x_1 = WCET_1 sync done1 do {x_1'=0, x_2' = x_2, x_3' = x_3}  goto active_non_1_2_non_3;
+
+loc active_1_2_3: while True stop{x_2,x_3} wait{}
+	when x_1 = WCET_1 sync done1 do {x_1' = 0, x_2' = x_2, x_3' = x_3} goto active_non_1_2_3;
+
+end -- automaton_P_gyro
+
+automaton T_1
+
+
+synclabs: done1, require1;
+
+initially init_s;
+
+loc init_s: while t_1 <= Off1 wait {}
+	when t_1 = Off1 sync require1 do {t_1'=0} goto waiting;
+
+loc idle: while t_1 <= per1 wait {}
+	when t_1 = per1 sync require1 do {t_1'=0} goto waiting;
+
+loc waiting: while t_1 <= per1 wait {}
+	when True sync done1 do {} goto idle;
+
+end
+
+automaton T_2
+
+synclabs: done2, require2;
+
+initially init_s;
+
+loc init_s: while t_2 <= Off2 wait {}
+	when t_2 = Off2 sync require2 do {t_2'=0} goto waiting;
+
+loc idle: while t_2 <= per2 wait {}
+	when t_2 = per2 sync require2 do {t_2'=0} goto waiting;
+
+loc waiting: while t_2 <= per2 wait {}
+	when True sync done2 do {} goto idle;
+
+end
+
+automaton T_3
+
+
+synclabs: done3, require3;
+
+initially init_s;
+
+loc init_s: while t_3 <= Off3 wait {}
+	when t_3 = Off3 sync require3 do {t_3'=0} goto waiting;
+
+loc idle: while t_3 <= per3 wait {}
+	when t_3 = per3 sync require3 do {t_3' = 0} goto waiting;
+
+loc waiting: while t_3 <= per3 wait {}
+	when True sync done3 do {} goto idle;
+
+end
+
+var init : region;
+
+init := loc[stopper] = f_1_r &
+	loc[scheduler_P_Application] = active_non_1_non_2_non_3 &
+	loc[T_1] = init_s &
+	loc[T_2] = init_s &
+	loc[T_3]= init_s &
+
+x_1 = 0 &
+x_2 = 0 &
+x_3 = 0 &
+t_1 = 0 &
+t_2 = 0 &
+t_3 = 0 &
+time = 0 
+--& 
+-- deadlineBasic = 134 &
+--WCET_1 = 4 &
+--WCET_2 = 20 &
+--WCET_3 = 120 &
+--per1 = 10 &
+--per2 = 100 &
+--per3 = 1000 &
+--Off1 = 0 &
+--Off2 = 94 &
+--Off3 = 0
+;

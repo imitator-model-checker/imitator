@@ -1,0 +1,86 @@
+--****************************************************--
+--****************************************************--
+--   Laboratoire Specification et Verification
+--
+--   Merging bug
+--
+--   Romain Soulat
+--
+--   Created       : 2011 (?)
+--   Last modified : 02/12/2011
+--   Conform with IMITATOR >= 2.37
+--****************************************************--
+--****************************************************--
+
+var 	x1, x2: clock;
+		d1, d2: parameter;
+
+
+
+automaton elagueur
+
+synclabs: job1_start,job1_finish,job2_start,job2_finish;
+
+loc I1: while True wait{}
+	when True sync job1_start goto b1_seen;
+	when True sync job2_start goto b2_seen;
+
+loc b1_seen: while True wait{}
+	when True sync job2_start goto b1b2_seen;
+
+loc b2_seen: while True wait{}
+	when True sync job1_start goto b1b2_seen;
+
+loc b1b2_seen: while True wait{}
+	when True sync job1_finish goto b1b2_seen;
+	when True sync job2_finish goto b1b2_seen;
+
+end
+
+--****************************************************--
+  automaton job1
+--****************************************************--
+synclabs: job1_start, job1_finish;
+initially I1;
+
+loc I1: while True wait {}
+	when True  sync job1_start do {x1' = 0} goto J1;  
+
+loc J1: while x1<= d1 wait {}
+	when  x1 = d1 sync job1_finish goto K1;   
+loc K1: while True wait {}
+
+
+
+end
+
+--****************************************************--
+  automaton job2
+--****************************************************--
+synclabs: job2_start, job2_finish;
+initially I1;
+
+loc I1: while True wait {}
+	when  True  sync job2_start do {x2' = 0} goto J1;  
+
+loc J1: while x2<= d2 wait {}
+	when  x2 = d2 sync job2_finish goto K1;   
+
+loc K1: while True wait {}
+--   when x1 > x2 sync BAD do {x1'=0,x2'=0} goto BAD;
+
+loc BAD: while True wait {}
+
+end
+
+var init:region;
+
+init :=
+	----------------------
+	-- Initial locations
+	----------------------
+	  loc[job1] = I1
+	& loc[job2] = I1 
+	& loc[elagueur] = I1
+	& x1=0 & x2=0 
+;
