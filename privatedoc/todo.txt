@@ -39,7 +39,9 @@ MODEL FEATURES
 OUTPUT FEATURES
 ************************************************************
 [ ] allow cartography for inverse method
-[ ] always output a cartography when 2D, even for IM, and always colour it if some good/bad states have been defined
+[ ] always output a cartography when 2D, even for IM, and always colour it if some good/bad states have been defined
+[ ] Rétablir le fait que -with-parametric-log active -with-log
+
 
 ************************************************************
 USER INTERFACE
