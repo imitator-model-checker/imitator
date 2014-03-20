@@ -10,7 +10,7 @@
  * Author:        Ulrich Kuehne, Etienne Andre
  * 
  * Created:       2010/07/22
- * Last modified: 2014/02/13
+ * Last modified: 2014/03/20
  *
  ****************************************************************)
 
@@ -46,22 +46,28 @@ exception Unsat_exception
 (* Global variables *)
 (**************************************************************)
 
-(* Constraint for result (used for IM) *)
+(* Constraint for result (used for IM and EFIM) *)
+(*** WARNING: is it always properly initialized? (even in case of repeated iterations of IM?) ***)
 let k_result = ref ( LinearConstraint.p_true_constraint () )
 
 (* Constraint to store the bad constraints to be negated (used for IM-complete) *)
+(*** NOTE: can it be merged with p_constraints?! *)
+(*** WARNING: is it always properly initialized? (even in case of repeated iterations of IM?) ***)
 let k_bad = ref []
 
-(* List of constraints for result (used for EF_synthesis) *)
+(* List of constraints for result (used for EF_synthesis / EFIM) *)
+(*** WARNING: is it always properly initialized? (even in case of repeated iterations of IM?) ***)
 let p_constraints = ref []
 
 (* List of last states (of runs) : used for the union mode *)
+(*** WARNING: is it always properly initialized? (even in case of repeated iterations of IM?) ***)
 let slast = ref []
 
 (* Number of random selections of pi0-incompatible inequalities in IM *)
+(*** WARNING: is it always properly initialized? (even in case of repeated iterations of IM?) ***)
 let nb_random_selections = ref 0
 
-(* Check whether the tile is bad (for IM and BC) *)
+(* Check whether the tile is bad (for IM and BC, and also EFIM) *)
 let tile_nature = ref Unknown
 
 
@@ -1499,7 +1505,8 @@ let next_combination combination max_indexes =
 (* rechability_graph : current reachability graph      *)
 (* constr            : new state constraint            *)
 (*-----------------------------------------------------*)
-(* returns (true, p_constraint) iff the state is pi0-compatible (false, _) otherwise *)
+(* returns (true, p_constraint) if the state is pi0-compatible, and (false, _) otherwise *)
+(*** BADPROG: no need to return (false, _), better return some Some/None ***)
 (*-----------------------------------------------------*)
 (* side effect: add the negation of the p_constraint to all computed states *)
 (*-----------------------------------------------------*)
@@ -1523,12 +1530,6 @@ let inverse_method_check_constraint model reachability_graph constr =
 	let is_pi0_incompatible = incompatible != [] in
 	
 	(* If pi0-incompatible: select an inequality *)
-	
-	
-	
-	(*** TODO: not for EFIM if already bad ***)
-	
-	
 	if is_pi0_incompatible then (
 		print_message Debug_low ("\nFound a pi0-incompatible state.");
 		(* Print some information *)
@@ -1538,49 +1539,60 @@ let inverse_method_check_constraint model reachability_graph constr =
 			print_message Debug_medium ("\nThe following inequalities are pi0-incompatible:");
 			List.iter (fun inequality -> print_message Debug_medium (LinearConstraint.string_of_p_linear_inequality model.variable_names inequality)) incompatible;
 		);
+		
+		(* Case EFIM: no need to select a pi-incompatible inequality if already bad *)
+		if options#efim && !tile_nature = Bad then(
+			print_message Debug_low ("\nEFIM: cut branch.");
+			(false , p_constraint)
+		
+		(* Case normal IM: select a pi-incompatible inequality *)
+		)else(
+			let p_inequality =
+				(* If random selection: pick up a random inequality *)
+				if not options#no_random then random_element incompatible
+				(* Else select the first one *)
+				else List.nth incompatible 0
+			in
+			(* Print some information *)
+			if debug_mode_greater  Debug_medium then(
+				print_message Debug_medium ("\nSelecting the following pi0-incompatible inequality:");
+				print_message Debug_medium (LinearConstraint.string_of_p_linear_inequality model.variable_names p_inequality);
+			);
 
-		let p_inequality =
-			(* If random selection: pick up a random inequality *)
-			if not options#no_random then random_element incompatible
-			(* Else select the first one *)
-			else List.nth incompatible 0
-		in
-		(* Print some information *)
-		if debug_mode_greater  Debug_medium then(
-			print_message Debug_medium ("\nSelecting the following pi0-incompatible inequality:");
-			print_message Debug_medium (LinearConstraint.string_of_p_linear_inequality model.variable_names p_inequality);
-		);
-
-		(* Update counter *)
-		if List.length incompatible > 1 then nb_random_selections := !nb_random_selections + 1;
-		
-		(* Negate the inequality *)
-		let negated_inequality = LinearConstraint.negate_wrt_pi0 pi0 p_inequality in
-		(* Print some information *)
-		let randomly = if not options#no_random then "randomly " else "" in
-		let among = if List.length incompatible > 1 then (" (" ^ randomly ^ "selected among " ^ (string_of_int (List.length incompatible)) ^ " inequalities)") else "" in
-		print_message Debug_standard ("  Adding the following inequality" ^ among ^ ":");
-		print_message Debug_standard ("  " ^ (LinearConstraint.string_of_p_linear_inequality model.variable_names negated_inequality));
-		
-		
-		(* Transform to constraint *)
-		let negated_constraint = LinearConstraint.make_p_constraint [negated_inequality] in
-		
-		
-		(* Add the p_constraint to the result (except in case of variants) *)
-		if not (options#pi_compatible || options#union) then(
-			print_message Debug_high ("Updating k_result with the negated inequality");
-			LinearConstraint.p_intersection_assign !k_result [negated_constraint];
-		);
-		
-
-		(* Update the previous states (including the 'new_states' and the 'orig_state') *)
-		print_message Debug_medium ("\nUpdating all the previous states.\n");
-		StateSpace.add_p_constraint_to_states reachability_graph negated_constraint;
-		
-		(* If pi-incompatible *)
-		(false, p_constraint)
-		(* If pi-compatible *)
+			(* Update counter *)
+			if List.length incompatible > 1 then nb_random_selections := !nb_random_selections + 1;
+			
+			(* Negate the inequality *)
+			let negated_inequality = LinearConstraint.negate_wrt_pi0 pi0 p_inequality in
+			(* Print some information *)
+			if debug_mode_greater Debug_standard then(
+				let randomly = if not options#no_random then "randomly " else "" in
+				let among = if List.length incompatible > 1 then (" (" ^ randomly ^ "selected among " ^ (string_of_int (List.length incompatible)) ^ " inequalities)") else "" in
+				print_message Debug_standard ("  Adding the following inequality" ^ among ^ ":");
+				print_message Debug_standard ("  " ^ (LinearConstraint.string_of_p_linear_inequality model.variable_names negated_inequality));
+			);
+			
+			(* Transform to constraint *)
+			let negated_constraint = LinearConstraint.make_p_constraint [negated_inequality] in
+			
+			
+			(* Add the p_constraint to the result (except in case of variants) *)
+			(*** WARNING: why not in case of variants ?! ***)
+			if not (options#pi_compatible || options#union) then(
+				print_message Debug_high ("Updating k_result with the negated inequality");
+				LinearConstraint.p_intersection_assign !k_result [negated_constraint];
+			);
+			
+			(* Update the previous states (including the 'new_states' and the 'orig_state') *)
+			(* Not for EFIM! *)
+			if not options#efim then(
+				print_message Debug_medium ("\nUpdating all the previous states.\n");
+				StateSpace.add_p_constraint_to_states reachability_graph negated_constraint;
+			);
+			
+			(* If pi-incompatible *)
+			(false, p_constraint)
+		)(* Endif normal IM and pi-incompatible *)
 	) else (true, p_constraint)
 
 
@@ -1789,17 +1801,17 @@ let add_a_new_state model reachability_graph orig_state_index new_states_indexes
 			(* Will the state be added to the list of new states (the successors of which will be computed)? *)
 			let to_be_added = ref true in
 			
-			(* If synthesis: add the constraint to the list of successful constraints if this corresponds to a bad location *)
-			if options#imitator_mode = EF_synthesis then(
+			(* If synthesis / EFIM: add the constraint to the list of successful constraints if this corresponds to a bad location *)
+			if options#imitator_mode = EF_synthesis || options#efim then(
 			match model.correctness_condition with
-				| None -> raise (InternalError("[EF-synthesis] A correctness property must be defined to perform EF-synthesis. This should have been checked before."))
+				| None -> raise (InternalError("[EF-synthesis/EFIM] A correctness property must be defined to perform EF-synthesis or EFIM. This should have been checked before."))
 				| Some (Unreachable (unreachable_automaton_index , unreachable_location_index)) ->
 					(* Get the location of unreachable_automaton_index in the new state *)
 					let new_location_index = Automaton.get_location location unreachable_automaton_index in
 					(* Check if this is the same as the "unreachable" one *)
 					if new_location_index = unreachable_location_index then(
 						(* Print some information *)
-						print_message Debug_standard "  EF-synthesis: Found a state violating the property.";
+						print_message Debug_standard "  [EF-synthesis/EFIM]: Found a state violating the property.";
 						
 						(* Project onto the parameters *)
 						let p_constraint = LinearConstraint.px_hide_nonparameters_and_collapse final_constraint in

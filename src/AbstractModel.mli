@@ -167,6 +167,7 @@ type correctness_condition = reachability_property option
 (****************************************************************)
 (** Nature of the tiles *)
 (****************************************************************)
+(*** BADPROG : nothing to do with abstract model ! ***)
 type tile_nature =
 	| Good
 	| Bad
