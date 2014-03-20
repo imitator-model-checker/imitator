@@ -10,7 +10,7 @@
  * Created:       2014/03/15
  * Last modified: 2014/03/15
  *
- ****************************************************************) 
+ ****************************************************************)
 
 open Global
 
@@ -29,7 +29,7 @@ open Global
    - il y a un probleme avec les affichages quand je ne mets pas un  
      print_newline(); après !
  *)
-(*
+
 open Mpi
 open Printf (* a terme : retirer tout ca *)
 open Unix (* temporaire : necessaire pour sleep *)
@@ -258,7 +258,7 @@ let worker () =
             finished := true 
 	  end
         ;
-    done *)
+    done 
 ;;
 
 

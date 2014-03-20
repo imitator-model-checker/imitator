@@ -1,0 +1,7 @@
+# specifications for "ocaml-mpi":
+description = "MPI bindings for OCaml (added by Etienne and Alban)"
+requires = ""
+version = "1.01"
+archive(byte) = "mpi.cma"
+archive(native) = "mpi.cmxa" 
+directory = "/usr/lib/ocaml/ocamlmpi"
