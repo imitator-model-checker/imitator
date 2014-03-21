@@ -1,0 +1,82 @@
+--************************************************************--
+--************************************************************--
+--
+--   Petit problème de casserole et de minuteur
+
+--
+--   Etienne ANDRE
+--   Universite Paris 13, Sorbonne Paris Cite, LIPN (France)
+--
+--                                Created : 2014/03/21
+--                          Last modified : 2014/03/21
+--                       IMITATOR version : 2.6.1.1
+--************************************************************--
+--************************************************************--
+
+
+var 	xC, xM
+		: clock;
+		
+	dCasserole, dMinuteur
+		: parameter;
+
+
+--****************************************************--
+--****************************************************--
+-- AUTOMATA
+--****************************************************--
+--****************************************************--
+
+
+--****************************************************--
+  automaton systeme
+--****************************************************--
+synclabs: enclenche, sonne, deborde, miam;
+initially chauffe;
+
+loc chauffe: while xC <= dCasserole wait {}
+	when True do {xM' = 0} sync enclenche goto tique;
+	when xC = dCasserole sync deborde goto catastrophe;
+
+loc tique: while xC <= dCasserole & xM <= dMinuteur wait {}
+	when xM = dMinuteur sync sonne goto cuit;
+	when xC = dCasserole sync deborde goto catastrophe;
+
+loc cuit: while xC <= dCasserole wait {}
+	when xC = dCasserole sync miam goto mange;
+
+loc mange: while True wait {}
+
+loc catastrophe: while True wait {}
+end -- systeme
+
+
+
+--****************************************************--
+--****************************************************--
+-- ANALYSIS
+--****************************************************--
+--****************************************************--
+
+var init
+	: region;
+
+init :=
+	----------------------
+	-- Initial locations
+	----------------------
+	  loc[systeme] = chauffe
+
+	----------------------
+	-- Clocks
+	----------------------
+	& xC = 0
+	& xM = 0
+	
+	----------------------
+	-- Parameters
+	----------------------
+	& dCasserole >= 0
+	& dMinuteur >= 0
+;
+
