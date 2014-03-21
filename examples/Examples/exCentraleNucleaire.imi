@@ -1,0 +1,114 @@
+--************************************************************--
+--************************************************************--
+--
+--   Petit problème de centrale nucléaire qui explose
+--   (pour devoir SITH 2013-2014)
+
+--
+--   Etienne ANDRE
+--   Universite Paris 13, Sorbonne Paris Cite, LIPN (France)
+--
+--                                Created : 2014/03/21
+--                          Last modified : 2014/03/21
+--                       IMITATOR version : 2.6.1.1
+--************************************************************--
+--************************************************************--
+
+
+var 	x1, x2
+		: clock;
+		
+	p1, (* Durée min entre début de chauffage et explosion *)
+	p2, (* Durée exacte entre début de chauffage et déclenchement de l'alarme *)
+	p3, (* Durée exacte entre déclenchement alarme et début arrosage *)
+	p4  (* Durée max début et fin arrosage *)
+		: parameter;
+
+
+--****************************************************--
+--****************************************************--
+-- AUTOMATA
+--****************************************************--
+--****************************************************--
+
+
+--****************************************************--
+  automaton centrale
+--****************************************************--
+synclabs: commenceAChauffer, tropChaud, declencheAlarme, debutArrosage, finArrosage, redemarre;
+initially normal;
+
+loc normal: while True wait {}
+	when True do {x1' = 0, x2' = 0} sync commenceAChauffer goto chauffe;
+
+loc chauffe: while x1 <= p1 & x2 <= p2 wait {}
+	when x1 >= p1 sync tropChaud goto boum;
+	when x2 = p2 do{x2' = 0} sync declencheAlarme goto sonne;
+
+loc sonne: while x1 <= p1 & x2 <= p3 wait {}
+	when x1 >= p1 sync tropChaud goto boum;
+	when x2 = p3 do{x2' = 0} sync debutArrosage goto arrose;
+
+loc arrose: while x1 <= p1 & x2 <= p4 wait {}
+	when x1 >= p1 sync tropChaud goto boum;
+	when x2 <= p4 do {x1' = 0, x2' = 0} sync finArrosage goto arret;
+		(* reset to try to reduce state space *)
+
+loc arret: while True wait {}
+	when True do {x1' = 0, x2' = 0} sync redemarre goto normal;
+		(* reset to try to reduce state space *)
+
+loc boum: while True wait {}
+
+end -- centrale
+
+
+
+--****************************************************--
+--****************************************************--
+-- ANALYSIS
+--****************************************************--
+--****************************************************--
+
+var init
+	: region;
+
+init :=
+	----------------------
+	-- Initial locations
+	----------------------
+	  loc[centrale] = normal
+
+	----------------------
+	-- Clocks
+	----------------------
+	& x1 = 0
+	& x2 = 0
+	
+	----------------------
+	-- Parameters
+	----------------------
+	& p1 >= 0
+	& p2 >= 0
+	& p3 >= 0
+	& p4 >= 0
+
+	----------------------
+	-- Parameters not EF boum
+	----------------------
+--	& p1 = 10
+--	& p2 = 2
+--	& p3 = 3
+--	& p4 = 4
+
+	----------------------
+	-- Parameters AF BOUM
+	----------------------
+(*
+	& p1 = 2
+	& p2 = 2
+	& p3 = 3
+	& p4 = 4
+*)
+;
+
