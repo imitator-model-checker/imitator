@@ -93,6 +93,7 @@ let cartography model v0 returned_constraint_list cartography_name =
 	(* Retrieve the input options *)
 	let options = Input.get_options () in
 	
+	print_message Debug_low "Starting to compute graphical cartography...";
 	(* For all returned_constraint *)
 	let new_returned_constraint_list = List.map (
 		fun returned_constraint -> match returned_constraint with
@@ -126,7 +127,10 @@ let cartography model v0 returned_constraint_list cartography_name =
 	let x_index = 0 in
 	let y_index = 1 in
 
+	
 	(* First find the dimensions *)
+
+	print_message Debug_low "Looking for dimensions...";
 	let range_params : int list ref = ref [] in
 	let bounds = ref (Array.make 2 (NumConst.zero, NumConst.zero)) in
 
@@ -134,6 +138,7 @@ let cartography model v0 returned_constraint_list cartography_name =
 	begin
 	match options#imitator_mode with
 		| EF_synthesis ->
+			print_message Debug_low "Case EF-synthesis: first 2 parameters";
 			(* First check that there are at least 2 parameters *)
 			if model.nb_parameters < 2 then(
 				print_error "Could not plot cartography (which requires 2 parameters)";
@@ -142,20 +147,22 @@ let cartography model v0 returned_constraint_list cartography_name =
 			(* Choose the first 2 *)
 			range_params := [ List.nth model.parameters 0 ; List.nth model.parameters 1];
 			
-			(** WARNING: quite random thing here ! *)
+			(*** WARNING: quite random thing here ! ***)
 			!bounds.(0) <- (NumConst.numconst_of_int 0, NumConst.numconst_of_int 50);
 			!bounds.(1) <- (NumConst.numconst_of_int 0, NumConst.numconst_of_int 50);
 	
 	(* If cartography: find indices of first two variables with a parameter range *)
 		| Cover_cartography | Random_cartography _ | Border_cartography ->
+			print_message Debug_low "Case real cartography: first 2 parameters with a range";
 			Array.iteri (fun index (a,b) -> 
 				if NumConst.neq a b then(
 					(* Add one more parameter *)
+					print_message Debug_medium "Found a parameter!";
 					range_params := index :: !range_params;
 				)
 			) v0;
 			range_params := List.rev !range_params;
-
+			
 			if (List.length !range_params) < 2 then(
 				print_error "Could not plot cartography (region of interest has too few dimensions)";
 				abort_program();
@@ -176,11 +183,19 @@ let cartography model v0 returned_constraint_list cartography_name =
 	
 	(* Now start *)
 	
-	let x_param = List.nth !range_params 0 in
-	let y_param = List.nth !range_params 1 in
+	let x_pos = 0 in
+	let y_pos = 1 in
+	
+	(* Retrieve parameters *)
+	let x_param = List.nth !range_params x_pos in
+	let y_param = List.nth !range_params y_pos in
 
 	let x_name = model.variable_names x_param in
 	let y_name = model.variable_names y_param in
+
+	(* Print some information *)
+	print_message Debug_standard ("Cartography will be drawn in 2D for parameters " ^ x_name ^  " and " ^ y_name ^  ".");
+	
 	(* Create a script that will print the cartography *)
 	let script_name = cartography_name ^ ".sh" in
 	let script = open_out script_name in
@@ -199,27 +214,37 @@ let cartography model v0 returned_constraint_list cartography_name =
 		(NumConst.string_of_numconst n) ^ "."
 	in
 	
+	(* Print some information *)
+	print_message Debug_low ("Computing the zone...");
+	
 	let str_zone =
-				(graph_string_of_numconst (fst (!bounds.(x_param))))
-		^" "^(graph_string_of_numconst (snd (!bounds.(y_param))))
-		^"\n"^(graph_string_of_numconst (snd (!bounds.(x_param))))
-		^" "^ (graph_string_of_numconst (snd (!bounds.(y_param))))
-		^"\n"^(graph_string_of_numconst (snd (!bounds.(x_param))))
-		^" "^ (graph_string_of_numconst (fst (!bounds.(y_param))))
-		^"\n"^(graph_string_of_numconst (fst (!bounds.(x_param))))
-		^" "^ (graph_string_of_numconst (fst (!bounds.(y_param))))
-		^"\n"^(graph_string_of_numconst (fst (!bounds.(x_param))))
-		^" "^ (graph_string_of_numconst (snd (!bounds.(y_param))))
+				(graph_string_of_numconst (fst (!bounds.(x_pos))))
+		^" "^(graph_string_of_numconst (snd (!bounds.(y_pos))))
+		^"\n"^(graph_string_of_numconst (snd (!bounds.(x_pos))))
+		^" "^ (graph_string_of_numconst (snd (!bounds.(y_pos))))
+		^"\n"^(graph_string_of_numconst (snd (!bounds.(x_pos))))
+		^" "^ (graph_string_of_numconst (fst (!bounds.(y_pos))))
+		^"\n"^(graph_string_of_numconst (fst (!bounds.(x_pos))))
+		^" "^ (graph_string_of_numconst (fst (!bounds.(y_pos))))
+		^"\n"^(graph_string_of_numconst (fst (!bounds.(x_pos))))
+		^" "^ (graph_string_of_numconst (snd (!bounds.(y_pos))))
 	in
 	output_string file_zone str_zone;
 	close_out file_zone;
+
+	(* Print some information *)
+	print_message Debug_high ("str_zone = \n" ^ str_zone);
+
 	(* Beginning of the script *)
 	let script_line = ref ("graph -T " ^ cartography_extension ^ " -C -X \"" ^ x_name ^ "\" -Y \"" ^ y_name ^ "\" ") in
 	(* find the minimum and maximum abscissa and ordinate for each constraint and store them in a list *)
 	
+	(* Print some information *)
+	print_message Debug_low ("Finding zone corners...");
+
 	(* get corners of bounds *)
-	let init_min_abs, init_max_abs = !bounds.(x_param) in
-	let init_min_ord, init_max_ord = !bounds.(y_param) in
+	let init_min_abs, init_max_abs = !bounds.(x_pos) in
+	let init_min_ord, init_max_ord = !bounds.(y_pos) in
 (*		(* convert to float *)
 	let init_min_abs = float_of_int init_min_abs in
 	let init_max_abs = float_of_int init_max_abs in
@@ -245,6 +270,9 @@ let cartography model v0 returned_constraint_list cartography_name =
 	(*** WARNING! very dangerous here! may not work for big integers *)
 	let bad_float_of_num_const n = float_of_string (NumConst.string_of_numconst n) in
 
+	(* Print some information *)
+	print_message Debug_low ("Finding minima and maxima for axes...");
+
 	(* Find mininma and maxima for axes (version Etienne, who finds imperative here better ) *)
 	let min_abs = ref (bad_float_of_num_const init_min_abs) in
 	let max_abs = ref (bad_float_of_num_const init_max_abs) in
@@ -266,6 +294,9 @@ let cartography model v0 returned_constraint_list cartography_name =
 		| Union_of_constraints (list_of_k, _) -> List.iter update_min_max list_of_k
 		| NNCConstraint _ -> raise (InternalError ("NNCCs are not available everywhere yet."))
 	) new_returned_constraint_list;
+
+	(* Print some information *)
+	print_message Debug_low ("Adding a 1-unit margin...");
 
 	(* Add a margin of 1 unit *)
 	let min_abs = !min_abs -. 1.0 in
@@ -515,7 +546,7 @@ let dot_of_graph model reachability_graph ~fancy =
 				^ (if options#with_parametric_log then (
 					(* Eliminate clocks *)
 					let parametric_constraint = LinearConstraint.px_hide_nonparameters_and_collapse (*model.clocks*) linear_constraint in
-					"\n\n  After clock elimination:"
+					"\n\n  Projection onto the parameters:"
 					^ "\n  " ^ (LinearConstraint.string_of_p_linear_constraint model.variable_names parametric_constraint);
 				) else "");
 			) state_indexes;

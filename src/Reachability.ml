@@ -2737,6 +2737,7 @@ let inverse_method_gen model init_state =
 
 		(* Case EFIM: return k_result *)
 		else if options#efim then (
+			(*** NOTE:  actually useless ***)
 			Convex_constraint (!k_result , !tile_nature)
 		)
 
@@ -2770,27 +2771,30 @@ let efim model init_state =
 	let options = Input.get_options () in
 
 	(* Call the inverse method *)
-	let (returned_constraint : AbstractModel.returned_constraint), reachability_graph, tile_nature, deterministic, nb_iterations, total_time = inverse_method_gen model init_state in
+	let _, reachability_graph, tile_nature, deterministic, nb_iterations, total_time = inverse_method_gen model init_state in
 	
-	(* Here comes the result *)
+	(* Processing the result *)
+	let constraint_str =
+	match tile_nature with
+	(* Good is impossible: only bad or unknown *)
+	| Good _ -> raise (InternalError "Impossible situation in EFIM: a returned_constraint has a good tile nature althoug this is not enabled here.");
 	
-(* 	blublu *)
+	(* Bad tile: return the union of the bad constraints *)
+	| Bad _ ->
+		string_of_returned_constraint model.variable_names (Union_of_constraints (!p_constraints, tile_nature))
 	
 	
-	print_message Debug_standard ("\nFinal constraint K0 "
-		^ (if options#union
-			then "(under disjunctive form) "
-			else (
-				match returned_constraint with
-					| Convex_constraint (p_linear_constraint , _) -> " (" ^ (string_of_int (LinearConstraint.p_nb_inequalities p_linear_constraint)) ^ " inequalities)"
-					| NNCConstraint _ (*(k_good, k_bad, tile_nature)*) -> " (in \"good - bad\" form)"
-					| _ -> raise (InternalError "Impossible situation in inverse_method: a returned_constraint is not under convex form although union mode is not enabled.");
-			)
-		)
-		^ ":");
-	print_message Debug_nodebug (string_of_returned_constraint model.variable_names returned_constraint);
+	(* No bad location means good! *)
+	| Unknown _ ->
+		string_of_returned_constraint model.variable_names (Convex_constraint (!k_result , tile_nature))
+	
+	in
+	
+	
+	print_message Debug_standard ("\nFinal constraint K0:");
+	print_message Debug_nodebug (constraint_str);
 	print_message Debug_standard (
-		"\nInverse method successfully finished " ^ (after_seconds ()) ^ "."
+		"\nEFIM successfully finished " ^ (after_seconds ()) ^ "."
 	);
 	
 	(* Print memory information *)

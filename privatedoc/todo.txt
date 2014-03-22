@@ -1,4 +1,12 @@
 ************************************************************
+BUGS
+************************************************************
+[!] graphical cartography seems not to work when called with more than 2 parameters
+	example: flipflop.imi (with all parameters) and flipflop.v0
+	it works well with 2 parameters only
+
+
+************************************************************
 ALGORITHMIC FEATURES
 ************************************************************
 [!!!] PDBMs
