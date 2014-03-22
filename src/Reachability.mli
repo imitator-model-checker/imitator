@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre, Ulrich Kuehne, Romain Soulat
  * Created:       2010/07/22
- * Last modified: 2013/12/06
+ * Last modified: 2014/03/22
  *
  **************************************************)
 
@@ -37,5 +37,7 @@ val full_state_space_exploration : abstract_model -> state -> unit
 val ef_synthesis : abstract_model -> state -> returned_constraint
 
 val inverse_method_gen : abstract_model -> state -> returned_constraint * StateSpace.reachability_graph * tile_nature * bool * int * float
+
+val efim : abstract_model -> state -> unit
 
 val inverse_method : abstract_model -> state -> unit

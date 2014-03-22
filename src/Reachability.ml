@@ -1549,7 +1549,7 @@ let inverse_method_check_constraint model reachability_graph constr =
 		
 		(* Case EFIM: no need to select a pi-incompatible inequality if already bad *)
 		if options#efim && !tile_nature = Bad then(
-			print_message Debug_low ("\nEFIM: cut branch.");
+			print_message Debug_low ("\n[EFIM] Cut branch.");
 			(false , p_constraint)
 		
 		(* Case normal IM: select a pi-incompatible inequality *)
@@ -1592,6 +1592,7 @@ let inverse_method_check_constraint model reachability_graph constr =
 			
 			(* Update the previous states (including the 'new_states' and the 'orig_state') *)
 			(* Not for EFIM! *)
+			(*** NOTE: maybe not for IMK either? ****)
 			if not options#efim then(
 				print_message Debug_medium ("\nUpdating all the previous states.\n");
 				StateSpace.add_p_constraint_to_states reachability_graph negated_constraint;
@@ -2704,11 +2705,13 @@ let inverse_method_gen model init_state =
 	(* Computation of the returned constraint *)
 	(*--------------------------------------------------*)
 	let returned_constraint =
+
 	(* Case IM standard : return the intersection *)
 	if (*options#dynamic ||*) (not options#union && not options#pi_compatible && not options#completeIM) then (
 		print_message Debug_total ("\nMode: IM standard.");
 		Convex_constraint (!k_result, !tile_nature)
 	) else (
+
 	(* Case union : return the constraint on the parameters associated to slast*)
 		if options#union then (
 			print_message Debug_total ("\nMode: union.");
@@ -2723,12 +2726,22 @@ let inverse_method_gen model init_state =
 			) !slast
 			in Union_of_constraints (list_of_constraints, !tile_nature)
 		)
-	(* Case IMorig : return only the current constraint, viz., the constraint of the first state *)
+		
+		(* Case IMorig : return only the current constraint, viz., the constraint of the first state *)
+		(*** NOTE: why not returning just K_result? ***)
 		else if options#pi_compatible then (
 			let (_ , px_constraint) = get_state reachability_graph 0 in
 				print_message Debug_total ("\nMode: IMorig.");
 				Convex_constraint (LinearConstraint.px_hide_nonparameters_and_collapse px_constraint , !tile_nature) 
-		) else if options#completeIM then (
+		)
+
+		(* Case EFIM: return k_result *)
+		else if options#efim then (
+			Convex_constraint (!k_result , !tile_nature)
+		)
+
+		(* Case IMcomplete *)
+		else if options#completeIM then (
 				print_message Debug_total ("\nMode: IMcomplete.");
 				let k_good, k_bad = process_result_IMcomplete !k_result !k_bad in
 				NNCConstraint ([k_good] , k_bad, !tile_nature)
@@ -2749,6 +2762,55 @@ let inverse_method_gen model init_state =
 	returned_constraint, reachability_graph, !tile_nature, (nb_random_selections > 0), nb_iterations, total_time
 	
 	
+
+(*--------------------------------------------------*)
+let efim model init_state =
+(*--------------------------------------------------*)
+	(* Retrieve the input options *)
+	let options = Input.get_options () in
+
+	(* Call the inverse method *)
+	let (returned_constraint : AbstractModel.returned_constraint), reachability_graph, tile_nature, deterministic, nb_iterations, total_time = inverse_method_gen model init_state in
+	
+	(* Here comes the result *)
+	
+(* 	blublu *)
+	
+	
+	print_message Debug_standard ("\nFinal constraint K0 "
+		^ (if options#union
+			then "(under disjunctive form) "
+			else (
+				match returned_constraint with
+					| Convex_constraint (p_linear_constraint , _) -> " (" ^ (string_of_int (LinearConstraint.p_nb_inequalities p_linear_constraint)) ^ " inequalities)"
+					| NNCConstraint _ (*(k_good, k_bad, tile_nature)*) -> " (in \"good - bad\" form)"
+					| _ -> raise (InternalError "Impossible situation in inverse_method: a returned_constraint is not under convex form although union mode is not enabled.");
+			)
+		)
+		^ ":");
+	print_message Debug_nodebug (string_of_returned_constraint model.variable_names returned_constraint);
+	print_message Debug_standard (
+		"\nInverse method successfully finished " ^ (after_seconds ()) ^ "."
+	);
+	
+	(* Print memory information *)
+	print_memory_used Debug_standard;
+	
+	print_message Debug_low (
+		"Computation time for EFIM only: "
+		^ (string_of_seconds total_time) ^ "."
+	);
+	
+	(* Generate graphics *)
+	let radical = options#files_prefix in
+	Graphics.generate_graph model reachability_graph radical;
+	
+	(* Print statistics *)
+	print_statistics reachability_graph;
+
+	(* The end *)
+	()
+
 
 (*--------------------------------------------------*)
 let inverse_method model init_state =
