@@ -8,7 +8,7 @@
  * Author:        Etienne Andre
  * 
  * Created:       2009/09/08
- * Last modified: 2013/10/08
+ * Last modified: 2014/03/22
  *
  ****************************************************************)
 
@@ -37,6 +37,7 @@ val header_string: string
 (* Extension for input model files *)
 val model_extension: string
 
+val print_contributors : unit -> unit
 
 (****************************************************************)
 (** Exceptions *)

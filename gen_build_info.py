@@ -5,11 +5,13 @@
 #
 #               Increment the build number
 #
-# Etienne ANDRE
+# Etienne Andre
+#
 # Laboratoire d'Informatique de Paris Nord
 # Universite Paris 13, Sorbonne Paris Cite, France
+#
 # Created      : 2013/09/26
-# Last modified: 2013/09/26
+# Last modified: 2014/03/22
 #************************************************************
 
 
@@ -33,6 +35,7 @@ print "Python is now handling build information..."
 current_build_date = strftime("%Y-%m-%d %H:%M:%S", gmtime()) + " UTC"
 # Just for generation date
 date_str = strftime("%Y-%m-%d", gmtime())
+year_str = strftime("%Y", gmtime())
 
 
 #************************************************************
@@ -84,6 +87,8 @@ write_to_file(ml_file_name, """
  
 let build_number = \"""" + str (current_build) + """\"
 let build_time = \"""" + current_build_date + """\"
+let build_year = \"""" + year_str + """\"
+
 """)
 
 
@@ -104,6 +109,7 @@ write_to_file(mli_file_name, """
  
 val build_number : string
 val build_time : string
+val build_year : string
 """)
 
 

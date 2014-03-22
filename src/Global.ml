@@ -8,7 +8,7 @@
  * Author:        Etienne Andre
  * 
  * Created:       2009/09/08
- * Last modified: 2013/10/08
+ * Last modified: 2014/03/22
  *
  ****************************************************************)
  
@@ -30,12 +30,28 @@ open DynArray
 let program_name = "IMITATOR"
 let version_string = "2.6.1.2"
 
-let print_version_string _ = 
+let print_version_string () = 
 	print_string (program_name ^ " " ^ version_string ^ "\n")
 
 
 (* Extension for input model files *)
 let model_extension = ".imi"
+
+
+
+let print_contributors()  = 
+	print_version_string();
+	print_string " The tool has been developed by:\n";
+	print_string " * Etienne Andre       (2008 -     )\n";
+	print_string " * Daphne Dussaud      (2010)\n";
+	print_string " * Ulrich Kuehne       (2010 - 2011)\n";
+	print_string " * Romain Soulat       (2010 - 2013)\n";
+	print_string "\n";
+	print_string " Moral support and suggestions by:\n";
+	print_string " * Emmanuelle Encrenaz\n";
+	print_string " * Laurent Fribourg\n";
+	print_string " * Giuseppe Lipari\n";
+	()
 
 
 (****************************************************************)
@@ -551,9 +567,8 @@ let header_string =
 	"************************************************************\n"
 	^ "*  " ^ program_name ^ " " ^ version_string ^ (string_n_times (46 - (String.length version_string)) " ") ^ " *\n"
 	^ "*                                                          *\n"
-	^ "*             Etienne ANDRE, Ulrich KUEHNE, Romain SOULAT  *\n"
-	^ "*                                             2009 - " ^ (string_of_int ((localtime (Unix.gettimeofday ())).tm_year + 1900))
- ^ "  *\n"
+	^ "*             Etienne Andre, Ulrich Kuehne, Romain Soulat  *\n"
+	^ "*                                             2009 - " ^ (BuildInfo.build_year) ^ "  *\n"
 	^ "*                       LSV, ENS de Cachan & CNRS, France  *\n"
 	^ "*  Universite Paris 13, Sorbonne Paris Cite, LIPN, France  *\n"
 	^ "*                                                          *\n"

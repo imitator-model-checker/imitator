@@ -47,7 +47,6 @@ exception Unsat_exception
 (**************************************************************)
 
 (* Constraint for result (used for IM and EFIM) *)
-(*** WARNING: is it always properly initialized? (even in case of repeated iterations of IM?) ***)
 let k_result = ref ( LinearConstraint.p_true_constraint () )
 
 (* Constraint to store the bad constraints to be negated (used for IM-complete) *)
@@ -56,7 +55,6 @@ let k_result = ref ( LinearConstraint.p_true_constraint () )
 let k_bad = ref []
 
 (* List of constraints for result (used for EF_synthesis / EFIM) *)
-(*** WARNING: is it always properly initialized? (even in case of repeated iterations of IM?) ***)
 let p_constraints = ref []
 
 (* List of last states (of runs) : used for the union mode *)
@@ -425,12 +423,21 @@ let prepare_clocks_elimination model =
 let update_tile_nature (location, (*linear_constraint*)_) =
 	(* Get the model *)
 	let model = Input.get_model() in
+	(* Retrieve the input options *)
+	let options = Input.get_options () in
+
 	match model.correctness_condition with
 	| None -> ()
 	| Some (Unreachable (bad_automaton_index , bad_location_index)) ->
 		(* Check if the local location is the same as the bad one *)
 		let is_bad = (Automaton.get_location location bad_automaton_index) = bad_location_index in
-			if is_bad then tile_nature := Bad;
+			if is_bad then (
+				(*** Quite a hack here ***)
+				if options#efim && !tile_nature <> Bad then(
+					print_message Debug_standard ("  [EFIM] Bad location found! Switching to bad-driven algorithm");
+				);
+				tile_nature := Bad;
+			);
 	| _ -> raise (InternalError("IMITATOR currently ony implements the non-reachability-like properties."))
 
 
@@ -2306,9 +2313,9 @@ let post_star model init_state =
 	let init_loc, init_constr = init_state in
 	let init_state = (init_loc, LinearConstraint.px_copy init_constr) in
 
-	(*Initialization of k_result*)
-(* 	k_result := LinearConstraint.true_constraint (); *)
+	(* Initialization of global variables *)
 	k_result := LinearConstraint.px_hide_nonparameters_and_collapse init_constr;
+	p_constraints := [];
 
 	(*Initialization of slast : used in union mode only*)
 	slast := [];
