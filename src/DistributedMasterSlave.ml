@@ -12,29 +12,21 @@
  *
  ****************************************************************)
  
+open Global
 open Mpi
 open Printf (* a terme : retirer tout ca *)
 open Unix (* temporaire : necessaire pour sleep *)
-open Marshal
 open DistributedUtilities
 	
 
 (* Declaration of the tags we are going to use in 
    communications within the M/W pattern *)
 
-let data_tag = 1      (* used when we are sending input data           *)
-let finished_tag = 2  (* used to mean that work is done                *)
-let result_tag = 3    (* used when we are sending computation results  *)
-let work_tag = 4      (* used to ask for some work                     *)
-
 (* tmp *)
 let cnt = ref 0
 
 (* ** *** *** ***** *******       UTILS       ******* ***** *** *** ** *)
 
-let serialize( data ) =
-  Marshal.to_string( data )
-;;
 
 (* Store the result of a computation.                                  *)
 
@@ -85,6 +77,16 @@ let init_slave rank size =
 
 
 (* ** *** *** ***** *******       MASTER      ******* ***** *** *** ** *)
+let receive_pull_request_and_store_constraint () =
+	match receive_pull_request () with
+	| PullOnly source_rank -> source_rank
+	| OutOfBound source_rank ->
+		(* FAIRE QUELQUE CHOSE POUR DIRE QU'UN POINT N'A PAS MARCHÉ *)
+		source_rank
+	| PullAndResult (source_rank , linear_constraint) -> 
+		(* FAIRE QUELQUE CHOSE POUR METTRE LA CONTRAINTE EN MÉMOIRE *)
+		source_rank
+
 
 let master () = 
     let size = Mpi.comm_size Mpi.comm_world in
@@ -96,36 +98,19 @@ let master () =
     let rc = ref 0 in
 
     while not !finished do
-      
-      (* First receive the length of the data we are about to receive *)
-      let (len, src, tag) = 
-	Mpi.receive_status Mpi.any_source Mpi.any_tag Mpi.comm_world in
+		print_message Debug_low ("Master: waiting for a pull request");
+		(* Get the pull_request *)
+		let source_rank = receive_pull_request_and_store_constraint () in
+	
+		print_message Debug_low ("Master: got a pull request from slave " ^ (string_of_int source_rank) ^ "");
+	(* 	TODO: TROUVER LE POINT *)
+		let mypi0 = [] in
+			(*** CACHE ; si plus de point, alors finished := true *)
+		
+			send_pi0 mypi0 source_rank;
+	
 
-      (* Is this a result or a simple pull ? *)     
-
-      if tag = result_tag then 
-	begin
-	  (* receive the result itself *)
-	  let buff = String.create len in
-	  let res = ref buff in
-	  res := Mpi.receive src result_tag Mpi.comm_world; 
-	    
-	  (* Received the result of a computation - store it. *)
-	  rc := store !res src ;
-	  print_string "MASTER - stored result and returned value " ;
-	  print_int !rc;
-	  print_newline()
-	end
-      else 
-	begin
-	  (* This is a simple pull - no result coming *)
-	  print_string(  "MASTER - Recv pull request from " ) ; 
-	  print_int( src );
-	  print_newline()
-	end
-      ;
-      
-      (* Send some new data: send the size, then the data *)
+(*(*(*      (* Send some new data: send the size, then the data *)
       let (len, mydata) = get_data() in
 
       Mpi.send len src data_tag comm_world ;
@@ -137,7 +122,7 @@ let master () =
       (* Do I still have data to send? *)
       if !cnt > 20 then
         finished := true 
-      ;
+      ;*)*)*)
 	
     done;
 
@@ -149,6 +134,14 @@ let master () =
     
     let k = ref 0 in
     while !k < ( size - 1) do
+		print_message Debug_low ("Master: waiting for a pull request");
+		(* Get the pull_request *)
+		let source_rank = receive_pull_request_and_store_constraint () in
+		(* Say good bye *)
+		send_finished source_rank;
+		
+(*		
+		
       let (len, src, tag) = 
 	Mpi.receive_status Mpi.any_source any_tag Mpi.comm_world in
       
@@ -163,10 +156,11 @@ let master () =
 	  rc := store !res src ;
 	  print_string "MASTER - stored result and returned value " ;
 	  print_int !rc;
-	  print_newline();
+	  print_newline();*)
+	  
 	  k := ( !k + 1 );
-	  Mpi.send k src finished_tag comm_world ;
-	end
+	  
+(* 	end *)
     done;
     	
     print_string( "MASTER - slaves done" );
@@ -176,17 +170,16 @@ let master () =
 (* *** *** ***** *******      WORKER      ******* ***** *** *** *)
 
 let worker () = 
-    let size = Mpi.comm_size Mpi.comm_world in
-    let rank = Mpi.comm_rank Mpi.comm_world in
+	let rank = rank() in
+	let size = size() in
 
-    init_slave rank size;
+	init_slave rank size;
 
     let n = rank in
     let finished = ref false in
 
     (* Start: ask for some work *)
-
-    Mpi.send n masterrank work_tag Mpi.comm_world ;
+    send_work_request();
 
     Printf.printf "%d] sent pull request to the master" rank ;
     print_newline(); 
@@ -194,7 +187,7 @@ let worker () =
     while not !finished do
 
         (* Receive some work: size of the input data *)
-
+(*
         let ( w, _, tag ) =
 	  Mpi.receive_status masterrank Mpi.any_tag Mpi.comm_world in
 
@@ -206,29 +199,25 @@ let worker () =
 
 	    work := Mpi.receive masterrank data_tag Mpi.comm_world; 
 	    Printf.printf "recv %d bytes of work %s with tag %d" w !work tag ;
-	    print_newline() ;
+	    print_newline() ;*)
 
+		match receive_work () with
+		
+		| Work pi0 -> 
             (* Do the job here *)
-
-            Printf.printf "[%d] working now" rank ; print_newline();
-	    let result = compute !work in
-	    let res_size = String.length result in
-	    
-	    (* Send the result: 1st send the data size, then the data *)
-
-	    Mpi.send res_size masterrank result_tag Mpi.comm_world;
-	    Mpi.send result masterrank result_tag Mpi.comm_world ;
-            Printf.printf "[%d] result %s sent" rank result ; 
-	    print_newline();
-
-	  end
-        else
-	  begin
-            (* Done - exit now *)
-            Printf.printf "[%d] done now - EXITING" rank ; 
-	    print_newline();
-            finished := true 
-	  end
-        ;
-    done 
+			Printf.printf "[%d] working now" rank ; print_newline();
+			let result = (*** TODO: do something ***)
+				(*** RESULTAT BIDON ***)
+				LinearConstraint.p_true_constraint()
+			in
+		
+			(* Send a SAMPLE constraint *)
+			send_constraint(result);
+			print_message Debug_low ("Worker " ^ (string_of_int rank) ^ " sent a constraint.");
+			
+		| Stop ->
+			print_message Debug_low ("Worker " ^ (string_of_int rank) ^ " says: done!");
+			finished := true
+    done;
+	print_message Debug_low ("Worker " ^ (string_of_int rank) ^ " is done.");
 ;;
