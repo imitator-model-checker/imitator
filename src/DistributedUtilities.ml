@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Universite Paris 13, Sorbonne Paris Cite, LIPN (France)
  * 
- * Author:        Etienne Andre
+ * Author:        Etienne Andre, Camille Coti
  * 
  * Created:       2014/03/24
  * Last modified: 2014/03/24
@@ -67,7 +67,15 @@ let masterrank = 0
 
 
 (****************************************************************)
-(** Functions *)
+(** Serialization Functions *)
+(****************************************************************)
+serialize_numconst = NumConst.string_of_numconst
+unserialize_numconst = NumConst.numconst_of_string
+
+
+
+(****************************************************************)
+(** MPI Functions *)
 (****************************************************************)
 (*** WARNING: le "ref 1" ne signifie rien du tout ***)
 let weird_stuff() = ref 1
