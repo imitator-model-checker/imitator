@@ -305,7 +305,7 @@ let find_next_pi0_cover program init_constraint min_bounds max_bounds nb_dimensi
 
 
 (*------------------------------------------------------------*)
-(** Compute the next pi0 and directly modify the variable 'current_pi0' (standard BC) *)
+(** Compute the next pi0 and directly modify the variable 'current_pi0' (border BC) *)
 (*------------------------------------------------------------*)
 let find_next_pi0_border program init_constraint min_bounds max_bounds nb_dimensions computed_constraints current_pi0 latest_nature current_intervals_min current_intervals_max =
 	find_next_pi0_cover program init_constraint min_bounds max_bounds nb_dimensions computed_constraints current_pi0 (*
@@ -602,7 +602,7 @@ let cover_behavioral_cartography program v0 init_state =
 	(* Debug mode *)
 	let global_debug_mode = get_debug_mode() in
 	
-	(** TODO : check that initial pi0 is suitable!! (could be incompatible with initial constraint) *)
+	(*** TODO : check that initial pi0 is suitable!! (could be incompatible with initial constraint) ***)
 	
 	(* Print *)
 	print_message Debug_standard ("\n**************************************************");
