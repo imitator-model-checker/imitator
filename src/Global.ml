@@ -8,7 +8,7 @@
  * Author:        Etienne Andre
  * 
  * Created:       2009/09/08
- * Last modified: 2014/03/22
+ * Last modified: 2014/03/25
  *
  ****************************************************************)
  
@@ -58,6 +58,7 @@ let print_contributors()  =
 (** Exceptions *)
 (****************************************************************)
 exception InternalError of string
+exception SerializationError of string
 exception Found
 exception InvalidModel
 exception UnexpectedToken of char

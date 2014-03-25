@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2010/03/04
- * Last modified: 2013/01/30
+ * Last modified: 2014/03/25
  *
  ****************************************************************)
 
@@ -41,6 +41,12 @@ let numconst_of_int i = (Gmp.Q.from_int i)
 let numconst_of_frac i j = (Gmp.Q.from_ints i j)
 
 let numconst_of_zfrac i j = (Gmp.Q.from_zs i j)
+
+
+(*** WARNING !!!!! 
+	It seems that many functions were NOT tester for negative numbers !!!!!
+***)
+
 
 (* Cannot string_of_int (can overflow) ; behavior unspecified if no integer string *)
 let numconst_of_int_string s =

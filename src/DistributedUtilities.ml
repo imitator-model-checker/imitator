@@ -8,7 +8,7 @@
  * Author:        Etienne Andre, Camille Coti
  * 
  * Created:       2014/03/24
- * Last modified: 2014/03/24
+ * Last modified: 2014/03/25
  *
  ****************************************************************)
 
@@ -69,10 +69,93 @@ let masterrank = 0
 (****************************************************************)
 (** Serialization Functions *)
 (****************************************************************)
-serialize_numconst = NumConst.string_of_numconst
-unserialize_numconst = NumConst.numconst_of_string
+(* Returns a list of substrings splitted using sep *)
+let split sep = Str.split (Str.regexp ("[" ^ sep ^ "]"))
+
+let serialize_numconst = NumConst.string_of_numconst
+let unserialize_numconst = NumConst.numconst_of_string
+
+(* Separator between the two elements of a pair *)
+let serialize_SEP_PAIR = ","
+(* Separator between the elements of a list *)
+let serialize_SEP_LIST = ";"
+
+let serialize_pi0_pair (variable_index , value) =
+	(string_of_int variable_index)
+	^
+	serialize_SEP_PAIR
+	^
+	(serialize_numconst value)
 
 
+let serialize_pi0 pi0 =
+	(* Convert all pairs to string *)
+	let pi0_string_list = List.map serialize_pi0_pair pi0 in
+	(* Add separators *)
+	String.concat serialize_SEP_LIST pi0_string_list
+(*	| [] -> ""
+	| [ pair ] -> serialize_pi0_pair pair
+	| pair :: rest ->
+		serialize_pi0_pair pair
+		^ serialize_SEP_LIST
+		^ serialize_pi0 rest*)
+
+let unserialize_variable variable_string =
+	(* First check that it is an integer *)
+	(*** NOTE: test already performed by int_of_string? ***)
+	if not (Str.string_match (Str.regexp "^[0-9]+$") variable_string 0) then
+		raise (SerializationError ("Cannot unserialize variable '" ^ variable_string ^ "': int expected."));
+	(* First check that it is an integer *)
+	int_of_string variable_string
+
+
+let unserialize_pi0_pair pi0_pair_string =
+	match split serialize_SEP_PAIR pi0_pair_string with
+	| [variable_string ; value_string ] ->
+		unserialize_variable variable_string , unserialize_numconst value_string
+	| _ -> raise (SerializationError ("Cannot unserialize pi0 value '" ^ pi0_pair_string ^ "': (variable_index, value) expected."))
+
+
+let unserialize_pi0 pi0_string =
+	let pi0_pairs_string = split serialize_SEP_LIST pi0_string in
+	List.map unserialize_pi0_pair pi0_pairs_string
+
+
+let debug_string_of_pi0 pi0 =
+	"Pi0:"
+	^ (String.concat "\n, "
+		(List.map (fun (variable_index , value) ->
+			"p" ^(string_of_int variable_index)
+			^ " => "
+			^ (NumConst.string_of_numconst value)
+		) pi0 
+		)
+	)
+	
+let test_serialization () =
+	let mypi0 = [
+		( 0 , NumConst.zero ) ;
+		( 1 , NumConst.one ) ;
+(* 		( 2 , NumConst.minus_one ) ; *)
+		( 3 , NumConst.numconst_of_int 23) ;
+(* 		( 4 , NumConst.numconst_of_int (-13)) ; *)
+		( 5 , NumConst.numconst_of_frac 2 2011) ;
+	] in
+	print_message Debug_standard "Here is my pi0";
+	print_message Debug_standard (debug_string_of_pi0 mypi0);
+	print_message Debug_standard "Now serializing it...";
+	let pi0_serialized = serialize_pi0 mypi0 in
+	print_message Debug_standard "After serialization:";
+	print_message Debug_standard  pi0_serialized;
+	print_message Debug_standard "Now unserializing it...";
+	let mypi0_back = unserialize_pi0 pi0_serialized in
+	print_message Debug_standard  (debug_string_of_pi0 mypi0_back);
+	()
+
+;;
+test_serialization();
+abort_program();;
+	
 
 (****************************************************************)
 (** MPI Functions *)
