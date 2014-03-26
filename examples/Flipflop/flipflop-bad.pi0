@@ -1,0 +1,27 @@
+--****************************************************--
+--****************************************************--
+--   Laboratoire Specification et Verification
+--
+--   Modeling of the circuit described in "Verification of timed circuits with symbolic delays" (Clariso -- Cortadella)
+--
+--   Etienne Andre
+--
+--   Created               : 2007/11
+--   Fork from flipflop.pi0: 2014/03/26
+--   Last modified         : 2014/03/26
+--****************************************************--
+--****************************************************--
+
+
+	& tHI    = 20
+	& tLO    = 15
+	& tSetup = 10
+	& tHold  = 15
+	& dG1_l  = 7
+	& dG1_u  = 7
+	& dG2_l  = 5
+	& dG2_u  = 6
+	& dG3_l  = 8
+	& dG3_u  = 10
+	& dG4_l  = 3
+	& dG4_u  = 17 

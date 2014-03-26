@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2014/03/15
- * Last modified: 2014/03/15
+ * Last modified: 2014/03/25
  *
  ****************************************************************)
 
@@ -101,7 +101,7 @@ let compile options =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 	(* Parsing the main model *)
-	print_message Debug_low ("Considering file " ^ options#file ^ ".");
+	print_message Debug_low ("Parsing file " ^ options#file ^ "...");
 	let parsing_structure = 
 		(* Branching between 2 input syntaxes *)
 		if options#fromGML then
@@ -112,7 +112,7 @@ let compile options =
 
 
 	if options#imitator_mode != State_space_exploration && options#imitator_mode != Translation then
-		print_message Debug_low ("Considering reference valuation in file " ^ options#pi0file ^ ".");
+		print_message Debug_low ("Parsing reference valuation in file " ^ options#pi0file ^ "...");
 
 	(* Pi0 Parsing *)
 	let pi0_parsed, v0_parsed =

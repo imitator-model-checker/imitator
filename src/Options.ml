@@ -474,7 +474,7 @@ class imitator_options =
 
 
 			if !efim then
-				print_message Debug_standard ("Considering special algorithm EFIM (experimental).")
+				print_message Debug_standard ("Considering algorithm EFIM (work in progress).")
 			else
 				print_message Debug_medium ("No EFIM algorithm (default).")
 			;
@@ -488,7 +488,7 @@ class imitator_options =
 
 				
 			if !branch_and_bound then
-				print_message Debug_standard ("Considering branch and bound (experimental!).")
+				print_message Debug_standard ("Considering branch and bound (work in progress!!).")
 			else
 				print_message Debug_medium ("No branch and bound mode (default).");
 

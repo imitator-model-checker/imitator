@@ -662,9 +662,9 @@ let cover_behavioral_cartography program v0 init_state =
 			"\nK" ^ (string_of_int (!current_iteration)) ^ " computed using algorithm InverseMethod after "
 			^ (string_of_int nb_iterations) ^ " iteration" ^ (s_of_int nb_iterations) ^ ""
 			^ " in " ^ (string_of_seconds total_time) ^ ": "
-			^ (string_of_int current_nb_states) ^ " reachable state" ^ (s_of_int current_nb_states)
+			^ (string_of_int current_nb_states) ^ " state" ^ (s_of_int current_nb_states)
 			^ " with "
-			^ (string_of_int current_nb_transitions) ^ " transition" ^ (s_of_int current_nb_transitions) ^ ".");
+			^ (string_of_int current_nb_transitions) ^ " transition" ^ (s_of_int current_nb_transitions) ^ " explored.");
 		
 		(* Generate the dot graph (will not be performed if options are not suitable) *)
 		let radical = options#files_prefix ^ "_" ^ (string_of_int !current_iteration) in
@@ -685,9 +685,6 @@ let cover_behavioral_cartography program v0 init_state =
 		);
 
 
-		
-		let k0 = returned_constraint in
-		
 		(* Process the constraint(s) in some cases *)
 		begin
 		(* Branching *)
@@ -710,13 +707,13 @@ let cover_behavioral_cartography program v0 init_state =
 			(* Apply this to the constraint(s) *)
 			begin match returned_constraint with
 				| Convex_constraint (k, _) ->
-					(** NOTE: Quite costly test, but interesting for statistics and readability *)
+					(*** NOTE: Quite costly test, but interesting for statistics and readability ***)
 					let old_k = LinearConstraint.p_copy k in
 					enlarge program.parameters program.clocks_and_discrete k;
 					if not (LinearConstraint.p_is_equal k old_k) then nb_enlargements := !nb_enlargements + 1;
 				| Union_of_constraints (k_list, _) ->
 					List.iter (fun k ->
-						(** NOTE: Quite costly test, but interesting for statistics and readability *)
+						(*** NOTE: Quite costly test, but interesting for statistics and readability ***)
 						let old_k = LinearConstraint.p_copy k in
 						enlarge program.parameters program.clocks_and_discrete k;
 						if not (LinearConstraint.p_is_equal k old_k) then nb_enlargements := !nb_enlargements + 1;
@@ -736,7 +733,8 @@ let cover_behavioral_cartography program v0 init_state =
 		(* Add the pi0 and the computed constraint *)
 		(* USELESS SO FAR 
 		DynArray.add pi0_computed pi0; *)
-		DynArray.add computed_constraints k0;
+		(*** WARNING: so stupid here!! Better flatten the structure! ***)
+		DynArray.add computed_constraints returned_constraint;
 		
 		(* Compute the next pi0 (note that current_pi0 is directly modified by the function!) and return flags for more pi0 and co *)
 		let found_pi0 , time_limit_reached , new_nb_useless_points =
@@ -836,7 +834,7 @@ let random_behavioral_cartography program v0 init_state nb =
 
 		(* Print messages *)
 		print_message Debug_standard ("\n**************************************************");
-		print_message Debug_standard ("BEHAVIORAL CARTOGRAPHY ALGORITHM: " ^ (string_of_int !i) ^ " / " ^ (string_of_int nb) ^ "");
+		print_message Debug_standard ("RANDOM BEHAVIORAL CARTOGRAPHY ALGORITHM: " ^ (string_of_int !i) ^ " / " ^ (string_of_int nb) ^ "");
 		
 		(* First check that it was not computed before *)
 		let already_computed, index = 

@@ -288,8 +288,15 @@ try(
 			
 		(* Inverse Method *)
 		| Inverse_method ->
+			if options#efim then
+				(
+				Reachability.efim model init_state_after_time_elapsing;
+				[]
+				)
+			else(
 				Reachability.inverse_method model init_state_after_time_elapsing;
-			[]
+				[]
+			)
 
 
 		| Cover_cartography | Border_cartography ->
@@ -310,7 +317,7 @@ try(
 			if zones = [] then(
 				print_message Debug_standard ("\nNo cartography can be generated since the list of constraints is empty.\n");
 			)else(
-				print_message Debug_standard ("\nGeneration of the graphical cartography...\n");
+				print_message Debug_standard ("\nGeneration of the graphical cartography...");
 				Graphics.cartography model v0 zones (options#files_prefix ^ "_cart")
 			)
 		) else (

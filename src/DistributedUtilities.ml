@@ -153,8 +153,8 @@ let test_serialization () =
 	()
 
 ;;
-test_serialization();
-abort_program();;
+(*test_serialization();
+abort_program();;*)
 	
 
 (****************************************************************)

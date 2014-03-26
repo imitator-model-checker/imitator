@@ -1588,6 +1588,12 @@ let inverse_method_check_constraint model reachability_graph constr =
 			if not (options#pi_compatible || options#union) then(
 				print_message Debug_high ("Updating k_result with the negated inequality");
 				LinearConstraint.p_intersection_assign !k_result [negated_constraint];
+				(* Print some information *)
+				if debug_mode_greater Debug_low then(
+					print_message Debug_low ("\nk_result now equal (after addition of neg J) to ");
+					print_message Debug_low (LinearConstraint.string_of_p_linear_constraint model.variable_names !k_result);
+					print_message Debug_low ("");
+				);
 			);
 			
 			(* Update the previous states (including the 'new_states' and the 'orig_state') *)
@@ -1596,6 +1602,8 @@ let inverse_method_check_constraint model reachability_graph constr =
 			if not options#efim then(
 				print_message Debug_medium ("\nUpdating all the previous states.\n");
 				StateSpace.add_p_constraint_to_states reachability_graph negated_constraint;
+			)else(
+				print_message Debug_standard("  [EFIM] Storing inequality only");
 			);
 			
 			(* If pi-incompatible *)
@@ -1744,9 +1752,15 @@ let add_a_new_state model reachability_graph orig_state_index new_states_indexes
 			in
 			
 			(* If pi-compatible state: add the new state's p_constraint to the on-the-fly computation of the result of IMss *)
-			if valid_new_state && not (options#pi_compatible || options#union) then(
+			if valid_new_state && not (options#pi_compatible || options#union || options#efim) then(
 				print_message Debug_high ("Updating k_result");
 				LinearConstraint.p_intersection_assign !k_result [new_p_constraint];
+				(* Print some information *)
+				if debug_mode_greater Debug_low then(
+					print_message Debug_low ("\nk_result now equal (after addition of current state's K) to ");
+					print_message Debug_low (LinearConstraint.string_of_p_linear_constraint model.variable_names !k_result);
+					print_message Debug_low ("");
+				);
 			);
 			(* Return locally the result *)
 			valid_new_state
@@ -1765,7 +1779,9 @@ let add_a_new_state model reachability_graph orig_state_index new_states_indexes
 		);
 		(* Return *)
 		valid_new_state
-	(* end match algorithm *)
+	(*------------------------------------------------------------*)
+	(* end branch between algorithms *)
+	(*------------------------------------------------------------*)
 	in
 	
 	(* Only add the new state if it is actually valid *)
@@ -1819,7 +1835,7 @@ let add_a_new_state model reachability_graph orig_state_index new_states_indexes
 					(* Check if this is the same as the "unreachable" one *)
 					if new_location_index = unreachable_location_index then(
 						(* Print some information *)
-						print_message Debug_standard "  [EF-synthesis/EFIM]: Found a state violating the property.";
+						print_message Debug_standard "  [EF-synthesis]: Found a state violating the property.";
 						
 						(* Project onto the parameters *)
 						let p_constraint = LinearConstraint.px_hide_nonparameters_and_collapse final_constraint in
@@ -1832,7 +1848,7 @@ let add_a_new_state model reachability_graph orig_state_index new_states_indexes
 						
 						(* Print some information *)
 						if debug_mode_greater Debug_low then(
-							print_message Debug_low "Adding the following constraint:";
+							print_message Debug_low "Adding the following constraint to the list of bad constraints:";
 							print_message Debug_low (LinearConstraint.string_of_p_linear_constraint model.variable_names p_constraint);
 						);
 						
@@ -2315,8 +2331,16 @@ let post_star model init_state =
 	let init_state = (init_loc, LinearConstraint.px_copy init_constr) in
 
 	(* Initialization of global variables *)
+	print_message Debug_low ("Initializing global variables...");
 	k_result := LinearConstraint.px_hide_nonparameters_and_collapse init_constr;
 	p_constraints := [];
+
+	(* Print some information *)
+	if debug_mode_greater Debug_low then(
+		print_message Debug_low ("Initialized k_result to ");
+		print_message Debug_low (LinearConstraint.string_of_p_linear_constraint model.variable_names !k_result);
+		print_message Debug_low ("");
+	);
 
 	(*Initialization of slast : used in union mode only*)
 	slast := [];
@@ -2454,9 +2478,9 @@ let post_star model init_state =
 		^ (string_of_int !nb_iterations) ^ " iteration" ^ (s_of_int !nb_iterations) ^ ""
 (* 		^ " in " ^ (string_of_seconds (time_from !counter)) *)
 		^ ": "
-		^ (string_of_int nb_states) ^ " reachable state" ^ (s_of_int nb_states)
+		^ (string_of_int nb_states) ^ " state" ^ (s_of_int nb_states)
 		^ " with "
-		^ (string_of_int nb_transitions) ^ " transition" ^ (s_of_int nb_transitions) ^ ".");
+		^ (string_of_int nb_transitions) ^ " transition" ^ (s_of_int nb_transitions) ^ " explored.");
 
 	(* Return the graph, the iteration and the counter *)
 	reachability_graph , !nb_iterations , (time_from start_time) , !nb_random_selections
@@ -2706,55 +2730,59 @@ let inverse_method_gen model init_state =
 	(*--------------------------------------------------*)
 	let returned_constraint =
 
+	(* Case union : return the constraint on the parameters associated to slast*)
+	if options#union then (
+		print_message Debug_total ("\nMode: union.");
+		let list_of_constraints =
+		List.map (fun state_index ->
+			print_message Debug_medium ("\nOne state found.");
+			(* Get the constraint on clocks and parameters *)
+			let (_, current_constraint) =
+				StateSpace.get_state reachability_graph state_index
+			(* Eliminate clocks *)
+			in LinearConstraint.px_hide_nonparameters_and_collapse current_constraint
+		) !slast
+		in Union_of_constraints (list_of_constraints, !tile_nature)
+	)
+	
+	(* Case IMorig : return only the current constraint, viz., the constraint of the first state *)
+	(*** NOTE: why not returning just K_result? ***)
+	else if options#pi_compatible then (
+		let (_ , px_constraint) = get_state reachability_graph 0 in
+			print_message Debug_total ("\nMode: IMorig.");
+			Convex_constraint (LinearConstraint.px_hide_nonparameters_and_collapse px_constraint , !tile_nature) 
+	)
+
+	(* Case EFIM: return k_result OR list of bad *)
+	else if options#efim then (
+		match !tile_nature with
+		(* Bad tile: return the union of the bad constraints *)
+		| Bad _ ->
+			Union_of_constraints (!p_constraints, !tile_nature)
+		(* No bad location means good! *)
+		| Good _ ->
+			Convex_constraint (!k_result , !tile_nature)
+		(* Unkown is impossible *)
+		| Unknown _ -> raise (InternalError "Impossible situation in EFIM: a returned_constraint has an unkown tile nature althoug this is not enabled here.")
+	)
+
+	(* Case IMcomplete *)
+	else if options#completeIM then (
+			print_message Debug_total ("\nMode: IMcomplete.");
+			let k_good, k_bad = process_result_IMcomplete !k_result !k_bad in
+			NNCConstraint ([k_good] , k_bad, !tile_nature)
+	)
+
 	(* Case IM standard : return the intersection *)
-	if (*options#dynamic ||*) (not options#union && not options#pi_compatible && not options#completeIM) then (
+	else (
 		print_message Debug_total ("\nMode: IM standard.");
 		Convex_constraint (!k_result, !tile_nature)
-	) else (
-
-	(* Case union : return the constraint on the parameters associated to slast*)
-		if options#union then (
-			print_message Debug_total ("\nMode: union.");
-			let list_of_constraints =
-			List.map (fun state_index ->
-				print_message Debug_medium ("\nOne state found.");
-				(* Get the constraint on clocks and parameters *)
-				let (_, current_constraint) =
-					StateSpace.get_state reachability_graph state_index
-				(* Eliminate clocks *)
-				in LinearConstraint.px_hide_nonparameters_and_collapse current_constraint
-			) !slast
-			in Union_of_constraints (list_of_constraints, !tile_nature)
-		)
-		
-		(* Case IMorig : return only the current constraint, viz., the constraint of the first state *)
-		(*** NOTE: why not returning just K_result? ***)
-		else if options#pi_compatible then (
-			let (_ , px_constraint) = get_state reachability_graph 0 in
-				print_message Debug_total ("\nMode: IMorig.");
-				Convex_constraint (LinearConstraint.px_hide_nonparameters_and_collapse px_constraint , !tile_nature) 
-		)
-
-		(* Case EFIM: return k_result *)
-		else if options#efim then (
-			(*** NOTE:  actually useless ***)
-			Convex_constraint (!k_result , !tile_nature)
-		)
-
-		(* Case IMcomplete *)
-		else if options#completeIM then (
-				print_message Debug_total ("\nMode: IMcomplete.");
-				let k_good, k_bad = process_result_IMcomplete !k_result !k_bad in
-				NNCConstraint ([k_good] , k_bad, !tile_nature)
-		) else (
-			raise (InternalError ("This code should be unreachable (in end of inverse_method, when returning the constraint)."));
-		)
-(*		(* Case IM : intersection *)
+	)
+			(*		(* Case IM : intersection *)
 		else (
 			(** HERE PROBLEM IF ONE WANTS TO COMPUTE THE states FILE AFTER (destruction of the states) **)
 			Convex_constraint (StateSpace.compute_k0_destructive model reachability_graph)
 		)*)
-	)
 	in
 
 	(*--------------------------------------------------*)
@@ -2771,23 +2799,22 @@ let efim model init_state =
 	let options = Input.get_options () in
 
 	(* Call the inverse method *)
-	let _, reachability_graph, tile_nature, deterministic, nb_iterations, total_time = inverse_method_gen model init_state in
+	let returned_constraint, reachability_graph, tile_nature, deterministic, nb_iterations, total_time = inverse_method_gen model init_state in
 	
 	(* Processing the result *)
-	let constraint_str =
-	match tile_nature with
-	(* Good is impossible: only bad or unknown *)
-	| Good _ -> raise (InternalError "Impossible situation in EFIM: a returned_constraint has a good tile nature althoug this is not enabled here.");
-	
+	let constraint_str = string_of_returned_constraint model.variable_names returned_constraint
+(*	match tile_nature with
 	(* Bad tile: return the union of the bad constraints *)
 	| Bad _ ->
 		string_of_returned_constraint model.variable_names (Union_of_constraints (!p_constraints, tile_nature))
 	
 	
 	(* No bad location means good! *)
-	| Unknown _ ->
+	| Good _ ->
 		string_of_returned_constraint model.variable_names (Convex_constraint (!k_result , tile_nature))
 	
+	(* Unkown is impossible *)
+	| Unknown _ -> raise (InternalError "Impossible situation in EFIM: a returned_constraint has an unkown tile nature althoug this is not enabled here.");*)
 	in
 	
 	

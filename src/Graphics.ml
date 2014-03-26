@@ -194,7 +194,7 @@ let cartography model v0 returned_constraint_list cartography_name =
 	let y_name = model.variable_names y_param in
 
 	(* Print some information *)
-	print_message Debug_standard ("Cartography will be drawn in 2D for parameters " ^ x_name ^  " and " ^ y_name ^  ".");
+(* 	print_message Debug_standard ("Cartography will be drawn in 2D for parameters " ^ x_name ^  " and " ^ y_name ^  "."); *)
 	
 	(* Create a script that will print the cartography *)
 	let script_name = cartography_name ^ ".sh" in
@@ -426,7 +426,7 @@ let cartography model v0 returned_constraint_list cartography_name =
 	(* Print some information *)
 	(** TODO one day: change this string and update IMITATOR service in CosyVerif *)
 	print_message Debug_standard (
-		"Plot cartography projected on parameters " ^ x_name ^ ", " ^ y_name
+		"Plot cartography in 2D projected on parameters " ^ x_name ^ " and " ^ y_name
 		^ " to file '" ^ final_name ^ "'."); 
 	(* execute the script *)
 	(** TODO: Improve! Should perform an automatic detection of the model! *)
