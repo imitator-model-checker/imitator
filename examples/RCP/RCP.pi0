@@ -8,7 +8,7 @@
 --   Laboratoire Specification et Verification
 --
 --                                Created : 2008/01/10
---                          Last modified : 2010/04/27
+--                          Last modified : 2014/03/26
 --****************************************************--
 --****************************************************--
 
@@ -22,11 +22,16 @@
 
 
 	---IEEE VALUES---
-	& rc_fast_min	= 760
+(*	& rc_fast_min	= 760
 	& rc_fast_max	= 850
 	& rc_slow_min	= 1590
 	& rc_slow_max	= 1670
-	& delay			= 360
+	& delay			= 360*)
+	
+	---2D (as for BC)---
+	& rc_slow_min = 159
+	& delay       = 36
+	
 
 
 	---PRISM WEB PAGE---

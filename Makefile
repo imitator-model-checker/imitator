@@ -490,12 +490,27 @@ exe:
 # 	$(TARGETV) $(EXAMPLE_PATH)/BRP/brp.imi $(EXAMPLE_PATH)/BRP/brp.pi0 -dynamic-elimination -with-dot -with-log -log-prefix $(EXAMPLE_PATH)/BRP/brp-dynamic
 # 	bin/IMITATOR2.6.1 $(EXAMPLE_PATH)/BRP/brp.imi $(EXAMPLE_PATH)/BRP/brp.pi0
 # 	$(TARGETV) $(EXAMPLE_PATH)/BRP/brp.imi $(EXAMPLE_PATH)/BRP/brp.pi0
-# 	$(TARGET) $(EXAMPLE_PATH)/BRP/brp.imi $(EXAMPLE_PATH)/BRP/brp.pi0 -merge
+	$(TARGET) $(EXAMPLE_PATH)/BRP/brp.imi $(EXAMPLE_PATH)/BRP/brp.pi0 -merge
 # 	$(TARGET) $(EXAMPLE_PATH)/BRP/brp.imi $(EXAMPLE_PATH)/BRP/brp.pi0 -merge-before
 # 	$(TARGET) $(EXAMPLE_PATH)/BRP/brp.imi $(EXAMPLE_PATH)/BRP/brp.pi0 -bab
 
-# 	$(TARGET) $(EXAMPLE_PATH)/RCP/RCP.imi -mode statespace -PTA2GrML
-# 	$(TARGET) $(EXAMPLE_PATH)/RCP/RCP.imi -mode EF
+# 	$(TARGET) $(EXAMPLE_PATH)/RCP/RCP.imi -PTA2JPG
+
+# 	$(TARGET) $(EXAMPLE_PATH)/RCP/RCP-counting.imi $(EXAMPLE_PATH)/RCP/RCP.pi0 -merge
+# 	$(TARGET) $(EXAMPLE_PATH)/RCP/RCP-counting.imi $(EXAMPLE_PATH)/RCP/RCP.v0 -mode cover -cart -log-prefix $(EXAMPLE_PATH)/RCP/RCP-counting-BC
+
+# 	$(TARGET) $(EXAMPLE_PATH)/RCP/RCP.imi $(EXAMPLE_PATH)/RCP/RCP.v0 -mode cover -cart -log-prefix $(EXAMPLE_PATH)/RCP/RCP-BC
+
+# 	$(TARGET) $(EXAMPLE_PATH)/RCP/RCP.imi $(EXAMPLE_PATH)/RCP/RCP.v0 -mode cover -cart -merge -log-prefix $(EXAMPLE_PATH)/RCP/RCP-BC-merge
+	
+# 	$(TARGET) $(EXAMPLE_PATH)/RCP/RCP.imi $(EXAMPLE_PATH)/RCP/RCP.v0 -mode cover -efim -cart -log-prefix $(EXAMPLE_PATH)/RCP/RCP-EFIM
+	
+# 	$(TARGET) $(EXAMPLE_PATH)/RCP/RCP.imi $(EXAMPLE_PATH)/RCP/RCP.v0 -mode cover -merge -efim -cart -log-prefix $(EXAMPLE_PATH)/RCP/RCP-EFIM-merge
+	
+# 	$(TARGET) $(EXAMPLE_PATH)/RCP/RCP.imi -mode EF -cart -log-prefix $(EXAMPLE_PATH)/RCP/RCP-EF
+	
+# 	$(TARGET) $(EXAMPLE_PATH)/RCP/RCP.imi -mode EF -merge -cart -log-prefix $(EXAMPLE_PATH)/RCP/RCP-EF-merge
+	
 # 	$(TARGET) $(EXAMPLE_PATH)/RCP/RCP.imi $(EXAMPLE_PATH)/RCP/RCP.pi0 -merge
 # 	$(TARGETV) $(EXAMPLE_PATH)/RCP/RCP.imi $(EXAMPLE_PATH)/RCP/RCP.pi0 -merge
 # 	$(TARGETV) $(EXAMPLE_PATH)/RCP/RCP.imi $(EXAMPLE_PATH)/RCP/RCP.pi0 -with-dot -with-log
@@ -508,8 +523,7 @@ exe:
 
 # 	./IMITATOR Examples/RCP/RCP_bounded.imi Examples/RCP/RCP_bounded.pi0 -no-dot -no-log
 
-
-# 	### WARNING: the prism model seems odd!!
+# 	WARNING: the prism model seems odd!!
 	
 # 	$(TARGET) $(EXAMPLE_PATH)/CSMACD/csmacdPrism.imi -PTA2JPG
 # 	$(TARGET) $(EXAMPLE_PATH)/CSMACD/csmacdPrism.imi -mode statespace 
@@ -571,17 +585,17 @@ exe:
 
 # 	./IMITATOR Examples/Valmem/spsmall_obs.imi -mode statespace -with-parametric-log
 # 	./IMITATOR Examples/Valmem/spsmall_obs.imi Examples/Valmem/spsmall.pi0
-	$(TARGET) $(EXAMPLE_PATH)/Valmem/spsmall_obs.imi $(EXAMPLE_PATH)/Valmem/spsmall_obs.v0 -mode cover -cart -log-prefix $(EXAMPLE_PATH)/Valmem/spsmall_obs-BC
+# 	$(TARGET) $(EXAMPLE_PATH)/Valmem/spsmall_obs.imi $(EXAMPLE_PATH)/Valmem/spsmall_obs.v0 -mode cover -cart -log-prefix $(EXAMPLE_PATH)/Valmem/spsmall_obs-BC
 
-	$(TARGET) $(EXAMPLE_PATH)/Valmem/spsmall_obs.imi $(EXAMPLE_PATH)/Valmem/spsmall_obs.v0 -mode cover -merge -cart -log-prefix $(EXAMPLE_PATH)/Valmem/spsmall_obs-BC-merge
+# 	$(TARGET) $(EXAMPLE_PATH)/Valmem/spsmall_obs.imi $(EXAMPLE_PATH)/Valmem/spsmall_obs.v0 -mode cover -merge -cart -log-prefix $(EXAMPLE_PATH)/Valmem/spsmall_obs-BC-merge
 
-	$(TARGET) $(EXAMPLE_PATH)/Valmem/spsmall_obs.imi $(EXAMPLE_PATH)/Valmem/spsmall_obs.v0 -mode cover -efim -cart -log-prefix $(EXAMPLE_PATH)/Valmem/spsmall_obs-EFIM
+# 	$(TARGET) $(EXAMPLE_PATH)/Valmem/spsmall_obs.imi $(EXAMPLE_PATH)/Valmem/spsmall_obs.v0 -mode cover -efim -cart -log-prefix $(EXAMPLE_PATH)/Valmem/spsmall_obs-EFIM
 
-	$(TARGET) $(EXAMPLE_PATH)/Valmem/spsmall_obs.imi $(EXAMPLE_PATH)/Valmem/spsmall_obs.v0 -mode cover -efim -merge -cart -log-prefix $(EXAMPLE_PATH)/Valmem/spsmall_obs-EFIM-merge
+# 	$(TARGET) $(EXAMPLE_PATH)/Valmem/spsmall_obs.imi $(EXAMPLE_PATH)/Valmem/spsmall_obs.v0 -mode cover -efim -merge -cart -log-prefix $(EXAMPLE_PATH)/Valmem/spsmall_obs-EFIM-merge
 
-	$(TARGET) $(EXAMPLE_PATH)/Valmem/spsmall_obs.imi -mode EF -cart -log-prefix $(EXAMPLE_PATH)/Valmem/spsmall_obs-EF
+# 	$(TARGET) $(EXAMPLE_PATH)/Valmem/spsmall_obs.imi -mode EF -cart -log-prefix $(EXAMPLE_PATH)/Valmem/spsmall_obs-EF
 
-	$(TARGET) $(EXAMPLE_PATH)/Valmem/spsmall_obs.imi -mode EF -merge -cart -log-prefix $(EXAMPLE_PATH)/Valmem/spsmall_obs-EF-merge
+# 	$(TARGET) $(EXAMPLE_PATH)/Valmem/spsmall_obs.imi -mode EF -merge -cart -log-prefix $(EXAMPLE_PATH)/Valmem/spsmall_obs-EF-merge
 
 # 	$(TARGET) $(EXAMPLE_PATH)/Valmem/LSV.imi $(EXAMPLE_PATH)/Valmem/delais1_hy.pi0 -merge -incl -with-log -log-prefix $(EXAMPLE_PATH)/Valmem/LSV-merge
 # 	$(TARGET) $(EXAMPLE_PATH)/Valmem/LSV.imi $(EXAMPLE_PATH)/Valmem/delais1_hy.pi0 -no-dot -no-log -depth-limit 31 -jobshop -verbose medium
