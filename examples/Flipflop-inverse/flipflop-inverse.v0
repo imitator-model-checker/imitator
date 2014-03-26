@@ -9,7 +9,7 @@
 --   Etienne ANDRE and Laurent FRIBOURG
 --
 --   Created      : 2009/11/03 (after file flipflop.hy)
---   Last modified: 2010/03/24
+--   Last modified: 2014/03/26
 --****************************************************--
 --****************************************************--
 
@@ -28,18 +28,18 @@
 -- 	& dG4_u = 0..30 (*7*)
 	
 	----- TOUT INSTANCIE SAUF dG2u et tHold -----
-	& tHI = 40
+(*(*(*	& tHI = 40
 	& tLO = 20
-	& tSetup = 19
+	& tSetup = 19*)*)*)
 	& tHold = 0 .. 50 (*6*)
-	& dG1_u = 18
+(*	& dG1_u = 18
 	& dG1_l = 18
-	& dG2_l = 5
+	& dG2_l = 5*)
 	& dG2_u = 5 .. 40 (*19*)
-	& dG3_l = 8
+(*	& dG3_l = 8
 	& dG3_u = 10
 	& dG4_l = 3
-	& dG4_u = 7
+	& dG4_u = 7*)
 	
 	----- TOUT INSTANCIE SAUF dG2u et dG3u -----
 -- 	& tHI = 40

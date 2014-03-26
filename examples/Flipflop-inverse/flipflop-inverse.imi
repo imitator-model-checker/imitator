@@ -8,22 +8,28 @@
 --   Etienne ANDRE and Laurent FRIBOURG
 --
 --   Created      : 2009/11/03 (after file flipflop.hy)
---   Last modified: 2010/03/24
+--   Last modified: 2014/03/26
 --****************************************************--
 --****************************************************--
 
 var 	s, ckG1, ckG2, ckG3, ckG4
 		: clock;
 
-	tHI, tLO,
+(*	tHI, tLO,
 	tSetup, tHold,
 	dG1_l, dG1_u,
 	dG2_l, dG2_u,
 	dG3_l, dG3_u,
 	dG4_l, dG4_u
+			: parameter;*)
+	tHI = 40, tLO = 20,
+	tSetup = 19, tHold,
+	dG1_l = 18, dG1_u = 18,
+	dG2_l = 5, dG2_u,
+	dG3_l = 8, dG3_u = 10,
+	dG4_l = 3, dG4_u = 7
 			: parameter;
 
--- 	tCKQ,
 	qLevel,
 	qCK
 			: discrete;
@@ -370,7 +376,7 @@ init := True
 	-- CONTRAINTE A NIER POUR AVOIR L'ETAT 4 : tHold <= dG3_u + dG4_u
 
 	---START PI0---
-	& tHI=24
+(*	& tHI=24
 	& tLO=15
 --	& tSetup=10
 --	& tHold=17
@@ -381,7 +387,7 @@ init := True
 	& dG3_l=8
 	& dG3_u=10
 	& dG4_l=3
-	& dG4_u=7
+	& dG4_u=7*)
 	---END PI0---
 
 	& dG1_l <= dG1_u 
@@ -394,7 +400,12 @@ init := True
 	& dG3_l >= 0
 	& dG4_l >= 0
 
--- 	& tHI = 40
+	& tSetup >= 0
+	& tHold >= 0
+	& tHI >= 0
+	& tLO >= 0
+
+	-- 	& tHI = 40
 -- 	& tLO = 20
 -- 	& tSetup = 19
 -- 	& tHold = 6
@@ -434,3 +445,5 @@ init := True
 -- 	
 ;
 
+(* Not exactly the property that we would like! The real property is qUp and ckDown always occur, and qUp occurs before ckDown *)
+property := if ckDown then qDown has happened before;

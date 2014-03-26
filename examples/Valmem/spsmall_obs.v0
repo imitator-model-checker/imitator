@@ -9,13 +9,13 @@
 --   MODEL WITH OBSERVER (tCKQ conform with ST specification)
 --
 --   Created       : 2010/09/09
---   Last modified : 2010/09/09
+--   Last modified : 2014/03/26
 --****************************************************--
 --****************************************************--
 
 
 	---START V0---
-	& d_up_q_0         = 21
+(*	& d_up_q_0         = 21
 	& d_up_net27       = 0
 	& d_up_d_inta      = 22
 	& d_dn_d_inta      = 45
@@ -39,7 +39,7 @@
   	& d_dn_d_h         = 66
 
 	& tHI              = 45
-	& tLO              = 65
+	& tLO              = 65*)
 	& tsetupd          = 65 .. 110 -- 100
 	& tsetupwen        = 0 .. 66 -- 31
 -- 	-- VALEURS RAPPORT ABDEL
