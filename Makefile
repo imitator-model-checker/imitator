@@ -330,7 +330,7 @@ exe:
 ##### CASE STUDIES : EXAMPLES #####
 # 	$(TARGET) $(EXAMPLE_PATH)/Examples/exSITH.imi -PTA2JPG
 # 	$(TARGET) $(EXAMPLE_PATH)/Examples/exSITH.imi -mode EF -with-dot
-	$(TARGET) $(EXAMPLE_PATH)/Examples/exSITH.imi $(EXAMPLE_PATH)/Examples/exSITH.pi0 -with-dot
+# 	$(TARGET) $(EXAMPLE_PATH)/Examples/exSITH.imi $(EXAMPLE_PATH)/Examples/exSITH.pi0 -with-dot
 
 # 	$(TARGET) $(EXAMPLE_PATH)/Examples/contrexPPTA.imi $(EXAMPLE_PATH)/Examples/contrexPPTA.pi0
 # 	$(TARGET) $(EXAMPLE_PATH)/Examples/contrexPPTA.imi $(EXAMPLE_PATH)/Examples/contrexPPTA.pi0 -bab
@@ -445,8 +445,9 @@ exe:
 # 	$(TARGETV) $(EXAMPLE_PATH)/Train/Train1PTA.imi -mode statespace -with-dot -with-log -with-parametric-log
 # 	$(TARGETV) $(EXAMPLE_PATH)/Train/Train1PTA.imi -mode EF -with-dot -with-log -with-parametric-log -cart
 
-# 	bin/IMITATOR2.6.1 $(EXAMPLE_PATH)/Train/Train1PTA.imi $(EXAMPLE_PATH)/Train/Train1PTA.pi0
-# 	$(TARGETV) $(EXAMPLE_PATH)/Train/Train1PTA.imi $(EXAMPLE_PATH)/Train/Train1PTA.pi0
+# 	$(TARGET) $(EXAMPLE_PATH)/Train/Train1PTA.imi $(EXAMPLE_PATH)/Train/Train1PTA.pi0
+# 	$(TARGET) $(EXAMPLE_PATH)/Train/Train1PTA.imi $(EXAMPLE_PATH)/Train/Train1PTA-good.pi0
+	$(TARGET) $(EXAMPLE_PATH)/Train/Train1PTA.imi $(EXAMPLE_PATH)/Train/Train1PTA-bad.pi0  -with-dot
 # 	$(TARGET) $(EXAMPLE_PATH)/Train/Train1PTA.imi $(EXAMPLE_PATH)/Train/Train1PTA.v0 -mode border -cart
 # 	$(TARGET) $(EXAMPLE_PATH)/Train/Train1PTA.imi $(EXAMPLE_PATH)/Train/Train1PTA.v0 -mode cover -cart
 # 	$(TARGET) $(EXAMPLE_PATH)/Train/Train1PTA.imi -PTA2GrML

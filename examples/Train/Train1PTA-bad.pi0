@@ -1,0 +1,19 @@
+--************************************************************--
+--************************************************************--
+--
+--   Railroad Gate Controller
+--
+--   Simple model with 1 PTA only
+--
+--   Etienne ANDRE
+--   Laboratoire d'Informatique de Paris Nord
+--
+--                                Created : 2012/03/13
+--                Fork from Train1PTA.pi0 : 2014/03/27
+--                          Last modified : 2014/03/27
+--************************************************************--
+--************************************************************--
+
+	& dApproach = 4
+	& dStartDown = 2
+	& dGetDown = 3
