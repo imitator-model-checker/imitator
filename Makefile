@@ -447,7 +447,7 @@ exe:
 
 # 	$(TARGET) $(EXAMPLE_PATH)/Train/Train1PTA.imi $(EXAMPLE_PATH)/Train/Train1PTA.pi0
 # 	$(TARGET) $(EXAMPLE_PATH)/Train/Train1PTA.imi $(EXAMPLE_PATH)/Train/Train1PTA-good.pi0
-	$(TARGET) $(EXAMPLE_PATH)/Train/Train1PTA.imi $(EXAMPLE_PATH)/Train/Train1PTA-bad.pi0  -with-dot
+# 	$(TARGET) $(EXAMPLE_PATddH)/Train/Train1PTA.imi $(EXAMPLE_PATH)/Train/Train1PTA-bad.pi0  -with-dot
 # 	$(TARGET) $(EXAMPLE_PATH)/Train/Train1PTA.imi $(EXAMPLE_PATH)/Train/Train1PTA.v0 -mode border -cart
 # 	$(TARGET) $(EXAMPLE_PATH)/Train/Train1PTA.imi $(EXAMPLE_PATH)/Train/Train1PTA.v0 -mode cover -cart
 # 	$(TARGET) $(EXAMPLE_PATH)/Train/Train1PTA.imi -PTA2GrML
@@ -463,6 +463,7 @@ exe:
 
 ##### CASE STUDIES : PROTOCOLS #####
 
+	$(TARGET) $(EXAMPLE_PATH)/Fischer/fischer_2.imi -PTA2JPG
 # 	$(TARGETV) $(EXAMPLE_PATH)/Fischer/fischer_2.imi $(EXAMPLE_PATH)/Fischer/fischer_2.pi0
 
 # 	$(TARGETV) $(EXAMPLE_PATH)/Fischer/fischerHRSV02.imi $(EXAMPLE_PATH)/Fischer/fischerHRSV02.pi0
