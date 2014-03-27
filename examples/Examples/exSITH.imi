@@ -8,7 +8,7 @@
 --   Laboratoire d'Informatique de Paris Nord
 --
 --                                Created : 2012/02/08
---                          Last modified : 2012/02/08
+--                          Last modified : 2014/03/27
 --************************************************************--
 --************************************************************--
 
@@ -77,3 +77,5 @@ init := True
 
 ;
 
+
+property := unreachable loc[A] = qBad;

@@ -328,10 +328,9 @@ exe:
 # 	bin/IMITATOR2.34.111115 $(EXAMPLE_PATH)/Examples/testBoucleAvecDiscrete.imi -mode statespace -depth-limit 200 -no-dot -no-log
 
 ##### CASE STUDIES : EXAMPLES #####
-# 	$(TARGET) $(EXAMPLE_PATH)/Examples/exSITH.imi -mode statespace -PTA2GrML
-# 	$(TARGET) $(EXAMPLE_PATH)/Examples/exSITH.imi $(EXAMPLE_PATH)/Examples/exSITH.pi0 -bab -merge
-# 	$(TARGET) $(EXAMPLE_PATH)/Examples/exSITH.imi $(EXAMPLE_PATH)/Examples/exSITH.pi0 -bab
-# 	$(TARGET) $(EXAMPLE_PATH)/Examples/exSITH.imi $(EXAMPLE_PATH)/Examples/exSITH.pi0
+# 	$(TARGET) $(EXAMPLE_PATH)/Examples/exSITH.imi -PTA2JPG
+# 	$(TARGET) $(EXAMPLE_PATH)/Examples/exSITH.imi -mode EF -with-dot
+	$(TARGET) $(EXAMPLE_PATH)/Examples/exSITH.imi $(EXAMPLE_PATH)/Examples/exSITH.pi0 -with-dot
 
 # 	$(TARGET) $(EXAMPLE_PATH)/Examples/contrexPPTA.imi $(EXAMPLE_PATH)/Examples/contrexPPTA.pi0
 # 	$(TARGET) $(EXAMPLE_PATH)/Examples/contrexPPTA.imi $(EXAMPLE_PATH)/Examples/contrexPPTA.pi0 -bab
@@ -490,7 +489,7 @@ exe:
 # 	$(TARGETV) $(EXAMPLE_PATH)/BRP/brp.imi $(EXAMPLE_PATH)/BRP/brp.pi0 -dynamic-elimination -with-dot -with-log -log-prefix $(EXAMPLE_PATH)/BRP/brp-dynamic
 # 	bin/IMITATOR2.6.1 $(EXAMPLE_PATH)/BRP/brp.imi $(EXAMPLE_PATH)/BRP/brp.pi0
 # 	$(TARGETV) $(EXAMPLE_PATH)/BRP/brp.imi $(EXAMPLE_PATH)/BRP/brp.pi0
-	$(TARGET) $(EXAMPLE_PATH)/BRP/brp.imi $(EXAMPLE_PATH)/BRP/brp.pi0 -merge
+# 	$(TARGET) $(EXAMPLE_PATH)/BRP/brp.imi $(EXAMPLE_PATH)/BRP/brp.pi0 -merge
 # 	$(TARGET) $(EXAMPLE_PATH)/BRP/brp.imi $(EXAMPLE_PATH)/BRP/brp.pi0 -merge-before
 # 	$(TARGET) $(EXAMPLE_PATH)/BRP/brp.imi $(EXAMPLE_PATH)/BRP/brp.pi0 -bab
 
