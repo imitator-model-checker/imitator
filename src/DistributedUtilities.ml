@@ -81,7 +81,7 @@ let serialize_SEP_PAIR = ","
 let serialize_SEP_LIST = ";"
 
 let serialize_pi0_pair (variable_index , value) =
-	(string_of_int variable_index)
+	LinearConstraint.serialize_variable variable_index
 	^
 	serialize_SEP_PAIR
 	^
@@ -100,19 +100,10 @@ let serialize_pi0 pi0 =
 		^ serialize_SEP_LIST
 		^ serialize_pi0 rest*)
 
-let unserialize_variable variable_string =
-	(* First check that it is an integer *)
-	(*** NOTE: test already performed by int_of_string? ***)
-	if not (Str.string_match (Str.regexp "^[0-9]+$") variable_string 0) then
-		raise (SerializationError ("Cannot unserialize variable '" ^ variable_string ^ "': int expected."));
-	(* First check that it is an integer *)
-	int_of_string variable_string
-
-
 let unserialize_pi0_pair pi0_pair_string =
 	match split serialize_SEP_PAIR pi0_pair_string with
 	| [variable_string ; value_string ] ->
-		unserialize_variable variable_string , unserialize_numconst value_string
+		LinearConstraint.unserialize_variable variable_string , unserialize_numconst value_string
 	| _ -> raise (SerializationError ("Cannot unserialize pi0 value '" ^ pi0_pair_string ^ "': (variable_index, value) expected."))
 
 
@@ -133,6 +124,23 @@ let debug_string_of_pi0 pi0 =
 	)
 	
 let test_serialization () =
+	let test_unserialize_variable variable_string = 
+		try(
+		let unserialized_variable = LinearConstraint.unserialize_variable variable_string in
+		print_message Debug_standard ("Unserializing " ^ variable_string ^ "...: " ^ (string_of_int unserialized_variable));
+		) with
+		SerializationError error -> print_error ("Serialization error: " ^ error)
+	in
+	test_unserialize_variable "0";
+	test_unserialize_variable "1";
+	test_unserialize_variable "26";
+	test_unserialize_variable "184848448";
+	test_unserialize_variable "";
+	test_unserialize_variable "plouf";
+	test_unserialize_variable "-2";
+	test_unserialize_variable "3.2";
+	test_unserialize_variable "3829t39";
+	
 	let mypi0 = [
 		( 0 , NumConst.zero ) ;
 		( 1 , NumConst.one ) ;
@@ -143,10 +151,12 @@ let test_serialization () =
 	] in
 	print_message Debug_standard "Here is my pi0";
 	print_message Debug_standard (debug_string_of_pi0 mypi0);
+	
 	print_message Debug_standard "Now serializing it...";
 	let pi0_serialized = serialize_pi0 mypi0 in
 	print_message Debug_standard "After serialization:";
 	print_message Debug_standard  pi0_serialized;
+	
 	print_message Debug_standard "Now unserializing it...";
 	let mypi0_back = unserialize_pi0 pi0_serialized in
 	print_message Debug_standard  (debug_string_of_pi0 mypi0_back);

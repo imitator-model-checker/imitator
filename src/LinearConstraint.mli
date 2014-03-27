@@ -10,7 +10,7 @@
  * Author:        Etienne Andre
  * 
  * Created:       2010/03/04
- * Last modified: 2014/02/13
+ * Last modified: 2014/03/27
  *
  ****************************************************************) 
  
@@ -399,6 +399,12 @@ val shape_of_poly : variable -> variable -> p_linear_constraint -> (float*float)
 (** Plot polyhedron corresponding to a convex constraint, projected on the two given variables *)
 val plot_2d : variable -> variable -> p_linear_constraint -> float -> float -> float -> float -> bool*string
 
+
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+(** {2 Serialization} *)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+val serialize_variable : variable -> string
+val unserialize_variable : string -> variable
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
 (** {3 Statistics on performances} *)

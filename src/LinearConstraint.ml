@@ -10,7 +10,7 @@
  * Author:        Etienne Andre
  * 
  * Created:       2010/03/04
- * Last modified: 2014/02/13
+ * Last modified: 2014/03/27
  *
  ****************************************************************) 
  
@@ -210,6 +210,7 @@ let rec normalize_linear_term lt =
 (** Add on for TA2CLP *)
 let string_of_var names variable =
 	"V_" ^ (names variable)
+
 
 	
 (************************************************************)
@@ -1980,6 +1981,9 @@ let px_linear_constraint_of_cpdbm clock_offset cpdbm =
 
 
 
+
+
+
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 (** Tests *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -2120,3 +2124,22 @@ let test_PDBMs () =
 	
 	print_string "\n*%*%*%*%*%*% ENDING PDBMs TESTS *%*%*%*%*%*%";
 	()
+
+
+
+(************************************************************)
+(** {2 Serialization} *)
+(************************************************************)
+
+(** Serialization for PaTATOR *)
+let serialize_variable = string_of_int
+
+let unserialize_variable variable_string =
+	(* First check that it is an integer *)
+	(*** NOTE: test already performed by int_of_string? ***)
+	if not (Str.string_match (Str.regexp "^[0-9]+$") variable_string 0) then
+		raise (SerializationError ("Cannot unserialize variable '" ^ variable_string ^ "': int expected."));
+	(* First check that it is an integer *)
+	int_of_string variable_string
+
+
