@@ -24,6 +24,8 @@ open Options
 open Reachability
 open Gc
 
+open Mpi
+
 
 (**************************************************
 
@@ -52,20 +54,6 @@ TAGS POUR CHOSES A FAIRE
 terminate_program();*)
 
 
-(**************************************************)
-(**************************************************)
-(* Print startup message *)
-(**************************************************)
-(**************************************************)
-
-print_message Debug_standard header_string;
-
-
-(* Print date *)
-print_message Debug_standard ("Analysis time: " ^ (now()) ^ "\n");
-
-
-
 
 (**************************************************)
 (* Get the arguments *)
@@ -78,11 +66,36 @@ options#parse;
 (* Set the options (for other modules) *)
 Input.set_options options;
 
-(* Recall the arguments *)
-options#recall();
 
+(**************************************************)
+(**************************************************)
+(* Print startup message *)
+(**************************************************)
+(**************************************************)
+  
+begin
+  match options#distribution_mode with
+  | Distributed -> 
+    let rank = Mpi.comm_rank comm_world in
+    if rank = 0 then
+      begin
+	(* Recall the arguments *)
+	options#recall(); 
+	(* Print stuff about the authors *)
+	print_message Debug_standard header_string;
+	(* Print date *)
+	print_message Debug_standard ("Analysis time: " ^ (now()) ^ "\n")
+      end;
+  | _ -> 
+    (* Recall the arguments *)
+    options#recall(); 
+    (* Print stuff about the authors *)
+    print_message Debug_standard header_string;
+    (* Print date *)
+    print_message Debug_standard ("Analysis time: " ^ (now()) ^ "\n")  
+end;
 
-
+    
 
 (**************************************************)
 (* Get input *)

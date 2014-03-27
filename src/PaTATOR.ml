@@ -46,17 +46,18 @@ let run () =
 	(* Get the model *)
 	let model = Input.get_model() in
 
-	(* Print some information *)
-	print_message Debug_standard ("Hi guys! This is PaTATOR speaking!");
+	let rank = Mpi.comm_rank comm_world in
 
+	(* Print some information *)
+	if rank = 0 then
+	  print_message Debug_standard ("Hi guys! This is PaTATOR speaking!");
 	
 	
  	(**************************************************)
 	(* Starting here *)
 	(**************************************************)
-	let rank = Mpi.comm_rank comm_world in
 	Random.init 0; (* tmp pour tests *)
-  
+
 	(* Fork between master and slave *)
 	if rank = masterrank then 
 		DistributedMasterSlave.master()
