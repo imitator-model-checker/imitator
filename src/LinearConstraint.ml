@@ -10,7 +10,7 @@
  * Author:        Etienne Andre
  * 
  * Created:       2010/03/04
- * Last modified: 2014/03/27
+ * Last modified: 2014/03/30
  *
  ****************************************************************) 
  
@@ -657,8 +657,9 @@ let string_of_linear_inequality names linear_inequality =
 		| Less_Than_RS -> " < "
 		| Less_Or_Equal_RS -> " <= "
 		| Equal_RS -> " = "
+		| Greater_Or_Equal_RS -> " >= "
 		| Greater_Than_RS -> " > "
-		| Greater_Or_Equal_RS -> " >= " in
+	in
 	lstr ^ opstr ^ rstr
 
 let string_of_p_linear_inequality = string_of_linear_inequality
@@ -890,6 +891,135 @@ let find_variables variables_list linear_constraint =
 let pxd_find_variables = find_variables
 
 
+
+
+
+
+
+(*############################################################*)
+(* BEGIN TO MOVE TO THE BOTTOM *)
+(*############################################################*)
+
+(************************************************************)
+(** {2 Serialization for PaTATOR} *)
+(************************************************************)
+
+(*
+	General translation :
+
+	2 p1 + p2 + p3 <= 4 p4
+	^ 2/3 p1 + 5 p2 > 7 p3
+	=>
+	2,1+1,2+1,3l4,4^2/3,1+5,2>7,3
+	
+	Operators:
+	< l = g >
+*)
+
+(** Separator between coef and variable *)
+let serialize_SEP_CV = "*"
+
+(** Separator between linear terms *)
+let serialize_SEP_LC = "+"
+
+(** Separator between linear inequalities *)
+let serialize_SEP_LC = "^"
+
+
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+(** {3 Variables} *)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+
+let serialize_variable = string_of_int
+
+let unserialize_variable variable_string =
+	(* First check that it is an integer *)
+	(*** NOTE: test already performed by int_of_string? ***)
+	if not (Str.string_match (Str.regexp "^[0-9]+$") variable_string 0) then
+		raise (SerializationError ("Cannot unserialize variable '" ^ variable_string ^ "': int expected."));
+	(* First check that it is an integer *)
+	int_of_string variable_string
+
+
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+(** {3 Coefficients} *)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+let serialize_coef = Gmp.Z.string_from
+
+
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+(** {3 Operators} *)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+let serialize_op = function
+	| Less_Than_RS -> "<"
+	| Less_Or_Equal_RS -> "l"
+	| Equal_RS -> "="
+	| Greater_Or_Equal_RS -> "g"
+	| Greater_Than_RS -> ">"
+
+
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+(** {3 Linear term} *)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+
+(** Convert a linear term (PPL) into a string *)
+let rec serialize_linear_term linear_term =
+	match linear_term with
+		| Coefficient z -> serialize_coef z
+		| Variable v -> serialize_variable v
+		| Unary_Plus t -> serialize_linear_term t
+		| Unary_Minus t -> raise (InternalError("Match Unary_Minus not taken into account in serialization"))
+		| Plus (lterm, rterm) -> (
+			  let lstr = serialize_linear_term lterm in
+				let rstr = serialize_linear_term rterm in
+				lstr ^ serialize_SEP_LC ^ rstr )
+		| Minus (lterm, rterm) -> raise (InternalError("Match Minus not taken into account in serialization"))
+		| Times (z, rterm) -> (
+				let fstr = serialize_coef z in
+				let tstr = serialize_linear_term rterm in
+					match rterm with
+						| Coefficient _ -> raise (InternalError("Case 'z * Coefficient' not taken into account in serialization"))
+						| Variable    _ -> fstr ^ serialize_SEP_CV ^ tstr
+						| _ -> raise (InternalError("Case '_ * Coefficient' not taken into account in serialization"))
+						
+				)
+				
+
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+(** {3 Linear inequalities} *)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+
+(** Serialize a linear inequality *)
+let serialize_linear_inequality linear_inequality =
+(* 	let normal_ineq = normalize_inequality linear_inequality in *)
+	let lterm, rterm, op = split_linear_inequality linear_inequality in
+	let lstr = serialize_linear_term lterm in
+	let rstr = serialize_linear_term rterm in
+	lstr ^ (serialize_op op) ^ rstr
+
+
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+(** {3 Linear constraints} *)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+(** Serialize a linear constraint *)
+let serialize_linear_constraint linear_constraint =
+	(* Get a list of linear inequalities and serialize *)
+	let list_of_inequalities = List.map serialize_linear_inequality (get_constraints linear_constraint) in
+	(* Add separators *)
+	String.concat serialize_SEP_LC list_of_inequalities
+
+
+(*############################################################*)
+(* END TO MOVE TO THE BOTTOM *)
+(*############################################################*)
+
+	
+	
+	
+	
+	
+	
+	
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
 (** {3 Conversion} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
@@ -904,6 +1034,14 @@ let string_of_true = "true"
 
 (** Convert a linear constraint into a string *)
 let string_of_linear_constraint names linear_constraint =
+
+
+(* 	TODO HACK WARNING *)
+(* 	print_warning(serialize_linear_constraint linear_constraint); *)
+	
+	
+	
+	
 	(* First check if true *)
 	if is_true linear_constraint then string_of_true
 	(* Then check if false *)
@@ -2124,22 +2262,5 @@ let test_PDBMs () =
 	
 	print_string "\n*%*%*%*%*%*% ENDING PDBMs TESTS *%*%*%*%*%*%";
 	()
-
-
-
-(************************************************************)
-(** {2 Serialization} *)
-(************************************************************)
-
-(** Serialization for PaTATOR *)
-let serialize_variable = string_of_int
-
-let unserialize_variable variable_string =
-	(* First check that it is an integer *)
-	(*** NOTE: test already performed by int_of_string? ***)
-	if not (Str.string_match (Str.regexp "^[0-9]+$") variable_string 0) then
-		raise (SerializationError ("Cannot unserialize variable '" ^ variable_string ^ "': int expected."));
-	(* First check that it is an integer *)
-	int_of_string variable_string
 
 

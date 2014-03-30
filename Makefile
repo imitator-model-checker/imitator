@@ -332,6 +332,8 @@ exe:
 # 	$(TARGET) $(EXAMPLE_PATH)/Examples/exSITH.imi -mode EF -with-dot
 # 	$(TARGET) $(EXAMPLE_PATH)/Examples/exSITH.imi $(EXAMPLE_PATH)/Examples/exSITH.pi0 -with-dot
 
+	$(TARGET) $(EXAMPLE_PATH)/Examples/exCentraleNucleaire.imi -mode statespace -with-dot -fancy
+
 # 	$(TARGET) $(EXAMPLE_PATH)/Examples/contrexPPTA.imi $(EXAMPLE_PATH)/Examples/contrexPPTA.pi0
 # 	$(TARGET) $(EXAMPLE_PATH)/Examples/contrexPPTA.imi $(EXAMPLE_PATH)/Examples/contrexPPTA.pi0 -bab
 
@@ -463,7 +465,7 @@ exe:
 
 ##### CASE STUDIES : PROTOCOLS #####
 
-	$(TARGET) $(EXAMPLE_PATH)/Fischer/fischer_2.imi -PTA2JPG
+# 	$(TARGET) $(EXAMPLE_PATH)/Fischer/fischer_2.imi -PTA2JPG
 # 	$(TARGETV) $(EXAMPLE_PATH)/Fischer/fischer_2.imi $(EXAMPLE_PATH)/Fischer/fischer_2.pi0
 
 # 	$(TARGETV) $(EXAMPLE_PATH)/Fischer/fischerHRSV02.imi $(EXAMPLE_PATH)/Fischer/fischerHRSV02.pi0

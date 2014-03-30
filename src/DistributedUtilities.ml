@@ -8,7 +8,7 @@
  * Author:        Etienne Andre, Camille Coti
  * 
  * Created:       2014/03/24
- * Last modified: 2014/03/25
+ * Last modified: 2014/03/30
  *
  ****************************************************************)
 
@@ -93,12 +93,6 @@ let serialize_pi0 pi0 =
 	let pi0_string_list = List.map serialize_pi0_pair pi0 in
 	(* Add separators *)
 	String.concat serialize_SEP_LIST pi0_string_list
-(*	| [] -> ""
-	| [ pair ] -> serialize_pi0_pair pair
-	| pair :: rest ->
-		serialize_pi0_pair pair
-		^ serialize_SEP_LIST
-		^ serialize_pi0 rest*)
 
 let unserialize_pi0_pair pi0_pair_string =
 	match split serialize_SEP_PAIR pi0_pair_string with
