@@ -525,5 +525,13 @@ init :=     loc[Task_t1] = t1_loc_idle &
     loc[sched_CPU1] = CPU1_loc_ &
     CPU1_urgent = 0 &
     loc[OBS_dline] = dline_loc_nomiss &
-    True;
+ 	True
+   
+(*     FOR fair comparison of EF synthesis with other algorithms *)
+(*		& 20 <= t4_C 
+    	& t4_C <= 30
+		& 15 <= t5_C 
+    	& t5_C <= 25*)
+;
+    
 property := unreachable loc[OBS_dline] = dline_loc_miss

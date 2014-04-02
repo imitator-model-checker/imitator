@@ -51,9 +51,11 @@ OUTPUT FEATURES
 [ ] BC: give the number of tiles reduced to a point, and the number of points not covered at all (when IM does not finish)
 
 
-[ ] allow cartography for inverse method
+[ ] allow graphical cartography for inverse method
 [ ] always output a cartography when 2D, even for IM, and always colour it if some good/bad states have been defined
 [ ] Rétablir le fait que -with-parametric-log active -with-log
+
+[ ] rétablir (de HyMITATOR) le fait que contrôle+C rende un résultat partiel
 
 
 ************************************************************
