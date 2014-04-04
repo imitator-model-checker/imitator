@@ -1,0 +1,373 @@
+--****************************************************--
+--   Laboratoire Specification et Verification
+--
+--   Modeling of an "AND" and an "OR" logical gate
+--   From "Verification of Concurrent Systems with Parametric Delays Using Octahedra" by Clariso and Cortadella
+--
+--   Modeling: Etienne ANDRE and Laurent FRIBOURG
+--
+--   Version SANS compteur de B^\up
+--   Version SANS variables discretes reprenant les valeurs des signaux
+--
+--   Created       : 2008/01
+--   Last modified : 2010/03/29
+--                                Created : 2008/01
+--                          Last modified : 2010/03/29
+--                    Fork from AndOr.imi : 2014/04/04
+--                          Last modified : 2014/04/04
+--                       IMITATOR version : 2.6.1.2
+--****************************************************--
+
+var 	ckOr, ckAnd, cka, ckb
+		: clock;
+
+	dA_High_l, dA_High_u,
+	dA_Low_l, dA_Low_u,
+	dB_High_l, dB_High_u,
+	dB_Low_l, dB_Low_u,
+	dOr_l, dOr_u,
+	dAnd_l, dAnd_u
+			: parameter;
+
+
+
+--****************************************************--
+--****************************************************--
+-- AUTOMATA
+--****************************************************--
+--****************************************************--
+
+
+--****************************************************--
+  automaton input
+--****************************************************--
+synclabs: aUp, aDown, bUp, bDown;
+initially InputInit;
+
+loc InputInit: while ckb <= dB_High_u wait {}
+	when ckb >= dB_High_l sync bDown do {ckb' = 0} goto Input2; -- & nbB < nbBmax  // nbB' = nbB + 1 , 
+
+loc Input2: while cka <= dA_High_u wait {}
+	when cka >= dA_High_l sync aDown do {cka' = 0} goto Input3; --, qa'=0
+
+loc Input3: while ckb <= dB_Low_u wait {}
+	when ckb >= dB_Low_l sync bUp do {ckb' = 0} goto Input4;
+
+loc Input4: while cka <= dA_Low_u wait {}
+	when cka >= dA_Low_l sync aUp do {cka' = 0, ckb' = 0} goto InputInit; -- ,qa'=1
+
+end -- input
+
+
+-- --****************************************************--
+--   automaton inputA
+-- --****************************************************--
+-- synclabs: aUp, aDown;
+-- initially InputA_High;
+-- 
+-- loc InputA_High: while cka <= dA_High_u wait {}
+-- 	when cka >= dA_High_l sync aDown do {cka' = 0} goto InputA_Low; --, qa'=0
+-- 
+-- loc InputA_Low: while cka <= dA_Low_u wait {}
+-- 	when cka >= dA_Low_l sync aUp do {cka' = 0} goto InputA_High; -- ,qa'=1
+-- 
+-- end -- inputA
+-- 
+-- --****************************************************--
+--   automaton inputB
+-- --****************************************************--
+-- synclabs: bUp, bDown;
+-- initially InputB_High;
+-- 
+-- loc InputB_High: while ckb <= dB_High_u wait {}
+-- 	when ckb >= dB_High_l sync bDown do {ckb' = 0} goto InputB_Low; -- & nbB < nbBmax  // nbB' = nbB + 1 , 
+-- 
+-- loc InputB_Low: while ckb <= dB_Low_u wait {}
+-- 	when ckb >= dB_Low_l sync bUp do {ckb' = 0} goto InputB_High;
+-- 
+-- end -- inputB
+-- 
+
+--****************************************************--
+  automaton andGate
+--****************************************************--
+-- Input 1 : t (output of OR)
+-- Input 2 : b
+-- Output : x
+
+synclabs: tUp, tDown, bUp, bDown,
+	xUp, xDown;
+initially And111;
+
+loc And000: while ckAnd >= 0 wait {}
+	when True sync tUp do {} goto And100;
+	when True sync bUp do {} goto And010;
+
+loc And001: while ckAnd <= dAnd_u & ckAnd>=0 wait {}
+	when True sync tUp do {ckAnd' = 0} goto And101;
+	when True sync bUp do {ckAnd' = 0} goto And011;
+	when ckAnd >= dAnd_l sync xDown do {} goto And000; -- qx'=0
+
+loc And010: while ckAnd >= 0 wait {}
+	when True sync tUp do {ckAnd' = 0} goto And110;
+	when True sync bDown do {} goto And000;
+
+loc And011: while ckAnd <= dAnd_u & ckAnd>=0 wait {}
+	when True sync tUp do {} goto And111;
+	when True sync bDown do {ckAnd' = 0} goto And001;
+	when ckAnd >= dAnd_l sync xDown do {} goto And010; -- qx'=0
+
+loc And100: while ckAnd >= 0 wait {}
+	when True sync tDown do {} goto And000;
+	when True sync bUp do {ckAnd' = 0} goto And110;
+
+loc And101: while ckAnd <= dAnd_u & ckAnd>=0 wait {}
+	when True sync tDown do {ckAnd' = 0} goto And001;
+	when True sync bUp do {} goto And111;
+	when ckAnd >= dAnd_l sync xDown do {} goto And100; -- qx'=0
+
+loc And110: while ckAnd <= dAnd_u& ckAnd>=0  wait {}
+	when True sync tDown do {} goto And010;
+	when True sync bDown do {} goto And100;
+	when ckAnd >= dAnd_l sync xUp do {} goto And111; -- qx'=1
+
+loc And111: while ckAnd >= 0 wait {}
+	when True sync tDown do {ckAnd' = 0} goto And011;
+	when True sync bDown do {ckAnd' = 0} goto And101;
+end -- andGate
+
+
+--****************************************************--
+  automaton orGate
+--****************************************************--
+-- Input 1 : x (output of AND)
+-- Input 2 : a
+-- Output : t
+
+synclabs: xUp, xDown, aUp, aDown,
+	tUp, tDown;
+initially Or111;
+
+loc Or000: while ckOr >= 0 wait {}
+	when True sync xUp do {ckOr' = 0} goto Or100;
+	when True sync aUp do {ckOr' = 0} goto Or010;
+
+loc Or001: while ckOr <= dOr_u & ckOr >= 0 wait {}
+	when True sync xUp do {} goto Or101;
+	when True sync aUp do {} goto Or011;
+	when ckOr >= dOr_l sync tDown do {} goto Or000;
+
+loc Or010: while ckOr <= dOr_u & ckOr >= 0 wait {}
+	when True sync xUp do {ckOr' = 0} goto Or110;
+	when True sync aDown do {} goto Or000;
+	when ckOr >= dOr_l sync tUp do {} goto Or011;
+
+loc Or011: while ckOr >= 0 wait {}
+	when True sync xUp do {} goto Or111;
+	when True sync aDown do {ckOr' = 0} goto Or001;
+
+loc Or100: while ckOr <= dOr_u & ckOr >= 0 wait {}
+	when True sync xDown do {} goto Or000;
+	when True sync aUp do {ckOr' = 0} goto Or110;
+	when ckOr >= dOr_l sync tUp do {} goto Or101;
+
+loc Or101: while ckOr >= 0 wait {}
+	when True sync xDown do {ckOr' = 0} goto Or001;
+	when True sync aUp do {} goto Or111;
+
+loc Or110: while ckOr <= dOr_u & ckOr >= 0 wait {}
+	when True sync xDown do {ckOr' = 0} goto Or010;
+	when True sync aDown do {ckOr' = 0} goto Or100;
+	when ckOr >= dOr_l sync tUp do {} goto Or111;
+
+loc Or111: while ckOr >= 0 wait {}
+	when True sync xDown do {} goto Or011;
+	when True sync aDown do {} goto Or101;
+end -- orGate
+
+
+--****************************************************--
+  automaton obs
+--****************************************************--
+synclabs: xUp, aUp,
+	tUp, tDown;
+(* This observer checks that we always have aUp then xUp in an alternating manner *)
+initially obs1;
+
+loc obs1: while True wait {}
+	when True sync aUp goto obs2;
+	when True sync xUp goto obsBAD;
+
+loc obs2: while True wait {}
+	when True sync xUp goto obs1;
+	when True sync aUp goto obsBAD;
+
+loc obsBAD: while True wait {}
+	when True sync aUp goto obsBAD;
+	when True sync xUp goto obsBAD;
+
+end (*observer *)
+
+--****************************************************--
+--****************************************************--
+-- ANALYSIS
+--****************************************************--
+--****************************************************--
+
+var init : region;
+
+init :=
+	----------------------
+	-- Initial locations
+	----------------------
+	  loc[input] = InputInit
+	& loc[andGate] = And111
+	& loc[orGate] = Or111
+-- 	& qa=1 & qx=1
+	& loc[obs] = obs1
+
+
+	----------------------
+	-- Clocks
+	----------------------
+	& ckOr  >= 0
+	& ckAnd >= 0
+	& cka   =  0
+	& ckb   =  0
+(* 	& ckb   <= dB_High_u *)
+
+	----------------------
+	-- Constraints
+	----------------------
+	& dA_High_l <= dA_High_u
+	& dA_Low_l <= dA_Low_u
+
+	& dB_High_l <= dB_High_u
+	& dB_Low_l <= dB_Low_u
+
+	& dOr_l <= dOr_u
+	& dAnd_l <= dAnd_u	
+
+	& 0 <= dA_High_l 
+	& 0 <= dA_Low_l 
+	& 0 <= dB_High_l 
+	& 0 <= dB_Low_l 
+	& 0 <= dOr_l 
+	& 0 <= dAnd_l
+
+-- JEU DE VALEURS DONNANT 9 ETATS (DONC MAUVAIS)
+
+--	& dA_High_u = 20
+--	& dA_High_l = 19
+--	& dAnd_u = 10
+--	& dAnd_l = 9
+--	& bpre_u = 8
+--	& bpre_l = 7
+--	& dOr_u = 5
+--	& dOr_l = 4
+--	& dB_Low_u = 19
+--	& dB_Low_l = 18
+--	& dA_Low_u = 18
+--	& dA_Low_l = 16
+
+
+-- JEU DE VALEURS DONNANT 8 ETATS (tous sauf le 1) mais qui apparemment ne reboucle pas DONC MAUVAIS
+--	& dA_High_u = 20
+--	& dA_High_l = 19
+--	& dAnd_u = 10
+--	& dAnd_l = 9
+--	& bpre_u = 8
+--	& bpre_l = 7
+--	& dOr_u = 5
+--	& dOr_l = 4
+--	& dB_Low_u = 21
+--	& dB_Low_l = 20
+--	& dA_Low_u = 18
+--	& dA_Low_l = 16
+
+-- JEU DE VALEURS VERIFIANT LES CONTRAINTES DE LAURENT avec 8 etats (tous sauf le 1) et qui boucle (donc tout va bien)
+	---START PI0---
+-- 	& dA_High_l = 13
+-- 	& dA_High_u = 14
+-- 	& dA_Low_l = 16
+-- 	& dA_Low_u = 18
+-- -- 	& dB_High_l = 10
+-- -- 	& dB_High_u = 12
+-- 	& dB_High_l = 7
+-- 	& dB_High_u = 8
+-- 	& dB_Low_l = 19
+-- 	& dB_Low_u = 20
+-- 	& dAnd_l = 3
+-- 	& dAnd_u = 4
+-- 	& dOr_l = 1
+-- 	& dOr_u = 2
+	---END PI0---
+
+	----------------------
+	-- Contraintes donnees par IMITATOR 1
+	----------------------
+--       & dOr_l <= dOr_u
+--       & dOr_u + dA_High_u < bpre_l + dB_Low_l
+--       & dA_Low_l <= dA_Low_u
+--       & dA_High_l <= dA_High_u
+--       & bpre_l <= bpre_u
+--       & 0 < dAnd_l
+--       & 0 < dOr_l
+--       & bpre_l + dB_Low_l <= dA_Low_u + dA_High_u
+--       & dAnd_u + dOr_u < bpre_l
+--       & 0 < dA_Low_l
+--       & dB_Low_l <= dB_Low_u
+--       & dAnd_l <= dAnd_u
+--       & bpre_u + dAnd_u < dA_High_l
+-- print (reach forward from init endreach);
+
+
+(*	& dA_High_l = 13
+	& dA_High_u = 14
+	& dA_Low_l = 16
+	& dA_Low_u = 18
+-- 	& dB_High_l = 10
+-- 	& dB_High_u = 12
+	& dB_High_l = 7
+	& dB_High_u = 8
+	& dB_Low_l = 19
+	& dB_Low_u = 20
+	& dAnd_l = 3
+--	& dAnd_u = 4
+	& dOr_l = 1
+	& dOr_u = 2
+*)
+
+
+(* CARTO 5 PARAM (INFINITY'10 ?) 
+	& dA_High_l = 13
+--	& dA_High_u = 13 .. 30 -- 14
+	& dA_Low_l = 16
+--	& dA_Low_u = 16 .. 30 -- 16 .. 25 -- 18
+	& dB_High_l = 7
+--	& dB_High_u = 7 .. 20 --7 .. 15 -- 8
+	& dB_Low_l = 19
+--	& dB_Low_u = 20 -- 19 .. 25 -- 20
+	& dAnd_l = 3
+--	& dAnd_u = 3 .. 10 -- 3 .. 5 -- 4
+	& dOr_l = 1
+--	& dOr_u = 1 .. 5 -- 1 .. 5 -- 2
+*)
+
+
+(* CARTO 4 PARAM (as of 2013/01/23) *)
+(* 	& dA_High_l = 13 *)
+(* 	& dA_High_u = 14 *)
+(* 	& dA_Low_l = 16 *)
+--	& dA_Low_u = 16 .. 30 -- 16 .. 25 -- 18
+(* 	& dB_High_l = 7 *)
+--	& dB_High_u = 7 .. 20 --7 .. 15 -- 8
+(* 	& dB_Low_l = 19 *)
+--	& dB_Low_u = 20 -- 19 .. 25 -- 20
+(* 	& dAnd_l = 3 *)
+--	& dAnd_u = 3 .. 10 -- 3 .. 5 -- 4
+(* 	& dOr_l = 1 *)
+--	& dOr_u = 1 .. 5 -- 1 .. 5 -- 2
+
+;
+

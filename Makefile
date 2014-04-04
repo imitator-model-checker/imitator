@@ -353,10 +353,13 @@ exe:
 # 	$(TARGET) $(EXAMPLE_PATH)/AndOr/AndOr.imi -PTA2GrML
 # 	$(TARGET) $(EXAMPLE_PATH)/AndOr/AndOr.imi.grml -fromGrML -mode statespace
 
+# 	$(TARGET) $(EXAMPLE_PATH)/AndOr/AndOr.imi -mode statespace -merge
 # 	$(TARGET) $(EXAMPLE_PATH)/AndOr/AndOr.imi -mode statespace -dynamic-elimination -verbose total
 # 	$(TARGET) $(EXAMPLE_PATH)/AndOr/AndOr2.imi -PTA2JPG
 # 	$(TARGET) $(EXAMPLE_PATH)/AndOr/AndOr.imi -mode statespace -states-limit 10
 # 	$(TARGET) $(EXAMPLE_PATH)/AndOr/AndOr.imi -mode statespace -time-limit 10
+
+	$(TARGET) $(EXAMPLE_PATH)/AndOr/AndOr_obs.imi -mode statespace -merge -with-dot
 
 # 	$(TARGET) $(EXAMPLE_PATH)/Tests/AndOrTest.imi $(EXAMPLE_PATH)/Tests/AndOrTest.pi0 -verbose high
 # 	$(TARGET) $(EXAMPLE_PATH)/Tests/AndOrTest.imi -PTA2JPG
@@ -431,6 +434,8 @@ exe:
 # 	$(TARGETV) $(EXAMPLE_PATH)/SRlatch/SRlatch.imi $(EXAMPLE_PATH)/SRlatch/SRlatch.pi0 -dynamic-elimination
 # 	$(TARGET) $(EXAMPLE_PATH)/SRlatch/SRlatch.imi $(EXAMPLE_PATH)/SRlatch/SRlatch.pi0 -bab
 # 	$(TARGET) $(EXAMPLE_PATH)/SRlatch/SRlatch.imi $(EXAMPLE_PATH)/SRlatch/SRlatch.v0 -mode cover
+
+# 	$(TARGET) $(EXAMPLE_PATH)/SRlatch/SRlatch.imi -mode EF -cart
 
 # 	./IMITATOR Examples/SRlatch/SRlatch_delais_fixes.imi -mode statespace
 # 	./IMITATOR Examples/SRlatch/SRlatch_delais_fixes.imi Examples/SRlatch/SRlatch_delais_fixes.pi0
@@ -689,7 +694,7 @@ exe:
 # 	$(TARGET) $(EXAMPLE_PATH)/Scheduling/test3.imi -mode EF -cart -merge
 
 # 	$(TARGET) $(EXAMPLE_PATH)/Scheduling/test5.imi $(EXAMPLE_PATH)/Scheduling/test5.v0 -mode cover -merge -cart -log-prefix $(EXAMPLE_PATH)/Scheduling/test5-BCmerge2535
-	$(TARGET) $(EXAMPLE_PATH)/Scheduling/test5.imi -mode EF -incl -merge -cart -log-prefix $(EXAMPLE_PATH)/Scheduling/test5-EFmergeUnbounded -depth-limit 400
+# 	$(TARGET) $(EXAMPLE_PATH)/Scheduling/test5.imi -mode EF -incl -merge -cart -log-prefix $(EXAMPLE_PATH)/Scheduling/test5-EFmergeUnbounded -depth-limit 400
 # 	$(TARGET) $(EXAMPLE_PATH)/Scheduling/test5.imi $(EXAMPLE_PATH)/Scheduling/test5.v0 -mode cover -efim -merge -cart -log-prefix $(EXAMPLE_PATH)/Scheduling/test5-EFIMmerge20301525
 
 

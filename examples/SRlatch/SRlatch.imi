@@ -7,18 +7,19 @@
 --   Etienne ANDRE
 --
 --   Created:        2010/03/19
---   Last modified : 2013/05/05
+--   Last modified : 2014/04/04
 --************************************************************--
 --************************************************************--
 
 var 	ckNor1, ckNor2, s
 		: clock;
-
-	dNor1_l, dNor1_u,
-	dNor2_l, dNor2_u,
--- 	,
--- 	t_R_down, t_S_down
-	t_down
+	
+	dNor1_l,
+	dNor1_u (*= 4*),
+	dNor2_l (*= 5*),
+	dNor2_u,
+(*  	t_R_down, t_S_down, *)
+	t_down (*= 10*)
 			: parameter;
 
 --************************************************************--
@@ -229,17 +230,18 @@ init := True
 
 	& dNor1_l <= dNor1_u
 	& dNor2_l <= dNor2_u
-
+	
 	------------------------------------------------------------
 	-- PI0
 	------------------------------------------------------------
-	& dNor1_l	= 3
+(*	& dNor1_l	= 3
 -- 	& dNor1_u	= 4
 	& dNor2_l	= 5
 -- 	& dNor2_u	= 5
 	& t_down	= 10
 -- 	& t_R_down	= 11
--- 	& t_S_down	= 10
+-- 	& t_S_down	= 10 *)
 ;
 
-(* print (reach forward from init endreach); *)
+(* Not exactly the property that we would like! The real property is "the system eventually reaches a state where \overline{Q} = 1" *)
+property := if overQ_Up then R_Down has happened before;

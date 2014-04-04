@@ -57,6 +57,11 @@ OUTPUT FEATURES
 
 [ ] rétablir (de HyMITATOR) le fait que contrôle+C rende un résultat partiel
 
+Options names:
+- rename -with-dot with -draw-trace-set
+- rename -cart with -draw-cart
+- rename -with-log with ??? -output-states?
+
 
 ************************************************************
 USER INTERFACE
