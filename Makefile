@@ -359,7 +359,7 @@ exe:
 # 	$(TARGET) $(EXAMPLE_PATH)/AndOr/AndOr.imi -mode statespace -states-limit 10
 # 	$(TARGET) $(EXAMPLE_PATH)/AndOr/AndOr.imi -mode statespace -time-limit 10
 
-	$(TARGET) $(EXAMPLE_PATH)/AndOr/AndOr_obs.imi -mode statespace -merge -with-dot
+# 	$(TARGET) $(EXAMPLE_PATH)/AndOr/AndOr_obs.imi -mode statespace -merge -with-dot
 
 # 	$(TARGET) $(EXAMPLE_PATH)/Tests/AndOrTest.imi $(EXAMPLE_PATH)/Tests/AndOrTest.pi0 -verbose high
 # 	$(TARGET) $(EXAMPLE_PATH)/Tests/AndOrTest.imi -PTA2JPG
@@ -494,13 +494,16 @@ exe:
 	
 # 	$(TARGET) $(EXAMPLE_PATH)/BRP/brp.imi -PTA2JPG
 # 	$(TARGET) $(EXAMPLE_PATH)/BRP/brp.imi -mode statespace 
+# 	$(TARGET) $(EXAMPLE_PATH)/BRP/brp.imi $(EXAMPLE_PATH)/BRP/brp.pi0 -merge
+# 	$(TARGET) $(EXAMPLE_PATH)/BRP/brp.imi $(EXAMPLE_PATH)/BRP/brp.v0 -mode cover -cart -merge -check-point
+	$(TARGET) $(EXAMPLE_PATH)/BRP/brp.imi $(EXAMPLE_PATH)/BRP/brp.v0 -mode cover -efim -cart -merge -step 10
+# 	$(TARGET) $(EXAMPLE_PATH)/BRP/brp.imi -mode EF -merge -cart
 # 	$(TARGETV) $(EXAMPLE_PATH)/BRP/brp.imi $(EXAMPLE_PATH)/BRP/brp.pi0 -with-dot -with-log
 # 	$(TARGETV) $(EXAMPLE_PATH)/BRP/brp.imi $(EXAMPLE_PATH)/BRP/brp.pi0 -dynamic-elimination -with-dot -with-log -log-prefix $(EXAMPLE_PATH)/BRP/brp-dynamic
 # 	bin/IMITATOR2.6.1 $(EXAMPLE_PATH)/BRP/brp.imi $(EXAMPLE_PATH)/BRP/brp.pi0
 # 	$(TARGETV) $(EXAMPLE_PATH)/BRP/brp.imi $(EXAMPLE_PATH)/BRP/brp.pi0
 # 	$(TARGET) $(EXAMPLE_PATH)/BRP/brp.imi $(EXAMPLE_PATH)/BRP/brp.pi0 -merge
 # 	$(TARGET) $(EXAMPLE_PATH)/BRP/brp.imi $(EXAMPLE_PATH)/BRP/brp.pi0 -merge-before
-# 	$(TARGET) $(EXAMPLE_PATH)/BRP/brp.imi $(EXAMPLE_PATH)/BRP/brp.pi0 -bab
 
 # 	$(TARGET) $(EXAMPLE_PATH)/RCP/RCP.imi -PTA2JPG
 
