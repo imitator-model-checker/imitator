@@ -1,0 +1,201 @@
+--************************************************************--
+--************************************************************--
+--
+--   Fischer's mutual exclusion protocol
+--
+--   From the PAT version of the protocol
+--
+--                                Created : 2012/10/08
+--               Fork from fischerPAT.imi : 2014/04/08
+--                          Last modified : 2014/04/08
+--************************************************************--
+--************************************************************--
+
+var 
+	-- P1's clock
+	x1,
+	-- P2's clock
+	x2,
+(*	-- P3's clocks
+	x3,
+	y3,*)
+		:clock;
+	
+
+	turn,
+	counter
+		: discrete;
+
+	delta,
+	epsilon
+		: parameter;
+		
+
+	IDLE = -1 -- (constant)
+		: parameter; 
+
+		
+(*
+THIS MODEL IS SUPPOSED TO BE EQUIVALENT TO THE FOLLOWING PAT.PAR MODEL 
+(except the observer)
+
+#define N 3;
+#define Idle -1;
+var turn = Idle;
+var counter = 0;
+parameter Delta;
+parameter Epsilon;
+
+proc(i) = ifb(turn == Idle) { Active(i) };
+Active(i)= ((update.i{turn=i} -> Wait[Epsilon])within[Delta]);
+    if (turn == i) {
+        cs.i{counter++} -> exit.i{counter--; turn=Idle}->proc(i)
+    } else {
+        proc(i)
+    };
+FME = ||| i:{0..N-1}@proc(i); // forget about this composition*)
+
+
+(*--************************************************************--
+automaton procGEN
+--************************************************************--
+synclabs: access_GEN, enter_GEN, exit_GEN, no_access_GEN, try_GEN, update_GEN;
+
+loc idleGEN: while True wait {}
+	when turn = IDLE sync try_GEN do {xGEN' = 0} goto activeGEN;
+
+loc activeGEN: while xGEN <= delta wait {}
+	when True sync update_GEN do {turn' = GEN, xGEN' = 0} goto checkGEN;
+
+loc checkGEN: while True wait {}
+	when xGEN >= epsilon & turn = GEN sync access_GEN goto accessGEN;
+	when xGEN >= epsilon & turn < GEN sync no_access_GEN do {} goto idleGEN;
+	when xGEN >= epsilon & turn > GEN sync no_access_GEN do {} goto idleGEN; -- oops, no "<>" operator here!
+
+loc accessGEN: while True wait {}
+	when True sync enter_GEN do {counter' = counter + 1} goto CSGEN;
+
+loc CSGEN: while True wait {}
+	when True sync exit_GEN do {counter' = counter - 1, turn' = IDLE} goto idleGEN;
+
+end -- procGEN*)
+
+
+--************************************************************--
+automaton proc1
+--************************************************************--
+synclabs: access_1, enter_1, exit_1, no_access_1, try_1, update_1;
+
+loc idle1: while True wait {}
+	when turn = IDLE sync try_1 do {x1' = 0} goto active1;
+
+loc active1: while x1 <= delta wait {}
+	when True sync update_1 do {turn' = 1, x1' = 0} goto check1;
+
+loc check1: while True wait {}
+	when x1 >= epsilon & turn = 1 sync access_1 do {x1' = 0} goto access1;
+	when x1 >= epsilon & turn < 1 sync no_access_1 do {x1' = 0}  goto idle1;
+	when x1 >= epsilon & turn > 1 sync no_access_1 do {x1' = 0}  goto idle1; -- oops, no "<>" operator here!
+
+loc access1: while True wait {}
+	when True sync enter_1 do {counter' = counter + 1} goto CS1;
+
+loc CS1: while True wait {}
+	when True sync exit_1 do {counter' = counter - 1, turn' = IDLE, x1' = 0} goto idle1;
+
+end -- proc1
+
+
+--************************************************************--
+automaton proc2
+--************************************************************--
+synclabs: access_2, enter_2, exit_2, no_access_2, try_2, update_2;
+
+loc idle2: while True wait {}
+	when turn = IDLE sync try_2 do {x2' = 0} goto active2;
+
+loc active2: while x2 <= delta wait {}
+	when True sync update_2 do {turn' = 2, x2' = 0} goto check2;
+
+loc check2: while True wait {}
+	when x2 >= epsilon & turn = 2 sync access_2 do {x2' = 0} goto access2;
+	when x2 >= epsilon & turn < 2 sync no_access_2 do {x2' = 0} goto idle2;
+	when x2 >= epsilon & turn > 2 sync no_access_2 do {x2' = 0} goto idle2; -- oops, no "<>" operator here!
+
+loc access2: while True wait {}
+	when True sync enter_2 do {counter' = counter + 1} goto CS2;
+
+loc CS2: while True wait {}
+	when True sync exit_2 do {counter' = counter - 1, turn' = IDLE, x2' = 0} goto idle2;
+
+end -- proc2
+
+
+
+--************************************************************--
+automaton observer
+--************************************************************--
+synclabs : enter_1, enter_2, exit_1, exit_2;
+
+loc obs_waiting: while True wait {}
+	when True sync enter_1 goto obs_1;
+	when True sync enter_2 goto obs_2;
+
+loc obs_1: while True wait {}
+	when True sync exit_1 goto obs_waiting;
+	when True sync enter_2 goto obs_violation;
+
+loc obs_2: while True wait {}
+	when True sync exit_2 goto obs_waiting;
+	when True sync enter_1 goto obs_violation;
+
+loc obs_violation: while True wait {}
+(* 	HACK : no outgoing action to reduce state space *)
+
+end (* observer *)
+
+
+--************************************************************--
+--************************************************************--
+-- ANALYSIS
+--************************************************************--
+--************************************************************--
+
+
+var 
+   init: region;
+
+   
+init :=
+	----------------------
+	-- Initial locations
+	----------------------
+	& loc[proc1] = idle1
+	& loc[proc2] = idle2
+(* 	& loc[proc3] = idle3 *)
+(*	& loc[proc4] = idle4*)
+	& loc[observer] = obs_waiting
+	
+	----------------------
+	-- Clocks
+	----------------------
+	& x1 = 0
+	& x2 = 0
+
+(*	& x3 = 0
+	& y3 = 0
+	*)
+	----------------------
+	-- Discrete
+	----------------------
+	& turn = IDLE
+	& counter = 0
+
+	----------------------
+	-- Parameters
+	----------------------
+(*	& delta   = 3
+	& epsilon = 4*)
+;
+
+property := unreachable loc[observer] = obs_violation;

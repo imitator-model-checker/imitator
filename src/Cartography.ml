@@ -633,7 +633,7 @@ let cover_behavioral_cartography program v0 init_state =
 		print_message Debug_standard ("Considering the following pi" ^ (string_of_int !current_iteration));
 		print_message Debug_standard (ModelPrinter.string_of_pi0 program pi0);
 		
-		(* Prevent the debug messages (except in debug high or total) *)
+		(* Prevent the debug messages (except in debug medium, high or total) *)
 		if not (debug_mode_greater Debug_medium) then
 			set_debug_mode Debug_nodebug;
 		

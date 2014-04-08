@@ -8,7 +8,7 @@
  * Author:        Etienne Andre
  * 
  * Created:       2009/09/08
- * Last modified: 2014/03/25
+ * Last modified: 2014/04/08
  *
  ****************************************************************)
  
@@ -103,14 +103,29 @@ let global_debug_mode = ref (Debug_mode_set Debug_standard)
 let timed_mode = ref false
 
 
+(* Get the debug mode *)
+let get_debug_mode () =
+	match !global_debug_mode with
+	| Debug_mode_not_set -> raise (InternalError ("The debug mode has not yet been set."))
+	| Debug_mode_set debug_mode -> debug_mode
+
+
+(* Set the debug mode *)
+let set_debug_mode debug_mode =
+	(*match !global_debug_mode with
+	| Debug_mode_not_set -> global_debug_mode := Debug_mode_set debug_mode
+	| Debug_mode_set debug_mode -> raise (InternalError ("The debug mode has already been set, impossible to set it again."))*)
+	global_debug_mode := Debug_mode_set debug_mode
+
+
 (* Return true if the global debug mode is greater than 'debug_mode', false otherwise *)
 let debug_mode_greater debug_mode =
 	(* Get the global debug mode *)
-	let global_debug_mode =
-	match !global_debug_mode with
+	let global_debug_mode = get_debug_mode() in
+(*	match !global_debug_mode with
 	| Debug_mode_not_set -> raise (InternalError ("The debug mode has not been set, impossible to access it."))
 	| Debug_mode_set global_debug_mode -> global_debug_mode
-	in
+	in*)
 	(* Compare *)
 	(level_of_debug global_debug_mode) >= (level_of_debug debug_mode)
 
@@ -125,18 +140,6 @@ let debug_mode_of_string debug_mode =
 	else if debug_mode = "total" then Debug_total
 	else raise Not_found
 
-(* Set the debug mode *)
-let set_debug_mode debug_mode =
-	(*match !global_debug_mode with
-	| Debug_mode_not_set -> global_debug_mode := Debug_mode_set debug_mode
-	| Debug_mode_set debug_mode -> raise (InternalError ("The debug mode has already been set, impossible to set it again."))*)
-	global_debug_mode := Debug_mode_set debug_mode
-
-(* Get the debug mode *)
-let get_debug_mode () =
-	match !global_debug_mode with
-	| Debug_mode_not_set -> raise (InternalError ("The debug mode has not yet been set."))
-	| Debug_mode_set debug_mode -> debug_mode
 
 
 (****************************************************************)

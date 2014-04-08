@@ -43,6 +43,8 @@ MODEL FEATURES
 [!!!] allow DISCRETE * parameters in clock updates (and more generally DISCRETE * anything)
 	needed by Giuseppe
 [?] have several locations in the "bad" definition (avoids to create a global deadline-miss-observer in the case of scheduling problems)
+[ ] allow model duplication (e.g., n clients automatically generated)
+[ ] allow more than one bad location (e.g., in Fischer: property := unreachable loc[proc1] = cs1 AND loc[proc2] = cs2)
 
 
 ************************************************************

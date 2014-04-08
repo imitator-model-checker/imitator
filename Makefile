@@ -475,7 +475,7 @@ exe:
 
 # 	$(TARGETV) $(EXAMPLE_PATH)/Fischer/fischerHRSV02.imi $(EXAMPLE_PATH)/Fischer/fischerHRSV02.pi0
 # 	$(TARGET) $(EXAMPLE_PATH)/Fischer/fischerHRSV02_obs.imi $(EXAMPLE_PATH)/Fischer/fischerHRSV02.pi0 -merge -incl -with-dot -depth-limit 80 -fancy
-	$(TARGET) $(EXAMPLE_PATH)/Fischer/fischerHRSV02_obs.imi -mode EF -merge -incl -depth-limit 80 -cart
+# 	$(TARGET) $(EXAMPLE_PATH)/Fischer/fischerHRSV02_obs.imi -mode EF -merge -incl -depth-limit 80 -cart
 # 	$(TARGET) $(EXAMPLE_PATH)/Fischer/fischerHRSV02_obs.imi $(EXAMPLE_PATH)/Fischer/fischerHRSV02.v0 -mode cover -merge -incl -depth-limit 80 -cart -verbose low
 # 	$(TARGET) $(EXAMPLE_PATH)/Fischer/fischerHRSV02_obs.imi $(EXAMPLE_PATH)/Fischer/fischerHRSV02.v0 -mode cover -merge -incl -efim -depth-limit 80 -cart -verbose low
 # 	$(TARGET) $(EXAMPLE_PATH)/Fischer/fischerHRSV02_obs.imi -PTA2JPG
@@ -487,6 +487,11 @@ exe:
 # 	$(TARGET) $(EXAMPLE_PATH)/Fischer/fischerPAT.imi -PTA2JPG
 # 	$(TARGETV) $(EXAMPLE_PATH)/Fischer/fischerPAT.imi $(EXAMPLE_PATH)/Fischer/fischerPAT.pi0 -depth-limit 20
 # 	$(TARGETV) $(EXAMPLE_PATH)/Fischer/fischerPAT.imi $(EXAMPLE_PATH)/Fischer/fischerPAT.pi0 -dynamic-elimination -verbose low -depth-limit 60 -with-log 
+
+# 	$(TARGET) $(EXAMPLE_PATH)/Fischer/fischerPAT_obs.imi -mode EF -merge -cart
+# 	$(TARGET) $(EXAMPLE_PATH)/Fischer/fischerPAT_obs.imi $(EXAMPLE_PATH)/Fischer/fischerPAT.pi0 -merge -with-dot -fancy
+# 	$(TARGET) $(EXAMPLE_PATH)/Fischer/fischerPAT_obs.imi $(EXAMPLE_PATH)/Fischer/fischerPAT.v0 -mode cover -merge -cart
+# 	$(TARGET) $(EXAMPLE_PATH)/Fischer/fischerPAT_obs.imi $(EXAMPLE_PATH)/Fischer/fischerPAT.v0 -mode cover -efim -merge -cart
 
 # 	$(TARGET) $(EXAMPLE_PATH)/BangOlufsen/BangOlufsen.imi -mode statespace 
 # 	$(TARGET) $(EXAMPLE_PATH)/BangOlufsen/BangOlufsen.imi $(EXAMPLE_PATH)/BangOlufsen/BangOlufsen.pi0 -depth-limit 12 -incl -statistics
