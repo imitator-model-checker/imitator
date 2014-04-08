@@ -474,6 +474,11 @@ exe:
 # 	$(TARGETV) $(EXAMPLE_PATH)/Fischer/fischer_2.imi $(EXAMPLE_PATH)/Fischer/fischer_2.pi0
 
 # 	$(TARGETV) $(EXAMPLE_PATH)/Fischer/fischerHRSV02.imi $(EXAMPLE_PATH)/Fischer/fischerHRSV02.pi0
+# 	$(TARGET) $(EXAMPLE_PATH)/Fischer/fischerHRSV02_obs.imi $(EXAMPLE_PATH)/Fischer/fischerHRSV02.pi0 -merge -incl -with-dot -depth-limit 80 -fancy
+	$(TARGET) $(EXAMPLE_PATH)/Fischer/fischerHRSV02_obs.imi -mode EF -merge -incl -depth-limit 80 -cart
+# 	$(TARGET) $(EXAMPLE_PATH)/Fischer/fischerHRSV02_obs.imi $(EXAMPLE_PATH)/Fischer/fischerHRSV02.v0 -mode cover -merge -incl -depth-limit 80 -cart -verbose low
+# 	$(TARGET) $(EXAMPLE_PATH)/Fischer/fischerHRSV02_obs.imi $(EXAMPLE_PATH)/Fischer/fischerHRSV02.v0 -mode cover -merge -incl -efim -depth-limit 80 -cart -verbose low
+# 	$(TARGET) $(EXAMPLE_PATH)/Fischer/fischerHRSV02_obs.imi -PTA2JPG
 	
 # 	$(TARGET) $(EXAMPLE_PATH)/Fischer/fischerPAT.imi -mode statespace -verbose total
 # 	$(TARGET) $(EXAMPLE_PATH)/Fischer/fischerPAT.imi -mode statespace -with-log -with-dot -incl -fancy
@@ -496,7 +501,7 @@ exe:
 # 	$(TARGET) $(EXAMPLE_PATH)/BRP/brp.imi -mode statespace 
 # 	$(TARGET) $(EXAMPLE_PATH)/BRP/brp.imi $(EXAMPLE_PATH)/BRP/brp.pi0 -merge
 # 	$(TARGET) $(EXAMPLE_PATH)/BRP/brp.imi $(EXAMPLE_PATH)/BRP/brp.v0 -mode cover -cart -merge -check-point
-	$(TARGET) $(EXAMPLE_PATH)/BRP/brp.imi $(EXAMPLE_PATH)/BRP/brp.v0 -mode cover -efim -cart -merge -step 10
+# 	$(TARGET) $(EXAMPLE_PATH)/BRP/brp.imi $(EXAMPLE_PATH)/BRP/brp.v0 -mode cover -efim -cart -merge -step 10
 # 	$(TARGET) $(EXAMPLE_PATH)/BRP/brp.imi -mode EF -merge -cart
 # 	$(TARGETV) $(EXAMPLE_PATH)/BRP/brp.imi $(EXAMPLE_PATH)/BRP/brp.pi0 -with-dot -with-log
 # 	$(TARGETV) $(EXAMPLE_PATH)/BRP/brp.imi $(EXAMPLE_PATH)/BRP/brp.pi0 -dynamic-elimination -with-dot -with-log -log-prefix $(EXAMPLE_PATH)/BRP/brp-dynamic
