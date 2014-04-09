@@ -8,7 +8,7 @@
  * Author:        Etienne Andre
  * 
  * Created:       2009/09/08
- * Last modified: 2014/04/08
+ * Last modified: 2014/04/09
  *
  ****************************************************************)
  
@@ -399,10 +399,15 @@ let string_of_list_of_string_with_sep sep l =
 	string_of_array_of_string_with_sep sep (Array.of_list l)
 
 
+(* Returns a list of substrings splitted using sep *)
+let split sep = Str.split (Str.regexp ("[" ^ sep ^ "]"))
+
 
 (* 's_of_int i' Return "s" if i > 1, "" otherwise *)
 let s_of_int i =
 	if i > 1 then "s" else ""
+
+
 
 (****************************************************************)
 (** Useful functions on booleans *)

@@ -8,7 +8,7 @@
  * Author:        Etienne Andre
  * 
  * Created:       2009/09/08
- * Last modified: 2014/03/25
+ * Last modified: 2014/04/09
  *
  ****************************************************************)
 
@@ -225,6 +225,9 @@ val string_of_array_of_string_with_sep : string -> string array -> string
 
 (* Convert a list of string into a string with separators *)
 val string_of_list_of_string_with_sep : string -> string list -> string
+
+(* Returns a list of substrings splitted using sep *)
+val split : string -> string -> string list
 
 (* 's_of_int i' Return "s" if i > 1, "" otherwise *)
 val s_of_int : int -> string

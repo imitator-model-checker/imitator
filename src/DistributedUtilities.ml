@@ -69,8 +69,6 @@ let masterrank = 0
 (****************************************************************)
 (** Serialization Functions *)
 (****************************************************************)
-(* Returns a list of substrings splitted using sep *)
-let split sep = Str.split (Str.regexp ("[" ^ sep ^ "]"))
 
 let serialize_numconst = NumConst.string_of_numconst
 let unserialize_numconst = NumConst.numconst_of_string

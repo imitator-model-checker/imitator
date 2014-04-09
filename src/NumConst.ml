@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2010/03/04
- * Last modified: 2014/03/25
+ * Last modified: 2014/04/09
  *
  ****************************************************************)
 
@@ -27,6 +27,42 @@ exception Unknown_numconst of string
 (**************************************************)
 
 let get_mpq a = a
+
+
+
+(**************************************************)
+(** {2 Arithmetic Functions} *)
+(**************************************************)
+
+(*let arithmetic_gen op a b =
+	let a = get_mpq a in
+	let b = get_mpq b in
+	let result = Gmp.Q.create () in
+	op result a b;
+	result*)
+
+let add = ( +/ ) 
+(*	arithmetic_gen Gmp.Q.add*)
+
+let sub = ( -/ ) 
+(*	arithmetic_gen Gmp.Q.sub*)
+
+let mul = ( */ ) 
+(*	arithmetic_gen Gmp.Q.mul*)
+
+let div = ( // ) 
+(*	arithmetic_gen Gmp.Q.div*)
+
+let neg a = Gmp.Q.neg a	
+(*	let a = get_mpq a in           *)
+(*	let result = Gmp.Q.create () in*)
+(*	Gmp.Q.neg result a;            *)
+(*	Mpq result                     *)
+
+let abs a =
+	if Gmp.Q.cmp (get_mpq a) (Gmp.Q.zero) >= 0 then a
+	else neg a
+
 
 (**************************************************)
 (** {2 User Conversions} *)
@@ -69,8 +105,9 @@ let numconst_of_float f = (* Mpq (Mpq.of_float i) DOES NOT WORK WELL *)
 		(* Create the fraction *)
 		 (integer */ denominator +/ fractional) // denominator
 	)
-	
-let numconst_of_string str =
+
+
+let numconst_of_positive_string str =
 	(* Case int *)
 	if Str.string_match (Str.regexp "^[0-9]+$") str 0 then
 		numconst_of_int_string str
@@ -85,7 +122,30 @@ let numconst_of_string str =
 	(* Otherwise *)
 	else raise (Unknown_numconst ("Impossible to cast the string '" ^ str ^ "' to a NumConst in function numconst_of_string. Unknown type."))
 	(* 	Gmp.Q.from_z (Gmp.Z.from_string str) *)
+
+
+let numconst_of_string str =
+	let s = "^-\\(.+\\)$" in
+	let r = Str.regexp s in
 	
+	let matched = try
+		(*** NOTE: try could be safely removed ***)
+		Str.string_match r str 0
+		with Failure f -> raise (Failure("Failure while unserializing numconst '" ^ str ^ "'. Error: " ^ f));
+	in
+	
+	(* Case negative *)
+	if matched then(
+		(* Retrieve the rest *)
+		let rest = try
+			(*** NOTE: try could be safely removed ***)
+			Str.matched_group 1 str
+			with Failure f -> raise (Failure("Failure while unserializing numconst '" ^ str ^ "' and accessign group 1. Error: " ^ f));
+		in
+		neg (numconst_of_positive_string rest)
+	)
+	(* Case positive *)
+	else numconst_of_positive_string str
 
 	
 let numconst_of_mpq m = m
@@ -117,39 +177,8 @@ let minus_one = numconst_of_int (-1)
 
 
 (**************************************************)
-(** {2 Arithmetic Functions} *)
+(** {2 More Elaborated Arithmetic Functions} *)
 (**************************************************)
-
-(*let arithmetic_gen op a b =
-	let a = get_mpq a in
-	let b = get_mpq b in
-	let result = Gmp.Q.create () in
-	op result a b;
-	result*)
-
-let add = ( +/ ) 
-(*	arithmetic_gen Gmp.Q.add*)
-
-let sub = ( -/ ) 
-(*	arithmetic_gen Gmp.Q.sub*)
-
-let mul = ( */ ) 
-(*	arithmetic_gen Gmp.Q.mul*)
-
-let div = ( // ) 
-(*	arithmetic_gen Gmp.Q.div*)
-
-let neg a = Gmp.Q.neg a	
-(*	let a = get_mpq a in           *)
-(*	let result = Gmp.Q.create () in*)
-(*	Gmp.Q.neg result a;            *)
-(*	Mpq result                     *)
-
-let abs a =
-	if Gmp.Q.cmp (get_mpq a) (Gmp.Q.zero) >= 0 then a
-	else neg a
-
-
 
 (** WARNING: not really tested !!! *)
 let find_multiple_gen tcdiv_q base_number step number =

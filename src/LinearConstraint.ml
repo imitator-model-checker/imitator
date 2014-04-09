@@ -10,7 +10,7 @@
  * Author:        Etienne Andre
  * 
  * Created:       2010/03/04
- * Last modified: 2014/03/30
+ * Last modified: 2014/04/08
  *
  ****************************************************************) 
  
@@ -131,6 +131,7 @@ type coef = NumConst.t
 (* the linear_term is a generalization of the corresponding  *)
 (* PPL data structure Ppl.linear_expression, using rationals *)
 (* instead of integers. *)
+(*** WARNING: probably useless construction (by Ulrich) ***)
 type linear_term =
 	  Var of variable
 	| Coef of coef
@@ -143,6 +144,7 @@ type px_linear_term = linear_term
 type pxd_linear_term = linear_term
 
 
+(*** WARNING: probably useless construction (by Ulrich) ***)
 type op =
 	| Op_g
 	| Op_ge
@@ -920,10 +922,10 @@ let pxd_find_variables = find_variables
 let serialize_SEP_CV = "*"
 
 (** Separator between linear terms *)
-let serialize_SEP_LC = "+"
+let serialize_SEP_LT = "+"
 
-(** Separator between linear inequalities *)
-let serialize_SEP_LC = "^"
+(** Separator between linear inequalities ('a' stands for 'and'; not using '^' because makes conflicts in regular expressions) *)
+let serialize_SEP_LI = "a"
 
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -946,16 +948,44 @@ let unserialize_variable variable_string =
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 let serialize_coef = Gmp.Z.string_from
 
+let unserialize_coef = (*NumConst.numconst_of_string*)Gmp.Z.from_string
+
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 (** {3 Operators} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+let serialize_ALL_OPS = "<l=g>"
+
 let serialize_op = function
 	| Less_Than_RS -> "<"
 	| Less_Or_Equal_RS -> "l"
 	| Equal_RS -> "="
 	| Greater_Or_Equal_RS -> "g"
 	| Greater_Than_RS -> ">"
+
+let unserialize_op s = match s with
+	| "<" -> Less_Than_RS
+	| "l" -> Less_Or_Equal_RS
+	| "=" -> Equal_RS
+	| "g" -> Greater_Or_Equal_RS
+	| ">" -> Greater_Than_RS
+	| _ -> raise (SerializationError ("Cannot unserialize op '" ^ s ^ "'."))
+
+
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+(** {3 Coefficients} *)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+(** Unserialize a pair (coef, variable) or a coef *)
+let unserialize_coef_var coef_var_pair_string =
+	match split serialize_SEP_CV coef_var_pair_string with
+	(* Case variable with a coefficient *)
+	| [coef_string ; variable_string ] ->
+		Times (unserialize_coef coef_string , Variable (unserialize_variable variable_string))
+	(* Case coefficient alone *)
+	| [coef_string ] ->
+		Coefficient (unserialize_coef coef_string)
+	| _ -> raise (SerializationError ("Cannot unserialize string '" ^ coef_var_pair_string ^ "': (coef, variable_index) or coef expected."))
+
 
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -965,14 +995,15 @@ let serialize_op = function
 (** Convert a linear term (PPL) into a string *)
 let rec serialize_linear_term linear_term =
 	match linear_term with
+	(*** WARNING: slightly problematic translation, as we do not check that a variable is never without a coefficient (in which case it will be interpreted as a coefficient instead of a variable) ***)
 		| Coefficient z -> serialize_coef z
 		| Variable v -> serialize_variable v
-		| Unary_Plus t -> serialize_linear_term t
+		| Unary_Plus t -> (*serialize_linear_term t*)raise (InternalError("Match Unary_Plus not taken into account in serialization"))
 		| Unary_Minus t -> raise (InternalError("Match Unary_Minus not taken into account in serialization"))
 		| Plus (lterm, rterm) -> (
 			  let lstr = serialize_linear_term lterm in
 				let rstr = serialize_linear_term rterm in
-				lstr ^ serialize_SEP_LC ^ rstr )
+				lstr ^ serialize_SEP_LT ^ rstr )
 		| Minus (lterm, rterm) -> raise (InternalError("Match Minus not taken into account in serialization"))
 		| Times (z, rterm) -> (
 				let fstr = serialize_coef z in
@@ -983,7 +1014,24 @@ let rec serialize_linear_term linear_term =
 						| _ -> raise (InternalError("Case '_ * Coefficient' not taken into account in serialization"))
 						
 				)
-				
+
+
+let unserialize_linear_term linear_term_string =
+	(* Split according to the separator '+' *)
+	let coef_var_pairs_string = split serialize_SEP_LT linear_term_string in
+	(* Convert to proper coefs and vars *)
+	let coef_var_pairs = List.map unserialize_coef_var coef_var_pairs_string in
+	(* Reconstruct the linear_term *)
+	match coef_var_pairs with
+	(* Only one linear term *)
+	| [ coef_var ] -> coef_var
+	(* More than one linear term *)
+	| coef_var :: rest ->
+		List.fold_left (fun current_lt coef_var ->
+			Plus(coef_var, current_lt)
+		) coef_var rest
+	| _ -> raise (SerializationError("Found empty linear term when unserializing."))
+
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 (** {3 Linear inequalities} *)
@@ -998,6 +1046,33 @@ let serialize_linear_inequality linear_inequality =
 	lstr ^ (serialize_op op) ^ rstr
 
 
+let unserialize_linear_inequality linear_inequality_string =
+	(* Split according to the operators *)
+	let s = ("^\\(.+\\)\\([" ^ serialize_ALL_OPS ^ "]\\)\\(.+\\)$") in
+	let r = Str.regexp s in
+	(* Check accuracy *)
+	let matched = (*try*)
+		Str.string_match r linear_inequality_string 0
+		(*with Failure f -> raise (SerializationError("Failure while unserializing linear inequality '" ^ linear_inequality_string ^ "'. Expected: (lterm, op, rterm). Error: " ^ f));*)
+	in
+	if not matched then(
+		raise (SerializationError("Found unexpected linear inequality '" ^ linear_inequality_string ^ "'. Expected: (lterm, op, rterm)."))
+	);
+	(* Retrieve the 3 groups *)
+	let lstr = Str.matched_group 1 linear_inequality_string in
+	let op_string = Str.matched_group 2 linear_inequality_string in
+	let rstr = Str.matched_group 3 linear_inequality_string in
+	
+	(*try*)
+	(* Unserialize and build *)
+	build_linear_inequality
+		(unserialize_linear_term lstr)
+		(unserialize_linear_term rstr)
+		(unserialize_op op_string)
+	(*with Failure f -> raise (SerializationError("Failure while unserializing linear inequality '" ^ linear_inequality_string ^ "'. Error: " ^ f))*)
+	
+
+
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 (** {3 Linear constraints} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -1006,7 +1081,21 @@ let serialize_linear_constraint linear_constraint =
 	(* Get a list of linear inequalities and serialize *)
 	let list_of_inequalities = List.map serialize_linear_inequality (get_constraints linear_constraint) in
 	(* Add separators *)
-	String.concat serialize_SEP_LC list_of_inequalities
+	String.concat serialize_SEP_LI list_of_inequalities
+
+
+
+let unserialize_linear_constraint linear_constraint_string =
+	(* Split according to the separator '^' *)
+	let inequalities_string =
+		try
+			split serialize_SEP_LI linear_constraint_string
+		with Failure f -> raise (SerializationError("Splitting failure while unserializing linear inequality '" ^ linear_constraint_string ^ "'. Error: " ^ f))
+	in
+	(* Convert to linear inequalities *)
+	let inequalities =  List.map unserialize_linear_inequality inequalities_string in
+	(* Reconstruct the linear constraint *)
+	make inequalities
 
 
 (*############################################################*)
@@ -1036,8 +1125,16 @@ let string_of_true = "true"
 let string_of_linear_constraint names linear_constraint =
 
 
-(* 	TODO HACK WARNING *)
-(* 	print_warning(serialize_linear_constraint linear_constraint); *)
+(*** 	TODO DEBUG HACK WARNING ***)
+(*	let serialized = serialize_linear_constraint linear_constraint in
+	print_warning(serialized);
+	let unserialized = 
+		try
+			unserialize_linear_constraint serialized
+		with Failure f -> raise (SerializationError("Failure while unserializing linear inequality '" ^ serialized ^ "'. Error: " ^ f))
+	in
+	print_string(string_of_bool( is_equal linear_constraint unserialized ));*)
+(*** 	TODO DEBUG HACK WARNING ***)
 	
 	
 	
