@@ -10,7 +10,7 @@
  * Author:        Ulrich Kuehne, Etienne Andre
  * 
  * Created:       2010/07/22
- * Last modified: 2014/03/20
+ * Last modified: 2014/04/15
  *
  ****************************************************************)
 
@@ -32,6 +32,26 @@ open Gc
 
 exception Unsat_exception
 
+
+
+
+(****************************************************************)
+(** The result output by IM *)
+(****************************************************************)
+type im_result = {
+	(* Returned constraint *)
+	result : returned_constraint;
+	(* Reachability graph *)
+	reachability_graph : StateSpace.reachability_graph;
+	(* Tile nature *)
+	tile_nature : tile_nature;
+	(* Deterministic analysis? *)
+	deterministic : bool;
+	(* Number of iterations *)
+	nb_iterations : int;
+	(* Computation time *)
+	total_time : float;
+}
 
 
 
@@ -1156,6 +1176,41 @@ let create_initial_state model =
 	initial_location, current_constraint
 
 
+
+(*--------------------------------------------------*)
+(* Compute the initial state with the initial invariants and time elapsing, and check it is satisfiable; otherwise abort *)
+(*--------------------------------------------------*)
+let get_initial_state_or_abort model =
+	(* Print the initial state *)
+	if debug_mode_greater Debug_medium then
+		print_message Debug_medium ("\nInitial state:\n" ^ (ModelPrinter.string_of_state model (model.initial_location, model.initial_constraint)) ^ "\n");
+
+	(* Check the satisfiability *)
+	if not (LinearConstraint.px_is_satisfiable model.initial_constraint) then (
+		print_warning "The initial constraint of the model is not satisfiable.";
+		terminate_program();
+	)else(
+		print_message Debug_total ("\nThe initial constraint of the model is satisfiable.");
+	);
+
+	(* Get the initial state after time elapsing *)
+	let init_state_after_time_elapsing = create_initial_state model in
+	let _, initial_constraint_after_time_elapsing = init_state_after_time_elapsing in
+
+
+	(* Check the satisfiability *)
+	if not (LinearConstraint.px_is_satisfiable initial_constraint_after_time_elapsing) then (
+		print_warning "The initial constraint of the model after time elapsing is not satisfiable.";
+		terminate_program();
+	)else(
+		print_message Debug_total ("\nThe initial constraint of the model after time elapsing is satisfiable.");
+	);
+	(* Print the initial state after time elapsing *)
+	if debug_mode_greater Debug_medium then
+		print_message Debug_medium ("\nInitial state after time-elapsing:\n" ^ (ModelPrinter.string_of_state model init_state_after_time_elapsing) ^ "\n");
+		
+	(* Return the initial state *)
+	init_state_after_time_elapsing
 
 
 (*--------------------------------------------------*)
@@ -2550,9 +2605,12 @@ let print_statistics reachability_graph =
 (************************************************************)
 (* State space exploration analysis *)
 (************************************************************)
-let full_state_space_exploration model init_state =
+let full_state_space_exploration model =
 	(* Retrieve the input options *)
 	let options = Input.get_options () in
+
+	(* Compute the initial state *)
+	let init_state = get_initial_state_or_abort model in
 
 	(* Call to generic function *)
 	let reachability_graph , _ , total_time ,  _ = post_star model init_state in
@@ -2581,9 +2639,12 @@ let full_state_space_exploration model init_state =
 (************************************************************)
 (* EF-synthesis *)
 (************************************************************)
-let ef_synthesis model init_state =
+let ef_synthesis model =
 	(* Retrieve the input options *)
 	let options = Input.get_options () in
+
+	(* Compute the initial state *)
+	let init_state = get_initial_state_or_abort model in
 
 	(* Call to generic function *)
 	let reachability_graph , _ , total_time ,  _ = post_star model init_state in
@@ -2788,21 +2849,32 @@ let inverse_method_gen model init_state =
 	(*--------------------------------------------------*)
 	(* Return result *)
 	(*--------------------------------------------------*)
-	returned_constraint, reachability_graph, !tile_nature, (nb_random_selections > 0), nb_iterations, total_time
+	{
+	result 				= returned_constraint;
+	reachability_graph	= reachability_graph;
+	tile_nature			= !tile_nature;
+	deterministic		= (nb_random_selections > 0);
+	nb_iterations		= nb_iterations;
+	total_time			= total_time
+	}
 	
 	
 
+(*** WARNING!!! Why a dedicated function here, whereas for BC+EFIM this function is not (?) called? ***)
 (*--------------------------------------------------*)
-let efim model init_state =
+let efim model =
 (*--------------------------------------------------*)
 	(* Retrieve the input options *)
 	let options = Input.get_options () in
 
+	(* Compute the initial state *)
+	let init_state = get_initial_state_or_abort model in
+
 	(* Call the inverse method *)
-	let returned_constraint, reachability_graph, tile_nature, deterministic, nb_iterations, total_time = inverse_method_gen model init_state in
+	let (*returned_constraint, reachability_graph, tile_nature, deterministic, nb_iterations, total_time*) im_result = inverse_method_gen model init_state in
 	
 	(* Processing the result *)
-	let constraint_str = string_of_returned_constraint model.variable_names returned_constraint
+	let constraint_str = string_of_returned_constraint model.variable_names im_result.result
 (*	match tile_nature with
 	(* Bad tile: return the union of the bad constraints *)
 	| Bad _ ->
@@ -2829,42 +2901,47 @@ let efim model init_state =
 	
 	print_message Debug_low (
 		"Computation time for EFIM only: "
-		^ (string_of_seconds total_time) ^ "."
+		^ (string_of_seconds im_result.total_time) ^ "."
 	);
 	
 	(* Generate graphics *)
 	let radical = options#files_prefix in
-	Graphics.generate_graph model reachability_graph radical;
+	Graphics.generate_graph model im_result.reachability_graph radical;
 	
 	(* Print statistics *)
-	print_statistics reachability_graph;
+	print_statistics im_result.reachability_graph;
 
 	(* The end *)
 	()
 
 
 (*--------------------------------------------------*)
-let inverse_method model init_state =
+let inverse_method model =
 (*--------------------------------------------------*)
 	(* Retrieve the input options *)
 	let options = Input.get_options () in
+	
+	(* Compute the initial state *)
+	let init_state = get_initial_state_or_abort model in
 
 	(* Call the inverse method *)
-	let (returned_constraint : AbstractModel.returned_constraint), reachability_graph, tile_nature, deterministic, nb_iterations, total_time = inverse_method_gen model init_state in
+	let im_result = inverse_method_gen model init_state in
+	
+(* 	(returned_constraint : AbstractModel.returned_constraint), im_result.reachability_graph, tile_nature, deterministic, nb_iterations, total_time  *)
 	
 	(* Here comes the result *)
 	print_message Debug_standard ("\nFinal constraint K0 "
 		^ (if options#union
 			then "(under disjunctive form) "
 			else (
-				match returned_constraint with
+				match im_result.result with
 					| Convex_constraint (p_linear_constraint , _) -> " (" ^ (string_of_int (LinearConstraint.p_nb_inequalities p_linear_constraint)) ^ " inequalities)"
 					| NNCConstraint _ (*(k_good, k_bad, tile_nature)*) -> " (in \"good - bad\" form)"
 					| _ -> raise (InternalError "Impossible situation in inverse_method: a returned_constraint is not under convex form although union mode is not enabled.");
 			)
 		)
 		^ ":");
-	print_message Debug_nodebug (string_of_returned_constraint model.variable_names returned_constraint);
+	print_message Debug_nodebug (string_of_returned_constraint model.variable_names im_result.result);
 	print_message Debug_standard (
 		"\nInverse method successfully finished " ^ (after_seconds ()) ^ "."
 	);
@@ -2874,15 +2951,15 @@ let inverse_method model init_state =
 	
 	print_message Debug_low (
 		"Computation time for IM only: "
-		^ (string_of_seconds total_time) ^ "."
+		^ (string_of_seconds im_result.total_time) ^ "."
 	);
 	
 	(* Generate graphics *)
 	let radical = options#files_prefix in
-	Graphics.generate_graph model reachability_graph radical;
+	Graphics.generate_graph model im_result.reachability_graph radical;
 	
 	(* Print statistics *)
-	print_statistics reachability_graph;
+	print_statistics im_result.reachability_graph;
 
 	(* The end *)
 	()

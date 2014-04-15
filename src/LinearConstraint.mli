@@ -10,7 +10,7 @@
  * Author:        Etienne Andre
  * 
  * Created:       2010/03/04
- * Last modified: 2014/03/27
+ * Last modified: 2014/04/15
  *
  ****************************************************************) 
  
@@ -405,6 +405,9 @@ val plot_2d : variable -> variable -> p_linear_constraint -> float -> float -> f
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
 val serialize_variable : variable -> string
 val unserialize_variable : string -> variable
+
+val serialize_linear_constraint : p_linear_constraint -> string
+val unserialize_linear_constraint : string -> p_linear_constraint
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
 (** {3 Statistics on performances} *)

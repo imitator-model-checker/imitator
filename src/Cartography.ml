@@ -2,7 +2,7 @@
  *
  *                       IMITATOR
  * 
- * Convert a parsing structure into an abstract program
+ * Convert a parsing structure into an abstract model
  *
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Universite Paris 13, Sorbonne Paris Cite, LIPN (France)
@@ -10,7 +10,7 @@
  * Author:        Ulrich Kuehne, Etienne Andre
  * 
  * Created:       2012/06/18
- * Last modified: 2013/03/01
+ * Last modified: 2014/04/14
  *
  ****************************************************************)
 
@@ -143,18 +143,18 @@ let pi0_in_returned_constraint pi0 = function
 (*------------------------------------------------------------*)
 (* Generate a random pi0 in a given interval for each parameter (array view!) *)
 (*------------------------------------------------------------*)
-let random_pi0 program pi0 =
+let random_pi0 model pi0 =
 	raise (InternalError "not implemented")
 (*	(* Create the pi0 *)
-	let random_pi0 = Array.make program.nb_parameters NumConst.zero in
+	let random_pi0 = Array.make model.nb_parameters NumConst.zero in
 	(* Fill it *)
-	for i = 0 to program.nb_parameters - 1 do
+	for i = 0 to model.nb_parameters - 1 do
 		let a, b = pi0.(i) in
 		(* Generate a random value in the interval *)
 		Random.self_init();
 		let random_value = Random.int (b - a + 1) + a in
 		(* Debug *)
-(* 		print_message Debug_medium ("Generating randomly value '" ^ (string_of_int random_value) ^ "' for parameter '" ^ (program.variable_names i) ^ "'."); *)
+(* 		print_message Debug_medium ("Generating randomly value '" ^ (string_of_int random_value) ^ "' for parameter '" ^ (model.variable_names i) ^ "'."); *)
 		(* Convert to a num *)
 		random_pi0.(i) <- NumConst.numconst_of_int random_value;
 	done;
@@ -213,7 +213,7 @@ let initial_pi0 min_bounds max_bounds first_dimension =
 (*------------------------------------------------------------*)
 (** Compute the next pi0 and directly modify the variable 'current_pi0' (standard BC) *)
 (*------------------------------------------------------------*)
-let find_next_pi0_cover program init_constraint min_bounds max_bounds nb_dimensions computed_constraints current_pi0 =
+let find_next_pi0_cover model init_constraint min_bounds max_bounds nb_dimensions computed_constraints current_pi0 =
 	(* Retrieve the input options *)
 	let options = Input.get_options () in
 	
@@ -273,7 +273,7 @@ let find_next_pi0_cover program init_constraint min_bounds max_bounds nb_dimensi
 				nb_useless_points := !nb_useless_points + 1;
 				if debug_mode_greater Debug_medium then (
 					print_message Debug_medium "The following pi0 is already included in a constraint.";
-					print_message Debug_medium (ModelPrinter.string_of_pi0 program pi0);
+					print_message Debug_medium (ModelPrinter.string_of_pi0 model pi0);
 				);
 				(** TODO: could be optimized by finding the nearest multiple of tile next to the border, and directly switching to that one *)
 				
@@ -282,8 +282,8 @@ let find_next_pi0_cover program init_constraint min_bounds max_bounds nb_dimensi
 				(* Update the number of unsuccessful points *)
 				nb_useless_points := !nb_useless_points + 1;
 				if debug_mode_greater Debug_medium then (
-					print_message Debug_medium "The following pi0 does not satisfy the initial constraint of the program.";
-					print_message Debug_medium (ModelPrinter.string_of_pi0 program pi0);
+					print_message Debug_medium "The following pi0 does not satisfy the initial constraint of the model.";
+					print_message Debug_medium (ModelPrinter.string_of_pi0 model pi0);
 				);
 			(* If both checks passed, then pi0 found *)
 			)else(
@@ -307,8 +307,8 @@ let find_next_pi0_cover program init_constraint min_bounds max_bounds nb_dimensi
 (*------------------------------------------------------------*)
 (** Compute the next pi0 and directly modify the variable 'current_pi0' (border BC) *)
 (*------------------------------------------------------------*)
-let find_next_pi0_border program init_constraint min_bounds max_bounds nb_dimensions computed_constraints current_pi0 latest_nature current_intervals_min current_intervals_max =
-	find_next_pi0_cover program init_constraint min_bounds max_bounds nb_dimensions computed_constraints current_pi0 (*
+let find_next_pi0_border model init_constraint min_bounds max_bounds nb_dimensions computed_constraints current_pi0 latest_nature current_intervals_min current_intervals_max =
+	find_next_pi0_cover model init_constraint min_bounds max_bounds nb_dimensions computed_constraints current_pi0 (*
 	(* Print some information *)
 	print_message Debug_standard "Entering function 'find_next_pi0_border'.";
 	
@@ -368,7 +368,7 @@ let find_next_pi0_border program init_constraint min_bounds max_bounds nb_dimens
 				let pi0 = fun parameter -> current_pi0.(parameter) in
 				
 				(* Print some information *)
-				print_message Debug_standard ("Constructing a tentative point: " ^ (ModelPrinter.string_of_pi0 program pi0) ^ ".");
+				print_message Debug_standard ("Constructing a tentative point: " ^ (ModelPrinter.string_of_pi0 model pi0) ^ ".");
 		
 				print_message Debug_standard ("Checking whether this point belongs to a tile.");
 
@@ -415,7 +415,7 @@ let find_next_pi0_border program init_constraint min_bounds max_bounds nb_dimens
 					nb_useless_points := !nb_useless_points + 1;
 					if debug_mode_greater Debug_medium then (
 						print_message Debug_medium "The following pi0 is already included in a constraint.";
-						print_message Debug_medium (ModelPrinter.string_of_pi0 program pi0);
+						print_message Debug_medium (ModelPrinter.string_of_pi0 model pi0);
 					);
 					
 				) else (
@@ -511,7 +511,7 @@ let find_next_pi0_border program init_constraint min_bounds max_bounds nb_dimens
 (*------------------------------------------------------------*)
 (** Behavioral cartography algorithm with full coverage of V0 *)
 (*------------------------------------------------------------*)
-let cover_behavioral_cartography program v0 init_state =
+let cover_behavioral_cartography model v0 =
 	(* Retrieve the input options *)
 	let options = Input.get_options () in
 
@@ -556,7 +556,10 @@ let cover_behavioral_cartography program v0 init_state =
 	(* Counts the points actually member of an existing constraint (hence useless) for information purpose *)
 	let nb_useless_points = ref 0 in
 	
-	(* Initial constraint of the program *)
+	(* Compute the initial state *)
+	let init_state = get_initial_state_or_abort model in
+
+	(* Initial constraint of the model *)
 	let _, init_constraint = init_state in
 	(* Hide non parameters *)
 	let init_constraint = LinearConstraint.px_hide_nonparameters_and_collapse init_constraint in
@@ -573,7 +576,7 @@ let cover_behavioral_cartography program v0 init_state =
 		| Border_cartography -> 
 			Array.copy min_bounds, Array.copy max_bounds
 (*			let first, others =
-			begin match program.parameters with 
+			begin match model.parameters with 
 				| first :: others -> first , others 
 				| _ -> raise (InternalError("There should be at least one parameter (but this may not have been checked somewhere else, right?)."))
 			end
@@ -609,7 +612,7 @@ let cover_behavioral_cartography program v0 init_state =
 	print_message Debug_standard (" START THE BEHAVIORAL CARTOGRAPHY ALGORITHM");
 	print_message Debug_standard ("**************************************************");
 	print_message Debug_standard (" Parametric rectangle V0: ");
-	print_message Debug_standard (ModelPrinter.string_of_v0 program v0);
+	print_message Debug_standard (ModelPrinter.string_of_v0 model v0);
 	print_message Debug_standard (" Number of points inside V0: " ^ (NumConst.string_of_numconst nb_points));
 
 	(* Iterate on all the possible pi0 *)
@@ -631,7 +634,7 @@ let cover_behavioral_cartography program v0 init_state =
 		print_message Debug_standard ("\n**************************************************");
 		print_message Debug_standard ("BEHAVIORAL CARTOGRAPHY ALGORITHM: " ^ (string_of_int !current_iteration) ^ "");
 		print_message Debug_standard ("Considering the following pi" ^ (string_of_int !current_iteration));
-		print_message Debug_standard (ModelPrinter.string_of_pi0 program pi0);
+		print_message Debug_standard (ModelPrinter.string_of_pi0 model pi0);
 		
 		(* Prevent the debug messages (except in debug medium, high or total) *)
 		if not (debug_mode_greater Debug_medium) then
@@ -641,17 +644,17 @@ let cover_behavioral_cartography program v0 init_state =
 		Input.set_pi0 pi0;
 		
 		(* Call the inverse method *)
-		let returned_constraint, graph, tile_nature, (*deterministic*)_, nb_iterations, total_time = Reachability.inverse_method_gen program init_state in
+		let (*returned_constraint, graph, tile_nature, (*deterministic*)_, nb_iterations, total_time*) im_result = Reachability.inverse_method_gen model init_state in
 		
 		(* Update the time spent on IM *)
-		time_spent_on_IM := !time_spent_on_IM +. total_time;
+		time_spent_on_IM := !time_spent_on_IM +. im_result.total_time;
 		
 		(* Get the debug mode back *)
 		set_debug_mode global_debug_mode;
 		
 		(* Retrieve some info *)
-		let current_nb_states = StateSpace.nb_states graph in
-		let current_nb_transitions = StateSpace.nb_transitions graph in
+		let current_nb_states = StateSpace.nb_states im_result.reachability_graph in
+		let current_nb_transitions = StateSpace.nb_transitions im_result.reachability_graph in
 		
 		(* Update the counters *)
 		nb_states := !nb_states + current_nb_states;
@@ -660,15 +663,15 @@ let cover_behavioral_cartography program v0 init_state =
 		(* Print message *)
 		print_message Debug_standard (
 			"\nK" ^ (string_of_int (!current_iteration)) ^ " computed using algorithm InverseMethod after "
-			^ (string_of_int nb_iterations) ^ " iteration" ^ (s_of_int nb_iterations) ^ ""
-			^ " in " ^ (string_of_seconds total_time) ^ ": "
+			^ (string_of_int im_result.nb_iterations) ^ " iteration" ^ (s_of_int im_result.nb_iterations) ^ ""
+			^ " in " ^ (string_of_seconds im_result.total_time) ^ ": "
 			^ (string_of_int current_nb_states) ^ " state" ^ (s_of_int current_nb_states)
 			^ " with "
 			^ (string_of_int current_nb_transitions) ^ " transition" ^ (s_of_int current_nb_transitions) ^ " explored.");
 		
 		(* Generate the dot graph (will not be performed if options are not suitable) *)
 		let radical = options#files_prefix ^ "_" ^ (string_of_int !current_iteration) in
-			Graphics.generate_graph program graph radical;
+			Graphics.generate_graph model im_result.reachability_graph radical;
 		
 
 		(* Print the constraint *)
@@ -677,11 +680,11 @@ let cover_behavioral_cartography program v0 init_state =
 		(** NOTE: it may actually be more clever to check the tile nature from the graph, especially if we go for more complicated properties!! *)
 		
 		
-(* 			let bad_string = if StateSpace.is_bad program graph then "BAD." else "GOOD." in *)
+(* 			let bad_string = if StateSpace.is_bad model graph then "BAD." else "GOOD." in *)
 		print_message Debug_low ("Constraint K0 computed:");
-		print_message Debug_standard (ModelPrinter.string_of_returned_constraint program.variable_names returned_constraint);
-		if program.correctness_condition <> None then(
-			print_message Debug_standard ("This tile is " ^ (string_of_tile_nature tile_nature) ^ ".");
+		print_message Debug_standard (ModelPrinter.string_of_returned_constraint model.variable_names im_result.result);
+		if model.correctness_condition <> None then(
+			print_message Debug_standard ("This tile is " ^ (string_of_tile_nature im_result.tile_nature) ^ ".");
 		);
 
 
@@ -697,7 +700,7 @@ let cover_behavioral_cartography program v0 init_state =
 			(* The function depends whether the zone is good or bad *)
 			let nb_enlargements = ref 0 in
 			let enlarge =
-				match tile_nature with
+				match im_result.tile_nature with
 				(* If good: take all points from zero *)
 				| Good -> LinearConstraint.grow_to_zero_assign
 				(* If bad: take all points above *)
@@ -705,17 +708,17 @@ let cover_behavioral_cartography program v0 init_state =
 				| _ -> raise (InternalError ("Tile nature should be good or bad only, so far "))
 			in
 			(* Apply this to the constraint(s) *)
-			begin match returned_constraint with
+			begin match im_result.result with
 				| Convex_constraint (k, _) ->
 					(*** NOTE: Quite costly test, but interesting for statistics and readability ***)
 					let old_k = LinearConstraint.p_copy k in
-					enlarge program.parameters program.clocks_and_discrete k;
+					enlarge model.parameters model.clocks_and_discrete k;
 					if not (LinearConstraint.p_is_equal k old_k) then nb_enlargements := !nb_enlargements + 1;
 				| Union_of_constraints (k_list, _) ->
 					List.iter (fun k ->
 						(*** NOTE: Quite costly test, but interesting for statistics and readability ***)
 						let old_k = LinearConstraint.p_copy k in
-						enlarge program.parameters program.clocks_and_discrete k;
+						enlarge model.parameters model.clocks_and_discrete k;
 						if not (LinearConstraint.p_is_equal k old_k) then nb_enlargements := !nb_enlargements + 1;
 					) k_list
 				| NNCConstraint _ -> raise (InternalError ("NNCCs are not available everywhere yet."))
@@ -723,7 +726,7 @@ let cover_behavioral_cartography program v0 init_state =
 			
 			if !nb_enlargements > 0 then(
 				print_message Debug_standard ("Constraint after enlarging:" ^ (if !nb_enlargements > 1 then " ("  ^ (string_of_int !nb_enlargements) ^ " enlargements)" else ""));
-				print_message Debug_standard (ModelPrinter.string_of_returned_constraint program.variable_names returned_constraint);
+				print_message Debug_standard (ModelPrinter.string_of_returned_constraint model.variable_names im_result.result);
 			);
 
 		| _ -> raise (InternalError("In function 'cover_behavioral_cartography', the mode should be a cover / border cartography only."))
@@ -734,17 +737,17 @@ let cover_behavioral_cartography program v0 init_state =
 		(* USELESS SO FAR 
 		DynArray.add pi0_computed pi0; *)
 		(*** WARNING: so stupid here!! Better flatten the structure! ***)
-		DynArray.add computed_constraints returned_constraint;
+		DynArray.add computed_constraints im_result.result;
 		
 		(* Compute the next pi0 (note that current_pi0 is directly modified by the function!) and return flags for more pi0 and co *)
 		let found_pi0 , time_limit_reached , new_nb_useless_points =
 			(* Branching *)
 			match options#imitator_mode with
 			| Cover_cartography ->
-				find_next_pi0_cover program init_constraint min_bounds max_bounds nb_dimensions computed_constraints current_pi0
+				find_next_pi0_cover model init_constraint min_bounds max_bounds nb_dimensions computed_constraints current_pi0
 
 			| Border_cartography ->
-				find_next_pi0_border program init_constraint min_bounds max_bounds nb_dimensions computed_constraints current_pi0 tile_nature current_intervals_min current_intervals_max
+				find_next_pi0_border model init_constraint min_bounds max_bounds nb_dimensions computed_constraints current_pi0 im_result.tile_nature current_intervals_min current_intervals_max
 
 			| _ -> raise (InternalError("In function 'cover_behavioral_cartography', the mode should be a cover / border cartography only."))
 		in
@@ -805,13 +808,13 @@ let cover_behavioral_cartography program v0 init_state =
 (** Behavioral cartography algorithm with random selection of a pi0 *)
 (** TODO: merge with the other !!!! *)
 (*------------------------------------------------------------*)
-let random_behavioral_cartography program v0 init_state nb =
+let random_behavioral_cartography model v0 nb =
 	(* Retrieve the input options *)
 	let options = Input.get_options () in
 
 	(* Array for the pi0 *)
 	(***** TO OPTIMIZE: why create such a big array?! *****)
-	let pi0_computed = Array.make nb (random_pi0 program v0) in
+	let pi0_computed = Array.make nb (random_pi0 model v0) in
 	(* Array for the results *)
 	(***** TO OPTIMIZE: why create such a big array?! *****)
 	let results = Array.make nb (Convex_constraint (LinearConstraint.p_false_constraint (), Unknown)) in
@@ -821,7 +824,11 @@ let random_behavioral_cartography program v0 init_state nb =
 	let global_debug_mode = get_debug_mode() in
 	(* Prevent the printing of messages in algorithm Inverse Method *)
 	let cut_messages = not (debug_mode_greater Debug_low) in
-	(* Initial constraint of the program *)
+
+	(* Compute the initial state *)
+	let init_state = get_initial_state_or_abort model in
+
+	(* Initial constraint of the model *)
 	let _, init_constraint = init_state in
 	(* Hide non parameters *)
 	let init_constraint = LinearConstraint.px_hide_nonparameters_and_collapse init_constraint in
@@ -830,7 +837,7 @@ let random_behavioral_cartography program v0 init_state nb =
 	let i = ref 1 in
 	let limit_reached = ref false in
 	while !i <= nb && not !limit_reached do
-		let pi0 = random_pi0 program v0 in
+		let pi0 = random_pi0 model v0 in
 
 		(* Print messages *)
 		print_message Debug_standard ("\n**************************************************");
@@ -853,17 +860,17 @@ let random_behavioral_cartography program v0 init_state nb =
 			(* Check that it does not belong to any constraint *)
 			if array_exists (pi0_in_returned_constraint pi0_functional) results then (
 				print_message Debug_standard ("This pi" ^ (string_of_int !i) ^ " is already included in a constraint.");
-				print_message Debug_standard (ModelPrinter.string_of_pi0 program pi0_functional);
+				print_message Debug_standard (ModelPrinter.string_of_pi0 model pi0_functional);
 				
 			(* Check that it satisfies the initial constraint *)
 			) else if not (LinearConstraint.is_pi0_compatible pi0_functional init_constraint) then (
-				print_message Debug_standard ("This pi" ^ (string_of_int !i) ^ " does not satisfy the initial constraint of the program.");
-				print_message Debug_standard (ModelPrinter.string_of_pi0 program pi0_functional);
+				print_message Debug_standard ("This pi" ^ (string_of_int !i) ^ " does not satisfy the initial constraint of the model.");
+				print_message Debug_standard (ModelPrinter.string_of_pi0 model pi0_functional);
 				
 			) else (
 				(* Consider from here a brand new and correct pi0 *)
 				print_message Debug_standard ("Considering pi" ^ (string_of_int !i) ^ " :=");
-				print_message Debug_standard (ModelPrinter.string_of_pi0 program pi0_functional);
+				print_message Debug_standard (ModelPrinter.string_of_pi0 model pi0_functional);
 
 				(* Prevent the messages if needed *)
 				if cut_messages then (
@@ -874,18 +881,18 @@ let random_behavioral_cartography program v0 init_state nb =
 				Input.set_pi0 pi0_functional;
 			
 				(* Call the inverse method *)
-				let returned_constraint, graph, (*tile_nature*)_, (*deterministic*)_, nb_iterations, total_time = Reachability.inverse_method_gen program init_state in
+				let (*returned_constraint, graph, (*tile_nature*)_, (*deterministic*)_, nb_iterations, total_time*) im_result = Reachability.inverse_method_gen model init_state in
 				(* Get the debug mode back *)
 				set_debug_mode global_debug_mode;
 
 				(* Retrieve some info *)
-				let current_nb_states = StateSpace.nb_states graph in
-				let current_nb_transitions = StateSpace.nb_transitions graph in
+				let current_nb_states = StateSpace.nb_states im_result.reachability_graph in
+				let current_nb_transitions = StateSpace.nb_transitions im_result.reachability_graph in
 				
 				print_message Debug_standard (
 					"\nK" ^ (string_of_int !i) ^ " computed using algorithm InverseMethod after "
-					^ (string_of_int nb_iterations) ^ " iteration" ^ (s_of_int nb_iterations) ^ ""
-					^ " in " ^ (string_of_seconds total_time) ^ ": "
+					^ (string_of_int im_result.nb_iterations) ^ " iteration" ^ (s_of_int im_result.nb_iterations) ^ ""
+					^ " in " ^ (string_of_seconds im_result.total_time) ^ ": "
 					^ (string_of_int current_nb_states) ^ " reachable state" ^ (s_of_int current_nb_states)
 					^ " with "
 					^ (string_of_int current_nb_transitions) ^ " transition" ^ (s_of_int current_nb_transitions) ^ ".");
@@ -895,22 +902,22 @@ let random_behavioral_cartography program v0 init_state nb =
 
 				(* Generate the dot graph *)
 				let radical = options#files_prefix ^ "_" ^ (string_of_int !i) in
-				Graphics.generate_graph program graph radical;
+				Graphics.generate_graph model im_result.reachability_graph radical;
 				(* Add the index to the interesting list *)
 				interesting_interations := !i :: !interesting_interations;
 
 				(* compute k0 *)
 (*				let k0 =  if options#dynamic || options#union then ( returned_constraint )
 				else  match returned_constraint with 
-					| Convex_constraint _ -> Convex_constraint (StateSpace.compute_k0_destructive program graph)
+					| Convex_constraint _ -> Convex_constraint (StateSpace.compute_k0_destructive model graph)
 					| _ -> print_error ("Internal error when getting the result of post_star in cover: 'options#dynamic' is activated but the constraint returned is not convex (type 'Convex_constraint')."); abort_program (); exit(0)
 
 				in*)
-				let k0 = returned_constraint in
+				let k0 = im_result.result in
 												
 				(* Print the constraint *)
 				print_message Debug_low ("Constraint K0 computed:");
-				print_message Debug_standard (ModelPrinter.string_of_returned_constraint program.variable_names k0);
+				print_message Debug_standard (ModelPrinter.string_of_returned_constraint model.variable_names k0);
 
 				(* Add the result *)
 				results.(!i - 1) <- k0;

@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre, Ulrich Kuehne, Romain Soulat
  * Created:       2010/07/22
- * Last modified: 2014/03/22
+ * Last modified: 2014/04/15
  *
  **************************************************)
 
@@ -16,7 +16,27 @@ open StateSpace
 open LinearConstraint
 
 
-val create_initial_state : abstract_model -> state
+(****************************************************************)
+(** The result output by IM *)
+(****************************************************************)
+type im_result = {
+	(* Returned constraint *)
+	result : returned_constraint;
+	(* Reachability graph *)
+	reachability_graph : StateSpace.reachability_graph;
+	(* Tile nature *)
+	tile_nature : tile_nature;
+	(* Deterministic analysis? *)
+	deterministic : bool;
+	(* Number of iterations *)
+	nb_iterations : int;
+	(* Computation time *)
+	total_time : float;
+}
+
+
+
+val get_initial_state_or_abort : abstract_model -> state
 
 val print_stats: unit -> unit
 
@@ -32,12 +52,13 @@ val prepare_clocks_elimination : abstract_model -> unit
 (************************************************************)
 (* Algorithms *)
 (************************************************************)
-val full_state_space_exploration : abstract_model -> state -> unit
+val full_state_space_exploration : abstract_model -> unit
 
-val ef_synthesis : abstract_model -> state -> returned_constraint
+val ef_synthesis : abstract_model -> returned_constraint
 
-val inverse_method_gen : abstract_model -> state -> returned_constraint * StateSpace.reachability_graph * tile_nature * bool * int * float
+val inverse_method_gen : abstract_model -> state -> im_result
+	(*returned_constraint * StateSpace.reachability_graph * tile_nature * bool * int * float*)
 
-val efim : abstract_model -> state -> unit
+val efim : abstract_model -> unit
 
-val inverse_method : abstract_model -> state -> unit
+val inverse_method : abstract_model -> unit

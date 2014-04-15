@@ -142,7 +142,9 @@ if options#pta2gml then(
 	print_message Debug_standard ("Translating model to GrML.");
 	let translated_model = PTA2GrML.string_of_model model in
 	let gml_file = options#files_prefix ^ ".grml" in
-	print_message Debug_total ("\n" ^ translated_model ^ "\n");
+	if debug_mode_greater Debug_total then(
+		print_message Debug_total ("\n" ^ translated_model ^ "\n");
+	);
 	(* Write *)
 	write_to_file gml_file translated_model;
 	terminate_program()
@@ -152,7 +154,9 @@ if options#pta2gml then(
 if options#pta2jpg then(
 	print_message Debug_standard ("Translating model to a graphics.");
 	let translated_model = PTA2JPG.string_of_model model in
-	print_message Debug_high ("\n" ^ translated_model ^ "\n");
+	if debug_mode_greater Debug_high then(
+		print_message Debug_high ("\n" ^ translated_model ^ "\n");
+	);
 	Graphics.dot model options#files_prefix translated_model;
 	terminate_program()
 );
@@ -203,36 +207,6 @@ if options#dynamic_clock_elimination then (
 	Reachability.prepare_clocks_elimination model
 );
 
-
-(**************************************************)
-(* Initial state *)
-(**************************************************)
-
-(* Print the initial state *)
-print_message Debug_medium ("\nInitial state:\n" ^ (ModelPrinter.string_of_state model (model.initial_location, model.initial_constraint)) ^ "\n");
-
-(* Check the satisfiability *)
-if not (LinearConstraint.px_is_satisfiable model.initial_constraint) then (
-	print_warning "The initial constraint of the model is not satisfiable.";
-	terminate_program();
-)else(
-	print_message Debug_total ("\nThe initial constraint of the model is satisfiable.");
-);
-
-(* Get the initial state after time elapsing *)
-let init_state_after_time_elapsing = Reachability.create_initial_state model in
-let _, initial_constraint_after_time_elapsing = init_state_after_time_elapsing in
-
-
-(* Check the satisfiability *)
-if not (LinearConstraint.px_is_satisfiable initial_constraint_after_time_elapsing) then (
-	print_warning "The initial constraint of the model after time elapsing is not satisfiable.";
-	terminate_program();
-)else(
-	print_message Debug_total ("\nThe initial constraint of the model after time elapsing is satisfiable.");
-);
-(* Print the initial state after time elapsing *)
-print_message Debug_medium ("\nInitial state after time-elapsing:\n" ^ (ModelPrinter.string_of_state model init_state_after_time_elapsing) ^ "\n");
 
 
 
@@ -290,36 +264,37 @@ try(
 		
 		(* Exploration *)
 		| State_space_exploration
-			-> Reachability.full_state_space_exploration model init_state_after_time_elapsing;
+			-> Reachability.full_state_space_exploration model;
 			[]
 			
 		(* Synthesis *)
 		| EF_synthesis 
 			->
-			[Reachability.ef_synthesis model init_state_after_time_elapsing]
+			[Reachability.ef_synthesis model]
 
 			
 		(* Inverse Method *)
 		| Inverse_method ->
 			if options#efim then
 				(
-				Reachability.efim model init_state_after_time_elapsing;
+					(*** WARNING!!! Why a dedicated function here, whereas for BC+EFIM this function is not (?) called? ***)
+				Reachability.efim model;
 				[]
 				)
 			else(
-				Reachability.inverse_method model init_state_after_time_elapsing;
+				Reachability.inverse_method model;
 				[]
 			)
 
 
 		| Cover_cartography | Border_cartography ->
 		(* Behavioral cartography algorithm with full coverage *)
-			Cartography.cover_behavioral_cartography model v0 init_state_after_time_elapsing
+			Cartography.cover_behavioral_cartography model v0
 			
 			
 		| Random_cartography nb ->
 		(* Behavioral cartography algorithm with random iterations *)
-			Cartography.random_behavioral_cartography model v0 init_state_after_time_elapsing nb;
+			Cartography.random_behavioral_cartography model v0 nb;
 
 			
 	in

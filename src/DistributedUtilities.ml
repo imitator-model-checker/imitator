@@ -8,13 +8,14 @@
  * Author:        Etienne Andre, Camille Coti
  * 
  * Created:       2014/03/24
- * Last modified: 2014/03/30
+ * Last modified: 2014/04/15
  *
  ****************************************************************)
 
 open Global
 open Mpi
-open Marshal
+(* open Marshal *)
+open AbstractModel
 
 
 (****************************************************************)
@@ -162,7 +163,7 @@ abort_program();;*)
 (****************************************************************)
 (** MPI Functions *)
 (****************************************************************)
-(*** WARNING: le "ref 1" ne signifie rien du tout ***)
+(*** NOTE: le "ref 1" ne signifie rien du tout ***)
 let weird_stuff() = ref 1
 
 
@@ -192,14 +193,15 @@ let size () = Mpi.comm_size Mpi.comm_world
 let rank () = Mpi.comm_rank Mpi.comm_world
 
 
-
+(*
+***NOTE : doesn't work with the constraints***
 let serialize( data ) =
 	(*** WARNING: mis "No_sharing" completement au pif ***)
 	Marshal.to_string data [(*No_sharing; *)Closures]
 
 
 let unserialize( str ) =
-	Marshal.from_string str 0
+	Marshal.from_string str 0*)
 
 
 
@@ -208,7 +210,7 @@ let send_constraint linear_constraint =
 	let rank = rank() in
 
 	print_message Debug_low ("Worker " ^ (string_of_int rank) ^ " starts send_constraint");
-	let mlc = serialize(linear_constraint)  in
+	let mlc = LinearConstraint.serialize_linear_constraint linear_constraint  in
 	let res_size = String.length mlc in
 	
 	(* Send the result: 1st send the data size, then the data *)
@@ -222,7 +224,7 @@ let send_constraint linear_constraint =
 
 (* Sends a point (first the size then the point), by the master *)
 let send_pi0 pi0 slave_rank =
-	let mpi0 = serialize(pi0)  in
+	let mpi0 = serialize_pi0 pi0 in
 	let res_size = String.length mpi0 in
 	
 	(* Send the result: 1st send the data size, then the data *)
@@ -252,7 +254,7 @@ let receive_pull_request () =
 		res := Mpi.receive source_rank (int_of_slave_tag Slave_result_tag) Mpi.comm_world;
 			
 		(* Get the constraint *)
-		let linear_constraint = unserialize !res in
+		let linear_constraint = LinearConstraint.unserialize_linear_constraint !res in
 		PullAndResult (source_rank , linear_constraint)
 		
 	(* Case error *)
@@ -266,6 +268,9 @@ let send_finished source_rank =
 	Mpi.send (weird_stuff()) source_rank (int_of_master_tag Master_finished_tag) Mpi.comm_world 
 
 let receive_work () =
+	(* Get the model *)
+	let model = Input.get_model() in
+
 	let ( w, _, tag ) =
 	Mpi.receive_status masterrank Mpi.any_tag Mpi.comm_world in
 
@@ -281,9 +286,17 @@ let receive_work () =
 		Printf.printf "recv %d bytes of work %s with tag %d" w !work (int_of_master_tag Master_data_tag) ;
 		print_newline() ;
 		
-		(* Get the constraint *)
-		let pi0 = unserialize !work in
-		Work pi0
+		(* Get the pi0 *)
+		let pi0 = unserialize_pi0 !work in
+		(*** HACK ***)
+		(* Convert back to an array *)
+		let array_pi0 = Array.make model.nb_parameters NumConst.zero in
+		List.iter (fun (variable_index, variable_value) ->
+			array_pi0.(variable_index) <- variable_value;
+		) pi0;
+		(* Convert the pi0 to functional representation *)
+		let pi0_fun = fun parameter -> array_pi0.(parameter) in
+		Work pi0_fun
 
 	| Master_finished_tag -> Stop
 

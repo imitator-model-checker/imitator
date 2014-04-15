@@ -15,7 +15,8 @@
 open Global
 open Mpi
 open Printf (* a terme : retirer tout ca *)
-open Unix (* temporaire : necessaire pour sleep *)
+(* open Unix (* temporaire : necessaire pour sleep *) *)
+open Reachability
 open DistributedUtilities
 	
 
@@ -30,13 +31,13 @@ let cnt = ref 0
 
 (* Store the result of a computation.                                  *)
 
-let store result source =
+(*let store result source =
 	print_string "MASTER - recv result" ; print_string result;
 	print_string " from ";
 	print_int source ;
 	print_newline();
 	0
-;;
+;;*)
 
 (* Returns the next set of input data                                  *)
 (* This is where the master's intelligence will come.                  *)
@@ -45,7 +46,7 @@ let store result source =
 (* second one is the data itself. The data is serialized and ready to  *)
 (* be sent.                                                            *)
 
-let get_data () =
+(*let get_data () =
 	let size = 1 + ( Random.int 25 ) in
 	let buff = String.create size in
 	let alphanum = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789" in
@@ -55,15 +56,15 @@ let get_data () =
 	done;
 	cnt := !cnt + 1;
 	(size, buff)
-;;
+;;*)
 
 (* Here will come the slave's real work                                *)
 
-let compute( input_data ) =
+(*let compute( input_data ) =
 	(* don't do anything for the moment *)
 	Unix.sleep 1;
 	input_data
-;;
+;;*)
 
 (* Initialize a slave                                                  *)
 
@@ -181,8 +182,13 @@ let worker () =
     (* Start: ask for some work *)
     send_work_request();
 
-    Printf.printf "%d] sent pull request to the master" rank ;
-    print_newline(); 
+    print_message Debug_low ("[" ^ (string_of_int rank) ^ "] sent pull request to the master");
+
+	(* Get the model *)
+	let model = Input.get_model() in
+
+	(* In the meanwhile: compute the initial state *)
+    let init_state = Reachability.get_initial_state_or_abort model in
 
     while not !finished do
 
@@ -206,9 +212,21 @@ let worker () =
 		| Work pi0 -> 
             (* Do the job here *)
 			Printf.printf "[%d] working now" rank ; print_newline();
-			let result = (*** TODO: do something ***)
+			let result = 
+				(* Set the new pi0 *)
+				Input.set_pi0 pi0;
+				(* Call IM *)
+				let im_result = Reachability.inverse_method_gen model init_state in
+
+				
+(* 			inverse_method_gen : abstract_model -> state -> returned_constraint * StateSpace.reachability_graph * tile_nature * bool * int * float *)
+
+							(*** TODO: do something ***)
+
+
 				(*** RESULTAT BIDON ***)
 				LinearConstraint.p_true_constraint()
+(* 				im_result.result *)
 			in
 		
 			(* Send a SAMPLE constraint *)
