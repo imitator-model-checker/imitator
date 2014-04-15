@@ -217,18 +217,9 @@ let worker () =
 			Input.set_pi0 pi0;
 			(* Call IM *)
 			let im_result , _ = Reachability.inverse_method_gen model init_state in
-
 			
-(* 			inverse_method_gen : abstract_model -> state -> returned_constraint * StateSpace.reachability_graph * tile_nature * bool * int * float *)
+			(*** TODO: handle a special case if the result is NOT valid (e.g., stopped before the end due to timeout or state limit reached) ***)
 
-						(*** TODO: do something ***)
-
-
-			(*** RESULTAT BIDON ***)
-(* 			LinearConstraint.p_true_constraint() *)
-(* 				im_result.result *)
-(* 			in *)
-		
 			(* Send the result *)
 			send_result im_result;
 			print_message Debug_low ("Worker " ^ (string_of_int rank) ^ " sent a constraint.");
