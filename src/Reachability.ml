@@ -41,8 +41,8 @@ exception Unsat_exception
 type im_result = {
 	(* Returned constraint *)
 	result : returned_constraint;
-	(* Reachability graph *)
-	reachability_graph : StateSpace.reachability_graph;
+(*	(* Reachability graph *)
+	reachability_graph : StateSpace.reachability_graph;*)
 	(* Tile nature *)
 	tile_nature : tile_nature;
 	(* Deterministic analysis? *)
@@ -2851,12 +2851,13 @@ let inverse_method_gen model init_state =
 	(*--------------------------------------------------*)
 	{
 	result 				= returned_constraint;
-	reachability_graph	= reachability_graph;
 	tile_nature			= !tile_nature;
 	deterministic		= (nb_random_selections > 0);
 	nb_iterations		= nb_iterations;
 	total_time			= total_time
 	}
+	,
+	reachability_graph
 	
 	
 
@@ -2871,7 +2872,7 @@ let efim model =
 	let init_state = get_initial_state_or_abort model in
 
 	(* Call the inverse method *)
-	let (*returned_constraint, reachability_graph, tile_nature, deterministic, nb_iterations, total_time*) im_result = inverse_method_gen model init_state in
+	let (*returned_constraint, reachability_graph, tile_nature, deterministic, nb_iterations, total_time*) im_result , reachability_graph = inverse_method_gen model init_state in
 	
 	(* Processing the result *)
 	let constraint_str = string_of_returned_constraint model.variable_names im_result.result
@@ -2906,10 +2907,10 @@ let efim model =
 	
 	(* Generate graphics *)
 	let radical = options#files_prefix in
-	Graphics.generate_graph model im_result.reachability_graph radical;
+	Graphics.generate_graph model reachability_graph radical;
 	
 	(* Print statistics *)
-	print_statistics im_result.reachability_graph;
+	print_statistics reachability_graph;
 
 	(* The end *)
 	()
@@ -2925,7 +2926,7 @@ let inverse_method model =
 	let init_state = get_initial_state_or_abort model in
 
 	(* Call the inverse method *)
-	let im_result = inverse_method_gen model init_state in
+	let im_result, reachability_graph = inverse_method_gen model init_state in
 	
 (* 	(returned_constraint : AbstractModel.returned_constraint), im_result.reachability_graph, tile_nature, deterministic, nb_iterations, total_time  *)
 	
@@ -2955,11 +2956,12 @@ let inverse_method model =
 	);
 	
 	(* Generate graphics *)
+	(*** TODO: move inside inverse_method_gen ***)
 	let radical = options#files_prefix in
-	Graphics.generate_graph model im_result.reachability_graph radical;
+	Graphics.generate_graph model reachability_graph radical;
 	
 	(* Print statistics *)
-	print_statistics im_result.reachability_graph;
+	print_statistics reachability_graph;
 
 	(* The end *)
 	()

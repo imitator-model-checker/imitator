@@ -644,7 +644,7 @@ let cover_behavioral_cartography model v0 =
 		Input.set_pi0 pi0;
 		
 		(* Call the inverse method *)
-		let (*returned_constraint, graph, tile_nature, (*deterministic*)_, nb_iterations, total_time*) im_result = Reachability.inverse_method_gen model init_state in
+		let (*returned_constraint, graph, tile_nature, (*deterministic*)_, nb_iterations, total_time*) im_result, reachability_graph = Reachability.inverse_method_gen model init_state in
 		
 		(* Update the time spent on IM *)
 		time_spent_on_IM := !time_spent_on_IM +. im_result.total_time;
@@ -653,8 +653,8 @@ let cover_behavioral_cartography model v0 =
 		set_debug_mode global_debug_mode;
 		
 		(* Retrieve some info *)
-		let current_nb_states = StateSpace.nb_states im_result.reachability_graph in
-		let current_nb_transitions = StateSpace.nb_transitions im_result.reachability_graph in
+		let current_nb_states = StateSpace.nb_states reachability_graph in
+		let current_nb_transitions = StateSpace.nb_transitions reachability_graph in
 		
 		(* Update the counters *)
 		nb_states := !nb_states + current_nb_states;
@@ -670,8 +670,9 @@ let cover_behavioral_cartography model v0 =
 			^ (string_of_int current_nb_transitions) ^ " transition" ^ (s_of_int current_nb_transitions) ^ " explored.");
 		
 		(* Generate the dot graph (will not be performed if options are not suitable) *)
+		(*** TODO: move inside inverse_method_gen ***)
 		let radical = options#files_prefix ^ "_" ^ (string_of_int !current_iteration) in
-			Graphics.generate_graph model im_result.reachability_graph radical;
+			Graphics.generate_graph model reachability_graph radical;
 		
 
 		(* Print the constraint *)
@@ -881,13 +882,13 @@ let random_behavioral_cartography model v0 nb =
 				Input.set_pi0 pi0_functional;
 			
 				(* Call the inverse method *)
-				let (*returned_constraint, graph, (*tile_nature*)_, (*deterministic*)_, nb_iterations, total_time*) im_result = Reachability.inverse_method_gen model init_state in
+				let (*returned_constraint, graph, (*tile_nature*)_, (*deterministic*)_, nb_iterations, total_time*) im_result, reachability_graph = Reachability.inverse_method_gen model init_state in
 				(* Get the debug mode back *)
 				set_debug_mode global_debug_mode;
 
 				(* Retrieve some info *)
-				let current_nb_states = StateSpace.nb_states im_result.reachability_graph in
-				let current_nb_transitions = StateSpace.nb_transitions im_result.reachability_graph in
+				let current_nb_states = StateSpace.nb_states reachability_graph in
+				let current_nb_transitions = StateSpace.nb_transitions reachability_graph in
 				
 				print_message Debug_standard (
 					"\nK" ^ (string_of_int !i) ^ " computed using algorithm InverseMethod after "
@@ -901,8 +902,9 @@ let random_behavioral_cartography model v0 nb =
 				pi0_computed.(!i - 1) <- pi0;
 
 				(* Generate the dot graph *)
+				(*** TODO: move to inverse_method_gen ***)
 				let radical = options#files_prefix ^ "_" ^ (string_of_int !i) in
-				Graphics.generate_graph model im_result.reachability_graph radical;
+				Graphics.generate_graph model reachability_graph radical;
 				(* Add the index to the interesting list *)
 				interesting_interations := !i :: !interesting_interations;
 

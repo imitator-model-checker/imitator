@@ -176,7 +176,7 @@ let worker () =
 
 	init_slave rank size;
 
-    let n = rank in
+(*     let n = rank in *)
     let finished = ref false in
 
     (* Start: ask for some work *)
@@ -212,25 +212,25 @@ let worker () =
 		| Work pi0 -> 
             (* Do the job here *)
 			Printf.printf "[%d] working now" rank ; print_newline();
-			let result = 
-				(* Set the new pi0 *)
-				Input.set_pi0 pi0;
-				(* Call IM *)
-				let im_result = Reachability.inverse_method_gen model init_state in
 
-				
+			(* Set the new pi0 *)
+			Input.set_pi0 pi0;
+			(* Call IM *)
+			let im_result , _ = Reachability.inverse_method_gen model init_state in
+
+			
 (* 			inverse_method_gen : abstract_model -> state -> returned_constraint * StateSpace.reachability_graph * tile_nature * bool * int * float *)
 
-							(*** TODO: do something ***)
+						(*** TODO: do something ***)
 
 
-				(*** RESULTAT BIDON ***)
-				LinearConstraint.p_true_constraint()
+			(*** RESULTAT BIDON ***)
+(* 			LinearConstraint.p_true_constraint() *)
 (* 				im_result.result *)
-			in
+(* 			in *)
 		
-			(* Send a SAMPLE constraint *)
-			send_constraint(result);
+			(* Send the result *)
+			send_result im_result;
 			print_message Debug_low ("Worker " ^ (string_of_int rank) ^ " sent a constraint.");
 			
 		| Stop ->

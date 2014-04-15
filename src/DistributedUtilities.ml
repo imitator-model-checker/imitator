@@ -16,6 +16,7 @@ open Global
 open Mpi
 (* open Marshal *)
 open AbstractModel
+open Reachability
 
 
 (****************************************************************)
@@ -70,14 +71,23 @@ let masterrank = 0
 (****************************************************************)
 (** Serialization Functions *)
 (****************************************************************)
+(*------------------------------------------------------------*)
+(* Pi0 *)
+(*------------------------------------------------------------*)
 
 let serialize_numconst = NumConst.string_of_numconst
 let unserialize_numconst = NumConst.numconst_of_string
+
+(* Reminder: list of separators in LinearConstraint:
+	+ * a  
+*)
 
 (* Separator between the two elements of a pair *)
 let serialize_SEP_PAIR = ","
 (* Separator between the elements of a list *)
 let serialize_SEP_LIST = ";"
+(* Separator between the elements of a structure *)
+let serialize_SEP_STRUCT = "|"
 
 let serialize_pi0_pair (variable_index , value) =
 	LinearConstraint.serialize_variable variable_index
@@ -104,6 +114,94 @@ let unserialize_pi0 pi0_string =
 	let pi0_pairs_string = split serialize_SEP_LIST pi0_string in
 	List.map unserialize_pi0_pair pi0_pairs_string
 
+
+(*------------------------------------------------------------*)
+(* Result of IM *)
+(*------------------------------------------------------------*)
+
+let serialize_tile_nature = function
+	| Good -> "G"
+	| Bad -> "B"
+	| Unknown -> "U"
+
+
+let unserialize_tile_nature = function
+	| "G" -> Good
+	| "B" -> Bad
+	| "U" -> Unknown
+	| other -> raise (InternalError ("Impossible match '" ^ other ^ "' in unserialize_tile_nature."))
+
+
+let serialize_returned_constraint = function
+	(* Constraint under convex form *)
+	| Convex_constraint (p_linear_constraint , tile_nature) ->
+		(* Serialize the constraints *)
+		(LinearConstraint.serialize_linear_constraint p_linear_constraint)
+		^ serialize_SEP_PAIR
+		(* Serialize the tile nature *)
+		^ (serialize_tile_nature tile_nature)
+	
+	(* Disjunction of constraints *)
+	| Union_of_constraints (p_linear_constraint_list , tile_nature) ->
+		(* Serialize the list of constraints *)
+		String.concat serialize_SEP_LIST  (List.map LinearConstraint.serialize_linear_constraint p_linear_constraint_list)
+		^ serialize_SEP_PAIR
+		(* Serialize the tile nature *)
+		^ (serialize_tile_nature tile_nature)
+
+	(* Non-necessarily convex constraint: set of constraints MINUS a set of negations of constraints *)
+	| NNCConstraint _ -> raise (SerializationError ("Cannot serialize NNCConstraint yet."))
+
+
+
+let unserialize_returned_constraint returned_constraint_string =
+	(* Split between constraints and tile nature *)
+	let constraints_str , tile_nature_str =
+	match split serialize_SEP_PAIR returned_constraint_string with
+	| [constraints_str ; tile_nature_str ] -> constraints_str , tile_nature_str
+	| _ -> raise (SerializationError ("Cannot unserialize returned constraint '" ^ returned_constraint_string ^ "'."))
+	in
+	(* Retrieve the list of constraints *)
+	let constraints = List.map LinearConstraint.unserialize_linear_constraint (split serialize_SEP_LIST constraints_str) in
+	(* Unserialize tile nature *)
+	let tile_nature = unserialize_tile_nature tile_nature_str in
+	(* Return *)
+	let result =
+	match constraints with
+		| [p_linear_constraint] -> Convex_constraint (p_linear_constraint , tile_nature)
+		| _ -> Union_of_constraints (constraints , tile_nature)
+		(*** WARNING: NNCConstraint case not implemented ! ***)
+	in result 
+	
+
+let serialize_im_result im_result =
+	(* Returned constraint *)
+	(serialize_returned_constraint im_result.result)
+	^
+	serialize_SEP_STRUCT
+	^
+	(* Tile nature *)
+	(serialize_tile_nature im_result.tile_nature)
+	^
+	serialize_SEP_STRUCT
+	^
+	(* Deterministic analysis? *)
+	(string_of_bool im_result.deterministic)
+	^
+	serialize_SEP_STRUCT
+	^
+	(* Number of iterations *)
+	(string_of_int im_result.nb_iterations)
+	^
+	serialize_SEP_STRUCT
+	^
+	(* Computation time *)
+	(string_of_float im_result.total_time)
+	
+
+(*------------------------------------------------------------*)
+(* Tests *)
+(*------------------------------------------------------------*)
 
 let debug_string_of_pi0 pi0 =
 	"Pi0:"
@@ -181,12 +279,12 @@ let slave_tag_of_int = function
 	| 1 -> Slave_result_tag
 	| 2 -> Slave_work_tag
 	| 3 -> Slave_outofbound_tag
-	| _ -> raise (InternalError ("Impossible match in slave_tag_of_int."))
+	| other -> raise (InternalError ("Impossible match '" ^ (string_of_int other) ^ "' in slave_tag_of_int."))
 
 let master_tag_of_int = function
 	| 17 -> Master_data_tag 
 	| 18 -> Master_finished_tag
-	| _ -> raise (InternalError ("Impossible match in master_tag_of_int."))
+	| other -> raise (InternalError ("Impossible match '" ^ (string_of_int other) ^ "' in master_tag_of_int."))
 
 
 let size () = Mpi.comm_size Mpi.comm_world
@@ -205,12 +303,12 @@ let unserialize( str ) =
 
 
 
-(* Sends a constraint (first the size then the constraint), by the slave *)
-let send_constraint linear_constraint =
+(* Sends a result (first the size then the constraint), by the slave *)
+let send_result (*linear_constraint*)im_result =
 	let rank = rank() in
 
 	print_message Debug_low ("Worker " ^ (string_of_int rank) ^ " starts send_constraint");
-	let mlc = LinearConstraint.serialize_linear_constraint linear_constraint  in
+	let mlc = (*LinearConstraint.serialize_linear_constraint linear_constraint *) serialize_im_result im_result in
 	let res_size = String.length mlc in
 	
 	(* Send the result: 1st send the data size, then the data *)

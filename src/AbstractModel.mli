@@ -250,7 +250,9 @@ type abstract_model = {
 	user_property : property_definition;
 	(* Property defined by the model *)
 	correctness_condition : correctness_condition;
+	
 	(* Set of polyhedra (only used for direct cartography without running the model) *)
+	(*** BADPROG ***)
 	carto : (LinearConstraint.p_linear_constraint * tile_nature) list * (NumConst.t * NumConst.t) * (NumConst.t * NumConst.t);
 }
 
@@ -263,6 +265,7 @@ type abstract_model = {
 (*** BADPROG: should NOT be here! but rather in Reachability or something like this ***)
 (** Constraint returned by the inverse method *)
 type returned_constraint =
+	(*** TODO: merge these 2 objects (Convex_constraint and Union_of_constraints) ***)
 	(** Constraint under convex form *)
 	| Convex_constraint of LinearConstraint.p_linear_constraint * tile_nature
 	

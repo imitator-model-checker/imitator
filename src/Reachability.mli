@@ -22,8 +22,8 @@ open LinearConstraint
 type im_result = {
 	(* Returned constraint *)
 	result : returned_constraint;
-	(* Reachability graph *)
-	reachability_graph : StateSpace.reachability_graph;
+(*	(* Reachability graph *)
+	reachability_graph : StateSpace.reachability_graph;*)
 	(* Tile nature *)
 	tile_nature : tile_nature;
 	(* Deterministic analysis? *)
@@ -56,7 +56,7 @@ val full_state_space_exploration : abstract_model -> unit
 
 val ef_synthesis : abstract_model -> returned_constraint
 
-val inverse_method_gen : abstract_model -> state -> im_result
+val inverse_method_gen : abstract_model -> state -> (im_result * StateSpace.reachability_graph)
 	(*returned_constraint * StateSpace.reachability_graph * tile_nature * bool * int * float*)
 
 val efim : abstract_model -> unit
