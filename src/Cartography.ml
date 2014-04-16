@@ -23,7 +23,19 @@ open Global
 open AbstractModel
 open StateSpace
 open Reachability
- 
+
+
+
+
+
+
+(************************************************************)
+(* Types *)
+(************************************************************)
+
+(*** BADPROG ***)
+type current_pi0 = NumConst.t array
+
 
 (************************************************************)
 (* Global variable used for BC *)
@@ -564,6 +576,31 @@ let find_next_pi0_border model init_constraint min_bounds max_bounds nb_dimensio
 	*)
 
 
+(* Generic function to find the next pi0 *)
+let find_next_pi0 model im_result current_pi0 =
+	(* Retrieve the input options *)
+	let options = Input.get_options () in
+
+	let found_pi0 , time_limit_reached , new_nb_useless_points =
+	(* Branching *)
+	match options#imitator_mode with
+	| Cover_cartography ->
+		find_next_pi0_cover model !init_constraint !min_bounds !max_bounds !nb_dimensions !computed_constraints current_pi0
+
+	| Border_cartography ->
+		find_next_pi0_border model !init_constraint !min_bounds !max_bounds !nb_dimensions !computed_constraints current_pi0 im_result.tile_nature !current_intervals_min !current_intervals_max
+
+	| _ -> raise (InternalError("In function 'cover_behavioral_cartography', the mode should be a cover / border cartography only."))
+	in
+	(* Update the number of useless points *)
+	nb_useless_points := !nb_useless_points + new_nb_useless_points;
+	
+	(* Return *)
+	found_pi0 , time_limit_reached
+
+
+
+
 (************************************************************)
 (* BEHAVIORAL CARTOGRAPHY ALGORITHM functions *)
 (************************************************************)
@@ -681,6 +718,102 @@ let bc_init model v0 =
 	()
 
 
+
+
+
+
+(*------------------------------------------------------------*)
+(** Auxiliary function: process the result of IM *)
+(*------------------------------------------------------------*)
+let bc_process_im_result im_result =
+	(* Get the model *)
+	let model = Input.get_model() in
+	(* Retrieve the input options *)
+	let options = Input.get_options () in
+
+	(* Update the time spent on IM *)
+	time_spent_on_IM := !time_spent_on_IM +. im_result.total_time;
+	
+	(* Update the counters *)
+	nb_states := !nb_states + im_result.nb_states;
+	nb_transitions := !nb_transitions + im_result.nb_transitions;
+	
+	(* Print message *)
+	print_message Debug_standard (
+		"\nK" ^ (string_of_int (!current_iteration)) ^ " computed using algorithm InverseMethod after "
+		^ (string_of_int im_result.nb_iterations) ^ " iteration" ^ (s_of_int im_result.nb_iterations) ^ ""
+		^ " in " ^ (string_of_seconds im_result.total_time) ^ ": "
+		^ (string_of_int im_result.nb_states) ^ " state" ^ (s_of_int im_result.nb_states)
+		^ " with "
+		^ (string_of_int im_result.nb_transitions) ^ " transition" ^ (s_of_int im_result.nb_transitions) ^ " explored.");
+	
+	(* Print the constraint *)
+	
+	(*** NOTE: it may actually be more clever to check the tile nature from the graph, especially if we go for more complicated properties!! ***)
+	
+	
+(* 			let bad_string = if StateSpace.is_bad model graph then "BAD." else "GOOD." in *)
+	print_message Debug_low ("Constraint K0 computed:");
+	print_message Debug_standard (ModelPrinter.string_of_returned_constraint model.variable_names im_result.result);
+	if model.correctness_condition <> None then(
+		print_message Debug_standard ("This tile is " ^ (string_of_tile_nature im_result.tile_nature) ^ ".");
+	);
+
+	(* Process the constraint(s) in some cases *)
+	begin
+	(* Branching *)
+	match options#imitator_mode with
+	| Cover_cartography ->
+		(* Just return the constraint *)
+		()
+
+	| Border_cartography ->
+		(* The function depends whether the zone is good or bad *)
+		let nb_enlargements = ref 0 in
+		let enlarge =
+			match im_result.tile_nature with
+			(* If good: take all points from zero *)
+			| Good -> LinearConstraint.grow_to_zero_assign
+			(* If bad: take all points above *)
+			| Bad -> LinearConstraint.grow_to_infinite_assign
+			| _ -> raise (InternalError ("Tile nature should be good or bad only, so far "))
+		in
+		(* Apply this to the constraint(s) *)
+		begin match im_result.result with
+			| Convex_constraint (k, _) ->
+				(*** NOTE: Quite costly test, but interesting for statistics and readability ***)
+				let old_k = LinearConstraint.p_copy k in
+				enlarge model.parameters model.clocks_and_discrete k;
+				if not (LinearConstraint.p_is_equal k old_k) then nb_enlargements := !nb_enlargements + 1;
+			| Union_of_constraints (k_list, _) ->
+				List.iter (fun k ->
+					(*** NOTE: Quite costly test, but interesting for statistics and readability ***)
+					let old_k = LinearConstraint.p_copy k in
+					enlarge model.parameters model.clocks_and_discrete k;
+					if not (LinearConstraint.p_is_equal k old_k) then nb_enlargements := !nb_enlargements + 1;
+				) k_list
+			| NNCConstraint _ -> raise (InternalError ("NNCCs are not available everywhere yet."))
+		end;
+		
+		if !nb_enlargements > 0 then(
+			print_message Debug_standard ("Constraint after enlarging:" ^ (if !nb_enlargements > 1 then " ("  ^ (string_of_int !nb_enlargements) ^ " enlargements)" else ""));
+			print_message Debug_standard (ModelPrinter.string_of_returned_constraint model.variable_names im_result.result);
+		);
+
+	| _ -> raise (InternalError("In function 'cover_behavioral_cartography', the mode should be a cover / border cartography only."))
+	end; (* end process constraint *)
+	
+	
+	(* Add the pi0 and the computed constraint *)
+	(* USELESS SO FAR 
+	DynArray.add pi0_computed pi0; *)
+	
+	(*** WARNING: so stupid here!! Better flatten the structure! ***)
+	DynArray.add !computed_constraints im_result.result;
+	
+	()
+
+
 (*------------------------------------------------------------*)
 (** Auxiliary function: finalize the behavioral cartography *)
 (*------------------------------------------------------------*)
@@ -689,10 +822,14 @@ let bc_finalize () =
 	let options = Input.get_options () in
 
 	let nb_tiles = DynArray.length !computed_constraints in
-	let nb_states = (float_of_int (!nb_states)) /. (float_of_int nb_tiles) in
-	let nb_transitions = (float_of_int (!nb_transitions)) /. (float_of_int nb_tiles) in
+	(*** TODO: round !!! ***)
+	let nb_states = int_of_float ((float_of_int (!nb_states)) /. (float_of_int nb_tiles)) in
+	(*** TODO: round !!! ***)
+	let nb_transitions = int_of_float ((float_of_int (!nb_transitions)) /. (float_of_int nb_tiles)) in
 	
+	(*** TODO: round !!! ***)
 	let global_time = time_from !start_time in
+	(*** TODO: round !!! ***)
 	let time_spent_on_BC = global_time -. (!time_spent_on_IM) in
 	
 	(* Print the result *)
@@ -701,8 +838,8 @@ let bc_finalize () =
 	print_message Debug_standard ("Size of V0: " ^ (NumConst.string_of_numconst !nb_points) ^ "");
 	print_message Debug_standard ("Unsuccessful points: " ^ (string_of_int !nb_useless_points) ^ "");
 	print_message Debug_standard ("" ^ (string_of_int nb_tiles) ^ " different constraints were computed.");
-	print_message Debug_standard ("Average number of states     : " ^ (string_of_float nb_states) ^ "");
-	print_message Debug_standard ("Average number of transitions: " ^ (string_of_float nb_transitions) ^ "");
+	print_message Debug_standard ("Average number of states     : " ^ (string_of_int nb_states) ^ "");
+	print_message Debug_standard ("Average number of transitions: " ^ (string_of_int nb_transitions) ^ "");
 	print_message Debug_standard ("Global time spent    : " ^ (string_of_float global_time) ^ " s");
 	print_message Debug_standard ("Time spent on IM     : " ^ (string_of_float (!time_spent_on_IM)) ^ " s");
 	print_message Debug_standard ("Time spent on BC only: " ^ (string_of_float (time_spent_on_BC)) ^ " s");
@@ -743,11 +880,8 @@ let cover_behavioral_cartography model v0 =
 	let more_pi0 = ref true in
 	let limit_reached = ref false in
 	while !more_pi0 && not !limit_reached do
-		(* Copy the array current_pi0 *)
-		(*(** NOTE: this copy looks completely useless *)
-		let pi0_array = Array.copy current_pi0 in*)
-		
-		(** WARNING : duplicate operation (quite cheap anyway) *)
+
+		(*** WARNING : duplicate operation (quite cheap anyway) ***)
 		(* Convert to functional representation *)
 		let pi0 = fun parameter -> current_pi0.(parameter) in
 		
@@ -768,118 +902,22 @@ let cover_behavioral_cartography model v0 =
 		Input.set_pi0 pi0;
 		
 		(* Call the inverse method *)
-		let (*returned_constraint, graph, tile_nature, (*deterministic*)_, nb_iterations, total_time*) im_result, reachability_graph = Reachability.inverse_method_gen model !init_state in
-		
-		(* Update the time spent on IM *)
-		time_spent_on_IM := !time_spent_on_IM +. im_result.total_time;
+		let im_result, reachability_graph = Reachability.inverse_method_gen model !init_state in
 		
 		(* Get the debug mode back *)
 		set_debug_mode !global_debug_mode;
 		
-		(* Retrieve some info *)
-		let current_nb_states = StateSpace.nb_states reachability_graph in
-		let current_nb_transitions = StateSpace.nb_transitions reachability_graph in
-		
-		(* Update the counters *)
-		nb_states := !nb_states + current_nb_states;
-		nb_transitions := !nb_transitions + current_nb_transitions;
-		
-		(* Print message *)
-		print_message Debug_standard (
-			"\nK" ^ (string_of_int (!current_iteration)) ^ " computed using algorithm InverseMethod after "
-			^ (string_of_int im_result.nb_iterations) ^ " iteration" ^ (s_of_int im_result.nb_iterations) ^ ""
-			^ " in " ^ (string_of_seconds im_result.total_time) ^ ": "
-			^ (string_of_int current_nb_states) ^ " state" ^ (s_of_int current_nb_states)
-			^ " with "
-			^ (string_of_int current_nb_transitions) ^ " transition" ^ (s_of_int current_nb_transitions) ^ " explored.");
+		(* Process the result by IM *)
+		bc_process_im_result im_result;
 		
 		(* Generate the dot graph (will not be performed if options are not suitable) *)
 		(*** TODO: move inside inverse_method_gen ***)
 		let radical = options#files_prefix ^ "_" ^ (string_of_int !current_iteration) in
 			Graphics.generate_graph model reachability_graph radical;
-		
 
-		(* Print the constraint *)
-		
-		
-		(** NOTE: it may actually be more clever to check the tile nature from the graph, especially if we go for more complicated properties!! *)
-		
-		
-(* 			let bad_string = if StateSpace.is_bad model graph then "BAD." else "GOOD." in *)
-		print_message Debug_low ("Constraint K0 computed:");
-		print_message Debug_standard (ModelPrinter.string_of_returned_constraint model.variable_names im_result.result);
-		if model.correctness_condition <> None then(
-			print_message Debug_standard ("This tile is " ^ (string_of_tile_nature im_result.tile_nature) ^ ".");
-		);
-
-
-		(* Process the constraint(s) in some cases *)
-		begin
-		(* Branching *)
-		match options#imitator_mode with
-		| Cover_cartography ->
-			(* Just return the constraint *)
-			()
-
-		| Border_cartography ->
-			(* The function depends whether the zone is good or bad *)
-			let nb_enlargements = ref 0 in
-			let enlarge =
-				match im_result.tile_nature with
-				(* If good: take all points from zero *)
-				| Good -> LinearConstraint.grow_to_zero_assign
-				(* If bad: take all points above *)
-				| Bad -> LinearConstraint.grow_to_infinite_assign
-				| _ -> raise (InternalError ("Tile nature should be good or bad only, so far "))
-			in
-			(* Apply this to the constraint(s) *)
-			begin match im_result.result with
-				| Convex_constraint (k, _) ->
-					(*** NOTE: Quite costly test, but interesting for statistics and readability ***)
-					let old_k = LinearConstraint.p_copy k in
-					enlarge model.parameters model.clocks_and_discrete k;
-					if not (LinearConstraint.p_is_equal k old_k) then nb_enlargements := !nb_enlargements + 1;
-				| Union_of_constraints (k_list, _) ->
-					List.iter (fun k ->
-						(*** NOTE: Quite costly test, but interesting for statistics and readability ***)
-						let old_k = LinearConstraint.p_copy k in
-						enlarge model.parameters model.clocks_and_discrete k;
-						if not (LinearConstraint.p_is_equal k old_k) then nb_enlargements := !nb_enlargements + 1;
-					) k_list
-				| NNCConstraint _ -> raise (InternalError ("NNCCs are not available everywhere yet."))
-			end;
-			
-			if !nb_enlargements > 0 then(
-				print_message Debug_standard ("Constraint after enlarging:" ^ (if !nb_enlargements > 1 then " ("  ^ (string_of_int !nb_enlargements) ^ " enlargements)" else ""));
-				print_message Debug_standard (ModelPrinter.string_of_returned_constraint model.variable_names im_result.result);
-			);
-
-		| _ -> raise (InternalError("In function 'cover_behavioral_cartography', the mode should be a cover / border cartography only."))
-		end; (* end process constraint *)
-		
-		
-		(* Add the pi0 and the computed constraint *)
-		(* USELESS SO FAR 
-		DynArray.add pi0_computed pi0; *)
-		
-		(*** WARNING: so stupid here!! Better flatten the structure! ***)
-		DynArray.add !computed_constraints im_result.result;
-		
 		(* Compute the next pi0 (note that current_pi0 is directly modified by the function!) and return flags for more pi0 and co *)
-		let found_pi0 , time_limit_reached , new_nb_useless_points =
-			(* Branching *)
-			match options#imitator_mode with
-			| Cover_cartography ->
-				find_next_pi0_cover model !init_constraint !min_bounds !max_bounds !nb_dimensions !computed_constraints current_pi0
-
-			| Border_cartography ->
-				find_next_pi0_border model !init_constraint !min_bounds !max_bounds !nb_dimensions !computed_constraints current_pi0 im_result.tile_nature !current_intervals_min !current_intervals_max
-
-			| _ -> raise (InternalError("In function 'cover_behavioral_cartography', the mode should be a cover / border cartography only."))
-		in
+		let found_pi0 , time_limit_reached = find_next_pi0 model im_result current_pi0 in
 		
-		(* Update the number of useless points *)
-		nb_useless_points := !nb_useless_points + new_nb_useless_points;
 		(* Update the time limit *)
 		limit_reached := time_limit_reached;
 		(* Update the found pi0 flag *)

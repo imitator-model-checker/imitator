@@ -190,6 +190,16 @@ let serialize_im_result im_result =
 	^
 	serialize_SEP_STRUCT
 	^
+	(* Number of states *)
+	(string_of_int im_result.nb_states)
+	^
+	serialize_SEP_STRUCT
+	^
+	(* Number of transitions *)
+	(string_of_int im_result.nb_transitions)
+	^
+	serialize_SEP_STRUCT
+	^
 	(* Number of iterations *)
 	(string_of_int im_result.nb_iterations)
 	^
@@ -200,16 +210,18 @@ let serialize_im_result im_result =
 
 
 let unserialize_im_result im_result_string =
-	let returned_constraint_string , tile_nature_str , deterministic_string , nb_iterations_string , total_time_string =
+	let returned_constraint_string , tile_nature_str , deterministic_string , nb_states_string , nb_transitions_string , nb_iterations_string , total_time_string =
 	match split serialize_SEP_STRUCT im_result_string with
-		| [returned_constraint_string ; tile_nature_str ; deterministic_string ; nb_iterations_string ; total_time_string ]
-			-> returned_constraint_string , tile_nature_str , deterministic_string , nb_iterations_string , total_time_string
+		| [returned_constraint_string ; tile_nature_str ; deterministic_string ; nb_states_string ; nb_transitions_string ; nb_iterations_string ; total_time_string ]
+			-> returned_constraint_string , tile_nature_str , deterministic_string ,  nb_states_string , nb_transitions_string , nb_iterations_string , total_time_string
 		| _ -> raise (SerializationError ("Cannot unserialize im_result '" ^ im_result_string ^ "'."))
 	in
 	{
 	result 				= unserialize_returned_constraint returned_constraint_string;
 	tile_nature			= unserialize_tile_nature tile_nature_str;
 	deterministic		= bool_of_string deterministic_string;
+	nb_states			= int_of_string nb_states_string;
+	nb_transitions		= int_of_string nb_transitions_string;
 	nb_iterations		= int_of_string nb_iterations_string;
 	total_time			= float_of_string total_time_string;
 	}

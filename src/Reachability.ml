@@ -47,6 +47,10 @@ type im_result = {
 	tile_nature : tile_nature;
 	(* Deterministic analysis? *)
 	deterministic : bool;
+	(* Number of states *)
+	nb_states : int;
+	(* Number of transitions *)
+	nb_transitions : int;
 	(* Number of iterations *)
 	nb_iterations : int;
 	(* Computation time *)
@@ -2853,6 +2857,8 @@ let inverse_method_gen model init_state =
 	result 				= returned_constraint;
 	tile_nature			= !tile_nature;
 	deterministic		= (nb_random_selections > 0);
+	nb_states			= StateSpace.nb_states reachability_graph;
+	nb_transitions		= StateSpace.nb_transitions reachability_graph;
 	nb_iterations		= nb_iterations;
 	total_time			= total_time
 	}

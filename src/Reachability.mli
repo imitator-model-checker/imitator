@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre, Ulrich Kuehne, Romain Soulat
  * Created:       2010/07/22
- * Last modified: 2014/04/15
+ * Last modified: 2014/04/16
  *
  **************************************************)
 
@@ -28,6 +28,10 @@ type im_result = {
 	tile_nature : tile_nature;
 	(* Deterministic analysis? *)
 	deterministic : bool;
+	(* Number of states *)
+	nb_states : int;
+	(* Number of transitions *)
+	nb_transitions : int;
 	(* Number of iterations *)
 	nb_iterations : int;
 	(* Computation time *)

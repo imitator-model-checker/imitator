@@ -8,7 +8,7 @@
  * Author:        Etienne Andre
  * 
  * Created:       2009/09/08
- * Last modified: 2014/04/09
+ * Last modified: 2014/04/16
  *
  ****************************************************************)
 
@@ -241,6 +241,11 @@ val evaluate_and : bool -> bool -> bool
 (* Evaluate both part of an 'or' comparison and return the disjunction *)
 val evaluate_or : bool -> bool -> bool
 
+(****************************************************************)
+(** Useful functions on floats *)
+(****************************************************************)
+(** round_n n f rounds float f with n decimal digits *)
+(* val round_n : int -> float -> float *)
 
 
 

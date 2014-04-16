@@ -8,7 +8,7 @@
  * Author:        Etienne Andre
  * 
  * Created:       2009/09/08
- * Last modified: 2014/04/09
+ * Last modified: 2014/04/16
  *
  ****************************************************************)
  
@@ -424,6 +424,16 @@ let evaluate_or a b =
 	a || b
 
 
+(****************************************************************)
+(** Useful functions on floats *)
+(****************************************************************)
+(*
+(** round_n n f rounds float f with n decimal digits *)
+let round_n n f =
+	let factor = 10. ** (float_of_int n) in
+(*	print_float factor;
+	exit 0;*)
+	(float_of_int (int_of_float (floor  (f *. factor)))) /. factor*)
 
 
 (****************************************************************)
