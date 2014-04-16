@@ -15,11 +15,9 @@
 (** Behavioral cartography auxiliary functions *)
 (************************************************************)
 (*** BADPROG ***)
-type current_pi0 = NumConst.t array
+(* type current_pi0 = NumConst.t array *)
 
-(*** WARNING: inconsistent functions, i.e., somes times v0 and the model are included, some times not ***)
-
-val bc_init : AbstractModel.abstract_model -> AbstractModel.v0 -> unit
+val bc_initialize : unit -> unit
 
 val bc_process_im_result : Reachability.im_result -> unit
 
@@ -27,7 +25,13 @@ val bc_finalize : unit -> unit
 
 val bc_result : unit -> AbstractModel.returned_constraint list
 
-val find_next_pi0 : AbstractModel.abstract_model ->  Reachability.im_result -> current_pi0 -> (bool * bool)
+val compute_initial_pi0 : unit -> unit
+
+val find_next_pi0 : AbstractModel.tile_nature option -> (bool * bool)
+
+(* Get the current pi0 in the form of a list (for PaTATOR) *)
+val get_current_pi0 : unit -> (Automaton.variable_index * NumConst.t) list
+
 
 
 (************************************************************)

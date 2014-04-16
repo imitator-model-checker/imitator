@@ -8,7 +8,7 @@
  * Author:        Etienne Andre
  * 
  * Created:       2014/03/15
- * Last modified: 2014/03/24
+ * Last modified: 2014/04/16
  *
  ****************************************************************)
 
@@ -41,10 +41,10 @@ open Marshal
 
 (* * *** *** ***** *******    MAIN FUNCTION    ******* ***** *** *** * *)
 let run () =
-	(* Retrieve the input options *)
+(*	(* Retrieve the input options *)
 	let options = Input.get_options () in
 	(* Get the model *)
-	let model = Input.get_model() in
+	let model = Input.get_model() in*)
 
 	let rank = Mpi.comm_rank comm_world in
 

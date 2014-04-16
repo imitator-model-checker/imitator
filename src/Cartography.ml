@@ -34,7 +34,7 @@ open Reachability
 (************************************************************)
 
 (*** BADPROG ***)
-type current_pi0 = NumConst.t array
+(* type current_pi0 = NumConst.t array *)
 
 
 (************************************************************)
@@ -97,7 +97,9 @@ let computed_constraints = ref (DynArray.create())
 let current_intervals_min = ref (Array.make 0 NumConst.zero)
 let current_intervals_max = ref (Array.make 0 NumConst.zero)
 
- 
+let current_pi0 = ref None
+
+
 (************************************************************)
 (* Functions on tile nature *)
 (************************************************************)
@@ -247,11 +249,14 @@ let random_pi0 model pi0 =
 (************************************************************)
 (*------------------------------------------------------------*)
 (* First point pi0 *)
-(** WARNING / TODO: technically, we should check that pi0 models the initial constraint *)
+(*** WARNING / TODO: technically, we should check that pi0 models the initial constraint ***)
 (*------------------------------------------------------------*)
-let initial_pi0 min_bounds max_bounds first_dimension =
+let compute_initial_pi0 () =
 	(* Retrieve the input options *)
 	let options = Input.get_options () in
+	
+	(*** WARNING: should be sure that 0 is the first parameter dimension!! ***)
+	let first_dimension = 0 in
 	
 	let step = options#step in
 	
@@ -260,16 +265,16 @@ let initial_pi0 min_bounds max_bounds first_dimension =
 	
 	(* Instantiate with the lower bounds *)
 	| Cover_cartography ->
-		Array.copy min_bounds
+		current_pi0 := Some (Array.copy !min_bounds)
 
 		(* Instantiate with the point in the middle of V0 *)
 	| Border_cartography ->
 		(* Start with the min bounds everywhere *)
-		let initial_pi0 = (*Array.create (Array.length min_bounds) NumConst.zero*) Array.copy min_bounds in
+		let initial_pi0 = (*Array.create (Array.length min_bounds) NumConst.zero*) Array.copy !min_bounds in
 (* 		for i = 0 to (Array.length initial_pi0) - 1 do *)
 			(* Get some variables *)
-			let min_bound = min_bounds.(first_dimension) in
-			let max_bound = max_bounds.(first_dimension) in
+			let min_bound = !min_bounds.(first_dimension) in
+			let max_bound = !max_bounds.(first_dimension) in
 			(* Compute the middle *)
 			let local_point = try
 				find_multiple_in_between min_bound max_bound step
@@ -280,8 +285,8 @@ let initial_pi0 min_bounds max_bounds first_dimension =
 			(* Assign it to the array *)
 			initial_pi0.(first_dimension) <- local_point;
 (* 		done; *)
-		(* Return the initial_pi0 *)
-		initial_pi0
+		(* Set the initial_pi0 *)
+		current_pi0 := Some (initial_pi0)
 		
 	| _ -> raise (InternalError("In function 'initial_pi0', the mode should be a cover / border cartography only."))
 
@@ -293,102 +298,117 @@ let initial_pi0 min_bounds max_bounds first_dimension =
 (*------------------------------------------------------------*)
 (** Compute the next pi0 and directly modify the variable 'current_pi0' (standard BC) *)
 (*------------------------------------------------------------*)
-let find_next_pi0_cover model init_constraint min_bounds max_bounds nb_dimensions computed_constraints current_pi0 =
+let find_next_pi0_cover () =
+	(* Get the model *)
+	let model = Input.get_model() in
 	(* Retrieve the input options *)
 	let options = Input.get_options () in
-	
-	(* Counts the points actually member of an existing constraint (hence useless) for information purpose *)
-	let nb_useless_points = ref 0 in
-	
-	(* Are there still possible points *)
-	let more_pi0 = ref true in
-	(* Did we find a suitable pi0 *)
-	let found_pi0 = ref false in
-	(* Did we reach the time limit *)
-	let time_limit_reached = ref false in
 
-	while !more_pi0 && not !time_limit_reached && not !found_pi0 do
+	match !current_pi0 with
+	(* First initialization *)
+	| None -> 
+		raise (InternalError("Current_pi0 is not defined, altough it should have at this point."))
+(*		current_pi0 := Some (compute_initial_pi0 !min_bounds !max_bounds 0) (*** WARNING: should be sure that 0 is the first parameter dimension ***)
+		;
+		(* Return *)
+		true, false, 0*)
+	
+	(* Next point *)
+	| Some current_pi0 -> (
 		
-		(* 1) Compute the next pi0 (if any left) *)
+		(* Counts the points actually member of an existing constraint (hence useless) for information purpose *)
+		let nb_useless_points = ref 0 in
 		
-		(* Start with the first dimension *)
-		let current_dimension = ref 0 in (** WARNING: should be sure that 0 is the first parameter dimension *)
-		(* The current dimension is not yet the maximum *)
-		let not_is_max = ref true in
-		
-		while !not_is_max do
-			(* Try to increment the local dimension *)
-			let current_dimension_incremented = NumConst.add current_pi0.(!current_dimension) options#step in
-			if current_dimension_incremented <= max_bounds.(!current_dimension) then (
-				(* Increment this dimension *)
-				current_pi0.(!current_dimension) <- current_dimension_incremented;
-				(* Reset the smaller dimensions to the low bound *)
-				for i = 0 to !current_dimension - 1 do
-					current_pi0.(i) <- min_bounds.(i);
-				done;
-				(* Stop the loop *)
-				not_is_max := false;
-			)
-			(* Else: try the next dimension *)
-			else ( 
-				current_dimension := !current_dimension + 1;
-				(* If last dimension: the end! *)
-				if !current_dimension >= nb_dimensions then(
-					more_pi0 := false;
+		(* Are there still possible points *)
+		let more_pi0 = ref true in
+		(* Did we find a suitable pi0 *)
+		let found_pi0 = ref false in
+		(* Did we reach the time limit *)
+		let time_limit_reached = ref false in
+
+		while !more_pi0 && not !time_limit_reached && not !found_pi0 do
+			
+			(* 1) Compute the next pi0 (if any left) *)
+			
+			(* Start with the first dimension *)
+			let current_dimension = ref 0 in (** WARNING: should be sure that 0 is the first parameter dimension *)
+			(* The current dimension is not yet the maximum *)
+			let not_is_max = ref true in
+			
+			while !not_is_max do
+				(* Try to increment the local dimension *)
+				let current_dimension_incremented = NumConst.add current_pi0.(!current_dimension) options#step in
+				if current_dimension_incremented <= !max_bounds.(!current_dimension) then (
+					(* Increment this dimension *)
+					current_pi0.(!current_dimension) <- current_dimension_incremented;
+					(* Reset the smaller dimensions to the low bound *)
+					for i = 0 to !current_dimension - 1 do
+						current_pi0.(i) <- !min_bounds.(i);
+					done;
+					(* Stop the loop *)
 					not_is_max := false;
 				)
-			);
-		done; (* while not is max *)
-	
-		(* 2) Check that this pi0 is new *)
+				(* Else: try the next dimension *)
+				else ( 
+					current_dimension := !current_dimension + 1;
+					(* If last dimension: the end! *)
+					if !current_dimension >= !nb_dimensions then(
+						more_pi0 := false;
+						not_is_max := false;
+					)
+				);
+			done; (* while not is max *)
 		
-		if !more_pi0 then(
+			(* 2) Check that this pi0 is new *)
+			
+			if !more_pi0 then(
 
-			(* Convert the current pi0 to functional representation *)
-			let pi0 = fun parameter -> current_pi0.(parameter) in
-			
-			(* Check that the current pi0 does not belong to any constraint *)
-			if dynArray_exists (pi0_in_returned_constraint pi0) computed_constraints then (
-				(* Update the number of unsuccessful points *)
-				nb_useless_points := !nb_useless_points + 1;
-				if debug_mode_greater Debug_medium then (
-					print_message Debug_medium "The following pi0 is already included in a constraint.";
-					print_message Debug_medium (ModelPrinter.string_of_pi0 model pi0);
-				);
-				(** TODO: could be optimized by finding the nearest multiple of tile next to the border, and directly switching to that one *)
+				(* Convert the current pi0 to functional representation *)
+				let pi0 = fun parameter -> current_pi0.(parameter) in
 				
-			(* Check that it satisfies the initial constraint *)
-			) else if not (LinearConstraint.is_pi0_compatible pi0 init_constraint) then (
-				(* Update the number of unsuccessful points *)
-				nb_useless_points := !nb_useless_points + 1;
-				if debug_mode_greater Debug_medium then (
-					print_message Debug_medium "The following pi0 does not satisfy the initial constraint of the model.";
-					print_message Debug_medium (ModelPrinter.string_of_pi0 model pi0);
+				(* Check that the current pi0 does not belong to any constraint *)
+				if dynArray_exists (pi0_in_returned_constraint pi0) !computed_constraints then (
+					(* Update the number of unsuccessful points *)
+					nb_useless_points := !nb_useless_points + 1;
+					if debug_mode_greater Debug_medium then (
+						print_message Debug_medium "The following pi0 is already included in a constraint.";
+						print_message Debug_medium (ModelPrinter.string_of_pi0 model pi0);
+					);
+					(** TODO: could be optimized by finding the nearest multiple of tile next to the border, and directly switching to that one *)
+					
+				(* Check that it satisfies the initial constraint *)
+				) else if not (LinearConstraint.is_pi0_compatible pi0 !init_constraint) then (
+					(* Update the number of unsuccessful points *)
+					nb_useless_points := !nb_useless_points + 1;
+					if debug_mode_greater Debug_medium then (
+						print_message Debug_medium "The following pi0 does not satisfy the initial constraint of the model.";
+						print_message Debug_medium (ModelPrinter.string_of_pi0 model pi0);
+					);
+				(* If both checks passed, then pi0 found *)
+				)else(
+					found_pi0 := true;
 				);
-			(* If both checks passed, then pi0 found *)
-			)else(
-				found_pi0 := true;
-			);
-			
-			(* If pi0 still not found, check time limit *)
-			if not !found_pi0 then(
-				(* Stop if the time limit has been reached *)
-				match options#time_limit with
-					| None -> ()
-					| Some limit -> if (get_time()) > (float_of_int limit) then time_limit_reached := true;
-			);
-		); (*if more pi0 *)
-	done; (* while more pi0 and so on *)
-	
-	(* Return info (note that current_pi0 has ALREADY been updated if a suitable pi0 was found !) *)
-	!found_pi0 , !time_limit_reached , !nb_useless_points
+				
+				(* If pi0 still not found, check time limit *)
+				if not !found_pi0 then(
+					(* Stop if the time limit has been reached *)
+					match options#time_limit with
+						| None -> ()
+						| Some limit -> if (get_time()) > (float_of_int limit) then time_limit_reached := true;
+				);
+			); (*if more pi0 *)
+		done; (* while more pi0 and so on *)
+		
+		(* Return info (note that current_pi0 has ALREADY been updated if a suitable pi0 was found !) *)
+		!found_pi0 , !time_limit_reached , !nb_useless_points
+	)
 
 
 (*------------------------------------------------------------*)
 (** Compute the next pi0 and directly modify the variable 'current_pi0' (border BC) *)
 (*------------------------------------------------------------*)
-let find_next_pi0_border model init_constraint min_bounds max_bounds nb_dimensions computed_constraints current_pi0 latest_nature current_intervals_min current_intervals_max =
-	find_next_pi0_cover model init_constraint min_bounds max_bounds nb_dimensions computed_constraints current_pi0 (*
+let find_next_pi0_border latest_nature =
+	find_next_pi0_cover () (*
 	(* Print some information *)
 	print_message Debug_standard "Entering function 'find_next_pi0_border'.";
 	
@@ -577,7 +597,7 @@ let find_next_pi0_border model init_constraint min_bounds max_bounds nb_dimensio
 
 
 (* Generic function to find the next pi0 *)
-let find_next_pi0 model im_result current_pi0 =
+let find_next_pi0 tile_nature_option =
 	(* Retrieve the input options *)
 	let options = Input.get_options () in
 
@@ -585,10 +605,14 @@ let find_next_pi0 model im_result current_pi0 =
 	(* Branching *)
 	match options#imitator_mode with
 	| Cover_cartography ->
-		find_next_pi0_cover model !init_constraint !min_bounds !max_bounds !nb_dimensions !computed_constraints current_pi0
+		find_next_pi0_cover ()
 
 	| Border_cartography ->
-		find_next_pi0_border model !init_constraint !min_bounds !max_bounds !nb_dimensions !computed_constraints current_pi0 im_result.tile_nature !current_intervals_min !current_intervals_max
+		begin
+		match tile_nature_option with
+			| Some tile_nature -> find_next_pi0_border tile_nature
+			| None -> raise (InternalError("The case of a border cartography with no tile nature in the most recent constraint is not handled yet."))
+		end
 
 	| _ -> raise (InternalError("In function 'cover_behavioral_cartography', the mode should be a cover / border cartography only."))
 	in
@@ -612,7 +636,11 @@ let find_next_pi0 model im_result current_pi0 =
 (*------------------------------------------------------------*)
 (** Auxiliary function: initialize the behavioral cartography *)
 (*------------------------------------------------------------*)
-let bc_init model v0 =
+let bc_initialize () =
+	(* Get the model *)
+	let model = Input.get_model() in
+	(* Get the v0 *)
+	let v0 = Input.get_v0() in
 	(* Retrieve the input options *)
 	let options = Input.get_options () in
 
@@ -863,6 +891,26 @@ let bc_result () =
 	zones
 
 
+
+(* Convert the array into a functional representation *)
+let create_pi0_fun () =
+	match !current_pi0 with
+	| None -> raise (InternalError("Functional pi0 called before its initialization."))
+	| Some current_pi0 ->
+		fun parameter_index -> current_pi0.(parameter_index)
+	
+
+(* Get the current pi0 in the form of a list (for PaTATOR) *)
+let get_current_pi0 () =
+	(* Get the model *)
+	let model = Input.get_model() in
+	match !current_pi0 with
+	| None -> raise (InternalError("Current pi0 called before its initialization."))
+	| Some current_pi0 ->
+		List.map (fun parameter_index -> parameter_index , current_pi0.(parameter_index)) model.parameters
+
+
+
 (*------------------------------------------------------------*)
 (** Behavioral cartography algorithm with full coverage of V0 *)
 (*------------------------------------------------------------*)
@@ -871,35 +919,35 @@ let cover_behavioral_cartography model v0 =
 	let options = Input.get_options () in
 
 	(* Perform initialization *)
-	bc_init model v0;
+	bc_initialize ();
 
 	(* Compute the first point pi0 *)
-	let current_pi0 = initial_pi0 !min_bounds !max_bounds 0 (*** WARNING: should be sure that 0 is the first parameter dimension ***) in
+	compute_initial_pi0 ();
 	
 	(* Iterate on all the possible pi0 *)
 	let more_pi0 = ref true in
 	let limit_reached = ref false in
+	
 	while !more_pi0 && not !limit_reached do
 
-		(*** WARNING : duplicate operation (quite cheap anyway) ***)
-		(* Convert to functional representation *)
-		let pi0 = fun parameter -> current_pi0.(parameter) in
-		
 		(* Iterate *)
 		current_iteration := !current_iteration + 1;
+		
+		(*** WARNING : duplicate operation (quite cheap anyway) ***)
+		let pi0_fun = create_pi0_fun () in
 
 		(* Debug messages *)
 		print_message Debug_standard ("\n**************************************************");
 		print_message Debug_standard ("BEHAVIORAL CARTOGRAPHY ALGORITHM: " ^ (string_of_int !current_iteration) ^ "");
 		print_message Debug_standard ("Considering the following pi" ^ (string_of_int !current_iteration));
-		print_message Debug_standard (ModelPrinter.string_of_pi0 model pi0);
+		print_message Debug_standard (ModelPrinter.string_of_pi0 model pi0_fun);
 		
 		(* Prevent the debug messages (except in debug medium, high or total) *)
 		if not (debug_mode_greater Debug_medium) then
 			set_debug_mode Debug_nodebug;
 		
 		(* Set the new pi0 *)
-		Input.set_pi0 pi0;
+		Input.set_pi0 (pi0_fun);
 		
 		(* Call the inverse method *)
 		let im_result, reachability_graph = Reachability.inverse_method_gen model !init_state in
@@ -916,7 +964,7 @@ let cover_behavioral_cartography model v0 =
 			Graphics.generate_graph model reachability_graph radical;
 
 		(* Compute the next pi0 (note that current_pi0 is directly modified by the function!) and return flags for more pi0 and co *)
-		let found_pi0 , time_limit_reached = find_next_pi0 model im_result current_pi0 in
+		let found_pi0 , time_limit_reached = find_next_pi0 (Some im_result.tile_nature) in
 		
 		(* Update the time limit *)
 		limit_reached := time_limit_reached;
@@ -925,7 +973,9 @@ let cover_behavioral_cartography model v0 =
 
 	done; (* while more pi0 *)
 
+	(* Print info if premature termination *)
 	if !limit_reached && !more_pi0 then (
+		(*** WARNING : what about other limits?! (iterations, etc.?) ***)
 		match options#time_limit with
 			| None -> ()
 			| Some limit -> if (get_time()) > (float_of_int limit) then print_warning (
@@ -943,7 +993,8 @@ let cover_behavioral_cartography model v0 =
 
 (*------------------------------------------------------------*)
 (** Behavioral cartography algorithm with random selection of a pi0 *)
-(** TODO: merge with the other !!!! *)
+(*** TODO: merge with the other !!!! ***)
+(*** WARNING: not tested for a LONG time ***)
 (*------------------------------------------------------------*)
 let random_behavioral_cartography model v0 nb =
 	(* Retrieve the input options *)

@@ -399,7 +399,7 @@ exe:
 # 	$(TARGETV) $(EXAMPLE_PATH)/Flipflop/flipflop.imi $(EXAMPLE_PATH)/Flipflop/flipflop.pi0 -dynamic-elimination -with-dot -with-log -log-prefix $(EXAMPLE_PATH)/Flipflop/flipflop-dynamic
 # 	$(TARGET) $(EXAMPLE_PATH)/Flipflop/flipflop.imi $(EXAMPLE_PATH)/Flipflop/flipflop.pi0 -bab
 
-# 	$(TARGET) $(EXAMPLE_PATH)/Flipflop/flipflop.imi $(EXAMPLE_PATH)/Flipflop/flipflop.v0 -mode cover -cart
+	$(TARGET) $(EXAMPLE_PATH)/Flipflop/flipflop.imi $(EXAMPLE_PATH)/Flipflop/flipflop.v0 -mode cover -cart -verbose total
 # 	$(TARGET) $(EXAMPLE_PATH)/Flipflop/flipflop.imi -mode statespace -with-dot
 # 	$(TARGET) $(EXAMPLE_PATH)/Flipflop/flipflop.imi $(EXAMPLE_PATH)/Flipflop/flipflop-bug.pi0 -with-dot -efim -with-log -with-parametric-log -verbose low -fancy
 # 	$(TARGET) $(EXAMPLE_PATH)/Flipflop/flipflop.imi $(EXAMPLE_PATH)/Flipflop/flipflop.v0 -efim -mode cover -cart

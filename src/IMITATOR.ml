@@ -8,7 +8,7 @@
  * Author:        Ulrich Kuehne, Etienne Andre
  * 
  * Created:       2009/09/07
- * Last modified: 2014/03/15
+ * Last modified: 2014/04/16
  *
  ****************************************************************)
 
@@ -104,6 +104,7 @@ let model, pi0, v0 = ParsingUtility.compile options in
 
 Input.set_model model;
 Input.set_pi0 pi0;
+Input.set_v0 v0;
 
 
 (**************************************************)
