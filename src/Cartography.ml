@@ -10,10 +10,14 @@
  * Author:        Ulrich Kuehne, Etienne Andre
  * 
  * Created:       2012/06/18
- * Last modified: 2014/04/14
+ * Last modified: 2014/04/16
  *
  ****************************************************************)
 
+
+(************************************************************)
+(* Modules *)
+(************************************************************)
 
 open Global
 open AbstractModel
@@ -21,8 +25,71 @@ open StateSpace
 open Reachability
  
 
+(************************************************************)
+(* Global variable used for BC *)
+(************************************************************)
+
+(*** NOTE: all this could be turned in a structure, or a .mli file ***)
+
+
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+(* Constants *)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+
+(* Debug mode *)
+let global_debug_mode = ref (Debug_standard)
+
+(* Record start time to compute the time spent only on calling IM *)
+let start_time = ref (Unix.gettimeofday())
+
+(* Number of dimensions in the system *)
+let nb_dimensions = ref 0
+
+(* Min & max bounds for the parameters *)
+let min_bounds = ref (Array.make 0 NumConst.zero)
+let max_bounds = ref (Array.make 0 NumConst.zero)
+	
+(* Compute the (actually slightly approximate) number of points in V0 (for information purpose) *)
+let nb_points = ref NumConst.zero
+
+
+
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+(* Variables *)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+
+(* Current iteration (for information purpose) *)
+let current_iteration = ref 0
+(* Sum of number of states (for information purpose) *)
+let nb_states = ref 0
+(* Sum of number of transitions (for information purpose) *)
+let nb_transitions = ref 0
+
+(* Time counter for recording the globl time spent on BC *)
+let time_spent_on_IM = ref 0.
+
+(* Counts the points actually member of an existing constraint (hence useless) for information purpose *)
+let nb_useless_points = ref 0
+
+(* Compute the initial state (TOTALLY RANDOM VALUE) *)
+let init_state = ref (Automaton.make_location [] [], LinearConstraint.px_true_constraint())
+
+(* Initial constraint of the model *)
+let init_constraint = ref (LinearConstraint.p_true_constraint())
+
+(* (Dynamic) Array for the results *)
+let computed_constraints = ref (DynArray.create())
+
+(* Compute some variables for the border cartography only *)
+(* Current_intervals_min and Current_intervals_max represent, for each dimension, the interval (multiple of step) in which the points have not been classified as good or bad *)
+let current_intervals_min = ref (Array.make 0 NumConst.zero)
+let current_intervals_max = ref (Array.make 0 NumConst.zero)
+
  
- 
+(************************************************************)
+(* Functions on tile nature *)
+(************************************************************)
+
 (* let string_of_array_pi0 pi0_array = 
 	(* Retrieve the program *)
 	let program = Input.get_program () in
@@ -31,8 +98,9 @@ open Reachability
 	(* Convert to string *)
 	ModelPrinter.string_of_pi0 program pi0_functional
 	*)
-(* TODO: move this translation somewhere else
-   WARNING: code duplicated *)
+
+(*** TODO: move this translation somewhere else ***)
+(*** WARNING: code duplicated ***)
 let string_of_tile_nature = function
 	| Good -> "good"
 	| Bad -> "bad"
@@ -45,9 +113,9 @@ let tile_nature_of_returned_constraint = function
 	| NNCConstraint _ -> raise (InternalError ("NNCCs are not available everywhere yet."))
 
 
-(**************************************************)
+(************************************************************)
 (* Functions on NumConst (that may not need to be defined here) *)
-(**************************************************)
+(************************************************************)
 (*------------------------------------------------------------*)
 (* Check if number is a multiple of step since base_number *)
 (* That is: does there exist an integer k such that number = base_number + k * step ? *)
@@ -122,9 +190,9 @@ let find_multiple_in_between_and_from min_bound min max step =
 	find_multiple_in_between m max step
 
 
-(**************************************************)
+(************************************************************)
 (* General functions *)
-(**************************************************)
+(************************************************************)
 (*------------------------------------------------------------*)
 (** Check if a pi_0 belongs to a 'returned_constraint'*)
 (*------------------------------------------------------------*)
@@ -137,9 +205,9 @@ let pi0_in_returned_constraint pi0 = function
 
 
 
-(**************************************************)
+(************************************************************)
 (* Pi0 function (to move to "next pi0 functions" section) *)
-(**************************************************)
+(************************************************************)
 (*------------------------------------------------------------*)
 (* Generate a random pi0 in a given interval for each parameter (array view!) *)
 (*------------------------------------------------------------*)
@@ -162,9 +230,9 @@ let random_pi0 model pi0 =
 	random_pi0*)
 
 
-(**************************************************)
+(************************************************************)
 (* Initial pi0 functions *)
-(**************************************************)
+(************************************************************)
 (*------------------------------------------------------------*)
 (* First point pi0 *)
 (** WARNING / TODO: technically, we should check that pi0 models the initial constraint *)
@@ -206,9 +274,9 @@ let initial_pi0 min_bounds max_bounds first_dimension =
 	| _ -> raise (InternalError("In function 'initial_pi0', the mode should be a cover / border cartography only."))
 
 
-(**************************************************)
+(************************************************************)
 (* Next pi0 functions *)
-(**************************************************)
+(************************************************************)
 
 (*------------------------------------------------------------*)
 (** Compute the next pi0 and directly modify the variable 'current_pi0' (standard BC) *)
@@ -496,22 +564,18 @@ let find_next_pi0_border model init_constraint min_bounds max_bounds nb_dimensio
 	*)
 
 
-(**************************************************)
+(************************************************************)
 (* BEHAVIORAL CARTOGRAPHY ALGORITHM functions *)
-(**************************************************)
+(************************************************************)
 	
 	
-	
-	
-(* TODO: merge both algorithms into cover_behavioral_cartography !!! *)
-
-
+(*** TODO: merge both algorithms into cover_behavioral_cartography !!! ***)
 
 
 (*------------------------------------------------------------*)
-(** Behavioral cartography algorithm with full coverage of V0 *)
+(** Auxiliary function: initialize the behavioral cartography *)
 (*------------------------------------------------------------*)
-let cover_behavioral_cartography model v0 =
+let bc_init model v0 =
 	(* Retrieve the input options *)
 	let options = Input.get_options () in
 
@@ -519,28 +583,28 @@ let cover_behavioral_cartography model v0 =
 	print_message Debug_medium ("Starting preprocessing for the behavioral cartography");
 
 	(* Time counter for recording the globl time spent on BC *)
-	let time_spent_on_IM = ref 0. in
+	time_spent_on_IM := 0.;
 	(* Record start time to compute the time spent only on calling IM *)
-	let start_time = Unix.gettimeofday() in
+	start_time := Unix.gettimeofday();
 
 	(* Number of dimensions in the system *)
-	let nb_dimensions = Array.length v0 in
+	nb_dimensions := Array.length v0;
 	
 	(* Print some information *)
-	print_message Debug_medium ("Number of dimensions: " ^ (string_of_int nb_dimensions));
+	print_message Debug_medium ("Number of dimensions: " ^ (string_of_int !nb_dimensions));
 
 	(* Check that the cartography is not applied to 0 dimension! *)
-	if nb_dimensions = 0 then(
+	if !nb_dimensions = 0 then(
 		print_error "The cartography has 0 dimension in V0, and cannot be applied.";
 		abort_program();
 	);
 	
 	(* Min & max bounds for the parameters *)
-	let min_bounds = Array.map (fun (low, high) -> low) v0 in
-	let max_bounds = Array.map (fun (low, high) -> high) v0 in
+	min_bounds := Array.map (fun (low, high) -> low) v0;
+	max_bounds := Array.map (fun (low, high) -> high) v0;
 	
 	(* Compute the (actually slightly approximate) number of points in V0 (for information purpose) *)
-	let nb_points = Array.fold_left (fun current_number (low, high) ->
+	nb_points := Array.fold_left (fun current_number (low, high) ->
 		(* Multiply current number of points by the interval + 1, itself divided by the step *)
 		NumConst.mul
 			current_number
@@ -551,30 +615,30 @@ let cover_behavioral_cartography model v0 =
 				)
 				options#step
 			)
-	) NumConst.one v0 in
+	) NumConst.one v0;
 	
 	(* Counts the points actually member of an existing constraint (hence useless) for information purpose *)
-	let nb_useless_points = ref 0 in
+	nb_useless_points := 0;
 	
 	(* Compute the initial state *)
-	let init_state = get_initial_state_or_abort model in
+	init_state := get_initial_state_or_abort model;
 
 	(* Initial constraint of the model *)
-	let _, init_constraint = init_state in
+	let _, init_px_constraint = !init_state in
 	(* Hide non parameters *)
-	let init_constraint = LinearConstraint.px_hide_nonparameters_and_collapse init_constraint in
+	init_constraint := LinearConstraint.px_hide_nonparameters_and_collapse init_px_constraint;
 
 (*	(* (Dynamic) Array for the pi0 (USELESS SO FAR) *)
 	let pi0_computed = DynArray.create() in*)
 	(* (Dynamic) Array for the results *)
-	let computed_constraints = DynArray.create() in
+	computed_constraints := DynArray.create();
 	
 	(* Compute some variables for the border cartography only *)
 	(* Current_intervals_min and Current_intervals_max represent, for each dimension, the interval (multiple of step) in which the points have not been classified as good or bad *)
-	let (*current_dimension, remaining_dimensions, current_interval_min, *)current_intervals_min, current_intervals_max =
+	let the_current_intervals_min, the_current_intervals_max =
 	match options#imitator_mode with
 		| Border_cartography -> 
-			Array.copy min_bounds, Array.copy max_bounds
+			Array.copy !min_bounds, Array.copy !max_bounds
 (*			let first, others =
 			begin match model.parameters with 
 				| first :: others -> first , others 
@@ -591,19 +655,19 @@ let cover_behavioral_cartography model v0 =
 		(* Otherwise, does not matter *)
 		| _ -> (*ref 0, ref [], ref NumConst.zero, ref NumConst.zero*) Array.make 0 NumConst.zero, Array.make 0 NumConst.zero
 	in
-
-	(* Compute the first point pi0 *)
-	let current_pi0 = initial_pi0 min_bounds max_bounds 0 (** Warning: should be sure that 0 is the first parameter dimension*) in
+	current_intervals_min := the_current_intervals_min;
+	current_intervals_max := the_current_intervals_max;
 	
+
 	(* Current iteration (for information purpose) *)
-	let current_iteration = ref 0 in
+	current_iteration := 0;
 	(* Sum of number of states (for information purpose) *)
-	let nb_states = ref 0 in
+	nb_states := 0;
 	(* Sum of number of transitions (for information purpose) *)
-	let nb_transitions = ref 0 in
+	nb_transitions := 0;
 
 	(* Debug mode *)
-	let global_debug_mode = get_debug_mode() in
+	global_debug_mode := get_debug_mode();
 	
 	(*** TODO : check that initial pi0 is suitable!! (could be incompatible with initial constraint) ***)
 	
@@ -613,8 +677,68 @@ let cover_behavioral_cartography model v0 =
 	print_message Debug_standard ("**************************************************");
 	print_message Debug_standard (" Parametric rectangle V0: ");
 	print_message Debug_standard (ModelPrinter.string_of_v0 model v0);
-	print_message Debug_standard (" Number of points inside V0: " ^ (NumConst.string_of_numconst nb_points));
+	print_message Debug_standard (" Number of points inside V0: " ^ (NumConst.string_of_numconst !nb_points));
+	()
 
+
+(*------------------------------------------------------------*)
+(** Auxiliary function: finalize the behavioral cartography *)
+(*------------------------------------------------------------*)
+let bc_finalize () =
+	(* Retrieve the input options *)
+	let options = Input.get_options () in
+
+	let nb_tiles = DynArray.length !computed_constraints in
+	let nb_states = (float_of_int (!nb_states)) /. (float_of_int nb_tiles) in
+	let nb_transitions = (float_of_int (!nb_transitions)) /. (float_of_int nb_tiles) in
+	
+	let global_time = time_from !start_time in
+	let time_spent_on_BC = global_time -. (!time_spent_on_IM) in
+	
+	(* Print the result *)
+	print_message Debug_standard ("\n**************************************************");
+	print_message Debug_standard (" END OF THE BEHAVIORAL CARTOGRAPHY ALGORITHM");
+	print_message Debug_standard ("Size of V0: " ^ (NumConst.string_of_numconst !nb_points) ^ "");
+	print_message Debug_standard ("Unsuccessful points: " ^ (string_of_int !nb_useless_points) ^ "");
+	print_message Debug_standard ("" ^ (string_of_int nb_tiles) ^ " different constraints were computed.");
+	print_message Debug_standard ("Average number of states     : " ^ (string_of_float nb_states) ^ "");
+	print_message Debug_standard ("Average number of transitions: " ^ (string_of_float nb_transitions) ^ "");
+	print_message Debug_standard ("Global time spent    : " ^ (string_of_float global_time) ^ " s");
+	print_message Debug_standard ("Time spent on IM     : " ^ (string_of_float (!time_spent_on_IM)) ^ " s");
+	print_message Debug_standard ("Time spent on BC only: " ^ (string_of_float (time_spent_on_BC)) ^ " s");
+	print_message Debug_standard ("**************************************************");
+	
+	if options#statistics then (
+		(* PPL *)
+		print_message Debug_standard "--------------------";
+		print_message Debug_standard "Statistics on PPL";
+		print_message Debug_standard ("--------------------" ^ (LinearConstraint.get_statistics ()));
+	);
+	()
+		
+
+(*------------------------------------------------------------*)
+(** Auxiliary function: return the result of the behavioral cartography *)
+(*------------------------------------------------------------*)
+let bc_result () =
+	(* Return a list of the generated zones *)
+	let zones = DynArray.to_list !computed_constraints in
+	zones
+
+
+(*------------------------------------------------------------*)
+(** Behavioral cartography algorithm with full coverage of V0 *)
+(*------------------------------------------------------------*)
+let cover_behavioral_cartography model v0 =
+	(* Retrieve the input options *)
+	let options = Input.get_options () in
+
+	(* Perform initialization *)
+	bc_init model v0;
+
+	(* Compute the first point pi0 *)
+	let current_pi0 = initial_pi0 !min_bounds !max_bounds 0 (*** WARNING: should be sure that 0 is the first parameter dimension ***) in
+	
 	(* Iterate on all the possible pi0 *)
 	let more_pi0 = ref true in
 	let limit_reached = ref false in
@@ -644,13 +768,13 @@ let cover_behavioral_cartography model v0 =
 		Input.set_pi0 pi0;
 		
 		(* Call the inverse method *)
-		let (*returned_constraint, graph, tile_nature, (*deterministic*)_, nb_iterations, total_time*) im_result, reachability_graph = Reachability.inverse_method_gen model init_state in
+		let (*returned_constraint, graph, tile_nature, (*deterministic*)_, nb_iterations, total_time*) im_result, reachability_graph = Reachability.inverse_method_gen model !init_state in
 		
 		(* Update the time spent on IM *)
 		time_spent_on_IM := !time_spent_on_IM +. im_result.total_time;
 		
 		(* Get the debug mode back *)
-		set_debug_mode global_debug_mode;
+		set_debug_mode !global_debug_mode;
 		
 		(* Retrieve some info *)
 		let current_nb_states = StateSpace.nb_states reachability_graph in
@@ -737,18 +861,19 @@ let cover_behavioral_cartography model v0 =
 		(* Add the pi0 and the computed constraint *)
 		(* USELESS SO FAR 
 		DynArray.add pi0_computed pi0; *)
+		
 		(*** WARNING: so stupid here!! Better flatten the structure! ***)
-		DynArray.add computed_constraints im_result.result;
+		DynArray.add !computed_constraints im_result.result;
 		
 		(* Compute the next pi0 (note that current_pi0 is directly modified by the function!) and return flags for more pi0 and co *)
 		let found_pi0 , time_limit_reached , new_nb_useless_points =
 			(* Branching *)
 			match options#imitator_mode with
 			| Cover_cartography ->
-				find_next_pi0_cover model init_constraint min_bounds max_bounds nb_dimensions computed_constraints current_pi0
+				find_next_pi0_cover model !init_constraint !min_bounds !max_bounds !nb_dimensions !computed_constraints current_pi0
 
 			| Border_cartography ->
-				find_next_pi0_border model init_constraint min_bounds max_bounds nb_dimensions computed_constraints current_pi0 im_result.tile_nature current_intervals_min current_intervals_max
+				find_next_pi0_border model !init_constraint !min_bounds !max_bounds !nb_dimensions !computed_constraints current_pi0 im_result.tile_nature !current_intervals_min !current_intervals_max
 
 			| _ -> raise (InternalError("In function 'cover_behavioral_cartography', the mode should be a cover / border cartography only."))
 		in
@@ -770,38 +895,11 @@ let cover_behavioral_cartography model v0 =
 			);
 	);
 	
-	let nb_tiles = DynArray.length computed_constraints in
-	let nb_states = (float_of_int (!nb_states)) /. (float_of_int nb_tiles) in
-	let nb_transitions = (float_of_int (!nb_transitions)) /. (float_of_int nb_tiles) in
-	
-	let global_time = time_from start_time in
-	let time_spent_on_BC = global_time -. (!time_spent_on_IM) in
-	
-	(* Print the result *)
-	print_message Debug_standard ("\n**************************************************");
-	print_message Debug_standard (" END OF THE BEHAVIORAL CARTOGRAPHY ALGORITHM");
-	print_message Debug_standard ("Size of V0: " ^ (NumConst.string_of_numconst nb_points) ^ "");
-	print_message Debug_standard ("Unsuccessful points: " ^ (string_of_int !nb_useless_points) ^ "");
-	print_message Debug_standard ("" ^ (string_of_int nb_tiles) ^ " different constraints were computed.");
-	print_message Debug_standard ("Average number of states     : " ^ (string_of_float nb_states) ^ "");
-	print_message Debug_standard ("Average number of transitions: " ^ (string_of_float nb_transitions) ^ "");
-	print_message Debug_standard ("Global time spent    : " ^ (string_of_float global_time) ^ " s");
-	print_message Debug_standard ("Time spent on IM     : " ^ (string_of_float (!time_spent_on_IM)) ^ " s");
-	print_message Debug_standard ("Time spent on BC only: " ^ (string_of_float (time_spent_on_BC)) ^ " s");
-	print_message Debug_standard ("**************************************************");
-	
-	if options#statistics then (
-		(* PPL *)
-		print_message Debug_standard "--------------------";
-		print_message Debug_standard "Statistics on PPL";
-		print_message Debug_standard ("--------------------" ^ (LinearConstraint.get_statistics ()));
-	);
-		
+	(* Process the finalization *)
+	bc_finalize ();
 
-	(* Return a list of the generated zones *)
-	let zones = DynArray.to_list computed_constraints in
-	zones
-
+	(* Process the result and return *)
+	bc_result ()
 
 
 

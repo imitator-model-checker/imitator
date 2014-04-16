@@ -7,7 +7,7 @@
 #
 #  _oasis authors: Etienne Andre, Alban Linard
 #  Created:        2013/12/11
-#  Last modified:  2014/03/20
+#  Last modified:  2014/04/16
 ###############################################################
 
 OASISFormat: 0.3
@@ -35,10 +35,12 @@ Executable imitator
 
 Test startingcomment
   Command: echo "\n********** STARTING TESTS **********\n"
-Test testFlipFlop2
-  Command: ./IMITATOR.native examples/Flipflop/flipflop.imi -mode statespace -depth-limit 2
-Test test2
+Test tes1
   Command: ./IMITATOR.native examples/Flipflop/flipflop.imi -mode statespace -depth-limit 5
+Test test2
+  Command: ./IMITATOR.native examples/Flipflop/flipflop.imi examples/Flipflop/flipflop.pi0
+Test test3
+  Command: ./IMITATOR.native examples/Flipflop/flipflop.imi examples/Flipflop/flipflop.v0 -mode cover -cart
 Test finalcomment
   Command: echo "\n********** END TESTS **********\n"
 

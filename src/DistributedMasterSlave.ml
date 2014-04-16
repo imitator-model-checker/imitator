@@ -104,26 +104,15 @@ let master () =
 		let source_rank = receive_pull_request_and_store_constraint () in
 	
 		print_message Debug_low ("Master: got a pull request from slave " ^ (string_of_int source_rank) ^ "");
-	(* 	TODO: TROUVER LE POINT *)
+
+		(* 	TODO: TROUVER LE POINT *)
+		
+		
 		let mypi0 = [] in
+			
 			(*** CACHE ; si plus de point, alors finished := true *)
 		
 			send_pi0 mypi0 source_rank;
-	
-
-(*(*(*      (* Send some new data: send the size, then the data *)
-      let (len, mydata) = get_data() in
-
-      Mpi.send len src data_tag comm_world ;
-      Mpi.send mydata src data_tag comm_world ;
-
-      Printf.printf "MASTER - sent %d bytes of data %s to %d with tag %d" len mydata src data_tag ; 
-      print_newline();
-
-      (* Do I still have data to send? *)
-      if !cnt > 20 then
-        finished := true 
-      ;*)*)*)
 	
     done;
 
@@ -191,21 +180,6 @@ let worker () =
     let init_state = Reachability.get_initial_state_or_abort model in
 
     while not !finished do
-
-        (* Receive some work: size of the input data *)
-(*
-        let ( w, _, tag ) =
-	  Mpi.receive_status masterrank Mpi.any_tag Mpi.comm_world in
-
-        if tag = data_tag then
-	  begin
-	    (* Receive the data itself *)
-	    let buff = String.create w in
-	    let work = ref buff in
-
-	    work := Mpi.receive masterrank data_tag Mpi.comm_world; 
-	    Printf.printf "recv %d bytes of work %s with tag %d" w !work tag ;
-	    print_newline() ;*)
 
 		match receive_work () with
 		

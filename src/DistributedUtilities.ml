@@ -8,7 +8,7 @@
  * Author:        Etienne Andre, Camille Coti
  * 
  * Created:       2014/03/24
- * Last modified: 2014/04/15
+ * Last modified: 2014/04/16
  *
  ****************************************************************)
 
@@ -26,7 +26,7 @@ type rank = int
 
 type pull_request =
 	| PullOnly of rank
-	| PullAndResult of rank * LinearConstraint.p_linear_constraint
+	| PullAndResult of rank * Reachability.im_result
 	| OutOfBound of rank
 
 type work_assignment =
@@ -197,6 +197,23 @@ let serialize_im_result im_result =
 	^
 	(* Computation time *)
 	(string_of_float im_result.total_time)
+
+
+let unserialize_im_result im_result_string =
+	let returned_constraint_string , tile_nature_str , deterministic_string , nb_iterations_string , total_time_string =
+	match split serialize_SEP_STRUCT im_result_string with
+		| [returned_constraint_string ; tile_nature_str ; deterministic_string ; nb_iterations_string ; total_time_string ]
+			-> returned_constraint_string , tile_nature_str , deterministic_string , nb_iterations_string , total_time_string
+		| _ -> raise (SerializationError ("Cannot unserialize im_result '" ^ im_result_string ^ "'."))
+	in
+	{
+	result 				= unserialize_returned_constraint returned_constraint_string;
+	tile_nature			= unserialize_tile_nature tile_nature_str;
+	deterministic		= bool_of_string deterministic_string;
+	nb_iterations		= int_of_string nb_iterations_string;
+	total_time			= float_of_string total_time_string;
+	}
+	
 	
 
 (*------------------------------------------------------------*)
@@ -352,8 +369,8 @@ let receive_pull_request () =
 		res := Mpi.receive source_rank (int_of_slave_tag Slave_result_tag) Mpi.comm_world;
 			
 		(* Get the constraint *)
-		let linear_constraint = LinearConstraint.unserialize_linear_constraint !res in
-		PullAndResult (source_rank , linear_constraint)
+		let im_result = unserialize_im_result !res in
+		PullAndResult (source_rank , im_result)
 		
 	(* Case error *)
 	| Slave_outofbound_tag -> OutOfBound source_rank

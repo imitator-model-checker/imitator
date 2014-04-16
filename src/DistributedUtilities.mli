@@ -8,7 +8,7 @@
  * Author:        Etienne Andre, Camille Coti
  * 
  * Created:       2014/03/24
- * Last modified: 2014/04/15
+ * Last modified: 2014/04/16
  *
  ****************************************************************)
 
@@ -20,7 +20,7 @@ type rank = int
 
 type pull_request =
 	| PullOnly of rank
-	| PullAndResult of rank * LinearConstraint.p_linear_constraint
+	| PullAndResult of rank * Reachability.im_result
 	| OutOfBound of rank
 
 
