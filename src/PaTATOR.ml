@@ -8,7 +8,7 @@
  * Author:        Etienne Andre
  * 
  * Created:       2014/03/15
- * Last modified: 2014/04/16
+ * Last modified: 2014/04/17
  *
  ****************************************************************)
 
@@ -32,8 +32,8 @@ open Global
 
 open Mpi
 open DistributedUtilities
-open Printf (* a terme : retirer tout ca *)
-open Unix (* temporaire : necessaire pour sleep *)
+(* open Printf (* a terme : retirer tout ca *) *)
+(* open Unix (* temporaire : necessaire pour sleep *) *)
 open Marshal
 
 
@@ -48,15 +48,15 @@ let run () =
 
 	let rank = Mpi.comm_rank comm_world in
 
-	(* Print some information *)
+(*	(* Print some information *)
 	if rank = 0 then
-	  print_message Debug_standard ("Hi guys! This is PaTATOR speaking!");
+	  print_message Debug_standard ("Hi guys! This is PaTATOR speaking!");*)
 	
 	
  	(**************************************************)
 	(* Starting here *)
 	(**************************************************)
-	Random.init 0; (* tmp pour tests *)
+(* 	Random.init 0; (* tmp pour tests *) *)
 
 	(* Fork between master and slave *)
 	if rank = masterrank then 

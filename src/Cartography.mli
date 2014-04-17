@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2012/06/18
- * Last modified: 2014/04/16
+ * Last modified: 2014/04/17
  *
  ****************************************************************)
 
@@ -38,8 +38,8 @@ val get_current_pi0 : unit -> (Automaton.variable_index * NumConst.t) list
 (** Behavioral cartography algorithms *)
 (************************************************************)
 
-val random_behavioral_cartography : AbstractModel.abstract_model -> AbstractModel.v0 -> int -> AbstractModel.returned_constraint list
+val random_behavioral_cartography : AbstractModel.abstract_model -> AbstractModel.v0 -> int -> (*AbstractModel.returned_constraint list*)unit
 
-val cover_behavioral_cartography : AbstractModel.abstract_model -> AbstractModel.v0 -> AbstractModel.returned_constraint list
+val cover_behavioral_cartography : AbstractModel.abstract_model -> AbstractModel.v0 -> (*AbstractModel.returned_constraint list*)unit
 
 

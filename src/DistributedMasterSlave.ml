@@ -8,7 +8,7 @@
  * Author:        Etienne Andre, Camille Coti
  * 
  * Created:       2014/03/24
- * Last modified: 2014/04/16
+ * Last modified: 2014/04/17
  *
  ****************************************************************)
  
@@ -62,26 +62,27 @@ let cnt = ref 0
 (* Initialize a slave                                                  *)
 
 let init_slave rank size =
-	print_string( "I am slave " );
-	print_int( rank );
-	print_string( " in " );
-	print_int( size-1 );
-	print_newline(); 
+	print_message Debug_standard ("[Worker " ^ (string_of_int rank) ^ "] I am worker [" ^ (string_of_int rank) ^ "] in " ^ (string_of_int (size-1)) ^ ".");
 ;;
 
 
 (* ** *** *** ***** *******       MASTER      ******* ***** *** *** ** *)
 
 let receive_pull_request_and_store_constraint () =
+	print_message Debug_medium ("[Master] Entered function 'receive_pull_request_and_store_constraint'...");
 	match receive_pull_request () with
-	| PullOnly source_rank -> source_rank, None
+	| PullOnly source_rank ->
+		print_message Debug_medium ("[Master] Received PullOnly request...");
+		source_rank, None
 	
 	| OutOfBound source_rank ->
+		print_message Debug_medium ("[Master] Received OutOfBound request...");
 		(* FAIRE QUELQUE CHOSE POUR DIRE QU'UN POINT N'A PAS MARCHÉ *)
 		raise (InternalError("OutOfBound not implemented."))(*;
 		source_rank, None*)
 
 	| PullAndResult (source_rank , im_result) -> 
+		print_message Debug_medium ("[Master] Received PullAndResult request...");
 		(* Process the result by IM *)
 		Cartography.bc_process_im_result im_result;
 		(* Return source rank *)
@@ -92,8 +93,7 @@ let master () =
 	(* Retrieve the input options *)
 	let options = Input.get_options () in
 
-    print_string( "I am the maaaastah" );
-    print_newline();
+    print_message Debug_standard ("[Master] Hello world!");
     
 	(* Perform initialization *)
 	Cartography.bc_initialize ();
@@ -106,12 +106,12 @@ let master () =
 	let limit_reached = ref false in
 	
 	while !more_pi0 && not !limit_reached do
-		print_message Debug_standard ("Master: waiting for a pull request");
+		print_message Debug_standard ("[Master] Waiting for a pull request");
 
 		(* Get the pull_request *)
 		let source_rank, tile_nature_option = receive_pull_request_and_store_constraint () in
 	
-		print_message Debug_standard ("Master: got a pull request from slave " ^ (string_of_int source_rank) ^ "");
+		print_message Debug_standard ("[Master] Got a pull request from slave " ^ (string_of_int source_rank) ^ "");
 
 		(* Retrieve pi0 *)
 		let pi0 = Cartography.get_current_pi0 () in
@@ -144,8 +144,7 @@ let master () =
 	);
 	
 
-    print_string( "MASTER - done" );
-    print_newline();
+    print_message Debug_standard ("[Master] Done!" );
 
     (* I am done sending all my data. Receive the results of the last
        computations, and wrap up. *)
@@ -154,7 +153,7 @@ let master () =
 
     let k = ref 0 in
     while !k < ( size - 1) do
-		print_message Debug_standard ("Master: waiting for a pull request");
+		print_message Debug_standard ("[Master] Waiting for a pull request");
 		(* Get the pull_request *)
 		let source_rank , _ = receive_pull_request_and_store_constraint () in
 		(* Say good bye *)
@@ -183,14 +182,20 @@ let master () =
 (* 	end *)
     done;
 
-    print_message Debug_standard ("Master: all slaves done" );
+    print_message Debug_standard ("[Master] All slaves done" );
     
 	(* Process the finalization *)
 	Cartography.bc_finalize ();
 
 	(* Process the result and return *)
-	Cartography.bc_result ();
-	(*** TODO: factor the code in IMITATOR.ml, and process graphical description of zones HERE ***)
+	let tiles = Cartography.bc_result () in
+	(* Render zones in a graphical form *)
+	if options#cart then (
+		Graphics.cartography (Input.get_model()) (Input.get_v0()) tiles (options#files_prefix ^ "_cart_patator")
+	) else (
+			print_message Debug_high "Graphical cartography not asked: graph not generated.";
+	);
+
 	()
 	
 ;;
@@ -198,9 +203,11 @@ let master () =
 (* *** *** ***** *******      WORKER      ******* ***** *** *** *)
 
 let worker () = 
+    
 	let rank = rank() in
 	let size = size() in
 
+    print_message Debug_standard ("[Worker " ^ (string_of_int rank) ^ "] Hello!");
 	init_slave rank size;
 
 (*     let n = rank in *)
@@ -209,7 +216,7 @@ let worker () =
     (* Start: ask for some work *)
     send_work_request();
 
-    print_message Debug_standard ("[" ^ (string_of_int rank) ^ "] sent pull request to the master.");
+    print_message Debug_standard ("[Worker " ^ (string_of_int rank) ^ "] sent pull request to the master.");
 
 	(* Get the model *)
 	let model = Input.get_model() in
@@ -223,7 +230,7 @@ let worker () =
 		
 		| Work pi0 -> 
             (* Do the job here *)
-			print_message Debug_standard ("[" ^ (string_of_int rank) ^ "] working now.");
+			print_message Debug_standard ("[Worker " ^ (string_of_int rank) ^ "] working now.");
 
 			(* Set the new pi0 *)
 			Input.set_pi0 pi0;
@@ -234,11 +241,11 @@ let worker () =
 
 			(* Send the result *)
 			send_result im_result;
-			print_message Debug_standard ("Worker " ^ (string_of_int rank) ^ " sent a constraint.");
+			print_message Debug_standard ("[Worker " ^ (string_of_int rank) ^ "] Sent a constraint.");
 			
 		| Stop ->
-			print_message Debug_standard ("Worker " ^ (string_of_int rank) ^ " says: done!");
+			print_message Debug_standard ("[Worker " ^ (string_of_int rank) ^ "] I was just told to stop work.");
 			finished := true
     done;
-	print_message Debug_standard ("Worker " ^ (string_of_int rank) ^ " is done.");
+	print_message Debug_standard ("[Worker " ^ (string_of_int rank) ^ "] I'm done.");
 ;;

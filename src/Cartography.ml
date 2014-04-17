@@ -10,7 +10,7 @@
  * Author:        Ulrich Kuehne, Etienne Andre
  * 
  * Created:       2012/06/18
- * Last modified: 2014/04/16
+ * Last modified: 2014/04/17
  *
  ****************************************************************)
 
@@ -986,8 +986,15 @@ let cover_behavioral_cartography model v0 =
 	(* Process the finalization *)
 	bc_finalize ();
 
-	(* Process the result and return *)
-	bc_result ()
+	(* Process the result *)
+	let zones = bc_result () in
+	
+	(* Render zones in a graphical form *)
+	if options#cart then (
+		Graphics.cartography model (Input.get_v0()) zones (options#files_prefix ^ "_cart_bc")
+	) else (
+			print_message Debug_high "Graphical cartography not asked: graph not generated.";
+	)
 
 
 
@@ -1139,4 +1146,10 @@ let random_behavioral_cartography model v0 nb =
 
 	(* Return a list of generated zones *)
 	let zones = List.map (fun index -> results.(index)) !interesting_interations in
-	zones
+	
+	(* Render zones in a graphical form *)
+	if options#cart then (
+		Graphics.cartography model (Input.get_v0()) zones (options#files_prefix ^ "_cart_bc_random")
+	) else (
+			print_message Debug_high "Graphical cartography not asked: graph not generated.";
+	)

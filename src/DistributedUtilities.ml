@@ -366,11 +366,16 @@ let send_work_request () =
 
 
 let receive_pull_request () =
-	(* First receive the length of the data we are about to receive *)
-      let (len, source_rank, tag) = 
-	Mpi.receive_status Mpi.any_source Mpi.any_tag Mpi.comm_world in
+	print_message Debug_medium ("Entered function 'receive_pull_request'...");
 	
+	(* First receive the length of the data we are about to receive *)
+    let (len, source_rank, tag) = 
+		Mpi.receive_status Mpi.any_source Mpi.any_tag Mpi.comm_world
+	in
+	
+	print_message Debug_medium ("MPI status received");
 	let tag = slave_tag_of_int tag in
+	print_message Debug_medium ("Tag decoded.");
 
 	(* Is this a result or a simple pull ? *)
 	match tag with
@@ -409,9 +414,9 @@ let receive_work () =
 		let buff = String.create w in
 		let work = ref buff in
 
-		work := Mpi.receive masterrank (int_of_master_tag Master_data_tag) Mpi.comm_world; 
-		Printf.printf "recv %d bytes of work %s with tag %d" w !work (int_of_master_tag Master_data_tag) ;
-		print_newline() ;
+		work := Mpi.receive masterrank (int_of_master_tag Master_data_tag) Mpi.comm_world;
+		
+		print_message Debug_high ("Received " ^ (string_of_int w) ^ " bytes of work '" ^ !work ^ "' with tag " ^ (string_of_int (int_of_master_tag Master_data_tag)));
 		
 		(* Get the pi0 *)
 		let pi0 = unserialize_pi0 !work in

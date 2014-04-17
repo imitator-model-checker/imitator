@@ -10,7 +10,7 @@
  * Author:        Ulrich Kuehne, Etienne Andre
  * 
  * Created:       2010/07/22
- * Last modified: 2014/04/15
+ * Last modified: 2014/04/17
  *
  ****************************************************************)
 
@@ -2673,11 +2673,14 @@ let ef_synthesis model =
 	let radical = options#files_prefix in
 	Graphics.generate_graph model reachability_graph radical;
 	
-	(* Return the constraints in the following form: list of Union_of_constraints of LinearConstraint.p_linear_constraint list * tile_nature *)
-	(* Return the constraints *)
-(*	List.map (fun p_constraint -> Union_of_constraints ([p_constraint], Bad) )
-	!p_constraints*)
-	Union_of_constraints (!p_constraints, Bad)
+	(* Render zones in a graphical form *)
+	let zones = [Union_of_constraints (!p_constraints, Bad)] in
+	if options#cart then (
+		Graphics.cartography model (Input.get_v0()) zones (options#files_prefix ^ "_cart_ef")
+	) else (
+			print_message Debug_high "Graphical cartography not asked: graph not generated.";
+	)
+
 	
 
 (*--------------------------------------------------*)

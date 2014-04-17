@@ -8,7 +8,7 @@
  * Author:        Etienne Andre, Ulrich Kuehne
  * 
  * Created:       2010/07/05
- * Last modified: 2013/10/08
+ * Last modified: 2014/04/17
  *
  ****************************************************************)
  
@@ -90,6 +90,14 @@ let make_file_name cartography_name file_index =
 (* print the cartography which correspond to the list of constraint *)
 (*------------------------------------------------------------*)
 let cartography model v0 returned_constraint_list cartography_name =
+	(* No cartography if no zone *)
+	if returned_constraint_list = [] then(
+		print_message Debug_standard ("\nNo cartography can be generated since the list of constraints is empty.\n");
+	)else(
+		print_message Debug_standard ("\nGeneration of the graphical cartography...");
+(*		Graphics.cartography model v0 zones (options#files_prefix ^ "_cart")
+	)*)
+
 	(* Retrieve the input options *)
 	let options = Input.get_options () in
 	
@@ -450,6 +458,7 @@ let cartography model v0 returned_constraint_list cartography_name =
 		done;
 	); ()
 
+	)
 
 
 

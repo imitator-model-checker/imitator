@@ -8,7 +8,7 @@
  * Author:        Ulrich Kuehne, Etienne Andre
  * 
  * Created:       2009/09/07
- * Last modified: 2014/04/16
+ * Last modified: 2014/04/17
  *
  ****************************************************************)
 
@@ -73,19 +73,22 @@ Input.set_options options;
 (**************************************************)
 (**************************************************)
   
-begin
+(*begin
   match options#distribution_mode with
   | Distributed -> 
     let rank = Mpi.comm_rank comm_world in
     if rank = 0 then
-      begin
-	(* Recall the arguments *)
-	options#recall(); 
+      begin*)
 	(* Print stuff about the authors *)
 	print_message Debug_standard header_string;
+	
 	(* Print date *)
-	print_message Debug_standard ("Analysis time: " ^ (now()) ^ "\n")
-      end;
+	print_message Debug_standard ("Analysis time: " ^ (now()) ^ "\n");
+
+	(* Recall the arguments *)
+	options#recall(); 
+
+(*      end;
   | _ -> 
     (* Recall the arguments *)
     options#recall(); 
@@ -93,7 +96,7 @@ begin
     print_message Debug_standard header_string;
     (* Print date *)
     print_message Debug_standard ("Analysis time: " ^ (now()) ^ "\n")  
-end;
+end;*)
 
     
 
@@ -258,7 +261,7 @@ if options#imitator_mode = Inverse_method && options#branch_and_bound then(
 
 begin
 try(
-	let zones =
+(* 	let zones = *)
 	match options#imitator_mode with
 		| Translation -> raise (InternalError "Translation cannot be executed here; program should already have terminated at this point.");
 
@@ -266,12 +269,12 @@ try(
 		(* Exploration *)
 		| State_space_exploration
 			-> Reachability.full_state_space_exploration model;
-			[]
+(* 			[] *)
 			
 		(* Synthesis *)
 		| EF_synthesis 
 			->
-			[Reachability.ef_synthesis model]
+			(*[*)Reachability.ef_synthesis model(*]*)
 
 			
 		(* Inverse Method *)
@@ -280,11 +283,11 @@ try(
 				(
 					(*** WARNING!!! Why a dedicated function here, whereas for BC+EFIM this function is not (?) called? ***)
 				Reachability.efim model;
-				[]
+(* 				[] *)
 				)
 			else(
 				Reachability.inverse_method model;
-				[]
+(* 				[] *)
 			)
 
 
@@ -297,7 +300,7 @@ try(
 		(* Behavioral cartography algorithm with random iterations *)
 			Cartography.random_behavioral_cartography model v0 nb;
 
-			
+			(*
 	in
 
 	(* Computation of the cartography *)
@@ -312,7 +315,7 @@ try(
 		) else (
 			print_message Debug_high "Graphical cartography not asked: graph not generated."
 		)
-	;
+	;*)
 ) with
 	| InternalError e -> (print_error ("Internal error: " ^ e ^ "\nPlease (kindly) insult the developers."); abort_program (); exit 1);
 end;
