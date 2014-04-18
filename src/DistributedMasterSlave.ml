@@ -8,7 +8,7 @@
  * Author:        Etienne Andre, Camille Coti
  * 
  * Created:       2014/03/24
- * Last modified: 2014/04/17
+ * Last modified: 2014/04/18
  *
  ****************************************************************)
  
@@ -204,6 +204,9 @@ let master () =
 
 let worker () = 
     
+	(* Get the model *)
+	let model = Input.get_model() in
+
 	let rank = rank() in
 	let size = size() in
 
@@ -218,9 +221,6 @@ let worker () =
 
     print_message Debug_standard ("[Worker " ^ (string_of_int rank) ^ "] sent pull request to the master.");
 
-	(* Get the model *)
-	let model = Input.get_model() in
-
 	(* In the meanwhile: compute the initial state *)
     let init_state = Reachability.get_initial_state_or_abort model in
 
@@ -230,12 +230,45 @@ let worker () =
 		
 		| Work pi0 -> 
             (* Do the job here *)
-			print_message Debug_standard ("[Worker " ^ (string_of_int rank) ^ "] working now.");
 
 			(* Set the new pi0 *)
 			Input.set_pi0 pi0;
+			
+			(* Print some messages *)
+			print_message Debug_standard ("\n**************************************************");
+			print_message Debug_standard ("BEHAVIORAL CARTOGRAPHY ALGORITHM: "(* ^ (string_of_int !current_iteration) ^ ""*));
+			print_message Debug_standard ("[Worker " ^ (string_of_int rank) ^ "] working now.");
+			print_message Debug_standard ("Considering the following pi" (*^ (string_of_int !current_iteration)*));
+			print_message Debug_standard (ModelPrinter.string_of_pi0 model pi0);
+			
+			(* Save debug mode *)
+			let global_debug_mode = get_debug_mode() in 
+			
+			(* Prevent the debug messages (except in debug medium, high or total) *)
+			if not (debug_mode_greater Debug_medium) then
+				set_debug_mode Debug_nodebug;
+		
 			(* Call IM *)
 			let im_result , _ = Reachability.inverse_method_gen model init_state in
+			
+			print_message Debug_standard ("[Worker " ^ (string_of_int rank) ^ "] finished a computation of IM.");
+			
+			(* Get the debug mode back *)
+			set_debug_mode global_debug_mode;
+			
+			(* Process the result by IM *)
+			(*** TODO (cannot jus call process_im_result) ***)
+			
+			(* Print message *)
+			print_message Debug_standard (
+				"\n[Worker " ^ (string_of_int rank) ^ "] K computed by IM after "
+				^ (string_of_int im_result.nb_iterations) ^ " iteration" ^ (s_of_int im_result.nb_iterations) ^ ""
+				^ " in " ^ (string_of_seconds im_result.total_time) ^ ": "
+				^ (string_of_int im_result.nb_states) ^ " state" ^ (s_of_int im_result.nb_states)
+				^ " with "
+				^ (string_of_int im_result.nb_transitions) ^ " transition" ^ (s_of_int im_result.nb_transitions) ^ " explored.");
+
+			
 			
 			(*** TODO: handle a special case if the result is NOT valid (e.g., stopped before the end due to timeout or state limit reached) ***)
 

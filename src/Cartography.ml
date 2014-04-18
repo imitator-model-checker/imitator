@@ -768,7 +768,7 @@ let bc_process_im_result im_result =
 	
 	(* Print message *)
 	print_message Debug_standard (
-		"\nK" ^ (string_of_int (!current_iteration)) ^ " computed using algorithm InverseMethod after "
+		"\nK" ^ (string_of_int (!current_iteration)) ^ " computed by IM after "
 		^ (string_of_int im_result.nb_iterations) ^ " iteration" ^ (s_of_int im_result.nb_iterations) ^ ""
 		^ " in " ^ (string_of_seconds im_result.total_time) ^ ": "
 		^ (string_of_int im_result.nb_states) ^ " state" ^ (s_of_int im_result.nb_states)
@@ -936,7 +936,7 @@ let cover_behavioral_cartography model v0 =
 		(*** WARNING : duplicate operation (quite cheap anyway) ***)
 		let pi0_fun = create_pi0_fun () in
 
-		(* Debug messages *)
+		(* Print some messages *)
 		print_message Debug_standard ("\n**************************************************");
 		print_message Debug_standard ("BEHAVIORAL CARTOGRAPHY ALGORITHM: " ^ (string_of_int !current_iteration) ^ "");
 		print_message Debug_standard ("Considering the following pi" ^ (string_of_int !current_iteration));
