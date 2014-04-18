@@ -380,20 +380,29 @@ let receive_pull_request () =
 	(* Is this a result or a simple pull ? *)
 	match tag with
 	| Slave_result_tag ->
+		print_message Debug_medium ("Received Slave_result_tag");
 		(* receive the result itself *)
 		let buff = String.create len in
 		let res = ref buff in
 		res := Mpi.receive source_rank (int_of_slave_tag Slave_result_tag) Mpi.comm_world;
+		
+		(* Print some information *)
+		if debug_mode_greater Debug_medium then
+			print_message Debug_medium ("Tag was '" ^ !res ^ "'");
 			
 		(* Get the constraint *)
 		let im_result = unserialize_im_result !res in
 		PullAndResult (source_rank , im_result)
 		
 	(* Case error *)
-	| Slave_outofbound_tag -> OutOfBound source_rank
+	| Slave_outofbound_tag ->
+		print_message Debug_medium ("Received Slave_outofbound_tag");
+		OutOfBound source_rank
 	
 	(* Case simple pull? *)
-	| Slave_work_tag -> PullOnly source_rank
+	| Slave_work_tag ->
+		print_message Debug_medium ("Received Slave_work_tag");
+		PullOnly source_rank
 
 
 let send_finished source_rank = 
