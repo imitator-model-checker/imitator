@@ -384,6 +384,7 @@ let receive_pull_request () =
 		(* receive the result itself *)
 		let buff = String.create len in
 		let res = ref buff in
+		print_message Debug_medium ("Buffer created");
 		res := Mpi.receive source_rank (int_of_slave_tag Slave_result_tag) Mpi.comm_world;
 		
 		(* Print some information *)
