@@ -156,6 +156,7 @@ let master () =
 		print_message Debug_standard ("[Master] Waiting for a pull request");
 		(* Get the pull_request *)
 		let source_rank , _ = receive_pull_request_and_store_constraint () in
+		print_message Debug_standard ("[Master] Received from " ^ ( string_of_int source_rank ));
 		(* Say good bye *)
 		send_finished source_rank;
 		

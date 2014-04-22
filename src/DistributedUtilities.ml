@@ -210,6 +210,7 @@ let serialize_im_result im_result =
 
 
 let unserialize_im_result im_result_string =
+	print_message Debug_medium ( "[Master] Unserialize " ^ im_result_string );
 	let returned_constraint_string , tile_nature_str , deterministic_string , nb_states_string , nb_transitions_string , nb_iterations_string , total_time_string =
 	match split serialize_SEP_STRUCT im_result_string with
 		| [returned_constraint_string ; tile_nature_str ; deterministic_string ; nb_states_string ; nb_transitions_string ; nb_iterations_string ; total_time_string ]
@@ -336,15 +337,16 @@ let unserialize( str ) =
 let send_result (*linear_constraint*)im_result =
 	let rank = rank() in
 
-	print_message Debug_low ("Worker " ^ (string_of_int rank) ^ " starts send_constraint");
+	print_message Debug_medium ("Worker " ^ (string_of_int rank) ^ " starts send_constraint");
 	let mlc = (*LinearConstraint.serialize_linear_constraint linear_constraint *) serialize_im_result im_result in
 	let res_size = String.length mlc in
 	
 	(* Send the result: 1st send the data size, then the data *)
-	print_message Debug_low ("Worker " ^ (string_of_int rank) ^ " is about to send the size (" ^ (string_of_int res_size) ^ ") of the constraint.");
+	print_message Debug_medium ("Worker " ^ (string_of_int rank) ^ " is about to send the size (" ^ (string_of_int res_size) ^ ") of the constraint.");
 	Mpi.send res_size masterrank (int_of_slave_tag Slave_result_tag) Mpi.comm_world;
-	print_message Debug_low ("Worker " ^ (string_of_int rank) ^ " is about to send the constraint.");
-	Mpi.send mlc masterrank (int_of_slave_tag Slave_result_tag) Mpi.comm_world
+	print_message Debug_medium ("Worker " ^ (string_of_int rank) ^ " is about to send the constraint.");
+	Mpi.send mlc masterrank (int_of_slave_tag Slave_result_tag) Mpi.comm_world ;
+        print_message Debug_medium ("Worker " ^ (string_of_int rank) ^ " sent the constraint " ^ mlc)
 (* 		Printf.printf "[%d] result %s sent" (rank()) result ;  *)
 (* 	print_newline() *)
 
@@ -373,20 +375,21 @@ let receive_pull_request () =
 		Mpi.receive_status Mpi.any_source Mpi.any_tag Mpi.comm_world
 	in
 	
-	print_message Debug_medium ("MPI status received");
+	print_message Debug_medium ("MPI status received from " ^ ( string_of_int source_rank));
 	let tag = slave_tag_of_int tag in
 	print_message Debug_medium ("Tag decoded.");
 
 	(* Is this a result or a simple pull ? *)
 	match tag with
 	| Slave_result_tag ->
-		print_message Debug_medium ("Received Slave_result_tag");
+		print_message Debug_medium ("Received Slave_result_tag from " ^ ( string_of_int source_rank) );
 		(* receive the result itself *)
 		let buff = String.create len in
 		let res = ref buff in
 		print_message Debug_medium ("Buffer created with length " ^ (string_of_int len));
 		res := Mpi.receive source_rank (int_of_slave_tag Slave_result_tag) Mpi.comm_world;
-		
+		print_message Debug_medium ("recv done");
+
 		(* Print some information *)
 		if debug_mode_greater Debug_medium then
 			print_message Debug_medium ("Tag was '" ^ !res ^ "'");
