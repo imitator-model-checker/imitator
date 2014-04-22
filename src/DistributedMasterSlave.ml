@@ -8,7 +8,7 @@
  * Author:        Etienne Andre, Camille Coti
  * 
  * Created:       2014/03/24
- * Last modified: 2014/04/18
+ * Last modified: 2014/04/22
  *
  ****************************************************************)
  
@@ -245,8 +245,8 @@ let worker () =
 			(* Save debug mode *)
 			let global_debug_mode = get_debug_mode() in 
 			
-			(* Prevent the debug messages (except in debug medium, high or total) *)
-			if not (debug_mode_greater Debug_medium) then
+			(* Prevent the debug messages (except in verbose modes high or total) *)
+			if not (debug_mode_greater Debug_high) then
 				set_debug_mode Debug_nodebug;
 		
 			(* Call IM *)

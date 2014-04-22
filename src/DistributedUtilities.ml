@@ -8,7 +8,7 @@
  * Author:        Etienne Andre, Camille Coti
  * 
  * Created:       2014/03/24
- * Last modified: 2014/04/16
+ * Last modified: 2014/04/22
  *
  ****************************************************************)
 
@@ -210,7 +210,7 @@ let serialize_im_result im_result =
 
 
 let unserialize_im_result im_result_string =
-	print_message Debug_medium ( "[Master] Unserialize " ^ im_result_string );
+	print_message Debug_medium ( "[Master] About to unserialize '" ^ im_result_string ^ "'");
 	let returned_constraint_string , tile_nature_str , deterministic_string , nb_states_string , nb_transitions_string , nb_iterations_string , total_time_string =
 	match split serialize_SEP_STRUCT im_result_string with
 		| [returned_constraint_string ; tile_nature_str ; deterministic_string ; nb_states_string ; nb_transitions_string ; nb_iterations_string ; total_time_string ]
@@ -337,18 +337,19 @@ let unserialize( str ) =
 let send_result (*linear_constraint*)im_result =
 	let rank = rank() in
 
-	print_message Debug_medium ("Worker " ^ (string_of_int rank) ^ " starts send_constraint");
+	print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "] Entering send_constraint");
 	let mlc = (*LinearConstraint.serialize_linear_constraint linear_constraint *) serialize_im_result im_result in
 	let res_size = String.length mlc in
+
+	print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "] Serialized constraint '" ^ mlc ^ "'");
 	
 	(* Send the result: 1st send the data size, then the data *)
-	print_message Debug_medium ("Worker " ^ (string_of_int rank) ^ " is about to send the size (" ^ (string_of_int res_size) ^ ") of the constraint.");
+	print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "] About to send the size (" ^ (string_of_int res_size) ^ ") of the constraint.");
 	Mpi.send res_size masterrank (int_of_slave_tag Slave_result_tag) Mpi.comm_world;
-	print_message Debug_medium ("Worker " ^ (string_of_int rank) ^ " is about to send the constraint.");
+	print_message Debug_high ("[Worker " ^ (string_of_int rank) ^ "] About to send a constraint.");
 	Mpi.send mlc masterrank (int_of_slave_tag Slave_result_tag) Mpi.comm_world ;
-        print_message Debug_medium ("Worker " ^ (string_of_int rank) ^ " sent the constraint " ^ mlc)
-(* 		Printf.printf "[%d] result %s sent" (rank()) result ;  *)
-(* 	print_newline() *)
+	print_message Debug_low ("[Worker " ^ (string_of_int rank) ^ "] Sent constraint '" ^ mlc ^ "'");
+	()
 
 
 (* Sends a point (first the size then the point), by the master *)
