@@ -8,7 +8,7 @@
  * Author:        Etienne Andre, Camille Coti
  * 
  * Created:       2014/03/24
- * Last modified: 2014/04/22
+ * Last modified: 2014/04/23
  *
  ****************************************************************)
 
@@ -383,30 +383,31 @@ let receive_pull_request () =
 	(* Is this a result or a simple pull ? *)
 	match tag with
 	| Slave_result_tag ->
-		print_message Debug_medium ("Received Slave_result_tag from " ^ ( string_of_int source_rank) );
+		print_message Debug_medium ("[Master] Received Slave_result_tag from " ^ ( string_of_int source_rank) );
 		(* receive the result itself *)
-		let buff = String.create len in
-		let res = ref buff in
-		print_message Debug_medium ("Buffer created with length " ^ (string_of_int len));
-		res := Mpi.receive source_rank (int_of_slave_tag Slave_result_tag) Mpi.comm_world;
-		print_message Debug_medium ("recv done");
+(*		let buff = String.create len in
+		let res = ref buff in*)
+		print_message Debug_medium ("[Master] Buffer created with length " ^ (string_of_int len));
+		let res = Mpi.receive source_rank (int_of_slave_tag Slave_result_tag) Mpi.comm_world in
+		print_message Debug_medium ("[Master] Reception done");
+(* 		print_string res.(0); *)
 
 		(* Print some information *)
 		if debug_mode_greater Debug_medium then
-			print_message Debug_medium ("Tag was '" ^ !res ^ "'");
+			print_message Debug_medium ("[Master] Tag was '" ^ (*!*)res ^ "'");
 			
 		(* Get the constraint *)
-		let im_result = unserialize_im_result !res in
+		let im_result = unserialize_im_result (*!*)res in
 		PullAndResult (source_rank , im_result)
 		
 	(* Case error *)
 	| Slave_outofbound_tag ->
-		print_message Debug_medium ("Received Slave_outofbound_tag");
+		print_message Debug_medium ("[Master] Received Slave_outofbound_tag");
 		OutOfBound source_rank
 	
 	(* Case simple pull? *)
 	| Slave_work_tag ->
-		print_message Debug_medium ("Received Slave_work_tag");
+		print_message Debug_medium ("[Master] Received Slave_work_tag");
 		PullOnly source_rank
 
 
