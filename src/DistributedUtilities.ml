@@ -387,7 +387,13 @@ let receive_pull_request () =
 		(* receive the result itself *)
 (*		let buff = String.create len in
 		let res = ref buff in*)
-		print_message Debug_medium ("[Master] Buffer created with length " ^ (string_of_int len));
+(* 		print_message Debug_medium ("[Master] Buffer created with length " ^ (string_of_int len)); *)
+		
+		
+		print_message Debug_medium ("[Master] Dodoooooooooooooooooo");
+		Unix.sleep 1;
+
+		
 		let res = Mpi.receive source_rank (int_of_slave_tag Slave_result_tag) Mpi.comm_world in
 		print_message Debug_medium ("[Master] Reception done");
 		print_message Debug_medium ("[Master] Reception done (oui oui)");
