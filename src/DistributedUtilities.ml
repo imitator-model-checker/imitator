@@ -8,7 +8,7 @@
  * Author:        Etienne Andre, Camille Coti
  * 
  * Created:       2014/03/24
- * Last modified: 2014/04/23
+ * Last modified: 2014/04/24
  *
  ****************************************************************)
 
@@ -332,6 +332,7 @@ let unserialize( str ) =
 	Marshal.from_string str 0*)
 
 
+let message_MAX_SIZE = 100
 
 (* Sends a result (first the size then the constraint), by the slave *)
 let send_result (*linear_constraint*)im_result =
@@ -346,10 +347,41 @@ let send_result (*linear_constraint*)im_result =
 	(* Send the result: 1st send the data size, then the data *)
 	print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "] About to send the size (" ^ (string_of_int res_size) ^ ") of the constraint.");
 	Mpi.send res_size masterrank (int_of_slave_tag Slave_result_tag) Mpi.comm_world;
-	print_message Debug_high ("[Worker " ^ (string_of_int rank) ^ "] About to send a constraint.");
-	Mpi.send mlc masterrank (int_of_slave_tag Slave_result_tag) Mpi.comm_world ;
-	print_message Debug_low ("[Worker " ^ (string_of_int rank) ^ "] Sent constraint '" ^ mlc ^ "'");
-	()
+	
+	(*** HACK: cut the constraint to try to solve a strange bug with MPI ***)
+	if res_size <= message_MAX_SIZE then(
+		(* Normal situation *)
+		print_message Debug_high ("[Worker " ^ (string_of_int rank) ^ "] About to send a constraint.");
+		Mpi.send mlc masterrank (int_of_slave_tag Slave_result_tag) Mpi.comm_world ;
+		print_message Debug_low ("[Worker " ^ (string_of_int rank) ^ "] Sent constraint '" ^ mlc ^ "'");
+		()
+	)else(
+		(* Cutting situation *)
+		print_message Debug_low ("[Worker " ^ (string_of_int rank) ^ "] About to cut a constraint into smaller parts.");
+		let remainder = res_size mod message_MAX_SIZE in
+		let nb_parts = res_size / message_MAX_SIZE in
+		print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "] There will be " ^ (string_of_int nb_parts) ^ " parts and " ^ (if remainder = 0 then "no" else "a") ^ " remainder.");
+		for i = 0 to nb_parts - 1 do
+			(* Cut the string *)
+			let substring = String.sub mlc (i * message_MAX_SIZE) message_MAX_SIZE in
+			print_message Debug_high ("[Worker " ^ (string_of_int rank) ^ "] About to send a piece of constraint.");
+			Mpi.send substring masterrank (int_of_slave_tag Slave_result_tag) Mpi.comm_world ;
+			print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "] Sent piece of constraint #" ^ (string_of_int i) ^ " '" ^ substring ^ "'");
+		done;
+		
+		(* Send the remainder if not null *)
+		if remainder <> 0 then(
+			(* Cut the string *)
+			let substring = String.sub mlc (nb_parts * message_MAX_SIZE) remainder in
+			print_message Debug_high ("[Worker " ^ (string_of_int rank) ^ "] About to send the last piece of a constraint.");
+			Mpi.send substring masterrank (int_of_slave_tag Slave_result_tag) Mpi.comm_world ;
+			print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "] Sent (last) piece of constraint #" ^ (string_of_int nb_parts) ^ " '" ^ substring ^ "'");
+		);
+		
+		print_message Debug_low ("[Worker " ^ (string_of_int rank) ^ "] Sent constraint '" ^ mlc ^ "'  in small pieces.");
+		
+		()
+	)
 
 
 (* Sends a point (first the size then the point), by the master *)
@@ -384,30 +416,66 @@ let receive_pull_request () =
 	match tag with
 	| Slave_result_tag ->
 		print_message Debug_medium ("[Master] Received Slave_result_tag from " ^ ( string_of_int source_rank) );
+		print_message Debug_medium ("[Master] Expecting a result of size " ^ ( string_of_int len) );
 		(* receive the result itself *)
 (*		let buff = String.create len in
 		let res = ref buff in*)
 (* 		print_message Debug_medium ("[Master] Buffer created with length " ^ (string_of_int len)); *)
+(*		print_message Debug_medium ("[Master] Dodoooooooooooooooooo");
+		Unix.sleep 1;*)
 		
+		(*** HACK: cut the constraint to try to solve a strange bug with MPI ***)
+		let res = 
+		if len <= message_MAX_SIZE then(
+			(* Normal situation *)
+			print_message Debug_medium ("[Master] Constraint will be received in a single piece.");
+			let res = Mpi.receive source_rank (int_of_slave_tag Slave_result_tag) Mpi.comm_world in
+			print_message Debug_medium ("[Master] Reception done");
+			res
+		)else(
+			(* Cutting situation *)
+			print_message Debug_low ("[Master] About to reconstruct a constraint from small parts.");
+			let remainder = len mod message_MAX_SIZE in
+			let nb_parts = len / message_MAX_SIZE in
+			
+			print_message Debug_medium ("[Master] There will be " ^ (string_of_int nb_parts) ^ " parts and " ^ (if remainder = 0 then "no" else "a") ^ " remainder.");
+			
+			(* Create result *)
+			let resulting_string = ref "" in
+			
+			for i = 0 to nb_parts - 1 do
+				(* Get the string *)
+				let res = Mpi.receive source_rank (int_of_slave_tag Slave_result_tag) Mpi.comm_world in
+				resulting_string := !resulting_string ^ res;
+				print_message Debug_medium ("[Master] Received piece of constraint #" ^ (string_of_int i) ^ ": '" ^ res ^ "'");
+			done;
 		
-		print_message Debug_medium ("[Master] Dodoooooooooooooooooo");
-		Unix.sleep 1;
-
+			(* Receive the remainder if not null *)
+			if remainder <> 0 then(
+				let res = Mpi.receive source_rank (int_of_slave_tag Slave_result_tag) Mpi.comm_world in
+				resulting_string := !resulting_string ^ res;
+				print_message Debug_medium ("[Master] Received (last) piece of constraint #" ^ (string_of_int nb_parts) ^ ": '" ^ res ^ "'");
+			);
+			
+			print_message Debug_low ("[Master] Successfully received constraint '" ^ !resulting_string ^ "'  in small pieces.");
+			
+			(* Return result *)
+			!resulting_string
+		)
 		
-		let res = Mpi.receive source_rank (int_of_slave_tag Slave_result_tag) Mpi.comm_world in
-		print_message Debug_medium ("[Master] Reception done");
-		print_message Debug_medium ("[Master] Reception done (oui oui)");
+		in
+(*		print_message Debug_medium ("[Master] Reception done (oui oui)");
 		let l = String.length res in
 		print_message Debug_medium ("[Master] Calcul taille");
 		print_int l;
 		print_message Debug_medium ("[Master] Taille affichee");
 		
 		print_char res.[0];
-		print_message Debug_medium ("[Master] Coucou j'ai ecrit le premier caractere !");
+		print_message Debug_medium ("[Master] Coucou j'ai ecrit le premier caractere !");*)
 
 		(* Print some information *)
 		if debug_mode_greater Debug_medium then
-			print_message Debug_medium ("[Master] Tag was '" ^ (*!*)res ^ "'");
+			print_message Debug_medium ("[Master] Result was '" ^ (*!*)res ^ "'");
 			
 		(* Get the constraint *)
 		let im_result = unserialize_im_result (*!*)res in
