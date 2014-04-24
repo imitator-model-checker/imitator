@@ -390,6 +390,12 @@ let receive_pull_request () =
 		print_message Debug_medium ("[Master] Buffer created with length " ^ (string_of_int len));
 		let res = Mpi.receive source_rank (int_of_slave_tag Slave_result_tag) Mpi.comm_world in
 		print_message Debug_medium ("[Master] Reception done");
+		print_message Debug_medium ("[Master] Reception done (oui oui)");
+		let l = String.length res in
+		print_message Debug_medium ("[Master] Calcul taille");
+		print_int l;
+		print_message Debug_medium ("[Master] Taille affichee");
+		
 		print_char res.[0];
 		print_message Debug_medium ("[Master] Coucou j'ai ecrit le premier caractere !");
 
