@@ -134,6 +134,9 @@ let master () =
 	(* To differentiate between initialization of pi0 / next_point *)
 	let first_point = ref true in
 	
+	(* For the end of the algorithm *)
+	let workers_done = ref 0 in
+	
 	(* If random: start with random (switch to sequential later) *)
 	begin
 	match options#distribution_mode with
@@ -157,64 +160,48 @@ let master () =
 		
 		(* IF no-precompute: compute pi0 NOW *)
 		if not options#precomputepi0 then(
-			(*(* Case first point *)
-			if !first_point then(
-				Cartography.compute_initial_pi0 ();
-				first_point := false;
-			(* Other case *)
-			)else(
-				let found_pi0 , time_limit_reached = Cartography.find_next_pi0 tile_nature_option in
-				(* Update the time limit *)
-				limit_reached := time_limit_reached;
-				(* Update the found pi0 flag *)
-				more_pi0 := found_pi0;
-			);*)
 			print_message Debug_high ("[Master] Computing pi0...");
 			compute_next_pi0 more_pi0 limit_reached first_point tile_nature_option;
-			print_message Debug_high ("[Master] Computed pi0.");
 		);
 		
-		(*** WARNING: if no more pi0 (or limit reached), then we still send one below !!!!! ***)
-		
 		(* Access the pi0 *)
-		print_message Debug_high ("[Master] Accessing pi0...");
 		let pi0 = Cartography.get_current_pi0 () in
-		print_message Debug_high ("[Master] Accessed pi0.");
 		
-		(* Send it *)
-		print_message Debug_medium ( "[Master] Sending pi0 to [Worker " ^ (string_of_int source_rank ) ^ "]" ) ;
-		send_pi0 pi0 source_rank;
+		(* If finished: say goodbye *)
+		if !limit_reached || not !more_pi0 then(
+			send_finished source_rank;
+			workers_done := !workers_done + 1;
+			print_message Debug_medium( "\t[Master] - [Worker " ^ (string_of_int source_rank ) ^ "] is done");
+		(* Otherwise send pi0 *)
+		)else(
+			print_message Debug_medium ( "[Master] Sending pi0 to [Worker " ^ (string_of_int source_rank ) ^ "]" ) ;
+			send_pi0 pi0 source_rank;
+		);
 
 		(* IF precompute: Compute the next pi0 for next time, and return flags for more pi0 and co *)
 		(*** WARNING: computing the pi0 BEFORE it is asked may be stupid! It may be smarter to compute it on demand (to be compared) ***)
-		if options#precomputepi0 then(
-(*			let found_pi0 , time_limit_reached = Cartography.find_next_pi0 tile_nature_option in
-			(* Update the time limit *)
-			limit_reached := time_limit_reached;
-			(* Update the found pi0 flag *)
-			more_pi0 := found_pi0;*)
+		if options#precomputepi0 && not !limit_reached && !more_pi0 then(
 			compute_next_pi0 more_pi0 limit_reached first_point tile_nature_option;
 		);
 	done;
-	
+
 
 	(*** NOTE: we could check here (and at every further iteration) whether all integer points are already covered!!! If yes, stop. ***)
 	
 	print_message Debug_medium ( "[Master] Done with sending pi0; waiting for last results." );
 
 	let size = Mpi.comm_size Mpi.comm_world in
-		let k = ref 0 in
-		while !k < ( size - 1) do
-		print_message Debug_medium ("[Master] " ^ ( string_of_int ( size - 1 - !k )) ^ " slaves left" );
+		while !workers_done < ( size - 1) do
+		print_message Debug_medium ("[Master] " ^ ( string_of_int ( size - 1 - !workers_done )) ^ " workers left" );
 		let source_rank , _ = receive_pull_request_and_store_constraint () in
 		print_message Debug_medium ("[Master] Received from [Worker " ^ ( string_of_int source_rank ) ^"]");
 		(* Say good bye *)
 		send_finished source_rank;
-		k := !k + 1;
+		workers_done := !workers_done + 1;
 		print_message Debug_medium( "\t[Master] - [Worker " ^ (string_of_int source_rank ) ^ "] is done");
 	done;
 		
-	print_message Debug_medium ("[Master] All slaves done" );
+	print_message Debug_medium ("[Master] All workers done" );
 
 	(* Process the finalization *)
 	Cartography.bc_finalize ();

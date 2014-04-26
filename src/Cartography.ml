@@ -378,6 +378,8 @@ let random_pi0 max_tries =
 			(* Print some information *)
 			print_message Debug_medium ("Try " ^ (string_of_int !nb_tries) ^ " successful!");
 
+			current_pi0 := Some pi0;
+			
 			continue := false;
 		(* Otherwise: go further *)
 		)else(
@@ -792,7 +794,7 @@ let bc_initialize () =
 	
 
 	(* Current iteration (for information purpose) *)
-	current_iteration := 0;
+	current_iteration := 1;
 	(* Sum of number of states (for information purpose) *)
 	nb_states := 0;
 	(* Sum of number of transitions (for information purpose) *)
@@ -906,6 +908,9 @@ let bc_process_im_result im_result =
 	(*** WARNING: so stupid here!! Better flatten the structure! ***)
 	DynArray.add !computed_constraints im_result.result;
 	
+	(* Iterate *)
+	current_iteration := !current_iteration + 1;
+		
 	()
 
 
@@ -973,18 +978,22 @@ let get_current_pi0 () =
 
 	(* Get the model *)
 	let model = Input.get_model() in
-	print_message Debug_high ("Model obtained ...");
+	begin
 	match !current_pi0 with
-	| None -> raise (InternalError("Current pi0 called before its initialization."))
+	| None ->(
+		print_message Debug_total ("No pi0!");
+		raise (InternalError("Current pi0 called before its initialization."))
+	)
 	| Some current_pi0 ->
-		print_message Debug_high ("About to convert...");
-		let result = 
+(* 		print_message Debug_high ("About to convert..."); *)
+(* 		let result =  *)
 			List.map (fun parameter_index ->
-				print_message Debug_high ("Convert");
+(* 				print_message Debug_high ("Convert"); *)
 				parameter_index , current_pi0.(parameter_index)) model.parameters
-		in
-		print_message Debug_high ("Computed result in get_current_pi0() ");
-		result
+(* 		in *)
+(* 		print_message Debug_high ("Computed result in get_current_pi0() "); *)
+(* 		result *)
+	end
 
 
 
@@ -1008,9 +1017,6 @@ let cover_behavioral_cartography model v0 =
 	(* Iterate on all the possible pi0 *)
 	while !more_pi0 && not !time_limit_reached do
 
-		(* Iterate *)
-		current_iteration := !current_iteration + 1;
-		
 		(*** WARNING : duplicate operation (quite cheap anyway) ***)
 		let pi0_fun = create_pi0_fun () in
 
@@ -1038,7 +1044,8 @@ let cover_behavioral_cartography model v0 =
 		
 		(* Generate the dot graph (will not be performed if options are not suitable) *)
 		(*** TODO: move inside inverse_method_gen ***)
-		let radical = options#files_prefix ^ "_" ^ (string_of_int !current_iteration) in
+		(*** HACK: have to decrease current_iteration because it was increased in bc_process_im_result ... ***)
+		let radical = options#files_prefix ^ "_" ^ (string_of_int (!current_iteration-1)) in
 			Graphics.generate_graph model reachability_graph radical;
 
 		(* Compute the next pi0 (note that current_pi0 is directly modified by the function!) and return flags for more pi0 and co *)
