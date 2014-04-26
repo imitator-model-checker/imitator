@@ -101,7 +101,7 @@ let compute_next_pi0 more_pi0 limit_reached first_point tile_nature_option =
 			)else(
 				(* Switch mode ! *)
 				still_random := false;
-				print_message Debug_standard ("[Master] Could not find a new random pi0 after " ^ (string_of_int nb_tries) ^ " attemps. Now switching mode from random to sequential.");
+				print_message Debug_standard ("\n[Master] Could not find a new random pi0 after " ^ (string_of_int nb_tries) ^ " attemps! Now switching mode from random to sequential.");
 			);
 		);
 		(* Test whether the algorithm is now in sequential mode *)
@@ -188,7 +188,7 @@ let master () =
 
 	(*** NOTE: we could check here (and at every further iteration) whether all integer points are already covered!!! If yes, stop. ***)
 	
-	print_message Debug_medium ( "[Master] Done with sending pi0; waiting for last results." );
+	print_message Debug_standard ( "[Master] Done with sending pi0; waiting for last results." );
 
 	let size = Mpi.comm_size Mpi.comm_world in
 		while !workers_done < ( size - 1) do
@@ -201,7 +201,7 @@ let master () =
 		print_message Debug_medium( "\t[Master] - [Worker " ^ (string_of_int source_rank ) ^ "] is done");
 	done;
 		
-	print_message Debug_medium ("[Master] All workers done" );
+	print_message Debug_standard ("[Master] All workers done" );
 
 	(* Process the finalization *)
 	Cartography.bc_finalize ();
@@ -258,25 +258,24 @@ let worker() =
        (* Print some messages *)
        print_message Debug_medium ("\n**************************************************");
        print_message Debug_medium ("BEHAVIORAL CARTOGRAPHY ALGORITHM: "(* ^ (string_of_int !current_iteration) ^ ""*));
-       print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "] working now.");
-       print_message Debug_medium ("Considering the following pi" (*^ (string_of_int !current_iteration)*));
-       print_message Debug_medium (ModelPrinter.string_of_pi0 model pi0);
+       print_message Debug_standard ("\n[Worker " ^ (string_of_int rank) ^ "] Launching IM for the following pi:" (*^ (string_of_int !current_iteration)*));
+       print_message Debug_standard (ModelPrinter.string_of_pi0 model pi0);
        
        (* Save debug mode *)
        let global_debug_mode = get_debug_mode() in 
        
        (* Prevent the debug messages (except in verbose modes high or total) *)
        if not (debug_mode_greater Debug_high) then
-	 set_debug_mode Debug_nodebug;
+			set_debug_mode Debug_nodebug;
        
        (* Call IM *)
        let im_result , _ = Reachability.inverse_method_gen model init_state in
 			
-       print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "] finished a computation of IM.");
-			
        (* Get the debug mode back *)
        set_debug_mode global_debug_mode;
        
+       print_message Debug_standard ("[Worker " ^ (string_of_int rank) ^ "] finished a computation of IM.");
+			
        (* Process the result by IM *)
        (*** TODO (cannot jus call process_im_result) ***)
        
