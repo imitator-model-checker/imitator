@@ -77,6 +77,9 @@ let nb_states = ref 0
 (* Sum of number of transitions (for information purpose) *)
 let nb_transitions = ref 0
 
+(* Time limit reached? *)
+let time_limit_reached = ref false
+
 (* Time counter for recording the globl time spent on BC *)
 let time_spent_on_IM = ref 0.
 
@@ -271,10 +274,56 @@ let compute_initial_pi0 () =
 (* Next pi0 functions *)
 (************************************************************)
 
+(* Generic function checking if a computed pi0 belongs to some constraint and satisfies the init constraint *)
+let test_pi0_uncovered current_pi0 found_pi0 =
+	(* Get the model *)
+	let model = Input.get_model() in
+	(* Retrieve the input options *)
+	let options = Input.get_options () in
+
+	(* Convert the current pi0 to functional representation *)
+	let pi0 = fun parameter -> current_pi0.(parameter) in
+	
+	(* Check that the current pi0 does not belong to any constraint *)
+	if dynArray_exists (pi0_in_returned_constraint pi0) !computed_constraints then (
+		(* Update the number of unsuccessful points *)
+		nb_useless_points := !nb_useless_points + 1;
+		if debug_mode_greater Debug_medium then (
+			print_message Debug_medium "The following pi0 is already included in a constraint.";
+			print_message Debug_medium (ModelPrinter.string_of_pi0 model pi0);
+		);
+		(** TODO: could be optimized by finding the nearest multiple of tile next to the border, and directly switching to that one *)
+		
+	(* Check that it satisfies the initial constraint *)
+	) else if not (LinearConstraint.is_pi0_compatible pi0 !init_constraint) then (
+		(* Update the number of unsuccessful points *)
+		nb_useless_points := !nb_useless_points + 1;
+		if debug_mode_greater Debug_medium then (
+			print_message Debug_medium "The following pi0 does not satisfy the initial constraint of the model.";
+			print_message Debug_medium (ModelPrinter.string_of_pi0 model pi0);
+		);
+	(* If both checks passed, then pi0 found *)
+	)else(
+		found_pi0 := true;
+	);
+	
+	(* If pi0 still not found, check time limit *)
+	if not !found_pi0 then(
+		(* Stop if the time limit has been reached *)
+		match options#time_limit with
+		| None -> ()
+		| Some limit ->
+			if (get_time()) > (float_of_int limit)
+				then time_limit_reached := true;
+	);
+	()
+
+
+
 (*------------------------------------------------------------*)
-(* Generate a random pi0 in a given interval for each parameter (array view!) *)
+(* Generate one random pi0 in a given interval for each parameter (array view!) *)
 (*------------------------------------------------------------*)
-let random_pi0 model v0 =
+let one_random_pi0 model v0 =
 	(* Retrieve the input options *)
 	let options = Input.get_options () in
 	
@@ -305,7 +354,7 @@ let random_pi0 model v0 =
 (*------------------------------------------------------------*)
 let find_next_pi0_cover () =
 	(* Get the model *)
-	let model = Input.get_model() in
+(* 	let model = Input.get_model() in *)
 	(* Retrieve the input options *)
 	let options = Input.get_options () in
 
@@ -313,10 +362,6 @@ let find_next_pi0_cover () =
 	(* First initialization *)
 	| None -> 
 		raise (InternalError("Current_pi0 is not defined, altough it should have at this point."))
-(*		current_pi0 := Some (compute_initial_pi0 !min_bounds !max_bounds 0) (*** WARNING: should be sure that 0 is the first parameter dimension ***)
-		;
-		(* Return *)
-		true, false, 0*)
 	
 	(* Next point *)
 	| Some current_pi0 -> (
@@ -328,8 +373,8 @@ let find_next_pi0_cover () =
 		let more_pi0 = ref true in
 		(* Did we find a suitable pi0 *)
 		let found_pi0 = ref false in
-		(* Did we reach the time limit *)
-		let time_limit_reached = ref false in
+(*(*		(* Did we reach the time limit *)
+		let time_limit_reached = ref false in*)*)
 
 		while !more_pi0 && not !time_limit_reached && not !found_pi0 do
 			
@@ -367,45 +412,13 @@ let find_next_pi0_cover () =
 			(* 2) Check that this pi0 is new *)
 			
 			if !more_pi0 then(
-
-				(* Convert the current pi0 to functional representation *)
-				let pi0 = fun parameter -> current_pi0.(parameter) in
-				
-				(* Check that the current pi0 does not belong to any constraint *)
-				if dynArray_exists (pi0_in_returned_constraint pi0) !computed_constraints then (
-					(* Update the number of unsuccessful points *)
-					nb_useless_points := !nb_useless_points + 1;
-					if debug_mode_greater Debug_medium then (
-						print_message Debug_medium "The following pi0 is already included in a constraint.";
-						print_message Debug_medium (ModelPrinter.string_of_pi0 model pi0);
-					);
-					(** TODO: could be optimized by finding the nearest multiple of tile next to the border, and directly switching to that one *)
-					
-				(* Check that it satisfies the initial constraint *)
-				) else if not (LinearConstraint.is_pi0_compatible pi0 !init_constraint) then (
-					(* Update the number of unsuccessful points *)
-					nb_useless_points := !nb_useless_points + 1;
-					if debug_mode_greater Debug_medium then (
-						print_message Debug_medium "The following pi0 does not satisfy the initial constraint of the model.";
-						print_message Debug_medium (ModelPrinter.string_of_pi0 model pi0);
-					);
-				(* If both checks passed, then pi0 found *)
-				)else(
-					found_pi0 := true;
-				);
-				
-				(* If pi0 still not found, check time limit *)
-				if not !found_pi0 then(
-					(* Stop if the time limit has been reached *)
-					match options#time_limit with
-						| None -> ()
-						| Some limit -> if (get_time()) > (float_of_int limit) then time_limit_reached := true;
-				);
+				(* Generic function possibly updating found_pi0 *)
+				test_pi0_uncovered current_pi0 found_pi0;
 			); (*if more pi0 *)
 		done; (* while more pi0 and so on *)
 		
 		(* Return info (note that current_pi0 has ALREADY been updated if a suitable pi0 was found !) *)
-		!found_pi0 , !time_limit_reached , !nb_useless_points
+		!found_pi0 , !nb_useless_points
 	)
 
 
@@ -606,7 +619,7 @@ let find_next_pi0 tile_nature_option =
 	(* Retrieve the input options *)
 	let options = Input.get_options () in
 
-	let found_pi0 , time_limit_reached , new_nb_useless_points =
+	let found_pi0 , new_nb_useless_points =
 	(* Branching *)
 	match options#imitator_mode with
 	| Cover_cartography ->
@@ -625,7 +638,7 @@ let find_next_pi0 tile_nature_option =
 	nb_useless_points := !nb_useless_points + new_nb_useless_points;
 	
 	(* Return *)
-	found_pi0 , time_limit_reached
+	found_pi0 , !time_limit_reached
 
 
 
@@ -772,7 +785,7 @@ let bc_process_im_result im_result =
 	nb_transitions := !nb_transitions + im_result.nb_transitions;
 	
 	(* Print message *)
-	print_message Debug_medium (
+	print_message Debug_standard (
 		"\nK" ^ (string_of_int (!current_iteration)) ^ " computed by IM after "
 		^ (string_of_int im_result.nb_iterations) ^ " iteration" ^ (s_of_int im_result.nb_iterations) ^ ""
 		^ " in " ^ (string_of_seconds im_result.total_time) ^ ": "
@@ -787,7 +800,7 @@ let bc_process_im_result im_result =
 	
 (* 			let bad_string = if StateSpace.is_bad model graph then "BAD." else "GOOD." in *)
 	print_message Debug_low ("Constraint K0 computed:");
-	print_message Debug_medium (ModelPrinter.string_of_returned_constraint model.variable_names im_result.result);
+	print_message Debug_standard (ModelPrinter.string_of_returned_constraint model.variable_names im_result.result);
 	if model.correctness_condition <> None then(
 		print_message Debug_medium ("This tile is " ^ (string_of_tile_nature im_result.tile_nature) ^ ".");
 	);
@@ -929,11 +942,11 @@ let cover_behavioral_cartography model v0 =
 	(* Compute the first point pi0 *)
 	compute_initial_pi0 ();
 	
-	(* Iterate on all the possible pi0 *)
 	let more_pi0 = ref true in
-	let limit_reached = ref false in
+	time_limit_reached := false;
 	
-	while !more_pi0 && not !limit_reached do
+	(* Iterate on all the possible pi0 *)
+	while !more_pi0 && not !time_limit_reached do
 
 		(* Iterate *)
 		current_iteration := !current_iteration + 1;
@@ -969,17 +982,15 @@ let cover_behavioral_cartography model v0 =
 			Graphics.generate_graph model reachability_graph radical;
 
 		(* Compute the next pi0 (note that current_pi0 is directly modified by the function!) and return flags for more pi0 and co *)
-		let found_pi0 , time_limit_reached = find_next_pi0 (Some im_result.tile_nature) in
+		let found_pi0 , _ = find_next_pi0 (Some im_result.tile_nature) in
 		
-		(* Update the time limit *)
-		limit_reached := time_limit_reached;
 		(* Update the found pi0 flag *)
 		more_pi0 := found_pi0;
 
 	done; (* while more pi0 *)
 
 	(* Print info if premature termination *)
-	if !limit_reached && !more_pi0 then (
+	if !time_limit_reached && !more_pi0 then (
 		(*** WARNING : what about other limits?! (iterations, etc.?) ***)
 		match options#time_limit with
 			| None -> ()
@@ -1018,8 +1029,8 @@ let random_behavioral_cartography model v0 nb =
 
 	(* Array for the pi0 *)
 	(*** TO OPTIMIZE: why create such a big array?! ***)
-	(*** TO OPTIMIZE: WARNING: the function is called everytime !!!!! at least factorize ***)
-	let pi0_computed = Array.make nb (random_pi0 model v0) in
+	let random_pi0 = one_random_pi0 model v0 in
+	let pi0_computed = Array.make nb random_pi0 in
 
 	(* Array for the results *)
 	(*** TO OPTIMIZE: why create such a big array?! ***)
@@ -1044,9 +1055,10 @@ let random_behavioral_cartography model v0 nb =
 
 	(* Current iteration *)
 	let i = ref 1 in
-	let limit_reached = ref false in
-	while !i <= nb && not !limit_reached do
-		let pi0 = random_pi0 model v0 in
+	time_limit_reached := false;
+	
+	while !i <= nb && not !time_limit_reached do
+		let pi0 = one_random_pi0 model v0 in
 
 		(* Print messages *)
 		print_message Debug_standard ("\n**************************************************");
@@ -1137,14 +1149,14 @@ let random_behavioral_cartography model v0 nb =
 		let _ =
 		match options#time_limit with
 			| None -> ()
-			| Some limit -> if (get_time()) > (float_of_int limit) then limit_reached := true;
+			| Some limit -> if (get_time()) > (float_of_int limit) then time_limit_reached := true;
 		in
 
 		(* Increment the iteration *)
 		i := !i + 1;
 	done;
 
-	if !limit_reached && !i <= nb then (
+	if !time_limit_reached && !i <= nb then (
 		match options#time_limit with
 			| None -> ()
 			| Some limit -> if (get_time()) > (float_of_int limit) then print_warning (

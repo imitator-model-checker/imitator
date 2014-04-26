@@ -14,6 +14,7 @@
 
  
 open Global
+open Options
 open Mpi
 open Reachability
 open DistributedUtilities
@@ -46,12 +47,55 @@ let receive_pull_request_and_store_constraint () =
 
 	| PullAndResult (source_rank , im_result) -> 
 		print_message Debug_low ("[Master] Received PullAndResult request...");
+		print_message Debug_standard ("\n[Master] Received the following constraint from worker " ^ (string_of_int source_rank));
 		Cartography.bc_process_im_result im_result;
 		(* Return source rank *)
 		source_rank, Some im_result.tile_nature
 ;;
 
+(* Generic function handling the next sequential point *)
+let compute_next_pi0_sequentially more_pi0 limit_reached tile_nature_option=
+	let found_pi0 , time_limit_reached = Cartography.find_next_pi0 tile_nature_option in
+	(* Update the time limit *)
+	limit_reached := time_limit_reached;
+	(* Update the found pi0 flag *)
+	more_pi0 := found_pi0;
+	()
 
+
+(* Generic function handling all cases *)
+let compute_next_pi0 more_pi0 limit_reached first_point tile_nature_option =
+	(* Retrieve the input options *)
+	let options = Input.get_options () in
+	
+	match options#distribution_mode with
+	(** Distributed mode: Master slave with sequential pi0 *)
+	| Distributed_sequential -> 
+		(* Case first point *)
+		if !first_point then(
+			Cartography.compute_initial_pi0 ();
+			first_point := false;
+		(* Other case *)
+		)else(
+			compute_next_pi0_sequentially more_pi0 limit_reached tile_nature_option
+		)
+	
+(*	(** Distributed mode: Master slave with random pi0 and n retries before switching to sequential mode *)
+	| Distributed_random nb_tries ->
+		(* Flag *)
+		let more_tries = ref true in
+		(* Counter *)
+		let nb_tries = ref 0 in
+		
+		(* Loop until impossible *)
+		while !more_tries do
+			
+		done;
+		*)
+	
+	
+	(** Normal mode *)
+	| Non_distributed -> raise (InternalError("IMITATOR should be distributed at this point."))
 
 let master () =
 	(* Retrieve the input options *)
@@ -62,13 +106,19 @@ let master () =
 	(* Perform initialization *)
 	Cartography.bc_initialize ();
 	
-	(* Compute the first point pi0 *)
-	Cartography.compute_initial_pi0 ();
-	
-	(* Iterate on all the possible pi0 *)
 	let more_pi0 = ref true in
 	let limit_reached = ref false in
 	
+	(* To differentiate between initialization of pi0 / next_point *)
+	let first_point = ref true in
+	
+	(* IF no-precompute: Compute the first point pi0 *)
+	if not options#precomputepi0 then(
+		compute_next_pi0 more_pi0 limit_reached first_point None;
+		Cartography.compute_initial_pi0 ();
+	);
+	
+	(* Iterate on all the possible pi0 *)
 	while !more_pi0 && not !limit_reached do
 		print_message Debug_low ("[Master] Waiting for a pull request");
 		
@@ -78,11 +128,18 @@ let master () =
 		
 		(* IF no-precompute: compute pi0 NOW *)
 		if not options#precomputepi0 then(
-			let found_pi0 , time_limit_reached = Cartography.find_next_pi0 tile_nature_option in
-			(* Update the time limit *)
-			limit_reached := time_limit_reached;
-			(* Update the found pi0 flag *)
-			more_pi0 := found_pi0;
+			(* Case first point *)
+			if !first_point then(
+				Cartography.compute_initial_pi0 ();
+				first_point := false;
+			(* Other case *)
+			)else(
+				let found_pi0 , time_limit_reached = Cartography.find_next_pi0 tile_nature_option in
+				(* Update the time limit *)
+				limit_reached := time_limit_reached;
+				(* Update the found pi0 flag *)
+				more_pi0 := found_pi0;
+			);
 		);
 		
 		(* Access the pi0 *)
