@@ -344,11 +344,13 @@ let send_result (*linear_constraint*)im_result =
 
 	print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "] Serialized constraint '" ^ mlc ^ "'");
 	
-	(* Send the result: 1st send the data size, then the data *)
+	(* Send the result: 1st send my rank, then the data size, then the data *)
 	print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "] About to send the size (" ^ (string_of_int res_size) ^ ") of the constraint.");
+	Mpi.send rank masterrank (int_of_slave_tag Slave_result_tag) Mpi.comm_world;
 	Mpi.send res_size masterrank (int_of_slave_tag Slave_result_tag) Mpi.comm_world;
-	
-	(*** HACK: cut the constraint to try to solve a strange bug with MPI ***)
+	Mpi.send mlc masterrank (int_of_slave_tag Slave_result_tag) Mpi.comm_world
+
+(*	(*** HACK: cut the constraint to try to solve a strange bug with MPI ***)
 	if res_size <= message_MAX_SIZE then(
 		(* Normal situation *)
 		print_message Debug_high ("[Worker " ^ (string_of_int rank) ^ "] About to send a constraint.");
@@ -377,12 +379,12 @@ let send_result (*linear_constraint*)im_result =
 			Mpi.send substring masterrank (int_of_slave_tag Slave_result_tag) Mpi.comm_world ;
 			print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "] Sent (last) piece of constraint #" ^ (string_of_int nb_parts) ^ " '" ^ substring ^ "'");
 		);
-		
+ 
 		print_message Debug_low ("[Worker " ^ (string_of_int rank) ^ "] Sent constraint '" ^ mlc ^ "'  in small pieces.");
 		
-		()
+ 		()
 	)
-
+ *)
 
 (* Sends a point (first the size then the point), by the master *)
 let send_pi0 pi0 slave_rank =
@@ -397,103 +399,59 @@ let send_pi0 pi0 slave_rank =
 
 
 let send_work_request () =
-	Mpi.send (weird_stuff()) masterrank (int_of_slave_tag Slave_work_tag) Mpi.comm_world
-
+	Mpi.send (rank()) masterrank (int_of_slave_tag Slave_work_tag) Mpi.comm_world
 
 let receive_pull_request () =
-	print_message Debug_medium ("Entered function 'receive_pull_request'...");
-	
-	(* First receive the length of the data we are about to receive *)
-    let (len, source_rank, tag) = 
-		Mpi.receive_status Mpi.any_source Mpi.any_tag Mpi.comm_world
-	in
-	
-	print_message Debug_medium ("MPI status received from " ^ ( string_of_int source_rank));
-	let tag = slave_tag_of_int tag in
-	print_message Debug_medium ("Tag decoded.");
+  
+  (* First receive the length of the data we are about to receive *)
+  let (l, source_rank, tag) = 
+    Mpi.receive_status Mpi.any_source Mpi.any_tag Mpi.comm_world
+  in
 
-	(* Is this a result or a simple pull ? *)
-	match tag with
-	| Slave_result_tag ->
-		print_message Debug_medium ("[Master] Received Slave_result_tag from " ^ ( string_of_int source_rank) );
-		print_message Debug_medium ("[Master] Expecting a result of size " ^ ( string_of_int len) );
-		(* receive the result itself *)
-(*		let buff = String.create len in
-		let res = ref buff in*)
-(* 		print_message Debug_medium ("[Master] Buffer created with length " ^ (string_of_int len)); *)
-(*		print_message Debug_medium ("[Master] Dodoooooooooooooooooo");
-		Unix.sleep 1;*)
-		
-		(*** HACK: cut the constraint to try to solve a strange bug with MPI ***)
-		let res = 
-		if len <= message_MAX_SIZE then(
-			(* Normal situation *)
-			print_message Debug_medium ("[Master] Constraint will be received in a single piece.");
-			let res = Mpi.receive source_rank (int_of_slave_tag Slave_result_tag) Mpi.comm_world in
-			print_message Debug_medium ("[Master] Reception done");
-			res
-		)else(
-			(* Cutting situation *)
-			print_message Debug_low ("[Master] About to reconstruct a constraint from small parts.");
-			let remainder = len mod message_MAX_SIZE in
-			let nb_parts = len / message_MAX_SIZE in
-			
-			print_message Debug_medium ("[Master] There will be " ^ (string_of_int nb_parts) ^ " parts and " ^ (if remainder = 0 then "no" else "a") ^ " remainder.");
-			
-			(* Create result *)
-			let resulting_string = ref "" in
-			
-			for i = 0 to nb_parts - 1 do
-				(* Get the string *)
-				let res = Mpi.receive source_rank (int_of_slave_tag Slave_result_tag) Mpi.comm_world in
-				resulting_string := !resulting_string ^ res;
-				print_message Debug_medium ("[Master] Received piece of constraint #" ^ (string_of_int i) ^ ": '" ^ res ^ "'");
-			done;
-		
-			(* Receive the remainder if not null *)
-			if remainder <> 0 then(
-				let res = Mpi.receive source_rank (int_of_slave_tag Slave_result_tag) Mpi.comm_world in
-				resulting_string := !resulting_string ^ res;
-				print_message Debug_medium ("[Master] Received (last) piece of constraint #" ^ (string_of_int nb_parts) ^ ": '" ^ res ^ "'");
-			);
-			
-			print_message Debug_low ("[Master] Successfully received constraint '" ^ !resulting_string ^ "'  in small pieces.");
-			
-			(* Return result *)
-			!resulting_string
-		)
-		
-		in
-(*		print_message Debug_medium ("[Master] Reception done (oui oui)");
-		let l = String.length res in
-		print_message Debug_medium ("[Master] Calcul taille");
-		print_int l;
-		print_message Debug_medium ("[Master] Taille affichee");
-		
-		print_char res.[0];
-		print_message Debug_medium ("[Master] Coucou j'ai ecrit le premier caractere !");*)
+  print_string ("\t[Master] MPI status received from [Worker " ^ ( string_of_int source_rank) ^"]"); print_newline() ;
+  print_string ("\t[Master] Tag decoded from [Worker " ^ ( string_of_int source_rank) ^"] : " ^ ( string_of_int tag ) ); print_newline() ;
 
-		(* Print some information *)
-		if debug_mode_greater Debug_medium then
-			print_message Debug_medium ("[Master] Result was '" ^ (*!*)res ^ "'");
+  let tag = slave_tag_of_int tag in  
+
+  (* Is this a result or a simple pull ? *)
+  match tag with
+  | Slave_result_tag ->
+     let s_rank = l in
+     print_string ("[Master] Received Slave_result_tag from " ^ ( string_of_int source_rank) ); print_newline() ;
+
+     let len = Mpi.receive s_rank (int_of_slave_tag Slave_result_tag) Mpi.comm_world in
+
+     print_string ("[Master] Expecting a result of size " ^ ( string_of_int len) ^ " from [Worker " ^ (string_of_int s_rank) ^ "]" ); print_newline() ;
+
+     (* receive the result itself *)
+     let buff = String.create len in
+     let res = ref buff in
+     print_string ("[Master] Buffer created with length " ^ (string_of_int len)^"");	 print_newline() ;
+     res := Mpi.receive s_rank (int_of_slave_tag Slave_result_tag) Mpi.comm_world ;
+     print_string("[Master] received buffer " ^ !res ^ " of size " ^ ( string_of_int len) ^ " from [Worker "  ^ (string_of_int source_rank) ^ "]");	 print_newline() ;
+
 			
-		(* Get the constraint *)
-		let im_result = unserialize_im_result (*!*)res in
-		PullAndResult (source_rank , im_result)
+     (* Get the constraint *)
+     let im_result = unserialize_im_result !res in
+     
+     PullAndResult (s_rank , im_result)
+		   
+  (* Case error *)
+  | Slave_outofbound_tag ->
+     print_string ("[Master] Received Slave_outofbound_tag"); print_newline() ;
+     OutOfBound source_rank
 		
-	(* Case error *)
-	| Slave_outofbound_tag ->
-		print_message Debug_medium ("[Master] Received Slave_outofbound_tag");
-		OutOfBound source_rank
-	
-	(* Case simple pull? *)
-	| Slave_work_tag ->
-		print_message Debug_medium ("[Master] Received Slave_work_tag");
-		PullOnly source_rank
+  (* Case simple pull? *)
+  | Slave_work_tag ->
+     print_string ("[Master] Received Slave_work_tag from [Worker " ^ ( string_of_int source_rank) ^ "] : " ^  ( string_of_int l )); print_newline() ;
+     PullOnly (* source_rank *) l
+
+;;
 
 
 let send_finished source_rank = 
-	Mpi.send (weird_stuff()) source_rank (int_of_master_tag Master_finished_tag) Mpi.comm_world 
+  print_string( "[Master] Sending STOP to [Worker " ^ (string_of_int source_rank ) ^"]."); print_newline();
+  Mpi.send (weird_stuff()) source_rank (int_of_master_tag Master_finished_tag) Mpi.comm_world 
 
 let receive_work () =
 	(* Get the model *)

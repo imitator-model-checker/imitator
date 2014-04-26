@@ -46,7 +46,7 @@ let run () =
 	(* Get the model *)
 	let model = Input.get_model() in*)
 
-	let rank = Mpi.comm_rank comm_world in
+	let rank = Mpi.comm_rank Mpi.comm_world in
 
 (*	(* Print some information *)
 	if rank = 0 then
@@ -65,8 +65,10 @@ let run () =
 		DistributedMasterSlave.worker()
 	;
   
+	  
+
 	(* At the end: synchronization barrier *)
-	barrier comm_world;
+	barrier Mpi.comm_world;
 
 	
  	(**************************************************)
