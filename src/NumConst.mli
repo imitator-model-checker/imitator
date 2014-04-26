@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2010/03/04
- * Last modified: 2013/01/30
+ * Last modified: 2014/04/26
  *
  ****************************************************************)
  
@@ -62,6 +62,10 @@ val abs : t -> t
 val find_multiple_below : t -> t -> t -> t
 (** Find the closest multiple of step from base_number above (or equal to) number *)
 val find_multiple_above : t -> t -> t -> t
+
+(** Generates a random integer NumConst in the interval [min , max] *)
+val random_integer : t -> t -> t
+
 
 (**************************************************)
 (** {2 Comparison Functions} *)

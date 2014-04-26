@@ -371,10 +371,18 @@ print_string ("\n d >= e ? " ^ (string_of_bool (ge d e)));
 print_string ("\n d > e ? " ^ (string_of_bool (g d e)));
 
 
-(*** TODO: test the uniform distribution !!! ***)
+let occurrences = Array.make 150 0 in
 print_string ("\n A bit of randomization: ");
-for i = 0 to 999 do
-	print_string ((string_of_numconst (random_integer (numconst_of_int 4) (numconst_of_int 150))) ^ " - ");
+for i = 0 to 100000 do
+	let random = random_integer (numconst_of_int 4) (numconst_of_int 149) in
+(* 	print_string ((string_of_numconst random) ^ " - "); *)
+	(* Convert to an integer (only works because small enough) *)
+	let inti = Gmp.Z.to_int (get_num random) in
+	(* Increment table *)
+	occurrences.(inti) <- occurrences.(inti) + 1;
+done;
+for i = 0 to 149 do
+	print_string ("\n " ^ (string_of_int i)  ^" -> " ^ (string_of_int occurrences.(i)) ^ " occurrences");
 done;
 
 
