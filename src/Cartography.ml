@@ -275,9 +275,7 @@ let compute_initial_pi0 () =
 (* Generate a random pi0 in a given interval for each parameter (array view!) *)
 (*------------------------------------------------------------*)
 let random_pi0 model v0 =
-		raise (InternalError "not implemented")
-
-(*	(* Retrieve the input options *)
+	(* Retrieve the input options *)
 	let options = Input.get_options () in
 	
 	(*** WARNING! Does not work with step <> 1 !!!! ***)
@@ -290,15 +288,16 @@ let random_pi0 model v0 =
 	for i = 0 to model.nb_parameters - 1 do
 		let min, max = v0.(i) in
 		(* Generate a random value in the interval *)
-		Random.self_init();
-		let random_value = Random.int (max - min + 1) + min in
-		(* Debug *)
-(* 		print_message Debug_medium ("Generating randomly value '" ^ (string_of_int random_value) ^ "' for parameter '" ^ (model.variable_names i) ^ "'."); *)
-		(* Convert to a num *)
-		random_pi0.(i) <- NumConst.numconst_of_int random_value;
+		let random_value = NumConst.random_integer min max in
+		
+		(* Print some information *)
+ 		print_message Debug_medium ("Generating randomly value '" ^ (NumConst.string_of_numconst random_value) ^ "' for parameter '" ^ (model.variable_names i) ^ "'.");
+ 		
+		(* Add to the array *)
+		random_pi0.(i) <- random_value;
 	done;
 	(* Return the result as an array *)
-	random_pi0*)
+	random_pi0
 
 
 (*------------------------------------------------------------*)
@@ -1010,6 +1009,10 @@ let cover_behavioral_cartography model v0 =
 (*** WARNING: not tested for a LONG time ***)
 (*------------------------------------------------------------*)
 let random_behavioral_cartography model v0 nb =
+
+
+	print_warning("The random behavioral cartography has not been used (nor tested) for a while, and may contain bugs, or lead to inconsistent results.");
+	
 	(* Retrieve the input options *)
 	let options = Input.get_options () in
 
