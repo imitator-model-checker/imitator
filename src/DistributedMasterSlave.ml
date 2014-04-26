@@ -73,10 +73,12 @@ let compute_next_pi0 more_pi0 limit_reached first_point tile_nature_option =
 	| Distributed_sequential -> 
 		(* Case first point *)
 		if !first_point then(
+			print_message Debug_low ("[Master] This is the first pi0.");
 			Cartography.compute_initial_pi0 ();
 			first_point := false;
 		(* Other case *)
 		)else(
+			print_message Debug_low ("[Master] Computing next pi0...");
 			compute_next_pi0_sequentially more_pi0 limit_reached tile_nature_option
 		)
 	
@@ -112,10 +114,10 @@ let master () =
 	(* To differentiate between initialization of pi0 / next_point *)
 	let first_point = ref true in
 	
-	(* IF no-precompute: Compute the first point pi0 *)
-	if not options#precomputepi0 then(
+	(* IF precompute: Compute the first point pi0 *)
+	if options#precomputepi0 then(
 		compute_next_pi0 more_pi0 limit_reached first_point None;
-		Cartography.compute_initial_pi0 ();
+(* 		Cartography.compute_initial_pi0 (); *)
 	);
 	
 	(* Iterate on all the possible pi0 *)
@@ -124,11 +126,11 @@ let master () =
 		
 		(* Get the pull_request *)
 		let source_rank, tile_nature_option = receive_pull_request_and_store_constraint () in
-		print_message Debug_medium ("[Master] Got a pull request from slave " ^ (string_of_int source_rank) ^ "");
+		print_message Debug_medium ("[Master] Received a pull request from worker " ^ (string_of_int source_rank) ^ "");
 		
 		(* IF no-precompute: compute pi0 NOW *)
 		if not options#precomputepi0 then(
-			(* Case first point *)
+			(*(* Case first point *)
 			if !first_point then(
 				Cartography.compute_initial_pi0 ();
 				first_point := false;
@@ -139,7 +141,8 @@ let master () =
 				limit_reached := time_limit_reached;
 				(* Update the found pi0 flag *)
 				more_pi0 := found_pi0;
-			);
+			);*)
+			compute_next_pi0 more_pi0 limit_reached first_point tile_nature_option;
 		);
 		
 		(* Access the pi0 *)
@@ -152,11 +155,12 @@ let master () =
 		(* IF precompute: Compute the next pi0 for next time, and return flags for more pi0 and co *)
 		(*** WARNING: computing the pi0 BEFORE it is asked may be stupid! It may be smarter to compute it on demand (to be compared) ***)
 		if options#precomputepi0 then(
-			let found_pi0 , time_limit_reached = Cartography.find_next_pi0 tile_nature_option in
+(*			let found_pi0 , time_limit_reached = Cartography.find_next_pi0 tile_nature_option in
 			(* Update the time limit *)
 			limit_reached := time_limit_reached;
 			(* Update the found pi0 flag *)
-			more_pi0 := found_pi0;
+			more_pi0 := found_pi0;*)
+			compute_next_pi0 more_pi0 limit_reached first_point tile_nature_option;
 		);
 	done;
 	

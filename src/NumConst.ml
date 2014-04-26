@@ -258,7 +258,6 @@ let find_multiple_above =
 
 let state = 
 	(*** HACK: should maybe not be there ***)
-	print_string "\n INITIALIZATION";
 	Random.self_init();
 	(* Initialize random *)
 	(*** EXPLANATION: total HACK here, tried greater than 128 (e.g. 255) entails 'exception Invalid_argument("Gmp.Random.randinit")' ***)
