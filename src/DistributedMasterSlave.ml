@@ -17,10 +17,6 @@ open Global
 open Mpi
 open Reachability
 open DistributedUtilities
-	
-let masterrank = 0 
-(* let cnt = ref 0 (* DEBUG *) *)
-let nb_of_rounds = 20    
 
 
 (****************************************************************)
@@ -55,6 +51,8 @@ let receive_pull_request_and_store_constraint () =
 		source_rank, Some im_result.tile_nature
 ;;
 
+
+
 let master () =
 	(* Retrieve the input options *)
 	let options = Input.get_options () in
@@ -72,7 +70,7 @@ let master () =
 	let limit_reached = ref false in
 	
 	while !more_pi0 && not !limit_reached do
-		print_message Debug_standard ("[Master] Waiting for a pull request");
+		print_message Debug_low ("[Master] Waiting for a pull request");
 		
 		(* Get the pull_request *)
 		let source_rank, tile_nature_option = receive_pull_request_and_store_constraint () in
@@ -91,7 +89,7 @@ let master () =
 		let pi0 = Cartography.get_current_pi0 () in
 		
 		(* Send it *)
-		print_message Debug_standard ( "[Master] : sent pi0 to [Worker " ^ (string_of_int source_rank ) ^ "]" ) ;
+		print_message Debug_standard ( "[Master] Sent pi0 to [Worker " ^ (string_of_int source_rank ) ^ "]" ) ;
 		send_pi0 pi0 source_rank;
 
 		(* IF precompute: Compute the next pi0 for next time, and return flags for more pi0 and co *)
@@ -104,8 +102,11 @@ let master () =
 			more_pi0 := found_pi0;
 		);
 	done;
+	
 
-	print_message Debug_standard ( "[Master] Done." );
+	(*** NOTE: we could check here (and at every further iteration) whether all integer points are already covered!!! If yes, stop. ***)
+	
+	print_message Debug_standard ( "[Master] Done with sending pi0; waiting for last results." );
 
 	let size = Mpi.comm_size Mpi.comm_world in
 		let k = ref 0 in
@@ -117,23 +118,23 @@ let master () =
 		send_finished source_rank;
 		k := !k + 1;
 		print_message Debug_standard( "\t[Master] - [Worker " ^ (string_of_int source_rank ) ^ "] is done");
-		done;
+	done;
 		
-		print_message Debug_standard ("[Master] All slaves done" );
+	print_message Debug_standard ("[Master] All slaves done" );
 
-		(* Process the finalization *)
-		Cartography.bc_finalize ();
-		
-		(* Process the result and return *)
-		let tiles = Cartography.bc_result () in
-		(* Render zones in a graphical form *)
-		if options#cart then (
+	(* Process the finalization *)
+	Cartography.bc_finalize ();
+	
+	(* Process the result and return *)
+	let tiles = Cartography.bc_result () in
+	(* Render zones in a graphical form *)
+	if options#cart then (
 		Graphics.cartography (Input.get_model()) (Input.get_v0()) tiles (options#files_prefix ^ "_cart_patator")
-		) else (
+	) else (
 		print_message Debug_high "Graphical cartography not asked: graph not generated.";
-		);
-		
-		()
+	);
+	
+	()
 ;;
 
 (****************************************************************)
@@ -141,7 +142,7 @@ let master () =
 (****************************************************************)
 
 let init_slave rank size =
-	print_message Debug_standard ("[Worker " ^ (string_of_int rank) ^ "] I am worker [" ^ (string_of_int rank) ^ "] in " ^ (string_of_int (size-1)) ^ ".");
+	print_message Debug_standard ("[Worker " ^ (string_of_int rank) ^ "] I am worker " ^ (string_of_int rank) ^ "/" ^ (string_of_int (size-1)) ^ ".");
 ;;
 
 let worker() =

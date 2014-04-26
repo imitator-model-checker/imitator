@@ -408,8 +408,8 @@ let receive_pull_request () =
     Mpi.receive_status Mpi.any_source Mpi.any_tag Mpi.comm_world
   in
 
-  print_string ("\t[Master] MPI status received from [Worker " ^ ( string_of_int source_rank) ^"]"); print_newline() ;
-  print_string ("\t[Master] Tag decoded from [Worker " ^ ( string_of_int source_rank) ^"] : " ^ ( string_of_int tag ) ); print_newline() ;
+  print_message Debug_medium ("\t[Master] MPI status received from [Worker " ^ ( string_of_int source_rank) ^"]");
+  print_message Debug_medium ("\t[Master] Tag decoded from [Worker " ^ ( string_of_int source_rank) ^"] : " ^ ( string_of_int tag ) );
 
   let tag = slave_tag_of_int tag in  
 
@@ -417,18 +417,18 @@ let receive_pull_request () =
   match tag with
   | Slave_result_tag ->
      let s_rank = l in
-     print_string ("[Master] Received Slave_result_tag from " ^ ( string_of_int source_rank) ); print_newline() ;
+     print_message Debug_medium ("[Master] Received Slave_result_tag from " ^ ( string_of_int source_rank) );
 
      let len = Mpi.receive s_rank (int_of_slave_tag Slave_result_tag) Mpi.comm_world in
 
-     print_string ("[Master] Expecting a result of size " ^ ( string_of_int len) ^ " from [Worker " ^ (string_of_int s_rank) ^ "]" ); print_newline() ;
+     print_message Debug_medium ("[Master] Expecting a result of size " ^ ( string_of_int len) ^ " from [Worker " ^ (string_of_int s_rank) ^ "]" );
 
      (* receive the result itself *)
      let buff = String.create len in
      let res = ref buff in
-     print_string ("[Master] Buffer created with length " ^ (string_of_int len)^"");	 print_newline() ;
+     print_message Debug_medium ("[Master] Buffer created with length " ^ (string_of_int len)^"");	
      res := Mpi.receive s_rank (int_of_slave_tag Slave_result_tag) Mpi.comm_world ;
-     print_string("[Master] received buffer " ^ !res ^ " of size " ^ ( string_of_int len) ^ " from [Worker "  ^ (string_of_int source_rank) ^ "]");	 print_newline() ;
+     print_message Debug_medium("[Master] received buffer " ^ !res ^ " of size " ^ ( string_of_int len) ^ " from [Worker "  ^ (string_of_int source_rank) ^ "]");	
 
 			
      (* Get the constraint *)
@@ -438,19 +438,19 @@ let receive_pull_request () =
 		   
   (* Case error *)
   | Slave_outofbound_tag ->
-     print_string ("[Master] Received Slave_outofbound_tag"); print_newline() ;
+     print_message Debug_medium ("[Master] Received Slave_outofbound_tag");
      OutOfBound source_rank
 		
   (* Case simple pull? *)
   | Slave_work_tag ->
-     print_string ("[Master] Received Slave_work_tag from [Worker " ^ ( string_of_int source_rank) ^ "] : " ^  ( string_of_int l )); print_newline() ;
+     print_message Debug_medium ("[Master] Received Slave_work_tag from [Worker " ^ ( string_of_int source_rank) ^ "] : " ^  ( string_of_int l ));
      PullOnly (* source_rank *) l
 
 ;;
 
 
 let send_finished source_rank = 
-  print_string( "[Master] Sending STOP to [Worker " ^ (string_of_int source_rank ) ^"]."); print_newline();
+  print_message Debug_medium( "[Master] Sending STOP to [Worker " ^ (string_of_int source_rank ) ^"].");
   Mpi.send (weird_stuff()) source_rank (int_of_master_tag Master_finished_tag) Mpi.comm_world 
 
 
