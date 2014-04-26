@@ -7,7 +7,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Ulrich Kuehne, Etienne Andre
  * Created:       2010
- * Last modified: 2014/03/15
+ * Last modified: 2014/04/26
  *
  ****************************************************************)
  
@@ -122,6 +122,9 @@ class imitator_options =
 		(* limit number of iterations *)
 		val mutable post_limit = ref None
 		
+		(* Pre-compute pi0 ? (in PaTATOR mode only) *)
+		val mutable precomputepi0 = ref false
+		
 		(* limit number of states *)
 		val mutable states_limit = ref None
 		
@@ -190,6 +193,7 @@ class imitator_options =
 		method no_random = !no_random
 		method pi_compatible = !pi_compatible
 		method post_limit = !post_limit
+		method precomputepi0 = !precomputepi0
 		method pta2clp = !pta2clp
 		method pta2gml = !pta2gml
 		method pta2jpg = !pta2jpg
@@ -310,6 +314,8 @@ class imitator_options =
 
 				(* 				("-PTA2CLP", Unit (fun _ -> pta2clp := true; imitator_mode := Translation), "Translate PTA into a CLP program, and exit without performing any analysis. Work in progress! Defaut : 'false'"); *)
 				
+				("-precomputepi0", Set precomputepi0, " Compute the next pi0 before the next reception of a constraint (in PaTATOR mode only). Default: false.");
+
 				("-PTA2GrML", Unit (fun _ -> pta2gml := true; imitator_mode := Translation), "Translate PTA into a GrML program, and exit without performing any analysis. Defaut : 'false'");
 				
 				("-PTA2JPG", Unit (fun _ -> pta2jpg := true; with_dot:= true; imitator_mode := Translation), "Translate PTA into a graphics, and exit without performing any analysis. Defaut : 'false'");
@@ -484,6 +490,15 @@ class imitator_options =
 				print_message Debug_standard ("Considering a distributed version of IMITATOR (WORK IN PROGRESS).")
 			else
 				print_message Debug_medium ("Non-distributed version of IMITATOR (default).")
+			;
+
+			if !precomputepi0 then(
+				print_message Debug_standard ("Compute the next pi0 before the next reception of a constraint.");
+				if !distribution_mode = Non_distributed then
+					print_warning("The -precomputepi0 option is only valid in distributed mode. It will hence be ignored.");
+				)
+			else
+				print_message Debug_medium ("Compute the next pi0 on-demand, in PaTATOR mode (default).")
 			;
 
 				

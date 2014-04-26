@@ -453,6 +453,7 @@ let send_finished source_rank =
   print_string( "[Master] Sending STOP to [Worker " ^ (string_of_int source_rank ) ^"]."); print_newline();
   Mpi.send (weird_stuff()) source_rank (int_of_master_tag Master_finished_tag) Mpi.comm_world 
 
+
 let receive_work () =
 	(* Get the model *)
 	let model = Input.get_model() in
