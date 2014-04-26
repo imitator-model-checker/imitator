@@ -772,7 +772,7 @@ let bc_process_im_result im_result =
 	nb_transitions := !nb_transitions + im_result.nb_transitions;
 	
 	(* Print message *)
-	print_message Debug_standard (
+	print_message Debug_medium (
 		"\nK" ^ (string_of_int (!current_iteration)) ^ " computed by IM after "
 		^ (string_of_int im_result.nb_iterations) ^ " iteration" ^ (s_of_int im_result.nb_iterations) ^ ""
 		^ " in " ^ (string_of_seconds im_result.total_time) ^ ": "
@@ -787,9 +787,9 @@ let bc_process_im_result im_result =
 	
 (* 			let bad_string = if StateSpace.is_bad model graph then "BAD." else "GOOD." in *)
 	print_message Debug_low ("Constraint K0 computed:");
-	print_message Debug_standard (ModelPrinter.string_of_returned_constraint model.variable_names im_result.result);
+	print_message Debug_medium (ModelPrinter.string_of_returned_constraint model.variable_names im_result.result);
 	if model.correctness_condition <> None then(
-		print_message Debug_standard ("This tile is " ^ (string_of_tile_nature im_result.tile_nature) ^ ".");
+		print_message Debug_medium ("This tile is " ^ (string_of_tile_nature im_result.tile_nature) ^ ".");
 	);
 
 	(* Process the constraint(s) in some cases *)
@@ -942,10 +942,10 @@ let cover_behavioral_cartography model v0 =
 		let pi0_fun = create_pi0_fun () in
 
 		(* Print some messages *)
-		print_message Debug_standard ("\n**************************************************");
-		print_message Debug_standard ("BEHAVIORAL CARTOGRAPHY ALGORITHM: " ^ (string_of_int !current_iteration) ^ "");
-		print_message Debug_standard ("Considering the following pi" ^ (string_of_int !current_iteration));
-		print_message Debug_standard (ModelPrinter.string_of_pi0 model pi0_fun);
+		print_message Debug_medium ("\n**************************************************");
+		print_message Debug_medium ("BEHAVIORAL CARTOGRAPHY ALGORITHM: " ^ (string_of_int !current_iteration) ^ "");
+		print_message Debug_medium ("Considering the following pi" ^ (string_of_int !current_iteration));
+		print_message Debug_medium (ModelPrinter.string_of_pi0 model pi0_fun);
 		
 		(* Prevent the debug messages (except in debug medium, high or total) *)
 		if not (debug_mode_greater Debug_medium) then

@@ -57,7 +57,7 @@ let master () =
 	(* Retrieve the input options *)
 	let options = Input.get_options () in
 	
-	print_message Debug_standard ("[Master] Hello world!");
+	print_message Debug_medium ("[Master] Hello world!");
 	
 	(* Perform initialization *)
 	Cartography.bc_initialize ();
@@ -74,7 +74,7 @@ let master () =
 		
 		(* Get the pull_request *)
 		let source_rank, tile_nature_option = receive_pull_request_and_store_constraint () in
-		print_message Debug_standard ("[Master] Got a pull request from slave " ^ (string_of_int source_rank) ^ "");
+		print_message Debug_medium ("[Master] Got a pull request from slave " ^ (string_of_int source_rank) ^ "");
 		
 		(* IF no-precompute: compute pi0 NOW *)
 		if not options#precomputepi0 then(
@@ -89,7 +89,7 @@ let master () =
 		let pi0 = Cartography.get_current_pi0 () in
 		
 		(* Send it *)
-		print_message Debug_standard ( "[Master] Sent pi0 to [Worker " ^ (string_of_int source_rank ) ^ "]" ) ;
+		print_message Debug_medium ( "[Master] Sent pi0 to [Worker " ^ (string_of_int source_rank ) ^ "]" ) ;
 		send_pi0 pi0 source_rank;
 
 		(* IF precompute: Compute the next pi0 for next time, and return flags for more pi0 and co *)
@@ -106,21 +106,21 @@ let master () =
 
 	(*** NOTE: we could check here (and at every further iteration) whether all integer points are already covered!!! If yes, stop. ***)
 	
-	print_message Debug_standard ( "[Master] Done with sending pi0; waiting for last results." );
+	print_message Debug_medium ( "[Master] Done with sending pi0; waiting for last results." );
 
 	let size = Mpi.comm_size Mpi.comm_world in
 		let k = ref 0 in
 		while !k < ( size - 1) do
-		print_message Debug_standard ("[Master] " ^ ( string_of_int ( size - 1 - !k )) ^ " slaves left" );
+		print_message Debug_medium ("[Master] " ^ ( string_of_int ( size - 1 - !k )) ^ " slaves left" );
 		let source_rank , _ = receive_pull_request_and_store_constraint () in
-		print_message Debug_standard ("[Master] Received from [Worker " ^ ( string_of_int source_rank ) ^"]");
+		print_message Debug_medium ("[Master] Received from [Worker " ^ ( string_of_int source_rank ) ^"]");
 		(* Say good bye *)
 		send_finished source_rank;
 		k := !k + 1;
-		print_message Debug_standard( "\t[Master] - [Worker " ^ (string_of_int source_rank ) ^ "] is done");
+		print_message Debug_medium( "\t[Master] - [Worker " ^ (string_of_int source_rank ) ^ "] is done");
 	done;
 		
-	print_message Debug_standard ("[Master] All slaves done" );
+	print_message Debug_medium ("[Master] All slaves done" );
 
 	(* Process the finalization *)
 	Cartography.bc_finalize ();
@@ -142,7 +142,7 @@ let master () =
 (****************************************************************)
 
 let init_slave rank size =
-	print_message Debug_standard ("[Worker " ^ (string_of_int rank) ^ "] I am worker " ^ (string_of_int rank) ^ "/" ^ (string_of_int (size-1)) ^ ".");
+	print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "] I am worker " ^ (string_of_int rank) ^ "/" ^ (string_of_int (size-1)) ^ ".");
 ;;
 
 let worker() =
@@ -159,7 +159,7 @@ let worker() =
   (* Ask for some work *)
   send_work_request ();
     
-  print_message Debug_standard ("[Worker " ^ (string_of_int rank) ^ "] sent pull request to the master.");
+  print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "] sent pull request to the master.");
   
   (* In the meanwhile: compute the initial state *)
   let init_state = Reachability.get_initial_state_or_abort model in
@@ -169,17 +169,17 @@ let worker() =
     match receive_work () with
     | Work pi0 ->  (* receive a chunk of work *)
 
-       print_message Debug_standard( "[Worker " ^ ( string_of_int rank ) ^ "] received work. Send a result." );
+       print_message Debug_medium( "[Worker " ^ ( string_of_int rank ) ^ "] received work. Send a result." );
 
        (* Set the new pi0 *)
        Input.set_pi0 pi0;
        
        (* Print some messages *)
-       print_message Debug_standard ("\n**************************************************");
-       print_message Debug_standard ("BEHAVIORAL CARTOGRAPHY ALGORITHM: "(* ^ (string_of_int !current_iteration) ^ ""*));
-       print_message Debug_standard ("[Worker " ^ (string_of_int rank) ^ "] working now.");
-       print_message Debug_standard ("Considering the following pi" (*^ (string_of_int !current_iteration)*));
-       print_message Debug_standard (ModelPrinter.string_of_pi0 model pi0);
+       print_message Debug_medium ("\n**************************************************");
+       print_message Debug_medium ("BEHAVIORAL CARTOGRAPHY ALGORITHM: "(* ^ (string_of_int !current_iteration) ^ ""*));
+       print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "] working now.");
+       print_message Debug_medium ("Considering the following pi" (*^ (string_of_int !current_iteration)*));
+       print_message Debug_medium (ModelPrinter.string_of_pi0 model pi0);
        
        (* Save debug mode *)
        let global_debug_mode = get_debug_mode() in 
@@ -191,7 +191,7 @@ let worker() =
        (* Call IM *)
        let im_result , _ = Reachability.inverse_method_gen model init_state in
 			
-       print_message Debug_standard ("[Worker " ^ (string_of_int rank) ^ "] finished a computation of IM.");
+       print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "] finished a computation of IM.");
 			
        (* Get the debug mode back *)
        set_debug_mode global_debug_mode;
@@ -200,7 +200,7 @@ let worker() =
        (*** TODO (cannot jus call process_im_result) ***)
        
        (* Print message *)
-       print_message Debug_standard (
+       print_message Debug_medium (
 		       "\n[Worker " ^ (string_of_int rank) ^ "] K computed by IM after "
 		       ^ (string_of_int im_result.nb_iterations) ^ " iteration" ^ (s_of_int im_result.nb_iterations) ^ ""
 		       ^ " in " ^ (string_of_seconds im_result.total_time) ^ ": "
@@ -211,12 +211,12 @@ let worker() =
        (*** TODO: handle a special case if the result is NOT valid (e.g., stopped before the end due to timeout or state limit reached) ***)
        
        send_result  im_result;
-       print_message Debug_standard ("[Worker " ^ (string_of_int rank) ^ "] Sent a constraint ");
+       print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "] Sent a constraint ");
 
     | Stop ->      (* end *)
-       print_message Debug_standard ("[Worker " ^ (string_of_int rank) ^ "] I was just told to stop work.");
+       print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "] I was just told to stop work.");
        finished := true
   done;
-  print_message Debug_standard ("\t[Worker " ^ (string_of_int rank) ^ "] I'm done.");
+  print_message Debug_medium ("\t[Worker " ^ (string_of_int rank) ^ "] I'm done.");
 ;;
 		     
