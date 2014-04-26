@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2012/06/18
- * Last modified: 2014/04/17
+ * Last modified: 2014/04/26
  *
  ****************************************************************)
 
@@ -32,7 +32,8 @@ val find_next_pi0 : AbstractModel.tile_nature option -> (bool * bool)
 (* Get the current pi0 in the form of a list (for PaTATOR) *)
 val get_current_pi0 : unit -> (Automaton.variable_index * NumConst.t) list
 
-
+(** Try to generate an uncovered random pi0, and gives up after n tries *)
+val random_pi0 : int -> bool
 
 (************************************************************)
 (** Behavioral cartography algorithms *)

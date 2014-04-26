@@ -350,6 +350,55 @@ let one_random_pi0 model v0 =
 
 
 (*------------------------------------------------------------*)
+(** Try to generate an uncovered random pi0, and gives up after n tries *)
+(*------------------------------------------------------------*)
+let random_pi0 max_tries =
+	(* Get the model *)
+	let model = Input.get_model() in
+	(* Get the v0 *)
+	let v0 = Input.get_v0() in
+
+	(* Print some information *)
+	print_message Debug_medium ("Trying to randomly find a fresh pi0 with " ^ (string_of_int max_tries) ^ " tries.");
+
+	(* Flags *)
+	let continue = ref true in
+	let found_pi0 = ref false in
+	(* Counter *)
+	let nb_tries = ref 1 in
+	
+	(* Loop until impossible *)
+	while !continue do
+		(* Generate a random pi0 *)
+		let pi0 = one_random_pi0 model v0 in
+		(* Try to see if valid (and updates found_pi0) *)
+		test_pi0_uncovered pi0 found_pi0;
+		(* If yes: stop *)
+		if !found_pi0 then(
+			(* Print some information *)
+			print_message Debug_medium ("Try " ^ (string_of_int !nb_tries) ^ " successful!");
+
+			continue := false;
+		(* Otherwise: go further *)
+		)else(
+			(* Print some information *)
+			print_message Debug_medium ("Try " ^ (string_of_int !nb_tries) ^ " unsuccessful.");
+			(* Increment counter *)
+			nb_tries := !nb_tries + 1;
+			(* Check whether limit reached *)
+			if !nb_tries > max_tries then
+				continue := false;
+				(* Print some information *)
+				print_message Debug_medium ("Could not find a pi0 within " ^ (string_of_int max_tries) ^ " tries.");
+		);
+	done;
+	
+	(* Return whether a pi0 has been found *)
+	!found_pi0
+
+
+
+(*------------------------------------------------------------*)
 (** Compute the next pi0 and directly modify the variable 'current_pi0' (standard BC) *)
 (*------------------------------------------------------------*)
 let find_next_pi0_cover () =
@@ -920,12 +969,20 @@ let create_pi0_fun () =
 
 (* Get the current pi0 in the form of a list (for PaTATOR) *)
 let get_current_pi0 () =
+(* 	print_message Debug_high ("Entering get_current_pi0() ..."); *)
+
 	(* Get the model *)
 	let model = Input.get_model() in
+	print_message Debug_high ("Model obtained ...");
 	match !current_pi0 with
 	| None -> raise (InternalError("Current pi0 called before its initialization."))
 	| Some current_pi0 ->
-		List.map (fun parameter_index -> parameter_index , current_pi0.(parameter_index)) model.parameters
+		let result = 
+			List.map (fun parameter_index -> parameter_index , current_pi0.(parameter_index)) model.parameters
+		in
+		print_message Debug_high ("Computed result in get_current_pi0() ");
+		result
+
 
 
 

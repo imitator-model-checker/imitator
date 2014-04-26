@@ -231,7 +231,8 @@ exe:
 
 
 ##### TESTS FOR MPI / PATATOR #####
-	mpiexec -n 4 $(TARGET) $(EXAMPLE_PATH)/Flipflop/flipflop.imi $(EXAMPLE_PATH)/Flipflop/flipflop.v0 -mode cover -distributed sequential -cart -precomputepi0 -verbose low
+# 	mpiexec -n 4 $(TARGET) $(EXAMPLE_PATH)/Flipflop/flipflop.imi $(EXAMPLE_PATH)/Flipflop/flipflop.v0 -mode cover -distributed sequential -cart -precomputepi0 -verbose standard
+	mpiexec -n 4 $(TARGET) $(EXAMPLE_PATH)/Flipflop/flipflop.imi $(EXAMPLE_PATH)/Flipflop/flipflop.v0 -mode cover -distributed random10 -cart -verbose high
 
 # 	 mpiexec -n 4 valgrind  ./IMITATOR.native examples/Flipflop/flipflop.imi examples/Flipflop/flipflop.v0 -mode cover -distributed -verbose low
 

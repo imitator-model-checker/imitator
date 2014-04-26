@@ -53,17 +53,34 @@ let receive_pull_request_and_store_constraint () =
 		source_rank, Some im_result.tile_nature
 ;;
 
+(*------------------------------------------------------------*)
 (* Generic function handling the next sequential point *)
-let compute_next_pi0_sequentially more_pi0 limit_reached tile_nature_option=
-	let found_pi0 , time_limit_reached = Cartography.find_next_pi0 tile_nature_option in
-	(* Update the time limit *)
-	limit_reached := time_limit_reached;
-	(* Update the found pi0 flag *)
-	more_pi0 := found_pi0;
-	()
+(*------------------------------------------------------------*)
+let compute_next_pi0_sequentially more_pi0 limit_reached first_point tile_nature_option =
+	(* Case first point *)
+	if !first_point then(
+		print_message Debug_low ("[Master] This is the first pi0.");
+		Cartography.compute_initial_pi0 ();
+		first_point := false;
+	(* Other case *)
+	)else(
+		print_message Debug_low ("[Master] Computing next pi0 sequentially...");
+		let found_pi0 , time_limit_reached = Cartography.find_next_pi0 tile_nature_option in
+		(* Update the time limit *)
+		limit_reached := time_limit_reached;
+		(* Update the found pi0 flag *)
+		more_pi0 := found_pi0;
+	)
 
+(*------------------------------------------------------------*)
+(* Global variable for the random distributed mode *)
+(*------------------------------------------------------------*)
+(*** TODO: put somewhere else ***)
+let still_random = ref true
 
+(*------------------------------------------------------------*)
 (* Generic function handling all cases *)
+(*------------------------------------------------------------*)
 let compute_next_pi0 more_pi0 limit_reached first_point tile_nature_option =
 	(* Retrieve the input options *)
 	let options = Input.get_options () in
@@ -71,34 +88,37 @@ let compute_next_pi0 more_pi0 limit_reached first_point tile_nature_option =
 	match options#distribution_mode with
 	(** Distributed mode: Master slave with sequential pi0 *)
 	| Distributed_sequential -> 
-		(* Case first point *)
-		if !first_point then(
-			print_message Debug_low ("[Master] This is the first pi0.");
-			Cartography.compute_initial_pi0 ();
-			first_point := false;
-		(* Other case *)
-		)else(
-			print_message Debug_low ("[Master] Computing next pi0...");
-			compute_next_pi0_sequentially more_pi0 limit_reached tile_nature_option
-		)
+		compute_next_pi0_sequentially more_pi0 limit_reached first_point tile_nature_option
 	
-(*	(** Distributed mode: Master slave with random pi0 and n retries before switching to sequential mode *)
+	(** Distributed mode: Master slave with random pi0 and n retries before switching to sequential mode *)
 	| Distributed_random nb_tries ->
-		(* Flag *)
-		let more_tries = ref true in
-		(* Counter *)
-		let nb_tries = ref 0 in
-		
-		(* Loop until impossible *)
-		while !more_tries do
-			
-		done;
-		*)
-	
+		(* Test whether the algorithm is still in random mode *)
+		if !still_random then(
+			(* Try to find a random pi0 *)
+			let successful = Cartography.random_pi0 nb_tries in
+			if successful then(
+				print_message Debug_low ("[Master] Computed a new random pi0.");
+			)else(
+				(* Switch mode ! *)
+				still_random := false;
+				print_message Debug_standard ("[Master] Could not find a new random pi0 after " ^ (string_of_int nb_tries) ^ " attemps. Now switching mode from random to sequential.");
+			);
+		);
+		(* Test whether the algorithm is now in sequential mode *)
+		(*** NOTE: important to test again (instead of using 'else') in case the value was changed just above ***)
+		if not !still_random then(
+			print_message Debug_medium ("[Master] Now in sequential mode: computing a sequential pi0.");
+			compute_next_pi0_sequentially more_pi0 limit_reached first_point tile_nature_option
+		);
+		print_message Debug_high ("[Master] Exiting function compute_next_pi0...");
 	
 	(** Normal mode *)
 	| Non_distributed -> raise (InternalError("IMITATOR should be distributed at this point."))
 
+
+(*------------------------------------------------------------*)
+(* The cartography algorithm implemented in the master *)
+(*------------------------------------------------------------*)
 let master () =
 	(* Retrieve the input options *)
 	let options = Input.get_options () in
@@ -113,6 +133,13 @@ let master () =
 	
 	(* To differentiate between initialization of pi0 / next_point *)
 	let first_point = ref true in
+	
+	(* If random: start with random (switch to sequential later) *)
+	begin
+	match options#distribution_mode with
+	| Distributed_random _ -> still_random := true;
+	| _ -> ();
+	end;
 	
 	(* IF precompute: Compute the first point pi0 *)
 	if options#precomputepi0 then(
@@ -142,14 +169,20 @@ let master () =
 				(* Update the found pi0 flag *)
 				more_pi0 := found_pi0;
 			);*)
+			print_message Debug_high ("[Master] Computing pi0...");
 			compute_next_pi0 more_pi0 limit_reached first_point tile_nature_option;
+			print_message Debug_high ("[Master] Computed pi0.");
 		);
 		
+		(*** WARNING: if no more pi0 (or limit reached), then we still send one below !!!!! ***)
+		
 		(* Access the pi0 *)
+		print_message Debug_high ("[Master] Accessing pi0...");
 		let pi0 = Cartography.get_current_pi0 () in
+		print_message Debug_high ("[Master] Accessed pi0.");
 		
 		(* Send it *)
-		print_message Debug_medium ( "[Master] Sent pi0 to [Worker " ^ (string_of_int source_rank ) ^ "]" ) ;
+		print_message Debug_medium ( "[Master] Sending pi0 to [Worker " ^ (string_of_int source_rank ) ^ "]" ) ;
 		send_pi0 pi0 source_rank;
 
 		(* IF precompute: Compute the next pi0 for next time, and return flags for more pi0 and co *)
