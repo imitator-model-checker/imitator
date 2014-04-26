@@ -7,6 +7,7 @@ BUGS
 
 [!] NumConst was not tested (and, indeed, numconst_of_string does not work) for negative numbers !!!
 
+[!] NumConst.numconst_of_float does not give the specified result! (it is used in Pi0Parser)
 
 ************************************************************
 ALGORITHMIC FEATURES

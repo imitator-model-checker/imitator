@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2010/03/04
- * Last modified: 2014/04/09
+ * Last modified: 2014/04/26
  *
  ****************************************************************)
 
@@ -84,12 +84,13 @@ let numconst_of_zfrac i j = (Gmp.Q.from_zs i j)
 ***)
 
 
-(* Cannot string_of_int (can overflow) ; behavior unspecified if no integer string *)
+(*** NOTE: Cannot use string_of_int (can overflow) ; behavior unspecified if no integer string ****)
 let numconst_of_int_string s =
 	Gmp.Q.from_z (Gmp.Z.from_string s)
 
 
 let numconst_of_float f = (* Mpq (Mpq.of_float i) DOES NOT WORK WELL *)
+	(*** WARNING: numconst_of_float 0.4 gives 400000000001/1000000000000 due to the floating point representation!! ***)
 	(* Split the float in integer and fractional part *)
 	let (fractional, integer) = modf f in
 	let integer = numconst_of_int (int_of_float integer) in
@@ -177,6 +178,44 @@ let minus_one = numconst_of_int (-1)
 
 
 (**************************************************)
+(** {2 Comparison Functions} *)
+(**************************************************)
+let equal a b =
+	Gmp.Q.equal (get_mpq a) (get_mpq b)
+
+let neq a b =
+	not (equal a b)
+
+let l  = ( </ )
+let le = ( <=/ )
+let ge = ( >=/ )
+let g  = ( >/ )
+
+
+(**************************************************)
+(** {2 Test Functions} *)
+(**************************************************)
+let is_integer n =
+	(* Zero is an integer! *)
+	(*** WARNING: added one as well, because the cmp test below did not work for one *)
+	equal n zero || equal n one ||
+	(* Then check denominator = 1 *)
+	(
+		(*print_string (Gmp.Z.to_string (get_num n));
+		print_string "/";
+		print_string (Gmp.Z.to_string (get_num n));
+		print_string "\n";
+		print_string ("  Check num = den: " ^ (string_of_bool ((get_num n) = (get_den n))));
+		print_string "\n";
+		print_string ("  Check cmp (num , den): " ^ (string_of_int (Gmp.Z.cmp (get_num n) (get_den n))));
+		print_string "\n";*)
+		(*** WARNING: should not use directly (get_num n) = (get_den n), because got strange results ***)
+(* 		(Gmp.Z.cmp (get_num n) (get_den n)) > 0 *)
+		(Gmp.Z.cmp (get_den n) (Gmp.Z.from_int 1)) = 0
+	)
+
+
+(**************************************************)
 (** {2 More Elaborated Arithmetic Functions} *)
 (**************************************************)
 
@@ -217,100 +256,129 @@ let find_multiple_above =
 	find_multiple_gen Gmp.Z.cdiv_q
 		
 
+let state = 
+	(*** HACK: should maybe not be there ***)
+	print_string "\n INITIALIZATION";
+	Random.self_init();
+	(* Initialize random *)
+	(*** EXPLANATION: total HACK here, tried greater than 128 (e.g. 255) entails 'exception Invalid_argument("Gmp.Random.randinit")' ***)
+	let random_value = Random.int (*max_int*)128 in
+	(*** HACK: The 4 lines below are written to empirically try a good value ! ***)
+(*	for i = 0 to 100000 do
+		print_string ".";
+		let _ = Gmp.RNG.randinit (Gmp.RNG.GMP_RAND_ALG_LC random_value) in ()
+	done;*)
+	(*** WARNING: not sure to understand what I did there (EA, 26/4/2014) ***)
+	Gmp.RNG.randinit (Gmp.RNG.GMP_RAND_ALG_LC random_value)
 
-(**************************************************)
-(** {2 Comparison Functions} *)
-(**************************************************)
-let equal a b =
-	Gmp.Q.equal (get_mpq a) (get_mpq b)
-
-let neq a b =
-	not (equal a b)
-
-let l  = ( </ )
-let le = ( <=/ )
-let ge = ( >=/ )
-let g  = ( >/ )
 
 
-(**************************************************)
-(** {2 Test Functions} *)
-(**************************************************)
-let is_integer n =
-	(* Zero is an integer! *)
-	(*** WARNING: added one as well, because the cmp test below did not work for one *)
-	equal n zero || equal n one ||
-	(* Then check denominator = numerator *)
-	(
-		(*print_string (Gmp.Z.to_string (get_num n));
-		print_string "/";
-		print_string (Gmp.Z.to_string (get_num n));
-		print_string "\n";
-		print_string ("  Check num = den: " ^ (string_of_bool ((get_num n) = (get_den n))));
-		print_string "\n";
-		print_string ("  Check cmp (num , den): " ^ (string_of_int (Gmp.Z.cmp (get_num n) (get_den n))));
-		print_string "\n";*)
-		(*** WARNING: should not use directly (get_num n) = (get_den n), because got strange results *)
-		(Gmp.Z.cmp (get_num n) (get_den n)) > 0
-	)
+(** Generates a random integer NumConst in the interval [min , max] *)
+let random_integer min max =
+	(* Preliminary check *)
+	if not (is_integer min && is_integer max) then
+		raise (Failure("Random integers must be in between integer bounds."));
+	
+	(* Compute the number of integers *)
+	let nb = max -/ min +/ one in
+
+	(* Convert to Z *)
+	let nb = get_num nb in
+	
+	(* Compute random *)
+	let random_number = Gmp.Z.urandomm state nb in
+(* 	let plouf = Gmp.Q.mpz_urandomm in *)
+	(* Convert back to Gmp.Q *)
+	let random_number = Gmp.Q.from_z random_number in
+	
+	(* Go back to the specified interval *)
+	random_number +/ min
 
 
 
 (**************************************************)
 (* Tests *)
 (**************************************************)
-(*
-let a = NumConst.numconst_of_float 0.4 in
-let b = NumConst.numconst_of_frac 1 3 in
-let c = NumConst.numconst_of_int 2 in
-let d = NumConst.numconst_of_float 2.00 in
-let e = NumConst.numconst_of_frac 306 153 in
 
-print_string ("\n a = " ^ (NumConst.string_of_numconst a));
-print_string ("\n b = " ^ (NumConst.string_of_numconst b));
-print_string ("\n c = " ^ (NumConst.string_of_numconst c));
-print_string ("\n d = " ^ (NumConst.string_of_numconst d));
-print_string ("\n e = " ^ (NumConst.string_of_numconst e));
+(*;;
+let a = numconst_of_float 0.4 in
+let b = numconst_of_frac 1 3 in
+let c = numconst_of_int 2 in
+let d = numconst_of_float 2.00 in
+let e = numconst_of_frac 306 153 in
+let n1 = numconst_of_frac 153 153 in
+let n2 = numconst_of_frac 7 3 in
+(*** BUG HERE due to numconst_of_string (valid 26/04/2014) ***)
+let n3 = numconst_of_string "0.4" in
+let n4 = numconst_of_frac 2040 10 in
 
-print_string ("\n a + b = " ^ (NumConst.string_of_numconst (NumConst.add a b)));
-print_string ("\n a + c = " ^ (NumConst.string_of_numconst (NumConst.add a c)));
-print_string ("\n b + c = " ^ (NumConst.string_of_numconst (NumConst.add b c)));
+let numbers = [a ; b ; c ; d ; e ; n1 ; n2 ; n3 ; n4] in
+List.iter (fun number -> 
+	print_string ("\n n = " ^ (string_of_numconst number) ^ " ; Is it an integer ? " ^ (string_of_bool (is_integer number)));
+) numbers ;
+(*print_string ("\n b = " ^ (string_of_numconst b));
+print_string ("\n c = " ^ (string_of_numconst c));
+print_string ("\n d = " ^ (string_of_numconst d));
+print_string ("\n e = " ^ (string_of_numconst e));
+print_string ("\n n1 = " ^ (string_of_numconst n1));
+print_string ("\n n2 = " ^ (string_of_numconst n2));
+print_string ("\n n3 = " ^ (string_of_numconst n3));
 
-print_string ("\n a - b = " ^ (NumConst.string_of_numconst (NumConst.sub a b)));
-print_string ("\n a - c = " ^ (NumConst.string_of_numconst (NumConst.sub a c)));
-print_string ("\n b - c = " ^ (NumConst.string_of_numconst (NumConst.sub b c)));
+print_string ("\n Is b an integer ? " ^ (string_of_bool (is_integer b)));
+print_string ("\n Is c an integer ? " ^ (string_of_bool (is_integer c)));
+print_string ("\n Is d an integer ? " ^ (string_of_bool (is_integer d)));
+print_string ("\n Is e an integer ? " ^ (string_of_bool (is_integer e)));
+print_string ("\n Is n1 an integer ? " ^ (string_of_bool (is_integer n1)));
+print_string ("\n Is n2 an integer ? " ^ (string_of_bool (is_integer n2)));
+print_string ("\n Is n3 an integer ? " ^ (string_of_bool (is_integer n3)));*)
 
-print_string ("\n a * b = " ^ (NumConst.string_of_numconst (NumConst.mul a b)));
-print_string ("\n a * c = " ^ (NumConst.string_of_numconst (NumConst.mul a c)));
-print_string ("\n b * c = " ^ (NumConst.string_of_numconst (NumConst.mul b c)));
 
-print_string ("\n a / b = " ^ (NumConst.string_of_numconst (NumConst.div a b)));
-print_string ("\n a / c = " ^ (NumConst.string_of_numconst (NumConst.div a c)));
-print_string ("\n b / c = " ^ (NumConst.string_of_numconst (NumConst.div b c)));
+print_string ("\n a + b = " ^ (string_of_numconst (add a b)));
+print_string ("\n a + c = " ^ (string_of_numconst (add a c)));
+print_string ("\n b + c = " ^ (string_of_numconst (add b c)));
 
-print_string ("\n -a = " ^ (NumConst.string_of_numconst (NumConst.neg a)));
-print_string ("\n -b = " ^ (NumConst.string_of_numconst (NumConst.neg b)));
-print_string ("\n -c = " ^ (NumConst.string_of_numconst (NumConst.neg c)));
+print_string ("\n a - b = " ^ (string_of_numconst (sub a b)));
+print_string ("\n a - c = " ^ (string_of_numconst (sub a c)));
+print_string ("\n b - c = " ^ (string_of_numconst (sub b c)));
 
-print_string ("\n |a| = " ^ (NumConst.string_of_numconst (NumConst.abs a)));
-print_string ("\n |-a| = " ^ (NumConst.string_of_numconst (NumConst.abs (NumConst.neg a))));
+print_string ("\n a * b = " ^ (string_of_numconst (mul a b)));
+print_string ("\n a * c = " ^ (string_of_numconst (mul a c)));
+print_string ("\n b * c = " ^ (string_of_numconst (mul b c)));
 
-print_string ("\n a = b ? " ^ (string_of_bool (NumConst.equal a b)));
-print_string ("\n a <> b ? " ^ (string_of_bool (NumConst.neq a b)));
-print_string ("\n a < b ? " ^ (string_of_bool (NumConst.l a b)));
-print_string ("\n a <= b ? " ^ (string_of_bool (NumConst.le a b)));
-print_string ("\n a >= b ? " ^ (string_of_bool (NumConst.ge a b)));
-print_string ("\n a > b ? " ^ (string_of_bool (NumConst.g a b)));
+print_string ("\n a / b = " ^ (string_of_numconst (div a b)));
+print_string ("\n a / c = " ^ (string_of_numconst (div a c)));
+print_string ("\n b / c = " ^ (string_of_numconst (div b c)));
 
-print_string ("\n d = e ? " ^ (string_of_bool (NumConst.equal d e)));
-print_string ("\n d <> e ? " ^ (string_of_bool (NumConst.neq d e)));
-print_string ("\n d < e ? " ^ (string_of_bool (NumConst.l d e)));
-print_string ("\n d <= e ? " ^ (string_of_bool (NumConst.le d e)));
-print_string ("\n d >= e ? " ^ (string_of_bool (NumConst.ge d e)));
-print_string ("\n d > e ? " ^ (string_of_bool (NumConst.g d e)));
+print_string ("\n -a = " ^ (string_of_numconst (neg a)));
+print_string ("\n -b = " ^ (string_of_numconst (neg b)));
+print_string ("\n -c = " ^ (string_of_numconst (neg c)));
+
+print_string ("\n |a| = " ^ (string_of_numconst (abs a)));
+print_string ("\n |-a| = " ^ (string_of_numconst (abs (neg a))));
+
+print_string ("\n a = b ? " ^ (string_of_bool (equal a b)));
+print_string ("\n a <> b ? " ^ (string_of_bool (neq a b)));
+print_string ("\n a < b ? " ^ (string_of_bool (l a b)));
+print_string ("\n a <= b ? " ^ (string_of_bool (le a b)));
+print_string ("\n a >= b ? " ^ (string_of_bool (ge a b)));
+print_string ("\n a > b ? " ^ (string_of_bool (g a b)));
+
+print_string ("\n d = e ? " ^ (string_of_bool (equal d e)));
+print_string ("\n d <> e ? " ^ (string_of_bool (neq d e)));
+print_string ("\n d < e ? " ^ (string_of_bool (l d e)));
+print_string ("\n d <= e ? " ^ (string_of_bool (le d e)));
+print_string ("\n d >= e ? " ^ (string_of_bool (ge d e)));
+print_string ("\n d > e ? " ^ (string_of_bool (g d e)));
+
+
+(*** TODO: test the uniform distribution !!! ***)
+print_string ("\n A bit of randomization: ");
+for i = 0 to 999 do
+	print_string ((string_of_numconst (random_integer (numconst_of_int 4) (numconst_of_int 150))) ^ " - ");
+done;
 
 
 print_newline();
 
-exit 0;
-*)
+
+exit 0*)

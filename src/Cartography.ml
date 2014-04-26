@@ -10,7 +10,7 @@
  * Author:        Ulrich Kuehne, Etienne Andre
  * 
  * Created:       2012/06/18
- * Last modified: 2014/04/17
+ * Last modified: 2014/04/26
  *
  ****************************************************************)
 
@@ -219,30 +219,6 @@ let pi0_in_returned_constraint pi0 = function
 
 
 
-(************************************************************)
-(* Pi0 function (to move to "next pi0 functions" section) *)
-(************************************************************)
-(*------------------------------------------------------------*)
-(* Generate a random pi0 in a given interval for each parameter (array view!) *)
-(*------------------------------------------------------------*)
-let random_pi0 model pi0 =
-	raise (InternalError "not implemented")
-(*	(* Create the pi0 *)
-	let random_pi0 = Array.make model.nb_parameters NumConst.zero in
-	(* Fill it *)
-	for i = 0 to model.nb_parameters - 1 do
-		let a, b = pi0.(i) in
-		(* Generate a random value in the interval *)
-		Random.self_init();
-		let random_value = Random.int (b - a + 1) + a in
-		(* Debug *)
-(* 		print_message Debug_medium ("Generating randomly value '" ^ (string_of_int random_value) ^ "' for parameter '" ^ (model.variable_names i) ^ "'."); *)
-		(* Convert to a num *)
-		random_pi0.(i) <- NumConst.numconst_of_int random_value;
-	done;
-	(* Return the result as an array *)
-	random_pi0*)
-
 
 (************************************************************)
 (* Initial pi0 functions *)
@@ -294,6 +270,36 @@ let compute_initial_pi0 () =
 (************************************************************)
 (* Next pi0 functions *)
 (************************************************************)
+
+(*------------------------------------------------------------*)
+(* Generate a random pi0 in a given interval for each parameter (array view!) *)
+(*------------------------------------------------------------*)
+let random_pi0 model v0 =
+		raise (InternalError "not implemented")
+
+(*	(* Retrieve the input options *)
+	let options = Input.get_options () in
+	
+	(*** WARNING! Does not work with step <> 1 !!!! ***)
+	if options#step <> NumConst.one then
+		raise (InternalError("Random pi0 not implemented with steps <> 1."));
+	
+	(* Create the pi0 *)
+	let random_pi0 = Array.make model.nb_parameters NumConst.zero in
+	(* Fill it *)
+	for i = 0 to model.nb_parameters - 1 do
+		let min, max = v0.(i) in
+		(* Generate a random value in the interval *)
+		Random.self_init();
+		let random_value = Random.int (max - min + 1) + min in
+		(* Debug *)
+(* 		print_message Debug_medium ("Generating randomly value '" ^ (string_of_int random_value) ^ "' for parameter '" ^ (model.variable_names i) ^ "'."); *)
+		(* Convert to a num *)
+		random_pi0.(i) <- NumConst.numconst_of_int random_value;
+	done;
+	(* Return the result as an array *)
+	random_pi0*)
+
 
 (*------------------------------------------------------------*)
 (** Compute the next pi0 and directly modify the variable 'current_pi0' (standard BC) *)
@@ -1008,15 +1014,20 @@ let random_behavioral_cartography model v0 nb =
 	let options = Input.get_options () in
 
 	(* Array for the pi0 *)
-	(***** TO OPTIMIZE: why create such a big array?! *****)
+	(*** TO OPTIMIZE: why create such a big array?! ***)
+	(*** TO OPTIMIZE: WARNING: the function is called everytime !!!!! at least factorize ***)
 	let pi0_computed = Array.make nb (random_pi0 model v0) in
+
 	(* Array for the results *)
-	(***** TO OPTIMIZE: why create such a big array?! *****)
+	(*** TO OPTIMIZE: why create such a big array?! ***)
 	let results = Array.make nb (Convex_constraint (LinearConstraint.p_false_constraint (), Unknown)) in
+	
 	(* Index of the iterations where we really found different constraints *)
 	let interesting_interations = ref [] in
+	
 	(* Debug mode *)
 	let global_debug_mode = get_debug_mode() in
+	
 	(* Prevent the printing of messages in algorithm Inverse Method *)
 	let cut_messages = not (debug_mode_greater Debug_low) in
 

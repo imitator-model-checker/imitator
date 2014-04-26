@@ -127,6 +127,7 @@ atom:
 
 number:
 	| INT {  NumConst.numconst_of_int $1 }
+	/*** WARNING: numconst_of_float 0.4 gives 400000000001/1000000000000 due to the floating point representation!! ***/
 	| FLOAT {  NumConst.numconst_of_float $1 }
 ;
 
