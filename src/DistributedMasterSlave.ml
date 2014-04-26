@@ -36,20 +36,20 @@ let nb_of_rounds = 20
     false
     *)
 let receive_pull_request_and_store_constraint () =
-	print_message Debug_standard ("[Master] Entered function 'receive_pull_request_and_store_constraint'...");
+	print_message Debug_high ("[Master] Entered function 'receive_pull_request_and_store_constraint'...");
 	match receive_pull_request () with
 	| PullOnly source_rank ->
-		print_message Debug_standard ("[Master] Received PullOnly request...");
+		print_message Debug_low ("[Master] Received PullOnly request...");
 		source_rank, None
 
 	| OutOfBound source_rank ->
-		print_message Debug_standard ("[Master] Received OutOfBound request...");
+		print_message Debug_low ("[Master] Received OutOfBound request...");
 		(* FAIRE QUELQUE CHOSE POUR DIRE QU'UN POINT N'A PAS MARCHÉ *)
 		raise (InternalError("OutOfBound not implemented."))(*;
 		source_rank, None*)
 
 	| PullAndResult (source_rank , im_result) -> 
-		print_message Debug_standard ("[Master] Received PullAndResult request...");
+		print_message Debug_low ("[Master] Received PullAndResult request...");
 		Cartography.bc_process_im_result im_result;
 		(* Return source rank *)
 		source_rank, Some im_result.tile_nature

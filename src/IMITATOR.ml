@@ -8,7 +8,7 @@
  * Author:        Ulrich Kuehne, Etienne Andre
  * 
  * Created:       2009/09/07
- * Last modified: 2014/04/17
+ * Last modified: 2014/04/26
  *
  ****************************************************************)
 
@@ -123,8 +123,8 @@ if debug_mode_greater Debug_total then
 begin
 match options#distribution_mode with
 	(* Fork if distributed *)
-	| Distributed -> PaTATOR.run()
-	| _ -> ()
+	| Non_distributed -> ()
+	| _ -> PaTATOR.run()
 end;
 
 

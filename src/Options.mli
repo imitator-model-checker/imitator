@@ -13,8 +13,12 @@ open Global
 
 
 type distribution_mode =
+	(** Normal mode *)
 	| Non_distributed
-	| Distributed
+	(** Distributed mode: Master slave with sequential pi0 *)
+	| Distributed_sequential
+	(** Distributed mode: Master slave with random pi0 and n retries before switching to sequential mode *)
+	| Distributed_random of int
 
 
 

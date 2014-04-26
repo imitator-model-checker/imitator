@@ -15,8 +15,12 @@ open Arg
 open Global
 
 type distribution_mode =
+	(** Normal mode *)
 	| Non_distributed
-	| Distributed
+	(** Distributed mode: Master slave with sequential pi0 *)
+	| Distributed_sequential
+	(** Distributed mode: Master slave with random pi0 and n retries before switching to sequential mode *)
+	| Distributed_random of int
 
 
 class imitator_options =
@@ -256,6 +260,28 @@ class imitator_options =
 					abort_program ();
 					exit(1);
 				)
+			
+			(* Get the distributed mode *)
+			and set_distributed mode =
+				(* Case: no distributed mode *)
+				if mode = "no" then 
+					distribution_mode := Non_distributed
+				(* Case: distributed with sequential *)
+				else if mode = "sequential" then 
+					distribution_mode := Distributed_sequential
+				(* Case: random generation with bounded number of attempts *)
+				else try (
+					(* Find the 'random' string *)
+					if not (String.sub mode 0 6 = "random") then raise (Failure "toto");
+					(* Find the number *)
+					let number = String.sub mode 6 (String.length mode - 6) in
+					distribution_mode := Distributed_random (int_of_string number)
+				) with Failure _ | Invalid_argument _-> (
+					print_error ("The distribution mode '" ^ mode ^ "' is not valid.");
+					Arg.usage speclist usage_msg;
+					abort_program ();
+					exit(1);
+				)
 
 			(* Options *)
 			and speclist = [
@@ -270,7 +296,7 @@ class imitator_options =
 
 				(* 				("-dynamic", Set dynamic, "Perform the on-the-fly intersection. Defaut : 'false'"); *)
 				
-				("-check-point", Set check_point, " Check at each iteration whether the accumulated constraint is restricted to pi0 (warning! very costly)");
+				("-check-point", Set check_point, " Check at each iteration whether the accumulated constraint is restricted to pi0 (warning! very costly). Default: false.");
 				
 				("-completeIM", Set completeIM, " Experimental version of IM that outputs a complete (full) result. Default: false.");
 				
@@ -280,11 +306,14 @@ class imitator_options =
 				
 				("-depth-limit", Int (fun i -> post_limit := Some i), " Limits the depth of the exploration of the reachability graph. Default: no limit.");
 				
-				("-distributed", Unit (fun _ -> distribution_mode := Distributed), " Distributed version of IMITATOR (work in progress). Default: non-distributed.");
+				("-distributed", String set_distributed, " Distributed version of the behavioral cartography (work in progress).
+        Use 'no' for the non-distributed mode (default).
+        Use 'sequential' for a sequential iteration on pi0.
+        Use 'randomXX' to generate random pi0 (e.g., random5 or random10); after XX successive unsuccessful attempts (where the generated point is already covered), the algorithm will do an exhaustive sequential iteration.");
 				
 				("-dynamic-elimination", Set dynamic_clock_elimination, " Dynamic clock elimination [FSFMA13]. Default: false.");
 				
-				("-efim", Set efim, " New algorithm in between IM and EF (WORK IN PROGRESS). Default: false.");
+				("-efim", Set efim, " New algorithm mixing IM and EF (work in progress). Default: false.");
 				
 				("-fancy", Set fancy, " Generate detailed state information for dot output. Default: false.");
 
@@ -486,10 +515,22 @@ class imitator_options =
 			;
 
 
-			if !distribution_mode = Distributed then
-				print_message Debug_standard ("Considering a distributed version of IMITATOR (WORK IN PROGRESS).")
-			else
-				print_message Debug_medium ("Non-distributed version of IMITATOR (default).")
+			
+			match !distribution_mode with
+			| Non_distributed -> 
+				print_message Debug_medium ("Non-distributed version of IMITATOR (default).");
+			| Distributed_sequential ->(
+				print_message Debug_standard ("Considering a distributed version of IMITATOR with sequential enumeration of pi0.");
+				if !imitator_mode <> Cover_cartography then(
+					print_warning "The distributed mode is only valid for the cartography. Option will be ignored.";
+				)
+			)
+			| Distributed_random max -> (
+				print_message Debug_standard ("Considering a distributed version of IMITATOR with random generation of pi0 with up to " ^ (string_of_int max) ^ " successive failure before switching to exhaustive enumeration.");
+				if !imitator_mode <> Cover_cartography then(
+					print_warning "The distributed mode is only valid for the cartography. Option will be ignored.";
+				)
+			)
 			;
 
 			if !precomputepi0 then(
