@@ -977,8 +977,11 @@ let get_current_pi0 () =
 	match !current_pi0 with
 	| None -> raise (InternalError("Current pi0 called before its initialization."))
 	| Some current_pi0 ->
+		print_message Debug_high ("About to convert...");
 		let result = 
-			List.map (fun parameter_index -> parameter_index , current_pi0.(parameter_index)) model.parameters
+			List.map (fun parameter_index ->
+				print_message Debug_high ("Convert");
+				parameter_index , current_pi0.(parameter_index)) model.parameters
 		in
 		print_message Debug_high ("Computed result in get_current_pi0() ");
 		result
