@@ -20,6 +20,25 @@ open Reachability
 open DistributedUtilities
 
 
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+(* Counters *)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+
+(*------------------------------------------------------------*)
+(* Slaves *)
+(*------------------------------------------------------------*)
+
+(*let counter_slave_waiting = ref 0.0
+let start_time_next_point = ref 0.0
+
+let start_counter_next_point () =
+	start_time_next_point := Unix.gettimeofday()
+
+let stop_counter_next_point () =
+	counter_next_point := !counter_next_point +. Unix.gettimeofday() -. !start_time_next_point
+*)
+
+
 (****************************************************************)
 (**     MASTER      *)
 (****************************************************************)

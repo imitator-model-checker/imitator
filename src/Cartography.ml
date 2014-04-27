@@ -51,9 +51,6 @@ open Reachability
 (* Debug mode *)
 let global_debug_mode = ref (Debug_standard)
 
-(* Record start time to compute the time spent only on calling IM *)
-let start_time = ref (Unix.gettimeofday())
-
 (* Number of dimensions in the system *)
 let nb_dimensions = ref 0
 
@@ -101,6 +98,32 @@ let current_intervals_min = ref (Array.make 0 NumConst.zero)
 let current_intervals_max = ref (Array.make 0 NumConst.zero)
 
 let current_pi0 = ref None
+
+
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+(* Counters *)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+
+(* Record start time to compute the time spent only on calling IM *)
+let start_time = ref (Unix.gettimeofday())
+
+(*
+
+(*------------------------------------------------------------*)
+(* Next point *)
+(*------------------------------------------------------------*)
+
+let counter_next_point = ref 0.0
+let start_time_next_point = ref 0.0
+
+let start_counter_next_point () =
+	start_time_next_point := Unix.gettimeofday()
+
+let stop_counter_next_point () =
+	counter_next_point := !counter_next_point +. Unix.gettimeofday() -. !start_time_next_point
+*)
+
+let counter_next_point = new Counter.counter
 
 
 (************************************************************)
@@ -353,6 +376,7 @@ let one_random_pi0 model v0 =
 (** Try to generate an uncovered random pi0, and gives up after n tries *)
 (*------------------------------------------------------------*)
 let random_pi0 max_tries =
+	counter_next_point#start;
 	(* Get the model *)
 	let model = Input.get_model() in
 	(* Get the v0 *)
@@ -395,6 +419,8 @@ let random_pi0 max_tries =
 		);
 	done;
 	
+	counter_next_point#stop;
+
 	(* Return whether a pi0 has been found *)
 	!found_pi0
 
@@ -667,6 +693,7 @@ let find_next_pi0_border latest_nature =
 
 (* Generic function to find the next pi0 *)
 let find_next_pi0 tile_nature_option =
+	counter_next_point#start;
 	(* Retrieve the input options *)
 	let options = Input.get_options () in
 
@@ -688,6 +715,8 @@ let find_next_pi0 tile_nature_option =
 	(* Update the number of useless points *)
 	nb_useless_points := !nb_useless_points + new_nb_useless_points;
 	
+	counter_next_point#stop;
+
 	(* Return *)
 	found_pi0 , !time_limit_reached
 
@@ -930,7 +959,8 @@ let bc_finalize () =
 	(*** TODO: round !!! ***)
 	let global_time = time_from !start_time in
 	(*** TODO: round !!! ***)
-	let time_spent_on_BC = global_time -. (!time_spent_on_IM) in
+(* 	let time_spent_on_BC = global_time -. (!time_spent_on_IM) in *)
+	
 	
 	(* Print the result *)
 	print_message Debug_standard ("\n**************************************************");
@@ -938,11 +968,12 @@ let bc_finalize () =
 	print_message Debug_standard ("Size of V0: " ^ (NumConst.string_of_numconst !nb_points) ^ "");
 	print_message Debug_standard ("Unsuccessful points: " ^ (string_of_int !nb_useless_points) ^ "");
 	print_message Debug_standard ("" ^ (string_of_int nb_tiles) ^ " different constraints were computed.");
-	print_message Debug_standard ("Average number of states     : " ^ (string_of_int nb_states) ^ "");
-	print_message Debug_standard ("Average number of transitions: " ^ (string_of_int nb_transitions) ^ "");
-	print_message Debug_standard ("Global time spent    : " ^ (string_of_float global_time) ^ " s");
-	print_message Debug_standard ("Time spent on IM     : " ^ (string_of_float (!time_spent_on_IM)) ^ " s");
-	print_message Debug_standard ("Time spent on BC only: " ^ (string_of_float (time_spent_on_BC)) ^ " s");
+	print_message Debug_standard ("Average number of states        : " ^ (string_of_int nb_states) ^ "");
+	print_message Debug_standard ("Average number of transitions   : " ^ (string_of_int nb_transitions) ^ "");
+	print_message Debug_standard ("Global time spent               : " ^ (string_of_float global_time) ^ " s");
+	print_message Debug_standard ("Time spent on IM                : " ^ (string_of_float (!time_spent_on_IM)) ^ " s");
+(* 	print_message Debug_standard ("Time spent on BC only: " ^ (string_of_float (time_spent_on_BC)) ^ " s"); *)
+	print_message Debug_standard ("Time spent to compute next point: " ^ (string_of_float (counter_next_point#value)) ^ " s");
 	print_message Debug_standard ("**************************************************");
 	
 	if options#statistics then (
