@@ -232,11 +232,30 @@ exe:
 
 ##### TESTS FOR MPI / PATATOR #####
 # 	mpiexec -n 4 $(TARGET) $(EXAMPLE_PATH)/Flipflop/flipflop.imi $(EXAMPLE_PATH)/Flipflop/flipflop.v0 -mode cover -distributed sequential -cart -precomputepi0 -verbose standard
-	mpiexec -n 4 $(TARGET) $(EXAMPLE_PATH)/Flipflop/flipflop.imi $(EXAMPLE_PATH)/Flipflop/flipflop.v0 -mode cover -distributed random5 -cart -verbose standard -precomputepi0
+# 	mpiexec -n 4 $(TARGET) $(EXAMPLE_PATH)/Flipflop/flipflop.imi $(EXAMPLE_PATH)/Flipflop/flipflop.v0 -mode cover -distributed random5 -cart -verbose standard -precomputepi0
+
 
 # 	mpiexec -n 4 $(TARGET) $(EXAMPLE_PATH)/RCP/RCP.imi $(EXAMPLE_PATH)/RCP/RCP.v0 -mode cover -cart -distributed sequential
 	 
 # 	mpiexec -n 4 $(TARGET) $(EXAMPLE_PATH)/RCP/RCP.imi $(EXAMPLE_PATH)/RCP/RCP.v0 -mode cover -cart -distributed random10
+	 
+# 	$(TARGET) $(EXAMPLE_PATH)/Valmem/spsmall_obs.imi $(EXAMPLE_PATH)/Valmem/spsmall_obs.v0 -mode cover -cart -log-prefix $(EXAMPLE_PATH)/Valmem/spsmall_obs-BC
+# 
+# 	mpiexec -n 4 $(TARGET) $(EXAMPLE_PATH)/Valmem/spsmall_obs.imi $(EXAMPLE_PATH)/Valmem/spsmall_obs.v0 -mode cover -cart -log-prefix $(EXAMPLE_PATH)/Valmem/spsmall_obs-BC-patator-seq -distributed sequential
+# 	 
+# 	mpiexec -n 4 $(TARGET) $(EXAMPLE_PATH)/Valmem/spsmall_obs.imi $(EXAMPLE_PATH)/Valmem/spsmall_obs.v0 -mode cover -cart -log-prefix $(EXAMPLE_PATH)/Valmem/spsmall_obs-BC-patator-r20 -distributed random20
+# 	 
+	$(TARGET) $(EXAMPLE_PATH)/Valmem/spsmall_obs.imi $(EXAMPLE_PATH)/Valmem/spsmall_obs.v0 -mode cover -cart -log-prefix $(EXAMPLE_PATH)/Valmem/spsmall_obs-BCm -merge
+
+	mpiexec -n 4 $(TARGET) $(EXAMPLE_PATH)/Valmem/spsmall_obs.imi $(EXAMPLE_PATH)/Valmem/spsmall_obs.v0 -mode cover -cart -log-prefix $(EXAMPLE_PATH)/Valmem/spsmall_obs-BC-patator-seqm -distributed sequential -merge
+	 
+	mpiexec -n 4 $(TARGET) $(EXAMPLE_PATH)/Valmem/spsmall_obs.imi $(EXAMPLE_PATH)/Valmem/spsmall_obs.v0 -mode cover -cart -log-prefix $(EXAMPLE_PATH)/Valmem/spsmall_obs-BC-patator-r10m -distributed random10 -merge
+	 
+	mpiexec -n 4 $(TARGET) $(EXAMPLE_PATH)/Valmem/spsmall_obs.imi $(EXAMPLE_PATH)/Valmem/spsmall_obs.v0 -mode cover -cart -log-prefix $(EXAMPLE_PATH)/Valmem/spsmall_obs-BC-patator-r100m -distributed random100 -merge
+	 
+	 
+	 
+	 
 	 
 ##### TESTS FOR SYNTAX AND FEATURES #####
 
