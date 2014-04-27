@@ -28,7 +28,7 @@ open DistributedUtilities
 (* Slaves *)
 (*------------------------------------------------------------*)
 
-(*let counter_slave_waiting = ref 0.0
+(*let counter_worker_waiting = ref 0.0
 let start_time_next_point = ref 0.0
 
 let start_counter_next_point () =
@@ -37,6 +37,11 @@ let start_counter_next_point () =
 let stop_counter_next_point () =
 	counter_next_point := !counter_next_point +. Unix.gettimeofday() -. !start_time_next_point
 *)
+
+let counter_master_waiting 		= new Counter.counter
+let counter_master_find_nextpi0	= new Counter.counter
+let counter_worker_waiting 		= new Counter.counter
+let counter_worker_working 			= new Counter.counter
 
 
 (****************************************************************)
@@ -53,7 +58,12 @@ let stop_counter_next_point () =
     *)
 let receive_pull_request_and_store_constraint () =
 	print_message Debug_high ("[Master] Entered function 'receive_pull_request_and_store_constraint'...");
-	match receive_pull_request () with
+	
+	counter_master_waiting#start;
+	let pull_request = receive_pull_request () in
+	counter_master_waiting#stop;
+	
+	match pull_request with
 	| PullOnly source_rank ->
 		print_message Debug_low ("[Master] Received PullOnly request...");
 		source_rank, None
@@ -72,10 +82,12 @@ let receive_pull_request_and_store_constraint () =
 		source_rank, Some im_result.tile_nature
 ;;
 
+
 (*------------------------------------------------------------*)
 (* Generic function handling the next sequential point *)
 (*------------------------------------------------------------*)
 let compute_next_pi0_sequentially more_pi0 limit_reached first_point tile_nature_option =
+	counter_master_find_nextpi0#start ;
 	(* Case first point *)
 	if !first_point then(
 		print_message Debug_low ("[Master] This is the first pi0.");
@@ -89,7 +101,10 @@ let compute_next_pi0_sequentially more_pi0 limit_reached first_point tile_nature
 		limit_reached := time_limit_reached;
 		(* Update the found pi0 flag *)
 		more_pi0 := found_pi0;
-	)
+	);
+	counter_master_find_nextpi0#stop;
+	()
+
 
 (*------------------------------------------------------------*)
 (* Global variable for the random distributed mode *)
@@ -141,6 +156,10 @@ let compute_next_pi0 more_pi0 limit_reached first_point tile_nature_option =
 let master () =
 	(* Retrieve the input options *)
 	let options = Input.get_options () in
+	
+	(* Initialize counters *)
+	counter_master_find_nextpi0#init;
+	counter_master_waiting#init;
 	
 	print_message Debug_medium ("[Master] Hello world!");
 	
@@ -225,6 +244,10 @@ let master () =
 	(* Process the finalization *)
 	Cartography.bc_finalize ();
 	
+	print_message Debug_standard ("[Master] Total waiting time     : " ^ (string_of_float (counter_master_waiting#value)) ^ " s");
+	print_message Debug_standard ("**************************************************");
+
+	
 	(* Process the result and return *)
 	let tiles = Cartography.bc_result () in
 	(* Render zones in a graphical form *)
@@ -247,75 +270,95 @@ let init_slave rank size =
 
 let worker() =
 
-  (* Get the model *)
-  let model = Input.get_model() in
-  
-  let rank = Mpi.comm_rank Mpi.comm_world in
-  let size = Mpi.comm_size Mpi.comm_world in
-  init_slave rank size;
-  
-  let finished = ref false in
-  
-  (* Ask for some work *)
-  send_work_request ();
-    
-  print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "] sent pull request to the master.");
-  
-  (* In the meanwhile: compute the initial state *)
-  let init_state = Reachability.get_initial_state_or_abort model in
- 
-  while not !finished do
-    
-    match receive_work () with
-    | Work pi0 ->  (* receive a chunk of work *)
+	(* Get the model *)
+	let model = Input.get_model() in
+	
+	(* Init counters *)
+	counter_worker_waiting#init;
+	counter_worker_working#init;
+	
+	let rank = Mpi.comm_rank Mpi.comm_world in
+	let size = Mpi.comm_size Mpi.comm_world in
+	init_slave rank size;
+	
+	let finished = ref false in
+	
+	(* Ask for some work *)
+	send_work_request ();
+		
+	print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "] sent pull request to the master.");
+	
+	(* In the meanwhile: compute the initial state *)
+	let init_state = Reachability.get_initial_state_or_abort model in
+	
+	while not !finished do
+		
+		counter_worker_waiting#start;
+		let work = receive_work () in
+		counter_worker_waiting#stop;
+		
+		match work with
+		
+		(* receive a chunk of work *)
+		| Work pi0 ->
+			counter_worker_working#start;
 
-       print_message Debug_medium( "[Worker " ^ ( string_of_int rank ) ^ "] received work. Send a result." );
+			print_message Debug_medium( "[Worker " ^ ( string_of_int rank ) ^ "] received work. Send a result." );
 
-       (* Set the new pi0 *)
-       Input.set_pi0 pi0;
-       
-       (* Print some messages *)
-       print_message Debug_medium ("\n**************************************************");
-       print_message Debug_medium ("BEHAVIORAL CARTOGRAPHY ALGORITHM: "(* ^ (string_of_int !current_iteration) ^ ""*));
-       print_message Debug_standard ("\n[Worker " ^ (string_of_int rank) ^ "] Launching IM for the following pi:" (*^ (string_of_int !current_iteration)*));
-       print_message Debug_standard (ModelPrinter.string_of_pi0 model pi0);
-       
-       (* Save debug mode *)
-       let global_debug_mode = get_debug_mode() in 
-       
-       (* Prevent the debug messages (except in verbose modes high or total) *)
-       if not (debug_mode_greater Debug_high) then
-			set_debug_mode Debug_nodebug;
-       
-       (* Call IM *)
-       let im_result , _ = Reachability.inverse_method_gen model init_state in
+			(* Set the new pi0 *)
+			Input.set_pi0 pi0;
 			
-       (* Get the debug mode back *)
-       set_debug_mode global_debug_mode;
-       
-       print_message Debug_standard ("[Worker " ^ (string_of_int rank) ^ "] finished a computation of IM.");
+			(* Print some messages *)
+			print_message Debug_medium ("\n**************************************************");
+			print_message Debug_medium ("BEHAVIORAL CARTOGRAPHY ALGORITHM: "(* ^ (string_of_int !current_iteration) ^ ""*));
+			print_message Debug_standard ("\n[Worker " ^ (string_of_int rank) ^ "] Launching IM for the following pi:" (*^ (string_of_int !current_iteration)*));
+			print_message Debug_standard (ModelPrinter.string_of_pi0 model pi0);
 			
-       (* Process the result by IM *)
-       (*** TODO (cannot jus call process_im_result) ***)
-       
-       (* Print message *)
-       print_message Debug_medium (
-		       "\n[Worker " ^ (string_of_int rank) ^ "] K computed by IM after "
-		       ^ (string_of_int im_result.nb_iterations) ^ " iteration" ^ (s_of_int im_result.nb_iterations) ^ ""
-		       ^ " in " ^ (string_of_seconds im_result.total_time) ^ ": "
-		       ^ (string_of_int im_result.nb_states) ^ " state" ^ (s_of_int im_result.nb_states)
-		       ^ " with "
-		       ^ (string_of_int im_result.nb_transitions) ^ " transition" ^ (s_of_int im_result.nb_transitions) ^ " explored.");
-       
-       (*** TODO: handle a special case if the result is NOT valid (e.g., stopped before the end due to timeout or state limit reached) ***)
-       
-       send_result  im_result;
-       print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "] Sent a constraint ");
+			(* Save debug mode *)
+			let global_debug_mode = get_debug_mode() in 
+			
+			(* Prevent the debug messages (except in verbose modes high or total) *)
+			if not (debug_mode_greater Debug_high) then
+					set_debug_mode Debug_nodebug;
+			
+			(* Call IM *)
+			let im_result , _ = Reachability.inverse_method_gen model init_state in
+					
+			(* Get the debug mode back *)
+			set_debug_mode global_debug_mode;
+			
+			print_message Debug_standard ("[Worker " ^ (string_of_int rank) ^ "] finished a computation of IM.");
+					
+			(* Process the result by IM *)
+			(*** TODO (cannot jus call process_im_result) ***)
+			
+			(* Print message *)
+			print_message Debug_medium (
+					"\n[Worker " ^ (string_of_int rank) ^ "] K computed by IM after "
+					^ (string_of_int im_result.nb_iterations) ^ " iteration" ^ (s_of_int im_result.nb_iterations) ^ ""
+					^ " in " ^ (string_of_seconds im_result.total_time) ^ ": "
+					^ (string_of_int im_result.nb_states) ^ " state" ^ (s_of_int im_result.nb_states)
+					^ " with "
+					^ (string_of_int im_result.nb_transitions) ^ " transition" ^ (s_of_int im_result.nb_transitions) ^ " explored.");
+			
+			(*** TODO: handle a special case if the result is NOT valid (e.g., stopped before the end due to timeout or state limit reached) ***)
+			
+			send_result  im_result;
+			print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "] Sent a constraint ");
 
-    | Stop ->      (* end *)
-       print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "] I was just told to stop work.");
-       finished := true
-  done;
-  print_message Debug_medium ("\t[Worker " ^ (string_of_int rank) ^ "] I'm done.");
+			counter_worker_working#stop;
+			
+		(* The end *)
+		| Stop ->
+			print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "] I was just told to stop work.");
+			finished := true
+	done;
+	
+	(* Print some information *)
+	let occupancy = counter_worker_working#value /. (counter_worker_working#value +. counter_worker_waiting#value) *. 100. in
+	print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "] I'm done.");
+	print_message Debug_standard ("[Worker " ^ (string_of_int rank) ^ "] Total waiting time     : " ^ (string_of_float (counter_worker_waiting#value)) ^ " s");
+	print_message Debug_standard ("[Worker " ^ (string_of_int rank) ^ "] Total working time     : " ^ (string_of_float (counter_worker_working#value)) ^ " s");
+	print_message Debug_standard ("[Worker " ^ (string_of_int rank) ^ "] Occupancy              : " ^ (string_of_float occupancy) ^ " %");
 ;;
-		     
+
