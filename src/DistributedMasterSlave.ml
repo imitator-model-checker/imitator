@@ -135,8 +135,8 @@ let compute_next_pi0 more_pi0 limit_reached first_point tile_nature_option =
 			)else(
 				(* Switch mode ! *)
 				still_random := false;
-				print_message Debug_standard ("**************************************************");
-				print_message Debug_standard ("\n[Master] Could not find a new random pi0 after " ^ (string_of_int nb_tries) ^ " attemps! Now switching mode from random to sequential.");
+				print_message Debug_standard ("\n**************************************************");
+				print_message Debug_standard ("[Master] Could not find a new random pi0 after " ^ (string_of_int nb_tries) ^ " attemps! Now switching mode from random to sequential.");
 			);
 		);
 		(* Test whether the algorithm is now in sequential mode *)
