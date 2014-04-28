@@ -10,7 +10,7 @@
  * Author:        Ulrich Kuehne, Etienne Andre
  * 
  * Created:       2012/06/18
- * Last modified: 2014/04/26
+ * Last modified: 2014/04/28
  *
  ****************************************************************)
 
@@ -20,6 +20,7 @@
 (************************************************************)
 
 open Global
+open Options
 open AbstractModel
 open StateSpace
 open Reachability
@@ -1052,10 +1053,13 @@ let cover_behavioral_cartography model v0 =
 		let pi0_fun = create_pi0_fun () in
 
 		(* Print some messages *)
-		print_message Debug_medium ("\n**************************************************");
-		print_message Debug_medium ("BEHAVIORAL CARTOGRAPHY ALGORITHM: " ^ (string_of_int !current_iteration) ^ "");
-		print_message Debug_medium ("Considering the following pi" ^ (string_of_int !current_iteration));
-		print_message Debug_medium (ModelPrinter.string_of_pi0 model pi0_fun);
+		(*** HACK: only print if non-distributed ***)
+		if options#distribution_mode = Non_distributed then(
+			print_message Debug_standard ("\n**************************************************");
+			print_message Debug_standard ("BEHAVIORAL CARTOGRAPHY ALGORITHM: " ^ (string_of_int !current_iteration) ^ "");
+			print_message Debug_standard ("Considering the following pi" ^ (string_of_int !current_iteration));
+			print_message Debug_standard (ModelPrinter.string_of_pi0 model pi0_fun);
+		);
 		
 		(* Prevent the debug messages (except in debug medium, high or total) *)
 		if not (debug_mode_greater Debug_medium) then

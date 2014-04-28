@@ -245,13 +245,13 @@ exe:
 # 	 
 # 	mpiexec -n 4 $(TARGET) $(EXAMPLE_PATH)/Valmem/spsmall_obs.imi $(EXAMPLE_PATH)/Valmem/spsmall_obs.v0 -mode cover -cart -log-prefix $(EXAMPLE_PATH)/Valmem/spsmall_obs-BC-patator-r20 -distributed random20
 # 	 
-	$(TARGET) $(EXAMPLE_PATH)/Valmem/spsmall_obs.imi $(EXAMPLE_PATH)/Valmem/spsmall_obs.v0 -mode cover -cart -log-prefix $(EXAMPLE_PATH)/Valmem/spsmall_obs-BCm -merge
+# 	$(TARGET) $(EXAMPLE_PATH)/Valmem/spsmall_obs.imi $(EXAMPLE_PATH)/Valmem/spsmall_obs.v0 -mode cover -cart -log-prefix $(EXAMPLE_PATH)/Valmem/spsmall_obs-BCm -merge
 
-	mpiexec -n 4 $(TARGET) $(EXAMPLE_PATH)/Valmem/spsmall_obs.imi $(EXAMPLE_PATH)/Valmem/spsmall_obs.v0 -mode cover -cart -log-prefix $(EXAMPLE_PATH)/Valmem/spsmall_obs-BC-patator-seqm -distributed sequential -merge
+# 	mpiexec -n 4 $(TARGET) $(EXAMPLE_PATH)/Valmem/spsmall_obs.imi $(EXAMPLE_PATH)/Valmem/spsmall_obs.v0 -mode cover -cart -log-prefix $(EXAMPLE_PATH)/Valmem/spsmall_obs-BC-patator-seqm -distributed sequential -merge
 	 
-	mpiexec -n 4 $(TARGET) $(EXAMPLE_PATH)/Valmem/spsmall_obs.imi $(EXAMPLE_PATH)/Valmem/spsmall_obs.v0 -mode cover -cart -log-prefix $(EXAMPLE_PATH)/Valmem/spsmall_obs-BC-patator-r10m -distributed random10 -merge
+# 	mpiexec -n 4 $(TARGET) $(EXAMPLE_PATH)/Valmem/spsmall_obs.imi $(EXAMPLE_PATH)/Valmem/spsmall_obs.v0 -mode cover -cart -log-prefix $(EXAMPLE_PATH)/Valmem/spsmall_obs-BC-patator-r10m -distributed random10 -merge
 	 
-	mpiexec -n 4 $(TARGET) $(EXAMPLE_PATH)/Valmem/spsmall_obs.imi $(EXAMPLE_PATH)/Valmem/spsmall_obs.v0 -mode cover -cart -log-prefix $(EXAMPLE_PATH)/Valmem/spsmall_obs-BC-patator-r100m -distributed random100 -merge
+# 	mpiexec -n 4 $(TARGET) $(EXAMPLE_PATH)/Valmem/spsmall_obs.imi $(EXAMPLE_PATH)/Valmem/spsmall_obs.v0 -mode cover -cart -log-prefix $(EXAMPLE_PATH)/Valmem/spsmall_obs-BC-patator-r100m -distributed random100 -merge
 	 
 	 
 	 
