@@ -16,10 +16,12 @@ var 	PLCclk, COMclk, NETclk, RIOclk, ENVclk,
 	tt, yy , zz
 	: clock;
 
-	PLCmtt, PLCct,
-	COMd,
+	PLCmtt = 100,
+	PLCct = 600,
+	COMd = 25,
 	COMct,
-	NETd, RIOd,
+	NETd = 10,
+	RIOd = 70,
 	SIGmrt		: parameter;
 
 

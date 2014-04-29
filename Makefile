@@ -655,8 +655,10 @@ exe:
 # 	$(TARGET) $(EXAMPLE_PATH)/SIMOP/simop.imi -PTA2JPG
 # 	$(TARGET) $(EXAMPLE_PATH)/SIMOP/simop.imi -mode statespace 
 
-# 	bin/IMITATOR2.6.1 $(EXAMPLE_PATH)/SIMOP/simop.imi $(EXAMPLE_PATH)/SIMOP/simop.pi0 -merge
-# 	$(TARGETV) $(EXAMPLE_PATH)/SIMOP/simop.imi $(EXAMPLE_PATH)/SIMOP/simop.pi0 -merge
+# 	$(TARGET) $(EXAMPLE_PATH)/SIMOP/simop.imi $(EXAMPLE_PATH)/SIMOP/simop.pi0 -merge
+# 	$(TARGET) $(EXAMPLE_PATH)/SIMOP/simop.imi $(EXAMPLE_PATH)/SIMOP/simop.v0 -merge -mode cover -cart
+
+	# 	$(TARGETV) $(EXAMPLE_PATH)/SIMOP/simop.imi $(EXAMPLE_PATH)/SIMOP/simop.pi0 -merge
 # 	$(TARGETV) $(EXAMPLE_PATH)/SIMOP/simop.imi $(EXAMPLE_PATH)/SIMOP/simop.pi0 -dynamic-elimination -with-dot -with-log -log-prefix $(EXAMPLE_PATH)/SIMOP/simop-dynamic
 # 	$(TARGET) $(EXAMPLE_PATH)/SIMOP/simop.imi $(EXAMPLE_PATH)/SIMOP/simop.pi0 -merge-before
 # 	$(TARGET) $(EXAMPLE_PATH)/SIMOP/simop.imi $(EXAMPLE_PATH)/SIMOP/simop.pi0 -merge -dynamic-elimination
@@ -734,7 +736,7 @@ exe:
 # 	$(TARGET) $(EXAMPLE_PATH)/Scheduling/test3.imi $(EXAMPLE_PATH)/Scheduling/test3.v0 -mode cover -cart -efim -merge
 # 	$(TARGET) $(EXAMPLE_PATH)/Scheduling/test3.imi -mode EF -cart -merge
 
-# 	$(TARGET) $(EXAMPLE_PATH)/Scheduling/test5.imi $(EXAMPLE_PATH)/Scheduling/test5.v0 -mode cover -merge -cart -log-prefix $(EXAMPLE_PATH)/Scheduling/test5-BCmerge2535
+	$(TARGET) $(EXAMPLE_PATH)/Scheduling/test5.imi $(EXAMPLE_PATH)/Scheduling/test5.v0 -mode cover -merge -cart -log-prefix $(EXAMPLE_PATH)/Scheduling/test5-BCmerge2535
 # 	$(TARGET) $(EXAMPLE_PATH)/Scheduling/test5.imi -mode EF -incl -merge -cart -log-prefix $(EXAMPLE_PATH)/Scheduling/test5-EFmergeUnbounded -depth-limit 400
 # 	$(TARGET) $(EXAMPLE_PATH)/Scheduling/test5.imi $(EXAMPLE_PATH)/Scheduling/test5.v0 -mode cover -efim -merge -cart -log-prefix $(EXAMPLE_PATH)/Scheduling/test5-EFIMmerge20301525
 
