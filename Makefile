@@ -435,7 +435,7 @@ exe:
 # 	bin/IMITATOR32 $(EXAMPLE_PATH)/Flipflop/flipflop.imi $(EXAMPLE_PATH)/Flipflop/flipflop.v0 -mode border -cart -with-graphics-source
 # 	$(TARGETV) $(EXAMPLE_PATH)/Flipflop/flipflop.imi $(EXAMPLE_PATH)/Flipflop/flipflop.v0 -mode border -cart -with-graphics-source
 # 	./IMITATOR Examples/Flipflop/flipflop.imi Examples/Flipflop/flipflop.v0 -mode random1000  -log-prefix Examples/Flipflop/test2/test
-# 	./IMITATOR Examples/Flipflop/flipflop.imi Examples/Flipflop/flipflop.v0 -mode cover
+	$(TARGET) $(EXAMPLE_PATH)/Flipflop/flipflop.imi $(EXAMPLE_PATH)/Flipflop/flipflop.v0 -mode cover -cart
 # 	# 	./IMITATOR Examples/Flipflop/flipflop.imi Examples/Flipflop/flipflop.v0 -mode cover -no-log -time-limit 1 -depth-limit 25
 # 	./IMITATOR Examples/Flipflop/flipflop.imi Examples/Flipflop/flipflop.v0 -mode cover -no-log -no-dot
 
@@ -736,7 +736,7 @@ exe:
 # 	$(TARGET) $(EXAMPLE_PATH)/Scheduling/test3.imi $(EXAMPLE_PATH)/Scheduling/test3.v0 -mode cover -cart -efim -merge
 # 	$(TARGET) $(EXAMPLE_PATH)/Scheduling/test3.imi -mode EF -cart -merge
 
-	$(TARGET) $(EXAMPLE_PATH)/Scheduling/test5.imi $(EXAMPLE_PATH)/Scheduling/test5.v0 -mode cover -merge -cart -log-prefix $(EXAMPLE_PATH)/Scheduling/test5-BCmerge2535
+# 	$(TARGET) $(EXAMPLE_PATH)/Scheduling/test5.imi $(EXAMPLE_PATH)/Scheduling/test5.v0 -mode cover -merge -cart -log-prefix $(EXAMPLE_PATH)/Scheduling/test5-BCmerge2535
 # 	$(TARGET) $(EXAMPLE_PATH)/Scheduling/test5.imi -mode EF -incl -merge -cart -log-prefix $(EXAMPLE_PATH)/Scheduling/test5-EFmergeUnbounded -depth-limit 400
 # 	$(TARGET) $(EXAMPLE_PATH)/Scheduling/test5.imi $(EXAMPLE_PATH)/Scheduling/test5.v0 -mode cover -efim -merge -cart -log-prefix $(EXAMPLE_PATH)/Scheduling/test5-EFIMmerge20301525
 
