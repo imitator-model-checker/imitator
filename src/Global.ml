@@ -8,7 +8,7 @@
  * Author:        Etienne Andre
  * 
  * Created:       2009/09/08
- * Last modified: 2014/04/16
+ * Last modified: 2014/05/06
  *
  ****************************************************************)
  
@@ -28,7 +28,7 @@ open DynArray
 (****************************************************************)
 
 let program_name = "IMITATOR"
-let version_string = "2.6.1.2"
+let version_string = "2.6.2"
 
 let print_version_string () = 
 	print_string (program_name ^ " " ^ version_string ^ "\n")

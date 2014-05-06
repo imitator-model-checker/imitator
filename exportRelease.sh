@@ -11,7 +11,7 @@
  # Author:        Etienne Andre
  # 
  # Created:       2013/03/06
- # Last modified: 2013/03/06
+ # Last modified: 2014/05/06
  #
 ################################################################
  
@@ -32,7 +32,7 @@ echo "First cleaning $DESTDIR"
 rm -rf $DESTDIR/*
 
 # Copy root files
-for file in GNU.txt INSTALL.txt Makefile RELEASES.txt; do
+for file in build_number.txt GNU.txt INSTALL.txt _oasis makeoasis.sh gen_build_info.py incrementer.py RELEASES.txt; do
 	echo "Copying $file ..."
 	cp $file $DESTDIR$file
 done
