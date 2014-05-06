@@ -1,8 +1,9 @@
 *******************************************************
-release 2.6.2    (201X-XX-XX) FUTURE RELEASE
+release 2.6.2    (2014-05-06) PRIVATE RELEASE
 
 Major features:
-- [WORK IN PROGRESS] Added EF-synthesis (option "-EF"): synthesize all parameter valuations such that XXXX
+- Added EF-synthesis (option "-EF"): synthesize all parameter valuations such that a given state is reachable
+- Added a distributed version of IMITATOR
 
 Minor features:
 
@@ -17,6 +18,8 @@ Internal
 - replaced Makefile with _oasis
 - Refactored constraints
 - Renamed "Graph.ml" with "StateSpace.ml"
+- Much refactoring of the code, in particular in Cartography.ml
+
 
 *******************************************************
 release 2.6.1.1    (2013-08-02) PRIVATE RELEASE
