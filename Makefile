@@ -435,7 +435,7 @@ exe:
 # 	bin/IMITATOR32 $(EXAMPLE_PATH)/Flipflop/flipflop.imi $(EXAMPLE_PATH)/Flipflop/flipflop.v0 -mode border -cart -with-graphics-source
 # 	$(TARGETV) $(EXAMPLE_PATH)/Flipflop/flipflop.imi $(EXAMPLE_PATH)/Flipflop/flipflop.v0 -mode border -cart -with-graphics-source
 # 	./IMITATOR Examples/Flipflop/flipflop.imi Examples/Flipflop/flipflop.v0 -mode random1000  -log-prefix Examples/Flipflop/test2/test
-	$(TARGET) $(EXAMPLE_PATH)/Flipflop/flipflop.imi $(EXAMPLE_PATH)/Flipflop/flipflop.v0 -mode cover -cart
+# 	$(TARGET) $(EXAMPLE_PATH)/Flipflop/flipflop.imi $(EXAMPLE_PATH)/Flipflop/flipflop.v0 -mode cover -cart
 # 	# 	./IMITATOR Examples/Flipflop/flipflop.imi Examples/Flipflop/flipflop.v0 -mode cover -no-log -time-limit 1 -depth-limit 25
 # 	./IMITATOR Examples/Flipflop/flipflop.imi Examples/Flipflop/flipflop.v0 -mode cover -no-log -no-dot
 
@@ -636,6 +636,8 @@ exe:
 # 	./IMITATOR Examples/Valmem/spsmall_obs.imi Examples/Valmem/spsmall.pi0
 # 	$(TARGET) $(EXAMPLE_PATH)/Valmem/spsmall_obs.imi $(EXAMPLE_PATH)/Valmem/spsmall_obs.v0 -mode cover -cart -log-prefix $(EXAMPLE_PATH)/Valmem/spsmall_obs-BC
 
+	bin/IMITATOR261 $(EXAMPLE_PATH)/Valmem/spsmall_2p.imi -mode reachability -with-dot -incl
+	
 # 	$(TARGET) $(EXAMPLE_PATH)/Valmem/spsmall_obs.imi $(EXAMPLE_PATH)/Valmem/spsmall_obs.v0 -mode cover -merge -cart -log-prefix $(EXAMPLE_PATH)/Valmem/spsmall_obs-BC-merge
 
 # 	$(TARGET) $(EXAMPLE_PATH)/Valmem/spsmall_obs.imi $(EXAMPLE_PATH)/Valmem/spsmall_obs.v0 -mode cover -efim -cart -log-prefix $(EXAMPLE_PATH)/Valmem/spsmall_obs-EFIM
