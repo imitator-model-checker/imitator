@@ -636,7 +636,7 @@ exe:
 # 	./IMITATOR Examples/Valmem/spsmall_obs.imi Examples/Valmem/spsmall.pi0
 # 	$(TARGET) $(EXAMPLE_PATH)/Valmem/spsmall_obs.imi $(EXAMPLE_PATH)/Valmem/spsmall_obs.v0 -mode cover -cart -log-prefix $(EXAMPLE_PATH)/Valmem/spsmall_obs-BC
 
-	bin/IMITATOR261 $(EXAMPLE_PATH)/Valmem/spsmall_2p.imi -mode reachability -with-dot -incl
+	bin/IMITATOR261 $(EXAMPLE_PATH)/Valmem/spsmall_nop.imi -mode reachability
 	
 # 	$(TARGET) $(EXAMPLE_PATH)/Valmem/spsmall_obs.imi $(EXAMPLE_PATH)/Valmem/spsmall_obs.v0 -mode cover -merge -cart -log-prefix $(EXAMPLE_PATH)/Valmem/spsmall_obs-BC-merge
 
