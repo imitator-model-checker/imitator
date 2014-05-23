@@ -1,0 +1,23 @@
+Command: /users/howardwo/bin/hytech audio-10Q-syn
+=================================================================
+HyTech: symbolic model checker for embedded systems
+Version 1.04 10/15/96
+For more info: 
+    email: hytech@eecs.berkeley.edu
+    http://www.eecs.berkeley.edu/~tah/HyTech
+Warning: Input has changed from version 1.00(a). Use -i for more info
+=================================================================
+
+Number of iterations required for reachability: 39
+Audio control protocol not correct for the following error tolerance
+Location: .error..
+     15eps >= 1
+  |
+Location: .overflowerror..
+     15eps >= 1
+
+
+=================================================================
+Max memory used = 70224 kilobytes =               68.58 MB 
+Time spent      =      95.78u +    393.77s =     489.55 sec total
+=================================================================
