@@ -1,0 +1,17 @@
+Command: /usr/local/bin/hytech swimming3
+=================================================================
+HyTech: symbolic model checker for embedded systems
+Version 1.04 10/15/96
+For more info: 
+    email: hytech@eecs.berkeley.edu
+    http://www.eecs.berkeley.edu/~tah/HyTech
+Warning: Input has changed from version 1.00(a). Use -i for more info
+=================================================================
+
+forward
+ABORTING
+=================================================================
+Max memory used =     0 pages =        0 bytes =   0.00 MB 
+Time spent      =     775.60u +    100.00s =     875.60 sec total
+=================================================================
+Program aborted. Out of memory
