@@ -53,18 +53,18 @@ OUTPUT FEATURES
 ************************************************************
 [ ] BC: give the number of tiles reduced to a point, and the number of points not covered at all (when IM does not finish)
 
-
 [ ] allow graphical cartography for inverse method
-[ ] always output a cartography when 2D, even for IM, and always colour it if some good/bad states have been defined
+[ ] always allow output a cartography when 2D, even for IM, and always colour it if some good/bad states have been defined
 [ ] pass as an option the min and max bounds for the 2D graphical cartography, especially for EF or IM simple (where there is no v0)
 [ ] Rétablir le fait que -with-parametric-log active -with-log
 
 [ ] rétablir (de HyMITATOR) le fait que contrôle+C rende un résultat partiel
 
 Options names:
-- rename -with-dot with -draw-trace-set
+- rename -with-dot with -draw-trace-set (ou -output-trace-set?)
 - rename -cart with -draw-cart
-- rename -with-log with ??? -output-states?
+- rename -PTA2JPG with -draw-PTA
+- rename -with-log with ??? -output-states? -write-states?
 
 
 ************************************************************

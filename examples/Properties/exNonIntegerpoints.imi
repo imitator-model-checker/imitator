@@ -1,0 +1,80 @@
+--************************************************************--
+--************************************************************--
+--
+--   Example to study the absence of integer points in a state
+--
+--   Etienne ANDRE, Didier LIME
+--   Laboratoire d'Informatique de Paris Nord
+--
+--                                Created : 2014/05/30
+--                          Last modified : 2014/05/30
+--                       IMITATOR version : 2.6.2
+--************************************************************--
+--************************************************************--
+
+(*
+	l0 — x = a, x := 0 —> l1 — x = a et y = 1 —> l2
+
+	Evidemment il n’y a plus de points entiers en l2 (bien que tous les invariants soient vrais) puisque a vaut nécessairement 1/2.
+		Didier LIME (29/05/2014)
+*)
+
+
+var
+ 	x, y
+		: clock;
+
+	a
+		: parameter;
+
+
+--************************************************************--
+  automaton pta
+--************************************************************--
+synclabs: ;
+initially l0;
+
+loc l0: while True wait {}
+	when x = a do {x' = 0} goto l1;
+
+loc l1: while True wait {}
+	when x = a && y = 1 goto l2;
+
+loc l2: while True wait {}
+
+end -- pta
+
+
+--************************************************************--
+--************************************************************--
+-- ANALYSIS
+--************************************************************--
+--************************************************************--
+
+(* var init : region; *)
+
+init := True
+	----------------------
+	-- Initial locations
+	----------------------
+	& loc[pta]      = l0
+
+	----------------------
+	-- Clocks
+	----------------------
+	& x = 0
+	& y = 0
+
+	----------------------
+	-- Given constraints
+	----------------------
+	& a >= 0
+
+	----------------------
+	-- Instantiations
+	----------------------
+
+;
+
+end
+
