@@ -329,7 +329,7 @@ exe:
 # 	$(TARGETV) $(EXAMPLE_PATH)/Proprietes/contrexTerminationGlobalClockIMincl.imi -mode statespace -no-merging -incl
 # 	$(TARGETV) $(EXAMPLE_PATH)/Proprietes/contrexTerminationGlobalClockIMincl.imi $(EXAMPLE_PATH)/Proprietes/contrexTerminationGlobalClockIMincl.pi0 -depth-limit 30 -with-dot -with-log -with-parametric-log
 
-# 	$(TARGETV) $(EXAMPLE_PATH)/Examples/JLR-TACAS13.imi $(EXAMPLE_PATH)/Examples/JLR-TACAS13.pi0 -with-dot -depth-limit 20 -with-log -with-parametric-log
+	$(TARGET) $(EXAMPLE_PATH)/Examples/JLR-TACAS13.imi $(EXAMPLE_PATH)/Examples/JLR-TACAS13.pi0 -with-dot -depth-limit 100 -with-log -with-parametric-log -incl -merge
 
 # 	$(TARGET) $(EXAMPLE_PATH)/Proprietes/exNonTerminationDFS.imi $(EXAMPLE_PATH)/Proprietes/exNonTerminationDFS.pi0 -bab -no-merging -incl -with-log -states-limit 30 -with-parametric-log # PROBLEM BAB
 # 	$(TARGET) $(EXAMPLE_PATH)/Proprietes/exNonTerminationDFS.imi $(EXAMPLE_PATH)/Proprietes/exNonTerminationDFS.pi0 -no-merging -incl -with-parametric-log -with-log -states-limit 30 -with-dot
@@ -636,7 +636,7 @@ exe:
 # 	./IMITATOR Examples/Valmem/spsmall_obs.imi Examples/Valmem/spsmall.pi0
 # 	$(TARGET) $(EXAMPLE_PATH)/Valmem/spsmall_obs.imi $(EXAMPLE_PATH)/Valmem/spsmall_obs.v0 -mode cover -cart -log-prefix $(EXAMPLE_PATH)/Valmem/spsmall_obs-BC
 
-	bin/IMITATOR261 $(EXAMPLE_PATH)/Valmem/spsmall_nop.imi -mode reachability
+# 	bin/IMITATOR261 $(EXAMPLE_PATH)/Valmem/spsmall_nop.imi -mode reachability
 	
 # 	$(TARGET) $(EXAMPLE_PATH)/Valmem/spsmall_obs.imi $(EXAMPLE_PATH)/Valmem/spsmall_obs.v0 -mode cover -merge -cart -log-prefix $(EXAMPLE_PATH)/Valmem/spsmall_obs-BC-merge
 

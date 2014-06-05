@@ -9,8 +9,8 @@
 --   Universite Paris 13, Sorbonne Paris Cite, LIPN (France)
 --
 --                                Created : 2013/11/13
---                          Last modified : 2013/11/13
---                       IMITATOR version : 2.6.1
+--                          Last modified : 2014/06/05
+--                       IMITATOR version : 2.6.2
 --************************************************************--
 --************************************************************--
 
@@ -64,5 +64,10 @@ init :=
 	& x = 0
 	& y = 0
 	
+	----------------------
+	-- Bounded parameters
+	----------------------
+	& 0 <= a & a <= 10 
+	& 0 <= b & b <= 10 
 ;
 
