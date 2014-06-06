@@ -71,3 +71,4 @@ init :=
 	& 0 <= b & b <= 10 
 ;
 
+property := unreachable loc[aa] = l2;
