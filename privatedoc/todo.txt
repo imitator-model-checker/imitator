@@ -59,7 +59,7 @@ OUTPUT FEATURES
 [ ] always allow output a cartography when 2D, even for IM, and always colour it if some good/bad states have been defined
 [ ] pass as an option the min and max bounds for the 2D graphical cartography, especially for EF or IM simple (where there is no v0)
 	-draw-cart-x-min / -draw-cart-y-max
-[ ] Rétablir le fait que -with-parametric-log active -with-log
+[ ] Rétablir le fait que -with-parametric-log active -with-log (ou inclure cette option par défaut, en fait...)
 
 [ ] rétablir (de HyMITATOR) le fait que contrôle+C rende un résultat partiel
 
