@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2010/03/04
- * Last modified: 2014/04/26
+ * Last modified: 2014/06/08
  *
  ****************************************************************)
 
@@ -20,6 +20,13 @@ open Gmp.Q.Infixes
 type t = Gmp.Q.t
 
 exception Unknown_numconst of string
+
+
+(**************************************************)
+(* Global constants (for random generator) *)
+(**************************************************)
+let random_generator_state = ref None
+exception Random_generator_initialization_exception of string
 
 
 (**************************************************)
@@ -256,20 +263,56 @@ let find_multiple_above =
 	find_multiple_gen Gmp.Z.cdiv_q
 		
 
-let state = 
-	(*** HACK: should maybe not be there ***)
-	Random.self_init();
-	(* Initialize random *)
-	(*** EXPLANATION: total HACK here, tried greater than 128 (e.g. 255) entails 'exception Invalid_argument("Gmp.Random.randinit")' ***)
-	let random_value = Random.int (*max_int*)128 in
-	(*** HACK: The 4 lines below are written to empirically try a good value ! ***)
-(*	for i = 0 to 100000 do
-		print_string ".";
-		let _ = Gmp.RNG.randinit (Gmp.RNG.GMP_RAND_ALG_LC random_value) in ()
-	done;*)
-	(*** WARNING: not sure to understand what I did there (EA, 26/4/2014) ***)
-	Gmp.RNG.randinit (Gmp.RNG.GMP_RAND_ALG_LC random_value)
-
+(* Return a unique random generator (only one time in an IMITATOR execution - singleton pattern) *)
+let random_generator() = 
+	(* Singleton pattern *)
+	match !random_generator_state with
+		| Some random_generator -> random_generator
+		| None ->
+			(*** HACK: should maybe not be there ***)
+			Random.self_init();
+			
+			(* Initialize random *)
+			(*** EXPLANATION: total HACK here, tried greater than 128 (e.g. 255) entails 'exception Invalid_argument("Gmp.Random.randinit"); WARNING! Got one time "Fatal error: exception Invalid_argument("Gmp.Random.randinit")" with 128 too; should add an exception mechanism with retry, just in case...' ***)
+			let random_value = Random.int (*max_int*)128 in
+			(*** HACK: The 4 lines below are written to empirically try a good value ! ***)
+		(*	for i = 0 to 100000 do
+				print_string ".";
+				let _ = Gmp.RNG.randinit (Gmp.RNG.GMP_RAND_ALG_LC random_value) in ()
+			done;*)
+			
+			(* Try several times just in case of a "Fatal error: exception Invalid_argument("Gmp.Random.randinit")" *)
+			let max_tries = 5 in
+			let nb_tries = ref 0 in
+			let random_generator = ref None in
+			while !random_generator = None & !nb_tries < max_tries do
+				(* Increment *)
+				nb_tries := !nb_tries + 1;
+				try (
+					(*** WARNING: not sure to understand what I did there (EA, 26/4/2014) ***)
+					random_generator := Some (Gmp.RNG.randinit (Gmp.RNG.GMP_RAND_ALG_LC random_value));
+				) with Invalid_argument _ ->(
+					random_generator := None;
+(* 					print_string "\nPROBLEM WHILE INITIALIZING RANDOM GENERATOR"; *)
+(* 					print_newline(); *)
+				);
+			done;
+			
+			let result =
+			match !random_generator with
+				| Some random_generator ->
+					(* Assign singleton *)
+					random_generator_state := Some random_generator;
+					(* Return *)
+					random_generator
+				| None -> (
+					print_string("Fatal error during random generator initialization. Aborting.");
+					print_newline();
+					flush Pervasives.stdout;
+					raise (Random_generator_initialization_exception("Fatal error during random generator initialization."));
+					exit(1);
+				);
+			in result
 
 
 (** Generates a random integer NumConst in the interval [min , max] *)
@@ -285,7 +328,7 @@ let random_integer min max =
 	let nb = get_num nb in
 	
 	(* Compute random *)
-	let random_number = Gmp.Z.urandomm state nb in
+	let random_number = Gmp.Z.urandomm (random_generator()) nb in
 (* 	let plouf = Gmp.Q.mpz_urandomm in *)
 	(* Convert back to Gmp.Q *)
 	let random_number = Gmp.Q.from_z random_number in

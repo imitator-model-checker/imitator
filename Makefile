@@ -232,7 +232,7 @@ exe:
 
 ##### TESTS FOR MPI / PATATOR #####
 # 	mpiexec -n 4 $(TARGET) $(EXAMPLE_PATH)/Flipflop/flipflop.imi $(EXAMPLE_PATH)/Flipflop/flipflop.v0 -mode cover -distributed sequential -cart -precomputepi0 -verbose standard
-# 	mpiexec -n 4 $(TARGET) $(EXAMPLE_PATH)/Flipflop/flipflop.imi $(EXAMPLE_PATH)/Flipflop/flipflop.v0 -mode cover -distributed random5 -cart -verbose standard -precomputepi0
+	mpiexec -n 4 $(TARGET) $(EXAMPLE_PATH)/Flipflop/flipflop.imi $(EXAMPLE_PATH)/Flipflop/flipflop.v0 -mode cover -distributed random5 -cart -verbose standard -precomputepi0
 
 
 # 	mpiexec -n 4 $(TARGET) $(EXAMPLE_PATH)/RCP/RCP.imi $(EXAMPLE_PATH)/RCP/RCP.v0 -mode cover -cart -distributed sequential
@@ -333,7 +333,9 @@ exe:
 # 	$(TARGET) $(EXAMPLE_PATH)/Examples/JLR-TACAS13.imi $(EXAMPLE_PATH)/Examples/JLR-TACAS13.v0 -efim -mode cover -cart -depth-limit 50
 
 
-	$(TARGET) $(EXAMPLE_PATH)/Examples/JLR-TACAS13.imi $(EXAMPLE_PATH)/Examples/JLR-TACAS13.v0 -efim -mode cover -cart -depth-limit 50
+# 	$(TARGET) $(EXAMPLE_PATH)/Examples/JLR-TACAS13.imi $(EXAMPLE_PATH)/Examples/JLR-TACAS13.v0 -efim -mode cover -cart -depth-limit 10
+	
+# 	$(TARGET) $(EXAMPLE_PATH)/Examples/JLR-TACAS13.imi -mode EF -cart -depth-limit 10
 	
 
 # 	$(TARGET) $(EXAMPLE_PATH)/Proprietes/exNonTerminationDFS.imi $(EXAMPLE_PATH)/Proprietes/exNonTerminationDFS.pi0 -bab -no-merging -incl -with-log -states-limit 30 -with-parametric-log # PROBLEM BAB
