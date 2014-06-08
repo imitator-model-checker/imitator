@@ -331,7 +331,9 @@ exe:
 
 # 	$(TARGET) $(EXAMPLE_PATH)/Examples/JLR-TACAS13.imi $(EXAMPLE_PATH)/Examples/JLR-TACAS13.pi0 -with-dot -depth-limit 100 -with-log -with-parametric-log -incl -merge
 # 	$(TARGET) $(EXAMPLE_PATH)/Examples/JLR-TACAS13.imi $(EXAMPLE_PATH)/Examples/JLR-TACAS13.v0 -efim -mode cover -cart -depth-limit 50
- 	$(TARGET) $(EXAMPLE_PATH)/Examples/JLR-TACAS13.imi $(EXAMPLE_PATH)/Examples/JLR-TACAS13.v0 -efim -mode cover -cart -depth-limit 50
+
+
+	$(TARGET) $(EXAMPLE_PATH)/Examples/JLR-TACAS13.imi $(EXAMPLE_PATH)/Examples/JLR-TACAS13.v0 -efim -mode cover -cart -depth-limit 50
 	
 
 # 	$(TARGET) $(EXAMPLE_PATH)/Proprietes/exNonTerminationDFS.imi $(EXAMPLE_PATH)/Proprietes/exNonTerminationDFS.pi0 -bab -no-merging -incl -with-log -states-limit 30 -with-parametric-log # PROBLEM BAB

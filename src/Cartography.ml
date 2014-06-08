@@ -865,6 +865,20 @@ let bc_process_im_result im_result =
 	nb_states := !nb_states + im_result.nb_states;
 	nb_transitions := !nb_transitions + im_result.nb_transitions;
 	
+	(* Check validity of returned constraint *)
+	let valid_result = ref true in
+	if im_result.premature_stop then(
+		print_warning "This execution of IM has stopped prematurely.";
+		
+		(* Should the result be taken into account? *)
+		(* Yes only for EFIM and a bad tile *)
+		if options#efim & im_result.tile_nature = Bad then(
+			valid_result := true; (* useless assignment since valid_result was already initialized to true *)
+		)else(
+			valid_result := false;
+		);
+	);
+	
 	(* Print message *)
 	print_message Debug_standard (
 		"\nK" ^ (string_of_int (!current_iteration)) ^ " computed by IM after "
@@ -873,75 +887,98 @@ let bc_process_im_result im_result =
 		^ (string_of_int im_result.nb_states) ^ " state" ^ (s_of_int im_result.nb_states)
 		^ " with "
 		^ (string_of_int im_result.nb_transitions) ^ " transition" ^ (s_of_int im_result.nb_transitions) ^ " explored.");
+		
+	(* Iterate *)
+	current_iteration := !current_iteration + 1;
+		
+	(* VALID RESULT *)
+	if !valid_result then(
+		if im_result.premature_stop then(
+			print_message Debug_standard "This constraint is valid despite premature termination.";
+		);
 	
-	(* Print the constraint *)
-	
-	(*** NOTE: it may actually be more clever to check the tile nature from the graph, especially if we go for more complicated properties!! ***)
-	
-	
-(* 			let bad_string = if StateSpace.is_bad model graph then "BAD." else "GOOD." in *)
-	print_message Debug_low ("Constraint K0 computed:");
-	print_message Debug_standard (ModelPrinter.string_of_returned_constraint model.variable_names im_result.result);
-	if model.correctness_condition <> None then(
-		print_message Debug_medium ("This tile is " ^ (string_of_tile_nature im_result.tile_nature) ^ ".");
-	);
+		(* Print the constraint *)
+		
+		(*** NOTE: it may actually be more clever to check the tile nature from the graph, especially if we go for more complicated properties!! ***)
+		
+		
+	(* 			let bad_string = if StateSpace.is_bad model graph then "BAD." else "GOOD." in *)
+		print_message Debug_low ("Constraint K0 computed:");
+		print_message Debug_standard (ModelPrinter.string_of_returned_constraint model.variable_names im_result.result);
+		if model.correctness_condition <> None then(
+			print_message Debug_medium ("This tile is " ^ (string_of_tile_nature im_result.tile_nature) ^ ".");
+		);
 
-	(* Process the constraint(s) in some cases *)
-	begin
-	(* Branching *)
-	match options#imitator_mode with
-	| Cover_cartography ->
-		(* Just return the constraint *)
-		()
+		(* Process the constraint(s) in some cases *)
+		begin
+		(* Branching *)
+		match options#imitator_mode with
+		| Cover_cartography ->
+			(* Just return the constraint *)
+			()
 
-	| Border_cartography ->
-		(* The function depends whether the zone is good or bad *)
-		let nb_enlargements = ref 0 in
-		let enlarge =
-			match im_result.tile_nature with
-			(* If good: take all points from zero *)
-			| Good -> LinearConstraint.grow_to_zero_assign
-			(* If bad: take all points above *)
-			| Bad -> LinearConstraint.grow_to_infinite_assign
-			| _ -> raise (InternalError ("Tile nature should be good or bad only, so far "))
-		in
-		(* Apply this to the constraint(s) *)
-		begin match im_result.result with
-			| Convex_constraint (k, _) ->
-				(*** NOTE: Quite costly test, but interesting for statistics and readability ***)
-				let old_k = LinearConstraint.p_copy k in
-				enlarge model.parameters model.clocks_and_discrete k;
-				if not (LinearConstraint.p_is_equal k old_k) then nb_enlargements := !nb_enlargements + 1;
-			| Union_of_constraints (k_list, _) ->
-				List.iter (fun k ->
+		| Border_cartography ->
+			(* The function depends whether the zone is good or bad *)
+			let nb_enlargements = ref 0 in
+			let enlarge =
+				match im_result.tile_nature with
+				(* If good: take all points from zero *)
+				| Good -> LinearConstraint.grow_to_zero_assign
+				(* If bad: take all points above *)
+				| Bad -> LinearConstraint.grow_to_infinite_assign
+				| _ -> raise (InternalError ("Tile nature should be good or bad only, so far "))
+			in
+			(* Apply this to the constraint(s) *)
+			begin match im_result.result with
+				| Convex_constraint (k, _) ->
 					(*** NOTE: Quite costly test, but interesting for statistics and readability ***)
 					let old_k = LinearConstraint.p_copy k in
 					enlarge model.parameters model.clocks_and_discrete k;
 					if not (LinearConstraint.p_is_equal k old_k) then nb_enlargements := !nb_enlargements + 1;
-				) k_list
-			| NNCConstraint _ -> raise (InternalError ("NNCCs are not available everywhere yet."))
-		end;
-		
-		if !nb_enlargements > 0 then(
-			print_message Debug_standard ("Constraint after enlarging:" ^ (if !nb_enlargements > 1 then " ("  ^ (string_of_int !nb_enlargements) ^ " enlargements)" else ""));
-			print_message Debug_standard (ModelPrinter.string_of_returned_constraint model.variable_names im_result.result);
-		);
+				| Union_of_constraints (k_list, _) ->
+					List.iter (fun k ->
+						(*** NOTE: Quite costly test, but interesting for statistics and readability ***)
+						let old_k = LinearConstraint.p_copy k in
+						enlarge model.parameters model.clocks_and_discrete k;
+						if not (LinearConstraint.p_is_equal k old_k) then nb_enlargements := !nb_enlargements + 1;
+					) k_list
+				| NNCConstraint _ -> raise (InternalError ("NNCCs are not available everywhere yet."))
+			end;
+			
+			if !nb_enlargements > 0 then(
+				print_message Debug_standard ("Constraint after enlarging:" ^ (if !nb_enlargements > 1 then " ("  ^ (string_of_int !nb_enlargements) ^ " enlargements)" else ""));
+				print_message Debug_standard (ModelPrinter.string_of_returned_constraint model.variable_names im_result.result);
+			);
 
-	| _ -> raise (InternalError("In function 'cover_behavioral_cartography', the mode should be a cover / border cartography only."))
-	end; (* end process constraint *)
-	
-	
-	(* Add the pi0 and the computed constraint *)
-	(* USELESS SO FAR 
-	DynArray.add pi0_computed pi0; *)
-	
-	(*** WARNING: so stupid here!! Better flatten the structure! ***)
-	DynArray.add !computed_constraints im_result.result;
-	
-	(* Iterate *)
-	current_iteration := !current_iteration + 1;
+		| _ -> raise (InternalError("In function 'cover_behavioral_cartography', the mode should be a cover / border cartography only."))
+		end; (* end process constraint *)
 		
-	()
+		
+		(* Add the pi0 and the computed constraint *)
+		(* USELESS SO FAR 
+		DynArray.add pi0_computed pi0; *)
+		
+		(*** WARNING: so stupid here!! Better flatten the structure! ***)
+		DynArray.add !computed_constraints im_result.result;
+		
+		()
+	
+	(* INVALID RESULT *)
+	)else(
+		print_message Debug_standard "This constraint is discarded due to premature termination.";
+		
+		(*** TODO: add 1 to the number of invalid points *)
+	
+		(* Print the constraint only in debug mode *)
+		if debug_mode_greater Debug_low then(
+			print_message Debug_low ("The constraint computed was:");
+			print_message Debug_low (ModelPrinter.string_of_returned_constraint model.variable_names im_result.result);
+			if model.correctness_condition <> None then(
+				print_message Debug_medium ("This tile would have been " ^ (string_of_tile_nature im_result.tile_nature) ^ ".");
+			);
+		);
+	
+	)
 
 
 (*------------------------------------------------------------*)

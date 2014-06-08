@@ -8,7 +8,7 @@
  * Author:        Etienne Andre, Camille Coti
  * 
  * Created:       2014/03/24
- * Last modified: 2014/04/24
+ * Last modified: 2014/06/08
  *
  ****************************************************************)
 
@@ -185,6 +185,11 @@ let serialize_im_result im_result =
 	^
 	serialize_SEP_STRUCT
 	^
+	(* Premature stop? *)
+	(string_of_bool im_result.premature_stop)
+	^
+	serialize_SEP_STRUCT
+	^
 	(* Deterministic analysis? *)
 	(string_of_bool im_result.deterministic)
 	^
@@ -211,15 +216,16 @@ let serialize_im_result im_result =
 
 let unserialize_im_result im_result_string =
 	print_message Debug_medium ( "[Master] About to unserialize '" ^ im_result_string ^ "'");
-	let returned_constraint_string , tile_nature_str , deterministic_string , nb_states_string , nb_transitions_string , nb_iterations_string , total_time_string =
+	let returned_constraint_string , tile_nature_str , premature_stop_string ,  deterministic_string , nb_states_string , nb_transitions_string , nb_iterations_string , total_time_string =
 	match split serialize_SEP_STRUCT im_result_string with
-		| [returned_constraint_string ; tile_nature_str ; deterministic_string ; nb_states_string ; nb_transitions_string ; nb_iterations_string ; total_time_string ]
-			-> returned_constraint_string , tile_nature_str , deterministic_string ,  nb_states_string , nb_transitions_string , nb_iterations_string , total_time_string
+		| [returned_constraint_string ; tile_nature_str ; premature_stop_string ; deterministic_string ; nb_states_string ; nb_transitions_string ; nb_iterations_string ; total_time_string ]
+			-> returned_constraint_string , tile_nature_str , premature_stop_string , deterministic_string ,  nb_states_string , nb_transitions_string , nb_iterations_string , total_time_string
 		| _ -> raise (SerializationError ("Cannot unserialize im_result '" ^ im_result_string ^ "'."))
 	in
 	{
 	result 				= unserialize_returned_constraint returned_constraint_string;
 	tile_nature			= unserialize_tile_nature tile_nature_str;
+	premature_stop		= bool_of_string premature_stop_string;
 	deterministic		= bool_of_string deterministic_string;
 	nb_states			= int_of_string nb_states_string;
 	nb_transitions		= int_of_string nb_transitions_string;

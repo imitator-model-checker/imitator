@@ -33,6 +33,8 @@ EFFICIENCY AND OPTIMIZATIONS
 
  OPTIMISATIONS A FAIRE POUR L'EXECUTION
 
+[ ] heuristics: automatically stop EFIM if a bad tile is found, e.g., after 2 times more states, or 2 times more iterations
+
 [ ] METTRE DES TABLES DE HASH et non des tableaux pour transitions, gardes, invariants, etc. Avantage : (beaucoup) moins de choses en memoire, execution a peine plus lente.
 
 

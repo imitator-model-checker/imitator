@@ -1,13 +1,18 @@
-(***************************************************
+(*****************************************************************
  *
- *                     IMITATOR II
+ *                       IMITATOR
  * 
- * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
- * Author:        Etienne Andre, Ulrich Kuehne, Romain Soulat
- * Created:       2010/07/22
- * Last modified: 2014/04/17
+ * Defines algorithms based on state space exploration
  *
- **************************************************)
+ * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
+ * Universite Paris 13, Sorbonne Paris Cite, LIPN (France)
+ * 
+ * Author:        Ulrich Kuehne, Etienne Andre
+ * 
+ * Created:       2010/07/22
+ * Last modified: 2014/06/08
+ *
+ ****************************************************************)
 
 open Global
 open AbstractModel
@@ -26,6 +31,8 @@ type im_result = {
 	reachability_graph : StateSpace.reachability_graph;*)
 	(* Tile nature *)
 	tile_nature : tile_nature;
+	(* Premature stop? (i.e., states / depth / time limit reached) *)
+	premature_stop : bool;
 	(* Deterministic analysis? *)
 	deterministic : bool;
 	(* Number of states *)

@@ -2,7 +2,7 @@
  *
  *                       IMITATOR
  * 
- * Convert a parsing structure into an abstract model
+ * Defines algorithms based on state space exploration
  *
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Universite Paris 13, Sorbonne Paris Cite, LIPN (France)
@@ -10,7 +10,7 @@
  * Author:        Ulrich Kuehne, Etienne Andre
  * 
  * Created:       2010/07/22
- * Last modified: 2014/04/17
+ * Last modified: 2014/06/08
  *
  ****************************************************************)
 
@@ -45,6 +45,8 @@ type im_result = {
 	reachability_graph : StateSpace.reachability_graph;*)
 	(* Tile nature *)
 	tile_nature : tile_nature;
+	(* Premature stop? (i.e., states / depth / time limit reached) *)
+	premature_stop : bool;
 	(* Deterministic analysis? *)
 	deterministic : bool;
 	(* Number of states *)
@@ -2354,12 +2356,17 @@ let branch_and_bound model init_state =
 		limit_reached := check_limit 0 (** TODO: check depth *) (StateSpace.nb_states reachability_graph) (time_from start_time);
 	done;
 	
-	(* Check whether there are still states to explore *)
+	(* Flat to detect premature stop in case of limit reached *)
+	let premature_stop = ref false in
+	
+	(* There were still states to explore *)
 	if !limit_reached && !nb_states_to_visit > 0 then(
+		(* Update flag *)
+		premature_stop := true;
+		(* Print some information *)
 		print_warnings_limit 0 (** TODO: check depth *) (StateSpace.nb_states reachability_graph) (time_from start_time) !nb_states_to_visit;
 	);
-	
-	
+		
 	print_message Debug_standard (
 		let nb_states = StateSpace.nb_states reachability_graph in
 		let nb_transitions = StateSpace.nb_transitions reachability_graph in
@@ -2369,7 +2376,7 @@ let branch_and_bound model init_state =
 		^ (string_of_int nb_transitions) ^ " transition" ^ (s_of_int nb_transitions) ^ ".");
 
 	(* Return the graph, the iteration and the counter *)
-	reachability_graph , 0 (** TODO: check depth *) , (time_from start_time) , !nb_random_selections
+	reachability_graph , 0 (** TODO: check depth *) , (time_from start_time) , !premature_stop, !nb_random_selections
 
 
 
@@ -2525,8 +2532,14 @@ let post_star model init_state =
 		limit_reached := !limit_reached or (check_limit !nb_iterations (StateSpace.nb_states reachability_graph) (time_from start_time));
 	done;
 	
+	(* Flat to detect premature stop in case of limit reached *)
+	let premature_stop = ref false in
+	
 	(* There were still states to explore *)
 	if !limit_reached && !newly_found_new_states != [] then(
+		(* Update flag *)
+		premature_stop := true;
+		(* Print some information *)
 		print_warnings_limit !nb_iterations (StateSpace.nb_states reachability_graph) (time_from start_time) (List.length !newly_found_new_states);
 	);
 
@@ -2542,7 +2555,7 @@ let post_star model init_state =
 		^ (string_of_int nb_transitions) ^ " transition" ^ (s_of_int nb_transitions) ^ " explored.");
 
 	(* Return the graph, the iteration and the counter *)
-	reachability_graph , !nb_iterations , (time_from start_time) , !nb_random_selections
+	reachability_graph , !nb_iterations , (time_from start_time) , !premature_stop, !nb_random_selections
 
 
 
@@ -2617,7 +2630,7 @@ let full_state_space_exploration model =
 	let init_state = get_initial_state_or_abort model in
 
 	(* Call to generic function *)
-	let reachability_graph , _ , total_time ,  _ = post_star model init_state in
+	let reachability_graph , _ , total_time ,  _ , _ = post_star model init_state in
 	
 	print_message Debug_standard (
 		"\nState space exploration completed " ^ (after_seconds ()) ^ "."
@@ -2651,7 +2664,7 @@ let ef_synthesis model =
 	let init_state = get_initial_state_or_abort model in
 
 	(* Call to generic function *)
-	let reachability_graph , _ , total_time ,  _ = post_star model init_state in
+	let reachability_graph , _ , total_time , _ ,  _ = post_star model init_state in
 	
 	print_message Debug_standard (
 		"\nState space exploration completed " ^ (after_seconds ()) ^ "."
@@ -2778,7 +2791,7 @@ let inverse_method_gen model init_state =
 	(* Choose the correct algorithm *)
 	let algo = if options#branch_and_bound then branch_and_bound else post_star in
 	(* Call to generic functions *)
-	let reachability_graph, nb_iterations, total_time, nb_random_selections = algo model init_state in
+	let reachability_graph, nb_iterations, total_time, premature_stop, nb_random_selections = algo model init_state in
 	
 	(*--------------------------------------------------*)
 	(* Print information *)
@@ -2859,6 +2872,7 @@ let inverse_method_gen model init_state =
 	{
 	result 				= returned_constraint;
 	tile_nature			= !tile_nature;
+	premature_stop		= premature_stop;
 	deterministic		= (nb_random_selections > 0);
 	nb_states			= StateSpace.nb_states reachability_graph;
 	nb_transitions		= StateSpace.nb_transitions reachability_graph;
