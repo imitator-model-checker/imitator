@@ -16,6 +16,7 @@
 open Global
 open Options
 open Reachability
+open AbstractModel
 
 (*
  *  message tags
