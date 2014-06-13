@@ -498,6 +498,7 @@ let find_next_pi0_cover () =
 		(* Return info (note that current_pi0 has ALREADY been updated if a suitable pi0 was found !) *)
 		!found_pi0 , !nb_useless_points
 	)
+      
 
 
 (*------------------------------------------------------------*)
@@ -1063,6 +1064,24 @@ let get_current_pi0 () =
 (* 		print_message Debug_high ("Computed result in get_current_pi0() "); *)
 (* 		result *)
 	end
+
+
+(*
+ *
+ *)
+let move_to_next_uncovered_pi0 () =
+  match !current_pi0 with
+    | None -> raise (InternalError("Current_pi0 is not defined, " ^
+				     "altough it should have at this point."))
+    | Some current_pi0 ->
+	let found_pi0 = ref false in
+	  print_message Debug_high " master check";
+	  test_pi0_uncovered current_pi0 found_pi0;
+	  if !found_pi0
+	  then true
+	  else
+	    let (found, _) = find_next_pi0_cover ()
+	    in found
 
 
 

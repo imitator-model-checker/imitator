@@ -19,6 +19,8 @@ type distribution_mode =
 	| Distributed_sequential
 	(** Distributed mode: Master slave with random pi0 and n retries before switching to sequential mode *)
 	| Distributed_random of int
+	(**  Distributed mode:  Workers live their own lives and communicate results to the coordinator  **)
+	| Distributed_unsupervised
 
 
 

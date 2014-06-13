@@ -35,12 +35,13 @@ open DistributedUtilities
 (* open Printf (* a terme : retirer tout ca *) *)
 (* open Unix (* temporaire : necessaire pour sleep *) *)
 open Marshal
-
+open Options
 
 	
 
 (* * *** *** ***** *******    MAIN FUNCTION    ******* ***** *** *** * *)
 let run () =
+        let options = Input.get_options () in
 (*	(* Retrieve the input options *)
 	let options = Input.get_options () in
 	(* Get the model *)
@@ -59,11 +60,18 @@ let run () =
 (* 	Random.init 0; (* tmp pour tests *) *)
 
 	(* Fork between master and slave *)
-	if rank = masterrank then 
-		DistributedMasterSlave.master()
-	else 
-		DistributedMasterSlave.worker()
-	;
+	let code =
+	  match options#distribution_mode with
+	    | Distributed_unsupervised ->
+		if rank = masterrank
+		then DistributedUnsupervised.coordinator
+		else DistributedUnsupervised.worker
+	    | _ ->
+		if rank = masterrank
+		then DistributedMasterSlave.master
+		else DistributedMasterSlave.worker
+	in
+	  code ();
   
 	  
 

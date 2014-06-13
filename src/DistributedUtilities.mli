@@ -58,3 +58,8 @@ val send_finished : rank -> unit
 val receive_pull_request : unit -> pull_request
 
 val receive_work : unit -> work_assignment
+
+val serialize_pi0 : (Automaton.variable_index * NumConst.t) list -> string
+val unserialize_pi0 : string -> (Automaton.variable_index * NumConst.t) list
+val serialize_im_result : Reachability.im_result -> string
+val unserialize_im_result : string -> Reachability.im_result

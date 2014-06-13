@@ -21,7 +21,8 @@ type distribution_mode =
 	| Distributed_sequential
 	(** Distributed mode: Master slave with random pi0 and n retries before switching to sequential mode *)
 	| Distributed_random of int
-
+	(**  Distributed mode:  Workers live their own lives and communicate results to the coordinator  **)
+	| Distributed_unsupervised
 
 class imitator_options =
 	object
@@ -269,6 +270,9 @@ class imitator_options =
 				(* Case: distributed with sequential *)
 				else if mode = "sequential" then 
 					distribution_mode := Distributed_sequential
+				(* Case: distributed in unsupervised version *)
+				else if mode = "unsupervised" then 
+					distribution_mode := Distributed_unsupervised
 				(* Case: random generation with bounded number of attempts *)
 				else try (
 					(* Find the 'random' string *)
@@ -521,6 +525,12 @@ class imitator_options =
 				print_message Debug_medium ("Non-distributed version of IMITATOR (default).");
 			| Distributed_sequential ->(
 				print_message Debug_standard ("Considering a distributed version of IMITATOR with sequential enumeration of pi0.");
+				if !imitator_mode <> Cover_cartography then(
+					print_warning "The distributed mode is only valid for the cartography. Option will be ignored.";
+				)
+			)
+			| Distributed_unsupervised ->(
+				print_message Debug_standard ("Considering a distributed version of IMITATOR with unsupervised workers.");
 				if !imitator_mode <> Cover_cartography then(
 					print_warning "The distributed mode is only valid for the cartography. Option will be ignored.";
 				)
