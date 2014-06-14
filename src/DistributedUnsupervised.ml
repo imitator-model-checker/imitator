@@ -2,13 +2,12 @@
  *
  *                       IMITATOR
  * 
- * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Universite Paris 13, Sorbonne Paris Cite, LIPN (France)
  * 
  * Author:        Sami Evangelista
  * 
  * Created:       2014/06/10
- * Last modified: 2014/06/13
+ * Last modified: 2014/06/14
  *
  ****************************************************************)
 
@@ -53,7 +52,7 @@ let mtag_to_int = function
 (*
  *  Utility functions
  *)
-let pr = print_message Debug_high
+let pr = print_message Debug_standard
 
 let valueListToPi0 (model: AbstractModel.abstract_model) l =
   let array_pi0 = Array.make model.nb_parameters NumConst.zero in
@@ -79,22 +78,47 @@ let array_update f a =
  *  Coordinator code
  ******************************************************************************)
 let coordinator () =
-  Cartography.bc_initialize ();
+	(* Retrieve the input options *)
+	let options = Input.get_options () in
+
+	Cartography.bc_initialize ();
   Cartography.compute_initial_pi0 ();
   let terminated = ref false in
-  let workers_done = ref 0 in
+  let nb_workers_done = ref 0 in
   let world = Mpi.comm_world in
-  let workers = Mpi.comm_size world - 1 in
-  let boxes = Array.make workers [] in
-  let coordinator_init () = pr ("[Coordinator] start\n") in
-  let coordinator_end () = pr ("[Coordinator] end\n") in
+  let nb_workers = Mpi.comm_size world - 1 in
+  let boxes = Array.make nb_workers [] in
+  
+	let coordinator_init () = pr ("[Coordinator] start\n") in
+	
+	let coordinator_end () =
+	pr ("[Coordinator] end\n");
+	(* Process the finalization *)
+	Cartography.bc_finalize ();
+	
+	(* Process the result and return *)
+	let tiles = Cartography.bc_result () in
+	(* Render zones in a graphical form *)
+	if options#cart then (
+		Graphics.cartography (Input.get_model()) (Input.get_v0()) tiles (options#files_prefix ^ "_cart_patator")
+	) else (
+		print_message Debug_high "Graphical cartography not asked: graph not generated.";
+	);
+	()
+	
+	
+	in
+	
+	(*------------------------------------------------------------*)
   let coordinator_send_termination worker =
     pr ("[Coordinator] send termination message to worker " ^
 	  (string_of_int worker));
-    workers_done := !workers_done + 1;
+    nb_workers_done := !nb_workers_done + 1;
     Mpi.send () worker (mtag_to_int TERMINATE) world
   in
-  let coordinator_send_constraints worker =
+
+  	(*------------------------------------------------------------*)
+	let coordinator_send_constraints worker =
     let idx = worker - 1 in
     let box = boxes.(idx) in
     let l = List.length box in
@@ -111,12 +135,16 @@ let coordinator () =
 	box;
       boxes.(idx) <- []
   in
+  
+	(*------------------------------------------------------------*)
   let coordinator_process_ask_for_point worker =
     let pi0 = Cartography.get_current_pi0 () in
     let pi0_str = DistributedUtilities.serialize_pi0 pi0 in
       Mpi.send pi0_str worker (mtag_to_int POINT) world
   in
-  let coordinator_process_received_constraint (worker, data) =
+
+  	(*------------------------------------------------------------*)
+	let coordinator_process_received_constraint (worker, data) =
     let update_boxes res =
       let update_box (i, box) =
 	if i + 1 = worker
@@ -139,11 +167,15 @@ let coordinator () =
 		pr "[Coordinator] everything is covered";
 		coordinator_send_termination worker)
   in
+  
+	(*------------------------------------------------------------*)
   let coordinator_process_termination worker =
     pr ("[Coordinator] receive a termination message from worker " ^
 	  (string_of_int worker));
-    workers_done := !workers_done + 1
+    nb_workers_done := !nb_workers_done + 1
   in
+  
+	(*------------------------------------------------------------*)
   let rec coordinator_loop () =
     let (d, src, tag) = Mpi.receive_status Mpi.any_source Mpi.any_tag world in
       (match int_to_mtag tag with
@@ -151,10 +183,12 @@ let coordinator () =
 	 | TERMINATE     -> coordinator_process_termination src
 	 | ASK_FOR_POINT -> coordinator_process_ask_for_point src
 	 | _ -> raise (InternalError "unexpected tag"));
-      if !workers_done >= workers
+      if !nb_workers_done >= nb_workers
       then ()
       else coordinator_loop ()
   in
+	(*------------------------------------------------------------*)
+	(* Main sequence *)
     coordinator_init ();
     coordinator_loop ();
     coordinator_end ()
@@ -231,9 +265,21 @@ let worker () =
   let worker_process_pi0 pi0 =
     pr (msg_prefix ^ " process a point");
     Input.set_pi0 (pi0);
-    let res, _ = Reachability.inverse_method_gen model s0 in
-      Cartography.bc_process_im_result res;
-      worker_send_pi0 res
+    
+		(* Save debug mode *)
+		let global_debug_mode = get_debug_mode() in 
+			
+		(* Prevent the debug messages (except in verbose modes high or total) *)
+		if not (debug_mode_greater Debug_high) then
+				set_debug_mode Debug_nodebug;
+			
+		let res, _ = Reachability.inverse_method_gen model s0 in
+		
+		(* Get the debug mode back *)
+		set_debug_mode global_debug_mode;
+		
+		Cartography.bc_process_im_result res;
+		worker_send_pi0 res
   in
   let rec worker_loop () =
     if !terminate

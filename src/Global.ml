@@ -8,7 +8,7 @@
  * Author:        Etienne Andre
  * 
  * Created:       2009/09/08
- * Last modified: 2014/05/06
+ * Last modified: 2014/06/14
  *
  ****************************************************************)
  
@@ -45,6 +45,7 @@ let print_contributors()  =
 	print_string " * Etienne Andre       (2008 -     )\n";
 	print_string " * Camille Coti        (2014 -     )\n";
 	print_string " * Daphne Dussaud      (2010)\n";
+	print_string " * Sami Evangelista    (2014 -     )\n";
 	print_string " * Ulrich Kuehne       (2010 - 2011)\n";
 	print_string " * Romain Soulat       (2010 - 2013)\n";
 	print_string "\n";

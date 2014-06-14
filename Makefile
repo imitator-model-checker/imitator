@@ -232,7 +232,8 @@ exe:
 
 ##### TESTS FOR MPI / PATATOR #####
 # 	mpiexec -n 4 $(TARGET) $(EXAMPLE_PATH)/Flipflop/flipflop.imi $(EXAMPLE_PATH)/Flipflop/flipflop.v0 -mode cover -distributed sequential -cart -precomputepi0 -verbose standard
-	mpiexec -n 4 $(TARGET) $(EXAMPLE_PATH)/Flipflop/flipflop.imi $(EXAMPLE_PATH)/Flipflop/flipflop.v0 -mode cover -distributed random5 -cart -verbose standard -precomputepi0
+# 	mpiexec -n 4 $(TARGET) $(EXAMPLE_PATH)/Flipflop/flipflop.imi $(EXAMPLE_PATH)/Flipflop/flipflop.v0 -mode cover -distributed random5 -cart -verbose standard
+	mpiexec -n 4 $(TARGET) $(EXAMPLE_PATH)/Flipflop/flipflop.imi $(EXAMPLE_PATH)/Flipflop/flipflop.v0 -mode cover -distributed unsupervised -cart -verbose standard
 
 
 # 	mpiexec -n 4 $(TARGET) $(EXAMPLE_PATH)/RCP/RCP.imi $(EXAMPLE_PATH)/RCP/RCP.v0 -mode cover -cart -distributed sequential
