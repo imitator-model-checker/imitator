@@ -48,6 +48,11 @@ let mtag_to_int = function
   | TERMINATE      -> 6
 ;;
 
+(* Constant max number of tries *)
+let = nb_tries_max 100
+
+
+
 
 (*
  *  Utility functions
@@ -125,6 +130,7 @@ let coordinator () =
       pr ("[Coordinator] send a bunch of " ^ (string_of_int l) ^
 	    " constraints to worker " ^
 	    (string_of_int worker));
+	    (*** QUESTION (Camille): should we send only one message? ***)
       Mpi.send l worker (mtag_to_int NO_CONSTRAINTS) world;
       List.iter
 	(fun cons ->
@@ -245,7 +251,7 @@ let worker () =
       | _         -> raise (InternalError "unexpected tag")
   in
   let worker_choose_pi0 () =
-    let success = Cartography.random_pi0 100 in
+    let success = Cartography.random_pi0 nb_tries_max in
       if success
       then (pr (msg_prefix ^ " has chosen a random point");
 	    Some (valueListToPi0 model (Cartography.get_current_pi0 ())))

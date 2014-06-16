@@ -298,7 +298,7 @@ let compute_initial_pi0 () =
 (* Next pi0 functions *)
 (************************************************************)
 
-(* Generic function checking if a computed pi0 belongs to some constraint and satisfies the init constraint *)
+(* Generic function checking if a computed pi0 belongs to some constraint and satisfies the init constraint; sets the reference "found_pi0" to true if indeed uncovered *)
 let test_pi0_uncovered current_pi0 found_pi0 =
 	(* Get the model *)
 	let model = Input.get_model() in
@@ -316,7 +316,7 @@ let test_pi0_uncovered current_pi0 found_pi0 =
 			print_message Debug_medium "The following pi0 is already included in a constraint.";
 			print_message Debug_medium (ModelPrinter.string_of_pi0 model pi0);
 		);
-		(** TODO: could be optimized by finding the nearest multiple of tile next to the border, and directly switching to that one *)
+		(*** TODO: could be optimized by finding the nearest multiple of tile next to the border, and directly switching to that one ***)
 		
 	(* Check that it satisfies the initial constraint *)
 	) else if not (LinearConstraint.is_pi0_compatible pi0 !init_constraint) then (
@@ -331,6 +331,7 @@ let test_pi0_uncovered current_pi0 found_pi0 =
 		found_pi0 := true;
 	);
 	
+	(*** BADPROG: this check has nothing to do in this function! put back to the BC algorithm ***)
 	(* If pi0 still not found, check time limit *)
 	if not !found_pi0 then(
 		(* Stop if the time limit has been reached *)
@@ -1067,7 +1068,7 @@ let get_current_pi0 () =
 
 
 (*
- *
+ * Move to the next uncovered pi0 and do not move if the current pi0 is still not covered; update global variable current_pi0 (if necessary)
  *)
 let move_to_next_uncovered_pi0 () =
   match !current_pi0 with

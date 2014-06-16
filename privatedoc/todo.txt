@@ -37,7 +37,11 @@ EFFICIENCY AND OPTIMIZATIONS
 
 [ ] METTRE DES TABLES DE HASH et non des tableaux pour transitions, gardes, invariants, etc. Avantage : (beaucoup) moins de choses en memoire, execution a peine plus lente.
 
+[!!!] factorize the constraints in the cartography!!!!! (at least by equality check, better by inclusion, even better merging)
 
+
+PATATOR mode:
+[ ] add a mechanism of message passing DURING an execution of IM: to stop an execution of a node in some cases (e.g. all points are covered, or the pi0 has been covered by someone else)
 
 
 ************************************************************
