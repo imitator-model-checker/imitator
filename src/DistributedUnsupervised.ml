@@ -96,7 +96,7 @@ let coordinator () =
   let coordinator_init () =
     Cartography.bc_initialize ();
     Cartography.compute_initial_pi0 ();
-    Cartography.init_unprocessed_pi0_list nb_coord_points;
+    Cartography.constraint_list_init nb_coord_points; 
     pr "[Coordinator] start\n"
   in
     
@@ -142,7 +142,6 @@ let coordinator () =
 	box;
       boxes.(idx) <- []
   in
-    
   (*------------------------------------------------------------*)
   let coordinator_process_ask_for_point worker =
     let pi0 = Cartography.get_current_pi0 () in
@@ -150,6 +149,20 @@ let coordinator () =
       Mpi.send pi0_str worker (mtag_to_int POINT) world
   in
 
+  (*------------------------------------------------------------*)
+  let coordinator_send_point (worker, pt) =
+    pr ("[Coordinator] send a point to worker " ^ (string_of_int worker));
+    let pt_str = DistributedUtilities.serialize_pi0 pt in
+      Mpi.send pt_str worker (mtag_to_int POINT) world
+  in
+    
+  (*------------------------------------------------------------*)
+  let coordinator_process_ask_for_point worker =
+    match Cartography.constraint_list_random () with
+      | None     -> (terminated := true;
+		     coordinator_send_termination worker)
+      | Some pi0 -> coordinator_send_point (worker, pi0)
+  in
   (*------------------------------------------------------------*)
   let coordinator_process_received_constraint (worker, data) =
     let update_boxes res =
@@ -167,12 +180,13 @@ let coordinator () =
       else
 	let res = DistributedUtilities.unserialize_im_result data in
 	  Cartography.bc_process_im_result res;
-	  if Cartography.move_to_next_uncovered_pi0 ()
-	  then (update_boxes data;
-		coordinator_send_constraints worker)
-	  else (terminated := true;
+	  Cartography.constraint_list_update ();
+	  if Cartography.constraint_list_empty ()
+	  then (terminated := true;
 		pr "[Coordinator] everything is covered";
 		coordinator_send_termination worker)
+	  else (update_boxes data;
+		coordinator_send_constraints worker)
   in
 
   (*------------------------------------------------------------*)

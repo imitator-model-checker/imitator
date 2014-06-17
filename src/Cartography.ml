@@ -1338,3 +1338,111 @@ let random_behavioral_cartography model v0 nb =
 	) else (
 			print_message Debug_high "Graphical cartography not asked: graph not generated.";
 	)
+
+
+
+let next_unproc = ref []
+;;
+
+let next_unproc_len = ref 0
+;;
+
+let next_unproc_max_size = ref 0
+;;
+
+let more_pi0 = ref false
+;;
+
+let pr = print_message Debug_standard
+;;
+
+(* return point next to pi0.  returns (Some point) is pi0 is not the
+   last point, or None if pi0 if it is *)
+let next_pi0 pi0 =
+  let options = Input.get_options () in
+  let res = Array.copy pi0 in
+  let found = ref true in
+  let current_dimension = ref 0 in
+  let continue = ref true in
+    while !continue do
+      let current_dimension_incremented =
+	NumConst.add res.(!current_dimension) options#step
+      in
+	if current_dimension_incremented <= !max_bounds.(!current_dimension)
+	then (res.(!current_dimension) <- current_dimension_incremented;
+	      for i = 0 to !current_dimension - 1 do
+		res.(i) <- !min_bounds.(i);
+	      done;
+	      continue := false)
+	else (current_dimension := !current_dimension + 1;
+	      if !current_dimension >= !nb_dimensions
+	      then (found := false;
+		    continue := false))
+    done;
+    if !found
+    then Some res
+    else None
+;;
+
+let constraint_list_fill () =
+  let rec loop = function
+      (0, _) -> ()
+    | (n, last) ->
+	match next_pi0 last
+	with None    -> more_pi0 := false
+	  |  Some pt -> 
+	       let uncovered = ref false in
+		 test_pi0_uncovered pt uncovered;
+		 if not (!uncovered)
+		 then loop (n, pt)
+		 else (next_unproc := pt :: (!next_unproc);
+		       next_unproc_len := !next_unproc_len + 1;
+		       loop (n - 1, pt))
+  in
+    if (not (!more_pi0)) || (!next_unproc_len) >= (!next_unproc_max_size)
+    then ()
+    else loop ((!next_unproc_max_size) - (!next_unproc_len),
+	       List.hd (!next_unproc))
+;;
+
+let constraint_list_init size =
+  next_unproc := [];
+  more_pi0 := true;
+  next_unproc_max_size := size;
+  compute_initial_pi0 ();
+  let first_pi0 = match !current_pi0 with
+      None -> raise (InternalError
+		       "init_unprocessed_pi0_list: no first point found")
+    | Some first_pi0 -> Array.copy (first_pi0)
+  in
+    if size <= 0
+    then raise (InternalError
+		  "init_unprocessed_pi0_list: called with negative size")
+    else (next_unproc_len := 1;
+	  next_unproc := [ first_pi0 ];
+	  constraint_list_fill ())
+;;
+
+let constraint_list_update () =
+  let check_point pt = 
+    let uncovered = ref false in
+      test_pi0_uncovered pt uncovered;
+      !uncovered
+  in
+    next_unproc := List.filter check_point (!next_unproc);
+    next_unproc_len := List.length (!next_unproc);
+    constraint_list_fill ()
+;;
+
+let constraint_list_random () =
+  if !next_unproc_len = 0
+  then None
+  else
+    let model = Input.get_model () in
+    let n = Random.int (!next_unproc_len) in
+    let a = List.nth (!next_unproc) n in
+      Some (List.map (fun idx -> idx, a.(idx)) model.parameters)
+;;
+
+let constraint_list_empty () = !next_unproc_len = 0
+;;
