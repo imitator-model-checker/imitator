@@ -236,7 +236,7 @@ exe:
 # 	mpiexec -n 4 $(TARGET) $(EXAMPLE_PATH)/Flipflop/flipflop.imi $(EXAMPLE_PATH)/Flipflop/flipflop.v0 -mode cover -distributed unsupervised -cart -verbose standard
 
 # 	mpiexec -n 4 $(TARGET) $(EXAMPLE_PATH)/Scheduling/test3.imi $(EXAMPLE_PATH)/Scheduling/test3.v0 -mode cover -merge -distributed sequential -cart -verbose standard
-	mpiexec -n 4 $(TARGET) $(EXAMPLE_PATH)/Scheduling/test3.imi $(EXAMPLE_PATH)/Scheduling/test3.v0 -mode cover -merge -distributed unsupervised -cart -verbose standard
+# 	mpiexec -n 4 $(TARGET) $(EXAMPLE_PATH)/Scheduling/test3.imi $(EXAMPLE_PATH)/Scheduling/test3.v0 -mode cover -merge -distributed unsupervised -cart -verbose standard
 
 # 	mpiexec -n 4 $(TARGET) $(EXAMPLE_PATH)/RCP/RCP.imi $(EXAMPLE_PATH)/RCP/RCP.v0 -mode cover -cart -distributed sequential
 	 
@@ -370,7 +370,7 @@ exe:
 # 	$(TARGET) $(EXAMPLE_PATH)/Examples/exSITH.imi -mode EF -with-dot
 # 	$(TARGET) $(EXAMPLE_PATH)/Examples/exSITH.imi $(EXAMPLE_PATH)/Examples/exSITH.pi0 -with-dot
 
-# 	$(TARGET) $(EXAMPLE_PATH)/Examples/exCentraleNucleaire.imi -mode statespace -with-dot -fancy
+	$(TARGET) $(EXAMPLE_PATH)/Examples/exCentraleNucleaire.imi -mode statespace -with-dot -fancy
 
 # 	$(TARGET) $(EXAMPLE_PATH)/Examples/contrexPPTA.imi $(EXAMPLE_PATH)/Examples/contrexPPTA.pi0
 # 	$(TARGET) $(EXAMPLE_PATH)/Examples/contrexPPTA.imi $(EXAMPLE_PATH)/Examples/contrexPPTA.pi0 -bab
