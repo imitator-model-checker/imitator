@@ -18,9 +18,13 @@ open Reachability
 open AbstractModel
 
 (*
- *  Constant max number of tries
+ *  constants
  *)
+
+(*  max number of attempts before giving up choosing a random point  *)
 let nb_tries_max = 100
+
+(*  number of uncovered points kept by the coordinator  *)
 let nb_coord_points = 100
 
 
@@ -180,7 +184,7 @@ let coordinator () =
       else
 	let res = DistributedUtilities.unserialize_im_result data in
 	  Cartography.bc_process_im_result res;
-	  Cartography.constraint_list_update ();
+	  Cartography.constraint_list_update res;
 	  if Cartography.constraint_list_empty ()
 	  then (terminated := true;
 		pr "[Coordinator] everything is covered";

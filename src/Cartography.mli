@@ -38,12 +38,6 @@ val move_to_next_uncovered_pi0 : unit -> bool
 (** Try to generate an uncovered random pi0, and gives up after n tries *)
 val random_pi0 : int -> bool
 
-val constraint_list_init : int -> unit
-val constraint_list_random : unit ->
-  ((Automaton.variable_index * NumConst.t) list) option
-val constraint_list_update : unit -> unit
-val constraint_list_empty : unit -> bool
-
 (************************************************************)
 (** Behavioral cartography algorithms *)
 (************************************************************)
@@ -51,3 +45,15 @@ val constraint_list_empty : unit -> bool
 val random_behavioral_cartography : AbstractModel.abstract_model -> AbstractModel.v0 -> int -> (*AbstractModel.returned_constraint list*)unit
 
 val cover_behavioral_cartography : AbstractModel.abstract_model -> AbstractModel.v0 -> (*AbstractModel.returned_constraint list*)unit
+
+
+(*
+ *  functions used by the coordinator in the distributed-unsupervised
+ *  cartography (the coordinator maintaints a list of points instead of
+ *  a single one
+ *)
+val constraint_list_init : int -> unit
+val constraint_list_random : unit ->
+  ((Automaton.variable_index * NumConst.t) list) option
+val constraint_list_update : Reachability.im_result -> unit
+val constraint_list_empty : unit -> bool

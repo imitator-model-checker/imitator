@@ -1341,6 +1341,13 @@ let random_behavioral_cartography model v0 nb =
 
 
 
+
+
+(*
+ *  functions used by the coordinator in the distributed-unsupervised
+ *  cartography (the coordinator maintaints a list of points instead of
+ *  a single one
+ *)
 let next_unproc = ref []
 ;;
 
@@ -1384,7 +1391,7 @@ let next_pi0 pi0 =
     else None
 ;;
 
-let constraint_list_fill () =
+let constraint_list_fill last =
   let rec loop = function
       (0, _) -> ()
     | (n, last) ->
@@ -1401,8 +1408,7 @@ let constraint_list_fill () =
   in
     if (not (!more_pi0)) || (!next_unproc_len) >= (!next_unproc_max_size)
     then ()
-    else loop ((!next_unproc_max_size) - (!next_unproc_len),
-	       List.hd (!next_unproc))
+    else loop ((!next_unproc_max_size) - (!next_unproc_len), last)
 ;;
 
 let constraint_list_init size =
@@ -1420,28 +1426,29 @@ let constraint_list_init size =
 		  "init_unprocessed_pi0_list: called with negative size")
     else (next_unproc_len := 1;
 	  next_unproc := [ first_pi0 ];
-	  constraint_list_fill ())
+	  constraint_list_fill first_pi0)
 ;;
 
-let constraint_list_update () =
-  let check_point pt = 
-    let uncovered = ref false in
-      test_pi0_uncovered pt uncovered;
-      !uncovered
-  in
-    next_unproc := List.filter check_point (!next_unproc);
-    next_unproc_len := List.length (!next_unproc);
-    constraint_list_fill ()
+let constraint_list_update im_res =
+  match !next_unproc with
+    | [] -> ()
+    | last :: _ ->    
+	let check_point pt =
+	  not (pi0_in_returned_constraint (Array.get pt) im_res.result)
+	in
+	  next_unproc := List.filter check_point (!next_unproc);
+	  next_unproc_len := List.length (!next_unproc);
+	  constraint_list_fill last
 ;;
 
 let constraint_list_random () =
   if !next_unproc_len = 0
   then None
   else
-    let model = Input.get_model () in
-    let n = Random.int (!next_unproc_len) in
-    let a = List.nth (!next_unproc) n in
-      Some (List.map (fun idx -> idx, a.(idx)) model.parameters)
+      let model = Input.get_model () in
+      let n = Random.int (!next_unproc_len) in
+      let a = List.nth (!next_unproc) n in
+	Some (List.map (fun idx -> idx, a.(idx)) model.parameters)
 ;;
 
 let constraint_list_empty () = !next_unproc_len = 0
