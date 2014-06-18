@@ -146,7 +146,10 @@ let compute_next_pi0 more_pi0 limit_reached first_point tile_nature_option =
 			compute_next_pi0_sequentially more_pi0 limit_reached first_point tile_nature_option
 		);
 		print_message Debug_high ("[Master] Exiting function compute_next_pi0...");
-	
+	(** TODO: missing something there **)
+		
+	| Distributed_unsupervised -> print_message Debug_high  "Hello !";
+
 	(** Normal mode *)
 	| Non_distributed -> raise (InternalError("IMITATOR should be distributed at this point."))
 
