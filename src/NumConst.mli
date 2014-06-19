@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2010/03/04
- * Last modified: 2014/04/26
+ * Last modified: 2014/06/19
  *
  ****************************************************************)
  
@@ -80,4 +80,8 @@ val g : t -> t -> bool
 (**************************************************)
 (** {2 Test Functions} *)
 (**************************************************)
+(* Check if a NumConst is an integer *)
 val is_integer : t -> bool
+
+(* Check if a number is of type 'int', i.e., if it is an integer, and small enough to be represented as an int *)
+val is_int : t -> bool

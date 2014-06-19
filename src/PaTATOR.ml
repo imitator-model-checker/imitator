@@ -8,7 +8,7 @@
  * Author:        Etienne Andre
  * 
  * Created:       2014/03/15
- * Last modified: 2014/04/17
+ * Last modified: 2014/06/19
  *
  ****************************************************************)
 
@@ -32,8 +32,6 @@ open Global
 
 open Mpi
 open DistributedUtilities
-(* open Printf (* a terme : retirer tout ca *) *)
-(* open Unix (* temporaire : necessaire pour sleep *) *)
 open Marshal
 open Options
 
@@ -59,14 +57,16 @@ let run () =
 	(**************************************************)
 (* 	Random.init 0; (* tmp pour tests *) *)
 
-	(* Fork between master and slave *)
 	let code =
+	(* Fork between the algorithms *)
 	  match options#distribution_mode with
 	    | Distributed_unsupervised ->
+		(* Fork between master and slave *)
 		if rank = masterrank
 		then DistributedUnsupervised.coordinator
 		else DistributedUnsupervised.worker
 	    | _ ->
+		(* Fork between master and slave *)
 		if rank = masterrank
 		then DistributedMasterSlave.master
 		else DistributedMasterSlave.worker

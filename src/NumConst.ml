@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2010/03/04
- * Last modified: 2014/06/08
+ * Last modified: 2014/06/19
  *
  ****************************************************************)
 
@@ -91,7 +91,7 @@ let numconst_of_zfrac i j = (Gmp.Q.from_zs i j)
 ***)
 
 
-(*** NOTE: Cannot use string_of_int (can overflow) ; behavior unspecified if no integer string ****)
+(*** NOTE: Cannot use string_of_int (can overflow) ; behavior unspecified if no integer string ***)
 let numconst_of_int_string s =
 	Gmp.Q.from_z (Gmp.Z.from_string s)
 
@@ -202,6 +202,7 @@ let g  = ( >/ )
 (**************************************************)
 (** {2 Test Functions} *)
 (**************************************************)
+(* Check if a NumConst is an integer *)
 let is_integer n =
 	(* Zero is an integer! *)
 	(*** WARNING: added one as well, because the cmp test below did not work for one *)
@@ -220,6 +221,22 @@ let is_integer n =
 (* 		(Gmp.Z.cmp (get_num n) (get_den n)) > 0 *)
 		(Gmp.Z.cmp (get_den n) (Gmp.Z.from_int 1)) = 0
 	)
+
+
+(* Check if a number is of type 'int', i.e., if it is an integer, and small enough to be represented as an int *)
+(*** BADPROG: checks if the conversion to int to NumConst is equal to the NumConst! (but works...) ***)
+let is_int n =
+	(* First check that it is an integer *)
+	if not (is_integer n) then false
+	else(
+		(* Convert to int *)
+		let den = get_num n in
+		let int_n = Gmp.Z.to_int den in
+		let numconst_int_n = numconst_of_int int_n in
+		(* Compare *)
+		equal n numconst_int_n
+	)
+
 
 
 (**************************************************)
@@ -306,11 +323,12 @@ let random_generator() =
 					(* Return *)
 					random_generator
 				| None -> (
+					(* Double printing for MPI-based version that does not report exceptions *)
+					(*** TODO: this mechanism should be factored in a "super Global.ml" module ***)
 					print_string("Fatal error during random generator initialization. Aborting.");
 					print_newline();
 					flush Pervasives.stdout;
 					raise (Random_generator_initialization_exception("Fatal error during random generator initialization."));
-					exit(1);
 				);
 			in result
 
@@ -341,7 +359,6 @@ let random_integer min max =
 (**************************************************)
 (* Tests *)
 (**************************************************)
-
 (*;;
 let a = numconst_of_float 0.4 in
 let b = numconst_of_frac 1 3 in
@@ -354,10 +371,17 @@ let n2 = numconst_of_frac 7 3 in
 let n3 = numconst_of_string "0.4" in
 let n4 = numconst_of_frac 2040 10 in
 
-let numbers = [a ; b ; c ; d ; e ; n1 ; n2 ; n3 ; n4] in
+let n_small = numconst_of_string "12345" in
+let n_small2 = numconst_of_string "1234567" in
+let n_medium = numconst_of_string "12343848348567" in
+let n_big = numconst_of_string "1234567857985798759847574039753457304758" in
+let n_big2 = numconst_of_string "123456785798579875984848248981718902747574039753457304758" in
+
+let numbers = [a ; b ; c ; d ; e ; n1 ; n2 ; n3 ; n4 ; n_small ; n_small2 ; n_medium; n_big ; n_big2] in
 List.iter (fun number -> 
-	print_string ("\n n = " ^ (string_of_numconst number) ^ " ; Is it an integer ? " ^ (string_of_bool (is_integer number)));
+	print_string ("\n n = " ^ (string_of_numconst number) ^ " ; Is it an integer ? " ^ (string_of_bool (is_integer number))  ^ " ; Is it an int ? " ^ (string_of_bool (is_int number)));
 ) numbers ;
+
 (*print_string ("\n b = " ^ (string_of_numconst b));
 print_string ("\n c = " ^ (string_of_numconst c));
 print_string ("\n d = " ^ (string_of_numconst d));
@@ -429,6 +453,5 @@ done;
 
 
 print_newline();
-
-
-exit 0*)
+exit 0
+*)

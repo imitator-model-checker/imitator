@@ -4,10 +4,10 @@
  * 
  * Universite Paris 13, Sorbonne Paris Cite, LIPN (France)
  * 
- * Author:        Sami Evangelista
+ * Author:        Sami Evangelista, Etienne Andre
  * 
  * Created:       2014/06/10
- * Last modified: 2014/06/14
+ * Last modified: 2014/06/19
  *
  ****************************************************************)
 
@@ -64,7 +64,6 @@ let mtag_to_int = function
 (*
  *  Utility functions
  *)
-let pr = print_message Debug_standard
 
 let valueListToPi0 (model: AbstractModel.abstract_model) l =
   let array_pi0 = Array.make model.nb_parameters NumConst.zero in
@@ -101,11 +100,11 @@ let coordinator () =
     Cartography.bc_initialize ();
     Cartography.compute_initial_pi0 ();
     Cartography.constraint_list_init nb_coord_points; 
-    pr "[Coordinator] start\n"
+    print_message Debug_standard"[Coordinator] start\n"
   in
     
   let coordinator_end () =
-    pr ("[Coordinator] end\n");
+    print_message Debug_standard("[Coordinator] end\n");
     (* Process the finalization *)
     Cartography.bc_finalize ();  
     (* Process the result and return *)
@@ -122,7 +121,7 @@ let coordinator () =
     
   (*------------------------------------------------------------*)
   let coordinator_send_termination worker =
-    pr ("[Coordinator] send termination message to worker " ^
+    print_message Debug_standard("[Coordinator] send termination message to worker " ^
 	  (string_of_int worker));
     nb_workers_done := !nb_workers_done + 1;
     Mpi.send () worker (mtag_to_int TERMINATE) world
@@ -133,29 +132,30 @@ let coordinator () =
     let idx = worker - 1 in
     let box = boxes.(idx) in
     let l = List.length box in
-      pr ("[Coordinator] send a bunch of " ^ (string_of_int l) ^
+      print_message Debug_standard("[Coordinator] send a bunch of " ^ (string_of_int l) ^
 	    " constraints to worker " ^
 	    (string_of_int worker));
       (*** QUESTION (Camille): should we send only one message? ***)
       Mpi.send l worker (mtag_to_int NO_CONSTRAINTS) world;
       List.iter
 	(fun cons ->
-	   pr ("[Coordinator] send one constraint to worker " ^
+	   print_message Debug_standard("[Coordinator] send one constraint to worker " ^
 		 (string_of_int worker));
 	   Mpi.send cons worker (mtag_to_int CONSTRAINT) world)
 	box;
       boxes.(idx) <- []
   in
   (*------------------------------------------------------------*)
-  let coordinator_process_ask_for_point worker =
+  (*** WARNING: the following code was useless! (EA, 19/06/14) ***)
+(*  let coordinator_process_ask_for_point worker =
     let pi0 = Cartography.get_current_pi0 () in
     let pi0_str = DistributedUtilities.serialize_pi0 pi0 in
       Mpi.send pi0_str worker (mtag_to_int POINT) world
-  in
+  in*)
 
   (*------------------------------------------------------------*)
   let coordinator_send_point (worker, pt) =
-    pr ("[Coordinator] send a point to worker " ^ (string_of_int worker));
+    print_message Debug_standard("[Coordinator] send a point to worker " ^ (string_of_int worker));
     let pt_str = DistributedUtilities.serialize_pi0 pt in
       Mpi.send pt_str worker (mtag_to_int POINT) world
   in
@@ -177,7 +177,7 @@ let coordinator () =
       in
 	array_update update_box boxes
     in
-      pr ("[Coordinator] receive a constraint from worker " ^
+      print_message Debug_standard("[Coordinator] receive a constraint from worker " ^
 	    (string_of_int worker));
       if !terminated
       then coordinator_send_termination worker
@@ -187,7 +187,7 @@ let coordinator () =
 	  Cartography.constraint_list_update res;
 	  if Cartography.constraint_list_empty ()
 	  then (terminated := true;
-		pr "[Coordinator] everything is covered";
+		print_message Debug_standard"[Coordinator] everything is covered";
 		coordinator_send_termination worker)
 	  else (update_boxes data;
 		coordinator_send_constraints worker)
@@ -195,7 +195,7 @@ let coordinator () =
 
   (*------------------------------------------------------------*)
   let coordinator_process_termination worker =
-    pr ("[Coordinator] receive a termination message from worker " ^
+    print_message Debug_standard("[Coordinator] receive a termination message from worker " ^
 	  (string_of_int worker));
     nb_workers_done := !nb_workers_done + 1
   in
@@ -237,10 +237,10 @@ let worker () =
   let s0 = Reachability.get_initial_state_or_abort model in
   let worker_init () =
     Cartography.bc_initialize ();
-    pr (msg_prefix ^ " start\n")
+    print_message Debug_standard(msg_prefix ^ " start\n")
   in
   let worker_end () =
-    pr (msg_prefix ^ " end\n")
+    print_message Debug_standard(msg_prefix ^ " end\n")
   in
   let worker_process_received_point data =
     let pi0 = DistributedUtilities.unserialize_pi0 data in
@@ -258,23 +258,23 @@ let worker () =
   and worker_wait_and_process_response () = 
     let (data, _, tag) = Mpi.receive_status coordinator Mpi.any_tag world in
       match int_to_mtag tag with
-	| TERMINATE      -> (pr (msg_prefix ^ " receive termination message");
+	| TERMINATE      -> (print_message Debug_standard(msg_prefix ^ " receive termination message");
 			     terminate := true)
-	| CONTINUE       -> pr (msg_prefix ^ " receive continuation message")
-	| NO_CONSTRAINTS -> (pr (msg_prefix ^ " receive a bunch of contraints");
+	| CONTINUE       -> print_message Debug_standard(msg_prefix ^ " receive continuation message")
+	| NO_CONSTRAINTS -> (print_message Debug_standard(msg_prefix ^ " receive a bunch of contraints");
 			     worker_process_received_constraints data)
-	| CONSTRAINT     -> (pr (msg_prefix ^ " receive a contraint");
+	| CONSTRAINT     -> (print_message Debug_standard(msg_prefix ^ " receive a contraint");
 			     worker_process_received_constraint data)
-	| POINT          -> (pr (msg_prefix ^ " receive point");
+	| POINT          -> (print_message Debug_standard(msg_prefix ^ " receive point");
 			     worker_process_received_point data)
 	| _         -> raise (InternalError "unexpected tag")
   in
   let worker_choose_pi0 () =
     let success = Cartography.random_pi0 nb_tries_max in
       if success
-      then (pr (msg_prefix ^ " has chosen a random point");
+      then (print_message Debug_standard(msg_prefix ^ " has chosen a random point");
 	    Some (valueListToPi0 model (Cartography.get_current_pi0 ())))
-      else (pr (msg_prefix ^ " send a ask-for-point to the coordinator");
+      else (print_message Debug_standard(msg_prefix ^ " send a ask-for-point to the coordinator");
 	    Mpi.send () coordinator (mtag_to_int ASK_FOR_POINT) world;
 	    worker_wait_and_process_response ();
 	    let res = !received_point in
@@ -283,12 +283,12 @@ let worker () =
   in
   let worker_send_pi0 res =
     let res_str = DistributedUtilities.serialize_im_result res in
-      pr (msg_prefix ^ " send a constraint to the coordinator");
+      print_message Debug_standard(msg_prefix ^ " send a constraint to the coordinator");
       Mpi.send res_str coordinator (mtag_to_int CONSTRAINT) world;
       worker_wait_and_process_response ()
   in
   let worker_process_pi0 pi0 =
-    pr (msg_prefix ^ " process a point");
+    print_message Debug_standard(msg_prefix ^ " process a point");
     Input.set_pi0 (pi0);
     
     (* Save debug mode *)

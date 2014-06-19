@@ -8,7 +8,7 @@
  * Author:        Etienne Andre, Camille Coti
  * 
  * Created:       2014/03/24
- * Last modified: 2014/04/26
+ * Last modified: 2014/06/19
  *
  ****************************************************************)
 
@@ -112,6 +112,14 @@ let compute_next_pi0_sequentially more_pi0 limit_reached first_point tile_nature
 (*** TODO: put somewhere else ***)
 let still_random = ref true
 
+
+(*------------------------------------------------------------*)
+(* Global variable for the shuffle mode *)
+(*------------------------------------------------------------*)
+(*** TODO: put somewhere else ***)
+let shuffled_array = ref []
+
+
 (*------------------------------------------------------------*)
 (* Generic function handling all cases *)
 (*------------------------------------------------------------*)
@@ -121,11 +129,15 @@ let compute_next_pi0 more_pi0 limit_reached first_point tile_nature_option =
 	
 	match options#distribution_mode with
 	(** Distributed mode: Master slave with sequential pi0 *)
-	| Distributed_sequential -> 
+	| Distributed_ms_sequential -> 
 		compute_next_pi0_sequentially more_pi0 limit_reached first_point tile_nature_option
 	
+	(** Distributed mode: Master slave with shuffle pi0 *)
+	| Distributed_ms_shuffle -> 
+		raise (InternalError ("shuffle not implemented"))
+	
 	(** Distributed mode: Master slave with random pi0 and n retries before switching to sequential mode *)
-	| Distributed_random nb_tries ->
+	| Distributed_ms_random nb_tries ->
 		(* Test whether the algorithm is still in random mode *)
 		if !still_random then(
 			(* Try to find a random pi0 *)
@@ -146,13 +158,23 @@ let compute_next_pi0 more_pi0 limit_reached first_point tile_nature_option =
 			compute_next_pi0_sequentially more_pi0 limit_reached first_point tile_nature_option
 		);
 		print_message Debug_high ("[Master] Exiting function compute_next_pi0...");
-	(** TODO: missing something there **)
+	(**$ TODO: missing something there ***)
 		
-	| Distributed_unsupervised -> print_message Debug_high  "Hello !";
+	| Distributed_unsupervised -> raise (InternalError("IMITATOR cannot be unsupervised at this point."))
 
 	(** Normal mode *)
 	| Non_distributed -> raise (InternalError("IMITATOR should be distributed at this point."))
 
+
+(*------------------------------------------------------------*)
+(* Functions handling shuffle mode *)
+(*------------------------------------------------------------*)
+
+(* Sends one point to each node (to have all nodes occupied for a while) *)
+let send_one_point_to_each_node() = ()
+
+(* Statically compute the shuffled array of all points *)
+let compute_shuffled_array() = ()
 
 (*------------------------------------------------------------*)
 (* The cartography algorithm implemented in the master *)
@@ -182,8 +204,8 @@ let master () =
 	(* If random: start with random (switch to sequential later) *)
 	begin
 	match options#distribution_mode with
-	| Distributed_random _ -> still_random := true;
-	| _ -> ();
+		| Distributed_ms_random _ -> still_random := true;
+		| _ -> ();
 	end;
 	
 	(* IF precompute: Compute the first point pi0 *)
@@ -191,6 +213,17 @@ let master () =
 		compute_next_pi0 more_pi0 limit_reached first_point None;
 (* 		Cartography.compute_initial_pi0 (); *)
 	);
+	
+	(* IF shuffle mode: first sends one point to each node, and then statically compute the shuffled array of all points *)
+	if options#distribution_mode = Distributed_ms_shuffle then(
+		(* First sends one point to each node (to have all nodes occupied for a while) *)
+		print_message Debug_standard ("[Master] Shuffle mode: sending one point to each node");
+		send_one_point_to_each_node();
+		(* In the mean while: statically compute the shuffled array of all points *)
+		print_message Debug_standard ("[Master] Shuffle mode: computing the shuffled array of points");
+		compute_shuffled_array();
+	);
+	(* end if shuffle *)
 	
 	(* Iterate on all the possible pi0 *)
 	while !more_pi0 && not !limit_reached do
@@ -216,7 +249,7 @@ let master () =
 			print_message Debug_medium( "\t[Master] - [Worker " ^ (string_of_int source_rank ) ^ "] is done");
 		(* Otherwise send pi0 *)
 		)else(
-			print_message Debug_medium ( "[Master] Sending pi0 to [Worker " ^ (string_of_int source_rank ) ^ "]" ) ;
+			print_message Debug_medium ( "[Master] Sending pi0 to [Worker " ^ (string_of_int source_rank ) ^ "]" );
 			send_pi0 pi0 source_rank;
 		);
 
@@ -230,7 +263,7 @@ let master () =
 
 	(*** NOTE: we could check here (and at every further iteration) whether all integer points are already covered!!! If yes, stop. ***)
 	
-	print_message Debug_standard ( "[Master] Done with sending pi0; waiting for last results." );
+	print_message Debug_standard ( "[Master] Done with sending pi0; waiting for last results.");
 
 	let size = Mpi.comm_size Mpi.comm_world in
 		while !workers_done < ( size - 1) do

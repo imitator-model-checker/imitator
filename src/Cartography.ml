@@ -10,7 +10,7 @@
  * Author:        Ulrich Kuehne, Etienne Andre
  * 
  * Created:       2012/06/18
- * Last modified: 2014/04/28
+ * Last modified: 2014/06/19
  *
  ****************************************************************)
 
@@ -36,6 +36,9 @@ open Reachability
 
 (*** BADPROG ***)
 (* type current_pi0 = NumConst.t array *)
+
+(* List version of pi0 for PaTATOR *)
+type pi0_list = (Automaton.variable_index * NumConst.t) list
 
 
 (************************************************************)
@@ -783,6 +786,8 @@ let bc_initialize () =
 			)
 	) NumConst.one v0;
 	
+	(*** TODO: check that it is not empty (or is it done elsewhere?) ***)
+	
 	(* Counts the points actually member of an existing constraint (hence useless) for information purpose *)
 	nb_useless_points := 0;
 	
@@ -1067,6 +1072,44 @@ let get_current_pi0 () =
 	end
 
 
+
+(** Get the list of *all* points in V0 (for PaTATOR) *)
+let compute_all_pi0 () =
+	(* Get the model *)
+	let model = Input.get_model() in
+	(* Get the v0 *)
+	let v0 = Input.get_v0() in
+	(* Retrieve the input options *)
+	let options = Input.get_options () in
+
+	(*** WARNING: step not implemented here! ***)
+	if NumConst.neq options#step NumConst.one then(
+		raise (InternalError("The step must be equal to 1 to compute all pi0 in V0 (for now)."));
+	);
+	
+	(*** TODO: check that nb_points has been computed (it should have) ***)
+	
+	
+	
+	
+	
+	(* First check that the number of points is an integer! *)
+	
+	
+	(*** JE SUIS LAAAAAAAAA ***)
+	let int_nb_points = 0(*!nb_points*) in
+	
+	
+	
+	
+	(* Array for all the pi0 *)
+	(*** NOTE/TO OPTIMIZE: a bit stupid to compute a *random* pi0; one could just compute a all-0 one ***)
+	let random_pi0 = one_random_pi0 model v0 in
+	let all_points = Array.make int_nb_points one_random_pi0 in
+
+	[]
+
+
 (*
  * Move to the next uncovered pi0 and do not move if the current pi0 is still not covered; update global variable current_pi0 (if necessary)
  *)
@@ -1187,8 +1230,9 @@ let random_behavioral_cartography model v0 nb =
 	let options = Input.get_options () in
 
 	(* Array for the pi0 *)
-	(*** TO OPTIMIZE: why create such a big array?! ***)
+	(*** NOTE/TO OPTIMIZE: a bit stupid to compute a *random* pi0; one could just compute a all-0 one ***)
 	let random_pi0 = one_random_pi0 model v0 in
+	(*** TO OPTIMIZE: why create such a big array?! ***)
 	let pi0_computed = Array.make nb random_pi0 in
 
 	(* Array for the results *)

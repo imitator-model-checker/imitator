@@ -7,22 +7,28 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Ulrich Kuehne, Etienne Andre
  * Created:       2010
- * Last modified: 2014/04/26
+ * Last modified: 2014/06/19
  *
  ****************************************************************)
  
 open Arg
 open Global
 
+
 type distribution_mode =
 	(** Normal mode *)
 	| Non_distributed
+	
 	(** Distributed mode: Master slave with sequential pi0 *)
-	| Distributed_sequential
+	| Distributed_ms_sequential
+	(** Distributed mode: Master slave with sequential pi0 shuffled *)
+	| Distributed_ms_shuffle
 	(** Distributed mode: Master slave with random pi0 and n retries before switching to sequential mode *)
-	| Distributed_random of int
-	(**  Distributed mode:  Workers live their own lives and communicate results to the coordinator  **)
+	| Distributed_ms_random of int
+	
+	(**  Distributed mode: Workers live their own lives and communicate results to the coordinator  **)
 	| Distributed_unsupervised
+
 
 class imitator_options =
 	object
@@ -267,19 +273,24 @@ class imitator_options =
 				(* Case: no distributed mode *)
 				if mode = "no" then 
 					distribution_mode := Non_distributed
-				(* Case: distributed with sequential *)
-				else if mode = "sequential" then 
-					distribution_mode := Distributed_sequential
+					
 				(* Case: distributed in unsupervised version *)
 				else if mode = "unsupervised" then 
 					distribution_mode := Distributed_unsupervised
-				(* Case: random generation with bounded number of attempts *)
+
+				(* Case: distributed master-slave with sequential selection *)
+				else if mode = "sequential" then 
+					distribution_mode := Distributed_ms_sequential
+				(* Case: distributed master-slave with shuffle selection *)
+				else if mode = "shuffle" then 
+					distribution_mode := Distributed_ms_shuffle
+				(* Case: distributed master-slave random generation with a bounded number of attempts *)
 				else try (
 					(* Find the 'random' string *)
-					if not (String.sub mode 0 6 = "random") then raise (Failure "toto");
+					if not (String.sub mode 0 6 = "random") then raise (Failure "this string is never used");
 					(* Find the number *)
 					let number = String.sub mode 6 (String.length mode - 6) in
-					distribution_mode := Distributed_random (int_of_string number)
+					distribution_mode := Distributed_ms_random (int_of_string number)
 				) with Failure _ | Invalid_argument _-> (
 					print_error ("The distribution mode '" ^ mode ^ "' is not valid.");
 					Arg.usage speclist usage_msg;
@@ -522,21 +533,27 @@ class imitator_options =
 			
 			match !distribution_mode with
 			| Non_distributed -> 
-				print_message Debug_medium ("Non-distributed version of IMITATOR (default).");
-			| Distributed_sequential ->(
-				print_message Debug_standard ("Considering a distributed version of IMITATOR with sequential enumeration of pi0.");
-				if !imitator_mode <> Cover_cartography then(
-					print_warning "The distributed mode is only valid for the cartography. Option will be ignored.";
-				)
-			)
+				print_message Debug_medium ("Non-distributed mode (default).");
 			| Distributed_unsupervised ->(
-				print_message Debug_standard ("Considering a distributed version of IMITATOR with unsupervised workers.");
+				print_message Debug_standard ("Considering a distributed mode with unsupervised workers.");
 				if !imitator_mode <> Cover_cartography then(
 					print_warning "The distributed mode is only valid for the cartography. Option will be ignored.";
 				)
 			)
-			| Distributed_random max -> (
-				print_message Debug_standard ("Considering a distributed version of IMITATOR with random generation of pi0 with up to " ^ (string_of_int max) ^ " successive failure before switching to exhaustive enumeration.");
+			| Distributed_ms_sequential ->(
+				print_message Debug_standard ("Considering a distributed mode with sequential enumeration of pi0 points.");
+				if !imitator_mode <> Cover_cartography then(
+					print_warning "The distributed mode is only valid for the cartography. Option will be ignored.";
+				)
+			)
+			| Distributed_ms_shuffle ->(
+				print_message Debug_standard ("Considering a distributed mode with \"shuffle\" enumeration of pi0 points.");
+				if !imitator_mode <> Cover_cartography then(
+					print_warning "The distributed mode is only valid for the cartography. Option will be ignored.";
+				)
+			)
+			| Distributed_ms_random max -> (
+				print_message Debug_standard ("Considering a distributed mode with random generation of pi0 points with up to " ^ (string_of_int max) ^ " successive failure before switching to exhaustive enumeration.");
 				if !imitator_mode <> Cover_cartography then(
 					print_warning "The distributed mode is only valid for the cartography. Option will be ignored.";
 				)
@@ -549,7 +566,7 @@ class imitator_options =
 					print_warning("The -precomputepi0 option is only valid in distributed mode. It will hence be ignored.");
 				)
 			else
-				print_message Debug_medium ("Compute the next pi0 on-demand, in PaTATOR mode (default).")
+				print_message Debug_medium ("Compute the next pi0 on-demand, in distributed mode (default).")
 			;
 
 				
