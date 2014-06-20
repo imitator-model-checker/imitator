@@ -8,7 +8,7 @@
  * Author:        Etienne Andre
  * 
  * Created:       2009/09/08
- * Last modified: 2014/06/19
+ * Last modified: 2014/06/20
  *
  ****************************************************************)
 
@@ -198,6 +198,9 @@ val true_indexes : bool array -> int list
 
 (** exists p {a1; ...; an} checks if at least one element of the Array satisfies the predicate p. That is, it returns (p a1) || (p a2) || ... || (p an). *)
 val array_exists : ('a -> bool) -> 'a array -> bool
+
+(** Shuffles the values of an array *)
+val array_shuffle : 'a array -> unit
 
 
 (****************************************************************)

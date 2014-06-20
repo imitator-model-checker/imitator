@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2012/06/18
- * Last modified: 2014/06/19
+ * Last modified: 2014/06/20
  *
  ****************************************************************)
 
@@ -31,6 +31,7 @@ val bc_result : unit -> AbstractModel.returned_constraint list
 val compute_initial_pi0 : unit -> unit
 
 val find_next_pi0 : AbstractModel.tile_nature option -> (bool * bool)
+val find_next_pi0_shuffle : AbstractModel.tile_nature option -> (bool * bool)
 
 (** Get the current pi0 in the form of a list (for PaTATOR) *)
 val get_current_pi0 : unit -> pi0_list
@@ -43,6 +44,13 @@ val move_to_next_uncovered_pi0 : unit -> bool
 
 (** Try to generate an uncovered random pi0, and gives up after n tries *)
 val random_pi0 : int -> bool
+
+(** Compute an array made of *all* points in V0 (for PaTATOR) *)
+val compute_all_pi0 : unit -> unit
+
+(** Shuffle the array made of *all* points in V0 (for PaTATOR) *)
+val shuffle_all_pi0 : unit -> unit
+
 
 (************************************************************)
 (** Behavioral cartography algorithms *)

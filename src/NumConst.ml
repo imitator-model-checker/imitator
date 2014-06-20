@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2010/03/04
- * Last modified: 2014/06/19
+ * Last modified: 2014/06/20
  *
  ****************************************************************)
 
@@ -223,6 +223,12 @@ let is_integer n =
 	)
 
 
+(* Convert to int without checking anything *)
+let raw_to_int n = 
+	let den = get_num n in
+	Gmp.Z.to_int den
+
+
 (* Check if a number is of type 'int', i.e., if it is an integer, and small enough to be represented as an int *)
 (*** BADPROG: checks if the conversion to int to NumConst is equal to the NumConst! (but works...) ***)
 let is_int n =
@@ -230,11 +236,25 @@ let is_int n =
 	if not (is_integer n) then false
 	else(
 		(* Convert to int *)
-		let den = get_num n in
-		let int_n = Gmp.Z.to_int den in
+		let int_n = raw_to_int n in
 		let numconst_int_n = numconst_of_int int_n in
 		(* Compare *)
 		equal n numconst_int_n
+	)
+
+
+(**************************************************)
+(** {2 Conversion Functions} *)
+(**************************************************)
+(* Converts to int; raise Failure in case of impossible cast *)
+let to_int n =
+	(* First check that it is an int *)
+	if not (is_int n) then (
+		(* Abort with Failure exception *)
+		failwith ("Trying to cast a NumConst " ^ (string_of_numconst n) ^ " to an int." )
+	)else(
+		(* Convert to int *)
+		raw_to_int n
 	)
 
 

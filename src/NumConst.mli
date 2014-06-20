@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2010/03/04
- * Last modified: 2014/06/19
+ * Last modified: 2014/06/20
  *
  ****************************************************************)
  
@@ -85,3 +85,10 @@ val is_integer : t -> bool
 
 (* Check if a number is of type 'int', i.e., if it is an integer, and small enough to be represented as an int *)
 val is_int : t -> bool
+
+
+(**************************************************)
+(** {2 Conversion Functions} *)
+(**************************************************)
+(* Converts to int; raise Failure in case of impossible cast *)
+val to_int : t -> int

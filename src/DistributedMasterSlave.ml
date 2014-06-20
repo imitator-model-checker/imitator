@@ -8,7 +8,7 @@
  * Author:        Etienne Andre, Camille Coti
  * 
  * Created:       2014/03/24
- * Last modified: 2014/06/19
+ * Last modified: 2014/06/20
  *
  ****************************************************************)
 
@@ -87,7 +87,9 @@ let receive_pull_request_and_store_constraint () =
 (* Generic function handling the next sequential point *)
 (*------------------------------------------------------------*)
 let compute_next_pi0_sequentially more_pi0 limit_reached first_point tile_nature_option =
+	(* Start timer *)
 	counter_master_find_nextpi0#start ;
+
 	(* Case first point *)
 	if !first_point then(
 		print_message Debug_low ("[Master] This is the first pi0.");
@@ -102,22 +104,38 @@ let compute_next_pi0_sequentially more_pi0 limit_reached first_point tile_nature
 		(* Update the found pi0 flag *)
 		more_pi0 := found_pi0;
 	);
+	
+	(* Stop timer *)
 	counter_master_find_nextpi0#stop;
+	
 	()
 
+
+(*------------------------------------------------------------*)
+(* Generic function handling the next point in shuffle mode *)
+(*------------------------------------------------------------*)
+let compute_next_pi0_shuffle more_pi0 limit_reached first_point tile_nature_option =
+	(* Start timer *)
+	counter_master_find_nextpi0#start ;
+
+	print_message Debug_low ("[Master] Computing next pi0 in shuffle mode...");
+	
+	let found_pi0 , time_limit_reached = Cartography.find_next_pi0_shuffle tile_nature_option in
+	(* Update the time limit *)
+	limit_reached := time_limit_reached;
+	(* Update the found pi0 flag *)
+	more_pi0 := found_pi0;
+
+	(* Stop timer *)
+	counter_master_find_nextpi0#stop;
+	
+	()
 
 (*------------------------------------------------------------*)
 (* Global variable for the random distributed mode *)
 (*------------------------------------------------------------*)
 (*** TODO: put somewhere else ***)
 let still_random = ref true
-
-
-(*------------------------------------------------------------*)
-(* Global variable for the shuffle mode *)
-(*------------------------------------------------------------*)
-(*** TODO: put somewhere else ***)
-let shuffled_array = ref []
 
 
 (*------------------------------------------------------------*)
@@ -134,7 +152,7 @@ let compute_next_pi0 more_pi0 limit_reached first_point tile_nature_option =
 	
 	(** Distributed mode: Master slave with shuffle pi0 *)
 	| Distributed_ms_shuffle -> 
-		raise (InternalError ("shuffle not implemented"))
+		compute_next_pi0_shuffle more_pi0 limit_reached first_point tile_nature_option
 	
 	(** Distributed mode: Master slave with random pi0 and n retries before switching to sequential mode *)
 	| Distributed_ms_random nb_tries ->
@@ -170,11 +188,16 @@ let compute_next_pi0 more_pi0 limit_reached first_point tile_nature_option =
 (* Functions handling shuffle mode *)
 (*------------------------------------------------------------*)
 
-(* Sends one point to each node (to have all nodes occupied for a while) *)
-let send_one_point_to_each_node() = ()
+(*(* Sends one point to each node (to have all nodes occupied for a while) *)
+let send_one_point_to_each_node() = ()*)
 
 (* Statically compute the shuffled array of all points *)
-let compute_shuffled_array() = ()
+let compute_shuffled_array() =
+	(* Compute the array of all points *)
+	Cartography.compute_all_pi0 ();
+	(* Shuffle it! *)
+	Cartography.shuffle_all_pi0 ();
+	()
 
 (*------------------------------------------------------------*)
 (* The cartography algorithm implemented in the master *)
@@ -210,6 +233,7 @@ let master () =
 	
 	(* IF precompute: Compute the first point pi0 *)
 	if options#precomputepi0 then(
+		(*** WARNING: this may lead to an unexpected behavior if mode is shuffle ! ***)
 		compute_next_pi0 more_pi0 limit_reached first_point None;
 (* 		Cartography.compute_initial_pi0 (); *)
 	);
@@ -217,11 +241,14 @@ let master () =
 	(* IF shuffle mode: first sends one point to each node, and then statically compute the shuffled array of all points *)
 	if options#distribution_mode = Distributed_ms_shuffle then(
 		(* First sends one point to each node (to have all nodes occupied for a while) *)
-		print_message Debug_standard ("[Master] Shuffle mode: sending one point to each node");
-		send_one_point_to_each_node();
-		(* In the mean while: statically compute the shuffled array of all points *)
-		print_message Debug_standard ("[Master] Shuffle mode: computing the shuffled array of points");
+		(*** NO!!!! just ask the slaves to do this ***)
+(*		print_message Debug_standard ("[Master] Shuffle mode: sending one point to each node");
+		send_one_point_to_each_node();*)
+		
+		(* In the meanwhile: statically compute the shuffled array of all points *)
+		print_message Debug_standard ("[Master] Shuffle mode: starting to compute the shuffled array of points");
 		compute_shuffled_array();
+		print_message Debug_standard ("[Master] Shuffle mode: finished to compute the shuffled array of points");
 	);
 	(* end if shuffle *)
 	
@@ -309,6 +336,8 @@ let worker() =
 
 	(* Get the model *)
 	let model = Input.get_model() in
+	(* Retrieve the input options *)
+	let options = Input.get_options () in
 	
 	(* Init counters *)
 	counter_worker_waiting#init;
@@ -320,8 +349,19 @@ let worker() =
 	
 	let finished = ref false in
 	
-	(* Ask for some work *)
-	send_work_request ();
+	begin
+	match options#distribution_mode with 
+		(* First start by compyting a random pi0 (while the master is computing the shuffle list) *)
+		| Distributed_ms_shuffle -> 
+			(*** TODO !!! TODO !!! TODO !!! ***)
+			(*** NOTE: in fact, maybe NOT efficient; even for a big V0 (500,000 points), the shuffle takes only a few seconds (12s) ***)
+			(*** TODO: test and compare ***)
+			send_work_request ();
+		(* Otherwise just ask lazily for some work *)
+		| _ ->
+			(* Ask for some work *)
+			send_work_request ();
+	end;
 		
 	print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "] sent pull request to the master.");
 	

@@ -10,7 +10,7 @@
  * Author:        Ulrich Kuehne, Etienne Andre
  * 
  * Created:       2012/06/18
- * Last modified: 2014/06/19
+ * Last modified: 2014/06/20
  *
  ****************************************************************)
 
@@ -103,6 +103,12 @@ let current_intervals_max = ref (Array.make 0 NumConst.zero)
 
 let current_pi0 = ref None
 
+(* For PaTATOR: array of all pi0 contained in V0 *)
+let all_pi0_array = ref None
+(* Pointer to current pi0 in all_pi0_array *)
+let all_pi0_array_current = ref 0
+
+
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 (* Counters *)
@@ -110,6 +116,45 @@ let current_pi0 = ref None
 
 (* Record start time to compute the time spent only on calling IM *)
 let start_time = ref (Unix.gettimeofday())
+
+
+
+
+
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+(* Global functions on pi0 *)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+
+(* Return the current_pi0; raises InternalError if current_pi0 was not initialized *)
+let get_current_pi0_option () =
+	match !current_pi0 with
+	| None -> 
+		raise (InternalError("Current_pi0 has not been initialized yet, altough it should have at this point."))
+	| Some current_pi0 -> current_pi0
+
+
+(* Return the all_pi0_array; raises InternalError if all_pi0_array was not initialized *)
+let get_all_pi0_array_option () =
+	match !all_pi0_array with
+	| None -> 
+		raise (InternalError("all_pi0_array has not been initialized yet, altough it should have at this point."))
+	| Some all_pi0_array -> all_pi0_array
+
+
+(* Convert the array into a functional representation *)
+let pi0_fun_of_pi0 pi0 =
+	(* Convert to function *)
+	fun parameter_index -> pi0.(parameter_index)
+
+
+(* Convert the array into a functional representation *)
+let pi0_fun_of_current_pi0 () =
+	(* Retrieve the current pi0 (that must have been initialized before) *)
+	let current_pi0 = get_current_pi0_option () in
+	(* Convert to function *)
+	pi0_fun_of_pi0 current_pi0
+	
+
 
 (*
 
@@ -254,7 +299,7 @@ let pi0_in_returned_constraint pi0 = function
 (* Initial pi0 functions *)
 (************************************************************)
 (*------------------------------------------------------------*)
-(* First point pi0 *)
+(* Set pi0 to the initial (smallest) point in V0 *)
 (*** WARNING / TODO: technically, we should check that pi0 models the initial constraint ***)
 (*------------------------------------------------------------*)
 let compute_initial_pi0 () =
@@ -272,8 +317,16 @@ let compute_initial_pi0 () =
 	(* Instantiate with the lower bounds *)
 	| Cover_cartography ->
 		current_pi0 := Some (Array.copy !min_bounds)
+		(*
+		(*** BEGIN DEBUG ***)
+		;
+		let pi0_fun = pi0_fun_of_current_pi0 () in
+			print_message Debug_standard ("=======");
+			print_message Debug_standard (ModelPrinter.string_of_pi0 (Input.get_model()) pi0_fun)
+		(*** END DEBUG ***)
+		*)
 
-		(* Instantiate with the point in the middle of V0 *)
+	(* Instantiate with the point in the middle of V0 *)
 	| Border_cartography ->
 		(* Start with the min bounds everywhere *)
 		let initial_pi0 = (*Array.create (Array.length min_bounds) NumConst.zero*) Array.copy !min_bounds in
@@ -351,7 +404,11 @@ let test_pi0_uncovered current_pi0 found_pi0 =
 (*------------------------------------------------------------*)
 (* Generate one random pi0 in a given interval for each parameter (array view!) *)
 (*------------------------------------------------------------*)
-let one_random_pi0 model v0 =
+let one_random_pi0 () =
+	(* Get the model *)
+	let model = Input.get_model() in
+	(* Get the v0 *)
+	let v0 = Input.get_v0() in
 	(* Retrieve the input options *)
 	let options = Input.get_options () in
 	
@@ -383,9 +440,9 @@ let one_random_pi0 model v0 =
 let random_pi0 max_tries =
 	counter_next_point#start;
 	(* Get the model *)
-	let model = Input.get_model() in
+(* 	let model = Input.get_model() in *)
 	(* Get the v0 *)
-	let v0 = Input.get_v0() in
+(* 	let v0 = Input.get_v0() in *)
 
 	(* Print some information *)
 	print_message Debug_medium ("Trying to randomly find a fresh pi0 with " ^ (string_of_int max_tries) ^ " tries.");
@@ -399,7 +456,7 @@ let random_pi0 max_tries =
 	(* Loop until impossible *)
 	while !continue do
 		(* Generate a random pi0 *)
-		let pi0 = one_random_pi0 model v0 in
+		let pi0 = one_random_pi0 () in
 		(* Try to see if valid (and updates found_pi0) *)
 		test_pi0_uncovered pi0 found_pi0;
 		(* If yes: stop *)
@@ -432,76 +489,86 @@ let random_pi0 max_tries =
 
 
 (*------------------------------------------------------------*)
-(** Compute the next pi0 and directly modify the variable 'current_pi0' (standard BC) *)
+(* Compute the next pi0 and directly modify the variable 'current_pi0' (standard BC) *)
 (*------------------------------------------------------------*)
-let find_next_pi0_cover () =
-	(* Get the model *)
-(* 	let model = Input.get_model() in *)
+
+(* Auxiliary function: compute the immediately next pi0 in a sequential manner; returns true if a pi0 has been found, false if all V0 is covered *)
+(*** BAD PROG: flag problem ***)
+let compute_next_sequential_pi0 () =
 	(* Retrieve the input options *)
 	let options = Input.get_options () in
 
-	match !current_pi0 with
-	(* First initialization *)
-	| None -> 
-		raise (InternalError("Current_pi0 is not defined, altough it should have at this point."))
-	
-	(* Next point *)
-	| Some current_pi0 -> (
-		
-		(* Counts the points actually member of an existing constraint (hence useless) for information purpose *)
-		let nb_useless_points = ref 0 in
-		
-		(* Are there still possible points *)
-		let more_pi0 = ref true in
-		(* Did we find a suitable pi0 *)
-		let found_pi0 = ref false in
-(*(*		(* Did we reach the time limit *)
-		let time_limit_reached = ref false in*)*)
+	(* Retrieve the current pi0 (that must have been initialized before) *)
+	let current_pi0 = get_current_pi0_option () in
 
-		while !more_pi0 && not !time_limit_reached && not !found_pi0 do
-			
-			(* 1) Compute the next pi0 (if any left) *)
-			
-			(* Start with the first dimension *)
-			let current_dimension = ref 0 in (** WARNING: should be sure that 0 is the first parameter dimension *)
-			(* The current dimension is not yet the maximum *)
-			let not_is_max = ref true in
-			
-			while !not_is_max do
-				(* Try to increment the local dimension *)
-				let current_dimension_incremented = NumConst.add current_pi0.(!current_dimension) options#step in
-				if current_dimension_incremented <= !max_bounds.(!current_dimension) then (
-					(* Increment this dimension *)
-					current_pi0.(!current_dimension) <- current_dimension_incremented;
-					(* Reset the smaller dimensions to the low bound *)
-					for i = 0 to !current_dimension - 1 do
-						current_pi0.(i) <- !min_bounds.(i);
-					done;
-					(* Stop the loop *)
-					not_is_max := false;
-				)
-				(* Else: try the next dimension *)
-				else ( 
-					current_dimension := !current_dimension + 1;
-					(* If last dimension: the end! *)
-					if !current_dimension >= !nb_dimensions then(
-						more_pi0 := false;
-						not_is_max := false;
-					)
-				);
-			done; (* while not is max *)
+	(* Start with the first dimension *)
+	let current_dimension = ref 0 in (** WARNING: should be sure that 0 is the first parameter dimension *)
+	(* The current dimension is not yet the maximum *)
+	let not_is_max = ref true in
+	
+	let more_pi0 = ref true in
+	
+	while !not_is_max do
+		(* Try to increment the local dimension *)
+		let current_dimension_incremented = NumConst.add current_pi0.(!current_dimension) options#step in
+		if current_dimension_incremented <= !max_bounds.(!current_dimension) then (
+			(* Increment this dimension *)
+			current_pi0.(!current_dimension) <- current_dimension_incremented;
+			(* Reset the smaller dimensions to the low bound *)
+			for i = 0 to !current_dimension - 1 do
+				current_pi0.(i) <- !min_bounds.(i);
+			done;
+			(* Stop the loop *)
+			not_is_max := false;
+		)
+		(* Else: try the next dimension *)
+		else ( 
+			current_dimension := !current_dimension + 1;
+			(* If last dimension: the end! *)
+			if !current_dimension >= !nb_dimensions then(
+				more_pi0 := false;
+				not_is_max := false;
+			)
+		);
+	done; (* while not is max *)
+	(* Return the flag *)
+	!more_pi0
+
+
+
+(** Compute the next pi0 and directly modify the variable 'current_pi0' (standard BC) *)
+let find_next_pi0_cover () =
+	(* Get the model *)
+(* 	let model = Input.get_model() in *)
+
+	(* Retrieve the current pi0 (that must have been initialized before) *)
+	let current_pi0 = get_current_pi0_option () in
+	
+(*		(* Counts the points actually member of an existing constraint (hence useless) for information purpose *)
+	let nb_useless_points = ref 0 in*)
+	
+	(* Are there still possible points *)
+	let more_pi0 = ref true in
+	(* Did we find a suitable pi0 *)
+	let found_pi0 = ref false in
+(*(*		(* Did we reach the time limit *)
+	let time_limit_reached = ref false in*)*)
+
+	while !more_pi0 && not !time_limit_reached && not !found_pi0 do
 		
-			(* 2) Check that this pi0 is new *)
-			
-			if !more_pi0 then(
-				(* Generic function possibly updating found_pi0 *)
-				test_pi0_uncovered current_pi0 found_pi0;
-			); (*if more pi0 *)
-		done; (* while more pi0 and so on *)
+		(* 1) Compute the next pi0 (if any left) in a sequential manner; the function returns false if all has been covered *)
+		more_pi0 := compute_next_sequential_pi0 ();
+
+		(* 2) Check that this pi0 is new *)
+		if !more_pi0 then(
+			(* Generic function possibly updating found_pi0 *)
+			test_pi0_uncovered current_pi0 found_pi0;
+		); (*if more pi0 *)
 		
-		(* Return info (note that current_pi0 has ALREADY been updated if a suitable pi0 was found !) *)
-		!found_pi0 , !nb_useless_points
-	)
+	done; (* while more pi0 and so on *)
+	
+	(* Return info (note that current_pi0 has ALREADY been updated if a suitable pi0 was found !) *)
+	!found_pi0 , !nb_useless_points
       
 
 
@@ -698,6 +765,7 @@ let find_next_pi0_border latest_nature =
 
 
 (* Generic function to find the next pi0 *)
+(*** WARNING: duplicate code ***)
 let find_next_pi0 tile_nature_option =
 	counter_next_point#start;
 	(* Retrieve the input options *)
@@ -716,7 +784,7 @@ let find_next_pi0 tile_nature_option =
 			| None -> raise (InternalError("The case of a border cartography with no tile nature in the most recent constraint is not handled yet."))
 		end
 
-	| _ -> raise (InternalError("In function 'cover_behavioral_cartography', the mode should be a cover / border cartography only."))
+	| _ -> raise (InternalError("In function 'find_next_pi0', the mode should be a cover / border cartography only."))
 	in
 	(* Update the number of useless points *)
 	nb_useless_points := !nb_useless_points + new_nb_useless_points;
@@ -727,7 +795,56 @@ let find_next_pi0 tile_nature_option =
 	found_pi0 , !time_limit_reached
 
 
+(* Generic function to find the next pi0 (in shuffle mode) *)
+(*** WARNING: duplicate code ***)
+let find_next_pi0_shuffle tile_nature_option =
+	counter_next_point#start;
+	(* Retrieve the input options *)
+	let options = Input.get_options () in
 
+	let found_pi0 , new_nb_useless_points =
+	(* Branching *)
+	match options#imitator_mode with
+	| Cover_cartography ->
+		(* Are there still possible points *)
+		let more_pi0 = ref true in
+		(* Did we find a suitable pi0 *)
+		let found_pi0 = ref false in
+
+		let all_pi0_array = get_all_pi0_array_option () in
+
+		while !more_pi0 && not !time_limit_reached && not !found_pi0 do
+			
+			(* 1) Compute the next pi0 (if any left) using the shuffle mode; the function returns false if all has been covered *)
+			if !all_pi0_array_current < Array.length all_pi0_array - 1 then(
+				(* Go to next pi0 *)
+				all_pi0_array_current := !all_pi0_array_current + 1;
+				(* Update *)
+				current_pi0 := Some all_pi0_array.(!all_pi0_array_current);
+			)else(
+				(* Finished *)
+				more_pi0 := false;
+			);
+
+			(* 2) Check that this pi0 is new *)
+			if !more_pi0 then(
+				(* Generic function possibly updating found_pi0 *)
+				test_pi0_uncovered (get_current_pi0_option ()) found_pi0;
+			); (*if more pi0 *)
+			
+		done; (* while more pi0 and so on *)
+		
+		(* Return info (note that current_pi0 has ALREADY been updated if a suitable pi0 was found !) *)
+		!found_pi0 , !nb_useless_points
+	| _ -> raise (InternalError("In function 'find_next_pi0_shuffle', the mode should be a cover cartography only."))
+	in
+	(* Update the number of useless points *)
+	nb_useless_points := !nb_useless_points + new_nb_useless_points;
+	
+	counter_next_point#stop;
+
+	(* Return *)
+	found_pi0 , !time_limit_reached
 
 (************************************************************)
 (* BEHAVIORAL CARTOGRAPHY ALGORITHM functions *)
@@ -1040,13 +1157,7 @@ let bc_result () =
 
 
 
-(* Convert the array into a functional representation *)
-let create_pi0_fun () =
-	match !current_pi0 with
-	| None -> raise (InternalError("Functional pi0 called before its initialization."))
-	| Some current_pi0 ->
-		fun parameter_index -> current_pi0.(parameter_index)
-	
+
 
 (* Get the current pi0 in the form of a list (for PaTATOR) *)
 let get_current_pi0 () =
@@ -1054,31 +1165,28 @@ let get_current_pi0 () =
 
 	(* Get the model *)
 	let model = Input.get_model() in
-	begin
-	match !current_pi0 with
-	| None ->(
-		print_message Debug_total ("No pi0!");
-		raise (InternalError("Current pi0 called before its initialization."))
-	)
-	| Some current_pi0 ->
+
+	(* Retrieve the current pi0 (that must have been initialized before) *)
+	let current_pi0 = get_current_pi0_option () in
+
 (* 		print_message Debug_high ("About to convert..."); *)
 (* 		let result =  *)
-			List.map (fun parameter_index ->
+		List.map (fun parameter_index ->
 (* 				print_message Debug_high ("Convert"); *)
-				parameter_index , current_pi0.(parameter_index)) model.parameters
+			parameter_index , current_pi0.(parameter_index)) model.parameters
 (* 		in *)
 (* 		print_message Debug_high ("Computed result in get_current_pi0() "); *)
 (* 		result *)
-	end
+(* 	end *)
 
 
 
-(** Get the list of *all* points in V0 (for PaTATOR) *)
+(** Compute an array made of *all* points in V0 (for PaTATOR) *)
 let compute_all_pi0 () =
-	(* Get the model *)
+(*	(* Get the model *)
 	let model = Input.get_model() in
 	(* Get the v0 *)
-	let v0 = Input.get_v0() in
+	let v0 = Input.get_v0() in*)
 	(* Retrieve the input options *)
 	let options = Input.get_options () in
 
@@ -1087,27 +1195,90 @@ let compute_all_pi0 () =
 		raise (InternalError("The step must be equal to 1 to compute all pi0 in V0 (for now)."));
 	);
 	
-	(*** TODO: check that nb_points has been computed (it should have) ***)
+	(* Check that nb_points has been computed (it should have) *)
+	if NumConst.equal !nb_points NumConst.zero then(
+		raise (InternalError("The number of points in V0 has not been computed (but it should)."));
+	);
 	
+	(* First check that the number of points can be represented as an int *)
+	if not (NumConst.is_int !nb_points) then(
+		raise (InternalError("The number of points in V0 is too big to be represented as an int."));
+	);
 	
+	(* Convert to int *)
+	let int_nb_points = NumConst.to_int !nb_points in
 	
-	
-	
-	(* First check that the number of points is an integer! *)
-	
-	
-	(*** JE SUIS LAAAAAAAAA ***)
-	let int_nb_points = 0(*!nb_points*) in
-	
-	
-	
-	
-	(* Array for all the pi0 *)
-	(*** NOTE/TO OPTIMIZE: a bit stupid to compute a *random* pi0; one could just compute a all-0 one ***)
-	let random_pi0 = one_random_pi0 model v0 in
-	let all_points = Array.make int_nb_points one_random_pi0 in
+	(* Set the first point *)
+	compute_initial_pi0 ();
 
-	[]
+	(* Retrieve the initial pi0 (that must have been initialized before) *)
+	let initial_pi0 = get_current_pi0_option () in
+	(* Copy it! Very important *)
+	let initial_pi0 = Array.copy initial_pi0 in
+	
+	(* Create a array for all the pi0, initially containing the first pi0 everywhere *)
+	let all_points = Array.make int_nb_points initial_pi0 in
+	
+	(* Fill it for the other points *)
+	for pi0_index = 1 to int_nb_points - 1 do
+		(* Compute the next pi0 *)
+		let more_pi0 = compute_next_sequential_pi0 () in
+		(* If no more pi0: problem! *)
+		if not more_pi0 then(
+			raise (InternalError("No more pi0 before completing the fill the static array of all pi0."));
+		);
+		(* Get the current pi0 and COPY it! Very important *)
+		let current_pi0_copy = Array.copy (get_current_pi0_option ()) in
+		(* Fill the array *)
+		all_points.(pi0_index) <- current_pi0_copy;
+		
+	done;
+	
+	(* Set the global variable *)
+	all_pi0_array := Some all_points;
+
+	(* Set the first pi0 *)
+	current_pi0 := Some (all_points.(0));
+	all_pi0_array_current := 0;
+	
+	
+(*	(*** BEGIN DEBUG ***)
+	(* Print all pi0 *)
+	let model = Input.get_model() in
+	for pi0_index = 0 to int_nb_points - 1 do
+		let pi0_fun = pi0_fun_of_pi0 all_points.(pi0_index) in
+			print_message Debug_standard ((string_of_int pi0_index) ^ ":");
+			print_message Debug_standard (ModelPrinter.string_of_pi0 model pi0_fun);
+	done;
+(*	raise (InternalError ("bye bye"));*)
+	(*** END DEBUG ***)*)
+	
+	(* Return *)
+	()
+
+
+(** Shuffle the array made of *all* points in V0 (for PaTATOR) *)
+let shuffle_all_pi0 () =
+	let all_points = get_all_pi0_array_option () in
+	(*** NOTE: applied two times, because once is quite deterministic (see warning in the array_shuffle code) ***)
+	array_shuffle all_points;
+	array_shuffle all_points;
+	
+(*
+	(*** BEGIN DEBUG ***)
+	(* Print all pi0 *)
+	let model = Input.get_model() in
+	for pi0_index = 0 to Array.length all_points - 1 do
+		let pi0_fun = pi0_fun_of_pi0 all_points.(pi0_index) in
+			print_message Debug_standard ((string_of_int pi0_index) ^ ":");
+			print_message Debug_standard (ModelPrinter.string_of_pi0 model pi0_fun);
+	done;
+(* 	raise (InternalError ("bye bye")); *)
+	(*** END DEBUG ***)
+	*)
+	
+	(* Return *)
+	()
 
 
 (*
@@ -1150,7 +1321,7 @@ let cover_behavioral_cartography model v0 =
 	while !more_pi0 && not !time_limit_reached do
 
 		(*** WARNING : duplicate operation (quite cheap anyway) ***)
-		let pi0_fun = create_pi0_fun () in
+		let pi0_fun = pi0_fun_of_current_pi0 () in
 
 		(* Print some messages *)
 		(*** HACK: only print if non-distributed ***)
@@ -1224,14 +1395,17 @@ let cover_behavioral_cartography model v0 =
 let random_behavioral_cartography model v0 nb =
 
 
+
 	print_warning("The random behavioral cartography has not been used (nor tested) for a while, and may contain bugs, or lead to inconsistent results.");
+
+	
 	
 	(* Retrieve the input options *)
 	let options = Input.get_options () in
 
 	(* Array for the pi0 *)
-	(*** NOTE/TO OPTIMIZE: a bit stupid to compute a *random* pi0; one could just compute a all-0 one ***)
-	let random_pi0 = one_random_pi0 model v0 in
+	(*** NOTE/TO OPTIMIZE: a bit stupid to compute a *random* pi0; one could just compute an all-0 one ***)
+	let random_pi0 = one_random_pi0 () in
 	(*** TO OPTIMIZE: why create such a big array?! ***)
 	let pi0_computed = Array.make nb random_pi0 in
 
@@ -1261,7 +1435,7 @@ let random_behavioral_cartography model v0 nb =
 	time_limit_reached := false;
 	
 	while !i <= nb && not !time_limit_reached do
-		let pi0 = one_random_pi0 model v0 in
+		let pi0 = one_random_pi0 () in
 
 		(* Print messages *)
 		print_message Debug_standard ("\n**************************************************");

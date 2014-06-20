@@ -8,7 +8,7 @@
  * Author:        Etienne Andre
  * 
  * Created:       2009/09/08
- * Last modified: 2014/06/14
+ * Last modified: 2014/06/20
  *
  ****************************************************************)
  
@@ -352,6 +352,15 @@ let array_exists p a =
 		(* Not found *)
 		false
 	) with Found -> true
+
+
+(** Shuffles the values of an array *)
+(*** NOTE: important, otherwise always the same "random" ! ***)
+;;Random.self_init();;
+(*** NOTE: Found online at http://www.codecodex.com/wiki/index.php?title=Shuffle_an_array ***)
+(*** WARNING: not a real shuffle! the first element is always at the end... ***)
+let array_shuffle a = Array.sort (fun _ _ -> (Random.int 3) - 1) a
+
 
 
 (****************************************************************)
