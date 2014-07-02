@@ -10,7 +10,7 @@
  * Author:        Ulrich Kuehne, Etienne Andre
  * 
  * Created:       2012/06/18
- * Last modified: 2014/06/20
+ * Last modified: 2014/07/02
  *
  ****************************************************************)
 
@@ -292,6 +292,16 @@ let pi0_in_returned_constraint pi0 = function
 	| NNCConstraint _ -> raise (InternalError ("NNCCs are not available everywhere yet."))
 
 
+(*------------------------------------------------------------*)
+(** Try to check whether a returned_constraint is included in another constraint *)
+(*------------------------------------------------------------*)
+let leq_returned_constraint rc1 rc2 =
+	match (rc1, rc2) with
+	| Convex_constraint (k1,_) , Convex_constraint (k2,_) -> LinearConstraint.p_is_leq k1 k2
+	| Convex_constraint (k1,_) , Union_of_constraints (k_list,_) -> List.exists (LinearConstraint.p_is_leq k1) k_list
+	(** Otherwise, don't bother for now *)
+	(*** TODO: improve ***)
+	| _ -> false
 
 
 
@@ -1082,8 +1092,50 @@ let bc_process_im_result im_result =
 		(* USELESS SO FAR 
 		DynArray.add pi0_computed pi0; *)
 		
-		(*** WARNING: so stupid here!! Better flatten the structure! ***)
-		DynArray.add !computed_constraints im_result.result;
+		(*------------------------------------------------------------*)
+		(* At least checks whether the new constraint is INCLUDED (or equal) into a former one *)
+		(*** TODO: check reverse inclusion / merge constraints together / etc. ***)
+		(*** TODO: perform the inclusion check "new \in old" only in PaTATOR mode! because the situation new \in old will never happen in the mononode, sequential cartography ***)
+		let found = ref false in
+		let array_index = ref 0 in
+		while not !found && !array_index < (DynArray.length !computed_constraints) do
+			if debug_mode_greater Debug_high then
+				print_message Debug_high ("Comparing new constraint with " ^ (string_of_int (!array_index+1)) ^ "th old constraint.");
+			(* Retrieve the i-th constraint *)
+			let ith_constraint = DynArray.get !computed_constraints !array_index in
+			(* Compare *)
+			if leq_returned_constraint im_result.result ith_constraint then(
+				(* Stop *)
+				found := true;
+				(* Print some information *)
+				print_message Debug_standard "Constraint included in another one previously computed: dropped.";
+			)else(
+				(* Compare the other way round (if included, just replace) *)
+				if leq_returned_constraint ith_constraint im_result.result then(
+					(* Replace *)
+					DynArray.set !computed_constraints !array_index im_result.result;
+					(* Stop *)
+					found := true;
+					(* Print some information *)
+					print_message Debug_standard "Constraint larger than another one previously computed: replace.";
+				); (* if larger *)
+			);
+			
+			
+			
+			(* Increment *)
+			array_index := !array_index + 1;
+		done;
+		
+		(* Only add if not fond *)
+		if not !found then(
+			print_message Debug_medium "Constraint not found earlier: add.";
+			DynArray.add !computed_constraints im_result.result;
+		)else(
+			(*** TODO: add a counter or something, for information purpose ***)
+			()
+		);
+		(*------------------------------------------------------------*)
 		
 		()
 	

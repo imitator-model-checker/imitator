@@ -40,6 +40,12 @@ EFFICIENCY AND OPTIMIZATIONS
 [!!!] factorize the constraints in the cartography!!!!! (at least by equality check, better by inclusion, even better merging)
 
 
+BC mode
+[ ] add an option to try to simplify (or not) the list of constraints
+
+EF
+[ ] flatten the list of constraints as much as possible !! (and add option ?)
+
 PATATOR mode:
 [ ] add a mechanism of message passing DURING an execution of IM: to stop an execution of a node in some cases (e.g. all points are covered, or the pi0 has been covered by someone else)
 
@@ -66,6 +72,7 @@ OUTPUT FEATURES
 [ ] Rétablir le fait que -with-parametric-log active -with-log (ou inclure cette option par défaut, en fait...)
 
 [ ] rétablir (de HyMITATOR) le fait que contrôle+C rende un résultat partiel
+
 
 Options names:
 - rename -with-dot with -draw-trace-set (or -output-trace-set? or -plot-trace-set?)
