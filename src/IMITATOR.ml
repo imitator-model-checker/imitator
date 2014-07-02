@@ -161,7 +161,7 @@ if options#pta2jpg then(
 	if debug_mode_greater Debug_high then(
 		print_message Debug_high ("\n" ^ translated_model ^ "\n");
 	);
-	Graphics.dot model options#files_prefix translated_model;
+	Graphics.dot model (options#files_prefix ^ "-pta") translated_model;
 	terminate_program()
 );
 

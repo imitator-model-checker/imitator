@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2012/08/24
- * Last modified: 2013/03/20
+ * Last modified: 2014/07/02
  *
  ************************************************************)
 
@@ -61,7 +61,7 @@ let string_of_header program =
 	          "/************************************************************"
 	^ "\n" ^" * Program " ^ options#file
 	^ "\n" ^" * Converted by " ^ program_name ^ " " ^ version_string
-(* 	^ "\n" ^" * Generated at time " ^ time? *)
+	^ "\n" ^" * Generated at time " ^ (now()) ^ ""
 	^ "\n" ^" ************************************************************/"
 	
 
@@ -246,7 +246,7 @@ let string_of_automata program =
 	^ "\n"
 	(* General information *)
 (* 	s_0[fillcolor=red, style=filled, shape=Mrecord, label="s_0|{InputInit|And111|Or111}"]; *)
-	^ "\nname[shape=none, style=bold, fontsize=24, label=\"" ^ options#file ^ "\"];"
+^ "\nname[shape=none, style=bold, fontsize=24, label=\"" ^ options#file ^ "\"];"
 	^ "\ngeneral_info[shape=record, label=\"" (*Model|{*)
 	^ "{Clocks|" ^ (vertical_string_of_list_of_variables program.clocks) ^ "}"
 	^ "|{Parameters|" ^ (vertical_string_of_list_of_variables program.parameters) ^ "}"
@@ -257,6 +257,7 @@ let string_of_automata program =
 	^ "\"];" (*}*)
 	(* To ensure that the name is above general info *)
 	^ "\n name -> general_info [color=white];"
+	^ "\ndate[shape=none, style=bold, fontsize=10, label=\"Generated: " ^ (now()) ^ "\"];"
 
 	
 	^ (string_of_list_of_string_with_sep "\n\n" (

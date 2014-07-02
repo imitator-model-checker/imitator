@@ -8,7 +8,7 @@
  * Author:        Etienne Andre
  * 
  * Created:       2009/09/08
- * Last modified: 2014/06/20
+ * Last modified: 2014/07/02
  *
  ****************************************************************)
  
@@ -597,7 +597,8 @@ let header_string =
 	"************************************************************\n"
 	^ "*  " ^ program_name ^ " " ^ version_string ^ (string_n_times (46 - (String.length version_string)) " ") ^ " *\n"
 	^ "*                                                          *\n"
-	^ "*             Etienne Andre, Ulrich Kuehne, Romain Soulat  *\n"
+	^ "*                     Etienne Andre, Ulrich Kuehne et al.  *\n"
+(* 	^ "*             Etienne Andre, Ulrich Kuehne, Romain Soulat  *\n" *)
 	^ "*                                             2009 - " ^ (BuildInfo.build_year) ^ "  *\n"
 	^ "*                       LSV, ENS de Cachan & CNRS, France  *\n"
 	^ "*  Universite Paris 13, Sorbonne Paris Cite, LIPN, France  *\n"

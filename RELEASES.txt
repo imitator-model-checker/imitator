@@ -1,4 +1,31 @@
 *******************************************************
+release XXXX    (XXXX) PRIVATE RELEASE
+
+Nothing really new, just a backup before refactoring constraints
+
+Major features:
+- Added EF-synthesis (option "-EF"): synthesize all parameter valuations such that a given state is reachable
+- Added a distributed version of IMITATOR
+
+Minor features:
+- add suffix "-pta.jpg" to PTA2JPG files
+
+Changes in options syntax:
+- "reachability" becomes "statespace"
+
+Misc
+- Improve printing floating numbers (in time and memory statistics)
+- Now IMITATOR has a build number
+
+Internal
+- replaced Makefile with _oasis
+- Refactored constraints
+- Renamed "Graph.ml" with "StateSpace.ml"
+- Much refactoring of the code, in particular in Cartography.ml
+
+
+
+*******************************************************
 release 2.6.2    (2014-05-06) PRIVATE RELEASE
 
 Major features:

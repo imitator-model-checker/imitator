@@ -86,8 +86,8 @@ init := loc[sched] = idle &
     (* For fair comparison between EF and IM-based algorithms *)
 (*    & 30 <= T2 & T2 <= 50
     & 90 <= T6 & T6 <= 100*)
-    & 00 <= T2 & T2 <= 50
-    & 00 <= T6 & T6 <= 100
+(*    & 00 <= T2 & T2 <= 50
+    & 00 <= T6 & T6 <= 100*)
 ;
 
 
