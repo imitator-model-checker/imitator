@@ -1095,7 +1095,6 @@ let bc_process_im_result im_result =
 		(*------------------------------------------------------------*)
 		(* At least checks whether the new constraint is INCLUDED (or equal) into a former one *)
 		(*** TODO: check reverse inclusion / merge constraints together / etc. ***)
-		(*** TODO: perform the inclusion check "new \in old" only in PaTATOR mode! because the situation new \in old will never happen in the mononode, sequential cartography ***)
 		let found = ref false in
 		let array_index = ref 0 in
 		while not !found && !array_index < (DynArray.length !computed_constraints) do
@@ -1104,6 +1103,7 @@ let bc_process_im_result im_result =
 			(* Retrieve the i-th constraint *)
 			let ith_constraint = DynArray.get !computed_constraints !array_index in
 			(* Compare *)
+			(*** TODO: perform the inclusion check "new \in old" only in PaTATOR mode! because the situation new \in old will never happen in the mononode, sequential cartography ***)
 			if leq_returned_constraint im_result.result ith_constraint then(
 				(* Stop *)
 				found := true;
