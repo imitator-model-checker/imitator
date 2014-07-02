@@ -1,3 +1,16 @@
+--************************************************************--
+--************************************************************--
+--
+--   FMTV 2014: case study #2
+--
+--   Youcheng Sun
+--
+--                                Created : 2014/07/02
+--                          Last modified : 2014/07/02
+--                       IMITATOR version : 2.6.2
+--************************************************************--
+--************************************************************--
+
 var
     p2, c2, p6, c6 : clock;
     J6=0, C61_BEST=4, C61_WORST=4, C62_BEST=9, C62_WORST=10, C63_BEST=4, C63_WORST=5,
@@ -68,6 +81,14 @@ var init: region;
 
 init := loc[sched] = idle &
     p6>=0 & p6<=T6+J6 &
-    p2>=0 & p2<=T2;
+    p2>=0 & p2<=T2
+    
+    (* For fair comparison between EF and IM-based algorithms *)
+(*    & 30 <= T2 & T2 <= 50
+    & 90 <= T6 & T6 <= 100*)
+    & 00 <= T2 & T2 <= 50
+    & 00 <= T6 & T6 <= 100
+;
+
 
 property := unreachable loc[sched] = error;

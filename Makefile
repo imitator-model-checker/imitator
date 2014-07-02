@@ -764,6 +764,8 @@ exe:
 # 	$(TARGET) $(EXAMPLE_PATH)/Scheduling/test5.imi -mode EF -incl -merge -cart -log-prefix $(EXAMPLE_PATH)/Scheduling/test5-EFmergeUnbounded -depth-limit 400
 # 	$(TARGET) $(EXAMPLE_PATH)/Scheduling/test5.imi $(EXAMPLE_PATH)/Scheduling/test5.v0 -mode cover -efim -merge -cart -log-prefix $(EXAMPLE_PATH)/Scheduling/test5-EFIMmerge20301525
 
+	$(TARGET) $(EXAMPLE_PATH)/Scheduling/fmtv-challenge2-v1.imi -mode EF -merge -incl -cart
+# 	$(TARGET) $(EXAMPLE_PATH)/Scheduling/fmtv-challenge2-v1.imi $(EXAMPLE_PATH)/Scheduling/fmtv-challenge2-v1.v0 -mode cover -efim -merge -cart
 
 
 
