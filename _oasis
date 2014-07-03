@@ -29,6 +29,8 @@ Executable imitator
   BuildDepends: gmp, extlib, mpi, ppl, str, unix
   CCLib: -lppl -ltinfo -lppl_ocaml -lstdc++ -lgmp -lgmpxx -lmpi
 #  CCLib: -static '-lppl -ltinfo -lppl_ocaml -lstdc++ -lgmp -lgmpxx -lmpi'
+#  CCLib: -static '-lppl -ltinfo -lppl_ocaml -lstdc++ -lgmp -lgmpxx -llam -llamf77mpi -llammpi++ -llammpio -lmpi -lcamlmpi'
+
 # -static to have a static compiling (+ ' ' around)
 # I removed -lcamlrun because I wrote "best" instead of "byte"
   CompiledObject: best
