@@ -440,7 +440,7 @@ let cartography model v0 returned_constraint_list cartography_name =
 	(** TODO: Improve! Should perform an automatic detection of the model! *)
 	let execution = Sys.command !script_line in
 	if execution != 0 then
-		(print_error ("Something went wrong in the command. Exit code: " ^ (string_of_int execution) ^ ". Maybe you forgot to install the 'graph' utility."););
+		(print_error ("Something went wrong in the command. Exit code: " ^ (string_of_int execution) ^ ". Maybe you forgot to install the 'graph' utility (from the 'plotutils' package)."););
 	
 	(* Print some information *)
 	print_message Debug_high ("Result of the cartography execution: exit code " ^ (string_of_int execution));
