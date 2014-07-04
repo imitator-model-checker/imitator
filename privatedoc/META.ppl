@@ -5,3 +5,5 @@ archive(byte)="ppl_ocaml.cma"
 archive(native)="ppl_ocaml.cmxa"
 requires=""
 directory="/usr/lib/ppl"
+linkopts = "-cclib -lppl -cclib -lppl_ocaml"
+#  -cclib -lgmp -cclib -lgmpxx

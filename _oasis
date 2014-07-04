@@ -27,7 +27,8 @@ Executable imitator
   BuildTools: ocamlbuild
   MainIs:     src/IMITATOR.ml
   BuildDepends: gmp, extlib, mpi, ppl, str, unix
-  CCLib: -lppl -ltinfo -lppl_ocaml -lstdc++ -lgmp -lgmpxx -lmpi
+  CCLib: -lstdc++
+  # -ltinfo
 #  CCLib: -static '-lppl -ltinfo -lppl_ocaml -lstdc++ -lgmp -lgmpxx -lmpi'
 #  CCLib: -static '-lppl -ltinfo -lppl_ocaml -lstdc++ -lgmp -lgmpxx -llam -llamf77mpi -llammpi++ -llammpio -lmpi -lcamlmpi'
 
