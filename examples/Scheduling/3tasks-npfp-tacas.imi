@@ -116,6 +116,8 @@ init := loc[act1]=waiting1 &
         loc[act2]=waiting2 &
         loc[act3]=waiting3 &
         loc[sched]=idle &
-        p1=0 & p2 =0 & p3=0 & c2=0 & c1=0 & c3=0;
+        p1=0 & p2 =0 & p3=0 & c2=0 & c1=0 & c3=0
+		& a >= 0 & b >= 0
+		;
 
 property := unreachable loc[sched] = error;
