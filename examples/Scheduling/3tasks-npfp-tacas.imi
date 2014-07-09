@@ -1,0 +1,123 @@
+var 
+    p1, p2, p3, c1, c2, c3 : clock;
+    --a=50, b=20, c=18, d=28, C3_BEST=20, C3_WORST=28: discrete;
+    d=28, c=18, C3_BEST=20, C3_WORST=28: discrete;
+    b, a : parameter;
+
+automaton act1
+synclabs: r1;
+--loc waiting1 : while a<=50&a>=20&p1<=a wait {}
+loc waiting1 : while p1<=a wait {}
+    when p1>=a sync r1 do {p1'=0} goto waiting1;
+end
+
+automaton act2
+synclabs: r2;
+loc waiting2 : while p2<=2*a wait {}
+--loc waiting2 : while True wait {}
+    when p2>=2*a sync r2 do {p2'=0} goto waiting2;
+end
+
+automaton act3
+synclabs: r3;
+loc waiting3 : while p3<=3*a wait {}
+    when p3>=3*a sync r3 do {p3'=0} goto waiting3;
+end
+
+
+automaton sched
+synclabs : r1, r2, r3;
+
+loc idle : while True wait {}
+    when True sync r1 do {c1'=0} goto x1R;
+    when True sync r2 do {c2'=0} goto x2R;
+    when True sync r3 do {c3'=0} goto x3R;
+
+loc x1R : while c1<=b wait {}
+    when c1>=10 do {} goto idle;
+    when c1<b sync r1 do{} goto error;
+    when True sync r2 do {} goto x1R2W;
+    when True sync r3 do {} goto x1R3W;
+
+loc x2R : while c2<=d wait {}
+    when c2>=c do {} goto idle;
+    when c2<d sync r2 do {} goto error;
+    when True sync r1 do {} goto x1W2R;
+    when True sync r3 do {} goto x2R3W;
+
+loc x3R : while c3 <= C3_WORST wait {}
+    when c3>=C3_BEST do {} goto idle;
+    when c3<C3_WORST sync r3 do {} goto error;
+    when True sync r1 do {} goto x1W3R;
+    when True sync r2 do {} goto x2W3R;
+
+loc x1R2W : while c1<=b wait {}
+    when c1 >= 10 do {c2'=0} goto x2R;
+    when c1 < b sync r1 do {} goto error;
+    when True sync r2 do {} goto error;
+    when True sync r3 do {} goto x1R2W3W;
+
+loc x1R3W : while c1<=b wait {}
+    when c1>=10 do {c3'=0} goto x3R;
+    when c1<b sync r1 do {} goto error;
+    when True sync r3 do {} goto error;
+    when True sync r2 do {} goto x1R2W3W;
+
+loc x1W2R : while c2<=d wait {}
+    when c2 >= c do {c1'=0} goto x1R;
+    when c2<d sync r2 do {} goto error;
+    when True sync r1 do {} goto error;
+    when True sync r3 do {} goto x1W2R3W;
+
+loc x2R3W : while c2<=d wait {}
+    when c2>=c do {c3'=0} goto x3R;
+    when c2<d sync r2 do {} goto error;
+    when True sync r3 do {} goto error;
+    when True sync r1 do {} goto x1W2R3W;
+
+loc x1W3R : while c3<=C3_WORST wait {}
+    when c3 >= C3_BEST do {c1'=0} goto x1R;
+    when c3<C3_WORST sync r3 do {} goto error;
+    when True sync r1 do {} goto error;
+    when True sync r2 do {} goto x1W2W3R;
+
+loc x2W3R : while c3<=C3_WORST wait {}
+    when c3 >= C3_BEST do {c2'=0} goto x2R;
+    when c3<C3_WORST sync r3 do {} goto error;
+    when True sync r2 do {} goto error;
+    when True sync r1 do {} goto x1W2W3R;
+
+loc x1R2W3W : while c1<=b wait {}
+    when c1>=10 do {c2'=0} goto x2R3W;
+    when c1<b sync r1 do {} goto error;
+    when True sync r2 do {} goto error;
+    when True sync r3 do {} goto error;
+
+loc x1W2R3W : while c2<=d wait {}
+    when c2>=c do {c1'=0} goto x1R3W;
+    when c2<d sync r2 do {} goto error;
+    when True sync r1 do {} goto error;
+    when True sync r3 do {} goto error;
+
+loc x1W2W3R : while c3<=C3_WORST wait {}
+    when c3>=C3_BEST do {c1'=0} goto x1R2W;
+    when c3<C3_WORST sync r3 do {} goto error;
+    when True sync r1 do {} goto error;
+    when True sync r2 do {} goto error;
+
+loc error : while True wait{}
+
+end
+
+
+var init: region;
+
+init := loc[act1]=waiting1 &
+        loc[act2]=waiting2 &
+        loc[act3]=waiting3 &
+        loc[sched]=idle &
+        p1=0 & p2 =0 & p3=0 & c2=0 & c1=0 & c3=0
+		& a >= 0 & b >= 0
+		;
+
+property := unreachable loc[sched] = error;
