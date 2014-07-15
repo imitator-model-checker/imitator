@@ -24,10 +24,11 @@ type distribution_mode =
 	(** Distributed mode: Master slave with sequential pi0 shuffled *)
 	| Distributed_ms_shuffle
 	(** Distributed mode: Master slave with random pi0 and n retries before switching to sequential mode *)
-	| Distributed_ms_random of int
-	
+	| Distributed_ms_random of int	
 	(**  Distributed mode: Workers live their own lives and communicate results to the coordinator  **)
-	| Distributed_unsupervised
+	| Distributed_unsupervised	
+	(**  Distributed mode: multi-threaded version of Distributed_unsupervised  **)
+	| Distributed_unsupervised_multi_threaded
 
 
 class imitator_options =
@@ -277,6 +278,8 @@ class imitator_options =
 				(* Case: distributed in unsupervised version *)
 				else if mode = "unsupervised" then 
 					distribution_mode := Distributed_unsupervised
+				else if mode = "unsupervised-multi-threaded" then 
+					distribution_mode := Distributed_unsupervised_multi_threaded
 
 				(* Case: distributed master-slave with sequential selection *)
 				else if mode = "sequential" then 
@@ -536,6 +539,12 @@ class imitator_options =
 				print_message Debug_medium ("Non-distributed mode (default).");
 			| Distributed_unsupervised ->(
 				print_message Debug_standard ("Considering a distributed mode with unsupervised workers.");
+				if !imitator_mode <> Cover_cartography then(
+					print_warning "The distributed mode is only valid for the cartography. Option will be ignored.";
+				)
+			)
+			| Distributed_unsupervised_multi_threaded ->(
+				print_message Debug_standard ("Considering a distributed mode with unsupervised multi-threaded workers.");
 				if !imitator_mode <> Cover_cartography then(
 					print_warning "The distributed mode is only valid for the cartography. Option will be ignored.";
 				)

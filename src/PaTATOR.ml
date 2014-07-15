@@ -61,10 +61,15 @@ let run () =
 	(* Fork between the algorithms *)
 	  match options#distribution_mode with
 	    | Distributed_unsupervised ->
-		(* Fork between master and slave *)
+		(* Fork between worker and coordinator *)
 		if rank = masterrank
 		then DistributedUnsupervised.coordinator
 		else DistributedUnsupervised.worker
+	    | Distributed_unsupervised_multi_threaded ->
+		(* Fork between worker and coordinator *)
+		if rank = masterrank
+		then DistributedMultiThreadedUnsupervised.coordinator
+		else DistributedMultiThreadedUnsupervised.worker
 	    | _ ->
 		(* Fork between master and slave *)
 		if rank = masterrank

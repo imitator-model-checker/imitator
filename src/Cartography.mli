@@ -39,6 +39,10 @@ val get_current_pi0 : unit -> pi0_list
 (** Get the list of *all* points in V0 (for PaTATOR) *)
 val compute_all_pi0 : unit -> pi0_list list
 
+val pi0_in_returned_constraint:
+  (LinearConstraint.variable -> LinearConstraint.coef) ->
+  AbstractModel.returned_constraint -> bool
+
 (* Move to the next uncovered pi0 and do not move if the current pi0 is still not covered; update global variable current_pi0 (if necessary) *)
 val move_to_next_uncovered_pi0 : unit -> bool
 
@@ -67,7 +71,6 @@ val cover_behavioral_cartography : AbstractModel.abstract_model -> AbstractModel
  *  a single one
  *)
 val constraint_list_init : int -> unit
-val constraint_list_random : unit ->
-  ((Automaton.variable_index * NumConst.t) list) option
+val constraint_list_random : unit -> pi0_list option
 val constraint_list_update : Reachability.im_result -> unit
 val constraint_list_empty : unit -> bool

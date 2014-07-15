@@ -21,10 +21,11 @@ type distribution_mode =
 	(** Distributed mode: Master slave with sequential pi0 shuffled *)
 	| Distributed_ms_shuffle
 	(** Distributed mode: Master slave with random pi0 and n retries before switching to sequential mode *)
-	| Distributed_ms_random of int
-	
+	| Distributed_ms_random of int	
 	(**  Distributed mode: Workers live their own lives and communicate results to the coordinator  **)
-	| Distributed_unsupervised
+	| Distributed_unsupervised	
+	(**  Distributed mode: multi-threaded version of Distributed_unsupervised  **)
+	| Distributed_unsupervised_multi_threaded
 
 
 
