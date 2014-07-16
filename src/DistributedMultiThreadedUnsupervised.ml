@@ -27,8 +27,9 @@ let nb_tries_max = 10
 (*  number of uncovered points kept by the coordinator  *)
 let nb_coord_points = 100
 
-(*  a worker sends a ping every ping_period milliseconds  *)
-let ping_period = 100
+(*  a worker sends a ping every ping_period seconds  *)
+let ping_period = 0.01
+let one_ms = 0.001
 
 
 (*
@@ -41,7 +42,6 @@ type mtag =
   | PING
   | NO_CONSTRAINTS
   | TERMINATE
-  | TERMINATE_ACK
 ;;
 
 let mtag_of_int = function
@@ -51,7 +51,6 @@ let mtag_of_int = function
   | 4 -> PING
   | 5 -> NO_CONSTRAINTS
   | 6 -> TERMINATE
-  | 7 -> TERMINATE_ACK
   | _ -> raise (InternalError "invalid int mtag")
 ;;
 
@@ -62,7 +61,6 @@ let int_of_mtag = function
   | PING           -> 4
   | NO_CONSTRAINTS -> 5
   | TERMINATE      -> 6
-  | TERMINATE_ACK  -> 7
 ;;
 
 let string_of_mtag = function
@@ -72,7 +70,6 @@ let string_of_mtag = function
   | PING           -> "PING"
   | NO_CONSTRAINTS -> "NO-CONSTRAINTS"
   | TERMINATE      -> "TERMINATE"
-  | TERMINATE_ACK  -> "TERMINATE-ACK"
 ;;
 
 
@@ -88,11 +85,6 @@ let array_update f a =
           loop (i + 1))
   in
     loop 0
-;;
-
-let val_of = function
-  | None -> raise (InternalError "val_of None")
-  | Some v -> v
 ;;
 
 let valueListToPi0 (model: AbstractModel.abstract_model) l =
@@ -194,9 +186,14 @@ let coordinator () =
       | None     -> coordinator_send_termination worker
       | Some pi0 -> coordinator_send_point (worker, pi0)
   in
-  let coordinator_process_received_constraint (worker, data) =
+  let coordinator_process_constraint (worker, data) =
     let res = DistributedUtilities.unserialize_im_result data in
       update_boxes worker data;
+      (* Sami: ca serait bien que Cartography.bc_process_im_result
+	 renvoie true/false selon que la contrainte a ete utile ou pas.
+	 si elle est inutile (redondante) alors pas besoin de l'envoyer
+	 aux autres workers idem quand un worker a calcule une nouvelle
+	 contrainte *)
       Cartography.bc_process_im_result res;
       Cartography.constraint_list_update res;
       if not (Cartography.constraint_list_empty ())
@@ -208,7 +205,7 @@ let coordinator () =
     let (d, src, tag) = Mpi.receive_status Mpi.any_source Mpi.any_tag world in
       (pr_recv_msg 0 src (mtag_of_int tag);
        match mtag_of_int tag with
-	 | CONSTRAINT    -> coordinator_process_received_constraint (src, d)
+	 | CONSTRAINT    -> coordinator_process_constraint (src, d)
 	 | ASK_FOR_POINT -> coordinator_process_ask_for_point src
 	 | PING          -> coordinator_process_ping src
 	 | _             -> raise (InternalError "unexpected tag"));
@@ -282,20 +279,14 @@ let worker () =
   let worker_process_ping () =
     ()
   in
-  let worker_process_received_point data =
+  let worker_process_point data =
     let pi0 = DistributedUtilities.unserialize_pi0 data in
     let pi0 = valueListToPi0 model pi0 in
       if !current_job <> None
       then raise (InternalError "point received while in job")
       else worker_launch_job pi0
   in
-  let rec worker_process_no_constraints = function
-    | 0 -> (if !current_job = None
-	    then worker_initiate_job ()
-	    else ())
-    | n -> (worker_process_message ();
-	    worker_process_no_constraints (n - 1))
-  and worker_process_received_constraint data =
+  let worker_process_constraint data =
     let res = DistributedUtilities.unserialize_im_result data in
     let cons = res.result in
       Cartography.bc_process_im_result res;
@@ -306,15 +297,24 @@ let worker () =
             then ()
             else (print_message Debug_standard
                     (msg_prefix ^
-                       " received constraint covers job point -> kill job");
-(*                                                                                                                                  
- Sami: Thread.kill is not implemented so we have to find a way to stop the current job
-       (e.g. change in the inverse method directly)
-                  Thread.kill t;
-                  current_job := None;
-                  job_result := None
+                       " received constraint covers job point " ^
+		       "-> kill job (not implemented)");
+		  (* Sami: Thread.kill is not implemented so we have
+		     to find a way to stop the current job (e.g. change
+		     in the inverse method directly)
+
+                     Thread.kill t;
+                     current_job := None;
+                     job_result := None
 		  *)
-)
+		 )
+  in
+  let rec worker_process_no_constraints = function
+    | 0 -> (if !current_job = None
+            then worker_initiate_job ()
+            else ())
+    | n -> (worker_process_message ();
+            worker_process_no_constraints (n - 1))
   and worker_initiate_job () =
     if Cartography.random_pi0 nb_tries_max
     then (print_message Debug_standard
@@ -328,8 +328,8 @@ let worker () =
       (pr_recv_msg me src (mtag_of_int tag);
        match mtag_of_int tag with
 	 | TERMINATE      -> worker_process_terminate ()
-	 | CONSTRAINT     -> worker_process_received_constraint data
-	 | POINT          -> worker_process_received_point data
+	 | CONSTRAINT     -> worker_process_constraint data
+	 | POINT          -> worker_process_point data
 	 | PING           -> worker_process_ping ()
 	 | NO_CONSTRAINTS -> worker_process_no_constraints data
 	 | _              -> raise (InternalError "unexpected tag"))
@@ -345,26 +345,27 @@ let worker () =
 	job_result := None;
 	true
   in
-  let rec worker_action n =
-    if !terminate
-    then ()
-    else (Mutex.lock mut;
-	  let job_done = worker_process_job_result (!job_result) in
-	    Mutex.unlock mut;
-	    if job_done
-	    then worker_initiate_job ()
-	    else (Thread.delay 0.001;
-		  if n = 0
-		  then (worker_send () PING;
-			worker_process_message ();
-			worker_action ping_period)
-		  else worker_action (n - 1)))
-  in
+  let last_ping = ref (Sys.time ()) in
   let rec worker_loop () =
     if !terminate
     then ()
-    else (worker_action ping_period;
-	  worker_loop ())
+    else (Thread.yield ();                                                                                                                                                                                 
+          Mutex.lock mut;
+	  let job_done = worker_process_job_result (!job_result) in
+	    Mutex.unlock mut;
+	    if job_done
+	    then (if !terminate
+		  then ()
+		  else (worker_initiate_job ();
+			last_ping := Sys.time ();
+			worker_loop ()))
+	    else (let now = Sys.time () in
+		    if (now -. (!last_ping)) >= ping_period
+		    then (last_ping := now;
+			  worker_send () PING;
+			  worker_process_message ();
+			  worker_loop ())
+		    else worker_loop ()))
   in
     try
       worker_init ();
