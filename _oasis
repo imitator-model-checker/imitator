@@ -7,7 +7,7 @@
 #
 #  _oasis authors: Etienne Andre, Alban Linard
 #  Created:        2013/12/11
-#  Last modified:  2014/05/06
+#  Last modified:  2014/07/21
 ###############################################################
 
 OASISFormat: 0.3
@@ -26,7 +26,7 @@ Executable imitator
   Path:       .
   BuildTools: ocamlbuild
   MainIs:     src/IMITATOR.ml
-  BuildDepends: gmp, extlib, mpi, ppl, str, unix
+  BuildDepends: gmp, extlib, mpi, ppl, str, unix, threads
   CCLib: -lstdc++
   # -ltinfo
 #  CCLib: -static '-lppl -ltinfo -lppl_ocaml -lstdc++ -lgmp -lgmpxx -lmpi'

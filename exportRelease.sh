@@ -11,7 +11,7 @@
  # Author:        Etienne Andre
  # 
  # Created:       2013/03/06
- # Last modified: 2014/05/06
+ # Last modified: 2014/07/21
  #
 ################################################################
  
@@ -32,7 +32,7 @@ echo "First cleaning $DESTDIR"
 rm -rf $DESTDIR/*
 
 # Copy root files
-for file in build_number.txt GNU.txt INSTALL.txt _oasis makeoasis.sh gen_build_info.py incrementer.py RELEASES.txt; do
+for file in build_number.txt GNU.txt INSTALL.txt _oasis makeoasis.sh gen_build_info.py incrementer.py README.md RELEASES.txt; do
 	echo "Copying $file ..."
 	cp $file $DESTDIR$file
 done
@@ -44,7 +44,7 @@ for directory in doc examples src; do
 done
 
 # Create bin and lib
-for directory in bin lib; do
+for directory in bin; do
 	echo "Creating $directory ..."
 	mkdir $DESTDIR$directory
 done

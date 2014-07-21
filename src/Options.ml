@@ -383,7 +383,7 @@ class imitator_options =
 				
 				("-verbose", String set_debug_mode_ref, " Print more or less information. Can be set to 'mute', 'standard', 'low', 'medium', 'high', 'total'. Default: 'standard'");
 				
-				("-version", Unit (fun _ -> print_string ("\n" ^ program_name ^ " " ^ version_string ^ "\n"); exit 0), " Print version number and exit.");
+				("-version", Unit (fun _ -> print_string ("\n" ^ program_name ^ " " ^ version_string ^ "\nBuild: " ^ BuildInfo.build_number ^ " (" ^ BuildInfo.build_time ^ ")\n"); exit 0), " Print version number and exit.");
 				
 				("-with-dot", Set with_dot, " Trace set under a graphical form (using 'dot'). Default: false.");
 				
