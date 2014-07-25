@@ -7,7 +7,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Ulrich Kuehne, Etienne Andre
  * Created:       2010
- * Last modified: 2014/06/19
+ * Last modified: 2014/07/25
  *
  ****************************************************************)
  
@@ -226,7 +226,7 @@ class imitator_options =
 
 		
 		method parse =
-			let usage_msg = "Usage: " ^ program_name ^ " model.imi [reference_valuation.pi0] [options]" in
+			let usage_msg = "Usage: " ^ (*program_name*)(Sys.argv.(0)) ^ " model.imi [reference_valuation.pi0] [options]" in
 
 			(* Get the debug mode *)
 			let rec set_debug_mode_ref debug_mode =
@@ -331,7 +331,7 @@ class imitator_options =
 				
 				("-dynamic-elimination", Set dynamic_clock_elimination, " Dynamic clock elimination [FSFMA13]. Default: false.");
 				
-				("-efim", Set efim, " New algorithm mixing IM and EF (work in progress). Default: false.");
+				("-EFIM", Set efim, " Reachability-preservation algorithm mixing IM and EF. Default: false.");
 				
 				("-fancy", Set fancy, " Generate detailed state information for dot output. Default: false.");
 

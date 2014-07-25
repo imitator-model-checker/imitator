@@ -10,6 +10,7 @@ Major features:
 Minor features:
 - add suffix "-pta.jpg" to PTA2JPG files
 - in BC mode: try to reduce the number of constraint (inclusion test in both directions)
+- main binary now in lower case ("imitator")
 
 Changes in options syntax:
 - "reachability" becomes "statespace"

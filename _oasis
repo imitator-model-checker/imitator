@@ -7,7 +7,7 @@
 #
 #  _oasis authors: Etienne Andre, Alban Linard
 #  Created:        2013/12/11
-#  Last modified:  2014/07/21
+#  Last modified:  2014/07/25
 ###############################################################
 
 OASISFormat: 0.3
@@ -19,7 +19,7 @@ License:     GPL-3.0
 
 # Handling build number (using Python)
 PreBuildCommand: python gen_build_info.py
-PostBuildCommand: python incrementer.py ; echo "Copying main binary file to bin/IMITATOR ..." ; cp _build/src/IMITATOR.native bin/IMITATOR
+PostBuildCommand: python incrementer.py ; echo "Copying main binary file to bin/imitator ..." ; cp _build/src/IMITATOR.native bin/imitator
 
 
 Executable imitator
@@ -39,11 +39,11 @@ Executable imitator
 Test startingcomment
   Command: echo "\n********** STARTING TESTS **********\n"
 Test tes1
-  Command: ./IMITATOR.native examples/Flipflop/flipflop.imi -mode statespace -depth-limit 5
+  Command: ./bin/imitator examples/Flipflop/flipflop.imi -mode statespace -depth-limit 5
 Test test2
-  Command: ./IMITATOR.native examples/Flipflop/flipflop.imi examples/Flipflop/flipflop.pi0
+  Command: ./bin/imitator examples/Flipflop/flipflop.imi examples/Flipflop/flipflop.pi0
 Test test3
-  Command: ./IMITATOR.native examples/Flipflop/flipflop.imi examples/Flipflop/flipflop.v0 -mode cover -cart
+  Command: ./bin/imitator examples/Flipflop/flipflop.imi examples/Flipflop/flipflop.v0 -mode cover -cart
 Test finalcomment
   Command: echo "\n********** END TESTS **********\n"
 
