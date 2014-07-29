@@ -10,7 +10,7 @@
  * Author:        Etienne Andre
  * 
  * Created:       2009/09/09
- * Last modified: 2013/11/20
+ * Last modified: 2014/07/29
  *
  ****************************************************************)
 
@@ -1418,7 +1418,7 @@ let convert_transitions nb_actions index_of_variables constants type_of_variable
 (*--------------------------------------------------*)
 (* Create the initial state *)
 (*--------------------------------------------------*)
-let make_initial_state index_of_automata locations_per_automaton index_of_locations index_of_variables constants type_of_variables init_discrete_pairs  init_definition =
+let make_initial_state index_of_automata locations_per_automaton index_of_locations index_of_variables parameters constants type_of_variables variable_names init_discrete_pairs init_definition =
 	(* Get the location initialisations and the constraint *)
 	let loc_assignments, linear_predicates = List.partition (function
 		| Loc_assignment _ -> true
@@ -1481,6 +1481,18 @@ let make_initial_state index_of_automata locations_per_automaton index_of_locati
 		(* Remove discretes *)
 		LinearConstraint.pxd_hide_discrete_and_collapse initial_constraint
 	in
+	
+	(* PERFORM VERIFICATIONS *)
+	(* Check that all parameters are bound to be >= 0 *)
+	List.iter (fun parameter_id ->
+		(* Print some information *)
+		print_message Debug_low ("Checking that parameter '" ^ (variable_names parameter_id) ^ "' is >= 0 in the initial constraint...");
+		
+		(* Check *)
+		if not (LinearConstraint.px_is_positive_in parameter_id initial_constraint) then
+			print_warning ("Parameter '" ^ (variable_names parameter_id) ^ "' is not necessarily positive in the initial constraint. The behavior of " ^ Global.program_name ^ " is unspecified in this case. You are advised to add inequality '" ^ (variable_names parameter_id) ^ " >= 0' to the initial state of the model.");
+	) parameters;
+	
 	(* Return the initial state *)
 	initial_location, initial_constraint
 
@@ -2057,7 +2069,7 @@ let abstract_model_of_parsing_structure (parsed_variable_declarations, parsed_au
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	print_message Debug_total ("*** Building initial state...");
 	let (initial_location, initial_constraint) =
-		make_initial_state index_of_automata array_of_location_names index_of_locations index_of_variables constants type_of_variables init_discrete_pairs parsed_init_definition in
+		make_initial_state index_of_automata array_of_location_names index_of_locations index_of_variables parameters constants type_of_variables variable_names init_discrete_pairs parsed_init_definition in
 	
 	(* Add the observer initial constraint *)
 	begin

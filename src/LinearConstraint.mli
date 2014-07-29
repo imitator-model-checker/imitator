@@ -10,7 +10,7 @@
  * Author:        Etienne Andre
  * 
  * Created:       2010/03/04
- * Last modified: 2014/04/15
+ * Last modified: 2014/07/29
  *
  ****************************************************************) 
  
@@ -239,6 +239,8 @@ val px_is_equal : px_linear_constraint -> px_linear_constraint -> bool
 val p_is_leq : p_linear_constraint -> p_linear_constraint -> bool
 val px_is_leq : px_linear_constraint -> px_linear_constraint -> bool
 
+(** Check if a variable v is bound to be >= 0 in a constraint c *)
+val px_is_positive_in : variable -> px_linear_constraint -> bool
 
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)

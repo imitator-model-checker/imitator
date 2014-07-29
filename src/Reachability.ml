@@ -866,10 +866,10 @@ let rho_assign model (linear_constraint : LinearConstraint.pxd_linear_constraint
 		
 		
 		
-			(* TODO : add "reset" function to LinearConstraint *)
+			(*** TODO : add "reset" function to LinearConstraint ***)
 			
 		
-			(** TO OPTIMIZE: Hashtbl.fold and List.map should be merged into one function *)
+			(*** TO OPTIMIZE: Hashtbl.fold and List.map should be merged into one function ***)
 			
 			(* Compute the list of clocks to update from the hashtable *)
 			let list_of_clocks_to_update = Hashtbl.fold (fun clock_id _ list_of_clocks -> clock_id :: list_of_clocks) clocks_hash [] in

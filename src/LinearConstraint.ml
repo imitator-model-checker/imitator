@@ -10,7 +10,7 @@
  * Author:        Etienne Andre
  * 
  * Created:       2010/03/04
- * Last modified: 2014/04/08
+ * Last modified: 2014/07/29
  *
  ****************************************************************) 
  
@@ -292,7 +292,8 @@ let ppl_intersection_assign x =
 	ppl_t_intersection_assign := !ppl_t_intersection_assign +. (Unix.gettimeofday() -. start);
 	(* Return result *)
 	result
-	
+
+
 let ppl_remove_dim poly remove =
 	(* Statistics *)
 	ppl_nb_remove_dim := !ppl_nb_remove_dim + 1;
@@ -793,6 +794,7 @@ let is_false c =
 	result
 
 let p_is_false = is_false
+let px_is_false = is_false
 
 
 (** Check if a constraint is true *)
@@ -847,6 +849,7 @@ let is_leq x y =
 
 let p_is_leq = is_leq
 let px_is_leq = is_leq
+
 
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
@@ -1175,6 +1178,7 @@ let copy linear_constraint =
 let p_copy = copy
 let px_copy = copy
 let pxd_copy = copy
+
 
 (** Perform the intersection of a linear constrain with a list of constraints (with side effect) *)
 let intersection_assign linear_constraint constrs =
@@ -1547,6 +1551,30 @@ let render_non_strict_p_linear_constraint k =
 	make_p_constraint (List.map strict_to_not_strict_inequality inequality_list)
 
 
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+(** {3 More testing functions} *)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+
+(** Check if a variable v is bound to be >= 0 in a constraint c *)
+let px_is_positive_in v c =
+	(* Idea: perform emptiness check of (v < 0 and c) *)
+	(* Create v < 0, i.e., -v > 0 *)
+	let v_lt = make_px_linear_term [
+			NumConst.minus_one, v;
+		] NumConst.zero in
+	let v_l_zero = make [make_px_linear_inequality v_lt Op_g] in
+(* 	let variable_names variable_index ="v" ^ (string_of_int variable_index) in *)
+	(* Intersect with c *)
+	(*				print_string (string_of_linear_constraint variable_names v_l_zero);
+					print_newline();
+					print_string (string_of_linear_constraint variable_names c);
+					print_newline();*)
+	px_intersection_assign v_l_zero [c];
+(*					print_string (string_of_linear_constraint variable_names v_l_zero);
+					print_newline();*)
+	(* Check *)
+	not (is_satisfiable v_l_zero)
+
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
 (** {3 Pi0-compatibility} *)
@@ -1799,7 +1827,7 @@ let intersection_straight_line d1 d2 =
 (* test if a point belong to a square line *)
 let point_on_line p min_abs min_ord max_abs max_ord =
 	match p with 
-		|Dot (a,b) when ((min_abs <= a) & (a <= max_abs) & (min_ord <= b) & (b <= max_ord)) -> true
+		|Dot (a,b) when ((min_abs <= a) && (a <= max_abs) && (min_ord <= b) && (b <= max_ord)) -> true
 		|_ -> false
 
 
@@ -1865,10 +1893,10 @@ let generate_points x y linear_constraint min_abs min_ord max_abs max_ord =
 	for i=0 to List.length points -1 do 
 		for j=0 to List.length ray -1 do
 			match List.nth ray j with
-				|(u,v) when ((u>=0.) & (v>=0.)) -> point_list:=(max ((max_abs)*.(fst(List.nth ray j))) (fst (List.nth points i)) , max ((max_ord)*.(snd(List.nth ray j))) (snd (List.nth points i)))::!point_list
-				|(u,v) when ((u<0.) & (v>=0.)) -> point_list:=(min ((min_abs)*.(fst(List.nth ray j))) (fst (List.nth points i)) , max ((max_ord)*.(snd(List.nth ray j))) (snd (List.nth points i)))::!point_list
-				|(u,v) when ((u>=0.) & (v<0.)) -> point_list:=(max ((max_abs)*.(fst(List.nth ray j))) (fst (List.nth points i)) , min ((min_ord)*.(snd(List.nth ray j))) (snd (List.nth points i)))::!point_list
-				|(u,v) when ((u<0.) & (v<0.)) -> point_list:=(min ((min_abs)*.(fst(List.nth ray j))) (fst (List.nth points i)) , min ((min_ord)*.(snd(List.nth ray j))) (snd (List.nth points i)))::!point_list
+				|(u,v) when ((u>=0.) && (v>=0.)) -> point_list:=(max ((max_abs)*.(fst(List.nth ray j))) (fst (List.nth points i)) , max ((max_ord)*.(snd(List.nth ray j))) (snd (List.nth points i)))::!point_list
+				|(u,v) when ((u<0.) && (v>=0.)) -> point_list:=(min ((min_abs)*.(fst(List.nth ray j))) (fst (List.nth points i)) , max ((max_ord)*.(snd(List.nth ray j))) (snd (List.nth points i)))::!point_list
+				|(u,v) when ((u>=0.) && (v<0.)) -> point_list:=(max ((max_abs)*.(fst(List.nth ray j))) (fst (List.nth points i)) , min ((min_ord)*.(snd(List.nth ray j))) (snd (List.nth points i)))::!point_list
+				|(u,v) when ((u<0.) && (v<0.)) -> point_list:=(min ((min_abs)*.(fst(List.nth ray j))) (fst (List.nth points i)) , min ((min_ord)*.(snd(List.nth ray j))) (snd (List.nth points i)))::!point_list
 				| _ -> ()
 		done
 	done;
@@ -1887,7 +1915,7 @@ let generate_points x y linear_constraint min_abs min_ord max_abs max_ord =
 		let l2 = ref [] in
 		let l3 = ref [] in
 		let l4 = ref [] in
-		while !i <= (List.length ray -1) & (!add_point = (Nowhere,Nowhere)) do 
+		while !i <= (List.length ray -1) && (!add_point = (Nowhere,Nowhere)) do 
 			let j = ref 0 in
 			while !j <= (List.length points -1) do
 				(* make the straight line to test from a point and a vector *)
@@ -1905,15 +1933,15 @@ let generate_points x y linear_constraint min_abs min_ord max_abs max_ord =
 				j:=!j+1
 			done;
 			(* if two intersection points are on two consecutives border then mark it in add_point *)
-			if List.length !l1 <> 0 & List.length !l2 <> 0 then add_point:=(North,East)
-			else if List.length !l2 <> 0 & List.length !l3 <> 0 then add_point:=(East,South)
-			else if List.length !l3 <> 0 & List.length !l4 <> 0 then add_point:=(South,West)
-			else if List.length !l4 <> 0 & List.length !l4 <> 0 then add_point:=(West,North)
+			if List.length !l1 <> 0 && List.length !l2 <> 0 then add_point:=(North,East)
+			else if List.length !l2 <> 0 && List.length !l3 <> 0 then add_point:=(East,South)
+			else if List.length !l3 <> 0 && List.length !l4 <> 0 then add_point:=(South,West)
+			else if List.length !l4 <> 0 && List.length !l4 <> 0 then add_point:=(West,North)
 			(* if two intersection points are on two opposite border then mark it in add_point *)
-			else if List.length !l1 <> 0 & List.length !l3 <> 0 then add_point:=(North,South)
-			else if List.length !l2 <> 0 & List.length !l4 <> 0 then add_point:=(East,West)
-			else if List.length !l3 <> 0 & List.length !l1 <> 0 then add_point:=(South,North)
-			else if List.length !l4 <> 0 & List.length !l2 <> 0 then add_point:=(West,East);
+			else if List.length !l1 <> 0 && List.length !l3 <> 0 then add_point:=(North,South)
+			else if List.length !l2 <> 0 && List.length !l4 <> 0 then add_point:=(East,West)
+			else if List.length !l3 <> 0 && List.length !l1 <> 0 then add_point:=(South,North)
+			else if List.length !l4 <> 0 && List.length !l2 <> 0 then add_point:=(West,East);
 			i:=!i+1
 		done;
 		(* add the intersection points between the border specified by add_point to point_list *)

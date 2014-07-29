@@ -1,8 +1,6 @@
 *******************************************************
 release XXXX    (XXXX) PRIVATE RELEASE
 
-Nothing really new, just a backup before refactoring constraints
-
 Major features:
 - Added EF-synthesis (option "-EF"): synthesize all parameter valuations such that a given state is reachable
 - Added a distributed version of IMITATOR
@@ -11,6 +9,7 @@ Minor features:
 - add suffix "-pta.jpg" to PTA2JPG files
 - in BC mode: try to reduce the number of constraint (inclusion test in both directions)
 - main binary now in lower case ("imitator")
+- warning displayed if parameters are not contrained to be >= 0 in the model
 
 Changes in options syntax:
 - "reachability" becomes "statespace"
@@ -20,7 +19,8 @@ Misc
 - Now IMITATOR has a build number
 
 Internal
-- replaced Makefile with _oasis
+- Moved to OCaml 4.01.0
+- Replaced Makefile with _oasis 0.3
 - Refactored constraints
 - Renamed "Graph.ml" with "StateSpace.ml"
 - Much refactoring of the code, in particular in Cartography.ml
