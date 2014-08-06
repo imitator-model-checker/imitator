@@ -66,6 +66,12 @@ class imitator_options =
 		(* prefix for output files *)
 		val mutable files_prefix = ref ""
 		
+		(* min/max values for the cartography *)
+		val mutable output_cart_x_min = ref None
+		val mutable output_cart_x_max = ref None
+		val mutable output_cart_y_min = ref None
+		val mutable output_cart_y_max = ref None
+
 		(* Gives statistics on number of calls *)
 		val mutable statistics = ref false
 		
@@ -203,6 +209,10 @@ class imitator_options =
 		method merge = !merge
 		method merge_before = !merge_before
 		method no_random = !no_random
+		method output_cart_x_min = !output_cart_x_min
+		method output_cart_x_max = !output_cart_x_max
+		method output_cart_y_min = !output_cart_y_min
+		method output_cart_y_max = !output_cart_y_max
 		method pi_compatible = !pi_compatible
 		method post_limit = !post_limit
 		method precomputepi0 = !precomputepi0
@@ -359,6 +369,12 @@ class imitator_options =
 				
 				("-output-cart", Set cart, " Plot cartography before terminating the program. Uses the first two parameters with ranges. Default: false.");
 				
+				(*** WARNING: only works partially ***)
+				("-output-cart-x-min", Int (fun n -> output_cart_x_min := Some n), " Set minimum value for the x axis when plotting the cartography (not entirely functional yet). Default: 0.");
+				("-output-cart-x-max", Int (fun n -> output_cart_x_max := Some n), " Set maximum value for the x axis when plotting the cartography (not entirely functional yet). Default: automatic.");
+				("-output-cart-y-min", Int (fun n -> output_cart_y_min := Some n), " Set minimum value for the y axis when plotting the cartography (not entirely functional yet). Default: 0.");
+				("-output-cart-y-max", Int (fun n -> output_cart_y_max := Some n), " Set maximum value for the y axis when plotting the cartography (not entirely functional yet). Default: automatic.");
+				
 				("-output-graphics-source", Set with_graphics_source, " Keep file(s) used for generating graphical output. Default: false.");
 
 (* 				("-output-parametric-states", Set with_parametric_log, " Adds the elimination of the clock variables to the constraints in the description of all reachable states. Default: false."); *)
@@ -470,7 +486,7 @@ class imitator_options =
 			in print_message Debug_standard ("Mode: " ^ message ^ ".");
 
 
-			(* TODO : print the user-defined correctness condition, if any *)
+			(*** TODO : print the user-defined correctness condition, if any ***)
 			
 			
 			(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -532,7 +548,7 @@ class imitator_options =
 			;
 
 
-			
+			begin
 			match !distribution_mode with
 			| Non_distributed -> 
 				print_message Debug_medium ("Non-distributed mode (default).");
@@ -566,7 +582,7 @@ class imitator_options =
 					print_warning "The distributed mode is only valid for the cartography. Option will be ignored.";
 				)
 			)
-			;
+			end;
 
 			if !precomputepi0 then(
 				print_message Debug_standard ("Compute the next pi0 before the next reception of a constraint.");
@@ -649,15 +665,55 @@ class imitator_options =
 			else
 				print_message Debug_medium ("No check of the constraint equality with pi0 (default).");
 
-			(* Output *)
-
-			if !with_dot then
-				print_message Debug_standard ("Graphical output will be generated.")
-			else
-				print_message Debug_medium ("No graphical output (default).");
 				
+				
+			(*============================================================*)
+			(* OUTPUT *)
+			(*============================================================*)
+
+			if !cart then
+				print_message Debug_standard ("The cartography will be output in a graphical mode.")
+			else
+				print_message Debug_medium ("No graphical output for the cartography (default).");
+			
+			(* Check that if output_cart_x_max / etc. are defined, then cart should be active too *)
+			
+			begin
+			match !output_cart_x_min with
+				| None -> print_message Debug_medium ("No specified minimum value for the x axis for the cartography (default).");
+				| Some n ->
+					if not !cart then (print_warning "A minimum value for the x axis for the cartography is specified, but no cartography will be output. Ignored.")
+					else print_message Debug_low ("The minimum value for the x axis for the cartography will be " ^ (string_of_int n) ^ ".");
+			end;
+			begin
+			match !output_cart_x_max with
+				| None -> print_message Debug_medium ("No specified minimum value for the x axis for the cartography (default).");
+				| Some n ->
+					if not !cart then (print_warning "A maximum value for the x axis for the cartography is specified, but no cartography will be output. Ignored.")
+					else print_message Debug_low ("The maximum value for the x axis for the cartography will be " ^ (string_of_int n) ^ ".");
+			end;
+			begin
+			match !output_cart_y_min with
+				| None -> print_message Debug_medium ("No specified minimum value for the y axis for the cartography (default).");
+				| Some n ->
+					if not !cart then (print_warning "A minimum value for the y axis for the cartography is specified, but no cartography will be output. Ignored.")
+					else print_message Debug_low ("The minimum value for the y axis for the cartography will be " ^ (string_of_int n) ^ ".");
+			end;
+			begin
+			match !output_cart_y_max with
+				| None -> print_message Debug_medium ("No specified minimum value for the y axis for the cartography (default).");
+				| Some n -> print_message Debug_low ("The maximum value for the y axis for the cartography will be " ^ (string_of_int n) ^ ".");
+			end;
+			
+			
+			if !with_dot then
+				print_message Debug_standard ("The trace set(s) will be generated in a graphical mode.")
+			else
+				print_message Debug_medium ("No graphical output for trace set(s) (default).");
+			
+			
 			if !with_log then
-				print_message Debug_standard ("Log (description of states) will be generated.")
+				print_message Debug_standard ("Description of states will be output.")
 			else
 				print_message Debug_medium ("No state description (default).");
 

@@ -8,7 +8,7 @@
  * Author:        Ulrich Kuehne, Etienne Andre
  * 
  * Created:       2009/09/07
- * Last modified: 2014/04/26
+ * Last modified: 2014/08/06
  *
  ****************************************************************)
 
@@ -73,31 +73,14 @@ Input.set_options options;
 (**************************************************)
 (**************************************************)
   
-(*begin
-  match options#distribution_mode with
-  | Distributed -> 
-    let rank = Mpi.comm_rank comm_world in
-    if rank = 0 then
-      begin*)
-	(* Print stuff about the authors *)
-	print_message Debug_standard header_string;
-	
-	(* Print date *)
-	print_message Debug_standard ("Analysis time: " ^ (now()) ^ "\n");
+(* Print header *)
+print_message Debug_standard header_string;
 
-	(* Recall the arguments *)
-	options#recall(); 
+(* Print date *)
+print_message Debug_standard ("Analysis time: " ^ (now()) ^ "\n");
 
-(*      end;
-  | _ -> 
-    (* Recall the arguments *)
-    options#recall(); 
-    (* Print stuff about the authors *)
-    print_message Debug_standard header_string;
-    (* Print date *)
-    print_message Debug_standard ("Analysis time: " ^ (now()) ^ "\n")  
-end;*)
-
+(* Recall the arguments *)
+options#recall(); 
     
 
 (**************************************************)

@@ -10,6 +10,7 @@ Minor features:
 - in BC mode: try to reduce the number of constraint (inclusion test in both directions)
 - main binary now in lower case ("imitator")
 - warning displayed if parameters are not contrained to be >= 0 in the model
+- new options to specify min/max values for x/y axes for the graphical output of the cartography
 
 Changes in options syntax:
 - "reachability" becomes "statespace"

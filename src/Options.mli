@@ -56,6 +56,10 @@ class imitator_options :
 		method merge : bool
 		method merge_before : bool
 		method no_random : bool
+		method output_cart_x_min : int option
+		method output_cart_x_max : int option
+		method output_cart_y_min : int option
+		method output_cart_y_max : int option
 		method pi0file : string
 		method pi_compatible : bool
 		method post_limit : int option

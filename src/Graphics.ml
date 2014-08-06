@@ -11,11 +11,11 @@
  * Last modified: 2014/08/06
  *
  ****************************************************************)
- 
- 
-(**************************************************)
+
+
+(************************************************************)
 (* Modules *)
-(**************************************************)
+(************************************************************)
 
 open Global
 (* open LinearConstraint *)
@@ -23,11 +23,12 @@ open AbstractModel
 
 
 
-(**************************************************)
-(**************************************************)
+
+(************************************************************)
+(************************************************************)
 (* GLOBAL CONSTANTS *)
-(**************************************************)
-(**************************************************)
+(************************************************************)
+(************************************************************)
 
 let dot_command = "dot"
 let dot_image_extension = "jpg"
@@ -47,9 +48,9 @@ let string_of_tile_nature = function
 	| _ -> raise (InternalError ("Tile nature should be good or bad only, so far "))
 
 
-(**************************************************)
+(************************************************************)
 (* Plot (graph) Functions *)
-(**************************************************)
+(************************************************************)
 
 (*------------------------------------------------------------*)
 (* Convert a tile_index into a color for graph (actually an integer from 1 to 5) *)
@@ -90,10 +91,10 @@ let make_file_name cartography_name file_index =
 (* print the cartography which correspond to the list of constraint *)
 (*------------------------------------------------------------*)
 let cartography model v0 returned_constraint_list cartography_name =
-	(* No cartography if no zone *)
-	if returned_constraint_list = [] then(
-		print_message Debug_standard ("\nNo cartography can be generated since the list of constraints is empty.\n");
-	)else(
+(* No cartography if no zone *)
+if returned_constraint_list = [] then(
+	print_message Debug_standard ("\nNo cartography can be generated since the list of constraints is empty.\n");
+)else(
 		print_message Debug_standard ("\nGeneration of the graphical cartography...");
 (*		Graphics.cartography model v0 zones (options#files_prefix ^ "_cart")
 	)*)
@@ -127,10 +128,7 @@ let cartography model v0 returned_constraint_list cartography_name =
 	done;*)
 	
 	
-	
-	(***** TODO!!! for EF-synthesis, first draw a green background, since the non-red is necessarily green (well, unless approximations are used) *)
-	
-	
+	(*** TODO!!! for EF-synthesis, first draw a green background, since the non-red is necessarily green (well, unless approximations are used) ***)
 	
 	let x_index = 0 in
 	let y_index = 1 in
@@ -155,9 +153,29 @@ let cartography model v0 returned_constraint_list cartography_name =
 			(* Choose the first 2 *)
 			range_params := [ List.nth model.parameters 0 ; List.nth model.parameters 1];
 			
-			(*** WARNING: quite random thing here ! ***)
-			!bounds.(0) <- (NumConst.numconst_of_int 0, NumConst.numconst_of_int 50);
-			!bounds.(1) <- (NumConst.numconst_of_int 0, NumConst.numconst_of_int 50);
+			(* Prepare the "V0" rectangle *)
+			let ef_x_min =
+			match options#output_cart_x_min with
+				| None -> NumConst.numconst_of_int 0 (*** WARNING: quite random thing here ! ***)
+				| Some n -> NumConst.numconst_of_int n
+			in
+			let ef_x_max =
+			match options#output_cart_x_max with
+				| None -> NumConst.numconst_of_int 50 (*** WARNING: quite random thing here ! ***)
+				| Some n -> NumConst.numconst_of_int n
+			in
+			let ef_y_min =
+			match options#output_cart_y_min with
+				| None -> NumConst.numconst_of_int 0 (*** WARNING: quite random thing here ! ***)
+				| Some n -> NumConst.numconst_of_int n
+			in
+			let ef_y_max =
+			match options#output_cart_y_max with
+				| None -> NumConst.numconst_of_int 50 (*** WARNING: quite random thing here ! ***)
+				| Some n -> NumConst.numconst_of_int n
+			in
+			!bounds.(0) <- ef_x_min, ef_x_max;
+			!bounds.(1) <- ef_y_min, ef_y_max;
 	
 	(* If cartography: find indices of first two variables with a parameter range *)
 		| Cover_cartography | Random_cartography _ | Border_cartography ->
@@ -182,12 +200,46 @@ let cartography model v0 returned_constraint_list cartography_name =
 
 		
 	(* Else: no reason to draw a cartography *)
-	(** TODO: could be allowed for IM, after all *)
+	(*** TODO: should be allowed for IM too ***)
 		| _ -> 
 			print_error "Cartography can only be drawn while in cartography or EF-synthesis mode.";
 			abort_program();
 	end;
-
+	
+	(*** WARNING: only works partially ***)
+	(* Shrink V0 bounds if options specified *)
+	begin
+	match options#output_cart_x_min with
+		| None -> ()
+		| Some n -> let (old_min, old_max) = !bounds.(x_index) in
+			let new_min = NumConst.numconst_of_int n in
+			if NumConst.g new_min old_min then
+				!bounds.(x_index) <- (new_min, old_max);
+	end;
+	begin
+	match options#output_cart_x_max with
+		| None -> ()
+		| Some n -> let (old_min, old_max) = !bounds.(x_index) in
+			let new_max = NumConst.numconst_of_int n in
+			if NumConst.l new_max old_max then
+				!bounds.(x_index) <- (old_min, new_max);
+	end;
+	begin
+	match options#output_cart_y_min with
+		| None -> ()
+		| Some n -> let (old_min, old_max) = !bounds.(y_index) in
+			let new_min = NumConst.numconst_of_int n in
+			if NumConst.g new_min old_min then
+				!bounds.(y_index) <- (new_min, old_max);
+	end;
+	begin
+	match options#output_cart_y_max with
+		| None -> ()
+		| Some n -> let (old_min, old_max) = !bounds.(y_index) in
+			let new_max = NumConst.numconst_of_int n in
+			if NumConst.l new_max old_max then
+				!bounds.(y_index) <- (old_min, new_max);
+	end;
 	
 	(* Now start *)
 	
@@ -207,9 +259,10 @@ let cartography model v0 returned_constraint_list cartography_name =
 	(* Create a script that will print the cartography *)
 	let script_name = cartography_name ^ ".sh" in
 	let script = open_out script_name in
-	(* Find the V0 zone *)
-	let file_v0_name = cartography_name^"_v0.txt" in
-	let file_zone = open_out file_v0_name in
+	
+	(* Create a temp file containing the V0 coordinates *)
+	let file_v0_name = cartography_name ^ "_v0.txt" in
+	let file_rectangle_v0 = open_out file_v0_name in
 	
 	
 	(* Convert a num_const to a string, specifically for Graph *)
@@ -225,7 +278,7 @@ let cartography model v0 returned_constraint_list cartography_name =
 	(* Print some information *)
 	print_message Debug_low ("Computing the zone...");
 	
-	let str_zone =
+	let str_rectangle_v0 =
 				(graph_string_of_numconst (fst (!bounds.(x_pos))))
 		^" "^(graph_string_of_numconst (snd (!bounds.(y_pos))))
 		^"\n"^(graph_string_of_numconst (snd (!bounds.(x_pos))))
@@ -237,11 +290,12 @@ let cartography model v0 returned_constraint_list cartography_name =
 		^"\n"^(graph_string_of_numconst (fst (!bounds.(x_pos))))
 		^" "^ (graph_string_of_numconst (snd (!bounds.(y_pos))))
 	in
-	output_string file_zone str_zone;
-	close_out file_zone;
+	output_string file_rectangle_v0 str_rectangle_v0;
+	close_out file_rectangle_v0;
 
 	(* Print some information *)
-	print_message Debug_high ("str_zone = \n" ^ str_zone);
+	if debug_mode_greater Debug_total then
+		print_message Debug_total ("str_rectangle_v0 = \n" ^ str_rectangle_v0);
 
 	(* Beginning of the script *)
 	let script_line = ref ("graph -T " ^ cartography_extension ^ " -C -X \"" ^ x_name ^ "\" -Y \"" ^ y_name ^ "\" ") in
@@ -275,7 +329,7 @@ let cartography model v0 returned_constraint_list cartography_name =
 
 	(* Conversion to float, because all functions handle floats *)
 	
-	(*** WARNING! very dangerous here! may not work for big integers *)
+	(*** WARNING! very dangerous here! may not work for big integers ***)
 	let bad_float_of_num_const n = float_of_string (NumConst.string_of_numconst n) in
 
 	(* Print some information *)
@@ -307,10 +361,43 @@ let cartography model v0 returned_constraint_list cartography_name =
 	print_message Debug_low ("Adding a 1-unit margin...");
 
 	(* Add a margin of 1 unit *)
-	let min_abs = !min_abs -. 1.0 in
-	let max_abs = !max_abs +. 1.0 in
-	let min_ord = !min_ord -. 1.0 in
-	let max_ord = !max_ord +. 1.0 in
+	min_abs := !min_abs -. 1.0;
+	max_abs := !max_abs +. 1.0;
+	min_ord := !min_ord -. 1.0;
+	max_ord := !max_ord +. 1.0;
+	
+	(* Overwrite bounds if options specified *)
+	(*** WARNING: only works partially ***)
+	begin
+	match options#output_cart_x_min with
+		| None -> ()
+		| Some n -> min_abs := float_of_int n;
+(*		let (_, old_max) = !bounds.(x_index) in
+			!bounds.(x_index) <- (NumConst.numconst_of_int n, old_max);*)
+	end;
+	begin
+	match options#output_cart_x_max with
+		| None -> ()
+		| Some n -> max_abs := float_of_int n;
+		(*let (old_min, _) = !bounds.(x_index) in
+			!bounds.(x_index) <- (old_min, NumConst.numconst_of_int n);*)
+	end;
+	begin
+	match options#output_cart_y_min with
+		| None -> ()
+		| Some n -> min_ord := float_of_int n;
+		(*let (_, old_max) = !bounds.(y_index) in
+			!bounds.(y_index) <- (NumConst.numconst_of_int n, old_max);*)
+	end;
+	begin
+	match options#output_cart_y_max with
+		| None -> ()
+		| Some n -> max_ord := float_of_int n;
+		(*let (old_min, _) = !bounds.(y_index) in
+			!bounds.(y_index) <- (old_min, NumConst.numconst_of_int n);*)
+	end;
+	(*** TODO!!! do something if some min > max ***)
+
 	
 	(* print_message Debug_standard ((string_of_float !min_abs)^"  "^(string_of_float !min_ord)); *)
 	(* Create a new file for each constraint *)
@@ -336,8 +423,8 @@ let cartography model v0 returned_constraint_list cartography_name =
 			else script_line := !script_line^"-m "^(string_of_int((i mod 5)+1))^" -q 0.7 "^file_name^" "
 	done;*)
 
-	(*** BAD PROG : bouh pas beau *)
-	(*** WARNING: it looks like file_index = tile_index, always! *)
+	(*** BAD PROG : bouh pas beau ***)
+	(*** WARNING: it looks like file_index = tile_index, always! ***)
 	let file_index = ref 0 in
 	let tile_index = ref 0 in
 	(* Creation of files (Daphne wrote this?) *)
@@ -361,7 +448,7 @@ let cartography model v0 returned_constraint_list cartography_name =
 		remove_dimensions (model.nb_discrete + model.nb_clocks) k ;*)
 		
 		(* find the points satisfying the constraint *)
-		let s = LinearConstraint.plot_2d x_param y_param k min_abs min_ord max_abs max_ord in
+		let s = LinearConstraint.plot_2d x_param y_param k !min_abs !min_ord !max_abs !max_ord in
 		(* Get the points *)
 		let the_points = snd s in
 		(* print in the file the coordinates of the points *)
@@ -393,7 +480,7 @@ let cartography model v0 returned_constraint_list cartography_name =
 		close_out file_out_bis;
 		(* instructions to have the zones colored. If fst s = true then the zone is infinite *)
 		if fst s
-			(*** TO DO : same color for one disjunctive tile *)
+			(*** TODO : same color for one disjunctive tile ***)
 			then script_line := !script_line ^ "-m " ^ (graph_color_of_int !tile_index tile_nature true) ^ " -q 0.3 " ^ file_name ^ " "
 			else script_line := !script_line ^ "-m " ^ (graph_color_of_int !tile_index tile_nature false) ^ " -q 0.7 " ^ file_name ^ " "
 		;
@@ -402,7 +489,7 @@ let cartography model v0 returned_constraint_list cartography_name =
 	(* For all returned_constraint *)
 	List.iter (function
 		| Convex_constraint (k, tn) ->
-			(*** WARNING: duplicate code *)
+			(*** WARNING: duplicate code ***)
 			(* Test just in case ! (otherwise an exception arises *)
 			if LinearConstraint.p_is_false k then(
 				print_warning " Found a false constraint when computing the cartography. Ignored."
@@ -412,7 +499,7 @@ let cartography model v0 returned_constraint_list cartography_name =
 			)
 		| Union_of_constraints (list_of_k, tn) ->
 			List.iter (fun k -> 
-				(*** WARNING: duplicate code *)
+				(*** WARNING: duplicate code ***)
 				(* Test just in case ! (otherwise an exception arises *)
 				if LinearConstraint.p_is_false k then(
 					print_warning " Found a false constraint when computing the cartography. Ignored."
@@ -437,7 +524,7 @@ let cartography model v0 returned_constraint_list cartography_name =
 		"Plot cartography in 2D projected on parameters " ^ x_name ^ " and " ^ y_name
 		^ " to file '" ^ final_name ^ "'."); 
 	(* execute the script *)
-	(** TODO: Improve! Should perform an automatic detection of the model! *)
+	(*** TODO: Improve! Should perform an automatic detection of the model! ***)
 	let execution = Sys.command !script_line in
 	if execution != 0 then
 		(print_error ("Something went wrong in the command. Exit code: " ^ (string_of_int execution) ^ ". Maybe you forgot to install the 'graph' utility (from the 'plotutils' package)."););
@@ -462,9 +549,9 @@ let cartography model v0 returned_constraint_list cartography_name =
 
 
 
-(**************************************************)
+(************************************************************)
 (* Dot Functions *)
-(**************************************************)
+(************************************************************)
 
 let dot_colors = [
 (* I ordered the first colors *)
@@ -774,9 +861,9 @@ let generate_graph model reachability_graph radical =
 
 
 
-(**************************************************)
+(************************************************************)
 (* Meta programming (could have been written in Python for example) *)
-(**************************************************)
+(************************************************************)
 
 
 (*let dot_colors = [
