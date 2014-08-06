@@ -7,7 +7,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Ulrich Kuehne, Etienne Andre
  * Created:       2010
- * Last modified: 2014/07/25
+ * Last modified: 2014/08/06
  *
  ****************************************************************)
  
@@ -26,7 +26,7 @@ type distribution_mode =
 	(** Distributed mode: Master slave with random pi0 and n retries before switching to sequential mode *)
 	| Distributed_ms_random of int	
 	(**  Distributed mode: Workers live their own lives and communicate results to the coordinator  **)
-	| Distributed_unsupervised	
+	| Distributed_unsupervised
 	(**  Distributed mode: multi-threaded version of Distributed_unsupervised  **)
 	| Distributed_unsupervised_multi_threaded
 
@@ -81,8 +81,8 @@ class imitator_options =
 		(* Print logs *)
 		val mutable with_log = ref false
 		
-		(* print parametric logs *)
-		val mutable with_parametric_log = ref false
+(*		(* print parametric logs *)
+		val mutable with_parametric_log = ref false*)
 
 
 		
@@ -113,7 +113,7 @@ class imitator_options =
 		(* On-the-fly intersection (DEPRECATED) *)
 (* 		val mutable dynamic = ref false *)
 		
-		(* Distributed version of IMITATOR (TOTALLY EXPERIMENTAL) *)
+		(* Distributed version of IMITATOR *)
 		val mutable distribution_mode = ref Non_distributed
 		
 		(* Remove useless clocks (slightly experimental) *)
@@ -220,7 +220,7 @@ class imitator_options =
 		method with_dot = !with_dot
 		method with_graphics_source = !with_graphics_source
 		method with_log = !with_log
-		method with_parametric_log = !with_parametric_log
+(* 		method with_parametric_log = !with_parametric_log *)
 
 		method pi0file = !pi0file
 
@@ -308,9 +308,7 @@ class imitator_options =
 (* 				Temporarily disabled (March 2014) *)
 (* 				("-bab", Set branch_and_bound, " Experimental new feature of IMITATOR, based on cost optimization (WORK IN PROGRESS). Default: 'false'"); *)
 				
-				("-cart", Set cart, " Plot cartography before terminating the program. Uses the first two parameters with ranges. Default: false.");
-				
-				("-cartonly", Unit (fun _ -> cart := true; cartonly := true; imitator_mode := Translation), " Only prints a cartography. Default: false.");
+				("-cartonly", Unit (fun _ -> cart := true; cartonly := true; imitator_mode := Translation), " Only outputs a cartography. Default: false.");
 
 				(* 				("-dynamic", Set dynamic, "Perform the on-the-fly intersection. Defaut : 'false'"); *)
 				
@@ -345,8 +343,6 @@ class imitator_options =
 				
 				("-IMunion", Set union, " Algorithm IMUnion (defined in [AS11]): Returns the union of the constraint on the parameters associated to the last state of each trace. Default: 'false'");
 				
-				("-log-prefix", Set_string files_prefix, " Sets the prefix for output files. Default: [model].");
-				
 				("-merge", Set merge, " Use the merging technique of [AFS12]. Default: 'false' (disable)");
 				
 				("-merge-before", Set merge_before , " Use the merging technique of [AFS12] but merges states before pi0-compatibility test (EXPERIMENTAL). Default: 'false' (disable)");
@@ -360,6 +356,18 @@ class imitator_options =
 				("-no-random", Set no_random, " No random selection of the pi0-incompatible inequality (select the first found). Default: false.");
 
 				(* 				("-PTA2CLP", Unit (fun _ -> pta2clp := true; imitator_mode := Translation), "Translate PTA into a CLP program, and exit without performing any analysis. Work in progress! Defaut : 'false'"); *)
+				
+				("-output-cart", Set cart, " Plot cartography before terminating the program. Uses the first two parameters with ranges. Default: false.");
+				
+				("-output-graphics-source", Set with_graphics_source, " Keep file(s) used for generating graphical output. Default: false.");
+
+(* 				("-output-parametric-states", Set with_parametric_log, " Adds the elimination of the clock variables to the constraints in the description of all reachable states. Default: false."); *)
+
+				("-output-prefix", Set_string files_prefix, " Sets the prefix for output files. Default: [model].");
+				
+				("-output-states", Set with_log, " Generation of the description of all reachable states in a file. Default: false.");
+				
+				("-output-trace-set", Set with_dot, " Trace set under a graphical form (using 'dot'). Default: false.");
 				
 				("-precomputepi0", Set precomputepi0, " Compute the next pi0 before the next reception of a constraint (in PaTATOR mode only). Default: false.");
 
@@ -384,15 +392,6 @@ class imitator_options =
 				("-verbose", String set_debug_mode_ref, " Print more or less information. Can be set to 'mute', 'standard', 'low', 'medium', 'high', 'total'. Default: 'standard'");
 				
 				("-version", Unit (fun _ -> print_string ("\n" ^ program_name ^ " " ^ version_string ^ "\nBuild: " ^ BuildInfo.build_number ^ " (" ^ BuildInfo.build_time ^ ")\n"); exit 0), " Print version number and exit.");
-				
-				("-with-dot", Set with_dot, " Trace set under a graphical form (using 'dot'). Default: false.");
-				
-				("-with-graphics-source", Set with_graphics_source, " Keep file(s) used for generating graphical output. Default: false.");
-				
-				("-with-log", Set with_log, " Generation of log files (description of states). Default: false.");
-				
-				("-with-parametric-log", Set with_parametric_log, " Adds the elimination of the clock variables in the constraints in the log files. Default: false.");
-
 			] in
 					
 			(* function for parsing arguments *)
@@ -497,9 +496,9 @@ class imitator_options =
 				print_warning ("Ayclic mode is set although tree mode is already set. Only tree mode will be considered.");
 			);
 
-			if !with_parametric_log && not !with_log then (
+(*			if !with_parametric_log && not !with_log then (
 				print_warning ("Parametric log was asked, but log was not asked. No log will be output.");
-			);
+			);*)
 
 
 
@@ -662,10 +661,10 @@ class imitator_options =
 			else
 				print_message Debug_medium ("No state description (default).");
 
-			if !with_parametric_log then
+(*			if !with_parametric_log then
 				print_message Debug_standard ("Parametric description of states will be generated.")
 			else
-				print_message Debug_medium ("No parametric description of states (default).");
+				print_message Debug_medium ("No parametric description of states (default).");*)
 
 			(* LIMIT OF POST *)
 			let _ =

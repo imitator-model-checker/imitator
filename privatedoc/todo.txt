@@ -75,10 +75,7 @@ OUTPUT FEATURES
 
 
 Options names:
-- rename -with-dot with -draw-trace-set (or -output-trace-set? or -plot-trace-set?)
-- rename -cart with -draw-cart or plot-cart ?
-- rename -PTA2JPG with -draw-PTA or plot-PTA ?
-- rename -with-log with ??? -output-states? -write-states?
+- rename -PTA2JPG with -draw-PTA or plot-PTA or -output-PTA?
 
 
 ************************************************************

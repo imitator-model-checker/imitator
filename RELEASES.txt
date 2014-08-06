@@ -13,6 +13,12 @@ Minor features:
 
 Changes in options syntax:
 - "reachability" becomes "statespace"
+- "-cart" becomes "-output-cart"
+- "-log-prefix" becomes "-output-prefix"
+- "-with-dot" becomes "-output-trace-set"
+- "-with-graphics-source" becomes "-output-graphics-source"
+- "-with-log" becomes "-output-states"
+- "-with-parametric-log" is removed (becomes true by default)
 
 Misc
 - Improve printing floating numbers (in time and memory statistics)

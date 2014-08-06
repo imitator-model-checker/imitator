@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2012/05/10
- * Last modified: 2014/06/19
+ * Last modified: 2014/08/06
  *
  ****************************************************************)
  
@@ -74,7 +74,7 @@ class imitator_options :
 		method with_dot : bool
 		method with_graphics_source : bool
 		method with_log : bool
-		method with_parametric_log : bool
+(* 		method with_parametric_log : bool *)
 		method parse : unit
 		
 		(* Recall options *)
