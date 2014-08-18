@@ -1,0 +1,47 @@
+###############################################################
+#
+#                       IMITATOR
+#
+#  Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
+#  Laboratoire d'Informatique de Paris Nord (Paris 13, France)
+#
+#  _oasis authors: Etienne Andre, Alban Linard
+#  Created:        2014/08/18
+#  Last modified:  2014/08/18
+###############################################################
+
+OASISFormat: 0.3
+Name:        IMITATORnondistr
+Version:     2.6.2
+Synopsis:    shortdescription
+Authors:     Etienne Andre, Ulrich Kuehne, Romain Soulat
+License:     GPL-3.0
+
+# Handling build number (using Python)
+PreBuildCommand: python gen_build_info.py
+PostBuildCommand: python incrementer.py ; echo "Copying main binary file to bin/imitatornondistr ..." ; cp _build/src/IMITATOR-nondistr.native bin/imitatornondistr
+
+
+Executable imitatornondistr
+  Path:       .
+  BuildTools: ocamlbuild
+  MainIs:     src/IMITATOR-nondistr.ml
+  BuildDepends: gmp, extlib, ppl, str, unix, threads
+#  CCLib: -lstdc++
+  CCLib: -static '-lppl -ltinfo -lppl_ocaml -lstdc++ -lgmp -lgmpxx'
+
+# -static to have a static compiling (+ ' ' around)
+# I removed -lcamlrun because I wrote "best" instead of "byte"
+  CompiledObject: best
+
+Test startingcomment
+  Command: echo "\n********** STARTING TESTS **********\n"
+Test tes1
+  Command: ./bin/imitatornondistr examples/Flipflop/flipflop.imi -mode statespace -depth-limit 5
+Test test2
+  Command: ./bin/imitatornondistr examples/Flipflop/flipflop.imi examples/Flipflop/flipflop.pi0 -output-trace-set -output-states
+Test test3
+  Command: ./bin/imitatornondistr examples/Flipflop/flipflop.imi examples/Flipflop/flipflop.v0 -mode cover -output-cart
+Test finalcomment
+  Command: echo "\n********** END TESTS **********\n"
+

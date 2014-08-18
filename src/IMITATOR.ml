@@ -24,7 +24,6 @@ open Options
 open Reachability
 open Gc
 
-open Mpi
 
 
 (**************************************************
@@ -103,12 +102,16 @@ if debug_mode_greater Debug_total then
 (**************************************************)
 (* Case distributed *)
 (**************************************************)
+(* Do not modify the following lines! (used by an external script to compile the non-distributed version of IMITATOR) *)
+(* ** *** **** ***** ******    BEGIN FORK PaTATOR    ****** ***** **** *** ** *)
 begin
 match options#distribution_mode with
 	(* Fork if distributed *)
 	| Non_distributed -> ()
-	| _ -> PaTATOR.run()
+	| _ -> (PaTATOR.run(); exit(0))
 end;
+(* ** *** **** ***** ******    END FORK PaTATOR    ****** ***** **** *** ** *)
+(* Do not modify the previous lines! (used by an external script to compile the non-distributed version of IMITATOR) *)
 
 
 
@@ -162,7 +165,6 @@ if options#cartonly then(
 	(* The end *)
 	terminate_program()
 );
-(* 		| End_of_file -> print_error ("Parsing error in file " ^ file_name ^ ": unexpected end of file."); abort_program (); exit(1) *)
 
 
 

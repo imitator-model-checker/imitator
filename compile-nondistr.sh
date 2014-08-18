@@ -4,15 +4,20 @@
  #
  #                       BUILDATOR
  # 
- # Small script to build IMITATOR
+ # Script to build the non-distributed version of IMITATOR
  #
  # Universite Paris 13, Sorbonne Paris Cite, LIPN (France)
  # 
  # Author:        Etienne Andre
  # 
- # Created:       2014/01/13
- # Last modified: 2014/01/13
+ # Created:       2014/08/18
+ # Last modified: 2014/08/18
  #
 ################################################################
 
-oasis setup && ocaml setup.ml -configure --enable-tests && ocaml setup.ml -all
+python gen_imitator_nondistr.py \
+&& python gen_oasis_nondistr.py \
+&& oasis setup \
+&& ocaml setup.ml -configure --enable-tests \
+&& ocaml setup.ml -all
+
