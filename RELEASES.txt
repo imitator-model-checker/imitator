@@ -25,6 +25,9 @@ Misc
 - Improve printing floating numbers (in time and memory statistics)
 - Now IMITATOR has a build number
 
+Install and compile
+- Two versions: distributed (sh compile.sh), that creates a dynamic binary, or non-distributed (sh compile-nondistr.sh), that creates a static binary
+
 Internal
 - Moved to OCaml 4.01.0
 - Replaced Makefile with _oasis 0.3
