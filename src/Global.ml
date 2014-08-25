@@ -8,7 +8,7 @@
  * Author:        Etienne Andre
  * 
  * Created:       2009/09/08
- * Last modified: 2014/07/02
+ * Last modified: 2014/08/25
  *
  ****************************************************************)
  
@@ -47,6 +47,7 @@ let print_contributors()  =
 	print_string " * Daphne Dussaud      (2010)\n";
 	print_string " * Sami Evangelista    (2014 -     )\n";
 	print_string " * Ulrich Kuehne       (2010 - 2011)\n";
+(* 	print_string " * Nguyen Hoang Gia    (2014 -     )\n"; *)
 	print_string " * Romain Soulat       (2010 - 2013)\n";
 	print_string "\n";
 	print_string " Moral support and suggestions by:\n";
@@ -598,7 +599,6 @@ let header_string =
 	^ "*  " ^ program_name ^ " " ^ version_string ^ (string_n_times (46 - (String.length version_string)) " ") ^ " *\n"
 	^ "*                                                          *\n"
 	^ "*                     Etienne Andre, Ulrich Kuehne et al.  *\n"
-(* 	^ "*             Etienne Andre, Ulrich Kuehne, Romain Soulat  *\n" *)
 	^ "*                                             2009 - " ^ (BuildInfo.build_year) ^ "  *\n"
 	^ "*                       LSV, ENS de Cachan & CNRS, France  *\n"
 	^ "*  Universite Paris 13, Sorbonne Paris Cite, LIPN, France  *\n"
@@ -661,7 +661,7 @@ let terminate_program () =
 	print_newline();
 	print_message Debug_standard (program_name ^ " successfully terminated (" ^ (after_seconds ()) ^ ")");
 	(* Print memory info *)
-	print_memory_used Debug_standard;
+	print_memory_used Debug_low;
 	(* The end *)
 	print_newline();
 	flush Pervasives.stdout;
