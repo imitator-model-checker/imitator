@@ -113,7 +113,7 @@ IMILIB = lib/imitator.cma
 
 # target executable
 TARGET_PATH = bin/
-TARGET_NAME = IMITATOR
+TARGET_NAME = imitator
 VERSION = 2.6.1.1
 TARGET = $(TARGET_PATH)$(TARGET_NAME)
 TARGETV = $(TARGET)$(VERSION)
@@ -480,10 +480,10 @@ exe:
 	# 	$(TARGET) $(EXAMPLE_PATH)/Latch/latchValmem.imi $(EXAMPLE_PATH)/Latch/latchValmem.pi0 -bab
 
 # 	$(TARGET) $(EXAMPLE_PATH)/SRlatch/SRlatch.imi -mode statespace
-# 	$(TARGETV) $(EXAMPLE_PATH)/SRlatch/SRlatch.imi $(EXAMPLE_PATH)/SRlatch/SRlatch.pi0
+# 	$(TARGET) $(EXAMPLE_PATH)/SRlatch/SRlatch.imi $(EXAMPLE_PATH)/SRlatch/SRlatch.pi0
 # 	$(TARGETV) $(EXAMPLE_PATH)/SRlatch/SRlatch.imi $(EXAMPLE_PATH)/SRlatch/SRlatch.pi0 -dynamic-elimination
 # 	$(TARGET) $(EXAMPLE_PATH)/SRlatch/SRlatch.imi $(EXAMPLE_PATH)/SRlatch/SRlatch.pi0 -bab
-# 	$(TARGET) $(EXAMPLE_PATH)/SRlatch/SRlatch.imi $(EXAMPLE_PATH)/SRlatch/SRlatch.v0 -mode cover
+	$(TARGET) $(EXAMPLE_PATH)/SRlatch/SRlatch.imi $(EXAMPLE_PATH)/SRlatch/SRlatch.v0 -mode cover -output-cart
 
 # 	$(TARGET) $(EXAMPLE_PATH)/SRlatch/SRlatch.imi -mode EF -cart
 
