@@ -68,7 +68,6 @@ OUTPUT FEATURES
 [!!] allow graphical cartography for inverse method
 [ ] always allow output a cartography when 2D, even for IM, and always colour it if some good/bad states have been defined
 [ ] pass as an option the name of the parameters for the 2D graphical cartography (currently: first two)
-[ ] Rétablir le fait que -with-parametric-log active -with-log (ou inclure cette option par défaut, en fait...)
 
 [ ] rétablir (de HyMITATOR) le fait que contrôle+C rende un résultat partiel
 
@@ -109,8 +108,3 @@ ADMINISTRATIVE
 [!!] GPL license
 
 
-
-************************************************************
-THEORETICAL QUESTIONS
-************************************************************
-- 
