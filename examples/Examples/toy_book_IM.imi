@@ -1,0 +1,67 @@
+--****************************************************--
+--****************************************************--
+--
+--   Modeling of the example of Figure 3.3 in the book "The Inverse Method"
+--
+--
+--   Author: Nguyen Hoang Gia   
+--
+--   Created      : 2014/08/25
+--   Last modified: 2014/08/26
+--****************************************************--
+--****************************************************--
+
+var x1, x2 : clock;
+
+p1, p2, p3 : parameter; 
+
+
+--****************************************************--
+automaton toy
+--****************************************************--
+
+synclabs: a, b;
+initially Q0;
+
+
+loc Q0: while x1 <= p1 wait {}
+when x2 >= p2 sync a do {x1' = 0} goto Q1;
+when x1 >= p3 sync b do {}        goto Q2;
+
+loc Q1: while x1 >= 0 wait {}
+when True do {} goto Q1;
+
+loc Q2: while x1 >= 0 wait {}
+when True do {} goto Q2;
+end -- toy
+
+
+
+--****************************************************--
+-- ANALYSIS
+--****************************************************--
+
+
+var init : region;
+
+init := 
+----------------------
+-- Initial locations
+----------------------
+
+loc[toy] = Q0
+
+------------------------------------------------------------
+-- INITIAL CONSTRAINTS
+------------------------------------------------------------
+
+& x1 = 0
+& x2 = 0
+& p1 >= 0
+& p2 >= 0
+& p3 >= 0
+;
+
+-- property := everytime Q0 then eventually Q1;
+
+end
