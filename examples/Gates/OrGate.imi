@@ -1,0 +1,96 @@
+(************************************************************
+ *                         IMITATOR
+ *
+ * Model of an "AND" logical gate
+ *
+ * Author          : Christopher Makanga
+ * Created         : 2014/08/28
+ * Last modified   : 2014/08/28
+ * IMITATOR version: 2.6.2
+ ************************************************************)
+
+var 	ckOr
+		: clock;
+
+	dOr_l, dOr_u
+			: parameter;
+
+
+--****************************************************--
+  automaton OrGate
+--****************************************************--
+synclabs: i1Up, i1Down, i2Up, i2Down,
+	sUp, sDown;
+
+(* Stable *)
+loc Or000: while True wait {}
+	when True sync i1Up do {ckOr' = 0} goto Or100;
+	when True sync i2Up do {ckOr' = 0} goto Or010;
+
+(* Unstable *)
+loc Or001: while ckOr <= dOr_u wait {}
+	when True sync i1Up do {} goto Or101;
+	when True sync i2Up do {} goto Or011;
+	when ckOr >= dOr_l sync sDown do {} goto Or000;
+
+(* Unstable *)
+loc Or010: while ckOr <= dOr_u wait {}
+	when True sync i1Up do {} goto Or110;
+	when True sync i2Down do {} goto Or000;
+	when ckOr >= dOr_l sync sUp do {} goto Or011;
+
+(* Stable *)
+loc Or011: while True wait {}
+	when True sync i1Up do {} goto Or111;
+	when True sync i2Down do {ckOr' = 0} goto Or001;
+
+(* Unstable *)
+loc Or100: while ckOr <= dOr_u wait {}
+	when True sync i1Down do {} goto Or000;
+	when True sync i2Up do {ckOr' = 0} goto Or110;
+	when ckOr >= dOr_l sync sUp do {} goto Or101;
+
+(* Stable *)
+loc Or101: while True wait {}
+	when True sync i1Down do {ckOr' = 0} goto Or001;
+	when True sync i2Up do {} goto Or111;
+
+(* Unstable *)
+loc Or110: while ckOr <= dOr_u  wait {}
+	when True sync i1Down do {ckOr' = 0} goto Or010;
+	when True sync i2Down do {ckOr' = 0} goto Or100;
+	when ckOr >= dOr_l sync sUp do {} goto Or111;
+
+(* Stable *)
+loc Or111: while True wait {}
+	when True sync i1Down do {} goto Or011;
+	when True sync i2Down do {} goto Or101;
+
+end -- OrGate
+
+
+
+
+(************************************************************)
+(* Analysis *)
+(************************************************************)
+
+init := True
+	(*------------------------------------------------------------
+	   INITIAL LOCATION
+	  ------------------------------------------------------------*)
+	& loc[OrGate] = Or000
+
+	(*------------------------------------------------------------
+	   INITIAL CLOCKS
+	  ------------------------------------------------------------*)
+	& ckOr = 0
+
+	(*------------------------------------------------------------
+	   PARAMETER CONSTRAINTS
+	  ------------------------------------------------------------*)
+	& dOr_l >= 0
+	& dOr_l <= dOr_u
+;
+
+end
