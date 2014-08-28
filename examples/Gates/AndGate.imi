@@ -65,7 +65,7 @@ loc And111: while True wait {}
 	when True sync i1Down do {ckAnd' = 0} goto And011;
 	when True sync i2Down do {ckAnd' = 0} goto And101;
 
-end -- AndGate
+end (*AndGate*)
 
 
 

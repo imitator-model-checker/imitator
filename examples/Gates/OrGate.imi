@@ -16,9 +16,9 @@ var 	ckOr
 			: parameter;
 
 
---****************************************************--
+(************************************************************)
   automaton OrGate
---****************************************************--
+(************************************************************)
 synclabs: i1Up, i1Down, i2Up, i2Down,
 	sUp, sDown;
 
@@ -66,7 +66,7 @@ loc Or111: while True wait {}
 	when True sync i1Down do {} goto Or011;
 	when True sync i2Down do {} goto Or101;
 
-end -- OrGate
+end (*OrGate*)
 
 
 
