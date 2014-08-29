@@ -35,7 +35,7 @@ loc Or001: while ckOr <= dOr_u wait {}
 
 (* Unstable *)
 loc Or010: while ckOr <= dOr_u wait {}
-	when True sync i1Up do {} goto Or110;
+	when True sync i1Up do {ckOr' = 0} goto Or110;
 	when True sync i2Down do {} goto Or000;
 	when ckOr >= dOr_l sync sUp do {} goto Or011;
 

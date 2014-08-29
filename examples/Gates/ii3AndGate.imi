@@ -27,13 +27,13 @@ synclabs: i1Up, i1Down, i2Up, i2Down,i3Up, i3Down,
 loc ii3And0000: while True wait {}
 	when True sync i1Up do {} goto ii3And1000;
 	when True sync i2Up do {} goto ii3And0100;
-	when True sync i3Up do {} goto ii3And0100;
+	when True sync i3Up do {} goto ii3And0010;
 
 (* Unstable *)
 loc ii3And0001: while ckii3And <= dii3And_u wait {}
 	when True sync i1Up do {ckii3And' = 0} goto ii3And1001;
 	when True sync i2Up do {ckii3And' = 0} goto ii3And0101;
-	when True sync i3Up do {ckii3And' = 0} goto ii3And0100;	
+	when True sync i3Up do {ckii3And' = 0} goto ii3And0011;	
 	when ckii3And >= dii3And_l sync sDown do {} goto ii3And0000;
 
 (* Stable *)
@@ -46,7 +46,7 @@ loc ii3And0010: while True wait {}
 loc ii3And0011: while ckii3And <= dii3And_u wait {}
 	when True sync i1Up do {ckii3And' = 0} goto ii3And1011;
 	when True sync i2Up do {} goto ii3And0111;
-	when True sync i3Down do {} goto ii3And0001;
+	when True sync i3Down do {ckii3And' = 0} goto ii3And0001;
 	when ckii3And >= dii3And_l sync sDown do {} goto ii3And0010;
 
 (* Stable *)
@@ -78,8 +78,8 @@ loc ii3And0111: while True wait {}
 (* Stable *)
 loc ii3And1000: while True wait {}
 	when True sync i1Down do {} goto ii3And0000;
-	when True sync i2Up do {ckii3And' = 0} goto ii3And1100;
-	when True sync i3Up do {ckii3And' = 0} goto ii3And1010;
+	when True sync i2Up do {} goto ii3And1100;
+	when True sync i3Up do {} goto ii3And1010;
 
 (* Unstable *)
 loc ii3And1001: while ckii3And <= dii3And_u wait {}
@@ -105,7 +105,7 @@ loc ii3And1011: while ckii3And <= dii3And_u wait {}
 loc ii3And1100: while True wait {}
 	when True sync i1Down do {} goto ii3And0100;
 	when True sync i2Down do {} goto ii3And1000;
-	when True sync i3Up do {} goto ii3And1010;
+	when True sync i3Up do {} goto ii3And1110;
 
 (* Unstable *)
 loc ii3And1101: while ckii3And <= dii3And_u wait {}

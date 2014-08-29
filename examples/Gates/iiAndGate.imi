@@ -65,7 +65,7 @@ loc iiAnd110: while True wait {}
 loc iiAnd111: while ckiiAnd <= diiAnd_u  wait {}
 	when True sync i1Down do {ckiiAnd' = 0} goto iiAnd011;
 	when True sync i2Down do {} goto iiAnd101;
-	when ckiiAnd >= diiAnd_l sync sDown do {} goto iiAnd101;
+	when ckiiAnd >= diiAnd_l sync sDown do {} goto iiAnd110;
 
 end (*iiAndGate*)
 
