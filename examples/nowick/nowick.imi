@@ -1,0 +1,156 @@
+(************************************************************
+ *                         IMITATOR
+ *
+ * Model of the nowick example
+ * Source: "Verification of Concurrent Systems with Parametric Delays Using Octahedra" by Clariso and Cortadella (2005)
+ *
+ * Author          : Christopher Makanga
+ * Created         : 2014/08/29
+ * Last modified   : 2014/08/29
+ * IMITATOR version: 2.6.2
+ ************************************************************)
+
+var 	ckiiAnd, ckOr3 (* ici: toutes les horloges *)
+		: clock;
+
+	(* ici: tous les parametres *)
+	d3, D3,
+	d7, D7,
+			: parameter;
+
+
+(************************************************************)
+  automaton iiAndGate
+(************************************************************)
+synclabs: hUp, hDown, bUp, bDown,
+	gUp, gDown;
+
+(* Stable *)
+loc iiAnd000: while True wait {}
+	when True sync hUp do {ckiiAnd' = 0} goto iiAnd100;
+	when True sync bUp do {} goto iiAnd010;
+
+(* Unstable *)
+loc iiAnd001: while ckiiAnd <= D3 wait {}
+	when True sync hUp do {} goto iiAnd101;
+	when True sync bUp do {ckiiAnd' = 0} goto iiAnd011;
+	when ckiiAnd >= d3 sync gDown do {} goto iiAnd000;
+
+(* Stable *)
+loc iiAnd010: while True wait {}
+	when True sync hUp do {} goto iiAnd110;
+	when True sync bDown do {} goto iiAnd000;
+
+(* Unstable *)
+loc iiAnd011: while ckiiAnd <= D3 wait {}
+	when True sync hUp do {ckiiAnd' = 0} goto iiAnd111;
+	when True sync bDown do {ckiiAnd' = 0} goto iiAnd001;
+	when ckiiAnd >= d3 sync gDown do {} goto iiAnd010;
+
+(* Unstable *)
+loc iiAnd100: while ckiiAnd <= D3 wait {}
+	when True sync hDown do {} goto iiAnd000;
+	when True sync bUp do {} goto iiAnd110;
+	when ckiiAnd >= d3 sync gUp do {} goto iiAnd101;
+
+(* Stable *)
+loc iiAnd101: while True wait {}
+	when True sync hDown do {ckiiAnd' = 0} goto iiAnd001;
+	when True sync bUp do {ckiiAnd' = 0} goto iiAnd111;
+
+(* Stable *)
+loc iiAnd110: while True wait {}
+	when True sync hDown do {} goto iiAnd010;
+	when True sync bDown do {ckiiAnd' = 0} goto iiAnd100;
+
+(* Unstable *)
+loc iiAnd111: while ckiiAnd <= D3  wait {}
+	when True sync hDown do {ckiiAnd' = 0} goto iiAnd011;
+	when True sync bDown do {} goto iiAnd101;
+	when ckiiAnd >= d3 sync gDown do {} goto iiAnd110;
+
+end (*iiAndGate*)
+
+
+
+
+(************************************************************)
+  automaton Or3Gate
+(************************************************************)
+synclabs: fUp, fDown, gUp, gDown,
+	yUp, yDown;
+
+(* Stable *)
+loc Or3_000: while True wait {}
+	when True sync fUp do {ckOr3' = 0} goto Or3_100;
+	when True sync gUp do {ckOr3' = 0} goto Or3_010;
+
+(* Unstable *)
+loc Or3_001: while ckOr3 <= D7 wait {}
+	when True sync fUp do {} goto Or3_101;
+	when True sync gUp do {} goto Or3_011;
+	when ckOr3 >= d7 sync yDown do {} goto Or3_000;
+
+(* Unstable *)
+loc Or3_010: while ckOr3 <= D7 wait {}
+	when True sync fUp do {ckOr3' = 0} goto Or3_110;
+	when True sync gDown do {} goto Or3_000;
+	when ckOr3 >= d7 sync yUp do {} goto Or3_011;
+
+(* Stable *)
+loc Or3_011: while True wait {}
+	when True sync fUp do {} goto Or3_111;
+	when True sync gDown do {ckOr3' = 0} goto Or3_001;
+
+(* Unstable *)
+loc Or3_100: while ckOr3 <= D7 wait {}
+	when True sync fDown do {} goto Or3_000;
+	when True sync gUp do {ckOr3' = 0} goto Or3_110;
+	when ckOr3 >= d7 sync yUp do {} goto Or3_101;
+
+(* Stable *)
+loc Or3_101: while True wait {}
+	when True sync fDown do {ckOr3' = 0} goto Or3_001;
+	when True sync gUp do {} goto Or3_111;
+
+(* Unstable *)
+loc Or3_110: while ckOr3 <= D7  wait {}
+	when True sync fDown do {ckOr3' = 0} goto Or3_010;
+	when True sync gDown do {ckOr3' = 0} goto Or3_100;
+	when ckOr3 >= d7 sync yUp do {} goto Or3_111;
+
+(* Stable *)
+loc Or3_111: while True wait {}
+	when True sync fDown do {} goto Or3_011;
+	when True sync gDown do {} goto Or3_101;
+
+end (*OrGate*)
+
+
+(************************************************************)
+(* Analysis *)
+(************************************************************)
+
+init := True
+	(*------------------------------------------------------------
+	   INITIAL LOCATION
+	  ------------------------------------------------------------*)
+	& loc[iiAndGate] = iiAnd000
+	& loc[Or3Gate] = Or3_000
+
+	(*------------------------------------------------------------
+	   INITIAL CLOCKS
+	  ------------------------------------------------------------*)
+	& ckiiAnd = 0
+	& ckOr3 = 0
+
+	(*------------------------------------------------------------
+	   PARAMETER CONSTRAINTS
+	  ------------------------------------------------------------*)
+	& d3 >= 0
+	& d7 >= 0
+	& d3 <= D3
+	& d7 <= D7
+;
+
+end
