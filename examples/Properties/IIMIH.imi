@@ -1,0 +1,75 @@
+(************************************************************
+ *                         IMITATOR
+ *
+ * Model to show that it is necessary to use the IH in the final intersection in IIM
+ *
+ * Author          : Etienne Andre
+ * Created         : 2014/09/01
+ * Last modified   : 2014/09/01
+ * IMITATOR version: 2.6.2
+ ************************************************************)
+
+ var 	x
+		: clock;
+
+	p
+			: parameter;
+			
+(************************************************************)
+
+(************************************************************)
+  automaton a
+(************************************************************)
+
+synclabs: ;
+
+(*loc l1: while True wait {}
+	when True goto l2;
+	when True goto l3;
+
+loc l2: while p <= 1 wait {}
+	when True goto l4;
+
+loc l3: while True wait {}
+	when True goto l4;
+
+loc l4: while x = p & x < 2 wait {}
+	when x > 1 goto lbad;
+
+loc lbad: while True wait {}*)
+
+
+loc l1: while True wait {}
+	when x = 1 goto l2;
+	when x > 0 goto l2;
+
+loc l2: while x <= 2 wait {}
+	when x < 1 & x = p goto lbad;
+
+loc lbad: while True wait {}
+end (* automaton *)
+
+
+
+(************************************************************)
+(* Analysis *)
+(************************************************************)
+
+init := True
+	(*------------------------------------------------------------
+	   INITIAL LOCATION
+	  ------------------------------------------------------------*)
+	& loc[a] = l1
+		
+	(*------------------------------------------------------------
+	   INITIAL CLOCKS
+	  ------------------------------------------------------------*)
+	& x = 0
+
+	(*------------------------------------------------------------
+	   PARAMETER CONSTRAINTS
+	  ------------------------------------------------------------*)
+	& p >= 0
+	& p <= 2
+;
+end
