@@ -6,21 +6,22 @@
  *
  * Author          : Christopher Makanga
  * Created         : 2014/08/29
- * Last modified   : 2014/08/29
+ * Last modified   : 2014/09/02
  * IMITATOR version: 2.6.2
  ************************************************************)
 
- var 	ckiiAnd, ckOr3, ckOr2, ckOr1, ckAnd1, ckii3And1, ckii3And2 (*ici: toutes les horloges *)
+ var 	ckiiAnd, ckOr3, ckOr2, ckOr1, ckAnd1, ckii3And1, ckii3And2,
+		ckInputA, ckInputB, ckInputC,
 		: clock;
 
 	(* ici: tous les parametres *)
-	d3, D3,
-	d7, D7,
-	d6, D6,
-	d5, D5,
-	d4, D4,
-	d2, D2,
 	d1, D1,
+	d2, D2,
+	d3, D3,
+	d4, D4,
+	d5, D5,
+	d6, D6,
+	d7, D7,
 			: parameter;
 			
 (************************************************************)
@@ -522,6 +523,47 @@ end (*iiAndGate*)
 
 
 (************************************************************)
+  automaton InputC
+(************************************************************)
+synclabs: cUp, cDown;
+
+loc InputC_0: while ckInputC <= 6 wait {}
+	when ckInputC >= 4 sync cUp do {ckInputC' = 0} goto InputC_1;
+
+loc InputC_1: while ckInputC <= 6 wait {}
+	when ckInputC >= 4 sync cDown do {ckInputC' = 0} goto InputC_0;
+
+end (*InputC*)
+
+
+(************************************************************)
+  automaton InputA
+(************************************************************)
+synclabs: aUp, aDown;
+
+loc InputA_0: while ckInputA <= 9 wait {}
+	when ckInputA >= 2 sync aUp do {ckInputA' = 0} goto InputA_1;
+
+loc InputA_1: while ckInputA <= 9 wait {}
+	when ckInputA >= 2 sync aDown do {ckInputA' = 0} goto InputA_0;
+
+end (*InputA*)
+
+
+(************************************************************)
+  automaton InputB
+(************************************************************)
+synclabs: bUp, bDown;
+
+loc InputB_0: while ckInputB <= 6 wait {}
+	when ckInputB >= 3 sync bUp do {ckInputB' = 0} goto InputB_1;
+
+loc InputB_1: while ckInputB <= 6 wait {}
+	when ckInputB >= 3 sync bDown do {ckInputB' = 0} goto InputB_0;
+
+end (*InputB*)
+
+(************************************************************)
 (* Analysis *)
 (************************************************************)
 
@@ -536,6 +578,9 @@ init := True
 	& loc[ii3And1Gate] = ii3And1_0000
 	& loc[ii3And2Gate] = ii3And2_0000
 	& loc[iiAndGate] = iiAnd_000
+	& loc[InputC] = InputC_0
+	& loc[InputA] = InputA_0
+	& loc[InputB] = InputB_0
 		
 	(*------------------------------------------------------------
 	   INITIAL CLOCKS
@@ -548,6 +593,9 @@ init := True
 	& ckii3And1 = 0
 	& ckii3And2 = 0
 	& ckiiAnd = 0
+	& ckInputC = 0
+	& ckInputA = 0
+	& ckInputB = 0
 
 	(*------------------------------------------------------------
 	   PARAMETER CONSTRAINTS
