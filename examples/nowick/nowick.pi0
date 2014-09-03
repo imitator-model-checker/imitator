@@ -1,0 +1,26 @@
+(************************************************************
+ *                         IMITATOR
+ *
+ * Model of the nowick example
+ * Source: "Verification of Concurrent Systems with Parametric Delays Using Octahedra" by Clariso and Cortadella (2005)
+ *
+ * Author          : Christopher Makanga, Etienne Andre
+ * Created         : 2014/09/03
+ * Last modified   : 2014/09/03
+ * IMITATOR version: 2.6.2
+ ************************************************************)
+
+	& d1 = 4
+	& D1 = 9
+	& d2 = 3
+	& D2 = 9
+	& d3 = 3
+	& D3 = 6
+	& d4 = 3
+	& D4 = 9
+	& d5 = 2
+	& D5 = 6
+	& d6 = 10
+	& D6 = 12
+	& d7 = 10
+	& D7 = 12

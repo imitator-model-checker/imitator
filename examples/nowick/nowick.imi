@@ -4,9 +4,9 @@
  * Model of the nowick example
  * Source: "Verification of Concurrent Systems with Parametric Delays Using Octahedra" by Clariso and Cortadella (2005)
  *
- * Author          : Christopher Makanga
+ * Author          : Christopher Makanga, Etienne Andre
  * Created         : 2014/08/29
- * Last modified   : 2014/09/02
+ * Last modified   : 2014/09/03
  * IMITATOR version: 2.6.2
  ************************************************************)
 
@@ -15,14 +15,46 @@
 		: clock;
 
 	(* ici: tous les parametres *)
-	d1, D1,
+	(*d1, D1,
 	d2, D2,
 	d3, D3,
 	d4, D4,
 	d5, D5,
 	d6, D6,
-	d7, D7,
-			: parameter;
+	d7, D7,*)
+	
+	
+(*	  d1 = 4
+	, D1 = 9
+	, d2 = 3
+	, D2 = 9
+	, d3 = 3
+	, D3 = 6
+	, d4 = 3
+	, D4 = 9
+	, d5 = 2
+	, D5 = 6
+	, d6 = 10
+	, D6 = 12
+	, d7 = 10
+	, D7 = 12
+	*)
+	  d1 = 4
+	, D1 = 9
+	, d2 = 3
+	, D2 = 3
+	, d3 = 1
+	, D3 = 1
+	, d4 = 9
+	, D4 = 9
+	, d5 = 6
+	, D5 = 6
+	, d6 = 10
+	, D6 = 10
+	, d7 = 11
+	, D7 = 11
+		
+		: parameter;
 			
 (************************************************************)
 
@@ -563,6 +595,103 @@ loc InputB_1: while ckInputB <= 6 wait {}
 
 end (*InputB*)
 
+
+
+(************************************************************)
+  automaton environment
+(************************************************************)
+synclabs: aUp, aDown, bUp, bDown, cUp, cDown;
+
+loc env0: while True wait {}
+	when True sync aUp goto env1;
+	when True sync bUp goto env1prime;
+
+loc env1: while True wait {}
+	when True sync bUp goto env2;
+
+loc env1prime: while True wait {}
+	when True sync aUp goto env2;
+
+loc env2: while True wait {}
+	when True sync cUp goto env3;
+
+loc env3: while True wait {}
+	when True sync cDown goto env4;
+
+loc env4: while True wait {}
+	when True sync bDown goto env5;
+
+loc env5: while True wait {}
+	when True sync aDown goto env0;
+
+end (* environment with input only *)
+
+
+(*(************************************************************)
+  automaton environment
+(************************************************************)
+synclabs: aUp, aDown, bUp, bDown, cUp, cDown, xUp, xDown, yUp, yDown;
+
+loc env0: while True wait {}
+	when True sync aUp goto env1;
+	when True sync bUp goto env1prime;
+
+loc env1: while True wait {}
+	when True sync bUp goto env2;
+
+loc env1prime: while True wait {}
+	when True sync aUp goto env2;
+
+loc env2: while True wait {}
+	when True sync xUp goto env3;
+	when True sync yUp goto env3prime;
+
+loc env3: while True wait {}
+	when True sync yUp goto env4;
+
+loc env3prime: while True wait {}
+	when True sync xUp goto env4;
+
+loc env4: while True wait {}
+	when True sync cUp goto env5;
+
+loc env5: while True wait {}
+	when True sync xDown goto env6;
+
+loc env6: while True wait {}
+	when True sync cDown goto env7;
+
+loc env7: while True wait {}
+	when True sync xUp goto env8;
+	when True sync yDown goto env8prime;
+
+loc env8: while True wait {}
+	when True sync yDown goto env9;
+
+loc env8prime: while True wait {}
+	when True sync xUp goto env9;
+
+loc env9: while True wait {}
+	when True sync bDown goto env10;
+
+loc env10: while True wait {}
+	when True sync yUp goto env11;
+	when True sync xDown goto env11prime;
+
+loc env11: while True wait {}
+	when True sync xDown goto env12;
+
+loc env11prime: while True wait {}
+	when True sync yUp goto env12;
+
+loc env12: while True wait {}
+	when True sync aDown goto env13;
+
+loc env13: while True wait {}
+	when True sync yDown goto env0;
+
+end (* full environment *)*)
+
 (************************************************************)
 (* Analysis *)
 (************************************************************)
@@ -581,6 +710,7 @@ init := True
 	& loc[InputC] = InputC_0
 	& loc[InputA] = InputA_0
 	& loc[InputB] = InputB_0
+	& loc[environment] = env0
 		
 	(*------------------------------------------------------------
 	   INITIAL CLOCKS
@@ -614,5 +744,30 @@ init := True
 	& d5 <= D5
 	& d6 <= D6
 	& d7 <= D7
-;
+	
+	(*------------------------------------------------------------
+	   ONE PARAMETER VALUATION SATISFYING [CC05]
+	  ------------------------------------------------------------*)
+(*	& d1 = 4
+	& D1 = 9
+	& d2 = 3
+	& D2 = 9
+	& d3 = 3
+	& D3 = 6
+	& d4 = 3
+	& D4 = 9
+	& d5 = 2
+	& D5 = 6
+	& d6 = 10
+	& D6 = 12
+	& d7 = 10
+	& D7 = 12*)
+	
+	(*------------------------------------------------------------
+	   THE CONSTRAINT IN [CC05]
+	  ------------------------------------------------------------*)
+(*	& D4 + D5 < d1 + d6 + 2
+	& D1 < d2 + d7 + 4*)
+
+	;
 end
