@@ -2,13 +2,12 @@
  *
  *                       IMITATOR
  * 
- * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Universite Paris 13, Sorbonne Paris Cite, LIPN (France)
  * 
- * Author:        Etienne Andre, Camille Coti
+ * Author:        Etienne Andre, Camille Coti, Hoang Gia Nguyen
  * 
- * Created:       2014/03/24
- * Last modified: 2014/06/20
+ * Created:       2014/09/05
+ * Last modified: 2014/09/05
  *
  ****************************************************************)
 
@@ -28,16 +27,6 @@ open DistributedUtilities
 (* Slaves *)
 (*------------------------------------------------------------*)
 
-(*let counter_worker_waiting = ref 0.0
-let start_time_next_point = ref 0.0
-
-let start_counter_next_point () =
-	start_time_next_point := Unix.gettimeofday()
-
-let stop_counter_next_point () =
-	counter_next_point := !counter_next_point +. Unix.gettimeofday() -. !start_time_next_point
-*)
-
 let counter_master_waiting 		= new Counter.counter
 let counter_master_find_nextpi0	= new Counter.counter
 let counter_worker_waiting 		= new Counter.counter
@@ -48,14 +37,6 @@ let counter_worker_working 		= new Counter.counter
 (**     MASTER      *)
 (****************************************************************)
 
-(*let is_limit_reached () =
-  cnt := !cnt + 1;
-  print_message Debug_standard( "[Master] " ^ ( string_of_int !cnt ) ^" rounds done" );
-  if !cnt > nb_of_rounds then
-    true
-  else
-    false
-    *)
 let receive_pull_request_and_store_constraint () =
 	print_message Debug_high ("[Master] Entered function 'receive_pull_request_and_store_constraint'...");
 	
@@ -63,7 +44,9 @@ let receive_pull_request_and_store_constraint () =
 	let pull_request = receive_pull_request () in
 	counter_master_waiting#stop;
 	
-	match pull_request with
+	(** DO SOMETHING HERE **)
+	
+(*	match pull_request with
 	| PullOnly source_rank ->
 		print_message Debug_low ("[Master] Received PullOnly request...");
 		source_rank, None
@@ -79,7 +62,7 @@ let receive_pull_request_and_store_constraint () =
 		print_message Debug_standard ("\n[Master] Received the following constraint from worker " ^ (string_of_int source_rank));
 		Cartography.bc_process_im_result im_result;
 		(* Return source rank *)
-		source_rank, Some im_result.tile_nature
+		source_rank, Some im_result.tile_nature*)
 ;;
 
 
@@ -112,30 +95,10 @@ let compute_next_pi0_sequentially more_pi0 limit_reached first_point tile_nature
 
 
 (*------------------------------------------------------------*)
-(* Generic function handling the next point in shuffle mode *)
-(*------------------------------------------------------------*)
-let compute_next_pi0_shuffle more_pi0 limit_reached first_point tile_nature_option =
-	(* Start timer *)
-	counter_master_find_nextpi0#start ;
-
-	print_message Debug_low ("[Master] Computing next pi0 in shuffle mode...");
-	
-	let found_pi0 , time_limit_reached = Cartography.find_next_pi0_shuffle tile_nature_option in
-	(* Update the time limit *)
-	limit_reached := time_limit_reached;
-	(* Update the found pi0 flag *)
-	more_pi0 := found_pi0;
-
-	(* Stop timer *)
-	counter_master_find_nextpi0#stop;
-	
-	()
-
-(*------------------------------------------------------------*)
 (* Global variable for the random distributed mode *)
 (*------------------------------------------------------------*)
 (*** TODO: put somewhere else ***)
-let still_random = ref true
+(* let still_random = ref true *)
 
 
 (*------------------------------------------------------------*)
@@ -145,7 +108,7 @@ let compute_next_pi0 more_pi0 limit_reached first_point tile_nature_option =
 	(* Retrieve the input options *)
 	let options = Input.get_options () in
 	
-	match options#distribution_mode with
+	(*match options#distribution_mode with
 	(** Distributed mode: Master slave with sequential pi0 *)
 	| Distributed_ms_sequential -> 
 		compute_next_pi0_sequentially more_pi0 limit_reached first_point tile_nature_option
@@ -181,7 +144,9 @@ let compute_next_pi0 more_pi0 limit_reached first_point tile_nature_option =
 	| Distributed_unsupervised -> raise (InternalError("IMITATOR cannot be unsupervised at this point."))
 
 	(** Normal mode *)
-	| Non_distributed -> raise (InternalError("IMITATOR should be distributed at this point."))
+	| Non_distributed -> raise (InternalError("IMITATOR should be distributed at this point."))*)
+	
+	(** DO SOMETHING HERE **)
 
 
 (*------------------------------------------------------------*)
@@ -192,13 +157,23 @@ let compute_next_pi0 more_pi0 limit_reached first_point tile_nature_option =
 let send_one_point_to_each_node() = ()*)
 
 (* Statically compute the shuffled array of all points *)
-let compute_shuffled_array() =
+(*let compute_shuffled_array() =
 	(* Compute the array of all points *)
 	Cartography.compute_all_pi0 ();
 	(* Shuffle it! *)
 	Cartography.shuffle_all_pi0 ();
-	()
+	()*)
 
+	
+(*------------------------------------------------------------*)
+(* Some functions to implement *)
+(*------------------------------------------------------------*)
+
+(* TODO *)
+let check_covered () = false
+	
+	
+	
 (*------------------------------------------------------------*)
 (* The cartography algorithm implemented in the master *)
 (*------------------------------------------------------------*)
@@ -212,11 +187,27 @@ let master () =
 	
 	print_message Debug_medium ("[Master] Hello world!");
 	
+	(* List of subparts maintained by the master *)
+	let subparts = ref [] in
+	
 	(* Perform initialization *)
 	Cartography.bc_initialize ();
 	
 	let more_pi0 = ref true in
 	let limit_reached = ref false in
+	
+	
+	(*** THE ALGORITHM STARTS HERE ***)
+	while not (check_covered ()) do
+		
+		(* Get the pull_request *)
+		let source_rank, tile_nature_option = receive_pull_request_and_store_constraint () in
+		print_message Debug_medium ("[Master] Received a pull request from worker " ^ (string_of_int source_rank) ^ "");
+		
+		
+	
+	done;
+	(*** THE ALGORITHM STOPS HERE ***)
 	
 	(* To differentiate between initialization of pi0 / next_point *)
 	let first_point = ref true in
