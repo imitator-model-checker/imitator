@@ -1,0 +1,331 @@
+(************************************************************
+ *                         IMITATOR
+ *
+ * Model of the GaspFIFO example
+ * Source: "Verification of Concurrent Systems with Parametric Delays Using Octahedra" by Clariso and Cortadella (2005)
+ *
+ * Author          : Christopher Makanga
+ * Created         : 2014/09/05
+ * Last modified   : 2014/09/05
+ * IMITATOR version: 2.6.2
+ ************************************************************)
+
+ var 	ckNotB, ckNotC,ckNotD, ckNot, ckAnd, ckYes, ckYesA
+		: clock;
+
+	(* ici: tous les parametres *)
+	dNotB, DNotB,
+	dNotC, DC,
+	dNotD, DNotD
+	dNotE, DNotE,
+	dF, DF,
+	dNot, DNot,
+	dx, Dx,
+	dy, Dy,
+	dIe, DIe,
+	dYes, DYes,
+	dYesA, DYesA,
+			: parameter;
+			
+(************************************************************)
+
+(************************************************************)
+  automaton NotBGate
+(************************************************************)
+
+synclabs: xUp, xDown, IeUp, IeDown;
+
+
+
+(* Unstable *)
+loc NotB_00: while ckNotB <= DNotB wait {}
+	when True sync xUp do {} goto NotB_10;
+	when ckNotB >= dNotB sync IeUp do {} goto NotB_01;
+
+(* Stable *)
+loc NotB_01: while True wait {}
+	when True sync xUp do {ckNotB' = 0} goto NotB_11;
+
+(* Stable *)
+loc NotB_10: while True wait {}
+	when True sync xDow do {ckNotB' = 0} goto NotB_00;
+
+(* Unstable *)
+loc NotB_11: while ckNotB <= DNotB wait {}
+	when True sync xDown do {} goto NotB_01;
+	when ckNotB >= dNotB sync IeDown do {} goto NotB_10;
+
+end (*NotBGate*)
+
+
+(************************************************************)
+  automaton NotCGate
+(************************************************************)
+synclabs: outUp, outDown, IeUp, IeDown;
+
+(* Unstable *)
+loc NotC_00: while ckNotC <= DNotC wait {}
+	when True sync outUp do {} goto NotC_10;
+	when ckNotC >= dNotC sync IeUp do {} goto NotC_01;
+
+(* Stable *)
+loc NotC_01: while True wait {}
+	when True sync outUp do {ckNotC' = 0} goto NotC_11;
+
+(* Stable *)
+loc NotC_10: while True wait {}
+	when True sync outDow do {ckNotC' = 0} goto NotC_00;
+
+(* Unstable *)
+loc NotC_11: while ckNotC <= DNotC wait {}
+	when True sync outDown do {} goto NotC_01;
+	when ckNotC >= dNotC sync IeDown do {} goto NotC_10;
+
+end (*NotCGate*)
+
+
+(************************************************************)
+  automaton NotDGate
+(************************************************************)
+synclabs: sUp, sDown, outUp, outDown;
+
+(* Unstable *)
+loc NotD_00: while ckNotD <= DNotD wait {}
+	when True sync sUp do {} goto NotD_10;
+	when ckNotD >= dNotD sync outUp do {} goto NotD_01;
+
+(* Stable *)
+loc NotD_01: while True wait {}
+	when True sync sUp do {ckNotD' = 0} goto NotD_11;
+
+(* Stable *)
+loc NotD_10: while True wait {}
+	when True sync xDow do {ckNotD' = 0} goto NotD_00;
+
+(* Unstable *)
+loc NotD_11: while ckNotD <= DNotD wait {}
+	when True sync sDown do {} goto NotD_01;
+	when ckNotD >= dNotD sync outDown do {} goto NotD_10;
+
+end (*NotDGate*)
+
+
+(************************************************************)
+  automaton NotEGate
+(************************************************************)
+synclabs: yUp, yDown, reUp, reDown;
+
+(* Unstable *)
+loc NotE_00: while ckNotE <= DNotE wait {}
+	when True sync yUp do {} goto NotE_10;
+	when ckNotE >= dNotE sync reUp do {} goto NotE_01;
+
+(* Stable *)
+loc NotE_01: while True wait {}
+	when True sync yUp do {ckNotE' = 0} goto NotE_11;
+
+(* Stable *)
+loc NotE_10: while True wait {}
+	when True sync xDow do {ckNotE' = 0} goto NotE_00;
+
+(* Unstable *)
+loc NotE_11: while ckNotE <= DNotE wait {}
+	when True sync yDown do {} goto NotE_01;
+	when ckNotE >= dNotE sync reDown do {} goto NotE_10;
+
+end (*NotEGate*)
+
+
+(************************************************************)
+  automaton NotGate
+(************************************************************)
+synclabs: IeUp, IeDown, aUp, aDown;
+
+(* Unstable *)
+loc Not_00: while ckNot <= DNot wait {}
+	when True sync IeUp do {} goto Not_10;
+	when ckNot >= dNot sync aUp do {} goto Not_01;
+
+(* Stable *)
+loc Not_01: while True wait {}
+	when True sync IeUp do {ckNot' = 0} goto Not_11;
+
+(* Stable *)
+loc Not_10: while True wait {}
+	when True sync xDow do {ckNot' = 0} goto Not_00;
+
+(* Unstable *)
+loc Not_11: while ckNot <= DNot wait {}
+	when True sync IeDown do {} goto Not_01;
+	when ckNot >= dNot sync aDown do {} goto Not_10;
+
+end (*NotGate*)
+
+
+(************************************************************)
+  automaton AndGate
+(************************************************************)
+synclabs: aUp, aDown, reUp, reDown, outUp, outDown;
+
+(* Stable *)
+loc And_000: while True wait {}
+	when True sync aUp do {} goto And_100;
+	when True sync reUp do {} goto And_010;
+
+(* Untable *)
+loc And_001: while ckAnd <= DF wait {}
+	when True sync aUp do {ckAnd' = 0} goto And_101;
+	when True sync reUp do {ckAnd' = 0} goto And_011;
+	when ckAnd >= dF sync outDown do {} goto And_000;
+
+(* Stable *)
+loc And_010: while True wait {}
+	when True sync aUp do {ckAnd' = 0} goto And_110;
+	when True sync reDown do {} goto And_000;
+
+(* Untable *)
+loc And_011: while ckAnd <= DF wait {}
+	when True sync aUp do {} goto And_111;
+	when True sync reDown do {ckAnd' = 0} goto And_001;
+	when ckAnd >= dF sync outDown do {} goto And_010;
+
+(* Stable *)
+loc And_100: while True wait {}
+	when True sync aDown do {} goto And_000;
+	when True sync reUp do {ckAnd' = 0} goto And_110;
+
+(* Untable *)
+loc And_101: while ckAnd <= DF wait {}
+	when True sync aDown do {ckAnd' = 0} goto And_001;
+	when True sync reUp do {} goto And_111;
+	when ckAnd >= dF sync outDown do {} goto And_100;
+
+(* Untable *)
+loc And_110: while ckAnd <= DF  wait {}
+	when True sync aDown do {} goto And_010;
+	when True sync reDown do {} goto And_100;
+	when ckAnd >= dF sync outUp do {} goto And_111;
+
+(* Stable *)
+loc And_111: while True wait {}
+	when True sync aDown do {ckAnd' = 0} goto And_011;
+	when True sync reDown do {ckAnd' = 0} goto And_101;
+
+end (*AndGate*)
+
+
+(************************************************************)
+  automaton YesGate
+(************************************************************)
+synclabs: outUp, outDown, sUp, sDown;
+
+(* Stable *)
+loc Yes_00: while True wait {}
+	when True sync outUp do {ckYes' = 0} goto Yes_10;
+
+(* Unstable *)
+loc Yes_01: while ckYes <= DYes wait {}
+	when True sync outUp do {} goto Yes_11;
+	when ckYes >= dYes sync sDown do {} goto Yes_00
+
+(* Unstable *)
+loc Yes_10: while ckYes <= DYes wait {}
+	when True sync outDow do {} goto Yes_00;
+	when ckYes >= dYes sync sUp do {} goto Yes_11
+
+(* Stable *)
+loc Yes_11: while ckYes <= DYes wait {}
+	when True sync outDown do {ckYes' = 0} goto Yes_01;
+
+end (*YesGate*)
+
+
+(************************************************************)
+  automaton YesAGate
+(************************************************************)
+synclabs: outUp, outDown, reUp, reDown;
+
+(* Stable *)
+loc YesA_00: while True wait {}
+	when True sync outUp do {ckYesA' = 0} goto YesA_10;
+
+(* Unstable *)
+loc YesA_01: while ckYesA <= DYesA wait {}
+	when True sync outUp do {} goto YesA_11;
+	when ckYesA >= dYesA sync reDown do {} goto YesA_00
+
+(* Unstable *)
+loc YesA_10: while ckYesA <= DYesA wait {}
+	when True sync outDow do {} goto YesA_00;
+	when ckYesA >= dYesA sync reUp do {} goto YesA_11
+
+(* Stable *)
+loc YesA_11: while ckYesA <= DYesA wait {}
+	when True sync outDown do {ckYesA' = 0} goto YesA_01;
+
+end (*YesAGate*)
+
+
+(************************************************************)
+(* Analysis *)
+(************************************************************)
+
+init := True
+	(*------------------------------------------------------------
+	   INITIAL LOCATION
+	  ------------------------------------------------------------*)
+	& loc[NotBGate] = NotB_01
+	& loc[NotCGate] = NotC_01
+	& loc[NotDGate] = NotD_01
+	& loc[NotEGate] = NotE_01
+	& loc[NotGate] = Not_01
+	& loc[YesGate] = Yes_00
+	& loc[YesAGate] = YesA_00
+	& loc[AndGate] = And_000
+		
+	(*------------------------------------------------------------
+	   INITIAL CLOCKS
+	  ------------------------------------------------------------*)
+	& ckNotB = 0
+	& ckNotC = 0
+	& ckNotD = 0
+	& ckNotE = 0
+	& ckNot = 0
+	& ckYes = 0
+	& ckYesA = 0
+	& ckAnd = 0
+
+	(*------------------------------------------------------------
+	   PARAMETER CONSTRAINTS
+	  ------------------------------------------------------------*)
+	& dNotB > 2
+	& 2 + dNot + dAnd > dNotB
+	& DNotE > dNotE
+	& dNotE + DYesA > DYes + DNotD + 2
+	& DYes > dNot + 2
+	& DNotE > DYes
+	& DNotB > dNot + 2
+	& DNotB > DYes + 2 + 2
+	& DNotB > DNotE + DYesA + dNotE
+	& 2 + DYes > DYesA
+	& dNotE > dNot + 2 + 2
+	
+	& dNotB = 3
+	& DNotB = 14
+	& dNotC = 3
+	& DNotC = 4
+	& dNot = 1
+	& DNot = 2
+	& dNotD = 1
+	& DNotD = 2
+	& dYes = 3
+	& DYes = 4
+	& dF = 1
+	& DF = 2
+	& dYesA = 1
+	& DYesA = 2
+	& dNotE = 6
+	& DNotE = 7
+	
+;
+end
