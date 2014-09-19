@@ -10,7 +10,7 @@
  * Author:        Ulrich Kuehne, Etienne Andre
  * 
  * Created:       2012/06/18
- * Last modified: 2014/07/02
+ * Last modified: 2014/09/19
  *
  ****************************************************************)
 
@@ -1006,7 +1006,7 @@ let bc_process_im_result im_result =
 		
 		(* Should the result be taken into account? *)
 		(* Yes only for EFIM and a bad tile *)
-		if options#efim & im_result.tile_nature = Bad then(
+		if options#efim && im_result.tile_nature = Bad then(
 			valid_result := true; (* useless assignment since valid_result was already initialized to true *)
 		)else(
 			valid_result := false;
@@ -1401,7 +1401,7 @@ let cover_behavioral_cartography model v0 =
 		set_debug_mode !global_debug_mode;
 		
 		(* Process the result by IM *)
-		bc_process_im_result im_result;
+		let _ = bc_process_im_result im_result in ();
 		
 		(* Generate the dot graph (will not be performed if options are not suitable) *)
 		(*** TODO: move inside inverse_method_gen ***)
