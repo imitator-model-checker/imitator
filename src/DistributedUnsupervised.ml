@@ -22,7 +22,7 @@ open AbstractModel
  *)
 
 (*  max number of attempts before giving up choosing a random point  *)
-let nb_tries_max = 100
+let nb_tries_max = 10
 
 (*  number of uncovered points kept by the coordinator  *)
 let nb_coord_points = 100
@@ -146,12 +146,6 @@ let coordinator () =
       boxes.(idx) <- []
   in
   (*------------------------------------------------------------*)
-  (*** WARNING: the following code was useless! (EA, 19/06/14) ***)
-(*  let coordinator_process_ask_for_point worker =
-    let pi0 = Cartography.get_current_pi0 () in
-    let pi0_str = DistributedUtilities.serialize_pi0 pi0 in
-      Mpi.send pi0_str worker (mtag_to_int POINT) world
-  in*)
 
   (*------------------------------------------------------------*)
   let coordinator_send_point (worker, pt) =
@@ -183,14 +177,16 @@ let coordinator () =
       then coordinator_send_termination worker
       else
 	let res = DistributedUtilities.unserialize_im_result data in
-	  Cartography.bc_process_im_result res;
-	  Cartography.constraint_list_update res;
-	  if Cartography.constraint_list_empty ()
-	  then (terminated := true;
-		print_message Debug_standard"[Coordinator] everything is covered";
-		coordinator_send_termination worker)
-	  else (update_boxes data;
-		coordinator_send_constraints worker)
+	let useful = Cartography.bc_process_im_result res in
+	  if not useful
+	  then ()
+	  else (Cartography.constraint_list_update res;
+		if Cartography.constraint_list_empty ()
+		then (terminated := true;
+		      print_message Debug_standard"[Coordinator] everything is covered";
+		      coordinator_send_termination worker)
+		else (update_boxes data;
+		      coordinator_send_constraints worker))
   in
 
   (*------------------------------------------------------------*)
@@ -214,9 +210,13 @@ let coordinator () =
   in
     (*------------------------------------------------------------*)
     (* Main sequence *)
-    coordinator_init ();
-    coordinator_loop ();
-    coordinator_end ()
+    try
+      coordinator_init ();
+      coordinator_loop ();
+      coordinator_end ()
+    with _ ->
+      print_message Debug_standard
+        ("[Coordinator] aborted due to an uncatched exception")
 ;;
 
 
@@ -248,7 +248,7 @@ let worker () =
   in
   let worker_process_received_constraint data =
     let res = DistributedUtilities.unserialize_im_result data in
-      Cartography.bc_process_im_result res
+      ignore (Cartography.bc_process_im_result res)
   in
   let rec worker_process_received_constraints n =
     if n = 0
@@ -303,8 +303,10 @@ let worker () =
 	(* Get the debug mode back *)
 	set_debug_mode global_debug_mode;
 	
-	Cartography.bc_process_im_result res;
-	worker_send_pi0 res
+	let useful = Cartography.bc_process_im_result res in
+	  if useful
+	  then worker_send_pi0 res
+	  else ()
   in
   let rec worker_loop () =
     if !terminate
@@ -314,7 +316,13 @@ let worker () =
       | Some pi0 -> (worker_process_pi0 pi0;
 		     worker_loop ())
   in
-    worker_init ();
-    worker_loop ();
-    worker_end ();
+    try
+      worker_init ();
+      worker_loop ();
+      worker_end ()
+    with _ -> let w = Mpi.comm_world in
+      print_message Debug_standard
+	("[Worker " ^ (string_of_int (Mpi.comm_rank w)) ^ " / " ^
+	   (string_of_int (Mpi.comm_size w - 1)) ^
+	   "] due to an uncatched exception")
 ;;

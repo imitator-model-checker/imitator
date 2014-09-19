@@ -22,7 +22,7 @@ type pi0_list = (Automaton.variable_index * NumConst.t) list
 
 val bc_initialize : unit -> unit
 
-val bc_process_im_result : Reachability.im_result -> unit
+val bc_process_im_result : Reachability.im_result -> bool
 
 val bc_finalize : unit -> unit
 

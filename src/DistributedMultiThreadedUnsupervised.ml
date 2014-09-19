@@ -29,7 +29,6 @@ let nb_coord_points = 100
 
 (*  a worker sends a ping every ping_period seconds  *)
 let ping_period = 0.01
-let one_ms = 0.001
 
 
 (*
@@ -189,17 +188,14 @@ let coordinator () =
   let coordinator_process_constraint (worker, data) =
     let res = DistributedUtilities.unserialize_im_result data in
       update_boxes worker data;
-      (* Sami: ca serait bien que Cartography.bc_process_im_result
-	 renvoie true/false selon que la contrainte a ete utile ou pas.
-	 si elle est inutile (redondante) alors pas besoin de l'envoyer
-	 aux autres workers idem quand un worker a calcule une nouvelle
-	 contrainte *)
-      Cartography.bc_process_im_result res;
-      Cartography.constraint_list_update res;
-      if not (Cartography.constraint_list_empty ())
-      then ()
-      else coordinator_termination ();
-      coordinator_process_ping worker
+      let useful = Cartography.bc_process_im_result res in
+	if not useful
+	then ()
+	else (Cartography.constraint_list_update res;
+	      if not (Cartography.constraint_list_empty ())
+	      then ()
+	      else coordinator_termination ();
+	      coordinator_process_ping worker)
   in
   let rec coordinator_loop () =
     let (d, src, tag) = Mpi.receive_status Mpi.any_source Mpi.any_tag world in
@@ -289,7 +285,7 @@ let worker () =
   let worker_process_constraint data =
     let res = DistributedUtilities.unserialize_im_result data in
     let cons = res.result in
-      Cartography.bc_process_im_result res;
+    let _ = Cartography.bc_process_im_result res in
       match !current_job with
         | None -> ()
         | Some (pt, t) ->
@@ -338,11 +334,13 @@ let worker () =
   | None -> false
   | Some cons ->
       let cons_str = DistributedUtilities.serialize_im_result cons in
-	Cartography.bc_process_im_result cons;
-	worker_send cons_str CONSTRAINT;
-	worker_process_message ();
-	current_job := None;
-	job_result := None;
+      let useful = Cartography.bc_process_im_result cons in
+	if not useful
+	then ()
+	else (worker_send cons_str CONSTRAINT;
+	      worker_process_message ();
+	      current_job := None;
+	      job_result := None);
 	true
   in
   let last_ping = ref (Sys.time ()) in
@@ -362,8 +360,9 @@ let worker () =
 	    else (let now = Sys.time () in
 		    if (now -. (!last_ping)) >= ping_period
 		    then (last_ping := now;
-			  worker_send () PING;
+			  (*worker_send () PING;
 			  worker_process_message ();
+			  *)
 			  worker_loop ())
 		    else worker_loop ()))
   in

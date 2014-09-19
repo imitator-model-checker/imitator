@@ -77,7 +77,7 @@ let receive_pull_request_and_store_constraint () =
 	| PullAndResult (source_rank , im_result) -> 
 		print_message Debug_low ("[Master] Received PullAndResult request...");
 		print_message Debug_standard ("\n[Master] Received the following constraint from worker " ^ (string_of_int source_rank));
-		Cartography.bc_process_im_result im_result;
+		ignore (Cartography.bc_process_im_result im_result);
 		(* Return source rank *)
 		source_rank, Some im_result.tile_nature
 ;;
@@ -179,6 +179,8 @@ let compute_next_pi0 more_pi0 limit_reached first_point tile_nature_option =
 	(**$ TODO: missing something there ***)
 		
 	| Distributed_unsupervised -> raise (InternalError("IMITATOR cannot be unsupervised at this point."))
+
+	| Distributed_unsupervised_multi_threaded -> raise (InternalError("IMITATOR cannot be unsupervised-multi-threaded at this point."))
 
 	(** Normal mode *)
 	| Non_distributed -> raise (InternalError("IMITATOR should be distributed at this point."))

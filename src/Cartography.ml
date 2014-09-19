@@ -1137,7 +1137,7 @@ let bc_process_im_result im_result =
 		);
 		(*------------------------------------------------------------*)
 		
-		()
+		not (!found)
 	
 	(* INVALID RESULT *)
 	)else(
@@ -1153,6 +1153,7 @@ let bc_process_im_result im_result =
 				print_message Debug_medium ("This tile would have been " ^ (string_of_tile_nature im_result.tile_nature) ^ ".");
 			);
 		);
+		false
 	
 	)
 
