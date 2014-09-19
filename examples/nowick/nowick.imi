@@ -6,17 +6,19 @@
  *
  * Author          : Christopher Makanga, Etienne Andre
  * Created         : 2014/08/29
- * Last modified   : 2014/09/03
+ * Last modified   : 2014/09/19
  * IMITATOR version: 2.6.2
  ************************************************************)
 
  var 	ckiiAnd, ckOr3, ckOr2, ckOr1, ckAnd1, ckii3And1, ckii3And2,
 		ckInputA, ckInputB, ckInputC,
+		x_a, x_b, x_c,
 		: clock;
 
 	(* ici: tous les parametres *)
 	(*d1, D1,
 	d2, D2,
+	
 	d3, D3,
 	d4, D4,
 	d5, D5,
@@ -597,7 +599,7 @@ end (*InputB*)
 
 
 
-(************************************************************)
+(*(************************************************************)
   automaton environment
 (************************************************************)
 synclabs: aUp, aDown, bUp, bDown, cUp, cDown;
@@ -624,7 +626,7 @@ loc env4: while True wait {}
 loc env5: while True wait {}
 	when True sync aDown goto env0;
 
-end (* environment with input only *)
+end (* environment with input only *)*)
 
 
 (*(************************************************************)
@@ -692,6 +694,87 @@ loc env13: while True wait {}
 
 end (* full environment *)*)
 
+
+(************************************************************)
+  automaton InputcManagement
+(************************************************************)
+synclabs: cUp, cDown, xUp, xDown,yUp(*, yDown*);
+	  
+	  loc inputc_Low : while True wait {}
+	      when True sync xUp do {} goto inputc_xUp;
+	      when True sync yUp do {} goto inputc_yUp;
+
+	  loc inputc_xUp : while True wait {}
+	      when True sync yUp do {x_c' = 0} goto inputc_rising;
+	  
+	  loc inputc_yUp : while True wait {}
+	      when True sync xUp do {x_c' = 0} goto inputc_rising;
+	  
+	  loc inputc_rising : while x_c <= 6 wait {}
+	    when x_c >= 4 sync cUp do {} goto inputc_High;
+	  
+	  loc inputc_High : while True wait {}
+	      when True sync xDown do {x_c' = 0} goto inputc_falling;
+	  
+	  loc inputc_falling : while x_c <= 6 wait {}
+	      when x_c >= 4 sync cDown do {} goto inputc_Low;
+
+end (*InputcManagement*)
+
+(************************************************************)
+  automaton InputaManagement
+(************************************************************)
+synclabs: aUp, aDown, (*xUp, *)xDown,yUp, yDown;
+	  
+	  loc inputa_Low : while True wait {}
+	      when True sync yDown do {x_a' = 0} goto inputa_rising;
+	  
+	  loc inputa_rising : while x_a <= 9 wait {}
+	      when x_a >= 2 sync aUp do {} goto inputa_High;
+	  
+	  loc inputa_High : while True wait {}
+	      when True sync xDown do {} goto inputa_xDown;
+	      when True sync yUp do {} goto inputa_yUp;
+
+	  loc inputa_xDown : while True wait {}
+	      when True sync yUp do {x_a' = 0} goto inputa_falling;
+	  
+	  loc inputa_yUp : while True wait {}
+	      when True sync xDown do {x_a' = 0} goto inputa_falling;
+	  
+	  loc inputa_falling : while x_a <= 9 wait {}
+	    when x_a >= 2 sync aDown do {} goto inputa_Low;
+
+end (*InputaManagement*)
+
+(************************************************************)
+  automaton InputbManagement
+(************************************************************)
+synclabs: bUp, bDown, xUp, (*xDown,*)(*yUp, *)yDown;
+	  
+	  loc inputb_Low : while True wait {}
+	      when True sync yDown do {x_b' = 0} goto inputb_rising;
+	  
+	  loc inputb_rising : while x_b <= 6 wait {}
+	      when x_b >= 3 sync bUp do {} goto inputb_High;
+	  
+	  loc inputb_High : while True wait {}
+	      when True sync xUp do {} goto inputb_xUp;
+	      when True sync yDown do {} goto inputb_yDown;
+
+	  loc inputb_xUp : while True wait {}
+	      when True sync yDown do {x_b' = 0} goto inputb_falling;
+	  
+	  loc inputb_yDown : while True wait {}
+	      when True sync xUp do {x_b' = 0} goto inputb_falling;
+	  
+	  loc inputb_falling : while x_b <= 6 wait {}
+	    when x_b >= 3 sync bDown do {} goto inputb_Low;
+
+end (*InputaManagement*)
+
+
+
 (************************************************************)
 (* Analysis *)
 (************************************************************)
@@ -710,7 +793,10 @@ init := True
 	& loc[InputC] = InputC_0
 	& loc[InputA] = InputA_0
 	& loc[InputB] = InputB_0
-	& loc[environment] = env0
+(* 	& loc[environment] = env0 *)
+	& loc[InputaManagement] = inputa_Low
+	& loc[InputbManagement] = inputb_Low
+	& loc[InputcManagement] = inputc_Low
 		
 	(*------------------------------------------------------------
 	   INITIAL CLOCKS
@@ -726,6 +812,10 @@ init := True
 	& ckInputC = 0
 	& ckInputA = 0
 	& ckInputB = 0
+
+	& x_a = 0
+	& x_b = 0
+	& x_c = 0
 
 	(*------------------------------------------------------------
 	   PARAMETER CONSTRAINTS

@@ -984,7 +984,7 @@ let bc_initialize () =
 
 
 (*------------------------------------------------------------*)
-(** Auxiliary function: process the result of IM *)
+(** Auxiliary function: process the result of IM; return true if the constraint is indeed added, false otherwise *)
 (*------------------------------------------------------------*)
 let bc_process_im_result im_result =
 	(* Get the model *)
@@ -1127,7 +1127,7 @@ let bc_process_im_result im_result =
 			array_index := !array_index + 1;
 		done;
 		
-		(* Only add if not fond *)
+		(* Only add if not found *)
 		if not !found then(
 			print_message Debug_medium "Constraint not found earlier: add.";
 			DynArray.add !computed_constraints im_result.result;
@@ -1137,6 +1137,7 @@ let bc_process_im_result im_result =
 		);
 		(*------------------------------------------------------------*)
 		
+		(* Return true only if really added *)
 		not (!found)
 	
 	(* INVALID RESULT *)
@@ -1153,6 +1154,7 @@ let bc_process_im_result im_result =
 				print_message Debug_medium ("This tile would have been " ^ (string_of_tile_nature im_result.tile_nature) ^ ".");
 			);
 		);
+		(* Return true only if really added *)
 		false
 	
 	)
