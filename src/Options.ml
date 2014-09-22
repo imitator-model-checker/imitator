@@ -25,6 +25,8 @@ type distribution_mode =
 	| Distributed_ms_shuffle
 	(** Distributed mode: Master slave with random pi0 and n retries before switching to sequential mode *)
 	| Distributed_ms_random of int	
+	(** Distributed mode: Master slave with subpart distribution *)
+	| Distributed_ms_subpart
 	(**  Distributed mode: Workers live their own lives and communicate results to the coordinator  **)
 	| Distributed_unsupervised
 	(**  Distributed mode: multi-threaded version of Distributed_unsupervised  **)
@@ -297,6 +299,9 @@ class imitator_options =
 				(* Case: distributed master-slave with shuffle selection *)
 				else if mode = "shuffle" then 
 					distribution_mode := Distributed_ms_shuffle
+				(* Case: distributed master-slave with subpart distribution *)
+				else if mode = "subpart" then 
+					distribution_mode := Distributed_ms_subpart
 				(* Case: distributed master-slave random generation with a bounded number of attempts *)
 				else try (
 					(* Find the 'random' string *)

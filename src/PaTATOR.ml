@@ -8,7 +8,7 @@
  * Author:        Etienne Andre
  * 
  * Created:       2014/03/15
- * Last modified: 2014/06/19
+ * Last modified: 2014/09/22
  *
  ****************************************************************)
 
@@ -60,16 +60,26 @@ let run () =
 	let code =
 	(* Fork between the algorithms *)
 	  match options#distribution_mode with
+	    
 	    | Distributed_unsupervised ->
 		(* Fork between worker and coordinator *)
 		if rank = masterrank
 		then DistributedUnsupervised.coordinator
 		else DistributedUnsupervised.worker
+	    
 	    | Distributed_unsupervised_multi_threaded ->
 		(* Fork between worker and coordinator *)
 		if rank = masterrank
 		then DistributedMultiThreadedUnsupervised.coordinator
 		else DistributedMultiThreadedUnsupervised.worker
+	    
+	    | Distributed_ms_subpart ->
+		(* Fork between worker and coordinator *)
+		if rank = masterrank
+		then DistributedMasterSlaveSubparts.master
+		else DistributedMasterSlaveSubparts.worker
+		
+	    (* Other master slave scheme *)
 	    | _ ->
 		(* Fork between master and slave *)
 		if rank = masterrank

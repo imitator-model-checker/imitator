@@ -7,7 +7,7 @@
  * Author:        Etienne Andre, Camille Coti, Hoang Gia Nguyen
  * 
  * Created:       2014/09/05
- * Last modified: 2014/09/05
+ * Last modified: 2014/09/22
  *
  ****************************************************************)
 
@@ -63,8 +63,11 @@ let receive_pull_request_and_store_constraint () =
 		Cartography.bc_process_im_result im_result;
 		(* Return source rank *)
 		source_rank, Some im_result.tile_nature*)
-;;
+	()
 
+
+
+(* hey how are yous *)
 
 (*------------------------------------------------------------*)
 (* Generic function handling the next sequential point *)
@@ -92,6 +95,7 @@ let compute_next_pi0_sequentially more_pi0 limit_reached first_point tile_nature
 	counter_master_find_nextpi0#stop;
 	
 	()
+	
 
 
 (*------------------------------------------------------------*)
@@ -147,6 +151,7 @@ let compute_next_pi0 more_pi0 limit_reached first_point tile_nature_option =
 	| Non_distributed -> raise (InternalError("IMITATOR should be distributed at this point."))*)
 	
 	(** DO SOMETHING HERE **)
+	()
 
 
 (*------------------------------------------------------------*)
@@ -172,13 +177,15 @@ let send_one_point_to_each_node() = ()*)
 (* TODO *)
 let check_covered () = false
 	
-	
-	
+
+
 (*------------------------------------------------------------*)
 (* The cartography algorithm implemented in the master *)
 (*------------------------------------------------------------*)
 let master () =
-	(* Retrieve the input options *)
+	()
+
+(*	(* Retrieve the input options *)
 	let options = Input.get_options () in
 	
 	(* Initialize counters *)
@@ -312,8 +319,8 @@ let master () =
 		print_message Debug_high "Graphical cartography not asked: graph not generated.";
 	);
 	
-	()
-;;
+	()*)
+
 
 (****************************************************************)
 (**        WORKER         *)
@@ -321,7 +328,8 @@ let master () =
 
 let init_slave rank size =
 	print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "] I am worker " ^ (string_of_int rank) ^ "/" ^ (string_of_int (size-1)) ^ ".");
-;;
+	()
+
 
 let worker() =
 
@@ -428,5 +436,6 @@ let worker() =
 	print_message Debug_standard ("[Worker " ^ (string_of_int rank) ^ "] Total waiting time     : " ^ (string_of_float (counter_worker_waiting#value)) ^ " s");
 	print_message Debug_standard ("[Worker " ^ (string_of_int rank) ^ "] Total working time     : " ^ (string_of_float (counter_worker_working#value)) ^ " s");
 	print_message Debug_standard ("[Worker " ^ (string_of_int rank) ^ "] Occupancy              : " ^ (string_of_float occupancy) ^ " %");
-;;
+
+
 
