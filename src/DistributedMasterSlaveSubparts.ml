@@ -183,9 +183,7 @@ let check_covered () = false
 (* The cartography algorithm implemented in the master *)
 (*------------------------------------------------------------*)
 let master () =
-	()
-
-(*	(* Retrieve the input options *)
+	(* Retrieve the input options *)
 	let options = Input.get_options () in
 	
 	(* Initialize counters *)
@@ -200,7 +198,7 @@ let master () =
 	(* Perform initialization *)
 	Cartography.bc_initialize ();
 	
-	let more_pi0 = ref true in
+	let more_subparts = ref true in
 	let limit_reached = ref false in
 	
 	
@@ -208,15 +206,16 @@ let master () =
 	while not (check_covered ()) do
 		
 		(* Get the pull_request *)
-		let source_rank, tile_nature_option = receive_pull_request_and_store_constraint () in
-		print_message Debug_medium ("[Master] Received a pull request from worker " ^ (string_of_int source_rank) ^ "");
+(* 		let source_rank, tile_nature_option = receive_pull_request_and_store_constraint () in *)
+		print_message Debug_medium ("[Master] heloooooo ");
+(* 		print_message Debug_medium ("[Master] Received a pull request from worker " ^ (string_of_int source_rank) ^ ""); *)
 		
 		
 	
 	done;
 	(*** THE ALGORITHM STOPS HERE ***)
 	
-	(* To differentiate between initialization of pi0 / next_point *)
+(*	(* To differentiate between initialization of pi0 / next_point *)
 	let first_point = ref true in
 	
 	(* For the end of the algorithm *)
@@ -232,7 +231,7 @@ let master () =
 	(* IF precompute: Compute the first point pi0 *)
 	if options#precomputepi0 then(
 		(*** WARNING: this may lead to an unexpected behavior if mode is shuffle ! ***)
-		compute_next_pi0 more_pi0 limit_reached first_point None;
+		compute_next_pi0 more_subparts limit_reached first_point None;
 (* 		Cartography.compute_initial_pi0 (); *)
 	);
 	
@@ -251,7 +250,7 @@ let master () =
 	(* end if shuffle *)
 	
 	(* Iterate on all the possible pi0 *)
-	while !more_pi0 && not !limit_reached do
+	while !more_subparts && not !limit_reached do
 		print_message Debug_low ("[Master] Waiting for a pull request");
 		
 		(* Get the pull_request *)
@@ -261,14 +260,14 @@ let master () =
 		(* IF no-precompute: compute pi0 NOW *)
 		if not options#precomputepi0 then(
 			print_message Debug_high ("[Master] Computing pi0...");
-			compute_next_pi0 more_pi0 limit_reached first_point tile_nature_option;
+			compute_next_pi0 more_subparts limit_reached first_point tile_nature_option;
 		);
 		
 		(* Access the pi0 *)
 		let pi0 = Cartography.get_current_pi0 () in
 		
 		(* If finished: say goodbye *)
-		if !limit_reached || not !more_pi0 then(
+		if !limit_reached || not !more_subparts then(
 			send_finished source_rank;
 			workers_done := !workers_done + 1;
 			print_message Debug_medium( "\t[Master] - [Worker " ^ (string_of_int source_rank ) ^ "] is done");
@@ -280,8 +279,8 @@ let master () =
 
 		(* IF precompute: Compute the next pi0 for next time, and return flags for more pi0 and co *)
 		(*** WARNING: computing the pi0 BEFORE it is asked may be stupid! It may be smarter to compute it on demand (to be compared) ***)
-		if options#precomputepi0 && not !limit_reached && !more_pi0 then(
-			compute_next_pi0 more_pi0 limit_reached first_point tile_nature_option;
+		if options#precomputepi0 && not !limit_reached && !more_subparts then(
+			compute_next_pi0 more_subparts limit_reached first_point tile_nature_option;
 		);
 	done;
 
@@ -317,9 +316,9 @@ let master () =
 		Graphics.cartography (Input.get_model()) (Input.get_v0()) tiles (options#files_prefix ^ "_cart_patator")
 	) else (
 		print_message Debug_high "Graphical cartography not asked: graph not generated.";
-	);
+	);*)
 	
-	()*)
+	()
 
 
 (****************************************************************)
