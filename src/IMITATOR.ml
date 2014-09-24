@@ -8,7 +8,7 @@
  * Author:        Ulrich Kuehne, Etienne Andre
  * 
  * Created:       2009/09/07
- * Last modified: 2014/08/06
+ * Last modified: 2014/09/24
  *
  ****************************************************************)
 
@@ -29,10 +29,11 @@ open Gc
 (**************************************************
 
 TAGS POUR CHOSES A FAIRE
-- (**** TO DO ****)
-- (**** BAD PROG ****)
-- (**** TO OPTIMIZE ****)
-- (**** OPTIMIZED ****)
+- (*** TO DO ***)
+- (*** BAD PROG ***)
+- (*** TO OPTIMIZE ***)
+- (*** OPTIMIZED ***)
+- (*** WARNING ***)
 
 <>
 
@@ -103,7 +104,7 @@ if debug_mode_greater Debug_total then
 (**************************************************)
 (* Case distributed *)
 (**************************************************)
-(* Do not modify the following lines! (used by an external script to compile the non-distributed version of IMITATOR) *)
+(*** WARNING:  Do not modify the following lines! (used by an external script to compile the non-distributed version of IMITATOR) ***)
 (* ** *** **** ***** ******    BEGIN FORK PaTATOR    ****** ***** **** *** ** *)
 begin
 match options#distribution_mode with
@@ -112,7 +113,7 @@ match options#distribution_mode with
 	| _ -> (PaTATOR.run(); exit(0))
 end;
 (* ** *** **** ***** ******    END FORK PaTATOR    ****** ***** **** *** ** *)
-(* Do not modify the previous lines! (used by an external script to compile the non-distributed version of IMITATOR) *)
+(*** WARNING:  Do not modify the previous lines! (used by an external script to compile the non-distributed version of IMITATOR) ***)
 
 
 
@@ -161,8 +162,14 @@ if options#cartonly then(
 	let constraints = List.map (fun (linear_constraint , tile_nature) ->
 		Convex_constraint (linear_constraint , tile_nature)
 	) constraints in
+	(* Create the v0 *)
+	let v0 = new HyperRectangle.hyper_rectangle in
+	v0#set_min 0 p1_min;
+	v0#set_max 0 p1_max;
+	v0#set_min 1 p2_min;
+	v0#set_max 1 p2_max;
 	(* Call the cartography *)
-	Graphics.cartography model [| (p1_min , p1_max); (p2_min , p2_max) |] constraints options#files_prefix;
+	Graphics.cartography model (*[| (p1_min , p1_max); (p2_min , p2_max) |]*) v0 constraints options#files_prefix;
 	(* The end *)
 	terminate_program()
 );

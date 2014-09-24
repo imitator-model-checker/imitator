@@ -8,7 +8,7 @@
  * Author:        Etienne Andre, Ulrich Kuehne
  * 
  * Created:       2010/07/05
- * Last modified: 2014/08/06
+ * Last modified: 2014/09/24
  *
  ****************************************************************)
 
@@ -180,13 +180,17 @@ if returned_constraint_list = [] then(
 	(* If cartography: find indices of first two variables with a parameter range *)
 		| Cover_cartography | Random_cartography _ | Border_cartography ->
 			print_message Debug_low "Case real cartography: first 2 parameters with a range";
-			Array.iteri (fun index (a,b) -> 
+			for index = 0 to model.nb_parameters - 1 do
+(* 			Array.iteri (fun index (a,b) ->  *)
+				let a = v0#get_min index in
+				let b = v0#get_max index in
 				if NumConst.neq a b then(
 					(* Add one more parameter *)
 					print_message Debug_medium "Found a parameter!";
 					range_params := index :: !range_params;
 				)
-			) v0;
+			(* ) v0;*)
+			done;
 			range_params := List.rev !range_params;
 			
 			if (List.length !range_params) < 2 then(
@@ -195,8 +199,8 @@ if returned_constraint_list = [] then(
 			);
 
 			(* Update bounds *)
-			!bounds.(x_index) <- v0.(List.nth !range_params 0);
-			!bounds.(y_index) <- v0.(List.nth !range_params 1);
+			!bounds.(x_index) <- v0#get_min (List.nth !range_params 0), v0#get_max (List.nth !range_params 0);
+			!bounds.(y_index) <- v0#get_min (List.nth !range_params 1), v0#get_max (List.nth !range_params 1);
 
 		
 	(* Else: no reason to draw a cartography *)

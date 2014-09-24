@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2009/12/02
- * Last modified: 2013/08/02
+ * Last modified: 2014/09/24
  *
  **************************************************)
 
@@ -243,7 +243,10 @@ let string_of_v0 model v0 =
 		List.map (fun parameter ->
 			(model.variable_names parameter)
 			^ " = "
-			^ (let min_bound, max_bound = v0.(parameter) in
+			^ (
+(* 				let min_bound, max_bound = v0.(parameter) in *)
+				let min_bound = v0#get_min parameter in
+				let max_bound = v0#get_max parameter in
 				if min_bound = max_bound
 					then NumConst.string_of_numconst min_bound
 					else (NumConst.string_of_numconst min_bound) ^ ".." ^ (NumConst.string_of_numconst max_bound)

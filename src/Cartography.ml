@@ -10,7 +10,7 @@
  * Author:        Ulrich Kuehne, Etienne Andre
  * 
  * Created:       2012/06/18
- * Last modified: 2014/09/19
+ * Last modified: 2014/09/24
  *
  ****************************************************************)
 
@@ -430,7 +430,8 @@ let one_random_pi0 () =
 	let random_pi0 = Array.make model.nb_parameters NumConst.zero in
 	(* Fill it *)
 	for i = 0 to model.nb_parameters - 1 do
-		let min, max = v0.(i) in
+		let min = v0#get_min i in
+		let max = v0#get_max i in
 		(* Generate a random value in the interval *)
 		let random_value = NumConst.random_integer min max in
 		
@@ -856,6 +857,8 @@ let find_next_pi0_shuffle tile_nature_option =
 	(* Return *)
 	found_pi0 , !time_limit_reached
 
+
+
 (************************************************************)
 (* BEHAVIORAL CARTOGRAPHY ALGORITHM functions *)
 (************************************************************)
@@ -884,7 +887,7 @@ let bc_initialize () =
 	start_time := Unix.gettimeofday();
 
 	(* Number of dimensions in the system *)
-	nb_dimensions := Array.length v0;
+	nb_dimensions := model.nb_parameters;
 	
 	(* Print some information *)
 	print_message Debug_medium ("Number of dimensions: " ^ (string_of_int !nb_dimensions));
@@ -895,12 +898,24 @@ let bc_initialize () =
 		abort_program();
 	);
 	
+	
 	(* Min & max bounds for the parameters *)
-	min_bounds := Array.map (fun (low, high) -> low) v0;
-	max_bounds := Array.map (fun (low, high) -> high) v0;
+	
+(*	min_bounds := Array.map (fun (low, high) -> low) v0;
+	max_bounds := Array.map (fun (low, high) -> high) v0;*)
+	(*** BADPROG (to improve ***)
+	(* Initialize *)
+	min_bounds := Array.make !nb_dimensions NumConst.zero;
+	max_bounds := Array.make !nb_dimensions NumConst.zero;
+	(* Fill *)
+	for parameter_index = 0 to !nb_dimensions - 1 do
+		!min_bounds.(parameter_index) <- v0#get_min parameter_index;
+		!max_bounds.(parameter_index) <- v0#get_max parameter_index;
+	done;
+	
 	
 	(* Compute the (actually slightly approximate) number of points in V0 (for information purpose) *)
-	nb_points := Array.fold_left (fun current_number (low, high) ->
+(*	nb_points := Array.fold_left (fun current_number (low, high) ->
 		(* Multiply current number of points by the interval + 1, itself divided by the step *)
 		NumConst.mul
 			current_number
@@ -911,7 +926,24 @@ let bc_initialize () =
 				)
 				options#step
 			)
-	) NumConst.one v0;
+	) NumConst.one v0;*)
+	nb_points := NumConst.one;
+	for parameter_index = 0 to !nb_dimensions - 1 do
+		nb_points :=
+		let low = v0#get_min parameter_index in
+		let high = v0#get_max parameter_index in
+		(* Multiply current number of points by the interval + 1, itself divided by the step *)
+		NumConst.mul
+			!nb_points
+			(NumConst.div
+				(NumConst.add
+					(NumConst.sub high low)
+					NumConst.one
+				)
+				options#step
+			)
+		;
+	done;
 	
 	(*** TODO: check that it is not empty (or is it done elsewhere?) ***)
 	

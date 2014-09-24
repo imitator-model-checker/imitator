@@ -10,7 +10,7 @@
  * Author:        Ulrich Kuehne, Etienne Andre
  * 
  * Created:       2010/07/22
- * Last modified: 2014/06/08
+ * Last modified: 2014/08/24
  *
  ****************************************************************)
 
@@ -2529,7 +2529,7 @@ let post_star model init_state =
 		nb_iterations := !nb_iterations + 1;
 		
 		(* Check if the limit has been reached *)
-		limit_reached := !limit_reached or (check_limit !nb_iterations (StateSpace.nb_states reachability_graph) (time_from start_time));
+		limit_reached := !limit_reached || (check_limit !nb_iterations (StateSpace.nb_states reachability_graph) (time_from start_time));
 	done;
 	
 	(* Flat to detect premature stop in case of limit reached *)
@@ -2838,13 +2838,13 @@ let inverse_method_gen model init_state =
 	else if options#efim then (
 		match !tile_nature with
 		(* Bad tile: return the union of the bad constraints *)
-		| Bad _ ->
+		| Bad ->
 			Union_of_constraints (!p_constraints, !tile_nature)
 		(* No bad location means good! *)
-		| Good _ ->
+		| Good ->
 			Convex_constraint (!k_result , !tile_nature)
 		(* Unkown is impossible *)
-		| Unknown _ -> raise (InternalError "Impossible situation in EFIM: a returned_constraint has an unkown tile nature althoug this is not enabled here.")
+		| Unknown -> raise (InternalError "Impossible situation in EFIM: a returned_constraint has an unkown tile nature althoug this is not enabled here.")
 	)
 
 	(* Case IMcomplete *)

@@ -1007,9 +1007,9 @@ let check_pi0 pi0 parameters_names =
 (*--------------------------------------------------*)
 (* Check the pi0 cube w.r.t. the model parameters *)
 (*--------------------------------------------------*)
-let check_v0 v0 parameters_names =
+let check_v0 parsed_v0 parameters_names =
 	(* Compute the list of variable names *)
-	let list_of_variables = List.map (fun (v, _, _) -> v) v0 in
+	let list_of_variables = List.map (fun (v, _, _) -> v) parsed_v0 in
 
 	(* Compute the multiply defined variables *)
 	let multiply_defined_variables = elements_existing_several_times list_of_variables in
@@ -1041,7 +1041,7 @@ let check_v0 v0 parameters_names =
 			)
 		)
 		true
-		v0
+		parsed_v0
 	in
 
 	(* Check if some defined variables are not parameters (and warn) *)
@@ -1513,14 +1513,18 @@ let make_pi0 parsed_pi0 variables nb_parameters =
 	done;
 	pi0
 
+(*--------------------------------------------------*)
+(* Convert the parsed v0 into a valid v0 *)
+(*--------------------------------------------------*)
 let make_v0 parsed_v0 index_of_variables nb_parameters =
-	let v0 = Array.make nb_parameters (NumConst.zero, NumConst.zero) in
+	let v0 = new HyperRectangle.hyper_rectangle in
 	List.iter (fun (variable_name, a, b) ->
 		try
 		(* Get the variable index *)
 		let variable_index = Hashtbl.find index_of_variables variable_name in
 		(* Update the variable value *)
-		v0.(variable_index) <- (a, b)
+		v0#set_min variable_index a;
+		v0#set_max variable_index b;
 		with Not_found -> 
 			(* No problem: this must be an invalid parameter name (which is ignored) *)
 			()
@@ -1905,12 +1909,15 @@ let abstract_model_of_parsing_structure (parsed_variable_declarations, parsed_au
 	(* Constuct the pi0 *)
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
-	let pi0, v0 =
+	let pi0, (v0 : v0) =
 		match options#imitator_mode with
 		(* No pi0 / v0 *)
+		(*** BADPROG : should be an option !!! ***)
 		| Translation | State_space_exploration | EF_synthesis ->
 			(* Return blank values *)
-			Array.make 0 NumConst.zero, Array.make 0 (NumConst.zero, NumConst.zero)
+			Array.make 0 NumConst.zero
+			,
+			(new HyperRectangle.hyper_rectangle)
 
 		(* IM : Pi0 *)
 		| Inverse_method -> 
@@ -1920,7 +1927,9 @@ let abstract_model_of_parsing_structure (parsed_variable_declarations, parsed_au
 			(* Construction of the pi_0 *)
 			let pi0 = make_pi0 parsed_pi0 variables nb_parameters in
 			(* Return the pair *)
-			pi0, Array.make 0 (NumConst.zero, NumConst.zero)
+			pi0
+			,
+			(new HyperRectangle.hyper_rectangle)
 			
 		(* BC : V0 *)
 		| Cover_cartography | Random_cartography _ | Border_cartography -> 
@@ -1930,7 +1939,9 @@ let abstract_model_of_parsing_structure (parsed_variable_declarations, parsed_au
 			(* Construction of the pi_0 *)
 			let v0 = make_v0 parsed_v0 index_of_variables nb_parameters in
 			(* Return the pair *)
-			Array.make 0 NumConst.zero, v0
+			Array.make 0 NumConst.zero
+			,
+			v0
 	in
 	
 	(* Make a functional version of the pi0 *)
@@ -2160,11 +2171,13 @@ let abstract_model_of_parsing_structure (parsed_variable_declarations, parsed_au
 			) parameters;
 		| _ -> 
 			print_message Debug_medium ("\n*** Reference rectangle V0:");
-			Array.iteri (fun i (a, b) ->
+			for parameter_index = 0 to nb_parameters - 1 do
+				let min = v0#get_min parameter_index in
+				let max = v0#get_max parameter_index in
 				print_message Debug_medium (
-					variables.(i) ^ " : [" ^ (NumConst.string_of_numconst a) ^ ", " ^ (NumConst.string_of_numconst b) ^ "]"
-				)
-			) v0
+					variables.(parameter_index) ^ " : [" ^ (NumConst.string_of_numconst min) ^ ", " ^ (NumConst.string_of_numconst max) ^ "]"
+				);
+			done;
 	);
 	
 	
