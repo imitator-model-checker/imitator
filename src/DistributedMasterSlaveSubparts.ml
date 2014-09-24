@@ -435,6 +435,23 @@ let worker() =
 	print_message Debug_standard ("[Worker " ^ (string_of_int rank) ^ "] Total waiting time     : " ^ (string_of_float (counter_worker_waiting#value)) ^ " s");
 	print_message Debug_standard ("[Worker " ^ (string_of_int rank) ^ "] Total working time     : " ^ (string_of_float (counter_worker_working#value)) ^ " s");
 	print_message Debug_standard ("[Worker " ^ (string_of_int rank) ^ "] Occupancy              : " ^ (string_of_float occupancy) ^ " %");
+	()
 
 
+(*------------------------------------------------------------*)
+(* Tests *)
+(*------------------------------------------------------------*)
+
+let test_gia () =
+	print_message Debug_standard "Starting test !";
+	(* to something here *)
+	
+	
+	
+	()
+
+
+(*;;
+test_gia();
+abort_program();*)
 
