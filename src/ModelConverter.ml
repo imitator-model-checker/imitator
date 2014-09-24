@@ -10,7 +10,7 @@
  * Author:        Etienne Andre
  * 
  * Created:       2009/09/09
- * Last modified: 2014/07/29
+ * Last modified: 2014/09/24
  *
  ****************************************************************)
 
@@ -1695,6 +1695,10 @@ let abstract_model_of_parsing_structure (parsed_variable_declarations, parsed_au
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	print_message Debug_high ("\nSetting dimensions...");
 	LinearConstraint.set_dimensions nb_parameters nb_clocks nb_discrete;
+	
+	(* Set dimensions for hyper rectangles *)
+	HyperRectangle.set_dimensions nb_parameters;
+
 	
 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
