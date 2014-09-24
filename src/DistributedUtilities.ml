@@ -91,7 +91,7 @@ let masterrank = 0
 (** Serialization Functions *)
 (****************************************************************)
 (*------------------------------------------------------------*)
-(* Pi0 *)
+(* General *)
 (*------------------------------------------------------------*)
 
 let serialize_numconst = NumConst.string_of_numconst
@@ -108,6 +108,10 @@ let serialize_SEP_LIST = ";"
 (* Separator between the elements of a structure *)
 let serialize_SEP_STRUCT = "|"
 
+
+(*------------------------------------------------------------*)
+(* Pi0 *)
+(*------------------------------------------------------------*)
 let serialize_pi0_pair (variable_index , value) =
 	LinearConstraint.serialize_variable variable_index
 	^
@@ -130,8 +134,60 @@ let unserialize_pi0_pair pi0_pair_string =
 
 
 let unserialize_pi0 pi0_string =
+	(*** TODO: check correct number of values ! ***)
 	let pi0_pairs_string = split serialize_SEP_LIST pi0_string in
 	List.map unserialize_pi0_pair pi0_pairs_string
+
+
+(*------------------------------------------------------------*)
+(* V0 *)
+(*------------------------------------------------------------*)
+let serialize_hyper_rectangle_pair (min, max) =
+	(serialize_numconst min)
+	^
+	serialize_SEP_PAIR
+	^
+	(serialize_numconst max)
+
+	
+let serialize_hyper_rectangle hyper_rectangle =
+	let nb_parameters = HyperRectangle.get_dimensions () in
+	(* Create an array of pairs *)
+	let hyper_rectangle_array = Array.create nb_parameters (NumConst.zero, NumConst.zero) in
+	for parameter_index = 0 to nb_parameters - 1 do
+		hyper_rectangle_array.(parameter_index) <- (hyper_rectangle#get_min parameter_index, hyper_rectangle#get_max parameter_index);
+	done;
+	(* Convert to list *)
+	let hyper_rectangle_list = Array.to_list hyper_rectangle_array in
+	(* Convert all pairs to string *)
+	let hyper_rectangle_string_list = List.map serialize_hyper_rectangle_pair hyper_rectangle_list in
+	(* Add separators *)
+	String.concat serialize_SEP_LIST hyper_rectangle_string_list
+
+let unserialize_hyper_rectangle_pair hyper_rectangle_pair_string =
+	match split serialize_SEP_PAIR hyper_rectangle_pair_string with
+	| [min_string ; max_string ] ->
+		unserialize_numconst min_string , unserialize_numconst max_string
+	| _ -> raise (SerializationError ("Cannot unserialize hyper_rectangle value '" ^ hyper_rectangle_pair_string ^ "': (min, max) expected."))
+
+
+let unserialize_hyper_rectangle hyper_rectangle_string =
+	(*** TODO: check correct number of values ! ***)
+	(* Split into a list of pairs *)
+	let hyper_rectangle_pairs_string = split serialize_SEP_LIST hyper_rectangle_string in
+	(* Retrieve a list of (min, max) *)
+	let hyper_rectangle_list = List.map unserialize_hyper_rectangle_pair hyper_rectangle_pairs_string in
+	(* Build the hyper_rectangle *)
+	let hyper_rectangle = new HyperRectangle.hyper_rectangle in
+	let parameter_index = ref 0 in
+	List.iter (fun (min, max) ->
+		hyper_rectangle#set_min !parameter_index min;
+		hyper_rectangle#set_max !parameter_index max;
+		parameter_index := !parameter_index + 1;
+	) hyper_rectangle_list;
+	(* Return *)
+	hyper_rectangle
+
 
 
 (*------------------------------------------------------------*)
@@ -269,6 +325,21 @@ let debug_string_of_pi0 pi0 =
 		)
 	)
 	
+let debug_string_of_v0 v0 =
+	let nb_parameters = HyperRectangle.get_dimensions () in
+	(*** BADPROG ***)
+	let my_string = ref "V0:" in
+	for parameter_index = 0 to nb_parameters - 1 do
+		my_string := !my_string ^ "\n"
+			^ (NumConst.string_of_numconst (v0#get_min parameter_index))
+			^ ", "
+			^ (NumConst.string_of_numconst (v0#get_max parameter_index))
+		;
+	done;
+	(* Return *)
+	!my_string
+
+
 let test_serialization () =
 	let test_unserialize_variable variable_string = 
 		try(
@@ -306,6 +377,32 @@ let test_serialization () =
 	print_message Debug_standard "Now unserializing it...";
 	let mypi0_back = unserialize_pi0 pi0_serialized in
 	print_message Debug_standard  (debug_string_of_pi0 mypi0_back);
+
+	(*** BIG HACK because nb dimensions not set yet ***)
+	let nb_parameters = 5 in
+	HyperRectangle.set_dimensions nb_parameters;
+	
+	(* Create dummy v0 *)
+	let v0 = new HyperRectangle.hyper_rectangle in
+	
+	(* Set dimensions *)
+	for parameter_index = 0 to nb_parameters - 1 do
+		(* Set to (p, 2*p + 1*)
+		v0#set_min parameter_index (NumConst.numconst_of_int parameter_index);
+		v0#set_max parameter_index (NumConst.numconst_of_int (2 * parameter_index + 1));
+	done;
+	
+	print_message Debug_standard "Here is my hyper rectangle";
+	print_message Debug_standard (debug_string_of_v0 v0);
+	
+	print_message Debug_standard "Now serializing it...";
+	let v0_serialized = serialize_hyper_rectangle v0 in
+	print_message Debug_standard "After serialization:";
+	print_message Debug_standard  v0_serialized;
+	
+	print_message Debug_standard "Now unserializing it...";
+	let myv0_back = unserialize_hyper_rectangle v0_serialized in
+	print_message Debug_standard  (debug_string_of_v0 myv0_back);
 	()
 
 ;;

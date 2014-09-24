@@ -457,7 +457,7 @@ exe:
 # 	bin/IMITATOR32 $(EXAMPLE_PATH)/Flipflop/flipflop.imi $(EXAMPLE_PATH)/Flipflop/flipflop.v0 -mode border -cart -with-graphics-source
 # 	$(TARGETV) $(EXAMPLE_PATH)/Flipflop/flipflop.imi $(EXAMPLE_PATH)/Flipflop/flipflop.v0 -mode border -cart -with-graphics-source
 # 	./IMITATOR Examples/Flipflop/flipflop.imi Examples/Flipflop/flipflop.v0 -mode random1000  -log-prefix Examples/Flipflop/test2/test
-# 	$(TARGET) $(EXAMPLE_PATH)/Flipflop/flipflop.imi $(EXAMPLE_PATH)/Flipflop/flipflop.v0 -mode cover -cart
+	$(TARGET) $(EXAMPLE_PATH)/Flipflop/flipflop.imi $(EXAMPLE_PATH)/Flipflop/flipflop.v0 -mode cover -output-cart
 # 	# 	./IMITATOR Examples/Flipflop/flipflop.imi Examples/Flipflop/flipflop.v0 -mode cover -no-log -time-limit 1 -depth-limit 25
 # 	./IMITATOR Examples/Flipflop/flipflop.imi Examples/Flipflop/flipflop.v0 -mode cover -no-log -no-dot
 
@@ -483,7 +483,7 @@ exe:
 # 	$(TARGET) $(EXAMPLE_PATH)/SRlatch/SRlatch.imi $(EXAMPLE_PATH)/SRlatch/SRlatch.pi0
 # 	$(TARGETV) $(EXAMPLE_PATH)/SRlatch/SRlatch.imi $(EXAMPLE_PATH)/SRlatch/SRlatch.pi0 -dynamic-elimination
 # 	$(TARGET) $(EXAMPLE_PATH)/SRlatch/SRlatch.imi $(EXAMPLE_PATH)/SRlatch/SRlatch.pi0 -bab
-	$(TARGET) $(EXAMPLE_PATH)/SRlatch/SRlatch.imi $(EXAMPLE_PATH)/SRlatch/SRlatch.v0 -mode cover -output-cart
+# 	$(TARGET) $(EXAMPLE_PATH)/SRlatch/SRlatch.imi $(EXAMPLE_PATH)/SRlatch/SRlatch.v0 -mode cover -output-cart
 
 # 	$(TARGET) $(EXAMPLE_PATH)/SRlatch/SRlatch.imi -mode EF -cart
 

@@ -55,6 +55,9 @@ let assert_dim_valid dim =
 		raise (InternalError ("Trying to access dimension " ^ (string_of_int dim) ^ " in a HyperRectangle although the number of dimensions is " ^ (string_of_int nb_dim) ^ "."))
 
 
+(** Get the number of dimensions for ALL hyper rectangles; must be called (once and only once) before creating any object *)
+let get_dimensions = get_dim
+
 
 (****************************************************************)
 class hyper_rectangle =

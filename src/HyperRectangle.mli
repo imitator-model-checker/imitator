@@ -14,6 +14,8 @@
 (** Global function: set the number of dimensions for ALL hyper rectangles; must be called (once and only once) before creating any object *)
 val set_dimensions : int -> unit
 
+(** Global function: get the number of dimensions for ALL hyper rectangles *)
+val get_dimensions : unit -> int
 
 
 class hyper_rectangle :
