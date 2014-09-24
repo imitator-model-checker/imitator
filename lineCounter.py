@@ -6,8 +6,8 @@
 ##
 ##   Author: Etienne ANDRE
 ##
-##   Created       : 06/04/2009
-##   Last modified : 06/04/2009
+##   Created       : 2009/04/06
+##   Last modified : 2009/09/24
 ########################################################
 ######################################################## 
 
@@ -21,8 +21,14 @@ import os, re
 counter = 0
 # Number of files
 nb_files = 0
-# Iterate on the files of the current directory
-for file in os.listdir('.'):
+# Relative path
+path = "./src/" # os.getcwd() + 
+
+print " Counting lines in all files in " + path
+
+# Iterate on the files in the "src" directory
+for file in os.listdir(path):
+	file = path + file
 	# Only consider files
 	if os.path.isfile(file):
 		# Open file
