@@ -5,36 +5,46 @@
  *
  * Author          : Etienne Andre
  * Created         : 2014/09/01
- * Last modified   : 2014/09/24
+ * Last modified   : 2014/09/01
  * IMITATOR version: 2.6.2
  ************************************************************)
 
- var 	x1, x2
+ var 	x
 		: clock;
 
-	p1, p2
+	p
 			: parameter;
 			
 (************************************************************)
 
 (************************************************************)
-  automaton pta1
+  automaton a
 (************************************************************)
 
-synclabs: a, b, c;
+synclabs: ;
 
-loc l0: while True wait {}
-	when x2 = p2 do {x2' = 0} goto l0prime;
+(*loc l1: while True wait {}
+	when True goto l2;
+	when True goto l3;
 
-loc l0prime: while True wait {}
-	when x2 = p2 & x1 >= 1 do {x1' = 0} goto l1;
+loc l2: while p <= 1 wait {}
+	when True goto l4;
+
+loc l3: while True wait {}
+	when True goto l4;
+
+loc l4: while x = p & x < 2 wait {}
+	when x > 1 goto lbad;
+
+loc lbad: while True wait {}*)
+
 
 loc l1: while True wait {}
-	when x1 = 1 sync a goto l2;
-	when x1 = p2 sync b goto l2;
+	when x = 1 goto l2;
+	when x > 0 goto l2;
 
-loc l2: while x1 <= 2 wait {}
-	when x1 < 1 & x1 = p1 sync c goto lbad;
+loc l2: while x <= 2 wait {}
+	when x < 1 & x = p goto lbad;
 
 loc lbad: while True wait {}
 end (* automaton *)
@@ -49,18 +59,17 @@ init := True
 	(*------------------------------------------------------------
 	   INITIAL LOCATION
 	  ------------------------------------------------------------*)
-	& loc[pta1] = l0
+	& loc[a] = l1
 		
 	(*------------------------------------------------------------
 	   INITIAL CLOCKS
 	  ------------------------------------------------------------*)
-	& x1 = 0
-	& x2 = 0
+	& x = 0
 
 	(*------------------------------------------------------------
 	   PARAMETER CONSTRAINTS
 	  ------------------------------------------------------------*)
-	& p1 >= 0 & p1 <= 2
-	& p2 >= 0 & p2 <= 2
+	& p >= 0
+	& p <= 2
 ;
 end
