@@ -2,10 +2,11 @@
  *                         IMITATOR
  *
  * Model to show that it is necessary to use the IH in the final intersection in IIM
+ * *** WRONG model *** because the IH are equal but… empty :(
  *
- * Author          : Etienne Andre and Didier Lime
- * Created         : 2014/09/25
- * Last modified   : 2014/09/25
+ * Author          : Etienne Andre
+ * Created         : 2014/09/01
+ * Last modified   : 2014/09/24
  * IMITATOR version: 2.6.2
  ************************************************************)
 
