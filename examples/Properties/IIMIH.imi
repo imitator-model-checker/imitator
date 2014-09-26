@@ -9,10 +9,10 @@
  * IMITATOR version: 2.6.2
  ************************************************************)
 
- var 	x1, x2
+ var 	x
 		: clock;
 
-	p1, p2
+	a
 			: parameter;
 			
 (************************************************************)
@@ -24,17 +24,17 @@
 synclabs: a, b, c;
 
 loc l0: while True wait {}
-	when x2 = p2 do {x2' = 0} goto l0prime;
+	when True goto l1;
+	when True goto l1prime;
 
-loc l0prime: while True wait {}
-	when x2 = p2 & x1 = 1 do {x1' = 0} goto l1;
+loc l1: while x <= a wait {}
+	when x >= 1 do {x' = 0} goto l2;
 
-loc l1: while True wait {}
-	when x1 = 1 sync a goto l2;
-	when x1 = p2 sync b goto l2;
+loc l1prime: while x <= 2a wait {}
+	when x >= 1 do {x' = 0} goto l2;
 
-loc l2: while x1 <= 2 wait {}
-	when x1 < 1 & x1 = p1 sync c goto lbad;
+loc l2: while x <= 1 wait {}
+	when x >= 2a goto lbad;
 
 loc lbad: while True wait {}
 end (* automaton *)
@@ -54,13 +54,11 @@ init := True
 	(*------------------------------------------------------------
 	   INITIAL CLOCKS
 	  ------------------------------------------------------------*)
-	& x1 = 0
-	& x2 = 0
+	& x = 0
 
 	(*------------------------------------------------------------
 	   PARAMETER CONSTRAINTS
 	  ------------------------------------------------------------*)
-	& p1 >= 0 & p1 <= 2
-	& p2 >= 0 & p2 <= 2
+	& a >= 0 & a <= 2
 ;
 end
