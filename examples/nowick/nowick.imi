@@ -6,12 +6,13 @@
  *
  * Author          : Christopher Makanga, Etienne Andre
  * Created         : 2014/08/29
- * Last modified   : 2014/09/22
+ * Last modified   : 2014/09/26
  * IMITATOR version: 2.6.2
  ************************************************************)
 
  var 	ckiiAnd, ckOr3, ckOr2, ckOr1, ckAnd1, ckii3And1, ckii3And2,
-		ckInputA, ckInputB, ckInputC, x_a, x_b, x_c,
+		(*ckInputA, ckInputB, ckInputC, *)
+			x_a, x_b, x_c,
 		: clock;
 
 		(** WARNING: set of values not consistent with CC05 *)
@@ -24,35 +25,42 @@
 	, d7 = 2, D7 = 3*)
 	
 	(* Set consistent with CC05 (found by C. Makanga) *)
-(*	  d1 = 4, D1 = 9
-	, d2 = 3, D2 = 9
-	, d3 = 3, D3 = 6
-	, d4 = 3, D4 = 9
-	, d5 = 2, D5 = 6
-	, d6 = 10, D6 = 12
-	, d7 = 10, D7 = 12*)
+	  d1 = 4, D1 = 9,
+	d2 = 3, D2 = 9,
+	d3 = 3, D3 = 6,
+	d4 = 3, (*D4 = 9,*)
+	d5 = 2, D5 = 6,
+	d6 = 10, D6 = 12,
+	d7 = 10, D7 = 12, 
 
 	(* Set consistent with CC05, with punctual delays (found by C. Makanga) *)
-	  d1 = 9, D1 = 9
+(*	  d1 = 9, D1 = 9
 	, d2 = 3, D2 = 3
 	, d3 = 12, D3 = 12
 	, d4 = 8, D4 = 8
 	, d5 = 6, D5 = 6
 	, d6 = 10, D6 = 10
-	, d7 = 11, D7 = 11
+	, d7 = 11, D7 = 11, *)
 	
 	(*	& D4 + D5 < d1 + d6 + 2
 	& D1 < d2 + d7 + 4*)
 
 	
 	(* Fully parametric *)
-(*	d1, D1,
+	(*d1, D1,
 	d2, D2,
 	d3, D3,
-	d4, D4,
-	d5, D5,
-	d6, D6,
+	d4, *)D4,
+	(*d5, D5,*)
+	(*d6, D6,
 	d7, D7,*)
+
+	DaMin = 2, DaMax = 9,
+	DbMin = 3, DbMax = 6,
+	DcMin = 4, DcMax = 6,
+(*	DaMin = 0, DaMax = 1000,
+	DbMin = 0, DbMax = 1000,
+	DcMin = 0, DcMax = 1000,*)
 
 		: parameter;
 			
@@ -170,8 +178,10 @@ end (*OrGate*)
   automaton Or1Gate
 (************************************************************)
 synclabs: kUp, kDown, cUp, cDown,
-	xUp, xDown;
+	hUp, hDown;
 
+(* Configuration : kch *)
+	
 (* Stable *)
 loc Or1_000: while True wait {}
 	when True sync kUp do {ckOr1' = 0} goto Or1_100;
@@ -181,13 +191,13 @@ loc Or1_000: while True wait {}
 loc Or1_001: while ckOr1 <= D5 wait {}
 	when True sync kUp do {} goto Or1_101;
 	when True sync cUp do {} goto Or1_011;
-	when ckOr1 >= d5 sync xDown do {} goto Or1_000;
+	when ckOr1 >= d5 sync hDown do {} goto Or1_000;
 
 (* Unstable *)
 loc Or1_010: while ckOr1 <= D5 wait {}
 	when True sync kUp do {ckOr1' = 0} goto Or1_110;
 	when True sync cDown do {} goto Or1_000;
-	when ckOr1 >= d5 sync xUp do {} goto Or1_011;
+	when ckOr1 >= d5 sync hUp do {} goto Or1_011;
 
 (* Stable *)
 loc Or1_011: while True wait {}
@@ -198,7 +208,7 @@ loc Or1_011: while True wait {}
 loc Or1_100: while ckOr1 <= D5 wait {}
 	when True sync kDown do {} goto Or1_000;
 	when True sync cUp do {ckOr1' = 0} goto Or1_110;
-	when ckOr1 >= d5 sync xUp do {} goto Or1_101;
+	when ckOr1 >= d5 sync hUp do {} goto Or1_101;
 
 (* Stable *)
 loc Or1_101: while True wait {}
@@ -209,7 +219,7 @@ loc Or1_101: while True wait {}
 loc Or1_110: while ckOr1 <= D5  wait {}
 	when True sync kDown do {ckOr1' = 0} goto Or1_010;
 	when True sync cDown do {ckOr1' = 0} goto Or1_100;
-	when ckOr1 >= d5 sync xUp do {} goto Or1_111;
+	when ckOr1 >= d5 sync hUp do {} goto Or1_111;
 
 (* Stable *)
 loc Or1_111: while True wait {}
@@ -605,8 +615,17 @@ synclabs: aUp, aDown, (*xUp, *)xDown,yUp, yDown;
 	  loc inputa_Low : while True wait {}
 	      when True sync yDown do {x_a' = 0} goto inputa_rising;
 	  
-	  loc inputa_rising : while x_a <= 9 wait {}
-	      when x_a >= 2 sync aUp do {} goto inputa_High;
+	loc inputa_rising : while x_a <= DaMax wait {}
+		when x_a >= DaMin sync aUp do {} goto inputa_waiting_yUp;
+	      
+	loc inputa_waiting_yUp : while True wait {}
+		when True sync yUp do {} goto inputa_waiting_xDown;
+	      
+	loc inputa_waiting_xDown : while True wait {}
+		when True sync xDown do {} goto inputa_waiting_yDown;
+	      
+	loc inputa_waiting_yDown : while True wait {}
+		when True sync yDown do {} goto inputa_High;      
 	  
 	  loc inputa_High : while True wait {}
 	      when True sync xDown do {} goto inputa_xDown;
@@ -618,8 +637,8 @@ synclabs: aUp, aDown, (*xUp, *)xDown,yUp, yDown;
 	  loc inputa_yUp : while True wait {}
 	      when True sync xDown do {x_a' = 0} goto inputa_falling;
 	  
-	  loc inputa_falling : while x_a <= 9 wait {}
-	    when x_a >= 2 sync aDown do {} goto inputa_Low;
+	  loc inputa_falling : while x_a <= DaMax wait {}
+	    when x_a >= DaMin sync aDown do {} goto inputa_Low;
 
 end (*InputaManagement*)
 
@@ -632,10 +651,13 @@ synclabs: bUp, bDown, xUp, (*xDown,*)(*yUp, *)yDown;
 	  loc inputb_Low : while True wait {}
 	      when True sync yDown do {x_b' = 0} goto inputb_rising;
 	  
-	  loc inputb_rising : while x_b <= 6 wait {}
-	      when x_b >= 3 sync bUp do {} goto inputb_High;
+	  loc inputb_rising : while x_b <= DbMax wait {}
+	      when x_b >= DbMin sync bUp do {} goto inputb_High1;
 	  
-	  loc inputb_High : while True wait {}
+	  loc inputb_High1 : while True wait {}
+	      when True sync xUp do {} goto inputb_High2;
+
+	loc inputb_High2 : while True wait {}
 	      when True sync xUp do {} goto inputb_xUp;
 	      when True sync yDown do {} goto inputb_yDown;
 
@@ -645,8 +667,11 @@ synclabs: bUp, bDown, xUp, (*xDown,*)(*yUp, *)yDown;
 	  loc inputb_yDown : while True wait {}
 	      when True sync xUp do {x_b' = 0} goto inputb_falling;
 	  
-	  loc inputb_falling : while x_b <= 6 wait {}
-	    when x_b >= 3 sync bDown do {} goto inputb_Low;
+	  loc inputb_falling : while x_b <= DbMax wait {}
+	    when x_b >= DbMin sync bDown do {} goto (* inputb_Low_waiting_yDown;
+
+	  loc inputb_Low_waiting_yDown : while True wait {}
+	    when sync yDown do {} goto *)inputb_Low;
 
 end (*InputaManagement*)
 
@@ -655,7 +680,7 @@ end (*InputaManagement*)
 (************************************************************)
   automaton InputcManagement
 (************************************************************)
-synclabs: cUp, cDown, xUp, xDown,yUp(*, yDown*);
+synclabs: cUp, cDown, xUp, xDown, yUp(*, yDown*);
 	  
 	  loc inputc_Low : while True wait {}
 	      when True sync xUp do {} goto inputc_xUp;
@@ -667,14 +692,27 @@ synclabs: cUp, cDown, xUp, xDown,yUp(*, yDown*);
 	  loc inputc_yUp : while True wait {}
 	      when True sync xUp do {x_c' = 0} goto inputc_rising;
 	  
-	  loc inputc_rising : while x_c <= 6 wait {}
-	    when x_c >= 4 sync cUp do {} goto inputc_High;
+	  loc inputc_rising : while x_c <= DcMax wait {}
+	    when x_c >= DcMin sync cUp do {} goto inputc_High;
 	  
 	  loc inputc_High : while True wait {}
 	      when True sync xDown do {x_c' = 0} goto inputc_falling;
 	  
-	  loc inputc_falling : while x_c <= 6 wait {}
-	      when x_c >= 4 sync cDown do {} goto inputc_Low;
+	  loc inputc_falling : while x_c <= DcMax wait {}
+	      when x_c >= DcMin sync cDown do {} goto inputc_Low_waiting_xUp;
+
+	loc inputc_Low_waiting_xUp : while True wait {}
+		when True sync xUp goto inputc_Low_waiting_xDown_yUp;
+	
+	loc inputc_Low_waiting_xDown_yUp : while True wait {}
+		when True sync xDown goto inputc_Low_waiting_yUp;
+		when True sync yUp goto inputc_Low_waiting_xDown;
+	
+	loc inputc_Low_waiting_xDown : while True wait {}
+		when True sync xDown goto inputc_Low;
+	
+	loc inputc_Low_waiting_yUp : while True wait {}
+		when True sync yUp goto inputc_Low;
 
 end (*InputcManagement*)
 
@@ -709,7 +747,7 @@ loc env5: while True wait {}
 end (* environment with input only *)*)
 
 
-(************************************************************)
+(*(************************************************************)
   automaton environment
 (************************************************************)
 synclabs: aUp, aDown, bUp, bDown, cUp, cDown, xUp, xDown, yUp, yDown;
@@ -772,7 +810,7 @@ loc env12: while True wait {}
 loc env13: while True wait {}
 	when True sync yDown goto env0;
 
-end (* full environment *)
+end (* full environment *)*)
 
 (************************************************************)
 (* Analysis *)
@@ -792,7 +830,7 @@ init := True
 (*	& loc[InputC] = InputC_0
 	& loc[InputA] = InputA_0
 	& loc[InputB] = InputB_0*)
-	& loc[environment] = env0
+(* 	& loc[environment] = env0 *)
 	& loc[InputaManagement] = inputa_rising
 	& loc[InputbManagement] = inputb_rising
 	& loc[InputcManagement] = inputc_Low
@@ -808,9 +846,9 @@ init := True
 	& ckii3And1 = 0
 	& ckii3And2 = 0
 	& ckiiAnd = 0
-	& ckInputC = 0
+(*	& ckInputC = 0
 	& ckInputA = 0
-	& ckInputB = 0
+	& ckInputB = 0*)
 	& x_a = 0
 	& x_b = 0
 	& x_c = 0
@@ -837,8 +875,8 @@ init := True
 	(*------------------------------------------------------------
 	   THE CONSTRAINT IN [CC05]
 	  ------------------------------------------------------------*)
-	& D4 + D5 < d1 + d6 + 2
-	& D1 < d2 + d7 + 4
+(*	& D4 + D5 < d1 + d6 + 2
+	& D1 < d2 + d7 + 4*)
 
 	;
 end
