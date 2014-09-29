@@ -48,7 +48,7 @@ let receive_pull_request_and_store_constraint () =
 	
 	(** DO SOMETHING HERE **)
 	
-(*	match pull_request with
+(*z	match pull_request with
 	| PullOnly source_rank ->
 		print_message Debug_low ("[Master] Received PullOnly request...");
 		source_rank, None
@@ -544,25 +544,21 @@ let sliptSubpart (s : HyperRectangle.hyper_rectangle) =
 let intialize_Subparts (subparts : HyperRectangle.hyper_rectangle list ref) (n : int) =
 	for l = 0 to n do 
 	begin
-	(*check each dimension in all list subpart get the longest and remember the number of subpart*)
-	(*check the longest dimension if it equals 1 -> cannt split anymore -> stop!*)
-	(*few lines duplicate here!!!*)
-	  let max_length = ref 0 in
+	  (*find the largest subpart to slipt*)
+	  let max_pi0s = ref 0 in
 	  let subno = ref 0 in
 	  for i = 0 to (List.length !subparts)-1 do
-	    for j = 0 to (HyperRectangle.get_dimensions() -1) do
-	      let temp = ( (NumConst.to_int((at !subparts i)#get_max j) - NumConst.to_int((at !subparts i)#get_min j)) +1 ) in
-	      if (!max_length < temp) then
+	      let temp = getTotalPi0 (at !subparts i) (HyperRectangle.get_dimensions() -1) in
+	      if (!max_pi0s < temp) then
 	      begin
-	      max_length := temp; 
+	      max_pi0s := temp; 
 	      subno := i;
 	      end
-	    done ;  
 	  done;
 	  (*check if length every edge is 1 unit*)
-	  if (!max_length != 1) then 
+	  if (!max_pi0s != 1) then 
 	  begin
-	    print_message Debug_standard ("\nMax length in list : " ^ (string_of_int !max_length) ^ " in subpart : " ^ (string_of_int !subno));
+	    print_message Debug_standard ("\nMax pi0s in list is : " ^ (string_of_int !max_pi0s) ^ " in subpart : " ^ (string_of_int !subno));
 	    (*get list split subparts*)
 	    let newSubpartList = sliptSubpart (at !subparts !subno) in (*!subno*)
 	    (*remove old subpart*)
@@ -583,6 +579,14 @@ let intialize_Subparts (subparts : HyperRectangle.hyper_rectangle list ref) (n :
 let test_gia () =
 	print_message Debug_standard "--------------------Starting test !-------------------- \n"; 
 	(*************Sample Data v0************)
+	(*test with the odd dimensions matrix 3x3*)
+(*	HyperRectangle.set_dimensions 2;
+	let v0 = new HyperRectangle.hyper_rectangle in 
+	v0#set_min 0 (NumConst.numconst_of_int 0); 
+	v0#set_max 0 (NumConst.numconst_of_int 2);
+	v0#set_min 1 (NumConst.numconst_of_int 0);
+	v0#set_max 1 (NumConst.numconst_of_int 2);*)
+	(*-------------------*)
 	HyperRectangle.set_dimensions 3;
 	let v0 = new HyperRectangle.hyper_rectangle in 
 	v0#set_min 0 (NumConst.numconst_of_int 0); 
@@ -597,8 +601,8 @@ let test_gia () =
 	let subparts = ref [] in
 	subparts := !subparts@[(v0)];
 	print_message Debug_standard ("\nInitial list length : " ^ (string_of_int (List.length !subparts) ) );
-	
-	intialize_Subparts subparts 119;
+	(*Note: The input number of worker counted from zero!*)
+	intialize_Subparts subparts 120;
 	
 	print_message Debug_standard "\n --------------------End of test !--------------------"; 
 	
