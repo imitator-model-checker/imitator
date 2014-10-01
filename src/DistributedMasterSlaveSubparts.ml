@@ -17,6 +17,8 @@ open Options
 open Mpi
 open Reachability
 open DistributedUtilities
+(*Exception*)
+exception Ex of string;;
 
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -46,7 +48,7 @@ let receive_pull_request_and_store_constraint () =
 	
 	(** DO SOMETHING HERE **)
 	
-(*	match pull_request with
+(*z	match pull_request with
 	| PullOnly source_rank ->
 		print_message Debug_low ("[Master] Received PullOnly request...");
 		source_rank, None
@@ -435,23 +437,178 @@ let worker() =
 	print_message Debug_standard ("[Worker " ^ (string_of_int rank) ^ "] Total waiting time     : " ^ (string_of_float (counter_worker_waiting#value)) ^ " s");
 	print_message Debug_standard ("[Worker " ^ (string_of_int rank) ^ "] Total working time     : " ^ (string_of_float (counter_worker_working#value)) ^ " s");
 	print_message Debug_standard ("[Worker " ^ (string_of_int rank) ^ "] Occupancy              : " ^ (string_of_float occupancy) ^ " %");
-	()
+()
 
 
 (*------------------------------------------------------------*)
 (* Tests *)
 (*------------------------------------------------------------*)
 
+(*get element at*)	
+let rec at (lst : HyperRectangle.hyper_rectangle list) (n : int) : HyperRectangle.hyper_rectangle =
+	match lst with
+	h :: t -> if n = 0 then begin h end else begin at t (n - 1) end;
+	| [] -> raise Not_found;;
+
+(*remove element at*)	
+let rec remove_at (lst : HyperRectangle.hyper_rectangle list) (n : int) : HyperRectangle.hyper_rectangle list=
+	match lst with
+	| [] -> [];
+	| h :: t -> if n = 0 then t else h :: remove_at t (n-1);;
+    
+(*get total pi0 inside subpart put the subpart and number of dimensions then get the number of the pi0s inside it*) 
+let getTotalPi0 (subpart : HyperRectangle.hyper_rectangle) (d : int) = 
+	let temp = ref 1 in
+	for i = 0 to d do
+	  temp := !temp*( (NumConst.to_int(subpart#get_max i) - NumConst.to_int(subpart#get_min i) ) +1);
+	done ;  !temp;;
+	
+(* Slipt subpart put HyperRectangle s return List [s1;s2] !! the number of pi0 in subpart must be larger or equals 2*)
+let sliptSubpart (s : HyperRectangle.hyper_rectangle) =
+	(*Display information of s*)
+	print_message Debug_standard ("\nSplitting............! ");
+	print_message Debug_standard ("\ns infomation: ");
+	let d = (HyperRectangle.get_dimensions() -1) in
+	print_message Debug_standard ("Number dimensions is : " ^ (string_of_int d) );
+	for j = 0 to d do
+	print_message Debug_standard ("Dimension " ^(string_of_int j)^" : "^ " min = " ^ (string_of_int (NumConst.to_int(s#get_min j)))^";"^ " max = " ^ (string_of_int (NumConst.to_int(s#get_max j))));
+	done;
+	(*check pi0 in subpart*)
+	let totalpi0 = getTotalPi0 s d in
+	print_message Debug_standard ("Total pi0s in s is : " ^ (string_of_int totalpi0) );
+	(* Sliptting subpart into 2 smaller subparts*)
+	let max_d_l = ref 0 in
+	let max_d = ref 0 in
+	let temp = ref 0 in
+	for i = 0 to d do
+	  temp := ( (NumConst.to_int(s#get_max i)) - (NumConst.to_int(s#get_min i)) +1 );
+	  if !temp > !max_d_l then 
+	  begin
+	  max_d_l := !temp; 
+	  max_d := i ;
+	  end
+	done;
+	print_message Debug_standard ("\ndetected Max dimension length in this subpart is : " ^ (string_of_int (!max_d_l)) ^ " unit at dimension " ^ (string_of_int (!max_d))); 
+	  (*create new subparts*)
+	  let s1 = new HyperRectangle.hyper_rectangle in
+	  let s2 = new HyperRectangle.hyper_rectangle in
+	    for i = 0 to d do
+
+	      if ( i == !max_d ) 
+	      then 
+	      begin
+	      	(if(!max_d_l > 2) 
+	      	then 
+	      	begin
+		  s1#set_min i (s#get_min i);
+		  s1#set_max i ( NumConst.numconst_of_int ((NumConst.to_int (s#get_min i)) + (!max_d_l/2)) );
+		  s2#set_min i ( NumConst.numconst_of_int ((NumConst.to_int (s#get_min i)) + (!max_d_l/2 + 1)) );
+		  s2#set_max i (s#get_max i);
+		end
+		else
+		begin
+		  s1#set_min i (s#get_min i); 
+		  s1#set_max i (s#get_min i);
+		  s2#set_min i (s#get_max i); 
+		  s2#set_max i (s#get_max i);
+		end);
+	      end
+	      else 
+	      begin
+		s1#set_min i (s#get_min i); 
+		s1#set_max i (s#get_max i);
+		s2#set_min i (s#get_min i); 
+		s2#set_max i (s#get_max i);
+	      end
+	   done;
+	(*Display information of s1*)
+	print_message Debug_standard ("\ns1 infomation: ");
+	for i = 0 to d do
+	print_message Debug_standard ("Dimension " ^(string_of_int i)^" : "^ " min = " ^ (string_of_int (NumConst.to_int(s1#get_min i)))^";"^ " max = " ^ (string_of_int (NumConst.to_int(s1#get_max i))));
+	done;
+	(*check pi0 in subpart*)
+	let totalpi0s1 = getTotalPi0 s1 d in
+	print_message Debug_standard ("Total pi0s in s1 is : " ^ (string_of_int totalpi0s1) );
+	(*Display information of s2*)
+	print_message Debug_standard ("\ns2 infomation: ");
+	for i = 0 to d do
+	print_message Debug_standard ("Dimension " ^(string_of_int i)^" : "^ " min = " ^ (string_of_int (NumConst.to_int(s2#get_min i)))^";"^ " max = " ^ (string_of_int (NumConst.to_int(s2#get_max i))));
+	done;
+	(*check pi0 in subpart*)
+	let totalpi0s2 = getTotalPi0 s2 d in
+	print_message Debug_standard ("Total pi0s in s2 is : " ^ (string_of_int totalpi0s2) );
+	[s1;s2];;
+()
+	
+(*initial Subparts function: put in the Subpart list with number of the Workers return the new split subpart list*)
+let intialize_Subparts (subparts : HyperRectangle.hyper_rectangle list ref) (n : int) =
+	for l = 0 to n do 
+	begin
+	  (*find the largest subpart to slipt*)
+	  let max_pi0s = ref 0 in
+	  let subno = ref 0 in
+	  for i = 0 to (List.length !subparts)-1 do
+	      let temp = getTotalPi0 (at !subparts i) (HyperRectangle.get_dimensions() -1) in
+	      if (!max_pi0s < temp) then
+	      begin
+	      max_pi0s := temp; 
+	      subno := i;
+	      end
+	  done;
+	  (*check if length every edge is 1 unit*)
+	  if (!max_pi0s != 1) then 
+	  begin
+	    print_message Debug_standard ("\nMax pi0s in list is : " ^ (string_of_int !max_pi0s) ^ " in subpart : " ^ (string_of_int !subno));
+	    (*get list split subparts*)
+	    let newSubpartList = sliptSubpart (at !subparts !subno) in (*!subno*)
+	    (*remove old subpart*)
+	    subparts := (remove_at !subparts !subno);
+	    (*add new subparts*)
+	    subparts := !subparts@newSubpartList;
+	    print_message Debug_standard ("\nList length : " ^ (string_of_int (List.length !subparts) ) );
+	   end
+	   else
+	   begin
+	    raise (Ex ("Could not split smaller and The requried Suparts/Workers larger the points in v0! Please Check Again! :P "));
+	   end;
+	end
+	done;;
+()
+
+
 let test_gia () =
-	print_message Debug_standard "Starting test !";
-	(* to something here *)
+	print_message Debug_standard "--------------------Starting test !-------------------- \n"; 
+	(*************Sample Data v0************)
+	(*test with the odd dimensions matrix 3x3*)
+(*	HyperRectangle.set_dimensions 2;
+	let v0 = new HyperRectangle.hyper_rectangle in 
+	v0#set_min 0 (NumConst.numconst_of_int 0); 
+	v0#set_max 0 (NumConst.numconst_of_int 2);
+	v0#set_min 1 (NumConst.numconst_of_int 0);
+	v0#set_max 1 (NumConst.numconst_of_int 2);*)
+	(*-------------------*)
+	HyperRectangle.set_dimensions 3;
+	let v0 = new HyperRectangle.hyper_rectangle in 
+	v0#set_min 0 (NumConst.numconst_of_int 0); 
+	v0#set_max 0 (NumConst.numconst_of_int 3);
+	v0#set_min 1 (NumConst.numconst_of_int 0);
+	v0#set_max 1 (NumConst.numconst_of_int 4);
+	v0#set_min 2 (NumConst.numconst_of_int 0);
+	v0#set_max 2 (NumConst.numconst_of_int 5);
+	(*print_message Debug_standard ("total dimension : " ^ ( string_of_int (HyperRectangle.get_dimensions()) ) );*)
 	
+	(*Create list Subpart*)
+	let subparts = ref [] in
+	subparts := !subparts@[(v0)];
+	print_message Debug_standard ("\nInitial list length : " ^ (string_of_int (List.length !subparts) ) );
+	(*Note: The input number of worker counted from zero!*)
+	intialize_Subparts subparts 120;
 	
+	print_message Debug_standard "\n --------------------End of test !--------------------"; 
 	
-	()
+()
 
-
-(*;;
+;;
 test_gia();
-abort_program();*)
+abort_program();
 
