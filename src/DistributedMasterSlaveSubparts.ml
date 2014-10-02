@@ -604,54 +604,60 @@ let splitSubpartOnFly (s : HyperRectangle.hyper_rectangle) pi0 : HyperRectangle.
 	| [], _
 	| _, []        -> raise (Ex (" both of list are not the same length "));
 	| x::xs, y::ys -> 
-	if (x != y) then begin
-	if(x < y) 
-	then begin b:=true; isless xs ys end 
-	else begin b:=false; isless xs ys end;
-	end else begin
-	isless xs ys
-	end in
-
+	if (x != y) 
+	then 
+	  begin
+	  if(x < y) 
+	  then 
+	    begin 
+	    b:=true; 
+	    isless xs ys 
+	    end 
+	  else 
+	    begin 
+	    b:=false; 
+	    isless xs ys 
+	    end;
+	  end 
+	else 
+	  begin
+	    isless xs ys
+	  end in
+	(**)
 	let notfinish = ref true in	
 	let s = ref s in
 	let lst = ref [] in
 	while (!notfinish) do
 	(*for i = 0 to 4 do*)
-	begin	
-	(*1/ slipt subpart with current point*)
-	let newSubparts = ref (sliptSubpart !s) in
-	(*get the smaller subpart*)
-	let s1 =ref  (List.hd !newSubparts) in
-	let max_pi0_s1 = ref (get_max_pi0_subpart (!s1))in
-	for j = 0 to 2 do 
-	begin
-	(*print_message Debug_standard ("\nMax in list : " ^ (string_of_int (List.nth !max_pi0_s1 j) ) );*)
-	end
+	  begin	
+	  (*1/ slipt subpart with current point*)
+	  let newSubparts = ref (sliptSubpart !s) in
+	  (*get the smaller subpart*)
+	  let s1 =ref  (List.hd !newSubparts) in
+	  let max_pi0_s1 = ref (get_max_pi0_subpart (!s1))in
+	  (*compare with the current pi0*)
+	  let d = ref (isless pi0l !max_pi0_s1) in
+	  if (!d) then
+	    begin
+	    print_message Debug_standard ("\n there are some points in 2 subparts! true, now i can send them for the workers!" );
+	    (*checking the pi0 belong to which subpart*)
+	    (*send each subpart for specific worker*)
+	    (*testing*)
+	    (*send the subpart that containt current point to worker 1*)
+	    (*find the started point in other subpart from current point then send the point anh the supart for the worker*)
+	    lst := !newSubparts;
+	    (*set notfinish = false*)
+	    notfinish := false;
+	    end
+	  else
+	    begin
+	    print_message Debug_standard ("\n the current pi0 equals the last pi0 of this subpart or goes over so I need split it one more time!, be patient workers! false " );
+	    (*get 2nd supart -> s to split one more time*)
+	    s := List.nth (!newSubparts) 1 ;
+	    end
+	  end
 	done;
-	
-	(*compare with the current pi0*)
-	let d = ref (isless pi0l !max_pi0_s1) in
-	if (!d) then
-	begin
-	print_message Debug_standard ("\n there are some points in 2 subparts! true, now i can send them for the workers!" );
-	(*checking the pi0 belong to which subpart*)
-	(*send each subpart for specific worker*)
-	(*testing*)
-	(*send the subpart that containt current point to worker 1*)
-	(*find the started point in other subpart from current point then send the point anh the supart for the worker*)
-	lst := !newSubparts;
-	(*set notfinish = false*)
-	notfinish := false;
-	end
-	else
-	begin
-	print_message Debug_standard ("\n the current pi0 equals the last pi0 of this subpart or goes over so I need split it one more time!, be patient workers! false " );
-	(*get 2nd supart -> s to split one more time*)
-	s := List.nth (!newSubparts) 1 ;
-	end
-
-	end
-	done;
+	(*return the list of new subpart*)
 	!lst;;
 	()
 	
@@ -694,14 +700,12 @@ let test_gia () =
 	(*intialize_Subparts subparts 0;*)
 	(*let my_hash = Hashtbl.create 10 in*)
 
-	
-	(**************************************************Split Subpart with current pi0- input: subpart / output: list of two new subparts******************************************************************************)
 	(*pi0*)
 	(*let pi0 = [|0;2;2|] in*)
 	let pi0 = [|1;3;3|] in
 	
 
-	 subparts := splitSubpartOnFly v0 pi0 ;
+	subparts := splitSubpartOnFly v0 pi0 ;
 	
 	
 	
