@@ -10,7 +10,7 @@
  * Author:        Ulrich Kuehne, Etienne Andre
  * 
  * Created:       2010/07/22
- * Last modified: 2014/08/24
+ * Last modified: 2014/10/01
  *
  ****************************************************************)
 
@@ -118,7 +118,7 @@ let instantiate_costs model pi0 =
 			(* Instantiate it *)
 			let instantiated_cost = match cost with 
 				| None -> NumConst.zero 
-				| Some cost -> LinearConstraint.evaluate_p_linear_term pi0 cost in
+				| Some cost -> LinearConstraint.evaluate_p_linear_term pi0#get_value cost in
 			(* Save it *)
 			costs.(automaton_index).(location_index) <- instantiated_cost;
 		done;
@@ -1594,7 +1594,7 @@ let inverse_method_check_constraint model reachability_graph constr =
 	);
 	(* Check the pi0-compatibility *)
 	print_message Debug_high ("\nChecking pi-compatibility:");
-	let compatible, incompatible = LinearConstraint.partition_pi0_compatible pi0 p_constraint in
+	let compatible, incompatible = LinearConstraint.partition_pi0_compatible pi0#get_value p_constraint in
 	let is_pi0_incompatible = incompatible != [] in
 	
 	(* If pi0-incompatible: select an inequality *)
@@ -1631,7 +1631,7 @@ let inverse_method_check_constraint model reachability_graph constr =
 			if List.length incompatible > 1 then nb_random_selections := !nb_random_selections + 1;
 			
 			(* Negate the inequality *)
-			let negated_inequality = LinearConstraint.negate_wrt_pi0 pi0 p_inequality in
+			let negated_inequality = LinearConstraint.negate_wrt_pi0 pi0#get_value p_inequality in
 			(* Print some information *)
 			if debug_mode_greater Debug_standard then(
 				let randomly = if not options#no_random then "randomly " else "" in
@@ -1697,7 +1697,7 @@ let completeIM_check_constraint model reachability_graph constr =
 	);
 	(* Check the pi0-compatibility *)
 	print_message Debug_high ("\nChecking pi-compatibility:");
-	let is_compatible = LinearConstraint.is_pi0_compatible pi0 p_constraint in
+	let is_compatible = LinearConstraint.is_pi0_compatible pi0#get_value p_constraint in
 	(* Return the pi0-compatibility and the p_constraint *)
 	is_compatible , p_constraint
 	
@@ -2505,7 +2505,7 @@ let post_star model init_state =
 			(* Get pi0 *)
 			let pi0 = Input.get_pi0() in
 			(* Converting pi0 to a list *)
-			let pi0_list = List.map (fun p -> (p, pi0 p)) model.	parameters in
+			let pi0_list = List.map (fun p -> (p, pi0#get_value p)) model.parameters in
 			(* Converting pi0 to a constraint *)
 			let pi0_constraint = LinearConstraint.p_constraint_of_point pi0_list in
 			(* Print *)

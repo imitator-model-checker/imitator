@@ -8,7 +8,7 @@
  * Author:        Etienne Andre, Camille Coti
  * 
  * Created:       2014/03/24
- * Last modified: 2014/09/05
+ * Last modified: 2014/10/02
  *
  ****************************************************************)
 
@@ -112,6 +112,9 @@ let serialize_SEP_STRUCT = "|"
 (*------------------------------------------------------------*)
 (* Pi0 *)
 (*------------------------------------------------------------*)
+
+(*** WARNING / TODO : we should just send the VALUES, not the indexes !!! ***)
+
 let serialize_pi0_pair (variable_index , value) =
 	LinearConstraint.serialize_variable variable_index
 	^
@@ -120,9 +123,17 @@ let serialize_pi0_pair (variable_index , value) =
 	(serialize_numconst value)
 
 
-let serialize_pi0 pi0 =
+let serialize_pi0 (pi0:AbstractModel.pi0) =
+	let nb_parameters = PVal.get_dimensions () in
+	(* Create an array *)
+	let pi0_array = Array.create nb_parameters (0, NumConst.zero) in
+	for parameter_index = 0 to nb_parameters - 1 do
+		pi0_array.(parameter_index) <- parameter_index (*** WARNING: USELESS ***), pi0#get_value parameter_index;
+	done;
+	(* Convert to list *)
+	let pi0_list = Array.to_list pi0_array in
 	(* Convert all pairs to string *)
-	let pi0_string_list = List.map serialize_pi0_pair pi0 in
+	let pi0_string_list = List.map serialize_pi0_pair pi0_list in
 	(* Add separators *)
 	String.concat serialize_SEP_LIST pi0_string_list
 
@@ -135,8 +146,23 @@ let unserialize_pi0_pair pi0_pair_string =
 
 let unserialize_pi0 pi0_string =
 	(*** TODO: check correct number of values ! ***)
+	(* Split into a list of pairs *)
 	let pi0_pairs_string = split serialize_SEP_LIST pi0_string in
-	List.map unserialize_pi0_pair pi0_pairs_string
+	(* Retrieve a list of (min, max) *)
+	let pi0_list = List.map unserialize_pi0_pair pi0_pairs_string in
+	(* Build the pi0 *)
+	let pi0 = new PVal.pval in
+	let parameter_index = ref 0 in
+	List.iter (fun (_(* WARNING: USELESS *), value) ->
+		pi0#set_value !parameter_index value;
+		parameter_index := !parameter_index + 1;
+	) pi0_list;
+	(* Return *)
+	pi0
+
+	(*
+	let pi0_pairs_string = split serialize_SEP_LIST pi0_string in
+	List.map unserialize_pi0_pair pi0_pairs_string*)
 
 
 (*------------------------------------------------------------*)
@@ -315,15 +341,19 @@ let unserialize_im_result im_result_string =
 (*------------------------------------------------------------*)
 
 let debug_string_of_pi0 pi0 =
-	"Pi0:"
-	^ (String.concat "\n, "
-		(List.map (fun (variable_index , value) ->
-			"p" ^(string_of_int variable_index)
+	let nb_parameters = PVal.get_dimensions () in
+	(*** BADPROG ***)
+	let my_string = ref "Pi0:" in
+	for parameter_index = 0 to nb_parameters - 1 do
+		my_string := !my_string ^ "\n"
+			^ "p" ^ (string_of_int parameter_index)
 			^ " => "
-			^ (NumConst.string_of_numconst value)
-		) pi0 
-		)
-	)
+			^ (NumConst.string_of_numconst (pi0#get_value parameter_index))
+		;
+	done;
+	(* Return *)
+	!my_string
+
 	
 let debug_string_of_v0 v0 =
 	let nb_parameters = HyperRectangle.get_dimensions () in
@@ -358,14 +388,22 @@ let test_serialization () =
 	test_unserialize_variable "3.2";
 	test_unserialize_variable "3829t39";
 	
-	let mypi0 = [
+(*	let mypi0 = [
 		( 0 , NumConst.zero ) ;
 		( 1 , NumConst.one ) ;
 (* 		( 2 , NumConst.minus_one ) ; *)
 		( 3 , NumConst.numconst_of_int 23) ;
 (* 		( 4 , NumConst.numconst_of_int (-13)) ; *)
 		( 5 , NumConst.numconst_of_frac 2 2011) ;
-	] in
+	] in*)
+	let mypi0 = new PVal.pval in
+	mypi0#set_value 0 NumConst.zero;
+	mypi0#set_value 1 NumConst.one;
+(* 	mypi0#set_value 2 NumConst.minus_one; *)
+	mypi0#set_value 3 (NumConst.numconst_of_int 23);
+(* 	mypi0#set_value 4 (NumConst.numconst_of_int (-13)); *)
+	mypi0#set_value 5 (NumConst.numconst_of_frac 2 2011);
+
 	print_message Debug_standard "Here is my pi0";
 	print_message Debug_standard (debug_string_of_pi0 mypi0);
 	
@@ -509,7 +547,7 @@ let send_result (*linear_constraint*)im_result =
  *)
 
 (* Sends a point (first the size then the point), by the master *)
-let send_pi0 pi0 slave_rank =
+let send_pi0 (pi0 : AbstractModel.pi0) slave_rank =
 	let mpi0 = serialize_pi0 pi0 in
 	let res_size = String.length mpi0 in
 	
@@ -597,15 +635,15 @@ let receive_work () =
 		
 		(* Get the pi0 *)
 		let pi0 = unserialize_pi0 !work in
-		(*** HACK ***)
+(*		(*** HACK ***)
 		(* Convert back to an array *)
 		let array_pi0 = Array.make model.nb_parameters NumConst.zero in
 		List.iter (fun (variable_index, variable_value) ->
 			array_pi0.(variable_index) <- variable_value;
 		) pi0;
 		(* Convert the pi0 to functional representation *)
-		let pi0_fun = fun parameter -> array_pi0.(parameter) in
-		Work pi0_fun
+		let pi0_fun = fun parameter -> array_pi0.(parameter) in*)
+		Work (*pi0_fun*)pi0
 
 	| Master_finished_tag -> Stop
 

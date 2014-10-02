@@ -7,7 +7,7 @@
  * Author:        Etienne Andre
  * 
  * Created:       2014/09/24
- * Last modified: 2014/09/24
+ * Last modified: 2014/10/01
  *
  ****************************************************************)
 
@@ -31,6 +31,7 @@ class hyper_rectangle :
 		(** Set the maximum value for a dimension *)
 		method set_max : int -> NumConst.t -> unit
 
-		(** Get the smallest point in the hyper rectangle (i.e., the list of min) in the form of a list of n values *)
-		method get_smallest_point : unit -> NumConst.t list
+(* 		(** Get the smallest point in the hyper rectangle (i.e., the list of min) in the form of a list of n values *) *)
+		(** Get the smallest point in the hyper rectangle (i.e., the list of min) in the form of a PVal.pval *)
+		method get_smallest_point : unit -> PVal.pval
 end

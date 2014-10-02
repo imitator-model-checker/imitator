@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2011/11/22
- * Last modified: 2013/08/02
+ * Last modified: 2014/10/02
  *
  ************************************************************)
 
@@ -313,13 +313,13 @@ let string_of_state program (global_location, linear_constraint) =
 (** Pi0 *)
 (**************************************************)
 (* Convert a pi0 into a string *)
-let string_of_pi0 program pi0 =
-	"  " ^ (
-	string_of_list_of_string_with_sep "\n& " (
-		List.map (fun parameter ->
-			(program.variable_names parameter)
-			^ " = "
-			^ (NumConst.string_of_numconst (pi0 parameter))
-		) program.parameters
-	)
+let string_of_pi0 model pi0 =
+		"  " ^ (
+		string_of_list_of_string_with_sep "\n& " (
+			List.map (fun parameter ->
+				(model.variable_names parameter)
+				^ " = "
+				^ (NumConst.string_of_numconst (pi0#get_value parameter))
+			) model.parameters
+		)
 	)

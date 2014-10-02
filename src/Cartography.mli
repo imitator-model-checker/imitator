@@ -5,13 +5,13 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2012/06/18
- * Last modified: 2014/06/20
+ * Last modified: 2014/10/02
  *
  ****************************************************************)
 
 
 (* List version of pi0 for PaTATOR *)
-type pi0_list = (Automaton.variable_index * NumConst.t) list
+(* type pi0_list = (Automaton.variable_index * NumConst.t) list *)
 
 
 (************************************************************)
@@ -33,15 +33,14 @@ val compute_initial_pi0 : unit -> unit
 val find_next_pi0 : AbstractModel.tile_nature option -> (bool * bool)
 val find_next_pi0_shuffle : AbstractModel.tile_nature option -> (bool * bool)
 
-(** Get the current pi0 in the form of a list (for PaTATOR) *)
-val get_current_pi0 : unit -> pi0_list
+(** Get the current pi0 (for PaTATOR) *)
+val get_current_pi0 : unit -> AbstractModel.pi0
 
 (** Get the list of *all* points in V0 (for PaTATOR) *)
-val compute_all_pi0 : unit -> pi0_list list
+val compute_all_pi0 : unit -> (*pi0_list*)PVal.pval list
 
 val pi0_in_returned_constraint:
-  (LinearConstraint.variable -> LinearConstraint.coef) ->
-  AbstractModel.returned_constraint -> bool
+	AbstractModel.pi0 -> AbstractModel.returned_constraint -> bool
 
 (* Move to the next uncovered pi0 and do not move if the current pi0 is still not covered; update global variable current_pi0 (if necessary) *)
 val move_to_next_uncovered_pi0 : unit -> bool
@@ -71,6 +70,6 @@ val cover_behavioral_cartography : AbstractModel.abstract_model -> AbstractModel
  *  a single one
  *)
 val constraint_list_init : int -> unit
-val constraint_list_random : unit -> pi0_list option
+val constraint_list_random : unit -> PVal.pval option
 val constraint_list_update : Reachability.im_result -> unit
 val constraint_list_empty : unit -> bool

@@ -8,7 +8,7 @@
  * Author:        Etienne Andre
  * 
  * Created:       2009/09/11
- * Last modified: 2014/09/24
+ * Last modified: 2014/10/01
  *
  ****************************************************************)
 
@@ -37,7 +37,7 @@ type action_name = string
 (** Pi 0 *)
 (****************************************************************)
 (* type pi0 = NumConst.t array *)
-type pi0 = variable_index -> NumConst.t
+type pi0 = (*variable_index -> NumConst.t*)PVal.pval
 
 type v0 = HyperRectangle.hyper_rectangle
 

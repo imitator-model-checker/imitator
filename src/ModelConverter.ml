@@ -10,7 +10,7 @@
  * Author:        Etienne Andre
  * 
  * Created:       2009/09/09
- * Last modified: 2014/09/24
+ * Last modified: 2014/10/02
  *
  ****************************************************************)
 
@@ -1501,7 +1501,7 @@ let make_initial_state index_of_automata locations_per_automaton index_of_locati
 (* Convert the parsed pi0 into a valid pi0 *)
 (*--------------------------------------------------*)
 let make_pi0 parsed_pi0 variables nb_parameters =
-	let pi0 = Array.make nb_parameters NumConst.zero in
+	let pi0 = new PVal.pval in
 	for i = 0 to nb_parameters - 1 do
 		let parameter_name = variables.(i) in
 		let value = try(
@@ -1509,7 +1509,7 @@ let make_pi0 parsed_pi0 variables nb_parameters =
 			) with Not_found ->
 			raise (InternalError ("The parameter name '" ^ parameter_name ^ "' was not found in pi0 although checks should have been performed before."))
 		in
-		pi0.(i) <- value
+		pi0#set_value i value
 	done;
 	pi0
 
@@ -1702,6 +1702,8 @@ let abstract_model_of_parsing_structure (parsed_variable_declarations, parsed_au
 	
 	(* Set dimensions for hyper rectangles *)
 	HyperRectangle.set_dimensions nb_parameters;
+	(* Set dimensions for parameter valuations *)
+	PVal.set_dimensions nb_parameters;
 
 	
 
@@ -1909,13 +1911,13 @@ let abstract_model_of_parsing_structure (parsed_variable_declarations, parsed_au
 	(* Constuct the pi0 *)
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
-	let pi0, (v0 : v0) =
+	let (pi0 : AbstractModel.pi0), (v0 : AbstractModel.v0) =
 		match options#imitator_mode with
 		(* No pi0 / v0 *)
 		(*** BADPROG : should be an option !!! ***)
 		| Translation | State_space_exploration | EF_synthesis ->
 			(* Return blank values *)
-			Array.make 0 NumConst.zero
+			(new PVal.pval)
 			,
 			(new HyperRectangle.hyper_rectangle)
 
@@ -1939,13 +1941,13 @@ let abstract_model_of_parsing_structure (parsed_variable_declarations, parsed_au
 			(* Construction of the pi_0 *)
 			let v0 = make_v0 parsed_v0 index_of_variables nb_parameters in
 			(* Return the pair *)
-			Array.make 0 NumConst.zero
+			(new PVal.pval)
 			,
 			v0
 	in
 	
-	(* Make a functional version of the pi0 *)
-	let pi0 = fun index -> pi0.(index) in
+(*	(* Make a functional version of the pi0 *)
+	let pi0 = fun index -> pi0.(index) in*)
 
 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -2166,7 +2168,7 @@ let abstract_model_of_parsing_structure (parsed_variable_declarations, parsed_au
 			print_message Debug_medium ("\n*** Reference valuation pi0:");
 			List.iter (fun parameter ->
 				print_message Debug_medium (
-					variables.(parameter) ^ " : " ^ (NumConst.string_of_numconst (pi0 parameter))
+					variables.(parameter) ^ " : " ^ (NumConst.string_of_numconst (pi0#get_value parameter))
 				)
 			) parameters;
 		| _ -> 

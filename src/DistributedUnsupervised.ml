@@ -7,7 +7,7 @@
  * Author:        Sami Evangelista, Etienne Andre
  * 
  * Created:       2014/06/10
- * Last modified: 2014/06/19
+ * Last modified: 2014/10/02
  *
  ****************************************************************)
 
@@ -64,13 +64,13 @@ let mtag_to_int = function
 (*
  *  Utility functions
  *)
-
+(*
 let valueListToPi0 (model: AbstractModel.abstract_model) l =
   let array_pi0 = Array.make model.nb_parameters NumConst.zero in
     List.iter (fun (idx, value) -> array_pi0.(idx) <- value) l;
     let pi0 = fun param -> array_pi0.(param) in
       pi0
-;;
+;;*)
 
 let array_update f a =
   let len = Array.length a in
@@ -230,56 +230,70 @@ let worker () =
   let world_size = Mpi.comm_size world in
   let model = Input.get_model () in
   let me = Mpi.comm_rank world in
-  let received_point = ref None in
+  let received_point : AbstractModel.pi0 option ref = ref None in
   let msg_prefix = "[Worker " ^ (string_of_int me) ^ " / " ^
     (string_of_int (world_size - 1)) ^ "]" in
   let coordinator = 0 in
   let s0 = Reachability.get_initial_state_or_abort model in
-  let worker_init () =
-    Cartography.bc_initialize ();
-    print_message Debug_standard(msg_prefix ^ " start\n")
-  in
-  let worker_end () =
-    print_message Debug_standard(msg_prefix ^ " end\n")
-  in
-  let worker_process_received_point data =
-    let pi0 = DistributedUtilities.unserialize_pi0 data in
-      received_point := Some (valueListToPi0 model pi0)
-  in
-  let worker_process_received_constraint data =
-    let res = DistributedUtilities.unserialize_im_result data in
-      ignore (Cartography.bc_process_im_result res)
-  in
-  let rec worker_process_received_constraints n =
-    if n = 0
-    then ()
-    else (worker_wait_and_process_response ();
-	  worker_process_received_constraints (n - 1))
-  and worker_wait_and_process_response () = 
-    let (data, _, tag) = Mpi.receive_status coordinator Mpi.any_tag world in
-      match int_to_mtag tag with
-	| TERMINATE      -> (print_message Debug_standard(msg_prefix ^ " receive termination message");
-			     terminate := true)
-	| CONTINUE       -> print_message Debug_standard(msg_prefix ^ " receive continuation message")
-	| NO_CONSTRAINTS -> (print_message Debug_standard(msg_prefix ^ " receive a bunch of contraints");
-			     worker_process_received_constraints data)
-	| CONSTRAINT     -> (print_message Debug_standard(msg_prefix ^ " receive a contraint");
-			     worker_process_received_constraint data)
-	| POINT          -> (print_message Debug_standard(msg_prefix ^ " receive point");
-			     worker_process_received_point data)
-	| _         -> raise (InternalError "unexpected tag")
-  in
-  let worker_choose_pi0 () =
-    let success = Cartography.random_pi0 nb_tries_max in
-      if success
-      then (print_message Debug_standard(msg_prefix ^ " has chosen a random point");
-	    Some (valueListToPi0 model (Cartography.get_current_pi0 ())))
-      else (print_message Debug_standard(msg_prefix ^ " send a ask-for-point to the coordinator");
-	    Mpi.send () coordinator (mtag_to_int ASK_FOR_POINT) world;
-	    worker_wait_and_process_response ();
-	    let res = !received_point in
-	      received_point := None;
-	      res)
+	(*------------------------------------------------------------*)
+	let worker_init () =
+		Cartography.bc_initialize ();
+		print_message Debug_standard(msg_prefix ^ " start\n")
+	in
+	(*------------------------------------------------------------*)
+	let worker_end () =
+		print_message Debug_standard(msg_prefix ^ " end\n")
+	in
+	(*------------------------------------------------------------*)
+	let worker_process_received_point data =
+		let pi0 = DistributedUtilities.unserialize_pi0 data in
+		received_point := Some (*valueListToPi0 model *)pi0
+	in
+	(*------------------------------------------------------------*)
+	let worker_process_received_constraint data =
+		let res = DistributedUtilities.unserialize_im_result data in
+			(* ignore ( *)
+		(Cartography.bc_process_im_result res)
+			(* ) *)
+	in
+	(*------------------------------------------------------------*)
+	let rec worker_process_received_constraints n =
+		if n = 0
+		then ()
+		else (worker_wait_and_process_response ();
+		worker_process_received_constraints (n - 1))
+	(*------------------------------------------------------------*)
+	and worker_wait_and_process_response () = 
+		let (data, _, tag) = Mpi.receive_status coordinator Mpi.any_tag world in
+		begin
+		match int_to_mtag tag with
+			| TERMINATE      -> (print_message Debug_standard(msg_prefix ^ " receive termination message");
+						terminate := true)
+			| CONTINUE       -> print_message Debug_standard(msg_prefix ^ " receive continuation message")
+			| NO_CONSTRAINTS -> (print_message Debug_standard(msg_prefix ^ " receive a bunch of contraints");
+						worker_process_received_constraints data)
+			| CONSTRAINT     -> (print_message Debug_standard(msg_prefix ^ " receive a contraint");
+						let _ = worker_process_received_constraint data in ())
+			| POINT          -> (print_message Debug_standard(msg_prefix ^ " receive point");
+						worker_process_received_point data)
+			| _         -> raise (InternalError "unexpected tag")
+		end
+	in
+	(*------------------------------------------------------------*)
+	let worker_choose_pi0 () =
+		let success = Cartography.random_pi0 nb_tries_max in
+			if success
+			then (
+				print_message Debug_standard(msg_prefix ^ " has chosen a random point");
+				Some ((*valueListToPi0 model ( *)Cartography.get_current_pi0 ()) (* ) *)
+			)else (
+				print_message Debug_standard(msg_prefix ^ " send a ask-for-point to the coordinator");
+				Mpi.send () coordinator (mtag_to_int ASK_FOR_POINT) world;
+				worker_wait_and_process_response ();
+				let res : AbstractModel.pi0 option = !received_point in
+				received_point := None;
+				res
+			)
   in
   let worker_send_pi0 res =
     let res_str = DistributedUtilities.serialize_im_result res in

@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2009/12/02
- * Last modified: 2014/09/24
+ * Last modified: 2014/10/01
  *
  **************************************************)
 
@@ -227,7 +227,7 @@ let string_of_pi0 model pi0 =
 		List.map (fun parameter ->
 			(model.variable_names parameter)
 			^ " = "
-			^ (NumConst.string_of_numconst (pi0 parameter))
+			^ (NumConst.string_of_numconst (pi0#get_value parameter))
 		) model.parameters
 	)
 	)

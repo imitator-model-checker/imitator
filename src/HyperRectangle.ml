@@ -7,7 +7,7 @@
  * Author:        Etienne Andre
  * 
  * Created:       2014/09/24
- * Last modified: 2014/09/24
+ * Last modified: 2014/10/01
  *
  ****************************************************************)
 
@@ -109,14 +109,30 @@ class hyper_rectangle =
 			let (min, _) = the_array.(dim) in
 			the_array.(dim) <- (min, value)
 
-		(** Get the smallest point in the hyper rectangle (i.e., the list of min) in the form of a list of n values *)
+(*		(** Get the smallest point in the hyper rectangle (i.e., the list of min) in the form of a list of n values *)
  		method get_smallest_point () =
 			(* First check that the number of dimensions has been set *)
 			assert_nb_dim_initialized();
 			(* Convert using predefined functions *)
 			let first, _ = List.split (Array.to_list(the_array)) in
-			first
+			first*)
 			
+		(** Get the smallest point in the hyper rectangle (i.e., the list of min) in the form of a PVal.pval *)
+ 		method get_smallest_point () =
+			(* First check that the number of dimensions has been set *)
+			assert_nb_dim_initialized();
+			(* Create parameter valuation *)
+			let pval = new PVal.pval in
+			(* Assign for all dimensions *)
+			let nb_dim = get_dim () in
+			for dim = 0 to nb_dim - 1 do
+				(* Get the minimum value *)
+				let min, _ = the_array.(dim) in
+				(* Assign *)
+				pval#set_value dim min;
+			done;
+			(* Return *)
+			pval
 	;
 end
 

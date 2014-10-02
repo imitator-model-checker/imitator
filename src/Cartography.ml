@@ -10,7 +10,7 @@
  * Author:        Ulrich Kuehne, Etienne Andre
  * 
  * Created:       2012/06/18
- * Last modified: 2014/09/24
+ * Last modified: 2014/10/02
  *
  ****************************************************************)
 
@@ -101,7 +101,7 @@ let computed_constraints = ref (DynArray.create())
 let current_intervals_min = ref (Array.make 0 NumConst.zero)
 let current_intervals_max = ref (Array.make 0 NumConst.zero)
 
-let current_pi0 = ref None
+let current_pi0 : PVal.pval option ref = ref None
 
 (* For PaTATOR: array of all pi0 contained in V0 *)
 let all_pi0_array = ref None
@@ -141,19 +141,19 @@ let get_all_pi0_array_option () =
 	| Some all_pi0_array -> all_pi0_array
 
 
-(* Convert the array into a functional representation *)
+(*(* Convert the array into a functional representation *)
 let pi0_fun_of_pi0 pi0 =
 	(* Convert to function *)
-	fun parameter_index -> pi0.(parameter_index)
+	fun parameter_index -> pi0.(parameter_index)*)
 
 
-(* Convert the array into a functional representation *)
+(*(* Convert the array into a functional representation *)
 let pi0_fun_of_current_pi0 () =
 	(* Retrieve the current pi0 (that must have been initialized before) *)
 	let current_pi0 = get_current_pi0_option () in
 	(* Convert to function *)
 	pi0_fun_of_pi0 current_pi0
-	
+	*)
 
 
 (*
@@ -286,9 +286,9 @@ let find_multiple_in_between_and_from min_bound min max step =
 (** Check if a pi_0 belongs to a 'returned_constraint'*)
 (*------------------------------------------------------------*)
 let pi0_in_returned_constraint pi0 = function
-	| Convex_constraint (k,_) -> LinearConstraint.is_pi0_compatible pi0 k
+	| Convex_constraint (k,_) -> LinearConstraint.is_pi0_compatible pi0#get_value k
 	(** Disjunction of constraints *)
-	| Union_of_constraints (k_list , _) -> List.exists (LinearConstraint.is_pi0_compatible pi0) k_list
+	| Union_of_constraints (k_list , _) -> List.exists (LinearConstraint.is_pi0_compatible pi0#get_value) k_list
 	| NNCConstraint _ -> raise (InternalError ("NNCCs are not available everywhere yet."))
 
 
@@ -315,6 +315,8 @@ let leq_returned_constraint rc1 rc2 =
 let compute_initial_pi0 () =
 	(* Retrieve the input options *)
 	let options = Input.get_options () in
+	(* Get the model *)
+	let model = Input.get_model() in
 	
 	(*** WARNING: should be sure that 0 is the first parameter dimension!! ***)
 	let first_dimension = 0 in
@@ -322,11 +324,18 @@ let compute_initial_pi0 () =
 	let step = options#step in
 	
 	(* Case by case *)
+	begin
 	match options#imitator_mode with
 	
 	(* Instantiate with the lower bounds *)
 	| Cover_cartography ->
-		current_pi0 := Some (Array.copy !min_bounds)
+		let pi0 = new PVal.pval in
+		(* Copy min bounds *)
+		for parameter_index = 0 to model.nb_parameters - 1 do
+			pi0#set_value parameter_index !min_bounds.(parameter_index);
+		done;
+		
+		current_pi0 := Some pi0;
 		(*
 		(*** BEGIN DEBUG ***)
 		;
@@ -339,8 +348,10 @@ let compute_initial_pi0 () =
 	(* Instantiate with the point in the middle of V0 *)
 	| Border_cartography ->
 		(* Start with the min bounds everywhere *)
-		let initial_pi0 = (*Array.create (Array.length min_bounds) NumConst.zero*) Array.copy !min_bounds in
-(* 		for i = 0 to (Array.length initial_pi0) - 1 do *)
+		let initial_pi0 = new PVal.pval in
+		(*** NOTE: to rewrite and retest ***)
+		raise (InternalError ("Not implemented"));
+(*(** 		for i = 0 to (Array.length initial_pi0) - 1 do *)
 			(* Get some variables *)
 			let min_bound = !min_bounds.(first_dimension) in
 			let max_bound = !max_bounds.(first_dimension) in
@@ -352,12 +363,14 @@ let compute_initial_pi0 () =
 					raise (Failure("V0 does not contain any point multiple of step '" ^ (NumConst.string_of_numconst step) ^"' in some direction."))
 			in
 			(* Assign it to the array *)
-			initial_pi0.(first_dimension) <- local_point;
+			initial_pi0.(first_dimension) <- local_point;*)
 (* 		done; *)
 		(* Set the initial_pi0 *)
 		current_pi0 := Some (initial_pi0)
 		
 	| _ -> raise (InternalError("In function 'initial_pi0', the mode should be a cover / border cartography only."))
+	end;
+	()
 
 
 (************************************************************)
@@ -371,26 +384,27 @@ let test_pi0_uncovered current_pi0 found_pi0 =
 	(* Retrieve the input options *)
 	let options = Input.get_options () in
 
-	(* Convert the current pi0 to functional representation *)
-	let pi0 = fun parameter -> current_pi0.(parameter) in
+(*	(* Convert the current pi0 to functional representation *)
+	let pi0 = fun parameter -> current_pi0.(parameter) in*)
+(* 	let pi0 = current_pi0#get_value in *)
 	
 	(* Check that the current pi0 does not belong to any constraint *)
-	if dynArray_exists (pi0_in_returned_constraint pi0) !computed_constraints then (
+	if dynArray_exists (pi0_in_returned_constraint current_pi0) !computed_constraints then (
 		(* Update the number of unsuccessful points *)
 		nb_useless_points := !nb_useless_points + 1;
 		if debug_mode_greater Debug_medium then (
 			print_message Debug_medium "The following pi0 is already included in a constraint.";
-			print_message Debug_medium (ModelPrinter.string_of_pi0 model pi0);
+			print_message Debug_medium (ModelPrinter.string_of_pi0 model current_pi0);
 		);
 		(*** TODO: could be optimized by finding the nearest multiple of tile next to the border, and directly switching to that one ***)
 		
 	(* Check that it satisfies the initial constraint *)
-	) else if not (LinearConstraint.is_pi0_compatible pi0 !init_constraint) then (
+	) else if not (LinearConstraint.is_pi0_compatible current_pi0#get_value !init_constraint) then (
 		(* Update the number of unsuccessful points *)
 		nb_useless_points := !nb_useless_points + 1;
 		if debug_mode_greater Debug_medium then (
 			print_message Debug_medium "The following pi0 does not satisfy the initial constraint of the model.";
-			print_message Debug_medium (ModelPrinter.string_of_pi0 model pi0);
+			print_message Debug_medium (ModelPrinter.string_of_pi0 model current_pi0);
 		);
 	(* If both checks passed, then pi0 found *)
 	)else(
@@ -412,7 +426,7 @@ let test_pi0_uncovered current_pi0 found_pi0 =
 
 
 (*------------------------------------------------------------*)
-(* Generate one random pi0 in a given interval for each parameter (array view!) *)
+(* Generate one random pi0 in a given interval for each parameter *)
 (*------------------------------------------------------------*)
 let one_random_pi0 () =
 	(* Get the model *)
@@ -427,7 +441,7 @@ let one_random_pi0 () =
 		raise (InternalError("Random pi0 not implemented with steps <> 1."));
 	
 	(* Create the pi0 *)
-	let random_pi0 = Array.make model.nb_parameters NumConst.zero in
+	let random_pi0 = new PVal.pval (*Array.make model.nb_parameters NumConst.zero*) in
 	(* Fill it *)
 	for i = 0 to model.nb_parameters - 1 do
 		let min = v0#get_min i in
@@ -439,9 +453,9 @@ let one_random_pi0 () =
  		print_message Debug_medium ("Generating randomly value '" ^ (NumConst.string_of_numconst random_value) ^ "' for parameter '" ^ (model.variable_names i) ^ "'.");
  		
 		(* Add to the array *)
-		random_pi0.(i) <- random_value;
+		random_pi0#set_value i random_value;
 	done;
-	(* Return the result as an array *)
+	(* Return the result *)
 	random_pi0
 
 
@@ -521,13 +535,13 @@ let compute_next_sequential_pi0 () =
 	
 	while !not_is_max do
 		(* Try to increment the local dimension *)
-		let current_dimension_incremented = NumConst.add current_pi0.(!current_dimension) options#step in
+		let current_dimension_incremented = NumConst.add (current_pi0#get_value !current_dimension) options#step in
 		if current_dimension_incremented <= !max_bounds.(!current_dimension) then (
 			(* Increment this dimension *)
-			current_pi0.(!current_dimension) <- current_dimension_incremented;
+			current_pi0#set_value (!current_dimension) current_dimension_incremented;
 			(* Reset the smaller dimensions to the low bound *)
 			for i = 0 to !current_dimension - 1 do
-				current_pi0.(i) <- !min_bounds.(i);
+				current_pi0#set_value i !min_bounds.(i);
 			done;
 			(* Stop the loop *)
 			not_is_max := false;
@@ -1245,7 +1259,7 @@ let bc_result () =
 
 
 
-
+(*
 (* Get the current pi0 in the form of a list (for PaTATOR) *)
 let get_current_pi0 () =
 (* 	print_message Debug_high ("Entering get_current_pi0() ..."); *)
@@ -1264,8 +1278,17 @@ let get_current_pi0 () =
 (* 		in *)
 (* 		print_message Debug_high ("Computed result in get_current_pi0() "); *)
 (* 		result *)
-(* 	end *)
+(* 	end *)*)
 
+
+(* Get the current pi0 (for PaTATOR) *)
+let get_current_pi0 () =
+	(* Get the model *)
+	let model = Input.get_model() in
+
+	(* Retrieve the current pi0 (that must have been initialized before) *)
+	let current_pi0 = get_current_pi0_option () in
+	current_pi0
 
 
 (** Compute an array made of *all* points in V0 (for PaTATOR) *)
@@ -1298,13 +1321,17 @@ let compute_all_pi0 () =
 	(* Set the first point *)
 	compute_initial_pi0 ();
 
+	(* Copy it! Very important *)
+(* 	let initial_pi0 = Array.copy initial_pi0 in *)
+	
+	(* Create a array for all the pi0, initially containing a useless object everywhere *)
+	let useless_pi0 = new PVal.pval in
+	let all_points = Array.make int_nb_points useless_pi0 in
+	
 	(* Retrieve the initial pi0 (that must have been initialized before) *)
 	let initial_pi0 = get_current_pi0_option () in
-	(* Copy it! Very important *)
-	let initial_pi0 = Array.copy initial_pi0 in
-	
-	(* Create a array for all the pi0, initially containing the first pi0 everywhere *)
-	let all_points = Array.make int_nb_points initial_pi0 in
+	(* Fill the first point with a COPY of the initial pi0 *)
+	all_points.(0) <- initial_pi0#copy();
 	
 	(* Fill it for the other points *)
 	for pi0_index = 1 to int_nb_points - 1 do
@@ -1315,7 +1342,7 @@ let compute_all_pi0 () =
 			raise (InternalError("No more pi0 before completing the fill the static array of all pi0."));
 		);
 		(* Get the current pi0 and COPY it! Very important *)
-		let current_pi0_copy = Array.copy (get_current_pi0_option ()) in
+		let current_pi0_copy = (get_current_pi0_option ())#copy() in
 		(* Fill the array *)
 		all_points.(pi0_index) <- current_pi0_copy;
 		
@@ -1407,8 +1434,8 @@ let cover_behavioral_cartography model v0 =
 	(* Iterate on all the possible pi0 *)
 	while !more_pi0 && not !time_limit_reached do
 
-		(*** WARNING : duplicate operation (quite cheap anyway) ***)
-		let pi0_fun = pi0_fun_of_current_pi0 () in
+(* 		let pi0_fun = pi0_fun_of_current_pi0 () in *)
+		let pi0 = get_current_pi0_option() in
 
 		(* Print some messages *)
 		(*** HACK: only print if non-distributed ***)
@@ -1416,7 +1443,7 @@ let cover_behavioral_cartography model v0 =
 			print_message Debug_standard ("\n**************************************************");
 			print_message Debug_standard ("BEHAVIORAL CARTOGRAPHY ALGORITHM: " ^ (string_of_int !current_iteration) ^ "");
 			print_message Debug_standard ("Considering the following pi" ^ (string_of_int !current_iteration));
-			print_message Debug_standard (ModelPrinter.string_of_pi0 model pi0_fun);
+			print_message Debug_standard (ModelPrinter.string_of_pi0 model pi0);
 		);
 		
 		(* Prevent the debug messages (except in debug medium, high or total) *)
@@ -1424,7 +1451,7 @@ let cover_behavioral_cartography model v0 =
 			set_debug_mode Debug_nodebug;
 		
 		(* Set the new pi0 *)
-		Input.set_pi0 (pi0_fun);
+		Input.set_pi0 (pi0);
 		
 		(* Call the inverse method *)
 		let im_result, reachability_graph = Reachability.inverse_method_gen model !init_state in
@@ -1540,22 +1567,22 @@ let random_behavioral_cartography model v0 nb =
 		(* Only consider new pi0 *)
 		) else (
 			(* Convert the pi0 to a functional representation *)
-			let pi0_functional = fun parameter -> pi0.(parameter) in
+(* 			let pi0_functional = fun parameter -> pi0.(parameter) in *)
 
 			(* Check that it does not belong to any constraint *)
-			if array_exists (pi0_in_returned_constraint pi0_functional) results then (
+			if array_exists (pi0_in_returned_constraint pi0) results then (
 				print_message Debug_standard ("This pi" ^ (string_of_int !i) ^ " is already included in a constraint.");
-				print_message Debug_standard (ModelPrinter.string_of_pi0 model pi0_functional);
+				print_message Debug_standard (ModelPrinter.string_of_pi0 model pi0);
 				
 			(* Check that it satisfies the initial constraint *)
-			) else if not (LinearConstraint.is_pi0_compatible pi0_functional init_constraint) then (
+			) else if not (LinearConstraint.is_pi0_compatible pi0#get_value init_constraint) then (
 				print_message Debug_standard ("This pi" ^ (string_of_int !i) ^ " does not satisfy the initial constraint of the model.");
-				print_message Debug_standard (ModelPrinter.string_of_pi0 model pi0_functional);
+				print_message Debug_standard (ModelPrinter.string_of_pi0 model pi0);
 				
 			) else (
 				(* Consider from here a brand new and correct pi0 *)
 				print_message Debug_standard ("Considering pi" ^ (string_of_int !i) ^ " :=");
-				print_message Debug_standard (ModelPrinter.string_of_pi0 model pi0_functional);
+				print_message Debug_standard (ModelPrinter.string_of_pi0 model pi0);
 
 				(* Prevent the messages if needed *)
 				if cut_messages then (
@@ -1563,7 +1590,7 @@ let random_behavioral_cartography model v0 nb =
 				);
 				
 				(* Set the new pi0 *)
-				Input.set_pi0 pi0_functional;
+				Input.set_pi0 pi0;
 			
 				(* Call the inverse method *)
 				let (*returned_constraint, graph, (*tile_nature*)_, (*deterministic*)_, nb_iterations, total_time*) im_result, reachability_graph = Reachability.inverse_method_gen model init_state in
@@ -1670,30 +1697,34 @@ let pr = print_message Debug_standard
 
 (* return point next to pi0.  returns (Some point) is pi0 is not the
    last point, or None if pi0 if it is *)
-let next_pi0 pi0 =
-  let options = Input.get_options () in
-  let res = Array.copy pi0 in
-  let found = ref true in
-  let current_dimension = ref 0 in
-  let continue = ref true in
-    while !continue do
-      let current_dimension_incremented =
-	NumConst.add res.(!current_dimension) options#step
-      in
-	if current_dimension_incremented <= !max_bounds.(!current_dimension)
-	then (res.(!current_dimension) <- current_dimension_incremented;
-	      for i = 0 to !current_dimension - 1 do
-		res.(i) <- !min_bounds.(i);
-	      done;
-	      continue := false)
-	else (current_dimension := !current_dimension + 1;
-	      if !current_dimension >= !nb_dimensions
-	      then (found := false;
-		    continue := false))
-    done;
-    if !found
-    then Some res
-    else None
+   (*** WARNING!!! (added by EA, 2014/10/01); this code seems to be duplicated !!! ***)
+let next_pi0 (pi0 : PVal.pval) =
+	let options = Input.get_options () in
+	let res = pi0#copy() in
+	let found = ref true in
+	let current_dimension = ref 0 in
+	let continue = ref true in
+	while !continue do
+		let current_dimension_incremented =
+			NumConst.add (res#get_value !current_dimension) options#step
+		in
+		if current_dimension_incremented <= !max_bounds.(!current_dimension)
+		then (
+			res#set_value (!current_dimension) current_dimension_incremented; (*(res.(!current_dimension) <- current_dimension_incremented;*)
+			for i = 0 to !current_dimension - 1 do
+				res#set_value  i !min_bounds.(i);
+			done;
+			continue := false
+		) else (
+			current_dimension := !current_dimension + 1;
+			if !current_dimension >= !nb_dimensions
+			then (
+				found := false;
+				continue := false
+			)
+		)
+	done;
+	if !found then Some res else None
 ;;
 
 let constraint_list_fill last =
@@ -1721,11 +1752,12 @@ let constraint_list_init size =
   more_pi0 := true;
   next_unproc_max_size := size;
   compute_initial_pi0 ();
-  let first_pi0 = match !current_pi0 with
+  let first_pi0 = (get_current_pi0_option())#copy() in 
+  (*match !current_pi0 with
       None -> raise (InternalError
 		       "init_unprocessed_pi0_list: no first point found")
     | Some first_pi0 -> Array.copy (first_pi0)
-  in
+  in*)
     if size <= 0
     then raise (InternalError
 		  "init_unprocessed_pi0_list: called with negative size")
@@ -1738,8 +1770,8 @@ let constraint_list_update im_res =
   match !next_unproc with
     | [] -> ()
     | last :: _ ->    
-	let check_point pt =
-	  not (pi0_in_returned_constraint (Array.get pt) im_res.result)
+	let check_point (pt:PVal.pval) =
+	  not (pi0_in_returned_constraint pt(*(Array.get pt)*) im_res.result)
 	in
 	  next_unproc := List.filter check_point (!next_unproc);
 	  next_unproc_len := List.length (!next_unproc);
@@ -1753,7 +1785,7 @@ let constraint_list_random () =
       let model = Input.get_model () in
       let n = Random.int (!next_unproc_len) in
       let a = List.nth (!next_unproc) n in
-	Some (List.map (fun idx -> idx, a.(idx)) model.parameters)
+	Some a(*(List.map (fun idx -> idx, a.(idx)) model.parameters)*)
 ;;
 
 let constraint_list_empty () = !next_unproc_len = 0

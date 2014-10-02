@@ -7,7 +7,7 @@
  * Author:        Sami Evangelista
  * 
  * Created:       2014/07/11
- * Last modified: 2014/07/15
+ * Last modified: 2014/10/02
  *
  ****************************************************************)
 
@@ -86,12 +86,12 @@ let array_update f a =
     loop 0
 ;;
 
-let valueListToPi0 (model: AbstractModel.abstract_model) l =
+(*let valueListToPi0 (model: AbstractModel.abstract_model) l =
   let array_pi0 = Array.make model.nb_parameters NumConst.zero in
     List.iter (fun (idx, value) -> array_pi0.(idx) <- value) l;
     let pi0 = fun param -> array_pi0.(param) in
       pi0
-;;
+;;*)
 
 let string_of_node = function
 | 0 -> "Coordinator"
@@ -277,7 +277,7 @@ let worker () =
   in
   let worker_process_point data =
     let pi0 = DistributedUtilities.unserialize_pi0 data in
-    let pi0 = valueListToPi0 model pi0 in
+(*     let pi0 = valueListToPi0 model pi0 in *)
       if !current_job <> None
       then raise (InternalError "point received while in job")
       else worker_launch_job pi0
@@ -316,7 +316,7 @@ let worker () =
     then (print_message Debug_standard
             (msg_prefix ^ " has chosen a random point");
           worker_launch_job
-            (valueListToPi0 model (Cartography.get_current_pi0 ())))
+            ((*valueListToPi0 model *)(Cartography.get_current_pi0 ())))
     else (worker_send () ASK_FOR_POINT;
           worker_process_message ())
   and worker_process_message () =
