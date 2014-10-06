@@ -23,16 +23,16 @@ type pull_request =
 	| PullAndResult of rank * Reachability.im_result
 	| OutOfBound of rank
 	(*Hoang Gia new tags*)
-	| Tile
-	| Pi0
+	| Tile of rank * Reachability.im_result
+	| Pi0 of rank *  AbstractModel.pi0
 
 
 type work_assignment =
 	| Work of AbstractModel.pi0
 	| Stop
 	(*Hoang Gia new tags*)
-	| Subpart 
-	| Tile
+	| Subpart of HyperRectangle.hyper_rectangle
+	| Tile of Reachability.im_result
 	| Terminate
 
 (* type pi0_list = (Automaton.variable_index * NumConst.t) list *)

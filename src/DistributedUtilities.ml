@@ -30,8 +30,8 @@ type pull_request =
 	| PullAndResult of rank * Reachability.im_result
 	| OutOfBound of rank
 	(*Hoang Gia new tags*)
-	| Tile 
-	| Pi0
+	| Tile of rank * Reachability.im_result (*the same with PullAndResult*)
+	| Pi0 of rank *  AbstractModel.pi0 (*the same with work at Master tag*)
 
 
 
@@ -40,8 +40,8 @@ type work_assignment =
 	| Work of AbstractModel.pi0
 	| Stop
 	(*Hoang Gia new tags*)
-	| Subpart 
-	| Tile
+	| Subpart of HyperRectangle.hyper_rectangle
+	| Tile of Reachability.im_result
 	| Terminate
 
 
@@ -52,14 +52,21 @@ type pi0_list = (Automaton.variable_index * NumConst.t) list
 (****************************************************************)
 (** Tags sent by slave *)
 type mpi_slave_tag =
-	| Slave_result_tag
-	| Slave_work_tag
-	| Slave_outofbound_tag
+	| Slave_result_tag (*Tile tag or constraint K*)
+	| Slave_work_tag (*Pull tag*)
+	| Slave_outofbound_tag (* out of bounded workers exception *)
+	(*Hoang Gia new tags*)
+	| Slave_tile_tag
+	| Slave_pi0_tag
 
 (** Tags sent by master *)
 type mpi_master_tag =
-	| Master_data_tag
-	| Master_finished_tag
+	| Master_data_tag (*pi0*)
+	| Master_finished_tag (*Stop tags*)
+	(*Hoang Gia new tags*)
+	| Master_tile_tag
+	| Master_subpart_tag
+	| Master_terminate_tag
 
 (*	let data_tag = 1        (* used when we are sending input data           *)
 let finished_tag = 2    (* used to mean that work is done                *)
@@ -452,20 +459,35 @@ let int_of_slave_tag = function
 	| Slave_result_tag -> 1
 	| Slave_work_tag -> 2
 	| Slave_outofbound_tag -> 3
-
+	(*Hoang Gia new tags*)
+	| Slave_tile_tag -> 4
+	| Slave_pi0_tag -> 5
+	
 let int_of_master_tag = function
 	| Master_data_tag -> 17
 	| Master_finished_tag -> 18
+	(*Hoang Gia new tags*)
+	| Master_tile_tag -> 19
+	| Master_subpart_tag -> 20
+	| Master_terminate_tag -> 21
+	
 
 let slave_tag_of_int = function
 	| 1 -> Slave_result_tag
 	| 2 -> Slave_work_tag
 	| 3 -> Slave_outofbound_tag
+	(*Hoang Gia new tags*)
+	| 4 -> Slave_tile_tag
+	| 5 -> Slave_pi0_tag
 	| other -> raise (InternalError ("Impossible match '" ^ (string_of_int other) ^ "' in slave_tag_of_int."))
 
 let master_tag_of_int = function
 	| 17 -> Master_data_tag 
 	| 18 -> Master_finished_tag
+	(*Hoang Gia new tags*)
+	| 19 -> Master_tile_tag
+	| 20 -> Master_subpart_tag
+	| 21 -> Master_terminate_tag
 	| other -> raise (InternalError ("Impossible match '" ^ (string_of_int other) ^ "' in master_tag_of_int."))
 
 
@@ -597,6 +619,42 @@ let receive_pull_request () =
   | Slave_work_tag ->
      print_message Debug_medium ("[Master] Received Slave_work_tag from [Worker " ^ ( string_of_int source_rank) ^ "] : " ^  ( string_of_int l ));
      PullOnly (* source_rank *) l
+     
+     
+  (*Hoang Gia new tags*)  
+  
+  (* Tile tag  same with Slave_result_tag*)
+  | Slave_tile_tag ->
+     let s_rank = l in
+     print_message Debug_medium ("[Master] Received Slave_result_tag from " ^ ( string_of_int source_rank) );
+     let len = Mpi.receive s_rank (int_of_slave_tag Slave_tile_tag) Mpi.comm_world in
+     print_message Debug_medium ("[Master] Expecting a result of size " ^ ( string_of_int len) ^ " from [Worker " ^ (string_of_int s_rank) ^ "]" );
+     (* receive the K itself *)
+     let buff = String.create len in
+     let res = ref buff in
+     print_message Debug_medium ("[Master] Buffer created with length " ^ (string_of_int len)^"");	
+     res := Mpi.receive s_rank (int_of_slave_tag Slave_tile_tag) Mpi.comm_world ;
+     print_message Debug_medium("[Master] received buffer " ^ !res ^ " of size " ^ ( string_of_int len) ^ " from [Worker "  ^ (string_of_int source_rank) ^ "]");	
+     (* Get the constraint *)
+     let im_result = unserialize_im_result !res in
+     Tile (s_rank , im_result)
+  
+  (* pi0 tags same as Master_data_tag*)
+  | Slave_pi0_tag ->
+    let s_rank = l in 
+    print_message Debug_medium ("[Master] Received Slave_pi0_tag from " ^ ( string_of_int source_rank) );
+    let len = Mpi.receive s_rank (int_of_slave_tag Slave_result_tag) Mpi.comm_world in
+    print_message Debug_medium ("[Master] Expecting a result of size " ^ ( string_of_int len) ^ " from [Worker " ^ (string_of_int s_rank) ^ "]" );
+     (* Receive the data itself *)
+    let buff = String.create len in
+    let res = ref buff in
+    print_message Debug_medium ("[Master] Buffer created with length " ^ (string_of_int len)^"");	
+    res := Mpi.receive s_rank (int_of_slave_tag Slave_pi0_tag) Mpi.comm_world ;
+    print_message Debug_medium("[Master] received buffer " ^ !res ^ " of size " ^ ( string_of_int len) ^ " from [Worker "  ^ (string_of_int source_rank) ^ "]");	
+    (* Get the constraint *)
+    let pi0 = unserialize_pi0 !res in
+    Pi0 (s_rank , pi0)
+
 
 ;;
 
@@ -638,4 +696,33 @@ let receive_work () =
 		Work (*pi0_fun*)pi0
 
 	| Master_finished_tag -> Stop
+	
+	
+	(*Hoang Gia new tags*)
+	| Master_tile_tag -> 
+		(* Receive the data itself *)
+		let buff = String.create w in
+		let work = ref buff in
+
+		work := Mpi.receive masterrank (int_of_master_tag Master_tile_tag) Mpi.comm_world;
+		
+		print_message Debug_high ("Received " ^ (string_of_int w) ^ " bytes of work '" ^ !work ^ "' with tag " ^ (string_of_int (int_of_master_tag Master_tile_tag)));
+		
+		(* Get the K *)
+		let im_result = unserialize_im_result !work in
+		Tile im_result
+		
+	| Master_terminate_tag -> Terminate
+	| Master_subpart_tag -> 
+	  	(* Receive the data itself *)
+		let buff = String.create w in
+		let work = ref buff in
+
+		work := Mpi.receive masterrank (int_of_master_tag Master_subpart_tag) Mpi.comm_world;
+		
+		print_message Debug_high ("Received " ^ (string_of_int w) ^ " bytes of work '" ^ !work ^ "' with tag " ^ (string_of_int (int_of_master_tag Master_subpart_tag)));
+		
+		(* Get the K *)
+		let subpart = unserialize_hyper_rectangle !work in
+		Subpart subpart
 
