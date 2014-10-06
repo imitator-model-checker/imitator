@@ -22,11 +22,18 @@ type pull_request =
 	| PullOnly of rank
 	| PullAndResult of rank * Reachability.im_result
 	| OutOfBound of rank
+	(*Hoang Gia new tags*)
+	| Tile
+	| Pi0
 
 
 type work_assignment =
 	| Work of AbstractModel.pi0
 	| Stop
+	(*Hoang Gia new tags*)
+	| Subpart 
+	| Tile
+	| Terminate
 
 (* type pi0_list = (Automaton.variable_index * NumConst.t) list *)
 
