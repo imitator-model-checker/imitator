@@ -31,7 +31,7 @@ type pull_request =
 	| OutOfBound of rank
 	(*Hoang Gia new tags*)
 	| Tile of rank * Reachability.im_result (*the same with PullAndResult*)
-	| Pi0 of rank *  AbstractModel.pi0 (*the same with work at Master tag*)
+	| Pi0 of rank * AbstractModel.pi0 (*the same with work at Master tag*)
 
 
 
@@ -574,6 +574,17 @@ let send_pi0 (pi0 : AbstractModel.pi0) slave_rank =
 
 let send_work_request () =
 	Mpi.send (rank()) masterrank (int_of_slave_tag Slave_work_tag) Mpi.comm_world
+	
+	
+(*Hoang Gia send subpart by the Master*)
+let send_subpart (subpart : HyperRectangle.hyper_rectangle) slave_rank =
+	let msubpart = serialize_hyper_rectangle subpart in
+	let res_size = String.length msubpart in
+	
+	(* Send the subpart: 1st send the data size, then the data *)
+	Mpi.send res_size slave_rank (int_of_master_tag Master_subpart_tag ) Mpi.comm_world;
+	Mpi.send msubpart slave_rank (int_of_master_tag Master_subpart_tag) Mpi.comm_world
+	
 
 let receive_pull_request () =
   
@@ -626,7 +637,7 @@ let receive_pull_request () =
   (* Tile tag  same with Slave_result_tag*)
   | Slave_tile_tag ->
      let s_rank = l in
-     print_message Debug_medium ("[Master] Received Slave_result_tag from " ^ ( string_of_int source_rank) );
+     print_message Debug_medium ("[Master] Received Slave_tile_tag from " ^ ( string_of_int source_rank) );
      let len = Mpi.receive s_rank (int_of_slave_tag Slave_tile_tag) Mpi.comm_world in
      print_message Debug_medium ("[Master] Expecting a result of size " ^ ( string_of_int len) ^ " from [Worker " ^ (string_of_int s_rank) ^ "]" );
      (* receive the K itself *)
@@ -643,7 +654,7 @@ let receive_pull_request () =
   | Slave_pi0_tag ->
     let s_rank = l in 
     print_message Debug_medium ("[Master] Received Slave_pi0_tag from " ^ ( string_of_int source_rank) );
-    let len = Mpi.receive s_rank (int_of_slave_tag Slave_result_tag) Mpi.comm_world in
+    let len = Mpi.receive s_rank (int_of_slave_tag Slave_pi0_tag) Mpi.comm_world in
     print_message Debug_medium ("[Master] Expecting a result of size " ^ ( string_of_int len) ^ " from [Worker " ^ (string_of_int s_rank) ^ "]" );
      (* Receive the data itself *)
     let buff = String.create len in
@@ -652,10 +663,9 @@ let receive_pull_request () =
     res := Mpi.receive s_rank (int_of_slave_tag Slave_pi0_tag) Mpi.comm_world ;
     print_message Debug_medium("[Master] received buffer " ^ !res ^ " of size " ^ ( string_of_int len) ^ " from [Worker "  ^ (string_of_int source_rank) ^ "]");	
     (* Get the constraint *)
-    let pi0 = unserialize_pi0 !res in
+    let pi0 = (unserialize_pi0 !res) in
     Pi0 (s_rank , pi0)
-
-
+    
 ;;
 
 

@@ -24,7 +24,7 @@ type pull_request =
 	| OutOfBound of rank
 	(*Hoang Gia new tags*)
 	| Tile of rank * Reachability.im_result
-	| Pi0 of rank *  AbstractModel.pi0
+	| Pi0 of rank * AbstractModel.pi0
 
 
 type work_assignment =
