@@ -60,6 +60,8 @@ val send_pi0 : AbstractModel.pi0 -> rank -> unit
 
 val send_work_request : unit -> unit
 
+val send_subpart : HyperRectangle.hyper_rectangle -> rank -> unit
+
 val send_finished : rank -> unit
 
 val receive_pull_request : unit -> pull_request
