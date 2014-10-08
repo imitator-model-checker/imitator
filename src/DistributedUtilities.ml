@@ -559,6 +559,24 @@ let send_result (*linear_constraint*)im_result =
  		()
 	)
  *)
+ 
+ 
+ (* Hoang Gia Sends a result (first the size then the constraint), by the master *)
+let send_tile (*linear_constraint*)im_result slave_rank =
+	let rank = rank() in
+
+	print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "] Entering send_constraint");
+	let mlc = (*LinearConstraint.serialize_linear_constraint linear_constraint *) serialize_im_result im_result in
+	let res_size = String.length mlc in
+
+	print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "] Serialized constraint '" ^ mlc ^ "'");
+	
+	(* Send the result: 1st send my rank, then the data size, then the data *)
+	print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "] About to send the size (" ^ (string_of_int res_size) ^ ") of the constraint.");
+	Mpi.send rank slave_rank (int_of_master_tag Master_tile_tag) Mpi.comm_world;
+	Mpi.send res_size slave_rank (int_of_master_tag Master_tile_tag) Mpi.comm_world;
+	Mpi.send mlc slave_rank (int_of_master_tag Master_tile_tag) Mpi.comm_world
+	
 
 (* Sends a point (first the size then the point), by the master *)
 let send_pi0 (pi0 : AbstractModel.pi0) slave_rank =
@@ -672,6 +690,12 @@ let receive_pull_request () =
 let send_finished source_rank = 
   print_message Debug_medium( "[Master] Sending STOP to [Worker " ^ (string_of_int source_rank ) ^"].");
   Mpi.send (weird_stuff()) source_rank (int_of_master_tag Master_finished_tag) Mpi.comm_world 
+  
+(*Hoang Gia new functions*)
+let send_terminate source_rank = 
+  print_message Debug_medium( "[Master] Sending TERMINATE to [Worker " ^ (string_of_int source_rank ) ^"].");
+  Mpi.send (weird_stuff()) source_rank (int_of_master_tag Master_terminate_tag) Mpi.comm_world 
+  
 
 
 let receive_work () =

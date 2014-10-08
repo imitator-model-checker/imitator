@@ -56,6 +56,8 @@ val rank : unit -> int
 
 val send_result : (*LinearConstraint.p_linear_constraint*)Reachability.im_result -> unit
 
+val send_tile : Reachability.im_result -> rank -> unit
+
 val send_pi0 : AbstractModel.pi0 -> rank -> unit
 
 val send_work_request : unit -> unit
@@ -63,6 +65,8 @@ val send_work_request : unit -> unit
 val send_subpart : HyperRectangle.hyper_rectangle -> rank -> unit
 
 val send_finished : rank -> unit
+
+val send_terminate : rank -> unit
 
 val receive_pull_request : unit -> pull_request
 

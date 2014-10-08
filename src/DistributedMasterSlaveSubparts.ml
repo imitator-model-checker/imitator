@@ -196,39 +196,38 @@ let intialize_Subparts (v0 : HyperRectangle.hyper_rectangle) (n : int) =
 	()
 
 (*get list the max pi0 as list*)
-let get_max_pi0_subpart (s : HyperRectangle.hyper_rectangle) =
+(*let get_max_pi0_subpart (s : HyperRectangle.hyper_rectangle) =
 	let lst = ref [] in
 	for i=0 to (HyperRectangle.get_dimensions()-1) do
 	lst := !lst@[NumConst.to_int(s#get_max i)];
 (*	print_message Debug_standard ("\nMax pi0 : " ^ (string_of_int (NumConst.to_int(v0#get_max i)) ) );*)
 	done;
 	!lst;;
+	()*)
+
+(*get number of points in subpart*)
+let get_points_in_subpart (s : HyperRectangle.hyper_rectangle)=
+	let total = ref 1 in
+	for i=0 to (HyperRectangle.get_dimensions()-1) do
+	total := !total * (NumConst.to_int(s#get_max i)+1);
+	done;
+	!total;;
 	()
 
 (*compute the how many points was done in subpart*)
-let done_points_in_subpart (s : HyperRectangle.hyper_rectangle) arr =
+let done_points_in_subpart (s : HyperRectangle.hyper_rectangle) (arr : AbstractModel.pi0) =
 	let sum = ref 0 in
 	let tail = ref 1 in
 	for i= (HyperRectangle.get_dimensions()-1) downto 0 do
 	  for j=i-1 downto 0 do
 	    tail := !tail*(NumConst.to_int(s#get_max j)+1) ;
 	  done;
-	  sum := !sum + ((arr.(i)) * !tail);
+	  sum := !sum + ( (NumConst.to_int (arr#get_value(i))) * !tail );
 	  tail := 1;
 	done;
 	!sum +1;;
 	()
 	
-(*4 4 4
-
-4 3 2
-
-1 3 3
-	*)
-	
-let _ = for i=1 to 0 do
-  Printf.printf "abc";
-done
 	
 (*increase 1 unit*)
 let get_next_sequential_pi0_in_subpart pi0 (s : HyperRectangle.hyper_rectangle) : int array =
@@ -347,7 +346,6 @@ let dynamicSplitSubpart (s : HyperRectangle.hyper_rectangle) pi0 : HyperRectangl
 	()*)
 	
 	
-	
 
 let receive_pull_request () =
 	print_message Debug_high ("[Master] Entered function 'receive_pull_request_and_store_constraint'...");
@@ -395,7 +393,6 @@ let receive_pull_request () =
 let compute_next_pi0_sequentially more_pi0 limit_reached first_point tile_nature_option =
 	(* Start timer *)
 	counter_master_find_nextpi0#start ;
-
 	(* Case first point *)
 	if !first_point then(
 		print_message Debug_low ("[Master] This is the first pi0.");
@@ -410,12 +407,19 @@ let compute_next_pi0_sequentially more_pi0 limit_reached first_point tile_nature
 		(* Update the found pi0 flag *)
 		more_pi0 := found_pi0;
 	);
-	
 	(* Stop timer *)
 	counter_master_find_nextpi0#stop;
-	
 	()
 
+(* pval to array *)
+let pval2array pval =
+	let arr = Array.make (PVal.get_dimensions()) 0 in
+	(*print_message Debug_standard ("\nPVal dimensions : " ^ (string_of_int (PVal.get_dimensions()) ) );*)
+	for i = 0 to (PVal.get_dimensions()-1) do
+	  arr.(i) <- (NumConst.to_int (pval#get_value i));
+	done;
+	arr;;
+	()
 
 
 (*------------------------------------------------------------*)
@@ -449,11 +453,6 @@ let master () =
 	(* number of subpart want to split *)
 	let np = 4 in
 	
-	(* Access the pi0 *)
-(*	let pi0 = Cartography.get_current_pi0 () in
-	v0 = getsubpqrt in
-	Input.set_v0 v0;*)
-	
 	(* Initialize counters *)
 	counter_master_find_nextpi0#init;
 	counter_master_waiting#init;
@@ -477,6 +476,9 @@ let master () =
 	
 	(* current pi0 of workers*)
 	let current_Pi0 = ref [] in
+	
+	(* stopSplitting flag *)
+	let stopSplitting = ref false in
 	
 	(*** THE ALGORITHM STARTS HERE ***)
 	while not (check_covered()) do
@@ -506,23 +508,80 @@ let master () =
 				 (*have not any subpart in list -> splitting*)
 				 else
 				  begin
-				    let temp = ref 0 in
-				    let sum = ref 0 in
-				    (*find the most incomplete points subpart*)
-				    for i=0 to (List.length (!index))-1 do
+				    if(not !stopSplitting) then
 				      begin
-					(*temp := get_max_pi0_subpart(second (List.nth !index i))*)
-					print_message Debug_medium ("[Master] Received a pull request from worker " );
-				      end
-				    done
-				  end
+					let remain = ref 0 in
+					let markedWorker = ref 0 in
+					(*let marked = ref 0 in*)
+					(*find the most incomplete points subpart*)
+					for i=0 to (List.length (!index))-1 do
+					    (*get worker in index*)
+					    let worker = first (List.nth !index i) in
+					    (*compute the remain points by get number of points in subpart - the done points*)
+					    let size = get_points_in_subpart (List.assoc worker !index) in
+					    let done_points = done_points_in_subpart (List.assoc worker !index) (List.assoc worker !current_Pi0) in
+					    let temp = size - done_points in
+					    if (temp > !remain) then
+					      begin
+						remain := temp;
+						(*marked := i;*)
+						markedWorker := worker;
+					      end;
+					done; (*for*)
+					 (*check if this largest subpart is splittable*)
+					 if (!remain > 2) then 
+					  begin
+					    (*dynamic splitting here*)
+					    (*stop the worker for awhile*)
+					    send_finished !markedWorker;
+					    (*get splittable largest subpart*)
+					    let subpart = List.assoc !markedWorker !index in
+					    let current_pi0 = List.assoc !markedWorker !current_Pi0 in
+					    (**)
+					    let current_pi0_arr = pval2array current_pi0 in
+					    let newSubparts = dynamicSplitSubpart subpart current_pi0_arr in
+					    (*send to the old worker the first subpart*)
+					    send_subpart (at newSubparts 0) (!markedWorker);
+					    (*send to the new worker the splitSubpart*)
+					    send_subpart (at newSubparts 1) (source_rank);
+					    (*then add into the index the new worker with new splitSubpart *)
+					    index := !index@[(source_rank, (at newSubparts 1))];
+					    (*worker := first (List.nth !index !marked);*)
+					    (*print_message Debug_medium ("[Master] heloooooo ");*)
+					  end
+					 (*the points left in subpart less than 2*)
+					 else
+					  begin
+					    (*send terminate to the worker*)
+					    send_terminate source_rank;
+					    (*set the stopSplitting = true*)
+					    stopSplitting := true;
+					  end;
+					end (* stopSplitting *)
+				    (*case stop splitting = true -> send terminate to workers which send pull msg*)
+				    else
+				      begin
+					  (*send terminate to the worker*)
+					  send_terminate source_rank;
+				      end;
+				    end;
 				  
 		
 		
 		(*Tile Tag*)
 		|(Some x, None) -> print_message Debug_medium ("[Master] Received a tile from worker " ^ (string_of_int source_rank) ^ "");
-				   (*receive tile then send to the other workers to update*)
-				   
+				   (*check duplicated tile*)
+				   (*let tiles = Cartography.bc_result () in*)
+				   (*if(Cartography.bc_process_im_result x) then
+				    begin
+				      (*receive tile then send to the other workers to update*)
+				      for i = 0 to (List.length index)-1 do
+					if(first (at index i)) != source_rank then
+					  begin
+					    send_tile x (first (at index i));
+					  end;
+				      done
+				    end;*)
 		
 		
 		
@@ -549,6 +608,11 @@ let master () =
 (**        WORKER         *)
 (****************************************************************)
 
+	(* Access the pi0 *)
+(*	let pi0 = Cartography.get_current_pi0 () in
+	v0 = getsubpqrt in
+	Input.set_v0 v0;*)
+
 let init_slave rank size =
 	print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "] I am worker " ^ (string_of_int rank) ^ "/" ^ (string_of_int (size-1)) ^ ".");
 	()
@@ -559,7 +623,7 @@ let worker() =
 	(* Get the model *)
 	let model = Input.get_model() in
 	(* Retrieve the input options *)
-	let options = Input.get_options () in
+	(*let options = Input.get_options () in*)
 	
 	(* Init counters *)
 	counter_worker_waiting#init;
@@ -571,7 +635,7 @@ let worker() =
 	
 	let finished = ref false in
 	
-	begin
+(*	begin
 	match options#distribution_mode with 
 		(* First start by compyting a random pi0 (while the master is computing the shuffle list) *)
 		| Distributed_ms_shuffle -> 
@@ -583,7 +647,7 @@ let worker() =
 		| _ ->
 			(* Ask for some work *)
 			send_work_request ();
-	end;
+	end;*)
 		
 	print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "] sent pull request to the master.");
 	
@@ -676,36 +740,34 @@ let worker() =
 (*------------------------------------------------------------*)
 
 (*implement the master*)
-let test_gia () =
-  (*master()*)
+(*let test_gia () =
+  master();*)
     
 
-	print_message Debug_standard "--------------------Starting test !-------------------- \n"; 
+(*	print_message Debug_standard "--------------------Starting test !-------------------- \n"; 
 	counter_master_waiting#start;
 	(*************Sample Data v0************)
 
-	HyperRectangle.set_dimensions 2;
+	HyperRectangle.set_dimensions 3;
 	let v0 = new HyperRectangle.hyper_rectangle in 
 	
-(*	v0#set_min 0 (NumConst.numconst_of_int 0); 
+	v0#set_min 0 (NumConst.numconst_of_int 0); 
 	v0#set_max 0 (NumConst.numconst_of_int 3);
 	v0#set_min 1 (NumConst.numconst_of_int 0);
 	v0#set_max 1 (NumConst.numconst_of_int 3);
 	v0#set_min 2 (NumConst.numconst_of_int 0);
-	v0#set_max 2 (NumConst.numconst_of_int 3);*)
+	v0#set_max 2 (NumConst.numconst_of_int 3);
 	
-	v0#set_min 0 (NumConst.numconst_of_int 0); 
+(*	v0#set_min 0 (NumConst.numconst_of_int 0); 
 	v0#set_max 0 (NumConst.numconst_of_int 4);
 	v0#set_min 1 (NumConst.numconst_of_int 0);
-	v0#set_max 1 (NumConst.numconst_of_int 4);
+	v0#set_max 1 (NumConst.numconst_of_int 4);*)
 	
 	(* List of subparts maintained by the master *)
-	let subparts = ref [] in
+(*	let subparts = ref [] in
 	subparts := !subparts@[(v0)];
 
-	let more_subparts = ref true in
-	let limit_reached = ref false in
-	print_message Debug_standard ("\nInitial list length : " ^ (string_of_int (List.length !subparts) ) );
+	print_message Debug_standard ("\nInitial list length : " ^ (string_of_int (List.length !subparts) ) );*)
 
 	(*pi0*)
 	(*let pi0 = [|0;2;2|] in*)
@@ -727,12 +789,25 @@ let test_gia () =
 	(*let done_points = done_points_in_subpart v0 pi0 in
 	print_message Debug_standard ("\n done points : " ^ (string_of_int (done_points) ) );*)
 	
+	(*test pval to array*)
+	(*create an instance pval*)
+	(*PVal.set_dimensions 2;
+	let pval = new PVal.pval in
+	pval#set_value 0 (NumConst.numconst_of_int 2);
+	pval#set_value 1 (NumConst.numconst_of_int 2);
+	print_message Debug_standard ("\n pval 0 : " ^ (string_of_int (NumConst.to_int (pval#get_value 0)) ) );
+	print_message Debug_standard ("\n pval 1 : " ^ (string_of_int (NumConst.to_int (pval#get_value 1)) ) );
+	let arr = pval2array pval in
+	print_message Debug_standard ("\n array 0 : " ^ (string_of_int  (arr.(0)) ) );
+	print_message Debug_standard ("\n array 1 : " ^ (string_of_int  (arr.(1)) ) );*)
+	
+	
 	counter_master_waiting#stop;
 	print_message Debug_standard ("[Master] Total waiting time     : " ^ (string_of_float (counter_master_waiting#value)) ^ " s");
-	print_message Debug_standard "\n --------------------End of test !--------------------"; 
+	print_message Debug_standard "\n --------------------End of test !--------------------"; *)
 	
-()
+(*()*)
 
-;;
+(*;;*)
 (*test_gia();
 abort_program();*)
