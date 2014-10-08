@@ -30,7 +30,7 @@ exception Ex of string;;
 (*------------------------------------------------------------*)
 
 let counter_master_waiting 		= new Counter.counter
-let counter_master_find_nextpi0	= new Counter.counter
+let counter_master_find_nextpi0		= new Counter.counter
 let counter_worker_waiting 		= new Counter.counter
 let counter_worker_working 		= new Counter.counter
 
@@ -38,6 +38,10 @@ let counter_worker_working 		= new Counter.counter
 (****************************************************************)
 (**     MASTER      *)
 (****************************************************************)
+
+let first (a,b) = a
+let second (a,b) = b
+
 (*get element at*)	
 let rec at (lst : HyperRectangle.hyper_rectangle list) (n : int) : HyperRectangle.hyper_rectangle =
 	match lst with
@@ -154,8 +158,8 @@ let sliptLongestDimensionSubpart (s : HyperRectangle.hyper_rectangle) =
 	()
 	
 (*initial Subparts function: put in the Subpart list with number of the Workers return the new split subpart list*)
-let intialize_Subparts (s : HyperRectangle.hyper_rectangle list) (n : int) =
-	let subparts = ref s in
+let intialize_Subparts (v0 : HyperRectangle.hyper_rectangle) (n : int) =
+	let subparts = ref [v0] in
 	for l = 0 to n do 
 	begin
 	
@@ -200,6 +204,31 @@ let get_max_pi0_subpart (s : HyperRectangle.hyper_rectangle) =
 	done;
 	!lst;;
 	()
+
+(*compute the how many points was done in subpart*)
+let done_points_in_subpart (s : HyperRectangle.hyper_rectangle) arr =
+	let sum = ref 0 in
+	let tail = ref 1 in
+	for i= (HyperRectangle.get_dimensions()-1) downto 0 do
+	  for j=i-1 downto 0 do
+	    tail := !tail*(NumConst.to_int(s#get_max j)+1) ;
+	  done;
+	  sum := !sum + ((arr.(i)) * !tail);
+	  tail := 1;
+	done;
+	!sum +1;;
+	()
+	
+(*4 4 4
+
+4 3 2
+
+1 3 3
+	*)
+	
+let _ = for i=1 to 0 do
+  Printf.printf "abc";
+done
 	
 (*increase 1 unit*)
 let get_next_sequential_pi0_in_subpart pi0 (s : HyperRectangle.hyper_rectangle) : int array =
@@ -316,8 +345,11 @@ let dynamicSplitSubpart (s : HyperRectangle.hyper_rectangle) pi0 : HyperRectangl
 	done;
 	[s1;s2];;
 	()*)
+	
+	
+	
 
-let receive_pull_request_and_store_constraint () =
+let receive_pull_request () =
 	print_message Debug_high ("[Master] Entered function 'receive_pull_request_and_store_constraint'...");
 	
 	counter_master_waiting#start;
@@ -329,20 +361,28 @@ let receive_pull_request_and_store_constraint () =
 	match pull_request with
 	| PullOnly source_rank ->
 		print_message Debug_low ("[Master] Received PullOnly request...");
-		source_rank, None
+		(source_rank, None , None)
 
 	| OutOfBound source_rank ->
 		print_message Debug_low ("[Master] Received OutOfBound request...");
 		(* FAIRE QUELQUE CHOSE POUR DIRE QU'UN POINT N'A PAS MARCHÉ *)
 		raise (InternalError("OutOfBound not implemented."))(*;
 		source_rank, None*)
-
-	| PullAndResult (source_rank , im_result) -> 
-		print_message Debug_low ("[Master] Received PullAndResult request...");
+		
+	(*Hoang Gia new messages*)
+	| Tile (source_rank , im_result) ->
+		print_message Debug_low ("[Master] Received Tile ...");
 		print_message Debug_standard ("\n[Master] Received the following constraint from worker " ^ (string_of_int source_rank));
-		Cartography.bc_process_im_result im_result;
+		(*Cartography.bc_process_im_result im_result;*) (*send to all workers*)
 		(* Return source rank *)
-		source_rank, Some im_result.tile_nature;;
+		(source_rank, Some im_result.tile_nature , None )
+	
+	| Pi0 (source_rank , pi0) ->
+	      (*print_message Debug_low ("[Master] Received pi0 ...");
+	      print_message Debug_standard ("\n[Master] Received the following pi0 from worker " ^ (string_of_int source_rank));*)
+	      (source_rank , None , Some pi0)
+	      
+	| _ ->  raise (InternalError("have not implemented.")) 
 	()
 
 
@@ -375,7 +415,7 @@ let compute_next_pi0_sequentially more_pi0 limit_reached first_point tile_nature
 	counter_master_find_nextpi0#stop;
 	
 	()
-	
+
 
 
 (*------------------------------------------------------------*)
@@ -383,71 +423,6 @@ let compute_next_pi0_sequentially more_pi0 limit_reached first_point tile_nature
 (*------------------------------------------------------------*)
 (*** TODO: put somewhere else ***)
 (* let still_random = ref true *)
-
-
-(*------------------------------------------------------------*)
-(* Generic function handling all cases *)
-(*------------------------------------------------------------*)
-let compute_next_pi0 more_pi0 limit_reached first_point tile_nature_option =
-	(* Retrieve the input options *)
-	let options = Input.get_options () in
-	
-	(*match options#distribution_mode with
-	(** Distributed mode: Master slave with sequential pi0 *)
-	| Distributed_ms_sequential -> 
-		compute_next_pi0_sequentially more_pi0 limit_reached first_point tile_nature_option
-	
-	(** Distributed mode: Master slave with shuffle pi0 *)
-	| Distributed_ms_shuffle -> 
-		compute_next_pi0_shuffle more_pi0 limit_reached first_point tile_nature_option
-	
-	(** Distributed mode: Master slave with random pi0 and n retries before switching to sequential mode *)
-	| Distributed_ms_random nb_tries ->
-		(* Test whether the algorithm is still in random mode *)
-		if !still_random then(
-			(* Try to find a random pi0 *)
-			let successful = Cartography.random_pi0 nb_tries in
-			if successful then(
-				print_message Debug_low ("[Master] Computed a new random pi0.");
-			)else(
-				(* Switch mode ! *)
-				still_random := false;
-				print_message Debug_standard ("\n**************************************************");
-				print_message Debug_standard ("[Master] Could not find a new random pi0 after " ^ (string_of_int nb_tries) ^ " attemps! Now switching mode from random to sequential.");
-			);
-		);
-		(* Test whether the algorithm is now in sequential mode *)
-		(*** NOTE: important to test again (instead of using 'else') in case the value was changed just above ***)
-		if not !still_random then(
-			print_message Debug_medium ("[Master] Now in sequential mode: computing a sequential pi0.");
-			compute_next_pi0_sequentially more_pi0 limit_reached first_point tile_nature_option
-		);
-		print_message Debug_high ("[Master] Exiting function compute_next_pi0...");
-	(**$ TODO: missing something there ***)
-		
-	| Distributed_unsupervised -> raise (InternalError("IMITATOR cannot be unsupervised at this point."))
-
-	(** Normal mode *)
-	| Non_distributed -> raise (InternalError("IMITATOR should be distributed at this point."))*)
-	
-	(** DO SOMETHING HERE **)
-	()
-
-
-(*------------------------------------------------------------*)
-(* Functions handling shuffle mode *)
-(*------------------------------------------------------------*)
-
-(*(* Sends one point to each node (to have all nodes occupied for a while) *)
-let send_one_point_to_each_node() = ()*)
-
-(* Statically compute the shuffled array of all points *)
-(*let compute_shuffled_array() =
-	(* Compute the array of all points *)
-	Cartography.compute_all_pi0 ();
-	(* Shuffle it! *)
-	Cartography.shuffle_all_pi0 ();
-	()*)
 
 	
 (*------------------------------------------------------------*)
@@ -462,9 +437,22 @@ let check_covered () = false
 (*------------------------------------------------------------*)
 (* The cartography algorithm implemented in the master *)
 (*------------------------------------------------------------*)
+(*Hoang Gia master implementation*)
 let master () =
 	(* Retrieve the input options *)
-	let options = Input.get_options () in
+	(*let options = Input.get_options () in*)
+	
+	(* Get the model *)
+	let model = Input.get_model() in
+	(* Get the v0 *)
+	let v0 = Input.get_v0() in
+	(* number of subpart want to split *)
+	let np = 4 in
+	
+	(* Access the pi0 *)
+(*	let pi0 = Cartography.get_current_pi0 () in
+	v0 = getsubpqrt in
+	Input.set_v0 v0;*)
 	
 	(* Initialize counters *)
 	counter_master_find_nextpi0#init;
@@ -481,123 +469,79 @@ let master () =
 	let more_subparts = ref true in
 	let limit_reached = ref false in
 	
+	(*initialize list of subpart*)
+	subparts := intialize_Subparts v0 np;
+	
+	(* create index(worker,supart) *)
+	let index = ref [] in
+	
+	(* current pi0 of workers*)
+	let current_Pi0 = ref [] in
 	
 	(*** THE ALGORITHM STARTS HERE ***)
-	while not (check_covered ()) do
-		
+	while not (check_covered()) do
+		(*count number of subparts were sent*)
+		let count = ref 0 in
 		(* Get the pull_request *)
-(* 		let source_rank, tile_nature_option = receive_pull_request_and_store_constraint () in *)
+		let source_rank, tile_nature_option, pi0 = (receive_pull_request()) in
 		print_message Debug_medium ("[Master] heloooooo ");
-(* 		print_message Debug_medium ("[Master] Received a pull request from worker " ^ (string_of_int source_rank) ^ ""); *)
+		let msg = ref (tile_nature_option, pi0) in
+		match !msg with 
+		(*Pull Tag*)
+		(None , None) -> print_message Debug_medium ("[Master] Received a pull request from worker " ^ (string_of_int source_rank) ^ "");
+				 (* check to delete if the worker comeback *)
+				 if(List.mem_assoc source_rank !index) then
+				  begin
+				    index := List.remove_assoc source_rank !index;
+				  end;
+				  
+				 (*case : semd all of subpart in the list*)
+				 if not (!count = np) then 
+				  begin
+				    (*send new subpart *)
+				    send_subpart (at (!subparts) (!count)) source_rank;
+				    (*add into index*)
+				    index := !index@[( source_rank, (List.hd !subparts) )];
+				  end
+				 (*have not any subpart in list -> splitting*)
+				 else
+				  begin
+				    let temp = ref 0 in
+				    let sum = ref 0 in
+				    (*find the most incomplete points subpart*)
+				    for i=0 to (List.length (!index))-1 do
+				      begin
+					(*temp := get_max_pi0_subpart(second (List.nth !index i))*)
+					print_message Debug_medium ("[Master] Received a pull request from worker " );
+				      end
+				    done
+				  end
+				  
 		
 		
-	
-	done;
-	(*** THE ALGORITHM STOPS HERE ***)
-	
-(*	(* To differentiate between initialization of pi0 / next_point *)
-	let first_point = ref true in
-	
-	(* For the end of the algorithm *)
-	let workers_done = ref 0 in
-	
-	(* If random: start with random (switch to sequential later) *)
-	begin
-	match options#distribution_mode with
-		| Distributed_ms_random _ -> still_random := true;
-		| _ -> ();
-	end;
-	
-	(* IF precompute: Compute the first point pi0 *)
-	if options#precomputepi0 then(
-		(*** WARNING: this may lead to an unexpected behavior if mode is shuffle ! ***)
-		compute_next_pi0 more_subparts limit_reached first_point None;
-(* 		Cartography.compute_initial_pi0 (); *)
-	);
-	
-	(* IF shuffle mode: first sends one point to each node, and then statically compute the shuffled array of all points *)
-	if options#distribution_mode = Distributed_ms_shuffle then(
-		(* First sends one point to each node (to have all nodes occupied for a while) *)
-		(*** NO!!!! just ask the slaves to do this ***)
-(*		print_message Debug_standard ("[Master] Shuffle mode: sending one point to each node");
-		send_one_point_to_each_node();*)
+		(*Tile Tag*)
+		|(Some x, None) -> print_message Debug_medium ("[Master] Received a tile from worker " ^ (string_of_int source_rank) ^ "");
+				   (*receive tile then send to the other workers to update*)
+				   
 		
-		(* In the meanwhile: statically compute the shuffled array of all points *)
-		print_message Debug_standard ("[Master] Shuffle mode: starting to compute the shuffled array of points");
-		compute_shuffled_array();
-		print_message Debug_standard ("[Master] Shuffle mode: finished to compute the shuffled array of points");
-	);
-	(* end if shuffle *)
-	
-	(* Iterate on all the possible pi0 *)
-	while !more_subparts && not !limit_reached do
-		print_message Debug_low ("[Master] Waiting for a pull request");
 		
-		(* Get the pull_request *)
-		let source_rank, tile_nature_option = receive_pull_request_and_store_constraint () in
-		print_message Debug_medium ("[Master] Received a pull request from worker " ^ (string_of_int source_rank) ^ "");
 		
-		(* IF no-precompute: compute pi0 NOW *)
-		if not options#precomputepi0 then(
-			print_message Debug_high ("[Master] Computing pi0...");
-			compute_next_pi0 more_subparts limit_reached first_point tile_nature_option;
-		);
+		(*Pi0 Tag*)
+		|(None, Some y) -> print_message Debug_medium ("[Master] Received a pi0 from worker " ^ (string_of_int source_rank) ^ "");
+				   (*update the current point of worker*)
+				   if(List.mem_assoc source_rank !current_Pi0) then
+				    begin
+				      current_Pi0 := List.remove_assoc source_rank !current_Pi0;
+				    end
+				   else 
+				    begin
+				      current_Pi0 := !current_Pi0@[( source_rank, y)];
+				    end
+				    
+		(*0ther cases*)
+		|_ -> raise (InternalError("have not implemented."))
 		
-		(* Access the pi0 *)
-		let pi0 = Cartography.get_current_pi0 () in
-		
-		(* If finished: say goodbye *)
-		if !limit_reached || not !more_subparts then(
-			send_finished source_rank;
-			workers_done := !workers_done + 1;
-			print_message Debug_medium( "\t[Master] - [Worker " ^ (string_of_int source_rank ) ^ "] is done");
-		(* Otherwise send pi0 *)
-		)else(
-			print_message Debug_medium ( "[Master] Sending pi0 to [Worker " ^ (string_of_int source_rank ) ^ "]" );
-			send_pi0 pi0 source_rank;
-		);
-
-		(* IF precompute: Compute the next pi0 for next time, and return flags for more pi0 and co *)
-		(*** WARNING: computing the pi0 BEFORE it is asked may be stupid! It may be smarter to compute it on demand (to be compared) ***)
-		if options#precomputepi0 && not !limit_reached && !more_subparts then(
-			compute_next_pi0 more_subparts limit_reached first_point tile_nature_option;
-		);
-	done;
-
-
-	(*** NOTE: we could check here (and at every further iteration) whether all integer points are already covered!!! If yes, stop. ***)
-	
-	print_message Debug_standard ( "[Master] Done with sending pi0; waiting for last results.");
-
-	let size = Mpi.comm_size Mpi.comm_world in
-		while !workers_done < ( size - 1) do
-		print_message Debug_medium ("[Master] " ^ ( string_of_int ( size - 1 - !workers_done )) ^ " workers left" );
-		let source_rank , _ = receive_pull_request_and_store_constraint () in
-		print_message Debug_medium ("[Master] Received from [Worker " ^ ( string_of_int source_rank ) ^"]");
-		(* Say good bye *)
-		send_finished source_rank;
-		workers_done := !workers_done + 1;
-		print_message Debug_medium( "\t[Master] - [Worker " ^ (string_of_int source_rank ) ^ "] is done");
-	done;
-		
-	print_message Debug_standard ("[Master] All workers done" );
-
-	(* Process the finalization *)
-	Cartography.bc_finalize ();
-	
-	print_message Debug_standard ("[Master] Total waiting time     : " ^ (string_of_float (counter_master_waiting#value)) ^ " s");
-	print_message Debug_standard ("**************************************************");
-
-	
-	(* Process the result and return *)
-	let tiles = Cartography.bc_result () in
-	(* Render zones in a graphical form *)
-	if options#cart then (
-		Graphics.cartography (Input.get_model()) (Input.get_v0()) tiles (options#files_prefix ^ "_cart_patator")
-	) else (
-		print_message Debug_high "Graphical cartography not asked: graph not generated.";
-	);*)
-	
+	done;;
 	()
 
 
@@ -707,6 +651,13 @@ let worker() =
 		| Stop ->
 			print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "] I was just told to stop work.");
 			finished := true
+			
+		| Terminate -> print_message Debug_medium (" Terminate ");
+		
+		| Subpart supart -> print_message Debug_medium (" Subpart ");
+		
+		| Tile tile -> print_message Debug_medium (" Tile ");
+		
 	done;
 	
 	(* Print some information *)
@@ -725,22 +676,28 @@ let worker() =
 (*------------------------------------------------------------*)
 
 (*implement the master*)
-(*let test_gia () =
-
+let test_gia () =
+  (*master()*)
+    
 
 	print_message Debug_standard "--------------------Starting test !-------------------- \n"; 
 	counter_master_waiting#start;
 	(*************Sample Data v0************)
 
-	HyperRectangle.set_dimensions 3;
+	HyperRectangle.set_dimensions 2;
 	let v0 = new HyperRectangle.hyper_rectangle in 
 	
-	v0#set_min 0 (NumConst.numconst_of_int 0); 
+(*	v0#set_min 0 (NumConst.numconst_of_int 0); 
 	v0#set_max 0 (NumConst.numconst_of_int 3);
 	v0#set_min 1 (NumConst.numconst_of_int 0);
 	v0#set_max 1 (NumConst.numconst_of_int 3);
 	v0#set_min 2 (NumConst.numconst_of_int 0);
-	v0#set_max 2 (NumConst.numconst_of_int 3);
+	v0#set_max 2 (NumConst.numconst_of_int 3);*)
+	
+	v0#set_min 0 (NumConst.numconst_of_int 0); 
+	v0#set_max 0 (NumConst.numconst_of_int 4);
+	v0#set_min 1 (NumConst.numconst_of_int 0);
+	v0#set_max 1 (NumConst.numconst_of_int 4);
 	
 	(* List of subparts maintained by the master *)
 	let subparts = ref [] in
@@ -752,7 +709,7 @@ let worker() =
 
 	(*pi0*)
 	(*let pi0 = [|0;2;2|] in*)
-	let pi0 = [|3;1;0|] in
+	let pi0 = [|4;4|] in
 	
 	(*let b = checkSplitCondition pi0 v0 in
 	if(b) then  raise (Ex (" This Subpart do not satisfy condition! "));*)
@@ -765,12 +722,16 @@ let worker() =
 	
 	(*test dynamicSplitSubpart*)
 	(*subparts := dynamicSplitSubpart v0 pi0 ;*)
-
+	
+	(*check done points in subpart*)
+	(*let done_points = done_points_in_subpart v0 pi0 in
+	print_message Debug_standard ("\n done points : " ^ (string_of_int (done_points) ) );*)
+	
 	counter_master_waiting#stop;
 	print_message Debug_standard ("[Master] Total waiting time     : " ^ (string_of_float (counter_master_waiting#value)) ^ " s");
 	print_message Debug_standard "\n --------------------End of test !--------------------"; 
 	
-()*)
+()
 
 ;;
 (*test_gia();
