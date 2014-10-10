@@ -500,7 +500,8 @@ let master () =
 		|(Some x, None) -> print_message Debug_medium ("[Master] Received a tile from worker " ^ (string_of_int source_rank) ^ "");
 				   (*check duplicated tile*)
 				   (*let tiles = Cartography.bc_result () in*)
-(*				   if(Cartography.bc_process_im_result x) then
+				   let b = Cartography.bc_process_im_result x in
+				   if(b) then
 				    begin
 				      (*receive tile then send to the other workers to update*)
 				      for i = 0 to (List.length !index)-1 do
@@ -509,7 +510,7 @@ let master () =
 					    send_tile x (first (List.nth !index i));
 					  end;
 				      done
-				    end;*)
+				    end;
 (*				    send_terminate source_rank;
 				    check_covered := true;*)
 				    
@@ -598,21 +599,12 @@ let worker() =
 	let size = Mpi.comm_size Mpi.comm_world in
 	init_slave rank size;
 	
-
-	
 	let finished = ref false in
-	
-	(* Access the pi0 *)
-(*	let pi0 = Cartography.get_current_pi0 () in
-	v0 = getsubpqrt in
-	Input.set_v0 v0;*)
 		
 	(* In the meanwhile: compute the initial state *)
 	let init_state = Reachability.get_initial_state_or_abort model in
 	
 
-	
-	
 	while (not !finished) do
 	
 		send_work_request ();
@@ -692,8 +684,6 @@ let worker() =
 			    
 			   (*(* let moved = Cartography.move_to_next_uncovered_pi0 () in
 			      print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "]  Changed? " ^ (string_of_bool moved) ^ "");*)*)
-			    
-			    
 			    
 			    let pi01 = Cartography.get_current_pi0() in
 			    print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "]  pi01 " ^ (string_of_int (NumConst.to_int (pi01#get_value 0))) ^ "");
