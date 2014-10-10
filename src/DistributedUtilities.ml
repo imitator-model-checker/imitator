@@ -30,7 +30,7 @@ type pull_request =
 	| PullAndResult of rank * Reachability.im_result
 	| OutOfBound of rank
 	(*Hoang Gia new tags*)
-	| Tile of rank * Reachability.im_result (*the same with PullAndResult*)
+	| Tile of rank * Reachability.im_result  (*the same with PullAndResult*)
 	| Pi0 of rank * AbstractModel.pi0 (*the same with work at Master tag*)
 
 
@@ -560,6 +560,22 @@ let send_result (*linear_constraint*)im_result =
 	)
  *)
  
+(*send tile = send result*)
+let send_result_worker (*linear_constraint*)im_result =
+	let rank = rank() in
+
+	print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "] Entering send_constraint");
+	let mlc = (*LinearConstraint.serialize_linear_constraint linear_constraint *) serialize_im_result im_result in
+	let res_size = String.length mlc in
+
+	print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "] Serialized constraint '" ^ mlc ^ "'");
+	
+	(* Send the result: 1st send my rank, then the data size, then the data *)
+	print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "] About to send the size (" ^ (string_of_int res_size) ^ ") of the constraint.");
+	Mpi.send rank masterrank (int_of_slave_tag Slave_tile_tag) Mpi.comm_world;
+	Mpi.send res_size masterrank (int_of_slave_tag Slave_tile_tag) Mpi.comm_world;
+	Mpi.send mlc masterrank (int_of_slave_tag Slave_tile_tag) Mpi.comm_world
+	
  
  (* Hoang Gia Sends a result (first the size then the constraint), by the master *)
 let send_tile (*linear_constraint*)im_result slave_rank =
@@ -588,6 +604,39 @@ let send_pi0 (pi0 : AbstractModel.pi0) slave_rank =
 	Mpi.send mpi0 slave_rank (int_of_master_tag Master_data_tag) Mpi.comm_world
 (* 		Printf.printf "[%d] result %s sent" (rank()) result ;  *)
 (* 	print_newline() *)
+
+
+(* Sends a point (first the size then the point), by the slave *)
+let send_pi0_worker (pi0 : AbstractModel.pi0) =
+	let rank = rank() in
+	print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "] Entering send_pi0");
+	let mpi0 = serialize_pi0 pi0 in
+	let res_size = String.length mpi0 in
+	(* Send the result: 1st send the data size, then the data *)
+	Mpi.send rank masterrank (int_of_slave_tag Slave_pi0_tag) Mpi.comm_world;
+	Mpi.send res_size masterrank (int_of_slave_tag Slave_pi0_tag) Mpi.comm_world;
+	Mpi.send mpi0 masterrank (int_of_slave_tag Slave_pi0_tag) Mpi.comm_world
+	
+	
+	
+	
+(*	let rank = rank() in
+
+	print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "] Entering send_constraint");
+	let mlc = (*LinearConstraint.serialize_linear_constraint linear_constraint *) serialize_im_result im_result in
+	let res_size = String.length mlc in
+
+	print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "] Serialized constraint '" ^ mlc ^ "'");
+	
+	(* Send the result: 1st send my rank, then the data size, then the data *)
+	print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "] About to send the size (" ^ (string_of_int res_size) ^ ") of the constraint.");
+	Mpi.send rank masterrank (int_of_slave_tag Slave_result_tag) Mpi.comm_world;
+	Mpi.send res_size masterrank (int_of_slave_tag Slave_result_tag) Mpi.comm_world;
+	Mpi.send mlc masterrank (int_of_slave_tag Slave_result_tag) Mpi.comm_world*)
+	
+	
+
+
 
 
 let send_work_request () =
@@ -672,7 +721,9 @@ let receive_pull_request () =
   | Slave_pi0_tag ->
     let s_rank = l in 
     print_message Debug_medium ("[Master] Received Slave_pi0_tag from " ^ ( string_of_int source_rank) );
+    print_message Debug_medium ("[Master] !!!!!!!!!!!!!!!!!!!!!1 " );
     let len = Mpi.receive s_rank (int_of_slave_tag Slave_pi0_tag) Mpi.comm_world in
+    print_message Debug_medium ("[Master] !!!!!!!!!!!!!!!!!!!!!1 " );
     print_message Debug_medium ("[Master] Expecting a result of size " ^ ( string_of_int len) ^ " from [Worker " ^ (string_of_int s_rank) ^ "]" );
      (* Receive the data itself *)
     let buff = String.create len in
@@ -685,6 +736,7 @@ let receive_pull_request () =
     Pi0 (s_rank , pi0)
     
 ;;
+
 
 
 let send_finished source_rank = 

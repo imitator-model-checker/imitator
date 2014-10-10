@@ -347,7 +347,7 @@ let dynamicSplitSubpart (s : HyperRectangle.hyper_rectangle) pi0 : HyperRectangl
 	
 	
 
-let receive_pull_request () =
+let receive_pull_request_subpart () =
 	print_message Debug_high ("[Master] Entered function 'receive_pull_request_and_store_constraint'...");
 	
 	counter_master_waiting#start;
@@ -364,7 +364,7 @@ let receive_pull_request () =
 	| OutOfBound source_rank ->
 		print_message Debug_low ("[Master] Received OutOfBound request...");
 		(* FAIRE QUELQUE CHOSE POUR DIRE QU'UN POINT N'A PAS MARCHÉ *)
-		raise (InternalError("OutOfBound not implemented."))(*;
+		raise (InternalError("OutOfBound not implemented."));(*;
 		source_rank, None*)
 		
 	(*Hoang Gia new messages*)
@@ -376,8 +376,8 @@ let receive_pull_request () =
 		(source_rank, Some im_result , None )
 	
 	| Pi0 (source_rank , pi0) ->
-	      (*print_message Debug_low ("[Master] Received pi0 ...");
-	      print_message Debug_standard ("\n[Master] Received the following pi0 from worker " ^ (string_of_int source_rank));*)
+	      print_message Debug_low ("[Master] Received pi0 ...");
+	      print_message Debug_standard ("\n[Master] Received the following pi0 from worker " ^ (string_of_int source_rank));
 	      (source_rank , None , Some pi0)
 	      
 	| _ ->  raise (InternalError("have not implemented.")) 
@@ -452,16 +452,19 @@ let master () =
 	(* stopSplitting flag *)
 	let stopSplitting = ref false in
 	
+	(*count number of subparts were sent*)
+	let count = ref 0  in
+	
 	(*** THE ALGORITHM STARTS HERE ***)
 	while (not !check_covered) do
+	(*for i = 0 to 1 do*)
 
-		(*count number of subparts were sent*)
-		let count = ref 0  in
+		
 		(* Get the pull_request *)
-		let source_rank, tile_nature_option, pi0 = (receive_pull_request()) in
+		let source_rank, tile_nature_option, pi0 = (receive_pull_request_subpart()) in
 		print_message Debug_medium ("[Master] heloooooo ");
-		let msg = ref (tile_nature_option, pi0) in
-		match !msg with 
+		let msg =  (tile_nature_option, pi0) in
+		match msg with 
 		(*Pull Tag*)
 		(None , None) -> print_message Debug_medium ("[Master] Received a pull request from worker " ^ (string_of_int source_rank) ^ "");
 				 (* check to delete if the worker comeback *)
@@ -470,9 +473,10 @@ let master () =
 				    index := List.remove_assoc source_rank !index;
 				  end;
 				  
-				 (*case : semd all of subpart in the list*)
+				 (*case : send all of subpart in the list*)
 				 if not (!count = (List.length !subparts)) then 
 				  begin
+				   print_message Debug_medium ("[Master] count " ^ (string_of_int !count) ^ "");
 				    (*send new subpart *)
 				    send_subpart (at (!subparts) (!count)) source_rank;
 				    print_message Debug_medium ("[Master] Sent Subpart to worker " ^ (string_of_int source_rank) ^ "");
@@ -483,71 +487,18 @@ let master () =
 				 (*have not any subpart in list -> splitting*)
 				 else
 				  begin
-				    if(not !stopSplitting) then
-				      begin
-					let remain = ref 0 in
-					let markedWorker = ref 0 in
-					(*let marked = ref 0 in*)
-					(*find the most incomplete points subpart*)
-					for i=0 to (List.length (!index))-1 do
-					    (*get worker in index*)
-					    let worker = first (List.nth !index i) in
-					    (*compute the remain points by get number of points in subpart - the done points*)
-					    let size = get_points_in_subpart (List.assoc worker !index) in
-					    let done_points = done_points_in_subpart (List.assoc worker !index) (List.assoc worker !current_Pi0) in
-					    let temp = size - done_points in
-					    if (temp > !remain) then
-					      begin
-						remain := temp;
-						(*marked := i;*)
-						markedWorker := worker;
-					      end;
-					done; (*for*)
-					 (*check if this largest subpart is splittable*)
-					 if (!remain > 2) then 
-					  begin
-					    (*dynamic splitting here*)
-					    (*stop the worker for awhile*)
-					    send_finished !markedWorker;
-					    (*get splittable largest subpart*)
-					    let subpart = List.assoc !markedWorker !index in
-					    let current_pi0 = List.assoc !markedWorker !current_Pi0 in
-					    (**)
-					    let current_pi0_arr = pval2array current_pi0 in
-					    let newSubparts = dynamicSplitSubpart subpart current_pi0_arr in
-					    (*send to the old worker the first subpart*)
-					    send_subpart (at newSubparts 0) (!markedWorker);
-					    (*send to the new worker the splitSubpart*)
-					    send_subpart (at newSubparts 1) (source_rank);
-					    (*then add into the index the new worker with new splitSubpart *)
-					    index := !index@[(source_rank, (at newSubparts 1))];
-					    (*worker := first (List.nth !index !marked);*)
-					    (*print_message Debug_medium ("[Master] heloooooo ");*)
-					  end
-					 (*the points left in subpart less than 2*)
-					 else
-					  begin
-					    (*send terminate to the worker*)
-					    send_terminate source_rank;
-					    (*set the stopSplitting = true*)
-					    (*stopSplitting := true;*)
-					  end;
-					end (* stopSplitting *)
-				    (*case stop splitting = true -> send terminate to workers which send pull msg*)
-				    else
-				      begin
-					  (*send terminate to the worker*)
-					  send_terminate source_rank;
-				      end;
-				    end;
-				  
+				     check_covered := true;
+				  end;
+			
+				  (*for debug!*)		    
+				  (*check_covered := true;*)
 		
 		
 		(*Tile Tag*)
 		|(Some x, None) -> print_message Debug_medium ("[Master] Received a tile from worker " ^ (string_of_int source_rank) ^ "");
 				   (*check duplicated tile*)
 				   (*let tiles = Cartography.bc_result () in*)
-				   if(Cartography.bc_process_im_result x) then
+(*				   if(Cartography.bc_process_im_result x) then
 				    begin
 				      (*receive tile then send to the other workers to update*)
 				      for i = 0 to (List.length !index)-1 do
@@ -556,7 +507,10 @@ let master () =
 					    send_tile x (first (List.nth !index i));
 					  end;
 				      done
-				    end;
+				    end;*)
+				    send_terminate source_rank;
+				    check_covered := true;
+				    
 		
 		
 		
@@ -570,14 +524,17 @@ let master () =
 				   else 
 				    begin
 				      current_Pi0 := !current_Pi0@[( source_rank, y)];
-				    end
+				    end;
+				    check_covered := true;
+				    
 				    
 		(*0ther cases*)
-		|_ -> raise (InternalError("have not implemented."));
+		(*|_ -> raise (InternalError("have not implemented."));*)
 		
 		(**)
 		if(!index = []) then begin check_covered := true end;
-		
+	
+	(*stopSplitting := true;*)
 	done;;
 	()
 
@@ -650,7 +607,8 @@ let worker() =
 	
 
 	
-	while not !finished do
+	
+	while (not !finished) do
 	
 		send_work_request ();
 		print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "] sent pull request to the master.");
@@ -667,7 +625,9 @@ let worker() =
 			(* To differentiate between initialization of pi0 / next_point *)
 			let first_point = ref true in
 			
-			let more_pi0 = ref false in
+			let more_pi0 = ref true in
+			
+			let limit_reached = ref false in
 			
 			(*initialize subpart*)
 			Input.set_v0 subpart;
@@ -675,45 +635,77 @@ let worker() =
 			
 			(*initial pi0*)
 			Cartography.compute_initial_pi0();
-			print_message Debug_medium ("Worker debug!!! ");
 			
-(*			while !more_pi0 do
+			(*let c = ref 0 in*)
+ (*			while (!more_pi0 && not !limit_reached) do 
 			    
-			    let pi0 = Cartography.get_current_pi0 () in
-			    (* Call IM *)
+			    
+			    let pi0 = Cartography.get_current_pi0() in
+			    print_message Debug_medium (" pi0 " ^ (string_of_int (NumConst.to_int (pi0#get_value 0))) ^ "");
+			    print_message Debug_medium (" pi0 " ^ (string_of_int (NumConst.to_int (pi0#get_value 1))) ^ "");
+			    
+			    (*send_pi0_worker pi0;
+			    print_message Debug_medium ("send pi0 to worker ");*)
+			    
 			    let im_result , _ = Reachability.inverse_method_gen model init_state in
 			    
+			    Cartography.bc_process_im_result im_result;
 			    
-			    Cartography.compute_next_sequential_pi0
+			    send_result im_result;
+			    
+			    compute_next_pi0_sequentially more_pi0 limit_reached first_point (Some im_result.tile_nature);
+			    
+			    let pi01 = Cartography.get_current_pi0() in
+			    print_message Debug_medium (" pi01 " ^ (string_of_int (NumConst.to_int (pi01#get_value 0))) ^ "");
+			    print_message Debug_medium (" pi01 " ^ (string_of_int (NumConst.to_int (pi01#get_value 1))) ^ "");
+			    
+			    (* If finished: say goodbye *)
+			    if (!limit_reached || not !more_pi0) then begin finished := true; end;
+			   
+			    (*c := !c +1;
+			    print_message Debug_medium (" count!!!!!!!!!!!!!!!!!!!!!! " ^ (string_of_int (!c)) ^ "");*)
+			    
+			    (* Process the finalization *)
+			    (*Cartography.bc_finalize ();*)
 			done;*)
 			
-			finished := true;
-
+			(*test*)
+			 let pi0 = Cartography.get_current_pi0() in
+			 let im_result , _ = Reachability.inverse_method_gen model init_state in
+			 send_result_worker im_result;
+			 (*send_pi0_worker pi0;*)
+			(* print_message Debug_medium (" debug!!!!!!!!!!!!!!!!11 ");*)
+			(*send_work_request ();*)
 			
-		| Terminate -> print_message Debug_medium (" Terminate ");
+			
+			
+			
+			
+			finished := true;
+			(*let pi0 = Cartography.get_current_pi0() in *)
+(* 			print_message Debug_medium (" debug here!!!!!!! end for"); *)
+			(*send_pi0_worker pi0;*)
+			
+		| Terminate -> 
+			print_message Debug_medium (" Terminate ");
 			print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "] I was just told to terminate work.");
 			finished := true
-		
-		
-		| Tile tile -> print_message Debug_medium (" Tile ");
-		
-		| Stop ->
-			print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "] I was just told to stop work.");
-			finished := true
 			
-		| _ -> raise (InternalError("have not implemented."))
-		      
+		| _ -> raise (InternalError("have not implemented."));
+		
 		
 	done;
+	(* print_message Debug_medium (" debug!!!!!!!!!!!!!!!!11 ");*)
+	(*print_message Debug_medium (" debug here!!!!!!! end while");*)
 	
 	(* Print some information *)
-	let occupancy = counter_worker_working#value /. (counter_worker_working#value +. counter_worker_waiting#value) *. 100. in
+(*	let occupancy = counter_worker_working#value /. (counter_worker_working#value +. counter_worker_waiting#value) *. 100. in
 	print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "] I'm done.");
 	print_message Debug_standard ("[Worker " ^ (string_of_int rank) ^ "] Total waiting time     : " ^ (string_of_float (counter_worker_waiting#value)) ^ " s");
 	print_message Debug_standard ("[Worker " ^ (string_of_int rank) ^ "] Total working time     : " ^ (string_of_float (counter_worker_working#value)) ^ " s");
-	print_message Debug_standard ("[Worker " ^ (string_of_int rank) ^ "] Occupancy              : " ^ (string_of_float occupancy) ^ " %");
+	print_message Debug_standard ("[Worker " ^ (string_of_int rank) ^ "] Occupancy              : " ^ (string_of_float occupancy) ^ " %");*)
 ()
-
+;;
 
 
 

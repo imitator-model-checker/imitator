@@ -25,6 +25,7 @@ type pull_request =
 	(*Hoang Gia new tags*)
 	| Tile of rank * Reachability.im_result
 	| Pi0 of rank * AbstractModel.pi0
+	
 
 
 type work_assignment =
@@ -56,9 +57,13 @@ val rank : unit -> int
 
 val send_result : (*LinearConstraint.p_linear_constraint*)Reachability.im_result -> unit
 
+val send_result_worker : Reachability.im_result -> unit
+
 val send_tile : Reachability.im_result -> rank -> unit
 
 val send_pi0 : AbstractModel.pi0 -> rank -> unit
+
+val send_pi0_worker : AbstractModel.pi0 -> unit
 
 val send_work_request : unit -> unit
 

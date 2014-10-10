@@ -17,3 +17,6 @@ val master : unit -> unit
 
 (** Implementation of slave *)
 val worker : unit -> unit
+
+(** For testing purpose *)
+(*val test_gia : unit -> unit*)
