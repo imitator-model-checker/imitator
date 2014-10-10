@@ -10,7 +10,7 @@
  * Author:        Ulrich Kuehne, Etienne Andre
  * 
  * Created:       2012/06/18
- * Last modified: 2014/10/02
+ * Last modified: 2014/10/10
  *
  ****************************************************************)
 
@@ -1396,7 +1396,7 @@ let shuffle_all_pi0 () =
 
 
 (*
- * Move to the next uncovered pi0 and do not move if the current pi0 is still not covered; update global variable current_pi0 (if necessary)
+ * Move to the next uncovered pi0 and do not move if the current pi0 is still not covered; update global variable current_pi0 (if necessary); return true if indeed moved
  *)
 let move_to_next_uncovered_pi0 () =
   match !current_pi0 with
@@ -1404,14 +1404,19 @@ let move_to_next_uncovered_pi0 () =
 				     "altough it should have at this point."))
     | Some current_pi0 ->
 	let found_pi0 = ref false in
-	  print_message Debug_high " master check";
+	    print_message Debug_high " [Cartography.move_to_next_uncovered_pi0] check coverage of pi0";
 	  test_pi0_uncovered current_pi0 found_pi0;
+	  (* If !found_pi0 set to true: means it is NOT covered *)
 	  if !found_pi0
-	  then true
-	  else
+	  then (
+	    print_message Debug_medium" [Cartography.move_to_next_uncovered_pi0] pi0 was not covered: do not move";
+	    (* Not covered means no move *)
+	    false
+	  )
+	  else(
 	    let (found, _) = find_next_pi0_cover ()
 	    in found
-
+	    )
 
 
 
