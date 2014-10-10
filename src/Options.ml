@@ -587,6 +587,13 @@ class imitator_options =
 					print_warning "The distributed mode is only valid for the cartography. Option will be ignored.";
 				)
 			)
+			(*************)
+			| Distributed_ms_subpart -> (
+				print_message Debug_standard ("Considering a distributed mode with \"shuffle\" enumeration of pi0 points.");
+				if !imitator_mode <> Cover_cartography then(
+					print_warning "The distributed mode is only valid for the cartography. Option will be ignored.";
+				)
+			)
 			end;
 
 			if !precomputepi0 then(

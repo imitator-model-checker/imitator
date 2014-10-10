@@ -371,7 +371,7 @@ let receive_pull_request_subpart () =
 	| Tile (source_rank , im_result) ->
 		print_message Debug_low ("[Master] Received Tile ...");
 		print_message Debug_standard ("\n[Master] Received the following constraint from worker " ^ (string_of_int source_rank));
-		Cartography.bc_process_im_result im_result; (*send to all workers*)
+		(*Cartography.bc_process_im_result im_result;*) (*send to all workers*)
 		(* Return source rank *)
 		(source_rank, Some im_result , None )
 	
@@ -457,13 +457,16 @@ let master () =
 	
 	(*** THE ALGORITHM STARTS HERE ***)
 	while (not !check_covered) do
+	  begin
 	(*for i = 0 to 1 do*)
 
 		
 		(* Get the pull_request *)
 		let source_rank, tile_nature_option, pi0 = (receive_pull_request_subpart()) in
 		print_message Debug_medium ("[Master] heloooooo ");
+		
 		let msg =  (tile_nature_option, pi0) in
+		(*send_terminate source_rank;*)
 		match msg with 
 		(*Pull Tag*)
 		(None , None) -> print_message Debug_medium ("[Master] Received a pull request from worker " ^ (string_of_int source_rank) ^ "");
@@ -474,9 +477,9 @@ let master () =
 				  end;
 				  
 				 (*case : send all of subpart in the list*)
-				 if not (!count = (List.length !subparts)) then 
+				 if not (!count = 1) then 
 				  begin
-				   print_message Debug_medium ("[Master] count " ^ (string_of_int !count) ^ "");
+				   print_message Debug_medium ("[Master] count " ^ (string_of_int !count) ^ "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1");
 				    (*send new subpart *)
 				    send_subpart (at (!subparts) (!count)) source_rank;
 				    print_message Debug_medium ("[Master] Sent Subpart to worker " ^ (string_of_int source_rank) ^ "");
@@ -487,11 +490,10 @@ let master () =
 				 (*have not any subpart in list -> splitting*)
 				 else
 				  begin
-				     check_covered := true;
+				     (*check_covered := true;*)
+				     send_terminate source_rank;
 				  end;
 			
-				  (*for debug!*)		    
-				  (*check_covered := true;*)
 		
 		
 		(*Tile Tag*)
@@ -508,8 +510,8 @@ let master () =
 					  end;
 				      done
 				    end;*)
-				    send_terminate source_rank;
-				    check_covered := true;
+(*				    send_terminate source_rank;
+				    check_covered := true;*)
 				    
 		
 		
@@ -530,12 +532,15 @@ let master () =
 				    
 		(*0ther cases*)
 		(*|_ -> raise (InternalError("have not implemented."));*)
-		
-		(**)
-		if(!index = []) then begin check_covered := true end;
+	  end;
+	(**)
+	if(!index = []) then begin check_covered := true end;
 	
 	(*stopSplitting := true;*)
-	done;;
+	done;
+	
+	(* Process the finalization *)
+	Cartography.bc_finalize ();;
 	()
 
 
@@ -552,12 +557,12 @@ let compute_next_pi0_sequentially more_pi0 limit_reached first_point tile_nature
 
 	(* Case first point *)
 	if !first_point then(
-		print_message Debug_low ("[Master] This is the first pi0.");
+		print_message Debug_low ("[Some worker] This is the first pi0.");
 		Cartography.compute_initial_pi0 ();
 		first_point := false;
 	(* Other case *)
 	)else(
-		print_message Debug_low ("[Master] Computing next pi0 sequentially...");
+		print_message Debug_low ("[Some worker] Computing next pi0 sequentially...");
 		let found_pi0 , time_limit_reached = Cartography.find_next_pi0 tile_nature_option in
 		(* Update the time limit *)
 		limit_reached := time_limit_reached;
@@ -631,33 +636,68 @@ let worker() =
 			
 			(*initialize subpart*)
 			Input.set_v0 subpart;
-			(*print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "] setted v0.");*)
+			if debug_mode_greater Debug_medium then(
+				print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "] set v0:");
+				print_message Debug_medium (ModelPrinter.string_of_v0 model subpart);
+			);
 			
 			(*initial pi0*)
 			Cartography.compute_initial_pi0();
 			
-			(*let c = ref 0 in*)
- (*			while (!more_pi0 && not !limit_reached) do 
+			print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "] Initial pi0:");
+			   print_message Debug_medium   (ModelPrinter.string_of_pi0 model (Cartography.get_current_pi0()));
+
+			   
+			   (*let c = ref 0 in*)
+ 			while (!more_pi0 && not !limit_reached) do 
 			    
 			    
 			    let pi0 = Cartography.get_current_pi0() in
-			    print_message Debug_medium (" pi0 " ^ (string_of_int (NumConst.to_int (pi0#get_value 0))) ^ "");
-			    print_message Debug_medium (" pi0 " ^ (string_of_int (NumConst.to_int (pi0#get_value 1))) ^ "");
+			print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "] pi0:");
+			   print_message Debug_medium   (ModelPrinter.string_of_pi0 model pi0);
+(*			    print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "]  pi0 " ^ (string_of_int (NumConst.to_int (pi0#get_value 0))) ^ "");
+			    print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "]  pi0 " ^ (string_of_int (NumConst.to_int (pi0#get_value 1))) ^ "");*)
 			    
 			    (*send_pi0_worker pi0;
 			    print_message Debug_medium ("send pi0 to worker ");*)
 			    
+			    (* Set the new pi0 *)
+			Input.set_pi0 pi0;
+			
+			(* Save debug mode *)
+			let global_debug_mode = get_debug_mode() in 
+			
+			(* Prevent the debug messages (except in verbose modes high or total) *)
+				if not (debug_mode_greater Debug_total) then
+					set_debug_mode Debug_nodebug;
+			
+			    (* Compute IM *)
 			    let im_result , _ = Reachability.inverse_method_gen model init_state in
+(* 			    raise (InternalError("stop here")); *)
 			    
-			    Cartography.bc_process_im_result im_result;
+			(* Get the debug mode back *)
+			set_debug_mode global_debug_mode;
 			    
-			    send_result im_result;
+			    (* Process result *)
+			    let added = Cartography.bc_process_im_result im_result in
+			    (* Print some info *)
+				print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "]  Constraint really added? " ^ (string_of_bool added) ^ "");
+			
+			    send_result_worker im_result;
 			    
+			    (*!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1*)
 			    compute_next_pi0_sequentially more_pi0 limit_reached first_point (Some im_result.tile_nature);
 			    
+			   (* Cartography.find_next_pi0  (Some im_result.tile_nature);*)
+			    
+			   (*(* let moved = Cartography.move_to_next_uncovered_pi0 () in
+			      print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "]  Changed? " ^ (string_of_bool moved) ^ "");*)*)
+			    
+			    
+			    
 			    let pi01 = Cartography.get_current_pi0() in
-			    print_message Debug_medium (" pi01 " ^ (string_of_int (NumConst.to_int (pi01#get_value 0))) ^ "");
-			    print_message Debug_medium (" pi01 " ^ (string_of_int (NumConst.to_int (pi01#get_value 1))) ^ "");
+			    print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "]  pi01 " ^ (string_of_int (NumConst.to_int (pi01#get_value 0))) ^ "");
+			    print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "]  pi01 " ^ (string_of_int (NumConst.to_int (pi01#get_value 1))) ^ "");
 			    
 			    (* If finished: say goodbye *)
 			    if (!limit_reached || not !more_pi0) then begin finished := true; end;
@@ -665,26 +705,12 @@ let worker() =
 			    (*c := !c +1;
 			    print_message Debug_medium (" count!!!!!!!!!!!!!!!!!!!!!! " ^ (string_of_int (!c)) ^ "");*)
 			    
-			    (* Process the finalization *)
-			    (*Cartography.bc_finalize ();*)
-			done;*)
+			done;
 			
-			(*test*)
-			 let pi0 = Cartography.get_current_pi0() in
-			 let im_result , _ = Reachability.inverse_method_gen model init_state in
-			 send_result_worker im_result;
-			 (*send_pi0_worker pi0;*)
-			(* print_message Debug_medium (" debug!!!!!!!!!!!!!!!!11 ");*)
-			(*send_work_request ();*)
+			(*Ask for more after finishing*)
+			send_work_request ();
 			
-			
-			
-			
-			
-			finished := true;
-			(*let pi0 = Cartography.get_current_pi0() in *)
-(* 			print_message Debug_medium (" debug here!!!!!!! end for"); *)
-			(*send_pi0_worker pi0;*)
+			(*finished := true;*)
 			
 		| Terminate -> 
 			print_message Debug_medium (" Terminate ");
@@ -695,7 +721,7 @@ let worker() =
 		
 		
 	done;
-	(* print_message Debug_medium (" debug!!!!!!!!!!!!!!!!11 ");*)
+	 print_message Debug_medium (" debug!!!!!!!!!!!!!!!!11 ");
 	(*print_message Debug_medium (" debug here!!!!!!! end while");*)
 	
 	(* Print some information *)
