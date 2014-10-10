@@ -393,7 +393,7 @@ let test_pi0_uncovered current_pi0 found_pi0 =
 		(* Update the number of unsuccessful points *)
 		nb_useless_points := !nb_useless_points + 1;
 		if debug_mode_greater Debug_medium then (
-			print_message Debug_medium "The following pi0 is already included in a constraint.";
+			print_message Debug_medium "[Cartography.test_pi0_uncovered] The following pi0 is already included in a constraint.";
 			print_message Debug_medium (ModelPrinter.string_of_pi0 model current_pi0);
 		);
 		(*** TODO: could be optimized by finding the nearest multiple of tile next to the border, and directly switching to that one ***)
@@ -403,7 +403,7 @@ let test_pi0_uncovered current_pi0 found_pi0 =
 		(* Update the number of unsuccessful points *)
 		nb_useless_points := !nb_useless_points + 1;
 		if debug_mode_greater Debug_medium then (
-			print_message Debug_medium "The following pi0 does not satisfy the initial constraint of the model.";
+			print_message Debug_medium "[Cartography.test_pi0_uncovered] The following pi0 does not satisfy the initial constraint of the model.";
 			print_message Debug_medium (ModelPrinter.string_of_pi0 model current_pi0);
 		);
 	(* If both checks passed, then pi0 found *)
@@ -561,7 +561,9 @@ let compute_next_sequential_pi0 () =
 
 
 
-(** Compute the next pi0 and directly modify the variable 'current_pi0' (standard BC) *)
+(** Compute the next pi0 by sequentially trying all points until a point not covered is found; and then directly modify the internal variable 'current_pi0' (standard BC)
+ * Return (found_pi0 : bool, nb_useless_points : int)
+ *)
 let find_next_pi0_cover () =
 	(* Get the model *)
 (* 	let model = Input.get_model() in *)
@@ -586,6 +588,7 @@ let find_next_pi0_cover () =
 
 		(* 2) Check that this pi0 is new *)
 		if !more_pi0 then(
+			print_message Debug_high ("[Cartography.find_next_pi0_cover] check whether pi0 is covered");
 			(* Generic function possibly updating found_pi0 *)
 			test_pi0_uncovered current_pi0 found_pi0;
 		); (*if more pi0 *)

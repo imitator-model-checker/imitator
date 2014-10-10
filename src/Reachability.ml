@@ -1606,6 +1606,10 @@ let inverse_method_check_constraint model reachability_graph constr =
 			print_message Debug_high (LinearConstraint.string_of_px_linear_constraint model.variable_names constr);
 			print_message Debug_medium ("\nThe following inequalities are pi0-incompatible:");
 			List.iter (fun inequality -> print_message Debug_medium (LinearConstraint.string_of_p_linear_inequality model.variable_names inequality)) incompatible;
+			if debug_mode_greater Debug_high then(
+				print_message Debug_high ("\nRecall that pi0 is:");
+				print_message Debug_high   (ModelPrinter.string_of_pi0 model pi0);
+			);
 		);
 		
 		(* Case EFIM: no need to select a pi-incompatible inequality if already bad *)

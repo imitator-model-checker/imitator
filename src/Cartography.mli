@@ -30,7 +30,11 @@ val bc_result : unit -> AbstractModel.returned_constraint list
 
 val compute_initial_pi0 : unit -> unit
 
+(** Compute the next pi0 by sequentially trying all points until a point not covered is found; and then directly modify the internal variable 'current_pi0' (standard BC)
+ * Return (found_pi0 : bool, nb_useless_points : int)
+ *)
 val find_next_pi0 : AbstractModel.tile_nature option -> (bool * bool)
+
 val find_next_pi0_shuffle : AbstractModel.tile_nature option -> (bool * bool)
 
 (** Get the current pi0 (for PaTATOR) *)
