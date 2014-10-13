@@ -35,6 +35,7 @@ type work_assignment =
 	| Subpart of HyperRectangle.hyper_rectangle
 	| Tile of Reachability.im_result
 	| Terminate
+	| Continue
 
 (* type pi0_list = (Automaton.variable_index * NumConst.t) list *)
 
@@ -72,6 +73,8 @@ val send_subpart : HyperRectangle.hyper_rectangle -> rank -> unit
 val send_finished : rank -> unit
 
 val send_terminate : rank -> unit
+
+val send_continue : rank -> unit
 
 val receive_pull_request : unit -> pull_request
 

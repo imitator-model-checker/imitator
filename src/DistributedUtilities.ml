@@ -43,6 +43,7 @@ type work_assignment =
 	| Subpart of HyperRectangle.hyper_rectangle
 	| Tile of Reachability.im_result
 	| Terminate
+	| Continue
 
 
 type pi0_list = (Automaton.variable_index * NumConst.t) list
@@ -67,6 +68,7 @@ type mpi_master_tag =
 	| Master_tile_tag
 	| Master_subpart_tag
 	| Master_terminate_tag
+	| Master_continue_tag
 
 (*	let data_tag = 1        (* used when we are sending input data           *)
 let finished_tag = 2    (* used to mean that work is done                *)
@@ -470,6 +472,7 @@ let int_of_master_tag = function
 	| Master_tile_tag -> 19
 	| Master_subpart_tag -> 20
 	| Master_terminate_tag -> 21
+	| Master_continue_tag -> 22
 	
 
 let slave_tag_of_int = function
@@ -488,6 +491,7 @@ let master_tag_of_int = function
 	| 19 -> Master_tile_tag
 	| 20 -> Master_subpart_tag
 	| 21 -> Master_terminate_tag
+	| 22 -> Master_continue_tag
 	| other -> raise (InternalError ("Impossible match '" ^ (string_of_int other) ^ "' in master_tag_of_int."))
 
 
@@ -579,17 +583,17 @@ let send_result_worker (*linear_constraint*)im_result =
  
  (* Hoang Gia Sends a result (first the size then the constraint), by the master *)
 let send_tile (*linear_constraint*)im_result slave_rank =
-	let rank = rank() in
+	(*let rank = rank() in*)
 
-	print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "] Entering send_constraint");
+	(*print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "] Entering send_constraint");*)
 	let mlc = (*LinearConstraint.serialize_linear_constraint linear_constraint *) serialize_im_result im_result in
 	let res_size = String.length mlc in
 
-	print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "] Serialized constraint '" ^ mlc ^ "'");
+	(*print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "] Serialized constraint '" ^ mlc ^ "'");*)
 	
 	(* Send the result: 1st send my rank, then the data size, then the data *)
-	print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "] About to send the size (" ^ (string_of_int res_size) ^ ") of the constraint.");
-	Mpi.send rank slave_rank (int_of_master_tag Master_tile_tag) Mpi.comm_world;
+	(*print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "] About to send the size (" ^ (string_of_int res_size) ^ ") of the constraint.");*)
+	(*Mpi.send rank slave_rank (int_of_master_tag Master_tile_tag) Mpi.comm_world;*)
 	Mpi.send res_size slave_rank (int_of_master_tag Master_tile_tag) Mpi.comm_world;
 	Mpi.send mlc slave_rank (int_of_master_tag Master_tile_tag) Mpi.comm_world
 	
@@ -743,12 +747,15 @@ let send_finished source_rank =
   print_message Debug_medium( "[Master] Sending STOP to [Worker " ^ (string_of_int source_rank ) ^"].");
   Mpi.send (weird_stuff()) source_rank (int_of_master_tag Master_finished_tag) Mpi.comm_world 
   
-(*Hoang Gia new functions*)
+(*Hoang Gia send TERMINATE tag*)
 let send_terminate source_rank = 
   print_message Debug_medium( "[Master] Sending TERMINATE to [Worker " ^ (string_of_int source_rank ) ^"].");
   Mpi.send (weird_stuff()) source_rank (int_of_master_tag Master_terminate_tag) Mpi.comm_world 
-  
-
+ 
+(*Hoang Gia send Continue tag*)
+let send_continue source_rank = 
+  print_message Debug_medium( "[Master] Sending CONTINUE to [Worker " ^ (string_of_int source_rank ) ^"].");
+  Mpi.send (weird_stuff()) source_rank (int_of_master_tag Master_continue_tag) Mpi.comm_world 
 
 let receive_work () =
 	(* Get the model *)
@@ -798,7 +805,6 @@ let receive_work () =
 		let im_result = unserialize_im_result !work in
 		Tile im_result
 		
-	| Master_terminate_tag -> Terminate
 	| Master_subpart_tag -> 
 	  	(* Receive the data itself *)
 		let buff = String.create w in
@@ -812,3 +818,6 @@ let receive_work () =
 		let subpart = unserialize_hyper_rectangle !work in
 		Subpart subpart
 
+	| Master_terminate_tag -> Terminate
+	
+	| Master_continue_tag -> Continue

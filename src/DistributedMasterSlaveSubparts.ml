@@ -53,6 +53,12 @@ let rec remove_at (lst : HyperRectangle.hyper_rectangle list) (n : int) : HyperR
 	match lst with
 	| [] -> [];
 	| h :: t -> if n = 0 then t else h :: remove_at t (n-1);;
+	
+(*remove element at*)	
+let rec remove_at_lst lst n =
+	match lst with
+	| [] -> [];
+	| h :: t -> if n = 0 then t else h :: remove_at_lst t (n-1);;
     
 (*get total pi0 inside subpart put the subpart and number of dimensions then get the number of the pi0s inside it*) 
 let getTotalPi0 (subpart : HyperRectangle.hyper_rectangle) (d : int) = 
@@ -345,13 +351,13 @@ let dynamicSplitSubpart (s : HyperRectangle.hyper_rectangle) pi0 : HyperRectangl
 	[s1;s2];;
 	()*)
 	
-	
 
 let receive_pull_request_subpart () =
-	print_message Debug_high ("[Master] Entered function 'receive_pull_request_and_store_constraint'...");
+	print_message Debug_high ("[Master] Entered function 'receive_pull_request_subpart'...");
 	
 	counter_master_waiting#start;
 	let pull_request = receive_pull_request () in
+	(*print_message Debug_high ("[Master] Entered function 'receive_pull_request_subpart'...!!!!!!!!!");*)
 	counter_master_waiting#stop;
 	
 	(** DO SOMETHING HERE **)
@@ -383,10 +389,7 @@ let receive_pull_request_subpart () =
 	| _ ->  raise (InternalError("have not implemented.")) 
 	()
 
-
-
 (* hey how are yous *)
-
 
 (* pval to array *)
 let pval2array pval =
@@ -397,20 +400,19 @@ let pval2array pval =
 	done;
 	arr;;
 	()
-
 	
 (*------------------------------------------------------------*)
 (* Some functions to implement *)
 (*------------------------------------------------------------*)
-
 
 (*------------------------------------------------------------*)
 (* The cartography algorithm implemented in the master *)
 (*------------------------------------------------------------*)
 (*Hoang Gia master implementation*)
 let master () =
-	(* Retrieve the input options *)
-	(*let options = Input.get_options () in*)
+	
+	 (*Retrieve the input options *)
+	let options = Input.get_options () in
 	
 	let check_covered = ref false in
 	
@@ -418,8 +420,8 @@ let master () =
 	let model = Input.get_model() in
 	(* Get the v0 *)
 	let v0 = Input.get_v0() in
-	(* number of subpart want to split *)
-	let np = -1 in
+	
+
 	
 	(* Initialize counters *)
 	counter_master_find_nextpi0#init;
@@ -427,39 +429,45 @@ let master () =
 	
 	print_message Debug_medium ("[Master] Hello world!");
 	
-	(* List of subparts maintained by the master *)
-	let subparts = ref [] in
-	
 	(* Perform initialization *)
 	Cartography.bc_initialize ();
+	
+	(* List of subparts maintained by the master *)
+	let subparts = ref [] in
 	
 	let more_subparts = ref true in
 	let limit_reached = ref false in
 	
+
+	(*print_message Debug_standard ("[Master] Here!!!!!!!!!!");*)
+	(* create index(worker,supart) *)
+	let index = ref [] in
+	(* current pi0 of workers*)
+	let current_Pi0 = ref [] in
+	(* stopSplitting flag *)
+	let stopSplitting = ref false in
+	(*count number of subparts were sent*)
+	let count = ref 0  in
+	(*waitting *)
+	let waittingList = ref [] in
 	
+	
+	(******************Adjustable values********************)
+	(* number of subpart want to initialize in the first time *)
+	let np = 0 in
+	(*depend on size of model*)
+	let dynamicSplittingMode = ref true in
+	(*******************************************************)
 	
 	(*initialize list of subpart*)
 	subparts := intialize_Subparts v0 np;
 	
-	(*print_message Debug_standard ("[Master] Here!!!!!!!!!!");*)
-	
-	(* create index(worker,supart) *)
-	let index = ref [] in
-	
-	(* current pi0 of workers*)
-	let current_Pi0 = ref [] in
-	
-	(* stopSplitting flag *)
-	let stopSplitting = ref false in
-	
-	(*count number of subparts were sent*)
-	let count = ref 0  in
+	let tilebuffer = ref [] in
 	
 	(*** THE ALGORITHM STARTS HERE ***)
 	while (not !check_covered) do
 	  begin
 	(*for i = 0 to 1 do*)
-
 		
 		(* Get the pull_request *)
 		let source_rank, tile_nature_option, pi0 = (receive_pull_request_subpart()) in
@@ -477,7 +485,7 @@ let master () =
 				  end;
 				  
 				 (*case : send all of subpart in the list*)
-				 if not (!count = 1) then 
+				 if not (!count = (List.length !subparts) ) then 
 				  begin
 				   print_message Debug_medium ("[Master] count " ^ (string_of_int !count) ^ "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1");
 				    (*send new subpart *)
@@ -487,61 +495,89 @@ let master () =
 				    index := !index@[( source_rank, (List.hd !subparts) )];
 				    count := !count +1;
 				  end
-				 (*have not any subpart in list -> splitting*)
+				 (*have not any subpart in list -> splitting* , if could not split -> terminate*)
 				 else
 				  begin
-				     (*check_covered := true;*)
-				     send_terminate source_rank;
-				  end;
-			
-		
-		
+
+					(*print_message Debug_standard ("[Master]  worker " ^ (string_of_int source_rank) ^ " go to waitting list");
+					waittingList := !waittingList@[source_rank];
+					print_message Debug_standard ("[Master]  worker waitting list " ^ (string_of_int (List.length !waittingList)) );*)
+
+					
+					send_terminate source_rank;
+
+				      
+				      
+				  end
 		(*Tile Tag*)
-		|(Some x, None) -> print_message Debug_medium ("[Master] Received a tile from worker " ^ (string_of_int source_rank) ^ "");
+		|(Some tile, None) -> print_message Debug_medium ("[Master] Received a tile from worker " ^ (string_of_int source_rank) ^ "");
 				   (*check duplicated tile*)
 				   (*let tiles = Cartography.bc_result () in*)
-				   let b = Cartography.bc_process_im_result x in
+				   let b = Cartography.bc_process_im_result tile in
 				   if(b) then
 				    begin
 				      (*receive tile then send to the other workers to update*)
 				      for i = 0 to (List.length !index)-1 do
 					if ( (first (List.nth !index i)) != source_rank ) then
 					  begin
-					    send_tile x (first (List.nth !index i));
+					   (* send_tile tile (first (List.nth !index i));*)
+					   tilebuffer := !tilebuffer@[(first (List.nth !index i)), tile];
 					  end;
 				      done
 				    end;
+				    print_message Debug_standard ("[Master]  worker " ^ (string_of_int source_rank) ^ " broadcast to Workers");
 (*				    send_terminate source_rank;
 				    check_covered := true;*)
-				    
-		
-		
-		
 		(*Pi0 Tag*)
-		|(None, Some y) -> print_message Debug_medium ("[Master] Received a pi0 from worker " ^ (string_of_int source_rank) ^ "");
-				   (*update the current point of worker*)
-				   if(List.mem_assoc source_rank !current_Pi0) then
-				    begin
-				      current_Pi0 := List.remove_assoc source_rank !current_Pi0;
-				    end
-				   else 
-				    begin
-				      current_Pi0 := !current_Pi0@[( source_rank, y)];
-				    end;
-				    check_covered := true;
-				    
-				    
+		|(None, Some pi0) -> print_message Debug_medium ("[Master] Received a pi0 from worker " ^ (string_of_int source_rank) ^ "");
+
+				     while(List.mem_assoc source_rank !tilebuffer) do
+					begin
+						send_tile (List.assoc source_rank !tilebuffer) source_rank;
+						tilebuffer := (List.remove_assoc source_rank !tilebuffer);
+						print_message Debug_standard ("[Master] send a tile to worker " ^ (string_of_int source_rank) ^ "");
+					end
+				     done;
+				     send_continue source_rank;
+				  (*   send_terminate source_rank;*)
+				     
+
 		(*0ther cases*)
-		(*|_ -> raise (InternalError("have not implemented."));*)
+		|_ -> raise (InternalError("have not implemented."));
 	  end;
+	
 	(**)
-	if(!index = []) then begin check_covered := true end;
+	if(!index = []) 
+	  then 
+	  begin 
+	    check_covered := true;
+(*	    for i = 0 to (List.length !waittingList)-1 do
+		send_terminate (List.nth !waittingList i);
+	    done*)
+	  end;
 	
 	(*stopSplitting := true;*)
 	done;
 	
+	
+	
+	
+	print_message Debug_standard ("[Master] All workers done" );
+
 	(* Process the finalization *)
-	Cartography.bc_finalize ();;
+	Cartography.bc_finalize ();
+	
+	print_message Debug_standard ("[Master] Total waiting time     : " ^ (string_of_float (counter_master_waiting#value)) ^ " s");
+	print_message Debug_standard ("**************************************************");
+	
+	(* Process the result and return *)
+	let tiles = Cartography.bc_result () in
+	(* Render zones in a graphical form *)
+	if options#cart then (
+		Graphics.cartography (Input.get_model()) (Input.get_v0()) tiles (options#files_prefix ^ "_cart_patator")
+	) else (
+		print_message Debug_high "Graphical cartography not asked: graph not generated.";
+	);
 	()
 
 
@@ -555,7 +591,6 @@ let master () =
 let compute_next_pi0_sequentially more_pi0 limit_reached first_point tile_nature_option =
 	(* Start timer *)
 	counter_master_find_nextpi0#start ;
-
 	(* Case first point *)
 	if !first_point then(
 		print_message Debug_low ("[Some worker] This is the first pi0.");
@@ -570,52 +605,36 @@ let compute_next_pi0_sequentially more_pi0 limit_reached first_point tile_nature
 		(* Update the found pi0 flag *)
 		more_pi0 := found_pi0;
 	);
-	
 	(* Stop timer *)
 	counter_master_find_nextpi0#stop;
-	
 	()
-
-
 
 let init_slave rank size =
 	print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "] I am worker " ^ (string_of_int rank) ^ "/" ^ (string_of_int (size-1)) ^ ".");
 	()
 
-
 let worker() =
-	(* Perform initialization *)
-	Cartography.bc_initialize ();
 	(* Get the model *)
 	let model = Input.get_model() in
 	(* Retrieve the input options *)
 	let options = Input.get_options () in
-	
 	(* Init counters *)
 	counter_worker_waiting#init;
 	counter_worker_working#init;
-	
 	let rank = Mpi.comm_rank Mpi.comm_world in
 	let size = Mpi.comm_size Mpi.comm_world in
 	init_slave rank size;
-	
 	let finished = ref false in
-		
 	(* In the meanwhile: compute the initial state *)
 	let init_state = Reachability.get_initial_state_or_abort model in
-	
 
 	while (not !finished) do
-	
 		send_work_request ();
 		print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "] sent pull request to the master.");
-		
 		counter_worker_waiting#start;
 		let work = receive_work () in
 		counter_worker_waiting#stop;
-		
 		match work with
-		
 		| Subpart subpart -> 
 			print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "] received subpart from Master.");
 			
@@ -628,6 +647,10 @@ let worker() =
 			
 			(*initialize subpart*)
 			Input.set_v0 subpart;
+			
+			(* Perform initialization *)
+			Cartography.bc_initialize ();
+			
 			if debug_mode_greater Debug_medium then(
 				print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "] set v0:");
 				print_message Debug_medium (ModelPrinter.string_of_v0 model subpart);
@@ -637,70 +660,75 @@ let worker() =
 			Cartography.compute_initial_pi0();
 			
 			print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "] Initial pi0:");
-			   print_message Debug_medium   (ModelPrinter.string_of_pi0 model (Cartography.get_current_pi0()));
-
+			print_message Debug_medium   (ModelPrinter.string_of_pi0 model (Cartography.get_current_pi0()));
 			   
 			   (*let c = ref 0 in*)
- 			while (!more_pi0 && not !limit_reached) do 
-			    
+ 			while (!more_pi0 && not !limit_reached) do 			    
 			    
 			    let pi0 = Cartography.get_current_pi0() in
-			print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "] pi0:");
-			   print_message Debug_medium   (ModelPrinter.string_of_pi0 model pi0);
+			    print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "] pi0:");
+			    print_message Debug_medium   (ModelPrinter.string_of_pi0 model pi0);
 (*			    print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "]  pi0 " ^ (string_of_int (NumConst.to_int (pi0#get_value 0))) ^ "");
 			    print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "]  pi0 " ^ (string_of_int (NumConst.to_int (pi0#get_value 1))) ^ "");*)
 			    
-			    (*send_pi0_worker pi0;
-			    print_message Debug_medium ("send pi0 to worker ");*)
+			    (*send pi0 to master*)
+			    send_pi0_worker pi0;
+			    print_message Debug_medium ("send pi0 to master ");
+			
+			    (* Save debug mode *)
+			    let global_debug_mode = get_debug_mode() in 
 			    
-			    (* Set the new pi0 *)
-			Input.set_pi0 pi0;
-			
-			(* Save debug mode *)
-			let global_debug_mode = get_debug_mode() in 
-			
-			(* Prevent the debug messages (except in verbose modes high or total) *)
-				if not (debug_mode_greater Debug_total) then
-					set_debug_mode Debug_nodebug;
+			    let receivedContinue = ref false in
+			    while (not !receivedContinue) do
+			    let check = receive_work () in
+			    match check with
+				
+			    | Tile tile -> print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "] received Tile from Master.");
+						let b = Cartography.bc_process_im_result tile in
+						print_message Debug_standard ("[Worker " ^ (string_of_int rank) ^ "] received Tile from Master.");
+			    
+			    | Continue -> print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "] received continue tag from Master.");
+					  print_message Debug_standard ("[Worker] bug!!!!!!!!!");
+					  receivedContinue := true;
+			    done;
+			      
+			    Cartography.move_to_next_uncovered_pi0();
+			    (*let pi0 = Cartography.get_current_pi0() in*)
+			    
+			    (* Prevent the debug messages (except in verbose modes high or total) *)
+			    if not (debug_mode_greater Debug_total) 
+			      then
+				set_debug_mode Debug_nodebug;
 			
 			    (* Compute IM *)
 			    let im_result , _ = Reachability.inverse_method_gen model init_state in
 (* 			    raise (InternalError("stop here")); *)
 			    
-			(* Get the debug mode back *)
-			set_debug_mode global_debug_mode;
+			    print_message Debug_standard ("[Worker] gia bug!!!!!!!!!");
+			    
+			    (* Get the debug mode back *)
+			    set_debug_mode global_debug_mode;
 			    
 			    (* Process result *)
 			    let added = Cartography.bc_process_im_result im_result in
+			    
 			    (* Print some info *)
-				print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "]  Constraint really added? " ^ (string_of_bool added) ^ "");
-			
+			    print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "]  Constraint really added? " ^ (string_of_bool added) ^ "");
+			    
+			    (*send result to master*)
 			    send_result_worker im_result;
 			    
 			    (*!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1*)
 			    compute_next_pi0_sequentially more_pi0 limit_reached first_point (Some im_result.tile_nature);
 			    
-			   (* Cartography.find_next_pi0  (Some im_result.tile_nature);*)
-			    
-			   (*(* let moved = Cartography.move_to_next_uncovered_pi0 () in
-			      print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "]  Changed? " ^ (string_of_bool moved) ^ "");*)*)
-			    
-			    let pi01 = Cartography.get_current_pi0() in
-			    print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "]  pi01 " ^ (string_of_int (NumConst.to_int (pi01#get_value 0))) ^ "");
-			    print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "]  pi01 " ^ (string_of_int (NumConst.to_int (pi01#get_value 1))) ^ "");
-			    
-			    (* If finished: say goodbye *)
-			    if (!limit_reached || not !more_pi0) then begin finished := true; end;
-			   
-			    (*c := !c +1;
-			    print_message Debug_medium (" count!!!!!!!!!!!!!!!!!!!!!! " ^ (string_of_int (!c)) ^ "");*)
-			    
+			    (* Set the new pi0 *)
+			     Input.set_pi0 pi0;
+
+			     
+			     
 			done;
-			
-			(*Ask for more after finishing*)
-			send_work_request ();
-			
-			(*finished := true;*)
+		
+		| Tile tile -> print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "] I received subpart from Master.");
 			
 		| Terminate -> 
 			print_message Debug_medium (" Terminate ");
@@ -711,15 +739,7 @@ let worker() =
 		
 		
 	done;
-	 print_message Debug_medium (" debug!!!!!!!!!!!!!!!!11 ");
-	(*print_message Debug_medium (" debug here!!!!!!! end while");*)
-	
-	(* Print some information *)
-(*	let occupancy = counter_worker_working#value /. (counter_worker_working#value +. counter_worker_waiting#value) *. 100. in
-	print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "] I'm done.");
-	print_message Debug_standard ("[Worker " ^ (string_of_int rank) ^ "] Total waiting time     : " ^ (string_of_float (counter_worker_waiting#value)) ^ " s");
-	print_message Debug_standard ("[Worker " ^ (string_of_int rank) ^ "] Total working time     : " ^ (string_of_float (counter_worker_working#value)) ^ " s");
-	print_message Debug_standard ("[Worker " ^ (string_of_int rank) ^ "] Occupancy              : " ^ (string_of_float occupancy) ^ " %");*)
+
 ()
 ;;
 
@@ -747,7 +767,7 @@ let worker() =
 	v0#set_min 1 (NumConst.numconst_of_int 0);
 	v0#set_max 1 (NumConst.numconst_of_int 3);
 	v0#set_min 2 (NumConst.numconst_of_int 0);
-	v0#set_max 2 (NumConst.numconst_of_int 3);
+	v0#set_max 2 (NumConst.numconst_of_int 3);| Subpart
 	
 (*	v0#set_min 0 (NumConst.numconst_of_int 0); 
 	v0#set_max 0 (NumConst.numconst_of_int 4);
