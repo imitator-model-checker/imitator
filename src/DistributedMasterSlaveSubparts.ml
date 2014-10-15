@@ -71,20 +71,20 @@ let split s dimension =
 	let d = HyperRectangle.get_dimensions() -1 in
 	(* Sliptting subpart into 2 smaller subparts*)
 	(*Display information of s*)
-	print_message Debug_medium ("\nSplitting............! ");
+	(*print_message Debug_medium ("\nSplitting............! ");
 	print_message Debug_medium ("\ns infomation: ");
-	print_message Debug_medium ("Number dimensions is : " ^ (string_of_int d) );
-	for j = 0 to d do
+	print_message Debug_medium ("Number dimensions is : " ^ (string_of_int d) );*)
+	(*for j = 0 to d do
 	print_message Debug_medium ("Dimension " ^(string_of_int j)^" : "^ " min = " ^ (string_of_int (NumConst.to_int(s#get_min j)))^";"^ " max = " ^ (string_of_int (NumConst.to_int(s#get_max j))));
-	done;
+	done;*)
 	(*check pi0 in subpart*)
-	let totalpi0 = getTotalPi0 s d in
-	print_message Debug_medium ("Total pi0s in s is : " ^ (string_of_int totalpi0) );
+	(*let totalpi0 = getTotalPi0 s d in
+	print_message Debug_medium ("Total pi0s in s is : " ^ (string_of_int totalpi0) );*)
 	(**********************************end printing***************************************************)
 	let max_d_l = ref 0 in
 	(*count from zero so that add 1 unit*)
 	max_d_l := ( (NumConst.to_int(s#get_max dimension)) - (NumConst.to_int(s#get_min dimension)) +1 );
-	if (!max_d_l = 1) then raise (Ex ("the length is minimum, could not split smaller "));
+	(*if (!max_d_l = 1) then raise (Ex ("the length is minimum, could not split smaller "));*)
 	print_message Debug_medium ("\ndetected Max dimension length in this subpart is : " ^ (string_of_int (!max_d_l)) ^ " unit at dimension " ^ (string_of_int (dimension))); 
 	  (*create new subparts*)
 	  let s1 = new HyperRectangle.hyper_rectangle in
@@ -120,7 +120,7 @@ let split s dimension =
 	      end
 	   done;
 	(*Display information of s1*)
-	print_message Debug_medium ("\ns1 infomation: ");
+	(*print_message Debug_medium ("\ns1 infomation: ");
 	for i = 0 to d do
 	print_message Debug_medium ("Dimension " ^(string_of_int i)^" : "^ " min = " ^ (string_of_int (NumConst.to_int(s1#get_min i)))^";"^ " max = " ^ (string_of_int (NumConst.to_int(s1#get_max i))));
 	done;
@@ -134,7 +134,7 @@ let split s dimension =
 	done;
 	(*check pi0 in subpart*)
 	let totalpi0s2 = getTotalPi0 s2 d in
-	print_message Debug_medium ("Total pi0s in s2 is : " ^ (string_of_int totalpi0s2) );
+	print_message Debug_medium ("Total pi0s in s2 is : " ^ (string_of_int totalpi0s2) );*)
 	(***************************************************************************)
 	[s1;s2];;
 	()
@@ -416,7 +416,7 @@ let master () =
 	(*** THE ALGORITHM STARTS HERE ***)
 	while (not !check_covered) do
 	  begin
-		if(!waittingList != []) 
+		(*if(!waittingList != []) 
 		then
 		begin
 			for i = 0 to (List.length !waittingList)-1 do
@@ -430,7 +430,7 @@ let master () =
 				     done;
 			done;
 			
-		end;
+		end;*)
 		
 		(* Get the pull_request *)
 		let source_rank, tile_nature_option, pi0 = (receive_pull_request_subpart()) in
@@ -463,12 +463,12 @@ let master () =
 				  begin
 
 					
-					waittingList := !waittingList@[source_rank];
+					(*waittingList := !waittingList@[source_rank];
 					print_message Debug_standard ("[Master]  worker " ^ (string_of_int source_rank) ^ " go to waittingList!!!");
-					print_message Debug_standard ("[Master]  waitting list size : " ^ (string_of_int (List.length !waittingList)) );
+					print_message Debug_standard ("[Master]  waitting list size : " ^ (string_of_int (List.length !waittingList)) );*)
 
-					(*print_message Debug_standard ("[Master]  worker " ^ (string_of_int source_rank) ^ " terminated!!!");
-					send_terminate source_rank;*)
+					print_message Debug_standard ("[Master]  worker " ^ (string_of_int source_rank) ^ " terminated!!!");
+					send_terminate source_rank;
 
 				      
 				      
@@ -501,10 +501,11 @@ let master () =
 						print_message Debug_standard ("[Master] send a tile to worker " ^ (string_of_int source_rank) ^ "");
 					end
 				     done;
-				
-				end
-				else
-				begin
+				     
+				(*send_continue source_rank;*)
+				end;
+				(*else
+				begin 
 				     if( !waittingList != [] ) then
 				      begin
 					print_message Debug_medium ("[Master] waitting List : " ^ (string_of_int (List.length !waittingList) ) ^ "");
@@ -513,11 +514,11 @@ let master () =
 					let max_size = get_points_in_subpart s in
 					let done_points = done_points_in_subpart s pi0 in
 					let remain_points = max_size - done_points in
-					 print_message Debug_medium ("[Master] Splitting stage....... ");
+					 print_message Debug_standard ("[Master] Splitting ....... ");
 					if(remain_points > 1) 
 					  then
 					  begin
-					    print_message Debug_medium ("[Master] Splitting stage....... ");
+					    print_message Debug_medium ("[Master] Splitting ....... ");
 					    let pi0arr = pval2array pi0 in
 					    let newSubparts = dynamicSplitSubpart s pi0arr in
 					    (*send back to this worker*)
@@ -532,7 +533,7 @@ let master () =
 					    (*print_message Debug_standard ("[Master] All workers done" );*)
 					  end
 				     end;
-				end;
+				end;*)
 				     send_continue source_rank;
 
 		(*0ther cases*)
@@ -544,9 +545,9 @@ let master () =
 	  then 
 	  begin 
 	    check_covered := true;
-	    for i = 0 to (List.length !waittingList)-1 do
+(*	    for i = 0 to (List.length !waittingList)-1 do
 		send_terminate (List.nth !waittingList i);
-	    done
+	    done*)
 	  end;
 	
 	(*stopSplitting := true;*)
@@ -724,9 +725,9 @@ let worker() =
 			     
 			done;
 		
-		| Tile tile -> 	print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "] I received subpart from Master.");
+		(*| Tile tile -> 	print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "] I received subpart from Master.");
 				let b = Cartography.bc_process_im_result tile in
-				print_message Debug_standard ("[Worker " ^ (string_of_int rank) ^ "] received Tile from Master.");
+				print_message Debug_standard ("[Worker " ^ (string_of_int rank) ^ "] received Tile from Master.");*)
 			
 		| Terminate -> 
 				print_message Debug_medium (" Terminate ");
