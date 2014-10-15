@@ -463,12 +463,12 @@ let master () =
 				  begin
 
 					
-					(*waittingList := !waittingList@[source_rank];
+					waittingList := !waittingList@[source_rank];
 					print_message Debug_standard ("[Master]  worker " ^ (string_of_int source_rank) ^ " go to waittingList!!!");
-					print_message Debug_standard ("[Master]  waitting list size : " ^ (string_of_int (List.length !waittingList)) );*)
+					print_message Debug_standard ("[Master]  waitting list size : " ^ (string_of_int (List.length !waittingList)) );
 
-					print_message Debug_standard ("[Master]  worker " ^ (string_of_int source_rank) ^ " terminated!!!");
-					send_terminate source_rank;
+					(*print_message Debug_standard ("[Master]  worker " ^ (string_of_int source_rank) ^ " terminated!!!");
+					send_terminate source_rank;*)
 
 				      
 				      
@@ -503,8 +503,8 @@ let master () =
 				     done;
 				     
 				(*send_continue source_rank;*)
-				end;
-				(*else
+				end
+				else
 				begin 
 				     if( !waittingList != [] ) then
 				      begin
@@ -533,7 +533,7 @@ let master () =
 					    (*print_message Debug_standard ("[Master] All workers done" );*)
 					  end
 				     end;
-				end;*)
+				end;
 				     send_continue source_rank;
 
 		(*0ther cases*)
@@ -545,9 +545,9 @@ let master () =
 	  then 
 	  begin 
 	    check_covered := true;
-(*	    for i = 0 to (List.length !waittingList)-1 do
+	    for i = 0 to (List.length !waittingList)-1 do
 		send_terminate (List.nth !waittingList i);
-	    done*)
+	    done
 	  end;
 	
 	(*stopSplitting := true;*)
@@ -665,7 +665,28 @@ let worker() =
 (*			    print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "]  pi0 " ^ (string_of_int (NumConst.to_int (pi0#get_value 0))) ^ "");
 			    print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "]  pi0 " ^ (string_of_int (NumConst.to_int (pi0#get_value 1))) ^ "");*)
 			    
+			    (*send pi0 to master*)
+			    send_pi0_worker !pi0;
+			    print_message Debug_medium ("send pi0 to master ");
 			    
+			    let receivedContinue = ref false in
+			    while (not !receivedContinue) do
+			    let check = receive_work () in
+			    match check with
+				
+			    | Tile tile -> 		print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "] received Tile from Master.");
+							let b = Cartography.bc_process_im_result tile in
+							print_message Debug_standard ("[Worker " ^ (string_of_int rank) ^ "] received Tile from Master.");
+			    
+			    | Continue ->  		print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "] received continue tag from Master.");
+							(*Cartography.move_to_next_uncovered_pi0();*)
+							(*pi0 := Cartography.get_current_pi0();*)
+							receivedContinue := true;
+			    
+			    | Subpart subpart ->	print_message Debug_standard ("[Worker " ^ (string_of_int rank) ^ "] received scaled subpart tag from Master.");
+							Input.set_v0 subpart;				
+			
+			    done;
 			
 			    (* Save debug mode *)
 			    let global_debug_mode = get_debug_mode() in 
@@ -700,8 +721,8 @@ let worker() =
 			    (* Set the new pi0 *)
 			     Input.set_pi0 !pi0;
 
-			    (*send pi0 to master*)
-			    send_pi0_worker !pi0;
+			        (*send pi0 to master*)
+	(*		    send_pi0_worker !pi0;
 			    print_message Debug_medium ("send pi0 to master ");
 			    
 			    let receivedContinue = ref false in
@@ -721,7 +742,8 @@ let worker() =
 			    | Subpart subpart ->	print_message Debug_standard ("[Worker " ^ (string_of_int rank) ^ "] received scaled subpart tag from Master.");
 							Input.set_v0 subpart;				
 			
-			    done;
+			    done;*)
+			
 			     
 			done;
 		
