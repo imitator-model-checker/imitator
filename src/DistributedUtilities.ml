@@ -32,6 +32,7 @@ type pull_request =
 	(*Hoang Gia new tags*)
 	| Tile of rank * Reachability.im_result  (*the same with PullAndResult*)
 	| Pi0 of rank * AbstractModel.pi0 (*the same with work at Master tag*)
+	| UpdateRequest of rank
 
 
 
@@ -59,6 +60,7 @@ type mpi_slave_tag =
 	(*Hoang Gia new tags*)
 	| Slave_tile_tag
 	| Slave_pi0_tag
+	| Slave_updaterequest_tag
 
 (** Tags sent by master *)
 type mpi_master_tag =
@@ -464,6 +466,7 @@ let int_of_slave_tag = function
 	(*Hoang Gia new tags*)
 	| Slave_tile_tag -> 4
 	| Slave_pi0_tag -> 5
+	| Slave_updaterequest_tag -> 6
 	
 let int_of_master_tag = function
 	| Master_data_tag -> 17
@@ -482,6 +485,7 @@ let slave_tag_of_int = function
 	(*Hoang Gia new tags*)
 	| 4 -> Slave_tile_tag
 	| 5 -> Slave_pi0_tag
+	| 6 -> Slave_updaterequest_tag
 	| other -> raise (InternalError ("Impossible match '" ^ (string_of_int other) ^ "' in slave_tag_of_int."))
 
 let master_tag_of_int = function
@@ -646,6 +650,9 @@ let send_pi0_worker (pi0 : AbstractModel.pi0) =
 let send_work_request () =
 	Mpi.send (rank()) masterrank (int_of_slave_tag Slave_work_tag) Mpi.comm_world
 	
+let send_update_request () =
+	Mpi.send (rank()) masterrank (int_of_slave_tag Slave_updaterequest_tag) Mpi.comm_world
+	
 	
 (*Hoang Gia send subpart by the Master*)
 let send_subpart (subpart : HyperRectangle.hyper_rectangle) slave_rank =
@@ -701,6 +708,10 @@ let receive_pull_request () =
   | Slave_work_tag ->
      print_message Debug_medium ("[Master] Received Slave_work_tag from [Worker " ^ ( string_of_int source_rank) ^ "] : " ^  ( string_of_int l ));
      PullOnly (* source_rank *) l
+     
+  | Slave_updaterequest_tag ->
+     print_message Debug_medium ("[Master] Received Slave_updaterequest_tag from [Worker " ^ ( string_of_int source_rank) ^ "] : " ^  ( string_of_int l ));
+     UpdateRequest (* source_rank *) l
      
      
   (*Hoang Gia new tags*)  

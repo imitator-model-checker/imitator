@@ -25,6 +25,7 @@ type pull_request =
 	(*Hoang Gia new tags*)
 	| Tile of rank * Reachability.im_result
 	| Pi0 of rank * AbstractModel.pi0
+	| UpdateRequest of rank
 	
 
 
@@ -67,6 +68,8 @@ val send_pi0 : AbstractModel.pi0 -> rank -> unit
 val send_pi0_worker : AbstractModel.pi0 -> unit
 
 val send_work_request : unit -> unit
+
+val send_update_request : unit -> unit
 
 val send_subpart : HyperRectangle.hyper_rectangle -> rank -> unit
 

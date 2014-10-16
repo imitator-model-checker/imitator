@@ -352,7 +352,7 @@ let dynamicSplitSubpart (s : HyperRectangle.hyper_rectangle) pi0 : HyperRectangl
 	()*)
 	
 
-let receive_pull_request_subpart () =
+(*let receive_pull_request_subpart () =
 	print_message Debug_high ("[Master] Entered function 'receive_pull_request_subpart'...");
 	
 	counter_master_waiting#start;
@@ -387,7 +387,7 @@ let receive_pull_request_subpart () =
 	      (source_rank , None , Some pi0)
 	      
 	| _ ->  raise (InternalError("have not implemented.")) 
-	()
+	()*)
 
 (* hey how are yous *)
 
@@ -454,7 +454,7 @@ let master () =
 	
 	(******************Adjustable values********************)
 	(* number of subpart want to initialize in the first time *)
-	let np = 1 in
+	let np = 0 in
 	(*depend on size of model*)
 	let dynamicSplittingMode = ref true in
 	(*******************************************************)
@@ -484,14 +484,15 @@ let master () =
 		end;*)
 		
 		(* Get the pull_request *)
-		let source_rank, tile_nature_option, pi0 = (receive_pull_request_subpart()) in
+		(*let source_rank, tile_nature_option, pi0 = (receive_pull_request_subpart()) in*)
 		print_message Debug_medium ("[Master] heloooooo ");
 		
-		let msg =  (tile_nature_option, pi0) in
+		let pull_request = receive_pull_request () in
 		(*send_terminate source_rank;*)
-		match msg with 
+		match pull_request with 
 		(*Pull Tag*)
-		(None , None) -> print_message Debug_medium ("[Master] Received a pull request from worker " ^ (string_of_int source_rank) ^ "");
+		| PullOnly source_rank -> 
+				 print_message Debug_medium ("[Master] Received a pull request from worker " ^ (string_of_int source_rank) ^ "");
 				 (* check to delete if the worker comeback *)
 				 if(List.mem_assoc source_rank !index) then
 				  begin
@@ -513,7 +514,6 @@ let master () =
 				 else
 				  begin
 
-					
 					waittingList := !waittingList@[source_rank];
 					print_message Debug_standard ("[Master]  worker " ^ (string_of_int source_rank) ^ " go to waittingList!!!");
 					print_message Debug_standard ("[Master]  waitting list size : " ^ (string_of_int (List.length !waittingList)) );
@@ -521,11 +521,10 @@ let master () =
 					(*print_message Debug_standard ("[Master]  worker " ^ (string_of_int source_rank) ^ " terminated!!!");
 					send_terminate source_rank;*)
 
-				      
-				      
 				  end
 		(*Tile Tag*)
-		|(Some tile, None) -> print_message Debug_medium ("[Master] Received a tile from worker " ^ (string_of_int source_rank) ^ "");
+		| Tile (source_rank , tile) -> 
+				   print_message Debug_medium ("[Master] Received a tile from worker " ^ (string_of_int source_rank) ^ "");
 				   (*check duplicated tile*)
 				   let b = Cartography.bc_process_im_result tile in
 				   if(b) then
@@ -541,26 +540,10 @@ let master () =
 				    end;
 
 		(*Pi0 Tag*)
-		|(None, Some pi0) -> print_message Debug_medium ("[Master] Received a pi0 from worker " ^ (string_of_int source_rank) ^ "");
-				(*if(List.mem_assoc source_rank !tilebuffer) 
-				then
-				begin*)
-				     while(List.mem_assoc source_rank !tilebuffer) do
-					begin
-						send_tile (List.assoc source_rank !tilebuffer) source_rank;
-						tilebuffer := (List.remove_assoc source_rank !tilebuffer);
-						print_message Debug_standard ("[Master] send a tile to worker " ^ (string_of_int source_rank) ^ "");
-					end
-				     done;
-				     
-				(*(*send_continue source_rank;*)
-				end
-				else*)
-				(*check this pi0 covered or not*)
+		| Pi0 (source_rank , pi0) -> 
+				print_message Debug_medium ("[Master] Received a pi0 from worker " ^ (string_of_int source_rank) ^ "");
 				let found_pi0 = ref false in
 				Cartography.test_pi0_uncovered pi0 found_pi0 ;
-				(*if not !found_pi0 then
-				begin *)
 				     if( !waittingList != [] && !found_pi0) then
 				      begin
 					print_message Debug_medium ("[Master] waitting List : " ^ (string_of_int (List.length !waittingList) ) ^ "");
@@ -588,10 +571,21 @@ let master () =
 					    (*print_message Debug_standard ("[Master] All workers done" );*)
 					  end
 				     end;
-				(*end;*)
 				     send_continue source_rank
 				     
-
+		| UpdateRequest source_rank ->
+				print_message Debug_standard ("[Master] UpdateRequest List ");
+				while(List.mem_assoc source_rank !tilebuffer) do
+				  begin
+				    send_tile (List.assoc source_rank !tilebuffer) source_rank;
+				    tilebuffer := (List.remove_assoc source_rank !tilebuffer);
+				    print_message Debug_standard ("[Master] send a tile to worker " ^ (string_of_int source_rank) ^ "");
+				  end
+				done;
+				send_continue source_rank
+		
+				     
+				     
 		(*0ther cases*)
 		|_ -> raise (InternalError("have not implemented."));
 	  end;
@@ -722,8 +716,14 @@ let worker() =
 			    print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "]  pi0 " ^ (string_of_int (NumConst.to_int (pi0#get_value 1))) ^ "");*)
 			    
 			    (*send pi0 to master*)
-			    send_pi0_worker !pi0;
-			    print_message Debug_medium ("send pi0 to master ");
+			    (*send_pi0_worker !pi0;*)
+(* 			    print_message Debug_medium ("send pi0 to master "); *)
+
+			    (*print_message Debug_standard ("[Master] UpdateRequest List 1111");*)
+			    
+			    send_update_request();
+			    
+			    print_message Debug_medium (" send_update_request to master ");
 			    
 			    let receivedContinue = ref false in
 			    while (not !receivedContinue) do
@@ -740,16 +740,12 @@ let worker() =
 							print_message Debug_standard ("[Worker " ^ (string_of_int rank) ^ "] received Tile from Master.");
 			    
 			    | Continue ->  		print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "] received continue tag from Master.");
-							(*Cartography.move_to_next_uncovered_pi0();*)
-							(*pi0 := Cartography.get_current_pi0();*)
-							receivedContinue := true;
-			    
-			    | Subpart subpart ->	print_message Debug_standard ("[Worker " ^ (string_of_int rank) ^ "] received scaled subpart tag from Master.");
-							Input.set_v0 subpart;				
+							receivedContinue := true;			
 			
 			    done;
 			   
-			  pi0 := (Cartography.get_current_pi0());
+			    pi0 := (Cartography.get_current_pi0());
+			  
 			     (* Set the new pi0 *)
 			     Input.set_pi0 !pi0;
 			
@@ -782,44 +778,34 @@ let worker() =
 				send_result_worker im_result;
 			    end;
 			    
-			    (*compute_next_pi0_sequentially more_pi0 limit_reached first_point (Some im_result.tile_nature);*)
-			   
-
-			    (*send pi0 to master*)
-(*			    send_pi0_worker !pi0;
-			    print_message Debug_medium ("send pi0 to master ");
-			    
-			    
-			    let receivedContinue = ref false in
-			    while (not !receivedContinue) do
-			    let check = receive_work () in
-			    match check with
-				
-			    | Tile tile -> 		print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "] received Tile from Master.");
-							let b = Cartography.bc_process_im_result tile in
-							(* compute_next_pi0_sequentially more_pi0 limit_reached first_point (Some tile.tile_nature);*)
-							print_message Debug_standard ("[Worker " ^ (string_of_int rank) ^ "] received Tile from Master.");
-			    
-			    | Continue ->  		print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "] received continue tag from Master.");
-							(*Cartography.move_to_next_uncovered_pi0();*)
-							(*pi0 := Cartography.get_current_pi0();*)
-							receivedContinue := true;
-			    
-			    | Subpart subpart ->	print_message Debug_standard ("[Worker " ^ (string_of_int rank) ^ "] received scaled subpart tag from Master.");
-							Input.set_v0 subpart;				
-			
-			    done;*)
 			    
 			    
 			    (*!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1*)
 			    compute_next_pi0_sequentially more_pi0 limit_reached first_point (Some im_result.tile_nature);
+			    
+			    pi0 := (Cartography.get_current_pi0());
+			  
+			    (*send pi0 to master*)
+			    send_pi0_worker !pi0;
+(* 			    print_message Debug_medium ("send pi0 to master "); *)
+			    let receivedContinue1 = ref false in
+			    while (not !receivedContinue1) do
+			    let check1 = receive_work () in
+			    match check1 with
+			    
+			    | Continue ->  		print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "] received continue tag from Master.");
+							receivedContinue1 := true;
+			    
+			    | Subpart subpart ->	print_message Debug_standard ("[Worker " ^ (string_of_int rank) ^ "] received scaled subpart tag from Master.");
+							Input.set_v0 subpart;				
+			    done;
 			
 			     
 			done;
 		
-		| Tile tile -> 	print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "] I received subpart from Master.");
+(*		| Tile tile -> 	print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "] I received subpart from Master.");
 				let b = Cartography.bc_process_im_result tile in
-				print_message Debug_standard ("[Worker " ^ (string_of_int rank) ^ "] received Tile from Master.");
+				print_message Debug_standard ("[Worker " ^ (string_of_int rank) ^ "] received Tile from Master.");*)
 			
 		| Terminate -> 
 				print_message Debug_medium (" Terminate ");
