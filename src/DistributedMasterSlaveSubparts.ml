@@ -71,21 +71,21 @@ let split s dimension =
 	let d = HyperRectangle.get_dimensions() -1 in
 	(* Sliptting subpart into 2 smaller subparts*)
 	(*Display information of s*)
-	(*print_message Debug_medium ("\nSplitting............! ");
-	print_message Debug_medium ("\ns infomation: ");
-	print_message Debug_medium ("Number dimensions is : " ^ (string_of_int d) );*)
-	(*for j = 0 to d do
-	print_message Debug_medium ("Dimension " ^(string_of_int j)^" : "^ " min = " ^ (string_of_int (NumConst.to_int(s#get_min j)))^";"^ " max = " ^ (string_of_int (NumConst.to_int(s#get_max j))));
-	done;*)
+(*	print_message Debug_standard ("\nSplitting............! ");
+	print_message Debug_standard ("\ns infomation: ");
+	print_message Debug_standard ("Number dimensions is : " ^ (string_of_int d) );
+	for j = 0 to d do
+	print_message Debug_standard ("Dimension " ^(string_of_int j)^" : "^ " min = " ^ (string_of_int (NumConst.to_int(s#get_min j)))^";"^ " max = " ^ (string_of_int (NumConst.to_int(s#get_max j))));
+	done;
 	(*check pi0 in subpart*)
-	(*let totalpi0 = getTotalPi0 s d in
-	print_message Debug_medium ("Total pi0s in s is : " ^ (string_of_int totalpi0) );*)
+	let totalpi0 = getTotalPi0 s d in
+	print_message Debug_standard ("Total pi0s in s is : " ^ (string_of_int totalpi0) );*)
 	(**********************************end printing***************************************************)
 	let max_d_l = ref 0 in
 	(*count from zero so that add 1 unit*)
 	max_d_l := ( (NumConst.to_int(s#get_max dimension)) - (NumConst.to_int(s#get_min dimension)) +1 );
-	(*if (!max_d_l = 1) then raise (Ex ("the length is minimum, could not split smaller "));*)
-	print_message Debug_medium ("\ndetected Max dimension length in this subpart is : " ^ (string_of_int (!max_d_l)) ^ " unit at dimension " ^ (string_of_int (dimension))); 
+	if (!max_d_l = 1) then raise (Ex ("the length is minimum, could not split smaller "));
+	print_message Debug_standard ("\ndetected Max dimension length in this subpart is : " ^ (string_of_int (!max_d_l)) ^ " unit at dimension " ^ (string_of_int (dimension))); 
 	  (*create new subparts*)
 	  let s1 = new HyperRectangle.hyper_rectangle in
 	  let s2 = new HyperRectangle.hyper_rectangle in
@@ -120,21 +120,21 @@ let split s dimension =
 	      end
 	   done;
 	(*Display information of s1*)
-	(*print_message Debug_medium ("\ns1 infomation: ");
+(*	print_message Debug_standard ("\ns1 infomation: ");
 	for i = 0 to d do
-	print_message Debug_medium ("Dimension " ^(string_of_int i)^" : "^ " min = " ^ (string_of_int (NumConst.to_int(s1#get_min i)))^";"^ " max = " ^ (string_of_int (NumConst.to_int(s1#get_max i))));
+	print_message Debug_standard ("Dimension " ^(string_of_int i)^" : "^ " min = " ^ (string_of_int (NumConst.to_int(s1#get_min i)))^";"^ " max = " ^ (string_of_int (NumConst.to_int(s1#get_max i))));
 	done;
 	(*check pi0 in subpart*)
 	let totalpi0s1 = getTotalPi0 s1 d in
-	print_message Debug_medium ("Total pi0s in s1 is : " ^ (string_of_int totalpi0s1) );
+	print_message Debug_standard ("Total pi0s in s1 is : " ^ (string_of_int totalpi0s1) );
 	(*Display information of s2*)
-	print_message Debug_medium ("\ns2 infomation: ");
+	print_message Debug_standard ("\ns2 infomation: ");
 	for i = 0 to d do
-	print_message Debug_medium ("Dimension " ^(string_of_int i)^" : "^ " min = " ^ (string_of_int (NumConst.to_int(s2#get_min i)))^";"^ " max = " ^ (string_of_int (NumConst.to_int(s2#get_max i))));
+	print_message Debug_standard ("Dimension " ^(string_of_int i)^" : "^ " min = " ^ (string_of_int (NumConst.to_int(s2#get_min i)))^";"^ " max = " ^ (string_of_int (NumConst.to_int(s2#get_max i))));
 	done;
 	(*check pi0 in subpart*)
 	let totalpi0s2 = getTotalPi0 s2 d in
-	print_message Debug_medium ("Total pi0s in s2 is : " ^ (string_of_int totalpi0s2) );*)
+	print_message Debug_standard ("Total pi0s in s2 is : " ^ (string_of_int totalpi0s2) );*)
 	(***************************************************************************)
 	[s1;s2];;
 	()
@@ -183,14 +183,14 @@ let intialize_Subparts (v0 : HyperRectangle.hyper_rectangle) (n : int) =
 	  (*check if length every edge if equals to unit*)
 	  if (!max_pi0s != 1) then 
 	  begin
-	    print_message Debug_medium ("\nMax pi0s in list is : " ^ (string_of_int !max_pi0s) ^ " in subpart : " ^ (string_of_int !subno));
+	    print_message Debug_standard ("\nMax pi0s in list is : " ^ (string_of_int !max_pi0s) ^ " in subpart : " ^ (string_of_int !subno));
 	    (*get list split subparts*)
 	    let newSubpartList = sliptLongestDimensionSubpart (at !subparts !subno) in (*!subno*)
 	    (*remove old subpart*)
 	    subparts := (remove_at !subparts !subno);
 	    (*add new subparts*)
 	    subparts := !subparts@newSubpartList;
-	    print_message Debug_medium ("\nList length : " ^ (string_of_int (List.length !subparts) ) );
+	    print_message Debug_standard ("\nList length : " ^ (string_of_int (List.length !subparts) ) );
 	   end
 	   else
 	   begin
@@ -272,7 +272,7 @@ let get_next_sequential_pi0_in_subpart pi0 (s : HyperRectangle.hyper_rectangle) 
 
 (* dynamic split subpart *)
 let dynamicSplitSubpart (s : HyperRectangle.hyper_rectangle) pi0 : HyperRectangle.hyper_rectangle list =
-	print_message Debug_medium ("\n entering dynamic splitting process" );
+	print_message Debug_standard ("\n entering dynamic splitting process" );
 	let pi0 = get_next_sequential_pi0_in_subpart pi0 s in 
 	let notFound = ref true in
 	let max_d_l = ref 0 in
@@ -280,7 +280,7 @@ let dynamicSplitSubpart (s : HyperRectangle.hyper_rectangle) pi0 : HyperRectangl
 	let lst = ref [] in
 	while( !notFound (*&& (!j != -1)*) ) do
 	  begin		
-	    if(!j = -1) then raise (Ex (" there are only 1 pi0 left in subpart, could not split! "));
+	    (*if(!j = -1) then raise (Ex (" there are only 1 pi0 left in subpart, could not split! "));*)
 	    (*if current pi0 at max dimension j but the Min at demension j of subpart is lower, split all the done pi0 below j*)
 	    (*update subpart*)
 	    if ( NumConst.to_int(s#get_min (!j)) < pi0.(!j) ) then begin s#set_min (!j) (NumConst.numconst_of_int (pi0.(!j))) end;
@@ -288,7 +288,7 @@ let dynamicSplitSubpart (s : HyperRectangle.hyper_rectangle) pi0 : HyperRectangl
 	    (*split subpart if the remain distance from pi0 to max dimension at leat 2 points*)
 	    if( !max_d_l > 1 ) then
 	      begin
-		print_message Debug_medium ("\nBegin split at demension : " ^ (string_of_int (!j) ) );
+		print_message Debug_standard ("\nBegin split at demension : " ^ (string_of_int (!j) ) );
 		lst := split s !j;
 		notFound := false ;
 	      end;
@@ -299,6 +299,57 @@ let dynamicSplitSubpart (s : HyperRectangle.hyper_rectangle) pi0 : HyperRectangl
 	!lst;;
 	()
 	
+(*dynamic split subpart 2*)
+(*let splitSubpartOnFly2 (s : HyperRectangle.hyper_rectangle) pi0 : HyperRectangle.hyper_rectangle list =
+	print_message Debug_standard ("\n entering dynamic splitting process" );
+	
+	let pi0 = get_next_sequential_pi0_in_subpart pi0 s in 
+	(*check*)
+	let b = checkSplitCondition pi0 s in
+	if(b) then  raise (Ex (" This Subpart do not satisfy condition! "));
+
+	let s = ref s in
+	let notFound = ref true in
+	(*split the larger demension first (last)*)
+	let j = ref (HyperRectangle.get_dimensions()-1) in
+	while(!notFound) do
+	(*for i = (HyperRectangle.get_dimensions() -1) downto 0 do*)
+	  begin
+	    print_message Debug_standard ("\n entering while nth :" ^ (string_of_int (!j) ));
+	    (*if the current point lower the dimension j then take the range between pi0 to Max dimension J for splitting*)
+	    if( NumConst.to_int(!s#get_max (!j)) > pi0.(!j) ) then
+	      begin
+	      print_message Debug_standard ("\nBegin split at demension : " ^ (string_of_int (!j) ) );
+	      let max_d_l = ref ( (NumConst.to_int(!s#get_max (!j)) - pi0.(!j) ) +1 ) in
+	      (*print_message Debug_standard ("\n max_d_l :" ^ (string_of_int (!max_d_l) ));*)
+	      !s#set_min (!j) (NumConst.numconst_of_int (pi0.(!j))) ;
+
+	      (********************************************************)
+	      notFound := false ;
+	      (*[s1;s2];*)
+	      end
+	      else (*note :these cases for pi0 = Max at dimension j or raise exception for pi0 > Max*)
+		begin(
+		print_message Debug_standard ("\n entering pi0 = Max" );
+		(*if current pi0 at max dimension j but the Min at demension j of subpart is lower, split all the done pi0 below j*)
+		if ( NumConst.to_int(!s#get_min (!j)) != pi0.(!j) ) then
+		  begin
+		  !s#set_min (!j) (NumConst.numconst_of_int (pi0.(!j))) ;
+		  print_message Debug_standard ("\n min_d_l :" ^ (string_of_int ( NumConst.to_int(!s#get_min !j)) ));
+		  print_message Debug_standard ("\n max_d_l :" ^ (string_of_int ( NumConst.to_int(!s#get_max !j)) ));
+		  end;
+		 (*********************************************)
+		)end;
+	      j := (!j - 1) ;
+	      if(!j = -1) then
+	      begin
+	      notFound := false ;
+		(*raise (Ex ("Could not split smaller and The requried Suparts/Workers larger the points in v0! Please Check Again! :P "));*)
+	      end;
+	  end(*end while*)
+	done;
+	[s1;s2];;
+	()*)
 	
 
 let receive_pull_request_subpart () =
@@ -318,21 +369,21 @@ let receive_pull_request_subpart () =
 
 	| OutOfBound source_rank ->
 		print_message Debug_low ("[Master] Received OutOfBound request...");
-		(* FAIRE QUELQUE CHOSE POUR DIRE QU'UN POINT N'A PAS MARCHÉ *)
+		(* FAIRE QUELQUE CHOSE POUR DIRE QU'UN POINT N'A PAS MARCH? *)
 		raise (InternalError("OutOfBound not implemented."));(*;
 		source_rank, None*)
 		
 	(*Hoang Gia new messages*)
 	| Tile (source_rank , im_result) ->
 		print_message Debug_low ("[Master] Received Tile ...");
-		print_message Debug_medium ("\n[Master] Received the following constraint from worker " ^ (string_of_int source_rank));
+		print_message Debug_standard ("\n[Master] Received the following constraint from worker " ^ (string_of_int source_rank));
 		(*Cartography.bc_process_im_result im_result;*) (*send to all workers*)
 		(* Return source rank *)
 		(source_rank, Some im_result , None )
 	
 	| Pi0 (source_rank , pi0) ->
 	      print_message Debug_low ("[Master] Received pi0 ...");
-	      print_message Debug_medium ("\n[Master] Received the following pi0 from worker " ^ (string_of_int source_rank));
+	      print_message Debug_standard ("\n[Master] Received the following pi0 from worker " ^ (string_of_int source_rank));
 	      (source_rank , None , Some pi0)
 	      
 	| _ ->  raise (InternalError("have not implemented.")) 
@@ -416,7 +467,7 @@ let master () =
 	(*** THE ALGORITHM STARTS HERE ***)
 	while (not !check_covered) do
 	  begin
-		(*if(!waittingList != []) 
+(*		if(!waittingList != []) 
 		then
 		begin
 			for i = 0 to (List.length !waittingList)-1 do
@@ -491,9 +542,9 @@ let master () =
 
 		(*Pi0 Tag*)
 		|(None, Some pi0) -> print_message Debug_medium ("[Master] Received a pi0 from worker " ^ (string_of_int source_rank) ^ "");
-				if(List.mem_assoc source_rank !tilebuffer) 
+				(*if(List.mem_assoc source_rank !tilebuffer) 
 				then
-				begin
+				begin*)
 				     while(List.mem_assoc source_rank !tilebuffer) do
 					begin
 						send_tile (List.assoc source_rank !tilebuffer) source_rank;
@@ -502,11 +553,15 @@ let master () =
 					end
 				     done;
 				     
-				(*send_continue source_rank;*)
+				(*(*send_continue source_rank;*)
 				end
-				else
-				begin 
-				     if( !waittingList != [] ) then
+				else*)
+				(*check this pi0 covered or not*)
+				let found_pi0 = ref false in
+				Cartography.test_pi0_uncovered pi0 found_pi0 ;
+				(*if not !found_pi0 then
+				begin *)
+				     if( !waittingList != [] && not !found_pi0) then
 				      begin
 					print_message Debug_medium ("[Master] waitting List : " ^ (string_of_int (List.length !waittingList) ) ^ "");
 					(*compute the remain points int this subpart*)
@@ -533,8 +588,9 @@ let master () =
 					    (*print_message Debug_standard ("[Master] All workers done" );*)
 					  end
 				     end;
-				end;
-				     send_continue source_rank;
+				(*end;*)
+				     send_continue source_rank
+				     
 
 		(*0ther cases*)
 		|_ -> raise (InternalError("have not implemented."));
@@ -676,6 +732,11 @@ let worker() =
 				
 			    | Tile tile -> 		print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "] received Tile from Master.");
 							let b = Cartography.bc_process_im_result tile in
+							let found_pi0 = ref false in
+							Cartography.test_pi0_uncovered !pi0 found_pi0 ;
+							if(not !found_pi0) then
+							compute_next_pi0_sequentially more_pi0 limit_reached first_point (Some tile.tile_nature);
+							
 							print_message Debug_standard ("[Worker " ^ (string_of_int rank) ^ "] received Tile from Master.");
 			    
 			    | Continue ->  		print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "] received continue tag from Master.");
@@ -687,6 +748,10 @@ let worker() =
 							Input.set_v0 subpart;				
 			
 			    done;
+			   
+			  pi0 := (Cartography.get_current_pi0());
+			     (* Set the new pi0 *)
+			     Input.set_pi0 !pi0;
 			
 			    (* Save debug mode *)
 			    let global_debug_mode = get_debug_mode() in 
@@ -714,16 +779,13 @@ let worker() =
 			    (*send result to master*)
 			    send_result_worker im_result;
 			    
+			    (*compute_next_pi0_sequentially more_pi0 limit_reached first_point (Some im_result.tile_nature);*)
+			   
 
-			    (*!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1*)
-			    compute_next_pi0_sequentially more_pi0 limit_reached first_point (Some im_result.tile_nature);
-			    
-			    (* Set the new pi0 *)
-			     Input.set_pi0 !pi0;
-
-			        (*send pi0 to master*)
-	(*		    send_pi0_worker !pi0;
+			    (*send pi0 to master*)
+(*			    send_pi0_worker !pi0;
 			    print_message Debug_medium ("send pi0 to master ");
+			    
 			    
 			    let receivedContinue = ref false in
 			    while (not !receivedContinue) do
@@ -732,6 +794,7 @@ let worker() =
 				
 			    | Tile tile -> 		print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "] received Tile from Master.");
 							let b = Cartography.bc_process_im_result tile in
+							(* compute_next_pi0_sequentially more_pi0 limit_reached first_point (Some tile.tile_nature);*)
 							print_message Debug_standard ("[Worker " ^ (string_of_int rank) ^ "] received Tile from Master.");
 			    
 			    | Continue ->  		print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "] received continue tag from Master.");
@@ -743,13 +806,17 @@ let worker() =
 							Input.set_v0 subpart;				
 			
 			    done;*)
+			    
+			    
+			    (*!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1*)
+			    compute_next_pi0_sequentially more_pi0 limit_reached first_point (Some im_result.tile_nature);
 			
 			     
 			done;
 		
-		(*| Tile tile -> 	print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "] I received subpart from Master.");
+		| Tile tile -> 	print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "] I received subpart from Master.");
 				let b = Cartography.bc_process_im_result tile in
-				print_message Debug_standard ("[Worker " ^ (string_of_int rank) ^ "] received Tile from Master.");*)
+				print_message Debug_standard ("[Worker " ^ (string_of_int rank) ^ "] received Tile from Master.");
 			
 		| Terminate -> 
 				print_message Debug_medium (" Terminate ");
