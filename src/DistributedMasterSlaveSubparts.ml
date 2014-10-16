@@ -561,7 +561,7 @@ let master () =
 				Cartography.test_pi0_uncovered pi0 found_pi0 ;
 				(*if not !found_pi0 then
 				begin *)
-				     if( !waittingList != [] && not !found_pi0) then
+				     if( !waittingList != [] && !found_pi0) then
 				      begin
 					print_message Debug_medium ("[Master] waitting List : " ^ (string_of_int (List.length !waittingList) ) ^ "");
 					(*compute the remain points int this subpart*)
@@ -777,7 +777,10 @@ let worker() =
 			    print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "]  Constraint really added? " ^ (string_of_bool added) ^ "");
 			    
 			    (*send result to master*)
-			    send_result_worker im_result;
+			    if(added) then 
+			    begin
+				send_result_worker im_result;
+			    end;
 			    
 			    (*compute_next_pi0_sequentially more_pi0 limit_reached first_point (Some im_result.tile_nature);*)
 			   
