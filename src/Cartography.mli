@@ -43,8 +43,7 @@ val get_current_pi0 : unit -> AbstractModel.pi0
 (** Get the list of *all* points in V0 (for PaTATOR) *)
 val compute_all_pi0 : unit -> (*pi0_list*)PVal.pval list
 
-val pi0_in_returned_constraint:
-	AbstractModel.pi0 -> AbstractModel.returned_constraint -> bool
+val pi0_in_returned_constraint: AbstractModel.pi0 -> AbstractModel.returned_constraint -> bool
 
 (* Move to the next uncovered pi0 and do not move if the current pi0 is still not covered; update global variable current_pi0 (if necessary); return true if indeed moved *)
 val move_to_next_uncovered_pi0 : unit -> bool
@@ -57,6 +56,8 @@ val compute_all_pi0 : unit -> unit
 
 (** Shuffle the array made of *all* points in V0 (for PaTATOR) *)
 val shuffle_all_pi0 : unit -> unit
+
+val test_pi0_uncovered : AbstractModel.pi0 -> bool ref -> unit 
 
 
 (************************************************************)
