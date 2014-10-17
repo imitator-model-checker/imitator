@@ -454,7 +454,7 @@ let master () =
 	
 	(******************Adjustable values********************)
 	(* number of subpart want to initialize in the first time *)
-	let np = 0 in
+	let np = 1 in
 	(*depend on size of model*)
 	let dynamicSplittingMode = ref true in
 	(*******************************************************)
@@ -720,7 +720,7 @@ let worker() =
 (* 			    print_message Debug_medium ("send pi0 to master "); *)
 
 			    (*print_message Debug_standard ("[Master] UpdateRequest List 1111");*)
-			    
+			     (*Input.set_pi0 !pi0;*)
 			    send_update_request();
 			    
 			    print_message Debug_medium (" send_update_request to master ");
@@ -773,10 +773,10 @@ let worker() =
 			    print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "]  Constraint really added? " ^ (string_of_bool added) ^ "");
 			    
 			    (*send result to master*)
-			    if(added) then 
-			    begin
+(*			    if(added) then 
+			    begin*)
 				send_result_worker im_result;
-			    end;
+			    (*end;*)
 			    
 			    
 			    
@@ -787,7 +787,7 @@ let worker() =
 			  
 			    (*send pi0 to master*)
 			    send_pi0_worker !pi0;
-(* 			    print_message Debug_medium ("send pi0 to master "); *)
+ 			    print_message Debug_medium ("send pi0 to master "); 
 			    let receivedContinue1 = ref false in
 			    while (not !receivedContinue1) do
 			    let check1 = receive_work () in
