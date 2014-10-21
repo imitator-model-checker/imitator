@@ -641,11 +641,11 @@ let worker() =
 							begin
 								tiles := !tiles@[tile];
 							end;
-							(*let found_pi0 = ref false in
+							let found_pi0 = ref false in
 							Cartography.test_pi0_uncovered !pi0 found_pi0 ;
 							if(not !found_pi0) then
 							compute_next_pi0_sequentially more_pi0 limit_reached first_point (Some tile.tile_nature);
-							print_message Debug_standard ("[Worker " ^ (string_of_int rank) ^ "] received Tile from Master.");*)
+							print_message Debug_standard ("[Worker " ^ (string_of_int rank) ^ "] received Tile from Master.");
 			    
 			    | Continue ->  		print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "] received continue tag from Master.");
 							receivedContinue := true;	
