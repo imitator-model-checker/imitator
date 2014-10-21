@@ -72,7 +72,7 @@ val cover_behavioral_cartography : AbstractModel.abstract_model -> AbstractModel
 (*
  *  functions used by the coordinator in the distributed-unsupervised
  *  cartography (the coordinator maintaints a list of points instead of
- *  a single one
+ *  a single one (added by Sami Evangelista?!)
  *)
 val constraint_list_init : int -> unit
 val constraint_list_random : unit -> PVal.pval option
