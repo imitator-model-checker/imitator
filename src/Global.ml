@@ -8,7 +8,7 @@
  * Author:        Etienne Andre
  * 
  * Created:       2009/09/08
- * Last modified: 2014/08/25
+ * Last modified: 2014/10/21
  *
  ****************************************************************)
  
@@ -41,13 +41,13 @@ let model_extension = ".imi"
 
 let print_contributors()  = 
 	print_version_string();
-	print_string " The tool has been developed by:\n";
+	print_string " This tool has been developed by:\n";
 	print_string " * Etienne Andre       (2008 -     )\n";
 	print_string " * Camille Coti        (2014 -     )\n";
 	print_string " * Daphne Dussaud      (2010)\n";
 	print_string " * Sami Evangelista    (2014 -     )\n";
 	print_string " * Ulrich Kuehne       (2010 - 2011)\n";
-(* 	print_string " * Nguyen Hoang Gia    (2014 -     )\n"; *)
+	print_string " * Nguyen Hoang Gia    (2014 -     )\n";
 	print_string " * Romain Soulat       (2010 - 2013)\n";
 	print_string "\n";
 	print_string " Moral support and suggestions by:\n";
