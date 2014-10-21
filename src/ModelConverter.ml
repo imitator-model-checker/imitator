@@ -10,7 +10,7 @@
  * Author:        Etienne Andre
  * 
  * Created:       2009/09/09
- * Last modified: 2014/10/02
+ * Last modified: 2014/10/21
  *
  ****************************************************************)
 
@@ -504,7 +504,7 @@ let synclab_used_everywhere automata synclab_name =
 	(* Try to find the synclab in all the automaton where it is declared *)
 	try(
 		(* Check each automaton *)
-		List.iter (fun (_, sync_name_list, locations) ->
+		List.iter (fun (automaton_name, sync_name_list, locations) ->
 			(* Only check if the synclab is declared here *)
 			if List.mem synclab_name sync_name_list then(
 				(* Check that at least one location contains the synclab *)
@@ -512,7 +512,9 @@ let synclab_used_everywhere automata synclab_name =
 					(* Check that at least one transition contains the synclab *)
 					List.exists (fun (_, _, sync, _) -> sync = (Sync synclab_name)) transitions
 				) locations ) then (
-					(* No location contains the synclab *)
+					(* No location contains the synclab: warning and exception (to save a bit of time) *)
+					(*** TODO: perform exhaustive search, i.e., remove the exception mechanism ***)
+					print_warning ("The synclab '" ^ synclab_name ^ "' is not used in (at least) the automaton '" ^ automaton_name ^ "' where it is declared: it will thus be removed from the whole model.");
 					raise Not_found;
 				);
 			);
@@ -1598,12 +1600,12 @@ let abstract_model_of_parsing_structure (parsed_variable_declarations, parsed_au
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	let synclabs_names, removed_synclab_names = if options#sync_auto_detection then synclabs_names, [] else (
 		(* Keep only the synclabs which are used in ALL the automata where they are declared *)
-		List.partition (fun synclab_name -> if synclab_used_everywhere parsed_automata synclab_name then
+		List.partition (synclab_used_everywhere parsed_automata) (*(fun synclab_name -> if synclab_used_everywhere parsed_automata synclab_name then
 			(* If it is used everywhere: keep *)
 			true
 			(* If there exists an automaton where it is not used : warns and remove *)
 			else (print_warning ("The synclab '" ^ synclab_name ^ "' is not used in some of the automata where it is declared: it will thus be removed."); false)
-		) synclabs_names
+		)*) synclabs_names
 	) in
 	
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
