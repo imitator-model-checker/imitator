@@ -8,7 +8,7 @@
  * Author:        Ulrich Kuehne, Etienne Andre
  * 
  * Created:       2009/09/07
- * Last modified: 2014/09/24
+ * Last modified: 2014/10/21
  *
  ****************************************************************)
 
@@ -54,6 +54,11 @@ TAGS POUR CHOSES A FAIRE
 terminate_program();*)
 
 
+(**************************************************)
+(* BEGIN EXCEPTION MECHANISM *)
+(**************************************************)
+begin
+try(
 
 
 (**************************************************)
@@ -253,7 +258,6 @@ if options#imitator_mode = Inverse_method && options#branch_and_bound then(
 (**************************************************)
 
 begin
-try(
 (* 	let zones = *)
 	match options#imitator_mode with
 		| Translation -> raise (InternalError "Translation cannot be executed here; program should already have terminated at this point.");
@@ -309,9 +313,21 @@ try(
 			print_message Debug_high "Graphical cartography not asked: graph not generated."
 		)
 	;*)
-) with
-	| InternalError e -> (print_error ("Internal error: " ^ e ^ "\nPlease (kindly) insult the developers."); abort_program (); exit 1);
 end;
+
+
+(**************************************************)
+(* END EXCEPTION MECHANISM *)
+(**************************************************)
+) with
+	| InternalError e -> (
+		print_error ("Fatal internal error: " ^ e ^ "\nPlease (kindly) insult the developers.");
+		abort_program ();
+		(* Safety *)
+		exit 1
+	);
+end; (* try *)
+
 
 
 (**************************************************)
