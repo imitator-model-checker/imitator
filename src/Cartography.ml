@@ -10,7 +10,7 @@
  * Author:        Ulrich Kuehne, Etienne Andre
  * 
  * Created:       2012/06/18
- * Last modified: 2014/10/10
+ * Last modified: 2014/10/21
  *
  ****************************************************************)
 
@@ -596,7 +596,7 @@ let find_next_pi0_cover () =
 	done; (* while more pi0 and so on *)
 	
 	(* Return info (note that current_pi0 has ALREADY been updated if a suitable pi0 was found !) *)
-	!found_pi0 , !nb_useless_points
+	!found_pi0 (*, !nb_useless_points*)
       
 
 
@@ -799,7 +799,7 @@ let find_next_pi0 tile_nature_option =
 	(* Retrieve the input options *)
 	let options = Input.get_options () in
 
-	let found_pi0 , new_nb_useless_points =
+	let found_pi0 (*, new_nb_useless_points*) =
 	(* Branching *)
 	match options#imitator_mode with
 	| Cover_cartography ->
@@ -815,7 +815,7 @@ let find_next_pi0 tile_nature_option =
 	| _ -> raise (InternalError("In function 'find_next_pi0', the mode should be a cover / border cartography only."))
 	in
 	(* Update the number of useless points *)
-	nb_useless_points := !nb_useless_points + new_nb_useless_points;
+(* 	nb_useless_points := !nb_useless_points + new_nb_useless_points; *)
 	
 	counter_next_point#stop;
 
@@ -1417,7 +1417,7 @@ let move_to_next_uncovered_pi0 () =
 	    false
 	  )
 	  else(
-	    let (found, _) = find_next_pi0_cover ()
+	    let found = find_next_pi0_cover ()
 	    in found
 	    )
 
