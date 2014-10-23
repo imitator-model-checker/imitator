@@ -340,6 +340,12 @@ let unserialize_im_result im_result_string =
 	}
 	
 
+(** Serialize a list of im_result *)
+(*** NOTE: function implemented but not used now ***)
+let serialize_im_result_list im_result_list =
+	String.concat serialize_SEP_LIST_IMRESULT  (List.map serialize_im_result im_result_list)
+
+
 (** Unserialize a list of im_result *)
 let unserialize_im_result_list im_result_list_string =
 	(* Retrieve the list of im_result *)
