@@ -88,3 +88,5 @@ val unserialize_pi0 : string -> AbstractModel.pi0(*(Automaton.variable_index * N
 val serialize_im_result : Reachability.im_result -> string
 val unserialize_im_result : string -> Reachability.im_result
 val unserialize_im_result_list : string -> Reachability.im_result list
+(** Convert a list of serialized im_result into a serialized list of im_result (ad-hoc function to save time in subparts handling) *)
+val serialized_imresultlist_of_serializedimresult_list : string list -> string

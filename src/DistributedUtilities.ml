@@ -346,6 +346,11 @@ let serialize_im_result_list im_result_list =
 	String.concat serialize_SEP_LIST_IMRESULT  (List.map serialize_im_result im_result_list)
 
 
+(** Convert a list of serialized im_result into a serialized list of im_result (ad-hoc function to save time in subparts handling) *)
+let serialized_imresultlist_of_serializedimresult_list=
+	String.concat serialize_SEP_LIST_IMRESULT
+
+
 (** Unserialize a list of im_result *)
 let unserialize_im_result_list im_result_list_string =
 	(* Retrieve the list of im_result *)
