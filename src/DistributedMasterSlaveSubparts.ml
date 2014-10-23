@@ -468,7 +468,8 @@ let master () =
 					  end
 				     end;
 				     send_continue source_rank
-				     
+		
+		(*Serialize/Unserialize the List of tile HERE!!!!*)
 		| UpdateRequest source_rank ->
 				print_message Debug_standard ("[Master] UpdateRequest List ");
 				while(List.mem_assoc source_rank !tilebuffer) do
@@ -698,6 +699,7 @@ let worker() =
 			    
 			    pi0 := (Cartography.get_current_pi0());	  
 			    
+			    (*Serialize/Unserialize the List of tile HERE!!!!*)
 			    (*send pi0 to master*)
 			    send_pi0_worker !pi0;
  			    print_message Debug_medium ("send pi0 to master "); 
