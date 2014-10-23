@@ -8,7 +8,7 @@
  * Author:        Etienne Andre, Camille Coti
  * 
  * Created:       2014/03/24
- * Last modified: 2014/10/02
+ * Last modified: 2014/10/23
  *
  ****************************************************************)
 
@@ -110,6 +110,8 @@ let serialize_SEP_PAIR = ","
 let serialize_SEP_LIST = ";"
 (* Separator between the elements of a structure *)
 let serialize_SEP_STRUCT = "|"
+(* Separator between the elements of a list of im_results (need to be different from serialize_SEP_LIST because im_result contains itself some serialize_SEP_LIST *)
+let serialize_SEP_LIST_IMRESULT = ";;"
 
 
 (*------------------------------------------------------------*)
@@ -337,7 +339,12 @@ let unserialize_im_result im_result_string =
 		total_time			= float_of_string total_time_string;
 	}
 	
-	
+
+(** Unserialize a list of im_result *)
+let unserialize_im_result_list im_result_list_string =
+	(* Retrieve the list of im_result *)
+	List.map unserialize_im_result (split serialize_SEP_LIST_IMRESULT im_result_list_string)
+
 
 (*------------------------------------------------------------*)
 (* Tests *)

@@ -8,7 +8,7 @@
  * Author:        Etienne Andre, Camille Coti
  * 
  * Created:       2014/03/24
- * Last modified: 2014/10/01
+ * Last modified: 2014/10/23
  *
  ****************************************************************)
 
@@ -87,3 +87,4 @@ val serialize_pi0 : (*(Automaton.variable_index * NumConst.t) list*)AbstractMode
 val unserialize_pi0 : string -> AbstractModel.pi0(*(Automaton.variable_index * NumConst.t) list*)
 val serialize_im_result : Reachability.im_result -> string
 val unserialize_im_result : string -> Reachability.im_result
+val unserialize_im_result_list : string -> Reachability.im_result list
