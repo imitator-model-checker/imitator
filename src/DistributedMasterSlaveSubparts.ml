@@ -265,7 +265,7 @@ let get_next_sequential_pi0_in_subpart pi0 (s : HyperRectangle.hyper_rectangle) 
 (* dynamic split subpart *)
 let dynamicSplitSubpart (s : HyperRectangle.hyper_rectangle) pi0 : HyperRectangle.hyper_rectangle list =
 	print_message Debug_standard ("\n entering dynamic splitting process" );
-	(*let pi0 = get_next_sequential_pi0_in_subpart pi0 s in *)
+	let pi0 = get_next_sequential_pi0_in_subpart pi0 s in 
 	let notFound = ref true in
 	let max_d_l = ref 0 in
 	let j = ref (HyperRectangle.get_dimensions()-1) in
@@ -427,6 +427,17 @@ let master () =
 		(*Pi0 Tag*)
 		| Pi0 (source_rank , pi0) -> 
 				print_message Debug_medium ("[Master] Received a pi0 from worker " ^ (string_of_int source_rank) ^ "");
+				(*Update tiles*)
+				while(List.mem_assoc source_rank !tilebuffer) do
+				  begin
+				    send_tile (List.assoc source_rank !tilebuffer) source_rank;
+				    tilebuffer := (List.remove_assoc source_rank !tilebuffer);
+				    print_message Debug_standard ("[Master] send a tile to worker " ^ (string_of_int source_rank) ^ "");
+				  end
+				done;
+				
+				
+				(*Splitting*)
 				let found_pi0 = ref false in
 				Cartography.test_pi0_uncovered pi0 found_pi0 ;
 				     if( !waittingList != [] && !found_pi0) then
@@ -470,7 +481,7 @@ let master () =
 				     send_continue source_rank
 		
 		(*Serialize/Unserialize the List of tile HERE!!!!*)
-		| UpdateRequest source_rank ->
+		(*| UpdateRequest source_rank ->
 				print_message Debug_standard ("[Master] UpdateRequest List ");
 				while(List.mem_assoc source_rank !tilebuffer) do
 				  begin
@@ -479,7 +490,7 @@ let master () =
 				    print_message Debug_standard ("[Master] send a tile to worker " ^ (string_of_int source_rank) ^ "");
 				  end
 				done;
-				send_continue source_rank
+				send_continue source_rank*)
 		
 				     
 				     
@@ -618,16 +629,18 @@ let worker() =
 			print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "] Initial pi0:");
 			print_message Debug_medium   (ModelPrinter.string_of_pi0 model (Cartography.get_current_pi0()));
 			
+			let pi0 = ref (Cartography.get_current_pi0()) in
 			
 			counter_worker_working#start;   
 			   (*let c = ref 0 in*)
  			while (!more_pi0 && not !limit_reached) do 			    
 			    
-			    let pi0 = ref (Cartography.get_current_pi0()) in
 			    print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "] pi0:");
 			    print_message Debug_medium   (ModelPrinter.string_of_pi0 model !pi0);
 			    
-			    send_update_request();
+			    (*send_update_request();*)
+			    pi0 := (Cartography.get_current_pi0());
+			    send_pi0_worker !pi0;
 			    
 			    print_message Debug_medium (" send_update_request to master ");
 			    
@@ -647,11 +660,15 @@ let worker() =
 							if(not !found_pi0) then
 							compute_next_pi0_sequentially more_pi0 limit_reached first_point (Some tile.tile_nature);
 							print_message Debug_standard ("[Worker " ^ (string_of_int rank) ^ "] received Tile from Master.");
+							
+			    | Subpart subpart ->	print_message Debug_standard ("[Worker " ^ (string_of_int rank) ^ "] received scaled subpart tag from Master.");
+							Input.set_v0 subpart;
 			    
 			    | Continue ->  		print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "] received continue tag from Master.");
 							receivedContinue := true;	
 							
-			
+			     | _ -> 			raise (InternalError("error!!! receive tile at worker side."));
+			    
 			    done;
 			    
 				counter_worker_working#stop;
@@ -697,7 +714,7 @@ let worker() =
 			    (*!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1*)
 			    compute_next_pi0_sequentially more_pi0 limit_reached first_point (Some im_result.tile_nature);
 			    
-			    pi0 := (Cartography.get_current_pi0());	  
+			    (*pi0 := (Cartography.get_current_pi0());	  
 			    
 			    (*Serialize/Unserialize the List of tile HERE!!!!*)
 			    (*send pi0 to master*)
@@ -713,7 +730,9 @@ let worker() =
 			    
 			    | Subpart subpart ->	print_message Debug_standard ("[Worker " ^ (string_of_int rank) ^ "] received scaled subpart tag from Master.");
 							Input.set_v0 subpart;	
-			    done;
+							
+			    | _ -> 			raise (InternalError("error!!! receive subpart at worker side."));
+			    done;*)
 			     
 			done;
 		
