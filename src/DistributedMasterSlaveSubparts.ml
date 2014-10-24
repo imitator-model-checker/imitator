@@ -12,15 +12,15 @@
  ****************************************************************)
 
  
-(**************************************************)
+(****************************************************************)
 (* External modules *)
-(**************************************************)
+(****************************************************************)
 open Mpi
 
 
-(**************************************************)
+(****************************************************************)
 (* Internal modules *)
-(**************************************************)
+(****************************************************************)
 open Exceptions
 open ImitatorUtilities
 open Options
@@ -36,11 +36,17 @@ exception Ex of string;;
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 (*------------------------------------------------------------*)
-(* Slaves *)
+(* Master *)
+(*------------------------------------------------------------*)
+let counter_master_waiting 			= new Counter.counter
+let counter_master_find_nextpi0		= new Counter.counter
+let counter_master_split			= new Counter.counter
+
+
+(*------------------------------------------------------------*)
+(* Workers *)
 (*------------------------------------------------------------*)
 
-let counter_master_waiting 		= new Counter.counter
-let counter_master_find_nextpi0		= new Counter.counter
 let counter_worker_waiting 		= new Counter.counter
 let counter_worker_working 		= new Counter.counter
 
@@ -338,7 +344,8 @@ let master () =
 	(* Initialize counters *)
 	counter_master_find_nextpi0#init;
 	counter_master_waiting#init;
-	
+	counter_master_split#init;
+		
 	print_message Debug_medium ("[Master] Hello world!");
 	
 	(* Perform initialization *)
@@ -370,7 +377,9 @@ let master () =
 	(*******************************************************)
 	
 	(*initialize list of subpart*)
+	counter_master_split#start;
 	subparts := intialize_Subparts v0 np;
+	counter_master_split#stop;
 	
 	let tilebuffer = ref [] in
 
@@ -456,8 +465,11 @@ let master () =
 					
 					(*compute the remain points int this subpart*)
 					
+					counter_master_split#start;
 					let max_size = get_points_in_subpart s in
 					let done_points = done_points_in_subpart s pi0 in
+					counter_master_split#stop;
+
 					let remain_points = max_size - done_points in
 					 print_message Debug_standard ("[Master] Splitting ....... ");
 					if(remain_points > 1) 
@@ -468,13 +480,18 @@ let master () =
 					    index := (List.remove_assoc source_rank !index);
 					    
 					    let pi0arr = pval2array pi0 in
+					    
 					    (*method1*)
 					    (*let newSubparts = sliptLongestDimensionSubpart s in*)
+					    
 					    (*method2*)
+						counter_master_split#start;
 					    let newSubparts = dynamicSplitSubpart s pi0arr in
-					    (*send back to this worker*)
+						counter_master_split#stop;
+						
+						(*send back to this worker*)
 					    send_subpart (List.hd newSubparts) source_rank;
-					    print_message Debug_medium ("[Master] sent slipt subpart 1....... ");
+					    print_message Debug_medium ("[Master] sent split subpart 1....... ");
 					    
 					     index := !index@[source_rank, (at newSubparts 0)];
 					    
@@ -482,7 +499,7 @@ let master () =
 					    let w = List.hd !waittingList in
 					    send_subpart (at newSubparts 1) w;
 					    index := !index@[w, (at newSubparts 1)];
-					    print_message Debug_medium ("[Master] sent slipt subpart 2....... ");
+					    print_message Debug_medium ("[Master] sent split subpart 2....... ");
 					    waittingList := remove_at_lst !waittingList 0;
 					    (*print_message Debug_standard ("[Master] All workers done" );*)
 					  end
@@ -528,6 +545,7 @@ let master () =
 	(* Process the finalization *)
 	Cartography.bc_finalize ();
 	
+	print_message Debug_standard ("[Master] Splitting time         : " ^ (string_of_float (counter_master_split#value)) ^ " s");
 	print_message Debug_standard ("[Master] Total waiting time     : " ^ (string_of_float (counter_master_waiting#value)) ^ " s");
 	print_message Debug_standard ("**************************************************");
 	
