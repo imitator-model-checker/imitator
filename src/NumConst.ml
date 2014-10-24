@@ -322,7 +322,7 @@ let random_generator() =
 			let max_tries = 5 in
 			let nb_tries = ref 0 in
 			let random_generator = ref None in
-			while !random_generator = None & !nb_tries < max_tries do
+			while !random_generator = None && !nb_tries < max_tries do
 				(* Increment *)
 				nb_tries := !nb_tries + 1;
 				try (
