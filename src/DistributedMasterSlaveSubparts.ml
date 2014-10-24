@@ -39,7 +39,6 @@ exception Ex of string;;
 (* Master *)
 (*------------------------------------------------------------*)
 let counter_master_waiting 			= new Counter.counter
-let counter_master_find_nextpi0		= new Counter.counter
 let counter_master_split			= new Counter.counter
 
 
@@ -47,8 +46,10 @@ let counter_master_split			= new Counter.counter
 (* Workers *)
 (*------------------------------------------------------------*)
 
-let counter_worker_waiting 		= new Counter.counter
-let counter_worker_working 		= new Counter.counter
+let counter_worker_total 			= new Counter.counter
+let counter_worker_waiting 			= new Counter.counter
+let counter_worker_IM	 			= new Counter.counter
+let counter_worker_find_next_pi0	= new Counter.counter
 
 
 (****************************************************************)
@@ -342,7 +343,7 @@ let master () =
 
 	
 	(* Initialize counters *)
-	counter_master_find_nextpi0#init;
+(* 	counter_master_find_nextpi0#init; *)
 	counter_master_waiting#init;
 	counter_master_split#init;
 		
@@ -569,12 +570,14 @@ let master () =
 (*------------------------------------------------------------*)
 let compute_next_pi0_sequentially more_pi0 limit_reached first_point tile_nature_option =
 	(* Start timer *)
-	counter_master_find_nextpi0#start ;
+	counter_worker_find_next_pi0#start ;
+	
 	(* Case first point *)
 	if !first_point then(
 		print_message Debug_low ("[Some worker] This is the first pi0.");
 		Cartography.compute_initial_pi0 ();
 		first_point := false;
+		
 	(* Other case *)
 	)else(
 		print_message Debug_low ("[Some worker] Computing next pi0 sequentially...");
@@ -584,8 +587,10 @@ let compute_next_pi0_sequentially more_pi0 limit_reached first_point tile_nature
 		(* Update the found pi0 flag *)
 		more_pi0 := found_pi0;
 	);
+	
 	(* Stop timer *)
-	counter_master_find_nextpi0#stop;
+	counter_worker_find_next_pi0#stop;
+	(* The end *)
 	()
 
 let init_slave rank size =
@@ -597,9 +602,16 @@ let worker() =
 	let model = Input.get_model() in
 	(* Retrieve the input options *)
 	let options = Input.get_options () in
+	
 	(* Init counters *)
+	counter_worker_total#init;
 	counter_worker_waiting#init;
-	counter_worker_working#init;
+	counter_worker_IM#init;
+	counter_worker_find_next_pi0#init;
+	
+	(* Start global counter *)
+	counter_worker_total#start;
+	
 	let rank = Mpi.comm_rank Mpi.comm_world in
 	let size = Mpi.comm_size Mpi.comm_world in
 	init_slave rank size;
@@ -658,7 +670,7 @@ let worker() =
 			
 			let pi0 = ref (Cartography.get_current_pi0()) in
 			
-			counter_worker_working#start;   
+(* 			counter_worker_working#start;    *)
 			   (*let c = ref 0 in*)
  			while (!more_pi0 && not !limit_reached) do 			    
 			    
@@ -698,7 +710,7 @@ let worker() =
 			    
 			    done;
 			    
-				counter_worker_working#stop;
+(* 				counter_worker_working#stop; *)
 			   
 			    pi0 := (Cartography.get_current_pi0());
 			  
@@ -715,6 +727,7 @@ let worker() =
 				set_debug_mode Debug_nodebug;
 			
 			    (* Compute IM *)
+			    counter_worker_IM#start;
 			    let im_result , _ = Reachability.inverse_method_gen model init_state in
 (* 			    raise (InternalError("stop here")); *)
 
@@ -727,7 +740,8 @@ let worker() =
 			    
 			    (* Process result *)
 			    let added = Cartography.bc_process_im_result im_result in
-			    
+			    counter_worker_IM#stop;
+
 			    tiles := !tiles@[im_result];
 			    
 			    (* Print some info *)
@@ -777,12 +791,17 @@ let worker() =
 		
 	done;
 	
+	(* Stop global counter *)
+	counter_worker_total#stop;
+
 	(* Print some information *)
-	let occupancy = counter_worker_working#value /. (counter_worker_working#value +. counter_worker_waiting#value) *. 100. in
+	let occupancy = counter_worker_total#value /. (counter_worker_waiting#value) *. 100. in
 	print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "] I'm done.");
-	print_message Debug_standard ("[Worker " ^ (string_of_int rank) ^ "] Total waiting time     : " ^ (string_of_float (counter_worker_waiting#value)) ^ " s");
-	print_message Debug_standard ("[Worker " ^ (string_of_int rank) ^ "] Total working time     : " ^ (string_of_float (counter_worker_working#value)) ^ " s");
-	print_message Debug_standard ("[Worker " ^ (string_of_int rank) ^ "] Occupancy              : " ^ (string_of_float occupancy) ^ " %");   
+	print_message Debug_standard ("[Worker " ^ (string_of_int rank) ^ "] Total waiting time          : " ^ (string_of_float (counter_worker_waiting#value)) ^ " s");
+	print_message Debug_standard ("[Worker " ^ (string_of_int rank) ^ "] Total time on IM            : " ^ (string_of_float (counter_worker_IM#value)) ^ " s");
+	print_message Debug_standard ("[Worker " ^ (string_of_int rank) ^ "] Total time to find next pi0 : " ^ (string_of_float (counter_worker_find_next_pi0#value)) ^ " s");
+	print_message Debug_standard ("[Worker " ^ (string_of_int rank) ^ "] Total time                  : " ^ (string_of_float (counter_worker_total#value)) ^ " s");
+	print_message Debug_standard ("[Worker " ^ (string_of_int rank) ^ "] Occupancy                   : " ^ (string_of_float occupancy) ^ " %");
 
 ()
 ;;
