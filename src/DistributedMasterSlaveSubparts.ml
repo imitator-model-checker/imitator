@@ -393,7 +393,10 @@ let master () =
 		(*let source_rank, tile_nature_option, pi0 = (receive_pull_request_subpart()) in*)
 		print_message Debug_medium ("[Master] heloooooo ");
 		
+		counter_master_waiting#start;
 		let pull_request = receive_pull_request () in
+		counter_master_waiting#stop;
+		
 		(*send_terminate source_rank;*)
 		match pull_request with 
 		(*Pull Tag*)
