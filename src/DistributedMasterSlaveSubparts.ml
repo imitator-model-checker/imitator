@@ -38,6 +38,8 @@ exception Ex of string;;
 (*------------------------------------------------------------*)
 (* Master *)
 (*------------------------------------------------------------*)
+let counter_master_total 			= new Counter.counter
+let counter_master_processing 			= new Counter.counter
 let counter_master_waiting 			= new Counter.counter
 let counter_master_split			= new Counter.counter
 
@@ -340,17 +342,22 @@ let master () =
 	(* Get the v0 *)
 	let v0 = Input.get_v0() in
 	
-
-	
 	(* Initialize counters *)
 (* 	counter_master_find_nextpi0#init; *)
+	counter_master_total#init;
+	counter_master_processing#init;
 	counter_master_waiting#init;
 	counter_master_split#init;
 		
+	(* Start total counter *)
+	counter_master_total#start;
+	
 	print_message Debug_medium ("[Master] Hello world!");
 	
 	(* Perform initialization *)
+	counter_master_processing#start;
 	Cartography.bc_initialize ();
+	counter_master_processing#stop;
 	
 	(* List of subparts maintained by the master *)
 	let subparts = ref [] in
@@ -433,7 +440,10 @@ let master () =
 		| Tile (source_rank , tile) -> 
 				   print_message Debug_medium ("[Master] Received a tile from worker " ^ (string_of_int source_rank) ^ "");
 				   (*check duplicated tile*)
-				   let b = Cartography.bc_process_im_result tile in
+				   	counter_master_processing#start;
+					let b = Cartography.bc_process_im_result tile in
+				   	counter_master_processing#stop;
+
 				   if(b) then
 				    begin
 				      (*receive tile then send to the other workers to update*)
@@ -547,10 +557,20 @@ let master () =
 	print_message Debug_standard ("[Master] All workers done" );
 
 	(* Process the finalization *)
+	counter_master_processing#start;
 	Cartography.bc_finalize ();
+	counter_master_processing#stop;
 	
+	(* Stop global counter *)
+	counter_master_total#stop;
+
+	(* Print some information *)
+	let occupancy = (counter_master_total#value -. counter_master_waiting#value ) /. (counter_master_total#value) *. 100. in
+
 	print_message Debug_standard ("[Master] Splitting time         : " ^ (string_of_float (counter_master_split#value)) ^ " s");
-	print_message Debug_standard ("[Master] Total waiting time     : " ^ (string_of_float (counter_master_waiting#value)) ^ " s");
+	print_message Debug_standard ("[Master] Processing time        : " ^ (string_of_float (counter_master_processing#value)) ^ " s");
+	print_message Debug_standard ("[Master] Waiting time           : " ^ (string_of_float (counter_master_waiting#value)) ^ " s");
+	print_message Debug_standard ("[Master] Occupancy              : " ^ (string_of_float occupancy) ^ " %");
 	print_message Debug_standard ("**************************************************");
 	
 	(* Process the result and return *)
@@ -798,16 +818,15 @@ let worker() =
 	counter_worker_total#stop;
 
 	(* Print some information *)
-	let occupancy = counter_worker_total#value /. (counter_worker_waiting#value) *. 100. in
+	let occupancy = (counter_worker_total#value -. counter_worker_waiting#value ) /. (counter_worker_total#value) *. 100. in
 	print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "] I'm done.");
-	print_message Debug_standard ("[Worker " ^ (string_of_int rank) ^ "] Total waiting time          : " ^ (string_of_float (counter_worker_waiting#value)) ^ " s");
-	print_message Debug_standard ("[Worker " ^ (string_of_int rank) ^ "] Total time on IM            : " ^ (string_of_float (counter_worker_IM#value)) ^ " s");
-	print_message Debug_standard ("[Worker " ^ (string_of_int rank) ^ "] Total time to find next pi0 : " ^ (string_of_float (counter_worker_find_next_pi0#value)) ^ " s");
-	print_message Debug_standard ("[Worker " ^ (string_of_int rank) ^ "] Total time                  : " ^ (string_of_float (counter_worker_total#value)) ^ " s");
-	print_message Debug_standard ("[Worker " ^ (string_of_int rank) ^ "] Occupancy                   : " ^ (string_of_float occupancy) ^ " %");
+	print_message Debug_standard ("[Worker " ^ (string_of_int rank) ^ "] Number of unsuccessful points: " ^ (string_of_int (Cartography.get_nb_unsuccessful_points())) ^ "");
+	print_message Debug_standard ("[Worker " ^ (string_of_int rank) ^ "] Waiting time                 : " ^ (string_of_float (counter_worker_waiting#value)) ^ " s");
+	print_message Debug_standard ("[Worker " ^ (string_of_int rank) ^ "] Time spent on IM             : " ^ (string_of_float (counter_worker_IM#value)) ^ " s");
+	print_message Debug_standard ("[Worker " ^ (string_of_int rank) ^ "] Time to find next pi0        : " ^ (string_of_float (counter_worker_find_next_pi0#value)) ^ " s");
+	print_message Debug_standard ("[Worker " ^ (string_of_int rank) ^ "] Total time                   : " ^ (string_of_float (counter_worker_total#value)) ^ " s");
+	print_message Debug_standard ("[Worker " ^ (string_of_int rank) ^ "] Occupancy                    : " ^ (string_of_float occupancy) ^ " %");
 
 ()
 ;;
-
-
 

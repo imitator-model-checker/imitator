@@ -10,7 +10,7 @@
  * Author:        Ulrich Kuehne, Etienne Andre
  * 
  * Created:       2012/06/18
- * Last modified: 2014/10/21
+ * Last modified: 2014/10/24
  *
  ****************************************************************)
 
@@ -1294,6 +1294,12 @@ let get_current_pi0 () =
 	(* Retrieve the current pi0 (that must have been initialized before) *)
 	let current_pi0 = get_current_pi0_option () in
 	current_pi0
+
+
+(* Get the number of unsuccessful points (for PaTATOR) *)
+let get_nb_unsuccessful_points () =
+	!nb_useless_points
+
 
 
 (** Compute an array made of *all* points in V0 (for PaTATOR) *)

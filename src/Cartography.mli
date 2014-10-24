@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2012/06/18
- * Last modified: 2014/10/10
+ * Last modified: 2014/10/24
  *
  ****************************************************************)
 
@@ -39,6 +39,10 @@ val find_next_pi0_shuffle : AbstractModel.tile_nature option -> (bool * bool)
 
 (** Get the current pi0 (for PaTATOR) *)
 val get_current_pi0 : unit -> AbstractModel.pi0
+
+(* Get the number of unsuccessful points (for PaTATOR) *)
+val get_nb_unsuccessful_points : unit -> int
+
 
 (** Get the list of *all* points in V0 (for PaTATOR) *)
 val compute_all_pi0 : unit -> (*pi0_list*)PVal.pval list
