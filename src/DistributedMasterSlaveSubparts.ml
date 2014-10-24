@@ -7,14 +7,23 @@
  * Author:        Etienne Andre, Camille Coti, Hoang Gia Nguyen
  * 
  * Created:       2014/09/05
- * Last modified: 2014/09/22
+ * Last modified: 2014/10/24
  *
  ****************************************************************)
 
  
-open Global
-open Options
+(**************************************************)
+(* External modules *)
+(**************************************************)
 open Mpi
+
+
+(**************************************************)
+(* Internal modules *)
+(**************************************************)
+open Exceptions
+open ImitatorUtilities
+open Options
 open Reachability
 open DistributedUtilities
 

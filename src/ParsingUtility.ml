@@ -10,10 +10,19 @@
  ****************************************************************)
 
 
-open AbstractModel
+(**************************************************)
+(* External modules *)
+(**************************************************)
 open Gc
-open Global
-open Options
+
+
+(**************************************************)
+(* Internal modules *)
+(**************************************************)
+open Exceptions
+open AbstractModel
+open CamlUtilities
+open ImitatorUtilities
 
 
 

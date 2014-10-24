@@ -8,14 +8,25 @@
  * Author:        Etienne Andre, Camille Coti
  * 
  * Created:       2014/03/24
- * Last modified: 2014/10/23
+ * Last modified: 2014/10/24
  *
  ****************************************************************)
 
-open Global
+
+(**************************************************)
+(* External modules *)
+(**************************************************)
 open Mpi
 (* open Marshal *)
+
+
+(**************************************************)
+(* Internal modules *)
+(**************************************************)
 open AbstractModel
+open Exceptions
+open CamlUtilities
+open ImitatorUtilities
 open Reachability
 
 

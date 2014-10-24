@@ -12,7 +12,11 @@
  ****************************************************************)
 
 
-open Global
+(**************************************************)
+(* Internal modules *)
+(**************************************************)
+open Exceptions
+open ImitatorUtilities
 open Options
 open Reachability
 open AbstractModel

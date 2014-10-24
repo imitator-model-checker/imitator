@@ -13,7 +13,7 @@
 
 
 {
-open Global
+open Exceptions
 open Pi0Parser
 
 (* OCaml style comments *)

@@ -19,7 +19,9 @@
 (* Modules *)
 (************************************************************)
 
-open Global
+open Exceptions
+open CamlUtilities
+open ImitatorUtilities
 open Options
 open AbstractModel
 open StateSpace

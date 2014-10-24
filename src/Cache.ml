@@ -1,4 +1,6 @@
-open Global
+
+open ImitatorUtilities
+
 
 type ('a, 'b) t = {
 	mutable size  : int;

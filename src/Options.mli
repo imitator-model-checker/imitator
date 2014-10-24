@@ -9,7 +9,7 @@
  *
  ****************************************************************)
  
-open Global
+open ImitatorUtilities
 
 
 type distribution_mode =

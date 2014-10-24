@@ -13,7 +13,7 @@
 
 %{
 open ParsingStructure;;
-open Global;;
+open Exceptions;;
 open NumConst;;
   
   

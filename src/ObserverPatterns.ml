@@ -18,7 +18,9 @@
 (****************************************************************)
 (** Modules *)
 (****************************************************************)
-open Global
+open Exceptions
+open CamlUtilities
+open ImitatorUtilities
 open AbstractModel
 (* open LinearConstraint *)
 

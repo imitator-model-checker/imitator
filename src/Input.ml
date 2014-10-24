@@ -10,7 +10,7 @@
  ****************************************************************)
 
 
-open Global
+open Exceptions
 open AbstractModel
 
 (* internal references to global data structures *)

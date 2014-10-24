@@ -12,10 +12,20 @@
  *
  ****************************************************************)
 
- 
-open Global
-open Options
+
+(**************************************************)
+(* External modules *)
+(**************************************************)
 open Mpi
+
+
+(**************************************************)
+(* Internal modules *)
+(**************************************************)
+open Exceptions
+open CamlUtilities
+open ImitatorUtilities
+open Options
 open Reachability
 open DistributedUtilities
 

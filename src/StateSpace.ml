@@ -11,7 +11,10 @@
 
 module Ppl = Ppl_ocaml
 open Ppl
-open Global
+
+open Exceptions
+open CamlUtilities
+open ImitatorUtilities
 open AbstractModel
 
 

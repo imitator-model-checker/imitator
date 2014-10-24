@@ -14,8 +14,10 @@
 
 
 %{
+open Exceptions;;
 open ParsingStructure;;
-open Global;;
+open CamlUtilities;;
+open ImitatorUtilities;;
 open NumConst;;
 
 (* Counter for the unnamed locations *)

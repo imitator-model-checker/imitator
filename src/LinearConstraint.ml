@@ -16,7 +16,7 @@
  
 
 (************************************************************)
-(* Modules *)
+(* External modules *)
 (************************************************************)
 (*open Apron   *)
 (*open Lincons0*)
@@ -24,11 +24,21 @@
 module Ppl = Ppl_ocaml
 open Ppl
 
-open Global
 open Gmp.Z.Infixes
 
 
-exception Unsat_exception
+
+(************************************************************)
+(* Internal modules *)
+(************************************************************)
+open Exceptions
+open CamlUtilities
+open ImitatorUtilities
+
+
+(*** TODO: move to module Exceptions (if used) ***)
+(* exception Unsat_exception *)
+
 
 (************************************************************)
 (* Statistics for the use of PPL *)

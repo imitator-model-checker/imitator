@@ -12,8 +12,8 @@
 *****************************************************************)
 
 {
+open Exceptions
 open V0Parser
-open Global
 
 (* OCaml style comments *)
 let comment_depth = ref 0;;

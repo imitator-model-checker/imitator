@@ -7,12 +7,12 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Ulrich Kuehne, Etienne Andre
  * Created:       2010
- * Last modified: 2014/08/06
+ * Last modified: 2014/10/24
  *
  ****************************************************************)
  
 open Arg
-open Global
+open ImitatorUtilities
 
 
 type distribution_mode =
@@ -103,7 +103,7 @@ class imitator_options =
 		val mutable completeIM = ref false
 		
 		(* imitator mode *)
-		val mutable imitator_mode = ref Global.Inverse_method
+		val mutable imitator_mode = ref Inverse_method
 
 		
 		
@@ -362,7 +362,7 @@ class imitator_options =
 				
 				("-merge-before", Set merge_before , " Use the merging technique of [AFS12] but merges states before pi0-compatibility test (EXPERIMENTAL). Default: 'false' (disable)");
 				
-				("-mode", String set_mode, " Mode for " ^ program_name ^ ".
+				("-mode", String set_mode, " Mode for " ^ Constants.program_name ^ ".
         Use 'statespace' for a parametric state space exploration (no pi0 needed).
         Use 'EF' for a parametric non-reachability analysis (no pi0 needed).
         Use 'inversemethod' for the inverse method.
@@ -412,7 +412,7 @@ class imitator_options =
 				
 				("-verbose", String set_debug_mode_ref, " Print more or less information. Can be set to 'mute', 'standard', 'low', 'medium', 'high', 'total'. Default: 'standard'");
 				
-				("-version", Unit (fun _ -> print_string ("\n" ^ program_name ^ " " ^ version_string ^ "\nBuild: " ^ BuildInfo.build_number ^ " (" ^ BuildInfo.build_time ^ ")\n"); exit 0), " Print version number and exit.");
+				("-version", Unit (fun _ -> print_string ("\n" ^ Constants.program_name ^ " " ^ Constants.version_string ^ "\nBuild: " ^ BuildInfo.build_number ^ " (" ^ BuildInfo.build_time ^ ")\n"); exit 0), " Print version number and exit.");
 			] in
 					
 			(* function for parsing arguments *)
@@ -457,12 +457,12 @@ class imitator_options =
 			;
 			  
 			(* Remove the ".imi" at the end of the program prefix, if any *)
-			let model_extension_size = String.length model_extension in
+			let model_extension_size = String.length Constants.model_extension in
 			if String.length !files_prefix > model_extension_size then(
 				(* Get the last signs *)
 				let last = String.sub !files_prefix ((String.length !files_prefix) - model_extension_size) model_extension_size in
 				(* Check if it corresponds to ".imi" *)
-				if last = model_extension then(
+				if last = Constants.model_extension then(
 					(* Remove the last signs *)
 					files_prefix := String.sub !files_prefix 0 ((String.length !files_prefix) - model_extension_size);
 				);

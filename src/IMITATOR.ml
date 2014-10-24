@@ -14,16 +14,23 @@
 
 
 (**************************************************)
-(* Modules *)
+(* External modules *)
 (**************************************************)
-open Global
+open Gc
+
+
+(**************************************************)
+(* Internal modules *)
+(**************************************************)
+open Exceptions
+open CamlUtilities
+
+open ImitatorUtilities
 open AbstractModel
 (* open Arg *)
 open ModelPrinter
 open Options
 open Reachability
-open Gc
-
 
 
 (**************************************************
@@ -80,7 +87,7 @@ Input.set_options options;
 (**************************************************)
   
 (* Print header *)
-print_message Debug_standard header_string;
+print_header_string();
 
 (* Print date *)
 print_message Debug_standard ("Analysis time: " ^ (now()) ^ "\n");

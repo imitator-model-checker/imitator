@@ -26,7 +26,9 @@
 (****************************************************************)
 (** Modules *)
 (****************************************************************)
-open Global
+open Exceptions
+open CamlUtilities
+open ImitatorUtilities
 open Options
 open ParsingStructure
 open AbstractModel
@@ -1492,7 +1494,7 @@ let make_initial_state index_of_automata locations_per_automaton index_of_locati
 		
 		(* Check *)
 		if not (LinearConstraint.px_is_positive_in parameter_id initial_constraint) then
-			print_warning ("Parameter '" ^ (variable_names parameter_id) ^ "' is not necessarily positive in the initial constraint. The behavior of " ^ Global.program_name ^ " is unspecified in this case. You are advised to add inequality '" ^ (variable_names parameter_id) ^ " >= 0' to the initial state of the model.");
+			print_warning ("Parameter '" ^ (variable_names parameter_id) ^ "' is not necessarily positive in the initial constraint. The behavior of " ^ Constants.program_name ^ " is unspecified in this case. You are advised to add inequality '" ^ (variable_names parameter_id) ^ " >= 0' to the initial state of the model.");
 	) parameters;
 	
 	(* Return the initial state *)

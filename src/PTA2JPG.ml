@@ -10,8 +10,9 @@
  ************************************************************)
 
 
-open Global
+open Exceptions
 open AbstractModel
+open CamlUtilities
 
 
 (************************************************************
@@ -60,7 +61,7 @@ let string_of_header program =
 	let options = Input.get_options () in
 	          "/************************************************************"
 	^ "\n" ^" * Program " ^ options#file
-	^ "\n" ^" * Converted by " ^ program_name ^ " " ^ version_string
+	^ "\n" ^" * Converted by " ^ Constants.program_name ^ " " ^ Constants.version_string
 	^ "\n" ^" * Generated at time " ^ (now()) ^ ""
 	^ "\n" ^" ************************************************************/"
 	

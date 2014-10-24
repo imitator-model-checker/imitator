@@ -12,7 +12,8 @@
  *
  ****************************************************************)
 
-open Global
+ 
+open ImitatorUtilities
 
 (* ocamlc -I +ocamlmpi -o masterslave mpi.cma masterslave.ml           *)
 (* ocamlc -I +ocamlmpi -o masterslave mpi.cma unix.cma masterslave.ml   *)

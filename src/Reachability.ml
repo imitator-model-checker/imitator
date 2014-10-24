@@ -18,8 +18,10 @@
 (**************************************************************)
 (* Modules *)
 (**************************************************************)
+open Exceptions
 open Options
-open Global
+open CamlUtilities
+open ImitatorUtilities
 open AbstractModel
 open ModelPrinter
 open StateSpace
@@ -2309,7 +2311,7 @@ let branch_and_bound model init_state =
 			(* TODO: remove states from rtree !! (and big problem if some previous states have been removed due to merging.....) *)
 			
 			
-			Global.list_diff new_states eaten_states;
+			list_diff new_states eaten_states;
 		) else (
 			new_states
 		) in
@@ -2479,7 +2481,7 @@ let post_star model init_state =
 (* 			new_states_after_merging := try_to_merge_states reachability_graph !new_states_after_merging; *)
 			(* New version *)
 			let eaten_states = StateSpace.merge reachability_graph !new_states_after_merging in
-			new_states_after_merging := Global.list_diff !new_states_after_merging eaten_states;
+			new_states_after_merging := list_diff !new_states_after_merging eaten_states;
 		);
 
 

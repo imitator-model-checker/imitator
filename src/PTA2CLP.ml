@@ -10,7 +10,7 @@
  **************************************************)
 
 
-open Global
+open CamlUtilities
 open AbstractModel
 
 
