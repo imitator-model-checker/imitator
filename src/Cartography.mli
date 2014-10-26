@@ -22,6 +22,8 @@
 
 val bc_initialize : unit -> unit
 
+val bc_initialize_subpart : unit -> unit
+
 val bc_process_im_result : Reachability.im_result -> bool
 
 val bc_finalize : unit -> unit
@@ -63,6 +65,7 @@ val shuffle_all_pi0 : unit -> unit
 
 val test_pi0_uncovered : AbstractModel.pi0 -> bool ref -> unit 
 
+val find_next_pi0_cover : unit -> bool
 
 (************************************************************)
 (** Behavioral cartography algorithms *)

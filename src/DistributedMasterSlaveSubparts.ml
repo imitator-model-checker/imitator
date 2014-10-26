@@ -379,7 +379,7 @@ let master () =
 	
 	(******************Adjustable values********************)
 	(* number of subpart want to initialize in the first time *)
-	let np = 1 in
+	let np = 0 in
 	(*depend on size of model*)
 	let dynamicSplittingMode = ref true in
 	(*******************************************************)
@@ -642,10 +642,9 @@ let worker() =
 	(* In the meanwhile: compute the initial state *)
 	let init_state = Reachability.get_initial_state_or_abort model in
 	
-	let tiles = ref [] in
 	
-	(*Cartography.bc_initialize ();*)
-	
+	Cartography.bc_initialize ();
+
 
 	while (not !finished) do
 		send_work_request ();
@@ -658,15 +657,6 @@ let worker() =
 			print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "] received subpart from Master.");
 			
 			
-			(*update tiles*)
-			if(!tiles != [])
-			then
-			begin
-				for i =0 to (List.length !tiles) -1 do
-				Cartography.bc_process_im_result (List.nth !tiles i);
-				done;
-			end;
-			
 			(* To differentiate between initialization of pi0 / next_point *)
 			let first_point = ref true in
 			
@@ -678,7 +668,7 @@ let worker() =
 			Input.set_v0 subpart;
 			
 			(* Perform initialization *)
-			Cartography.bc_initialize ();
+			Cartography.bc_initialize_subpart ();
 			
 			if debug_mode_greater Debug_medium then(
 				print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "] set v0:");
@@ -702,6 +692,9 @@ let worker() =
 			    
 			    (*send_update_request();*)
 			    pi0 := (Cartography.get_current_pi0());
+			    
+			    (*Input.set_pi0 !pi0;*)
+			    
 			    send_pi0_worker !pi0;
 			    
 			    print_message Debug_medium (" send_update_request to master ");
@@ -713,32 +706,37 @@ let worker() =
 				
 			    | Tile tile -> 		print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "] received Tile from Master.");
 							let b = Cartography.bc_process_im_result tile in
-							if(b) then
-							begin
-								tiles := !tiles@[tile];
-							end;
-							let found_pi0 = ref false in
-							Cartography.test_pi0_uncovered !pi0 found_pi0 ;
-							if(not !found_pi0) then
-							compute_next_pi0_sequentially more_pi0 limit_reached first_point (Some tile.tile_nature);
 							print_message Debug_standard ("[Worker " ^ (string_of_int rank) ^ "] received Tile from Master.");
 							
 			    | Subpart subpart ->	print_message Debug_standard ("[Worker " ^ (string_of_int rank) ^ "] received scaled subpart tag from Master.");
 							Input.set_v0 subpart;
+							Cartography.bc_initialize_subpart ();
 			    
 			    | Continue ->  		print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "] received continue tag from Master.");
 							receivedContinue := true;	
+							let found_pi0 = ref false in
+							Cartography.test_pi0_uncovered !pi0 found_pi0 ;
+							if(not !found_pi0) then
+							compute_next_pi0_sequentially more_pi0 limit_reached first_point (None);
+							print_message Debug_standard ("[Worker " ^ (string_of_int rank) ^ "] received Tile from Master.");
 							
 			     | _ -> 			raise (InternalError("error!!! receive tile at worker side."));
 			    
 			    done;
 			    
 (* 				counter_worker_working#stop; *)
-			   
+			    (*let found_pi0 = ref false in
+			    Cartography.test_pi0_uncovered !pi0 found_pi0 ;
+			    if(not !found_pi0) then
+			    begin
+			      compute_next_pi0_sequentially more_pi0 limit_reached first_point (None);
+			      print_message Debug_standard ("[Worker " ^ (string_of_int rank) ^ "] received Tile from Master.");
+			    end;*)
+							
 			    pi0 := (Cartography.get_current_pi0());
 			  
-			     (* Set the new pi0 *)
-			     Input.set_pi0 !pi0;
+			    (* Set the new pi0 *)
+			    Input.set_pi0 !pi0;
 			
 			    (* Save debug mode *)
 			    let global_debug_mode = get_debug_mode() in 
@@ -755,7 +753,7 @@ let worker() =
 (* 			    raise (InternalError("stop here")); *)
 
 			    (*send result to master*)
-			    (*send_result_worker im_result;*)
+			    send_result_worker im_result;
 			    
 			    
 			    (* Get the debug mode back *)
@@ -765,38 +763,13 @@ let worker() =
 			    let added = Cartography.bc_process_im_result im_result in
 			    counter_worker_IM#stop;
 
-			    tiles := !tiles@[im_result];
 			    
 			    (* Print some info *)
 			    print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "]  Constraint really added? " ^ (string_of_bool added) ^ "");
 			    
-			    (*send result to master*)
-			    if(added) then
-			    begin
-			    send_result_worker im_result;
-			    end;
-			    (*!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1*)
+
 			    compute_next_pi0_sequentially more_pi0 limit_reached first_point (Some im_result.tile_nature);
-			    
-			    (*pi0 := (Cartography.get_current_pi0());	  
-			    
-			    (*Serialize/Unserialize the List of tile HERE!!!!*)
-			    (*send pi0 to master*)
-			    send_pi0_worker !pi0;
- 			    print_message Debug_medium ("send pi0 to master "); 
-			    let receivedContinue1 = ref false in
-			    while (not !receivedContinue1) do
-			    let check1 = receive_work () in
-			    match check1 with
-			    
-			    | Continue ->  		print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "] received continue tag from Master.");
-							receivedContinue1 := true;
-			    
-			    | Subpart subpart ->	print_message Debug_standard ("[Worker " ^ (string_of_int rank) ^ "] received scaled subpart tag from Master.");
-							Input.set_v0 subpart;	
-							
-			    | _ -> 			raise (InternalError("error!!! receive subpart at worker side."));
-			    done;*)
+			    (* Input.set_pi0 !pi0;*)
 			     
 			done;
 		

@@ -1029,7 +1029,139 @@ let bc_initialize () =
 	print_message Debug_standard (" Number of points inside V0: " ^ (NumConst.string_of_numconst !nb_points));
 	()
 
+(*Hoang Gia modified bc_initialize *)
+let bc_initialize_subpart () =	(* Get the model *)
+	let model = Input.get_model() in
+	(* Get the v0 *)
+	let v0 = Input.get_v0() in
+	(* Retrieve the input options *)
+	let options = Input.get_options () in
 
+	(* Print some information *)
+	print_message Debug_medium ("Starting preprocessing for the behavioral cartography");
+
+	(* Time counter for recording the globl time spent on BC *)
+	time_spent_on_IM := 0.;
+	(* Record start time to compute the time spent only on calling IM *)
+	start_time := Unix.gettimeofday();
+
+	(* Number of dimensions in the system *)
+	nb_dimensions := model.nb_parameters;
+	
+	(* Print some information *)
+	print_message Debug_medium ("Number of dimensions: " ^ (string_of_int !nb_dimensions));
+
+	(* Check that the cartography is not applied to 0 dimension! *)
+	if !nb_dimensions = 0 then(
+		print_error "The cartography has 0 dimension in V0, and cannot be applied.";
+		abort_program();
+	);
+	
+	
+	(* Min & max bounds for the parameters *)
+	
+(*	min_bounds := Array.map (fun (low, high) -> low) v0;
+	max_bounds := Array.map (fun (low, high) -> high) v0;*)
+	(*** BADPROG (to improve ***)
+	(* Initialize *)
+	min_bounds := Array.make !nb_dimensions NumConst.zero;
+	max_bounds := Array.make !nb_dimensions NumConst.zero;
+	(* Fill *)
+	for parameter_index = 0 to !nb_dimensions - 1 do
+		!min_bounds.(parameter_index) <- v0#get_min parameter_index;
+		!max_bounds.(parameter_index) <- v0#get_max parameter_index;
+	done;
+	
+	
+	(* Compute the (actually slightly approximate) number of points in V0 (for information purpose) *)
+(*	nb_points := Array.fold_left (fun current_number (low, high) ->
+		(* Multiply current number of points by the interval + 1, itself divided by the step *)
+		NumConst.mul
+			current_number
+			(NumConst.div
+				(NumConst.add
+					(NumConst.sub high low)
+					NumConst.one
+				)
+				options#step
+			)
+	) NumConst.one v0;*)
+	nb_points := NumConst.one;
+	for parameter_index = 0 to !nb_dimensions - 1 do
+		nb_points :=
+		let low = v0#get_min parameter_index in
+		let high = v0#get_max parameter_index in
+		(* Multiply current number of points by the interval + 1, itself divided by the step *)
+		NumConst.mul
+			!nb_points
+			(NumConst.div
+				(NumConst.add
+					(NumConst.sub high low)
+					NumConst.one
+				)
+				options#step
+			)
+		;
+	done;
+	
+	(*** TODO: check that it is not empty (or is it done elsewhere?) ***)
+	
+	(* Counts the points actually member of an existing constraint (hence useless) for information purpose *)
+	nb_useless_points := 0;
+	
+	(* Compute the initial state *)
+	init_state := get_initial_state_or_abort model;
+
+
+
+
+	
+	(* Compute some variables for the border cartography only *)
+	(* Current_intervals_min and Current_intervals_max represent, for each dimension, the interval (multiple of step) in which the points have not been classified as good or bad *)
+	let the_current_intervals_min, the_current_intervals_max =
+	match options#imitator_mode with
+		| Border_cartography -> 
+			Array.copy !min_bounds, Array.copy !max_bounds
+(*			let first, others =
+			begin match model.parameters with 
+				| first :: others -> first , others 
+				| _ -> raise (InternalError("There should be at least one parameter (but this may not have been checked somewhere else, right?)."))
+			end
+			in
+			(* Current dimension we consider *)
+			ref first,
+			(* The other dimensions *)
+			ref others,
+			(* The initial interval: min and max bound for the current dimension *)
+			ref min_bounds.(first), ref max_bounds.(first)*)
+	
+		(* Otherwise, does not matter *)
+		| _ -> (*ref 0, ref [], ref NumConst.zero, ref NumConst.zero*) Array.make 0 NumConst.zero, Array.make 0 NumConst.zero
+	in
+	current_intervals_min := the_current_intervals_min;
+	current_intervals_max := the_current_intervals_max;
+	
+
+	(* Current iteration (for information purpose) *)
+	current_iteration := 1;
+	(* Sum of number of states (for information purpose) *)
+	nb_states := 0;
+	(* Sum of number of transitions (for information purpose) *)
+	nb_transitions := 0;
+
+	(* Debug mode *)
+	global_debug_mode := get_debug_mode();
+	
+	(*** TODO : check that initial pi0 is suitable!! (could be incompatible with initial constraint) ***)
+	
+	(* Print *)
+	print_message Debug_standard ("\n**************************************************");
+	print_message Debug_standard (" START THE BEHAVIORAL CARTOGRAPHY ALGORITHM");
+	print_message Debug_standard ("**************************************************");
+	print_message Debug_standard (" Parametric rectangle V0: ");
+	print_message Debug_standard (ModelPrinter.string_of_v0 model v0);
+	print_message Debug_standard (" Number of points inside V0: " ^ (NumConst.string_of_numconst !nb_points));
+	()
 
 
 
