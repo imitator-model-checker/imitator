@@ -644,7 +644,7 @@ let send_pi0 (pi0 : AbstractModel.pi0) slave_rank =
 
 
 (* Sends a point (first the size then the point), by the slave *)
-let send_pi0_worker (pi0 : AbstractModel.pi0) =
+let send_pi0_worker pi0  =
 	let rank = rank() in
 	print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "] Entering send_pi0");
 	let mpi0 = serialize_pi0 pi0 in
@@ -654,6 +654,8 @@ let send_pi0_worker (pi0 : AbstractModel.pi0) =
 	Mpi.send res_size masterrank (int_of_slave_tag Slave_pi0_tag) Mpi.comm_world;
 	Mpi.send mpi0 masterrank (int_of_slave_tag Slave_pi0_tag) Mpi.comm_world
 	
+
+
 	
 	
 	

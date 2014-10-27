@@ -379,7 +379,7 @@ let master () =
 	
 	(******************Adjustable values********************)
 	(* number of subpart want to initialize in the first time *)
-	let np = 0 in
+	let np = 9 in
 	(*depend on size of model*)
 	let dynamicSplittingMode = ref true in
 	(*******************************************************)
@@ -401,11 +401,11 @@ let master () =
 		print_message Debug_medium ("[Master] heloooooo ");
 		
 		counter_master_waiting#start;
-		let pull_request = receive_pull_request () in
+		let pull_request = ref (receive_pull_request ()) in
 		counter_master_waiting#stop;
 		
 		(*send_terminate source_rank;*)
-		match pull_request with 
+		match !pull_request with 
 		(*Pull Tag*)
 		| PullOnly source_rank -> 
 				 print_message Debug_medium ("[Master] Received a pull request from worker " ^ (string_of_int source_rank) ^ "");
@@ -435,7 +435,8 @@ let master () =
 					(*print_message Debug_standard ("[Master]  worker " ^ (string_of_int source_rank) ^ " terminated!!!");
 					send_terminate source_rank;*)
 
-				  end
+				  end;
+				  print_message Debug_medium ("[Master] Received a pull request from worker " ^ (string_of_int source_rank) ^ " end!!!");
 		(*Tile Tag*)
 		| Tile (source_rank , tile) -> 
 				   print_message Debug_medium ("[Master] Received a tile from worker " ^ (string_of_int source_rank) ^ "");
@@ -455,6 +456,7 @@ let master () =
 					  end;
 				      done
 				    end;
+				    print_message Debug_medium ("[Master] Received a tile from worker " ^ (string_of_int source_rank) ^ " end!!!!!!");
 
 		(*Pi0 Tag*)
 		| Pi0 (source_rank , pi0) -> 
@@ -518,7 +520,9 @@ let master () =
 					    (*print_message Debug_standard ("[Master] All workers done" );*)
 					  end
 				     end;
-				     send_continue source_rank
+				     send_continue source_rank;
+				     
+				     print_message Debug_medium ("[Master] Received a pi0 from worker " ^ (string_of_int source_rank) ^ " end!!!!");
 		
 		(*Serialize/Unserialize the List of tile HERE!!!!*)
 		(*| UpdateRequest source_rank ->
@@ -700,6 +704,7 @@ let worker() =
 			    print_message Debug_medium (" send_update_request to master ");
 			    
 			    let receivedContinue = ref false in
+			     
 			    while (not !receivedContinue) do
 			    let check = receive_work () in
 			    match check with
@@ -718,9 +723,11 @@ let worker() =
 							Cartography.test_pi0_uncovered !pi0 found_pi0 ;
 							if(not !found_pi0) then
 							compute_next_pi0_sequentially more_pi0 limit_reached first_point (None);
+							 pi0 := (Cartography.get_current_pi0());
 							print_message Debug_standard ("[Worker " ^ (string_of_int rank) ^ "] received Tile from Master.");
 							
-			     | _ -> 			raise (InternalError("error!!! receive tile at worker side."));
+			     | _ -> 			print_message Debug_medium ("error!!! receive tile at worker side." ^ (string_of_int rank) ^ " ");
+							raise (InternalError("error!!! receive tile at worker side."));
 			    
 			    done;
 			    
@@ -733,7 +740,7 @@ let worker() =
 			      print_message Debug_standard ("[Worker " ^ (string_of_int rank) ^ "] received Tile from Master.");
 			    end;*)
 							
-			    pi0 := (Cartography.get_current_pi0());
+			   (* pi0 := (Cartography.get_current_pi0());*)
 			  
 			    (* Set the new pi0 *)
 			    Input.set_pi0 !pi0;
@@ -782,7 +789,8 @@ let worker() =
 				print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "] I was just told to terminate work.");
 				finished := true
 			
-		| _ -> 		raise (InternalError("have not implemented."));
+		| _ -> 		print_message Debug_medium ("have not implemented.");
+				raise (InternalError("have not implemented."));
 		
 		
 	done;
