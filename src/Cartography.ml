@@ -1086,7 +1086,7 @@ let bc_initialize_subpart () =	(* Get the model *)
 				options#step
 			)
 	) NumConst.one v0;*)
-	nb_points := NumConst.one;
+(*	nb_points := NumConst.one;
 	for parameter_index = 0 to !nb_dimensions - 1 do
 		nb_points :=
 		let low = v0#get_min parameter_index in
@@ -1102,7 +1102,7 @@ let bc_initialize_subpart () =	(* Get the model *)
 				options#step
 			)
 		;
-	done;
+	done;*)
 	
 	(*** TODO: check that it is not empty (or is it done elsewhere?) ***)
 	
@@ -1143,11 +1143,11 @@ let bc_initialize_subpart () =	(* Get the model *)
 	
 
 	(* Current iteration (for information purpose) *)
-	current_iteration := 1;
+	(*current_iteration := 1;*)
 	(* Sum of number of states (for information purpose) *)
-	nb_states := 0;
+	(*nb_states := 0;*)
 	(* Sum of number of transitions (for information purpose) *)
-	nb_transitions := 0;
+	(*nb_transitions := 0;*)
 
 	(* Debug mode *)
 	global_debug_mode := get_debug_mode();
@@ -1155,12 +1155,12 @@ let bc_initialize_subpart () =	(* Get the model *)
 	(*** TODO : check that initial pi0 is suitable!! (could be incompatible with initial constraint) ***)
 	
 	(* Print *)
-	print_message Debug_standard ("\n**************************************************");
+(*	print_message Debug_standard ("\n**************************************************");
 	print_message Debug_standard (" START THE BEHAVIORAL CARTOGRAPHY ALGORITHM");
 	print_message Debug_standard ("**************************************************");
 	print_message Debug_standard (" Parametric rectangle V0: ");
 	print_message Debug_standard (ModelPrinter.string_of_v0 model v0);
-	print_message Debug_standard (" Number of points inside V0: " ^ (NumConst.string_of_numconst !nb_points));
+	print_message Debug_standard (" Number of points inside V0: " ^ (NumConst.string_of_numconst !nb_points));*)
 	()
 
 

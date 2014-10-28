@@ -104,7 +104,7 @@ let split s dimension =
 	(*count from zero so that add 1 unit*)
 	max_d_l := ( (NumConst.to_int(s#get_max dimension)) - (NumConst.to_int(s#get_min dimension)) +1 );
 	if (!max_d_l = 1) then raise (Ex ("the length is minimum, could not split smaller "));
-	print_message Debug_standard ("\ndetected Max dimension length in this subpart is : " ^ (string_of_int (!max_d_l)) ^ " unit at dimension " ^ (string_of_int (dimension))); 
+	print_message Debug_medium ("\ndetected Max dimension length in this subpart is : " ^ (string_of_int (!max_d_l)) ^ " unit at dimension " ^ (string_of_int (dimension))); 
 	  (*create new subparts*)
 	  let s1 = new HyperRectangle.hyper_rectangle in
 	  let s2 = new HyperRectangle.hyper_rectangle in
@@ -202,14 +202,14 @@ let intialize_Subparts (v0 : HyperRectangle.hyper_rectangle) (n : int) =
 	  (*check if length every edge if equals to unit*)
 	  if (!max_pi0s != 1) then 
 	  begin
-	    print_message Debug_standard ("\nMax pi0s in list is : " ^ (string_of_int !max_pi0s) ^ " in subpart : " ^ (string_of_int !subno));
+	    print_message Debug_medium ("\nMax pi0s in list is : " ^ (string_of_int !max_pi0s) ^ " in subpart : " ^ (string_of_int !subno));
 	    (*get list split subparts*)
 	    let newSubpartList = sliptLongestDimensionSubpart (at !subparts !subno) in (*!subno*)
 	    (*remove old subpart*)
 	    subparts := (remove_at !subparts !subno);
 	    (*add new subparts*)
 	    subparts := !subparts@newSubpartList;
-	    print_message Debug_standard ("\nList length : " ^ (string_of_int (List.length !subparts) ) );
+	    print_message Debug_medium ("\nList length : " ^ (string_of_int (List.length !subparts) ) );
 	   end
 	   else
 	   begin
@@ -282,7 +282,7 @@ let get_next_sequential_pi0_in_subpart pi0 (s : HyperRectangle.hyper_rectangle) 
 
 (* dynamic split subpart *)
 let dynamicSplitSubpart (s : HyperRectangle.hyper_rectangle) pi0 : HyperRectangle.hyper_rectangle list =
-	print_message Debug_standard ("\n entering dynamic splitting process" );
+	print_message Debug_medium ("\n entering dynamic splitting process" );
 	let pi0 = get_next_sequential_pi0_in_subpart pi0 s in 
 	let notFound = ref true in
 	let max_d_l = ref 0 in
@@ -298,7 +298,7 @@ let dynamicSplitSubpart (s : HyperRectangle.hyper_rectangle) pi0 : HyperRectangl
 	    (*split subpart if the remain distance from pi0 to max dimension at leat 2 points*)
 	    if( !max_d_l > 1 ) then
 	      begin
-		print_message Debug_standard ("\nBegin split at demension : " ^ (string_of_int (!j) ) );
+		print_message Debug_medium ("\nBegin split at demension : " ^ (string_of_int (!j) ) );
 		lst := split s !j;
 		notFound := false ;
 	      end;
@@ -379,7 +379,7 @@ let master () =
 	
 	(******************Adjustable values********************)
 	(* number of subpart want to initialize in the first time *)
-	let np = 9 in
+	let np = 0 in
 	(*depend on size of model*)
 	let dynamicSplittingMode = ref true in
 	(*******************************************************)
@@ -429,8 +429,8 @@ let master () =
 				  begin
 
 					waittingList := !waittingList@[source_rank];
-					print_message Debug_standard ("[Master]  worker " ^ (string_of_int source_rank) ^ " go to waittingList!!!");
-					print_message Debug_standard ("[Master]  waitting list size : " ^ (string_of_int (List.length !waittingList)) );
+					print_message Debug_medium ("[Master]  worker " ^ (string_of_int source_rank) ^ " go to waittingList!!!");
+					print_message Debug_medium ("[Master]  waitting list size : " ^ (string_of_int (List.length !waittingList)) );
 
 					(*print_message Debug_standard ("[Master]  worker " ^ (string_of_int source_rank) ^ " terminated!!!");
 					send_terminate source_rank;*)
@@ -466,7 +466,7 @@ let master () =
 				  begin
 				    send_tile (List.assoc source_rank !tilebuffer) source_rank;
 				    tilebuffer := (List.remove_assoc source_rank !tilebuffer);
-				    print_message Debug_standard ("[Master] send a tile to worker " ^ (string_of_int source_rank) ^ "");
+				    print_message Debug_medium ("[Master] send a tile to worker " ^ (string_of_int source_rank) ^ "");
 				  end
 				done;
 				
@@ -487,7 +487,7 @@ let master () =
 					counter_master_split#stop;
 
 					let remain_points = max_size - done_points in
-					 print_message Debug_standard ("[Master] Splitting ....... ");
+					 print_message Debug_medium ("[Master] Splitting ....... ");
 					if(remain_points > 1) 
 					  then
 					  begin
@@ -688,7 +688,6 @@ let worker() =
 			let pi0 = ref (Cartography.get_current_pi0()) in
 			
 (* 			counter_worker_working#start;    *)
-			   (*let c = ref 0 in*)
  			while (!more_pi0 && not !limit_reached) do 			    
 			    
 			    print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "] pi0:");
@@ -697,7 +696,6 @@ let worker() =
 			    (*send_update_request();*)
 			    pi0 := (Cartography.get_current_pi0());
 			    
-			    (*Input.set_pi0 !pi0;*)
 			    
 			    send_pi0_worker !pi0;
 			    
@@ -711,20 +709,15 @@ let worker() =
 				
 			    | Tile tile -> 		print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "] received Tile from Master.");
 							let b = Cartography.bc_process_im_result tile in
-							print_message Debug_standard ("[Worker " ^ (string_of_int rank) ^ "] received Tile from Master.");
+							print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "] received Tile from Master.");
 							
-			    | Subpart subpart ->	print_message Debug_standard ("[Worker " ^ (string_of_int rank) ^ "] received scaled subpart tag from Master.");
+			    | Subpart subpart ->	print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "] received scaled subpart tag from Master.");
 							Input.set_v0 subpart;
 							Cartography.bc_initialize_subpart ();
 			    
 			    | Continue ->  		print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "] received continue tag from Master.");
 							receivedContinue := true;	
-							let found_pi0 = ref false in
-							Cartography.test_pi0_uncovered !pi0 found_pi0 ;
-							if(not !found_pi0) then
-							compute_next_pi0_sequentially more_pi0 limit_reached first_point (None);
-							 pi0 := (Cartography.get_current_pi0());
-							print_message Debug_standard ("[Worker " ^ (string_of_int rank) ^ "] received Tile from Master.");
+							print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "] received Tile from Master.");
 							
 			     | _ -> 			print_message Debug_medium ("error!!! receive tile at worker side." ^ (string_of_int rank) ^ " ");
 							raise (InternalError("error!!! receive tile at worker side."));
@@ -732,15 +725,14 @@ let worker() =
 			    done;
 			    
 (* 				counter_worker_working#stop; *)
-			    (*let found_pi0 = ref false in
+			    let found_pi0 = ref false in
 			    Cartography.test_pi0_uncovered !pi0 found_pi0 ;
 			    if(not !found_pi0) then
 			    begin
 			      compute_next_pi0_sequentially more_pi0 limit_reached first_point (None);
-			      print_message Debug_standard ("[Worker " ^ (string_of_int rank) ^ "] received Tile from Master.");
-			    end;*)
+			       pi0 := (Cartography.get_current_pi0());
+			    end;
 							
-			   (* pi0 := (Cartography.get_current_pi0());*)
 			  
 			    (* Set the new pi0 *)
 			    Input.set_pi0 !pi0;
