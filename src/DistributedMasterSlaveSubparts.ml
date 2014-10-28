@@ -367,19 +367,19 @@ let master () =
 	
 
 	(*print_message Debug_standard ("[Master] Here!!!!!!!!!!");*)
-	(* create index(worker,supart) *)
-	let index = ref [] in
+	(* create worker2subpart(worker,supart) *)
+	let worker2subpart = ref [] in
 	(* current pi0 of workers*)
 	let current_Pi0 = ref [] in
 	(* stopSplitting flag *)
-	let stopSplitting = ref false in
+	(*let stopSplitting = ref false in*)
 	(*waitting *)
-	let waittingList = ref [] in
+	(*let waittingList = ref [] in*)
 	
 	
 	(******************Adjustable values********************)
 	(* number of subpart want to initialize in the first time *)
-	let np = 0 in
+	let np = 9 in
 	(*depend on size of model*)
 	let dynamicSplittingMode = ref true in
 	(*******************************************************)
@@ -390,6 +390,10 @@ let master () =
 	counter_master_split#stop;
 	
 	let tilebuffer = ref [] in
+	
+	let pi0buffer = ref [] in
+	
+	let subpartbuffer = ref [] in
 
 	
 	(*** THE ALGORITHM STARTS HERE ***)
@@ -401,83 +405,132 @@ let master () =
 		print_message Debug_medium ("[Master] heloooooo ");
 		
 		counter_master_waiting#start;
-		let pull_request = ref (receive_pull_request ()) in
+		let pull_request = receive_pull_request () in
 		counter_master_waiting#stop;
 		
 		(*send_terminate source_rank;*)
-		match !pull_request with 
+		match pull_request with 
 		(*Pull Tag*)
 		| PullOnly source_rank -> 
 				 print_message Debug_medium ("[Master] Received a pull request from worker " ^ (string_of_int source_rank) ^ "");
 				 (* check to delete if the worker comeback *)
-				 if(List.mem_assoc source_rank !index) then
+				 if(List.mem_assoc source_rank !worker2subpart) then
 				  begin
-				    index := List.remove_assoc source_rank !index;
+				    worker2subpart := List.remove_assoc source_rank !worker2subpart;
 				  end;
-				  
+				  (*******************)
 				  if (!subparts != [])  then 
 				  begin
 				    (*send new subpart *)
 				    send_subpart (List.hd !subparts) source_rank;
 				    print_message Debug_medium ("[Master] Sent Subpart to worker " ^ (string_of_int source_rank) ^ "");
-				    (*add into index*)
-				    index := !index@[( source_rank, (List.hd !subparts) )];
+				    (*add into worker2subpart*)
+				    worker2subpart := !worker2subpart@[( source_rank, (List.hd !subparts) )];
 				    subparts := List.tl !subparts;
 				  end
 				 (*have not any subpart in list -> splitting* , if could not split -> terminate*)
 				 else
 				  begin
-
-					waittingList := !waittingList@[source_rank];
-					print_message Debug_medium ("[Master]  worker " ^ (string_of_int source_rank) ^ " go to waittingList!!!");
-					print_message Debug_medium ("[Master]  waitting list size : " ^ (string_of_int (List.length !waittingList)) );
-
-					(*print_message Debug_standard ("[Master]  worker " ^ (string_of_int source_rank) ^ " terminated!!!");
-					send_terminate source_rank;*)
-
-				  end;
-				  print_message Debug_medium ("[Master] Received a pull request from worker " ^ (string_of_int source_rank) ^ " end!!!");
-		(*Tile Tag*)
-		| Tile (source_rank , tile) -> 
-				   print_message Debug_medium ("[Master] Received a tile from worker " ^ (string_of_int source_rank) ^ "");
-				   (*check duplicated tile*)
-				   	counter_master_processing#start;
-					let b = Cartography.bc_process_im_result tile in
-				   	counter_master_processing#stop;
-
-				   if(b) then
-				    begin
-				      (*receive tile then send to the other workers to update*)
-				      for i = 0 to (List.length !index)-1 do
-					if ( (first (List.nth !index i)) != source_rank ) then
+					
+					(*chossing subpart to split*)
+					print_message Debug_standard ("[Master] Splitting ....... ");	
+					let s = ref (new HyperRectangle.hyper_rectangle) in
+					let w = ref 0 in
+					let pi0 = ref (new PVal.pval) in
+					let remain_points = ref 0 in
+					let temp = ref 0 in
+					
+					let subpartfound = ref false in
+					let i = ref 0 in
+					while( (not !subpartfound) && (!i != (List.length !worker2subpart) ) ) do
+					(*for i = 0 to (List.length !worker2subpart) -1 do*)
 					  begin
-					   (* send_tile tile (first (List.nth !index i));*)
-					   tilebuffer := !tilebuffer@[(first (List.nth !index i)), tile];
-					  end;
-				      done
-				    end;
-				    print_message Debug_medium ("[Master] Received a tile from worker " ^ (string_of_int source_rank) ^ " end!!!!!!");
+					  print_message Debug_standard ("[Master]  bugggggggggg!!!!!!!!!!!!! " );
+					    let s_temp = (second (List.nth !worker2subpart !i)) in
+					    let w_temp = (first (List.nth !worker2subpart !i)) in
+					    let pi0_temp = (List.assoc w_temp !pi0buffer) in
+					    let max_size = get_points_in_subpart s_temp in
+					    let done_points = done_points_in_subpart s_temp pi0_temp in
+					    temp := max_size - done_points;
+					    print_message Debug_standard ("[Master] temp " ^ (string_of_int !temp) ^ "");
+					    
+					   (* let found_pi0 = ref false in
+					    let found_pi0 = Cartography.test_pi0_uncovered !pi0 found_pi0 ;*)
+					    if ((*!temp > !remain_points*) (*&& !found_pi0*) (*&&*) (!temp > 1) && (max_size > done_points))
+					    then
+					     begin
+					     print_message Debug_standard ("[Master]  bugggggggggg!!!!!!!!!!!!!1111111111 " );
+						subpartfound := true;
+						remain_points := !temp;
+						s := s_temp;
+						w := w_temp;
+						pi0 := pi0_temp;
+					     end;
+					     print_message Debug_medium ("[Master] finding ....... ");
+					     i := !i + 1;
+					  end
+					done;
+					
+					
+					
+					(*splitting*)
+					 (*let found_pi0 = ref false in
+					    Cartography.test_pi0_uncovered !pi0 found_pi0 ;*)
+					if(!remain_points > 1 (*&& !found_pi0*)) 
+					  then
+					    begin
+					    print_message Debug_medium ("[Master] Splitting ....... ");
+					    worker2subpart := (List.remove_assoc !w !worker2subpart);
+					    
+					    if(List.mem_assoc !w !subpartbuffer) then
+					    begin
+					      subpartbuffer := List.remove_assoc !w !subpartbuffer;
+					    end;
+					    
+					    let pi0arr = pval2array !pi0 in
 
-		(*Pi0 Tag*)
-		| Pi0 (source_rank , pi0) -> 
-				print_message Debug_medium ("[Master] Received a pi0 from worker " ^ (string_of_int source_rank) ^ "");
-				(*Update tiles*)
-				while(List.mem_assoc source_rank !tilebuffer) do
-				  begin
-				    send_tile (List.assoc source_rank !tilebuffer) source_rank;
-				    tilebuffer := (List.remove_assoc source_rank !tilebuffer);
-				    print_message Debug_medium ("[Master] send a tile to worker " ^ (string_of_int source_rank) ^ "");
-				  end
-				done;
-				
-				
-				(*Splitting*)
-				let found_pi0 = ref false in
+					    (*counter_master_split#start;*)
+					    print_message Debug_standard (ModelPrinter.string_of_v0 model !s);
+					    print_message Debug_standard   (ModelPrinter.string_of_pi0 model (!pi0));
+					    
+					    let newSubparts = dynamicSplitSubpart !s pi0arr in
+					    print_message Debug_standard ("[Master]  bugggggggggg!!!!!!!!!!!!!1111111111 " );
+					    (*counter_master_split#stop;*)
+					    
+					    (*send splitSubpart worker*)
+					    send_subpart (at newSubparts 1) source_rank;
+					    worker2subpart := !worker2subpart@[source_rank, (at newSubparts 1)];
+					    print_message Debug_medium ("[Master] sent slipt subpart 2....... ");
+					    
+					    (*send back to this worker*)
+					    print_message Debug_medium ("[Master] sent slipt subpart 1....... ");
+					    (*sending back now store in buffer to send later*)
+					    subpartbuffer := !subpartbuffer@[!w, (at newSubparts 0)];
+					    worker2subpart := !worker2subpart@[!w, (at newSubparts 0)];
+					    
+					    (*worker2subpart := !worker2subpart@[source_rank, !s];*)
+					    
+					   
+					    (*waittingList := remove_at_lst !waittingList 0;*)
+					    print_message Debug_standard ("[Master] All workers done" );
+					    (*send_terminate source_rank;*)
+
+					    end
+					  else
+					    begin
+					    send_terminate source_rank;
+					   (* waittingList := !waittingList@[source_rank];*)
+						 print_message Debug_standard ("[Master] ASFSDGGSD" );
+					    end;
+					    
+					    
+					    
+					   (* et found_pi0 = ref false in
 				Cartography.test_pi0_uncovered pi0 found_pi0 ;
 				     if( !waittingList != [] && !found_pi0) then
 				      begin
 					print_message Debug_medium ("[Master] waitting List : " ^ (string_of_int (List.length !waittingList) ) ^ "");
-					let s = List.assoc source_rank !index in
+					let s = List.assoc source_rank !worker2subpart in
 					
 					(*compute the remain points int this subpart*)
 					
@@ -487,14 +540,14 @@ let master () =
 					counter_master_split#stop;
 
 					let remain_points = max_size - done_points in
-					 print_message Debug_medium ("[Master] Splitting ....... ");
+					 print_message Debug_standard ("[Master] Splitting ....... ");
 					if(remain_points > 1) 
 					  then
 					  begin
 					    print_message Debug_medium ("[Master] Splitting ....... ");
-					    (*if splitable, remove it in the index*)
-					    index := (List.remove_assoc source_rank !index);
-					    
+					    (*if splitable, remove it in the worker2subpart*)
+					    worker2subpart := (List.remove_assoc source_rank !worker2subpart);
+					    waittingList
 					    let pi0arr = pval2array pi0 in
 					    
 					    (*method1*)
@@ -509,24 +562,53 @@ let master () =
 					    send_subpart (List.hd newSubparts) source_rank;
 					    print_message Debug_medium ("[Master] sent split subpart 1....... ");
 					    
-					     index := !index@[source_rank, (at newSubparts 0)];
+					     worker2subpart := !worker2subpart@[source_rank, (at newSubparts 0)];
 					    
 					    (*send the other to waitting worker*)
 					    let w = List.hd !waittingList in
 					    send_subpart (at newSubparts 1) w;
-					    index := !index@[w, (at newSubparts 1)];
+					    worker2subpart := !worker2subpart@[w, (at newSubparts 1)];
 					    print_message Debug_medium ("[Master] sent split subpart 2....... ");
 					    waittingList := remove_at_lst !waittingList 0;
 					    (*print_message Debug_standard ("[Master] All workers done" );*)
 					  end
-				     end;
-				     send_continue source_rank;
-				     
-				     print_message Debug_medium ("[Master] Received a pi0 from worker " ^ (string_of_int source_rank) ^ " end!!!!");
-		
-		(*Serialize/Unserialize the List of tile HERE!!!!*)
-		(*| UpdateRequest source_rank ->
-				print_message Debug_standard ("[Master] UpdateRequest List ");
+				     end;*)
+					
+
+				  end
+		(*Tile Tag*)
+		| Tile (source_rank , tile) -> 
+				   print_message Debug_medium ("[Master] Received a tile from worker " ^ (string_of_int source_rank) ^ "");
+				   (*check duplicated tile*)
+				   	counter_master_processing#start;
+					let b = Cartography.bc_process_im_result tile in
+				   	counter_master_processing#stop;
+
+				   if(b) then
+				    begin
+				      (*receive tile then send to the other workers to update*)
+				      for i = 0 to (List.length !worker2subpart)-1 do
+					if ( (first (List.nth !worker2subpart i)) != source_rank ) then
+					  begin
+					   (* send_tile tile (first (List.nth !worker2subpart i));*)
+					   tilebuffer := !tilebuffer@[(first (List.nth !worker2subpart i)), tile];
+					  end;
+				      done
+				    end;
+
+		(*Pi0 Tag*)
+		| Pi0 (source_rank , pi0) -> 
+				print_message Debug_medium ("[Master] Received a pi0 from worker " ^ (string_of_int source_rank) ^ "");
+				
+				(*Update pi0s*)
+				if(List.mem_assoc source_rank !pi0buffer) then
+				 begin
+				   pi0buffer := List.remove_assoc source_rank !pi0buffer;
+				 end;
+				pi0buffer := !pi0buffer@[( source_rank, pi0 )];  
+				print_message Debug_standard ("[Master] pi0s list : " ^ (string_of_int (List.length !pi0buffer) ) ^ "");
+				
+				(*Send tiles for updating*)
 				while(List.mem_assoc source_rank !tilebuffer) do
 				  begin
 				    send_tile (List.assoc source_rank !tilebuffer) source_rank;
@@ -534,22 +616,61 @@ let master () =
 				    print_message Debug_standard ("[Master] send a tile to worker " ^ (string_of_int source_rank) ^ "");
 				  end
 				done;
-				send_continue source_rank*)
+				(*Send v0 for updating*)
+				(*if(List.mem_assoc source_rank !worker2subpart) then
+				begin
+				  send_subpart (List.assoc source_rank !worker2subpart) source_rank;
+				end;*)
+				(*subpartbuffer*)
+				if(List.mem_assoc source_rank !subpartbuffer) then
+				begin
+				  send_subpart (List.assoc source_rank !subpartbuffer) source_rank;
+				  subpartbuffer := List.remove_assoc source_rank !subpartbuffer;
+				 (* worker2subpart := List.remove_assoc source_rank !worker2subpart;*)
+				end;
+				
+				send_continue source_rank
+				
+				
 		
+		(*| UpdateRequest -> 
+				print_message Debug_medium ("[Master] Received a UpdateRequest from worker " ^ (string_of_int source_rank) ^ "");
 				     
-				     
+				(*Send tiles for updating*)
+				while(List.mem_assoc source_rank !tilebuffer) do
+				  begin
+				    send_tile (List.assoc source_rank !tilebuffer) source_rank;
+				    tilebuffer := (List.remove_assoc source_rank !tilebuffer);
+				    print_message Debug_standard ("[Master] send a tile to worker " ^ (string_of_int source_rank) ^ "");
+				  end
+				done;
+				(*Send v0 for updating*)
+				(*if(List.mem_assoc source_rank !worker2subpart) then
+				begin
+				  send_subpart (List.assoc source_rank !worker2subpart) source_rank;
+				end;*)
+				(*subpartbuffer*)
+				if(List.mem_assoc source_rank !subpartbuffer) then
+				begin
+				  send_subpart (List.assoc source_rank !subpartbuffer) source_rank;
+				  subpartbuffer := List.remove_assoc source_rank !subpartbuffer;
+				 (* worker2subpart := List.remove_assoc source_rank !worker2subpart;*)
+				end;
+				
+				send_continue source_rank*)
+				
 		(*0ther cases*)
 		|_ -> raise (InternalError("have not implemented."));
 	  end;
 	
 	(**)
-	if(!index = []) 
+	if(!worker2subpart = []) 
 	  then 
 	  begin 
 	    check_covered := true;
-	    for i = 0 to (List.length !waittingList)-1 do
+(*	    for i = 0 to (List.length !waittingList)-1 do
 		send_terminate (List.nth !waittingList i);
-	    done
+	    done*)
 	  end;
 	
 	(*stopSplitting := true;*)
@@ -751,17 +872,18 @@ let worker() =
 			    let im_result , _ = Reachability.inverse_method_gen model init_state in
 (* 			    raise (InternalError("stop here")); *)
 
-			    (*send result to master*)
-			    send_result_worker im_result;
-			    
-			    
 			    (* Get the debug mode back *)
 			    set_debug_mode global_debug_mode;
 			    
 			    (* Process result *)
 			    let added = Cartography.bc_process_im_result im_result in
 			    counter_worker_IM#stop;
-
+			    
+			   (* if(added) then
+			    begin*)
+			    (*send result to master*)
+			      send_result_worker im_result;
+			    (*end;*)
 			    
 			    (* Print some info *)
 			    print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "]  Constraint really added? " ^ (string_of_bool added) ^ "");
