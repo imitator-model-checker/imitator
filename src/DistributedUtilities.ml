@@ -653,27 +653,7 @@ let send_pi0_worker pi0  =
 	Mpi.send rank masterrank (int_of_slave_tag Slave_pi0_tag) Mpi.comm_world;
 	Mpi.send res_size masterrank (int_of_slave_tag Slave_pi0_tag) Mpi.comm_world;
 	Mpi.send mpi0 masterrank (int_of_slave_tag Slave_pi0_tag) Mpi.comm_world
-	
 
-
-	
-	
-	
-(*	let rank = rank() in
-
-	print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "] Entering send_constraint");
-	let mlc = (*LinearConstraint.serialize_linear_constraint linear_constraint *) serialize_im_result im_result in
-	let res_size = String.length mlc in
-
-	print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "] Serialized constraint '" ^ mlc ^ "'");
-	
-	(* Send the result: 1st send my rank, then the data size, then the data *)
-	print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "] About to send the size (" ^ (string_of_int res_size) ^ ") of the constraint.");
-	Mpi.send rank masterrank (int_of_slave_tag Slave_result_tag) Mpi.comm_world;
-	Mpi.send res_size masterrank (int_of_slave_tag Slave_result_tag) Mpi.comm_world;
-	Mpi.send mlc masterrank (int_of_slave_tag Slave_result_tag) Mpi.comm_world*)
-	
-	
 
 
 
@@ -836,28 +816,28 @@ let receive_work () =
 	(*Hoang Gia new tags*)
 	| Master_tile_tag -> 
 		(* Receive the data itself *)
-		let buff = String.create w in
-		let work = ref buff in
+		let buff1 = String.create w in
+		let work1 = ref buff1 in
 
-		work := Mpi.receive masterrank (int_of_master_tag Master_tile_tag) Mpi.comm_world;
+		work1 := Mpi.receive masterrank (int_of_master_tag Master_tile_tag) Mpi.comm_world;
 		
-		print_message Debug_high ("Received " ^ (string_of_int w) ^ " bytes of work '" ^ !work ^ "' with tag " ^ (string_of_int (int_of_master_tag Master_tile_tag)));
+		print_message Debug_high ("Received " ^ (string_of_int w) ^ " bytes of work '" ^ !work1 ^ "' with tag " ^ (string_of_int (int_of_master_tag Master_tile_tag)));
 		
 		(* Get the K *)
-		let im_result = unserialize_im_result !work in
+		let im_result = unserialize_im_result !work1 in
 		Tile im_result
 		
 	| Master_subpart_tag -> 
 	  	(* Receive the data itself *)
-		let buff = String.create w in
-		let work = ref buff in
+		let buff2 = String.create w in
+		let work2 = ref buff2 in
 
-		work := Mpi.receive masterrank (int_of_master_tag Master_subpart_tag) Mpi.comm_world;
+		work2 := Mpi.receive masterrank (int_of_master_tag Master_subpart_tag) Mpi.comm_world;
 		
-		print_message Debug_high ("Received " ^ (string_of_int w) ^ " bytes of work '" ^ !work ^ "' with tag " ^ (string_of_int (int_of_master_tag Master_subpart_tag)));
+		print_message Debug_high ("Received " ^ (string_of_int w) ^ " bytes of work '" ^ !work2 ^ "' with tag " ^ (string_of_int (int_of_master_tag Master_subpart_tag)));
 		
 		(* Get the K *)
-		let subpart = unserialize_hyper_rectangle !work in
+		let subpart = unserialize_hyper_rectangle !work2 in
 		Subpart subpart
 
 	| Master_terminate_tag -> Terminate

@@ -225,24 +225,38 @@ let intialize_Subparts (v0 : HyperRectangle.hyper_rectangle) (n : int) =
 let get_points_in_subpart (s : HyperRectangle.hyper_rectangle)=
 	let total = ref 1 in
 	for i=0 to (HyperRectangle.get_dimensions()-1) do
-	total := !total * (NumConst.to_int(s#get_max i)+1);
+	total := !total * (NumConst.to_int(s#get_max i) - NumConst.to_int(s#get_min i) + 1);
 	done;
 	!total;;
 	()
 
 (*compute the how many points was done in subpart*)
-let done_points_in_subpart (s : HyperRectangle.hyper_rectangle) (arr : AbstractModel.pi0) =
+(*let done_points_in_subpart (s : HyperRectangle.hyper_rectangle) (arr : AbstractModel.pi0) =
 	let sum = ref 0 in
 	let tail = ref 1 in
 	for i= (HyperRectangle.get_dimensions()-1) downto 0 do
 	  for j=i-1 downto 0 do
-	    tail := !tail*(NumConst.to_int(s#get_max j)+1) ;
+	    tail := !tail*(NumConst.to_int(s#get_max j) - NumConst.to_int(s#get_min j) +1) ;
 	  done;
-	  sum := !sum + ( (NumConst.to_int (arr#get_value(i))) * !tail );
+	  sum := !sum + ( ((NumConst.to_int (arr#get_value(i))) - NumConst.to_int(s#get_min j)) * !tail );
 	  tail := 1;
 	done;
 	!sum +1;;
-	()
+	()*)
+	
+(*compute the how many points was done in subpart*)
+let done_points_in_subpart (s : HyperRectangle.hyper_rectangle) (arr : AbstractModel.pi0) =
+	let sum = ref 0 in
+	let tail = ref 1 in
+	for i= 1 to (HyperRectangle.get_dimensions()-1) do
+	  for j=0 to i-1 do
+	    tail := !tail*(NumConst.to_int(s#get_max j) - NumConst.to_int(s#get_min j) +1) ;
+	  done;
+	  sum := !sum + ( (NumConst.to_int (arr#get_value(i))) - (NumConst.to_int(s#get_min i))) * !tail;
+	  tail := 1;
+	done;
+	!sum + (NumConst.to_int (arr#get_value(0))) - (NumConst.to_int(s#get_min 0)) + 1;;
+	() 
 	
 	
 (*increase 1 unit*)
@@ -288,22 +302,32 @@ let dynamicSplitSubpart (s : HyperRectangle.hyper_rectangle) pi0 : HyperRectangl
 	let max_d_l = ref 0 in
 	let j = ref (HyperRectangle.get_dimensions()-1) in
 	let lst = ref [] in
-	while( !notFound && (!j != -1) ) do
-	  begin		
-	    (*if(!j = -1) then raise (Ex (" there are only 1 pi0 left in subpart, could not split! "));*)
+	print_message Debug_medium ("\n bug!!!!!!!!!!0" );
+	while( !notFound (*&& (!j != -1)*) ) do
+	  begin	
+	  print_message Debug_medium ("\n bug!!!!!!!!!!1" );
+	   (* if(!j = -1) then  print_message Debug_medium ("\n all demensions of subpart could not split" ); raise (Ex (" there are only 1 pi0 left in subpart, could not split! "));*)
 	    (*if current pi0 at max dimension j but the Min at demension j of subpart is lower, split all the done pi0 below j*)
 	    (*update subpart*)
+	    print_message Debug_medium ("\n bug!!!!!!!!!!2" );
 	    if ( NumConst.to_int(s#get_min (!j)) < pi0.(!j) ) then begin s#set_min (!j) (NumConst.numconst_of_int (pi0.(!j))) end;
+	    print_message Debug_medium ("\n bug!!!!!!!!!!3" );
 	    max_d_l := ( (NumConst.to_int(s#get_max (!j)) - pi0.(!j) ) +1 ) ;
+	    print_message Debug_medium ("\n bug!!!!!!!!!!4" );
 	    (*split subpart if the remain distance from pi0 to max dimension at leat 2 points*)
 	    if( !max_d_l > 1 ) then
 	      begin
+	      print_message Debug_medium ("\n bug!!!!!!!!!!5" );
 		print_message Debug_medium ("\nBegin split at demension : " ^ (string_of_int (!j) ) );
 		lst := split s !j;
 		notFound := false ;
 	      end;
 	    j := (!j - 1) ;
-
+	   (* if(!j = -1) then
+	      begin
+		print_message Debug_medium ("\n all demensions of subpart could not split" );
+		raise (Ex (" all demensions of subpart could not split "));
+	      end;*)
 	    
 	    end(*end while*)
 	  done;
@@ -402,7 +426,7 @@ let master () =
 	
 	(******************Adjustable values********************)
 	(* number of subpart want to initialize in the first time *)
-	let np = 5 in
+	let np = 9 in
 	(*depend on size of model*)
 	let dynamicSplittingMode = ref true in
 	(*******************************************************)
@@ -475,9 +499,10 @@ let master () =
 					    let max_size = get_points_in_subpart s_temp in
 					    let done_points = done_points_in_subpart s_temp pi0_temp in
 					    temp := max_size - done_points;
+					    
 					    print_message Debug_standard ("[Master] temp " ^ (string_of_int !temp) ^ "");
 					    print_message Debug_standard ("[Master] max_size " ^ (string_of_int max_size) ^ "");
-					    print_message Debug_standard ("[Master] temp " ^ (string_of_int done_points) ^ "");
+					    print_message Debug_standard ("[Master] done_points " ^ (string_of_int done_points) ^ "");
 					    
 					    
 					    let found_pi0 = ref false in
@@ -891,3 +916,92 @@ let worker() =
 ()
 ;;
 
+
+(*------------------------------------------------------------*)
+(* Tests *)
+(*------------------------------------------------------------*)
+
+(*implement the master*)
+(*let test_gia () =
+
+    
+
+	print_message Debug_standard "--------------------Starting test !-------------------- \n"; 
+	counter_master_waiting#start;
+	(*************Sample Data v0************)
+
+	HyperRectangle.set_dimensions 2;
+	let v0 = new HyperRectangle.hyper_rectangle in 
+	
+(*	v0#set_min 0 (NumConst.numconst_of_int 0); 
+	v0#set_max 0 (NumConst.numconst_of_int 3);
+	v0#set_min 1 (NumConst.numconst_of_int 0);
+	v0#set_max 1 (NumConst.numconst_of_int 3);
+	v0#set_min 2 (NumConst.numconst_of_int 0);
+	v0#set_max 2 (NumConst.numconst_of_int 3);*)
+	
+	v0#set_min 0 (NumConst.numconst_of_int 1); 
+	v0#set_max 0 (NumConst.numconst_of_int 4);
+	v0#set_min 1 (NumConst.numconst_of_int 1);
+	v0#set_max 1 (NumConst.numconst_of_int 4);
+	
+	PVal.set_dimensions 2;
+	let pi0 = new PVal.pval in
+	pi0#set_value 0 (NumConst.numconst_of_int 2);
+	pi0#set_value 1 (NumConst.numconst_of_int 2);
+	
+	
+	(* List of subparts maintained by the master *)
+(*	let subparts = ref [] in
+	subparts := !subparts@[(v0)];
+
+	print_message Debug_standard ("\nInitial list length : " ^ (string_of_int (List.length !subparts) ) );*)
+
+	(*pi0*)
+	(*let pi0 = [|0;2;2|] in*)
+	(*let pi0 = [|4;4|] in*)
+	
+	
+	
+	(*let b = checkSplitCondition pi0 v0 in
+	if(b) then  raise (Ex (" This Subpart do not satisfy condition! "));*)
+	
+	(*test split function*)
+	(*split v0 2;*)
+	
+	(*test initialize subparts function*)
+	(*subparts := (intialize_Subparts !subparts 500);*)
+	
+	(*test dynamicSplitSubpart*)
+	(*subparts := dynamicSplitSubpart v0 pi0 ;*)
+	
+	(*check done points in subpart*)
+	let done_points = done_points_in_subpart v0 pi0 in
+	print_message Debug_standard ("\n done points : " ^ (string_of_int (done_points) ) );
+	
+	(*check points in subpart*)
+	let points = get_points_in_subpart v0 in
+	print_message Debug_standard ("\n points : " ^ (string_of_int (points) ) );
+	
+	(*test pval to array*)
+	(*create an instance pval*)
+	(*PVal.set_dimensions 2;
+	let pval = new PVal.pval in
+	pval#set_value 0 (NumConst.numconst_of_int 2);
+	pval#set_value 1 (NumConst.numconst_of_int 2);
+	print_message Debug_standard ("\n pval 0 : " ^ (string_of_int (NumConst.to_int (pval#get_value 0)) ) );
+	print_message Debug_standard ("\n pval 1 : " ^ (string_of_int (NumConst.to_int (pval#get_value 1)) ) );
+	let arr = pval2array pval in
+	print_message Debug_standard ("\n array 0 : " ^ (string_of_int  (arr.(0)) ) );
+	print_message Debug_standard ("\n array 1 : " ^ (string_of_int  (arr.(1)) ) );*)
+	
+	
+	counter_master_waiting#stop;
+	print_message Debug_standard ("[Master] Total waiting time     : " ^ (string_of_float (counter_master_waiting#value)) ^ " s");
+	print_message Debug_standard "\n --------------------End of test !--------------------"; 
+	
+()
+
+;;
+test_gia();
+abort_program();*)
