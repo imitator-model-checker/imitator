@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2012/06/18
- * Last modified: 2014/10/24
+ * Last modified: 2014/10/30
  *
  ****************************************************************)
 
@@ -47,7 +47,7 @@ val get_nb_unsuccessful_points : unit -> int
 
 
 (** Get the list of *all* points in V0 (for PaTATOR) *)
-val compute_all_pi0 : unit -> (*pi0_list*)PVal.pval list
+(* val compute_all_pi0 : unit -> (*pi0_list*)PVal.pval list *)
 
 val pi0_in_returned_constraint: AbstractModel.pi0 -> AbstractModel.returned_constraint -> bool
 

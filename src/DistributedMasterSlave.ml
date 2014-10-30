@@ -8,7 +8,7 @@
  * Author:        Etienne Andre, Camille Coti
  * 
  * Created:       2014/03/24
- * Last modified: 2014/06/20
+ * Last modified: 2014/10/30
  *
  ****************************************************************)
 
@@ -206,8 +206,10 @@ let send_one_point_to_each_node() = ()*)
 (* Statically compute the shuffled array of all points *)
 let compute_shuffled_array() =
 	(* Compute the array of all points *)
+	print_message Debug_low ("[Master] Shuffle mode: about to compute the array of all points");
 	Cartography.compute_all_pi0 ();
 	(* Shuffle it! *)
+	print_message Debug_low ("[Master] Shuffle mode: about to shuffle the array of points");
 	Cartography.shuffle_all_pi0 ();
 	()
 

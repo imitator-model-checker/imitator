@@ -10,7 +10,7 @@
  * Author:        Ulrich Kuehne, Etienne Andre
  * 
  * Created:       2012/06/18
- * Last modified: 2014/10/24
+ * Last modified: 2014/10/30
  *
  ****************************************************************)
 
@@ -1461,21 +1461,27 @@ let compute_all_pi0 () =
 	(* Convert to int *)
 	let int_nb_points = NumConst.to_int !nb_points in
 	
+	print_message Debug_medium ("[Cartography.compute_all_pi0] Computing the initial pi0");
 	(* Set the first point *)
 	compute_initial_pi0 ();
+	print_message Debug_medium ("[Cartography.compute_all_pi0] Done computing the initial pi0");
 
-	(* Copy it! Very important *)
-(* 	let initial_pi0 = Array.copy initial_pi0 in *)
-	
 	(* Create a array for all the pi0, initially containing a useless object everywhere *)
 	let useless_pi0 = new PVal.pval in
+	print_message Debug_medium ("[Cartography.compute_all_pi0] Creating an array of " ^ (string_of_int int_nb_points) ^ " points");
 	let all_points = Array.make int_nb_points useless_pi0 in
 	
+	print_message Debug_medium ("[Cartography.compute_all_pi0] Retrieving the initial pi0");
 	(* Retrieve the initial pi0 (that must have been initialized before) *)
 	let initial_pi0 = get_current_pi0_option () in
+	print_message Debug_medium ("[Cartography.compute_all_pi0] Copying pi0 just in case");
+	let initial_pi0_copy = initial_pi0#copy() in
+	print_message Debug_medium ("[Cartography.compute_all_pi0] Setting pi0 to the first point");
 	(* Fill the first point with a COPY of the initial pi0 *)
-	all_points.(0) <- initial_pi0#copy();
+	all_points.(0) <- initial_pi0_copy;
 	
+	print_message Debug_medium ("[Cartography.compute_all_pi0] Computing the other points");
+	print_message Debug_medium ("[Cartography.compute_all_pi0] Computing the other points");
 	(* Fill it for the other points *)
 	for pi0_index = 1 to int_nb_points - 1 do
 		(* Compute the next pi0 *)
@@ -1490,6 +1496,8 @@ let compute_all_pi0 () =
 		all_points.(pi0_index) <- current_pi0_copy;
 		
 	done;
+	
+	print_message Debug_medium ("[Cartography.compute_all_pi0] Done computing the other points");
 	
 	(* Set the global variable *)
 	all_pi0_array := Some all_points;
