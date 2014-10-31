@@ -302,22 +302,22 @@ let dynamicSplitSubpart (s : HyperRectangle.hyper_rectangle) pi0 : HyperRectangl
 	let max_d_l = ref 0 in
 	let j = ref (HyperRectangle.get_dimensions()-1) in
 	let lst = ref [] in
-	print_message Debug_medium ("\n bug!!!!!!!!!!0" );
+	(*print_message Debug_medium ("\n bug!!!!!!!!!!0" );*)
 	while( !notFound (*&& (!j != -1)*) ) do
 	  begin	
-	  print_message Debug_medium ("\n bug!!!!!!!!!!1" );
+	 (* print_message Debug_medium ("\n bug!!!!!!!!!!1" );*)
 	   (* if(!j = -1) then  print_message Debug_medium ("\n all demensions of subpart could not split" ); raise (Ex (" there are only 1 pi0 left in subpart, could not split! "));*)
 	    (*if current pi0 at max dimension j but the Min at demension j of subpart is lower, split all the done pi0 below j*)
 	    (*update subpart*)
-	    print_message Debug_medium ("\n bug!!!!!!!!!!2" );
+	   (* print_message Debug_medium ("\n bug!!!!!!!!!!2" );*)
 	    if ( NumConst.to_int(s#get_min (!j)) < pi0.(!j) ) then begin s#set_min (!j) (NumConst.numconst_of_int (pi0.(!j))) end;
-	    print_message Debug_medium ("\n bug!!!!!!!!!!3" );
+	   (* print_message Debug_medium ("\n bug!!!!!!!!!!3" );*)
 	    max_d_l := ( (NumConst.to_int(s#get_max (!j)) - pi0.(!j) ) +1 ) ;
-	    print_message Debug_medium ("\n bug!!!!!!!!!!4" );
+	    (*print_message Debug_medium ("\n bug!!!!!!!!!!4" );*)
 	    (*split subpart if the remain distance from pi0 to max dimension at leat 2 points*)
 	    if( !max_d_l > 1 ) then
 	      begin
-	      print_message Debug_medium ("\n bug!!!!!!!!!!5" );
+	      (*print_message Debug_medium ("\n bug!!!!!!!!!!5" );*)
 		print_message Debug_medium ("\nBegin split at demension : " ^ (string_of_int (!j) ) );
 		lst := split s !j;
 		notFound := false ;
@@ -426,7 +426,7 @@ let master () =
 	
 	(******************Adjustable values********************)
 	(* number of subpart want to initialize in the first time *)
-	let np = 9 in
+	let np = 5 in
 	(*depend on size of model*)
 	let dynamicSplittingMode = ref true in
 	(*******************************************************)
@@ -492,7 +492,7 @@ let master () =
 					while( (not !subpartfound) && (!i != (List.length !worker2subpart) ) ) do
 					(*for i = 0 to (List.length !worker2subpart) -1 do*)
 					  begin
-					  print_message Debug_standard ("[Master]  bugggggggggg!!!!!!!!!!!!! " );
+					  (*print_message Debug_standard ("[Master]  bugggggggggg!!!!!!!!!!!!! " );*)
 					    let s_temp = (second (List.nth !worker2subpart !i)) in
 					    let w_temp = (first (List.nth !worker2subpart !i)) in
 					    let pi0_temp = (List.assoc w_temp !pi0buffer) in
@@ -507,10 +507,10 @@ let master () =
 					    
 					    let found_pi0 = ref false in
 					    Cartography.test_pi0_uncovered !pi0 found_pi0 ;
-					    if ((*!temp > !remain_points*) (*&& !found_pi0*) !found_pi0 && (!temp > 1) && (max_size > done_points) && (pi0InV0 pi0_temp s_temp) )
+					    if ((*!temp > !remain_points*) (*&& !found_pi0*) !found_pi0 && (!temp > 1) (*&& (max_size > done_points)*) && (pi0InV0 pi0_temp s_temp) )
 					    then
 					     begin
-					     print_message Debug_standard ("[Master]  bugggggggggg!!!!!!!!!!!!!1111111111 " );
+					    (*(* print_message Debug_standard ("[Master]  bugggggggggg!!!!!!!!!!!!!1111111111 " );*)*)
 						subpartfound := true;
 						remain_points := !temp;
 						s := s_temp;
@@ -696,25 +696,36 @@ let compute_next_pi0_sequentially more_pi0 limit_reached first_point tile_nature
 	(* Start timer *)
 	counter_worker_find_next_pi0#start ;
 	
+	print_message Debug_medium ("[Some worker] compute_next_pi0_sequentially bug 0.");
+	
 	(* Case first point *)
 	if !first_point then(
 		print_message Debug_low ("[Some worker] This is the first pi0.");
 		Cartography.compute_initial_pi0 ();
 		first_point := false;
+		print_message Debug_medium ("[Some worker] compute_next_pi0_sequentially bug 1.");
 		
 	(* Other case *)
 	)else(
 		print_message Debug_low ("[Some worker] Computing next pi0 sequentially...");
+		
+		print_message Debug_medium ("[Some worker] compute_next_pi0_sequentially bug 2.");
+		
 		let found_pi0 , time_limit_reached = Cartography.find_next_pi0 tile_nature_option in
+		
+		print_message Debug_medium ("[Some worker] compute_next_pi0_sequentially bug 3.");
+		
 		(* Update the time limit *)
 		limit_reached := time_limit_reached;
 		(* Update the found pi0 flag *)
 		more_pi0 := found_pi0;
+		
 	);
 	
 	(* Stop timer *)
 	counter_worker_find_next_pi0#stop;
 	(* The end *)
+	print_message Debug_medium ("[Some worker] compute_next_pi0_sequentially bug 4.");
 	()
 
 let init_slave rank size =
@@ -811,9 +822,10 @@ let worker() =
 							print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "] received Tile from Master.");
 							
 			    | Subpart subpart ->	print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "] received scaled subpart tag from Master.");
-							if((done_points_in_subpart subpart !pi0) < 0)then
+							if(not (pi0InV0 !pi0 subpart))then
 							begin
-							  print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "] bug!!!!!!!.");
+							  print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "] bug!!!!abcd.");
+							  more_pi0 := false;
 							end
 							else
 							begin
