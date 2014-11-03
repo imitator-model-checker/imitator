@@ -96,7 +96,7 @@ class pval =
 			(* Create second object *)
 			let pval_copy = new pval in
 			(* Copy one by one *)
-			for dim = 0 to get_dim() do
+			for dim = 0 to get_dim() -1 do
 				pval_copy#set_value dim the_array.(dim);
 			done;
 			(* Return *)
