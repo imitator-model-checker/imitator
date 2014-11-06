@@ -547,6 +547,8 @@ let master () =
 	counter_master_split#stop;
 	
 	let tilebuffer = ref [] in
+	
+	let wastedTiles = ref 0 in
 
 	
 	(*** THE ALGORITHM STARTS HERE ***)
@@ -614,6 +616,10 @@ let master () =
 					   tilebuffer := !tilebuffer@[(first (List.nth !index i)), tile];
 					  end;
 				      done
+				    end
+				    else 
+				    begin
+				      wastedTiles := !wastedTiles + 1;
 				    end;
 				    print_message Debug_medium ("[Master] Received a tile from worker " ^ (string_of_int source_rank) ^ " end!!!!!!");
 
@@ -631,9 +637,9 @@ let master () =
 				
 				
 				(*Splitting*)
-				(*let found_pi0 = ref false in*)
-				(*Cartography.test_pi0_uncovered pi0 found_pi0 ;*)
-				     if( not (!waittingList = []) (*&& !found_pi0*)) then
+				let found_pi0 = ref false in
+				Cartography.test_pi0_uncovered pi0 found_pi0 ;
+				     if( not (!waittingList = []) && !found_pi0) then
 				      begin
 					print_message Debug_medium ("[Master] waitting List : " ^ (string_of_int (List.length !waittingList) ) ^ "");
 					let s = List.assoc source_rank !index in
@@ -769,6 +775,7 @@ let master () =
 	print_message Debug_standard ("[Master] Processing time        : " ^ (string_of_float (counter_master_processing#value)) ^ " s");
 	print_message Debug_standard ("[Master] Waiting time           : " ^ (string_of_float (counter_master_waiting#value)) ^ " s");
 	print_message Debug_standard ("[Master] Occupancy              : " ^ (string_of_float occupancy) ^ " %");
+	print_message Debug_standard ("[Master] wasted Tiles " ^ (string_of_int !wastedTiles) ^ " end!!!!!!");
 	print_message Debug_standard ("**************************************************");
 	
 	(* Process the result and return *)
