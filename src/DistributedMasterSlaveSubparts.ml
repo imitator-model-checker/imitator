@@ -748,8 +748,11 @@ let master () =
 	  then 
 	  begin 
 	    check_covered := true;
-	    for i = 0 to (List.length !waittingList)-1 do
-		send_terminate (List.nth !waittingList i);
+	    (*for i = 0 to (List.length !waittingList)-1 do
+		send_terminate (List.nth !waittingList i);*)
+		
+	    for i = 1 to (Mpi.comm_size Mpi.comm_world)-1 do
+		send_terminate i;
 	    done
 	  end;
 	
