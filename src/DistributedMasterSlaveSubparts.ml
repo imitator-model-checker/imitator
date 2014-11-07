@@ -536,7 +536,8 @@ let master () =
 	
 	(******************Adjustable values********************)
 	(* number of subpart want to initialize in the first time *)
-	let np = 9 in
+	(*let np = 9 in*)
+	let np = (Mpi.comm_size Mpi.comm_world) -3 in
 	(*depend on size of model*)
 	let dynamicSplittingMode = ref true in
 	(*******************************************************)
@@ -986,11 +987,11 @@ let worker() =
 			    let added = Cartography.bc_process_im_result im_result in
 			    counter_worker_IM#stop;
 			    
-			   (* if(added) then
-			    begin*)
+			    if(added) then
+			    begin
 			    (*send result to master*)
 			      send_result_worker im_result;
-			    (*end;*)
+			    end;
 			    
 			    (* Print some info *)
 			    print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "]  Constraint really added? " ^ (string_of_bool added) ^ "");
