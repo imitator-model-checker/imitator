@@ -30,6 +30,7 @@ open DistributedUtilities
 (*Exception*)
 exception Ex of string;;
 
+exception KillIM;;
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 (* Counters *)
@@ -52,6 +53,9 @@ let counter_worker_total 			= new Counter.counter
 let counter_worker_waiting 			= new Counter.counter
 let counter_worker_IM	 			= new Counter.counter
 let counter_worker_find_next_pi0	= new Counter.counter
+
+
+
 
 
 (****************************************************************)
@@ -798,6 +802,26 @@ let master () =
 (**        WORKER         *)
 (****************************************************************)
 
+
+
+(*------------------------------------------------------------*)
+(* Write something here *)
+(*------------------------------------------------------------*)
+
+(*** 
+	New function: 
+		1) check that buffer not empty
+		2) if empty --> exit (nothing)
+		3) if not empty, check what tag
+		4) if tag = Stop then raise exception
+***)
+let check_stop_order () =
+	(* do someting *)
+	if true(* do someting *) then
+	raise KillIM
+
+
+	
 (*------------------------------------------------------------*)
 (* Generic function handling the next sequential point *)
 (*------------------------------------------------------------*)
@@ -856,6 +880,9 @@ let worker() =
 	(* Start global counter *)
 	counter_worker_total#start;
 	
+	(* Assign the termination function to the inverse method *)
+	Reachability.set_patator_termination_function check_stop_order;
+	
 	let rank = Mpi.comm_rank Mpi.comm_world in
 	let size = Mpi.comm_size Mpi.comm_world in
 	init_slave rank size;
@@ -865,161 +892,178 @@ let worker() =
 	
 	
 	Cartography.bc_initialize ();
+	
+	let main_loop () = 
+		while (not !finished) do
+			send_work_request ();
+			print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "] sent pull request to the master.");
+			counter_worker_waiting#start;
 
-
-	while (not !finished) do
-		send_work_request ();
-		print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "] sent pull request to the master.");
-		counter_worker_waiting#start;
-
-		let work = receive_work() in
-		counter_worker_waiting#stop;
-		match work with
-		| Subpart subpart -> 
-			print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "] received subpart from Master.");
-			
-			
-			(* To differentiate between initialization of pi0 / next_point *)
-			let first_point = ref true in
-			
-			let more_pi0 = ref true in
-			
-			let limit_reached = ref false in
-			
-			(*initialize subpart*)
-			Input.set_v0 subpart;
-			
-			(* Perform initialization *)
-			Cartography.bc_initialize_subpart ();
-			
-			if debug_mode_greater Debug_medium then(
-				print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "] set v0:");
-				print_message Debug_medium (ModelPrinter.string_of_v0 model subpart);
-			);
-			
-			(*initial pi0*)
-			Cartography.compute_initial_pi0();
-			
-			print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "] Initial pi0:");
-			print_message Debug_medium   (ModelPrinter.string_of_pi0 model (Cartography.get_current_pi0()));
-			
-			let pi0 = ref (Cartography.get_current_pi0()) in
-			
-(* 			counter_worker_working#start;    *)
- 			while (!more_pi0 && not !limit_reached) do 			    
-			    
-			    print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "] pi0:");
-			    print_message Debug_medium   (ModelPrinter.string_of_pi0 model !pi0);
-			    
-			    (*send_update_request();*)
-			    pi0 := (Cartography.get_current_pi0());
-			    
-			    
-			    send_pi0_worker !pi0;
-			    
-			    print_message Debug_medium (" send pi0 to master ");
-			    
-			    let receivedContinue = ref false in
-			     
-			    while (not !receivedContinue) do
-			  
-			    let check = receive_work () in
-			    match check with
+			let work = receive_work() in
+			counter_worker_waiting#stop;
+			match work with
+			| Subpart subpart -> 
+				print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "] received subpart from Master.");
 				
-			    | Tile tile -> 		print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "] received Tile from Master.");
-							let b = Cartography.bc_process_im_result tile in
-							print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "] received Tile from Master.");
-							
-			    | Subpart subpart ->	print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "] received scaled subpart tag from Master.");
-							(*if(not (pi0InV0 !pi0 subpart))then
-							begin
-							  print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "] bug!!!!abcd.");
-							  more_pi0 := false;
-							end
-							else
-							begin*)
-							  Input.set_v0 subpart;
-							  Cartography.bc_initialize_subpart ();
-							(*end;*)
-			    
-			    | Continue ->  		print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "] received continue tag from Master.");
-							receivedContinue := true;	
-							print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "] received Tile from Master.");
-							
-			     | _ -> 			print_message Debug_medium ("error!!! receive tile at worker side." ^ (string_of_int rank) ^ " ");
-							raise (InternalError("error!!! receive tile at worker side."));
-			    
-			    done;
-			    
-(* 				counter_worker_working#stop; *)
-			    let found_pi0 = ref false in
-			    Cartography.test_pi0_uncovered !pi0 found_pi0 ;
-			    if(not !found_pi0) then
-			    begin
-				print_message Debug_medium ("[Workerq " ^ (string_of_int rank) ^ "] set v0:");
-				print_message Debug_medium (ModelPrinter.string_of_v0 model (Input.get_v0()));
-				print_message Debug_medium ("[Workerq " ^ (string_of_int rank) ^ "] Initial pi0:");
+				
+				(* To differentiate between initialization of pi0 / next_point *)
+				let first_point = ref true in
+				
+				let more_pi0 = ref true in
+				
+				let limit_reached = ref false in
+				
+				(*initialize subpart*)
+				Input.set_v0 subpart;
+				
+				(* Perform initialization *)
+				Cartography.bc_initialize_subpart ();
+				
+				if debug_mode_greater Debug_medium then(
+					print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "] set v0:");
+					print_message Debug_medium (ModelPrinter.string_of_v0 model subpart);
+				);
+				
+				(*initial pi0*)
+				Cartography.compute_initial_pi0();
+				
+				print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "] Initial pi0:");
 				print_message Debug_medium   (ModelPrinter.string_of_pi0 model (Cartography.get_current_pi0()));
 				
-			      compute_next_pi0_sequentially more_pi0 limit_reached first_point (None);
-			       pi0 := (Cartography.get_current_pi0());
-			    end;
-							
-			  
-			    (* Set the new pi0 *)
-			    Input.set_pi0 !pi0;
-			
-			    (* Save debug mode *)
-			    let global_debug_mode = get_debug_mode() in 
+				let pi0 = ref (Cartography.get_current_pi0()) in
+				
+	(* 			counter_worker_working#start;    *)
+				while (!more_pi0 && not !limit_reached) do 			    
+					
+					print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "] pi0:");
+					print_message Debug_medium   (ModelPrinter.string_of_pi0 model !pi0);
+					
+					(*send_update_request();*)
+					pi0 := (Cartography.get_current_pi0());
+					
+					
+					send_pi0_worker !pi0;
+					
+					print_message Debug_medium (" send pi0 to master ");
+					
+					let receivedContinue = ref false in
+					
+					while (not !receivedContinue) do
+				
+						let check = receive_work () in
+						match check with
+						
+						| Tile tile -> 		print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "] received Tile from Master.");
+									let b = Cartography.bc_process_im_result tile in
+									print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "] received Tile from Master.");
+									
+						| Subpart subpart ->	print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "] received scaled subpart tag from Master.");
+									(*if(not (pi0InV0 !pi0 subpart))then
+									begin
+									print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "] bug!!!!abcd.");
+									more_pi0 := false;
+									end
+									else
+									begin*)
+									Input.set_v0 subpart;
+									Cartography.bc_initialize_subpart ();
+									(*end;*)
+						
+						| Continue ->  		print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "] received continue tag from Master.");
+									receivedContinue := true;	
+									print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "] received Tile from Master.");
+									
+						| _ -> 			print_message Debug_medium ("error!!! receive tile at worker side." ^ (string_of_int rank) ^ " ");
+									raise (InternalError("error!!! receive tile at worker side."));
+						
+					done; (* end while *)
+					
+	(* 				counter_worker_working#stop; *)
+					let found_pi0 = ref false in
+					Cartography.test_pi0_uncovered !pi0 found_pi0 ;
+					if(not !found_pi0) then
+					begin
+						print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "] set v0:");
+						print_message Debug_medium (ModelPrinter.string_of_v0 model (Input.get_v0()));
+						print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "] Initial pi0:");
+						print_message Debug_medium   (ModelPrinter.string_of_pi0 model (Cartography.get_current_pi0()));
+						
+						compute_next_pi0_sequentially more_pi0 limit_reached first_point (None);
+						pi0 := (Cartography.get_current_pi0());
+					end;
+					
+					
+					(*** TODO: inform the master of the pi0 you chose ***)
+				
+				
+					(* Set the new pi0 *)
+					Input.set_pi0 !pi0;
+				
+					(* Save debug mode *)
+					let global_debug_mode = get_debug_mode() in 
 
-			    
-			    (* Prevent the debug messages (except in verbose modes high or total) *)
-			    if not (debug_mode_greater Debug_total) 
-			      then
-				set_debug_mode Debug_nodebug;
-			
-			    (* Compute IM *)
-			    counter_worker_IM#start;
-			    let im_result , _ = Reachability.inverse_method_gen model init_state in
-(* 			    raise (InternalError("stop here")); *)
+					
+					(* Prevent the debug messages (except in verbose mode total) *)
+					if not (debug_mode_greater Debug_total) 
+					then
+					set_debug_mode Debug_nodebug;
+				
+					(* Compute IM *)
+					counter_worker_IM#start;
+					let im_result , _ = Reachability.inverse_method_gen model init_state in
+	(* 			    raise (InternalError("stop here")); *)
 
-			    (* Get the debug mode back *)
-			    set_debug_mode global_debug_mode;
-			    
-			    (* Process result *)
-			    let added = Cartography.bc_process_im_result im_result in
-			    counter_worker_IM#stop;
-			    
-			    if(added) then
-			    begin
-			    (*send result to master*)
-			      send_result_worker im_result;
-			    end;
-			    
-			    (* Print some info *)
-			    print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "]  Constraint really added? " ^ (string_of_bool added) ^ "");
-			    
+					(* Get the debug mode back *)
+					set_debug_mode global_debug_mode;
+					
+					(* Process result *)
+					let added = Cartography.bc_process_im_result im_result in
+					counter_worker_IM#stop;
+					
+					if(added) then
+					begin
+					(*send result to master*)
+					send_result_worker im_result;
+					end;
+					
+					(* Print some info *)
+					print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "]  Constraint really added? " ^ (string_of_bool added) ^ "");
 
-			    compute_next_pi0_sequentially more_pi0 limit_reached first_point (Some im_result.tile_nature);
+					compute_next_pi0_sequentially more_pi0 limit_reached first_point (Some im_result.tile_nature);
 
-			    (* Input.set_pi0 !pi0;*)
-			     
-			done;
-		
-(*		| Tile tile -> 	print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "] I received subpart from Master.");
-				let b = Cartography.bc_process_im_result tile in
-				print_message Debug_standard ("[Worker " ^ (string_of_int rank) ^ "] received Tile from Master.");*)
+					(* Input.set_pi0 !pi0;*)
+					
+				done;
 			
-		| Terminate -> 
-				print_message Debug_medium (" Terminate ");
-				print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "] I was just told to terminate work.");
-				finished := true
+	(*		| Tile tile -> 	print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "] I received subpart from Master.");
+					let b = Cartography.bc_process_im_result tile in
+					print_message Debug_standard ("[Worker " ^ (string_of_int rank) ^ "] received Tile from Master.");*)
+				
+			| Terminate -> 
+					print_message Debug_medium (" Terminate ");
+					print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "] I was just told to terminate work.");
+					finished := true
+				
+			| _ -> 		print_message Debug_medium ("error!!! not implemented.");
+					raise (InternalError("not implemented."));
 			
-		| _ -> 		print_message Debug_medium ("error!!! have not implemented.");
-				raise (InternalError("have not implemented."));
-		
-		
-	done;
+		done
+	in
+	
+	
+	try(
+		main_loop();
+	)
+	(* Handle here the exception killing IM due to a master order *)
+	with KillIM ->(
+		(*** TODO ***)
+(* 		recovering_function() (ask master for latest tiles, process the tiles, maybe set a new V0/pi0...); *)
+		(*** TODO ***)
+		main_loop ();
+	);
+
+
+	(** THE END **)
 	
 	(* Stop global counter *)
 	counter_worker_total#stop;
@@ -1034,7 +1078,6 @@ let worker() =
 	print_message Debug_standard ("[Worker " ^ (string_of_int rank) ^ "] Total time                   : " ^ (string_of_float (counter_worker_total#value)) ^ " s");
 	print_message Debug_standard ("[Worker " ^ (string_of_int rank) ^ "] Occupancy                    : " ^ (string_of_float occupancy) ^ " %");
 
-()
 ;;
 
 

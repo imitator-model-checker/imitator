@@ -10,7 +10,7 @@
  * Author:        Ulrich Kuehne, Etienne Andre
  * 
  * Created:       2010/07/22
- * Last modified: 2014/06/08
+ * Last modified: 2014/11/10
  *
  ****************************************************************)
 
@@ -58,6 +58,12 @@ val print_stats: unit -> unit
 (* Create data structures for detecting useless clocks (to be called once per model) *)
 (** WARNING: should maybe be somewhere else? *)
 val prepare_clocks_elimination : abstract_model -> unit
+
+
+(************************************************************)
+(* Function for PaTATOR *)
+(************************************************************)
+val set_patator_termination_function : (unit -> unit) -> unit
 
 
 (************************************************************)

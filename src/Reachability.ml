@@ -10,7 +10,7 @@
  * Author:        Ulrich Kuehne, Etienne Andre
  * 
  * Created:       2010/07/22
- * Last modified: 2014/10/01
+ * Last modified: 2014/11/10
  *
  ****************************************************************)
 
@@ -95,6 +95,10 @@ let nb_random_selections = ref 0
 
 (* Check whether the tile is bad (for IM and BC, and also EFIM) *)
 let tile_nature = ref Unknown
+
+(* External function to be called to check a termination condition (used for PaTATOR) *)
+let patator_termination_function = ref None
+
 
 
 (**************************************************************)
@@ -2148,6 +2152,12 @@ let post_from_one_state model reachability_graph orig_state_index =
 (* Full reachability functions *)
 (************************************************************)
 
+(*---------------------------------------------------*)
+(* Set the PaTATOR termination function *)
+(*---------------------------------------------------*)
+let set_patator_termination_function f =
+	patator_termination_function := Some f
+
 
 (*---------------------------------------------------*)
 (* Check whether the limit of an exploration has been reached, according to the analysis options *)
@@ -2155,24 +2165,38 @@ let post_from_one_state model reachability_graph orig_state_index =
 let check_limit depth nb_states time =
 	(* Retrieve the input options *)
 	let options = Input.get_options () in
+	
 	(* Disjunction between the different options *)
+	
+	(* Depth limit *)
 	begin
 	match options#post_limit with
 		| None -> false
 		| Some limit -> depth > limit
 	end
 	||
+	(* States limit *)
 	begin
 	match options#states_limit with
 		| None -> false
 		| Some limit -> nb_states > limit
 	end
 	||
+	(* Time limit *)
 	begin
 	match options#time_limit with
 		| None -> false
 		| Some limit -> time > (float_of_int limit)
 	end
+	||
+	(* External function for PaTATOR (would raise an exception in case of stop needed) *)
+	begin
+	match !patator_termination_function with
+		| None -> false
+		| Some f -> f (); false (** Returns false but in fact will directly raise an exception in case of required termination **)
+	end
+
+
 
 
 (*---------------------------------------------------*)
