@@ -447,7 +447,7 @@ let pi0InV0 pi0 v0 =
 	!c;;
 	
 
-let receive_pull_request_subpart () =
+(*let receive_pull_request_subpart () =
 	print_message Debug_high ("[Master] Entered function 'receive_pull_request_and_store_constraint'...");
 	
 	counter_master_waiting#start;
@@ -481,7 +481,7 @@ let receive_pull_request_subpart () =
 	      (source_rank , None , Some pi0)
 	      
 	| _ ->  raise (InternalError("have not implemented.")) 
-	()
+	()*)
 	
 (*------------------------------------------------------------*)
 (* Some functions to implement *)
@@ -554,6 +554,8 @@ let master () =
 	let tilebuffer = ref [] in
 	
 	let wastedTiles = ref 0 in
+	
+	let pi0buffer = ref [] in
 
 	
 	(*** THE ALGORITHM STARTS HERE ***)
@@ -565,15 +567,16 @@ let master () =
 		print_message Debug_medium ("[Master] heloooooo ");
 		
 		counter_master_waiting#start;
-		(*let pull_request = ref (receive_pull_request ()) in*)
-		let source_rank, tile, pi0 = (receive_pull_request_subpart()) in
-		let msg =  (tile, pi0) in
+		let pull_request = (receive_pull_request ()) in
+		(*let source_rank, tile, pi0 = (receive_pull_request_subpart()) in
+		let msg =  (tile, pi0) in*)
 		counter_master_waiting#stop;
 		
 		(*send_terminate source_rank;*)
-		match msg with 
+		(*match msg with *)
+		match pull_request with 
 		(*Pull Tag*)
-		| (None , None) -> 
+		| PullOnly source_rank ->
 				 print_message Debug_medium ("[Master] Received a pull request from worker " ^ (string_of_int source_rank) ^ "");
 				 (* check to delete if the worker comeback *)
 				 if(List.mem_assoc source_rank !index) then
@@ -604,7 +607,7 @@ let master () =
 				  end;
 				  print_message Debug_medium ("[Master] Received a pull request from worker " ^ (string_of_int source_rank) ^ " end!!!");
 		(*Tile Tag*)
-		| (Some tile, None) -> 
+		| Tile (source_rank , tile) ->
 				   print_message Debug_medium ("[Master] Received a tile from worker " ^ (string_of_int source_rank) ^ "");
 				   (*check duplicated tile*)
 				   	counter_master_processing#start;
@@ -629,7 +632,7 @@ let master () =
 				    print_message Debug_medium ("[Master] Received a tile from worker " ^ (string_of_int source_rank) ^ " end!!!!!!");
 
 		(*Pi0 Tag*)
-		| (None, Some pi0) -> 
+		| Pi0 (source_rank , pi0) -> 
 				print_message Debug_medium ("[Master] Received a pi0 from worker " ^ (string_of_int source_rank) ^ "");
 				(*Update tiles*)
 				while(List.mem_assoc source_rank !tilebuffer) do
@@ -639,6 +642,14 @@ let master () =
 				    print_message Debug_standard ("[Master] send a tile to worker " ^ (string_of_int source_rank) ^ "");
 				  end
 				done;
+				
+				(*Update pi0s*)
+				if(List.mem_assoc source_rank !pi0buffer) then
+				 begin
+				   pi0buffer := List.remove_assoc source_rank !pi0buffer;
+				 end;
+				pi0buffer := !pi0buffer@[( source_rank, pi0 )];  
+				print_message Debug_standard ("[Master] pi0s list : " ^ (string_of_int (List.length !pi0buffer) ) ^ "");
 				
 				
 				(*Splitting*)
@@ -729,6 +740,23 @@ let master () =
 				     
 				     print_message Debug_medium ("[Master] Received a pi0 from worker " ^ (string_of_int source_rank) ^ " end!!!!");
 		
+		| UpdateRequest source_rank ->
+				print_message Debug_standard ("[Master] UpdateRequest List ");
+				
+				let uncovered = ref false in
+				let currentPi0 = List.assoc source_rank !pi0buffer in
+				Cartography.test_pi0_uncovered currentPi0 uncovered ;
+				if(!uncovered) then
+				begin
+				  send_continue(source_rank);
+				end
+				else
+				begin
+				  send_terminate(source_rank); 
+				end;
+				
+				
+		
 		(*Serialize/Unserialize the List of tile HERE!!!!*)
 		(*| UpdateRequest source_rank ->
 				print_message Debug_standard ("[Master] UpdateRequest List ");
@@ -817,7 +845,35 @@ let master () =
 ***)
 let check_stop_order () =
 	(* do someting *)
-	if true(* do someting *) then
+	
+	send_update_request();
+					
+	print_message Debug_medium (" send Update Request to master ");
+	
+	let killIM = ref false in
+	
+	let receivedContinue = ref false in
+					
+	(*while (not !receivedContinue) do*)
+				
+		let check = receive_work () in
+		match check with
+									
+			| Terminate ->		(*print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "] received Terminate tag from Master.");*)
+						killIM := true;
+
+						
+			| Continue ->  		(*print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "] received continue tag from Master.");*)
+						(*receivedContinue := true;*)	
+						(*print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "] received Tile from Master.");*)
+						print_message Debug_medium ("[Some Worker] received Continue from Master.");
+									
+			| _ -> 			(*print_message Debug_medium ("error!!! receive tile at worker side." ^ (string_of_int rank) ^ " ");*)
+						raise (InternalError("error!!! receive tile at worker side."));
+						
+	(*done; (* end while *)*)
+	
+	if !killIM(* do someting *) then
 	raise KillIM
 
 
@@ -893,7 +949,7 @@ let worker() =
 	
 	Cartography.bc_initialize ();
 	
-	let main_loop () = 
+	(*let main_loop () = *)
 		while (not !finished) do
 			send_work_request ();
 			print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "] sent pull request to the master.");
@@ -1007,9 +1063,12 @@ let worker() =
 					if not (debug_mode_greater Debug_total) 
 					then
 					set_debug_mode Debug_nodebug;
-				
-					(* Compute IM *)
+					
 					counter_worker_IM#start;
+					try(
+					
+					(* Compute IM *)
+					(*counter_worker_IM#start;*)
 					let im_result , _ = Reachability.inverse_method_gen model init_state in
 	(* 			    raise (InternalError("stop here")); *)
 
@@ -1033,6 +1092,14 @@ let worker() =
 
 					(* Input.set_pi0 !pi0;*)
 					
+					)
+					with KillIM ->(
+					(*** TODO ***)
+					 print_message Debug_standard "\n -------------Killed IM-----------------"; 
+					(*** TODO ***)
+					);
+					
+					
 				done;
 			
 	(*		| Tile tile -> 	print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "] I received subpart from Master.");
@@ -1047,11 +1114,11 @@ let worker() =
 			| _ -> 		print_message Debug_medium ("error!!! not implemented.");
 					raise (InternalError("not implemented."));
 			
-		done
-	in
+		done;
+(*	in*)
 	
 	
-	try(
+(*	try(
 		main_loop();
 	)
 	(* Handle here the exception killing IM due to a master order *)
@@ -1060,7 +1127,7 @@ let worker() =
 (* 		recovering_function() (ask master for latest tiles, process the tiles, maybe set a new V0/pi0...); *)
 		(*** TODO ***)
 		main_loop ();
-	);
+	);*)
 
 
 	(** THE END **)
@@ -1159,6 +1226,36 @@ let worker() =
 	print_message Debug_standard ("\n array 0 : " ^ (string_of_int  (arr.(0)) ) );
 	print_message Debug_standard ("\n array 1 : " ^ (string_of_int  (arr.(1)) ) );*)
 	
+	
+
+	    for i = 0 to 0 do 
+	    begin
+	     print_message Debug_standard "\n ------------begin-------------------"; 
+	    try(
+	      print_message Debug_standard "\n -------------doing-----------------"; 
+	      if false then
+	      raise KillIM;
+	      )
+	    with KillIM ->(
+		(*** TODO ***)
+		 print_message Debug_standard "\n -------------catch it-----------------"; 
+(* 		recovering_function() (ask master for latest tiles, process the tiles, maybe set a new V0/pi0...); *)
+		(*** TODO ***)
+	    )
+	    | _ -> print_message Debug_standard "\n -------------other-----------------"; 
+	    ;
+	    
+	    
+	     print_message Debug_standard "\n -------------end loop-----------------"; 
+	      
+	    end
+	    done;
+	    
+	
+
+
+	
+
 	
 	counter_master_waiting#stop;
 	print_message Debug_standard ("[Master] Total waiting time     : " ^ (string_of_float (counter_master_waiting#value)) ^ " s");
