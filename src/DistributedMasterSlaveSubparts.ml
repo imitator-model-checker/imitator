@@ -850,7 +850,7 @@ let check_stop_order () =
 					
 	print_message Debug_medium (" send Update Request to master ");
 	
-	let killIM = ref false in
+	(*let killIM = ref false in*)
 	
 	let receivedContinue = ref false in
 					
@@ -860,7 +860,9 @@ let check_stop_order () =
 		match check with
 									
 			| Terminate ->		(*print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "] received Terminate tag from Master.");*)
-						killIM := true;
+						(*killIM := true;*)
+						print_message Debug_medium ("[Some Worker] received Terminate from Master.");
+						raise KillIM;
 
 						
 			| Continue ->  		(*print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "] received continue tag from Master.");*)
@@ -869,12 +871,12 @@ let check_stop_order () =
 						print_message Debug_medium ("[Some Worker] received Continue from Master.");
 									
 			| _ -> 			(*print_message Debug_medium ("error!!! receive tile at worker side." ^ (string_of_int rank) ^ " ");*)
-						raise (InternalError("error!!! receive tile at worker side."));
+						raise (InternalError("error!!! receive tile at worker side."));;
 						
 	(*done; (* end while *)*)
 	
-	if !killIM(* do someting *) then
-	raise KillIM
+	(*if !killIM(* do someting *) then
+	raise KillIM*)
 
 
 	
