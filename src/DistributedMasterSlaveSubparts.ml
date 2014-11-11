@@ -741,17 +741,19 @@ let master () =
 				     print_message Debug_medium ("[Master] Received a pi0 from worker " ^ (string_of_int source_rank) ^ " end!!!!");
 		
 		| UpdateRequest source_rank ->
-				print_message Debug_standard ("[Master] UpdateRequest List ");
+				print_message Debug_standard ("[Master] Received UpdateRequest  ");
 				
 				let uncovered = ref false in
 				let currentPi0 = List.assoc source_rank !pi0buffer in
 				Cartography.test_pi0_uncovered currentPi0 uncovered ;
 				if(!uncovered) then
 				begin
+				  print_message Debug_standard ("[Master] send_continue  ");
 				  send_continue(source_rank);
 				end
 				else
 				begin
+				  print_message Debug_standard ("[Master] send_terminate  ");
 				  send_terminate(source_rank); 
 				end;
 				
