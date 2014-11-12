@@ -653,9 +653,9 @@ let master () =
 				
 				
 				(*Splitting*)
-				let found_pi0 = ref false in
-				Cartography.test_pi0_uncovered pi0 found_pi0 ;
-				     if( not (!waittingList = []) && !found_pi0) then
+				(*let found_pi0 = ref false in
+				Cartography.test_pi0_uncovered pi0 found_pi0 ;*)
+				     if( not (!waittingList = []) (*&& !found_pi0*)) then
 				      begin
 					print_message Debug_medium ("[Master] waitting List : " ^ (string_of_int (List.length !waittingList) ) ^ "");
 					let s = List.assoc source_rank !index in
@@ -743,21 +743,30 @@ let master () =
 		| UpdateRequest source_rank ->
 				print_message Debug_standard ("[Master] Received UpdateRequest  ");
 				
+				(*Update tiles*)
+				while(List.mem_assoc source_rank !tilebuffer) do
+				  begin
+				    send_tile (List.assoc source_rank !tilebuffer) source_rank;
+				    tilebuffer := (List.remove_assoc source_rank !tilebuffer);
+				    print_message Debug_standard ("[Master] send a tile to worker " ^ (string_of_int source_rank) ^ "");
+				  end
+				done;
+				
 				let uncovered = ref false in
 				let currentPi0 = List.assoc source_rank !pi0buffer in
 				Cartography.test_pi0_uncovered currentPi0 uncovered ;
-				if(!uncovered) then
-				begin
+				if(not !uncovered) then
+				(*begin
 				  print_message Debug_standard ("[Master] send_continue  ");
 				  send_continue(source_rank);
 				end
-				else
+				else*)
 				begin
 				  print_message Debug_standard ("[Master] send_terminate  ");
-				  send_terminate(source_rank); 
+				  send_terminate source_rank ; 
 				end;
 				
-				
+				send_continue source_rank;
 		
 		(*Serialize/Unserialize the List of tile HERE!!!!*)
 		(*| UpdateRequest source_rank ->
@@ -852,13 +861,37 @@ let check_stop_order () =
 					
 	print_message Debug_medium (" send Update Request to master ");
 	
-	(*let killIM = ref false in*)
+	let killIM = ref false in
 	
 	let receivedContinue = ref false in
 					
-	(*while (not !receivedContinue) do*)
+	while (not !receivedContinue) do
 				
 		let check = receive_work () in
+		match check with
+						
+		| Tile tile -> 		(*print_message Debug_medium ("[Worker " (*^ (string_of_int rank) ^*) "] received Tile from Master.");*)
+					let b = Cartography.bc_process_im_result tile in
+					print_message Debug_medium ("[Worker " ^ (*(string_of_int rank) ^*) "] received Tile from Master.");
+					
+		| Terminate -> 		print_message Debug_medium ("[Some Worker] received Terminate from Master.");
+					(*raise KillIM;*)
+					killIM := true;
+						
+		| Continue ->  		print_message Debug_medium ("[Worker " ^ (*(string_of_int rank) ^*) "] received continue tag from Master.");
+					receivedContinue := true;	
+					print_message Debug_medium ("[Worker " ^ (*(string_of_int rank) ^*) "] received Tile from Master.");
+									
+		| _ -> 			print_message Debug_medium ("error!!! receive tile at worker side." ^ (*(string_of_int rank) ^*) " ");
+					raise (InternalError("error!!! receive tile at worker side."));
+						
+	done; (* end while *)
+					
+					
+					
+	(*while (not !receivedContinue) do*)
+				
+(*		let check = receive_work () in
 		match check with
 									
 			| Terminate ->		(*print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "] received Terminate tag from Master.");*)
@@ -873,12 +906,12 @@ let check_stop_order () =
 						print_message Debug_medium ("[Some Worker] received Continue from Master.");
 									
 			| _ -> 			(*print_message Debug_medium ("error!!! receive tile at worker side." ^ (string_of_int rank) ^ " ");*)
-						raise (InternalError("error!!! receive tile at worker side."));;
+						raise (InternalError("error!!! receive tile at worker side."));;*)
 						
 	(*done; (* end while *)*)
 	
-	(*if !killIM(* do someting *) then
-	raise KillIM*)
+	if !killIM(* do someting *) then
+	raise KillIM;;
 
 
 	
@@ -1039,7 +1072,7 @@ let worker() =
 					done; (* end while *)
 					
 	(* 				counter_worker_working#stop; *)
-					let found_pi0 = ref false in
+					(*let found_pi0 = ref false in
 					Cartography.test_pi0_uncovered !pi0 found_pi0 ;
 					if(not !found_pi0) then
 					begin
@@ -1050,7 +1083,7 @@ let worker() =
 						
 						compute_next_pi0_sequentially more_pi0 limit_reached first_point (None);
 						pi0 := (Cartography.get_current_pi0());
-					end;
+					end;*)
 					
 					
 					(*** TODO: inform the master of the pi0 you chose ***)
@@ -1100,7 +1133,19 @@ let worker() =
 					with KillIM ->(
 					(*** TODO ***)
 					 print_message Debug_standard "\n -------------Killed IM-----------------"; 
+					(* let found_pi0 = ref false in
+					Cartography.test_pi0_uncovered !pi0 found_pi0 ;
+					if(not !found_pi0) then
+					begin*)
+					 compute_next_pi0_sequentially more_pi0 limit_reached first_point (None);
+					 (*pi0 := (Cartography.get_current_pi0());*)
 					(*** TODO ***)
+					(*end
+					else
+					begin
+					   print_message Debug_standard "\n -------------not changed-----------------"; 
+					end
+					;*)
 					);
 					
 					
