@@ -242,7 +242,7 @@ exe:
 # 	mpiexec -n 4 $(TARGET) $(EXAMPLE_PATH)/Flipflop/flipflop.imi $(EXAMPLE_PATH)/Flipflop/flipflop.v0 -mode cover -distributed sequential -output-cart -precomputepi0 -verbose standard
 # 	mpiexec -n 4 $(TARGET) $(EXAMPLE_PATH)/Flipflop/flipflop.imi $(EXAMPLE_PATH)/Flipflop/flipflop.v0 -mode cover -distributed random5 -cart -verbose standard
 # 	mpiexec -n 4 $(TARGET) $(EXAMPLE_PATH)/Flipflop/flipflop.imi $(EXAMPLE_PATH)/Flipflop/flipflop.v0 -mode cover -distributed unsupervised -cart -verbose standard
-	mpiexec -n 4 $(TARGET) $(EXAMPLE_PATH)/Flipflop/flipflop.imi $(EXAMPLE_PATH)/Flipflop/flipflop.v0 -mode cover -distributed shuffle -output-cart -verbose medium
+# 	mpiexec -n 4 $(TARGET) $(EXAMPLE_PATH)/Flipflop/flipflop.imi $(EXAMPLE_PATH)/Flipflop/flipflop.v0 -mode cover -distributed shuffle -output-cart -verbose medium
 # 	mpiexec -n 4 $(TARGET) $(EXAMPLE_PATH)/Flipflop/flipflop.imi $(EXAMPLE_PATH)/Flipflop/flipflop.v0 -mode cover -distributed subpart -output-cart
 	
 # 	mpiexec -n 4 $(TARGET) $(EXAMPLE_PATH)/Scheduling/test3-bigV0-3D.imi $(EXAMPLE_PATH)/Scheduling/test3-bigV0-3D.v0 -merge -mode cover -distributed shuffle -cart -verbose standard
@@ -455,6 +455,9 @@ exe:
 # 	$(TARGET) $(EXAMPLE_PATH)/Flipflop/flipflop.imi $(EXAMPLE_PATH)/Flipflop/flipflop-bug.pi0 -with-dot -efim -with-log -with-parametric-log -verbose low -fancy
 # 	$(TARGET) $(EXAMPLE_PATH)/Flipflop/flipflop.imi $(EXAMPLE_PATH)/Flipflop/flipflop.v0 -efim -mode cover -cart
 # 	$(TARGET) $(EXAMPLE_PATH)/Flipflop/flipflop.imi -mode EF -cart
+
+# 	$(TARGET) $(EXAMPLE_PATH)/Flipflop/flipflop4D.imi -mode EF -merge
+
 # 	bin/IMITATOR32 $(EXAMPLE_PATH)/Flipflop/flipflop.imi $(EXAMPLE_PATH)/Flipflop/flipflop.v0 -mode border -cart -with-graphics-source
 # 	$(TARGETV) $(EXAMPLE_PATH)/Flipflop/flipflop.imi $(EXAMPLE_PATH)/Flipflop/flipflop.v0 -mode border -cart -with-graphics-source
 # 	./IMITATOR Examples/Flipflop/flipflop.imi Examples/Flipflop/flipflop.v0 -mode random1000  -log-prefix Examples/Flipflop/test2/test
@@ -763,6 +766,7 @@ exe:
 
 # 	$(TARGET) $(EXAMPLE_PATH)/Scheduling/test5.imi $(EXAMPLE_PATH)/Scheduling/test5.v0 -mode cover -merge -cart -log-prefix $(EXAMPLE_PATH)/Scheduling/test5-BCmerge2535
 # 	$(TARGET) $(EXAMPLE_PATH)/Scheduling/test5.imi -mode EF -incl -merge -cart -log-prefix $(EXAMPLE_PATH)/Scheduling/test5-EFmergeUnbounded -depth-limit 400
+	$(TARGET) $(EXAMPLE_PATH)/Scheduling/test5.imi -mode EF -incl -merge -depth-limit 200 -output-cart
 # 	$(TARGET) $(EXAMPLE_PATH)/Scheduling/test5.imi $(EXAMPLE_PATH)/Scheduling/test5.v0 -mode cover -efim -merge -cart -log-prefix $(EXAMPLE_PATH)/Scheduling/test5-EFIMmerge20301525
 
 # 	$(TARGET) $(EXAMPLE_PATH)/Scheduling/fmtv-challenge2-v1.imi -mode EF -merge -incl -cart -merge
