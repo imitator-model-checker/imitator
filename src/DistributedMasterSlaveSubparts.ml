@@ -981,11 +981,11 @@ let worker() =
 					let added = Cartography.bc_process_im_result im_result in
 					counter_worker_IM#stop;
 					
-					if(added) then
-					begin
+					(*if(added) then
+					begin*)
 					(*send result to master*)
 					send_result_worker im_result;
-					end;
+					(*end;*)
 					(* Print some info *)
 					print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "]  Constraint really added? " ^ (string_of_bool added) ^ "");
 					compute_next_pi0_sequentially more_pi0 limit_reached first_point (Some im_result.tile_nature);
