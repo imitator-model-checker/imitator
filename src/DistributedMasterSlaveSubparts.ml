@@ -687,14 +687,14 @@ let master () =
 				  end
 				done;
 				
-				let uncovered = ref false in
+				(*let uncovered = ref false in
 				let currentPi0 = List.assoc source_rank !pi0buffer in
 				Cartography.test_pi0_uncovered currentPi0 uncovered ;
 				if(not !uncovered) then
 				begin
 				  print_message Debug_medium ("[Master] send_terminate  ");
 				  send_terminate source_rank ; 
-				end;
+				end;*)
 				
 				send_continue source_rank;
 
@@ -788,11 +788,21 @@ let check_stop_order () =
 					let b = Cartography.bc_process_im_result tile in
 					print_message Debug_medium ("[Worker " ^ (*(string_of_int rank) ^*) "] received Tile from Master.");
 					
-		| Terminate -> 		print_message Debug_medium ("[Some Worker] received Terminate from Master.");
+		(*| Terminate -> 		print_message Debug_medium ("[Some Worker] received Terminate from Master.");
 					(*raise KillIM;*)
-					killIM := true;
+					killIM := true;*)
 						
 		| Continue ->  		print_message Debug_medium ("[Worker " ^ (*(string_of_int rank) ^*) "] received continue tag from Master.");
+					let uncovered = ref false in
+					let currentPi0 = (*List.assoc source_rank !pi0buffer*) Cartography.get_current_pi0() in
+					Cartography.test_pi0_uncovered currentPi0 uncovered ;
+					if(not !uncovered) then
+					begin
+					  (*print_message Debug_medium ("[Master] send_terminate  ");
+					  send_terminate source_rank ;*) 
+					  killIM := true;
+					end;
+		      
 					receivedContinue := true;	
 					print_message Debug_medium ("[Worker " ^ (*(string_of_int rank) ^*) "] received Tile from Master.");
 									
