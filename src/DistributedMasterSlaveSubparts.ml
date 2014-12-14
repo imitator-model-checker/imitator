@@ -585,13 +585,13 @@ let master () =
 		| Pi0 (source_rank , pi0) -> 
 				print_message Debug_medium ("[Master] Received a pi0 from worker " ^ (string_of_int source_rank) ^ "");
 				(*Update tiles*)
-				while(List.mem_assoc source_rank !tilebuffer) do
+				(*while(List.mem_assoc source_rank !tilebuffer) do
 				  begin
 				    send_tile (List.assoc source_rank !tilebuffer) source_rank;
 				    tilebuffer := (List.remove_assoc source_rank !tilebuffer);
 				    print_message Debug_medium ("[Master] send a tile to worker " ^ (string_of_int source_rank) ^ "");
 				  end
-				done;
+				done;*)
 				
 				(*Update pi0s*)
 				if(List.mem_assoc source_rank !pi0buffer) then
