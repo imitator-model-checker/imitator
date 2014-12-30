@@ -585,13 +585,13 @@ let master () =
 		| Pi0 (source_rank , pi0) -> 
 				print_message Debug_medium ("[Master] Received a pi0 from worker " ^ (string_of_int source_rank) ^ "");
 				(*Update tiles*)
-				while(List.mem_assoc source_rank !tilebuffer) do
+				(*while(List.mem_assoc source_rank !tilebuffer) do
 				  begin
 				    send_tile (List.assoc source_rank !tilebuffer) source_rank;
 				    tilebuffer := (List.remove_assoc source_rank !tilebuffer);
 				    print_message Debug_medium ("[Master] send a tile to worker " ^ (string_of_int source_rank) ^ "");
 				  end
-				done;
+				done;*)
 				
 				(*Update pi0s*)
 				if(List.mem_assoc source_rank !pi0buffer) then
@@ -687,14 +687,14 @@ let master () =
 				  end
 				done;
 				
-				let uncovered = ref false in
+				(*let uncovered = ref false in
 				let currentPi0 = List.assoc source_rank !pi0buffer in
 				Cartography.test_pi0_uncovered currentPi0 uncovered ;
 				if(not !uncovered) then
 				begin
 				  print_message Debug_medium ("[Master] send_terminate  ");
 				  send_terminate source_rank ; 
-				end;
+				end;*)
 				
 				send_continue source_rank;
 
@@ -788,11 +788,21 @@ let check_stop_order () =
 					let b = Cartography.bc_process_im_result tile in
 					print_message Debug_medium ("[Worker " ^ (*(string_of_int rank) ^*) "] received Tile from Master.");
 					
-		| Terminate -> 		print_message Debug_medium ("[Some Worker] received Terminate from Master.");
+		(*| Terminate -> 		print_message Debug_medium ("[Some Worker] received Terminate from Master.");
 					(*raise KillIM;*)
-					killIM := true;
+					killIM := true;*)
 						
 		| Continue ->  		print_message Debug_medium ("[Worker " ^ (*(string_of_int rank) ^*) "] received continue tag from Master.");
+					let uncovered = ref false in
+					let currentPi0 = (*List.assoc source_rank !pi0buffer*) Cartography.get_current_pi0() in
+					Cartography.test_pi0_uncovered currentPi0 uncovered ;
+					if(not !uncovered) then
+					begin
+					  (*print_message Debug_medium ("[Master] send_terminate  ");
+					  send_terminate source_rank ;*) 
+					  killIM := true;
+					end;
+		      
 					receivedContinue := true;	
 					print_message Debug_medium ("[Worker " ^ (*(string_of_int rank) ^*) "] received Tile from Master.");
 									
@@ -981,11 +991,11 @@ let worker() =
 					let added = Cartography.bc_process_im_result im_result in
 					counter_worker_IM#stop;
 					
-					if(added) then
-					begin
+					(*if(added) then
+					begin*)
 					(*send result to master*)
 					send_result_worker im_result;
-					end;
+					(*end;*)
 					(* Print some info *)
 					print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "]  Constraint really added? " ^ (string_of_bool added) ^ "");
 					compute_next_pi0_sequentially more_pi0 limit_reached first_point (Some im_result.tile_nature);
