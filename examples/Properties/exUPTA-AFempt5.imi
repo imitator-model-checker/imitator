@@ -1,0 +1,70 @@
+(************************************************************
+ *                         IMITATOR
+ *
+ * Example to reason on the AF-emptiness for U-PTA
+ * FAILED attempt to design a PTA such that AF(lF) holds for PTA[p] iff p=k, for any integer k >= 0
+ *
+ * Author          : Etienne Andre
+ * Created         : 2014/12/30
+ * Last modified   : 2014/12/30
+ * IMITATOR version: 2.6.2
+ ************************************************************)
+
+var 	x, y
+		: clock;
+
+	p
+		: parameter;
+
+
+(************************************************************)
+  automaton PTA
+(************************************************************)
+synclabs: ;
+
+loc l1: while x <= 1 & y <= p wait {}
+	when x = 1 do {x' = 0} goto l1;
+	when x = 0 do {} goto l2;
+
+loc l2: while y <= p wait {}
+	when y <= p do {} goto lF;
+	when x > 0 do {} goto l3;
+
+loc l3: while x <= 1 wait {}
+	when y <= p do {} goto lF;
+	when y <= p & x = 1 do {x' = 0} goto l3;
+	when x = 1 & y < p+1 do {} goto l4;
+	
+loc l4: while True wait {}
+
+loc lF: while True wait {}
+
+end (* PTA *)
+
+
+
+(************************************************************)
+(* Analysis *)
+(************************************************************)
+
+init := True
+	(*------------------------------------------------------------
+	   INITIAL LOCATION
+	  ------------------------------------------------------------*)
+	& loc[PTA] = l1
+
+	(*------------------------------------------------------------
+	   INITIAL CLOCKS
+	  ------------------------------------------------------------*)
+	& x = 0
+	& y = 0
+
+	(*------------------------------------------------------------
+	   PARAMETER CONSTRAINTS
+	  ------------------------------------------------------------*)
+	& p >= 0
+	
+	& p = 1
+;
+
+end
