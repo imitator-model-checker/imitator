@@ -1,7 +1,7 @@
 (************************************************************
  *                         IMITATOR
  *
- * Sample circuit with a loop to examplify IMPO
+ * Model of an "AND" logical gate
  *
  * Author          : Etienne Andre
  * Created         : 2015/01/29
@@ -9,63 +9,163 @@
  * IMITATOR version: 2.6.2
  ************************************************************)
 
-var 	ckAnd
+var 	ckNot1, ckNot2, ckNot3, ckAnd, ckEnv
 		: clock;
 
+	di_l, di_u,
+	dNot1_l, dNot1_u,
+	dNot2_l, dNot2_u,
+	dNot3_l, dNot3_u,
 	dAnd_l, dAnd_u
 			: parameter;
 
 
 (************************************************************)
+  automaton Not1Gate
+(************************************************************)
+synclabs: qUp, qDown, n1Up, n1Down;
+
+(* Unstable *)
+loc Not100: while ckNot1 <= dNot1_u wait {}
+	when True sync qUp do {} goto Not110;
+	when ckNot1 >= dNot1_l sync n1Up do {} goto Not101;
+
+(* Stable *)
+loc Not101: while True wait {}
+	when True sync qUp do {ckNot1' = 0} goto Not111;
+
+(* Stable *)
+loc Not110: while True wait {}
+	when True sync qDown do {ckNot1' = 0} goto Not100;
+
+(* Unstable *)
+loc Not111: while ckNot1 <= dNot1_u wait {}
+	when True sync qDown goto Not101;
+	when ckNot1 >= dNot1_l sync n1Down goto Not110;
+
+end (*Not1Gate*)
+
+
+
+(************************************************************)
+  automaton Not2Gate
+(************************************************************)
+synclabs: iUp, iDown, n2Up, n2Down;
+
+(* Unstable *)
+loc Not200: while ckNot2 <= dNot2_u wait {}
+	when True sync iUp do {} goto Not210;
+	when ckNot2 >= dNot2_l sync n2Up do {} goto Not201;
+
+(* Stable *)
+loc Not201: while True wait {}
+	when True sync iUp do {ckNot2' = 0} goto Not211;
+
+(* Stable *)
+loc Not210: while True wait {}
+	when True sync iDown do {ckNot2' = 0} goto Not200;
+
+(* Unstable *)
+loc Not211: while ckNot2 <= dNot2_u wait {}
+	when True sync iDown goto Not201;
+	when ckNot2 >= dNot2_l sync n2Down goto Not210;
+
+end (*Not2Gate*)
+
+
+
+(************************************************************)
+  automaton Not3Gate
+(************************************************************)
+synclabs: n1Up, n1Down, n3Up, n3Down;
+
+(* Unstable *)
+loc Not300: while ckNot3 <= dNot3_u wait {}
+	when True sync n1Up do {} goto Not310;
+	when ckNot3 >= dNot3_l sync n3Up do {} goto Not301;
+
+(* Stable *)
+loc Not301: while True wait {}
+	when True sync n1Up do {ckNot3' = 0} goto Not311;
+
+(* Stable *)
+loc Not310: while True wait {}
+	when True sync n1Down do {ckNot3' = 0} goto Not300;
+
+(* Unstable *)
+loc Not311: while ckNot3 <= dNot3_u wait {}
+	when True sync n1Down goto Not301;
+	when ckNot3 >= dNot3_l sync n3Down goto Not310;
+
+end (*Not3Gate*)
+
+
+(************************************************************)
   automaton AndGate
 (************************************************************)
-synclabs: i1Up, i1Down, i2Up, i2Down, sUp, sDown;
+synclabs: n3Up, n3Down, n2Up, n2Down, qUp, qDown;
 
 (* Stable *)
 loc And000: while True wait {}
-	when True sync i1Up do {} goto And100;
-	when True sync i2Up do {} goto And010;
+	when True sync n3Up do {} goto And100;
+	when True sync n2Up do {} goto And010;
 
 (* Untable *)
 loc And001: while ckAnd <= dAnd_u wait {}
-	when True sync i1Up do {ckAnd' = 0} goto And101;
-	when True sync i2Up do {ckAnd' = 0} goto And011;
-	when ckAnd >= dAnd_l sync sDown do {} goto And000;
+	when True sync n3Up do {ckAnd' = 0} goto And101;
+	when True sync n2Up do {ckAnd' = 0} goto And011;
+	when ckAnd >= dAnd_l sync qDown do {} goto And000;
 
 (* Stable *)
 loc And010: while True wait {}
-	when True sync i1Up do {ckAnd' = 0} goto And110;
-	when True sync i2Down do {} goto And000;
+	when True sync n3Up do {ckAnd' = 0} goto And110;
+	when True sync n2Down do {} goto And000;
 
 (* Untable *)
 loc And011: while ckAnd <= dAnd_u wait {}
-	when True sync i1Up do {} goto And111;
-	when True sync i2Down do {ckAnd' = 0} goto And001;
-	when ckAnd >= dAnd_l sync sDown do {} goto And010;
+	when True sync n3Up do {} goto And111;
+	when True sync n2Down do {ckAnd' = 0} goto And001;
+	when ckAnd >= dAnd_l sync qDown do {} goto And010;
 
 (* Stable *)
 loc And100: while True wait {}
-	when True sync i1Down do {} goto And000;
-	when True sync i2Up do {ckAnd' = 0} goto And110;
+	when True sync n3Down do {} goto And000;
+	when True sync n2Up do {ckAnd' = 0} goto And110;
 
 (* Untable *)
 loc And101: while ckAnd <= dAnd_u wait {}
-	when True sync i1Down do {ckAnd' = 0} goto And001;
-	when True sync i2Up do {} goto And111;
-	when ckAnd >= dAnd_l sync sDown do {} goto And100;
+	when True sync n3Down do {ckAnd' = 0} goto And001;
+	when True sync n2Up do {} goto And111;
+	when ckAnd >= dAnd_l sync qDown do {} goto And100;
 
 (* Untable *)
 loc And110: while ckAnd <= dAnd_u  wait {}
-	when True sync i1Down do {} goto And010;
-	when True sync i2Down do {} goto And100;
-	when ckAnd >= dAnd_l sync sUp do {} goto And111;
+	when True sync n3Down do {} goto And010;
+	when True sync n2Down do {} goto And100;
+	when ckAnd >= dAnd_l sync qUp do {} goto And111;
 
 (* Stable *)
 loc And111: while True wait {}
-	when True sync i1Down do {ckAnd' = 0} goto And011;
-	when True sync i2Down do {ckAnd' = 0} goto And101;
+	when True sync n3Down do {ckAnd' = 0} goto And011;
+	when True sync n2Down do {ckAnd' = 0} goto And101;
 
 end (*AndGate*)
+
+
+
+(************************************************************)
+  automaton EnvI
+(************************************************************)
+synclabs: iUp, iDown;
+
+(* Unstable *)
+loc EnvI1: while ckEnv <= di_u wait {}
+	when ckEnv >= di_u sync iDown do {} goto EnvI0;
+
+(* Stable *)
+loc EnvI0: while True wait {}
+
+end (*EnvI*)
 
 
 
@@ -77,18 +177,56 @@ init := True
 	(*------------------------------------------------------------
 	   INITIAL LOCATION
 	  ------------------------------------------------------------*)
-	& loc[AndGate] = And000
+	 (*
+		I  = 1
+		N1 = 1
+		N2 = 0
+		N3 = 0
+		Q  = 1
+	 *)
+	  
+	& loc[Not1Gate]	= Not111
+	& loc[Not2Gate]	= Not210
+	& loc[Not3Gate]	= Not310
+	& loc[AndGate]	= And001
+	& loc[EnvI]		= EnvI1
 
 	(*------------------------------------------------------------
 	   INITIAL CLOCKS
 	  ------------------------------------------------------------*)
+	& ckNot1 = 0
+	& ckNot2 = 0
+	& ckNot3 = 0
 	& ckAnd = 0
+	& ckEnv = 0
 
 	(*------------------------------------------------------------
 	   PARAMETER CONSTRAINTS
 	  ------------------------------------------------------------*)
+	& dNot1_l >= 0
+	& dNot1_l <= dNot1_u
+	& dNot2_l >= 0
+	& dNot2_l <= dNot2_u
+	& dNot3_l >= 0
+	& dNot3_l <= dNot3_u
 	& dAnd_l >= 0
 	& dAnd_l <= dAnd_u
+	& di_l >= 0
+	& di_l <= di_u
+
+	(*------------------------------------------------------------
+	   PARAMETER VALUATION
+	  ------------------------------------------------------------*)
+(*	& dNot1_l	= 8
+	& dNot1_u	= 10
+	& dNot2_l	= 4
+	& dNot2_u	= 5
+	& dNot3_l	= 2
+	& dNot3_u	= 8
+	& dAnd_l	= 3
+	& dAnd_u	= 4
+	& di_l		= 1
+	& di_u		= 2*)
 ;
 
 end
