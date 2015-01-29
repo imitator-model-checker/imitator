@@ -1,7 +1,7 @@
 (************************************************************
  *                         IMITATOR
  *
- * Model of an "AND" logical gate
+ * Model of a small asynchronous circuit with a loop
  *
  * Author          : Etienne Andre
  * Created         : 2015/01/29
