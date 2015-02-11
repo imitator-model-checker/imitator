@@ -3,9 +3,9 @@
  *
  * Model of a pacemaker
  *
- * "Synthesising Optimal Timing Delays for Timed I/O Automata"
- * Marco Diciolla, Chang Hwan Peter Kim, Marta Kwiatkowska and Alexandru Mereacre
- * 2014
+ * "Modeling and Verification of a Dual Chamber Implantable Pacemaker"
+ * Zhihao Jiang, Miroslav Pajic, Salar Moarref, Rajeev Alur, Rahul Mangharam
+ * TACAS 2014
  *
  * Author          : Etienne Andre
  * Created         : 2015/02/11
@@ -13,72 +13,23 @@
  * IMITATOR version: 2.6.2
  ************************************************************)
 
-var 	t, x
+var 
+	(* local clocks *)
+	t_AVI, t_LRI, t_PVARP, t_VRP,
+	(* global clocks *)
+	clk, x
 		: clock;
 
-	B1 = 1, B2 = 2,
-	E = 40,
-	(* We treat PP, TAVD, AERP and VERP as uncontrollable parameters. *)
-	AERP,
-	PP,
-	VERP,
-	TAVD,
-	TLRImTLAVI, (* only one parameter for "TLRI - TLAVI" to reduce the constraints size *)
+	TURI,
+	TLRI,
+	TAVI,
+	TPVAB,
+	TPVARP,
+	TVRP,
+	Aminwait,
+	Amaxwait
 	
 			: parameter;
-
-
-(************************************************************)
-  automaton atrium
-(************************************************************)
-synclabs: Aget, AP;
-
-loc Q: while True wait {}
-	when t >= PP sync Aget do {t' = 0} goto Qprime;
-	when True sync AP do {} goto Qsecond;
-
-loc Qprime: while True wait {}
-	when t >= PP do {t' = 0} goto Qprime;
-	when x >= AERP do {x' = 0} goto Q;
-
-loc Qsecond: while True wait {}
-	when True sync Aget do {x' = 0} goto Qprime;
-
-end (*atrium*)
-
-
-
-(************************************************************)
-  automaton conduction
-(************************************************************)
-synclabs: Aget, CDI;
-
-loc C: while True wait {}
-	when True sync Aget do {} goto Cprime;
-
-loc Cprime: while True wait {}
-	when t >= TAVD sync CDI do {t' = 0} goto C;
-
-end (*conduction*)
-
-
-
-(************************************************************)
-  automaton ventricle
-(************************************************************)
-synclabs: Vget, CD, VP;
-
-loc V: while True wait {}
-	when True sync CD goto Vprime;
-	when True sync VP goto Vprime;
-
-loc Vprime: while True wait {}
-	when True sync Vget goto Vsecond;
-
-loc Vsecond: while True wait {}
-	when t >= VERP do {t' = 0} goto V;
-
-end (*ventricle*)
 
 
 
@@ -87,18 +38,116 @@ end (*ventricle*)
 (************************************************************)
 synclabs: AP, AS, VP, VS;
 
-loc LRI: while t <= TLRImTLAVI wait {}
-	when True sync VP do {t' = 0} goto LRI;
-	when True sync VS do {t' = 0} goto LRI;
-	when t >= TLRImTLAVI sync AP do {t' = 0} goto LRI;
+loc LRI: while t_LRI <= TLRI - TAVI wait {}
+	when True sync VP do {t_LRI' = 0} goto LRI;
+	when True sync VS do {t_LRI' = 0} goto LRI;
+	when t_LRI >= TLRI - TAVI sync AP do {t_LRI' = 0} goto LRI;
 	when True sync AS goto ASed;
 
 loc ASed: while True wait {}
-	when True sync VP do {t' = 0} goto LRI;
-	when True sync VS do {t' = 0} goto LRI;
+	when True sync VP do {t_LRI' = 0} goto LRI;
+	when True sync VS do {t_LRI' = 0} goto LRI;
 
 end (*LRI*)
 
+
+
+(************************************************************)
+  automaton AVI
+(************************************************************)
+synclabs: AP, AS, VP, VS;
+
+loc Idle: while True wait {}
+	when True sync AP do {t_AVI' = 0} goto AVI;
+	when True sync AS do {t_AVI' = 0} goto AVI;
+
+loc AVI: while t_AVI <= TAVI wait {}
+	when True sync VS goto Idle;
+	when t_AVI >= TAVI & clk >= TURI sync VP goto Idle;
+	when t_AVI >= TAVI & clk < TURI sync VP goto WaitURI;
+
+loc WaitURI: while clk <= TURI wait {}
+	when True sync VS goto Idle;
+	when clk >= TURI sync VP goto Idle;
+
+
+end (*AVI*)
+
+
+
+(************************************************************)
+  automaton URI
+(************************************************************)
+synclabs: VP, VS;
+
+loc URI: while True wait {}
+	when clk=0 sync VP goto URI;
+	when clk=0 sync VS goto URI;
+
+end (*URI*)
+
+
+
+(************************************************************)
+  automaton PVARP
+(************************************************************)
+synclabs: AR, AS, Aget, VP, VS;
+
+loc Idle: while True wait {}
+	when True sync VP do {t_PVARP' = 0} goto PVAB;
+	when True sync VS do {t_PVARP' = 0} goto PVAB;
+	when True sync Aget goto inter;
+
+(** COMMITTED **)
+loc inter: while True wait {}
+	when True sync AS goto Idle;
+
+loc PVAB: while t_PVARP <= TPVAB wait {}
+	when t_PVARP >= TPVAB goto PVARP;
+
+loc PVARP: while t_PVARP <= TPVARP wait {}
+	when True sync Aget goto inter1;
+	when t_PVARP >= TPVARP goto Idle;
+
+(** COMMITTED **)
+loc inter1: while True wait {}
+	when True sync AR goto PVARP;
+
+
+end (*PVARP*)
+
+
+
+(************************************************************)
+  automaton VRP
+(************************************************************)
+synclabs: Vget, VP, VS;
+
+loc Idle: while True wait {}
+	when True sync Vget goto inter;
+	when True sync VP do {t_VRP' = 0} goto VRP;
+
+(** COMMITTED **)
+loc inter: while True wait {}
+	when True sync VS do {t_VRP' = 0} goto VRP;
+
+loc VRP: while t_VRP <= TVRP wait {}
+	when t_VRP >= TVRP goto Idle;
+
+end (*VRP*)
+
+
+
+(************************************************************)
+  automaton RHM
+(************************************************************)
+synclabs: Aget, AP;
+
+loc AReady: while x < Amaxwait wait {}
+	when True sync AP do {x' = 0} goto AReady;
+	when x > Aminwait sync Aget do {x' = 0} goto AReady;
+
+end (*RHM*)
 
 
 (************************************************************)
@@ -109,29 +158,46 @@ init := True
 	(*------------------------------------------------------------
 	   INITIAL LOCATION
 	  ------------------------------------------------------------*)
-	& loc[atrium]		= Q
-	& loc[conduction]	= C
-	& loc[ventricle]	= V
 	& loc[LRI]			= LRI
+	& loc[AVI]			= Idle
+	& loc[URI]			= URI
+	& loc[PVARP]		= Idle
+	& loc[VRP]			= Idle
+	& loc[RHM]			= AReady
+
 
 	(*------------------------------------------------------------
 	   INITIAL CLOCKS
 	  ------------------------------------------------------------*)
-	& x = 0
-	& t = 0
+	& clk		= 0
+	& x			= 0
+	
+	& t_AVI		= 0
+	& t_LRI		= 0
+	& t_PVARP	= 0
+	& t_VRP		= 0
 
 	(*------------------------------------------------------------
 	   PARAMETER CONSTRAINTS
 	  ------------------------------------------------------------*)
-	& AERP >= 0
-	& PP >= 0
-	& VERP >= 0
-	& TAVD >= 0
-	& TLRImTLAVI >= 0
+	& TAVI		>= 0
+	& TLRI		>= 0
+	& TPVARP	>= 0
+	& TVRP		>= 0
+	& TURI		>= 0
+	& TPVAB		>= 0
+	& Aminwait	>= 0
+	& Amaxwait	>= 0
 
 	(*------------------------------------------------------------
 	   PARAMETER VALUATION
 	  ------------------------------------------------------------*)
+	& TAVI		= 150
+	& TLRI		= 1000
+	& TPVARP	= 100
+	& TVRP		= 150
+	& TURI		= 400
+	& TPVAB		= 50
 ;
 
 end
