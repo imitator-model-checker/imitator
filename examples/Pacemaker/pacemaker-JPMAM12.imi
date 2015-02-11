@@ -1,0 +1,137 @@
+(************************************************************
+ *                         IMITATOR
+ *
+ * Model of a pacemaker
+ *
+ * "Synthesising Optimal Timing Delays for Timed I/O Automata"
+ * Marco Diciolla, Chang Hwan Peter Kim, Marta Kwiatkowska and Alexandru Mereacre
+ * 2014
+ *
+ * Author          : Etienne Andre
+ * Created         : 2015/02/11
+ * Last modified   : 2015/02/11
+ * IMITATOR version: 2.6.2
+ ************************************************************)
+
+var 	t, x
+		: clock;
+
+	B1 = 1, B2 = 2,
+	E = 40,
+	(* We treat PP, TAVD, AERP and VERP as uncontrollable parameters. *)
+	AERP,
+	PP,
+	VERP,
+	TAVD,
+	TLRImTLAVI, (* only one parameter for "TLRI - TLAVI" to reduce the constraints size *)
+	
+			: parameter;
+
+
+(************************************************************)
+  automaton atrium
+(************************************************************)
+synclabs: Aget, AP;
+
+loc Q: while True wait {}
+	when t >= PP sync Aget do {t' = 0} goto Qprime;
+	when True sync AP do {} goto Qsecond;
+
+loc Qprime: while True wait {}
+	when t >= PP do {t' = 0} goto Qprime;
+	when x >= AERP do {x' = 0} goto Q;
+
+loc Qsecond: while True wait {}
+	when True sync Aget do {x' = 0} goto Qprime;
+
+end (*atrium*)
+
+
+
+(************************************************************)
+  automaton conduction
+(************************************************************)
+synclabs: Aget, CDI;
+
+loc C: while True wait {}
+	when True sync Aget do {} goto Cprime;
+
+loc Cprime: while True wait {}
+	when t >= TAVD sync CDI do {t' = 0} goto C;
+
+end (*conduction*)
+
+
+
+(************************************************************)
+  automaton ventricle
+(************************************************************)
+synclabs: Vget, CD, VP;
+
+loc V: while True wait {}
+	when True sync CD goto Vprime;
+	when True sync VP goto Vprime;
+
+loc Vprime: while True wait {}
+	when True sync Vget goto Vsecond;
+
+loc Vsecond: while True wait {}
+	when t >= VERP do {t' = 0} goto V;
+
+end (*ventricle*)
+
+
+
+(************************************************************)
+  automaton LRI
+(************************************************************)
+synclabs: AP, AS, VP, VS;
+
+loc LRI: while t <= TLRImTLAVI wait {}
+	when True sync VP do {t' = 0} goto LRI;
+	when True sync VS do {t' = 0} goto LRI;
+	when t >= TLRImTLAVI sync AP do {t' = 0} goto LRI;
+	when True sync AS goto ASed;
+
+loc ASed: while True wait {}
+	when True sync VP do {t' = 0} goto LRI;
+	when True sync VS do {t' = 0} goto LRI;
+
+end (*LRI*)
+
+
+
+(************************************************************)
+(* Analysis *)
+(************************************************************)
+
+init := True
+	(*------------------------------------------------------------
+	   INITIAL LOCATION
+	  ------------------------------------------------------------*)
+	& loc[atrium]		= Q
+	& loc[conduction]	= C
+	& loc[ventricle]	= V
+	& loc[LRI]			= LRI
+
+	(*------------------------------------------------------------
+	   INITIAL CLOCKS
+	  ------------------------------------------------------------*)
+	& x = 0
+	& t = 0
+
+	(*------------------------------------------------------------
+	   PARAMETER CONSTRAINTS
+	  ------------------------------------------------------------*)
+	& AERP >= 0
+	& PP >= 0
+	& VERP >= 0
+	& TAVD >= 0
+	& TLRImTLAVI >= 0
+
+	(*------------------------------------------------------------
+	   PARAMETER VALUATION
+	  ------------------------------------------------------------*)
+;
+
+end
