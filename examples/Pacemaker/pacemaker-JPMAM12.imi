@@ -17,7 +17,7 @@ var
 	(* local clocks *)
 	t_AVI, t_LRI, t_PVARP, t_VRP,
 	(* global clocks *)
-	clk, x
+	clk, x, x_urgent
 		: clock;
 
 	TURI,
@@ -27,9 +27,17 @@ var
 	TPVARP,
 	TVRP,
 	Aminwait,
-	Amaxwait
+	Amaxwait,
 	
-			: parameter;
+	(* Constants for readability *)
+	TRUE = 1,
+	FALSE = 0
+	
+		: parameter;
+	
+	(* Hack to test another PTA's location *)
+	AVIisIdle, PVARPisIdle
+		: discrete;
 
 
 
@@ -58,17 +66,17 @@ end (*LRI*)
 synclabs: AP, AS, VP, VS;
 
 loc Idle: while True wait {}
-	when True sync AP do {t_AVI' = 0} goto AVI;
-	when True sync AS do {t_AVI' = 0} goto AVI;
+	when True sync AP do {t_AVI' = 0, AVIisIdle' = FALSE} goto AVI;
+	when True sync AS do {t_AVI' = 0, AVIisIdle' = FALSE} goto AVI;
 
 loc AVI: while t_AVI <= TAVI wait {}
 	when True sync VS goto Idle;
-	when t_AVI >= TAVI & clk >= TURI sync VP goto Idle;
+	when t_AVI >= TAVI & clk >= TURI sync VP do {AVIisIdle' = TRUE} goto Idle;
 	when t_AVI >= TAVI & clk < TURI sync VP goto WaitURI;
 
 loc WaitURI: while clk <= TURI wait {}
-	when True sync VS goto Idle;
-	when clk >= TURI sync VP goto Idle;
+	when True sync VS do {AVIisIdle' = TRUE} goto Idle;
+	when clk >= TURI sync VP do {AVIisIdle' = TRUE} goto Idle;
 
 
 end (*AVI*)
@@ -81,8 +89,8 @@ end (*AVI*)
 synclabs: VP, VS;
 
 loc URI: while True wait {}
-	when clk=0 sync VP goto URI;
-	when clk=0 sync VS goto URI;
+	when True sync VP do {clk' = 0} goto URI;
+	when True sync VS do {clk' = 0} goto URI;
 
 end (*URI*)
 
@@ -91,27 +99,47 @@ end (*URI*)
 (************************************************************)
   automaton PVARP
 (************************************************************)
-synclabs: AR, AS, Aget, VP, VS;
+synclabs: AR, AS, Aget, VP, VS, PVARPbacktoIdle;
 
 loc Idle: while True wait {}
-	when True sync VP do {t_PVARP' = 0} goto PVAB;
-	when True sync VS do {t_PVARP' = 0} goto PVAB;
-	when True sync Aget goto inter;
+	when True sync VP do {t_PVARP' = 0, PVARPisIdle' = FALSE} goto PVAB;
+	when True sync VS do {t_PVARP' = 0, PVARPisIdle' = FALSE} goto PVAB;
+	when True sync Aget do {t_PVARP' = 0, PVARPisIdle' = FALSE} goto inter;
 
+(* ------------------------------------------------------------ *)
 (** COMMITTED **)
-loc inter: while True wait {}
-	when True sync AS goto Idle;
+(*loc inter: while True wait {}
+	when True sync AS goto Idle;*)
+
+(* Replaced with the following gadget *)
+
+loc inter: while t_PVARP = 0 wait {}
+	(* Easy case: loc[AVI] = idle: committed is urgent *)
+	when AVIisIdle = TRUE sync AS do {PVARPisIdle' = TRUE} goto Idle;
+	(* Less easy case: loc[AVI] =!= idle: wait! *)
+	when AVIisIdle = FALSE goto Wait;
+
+loc Wait: while True wait {}
+	when True sync VP do {t_PVARP' = 0} goto Urgent;
+	when True sync VS do {t_PVARP' = 0} goto Urgent;
+
+loc Urgent: while t_PVARP = 0 wait {}
+	when True sync AS do {PVARPisIdle' = TRUE} goto Idle;
+
+(* END gadget for committed *)
+(* ------------------------------------------------------------ *)
 
 loc PVAB: while t_PVARP <= TPVAB wait {}
 	when t_PVARP >= TPVAB goto PVARP;
 
 loc PVARP: while t_PVARP <= TPVARP wait {}
-	when True sync Aget goto inter1;
-	when t_PVARP >= TPVARP goto Idle;
+	when True sync Aget do {x_urgent' = 0} goto inter1;
+	when t_PVARP >= TPVARP do {PVARPisIdle' = TRUE} sync PVARPbacktoIdle goto Idle;
 
 (** COMMITTED **)
-loc inter1: while True wait {}
-	when True sync AR goto PVARP;
+(* In fact, urgent is OK because AR is not synchronized with anyone else *)
+loc inter1: while x_urgent = 0 wait {}
+	when x_urgent = 0 sync AR goto PVARP;
 
 
 end (*PVARP*)
@@ -121,18 +149,66 @@ end (*PVARP*)
 (************************************************************)
   automaton VRP
 (************************************************************)
-synclabs: Vget, VP, VS;
+synclabs: AP, AS, Aget, Vget, VP, VS, PVARPbacktoIdle;
 
 loc Idle: while True wait {}
-	when True sync Vget goto inter;
+	when True sync Vget do {t_VRP' = 0} goto inter;
 	when True sync VP do {t_VRP' = 0} goto VRP;
+	(* To prevent blocking *)
+	when True sync AP goto Idle;
+	when True sync AS goto Idle;
+	when True sync Aget goto Idle;
 
+(* ------------------------------------------------------------ *)
 (** COMMITTED **)
-loc inter: while True wait {}
-	when True sync VS do {t_VRP' = 0} goto VRP;
+(*loc inter: while True wait {}
+	when True sync VS do {t_VRP' = 0} goto VRP;*)
+
+loc inter: while t_VRP = 0 wait {}
+	(* Ready *)
+	when AVIisIdle = FALSE & PVARPisIdle = TRUE sync VS goto VRP;
+	(* Not ready...*)
+	when AVIisIdle = TRUE & PVARPisIdle = TRUE goto bNOKdOK;
+	when AVIisIdle = FALSE & PVARPisIdle = FALSE goto bOKdNOK;
+	when AVIisIdle = TRUE & PVARPisIdle = FALSE goto bNOKdNOK;
+
+(* AVI(b) not ready; PVARP(d) not ready *)
+loc bNOKdNOK: while True wait {}
+	when True sync AP goto bOKdNOK;
+	when True sync AS do {t_VRP' = 0} goto bOKdOK;
+	when True sync PVARPbacktoIdle goto bNOKdOK;
+	(* To prevent blocking *)
+	when True sync Aget goto bNOKdNOK;
+
+(* AVI(b) ready; PVARP(d) not ready *)
+loc bOKdNOK: while True wait {}
+	when True sync PVARPbacktoIdle do {t_VRP' = 0} goto bOKdOK;
+	(* To prevent blocking *)
+	when True sync Aget goto bOKdNOK;
+
+(* AVI(b) not ready; PVARP(d) ready *)
+loc bNOKdOK: while True wait {}
+	when True sync AP do {t_VRP' = 0} goto bOKdOK;
+	when True sync Aget goto bNOKdNOK2;
+
+(* AVI(b) not ready; PVARP(d) not ready *)
+loc bNOKdNOK2: while True wait {}
+	when True sync AS do {t_VRP' = 0} goto bOKdOK;
+
+(* AVI(b) ready; PVARP(d) ready: fire! *)
+loc bOKdOK: while t_VRP = 0 wait {}
+	when t_VRP = 0 sync VS goto VRP;
+
+(* END gadget for committed *)
+(* ------------------------------------------------------------ *)
 
 loc VRP: while t_VRP <= TVRP wait {}
 	when t_VRP >= TVRP goto Idle;
+	(* To prevent blocking *)
+	when True sync AP goto VRP;
+	when True sync AS goto VRP;
+	when True sync Aget goto VRP;
+
 
 end (*VRP*)
 
@@ -167,10 +243,17 @@ init := True
 
 
 	(*------------------------------------------------------------
+	   INITIAL DISCRETE
+	  ------------------------------------------------------------*)
+	& AVIisIdle			= TRUE
+	& PVARPisIdle		= TRUE
+	
+	(*------------------------------------------------------------
 	   INITIAL CLOCKS
 	  ------------------------------------------------------------*)
 	& clk		= 0
 	& x			= 0
+	& x_urgent	= 0
 	
 	& t_AVI		= 0
 	& t_LRI		= 0
