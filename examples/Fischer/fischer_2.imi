@@ -7,7 +7,7 @@
 --   Laboratoire Specification Verification
 --
 --                                Created : < 2012/02/14
---                          Last modified :   2012/02/14
+--                          Last modified :   2015/02/18
 --************************************************************--
 --************************************************************--
 
@@ -77,19 +77,19 @@ loc CS: while True wait {}
 end
 
 --************************************************************--
-automaton arbiter
+automaton arbitrer
 --************************************************************--
 synclabs : set1,release1,
            set2,release2,
 	   tau;
 	   
 
-loc arbitrer_loc: while True wait {}
-	when True sync set1 do {} goto arbitrer_loc;
-	when True sync release1 do {} goto arbitrer_loc;
-	when True sync set2 do {} goto arbitrer_loc;
-	when True sync release2 do {} goto arbitrer_loc;
-	when True sync tau do {} goto arbitrer_loc;
+loc loc_arbitrer: while True wait {}
+	when True sync set1 do {} goto loc_arbitrer;
+	when True sync release1 do {} goto loc_arbitrer;
+	when True sync set2 do {} goto loc_arbitrer;
+	when True sync release2 do {} goto loc_arbitrer;
+	when True sync tau do {} goto loc_arbitrer;
 end
 
 
@@ -111,7 +111,7 @@ init:=
 	----------------------
 	  loc[proc1] = idle
 	& loc[proc2] = idle
-	& loc[arbiter] = arbitrer_loc
+	& loc[arbitrer] = loc_arbitrer
 	
 	----------------------
 	-- Clocks
@@ -123,6 +123,12 @@ init:=
 	-- Discrete
 	----------------------
 	& k=0
+
+	----------------------
+	-- Parameters
+	----------------------
+	& a >= 0
+	& b >= 0
 ;
 
 
