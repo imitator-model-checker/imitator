@@ -340,7 +340,9 @@ class imitator_options =
 				("-distributed", String set_distributed, " Distributed version of the behavioral cartography (work in progress).
         Use 'no' for the non-distributed mode (default).
         Use 'sequential' for a sequential iteration on pi0.
-        Use 'randomXX' to generate random pi0 (e.g., random5 or random10); after XX successive unsuccessful attempts (where the generated point is already covered), the algorithm will do an exhaustive sequential iteration.");
+        Use 'randomXX' to generate random pi0 (e.g., random5 or random10); after XX successive unsuccessful attempts (where the generated point is already covered), the algorithm will do an exhaustive sequential iteration.
+        Use 'shuffle' for a shuffle point distribution.
+        Use 'subpart' for the dynamic subdomain partitioning.");
 				
 				("-dynamic-elimination", Set dynamic_clock_elimination, " Dynamic clock elimination [FSFMA13]. Default: false.");
 				
