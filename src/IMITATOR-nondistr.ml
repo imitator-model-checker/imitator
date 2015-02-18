@@ -12,31 +12,39 @@
  * Author:        Ulrich Kuehne, Etienne Andre
  * 
  * Created:       2009/09/07
- * Last modified: 2014/08/06
+ * Last modified: 2014/10/21
  *
  ****************************************************************)
 
 
 (**************************************************)
-(* Modules *)
+(* External modules *)
 (**************************************************)
-open Global
+open Gc
+
+
+(**************************************************)
+(* Internal modules *)
+(**************************************************)
+open Exceptions
+open CamlUtilities
+
+open ImitatorUtilities
 open AbstractModel
 (* open Arg *)
 open ModelPrinter
 open Options
 open Reachability
-open Gc
-
 
 
 (**************************************************
 
 TAGS POUR CHOSES A FAIRE
-- (**** TO DO ****)
-- (**** BAD PROG ****)
-- (**** TO OPTIMIZE ****)
-- (**** OPTIMIZED ****)
+- (*** TO DO ***)
+- (*** BAD PROG ***)
+- (*** TO OPTIMIZE ***)
+- (*** OPTIMIZED ***)
+- (*** WARNING ***)
 
 <>
 
@@ -56,6 +64,12 @@ TAGS POUR CHOSES A FAIRE
 (*LinearConstraint.test_PDBMs();
 terminate_program();*)
 
+
+(**************************************************)
+(* BEGIN EXCEPTION MECHANISM *)
+(**************************************************)
+begin
+try(
 
 
 (**************************************************)
@@ -77,7 +91,7 @@ Input.set_options options;
 (**************************************************)
   
 (* Print header *)
-print_message Debug_standard header_string;
+print_header_string();
 
 (* Print date *)
 print_message Debug_standard ("Analysis time: " ^ (now()) ^ "\n");
@@ -106,7 +120,7 @@ if debug_mode_greater Debug_total then
 (**************************************************)
 (* Case distributed *)
 (**************************************************)
-(* Do not modify the following lines! (used by an external script to compile the non-distributed version of IMITATOR) *)
+(*** WARNING:  Do not modify the following lines! (used by an external script to compile the non-distributed version of IMITATOR) ***)
 (* ** *** **** ***** ******    BEGIN FORK PaTATOR    ****** ***** **** *** ** *)(*
 begin
 match options#distribution_mode with
@@ -115,7 +129,7 @@ match options#distribution_mode with
 	| _ -> (PaTATOR.run(); exit(0))
 end;
 *)(* ** *** **** ***** ******    END FORK PaTATOR    ****** ***** **** *** ** *)
-(* Do not modify the previous lines! (used by an external script to compile the non-distributed version of IMITATOR) *)
+(*** WARNING:  Do not modify the previous lines! (used by an external script to compile the non-distributed version of IMITATOR) ***)
 
 
 
@@ -164,8 +178,14 @@ if options#cartonly then(
 	let constraints = List.map (fun (linear_constraint , tile_nature) ->
 		Convex_constraint (linear_constraint , tile_nature)
 	) constraints in
+	(* Create the v0 *)
+	let v0 = new HyperRectangle.hyper_rectangle in
+	v0#set_min 0 p1_min;
+	v0#set_max 0 p1_max;
+	v0#set_min 1 p2_min;
+	v0#set_max 1 p2_max;
 	(* Call the cartography *)
-	Graphics.cartography model [| (p1_min , p1_max); (p2_min , p2_max) |] constraints options#files_prefix;
+	Graphics.cartography model (*[| (p1_min , p1_max); (p2_min , p2_max) |]*) v0 constraints options#files_prefix;
 	(* The end *)
 	terminate_program()
 );
@@ -249,7 +269,6 @@ if options#imitator_mode = Inverse_method && options#branch_and_bound then(
 (**************************************************)
 
 begin
-try(
 (* 	let zones = *)
 	match options#imitator_mode with
 		| Translation -> raise (InternalError "Translation cannot be executed here; program should already have terminated at this point.");
@@ -305,9 +324,21 @@ try(
 			print_message Debug_high "Graphical cartography not asked: graph not generated."
 		)
 	;*)
-) with
-	| InternalError e -> (print_error ("Internal error: " ^ e ^ "\nPlease (kindly) insult the developers."); abort_program (); exit 1);
 end;
+
+
+(**************************************************)
+(* END EXCEPTION MECHANISM *)
+(**************************************************)
+) with
+	| InternalError e -> (
+		print_error ("Fatal internal error: " ^ e ^ "\nPlease (kindly) insult the developers.");
+		abort_program ();
+		(* Safety *)
+		exit 1
+	);
+end; (* try *)
+
 
 
 (**************************************************)
