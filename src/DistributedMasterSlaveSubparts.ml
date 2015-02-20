@@ -875,7 +875,9 @@ let worker() =
 	counter_worker_total#start;
 	
 	(* Assign the termination function to the inverse method *)
-	Reachability.set_patator_termination_function check_stop_order;
+	if options#distributedKillIM then(
+		Reachability.set_patator_termination_function check_stop_order;
+	);
 	
 	let rank = Mpi.comm_rank Mpi.comm_world in
 	let size = Mpi.comm_size Mpi.comm_world in

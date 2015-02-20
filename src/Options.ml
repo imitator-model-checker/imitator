@@ -7,7 +7,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Ulrich Kuehne, Etienne Andre
  * Created:       2010
- * Last modified: 2014/10/24
+ * Last modified: 2015/02/20
  *
  ****************************************************************)
  
@@ -124,6 +124,9 @@ class imitator_options =
 		(* Distributed version of IMITATOR *)
 		val mutable distribution_mode = ref Non_distributed
 		
+		(* For distributed version: kill IM heuristics *)
+		val mutable distributedKillIM = ref false
+		
 		(* Remove useless clocks (slightly experimental) *)
 		val mutable dynamic_clock_elimination = ref false
 		
@@ -198,6 +201,7 @@ class imitator_options =
 		method counterex = !counterex
 		(* method dynamic = !dynamic *)
 		method distribution_mode = !distribution_mode
+		method distributedKillIM = !distributedKillIM
 		method dynamic_clock_elimination = !dynamic_clock_elimination
 		method efim = !efim
 		method fancy = !fancy
@@ -337,12 +341,14 @@ class imitator_options =
 				
 				("-depth-limit", Int (fun i -> post_limit := Some i), " Limits the depth of the exploration of the reachability graph. Default: no limit.");
 				
-				("-distributed", String set_distributed, " Distributed version of the behavioral cartography (work in progress).
+				("-distributed", String set_distributed, " Distributed version of the behavioral cartography.
         Use 'no' for the non-distributed mode (default).
         Use 'sequential' for a sequential iteration on pi0.
         Use 'randomXX' to generate random pi0 (e.g., random5 or random10); after XX successive unsuccessful attempts (where the generated point is already covered), the algorithm will do an exhaustive sequential iteration.
         Use 'shuffle' for a shuffle point distribution.
         Use 'subpart' for the dynamic subdomain partitioning.");
+				
+				("-distributedKillIM", Set distributedKillIM, " In distributed cartography, kill processes covered by other tiles. Default: false.");
 				
 				("-dynamic-elimination", Set dynamic_clock_elimination, " Dynamic clock elimination [FSFMA13]. Default: false.");
 				
@@ -531,17 +537,17 @@ class imitator_options =
 
 			(* Variant of the inverse method *)
 			if !inclusion then
-				print_message Debug_standard ("Considering fixpoint variant with inclusion.")
+				print_message Debug_standard ("Considering fixpoint variant with inclusion [AS11].")
 			else
 				print_message Debug_medium ("No fixpoint variant (default).");
 
 			if !union then
-				print_message Debug_standard ("Considering return variant IMunion.")
+				print_message Debug_standard ("Considering return variant IMunion [AS11].")
 			else
 				print_message Debug_medium ("No IMunion return variant (default).");
 
 			if !pi_compatible then
-				print_message Debug_standard ("Considering return variant IMoriginal.")
+				print_message Debug_standard ("Considering return variant IMoriginal [AS11].")
 			else
 				print_message Debug_medium ("No IMoriginal return variant (default).");
 
@@ -549,7 +555,7 @@ class imitator_options =
 
 
 			if !efim then
-				print_message Debug_standard ("Considering algorithm EFIM (work in progress).")
+				print_message Debug_standard ("Considering algorithm EFIM [ALNS15].")
 			else
 				print_message Debug_medium ("No EFIM algorithm (default).")
 			;
@@ -560,19 +566,19 @@ class imitator_options =
 			| Non_distributed -> 
 				print_message Debug_medium ("Non-distributed mode (default).");
 			| Distributed_unsupervised ->(
-				print_message Debug_standard ("Considering a distributed mode with unsupervised workers.");
+				print_message Debug_standard ("Considering a distributed mode with unsupervised workers (work in progress).");
 				if !imitator_mode <> Cover_cartography then(
 					print_warning "The distributed mode is only valid for the cartography. Option will be ignored.";
 				)
 			)
 			| Distributed_unsupervised_multi_threaded ->(
-				print_message Debug_standard ("Considering a distributed mode with unsupervised multi-threaded workers.");
+				print_message Debug_standard ("Considering a distributed mode with unsupervised multi-threaded workers (work in progress).");
 				if !imitator_mode <> Cover_cartography then(
 					print_warning "The distributed mode is only valid for the cartography. Option will be ignored.";
 				)
 			)
 			| Distributed_ms_sequential ->(
-				print_message Debug_standard ("Considering a distributed mode with sequential enumeration of pi0 points.");
+				print_message Debug_standard ("Considering a distributed mode with sequential enumeration of pi0 points [ACE14].");
 				if !imitator_mode <> Cover_cartography then(
 					print_warning "The distributed mode is only valid for the cartography. Option will be ignored.";
 				)
@@ -584,7 +590,7 @@ class imitator_options =
 				)
 			)
 			| Distributed_ms_random max -> (
-				print_message Debug_standard ("Considering a distributed mode with random generation of pi0 points with up to " ^ (string_of_int max) ^ " successive failure before switching to exhaustive enumeration.");
+				print_message Debug_standard ("Considering a distributed mode with random generation of pi0 points with up to " ^ (string_of_int max) ^ " successive failure before switching to exhaustive enumeration [ACE14].");
 				if !imitator_mode <> Cover_cartography then(
 					print_warning "The distributed mode is only valid for the cartography. Option will be ignored.";
 				)
@@ -597,6 +603,15 @@ class imitator_options =
 				)
 			)
 			end;
+
+			if !distributedKillIM then(
+				print_message Debug_standard ("Heuristics to kill a process when its point is covered by another tile, in the distributed cartography (work in progress).");
+				if !imitator_mode <> Cover_cartography || !distribution_mode = Non_distributed then(
+					print_warning "The killIM heuristics is only valid for the distributed cartography. Option will be ignored.";
+				);
+			)else
+				print_message Debug_medium ("No killIM heuristics (default).")
+			;
 
 			if !precomputepi0 then(
 				print_message Debug_standard ("Compute the next pi0 before the next reception of a constraint.");

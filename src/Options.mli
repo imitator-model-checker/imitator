@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2012/05/10
- * Last modified: 2014/09/22
+ * Last modified: 2015/02/20
  *
  ****************************************************************)
  
@@ -45,6 +45,7 @@ class imitator_options :
 		method counterex : bool
 (* 		method dynamic : bool *)
 		method distribution_mode : distribution_mode
+		method distributedKillIM : bool
 		method dynamic_clock_elimination : bool
 		method efim : bool
 		method fancy : bool
