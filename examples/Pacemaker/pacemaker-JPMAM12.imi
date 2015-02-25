@@ -9,25 +9,25 @@
  *
  * Author          : Etienne Andre
  * Created         : 2015/02/11
- * Last modified   : 2015/02/11
+ * Last modified   : 2015/02/25
  * IMITATOR version: 2.6.2
  ************************************************************)
 
 var 
 	(* local clocks *)
-	t_AVI, t_LRI, t_PVARP, t_VRP,
+	t_AVI, t_LRI, t_PVARP, t_VRP, t_5a,
 	(* global clocks *)
 	clk, x, x_urgent
 		: clock;
 
-	TURI,
-	TLRI,
-	TAVI,
-	TPVAB,
-	TPVARP,
-	TVRP,
-	Aminwait,
-	Amaxwait,
+	TAVI		= 150,
+	TLRI		= 1000,
+	TPVARP		= 100,
+	TVRP		= 150,
+	TURI		= 400,
+	TPVAB		= 50,
+	Aminwait	= 0,(* (random value)*)
+	Amaxwait	= 1000,(* (random value)*)
 	
 	(* Constants for readability *)
 	TRUE = 1,
@@ -72,7 +72,7 @@ loc Idle: while True wait {}
 loc AVI: while t_AVI <= TAVI wait {}
 	when True sync VS goto Idle;
 	when t_AVI >= TAVI & clk >= TURI sync VP do {AVIisIdle' = TRUE} goto Idle;
-	when t_AVI >= TAVI & clk < TURI sync VP goto WaitURI;
+	when t_AVI >= TAVI & clk < TURI goto WaitURI;
 
 loc WaitURI: while clk <= TURI wait {}
 	when True sync VS do {AVIisIdle' = TRUE} goto Idle;
@@ -124,7 +124,7 @@ loc Wait: while True wait {}
 	when True sync VS do {t_PVARP' = 0} goto Urgent;
 
 loc Urgent: while t_PVARP = 0 wait {}
-	when True sync AS do {PVARPisIdle' = TRUE} goto Idle;
+	when t_PVARP = 0 sync AS do {PVARPisIdle' = TRUE} goto Idle;
 
 (* END gadget for committed *)
 (* ------------------------------------------------------------ *)
@@ -183,6 +183,7 @@ loc bNOKdNOK: while True wait {}
 (* AVI(b) ready; PVARP(d) not ready *)
 loc bOKdNOK: while True wait {}
 	when True sync PVARPbacktoIdle do {t_VRP' = 0} goto bOKdOK;
+	when True sync AS goto bNOKdOK; (* hopefully correct! *)
 	(* To prevent blocking *)
 	when True sync Aget goto bOKdNOK;
 
@@ -208,6 +209,7 @@ loc VRP: while t_VRP <= TVRP wait {}
 	when True sync AP goto VRP;
 	when True sync AS goto VRP;
 	when True sync Aget goto VRP;
+	when True sync PVARPbacktoIdle goto VRP; (*(self loop to avoid deadlocking)*)
 
 
 end (*VRP*)
@@ -227,6 +229,30 @@ end (*RHM*)
 
 
 (************************************************************)
+  automaton monitor5a
+(*  figure 5a of the paper  *)
+(************************************************************)
+synclabs: VP, VS;
+
+loc wait_1st: while True wait {}
+	when True sync VP do {t_5a' = 0} goto wait_2nd;
+	when True sync VS do {t_5a' = 0} goto wait_2nd;
+
+loc wait_2nd: while True wait {}
+	when True sync VP do {x_urgent' = 0} goto two_a;
+	when True sync VS do {x_urgent' = 0} goto two_a;
+
+loc two_a: while x_urgent = 0 wait {}
+	when x_urgent = 0 do {t_5a' = 0} goto wait_2nd;
+	when x_urgent = 0 && t_5a > TLRI do {t_5a' = 0} goto monitor5a_BAD;
+
+(* Sink location (stop time) *)
+loc monitor5a_BAD: while x_urgent = 0 wait {}
+
+end (* monitor5a *)
+
+
+(************************************************************)
 (* Analysis *)
 (************************************************************)
 
@@ -240,6 +266,7 @@ init := True
 	& loc[PVARP]		= Idle
 	& loc[VRP]			= Idle
 	& loc[RHM]			= AReady
+	& loc[monitor5a]	= wait_1st
 
 
 	(*------------------------------------------------------------
@@ -259,7 +286,9 @@ init := True
 	& t_LRI		= 0
 	& t_PVARP	= 0
 	& t_VRP		= 0
+	& t_5a		= 0
 
+	
 	(*------------------------------------------------------------
 	   PARAMETER CONSTRAINTS
 	  ------------------------------------------------------------*)
@@ -271,16 +300,21 @@ init := True
 	& TPVAB		>= 0
 	& Aminwait	>= 0
 	& Amaxwait	>= 0
+	
+	& Aminwait <= Amaxwait
 
+	
 	(*------------------------------------------------------------
 	   PARAMETER VALUATION
 	  ------------------------------------------------------------*)
-	& TAVI		= 150
+(*	& TAVI		= 150
 	& TLRI		= 1000
 	& TPVARP	= 100
 	& TVRP		= 150
 	& TURI		= 400
-	& TPVAB		= 50
+	& TPVAB		= 50*)
 ;
+
+property := unreachable loc[monitor5a] = monitor5a_BAD;
 
 end

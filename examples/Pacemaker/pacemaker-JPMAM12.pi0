@@ -1,0 +1,23 @@
+(************************************************************
+ *                         IMITATOR
+ *
+ * Model of a pacemaker
+ *
+ * "Modeling and Verification of a Dual Chamber Implantable Pacemaker"
+ * Zhihao Jiang, Miroslav Pajic, Salar Moarref, Rajeev Alur, Rahul Mangharam
+ * TACAS 2014
+ *
+ * Author          : Etienne Andre
+ * Created         : 2015/02/25
+ * Last modified   : 2015/02/25
+ * IMITATOR version: 2.6.2
+ ************************************************************)
+
+&	TAVI		= 150
+&	TLRI		= 1000
+&	TPVARP		= 100
+&	TVRP		= 150
+&	TURI		= 400
+&	TPVAB		= 50
+&	Aminwait	= 0 (*random value here !*)
+&	Amaxwait	= 1000 (*random value here !*)
