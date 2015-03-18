@@ -7,7 +7,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Ulrich Kuehne, Etienne Andre
  * Created:       2010
- * Last modified: 2015/02/20
+ * Last modified: 2015/03/18
  *
  ****************************************************************)
  
@@ -366,9 +366,9 @@ class imitator_options =
 				
 				("-IMunion", Set union, " Algorithm IMUnion (defined in [AS11]): Returns the union of the constraint on the parameters associated to the last state of each trace. Default: 'false'");
 				
-				("-merge", Set merge, " Use the merging technique of [AFS12]. Default: 'false' (disable)");
+				("-merge", Set merge, " Use the merging technique of [AFS13]. Default: 'false' (disable)");
 				
-				("-merge-before", Set merge_before , " Use the merging technique of [AFS12] but merges states before pi0-compatibility test (EXPERIMENTAL). Default: 'false' (disable)");
+				("-merge-before", Set merge_before , " Use the merging technique of [AFS13] but merges states before pi0-compatibility test (EXPERIMENTAL). Default: 'false' (disable)");
 				
 				("-mode", String set_mode, " Mode for " ^ Constants.program_name ^ ".
         Use 'statespace' for a parametric state space exploration (no pi0 needed).
@@ -649,14 +649,14 @@ class imitator_options =
 
 
 			if !merge then (
-				print_message Debug_standard ("Merging technique of [AFS12] enabled.");
+				print_message Debug_standard ("Merging technique of [AFS13] enabled.");
 			) else
-				print_message Debug_medium ("Merging technique of [AFS12] disabled (default).")
+				print_message Debug_medium ("Merging technique of [AFS13] disabled (default).")
 			;
 			if !merge_before then
-				print_message Debug_standard ("Variant of the merging technique of [AFS12] enabled. States will be merged before pi0-compatibility test (EXPERIMENTAL).")
+				print_message Debug_standard ("Variant of the merging technique of [AFS13] enabled. States will be merged before pi0-compatibility test (EXPERIMENTAL).")
 			else
-				print_message Debug_medium ("Variant of the merging technique of [AFS12] disabled.")
+				print_message Debug_medium ("Variant of the merging technique of [AFS13] disabled.")
 			;
 
 			(*if !dynamic then
