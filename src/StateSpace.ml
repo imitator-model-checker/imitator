@@ -745,8 +745,8 @@ let empty_states_for_comparison graph =
 
 (** Get statistics on the number of comparisons between states *)
 let get_statistics () =
-	(string_of_int !nb_state_comparisons) ^ " comparisons between states were performed."
-	^ "\n" ^ (string_of_int !nb_constraint_comparisons) ^ " comparisons between constraints were performed."
+	(string_of_int !nb_state_comparisons) ^ " comparison" ^ (s_of_int !nb_state_comparisons) ^ " between states were performed."
+	^ "\n" ^ (string_of_int !nb_constraint_comparisons) ^ " comparison" ^ (s_of_int !nb_constraint_comparisons) ^ " between constraints were performed."
 
 
 (** Get statistics on the structure of the states: number of different locations, number of different constraints *)
@@ -786,7 +786,7 @@ let get_statistics_states graph =
 	let nb_locations = Hashtbl.length nb_constraints_per_location_id in
 	let nb_different_constraints = DynArray.length nb_per_constraint in
 	let result_string = ref (
-		(string_of_int nb_states) ^ " states, " ^ (string_of_int nb_locations) ^ " locations, " ^ (string_of_int nb_different_constraints) ^ " constraints"
+		(string_of_int nb_states) ^ " state" ^ (s_of_int nb_states) ^ ", " ^ (string_of_int nb_locations) ^ " location" ^ (s_of_int nb_locations) ^ ", " ^ (string_of_int nb_different_constraints) ^ " constraint" ^ (s_of_int nb_different_constraints) ^ ""
 		^ "\nNumber of constraints per locations:"
 	) in
 	
@@ -795,7 +795,7 @@ let get_statistics_states graph =
 		result_string := !result_string ^ " - " ^ (string_of_int nb_constraints);
 	) nb_constraints_per_location_id;
 	(* Add average *)
-	result_string := !result_string ^ "\nAverage: " ^ (string_of_float ((float_of_int nb_states) /. (float_of_int nb_locations)));
+	result_string := !result_string ^ "\nAverage: " ^ (round3_float ((float_of_int nb_states) /. (float_of_int nb_locations)));
 	(*
 	(* Add number per constraint *)
 	result_string := !result_string ^ "\nNumber of occurrence of constraints: ";

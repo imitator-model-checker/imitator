@@ -139,7 +139,7 @@ let time_from t =
 
 (** Convert a % to a nice string *)
 let string_of_percent percent =
-	let percent = round3_float percent in
+	let percent = round3_float (percent *. 100.0) in
 	percent ^ " %"
 
 
