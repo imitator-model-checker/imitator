@@ -219,16 +219,17 @@ let print_header_string () =
 	
 	(* Build info *)
 	let build_info = "Build: " ^ BuildInfo.build_number ^ " (" ^ BuildInfo.build_time ^ ")" in
+	let length_header = 55 in
 	
 	"************************************************************\n"
-	^ "*  " ^ Constants.program_name ^ " " ^ Constants.version_string ^ (string_n_times (46 - (String.length Constants.version_string)) " ") ^ " *\n"
+	^ "*  " ^ Constants.program_name ^ " " ^ Constants.version_string ^ (string_n_times (length_header - (String.length Constants.program_name) - 1 - (String.length Constants.version_string)) " ") ^ " *\n"
 	^ "*                                                          *\n"
 	^ "*                     Etienne Andre, Ulrich Kuehne et al.  *\n"
 	^ "*                                             2009 - " ^ (BuildInfo.build_year) ^ "  *\n"
 	^ "*                       LSV, ENS de Cachan & CNRS, France  *\n"
 	^ "*  LIPN, Universite Paris 13, Sorbonne Paris Cite, France  *\n"
 	^ "*                                                          *\n"
-	^ "*  " ^ (string_n_times (55 - (String.length build_info)) " ") ^ build_info ^ " *\n"
+	^ "*  " ^ (string_n_times (length_header - (String.length build_info)) " ") ^ build_info ^ " *\n"
 	^ "************************************************************"
 	
 	in print_message Debug_standard header_string
@@ -238,7 +239,7 @@ let print_header_string () =
 let print_contributors()  = 
 	print_version_string();
 	print_string " This tool has been developed by:\n";
-	print_string " * Etienne Andre       (2008 - " ^ (BuildInfo.build_year) ^ ")\n";
+	print_string (" * Etienne Andre       (2008 - " ^ (BuildInfo.build_year) ^ ")\n");
 	print_string " * Camille Coti        (2014 - 2015)\n";
 	print_string " * Daphne Dussaud      (2010)\n";
 	print_string " * Sami Evangelista    (2014))\n";
