@@ -238,7 +238,7 @@ let print_header_string () =
 (* Print the name of the contributors *)
 let print_contributors()  = 
 	print_version_string();
-	print_string " This tool has been developed by:\n";
+	print_string (" " ^ Constants.program_name ^ " has been developed by:\n");
 	print_string (" * Etienne Andre       (2008 - " ^ (BuildInfo.build_year) ^ ")\n");
 	print_string " * Camille Coti        (2014)\n";
 	print_string " * Daphne Dussaud      (2010)\n";
