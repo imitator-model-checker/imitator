@@ -1906,7 +1906,7 @@ let add_a_new_state model reachability_graph orig_state_index new_states_indexes
 					(* Check if this is the same as the "unreachable" one *)
 					if new_location_index = unreachable_location_index then(
 						(* Print some information *)
-						print_message Debug_standard "  [EF-synthesis]: Found a state violating the property.";
+						print_message Debug_standard "  [EF-synthesis] Found a state violating the property.";
 						
 						(* Project onto the parameters *)
 						let p_constraint = LinearConstraint.px_hide_nonparameters_and_collapse final_constraint in
