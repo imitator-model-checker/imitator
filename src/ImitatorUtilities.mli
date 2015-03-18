@@ -78,6 +78,9 @@ val time_from : float -> float
 (** Print a number of seconds *)
 val string_of_seconds : float -> string
 
+(** Convert a % to a nice string *)
+val string_of_percent : float -> string
+
 (** Create a string of the form 'after x seconds', where x is the time since the program started *)
 val after_seconds : unit -> string
 

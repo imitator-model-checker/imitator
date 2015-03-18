@@ -10,7 +10,7 @@
  * Author:        Etienne Andre
  * 
  * Created:       2010/03/04
- * Last modified: 2014/07/29
+ * Last modified: 2015/03/18
  *
  ****************************************************************) 
  
@@ -414,7 +414,7 @@ val unserialize_linear_constraint : string -> p_linear_constraint
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
 (** {3 Statistics on performances} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
-val get_statistics : unit -> string
+val get_statistics : float -> string
 
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)

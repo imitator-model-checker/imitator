@@ -10,7 +10,7 @@
  * Author:        Ulrich Kuehne, Etienne Andre
  * 
  * Created:       2012/06/18
- * Last modified: 2014/10/30
+ * Last modified: 2015/03/18
  *
  ****************************************************************)
 
@@ -1380,7 +1380,7 @@ let bc_finalize () =
 		(* PPL *)
 		print_message Debug_standard "--------------------";
 		print_message Debug_standard "Statistics on PPL";
-		print_message Debug_standard ("--------------------" ^ (LinearConstraint.get_statistics ()));
+		print_message Debug_standard ("--------------------" ^ (LinearConstraint.get_statistics global_time));
 	);
 	()
 		

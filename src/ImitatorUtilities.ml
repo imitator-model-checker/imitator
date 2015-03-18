@@ -137,6 +137,12 @@ let get_time() =
 let time_from t =
 	(Unix.gettimeofday()) -. t
 
+(** Convert a % to a nice string *)
+let string_of_percent percent =
+	let percent = round3_float percent in
+	percent ^ " %"
+
+
 (* Print a number of seconds *)
 let string_of_seconds nb_seconds =
 	let duration = round3_float nb_seconds in

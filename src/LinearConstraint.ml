@@ -105,7 +105,7 @@ let ppl_nb_copy_polyhedron = ref 0
 	let ppl_t_copy_polyhedron = ref 0.0
 
 
-let get_statistics () =
+let get_statistics total_time =
 	let which_statistics = [
 		("space_dimension" , !ppl_nb_space_dimension , !ppl_t_space_dimension) ;
 		("normalize_linear_term" , !ppl_nb_normalize_linear_term , !ppl_t_normalize_linear_term) ;
@@ -113,11 +113,10 @@ let get_statistics () =
 		("false_constraint" , !ppl_nb_false_constraint , !ppl_t_false_constraint) ;
 		("is_true" , !ppl_nb_is_true , !ppl_t_is_true) ;
 		("is_false" , !ppl_nb_is_false , !ppl_t_is_false) ;
-		("is_equals" , !ppl_nb_is_equal , !ppl_t_is_equal) ;
+		("is_equal" , !ppl_nb_is_equal , !ppl_t_is_equal) ;
 		("contains" , !ppl_nb_contains , !ppl_t_contains) ;
 		("get_constraints" , !ppl_nb_get_constraints  , !ppl_t_get_constraints ) ;
 		("get_generators" , !ppl_nb_get_generators, !ppl_t_get_generators) ;
-
 		("add_constraints" , !ppl_nb_add_constraints, !ppl_t_add_constraints) ;
 		("difference_assign" , !ppl_nb_difference, !ppl_t_difference) ;
 		("hull_assign" , !ppl_nb_hull, !ppl_t_hull) ;
@@ -132,13 +131,33 @@ let get_statistics () =
 		("time_elapsing" , !ppl_nb_elapse, !ppl_t_elapse) ;
 		("copy_polyhedron" , !ppl_nb_copy_polyhedron, !ppl_t_copy_polyhedron) ;
 	] in
-	(* Print info *)
-	List.fold_left (fun current_string (name, nb, time) ->
-		current_string ^ "\n" ^ (string_of_int nb) ^ " calls to " ^ name ^ "\n"
-	^ (if nb > 0 then "Time: " ^ (string_of_float time) ^ " s"
-	^ "\nTime per call: " ^ (string_of_float (time /. (float_of_int nb))) ^ " s \n" else "")
-	) "" which_statistics;
-
+	(* Gather info *)
+	let statistics_string, total_ppl_nb, total_ppl_t = 
+	List.fold_left (fun (current_string, current_nb, current_t) (name, nb, time) ->
+		let new_string =
+			current_string ^ "\n" ^ (string_of_int nb) ^ " call" ^ (s_of_int nb) ^ " to '" ^ name ^ "'\n"
+		^ (if nb > 0 then
+			(* Time *)
+			"Time: " ^ (string_of_seconds time)
+			(* % of total time *)
+			^ " (" ^ (string_of_percent (time /. total_time) ) ^ ")"
+			(* Time per call *)
+			^ "\nTime per call: " ^ (string_of_float (time /. (float_of_int nb))) ^ " s \n" else "")
+		in
+		new_string , current_nb + nb , current_t +. time
+	) ("" , 0, 0.0) which_statistics
+	in
+	(* Totals *)
+	(* Should not sum up hull_assign_if_exact / hull_assign_if_exact_false / hull_assign_if_exact_true *)
+	let total_ppl_nb = total_ppl_nb - !ppl_nb_hull_assign_if_exact_true - !ppl_nb_hull_assign_if_exact_false in
+	let total_ppl_t = total_ppl_t -. !ppl_t_hull_assign_if_exact_true -. !ppl_t_hull_assign_if_exact_false in
+	let total_str = 
+		"\n" ^ (string_of_int total_ppl_nb) ^ " calls to PPL functions"
+		^ "\nTotal PPL time: " ^ (string_of_seconds total_ppl_t)
+		(* % of total time *)
+		^ " (" ^ (string_of_percent (total_ppl_t /. total_time) ) ^ ")"
+	in
+	statistics_string ^ total_str
 
 
 

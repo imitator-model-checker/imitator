@@ -2637,7 +2637,7 @@ let print_statistics total_time reachability_graph =
 		(* PPL *)
 		print_message Debug_standard "--------------------";
 		print_message Debug_standard "Statistics on PPL";
-		print_message Debug_standard ("--------------------" ^ (LinearConstraint.get_statistics ()));
+		print_message Debug_standard ("--------------------" ^ (LinearConstraint.get_statistics total_time));
 		
 		(* Graph *)
 		print_message Debug_standard "--------------------";
