@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre, Ulrich Kuehne
  * Created:       2009/12/08
- * Last modified: 2012/06/21
+ * Last modified: 2015/03/18
  *
  ****************************************************************)
 
@@ -31,10 +31,14 @@ type state = Automaton.global_location * LinearConstraint.px_linear_constraint
 
 type abstract_state = location_index * LinearConstraint.px_linear_constraint
 
+
 (****************************************************************)
 (** Graph structure *)
 (****************************************************************)
 type reachability_graph = {
+	(** The number of generated states (even not added to the graph) *)
+	nb_generated_states : int ref;
+
 	(** An Array 'state_index' -> 'abstract_state'; contains ALL states *)
 	all_states : (state_index, abstract_state) Hashtbl.t;
 	
@@ -62,7 +66,10 @@ type reachability_graph = {
 let initial_size = 100
 
 
-(* Debug *)
+(****************************************************************)
+(** Statistics *)
+(****************************************************************)
+(*** TODO: move to a statistics class / object ***)
 let nb_state_comparisons = ref 0
 let nb_constraint_comparisons = ref 0
 
@@ -86,6 +93,7 @@ let make guessed_nb_transitions =
 	
 	(* Create the graph *)
 	{
+		nb_generated_states = ref 0;
 		all_states = states;
 		index_of_locations = index_of_locations;
 		locations = locations;
@@ -98,6 +106,10 @@ let make guessed_nb_transitions =
 (****************************************************************)
 (** Interrogation on a graph *)
 (****************************************************************)
+
+(** Return the number of generated states (not necessarily present in the graph) *)
+let get_nb_gen_states graph =
+	!(graph.nb_generated_states)
 
 (** Return the number of states in a graph *)
 let nb_states graph =
@@ -267,6 +279,11 @@ let is_bad program graph =
 (** Actions on a graph *)
 (****************************************************************)
 exception Found of state_index
+
+(** Increment the number of generated states (even though not member of the graph) *)
+let increment_nb_gen_states graph =
+	graph.nb_generated_states := !(graph.nb_generated_states) + 1
+
 
 (** compute a hash code for a state, depending only on the location *)
 let hash_code (location, _) =

@@ -1,11 +1,11 @@
 (*****************************************************************
  *
- *                     IMITATOR II
+ *                     IMITATOR
  *
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2009/12/08
- * Last modified: 2013/08/02
+ * Last modified: 2015/03/18
  *
  ****************************************************************)
 
@@ -29,25 +29,7 @@ type abstract_state = location_index * LinearConstraint.px_linear_constraint
 (****************************************************************)
 (** Graph structure *)
 (****************************************************************)
-type reachability_graph (*= {
-	(** An Array 'state_index' -> 'abstract_state'; contains ALL states *)
-	all_states : (state_index, abstract_state) Hashtbl.t;
-	
-	(** A hashtable location -> location_index *)
-	index_of_locations : (Automaton.global_location, location_index) Hashtbl.t;
-
-	(** A DynArray location_index -> location *)
-	locations : Automaton.global_location DynArray.t;
-
-	(** A hashtable to quickly find states with identical locations (? ; made by Ulrich); only for states to be compared *)
-	states_for_comparison : (int, state_index) Hashtbl.t;
-
-	(** A hashtable '(state_index, action_index)' -> 'dest_state_index' *)
-	transitions_table : ((state_index * action_index), state_index) Hashtbl.t;
-
-	(** An integer that remembers the next index of state_index (may not be equal to the number of states, if states are removed *)
-	next_state_index : state_index ref;
-}*)
+type reachability_graph
 
 
 (****************************************************************)
@@ -61,6 +43,9 @@ val make : int -> reachability_graph
 (****************************************************************)
 (** Interrogation on a graph *)
 (****************************************************************)
+
+(** Return the number of generated states (not necessarily present in the graph) *)
+val get_nb_gen_states : reachability_graph -> int
 
 (** Return the number of states in a graph *)
 val nb_states : reachability_graph -> int
@@ -111,6 +96,9 @@ val last_states: abstract_model -> reachability_graph -> state_index list
 (****************************************************************)
 (** Actions on a graph *)
 (****************************************************************)
+
+(** Increment the number of generated states (even though not member of the graph) *)
+val increment_nb_gen_states : reachability_graph -> unit
 
 (** Add a state to a graph: return (state_index, added), where state_index is the index of the state, and 'added' is false if the state was already in the graph, true otherwise *)
 val add_state : AbstractModel.abstract_model -> reachability_graph -> state -> (state_index * bool)

@@ -10,7 +10,7 @@
  * Author:        Ulrich Kuehne, Etienne Andre
  * 
  * Created:       2010/07/22
- * Last modified: 2014/11/10
+ * Last modified: 2015/03/18
  *
  ****************************************************************)
 
@@ -1905,26 +1905,34 @@ let add_a_new_state model reachability_graph orig_state_index new_states_indexes
 					let new_location_index = Automaton.get_location location unreachable_automaton_index in
 					(* Check if this is the same as the "unreachable" one *)
 					if new_location_index = unreachable_location_index then(
-						(* Print some information *)
-						print_message Debug_standard "  [EF-synthesis] Found a state violating the property.";
 						
 						(* Project onto the parameters *)
 						let p_constraint = LinearConstraint.px_hide_nonparameters_and_collapse final_constraint in
 						
-						(* Add the constraint to the list of constraints *)
-						p_constraints := p_constraint :: !p_constraints;
+						(* Add the constraint to the list of constraints, unless it is already present there *)
+						(*** TODO: also check for REVERSE inclusion (old included in new) ***)
+						(*** TODO: merge this list on-the-fly!! ***)
+						(*** TODO: even better, directly use a non-convex constraint using PPL, and leave the work to PPL ***)
+						if List.exists (LinearConstraint.p_is_leq p_constraint) !p_constraints then(
+							print_message Debug_low "  [EF-synthesis] Found a state violating the property but the constraint is not new.";
+						)else(
+							p_constraints := p_constraint :: !p_constraints;
+							(* Print some information *)
+							print_message Debug_standard "  [EF-synthesis] Found a state violating the property.";
+							
+							(* Print some information *)
+							if debug_mode_greater Debug_medium then(
+								print_message Debug_medium "Adding the following constraint to the list of bad constraints:";
+								print_message Debug_medium (LinearConstraint.string_of_p_linear_constraint model.variable_names p_constraint);
+							);
+							
+						);
 						
 						(* Do NOT compute its successors *)
 						to_be_added := false;
 						
-						(* Print some information *)
-						if debug_mode_greater Debug_low then(
-							print_message Debug_low "Adding the following constraint to the list of bad constraints:";
-							print_message Debug_low (LinearConstraint.string_of_p_linear_constraint model.variable_names p_constraint);
-						);
-						
 					)else(
-						print_message Debug_medium "EF-synthesis: State not corresponding to the one wanted.";					
+						print_message Debug_medium "EF-synthesis: State not corresponding to the one wanted.";
 					);
 				| _ -> raise (InternalError("[EF-synthesis] IMITATOR currently ony implements the non-reachability-like properties. This should have been checked before."))
 			); (* end if EF_synthesis *)
@@ -1939,7 +1947,7 @@ let add_a_new_state model reachability_graph orig_state_index new_states_indexes
 			if options#union then (
 				print_message Debug_low ("\nMode union: adding a looping state to SLast.");
 				(* Adding the state *)
-				(* TO CHECK: what if new_state_index is already in slast?!! *)
+				(*** TODO / TO CHECK: what if new_state_index is already in slast?!! ***)
 				slast := new_state_index :: !slast;
 			);
 		);
@@ -2084,6 +2092,9 @@ let post_from_one_state model reachability_graph orig_state_index =
 						nb_unsatisfiable := !nb_unsatisfiable + 1;
 						print_message Debug_high ("\nThis constraint is not satisfiable ('Some unsatisfiable').");
 					) else (
+					
+					(* Increment a counter: this state IS generated (although maybe it will be discarded because equal / merged / algorithmic discarding ...) *)
+					StateSpace.increment_nb_gen_states reachability_graph;
 			
 					(**************************************************************)
 					(* EXPERIMENTAL BRANCHING: MERGE BEFORE OR AFTER? *)
@@ -2294,6 +2305,9 @@ let branch_and_bound model init_state =
 	(* Add the initial state to the reachable states *)
 	let init_state_index, _ = StateSpace.add_state model reachability_graph init_state in
 	
+	(* Increment the number of computed states *)
+	StateSpace.increment_nb_gen_states reachability_graph;
+	
 	(* Create the tree for exploration *)
 	let rtree = ReachabilityTree.create guessed_nb_states init_state_index in
 	
@@ -2458,6 +2472,9 @@ let post_star model init_state =
 	(* Add the initial state to the reachable states *)
 	let init_state_index, _ = StateSpace.add_state model reachability_graph init_state in
 	
+	(* Increment the number of computed states *)
+	StateSpace.increment_nb_gen_states reachability_graph;
+	
 	
 	(*--------------------------------------------------*)
 	(* Perform the post^* *)
@@ -2593,10 +2610,29 @@ let post_star model init_state =
 (*--------------------------------------------------*)
 (* Performances *)
 (*--------------------------------------------------*)
-let print_statistics reachability_graph =
+let print_statistics total_time reachability_graph =
 	(* Retrieve the input options *)
 	let options = Input.get_options () in
 
+	(** TODO: better have an independent module (or class) 'statistics' ***)
+	
+	(* Generic function for float/int conversion *)
+	let string_of_average average = 
+		if average < 10.0 then string_of_float average
+		else string_of_int (int_of_float average)
+	in
+	
+	(* Speed (number of states in the graph) *)
+	let nb_states = StateSpace.nb_states reachability_graph in
+	let average = (float_of_int nb_states) /. total_time in
+	print_message Debug_standard ("\nStates per second in the graph: " ^ (string_of_average average) ^ " (" ^ (string_of_int nb_states) ^ "/" ^ (string_of_seconds total_time) ^ ")");
+	
+	(* Speed (number of states computed, even if not kept) *)
+	let nb_gen_states = StateSpace.get_nb_gen_states reachability_graph in
+	let average = (float_of_int nb_gen_states) /. total_time in
+	print_message Debug_standard ("States computed per second: " ^ (string_of_average average) ^ " (" ^ (string_of_int nb_gen_states) ^ "/" ^ (string_of_seconds total_time) ^ ")");
+
+	
 	if options#statistics then (
 		(* PPL *)
 		print_message Debug_standard "--------------------";
@@ -2672,7 +2708,7 @@ let full_state_space_exploration model =
 	);
 
 	(* Print statistics *)
-	print_statistics reachability_graph;
+	print_statistics total_time reachability_graph;
 	
 	(* Generate graphics *)
 	let radical = options#files_prefix in
@@ -2701,7 +2737,7 @@ let ef_synthesis model =
 	);
 	
 	(* Print the result *)
-	print_message Debug_standard ("\nFinal constraint such that the property is *violated* (" ^ (string_of_int (List.length !p_constraints)) ^ " inequalities): ");
+	print_message Debug_standard ("\nFinal constraint such that the property is *violated* (" ^ (string_of_int (List.length !p_constraints)) ^ " constraints): ");
 	print_message Debug_standard (string_of_list_of_string_with_sep "\n OR \n" (List.map (LinearConstraint.string_of_p_linear_constraint model.variable_names) !p_constraints));
 	
 	print_message Debug_low (
@@ -2710,7 +2746,7 @@ let ef_synthesis model =
 	);
 
 	(* Print statistics *)
-	print_statistics reachability_graph;
+	print_statistics total_time reachability_graph;
 	
 	(* Generate graphics *)
 	let radical = options#files_prefix in
@@ -2963,7 +2999,7 @@ let efim model =
 	Graphics.generate_graph model reachability_graph radical;
 	
 	(* Print statistics *)
-	print_statistics reachability_graph;
+	print_statistics im_result.total_time reachability_graph;
 
 	(* The end *)
 	()
@@ -3014,7 +3050,7 @@ let inverse_method model =
 	Graphics.generate_graph model reachability_graph radical;
 	
 	(* Print statistics *)
-	print_statistics reachability_graph;
+	print_statistics im_result.total_time reachability_graph;
 
 	(* The end *)
 	()
