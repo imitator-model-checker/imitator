@@ -226,7 +226,7 @@ let print_header_string () =
 	^ "*                     Etienne Andre, Ulrich Kuehne et al.  *\n"
 	^ "*                                             2009 - " ^ (BuildInfo.build_year) ^ "  *\n"
 	^ "*                       LSV, ENS de Cachan & CNRS, France  *\n"
-	^ "*  Universite Paris 13, Sorbonne Paris Cite, LIPN, France  *\n"
+	^ "*  LIPN, Universite Paris 13, Sorbonne Paris Cite, France  *\n"
 	^ "*                                                          *\n"
 	^ "*  " ^ (string_n_times (55 - (String.length build_info)) " ") ^ build_info ^ " *\n"
 	^ "************************************************************"
@@ -238,12 +238,12 @@ let print_header_string () =
 let print_contributors()  = 
 	print_version_string();
 	print_string " This tool has been developed by:\n";
-	print_string " * Etienne Andre       (2008 -     )\n";
-	print_string " * Camille Coti        (2014 -     )\n";
+	print_string " * Etienne Andre       (2008 - " ^ (BuildInfo.build_year) ^ ")\n";
+	print_string " * Camille Coti        (2014 - 2015)\n";
 	print_string " * Daphne Dussaud      (2010)\n";
-	print_string " * Sami Evangelista    (2014 -     )\n";
+	print_string " * Sami Evangelista    (2014))\n";
 	print_string " * Ulrich Kuehne       (2010 - 2011)\n";
-	print_string " * Nguyen Hoang Gia    (2014 -     )\n";
+	print_string " * Nguyen Hoang Gia    (2014 - 2015)\n";
 	print_string " * Romain Soulat       (2010 - 2013)\n";
 	print_string "\n";
 	print_string " Moral support and suggestions by:\n";
