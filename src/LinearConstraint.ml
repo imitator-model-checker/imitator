@@ -10,7 +10,7 @@
  * Author:        Etienne Andre
  * 
  * Created:       2010/03/04
- * Last modified: 2014/07/29
+ * Last modified: 2015/03/18
  *
  ****************************************************************) 
  
@@ -38,6 +38,13 @@ open ImitatorUtilities
 
 (*** TODO: move to module Exceptions (if used) ***)
 (* exception Unsat_exception *)
+
+
+(************************************************************)
+(* CONSTANTS *)
+(************************************************************)
+(** Check or not the number of dimensions of new polyhedra (not doing it may save around 0,5% of computation time, and no error ever occurred) *)
+let check_assert_dimensions = false
 
 
 (************************************************************)
@@ -74,6 +81,11 @@ let ppl_nb_hull = ref 0
 	let ppl_t_hull = ref 0.0
 let ppl_nb_hull_assign_if_exact = ref 0
 	let ppl_t_hull_assign_if_exact = ref 0.0
+let ppl_nb_hull_assign_if_exact_true = ref 0
+	let ppl_t_hull_assign_if_exact_true = ref 0.0
+let ppl_nb_hull_assign_if_exact_false = ref 0
+	let ppl_t_hull_assign_if_exact_false = ref 0.0
+
 let ppl_nb_difference = ref 0
 	let ppl_t_difference = ref 0.0
 let ppl_nb_intersection_assign = ref 0
@@ -110,6 +122,8 @@ let get_statistics () =
 		("difference_assign" , !ppl_nb_difference, !ppl_t_difference) ;
 		("hull_assign" , !ppl_nb_hull, !ppl_t_hull) ;
 		("hull_assign_if_exact" , !ppl_nb_hull_assign_if_exact, !ppl_t_hull_assign_if_exact) ;
+		("hull_assign_if_exact_true" , !ppl_nb_hull_assign_if_exact_true, !ppl_t_hull_assign_if_exact_true) ;
+		("hull_assign_if_exact_false" , !ppl_nb_hull_assign_if_exact_false, !ppl_t_hull_assign_if_exact_false) ;
 		("intersection_assign" , !ppl_nb_intersection_assign, !ppl_t_intersection_assign) ;
 		("unconstrain" , !ppl_nb_unconstrain, !ppl_t_unconstrain) ;
 		("map" , !ppl_nb_map, !ppl_t_map) ;
@@ -321,11 +335,14 @@ let ppl_remove_dim poly remove =
 
 (** check the dimensionality of a polyhedron *)
 let assert_dimensions poly =
-	let ndim = space_dimension poly in
-	if not (ndim = !total_dim) then (
-		print_error ("Polyhedron has too few dimensions (" ^ (string_of_int ndim) ^ " / " ^ (string_of_int !total_dim) ^ ")");
-		raise (InternalError "Inconsistent polyhedron found")
+	if check_assert_dimensions then(
+		let ndim = space_dimension poly in
+		if not (ndim = !total_dim) then (
+			print_error ("Polyhedron has too few dimensions (" ^ (string_of_int ndim) ^ " / " ^ (string_of_int !total_dim) ^ ")");
+			raise (InternalError "Inconsistent polyhedron found")
+		)
 	)
+
 
 (************************************************************)
 (** {2 Linear terms} *)
@@ -1244,15 +1261,28 @@ let hull_assign linear_constraint1 linear_constraint2 =
 
 (** Perform the hull if the result is exact (version with side effect) *)
 let hull_assign_if_exact linear_constraint1 linear_constraint2 =
+	
+	let start = Unix.gettimeofday() in
+
 	(* Statistics *)
 	ppl_nb_hull_assign_if_exact := !ppl_nb_hull_assign_if_exact + 1;
-	let start = Unix.gettimeofday() in
+	
 	(* Actual call to PPL *)
 	let result = ppl_Polyhedron_poly_hull_assign_if_exact linear_constraint1 linear_constraint2 in
+	
 	(* Statistics *)
 	ppl_t_hull_assign_if_exact := !ppl_t_hull_assign_if_exact +. (Unix.gettimeofday() -. start);
+	if result then(
+		ppl_nb_hull_assign_if_exact_true := !ppl_nb_hull_assign_if_exact_true + 1;
+		ppl_t_hull_assign_if_exact_true := !ppl_t_hull_assign_if_exact_true +. (Unix.gettimeofday() -. start);
+	)else(
+		ppl_nb_hull_assign_if_exact_false := !ppl_nb_hull_assign_if_exact_false + 1;
+		ppl_t_hull_assign_if_exact_false := !ppl_t_hull_assign_if_exact_false +. (Unix.gettimeofday() -. start);
+	);
+	
 	(* Return result *)
 	result
+
 
 let px_hull_assign_if_exact = hull_assign_if_exact
 
