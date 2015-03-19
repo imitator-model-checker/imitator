@@ -1935,9 +1935,9 @@ let add_a_new_state model reachability_graph orig_state_index new_states_indexes
 							print_message Debug_standard "  [EF-synthesis] Found a state violating the property.";
 							
 							(* Print some information *)
-							if debug_mode_greater Debug_standard then(
-								print_message Debug_standard "Adding the following constraint to the list of bad constraints:";
-								print_message Debug_standard (LinearConstraint.string_of_p_linear_constraint model.variable_names p_constraint);
+							if debug_mode_greater Debug_medium then(
+								print_message Debug_medium "Adding the following constraint to the list of bad constraints:";
+								print_message Debug_medium (LinearConstraint.string_of_p_linear_constraint model.variable_names p_constraint);
 							);
 							
 						);
