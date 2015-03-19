@@ -8,7 +8,7 @@
  * Author:        Etienne Andre
  * 
  * Created       : 2009/09/07
- * Last modified : 2013/03/01
+ * Last modified : 2015/03/19
 ***********************************************/
 
 %{
@@ -51,7 +51,7 @@ let parse_error s =
 	CT_LOC CT_LOCATIONS
 	CT_NEXT CT_NOT
 	CT_ONCE CT_OR
-	CT_PARAMETER CT_PROPERTY
+	CT_PARAMETER CT_PROJECTRESULT CT_PROPERTY
 	CT_REGION
 	CT_SEQUENCE CT_STOP CT_SYNC CT_SYNCLABS
 	CT_THEN CT_TRUE
@@ -76,8 +76,8 @@ main:
 	 automata_descriptions commands EOF
 	{
 		let decl, automata = $1 in
-		let init, bad, carto = $2 in
-		decl, automata, init, bad, carto
+		let init, bad, projection, carto = $2 in
+		decl, automata, init, bad, projection, carto
 	}
 ;
 
@@ -384,7 +384,7 @@ pos_float:
 /***********************************************/
 
 commands:
-	| init_declaration_opt init_definition property_definition carto_definition rest_of_commands_opt { ($2, $3, $4) }
+	| init_declaration_opt init_definition property_definition projection_definition carto_definition rest_of_commands_opt { ($2, $3, $4, $5) }
 // 	| init_declaration_opt init_definition bad_definition { ($2, $3, ([] , (NumConst.zero,NumConst.zero) , (NumConst.zero,NumConst.zero))) }
 ;
 
@@ -467,6 +467,16 @@ property_definition:
 	|  { None }
 	
 ;
+
+projection_definition:
+	// Pattern
+	| CT_PROJECTRESULT LPAREN name_nonempty_list RPAREN semicolon_opt { Some $3 }
+	
+	// Case: no property
+	|  { None }
+	
+;
+
 
 // List of patterns
 pattern:

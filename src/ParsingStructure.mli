@@ -8,7 +8,7 @@
  * Author:        Etienne Andre
  *
  * Created:       2009/09/08
- * Last modified: 2013/03/04
+ * Last modified: 2015/03/19
  *
  ****************************************************************)
 
@@ -162,6 +162,14 @@ type property =
 
 type property_definition  = property option
 
+
+(****************************************************************)
+(** Projection definition *)
+(****************************************************************)
+
+type projection = (variable_name list) option
+
+
 (****************************************************************)
 (** Carto definition *)
 (****************************************************************)
@@ -185,6 +193,7 @@ type parsing_structure =
 	* automata
 	* init_definition
 	* property_definition
+	* projection
 	* carto_definition
 
 

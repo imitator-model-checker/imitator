@@ -10,7 +10,7 @@
  * Author:        Etienne Andre
  * 
  * Created:       2009/09/09
- * Last modified: 2014/10/21
+ * Last modified: 2015/03/19
  *
  ****************************************************************)
 
@@ -1568,7 +1568,7 @@ let get_clocks_in_updates : clock_updates -> Automaton.clock_index list = functi
 (*--------------------------------------------------*)
 (* Convert the parsing structure into an abstract model *)
 (*--------------------------------------------------*)
-let abstract_model_of_parsing_structure (parsed_variable_declarations, parsed_automata, parsed_init_definition, parsed_property_definition, parsed_carto_definition) parsed_pi0 parsed_v0 options =
+let abstract_model_of_parsing_structure (parsed_variable_declarations, parsed_automata, parsed_init_definition, parsed_property_definition, parsed_projection_definition, parsed_carto_definition) parsed_pi0 parsed_v0 options =
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Debug functions *) 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)

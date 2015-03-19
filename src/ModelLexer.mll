@@ -8,7 +8,7 @@
  * Author:        Etienne Andre
  * 
  * Created       : 2009/09/07
- * Last modified : 2013/03/11
+ * Last modified : 2015/03/19
 *****************************************************************)
 
 {
@@ -88,6 +88,7 @@ rule token = parse
 (* 	| "pre"            { CT_PRE } *)
 (* 	| "print"          { CT_PRINT } *)
 (* 	| "prints"         { CT_PRINTS } *)
+ 	| "projectresult"  { CT_PROJECTRESULT }
  	| "property"       { CT_PROPERTY }
 (* 	| "printsize"      { CT_PRINTSIZE } *)
 (* 	| "reach"          { CT_REACH } *)
