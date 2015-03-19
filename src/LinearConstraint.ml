@@ -10,7 +10,7 @@
  * Author:        Etienne Andre
  * 
  * Created:       2010/03/04
- * Last modified: 2015/03/18
+ * Last modified: 2015/03/19
  *
  ****************************************************************) 
  
@@ -1338,6 +1338,7 @@ let hide_assign variables linear_constraint =
 		assert_dimensions linear_constraint
 	)
 
+let p_hide_assign = hide_assign
 let px_hide_assign = hide_assign
 let pxd_hide_assign = hide_assign
 

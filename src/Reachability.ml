@@ -10,7 +10,7 @@
  * Author:        Ulrich Kuehne, Etienne Andre
  * 
  * Created:       2010/07/22
- * Last modified: 2015/03/18
+ * Last modified: 2015/03/19
  *
  ****************************************************************)
 
@@ -1909,6 +1909,20 @@ let add_a_new_state model reachability_graph orig_state_index new_states_indexes
 						(* Project onto the parameters *)
 						let p_constraint = LinearConstraint.px_hide_nonparameters_and_collapse final_constraint in
 						
+						(* Projecting onto SOME parameters if required *)
+						begin
+						match model.projection with
+						(* Unchanged *)
+						| None -> ()
+						(* Project *)
+						| Some parameters ->
+							print_message Debug_medium "  [EF-synthesis] Projecting onto some of the parameters.";
+							(*** TODO! do only once for all... ***)
+							let all_but_projectparameters = list_diff model.parameters parameters in
+							(* Eliminate other parameters *)
+							LinearConstraint.p_hide_assign all_but_projectparameters p_constraint;
+						end;
+						
 						(* Add the constraint to the list of constraints, unless it is already present there *)
 						(*** TODO: also check for REVERSE inclusion (old included in new) ***)
 						(*** TODO: merge this list on-the-fly!! ***)
@@ -1921,9 +1935,9 @@ let add_a_new_state model reachability_graph orig_state_index new_states_indexes
 							print_message Debug_standard "  [EF-synthesis] Found a state violating the property.";
 							
 							(* Print some information *)
-							if debug_mode_greater Debug_medium then(
-								print_message Debug_medium "Adding the following constraint to the list of bad constraints:";
-								print_message Debug_medium (LinearConstraint.string_of_p_linear_constraint model.variable_names p_constraint);
+							if debug_mode_greater Debug_standard then(
+								print_message Debug_standard "Adding the following constraint to the list of bad constraints:";
+								print_message Debug_standard (LinearConstraint.string_of_p_linear_constraint model.variable_names p_constraint);
 							);
 							
 						);

@@ -290,7 +290,7 @@ val pxd_hide_discrete_and_collapse : pxd_linear_constraint -> px_linear_constrai
 (* val pxd_hide_nonparameters_and_collapse : pxd_linear_constraint -> p_linear_constraint *)
 
 (** Eliminate (using existential quantification) a set of variables in a linear constraint, with side effects *)
-(* val hide_assign : variable list -> linear_constraint -> unit *)
+val p_hide_assign : variable list -> p_linear_constraint -> unit
 val px_hide_assign : variable list -> px_linear_constraint -> unit
 val pxd_hide_assign : variable list -> pxd_linear_constraint -> unit
 
