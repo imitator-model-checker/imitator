@@ -8,7 +8,7 @@
  * Author:        Etienne Andre
  * 
  * Created:       2009/09/11
- * Last modified: 2014/10/01
+ * Last modified: 2015/03/19
  *
  ****************************************************************)
 
@@ -162,7 +162,7 @@ type reachability_property =
 
 type correctness_condition = reachability_property option
 
-type projection = (variable_name list) option
+type projection = (parameter_index list) option
 
 (****************************************************************)
 (** Nature of the tiles *)

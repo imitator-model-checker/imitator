@@ -964,6 +964,23 @@ let check_and_convert_property index_of_variables type_of_variables variable_nam
 
 
 (*--------------------------------------------------*)
+(** Check that all parameters in the projection definition are valid *)
+(*--------------------------------------------------*)
+let check_projection_definition parameters_names = function
+	| None -> true
+	| Some parsed_parameters -> (
+		let well_formed = ref true in
+		List.iter (fun parsed_parameter ->
+			if not (List.mem parsed_parameter parameters_names) then(
+				print_error ("Parameter " ^ parsed_parameter  ^ " is not a valid parameter in the projection definition.");
+				well_formed := false
+			);
+		) parsed_parameters;
+		!well_formed
+	)
+
+
+(*--------------------------------------------------*)
 (* Check the pi0 w.r.t. the model parameters *)
 (*--------------------------------------------------*)
 let check_pi0 pi0 parameters_names =
@@ -1502,6 +1519,17 @@ let make_initial_state index_of_automata locations_per_automaton index_of_locati
 
 
 (*--------------------------------------------------*)
+(** Convert a list of parsed parameters into a list of variable_index *)
+(*--------------------------------------------------*)
+let convert_projection_definition index_of_variables = function
+	| None -> None
+	| Some parsed_parameters -> Some (List.map (fun parsed_parameter ->
+		(* No check because this was checked before *)
+		Hashtbl.find index_of_variables parsed_parameter
+	) parsed_parameters)
+
+
+(*--------------------------------------------------*)
 (* Convert the parsed pi0 into a valid pi0 *)
 (*--------------------------------------------------*)
 let make_pi0 parsed_pi0 variables nb_parameters =
@@ -1877,10 +1905,9 @@ let abstract_model_of_parsing_structure (parsed_variable_declarations, parsed_au
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Check projection definition *)
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(*** TODO ***)
-	let check_projection_definition _ = true in
+	let well_formed_projection = check_projection_definition parameters_names parsed_projection_definition in
 	
-	let well_formed_projection = check_projection_definition parsed_projection_definition in
+	
 	
 	
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -2111,6 +2138,13 @@ let abstract_model_of_parsing_structure (parsed_variable_declarations, parsed_au
 	
 	
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(* Convert the projection definition *) 
+	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	print_message Debug_total ("*** Building the projection definition...");
+	let projection = convert_projection_definition index_of_variables parsed_projection_definition in
+	
+	
+	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Debug prints *) 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Variables *)
@@ -2273,7 +2307,7 @@ let abstract_model_of_parsing_structure (parsed_variable_declarations, parsed_au
 	(* Property defined by the model *)
 	correctness_condition = correctness_condition;
 	(* List of parameters to project the result onto *)
-	projection = None; (*** TODO ***)
+	projection = projection;
 
 	(* Optional polyhedra *)
 	carto = carto_linear_constraints , (p1_min , p1_max) , (p2_min , p2_max);
