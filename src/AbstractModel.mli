@@ -162,6 +162,7 @@ type reachability_property =
 
 type correctness_condition = reachability_property option
 
+type projection = (variable_name list) option
 
 (****************************************************************)
 (** Nature of the tiles *)
@@ -249,6 +250,8 @@ type abstract_model = {
 	user_property : property_definition;
 	(* Property defined by the model *)
 	correctness_condition : correctness_condition;
+	(* List of parameters to project the result onto *)
+	projection : projection;
 	
 	(* Set of polyhedra (only used for direct cartography without running the model) *)
 	(*** BADPROG ***)

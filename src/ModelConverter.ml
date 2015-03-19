@@ -1873,6 +1873,15 @@ let abstract_model_of_parsing_structure (parsed_variable_declarations, parsed_au
 	let init_discrete_pairs, well_formed_init =
 		check_init discrete variable_names constants index_of_variables type_of_variables automata automata_names index_of_automata array_of_location_names parsed_init_definition observer_automaton in
 
+
+	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(* Check projection definition *)
+	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(*** TODO ***)
+	let check_projection_definition _ = true in
+	
+	let well_formed_projection = check_projection_definition parsed_projection_definition in
+	
 	
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Check property definition *)
@@ -1907,7 +1916,7 @@ let abstract_model_of_parsing_structure (parsed_variable_declarations, parsed_au
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* exit if not well formed *)
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	if not (well_formed_automata && well_formed_property && well_formed_init && !well_formed_carto)
+	if not (well_formed_automata && well_formed_property && well_formed_projection && well_formed_init && !well_formed_carto)
 		then raise InvalidModel;
 
 
@@ -2263,6 +2272,9 @@ let abstract_model_of_parsing_structure (parsed_variable_declarations, parsed_au
 	user_property = property;
 	(* Property defined by the model *)
 	correctness_condition = correctness_condition;
+	(* List of parameters to project the result onto *)
+	projection = None; (*** TODO ***)
+
 	(* Optional polyhedra *)
 	carto = carto_linear_constraints , (p1_min , p1_max) , (p2_min , p2_max);
 	}
