@@ -38,7 +38,7 @@ let latex_header = "
 % Tikz
 \usepackage{tikz}
 \usetikzlibrary{arrows,automata}
-%\\tikzstyle{every node}=[node distance=3cm]
+\\tikzstyle{every node}=[initial text=]
 \\tikzstyle{location}=[rectangle, rounded corners, minimum size=12pt, draw=black, inner sep=1.5pt]
 
 
@@ -66,16 +66,16 @@ let latex_header = "
 \definecolor{loccolor15}{rgb}{0.7, 0.7, 0.7}
 \definecolor{loccolor16}{rgb}{0.8, 0.8, 0.5}
 
-\\newcommand{\styleact}[1]{\\textcolor{coloract}{#1}}
-\\newcommand{\styleclock}[1]{\\textcolor{colorclock}{#1}}
-\\newcommand{\styledisc}[1]{\\textcolor{colordisc}{#1}}
-\\newcommand{\styleloc}[1]{\\textcolor{colorloc}{#1}}
-\\newcommand{\styleparam}[1]{\\textcolor{colorparam}{#1}}
+\\newcommand{\styleact}[1]{\ensuremath{\\textcolor{coloract}{\mathrm{#1}}}}
+\\newcommand{\styleclock}[1]{\ensuremath{\\textcolor{colorclock}{\mathrm{#1}}}}
+\\newcommand{\styledisc}[1]{\ensuremath{\\textcolor{colordisc}{\mathrm{#1}}}}
+\\newcommand{\styleloc}[1]{\ensuremath{\\textcolor{colorloc}{\mathrm{#1}}}}
+\\newcommand{\styleparam}[1]{\ensuremath{\\textcolor{colorparam}{\mathrm{#1}}}}
 
 \\newcommand{\imitator}{\\textsc{Imitator}}
 
-\\title{MY MODEL}
-\author{IMITATOR}
+\\title{An IMITATOR model}
+\author{" ^ Constants.program_name ^ "}
 
 
 \\begin{document}

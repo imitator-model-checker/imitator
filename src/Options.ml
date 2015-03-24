@@ -407,7 +407,7 @@ class imitator_options =
 				
 				("-PTA2JPG", Unit (fun _ -> pta2jpg := true; with_dot:= true; imitator_mode := Translation), "Translate the model into a graphics, and exit without performing any analysis. Defaut : 'false'");
 				
-				("-PTA2TikZ", Unit (fun _ -> pta2tikz := true; imitator_mode := Translation), "Translate the model into LaTeX TikZ code, and exit without performing any analysis. Defaut : 'false'");
+				("-PTA2TikZ", Unit (fun _ -> pta2tikz := true; imitator_mode := Translation), "Translate the model into LaTeX TikZ code (no positioning yet), and exit without performing any analysis. Defaut : 'false'");
 				
 				("-states-limit", Int (fun i -> states_limit := Some i), " States limit: will try to stop after reaching this number of states. Warning: the program may have to first finish computing the current iteration before stopping. Default: no limit.");
 				

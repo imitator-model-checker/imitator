@@ -42,7 +42,7 @@ let tikz_string_of_lc_gen lc_fun lc =
 	let lc_string = lc_fun variable_names_with_style lc in
 	(* Do some replacements *)
 	"& $" ^ Str.global_replace (Str.regexp ">=") ("\geq")
-		(Str.global_replace (Str.regexp "&") ("$\\\\\n\t\t\\$land$ & $")
+		(Str.global_replace (Str.regexp "&") ("$\\\\\\\\\n\t\t$\land$ & $")
 			(Str.global_replace (Str.regexp "a") ("a") lc_string)
 		)
 	^ "$"
@@ -52,34 +52,6 @@ let tikz_string_of_linear_constraint =
 	tikz_string_of_lc_gen LinearConstraint.string_of_pxd_linear_constraint
 
 
-
-(* Create the array of dot colors *)
-let dot_colors = Array.of_list Graphics.dot_colors
-
-(* Coloring function for each thing *)
-let color = fun index ->
-	(* If more colors than our array: white *)
-	try dot_colors.(index) with Invalid_argument _ -> "white"
-
-
-let id_of_location automaton_index location_index =
-	"s_" ^ (string_of_int automaton_index) ^ "_" ^ (string_of_int location_index)
-
-let string_of_list_of_variables variable_names variables =
-	let variables = List.map variable_names variables in
-	string_of_list_of_string_with_sep "," variables
-
-let escape_string_for_dot str =
-	(** BUG: cannot work with global replace *)
-(*		Str.global_substitute (Str.regexp ">\\|&") (fun s -> if s = ">" then "\\>" else if s = "&" then "\\&" else s)
-			str*)
-(* 		Str.global_replace (Str.regexp "\\(>\\|&\\)") ("\\" ^ "\\(\\1\\)") *)
-	Str.global_replace (Str.regexp "\n") (" \\n ")
-		(Str.global_replace (Str.regexp ">") ("\\>")
-			(Str.global_replace (Str.regexp "&") ("\\&") str)
-		)
-
-	
 	
 	
 (* Add a header to the model *)
@@ -88,8 +60,10 @@ let string_of_header model =
 	let options = Input.get_options () in
 	          "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
 	^ "\n" ^" % Model " ^ options#file
-	^ "\n" ^" % Converted by " ^ Constants.program_name ^ " " ^ Constants.version_string
+	^ "\n" ^" % Converted to LaTeX by " ^ Constants.program_name ^ " " ^ Constants.version_string
 	^ "\n" ^" % Generated at time " ^ (now()) ^ ""
+	^ "\n" ^" % "
+	^ "\n" ^" % (node positioning not yet supported, you may need to manually edit the file)"
 	^ "\n" ^" %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
 	
 
@@ -105,14 +79,17 @@ let string_of_clock_updates model = function
 	| Resets list_of_clocks -> 
 		string_of_list_of_string_with_sep "\\n" (List.map (fun variable_index ->
 			"\n\t\t & $"
+			(* Convert the variable name *)
 			^ (variable_names_with_style variable_index)
 			^ ":=0$\\\\"
 		) list_of_clocks)
 	| Updates list_of_clocks_lt -> 
 		string_of_list_of_string_with_sep "\\n" (List.map (fun (variable_index, linear_term) ->
-						"\n\t\t & $"
+			"\n\t\t & $"
+			(* Convert the variable name *)
 			^ (variable_names_with_style variable_index)
 			^ ":="
+			(* Convert the linear_term *)
 			^ (LinearConstraint.string_of_pxd_linear_term variable_names_with_style linear_term)
 			^ "$\\\\"
 		) list_of_clocks_lt)
@@ -121,11 +98,13 @@ let string_of_clock_updates model = function
 (* Convert a list of updates into a string *)
 let string_of_updates model updates =
 	string_of_list_of_string_with_sep "\\n" (List.map (fun (variable_index, linear_term) ->
-		(* Convert the variable name *)
-		(model.variable_names variable_index)
-		^ ":="
-		(* Convert the linear_term *)
-		^ (LinearConstraint.string_of_pxd_linear_term model.variable_names linear_term)
+			"\n\t\t & $"
+			(* Convert the variable name *)
+			^ (variable_names_with_style variable_index)
+			^ ":="
+			(* Convert the linear_term *)
+			^ (LinearConstraint.string_of_pxd_linear_term variable_names_with_style linear_term)
+			^ "$\\\\"
 	) updates)
 
 
@@ -153,59 +132,10 @@ let string_of_transition model automaton_index source_location action_index (gua
 	(* Clock updates *)
 	^ (string_of_clock_updates model clock_updates)
 	(* Discrete updates *)
-(* 	^ (string_of_updates model discrete_updates) *)
+ 	^ (string_of_updates model discrete_updates)
 	
 	(* The end *)
 	^ "\n\t\t\end{tabular}} (" ^ destination_location_name ^ ");"
-	
-	
-(*(* s_12 -> s_5 [label="bUp"]; *)
-	"\n\t"
-	(* Source *)
-	^ (id_of_location automaton_index source_location)
-	(* Destination *)
-	^ " -> "
-	^ (id_of_location automaton_index destination_location)
-	
-	^ " ["
-	(* Color for sync label *)
-	(* Check if the label is shared *)
-	^ (if List.length (model.automata_per_action action_index) > 1 then
-		let color = color action_index in
-		"style=bold, color=" ^ color ^ ", "
-		else "")
-	(* LABEL *)
-	^ "label=\""
-	(* Guard *)
-	^ (
-		if not (LinearConstraint.pxd_is_true guard) then
-			(escape_string_for_dot (LinearConstraint.string_of_pxd_linear_constraint model.variable_names guard)) ^ "\\n"
-		else ""
-		)
-	(* Sync *)
-	^ (string_of_sync model action_index)
-	(* Clock updates *)
-	^ (string_of_clock_updates model clock_updates)
-	(* Add a \n in case of both clocks and discrete *)
-	^ (if clock_updates != No_update && discrete_updates != [] then "\\n" else "")
-	(* Discrete updates *)
-	^ (string_of_updates model discrete_updates)
-	^ "\"];"*)
-	
-	(* Convert the guard *)
-(* 	^ (LinearConstraint.string_of_linear_constraint model.variable_names guard) *)
-	(* Convert the updates *)
-(* 	^ " do {" *)
-(* 	^ (string_of_clock_updates model clock_updates) *)
-	
-	
-(*	^ (string_of_updates model discrete_updates)
-	^ "} "
-	(* Convert the sync *)
-	^ (string_of_sync model action_index)
-	(* Convert the destination location *)
-	^ " goto " ^ (model.location_names automaton_index destination_location)
-	^ ";"*)
 
 
 (* Convert the transitions of a location into a string *)
@@ -236,17 +166,28 @@ let string_of_location model automaton_index location_index =
 	(* LOCATION *)
 (* 	\node[location, fill=cpale2] (Q0) {\coulloc{l0}}; *)
 
+	let inital_global_location  = model.initial_location in
+	let initial_location = Automaton.get_location inital_global_location automaton_index in
+
 	let location_name = model.location_names automaton_index location_index in
 	let invariant = model.invariants automaton_index location_index in
 	let color_id = ((location_index) mod LatexHeader.nb_colors) + 1 in
+	
+	let has_invariant = not (LinearConstraint.pxd_is_true invariant) in
+	let has_stopwatches = model.has_stopwatches && (model.stopwatches automaton_index location_index != []) in
 	
 	(*** TODO: better positioning! (from dot?) ***)
 	let pos_x = location_index in
 	let pos_y = 0 in
 	
-	"\n\t\t\\node[location, fill=loccolor" ^ (string_of_int color_id) ^ "] at (" ^ (string_of_int pos_x) ^ "," ^ (string_of_int pos_y) ^ ") (" ^ location_name ^ ") {\styleloc{" ^ (escape_latex location_name) ^ "}};"
+	(* Handle initial *)
+	let initial_str = if location_index = initial_location then "initial, " else "" in
+
+	"\n\t\t\\node[location, "
+	^ initial_str
+	^ "fill=loccolor" ^ (string_of_int color_id) ^ "] at (" ^ (string_of_int pos_x) ^ "," ^ (string_of_int pos_y) ^ ") (" ^ location_name ^ ") {\styleloc{" ^ (escape_latex location_name) ^ "}};"
 	
-	(* INVARIANT *)
+	(* INVARIANT AND STOPWATCHES *)
 (*			% Invariant of location Q1
 		\node [above] at (Q1.north) {
 			\begin{tabular}{c @{\ } c}
@@ -255,25 +196,21 @@ let string_of_location model automaton_index location_index =
 			\end{tabular}
 		};*)
 	
-	^ (if (not (LinearConstraint.pxd_is_true invariant)) then (
-		"\n\t\t% Invariant of location " ^ location_name
+	^ (if has_invariant || has_stopwatches then (
+		(* Comment *)
+		"\n\t\t% Invariant and stopwatches of location " ^ location_name
+		(* Begin *)
 		^ "\n\t\t\\node [above] at (" ^ location_name ^ ".north) {\\begin{tabular}{c @{\\ } c}"
-		^ (tikz_string_of_linear_constraint invariant)
+		(* Invariant *)
+		^ (if has_invariant then (tikz_string_of_linear_constraint invariant) ^ "\\\\" else "")
+		(* Stopwatches *)
+		^ (if has_stopwatches then (
+			let stopwatches = model.stopwatches automaton_index location_index in
+			(" & stop(" ^ (string_of_list_of_string_with_sep ", " (List.map variable_names_with_style stopwatches)) ^ ")")
+			) else "")
+		(* The end *)
 		^ "\end{tabular}};"
-	) else "" )
-
-(*	
-	
-	^ "|{" ^ (escape_string_for_dot (LinearConstraint.string_of_pxd_linear_constraint model.variable_names (model.invariants automaton_index location_index)))
-	(* Label: stopwatches *)
-	^ (if model.has_stopwatches then (
-		let stopwatches = model.stopwatches automaton_index location_index in
-		"|" ^
-		(if stopwatches != [] then "stop " ^ string_of_list_of_variables model.variable_names stopwatches else "")
-	) else "") *)
-	
-(*	(* Transitions *)
-	^ (string_of_transitions model automaton_index location_index)*)
+	) else "")
 
 
 (* Convert the locations of an automaton into a string *)
@@ -285,9 +222,6 @@ let string_of_locations model automaton_index =
 
 (* Convert an automaton into a string *)
 let string_of_automaton model automaton_index =
-	(* Finding the initial location *)
-(* 	let inital_global_location  = model.initial_location in *)
-(* 	let initial_location = Automaton.get_location inital_global_location automaton_index in *)
 	
 	let automaton_name = escape_latex (model.automata_names automaton_index) in
 
@@ -296,14 +230,8 @@ let string_of_automaton model automaton_index =
 	^ "\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
 	
 	^ "\n\t\\begin{subfigure}[b]{\\ratio}"
-	^ "\n\t\\begin{tikzpicture}[scale=2, auto, ->, >=stealth', thin]"
+	^ "\n\t\\begin{tikzpicture}[scale=5, auto, ->, >=stealth']" (*, thin*)
 	
-(*	TODO
-	(* Handling the initial arrow *)
-	^ "\n init" ^ (string_of_int automaton_index) ^ "[shape=none, label=\"" ^ (model.automata_names automaton_index) ^ "\"];"
-	^ "\n init" ^ (string_of_int automaton_index) ^ " -> " ^ (id_of_location automaton_index initial_location) ^ ";"
-	*)
-
 	(* Handling locations *)
 	^ "\n " ^ (string_of_locations model automaton_index)
 	
