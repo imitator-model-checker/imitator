@@ -60,7 +60,7 @@ let string_of_header program =
 	(* Retrieve the input options *)
 	let options = Input.get_options () in
 	          "/************************************************************"
-	^ "\n" ^" * Program " ^ options#file
+	^ "\n" ^" * Model " ^ options#file
 	^ "\n" ^" * Converted by " ^ Constants.program_name ^ " " ^ Constants.version_string
 	^ "\n" ^" * Generated at time " ^ (now()) ^ ""
 	^ "\n" ^" ************************************************************/"
