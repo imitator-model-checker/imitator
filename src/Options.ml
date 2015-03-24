@@ -7,7 +7,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Ulrich Kuehne, Etienne Andre
  * Created:       2010
- * Last modified: 2015/03/18
+ * Last modified: 2015/03/24
  *
  ****************************************************************)
  
@@ -179,6 +179,8 @@ class imitator_options =
 		(* Translate PTA into a graphics *)
 		val mutable pta2jpg = ref false
 
+		(* Translate PTA into a TikZ LaTeX code *)
+		val mutable pta2tikz = ref false
 		
 		
 		(* SPECIALIZED OPTIONS*)
@@ -225,6 +227,7 @@ class imitator_options =
 		method pta2clp = !pta2clp
 		method pta2gml = !pta2gml
 		method pta2jpg = !pta2jpg
+		method pta2tikz = !pta2tikz
 		method states_limit = !states_limit
 		method statistics = !statistics
 		method step = !step
@@ -400,9 +403,11 @@ class imitator_options =
 				
 				("-precomputepi0", Set precomputepi0, " Compute the next pi0 before the next reception of a constraint (in PaTATOR mode only). Default: false.");
 
-				("-PTA2GrML", Unit (fun _ -> pta2gml := true; imitator_mode := Translation), "Translate PTA into a GrML program, and exit without performing any analysis. Defaut : 'false'");
+				("-PTA2GrML", Unit (fun _ -> pta2gml := true; imitator_mode := Translation), "Translate the model into a GrML program, and exit without performing any analysis. Defaut : 'false'");
 				
-				("-PTA2JPG", Unit (fun _ -> pta2jpg := true; with_dot:= true; imitator_mode := Translation), "Translate PTA into a graphics, and exit without performing any analysis. Defaut : 'false'");
+				("-PTA2JPG", Unit (fun _ -> pta2jpg := true; with_dot:= true; imitator_mode := Translation), "Translate the model into a graphics, and exit without performing any analysis. Defaut : 'false'");
+				
+				("-PTA2TikZ", Unit (fun _ -> pta2tikz := true; imitator_mode := Translation), "Translate the model into LaTeX TikZ code, and exit without performing any analysis. Defaut : 'false'");
 				
 				("-states-limit", Int (fun i -> states_limit := Some i), " States limit: will try to stop after reaching this number of states. Warning: the program may have to first finish computing the current iteration before stopping. Default: no limit.");
 				

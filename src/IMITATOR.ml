@@ -3,12 +3,12 @@
  *                       IMITATOR
  * 
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
- * Universite Paris 13, Sorbonne Paris Cite, LIPN (France)
+ * LIPN, Universite Paris 13, Sorbonne Paris Cite (France)
  * 
  * Author:        Ulrich Kuehne, Etienne Andre
  * 
  * Created:       2009/09/07
- * Last modified: 2014/10/21
+ * Last modified: 2015/03/24
  *
  ****************************************************************)
 
@@ -165,6 +165,18 @@ if options#pta2jpg then(
 	terminate_program()
 );
 
+(* Translation to TikZ *)
+if options#pta2tikz then(
+	print_message Debug_standard ("Translating model to LaTeX TikZ code.");
+	let translated_model = PTA2TikZ.tikz_string_of_model model in
+	let latex_file = options#files_prefix ^ ".tex" in
+	if debug_mode_greater Debug_high then(
+		print_message Debug_high ("\n" ^ translated_model ^ "\n");
+	);
+	(* Write *)
+	write_to_file latex_file translated_model;
+	terminate_program()
+);
 (* Direct cartography output *)
 if options#cartonly then(
 	print_message Debug_standard ("Direct output of a cartography (no analysis will be run).");

@@ -7,7 +7,7 @@
  * Author:        Etienne Andre
  * 
  * Created:       2014/10/24
- * Last modified: 2014/10/24
+ * Last modified: 2015/03/24
  *
  ****************************************************************)
 
@@ -145,6 +145,9 @@ val now : unit -> string
 (**************************************************)
 (** System functions *)
 (**************************************************)
+
+(** Read a file and convert to string *)
+val read_from_file : string -> string
 
 val write_to_file : string -> string -> unit
 

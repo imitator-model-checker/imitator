@@ -7,7 +7,7 @@
  * Author:        Etienne Andre
  * 
  * Created:       2014/10/24
- * Last modified: 2014/10/24
+ * Last modified: 2015/03/24
  *
  ****************************************************************)
  
@@ -359,10 +359,19 @@ let round3_float d =
 (** System functions *)
 (**************************************************)
 
+(** Read a file and convert to string *)
+let read_from_file file_name =
+	(*** TODO: test for file existence! ***)
+	let ic = open_in file_name in
+	Std.input_all ic
+
+
 let write_to_file file_name file_content =
+	(*** TODO: test for file existence! ***)
 	let oc = open_out file_name in
 	(* Write file *)
 	output_string oc file_content;
 	(* Close channel *)
 	close_out oc;
 	()
+
