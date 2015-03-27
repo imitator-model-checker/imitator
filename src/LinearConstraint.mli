@@ -242,6 +242,9 @@ val px_is_leq : px_linear_constraint -> px_linear_constraint -> bool
 (** Check if a variable v is bound to be >= 0 in a constraint c *)
 val px_is_positive_in : variable -> px_linear_constraint -> bool
 
+(** Check if a constraint contains an integer point *)
+val px_contains_integer_point : px_linear_constraint -> bool
+
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
 (** {3 Functions} *)

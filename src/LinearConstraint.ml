@@ -10,7 +10,7 @@
  * Author:        Etienne Andre
  * 
  * Created:       2010/03/04
- * Last modified: 2015/03/19
+ * Last modified: 2015/03/27
  *
  ****************************************************************) 
  
@@ -18,8 +18,6 @@
 (************************************************************)
 (* External modules *)
 (************************************************************)
-(*open Apron   *)
-(*open Lincons0*)
 
 module Ppl = Ppl_ocaml
 open Ppl
@@ -35,9 +33,6 @@ open Exceptions
 open CamlUtilities
 open ImitatorUtilities
 
-
-(*** TODO: move to module Exceptions (if used) ***)
-(* exception Unsat_exception *)
 
 
 (************************************************************)
@@ -69,6 +64,9 @@ let ppl_nb_is_equal = ref 0
 	let ppl_t_is_equal = ref 0.0
 let ppl_nb_contains = ref 0
 	let ppl_t_contains = ref 0.0
+let ppl_nb_contains_integer_point = ref 0
+	let ppl_t_contains_integer_point = ref 0.0
+
 let ppl_nb_get_constraints = ref 0
 	let ppl_t_get_constraints = ref 0.0
 let ppl_nb_get_generators = ref 0
@@ -115,6 +113,7 @@ let get_statistics total_time =
 		("is_false" , !ppl_nb_is_false , !ppl_t_is_false) ;
 		("is_equal" , !ppl_nb_is_equal , !ppl_t_is_equal) ;
 		("contains" , !ppl_nb_contains , !ppl_t_contains) ;
+		("contains_integer_point" , !ppl_nb_contains_integer_point , !ppl_t_contains_integer_point) ;
 		("get_constraints" , !ppl_nb_get_constraints  , !ppl_t_get_constraints ) ;
 		("get_generators" , !ppl_nb_get_generators, !ppl_t_get_generators) ;
 		("add_constraints" , !ppl_nb_add_constraints, !ppl_t_add_constraints) ;
@@ -896,6 +895,20 @@ let is_leq x y =
 let p_is_leq = is_leq
 let px_is_leq = is_leq
 
+
+(** Check if a constraint contains an integer point *)
+let contains_integer_point c =
+	(* Statistics *)
+	ppl_nb_contains_integer_point := !ppl_nb_contains_integer_point + 1;
+	let start = Unix.gettimeofday() in
+	(* Actual call to PPL *)
+	let result = ppl_Polyhedron_contains_integer_point c in
+	(* Statistics *)
+	ppl_t_contains_integer_point := !ppl_t_contains_integer_point +. (Unix.gettimeofday() -. start);
+	(* Return result *)
+	result
+
+let px_contains_integer_point = contains_integer_point
 
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
