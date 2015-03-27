@@ -7,7 +7,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Ulrich Kuehne, Etienne Andre
  * Created:       2010
- * Last modified: 2015/03/24
+ * Last modified: 2015/03/27
  *
  ****************************************************************)
  
@@ -115,6 +115,9 @@ class imitator_options =
 		(* stop the analysis as soon as a counterexample is found *)
 		val mutable counterex = ref false
 
+		(* Check whether each constraint contains an integer point *)
+		val mutable check_ippta = ref false
+		
 		(* Check whether the accumulated constraint is restricted to pi0 *)
 		val mutable check_point = ref false
 		
@@ -198,6 +201,7 @@ class imitator_options =
 		method branch_and_bound_unset = (branch_and_bound := false)
 		method cart = !cart
 		method cartonly = !cartonly
+		method check_ippta = !check_ippta
 		method check_point = !check_point
 		method completeIM = !completeIM
 		method counterex = !counterex
@@ -333,6 +337,8 @@ class imitator_options =
 				("-cartonly", Unit (fun _ -> cart := true; cartonly := true; imitator_mode := Translation), " Only outputs a cartography. Default: false.");
 
 				(* 				("-dynamic", Set dynamic, "Perform the on-the-fly intersection. Defaut : 'false'"); *)
+				
+				("-check-ippta", Set check_ippta, " Check that every new state contains an integer point; raises an exception if not. Default: false.");
 				
 				("-check-point", Set check_point, " Check at each iteration whether the accumulated constraint is restricted to pi0 (warning! very costly). Default: false.");
 				
@@ -693,6 +699,11 @@ class imitator_options =
 				print_message Debug_standard ("Dynamic clock elimination activated.")
 			else
 				print_message Debug_medium ("No dynamic clock elimination (default).");
+
+			if !check_ippta then
+				print_message Debug_standard ("Check that each generated state contains an integer point. Raises an exception otherwise.")
+			else
+				print_message Debug_medium ("No check of the constraint containment of an integer point (default).");
 
 			if !check_point then
 				print_message Debug_standard ("At each iteration, it will be checked whether the constraint is restricted to the sole pi0 point (experimental and costly!).")

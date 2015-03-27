@@ -1890,6 +1890,15 @@ let add_a_new_state model reachability_graph orig_state_index new_states_indexes
 		) in
 		(* If this is really a new state *)
 		if added then (
+			(* Check if the new state contains an integer point *)
+			if options#check_ippta then(
+				if not (LinearConstraint.px_contains_integer_point final_constraint) then(
+					print_error ("State found with no integer point:\n" ^ 
+						(ModelPrinter.string_of_state model new_state));
+					raise NoIPPTA
+				);
+			);
+			
 			(* First check whether this is a bad tile according to the property and the nature of the state *)
 			update_tile_nature new_state;
 			
@@ -2555,8 +2564,8 @@ let post_star model init_state =
 		);
 		
 		(* If check-point option: check if the constraint is equal to pi0 *)
-		(** TO OPTIMIZE !!! (at least compute pi0_constraint once for all) *)
-		(** WARNING!! ONLY works for the classical inverse method (not for variants) *)
+		(*** TO OPTIMIZE !!! (at least compute pi0_constraint once for all) ***)
+		(*** WARNING!! ONLY works for the classical inverse method (not for variants) ***)
 		if options#check_point then(
 			print_message Debug_low ("\nMode check-point: checking whether the resulting constraint is restricted to pi0...");
 			(* Get all constraints *)
