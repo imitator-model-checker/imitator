@@ -10,7 +10,7 @@
  * Author:        Ulrich Kuehne, Etienne Andre
  * 
  * Created:       2012/06/18
- * Last modified: 2015/03/18
+ * Last modified: 2015/03/27
  *
  ****************************************************************)
 
@@ -321,9 +321,9 @@ let compute_initial_pi0 () =
 	let model = Input.get_model() in
 	
 	(*** WARNING: should be sure that 0 is the first parameter dimension!! ***)
-	let first_dimension = 0 in
+(* 	let first_dimension = 0 in *)
 	
-	let step = options#step in
+(* 	let step = options#step in *)
 	
 	(* Case by case *)
 	begin
@@ -1419,10 +1419,8 @@ let get_current_pi0 () =
 
 
 (* Get the current pi0 (for PaTATOR) *)
+(*** TODO: remove this function ***)
 let get_current_pi0 () =
-	(* Get the model *)
-	let model = Input.get_model() in
-
 	(* Retrieve the current pi0 (that must have been initialized before) *)
 	let current_pi0 = get_current_pi0_option () in
 	current_pi0
@@ -1938,7 +1936,7 @@ let constraint_list_random () =
   if !next_unproc_len = 0
   then None
   else
-      let model = Input.get_model () in
+(*       let model = Input.get_model () in *)
       let n = Random.int (!next_unproc_len) in
       let a = List.nth (!next_unproc) n in
 	Some a(*(List.map (fun idx -> idx, a.(idx)) model.parameters)*)
