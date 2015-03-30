@@ -410,7 +410,7 @@ let worker() =
 			
 			(* Prevent the debug messages (except in verbose modes high or total) *)
 			if not (debug_mode_greater Verbose_high) then
-					set_debug_mode Verbose_nodebug;
+					set_debug_mode Verbose_mute;
 			
 			(* Call IM *)
 			let im_result , _ = Reachability.inverse_method_gen model init_state in

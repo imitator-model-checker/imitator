@@ -314,7 +314,7 @@ let worker () =
       
       (* Prevent the debug messages (except in verbose modes high or total) *)
       if not (debug_mode_greater Verbose_high) then
-	set_debug_mode Verbose_nodebug;
+	set_debug_mode Verbose_mute;
       
       let res, _ = Reachability.inverse_method_gen model s0 in
 	

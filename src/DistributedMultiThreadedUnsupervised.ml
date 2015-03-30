@@ -255,7 +255,7 @@ let worker () =
     let global_debug_mode = get_debug_mode () in
       if debug_mode_greater Verbose_high
       then ()
-      else set_debug_mode Verbose_nodebug;
+      else set_debug_mode Verbose_mute;
       let res, _ = Reachability.inverse_method_gen model s0 in
 	set_debug_mode global_debug_mode;
 	print_message Verbose_standard

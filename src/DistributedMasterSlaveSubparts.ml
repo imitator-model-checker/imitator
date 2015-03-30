@@ -974,9 +974,8 @@ let worker() =
 
 					
 					(* Prevent the debug messages (except in verbose mode total) *)
-					if not (debug_mode_greater Verbose_total) 
-					then
-					set_debug_mode Verbose_nodebug;
+					if not (debug_mode_greater Verbose_total) then
+						set_debug_mode Verbose_mute;
 					
 					counter_worker_IM#start;
 					try(
