@@ -74,6 +74,9 @@ class imitator_options =
 		val mutable output_cart_y_min = ref None
 		val mutable output_cart_y_max = ref None
 
+		(* Result output to a file *)
+		val mutable output_result = ref false
+
 		(* Gives statistics on number of calls *)
 		val mutable statistics = ref false
 		
@@ -225,6 +228,7 @@ class imitator_options =
 		method output_cart_x_max = !output_cart_x_max
 		method output_cart_y_min = !output_cart_y_min
 		method output_cart_y_max = !output_cart_y_max
+		method output_result = !output_result
 		method pi_compatible = !pi_compatible
 		method post_limit = !post_limit
 		method precomputepi0 = !precomputepi0
@@ -249,7 +253,7 @@ class imitator_options =
 
 		
 		method parse =
-			let usage_msg = "Usage: " ^ (*program_name*)(Sys.argv.(0)) ^ " model.imi [reference_valuation.pi0] [options]" in
+			let usage_msg = "Usage: " ^ (*program_name*)(Sys.argv.(0)) ^ " model" ^ Constants.model_extension ^ " [reference_valuation.pi0] [options]" in
 
 			(* Get the debug mode *)
 			let rec set_debug_mode_ref debug_mode =
@@ -403,6 +407,8 @@ class imitator_options =
 
 				("-output-prefix", Set_string files_prefix, " Sets the prefix for output files. Default: [model].");
 				
+				("-output-result", Set output_result, " Writes the result to a file. Default: false.");
+				
 				("-output-states", Set with_log, " Generation of the description of all reachable states in a file. Default: false.");
 				
 				("-output-trace-set", Set with_dot, " Trace set under a graphical form (using 'dot'). Default: false.");
@@ -471,7 +477,7 @@ class imitator_options =
 			
 			(* Set prefix for files *)
 			if !files_prefix = "" then
-				(* WHAT ? *)
+				(*** WHAT ? ***)
 			  files_prefix := !file
 			;
 			  
@@ -750,6 +756,11 @@ class imitator_options =
 				| Some n -> print_message Verbose_low ("The maximum value for the y axis for the cartography will be " ^ (string_of_int n) ^ ".");
 			end;
 			
+			
+			if !output_result then
+				print_message Verbose_standard ("The result will be written to a file.")
+			else
+				print_message Verbose_medium ("No result written into a file (default).");
 			
 			if !with_dot then
 				print_message Verbose_standard ("The trace set(s) will be generated in a graphical mode.")

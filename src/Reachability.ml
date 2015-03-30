@@ -3003,15 +3003,22 @@ let efim model =
 	in
 	
 	
-	print_message Verbose_standard ("\nFinal constraint K0:");
-	(*** TODO: put Verbose_standard, and print to file if needed ***)
-	print_message Verbose_mute (constraint_str);
+	print_message Verbose_standard ("\nFinal constraint:");
+	(* Print on terminal *)
+	print_message Verbose_standard constraint_str;
 	print_message Verbose_standard (
 		"\nEFIM successfully finished " ^ (after_seconds ()) ^ "."
 	);
-	
+	(* Write to file if requested *)
+	if options#output_result then(
+		let file_name = options#files_prefix ^ Constants.result_file_extension in
+		write_to_file file_name (constraint_str ^ "\n");
+		print_message Verbose_standard ("Result written to file '" ^ file_name ^ "'.");
+	);
+
 	(* Print memory information *)
-	print_memory_used Verbose_standard;
+	if debug_mode_greater Verbose_standard then
+		print_memory_used Verbose_standard;
 	
 	print_message Verbose_low (
 		"Computation time for EFIM only: "
@@ -3055,14 +3062,24 @@ let inverse_method model =
 			)
 		)
 		^ ":");
-	(*** TODO: put Verbose_standard, and print to file if needed ***)
-	print_message Verbose_mute (string_of_returned_constraint model.variable_names im_result.result);
+
+	(* Convert result to string *)
+	let result_str = string_of_returned_constraint model.variable_names im_result.result in
+	(* Print on terminal *)
+	print_message Verbose_standard result_str;
 	print_message Verbose_standard (
 		"\nInverse method successfully finished " ^ (after_seconds ()) ^ "."
 	);
+	(* Write to file if requested *)
+	if options#output_result then(
+		let file_name = options#files_prefix ^ Constants.result_file_extension in
+		write_to_file file_name (result_str ^ "\n");
+		print_message Verbose_standard ("Result written to file '" ^ file_name ^ "'.");
+	);
 	
 	(* Print memory information *)
-	print_memory_used Verbose_standard;
+	if debug_mode_greater Verbose_standard then
+		print_memory_used Verbose_standard;
 	
 	print_message Verbose_low (
 		"Computation time for IM only: "

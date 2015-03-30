@@ -7,12 +7,12 @@
 #
 #  _oasis authors: Etienne Andre, Alban Linard
 #  Created:        2014/08/18
-#  Last modified:  2015/03/18
+#  Last modified:  2015/03/30
 ###############################################################
 
 OASISFormat: 0.3
 Name:        IMITATOR-nondistr
-Version:     2.6.2
+Version:     2.6.3
 Synopsis:    shortdescription
 Authors:     Etienne Andre, Ulrich Kuehne et al.
 License:     GPL-3.0
@@ -34,14 +34,26 @@ Executable imitatornondistr
 # I removed -lcamlrun because I wrote "best" instead of "byte"
   CompiledObject: best
 
+
 Test startingcomment
   Command: echo "\n********** STARTING TESTS **********\n"
+
 Test tes1
-  Command: ./bin/imitatornondistr examples/Flipflop/flipflop.imi -mode statespace -depth-limit 5
+  Command: echo "\n********** TEST 1 **********\n"; \
+      ./bin/imitatornondistr examples/Flipflop/flipflop.imi -mode statespace -depth-limit 5
+
 Test test2
-  Command: ./bin/imitatornondistr examples/Flipflop/flipflop.imi examples/Flipflop/flipflop.pi0 -output-trace-set -output-states -statistics
+  Command: echo "\n********** TEST 2 **********\n"; \
+      ./bin/imitatornondistr examples/Flipflop/flipflop.imi examples/Flipflop/flipflop.pi0 -output-trace-set -output-states -output-result -statistics
+
 Test test3
-  Command: ./bin/imitatornondistr examples/Flipflop/flipflop.imi examples/Flipflop/flipflop.v0 -mode cover -output-cart
+  Command: echo "\n********** TEST 3 **********\n"; \
+      ./bin/imitatornondistr examples/Flipflop/flipflop.imi examples/Flipflop/flipflop.v0 -mode cover -output-cart
+
+Test test4
+  Command: echo "\n********** TEST 4 **********\n"; \
+      ./bin/imitatornondistr examples/Examples/JLR-TACAS13.imi examples/Examples/JLR-TACAS13.v0 -mode cover -EFIM -output-cart -depth-limit 10 -verbose mute
+
 Test finalcomment
   Command: echo "\n********** END TESTS **********\n"
 
