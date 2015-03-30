@@ -1313,6 +1313,7 @@ let bc_process_im_result im_result =
 		(* Only add if not found *)
 		if not !found then(
 			print_message Verbose_medium "Constraint not found earlier: add.";
+			(*** TODO: add to file if options#output_result is enabled ***)
 			DynArray.add !computed_constraints im_result.result;
 		)else(
 			(*** TODO: add a counter or something, for information purpose ***)
