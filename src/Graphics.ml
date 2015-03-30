@@ -8,7 +8,7 @@
  * Author:        Etienne Andre, Ulrich Kuehne
  * 
  * Created:       2010/07/05
- * Last modified: 2014/09/24
+ * Last modified: 2015/03/30
  *
  ****************************************************************)
 
@@ -96,16 +96,16 @@ let make_file_name cartography_name file_index =
 let cartography model v0 returned_constraint_list cartography_name =
 (* No cartography if no zone *)
 if returned_constraint_list = [] then(
-	print_message Debug_standard ("\nNo cartography can be generated since the list of constraints is empty.\n");
+	print_message Verbose_standard ("\nNo cartography can be generated since the list of constraints is empty.\n");
 )else(
-		print_message Debug_standard ("\nGeneration of the graphical cartography...");
+		print_message Verbose_standard ("\nGeneration of the graphical cartography...");
 (*		Graphics.cartography model v0 zones (options#files_prefix ^ "_cart")
 	)*)
 
 	(* Retrieve the input options *)
 	let options = Input.get_options () in
 	
-	print_message Debug_low "Starting to compute graphical cartography...";
+	print_message Verbose_low "Starting to compute graphical cartography...";
 	(* For all returned_constraint *)
 	let new_returned_constraint_list = List.map (
 		fun returned_constraint -> match returned_constraint with
@@ -139,7 +139,7 @@ if returned_constraint_list = [] then(
 	
 	(* First find the dimensions *)
 
-	print_message Debug_low "Looking for dimensions...";
+	print_message Verbose_low "Looking for dimensions...";
 	let range_params : int list ref = ref [] in
 	let bounds = ref (Array.make 2 (NumConst.zero, NumConst.zero)) in
 
@@ -147,7 +147,7 @@ if returned_constraint_list = [] then(
 	begin
 	match options#imitator_mode with
 		| EF_synthesis ->
-			print_message Debug_low "Case EF-synthesis: first 2 parameters";
+			print_message Verbose_low "Case EF-synthesis: first 2 parameters";
 			(* First check that there are at least 2 parameters *)
 			if model.nb_parameters < 2 then(
 				print_error "Could not plot cartography (which requires 2 parameters)";
@@ -182,14 +182,14 @@ if returned_constraint_list = [] then(
 	
 	(* If cartography: find indices of first two variables with a parameter range *)
 		| Cover_cartography | Random_cartography _ | Border_cartography ->
-			print_message Debug_low "Case real cartography: first 2 parameters with a range";
+			print_message Verbose_low "Case real cartography: first 2 parameters with a range";
 			for index = 0 to model.nb_parameters - 1 do
 (* 			Array.iteri (fun index (a,b) ->  *)
 				let a = v0#get_min index in
 				let b = v0#get_max index in
 				if NumConst.neq a b then(
 					(* Add one more parameter *)
-					print_message Debug_medium "Found a parameter!";
+					print_message Verbose_medium "Found a parameter!";
 					range_params := index :: !range_params;
 				)
 			(* ) v0;*)
@@ -261,7 +261,7 @@ if returned_constraint_list = [] then(
 	let y_name = model.variable_names y_param in
 
 	(* Print some information *)
-(* 	print_message Debug_standard ("Cartography will be drawn in 2D for parameters " ^ x_name ^  " and " ^ y_name ^  "."); *)
+(* 	print_message Verbose_standard ("Cartography will be drawn in 2D for parameters " ^ x_name ^  " and " ^ y_name ^  "."); *)
 	
 	(* Create a script that will print the cartography *)
 	let script_name = cartography_name ^ ".sh" in
@@ -283,7 +283,7 @@ if returned_constraint_list = [] then(
 	in
 	
 	(* Print some information *)
-	print_message Debug_low ("Computing the zone...");
+	print_message Verbose_low ("Computing the zone...");
 	
 	let str_rectangle_v0 =
 				(graph_string_of_numconst (fst (!bounds.(x_pos))))
@@ -301,15 +301,15 @@ if returned_constraint_list = [] then(
 	close_out file_rectangle_v0;
 
 	(* Print some information *)
-	if debug_mode_greater Debug_total then
-		print_message Debug_total ("str_rectangle_v0 = \n" ^ str_rectangle_v0);
+	if debug_mode_greater Verbose_total then
+		print_message Verbose_total ("str_rectangle_v0 = \n" ^ str_rectangle_v0);
 
 	(* Beginning of the script *)
 	let script_line = ref ("graph -T " ^ cartography_extension ^ " -C -X \"" ^ x_name ^ "\" -Y \"" ^ y_name ^ "\" ") in
 	(* find the minimum and maximum abscissa and ordinate for each constraint and store them in a list *)
 	
 	(* Print some information *)
-	print_message Debug_low ("Finding zone corners...");
+	print_message Verbose_low ("Finding zone corners...");
 
 	(* get corners of bounds *)
 	let init_min_abs, init_max_abs = !bounds.(x_pos) in
@@ -340,7 +340,7 @@ if returned_constraint_list = [] then(
 	let bad_float_of_num_const n = float_of_string (NumConst.string_of_numconst n) in
 
 	(* Print some information *)
-	print_message Debug_low ("Finding minima and maxima for axes...");
+	print_message Verbose_low ("Finding minima and maxima for axes...");
 
 	(* Find mininma and maxima for axes (version Etienne, who finds imperative here better ) *)
 	let min_abs = ref (bad_float_of_num_const init_min_abs) in
@@ -365,7 +365,7 @@ if returned_constraint_list = [] then(
 	) new_returned_constraint_list;
 
 	(* Print some information *)
-	print_message Debug_low ("Adding a 1-unit margin...");
+	print_message Verbose_low ("Adding a 1-unit margin...");
 
 	(* Add a margin of 1 unit *)
 	min_abs := !min_abs -. 1.0;
@@ -406,7 +406,7 @@ if returned_constraint_list = [] then(
 	(*** TODO!!! do something if some min > max ***)
 
 	
-	(* print_message Debug_standard ((string_of_float !min_abs)^"  "^(string_of_float !min_ord)); *)
+	(* print_message Verbose_standard ((string_of_float !min_abs)^"  "^(string_of_float !min_ord)); *)
 	(* Create a new file for each constraint *)
 (*		for i=0 to List.length !new_constraint_list-1 do
 		let file_name = cartography_name^"_points_"^(string_of_int i)^".txt" in
@@ -441,15 +441,15 @@ if returned_constraint_list = [] then(
 		file_index := !file_index + 1;
 
 		(* Print some information *)
-		if debug_mode_greater Debug_low then(
-			print_message Debug_low ("Computing points for constraint " ^ (string_of_int !tile_index) ^ " \n " ^ (LinearConstraint.string_of_p_linear_constraint model.variable_names k) ^ ".");
+		if debug_mode_greater Verbose_low then(
+			print_message Verbose_low ("Computing points for constraint " ^ (string_of_int !tile_index) ^ " \n " ^ (LinearConstraint.string_of_p_linear_constraint model.variable_names k) ^ ".");
 		);
 		
 		let file_name = make_file_name cartography_name !file_index in
 		let file_out = open_out file_name in
 		
 (*			(* Remove all non-parameter dimensions (the n highest) *)
-		print_message Debug_standard ("Removing the " ^ (string_of_int (model.nb_discrete + model.nb_clocks)) ^ " highest (clocks and discrete) dimensions in the constraint, to keep only the " ^ (string_of_int (model.nb_parameters)) ^ " lowest."); 
+		print_message Verbose_standard ("Removing the " ^ (string_of_int (model.nb_discrete + model.nb_clocks)) ^ " highest (clocks and discrete) dimensions in the constraint, to keep only the " ^ (string_of_int (model.nb_parameters)) ^ " lowest."); 
 		(* Should be done already ?!! *)
 		hide_assign model.clocks_and_discrete k;
 		remove_dimensions (model.nb_discrete + model.nb_clocks) k ;*)
@@ -462,8 +462,8 @@ if returned_constraint_list = [] then(
 		output_string file_out the_points;
 
 		(* Print some information *)
-		if debug_mode_greater Debug_low then(
-			print_message Debug_low ("  Points \n " ^ the_points ^ "");
+		if debug_mode_greater Verbose_low then(
+			print_message Verbose_low ("  Points \n " ^ the_points ^ "");
 		);
 		
 		(* Prepare the comments at the end of the file *)
@@ -527,7 +527,7 @@ if returned_constraint_list = [] then(
 	output_string script !script_line;
 	(* Print some information *)
 	(** TODO one day: change this string and update IMITATOR service in CosyVerif *)
-	print_message Debug_standard (
+	print_message Verbose_standard (
 		"Plot cartography in 2D projected on parameters " ^ x_name ^ " and " ^ y_name
 		^ " to file '" ^ final_name ^ "'."); 
 	(* execute the script *)
@@ -537,17 +537,17 @@ if returned_constraint_list = [] then(
 		(print_error ("Something went wrong in the command. Exit code: " ^ (string_of_int execution) ^ ". Maybe you forgot to install the 'graph' utility (from the 'plotutils' package)."););
 	
 	(* Print some information *)
-	print_message Debug_high ("Result of the cartography execution: exit code " ^ (string_of_int execution));
+	print_message Verbose_high ("Result of the cartography execution: exit code " ^ (string_of_int execution));
 
 	(* Remove files *)
 	if not options#with_graphics_source then(
-		print_message Debug_medium ("Removing V0 file...");
+		print_message Verbose_medium ("Removing V0 file...");
 		delete_file file_v0_name;
-		print_message Debug_medium ("Removing script file...");
+		print_message Verbose_medium ("Removing script file...");
 		delete_file script_name;
 		(* Removing all point files *)
 		for i = 1 to !file_index do
-			print_message Debug_medium ("Removing points file #" ^ (string_of_int i) ^ "...");
+			print_message Verbose_medium ("Removing points file #" ^ (string_of_int i) ^ "...");
 			delete_file (make_file_name cartography_name i);
 		done;
 	); ()
@@ -589,7 +589,7 @@ let dot_of_graph model reachability_graph ~fancy =
 (*	(* Array location_index -> location *)
 	let locations = DynArray.create () in*)
 	
-	print_message Debug_high "\n[dot_of_graph] Starting to convert states to a graphics.";
+	print_message Verbose_high "\n[dot_of_graph] Starting to convert states to a graphics.";
 	
 	let header =
 		(* Header *)
@@ -615,9 +615,9 @@ let dot_of_graph model reachability_graph ~fancy =
 		^ "\n************************************************************/"
 	in
 	
-	print_message Debug_high "[dot_of_graph] Header completed.";
+	print_message Verbose_high "[dot_of_graph] Header completed.";
 
-	print_message Debug_high "[dot_of_graph] Retrieving states indexes...";
+	print_message Verbose_high "[dot_of_graph] Retrieving states indexes...";
 
 	(* Retrieve the states *)
 	let state_indexes = StateSpace.all_state_indexes model reachability_graph in
@@ -625,7 +625,7 @@ let dot_of_graph model reachability_graph ~fancy =
 	(* Sort the list (for better presentation in the file) *)
 	let state_indexes = List.sort (fun a b -> if a = b then 0 else if a < b then -1 else 1) state_indexes in
 	
-	print_message Debug_high "[dot_of_graph] Starting to convert states...";
+	print_message Verbose_high "[dot_of_graph] Starting to convert states...";
 
 	let states_description =	
 		(* Give the state indexes in comments *)
@@ -638,7 +638,7 @@ let dot_of_graph model reachability_graph ~fancy =
 			(* Retrieve location and constraint *)
 			let global_location, linear_constraint = StateSpace.get_state reachability_graph state_index in
 
-			print_message Debug_high ("[dot_of_graph] Converting state " ^ (string_of_int state_index) ^ "");
+			print_message Verbose_high ("[dot_of_graph] Converting state " ^ (string_of_int state_index) ^ "");
 
 			(* Construct the string *)
 			string_states := !string_states
@@ -658,7 +658,7 @@ let dot_of_graph model reachability_graph ~fancy =
 		^ "\n"
 	in
 	
-	print_message Debug_high "[dot_of_graph] Starting to convert transitions...";
+	print_message Verbose_high "[dot_of_graph] Starting to convert transitions...";
 
 	
 	let transitions_description =
@@ -684,7 +684,7 @@ let dot_of_graph model reachability_graph ~fancy =
 		^ "\n"
 	in
 	
-	print_message Debug_high "[dot_of_graph] Generating dot file...";
+	print_message Verbose_high "[dot_of_graph] Generating dot file...";
 	
 	let dot_file =
 		"\n\ndigraph G {"
@@ -756,7 +756,7 @@ let dot_of_graph model reachability_graph ~fancy =
 		^ "\n}"
 
 	in
-	print_message Debug_high "[dot_of_graph] Done.";
+	print_message Verbose_high "[dot_of_graph] Done.";
 
 	(* Dot file *)
 	header ^ dot_file,
@@ -775,29 +775,29 @@ let dot model radical dot_source_file =
 		let image_file_name = (radical ^ "." ^ dot_image_extension) in
 		
 		(* New line *)
-		print_message Debug_standard "";
+		print_message Verbose_standard "";
 		
 		(* Create the input file *)
-		print_message Debug_medium ("Creating input file for dot...");
+		print_message Verbose_medium ("Creating input file for dot...");
 
 		if options#with_dot then (
 			(* Write dot file *)
 			if options#with_graphics_source then(
-				print_message Debug_standard ("Creating source file for dot...");
+				print_message Verbose_standard ("Creating source file for dot...");
 			)else(
-				print_message Debug_medium ("Writing to dot file...");
+				print_message Verbose_medium ("Writing to dot file...");
 			);
 			write_to_file dot_file_name dot_source_file;
 
 			(* Generate gif file using dot *)
 			(*** WARNING: don't change this string (parsed by CosyVerif) **)
 			(*** TODO: add CosyVerif mode with output of the form "key : value" **)
-			print_message Debug_standard ("Generating graphical output to '" ^ image_file_name ^ "'...");
-			print_message Debug_medium ("Calling dot...");
+			print_message Verbose_standard ("Generating graphical output to '" ^ image_file_name ^ "'...");
+			print_message Verbose_medium ("Calling dot...");
 			begin
 			try (
 				let command_result = Sys.command (dot_command ^ " -T" ^ dot_image_extension ^ " " ^ dot_file_name ^ " -o " ^ image_file_name ^ "") in
-				print_message Debug_medium ("Result of the 'dot' command: " ^ (string_of_int command_result));
+				print_message Verbose_medium ("Result of the 'dot' command: " ^ (string_of_int command_result));
 				
 				if command_result != 0 then
 					print_error ("Something went wrong when calling 'dot'. Exit code: " ^ (string_of_int command_result) ^ ". Maybe you forgot to install the 'dot' utility.");
@@ -807,7 +807,7 @@ let dot model radical dot_source_file =
 			
 			(* Removing dot file (except if option) *)
 			if not options#with_graphics_source then(
-				print_message Debug_medium ("Removing dot file...");
+				print_message Verbose_medium ("Removing dot file...");
 				delete_file dot_file_name;
 			);
 		);
@@ -831,29 +831,29 @@ let generate_graph model reachability_graph radical =
 		let gif_file_name = (radical ^ "." ^ dot_image_extension) in
 		
 		(* New line *)
-		print_message Debug_standard "";
+		print_message Verbose_standard "";
 		
 		(* Create the input file *)
-		print_message Debug_medium ("Creating input file for dot...");
+		print_message Verbose_medium ("Creating input file for dot...");
 
 		if options#with_dot then (
 			(* Write dot file *)
 			if options#with_dot_source then(
-				print_message Debug_standard ("Creating source file for dot...");
+				print_message Verbose_standard ("Creating source file for dot...");
 			)else(
-				print_message Debug_medium ("Writing to dot file...");
+				print_message Verbose_medium ("Writing to dot file...");
 			);
 			write_to_file dot_file_name dot_model;
 
 			(* Generate gif file using dot *)
-			print_message Debug_standard "Generating graphical output...";
-			print_message Debug_medium ("Calling dot...");
+			print_message Verbose_standard "Generating graphical output...";
+			print_message Verbose_medium ("Calling dot...");
 			let command_result = Sys.command (dot_command ^ " -T" ^ dot_image_extension ^ " " ^ dot_file_name ^ " -o " ^ gif_file_name ^ "") in
-			print_message Debug_medium ("Result of the 'dot' command: " ^ (string_of_int command_result));
+			print_message Verbose_medium ("Result of the 'dot' command: " ^ (string_of_int command_result));
 			
 			(* Removing dot file (except if option) *)
 			if not options#with_dot_source then(
-				print_message Debug_medium ("Removing dot file...");
+				print_message Verbose_medium ("Removing dot file...");
 				delete_file dot_file_name;
 			);
 		);*)
@@ -861,7 +861,7 @@ let generate_graph model reachability_graph radical =
 		(* Write states file *)
 		if options#with_log then (
 			let states_file_name = (radical ^ "." ^ states_file_extension) in
-			print_message Debug_standard ("Writing the states description to file '" ^ states_file_name ^ "'...");
+			print_message Verbose_standard ("Writing the states description to file '" ^ states_file_name ^ "'...");
 			write_to_file states_file_name states;
 		);
 	)

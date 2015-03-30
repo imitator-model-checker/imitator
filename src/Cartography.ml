@@ -10,7 +10,7 @@
  * Author:        Ulrich Kuehne, Etienne Andre
  * 
  * Created:       2012/06/18
- * Last modified: 2015/03/27
+ * Last modified: 2015/03/30
  *
  ****************************************************************)
 
@@ -55,7 +55,7 @@ type pi0_list = (Automaton.variable_index * NumConst.t) list
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 (* Debug mode *)
-let global_debug_mode = ref (Debug_standard)
+let global_debug_mode = ref (Verbose_standard)
 
 (* Number of dimensions in the system *)
 let nb_dimensions = ref 0
@@ -218,11 +218,11 @@ let is_multiple_with_step base_number step number =
 	let number_minus_base_divided = NumConst.div number_minus_base step in
 
 	(* Print some information *)
-(* 	print_message Debug_standard ("(" ^ (NumConst.string_of_numconst number) ^ " - " ^ (NumConst.string_of_numconst base_number) ^ ") / " ^ (NumConst.string_of_numconst step) ^ " = " ^ (NumConst.string_of_numconst number_minus_base_divided) ^ ""); *)
+(* 	print_message Verbose_standard ("(" ^ (NumConst.string_of_numconst number) ^ " - " ^ (NumConst.string_of_numconst base_number) ^ ") / " ^ (NumConst.string_of_numconst step) ^ " = " ^ (NumConst.string_of_numconst number_minus_base_divided) ^ ""); *)
 	
 	(* Print some information again *)
-(* 	print_message Debug_standard ("  Is it positive? " ^ (string_of_bool (NumConst.ge number_minus_base_divided NumConst.zero))); *)
-(* 	print_message Debug_standard ("  Is it an integer? " ^ (string_of_bool (NumConst.is_integer number_minus_base_divided))); *)
+(* 	print_message Verbose_standard ("  Is it positive? " ^ (string_of_bool (NumConst.ge number_minus_base_divided NumConst.zero))); *)
+(* 	print_message Verbose_standard ("  Is it an integer? " ^ (string_of_bool (NumConst.is_integer number_minus_base_divided))); *)
 	
 	(* Check if positive integer *)
 	(NumConst.ge number_minus_base_divided NumConst.zero)
@@ -248,12 +248,12 @@ let find_multiple_in_between min max step =
 	in
 	(* Check if the average is a valid point *)
 	if is_multiple_with_step min step average then (
-(* 				print_message Debug_standard ((NumConst.string_of_numconst average) ^ " is multiple of " ^ (NumConst.string_of_numconst step) ^ "."); *)
+(* 				print_message Verbose_standard ((NumConst.string_of_numconst average) ^ " is multiple of " ^ (NumConst.string_of_numconst step) ^ "."); *)
 		average
 		
 		(* Otherwise try below *)
 		) else(
-(* 				print_message Debug_standard ((NumConst.string_of_numconst average) ^ " is NOT multiple of " ^ (NumConst.string_of_numconst step) ^ ""); *)
+(* 				print_message Verbose_standard ((NumConst.string_of_numconst average) ^ " is NOT multiple of " ^ (NumConst.string_of_numconst step) ^ ""); *)
 		let below = NumConst.find_multiple_below min step average in
 		if NumConst.ge below min then below else(
 			(* Otherwise try above *)
@@ -342,8 +342,8 @@ let compute_initial_pi0 () =
 		(*** BEGIN DEBUG ***)
 		;
 		let pi0_fun = pi0_fun_of_current_pi0 () in
-			print_message Debug_standard ("=======");
-			print_message Debug_standard (ModelPrinter.string_of_pi0 (Input.get_model()) pi0_fun)
+			print_message Verbose_standard ("=======");
+			print_message Verbose_standard (ModelPrinter.string_of_pi0 (Input.get_model()) pi0_fun)
 		(*** END DEBUG ***)
 		*)
 
@@ -394,9 +394,9 @@ let test_pi0_uncovered current_pi0 found_pi0 =
 	if dynArray_exists (pi0_in_returned_constraint current_pi0) !computed_constraints then (
 		(* Update the number of unsuccessful points *)
 		nb_useless_points := !nb_useless_points + 1;
-		if debug_mode_greater Debug_medium then (
-			print_message Debug_medium "[Cartography.test_pi0_uncovered] The following pi0 is already included in a constraint.";
-			print_message Debug_medium (ModelPrinter.string_of_pi0 model current_pi0);
+		if debug_mode_greater Verbose_medium then (
+			print_message Verbose_medium "[Cartography.test_pi0_uncovered] The following pi0 is already included in a constraint.";
+			print_message Verbose_medium (ModelPrinter.string_of_pi0 model current_pi0);
 		);
 		(*** TODO: could be optimized by finding the nearest multiple of tile next to the border, and directly switching to that one ***)
 		
@@ -404,9 +404,9 @@ let test_pi0_uncovered current_pi0 found_pi0 =
 	) else if not (LinearConstraint.is_pi0_compatible current_pi0#get_value !init_constraint) then (
 		(* Update the number of unsuccessful points *)
 		nb_useless_points := !nb_useless_points + 1;
-		if debug_mode_greater Debug_medium then (
-			print_message Debug_medium "[Cartography.test_pi0_uncovered] The following pi0 does not satisfy the initial constraint of the model.";
-			print_message Debug_medium (ModelPrinter.string_of_pi0 model current_pi0);
+		if debug_mode_greater Verbose_medium then (
+			print_message Verbose_medium "[Cartography.test_pi0_uncovered] The following pi0 does not satisfy the initial constraint of the model.";
+			print_message Verbose_medium (ModelPrinter.string_of_pi0 model current_pi0);
 		);
 	(* If both checks passed, then pi0 found *)
 	)else(
@@ -452,7 +452,7 @@ let one_random_pi0 () =
 		let random_value = NumConst.random_integer min max in
 		
 		(* Print some information *)
- 		print_message Debug_medium ("Generating randomly value '" ^ (NumConst.string_of_numconst random_value) ^ "' for parameter '" ^ (model.variable_names i) ^ "'.");
+ 		print_message Verbose_medium ("Generating randomly value '" ^ (NumConst.string_of_numconst random_value) ^ "' for parameter '" ^ (model.variable_names i) ^ "'.");
  		
 		(* Add to the array *)
 		random_pi0#set_value i random_value;
@@ -472,7 +472,7 @@ let random_pi0 max_tries =
 (* 	let v0 = Input.get_v0() in *)
 
 	(* Print some information *)
-	print_message Debug_medium ("Trying to randomly find a fresh pi0 with " ^ (string_of_int max_tries) ^ " tries.");
+	print_message Verbose_medium ("Trying to randomly find a fresh pi0 with " ^ (string_of_int max_tries) ^ " tries.");
 
 	(* Flags *)
 	let continue = ref true in
@@ -489,7 +489,7 @@ let random_pi0 max_tries =
 		(* If yes: stop *)
 		if !found_pi0 then(
 			(* Print some information *)
-			print_message Debug_medium ("Try " ^ (string_of_int !nb_tries) ^ " successful!");
+			print_message Verbose_medium ("Try " ^ (string_of_int !nb_tries) ^ " successful!");
 
 			current_pi0 := Some pi0;
 			
@@ -497,14 +497,14 @@ let random_pi0 max_tries =
 		(* Otherwise: go further *)
 		)else(
 			(* Print some information *)
-			print_message Debug_medium ("Try " ^ (string_of_int !nb_tries) ^ " unsuccessful.");
+			print_message Verbose_medium ("Try " ^ (string_of_int !nb_tries) ^ " unsuccessful.");
 			(* Increment counter *)
 			nb_tries := !nb_tries + 1;
 			(* Check whether limit reached *)
 			if !nb_tries > max_tries then
 				continue := false;
 				(* Print some information *)
-				print_message Debug_medium ("Could not find a pi0 within " ^ (string_of_int max_tries) ^ " tries.");
+				print_message Verbose_medium ("Could not find a pi0 within " ^ (string_of_int max_tries) ^ " tries.");
 		);
 	done;
 	
@@ -590,7 +590,7 @@ let find_next_pi0_cover () =
 
 		(* 2) Check that this pi0 is new *)
 		if !more_pi0 then(
-			print_message Debug_high ("[Cartography.find_next_pi0_cover] check whether pi0 is covered");
+			print_message Verbose_high ("[Cartography.find_next_pi0_cover] check whether pi0 is covered");
 			(* Generic function possibly updating found_pi0 *)
 			test_pi0_uncovered current_pi0 found_pi0;
 		); (*if more pi0 *)
@@ -608,7 +608,7 @@ let find_next_pi0_cover () =
 let find_next_pi0_border latest_nature =
 	find_next_pi0_cover () (*
 	(* Print some information *)
-	print_message Debug_standard "Entering function 'find_next_pi0_border'.";
+	print_message Verbose_standard "Entering function 'find_next_pi0_border'.";
 	
 	(* Retrieve the input options *)
 	let options = Input.get_options () in
@@ -637,7 +637,7 @@ let find_next_pi0_border latest_nature =
 		(* The current dimension is not yet the maximum *)
 		let not_is_max = ref true in
 		
-		print_message Debug_standard ("Starting from dimension " ^ (string_of_int !current_dimension) ^ ".");
+		print_message Verbose_standard ("Starting from dimension " ^ (string_of_int !current_dimension) ^ ".");
 		
 		begin
 		try
@@ -651,13 +651,13 @@ let find_next_pi0_border latest_nature =
 				let current_min = current_intervals_min.(!current_dimension) in
 				let current_max = current_intervals_max.(!current_dimension) in
 
-				print_message Debug_standard ("Looking for a multiple of step " ^ (NumConst.string_of_numconst step) ^ " from " ^ (NumConst.string_of_numconst min_bounds.(!current_dimension)) ^ " in [" ^ (NumConst.string_of_numconst current_min) ^ ", " ^ (NumConst.string_of_numconst current_max) ^ "] in dimension " ^ (string_of_int !current_dimension) ^ ".");
+				print_message Verbose_standard ("Looking for a multiple of step " ^ (NumConst.string_of_numconst step) ^ " from " ^ (NumConst.string_of_numconst min_bounds.(!current_dimension)) ^ " in [" ^ (NumConst.string_of_numconst current_min) ^ ", " ^ (NumConst.string_of_numconst current_max) ^ "] in dimension " ^ (string_of_int !current_dimension) ^ ".");
 		
 				(* Can raise Not_found, in which case we exit the loop *)
 				let middle_point = find_multiple_in_between_and_from min_bounds.(!current_dimension) current_min current_max step in
 				
 				(* Print some information *)
-				print_message Debug_standard ("Found " ^ (NumConst.string_of_numconst middle_point) ^ ".");
+				print_message Verbose_standard ("Found " ^ (NumConst.string_of_numconst middle_point) ^ ".");
 		
 				(* Update our current and tentative pi0 *)
 				current_pi0.(!current_dimension) <- middle_point;
@@ -666,22 +666,22 @@ let find_next_pi0_border latest_nature =
 				let pi0 = fun parameter -> current_pi0.(parameter) in
 				
 				(* Print some information *)
-				print_message Debug_standard ("Constructing a tentative point: " ^ (ModelPrinter.string_of_pi0 model pi0) ^ ".");
+				print_message Verbose_standard ("Constructing a tentative point: " ^ (ModelPrinter.string_of_pi0 model pi0) ^ ".");
 		
-				print_message Debug_standard ("Checking whether this point belongs to a tile.");
+				print_message Verbose_standard ("Checking whether this point belongs to a tile.");
 
 				(* Check that the current pi0 does not belong to any constraint *)
 				if dynArray_exists (fun returned_constraint ->
 					(* If the point belongs to a tile *)
 					if pi0_in_returned_constraint pi0 returned_constraint then (
 						(* Print some information *)
-						print_message Debug_standard ("  Pi0 belongs to this tile.");
+						print_message Verbose_standard ("  Pi0 belongs to this tile.");
 
 						(* Get the tile nature *)
 						let tile_nature = tile_nature_of_returned_constraint returned_constraint in
 						
 						(* Print some information *)
-						print_message Debug_standard ("    This tile is " ^ (string_of_tile_nature tile_nature) ^ ".");
+						print_message Verbose_standard ("    This tile is " ^ (string_of_tile_nature tile_nature) ^ ".");
 						
 						begin
 						match tile_nature with
@@ -699,21 +699,21 @@ let find_next_pi0_border latest_nature =
 						end;
 						
 						(* Print some information *)
-						print_message Debug_standard ("    Reducing the interval to [" ^ (NumConst.string_of_numconst current_intervals_min.(!current_dimension)) ^ ", " ^ (NumConst.string_of_numconst current_intervals_max.(!current_dimension)) ^ "] in dimension " ^ (string_of_int !current_dimension) ^ ".");
+						print_message Verbose_standard ("    Reducing the interval to [" ^ (NumConst.string_of_numconst current_intervals_min.(!current_dimension)) ^ ", " ^ (NumConst.string_of_numconst current_intervals_max.(!current_dimension)) ^ "] in dimension " ^ (string_of_int !current_dimension) ^ ".");
 						
 						(* Return true because we found a tile *)
 						true
 					)else(
 						(* This tile has not yet been found *)
-						print_message Debug_standard ("  Pi0 does not belong to this tile.");
+						print_message Verbose_standard ("  Pi0 does not belong to this tile.");
 						false
 					)
 				) computed_constraints then (
 					(* Update the number of unsuccessful points *)
 					nb_useless_points := !nb_useless_points + 1;
-					if debug_mode_greater Debug_medium then (
-						print_message Debug_medium "The following pi0 is already included in a constraint.";
-						print_message Debug_medium (ModelPrinter.string_of_pi0 model pi0);
+					if debug_mode_greater Verbose_medium then (
+						print_message Verbose_medium "The following pi0 is already included in a constraint.";
+						print_message Verbose_medium (ModelPrinter.string_of_pi0 model pi0);
 					);
 					
 				) else (
@@ -725,13 +725,13 @@ let find_next_pi0_border latest_nature =
 			done; (* end while *)
 			with Not_found -> (); (* at this point, there is no multiple of step between min and max for this dimension *)
 			(* Print some information *)
-			print_message Debug_standard ("No multiple found in the interval.");
+			print_message Verbose_standard ("No multiple found in the interval.");
 			
 			(* Switch to the next *)
 			current_dimension := !current_dimension + 1;
 
 			(* Print some information *)
-			print_message Debug_standard ("Now increasing to dimension " ^ (string_of_int !current_dimension) ^ ".");
+			print_message Verbose_standard ("Now increasing to dimension " ^ (string_of_int !current_dimension) ^ ".");
 		
 			(* If last dimension: the end! *)
 			if !current_dimension >= nb_dimensions then(
@@ -739,7 +739,7 @@ let find_next_pi0_border latest_nature =
 				not_is_max := false;
 				
 				(* Print some information *)
-				print_message Debug_standard ("Maximum dimension " ^ (string_of_int nb_dimensions) ^ " has been reached.");
+				print_message Verbose_standard ("Maximum dimension " ^ (string_of_int nb_dimensions) ^ " has been reached.");
 		
 			)else(
 				(* Reset the intervals of the smaller dimensions to the initial min / max bounds *)
@@ -751,7 +751,7 @@ let find_next_pi0_border latest_nature =
 					current_intervals_min.(i) <- min_bounds.(i);
 					
 					(* Print some information *)
-					print_message Debug_standard ("  New interval for dimension " ^ (string_of_int i) ^ ": [" ^ (NumConst.string_of_numconst current_intervals_min.(i)) ^ ", " ^ (NumConst.string_of_numconst current_intervals_max.(i)) ^ "].");
+					print_message Verbose_standard ("  New interval for dimension " ^ (string_of_int i) ^ ": [" ^ (NumConst.string_of_numconst current_intervals_min.(i)) ^ ", " ^ (NumConst.string_of_numconst current_intervals_max.(i)) ^ "].");
 		
 				done;
 			
@@ -898,7 +898,7 @@ let bc_initialize () =
 	let options = Input.get_options () in
 
 	(* Print some information *)
-	print_message Debug_medium ("Starting preprocessing for the behavioral cartography");
+	print_message Verbose_medium ("Starting preprocessing for the behavioral cartography");
 
 	(* Time counter for recording the globl time spent on BC *)
 	time_spent_on_IM := 0.;
@@ -909,7 +909,7 @@ let bc_initialize () =
 	nb_dimensions := model.nb_parameters;
 	
 	(* Print some information *)
-	print_message Debug_medium ("Number of dimensions: " ^ (string_of_int !nb_dimensions));
+	print_message Verbose_medium ("Number of dimensions: " ^ (string_of_int !nb_dimensions));
 
 	(* Check that the cartography is not applied to 0 dimension! *)
 	if !nb_dimensions = 0 then(
@@ -1021,12 +1021,12 @@ let bc_initialize () =
 	(*** TODO : check that initial pi0 is suitable!! (could be incompatible with initial constraint) ***)
 	
 	(* Print *)
-	print_message Debug_standard ("\n**************************************************");
-	print_message Debug_standard (" START THE BEHAVIORAL CARTOGRAPHY ALGORITHM");
-	print_message Debug_standard ("**************************************************");
-	print_message Debug_standard (" Parametric rectangle V0: ");
-	print_message Debug_standard (ModelPrinter.string_of_v0 model v0);
-	print_message Debug_standard (" Number of points inside V0: " ^ (NumConst.string_of_numconst !nb_points));
+	print_message Verbose_standard ("\n**************************************************");
+	print_message Verbose_standard (" START THE BEHAVIORAL CARTOGRAPHY ALGORITHM");
+	print_message Verbose_standard ("**************************************************");
+	print_message Verbose_standard (" Parametric rectangle V0: ");
+	print_message Verbose_standard (ModelPrinter.string_of_v0 model v0);
+	print_message Verbose_standard (" Number of points inside V0: " ^ (NumConst.string_of_numconst !nb_points));
 	()
 
 (*Hoang Gia modified bc_initialize *)
@@ -1038,7 +1038,7 @@ let bc_initialize_subpart () =	(* Get the model *)
 	let options = Input.get_options () in
 
 	(* Print some information *)
-	print_message Debug_medium ("Starting preprocessing for the behavioral cartography");
+	print_message Verbose_medium ("Starting preprocessing for the behavioral cartography");
 
 	(* Time counter for recording the globl time spent on BC *)
 	time_spent_on_IM := 0.;
@@ -1049,7 +1049,7 @@ let bc_initialize_subpart () =	(* Get the model *)
 	nb_dimensions := model.nb_parameters;
 	
 	(* Print some information *)
-	print_message Debug_medium ("Number of dimensions: " ^ (string_of_int !nb_dimensions));
+	print_message Verbose_medium ("Number of dimensions: " ^ (string_of_int !nb_dimensions));
 
 	(* Check that the cartography is not applied to 0 dimension! *)
 	if !nb_dimensions = 0 then(
@@ -1155,12 +1155,12 @@ let bc_initialize_subpart () =	(* Get the model *)
 	(*** TODO : check that initial pi0 is suitable!! (could be incompatible with initial constraint) ***)
 	
 	(* Print *)
-(*	print_message Debug_standard ("\n**************************************************");
-	print_message Debug_standard (" START THE BEHAVIORAL CARTOGRAPHY ALGORITHM");
-	print_message Debug_standard ("**************************************************");
-	print_message Debug_standard (" Parametric rectangle V0: ");
-	print_message Debug_standard (ModelPrinter.string_of_v0 model v0);
-	print_message Debug_standard (" Number of points inside V0: " ^ (NumConst.string_of_numconst !nb_points));*)
+(*	print_message Verbose_standard ("\n**************************************************");
+	print_message Verbose_standard (" START THE BEHAVIORAL CARTOGRAPHY ALGORITHM");
+	print_message Verbose_standard ("**************************************************");
+	print_message Verbose_standard (" Parametric rectangle V0: ");
+	print_message Verbose_standard (ModelPrinter.string_of_v0 model v0);
+	print_message Verbose_standard (" Number of points inside V0: " ^ (NumConst.string_of_numconst !nb_points));*)
 	()
 
 
@@ -1197,7 +1197,7 @@ let bc_process_im_result im_result =
 	);
 	
 	(* Print message *)
-	print_message Debug_standard (
+	print_message Verbose_standard (
 		"\nK" ^ (string_of_int (!current_iteration)) ^ " computed by IM after "
 		^ (string_of_int im_result.nb_iterations) ^ " iteration" ^ (s_of_int im_result.nb_iterations) ^ ""
 		^ " in " ^ (string_of_seconds im_result.total_time) ^ ": "
@@ -1211,7 +1211,7 @@ let bc_process_im_result im_result =
 	(* VALID RESULT *)
 	if !valid_result then(
 		if im_result.premature_stop then(
-			print_message Debug_standard "This constraint is valid despite premature termination.";
+			print_message Verbose_standard "This constraint is valid despite premature termination.";
 		);
 	
 		(* Print the constraint *)
@@ -1220,10 +1220,10 @@ let bc_process_im_result im_result =
 		
 		
 	(* 			let bad_string = if StateSpace.is_bad model graph then "BAD." else "GOOD." in *)
-		print_message Debug_low ("Constraint K0 computed:");
-		print_message Debug_standard (ModelPrinter.string_of_returned_constraint model.variable_names im_result.result);
+		print_message Verbose_low ("Constraint K0 computed:");
+		print_message Verbose_standard (ModelPrinter.string_of_returned_constraint model.variable_names im_result.result);
 		if model.correctness_condition <> None then(
-			print_message Debug_medium ("This tile is " ^ (string_of_tile_nature im_result.tile_nature) ^ ".");
+			print_message Verbose_medium ("This tile is " ^ (string_of_tile_nature im_result.tile_nature) ^ ".");
 		);
 
 		(* Process the constraint(s) in some cases *)
@@ -1263,8 +1263,8 @@ let bc_process_im_result im_result =
 			end;
 			
 			if !nb_enlargements > 0 then(
-				print_message Debug_standard ("Constraint after enlarging:" ^ (if !nb_enlargements > 1 then " ("  ^ (string_of_int !nb_enlargements) ^ " enlargements)" else ""));
-				print_message Debug_standard (ModelPrinter.string_of_returned_constraint model.variable_names im_result.result);
+				print_message Verbose_standard ("Constraint after enlarging:" ^ (if !nb_enlargements > 1 then " ("  ^ (string_of_int !nb_enlargements) ^ " enlargements)" else ""));
+				print_message Verbose_standard (ModelPrinter.string_of_returned_constraint model.variable_names im_result.result);
 			);
 
 		| _ -> raise (InternalError("In function 'cover_behavioral_cartography', the mode should be a cover / border cartography only."))
@@ -1281,8 +1281,8 @@ let bc_process_im_result im_result =
 		let found = ref false in
 		let array_index = ref 0 in
 		while not !found && !array_index < (DynArray.length !computed_constraints) do
-			if debug_mode_greater Debug_high then
-				print_message Debug_high ("Comparing new constraint with " ^ (string_of_int (!array_index+1)) ^ "th old constraint.");
+			if debug_mode_greater Verbose_high then
+				print_message Verbose_high ("Comparing new constraint with " ^ (string_of_int (!array_index+1)) ^ "th old constraint.");
 			(* Retrieve the i-th constraint *)
 			let ith_constraint = DynArray.get !computed_constraints !array_index in
 			(* Compare *)
@@ -1291,7 +1291,7 @@ let bc_process_im_result im_result =
 				(* Stop *)
 				found := true;
 				(* Print some information *)
-				print_message Debug_standard "Constraint included in another one previously computed: dropped.";
+				print_message Verbose_standard "Constraint included in another one previously computed: dropped.";
 			)else(
 				(* Compare the other way round (if included, just replace) *)
 				if leq_returned_constraint ith_constraint im_result.result then(
@@ -1300,7 +1300,7 @@ let bc_process_im_result im_result =
 					(* Stop *)
 					found := true;
 					(* Print some information *)
-					print_message Debug_standard "Constraint larger than another one previously computed: replace.";
+					print_message Verbose_standard "Constraint larger than another one previously computed: replace.";
 				); (* if larger *)
 			);
 			
@@ -1312,7 +1312,7 @@ let bc_process_im_result im_result =
 		
 		(* Only add if not found *)
 		if not !found then(
-			print_message Debug_medium "Constraint not found earlier: add.";
+			print_message Verbose_medium "Constraint not found earlier: add.";
 			DynArray.add !computed_constraints im_result.result;
 		)else(
 			(*** TODO: add a counter or something, for information purpose ***)
@@ -1325,16 +1325,16 @@ let bc_process_im_result im_result =
 	
 	(* INVALID RESULT *)
 	)else(
-		print_message Debug_standard "This constraint is discarded due to premature termination.";
+		print_message Verbose_standard "This constraint is discarded due to premature termination.";
 		
 		(*** TODO: add 1 to the number of invalid points *)
 	
 		(* Print the constraint only in debug mode *)
-		if debug_mode_greater Debug_low then(
-			print_message Debug_low ("The constraint computed was:");
-			print_message Debug_low (ModelPrinter.string_of_returned_constraint model.variable_names im_result.result);
+		if debug_mode_greater Verbose_low then(
+			print_message Verbose_low ("The constraint computed was:");
+			print_message Verbose_low (ModelPrinter.string_of_returned_constraint model.variable_names im_result.result);
 			if model.correctness_condition <> None then(
-				print_message Debug_medium ("This tile would have been " ^ (string_of_tile_nature im_result.tile_nature) ^ ".");
+				print_message Verbose_medium ("This tile would have been " ^ (string_of_tile_nature im_result.tile_nature) ^ ".");
 			);
 		);
 		(* Return true only if really added *)
@@ -1363,24 +1363,24 @@ let bc_finalize () =
 	
 	
 	(* Print the result *)
-	print_message Debug_standard ("\n**************************************************");
-	print_message Debug_standard (" END OF THE BEHAVIORAL CARTOGRAPHY ALGORITHM");
-	print_message Debug_standard ("Size of V0: " ^ (NumConst.string_of_numconst !nb_points) ^ "");
-	print_message Debug_standard ("Unsuccessful points: " ^ (string_of_int !nb_useless_points) ^ "");
-	print_message Debug_standard ("" ^ (string_of_int nb_tiles) ^ " different constraints were computed.");
-	print_message Debug_standard ("Average number of states        : " ^ (string_of_int nb_states) ^ "");
-	print_message Debug_standard ("Average number of transitions   : " ^ (string_of_int nb_transitions) ^ "");
-	print_message Debug_standard ("Global time spent               : " ^ (string_of_float global_time) ^ " s");
-	print_message Debug_standard ("Time spent on IM                : " ^ (string_of_float (!time_spent_on_IM)) ^ " s");
-(* 	print_message Debug_standard ("Time spent on BC only: " ^ (string_of_float (time_spent_on_BC)) ^ " s"); *)
-	print_message Debug_standard ("Time spent to compute next point: " ^ (string_of_float (counter_next_point#value)) ^ " s");
-	print_message Debug_standard ("**************************************************");
+	print_message Verbose_standard ("\n**************************************************");
+	print_message Verbose_standard (" END OF THE BEHAVIORAL CARTOGRAPHY ALGORITHM");
+	print_message Verbose_standard ("Size of V0: " ^ (NumConst.string_of_numconst !nb_points) ^ "");
+	print_message Verbose_standard ("Unsuccessful points: " ^ (string_of_int !nb_useless_points) ^ "");
+	print_message Verbose_standard ("" ^ (string_of_int nb_tiles) ^ " different constraints were computed.");
+	print_message Verbose_standard ("Average number of states        : " ^ (string_of_int nb_states) ^ "");
+	print_message Verbose_standard ("Average number of transitions   : " ^ (string_of_int nb_transitions) ^ "");
+	print_message Verbose_standard ("Global time spent               : " ^ (string_of_float global_time) ^ " s");
+	print_message Verbose_standard ("Time spent on IM                : " ^ (string_of_float (!time_spent_on_IM)) ^ " s");
+(* 	print_message Verbose_standard ("Time spent on BC only: " ^ (string_of_float (time_spent_on_BC)) ^ " s"); *)
+	print_message Verbose_standard ("Time spent to compute next point: " ^ (string_of_float (counter_next_point#value)) ^ " s");
+	print_message Verbose_standard ("**************************************************");
 	
 	if options#statistics then (
 		(* PPL *)
-		print_message Debug_standard "--------------------";
-		print_message Debug_standard "Statistics on PPL";
-		print_message Debug_standard ("--------------------" ^ (LinearConstraint.get_statistics global_time));
+		print_message Verbose_standard "--------------------";
+		print_message Verbose_standard "Statistics on PPL";
+		print_message Verbose_standard ("--------------------" ^ (LinearConstraint.get_statistics global_time));
 	);
 	()
 		
@@ -1399,7 +1399,7 @@ let bc_result () =
 (*
 (* Get the current pi0 in the form of a list (for PaTATOR) *)
 let get_current_pi0 () =
-(* 	print_message Debug_high ("Entering get_current_pi0() ..."); *)
+(* 	print_message Verbose_high ("Entering get_current_pi0() ..."); *)
 
 	(* Get the model *)
 	let model = Input.get_model() in
@@ -1407,13 +1407,13 @@ let get_current_pi0 () =
 	(* Retrieve the current pi0 (that must have been initialized before) *)
 	let current_pi0 = get_current_pi0_option () in
 
-(* 		print_message Debug_high ("About to convert..."); *)
+(* 		print_message Verbose_high ("About to convert..."); *)
 (* 		let result =  *)
 		List.map (fun parameter_index ->
-(* 				print_message Debug_high ("Convert"); *)
+(* 				print_message Verbose_high ("Convert"); *)
 			parameter_index , current_pi0.(parameter_index)) model.parameters
 (* 		in *)
-(* 		print_message Debug_high ("Computed result in get_current_pi0() "); *)
+(* 		print_message Verbose_high ("Computed result in get_current_pi0() "); *)
 (* 		result *)
 (* 	end *)*)
 
@@ -1459,27 +1459,27 @@ let compute_all_pi0 () =
 	(* Convert to int *)
 	let int_nb_points = NumConst.to_int !nb_points in
 	
-	print_message Debug_medium ("[Cartography.compute_all_pi0] Computing the initial pi0");
+	print_message Verbose_medium ("[Cartography.compute_all_pi0] Computing the initial pi0");
 	(* Set the first point *)
 	compute_initial_pi0 ();
-	print_message Debug_medium ("[Cartography.compute_all_pi0] Done computing the initial pi0");
+	print_message Verbose_medium ("[Cartography.compute_all_pi0] Done computing the initial pi0");
 
 	(* Create a array for all the pi0, initially containing a useless object everywhere *)
 	let useless_pi0 = new PVal.pval in
-	print_message Debug_medium ("[Cartography.compute_all_pi0] Creating an array of " ^ (string_of_int int_nb_points) ^ " points");
+	print_message Verbose_medium ("[Cartography.compute_all_pi0] Creating an array of " ^ (string_of_int int_nb_points) ^ " points");
 	let all_points = Array.make int_nb_points useless_pi0 in
 	
-	print_message Debug_medium ("[Cartography.compute_all_pi0] Retrieving the initial pi0");
+	print_message Verbose_medium ("[Cartography.compute_all_pi0] Retrieving the initial pi0");
 	(* Retrieve the initial pi0 (that must have been initialized before) *)
 	let initial_pi0 = get_current_pi0_option () in
-	print_message Debug_medium ("[Cartography.compute_all_pi0] Copying pi0 just in case");
+	print_message Verbose_medium ("[Cartography.compute_all_pi0] Copying pi0 just in case");
 	let initial_pi0_copy = initial_pi0#copy() in
-	print_message Debug_medium ("[Cartography.compute_all_pi0] Setting pi0 to the first point");
+	print_message Verbose_medium ("[Cartography.compute_all_pi0] Setting pi0 to the first point");
 	(* Fill the first point with a COPY of the initial pi0 *)
 	all_points.(0) <- initial_pi0_copy;
 	
-	print_message Debug_medium ("[Cartography.compute_all_pi0] Computing the other points");
-	print_message Debug_medium ("[Cartography.compute_all_pi0] Computing the other points");
+	print_message Verbose_medium ("[Cartography.compute_all_pi0] Computing the other points");
+	print_message Verbose_medium ("[Cartography.compute_all_pi0] Computing the other points");
 	(* Fill it for the other points *)
 	for pi0_index = 1 to int_nb_points - 1 do
 		(* Compute the next pi0 *)
@@ -1495,7 +1495,7 @@ let compute_all_pi0 () =
 		
 	done;
 	
-	print_message Debug_medium ("[Cartography.compute_all_pi0] Done computing the other points");
+	print_message Verbose_medium ("[Cartography.compute_all_pi0] Done computing the other points");
 	
 	(* Set the global variable *)
 	all_pi0_array := Some all_points;
@@ -1510,8 +1510,8 @@ let compute_all_pi0 () =
 	let model = Input.get_model() in
 	for pi0_index = 0 to int_nb_points - 1 do
 		let pi0_fun = pi0_fun_of_pi0 all_points.(pi0_index) in
-			print_message Debug_standard ((string_of_int pi0_index) ^ ":");
-			print_message Debug_standard (ModelPrinter.string_of_pi0 model pi0_fun);
+			print_message Verbose_standard ((string_of_int pi0_index) ^ ":");
+			print_message Verbose_standard (ModelPrinter.string_of_pi0 model pi0_fun);
 	done;
 (*	raise (InternalError ("bye bye"));*)
 	(*** END DEBUG ***)*)
@@ -1533,8 +1533,8 @@ let shuffle_all_pi0 () =
 	let model = Input.get_model() in
 	for pi0_index = 0 to Array.length all_points - 1 do
 		let pi0_fun = pi0_fun_of_pi0 all_points.(pi0_index) in
-			print_message Debug_standard ((string_of_int pi0_index) ^ ":");
-			print_message Debug_standard (ModelPrinter.string_of_pi0 model pi0_fun);
+			print_message Verbose_standard ((string_of_int pi0_index) ^ ":");
+			print_message Verbose_standard (ModelPrinter.string_of_pi0 model pi0_fun);
 	done;
 (* 	raise (InternalError ("bye bye")); *)
 	(*** END DEBUG ***)
@@ -1553,12 +1553,12 @@ let move_to_next_uncovered_pi0 () =
 				     "altough it should have at this point."))
     | Some current_pi0 ->
 	let found_pi0 = ref false in
-	    print_message Debug_high " [Cartography.move_to_next_uncovered_pi0] check coverage of pi0";
+	    print_message Verbose_high " [Cartography.move_to_next_uncovered_pi0] check coverage of pi0";
 	  test_pi0_uncovered current_pi0 found_pi0;
 	  (* If !found_pi0 set to true: means it is NOT covered *)
 	  if !found_pi0
 	  then (
-	    print_message Debug_medium" [Cartography.move_to_next_uncovered_pi0] pi0 was not covered: do not move";
+	    print_message Verbose_medium" [Cartography.move_to_next_uncovered_pi0] pi0 was not covered: do not move";
 	    (* Not covered means no move *)
 	    false
 	  )
@@ -1594,15 +1594,15 @@ let cover_behavioral_cartography model v0 =
 		(* Print some messages *)
 		(*** HACK: only print if non-distributed ***)
 		if options#distribution_mode = Non_distributed then(
-			print_message Debug_standard ("\n**************************************************");
-			print_message Debug_standard ("BEHAVIORAL CARTOGRAPHY ALGORITHM: " ^ (string_of_int !current_iteration) ^ "");
-			print_message Debug_standard ("Considering the following pi" ^ (string_of_int !current_iteration));
-			print_message Debug_standard (ModelPrinter.string_of_pi0 model pi0);
+			print_message Verbose_standard ("\n**************************************************");
+			print_message Verbose_standard ("BEHAVIORAL CARTOGRAPHY ALGORITHM: " ^ (string_of_int !current_iteration) ^ "");
+			print_message Verbose_standard ("Considering the following pi" ^ (string_of_int !current_iteration));
+			print_message Verbose_standard (ModelPrinter.string_of_pi0 model pi0);
 		);
 		
 		(* Prevent the debug messages (except in debug medium, high or total) *)
-		if not (debug_mode_greater Debug_medium) then
-			set_debug_mode Debug_nodebug;
+		if not (debug_mode_greater Verbose_medium) then
+			set_debug_mode Verbose_mute;
 		
 		(* Set the new pi0 *)
 		Input.set_pi0 (pi0);
@@ -1650,7 +1650,7 @@ let cover_behavioral_cartography model v0 =
 	if options#cart then (
 		Graphics.cartography model (Input.get_v0()) zones (options#files_prefix ^ "_cart_bc")
 	) else (
-			print_message Debug_high "Graphical cartography not asked: graph not generated.";
+			print_message Verbose_high "Graphical cartography not asked: graph not generated.";
 	)
 
 
@@ -1688,7 +1688,7 @@ let random_behavioral_cartography model v0 nb =
 	let global_debug_mode = get_debug_mode() in
 	
 	(* Prevent the printing of messages in algorithm Inverse Method *)
-	let cut_messages = not (debug_mode_greater Debug_low) in
+	let cut_messages = not (debug_mode_greater Verbose_low) in
 
 	(* Compute the initial state *)
 	let init_state = get_initial_state_or_abort model in
@@ -1706,8 +1706,8 @@ let random_behavioral_cartography model v0 nb =
 		let pi0 = one_random_pi0 () in
 
 		(* Print messages *)
-		print_message Debug_standard ("\n**************************************************");
-		print_message Debug_standard ("RANDOM BEHAVIORAL CARTOGRAPHY ALGORITHM: " ^ (string_of_int !i) ^ " / " ^ (string_of_int nb) ^ "");
+		print_message Verbose_standard ("\n**************************************************");
+		print_message Verbose_standard ("RANDOM BEHAVIORAL CARTOGRAPHY ALGORITHM: " ^ (string_of_int !i) ^ " / " ^ (string_of_int nb) ^ "");
 		
 		(* First check that it was not computed before *)
 		let already_computed, index = 
@@ -1717,7 +1717,7 @@ let random_behavioral_cartography model v0 nb =
 
 		(* If already computed: message *)
 		if already_computed then (
-			print_message Debug_standard ("This pi" ^ (string_of_int !i) ^ " is equal to pi" ^ (string_of_int (index + 1)) ^ ".");
+			print_message Verbose_standard ("This pi" ^ (string_of_int !i) ^ " is equal to pi" ^ (string_of_int (index + 1)) ^ ".");
 		(* Only consider new pi0 *)
 		) else (
 			(* Convert the pi0 to a functional representation *)
@@ -1725,22 +1725,22 @@ let random_behavioral_cartography model v0 nb =
 
 			(* Check that it does not belong to any constraint *)
 			if array_exists (pi0_in_returned_constraint pi0) results then (
-				print_message Debug_standard ("This pi" ^ (string_of_int !i) ^ " is already included in a constraint.");
-				print_message Debug_standard (ModelPrinter.string_of_pi0 model pi0);
+				print_message Verbose_standard ("This pi" ^ (string_of_int !i) ^ " is already included in a constraint.");
+				print_message Verbose_standard (ModelPrinter.string_of_pi0 model pi0);
 				
 			(* Check that it satisfies the initial constraint *)
 			) else if not (LinearConstraint.is_pi0_compatible pi0#get_value init_constraint) then (
-				print_message Debug_standard ("This pi" ^ (string_of_int !i) ^ " does not satisfy the initial constraint of the model.");
-				print_message Debug_standard (ModelPrinter.string_of_pi0 model pi0);
+				print_message Verbose_standard ("This pi" ^ (string_of_int !i) ^ " does not satisfy the initial constraint of the model.");
+				print_message Verbose_standard (ModelPrinter.string_of_pi0 model pi0);
 				
 			) else (
 				(* Consider from here a brand new and correct pi0 *)
-				print_message Debug_standard ("Considering pi" ^ (string_of_int !i) ^ " :=");
-				print_message Debug_standard (ModelPrinter.string_of_pi0 model pi0);
+				print_message Verbose_standard ("Considering pi" ^ (string_of_int !i) ^ " :=");
+				print_message Verbose_standard (ModelPrinter.string_of_pi0 model pi0);
 
 				(* Prevent the messages if needed *)
 				if cut_messages then (
-					set_debug_mode Debug_nodebug;
+					set_debug_mode Verbose_mute;
 				);
 				
 				(* Set the new pi0 *)
@@ -1755,7 +1755,7 @@ let random_behavioral_cartography model v0 nb =
 				let current_nb_states = StateSpace.nb_states reachability_graph in
 				let current_nb_transitions = StateSpace.nb_transitions reachability_graph in
 				
-				print_message Debug_standard (
+				print_message Verbose_standard (
 					"\nK" ^ (string_of_int !i) ^ " computed using algorithm InverseMethod after "
 					^ (string_of_int im_result.nb_iterations) ^ " iteration" ^ (s_of_int im_result.nb_iterations) ^ ""
 					^ " in " ^ (string_of_seconds im_result.total_time) ^ ": "
@@ -1783,8 +1783,8 @@ let random_behavioral_cartography model v0 nb =
 				let k0 = im_result.result in
 												
 				(* Print the constraint *)
-				print_message Debug_low ("Constraint K0 computed:");
-				print_message Debug_standard (ModelPrinter.string_of_returned_constraint model.variable_names k0);
+				print_message Verbose_low ("Constraint K0 computed:");
+				print_message Verbose_standard (ModelPrinter.string_of_returned_constraint model.variable_names k0);
 
 				(* Add the result *)
 				results.(!i - 1) <- k0;
@@ -1810,10 +1810,10 @@ let random_behavioral_cartography model v0 nb =
 	);
 	
 	(* Print the result *)
-	print_message Debug_standard ("\n**************************************************");
-	print_message Debug_standard ("" ^ (string_of_int (List.length !interesting_interations)) ^ " different constraint" ^ (s_of_int (List.length !interesting_interations)) ^ " were computed at the following iteration" ^ (s_of_int (List.length !interesting_interations)) ^ " :");
-	print_message Debug_standard (string_of_list_of_string_with_sep ", " (List.map string_of_int (List.rev !interesting_interations)));
-	print_message Debug_standard ("**************************************************");
+	print_message Verbose_standard ("\n**************************************************");
+	print_message Verbose_standard ("" ^ (string_of_int (List.length !interesting_interations)) ^ " different constraint" ^ (s_of_int (List.length !interesting_interations)) ^ " were computed at the following iteration" ^ (s_of_int (List.length !interesting_interations)) ^ " :");
+	print_message Verbose_standard (string_of_list_of_string_with_sep ", " (List.map string_of_int (List.rev !interesting_interations)));
+	print_message Verbose_standard ("**************************************************");
 
 	(* Return a list of generated zones *)
 	let zones = List.map (fun index -> results.(index)) !interesting_interations in
@@ -1822,7 +1822,7 @@ let random_behavioral_cartography model v0 nb =
 	if options#cart then (
 		Graphics.cartography model (Input.get_v0()) zones (options#files_prefix ^ "_cart_bc_random")
 	) else (
-			print_message Debug_high "Graphical cartography not asked: graph not generated.";
+			print_message Verbose_high "Graphical cartography not asked: graph not generated.";
 	)
 
 
@@ -1846,7 +1846,7 @@ let next_unproc_max_size = ref 0
 let more_pi0 = ref false
 ;;
 
-let pr = print_message Debug_standard
+let pr = print_message Verbose_standard
 ;;
 
 (* return point next to pi0.  returns (Some point) is pi0 is not the

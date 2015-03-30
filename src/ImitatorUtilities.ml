@@ -7,7 +7,7 @@
  * Author:        Etienne Andre
  * 
  * Created:       2014/10/24
- * Last modified: 2015/03/18
+ * Last modified: 2015/03/30
  *
  ****************************************************************)
  
@@ -36,31 +36,29 @@ let counter = ref (Unix.gettimeofday())
 (****************************************************************)
 
 type debug_mode =
-	| Debug_error (* c'est quoi ca ? *)
-	| Debug_nodebug
-	| Debug_standard
-	| Debug_low
-	| Debug_medium
-	| Debug_high
-	| Debug_total
+	| Verbose_mute
+	| Verbose_standard
+	| Verbose_low
+	| Verbose_medium
+	| Verbose_high
+	| Verbose_total
 
 (* Associate an integer to each debug mode *)
 let level_of_debug = function
-	| Debug_error -> 0
-	| Debug_nodebug -> 0
-	| Debug_standard -> 1
-	| Debug_low -> 2
-	| Debug_medium -> 3
-	| Debug_high -> 4
-	| Debug_total -> 5
+	| Verbose_mute -> 0
+	| Verbose_standard -> 1
+	| Verbose_low -> 2
+	| Verbose_medium -> 3
+	| Verbose_high -> 4
+	| Verbose_total -> 5
 
 (* The global debug mode *)
 type global_debug_mode_type =
-	| Debug_mode_not_set
-	| Debug_mode_set of debug_mode
+	| Verbose_mode_not_set
+	| Verbose_mode_set of debug_mode
 
 (* set to standard by default *)
-let global_debug_mode = ref (Debug_mode_set Debug_standard)
+let global_debug_mode = ref (Verbose_mode_set Verbose_standard)
 
 let timed_mode = ref false
 
@@ -68,16 +66,16 @@ let timed_mode = ref false
 (* Get the debug mode *)
 let get_debug_mode () =
 	match !global_debug_mode with
-	| Debug_mode_not_set -> raise (Exceptions.InternalError ("The debug mode has not yet been set."))
-	| Debug_mode_set debug_mode -> debug_mode
+	| Verbose_mode_not_set -> raise (Exceptions.InternalError ("The debug mode has not yet been set."))
+	| Verbose_mode_set debug_mode -> debug_mode
 
 
 (* Set the debug mode *)
 let set_debug_mode debug_mode =
 	(*match !global_debug_mode with
-	| Debug_mode_not_set -> global_debug_mode := Debug_mode_set debug_mode
-	| Debug_mode_set debug_mode -> raise (InternalError ("The debug mode has already been set, impossible to set it again."))*)
-	global_debug_mode := Debug_mode_set debug_mode
+	| Verbose_mode_not_set -> global_debug_mode := Verbose_mode_set debug_mode
+	| Verbose_mode_set debug_mode -> raise (InternalError ("The debug mode has already been set, impossible to set it again."))*)
+	global_debug_mode := Verbose_mode_set debug_mode
 
 
 (* Return true if the global debug mode is greater than 'debug_mode', false otherwise *)
@@ -85,8 +83,8 @@ let debug_mode_greater debug_mode =
 	(* Get the global debug mode *)
 	let global_debug_mode = get_debug_mode() in
 (*	match !global_debug_mode with
-	| Debug_mode_not_set -> raise (InternalError ("The debug mode has not been set, impossible to access it."))
-	| Debug_mode_set global_debug_mode -> global_debug_mode
+	| Verbose_mode_not_set -> raise (InternalError ("The debug mode has not been set, impossible to access it."))
+	| Verbose_mode_set global_debug_mode -> global_debug_mode
 	in*)
 	(* Compare *)
 	(level_of_debug global_debug_mode) >= (level_of_debug debug_mode)
@@ -94,12 +92,12 @@ let debug_mode_greater debug_mode =
 
 (* Convert a string into a debug_mode; raise Not_found if not found *)
 let debug_mode_of_string debug_mode =
-	if debug_mode = "mute" then Debug_nodebug
-	else if debug_mode = "standard" then Debug_standard
-	else if debug_mode = "low" then Debug_low
-	else if debug_mode = "medium" then Debug_medium
-	else if debug_mode = "high" then Debug_high
-	else if debug_mode = "total" then Debug_total
+	if debug_mode = "mute" then Verbose_mute
+	else if debug_mode = "standard" then Verbose_standard
+	else if debug_mode = "low" then Verbose_low
+	else if debug_mode = "medium" then Verbose_medium
+	else if debug_mode = "high" then Verbose_high
+	else if debug_mode = "total" then Verbose_total
 	else raise Not_found
 
 
@@ -238,7 +236,7 @@ let print_header_string () =
 	^ "*  " ^ (string_n_times (length_header - (String.length build_info)) " ") ^ build_info ^ " *\n"
 	^ "************************************************************"
 	
-	in print_message Debug_standard header_string
+	in print_message Verbose_standard header_string
 
 
 (* Print the name of the contributors *)
@@ -275,7 +273,7 @@ let delete_file file_name =
 		(* Delete the file *)
 		Sys.remove file_name;
 		(* Confirm *)
-		print_message Debug_total ("Removed file " ^ file_name ^ " successfully.");
+		print_message Verbose_total ("Removed file " ^ file_name ^ " successfully.");
 	)
 	with Sys_error e ->
 		print_error ("File " ^ file_name ^ " could not be removed. System says: '" ^ e ^ "'.")
@@ -307,9 +305,11 @@ let abort_program () =
 (* Terminate program *)
 let terminate_program () =
 	print_newline();
-	print_message Debug_standard (Constants.program_name ^ " successfully terminated (" ^ (after_seconds ()) ^ ")");
+	print_message Verbose_standard (Constants.program_name ^ " successfully terminated (" ^ (after_seconds ()) ^ ")");
 	(* Print memory info *)
-	print_memory_used Debug_low;
+	if debug_mode_greater Verbose_low then(
+		print_memory_used Verbose_low;
+	);
 	(* The end *)
 	print_newline();
 	flush Pervasives.stdout;

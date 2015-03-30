@@ -1,4 +1,18 @@
+(*****************************************************************
+ *
+ *                       IMITATOR
+ * 
+ * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
+ * LIPN, Universite Paris 13, Sorbonne Paris Cite (France)
+ * 
+ * Author:        Ulrich Kuehne, Etienne Andre
+ * 
+ * Created:       2010 (?)
+ * Last modified: 2015/03/30
+ *
+ ****************************************************************)
 
+ 
 open ImitatorUtilities
 
 
@@ -63,8 +77,8 @@ let store cache key item =
 	
 let print_stats cache =
 	let fill_rate = 100.0 *. (float_of_int (Hashtbl.length cache.table)) /. (float_of_int cache.size) in
-	print_message Debug_standard ("filled: " ^ (string_of_float fill_rate) ^ "%");
-	print_message Debug_standard ("hits  : " ^ (string_of_int cache.hits));
-	print_message Debug_standard ("misses: " ^ (string_of_int cache.misses));
-	print_message Debug_standard ("coll. : " ^ (string_of_int cache.collisions))
+	print_message Verbose_standard ("filled: " ^ (string_of_float fill_rate) ^ "%");
+	print_message Verbose_standard ("hits  : " ^ (string_of_int cache.hits));
+	print_message Verbose_standard ("misses: " ^ (string_of_int cache.misses));
+	print_message Verbose_standard ("coll. : " ^ (string_of_int cache.collisions))
 	

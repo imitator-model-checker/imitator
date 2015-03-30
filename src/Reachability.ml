@@ -10,7 +10,7 @@
  * Author:        Ulrich Kuehne, Etienne Andre
  * 
  * Created:       2010/07/22
- * Last modified: 2015/03/19
+ * Last modified: 2015/03/30
  *
  ****************************************************************)
 
@@ -224,7 +224,7 @@ let find_local_clocks model =
 		match automata_for_this_clock with
 			(* Only one element: clock is local *)
 			| [automaton_index] -> 
-(* 				print_message Debug_high ("Automaton " ^ (string_of_int automaton_index) ^ " has local clock " ^ (string_of_int clock_index)); *)
+(* 				print_message Verbose_high ("Automaton " ^ (string_of_int automaton_index) ^ " has local clock " ^ (string_of_int clock_index)); *)
 				(* Add the clock to the automaton *)
 				local_clocks_per_automaton.(automaton_index) <- (clock_index) :: local_clocks_per_automaton.(automaton_index);
 			(* Otherwise, clock is not local *)
@@ -289,16 +289,16 @@ let find_useless_clocks_in_automata model local_clocks_per_automaton =
 		) locations_for_this_automaton; (* end for each location *)
 		
 		(* Print debug information *)
-		if debug_mode_greater Debug_total then(
-			print_message Debug_total ("Computed predecessor locations and clock resets for automaton '" ^ (model.automata_names automaton_index) ^ "'");
+		if debug_mode_greater Verbose_total then(
+			print_message Verbose_total ("Computed predecessor locations and clock resets for automaton '" ^ (model.automata_names automaton_index) ^ "'");
 			(* Iterate on locations *)
 			List.iter (fun location_index ->
-				print_message Debug_total ("  Location '" ^ (model.location_names automaton_index location_index) ^ "' has predecessors:");
+				print_message Verbose_total ("  Location '" ^ (model.location_names automaton_index location_index) ^ "' has predecessors:");
 				let predecessors_string = string_of_list_of_string_with_sep ", " (List.map (
 					fun (source_index, reset_local_clocks) ->
 						(model.location_names automaton_index source_index) ^ "[resets: " ^ (string_of_list_of_string_with_sep ", " (List.map model.variable_names reset_local_clocks)) ^ "]"
 					) predecessors.(location_index)) in
-				print_message Debug_total ("    " ^ predecessors_string);
+				print_message Verbose_total ("    " ^ predecessors_string);
 			) locations_for_this_automaton; (* end for each location *)
 		);
 	
@@ -313,7 +313,7 @@ let find_useless_clocks_in_automata model local_clocks_per_automaton =
 					(* Check if the clock is present in the invariant *)
 					let constrained = LinearConstraint.pxd_is_constrained invariant clock_index in
 					(* Print some information *)
-					print_message Debug_total ("Clock '" ^ (model.variable_names clock_index) ^ "' is " ^ (if constrained then "" else "NOT ") ^ "constrained in invariant of location '" ^ (model.location_names automaton_index location_index) ^ "'");
+					print_message Verbose_total ("Clock '" ^ (model.variable_names clock_index) ^ "' is " ^ (if constrained then "" else "NOT ") ^ "constrained in invariant of location '" ^ (model.location_names automaton_index location_index) ^ "'");
 					(* Return true or false *)
 					constrained
 				) locations_for_this_automaton
@@ -334,9 +334,9 @@ let find_useless_clocks_in_automata model local_clocks_per_automaton =
 								let constrained = LinearConstraint.pxd_is_constrained guard clock_index in
 								(* Print some information *)
 								if constrained then (
-									print_message Debug_high ("Found a transition where clock '" ^ (model.variable_names clock_index) ^ "' is constrained in guard from location '" ^ (model.location_names automaton_index location_index) ^ "', through '" ^ (model.action_names action_index) ^ "'");
+									print_message Verbose_high ("Found a transition where clock '" ^ (model.variable_names clock_index) ^ "' is constrained in guard from location '" ^ (model.location_names automaton_index location_index) ^ "', through '" ^ (model.action_names action_index) ^ "'");
 								) else (
-									print_message Debug_total ("Clock '" ^ (model.variable_names clock_index) ^ "' is not constrained in guard from location '" ^ (model.location_names automaton_index location_index) ^ "' through '" ^ (model.action_names action_index) ^ "'");
+									print_message Verbose_total ("Clock '" ^ (model.variable_names clock_index) ^ "' is not constrained in guard from location '" ^ (model.location_names automaton_index location_index) ^ "' through '" ^ (model.action_names action_index) ^ "'");
 								);
 								(* Return true or false *)
 								constrained
@@ -353,9 +353,9 @@ let find_useless_clocks_in_automata model local_clocks_per_automaton =
 			let waiting = ref !marked in
 			
 			(* Print debug information *)
-			if debug_mode_greater Debug_medium then(
-				print_message Debug_medium ("Starting the XXX algorithm for local clock '" ^ (model.variable_names clock_index) ^ "' in automaton '" ^ (model.automata_names automaton_index) ^ "', with initial marked states:");
-				print_message Debug_medium (	"  " ^ (string_of_list_of_string_with_sep ", " (List.map (model.location_names automaton_index) !marked)));
+			if debug_mode_greater Verbose_medium then(
+				print_message Verbose_medium ("Starting the XXX algorithm for local clock '" ^ (model.variable_names clock_index) ^ "' in automaton '" ^ (model.automata_names automaton_index) ^ "', with initial marked states:");
+				print_message Verbose_medium (	"  " ^ (string_of_list_of_string_with_sep ", " (List.map (model.location_names automaton_index) !marked)));
 			);
 			
 			(* Start the algorithm *)
@@ -364,25 +364,25 @@ let find_useless_clocks_in_automata model local_clocks_per_automaton =
 				match !waiting with
 				| location_index :: rest ->
 					(* Debug information *)
-					print_message Debug_medium ("Pick up location '" ^ (model.location_names automaton_index location_index) ^ "'");
+					print_message Verbose_medium ("Pick up location '" ^ (model.location_names automaton_index location_index) ^ "'");
 					(* Remove the first element *)
 					waiting := rest;
 					(* For each transition leading to this location *)
 					List.iter (fun (source_index, reset_local_clocks) ->
 						(* Debug information *)
-						print_message Debug_high ("Considering predecessor transition from '" ^ (model.location_names automaton_index source_index) ^ "'");
+						print_message Verbose_high ("Considering predecessor transition from '" ^ (model.location_names automaton_index source_index) ^ "'");
 						(* If the clock is not reset by the transition *)
 						if not (List.mem clock_index reset_local_clocks) then(
 							(* Debug information *)
-							print_message Debug_high ("Clock not reset by a transition.");
+							print_message Verbose_high ("Clock not reset by a transition.");
 							(* If the source location does not belong to the marked list *)
 							if not (List.mem source_index !marked) then(
 								(* Add it to the marked list *)
 								marked := source_index :: !marked;
-								print_message Debug_high ("Location marked.");
+								print_message Verbose_high ("Location marked.");
 								(* Add it to the waiting list (if not present) *)
 								if not (List.mem source_index !waiting) then
-									print_message Debug_high ("Location added to waiting list.");
+									print_message Verbose_high ("Location added to waiting list.");
 									waiting := source_index :: !waiting;
 							); (* end if not in marked list *)
 						);(* end if clock not reset *)
@@ -397,9 +397,9 @@ let find_useless_clocks_in_automata model local_clocks_per_automaton =
 			let useless_locations = list_diff locations_for_this_automaton !marked in
 			
 			(* Print debug information *)
-			if debug_mode_greater Debug_low then(
-				print_message Debug_low ("List of useless locations for local clock '" ^ (model.variable_names clock_index) ^ "' in automaton '" ^ (model.automata_names automaton_index) ^ "'");
-				print_message Debug_low ("  " ^ (string_of_list_of_string_with_sep ", " (List.map (model.location_names automaton_index) useless_locations)));
+			if debug_mode_greater Verbose_low then(
+				print_message Verbose_low ("List of useless locations for local clock '" ^ (model.variable_names clock_index) ^ "' in automaton '" ^ (model.automata_names automaton_index) ^ "'");
+				print_message Verbose_low ("  " ^ (string_of_list_of_string_with_sep ", " (List.map (model.location_names automaton_index) useless_locations)));
 			);
 			
 			(* Update the data structure *)
@@ -425,25 +425,25 @@ let find_useless_clocks_in_automata model local_clocks_per_automaton =
 (* NOTE: This function is only called if the dynamic clock elimination option is activated *)
 let prepare_clocks_elimination model =
 	(* Compute the local clocks per automaton *)
-	print_message Debug_low ("*** Building local clocks per automaton...");
+	print_message Verbose_low ("*** Building local clocks per automaton...");
 	let local_clocks_per_automaton = find_local_clocks model in
 
 	(* Debug print: local clocks per automaton *)
-	if debug_mode_greater Debug_total then(
-		print_message Debug_total ("\n*** Local clocks per automaton:");
+	if debug_mode_greater Verbose_total then(
+		print_message Verbose_total ("\n*** Local clocks per automaton:");
 		(* For each automaton *)
 		List.iter (fun automaton_index ->
 			(* Get the actions *)
 			let clocks = local_clocks_per_automaton.(automaton_index) in
 			(* Print it *)
 			let clocks_string = string_of_list_of_string_with_sep ", " (List.map model.variable_names clocks) in
-			print_message Debug_total ("  " ^ (model.automata_names automaton_index) ^ " : " ^ clocks_string)
+			print_message Verbose_total ("  " ^ (model.automata_names automaton_index) ^ " : " ^ clocks_string)
 		) model.automata;
 	);
 	
 	
 	(* Compute and update useless clocks *)
-	print_message Debug_low ("*** Building useless clocks per location per automaton...");
+	print_message Verbose_low ("*** Building useless clocks per location per automaton...");
 	useless_clocks := find_useless_clocks_in_automata model local_clocks_per_automaton;
 	()
 
@@ -466,7 +466,7 @@ let update_tile_nature (location, (*linear_constraint*)_) =
 			if is_bad then (
 				(*** Quite a hack here ***)
 				if options#efim && !tile_nature <> Bad then(
-					print_message Debug_standard ("  [EFIM] Bad location found! Switching to bad-driven algorithm");
+					print_message Verbose_standard ("  [EFIM] Bad location found! Switching to bad-driven algorithm");
 				);
 				tile_nature := Bad;
 			);
@@ -505,9 +505,9 @@ let upd_cache = Cache.make upd_hash 100*)
 
 (* Print statistics for cache usage *)
 let print_stats _ =
-	print_message Debug_standard "invariant cache:"; 
+	print_message Verbose_standard "invariant cache:"; 
 	Cache.print_stats inv_cache(*;
- 	print_message Debug_standard "clock update cache:"; *)
+ 	print_message Verbose_standard "clock update cache:"; *)
 (* 	Cache.print_stats upd_cache *)
 	
  
@@ -562,7 +562,7 @@ let try_to_merge location1 constraint1 location2 constraint2 =
 let merge model action_and_state_list =
 
 	(* Print some information *)
-	print_message Debug_low ("\nStarting merging algorithm (before pi0-compatibility test) on a list of " ^ (string_of_int (List.length (!action_and_state_list))) ^ " state" ^ (s_of_int (List.length (!action_and_state_list))) ^ "");
+	print_message Verbose_low ("\nStarting merging algorithm (before pi0-compatibility test) on a list of " ^ (string_of_int (List.length (!action_and_state_list))) ^ " state" ^ (s_of_int (List.length (!action_and_state_list))) ^ "");
 	
 	(* Number of eated states (for printing purpose) *)
 	let nb_eated = ref 0 in
@@ -572,7 +572,7 @@ let merge model action_and_state_list =
 	(* while eater_index is in the list *)
 	while !eater_index < List.length (!action_and_state_list) do
 		(* Print some information *)
-		print_message Debug_high ("\n eater = " ^ (string_of_int !eater_index));
+		print_message Verbose_high ("\n eater = " ^ (string_of_int !eater_index));
 
 		(* Retrieve the eater *)
 		let eater_actions, eater_location, eater_constraint = List.nth !action_and_state_list !eater_index in
@@ -581,7 +581,7 @@ let merge model action_and_state_list =
 		let eated_index = ref 0 in
 		while !eated_index < List.length (!action_and_state_list) do
 			(* Print some information *)
-			print_message Debug_high ("\n eater = " ^ (string_of_int !eater_index));
+			print_message Verbose_high ("\n eater = " ^ (string_of_int !eater_index));
 			
 			(* Don't eat yourself *)
 			if !eater_index <> !eated_index then(
@@ -591,16 +591,16 @@ let merge model action_and_state_list =
 				(* If mergeable *)
 
 				(* Print some information *)
-				if debug_mode_greater Debug_total then (
-					print_message Debug_total ("\nConstraint of the eated before merging attempt...\n" ^ (LinearConstraint.string_of_px_linear_constraint model.variable_names eated_constraint));
-					print_message Debug_total ("\nConstraint of the eater before merging attempt...\n" ^ (LinearConstraint.string_of_px_linear_constraint model.variable_names eater_constraint));
+				if debug_mode_greater Verbose_total then (
+					print_message Verbose_total ("\nConstraint of the eated before merging attempt...\n" ^ (LinearConstraint.string_of_px_linear_constraint model.variable_names eated_constraint));
+					print_message Verbose_total ("\nConstraint of the eater before merging attempt...\n" ^ (LinearConstraint.string_of_px_linear_constraint model.variable_names eater_constraint));
 				);
 
 				
 				if try_to_merge eater_location eater_constraint eated_location eated_constraint then(
-					if debug_mode_greater Debug_total then (
+					if debug_mode_greater Verbose_total then (
 						(* Print some information *)
-						print_message Debug_total ("\nConstraint of the eater after merging...\n" ^ (LinearConstraint.string_of_px_linear_constraint model.variable_names eater_constraint));
+						print_message Verbose_total ("\nConstraint of the eater after merging...\n" ^ (LinearConstraint.string_of_px_linear_constraint model.variable_names eater_constraint));
 					);
 						
 					(* Due to side effects in try_to_merge, the merging is already performed at this point! *)
@@ -643,9 +643,9 @@ let merge model action_and_state_list =
 	
 	(* Print some information *)
 	if !nb_eated > 0 then
-		print_message Debug_standard ("  " ^ (string_of_int !nb_eated) ^ " state" ^ (s_of_int !nb_eated) ^ " merged before pi0-compatibility test.")
+		print_message Verbose_standard ("  " ^ (string_of_int !nb_eated) ^ " state" ^ (s_of_int !nb_eated) ^ " merged before pi0-compatibility test.")
 	else
-		print_message Debug_low ("  (No state merged before pi0-compatibility test)")
+		print_message Verbose_low ("  (No state merged before pi0-compatibility test)")
 	;
 	
 	
@@ -657,9 +657,9 @@ let merge model action_and_state_list =
 	  | first :: rest  -> let (loc_state, constr_state) =  (get_state graph index_state) in
 		  let (loc_hd, constr_hd) = (get_state graph first) in
 		  if (state_mergeable (loc_state, constr_state) (loc_hd, constr_hd)) then (
-			print_message Debug_total ("Mergeable states");
+			print_message Verbose_total ("Mergeable states");
 			merge_states graph index_state first;
-			print_message Debug_total ("States merged");
+			print_message Verbose_total ("States merged");
 			(* TO OPTIMIZE: operation already performed in state_mergeable !! *)
 			LinearConstraint.hull_assign constr_state constr_hd;
 			(true, first)
@@ -668,7 +668,7 @@ let merge model action_and_state_list =
 
 
 (*let try_to_merge_states graph list_of_states =
-	print_message Debug_high ("Starting merging");
+	print_message Verbose_high ("Starting merging");
 	
 	(* Count states (for statistics only *)
 	let nb_merged = ref 0 in
@@ -686,7 +686,7 @@ let merge model action_and_state_list =
 		
 		(* Loop as long as we merged states, i.e., always start again to try to marge eater if some states were merged *)
 		while !merged_states do
-			print_message Debug_total ("Starting inner loop in merging");
+			print_message Verbose_total ("Starting inner loop in merging");
 			(* Set flag to false: no states merged yet *)
 			merged_states := false;
 			(* Get the real state *)
@@ -697,9 +697,9 @@ let merge model action_and_state_list =
 				let s2 = get_state graph current_element in
 				(* Try to merge eater with current_element *)
 				if state_mergeable s1 s2 then (
-					print_message Debug_total ("Found a mergeable state");
+					print_message Verbose_total ("Found a mergeable state");
 					StateSpace.merge_2_states graph eater current_element;
-					print_message Debug_total ("States successfully merged");
+					print_message Verbose_total ("States successfully merged");
 					(** Optimized: hull already performed in state_mergeable !! *)
 					(* Update flags (we will have to start everything again) *)
 					start_again := true;
@@ -723,7 +723,7 @@ let merge model action_and_state_list =
 		(* Set flag to false: no states merged yet *)
 		start_again := false;
 
-		print_message Debug_total ("Starting one iteration of the outer loop in merging");
+		print_message Verbose_total ("Starting one iteration of the outer loop in merging");
 
 		let beginning = ref [] in
 		let remaining = ref (!current_list_of_states) in
@@ -733,7 +733,7 @@ let merge model action_and_state_list =
 			| [] -> raise (InternalError("Impossible case in 'merge_states'."))
 			| first_remaining :: rest_remaining ->
 				(* Call auxiliary function *)
-				print_message Debug_high ("Considered one more state");
+				print_message Verbose_high ("Considered one more state");
 				remaining := merge_states_aux first_remaining rest_remaining;
 				(* Add first to rest, i.e., move one step within the list *)
 				beginning := first_remaining :: !beginning;
@@ -744,7 +744,7 @@ let merge model action_and_state_list =
 
 	(* Some debug message *)
 	if !nb_merged > 0 then
-		print_message Debug_standard ("  " ^ (string_of_int !nb_merged) ^ " state" ^ (s_of_int !nb_merged) ^ " merged.");
+		print_message Verbose_standard ("  " ^ (string_of_int !nb_merged) ^ " state" ^ (s_of_int !nb_merged) ^ " merged.");
 	
 	(* Return something *)
 	!current_list_of_states
@@ -757,16 +757,16 @@ let merge model action_and_state_list =
 			(* Otherwise: *)
 			| first :: rest -> (
 				let (result, state_merged) = merging_of_states reachability_graph first rest [] in
-					print_message Debug_total ("Test for debugging the fatal error 2/5");
+					print_message Verbose_total ("Test for debugging the fatal error 2/5");
 					if result then (
-						print_message Debug_total ("Test for debugging the fatal error 3/5");
+						print_message Verbose_total ("Test for debugging the fatal error 3/5");
 						merging := true;
 						nb_merged := !nb_merged + 1;
-						print_message Debug_total ("Test for debugging the fatal error 4/5");
+						print_message Verbose_total ("Test for debugging the fatal error 4/5");
 						new_states_after_merging := list_remove_first_occurence state_merged !new_states_after_merging ;
-						print_message Debug_total ("Test for debugging the fatal error 5/5");
+						print_message Verbose_total ("Test for debugging the fatal error 5/5");
 					);
-				print_message Debug_total ("Looping merging");
+				print_message Verbose_total ("Looping merging");
 				);
 
 						(** DEBUT LOOP *)
@@ -881,7 +881,7 @@ let rho_assign model (linear_constraint : LinearConstraint.pxd_linear_constraint
 			let list_of_clocks_to_update = Hashtbl.fold (fun clock_id _ list_of_clocks -> clock_id :: list_of_clocks) clocks_hash [] in
 			
 			(* Compute X = 0 for the variables appearing in resets *)
-			print_message Debug_total ("\n -- Computing resets X = 0");
+			print_message Verbose_total ("\n -- Computing resets X = 0");
 			let updates =
 				(List.map (fun variable_index ->
 					(* Consider cases for clocks *)
@@ -897,22 +897,22 @@ let rho_assign model (linear_constraint : LinearConstraint.pxd_linear_constraint
 			(* Create the constraint *)
 			let updates = LinearConstraint.make_pxd_constraint updates in
 			(* Print some information *)
-			if debug_mode_greater Debug_total then(
-				print_message Debug_total (LinearConstraint.string_of_pxd_linear_constraint model.variable_names updates);
+			if debug_mode_greater Verbose_total then(
+				print_message Verbose_total (LinearConstraint.string_of_pxd_linear_constraint model.variable_names updates);
 			);
 			
 			(* Hide clocks updated within the linear constraint, viz., exists X' : lc, for X' in rho(X) *)
-			print_message Debug_total ("\n -- Computing exists X : lc for reset clocks");
+			print_message Verbose_total ("\n -- Computing exists X : lc for reset clocks");
 			LinearConstraint.pxd_hide_assign list_of_clocks_to_update linear_constraint;
-			if debug_mode_greater Debug_total then(
-				print_message Debug_total (LinearConstraint.string_of_pxd_linear_constraint model.variable_names linear_constraint);
+			if debug_mode_greater Verbose_total then(
+				print_message Verbose_total (LinearConstraint.string_of_pxd_linear_constraint model.variable_names linear_constraint);
 			);
 			
 			(* Add the constraints X = 0 *)
-			print_message Debug_total ("\n -- Adding X = 0 for reset clocks");
+			print_message Verbose_total ("\n -- Adding X = 0 for reset clocks");
 			LinearConstraint.pxd_intersection_assign linear_constraint [updates];
-			if debug_mode_greater Debug_total then(
-				print_message Debug_total (LinearConstraint.string_of_pxd_linear_constraint model.variable_names linear_constraint);
+			if debug_mode_greater Verbose_total then(
+				print_message Verbose_total (LinearConstraint.string_of_pxd_linear_constraint model.variable_names linear_constraint);
 			)
 			
 		(* CASE 3: updates to linear terms *)
@@ -938,8 +938,8 @@ let rho_assign model (linear_constraint : LinearConstraint.pxd_linear_constraint
 				Hashtbl.add prime_of_variable clock_id !clock_prime_id;
 				Hashtbl.add variable_of_prime !clock_prime_id clock_id;
 				(* Debug message *)
-				if debug_mode_greater Debug_total then(
-					print_message Debug_total ("\nThe primed index of variable '" ^ (model.variable_names clock_id) ^ "' (index = " ^ (string_of_int clock_id) ^ ") is set to " ^ (string_of_int !clock_prime_id) ^ ".")
+				if debug_mode_greater Verbose_total then(
+					print_message Verbose_total ("\nThe primed index of variable '" ^ (model.variable_names clock_id) ^ "' (index = " ^ (string_of_int clock_id) ^ ") is set to " ^ (string_of_int !clock_prime_id) ^ ".")
 				);
 				(* Increment the prime id for next variable *)
 				clock_prime_id := !clock_prime_id + 1;
@@ -947,7 +947,7 @@ let rho_assign model (linear_constraint : LinearConstraint.pxd_linear_constraint
 			) updates;
 			let new_max_dimension = !clock_prime_id in
 			let extra_dimensions = new_max_dimension - model.nb_variables in
-			print_message Debug_total ("\nNew dimension for constraints: " ^ (string_of_int new_max_dimension) ^ "; extra dimensions : " ^ (string_of_int extra_dimensions) ^ ".");
+			print_message Verbose_total ("\nNew dimension for constraints: " ^ (string_of_int new_max_dimension) ^ "; extra dimensions : " ^ (string_of_int extra_dimensions) ^ ".");
 			(* Extend the number of dimensions *)
 (* 			LinearConstraint.set_manager 0 new_max_dimension; *)
 			LinearConstraint.set_dimensions model.nb_parameters (model.nb_clocks + extra_dimensions) model.nb_discrete;
@@ -970,14 +970,14 @@ let rho_assign model (linear_constraint : LinearConstraint.pxd_linear_constraint
 			let inequalities = LinearConstraint.make_pxd_constraint inequalities in
 			(* Print some information *)
 			let print_constraint c = 
-				if debug_mode_greater Debug_total then(
+				if debug_mode_greater Verbose_total then(
 					let all_variable_names = fun variable_id ->
 						if variable_id < model.nb_variables then 
 							model.variable_names variable_id
 						else
 							(model.variable_names (Hashtbl.find variable_of_prime variable_id)) ^ "'"
 					in
-					print_message Debug_total (LinearConstraint.string_of_pxd_linear_constraint all_variable_names c);
+					print_message Verbose_total (LinearConstraint.string_of_pxd_linear_constraint all_variable_names c);
 				)else(
 					()
 				)
@@ -985,7 +985,7 @@ let rho_assign model (linear_constraint : LinearConstraint.pxd_linear_constraint
 			print_constraint inequalities;
 
 			(* Add the constraints X_i' = linear_term *)
-			print_message Debug_total ("\n -- Adding X_i' = linear_term for updated clocks");
+			print_message Verbose_total ("\n -- Adding X_i' = linear_term for updated clocks");
 			LinearConstraint.pxd_intersection_assign linear_constraint [inequalities];
 			(* Print some information *)
 			print_constraint linear_constraint;
@@ -993,10 +993,10 @@ let rho_assign model (linear_constraint : LinearConstraint.pxd_linear_constraint
 			(* Remove the variables X_i *)
 			let list_of_clocks_to_hide, _ = List.split updates in
 			(* Hide clocks updated within the linear constraint, viz., exists X_i : lc, for X_i in rho(X) *)
-			print_message Debug_total ("\n -- Computing exists X : lc for updated clocks");
+			print_message Verbose_total ("\n -- Computing exists X : lc for updated clocks");
 			LinearConstraint.pxd_hide_assign list_of_clocks_to_hide linear_constraint;
 			(* Print some information *)
-			if debug_mode_greater Debug_total then(
+			if debug_mode_greater Verbose_total then(
 				print_constraint linear_constraint;
 			);
 			
@@ -1004,20 +1004,20 @@ let rho_assign model (linear_constraint : LinearConstraint.pxd_linear_constraint
 			(** TO OPTIMIZE !! *)
 			(* Compute couples (X_i', X_i) *)
 			let clocks_and_primes = Hashtbl.fold (fun clock_id clock_prime_id couples -> (clock_id, clock_prime_id) :: couples) prime_of_variable [] in
-			print_message Debug_total ("\n -- Renaming clocks X_i' into X_i for updated clocks");
+			print_message Verbose_total ("\n -- Renaming clocks X_i' into X_i for updated clocks");
 			LinearConstraint.pxd_rename_variables_assign clocks_and_primes linear_constraint;
 			(* Print some information *)
-			if debug_mode_greater Debug_total then(
+			if debug_mode_greater Verbose_total then(
 				print_constraint linear_constraint;
 			);
 
 			(* Go back to the original number of dimensions *)
-			print_message Debug_total ("\nGo back to standard dimension for constraints: " ^ (string_of_int model.nb_variables) ^ ".");
+			print_message Verbose_total ("\nGo back to standard dimension for constraints: " ^ (string_of_int model.nb_variables) ^ ".");
 (* 			LinearConstraint.set_manager 0 model.nb_variables; *)
 			LinearConstraint.set_dimensions model.nb_parameters model.nb_clocks model.nb_discrete;
 			LinearConstraint.pxd_remove_dimensions extra_dimensions linear_constraint;
 			(* Print some information *)
-			if debug_mode_greater Debug_total then(
+			if debug_mode_greater Verbose_total then(
 				print_constraint linear_constraint;
 			);
 			
@@ -1101,63 +1101,63 @@ let create_initial_state model =
 	let initial_constraint = LinearConstraint.pxd_of_px_constraint initial_constraint in
 	
 	(* Compute the invariants I_q0(X) for the initial locations *)
-	print_message Debug_high ("\nComputing initial invariant I_q0(X)");
+	print_message Verbose_high ("\nComputing initial invariant I_q0(X)");
 	(* Create the invariant *)
 	let invariant = compute_plain_invariant model initial_location in
 	(* Print some information *)
-	if debug_mode_greater Debug_total then
-		print_message Debug_total (LinearConstraint.string_of_pxd_linear_constraint model.variable_names invariant);
+	if debug_mode_greater Verbose_total then
+		print_message Verbose_total (LinearConstraint.string_of_pxd_linear_constraint model.variable_names invariant);
 	
 	(* Compute constraint for assigning a (constant) value to discrete variables *)
-	print_message Debug_high ("Computing constraint for discrete variables");
+	print_message Verbose_high ("Computing constraint for discrete variables");
 	let discrete_values = List.map (fun discrete_index -> discrete_index, (Automaton.get_discrete_value initial_location discrete_index)) model.discrete in
 	(* Constraint of the form D_i = d_i *)
 	let discrete_constraint = instantiate_discrete discrete_values in
 	(* Print some information *)
-	if debug_mode_greater Debug_total then
-		print_message Debug_total (LinearConstraint.string_of_pxd_linear_constraint model.variable_names discrete_constraint);
+	if debug_mode_greater Verbose_total then
+		print_message Verbose_total (LinearConstraint.string_of_pxd_linear_constraint model.variable_names discrete_constraint);
 	
 	(* Perform intersection of C(X) and I_q0(X) and D_i = d_i *)
-	print_message Debug_high ("Performing intersection of C0(X) and I_q0(X) and D_i = d_i");
+	print_message Verbose_high ("Performing intersection of C0(X) and I_q0(X) and D_i = d_i");
 	let current_constraint = LinearConstraint.pxd_intersection [initial_constraint ; invariant ; discrete_constraint (*** TO OPTIMIZE: could be removed ***)] in
 	(* Print some information *)
-	if debug_mode_greater Debug_total then
-		print_message Debug_total (LinearConstraint.string_of_pxd_linear_constraint model.variable_names current_constraint);
+	if debug_mode_greater Verbose_total then
+		print_message Verbose_total (LinearConstraint.string_of_pxd_linear_constraint model.variable_names current_constraint);
 		
 	(* Compute the list of stopwatches *)
 	let stopped_clocks, elapsing_clocks = compute_stopwatches model initial_location in
-	print_message Debug_high ("Computing list of stopwatches");
-	if debug_mode_greater Debug_total then(
+	print_message Verbose_high ("Computing list of stopwatches");
+	if debug_mode_greater Verbose_total then(
 		let list_of_names = List.map model.variable_names stopped_clocks in
-		print_message Debug_total ("Stopped clocks : " ^ (string_of_list_of_string_with_sep ", " list_of_names));
+		print_message Verbose_total ("Stopped clocks : " ^ (string_of_list_of_string_with_sep ", " list_of_names));
 		let list_of_names = List.map model.variable_names elapsing_clocks in
-		print_message Debug_total ("Elapsing clocks: " ^ (string_of_list_of_string_with_sep ", " list_of_names));
+		print_message Verbose_total ("Elapsing clocks: " ^ (string_of_list_of_string_with_sep ", " list_of_names));
 	);
 	
 	(* Perform time elapsing *)
-	print_message Debug_high ("Performing time elapsing on [ C0(X) and I_q0(X) and D_i = d_i ]");
+	print_message Verbose_high ("Performing time elapsing on [ C0(X) and I_q0(X) and D_i = d_i ]");
 	LinearConstraint.pxd_time_elapse_assign (*model.clocks model.parameters_and_discrete*)
 		elapsing_clocks
 		(List.rev_append stopped_clocks model.parameters_and_discrete)
 		current_constraint
 	;
 	(* Print some information *)
-	if debug_mode_greater Debug_total then
-		print_message Debug_total (LinearConstraint.string_of_pxd_linear_constraint model.variable_names current_constraint);
+	if debug_mode_greater Verbose_total then
+		print_message Verbose_total (LinearConstraint.string_of_pxd_linear_constraint model.variable_names current_constraint);
 	
 	(* Perform intersection of [C(X) and I_q0(X) and D_i = d_i]time with I_q0(X) and D_i = d_i *)
-	print_message Debug_high ("Performing intersection of [C0(X) and I_q0(X) and D_i = d_i]time and I_q0(X) and D_i = d_i");
+	print_message Verbose_high ("Performing intersection of [C0(X) and I_q0(X) and D_i = d_i]time and I_q0(X) and D_i = d_i");
 	LinearConstraint.pxd_intersection_assign current_constraint [invariant ; discrete_constraint];
 	(* Print some information *)
-	if debug_mode_greater Debug_total then
-		print_message Debug_total (LinearConstraint.string_of_pxd_linear_constraint model.variable_names current_constraint);
+	if debug_mode_greater Verbose_total then
+		print_message Verbose_total (LinearConstraint.string_of_pxd_linear_constraint model.variable_names current_constraint);
 	
 	(* Hide discrete *)
-	print_message Debug_high ("Hide discrete");
+	print_message Verbose_high ("Hide discrete");
 	let current_constraint = LinearConstraint.pxd_hide_discrete_and_collapse (*model.discrete*) current_constraint in
 	(* Print some information *)
-	if debug_mode_greater Debug_total then
-		print_message Debug_total (LinearConstraint.string_of_px_linear_constraint model.variable_names current_constraint);
+	if debug_mode_greater Verbose_total then
+		print_message Verbose_total (LinearConstraint.string_of_px_linear_constraint model.variable_names current_constraint);
 		
 		
 	(* Remove useless clocks (if option activated) *)
@@ -1170,16 +1170,16 @@ let create_initial_state model =
 			List.rev_append current_list_of_clocks (!useless_clocks automaton_index location_index)
 		) [] model.automata in
 		(* Print some information *)
-		if debug_mode_greater Debug_low then(
-			print_message Debug_low ("The following clocks will be dynamically removed:");
-			print_message Debug_low ("  " ^ (string_of_list_of_string_with_sep ", " (List.map model.variable_names clocks_to_remove)));
+		if debug_mode_greater Verbose_low then(
+			print_message Verbose_low ("The following clocks will be dynamically removed:");
+			print_message Verbose_low ("  " ^ (string_of_list_of_string_with_sep ", " (List.map model.variable_names clocks_to_remove)));
 		);
 		
-		print_message Debug_high ("\nRemoving useless clocks ");
+		print_message Verbose_high ("\nRemoving useless clocks ");
 		LinearConstraint.px_hide_assign clocks_to_remove current_constraint;
 		(* Print some information *)
-		if debug_mode_greater Debug_total then(
-			print_message Debug_total (LinearConstraint.string_of_px_linear_constraint model.variable_names current_constraint);
+		if debug_mode_greater Verbose_total then(
+			print_message Verbose_total (LinearConstraint.string_of_px_linear_constraint model.variable_names current_constraint);
 		);
 	);
 	
@@ -1194,15 +1194,15 @@ let create_initial_state model =
 (*--------------------------------------------------*)
 let get_initial_state_or_abort model =
 	(* Print the initial state *)
-	if debug_mode_greater Debug_medium then
-		print_message Debug_medium ("\nInitial state:\n" ^ (ModelPrinter.string_of_state model (model.initial_location, model.initial_constraint)) ^ "\n");
+	if debug_mode_greater Verbose_medium then
+		print_message Verbose_medium ("\nInitial state:\n" ^ (ModelPrinter.string_of_state model (model.initial_location, model.initial_constraint)) ^ "\n");
 
 	(* Check the satisfiability *)
 	if not (LinearConstraint.px_is_satisfiable model.initial_constraint) then (
 		print_warning "The initial constraint of the model is not satisfiable.";
 		terminate_program();
 	)else(
-		print_message Debug_total ("\nThe initial constraint of the model is satisfiable.");
+		print_message Verbose_total ("\nThe initial constraint of the model is satisfiable.");
 	);
 
 	(* Get the initial state after time elapsing *)
@@ -1215,11 +1215,11 @@ let get_initial_state_or_abort model =
 		print_warning "The initial constraint of the model after time elapsing is not satisfiable.";
 		terminate_program();
 	)else(
-		print_message Debug_total ("\nThe initial constraint of the model after time elapsing is satisfiable.");
+		print_message Verbose_total ("\nThe initial constraint of the model after time elapsing is satisfiable.");
 	);
 	(* Print the initial state after time elapsing *)
-	if debug_mode_greater Debug_medium then
-		print_message Debug_medium ("\nInitial state after time-elapsing:\n" ^ (ModelPrinter.string_of_state model init_state_after_time_elapsing) ^ "\n");
+	if debug_mode_greater Verbose_medium then
+		print_message Verbose_medium ("\nInitial state after time-elapsing:\n" ^ (ModelPrinter.string_of_state model init_state_after_time_elapsing) ^ "\n");
 		
 	(* Return the initial state *)
 	init_state_after_time_elapsing
@@ -1236,7 +1236,7 @@ let compute_possible_actions model original_location =
 		(* Get the current location for automaton_index *)
 		let location_index = Automaton.get_location original_location automaton_index in
 		(* Print some information *)
-		print_message Debug_total ("Considering automaton " ^ (model.automata_names automaton_index) ^ " with location " ^ (model.location_names automaton_index location_index) ^ ".");
+		print_message Verbose_total ("Considering automaton " ^ (model.automata_names automaton_index) ^ " with location " ^ (model.location_names automaton_index location_index) ^ ".");
 		(* Get the possible actions for this location *)
 		let possible_actions_for_this_automaton =
 			model.actions_per_location automaton_index location_index
@@ -1246,14 +1246,14 @@ let compute_possible_actions model original_location =
 			(* Add the action *)
 			possible_actions.(action_index) <- true;
 			(* Print some information *)
-			print_message Debug_total ("Adding action " ^ (model.action_names action_index) ^ " for automaton " ^ (model.automata_names automaton_index) ^ " with location " ^ (model.location_names automaton_index location_index) ^ ".");
+			print_message Verbose_total ("Adding action " ^ (model.action_names action_index) ^ " for automaton " ^ (model.automata_names automaton_index) ^ " with location " ^ (model.location_names automaton_index location_index) ^ ".");
 		) possible_actions_for_this_automaton;
 	done;
 	(* Print some information *)
-	if debug_mode_greater Debug_total then (
-		print_message Debug_total ("Possible actions for all the locations are:");
+	if debug_mode_greater Verbose_total then (
+		print_message Verbose_total ("Possible actions for all the locations are:");
 		Array.iteri (fun action_index possible ->
-			if possible then (print_message Debug_total (" - " ^ (model.action_names action_index)));
+			if possible then (print_message Verbose_total (" - " ^ (model.action_names action_index)));
 		) possible_actions;
 	);
 	(* Remove every action where an automaton can not take this action in its *)
@@ -1270,8 +1270,8 @@ let compute_possible_actions model original_location =
 				&& (List.mem action_index (model.actions_per_location automaton_index (Automaton.get_location original_location automaton_index)))
 			) possible automata_for_this_action in
 		(* Print some information *)
-		if not action_possible && (debug_mode_greater Debug_total) then (
-			print_message Debug_total ("But action '" ^ (model.action_names action_index) ^ "' is not possible for all declared automata.")
+		if not action_possible && (debug_mode_greater Verbose_total) then (
+			print_message Verbose_total ("But action '" ^ (model.action_names action_index) ^ "' is not possible for all declared automata.")
 		);
 		(* Replace the previous value by the new one *)
 		action_possible
@@ -1373,96 +1373,96 @@ let compute_new_constraint model orig_constraint (discrete_constr : LinearConstr
 	(* Retrieve the input options *)
 	let options = Input.get_options () in
 	
-	if debug_mode_greater Debug_total then(
-		print_message Debug_total ("\n***********************************");
-		print_message Debug_total ("Entering compute_new_constraint");	
-		print_message Debug_total ("***********************************");
-		print_message Debug_total ("C = " ^ (LinearConstraint.string_of_px_linear_constraint model.variable_names (orig_constraint ())));
+	if debug_mode_greater Verbose_total then(
+		print_message Verbose_total ("\n***********************************");
+		print_message Verbose_total ("Entering compute_new_constraint");	
+		print_message Verbose_total ("***********************************");
+		print_message Verbose_total ("C = " ^ (LinearConstraint.string_of_px_linear_constraint model.variable_names (orig_constraint ())));
 	);
 	(* The constraint is checked on the fly for satisfiability -> exception mechanism *)
 	try (
 		let current_constraint = LinearConstraint.pxd_copy discrete_constr in
 
 		(* Print some information *)
-		if debug_mode_greater Debug_total then(
-			print_message Debug_total ("\nComputing the guards g(x)");
+		if debug_mode_greater Verbose_total then(
+			print_message Verbose_total ("\nComputing the guards g(x)");
 			List.iter (fun guard -> 
-				print_message Debug_total (LinearConstraint.string_of_pxd_linear_constraint model.variable_names guard);
+				print_message Verbose_total (LinearConstraint.string_of_pxd_linear_constraint model.variable_names guard);
 			) guards;
 		);
-		print_message Debug_total ("\nPerforming intersection of Di = di and C(X) and g(X)");
+		print_message Verbose_total ("\nPerforming intersection of Di = di and C(X) and g(X)");
 		(* Add the (old) value for discrete to the guards D_i = d_i and g(X) *)
 		LinearConstraint.pxd_intersection_assign current_constraint ((LinearConstraint.pxd_of_px_constraint (orig_constraint ())) :: guards);
 		(* Print some information *)
-		if debug_mode_greater Debug_total then(
-			print_message Debug_total (LinearConstraint.string_of_pxd_linear_constraint model.variable_names current_constraint);
+		if debug_mode_greater Verbose_total then(
+			print_message Verbose_total (LinearConstraint.string_of_pxd_linear_constraint model.variable_names current_constraint);
 		);
 		
 		(* Check here for unsatisfiability *)
 		if not (LinearConstraint.pxd_is_satisfiable current_constraint) then (
 			(* Statistics *)
 			nb_unsat1 := !nb_unsat1 + 1;
-			print_message Debug_high "skip transition";
+			print_message Verbose_high "skip transition";
 			raise Unsat_exception
 		);
 		
-		print_message Debug_total ("\nEliminate the discrete variables in C(X) and g(X)");
+		print_message Verbose_total ("\nEliminate the discrete variables in C(X) and g(X)");
 		(* Remove the discrete variables (Exists D_i : D_i = d_i and g(X)) *)
 		LinearConstraint.pxd_hide_assign model.discrete current_constraint;
 		(* Print some information *)
-		if debug_mode_greater Debug_total then(
-			print_message Debug_total (LinearConstraint.string_of_pxd_linear_constraint model.variable_names current_constraint);
+		if debug_mode_greater Verbose_total then(
+			print_message Verbose_total (LinearConstraint.string_of_pxd_linear_constraint model.variable_names current_constraint);
 		);
 		
-		print_message Debug_total ("\nProjecting C(X) and g(X) onto rho");
+		print_message Verbose_total ("\nProjecting C(X) and g(X) onto rho");
 		rho_assign model current_constraint clock_updates;
 		(* Print some information *)
-		if debug_mode_greater Debug_total then(
-			print_message Debug_total ("\nResult:");
-			print_message Debug_total (LinearConstraint.string_of_pxd_linear_constraint model.variable_names current_constraint);
+		if debug_mode_greater Verbose_total then(
+			print_message Verbose_total ("\nResult:");
+			print_message Verbose_total (LinearConstraint.string_of_pxd_linear_constraint model.variable_names current_constraint);
 		);
 
 		(* Compute the invariant in the destination location I_q(X) *)
-		print_message Debug_total ("\nComputing invariant I_q(X)");
+		print_message Verbose_total ("\nComputing invariant I_q(X)");
 		let invariant = compute_invariant model dest_location in
 		(* Print some information *)
-		if debug_mode_greater Debug_total then(
-			print_message Debug_total (LinearConstraint.string_of_pxd_linear_constraint model.variable_names invariant);
+		if debug_mode_greater Verbose_total then(
+			print_message Verbose_total (LinearConstraint.string_of_pxd_linear_constraint model.variable_names invariant);
 		);
 
 		(* Perform the intersection *)
-		print_message Debug_total ("\nPerforming intersection of [C(X) and g(X)] rho and I_q(X)");
+		print_message Verbose_total ("\nPerforming intersection of [C(X) and g(X)] rho and I_q(X)");
 		(* (Exists D_i : D_i = d_i and g(X)) *)
 		LinearConstraint.pxd_intersection_assign current_constraint [invariant];
 		(* Print some information *)
-		if debug_mode_greater Debug_total then(
-			print_message Debug_total (LinearConstraint.string_of_pxd_linear_constraint model.variable_names current_constraint);
+		if debug_mode_greater Verbose_total then(
+			print_message Verbose_total (LinearConstraint.string_of_pxd_linear_constraint model.variable_names current_constraint);
 			if not (LinearConstraint.pxd_is_satisfiable current_constraint) then
-				print_message Debug_total ("This constraint is NOT satisfiable (after intersection of [C(X) and g(X)] rho and I_q(X) ).");
+				print_message Verbose_total ("This constraint is NOT satisfiable (after intersection of [C(X) and g(X)] rho and I_q(X) ).");
 		);
 
 		(* NO USE FOR TESTING HERE FOR SATISFIABILITY (almost always satisfiable) *)
 	
 		(* Compute the list of stopwatches *)
 		let stopped_clocks, elapsing_clocks = compute_stopwatches model dest_location in
-		print_message Debug_high ("Computing list of stopwatches");
-		if debug_mode_greater Debug_total then(
+		print_message Verbose_high ("Computing list of stopwatches");
+		if debug_mode_greater Verbose_total then(
 			let list_of_names = List.map model.variable_names stopped_clocks in
-			print_message Debug_total ("Stopped clocks : " ^ (string_of_list_of_string_with_sep ", " list_of_names));
+			print_message Verbose_total ("Stopped clocks : " ^ (string_of_list_of_string_with_sep ", " list_of_names));
 			let list_of_names = List.map model.variable_names elapsing_clocks in
-			print_message Debug_total ("Elapsing clocks: " ^ (string_of_list_of_string_with_sep ", " list_of_names));
+			print_message Verbose_total ("Elapsing clocks: " ^ (string_of_list_of_string_with_sep ", " list_of_names));
 		);
 		
 		(* Perform time elapsing *)
-		print_message Debug_total ("\nPerforming time elapsing on [C(X) and g(X)] rho and I_q(X)");
+		print_message Verbose_total ("\nPerforming time elapsing on [C(X) and g(X)] rho and I_q(X)");
 		LinearConstraint.pxd_time_elapse_assign (*model.clocks model.parameters_and_discrete*)
 			elapsing_clocks
 			(List.rev_append stopped_clocks model.parameters_and_discrete)
 			current_constraint
 		;
 		(* Print some information *)
-		if debug_mode_greater Debug_total then(
-			print_message Debug_total (LinearConstraint.string_of_pxd_linear_constraint model.variable_names current_constraint);
+		if debug_mode_greater Verbose_total then(
+			print_message Verbose_total (LinearConstraint.string_of_pxd_linear_constraint model.variable_names current_constraint);
 		);
 
 		(* Compute the equalities for the discrete variables (in destination location) *)
@@ -1471,37 +1471,37 @@ let compute_new_constraint model orig_constraint (discrete_constr : LinearConstr
 		let discrete_constraint = instantiate_discrete discrete_values in
 		
 		(* Perform the intersection *)
-		print_message Debug_total ("\nPerforming intersection of the constraint with D_i = d_i and I_q(X) ");
+		print_message Verbose_total ("\nPerforming intersection of the constraint with D_i = d_i and I_q(X) ");
 		LinearConstraint.pxd_intersection_assign current_constraint
 			[
 				discrete_constraint;
 				invariant;
 			];
 		(* Print some information *)
-		if debug_mode_greater Debug_total then(
-			print_message Debug_total (LinearConstraint.string_of_pxd_linear_constraint model.variable_names current_constraint);
+		if debug_mode_greater Verbose_total then(
+			print_message Verbose_total (LinearConstraint.string_of_pxd_linear_constraint model.variable_names current_constraint);
 			if not (LinearConstraint.pxd_is_satisfiable current_constraint) then
-				print_message Debug_total ("This constraint is NOT satisfiable (after intersection of the constraint with D_i = d_i and I_q(X)).");
+				print_message Verbose_total ("This constraint is NOT satisfiable (after intersection of the constraint with D_i = d_i and I_q(X)).");
 		);
 		
 (*		(* Check here for unsatisfiability *)
 		if not (LinearConstraint.is_satisfiable current_constraint) then (
 			(* Statistics *)
 			nb_unsat2 := !nb_unsat2 + 1;
-			print_message Debug_high "skip transition";
+			print_message Verbose_high "skip transition";
 			raise Unsat_exception
 		);*)
 
 		(* AGAIN, NO USE FOR TESTING HERE FOR SATISFIABILITY (almost always satisfiable) *)
 
 		(* Hide discrete' *)
-		print_message Debug_total ("\nHide discrete variables ");
+		print_message Verbose_total ("\nHide discrete variables ");
 		let current_constraint = LinearConstraint.pxd_hide_discrete_and_collapse (*(model.discrete)*) current_constraint in
 		(* Print some information *)
-		if debug_mode_greater Debug_total then(
-			print_message Debug_total (LinearConstraint.string_of_px_linear_constraint model.variable_names current_constraint);
+		if debug_mode_greater Verbose_total then(
+			print_message Verbose_total (LinearConstraint.string_of_px_linear_constraint model.variable_names current_constraint);
 			if not (LinearConstraint.px_is_satisfiable current_constraint) then
-				print_message Debug_total ("This constraint is NOT satisfiable (after hiding discrete variables).");
+				print_message Verbose_total ("This constraint is NOT satisfiable (after hiding discrete variables).");
 		);
 		
 		
@@ -1515,16 +1515,16 @@ let compute_new_constraint model orig_constraint (discrete_constr : LinearConstr
 				List.rev_append current_list_of_clocks (!useless_clocks automaton_index location_index)
 			) [] model.automata in
 			(* Print some information *)
-			if debug_mode_greater Debug_low then(
-				print_message Debug_low ("The following clocks will be dynamically removed:");
-				print_message Debug_low ("  " ^ (string_of_list_of_string_with_sep ", " (List.map model.variable_names clocks_to_remove)));
+			if debug_mode_greater Verbose_low then(
+				print_message Verbose_low ("The following clocks will be dynamically removed:");
+				print_message Verbose_low ("  " ^ (string_of_list_of_string_with_sep ", " (List.map model.variable_names clocks_to_remove)));
 			);
 			
-			print_message Debug_high ("\nRemoving useless clocks ");
+			print_message Verbose_high ("\nRemoving useless clocks ");
 			LinearConstraint.px_hide_assign clocks_to_remove current_constraint;
 			(* Print some information *)
-			if debug_mode_greater Debug_total then(
-				print_message Debug_total (LinearConstraint.string_of_px_linear_constraint model.variable_names current_constraint);
+			if debug_mode_greater Verbose_total then(
+				print_message Verbose_total (LinearConstraint.string_of_px_linear_constraint model.variable_names current_constraint);
 			);
 		);
 		
@@ -1591,36 +1591,36 @@ let inverse_method_check_constraint model reachability_graph constr =
 	let pi0 = Input.get_pi0 () in
 	
 	(* Hide non-parameters *)
-	print_message Debug_high ("\nHiding non parameters...");
+	print_message Verbose_high ("\nHiding non parameters...");
 	let p_constraint = LinearConstraint.px_hide_nonparameters_and_collapse (*model.clocks_and_discrete*) constr in
-	print_message Debug_high ("\nParameters now hidden:");
+	print_message Verbose_high ("\nParameters now hidden:");
 	(* Print some information *)
-	if debug_mode_greater Debug_high then(
-		print_message Debug_high (LinearConstraint.string_of_p_linear_constraint model.variable_names p_constraint);
+	if debug_mode_greater Verbose_high then(
+		print_message Verbose_high (LinearConstraint.string_of_p_linear_constraint model.variable_names p_constraint);
 	);
 	(* Check the pi0-compatibility *)
-	print_message Debug_high ("\nChecking pi-compatibility:");
+	print_message Verbose_high ("\nChecking pi-compatibility:");
 	let compatible, incompatible = LinearConstraint.partition_pi0_compatible pi0#get_value p_constraint in
 	let is_pi0_incompatible = incompatible != [] in
 	
 	(* If pi0-incompatible: select an inequality *)
 	if is_pi0_incompatible then (
-		print_message Debug_low ("\nFound a pi0-incompatible state.");
+		print_message Verbose_low ("\nFound a pi0-incompatible state.");
 		(* Print some information *)
-		if debug_mode_greater Debug_medium then(
-			print_message Debug_high ("Associated constraint:");
-			print_message Debug_high (LinearConstraint.string_of_px_linear_constraint model.variable_names constr);
-			print_message Debug_medium ("\nThe following inequalities are pi0-incompatible:");
-			List.iter (fun inequality -> print_message Debug_medium (LinearConstraint.string_of_p_linear_inequality model.variable_names inequality)) incompatible;
-			if debug_mode_greater Debug_high then(
-				print_message Debug_high ("\nRecall that pi0 is:");
-				print_message Debug_high   (ModelPrinter.string_of_pi0 model pi0);
+		if debug_mode_greater Verbose_medium then(
+			print_message Verbose_high ("Associated constraint:");
+			print_message Verbose_high (LinearConstraint.string_of_px_linear_constraint model.variable_names constr);
+			print_message Verbose_medium ("\nThe following inequalities are pi0-incompatible:");
+			List.iter (fun inequality -> print_message Verbose_medium (LinearConstraint.string_of_p_linear_inequality model.variable_names inequality)) incompatible;
+			if debug_mode_greater Verbose_high then(
+				print_message Verbose_high ("\nRecall that pi0 is:");
+				print_message Verbose_high   (ModelPrinter.string_of_pi0 model pi0);
 			);
 		);
 		
 		(* Case EFIM: no need to select a pi-incompatible inequality if already bad *)
 		if options#efim && !tile_nature = Bad then(
-			print_message Debug_low ("\n[EFIM] Cut branch.");
+			print_message Verbose_low ("\n[EFIM] Cut branch.");
 			(false , p_constraint)
 		
 		(* Case normal IM: select a pi-incompatible inequality *)
@@ -1632,9 +1632,9 @@ let inverse_method_check_constraint model reachability_graph constr =
 				else List.nth incompatible 0
 			in
 			(* Print some information *)
-			if debug_mode_greater  Debug_medium then(
-				print_message Debug_medium ("\nSelecting the following pi0-incompatible inequality:");
-				print_message Debug_medium (LinearConstraint.string_of_p_linear_inequality model.variable_names p_inequality);
+			if debug_mode_greater  Verbose_medium then(
+				print_message Verbose_medium ("\nSelecting the following pi0-incompatible inequality:");
+				print_message Verbose_medium (LinearConstraint.string_of_p_linear_inequality model.variable_names p_inequality);
 			);
 
 			(* Update counter *)
@@ -1643,11 +1643,11 @@ let inverse_method_check_constraint model reachability_graph constr =
 			(* Negate the inequality *)
 			let negated_inequality = LinearConstraint.negate_wrt_pi0 pi0#get_value p_inequality in
 			(* Print some information *)
-			if debug_mode_greater Debug_standard then(
+			if debug_mode_greater Verbose_standard then(
 				let randomly = if not options#no_random then "randomly " else "" in
 				let among = if List.length incompatible > 1 then (" (" ^ randomly ^ "selected among " ^ (string_of_int (List.length incompatible)) ^ " inequalities)") else "" in
-				print_message Debug_standard ("  Adding the following inequality" ^ among ^ ":");
-				print_message Debug_standard ("  " ^ (LinearConstraint.string_of_p_linear_inequality model.variable_names negated_inequality));
+				print_message Verbose_standard ("  Adding the following inequality" ^ among ^ ":");
+				print_message Verbose_standard ("  " ^ (LinearConstraint.string_of_p_linear_inequality model.variable_names negated_inequality));
 			);
 			
 			(* Transform to constraint *)
@@ -1657,13 +1657,13 @@ let inverse_method_check_constraint model reachability_graph constr =
 			(* Add the p_constraint to the result (except in case of variants) *)
 			(*** WARNING: why not in case of variants ?! ***)
 			if not (options#pi_compatible || options#union) then(
-				print_message Debug_high ("Updating k_result with the negated inequality");
+				print_message Verbose_high ("Updating k_result with the negated inequality");
 				LinearConstraint.p_intersection_assign !k_result [negated_constraint];
 				(* Print some information *)
-				if debug_mode_greater Debug_low then(
-					print_message Debug_low ("\nk_result now equal (after addition of neg J) to ");
-					print_message Debug_low (LinearConstraint.string_of_p_linear_constraint model.variable_names !k_result);
-					print_message Debug_low ("");
+				if debug_mode_greater Verbose_low then(
+					print_message Verbose_low ("\nk_result now equal (after addition of neg J) to ");
+					print_message Verbose_low (LinearConstraint.string_of_p_linear_constraint model.variable_names !k_result);
+					print_message Verbose_low ("");
 				);
 			);
 			
@@ -1671,10 +1671,10 @@ let inverse_method_check_constraint model reachability_graph constr =
 			(* Not for EFIM! *)
 			(*** NOTE: maybe not for IMK either? ****)
 			if not options#efim then(
-				print_message Debug_medium ("\nUpdating all the previous states.\n");
+				print_message Verbose_medium ("\nUpdating all the previous states.\n");
 				StateSpace.add_p_constraint_to_states reachability_graph negated_constraint;
 			)else(
-				print_message Debug_standard("  [EFIM] Storing inequality only");
+				print_message Verbose_standard("  [EFIM] Storing inequality only");
 			);
 			
 			(* If pi-incompatible *)
@@ -1698,15 +1698,15 @@ let completeIM_check_constraint model reachability_graph constr =
 	let pi0 = Input.get_pi0 () in
 	
 	(* Hide non-parameters *)
-	print_message Debug_high ("\nHiding non parameters...");
+	print_message Verbose_high ("\nHiding non parameters...");
 	let p_constraint = LinearConstraint.px_hide_nonparameters_and_collapse constr in
-	print_message Debug_high ("\nParameters now hidden:");
+	print_message Verbose_high ("\nParameters now hidden:");
 	(* Print some information *)
-	if debug_mode_greater Debug_high then(
-		print_message Debug_high (LinearConstraint.string_of_p_linear_constraint model.variable_names p_constraint);
+	if debug_mode_greater Verbose_high then(
+		print_message Verbose_high (LinearConstraint.string_of_p_linear_constraint model.variable_names p_constraint);
 	);
 	(* Check the pi0-compatibility *)
-	print_message Debug_high ("\nChecking pi-compatibility:");
+	print_message Verbose_high ("\nChecking pi-compatibility:");
 	let is_compatible = LinearConstraint.is_pi0_compatible pi0#get_value p_constraint in
 	(* Return the pi0-compatibility and the p_constraint *)
 	is_compatible , p_constraint
@@ -1746,7 +1746,7 @@ let compute_transitions model location constr action_index automata aut_table ma
 				if not is_possible then (
 					(* Statistics *)
 					nb_early_unsatisfiable := !nb_early_unsatisfiable + 1;
-					print_message Debug_medium "** early skip transition **"
+					print_message Verbose_medium "** early skip transition **"
 				);
 				is_possible(*true*)
 			) in
@@ -1762,7 +1762,7 @@ let compute_transitions model location constr action_index automata aut_table ma
 			if !legal_transitions = [] then (
 				(* Statistics *)
 				nb_early_skip := !nb_early_skip + 1;
-				print_message Debug_medium "*** early skip action ***";
+				print_message Verbose_medium "*** early skip action ***";
 				raise Unsat_exception
 			);
 			(* Store possible transitions *)
@@ -1824,13 +1824,13 @@ let add_a_new_state model reachability_graph orig_state_index new_states_indexes
 			
 			(* If pi-compatible state: add the new state's p_constraint to the on-the-fly computation of the result of IMss *)
 			if valid_new_state && not (options#pi_compatible || options#union || options#efim) then(
-				print_message Debug_high ("Updating k_result");
+				print_message Verbose_high ("Updating k_result");
 				LinearConstraint.p_intersection_assign !k_result [new_p_constraint];
 				(* Print some information *)
-				if debug_mode_greater Debug_low then(
-					print_message Debug_low ("\nk_result now equal (after addition of current state's K) to ");
-					print_message Debug_low (LinearConstraint.string_of_p_linear_constraint model.variable_names !k_result);
-					print_message Debug_low ("");
+				if debug_mode_greater Verbose_low then(
+					print_message Verbose_low ("\nk_result now equal (after addition of current state's K) to ");
+					print_message Verbose_low (LinearConstraint.string_of_p_linear_constraint model.variable_names !k_result);
+					print_message Verbose_low ("");
 				);
 			);
 			(* Return locally the result *)
@@ -1840,12 +1840,12 @@ let add_a_new_state model reachability_graph orig_state_index new_states_indexes
 		in
 
 		(* Print some information *)
-		if debug_mode_greater Debug_high then(
+		if debug_mode_greater Verbose_high then(
 			(* Means state was not compatible *)
 			if not valid_new_state then(
 				let new_state = location, final_constraint in
-				if debug_mode_greater Debug_high then
-					print_message Debug_high ("The pi-incompatible state had been computed through action '" ^ (model.action_names action_index) ^ "', and was:\n" ^ (string_of_state model new_state));
+				if debug_mode_greater Verbose_high then
+					print_message Verbose_high ("The pi-incompatible state had been computed through action '" ^ (model.action_names action_index) ^ "', and was:\n" ^ (string_of_state model new_state));
 			);
 		);
 		(* Return *)
@@ -1861,8 +1861,8 @@ let add_a_new_state model reachability_graph orig_state_index new_states_indexes
 		let new_state = location, final_constraint in
 
 		(* Print some information *)
-		if debug_mode_greater Debug_total then(
-			print_message Debug_total ("Consider the state \n" ^ (string_of_state model new_state));
+		if debug_mode_greater Verbose_total then(
+			print_message Verbose_total ("Consider the state \n" ^ (string_of_state model new_state));
 		);
 
 		(* If IM or BC: Add the inequality to the result (except if case variants) *)
@@ -1874,7 +1874,7 @@ let add_a_new_state model reachability_graph orig_state_index new_states_indexes
 				-> ()
 			(* Case IM / BC: *)
 			| _ -> if not (options#pi_compatible || options#union) then(
-					print_message Debug_high ("Updating k_result");
+					print_message Verbose_high ("Updating k_result");
 					LinearConstraint.p_intersection_assign !k_result [inequality];
 				);
 		end;*)
@@ -1925,7 +1925,7 @@ let add_a_new_state model reachability_graph orig_state_index new_states_indexes
 						| None -> ()
 						(* Project *)
 						| Some parameters ->
-							print_message Debug_medium "  [EF-synthesis] Projecting onto some of the parameters.";
+							print_message Verbose_medium "  [EF-synthesis] Projecting onto some of the parameters.";
 							(*** TODO! do only once for all... ***)
 							let all_but_projectparameters = list_diff model.parameters parameters in
 							(* Eliminate other parameters *)
@@ -1937,16 +1937,16 @@ let add_a_new_state model reachability_graph orig_state_index new_states_indexes
 						(*** TODO: merge this list on-the-fly!! ***)
 						(*** TODO: even better, directly use a non-convex constraint using PPL, and leave the work to PPL ***)
 						if List.exists (LinearConstraint.p_is_leq p_constraint) !p_constraints then(
-							print_message Debug_low "  [EF-synthesis] Found a state violating the property but the constraint is not new.";
+							print_message Verbose_low "  [EF-synthesis] Found a state violating the property but the constraint is not new.";
 						)else(
 							p_constraints := p_constraint :: !p_constraints;
 							(* Print some information *)
-							print_message Debug_standard "  [EF-synthesis] Found a state violating the property.";
+							print_message Verbose_standard "  [EF-synthesis] Found a state violating the property.";
 							
 							(* Print some information *)
-							if debug_mode_greater Debug_medium then(
-								print_message Debug_medium "Adding the following constraint to the list of bad constraints:";
-								print_message Debug_medium (LinearConstraint.string_of_p_linear_constraint model.variable_names p_constraint);
+							if debug_mode_greater Verbose_medium then(
+								print_message Verbose_medium "Adding the following constraint to the list of bad constraints:";
+								print_message Verbose_medium (LinearConstraint.string_of_p_linear_constraint model.variable_names p_constraint);
 							);
 							
 						);
@@ -1955,7 +1955,7 @@ let add_a_new_state model reachability_graph orig_state_index new_states_indexes
 						to_be_added := false;
 						
 					)else(
-						print_message Debug_medium "EF-synthesis: State not corresponding to the one wanted.";
+						print_message Verbose_medium "EF-synthesis: State not corresponding to the one wanted.";
 					);
 				| _ -> raise (InternalError("[EF-synthesis] IMITATOR currently ony implements the non-reachability-like properties. This should have been checked before."))
 			); (* end if EF_synthesis *)
@@ -1968,7 +1968,7 @@ let add_a_new_state model reachability_graph orig_state_index new_states_indexes
 		(* ELSE : add to SLAST if mode union *)
 		else (
 			if options#union then (
-				print_message Debug_low ("\nMode union: adding a looping state to SLast.");
+				print_message Verbose_low ("\nMode union: adding a looping state to SLast.");
 				(* Adding the state *)
 				(*** TODO / TO CHECK: what if new_state_index is already in slast?!! ***)
 				slast := new_state_index :: !slast;
@@ -1978,10 +1978,10 @@ let add_a_new_state model reachability_graph orig_state_index new_states_indexes
 		(* Update the transitions *)
 		StateSpace.add_transition reachability_graph (orig_state_index, action_index, new_state_index);
 		(* Print some information *)
-		if debug_mode_greater Debug_high then (
+		if debug_mode_greater Verbose_high then (
 			let beginning_message = (if added then "NEW STATE" else "Old state") in
-			print_message Debug_high ("\n" ^ beginning_message ^ " reachable through action '" ^ (model.action_names action_index) ^ "': ");
-			print_message Debug_high (string_of_state model new_state);
+			print_message Verbose_high ("\n" ^ beginning_message ^ " reachable through action '" ^ (model.action_names action_index) ^ "': ");
+			print_message Verbose_high (string_of_state model new_state);
 		);
 	); (* end if add new state *)
 	(* Return void *)
@@ -2007,23 +2007,23 @@ let post_from_one_state model reachability_graph orig_state_index =
 	in
 
 	(* Debug prints *)
-	if debug_mode_greater Debug_high then(
+	if debug_mode_greater Verbose_high then(
 		let orig_state = StateSpace.get_state reachability_graph orig_state_index in
 		let _, orig_constraint = orig_state in
 		let orig_constraint_projection = LinearConstraint.px_hide_nonparameters_and_collapse orig_constraint in
-		print_message Debug_high ("Performing post from state:");
-		print_message Debug_high (string_of_state model orig_state);
-		print_message Debug_high ("\nThe projection of this constraint onto the parameters is:");
-		print_message Debug_high (LinearConstraint.string_of_p_linear_constraint model.variable_names orig_constraint_projection);
+		print_message Verbose_high ("Performing post from state:");
+		print_message Verbose_high (string_of_state model orig_state);
+		print_message Verbose_high ("\nThe projection of this constraint onto the parameters is:");
+		print_message Verbose_high (LinearConstraint.string_of_p_linear_constraint model.variable_names orig_constraint_projection);
 	);
 
 	(* get possible actions originating from current state *)
 	let list_of_possible_actions = compute_possible_actions model original_location in
 
 	(* Print some information *)
-	if debug_mode_greater Debug_high then (
+	if debug_mode_greater Verbose_high then (
 		let actions_string = List.map (fun action_index -> model.action_names action_index) list_of_possible_actions in
-		print_message Debug_high ("Possible synchronized actions are: " ^ (string_of_list_of_string_with_sep ", " actions_string));
+		print_message Verbose_high ("Possible synchronized actions are: " ^ (string_of_list_of_string_with_sep ", " actions_string));
 	);
 
 	(* Build the list of new states indexes *)
@@ -2042,7 +2042,7 @@ let post_from_one_state model reachability_graph orig_state_index =
 	(* FOR ALL ACTION DO: *)
 	List.iter (fun action_index ->
 
-		print_message Debug_medium ("\nComputing destination states for action '" ^ (model.action_names action_index) ^ "'");
+		print_message Verbose_medium ("\nComputing destination states for action '" ^ (model.action_names action_index) ^ "'");
 		(* Get the automata declaring the action *)
 		let automata_for_this_action = model.automata_per_action action_index in
 		let nb_automata_for_this_action = List.length automata_for_this_action in
@@ -2070,9 +2070,9 @@ let post_from_one_state model reachability_graph orig_state_index =
 		let legal_transitions_exist = compute_transitions model original_location orig_plus_discrete action_index automata_for_this_action real_indexes max_indexes possible_transitions in 
 	
 		(* Debug: compute the number of combinations *)
-		if debug_mode_greater Debug_medium || options#statistics then(
+		if debug_mode_greater Verbose_medium || options#statistics then(
 			let new_nb_combinations = Array.fold_left (fun sum max -> sum * (max + 1)) 1 max_indexes in
-			print_message Debug_medium ("" ^ (string_of_int new_nb_combinations) ^ " combination" ^ (s_of_int new_nb_combinations) ^ " will be considered for this state and this action\n");
+			print_message Verbose_medium ("" ^ (string_of_int new_nb_combinations) ^ " combination" ^ (s_of_int new_nb_combinations) ^ " will be considered for this state and this action\n");
 			(* Update for statistics *)
 			nb_combinations := !nb_combinations + new_nb_combinations;
 		);
@@ -2083,12 +2083,12 @@ let post_from_one_state model reachability_graph orig_state_index =
 		while !more_combinations do
 			debug_i := !debug_i +1;
 			(* Print some information *)
-			if debug_mode_greater Debug_total then (
+			if debug_mode_greater Verbose_total then (
 				let local_indexes = string_of_array_of_string_with_sep "\n\t" (
 				Array.mapi (fun local_index real_index ->
 					(string_of_int local_index) ^ " -> " ^ (string_of_int real_index) ^ " : " ^ (string_of_int current_indexes.(local_index)) ^ "; ";
 				) real_indexes) in
-				print_message Debug_total ("\n\n\n--- Consider the combination " ^ (string_of_int !debug_i) ^ " \n\t" ^ local_indexes);
+				print_message Verbose_total ("\n\n\n--- Consider the combination " ^ (string_of_int !debug_i) ^ " \n\t" ^ local_indexes);
 			);
 	
 			(* build the current combination of transitions *)
@@ -2108,12 +2108,12 @@ let post_from_one_state model reachability_graph orig_state_index =
 				| None -> 
 					(* Statistics *)
 					nb_unsatisfiable := !nb_unsatisfiable + 1;
-					print_message Debug_high ("\nThis constraint is not satisfiable ('None').");
+					print_message Verbose_high ("\nThis constraint is not satisfiable ('None').");
 				| Some (final_constraint : LinearConstraint.px_linear_constraint) -> (
 					if not (LinearConstraint.px_is_satisfiable final_constraint) then(
 						(* Statistics *)
 						nb_unsatisfiable := !nb_unsatisfiable + 1;
-						print_message Debug_high ("\nThis constraint is not satisfiable ('Some unsatisfiable').");
+						print_message Verbose_high ("\nThis constraint is not satisfiable ('Some unsatisfiable').");
 					) else (
 					
 					(* Increment a counter: this state IS generated (although maybe it will be discarded because equal / merged / algorithmic discarding ...) *)
@@ -2148,7 +2148,7 @@ let post_from_one_state model reachability_graph orig_state_index =
 	
 	(* If new_states is empty : the current state is a last state *)
 	if options#union && !new_states_indexes = [] then (
-		print_message Debug_low ("\nMode union: adding a state without successor to SLast.");
+		print_message Verbose_low ("\nMode union: adding a state without successor to SLast.");
 		(* Adding the state *)
 		slast := orig_state_index :: !slast;
 	);
@@ -2284,15 +2284,15 @@ let branch_and_bound model init_state =
 	(*Initialization of k_result*)
 	k_result := LinearConstraint.px_hide_nonparameters_and_collapse init_constr;
 
-	print_message Debug_standard ("START BRANCH AND BOUND");
+	print_message Verbose_standard ("START BRANCH AND BOUND");
 	
 	(* Instantiate all costs associated to locations, for once *)
-	print_message Debug_standard ("Instantiate costs");
+	print_message Verbose_standard ("Instantiate costs");
 	instantiate_costs model pi0;
 	
 	(* Print some information *)
-	if debug_mode_greater Debug_total then (
-		print_message Debug_standard ("Print costs");
+	if debug_mode_greater Verbose_total then (
+		print_message Verbose_standard ("Print costs");
 		(* For each automaton *)
 		for automaton_index = 0 to model.nb_automata - 1 do
 			(* Retrieve the number of locations for this automaton *)
@@ -2302,7 +2302,7 @@ let branch_and_bound model init_state =
 				(* Retrieve the cost *)
 				let cost = (!instantiated_costs).(automaton_index).(location_index) in
 				(* Print it *)
-					print_message Debug_total ((model.automata_names automaton_index) ^ " --> " ^ (model.location_names automaton_index location_index) ^ " : " ^ (NumConst.string_of_numconst cost));
+					print_message Verbose_total ((model.automata_names automaton_index) ^ " --> " ^ (model.location_names automaton_index location_index) ^ " : " ^ (NumConst.string_of_numconst cost));
 			done;
 		done;
 		
@@ -2315,12 +2315,12 @@ let branch_and_bound model init_state =
 	nb_random_selections := 0;
 
 	(* Debut prints *)
-	print_message Debug_low ("Starting reachability analysis from state:");
-	print_message Debug_low (string_of_state model init_state);
+	print_message Verbose_low ("Starting reachability analysis from state:");
+	print_message Verbose_low (string_of_state model init_state);
 	(* Guess the number of reachable states *)
 	let guessed_nb_states = 10 * (nb_actions + nb_automata + nb_variables) in 
 	let guessed_nb_transitions = guessed_nb_states * nb_actions in 
-	print_message Debug_total ("I guess I will reach about " ^ (string_of_int guessed_nb_states) ^ " states with " ^ (string_of_int guessed_nb_transitions) ^ " transitions.");
+	print_message Verbose_total ("I guess I will reach about " ^ (string_of_int guessed_nb_states) ^ " states with " ^ (string_of_int guessed_nb_transitions) ^ " transitions.");
 
 	(* Create the reachability graph *)
 	let reachability_graph = StateSpace.make guessed_nb_transitions in
@@ -2334,8 +2334,8 @@ let branch_and_bound model init_state =
 	(* Create the tree for exploration *)
 	let rtree = ReachabilityTree.create guessed_nb_states init_state_index in
 	
-	if debug_mode_greater Debug_total then(
-		print_message Debug_total ("\nReachability tree initialized:\n" ^ (ReachabilityTree.string_of_rtree string_of_int rtree));
+	if debug_mode_greater Verbose_total then(
+		print_message Verbose_total ("\nReachability tree initialized:\n" ^ (ReachabilityTree.string_of_rtree string_of_int rtree));
 	);
 
 	(*--------------------------------------------------*)
@@ -2351,11 +2351,11 @@ let branch_and_bound model init_state =
 	
 	(* Check if the list of new states is empty *)
 	while not (!limit_reached  || !nb_states_to_visit = 0) do
-		if debug_mode_greater Debug_standard then (
-			print_message Debug_low ("\n");
-			print_message Debug_standard ("Computing successors of state " ^ (string_of_int !current_state_index));
-			if debug_mode_greater Debug_medium then (
-				print_message Debug_medium (string_of_state model (StateSpace.get_state reachability_graph !current_state_index ));
+		if debug_mode_greater Verbose_standard then (
+			print_message Verbose_low ("\n");
+			print_message Verbose_standard ("Computing successors of state " ^ (string_of_int !current_state_index));
+			if debug_mode_greater Verbose_medium then (
+				print_message Verbose_medium (string_of_state model (StateSpace.get_state reachability_graph !current_state_index ));
 			);
 		);
 		
@@ -2382,20 +2382,20 @@ let branch_and_bound model init_state =
 		ReachabilityTree.set_visited !current_state_index rtree;
 		
 		(* Print some information *)
-		if debug_mode_greater Debug_medium then (
+		if debug_mode_greater Verbose_medium then (
 			let beginning_message = if new_states = [] then "\nFound no new state" else ("\nFound " ^ (string_of_int (List.length new_states)) ^ " new state" ^ (s_of_int (List.length new_states)) ^ "") in
-			print_message Debug_medium (beginning_message ^ ".\n");
+			print_message Verbose_medium (beginning_message ^ ".\n");
 		);
 		
-		if debug_mode_greater Debug_total then(
-			print_message Debug_total ("\nReachability tree now as follows:\n" ^ (ReachabilityTree.string_of_rtree string_of_int rtree));
+		if debug_mode_greater Verbose_total then(
+			print_message Verbose_total ("\nReachability tree now as follows:\n" ^ (ReachabilityTree.string_of_rtree string_of_int rtree));
 		);
 		(* If acyclic option: empty the list of already reached states for comparison with former states *)
 		
 		(** TODO : recheck this !! (I guess very dangerous, because would empty the whole list of states to compare!) *)
 		
 		if options#acyclic then(
-			print_message Debug_low ("\nMode acyclic: empty the list of states to be compared.");
+			print_message Verbose_low ("\nMode acyclic: empty the list of states to be compared.");
 			empty_states_for_comparison reachability_graph;
 		);
 		
@@ -2409,8 +2409,8 @@ let branch_and_bound model init_state =
 		
 		(* Update the new state to visit *)
 		if !nb_states_to_visit > 0 then(
-			print_message Debug_high ("Recall that current element in the reachability tree is " ^ (string_of_int !current_state_index));
-			print_message Debug_medium ("Finding next element in the reachability tree...");
+			print_message Verbose_high ("Recall that current element in the reachability tree is " ^ (string_of_int !current_state_index));
+			print_message Verbose_medium ("Finding next element in the reachability tree...");
 			try(
 				current_state_index := ReachabilityTree.get_next_element rtree;
 			) with Not_found -> (
@@ -2434,7 +2434,7 @@ let branch_and_bound model init_state =
 		print_warnings_limit 0 (** TODO: check depth *) (StateSpace.nb_states reachability_graph) (time_from start_time) !nb_states_to_visit;
 	);
 		
-	print_message Debug_standard (
+	print_message Verbose_standard (
 		let nb_states = StateSpace.nb_states reachability_graph in
 		let nb_transitions = StateSpace.nb_transitions reachability_graph in
 		"\nFixpoint reached: "
@@ -2464,15 +2464,15 @@ let post_star model init_state =
 	let init_state = (init_loc, LinearConstraint.px_copy init_constr) in
 
 	(* Initialization of global variables *)
-	print_message Debug_low ("Initializing global variables...");
+	print_message Verbose_low ("Initializing global variables...");
 	k_result := LinearConstraint.px_hide_nonparameters_and_collapse init_constr;
 	p_constraints := [];
 
 	(* Print some information *)
-	if debug_mode_greater Debug_low then(
-		print_message Debug_low ("Initialized k_result to ");
-		print_message Debug_low (LinearConstraint.string_of_p_linear_constraint model.variable_names !k_result);
-		print_message Debug_low ("");
+	if debug_mode_greater Verbose_low then(
+		print_message Verbose_low ("Initialized k_result to ");
+		print_message Verbose_low (LinearConstraint.string_of_p_linear_constraint model.variable_names !k_result);
+		print_message Verbose_low ("");
 	);
 
 	(*Initialization of slast : used in union mode only*)
@@ -2483,12 +2483,12 @@ let post_star model init_state =
 	nb_random_selections := 0;
 
 	(* Debut prints *)
-	print_message Debug_low ("Starting reachability analysis from state:");
-	print_message Debug_low (string_of_state model init_state);
+	print_message Verbose_low ("Starting reachability analysis from state:");
+	print_message Verbose_low (string_of_state model init_state);
 	(* Guess the number of reachable states *)
 	let guessed_nb_states = 10 * (nb_actions + nb_automata + nb_variables) in 
 	let guessed_nb_transitions = guessed_nb_states * nb_actions in 
-	print_message Debug_total ("I guess I will reach about " ^ (string_of_int guessed_nb_states) ^ " states with " ^ (string_of_int guessed_nb_transitions) ^ " transitions.");
+	print_message Verbose_total ("I guess I will reach about " ^ (string_of_int guessed_nb_states) ^ " states with " ^ (string_of_int guessed_nb_transitions) ^ " transitions.");
 	(* Create the reachability graph *)
 	let reachability_graph = StateSpace.make guessed_nb_transitions in
 	
@@ -2509,9 +2509,9 @@ let post_star model init_state =
 	(* Check if the list of new states is empty *)
 	while not (!limit_reached  || !newly_found_new_states = []) do
 		(* Print some information *)
-		if debug_mode_greater Debug_standard then (
-			print_message Debug_low ("\n");
-			print_message Debug_standard ("Computing post^" ^ (string_of_int (!nb_iterations)) ^ " from "  ^ (string_of_int (List.length !newly_found_new_states)) ^ " state" ^ (s_of_int (List.length !newly_found_new_states)) ^ ".");
+		if debug_mode_greater Verbose_standard then (
+			print_message Verbose_low ("\n");
+			print_message Verbose_standard ("Computing post^" ^ (string_of_int (!nb_iterations)) ^ " from "  ^ (string_of_int (List.length !newly_found_new_states)) ^ " state" ^ (s_of_int (List.length !newly_found_new_states)) ^ ".");
 		);
 		
 		(* Count the states for debug purpose: *)
@@ -2527,9 +2527,9 @@ let post_star model init_state =
 			(* Perform the post *)
 			let new_states = post_from_one_state model reachability_graph orig_state_index in
 			(* Print some information *)
-			if debug_mode_greater Debug_medium then (
+			if debug_mode_greater Verbose_medium then (
 				let beginning_message = if new_states = [] then "Found no new state" else ("Found " ^ (string_of_int (List.length new_states)) ^ " new state" ^ (s_of_int (List.length new_states)) ^ "") in
-				print_message Debug_medium (beginning_message ^ " for the post of state " ^ (string_of_int !num_state) ^ " / " ^ (string_of_int nb_states) ^ " in post^" ^ (string_of_int (!nb_iterations)) ^ ".\n");
+				print_message Verbose_medium (beginning_message ^ " for the post of state " ^ (string_of_int !num_state) ^ " / " ^ (string_of_int nb_states) ^ " in post^" ^ (string_of_int (!nb_iterations)) ^ ".\n");
 			);
 			
 			(* Return the concatenation of the new states *)
@@ -2552,14 +2552,14 @@ let post_star model init_state =
 		(* Update the newly_found_new_states *)
 		newly_found_new_states := !new_states_after_merging;
 		(* Print some information *)
-		if debug_mode_greater Debug_medium then (
+		if debug_mode_greater Verbose_medium then (
 			let beginning_message = if !newly_found_new_states = [] then "\nFound no new state" else ("\nFound " ^ (string_of_int (List.length !newly_found_new_states)) ^ " new state" ^ (s_of_int (List.length !newly_found_new_states)) ^ "") in
-			print_message Debug_medium (beginning_message ^ " for post^" ^ (string_of_int (!nb_iterations)) ^ ".\n");
+			print_message Verbose_medium (beginning_message ^ " for post^" ^ (string_of_int (!nb_iterations)) ^ ".\n");
 		);
 		
 		(* If acyclic option: empty the list of already reached states for comparison with former states *)
 		if options#acyclic then(
-			print_message Debug_low ("\nMode acyclic: empty the list of states to be compared.");
+			print_message Verbose_low ("\nMode acyclic: empty the list of states to be compared.");
 			empty_states_for_comparison reachability_graph;
 		);
 		
@@ -2567,7 +2567,7 @@ let post_star model init_state =
 		(*** TO OPTIMIZE !!! (at least compute pi0_constraint once for all) ***)
 		(*** WARNING!! ONLY works for the classical inverse method (not for variants) ***)
 		if options#check_point then(
-			print_message Debug_low ("\nMode check-point: checking whether the resulting constraint is restricted to pi0...");
+			print_message Verbose_low ("\nMode check-point: checking whether the resulting constraint is restricted to pi0...");
 			(* Get all constraints *)
 			let all_p_constraints = StateSpace.all_p_constraints model reachability_graph in
 			(* Computing the constraint intersection *)
@@ -2579,13 +2579,13 @@ let post_star model init_state =
 			(* Converting pi0 to a constraint *)
 			let pi0_constraint = LinearConstraint.p_constraint_of_point pi0_list in
 			(* Print *)
-			if debug_mode_greater Debug_medium then(
-				print_message Debug_medium ("\nPi0: " ^ (LinearConstraint.string_of_p_linear_constraint model.variable_names pi0_constraint));
+			if debug_mode_greater Verbose_medium then(
+				print_message Verbose_medium ("\nPi0: " ^ (LinearConstraint.string_of_p_linear_constraint model.variable_names pi0_constraint));
 			);
 			(* Checking whether the constraint is *included* within pi0 *)
 			if LinearConstraint.p_is_leq current_intersection pi0_constraint then(
 				(* Print message *)
-				print_message Debug_standard ("\nCurrent accumulated constraint is now restricted to pi0. Analysis can safely terminate.");
+				print_message Verbose_standard ("\nCurrent accumulated constraint is now restricted to pi0. Analysis can safely terminate.");
 				(* Stop *)
 				limit_reached := true;
 			);
@@ -2613,7 +2613,7 @@ let post_star model init_state =
 		print_warnings_limit !nb_iterations (StateSpace.nb_states reachability_graph) (time_from start_time) (List.length !newly_found_new_states);
 	);
 
-	print_message Debug_standard (
+	print_message Verbose_standard (
 		let nb_states = StateSpace.nb_states reachability_graph in
 		let nb_transitions = StateSpace.nb_transitions reachability_graph in
 		"\nFixpoint reached after "
@@ -2648,51 +2648,51 @@ let print_statistics total_time reachability_graph =
 	(* Speed (number of states in the graph) *)
 	let nb_states = StateSpace.nb_states reachability_graph in
 	let average = (float_of_int nb_states) /. total_time in
-	print_message Debug_standard ("\nStates per second in the graph: " ^ (string_of_average average) ^ " (" ^ (string_of_int nb_states) ^ "/" ^ (string_of_seconds total_time) ^ ")");
+	print_message Verbose_standard ("\nStates per second in the graph: " ^ (string_of_average average) ^ " (" ^ (string_of_int nb_states) ^ "/" ^ (string_of_seconds total_time) ^ ")");
 	
 	(* Speed (number of states computed, even if not kept) *)
 	let nb_gen_states = StateSpace.get_nb_gen_states reachability_graph in
 	let average = (float_of_int nb_gen_states) /. total_time in
-	print_message Debug_standard ("States computed per second: " ^ (string_of_average average) ^ " (" ^ (string_of_int nb_gen_states) ^ "/" ^ (string_of_seconds total_time) ^ ")");
+	print_message Verbose_standard ("States computed per second: " ^ (string_of_average average) ^ " (" ^ (string_of_int nb_gen_states) ^ "/" ^ (string_of_seconds total_time) ^ ")");
 
 	
 	if options#statistics then (
 		(* PPL *)
-		print_message Debug_standard "--------------------";
-		print_message Debug_standard "Statistics on PPL";
-		print_message Debug_standard ("--------------------" ^ (LinearConstraint.get_statistics total_time));
+		print_message Verbose_standard "--------------------";
+		print_message Verbose_standard "Statistics on PPL";
+		print_message Verbose_standard ("--------------------" ^ (LinearConstraint.get_statistics total_time));
 		
 		(* Graph *)
-		print_message Debug_standard "--------------------";
-		print_message Debug_standard "Statistics on Graph";
-		print_message Debug_standard "--------------------";
-		print_message Debug_standard (StateSpace.get_statistics ());
-		print_message Debug_standard (StateSpace.get_statistics_states reachability_graph);
+		print_message Verbose_standard "--------------------";
+		print_message Verbose_standard "Statistics on Graph";
+		print_message Verbose_standard "--------------------";
+		print_message Verbose_standard (StateSpace.get_statistics ());
+		print_message Verbose_standard (StateSpace.get_statistics_states reachability_graph);
 		
-		print_message Debug_standard "--------------------";
-		print_message Debug_standard "Statistics on Cache";
-		print_message Debug_standard "--------------------";
+		print_message Verbose_standard "--------------------";
+		print_message Verbose_standard "Statistics on Cache";
+		print_message Verbose_standard "--------------------";
 		print_stats ();
 		
-		print_message Debug_standard "--------------------";
-		print_message Debug_standard "Statistics on Reachability";
-		print_message Debug_standard "--------------------";
-		print_message Debug_standard ("Number of early skips because of unsatisfiable guards: " ^ (string_of_int !nb_early_unsatisfiable));
-		print_message Debug_standard ("Number of early skips because no actions: " ^ (string_of_int !nb_early_skip));
-		print_message Debug_standard ("Number of unsatisfiable constraints: " ^ (string_of_int !nb_unsatisfiable));
-		print_message Debug_standard ("Number of unsat1: " ^ (string_of_int !nb_unsat1));
-		print_message Debug_standard ("Number of unsat2: " ^ (string_of_int !nb_unsat2));
-		print_message Debug_standard ("Number of combinations considered: " ^ (string_of_int !nb_combinations));
+		print_message Verbose_standard "--------------------";
+		print_message Verbose_standard "Statistics on Reachability";
+		print_message Verbose_standard "--------------------";
+		print_message Verbose_standard ("Number of early skips because of unsatisfiable guards: " ^ (string_of_int !nb_early_unsatisfiable));
+		print_message Verbose_standard ("Number of early skips because no actions: " ^ (string_of_int !nb_early_skip));
+		print_message Verbose_standard ("Number of unsatisfiable constraints: " ^ (string_of_int !nb_unsatisfiable));
+		print_message Verbose_standard ("Number of unsat1: " ^ (string_of_int !nb_unsat1));
+		print_message Verbose_standard ("Number of unsat2: " ^ (string_of_int !nb_unsat2));
+		print_message Verbose_standard ("Number of combinations considered: " ^ (string_of_int !nb_combinations));
 		
-		print_message Debug_standard "--------------------";
-		print_message Debug_standard "Statistics on memory";
-		print_message Debug_standard "--------------------";
-		print_memory_used Debug_standard;
+		print_message Verbose_standard "--------------------";
+		print_message Verbose_standard "Statistics on memory";
+		print_message Verbose_standard "--------------------";
+		print_memory_used Verbose_standard;
 		Gc.print_stat stdout;
-(*		print_message Debug_standard "--------------------";
+(*		print_message Verbose_standard "--------------------";
 		Gc.major();
 		Gc.print_stat stdout;
-		print_message Debug_standard "--------------------";
+		print_message Verbose_standard "--------------------";
 		Gc.full_major();
 		Gc.print_stat stdout;*)
 	)
@@ -2721,11 +2721,11 @@ let full_state_space_exploration model =
 	(* Call to generic function *)
 	let reachability_graph , _ , total_time ,  _ , _ = post_star model init_state in
 	
-	print_message Debug_standard (
+	print_message Verbose_standard (
 		"\nState space exploration completed " ^ (after_seconds ()) ^ "."
 	);
 		
-	print_message Debug_low (
+	print_message Verbose_low (
 		"Computation time: "
 		^ (string_of_seconds total_time) ^ "."
 	);
@@ -2755,15 +2755,15 @@ let ef_synthesis model =
 	(* Call to generic function *)
 	let reachability_graph , _ , total_time , _ ,  _ = post_star model init_state in
 	
-	print_message Debug_standard (
+	print_message Verbose_standard (
 		"\nState space exploration completed " ^ (after_seconds ()) ^ "."
 	);
 	
 	(* Print the result *)
-	print_message Debug_standard ("\nFinal constraint such that the property is *violated* (" ^ (string_of_int (List.length !p_constraints)) ^ " constraints): ");
-	print_message Debug_standard (string_of_list_of_string_with_sep "\n OR \n" (List.map (LinearConstraint.string_of_p_linear_constraint model.variable_names) !p_constraints));
+	print_message Verbose_standard ("\nFinal constraint such that the property is *violated* (" ^ (string_of_int (List.length !p_constraints)) ^ " constraints): ");
+	print_message Verbose_standard (string_of_list_of_string_with_sep "\n OR \n" (List.map (LinearConstraint.string_of_p_linear_constraint model.variable_names) !p_constraints));
 	
-	print_message Debug_low (
+	print_message Verbose_low (
 		"Computation time: "
 		^ (string_of_seconds total_time) ^ "."
 	);
@@ -2780,7 +2780,7 @@ let ef_synthesis model =
 	if options#cart then (
 		Graphics.cartography model (Input.get_v0()) zones (options#files_prefix ^ "_cart_ef")
 	) else (
-			print_message Debug_high "Graphical cartography not asked: graph not generated.";
+			print_message Verbose_high "Graphical cartography not asked: graph not generated.";
 	)
 
 	
@@ -2791,7 +2791,7 @@ let ef_synthesis model =
 (* Try to remove useless "bad" constraints *)
 let process_result_IMcomplete original_k_good original_k_bad =
 	(* Print some information *)
-	print_message Debug_standard ("Trying to simplify some of the " ^ (string_of_int (List.length original_k_bad)) ^ " bad constraint" ^ (s_of_int (List.length original_k_bad)) ^ "...");
+	print_message Verbose_standard ("Trying to simplify some of the " ^ (string_of_int (List.length original_k_bad)) ^ " bad constraint" ^ (s_of_int (List.length original_k_bad)) ^ "...");
 
 	(*	let k_good = match original_k_good with
 	| [k_good] -> k_good
@@ -2816,7 +2816,7 @@ let process_result_IMcomplete original_k_good original_k_bad =
 	in
 	
 	(* Print some information *)
-	print_message Debug_standard ((string_of_int !nb_useless) ^ " bad constraint" ^ (s_of_int !nb_useless) ^ " have been deleted.");
+	print_message Verbose_standard ((string_of_int !nb_useless) ^ " bad constraint" ^ (s_of_int !nb_useless) ^ " have been deleted.");
 	
 	(*** TODO: merge!! ***)
 	
@@ -2842,27 +2842,27 @@ let inverse_method_gen model init_state =
 	(*(* TEST FOR BRANCH AND BOUND *)
 	if options#branch_and_bound then(
 		
-		print_message Debug_standard "1) BRANCH AND BOUND";
+		print_message Verbose_standard "1) BRANCH AND BOUND";
 		let _,_,_,_ = branch_and_bound model init_state in
 		let constraint1 = !k_result in
 
 		(* Remove branch and bound *)
 		options#branch_and_bound_unset;
-		print_message Debug_standard "2) CLASSICAL ALGORITHM";
+		print_message Verbose_standard "2) CLASSICAL ALGORITHM";
 		let _,_,_,_ = post_star model init_state in
 		let constraint2 = !k_result in
 	
-		print_message Debug_standard "3) COMPARE RESULT";
-		print_message Debug_standard "-> Branch and bound:";
-		print_message Debug_standard (LinearConstraint.string_of_linear_constraint model.variable_names constraint1);
-		print_message Debug_standard "-> Classical IM:";
-		print_message Debug_standard (LinearConstraint.string_of_linear_constraint model.variable_names constraint2);
+		print_message Verbose_standard "3) COMPARE RESULT";
+		print_message Verbose_standard "-> Branch and bound:";
+		print_message Verbose_standard (LinearConstraint.string_of_linear_constraint model.variable_names constraint1);
+		print_message Verbose_standard "-> Classical IM:";
+		print_message Verbose_standard (LinearConstraint.string_of_linear_constraint model.variable_names constraint2);
 		
 		if LinearConstraint.is_equal constraint1 constraint2 then(
-			print_message Debug_standard "\n\nCONSTRAINTS EQUAL :-)";
+			print_message Verbose_standard "\n\nCONSTRAINTS EQUAL :-)";
 			terminate_model();
 		) else (
-			print_message Debug_standard "\n\nARGH! CONSTRAINTS DIFFERENT :-(\n\n";
+			print_message Verbose_standard "\n\nARGH! CONSTRAINTS DIFFERENT :-(\n\n";
 			raise (InternalError "byebye");
 		);
 	);*)
@@ -2887,10 +2887,10 @@ let inverse_method_gen model init_state =
 	(*--------------------------------------------------*)
 	if not options#no_random then (
 		if (nb_random_selections > 0) then (
-			print_message Debug_standard "Analysis may have been non-deterministic:";
-			print_message Debug_standard ((string_of_int nb_random_selections) ^ " random selection" ^ (s_of_int nb_random_selections) ^ " have been performed.");
+			print_message Verbose_standard "Analysis may have been non-deterministic:";
+			print_message Verbose_standard ((string_of_int nb_random_selections) ^ " random selection" ^ (s_of_int nb_random_selections) ^ " have been performed.");
 		) else (
-			print_message Debug_standard "Analysis has been fully deterministic.";
+			print_message Verbose_standard "Analysis has been fully deterministic.";
 		)
 	);
 	
@@ -2902,10 +2902,10 @@ let inverse_method_gen model init_state =
 
 	(* Case union : return the constraint on the parameters associated to slast*)
 	if options#union then (
-		print_message Debug_total ("\nMode: union.");
+		print_message Verbose_total ("\nMode: union.");
 		let list_of_constraints =
 		List.map (fun state_index ->
-			print_message Debug_medium ("\nOne state found.");
+			print_message Verbose_medium ("\nOne state found.");
 			(* Get the constraint on clocks and parameters *)
 			let (_, current_constraint) =
 				StateSpace.get_state reachability_graph state_index
@@ -2919,7 +2919,7 @@ let inverse_method_gen model init_state =
 	(*** NOTE: why not returning just K_result? ***)
 	else if options#pi_compatible then (
 		let (_ , px_constraint) = get_state reachability_graph 0 in
-			print_message Debug_total ("\nMode: IMorig.");
+			print_message Verbose_total ("\nMode: IMorig.");
 			Convex_constraint (LinearConstraint.px_hide_nonparameters_and_collapse px_constraint , !tile_nature) 
 	)
 
@@ -2938,14 +2938,14 @@ let inverse_method_gen model init_state =
 
 	(* Case IMcomplete *)
 	else if options#completeIM then (
-			print_message Debug_total ("\nMode: IMcomplete.");
+			print_message Verbose_total ("\nMode: IMcomplete.");
 			let k_good, k_bad = process_result_IMcomplete !k_result !k_bad in
 			NNCConstraint ([k_good] , k_bad, !tile_nature)
 	)
 
 	(* Case IM standard : return the intersection *)
 	else (
-		print_message Debug_total ("\nMode: IM standard.");
+		print_message Verbose_total ("\nMode: IM standard.");
 		Convex_constraint (!k_result, !tile_nature)
 	)
 			(*		(* Case IM : intersection *)
@@ -3003,16 +3003,17 @@ let efim model =
 	in
 	
 	
-	print_message Debug_standard ("\nFinal constraint K0:");
-	print_message Debug_nodebug (constraint_str);
-	print_message Debug_standard (
+	print_message Verbose_standard ("\nFinal constraint K0:");
+	(*** TODO: put Verbose_standard, and print to file if needed ***)
+	print_message Verbose_mute (constraint_str);
+	print_message Verbose_standard (
 		"\nEFIM successfully finished " ^ (after_seconds ()) ^ "."
 	);
 	
 	(* Print memory information *)
-	print_memory_used Debug_standard;
+	print_memory_used Verbose_standard;
 	
-	print_message Debug_low (
+	print_message Verbose_low (
 		"Computation time for EFIM only: "
 		^ (string_of_seconds im_result.total_time) ^ "."
 	);
@@ -3043,7 +3044,7 @@ let inverse_method model =
 (* 	(returned_constraint : AbstractModel.returned_constraint), im_result.reachability_graph, tile_nature, deterministic, nb_iterations, total_time  *)
 	
 	(* Here comes the result *)
-	print_message Debug_standard ("\nFinal constraint K0 "
+	print_message Verbose_standard ("\nFinal constraint K0 "
 		^ (if options#union
 			then "(under disjunctive form) "
 			else (
@@ -3054,15 +3055,16 @@ let inverse_method model =
 			)
 		)
 		^ ":");
-	print_message Debug_nodebug (string_of_returned_constraint model.variable_names im_result.result);
-	print_message Debug_standard (
+	(*** TODO: put Verbose_standard, and print to file if needed ***)
+	print_message Verbose_mute (string_of_returned_constraint model.variable_names im_result.result);
+	print_message Verbose_standard (
 		"\nInverse method successfully finished " ^ (after_seconds ()) ^ "."
 	);
 	
 	(* Print memory information *)
-	print_memory_used Debug_standard;
+	print_memory_used Verbose_standard;
 	
-	print_message Debug_low (
+	print_message Verbose_low (
 		"Computation time for IM only: "
 		^ (string_of_seconds im_result.total_time) ^ "."
 	);

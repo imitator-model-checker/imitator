@@ -10,7 +10,7 @@
  * Author:        Etienne Andre
  * 
  * Created:       2009/09/09
- * Last modified: 2015/03/19
+ * Last modified: 2015/03/30
  *
  ****************************************************************)
 
@@ -450,7 +450,7 @@ let no_variables_in_linear_expression = check_f_in_linear_expression no_variable
 (*--------------------------------------------------*)
 let check_update index_of_variables type_of_variables variable_names constants automaton_name (variable_name, linear_expression) =
 	(* Get the index of the variable *)
-	print_message Debug_total ("              Checking one update");
+	print_message Verbose_total ("              Checking one update");
 	let index, declared = try (Hashtbl.find index_of_variables variable_name, true)
 		with Not_found -> (
 			print_error ("The variable '" ^ variable_name ^ "' used in an update in automaton '" ^ automaton_name ^ "' was not declared."); 0, false
@@ -458,17 +458,17 @@ let check_update index_of_variables type_of_variables variable_names constants a
 	in
 	if not declared then false else(
 		(* Get the type of the variable *)
-		print_message Debug_total ("                Getting the type of the variable");
+		print_message Verbose_total ("                Getting the type of the variable");
 		let type_of_variable = try (type_of_variables index)
 			with Invalid_argument comment -> (
 			raise (InternalError ("The variable '" ^ variable_name ^ "' was not found in '" ^ automaton_name ^ "', although this has been checked before. OCaml says: " ^ comment ^ "."))
 		) in
-		print_message Debug_total ("                Checking the type of the variable");
+		print_message Verbose_total ("                Checking the type of the variable");
 		match type_of_variable with
 		(* Case of a clock: allow only 0 as an update *)
 		| AbstractModel.Var_type_clock ->
 			(* Now allow ANY linear term in updates: so just check that variables have been declared *)
-			print_message Debug_total ("                A clock!");
+			print_message Verbose_total ("                A clock!");
 			check_linear_expression variable_names constants linear_expression
 (*			let result =
 			match linear_expression with
@@ -480,7 +480,7 @@ let check_update index_of_variables type_of_variables variable_names constants a
 			
 		(* Case of a discrete var.: allow only a linear combinations of constants and discrete *)
 		| AbstractModel.Var_type_discrete ->
-			print_message Debug_total ("                A discrete!");
+			print_message Verbose_total ("                A discrete!");
 			let result = only_discrete_in_linear_expression index_of_variables type_of_variables constants linear_expression in
 			if not result then
 				(print_error ("The variable '" ^ variable_name ^ "' is a discrete and its update can only be a linear combination of constants and discrete variables in automaton '" ^ automaton_name ^ "'."); false)
@@ -556,14 +556,14 @@ let check_automata index_of_variables type_of_variables variable_names index_of_
 
 	(* Check each automaton *)
 	List.iter (fun (automaton_name, sync_name_list, locations) ->
-		print_message Debug_total ("      Checking automaton " ^ automaton_name);
+		print_message Verbose_total ("      Checking automaton " ^ automaton_name);
 		(* Get the index of the automaton *)
 		let index = try (Hashtbl.find index_of_automata automaton_name) with
 			Not_found -> raise (InternalError ("Impossible to find the index of automaton '" ^ automaton_name ^ "'."))
 		in
 		(* Check each location *)
 		List.iter (fun (location_name, cost, convex_predicate, stopwatches, transitions) -> 
-			print_message Debug_total ("        Checking location " ^ location_name);
+			print_message Verbose_total ("        Checking location " ^ location_name);
 			(* Check that the location_name exists (which is obvious) *)
 			if not (in_array location_name locations_per_automaton.(index)) then(
 				print_error ("The location '" ^ location_name ^ "' declared in automaton '" ^ automaton_name ^ "' does not exist.");
@@ -573,13 +573,13 @@ let check_automata index_of_variables type_of_variables variable_names index_of_
 			begin
 			match cost with
 				| Some cost ->
-					print_message Debug_total ("          Checking cost");
+					print_message Verbose_total ("          Checking cost");
 					if not (check_linear_expression variable_names constants cost) then well_formed := false;
 				| None -> ()
 			end;
 			
 			(* Check the stopwatches *)
-			print_message Debug_total ("          Checking possible stopwatches");
+			print_message Verbose_total ("          Checking possible stopwatches");
 			if not (check_stopwatches index_of_variables type_of_variables stopwatches) then well_formed := false;
 			
 			
@@ -587,21 +587,21 @@ let check_automata index_of_variables type_of_variables variable_names index_of_
 			
 			(*** TODO: preciser quel automate et quelle location en cas d'erreur ***)
 			
-			print_message Debug_total ("          Checking convex predicate");
+			print_message Verbose_total ("          Checking convex predicate");
 			if not (check_convex_predicate variable_names constants convex_predicate) then well_formed := false;
 			
 			
 			(* Check transitions *)
-			print_message Debug_total ("          Checking transitions");
+			print_message Verbose_total ("          Checking transitions");
 			List.iter (fun (convex_predicate, updates, sync, dest_location_name) ->
 				(* Check the convex predicate *)
-				print_message Debug_total ("            Checking convex predicate");
+				print_message Verbose_total ("            Checking convex predicate");
 				if not (check_convex_predicate variable_names constants convex_predicate) then well_formed := false;
 				(* Check the updates *)
-				print_message Debug_total ("            Checking updates");
+				print_message Verbose_total ("            Checking updates");
 				List.iter (fun update -> if not (check_update index_of_variables type_of_variables variable_names constants automaton_name update) then well_formed := false) updates;
 				(* Check the sync *)
-				print_message Debug_total ("            Checking sync name ");
+				print_message Verbose_total ("            Checking sync name ");
 				if not (check_sync sync_name_list automaton_name sync) then well_formed := false;
 				(* Check that the destination location exists for this automaton *)
 				if not (in_array dest_location_name locations_per_automaton.(index)) then(
@@ -1219,7 +1219,7 @@ let make_automata index_of_variables constants index_of_automata index_of_locati
 	List.iter
 	(fun (automaton_name, _, locations) ->
 		(* Get the index of the automaton *)
-		print_message Debug_total ("    - Building automaton " ^ automaton_name);
+		print_message Verbose_total ("    - Building automaton " ^ automaton_name);
 		let automaton_index = try (Hashtbl.find index_of_automata automaton_name) with Not_found -> raise (InternalError ("Impossible to find the index of automaton '" ^ automaton_name ^ "'.")) in
 		(* Get the number of locations *)
 		let nb_locations = List.length locations in 
@@ -1507,7 +1507,7 @@ let make_initial_state index_of_automata locations_per_automaton index_of_locati
 	(* Check that all parameters are bound to be >= 0 *)
 	List.iter (fun parameter_id ->
 		(* Print some information *)
-		print_message Debug_low ("Checking that parameter '" ^ (variable_names parameter_id) ^ "' is >= 0 in the initial constraint...");
+		print_message Verbose_low ("Checking that parameter '" ^ (variable_names parameter_id) ^ "' is >= 0 in the initial constraint...");
 		
 		(* Check *)
 		if not (LinearConstraint.px_is_positive_in parameter_id initial_constraint) then
@@ -1620,8 +1620,8 @@ let abstract_model_of_parsing_structure (parsed_variable_declarations, parsed_au
 	
 	
 	(* Print some information *)
-	if debug_mode_greater Debug_total then(
-		print_message Debug_total ("Automata names : " ^ (string_of_list_of_string_with_sep ", " declared_automata_names));
+	if debug_mode_greater Verbose_total then(
+		print_message Verbose_total ("Automata names : " ^ (string_of_list_of_string_with_sep ", " declared_automata_names));
 	);
 
 	
@@ -1673,16 +1673,16 @@ let abstract_model_of_parsing_structure (parsed_variable_declarations, parsed_au
 	let observer_automaton, observer_clock_option = ObserverPatterns.new_elements parsed_property_definition in
 	
 	(* Print some information *)
-	if debug_mode_greater Debug_high then(
+	if debug_mode_greater Verbose_high then(
 		begin
 			match observer_automaton with
 			| None -> ()
-			| Some observer_automaton -> print_message Debug_high ("Adding extra automaton '" ^ observer_automaton ^ "' for the observer.");
+			| Some observer_automaton -> print_message Verbose_high ("Adding extra automaton '" ^ observer_automaton ^ "' for the observer.");
 		end;
 		begin
 			match observer_clock_option with
 			| None -> ()
-			| Some observer_clock_name -> print_message Debug_high ("Adding extra clock '" ^ observer_clock_name ^ "' for the observer.");
+			| Some observer_clock_name -> print_message Verbose_high ("Adding extra clock '" ^ observer_clock_name ^ "' for the observer.");
 		end;
 	);
 	
@@ -1729,7 +1729,7 @@ let abstract_model_of_parsing_structure (parsed_variable_declarations, parsed_au
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Set the LinearConstraint dimensions *) 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	print_message Debug_high ("\nSetting dimensions...");
+	print_message Verbose_high ("\nSetting dimensions...");
 	LinearConstraint.set_dimensions nb_parameters nb_clocks nb_discrete;
 	
 	(* Set dimensions for hyper rectangles *)
@@ -1802,7 +1802,7 @@ let abstract_model_of_parsing_structure (parsed_variable_declarations, parsed_au
 	(* Debug prints *)
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Numbers *)
-	print_message Debug_low (
+	print_message Verbose_low (
 		(string_of_int nb_automata) ^ " automata, "
 		^ (string_of_int nb_labels) ^ " declared label" ^ (s_of_int nb_labels) ^ ", "
 		^ (string_of_int nb_clocks) ^ " clock variable" ^ (s_of_int nb_clocks) ^ ", "
@@ -1813,18 +1813,18 @@ let abstract_model_of_parsing_structure (parsed_variable_declarations, parsed_au
 	);
 	
 	(* Automata *)
-	if debug_mode_greater Debug_high then(
-		print_message Debug_high ("\n*** Array of automata names:");
-		debug_print_array Debug_high array_of_automata_names;
+	if debug_mode_greater Verbose_high then(
+		print_message Verbose_high ("\n*** Array of automata names:");
+		debug_print_array Verbose_high array_of_automata_names;
 
 		(* Labels *)
-		print_message Debug_high ("\n*** Array of declared label names:");
-		debug_print_array Debug_high labels;
+		print_message Verbose_high ("\n*** Array of declared label names:");
+		debug_print_array Verbose_high labels;
 
 		(* Variables *)
-		print_message Debug_total ("\n*** Variable names:");
+		print_message Verbose_total ("\n*** Variable names:");
 		Array.iteri (fun i e ->
-			print_message Debug_total ((string_of_int i) ^ " -> " ^ e ^ " : " ^ (string_of_var_type (type_of_variables i)))
+			print_message Verbose_total ((string_of_int i) ^ " -> " ^ e ^ " : " ^ (string_of_var_type (type_of_variables i)))
 		) variables;
 	);
 	
@@ -1843,7 +1843,7 @@ let abstract_model_of_parsing_structure (parsed_variable_declarations, parsed_au
 		| None -> ()
 			(*** WARNING: we assume here that observer automaton is the last one ! ***)
 		| Some automaton_index ->
-			print_message Debug_high ("Adding the observer locations.");
+			print_message Verbose_high ("Adding the observer locations.");
 			array_of_location_names.(automaton_index) <- ObserverPatterns.get_locations parsed_property_definition
 	end;
 	
@@ -1869,12 +1869,12 @@ let abstract_model_of_parsing_structure (parsed_variable_declarations, parsed_au
 
 
 	(* Debug print *)
-	if debug_mode_greater Debug_high then(
-		print_message Debug_high ("\n*** Locations per automaton:");
+	if debug_mode_greater Verbose_high then(
+		print_message Verbose_high ("\n*** Locations per automaton:");
 		List.iter (fun automaton_index ->
-			print_message Debug_high ((automata_names automaton_index) ^ " : ");
+			print_message Verbose_high ((automata_names automaton_index) ^ " : ");
 			List.iter (fun location_index ->
-				print_message Debug_high ("    " ^ (string_of_int location_index) ^ " -> " ^ (location_names automaton_index location_index) ^ "");
+				print_message Verbose_high ("    " ^ (string_of_int location_index) ^ " -> " ^ (location_names automaton_index location_index) ^ "");
 			)
 			(locations_per_automaton automaton_index);
 		) automata;
@@ -1886,14 +1886,14 @@ let abstract_model_of_parsing_structure (parsed_variable_declarations, parsed_au
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Check the automata *) 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	print_message Debug_total ("*** Checking automata...");
+	print_message Verbose_total ("*** Checking automata...");
 	let well_formed_automata = check_automata index_of_variables type_of_variables variable_names index_of_automata array_of_location_names constants parsed_automata in
 
 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Check the init_definition *) 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	print_message Debug_total ("*** Checking init definition...");
+	print_message Verbose_total ("*** Checking init definition...");
 	(* Get pairs for the initialisation of the discrete variables, and check the init definition *)
 
 	(*** WARNING: might be a problem if the check_automata test fails ***)
@@ -1963,7 +1963,7 @@ let abstract_model_of_parsing_structure (parsed_variable_declarations, parsed_au
 
 		(* IM : Pi0 *)
 		| Inverse_method -> 
-			print_message Debug_total ("*** Building reference valuation...");
+			print_message Verbose_total ("*** Building reference valuation...");
 			(* Verification of the pi_0 *)
 			if not (check_pi0 parsed_pi0 parameters_names) then raise InvalidPi0;
 			(* Construction of the pi_0 *)
@@ -1975,7 +1975,7 @@ let abstract_model_of_parsing_structure (parsed_variable_declarations, parsed_au
 			
 		(* BC : V0 *)
 		| Cover_cartography | Random_cartography _ | Border_cartography -> 
-			print_message Debug_total ("*** Building reference rectangle...");
+			print_message Verbose_total ("*** Building reference rectangle...");
 			(* Verification of the pi_0 *)
 			if not (check_v0 parsed_v0 parameters_names) then raise InvalidPi0;
 			(* Construction of the pi_0 *)
@@ -1993,7 +1993,7 @@ let abstract_model_of_parsing_structure (parsed_variable_declarations, parsed_au
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Construct the automata *) 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	print_message Debug_total ("*** Building automata...");
+	print_message Verbose_total ("*** Building automata...");
 	(* Get all the possible actions for every location of every automaton *)
 	let actions, array_of_action_names, action_types, actions_per_automaton, actions_per_location, costs, invariants, stopwatches_array, has_stopwatches, transitions, nosync_obs =
 		make_automata index_of_variables constants index_of_automata index_of_locations labels index_of_actions removed_synclab_names parsed_automata (observer_automaton != None) in
@@ -2003,7 +2003,7 @@ let abstract_model_of_parsing_structure (parsed_variable_declarations, parsed_au
 	
 	(*** TODO: integrate inside 'make_automata' ***)
 	
-	print_message Debug_total ("*** Building transitions...");
+	print_message Verbose_total ("*** Building transitions...");
 	let transitions = convert_transitions nb_actions index_of_variables constants type_of_variables transitions in
 	
 	
@@ -2012,7 +2012,7 @@ let abstract_model_of_parsing_structure (parsed_variable_declarations, parsed_au
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	let correctness_condition, initial_observer_constraint =
 	match observer_automaton with
-	| None -> print_message Debug_total ("*** (No observer)");
+	| None -> print_message Verbose_total ("*** (No observer)");
 		(* Still check the case of non-reachability user-defined property *)
 		begin
 		match property with
@@ -2020,7 +2020,7 @@ let abstract_model_of_parsing_structure (parsed_variable_declarations, parsed_au
 			| _ -> None, None
 		end
 	| Some observer_id -> 
-		print_message Debug_low ("*** Generating the observer...");
+		print_message Verbose_low ("*** Generating the observer...");
 		(* Get the silent action index for the observer *)
 		let nosync_obs = match nosync_obs with
 			| Some nosync_obs -> nosync_obs
@@ -2105,26 +2105,26 @@ let abstract_model_of_parsing_structure (parsed_variable_declarations, parsed_au
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 	(* List of automata for every action *)
-	print_message Debug_total ("*** Building automata per action...");
+	print_message Verbose_total ("*** Building automata per action...");
 	let automata_per_action = make_automata_per_action actions_per_automaton nb_automata nb_actions in
 
 (*	(* Convert the costs *)
-	print_message Debug_total ("*** Building costs (if any)...");
+	print_message Verbose_total ("*** Building costs (if any)...");
 	let costs = convert_costs index_of_variables constants costs in*)
   	
 (*	(* Convert the invariants *)
-	print_message Debug_total ("*** Building invariants...");
+	print_message Verbose_total ("*** Building invariants...");
 	let invariants = convert_invariants index_of_variables constants invariants in*)
   	
 	(* Convert the stopwatches *)
-(* 	print_message Debug_total ("*** Building stopwatches..."); *)
+(* 	print_message Verbose_total ("*** Building stopwatches..."); *)
 (*	let stopwatches_fun = (fun automaton_index location_index -> stopwatches.(automaton_index).(location_index)) in*)
 
 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Construct the initial state *) 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	print_message Debug_total ("*** Building initial state...");
+	print_message Verbose_total ("*** Building initial state...");
 	let (initial_location, initial_constraint) =
 		make_initial_state index_of_automata array_of_location_names index_of_locations index_of_variables parameters constants type_of_variables variable_names init_discrete_pairs parsed_init_definition in
 	
@@ -2140,7 +2140,7 @@ let abstract_model_of_parsing_structure (parsed_variable_declarations, parsed_au
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Convert the projection definition *) 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	print_message Debug_total ("*** Building the projection definition...");
+	print_message Verbose_total ("*** Building the projection definition...");
 	let projection = convert_projection_definition index_of_variables parsed_projection_definition in
 	
 	
@@ -2148,82 +2148,82 @@ let abstract_model_of_parsing_structure (parsed_variable_declarations, parsed_au
 	(* Debug prints *) 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Variables *)
-	if debug_mode_greater Debug_high then(
-		print_message Debug_high ("\n*** All variables:");
+	if debug_mode_greater Verbose_high then(
+		print_message Verbose_high ("\n*** All variables:");
 		for i = 0 to nb_variables - 1 do
-			print_message Debug_high ("  "
+			print_message Verbose_high ("  "
 				^ (string_of_int i) ^ " : " ^ (variable_names i)
 	(* 			^ (if is_renamed_clock i then " (renamed clock)" else "") *)
 			);
 		done;
 	);
 	
-	if debug_mode_greater Debug_total then(
+	if debug_mode_greater Verbose_total then(
 		(* All action names *)
-		print_message Debug_total ("\n*** All action names:");
+		print_message Verbose_total ("\n*** All action names:");
 		(* For each action *)
 		List.iter (fun action_index -> 
-			print_message Debug_total ((string_of_int action_index) ^ " -> " ^ (action_names action_index));
+			print_message Verbose_total ((string_of_int action_index) ^ " -> " ^ (action_names action_index));
 		) actions;
 
 		(* Debug print: actions per automaton *)
-		print_message Debug_total ("\n*** Actions per automaton:");
+		print_message Verbose_total ("\n*** Actions per automaton:");
 		(* For each automaton *)
 		List.iter (fun automaton_index ->
 			(* Get the actions *)
 			let actions = actions_per_automaton automaton_index in
 			(* Print it *)
 			let actions_string = string_of_list_of_string_with_sep ", " (List.map action_names actions) in
-			print_message Debug_total ((automata_names automaton_index) ^ " : " ^ actions_string)
+			print_message Verbose_total ((automata_names automaton_index) ^ " : " ^ actions_string)
 		) automata;
 
 		(* Debug print: automata per action *)
-		print_message Debug_total ("\n*** Automata per action:");
+		print_message Verbose_total ("\n*** Automata per action:");
 		(* For each action *)
 		List.iter (fun action_index ->
 			(* Get the automata *)
 			let automata = automata_per_action action_index in
 			(* Print it *)
 			let automata_string = string_of_list_of_string_with_sep ", " (List.map automata_names automata) in
-			print_message Debug_total ((action_names action_index) ^ " : " ^ automata_string)
+			print_message Verbose_total ((action_names action_index) ^ " : " ^ automata_string)
 		) actions;
 
 
 		(* Possible actions per location *)
-		print_message Debug_total ("\n*** Possible actions per location:");
+		print_message Verbose_total ("\n*** Possible actions per location:");
 		(* For each automaton *)
 		List.iter (fun automaton_index ->
 			(* Print the automaton name *)
-			print_message Debug_total ("" ^ (automata_names automaton_index) ^ " :");
+			print_message Verbose_total ("" ^ (automata_names automaton_index) ^ " :");
 			(* For each location *)
 			List.iter (fun location_index ->
 				(* Get the actions *)
 				let actions = actions_per_location automaton_index location_index in
 				(* Print it *)
 				let my_string = string_of_list_of_string_with_sep ", " (List.map action_names actions) in
-				print_message Debug_total (" - " ^ (location_names automaton_index location_index) ^ " :" ^ my_string);
+				print_message Verbose_total (" - " ^ (location_names automaton_index location_index) ^ " :" ^ my_string);
 			) (locations_per_automaton automaton_index);
 		) automata;
 	);
 	
 	(* Debut print: Pi0 *)
-	if debug_mode_greater Debug_medium then(
+	if debug_mode_greater Verbose_medium then(
 		match options#imitator_mode with
 		| Translation -> ()
 		| State_space_exploration -> ()
 		| Inverse_method -> 
-			print_message Debug_medium ("\n*** Reference valuation pi0:");
+			print_message Verbose_medium ("\n*** Reference valuation pi0:");
 			List.iter (fun parameter ->
-				print_message Debug_medium (
+				print_message Verbose_medium (
 					variables.(parameter) ^ " : " ^ (NumConst.string_of_numconst (pi0#get_value parameter))
 				)
 			) parameters;
 		| _ -> 
-			print_message Debug_medium ("\n*** Reference rectangle V0:");
+			print_message Verbose_medium ("\n*** Reference rectangle V0:");
 			for parameter_index = 0 to nb_parameters - 1 do
 				let min = v0#get_min parameter_index in
 				let max = v0#get_max parameter_index in
-				print_message Debug_medium (
+				print_message Verbose_medium (
 					variables.(parameter_index) ^ " : [" ^ (NumConst.string_of_numconst min) ^ ", " ^ (NumConst.string_of_numconst max) ^ "]"
 				);
 			done;

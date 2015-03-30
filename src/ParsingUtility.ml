@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2014/03/15
- * Last modified: 2014/03/25
+ * Last modified: 2015/03/30
  *
  ****************************************************************)
 
@@ -110,7 +110,7 @@ let compile options =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 	(* Parsing the main model *)
-	print_message Debug_low ("Parsing file " ^ options#file ^ "...");
+	print_message Verbose_low ("Parsing file " ^ options#file ^ "...");
 	let parsing_structure = 
 		(* Branching between 2 input syntaxes *)
 		if options#fromGML then
@@ -121,7 +121,7 @@ let compile options =
 
 
 	if options#imitator_mode != State_space_exploration && options#imitator_mode != Translation then
-		print_message Debug_low ("Parsing reference valuation in file " ^ options#pi0file ^ "...");
+		print_message Verbose_low ("Parsing reference valuation in file " ^ options#pi0file ^ "...");
 
 	(* Pi0 Parsing *)
 	let pi0_parsed, v0_parsed =
@@ -143,7 +143,7 @@ let compile options =
 			| _ -> [], parser_lexer_from_file V0Parser.main V0Lexer.token options#pi0file
 	in
 
-	print_message Debug_standard ("\nParsing completed " ^ (after_seconds ()) ^ ".");
+	print_message Verbose_standard ("\nParsing completed " ^ (after_seconds ()) ^ ".");
 	(** USELESS, even increases memory x-( **)
 	(* Gc.major (); *)
 
@@ -165,16 +165,16 @@ let compile options =
 	let gc_stat = Gc.stat () in
 	let nb_words = gc_stat.minor_words +. gc_stat.major_words -. gc_stat.promoted_words in
 	let nb_ko = nb_words *. 4.0 /. 1024.0 in
-	print_message Debug_standard ("Memory for abstract model: " ^ (round3_float nb_ko) ^ " KiB (i.e., " ^ (string_of_int (int_of_float nb_words)) ^ " words)");
+	print_message Verbose_standard ("Memory for abstract model: " ^ (round3_float nb_ko) ^ " KiB (i.e., " ^ (string_of_int (int_of_float nb_words)) ^ " words)");
 
 	(* With or without stopwatches *)
 	if model.has_stopwatches then
-		print_message Debug_standard ("The model contains stopwatches.")
+		print_message Verbose_standard ("The model contains stopwatches.")
 	else
-		print_message Debug_low ("The model is purely timed (no stopwatches).");
+		print_message Verbose_low ("The model is purely timed (no stopwatches).");
 
 	(* Ugly line break *)
-	print_message Debug_standard "";
+	print_message Verbose_standard "";
 	
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)

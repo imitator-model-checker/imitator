@@ -7,7 +7,7 @@
  * Author:        Sami Evangelista
  * 
  * Created:       2014/07/11
- * Last modified: 2014/10/02
+ * Last modified: 2015/03/30
  *
  ****************************************************************)
 
@@ -100,13 +100,13 @@ let string_of_node = function
 ;;
 
 let pr_send_msg src dest tag =
-  print_message Debug_standard
+  print_message Verbose_standard
     ("[" ^ (string_of_node src) ^ "] send " ^ (string_of_mtag tag) ^
        " message to " ^ (string_of_node dest))
 ;;
 
 let pr_recv_msg dest src tag =
-  print_message Debug_standard 
+  print_message Verbose_standard 
     ("[" ^ (string_of_node dest) ^ "] receive " ^ (string_of_mtag tag) ^
        " message from " ^ (string_of_node src))
 ;;
@@ -132,20 +132,20 @@ let coordinator () =
       array_update update_box boxes
   in
   let coordinator_init () =
-    print_message Debug_standard "[Coordinator] start\n";
+    print_message Verbose_standard "[Coordinator] start\n";
     Cartography.bc_initialize ();
     Cartography.compute_initial_pi0 ();
     Cartography.constraint_list_init nb_coord_points
   in    
   let coordinator_end () =
-    print_message Debug_standard "[Coordinator] end\n";
+    print_message Verbose_standard "[Coordinator] end\n";
     Cartography.bc_finalize ();  
     let tiles = Cartography.bc_result () in
       if options#cart then (
 	Graphics.cartography (Input.get_model())
 	  (Input.get_v0()) tiles (options#files_prefix ^ "_cart_patator")
       ) else (
-	print_message Debug_high
+	print_message Verbose_high
 	  "Graphical cartography not asked: graph not generated.";
       )
   in
@@ -156,7 +156,7 @@ let coordinator () =
   let coordinator_termination () =
     if !terminated
     then ()
-    else (print_message Debug_standard"[Coordinator] everything is covered";
+    else (print_message Verbose_standard"[Coordinator] everything is covered";
 	  terminated := true)
   in
   let coordinator_send_termination worker =
@@ -215,9 +215,9 @@ let coordinator () =
       coordinator_loop ();
       coordinator_end ()
     with
-      | InternalError e -> print_message Debug_standard
+      | InternalError e -> print_message Verbose_standard
 	  ("[Coordinator] aborted: " ^ e)
-      | _ -> print_message Debug_standard ("[Coordinator] aborted")
+      | _ -> print_message Verbose_standard ("[Coordinator] aborted")
 ;;
 
 
@@ -243,29 +243,29 @@ let worker () =
     Mpi.send data coordinator (int_of_mtag tag) world
   in
   let worker_init () =
-    print_message Debug_standard (msg_prefix ^ " start");
+    print_message Verbose_standard (msg_prefix ^ " start");
     Cartography.bc_initialize ()
   in
   let worker_end () =
-    print_message Debug_standard (msg_prefix ^ " end")
+    print_message Verbose_standard (msg_prefix ^ " end")
   in
   let worker_job pi0 =
-    print_message Debug_standard (thread_msg_prefix ^ " process a point");
+    print_message Verbose_standard (thread_msg_prefix ^ " process a point");
     Input.set_pi0 pi0;
     let global_debug_mode = get_debug_mode () in
-      if debug_mode_greater Debug_high
+      if debug_mode_greater Verbose_high
       then ()
-      else set_debug_mode Debug_nodebug;
+      else set_debug_mode Verbose_nodebug;
       let res, _ = Reachability.inverse_method_gen model s0 in
 	set_debug_mode global_debug_mode;
-	print_message Debug_standard
+	print_message Verbose_standard
 	  (thread_msg_prefix ^ " terminate job");
 	Mutex.lock mut;
 	job_result := Some (res);
 	Mutex.unlock mut
   in
   let worker_launch_job pi0 =
-    print_message Debug_standard (msg_prefix ^ " launch a thread");
+    print_message Verbose_standard (msg_prefix ^ " launch a thread");
     let t = Thread.create worker_job pi0
     in
       current_job := Some (pi0, t)
@@ -292,7 +292,7 @@ let worker () =
         | Some (pt, t) ->
             if not (Cartography.pi0_in_returned_constraint pt cons)
             then ()
-            else (print_message Debug_standard
+            else (print_message Verbose_standard
                     (msg_prefix ^
                        " received constraint covers job point " ^
 		       "-> kill job (not implemented)");
@@ -314,7 +314,7 @@ let worker () =
             worker_process_no_constraints (n - 1))
   and worker_initiate_job () =
     if Cartography.random_pi0 nb_tries_max
-    then (print_message Debug_standard
+    then (print_message Verbose_standard
             (msg_prefix ^ " has chosen a random point");
           worker_launch_job
             ((*valueListToPi0 model *)(Cartography.get_current_pi0 ())))
@@ -373,9 +373,9 @@ let worker () =
       worker_loop ();
       worker_end ()
     with
-      | InternalError e -> print_message Debug_standard
+      | InternalError e -> print_message Verbose_standard
           (msg_prefix ^ " aborted: " ^ e)
-      | _ -> print_message Debug_standard
+      | _ -> print_message Verbose_standard
 	  (msg_prefix ^ " aborted")
       
 ;;

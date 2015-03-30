@@ -12,7 +12,7 @@
  * Author:        Ulrich Kuehne, Etienne Andre
  * 
  * Created:       2009/09/07
- * Last modified: 2015/03/24
+ * Last modified: 2015/03/30
  *
  ****************************************************************)
 
@@ -94,7 +94,7 @@ Input.set_options options;
 print_header_string();
 
 (* Print date *)
-print_message Debug_standard ("Analysis time: " ^ (now()) ^ "\n");
+print_message Verbose_standard ("Analysis time: " ^ (now()) ^ "\n");
 
 (* Recall the arguments *)
 options#recall(); 
@@ -113,8 +113,8 @@ Input.set_v0 v0;
 (**************************************************)
 (* Debug print: model *)
 (**************************************************)
-if debug_mode_greater Debug_total then
-	print_message Debug_total ("\nModel:\n" ^ (ModelPrinter.string_of_model model) ^ "\n");
+if debug_mode_greater Verbose_total then
+	print_message Verbose_total ("\nModel:\n" ^ (ModelPrinter.string_of_model model) ^ "\n");
 
 
 (**************************************************)
@@ -139,19 +139,19 @@ end;
 
 (* Translation to CLP (work in progress) *)
 if options#pta2clp then(
-	print_message Debug_standard ("Translating model to CLP.");
+	print_message Verbose_standard ("Translating model to CLP.");
 	print_warning ("Work in progress!!!!");
-	print_message Debug_standard ("\nmodel in CLP:\n" ^ (PTA2CLP.string_of_model model) ^ "\n");
+	print_message Verbose_standard ("\nmodel in CLP:\n" ^ (PTA2CLP.string_of_model model) ^ "\n");
 	terminate_program()
 );
 
 (* Translation to GrML (experimental) *)
 if options#pta2gml then(
-	print_message Debug_standard ("Translating model to GrML.");
+	print_message Verbose_standard ("Translating model to GrML.");
 	let translated_model = PTA2GrML.string_of_model model in
 	let gml_file = options#files_prefix ^ ".grml" in
-	if debug_mode_greater Debug_total then(
-		print_message Debug_total ("\n" ^ translated_model ^ "\n");
+	if debug_mode_greater Verbose_total then(
+		print_message Verbose_total ("\n" ^ translated_model ^ "\n");
 	);
 	(* Write *)
 	write_to_file gml_file translated_model;
@@ -160,10 +160,10 @@ if options#pta2gml then(
 
 (* Translation to JPG *)
 if options#pta2jpg then(
-	print_message Debug_standard ("Translating model to a graphics.");
+	print_message Verbose_standard ("Translating model to a graphics.");
 	let translated_model = PTA2JPG.string_of_model model in
-	if debug_mode_greater Debug_high then(
-		print_message Debug_high ("\n" ^ translated_model ^ "\n");
+	if debug_mode_greater Verbose_high then(
+		print_message Verbose_high ("\n" ^ translated_model ^ "\n");
 	);
 	Graphics.dot model (options#files_prefix ^ "-pta") translated_model;
 	terminate_program()
@@ -171,11 +171,11 @@ if options#pta2jpg then(
 
 (* Translation to TikZ *)
 if options#pta2tikz then(
-	print_message Debug_standard ("Translating model to LaTeX TikZ code.");
+	print_message Verbose_standard ("Translating model to LaTeX TikZ code.");
 	let translated_model = PTA2TikZ.tikz_string_of_model model in
 	let latex_file = options#files_prefix ^ ".tex" in
-	if debug_mode_greater Debug_high then(
-		print_message Debug_high ("\n" ^ translated_model ^ "\n");
+	if debug_mode_greater Verbose_high then(
+		print_message Verbose_high ("\n" ^ translated_model ^ "\n");
 	);
 	(* Write *)
 	write_to_file latex_file translated_model;
@@ -183,7 +183,7 @@ if options#pta2tikz then(
 );
 (* Direct cartography output *)
 if options#cartonly then(
-	print_message Debug_standard ("Direct output of a cartography (no analysis will be run).");
+	print_message Verbose_standard ("Direct output of a cartography (no analysis will be run).");
 	(* Get the parameters *)
 	let constraints , (p1_min , p1_max) , (p2_min , p2_max) = model.carto in
 	(* Transform the constraint for cartography *)
@@ -239,14 +239,14 @@ if options#dynamic_clock_elimination then (
 
 
 (*(* TESTS *) 
-print_message Debug_standard ("\nInitial constraint:\n" ^ (LinearConstraint.string_of_linear_constraint model.variable_names initial_constraint_after_time_elapsing) ^ "\n");
+print_message Verbose_standard ("\nInitial constraint:\n" ^ (LinearConstraint.string_of_linear_constraint model.variable_names initial_constraint_after_time_elapsing) ^ "\n");
 
 (*let n = ref 1 in
 
 List.iter (fun parameter_id ->
 	LinearConstraint.time_elapse_assign [parameter_id] (list_diff model.parameters [parameter_id]) initial_constraint_after_time_elapsing;
 	
-	print_message Debug_standard ("\nAfter time elapsing #" ^ (string_of_int !n) ^ " on parameter '" ^ (model.variable_names parameter_id) ^ "' :\n" ^ (LinearConstraint.string_of_linear_constraint model.variable_names initial_constraint_after_time_elapsing) ^ "\n");
+	print_message Verbose_standard ("\nAfter time elapsing #" ^ (string_of_int !n) ^ " on parameter '" ^ (model.variable_names parameter_id) ^ "' :\n" ^ (LinearConstraint.string_of_linear_constraint model.variable_names initial_constraint_after_time_elapsing) ^ "\n");
 	
 	Graphics.cartography model v0 [Convex_constraint initial_constraint_after_time_elapsing] (options#file ^ "-carto" ^ (string_of_int !n));
 
@@ -258,7 +258,7 @@ terminate_program();*)
 
 
 LinearConstraint.grow_to_zero_assign model.parameters model.clocks_and_discrete initial_constraint_after_time_elapsing;
-print_message Debug_standard ("\nFinal constraint:\n" ^ (LinearConstraint.string_of_linear_constraint model.variable_names initial_constraint_after_time_elapsing) ^ "\n");
+print_message Verbose_standard ("\nFinal constraint:\n" ^ (LinearConstraint.string_of_linear_constraint model.variable_names initial_constraint_after_time_elapsing) ^ "\n");
 Graphics.cartography model v0 [Convex_constraint initial_constraint_after_time_elapsing] (options#file ^ "-cartoz");
 terminate_program();*)
 
@@ -327,13 +327,13 @@ begin
 	if options#cart then (
 			(* No cartography if no zone *)
 			if zones = [] then(
-				print_message Debug_standard ("\nNo cartography can be generated since the list of constraints is empty.\n");
+				print_message Verbose_standard ("\nNo cartography can be generated since the list of constraints is empty.\n");
 			)else(
-				print_message Debug_standard ("\nGeneration of the graphical cartography...");
+				print_message Verbose_standard ("\nGeneration of the graphical cartography...");
 				Graphics.cartography model v0 zones (options#files_prefix ^ "_cart")
 			)
 		) else (
-			print_message Debug_high "Graphical cartography not asked: graph not generated."
+			print_message Verbose_high "Graphical cartography not asked: graph not generated."
 		)
 	;*)
 end;

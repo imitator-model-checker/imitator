@@ -8,7 +8,7 @@
  * Author:        Etienne Andre, Camille Coti
  * 
  * Created:       2014/03/24
- * Last modified: 2014/10/24
+ * Last modified: 2015/03/30
  *
  ****************************************************************)
 
@@ -332,7 +332,7 @@ let serialize_im_result im_result =
 
 
 let unserialize_im_result im_result_string =
-	print_message Debug_medium ( "[Master] About to unserialize '" ^ im_result_string ^ "'");
+	print_message Verbose_medium ( "[Master] About to unserialize '" ^ im_result_string ^ "'");
 	let returned_constraint_string , tile_nature_str , premature_stop_string ,  deterministic_string , nb_states_string , nb_transitions_string , nb_iterations_string , total_time_string =
 	match split serialize_SEP_STRUCT im_result_string with
 		| [returned_constraint_string ; tile_nature_str ; premature_stop_string ; deterministic_string ; nb_states_string ; nb_transitions_string ; nb_iterations_string ; total_time_string ]
@@ -406,7 +406,7 @@ let test_serialization () =
 	let test_unserialize_variable variable_string = 
 		try(
 		let unserialized_variable = LinearConstraint.unserialize_variable variable_string in
-		print_message Debug_standard ("Unserializing " ^ variable_string ^ "...: " ^ (string_of_int unserialized_variable));
+		print_message Verbose_standard ("Unserializing " ^ variable_string ^ "...: " ^ (string_of_int unserialized_variable));
 		) with
 		SerializationError error -> print_error ("Serialization error: " ^ error)
 	in
@@ -436,17 +436,17 @@ let test_serialization () =
 (* 	mypi0#set_value 4 (NumConst.numconst_of_int (-13)); *)
 	mypi0#set_value 5 (NumConst.numconst_of_frac 2 2011);
 
-	print_message Debug_standard "Here is my pi0";
-	print_message Debug_standard (debug_string_of_pi0 mypi0);
+	print_message Verbose_standard "Here is my pi0";
+	print_message Verbose_standard (debug_string_of_pi0 mypi0);
 	
-	print_message Debug_standard "Now serializing it...";
+	print_message Verbose_standard "Now serializing it...";
 	let pi0_serialized = serialize_pi0 mypi0 in
-	print_message Debug_standard "After serialization:";
-	print_message Debug_standard  pi0_serialized;
+	print_message Verbose_standard "After serialization:";
+	print_message Verbose_standard  pi0_serialized;
 	
-	print_message Debug_standard "Now unserializing it...";
+	print_message Verbose_standard "Now unserializing it...";
 	let mypi0_back = unserialize_pi0 pi0_serialized in
-	print_message Debug_standard  (debug_string_of_pi0 mypi0_back);
+	print_message Verbose_standard  (debug_string_of_pi0 mypi0_back);
 
 	(*** BIG HACK because nb dimensions not set yet ***)
 	let nb_parameters = 5 in
@@ -462,17 +462,17 @@ let test_serialization () =
 		v0#set_max parameter_index (NumConst.numconst_of_int (2 * parameter_index + 1));
 	done;
 	
-	print_message Debug_standard "Here is my hyper rectangle";
-	print_message Debug_standard (debug_string_of_v0 v0);
+	print_message Verbose_standard "Here is my hyper rectangle";
+	print_message Verbose_standard (debug_string_of_v0 v0);
 	
-	print_message Debug_standard "Now serializing it...";
+	print_message Verbose_standard "Now serializing it...";
 	let v0_serialized = serialize_hyper_rectangle v0 in
-	print_message Debug_standard "After serialization:";
-	print_message Debug_standard  v0_serialized;
+	print_message Verbose_standard "After serialization:";
+	print_message Verbose_standard  v0_serialized;
 	
-	print_message Debug_standard "Now unserializing it...";
+	print_message Verbose_standard "Now unserializing it...";
 	let myv0_back = unserialize_hyper_rectangle v0_serialized in
-	print_message Debug_standard  (debug_string_of_v0 myv0_back);
+	print_message Verbose_standard  (debug_string_of_v0 myv0_back);
 	()
 
 ;;
@@ -549,14 +549,14 @@ let message_MAX_SIZE = 100
 let send_result (*linear_constraint*)im_result =
 	let rank = rank() in
 
-	print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "] Entering send_constraint");
+	print_message Verbose_medium ("[Worker " ^ (string_of_int rank) ^ "] Entering send_constraint");
 	let mlc = (*LinearConstraint.serialize_linear_constraint linear_constraint *) serialize_im_result im_result in
 	let res_size = String.length mlc in
 
-	print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "] Serialized constraint '" ^ mlc ^ "'");
+	print_message Verbose_medium ("[Worker " ^ (string_of_int rank) ^ "] Serialized constraint '" ^ mlc ^ "'");
 	
 	(* Send the result: 1st send my rank, then the data size, then the data *)
-	print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "] About to send the size (" ^ (string_of_int res_size) ^ ") of the constraint.");
+	print_message Verbose_medium ("[Worker " ^ (string_of_int rank) ^ "] About to send the size (" ^ (string_of_int res_size) ^ ") of the constraint.");
 	Mpi.send rank masterrank (int_of_slave_tag Slave_result_tag) Mpi.comm_world;
 	Mpi.send res_size masterrank (int_of_slave_tag Slave_result_tag) Mpi.comm_world;
 	Mpi.send mlc masterrank (int_of_slave_tag Slave_result_tag) Mpi.comm_world
@@ -564,34 +564,34 @@ let send_result (*linear_constraint*)im_result =
 (*	(*** HACK: cut the constraint to try to solve a strange bug with MPI ***)
 	if res_size <= message_MAX_SIZE then(
 		(* Normal situation *)
-		print_message Debug_high ("[Worker " ^ (string_of_int rank) ^ "] About to send a constraint.");
+		print_message Verbose_high ("[Worker " ^ (string_of_int rank) ^ "] About to send a constraint.");
 		Mpi.send mlc masterrank (int_of_slave_tag Slave_result_tag) Mpi.comm_world ;
-		print_message Debug_low ("[Worker " ^ (string_of_int rank) ^ "] Sent constraint '" ^ mlc ^ "'");
+		print_message Verbose_low ("[Worker " ^ (string_of_int rank) ^ "] Sent constraint '" ^ mlc ^ "'");
 		()
 	)else(
 		(* Cutting situation *)
-		print_message Debug_low ("[Worker " ^ (string_of_int rank) ^ "] About to cut a constraint into smaller parts.");
+		print_message Verbose_low ("[Worker " ^ (string_of_int rank) ^ "] About to cut a constraint into smaller parts.");
 		let remainder = res_size mod message_MAX_SIZE in
 		let nb_parts = res_size / message_MAX_SIZE in
-		print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "] There will be " ^ (string_of_int nb_parts) ^ " parts and " ^ (if remainder = 0 then "no" else "a") ^ " remainder.");
+		print_message Verbose_medium ("[Worker " ^ (string_of_int rank) ^ "] There will be " ^ (string_of_int nb_parts) ^ " parts and " ^ (if remainder = 0 then "no" else "a") ^ " remainder.");
 		for i = 0 to nb_parts - 1 do
 			(* Cut the string *)
 			let substring = String.sub mlc (i * message_MAX_SIZE) message_MAX_SIZE in
-			print_message Debug_high ("[Worker " ^ (string_of_int rank) ^ "] About to send a piece of constraint.");
+			print_message Verbose_high ("[Worker " ^ (string_of_int rank) ^ "] About to send a piece of constraint.");
 			Mpi.send substring masterrank (int_of_slave_tag Slave_result_tag) Mpi.comm_world ;
-			print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "] Sent piece of constraint #" ^ (string_of_int i) ^ " '" ^ substring ^ "'");
+			print_message Verbose_medium ("[Worker " ^ (string_of_int rank) ^ "] Sent piece of constraint #" ^ (string_of_int i) ^ " '" ^ substring ^ "'");
 		done;
 		
 		(* Send the remainder if not null *)
 		if remainder <> 0 then(
 			(* Cut the string *)
 			let substring = String.sub mlc (nb_parts * message_MAX_SIZE) remainder in
-			print_message Debug_high ("[Worker " ^ (string_of_int rank) ^ "] About to send the last piece of a constraint.");
+			print_message Verbose_high ("[Worker " ^ (string_of_int rank) ^ "] About to send the last piece of a constraint.");
 			Mpi.send substring masterrank (int_of_slave_tag Slave_result_tag) Mpi.comm_world ;
-			print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "] Sent (last) piece of constraint #" ^ (string_of_int nb_parts) ^ " '" ^ substring ^ "'");
+			print_message Verbose_medium ("[Worker " ^ (string_of_int rank) ^ "] Sent (last) piece of constraint #" ^ (string_of_int nb_parts) ^ " '" ^ substring ^ "'");
 		);
  
-		print_message Debug_low ("[Worker " ^ (string_of_int rank) ^ "] Sent constraint '" ^ mlc ^ "'  in small pieces.");
+		print_message Verbose_low ("[Worker " ^ (string_of_int rank) ^ "] Sent constraint '" ^ mlc ^ "'  in small pieces.");
 		
  		()
 	)
@@ -601,14 +601,14 @@ let send_result (*linear_constraint*)im_result =
 let send_result_worker (*linear_constraint*)im_result =
 	let rank = rank() in
 
-	print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "] Entering send_constraint");
+	print_message Verbose_medium ("[Worker " ^ (string_of_int rank) ^ "] Entering send_constraint");
 	let mlc = (*LinearConstraint.serialize_linear_constraint linear_constraint *) serialize_im_result im_result in
 	let res_size = String.length mlc in
 
-	print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "] Serialized constraint '" ^ mlc ^ "'");
+	print_message Verbose_medium ("[Worker " ^ (string_of_int rank) ^ "] Serialized constraint '" ^ mlc ^ "'");
 	
 	(* Send the result: 1st send my rank, then the data size, then the data *)
-	print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "] About to send the size (" ^ (string_of_int res_size) ^ ") of the constraint.");
+	print_message Verbose_medium ("[Worker " ^ (string_of_int rank) ^ "] About to send the size (" ^ (string_of_int res_size) ^ ") of the constraint.");
 	Mpi.send rank masterrank (int_of_slave_tag Slave_tile_tag) Mpi.comm_world;
 	Mpi.send res_size masterrank (int_of_slave_tag Slave_tile_tag) Mpi.comm_world;
 	Mpi.send mlc masterrank (int_of_slave_tag Slave_tile_tag) Mpi.comm_world
@@ -618,14 +618,14 @@ let send_result_worker (*linear_constraint*)im_result =
 let send_tile (*linear_constraint*)im_result slave_rank =
 	(*let rank = rank() in*)
 
-	(*print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "] Entering send_constraint");*)
+	(*print_message Verbose_medium ("[Worker " ^ (string_of_int rank) ^ "] Entering send_constraint");*)
 	let mlc = (*LinearConstraint.serialize_linear_constraint linear_constraint *) serialize_im_result im_result in
 	let res_size = String.length mlc in
 
-	(*print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "] Serialized constraint '" ^ mlc ^ "'");*)
+	(*print_message Verbose_medium ("[Worker " ^ (string_of_int rank) ^ "] Serialized constraint '" ^ mlc ^ "'");*)
 	
 	(* Send the result: 1st send my rank, then the data size, then the data *)
-	(*print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "] About to send the size (" ^ (string_of_int res_size) ^ ") of the constraint.");*)
+	(*print_message Verbose_medium ("[Worker " ^ (string_of_int rank) ^ "] About to send the size (" ^ (string_of_int res_size) ^ ") of the constraint.");*)
 	(*Mpi.send rank slave_rank (int_of_master_tag Master_tile_tag) Mpi.comm_world;*)
 	Mpi.send res_size slave_rank (int_of_master_tag Master_tile_tag) Mpi.comm_world;
 	Mpi.send mlc slave_rank (int_of_master_tag Master_tile_tag) Mpi.comm_world
@@ -646,7 +646,7 @@ let send_pi0 (pi0 : AbstractModel.pi0) slave_rank =
 (* Sends a point (first the size then the point), by the slave *)
 let send_pi0_worker pi0  =
 	let rank = rank() in
-	print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "] Entering send_pi0");
+	print_message Verbose_medium ("[Worker " ^ (string_of_int rank) ^ "] Entering send_pi0");
 	let mpi0 = serialize_pi0 pi0 in
 	let res_size = String.length mpi0 in
 	(* Send the result: 1st send the data size, then the data *)
@@ -682,8 +682,8 @@ let receive_pull_request () =
     Mpi.receive_status Mpi.any_source Mpi.any_tag Mpi.comm_world
   in
 
-  print_message Debug_medium ("\t[Master] MPI status received from [Worker " ^ ( string_of_int source_rank) ^"]");
-  print_message Debug_medium ("\t[Master] Tag decoded from [Worker " ^ ( string_of_int source_rank) ^"] : " ^ ( string_of_int tag ) );
+  print_message Verbose_medium ("\t[Master] MPI status received from [Worker " ^ ( string_of_int source_rank) ^"]");
+  print_message Verbose_medium ("\t[Master] Tag decoded from [Worker " ^ ( string_of_int source_rank) ^"] : " ^ ( string_of_int tag ) );
 
   let tag = slave_tag_of_int tag in  
 
@@ -691,18 +691,18 @@ let receive_pull_request () =
   match tag with
   | Slave_result_tag ->
      let s_rank = l in
-     print_message Debug_medium ("[Master] Received Slave_result_tag from " ^ ( string_of_int source_rank) );
+     print_message Verbose_medium ("[Master] Received Slave_result_tag from " ^ ( string_of_int source_rank) );
 
      let len = Mpi.receive s_rank (int_of_slave_tag Slave_result_tag) Mpi.comm_world in
 
-     print_message Debug_medium ("[Master] Expecting a result of size " ^ ( string_of_int len) ^ " from [Worker " ^ (string_of_int s_rank) ^ "]" );
+     print_message Verbose_medium ("[Master] Expecting a result of size " ^ ( string_of_int len) ^ " from [Worker " ^ (string_of_int s_rank) ^ "]" );
 
      (* receive the result itself *)
      let buff = String.create len in
      let res = ref buff in
-     print_message Debug_medium ("[Master] Buffer created with length " ^ (string_of_int len)^"");	
+     print_message Verbose_medium ("[Master] Buffer created with length " ^ (string_of_int len)^"");	
      res := Mpi.receive s_rank (int_of_slave_tag Slave_result_tag) Mpi.comm_world ;
-     print_message Debug_medium("[Master] received buffer " ^ !res ^ " of size " ^ ( string_of_int len) ^ " from [Worker "  ^ (string_of_int source_rank) ^ "]");	
+     print_message Verbose_medium("[Master] received buffer " ^ !res ^ " of size " ^ ( string_of_int len) ^ " from [Worker "  ^ (string_of_int source_rank) ^ "]");	
 
 			
      (* Get the constraint *)
@@ -712,16 +712,16 @@ let receive_pull_request () =
 		   
   (* Case error *)
   | Slave_outofbound_tag ->
-     print_message Debug_medium ("[Master] Received Slave_outofbound_tag");
+     print_message Verbose_medium ("[Master] Received Slave_outofbound_tag");
      OutOfBound source_rank
 		
   (* Case simple pull? *)
   | Slave_work_tag ->
-     print_message Debug_medium ("[Master] Received Slave_work_tag from [Worker " ^ ( string_of_int source_rank) ^ "] : " ^  ( string_of_int l ));
+     print_message Verbose_medium ("[Master] Received Slave_work_tag from [Worker " ^ ( string_of_int source_rank) ^ "] : " ^  ( string_of_int l ));
      PullOnly (* source_rank *) l
      
   | Slave_updaterequest_tag ->
-     print_message Debug_medium ("[Master] Received Slave_updaterequest_tag from [Worker " ^ ( string_of_int source_rank) ^ "] : " ^  ( string_of_int l ));
+     print_message Verbose_medium ("[Master] Received Slave_updaterequest_tag from [Worker " ^ ( string_of_int source_rank) ^ "] : " ^  ( string_of_int l ));
      UpdateRequest (* source_rank *) l
      
      
@@ -730,15 +730,15 @@ let receive_pull_request () =
   (* Tile tag  same with Slave_result_tag*)
   | Slave_tile_tag ->
      let s_rank = l in
-     print_message Debug_medium ("[Master] Received Slave_tile_tag from " ^ ( string_of_int source_rank) );
+     print_message Verbose_medium ("[Master] Received Slave_tile_tag from " ^ ( string_of_int source_rank) );
      let len = Mpi.receive s_rank (int_of_slave_tag Slave_tile_tag) Mpi.comm_world in
-     print_message Debug_medium ("[Master] Expecting a result of size " ^ ( string_of_int len) ^ " from [Worker " ^ (string_of_int s_rank) ^ "]" );
+     print_message Verbose_medium ("[Master] Expecting a result of size " ^ ( string_of_int len) ^ " from [Worker " ^ (string_of_int s_rank) ^ "]" );
      (* receive the K itself *)
      let buff = String.create len in
      let res = ref buff in
-     print_message Debug_medium ("[Master] Buffer created with length " ^ (string_of_int len)^"");	
+     print_message Verbose_medium ("[Master] Buffer created with length " ^ (string_of_int len)^"");	
      res := Mpi.receive s_rank (int_of_slave_tag Slave_tile_tag) Mpi.comm_world ;
-     print_message Debug_medium("[Master] received buffer " ^ !res ^ " of size " ^ ( string_of_int len) ^ " from [Worker "  ^ (string_of_int source_rank) ^ "]");	
+     print_message Verbose_medium("[Master] received buffer " ^ !res ^ " of size " ^ ( string_of_int len) ^ " from [Worker "  ^ (string_of_int source_rank) ^ "]");	
      (* Get the constraint *)
      let im_result = unserialize_im_result !res in
      Tile (s_rank , im_result)
@@ -746,17 +746,17 @@ let receive_pull_request () =
   (* pi0 tags same as Master_data_tag*)
   | Slave_pi0_tag ->
     let s_rank = l in 
-    print_message Debug_medium ("[Master] Received Slave_pi0_tag from " ^ ( string_of_int source_rank) );
-    print_message Debug_medium ("[Master] !!!!!!!!!!!!!!!!!!!!!1 " );
+    print_message Verbose_medium ("[Master] Received Slave_pi0_tag from " ^ ( string_of_int source_rank) );
+    print_message Verbose_medium ("[Master] !!!!!!!!!!!!!!!!!!!!!1 " );
     let len = Mpi.receive s_rank (int_of_slave_tag Slave_pi0_tag) Mpi.comm_world in
-    print_message Debug_medium ("[Master] !!!!!!!!!!!!!!!!!!!!!1 " );
-    print_message Debug_medium ("[Master] Expecting a result of size " ^ ( string_of_int len) ^ " from [Worker " ^ (string_of_int s_rank) ^ "]" );
+    print_message Verbose_medium ("[Master] !!!!!!!!!!!!!!!!!!!!!1 " );
+    print_message Verbose_medium ("[Master] Expecting a result of size " ^ ( string_of_int len) ^ " from [Worker " ^ (string_of_int s_rank) ^ "]" );
      (* Receive the data itself *)
     let buff = String.create len in
     let res = ref buff in
-    print_message Debug_medium ("[Master] Buffer created with length " ^ (string_of_int len)^"");	
+    print_message Verbose_medium ("[Master] Buffer created with length " ^ (string_of_int len)^"");	
     res := Mpi.receive s_rank (int_of_slave_tag Slave_pi0_tag) Mpi.comm_world ;
-    print_message Debug_medium("[Master] received buffer " ^ !res ^ " of size " ^ ( string_of_int len) ^ " from [Worker "  ^ (string_of_int source_rank) ^ "]");	
+    print_message Verbose_medium("[Master] received buffer " ^ !res ^ " of size " ^ ( string_of_int len) ^ " from [Worker "  ^ (string_of_int source_rank) ^ "]");	
     (* Get the constraint *)
     let pi0 = (unserialize_pi0 !res) in
     Pi0 (s_rank , pi0)
@@ -766,17 +766,17 @@ let receive_pull_request () =
 
 
 let send_finished source_rank = 
-  print_message Debug_medium( "[Master] Sending STOP to [Worker " ^ (string_of_int source_rank ) ^"].");
+  print_message Verbose_medium( "[Master] Sending STOP to [Worker " ^ (string_of_int source_rank ) ^"].");
   Mpi.send (weird_stuff()) source_rank (int_of_master_tag Master_finished_tag) Mpi.comm_world 
   
 (*Hoang Gia send TERMINATE tag*)
 let send_terminate source_rank = 
-  print_message Debug_medium( "[Master] Sending TERMINATE to [Worker " ^ (string_of_int source_rank ) ^"].");
+  print_message Verbose_medium( "[Master] Sending TERMINATE to [Worker " ^ (string_of_int source_rank ) ^"].");
   Mpi.send (weird_stuff()) source_rank (int_of_master_tag Master_terminate_tag) Mpi.comm_world 
  
 (*Hoang Gia send Continue tag*)
 let send_continue source_rank = 
-  print_message Debug_medium( "[Master] Sending CONTINUE to [Worker " ^ (string_of_int source_rank ) ^"].");
+  print_message Verbose_medium( "[Master] Sending CONTINUE to [Worker " ^ (string_of_int source_rank ) ^"].");
   Mpi.send (weird_stuff()) source_rank (int_of_master_tag Master_continue_tag) Mpi.comm_world 
 
 let receive_work () =
@@ -796,7 +796,7 @@ let receive_work () =
 
 		work := Mpi.receive masterrank (int_of_master_tag Master_data_tag) Mpi.comm_world;
 		
-		print_message Debug_high ("Received " ^ (string_of_int w) ^ " bytes of work '" ^ !work ^ "' with tag " ^ (string_of_int (int_of_master_tag Master_data_tag)));
+		print_message Verbose_high ("Received " ^ (string_of_int w) ^ " bytes of work '" ^ !work ^ "' with tag " ^ (string_of_int (int_of_master_tag Master_data_tag)));
 		
 		(* Get the pi0 *)
 		let pi0 = unserialize_pi0 !work in
@@ -821,7 +821,7 @@ let receive_work () =
 
 		work1 := Mpi.receive masterrank (int_of_master_tag Master_tile_tag) Mpi.comm_world;
 		
-		print_message Debug_high ("Received " ^ (string_of_int w) ^ " bytes of work '" ^ !work1 ^ "' with tag " ^ (string_of_int (int_of_master_tag Master_tile_tag)));
+		print_message Verbose_high ("Received " ^ (string_of_int w) ^ " bytes of work '" ^ !work1 ^ "' with tag " ^ (string_of_int (int_of_master_tag Master_tile_tag)));
 		
 		(* Get the K *)
 		let im_result = unserialize_im_result !work1 in
@@ -834,7 +834,7 @@ let receive_work () =
 
 		work2 := Mpi.receive masterrank (int_of_master_tag Master_subpart_tag) Mpi.comm_world;
 		
-		print_message Debug_high ("Received " ^ (string_of_int w) ^ " bytes of work '" ^ !work2 ^ "' with tag " ^ (string_of_int (int_of_master_tag Master_subpart_tag)));
+		print_message Verbose_high ("Received " ^ (string_of_int w) ^ " bytes of work '" ^ !work2 ^ "' with tag " ^ (string_of_int (int_of_master_tag Master_subpart_tag)));
 		
 		(* Get the K *)
 		let subpart = unserialize_hyper_rectangle !work2 in

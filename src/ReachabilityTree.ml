@@ -7,7 +7,7 @@
  * LIPN, Universite Paris 13, Sorbonne Paris Cite, France
  * Author:        Etienne Andre
  * Created:       2012/06/07
- * Last modified: 2012/06/21
+ * Last modified: 2015/03/30
  *
  ************************************************************)
 
@@ -102,7 +102,7 @@ let get_next_element rtree =
 	let next = ref rtree.current_element in
 	(* Recursive function for checking an element ; raise Not_found if root is reached *)
 	let rec check_element element = 
-		print_message Debug_total ("\nChecking a new element");
+		print_message Verbose_total ("\nChecking a new element");
 		(* First check the children *)
 		let children = get_children element rtree in
 		(* Check if each children is visited *)
@@ -111,16 +111,16 @@ let get_next_element rtree =
 				Not_found -> raise (InternalError ("Error in get_next_element ; the child of some element has no entry at all in the visited table."));
 			in
 			if not child_is_visited then (
-				print_message Debug_total ("Child not visited! Next is found.");
+				print_message Verbose_total ("Child not visited! Next is found.");
 				next := child;
 				raise FoundNext
-			) else (print_message Debug_total ("Child visited."););
+			) else (print_message Verbose_total ("Child visited."););
 		) children;
 		
-		print_message Debug_total ("Children all visited.");
+		print_message Verbose_total ("Children all visited.");
 		(* Then check higher in the hierarchy, except if root *)
 		if element != rtree.root then(
-			print_message Debug_total ("Element is not root: go to parent.");
+			print_message Verbose_total ("Element is not root: go to parent.");
 			(* Retrieve the parent *)
 			let parent = Hashtbl.find rtree.parent element in
 			(* Check the parent *)
@@ -128,13 +128,13 @@ let get_next_element rtree =
 		)
 		(* If root : raise Not_found *)
 		else (
-			print_message Debug_total ("Element is root: not found!");
+			print_message Verbose_total ("Element is root: not found!");
 			raise Not_found
 		);
 	in	
 	(* Global exception mechanism when the child is found *)
 	try(
-		print_message Debug_total ("Starting to look for the new element.");
+		print_message Verbose_total ("Starting to look for the new element.");
 		check_element rtree.current_element
 	) with FoundNext ->
 		(* Set the new element *)

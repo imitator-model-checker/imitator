@@ -7,7 +7,7 @@
  * Author:        Etienne Andre, Camille Coti, Hoang Gia Nguyen
  * 
  * Created:       2014/09/05
- * Last modified: 2014/10/24
+ * Last modified: 2015/03/30
  *
  ****************************************************************)
 
@@ -94,21 +94,21 @@ let split s dimension =
 	let d = HyperRectangle.get_dimensions() -1 in
 	(* Sliptting subpart into 2 smaller subparts*)
 	(*Display information of s*)
-	(*print_message Debug_standard ("\nSplitting............! ");
-	print_message Debug_standard ("\ns infomation: ");
-	print_message Debug_standard ("Number dimensions is : " ^ (string_of_int d) );
+	(*print_message Verbose_standard ("\nSplitting............! ");
+	print_message Verbose_standard ("\ns infomation: ");
+	print_message Verbose_standard ("Number dimensions is : " ^ (string_of_int d) );
 	for j = 0 to d do
-	print_message Debug_standard ("Dimension " ^(string_of_int j)^" : "^ " min = " ^ (string_of_int (NumConst.to_int(s#get_min j)))^";"^ " max = " ^ (string_of_int (NumConst.to_int(s#get_max j))));
+	print_message Verbose_standard ("Dimension " ^(string_of_int j)^" : "^ " min = " ^ (string_of_int (NumConst.to_int(s#get_min j)))^";"^ " max = " ^ (string_of_int (NumConst.to_int(s#get_max j))));
 	done;
 	(*check pi0 in subpart*)
 	let totalpi0 = getTotalPi0 s d in
-	print_message Debug_standard ("Total pi0s in s is : " ^ (string_of_int totalpi0) );*)
+	print_message Verbose_standard ("Total pi0s in s is : " ^ (string_of_int totalpi0) );*)
 	(**********************************end printing***************************************************)
 	let max_d_l = ref 0 in
 	(*count from zero so that add 1 unit*)
 	max_d_l := ( (NumConst.to_int(s#get_max dimension)) - (NumConst.to_int(s#get_min dimension)) +1 );
 	if (!max_d_l = 1) then raise (Ex ("the length is minimum, could not split smaller "));
-	print_message Debug_medium ("\ndetected Max dimension length in this subpart is : " ^ (string_of_int (!max_d_l)) ^ " unit at dimension " ^ (string_of_int (dimension))); 
+	print_message Verbose_medium ("\ndetected Max dimension length in this subpart is : " ^ (string_of_int (!max_d_l)) ^ " unit at dimension " ^ (string_of_int (dimension))); 
 	  (*create new subparts*)
 	  let s1 = new HyperRectangle.hyper_rectangle in
 	  let s2 = new HyperRectangle.hyper_rectangle in
@@ -143,21 +143,21 @@ let split s dimension =
 	      end
 	   done;
 	(*Display information of s1*)
-	(*print_message Debug_standard ("\ns1 infomation: ");
+	(*print_message Verbose_standard ("\ns1 infomation: ");
 	for i = 0 to d do
-	print_message Debug_standard ("Dimension " ^(string_of_int i)^" : "^ " min = " ^ (string_of_int (NumConst.to_int(s1#get_min i)))^";"^ " max = " ^ (string_of_int (NumConst.to_int(s1#get_max i))));
+	print_message Verbose_standard ("Dimension " ^(string_of_int i)^" : "^ " min = " ^ (string_of_int (NumConst.to_int(s1#get_min i)))^";"^ " max = " ^ (string_of_int (NumConst.to_int(s1#get_max i))));
 	done;
 	(*check pi0 in subpart*)
 	let totalpi0s1 = getTotalPi0 s1 d in
-	print_message Debug_standard ("Total pi0s in s1 is : " ^ (string_of_int totalpi0s1) );
+	print_message Verbose_standard ("Total pi0s in s1 is : " ^ (string_of_int totalpi0s1) );
 	(*Display information of s2*)
-	print_message Debug_standard ("\ns2 infomation: ");
+	print_message Verbose_standard ("\ns2 infomation: ");
 	for i = 0 to d do
-	print_message Debug_standard ("Dimension " ^(string_of_int i)^" : "^ " min = " ^ (string_of_int (NumConst.to_int(s2#get_min i)))^";"^ " max = " ^ (string_of_int (NumConst.to_int(s2#get_max i))));
+	print_message Verbose_standard ("Dimension " ^(string_of_int i)^" : "^ " min = " ^ (string_of_int (NumConst.to_int(s2#get_min i)))^";"^ " max = " ^ (string_of_int (NumConst.to_int(s2#get_max i))));
 	done;
 	(*check pi0 in subpart*)
 	let totalpi0s2 = getTotalPi0 s2 d in
-	print_message Debug_standard ("Total pi0s in s2 is : " ^ (string_of_int totalpi0s2) );*)
+	print_message Verbose_standard ("Total pi0s in s2 is : " ^ (string_of_int totalpi0s2) );*)
 	(***************************************************************************)
 	[s1;s2];;
 	()
@@ -166,21 +166,21 @@ let split2 s dimension n =
 	let d = HyperRectangle.get_dimensions() -1 in
 	(* Sliptting subpart into 2 smaller subparts*)
 	(*Display information of s*)
-	(*print_message Debug_standard ("\nSplitting............! ");
-	print_message Debug_standard ("\ns infomation: ");
-	print_message Debug_standard ("Number dimensions is : " ^ (string_of_int d) );
+	(*print_message Verbose_standard ("\nSplitting............! ");
+	print_message Verbose_standard ("\ns infomation: ");
+	print_message Verbose_standard ("Number dimensions is : " ^ (string_of_int d) );
 	for j = 0 to d do
-	print_message Debug_standard ("Dimension " ^(string_of_int j)^" : "^ " min = " ^ (string_of_int (NumConst.to_int(s#get_min j)))^";"^ " max = " ^ (string_of_int (NumConst.to_int(s#get_max j))));
+	print_message Verbose_standard ("Dimension " ^(string_of_int j)^" : "^ " min = " ^ (string_of_int (NumConst.to_int(s#get_min j)))^";"^ " max = " ^ (string_of_int (NumConst.to_int(s#get_max j))));
 	done;
 	(*check pi0 in subpart*)
 	let totalpi0 = getTotalPi0 s d in
-	print_message Debug_standard ("Total pi0s in s is : " ^ (string_of_int totalpi0) );*)
+	print_message Verbose_standard ("Total pi0s in s is : " ^ (string_of_int totalpi0) );*)
 	(**********************************end printing***************************************************)
 	let max_d_l = ref 0 in
 	(*count from zero so that add 1 unit*)
 	max_d_l := ( (NumConst.to_int(s#get_max dimension)) - (NumConst.to_int(s#get_min dimension)) +1 );
 	if (!max_d_l = 1) then raise (Ex ("the length is minimum, could not split smaller "));
-	print_message Debug_medium ("\ndetected Max dimension length in this subpart is : " ^ (string_of_int (!max_d_l)) ^ " unit at dimension " ^ (string_of_int (dimension))); 
+	print_message Verbose_medium ("\ndetected Max dimension length in this subpart is : " ^ (string_of_int (!max_d_l)) ^ " unit at dimension " ^ (string_of_int (dimension))); 
 	  (*create new subparts*)
 	  let s1 = new HyperRectangle.hyper_rectangle in
 	  let s2 = new HyperRectangle.hyper_rectangle in
@@ -215,21 +215,21 @@ let split2 s dimension n =
 	      end
 	   done;
 	(*Display information of s1*)
-	(*print_message Debug_standard ("\ns1 infomation: ");
+	(*print_message Verbose_standard ("\ns1 infomation: ");
 	for i = 0 to d do
-	print_message Debug_standard ("Dimension " ^(string_of_int i)^" : "^ " min = " ^ (string_of_int (NumConst.to_int(s1#get_min i)))^";"^ " max = " ^ (string_of_int (NumConst.to_int(s1#get_max i))));
+	print_message Verbose_standard ("Dimension " ^(string_of_int i)^" : "^ " min = " ^ (string_of_int (NumConst.to_int(s1#get_min i)))^";"^ " max = " ^ (string_of_int (NumConst.to_int(s1#get_max i))));
 	done;
 	(*check pi0 in subpart*)
 	let totalpi0s1 = getTotalPi0 s1 d in
-	print_message Debug_standard ("Total pi0s in s1 is : " ^ (string_of_int totalpi0s1) );
+	print_message Verbose_standard ("Total pi0s in s1 is : " ^ (string_of_int totalpi0s1) );
 	(*Display information of s2*)
-	print_message Debug_standard ("\ns2 infomation: ");
+	print_message Verbose_standard ("\ns2 infomation: ");
 	for i = 0 to d do
-	print_message Debug_standard ("Dimension " ^(string_of_int i)^" : "^ " min = " ^ (string_of_int (NumConst.to_int(s2#get_min i)))^";"^ " max = " ^ (string_of_int (NumConst.to_int(s2#get_max i))));
+	print_message Verbose_standard ("Dimension " ^(string_of_int i)^" : "^ " min = " ^ (string_of_int (NumConst.to_int(s2#get_min i)))^";"^ " max = " ^ (string_of_int (NumConst.to_int(s2#get_max i))));
 	done;
 	(*check pi0 in subpart*)
 	let totalpi0s2 = getTotalPi0 s2 d in
-	print_message Debug_standard ("Total pi0s in s2 is : " ^ (string_of_int totalpi0s2) );*)
+	print_message Verbose_standard ("Total pi0s in s2 is : " ^ (string_of_int totalpi0s2) );*)
 	(***************************************************************************)
 	[s1;s2];;
 	()
@@ -279,14 +279,14 @@ let intialize_Subparts (v0 : HyperRectangle.hyper_rectangle) (n : int) =
 	  (*check if length every edge if equals to unit*)
 	  if (!max_pi0s != 1) then 
 	  begin
-	    print_message Debug_medium ("\nMax pi0s in list is : " ^ (string_of_int !max_pi0s) ^ " in subpart : " ^ (string_of_int !subno));
+	    print_message Verbose_medium ("\nMax pi0s in list is : " ^ (string_of_int !max_pi0s) ^ " in subpart : " ^ (string_of_int !subno));
 	    (*get list split subparts*)
 	    let newSubpartList = sliptLongestDimensionSubpart (at !subparts !subno) in (*!subno*)
 	    (*remove old subpart*)
 	    subparts := (remove_at !subparts !subno);
 	    (*add new subparts*)
 	    subparts := !subparts@newSubpartList;
-	    print_message Debug_medium ("\nList length : " ^ (string_of_int (List.length !subparts) ) );
+	    print_message Verbose_medium ("\nList length : " ^ (string_of_int (List.length !subparts) ) );
 	   end
 	   else
 	   begin
@@ -359,36 +359,36 @@ let get_next_sequential_pi0_in_subpart pi0 (s : HyperRectangle.hyper_rectangle) 
 
 (* dynamic split subpart *)
 let dynamicSplitSubpart (s : HyperRectangle.hyper_rectangle) pi0 n : HyperRectangle.hyper_rectangle list =
-	print_message Debug_medium ("\n entering dynamic splitting process" );
+	print_message Verbose_medium ("\n entering dynamic splitting process" );
 	(*let pi0 = get_next_sequential_pi0_in_subpart pi0 s in *)
 	let notFound = ref true in
 	let max_d_l = ref 0 in
 	let j = ref (HyperRectangle.get_dimensions()-1) in
 	let lst = ref [] in
-	(*print_message Debug_medium ("\n bug!!!!!!!!!!0" );*)
+	(*print_message Verbose_medium ("\n bug!!!!!!!!!!0" );*)
 	while( !notFound (*&& (!j != -1)*) ) do
 	  begin	
-	 (* print_message Debug_medium ("\n bug!!!!!!!!!!1" );*)
-	   (* if(!j = -1) then  print_message Debug_medium ("\n all demensions of subpart could not split" ); raise (Ex (" there are only 1 pi0 left in subpart, could not split! "));*)
+	 (* print_message Verbose_medium ("\n bug!!!!!!!!!!1" );*)
+	   (* if(!j = -1) then  print_message Verbose_medium ("\n all demensions of subpart could not split" ); raise (Ex (" there are only 1 pi0 left in subpart, could not split! "));*)
 	    (*if current pi0 at max dimension j but the Min at demension j of subpart is lower, split all the done pi0 below j*)
 	    (*update subpart*)
-	   (* print_message Debug_medium ("\n bug!!!!!!!!!!2" );*)
+	   (* print_message Verbose_medium ("\n bug!!!!!!!!!!2" );*)
 	    if ( NumConst.to_int(s#get_min (!j)) < pi0.(!j) ) then begin s#set_min (!j) (NumConst.numconst_of_int (pi0.(!j))) end;
-	   (* print_message Debug_medium ("\n bug!!!!!!!!!!3" );*)
+	   (* print_message Verbose_medium ("\n bug!!!!!!!!!!3" );*)
 	    max_d_l := ( (NumConst.to_int(s#get_max (!j)) - pi0.(!j) ) +1 ) ;
-	    (*print_message Debug_medium ("\n bug!!!!!!!!!!4" );*)
+	    (*print_message Verbose_medium ("\n bug!!!!!!!!!!4" );*)
 	    (*split subpart if the remain distance from pi0 to max dimension at leat 2 points*)
 	    if( !max_d_l > 1 ) then
 	      begin
-	      (*print_message Debug_medium ("\n bug!!!!!!!!!!5" );*)
-		print_message Debug_medium ("\nBegin split at demension : " ^ (string_of_int (!j) ) );
+	      (*print_message Verbose_medium ("\n bug!!!!!!!!!!5" );*)
+		print_message Verbose_medium ("\nBegin split at demension : " ^ (string_of_int (!j) ) );
 		lst := split2 s !j n;
 		notFound := false ;
 	      end;
 	    j := (!j - 1) ;
 	   (* if(!j = -1) then
 	      begin
-		print_message Debug_medium ("\n all demensions of subpart could not split" );
+		print_message Verbose_medium ("\n all demensions of subpart could not split" );
 		raise (Ex (" all demensions of subpart could not split "));
 	      end;*)
 	    
@@ -397,10 +397,10 @@ let dynamicSplitSubpart (s : HyperRectangle.hyper_rectangle) pi0 n : HyperRectan
 	  (*if(!j = -1) then
 	    begin
 	      
-	      print_message Debug_medium ("\n all demensions of subpart could not split" );
+	      print_message Verbose_medium ("\n all demensions of subpart could not split" );
 	      raise (Ex (" all demensions of subpart could not split "));
 	    end;*)
-	    print_message Debug_medium ("\n splitting list : " ^ (string_of_int (List.length !lst) ) );
+	    print_message Verbose_medium ("\n splitting list : " ^ (string_of_int (List.length !lst) ) );
 	!lst;;
 	()
 
@@ -410,7 +410,7 @@ let dynamicSplitSubpart (s : HyperRectangle.hyper_rectangle) pi0 n : HyperRectan
 (* pval to array *)
 let pval2array pval =
 	let arr = Array.make (PVal.get_dimensions()) 0 in
-	(*print_message Debug_standard ("\nPVal dimensions : " ^ (string_of_int (PVal.get_dimensions()) ) );*)
+	(*print_message Verbose_standard ("\nPVal dimensions : " ^ (string_of_int (PVal.get_dimensions()) ) );*)
 	for i = 0 to (PVal.get_dimensions()-1) do
 	  arr.(i) <- (NumConst.to_int (pval#get_value i));
 	done;
@@ -463,7 +463,7 @@ let master () =
 	(* Start total counter *)
 	counter_master_total#start;
 	
-	print_message Debug_medium ("[Master] Hello world!");
+	print_message Verbose_medium ("[Master] Hello world!");
 	
 	(* Perform initialization *)
 	counter_master_processing#start;
@@ -477,7 +477,7 @@ let master () =
 	let limit_reached = ref false in
 	
 
-	(*print_message Debug_standard ("[Master] Here!!!!!!!!!!");*)
+	(*print_message Verbose_standard ("[Master] Here!!!!!!!!!!");*)
 	(* create index(worker,supart) *)
 	let index = ref [] in
 	(* current pi0 of workers*)
@@ -514,7 +514,7 @@ let master () =
 		
 		(* Get the pull_request *)
 		(*let source_rank, tile_nature_option, pi0 = (receive_pull_request_subpart()) in*)
-		print_message Debug_medium ("[Master] heloooooo ");
+		print_message Verbose_medium ("[Master] heloooooo ");
 		
 		counter_master_waiting#start;
 		let pull_request = (receive_pull_request ()) in
@@ -527,7 +527,7 @@ let master () =
 		match pull_request with 
 		(*Pull Tag*)
 		| PullOnly source_rank ->
-				 print_message Debug_medium ("[Master] Received a pull request from worker " ^ (string_of_int source_rank) ^ "");
+				 print_message Verbose_medium ("[Master] Received a pull request from worker " ^ (string_of_int source_rank) ^ "");
 				 (* check to delete if the worker comeback *)
 				 if(List.mem_assoc source_rank !index) then
 				  begin
@@ -538,7 +538,7 @@ let master () =
 				  begin
 				    (*send new subpart *)
 				    send_subpart (List.hd !subparts) source_rank;
-				    print_message Debug_medium ("[Master] Sent Subpart to worker " ^ (string_of_int source_rank) ^ "");
+				    print_message Verbose_medium ("[Master] Sent Subpart to worker " ^ (string_of_int source_rank) ^ "");
 				    (*add into index*)
 				    index := !index@[( source_rank, (List.hd !subparts) )];
 				    subparts := List.tl !subparts;
@@ -548,17 +548,17 @@ let master () =
 				  begin
 
 					waittingList := !waittingList@[source_rank];
-					print_message Debug_medium ("[Master]  worker " ^ (string_of_int source_rank) ^ " go to waittingList!!!");
-					print_message Debug_medium ("[Master]  waitting list size : " ^ (string_of_int (List.length !waittingList)) );
+					print_message Verbose_medium ("[Master]  worker " ^ (string_of_int source_rank) ^ " go to waittingList!!!");
+					print_message Verbose_medium ("[Master]  waitting list size : " ^ (string_of_int (List.length !waittingList)) );
 
-					(*print_message Debug_standard ("[Master]  worker " ^ (string_of_int source_rank) ^ " terminated!!!");
+					(*print_message Verbose_standard ("[Master]  worker " ^ (string_of_int source_rank) ^ " terminated!!!");
 					send_terminate source_rank;*)
 
 				  end;
-				  print_message Debug_medium ("[Master] Received a pull request from worker " ^ (string_of_int source_rank) ^ " end!!!");
+				  print_message Verbose_medium ("[Master] Received a pull request from worker " ^ (string_of_int source_rank) ^ " end!!!");
 		(*Tile Tag*)
 		| Tile (source_rank , tile) ->
-				   print_message Debug_medium ("[Master] Received a tile from worker " ^ (string_of_int source_rank) ^ "");
+				   print_message Verbose_medium ("[Master] Received a tile from worker " ^ (string_of_int source_rank) ^ "");
 				   (*check duplicated tile*)
 				   	counter_master_processing#start;
 					let b = Cartography.bc_process_im_result tile in
@@ -579,17 +579,17 @@ let master () =
 				    begin
 				      wastedTiles := !wastedTiles + 1;
 				    end;
-				    print_message Debug_medium ("[Master] Received a tile from worker " ^ (string_of_int source_rank) ^ " end!!!!!!");
+				    print_message Verbose_medium ("[Master] Received a tile from worker " ^ (string_of_int source_rank) ^ " end!!!!!!");
 
 		(*Pi0 Tag*)
 		| Pi0 (source_rank , pi0) -> 
-				print_message Debug_medium ("[Master] Received a pi0 from worker " ^ (string_of_int source_rank) ^ "");
+				print_message Verbose_medium ("[Master] Received a pi0 from worker " ^ (string_of_int source_rank) ^ "");
 				(*Update tiles*)
 				(*while(List.mem_assoc source_rank !tilebuffer) do
 				  begin
 				    send_tile (List.assoc source_rank !tilebuffer) source_rank;
 				    tilebuffer := (List.remove_assoc source_rank !tilebuffer);
-				    print_message Debug_medium ("[Master] send a tile to worker " ^ (string_of_int source_rank) ^ "");
+				    print_message Verbose_medium ("[Master] send a tile to worker " ^ (string_of_int source_rank) ^ "");
 				  end
 				done;*)
 				
@@ -599,7 +599,7 @@ let master () =
 				   pi0buffer := List.remove_assoc source_rank !pi0buffer;
 				 end;
 				pi0buffer := !pi0buffer@[( source_rank, pi0 )];  
-				print_message Debug_medium ("[Master] pi0s list : " ^ (string_of_int (List.length !pi0buffer) ) ^ "");
+				print_message Verbose_medium ("[Master] pi0s list : " ^ (string_of_int (List.length !pi0buffer) ) ^ "");
 				
 				
 				(*Splitting*)
@@ -607,7 +607,7 @@ let master () =
 				Cartography.test_pi0_uncovered pi0 found_pi0 ;*)
 				     if( not (!waittingList = []) (*&& !found_pi0*)) then
 				      begin
-					print_message Debug_medium ("[Master] waitting List : " ^ (string_of_int (List.length !waittingList) ) ^ "");
+					print_message Verbose_medium ("[Master] waitting List : " ^ (string_of_int (List.length !waittingList) ) ^ "");
 					let s = List.assoc source_rank !index in
 					
 					(*compute the remain points int this subpart*)
@@ -620,15 +620,15 @@ let master () =
 					let remain_points = max_size - done_points in
 										    
 
-					print_message Debug_medium ("[Master] max_size " ^ (string_of_int max_size) ^ "");
-					print_message Debug_medium ("[Master] done_points " ^ (string_of_int done_points) ^ "");
+					print_message Verbose_medium ("[Master] max_size " ^ (string_of_int max_size) ^ "");
+					print_message Verbose_medium ("[Master] done_points " ^ (string_of_int done_points) ^ "");
 					
 					
-					 print_message Debug_medium ("[Master] Splitting ....... ");
+					 print_message Verbose_medium ("[Master] Splitting ....... ");
 					if(remain_points > 1 (*(List.length !waittingList)*)) 
 					  then
 					  begin
-					    print_message Debug_medium ("[Master] Splitting ....... ");
+					    print_message Verbose_medium ("[Master] Splitting ....... ");
 					    (*if splitable, remove it in the index*)
 					    index := (List.remove_assoc source_rank !index);
 					    
@@ -641,7 +641,7 @@ let master () =
 						(*send back to this worker*)
 					    let subpart1 = List.hd newSubparts in
 					    send_subpart subpart1 source_rank;
-					    print_message Debug_medium ("[Master] sent split subpart 1....... ");
+					    print_message Verbose_medium ("[Master] sent split subpart 1....... ");
 					    
 					     index := !index@[source_rank, subpart1];
 					    
@@ -662,28 +662,28 @@ let master () =
 						let w = List.hd !waittingList in
 						send_subpart (at newSubparts2 i) w;
 						index := !index@[w, (at newSubparts2 i)];
-						print_message Debug_medium ("[Master] sent split subpart 2gdfgdfgf....... ");
+						print_message Verbose_medium ("[Master] sent split subpart 2gdfgdfgf....... ");
 						waittingList := remove_at_lst !waittingList 0;
-						print_message Debug_medium ("[Master] sent split subpart 2gdfgdfgf.......1 ");
+						print_message Verbose_medium ("[Master] sent split subpart 2gdfgdfgf.......1 ");
 					    done;
 					    
-					    print_message Debug_medium ("[Master] sent split subpart 2gdfgdfgf.......2 ");
+					    print_message Verbose_medium ("[Master] sent split subpart 2gdfgdfgf.......2 ");
 					    
 					  end
 				     end;
 				     send_continue source_rank;
 				     
-				     print_message Debug_medium ("[Master] Received a pi0 from worker " ^ (string_of_int source_rank) ^ " end!!!!");
+				     print_message Verbose_medium ("[Master] Received a pi0 from worker " ^ (string_of_int source_rank) ^ " end!!!!");
 		
 		| UpdateRequest source_rank ->
-				print_message Debug_medium ("[Master] Received UpdateRequest  ");
+				print_message Verbose_medium ("[Master] Received UpdateRequest  ");
 				
 				(*Update tiles*)
 				while(List.mem_assoc source_rank !tilebuffer) do
 				  begin
 				    send_tile (List.assoc source_rank !tilebuffer) source_rank;
 				    tilebuffer := (List.remove_assoc source_rank !tilebuffer);
-				    print_message Debug_medium ("[Master] send a tile to worker " ^ (string_of_int source_rank) ^ "");
+				    print_message Verbose_medium ("[Master] send a tile to worker " ^ (string_of_int source_rank) ^ "");
 				  end
 				done;
 				
@@ -692,7 +692,7 @@ let master () =
 				Cartography.test_pi0_uncovered currentPi0 uncovered ;
 				if(not !uncovered) then
 				begin
-				  print_message Debug_medium ("[Master] send_terminate  ");
+				  print_message Verbose_medium ("[Master] send_terminate  ");
 				  send_terminate source_rank ; 
 				end;*)
 				
@@ -719,7 +719,7 @@ let master () =
 	
 	
 	
-	print_message Debug_standard ("[Master] All workers done" );
+	print_message Verbose_standard ("[Master] All workers done" );
 
 	(* Process the finalization *)
 	counter_master_processing#start;
@@ -732,12 +732,12 @@ let master () =
 	(* Print some information *)
 	let occupancy = (counter_master_total#value -. counter_master_waiting#value ) /. (counter_master_total#value) *. 100. in
 
-	print_message Debug_standard ("[Master] Splitting time         : " ^ (string_of_float (counter_master_split#value)) ^ " s");
-	print_message Debug_standard ("[Master] Processing time        : " ^ (string_of_float (counter_master_processing#value)) ^ " s");
-	print_message Debug_standard ("[Master] Waiting time           : " ^ (string_of_float (counter_master_waiting#value)) ^ " s");
-	print_message Debug_standard ("[Master] Occupancy              : " ^ (string_of_float occupancy) ^ " %");
-	print_message Debug_standard ("[Master] wasted Tiles " ^ (string_of_int !wastedTiles) ^ " end!!!!!!");
-	print_message Debug_standard ("**************************************************");
+	print_message Verbose_standard ("[Master] Splitting time         : " ^ (string_of_float (counter_master_split#value)) ^ " s");
+	print_message Verbose_standard ("[Master] Processing time        : " ^ (string_of_float (counter_master_processing#value)) ^ " s");
+	print_message Verbose_standard ("[Master] Waiting time           : " ^ (string_of_float (counter_master_waiting#value)) ^ " s");
+	print_message Verbose_standard ("[Master] Occupancy              : " ^ (string_of_float occupancy) ^ " %");
+	print_message Verbose_standard ("[Master] wasted Tiles " ^ (string_of_int !wastedTiles) ^ " end!!!!!!");
+	print_message Verbose_standard ("**************************************************");
 	
 	(* Process the result and return *)
 	let tiles = Cartography.bc_result () in
@@ -745,7 +745,7 @@ let master () =
 	if options#cart then (
 		Graphics.cartography (Input.get_model()) (Input.get_v0()) tiles (options#files_prefix ^ "_cart_patator")
 	) else (
-		print_message Debug_high "Graphical cartography not asked: graph not generated.";
+		print_message Verbose_high "Graphical cartography not asked: graph not generated.";
 	);
 	()
 
@@ -773,7 +773,7 @@ let check_stop_order () =
 	
 	send_update_request();
 					
-	print_message Debug_medium (" send Update Request to master ");
+	print_message Verbose_medium (" send Update Request to master ");
 	
 	let killIM = ref false in
 	
@@ -784,29 +784,29 @@ let check_stop_order () =
 		let check = receive_work () in
 		match check with
 						
-		| Tile tile -> 		(*print_message Debug_medium ("[Worker " (*^ (string_of_int rank) ^*) "] received Tile from Master.");*)
+		| Tile tile -> 		(*print_message Verbose_medium ("[Worker " (*^ (string_of_int rank) ^*) "] received Tile from Master.");*)
 					let b = Cartography.bc_process_im_result tile in
-					print_message Debug_medium ("[Worker " ^ (*(string_of_int rank) ^*) "] received Tile from Master.");
+					print_message Verbose_medium ("[Worker " ^ (*(string_of_int rank) ^*) "] received Tile from Master.");
 					
-		(*| Terminate -> 		print_message Debug_medium ("[Some Worker] received Terminate from Master.");
+		(*| Terminate -> 		print_message Verbose_medium ("[Some Worker] received Terminate from Master.");
 					(*raise KillIM;*)
 					killIM := true;*)
 						
-		| Continue ->  		print_message Debug_medium ("[Worker " ^ (*(string_of_int rank) ^*) "] received continue tag from Master.");
+		| Continue ->  		print_message Verbose_medium ("[Worker " ^ (*(string_of_int rank) ^*) "] received continue tag from Master.");
 					let uncovered = ref false in
 					let currentPi0 = (*List.assoc source_rank !pi0buffer*) Cartography.get_current_pi0() in
 					Cartography.test_pi0_uncovered currentPi0 uncovered ;
 					if(not !uncovered) then
 					begin
-					  (*print_message Debug_medium ("[Master] send_terminate  ");
+					  (*print_message Verbose_medium ("[Master] send_terminate  ");
 					  send_terminate source_rank ;*) 
 					  killIM := true;
 					end;
 		      
 					receivedContinue := true;	
-					print_message Debug_medium ("[Worker " ^ (*(string_of_int rank) ^*) "] received Tile from Master.");
+					print_message Verbose_medium ("[Worker " ^ (*(string_of_int rank) ^*) "] received Tile from Master.");
 									
-		| _ -> 			print_message Debug_medium ("error!!! receive tile at worker side." ^ (*(string_of_int rank) ^*) " ");
+		| _ -> 			print_message Verbose_medium ("error!!! receive tile at worker side." ^ (*(string_of_int rank) ^*) " ");
 					raise (InternalError("error!!! receive tile at worker side."));
 						
 	done; (* end while *)
@@ -823,24 +823,24 @@ let compute_next_pi0_sequentially more_pi0 limit_reached first_point tile_nature
 	(* Start timer *)
 	counter_worker_find_next_pi0#start ;
 	
-	print_message Debug_medium ("[Some worker] compute_next_pi0_sequentially bug 0.");
+	print_message Verbose_medium ("[Some worker] compute_next_pi0_sequentially bug 0.");
 	
 	(* Case first point *)
 	if !first_point then(
-		print_message Debug_low ("[Some worker] This is the first pi0.");
+		print_message Verbose_low ("[Some worker] This is the first pi0.");
 		Cartography.compute_initial_pi0 ();
 		first_point := false;
-		print_message Debug_medium ("[Some worker] compute_next_pi0_sequentially bug 1.");
+		print_message Verbose_medium ("[Some worker] compute_next_pi0_sequentially bug 1.");
 		
 	(* Other case *)
 	)else(
-		print_message Debug_low ("[Some worker] Computing next pi0 sequentially...");
+		print_message Verbose_low ("[Some worker] Computing next pi0 sequentially...");
 		
-		print_message Debug_medium ("[Some worker] compute_next_pi0_sequentially bug 2.");
+		print_message Verbose_medium ("[Some worker] compute_next_pi0_sequentially bug 2.");
 		
 		let found_pi0 , time_limit_reached = Cartography.find_next_pi0 tile_nature_option in
 		
-		print_message Debug_medium ("[Some worker] compute_next_pi0_sequentially bug 3.");
+		print_message Verbose_medium ("[Some worker] compute_next_pi0_sequentially bug 3.");
 		
 		(* Update the time limit *)
 		limit_reached := time_limit_reached;
@@ -852,11 +852,11 @@ let compute_next_pi0_sequentially more_pi0 limit_reached first_point tile_nature
 	(* Stop timer *)
 	counter_worker_find_next_pi0#stop;
 	(* The end *)
-	print_message Debug_medium ("[Some worker] compute_next_pi0_sequentially bug 4.");
+	print_message Verbose_medium ("[Some worker] compute_next_pi0_sequentially bug 4.");
 	()
 
 let init_slave rank size =
-	print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "] I am worker " ^ (string_of_int rank) ^ "/" ^ (string_of_int (size-1)) ^ ".");
+	print_message Verbose_medium ("[Worker " ^ (string_of_int rank) ^ "] I am worker " ^ (string_of_int rank) ^ "/" ^ (string_of_int (size-1)) ^ ".");
 	()
 
 let worker() =
@@ -892,14 +892,14 @@ let worker() =
 	(*let main_loop () = *)
 		while (not !finished) do
 			send_work_request ();
-			print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "] sent pull request to the master.");
+			print_message Verbose_medium ("[Worker " ^ (string_of_int rank) ^ "] sent pull request to the master.");
 			counter_worker_waiting#start;
 
 			let work = receive_work() in
 			counter_worker_waiting#stop;
 			match work with
 			| Subpart subpart -> 
-				print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "] received subpart from Master.");
+				print_message Verbose_medium ("[Worker " ^ (string_of_int rank) ^ "] received subpart from Master.");
 				
 				
 				(* To differentiate between initialization of pi0 / next_point *)
@@ -915,24 +915,24 @@ let worker() =
 				(* Perform initialization *)
 				Cartography.bc_initialize_subpart ();
 				
-				if debug_mode_greater Debug_medium then(
-					print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "] set v0:");
-					print_message Debug_medium (ModelPrinter.string_of_v0 model subpart);
+				if debug_mode_greater Verbose_medium then(
+					print_message Verbose_medium ("[Worker " ^ (string_of_int rank) ^ "] set v0:");
+					print_message Verbose_medium (ModelPrinter.string_of_v0 model subpart);
 				);
 				
 				(*initial pi0*)
 				Cartography.compute_initial_pi0();
 				
-				print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "] Initial pi0:");
-				print_message Debug_medium   (ModelPrinter.string_of_pi0 model (Cartography.get_current_pi0()));
+				print_message Verbose_medium ("[Worker " ^ (string_of_int rank) ^ "] Initial pi0:");
+				print_message Verbose_medium   (ModelPrinter.string_of_pi0 model (Cartography.get_current_pi0()));
 				
 				let pi0 = ref (Cartography.get_current_pi0()) in
 				
 	(* 			counter_worker_working#start;    *)
 				while (!more_pi0 && not !limit_reached) do 			    
 					
-					print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "] pi0:");
-					print_message Debug_medium   (ModelPrinter.string_of_pi0 model !pi0);
+					print_message Verbose_medium ("[Worker " ^ (string_of_int rank) ^ "] pi0:");
+					print_message Verbose_medium   (ModelPrinter.string_of_pi0 model !pi0);
 					
 					(*send_update_request();*)
 					pi0 := (Cartography.get_current_pi0());
@@ -940,7 +940,7 @@ let worker() =
 					
 					send_pi0_worker !pi0;
 					
-					print_message Debug_medium (" send pi0 to master ");
+					print_message Verbose_medium (" send pi0 to master ");
 					
 					let receivedContinue = ref false in
 					
@@ -949,19 +949,19 @@ let worker() =
 						let check = receive_work () in
 						match check with
 						
-						| Tile tile -> 		print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "] received Tile from Master.");
+						| Tile tile -> 		print_message Verbose_medium ("[Worker " ^ (string_of_int rank) ^ "] received Tile from Master.");
 									let b = Cartography.bc_process_im_result tile in
-									print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "] received Tile from Master.");
+									print_message Verbose_medium ("[Worker " ^ (string_of_int rank) ^ "] received Tile from Master.");
 									
-						| Subpart subpart ->	print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "] received scaled subpart tag from Master.");
+						| Subpart subpart ->	print_message Verbose_medium ("[Worker " ^ (string_of_int rank) ^ "] received scaled subpart tag from Master.");
 									Input.set_v0 subpart;
 									Cartography.bc_initialize_subpart ();
 						
-						| Continue ->  		print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "] received continue tag from Master.");
+						| Continue ->  		print_message Verbose_medium ("[Worker " ^ (string_of_int rank) ^ "] received continue tag from Master.");
 									receivedContinue := true;	
-									print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "] received Tile from Master.");
+									print_message Verbose_medium ("[Worker " ^ (string_of_int rank) ^ "] received Tile from Master.");
 									
-						| _ -> 			print_message Debug_medium ("error!!! receive tile at worker side." ^ (string_of_int rank) ^ " ");
+						| _ -> 			print_message Verbose_medium ("error!!! receive tile at worker side." ^ (string_of_int rank) ^ " ");
 									raise (InternalError("error!!! receive tile at worker side."));
 						
 					done; (* end while *)
@@ -974,9 +974,9 @@ let worker() =
 
 					
 					(* Prevent the debug messages (except in verbose mode total) *)
-					if not (debug_mode_greater Debug_total) 
+					if not (debug_mode_greater Verbose_total) 
 					then
-					set_debug_mode Debug_nodebug;
+					set_debug_mode Verbose_nodebug;
 					
 					counter_worker_IM#start;
 					try(
@@ -999,12 +999,12 @@ let worker() =
 					send_result_worker im_result;
 					(*end;*)
 					(* Print some info *)
-					print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "]  Constraint really added? " ^ (string_of_bool added) ^ "");
+					print_message Verbose_medium ("[Worker " ^ (string_of_int rank) ^ "]  Constraint really added? " ^ (string_of_bool added) ^ "");
 					compute_next_pi0_sequentially more_pi0 limit_reached first_point (Some im_result.tile_nature);
 					)
 					with KillIM ->(
 					(*** TODO ***)
-					 print_message Debug_medium "\n -------------Killed IM-----------------"; 
+					 print_message Verbose_medium "\n -------------Killed IM-----------------"; 
 					 compute_next_pi0_sequentially more_pi0 limit_reached first_point (None);
 					);
 					
@@ -1012,11 +1012,11 @@ let worker() =
 				done;
 				
 			| Terminate -> 
-					print_message Debug_medium (" Terminate ");
-					print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "] I was just told to terminate work.");
+					print_message Verbose_medium (" Terminate ");
+					print_message Verbose_medium ("[Worker " ^ (string_of_int rank) ^ "] I was just told to terminate work.");
 					finished := true
 				
-			| _ -> 		print_message Debug_medium ("error!!! not implemented.");
+			| _ -> 		print_message Verbose_medium ("error!!! not implemented.");
 					raise (InternalError("not implemented."));
 			
 		done;
@@ -1030,13 +1030,13 @@ let worker() =
 
 	(* Print some information *)
 	let occupancy = (counter_worker_total#value -. counter_worker_waiting#value ) /. (counter_worker_total#value) *. 100. in
-	print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "] I'm done.");
-	print_message Debug_standard ("[Worker " ^ (string_of_int rank) ^ "] Number of unsuccessful points: " ^ (string_of_int (Cartography.get_nb_unsuccessful_points())) ^ "");
-	print_message Debug_standard ("[Worker " ^ (string_of_int rank) ^ "] Waiting time                 : " ^ (string_of_float (counter_worker_waiting#value)) ^ " s");
-	print_message Debug_standard ("[Worker " ^ (string_of_int rank) ^ "] Time spent on IM             : " ^ (string_of_float (counter_worker_IM#value)) ^ " s");
-	print_message Debug_standard ("[Worker " ^ (string_of_int rank) ^ "] Time to find next pi0        : " ^ (string_of_float (counter_worker_find_next_pi0#value)) ^ " s");
-	print_message Debug_standard ("[Worker " ^ (string_of_int rank) ^ "] Total time                   : " ^ (string_of_float (counter_worker_total#value)) ^ " s");
-	print_message Debug_standard ("[Worker " ^ (string_of_int rank) ^ "] Occupancy                    : " ^ (string_of_float occupancy) ^ " %");
+	print_message Verbose_medium ("[Worker " ^ (string_of_int rank) ^ "] I'm done.");
+	print_message Verbose_standard ("[Worker " ^ (string_of_int rank) ^ "] Number of unsuccessful points: " ^ (string_of_int (Cartography.get_nb_unsuccessful_points())) ^ "");
+	print_message Verbose_standard ("[Worker " ^ (string_of_int rank) ^ "] Waiting time                 : " ^ (string_of_float (counter_worker_waiting#value)) ^ " s");
+	print_message Verbose_standard ("[Worker " ^ (string_of_int rank) ^ "] Time spent on IM             : " ^ (string_of_float (counter_worker_IM#value)) ^ " s");
+	print_message Verbose_standard ("[Worker " ^ (string_of_int rank) ^ "] Time to find next pi0        : " ^ (string_of_float (counter_worker_find_next_pi0#value)) ^ " s");
+	print_message Verbose_standard ("[Worker " ^ (string_of_int rank) ^ "] Total time                   : " ^ (string_of_float (counter_worker_total#value)) ^ " s");
+	print_message Verbose_standard ("[Worker " ^ (string_of_int rank) ^ "] Occupancy                    : " ^ (string_of_float occupancy) ^ " %");
 
 ;;
 

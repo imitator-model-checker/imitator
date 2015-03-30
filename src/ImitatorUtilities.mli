@@ -7,7 +7,7 @@
  * Author:        Etienne Andre
  * 
  * Created:       2014/10/24
- * Last modified: 2014/10/24
+ * Last modified: 2015/03/30
  *
  ****************************************************************)
 
@@ -18,13 +18,12 @@
 (****************************************************************)
 
 type debug_mode =
-	| Debug_error (* c'est quoi ca ? *)
-	| Debug_nodebug
-	| Debug_standard
-	| Debug_low
-	| Debug_medium
-	| Debug_high
-	| Debug_total
+	| Verbose_mute
+	| Verbose_standard
+	| Verbose_low
+	| Verbose_medium
+	| Verbose_high
+	| Verbose_total
 
 
 (* Return true if the global debug mode is greater than 'debug_mode', false otherwise *)

@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre, Ulrich Kuehne
  * Created:       2009/12/08
- * Last modified: 2015/03/18
+ * Last modified: 2015/03/30
  *
  ****************************************************************)
 
@@ -296,9 +296,9 @@ let states_equal state1 state2 =
 	let (loc2, constr2) = state2 in
 	if not (Automaton.location_equal loc1 loc2) then false else (
 		(* Statistics *)
-		print_message Debug_high ("About to compare equality between two constraints.");
+		print_message Verbose_high ("About to compare equality between two constraints.");
 		nb_constraint_comparisons := !nb_constraint_comparisons + 1;
-		print_message Debug_high ("Already performed " ^ (string_of_int (!nb_constraint_comparisons)) ^ " constraint comparisons.");
+		print_message Verbose_high ("Already performed " ^ (string_of_int (!nb_constraint_comparisons)) ^ " constraint comparisons.");
 		LinearConstraint.px_is_equal constr1 constr2
 	)
 	
@@ -308,9 +308,9 @@ let states_equal_dyn state1 state2 constr =
 	let (loc2, constr2) = state2 in
 	if not (Automaton.location_equal loc1 loc2) then false else (
 		(* Statistics *)
-		print_message Debug_high ("About to compare (dynamic) equality between two constraints.");
+		print_message Verbose_high ("About to compare (dynamic) equality between two constraints.");
 		nb_constraint_comparisons := !nb_constraint_comparisons + 1;
-		print_message Debug_high ("Already performed " ^ (string_of_int (!nb_constraint_comparisons)) ^ " constraint comparisons.");
+		print_message Verbose_high ("Already performed " ^ (string_of_int (!nb_constraint_comparisons)) ^ " constraint comparisons.");
 		(*** WARNING!!! Really sure that one wants do MODIFY the constraints here?!!! ***)
 		LinearConstraint.px_intersection_assign constr1  [constr];
 		LinearConstraint.px_intersection_assign constr2 [constr];
@@ -325,9 +325,9 @@ let state_included state1 state2 =
 	let (loc2, constr2) = state2 in
 	if not (Automaton.location_equal loc1 loc2) then false else (
 		(* Statistics *)
-		print_message Debug_high ("About to compare inclusion between two constraints.");
+		print_message Verbose_high ("About to compare inclusion between two constraints.");
 		nb_constraint_comparisons := !nb_constraint_comparisons + 1;
-		print_message Debug_high ("Already performed " ^ (string_of_int (!nb_constraint_comparisons)) ^ " constraint comparisons.");
+		print_message Verbose_high ("Already performed " ^ (string_of_int (!nb_constraint_comparisons)) ^ " constraint comparisons.");
 		LinearConstraint.px_is_leq constr1 constr2
 	)
 
@@ -388,8 +388,8 @@ let add_state_dyn program graph new_state constr =
 	let options = Input.get_options () in
 	(* compute hash value for the new state *)
 	let hash = hash_code new_state in
-	if debug_mode_greater Debug_total then (
-		print_message Debug_standard ("hash : " ^ (string_of_int hash));
+	if debug_mode_greater Verbose_total then (
+		print_message Verbose_standard ("hash : " ^ (string_of_int hash));
 	); 
 	(* In tree mode: does not test anything *)
 	if options#tree then (
@@ -403,15 +403,15 @@ let add_state_dyn program graph new_state constr =
 		try (
 			(* use hash table to find states with same locations (modulo hash collisions) *)
 			let old_states = Hashtbl.find_all graph.states_for_comparison hash in
-			if debug_mode_greater Debug_total then (
+			if debug_mode_greater Verbose_total then (
 				let nb_old = List.length old_states in
-				print_message Debug_total ("hashed list of length " ^ (string_of_int nb_old));
+				print_message Verbose_total ("hashed list of length " ^ (string_of_int nb_old));
 			);
 			
 			(* Statistics *)
-			print_message Debug_medium ("About to compare new state with " ^ (string_of_int (List.length old_states)) ^ " state(s).");
+			print_message Verbose_medium ("About to compare new state with " ^ (string_of_int (List.length old_states)) ^ " state(s).");
 			nb_state_comparisons := !nb_state_comparisons + (List.length old_states);
-			print_message Debug_medium ("Already performed " ^ (string_of_int (!nb_state_comparisons)) ^ " comparisons.");
+			print_message Verbose_medium ("Already performed " ^ (string_of_int (!nb_state_comparisons)) ^ " comparisons.");
 			
 			List.iter (fun index -> 
 				let state = get_state graph index in
@@ -433,8 +433,8 @@ let add_state program graph new_state =
 	let options = Input.get_options () in
 	(* compute hash value for the new state *)
 	let hash = hash_code new_state in
-	if debug_mode_greater Debug_total then (
-		print_message Debug_standard ("hash : " ^ (string_of_int hash));
+	if debug_mode_greater Verbose_total then (
+		print_message Verbose_standard ("hash : " ^ (string_of_int hash));
 	); 
 	(* In tree mode: does not test anything *)
 	if options#tree then (
@@ -448,15 +448,15 @@ let add_state program graph new_state =
 		try (
 			(* use hash table to find all states with same locations (modulo hash collisions) *)
 			let old_states = Hashtbl.find_all graph.states_for_comparison hash in
-			if debug_mode_greater Debug_total then (
+			if debug_mode_greater Verbose_total then (
 				let nb_old = List.length old_states in
-				print_message Debug_total ("hashed list of length " ^ (string_of_int nb_old));
+				print_message Verbose_total ("hashed list of length " ^ (string_of_int nb_old));
 			);
 
 			(* Statistics *)
-			print_message Debug_medium ("About to compare new state with " ^ (string_of_int (List.length old_states)) ^ " state(s).");
+			print_message Verbose_medium ("About to compare new state with " ^ (string_of_int (List.length old_states)) ^ " state(s).");
 			nb_state_comparisons := !nb_state_comparisons + (List.length old_states);
-			print_message Debug_medium ("Already performed " ^ (string_of_int (!nb_state_comparisons)) ^ " comparisons.");
+			print_message Verbose_medium ("Already performed " ^ (string_of_int (!nb_state_comparisons)) ^ " comparisons.");
 			
 			List.iter (fun index -> 
 				let state = get_state graph index in
@@ -605,10 +605,10 @@ let merge_2_states graph state_index1 state_index2 =
 (** Merge two states by replacing the second one by the first one, in the whole graph structure (lists of states, and transitions) *)
 let merge_states_ulrich graph s merged =
 	(* NOTE: 'merged' is usually very small, e.g., 1 or 2, so no need to optimize functions using 'merged *) 
-	print_message Debug_high ("Merging: update tables for state '" ^ (string_of_int s) ^ "' with " ^ (string_of_int (List.length merged)) ^ " merged.");
+	print_message Verbose_high ("Merging: update tables for state '" ^ (string_of_int s) ^ "' with " ^ (string_of_int (List.length merged)) ^ " merged.");
 	
 	(* Rebuild transitions table *)
-	print_message Debug_high ("Merging: update transition table, containing " ^ (string_of_int (Hashtbl.length graph.transitions_table)) ^ " elements");
+	print_message Verbose_high ("Merging: update transition table, containing " ^ (string_of_int (Hashtbl.length graph.transitions_table)) ^ " elements");
 	let t' = Hashtbl.copy graph.transitions_table in
 	Hashtbl.clear graph.transitions_table;
 	Hashtbl.iter (fun (src, a) trg -> 
@@ -619,12 +619,12 @@ let merge_states_ulrich graph s merged =
 	) t';
 
 	(* Remove merged from hash table *)
-	print_message Debug_high "Merging: update hash table";
+	print_message Verbose_high "Merging: update hash table";
 	let the_state = get_state graph s in
 	let h = hash_code the_state in
 	(* Get all states with that hash *)
 	let bucket = Hashtbl.find_all graph.states_for_comparison h in
-	print_message Debug_high ("Merging: got " ^ (string_of_int (List.length bucket)) ^ " states with hash " ^ (string_of_int h));
+	print_message Verbose_high ("Merging: got " ^ (string_of_int (List.length bucket)) ^ " states with hash " ^ (string_of_int h));
 	(* Remove them all *)
 	while Hashtbl.mem graph.states_for_comparison h do
 		Hashtbl.remove graph.states_for_comparison h;
@@ -636,9 +636,9 @@ let merge_states_ulrich graph s merged =
 	) bucket;
 	
 	(* Remove merged from state table *)
-	print_message Debug_high "Merging: update state table";
+	print_message Verbose_high "Merging: update state table";
 	List.iter (fun s -> 
-		print_message Debug_high ("Merging: remove state " ^ (string_of_int s));
+		print_message Verbose_high ("Merging: remove state " ^ (string_of_int s));
 (*		while Hashtbl.mem graph.states s do *)
 			Hashtbl.remove graph.all_states s
 (*		done*)
@@ -679,7 +679,7 @@ let merge graph new_states =
 	
 	(* function for merging one state with its siblings *)
 	let merge_state si =
-		print_message Debug_total ("try to merge state " ^ (string_of_int si));
+		print_message Verbose_total ("try to merge state " ^ (string_of_int si));
 		let l, c = get_state graph si in
 		(* get merge candidates as pairs (index, state) *)
 		let candidates = get_siblings graph si in
@@ -690,7 +690,7 @@ let merge graph new_states =
 				| m :: tail_mc -> begin
 					let sj, (_, c') = m in
 					if mergeable c c' then begin
-						print_message Debug_high ("merged with state " ^ (string_of_int sj));
+						print_message Verbose_high ("merged with state " ^ (string_of_int sj));
 						(* we ate sj, start over with new bigger state, removing sj *)
 						let all_mc' = List.filter (fun (sk, _) -> sk <> sj) all_mc in
 						sj :: eat all_mc' all_mc'
@@ -731,7 +731,7 @@ let merge graph new_states =
 	let nb_eaten = List.length eaten in
 	let nb_orig = List.length new_states in
 	if nb_eaten > 0 then
-		print_message Debug_standard ("  " ^ (string_of_int nb_eaten) ^ " state" ^ (s_of_int nb_eaten) ^ " merged within " ^ (string_of_int nb_orig) ^ " state" ^ (s_of_int nb_orig) ^ ".");
+		print_message Verbose_standard ("  " ^ (string_of_int nb_eaten) ^ " state" ^ (s_of_int nb_eaten) ^ " merged within " ^ (string_of_int nb_orig) ^ " state" ^ (s_of_int nb_orig) ^ ".");
 	
 	(* return eaten states *)
 	(*list_diff new_states*) eaten
@@ -812,7 +812,7 @@ let get_statistics_states graph =
 	
 (*(** Get the number of comparisons between states (performance checking purpose) *)
 let get_nb_state_comparisons () =
-(*	print_message Debug_standard ("About to return the number of comparisons (" ^ (string_of_int !nb_state_comparisons) ^ ").");*)
+(*	print_message Verbose_standard ("About to return the number of comparisons (" ^ (string_of_int !nb_state_comparisons) ^ ").");*)
 	!nb_state_comparisons
 
 (** Get the number of comparisons between constraints (performance checking purpose) *)

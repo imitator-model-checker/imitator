@@ -8,7 +8,7 @@
  * Author:        Etienne Andre, Camille Coti
  * 
  * Created:       2014/03/24
- * Last modified: 2014/10/30
+ * Last modified: 2015/03/30
  *
  ****************************************************************)
 
@@ -60,14 +60,14 @@ let counter_worker_working 		= new Counter.counter
 
 (*let is_limit_reached () =
   cnt := !cnt + 1;
-  print_message Debug_standard( "[Master] " ^ ( string_of_int !cnt ) ^" rounds done" );
+  print_message Verbose_standard( "[Master] " ^ ( string_of_int !cnt ) ^" rounds done" );
   if !cnt > nb_of_rounds then
     true
   else
     false
     *)
 let receive_pull_request_and_store_constraint () =
-	print_message Debug_high ("[Master] Entered function 'receive_pull_request_and_store_constraint'...");
+	print_message Verbose_high ("[Master] Entered function 'receive_pull_request_and_store_constraint'...");
 	
 	counter_master_waiting#start;
 	let pull_request = receive_pull_request () in
@@ -75,18 +75,18 @@ let receive_pull_request_and_store_constraint () =
 	
 	match pull_request with
 	| PullOnly source_rank ->
-		print_message Debug_low ("[Master] Received PullOnly request...");
+		print_message Verbose_low ("[Master] Received PullOnly request...");
 		source_rank, None
 
 	| OutOfBound source_rank ->
-		print_message Debug_low ("[Master] Received OutOfBound request...");
+		print_message Verbose_low ("[Master] Received OutOfBound request...");
 		(* FAIRE QUELQUE CHOSE POUR DIRE QU'UN POINT N'A PAS MARCHÉ *)
 		raise (InternalError("OutOfBound not implemented."))(*;
 		source_rank, None*)
 
 	| PullAndResult (source_rank , im_result) -> 
-		print_message Debug_low ("[Master] Received PullAndResult request...");
-		print_message Debug_standard ("\n[Master] Received the following constraint from worker " ^ (string_of_int source_rank));
+		print_message Verbose_low ("[Master] Received PullAndResult request...");
+		print_message Verbose_standard ("\n[Master] Received the following constraint from worker " ^ (string_of_int source_rank));
 		ignore (Cartography.bc_process_im_result im_result);
 		(* Return source rank *)
 		source_rank, Some im_result.tile_nature
@@ -102,12 +102,12 @@ let compute_next_pi0_sequentially more_pi0 limit_reached first_point tile_nature
 
 	(* Case first point *)
 	if !first_point then(
-		print_message Debug_low ("[Master] This is the first pi0.");
+		print_message Verbose_low ("[Master] This is the first pi0.");
 		Cartography.compute_initial_pi0 ();
 		first_point := false;
 	(* Other case *)
 	)else(
-		print_message Debug_low ("[Master] Computing next pi0 sequentially...");
+		print_message Verbose_low ("[Master] Computing next pi0 sequentially...");
 		let found_pi0 , time_limit_reached = Cartography.find_next_pi0 tile_nature_option in
 		(* Update the time limit *)
 		limit_reached := time_limit_reached;
@@ -128,7 +128,7 @@ let compute_next_pi0_shuffle more_pi0 limit_reached first_point tile_nature_opti
 	(* Start timer *)
 	counter_master_find_nextpi0#start ;
 
-	print_message Debug_low ("[Master] Computing next pi0 in shuffle mode...");
+	print_message Verbose_low ("[Master] Computing next pi0 in shuffle mode...");
 	
 	let found_pi0 , time_limit_reached = Cartography.find_next_pi0_shuffle tile_nature_option in
 	(* Update the time limit *)
@@ -171,21 +171,21 @@ let compute_next_pi0 more_pi0 limit_reached first_point tile_nature_option =
 			(* Try to find a random pi0 *)
 			let successful = Cartography.random_pi0 nb_tries in
 			if successful then(
-				print_message Debug_low ("[Master] Computed a new random pi0.");
+				print_message Verbose_low ("[Master] Computed a new random pi0.");
 			)else(
 				(* Switch mode ! *)
 				still_random := false;
-				print_message Debug_standard ("\n**************************************************");
-				print_message Debug_standard ("[Master] Could not find a new random pi0 after " ^ (string_of_int nb_tries) ^ " attemps! Now switching mode from random to sequential.");
+				print_message Verbose_standard ("\n**************************************************");
+				print_message Verbose_standard ("[Master] Could not find a new random pi0 after " ^ (string_of_int nb_tries) ^ " attemps! Now switching mode from random to sequential.");
 			);
 		);
 		(* Test whether the algorithm is now in sequential mode *)
 		(*** NOTE: important to test again (instead of using 'else') in case the value was changed just above ***)
 		if not !still_random then(
-			print_message Debug_medium ("[Master] Now in sequential mode: computing a sequential pi0.");
+			print_message Verbose_medium ("[Master] Now in sequential mode: computing a sequential pi0.");
 			compute_next_pi0_sequentially more_pi0 limit_reached first_point tile_nature_option
 		);
-		print_message Debug_high ("[Master] Exiting function compute_next_pi0...");
+		print_message Verbose_high ("[Master] Exiting function compute_next_pi0...");
 	(**$ TODO: missing something there ***)
 		
 	| Distributed_unsupervised -> raise (InternalError("IMITATOR cannot be unsupervised at this point."))
@@ -206,10 +206,10 @@ let send_one_point_to_each_node() = ()*)
 (* Statically compute the shuffled array of all points *)
 let compute_shuffled_array() =
 	(* Compute the array of all points *)
-	print_message Debug_low ("[Master] Shuffle mode: about to compute the array of all points");
+	print_message Verbose_low ("[Master] Shuffle mode: about to compute the array of all points");
 	Cartography.compute_all_pi0 ();
 	(* Shuffle it! *)
-	print_message Debug_low ("[Master] Shuffle mode: about to shuffle the array of points");
+	print_message Verbose_low ("[Master] Shuffle mode: about to shuffle the array of points");
 	Cartography.shuffle_all_pi0 ();
 	()
 
@@ -224,7 +224,7 @@ let master () =
 	counter_master_find_nextpi0#init;
 	counter_master_waiting#init;
 	
-	print_message Debug_medium ("[Master] Hello world!");
+	print_message Verbose_medium ("[Master] Hello world!");
 	
 	(* Perform initialization *)
 	Cartography.bc_initialize ();
@@ -256,27 +256,27 @@ let master () =
 	if options#distribution_mode = Distributed_ms_shuffle then(
 		(* First sends one point to each node (to have all nodes occupied for a while) *)
 		(*** NO!!!! just ask the slaves to do this ***)
-(*		print_message Debug_standard ("[Master] Shuffle mode: sending one point to each node");
+(*		print_message Verbose_standard ("[Master] Shuffle mode: sending one point to each node");
 		send_one_point_to_each_node();*)
 		
 		(* In the meanwhile: statically compute the shuffled array of all points *)
-		print_message Debug_standard ("[Master] Shuffle mode: starting to compute the shuffled array of points");
+		print_message Verbose_standard ("[Master] Shuffle mode: starting to compute the shuffled array of points");
 		compute_shuffled_array();
-		print_message Debug_standard ("[Master] Shuffle mode: finished to compute the shuffled array of points");
+		print_message Verbose_standard ("[Master] Shuffle mode: finished to compute the shuffled array of points");
 	);
 	(* end if shuffle *)
 	
 	(* Iterate on all the possible pi0 *)
 	while !more_pi0 && not !limit_reached do
-		print_message Debug_low ("[Master] Waiting for a pull request");
+		print_message Verbose_low ("[Master] Waiting for a pull request");
 		
 		(* Get the pull_request *)
 		let source_rank, tile_nature_option = receive_pull_request_and_store_constraint () in
-		print_message Debug_medium ("[Master] Received a pull request from worker " ^ (string_of_int source_rank) ^ "");
+		print_message Verbose_medium ("[Master] Received a pull request from worker " ^ (string_of_int source_rank) ^ "");
 		
 		(* IF no-precompute: compute pi0 NOW *)
 		if not options#precomputepi0 then(
-			print_message Debug_high ("[Master] Computing pi0...");
+			print_message Verbose_high ("[Master] Computing pi0...");
 			compute_next_pi0 more_pi0 limit_reached first_point tile_nature_option;
 		);
 		
@@ -287,10 +287,10 @@ let master () =
 		if !limit_reached || not !more_pi0 then(
 			send_finished source_rank;
 			workers_done := !workers_done + 1;
-			print_message Debug_medium( "\t[Master] - [Worker " ^ (string_of_int source_rank ) ^ "] is done");
+			print_message Verbose_medium( "\t[Master] - [Worker " ^ (string_of_int source_rank ) ^ "] is done");
 		(* Otherwise send pi0 *)
 		)else(
-			print_message Debug_medium ( "[Master] Sending pi0 to [Worker " ^ (string_of_int source_rank ) ^ "]" );
+			print_message Verbose_medium ( "[Master] Sending pi0 to [Worker " ^ (string_of_int source_rank ) ^ "]" );
 			send_pi0 pi0 source_rank;
 		);
 
@@ -304,26 +304,26 @@ let master () =
 
 	(*** NOTE: we could check here (and at every further iteration) whether all integer points are already covered!!! If yes, stop. ***)
 	
-	print_message Debug_standard ( "[Master] Done with sending pi0; waiting for last results.");
+	print_message Verbose_standard ( "[Master] Done with sending pi0; waiting for last results.");
 
 	let size = Mpi.comm_size Mpi.comm_world in
 		while !workers_done < ( size - 1) do
-		print_message Debug_medium ("[Master] " ^ ( string_of_int ( size - 1 - !workers_done )) ^ " workers left" );
+		print_message Verbose_medium ("[Master] " ^ ( string_of_int ( size - 1 - !workers_done )) ^ " workers left" );
 		let source_rank , _ = receive_pull_request_and_store_constraint () in
-		print_message Debug_medium ("[Master] Received from [Worker " ^ ( string_of_int source_rank ) ^"]");
+		print_message Verbose_medium ("[Master] Received from [Worker " ^ ( string_of_int source_rank ) ^"]");
 		(* Say good bye *)
 		send_finished source_rank;
 		workers_done := !workers_done + 1;
-		print_message Debug_medium( "\t[Master] - [Worker " ^ (string_of_int source_rank ) ^ "] is done");
+		print_message Verbose_medium( "\t[Master] - [Worker " ^ (string_of_int source_rank ) ^ "] is done");
 	done;
 		
-	print_message Debug_standard ("[Master] All workers done" );
+	print_message Verbose_standard ("[Master] All workers done" );
 
 	(* Process the finalization *)
 	Cartography.bc_finalize ();
 	
-	print_message Debug_standard ("[Master] Total waiting time     : " ^ (string_of_float (counter_master_waiting#value)) ^ " s");
-	print_message Debug_standard ("**************************************************");
+	print_message Verbose_standard ("[Master] Total waiting time     : " ^ (string_of_float (counter_master_waiting#value)) ^ " s");
+	print_message Verbose_standard ("**************************************************");
 
 	
 	(* Process the result and return *)
@@ -332,7 +332,7 @@ let master () =
 	if options#cart then (
 		Graphics.cartography (Input.get_model()) (Input.get_v0()) tiles (options#files_prefix ^ "_cart_patator")
 	) else (
-		print_message Debug_high "Graphical cartography not asked: graph not generated.";
+		print_message Verbose_high "Graphical cartography not asked: graph not generated.";
 	);
 	
 	()
@@ -343,7 +343,7 @@ let master () =
 (****************************************************************)
 
 let init_slave rank size =
-	print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "] I am worker " ^ (string_of_int rank) ^ "/" ^ (string_of_int (size-1)) ^ ".");
+	print_message Verbose_medium ("[Worker " ^ (string_of_int rank) ^ "] I am worker " ^ (string_of_int rank) ^ "/" ^ (string_of_int (size-1)) ^ ".");
 ;;
 
 let worker() =
@@ -377,7 +377,7 @@ let worker() =
 			send_work_request ();
 	end;
 		
-	print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "] sent pull request to the master.");
+	print_message Verbose_medium ("[Worker " ^ (string_of_int rank) ^ "] sent pull request to the master.");
 	
 	(* In the meanwhile: compute the initial state *)
 	let init_state = Reachability.get_initial_state_or_abort model in
@@ -394,23 +394,23 @@ let worker() =
 		| Work pi0 ->
 			counter_worker_working#start;
 
-			print_message Debug_medium( "[Worker " ^ ( string_of_int rank ) ^ "] received work. Send a result." );
+			print_message Verbose_medium( "[Worker " ^ ( string_of_int rank ) ^ "] received work. Send a result." );
 
 			(* Set the new pi0 *)
 			Input.set_pi0 pi0;
 			
 			(* Print some messages *)
-			print_message Debug_medium ("\n**************************************************");
-			print_message Debug_medium ("BEHAVIORAL CARTOGRAPHY ALGORITHM: "(* ^ (string_of_int !current_iteration) ^ ""*));
-			print_message Debug_standard ("\n[Worker " ^ (string_of_int rank) ^ "] Launching IM for the following pi:" (*^ (string_of_int !current_iteration)*));
-			print_message Debug_standard (ModelPrinter.string_of_pi0 model pi0);
+			print_message Verbose_medium ("\n**************************************************");
+			print_message Verbose_medium ("BEHAVIORAL CARTOGRAPHY ALGORITHM: "(* ^ (string_of_int !current_iteration) ^ ""*));
+			print_message Verbose_standard ("\n[Worker " ^ (string_of_int rank) ^ "] Launching IM for the following pi:" (*^ (string_of_int !current_iteration)*));
+			print_message Verbose_standard (ModelPrinter.string_of_pi0 model pi0);
 			
 			(* Save debug mode *)
 			let global_debug_mode = get_debug_mode() in 
 			
 			(* Prevent the debug messages (except in verbose modes high or total) *)
-			if not (debug_mode_greater Debug_high) then
-					set_debug_mode Debug_nodebug;
+			if not (debug_mode_greater Verbose_high) then
+					set_debug_mode Verbose_nodebug;
 			
 			(* Call IM *)
 			let im_result , _ = Reachability.inverse_method_gen model init_state in
@@ -418,13 +418,13 @@ let worker() =
 			(* Get the debug mode back *)
 			set_debug_mode global_debug_mode;
 			
-			print_message Debug_standard ("[Worker " ^ (string_of_int rank) ^ "] finished a computation of IM.");
+			print_message Verbose_standard ("[Worker " ^ (string_of_int rank) ^ "] finished a computation of IM.");
 					
 			(* Process the result by IM *)
 			(*** TODO (cannot jus call process_im_result) ***)
 			
 			(* Print message *)
-			print_message Debug_medium (
+			print_message Verbose_medium (
 					"\n[Worker " ^ (string_of_int rank) ^ "] K computed by IM after "
 					^ (string_of_int im_result.nb_iterations) ^ " iteration" ^ (s_of_int im_result.nb_iterations) ^ ""
 					^ " in " ^ (string_of_seconds im_result.total_time) ^ ": "
@@ -435,21 +435,21 @@ let worker() =
 			(*** TODO: handle a special case if the result is NOT valid (e.g., stopped before the end due to timeout or state limit reached) ***)
 			
 			send_result  im_result;
-			print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "] Sent a constraint ");
+			print_message Verbose_medium ("[Worker " ^ (string_of_int rank) ^ "] Sent a constraint ");
 
 			counter_worker_working#stop;
 			
 		(* The end *)
 		| Stop ->
-			print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "] I was just told to stop work.");
+			print_message Verbose_medium ("[Worker " ^ (string_of_int rank) ^ "] I was just told to stop work.");
 			finished := true
 	done;
 	
 	(* Print some information *)
 	let occupancy = counter_worker_working#value /. (counter_worker_working#value +. counter_worker_waiting#value) *. 100. in
-	print_message Debug_medium ("[Worker " ^ (string_of_int rank) ^ "] I'm done.");
-	print_message Debug_standard ("[Worker " ^ (string_of_int rank) ^ "] Total waiting time     : " ^ (string_of_float (counter_worker_waiting#value)) ^ " s");
-	print_message Debug_standard ("[Worker " ^ (string_of_int rank) ^ "] Total working time     : " ^ (string_of_float (counter_worker_working#value)) ^ " s");
-	print_message Debug_standard ("[Worker " ^ (string_of_int rank) ^ "] Occupancy              : " ^ (string_of_float occupancy) ^ " %");
+	print_message Verbose_medium ("[Worker " ^ (string_of_int rank) ^ "] I'm done.");
+	print_message Verbose_standard ("[Worker " ^ (string_of_int rank) ^ "] Total waiting time     : " ^ (string_of_float (counter_worker_waiting#value)) ^ " s");
+	print_message Verbose_standard ("[Worker " ^ (string_of_int rank) ^ "] Total working time     : " ^ (string_of_float (counter_worker_working#value)) ^ " s");
+	print_message Verbose_standard ("[Worker " ^ (string_of_int rank) ^ "] Occupancy              : " ^ (string_of_float occupancy) ^ " %");
 ;;
 
