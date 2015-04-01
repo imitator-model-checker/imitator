@@ -7,6 +7,8 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \usepackage[utf8x]{inputenc}
 
+\usepackage{fourier}
+
 \usepackage{amsmath, amssymb, url}
 
 % \usepackage[pdftex]{graphicx,color}
@@ -19,8 +21,8 @@
 	]{hyperref}
 
 \hypersetup{
-  pdftitle={IMITATOR User Manual},
-  pdfauthor={\'Etienne Andr\'e}%
+	pdftitle={IMITATOR User Manual},
+	pdfauthor={\'Etienne Andr\'e}%
 }
 
 
@@ -117,8 +119,8 @@
 % ALGORITHMES
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
 % Algorithmes PTA
-\newcommand{\IM}{\mathit{IM}}
-\newcommand{\carto}{\mathit{BC}}
+\newcommand{\IM}{\mathrm{IM}}
+\newcommand{\carto}{\mathrm{BC}}
 
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
 % CONSTANTES DE CHAINES
@@ -130,19 +132,17 @@
 \newcommand{\graphviz}{Graphviz}
 \newcommand{\hytech}{{\sc HyTech}}
 \newcommand{\imitator}{\textsc{Imitator}}
-%%\newcommand{\imitatordeux}{\textsc{Imitator}\,II}
 \newcommand{\imitatorExec}{\code{IMITATOR}}
-% \newcommand{\imperator}{\textsc{ImpRator}}
+\newcommand{\IPTA}{IPTA}
 \newcommand{\ocaml}{OCaml}
 \newcommand{\phaver}{PHAVer}
 % \newcommand{\polka}{NewPolka}
 % \newcommand{\prism}{\textsc{Prism}}
-\newcommand{\python}{Python}
 % \newcommand{\red}{RED}
 % \newcommand{\uppaal}{\textsc{Uppaal}}
 
 % Current version
-\newcommand{\imitatorversion}{2.6.0}
+\newcommand{\imitatorversion}{2.6.3}
 
 
 
@@ -208,34 +208,33 @@ and, automaton, clock, discrete, do, end, endreach, False, forward, from, goto, 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % Title Page
-\title{IMITATOR User Manual\\{\Large Version \imitatorversion{}}}
-\author{}
+\title{IMITATOR User Manual}
+\author{Étienne André}
 % \date{}
 
 \begin{document}
-\maketitle
+% \maketitle
+\mbox{}
 
-\bigskip
+\thispagestyle{empty}
+
+\vspace{5cm}
 
 \begin{center}
+	{\Huge \bfseries IMITATOR User Manual}
+
+	\vspace{2cm}
+
 	\includegraphics[width=0.40\textwidth]{include/logo.jpg}
+
+	\vspace{2cm}
+	
+	{\Large Version \imitatorversion{}}
+
 \end{center}
 
 \bigskip
 
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\begin{abstract}
-\imitator{} is a tool for parameter synthesis in timed automata with stopwatches~\cite{AFKS12}.
-It is based on the inverse method: given a reference valuation of the parameters, its generates a constraint such that the system behaves the same as under the reference valuation in terms of traces, i.e., alternating sequences of locations and actions.
-% This is useful for safely relaxing some values of the reference valuation, and optimizing timing bounds of the system.
-Besides the inverse method, \imitator{} also implements the ``behavioral cartography algorithm'', allowing to solve the following good parameters problem: find a set of valuations within a given rectangle for which the system behaves well.
-% New features and optimizations of the tool are presented, and various examples of asynchronous circuits and communication protocols are studied.
-We give here the installation requirements and the launching commands of \imitator{}, as well as the source code of a toy example.
-\end{abstract}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \newpage
 
@@ -256,10 +255,79 @@ We give here the installation requirements and the launching commands of \imitat
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
-\imitator{}~\cite{AFKS12} (for \emph{Inverse Method for Inferring Time AbstracT behaviOR}) is a tool for parameter synthesis in the framework of real-time systems based on the inverse method~$\IM$ for Parametric Timed Automata (PTAs) augmented with stopwatches~\cite{AHV93,AM02}.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{IMITATOR Parametric Timed Automata}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Definition}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+An \imitator{} parametric timed automata (hereafter \IPTA{}) is a network of parametric automata (as proposed in~\cite{AHV93}) augmented with several features such as stopwatches and discrete variables.
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Synchronization Model}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Discrete Variables}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+Discrete variables\footnote{%
+	The name ``discrete variable'' comes from \hytech{}.
+}
+are global integer variables.
+Their value is global, in the sense that they are shared by all automata of the model.
+	% TODO: how many bits? what happens in case of overflow?
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Initial Values}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Parameter Synthesis Using IMITATOR}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Inside the Box}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Example}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Old etc.}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+\imitator{}~\cite{AFKS12} (for \emph{Inverse Method for Inferring Time AbstracT behaviOR}) is a tool for parameter synthesis in the framework of real-time systems based on the inverse method~$\IM$ for Parametric Timed Automata (PTA) augmented with stopwatches~\cite{AHV93,AM02}.
 Different from CEGAR-based methods (see \cite{cgjlv00}), this algorithm for parameter synthesis makes use of a ``good'' parameter valuation~$\pio$ instead of a set of ``bad'' states~\cite{AS13}.
 
-When executing the inverse method, \imitator{} takes as input a network of PTAs with stopwatches
+When executing the inverse method, \imitator{} takes as input a network of PTA with stopwatches
 and a reference valuation~$\pio$; it synthesizes a constraint~$\Ko$ on the parameters such that (1) $\pio \models \Ko$ and (2) for all parameter valuation~$\piprime$ satisfying $\Ko$, the trace set (i.e., the discrete behavior) of~$\A$ under~$\piprime$ is the same as for~$\A$ under~$\pio$.
 %This preserves in particular linear time properties, 
 This provides the system with a criterion of \emph{robustness} (see, e.g., \cite{Markey11})
@@ -359,15 +427,15 @@ Sources, binaries for Linux platforms, and installation instructions are availab
 \subsection{Inputs and Outputs}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-The input syntax of \imitator{} to describe the network of PTAs modeling the system is originally based on the \hytech{} syntax, with several improvements.
-Actually, all standard \hytech{} files describing only PTAs (and not more general systems like linear hybrid automata\cite{achh92}) can be analyzed directly by \imitator{} with very minor changes.
+The input syntax of \imitator{} to describe the network of PTA modeling the system is originally based on the \hytech{} syntax, with several improvements.
+Actually, all standard \hytech{} files describing only PTA (and not more general systems like linear hybrid automata \cite{achh92}) can be analyzed directly by \imitator{} with very minor changes.
 % \footnote{An interface to accept as well files given using the \phaver{} syntax is currently being implemented.}.
 
 
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
 \paragraphe{Inverse Method}
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
-When calling \imitator{} to apply the inverse method algorithm, the tool takes as input two files, one describing the network of PTAs modeling the system, and the other describing the reference valuation.
+When calling \imitator{} to apply the inverse method algorithm, the tool takes as input two files, one describing the network of PTA modeling the system, and the other describing the reference valuation.
 As depicted in Figure~\ref{fig:ioIM}, it synthesizes a constraint on the parameters solving the inverse problem, as well as optionally the corresponding trace set under a graphical form.
 The description of all the parametric reachable states can also be optionally output.
 
@@ -410,7 +478,7 @@ The description of all the parametric reachable states can also be optionally ou
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
 \paragraphe{Behavioral Cartography Algorithm}
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
-When calling \imitator{} to apply the behavioral cartography algorithm, the tool takes as an input two files, one describing the network of PTAs modeling the system, and the other describing the reference rectangle, i.e., the bounds to consider for each parameter.
+When calling \imitator{} to apply the behavioral cartography algorithm, the tool takes as an input two files, one describing the network of PTA modeling the system, and the other describing the reference rectangle, i.e., the bounds to consider for each parameter.
 As depicted in Figure~\ref{fig:ioBC}, it synthesizes a list of tiles, as well as optionally the trace set corresponding to each tile under a graphical form.
 The description of all the parametric reachable states for each tile may also optionally be output.
 
@@ -1643,7 +1711,7 @@ Romain~Soulat implemented powerful algorithmic optimizations, and brought many c
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \newpage
-\bibliographystyle{abbrv}
+\bibliographystyle{alpha}
 \addcontentsline{toc}{section}{References}
 \bibliography{biblio}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
