@@ -108,6 +108,7 @@ let write_result_to_file constraint_str =
 	let options = Input.get_options () in
 	(* Prepare the string to write *)
 	let file_content =
+		(*** WARNING: duplicate code (Cartography.ml) ***)
 		"(*" 
 		(* Program version *)
 		^ "\n  Result output by " ^ Constants.program_name ^ ""

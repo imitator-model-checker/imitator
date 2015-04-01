@@ -10,7 +10,7 @@
  * Author:        Ulrich Kuehne, Etienne Andre
  * 
  * Created:       2012/06/18
- * Last modified: 2015/03/30
+ * Last modified: 2015/04/01
  *
  ****************************************************************)
 
@@ -96,7 +96,7 @@ let init_state = ref (Automaton.make_location [] [], LinearConstraint.px_true_co
 let init_constraint = ref (LinearConstraint.p_true_constraint())
 
 (* (Dynamic) Array for the results *)
-let computed_constraints = ref (DynArray.create())
+let computed_constraints : returned_constraint DynArray.t ref = ref (DynArray.create())
 
 (* Compute some variables for the border cartography only *)
 (* Current_intervals_min and Current_intervals_max represent, for each dimension, the interval (multiple of step) in which the points have not been classified as good or bad *)
@@ -175,6 +175,65 @@ let stop_counter_next_point () =
 *)
 
 let counter_next_point = new Counter.counter
+
+
+
+(**************************************************************)
+(* I/O functions *)
+(**************************************************************)
+(** Write all constraints to a file *)
+let write_result_to_file total_time =
+	(* Get the model *)
+	let model = Input.get_model() in
+	(* Retrieve the input options *)
+	let options = Input.get_options () in
+	(* Retrieve all constraints in the form of a string *)
+	let index = ref 1 in
+	let constraints_str =
+		DynArray.fold_left (fun current_str returned_constraint ->
+			(* Get the constraint and convert to string *)
+			let constraint_str = ModelPrinter.string_of_returned_constraint model.variable_names returned_constraint in
+			let index_str = string_of_int !index in
+			(* Increment *)
+			index := !index + 1;
+			(* Add the constraint to the string *)
+			(*** TODO: add other information from im_result if needed (tile nature, computation time, etc.) ***)
+			current_str
+			^ "\n (***** Constraint " ^ index_str ^ "*****)"
+			^ "\n" ^ constraint_str
+			^ "\n\n"
+		) "" !computed_constraints
+	in
+	(* Prepare the string to write *)
+	let file_content =
+		(*** WARNING: duplicate code (Reachability.ml) ***)
+		"(*" 
+		(* Program version *)
+		^ "\n  Result output by " ^ Constants.program_name ^ ""
+		^ "\n  Version  : " ^ Constants.version_string ^ " (build " ^ BuildInfo.build_number ^ ")"
+		^ "\n  Model    : '" ^ options#file ^ "'"
+		(* Date *)
+		^ "\n  Generated: " ^ (now()) ^ ""
+		(* Command *)
+		^ "\n  Command  : " ^ (string_of_array_of_string_with_sep " " Sys.argv)
+		^ "\n*)\n\n"
+		(*** HACK: add a special command for PaTATOR ***)
+		^ (if options#distribution_mode = Non_distributed then ""
+			else "PaTATOR"
+				(* Time *)
+				^ " " ^ (string_of_float total_time)
+				(* Number of tiles *)
+				^ " " ^ (string_of_int (DynArray.length !computed_constraints))
+				^ "\n\n"
+		)
+		(* The actual result *)
+		^ constraints_str ^ "\n"
+	in
+	(* Write to file *)
+	let file_name = options#files_prefix ^ "-cart" ^ Constants.result_file_extension in
+	write_to_file file_name file_content;
+	print_message Verbose_standard ("Result written to file '" ^ file_name ^ "'.")
+
 
 
 (************************************************************)
@@ -1362,6 +1421,12 @@ let bc_finalize () =
 	(*** TODO: round !!! ***)
 (* 	let time_spent_on_BC = global_time -. (!time_spent_on_IM) in *)
 	
+	(*** TODO: move graphics generation to here ***)
+	
+	(* Write to file *)
+	if options#output_result then(
+		write_result_to_file global_time;
+	);
 	
 	(* Print the result *)
 	print_message Verbose_standard ("\n**************************************************");
@@ -1643,7 +1708,7 @@ let cover_behavioral_cartography model v0 =
 	
 	(* Process the finalization *)
 	bc_finalize ();
-
+	
 	(* Process the result *)
 	let zones = bc_result () in
 	

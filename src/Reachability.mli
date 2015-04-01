@@ -10,7 +10,7 @@
  * Author:        Ulrich Kuehne, Etienne Andre
  * 
  * Created:       2010/07/22
- * Last modified: 2014/11/10
+ * Last modified: 2015/04/01
  *
  ****************************************************************)
 
@@ -24,6 +24,7 @@ open LinearConstraint
 (****************************************************************)
 (** The result output by IM *)
 (****************************************************************)
+(*** TODO: convert to a separate class ***)
 type im_result = {
 	(* Returned constraint *)
 	result : returned_constraint;

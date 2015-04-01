@@ -8,7 +8,7 @@
  * Author:        Etienne Andre, Camille Coti
  * 
  * Created:       2014/03/24
- * Last modified: 2015/03/30
+ * Last modified: 2015/04/01
  *
  ****************************************************************)
 
@@ -320,6 +320,7 @@ let master () =
 	print_message Verbose_standard ("[Master] All workers done" );
 
 	(* Process the finalization *)
+	print_message Verbose_standard ("[Master] Finalizing the cartography..." );
 	Cartography.bc_finalize ();
 	
 	print_message Verbose_standard ("[Master] Total waiting time     : " ^ (string_of_float (counter_master_waiting#value)) ^ " s");

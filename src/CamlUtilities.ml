@@ -7,7 +7,7 @@
  * Author:        Etienne Andre
  * 
  * Created:       2014/10/24
- * Last modified: 2015/03/24
+ * Last modified: 2015/04/01
  *
  ****************************************************************)
  
@@ -247,7 +247,7 @@ let string_of_array_of_string_with_sep sep a =
 		!the_string ^ a.(length - 1)
 	)
 
-(* Convert a list of string into a string with separators *)
+(** Convert a list of string into a string with separators (uses an internal conversion to list) *)
 let string_of_list_of_string_with_sep sep l =
 	string_of_array_of_string_with_sep sep (Array.of_list l)
 

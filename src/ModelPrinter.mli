@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2009/12/02
- * Last modified: 2013/08/02
+ * Last modified: 2015/01/04
  *
  ****************************************************************)
 
@@ -27,6 +27,7 @@ val string_of_state : abstract_model -> (Automaton.global_location * LinearConst
 (**************************************************)
 (** Result *)
 (**************************************************)
+(*** TODO/BADPROG : Move elsewhere? ***)
 val string_of_returned_constraint : (int -> string) -> returned_constraint -> string
 
 

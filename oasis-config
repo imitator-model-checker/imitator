@@ -7,7 +7,7 @@
 #
 #  _oasis authors: Etienne Andre, Alban Linard
 #  Created:        2013/12/11
-#  Last modified:  2015/03/30
+#  Last modified:  2015/04/01
 ###############################################################
 
 OASISFormat: 0.3
@@ -53,9 +53,11 @@ Test test3
 
 Test test4
   Command: echo "\n********** TEST 4 **********\n"; \
-      ./bin/imitator examples/Examples/JLR-TACAS13.imi examples/Examples/JLR-TACAS13.v0 -mode cover -EFIM -output-cart -depth-limit 10 -verbose mute
+      ./bin/imitator examples/Examples/JLR-TACAS13.imi examples/Examples/JLR-TACAS13.v0 -mode cover -EFIM -output-result -output-cart -depth-limit 10 -verbose mute
 
-# TODO: add a distributed test !
+Test test5
+  Command: echo "\n********** TEST 5 **********\n"; \
+      mpiexec -n 4 ./bin/imitator examples/Flipflop/flipflop.imi examples/Flipflop/flipflop.v0 -mode cover -output-result -output-cart -distributed sequential -verbose mute
 
 Test finalcomment
   Command: echo "\n********** END TESTS **********\n"
