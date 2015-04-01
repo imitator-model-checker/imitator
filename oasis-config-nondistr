@@ -52,7 +52,7 @@ Test test3
 
 Test test4
   Command: echo "\n********** TEST 4 **********\n"; \
-      ./bin/imitatornondistr examples/Examples/JLR-TACAS13.imi examples/Examples/JLR-TACAS13.v0 -mode cover -EFIM -output-result -output-cart -depth-limit 10 -verbose mute
+      ./bin/imitatornondistr examples/Examples/JLR-TACAS13.imi examples/Examples/JLR-TACAS13.v0 -mode cover -EFIM -output-result -output-cart -depth-limit 10 -verbose warnings
 
 Test finalcomment
   Command: echo "\n********** END TESTS **********\n"

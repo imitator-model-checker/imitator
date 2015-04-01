@@ -7,7 +7,7 @@
  * Author:        Etienne Andre
  * 
  * Created:       2014/10/24
- * Last modified: 2015/03/30
+ * Last modified: 2015/04/01
  *
  ****************************************************************)
 
@@ -19,6 +19,7 @@
 
 type debug_mode =
 	| Verbose_mute
+	| Verbose_warnings
 	| Verbose_standard
 	| Verbose_low
 	| Verbose_medium

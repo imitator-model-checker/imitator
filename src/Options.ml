@@ -435,7 +435,7 @@ class imitator_options =
 				
 				("-tree", Set tree, " Does not test if a new state was already encountered. To be set ONLY if the reachability graph is a tree (otherwise analysis may loop). Default: 'false'");
 				
-				("-verbose", String set_debug_mode_ref, " Print more or less information. Can be set to 'mute', 'standard', 'low', 'medium', 'high', 'total'. Default: 'standard'");
+				("-verbose", String set_debug_mode_ref, " Print more or less information. Can be set to 'mute', 'warnings', 'standard', 'low', 'medium', 'high', 'total'. Default: 'standard'");
 				
 				("-version", Unit (fun _ -> print_string ("\n" ^ Constants.program_name ^ " " ^ Constants.version_string ^ "\nBuild: " ^ BuildInfo.build_number ^ " (" ^ BuildInfo.build_time ^ ")\n"); exit 0), " Print version number and exit.");
 			] in

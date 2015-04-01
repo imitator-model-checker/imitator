@@ -7,7 +7,7 @@
  * Author:        Etienne Andre
  * 
  * Created:       2014/10/24
- * Last modified: 2015/03/30
+ * Last modified: 2015/04/01
  *
  ****************************************************************)
  
@@ -37,6 +37,7 @@ let counter = ref (Unix.gettimeofday())
 
 type debug_mode =
 	| Verbose_mute
+	| Verbose_warnings
 	| Verbose_standard
 	| Verbose_low
 	| Verbose_medium
@@ -45,12 +46,13 @@ type debug_mode =
 
 (* Associate an integer to each debug mode *)
 let level_of_debug = function
-	| Verbose_mute -> 0
-	| Verbose_standard -> 1
-	| Verbose_low -> 2
-	| Verbose_medium -> 3
-	| Verbose_high -> 4
-	| Verbose_total -> 5
+	| Verbose_mute		-> 0
+	| Verbose_warnings	-> 1
+	| Verbose_standard	-> 2
+	| Verbose_low		-> 3
+	| Verbose_medium	-> 4
+	| Verbose_high		-> 5
+	| Verbose_total		-> 6
 
 (* The global debug mode *)
 type global_debug_mode_type =
@@ -93,6 +95,7 @@ let debug_mode_greater debug_mode =
 (* Convert a string into a debug_mode; raise Not_found if not found *)
 let debug_mode_of_string debug_mode =
 	if debug_mode = "mute" then Verbose_mute
+	else if debug_mode = "warnings" then Verbose_warnings
 	else if debug_mode = "standard" then Verbose_standard
 	else if debug_mode = "low" then Verbose_low
 	else if debug_mode = "medium" then Verbose_medium
@@ -194,7 +197,7 @@ let print_message message_debug_mode message =
 (* Print a warning *)
 let print_warning message =
 	(* Do not print warnings in mute mode *)
-	if debug_mode_greater Verbose_standard then(
+	if debug_mode_greater Verbose_warnings then(
 		let spaces = " " in
 		(* Add new lines and blanks everywhere *)
 		let formatted_message = spaces ^ "*** Warning: " ^ (Str.global_replace (Str.regexp "\n") ("\n" ^ spaces) message) in
