@@ -10,7 +10,7 @@
  * Author:        Ulrich Kuehne, Etienne Andre
  * 
  * Created:       2010/07/22
- * Last modified: 2015/03/30
+ * Last modified: 2015/04/01
  *
  ****************************************************************)
 
@@ -98,6 +98,33 @@ let tile_nature = ref Unknown
 
 (* External function to be called to check a termination condition (used for PaTATOR) *)
 let patator_termination_function = ref None
+
+
+(**************************************************************)
+(* I/O functions *)
+(**************************************************************)
+let write_result_to_file constraint_str =
+	(* Retrieve the input options *)
+	let options = Input.get_options () in
+	(* Prepare the string to write *)
+	let file_content =
+		"(*" 
+		(* Program version *)
+		^ "\n  Result output by " ^ Constants.program_name ^ ""
+		^ "\n  Version  : " ^ Constants.version_string ^ " (build " ^ BuildInfo.build_number ^ ")"
+		^ "\n  Model    : '" ^ options#file ^ "'"
+		(* Date *)
+		^ "\n  Generated: " ^ (now()) ^ ""
+		(* Command *)
+		^ "\n  Command  : " ^ (string_of_array_of_string_with_sep " " Sys.argv)
+		^ "\n*)\n\n"
+		(* The actual result *)
+		^ constraint_str ^ "\n"
+	in
+	(* Write to file *)
+	let file_name = options#files_prefix ^ Constants.result_file_extension in
+	write_to_file file_name file_content;
+	print_message Verbose_standard ("Result written to file '" ^ file_name ^ "'.")
 
 
 
@@ -3011,9 +3038,7 @@ let efim model =
 	);
 	(* Write to file if requested *)
 	if options#output_result then(
-		let file_name = options#files_prefix ^ Constants.result_file_extension in
-		write_to_file file_name (constraint_str ^ "\n");
-		print_message Verbose_standard ("Result written to file '" ^ file_name ^ "'.");
+		write_result_to_file constraint_str;
 	);
 
 	(* Print memory information *)
@@ -3072,9 +3097,7 @@ let inverse_method model =
 	);
 	(* Write to file if requested *)
 	if options#output_result then(
-		let file_name = options#files_prefix ^ Constants.result_file_extension in
-		write_to_file file_name (result_str ^ "\n");
-		print_message Verbose_standard ("Result written to file '" ^ file_name ^ "'.");
+		write_result_to_file result_str;
 	);
 	
 	(* Print memory information *)
