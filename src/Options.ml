@@ -365,10 +365,12 @@ class imitator_options =
 				
 				("-distributed", String set_distributed, " Distributed version of the behavioral cartography.
         Use 'no' for the non-distributed mode (default).
-        Use 'sequential' for a sequential iteration on pi0.
-        Use 'randomXX' to generate random pi0 (e.g., random5 or random10); after XX successive unsuccessful attempts (where the generated point is already covered), the algorithm will do an exhaustive sequential iteration.
-        Use 'shuffle' for a shuffle point distribution.
-        Use 'subpart' for the dynamic subdomain partitioning.");
+        Use 'static' for a static domain partitioning.
+        Use 'sequential' for a master-worker scheme with sequential point distribution [ACE14].
+        Use 'randomXX' for a master-worker scheme with random point distribution (e.g., random5 or random10); after XX successive unsuccessful attempts (where the generated point is already covered), the algorithm will switch to an exhaustive sequential iteration [ACE14].
+        Use 'shuffle' for a master-worker scheme with shuffle point distribution.
+        Use 'subpart' for a master-worker dynamic subdomain partitioning.
+				");
 				
 				("-distributedKillIM", Set distributedKillIM, " In distributed cartography, kill processes covered by other tiles. Default: false.");
 				

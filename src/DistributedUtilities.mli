@@ -54,7 +54,7 @@ val masterrank : int
 (****************************************************************)
 
 
-val size : unit -> int
+val get_nb_nodes : unit -> int
 val get_rank : unit -> rank
 
 val send_result : (*LinearConstraint.p_linear_constraint*)Reachability.im_result -> unit

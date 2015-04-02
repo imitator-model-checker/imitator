@@ -777,6 +777,7 @@ let check_stop_order () =
 		let check = receive_work () in
 		match check with
 						
+		(*** TODO: how can the worker receive a tile from the master ??? ***)
 		| Tile tile -> 		(*print_message Verbose_medium ("[Worker " (*^ (string_of_int rank) ^*) "] received Tile from Master.");*)
 (* 					let b = Cartography.bc_process_im_result tile in *)
 					print_message Verbose_medium ("[Worker " ^ (*(string_of_int rank) ^*) "] received Tile from Master.");
@@ -1045,7 +1046,30 @@ let worker() =
 
 (*** TODO: receive tiles from the others ***)
 let collaborator_0_finalize () =
+	print_message Verbose_standard ( "[Coordinator] I am collaborator " ^ (string_of_int masterrank) ^ " and I am now the coordinator.");
+
+	let size = get_nb_nodes() in
+	let workers_done = ref 0 in
+
+	while !workers_done < ( size - 1) do
+		print_message Verbose_medium ("[Coordinator] " ^ ( string_of_int ( size - 1 - !workers_done )) ^ " workers left" );
+		(*** TODO here: receive tiles ***)
+		let source_rank , _ = (*receive_pull_request_and_store_constraint ()*)999,() in
+		print_message Verbose_medium ("[Coordinator] Received from Worker " ^ ( string_of_int source_rank ) ^"");
+		workers_done := !workers_done + 1;
+		print_message Verbose_standard( "\t[Coordinator] Received tiles from worker " ^ (string_of_int source_rank ) ^ ".");
+	done;
+		
+	print_message Verbose_standard ("[Coordinator] All workers done" );
+
+	(* Process the finalization *)
+	print_message Verbose_standard ("[Coordinator] Finalizing the cartography..." );
+	Cartography.bc_finalize ();
+	
+	print_message Verbose_standard ("[Coordinator] Total waiting time     : " ^ (string_of_float (counter_master_waiting#value)) ^ " s");
+	print_message Verbose_standard ("**************************************************");
 	()
+	
 (*** TODO: send tiles to collaborator #0 ***)
 let collaborator_n_finalize () =
 	()

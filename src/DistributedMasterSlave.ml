@@ -80,7 +80,7 @@ let receive_pull_request_and_store_constraint () =
 
 	| OutOfBound source_rank ->
 		print_message Verbose_low ("[Master] Received OutOfBound request...");
-		(* FAIRE QUELQUE CHOSE POUR DIRE QU'UN POINT N'A PAS MARCHÉ *)
+		(*** TODO: FAIRE QUELQUE CHOSE POUR DIRE QU'UN POINT N'A PAS MARCHÉ ***)
 		raise (InternalError("OutOfBound not implemented."))(*;
 		source_rank, None*)
 
@@ -311,15 +311,15 @@ let master () =
 	
 	print_message Verbose_standard ( "[Master] Done with sending pi0; waiting for last results.");
 
-	let size = Mpi.comm_size Mpi.comm_world in
-		while !workers_done < ( size - 1) do
+	let size = get_nb_nodes() in
+	while !workers_done < ( size - 1) do
 		print_message Verbose_medium ("[Master] " ^ ( string_of_int ( size - 1 - !workers_done )) ^ " workers left" );
 		let source_rank , _ = receive_pull_request_and_store_constraint () in
-		print_message Verbose_medium ("[Master] Received from [Worker " ^ ( string_of_int source_rank ) ^"]");
+		print_message Verbose_medium ("[Master] Received from Worker " ^ ( string_of_int source_rank ) ^"");
 		(* Say good bye *)
 		send_finished source_rank;
 		workers_done := !workers_done + 1;
-		print_message Verbose_medium( "\t[Master] - [Worker " ^ (string_of_int source_rank ) ^ "] is done");
+		print_message Verbose_medium( "\t[Master] Worker " ^ (string_of_int source_rank ) ^ " is done");
 	done;
 		
 	print_message Verbose_standard ("[Master] All workers done" );
@@ -363,8 +363,8 @@ let worker() =
 	counter_worker_waiting#init;
 	counter_worker_working#init;
 	
-	let rank = Mpi.comm_rank Mpi.comm_world in
-	let size = Mpi.comm_size Mpi.comm_world in
+	let rank = get_rank() in
+	let size = get_nb_nodes() in
 	init_slave rank size;
 	
 	let finished = ref false in

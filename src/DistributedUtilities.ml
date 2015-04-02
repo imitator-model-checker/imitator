@@ -52,6 +52,7 @@ type work_assignment =
 	| Stop
 	(*Hoang Gia new tags*)
 	| Subpart of HyperRectangle.hyper_rectangle
+		(*** TODO: how can the worker receive a tile from the master ??? ***)
 	| Tile of Reachability.im_result
 	| Terminate
 	| Continue
@@ -527,7 +528,7 @@ let master_tag_of_int = function
 	| other -> raise (InternalError ("Impossible match '" ^ (string_of_int other) ^ "' in master_tag_of_int."))
 
 
-let size () = Mpi.comm_size Mpi.comm_world
+let get_nb_nodes () = Mpi.comm_size Mpi.comm_world
 let get_rank () = Mpi.comm_rank Mpi.comm_world
 
 
