@@ -26,10 +26,10 @@ let run () =
 	let options = Input.get_options () in
 
 	(* Retrieve MPI rank *)
-	let rank = Mpi.comm_rank Mpi.comm_world in
+	let rank = get_rank() in
 
 	(* Print some information *)
-	if rank = 0 then
+	if rank = masterrank then
 	  print_message Verbose_standard ("Hi guys! This is PaTATOR speaking!");
 	
 	
@@ -58,6 +58,10 @@ let run () =
 		if rank = masterrank
 		then DistributedMasterSlaveSubparts.master
 		else DistributedMasterSlaveSubparts.worker
+		
+	    | Distributed_static ->
+		(* No work for now *)
+		DistributedMasterSlaveSubparts.collaborator
 		
 	    (* Other master slave scheme *)
 	    | _ ->

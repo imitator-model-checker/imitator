@@ -7,7 +7,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Ulrich Kuehne, Etienne Andre
  * Created:       2010
- * Last modified: 2015/03/30
+ * Last modified: 2015/04/02
  *
  ****************************************************************)
  
@@ -19,6 +19,9 @@ type distribution_mode =
 	(** Normal mode *)
 	| Non_distributed
 	
+	(** Distributed mode: static distribution mode (each node has its own part with no communication) *)
+	| Distributed_static
+	
 	(** Distributed mode: Master slave with sequential pi0 *)
 	| Distributed_ms_sequential
 	(** Distributed mode: Master slave with sequential pi0 shuffled *)
@@ -27,6 +30,7 @@ type distribution_mode =
 	| Distributed_ms_random of int	
 	(** Distributed mode: Master slave with subpart distribution *)
 	| Distributed_ms_subpart
+
 	(**  Distributed mode: Workers live their own lives and communicate results to the coordinator  **)
 	| Distributed_unsupervised
 	(**  Distributed mode: multi-threaded version of Distributed_unsupervised  **)
@@ -302,12 +306,17 @@ class imitator_options =
 				if mode = "no" then 
 					distribution_mode := Non_distributed
 					
+				(*** TODO / BADPROG: handle better this switch! ***)
+				
 				(* Case: distributed in unsupervised version *)
 				else if mode = "unsupervised" then 
 					distribution_mode := Distributed_unsupervised
 				else if mode = "unsupervised-multi-threaded" then 
 					distribution_mode := Distributed_unsupervised_multi_threaded
 
+				(* Case: distributed master-slave with sequential selection *)
+				else if mode = "static" then 
+					distribution_mode := Distributed_static
 				(* Case: distributed master-slave with sequential selection *)
 				else if mode = "sequential" then 
 					distribution_mode := Distributed_ms_sequential
@@ -590,6 +599,12 @@ class imitator_options =
 			)
 			| Distributed_unsupervised_multi_threaded ->(
 				print_message Verbose_standard ("Considering a distributed mode with unsupervised multi-threaded workers (work in progress).");
+				if !imitator_mode <> Cover_cartography then(
+					print_warning "The distributed mode is only valid for the cartography. Option will be ignored.";
+				)
+			)
+			| Distributed_static ->(
+				print_message Verbose_standard ("Considering a distributed mode with static splitting.");
 				if !imitator_mode <> Cover_cartography then(
 					print_warning "The distributed mode is only valid for the cartography. Option will be ignored.";
 				)

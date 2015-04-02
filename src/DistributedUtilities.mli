@@ -8,7 +8,7 @@
  * Author:        Etienne Andre, Camille Coti
  * 
  * Created:       2014/03/24
- * Last modified: 2014/10/23
+ * Last modified: 2015/04/02
  *
  ****************************************************************)
 
@@ -55,7 +55,7 @@ val masterrank : int
 
 
 val size : unit -> int
-val rank : unit -> int
+val get_rank : unit -> rank
 
 val send_result : (*LinearConstraint.p_linear_constraint*)Reachability.im_result -> unit
 

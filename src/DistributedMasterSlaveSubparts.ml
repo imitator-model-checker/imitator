@@ -7,7 +7,7 @@
  * Author:        Etienne Andre, Camille Coti, Hoang Gia Nguyen
  * 
  * Created:       2014/09/05
- * Last modified: 2015/03/30
+ * Last modified: 2015/04/02
  *
  ****************************************************************)
 
@@ -446,7 +446,7 @@ let master () =
 	let check_covered = ref false in
 	
 	(* Get the model *)
-	let model = Input.get_model() in
+(* 	let model = Input.get_model() in *)
 	(* Get the v0 *)
 	let v0 = Input.get_v0() in
 	
@@ -470,17 +470,17 @@ let master () =
 	(* List of subparts maintained by the master *)
 	let subparts = ref [] in
 	
-	let more_subparts = ref true in
-	let limit_reached = ref false in
+(* 	let more_subparts = ref true in *)
+(* 	let limit_reached = ref false in *)
 	
 
 	(*print_message Verbose_standard ("[Master] Here!!!!!!!!!!");*)
 	(* create index(worker,supart) *)
 	let index = ref [] in
 	(* current pi0 of workers*)
-	let current_Pi0 = ref [] in
+(* 	let current_Pi0 = ref [] in *)
 	(* stopSplitting flag *)
-	let stopSplitting = ref false in
+(* 	let stopSplitting = ref false in *)
 	(*waitting *)
 	let waittingList = ref [] in
 	
@@ -490,7 +490,7 @@ let master () =
 	(*let np = 9 in*)
 	let np = (Mpi.comm_size Mpi.comm_world) -3 in
 	(*depend on size of model*)
-	let dynamicSplittingMode = ref true in
+(* 	let dynamicSplittingMode = ref true in *)
 	(*******************************************************)
 	
 	(*initialize list of subpart*)
@@ -778,7 +778,7 @@ let check_stop_order () =
 		match check with
 						
 		| Tile tile -> 		(*print_message Verbose_medium ("[Worker " (*^ (string_of_int rank) ^*) "] received Tile from Master.");*)
-					let b = Cartography.bc_process_im_result tile in
+(* 					let b = Cartography.bc_process_im_result tile in *)
 					print_message Verbose_medium ("[Worker " ^ (*(string_of_int rank) ^*) "] received Tile from Master.");
 					
 		(*| Terminate -> 		print_message Verbose_medium ("[Some Worker] received Terminate from Master.");
@@ -948,7 +948,7 @@ let worker() =
 						match check with
 						
 						| Tile tile -> 		print_message Verbose_medium ("[Worker " ^ (string_of_int rank) ^ "] received Tile from Master.");
-									let b = Cartography.bc_process_im_result tile in
+(* 									let b = Cartography.bc_process_im_result tile in *)
 									print_message Verbose_medium ("[Worker " ^ (string_of_int rank) ^ "] received Tile from Master.");
 									
 						| Subpart subpart ->	print_message Verbose_medium ("[Worker " ^ (string_of_int rank) ^ "] received scaled subpart tag from Master.");
@@ -1036,4 +1036,37 @@ let worker() =
 	print_message Verbose_standard ("[Worker " ^ (string_of_int rank) ^ "] Occupancy                    : " ^ (string_of_float occupancy) ^ " %");
 
 ;;
+
+
+
+(****************************************************************)
+(**        COLLABORATOR (static distribution)         *)
+(****************************************************************)
+
+(*** TODO: receive tiles from the others ***)
+let collaborator_0_finalize () =
+	()
+(*** TODO: send tiles to collaborator #0 ***)
+let collaborator_n_finalize () =
+	()
+
+
+(** Implementation of coordinator (for static distribution) *)
+let collaborator () =
+
+	(*** TODO: compute all subparts ***)
+
+	
+	(*** TODO: select subpart #i ***)
+
+	
+	(*** TODO: call IM until subpart is 100% covered (main loop) ***)
+
+	
+	(* Finalization depending on MPI rank *)
+	if get_rank() = masterrank
+		then collaborator_0_finalize()
+		else collaborator_n_finalize()
+	
+	(* The end *)
 

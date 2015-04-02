@@ -8,7 +8,7 @@
  * Author:        Etienne Andre, Camille Coti
  * 
  * Created:       2014/03/24
- * Last modified: 2015/03/30
+ * Last modified: 2015/04/02
  *
  ****************************************************************)
 
@@ -17,7 +17,6 @@
 (* External modules *)
 (**************************************************)
 open Mpi
-(* open Marshal *)
 
 
 (**************************************************)
@@ -529,7 +528,7 @@ let master_tag_of_int = function
 
 
 let size () = Mpi.comm_size Mpi.comm_world
-let rank () = Mpi.comm_rank Mpi.comm_world
+let get_rank () = Mpi.comm_rank Mpi.comm_world
 
 
 (*
@@ -547,7 +546,7 @@ let message_MAX_SIZE = 100
 
 (* Sends a result (first the size then the constraint), by the slave *)
 let send_result (*linear_constraint*)im_result =
-	let rank = rank() in
+	let rank = get_rank() in
 
 	print_message Verbose_medium ("[Worker " ^ (string_of_int rank) ^ "] Entering send_constraint");
 	let mlc = (*LinearConstraint.serialize_linear_constraint linear_constraint *) serialize_im_result im_result in
@@ -599,7 +598,7 @@ let send_result (*linear_constraint*)im_result =
  
 (*send tile = send result*)
 let send_result_worker (*linear_constraint*)im_result =
-	let rank = rank() in
+	let rank = get_rank() in
 
 	print_message Verbose_medium ("[Worker " ^ (string_of_int rank) ^ "] Entering send_constraint");
 	let mlc = (*LinearConstraint.serialize_linear_constraint linear_constraint *) serialize_im_result im_result in
@@ -645,7 +644,7 @@ let send_pi0 (pi0 : AbstractModel.pi0) slave_rank =
 
 (* Sends a point (first the size then the point), by the slave *)
 let send_pi0_worker pi0  =
-	let rank = rank() in
+	let rank = get_rank() in
 	print_message Verbose_medium ("[Worker " ^ (string_of_int rank) ^ "] Entering send_pi0");
 	let mpi0 = serialize_pi0 pi0 in
 	let res_size = String.length mpi0 in
@@ -659,10 +658,10 @@ let send_pi0_worker pi0  =
 
 
 let send_work_request () =
-	Mpi.send (rank()) masterrank (int_of_slave_tag Slave_work_tag) Mpi.comm_world
+	Mpi.send (get_rank()) masterrank (int_of_slave_tag Slave_work_tag) Mpi.comm_world
 	
 let send_update_request () =
-	Mpi.send (rank()) masterrank (int_of_slave_tag Slave_updaterequest_tag) Mpi.comm_world
+	Mpi.send (get_rank()) masterrank (int_of_slave_tag Slave_updaterequest_tag) Mpi.comm_world
 	
 	
 (*Hoang Gia send subpart by the Master*)
@@ -781,7 +780,7 @@ let send_continue source_rank =
 
 let receive_work () =
 	(* Get the model *)
-	let model = Input.get_model() in
+(* 	let model = Input.get_model() in *)
 
 	let ( w, _, tag ) =
 	Mpi.receive_status masterrank Mpi.any_tag Mpi.comm_world in

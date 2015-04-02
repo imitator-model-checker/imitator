@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2012/05/10
- * Last modified: 2015/03/30
+ * Last modified: 2015/04/02
  *
  ****************************************************************)
  
@@ -16,6 +16,9 @@ type distribution_mode =
 	(** Normal mode *)
 	| Non_distributed
 	
+	(** Distributed mode: static distribution mode (each node has its own part with no communication) *)
+	| Distributed_static
+	
 	(** Distributed mode: Master slave with sequential pi0 *)
 	| Distributed_ms_sequential
 	(** Distributed mode: Master slave with sequential pi0 shuffled *)
@@ -24,8 +27,9 @@ type distribution_mode =
 	| Distributed_ms_random of int	
 	(** Distributed mode: Master slave with subpart distribution *)
 	| Distributed_ms_subpart
+
 	(**  Distributed mode: Workers live their own lives and communicate results to the coordinator  **)
-	| Distributed_unsupervised	
+	| Distributed_unsupervised
 	(**  Distributed mode: multi-threaded version of Distributed_unsupervised  **)
 	| Distributed_unsupervised_multi_threaded
 

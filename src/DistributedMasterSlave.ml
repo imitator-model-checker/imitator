@@ -8,7 +8,7 @@
  * Author:        Etienne Andre, Camille Coti
  * 
  * Created:       2014/03/24
- * Last modified: 2015/04/01
+ * Last modified: 2015/04/02
  *
  ****************************************************************)
 
@@ -90,6 +90,9 @@ let receive_pull_request_and_store_constraint () =
 		ignore (Cartography.bc_process_im_result im_result);
 		(* Return source rank *)
 		source_rank, Some im_result.tile_nature
+		
+	(*** WARNING: pattern-matching not exhaustive; is that safe? ***)
+	
 ;;
 
 
@@ -188,12 +191,14 @@ let compute_next_pi0 more_pi0 limit_reached first_point tile_nature_option =
 		print_message Verbose_high ("[Master] Exiting function compute_next_pi0...");
 	(**$ TODO: missing something there ***)
 		
-	| Distributed_unsupervised -> raise (InternalError("IMITATOR cannot be unsupervised at this point."))
+	| Distributed_static -> raise (InternalError(Constants.program_name ^ " cannot be in static distribution mode at this point."))
 
-	| Distributed_unsupervised_multi_threaded -> raise (InternalError("IMITATOR cannot be unsupervised-multi-threaded at this point."))
+	| Distributed_unsupervised -> raise (InternalError(Constants.program_name ^ " cannot be unsupervised at this point."))
+
+	| Distributed_unsupervised_multi_threaded -> raise (InternalError(Constants.program_name ^ " cannot be unsupervised-multi-threaded at this point."))
 
 	(** Normal mode *)
-	| Non_distributed -> raise (InternalError("IMITATOR should be distributed at this point."))
+	| Non_distributed -> raise (InternalError(Constants.program_name ^ " should be distributed at this point."))
 
 
 (*------------------------------------------------------------*)
@@ -444,6 +449,9 @@ let worker() =
 		| Stop ->
 			print_message Verbose_medium ("[Worker " ^ (string_of_int rank) ^ "] I was just told to stop work.");
 			finished := true
+
+			(*** WARNING: pattern-matching not exhaustive; is that safe? ***)
+		
 	done;
 	
 	(* Print some information *)
