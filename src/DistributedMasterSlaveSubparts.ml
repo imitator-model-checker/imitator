@@ -367,7 +367,7 @@ let dynamicSplitSubpart (s : HyperRectangle.hyper_rectangle) pi0 n : HyperRectan
 	let lst = ref [] in
 	(*print_message Verbose_medium ("\n bug!!!!!!!!!!0" );*)
 	while( !notFound (*&& (!j != -1)*) ) do
-	  begin	
+	  begin
 	 (* print_message Verbose_medium ("\n bug!!!!!!!!!!1" );*)
 	   (* if(!j = -1) then  print_message Verbose_medium ("\n all demensions of subpart could not split" ); raise (Ex (" there are only 1 pi0 left in subpart, could not split! "));*)
 	    (*if current pi0 at max dimension j but the Min at demension j of subpart is lower, split all the done pi0 below j*)
@@ -406,6 +406,7 @@ let dynamicSplitSubpart (s : HyperRectangle.hyper_rectangle) pi0 n : HyperRectan
 
 
 (* hey how are yous *)
+	(*** what is that ?????? ***)
 
 (* pval to array *)
 let pval2array pval =
@@ -432,10 +433,6 @@ let pi0InV0 pi0 v0 =
 	done;
 	!c;;
 	
-	
-(*------------------------------------------------------------*)
-(* Some functions to implement *)
-(*------------------------------------------------------------*)
 
 (*------------------------------------------------------------*)
 (* The cartography algorithm implemented in the master *)
@@ -757,10 +754,6 @@ let master () =
 
 
 
-(*------------------------------------------------------------*)
-(* Write something here *)
-(*------------------------------------------------------------*)
-
 (*** 
 	New function: 
 		1) check that buffer not empty
@@ -823,6 +816,7 @@ let compute_next_pi0_sequentially more_pi0 limit_reached first_point tile_nature
 	(* Start timer *)
 	counter_worker_find_next_pi0#start ;
 	
+	(*** TODO: what is that ?? ***)
 	print_message Verbose_medium ("[Some worker] compute_next_pi0_sequentially bug 0.");
 	
 	(* Case first point *)
@@ -830,16 +824,19 @@ let compute_next_pi0_sequentially more_pi0 limit_reached first_point tile_nature
 		print_message Verbose_low ("[Some worker] This is the first pi0.");
 		Cartography.compute_initial_pi0 ();
 		first_point := false;
+	(*** TODO: what is that ?? ***)
 		print_message Verbose_medium ("[Some worker] compute_next_pi0_sequentially bug 1.");
 		
 	(* Other case *)
 	)else(
 		print_message Verbose_low ("[Some worker] Computing next pi0 sequentially...");
 		
+	(*** TODO: what is that ?? ***)
 		print_message Verbose_medium ("[Some worker] compute_next_pi0_sequentially bug 2.");
 		
 		let found_pi0 , time_limit_reached = Cartography.find_next_pi0 tile_nature_option in
 		
+	(*** TODO: what is that ?? ***)
 		print_message Verbose_medium ("[Some worker] compute_next_pi0_sequentially bug 3.");
 		
 		(* Update the time limit *)
@@ -852,6 +849,7 @@ let compute_next_pi0_sequentially more_pi0 limit_reached first_point tile_nature
 	(* Stop timer *)
 	counter_worker_find_next_pi0#stop;
 	(* The end *)
+	(*** TODO: what is that ?? ***)
 	print_message Verbose_medium ("[Some worker] compute_next_pi0_sequentially bug 4.");
 	()
 
