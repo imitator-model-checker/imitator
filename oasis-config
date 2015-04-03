@@ -57,7 +57,11 @@ Test test4
 
 Test test5
   Command: echo "\n********** TEST 5 **********\n"; \
-      mpiexec -n 4 ./bin/imitator examples/Flipflop/flipflop.imi examples/Flipflop/flipflop.v0 -mode cover -output-result -output-cart -distributed sequential -verbose mute
+      mpiexec -n 4 ./bin/imitator examples/Flipflop/flipflop.imi examples/Flipflop/flipflop.v0 -mode cover -output-cart -distributed sequential -verbose standard
+
+Test test6
+  Command: echo "\n********** TEST 6 **********\n"; \
+      mpiexec -n 4 ./bin/imitator examples/Flipflop/flipflop.imi examples/Flipflop/flipflop.v0 -mode cover -output-result -output-cart -distributed subpart -verbose mute
 
 Test finalcomment
   Command: echo "\n********** END TESTS **********\n"

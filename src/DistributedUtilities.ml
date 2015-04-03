@@ -8,7 +8,7 @@
  * Author:        Etienne Andre, Camille Coti
  * 
  * Created:       2014/03/24
- * Last modified: 2015/04/02
+ * Last modified: 2015/04/03
  *
  ****************************************************************)
 
@@ -34,42 +34,42 @@ open Reachability
 (****************************************************************)
 type rank = int
 
-(** Worker tags *)
+(** Tags sent by workers *)
 type pull_request =
 	| PullOnly of rank
-	| PullAndResult of rank * Reachability.im_result
+	| Tile of rank * Reachability.im_result
 	| OutOfBound of rank
-	(*Hoang Gia new tags*)
-	| Tile of rank * Reachability.im_result  (*the same with PullAndResult*)
-	| Pi0 of rank * AbstractModel.pi0 (*the same with work at Master tag*)
+	(* Subpart tags *)
+	| Tiles of rank * (Reachability.im_result list) (** NEW TAG **)
+	| Pi0 of rank * AbstractModel.pi0
 	| UpdateRequest of rank
 
 
-
-(** Master tags *)
+(** Tags sent by the master *)
 type work_assignment =
 	| Work of AbstractModel.pi0
 	| Stop
-	(*Hoang Gia new tags*)
+	(* Subpart tags *)
 	| Subpart of HyperRectangle.hyper_rectangle
-		(*** TODO: how can the worker receive a tile from the master ??? ***)
-	| Tile of Reachability.im_result
+	| TileUpdate of Reachability.im_result
 	| Terminate
 	| Continue
 
 
 type pi0_list = (Automaton.variable_index * NumConst.t) list
 
+
+
 (****************************************************************)
 (** Private types *)
 (****************************************************************)
 (** Tags sent by slave *)
 type mpi_slave_tag =
-	| Slave_result_tag (*Tile tag or constraint K*)
+	| Slave_tile_tag (*Tile tag or constraint K*)
 	| Slave_work_tag (*Pull tag*)
 	| Slave_outofbound_tag (* out of bounded workers exception *)
-	(*Hoang Gia new tags*)
-	| Slave_tile_tag
+	(* Subpart tags *)
+	| Slave_tiles_tag (** NEW TAG **)
 	| Slave_pi0_tag
 	| Slave_updaterequest_tag
 
@@ -77,8 +77,8 @@ type mpi_slave_tag =
 type mpi_master_tag =
 	| Master_data_tag (*pi0*)
 	| Master_finished_tag (*Stop tags*)
-	(*Hoang Gia new tags*)
-	| Master_tile_tag
+	(* Subpart tags *)
+	| Master_tileupdate_tag
 	| Master_subpart_tag
 	| Master_terminate_tag
 	| Master_continue_tag
@@ -97,7 +97,7 @@ let outofbound_tag = 5  (* used by slave if out of time or depth         *)*)
 (** Constants *)
 (****************************************************************)
 (* Who is the master? *)
-let masterrank = 0 
+let masterrank = 0
 
 
 
@@ -352,7 +352,6 @@ let unserialize_im_result im_result_string =
 	
 
 (** Serialize a list of im_result *)
-(*** NOTE: function implemented but not used now ***)
 let serialize_im_result_list im_result_list =
 	String.concat serialize_SEP_LIST_IMRESULT  (List.map serialize_im_result im_result_list)
 
@@ -489,11 +488,11 @@ let weird_stuff() = ref 1
 
 
 let int_of_slave_tag = function
-	| Slave_result_tag -> 1
+	| Slave_tile_tag -> 1
 	| Slave_work_tag -> 2
 	| Slave_outofbound_tag -> 3
 	(*Hoang Gia new tags*)
-	| Slave_tile_tag -> 4
+(* 	| Slave_tile_tag -> 4 *)
 	| Slave_pi0_tag -> 5
 	| Slave_updaterequest_tag -> 6
 	
@@ -501,18 +500,18 @@ let int_of_master_tag = function
 	| Master_data_tag -> 17
 	| Master_finished_tag -> 18
 	(*Hoang Gia new tags*)
-	| Master_tile_tag -> 19
+	| Master_tileupdate_tag -> 19
 	| Master_subpart_tag -> 20
 	| Master_terminate_tag -> 21
 	| Master_continue_tag -> 22
 	
 
 let slave_tag_of_int = function
-	| 1 -> Slave_result_tag
+	| 1 -> Slave_tile_tag
 	| 2 -> Slave_work_tag
 	| 3 -> Slave_outofbound_tag
 	(*Hoang Gia new tags*)
-	| 4 -> Slave_tile_tag
+(* 	| 4 -> Slave_tile_tag *)
 	| 5 -> Slave_pi0_tag
 	| 6 -> Slave_updaterequest_tag
 	| other -> raise (InternalError ("Impossible match '" ^ (string_of_int other) ^ "' in slave_tag_of_int."))
@@ -521,7 +520,7 @@ let master_tag_of_int = function
 	| 17 -> Master_data_tag 
 	| 18 -> Master_finished_tag
 	(*Hoang Gia new tags*)
-	| 19 -> Master_tile_tag
+	| 19 -> Master_tileupdate_tag
 	| 20 -> Master_subpart_tag
 	| 21 -> Master_terminate_tag
 	| 22 -> Master_continue_tag
@@ -545,27 +544,54 @@ let unserialize( str ) =
 
 let message_MAX_SIZE = 100
 
+
+
+
+
+
+
+
+(*** TODO: separate Master and Worker functions ***)
+
+
+
+
+
+
+
+
+
+
+
+
+(*** TODO  / BADPROG: we must factor all these functions ***)
+
+
+(*** WARNING / BADPROG : these 3 functions seem to be almost identical !! ***)
+(*** TODO: factorize! ***)
 (* Sends a result (first the size then the constraint), by the slave *)
-let send_result (*linear_constraint*)im_result =
+let send_result im_result =
 	let rank = get_rank() in
 
 	print_message Verbose_medium ("[Worker " ^ (string_of_int rank) ^ "] Entering send_constraint");
-	let mlc = (*LinearConstraint.serialize_linear_constraint linear_constraint *) serialize_im_result im_result in
+	let mlc = serialize_im_result im_result in
 	let res_size = String.length mlc in
 
-	print_message Verbose_medium ("[Worker " ^ (string_of_int rank) ^ "] Serialized constraint '" ^ mlc ^ "'");
+	if debug_mode_greater Verbose_high then(
+		print_message Verbose_medium ("[Worker " ^ (string_of_int rank) ^ "] Serialized constraint '" ^ mlc ^ "'");
+	);
 	
 	(* Send the result: 1st send my rank, then the data size, then the data *)
 	print_message Verbose_medium ("[Worker " ^ (string_of_int rank) ^ "] About to send the size (" ^ (string_of_int res_size) ^ ") of the constraint.");
-	Mpi.send rank masterrank (int_of_slave_tag Slave_result_tag) Mpi.comm_world;
-	Mpi.send res_size masterrank (int_of_slave_tag Slave_result_tag) Mpi.comm_world;
-	Mpi.send mlc masterrank (int_of_slave_tag Slave_result_tag) Mpi.comm_world
+	Mpi.send rank masterrank (int_of_slave_tag Slave_tile_tag) Mpi.comm_world;
+	Mpi.send res_size masterrank (int_of_slave_tag Slave_tile_tag) Mpi.comm_world;
+	Mpi.send mlc masterrank (int_of_slave_tag Slave_tile_tag) Mpi.comm_world
 
 (*	(*** HACK: cut the constraint to try to solve a strange bug with MPI ***)
 	if res_size <= message_MAX_SIZE then(
 		(* Normal situation *)
 		print_message Verbose_high ("[Worker " ^ (string_of_int rank) ^ "] About to send a constraint.");
-		Mpi.send mlc masterrank (int_of_slave_tag Slave_result_tag) Mpi.comm_world ;
+		Mpi.send mlc masterrank (int_of_slave_tag Slave_tile_tag) Mpi.comm_world ;
 		print_message Verbose_low ("[Worker " ^ (string_of_int rank) ^ "] Sent constraint '" ^ mlc ^ "'");
 		()
 	)else(
@@ -578,7 +604,7 @@ let send_result (*linear_constraint*)im_result =
 			(* Cut the string *)
 			let substring = String.sub mlc (i * message_MAX_SIZE) message_MAX_SIZE in
 			print_message Verbose_high ("[Worker " ^ (string_of_int rank) ^ "] About to send a piece of constraint.");
-			Mpi.send substring masterrank (int_of_slave_tag Slave_result_tag) Mpi.comm_world ;
+			Mpi.send substring masterrank (int_of_slave_tag Slave_tile_tag) Mpi.comm_world ;
 			print_message Verbose_medium ("[Worker " ^ (string_of_int rank) ^ "] Sent piece of constraint #" ^ (string_of_int i) ^ " '" ^ substring ^ "'");
 		done;
 		
@@ -587,7 +613,7 @@ let send_result (*linear_constraint*)im_result =
 			(* Cut the string *)
 			let substring = String.sub mlc (nb_parts * message_MAX_SIZE) remainder in
 			print_message Verbose_high ("[Worker " ^ (string_of_int rank) ^ "] About to send the last piece of a constraint.");
-			Mpi.send substring masterrank (int_of_slave_tag Slave_result_tag) Mpi.comm_world ;
+			Mpi.send substring masterrank (int_of_slave_tag Slave_tile_tag) Mpi.comm_world ;
 			print_message Verbose_medium ("[Worker " ^ (string_of_int rank) ^ "] Sent (last) piece of constraint #" ^ (string_of_int nb_parts) ^ " '" ^ substring ^ "'");
 		);
  
@@ -597,40 +623,45 @@ let send_result (*linear_constraint*)im_result =
 	)
  *)
  
-(*send tile = send result*)
-let send_result_worker (*linear_constraint*)im_result =
+(** Sends a list of tiles from the worker to the master *)
+let send_tiles im_result_list =
 	let rank = get_rank() in
 
-	print_message Verbose_medium ("[Worker " ^ (string_of_int rank) ^ "] Entering send_constraint");
-	let mlc = (*LinearConstraint.serialize_linear_constraint linear_constraint *) serialize_im_result im_result in
+	print_message Verbose_medium ("[Worker " ^ (string_of_int rank) ^ "] Entering send_tiles");
+	let mlc = serialize_im_result_list im_result_list in
 	let res_size = String.length mlc in
 
-	print_message Verbose_medium ("[Worker " ^ (string_of_int rank) ^ "] Serialized constraint '" ^ mlc ^ "'");
+	if debug_mode_greater Verbose_high then(
+		print_message Verbose_high ("[Worker " ^ (string_of_int rank) ^ "] Serialized constraint list '" ^ mlc ^ "'");
+	);
 	
 	(* Send the result: 1st send my rank, then the data size, then the data *)
 	print_message Verbose_medium ("[Worker " ^ (string_of_int rank) ^ "] About to send the size (" ^ (string_of_int res_size) ^ ") of the constraint.");
-	Mpi.send rank masterrank (int_of_slave_tag Slave_tile_tag) Mpi.comm_world;
-	Mpi.send res_size masterrank (int_of_slave_tag Slave_tile_tag) Mpi.comm_world;
-	Mpi.send mlc masterrank (int_of_slave_tag Slave_tile_tag) Mpi.comm_world
+	Mpi.send rank masterrank (int_of_slave_tag Slave_tiles_tag) Mpi.comm_world;
+	Mpi.send res_size masterrank (int_of_slave_tag Slave_tiles_tag) Mpi.comm_world;
+	Mpi.send mlc masterrank (int_of_slave_tag Slave_tiles_tag) Mpi.comm_world
+
 	
- 
- (* Hoang Gia Sends a result (first the size then the constraint), by the master *)
-let send_tile (*linear_constraint*)im_result slave_rank =
+
+(** Master sends a tile update to a worker *)
+let send_tileupdate im_result slave_rank =
 	(*let rank = rank() in*)
 
 	(*print_message Verbose_medium ("[Worker " ^ (string_of_int rank) ^ "] Entering send_constraint");*)
-	let mlc = (*LinearConstraint.serialize_linear_constraint linear_constraint *) serialize_im_result im_result in
+	let mlc = serialize_im_result im_result in
 	let res_size = String.length mlc in
 
 	(*print_message Verbose_medium ("[Worker " ^ (string_of_int rank) ^ "] Serialized constraint '" ^ mlc ^ "'");*)
 	
 	(* Send the result: 1st send my rank, then the data size, then the data *)
 	(*print_message Verbose_medium ("[Worker " ^ (string_of_int rank) ^ "] About to send the size (" ^ (string_of_int res_size) ^ ") of the constraint.");*)
-	(*Mpi.send rank slave_rank (int_of_master_tag Master_tile_tag) Mpi.comm_world;*)
-	Mpi.send res_size slave_rank (int_of_master_tag Master_tile_tag) Mpi.comm_world;
-	Mpi.send mlc slave_rank (int_of_master_tag Master_tile_tag) Mpi.comm_world
+	(*Mpi.send rank slave_rank (int_of_master_tag Master_tileupdate_tag) Mpi.comm_world;*)
+	Mpi.send res_size slave_rank (int_of_master_tag Master_tileupdate_tag) Mpi.comm_world;
+	Mpi.send mlc slave_rank (int_of_master_tag Master_tileupdate_tag) Mpi.comm_world
 	
 
+(*** WARNING / BADPROG : these 2 functions seem to be almost identical !! ***)
+(*** TODO: factorize! ***)
 (* Sends a point (first the size then the point), by the master *)
 let send_pi0 (pi0 : AbstractModel.pi0) slave_rank =
 	let mpi0 = serialize_pi0 pi0 in
@@ -639,11 +670,10 @@ let send_pi0 (pi0 : AbstractModel.pi0) slave_rank =
 	(* Send the result: 1st send the data size, then the data *)
 	Mpi.send res_size slave_rank (int_of_master_tag Master_data_tag) Mpi.comm_world;
 	Mpi.send mpi0 slave_rank (int_of_master_tag Master_data_tag) Mpi.comm_world
-(* 		Printf.printf "[%d] result %s sent" (rank()) result ;  *)
-(* 	print_newline() *)
 
 
 (* Sends a point (first the size then the point), by the slave *)
+(*** TODO: factorize! ***)
 let send_pi0_worker pi0  =
 	let rank = get_rank() in
 	print_message Verbose_medium ("[Worker " ^ (string_of_int rank) ^ "] Entering send_pi0");
@@ -689,11 +719,11 @@ let receive_pull_request () =
 
   (* Is this a result or a simple pull ? *)
   match tag with
-  | Slave_result_tag ->
+  | Slave_tile_tag ->
      let s_rank = l in
-     print_message Verbose_medium ("[Master] Received Slave_result_tag from " ^ ( string_of_int source_rank) );
+     print_message Verbose_medium ("[Master] Received Slave_tile_tag from " ^ ( string_of_int source_rank) );
 
-     let len = Mpi.receive s_rank (int_of_slave_tag Slave_result_tag) Mpi.comm_world in
+     let len = Mpi.receive s_rank (int_of_slave_tag Slave_tile_tag) Mpi.comm_world in
 
      print_message Verbose_medium ("[Master] Expecting a result of size " ^ ( string_of_int len) ^ " from [Worker " ^ (string_of_int s_rank) ^ "]" );
 
@@ -701,14 +731,14 @@ let receive_pull_request () =
      let buff = String.create len in
      let res = ref buff in
      print_message Verbose_medium ("[Master] Buffer created with length " ^ (string_of_int len)^"");	
-     res := Mpi.receive s_rank (int_of_slave_tag Slave_result_tag) Mpi.comm_world ;
+     res := Mpi.receive s_rank (int_of_slave_tag Slave_tile_tag) Mpi.comm_world ;
      print_message Verbose_medium("[Master] received buffer " ^ !res ^ " of size " ^ ( string_of_int len) ^ " from [Worker "  ^ (string_of_int source_rank) ^ "]");	
 
 			
      (* Get the constraint *)
      let im_result = unserialize_im_result !res in
      
-     PullAndResult (s_rank , im_result)
+     Tile (s_rank , im_result)
 		   
   (* Case error *)
   | Slave_outofbound_tag ->
@@ -727,7 +757,7 @@ let receive_pull_request () =
      
   (*Hoang Gia new tags*)  
   
-  (* Tile tag  same with Slave_result_tag*)
+(*  (* Tile tag  same with Slave_tile_tag*)
   | Slave_tile_tag ->
      let s_rank = l in
      print_message Verbose_medium ("[Master] Received Slave_tile_tag from " ^ ( string_of_int source_rank) );
@@ -742,7 +772,7 @@ let receive_pull_request () =
      (* Get the constraint *)
      let im_result = unserialize_im_result !res in
      Tile (s_rank , im_result)
-  
+  *)
   (* pi0 tags same as Master_data_tag*)
   | Slave_pi0_tag ->
     let s_rank = l in 
@@ -814,18 +844,18 @@ let receive_work () =
 	
 	
 	(*Hoang Gia new tags*)
-	| Master_tile_tag -> 
+	| Master_tileupdate_tag -> 
 		(* Receive the data itself *)
 		let buff1 = String.create w in
 		let work1 = ref buff1 in
 
-		work1 := Mpi.receive masterrank (int_of_master_tag Master_tile_tag) Mpi.comm_world;
+		work1 := Mpi.receive masterrank (int_of_master_tag Master_tileupdate_tag) Mpi.comm_world;
 		
-		print_message Verbose_high ("Received " ^ (string_of_int w) ^ " bytes of work '" ^ !work1 ^ "' with tag " ^ (string_of_int (int_of_master_tag Master_tile_tag)));
+		print_message Verbose_high ("Received " ^ (string_of_int w) ^ " bytes of work '" ^ !work1 ^ "' with tag " ^ (string_of_int (int_of_master_tag Master_tileupdate_tag)));
 		
 		(* Get the K *)
 		let im_result = unserialize_im_result !work1 in
-		Tile im_result
+		TileUpdate im_result
 		
 	| Master_subpart_tag -> 
 	  	(* Receive the data itself *)

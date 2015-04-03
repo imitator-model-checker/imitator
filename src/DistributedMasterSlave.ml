@@ -8,7 +8,7 @@
  * Author:        Etienne Andre, Camille Coti
  * 
  * Created:       2014/03/24
- * Last modified: 2015/04/02
+ * Last modified: 2015/04/03
  *
  ****************************************************************)
 
@@ -84,8 +84,8 @@ let receive_pull_request_and_store_constraint () =
 		raise (InternalError("OutOfBound not implemented."))(*;
 		source_rank, None*)
 
-	| PullAndResult (source_rank , im_result) -> 
-		print_message Verbose_low ("[Master] Received PullAndResult request...");
+	| Tile (source_rank , im_result) -> 
+		print_message Verbose_low ("[Master] Received Tile request...");
 		print_message Verbose_standard ("\n[Master] Received the following constraint from worker " ^ (string_of_int source_rank));
 		ignore (Cartography.bc_process_im_result im_result);
 		(* Return source rank *)
@@ -159,6 +159,9 @@ let compute_next_pi0 more_pi0 limit_reached first_point tile_nature_option =
 	let options = Input.get_options () in
 	
 	match options#distribution_mode with
+	
+	(*** WARNING: pattern-matching not exhaustive; is that safe? ***)
+
 	(** Distributed mode: Master slave with sequential pi0 *)
 	| Distributed_ms_sequential -> 
 		compute_next_pi0_sequentially more_pi0 limit_reached first_point tile_nature_option
@@ -189,7 +192,7 @@ let compute_next_pi0 more_pi0 limit_reached first_point tile_nature_option =
 			compute_next_pi0_sequentially more_pi0 limit_reached first_point tile_nature_option
 		);
 		print_message Verbose_high ("[Master] Exiting function compute_next_pi0...");
-	(**$ TODO: missing something there ***)
+	(*** TODO: missing something there ***)
 		
 	| Distributed_static -> raise (InternalError(Constants.program_name ^ " cannot be in static distribution mode at this point."))
 
@@ -396,7 +399,9 @@ let worker() =
 		
 		match work with
 		
-		(* receive a chunk of work *)
+	(*** WARNING: pattern-matching not exhaustive; is that safe? ***)
+
+	(* receive a chunk of work *)
 		| Work pi0 ->
 			counter_worker_working#start;
 

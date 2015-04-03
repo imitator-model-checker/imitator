@@ -7,7 +7,7 @@
  * Author:        Etienne Andre, Camille Coti, Hoang Gia Nguyen
  * 
  * Created:       2014/09/05
- * Last modified: 2015/04/02
+ * Last modified: 2015/04/03
  *
  ****************************************************************)
 
@@ -474,7 +474,6 @@ let master () =
 (* 	let limit_reached = ref false in *)
 	
 
-	(*print_message Verbose_standard ("[Master] Here!!!!!!!!!!");*)
 	(* create index(worker,supart) *)
 	let index = ref [] in
 	(* current pi0 of workers*)
@@ -487,7 +486,6 @@ let master () =
 	
 	(******************Adjustable values********************)
 	(* number of subpart want to initialize in the first time *)
-	(*let np = 9 in*)
 	let np = (Mpi.comm_size Mpi.comm_world) -3 in
 	(*depend on size of model*)
 (* 	let dynamicSplittingMode = ref true in *)
@@ -515,12 +513,9 @@ let master () =
 		
 		counter_master_waiting#start;
 		let pull_request = (receive_pull_request ()) in
-		(*let source_rank, tile, pi0 = (receive_pull_request_subpart()) in
-		let msg =  (tile, pi0) in*)
 		counter_master_waiting#stop;
 		
 		(*send_terminate source_rank;*)
-		(*match msg with *)
 		match pull_request with 
 		(*Pull Tag*)
 		| PullOnly source_rank ->
@@ -675,10 +670,10 @@ let master () =
 		| UpdateRequest source_rank ->
 				print_message Verbose_medium ("[Master] Received UpdateRequest  ");
 				
-				(*Update tiles*)
+				(* Update tiles *)
 				while(List.mem_assoc source_rank !tilebuffer) do
 				  begin
-				    send_tile (List.assoc source_rank !tilebuffer) source_rank;
+				    send_tileupdate (List.assoc source_rank !tilebuffer) source_rank;
 				    tilebuffer := (List.remove_assoc source_rank !tilebuffer);
 				    print_message Verbose_medium ("[Master] send a tile to worker " ^ (string_of_int source_rank) ^ "");
 				  end
@@ -711,7 +706,7 @@ let master () =
 	  end;
 	
 	(*stopSplitting := true;*)
-	done;
+	done; (* END WHILE *)
 	
 	
 	
@@ -778,7 +773,7 @@ let check_stop_order () =
 		match check with
 						
 		(*** TODO: how can the worker receive a tile from the master ??? ***)
-		| Tile tile -> 		(*print_message Verbose_medium ("[Worker " (*^ (string_of_int rank) ^*) "] received Tile from Master.");*)
+		| TileUpdate tile -> 		(*print_message Verbose_medium ("[Worker " (*^ (string_of_int rank) ^*) "] received Tile from Master.");*)
 (* 					let b = Cartography.bc_process_im_result tile in *)
 					print_message Verbose_medium ("[Worker " ^ (*(string_of_int rank) ^*) "] received Tile from Master.");
 					
@@ -948,7 +943,7 @@ let worker() =
 						let check = receive_work () in
 						match check with
 						
-						| Tile tile -> 		print_message Verbose_medium ("[Worker " ^ (string_of_int rank) ^ "] received Tile from Master.");
+						| TileUpdate tile -> 		print_message Verbose_medium ("[Worker " ^ (string_of_int rank) ^ "] received Tile from Master.");
 (* 									let b = Cartography.bc_process_im_result tile in *)
 									print_message Verbose_medium ("[Worker " ^ (string_of_int rank) ^ "] received Tile from Master.");
 									
@@ -991,11 +986,9 @@ let worker() =
 					let added = Cartography.bc_process_im_result im_result in
 					counter_worker_IM#stop;
 					
-					(*if(added) then
-					begin*)
 					(*send result to master*)
-					send_result_worker im_result;
-					(*end;*)
+					send_result im_result;
+
 					(* Print some info *)
 					print_message Verbose_medium ("[Worker " ^ (string_of_int rank) ^ "]  Constraint really added? " ^ (string_of_bool added) ^ "");
 					compute_next_pi0_sequentially more_pi0 limit_reached first_point (Some im_result.tile_nature);
@@ -1069,14 +1062,18 @@ let collaborator_0_finalize () =
 	print_message Verbose_standard ("[Coordinator] Total waiting time     : " ^ (string_of_float (counter_master_waiting#value)) ^ " s");
 	print_message Verbose_standard ("**************************************************");
 	()
+
+
 	
 (*** TODO: send tiles to collaborator #0 ***)
 let collaborator_n_finalize () =
+	(*** TODO: use 'send_tiles' ***)
 	()
 
 
 (** Implementation of coordinator (for static distribution) *)
 let collaborator () =
+	let rank = get_rank() in
 
 	(*** TODO: compute all subparts ***)
 

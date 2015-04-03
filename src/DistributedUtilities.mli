@@ -8,7 +8,7 @@
  * Author:        Etienne Andre, Camille Coti
  * 
  * Created:       2014/03/24
- * Last modified: 2015/04/02
+ * Last modified: 2015/04/03
  *
  ****************************************************************)
 
@@ -16,29 +16,30 @@
 (****************************************************************)
 (** Types *)
 (****************************************************************)
+
 type rank = int
 
+(** Tags sent by workers *)
 type pull_request =
 	| PullOnly of rank
-	| PullAndResult of rank * Reachability.im_result
-	| OutOfBound of rank
-	(*Hoang Gia new tags*)
 	| Tile of rank * Reachability.im_result
+	| OutOfBound of rank
+	(* Subpart tags *)
+	| Tiles of rank * (Reachability.im_result list) (** NEW TAG **)
 	| Pi0 of rank * AbstractModel.pi0
 	| UpdateRequest of rank
-	
 
 
+(** Tags sent by the master *)
 type work_assignment =
 	| Work of AbstractModel.pi0
 	| Stop
-	(*Hoang Gia new tags*)
+	(* Subpart tags *)
 	| Subpart of HyperRectangle.hyper_rectangle
-	| Tile of Reachability.im_result
+	| TileUpdate of Reachability.im_result
 	| Terminate
 	| Continue
 
-(* type pi0_list = (Automaton.variable_index * NumConst.t) list *)
 
 
 (****************************************************************)
@@ -46,22 +47,29 @@ type work_assignment =
 (****************************************************************)
 
 (** Who is the master? *)
-val masterrank : int
+val masterrank : rank
 
 
 (****************************************************************)
-(** Functions *)
+(** Access functions *)
 (****************************************************************)
 
 
 val get_nb_nodes : unit -> int
 val get_rank : unit -> rank
 
-val send_result : (*LinearConstraint.p_linear_constraint*)Reachability.im_result -> unit
 
-val send_result_worker : Reachability.im_result -> unit
+(****************************************************************)
+(** Send functions *)
+(****************************************************************)
 
-val send_tile : Reachability.im_result -> rank -> unit
+val send_result : Reachability.im_result -> unit
+
+(** Master sends a tile update to a worker *)
+val send_tileupdate : Reachability.im_result -> rank -> unit
+
+(** Sends a list of tiles from the worker to the master *)
+val send_tiles : Reachability.im_result list -> unit
 
 val send_pi0 : AbstractModel.pi0 -> rank -> unit
 
@@ -79,14 +87,29 @@ val send_terminate : rank -> unit
 
 val send_continue : rank -> unit
 
+
+(****************************************************************)
+(** Receive functions *)
+(****************************************************************)
+
 val receive_pull_request : unit -> pull_request
 
 val receive_work : unit -> work_assignment
 
-val serialize_pi0 : (*(Automaton.variable_index * NumConst.t) list*)AbstractModel.pi0 -> string
-val unserialize_pi0 : string -> AbstractModel.pi0(*(Automaton.variable_index * NumConst.t) list*)
+
+(****************************************************************)
+(** Serialization functions *)
+(****************************************************************)
+
+val serialize_pi0 : AbstractModel.pi0 -> string
+
+val unserialize_pi0 : string -> AbstractModel.pi0
+
 val serialize_im_result : Reachability.im_result -> string
+
 val unserialize_im_result : string -> Reachability.im_result
+
 val unserialize_im_result_list : string -> Reachability.im_result list
+
 (** Convert a list of serialized im_result into a serialized list of im_result (ad-hoc function to save time in subparts handling) *)
 val serialized_imresultlist_of_serializedimresult_list : string list -> string

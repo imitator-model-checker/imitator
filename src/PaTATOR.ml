@@ -8,7 +8,7 @@
  * Author:        Etienne Andre
  * 
  * Created:       2014/03/15
- * Last modified: 2015/04/02
+ * Last modified: 2015/04/03
  *
  ****************************************************************)
 
@@ -60,7 +60,7 @@ let run () =
 		else DistributedMasterSlaveSubparts.worker
 		
 	    | Distributed_static ->
-		(* No work for now *)
+		(* No fork for now *)
 		DistributedMasterSlaveSubparts.collaborator
 		
 	    (* Other master slave scheme *)
