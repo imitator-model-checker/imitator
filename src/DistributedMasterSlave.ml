@@ -80,9 +80,9 @@ let receive_pull_request_and_store_constraint () =
 
 	| OutOfBound source_rank ->
 		print_message Verbose_low ("[Master] Received OutOfBound request...");
-		(*** TODO: FAIRE QUELQUE CHOSE POUR DIRE QU'UN POINT N'A PAS MARCHÉ ***)
-		raise (InternalError("OutOfBound not implemented."))(*;
-		source_rank, None*)
+		(*** TODO: DO SOMETHING TO HANDLE THE CASE OF A POINT THAT WAS NOT SUCCESSFUL ***)
+		raise (InternalError("OutOfBound not implemented."))
+		(* source_rank, None*)
 
 	| Tile (source_rank , im_result) -> 
 		print_message Verbose_low ("[Master] Received Tile request...");

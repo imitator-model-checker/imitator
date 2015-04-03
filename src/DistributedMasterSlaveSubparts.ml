@@ -986,6 +986,10 @@ let worker() =
 					let added = Cartography.bc_process_im_result im_result in
 					counter_worker_IM#stop;
 					
+					(*** NOTE for the collaborator version: keep it in memory 
+						all_tiles := im_result :: !all_tiles;
+					***)
+					
 					(*send result to master*)
 					send_result im_result;
 
@@ -1046,8 +1050,10 @@ let collaborator_0_finalize () =
 
 	while !workers_done < ( size - 1) do
 		print_message Verbose_medium ("[Coordinator] " ^ ( string_of_int ( size - 1 - !workers_done )) ^ " workers left" );
-		(*** TODO here: receive tiles ***)
-		let source_rank , _ = (*receive_pull_request_and_store_constraint ()*)999,() in
+		(*** TODO here: receive tiles
+			you need to receive a Tiles from function receive_pull_request()
+		***)
+		let source_rank , _ = (*receive_pull_request_and_store_constraint ()*)999999,() in
 		print_message Verbose_medium ("[Coordinator] Received from Worker " ^ ( string_of_int source_rank ) ^"");
 		workers_done := !workers_done + 1;
 		print_message Verbose_standard( "\t[Coordinator] Received tiles from worker " ^ (string_of_int source_rank ) ^ ".");
@@ -1067,7 +1073,9 @@ let collaborator_0_finalize () =
 	
 (*** TODO: send tiles to collaborator #0 ***)
 let collaborator_n_finalize () =
-	(*** TODO: use 'send_tiles' ***)
+	(*** TODO: use 'send_tiles !all_tiles' ***)
+	
+	(*** WARNING: there will be a problem because we cannot access easily the list of tiles ***)
 	()
 
 
