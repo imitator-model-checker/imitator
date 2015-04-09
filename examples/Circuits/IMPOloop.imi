@@ -163,7 +163,7 @@ synclabs: iUp, iDown;
 
 (* Unstable *)
 loc EnvI1: while ckEnv <= di_u wait {}
-	when ckEnv >= di_u sync iDown do {} goto EnvI0;
+	when ckEnv >= di_l sync iDown do {} goto EnvI0;
 
 (* Stable *)
 loc EnvI0: while True wait {}
@@ -216,6 +216,23 @@ init := True
 	& dAnd_l <= dAnd_u
 	& di_l >= 0
 	& di_l <= di_u
+	
+
+	(*------------------------------------------------------------
+	   RESULT OF IM
+	  ------------------------------------------------------------*)
+(*	
+	& di_l + dNot2_l > dAnd_u
+    & dNot1_l > dAnd_u
+    & dAnd_l > di_u
+   *)
+
+
+    (*------------------------------------------------------------
+	   RESULT OF IMPO
+	  ------------------------------------------------------------*)
+	& di_l + dNot2_l > dAnd_u
+    & dNot1_l > dAnd_u
 
 	(*------------------------------------------------------------
 	   PARAMETER VALUATION
