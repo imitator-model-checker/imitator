@@ -2,11 +2,14 @@
  *                         IMITATOR
  *
  * Model of a small acyclic asynchronous circuit
+ * "Preserving Partial Order Runs in Parametric Time Petri Nets"
+ * ACSD 2015
+ * Etienne Andre, Thomas Chatain, Cesar Rodriguez
  *
  * Author          : Etienne Andre
  * Created         : 2015/01/29
- * Last modified   : 2015/01/29
- * IMITATOR version: 2.6.2
+ * Last modified   : 2015/04/09
+ * IMITATOR version: 2.6.3
  ************************************************************)
 
 var 	ckNot1, ckNot2, ckAnd, ckEnv1, ckEnv2
@@ -207,12 +210,12 @@ init := True
 	(*------------------------------------------------------------
 	   PARAMETER VALUATION
 	  ------------------------------------------------------------*)
-	& dNot1_l	= 6
+(*(*	& dNot1_l	= 6
 	& dNot1_u	= 7
 	& dNot2_l	= 1
 	& dNot2_u	= 2
 	& dAnd_l	= 1
-	& dAnd_u	= 2
+	& dAnd_u	= 2*)*)
 
 (*	& dNot2_l  = 0.1
 	& dNot2_u = 0.3
