@@ -28,7 +28,10 @@ val bc_process_im_result : Reachability.im_result -> bool
 
 val bc_finalize : unit -> unit
 
-val bc_result : unit -> AbstractModel.returned_constraint list
+(* val bc_result : unit -> AbstractModel.returned_constraint list *)
+
+(** Generate the graphical cartography, and possibly personnalize the file suffix *)
+val output_graphical_cartography : string option -> unit
 
 val compute_initial_pi0 : unit -> unit
 

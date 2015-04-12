@@ -140,14 +140,10 @@ let coordinator () =
   let coordinator_end () =
     print_message Verbose_standard "[Coordinator] end\n";
     Cartography.bc_finalize ();  
-    let tiles = Cartography.bc_result () in
-      if options#cart then (
-	Graphics.cartography (Input.get_model())
-	  (Input.get_v0()) tiles (options#files_prefix ^ "_cart_patator")
-      ) else (
-	print_message Verbose_high
-	  "Graphical cartography not asked: graph not generated.";
-      )
+	(* Generate the graphics *)
+	Cartography.output_graphical_cartography (Some "_cart_patator");
+	(* The end *)
+	()
   in
   let coordinator_send worker tag data =
     pr_send_msg 0 worker tag;

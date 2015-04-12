@@ -8,7 +8,7 @@
  * Author:        Etienne Andre, Camille Coti
  * 
  * Created:       2014/03/24
- * Last modified: 2015/04/03
+ * Last modified: 2015/04/12
  *
  ****************************************************************)
 
@@ -334,18 +334,12 @@ let master () =
 	print_message Verbose_standard ("[Master] Total waiting time     : " ^ (string_of_float (counter_master_waiting#value)) ^ " s");
 	print_message Verbose_standard ("**************************************************");
 
+	(* Generate the graphics *)
+	Cartography.output_graphical_cartography (Some "_cart_patator");
 	
-	(*** DUPLICATE CODE (DistributedMasterSlaveSubparts) ***)
-	(* Process the result and return *)
-	let tiles = Cartography.bc_result () in
-	(* Render zones in a graphical form *)
-	if options#cart then (
-		Graphics.cartography (Input.get_model()) (Input.get_v0()) tiles (options#files_prefix ^ "_cart_patator")
-	) else (
-		print_message Verbose_high "Graphical cartography not asked: graph not generated.";
-	);
-	
+	(* The end *)
 	()
+
 ;;
 
 (****************************************************************)

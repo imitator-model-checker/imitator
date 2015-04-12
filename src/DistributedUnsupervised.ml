@@ -111,16 +111,10 @@ let coordinator () =
     print_message Verbose_standard("[Coordinator] end\n");
     (* Process the finalization *)
     Cartography.bc_finalize ();  
-    (* Process the result and return *)
-    let tiles = Cartography.bc_result () in
-      (* Render zones in a graphical form *)
-      if options#cart then (
-	Graphics.cartography (Input.get_model())
-	  (Input.get_v0()) tiles (options#files_prefix ^ "_cart_patator")
-      ) else (
-	print_message Verbose_high
-	  "Graphical cartography not asked: graph not generated.";
-      )
+	(* Generate the graphics *)
+	Cartography.output_graphical_cartography (Some "_cart_patator");
+	(* The end *)
+	()
   in
     
   (*------------------------------------------------------------*)

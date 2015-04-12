@@ -488,7 +488,7 @@ let master () =
 
 	(*** WARNING: why "-3" ??? ***)
 	
-	let np = (Mpi.comm_size Mpi.comm_world) -3 in
+	let np = (DistributedUtilities.get_nb_nodes ()) -3 in
 	(*depend on size of model*)
 (* 	let dynamicSplittingMode = ref true in *)
 	(*******************************************************)
@@ -703,7 +703,7 @@ let master () =
 	  begin 
 	    check_covered := true;
 		
-	    for i = 1 to (Mpi.comm_size Mpi.comm_world)-1 do
+	    for i = 1 to (DistributedUtilities.get_nb_nodes ())-1 do
 		send_terminate i;
 	    done
 	  end;
@@ -734,15 +734,10 @@ let master () =
 	print_message Verbose_standard ("[Master] wasted Tiles " ^ (string_of_int !wastedTiles) ^ " end!!!!!!");
 	print_message Verbose_standard ("**************************************************");
 	
-	(*** DUPLICATE CODE ***)
-	(* Process the result and return *)
-	let tiles = Cartography.bc_result () in
-	(* Render zones in a graphical form *)
-	if options#cart then (
-		Graphics.cartography (Input.get_model()) (Input.get_v0()) tiles (options#files_prefix ^ "_cart_patator")
-	) else (
-		print_message Verbose_high "Graphical cartography not asked: graph not generated.";
-	);
+	(* Generate the graphics *)
+	Cartography.output_graphical_cartography (Some "_cart_patator");
+
+	(* The end *)
 	()
 
 
@@ -875,7 +870,7 @@ let worker() =
 	);
 	
 	let rank = Mpi.comm_rank Mpi.comm_world in
-	let size = Mpi.comm_size Mpi.comm_world in
+	let size = get_nb_nodes () in
 
 	print_message Verbose_medium ("[Worker " ^ (string_of_int rank) ^ "] I am worker " ^ (string_of_int rank) ^ "/" ^ (string_of_int (size-1)) ^ ".");
 	
@@ -1057,7 +1052,7 @@ let collaborator_compute_subpart rank =
 
 	(*** WARNING: why "-3" ??? ***)
 	
-	let np = (Mpi.comm_size Mpi.comm_world) -3 in
+	let np = (DistributedUtilities.get_nb_nodes ()) -3 in
 	(*******************************************************)
 		
 	(* Compute all subparts *)
@@ -1114,15 +1109,10 @@ let collaborator_0_finalize () =
 	print_message Verbose_standard ("[Coordinator] Total waiting time     : " ^ (string_of_float (counter_master_waiting#value)) ^ " s");
 	print_message Verbose_standard ("**************************************************");
 
-	(*** DUPLICATE CODE ***)
-	let tiles = Cartography.bc_result () in
-	(* Render zones in a graphical form *)
-	if options#cart then (
-		Graphics.cartography (Input.get_model()) (Input.get_v0()) tiles (options#files_prefix ^ "_cart_patator")
-	) else (
-		print_message Verbose_high "Graphical cartography not asked: graph not generated.";
-	);
+	(* Generate the graphics *)
+	Cartography.output_graphical_cartography (Some "_cart_patator");
 	
+	(* The end *)
 	()
 
 

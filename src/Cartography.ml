@@ -948,6 +948,7 @@ let find_next_pi0_shuffle tile_nature_option =
 (*------------------------------------------------------------*)
 (** Auxiliary function: initialize the behavioral cartography *)
 (*------------------------------------------------------------*)
+(*** TODO: merge with bc_initialize_subpart; technically, split between the actual initialization, and the initialization that depends on V0 ***)
 let bc_initialize () =
 	(* Get the model *)
 	let model = Input.get_model() in
@@ -1090,7 +1091,9 @@ let bc_initialize () =
 
 (*Hoang Gia modified bc_initialize *)
 (*** WARNING!!!! why ?? What is the difference with bc_initialize ?? ***)
-let bc_initialize_subpart () =	(* Get the model *)
+(*** TODO: merge with bc_initialize ***)
+let bc_initialize_subpart () =
+	(* Get the model *)
 	let model = Input.get_model() in
 	(* Get the v0 *)
 	let v0 = Input.get_v0() in
@@ -1154,6 +1157,7 @@ let bc_initialize_subpart () =	(* Get the model *)
 	current_intervals_min := the_current_intervals_min;
 	current_intervals_max := the_current_intervals_max;
 	
+	(*** NOTE: what is missing from bc_initialize() is the initialization to 0 of current_iteration, nb_states, nb_transitions, as well as computed_constraints ***)
 
 
 	(* Debug mode *)
@@ -1392,14 +1396,6 @@ let bc_finalize () =
 	()
 		
 
-(*------------------------------------------------------------*)
-(** Auxiliary function: return the result of the behavioral cartography *)
-(*------------------------------------------------------------*)
-let bc_result () =
-	(* Return a list of the generated zones *)
-	let zones = DynArray.to_list !computed_constraints in
-	zones
-
 
 
 
@@ -1575,6 +1571,40 @@ let move_to_next_uncovered_pi0 () =
 	    )
 
 
+(*------------------------------------------------------------*)
+(** Auxiliary function: return the result of the behavioral cartography *)
+(*------------------------------------------------------------*)
+let bc_result () =
+	(* Return a list of the generated zones *)
+	let zones = DynArray.to_list !computed_constraints in
+	zones
+
+
+(*------------------------------------------------------------*)
+(** Generate the graphical cartography, and possibly personnalize the file suffix *)
+(*------------------------------------------------------------*)
+let output_graphical_cartography suffix_option =
+	(* Get the model *)
+	let model = Input.get_model() in
+	(* Retrieve the input options *)
+	let options = Input.get_options () in
+	
+	(* Retrieve the results *)
+	let zones = bc_result () in
+	
+	let suffix =
+	match suffix_option with
+	| Some str -> str
+	| None -> "_cart_bc"
+	in
+	
+	(* Render zones in a graphical form *)
+	if options#cart then (
+		Graphics.cartography model (Input.get_v0()) zones (options#files_prefix ^ suffix)
+	) else (
+			print_message Verbose_high "Graphical cartography not asked: graph not generated.";
+	)
+
 
 (*------------------------------------------------------------*)
 (** Behavioral cartography algorithm with full coverage of V0 *)
@@ -1650,22 +1680,18 @@ let cover_behavioral_cartography model =
 	(* Process the finalization *)
 	bc_finalize ();
 	
-	(* Process the result *)
-	let zones = bc_result () in
+	(* Generate graphical cartography *)
+	output_graphical_cartography None;
 	
-	(* Render zones in a graphical form *)
-	if options#cart then (
-		Graphics.cartography model (Input.get_v0()) zones (options#files_prefix ^ "_cart_bc")
-	) else (
-			print_message Verbose_high "Graphical cartography not asked: graph not generated.";
-	)
+	(* The end *)
+	()
 
 
 
 (*------------------------------------------------------------*)
 (** Behavioral cartography algorithm with random selection of a pi0 *)
-(*** TODO: merge with the other !!!! ***)
 (*** WARNING: not tested for a LONG time ***)
+(*** TODO: merge with cover_behavioral_cartography ***)
 (*------------------------------------------------------------*)
 let random_behavioral_cartography model nb =
 
@@ -1826,6 +1852,7 @@ let random_behavioral_cartography model nb =
 	let zones = List.map (fun index -> results.(index)) !interesting_interations in
 	
 	(* Render zones in a graphical form *)
+	(*** WARNING: duplicate code (cannot use output_graphical_cartography due to the different representation of zones here... ***)
 	if options#cart then (
 		Graphics.cartography model (Input.get_v0()) zones (options#files_prefix ^ "_cart_bc_random")
 	) else (
