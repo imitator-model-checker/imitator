@@ -8,7 +8,7 @@
  * Author:        Etienne Andre, Camille Coti
  * 
  * Created:       2014/03/24
- * Last modified: 2015/04/03
+ * Last modified: 2015/04/12
  *
  ****************************************************************)
 

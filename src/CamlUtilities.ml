@@ -27,17 +27,17 @@ let rec is_a_power_of_2_rec n =
 	else is_a_power_of_2_rec (n/2)
 
 
-(** Check if an integer is a power of two *)
+(** Check if an integer is a power of two, i.e., n = 2^m, with m >= 1 *)
 let is_a_power_of_2 n =
 	if n < 2 then false
 	else is_a_power_of_2_rec n
 
-;;
+(*;;
 let tests = [1; 2; 3; 4; -5; 0; 7; 8; 4; 232323; 2048; 76] in
 List.iter (fun n ->
 	print_string ("\nIs " ^ (string_of_int n) ^ " a power of 2? " ^ (string_of_bool (is_a_power_of_2 n)))
 	) tests;
-exit(1)
+exit(1)*)
 
 
 (****************************************************************)
@@ -275,6 +275,7 @@ let string_of_list_of_string_with_sep sep l =
 
 
 (* Returns a list of substrings splitted using sep *)
+(*** WARNING: the behavior of this function is odd (when sep=";;" or "£"; bug hidden here? ***)
 let split sep = Str.split (Str.regexp ("[" ^ sep ^ "]"))
 
 

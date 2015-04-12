@@ -15,7 +15,7 @@
 (****************************************************************)
 (** Useful functions on integers *)
 (****************************************************************)
-(** Check if an integer is a power of two *)
+(** Check if an integer is a power of two, i.e., n = 2^m, with m >= 1 *)
 val is_a_power_of_2 : int -> bool
 
 
@@ -120,6 +120,7 @@ val string_of_array_of_string_with_sep : string -> string array -> string
 val string_of_list_of_string_with_sep : string -> string list -> string
 
 (* Returns a list of substrings splitted using sep *)
+(*** WARNING: the behavior of this function is odd (when sep=";;" or "£"; bug hidden here? ***)
 val split : string -> string -> string list
 
 (* 's_of_int i' Return "s" if i > 1, "" otherwise *)

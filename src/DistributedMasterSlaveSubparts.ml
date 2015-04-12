@@ -261,7 +261,7 @@ let sliptLongestDimensionSubpart (s : HyperRectangle.hyper_rectangle) =
 	return the new split subpart list*)
 let intialize_Subparts (v0 : HyperRectangle.hyper_rectangle) (n : int) =
 	let subparts = ref [v0] in
-	for l = 0 to n do 
+	for l = 0 to n - 1 do 
 	begin
 	
  (* Find the largest subpart to split *)
@@ -440,7 +440,7 @@ let pi0InV0 pi0 v0 =
 let master () =
 	
 	 (*Retrieve the input options *)
-	let options = Input.get_options () in
+(* 	let options = Input.get_options () in *)
 	
 	let check_covered = ref false in
 	
@@ -486,9 +486,9 @@ let master () =
 	(******************Adjustable values********************)
 	(* number of subpart want to initialize in the first time *)
 
-	(*** WARNING: why "-3" ??? ***)
+	(*** WARNING: why "-2" ??? ***)
 	
-	let np = (DistributedUtilities.get_nb_nodes ()) -3 in
+	let np = (DistributedUtilities.get_nb_nodes ()) -2 in
 	(*depend on size of model*)
 (* 	let dynamicSplittingMode = ref true in *)
 	(*******************************************************)
@@ -640,29 +640,26 @@ let master () =
 					    
 					     index := !index@[source_rank, subpart1];
 					    
-					    let n = ref 1 in
 					    let subpart2 = (at newSubparts 1) in
 					    let size = get_points_in_subpart subpart2 in
-					    if( size >= (List.length !waittingList)) then
-					    begin
-					      n := (List.length !waittingList) -2;
-					    end
-					    else
-					    begin
-					      n := size -2;
-					    end;
+						let n =
+						(*** WARNING: why -1 ??? ***)
+					    if size >= (List.length !waittingList) then (List.length !waittingList) - 1
+						(*** WARNING: why -1 ??? ***)
+					    else size - 1
+					     in
 					    
-					    let newSubparts2 = intialize_Subparts subpart2 !n in
+					    let newSubparts2 = intialize_Subparts subpart2 n in
 					    for i = 0 to ( (List.length newSubparts2) -1) do
 						let w = List.hd !waittingList in
 						send_subpart (at newSubparts2 i) w;
 						index := !index@[w, (at newSubparts2 i)];
-						print_message Verbose_medium ("[Master] sent split subpart 2gdfgdfgf....... ");
+(* 						print_message Verbose_medium ("[Master] sent split subpart 2gdfgdfgf....... "); *)
 						waittingList := remove_at_lst !waittingList 0;
-						print_message Verbose_medium ("[Master] sent split subpart 2gdfgdfgf.......1 ");
+(* 						print_message Verbose_medium ("[Master] sent split subpart 2gdfgdfgf.......1 "); *)
 					    done;
 					    
-					    print_message Verbose_medium ("[Master] sent split subpart 2gdfgdfgf.......2 ");
+(* 					    print_message Verbose_medium ("[Master] sent split subpart 2gdfgdfgf.......2 "); *)
 					    
 					  end
 				     end;
@@ -1050,16 +1047,29 @@ let collaborator_compute_subpart rank =
 	(******************Adjustable values********************)
 	(* number of subpart want to initialize in the first time *)
 
-	(*** WARNING: why "-3" ??? ***)
+	(*** WARNING: why "-1" ??? ***)
 	
-	let np = (DistributedUtilities.get_nb_nodes ()) -3 in
+	let np = (DistributedUtilities.get_nb_nodes ()) -1 in
 	(*******************************************************)
 		
 	(* Compute all subparts *)
 	let subparts = intialize_Subparts v0 np in
 	
-	(* Return subpart # rank *)
-	List.nth subparts rank
+	print_message Verbose_low ("[collaborator " ^ (string_of_int rank) ^ "] I computed " ^ (string_of_int (List.length subparts)) ^ " subpart" ^ (s_of_int (List.length subparts)) ^ ".");
+	
+	(* Select subpart # rank *)
+	let subpart =
+	try(
+		List.nth subparts rank
+	)with
+	Failure f -> (
+		raise (InternalError("Error when accessing element #" ^ (string_of_int rank) ^ " in the list of subparts."))
+	)
+	in
+	(* Print some debug information *)
+	print_message Verbose_low ("[collaborator " ^ (string_of_int rank) ^ "] I picked up subpart #" ^ (string_of_int rank) ^ ".");
+	(* Return subpart *)
+	subpart
 
 
 (* At the end, the coordinator (collaborator #0) receives all tiles, and handles the result *)
@@ -1067,13 +1077,16 @@ let collaborator_0_finalize () =
 	print_message Verbose_standard ( "[Coordinator] I am collaborator " ^ (string_of_int masterrank) ^ " and I am now the coordinator.");
 	
 	(* Retrieve the input options *)
-	let options = Input.get_options () in
+(* 	let options = Input.get_options () in *)
 
-	let size = get_nb_nodes () in
+	let other_collaborators = get_nb_nodes () - 1 in
 	let workers_done = ref 0 in
+	
 
-	while !workers_done < ( size - 1) do
-		print_message Verbose_medium ("[Coordinator] " ^ ( string_of_int ( size - 1 - !workers_done )) ^ " workers left" );
+	print_message Verbose_low ("[Coordinator] Expecting to receive " ^ (string_of_int other_collaborators) ^ " results from my collaborators.");
+	
+	while !workers_done < other_collaborators do
+		print_message Verbose_low ("[Coordinator] " ^ ( string_of_int ( other_collaborators - !workers_done )) ^ " collaborators left." );
 
 		let pull_request = receive_pull_request () in
 		begin
@@ -1119,24 +1132,41 @@ let collaborator_0_finalize () =
 	
 (* Send tiles to the coordinator *)
 let collaborator_n_finalize all_tiles =
-	send_tiles all_tiles
+	(* Print some information *)
+	let rank = get_rank() in
+	print_message Verbose_low ("[collaborator " ^ (string_of_int rank) ^ "] About to send all my tiles to the coordinator...");
+
+	(* Send all tiles to the coordinator #0 *)
+	send_tiles all_tiles;
+	
+	(* Print some information *)
+	print_message Verbose_low ("[collaborator " ^ (string_of_int rank) ^ "] Tiles sent! The end for me.");
+	
+	(* The end *)
+	()
 
 
 (** Implementation of coordinator (for static distribution);
 	WARNING: only works with a number of nodes equal to a power of 2 *)
 let collaborator () =
+	let rank = get_rank() in
+	let nb_nodes = get_nb_nodes() in
+
+	(* First, the node # masterrank will issue a warning if the number of nodes is NOT a power of 2 *)
+	if rank = masterrank && not (is_a_power_of_2 nb_nodes) then
+		print_warning ("The number of nodes in the static distribution scheme must be a power of 2, but it is here equal to " ^ (string_of_int nb_nodes) ^ "; the behavior of " ^ Constants.program_name ^ " is NOT specified.");
+	
 	(* Get the model *)
 	let model = Input.get_model() in
 
 	(* Retrieve the input options *)
 	let options = Input.get_options () in
 
-	(*** TODO: backup v0 ?? at least for the coordinator, to put it back at the end? ***)
+	(* Backup the v0, so that the coordinator can put it back before finishing its work (and plotting the cartography) *)
+	let original_v0 = Input.get_v0 () in
 	
 	(* Backup debug mode *)
 	let global_debug_mode = get_debug_mode() in
-
-	let rank = get_rank() in
 
 	(* Compute subpart for this collaborator only *)
 	let subpart = collaborator_compute_subpart rank in
@@ -1144,31 +1174,49 @@ let collaborator () =
 	(* Assign subpart *)
 	Input.set_v0 subpart;
 	
+	print_message Verbose_high ("[collaborator " ^ (string_of_int rank) ^ "] Subpart assigned.");
+	
 	(* Compute the initial state *)
 	let init_state = Reachability.get_initial_state_or_abort model in
 	
+	print_message Verbose_high ("[collaborator " ^ (string_of_int rank) ^ "] Initial state accessed.");
+	
 	(* Maintain list of tiles for the finalization (send them all to the coordinator *)
 	let all_tiles = ref [] in
+	
+	(* Initialize the cartography *)
+	Cartography.bc_initialize ();
 	
 	(*** BADPROG: all the following is VERY close to Cartography.cover_behavioral_cartography; this function cannot be reused though, because it maintains only the constraints, whereas we need here the full "im_result" structure, to send them to the coordinator at the end.
 		A solution could be to modify Cartography.cover_behavioral_cartography so that it maintains a list of im_result, and then reuse it.
 		Close to this problem is the replacement of the im_result structure with an object that would be easier to handle.
 	***)
 		
+	print_message Verbose_low ("[collaborator " ^ (string_of_int rank) ^ "] BEFORE pi0 computed.");
+	
 	(* Compute the first point pi0 *)
 	Cartography.compute_initial_pi0 ();
+	
+	print_message Verbose_low ("[collaborator " ^ (string_of_int rank) ^ "] Initial pi0 computed.");
 	
 	let more_pi0 = ref true in
 	let time_limit_reached = ref false in
 	
+	let current_iteration = ref 1 in
+	
 	(* Start main loop *)
 	while !more_pi0 && not !time_limit_reached do
+		print_message Verbose_low ("[collaborator " ^ (string_of_int rank) ^ "] BC, iteration " ^ (string_of_int !current_iteration) ^ ".");
 
 		let pi0 = Cartography.get_current_pi0 () in
+
+		print_message Verbose_low ("[collaborator " ^ (string_of_int rank) ^ "] Setting pi0...");
 
 		(* Set the new pi0 *)
 		Input.set_pi0 (pi0);
 		
+		print_message Verbose_low ("[collaborator " ^ (string_of_int rank) ^ "] About to call IM...");
+
 		(* Prevent the debug messages (except in debug medium, high or total) *)
 		if not (debug_mode_greater Verbose_medium) then
 			set_debug_mode Verbose_mute;
@@ -1179,6 +1227,8 @@ let collaborator () =
 		(* Get the debug mode back *)
 		set_debug_mode global_debug_mode;
 		
+		print_message Verbose_low ("[collaborator " ^ (string_of_int rank) ^ "] Processing result of IM...");
+
 		(* Process the result by IM *)
 		let _ = Cartography.bc_process_im_result im_result in ();
 		
@@ -1186,11 +1236,18 @@ let collaborator () =
 		(*** TODO: only add to list if bc_process_im_result returned true? ***)
 		all_tiles := im_result :: !all_tiles;
 		
+		print_message Verbose_low ("[collaborator " ^ (string_of_int rank) ^ "] Computing next pi0...");
+
 		(* Compute the next pi0 (note that current_pi0 is directly modified by the function!) and return flags for more pi0 and co *)
 		let found_pi0 , _ = Cartography.find_next_pi0 (Some im_result.tile_nature) in
 		
 		(* Update the found pi0 flag *)
 		more_pi0 := found_pi0;
+		
+		print_message Verbose_low ("[collaborator " ^ (string_of_int rank) ^ "] Iteration " ^ (string_of_int !current_iteration) ^ " completed.");
+
+		(* Go to next iteration *)
+		current_iteration := !current_iteration + 1;
 
 	done; (* while more pi0 *)
 
@@ -1209,8 +1266,14 @@ let collaborator () =
 (* 	Cartography.bc_finalize (); *)
 	
 	(* Finalization depending on MPI rank *)
-	if get_rank() = masterrank
-		then collaborator_0_finalize()
-		else collaborator_n_finalize !all_tiles
+	if get_rank () = masterrank
+		then (
+			(* Put back the original v0 *)
+			Input.set_v0 original_v0;
+			(* Finalize *)
+			collaborator_0_finalize()
+		) else (
+			collaborator_n_finalize !all_tiles
+		)
 	
 	(* The end *)

@@ -93,7 +93,8 @@ let array_update f a =
  *)
 let coordinator () =
   (* Retrieve the input options *)
-  let options = Input.get_options () in
+(*   let options = Input.get_options () in *)
+
   let terminated = ref false in
   let nb_workers_done = ref 0 in
   let world = Mpi.comm_world in

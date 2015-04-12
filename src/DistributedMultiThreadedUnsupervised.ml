@@ -117,7 +117,7 @@ let pr_recv_msg dest src tag =
  *  Coordinator code
  *)
 let coordinator () =
-  let options = Input.get_options () in
+(*   let options = Input.get_options () in *)
   let terminated = ref false in
   let world = Mpi.comm_world in
   let nb_workers = Mpi.comm_size world - 1 in

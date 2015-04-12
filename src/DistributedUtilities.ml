@@ -8,7 +8,7 @@
  * Author:        Etienne Andre, Camille Coti
  * 
  * Created:       2014/03/24
- * Last modified: 2015/04/03
+ * Last modified: 2015/04/12
  *
  ****************************************************************)
 
@@ -115,14 +115,19 @@ let unserialize_numconst = NumConst.numconst_of_string
 	+ * a  
 *)
 
+
 (* Separator between the two elements of a pair *)
 let serialize_SEP_PAIR = ","
+
 (* Separator between the elements of a list *)
 let serialize_SEP_LIST = ";"
+
 (* Separator between the elements of a structure *)
 let serialize_SEP_STRUCT = "|"
+
 (* Separator between the elements of a list of im_results (need to be different from serialize_SEP_LIST because im_result contains itself some serialize_SEP_LIST *)
-let serialize_SEP_LIST_IMRESULT = ";;"
+(*** WARNING: when using some symboles (e.g., "£" or two symboles like ";;") it does NOT work, and creates a list with alternating elements and empty string ***)
+let serialize_SEP_LIST_IMRESULT = "#"
 
 
 (*------------------------------------------------------------*)
@@ -353,18 +358,62 @@ let unserialize_im_result im_result_string =
 
 (** Serialize a list of im_result *)
 let serialize_im_result_list im_result_list =
-	String.concat serialize_SEP_LIST_IMRESULT  (List.map serialize_im_result im_result_list)
+	String.concat serialize_SEP_LIST_IMRESULT (List.map serialize_im_result im_result_list)
 
 
 (** Convert a list of serialized im_result into a serialized list of im_result (ad-hoc function to save time in subparts handling) *)
-let serialized_imresultlist_of_serializedimresult_list=
+let serialized_imresultlist_of_serializedimresult_list =
 	String.concat serialize_SEP_LIST_IMRESULT
 
 
 (** Unserialize a list of im_result *)
 let unserialize_im_result_list im_result_list_string =
+	print_string ("\n"  ^ im_result_list_string );
 	(* Retrieve the list of im_result *)
-	List.map unserialize_im_result (split serialize_SEP_LIST_IMRESULT im_result_list_string)
+	let split_list = split serialize_SEP_LIST_IMRESULT im_result_list_string in
+	
+(*	(* DEBUG *)
+	print_string "\n**********";
+	print_string ("\n Splitting '" ^ im_result_list_string ^ "' using separator '" ^ serialize_SEP_LIST_IMRESULT ^ "'");
+	let i = ref 1 in
+	List.iter (fun l ->
+		print_string ("\n" ^ (string_of_int !i) ^ " : "  ^ l);
+		i := !i+1;
+	) split_list;
+	print_string "\n**********";*)
+	
+	List.map unserialize_im_result split_list
+
+(*
+;;
+
+let test_split some_string sep =
+	let split_list = split sep some_string in
+	print_string "\n**********";
+	print_string ("\n Splitting '" ^ some_string ^ "' using separator '" ^ sep ^ "'");
+	let i = ref 1 in
+	List.iter (fun l ->
+		print_string ("\n" ^ (string_of_int !i) ^ " : "  ^ l);
+		i := !i+1;
+	) split_list;
+	print_string "\n**********";
+	()
+in
+test_split "sdffsf;dsfsfsdf" ";";
+test_split "sdffsf;;dsfsfsdf" ";;";
+test_split "sdffsf;dsfsfsdf;sdfgkjsdgkf" ";";
+test_split "sdffsf;;dsfsfsdf;;zeurziur" ";;";
+
+test_split "-1*0>-24a1*1g7a1*0g17,B|B|false|false|19|18|9|0.19293498993;-1*0>-17a1*0g8a1*0+1*1g24,B|B|false|false|13|12|9|0.145488977433" ";";
+
+test_split "-1*0>-24a1*1g7a1*0g17,B|B|false|false|19|18|9|0.19293498993#-1*0>-17a1*0g8a1*0+1*1g24,B|B|false|false|13|12|9|0.145488977433" "#";
+
+test_split "-1*0>-24a1*1g7a1*0g17,B|B|false|false|19|18|9|0.19293498993;;-1*0>-17a1*0g8a1*0+1*1g24,B|B|false|false|13|12|9|0.145488977433" ";;";
+
+test_split "-1*0>-24a1*1g7a1*0g17,B|B|false|false|19|18|9|0.19293498993£-1*0>-17a1*0g8a1*0+1*1g24,B|B|false|false|13|12|9|0.145488977433" "£";
+
+
+abort_program();;*)
 
 
 (*------------------------------------------------------------*)
@@ -491,11 +540,14 @@ let int_of_slave_tag = function
 	| Slave_tile_tag -> 1
 	| Slave_work_tag -> 2
 	| Slave_outofbound_tag -> 3
-	(*Hoang Gia new tags*)
-(* 	| Slave_tile_tag -> 4 *)
+	(* Subpart tags *)
+	| Slave_tiles_tag -> 4 (** NEW TAG **)
 	| Slave_pi0_tag -> 5
 	| Slave_updaterequest_tag -> 6
-	
+	(*** NOTE: unused match case (but safer!) ***)
+	| _ -> raise (InternalError ("Impossible match in int_of_slave_tag."))
+
+
 let int_of_master_tag = function
 	| Master_data_tag -> 17
 	| Master_finished_tag -> 18
@@ -504,14 +556,17 @@ let int_of_master_tag = function
 	| Master_subpart_tag -> 20
 	| Master_terminate_tag -> 21
 	| Master_continue_tag -> 22
+	(*** NOTE: unused match case (but safer!) ***)
+	| _ -> raise (InternalError ("Impossible match in int_of_master_tag."))
 	
 
 let slave_tag_of_int = function
 	| 1 -> Slave_tile_tag
 	| 2 -> Slave_work_tag
 	| 3 -> Slave_outofbound_tag
+	(* Subpart tags *)
 	(*Hoang Gia new tags*)
-(* 	| 4 -> Slave_tile_tag *)
+	| 4 -> Slave_tiles_tag
 	| 5 -> Slave_pi0_tag
 	| 6 -> Slave_updaterequest_tag
 	| other -> raise (InternalError ("Impossible match '" ^ (string_of_int other) ^ "' in slave_tag_of_int."))
@@ -627,7 +682,7 @@ let send_result im_result =
 let send_tiles im_result_list =
 	let rank = get_rank() in
 
-	print_message Verbose_medium ("[Worker " ^ (string_of_int rank) ^ "] Entering send_tiles");
+	print_message Verbose_low ("[Worker " ^ (string_of_int rank) ^ "] Entering send_tiles");
 	let mlc = serialize_im_result_list im_result_list in
 	let res_size = String.length mlc in
 
@@ -637,8 +692,14 @@ let send_tiles im_result_list =
 	
 	(* Send the result: 1st send my rank, then the data size, then the data *)
 	print_message Verbose_medium ("[Worker " ^ (string_of_int rank) ^ "] About to send the size (" ^ (string_of_int res_size) ^ ") of the constraint.");
+
+	print_message Verbose_low ("[Worker " ^ (string_of_int rank) ^ "] Sending rank");
 	Mpi.send rank masterrank (int_of_slave_tag Slave_tiles_tag) Mpi.comm_world;
+	
+	print_message Verbose_low ("[Worker " ^ (string_of_int rank) ^ "] Sending size");
 	Mpi.send res_size masterrank (int_of_slave_tag Slave_tiles_tag) Mpi.comm_world;
+	
+	print_message Verbose_low ("[Worker " ^ (string_of_int rank) ^ "] Sending tiles");
 	Mpi.send mlc masterrank (int_of_slave_tag Slave_tiles_tag) Mpi.comm_world
 
 	

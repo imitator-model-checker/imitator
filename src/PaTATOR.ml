@@ -8,7 +8,7 @@
  * Author:        Etienne Andre
  * 
  * Created:       2014/03/15
- * Last modified: 2015/04/03
+ * Last modified: 2015/04/12
  *
  ****************************************************************)
 
@@ -30,7 +30,7 @@ let run () =
 
 	(* Print some information *)
 	if rank = masterrank then
-	  print_message Verbose_standard ("Hi guys! This is PaTATOR speaking!");
+	  print_message Verbose_standard ("Helloooo! This is now PaTATOR speaking.");
 	
 	
  	(**************************************************)
@@ -81,6 +81,6 @@ let run () =
  	(**************************************************)
 	(* Bye bye! *)
 	(**************************************************)
-	terminate_program()
+	terminate_program ()
 
  
