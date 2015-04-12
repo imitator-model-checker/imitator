@@ -7,7 +7,7 @@
 #
 #  _oasis authors: Etienne Andre, Alban Linard
 #  Created:        2013/12/11
-#  Last modified:  2015/04/01
+#  Last modified:  2015/04/12
 ###############################################################
 
 OASISFormat: 0.3
@@ -61,7 +61,7 @@ Test test5
 
 Test test6
   Command: echo "\n********** TEST 6 **********\n"; \
-      mpiexec -n 4 ./bin/imitator examples/Flipflop/flipflop.imi examples/Flipflop/flipflop.v0 -mode cover -output-result -output-cart -distributed subpart -verbose mute
+      mpiexec -n 4 ./bin/imitator examples/Flipflop/flipflop.imi examples/Flipflop/flipflop.v0 -mode cover -output-result -output-cart -distributed dynamic -verbose mute
 
 Test finalcomment
   Command: echo "\n********** END TESTS **********\n"

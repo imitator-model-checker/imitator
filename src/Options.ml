@@ -324,7 +324,7 @@ class imitator_options =
 				else if mode = "shuffle" then 
 					distribution_mode := Distributed_ms_shuffle
 				(* Case: distributed master-slave with subpart distribution *)
-				else if mode = "subpart" then 
+				else if mode = "dynamic" then 
 					distribution_mode := Distributed_ms_subpart
 				(* Case: distributed master-slave random generation with a bounded number of attempts *)
 				else try (
@@ -369,7 +369,7 @@ class imitator_options =
         Use 'sequential' for a master-worker scheme with sequential point distribution [ACE14].
         Use 'randomXX' for a master-worker scheme with random point distribution (e.g., random5 or random10); after XX successive unsuccessful attempts (where the generated point is already covered), the algorithm will switch to an exhaustive sequential iteration [ACE14].
         Use 'shuffle' for a master-worker scheme with shuffle point distribution.
-        Use 'subpart' for a master-worker dynamic subdomain partitioning.
+        Use 'dynamic' for a master-worker dynamic subdomain decomposition.
 				");
 				
 				("-distributedKillIM", Set distributedKillIM, " In distributed cartography, kill processes covered by other tiles. Default: false.");
