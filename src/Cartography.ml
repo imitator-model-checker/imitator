@@ -222,6 +222,8 @@ let write_result_to_file total_time =
 			else "PaTATOR"
 				(* Time *)
 				^ " " ^ (string_of_float total_time)
+				(* Number of nodes *)
+				^ " " ^ (string_of_int (DistributedUtilities.get_nb_nodes()))
 				(* Number of tiles *)
 				^ " " ^ (string_of_int (DynArray.length !computed_constraints))
 				^ "\n\n"

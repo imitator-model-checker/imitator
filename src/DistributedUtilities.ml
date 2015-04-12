@@ -368,7 +368,6 @@ let serialized_imresultlist_of_serializedimresult_list =
 
 (** Unserialize a list of im_result *)
 let unserialize_im_result_list im_result_list_string =
-	print_string ("\n"  ^ im_result_list_string );
 	(* Retrieve the list of im_result *)
 	let split_list = split serialize_SEP_LIST_IMRESULT im_result_list_string in
 	
@@ -693,13 +692,13 @@ let send_tiles im_result_list =
 	(* Send the result: 1st send my rank, then the data size, then the data *)
 	print_message Verbose_medium ("[Worker " ^ (string_of_int rank) ^ "] About to send the size (" ^ (string_of_int res_size) ^ ") of the constraint.");
 
-	print_message Verbose_low ("[Worker " ^ (string_of_int rank) ^ "] Sending rank");
+	print_message Verbose_high ("[Worker " ^ (string_of_int rank) ^ "] Sending rank");
 	Mpi.send rank masterrank (int_of_slave_tag Slave_tiles_tag) Mpi.comm_world;
 	
-	print_message Verbose_low ("[Worker " ^ (string_of_int rank) ^ "] Sending size");
+	print_message Verbose_high ("[Worker " ^ (string_of_int rank) ^ "] Sending size");
 	Mpi.send res_size masterrank (int_of_slave_tag Slave_tiles_tag) Mpi.comm_world;
 	
-	print_message Verbose_low ("[Worker " ^ (string_of_int rank) ^ "] Sending tiles");
+	print_message Verbose_high ("[Worker " ^ (string_of_int rank) ^ "] Sending tiles");
 	Mpi.send mlc masterrank (int_of_slave_tag Slave_tiles_tag) Mpi.comm_world
 
 	

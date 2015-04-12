@@ -1119,6 +1119,7 @@ let collaborator_0_finalize () =
 	print_message Verbose_standard ("[Coordinator] Finalizing the cartography..." );
 	Cartography.bc_finalize ();
 	
+	(*** WARNING! this time remains 0....... (or is it normal???) ***)
 	print_message Verbose_standard ("[Coordinator] Total waiting time     : " ^ (string_of_float (counter_master_waiting#value)) ^ " s");
 	print_message Verbose_standard ("**************************************************");
 
@@ -1192,12 +1193,12 @@ let collaborator () =
 		Close to this problem is the replacement of the im_result structure with an object that would be easier to handle.
 	***)
 		
-	print_message Verbose_low ("[collaborator " ^ (string_of_int rank) ^ "] BEFORE pi0 computed.");
+	print_message Verbose_high ("[collaborator " ^ (string_of_int rank) ^ "] BEFORE pi0 computed.");
 	
 	(* Compute the first point pi0 *)
 	Cartography.compute_initial_pi0 ();
 	
-	print_message Verbose_low ("[collaborator " ^ (string_of_int rank) ^ "] Initial pi0 computed.");
+	print_message Verbose_high ("[collaborator " ^ (string_of_int rank) ^ "] Initial pi0 computed.");
 	
 	let more_pi0 = ref true in
 	let time_limit_reached = ref false in
@@ -1210,12 +1211,12 @@ let collaborator () =
 
 		let pi0 = Cartography.get_current_pi0 () in
 
-		print_message Verbose_low ("[collaborator " ^ (string_of_int rank) ^ "] Setting pi0...");
+		print_message Verbose_high ("[collaborator " ^ (string_of_int rank) ^ "] Setting pi0...");
 
 		(* Set the new pi0 *)
 		Input.set_pi0 (pi0);
 		
-		print_message Verbose_low ("[collaborator " ^ (string_of_int rank) ^ "] About to call IM...");
+		print_message Verbose_high ("[collaborator " ^ (string_of_int rank) ^ "] About to call IM...");
 
 		(* Prevent the debug messages (except in debug medium, high or total) *)
 		if not (debug_mode_greater Verbose_medium) then
@@ -1227,7 +1228,7 @@ let collaborator () =
 		(* Get the debug mode back *)
 		set_debug_mode global_debug_mode;
 		
-		print_message Verbose_low ("[collaborator " ^ (string_of_int rank) ^ "] Processing result of IM...");
+		print_message Verbose_high ("[collaborator " ^ (string_of_int rank) ^ "] Processing result of IM...");
 
 		(* Process the result by IM *)
 		let _ = Cartography.bc_process_im_result im_result in ();
@@ -1236,7 +1237,7 @@ let collaborator () =
 		(*** TODO: only add to list if bc_process_im_result returned true? ***)
 		all_tiles := im_result :: !all_tiles;
 		
-		print_message Verbose_low ("[collaborator " ^ (string_of_int rank) ^ "] Computing next pi0...");
+		print_message Verbose_high ("[collaborator " ^ (string_of_int rank) ^ "] Computing next pi0...");
 
 		(* Compute the next pi0 (note that current_pi0 is directly modified by the function!) and return flags for more pi0 and co *)
 		let found_pi0 , _ = Cartography.find_next_pi0 (Some im_result.tile_nature) in
@@ -1244,7 +1245,7 @@ let collaborator () =
 		(* Update the found pi0 flag *)
 		more_pi0 := found_pi0;
 		
-		print_message Verbose_low ("[collaborator " ^ (string_of_int rank) ^ "] Iteration " ^ (string_of_int !current_iteration) ^ " completed.");
+		print_message Verbose_medium ("[collaborator " ^ (string_of_int rank) ^ "] Iteration " ^ (string_of_int !current_iteration) ^ " completed.");
 
 		(* Go to next iteration *)
 		current_iteration := !current_iteration + 1;
@@ -1268,7 +1269,7 @@ let collaborator () =
 	(* Finalization depending on MPI rank *)
 	if get_rank () = masterrank
 		then (
-			(* Put back the original v0 *)
+			(* Put back the original v0 (especially to a cartography with the good V0) *)
 			Input.set_v0 original_v0;
 			(* Finalize *)
 			collaborator_0_finalize()
