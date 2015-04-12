@@ -7,7 +7,7 @@
  * Author:        Etienne Andre
  * 
  * Created:       2014/10/24
- * Last modified: 2015/04/01
+ * Last modified: 2015/04/12
  *
  ****************************************************************)
  
@@ -16,6 +16,28 @@
 (** Modules *)
 (****************************************************************)
 open Unix
+
+
+(****************************************************************)
+(** Useful functions on integers *)
+(****************************************************************)
+let rec is_a_power_of_2_rec n =
+	if n mod 2 <> 0 then false
+	else if n = 2 then true
+	else is_a_power_of_2_rec (n/2)
+
+
+(** Check if an integer is a power of two *)
+let is_a_power_of_2 n =
+	if n < 2 then false
+	else is_a_power_of_2_rec n
+
+;;
+let tests = [1; 2; 3; 4; -5; 0; 7; 8; 4; 232323; 2048; 76] in
+List.iter (fun n ->
+	print_string ("\nIs " ^ (string_of_int n) ^ " a power of 2? " ^ (string_of_bool (is_a_power_of_2 n)))
+	) tests;
+exit(1)
 
 
 (****************************************************************)

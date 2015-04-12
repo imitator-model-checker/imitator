@@ -2,8 +2,9 @@
 release XXXX    (XXXX) PRIVATE RELEASE
 
 Major features:
-- Added EF-synthesis (option "-EF"): synthesize all parameter valuations such that a given state is reachable
-- Added a distributed version of IMITATOR
+- Added EF-synthesis (option "-EF"): synthesize all parameter valuations such that a given state is reachable [AHV93,JLR15]
+- Added PRP and PRPC algorithms [ALNS15]
+- Added a distributed version of IMITATOR [ACE14,ALNS15]
 
 Minor features:
 - add suffix "-pta.jpg" to PTA2JPG files
@@ -19,11 +20,11 @@ Changes in options syntax:
 - "-with-dot" becomes "-output-trace-set"
 - "-with-graphics-source" becomes "-output-graphics-source"
 - "-with-log" becomes "-output-states"
-- "-with-parametric-log" is removed (becomes true by default)
+- "-with-parametric-log" is removed (becomes always true when option "-output-states" is enabled)
 
 Misc
 - Improve printing floating numbers (in time and memory statistics)
-- Now IMITATOR has a build number
+- Now IMITATOR has a build number =)
 
 Install and compile
 - Two versions: distributed (sh compile.sh), that creates a dynamic binary, or non-distributed (sh compile-nondistr.sh), that creates a static binary
