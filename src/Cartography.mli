@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2012/06/18
- * Last modified: 2014/10/30
+ * Last modified: 2015/04/12
  *
  ****************************************************************)
 
@@ -71,9 +71,9 @@ val find_next_pi0_cover : unit -> bool
 (** Behavioral cartography algorithms *)
 (************************************************************)
 
-val random_behavioral_cartography : AbstractModel.abstract_model -> AbstractModel.v0 -> int -> (*AbstractModel.returned_constraint list*)unit
+val random_behavioral_cartography : AbstractModel.abstract_model -> int -> (*AbstractModel.returned_constraint list*)unit
 
-val cover_behavioral_cartography : AbstractModel.abstract_model -> AbstractModel.v0 -> (*AbstractModel.returned_constraint list*)unit
+val cover_behavioral_cartography : AbstractModel.abstract_model -> (*AbstractModel.returned_constraint list*)unit
 
 
 (*

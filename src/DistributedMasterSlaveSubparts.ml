@@ -7,7 +7,7 @@
  * Author:        Etienne Andre, Camille Coti, Hoang Gia Nguyen
  * 
  * Created:       2014/09/05
- * Last modified: 2015/04/03
+ * Last modified: 2015/04/12
  *
  ****************************************************************)
 
@@ -21,14 +21,12 @@ open Mpi
 (****************************************************************)
 (* Internal modules *)
 (****************************************************************)
+open CamlUtilities
 open Exceptions
 open ImitatorUtilities
 open Options
 open Reachability
 open DistributedUtilities
-
-(*Exception*)
-exception Ex of string;;
 
 exception KillIM;;
 
@@ -107,7 +105,7 @@ let split s dimension =
 	let max_d_l = ref 0 in
 	(*count from zero so that add 1 unit*)
 	max_d_l := ( (NumConst.to_int(s#get_max dimension)) - (NumConst.to_int(s#get_min dimension)) +1 );
-	if (!max_d_l = 1) then raise (Ex ("the length is minimum, could not split smaller "));
+	if (!max_d_l = 1) then raise (InternalError ("the length is minimum, could not split smaller "));
 	print_message Verbose_medium ("\ndetected Max dimension length in this subpart is : " ^ (string_of_int (!max_d_l)) ^ " unit at dimension " ^ (string_of_int (dimension))); 
 	  (*create new subparts*)
 	  let s1 = new HyperRectangle.hyper_rectangle in
@@ -179,7 +177,7 @@ let split2 s dimension n =
 	let max_d_l = ref 0 in
 	(*count from zero so that add 1 unit*)
 	max_d_l := ( (NumConst.to_int(s#get_max dimension)) - (NumConst.to_int(s#get_min dimension)) +1 );
-	if (!max_d_l = 1) then raise (Ex ("the length is minimum, could not split smaller "));
+	if (!max_d_l = 1) then raise (InternalError ("the length is minimum, could not split smaller "));
 	print_message Verbose_medium ("\ndetected Max dimension length in this subpart is : " ^ (string_of_int (!max_d_l)) ^ " unit at dimension " ^ (string_of_int (dimension))); 
 	  (*create new subparts*)
 	  let s1 = new HyperRectangle.hyper_rectangle in
@@ -259,13 +257,14 @@ let sliptLongestDimensionSubpart (s : HyperRectangle.hyper_rectangle) =
 	listSubpart;;
 	()
 	
-(*initial Subparts function: put in the Subpart list with number of the Workers return the new split subpart list*)
+(*initial Subparts function: put in the Subpart list with number of the Workers
+	return the new split subpart list*)
 let intialize_Subparts (v0 : HyperRectangle.hyper_rectangle) (n : int) =
 	let subparts = ref [v0] in
 	for l = 0 to n do 
 	begin
 	
- (*find the largest subpart to slipt*)
+ (* Find the largest subpart to split *)
 	  let max_pi0s = ref 0 in
 	  let subno = ref 0 in
 	  for i = 0 to (List.length !subparts)-1 do
@@ -290,7 +289,7 @@ let intialize_Subparts (v0 : HyperRectangle.hyper_rectangle) (n : int) =
 	   end
 	   else
 	   begin
-	    raise (Ex ("Could not split smaller and The requried Suparts/Workers larger the points in v0! Please Check Again! :P "));
+	    raise (InternalError ("Could not split smaller and The requried Suparts/Workers larger the points in v0! Please Check Again! :P "));
 	   end;
 	end
 	done;
@@ -346,7 +345,7 @@ let get_next_sequential_pi0_in_subpart pi0 (s : HyperRectangle.hyper_rectangle) 
 			current_dimension := !current_dimension + 1;
 			(* If last dimension: the end! *)
 			if !current_dimension > (HyperRectangle.get_dimensions()-1) then(
-				raise (Ex (" The pi0 is Max could not increase! "));
+				raise (InternalError (" The pi0 is Max could not increase! "));
 				(*not_is_max := false;*)
 			)
 		);
@@ -369,7 +368,7 @@ let dynamicSplitSubpart (s : HyperRectangle.hyper_rectangle) pi0 n : HyperRectan
 	while( !notFound (*&& (!j != -1)*) ) do
 	  begin
 	 (* print_message Verbose_medium ("\n bug!!!!!!!!!!1" );*)
-	   (* if(!j = -1) then  print_message Verbose_medium ("\n all demensions of subpart could not split" ); raise (Ex (" there are only 1 pi0 left in subpart, could not split! "));*)
+	   (* if(!j = -1) then  print_message Verbose_medium ("\n all demensions of subpart could not split" ); raise (InternalError (" there are only 1 pi0 left in subpart, could not split! "));*)
 	    (*if current pi0 at max dimension j but the Min at demension j of subpart is lower, split all the done pi0 below j*)
 	    (*update subpart*)
 	   (* print_message Verbose_medium ("\n bug!!!!!!!!!!2" );*)
@@ -389,7 +388,7 @@ let dynamicSplitSubpart (s : HyperRectangle.hyper_rectangle) pi0 n : HyperRectan
 	   (* if(!j = -1) then
 	      begin
 		print_message Verbose_medium ("\n all demensions of subpart could not split" );
-		raise (Ex (" all demensions of subpart could not split "));
+		raise (InternalError (" all demensions of subpart could not split "));
 	      end;*)
 	    
 	    end(*end while*)
@@ -398,7 +397,7 @@ let dynamicSplitSubpart (s : HyperRectangle.hyper_rectangle) pi0 n : HyperRectan
 	    begin
 	      
 	      print_message Verbose_medium ("\n all demensions of subpart could not split" );
-	      raise (Ex (" all demensions of subpart could not split "));
+	      raise (InternalError (" all demensions of subpart could not split "));
 	    end;*)
 	    print_message Verbose_medium ("\n splitting list : " ^ (string_of_int (List.length !lst) ) );
 	!lst;;
@@ -486,6 +485,9 @@ let master () =
 	
 	(******************Adjustable values********************)
 	(* number of subpart want to initialize in the first time *)
+
+	(*** WARNING: why "-3" ??? ***)
+	
 	let np = (Mpi.comm_size Mpi.comm_world) -3 in
 	(*depend on size of model*)
 (* 	let dynamicSplittingMode = ref true in *)
@@ -553,10 +555,10 @@ let master () =
 				   print_message Verbose_medium ("[Master] Received a tile from worker " ^ (string_of_int source_rank) ^ "");
 				   (*check duplicated tile*)
 				   	counter_master_processing#start;
-					let b = Cartography.bc_process_im_result tile in
+					let constraint_added = Cartography.bc_process_im_result tile in
 				   	counter_master_processing#stop;
 
-				   if(b) then
+				   if constraint_added then
 				    begin
 				      (*receive tile then send to the other workers to update*)
 				      for i = 0 to (List.length !index)-1 do
@@ -567,6 +569,7 @@ let master () =
 					  end;
 				      done
 				    end
+				    (* Otherwise: the constraint was not added because it existed already *)
 				    else 
 				    begin
 				      wastedTiles := !wastedTiles + 1;
@@ -731,6 +734,7 @@ let master () =
 	print_message Verbose_standard ("[Master] wasted Tiles " ^ (string_of_int !wastedTiles) ^ " end!!!!!!");
 	print_message Verbose_standard ("**************************************************");
 	
+	(*** DUPLICATE CODE ***)
 	(* Process the result and return *)
 	let tiles = Cartography.bc_result () in
 	(* Render zones in a graphical form *)
@@ -849,9 +853,6 @@ let compute_next_pi0_sequentially more_pi0 limit_reached first_point tile_nature
 	print_message Verbose_medium ("[Some worker] compute_next_pi0_sequentially bug 4.");
 	()
 
-let init_slave rank size =
-	print_message Verbose_medium ("[Worker " ^ (string_of_int rank) ^ "] I am worker " ^ (string_of_int rank) ^ "/" ^ (string_of_int (size-1)) ^ ".");
-	()
 
 let worker() =
 	(* Get the model *)
@@ -875,12 +876,15 @@ let worker() =
 	
 	let rank = Mpi.comm_rank Mpi.comm_world in
 	let size = Mpi.comm_size Mpi.comm_world in
-	init_slave rank size;
+
+	print_message Verbose_medium ("[Worker " ^ (string_of_int rank) ^ "] I am worker " ^ (string_of_int rank) ^ "/" ^ (string_of_int (size-1)) ^ ".");
+	
 	let finished = ref false in
+	
 	(* In the meanwhile: compute the initial state *)
 	let init_state = Reachability.get_initial_state_or_abort model in
 	
-	
+	(* Initialize the cartography *)
 	Cartography.bc_initialize ();
 	
 	(*let main_loop () = *)
@@ -1041,22 +1045,64 @@ let worker() =
 (**        COLLABORATOR (static distribution)         *)
 (****************************************************************)
 
-(*** TODO: receive tiles from the others ***)
+(* Compute the subpart for collaborator # rank *)
+(*** NOTE: for now, brute force method: compute ALL subpart, then select the subpart # rank ***)
+let collaborator_compute_subpart rank =
+	(* Get the v0 *)
+	let v0 = Input.get_v0() in
+
+	(*** WARNING: duplicate code ***)
+	(******************Adjustable values********************)
+	(* number of subpart want to initialize in the first time *)
+
+	(*** WARNING: why "-3" ??? ***)
+	
+	let np = (Mpi.comm_size Mpi.comm_world) -3 in
+	(*******************************************************)
+		
+	(* Compute all subparts *)
+	let subparts = intialize_Subparts v0 np in
+	
+	(* Return subpart # rank *)
+	List.nth subparts rank
+
+
+(* At the end, the coordinator (collaborator #0) receives all tiles, and handles the result *)
 let collaborator_0_finalize () =
 	print_message Verbose_standard ( "[Coordinator] I am collaborator " ^ (string_of_int masterrank) ^ " and I am now the coordinator.");
+	
+	(* Retrieve the input options *)
+	let options = Input.get_options () in
 
-	let size = get_nb_nodes() in
+	let size = get_nb_nodes () in
 	let workers_done = ref 0 in
 
 	while !workers_done < ( size - 1) do
 		print_message Verbose_medium ("[Coordinator] " ^ ( string_of_int ( size - 1 - !workers_done )) ^ " workers left" );
-		(*** TODO here: receive tiles
-			you need to receive a Tiles from function receive_pull_request()
-		***)
-		let source_rank , _ = (*receive_pull_request_and_store_constraint ()*)999999,() in
-		print_message Verbose_medium ("[Coordinator] Received from Worker " ^ ( string_of_int source_rank ) ^"");
+
+		let pull_request = receive_pull_request () in
+		begin
+		match pull_request with
+		| Tiles (source_rank, im_result_list) ->
+			let nb_tiles = List.length im_result_list in
+			print_message Verbose_standard( "\t[Coordinator] Received " ^ (string_of_int nb_tiles) ^ " tile" ^ (s_of_int nb_tiles) ^ " from worker " ^ (string_of_int source_rank ) ^ ".");
+			(* Add all received tiles *)
+			(*** TODO: measure processing time ***)
+(* 							   	counter_master_processing#start; *)
+			(*** TODO: count the number of useless / redundant tiles ***)
+			List.iter (fun im_result -> 
+				let _ = Cartography.bc_process_im_result im_result in
+				print_message Verbose_medium( "\t[Coordinator] Tile processed.");
+				()
+			) im_result_list;
+			(*** TODO: measure processing time ***)
+(* 				   	counter_master_processing#stop; *)
+
+		| _ -> raise (InternalError "[Coordinator] I only expect to receive a Tiles tag at this point.")
+		end;
+		(* Increment the number of workers that finished their job *)
 		workers_done := !workers_done + 1;
-		print_message Verbose_standard( "\t[Coordinator] Received tiles from worker " ^ (string_of_int source_rank ) ^ ".");
+		
 	done;
 		
 	print_message Verbose_standard ("[Coordinator] All workers done" );
@@ -1067,35 +1113,113 @@ let collaborator_0_finalize () =
 	
 	print_message Verbose_standard ("[Coordinator] Total waiting time     : " ^ (string_of_float (counter_master_waiting#value)) ^ " s");
 	print_message Verbose_standard ("**************************************************");
+
+	(*** DUPLICATE CODE ***)
+	let tiles = Cartography.bc_result () in
+	(* Render zones in a graphical form *)
+	if options#cart then (
+		Graphics.cartography (Input.get_model()) (Input.get_v0()) tiles (options#files_prefix ^ "_cart_patator")
+	) else (
+		print_message Verbose_high "Graphical cartography not asked: graph not generated.";
+	);
+	
 	()
 
 
 	
-(*** TODO: send tiles to collaborator #0 ***)
-let collaborator_n_finalize () =
-	(*** TODO: use 'send_tiles !all_tiles' ***)
-	
-	(*** WARNING: there will be a problem because we cannot access easily the list of tiles ***)
-	()
+(* Send tiles to the coordinator *)
+let collaborator_n_finalize all_tiles =
+	send_tiles all_tiles
 
 
 (** Implementation of coordinator (for static distribution) *)
 let collaborator () =
+	(* Get the model *)
+	let model = Input.get_model() in
+
+	(* Retrieve the input options *)
+	let options = Input.get_options () in
+
+	(*** TODO: backup v0 ?? at least for the coordinator, to put it back at the end? ***)
+	
+	(* Backup debug mode *)
+	let global_debug_mode = get_debug_mode() in
+
 	let rank = get_rank() in
 
-	(*** TODO: compute all subparts ***)
+	(* Compute subpart for this collaborator only *)
+	let subpart = collaborator_compute_subpart rank in
 
+	(* Assign subpart *)
+	Input.set_v0 subpart;
 	
-	(*** TODO: select subpart #i ***)
-
+	(* Compute the initial state *)
+	let init_state = Reachability.get_initial_state_or_abort model in
 	
-	(*** TODO: call IM until subpart is 100% covered (main loop) ***)
+	(* Maintain list of tiles for the finalization (send them all to the coordinator *)
+	let all_tiles = ref [] in
+	
+	(*** BADPROG: all the following is VERY close to Cartography.cover_behavioral_cartography; this function cannot be reused though, because it maintains only the constraints, whereas we need here the full "im_result" structure, to send them to the coordinator at the end.
+		A solution could be to modify Cartography.cover_behavioral_cartography so that it maintains a list of im_result, and then reuse it.
+		Close to this problem is the replacement of the im_result structure with an object that would be easier to handle.
+	***)
+		
+	(* Compute the first point pi0 *)
+	Cartography.compute_initial_pi0 ();
+	
+	let more_pi0 = ref true in
+	let time_limit_reached = ref false in
+	
+	(* Start main loop *)
+	while !more_pi0 && not !time_limit_reached do
 
+		let pi0 = Cartography.get_current_pi0 () in
+
+		(* Set the new pi0 *)
+		Input.set_pi0 (pi0);
+		
+		(* Prevent the debug messages (except in debug medium, high or total) *)
+		if not (debug_mode_greater Verbose_medium) then
+			set_debug_mode Verbose_mute;
+		
+		(* Call the inverse method *)
+		let im_result, _ = Reachability.inverse_method_gen model init_state in
+		
+		(* Get the debug mode back *)
+		set_debug_mode global_debug_mode;
+		
+		(* Process the result by IM *)
+		let _ = Cartography.bc_process_im_result im_result in ();
+		
+		(* Add the result to the local list of tiles *)
+		(*** TODO: only add to list if bc_process_im_result returned true? ***)
+		all_tiles := im_result :: !all_tiles;
+		
+		(* Compute the next pi0 (note that current_pi0 is directly modified by the function!) and return flags for more pi0 and co *)
+		let found_pi0 , _ = Cartography.find_next_pi0 (Some im_result.tile_nature) in
+		
+		(* Update the found pi0 flag *)
+		more_pi0 := found_pi0;
+
+	done; (* while more pi0 *)
+
+	(* Print info if premature termination *)
+	if !time_limit_reached && !more_pi0 then (
+		(*** WARNING : what about other limits?! (iterations, etc.?) ***)
+		match options#time_limit with
+			| None -> ()
+			| Some limit -> if (get_time()) > (float_of_int limit) then print_warning (
+				"The time limit (" ^ (string_of_int limit) ^ " second" ^ (s_of_int limit) ^ ") has been reached. The behavioral cartography algorithm now stops, although the cartography has not been covered yet."
+			);
+	);
+	(* End main loop *)
+	
+	(* Do not process the finalization (useless, and the coordinator will do it itself ) *)
+(* 	Cartography.bc_finalize (); *)
 	
 	(* Finalization depending on MPI rank *)
 	if get_rank() = masterrank
 		then collaborator_0_finalize()
-		else collaborator_n_finalize()
+		else collaborator_n_finalize !all_tiles
 	
 	(* The end *)
-

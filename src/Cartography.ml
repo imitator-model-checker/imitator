@@ -10,7 +10,7 @@
  * Author:        Ulrich Kuehne, Etienne Andre
  * 
  * Created:       2012/06/18
- * Last modified: 2015/04/01
+ * Last modified: 2015/04/12
  *
  ****************************************************************)
 
@@ -1089,6 +1089,7 @@ let bc_initialize () =
 	()
 
 (*Hoang Gia modified bc_initialize *)
+(*** WARNING!!!! why ?? What is the difference with bc_initialize ?? ***)
 let bc_initialize_subpart () =	(* Get the model *)
 	let model = Input.get_model() in
 	(* Get the v0 *)
@@ -1131,38 +1132,6 @@ let bc_initialize_subpart () =	(* Get the model *)
 		!max_bounds.(parameter_index) <- v0#get_max parameter_index;
 	done;
 	
-	
-	(* Compute the (actually slightly approximate) number of points in V0 (for information purpose) *)
-(*	nb_points := Array.fold_left (fun current_number (low, high) ->
-		(* Multiply current number of points by the interval + 1, itself divided by the step *)
-		NumConst.mul
-			current_number
-			(NumConst.div
-				(NumConst.add
-					(NumConst.sub high low)
-					NumConst.one
-				)
-				options#step
-			)
-	) NumConst.one v0;*)
-(*	nb_points := NumConst.one;
-	for parameter_index = 0 to !nb_dimensions - 1 do
-		nb_points :=
-		let low = v0#get_min parameter_index in
-		let high = v0#get_max parameter_index in
-		(* Multiply current number of points by the interval + 1, itself divided by the step *)
-		NumConst.mul
-			!nb_points
-			(NumConst.div
-				(NumConst.add
-					(NumConst.sub high low)
-					NumConst.one
-				)
-				options#step
-			)
-		;
-	done;*)
-	
 	(*** TODO: check that it is not empty (or is it done elsewhere?) ***)
 	
 	(* Counts the points actually member of an existing constraint (hence useless) for information purpose *)
@@ -1170,10 +1139,7 @@ let bc_initialize_subpart () =	(* Get the model *)
 	
 	(* Compute the initial state *)
 	init_state := get_initial_state_or_abort model;
-
-
-
-
+	
 	
 	(* Compute some variables for the border cartography only *)
 	(* Current_intervals_min and Current_intervals_max represent, for each dimension, the interval (multiple of step) in which the points have not been classified as good or bad *)
@@ -1181,18 +1147,6 @@ let bc_initialize_subpart () =	(* Get the model *)
 	match options#imitator_mode with
 		| Border_cartography -> 
 			Array.copy !min_bounds, Array.copy !max_bounds
-(*			let first, others =
-			begin match model.parameters with 
-				| first :: others -> first , others 
-				| _ -> raise (InternalError("There should be at least one parameter (but this may not have been checked somewhere else, right?)."))
-			end
-			in
-			(* Current dimension we consider *)
-			ref first,
-			(* The other dimensions *)
-			ref others,
-			(* The initial interval: min and max bound for the current dimension *)
-			ref min_bounds.(first), ref max_bounds.(first)*)
 	
 		(* Otherwise, does not matter *)
 		| _ -> (*ref 0, ref [], ref NumConst.zero, ref NumConst.zero*) Array.make 0 NumConst.zero, Array.make 0 NumConst.zero
@@ -1201,25 +1155,11 @@ let bc_initialize_subpart () =	(* Get the model *)
 	current_intervals_max := the_current_intervals_max;
 	
 
-	(* Current iteration (for information purpose) *)
-	(*current_iteration := 1;*)
-	(* Sum of number of states (for information purpose) *)
-	(*nb_states := 0;*)
-	(* Sum of number of transitions (for information purpose) *)
-	(*nb_transitions := 0;*)
 
 	(* Debug mode *)
 	global_debug_mode := get_debug_mode();
 	
 	(*** TODO : check that initial pi0 is suitable!! (could be incompatible with initial constraint) ***)
-	
-	(* Print *)
-(*	print_message Verbose_standard ("\n**************************************************");
-	print_message Verbose_standard (" START THE BEHAVIORAL CARTOGRAPHY ALGORITHM");
-	print_message Verbose_standard ("**************************************************");
-	print_message Verbose_standard (" Parametric rectangle V0: ");
-	print_message Verbose_standard (ModelPrinter.string_of_v0 model v0);
-	print_message Verbose_standard (" Number of points inside V0: " ^ (NumConst.string_of_numconst !nb_points));*)
 	()
 
 
@@ -1405,6 +1345,7 @@ let bc_process_im_result im_result =
 
 (*------------------------------------------------------------*)
 (** Auxiliary function: finalize the behavioral cartography *)
+(*** TODO: split or redefine this function (that both print statistics and export to file BUT does not produce graphics!! ***)
 (*------------------------------------------------------------*)
 let bc_finalize () =
 	(* Retrieve the input options *)
@@ -1638,7 +1579,7 @@ let move_to_next_uncovered_pi0 () =
 (*------------------------------------------------------------*)
 (** Behavioral cartography algorithm with full coverage of V0 *)
 (*------------------------------------------------------------*)
-let cover_behavioral_cartography model v0 =
+let cover_behavioral_cartography model =
 	(* Retrieve the input options *)
 	let options = Input.get_options () in
 
@@ -1726,7 +1667,7 @@ let cover_behavioral_cartography model v0 =
 (*** TODO: merge with the other !!!! ***)
 (*** WARNING: not tested for a LONG time ***)
 (*------------------------------------------------------------*)
-let random_behavioral_cartography model v0 nb =
+let random_behavioral_cartography model nb =
 
 
 

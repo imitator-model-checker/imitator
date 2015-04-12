@@ -335,6 +335,7 @@ let master () =
 	print_message Verbose_standard ("**************************************************");
 
 	
+	(*** DUPLICATE CODE (DistributedMasterSlaveSubparts) ***)
 	(* Process the result and return *)
 	let tiles = Cartography.bc_result () in
 	(* Render zones in a graphical form *)
