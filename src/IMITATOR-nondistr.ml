@@ -12,7 +12,7 @@
  * Author:        Ulrich Kuehne, Etienne Andre
  * 
  * Created:       2009/09/07
- * Last modified: 2015/03/30
+ * Last modified: 2015/04/12
  *
  ****************************************************************)
 
@@ -313,12 +313,12 @@ begin
 
 		| Cover_cartography | Border_cartography ->
 		(* Behavioral cartography algorithm with full coverage *)
-			Cartography.cover_behavioral_cartography model v0
+			Cartography.cover_behavioral_cartography model
 			
 			
 		| Random_cartography nb ->
 		(* Behavioral cartography algorithm with random iterations *)
-			Cartography.random_behavioral_cartography model v0 nb;
+			Cartography.random_behavioral_cartography model nb;
 
 			(*
 	in
