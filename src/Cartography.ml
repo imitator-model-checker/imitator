@@ -10,7 +10,7 @@
  * Author:        Ulrich Kuehne, Etienne Andre
  * 
  * Created:       2012/06/18
- * Last modified: 2015/04/12
+ * Last modified: 2015/04/15
  *
  ****************************************************************)
 
@@ -233,7 +233,7 @@ let write_result_to_file total_time =
 		^ constraints_str ^ "\n"
 	in
 	(* Write to file *)
-	let file_name = options#files_prefix ^ "-cart" ^ Constants.result_file_extension in
+	let file_name = options#files_prefix ^ "_cart" ^ Constants.result_file_extension in
 	write_to_file file_name file_content;
 	print_message Verbose_standard ("Result written to file '" ^ file_name ^ "'.")
 
