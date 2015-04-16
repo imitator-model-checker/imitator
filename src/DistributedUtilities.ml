@@ -8,7 +8,7 @@
  * Author:        Etienne Andre, Camille Coti
  * 
  * Created:       2014/03/24
- * Last modified: 2015/04/12
+ * Last modified: 2015/04/16
  *
  ****************************************************************)
 
@@ -859,9 +859,7 @@ let receive_pull_request () =
   | Slave_pi0_tag ->
     let s_rank = l in 
     print_message Verbose_medium ("[Master] Received Slave_pi0_tag from " ^ ( string_of_int source_rank) );
-    print_message Verbose_medium ("[Master] !!!!!!!!!!!!!!!!!!!!!1 " );
     let len = Mpi.receive s_rank (int_of_slave_tag Slave_pi0_tag) Mpi.comm_world in
-    print_message Verbose_medium ("[Master] !!!!!!!!!!!!!!!!!!!!!1 " );
     print_message Verbose_medium ("[Master] Expecting a result of size " ^ ( string_of_int len) ^ " from [Worker " ^ (string_of_int s_rank) ^ "]" );
      (* Receive the data itself *)
     let buff = String.create len in

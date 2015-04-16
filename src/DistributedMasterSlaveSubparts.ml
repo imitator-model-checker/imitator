@@ -728,7 +728,7 @@ let master () =
 	print_message Verbose_standard ("[Master] Processing time        : " ^ (string_of_float (counter_master_processing#value)) ^ " s");
 	print_message Verbose_standard ("[Master] Waiting time           : " ^ (string_of_float (counter_master_waiting#value)) ^ " s");
 	print_message Verbose_standard ("[Master] Occupancy              : " ^ (string_of_float occupancy) ^ " %");
-	print_message Verbose_standard ("[Master] wasted Tiles " ^ (string_of_int !wastedTiles) ^ " end!!!!!!");
+	print_message Verbose_standard ("[Master] wasted tiles           : " ^ (string_of_int !wastedTiles) ^ "");
 	print_message Verbose_standard ("**************************************************");
 	
 	(* Generate the graphics *)
