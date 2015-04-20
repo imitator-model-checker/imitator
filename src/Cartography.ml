@@ -216,19 +216,14 @@ let write_result_to_file total_time =
 		^ "\n  Generated: " ^ (now()) ^ ""
 		(* Command *)
 		^ "\n  Command  : " ^ (string_of_array_of_string_with_sep " " Sys.argv)
-		^ "\n*)\n\n"
-		(*** HACK: add a special command for PaTATOR ***)
-		^ (if options#distribution_mode = Non_distributed then ""
-			else "PaTATOR"
-				(* Time *)
-				^ " " ^ (string_of_float total_time)
+		(* Predefined format statistics for the cartography *)
+		^ "\n  Stats    : " ^ (string_of_float total_time)
 (*				(* Number of nodes *)
 				^ " " ^ (string_of_int (DistributedUtilities.get_nb_nodes()))*)
 				(*** NOTE: cannot add easily the number of nodes, because in non-distributed compiling, DistributedUtilities is not accessible! ***)
 				(* Number of tiles *)
 				^ " " ^ (string_of_int (DynArray.length !computed_constraints))
-				^ "\n\n"
-		)
+		^ "\n*)\n\n"
 		(* The actual result *)
 		^ constraints_str ^ "\n"
 	in
