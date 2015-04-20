@@ -8,7 +8,7 @@
  * Author:        Etienne Andre, Camille Coti
  * 
  * Created:       2014/03/24
- * Last modified: 2015/04/12
+ * Last modified: 2015/04/20
  *
  ****************************************************************)
 
@@ -771,6 +771,7 @@ let receive_pull_request () =
   let tag = slave_tag_of_int tag in  
 
   (* Is this a result or a simple pull ? *)
+(*** TODO: factorize a bit ***)
   match tag with
   | Slave_tile_tag ->
      print_message Verbose_medium ("[Master] Received Slave_tile_tag from " ^ ( string_of_int source_rank) );

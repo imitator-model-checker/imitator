@@ -7,7 +7,7 @@
  * Author:        Etienne Andre, Camille Coti, Hoang Gia Nguyen
  * 
  * Created:       2014/09/05
- * Last modified: 2015/04/12
+ * Last modified: 2015/04/20
  *
  ****************************************************************)
 
@@ -542,14 +542,11 @@ let master () =
 				  begin
 
 					waittingList := !waittingList@[source_rank];
-					print_message Verbose_medium ("[Master]  worker " ^ (string_of_int source_rank) ^ " go to waittingList!!!");
-					print_message Verbose_medium ("[Master]  waitting list size : " ^ (string_of_int (List.length !waittingList)) );
-
-					(*print_message Verbose_standard ("[Master]  worker " ^ (string_of_int source_rank) ^ " terminated!!!");
-					send_terminate source_rank;*)
+					print_message Verbose_high ("[Master] Worker " ^ (string_of_int source_rank) ^ " go to waittingList");
+					print_message Verbose_high ("[Master] Waiting list size : " ^ (string_of_int (List.length !waittingList)) );
 
 				  end;
-				  print_message Verbose_medium ("[Master] Received a pull request from worker " ^ (string_of_int source_rank) ^ " end!!!");
+				  print_message Verbose_medium ("[Master] Received a pull request from worker " ^ (string_of_int source_rank) ^ "; end.");
 		(*Tile Tag*)
 		| Tile (source_rank , tile) ->
 				   print_message Verbose_medium ("[Master] Received a tile from worker " ^ (string_of_int source_rank) ^ "");
@@ -574,7 +571,7 @@ let master () =
 				    begin
 				      wastedTiles := !wastedTiles + 1;
 				    end;
-				    print_message Verbose_medium ("[Master] Received a tile from worker " ^ (string_of_int source_rank) ^ " end!!!!!!");
+				    print_message Verbose_medium ("[Master] Received a tile from worker " ^ (string_of_int source_rank) ^ "");
 
 		(*Pi0 Tag*)
 		| Pi0 (source_rank , pi0) -> 
@@ -602,7 +599,7 @@ let master () =
 				Cartography.test_pi0_uncovered pi0 found_pi0 ;*)
 				     if( not (!waittingList = []) (*&& !found_pi0*)) then
 				      begin
-					print_message Verbose_medium ("[Master] waitting List : " ^ (string_of_int (List.length !waittingList) ) ^ "");
+					print_message Verbose_medium ("[Master] waiting List : " ^ (string_of_int (List.length !waittingList) ) ^ "");
 					let s = List.assoc source_rank !index in
 					
 					(*compute the remain points int this subpart*)
@@ -613,7 +610,6 @@ let master () =
 					counter_master_split#stop;
 
 					let remain_points = max_size - done_points in
-										    
 
 					print_message Verbose_medium ("[Master] max_size " ^ (string_of_int max_size) ^ "");
 					print_message Verbose_medium ("[Master] done_points " ^ (string_of_int done_points) ^ "");
@@ -665,7 +661,7 @@ let master () =
 				     end;
 				     send_continue source_rank;
 				     
-				     print_message Verbose_medium ("[Master] Received a pi0 from worker " ^ (string_of_int source_rank) ^ " end!!!!");
+				     print_message Verbose_medium ("[Master] Received a pi0 from worker " ^ (string_of_int source_rank) ^ "");
 		
 		| UpdateRequest source_rank ->
 				print_message Verbose_medium ("[Master] Received UpdateRequest  ");
@@ -691,7 +687,7 @@ let master () =
 				send_continue source_rank;
 
 		(*0ther cases*)
-		|_ -> raise (InternalError("have not implemented."));
+		|_ -> raise (InternalError("not implemented."));
 	  end;
 	
 	(**)
@@ -753,7 +749,6 @@ let master () =
 		4) if tag = Stop then raise exception
 ***)
 let check_stop_order () =
-	(* do someting *)
 	
 	send_update_request();
 					
@@ -796,8 +791,7 @@ let check_stop_order () =
 						
 	done; (* end while *)
 	
-	if !killIM(* do someting *) then
-	raise KillIM;;
+	if !killIM then raise KillIM;;
 
 
 	
@@ -807,29 +801,22 @@ let check_stop_order () =
 let compute_next_pi0_sequentially more_pi0 limit_reached first_point tile_nature_option =
 	(* Start timer *)
 	counter_worker_find_next_pi0#start ;
-	
-	(*** TODO: what is that ?? ***)
-	print_message Verbose_medium ("[Some worker] compute_next_pi0_sequentially bug 0.");
+
+	let rank = get_rank () in
+
+	print_message Verbose_high ("[Worker " ^ (string_of_int rank) ^ "] Entering compute_next_pi0_sequentially.");
 	
 	(* Case first point *)
 	if !first_point then(
-		print_message Verbose_low ("[Some worker] This is the first pi0.");
+		print_message Verbose_low ("[Worker " ^ (string_of_int rank) ^ "] This is the first pi0.");
 		Cartography.compute_initial_pi0 ();
 		first_point := false;
-	(*** TODO: what is that ?? ***)
-		print_message Verbose_medium ("[Some worker] compute_next_pi0_sequentially bug 1.");
 		
 	(* Other case *)
 	)else(
-		print_message Verbose_low ("[Some worker] Computing next pi0 sequentially...");
-		
-	(*** TODO: what is that ?? ***)
-		print_message Verbose_medium ("[Some worker] compute_next_pi0_sequentially bug 2.");
+		print_message Verbose_low ("[Worker " ^ (string_of_int rank) ^ "] Computing next pi0 sequentially...");
 		
 		let found_pi0 , time_limit_reached = Cartography.find_next_pi0 tile_nature_option in
-		
-	(*** TODO: what is that ?? ***)
-		print_message Verbose_medium ("[Some worker] compute_next_pi0_sequentially bug 3.");
 		
 		(* Update the time limit *)
 		limit_reached := time_limit_reached;
@@ -841,8 +828,7 @@ let compute_next_pi0_sequentially more_pi0 limit_reached first_point tile_nature
 	(* Stop timer *)
 	counter_worker_find_next_pi0#stop;
 	(* The end *)
-	(*** TODO: what is that ?? ***)
-	print_message Verbose_medium ("[Some worker] compute_next_pi0_sequentially bug 4.");
+	print_message Verbose_high ("[Worker " ^ (string_of_int rank) ^ "] Exiting compute_next_pi0_sequentially.");
 	()
 
 
