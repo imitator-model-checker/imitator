@@ -7,13 +7,13 @@
  * Author:        Etienne Andre
  * 
  * Created:       2014/10/24
- * Last modified: 2015/04/14
+ * Last modified: 2015/04/20
  *
  ****************************************************************)
  
 
 let program_name = "IMITATOR"
-let version_string = "2.7-beta1"
+let version_string = "2.7-beta2"
 
 (** Extension for input model files *)
 let model_extension = ".imi"
