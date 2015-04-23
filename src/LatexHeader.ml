@@ -7,7 +7,7 @@
  * Author:        Etienne Andre
  * 
  * Created:       2015/03/24
- * Last modified: 2015/03/24
+ * Last modified: 2015/04/23
  *
  ****************************************************************)
 
@@ -40,6 +40,7 @@ let latex_header = "
 \usetikzlibrary{arrows,automata}
 \\tikzstyle{every node}=[initial text=]
 \\tikzstyle{location}=[rectangle, rounded corners, minimum size=12pt, draw=black, inner sep=1.5pt]
+\\tikzstyle{invariant}=[draw=black, xshift=1em, inner sep=1pt]
 
 
 \definecolor{coloract}{rgb}{0.50, 0.70, 0.30}

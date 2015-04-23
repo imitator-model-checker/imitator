@@ -120,7 +120,7 @@ let string_of_transition model automaton_index source_location action_index (gua
 			$\coulclock{x} := 0$ \\
 			$\coulclock{y} := 0$ \\
 			\end{tabular}} (Q1);*)
-	"\n\n\t\t\\path (" ^ source_location_name ^ ") edge node{\\begin{tabular}{c @{\\ } c}"
+	"\n\n\t\t\\path (" ^ source_location_name ^ ") edge node{\\begin{tabular}{@{} c @{\\ } c@{} }"
 	
 	(* GUARD *)
 	^ (if not (LinearConstraint.pxd_is_true guard) then (
@@ -179,8 +179,10 @@ let string_of_location model automaton_index location_index =
 	let has_stopwatches = model.has_stopwatches && (model.stopwatches automaton_index location_index != []) in
 	
 	(*** TODO: better positioning! (from dot?) ***)
-	let pos_x = location_index in
-	let pos_y = 0 in
+(*	let pos_x = location_index in
+	let pos_y = 0 in*)
+	let pos_x = 0 in
+	let pos_y = -location_index in
 	
 	(* Handle initial *)
 	let initial_str = if location_index = initial_location then "initial, " else "" in
@@ -191,7 +193,7 @@ let string_of_location model automaton_index location_index =
 	
 	(* INVARIANT AND STOPWATCHES *)
 (*			% Invariant of location Q1
-		\node [above] at (Q1.north) {
+		\node [invariant,right] at (Q1.east) {
 			\begin{tabular}{c @{\ } c}
 				& $\coulclock{y} \leq \coulparam{p1}$\\
 				$\land$ & $\coulclock{x} \geq 5 \couldisc{i}$\\
@@ -200,9 +202,16 @@ let string_of_location model automaton_index location_index =
 	
 	^ (if has_invariant || has_stopwatches then (
 		(* Comment *)
-		"\n\t\t% Invariant and stopwatches of location " ^ location_name
+		let nature_for_comment =
+			match has_invariant, has_stopwatches with
+			| true , true -> "Invariant and stopwatches"
+			| true , false -> "Invariant"
+			| false , true -> "Stopwatches"
+			| _ -> raise (InternalError("Here the model must have invariants or stopwatches"))
+		in
+		"\n\t\t% " ^ nature_for_comment ^ " of location " ^ location_name
 		(* Begin *)
-		^ "\n\t\t\\node [above] at (" ^ location_name ^ ".north) {\\begin{tabular}{c @{\\ } c}"
+		^ "\n\t\t\\node [invariant,right] at (" ^ location_name ^ ".east) {\\begin{tabular}{@{} c @{\\ } c@{} }"
 		(* Invariant *)
 		^ (if has_invariant then (tikz_string_of_linear_constraint invariant) ^ "\\\\" else "")
 		(* Stopwatches *)
@@ -232,7 +241,7 @@ let string_of_automaton model automaton_index =
 	^ "\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
 	
 	^ "\n\t\\begin{subfigure}[b]{\\ratio}"
-	^ "\n\t\\begin{tikzpicture}[scale=5, auto, ->, >=stealth']" (*, thin*)
+	^ "\n\t\\begin{tikzpicture}[scale=2, auto, ->, >=stealth']" (*, thin*)
 	
 	(* Handling locations *)
 	^ "\n " ^ (string_of_locations model automaton_index)
