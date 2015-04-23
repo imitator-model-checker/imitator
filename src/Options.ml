@@ -7,7 +7,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Ulrich Kuehne, Etienne Andre
  * Created:       2010
- * Last modified: 2015/04/02
+ * Last modified: 2015/04/23
  *
  ****************************************************************)
  
@@ -376,8 +376,6 @@ class imitator_options =
 				
 				("-dynamic-elimination", Set dynamic_clock_elimination, " Dynamic clock elimination [FSFMA13]. Default: false.");
 				
-				("-EFIM", Set efim, " Reachability-preservation algorithm mixing IM and EF. Default: false.");
-				
 				("-fancy", Set fancy, " Generate detailed state information for dot output. Default: false.");
 
 				(* 				("-forcePi0", Set forcePi0, "Create a predefined pi0 file of the form p1 = 1, p2 = 2, etc. Defaut : 'false'"); *)
@@ -426,6 +424,8 @@ class imitator_options =
 				
 				("-precomputepi0", Set precomputepi0, " Compute the next pi0 before the next reception of a constraint (in PaTATOR mode only). Default: false.");
 
+				("-PRP", Set efim, " Reachability-preservation algorithm mixing IM and EF [ALNS15]. Default: false.");
+				
 				("-PTA2GrML", Unit (fun _ -> pta2gml := true; imitator_mode := Translation), "Translate the model into a GrML program, and exit without performing any analysis. Defaut : 'false'");
 				
 				("-PTA2JPG", Unit (fun _ -> pta2jpg := true; with_dot:= true; imitator_mode := Translation), "Translate the model into a graphics, and exit without performing any analysis. Defaut : 'false'");

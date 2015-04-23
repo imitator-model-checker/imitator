@@ -7,7 +7,7 @@
 #
 #  _oasis authors: Etienne Andre, Alban Linard
 #  Created:        2013/12/11
-#  Last modified:  2015/04/12
+#  Last modified:  2015/04/23
 ###############################################################
 
 OASISFormat: 0.3
@@ -53,7 +53,7 @@ Test test3
 
 Test test4
   Command: echo "\n********** TEST 4 **********\n"; \
-      ./bin/imitator examples/Examples/JLR-TACAS13.imi examples/Examples/JLR-TACAS13.v0 -mode cover -EFIM -output-result -output-cart -depth-limit 10 -verbose warnings
+      ./bin/imitator examples/Examples/JLR-TACAS13.imi examples/Examples/JLR-TACAS13.v0 -mode cover -PRP -output-result -output-cart -depth-limit 10 -verbose warnings
 
 Test test5
   Command: echo "\n********** TEST 5 **********\n"; \
