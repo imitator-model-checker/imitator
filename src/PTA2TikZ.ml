@@ -7,7 +7,7 @@
  * Author:        Etienne Andre
  * 
  * Created:       2015/03/24
- * Last modified: 2015/03/24
+ * Last modified: 2015/04/23
  *
  ****************************************************************)
 
@@ -91,7 +91,8 @@ let string_of_clock_updates model = function
 			^ ":="
 			(* Convert the linear_term *)
 			^ (LinearConstraint.string_of_pxd_linear_term variable_names_with_style linear_term)
-			^ "$\\\\"
+			(*** HACK!!! "%" added preventively to potentially avoid the bug for updates (see below) ***)
+			^ "$\\\\% "
 		) list_of_clocks_lt)
 
 	
@@ -104,7 +105,8 @@ let string_of_updates model updates =
 			^ ":="
 			(* Convert the linear_term *)
 			^ (LinearConstraint.string_of_pxd_linear_term variable_names_with_style linear_term)
-			^ "$\\\\"
+			(*** HACK!!! without the "%", a strange "\n" that occurs immediately after leads to a LaTeX compiling error when strictly >= 2 updates ***)
+			^ "$\\\\% "
 	) updates)
 
 
