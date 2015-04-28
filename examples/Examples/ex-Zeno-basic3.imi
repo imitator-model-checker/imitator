@@ -1,0 +1,73 @@
+(************************************************************
+ *                         IMITATOR
+ *
+ * Basic example to study non-Zeno checking
+ * There is an infinite accepting non-Zeno run provided p1 > 0 (self-loop on l1)
+ * If p1 <= p2, there is additionally an infinite accepting Zeno run (loop between l2 and l3)
+ * Node: the parametric zone graph is finite
+ *
+ * Author          : Etienne Andre
+ *
+ * Created         : 2015/04/28
+ * Last modified   : 2015/04/28
+ *
+ * IMITATOR version: 2.7-beta2
+ ************************************************************)
+
+var
+
+(* Clocks *)
+ 	x, y
+		: clock;
+
+(* Parameters *)
+	p1, p2
+		: parameter;
+
+
+
+(************************************************************)
+  automaton pta
+(************************************************************)
+synclabs: ;
+
+loc l1: while x <= p1 wait {}
+	when x >= p1 do {x' = 0, y' = 0} goto l1;
+	when x >= p2 do {y' = 0} goto l2;
+
+loc l2: while True wait {}
+	when x <= p1 & y > 0 goto l3;
+
+loc l3: while True wait {}
+	when x <= p1 goto l2;
+
+end (* pta *)
+
+
+
+(************************************************************)
+(* Analysis *)
+(************************************************************)
+
+init := True
+	(*------------------------------------------------------------
+	   INITIAL LOCATION
+	  ------------------------------------------------------------*)
+	& loc[pta] = l1
+
+	(*------------------------------------------------------------
+	   INITIAL CLOCKS
+	  ------------------------------------------------------------*)
+	& x = 0
+	& y = 0
+
+	(*------------------------------------------------------------
+	   PARAMETER CONSTRAINTS
+	  ------------------------------------------------------------*)
+	& p1 >= 0
+	& p2 >= 0
+;
+
+(* property := unreachable loc[pta] = l1; *)
+
+end
