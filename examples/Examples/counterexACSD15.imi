@@ -6,9 +6,9 @@
  * Author          : "Reviewer 1" (input by Etienne Andre)
  *
  * Created         : 2015/03/26
- * Last modified   : 2015/03/26
+ * Last modified   : 2015/05/06
  *
- * IMITATOR version: 2.6.3
+ * IMITATOR version: 2.7-beta2
  ************************************************************)
 
 var 	x, y
@@ -67,6 +67,7 @@ init := True
 	   PARAMETER CONSTRAINTS
 	  ------------------------------------------------------------*)
 	& p >= 0
+	& p <= 1
 ;
 
 property := unreachable loc[pta] = l4;
