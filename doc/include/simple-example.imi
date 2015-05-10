@@ -1,75 +1,89 @@
 (************************************************************
- *                      IMITATOR MODEL                      
+ *                      IMITATOR MODEL
  *
- * Empty template of a case study
+ * A simple example to introduce networks of IMITATOR parametric timed automata
  *
- * Author          : ME
+ * Author          : Etienne Andre
  *
- * Created         : 1970/01/01
- * Last modified   : 1970/01/01
+ * Created         : 2015/05/10
+ * Last modified   : 2015/05/10
  *
- * IMITATOR version: 2.7-beta2
+ * IMITATOR version: 2.7
  ************************************************************)
 
 var
 
 (* Clocks *)
- 	x
+ 	x, y
 		: clock;
 
 (* Discrete *)
-	i
+	i, j
 		: discrete;
 
 (* Parameters *)
-	p
+	p1, p2
 		: parameter;
 
 
-
 (************************************************************)
-  automaton pta
+  automaton pta1
 (************************************************************)
 synclabs: a;
 
 loc l1: while True wait {}
 	when x = 1 sync a do {x' = 0} goto l1;
 
-end (* pta *)
-
+end (* pta1 *)
 
 
 (************************************************************)
-(* Property specification *)
+  automaton pta2
+(************************************************************)
+synclabs: a,b;
+
+loc l1: while True wait {}
+	when x = 1 sync a do {x' = 0} goto l1;
+
+end (* pta2 *)
+
+
+(************************************************************)
+(* Initial state *)
 (************************************************************)
 
 init := True
 	(*------------------------------------------------------------
 	   INITIAL LOCATION
 	  ------------------------------------------------------------*)
-	& loc[pta] = l1
+	& loc[pta1] = l1
+	& loc[pta2] = l1
 
 	(*------------------------------------------------------------
 	   INITIAL CLOCKS
 	  ------------------------------------------------------------*)
 	& x = 0
+	& y >= 0
 
 	(*------------------------------------------------------------
 	   INITIAL DISCRETE
 	  ------------------------------------------------------------*)
 	& i = 0
+	& j = 2
 
 	(*------------------------------------------------------------
 	   PARAMETER CONSTRAINTS
 	  ------------------------------------------------------------*)
-	& p >= 0
+	& p1 >= 0
+	& p1 <= p2
 ;
 
 
 (************************************************************)
-(* Analysis *)
+(* Property specification *)
 (************************************************************)
 
-(* property := unreachable loc[pta] = l1; *)
+property := unreachable loc[pta1] = l3;
 
 end
+

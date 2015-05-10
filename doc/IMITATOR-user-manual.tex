@@ -1,4 +1,9 @@
-\documentclass[a4paper,11pt]{article}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% UNCOMMENT THE LINE BELOW TO VIEW COMMENTS
+\def\DraftVersion {}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\documentclass[a4paper,11pt]{report}
 
 % \sloppy
 
@@ -7,9 +12,16 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \usepackage[utf8x]{inputenc}
 
+\usepackage[english]{babel} % francais,
+
 \usepackage{fourier}
 
-\usepackage{amsmath, amssymb, url}
+\usepackage{amsmath,amssymb,amsthm,url}
+\usepackage{amsfonts}
+
+% \usepackage{caption}
+% \usepackage{subcaption}
+% \usepackage{marginnote}
 
 % \usepackage[pdftex]{graphicx,color}
 \usepackage[pdftex,
@@ -24,6 +36,16 @@
 	pdftitle={IMITATOR User Manual},
 	pdfauthor={\'Etienne Andr\'e}%
 }
+
+
+% BEGIN Watermarking
+\ifdefined\DraftVersion
+	\usepackage{draftwatermark}
+	\SetWatermarkText{draft}
+	\SetWatermarkScale{2}
+	\SetWatermarkColor[gray]{0.9}
+\fi
+% END Watermarking
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -67,17 +89,66 @@
 \definecolor{cpale15}{rgb}{0.7, 0.7, 0.7}
 \definecolor{cpale16}{rgb}{0.8, 0.8, 0.5}
 
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% CONSTANTES
+% CLEVER REFERENCES
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\usepackage[capitalise,english,nameinlink]{cleveref} % load after algorithm2e and hyperref
+% \crefname{line}{\text{line}}{\text{lines}} % to remove the capital
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% CONSTANTS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
-% CONSTANTES MATHEMATIQUES
+% MATHS
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
 % Variables
+\def\init{\ensuremath{\textsf{init}}} % \xspace
 \newcommand{\A}{\mathcal{A}}
-
+\newcommand{\Action}{\ensuremath{\Sigma}}
+\newcommand{\action}{a}
+\newcommand{\C}{C}
+\newcommand{\Cinit}{\C_\init} % initial constraint
+\newcommand{\Clock}{X} % set of clocks
+\newcommand{\ClockCard}{H} % cardinality of clocks
+\newcommand{\clock}{x} % clock
+\newcommand{\clockval}{w} % clock valuation
+\newcommand{\Cupdates}{\Clock_\mathsf{up}}
+\newcommand{\Dupdates}{\DVar_\mathsf{up}}
+\newcommand{\dval}{\ensuremath{\delta}} % discrete variable
+\newcommand{\DVar}{D} % set of discrete variables
+\newcommand{\dvar}{d} % discrete variable
+\newcommand{\DVarCard}{J} % cardinality of discrete variables
+% \newcommand{\DVarinit}{\DVar_\init} % discrete variable
+\newcommand{\edge}{e}
+\newcommand{\guard}{g}
+\newcommand{\invariant}{I}
+\newcommand{\LConstraint}{\mathcal{LC}} % (#1)% set of all constraints over some set
+\newcommand{\LConstraintD}{\LConstraint(\DVar)}
+\newcommand{\LConstraintXP}{\LConstraint(\Clock \cup \Param)}
+\newcommand{\LConstraintXPD}{\LConstraint(\Clock \cup \Param \cup \DVar)}
+\newcommand{\lterm}{\mathit{lt}}
+\newcommand{\LTerm}{\mathcal{LT}} % (#1)% set of all linear terms over some set
+\newcommand{\LTermD}{\LTerm(\DVar)}
+\newcommand{\LTermXPD}{\LTerm(\Clock \cup \Param \cup \DVar)}
+\newcommand{\loc}{l} % location
+\newcommand{\locinit}{\loc_\init}
+\newcommand{\Loc}{L} % set of locations
+\newcommand{\Param}{P} % set of parameters
+\newcommand{\param}{p} % parameter
+\newcommand{\ParamCard}{M} % number of parameters
+\newcommand{\pval}{v} % parameter valuation
+% \newcommand{\resets}{R}
+\newcommand{\steps}{ {\rightarrow} }
+\newcommand{\stopwatches}{S}
+\newcommand{\tuple}[1]{\langle#1\rangle}
+\newcommand{\Var}{\mathit{Var}} % set of variables
+\newcommand{\var}{\mathit{z}} % variable
+\newcommand{\VarCard}{N} % cardinality of variables % TODO: conflict
 
 % Ensembles
+\newcommand{\grandb}{{\mathbb B}}
 \newcommand{\grandn}{{\mathbb N}}
 \newcommand{\grandq}{{\mathbb Q}}
 \newcommand{\grandqplus}{{\mathbb Q}_{\geq 0}}
@@ -102,7 +173,7 @@
 \newcommand{\emptystring}{$\epsilon$}
 \newcommand{\fleche}[1]{\stackrel{#1}{\rightarrow}}
 \newcommand{\Fleche}[1]{\stackrel{#1}{\Rightarrow}}
-\newcommand{\steps}[0]{ {\rightarrow} }
+% \newcommand{\steps}[0]{ {\rightarrow} }
 
 % Booleens
 \newcommand{\false}{{\tt false}}
@@ -134,17 +205,25 @@
 \newcommand{\imitator}{\textsc{Imitator}}
 \newcommand{\imitatorExec}{\code{IMITATOR}}
 \newcommand{\IPTA}{IPTA}
+\newcommand{\NIPTA}{NIPTA}
 \newcommand{\ocaml}{OCaml}
 \newcommand{\phaver}{PHAVer}
 % \newcommand{\polka}{NewPolka}
 % \newcommand{\prism}{\textsc{Prism}}
 % \newcommand{\red}{RED}
-% \newcommand{\uppaal}{\textsc{Uppaal}}
+\newcommand{\uppaal}{\textsc{Uppaal}}
+
+\newcommand{\binimitator}{./imitator}
+
 
 % Current version
-\newcommand{\imitatorversion}{2.6.3}
+\newcommand{\imitatorversion}{2.7}
 
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% THEOREMS
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newtheorem{definition}{Definition}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % FORMATING
@@ -181,25 +260,70 @@
 \newcommand{\code}[1]{\textbf{\texttt{#1}}}
 
 
+\definecolor{imicolor}{rgb}{0, .4, .4}
+\newcommand{\styleIMI}[1]{\textcolor{imicolor}{\texttt{#1}}}
+
+\definecolor{optioncolor}{rgb}{.4, 0, .4}
+\newcommand{\styleOption}[1]{\textcolor{optioncolor}{\texttt{#1}}}
+
+\definecolor{pathcolor}{rgb}{1, .5, 0}
+\newcommand{\stylePath}[1]{\textcolor{pathcolor}{\texttt{#1}}}
+
+\newcommand{\GitHubIMI}{GitHub} % TODO
+
+\newcommand{\styleCommand}[1]{
+	\medskip
+	
+	% \mbox{}\hspace{.5cm}
+	\noindent\fcolorbox{white}{black!90}{
+		\textcolor{yellow!20}{\$ \texttt{#1}}
+	}
+	
+	\smallskip
+
+}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% I.E. / E.G. / W.R.T.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% Helps to spot the places where macros are NOT used
+\ifdefined \DraftVersion
+ 	\definecolor{colorok}{RGB}{80,80,150}
+\else
+	\definecolor{colorok}{RGB}{0,0,0}
+\fi
+
+% \newcommand{\eg}{\textcolor{colorok}{\textit{e.g.}}\xspace}
+% \newcommand{\ie}{\textcolor{colorok}{\textit{i.e.}}\xspace}
+% \newcommand{\wrt}{\textcolor{colorok}{w.r.t.}\xspace}
+\newcommand{\eg}{\textcolor{colorok}{\textit{e.g.}, }}
+\newcommand{\ie}{\textcolor{colorok}{\textit{i.e.}, }}
+\newcommand{\wrt}{\textcolor{colorok}{w.r.t.} }
+
+
+
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % IMITATOR FILES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \usepackage{listings}
-\newcommand{\FichierImitator}[1]{
-  \lstset{language=Imitator}
-  \lstinputlisting[columns=fixed, numbers=left, numberstyle=\tiny, breaklines=true, breakatwhitespace=true]{#1}
+\newcommand{\IncludeIMIfile}[1]{
+	\lstset{language=Imitator}
+	\lstinputlisting[columns=fixed, numbers=left, numberstyle=\tiny, breaklines=true, breakatwhitespace=true]{#1}
 }
 
-\lstdefinelanguage{Imitator}
-  {morekeywords={
-and, automaton, clock, discrete, do, end, endreach, False, forward, from, goto, if, in, init, initially, loc, locations, not, or, parameter, print, reach, region, sync, synclabs, True, var, wait, when, while
-  },
-  sensitive=false,
-   morecomment=[l][\color{gray}]{--},
-   morecomment=[s][keywordstyle]{"}{"},
- morecomment=[s]{/*}{*/},
- morecomment=[s]{(*}{*)},
+\lstdefinelanguage{Imitator}{
+	morekeywords={
+		and, automaton, clock, discrete, do, end, endreach, False, forward, from, goto, if, in, init, initially, loc, locations, not, or, parameter, print, reach, region, sync, synclabs, True, var, wait, when, while
+	},
+	sensitive=false,
+% 	morecomment=[l][\color{gray}]{--},
+	morecomment=[s][keywordstyle]{"}{"},
+% 	morecomment=[s]{/*}{*/},
+	morecomment=[s][\color{gray}]{(*}{*)},
 }
 
 
@@ -214,11 +338,14 @@ and, automaton, clock, discrete, do, end, endreach, False, forward, from, goto, 
 
 \begin{document}
 % \maketitle
-\mbox{}
 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \thispagestyle{empty}
 
-\vspace{5cm}
+\mbox{}
+
+\vspace{4cm}
 
 \begin{center}
 	{\Huge \bfseries IMITATOR User Manual}
@@ -231,15 +358,24 @@ and, automaton, clock, discrete, do, end, endreach, False, forward, from, goto, 
 	
 	{\Large Version \imitatorversion{}}
 
+	
 \end{center}
 
-\bigskip
+\vspace{3cm}
 
+{\small \hfill{}Build \input{../build_number.txt}}
+
+{\small \hfill{}\today{}}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \newpage
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \tableofcontents
 \addcontentsline{toc}{section}{Table of contents}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \newpage
 
@@ -250,33 +386,172 @@ and, automaton, clock, discrete, do, end, endreach, False, forward, from, goto, 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Introduction}
+\chapter{Introduction}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{IMITATOR Parametric Timed Automata}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{Definition}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-
-An \imitator{} parametric timed automata (hereafter \IPTA{}) is a network of parametric automata (as proposed in~\cite{AHV93}) augmented with several features such as stopwatches and discrete variables.
+% TODO
+% TODO
 
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{Synchronization Model}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\chapter{A Brief Introduction to the Syntax}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+We first briefly introduce the syntax using a simple example for readers familiar with parametric timed automata, and not interested in subtle details (such as the synchronization model).
+A formal (and nearly exhaustive) definition of \imitator{} parametric timed automata can be found in \cref{section:IPTA}.
+The complete syntax is given in \cref{chapter:grammar}.
+
+
+\IncludeIMIfile{include/simple-example.imi}
+
+% TODO
+
+
+Comments are OCaml-like comments starting with \styleIMI{(*} and ending with \styleIMI{*)}.
+As in OCaml, comments can be nested.
+
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\chapter{IMITATOR Parametric Timed Automata}\label{section:IPTA}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Formal Definition}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\imitator{} performs parametric verification of models specified using networks of \imitator{} parametric timed automaton (hereafter \NIPTA{}).
+
+An \imitator{} parametric timed automaton (hereafter \IPTA{}) is a variant of parametric automata (as introduced in~\cite{AHV93}).
+The main differences between \IPTA{} and the PTA of \cite{AHV93} is that \IPTA{} have no accepting / final location;
+furthermore, \IPTA{} augment the expressiveness of PTA with several features such as invariants, discrete (integer) variables, complex guards and invariants (\ie{} not only comparing a single clock to a single parameter), stopwatches, and arbitrary clock updates (\ie{} not necessarily to~0).
+
+\paragraph{Clocks, Parameters, Discrete Variables}
+\emph{Clocks} are real-valued variables all evolving at the same rate (unless they are stopped, which is allowed in \imitator{}).
+A set of clocks is $\Clock = \{ \clock_1, \dots, \clock_\ClockCard \}$;
+a clock valuation is
+$\clockval \colon \Clock \rightarrow \grandrplus$.
+
+\emph{Parameters} are rational-valued variables, that act as unknown constants.
+A set of parameters is $\Param = \{ \param_1, \dots, \param_\ParamCard \} $;
+a parameter valuation is a function $\pval\colon \Param \rightarrow \grandr$.
+We will often identify a valuation~$\pval$ with the \emph{point} $(\pval(\param_1), \dots, \pval(\param_{\ParamCard}))$.
+
+\emph{Discrete variables} are integer-valued variables.
+A set of discrete variables is $\DVar = \{ \dvar_1, \dots, \dvar_\DVarCard \} $;
+a discrete variable valuation is a function $\dval \colon \DVar \rightarrow \grandn$.
+
+
+\paragraph{Linear Constraints}
+Let us formalize the set of linear constraints allowed in \imitator{}.
+Given a set of variables~$\Var = \{ \var_1, \dots, \var_\VarCard \}$ (in the following, this set will be instantiated with $\Clock$ and/or $\Param$ and/or $\DVar$), a \emph{linear term} over $\Var$ is an expression of the form
+$$
+\sum_{1 \leq i \leq n} \alpha_i \var_i + d
+$$
+for some $n \in \grandn$,
+	where
+	$\var_{i} \in \Var$,
+	$\alpha_{i} \in \grandq$, for $1 \leq i \leq n$,
+	and
+	$d \in \grandq$.
+
+An~\emph{atomic constraint} over $\Var$ is an expression of the form
+% An \emph{inequality} over $\Clock$ and~$\Param$ is $e \prec 0$, where , and $e$ is a linear term %of the form
+$
+\lterm \prec 0
+$
+	where
+	$\lterm$ is a linear term over~$\Var$,
+	and
+	$\prec \in \{<, \leq, \geq, >\}$.
+
+A~\emph{constraint} over $\Var$ is a conjunction of atomic constraints.
+We denote by $\LTerm(\Var)$ the set of linear terms over~$\Var$, and by $\LConstraint(\Var)$ the set of constraints over~$\Var$.
+In \imitator{}, we will consider constraints belonging to sets such as $\LConstraintXP$ (\ie{} the set of constraints over clocks and parameters), or $\LConstraintXPD$ (\ie{} the set of constraints over clocks, parameters and discrete variables).
+
+
+
+\paragraph{\imitator{} Parametric Timed Automata}
+We can now give a formal definition of \IPTA{}.
+
+%------------------------------------------------------------
+\begin{definition}[\IPTA{}]\label{definition:IPTA}
+	An \imitator{} parametric timed automaton (\emph{\IPTA{}}) is a tuple $\A = \tuple{\Action, \Loc, \locinit, \DVar, \Clock, \Param, \invariant, \stopwatches, \steps}$, where:
+	\begin{itemize}
+		\item $\Action$ is a finite set of actions;
+		\item $\Loc$ is a finite set of locations;
+		\item $\locinit \in \Loc$ is the initial location;
+		\item $\DVar$ is a set of integer-valued variables;
+		\item $\Clock$ is a set of clocks;
+		\item $\Param$ is a set of parameters;
+		\item $\invariant : \Loc \rightarrow \LConstraintXPD$ assigns to every location~$\loc$ a constraint over all variables, called the \emph{invariant} of~$\loc$;
+		\item $\stopwatches : \Loc \rightarrow \Clock$ assigns to a every location a list of clocks that are stopped in this location;
+		\item $\steps$ is a set of edges $(\loc, \guard, \action, \Cupdates, \Dupdates, \loc')$, where
+			$\loc, \loc' \in \Loc$ are the source and destination locations,
+			$\guard \in \LConstraintXPD$ is a constraint over all variables (called \emph{guard} of the transition),
+			$\action\in\Sigma$ is the action associated with the transition,
+			$\Cupdates : \Clock \rightarrow \LTermXPD$ is the update function for clocks, and % TODO: partial function!
+			% TODO: sure that we can update to anything??
+			$\Dupdates : \DVar \rightarrow \LTermD$ is the update function for discrete variables. % TODO: partial function!
+	\end{itemize}
+\end{definition}
+%------------------------------------------------------------
+
+Observe that clocks can be updated to any value (\ie{} we can assign a clock, not only to~0, but to any linear term over the other clocks, the parameters and the discrete variables.
+However, discrete variables can only be assigned to a linear term over~$\DVar$ (including a constant).
+If clocks are always reset (\ie{} not assigned to more complex linear terms), \imitator{} will apply some optimizations that (may) increase the analysis speed.
+	% TODO: nice box with a ``tip'' title
+
+
+There are no distinction between clocks and stopwatches.
+That is, any clock can potentially be stopped in some location.
+\imitator{} will detect whether a model has or not stopwatches; if there is no stopwatch in some model, \imitator{} will apply some optimizations that (may) increase the analysis speed.
+	% TODO: nice box with a ``tip'' title
+
+
+%------------------------------------------------------------
+\begin{definition}[\NIPTA{}]
+	Given a set of \IPTA{} $\A_i = \tuple{\Action_i, \Loc_i, (\locinit)_i, \DVar_i, \Clock_i, \Param_i, \invariant_i, \stopwatches_i, \steps_i}$, $1 \leq i \leq N$ for some $N \in \grandn$,
+	a network of \IPTA{} (\emph{\NIPTA{}}) is a tuple
+		$\tuple{\Action, \DVar, \Clock, \Param, \{ \A_i \mid 1 \leq i \leq N \}, \Cinit}$, where:
+	\begin{itemize}
+		\item $\Action = \bigcup_{1 \leq i \leq N} \Action_i$ is the set of all actions;
+		\item $\DVar = \bigcup_{1 \leq i \leq N} \DVar_i$ is the set of all discrete variables;
+		\item $\Clock = \bigcup_{1 \leq i \leq N} \Clock_i$ is the set of all clocks;
+		\item $\Param = \bigcup_{1 \leq i \leq N} \Param_i$ is the set of all parameters;
+		\item $\Cinit \in \LConstraintXPD$ is the initial constraint over $\DVar$, $\Clock$ and $\Param$. % TODO
+	\end{itemize}
+\end{definition}
+%------------------------------------------------------------
+
+Observe that each set of actions, discrete variables, clocks and parameters is not disjoint between all \IPTA{}.
+That is, actions, discrete variables, clocks and parameters may be shared between different \IPTA{}.
+
+Different from many tools for (parametric) timed automata, clocks are not necessarily initially equal to~0 (this is similar to \hytech{} but different from \uppaal{}).
+The initial value of the clocks is defined by~$\Cinit$ (see \cref{ss:init}).
+If nothing is defined in~$\Cinit$, then their value is supposed to be arbitrary (any real value greater or equal to~0).
+
+Note that parameters are not assumed positive; however, the behavior of \imitator{} has not been tested for negative parameters, and it is strongly advised to constrain them to be positive in $\Cinit$ (if it is not the case, a warning is issued by \imitator{}).
+
+% TODO: constants
+
+% TODO: constants
+
+% TODO: example
+
+
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{Discrete Variables}
+\section{Discrete Variables}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 Discrete variables\footnote{%
@@ -284,42 +559,1037 @@ Discrete variables\footnote{%
 }
 are global integer variables.
 Their value is global, in the sense that they are shared by all automata of the model.
+They can be seen as syntactic sugar to represent a possibly unbounded number of locations.
 	% TODO: how many bits? what happens in case of overflow?
 
+Discrete variables must be initialized to a single constant value in the \styleIMI{init} definition;
+if they are not, a warning is issued, and they are arbitrarily set to~0.
+
+Discrete variables can be tested in guards, and updated along transitions.
+They are first tested, then updated.
+If two \IPTA{} in parallel update the same variable on the same synchronized transition (\eg{} an \IPTA{} performs \styleIMI{i' = 2} while another one performs \styleIMI{i' = 3}), then a warning is issued, and the behavior of the \NIPTA{} becomes unspecified.
+
+
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{Initial Values}
+\section{Initial State and Initialization of Variables}\label{ss:init}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+The definition of the initial state is very permissive in \imitator{}.
+Clocks are not necessarily equal to~0, and parameters are not even necessarily positive.
+
+Parameters and clocks can be initially bound by any linear constraint over parameters, clocks, and discrete variables.
+That is, we can define initial constraints such as:
+\begin{center}
+	\styleIMI{x1 + x2 <= 2 p1 + 0.5 p2 - i}.
+\end{center}
+% TODO: style for sample piece of file
+% TODO: check syntax :)
+
+However, discrete variables must be initialized to a \emph{constant integer}.
+Given a discrete variable \styleIMI{i}, if the definition of the initial state does not contain an equality of the form \styleIMI{i = ...} followed by a linear term in $\LTermXPD$, then \imitator{} will assume that \styleIMI{i} is initially set to~0, and will issue a warning.
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Synchronization Model}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+By default, all \IPTA{} of an \imitator{} model declare their set of actions.\footnote{%
+	An alternative is an automatic recognition of the actions used, see option \styleOption{-sync-auto-detect} in \cref{chapter:options}.
+}
+
+The \imitator{} synchronization model is such that \emph{all} \IPTA{} declaring an action must synchronize \emph{together} on this action.
+This can be seen as a \emph{strong broadcast}.
+That is, for a transition labeled with action~\styleIMI{a} to be executed, all \IPTA{} declaring \styleIMI{a} must be ready to execute \styleIMI{a} locally.
+Otherwise, this transition cannot be taken (yet).
+
+If an \IPTA{} declares an action \styleIMI{a} that is never used in this \IPTA{}, then action \styleIMI{a} will never be executed in the entire model.\footnote{%
+	In this case, \imitator{} will detect this situation and will entirely delete this action from the model, while issuing a warning.
+}
+
+
+
 
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Parameter Synthesis Using IMITATOR}
+\chapter{Parameter Synthesis Using IMITATOR}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+We give here the commands corresponding to the main analysis features of \imitator{}.
+We only give the most useful options.
+For more detailed commands, and a complete list of options, see \cref{chapter:options}.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{State Space Computation}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\imitator{} can compute the entire symbolic state space (``parametric zone graph'').
+Of course, the state space may be infinite, and the analysis is not guaranteed to terminate.
+
+The standard command is:
+
+\styleCommand{\binimitator{} model.imi -mode statespace -output-states}
+
+The option \styleOption{-output-states} generates a file with a textual description of all states (without this option, \imitator{} will not output anything).
+
+\imitator{} can also output the trace set in a graphical form using option \styleOption{-output-trace-set}.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{EF-Synthesis}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+A main problem in parametric timed automata is to compute the set of parameter valuations for which some location (for instance, an error location) is reachable.
+
+The algorithm implemented in \imitator{} is a basic breadth-first procedure, close to the one described in \cite{AHV93,JLR15}.
+Of course, the EF-emptiness problem being undecidable~\cite{AHV93}, the analysis is not guaranteed to terminate.
+
+The standard command is:
+
+\styleCommand{\binimitator{} model.imi -mode EFsynth -merge -incl}
+
+
+The options \styleOption{-merge} and \styleOption{-incl} are optional, but generally greatly increase the analysis efficiency and the termination.
+
+\imitator{} can also
+	output the trace set in a graphical form (option \styleOption{-output-trace-set}),
+	or
+	output the result to a file (option \styleOption{-output-result}).
+
+	% TODO: EFIM !!!
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Parametric Verification using Properties}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Inverse Method}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Behavioral Cartography}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\chapter{Graphical Output and Translation}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Trace Set}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Constraints and Cartography}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Inside the Box}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Export to JPEG}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Export to \LaTeX{}}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Example}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Old etc.}
+\chapter{Inside the Box}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% TODO: OCaml, PPL, representation of states (explicit : list of discrete var integers + locations ; constraints ; discrete variables...)
+
+
+% 
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% \chapter{Example}
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% 
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\chapter{Missing Features}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+Although we try to make \imitator{} as complete as possible, it misses some features, not implemented due to lack of time (contributors are welcome!) or due to complexity, or to keep the tool consistent.
+We enumerate in the following what seems to us to be the ``most missing'' features and, when applicable, we give hints to overcome these limitations.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Urgent Locations}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+Urgent transitions are locations in which time cannot elapse, \ie{} there must be left immediately after being entered.
+Whereas this feature is not natively implemented in \imitator{}, it can easily be simulated as follows:
+to simulate an urgent location \styleIMI{l}, one can add an extra clock (say \styleIMI{x\_urgent}) initialized to 0 on any transition leading \styleIMI{l}; then, the invariant of \styleIMI{l} is \styleIMI{x\_urgent = 0}.
+Note that a single clock \styleIMI{x\_urgent} is enough to simulate any number of urgent locations.
+
+	% TODO: example
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{ASAP Transitions}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+ASAP (as soon as possible) transitions are transitions that can be taken as soon as all \IPTA{} synchronizing with this transition can execute their local transition.
+This is different from urgent transitions, that must be taken in 0 time.
+Here, time can elapse, but not after all \IPTA{} are ready to execute their local transition.
+
+This is not supported by \imitator{}, and we do not see a way to simulate it easily.
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Parameterized Models}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+Parameterized models are understood here as models with an arbitrary number of components (\eg{} Fischer's mutual exclusion protocol with $n$ processes), that would be instantiated (\eg{} $n = 15$) before performing the analysis.
+\imitator{} does not currently support such parameterized models, and one should use copy/paste utilities to instantiate $n$ models.
+For complicated models with many processes, we usually write short scripts to generate the model (a script \stylePath{CSMACDgenerator.py} to model the varying part of parameterized models for the CSMA/CD case study is available on \GitHubIMI{}).
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Other Synchronization Models}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+One-to-one synchronization could possibly be simulated by using as many transitions as pairs of \IPTA{} in the model, although this may make the model rather complex.
+
+	% TODO: example
+
+
+Broadcast synchronization (``only the \IPTA{} ready to execute a given transition execute it'') is not supported.
+Once more, it could possibly be simulated by using as many transitions as subsets of \IPTA{} in the model, although this will make the model definitely complex.
+
+	% TODO: example
+
+
+Message passing is not supported.
+This can be easily simulated using dedicated discrete variables, that would be read / written in the transition.
+
+	% TODO: example
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Intervals for Discrete Variables}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+Discrete variables must be set to a constant integer in the \styleIMI{init} definition (\eg{} \styleIMI{i = 0}).
+Setting a variable to an arbitrarily value (\eg{} \styleIMI{i in [0 .. 10]}) is currently not supported.
+This can be simulated using an initialization \IPTA{} that nondeterministically sets \styleIMI{i} to any of the values, in 0 time so as to not disturb the model.
+	% TODO: example
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Complex Updates for Discrete Variables}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+So far, discrete variables can only be set to linear terms in $\LTermD$;
+hence, assigning a discrete variable to a clock, or to a parameter, or to any more complex expression, is not allowed.
+A reason for this restriction is that the value of the discrete variables would not anymore be constant (recall that discrete variables are syntactic sugar for \emph{locations}).
+
+However, this can be (partially) simulated with stopwatches: we can replace a discrete variable with a clock that is stopped in all locations (\ie{} it does not evolve with time), and that is updated to the desired value (recall from \cref{definition:IPTA} that the clock updates are more permissive than the discrete variable updates).
+
+% TODO: so far, only d := L(D); impossible to have clocks and parameters due to the constant nature of discrete variables
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\chapter{List of Options}\label{chapter:options}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+The options available for \imitator{} are explained in the following.
+
+%------------------------------------------------------------
+\paragraph{\code{-acyclic} (default: \code{false})}
+%------------------------------------------------------------
+Does not test if a new state was already encountered.
+In a normal use, when \imitator{} encounters a new state, it checks if it has been encountered before.
+This test may be time consuming for systems with a high number of reachable states.
+For acyclic systems, all traces pass only once by a given location.
+As a consquence, there are no cycles, so there should be no need to check if a given state has been encountered before.
+This is the main purpose of this option.
+
+However, be aware that, even for acyclic systems, several (different) traces can pass by the same state.
+In such a case, if the \code{-acyclic} option is activated, \imitator{} will compute \emph{twice} the states after the state common to the two traces.
+As a consequence, it is all but sure that activating this option will lead to an increase of speed.
+
+Note also that activating this option for non-acyclic systems may lead to an infinite loop in \imitator{}.
+
+%------------------------------------------------------------
+\paragraph{\code{-cart} (default: \code{off})}
+%------------------------------------------------------------
+
+After execution of the behavioral cartography, plots the generated
+zones as a \emph{PostScript} file. This option takes an integer which
+limits the number of generated plots, where each plot represents the
+projection of the parametric zones on two parameters. If the
+considered rectangle $v_0$ is spanned by two parameters only, then
+\code{-cart 1} will plot the projection of the generated zones on
+these two parameters. 
+
+This option makes use of the external utility \code{graph}, which is
+part of the \emph{GNU plotting utils}, available on most Linux
+platforms. The generated files will be located in the same directory
+as the source files, unless option \code{-log-prefix} is used.
+
+%------------------------------------------------------------
+\paragraph{\code{-depth-limit <limit>} (default: \code{none})}
+%------------------------------------------------------------
+Limits the number of iterations in the $\mathit{Post}$ exploration, \ie{} the depth of the traces.
+In the cartography mode, this option gives a limit to \emph{each} call to the inverse method.
+
+%------------------------------------------------------------
+\paragraph{\code{-fancy} (default: \code{false})}
+%------------------------------------------------------------
+
+In the graphical output of the reachable states (see option \code{-with-dot}), 
+provide detailed information on the local states of the composed automata.
+
+
+%------------------------------------------------------------
+\paragraph{\code{-fromGrML} (default: \code{false})}
+%------------------------------------------------------------
+
+Does not use the standard input syntax described here, but a GrML input syntax.
+This is used when interfacing \imitator{} with the CosyVerif platform.
+Note that, in that case, not all syntactic features of \imitator{} are supported.
+
+
+
+%------------------------------------------------------------
+\paragraph{\code{-IMK} (default: \code{false})}
+%------------------------------------------------------------
+Uses a variant of the inverse method that returns a constraint such that no $\pio$-compatible state is reached; it does not guarantee however that any ``good'' state will be reached (see~\cite{AS13}).
+
+
+
+%------------------------------------------------------------
+\paragraph{\code{-IMunion} (default: \code{false})}
+%------------------------------------------------------------
+Uses a variant of the inverse method that returns the union of the constraints associated to the last state of each path (see~\cite{AS13}).
+
+
+%------------------------------------------------------------
+\paragraph{\code{-incl} (default: \code{false})}
+%------------------------------------------------------------
+Consider an inclusion of region instead of the equality when performing the $\textit{Post}$ operation.
+In other terms, when encountering a new state, \imitator{} checks if the same state (same location and same constraint) has been encountered before and, if yes, does not consider this ``new'' state.
+However, when the \code{-inclusion} option is activated, it suffices that a previous state with the same location and a constraint \emph{greater or equal} to the constraint of the new state has been encountered to stop the analysis.
+This option corresponds to the way that, e.g., \hytech{} works, and suffices when one wants to check the \emph{non-reachability} of a given bad state.
+
+
+%------------------------------------------------------------
+\paragraph{\code{-log-prefix} (default: \code{<input\_file>})}
+%------------------------------------------------------------
+Set the prefix for log (\code{.states}) and graphical (\code{.jpg}) files.
+
+
+%------------------------------------------------------------
+\paragraph{\code{-merge} (default: \code{false})}
+%------------------------------------------------------------
+Use the merging technique of \cite{AFS12}.
+Note that, in that case, not all the properties of the inverse method are preserved.
+
+
+%------------------------------------------------------------
+\paragraph{\code{-mode} (default: \code{inversemethod})}
+%------------------------------------------------------------
+The mode for \imitator{}.
+
+\begin{tabular}{@{} l @{\ \ } l}
+ \code{reachability} & Parametric reachability analysis  \\
+ & (see \cref{ss:mode_reachability}) \\
+ \code{inversemethod} & Inverse method \\
+ & (see \cref{ss:mode_inversemethod}) \\
+ \code{cover} & Behavioral Cartography Algorithm with full coverage \\
+ & (see \cref{ss:mode_cartography}) \\
+ \code{randomXX} & Behavioral Cartography Algorithm with \code{XX} iterations \\
+  & (see \cref{ss:mode_cartography}) \\
+\end{tabular}
+
+
+
+%------------------------------------------------------------
+\paragraph{\code{-no-random} (default: \code{false})}
+%------------------------------------------------------------
+No random selection of the $\pi_0$-incompatible inequality (select the first found).
+By default, select an inequality in a random manner.
+
+
+
+%------------------------------------------------------------
+\paragraph{\code{-PTA2GrML} (default: \code{false})}
+%------------------------------------------------------------
+Translates the input model to a GrML format, and exits.
+
+
+%------------------------------------------------------------
+\paragraph{\code{-PTA2JPG} (default: \code{false})}
+%------------------------------------------------------------
+Translates the input model to a graphical, human-readable form (in \code{.jpg} format), and exits.
+
+
+%------------------------------------------------------------
+\paragraph{\code{-states-limit} (default: \code{none})}
+%------------------------------------------------------------
+Will try to stop after reaching this number of states.
+Warning: the program may have to first finish computing the current iteration before stopping.
+
+
+%------------------------------------------------------------
+\paragraph{\code{-statistics} (default: \code{false})}
+%------------------------------------------------------------
+Print info on number of calls to PPL, and other statistics about memory and time.
+Warning: enabling this option may slow down the analysis, and will certainly induce some extra computational time at the end.
+
+
+%------------------------------------------------------------
+\paragraph{\code{-step} (default: \code{1})}
+%------------------------------------------------------------
+Step for the behavioral cartography.
+
+
+%------------------------------------------------------------
+\paragraph{\code{-sync-auto-detect} (default: \code{false})}
+%------------------------------------------------------------
+\imitator{} considers that all the automata declaring a given synchronization label must be able to synchronize all together, so that the synchronization can happen.
+By default, \imitator{} considers that the synchronization labels declared in an automaton are those declared in the \code{synclabs} section.
+Therefore, if a synchronization label is declared but never used in (at least) one automaton, this label will never be synchronized in the execution\footnote{In such a case, the synchronization label is actually completely removed before the execution, in order to optimize the execution, and the user is warned of this removal.}.
+
+The option \code{-sync-auto-detect} allows to detect automatically the synchronization labels in each automaton: the labels declared in the \code{synclabs} section are ignored, and the \imitator{} considers that only the labels really used in an automaton are those considered to be declared.
+
+
+%------------------------------------------------------------
+\paragraph{\code{-time-limit <limit>} (default: \code{none})}
+%------------------------------------------------------------
+Try to limit the execution time (the value \code{<limit>} is given in seconds).
+Note that, in the current version of \imitator{}, the test of time limit is performed at the end of an iteration only (\ie{} at the end of a given $\mathit{Post}$ iteration).
+In the cartography mode, this option represents a \emph{global} time limit, not a limit for each call to the inverse method.
+
+
+%------------------------------------------------------------
+\paragraph{\code{-timed} (default: \code{false})}
+%------------------------------------------------------------
+Add a timing information to each output of the program.
+
+
+%------------------------------------------------------------
+\paragraph{\code{-verbose} (default: \code{standard})}
+%------------------------------------------------------------
+
+Give some debugging information, that may also be useful to have more details on the way \imitator{} works.
+The admissible values for \code{-verbose} are given below:
+
+\begin{tabular}{@{} l @{\ \ } l}
+ \code{nodebug} & Give only the resulting constraint \\
+ \code{standard} & Give little information (number of steps, computation time)\\
+ \code{low} & Give little additional information\\
+ \code{medium} & Give quite a lot of information\\
+ \code{high} & Give much information\\
+ \code{total} & Give really too much information\\
+\end{tabular}
+
+
+
+%------------------------------------------------------------
+\paragraph{\code{-with-dot} (default: \code{false})}
+%------------------------------------------------------------
+Graphical output using \gdot{}.
+In this case, \imitator{} outputs a file \code{<input\_file>.jpg}, which is a graphical output in the jpg format, generated using \gdot{}, corresponding to the trace set.
+% 	This graphical output is not generated in the case where the \code{-no-dot} option is activated.
+
+Note that the location and the name of those two files can be changed using the \code{-log-prefix} option.
+
+
+%------------------------------------------------------------
+\paragraph{\code{-with-graphics-source} (default: \code{false})}
+%------------------------------------------------------------
+Keep file(s) generated for the graphical outputs.
+
+
+%------------------------------------------------------------
+\paragraph{\code{-with-log} (default: \code{false})}
+%------------------------------------------------------------
+Generation of the files describing the reachable states.
+In this case, \imitator{} outputs a file \code{<input\_file>.states} containing the set of all the reachable states, with their names and the associated constraint on the clocks and parameters.
+If one wants to generate also the constraint on the parameters only, use the \code{-with-parametric-log} option.
+This file also contains the source for the generation of the graphical file, using the \gdot{} syntax.
+
+
+%------------------------------------------------------------
+\paragraph{\code{-with-parametric-log } (default: \code{false})}
+%------------------------------------------------------------
+For any constraint on the clocks and the parameters in the description of the states in the log files,
+add the constraint on the parameters only (\ie{} eliminate clock variables).
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\chapter{Grammar}\label{chapter:grammar}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Grammar of the Input File}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\imitator{} input is described by the following grammar.
+Non-terminals appear within angled parentheses.
+A non-terminal followed by two colons is defined by the list of immediately following non-blank lines, each of which represents a legal expansion.
+Input characters of terminals appear in typewritter font.
+The meta symbol \emptystring{} denotes the empty string.
+
+The text \npec{in green} is not taken into account by \imitator{}, but is allowed (or sometimes necessary) in order to allow the compatibility with \hytech{} files.
+
+
+%------------------------------------------------------------
+\regleGrammaire{imitator\_input}
+%------------------------------------------------------------
+\begin{tabular}{l l}
+	\  & \nt{automata\_descriptions} \nt{init} \\
+\end{tabular}
+
+\medskip
+
+
+We define each of those two components below.
+
+%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
+\subsection{Automata Descriptions}
+%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
+
+%------------------------------------------------------------
+\regleGrammaire{automata\_descriptions}
+%------------------------------------------------------------
+\begin{tabular}{l l}
+	\  & \nt{declarations} \nt{automata} \\
+\end{tabular}
+
+%------------------------------------------------------------
+\regleGrammaire{declarations}
+%------------------------------------------------------------
+\begin{tabular}{l l}
+	\  & \code{var} \nt{var\_lists} \\
+\end{tabular}
+
+%------------------------------------------------------------
+\regleGrammaire{var\_lists}
+%------------------------------------------------------------
+\begin{tabular}{l l}
+	\  & \nt{var\_list} \code{:} \nt{var\_type} \code{;} \nt{var\_lists} \\
+	$|$ & \emptystring
+\end{tabular}
+
+%------------------------------------------------------------
+\regleGrammaire{var\_list}
+%------------------------------------------------------------
+\begin{tabular}{l l}
+	\  & \code{<name>} \\
+	$|$ & \code{<name>} \code{,} \nt{var\_list}
+\end{tabular}
+
+%------------------------------------------------------------
+\regleGrammaire{var\_type}
+%------------------------------------------------------------
+\begin{tabular}{l l}
+	\  & \code{clock} \\
+	$|$ & \code{discrete} \\
+	$|$ & \code{parameter} \\
+\end{tabular}
+
+%------------------------------------------------------------
+\regleGrammaire{automata}
+%------------------------------------------------------------
+\begin{tabular}{l l}
+	\  & \nt{automaton} \nt{automata} \\
+	$|$ & \emptystring \\
+\end{tabular}
+
+%------------------------------------------------------------
+\regleGrammaire{automaton}
+%------------------------------------------------------------
+\begin{tabular}{l l}
+	\  & \code{automaton} \code{<name>} \nt{prolog} \nt{locations} \code{end} \\
+\end{tabular}
+
+%------------------------------------------------------------
+\regleGrammaire{prolog}
+%------------------------------------------------------------
+\begin{tabular}{l l}
+	\  & \npec{\nt{initialization}} \nt{sync\_labels} \\
+	$|$ & \nt{sync\_labels} \npec{\nt{initialization}} \\
+	$|$ & \nt{sync\_labels} \\
+\end{tabular}
+
+%------------------------------------------------------------
+\regleGrammaire{initialization}
+%------------------------------------------------------------
+\npec{
+\begin{tabular}{l l}
+	\  & \code{initially} \code{<name>} \nt{state\_initialization} \code{;} \\
+\end{tabular}
+}
+
+%------------------------------------------------------------
+\regleGrammaire{state\_initialization}
+%------------------------------------------------------------
+\npec{
+\begin{tabular}{l l}
+	\  & \code{\&} \nt{convex\_predicate} \\
+	$|$ & \emptystring \\
+\end{tabular}
+}
+
+%------------------------------------------------------------
+\regleGrammaire{sync\_labels}
+%------------------------------------------------------------
+\begin{tabular}{l l}
+	\  & \code{synclabs} \code{:} \nt{sync\_var\_list} \code{;} \\
+\end{tabular}
+
+%------------------------------------------------------------
+\regleGrammaire{sync\_var\_list}
+%------------------------------------------------------------
+\begin{tabular}{l l}
+	\  & \nt{sync\_var\_nonempty\_list} \\
+	$|$ & \emptystring \\
+\end{tabular}
+
+%------------------------------------------------------------
+\regleGrammaire{sync\_var\_nonempty\_list}
+%------------------------------------------------------------
+\begin{tabular}{l l}
+	\  & \code{<name>} \code{,} \nt{sync\_var\_nonempty\_list} \\
+	$|$ & \code{<name>} \\
+\end{tabular}
+
+%------------------------------------------------------------
+\regleGrammaire{locations}
+%------------------------------------------------------------
+\begin{tabular}{l l}
+	\  & \nt{location} \nt{locations} \\
+	$|$ & \emptystring \\
+\end{tabular}
+
+%------------------------------------------------------------
+\regleGrammaire{locations}
+%------------------------------------------------------------
+\begin{tabular}{l l}
+	\  & \code{loc} \code{<name>} \code{:} \code{while} \nt{convex\_predicate} \nt{stop\_opt} \npec{\nt{wait\_opt}} \nt{transitions} \\
+% 	$|$ & \code{loc} \code{<name>} \code{:} \code{while} \nt{convex\_predicate} \nt{transitions} \\
+\end{tabular}
+
+%------------------------------------------------------------
+\regleGrammaire{wait\_opt}
+%------------------------------------------------------------
+\begin{tabular}{l l}
+	\ & \npec{\code{wait()}} \\
+	$|$ & \npec{\code{wait}} \\
+	$|$ & \npec{\emptystring} \\
+\end{tabular}
+
+%------------------------------------------------------------
+\regleGrammaire{stop\_opt}
+%------------------------------------------------------------
+\begin{tabular}{l l}
+	\ & \code{stop\{} \nt{var\_list} \code{\}} \\
+	$|$ & \emptystring \\
+\end{tabular}
+
+	
+%------------------------------------------------------------
+\regleGrammaire{transitions}
+%------------------------------------------------------------
+\begin{tabular}{l l}
+	\  & \nt{transition} \nt{transitions} \\
+	$|$ & \emptystring \\
+\end{tabular}
+
+%------------------------------------------------------------
+\regleGrammaire{transition}
+%------------------------------------------------------------
+\begin{tabular}{l l}
+	\  & \code{when} \nt{convex\_predicate} \nt{update\_synchronization} \code{goto} \code{<name>} \code{;} \\
+\end{tabular}
+
+%------------------------------------------------------------
+\regleGrammaire{update\_synchronization}
+%------------------------------------------------------------
+\begin{tabular}{l l}
+	\  & \nt{updates} \\
+	$|$ & \nt{syn\_label} \\
+	$|$ & \nt{updates} \nt{syn\_label} \\
+	$|$ & \nt{syn\_label} \nt{updates} \\
+	$|$ & \emptystring \\
+\end{tabular}
+
+%------------------------------------------------------------
+\regleGrammaire{updates}
+%------------------------------------------------------------
+\begin{tabular}{l l}
+	\  & \code{do} \code{(} \nt{update\_list} \code{)} \\
+\end{tabular}
+
+%------------------------------------------------------------
+\regleGrammaire{update\_list}
+%------------------------------------------------------------
+\begin{tabular}{l l}
+	\  & \nt{update\_nonempty\_list} \\
+	$|$ & \emptystring \\
+\end{tabular}
+
+%------------------------------------------------------------
+\regleGrammaire{update\_nonempty\_list}
+%------------------------------------------------------------
+\begin{tabular}{l l}
+	\  & \nt{update} \code{,} \nt{update\_nonempty\_list} \\
+	$|$ & \nt{update} \\
+\end{tabular}
+
+%------------------------------------------------------------
+\regleGrammaire{update}
+%------------------------------------------------------------
+\begin{tabular}{l l}
+	\  & \code{<name>} \code{'} \code{=} \nt{linear\_expression} \\
+\end{tabular}
+
+%------------------------------------------------------------
+\regleGrammaire{syn\_label}
+%------------------------------------------------------------
+\begin{tabular}{l l}
+	\  & \code{sync} \code{<name>} \\
+\end{tabular}
+
+
+
+%------------------------------------------------------------
+\regleGrammaire{convex\_predicate}
+%------------------------------------------------------------
+\begin{tabular}{l l}
+	\  & \nt{linear\_constraint} \code{\&} \nt{convex\_predicate} \\
+	$|$ & \nt{linear\_constraint} \\
+\end{tabular}
+
+%------------------------------------------------------------
+\regleGrammaire{linear\_constraint}
+%------------------------------------------------------------
+\begin{tabular}{l l}
+	\  & \nt{linear\_expression} \nt{relop} \nt{linear\_expression} \\
+	$|$ & \code{True} \\
+	$|$ & \code{False} \\
+\end{tabular}
+
+%------------------------------------------------------------
+\regleGrammaire{relop}
+%------------------------------------------------------------
+\begin{tabular}{l l}
+	\  & \code{<} \\
+	$|$ & \code{<=} \\
+	$|$ & \code{=} \\
+	$|$ & \code{>=} \\
+	$|$ & \code{>} \\
+	$|$ & \code{<>} \\
+\end{tabular}
+
+%------------------------------------------------------------
+\regleGrammaire{linear\_expression}
+%------------------------------------------------------------
+\begin{tabular}{l l}
+	\  & \nt{linear\_term} \\
+	$|$ & \nt{linear\_expression} \code{+} \nt{linear\_term} \\
+	$|$ & \nt{linear\_expression} \code{-} \nt{linear\_term} \\
+\end{tabular}
+
+%------------------------------------------------------------
+\regleGrammaire{linear\_term}
+%------------------------------------------------------------
+\begin{tabular}{l l}
+	\  & \nt{rational} \\
+	$|$ & \nt{rational} \code{<name>} \\
+	$|$ & \nt{rational} \code{*} \code{<name>} \\
+	$|$ & \code{<name>} \\
+	$|$ & \code{(} \nt{linear\_term} \code{)} \\
+\end{tabular}
+
+%------------------------------------------------------------
+\regleGrammaire{rational}
+%------------------------------------------------------------
+\begin{tabular}{l l}
+	\  & \nt{integer} \\
+	\  & \nt{float} \\
+	$|$ & \nt{integer} \code{/} \nt{pos\_integer}  \\
+\end{tabular}
+
+%------------------------------------------------------------
+\regleGrammaire{integer}
+%------------------------------------------------------------
+\begin{tabular}{l l}
+	\  & \nt{pos\_integer} \\
+	$|$ & \code{-} \nt{pos\_integer}  \\
+\end{tabular}
+
+%------------------------------------------------------------
+\regleGrammaire{pos\_integer}
+%------------------------------------------------------------
+\begin{tabular}{l l}
+	\  & \code{<int>} \\
+\end{tabular}
+
+
+
+%------------------------------------------------------------
+\regleGrammaire{float}
+%------------------------------------------------------------
+\begin{tabular}{l l}
+	\  & \nt{pos\_float} \\
+	$|$ & \code{-} \nt{pos\_float}  \\
+\end{tabular}
+
+
+%------------------------------------------------------------
+\regleGrammaire{pos\_float}
+%------------------------------------------------------------
+\begin{tabular}{l l}
+	\  & \code{<float>} \\
+\end{tabular}
+
+
+%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
+\subsection{Initial State}
+%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
+
+%------------------------------------------------------------
+\regleGrammaire{init}
+%------------------------------------------------------------
+\begin{tabular}{l l}
+	& \npec{\nt{init\_declaration}} \nt{init\_definition} \nt{property\_definition} \npec{\nt{reach\_command}} \\
+\end{tabular}
+
+%------------------------------------------------------------
+\regleGrammaire{init\_declaration}
+%------------------------------------------------------------
+\begin{tabular}{l l}
+	\  & \npec{\code{var} \code{init} \code{:} \code{region} \code{;}} \\
+	$|$ & \emptystring \\
+\end{tabular}
+
+%------------------------------------------------------------
+\regleGrammaire{reach\_command}
+%------------------------------------------------------------
+\begin{tabular}{l l}
+	\  & \npec{\code{print} \code{(} \code{reach} \code{forward} \code{from} \code{init} \code{endreach} \code{)} \code{;}} \\
+	$|$ & \emptystring \\
+\end{tabular}
+
+%------------------------------------------------------------
+\regleGrammaire{init\_definition}
+%------------------------------------------------------------
+\begin{tabular}{l l}
+	\  & \code{init} \code{:=} \nt{region\_expression} \code{;} \\
+\end{tabular}
+
+%------------------------------------------------------------
+\regleGrammaire{region\_expression}
+%------------------------------------------------------------
+\begin{tabular}{l l}
+	\  & \nt{state\_predicate} \\
+	$|$ & \code{(} \nt{region\_expression} \code{)} \\
+	$|$ & \nt{region\_expression} \code{\&} \nt{region\_expression} \\
+\end{tabular}
+
+%------------------------------------------------------------
+\regleGrammaire{state\_predicate}
+%------------------------------------------------------------
+\begin{tabular}{l l}
+	\  & \code{loc} \code{[} \code{<name>} \code{]} \code{=} \code{<name>} \\
+	$|$ & \nt{linear\_constraint} \\
+\end{tabular}
+
+%------------------------------------------------------------
+\regleGrammaire{property\_definition}
+%------------------------------------------------------------
+\begin{tabular}{l l}
+	\  & \code{property := } \nt{pattern} \code{;} \\
+	$|$ & \emptystring \\
+\end{tabular}
+
+%------------------------------------------------------------
+\regleGrammaire{pattern}
+%------------------------------------------------------------
+\begin{tabular}{l l}
+	\  & \code{unreachable} \nt{loc\_predicate} \\
+	$|$ & \code{if <name> then <name> has happened before} \\
+	$|$ & \code{everytime <name> then <name> has happened before} \\
+	$|$ & \code{everytime <name> then <name> has happened once before} \\
+	$|$ & \code{if <name> then eventually <name>} \\
+	$|$ & \code{everytime <name> then eventually <name>} \\
+	$|$ & \code{everytime <name> then eventually <name> once before next} \\
+	$|$ & \code{<name> within }\nt{linear\_expression} \code{} \\
+	$|$ & \code{if <name> then <name> happened within }\nt{linear\_expression} \code{ before} \\
+	$|$ & \code{everytime <name> then <name> happened within }\nt{linear\_expression} \code{ before} \\
+	$|$ & \code{everytime <name> then <name> happened once within }\nt{linear\_expression} \code{ before} \\
+	$|$ & \code{if <name> then eventually <name> within }\nt{linear\_expression} \code{} \\
+	$|$ & \code{everytime <name> then eventually <name> within }\nt{linear\_expression} \code{} \\
+	$|$ & \code{everytime <name> then eventually <name> within }\nt{linear\_expression} \code{ once before next} \\
+	$|$ & \code{sequence} \nt{var\_list} \\
+	$|$ & \code{sequence always} \nt{var\_list} \\
+\end{tabular}
+
+%------------------------------------------------------------
+\regleGrammaire{loc\_expression}
+%------------------------------------------------------------
+\begin{tabular}{l l}
+	\  & \nt{loc\_predicate} \\
+	$|$ & \nt{loc\_predicate} \code{\&} \nt{loc\_expression} \\
+	$|$ & \nt{loc\_predicate} \nt{loc\_expression} \\
+\end{tabular}
+
+%------------------------------------------------------------
+\regleGrammaire{loc\_predicate}
+%------------------------------------------------------------
+\begin{tabular}{l l}
+	\  & \code{loc[} \code{<name>} \code{] = \code{<name>}} \\
+\end{tabular}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% \section{Grammar of reference valuation file}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% TO DO 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% \section{Grammar of reference rectangle file}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% TO DO 
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Reserved Words}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+The following words are keywords and cannot be used as names for automata, variables, synchronization labels or locations. 
+
+\code{always},
+\code{and},
+\code{automaton},
+\code{bad},
+\code{before},
+\code{carto},
+\code{clock},
+\code{discrete},
+\code{do},
+\code{end},
+\code{eventually},
+\code{everytime},
+\code{False},
+% \code{forward},
+% \code{from},
+\code{goto},
+\code{happened},
+\code{has},
+\code{if},
+% \code{in},
+\code{init},
+\code{initially},
+\code{loc},
+\code{locations},
+\code{next},
+\code{not},
+\code{once},
+\code{or},
+\code{parameter},
+\code{property},
+% \code{reach},
+\code{region},
+\code{sequence},
+\code{stop},
+\code{sync},
+\code{synclabs},
+\code{then},
+\code{True},
+\code{unreachable},
+\code{var},
+\code{wait},
+\code{when},
+\code{while},
+\code{within}
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% \newpage
+\chapter{Acknowledgments}
+% \addcontentsline{toc}{section}{Acknowledgments}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\'Etienne André initiated the development of \imitator{}, and keeps developing it.
+Emmanuelle~Encrenaz and Laurent~Fribourg have been great contributors of \imitator{}, on a theoretical point of view, and to find applications both from the literature and real case studies.
+Abdelrezzak~Bara provided several examples from the hardware literature.
+Jeremy~Sproston provided examples from the probabilistic community.
+	% TODO: Giuseppe Lipari, Youcheng
+% Bertrand~Jeannet has been of great help on the linking with Apron~\cite{jm09} on a previous version of \imitator{}.
+Ulrich~K\"uhne made several important improvements to \imitator{}, and linked the tool to PPL.
+Daphne~Dussaud implemented the graphical output of the behavioral cartography.
+Romain~Soulat implemented powerful algorithmic optimizations, and brought many case studies.
+
+	% TODO: add CC, SE, NHG
+
+\imitator{}'s logo comes from KaterBegemot's \code{Typing monkey.svg} (Licence: Creative Commons Attribution-Share Alike 3.0 Unported).
+	% TODO: license of tool, this document, etc.
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newpage
+\bibliographystyle{alpha}
+\addcontentsline{toc}{chapter}{References}
+\bibliography{biblio}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+% BEGIN HACK
+\ifdefined\DraftVersion
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\chapter{Old etc.}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -328,7 +1598,7 @@ Their value is global, in the sense that they are shared by all automata of the 
 Different from CEGAR-based methods (see \cite{cgjlv00}), this algorithm for parameter synthesis makes use of a ``good'' parameter valuation~$\pio$ instead of a set of ``bad'' states~\cite{AS13}.
 
 When executing the inverse method, \imitator{} takes as input a network of PTA with stopwatches
-and a reference valuation~$\pio$; it synthesizes a constraint~$\Ko$ on the parameters such that (1) $\pio \models \Ko$ and (2) for all parameter valuation~$\piprime$ satisfying $\Ko$, the trace set (i.e., the discrete behavior) of~$\A$ under~$\piprime$ is the same as for~$\A$ under~$\pio$.
+and a reference valuation~$\pio$; it synthesizes a constraint~$\Ko$ on the parameters such that (1) $\pio \models \Ko$ and (2) for all parameter valuation~$\piprime$ satisfying $\Ko$, the trace set (\ie{} the discrete behavior) of~$\A$ under~$\piprime$ is the same as for~$\A$ under~$\pio$.
 %This preserves in particular linear time properties, 
 This provides the system with a criterion of \emph{robustness} (see, e.g., \cite{Markey11})
 %, by formally guaranteeing a uniform discrete behavior 
@@ -408,7 +1678,7 @@ around~$\pio$.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Installing IMITATOR}
+\chapter{Installing IMITATOR}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -417,14 +1687,14 @@ Sources, binaries for Linux platforms, and installation instructions are availab
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section[Implementation]{General Structure and Implementation} \label{sec:implementation}
+\chapter[Implementation]{General Structure and Implementation} \label{sec:implementation}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{Inputs and Outputs}
+\section{Inputs and Outputs}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 The input syntax of \imitator{} to describe the network of PTA modeling the system is originally based on the \hytech{} syntax, with several improvements.
@@ -478,7 +1748,7 @@ The description of all the parametric reachable states can also be optionally ou
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
 \paragraphe{Behavioral Cartography Algorithm}
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
-When calling \imitator{} to apply the behavioral cartography algorithm, the tool takes as an input two files, one describing the network of PTA modeling the system, and the other describing the reference rectangle, i.e., the bounds to consider for each parameter.
+When calling \imitator{} to apply the behavioral cartography algorithm, the tool takes as an input two files, one describing the network of PTA modeling the system, and the other describing the reference rectangle, \ie{} the bounds to consider for each parameter.
 As depicted in Figure~\ref{fig:ioBC}, it synthesizes a list of tiles, as well as optionally the trace set corresponding to each tile under a graphical form.
 The description of all the parametric reachable states for each tile may also optionally be output.
 
@@ -529,13 +1799,13 @@ The description of all the parametric reachable states for each tile may also op
 % Note that, unlike \hytech{}, \imitator{} uses exact arithmetics with unlimited precision.
 % 
 % Contrarily to \hytech{} which performs an \emph{a\,priori} static composition of the automata, thus leading to a dramatical explosion of the number of locations, \imitator{} performs an \emph{on-the-fly} composition of the automata.
-% This \emph{on-the-fly} composition allows to analyze bigger systems, and decrease drastically the computation time compared to \imitator{}. % (see Section~\ref{sec:experiments}).
+% This \emph{on-the-fly} composition allows to analyze bigger systems, and decrease drastically the computation time compared to \imitator{}. % (see \cref{sec:experiments}).
 
 	
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{Features} \label{ss:features}
+\section{Features} \label{ss:features}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \imitator{} (version \imitatorversion{}) includes the following features:
@@ -552,7 +1822,7 @@ The description of all the parametric reachable states for each tile may also op
 \end{itemize}
 
 
-See Section~\ref{sss:options} for the list of options available when calling \imitator{}.
+See \cref{sss:options} for the list of options available when calling \imitator{}.
 
 
 
@@ -560,12 +1830,12 @@ See Section~\ref{sss:options} for the list of options available when calling \im
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{How to Use \imitator{}} \label{sec:how}
+\chapter{How to Use \imitator{}} \label{sec:how}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{Installation}
+\section{Installation}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 See the installation files available on the website for the most up-to-date information.
@@ -583,7 +1853,7 @@ Binaries and source code packages are available on \imitator{}'s Web page~\cite{
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{The \imitator{} Input File}
+\section{The \imitator{} Input File}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 Examples of input files can be found on \imitator{}'s Web page~\cite{imitator}.
@@ -592,7 +1862,7 @@ A tentative grammar is given in Appendix~\ref{app:grammar}.
 
 
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
-\subsubsection{Variables}
+\subsection{Variables}
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
 
 % TO DO !
@@ -610,20 +1880,20 @@ The automata names may be identical to other names (variables synchronization la
 % As in a standard \hytech{} file, they must be declared in the header of the file.
 
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
-\subsubsection{Parametric Timed Automata}
+\subsection{Parametric Timed Automata}
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
 
 See Appendix~\ref{app:grammar}.
 
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
-\subsubsection{Initial region and $\pi_0$}
+\subsection{Initial region and $\pi_0$}
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
 
 See Appendix~\ref{app:grammar}.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{Calling \imitator}
+\section{Calling \imitator}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \imitator{} can be used with three different modes:
@@ -641,7 +1911,7 @@ We detail those three modes below.
 
 
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
-\subsubsection{Reachability Analysis} \label{ss:mode_reachability}
+\subsection{Reachability Analysis} \label{ss:mode_reachability}
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
 
 Given a PTA~$\A$, the reachability analysis computes the whole set of reachable states from a given initial state.
@@ -654,7 +1924,7 @@ Note that there is no need to provide a $\pi_0$ or $V_0$ file in this case (if o
 
 
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
-\subsubsection{Inverse Method} \label{ss:mode_inversemethod}
+\subsection{Inverse Method} \label{ss:mode_inversemethod}
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
 
 Given a PTA~$\A$ and a valuation~$\pi_0$ of the parameters, the inverse method compute a constraint $K_0$ on the parameters guaranteeing that, for any $\pi \models K_0$, the trace sets of $\A[\pi]$ and $\A[\pi_0]$ are the same~\cite{AS13}.
@@ -672,7 +1942,7 @@ In this case, \imitator{} outputs the resulting constraint $K_0$ on the standard
 
 
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
-\subsubsection{Cartography} \label{ss:mode_cartography}
+\subsection{Cartography} \label{ss:mode_cartography}
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
 
 Given a PTA~$\A$ and a rectangle~$V_0$ (bounded interval of values for each parameter), the Behavioral Cartography Algorithm computes a cartography of the system~\cite{af10}.
@@ -727,239 +1997,13 @@ The property must be defined at the end of the \code{.imi} model file, using the
 
 
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
-\subsubsection{Options} \label{sss:options}
+\subsection{Options} \label{sss:options}
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
-
-The options available for \imitator{} are explained in the following.
-
-%------------------------------------------------------------
-\paragraph{\code{-acyclic} (default: \code{false})}
-%------------------------------------------------------------
-Does not test if a new state was already encountered.
-In a normal use, when \imitator{} encounters a new state, it checks if it has been encountered before.
-This test may be time consuming for systems with a high number of reachable states.
-For acyclic systems, all traces pass only once by a given location.
-As a consquence, there are no cycles, so there should be no need to check if a given state has been encountered before.
-This is the main purpose of this option.
-
-However, be aware that, even for acyclic systems, several (different) traces can pass by the same state.
-In such a case, if the \code{-acyclic} option is activated, \imitator{} will compute \emph{twice} the states after the state common to the two traces.
-As a consequence, it is all but sure that activating this option will lead to an increase of speed.
-
-Note also that activating this option for non-acyclic systems may lead to an infinite loop in \imitator{}.
-
-%------------------------------------------------------------
-\paragraph{\code{-cart} (default: \code{off})}
-%------------------------------------------------------------
-
-After execution of the behavioral cartography, plots the generated
-zones as a \emph{PostScript} file. This option takes an integer which
-limits the number of generated plots, where each plot represents the
-projection of the parametric zones on two parameters. If the
-considered rectangle $v_0$ is spanned by two parameters only, then
-\code{-cart 1} will plot the projection of the generated zones on
-these two parameters. 
-
-This option makes use of the external utility \code{graph}, which is
-part of the \emph{GNU plotting utils}, available on most Linux
-platforms. The generated files will be located in the same directory
-as the source files, unless option \code{-log-prefix} is used.
-
-%------------------------------------------------------------
-\paragraph{\code{-depth-limit <limit>} (default: \code{none})}
-%------------------------------------------------------------
-Limits the number of iterations in the $\mathit{Post}$ exploration, i.e., the depth of the traces.
-In the cartography mode, this option gives a limit to \emph{each} call to the inverse method.
-
-%------------------------------------------------------------
-\paragraph{\code{-fancy} (default: \code{false})}
-%------------------------------------------------------------
-
-In the graphical output of the reachable states (see option \code{-with-dot}), 
-provide detailed information on the local states of the composed automata.
-
-
-%------------------------------------------------------------
-\paragraph{\code{-fromGrML} (default: \code{false})}
-%------------------------------------------------------------
-
-Does not use the standard input syntax described here, but a GrML input syntax.
-This is used when interfacing \imitator{} with the CosyVerif platform.
-Note that, in that case, not all syntactic features of \imitator{} are supported.
-
-
-
-%------------------------------------------------------------
-\paragraph{\code{-IMK} (default: \code{false})}
-%------------------------------------------------------------
-Uses a variant of the inverse method that returns a constraint such that no $\pio$-compatible state is reached; it does not guarantee however that any ``good'' state will be reached (see~\cite{AS13}).
-
-
-
-%------------------------------------------------------------
-\paragraph{\code{-IMunion} (default: \code{false})}
-%------------------------------------------------------------
-Uses a variant of the inverse method that returns the union of the constraints associated to the last state of each path (see~\cite{AS13}).
-
-
-%------------------------------------------------------------
-\paragraph{\code{-incl} (default: \code{false})}
-%------------------------------------------------------------
-Consider an inclusion of region instead of the equality when performing the $\textit{Post}$ operation.
-In other terms, when encountering a new state, \imitator{} checks if the same state (same location and same constraint) has been encountered before and, if yes, does not consider this ``new'' state.
-However, when the \code{-inclusion} option is activated, it suffices that a previous state with the same location and a constraint \emph{greater or equal} to the constraint of the new state has been encountered to stop the analysis.
-This option corresponds to the way that, e.g., \hytech{} works, and suffices when one wants to check the \emph{non-reachability} of a given bad state.
-
-
-%------------------------------------------------------------
-\paragraph{\code{-log-prefix} (default: \code{<input\_file>})}
-%------------------------------------------------------------
-Set the prefix for log (\code{.states}) and graphical (\code{.jpg}) files.
-
-
-%------------------------------------------------------------
-\paragraph{\code{-merge} (default: \code{false})}
-%------------------------------------------------------------
-Use the merging technique of \cite{AFS12}.
-Note that, in that case, not all the properties of the inverse method are preserved.
-
-
-%------------------------------------------------------------
-\paragraph{\code{-mode} (default: \code{inversemethod})}
-%------------------------------------------------------------
-The mode for \imitator{}.
-
-\begin{tabular}{@{} l @{\ \ } l}
- \code{reachability} & Parametric reachability analysis  \\
- & (see Section~\ref{ss:mode_reachability}) \\
- \code{inversemethod} & Inverse method \\
- & (see Section~\ref{ss:mode_inversemethod}) \\
- \code{cover} & Behavioral Cartography Algorithm with full coverage \\
- & (see Section~\ref{ss:mode_cartography}) \\
- \code{randomXX} & Behavioral Cartography Algorithm with \code{XX} iterations \\
-  & (see Section~\ref{ss:mode_cartography}) \\
-\end{tabular}
-
-
-
-%------------------------------------------------------------
-\paragraph{\code{-no-random} (default: \code{false})}
-%------------------------------------------------------------
-No random selection of the $\pi_0$-incompatible inequality (select the first found).
-By default, select an inequality in a random manner.
-
-
-
-%------------------------------------------------------------
-\paragraph{\code{-PTA2GrML} (default: \code{false})}
-%------------------------------------------------------------
-Translates the input model to a GrML format, and exits.
-
-
-%------------------------------------------------------------
-\paragraph{\code{-PTA2JPG} (default: \code{false})}
-%------------------------------------------------------------
-Translates the input model to a graphical, human-readable form (in \code{.jpg} format), and exits.
-
-
-%------------------------------------------------------------
-\paragraph{\code{-states-limit} (default: \code{none})}
-%------------------------------------------------------------
-Will try to stop after reaching this number of states.
-Warning: the program may have to first finish computing the current iteration before stopping.
-
-
-%------------------------------------------------------------
-\paragraph{\code{-statistics} (default: \code{false})}
-%------------------------------------------------------------
-Print info on number of calls to PPL, and other statistics about memory and time.
-Warning: enabling this option may slow down the analysis, and will certainly induce some extra computational time at the end.
-
-
-%------------------------------------------------------------
-\paragraph{\code{-step} (default: \code{1})}
-%------------------------------------------------------------
-Step for the behavioral cartography.
-
-
-%------------------------------------------------------------
-\paragraph{\code{-sync-auto-detect} (default: \code{false})}
-%------------------------------------------------------------
-\imitator{} considers that all the automata declaring a given synchronization label must be able to synchronize all together, so that the synchronization can happen.
-By default, \imitator{} considers that the synchronization labels declared in an automaton are those declared in the \code{synclabs} section.
-Therefore, if a synchronization label is declared but never used in (at least) one automaton, this label will never be synchronized in the execution\footnote{In such a case, the synchronization label is actually completely removed before the execution, in order to optimize the execution, and the user is warned of this removal.}.
-
-The option \code{-sync-auto-detect} allows to detect automatically the synchronization labels in each automaton: the labels declared in the \code{synclabs} section are ignored, and the \imitator{} considers that only the labels really used in an automaton are those considered to be declared.
-
-
-%------------------------------------------------------------
-\paragraph{\code{-time-limit <limit>} (default: \code{none})}
-%------------------------------------------------------------
-Try to limit the execution time (the value \code{<limit>} is given in seconds).
-Note that, in the current version of \imitator{}, the test of time limit is performed at the end of an iteration only (i.e., at the end of a given $\mathit{Post}$ iteration).
-In the cartography mode, this option represents a \emph{global} time limit, not a limit for each call to the inverse method.
-
-
-%------------------------------------------------------------
-\paragraph{\code{-timed} (default: \code{false})}
-%------------------------------------------------------------
-Add a timing information to each output of the program.
-
-
-%------------------------------------------------------------
-\paragraph{\code{-verbose} (default: \code{standard})}
-%------------------------------------------------------------
-
-Give some debugging information, that may also be useful to have more details on the way \imitator{} works.
-The admissible values for \code{-verbose} are given below:
-
-\begin{tabular}{@{} l @{\ \ } l}
- \code{nodebug} & Give only the resulting constraint \\
- \code{standard} & Give little information (number of steps, computation time)\\
- \code{low} & Give little additional information\\
- \code{medium} & Give quite a lot of information\\
- \code{high} & Give much information\\
- \code{total} & Give really too much information\\
-\end{tabular}
-
-
-
-%------------------------------------------------------------
-\paragraph{\code{-with-dot} (default: \code{false})}
-%------------------------------------------------------------
-Graphical output using \gdot{}.
-In this case, \imitator{} outputs a file \code{<input\_file>.jpg}, which is a graphical output in the jpg format, generated using \gdot{}, corresponding to the trace set.
-% 	This graphical output is not generated in the case where the \code{-no-dot} option is activated.
-
-Note that the location and the name of those two files can be changed using the \code{-log-prefix} option.
-
-
-%------------------------------------------------------------
-\paragraph{\code{-with-graphics-source} (default: \code{false})}
-%------------------------------------------------------------
-Keep file(s) generated for the graphical outputs.
-
-
-%------------------------------------------------------------
-\paragraph{\code{-with-log} (default: \code{false})}
-%------------------------------------------------------------
-Generation of the files describing the reachable states.
-In this case, \imitator{} outputs a file \code{<input\_file>.states} containing the set of all the reachable states, with their names and the associated constraint on the clocks and parameters.
-If one wants to generate also the constraint on the parameters only, use the \code{-with-parametric-log} option.
-This file also contains the source for the generation of the graphical file, using the \gdot{} syntax.
-
-
-%------------------------------------------------------------
-\paragraph{\code{-with-parametric-log } (default: \code{false})}
-%------------------------------------------------------------
-For any constraint on the clocks and the parameters in the description of the states in the log files,
-add the constraint on the parameters only (i.e., eliminate clock variables).
-
 
 
 
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
-\subsubsection{Examples of Calls}
+\subsection{Examples of Calls}
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
 
 %------------------------------------------------------------
@@ -1014,7 +2058,7 @@ The resulting set of tiles will be given on the standard output.
 Calls the behavioral cartography algorithm on the automata described in file \code{flipflop.imi}, and the rectangle $V_0$ given in file \code{SRlatch.v0}.
 The algorithm will cover (at least) all the integer points within $V_0$.
 The resulting set of tiles will be given on the standard output.
-Given $n$ the number of generated tiles (i.e., the number of calls to the inverse method algorithm), the program will generate $n$ files of the form \code{SRlatch.imi\_$i$.states} (resp.~$n$ files of the form \code{SRlatch.imi\_$i$.jpg}) giving the description of the states (resp.~the reachability graph) of tile $i$, for $i = 1, \dots, n$.
+Given $n$ the number of generated tiles (\ie{} the number of calls to the inverse method algorithm), the program will generate $n$ files of the form \code{SRlatch.imi\_$i$.states} (resp.~$n$ files of the form \code{SRlatch.imi\_$i$.jpg}) giving the description of the states (resp.~the reachability graph) of tile $i$, for $i = 1, \dots, n$.
 
 
 %------------------------------------------------------------
@@ -1022,14 +2066,14 @@ Given $n$ the number of generated tiles (i.e., the number of calls to the invers
 %------------------------------------------------------------
 Calls the behavioral cartography algorithm on the automata described in file \code{flipflop.imi}, and the rectangle $V_0$ given in file \code{SRlatch.v0}.
 The program will call the inverse method on 100 points randomly selected within $V_0$.
-Since some points may be generated several times, or some points may belong to previously generated tiles (see Section~\ref{ss:mode_cartography}), the number $n$ of tiles generated will be such that $n \leq 100$.
+Since some points may be generated several times, or some points may belong to previously generated tiles (see \cref{ss:mode_cartography}), the number $n$ of tiles generated will be such that $n \leq 100$.
 The program will generate $n$ files of the form \code{SRlatch.imi\_$i$.jpg} giving the reachability graph of tile $i$, for $i = 1, \dots, n$.
 
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Example: SR-latch} \label{sec:example}
+\chapter{Example: SR-latch} \label{sec:example}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -1113,7 +2157,7 @@ Moreover, the parameter $t^\downarrow$ corresponds to the time duration between 
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{Parametric Reachability Analysis}
+\section{Parametric Reachability Analysis}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 We first perform a reachability analysis.
@@ -1227,7 +2271,7 @@ Considering this environment, the trace set of this system is given in Figure~\r
 
 % 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% \subsection{Inverse Method}
+% \section{Inverse Method}
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % 
 % We consider the following reference valuation $\pi_0$ of the parameters:
@@ -1278,7 +2322,7 @@ Considering this environment, the trace set of this system is given in Figure~\r
 % 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{Behavioral Cartography Algorithm}
+\section{Behavioral Cartography Algorithm}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
@@ -1688,58 +2732,29 @@ The source code of this example is available in Appendix~\ref{app:source}.
 
 
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\newpage
-\section*{Acknowledgments}
-\addcontentsline{toc}{section}{Acknowledgments}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-\'Etienne André initiated the development of \imitator{}, and keeps developing it.
-Emmanuelle~Encrenaz and Laurent~Fribourg have been great contributors of \imitator{}, on a theoretical point of view, and to find applications both from the literature and real case studies.
-Abdelrezzak~Bara provided several examples from the hardware literature.
-Jeremy~Sproston provided examples from the probabilistic community.
-% Bertrand~Jeannet has been of great help on the linking with Apron~\cite{jm09} on a previous version of \imitator{}.
-Ulrich~K\"uhne made several important improvements to \imitator{}, and linked the tool to PPL.
-Daphne~Dussaud implemented the graphical output of the behavioral cartography.
-Romain~Soulat implemented powerful algorithmic optimizations, and brought many case studies.
-
-\imitator{}'s logo comes from KaterBegemot's \code{Typing monkey.svg} (Licence: Creative Commons Attribution-Share Alike 3.0 Unported).
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\newpage
-\bibliographystyle{alpha}
-\addcontentsline{toc}{section}{References}
-\bibliography{biblio}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
 \newpage
 
 \appendix
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Source Code of the Example} \label{app:source}
+\chapter{Source Code of the Example} \label{app:source}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{Main Input File}
+\section{Main Input File}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\FichierImitator{include/SRlatch.imi}
+\IncludeIMIfile{include/SRlatch.imi}
 
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{$V_0$ File}
+\section{$V_0$ File}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\FichierImitator{include/SRlatch.v0}
+\IncludeIMIfile{include/SRlatch.v0}
 
 
 
@@ -1747,495 +2762,13 @@ Romain~Soulat implemented powerful algorithmic optimizations, and brought many c
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Complete Grammar} \label{app:grammar}
+\chapter{Complete Grammar} \label{app:grammar}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+\fi
+% END HACK
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{Grammar of the Input File}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-\imitator{} input is described by the following grammar.
-Non-terminals appear within angled parentheses.
-A non-terminal followed by two colons is defined by the list of immediately following non-blank lines, each of which represents a legal expansion.
-Input characters of terminals appear in typewritter font.
-The meta symbol \emptystring{} denotes the empty string.
-
-The text \npec{in green} is not taken into account by \imitator{}, but is allowed (or sometimes necessary) in order to allow the compatibility with \hytech{} files.
-
-
-%------------------------------------------------------------
-\regleGrammaire{imitator\_input}
-%------------------------------------------------------------
-\begin{tabular}{l l}
-	\  & \nt{automata\_descriptions} \nt{init} \\
-\end{tabular}
-
-\medskip
-
-
-We define each of those two components below.
-
-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
-\subsubsection{Automata Descriptions}
-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
-
-%------------------------------------------------------------
-\regleGrammaire{automata\_descriptions}
-%------------------------------------------------------------
-\begin{tabular}{l l}
-	\  & \nt{declarations} \nt{automata} \\
-\end{tabular}
-
-%------------------------------------------------------------
-\regleGrammaire{declarations}
-%------------------------------------------------------------
-\begin{tabular}{l l}
-	\  & \code{var} \nt{var\_lists} \\
-\end{tabular}
-
-%------------------------------------------------------------
-\regleGrammaire{var\_lists}
-%------------------------------------------------------------
-\begin{tabular}{l l}
-	\  & \nt{var\_list} \code{:} \nt{var\_type} \code{;} \nt{var\_lists} \\
-	$|$ & \emptystring
-\end{tabular}
-
-%------------------------------------------------------------
-\regleGrammaire{var\_list}
-%------------------------------------------------------------
-\begin{tabular}{l l}
-	\  & \code{<name>} \\
-	$|$ & \code{<name>} \code{,} \nt{var\_list}
-\end{tabular}
-
-%------------------------------------------------------------
-\regleGrammaire{var\_type}
-%------------------------------------------------------------
-\begin{tabular}{l l}
-	\  & \code{clock} \\
-	$|$ & \code{discrete} \\
-	$|$ & \code{parameter} \\
-\end{tabular}
-
-%------------------------------------------------------------
-\regleGrammaire{automata}
-%------------------------------------------------------------
-\begin{tabular}{l l}
-	\  & \nt{automaton} \nt{automata} \\
-	$|$ & \emptystring \\
-\end{tabular}
-
-%------------------------------------------------------------
-\regleGrammaire{automaton}
-%------------------------------------------------------------
-\begin{tabular}{l l}
-	\  & \code{automaton} \code{<name>} \nt{prolog} \nt{locations} \code{end} \\
-\end{tabular}
-
-%------------------------------------------------------------
-\regleGrammaire{prolog}
-%------------------------------------------------------------
-\begin{tabular}{l l}
-	\  & \npec{\nt{initialization}} \nt{sync\_labels} \\
-	$|$ & \nt{sync\_labels} \npec{\nt{initialization}} \\
-	$|$ & \nt{sync\_labels} \\
-\end{tabular}
-
-%------------------------------------------------------------
-\regleGrammaire{initialization}
-%------------------------------------------------------------
-\npec{
-\begin{tabular}{l l}
-	\  & \code{initially} \code{<name>} \nt{state\_initialization} \code{;} \\
-\end{tabular}
-}
-
-%------------------------------------------------------------
-\regleGrammaire{state\_initialization}
-%------------------------------------------------------------
-\npec{
-\begin{tabular}{l l}
-	\  & \code{\&} \nt{convex\_predicate} \\
-	$|$ & \emptystring \\
-\end{tabular}
-}
-
-%------------------------------------------------------------
-\regleGrammaire{sync\_labels}
-%------------------------------------------------------------
-\begin{tabular}{l l}
-	\  & \code{synclabs} \code{:} \nt{sync\_var\_list} \code{;} \\
-\end{tabular}
-
-%------------------------------------------------------------
-\regleGrammaire{sync\_var\_list}
-%------------------------------------------------------------
-\begin{tabular}{l l}
-	\  & \nt{sync\_var\_nonempty\_list} \\
-	$|$ & \emptystring \\
-\end{tabular}
-
-%------------------------------------------------------------
-\regleGrammaire{sync\_var\_nonempty\_list}
-%------------------------------------------------------------
-\begin{tabular}{l l}
-	\  & \code{<name>} \code{,} \nt{sync\_var\_nonempty\_list} \\
-	$|$ & \code{<name>} \\
-\end{tabular}
-
-%------------------------------------------------------------
-\regleGrammaire{locations}
-%------------------------------------------------------------
-\begin{tabular}{l l}
-	\  & \nt{location} \nt{locations} \\
-	$|$ & \emptystring \\
-\end{tabular}
-
-%------------------------------------------------------------
-\regleGrammaire{locations}
-%------------------------------------------------------------
-\begin{tabular}{l l}
-	\  & \code{loc} \code{<name>} \code{:} \code{while} \nt{convex\_predicate} \nt{stop\_opt} \npec{\nt{wait\_opt}} \nt{transitions} \\
-% 	$|$ & \code{loc} \code{<name>} \code{:} \code{while} \nt{convex\_predicate} \nt{transitions} \\
-\end{tabular}
-
-%------------------------------------------------------------
-\regleGrammaire{wait\_opt}
-%------------------------------------------------------------
-\begin{tabular}{l l}
-	\ & \npec{\code{wait()}} \\
-	$|$ & \npec{\code{wait}} \\
-	$|$ & \npec{\emptystring} \\
-\end{tabular}
-
-%------------------------------------------------------------
-\regleGrammaire{stop\_opt}
-%------------------------------------------------------------
-\begin{tabular}{l l}
-	\ & \code{stop\{} \nt{var\_list} \code{\}} \\
-	$|$ & \emptystring \\
-\end{tabular}
-
-	
-%------------------------------------------------------------
-\regleGrammaire{transitions}
-%------------------------------------------------------------
-\begin{tabular}{l l}
-	\  & \nt{transition} \nt{transitions} \\
-	$|$ & \emptystring \\
-\end{tabular}
-
-%------------------------------------------------------------
-\regleGrammaire{transition}
-%------------------------------------------------------------
-\begin{tabular}{l l}
-	\  & \code{when} \nt{convex\_predicate} \nt{update\_synchronization} \code{goto} \code{<name>} \code{;} \\
-\end{tabular}
-
-%------------------------------------------------------------
-\regleGrammaire{update\_synchronization}
-%------------------------------------------------------------
-\begin{tabular}{l l}
-	\  & \nt{updates} \\
-	$|$ & \nt{syn\_label} \\
-	$|$ & \nt{updates} \nt{syn\_label} \\
-	$|$ & \nt{syn\_label} \nt{updates} \\
-	$|$ & \emptystring \\
-\end{tabular}
-
-%------------------------------------------------------------
-\regleGrammaire{updates}
-%------------------------------------------------------------
-\begin{tabular}{l l}
-	\  & \code{do} \code{(} \nt{update\_list} \code{)} \\
-\end{tabular}
-
-%------------------------------------------------------------
-\regleGrammaire{update\_list}
-%------------------------------------------------------------
-\begin{tabular}{l l}
-	\  & \nt{update\_nonempty\_list} \\
-	$|$ & \emptystring \\
-\end{tabular}
-
-%------------------------------------------------------------
-\regleGrammaire{update\_nonempty\_list}
-%------------------------------------------------------------
-\begin{tabular}{l l}
-	\  & \nt{update} \code{,} \nt{update\_nonempty\_list} \\
-	$|$ & \nt{update} \\
-\end{tabular}
-
-%------------------------------------------------------------
-\regleGrammaire{update}
-%------------------------------------------------------------
-\begin{tabular}{l l}
-	\  & \code{<name>} \code{'} \code{=} \nt{linear\_expression} \\
-\end{tabular}
-
-%------------------------------------------------------------
-\regleGrammaire{syn\_label}
-%------------------------------------------------------------
-\begin{tabular}{l l}
-	\  & \code{sync} \code{<name>} \\
-\end{tabular}
-
-
-
-%------------------------------------------------------------
-\regleGrammaire{convex\_predicate}
-%------------------------------------------------------------
-\begin{tabular}{l l}
-	\  & \nt{linear\_constraint} \code{\&} \nt{convex\_predicate} \\
-	$|$ & \nt{linear\_constraint} \\
-\end{tabular}
-
-%------------------------------------------------------------
-\regleGrammaire{linear\_constraint}
-%------------------------------------------------------------
-\begin{tabular}{l l}
-	\  & \nt{linear\_expression} \nt{relop} \nt{linear\_expression} \\
-	$|$ & \code{True} \\
-	$|$ & \code{False} \\
-\end{tabular}
-
-%------------------------------------------------------------
-\regleGrammaire{relop}
-%------------------------------------------------------------
-\begin{tabular}{l l}
-	\  & \code{<} \\
-	$|$ & \code{<=} \\
-	$|$ & \code{=} \\
-	$|$ & \code{>=} \\
-	$|$ & \code{>} \\
-	$|$ & \code{<>} \\
-\end{tabular}
-
-%------------------------------------------------------------
-\regleGrammaire{linear\_expression}
-%------------------------------------------------------------
-\begin{tabular}{l l}
-	\  & \nt{linear\_term} \\
-	$|$ & \nt{linear\_expression} \code{+} \nt{linear\_term} \\
-	$|$ & \nt{linear\_expression} \code{-} \nt{linear\_term} \\
-\end{tabular}
-
-%------------------------------------------------------------
-\regleGrammaire{linear\_term}
-%------------------------------------------------------------
-\begin{tabular}{l l}
-	\  & \nt{rational} \\
-	$|$ & \nt{rational} \code{<name>} \\
-	$|$ & \nt{rational} \code{*} \code{<name>} \\
-	$|$ & \code{<name>} \\
-	$|$ & \code{(} \nt{linear\_term} \code{)} \\
-\end{tabular}
-
-%------------------------------------------------------------
-\regleGrammaire{rational}
-%------------------------------------------------------------
-\begin{tabular}{l l}
-	\  & \nt{integer} \\
-	\  & \nt{float} \\
-	$|$ & \nt{integer} \code{/} \nt{pos\_integer}  \\
-\end{tabular}
-
-%------------------------------------------------------------
-\regleGrammaire{integer}
-%------------------------------------------------------------
-\begin{tabular}{l l}
-	\  & \nt{pos\_integer} \\
-	$|$ & \code{-} \nt{pos\_integer}  \\
-\end{tabular}
-
-%------------------------------------------------------------
-\regleGrammaire{pos\_integer}
-%------------------------------------------------------------
-\begin{tabular}{l l}
-	\  & \code{<int>} \\
-\end{tabular}
-
-
-
-%------------------------------------------------------------
-\regleGrammaire{float}
-%------------------------------------------------------------
-\begin{tabular}{l l}
-	\  & \nt{pos\_float} \\
-	$|$ & \code{-} \nt{pos\_float}  \\
-\end{tabular}
-
-
-%------------------------------------------------------------
-\regleGrammaire{pos\_float}
-%------------------------------------------------------------
-\begin{tabular}{l l}
-	\  & \code{<float>} \\
-\end{tabular}
-
-
-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
-\subsubsection{Initial State}
-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
-
-%------------------------------------------------------------
-\regleGrammaire{init}
-%------------------------------------------------------------
-\begin{tabular}{l l}
-	& \npec{\nt{init\_declaration}} \nt{init\_definition} \nt{property\_definition} \npec{\nt{reach\_command}} \\
-\end{tabular}
-
-%------------------------------------------------------------
-\regleGrammaire{init\_declaration}
-%------------------------------------------------------------
-\begin{tabular}{l l}
-	\  & \npec{\code{var} \code{init} \code{:} \code{region} \code{;}} \\
-	$|$ & \emptystring \\
-\end{tabular}
-
-%------------------------------------------------------------
-\regleGrammaire{reach\_command}
-%------------------------------------------------------------
-\begin{tabular}{l l}
-	\  & \npec{\code{print} \code{(} \code{reach} \code{forward} \code{from} \code{init} \code{endreach} \code{)} \code{;}} \\
-	$|$ & \emptystring \\
-\end{tabular}
-
-%------------------------------------------------------------
-\regleGrammaire{init\_definition}
-%------------------------------------------------------------
-\begin{tabular}{l l}
-	\  & \code{init} \code{:=} \nt{region\_expression} \code{;} \\
-\end{tabular}
-
-%------------------------------------------------------------
-\regleGrammaire{region\_expression}
-%------------------------------------------------------------
-\begin{tabular}{l l}
-	\  & \nt{state\_predicate} \\
-	$|$ & \code{(} \nt{region\_expression} \code{)} \\
-	$|$ & \nt{region\_expression} \code{\&} \nt{region\_expression} \\
-\end{tabular}
-
-%------------------------------------------------------------
-\regleGrammaire{state\_predicate}
-%------------------------------------------------------------
-\begin{tabular}{l l}
-	\  & \code{loc} \code{[} \code{<name>} \code{]} \code{=} \code{<name>} \\
-	$|$ & \nt{linear\_constraint} \\
-\end{tabular}
-
-%------------------------------------------------------------
-\regleGrammaire{property\_definition}
-%------------------------------------------------------------
-\begin{tabular}{l l}
-	\  & \code{property := } \nt{pattern} \code{;} \\
-	$|$ & \emptystring \\
-\end{tabular}
-
-%------------------------------------------------------------
-\regleGrammaire{pattern}
-%------------------------------------------------------------
-\begin{tabular}{l l}
-	\  & \code{unreachable} \nt{loc\_predicate} \\
-	$|$ & \code{if <name> then <name> has happened before} \\
-	$|$ & \code{everytime <name> then <name> has happened before} \\
-	$|$ & \code{everytime <name> then <name> has happened once before} \\
-	$|$ & \code{if <name> then eventually <name>} \\
-	$|$ & \code{everytime <name> then eventually <name>} \\
-	$|$ & \code{everytime <name> then eventually <name> once before next} \\
-	$|$ & \code{<name> within }\nt{linear\_expression} \code{} \\
-	$|$ & \code{if <name> then <name> happened within }\nt{linear\_expression} \code{ before} \\
-	$|$ & \code{everytime <name> then <name> happened within }\nt{linear\_expression} \code{ before} \\
-	$|$ & \code{everytime <name> then <name> happened once within }\nt{linear\_expression} \code{ before} \\
-	$|$ & \code{if <name> then eventually <name> within }\nt{linear\_expression} \code{} \\
-	$|$ & \code{everytime <name> then eventually <name> within }\nt{linear\_expression} \code{} \\
-	$|$ & \code{everytime <name> then eventually <name> within }\nt{linear\_expression} \code{ once before next} \\
-	$|$ & \code{sequence} \nt{var\_list} \\
-	$|$ & \code{sequence always} \nt{var\_list} \\
-\end{tabular}
-
-%------------------------------------------------------------
-\regleGrammaire{loc\_expression}
-%------------------------------------------------------------
-\begin{tabular}{l l}
-	\  & \nt{loc\_predicate} \\
-	$|$ & \nt{loc\_predicate} \code{\&} \nt{loc\_expression} \\
-	$|$ & \nt{loc\_predicate} \nt{loc\_expression} \\
-\end{tabular}
-
-%------------------------------------------------------------
-\regleGrammaire{loc\_predicate}
-%------------------------------------------------------------
-\begin{tabular}{l l}
-	\  & \code{loc[} \code{<name>} \code{] = \code{<name>}} \\
-\end{tabular}
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% \subsection{Grammar of reference valuation file}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% TO DO 
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% \subsection{Grammar of reference rectangle file}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% TO DO 
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{Reserved Words}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-The following words are keywords and cannot be used as names for automata, variables, synchronization labels or locations. 
-
-\code{always},
-\code{and},
-\code{automaton},
-\code{bad},
-\code{before},
-\code{carto},
-\code{clock},
-\code{discrete},
-\code{do},
-\code{end},
-\code{eventually},
-\code{everytime},
-\code{False},
-% \code{forward},
-% \code{from},
-\code{goto},
-\code{happened},
-\code{has},
-\code{if},
-% \code{in},
-\code{init},
-\code{initially},
-\code{loc},
-\code{locations},
-\code{next},
-\code{not},
-\code{once},
-\code{or},
-\code{parameter},
-\code{property},
-% \code{reach},
-\code{region},
-\code{sequence},
-\code{stop},
-\code{sync},
-\code{synclabs},
-\code{then},
-\code{True},
-\code{unreachable},
-\code{var},
-\code{wait},
-\code{when},
-\code{while},
-\code{within}
 
 \end{document}
 
