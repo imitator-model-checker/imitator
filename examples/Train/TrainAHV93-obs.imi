@@ -6,11 +6,13 @@
 --   Model described in
 --   "Parametric Real-Time Reasoning" (fig. 2)
 --   Alur, Henzinger, Vardi (STOC 1993)
+--   Version with an observer to check for a crash and with invariants to force transitions to be taken
 --
 --   Etienne ANDRE
 --   Laboratoire d'Informatique de Paris Nord
 --
 --                                Created : 2011/11/25
+--                                   Fork : 2015/05/12
 --                          Last modified : 2015/05/12
 --                       IMITATOR version : 2.7-beta2
 --************************************************************--
@@ -35,13 +37,13 @@ initially train0;
 loc train0: while True wait {}
 	when True sync approach do {x' = 0} goto train1;
 
-loc train1: while True wait {}
+loc train1: while x < b wait {}
 	when x > a sync inn do {} goto train2;
 
-loc train2: while True wait {}
+loc train2: while x < b wait {}
 	when True sync out do {} goto train3;
 
-loc train3: while True wait {}
+loc train3: while x < b wait {}
 	when x < b sync exit do {} goto train0;
 
 end -- train
@@ -56,13 +58,13 @@ initially gate0;
 loc gate0: while True wait {}
 	when True sync lower do {y' = 0} goto gate1;
 
-loc gate1: while True wait {}
+loc gate1: while y < d wait {}
 	when c < y & y < d sync down do {} goto gate2;
 
 loc gate2: while True wait {}
 	when True sync raise do {y' = 0} goto gate3;
 
-loc gate3: while True wait {}
+loc gate3: while y < d wait {}
 	when c < y & y < d sync up do {} goto gate0;
 
 end -- gate
@@ -78,21 +80,46 @@ initially controller0;
 loc controller0: while True wait {}
 	when True sync approach do {z' = 0} goto controller1;
 
-loc controller1: while True wait {}
+loc controller1: while z < f wait {}
 	when e < z & z < f sync lower do {} goto controller2;
 
 loc controller2: while True wait {}
 	when True sync exit do {z' = 0} goto controller3;
 
-loc controller3: while True wait {}
+loc controller3: while z < f wait {}
 	when e < z & z < f sync raise do {} goto controller0;
 
 end -- controller
 
+--************************************************************--
+  automaton observer
+--************************************************************--
+(**
+ * @Description: There is a crash whenever the train performs "in" when the gate is not "down"
+ * @Note       : This could have been directly checked within the gate, and would have been more efficient (but this way is cleaner)
+ **)
+synclabs: inn, down, raise;
+
+(** The gate is not down *)
+loc obs_unsafe: while True wait {}
+	when True sync inn goto obs_crash;
+	when True sync down goto obs_safe;
+
+(** The gate is down *)
+loc obs_safe: while True wait {}
+	when True sync inn goto obs_safe;
+	when True sync raise goto obs_unsafe;
+
+(** Crash! *)
+loc obs_crash: while True wait {}
+
+
+end -- observer
+
 
 --************************************************************--
 --************************************************************--
--- ANALYSIS
+-- INITIAL STATE
 --************************************************************--
 --************************************************************--
 
@@ -105,6 +132,7 @@ init := True
 	& loc[train]      = train0
 	& loc[gate]       = gate0
 	& loc[controller] = controller0
+	& loc[observer]   = obs_unsafe
 
 	----------------------
 	-- Clocks
@@ -129,4 +157,7 @@ init := True
 
 ;
 
+property := unreachable loc[observer] = obs_crash;
+
 end
+
