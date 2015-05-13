@@ -1,15 +1,17 @@
 (************************************************************
  *                      IMITATOR MODEL                      
  *
- * Empty template of a case study
+ * Wireless fire alarm system
  *
- * Description     : TODO
+ * Description     : wireless fire alarm system
  * Correctness     : TODO
- * Source          : TODO
- * Author          : ME
  *
- * Created         : 1970/01/01
- * Last modified   : 1970/01/01
+ * Source          : "Language Emptiness of Continuous-Time Parametric Timed Automata" by Nikola Benes, Peter Bezdek, Kim G. Larsen, and Jiri Srba (the model was described in Sergio Feo-Arenis, Bernd Westphal, Daniel Dietsch, Marco Mun ̃iz, and Siyar An- disha. The wireless fire alarm system: Ensuring conformance to industrial stan- dards through formal verification. In FM'14, volume 8442 of LNCS, pages 658–672. Springer, 2014.)
+ * URL             : http://arxiv.org/abs/1504.07838v1
+ * Author          : Input by Étienne André
+ *
+ * Created         : 2015/05/13
+ * Last modified   : 2015/05/13
  *
  * IMITATOR version: 2.7-beta2
  ************************************************************)
@@ -17,28 +19,24 @@
 var
 
 (* Clocks *)
- 	x
+ 	x1, x2
 		: clock;
 
-(* Discrete *)
-	i
-		: discrete;
-
 (* Parameters *)
-	p
+	p1, p2
 		: parameter;
 
 
 
 (************************************************************)
-  automaton pta
+  automaton sensor1
 (************************************************************)
-synclabs: a;
+synclabs: result1, wakeup1;
 
-loc l1: while True wait {}
-	when x = 1 sync a do {x' = 0} goto l1;
+loc idle: while True wait {}
+	when True sync wakeup1 do {x1' = 0} goto awake;
 
-end (* pta *)
+end (* sensor1 *)
 
 
 
@@ -50,12 +48,13 @@ init := True
 	(*------------------------------------------------------------
 	   INITIAL LOCATION
 	  ------------------------------------------------------------*)
-	& loc[pta] = l1
+	& loc[sensor1] = idle
 
 	(*------------------------------------------------------------
 	   INITIAL CLOCKS
 	  ------------------------------------------------------------*)
-	& x = 0
+	& x1 = 0
+	& x2 = 0
 
 	(*------------------------------------------------------------
 	   INITIAL DISCRETE
