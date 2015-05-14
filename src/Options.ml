@@ -7,7 +7,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Ulrich Kuehne, Etienne Andre
  * Created:       2010
- * Last modified: 2015/04/23
+ * Last modified: 2015/05/14
  *
  ****************************************************************)
  
@@ -382,7 +382,7 @@ class imitator_options =
 				
 				("-fromGrML", Set fromGML, "GrML syntax for input files (experimental). Defaut : 'false'");
 				
-				("-incl", Set inclusion, " Consider an inclusion of region instead of the equality when performing the Post operation (e.g., as in algorithm IMincl defined in [AS11]). Default: 'false'");
+				("-incl", Set inclusion, " Consider an inclusion of symbolic zones instead of the equality when checking for a fixpoint. Default: 'false'");
 				
 				("-IMK", Set pi_compatible, " Algorithm IMoriginal (defined in [AS11]): return a constraint such that no pi-incompatible state can be reached. Default: 'false'");
 				
@@ -565,7 +565,12 @@ class imitator_options =
 
 			(* Variant of the inverse method *)
 			if !inclusion then
-				print_message Verbose_standard ("Considering fixpoint variant with inclusion [AS11].")
+				begin
+				match !imitator_mode with
+				| Inverse_method | Cover_cartography | Border_cartography | Random_cartography _
+					-> print_message Verbose_standard ("Considering variant of IM with inclusion in the fixpoint [AS11].")
+				| _ -> print_message Verbose_standard ("Considering fixpoint variant with inclusion of symbolic zones (instead of equality).")
+				end
 			else
 				print_message Verbose_medium ("No fixpoint variant (default).");
 
