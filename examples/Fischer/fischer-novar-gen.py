@@ -7,8 +7,9 @@
  #
  # Description     : Generator for Fischer with n processes. This model has no variable (the global variable is simulated with an untimed PTA); however, the reachability condition is expressed by a global variable that counts the number of processes in the critical sections. If more than n, the observer is going to a special location.
  # Correctness     : No more than 'n' (3, but can be changed) processes in critical section
- # Source          : ???
- # Author          : Michal Knapick, Etienne Andre
+ # Source          : "SAT-based Unbounded Model Checking of Timed Automata", Fundamatica Informatica 85(1-4): 425-440 (2008), Figure 1.
+ # Authors         : Wojciech Penczek, Maciej Szreter
+ # Script authors  : Michal Knapick, Etienne Andre
  #
  # Created         : 2015/05/15
  # Last modified   : 2015/05/15
