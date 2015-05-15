@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2014/03/15
- * Last modified: 2015/03/30
+ * Last modified: 2015/05/15
  *
  ****************************************************************)
 
@@ -143,7 +143,7 @@ let compile options =
 			| _ -> [], parser_lexer_from_file V0Parser.main V0Lexer.token options#pi0file
 	in
 
-	print_message Verbose_standard ("\nParsing completed " ^ (after_seconds ()) ^ ".");
+	print_message Verbose_low ("\nParsing completed " ^ (after_seconds ()) ^ ".");
 	(** USELESS, even increases memory x-( **)
 	(* Gc.major (); *)
 
@@ -162,6 +162,7 @@ let compile options =
 		| InternalError e -> (print_error ("Internal error: " ^ e ^ "\nPlease kindly insult the developers."); abort_program (); exit 1)
 		in
 
+	print_message Verbose_standard ("\nAbstract model built " ^ (after_seconds ()) ^ ".");
 	let gc_stat = Gc.stat () in
 	let nb_words = gc_stat.minor_words +. gc_stat.major_words -. gc_stat.promoted_words in
 	let nb_ko = nb_words *. 4.0 /. 1024.0 in
