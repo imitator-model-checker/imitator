@@ -190,8 +190,9 @@
 % ALGORITHMES
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
 % Algorithmes PTA
-\newcommand{\IM}{\mathrm{IM}}
-\newcommand{\carto}{\mathrm{BC}}
+\newcommand{\BC}{\ensuremath{\mathrm{BC}}}
+\newcommand{\EFsynth}{\ensuremath{\mathrm{EFsynth}}}
+\newcommand{\IM}{\ensuremath{\mathrm{IM}}}
 
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
 % CONSTANTES DE CHAINES
@@ -218,6 +219,7 @@
 
 % Current version
 \newcommand{\imitatorversion}{2.7}
+\newcommand{\imitatorversionname}{Butter Guéméné}
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -265,11 +267,12 @@
 
 \definecolor{optioncolor}{rgb}{.4, 0, .4}
 \newcommand{\styleOption}[1]{\textcolor{optioncolor}{\texttt{#1}}}
+\newcommand{\styleOptionValue}[1]{\textcolor{optioncolor}{\texttt{#1}}}
 
 \definecolor{pathcolor}{rgb}{1, .5, 0}
 \newcommand{\stylePath}[1]{\textcolor{pathcolor}{\texttt{#1}}}
 
-\newcommand{\GitHubIMI}{GitHub} % TODO
+\newcommand{\GitHubIMI}{GitHub} % TODO : URL
 
 \newcommand{\styleCommand}[1]{
 	\medskip
@@ -298,6 +301,7 @@
 % \newcommand{\eg}{\textcolor{colorok}{\textit{e.g.}}\xspace}
 % \newcommand{\ie}{\textcolor{colorok}{\textit{i.e.}}\xspace}
 % \newcommand{\wrt}{\textcolor{colorok}{w.r.t.}\xspace}
+\newcommand{\adhoc}{\textcolor{colorok}{\textit{ad-hoc} }} % TODO: solve space problems
 \newcommand{\eg}{\textcolor{colorok}{\textit{e.g.}, }}
 \newcommand{\ie}{\textcolor{colorok}{\textit{i.e.}, }}
 \newcommand{\wrt}{\textcolor{colorok}{w.r.t.} }
@@ -356,7 +360,7 @@
 
 	\vspace{2cm}
 	
-	{\Large Version \imitatorversion{}}
+	{\Large Version \imitatorversion{} (\imitatorversionname{})}
 
 	
 \end{center}
@@ -647,7 +651,12 @@ The option \styleOption{-output-states} generates a file with a textual descript
 
 A main problem in parametric timed automata is to compute the set of parameter valuations for which some location (for instance, an error location) is reachable.
 
-The algorithm implemented in \imitator{} is a basic breadth-first procedure, close to the one described in \cite{AHV93,JLR15}.
+The property must be specified as follows, at the end of the model (after the initial state definition):
+
+\styleIMI{property := unreachable loc[AUTOMATON] = LOCATION}\\
+where \styleIMI{AUTOMATON} is an automaton name, and \styleIMI{LOCATION} is a location name.
+
+The algorithm \EFsynth{} implemented in \imitator{} is a basic breadth-first procedure, close to the one described in \cite{AHV93,JLR15}.
 Of course, the EF-emptiness problem being undecidable~\cite{AHV93}, the analysis is not guaranteed to terminate.
 
 The standard command is:
@@ -659,8 +668,9 @@ The options \styleOption{-merge} and \styleOption{-incl} are optional, but gener
 
 \imitator{} can also
 	output the trace set in a graphical form (option \styleOption{-output-trace-set}),
+	output the constraint synthesized in a graphical form in two dimensions (option \styleOption{-output-cart}),
 	or
-	output the result to a file (option \styleOption{-output-result}).
+	output the result to a text file (option \styleOption{-output-result}).
 
 	% TODO: EFIM !!!
 
@@ -669,17 +679,93 @@ The options \styleOption{-merge} and \styleOption{-incl} are optional, but gener
 \section{Parametric Verification using Properties}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+\imitator{} basically only supports bad state reachability synthesis on the one hand, and algorithms such as the inverse method and the cartography on the other hand.
+However, many correctness properties can be encoded using reachability using \emph{observers} (see \cite{ABL98,ABBL98,Andre13ICECCS}).
+
+Encoding observers can be done manually (using \adhoc{} \IPTA{}), or using predefined correctness properties commonly met in the literature.
+
+If using a predefined property, the property must be specified as follows, at the end of the model (after the initial state definition):
+
+\styleIMI{property := [PROP]}
+
+\styleIMI{[PROP]} must conform to one of the following patterns, where \styleIMI{AUTOMATON} is an automaton name, \styleIMI{LOCATION} is a location name, \styleIMI{a}, \styleIMI{a1}, \styleIMI{a2} are actions, and the deadline \styleIMI{d} is a (possibly parametric) linear expression:
+
+\begin{itemize}
+	\item \styleIMI{property := unreachable loc[AUTOMATON] = LOCATION}
+	\item \styleIMI{property := if a2 then a1 has happened before}
+	\item \styleIMI{property := everytime a2 then a1 has happened before}
+	\item \styleIMI{property := everytime a2 then a1 has happened once before}
+% 	\item \styleIMI{property := if a1 then eventually a2}
+		% TODO
+% 	\item \styleIMI{property := everytime a1 then eventually a2}
+		% TODO
+% 	\item \styleIMI{property := everytime a1 then eventually a2 once before next}
+		% TODO
+	\item \styleIMI{property := a within d}
+	\item \styleIMI{property := if a2 then a1 has happened within d before}
+	\item \styleIMI{property := everytime a2 then a1 has happened within d before}
+	\item \styleIMI{property := everytime a2 then a1 has happened once within d before}
+	\item \styleIMI{property := if a1 then eventually a2 within d}
+	\item \styleIMI{property := everytime a1 then eventually a2 within~d}
+	\item \styleIMI{property := if a1 then eventually a2 within d once before next}
+	\item \styleIMI{property := sequence a1, \dots, an}
+	\item \styleIMI{property := always sequence a1, \dots, an}
+\end{itemize}
+
+The semantics of these properties is detailed in~\cite{Andre13ICECCS}.
+
+Then, the command to synthesize parameters is the same as for the EF-synthesis:
+
+\styleCommand{\binimitator{} model.imi -mode EFsynth -merge -incl}
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Inverse Method}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+Given an \NIPTA{} and a reference parameter valuation, the inverse method synthesizes a parameter constraint such that, for any parameter valuation in that constraint, the set of traces is the same as for the reference valuation~\cite{ACEF09}.
+This problem is known as the trace preservation synthesis.
+	% TODO: cite AM15
+The trace-preservation emptiness problem being undecidable, the analysis is not guaranteed to terminate (although it almost always does in practice).
+	% TODO: cite AM15
+
+The command is:
+
+\styleCommand{\binimitator{} model.imi model.pi0}
+
+The reference valuation is described in \stylePath{model.pi0}.
+
+\imitator{} can also
+	output the trace set in a graphical form (option \styleOption{-output-trace-set}),
+% 	output the constraint synthesized in a graphical form in two dimensions (option \styleOption{-output-cart}),
+	% TODO
+	or
+	output the result to a text file (option \styleOption{-output-result}).
+
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Behavioral Cartography}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+Given an \NIPTA{} and a bounded parameter domain, the behavioral cartography synthesizes tiles, \ie{} parameter domains such that for any parameter valuation in that domain, the set of traces is the same~\cite{AF10}.
+The corresponding problem being undecidable, the analysis is not guaranteed to terminate; when it terminates, it may also leave ``holes'', \ie{} parameter domains not covered by any tile.
+	% TODO: cite AM15
 
+The command is:
+
+\styleCommand{\binimitator{} model.imi model.v0 -mode cover}
+
+The bounded parameter domain is described in \stylePath{model.v0}.
+
+\imitator{} can also
+	output all trace sets in a graphical form (option \styleOption{-output-trace-set}),
+	output the constraints synthesized in a graphical form in two dimensions (option \styleOption{-output-cart}),
+	or
+	output the result to a text file (option \styleOption{-output-result}).
+
+The option \styleOption{-step} specifies the interval between any two points of which the coverage is checked (see \cite{AF10}).
+By default, it is 1; setting $\frac{1}{3}$ often leads to full coverage when 1 was not enough.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -688,25 +774,73 @@ The options \styleOption{-merge} and \styleOption{-incl} are optional, but gener
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+
+Again, we only give the most useful options.
+For more detailed commands, and a complete list of options, see \cref{chapter:options}.
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Trace Set}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+To generate the trace set of a given computation in a graphical form, use:
+
+\styleCommand{\binimitator{} model.imi [options] -output-trace-set}
+
+\imitator{} will generate a file \stylePath{model.jpg}.
+Note that, beyond about 1,000 states or 1,000 transitions, the dot utility (responsible to generate the trace set) may crash.
+
+Using \styleOption{-output-trace-set-nodetails} makes a more compact representation.
+
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Constraints and Cartography}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+To generate the constraint generated by \imitator{} in a 2-dimensional plot (using the plot utility), use:
+
+\styleCommand{\binimitator{} model.imi [options] -output-cart}
+
+This will generate file \stylePath{model\_cart\_ef.png} if the algorithm is \EFsynth{},
+\stylePath{model\_cart\_bc.png} if the algorithm is \BC{} and its variant,
+or \stylePath{model\_cart\_patator.png} if the algorithm is the distributed \BC{} and its variants.
+
+The 2 dimensions chosen for the plot are the first two (non-constant) parameter dimension in the model.
+
+Additional useful options are
+\styleOption{-output-cart-x-min},
+\styleOption{-output-cart-x-max},
+\styleOption{-output-cart-y-min},
+\styleOption{-output-cart-y-max}
+to tune the values of the axes,
+and \styleOption{-output-graphics-source} to keep the plot source.
+
+The graphical output of the constraint is not yet available for the inverse method.
+	% TODO
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Export to JPEG}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+To generate a graphic representation of the model without performing any analysis, use:
+
+\styleCommand{\binimitator{} model.imi -PTA2JPG}
+
+\imitator{} will generate a file \stylePath{model-pta.jpg}.
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Export to \LaTeX{}}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+To generate a \LaTeX{} representation of the model without performing any analysis, use:
+
+\styleCommand{\binimitator{} model.imi -PTA2TikZ}
+
+\imitator{} will generate a file \stylePath{model.tex}.
+This file is a standalone \LaTeX{} file containing a single figure, which contains the different \IPTA{} in \texttt{subfigure} environments.
+The node positioning is not yet supported (locations are depicted vertically), so you may need to manually position all nodes, and bend some transitions if needed.
 
 
 
@@ -819,6 +953,8 @@ However, this can be (partially) simulated with stopwatches: we can replace a di
 
 % TODO: so far, only d := L(D); impossible to have clocks and parameters due to the constant nature of discrete variables
 
+% TODO: only one PTA/location in the bad state definition
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -826,24 +962,29 @@ However, this can be (partially) simulated with stopwatches: we can replace a di
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-
 The options available for \imitator{} are explained in the following.
 
+Note that some more options are available in the current implementation of \imitator{}.
+If these options are not listed here, they are experimental (or deprecated).
+If needed, more information can be obtained by contacting the \imitator{} team.
+
+
 %------------------------------------------------------------
-\paragraph{\code{-acyclic} (default: \code{false})}
+\paragraph{\styleOption{-acyclic} (default: \styleOptionValue{false})}
 %------------------------------------------------------------
 Does not test if a new state was already encountered.
-In a normal use, when \imitator{} encounters a new state, it checks if it has been encountered before.
+Without this option, when \imitator{} encounters a new state, it checks if it has been encountered before.
 This test may be time consuming for systems with a high number of reachable states.
 For acyclic systems, all traces pass only once by a given location.
-As a consquence, there are no cycles, so there should be no need to check if a given state has been encountered before.
+As a consequence, there are no cycles, so there should be no need to check if a given state has been encountered before.
 This is the main purpose of this option.
 
 However, be aware that, even for acyclic systems, several (different) traces can pass by the same state.
-In such a case, if the \code{-acyclic} option is activated, \imitator{} will compute \emph{twice} the states after the state common to the two traces.
+In such a case, if the \styleOption{-acyclic} option is activated, \imitator{} will compute \emph{twice} the states after the state common to the two traces.
 As a consequence, it is all but sure that activating this option will lead to an increase of speed.
 
 Note also that activating this option for non-acyclic systems may lead to an infinite loop in \imitator{}.
+
 
 %------------------------------------------------------------
 \paragraph{\code{-cart} (default: \code{off})}
@@ -1608,7 +1749,7 @@ around~$\pio$.
 % The input syntax, inspired by~\hytech{}, allows the use of clocks (or stopwatches), rational-valued discrete variables, and parameters (i.e. unknown constants) to be used altogether in linear terms, within guards, invariants and updates.
 
 % By iterating the inverse method on all integer points within a bounded reference parameter domain, we get a set of constraints %(``tiles'')
-% such that, for every point in each such constraint, the time-abstract behavior is the same: this gives a behavioral cartography of the system~\cite{af10}.
+% such that, for every point in each such constraint, the time-abstract behavior is the same: this gives a behavioral cartography of the system~\cite{AF10}.
 
 
 
@@ -1815,7 +1956,7 @@ The description of all the parametric reachable states for each tile may also op
 	\item Reachability analysis: given a PTA~$\A$, compute the set of all the reachable states (as it is done in tools such as, e.g., \hytech{} and \phaver{});
 	\item Inverse method algorithm: given a PTA~$\A$ and a reference valuation~$\pi_0$, synthesize a constraint guaranteeing the same trace set as for $\A[\pi_0]$;
 	\item Behavioral cartography algorithm: given a PTA~$\A$ and a rectangular parameter domain~$V_0$, compute a list of tiles. Two different modes can be considered: (1) cover all the integer points of~$V_0$ or, (2) call a given number of times the inverse method on an integer point selected randomly within $V_0$ (which is interesting for rectangles containing a very big number of integer points but few different tiles);
-	\item Automatic generation of the trace sets, for the reachability analysis and for both algorithms $\IM$ and $\carto$;
+	\item Automatic generation of the trace sets, for the reachability analysis and for both algorithms $\IM$ and $\BC$;
 	\item Graphical output of the trace sets;
 	\item Graphical output of the behavioral cartography;
 	\item Optional use of the merging technique of \cite{AFS12}.
@@ -1901,7 +2042,7 @@ See Appendix~\ref{app:grammar}.
 \begin{enumerate}
 	\item Reachability analysis: given a PTA~$\A$, compute the whole set of reachable states from a given initial state.
 	\item Inverse Method: given a PTA~$\A$ and a valuation~$\pi_0$ of the parameters, compute a constraint on the parameters guaranteeing the same behavior as under~$\pi_0$~\cite{AS13}.
-	\item Behavioral Cartography Algorithm: given a PTA~$\A$ and a rectangle~$V_0$ (bounded interval of values for each parameter), compute a cartography of the system~\cite{af10}.
+	\item Behavioral Cartography Algorithm: given a PTA~$\A$ and a rectangle~$V_0$ (bounded interval of values for each parameter), compute a cartography of the system~\cite{AF10}.
 \end{enumerate}
 
 We detail those three modes below.
@@ -1945,7 +2086,7 @@ In this case, \imitator{} outputs the resulting constraint $K_0$ on the standard
 \subsection{Cartography} \label{ss:mode_cartography}
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
 
-Given a PTA~$\A$ and a rectangle~$V_0$ (bounded interval of values for each parameter), the Behavioral Cartography Algorithm computes a cartography of the system~\cite{af10}.
+Given a PTA~$\A$ and a rectangle~$V_0$ (bounded interval of values for each parameter), the Behavioral Cartography Algorithm computes a cartography of the system~\cite{AF10}.
 Two possible variants of the algorithm can be used:
 \begin{enumerate}
 	\item The standard variant covers all the integer points within $V_0$.
