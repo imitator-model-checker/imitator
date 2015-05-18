@@ -32,6 +32,9 @@ val program_name_and_version_and_nickname_and_build : unit -> string
 (* Name + version + nickname + build number + build time *)
 val program_name_and_version_and_nickname_and_build_time : unit -> string
 
+(* URL of IMITATOR without http:// *)
+val imitator_url : string
+
 
 (****************************************************************)
 (** Debug modes *)

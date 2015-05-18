@@ -7,7 +7,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Ulrich Kuehne, Etienne Andre
  * Created:       2010
- * Last modified: 2015/05/14
+ * Last modified: 2015/05/18
  *
  ****************************************************************)
  
@@ -257,12 +257,14 @@ class imitator_options =
 
 		
 		method parse =
-			let usage_msg = "Usage: " ^ (*program_name*)(Sys.argv.(0)) ^ " model" ^ Constants.model_extension ^ " [reference_valuation.pi0] [options]" in
+			let usage_msg = "Usage: " ^ (Sys.argv.(0)) ^ " model" ^ Constants.model_extension ^ " [reference_valuation.pi0] [options]" in
 
 			(* Get the debug mode *)
 			let rec set_debug_mode_ref debug_mode =
 					let mode = try debug_mode_of_string debug_mode
 						with Not_found ->
+						(*** HACK: print header now ***)
+						print_header_string();
 						print_error ("The debug mode '" ^ debug_mode ^ "' is not valid.");
 						Arg.usage speclist usage_msg;
 						abort_program ();
@@ -294,6 +296,8 @@ class imitator_options =
 					let number = String.sub mode 6 (String.length mode - 6) in
 					imitator_mode := (Random_cartography (int_of_string number))
 				) with Failure _ | Invalid_argument _-> (
+					(*** HACK: print header now ***)
+					print_header_string();
 					print_error ("The mode '" ^ mode ^ "' is not valid.");
 					Arg.usage speclist usage_msg;
 					abort_program ();
@@ -334,6 +338,8 @@ class imitator_options =
 					let number = String.sub mode 6 (String.length mode - 6) in
 					distribution_mode := Distributed_ms_random (int_of_string number)
 				) with Failure _ | Invalid_argument _-> (
+					(*** HACK: print header now ***)
+					print_header_string();
 					print_error ("The distribution mode '" ^ mode ^ "' is not valid.");
 					Arg.usage speclist usage_msg;
 					abort_program ();
@@ -357,7 +363,11 @@ class imitator_options =
 				
 				("-completeIM", Set completeIM, " Experimental version of IM that outputs a complete (full) result. Default: false.");
 				
-				("-contributors", Unit (fun _ -> print_contributors(); exit 0), " Print contributors and exit.");
+				("-contributors", Unit (fun _ ->
+					(*** HACK: print header now ***)
+					print_header_string();
+					print_contributors();
+					exit 0), " Print contributors and exit.");
 				
 				("-counterex", Set counterex, " Stop the analysis as soon as a bad state is discovered (work in progress). Default: false.");
 				
@@ -424,7 +434,7 @@ class imitator_options =
 				
 				("-precomputepi0", Set precomputepi0, " Compute the next pi0 before the next reception of a constraint (in PaTATOR mode only). Default: false.");
 
-				("-PRP", Set efim, " Reachability-preservation algorithm mixing IM and EF [ALNS15]. Default: false.");
+				("-PRP", Set efim, " Reachability-preservation algorithm mixing IM and EFsynth [ALNS15]. Default: false.");
 				
 				("-PTA2GrML", Unit (fun _ -> pta2gml := true; imitator_mode := Translation), "Translate the model into a GrML program, and exit without performing any analysis. Defaut : 'false'");
 				
@@ -448,7 +458,11 @@ class imitator_options =
 				
 				("-verbose", String set_debug_mode_ref, " Print more or less information. Can be set to 'mute', 'warnings', 'standard', 'low', 'medium', 'high', 'total'. Default: 'standard'");
 				
-				("-version", Unit (fun _ -> print_string ("\n" ^ Constants.program_name ^ " " ^ Constants.version_string ^ "\nBuild: " ^ BuildInfo.build_number ^ " (" ^ BuildInfo.build_time ^ ")\n"); exit 0), " Print version number and exit.");
+				("-version", Unit (fun _ ->
+					(*** HACK: print header now ***)
+					print_header_string();
+(*					print_string ("\n" ^ Constants.program_name ^ " " ^ Constants.version_string ^ "\nBuild: " ^ BuildInfo.build_number ^ " (" ^ BuildInfo.build_time ^ ")\n");*)
+					exit 0), " Print version number and exit.");
 			] in
 					
 			(* function for parsing arguments *)
@@ -473,6 +487,8 @@ class imitator_options =
 
 			(* Case no file (except case translation) *)
 			if nb_args < 1 then(
+				(*** HACK: print header now ***)
+				print_header_string();
 				print_error ("Please give a file name for the model.");
 				Arg.usage speclist usage_msg;
 				abort_program (); exit(1)
@@ -480,6 +496,8 @@ class imitator_options =
 			
 			(* Case no pi0 file *)
 			if nb_args = 1 && (!imitator_mode != State_space_exploration) && (!imitator_mode != EF_synthesis) && (!imitator_mode != Translation) (*&& not !forcePi0*) then(
+				(*** HACK: print header now ***)
+				print_header_string();
 				print_error ("Please give a file name for the reference valuation.");
 				Arg.usage speclist usage_msg;
 				abort_program (); exit(1)
@@ -588,9 +606,9 @@ class imitator_options =
 
 
 			if !efim then
-				print_message Verbose_standard ("Considering algorithm EFIM [ALNS15].")
+				print_message Verbose_standard ("Considering algorithm PRP [ALNS15].")
 			else
-				print_message Verbose_medium ("No EFIM algorithm (default).")
+				print_message Verbose_medium ("No PRP algorithm (default).")
 			;
 
 

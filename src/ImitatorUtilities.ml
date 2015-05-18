@@ -89,6 +89,9 @@ let program_name_and_version_and_nickname_and_build_time () =
 	^ ")"
 
 
+(* URL of IMITATOR without http:// *)
+let imitator_url = "www.imitator.fr"
+
 
 (****************************************************************)
 (** Debug modes *)
@@ -289,19 +292,20 @@ let print_header_string () =
 	
 	(* Build info *)
 	let build_info = "Build: " ^ BuildInfo.build_number ^ " (" ^ BuildInfo.build_time ^ ")" in
-	let length_header = 55 in
+	let length_header = 54 in
 	
 	let imi_name = program_name_and_version_and_nickname() in
 	
 	"************************************************************\n"
-	^ "*  " ^ imi_name ^ (string_n_times (length_header - (String.length imi_name)) " ") ^ "    *\n"
+	^ "*  " ^ imi_name ^ (string_n_times (length_header - (String.length imi_name)) " ") ^ "     *\n"
 	^ "*                                                          *\n"
 	^ "*                     Etienne Andre, Ulrich Kuehne et al.  *\n"
 	^ "*                                             2009 - " ^ (BuildInfo.build_year) ^ "  *\n"
 	^ "*                       LSV, ENS de Cachan & CNRS, France  *\n"
 	^ "*  LIPN, Universite Paris 13, Sorbonne Paris Cite, France  *\n"
+	^ "*  " ^ (string_n_times (length_header - (String.length imitator_url)) " ") ^ imitator_url ^ "  *\n"
 	^ "*                                                          *\n"
-	^ "*  " ^ (string_n_times (length_header - (String.length build_info)) " ") ^ build_info ^ " *\n"
+	^ "*  " ^ (string_n_times (length_header - (String.length build_info)) " ") ^ build_info ^ "  *\n"
 	^ "************************************************************"
 	
 	in print_message Verbose_standard header_string
@@ -309,20 +313,19 @@ let print_header_string () =
 
 (* Print the name of the contributors *)
 let print_contributors()  = 
-	print_version_string();
-	print_string (" " ^ Constants.program_name ^ " has been developed by:\n");
-	print_string (" * Etienne Andre       (2008 - " ^ (BuildInfo.build_year) ^ ")\n");
-	print_string " * Camille Coti        (2014)\n";
-	print_string " * Daphne Dussaud      (2010)\n";
-	print_string " * Sami Evangelista    (2014)\n";
-	print_string " * Ulrich Kuehne       (2010 - 2011)\n";
-	print_string " * Nguyen Hoang Gia    (2014 - 2015)\n";
-	print_string " * Romain Soulat       (2010 - 2013)\n";
+	print_string ("    " ^ Constants.program_name ^ " has been developed by:\n");
+	print_string ("    * Etienne Andre       (2008 - " ^ (BuildInfo.build_year) ^ ")\n");
+	print_string "    * Camille Coti        (2014)\n";
+	print_string "    * Daphne Dussaud      (2010)\n";
+	print_string "    * Sami Evangelista    (2014)\n";
+	print_string "    * Ulrich Kuehne       (2010 - 2011)\n";
+	print_string "    * Nguyen Hoang Gia    (2014 - 2015)\n";
+	print_string "    * Romain Soulat       (2010 - 2013)\n";
 	print_string "\n";
-	print_string " Moral support and suggestions by:\n";
-	print_string " * Emmanuelle Encrenaz\n";
-	print_string " * Laurent Fribourg\n";
-	print_string " * Giuseppe Lipari\n";
+	print_string "    Moral support and suggestions by:\n";
+	print_string "    * Emmanuelle Encrenaz\n";
+	print_string "    * Laurent Fribourg\n";
+	print_string "    * Giuseppe Lipari\n";
 	()
 
 
