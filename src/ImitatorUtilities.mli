@@ -7,10 +7,30 @@
  * Author:        Etienne Andre
  * 
  * Created:       2014/10/24
- * Last modified: 2015/04/01
+ * Last modified: 2015/05/18
  *
  ****************************************************************)
 
+
+
+(****************************************************************)
+(** Versioning *)
+(****************************************************************)
+
+(* Name + version *)
+val program_name_and_version : unit -> string
+
+(* Name + version + nickname *)
+val program_name_and_version_and_nickname : unit -> string
+
+(* Name + version + build *)
+val program_name_and_version_and_build : unit -> string
+
+(* Name + version + nickname + build number *)
+val program_name_and_version_and_nickname_and_build : unit -> string
+
+(* Name + version + nickname + build number + build time *)
+val program_name_and_version_and_nickname_and_build_time : unit -> string
 
 
 (****************************************************************)

@@ -10,7 +10,7 @@
  * Author:        Ulrich Kuehne, Etienne Andre
  * 
  * Created:       2010/07/22
- * Last modified: 2015/04/01
+ * Last modified: 2015/05/18
  *
  ****************************************************************)
 
@@ -112,7 +112,7 @@ let write_result_to_file constraint_str =
 		"(*" 
 		(* Program version *)
 		^ "\n  Result output by " ^ Constants.program_name ^ ""
-		^ "\n  Version  : " ^ Constants.version_string ^ " (build " ^ BuildInfo.build_number ^ ")"
+		^ "\n  Version  : " ^ (ImitatorUtilities.program_name_and_version_and_nickname_and_build())
 		^ "\n  Model    : '" ^ options#file ^ "'"
 		(* Date *)
 		^ "\n  Generated: " ^ (now()) ^ ""

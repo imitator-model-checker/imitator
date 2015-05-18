@@ -7,7 +7,7 @@
  * Author:        Etienne Andre
  * 
  * Created:       2014/10/24
- * Last modified: 2015/04/01
+ * Last modified: 2015/05/18
  *
  ****************************************************************)
  
@@ -28,6 +28,65 @@ open CamlUtilities
 (****************************************************************)
 let counter = ref (Unix.gettimeofday())
 
+
+
+
+
+(****************************************************************)
+(** Versioning *)
+(****************************************************************)
+
+(* Name + version *)
+let program_name_and_version () =
+	Constants.program_name
+	^ " "
+	^ Constants.version_string
+
+
+(* Name + version + nickname *)
+let program_name_and_version_and_nickname () =
+	Constants.program_name
+	^ " "
+	^ Constants.version_string
+	^ " \""
+	^ Constants.version_name
+	^ "\""
+
+
+(* Name + version + build number *)
+let program_name_and_version_and_build () =
+	Constants.program_name
+	^ " "
+	^ Constants.version_string
+	^ " (build "
+	^ BuildInfo.build_number
+	^ ")"
+
+
+(* Name + version + nickname + build number *)
+let program_name_and_version_and_nickname_and_build () =
+	Constants.program_name
+	^ " "
+	^ Constants.version_string
+	^ " \""
+	^ Constants.version_name
+	^ "\" (build "
+	^ BuildInfo.build_number
+	^ ")"
+
+
+(* Name + version + nickname + build number + build time *)
+let program_name_and_version_and_nickname_and_build_time () =
+	Constants.program_name
+	^ " "
+	^ Constants.version_string
+	^ " \""
+	^ Constants.version_name
+	^ "\" build "
+	^ BuildInfo.build_number
+	^ "\" ("
+	^ BuildInfo.build_time
+	^ ")"
 
 
 
@@ -232,8 +291,10 @@ let print_header_string () =
 	let build_info = "Build: " ^ BuildInfo.build_number ^ " (" ^ BuildInfo.build_time ^ ")" in
 	let length_header = 55 in
 	
+	let imi_name = program_name_and_version_and_nickname() in
+	
 	"************************************************************\n"
-	^ "*  " ^ Constants.program_name ^ " " ^ Constants.version_string ^ (string_n_times (length_header - (String.length Constants.program_name) - 1 - (String.length Constants.version_string)) " ") ^ " *\n"
+	^ "*  " ^ imi_name ^ (string_n_times (length_header - (String.length imi_name)) " ") ^ "    *\n"
 	^ "*                                                          *\n"
 	^ "*                     Etienne Andre, Ulrich Kuehne et al.  *\n"
 	^ "*                                             2009 - " ^ (BuildInfo.build_year) ^ "  *\n"
