@@ -190,9 +190,9 @@
 % ALGORITHMES
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
 % Algorithmes PTA
-\newcommand{\BC}{\ensuremath{\mathrm{BC}}}
-\newcommand{\EFsynth}{\ensuremath{\mathrm{EFsynth}}}
-\newcommand{\IM}{\ensuremath{\mathrm{IM}}}
+\newcommand{\BC}{\ensuremath{\mathsf{BC}}}
+\newcommand{\EFsynth}{\ensuremath{\mathsf{EFsynth}}}
+\newcommand{\IM}{\ensuremath{\mathsf{IM}}}
 
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
 % CONSTANTES DE CHAINES
@@ -967,10 +967,15 @@ The options available for \imitator{} are explained in the following.
 Note that some more options are available in the current implementation of \imitator{}.
 If these options are not listed here, they are experimental (or deprecated).
 If needed, more information can be obtained by contacting the \imitator{} team.
+	% cartonly
+	% check-iptta
+	% check-point
+	% completeIM
+	% -counterex
 
 
 %------------------------------------------------------------
-\paragraph{\styleOption{-acyclic} (default: \styleOptionValue{false})}
+\paragraph{\styleOption{-acyclic} (default: false)}
 %------------------------------------------------------------
 Does not test if a new state was already encountered.
 Without this option, when \imitator{} encounters a new state, it checks if it has been encountered before.
@@ -987,27 +992,48 @@ Note also that activating this option for non-acyclic systems may lead to an inf
 
 
 %------------------------------------------------------------
-\paragraph{\code{-cart} (default: \code{off})}
+\paragraph{\styleOption{-contributors}}
 %------------------------------------------------------------
+Print the list of contributors and exits.
 
-After execution of the behavioral cartography, plots the generated
-zones as a \emph{PostScript} file. This option takes an integer which
-limits the number of generated plots, where each plot represents the
-projection of the parametric zones on two parameters. If the
-considered rectangle $v_0$ is spanned by two parameters only, then
-\code{-cart 1} will plot the projection of the generated zones on
-these two parameters. 
-
-This option makes use of the external utility \code{graph}, which is
-part of the \emph{GNU plotting utils}, available on most Linux
-platforms. The generated files will be located in the same directory
-as the source files, unless option \code{-log-prefix} is used.
 
 %------------------------------------------------------------
-\paragraph{\code{-depth-limit <limit>} (default: \code{none})}
+\paragraph{\styleOption{-depth-limit <limit>} (default: none)}
 %------------------------------------------------------------
-Limits the number of iterations in the $\mathit{Post}$ exploration, \ie{} the depth of the traces.
+Limits the depth of the exploration of the state space.
 In the cartography mode, this option gives a limit to \emph{each} call to the inverse method.
+Setting \styleOption{-depth-limit} guarantees the termination of any execution of \imitator{}, but not the correctness of the algorithms.
+
+
+%------------------------------------------------------------
+\paragraph{\styleOption{-output-cart} (default: off)}
+%------------------------------------------------------------
+
+After execution of the behavioral cartography or \EFsynth{}, plots the generated zones as a \texttt{.png} file.
+This will generate file \stylePath{model\_cart\_ef.png} if the algorithm is \EFsynth{},
+\stylePath{model\_cart\_bc.png} if the algorithm is \BC{} and its variant,
+or \stylePath{model\_cart\_patator.png} if the algorithm is the distributed \BC{} and its variants.
+% This option takes an integer which limits the number of generated plots, where each plot represents the projection of the parametric zones on two parameters.
+	% TODO: check
+If the model contains more than two parameters, then \code{-output-cart} will plot the projection of the generated zones on the first two parameters of the model (or on the two \emph{varying} parameters in the case of \BC{}).
+
+This option makes use of the external utility \texttt{graph}, which is
+part of the \emph{GNU plotting utils}, available on most Linux
+platforms.
+The generated files will be located in the same directory as the source files, unless option \styleOption{-output-prefix} is used.
+
+Additional useful options are
+\styleOption{-output-cart-x-min},
+\styleOption{-output-cart-x-max},
+\styleOption{-output-cart-y-min},
+\styleOption{-output-cart-y-max}
+to tune the values of the axes,
+and \styleOption{-output-graphics-source} to keep the plot source.
+
+
+% TODO: i'm here
+
+
 
 %------------------------------------------------------------
 \paragraph{\code{-fancy} (default: \code{false})}
