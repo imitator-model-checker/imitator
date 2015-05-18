@@ -66,8 +66,8 @@ class imitator_options =
 		(* only plot cartography *)
 		val mutable cartonly = ref false
 		
-		(* plot fancy states in dot *)
-		val mutable fancy = ref false
+		(* Give location detais in dot *)
+		val mutable fancy = ref true
 		
 		(* prefix for output files *)
 		val mutable files_prefix = ref ""
@@ -386,8 +386,6 @@ class imitator_options =
 				
 				("-dynamic-elimination", Set dynamic_clock_elimination, " Dynamic clock elimination [FSFMA13]. Default: false.");
 				
-				("-fancy", Set fancy, " Generate detailed state information for dot output. Default: false.");
-
 				(* 				("-forcePi0", Set forcePi0, "Create a predefined pi0 file of the form p1 = 1, p2 = 2, etc. Defaut : 'false'"); *)
 				
 				("-fromGrML", Set fromGML, "GrML syntax for input files (experimental). Defaut : 'false'");
@@ -432,6 +430,9 @@ class imitator_options =
 				
 				("-output-trace-set", Set with_dot, " Trace set under a graphical form (using 'dot'). Default: false.");
 				
+				(*** HACK: I didn't find "Unset" constructor and I have no Internet connection to check... ***)
+				("-output-trace-set-nodetails", Unit (fun _ -> fancy := false), " No detailed location information in graphical trace set. Default: false (i.e., with details).");
+
 				("-precomputepi0", Set precomputepi0, " Compute the next pi0 before the next reception of a constraint (in PaTATOR mode only). Default: false.");
 
 				("-PRP", Set efim, " Reachability-preservation algorithm mixing IM and EFsynth [ALNS15]. Default: false.");
@@ -800,12 +801,20 @@ class imitator_options =
 			if !output_result then
 				print_message Verbose_standard ("The result will be written to a file.")
 			else
-				print_message Verbose_medium ("No result written into a file (default).");
+				print_message Verbose_medium ("No result written into a file (default).")
+			;
 			
 			if !with_dot then
 				print_message Verbose_standard ("The trace set(s) will be generated in a graphical mode.")
 			else
-				print_message Verbose_medium ("No graphical output for trace set(s) (default).");
+				print_message Verbose_medium ("No graphical output for trace set(s) (default).")
+			;
+			
+			if !fancy then
+				print_message Verbose_medium ("Locations will be detailed in the graphical trace set (default).")
+			else
+				print_message Verbose_standard ("No location details in the graphical trace set.")
+			;
 			
 			
 			if !with_log then

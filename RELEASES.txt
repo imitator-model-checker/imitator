@@ -24,6 +24,7 @@ Minor features:
 Changes in options syntax:
 - mode "reachability" becomes mode "statespace"
 - "-cart" becomes "-output-cart"
+- "-fancy" becomes true by default; to disable it, use "-output-trace-set-nodetails"
 - "-log-prefix" becomes "-output-prefix"
 - "-with-dot" becomes "-output-trace-set"
 - "-with-graphics-source" becomes "-output-graphics-source"
@@ -32,7 +33,8 @@ Changes in options syntax:
 
 Misc
 - Improve printing floating numbers (in time and memory statistics)
-- Now IMITATOR has a build number =)
+- Now IMITATOR has a build number
+- Now IMITATOR has a version name (based on Breton traditional galettes ingredients!): 2.7 is "Butter Guéméné"
 
 Install and compile
 - Two versions: distributed (sh compile.sh), that creates a dynamic binary, or non-distributed (sh compile-nondistr.sh), that creates a static binary
