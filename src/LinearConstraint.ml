@@ -437,18 +437,18 @@ let rec evaluate_linear_term_ppl valuation_function linear_term =
 		| Coefficient z -> NumConst.numconst_of_mpz z
 		| Variable v -> (
 			  try valuation_function v 
-			  with _ -> raise(InternalError ("No value was found for variable " ^ (string_of_int v) ^ ", while trying to evaluate a linear term; this variable was probably not defined.")))
-	  | Unary_Plus t -> evaluate_linear_term_ppl valuation_function t
+			  with _ -> raise(InternalError ("Error when evaluating variable " ^ (string_of_int v) ^ ", while trying to evaluate a linear term; this variable was probably not defined in the valuation function.")))
+		| Unary_Plus t -> evaluate_linear_term_ppl valuation_function t
 		| Unary_Minus t -> NumConst.neg (evaluate_linear_term_ppl valuation_function t)
 		| Plus (lterm, rterm) -> (
 				let lval = evaluate_linear_term_ppl valuation_function lterm in
 				let rval = evaluate_linear_term_ppl valuation_function rterm in
 				NumConst.add lval rval)
-	 | Minus (lterm, rterm) -> (
+		| Minus (lterm, rterm) -> (
 				let lval = evaluate_linear_term_ppl valuation_function lterm in
 				let rval = evaluate_linear_term_ppl valuation_function rterm in
 				NumConst.sub lval rval)
-	 | Times (z, rterm) -> ( 
+		| Times (z, rterm) -> ( 
 				let rval = evaluate_linear_term_ppl valuation_function rterm in
 				NumConst.mul (NumConst.numconst_of_mpz z) rval)
 
