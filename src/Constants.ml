@@ -12,7 +12,7 @@
  ****************************************************************)
  
 
-let program_name = "IMITATOR-working"
+let program_name = "IMITATOR"
 
 let version_string = "2.7-beta2"
 
