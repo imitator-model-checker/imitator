@@ -5,11 +5,11 @@ Major features:
 - Added EF-synthesis (option "-mode EF"): synthesize all parameter valuations such that a given state is reachable [AHV93,JLR15]
 - Added PRP and PRPC algorithms (option "-PRP") [ALNS15]
 - Added a distributed version of IMITATOR (option "-distributed"), with several distribution schemes:
-	* static [unpublished]
+	* static [ACN15]
 	* sequential [ACE14]
 	* random [ACE14]
-	* shuffle [unpublished]
-	* dynamic [unpublished]
+	* shuffle [ACN15]
+	* dynamic [ACN15]
 	* unsupervised / unsupervised multi-threaded (unpublished, EXPERIMENTAL)
 
 Minor features:
