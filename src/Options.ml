@@ -7,7 +7,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Ulrich Kuehne, Etienne Andre
  * Created:       2010
- * Last modified: 2015/05/18
+ * Last modified: 2015/07/02
  *
  ****************************************************************)
  
@@ -375,14 +375,14 @@ class imitator_options =
 				
 				("-distributed", String set_distributed, " Distributed version of the behavioral cartography.
         Use 'no' for the non-distributed mode (default).
-        Use 'static' for a static domain partitioning.
+        Use 'static' for a static domain partitioning [ACN15].
         Use 'sequential' for a master-worker scheme with sequential point distribution [ACE14].
         Use 'randomXX' for a master-worker scheme with random point distribution (e.g., random5 or random10); after XX successive unsuccessful attempts (where the generated point is already covered), the algorithm will switch to an exhaustive sequential iteration [ACE14].
-        Use 'shuffle' for a master-worker scheme with shuffle point distribution.
-        Use 'dynamic' for a master-worker dynamic subdomain decomposition.
+        Use 'shuffle' for a master-worker scheme with shuffle point distribution [ACN15].
+        Use 'dynamic' for a master-worker dynamic subdomain decomposition [ACN15].
 				");
 				
-				("-distributedKillIM", Set distributedKillIM, " In distributed cartography, kill processes covered by other tiles. Default: false.");
+				("-distributedKillIM", Set distributedKillIM, " In distributed cartography, kill processes covered by other tiles [ACN15]; only works with selected distribution schemes. Default: false.");
 				
 				("-dynamic-elimination", Set dynamic_clock_elimination, " Dynamic clock elimination [FSFMA13]. Default: false.");
 				
@@ -630,7 +630,7 @@ class imitator_options =
 				)
 			)
 			| Distributed_static ->(
-				print_message Verbose_standard ("Considering a distributed mode with static splitting.");
+				print_message Verbose_standard ("Considering a distributed mode with static splitting [ACN15].");
 				if !imitator_mode <> Cover_cartography then(
 					print_warning "The distributed mode is only valid for the cartography. Option will be ignored.";
 				)
@@ -655,7 +655,7 @@ class imitator_options =
 			)
 			(*************)
 			| Distributed_ms_subpart -> (
-				print_message Verbose_standard ("Considering a distributed mode with \"shuffle\" enumeration of pi0 points.");
+				print_message Verbose_standard ("Considering a distributed mode with a dynamic domain decomposition [ACN15].");
 				if !imitator_mode <> Cover_cartography then(
 					print_warning "The distributed mode is only valid for the cartography. Option will be ignored.";
 				)
@@ -663,7 +663,7 @@ class imitator_options =
 			end;
 
 			if !distributedKillIM then(
-				print_message Verbose_standard ("Heuristics to kill a process when its point is covered by another tile, in the distributed cartography (work in progress).");
+				print_message Verbose_standard ("Heuristics to kill a process when its point is covered by another tile, in the distributed cartography [ACN15]; only works with some distribution schemes.");
 				if !imitator_mode <> Cover_cartography || !distribution_mode = Non_distributed then(
 					print_warning "The killIM heuristics is only valid for the distributed cartography. Option will be ignored.";
 				);
