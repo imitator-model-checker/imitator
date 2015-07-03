@@ -1,7 +1,7 @@
 (************************************************************
  *                      IMITATOR MODEL                      
  *
- * Train with intruder
+ * Train gate controller with intruder
  *
  * Description     : Train crossing, with an intruder that may weaken the safety
  * Correctness     : When the train passes, the gate is closed
@@ -10,9 +10,9 @@
  * Input by        : Étienne André
  *
  * Created         : 2015/06/30
- * Last modified   : 2015/06/30
+ * Last modified   : 2015/07/03
  *
- * IMITATOR version: 2.7-beta2
+ * IMITATOR version: 2.7-beta3
  ************************************************************)
 
 
@@ -28,16 +28,20 @@ var
 		: discrete;
 
 (* Train parameters *)
-	p_approaching_min, p_approaching_max,
-	p_coming_min, p_coming_max,
-	p_stopping_min, p_stopping_max,
+	p_approaching_min = 40, p_approaching_max = 60,
+	p_coming_min = 10, p_coming_max = 15,
+	p_stopping_min = 8, p_stopping_max = 9,
 	
 (* Gate parameters *)
-	p_waiting_min, p_waiting_max,
-	p_ewaiting_min, p_ewaiting_max,
-	p_lowering_min, p_lowering_max,
+	p_waiting_min = 25, p_waiting_max = 40,
+	p_ewaiting_min = 5, p_ewaiting_max = 10,
+	p_lowering_min = 15, p_lowering_max = 20,
+(* 	p_elowering_min = 5, p_elowering_max = 8, *)
 
 (* Intruder parameters *)
+(*	p_walking_sensor_min = 80, p_walking_sensor_max = 100,
+	p_walking_house_min = 10, p_walking_house_max = 15,
+	p_enter_min = 50, p_enter_max = 60,*)
 	p_walking_sensor_min, p_walking_sensor_max,
 	p_walking_house_min, p_walking_house_max,
 	p_enter_min, p_enter_max,
@@ -103,8 +107,15 @@ loc waiting_cut: while x_gate <= p_ewaiting_max wait {}
 
 loc lowering: while x_gate <= p_lowering_max wait {}
 	when x_gate >= p_lowering_min sync end_lowering do {x_gate' = 0, gate_down' = TRUE} goto down;
+	when True sync power_cut goto lowering; (* no influce of power cut when the gate is lowering *)
+
+(* emergency (fast) mode for lowering the gate *)
+(*loc elowering: while x_gate <= p_elowering_max wait {}
+	when x_gate >= p_elowering_min sync end_lowering do {x_gate' = 0, gate_down' = TRUE} goto down;
+	when True sync power_cut goto elowering; (* no influce of power cut when the gate is lowering *)*)
 
 loc down: while True wait {}
+	when True sync power_cut goto lowering; (* no influce of power cut when the gate is down *)
 
 end (* gate *)
 
@@ -125,10 +136,10 @@ loc walking_sensor: while x_intruder <= p_walking_sensor_max wait {}
 	when x_gate >= p_walking_sensor_min sync break_sensor do {sensors_active' = FALSE, x_intruder' = 0} goto intruder_done;
 
 loc walking_house: while x_intruder <= p_walking_house_max wait {}
-	when x_gate >= p_walking_house_min sync reach_house do {sensors_active' = FALSE, x_intruder' = 0} goto enter_house;
+	when x_gate >= p_walking_house_min sync reach_house do {x_intruder' = 0} goto enter_house;
 
 loc enter_house: while x_intruder <= p_enter_max wait {}
-	when x_gate >= p_enter_min sync power_cut do {x_intruder' = 0} goto intruder_done;
+	when x_gate >= p_enter_min sync power_cut do {sensors_active' = FALSE, x_intruder' = 0} goto intruder_done;
 
 loc intruder_done: while True wait {}
 
@@ -177,6 +188,8 @@ init := True
 	& p_lowering_min <= p_lowering_max
 	& p_ewaiting_min >= 0
 	& p_ewaiting_min <= p_ewaiting_max
+(*	& p_elowering_min >= 0
+	& p_elowering_min <= p_elowering_max*)
 	(* Intruder *)
 	& p_walking_sensor_min >= 0
 	& p_walking_sensor_min <= p_walking_sensor_max
@@ -191,7 +204,7 @@ init := True
 (* Property specification *)
 (************************************************************)
 
-(* property := unreachable loc[pta] = l1; *)
+property := unreachable loc[train] = crash;
 
 
 (************************************************************)
