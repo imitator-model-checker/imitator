@@ -8,7 +8,7 @@
  * Author:        Etienne Andre, Ulrich Kuehne
  * 
  * Created:       2010/07/05
- * Last modified: 2015/05/18
+ * Last modified: 2015/07/03
  *
  ****************************************************************)
 
@@ -751,13 +751,30 @@ let dot_of_graph model reachability_graph ~fancy =
 					model.location_names aut_index loc_index
 				) model.automata in
 				let label = string_of_list_of_string_with_sep "|" loc_names in
+				let label_discrete = 
+					if model.nb_discrete > 0 then (
+						"|" ^ (string_of_list_of_string_with_sep "|" (
+							List.map (fun discrete_index -> 
+	(* 						let loc_index = Automaton.get_location global_location aut_index in *)
+								"v("
+								(* Variable name *)
+								^ (model.variable_names discrete_index)
+								(* Equal *)
+								^ ")="
+								(* Variable value *)
+								^ (NumConst.string_of_numconst (Automaton.get_discrete_value global_location discrete_index))
+							) model.discrete
+						))
+					) else ""
+				in
+				
 				(* Create the command *)
 				string_colors := !string_colors
 					^ "\n  " ^ node_index
 					^ "[fillcolor=" ^ location_color
 					^ ", style=filled, shape=Mrecord, label=\"" 
 					^ node_index ^ "|{" 
-					^ label ^ "}\"];";
+					^ label ^ label_discrete ^ "}\"];";
 			) else (
 				(* Create the command *)
 				string_colors := !string_colors
