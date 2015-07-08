@@ -15,6 +15,7 @@
 \usepackage[english]{babel} % francais,
 
 \usepackage{fourier}
+\usepackage{eulervm}
 
 \usepackage{amsmath,amssymb,amsthm,url}
 \usepackage{amsfonts}
@@ -207,8 +208,9 @@
 \newcommand{\gdot}{\texttt{dot}}
 \newcommand{\graphviz}{Graphviz}
 \newcommand{\hytech}{{\sc HyTech}}
-\newcommand{\imitator}{\textsc{Imitator}}
-\newcommand{\imitatorExec}{\code{IMITATOR}}
+% \newcommand{\imitator}{\textsc{Imitator}}
+\newcommand{\imitator}{\textsf{IMITATOR}}
+\newcommand{\imitatorExec}{\code{imitator}}
 \newcommand{\IPTA}{IPTA}
 \newcommand{\NIPTA}{NIPTA}
 \newcommand{\ocaml}{OCaml}
@@ -234,6 +236,9 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % FORMATING
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\hyphenation{IMITATOR}
+\hyphenation{Uppaal}
 
 \newcommand{\paragraphe}[1]{\paragraph{#1.}}
 
@@ -353,7 +358,7 @@
 
 \mbox{}
 
-\vspace{4cm}
+\vspace{3cm}
 
 \begin{center}
 	{\Huge \bfseries IMITATOR User Manual}
@@ -365,7 +370,6 @@
 	\vspace{2cm}
 	
 	{\Large Version \imitatorversion{} (\imitatorversionname{})}
-
 	
 \end{center}
 
@@ -374,6 +378,13 @@
 {\small \hfill{}Build \input{../build_number.txt}}
 
 {\small \hfill{}\today{}}
+
+\vspace{2cm}
+
+\begin{center}
+ 	{\Large \url{www.imitator.fr}}
+\end{center}
+
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -399,7 +410,7 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % TODO
-% TODO
+% TODO: say no GUI, but refer to CosyVerif
 
 
 
@@ -410,13 +421,17 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 We first briefly introduce the syntax using a simple example for readers familiar with parametric timed automata, and not interested in subtle details (such as the synchronization model).
-A formal (and nearly exhaustive) definition of \imitator{} parametric timed automata can be found in \cref{section:IPTA}.
+A formal (and nearly exhaustive) definition of \imitator{} parametric timed automata (\NIPTA{}) can be found in \cref{section:IPTA}.
 The complete syntax is given in \cref{chapter:grammar}.
+
+The input syntax of \imitator{} is originally based on the syntax of \hytech{}~\cite{HHW95}, with several improvements.
+Actually, all standard \hytech{} files describing only PTA (and not more general systems like linear hybrid automata \cite{achh92}) can be analyzed directly by \imitator{} (sometimes with very minor changes).
+
 
 
 \IncludeIMIfile{include/simple-example.imi}
 
-% TODO
+% TODO: add graphic representation, describe model, make at least one call
 
 
 Comments are OCaml-like comments starting with \styleIMI{(*} and ending with \styleIMI{*)}.
@@ -439,7 +454,7 @@ As in OCaml, comments can be nested.
 \imitator{} performs parametric verification of models specified using networks of \imitator{} parametric timed automata (hereafter \NIPTA{}).
 
 An \imitator{} parametric timed automaton (hereafter \IPTA{}) is a variant of parametric automata (as introduced in~\cite{AHV93}).
-The main differences between \IPTA{} and the PTA of \cite{AHV93} is that \IPTA{} have no accepting / final location;
+A first difference between \IPTA{} and the PTA of \cite{AHV93} is that \IPTA{} have no accepting / final location;
 furthermore, \IPTA{} augment the expressiveness of PTA with several features such as invariants, discrete (integer) variables, complex guards and invariants (\ie{} not only comparing a single clock to a single parameter), stopwatches (\ie{} the ability to stop clocks in some locations), and arbitrary clock updates (\ie{} not necessarily to~0).
 
 \paragraph{Clocks, Parameters, Discrete Variables}
@@ -870,108 +885,49 @@ The node positioning is not yet supported (locations are depicted vertically), s
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% TODO: OCaml, PPL, representation of states (explicit : list of discrete var integers + locations ; constraints ; discrete variables...)
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Language and Libraries}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+In short, \imitator{} is written in \ocaml{}, and contains about 26,000 lines of code.
+
+\imitator{} makes use of the following external libraries:
+
+\begin{itemize}
+	\item The OCaml ExtLib library (Extended Standard Library for Objective Caml)
+	\item The Parma Polyhedra Library (PPL)~\cite{bhz08}
+	\item The GNU Multiple Precision Arithmetic Library (GMP)
+\end{itemize}
 
 
-% 
-% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% \chapter{Example}
-% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Symbolic States}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+Verification of timed systems (and specially parametric timed systems) is necessarily done in a symbolic manner, in the sense that the timing information is abstracted by clock constraints.
+However, \imitator{} does not perform what is referred to as \emph{symbolic model checking}; in other words, the representation of locations in \imitator{} is explicit.
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\chapter{Missing Features}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-Although we try to make \imitator{} as complete as possible, it misses some features, not implemented due to lack of time (contributors are welcome!) or due to complexity, or to keep the tool consistent.
-We enumerate in the following what seems to us to be the ``most missing'' features and, when applicable, we give hints to overcome these limitations.
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Urgent Locations}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-Urgent transitions are locations in which time cannot elapse, \ie{} there must be left immediately after being entered.
-Whereas this feature is not natively implemented in \imitator{}, it can easily be simulated as follows:
-to simulate an urgent location \styleIMI{l}, one can add an extra clock (say \styleIMI{x\_urgent}) initialized to 0 on any transition leading \styleIMI{l}; then, the invariant of \styleIMI{l} is \styleIMI{x\_urgent = 0}.
-Note that a single clock \styleIMI{x\_urgent} is enough to simulate any number of urgent locations.
-
-	% TODO: example
-
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{ASAP Transitions}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-ASAP (as soon as possible) transitions are transitions that can be taken as soon as all \IPTA{} synchronizing with this transition can execute their local transition.
-This is different from urgent transitions, that must be taken in 0 time.
-Here, time can elapse, but not after all \IPTA{} are ready to execute their local transition.
-
-This is not supported by \imitator{}, and we do not see a way to simulate it easily.
+In short, a symbolic state in \imitator{} is made of the following elements:
+\begin{itemize}
+	\item the current location (index) of each \IPTA{};
+	\item the current value of the (integer-valued) discrete variables;
+	\item a constraint on $\Clock \cup \Param \cup \DVar$ representing the continuous information.
+\end{itemize}
+In \imitator{}, all integers (\ie{} the value of the discrete variables and the coefficients used in the constraints) are unbounded integers (implemented using GMP).
 
 
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Parameterized Models}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Installation}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-Parameterized models are understood here as models with an arbitrary number of components (\eg{} Fischer's mutual exclusion protocol with $n$ processes), that would be instantiated (\eg{} $n = 15$) before performing the analysis.
-\imitator{} does not currently support such parameterized models, and one should use copy/paste utilities to instantiate $n$ models.
-For complicated models with many processes, we usually write short scripts to generate the model (a script \stylePath{CSMACDgenerator.py} to model the varying part of parameterized models for the CSMA/CD case study is available on \GitHubIMI{}).
+This document does not aim at explaining how to install \imitator{}.
+See the installation files available on the website for the most up-to-date information.
 
+Binaries and source code packages are available on \imitator{}'s Web page~\cite{imitator}.
+Note that several standalone binaries are provided online for Linux systems, that require no installation.
 
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Other Synchronization Models}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-One-to-one synchronization could possibly be simulated by using as many transitions as pairs of \IPTA{} in the model, although this may make the model rather complex.
-
-	% TODO: example
-
-
-Broadcast synchronization (``only the \IPTA{} ready to execute a given transition execute it'') is not supported.
-Once more, it could possibly be simulated by using as many transitions as subsets of \IPTA{} in the model, although this will make the model definitely complex.
-
-	% TODO: example
-
-
-Message passing is not supported.
-This can be easily simulated using dedicated discrete variables, that would be read / written in the transition.
-
-	% TODO: example
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Intervals for Discrete Variables}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-Discrete variables must be set to a constant integer in the \styleIMI{init} definition (\eg{} \styleIMI{i = 0}).
-Setting a variable to an arbitrarily value (\eg{} \styleIMI{i in [0 .. 10]}) is currently not supported.
-This can be simulated using an initialization \IPTA{} that nondeterministically sets \styleIMI{i} to any of the values, in 0 time so as to not disturb the model.
-	% TODO: example
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Complex Updates for Discrete Variables}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-So far, discrete variables can only be set to linear terms in $\LTermD$;
-hence, assigning a discrete variable to a clock, or to a parameter, or to any more complex expression, is not allowed.
-A reason for this restriction is that the value of the discrete variables would not anymore be constant (recall that discrete variables are syntactic sugar for \emph{locations}).
-
-However, this can be (partially) simulated with stopwatches: we can replace a discrete variable with a clock that is stopped in all locations (\ie{} it does not evolve with time), and that is updated to the desired value (recall from \cref{definition:IPTA} that the clock updates are more permissive than the discrete variable updates).
-
-% TODO: so far, only d := L(D); impossible to have clocks and parameters due to the constant nature of discrete variables
-
-% TODO: only one PTA/location in the bad state definition
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1206,7 +1162,7 @@ Keep file(s) used for generating graphical output (\eg{} trace set, cartography)
 \paragraph{\styleOption{-output-prefix} (default: \stylePath{<input\_file>})}
 %------------------------------------------------------------
 Set the path prefix for all generated files.
-The path can be either relative (to the path to the \imitatorExec{} binary) or absolute, and must be followed by the file name.
+The path can be either relative (to the path to the \binimitator{} binary) or absolute, and must be followed by the file name.
 
 Examples:
 \begin{itemize}
@@ -1854,6 +1810,102 @@ The following words are keywords and cannot be used as names for automata, varia
 
 
 
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\chapter{Missing Features}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+Although we try to make \imitator{} as complete as possible, it misses some features, not implemented due to lack of time (contributors are welcome!) or due to complexity, or to keep the tool consistent.
+We enumerate in the following what seems to us to be the ``most missing'' features and, when applicable, we give hints to overcome these limitations.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Urgent Locations}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+Urgent transitions are locations in which time cannot elapse, \ie{} there must be left immediately after being entered.
+Whereas this feature is not natively implemented in \imitator{}, it can easily be simulated as follows:
+to simulate an urgent location \styleIMI{l}, one can add an extra clock (say \styleIMI{x\_urgent}) initialized to 0 on any transition leading \styleIMI{l}; then, the invariant of \styleIMI{l} is \styleIMI{x\_urgent = 0}.
+Note that a single clock \styleIMI{x\_urgent} is enough to simulate any number of urgent locations.
+
+	% TODO: example
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{ASAP Transitions}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+ASAP (as soon as possible) transitions are transitions that can be taken as soon as all \IPTA{} synchronizing with this transition can execute their local transition.
+This is different from urgent transitions, that must be taken in 0 time.
+Here, time can elapse, but not after all \IPTA{} are ready to execute their local transition.
+
+This is not supported by \imitator{}, and we do not see a way to simulate it easily.
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Parameterized Models}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+Parameterized models are understood here as models with an arbitrary number of components (\eg{} Fischer's mutual exclusion protocol with $n$ processes), that would be instantiated (\eg{} $n = 15$) before performing the analysis.
+\imitator{} does not currently support such parameterized models, and one should use copy/paste utilities to instantiate $n$ models.
+For complicated models with many processes, we usually write short scripts to generate the model (a script \stylePath{CSMACDgenerator.py} to model the varying part of parameterized models for the CSMA/CD case study is available on \GitHubIMI{}).
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Other Synchronization Models}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+One-to-one synchronization could possibly be simulated by using as many transitions as pairs of \IPTA{} in the model, although this may make the model rather complex.
+
+	% TODO: example
+
+
+Broadcast synchronization (``only the \IPTA{} ready to execute a given transition execute it'') is not supported.
+Once more, it could possibly be simulated by using as many transitions as subsets of \IPTA{} in the model, although this will make the model definitely complex.
+
+	% TODO: example
+
+
+Message passing is not supported.
+This can be easily simulated using dedicated discrete variables, that would be read / written in the transition.
+
+	% TODO: example
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Intervals for Discrete Variables}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+Discrete variables must be set to a constant integer in the \styleIMI{init} definition (\eg{} \styleIMI{i = 0}).
+Setting a variable to an arbitrarily value (\eg{} \styleIMI{i in [0 .. 10]}) is currently not supported.
+This can be simulated using an initialization \IPTA{} that nondeterministically sets \styleIMI{i} to any of the values, in 0 time so as to not disturb the model.
+	% TODO: example
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Complex Updates for Discrete Variables}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+So far, discrete variables can only be set to linear terms in $\LTermD$;
+hence, assigning a discrete variable to a clock, or to a parameter, or to any more complex expression, is not allowed.
+A reason for this restriction is that the value of the discrete variables would not anymore be constant (recall that discrete variables are syntactic sugar for \emph{locations}).
+
+However, this can be (partially) simulated with stopwatches: we can replace a discrete variable with a clock that is stopped in all locations (\ie{} it does not evolve with time), and that is updated to the desired value (recall from \cref{definition:IPTA} that the clock updates are more permissive than the discrete variable updates).
+
+% TODO: so far, only d := L(D); impossible to have clocks and parameters due to the constant nature of discrete variables
+
+% TODO: only one PTA/location in the bad state definition
+
+
+
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % \newpage
@@ -1871,9 +1923,27 @@ Bertrand~Jeannet has been of great help on the linking with Apron~\cite{JM09} in
 Ulrich~K\"uhne made several important improvements to \imitator{}, and linked the tool to PPL.
 Daphne~Dussaud implemented the graphical output of the behavioral cartography.
 Romain~Soulat implemented in part the merging technique~\cite{AFS13atva}, and brought several case studies.
-Giuseppe~Lipari provided examples from the real-time systems community.
+Giuseppe~Lipari and Sun~Youcheng provided examples from the real-time systems community, and collaborated on several algorithms.
 Camille~Coti, Sami~Evangelista and Nguyen~Hoang~Gia worked on the distributed version of \imitator{}.
 
+% TODO: projects
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\chapter{Licensing and Credits}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\imitator{} is available under the GNU GPL license.
+
+\bigskip
+
+This user manual is available under the Creative Commons CC-BY-SA license.
+
+\bigskip
+
+\paragraphe{Credits}
 \imitator{}'s logo comes from KaterBegemot's \stylePath{Typing monkey.svg} (Licence: Creative Commons Attribution-Share Alike 3.0 Unported).
 	% TODO: license of tool, this document, etc.
 
@@ -1981,14 +2051,6 @@ around~$\pio$.
 
 
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\chapter{Installing IMITATOR}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-Sources, binaries for Linux platforms, and installation instructions are available on \imitator{}'s Web page \cite{imitator}.
-
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -2002,9 +2064,6 @@ Sources, binaries for Linux platforms, and installation instructions are availab
 \section{Inputs and Outputs}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-The input syntax of \imitator{} to describe the network of PTA modeling the system is originally based on the \hytech{} syntax, with several improvements.
-Actually, all standard \hytech{} files describing only PTA (and not more general systems like linear hybrid automata \cite{achh92}) can be analyzed directly by \imitator{} with very minor changes.
-% \footnote{An interface to accept as well files given using the \phaver{} syntax is currently being implemented.}.
 
 
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
@@ -2127,7 +2186,6 @@ The description of all the parametric reachable states for each tile may also op
 \end{itemize}
 
 
-See \cref{sss:options} for the list of options available when calling \imitator{}.
 
 
 
@@ -2138,23 +2196,6 @@ See \cref{sss:options} for the list of options available when calling \imitator{
 \chapter{How to Use \imitator{}} \label{sec:how}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Installation}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-See the installation files available on the website for the most up-to-date information.
-
-In short, \imitator{} is written in \ocaml{}, and makes use of the following libraries:
-
-\begin{itemize}
-	\item The OCaml ExtLib library (Extended Standard Library for Objective Caml)
-	\item The Parma Polyhedra Library (PPL)~\cite{bhz08}
-        \item The GNU Multiple Precision Arithmetic Library (GMP)
-\end{itemize}
-
-Binaries and source code packages are available on \imitator{}'s Web page~\cite{imitator}.
-
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -2298,12 +2339,6 @@ The property must be defined at the end of the \code{.imi} model file, using the
 
 
 
-
-
-
-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
-\subsection{Options} \label{sss:options}
-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
 
 
 
@@ -3062,14 +3097,6 @@ The source code of this example is available in Appendix~\ref{app:source}.
 \IncludeIMIfile{include/SRlatch.v0}
 
 
-
-\newpage
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\chapter{Complete Grammar} \label{app:grammar}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \fi
 % END HACK
