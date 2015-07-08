@@ -390,18 +390,18 @@ class imitator_options =
 				
 				("-fromGrML", Set fromGML, "GrML syntax for input files (experimental). Defaut : 'false'");
 				
-				("-incl", Set inclusion, " Consider an inclusion of symbolic zones instead of the equality when checking for a fixpoint. Default: 'false'");
-				
 				("-IMK", Set pi_compatible, " Algorithm IMoriginal (defined in [AS11]): return a constraint such that no pi-incompatible state can be reached. Default: 'false'");
 				
 				("-IMunion", Set union, " Algorithm IMUnion (defined in [AS11]): Returns the union of the constraint on the parameters associated to the last state of each trace. Default: 'false'");
+				
+				("-incl", Set inclusion, " Consider an inclusion of symbolic zones instead of the equality when checking for a fixpoint. Default: 'false'");
 				
 				("-merge", Set merge, " Use the merging technique of [AFS13]. Default: 'false' (disable)");
 				
 				("-merge-before", Set merge_before , " Use the merging technique of [AFS13] but merges states before pi0-compatibility test (EXPERIMENTAL). Default: 'false' (disable)");
 				
 				("-mode", String set_mode, " Mode for " ^ Constants.program_name ^ ".
-        Use 'statespace' for a parametric state space exploration (no pi0 needed).
+        Use 'statespace' for the generation of the entire parametric state space (no pi0 needed).
         Use 'EF' for a parametric non-reachability analysis (no pi0 needed).
         Use 'inversemethod' for the inverse method.
         For the behavioral cartography algorithm, use 'cover' to cover all the points within V0, 'border' to find the border between a small-valued good and a large-valued bad zone (experimental), or 'randomXX' where XX is a number to iterate random calls to IM (e.g., random5 or random10000). Default: 'inversemethod'.");
@@ -699,6 +699,7 @@ class imitator_options =
 
 			(* OPTIONS *)
 
+			(*** TODO: check that only in IM/BC mode ***)
 			if !completeIM then (
 				print_message Verbose_standard ("IM will output a complete, possibly non-convex, constraint.");
 			) else
@@ -727,6 +728,7 @@ class imitator_options =
 			else
 				print_message Verbose_medium ("No auto-detection mode for sync actions (default).");
 
+			(*** TODO: check that only in IM/BC mode ***)
 			if !no_random then
 				print_message Verbose_standard ("No random selection for pi0-incompatible inequalities.")
 			else
@@ -752,6 +754,7 @@ class imitator_options =
 			else
 				print_message Verbose_medium ("No check of the constraint containment of an integer point (default).");
 
+			(*** TODO: check that only in IM/BC mode ***)
 			if !check_point then(
 				print_message Verbose_standard ("At each iteration, it will be checked whether the parameter constraint is restricted to the sole pi0 point (experimental and costly!).");
 				if !imitator_mode <> Inverse_method then
