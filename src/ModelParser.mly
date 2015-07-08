@@ -8,7 +8,7 @@
  * Author:        Etienne Andre
  * 
  * Created       : 2009/09/07
- * Last modified : 2015/03/19
+ * Last modified : 2015/07/08
 ***********************************************/
 
 %{
@@ -447,6 +447,29 @@ init_definition:
 	CT_INIT OP_ASSIGN region_expression SEMICOLON { $3 }
 ;
 
+
+// We allow here an optional "&" at the beginning
+region_expression:
+	ampersand_opt region_expression_fol { $2 }
+;
+
+region_expression_fol:
+	| state_predicate { [ $1 ] }
+	| LPAREN region_expression_fol RPAREN { $2 }
+	| region_expression_fol AMPERSAND region_expression_fol { $1 @ $3 }
+;
+
+state_predicate:
+	| loc_predicate { let a,b = $1 in (Loc_assignment (a,b)) } 
+	| linear_constraint { Linear_predicate $1 }
+;
+
+loc_predicate:
+	CT_LOC LSQBRA NAME RSQBRA OP_EQ NAME { ($3, $6) }
+;
+
+
+
 property_definition:
 // TODO: improve the bad definitions
 	// NOTE: Old version
@@ -523,6 +546,7 @@ pattern:
 
 bad_definition:
 	// TODO: add more?
+	// NOTE: could be removed since only defined using loc_predicate
 	| loc_predicate { let a,b = $1 in (Unreachable_location (a , b)) }
 ;
 
@@ -557,26 +581,6 @@ carto_definition_foll:
 // 	| loc_predicate AMPERSAND loc_expression { $1 :: $3 }
 // 	| loc_predicate loc_expression { $1 :: $2 }
 // ;
-
-// We allow here an optional "&" at the beginning
-region_expression:
-	ampersand_opt region_expression_fol { $2 }
-;
-
-region_expression_fol:
-	| state_predicate { [ $1 ] }
-	| LPAREN region_expression_fol RPAREN { $2 }
-	| region_expression_fol AMPERSAND region_expression_fol { $1 @ $3 }
-;
-
-loc_predicate:
-	CT_LOC LSQBRA NAME RSQBRA OP_EQ NAME { ($3, $6) }
-;
-
-state_predicate:
-	| loc_predicate { let a,b = $1 in (Loc_assignment (a,b)) } 
-	| linear_constraint { Linear_predicate $1 }
-;
 
 comma_opt:
 	| COMMA { }
