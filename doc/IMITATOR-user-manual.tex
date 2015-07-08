@@ -226,6 +226,7 @@
 % Current version
 \newcommand{\imitatorversion}{2.7}
 \newcommand{\imitatorversionname}{Butter Guéméné}
+	% TODO: add nice picture :-)
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -413,16 +414,19 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\imitator{} is a software tool to perform automated parameter synthesis for concurrent timed systems.
+\imitator{} is an open source software tool to perform automated parameter synthesis for concurrent timed systems.
 \imitator{} takes as input a network of parametric timed automata~\cite{AHV93}, a well-known formalism to specify and verify models of systems where timing constants can be replaced with parameters, \ie{} unknown constants.
 
 \imitator{} addresses several variants of the following problem:
-``given a concurrent timed system, what are the values of the timing constants that guarantee that the system satisfies some property?''
+``given a concurrent timed system, what are the values of the timing constants that guarantee that the model of the system satisfies some property?''
 Specifically, \imitator{} implements parametric safety analysis~\cite{AHV93,JLR15}, the inverse method \cite{ACEF09,AM15}, the behavioral cartography~\cite{AF10}, and parametric reachability preservation~\cite{ALNS15}.
 Numerous analysis options are available.
 
-\imitator{} is a command-line only tool, but that outputs results in graphical form, when applicable.
+\imitator{} is a command-line only tool, but that can output results in graphical form.
 Furthermore, a graphical user interface is available in the \CosyVerif{} platform.
+
+\imitator{} was able to verify numerous case studies from the literature and from the industry, such as communication protocols, hardware asynchronous circuits, schedulability problems and various other systems such as coffee machines (probably the most critical systems from a researcher point of view).
+Numerous benchmarks are available at \imitator{} Web page~\cite{imitator}.
 
 In this document, we present the input syntax, we formally define the input model of \imitator{}, and we explain how to perform various analyses using the numerous options.
 
@@ -492,7 +496,7 @@ This model contains two \IPTA{}.
 
 An \imitator{} parametric timed automaton (hereafter \IPTA{}) is a variant of parametric automata (as introduced in~\cite{AHV93}).
 A first difference between \IPTA{} and the PTA of \cite{AHV93} is that \IPTA{} have no accepting / final location;
-furthermore, \IPTA{} augment the expressiveness of PTA with several features such as invariants, discrete (integer) variables, complex guards and invariants (\ie{} not only comparing a single clock to a single parameter), stopwatches (\ie{} the ability to stop clocks in some locations), and arbitrary clock updates (\ie{} not necessarily to~0).
+furthermore, \IPTA{} augment the expressiveness of PTA with several features such as invariants, discrete (integer) variables, complex guards and invariants (\ie{} not only comparing a single clock to a single parameter), stopwatches (\ie{} the ability to stop some clocks in some locations), and arbitrary clock updates (\ie{} not necessarily to~0).
 
 \paragraph{Clocks, Parameters, Discrete Variables}
 \emph{Clocks} are real-valued variables all evolving at the same rate (unless they are stopped, which is allowed in \imitator{}).
@@ -601,10 +605,6 @@ If nothing is defined in~$\Cinit$, then their value is supposed to be arbitrary 
 
 Note that parameters are not assumed positive; however, the behavior of \imitator{} has not been tested for negative parameters, and it is strongly advised to constrain them to be positive in $\Cinit$ (if it is not the case, a warning is issued by \imitator{}).
 
-% TODO: constants
-
-% TODO: constants
-
 % TODO: example
 
 
@@ -617,8 +617,8 @@ Note that parameters are not assumed positive; however, the behavior of \imitato
 Discrete variables\footnote{%
 	The name ``discrete variable'' comes from \hytech{}.
 }
-are global integer variables.
-Their value is global, in the sense that they are shared by all automata of the model.
+are global integer-valued variables.
+Their value is global, in the sense that they are shared by all \IPTA{} of the model.
 They can be seen as syntactic sugar to represent a possibly unbounded number of locations.
 	% TODO: how many bits? what happens in case of overflow?
 
@@ -740,8 +740,6 @@ The option \styleOption{-dynamic-elimination} can also be used to reduce the sta
 	or
 	output the result to a text file (option \styleOption{-output-result}).
 
-	% TODO: EFIM !!!
-
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Parametric Verification using Properties}
@@ -791,7 +789,7 @@ Then, the command to synthesize parameters is the same as for the EF-synthesis:
 \section{Inverse Method}\label{ss:mode:IM}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-Given an \NIPTA{} and a reference parameter valuation, the inverse method synthesizes a parameter constraint such that, for any parameter valuation in that constraint, the set of traces is the same as for the reference valuation~\cite{ACEF09}.
+Given a \NIPTA{} and a reference parameter valuation, the inverse method synthesizes a parameter constraint such that, for any parameter valuation in that constraint, the set of traces is the same as for the reference valuation~\cite{ACEF09}.
 This problem is known as the trace preservation synthesis.
 The trace-preservation emptiness problem being undecidable~\cite{AM15}, the analysis is not guaranteed to terminate (although it often does in practice).
 
@@ -814,7 +812,7 @@ The reference valuation is described in \stylePath{model.pi0}.
 \section{Behavioral Cartography}\label{ss:mode:BC}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-Given an \NIPTA{} and a bounded parameter domain, the behavioral cartography synthesizes tiles, \ie{} parameter domains such that for any parameter valuation in that domain, the set of traces is the same~\cite{AF10}.
+Given a \NIPTA{} and a bounded parameter domain, the behavioral cartography synthesizes tiles, \ie{} parameter domains such that for any parameter valuation in that domain, the set of traces is the same~\cite{AF10}.
 The corresponding problem being undecidable, the analysis is not guaranteed to terminate; when it terminates, it may also leave ``holes'', \ie{} parameter domains not covered by any tile.
 	% TODO: cite AM15
 
@@ -833,8 +831,9 @@ The bounded parameter domain is described in \stylePath{model.v0}.
 The option \styleOption{-step} specifies the interval between any two points of which the coverage is checked (see \cite{AF10}).
 By default, it is 1; setting $\frac{1}{3}$ often leads to full coverage when 1 was not enough.
 
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{Behavioral Cartography with Random Coverage}\label{sss:mode:BC:random}
+\subsection*{Behavioral Cartography with Random Coverage}\label{sss:mode:BC:random}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 An alternative to the behavioral cartography is a random coverage; it can be seen as a kind of sampling.
@@ -846,6 +845,32 @@ The command is:
 where \styleOption{XX} is the number of times an integer point is randomly selected within the domain defined in \stylePath{model.v0}.
 If this point is already covered by one of the tiles, the inverse method is not called, an another point is selected.
 Note that \styleOption{XX} represents the number of integer points randomly selected; the number of calls to the inverse method can be significantly smaller.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Parametric Reachability Preservation}\label{ss:mode:PRP}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\imitator{} implements an algorithm solving the following problem:
+``given a reference parameter valuation~$\pval$ and some location~$\loc$, synthesize other valuations that preserve the reachability of~$\loc$''.
+By preserving the reachability, we mean that $\loc$ is reachable for the other valuations iff $\loc$ is reachable for~$\pval$.
+
+This algorithm~$\PRP$, that combines \EFsynth{} and \IM{} (see~\cite{ALNS15} for details), is called as follows:
+
+\styleCommand{\binimitator{} model.imi model.pi0 -PRP}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection*{Parametric Reachability Preservation Cartography}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+An extension of $\PRP$ to the cartography (named \PRPC{}) is also available: \PRPC{} synthesizes parameter constraints in which the (non-)reachability of $\loc$ is uniform.
+\PRPC{} was showed in~\cite{ALNS15} to be a good alternative to \EFsynth{}, especially when distributed.
+
+This algorithm~$\PRPC$ is called as follows:
+
+\styleCommand{\binimitator{} model.imi model.v0 -mode cover -PRP}
+
 
 
 
@@ -868,9 +893,9 @@ To generate the trace set of a given computation in a graphical form, use:
 \styleCommand{\binimitator{} model.imi [options] -output-trace-set}
 
 \imitator{} will generate a file \stylePath{model.jpg}.
-Note that, beyond about 1,000 states or 1,000 transitions, the dot utility (responsible to generate the trace set) may crash.
+Note that, beyond about 1,000 states or 1,000 transitions, the \gdot{} utility (responsible to generate the trace set) may crash.
 
-Using \styleOption{-output-trace-set-nodetails} makes a more compact representation.
+Using \styleOption{-output-trace-set-nodetails} makes a more compact representation (but is also less informative).
 
 
 
@@ -943,9 +968,9 @@ In short, \imitator{} is written in \ocaml{}, and contains about 26,000 lines of
 \imitator{} makes use of the following external libraries:
 
 \begin{itemize}
-	\item The OCaml ExtLib library (Extended Standard Library for Objective Caml)
-	\item The Parma Polyhedra Library (PPL)~\cite{bhz08}
-	\item The GNU Multiple Precision Arithmetic Library (GMP)
+	\item The OCaml ExtLib library (Extended Standard Library for Objective Caml);
+	\item The GNU Multiple Precision Arithmetic Library (GMP);
+	\item The Parma Polyhedra Library (PPL)~\cite{bhz08}, used to compute operations on polyhedra.
 \end{itemize}
 
 
@@ -1130,7 +1155,7 @@ The mode for \imitator{}.
 	& (see \cref{ss:mode:statespace}) \\
 	
 	\styleOption{EF} & Parametric non-reachability analysis (\EFsynth{} \cite{JLR15}) \\
-	& (see \cref{ss:mode:statespace}) \\
+	& (see \cref{ss:mode:EFsynth}) \\
 	
 	\styleOption{inversemethod} & Inverse method \\
 	& (see \cref{ss:mode:IM}) \\
@@ -1840,6 +1865,7 @@ The following words are keywords and cannot be used as names for automata, varia
 \styleIMI{once},
 \styleIMI{or},
 \styleIMI{parameter},
+\styleIMI{projectresult},
 \styleIMI{property},
 % \styleIMI{reach},
 \styleIMI{region},
@@ -1964,7 +1990,7 @@ However, this can be (partially) simulated with stopwatches: we can replace a di
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \sloppy
-\'Etienne André initiated the development of \imitator{}, and keeps developing it.
+\'Etienne André initiated the development of \imitator{} in 2008, and keeps developing it.
 Emmanuelle~Encrenaz and Laurent~Fribourg have been great supporters of \imitator{}, on a theoretical point of view, and to find applications both from the literature and real case studies.
 Abdelrezzak~Bara provided several examples from the hardware literature.
 Jeremy~Sproston provided examples from the probabilistic community.
