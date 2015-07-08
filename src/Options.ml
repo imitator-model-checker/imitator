@@ -1,8 +1,8 @@
 (*****************************************************************
  *
- *                     IMITATOR II
+ *                     IMITATOR
  *
- * Convert a parsing structure into an abstract program
+ * Options definitions
  *
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Ulrich Kuehne, Etienne Andre
