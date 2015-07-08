@@ -292,7 +292,7 @@
 		\textcolor{yellow!30}{\$\ \ \texttt{#1}}
 	}
 	
-	\smallskip
+	\medskip
 
 }
 
@@ -743,7 +743,7 @@ The option \styleOption{-dynamic-elimination} can also be used to reduce the sta
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Parametric Verification using Properties}
+\section{Parametric Verification using Properties}\label{ss:mode:prop}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \imitator{} basically only supports bad state reachability synthesis on the one hand, and algorithms such as the inverse method and the cartography on the other hand.
@@ -787,7 +787,7 @@ Then, the command to synthesize parameters is the same as for the EF-synthesis:
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Inverse Method}\label{ss:mode:IM}
+\section{Inverse Method: Trace Preservation}\label{ss:mode:IM}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 Given a \NIPTA{} and a reference parameter valuation, the inverse method~\IM{} synthesizes a parameter constraint such that, for any parameter valuation in that constraint, the set of traces is the same as for the reference valuation~\cite{ACEF09}.
@@ -860,6 +860,8 @@ This algorithm~$\PRP$, that combines \EFsynth{} and \IM{} (see~\cite{ALNS15} for
 
 \styleCommand{\binimitator{} model.imi model.pi0 -PRP}
 
+Note that a bad location (as in \cref{ss:mode:EFsynth}) or a property (as in \cref{ss:mode:prop}) must be defined in the model.
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection*{Parametric Reachability Preservation Cartography}
@@ -871,6 +873,9 @@ An extension of $\PRP$ to the cartography (named \PRPC{}) is also available: \PR
 This algorithm~$\PRPC$ is called as follows:
 
 \styleCommand{\binimitator{} model.imi model.v0 -mode cover -PRP}
+
+Again, a bad location (as in \cref{ss:mode:EFsynth}) or a property (as in \cref{ss:mode:prop}) must be defined in the model.
+
 
 
 
@@ -1332,11 +1337,11 @@ Integers can be used, or rationals (in the form \styleOption{x/y}).
 %------------------------------------------------------------
 \paragraph{\styleOption{-sync-auto-detect} (default: false)}
 %------------------------------------------------------------
-\imitator{} considers that all the \IPTA{} declaring a given synchronization label must be able to synchronize all together, so that the synchronization can happen.
-By default, \imitator{} considers that the synchronization labels declared in an \IPTA{} are those declared in the \styleIMI{synclabs} section.
-Therefore, if a synchronization label is declared but never used in (at least) one \IPTA{}, this label will never be synchronized in the execution\footnote{In such a case, the synchronization label is actually completely removed before the execution, in order to optimize the execution, and the user is warned of this removal.}.
+\imitator{} considers that all the \IPTA{} declaring a given action must be able to synchronize all together, so that the synchronization can happen.
+By default, \imitator{} considers that the actions declared in an \IPTA{} are those declared in the \styleIMI{synclabs} section.
+Therefore, if an action is declared but never used in (at least) one \IPTA{}, this label will never be synchronized in the execution\footnote{In such a case, action label is actually completely removed before the execution, in order to optimize the execution, and the user is warned of this removal.}.
 
-The option \styleOption{-sync-auto-detect} allows to detect automatically the synchronization labels in each \IPTA{}: the labels declared in the \styleIMI{synclabs} section are ignored, and \imitator{} considers that only the labels really used in an \IPTA{} are those considered to be declared.
+The option \styleOption{-sync-auto-detect} allows to detect automatically the actions in each \IPTA{}: the actions declared in the \styleIMI{synclabs} section are ignored, and \imitator{} considers as declared actions only the actions really used in this \IPTA{}.
 
 
 %------------------------------------------------------------
@@ -1404,8 +1409,8 @@ A variable name (represented by \styleIMI{<name>} in the grammar below) is a str
 By letter we mean the 26 letters of the Latin alphabet, without any diacritic mark.
 
 The set of clock names, parameter names and discrete variable names must (quite naturally) be disjoint.
-However, the sets of actions, locations and variables are not required to be disjoint.
-That is, the same name can be given to a clock, an action and a location.
+However, the sets of \IPTA{} names, location names, action names, and variable names are not required to be disjoint.
+That is, the same name can be given to a clock, an automaton, an action and a location.
 
 Furthermore, the names of the sets of locations of various \IPTA{} are not-necessarily disjoint either: that is, a same name can be given to two different locations in two different \IPTA{} (and they still represent two different things).
 
@@ -1890,20 +1895,38 @@ We define each of those two components below.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Grammar of the Reference Valuation File}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% TODO 
+
+The reference valuation file (usually named \stylePath{model.pi0}) gives a constant value to any parameter of the model;
+this file is used for~\IM{} and \PRP{}.
+
+It basically consists of a sequence of equalities \styleIMI{parameter = constant} separated (or not!) by the \styleIMI{\&} symbol.
+All parameters of the model must be given a valuation in this file; but the file may also use names that do not appear in the model (a warning will just be issued).
+
+Arithmetic expressions (using integers and rationals) can even be used instead of just constants.
+
+% TODO: give the actual grammar
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Grammar of the Reference Hyperrectangle File}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% TODO 
+
+The hyperrectangle file (usually named \stylePath{model.v0}) defines a bounded parameter domain, \ie{} a hyperrectangle having as dimensions the parameters of the model;
+this file is used for~\BC{} and \PRPC{}.
+
+It basically consists of a sequence of either equalities \styleIMI{parameter = constant} or intervals \styleIMI{parameter = constant .. constant} separated (or not!) by the \styleIMI{\&} symbol.
+All parameters of the model must be given an interval (possibly punctual) in this file; again, the file may also use names that do not appear in the model (a warning will just be issued).
+
+Again, arithmetic expressions (using integers and rationals) can even be used instead of just constants.
+
+% TODO: give the actual grammar
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Reserved Words}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-The following words are reserved keywords and cannot be used as names for automata, variables, synchronization labels or locations. 
+The following words are reserved keywords and cannot be used as names for automata, variables, actions or locations. 
 
 \styleIMI{always},
 \styleIMI{and},
@@ -2358,19 +2381,6 @@ The description of all the parametric reachable states for each tile may also op
 Examples of input files can be found on \imitator{}'s Web page~\cite{imitator}.
 A complete example is given in Appendix~\ref{app:source}.
 A tentative grammar is given in Appendix~\ref{app:grammar}.
-
-
-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
-\subsection{Variables}
-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
-
-% TO DO !
-% \commentaire{Syntaxe des noms de variables}
-
-Discrete variables, clocks and parameters variable names must be disjoint.
-
-The synchronization label names may be identical to other names (automata or variables).
-The automata names may be identical to other names (variables synchronization labels).
 
 
 
