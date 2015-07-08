@@ -7,7 +7,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Ulrich Kuehne, Etienne Andre
  * Created:       2010
- * Last modified: 2015/07/02
+ * Last modified: 2015/07/08
  *
  ****************************************************************)
  
@@ -359,7 +359,7 @@ class imitator_options =
 				
 				("-check-ippta", Set check_ippta, " Check that every new state contains an integer point; raises an exception if not. Default: false.");
 				
-				("-check-point", Set check_point, " Check at each iteration whether the accumulated constraint is restricted to pi0 (warning! very costly). Default: false.");
+				("-check-point", Set check_point, " Check at each iteration whether the accumulated parameter constraint is restricted to pi0 (warning! very costly). Default: false.");
 				
 				("-completeIM", Set completeIM, " Experimental version of IM that outputs a complete (full) result. Default: false.");
 				
@@ -752,8 +752,11 @@ class imitator_options =
 			else
 				print_message Verbose_medium ("No check of the constraint containment of an integer point (default).");
 
-			if !check_point then
-				print_message Verbose_standard ("At each iteration, it will be checked whether the constraint is restricted to the sole pi0 point (experimental and costly!).")
+			if !check_point then(
+				print_message Verbose_standard ("At each iteration, it will be checked whether the parameter constraint is restricted to the sole pi0 point (experimental and costly!).");
+				if !imitator_mode <> Inverse_method then
+					print_warning("The -check-point option is only valid for the inverse method. It will hence be ignored.");
+			)
 			else
 				print_message Verbose_medium ("No check of the constraint equality with pi0 (default).");
 

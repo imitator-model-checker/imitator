@@ -10,7 +10,7 @@
  * Author:        Ulrich Kuehne, Etienne Andre
  * 
  * Created:       2010/07/22
- * Last modified: 2015/05/18
+ * Last modified: 2015/07/08
  *
  ****************************************************************)
 
@@ -2594,7 +2594,8 @@ let post_star model init_state =
 		(* If check-point option: check if the constraint is equal to pi0 *)
 		(*** TO OPTIMIZE !!! (at least compute pi0_constraint once for all) ***)
 		(*** WARNING!! ONLY works for the classical inverse method (not for variants) ***)
-		if options#check_point then(
+		(*** TODO: also allow for BC ***)
+		if options#imitator_mode = Inverse_method  && options#check_point then(
 			print_message Verbose_low ("\nMode check-point: checking whether the resulting constraint is restricted to pi0...");
 			(* Get all constraints *)
 			let all_p_constraints = StateSpace.all_p_constraints model reachability_graph in
