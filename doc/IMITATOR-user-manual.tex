@@ -288,7 +288,7 @@
 	
 	% \mbox{}\hspace{.5cm}
 	\noindent\fcolorbox{white}{black!90}{
-		\textcolor{yellow!20}{\$ \texttt{#1}}
+		\textcolor{yellow!30}{\$\ \ \texttt{#1}}
 	}
 	
 	\smallskip
@@ -336,7 +336,7 @@
 % 	morecomment=[l][\color{gray}]{--},
 	morecomment=[s][keywordstyle]{"}{"},
 % 	morecomment=[s]{/*}{*/},
-	morecomment=[s][\color{gray}]{(*}{*)},
+	morecomment=[s][\color{gray!50!blue}]{(*}{*)},
 }
 
 
@@ -351,6 +351,8 @@
 
 \begin{document}
 % \maketitle
+
+\sloppy
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -383,7 +385,9 @@
 
 \begin{center}
  	{\Large \url{www.imitator.fr}}
+ 	
 \end{center}
+\hfill\includegraphics[width=.15\textwidth]{images/CC-BY-SA_500.png}
 
 
 
@@ -409,8 +413,22 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+\imitator{} is a software tool to perform automated parameter synthesis for concurrent timed systems.
+\imitator{} takes as input a network of parametric timed automata~\cite{AHV93}, a well-known formalism to specify and verify models of systems where timing constants can be replaced with parameters, \ie{} unknown constants.
+
+\imitator{} addresses several variants of the following problem:
+``given a concurrent timed system, what are the values of the timing constants that guarantee that the system satisfies some property?''
+Specifically, \imitator{} implements parametric safety analysis~\cite{AHV93,JLR15}, the inverse method \cite{ACEF09,AM15}, the behavioral cartography~\cite{AF10}, and parametric reachability preservation~\cite{ALNS15}.
+Numerous analysis options are available.
+
+\imitator{} is a command-line only tool, but that outputs results in graphical form, when applicable.
+Furthermore, a graphical user interface is available in the \CosyVerif{} platform.
+
+In this document, we present the input syntax, we formally define the input model of \imitator{}, and we explain how to perform various analyses using the numerous options.
+
+
 % TODO
-% TODO: say no GUI, but refer to CosyVerif
+% TODO: say no GUI, but refer to CosyVerif	
 
 
 
@@ -424,18 +442,37 @@ We first briefly introduce the syntax using a simple example for readers familia
 A formal (and nearly exhaustive) definition of \imitator{} parametric timed automata (\NIPTA{}) can be found in \cref{section:IPTA}.
 The complete syntax is given in \cref{chapter:grammar}.
 
+\paragraphe{Generalities}
 The input syntax of \imitator{} is originally based on the syntax of \hytech{}~\cite{HHW95}, with several improvements.
 Actually, all standard \hytech{} files describing only PTA (and not more general systems like linear hybrid automata \cite{achh92}) can be analyzed directly by \imitator{} (sometimes with very minor changes).
 
+Comments are OCaml-like comments starting with \styleIMI{(*} and ending with \styleIMI{*)}.
+As in OCaml, comments can be nested.
 
 
-\IncludeIMIfile{include/simple-example.imi}
+\paragraphe{An example of a coffee machine}
+We give below an example of a coffee machine interacting with a researching drinking coffee, given using the \imitator{} syntax.
+	% TODO: point to figure
+
+\IncludeIMIfile{../examples/Coffee/coffeeDrinker.imi}
 
 % TODO: add graphic representation, describe model, make at least one call
 
 
-Comments are OCaml-like comments starting with \styleIMI{(*} and ending with \styleIMI{*)}.
-As in OCaml, comments can be nested.
+\paragraphe{Header}
+Let us comment this case model by starting with the header.
+First, text in comments gives generalities about the model (author, date, description, etc.).
+The form is not normalized, but it could be in the future, so it is strongly advised to follow this form.
+
+Then, the variables are declared.
+
+
+\paragraphe{Automata}
+This model contains two \IPTA{}.
+
+\paragraphe{Initial Definitions}
+
+
 
 
 
@@ -631,7 +668,18 @@ If an \IPTA{} declares an action \styleIMI{a} that is never used in this \IPTA{}
 	In this case, \imitator{} will detect this situation and will entirely delete this action from the model, while issuing a warning.
 }
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Constants}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+\imitator{} does not strictly speaking support global constants (\ie{} a variable the value of which is known once for all).
+However, using the syntax
+% 
+\begin{center}
+\styleIMI{c = 2: parameter}
+\end{center}
+% 
+in the definition of the parameters is equivalent to replacing \styleIMI{c} with \styleIMI{2} everywhere in the model.
 
 
 
@@ -1334,6 +1382,7 @@ The meta symbol \emptystring{} denotes the empty string.
 
 The text \npec{in green} is not taken into account by \imitator{}, but allows some backward-compatibility with \hytech{} files~\cite{HHW95}.
 
+%TODO: rules for VARIABLE NAMES !! (and multiple names as multiple objects (e.g., same location names in different IPTA))
 
 %------------------------------------------------------------
 \regleGrammaire{imitator\_input}
@@ -1937,9 +1986,18 @@ Camille~Coti, Sami~Evangelista and Nguyen~Hoang~Gia worked on the distributed ve
 
 \imitator{} is available under the GNU GPL license.
 
+\begin{center}
+	\includegraphics[width=.3\textwidth]{images/GPLv3_Logo.png}
+\end{center}
+
+
 \bigskip
 
 This user manual is available under the Creative Commons CC-BY-SA license.
+
+\begin{center}
+	\includegraphics[width=.2\textwidth]{images/CC-BY-SA_500.png}
+\end{center}
 
 \bigskip
 
