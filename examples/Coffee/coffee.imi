@@ -30,7 +30,7 @@ var
 (************************************************************)
   automaton machine
 (************************************************************)
-synclabs: press, cup, coffee;
+synclabs: press, cup, coffee, sleep;
 
 loc idle: while True wait {}
 	when True sync press do {x' = 0, y' = 0} goto add_sugar;
@@ -39,8 +39,13 @@ loc add_sugar: while y <= p2 wait {}
 	when x >= p1 sync press do {x' = 0} goto add_sugar;
 	when y = p2 sync cup do {} goto preparing_coffee;
 
-loc preparing_coffee: while True wait {}
-	when y = p3 sync coffee goto idle;
+loc preparing_coffee: while y <= p3 wait {}
+(* 	when y = p3 sync coffee goto idle; *)
+	when y = p3 sync coffee do {x' = 0} goto cdone;
+
+loc cdone: while x <= 10 wait {}
+	when True sync press do {x' = 0, y' = 0} goto add_sugar;
+	when x = 10 sync sleep goto idle;
 
 end (* machine *)
 
@@ -79,7 +84,7 @@ init := True
 (* Property specification *)
 (************************************************************)
 
-(* property := unreachable loc[pta] = l1; *)
+property := unreachable loc[machine] = cdone;
 
 
 (************************************************************)
