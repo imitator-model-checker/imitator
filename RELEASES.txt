@@ -20,6 +20,7 @@ Minor features:
 - in BC mode: try to reduce the number of constraint (inclusion test in both directions)
 - warning displayed if parameters are not contrained to be >= 0 in the model
 - new options to specify min/max values for x/y axes for the graphical output of the cartography
+- Removed -counterex option (stops the analysis as soon as a counterexample is found)
 
 Changes in options syntax:
 - mode "reachability" becomes mode "statespace"

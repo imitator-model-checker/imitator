@@ -369,7 +369,7 @@ class imitator_options =
 					print_contributors();
 					exit 0), " Print contributors and exit.");
 				
-				("-counterex", Set counterex, " Stop the analysis as soon as a bad state is discovered (work in progress). Default: false.");
+(* 				("-counterex", Set counterex, " Stop the analysis as soon as a bad state is discovered (work in progress). Default: false."); *)
 				
 				("-depth-limit", Int (fun i -> post_limit := Some i), " Limits the depth of the exploration of the reachability graph. Default: no limit.");
 				
