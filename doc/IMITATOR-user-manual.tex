@@ -460,7 +460,7 @@ We give below an example of a coffee machine interacting with a researching drin
 
 \IncludeIMIfile{../examples/Coffee/coffeeDrinker.imi}
 
-% TODO: add graphic representation, describe model, make at least one call
+% TODO: add graphic representation, describe model, make at least one call (or even one call per algo)
 
 
 \paragraphe{Header}
@@ -598,8 +598,9 @@ That is, any clock can potentially be stopped in some location.
 
 Observe that each set of actions, discrete variables, clocks and parameters is not disjoint between all \IPTA{}.
 That is, actions, discrete variables, clocks and parameters may be shared between different \IPTA{}.
+If a variable is required to be local to an \IPTA{}, then it should just not be used in any other \IPTA{} of the model.
 
-Different from many tools for (parametric) timed automata, clocks are not necessarily initially equal to~0 (this is similar to \hytech{} but different from \uppaal{}).
+Different from many tools for (parametric) timed automata, clocks are not necessarily initially equal to~0 (this is similar to \hytech{}~\cite{HHW95} but different from \uppaal{}~\cite{LPY97}).
 The initial value of the clocks is defined by~$\Cinit$ (see \cref{ss:init}).
 If nothing is defined in~$\Cinit$, then their value is supposed to be arbitrary (any real value greater or equal to~0).
 
@@ -789,7 +790,7 @@ Then, the command to synthesize parameters is the same as for the EF-synthesis:
 \section{Inverse Method}\label{ss:mode:IM}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-Given a \NIPTA{} and a reference parameter valuation, the inverse method synthesizes a parameter constraint such that, for any parameter valuation in that constraint, the set of traces is the same as for the reference valuation~\cite{ACEF09}.
+Given a \NIPTA{} and a reference parameter valuation, the inverse method~\IM{} synthesizes a parameter constraint such that, for any parameter valuation in that constraint, the set of traces is the same as for the reference valuation~\cite{ACEF09}.
 This problem is known as the trace preservation synthesis.
 The trace-preservation emptiness problem being undecidable~\cite{AM15}, the analysis is not guaranteed to terminate (although it often does in practice).
 
@@ -812,7 +813,7 @@ The reference valuation is described in \stylePath{model.pi0}.
 \section{Behavioral Cartography}\label{ss:mode:BC}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-Given a \NIPTA{} and a bounded parameter domain, the behavioral cartography synthesizes tiles, \ie{} parameter domains such that for any parameter valuation in that domain, the set of traces is the same~\cite{AF10}.
+Given a \NIPTA{} and a bounded parameter domain, the behavioral cartography~\BC{} synthesizes tiles, \ie{} parameter domains such that for any parameter valuation in that domain, the set of traces is the same~\cite{AF10}.
 The corresponding problem being undecidable, the analysis is not guaranteed to terminate; when it terminates, it may also leave ``holes'', \ie{} parameter domains not covered by any tile.
 	% TODO: cite AM15
 
@@ -1396,18 +1397,32 @@ Prints \imitator{} header including the version number and exits.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Variable Names}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+A variable name (represented by \styleIMI{<name>} in the grammar below) is a string starting with a letter (small or capital), and followed by a set of letters, digits and underscores (``\styleIMI{\_}'').
+By letter we mean the 26 letters of the Latin alphabet, without any diacritic mark.
+
+The set of clock names, parameter names and discrete variable names must (quite naturally) be disjoint.
+However, the sets of actions, locations and variables are not required to be disjoint.
+That is, the same name can be given to a clock, an action and a location.
+
+Furthermore, the names of the sets of locations of various \IPTA{} are not-necessarily disjoint either: that is, a same name can be given to two different locations in two different \IPTA{} (and they still represent two different things).
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Grammar of the Input File}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\imitator{} input is described by the following grammar.
-Non-terminals appear within angled parentheses.
+The \imitator{} input model is described by the following grammar.
+Non-terminals appear \nt{within angled parentheses}.
+	% TODO: angled??
 A non-terminal followed by two colons is defined by the list of immediately following non-blank lines, each of which represents a legal expansion.
-Input characters of terminals appear in typewritter font.
+Input characters of terminals appear in \styleIMI{typewritter} font.
 The meta symbol \emptystring{} denotes the empty string.
 
 The text \npec{in green} is not taken into account by \imitator{}, but allows some backward-compatibility with \hytech{} files~\cite{HHW95}.
 
-%TODO: rules for VARIABLE NAMES !! (and multiple names as multiple objects (e.g., same location names in different IPTA))
 
 %------------------------------------------------------------
 \regleGrammaire{imitator\_input}
@@ -1452,7 +1467,9 @@ We define each of those two components below.
 %------------------------------------------------------------
 \begin{tabular}{l l}
 	\  & \styleIMI{<name>} \\
-	$|$ & \styleIMI{<name>} \styleIMI{,} \nt{var\_list}
+	$|$ & \styleIMI{<name> =} \nt{rational} \\
+	$|$ & \styleIMI{<name>} \styleIMI{,} \nt{var\_list}\\
+	$|$ & \styleIMI{<name> =} \nt{rational} \styleIMI{,} \nt{var\_list}\\
 \end{tabular}
 
 %------------------------------------------------------------
@@ -1486,10 +1503,12 @@ We define each of those two components below.
 	\  & \npec{\nt{initialization}} \nt{sync\_labels} \\
 	$|$ & \nt{sync\_labels} \npec{\nt{initialization}} \\
 	$|$ & \nt{sync\_labels} \\
+	$|$ & \npec{\nt{initialization}} \\
+	$|$ & \emptystring \\
 \end{tabular}
 
 %------------------------------------------------------------
-\regleGrammaire{initialization}
+\regleGrammaire{\npec{initialization}}
 %------------------------------------------------------------
 \npec{
 \begin{tabular}{l l}
@@ -1498,7 +1517,7 @@ We define each of those two components below.
 }
 
 %------------------------------------------------------------
-\regleGrammaire{state\_initialization}
+\regleGrammaire{\npec{state\_initialization}}
 %------------------------------------------------------------
 \npec{
 \begin{tabular}{l l}
@@ -1511,22 +1530,22 @@ We define each of those two components below.
 \regleGrammaire{sync\_labels}
 %------------------------------------------------------------
 \begin{tabular}{l l}
-	\  & \styleIMI{synclabs} \styleIMI{:} \nt{sync\_var\_list} \styleIMI{;} \\
+	\  & \styleIMI{synclabs} \styleIMI{:} \nt{name\_list} \styleIMI{;} \\
 \end{tabular}
 
 %------------------------------------------------------------
-\regleGrammaire{sync\_var\_list}
+\regleGrammaire{name\_list}
 %------------------------------------------------------------
 \begin{tabular}{l l}
-	\  & \nt{sync\_var\_nonempty\_list} \\
+	\  & \nt{name\_nonempty\_list} \\
 	$|$ & \emptystring \\
 \end{tabular}
 
 %------------------------------------------------------------
-\regleGrammaire{sync\_var\_nonempty\_list}
+\regleGrammaire{name\_nonempty\_list}
 %------------------------------------------------------------
 \begin{tabular}{l l}
-	\  & \styleIMI{<name>} \styleIMI{,} \nt{sync\_var\_nonempty\_list} \\
+	\  & \styleIMI{<name>} \styleIMI{,} \nt{name\_nonempty\_list} \\
 	$|$ & \styleIMI{<name>} \\
 \end{tabular}
 
@@ -1535,6 +1554,7 @@ We define each of those two components below.
 %------------------------------------------------------------
 \begin{tabular}{l l}
 	\  & \nt{location} \nt{locations} \\
+		% TODO / NOTE: costs are allowed there (but not enough implemented)
 	$|$ & \emptystring \\
 \end{tabular}
 
@@ -1559,7 +1579,7 @@ We define each of those two components below.
 \regleGrammaire{stop\_opt}
 %------------------------------------------------------------
 \begin{tabular}{l l}
-	\ & \styleIMI{stop\{} \nt{var\_list} \styleIMI{\}} \\
+	\ & \styleIMI{stop\{} \nt{name\_list} \styleIMI{\}} \\
 	$|$ & \emptystring \\
 \end{tabular}
 
@@ -1633,6 +1653,14 @@ We define each of those two components below.
 \regleGrammaire{convex\_predicate}
 %------------------------------------------------------------
 \begin{tabular}{l l}
+	\  & \styleIMI{\&} \nt{convex\_predicate\_fol} \\
+	$|$ & \nt{convex\_predicate\_fol} \\
+\end{tabular}
+
+%------------------------------------------------------------
+\regleGrammaire{convex\_predicate\_fol}
+%------------------------------------------------------------
+\begin{tabular}{l l}
 	\  & \nt{linear\_constraint} \styleIMI{\&} \nt{convex\_predicate} \\
 	$|$ & \nt{linear\_constraint} \\
 \end{tabular}
@@ -1655,7 +1683,7 @@ We define each of those two components below.
 	$|$ & \styleIMI{=} \\
 	$|$ & \styleIMI{>=} \\
 	$|$ & \styleIMI{>} \\
-	$|$ & \styleIMI{<>} \\
+% 	$|$ & \styleIMI{<>} \\
 \end{tabular}
 
 %------------------------------------------------------------
@@ -1674,6 +1702,7 @@ We define each of those two components below.
 	\  & \nt{rational} \\
 	$|$ & \nt{rational} \styleIMI{<name>} \\
 	$|$ & \nt{rational} \styleIMI{*} \styleIMI{<name>} \\
+	$|$ & \styleIMI{-} \styleIMI{<name>} \\
 	$|$ & \styleIMI{<name>} \\
 	$|$ & \styleIMI{(} \nt{linear\_term} \styleIMI{)} \\
 \end{tabular}
@@ -1729,24 +1758,45 @@ We define each of those two components below.
 \regleGrammaire{init}
 %------------------------------------------------------------
 \begin{tabular}{l l}
-	& \npec{\nt{init\_declaration}} \nt{init\_definition} \nt{property\_definition} \npec{\nt{reach\_command}} \\
+	& \npec{\nt{init\_declaration}} \nt{init\_definition} \nt{property\_definition} \nt{projection\_definition} \npec{\nt{other\_commands}} \\
 \end{tabular}
 
 %------------------------------------------------------------
-\regleGrammaire{init\_declaration}
+\regleGrammaire{\npec{init\_declaration}}
 %------------------------------------------------------------
 \begin{tabular}{l l}
 	\  & \npec{\styleIMI{var} \styleIMI{init} \styleIMI{:} \styleIMI{region} \styleIMI{;}} \\
+		% TODO: in fact, any sequence of names is accepted, not only init
 	$|$ & \emptystring \\
 \end{tabular}
 
 %------------------------------------------------------------
-\regleGrammaire{reach\_command}
+\regleGrammaire{other\_commands}
 %------------------------------------------------------------
 \begin{tabular}{l l}
-	\  & \npec{\styleIMI{print} \styleIMI{(} \styleIMI{reach} \styleIMI{forward} \styleIMI{from} \styleIMI{init} \styleIMI{endreach} \styleIMI{)} \styleIMI{;}} \\
+	\  & \styleIMI{end} \npec{\nt{rest\_of\_commands}} \\
 	$|$ & \emptystring \\
 \end{tabular}
+
+%------------------------------------------------------------
+\regleGrammaire{\npec{rest\_of\_commands}}
+%------------------------------------------------------------
+\begin{tabular}{l l}
+	\  & \npec{\nt{anything}} \npec{\nt{rest\_of\_commands}} \\
+	$|$ & \emptystring \\
+\end{tabular}
+
+%------------------------------------------------------------
+\regleGrammaire{\npec{anything}}
+%------------------------------------------------------------
+\begin{tabular}{l l}
+	\  & \styleIMI{(} \\
+	$|$ & \styleIMI{)} \\
+	$|$ & \styleIMI{<name>} \\
+	$|$ & \styleIMI{init} \\
+	$|$ & \styleIMI{bad} \\
+\end{tabular}
+
 
 %------------------------------------------------------------
 \regleGrammaire{init\_definition}
@@ -1759,10 +1809,19 @@ We define each of those two components below.
 \regleGrammaire{region\_expression}
 %------------------------------------------------------------
 \begin{tabular}{l l}
-	\  & \nt{state\_predicate} \\
-	$|$ & \styleIMI{(} \nt{region\_expression} \styleIMI{)} \\
-	$|$ & \nt{region\_expression} \styleIMI{\&} \nt{region\_expression} \\
+	\  & \styleIMI{\&} \nt{region\_expression\_fol}\\
+	$|$ & \nt{region\_expression\_fol}\\
 \end{tabular}
+
+%------------------------------------------------------------
+\regleGrammaire{region\_expression\_fol}
+%------------------------------------------------------------
+\begin{tabular}{l l}
+	\  & \nt{state\_predicate} \\
+	$|$ & \styleIMI{(} \nt{region\_expression\_fol} \styleIMI{)} \\
+	$|$ & \nt{region\_expression\_fol} \styleIMI{\&} \nt{region\_expression\_fol} \\
+\end{tabular}
+
 
 %------------------------------------------------------------
 \regleGrammaire{state\_predicate}
@@ -1773,10 +1832,22 @@ We define each of those two components below.
 \end{tabular}
 
 %------------------------------------------------------------
+\regleGrammaire{loc\_predicate}
+%------------------------------------------------------------
+\begin{tabular}{l l}
+	\  & \styleIMI{loc[} \styleIMI{<name>} \styleIMI{] = \styleIMI{<name>}} \\
+\end{tabular}
+
+
+
+
+
+
+%------------------------------------------------------------
 \regleGrammaire{property\_definition}
 %------------------------------------------------------------
 \begin{tabular}{l l}
-	\  & \styleIMI{property := } \nt{pattern} \styleIMI{;} \\
+	\  & \styleIMI{property :=} \nt{pattern} \styleIMI{;} \\
 	$|$ & \emptystring \\
 \end{tabular}
 
@@ -1802,39 +1873,37 @@ We define each of those two components below.
 	$|$ & \styleIMI{sequence always} \nt{var\_list} \\
 \end{tabular}
 
-%------------------------------------------------------------
-\regleGrammaire{loc\_expression}
-%------------------------------------------------------------
-\begin{tabular}{l l}
-	\  & \nt{loc\_predicate} \\
-	$|$ & \nt{loc\_predicate} \styleIMI{\&} \nt{loc\_expression} \\
-	$|$ & \nt{loc\_predicate} \nt{loc\_expression} \\
-\end{tabular}
 
-%------------------------------------------------------------
-\regleGrammaire{loc\_predicate}
-%------------------------------------------------------------
-\begin{tabular}{l l}
-	\  & \styleIMI{loc[} \styleIMI{<name>} \styleIMI{] = \styleIMI{<name>}} \\
-\end{tabular}
+%% TODO: add -cartonly grammar ! (entirely removed from the manual so far)
+
+% %------------------------------------------------------------
+% \regleGrammaire{loc\_expression}
+% %------------------------------------------------------------
+% \begin{tabular}{l l}
+% 	\  & \nt{loc\_predicate} \\
+% 	$|$ & \nt{loc\_predicate} \styleIMI{\&} \nt{loc\_expression} \\
+% 	$|$ & \nt{loc\_predicate} \nt{loc\_expression} \\
+% \end{tabular}
 
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% \section{Grammar of reference valuation file}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% TO DO 
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% \section{Grammar of reference rectangle file}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% TO DO 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Grammar of the Reference Valuation File}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% TODO 
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Grammar of the Reference Hyperrectangle File}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% TODO 
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Reserved Words}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-The following words are keywords and cannot be used as names for automata, variables, synchronization labels or locations. 
+The following words are reserved keywords and cannot be used as names for automata, variables, synchronization labels or locations. 
 
 \styleIMI{always},
 \styleIMI{and},
@@ -2303,23 +2372,6 @@ Discrete variables, clocks and parameters variable names must be disjoint.
 The synchronization label names may be identical to other names (automata or variables).
 The automata names may be identical to other names (variables synchronization labels).
 
-% TO DO !
-% \commentaire{preciser labels synchronises tous ensemble}
-
-% Any kind of variables (clocks, parameters, discrete, etc.) can be used.
-% As in a standard \hytech{} file, they must be declared in the header of the file.
-
-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
-\subsection{Parametric Timed Automata}
-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
-
-See Appendix~\ref{app:grammar}.
-
-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
-\subsection{Initial region and $\pi_0$}
-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
-
-See Appendix~\ref{app:grammar}.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
