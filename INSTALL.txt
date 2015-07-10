@@ -1,13 +1,19 @@
                         Installing IMITATOR
                         ===================
 
-Note: In case of problem, please read this INSTALL file carefully before reporting a bug.
+*** Note: In case of problem, please read this INSTALL file carefully.
+If you still cannot solve the problem, please feel free to contact the developers:
+	- preferably using https://github.com/etienneandre/imitator/
+	- or using the contact info at www.imitator.fr otherwise.
 
-The installation of IMITATOR II is very simple (see end of this file).
-However, the installation of the other libraries (especially PPL), although not difficult, will take more time.
 
 *** WARNING: this file is outdated, and will be updated soon.
 In the meanwhile, please refer to www.imitator.fr, or contact the developers.
+
+
+The installation of IMITATOR is very simple (see end of this file).
+However, the installation of the other libraries (especially PPL), although not difficult, will take more time.
+
 
 
 ************************************************************
