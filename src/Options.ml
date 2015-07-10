@@ -7,7 +7,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Ulrich Kuehne, Etienne Andre
  * Created:       2010
- * Last modified: 2015/07/08
+ * Last modified: 2015/07/10
  *
  ****************************************************************)
  
@@ -108,6 +108,9 @@ class imitator_options =
 		
 		(* Complete version of IM (experimental) *)
 		val mutable completeIM = ref false
+		
+		(* Property input via CosyVerif *)
+		val mutable cosyprop = ref ""
 		
 		(* imitator mode *)
 		val mutable imitator_mode = ref Inverse_method
@@ -211,6 +214,7 @@ class imitator_options =
 		method check_ippta = !check_ippta
 		method check_point = !check_point
 		method completeIM = !completeIM
+		method cosyprop = !cosyprop
 		method counterex = !counterex
 		(* method dynamic = !dynamic *)
 		method distribution_mode = !distribution_mode
@@ -363,6 +367,9 @@ class imitator_options =
 				
 				("-completeIM", Set completeIM, " Experimental version of IM that outputs a complete (full) result. Default: false.");
 				
+				(** HACK: property input from CosyVerif *)
+				("-cosyProp", Set_string cosyprop, " Sets the property (for the CosyVerif input only! This option should not be called manually). Default: none.");
+		
 				("-contributors", Unit (fun _ ->
 					(*** HACK: print header now ***)
 					print_header_string();

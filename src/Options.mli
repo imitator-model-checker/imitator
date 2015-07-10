@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2012/05/10
- * Last modified: 2015/04/02
+ * Last modified: 2015/07/10
  *
  ****************************************************************)
  
@@ -47,6 +47,8 @@ class imitator_options :
 		method check_ippta : bool
 		method check_point : bool
 		method completeIM : bool
+		(** HACK: property input from CosyVerif *)
+		method cosyprop : string
 		method counterex : bool
 (* 		method dynamic : bool *)
 		method distribution_mode : distribution_mode
