@@ -2,7 +2,7 @@ imitator
 ========
 
 [IMITATOR](http://www.imitator.fr) is an open source software tool to perform automated parameter synthesis for concurrent timed systems.
-IMITATOR takes as input a network of parametric timed automata [AHV93], a well-known formalism to specify and verify models of systems where timing constants can be replaced with parameters, i.e., unknown constants.
+IMITATOR takes as input a network of IMITATOR parametric timed automata (NIPTA): NIPTA are an extension of parametric timed automata [AHV93], a well-known formalism to specify and verify models of systems where timing constants can be replaced with parameters, i.e., unknown constants.
 
 IMITATOR addresses several variants of the following problem:
 _given a concurrent timed system, what are the values of the timing constants that guarantee that the model of the system satisfies some property?_
@@ -11,6 +11,7 @@ Specifically, IMITATOR implements:
 * the inverse method [ACEF09,AM15],
 * the behavioral cartography [AF10], and
 * parametric reachability preservation [ALNS15].
+
 Numerous analysis options are available.
 
 IMITATOR is a command-line only tool, but that can output results in graphical form.
@@ -23,7 +24,7 @@ For more info, please visit www.imitator.fr
 
 
 ### Keywords
-formal verification, model checking, software verification, parameter synthesis
+formal verification, model checking, software verification, parameter synthesis, parametric timed automata
 
 
 ### References
