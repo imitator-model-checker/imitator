@@ -47,5 +47,8 @@ Packages:
                 - make
                 - make install
                 - cd ../../../
-                - cp privatedoc/META.* /usr/lib/ocaml/METAS/
+                - cp METAS/* /usr/lib/ocaml/METAS/
                 - ./compile-nondistr.sh
+                - ./_build/sanitize.sh
+                - ./compile-nondistr.sh
+
