@@ -19,7 +19,8 @@ However, the installation of the other libraries (especially PPL), although not 
 ************************************************************
 INSTALL OCAML
 ************************************************************
-Using the package manager
+Using your favorite package manager
+	Note: the OCaml version used to develop IMITATOR is 4.01.0
 
 
 ************************************************************
@@ -44,13 +45,13 @@ Add /usr/lib/ocaml/extlib/ to the path:
 ************************************************************
 INSTALL g++
 ************************************************************
-Using the package manager
+Using your favorite package manager
 
 
 ************************************************************
 INSTALL m4
 ************************************************************
-Using the package manager
+Using your favorite package manager
 
 
 ************************************************************
