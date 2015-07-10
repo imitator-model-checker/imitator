@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created       : 2011/11/23
- * Last modified : 2015/07/10
+ * Last modified : 2013/03/18
 *****************************************************************)
 
 {
@@ -62,8 +62,8 @@ rule token = parse
 	| ">"			{ CLOSE }
 	| "/>"			{ SINGLE_CLOSE }
 	
-	| "initial"	    { INITIAL }
-	| "final"	    { FINAL }
+	| "initialState"	    { INITIAL }
+	| "finalState"	    { FINAL }
 	| "Normal"	    { NORMAL }
 	| "true"		{ TRUE }
 

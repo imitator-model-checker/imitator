@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2011/11/22
- * Last modified: 2015/07/10
+ * Last modified: 2014/10/02
  *
  ************************************************************)
 
@@ -250,7 +250,7 @@ let string_of_location program automaton_index location_index =
 	(* Init ? *)
 	^ "\n\t\t<attribute name=\"type\">"
 	^ (if initial_location = location_index then (
-		"initial"
+		"initialState"
 	) else "")
 	^ "</attribute>"
 	
