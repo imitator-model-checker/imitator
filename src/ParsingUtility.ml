@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2014/03/15
- * Last modified: 2015/05/15
+ * Last modified: 2015/07/10
  *
  ****************************************************************)
 
@@ -113,12 +113,34 @@ let compile options =
 	print_message Verbose_low ("Parsing file " ^ options#file ^ "...");
 	let parsing_structure = 
 		(* Branching between 2 input syntaxes *)
-		if options#fromGML then
+		
+		(* Case GrML *)
+		if options#fromGML then(
+			(*** HACK: for EFsynth, we will have to get the property from the command line and insert it into the parsed structure ***)
+			let variable_declarations, automata, init_definition, noproperty_definition, noprojection, nocarto_definition =
 			try parser_lexer_from_file GrMLParser.main GrMLLexer.token options#file
 			with InvalidModel -> (print_error ("GrML input contains error. Please check it again."); abort_program (); exit 1)
-		else parser_lexer_from_file ModelParser.main ModelLexer.token options#file
-	in 
+			in
+			if options#imitator_mode = EF_synthesis then(
+				(* So far, we retrieved the parsing structure for the GrML model *)
+				(* Now, let us check whether the command line property is present *)
+				if options#cosyprop = "" then(
+					print_error ("[GrML parser] The option corresponding to the property must be set when executing CosyVerif in mode EFsynth."); abort_program (); exit 1
+				);
+				(* Now, let us get and parse the property *)
+				let property = parser_lexer_from_string CosyPropertyParser.main CosyPropertyLexer.token options#cosyprop in
+				(* Let us insert the property at its right location *)
+				variable_declarations, automata, init_definition, property, noprojection, nocarto_definition
+			) else (
+				(* simply return the parsed structure as it is *)
+				variable_declarations, automata, init_definition, noproperty_definition, noprojection, nocarto_definition
 
+			)
+		) (* end if GrML *)
+		
+		(* Case normal parsing *)
+		else parser_lexer_from_file ModelParser.main ModelLexer.token options#file
+	in
 
 	if options#imitator_mode != State_space_exploration && options#imitator_mode != Translation then
 		print_message Verbose_low ("Parsing reference valuation in file " ^ options#pi0file ^ "...");
