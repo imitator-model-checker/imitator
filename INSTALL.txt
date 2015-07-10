@@ -6,29 +6,14 @@ Note: In case of problem, please read this INSTALL file carefully before reporti
 The installation of IMITATOR II is very simple (see end of this file).
 However, the installation of the other libraries (especially PPL), although not difficult, will take more time.
 
+*** WARNING: this file is outdated, and will be updated soon.
+In the meanwhile, please refer to www.imitator.fr, or contact the developers.
+
 
 ************************************************************
 INSTALL OCAML
 ************************************************************
-(the version used to develop PolyOp is 3.11.2)
-
-	./configure -prefix /usr
-
-	make world
-
-	make bootstrap
-
-	make opt
-
-	make opt.opt
-
-	sudo make install
-
-OCaml should be installed in:
-        binaries.................. /usr/bin        
-        standard library.......... /usr/lib/ocaml  
-        manual pages.............. /usr/man (with extension .1)
-
+Using the package manager
 
 
 ************************************************************
@@ -109,18 +94,8 @@ Libraries have been installed in:
 ************************************************************
 INSTALL MPFR
 ************************************************************
-	./configure --prefix=/usr --with-gmp-lib=/usr/lib --with-gmp-include=/usr/include
-	
-     make
+Using the package manager
 
-To check the built library (runs the test files), type:
-     make check
-
-To install it (default "/usr/local" | see "--prefix" option), type:
-	sudo make install
-
-Libraries have been installed in:                                                 
-	/usr/lib
 
 ************************************************************
 INSTALL MLGMP
