@@ -1,10 +1,10 @@
 *******************************************************
 release XXXX    (XXXX) PRIVATE RELEASE
 
-Major features:
+Major features since 2.6.1:
 - Added EF-synthesis (option "-mode EF"): synthesize all parameter valuations such that a given state is reachable [AHV93,JLR15]
 - Added PRP and PRPC algorithms (option "-PRP") [ALNS15]
-- Added a distributed version of IMITATOR (option "-distributed"), with several distribution schemes:
+- Added a distributed version of the behavioral cartography (option "-distributed"), with several distribution schemes:
 	* static [ACN15]
 	* sequential [ACE14]
 	* random [ACE14]
@@ -34,8 +34,8 @@ Changes in options syntax:
 
 Misc
 - Improve printing floating numbers (in time and memory statistics)
-- Now IMITATOR has a build number
-- Now IMITATOR has a version name (based on Breton traditional galettes ingredients!): 2.7 is "Butter Guéméné"
+- Now IMITATOR has a build number (since May 2013)
+- Now IMITATOR has a version name and a version logo (based on traditional Breton "galettes" ingredients!): 2.7 is "Butter Guéméné"
 
 Install and compile
 - Two versions: distributed (sh compile.sh), that creates a dynamic binary, or non-distributed (sh compile-nondistr.sh), that creates a static binary
