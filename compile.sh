@@ -15,6 +15,11 @@
  #
 ################################################################
 
+if [ -f "setup.ml" ]
+then
+  ocaml setup.ml -distclean
+fi
+
 python gen_oasis.py \
 && oasis setup \
 && ocaml setup.ml -configure --enable-tests \
