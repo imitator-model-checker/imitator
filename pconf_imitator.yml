@@ -1,0 +1,51 @@
+Name: Imitator
+
+Version: 2.7
+
+Homepage: http://www.imitator.fr
+
+Summary: Tool for parametric verification and robustness analysis of real-time systems
+
+Description: Tool for parametric verification and robustness analysis of real-time systems
+
+Copyright: GPL
+
+Maintainer: Etienne André <Etienne.Andre@univ-paris13.fr>
+
+Authors:
+    - Étienne André <Etienne.Andre@univ-paris13.fr>
+
+Packages:
+    imitator:
+        Type: binary
+        Files:
+            /usr/bin/imitator: _build/src/IMITATOR-nondistr.native
+
+        Runtime:
+            Dependencies:
+                graphviz: "*"
+                plotutils: "*"
+
+        Build:
+            Dependencies:
+                wget: "*"
+                python: "*"
+                g++: "*"
+                m4: "*"
+                ocaml-nox: "*"
+                ocaml-findlib: "*"
+                libextlib-ocaml-dev: "*"
+                libgmp-dev: "*"
+                libgmp-ocaml-dev: "*"
+                oasis: "*"
+                libppl-dev: "*"
+            Commands:
+                - apt-get source libppl-dev
+                - cd ppl-1.1/
+                - ./configure --prefix=/usr
+                - cd interfaces/OCaml/
+                - make
+                - make install
+                - cd ../../../
+                - cp privatedoc/META.* /usr/lib/ocaml/METAS/
+                - ./compile-nondistr.sh
