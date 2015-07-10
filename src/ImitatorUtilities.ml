@@ -322,6 +322,12 @@ let print_contributors()  =
 	print_string "    * Nguyen Hoang Gia    (2014 - 2015)\n";
 	print_string "    * Romain Soulat       (2010 - 2013)\n";
 	print_string "\n";
+	print_string "    Compiling and packaging:\n";
+	print_string "    * Corentin Guillevic  (2015)\n";
+	print_string "    * Sarah Hadbi         (2015)\n";
+	print_string "    * Fabrice Kordon      (2015)\n";
+	print_string "    * Alban Linard        (2014 - 2015)\n";
+	print_string "\n";
 	print_string "    Moral support and suggestions by:\n";
 	print_string "    * Emmanuelle Encrenaz\n";
 	print_string "    * Laurent Fribourg\n";
