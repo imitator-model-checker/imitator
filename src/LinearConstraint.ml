@@ -10,7 +10,7 @@
  * Author:        Etienne Andre
  * 
  * Created:       2010/03/04
- * Last modified: 2015/03/30
+ * Last modified: 2015/07/13
  *
  ****************************************************************) 
  
@@ -1795,6 +1795,7 @@ let grml_of_linear_constraint names t_level linear_constraint =
 		in grml_of_linear_constraint_rec t_level list_of_inequalities
 	))
 
+let grml_of_px_linear_constraint = grml_of_linear_constraint
 let grml_of_pxd_linear_constraint = grml_of_linear_constraint
 
 

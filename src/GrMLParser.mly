@@ -8,7 +8,7 @@
  * Author:        Etienne Andre
  * 
  * Created       : 2011/11/23
- * Last modified : 2013/03/18
+ * Last modified : 2015/07/13
  *
  ****************************************************************/
 
@@ -45,8 +45,8 @@ let merge_init_definitions local_init_definitions init_definitions =
     List.append local_init_definitions init_definitions
 ;; 
 
-let convert declarations locations transitions =
-	(* SO FAR CONSIDER ONLY ONE AUTOMATON *)
+let convert init_constraint locations transitions =
+	(*** NOTE: SO FAR CONSIDER ONLY ONE AUTOMATON ***)
 	let init_location : string ref = ref "" in
 	let ok = ref true in
 	
@@ -213,10 +213,15 @@ model:
 	header body footer
 	 
 	{
-		let declarations, states, transitions = $2 in
-		let automata, init_definition = convert declarations states transitions in
+		let (declarations, init_constraint), states, transitions = $2 in
+		let automata, init_definition = convert init_constraint states transitions in
+		
+		(* Add the initial constraint to the init definition *)
+		let linear_predicates = List.map (fun linear_constraint -> Linear_predicate linear_constraint) init_constraint in
+		let init_definition_and_constraint = List.rev_append linear_predicates init_definition in
+
 		(*** HACK: need to consider bad and carto as well (or?) ***)
-		declarations, automata, init_definition, None, None, ([] , (NumConst.zero,NumConst.zero) , (NumConst.zero,NumConst.zero))
+		declarations, automata, init_definition_and_constraint, None, None, ([] , (NumConst.zero,NumConst.zero) , (NumConst.zero,NumConst.zero))
 	}
 ;
 
@@ -257,19 +262,19 @@ close_attribute:
 ************************************************************/
 body:
 /* 	TODO: allow different orders, even all mixed together  */
-	| declarations states transitions { $1, $2, $3 } /*TODO: constraint*/ 
+	| declarations_and_constraint states transitions { $1, $2, $3 }
 /* 	| declarations states { $1, [], [], [] } */
 ;
 
 /************************************************************
-  VARIABLES AND CONSTANTS
+  VARIABLES, CONSTANTS AND INITIAL CONSTRAINT
 ************************************************************/
-declarations:
+declarations_and_constraint:
 /* 1 shift / reduce conflict here! */
 	| open_attribute STR_DECLARATION CLOSE
 	variables constants initial
 	close_attribute
-		{ List.rev_append $4 $5 }
+		{ (List.rev_append $4 $5), $6 }
 ;
 
 
@@ -569,14 +574,15 @@ arc_type_opt:
 ;
 
 transition_body:
-	/* TODO: TO IMPROVE ! */
+	/*** TODO: TO IMPROVE ! (HACK: very ugly) ***/
 // 	| label guard updates { $1, $2, $3 }
 	| updates guard label_name { $3, $2, $1 }
 	| updates guard { NoSync, $2, $1 }
-	| updates label_name { $2, [], $1 }
-	| label_name guard { $1, $2, [] }
-	| label_name updates { $1, [], $2 }
 	| guard updates { NoSync, $1, $2 }
+	| updates label_name { $2, [], $1 }
+	| label_name updates { $1, [], $2 }
+	| label_name guard { $1, $2, [] }
+	| guard label_name { $2, $1, [] }
 	| label_name { $1, [], [] }
 	| guard { NoSync, $1, [] }
 	| updates { NoSync, [], $1 }

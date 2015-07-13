@@ -22,6 +22,11 @@ Minor features:
 - new options to specify min/max values for x/y axes for the graphical output of the cartography
 - Removed -counterex option (stops the analysis as soon as a counterexample is found)
 
+Interfacing with CosyVerif (and support of GrML)
+- Add EF mode support to the CosyVerif interface (using options -fromGrML and -cosyProp)
+- Fix a bug in the GrML output (action labels were removed when exporting to GrML)
+- Add the initial constraint to both the GrML input and the GrML output
+
 Changes in options syntax:
 - mode "reachability" becomes mode "statespace"
 - "-cart" becomes "-output-cart"

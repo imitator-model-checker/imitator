@@ -10,7 +10,7 @@
  * Author:        Etienne Andre
  * 
  * Created:       2010/03/04
- * Last modified: 2015/03/18
+ * Last modified: 2015/07/13
  *
  ****************************************************************) 
  
@@ -390,6 +390,7 @@ val string_of_pxd_linear_constraint : (variable -> string) -> pxd_linear_constra
 val grml_of_pxd_linear_term : (variable -> string) -> int -> pxd_linear_term -> string
 
 (** Convert a linear constraint into a string for GML *)
+val grml_of_px_linear_constraint : (variable -> string) -> int -> px_linear_constraint -> string
 val grml_of_pxd_linear_constraint : (variable -> string) -> int -> pxd_linear_constraint -> string
 
 
