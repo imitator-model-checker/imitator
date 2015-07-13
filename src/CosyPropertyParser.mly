@@ -11,7 +11,7 @@
  * Author:        Etienne Andre
  * 
  * Created       : 2015/07/10
- * Last modified : 2015/07/10
+ * Last modified : 2015/07/13
 ***********************************************/
 
 %{
@@ -132,7 +132,7 @@ bad_definition:
 loc_predicate:
 // 	WARNING / HACK : we cannot use 'CT_LOC LSQBRA NAME RSQBRA OP_EQ NAME' because the name of the PTA is not know in GrML… (in fact it is always "1"…)
 // So since there is only one PTA in GrML, we drop the PTA name
-	NAME { ("1", $1) } // Here, "1" is the PTA name (huge HACK), and $1 is the location name
+	NAME { ("noname", $1) } // Here, "1" is the PTA name (huge HACK -- will be addressed in ParsingUtility), and $1 is the location name
 ;
 
 

@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2014/03/15
- * Last modified: 2015/07/10
+ * Last modified: 2015/07/13
  *
  ****************************************************************)
 
@@ -129,8 +129,27 @@ let compile options =
 				);
 				(* Now, let us get and parse the property *)
 				let property = parser_lexer_from_string CosyPropertyParser.main CosyPropertyLexer.token options#cosyprop in
-				(* Let us insert the property at its right location *)
-				variable_declarations, automata, init_definition, property, noprojection, nocarto_definition
+
+				(*** Big HACK: we need to get the automaton name, to insert it in the property if it is an Unreachable_location property ***)
+				(* First get the (unique) automaton name *)
+				let automaton =
+				match automata with
+					| [automaton] -> automaton
+					| _ -> raise (InternalError("Only one automaton is expected when parsing GrML."))
+				in
+				let automaton_name, _, _ = automaton in
+				
+				(* Insert the automaton name in the property *)
+				let property_updated = 
+				match property with 
+				(* Case Unreachable_location: edit *)
+				| Some (ParsingStructure.Unreachable_location (_, location_name)) -> Some (ParsingStructure.Unreachable_location (automaton_name, location_name))
+				(* Other: no edit *)
+				| p -> p
+				in
+				
+				(* Finally, insert the property at its right location *)
+				variable_declarations, automata, init_definition, property_updated, noprojection, nocarto_definition
 			) else (
 				(* simply return the parsed structure as it is *)
 				variable_declarations, automata, init_definition, noproperty_definition, noprojection, nocarto_definition
