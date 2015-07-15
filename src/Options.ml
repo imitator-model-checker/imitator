@@ -368,7 +368,7 @@ class imitator_options =
 				("-completeIM", Set completeIM, " Experimental version of IM that outputs a complete (full) result. Default: false.");
 				
 				(** HACK: property input from CosyVerif *)
-				("-cosyProp", Set_string cosyprop, " Sets the property (for the CosyVerif input only! This option should not be called manually). Default: none.");
+				("-cosyProp", Set_string cosyprop, " File name containing the property (for the CosyVerif input only! This option should not be called manually). Default: none.");
 		
 				("-contributors", Unit (fun _ ->
 					(*** HACK: print header now ***)
@@ -541,7 +541,7 @@ class imitator_options =
 			(* File prefix *)
 			print_message Verbose_low ("Prefix for output files: " ^ !files_prefix);
 			(* Print full command *)
-			(*** WARNING: this command drops the " or ' (if any) ***)
+			(*** WARNING: this command drops the "" or '' (if any) ***)
 			print_message Verbose_low ("Command: " ^ (CamlUtilities.string_of_array_of_string_with_sep " " Sys.argv));
 
 			(* Global mode *)

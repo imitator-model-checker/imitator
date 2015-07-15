@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2014/03/15
- * Last modified: 2015/07/13
+ * Last modified: 2015/07/15
  *
  ****************************************************************)
 
@@ -70,7 +70,7 @@ let parser_lexer_gen the_parser the_lexer lexbuf string_of_input file_name =
 let parser_lexer_from_file the_parser the_lexer file_name =
 	(* Open file *)
 	let in_channel = try (open_in file_name) with
-		| Sys_error e -> print_error ("The file " ^ file_name ^ " could not be opened.\n" ^ e); abort_program (); exit(1)
+		| Sys_error e -> print_error ("The file '" ^ file_name ^ "' could not be opened.\n" ^ e); abort_program (); exit(1)
 	in
 	(* Lexing *)
 	let lexbuf = try (Lexing.from_channel in_channel) with
@@ -125,10 +125,10 @@ let compile options =
 				(* So far, we retrieved the parsing structure for the GrML model *)
 				(* Now, let us check whether the command line property is present *)
 				if options#cosyprop = "" then(
-					print_error ("[GrML parser] The option corresponding to the property must be set when executing CosyVerif in mode EFsynth."); abort_program (); exit 1
+					print_error ("[GrML parser] The file name corresponding to the property must be given when executing CosyVerif in mode EFsynth."); abort_program (); exit 1
 				);
 				(* Now, let us get and parse the property *)
-				let property = parser_lexer_from_string CosyPropertyParser.main CosyPropertyLexer.token options#cosyprop in
+				let property = parser_lexer_from_file CosyPropertyParser.main CosyPropertyLexer.token options#cosyprop in
 
 				(*** Big HACK: we need to get the automaton name, to insert it in the property if it is an Unreachable_location property ***)
 				(* First get the (unique) automaton name *)
