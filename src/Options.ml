@@ -7,7 +7,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Ulrich Kuehne, Etienne Andre
  * Created:       2010
- * Last modified: 2015/07/10
+ * Last modified: 2015/07/15
  *
  ****************************************************************)
  
@@ -540,6 +540,9 @@ class imitator_options =
 			print_message Verbose_standard ("Model: " ^ !file);
 			(* File prefix *)
 			print_message Verbose_low ("Prefix for output files: " ^ !files_prefix);
+			(* Print full command *)
+			(*** WARNING: this command drops the " or ' (if any) ***)
+			print_message Verbose_low ("Command: " ^ (CamlUtilities.string_of_array_of_string_with_sep " " Sys.argv));
 
 			(* Global mode *)
 			let message = match !imitator_mode with
