@@ -1,11 +1,11 @@
 (*****************************************************************
  *
- *                     IMITATOR II
+ *                     IMITATOR
  * 
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre, Ulrich Kuehne
  * Created:       2009/12/08
- * Last modified: 2015/03/30
+ * Last modified: 2015/07/17
  *
  ****************************************************************)
 
@@ -298,7 +298,7 @@ let states_equal state1 state2 =
 		(* Statistics *)
 		print_message Verbose_high ("About to compare equality between two constraints.");
 		nb_constraint_comparisons := !nb_constraint_comparisons + 1;
-		print_message Verbose_high ("Already performed " ^ (string_of_int (!nb_constraint_comparisons)) ^ " constraint comparisons.");
+		print_message Verbose_high ("Already performed " ^ (string_of_int (!nb_constraint_comparisons)) ^ " constraint comparison" ^ (s_of_int !nb_constraint_comparisons) ^ ".");
 		LinearConstraint.px_is_equal constr1 constr2
 	)
 	
@@ -310,7 +310,7 @@ let states_equal_dyn state1 state2 constr =
 		(* Statistics *)
 		print_message Verbose_high ("About to compare (dynamic) equality between two constraints.");
 		nb_constraint_comparisons := !nb_constraint_comparisons + 1;
-		print_message Verbose_high ("Already performed " ^ (string_of_int (!nb_constraint_comparisons)) ^ " constraint comparisons.");
+		print_message Verbose_high ("Already performed " ^ (string_of_int (!nb_constraint_comparisons)) ^ " constraint comparison" ^ (s_of_int !nb_constraint_comparisons) ^ ".");
 		(*** WARNING!!! Really sure that one wants do MODIFY the constraints here?!!! ***)
 		LinearConstraint.px_intersection_assign constr1  [constr];
 		LinearConstraint.px_intersection_assign constr2 [constr];
@@ -327,7 +327,7 @@ let state_included state1 state2 =
 		(* Statistics *)
 		print_message Verbose_high ("About to compare inclusion between two constraints.");
 		nb_constraint_comparisons := !nb_constraint_comparisons + 1;
-		print_message Verbose_high ("Already performed " ^ (string_of_int (!nb_constraint_comparisons)) ^ " constraint comparisons.");
+		print_message Verbose_high ("Already performed " ^ (string_of_int (!nb_constraint_comparisons)) ^ " constraint comparison" ^ (s_of_int !nb_constraint_comparisons) ^ ".");
 		LinearConstraint.px_is_leq constr1 constr2
 	)
 
@@ -456,7 +456,7 @@ let add_state program graph new_state =
 			(* Statistics *)
 			print_message Verbose_medium ("About to compare new state with " ^ (string_of_int (List.length old_states)) ^ " state(s).");
 			nb_state_comparisons := !nb_state_comparisons + (List.length old_states);
-			print_message Verbose_medium ("Already performed " ^ (string_of_int (!nb_state_comparisons)) ^ " comparisons.");
+			print_message Verbose_medium ("Already performed " ^ (string_of_int (!nb_state_comparisons)) ^ " comparison" ^ (s_of_int !nb_state_comparisons) ^ ".");
 			
 			List.iter (fun index -> 
 				let state = get_state graph index in
