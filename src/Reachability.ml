@@ -10,7 +10,7 @@
  * Author:        Ulrich Kuehne, Etienne Andre
  * 
  * Created:       2010/07/22
- * Last modified: 2015/07/08
+ * Last modified: 2015/07/17
  *
  ****************************************************************)
 
@@ -184,9 +184,9 @@ let get_clocks_in_updates : clock_updates -> Automaton.clock_index list = functi
 	| Updates clock_update_list -> let result, _ = List.split clock_update_list in result
 
 
-(*--------------------------------------------------*)
+(*------------------------------------------------------------*)
 (* Find the local clocks per automaton *)
-(*--------------------------------------------------*)
+(*------------------------------------------------------------*)
 (** WARNING: the use of clock_offset is not beautiful (and error prone) here *)
 let find_local_clocks model =
 	(** HACK: yes, clock_offset is the number of parameters, but quite hard coded *)
@@ -262,9 +262,9 @@ let find_local_clocks model =
 	(*clocks_per_automaton, automata_per_clock,*) local_clocks_per_automaton
 	
 
-(*--------------------------------------------------*)
+(*------------------------------------------------------------*)
 (* Find the useless clocks in automata locations *)
-(*--------------------------------------------------*)
+(*------------------------------------------------------------*)
 (** NOTE: this function is not related to model conversion, and could (should?) be defined elsewhere *)
 let find_useless_clocks_in_automata model local_clocks_per_automaton =
 
@@ -447,9 +447,9 @@ let find_useless_clocks_in_automata model local_clocks_per_automaton =
 
 
 
-(*--------------------------------------------------*)
+(*------------------------------------------------------------*)
 (* Function for preparing data structures for dynamic clock elimination *)
-(*--------------------------------------------------*)
+(*------------------------------------------------------------*)
 (* NOTE: This function is only called if the dynamic clock elimination option is activated *)
 let prepare_clocks_elimination model =
 	(* Compute the local clocks per automaton *)
@@ -570,10 +570,10 @@ let nb_unsat2 = ref 0
 		LinearConstraint.hull_assign_if_exact constr1 constr2 
 	)*)
 
-(*--------------------------------------------------*)
+(*------------------------------------------------------------*)
 (* Check whether two states (location1 , constraint1) and (location2 , constraint2) are mergeable*)
 (* Warning! Performs the merging constraint1 := constraint1 U constraint2 if indeed mergeable *)
-(*--------------------------------------------------*)
+(*------------------------------------------------------------*)
 let try_to_merge location1 constraint1 location2 constraint2 =
 	(* First check equality of locations *)
 	if location1 <> location2 then false
@@ -582,10 +582,10 @@ let try_to_merge location1 constraint1 location2 constraint2 =
 		LinearConstraint.px_hull_assign_if_exact constraint1 constraint2
 	)
 
-(*--------------------------------------------------*)
+(*------------------------------------------------------------*)
 (* Merge states in a list (action_index, location, constraint) *)
 (* Return the updated list *)
-(*--------------------------------------------------*)
+(*------------------------------------------------------------*)
 (*** WARNING: horrible imperative style (and probably not efficient and not tail-recursive at all!) programming in this function *)
 let merge model action_and_state_list =
 
@@ -808,9 +808,9 @@ let merge model action_and_state_list =
 (* Main functions *)
 (**************************************************************)
 
-(*--------------------------------------------------*)
+(*------------------------------------------------------------*)
 (* Compute the invariant associated to a location   *)
-(*--------------------------------------------------*)
+(*------------------------------------------------------------*)
 let compute_plain_invariant model location =
   (* construct invariant *)
 	let invariants = List.map (fun automaton_index ->
@@ -823,10 +823,10 @@ let compute_plain_invariant model location =
 	LinearConstraint.pxd_intersection invariants
 
 
-(*--------------------------------------------------*)
-(* Compute the invariant I_q associated to a location  *)
+(*------------------------------------------------------------*)
+(* Compute the invariant I_l associated to a location  *)
 (* including renaming and time elapse. Uses cache.  *)
-(*--------------------------------------------------*)
+(*------------------------------------------------------------*)
 let compute_invariant model location =
 	(* Strip off discrete for caching scheme  *)
 	let locations = Automaton.get_locations location in
@@ -835,16 +835,16 @@ let compute_invariant model location =
 	match entry with
 		| Some inv -> inv
 		| None -> ( 
-			(* Build plain invariant I_q(X) *)
+			(* Build plain invariant I_l(X) *)
 			let invariant = compute_plain_invariant model location in
 			(* Store in cache *)
 			Cache.store inv_cache locations invariant;
 			invariant
 		)
 
-(*--------------------------------------------------*)
+(*------------------------------------------------------------*)
 (* Compute the polyhedron p projected onto rho(X) *)
-(*--------------------------------------------------*)
+(*------------------------------------------------------------*)
 (*** TO OPTIMIZE: use cache (?) *)
 let rho_assign model (linear_constraint : LinearConstraint.pxd_linear_constraint) clock_updates =
 	if clock_updates != [] then(
@@ -1055,9 +1055,9 @@ let rho_assign model (linear_constraint : LinearConstraint.pxd_linear_constraint
 	)
 
 
-(*--------------------------------------------------*)
+(*------------------------------------------------------------*)
 (* Create a fresh constraint of the form 'D = d' for any discrete variable D with value d *)
-(*--------------------------------------------------*)
+(*------------------------------------------------------------*)
 
 
 (*** SHALL BE REMPLACED WITH THE LINEAR_CONSTRAINT FUNCTION ***)
@@ -1078,9 +1078,9 @@ let instantiate_discrete discrete_values =
 	LinearConstraint.make_pxd_constraint inequalities
 
 
-(*--------------------------------------------------*)
+(*------------------------------------------------------------*)
 (* Compute the list of stopped and elapsing clocks in a location *)
-(*--------------------------------------------------*)
+(*------------------------------------------------------------*)
 let compute_stopwatches model location =
 	(* If no stopwatches at all: just return the set of clocks *)
 	if not model.has_stopwatches then ([], model.clocks) else(
@@ -1114,9 +1114,41 @@ let compute_stopwatches model location =
 	) (* if no stopwatch in the model *)
 
 
-(*--------------------------------------------------*)
+
+(*------------------------------------------------------------*)
+(* Apply time elapsing in location to the_constraint (the location is needed to retrieve the stopwatches stopped in this location) *)
+(*------------------------------------------------------------*)
+let apply_time_elapsing location the_constraint =
+	(* Get the model *)
+	let model = Input.get_model() in
+	(* Compute the list of stopwatches *)
+	let stopped_clocks, elapsing_clocks = compute_stopwatches model location in
+	print_message Verbose_high ("Computing list of stopwatches");
+	if debug_mode_greater Verbose_total then(
+		let list_of_names = List.map model.variable_names stopped_clocks in
+		print_message Verbose_total ("Stopped clocks : " ^ (string_of_list_of_string_with_sep ", " list_of_names));
+		let list_of_names = List.map model.variable_names elapsing_clocks in
+		print_message Verbose_total ("Elapsing clocks: " ^ (string_of_list_of_string_with_sep ", " list_of_names));
+	);
+	
+	(* Perform time elapsing *)
+	print_message Verbose_high ("Now applying time elapsing...");
+	(*** NOTE: the comment is to be changed in alternative TE mode ***)
+	LinearConstraint.pxd_time_elapse_assign
+		elapsing_clocks
+		(List.rev_append stopped_clocks model.parameters_and_discrete)
+		the_constraint
+	;
+	(* Print some information *)
+	if debug_mode_greater Verbose_total then(
+		print_message Verbose_total (LinearConstraint.string_of_pxd_linear_constraint model.variable_names the_constraint);
+	);
+	()
+
+
+(*------------------------------------------------------------*)
 (* Compute the initial state with the initial invariants and time elapsing *)
-(*--------------------------------------------------*)
+(*------------------------------------------------------------*)
 let create_initial_state model =
 	(* Retrieve the input options *)
 	let options = Input.get_options () in
@@ -1128,8 +1160,8 @@ let create_initial_state model =
 	(* Extend dimensions for discrete *)
 	let initial_constraint = LinearConstraint.pxd_of_px_constraint initial_constraint in
 	
-	(* Compute the invariants I_q0(X) for the initial locations *)
-	print_message Verbose_high ("\nComputing initial invariant I_q0(X)");
+	(* Compute the invariants I_l0(X) for the initial locations *)
+	print_message Verbose_high ("\nComputing initial invariant I_l0(X)");
 	(* Create the invariant *)
 	let invariant = compute_plain_invariant model initial_location in
 	(* Print some information *)
@@ -1145,40 +1177,50 @@ let create_initial_state model =
 	if debug_mode_greater Verbose_total then
 		print_message Verbose_total (LinearConstraint.string_of_pxd_linear_constraint model.variable_names discrete_constraint);
 	
-	(* Perform intersection of C(X) and I_q0(X) and D_i = d_i *)
-	print_message Verbose_high ("Performing intersection of C0(X) and I_q0(X) and D_i = d_i");
+	(* Perform intersection of C(X) and I_l0(X) and D_i = d_i *)
+	print_message Verbose_high ("Performing intersection of C0(X) and I_l0(X) and D_i = d_i");
 	let current_constraint = LinearConstraint.pxd_intersection [initial_constraint ; invariant ; discrete_constraint (*** TO OPTIMIZE: could be removed ***)] in
 	(* Print some information *)
 	if debug_mode_greater Verbose_total then
 		print_message Verbose_total (LinearConstraint.string_of_pxd_linear_constraint model.variable_names current_constraint);
+
+	
+	(*--- BEGIN only if time elapsing ---*)
+	if not options#no_time_elapsing then(
+		(* Perform time elapsing *)
+		print_message Verbose_high ("Applying time elapsing to [ C0(X) and I_l0(X) and D_i = d_i ]");
+		apply_time_elapsing initial_location current_constraint;
 		
-	(* Compute the list of stopwatches *)
-	let stopped_clocks, elapsing_clocks = compute_stopwatches model initial_location in
-	print_message Verbose_high ("Computing list of stopwatches");
-	if debug_mode_greater Verbose_total then(
-		let list_of_names = List.map model.variable_names stopped_clocks in
-		print_message Verbose_total ("Stopped clocks : " ^ (string_of_list_of_string_with_sep ", " list_of_names));
-		let list_of_names = List.map model.variable_names elapsing_clocks in
-		print_message Verbose_total ("Elapsing clocks: " ^ (string_of_list_of_string_with_sep ", " list_of_names));
+(*		(* Compute the list of stopwatches *)
+		let stopped_clocks, elapsing_clocks = compute_stopwatches model initial_location in
+		print_message Verbose_high ("Computing list of stopwatches");
+		if debug_mode_greater Verbose_total then(
+			let list_of_names = List.map model.variable_names stopped_clocks in
+			print_message Verbose_total ("Stopped clocks : " ^ (string_of_list_of_string_with_sep ", " list_of_names));
+			let list_of_names = List.map model.variable_names elapsing_clocks in
+			print_message Verbose_total ("Elapsing clocks: " ^ (string_of_list_of_string_with_sep ", " list_of_names));
+		);
+		
+		LinearConstraint.pxd_time_elapse_assign (*model.clocks model.parameters_and_discrete*)
+			elapsing_clocks
+			(List.rev_append stopped_clocks model.parameters_and_discrete)
+			current_constraint
+		;
+		(* Print some information *)
+		if debug_mode_greater Verbose_total then
+			print_message Verbose_total (LinearConstraint.string_of_pxd_linear_constraint model.variable_names current_constraint);*)
+		
+		
+		(* Perform intersection of [C(X) and I_l0(X) and D_i = d_i]time with I_l0(X) and D_i = d_i *)
+		(*** NOTE: intersection NOT necessary in absence of time elapsing, because the same I_l0(X) and D_i = d_i were intersected earlier ***)
+		print_message Verbose_high ("Performing intersection of [C0(X) and I_l0(X) and D_i = d_i]time and I_l0(X) and D_i = d_i");
+		LinearConstraint.pxd_intersection_assign current_constraint [invariant ; discrete_constraint];
+		(* Print some information *)
+		if debug_mode_greater Verbose_total then
+			print_message Verbose_total (LinearConstraint.string_of_pxd_linear_constraint model.variable_names current_constraint);
 	);
-	
-	(* Perform time elapsing *)
-	print_message Verbose_high ("Performing time elapsing on [ C0(X) and I_q0(X) and D_i = d_i ]");
-	LinearConstraint.pxd_time_elapse_assign (*model.clocks model.parameters_and_discrete*)
-		elapsing_clocks
-		(List.rev_append stopped_clocks model.parameters_and_discrete)
-		current_constraint
-	;
-	(* Print some information *)
-	if debug_mode_greater Verbose_total then
-		print_message Verbose_total (LinearConstraint.string_of_pxd_linear_constraint model.variable_names current_constraint);
-	
-	(* Perform intersection of [C(X) and I_q0(X) and D_i = d_i]time with I_q0(X) and D_i = d_i *)
-	print_message Verbose_high ("Performing intersection of [C0(X) and I_q0(X) and D_i = d_i]time and I_q0(X) and D_i = d_i");
-	LinearConstraint.pxd_intersection_assign current_constraint [invariant ; discrete_constraint];
-	(* Print some information *)
-	if debug_mode_greater Verbose_total then
-		print_message Verbose_total (LinearConstraint.string_of_pxd_linear_constraint model.variable_names current_constraint);
+		
+	(*--- END only if time elapsing ---*)
 	
 	(* Hide discrete *)
 	print_message Verbose_high ("Hide discrete");
@@ -1217,10 +1259,13 @@ let create_initial_state model =
 
 
 
-(*--------------------------------------------------*)
-(* Compute the initial state with the initial invariants and time elapsing, and check it is satisfiable; otherwise abort *)
-(*--------------------------------------------------*)
+(*------------------------------------------------------------*)
+(* Compute the initial state with the initial invariants and time elapsing, and check whether it is satisfiable; if not, abort *)
+(*------------------------------------------------------------*)
 let get_initial_state_or_abort model =
+	(* Retrieve the input options *)
+	let options = Input.get_options () in
+
 	(* Print the initial state *)
 	if debug_mode_greater Verbose_medium then
 		print_message Verbose_medium ("\nInitial state:\n" ^ (ModelPrinter.string_of_state model (model.initial_location, model.initial_constraint)) ^ "\n");
@@ -1239,23 +1284,24 @@ let get_initial_state_or_abort model =
 
 
 	(* Check the satisfiability *)
+	let begin_message = "The initial constraint of the model after invariant " ^ (if not options#no_time_elapsing then " and time elapsing" else "") in
 	if not (LinearConstraint.px_is_satisfiable initial_constraint_after_time_elapsing) then (
-		print_warning "The initial constraint of the model after time elapsing is not satisfiable.";
+		print_warning (begin_message ^ "is not satisfiable.");
 		terminate_program();
 	)else(
-		print_message Verbose_total ("\nThe initial constraint of the model after time elapsing is satisfiable.");
+		print_message Verbose_total ("\n" ^ begin_message ^ "is satisfiable.");
 	);
 	(* Print the initial state after time elapsing *)
 	if debug_mode_greater Verbose_medium then
-		print_message Verbose_medium ("\nInitial state after time-elapsing:\n" ^ (ModelPrinter.string_of_state model init_state_after_time_elapsing) ^ "\n");
+		print_message Verbose_medium ("\nInitial state computed:\n" ^ (ModelPrinter.string_of_state model init_state_after_time_elapsing) ^ "\n");
 		
 	(* Return the initial state *)
 	init_state_after_time_elapsing
 
 
-(*--------------------------------------------------*)
+(*------------------------------------------------------------*)
 (* Compute a list of possible actions for a state   *)
-(*--------------------------------------------------*)
+(*------------------------------------------------------------*)
 let compute_possible_actions model original_location = 
 	(* Create a boolean array for the possible actions *)
 	let possible_actions = Array.make model.nb_actions false in
@@ -1386,18 +1432,18 @@ let compute_new_location model aut_table trans_table action_index original_locat
 	
 
 
-(*--------------------------------------------------*)
+(*------------------------------------------------------------*)
 (* Compute the new constraint for a transition      *)
 (* orig_constraint : contraint in source location   *)
-(* discrete_constr : contraint D_i = d_i in source location (discrete variables) *)
+(* discrete_constr_src : contraint D_i = d_i in source location (discrete variables) *)
 (* (* stopped_clocks  : list of clocks stopped         *) *)
 (* (* elapsing_clocks : list of clocks non stopped     *) *)
 (* orig_location   : source location                *)
 (* dest_location   : target location                *)
 (* guards          : guard constraints per automaton*)
 (* clock_updates   : updated clock variables        *)
-(*--------------------------------------------------*)
-let compute_new_constraint model orig_constraint (discrete_constr : LinearConstraint.pxd_linear_constraint) orig_location dest_location guards clock_updates =
+(*------------------------------------------------------------*)
+let compute_new_constraint model orig_constraint (discrete_constr_src : LinearConstraint.pxd_linear_constraint) orig_location dest_location guards clock_updates =
 	(* Retrieve the input options *)
 	let options = Input.get_options () in
 	
@@ -1409,8 +1455,56 @@ let compute_new_constraint model orig_constraint (discrete_constr : LinearConstr
 	);
 	(* The constraint is checked on the fly for satisfiability -> exception mechanism *)
 	try (
-		let current_constraint = LinearConstraint.pxd_copy discrete_constr in
+		(* Retrieve the original constraint *)
+		(*** WARNING / VERY IMPORTANT: copy!!! (in fact convert, which is also a copy) ***)
+		let orig_constraint_with_maybe_time_elapsing = LinearConstraint.pxd_of_px_constraint  (orig_constraint ()) in
 
+		(* Alternative IMITATOR semantics for time-elapsing: apply time-elapsing NOW, and intersect with invariant *)
+		if options#no_time_elapsing then(
+			print_message Verbose_total ("\nAlternative time elapsing: Applying time elapsing NOW");
+			apply_time_elapsing orig_location orig_constraint_with_maybe_time_elapsing;
+			
+			(* Compute the invariant in the source location I_l(X) *)
+			(*** TO OPTIMIZE!!! This should be done only once in the function calling this function!! ***)
+			print_message Verbose_total ("\nComputing invariant I_l(X)");
+			let invariant = compute_invariant model orig_location in
+			(* Print some information *)
+			if debug_mode_greater Verbose_total then(
+				print_message Verbose_total (LinearConstraint.string_of_pxd_linear_constraint model.variable_names invariant);
+			);
+
+			(* Perform the intersection *)
+			print_message Verbose_total ("\nAlternative time elapsing: performing intersection of C(X)time and I_l(X)");
+			LinearConstraint.pxd_intersection_assign orig_constraint_with_maybe_time_elapsing [invariant];
+		);
+
+		
+(*		(* Factor time-elapsing because it can be used at two different places depending on the options *)
+		let apply_time_elapsing () =
+			(* Compute the list of stopwatches *)
+			let stopped_clocks, elapsing_clocks = compute_stopwatches model dest_location in
+			print_message Verbose_high ("Computing list of stopwatches");
+			if debug_mode_greater Verbose_total then(
+				let list_of_names = List.map model.variable_names stopped_clocks in
+				print_message Verbose_total ("Stopped clocks : " ^ (string_of_list_of_string_with_sep ", " list_of_names));
+				let list_of_names = List.map model.variable_names elapsing_clocks in
+				print_message Verbose_total ("Elapsing clocks: " ^ (string_of_list_of_string_with_sep ", " list_of_names));
+			);
+			
+			(* Perform time elapsing *)
+			LinearConstraint.pxd_time_elapse_assign
+				elapsing_clocks
+				(List.rev_append stopped_clocks model.parameters_and_discrete)
+				current_constraint
+			;
+			(* Print some information *)
+			if debug_mode_greater Verbose_total then(
+				print_message Verbose_total (LinearConstraint.string_of_pxd_linear_constraint model.variable_names current_constraint);
+			);
+		in*)
+
+		let current_constraint = LinearConstraint.pxd_copy discrete_constr_src in
+		
 		(* Print some information *)
 		if debug_mode_greater Verbose_total then(
 			print_message Verbose_total ("\nComputing the guards g(x)");
@@ -1418,9 +1512,10 @@ let compute_new_constraint model orig_constraint (discrete_constr : LinearConstr
 				print_message Verbose_total (LinearConstraint.string_of_pxd_linear_constraint model.variable_names guard);
 			) guards;
 		);
+
 		print_message Verbose_total ("\nPerforming intersection of Di = di and C(X) and g(X)");
 		(* Add the (old) value for discrete to the guards D_i = d_i and g(X) *)
-		LinearConstraint.pxd_intersection_assign current_constraint ((LinearConstraint.pxd_of_px_constraint (orig_constraint ())) :: guards);
+		LinearConstraint.pxd_intersection_assign current_constraint (orig_constraint_with_maybe_time_elapsing :: guards);
 		(* Print some information *)
 		if debug_mode_greater Verbose_total then(
 			print_message Verbose_total (LinearConstraint.string_of_pxd_linear_constraint model.variable_names current_constraint);
@@ -1450,8 +1545,8 @@ let compute_new_constraint model orig_constraint (discrete_constr : LinearConstr
 			print_message Verbose_total (LinearConstraint.string_of_pxd_linear_constraint model.variable_names current_constraint);
 		);
 
-		(* Compute the invariant in the destination location I_q(X) *)
-		print_message Verbose_total ("\nComputing invariant I_q(X)");
+		(* Compute the invariant in the destination location I_l'(X) *)
+		print_message Verbose_total ("\nComputing invariant I_l'(X)");
 		let invariant = compute_invariant model dest_location in
 		(* Print some information *)
 		if debug_mode_greater Verbose_total then(
@@ -1459,57 +1554,43 @@ let compute_new_constraint model orig_constraint (discrete_constr : LinearConstr
 		);
 
 		(* Perform the intersection *)
-		print_message Verbose_total ("\nPerforming intersection of [C(X) and g(X)] rho and I_q(X)");
+		print_message Verbose_total ("\nPerforming intersection of [C(X) and g(X)]rho and I_l'(X)");
 		(* (Exists D_i : D_i = d_i and g(X)) *)
 		LinearConstraint.pxd_intersection_assign current_constraint [invariant];
 		(* Print some information *)
 		if debug_mode_greater Verbose_total then(
 			print_message Verbose_total (LinearConstraint.string_of_pxd_linear_constraint model.variable_names current_constraint);
 			if not (LinearConstraint.pxd_is_satisfiable current_constraint) then
-				print_message Verbose_total ("This constraint is NOT satisfiable (after intersection of [C(X) and g(X)] rho and I_q(X) ).");
+				print_message Verbose_total ("This constraint is NOT satisfiable (after intersection of [C(X) and g(X)] rho and I_l'(X) ).");
 		);
-
-		(* NO USE FOR TESTING HERE FOR SATISFIABILITY (almost always satisfiable) *)
+		(*** NOTE: NO USE FOR TESTING HERE FOR SATISFIABILITY (almost always satisfiable from my experiments) -- ÉA ***)
 	
-		(* Compute the list of stopwatches *)
-		let stopped_clocks, elapsing_clocks = compute_stopwatches model dest_location in
-		print_message Verbose_high ("Computing list of stopwatches");
-		if debug_mode_greater Verbose_total then(
-			let list_of_names = List.map model.variable_names stopped_clocks in
-			print_message Verbose_total ("Stopped clocks : " ^ (string_of_list_of_string_with_sep ", " list_of_names));
-			let list_of_names = List.map model.variable_names elapsing_clocks in
-			print_message Verbose_total ("Elapsing clocks: " ^ (string_of_list_of_string_with_sep ", " list_of_names));
+	
+		(* Normal IMITATOR semantics for time-elapsing: apply time-elapsing now *)
+		if not options#no_time_elapsing then(
+			print_message Verbose_high ("Applying time elapsing to [C(X) and g(X)]rho and I_l'(X) ]");
+			apply_time_elapsing dest_location current_constraint;
 		);
-		
-		(* Perform time elapsing *)
-		print_message Verbose_total ("\nPerforming time elapsing on [C(X) and g(X)] rho and I_q(X)");
-		LinearConstraint.pxd_time_elapse_assign (*model.clocks model.parameters_and_discrete*)
-			elapsing_clocks
-			(List.rev_append stopped_clocks model.parameters_and_discrete)
-			current_constraint
-		;
-		(* Print some information *)
-		if debug_mode_greater Verbose_total then(
-			print_message Verbose_total (LinearConstraint.string_of_pxd_linear_constraint model.variable_names current_constraint);
-		);
-
-		(* Compute the equalities for the discrete variables (in destination location) *)
-		let discrete_values = List.map (fun discrete_index -> discrete_index, (Automaton.get_discrete_value dest_location discrete_index)) model.discrete in
+	
+	
+		(* Compute the equalities for the discrete variables in destination location *)
+		let discrete_values_dest = List.map (fun discrete_index -> discrete_index, (Automaton.get_discrete_value dest_location discrete_index)) model.discrete in
 		(* Convert to a constraint *)
-		let discrete_constraint = instantiate_discrete discrete_values in
+		let discrete_constraint_dest = instantiate_discrete discrete_values_dest in
 		
 		(* Perform the intersection *)
-		print_message Verbose_total ("\nPerforming intersection of the constraint with D_i = d_i and I_q(X) ");
+		print_message Verbose_total ("\nPerforming intersection of the constraint with D_i = d_i and I_l'(X) ");
 		LinearConstraint.pxd_intersection_assign current_constraint
 			[
-				discrete_constraint;
+				discrete_constraint_dest;
+				(*** NOTE: in principle, no need to intersect with invariant if time elapsing was NOT applied (alternating semantics). This could be improved (and tested) in the future. ***)
 				invariant;
 			];
 		(* Print some information *)
 		if debug_mode_greater Verbose_total then(
 			print_message Verbose_total (LinearConstraint.string_of_pxd_linear_constraint model.variable_names current_constraint);
 			if not (LinearConstraint.pxd_is_satisfiable current_constraint) then
-				print_message Verbose_total ("This constraint is NOT satisfiable (after intersection of the constraint with D_i = d_i and I_q(X)).");
+				print_message Verbose_total ("This constraint is NOT satisfiable (after intersection of the constraint with D_i = d_i and I_l'(X)).");
 		);
 		
 (*		(* Check here for unsatisfiability *)
@@ -1801,7 +1882,7 @@ let compute_transitions model location constr action_index automata aut_table ma
 			current_index := !current_index + 1;
 		) automata;
 		(* arrived here, so each automaton must have at least one legal transition *)
-		true		
+		true
 	) with Unsat_exception -> false
 
 
@@ -2029,6 +2110,7 @@ let post_from_one_state model reachability_graph orig_state_index =
 	(* Original location: static *)
 	let original_location, _ = StateSpace.get_state reachability_graph orig_state_index in
 	(* Dynamic version of the original px_constraint (can change!) *)
+	(*** NOTE / TO OPTIMIZE: OK but not in all algorithms !! ***)
 	let orig_constraint () =
 		let _, orig_constraint = StateSpace.get_state reachability_graph orig_state_index in
 		orig_constraint
@@ -2082,6 +2164,13 @@ let post_from_one_state model reachability_graph orig_state_index =
 		(* Compute conjunction with current constraint *)
 		(*** To optimize: it seems intersection_assign could be used instead ***)
 		let orig_plus_discrete = LinearConstraint.pxd_intersection [LinearConstraint.pxd_of_px_constraint (orig_constraint ()); discrete_constr] in
+		
+		(* In alternative semantics, apply time elapsing NOW, so as to factor this operation once for all *)
+		(*** WARNING: time elapsing is AGAIN performed in compute_new_constraint, which is a loss of efficiency ***)
+		if options#no_time_elapsing then(
+			print_message Verbose_total ("\nAlternative time elapsing: Applying time elapsing NOW");
+			apply_time_elapsing original_location orig_plus_discrete;
+		);
 		
 		(* Give a new index to those automata *)
 		let real_indexes = Array.make nb_automata_for_this_action 0 in
@@ -2366,9 +2455,9 @@ let branch_and_bound model init_state =
 		print_message Verbose_total ("\nReachability tree initialized:\n" ^ (ReachabilityTree.string_of_rtree string_of_int rtree));
 	);
 
-	(*--------------------------------------------------*)
+	(*------------------------------------------------------------*)
 	(* Start the exploration *)
-	(*--------------------------------------------------*)
+	(*------------------------------------------------------------*)
 	(* Current state to be analyzed *)
 	let current_state_index = ref init_state_index in
 	(* Limit reached? (Due to bounded analysis options) *)
@@ -2527,9 +2616,9 @@ let post_star model init_state =
 	StateSpace.increment_nb_gen_states reachability_graph;
 	
 	
-	(*--------------------------------------------------*)
+	(*------------------------------------------------------------*)
 	(* Perform the post^* *)
-	(*--------------------------------------------------*)
+	(*------------------------------------------------------------*)
 	let newly_found_new_states = ref [init_state_index] in
 	let nb_iterations = ref 1 in
 	let limit_reached = ref false in
@@ -2659,9 +2748,9 @@ let post_star model init_state =
 
 
 
-(*--------------------------------------------------*)
+(*------------------------------------------------------------*)
 (* Performances *)
-(*--------------------------------------------------*)
+(*------------------------------------------------------------*)
 let print_statistics total_time reachability_graph =
 	(* Retrieve the input options *)
 	let options = Input.get_options () in
@@ -2827,9 +2916,9 @@ let ef_synthesis model =
 
 	
 
-(*--------------------------------------------------*)
+(*------------------------------------------------------------*)
 (* Auxiliary function *)
-(*--------------------------------------------------*)
+(*------------------------------------------------------------*)
 (* Try to remove useless "bad" constraints *)
 let process_result_IMcomplete original_k_good original_k_bad =
 	(* Print some information *)
@@ -2871,9 +2960,9 @@ let process_result_IMcomplete original_k_good original_k_bad =
 (************************************************************)
 
 
-(*--------------------------------------------------*)
+(*------------------------------------------------------------*)
 (* Encapsulation function for IM, called by the real inverse method function, and by the cartography algorithms *)
-(*--------------------------------------------------*)
+(*------------------------------------------------------------*)
 let inverse_method_gen model init_state =
 	(* Retrieve the input options *)
 	let options = Input.get_options () in
@@ -2924,9 +3013,9 @@ let inverse_method_gen model init_state =
 	(* Call to generic functions *)
 	let reachability_graph, nb_iterations, total_time, premature_stop, nb_random_selections = algo model init_state in
 	
-	(*--------------------------------------------------*)
+	(*------------------------------------------------------------*)
 	(* Print information *)
-	(*--------------------------------------------------*)
+	(*------------------------------------------------------------*)
 	if not options#no_random then (
 		if (nb_random_selections > 0) then (
 			print_message Verbose_standard "Analysis may have been non-deterministic:";
@@ -2937,9 +3026,9 @@ let inverse_method_gen model init_state =
 	);
 	
 
-	(*--------------------------------------------------*)
+	(*------------------------------------------------------------*)
 	(* Computation of the returned constraint *)
-	(*--------------------------------------------------*)
+	(*------------------------------------------------------------*)
 	let returned_constraint =
 
 	(* Case union : return the constraint on the parameters associated to slast*)
@@ -2997,9 +3086,9 @@ let inverse_method_gen model init_state =
 		)*)
 	in
 
-	(*--------------------------------------------------*)
+	(*------------------------------------------------------------*)
 	(* Return result *)
-	(*--------------------------------------------------*)
+	(*------------------------------------------------------------*)
 	{
 	result 				= returned_constraint;
 	tile_nature			= !tile_nature;
@@ -3016,9 +3105,9 @@ let inverse_method_gen model init_state =
 	
 
 (*** WARNING!!! Why a dedicated function here, whereas for BC+EFIM this function is not (?) called? ***)
-(*--------------------------------------------------*)
+(*------------------------------------------------------------*)
 let efim model =
-(*--------------------------------------------------*)
+(*------------------------------------------------------------*)
 	(* Retrieve the input options *)
 	let options = Input.get_options () in
 
@@ -3076,9 +3165,9 @@ let efim model =
 	()
 
 
-(*--------------------------------------------------*)
+(*------------------------------------------------------------*)
 let inverse_method model =
-(*--------------------------------------------------*)
+(*------------------------------------------------------------*)
 	(* Retrieve the input options *)
 	let options = Input.get_options () in
 	

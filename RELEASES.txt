@@ -17,6 +17,7 @@ Minor features:
 - add two more verbose modes: mute and warning-only
 - the result (text) can be exported to a file (option "-output-result")
 - add suffix "-pta.jpg" to PTA2JPG files
+- time elapsing can be applied either at the beginning (new mode, option -no-time-elapsing) or at the end (classical IMITATOR semantics) of the computation of a new state [EXPERIMENTAL]
 - in BC mode: try to reduce the number of constraint (inclusion test in both directions)
 - warning displayed if parameters are not contrained to be >= 0 in the model
 - new options to specify min/max values for x/y axes for the graphical output of the cartography

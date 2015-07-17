@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2012/05/10
- * Last modified: 2015/07/10
+ * Last modified: 2015/07/17
  *
  ****************************************************************)
  
@@ -66,6 +66,7 @@ class imitator_options :
 		method merge : bool
 		method merge_before : bool
 		method no_random : bool
+		method no_time_elapsing : bool
 		method output_cart_x_min : int option
 		method output_cart_x_max : int option
 		method output_cart_y_min : int option

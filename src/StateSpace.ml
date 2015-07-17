@@ -434,7 +434,7 @@ let add_state program graph new_state =
 	(* compute hash value for the new state *)
 	let hash = hash_code new_state in
 	if debug_mode_greater Verbose_total then (
-		print_message Verbose_standard ("hash : " ^ (string_of_int hash));
+		print_message Verbose_total ("hash : " ^ (string_of_int hash));
 	); 
 	(* In tree mode: does not test anything *)
 	if options#tree then (

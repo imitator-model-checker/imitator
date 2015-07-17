@@ -10,7 +10,7 @@
  * Author:        Etienne Andre
  * 
  * Created:       2010/03/04
- * Last modified: 2015/07/13
+ * Last modified: 2015/07/17
  *
  ****************************************************************) 
  
@@ -1820,7 +1820,7 @@ let pxd_constraint_of_discrete_values (discrete_values : (variable * coef) list)
 	make_pxd_constraint inequalities
 
 
-(** Convert a PX into a PXD constraint by extending the number of dimensions *)
+(** Convert (and copy) a PX into a PXD constraint by extending the number of dimensions; the original constraint remains unchanged *)
 let pxd_of_px_constraint c = copy c
 
 

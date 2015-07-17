@@ -7,7 +7,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Ulrich Kuehne, Etienne Andre
  * Created:       2010
- * Last modified: 2015/07/15
+ * Last modified: 2015/07/17
  *
  ****************************************************************)
  
@@ -152,6 +152,9 @@ class imitator_options =
 		(* do not use random values *)
 		val mutable no_random = ref false
 		
+		(* no time elapsing in zones (in fact, time elapsing is performed before taking a transition, not after) *)
+		val mutable no_time_elapsing = ref false
+		
 		(* Returns contraint K ("algo IMK") *)
 		val mutable pi_compatible = ref false 
 		
@@ -231,6 +234,7 @@ class imitator_options =
 		method nb_args = nb_args
 		method merge = !merge
 		method merge_before = !merge_before
+		method no_time_elapsing = !no_time_elapsing
 		method no_random = !no_random
 		method output_cart_x_min = !output_cart_x_min
 		method output_cart_x_max = !output_cart_x_max
@@ -412,7 +416,11 @@ class imitator_options =
         Use 'EF' for a parametric non-reachability analysis (no pi0 needed).
         Use 'inversemethod' for the inverse method.
         For the behavioral cartography algorithm, use 'cover' to cover all the points within V0, 'border' to find the border between a small-valued good and a large-valued bad zone (experimental), or 'randomXX' where XX is a number to iterate random calls to IM (e.g., random5 or random10000). Default: 'inversemethod'.");
+        
+        
 				
+				("-no-time-elapsing", Set no_time_elapsing, " No time elapsing in zone computation (i.e., time elapsing is performed before taking a transition, not after). Default: false.");
+
 				("-no-random", Set no_random, " No random selection of the pi0-incompatible inequality (select the first found). Default: false.");
 
 				(* 				("-PTA2CLP", Unit (fun _ -> pta2clp := true; imitator_mode := Translation), "Translate PTA into a CLP program, and exit without performing any analysis. Work in progress! Defaut : 'false'"); *)
@@ -602,6 +610,12 @@ class imitator_options =
 				end
 			else
 				print_message Verbose_medium ("No fixpoint variant (default).");
+
+			if !no_time_elapsing then
+				print_message Verbose_standard ("Time elapsing will be applied at the beginning of the computation of a new state.")
+			else
+				print_message Verbose_medium ("Time elapsing will be applied at the end of the computation of a new state (default).")
+			;
 
 			if !union then
 				print_message Verbose_standard ("Considering return variant IMunion [AS11].")
