@@ -8,7 +8,7 @@
  * Author:        Etienne Andre
  *
  * Created:       2009/09/08
- * Last modified: 2015/03/19
+ * Last modified: 2015/07/18
  *
  ****************************************************************)
 
@@ -29,10 +29,11 @@ type sync_name = string
 (* Type of variable in declarations *)
 type var_type =
 	| Var_type_clock
+	| Var_type_constant
 	| Var_type_discrete
 	| Var_type_parameter
 
-(* We allow for some variables a value *)
+(* We allow for some variables (i.e., parameters and constants) a value *)
 type var_value = NumConst.t
 
 type variable_declaration = var_type * (variable_name * var_value option) list

@@ -1,7 +1,7 @@
 *******************************************************
 release XXXX    (XXXX) PRIVATE RELEASE
 
-Major features since 2.6.1:
+Major algorithmic features since 2.6.1
 - Added EF-synthesis (option "-mode EF"): synthesize all parameter valuations such that a given state is reachable [AHV93,JLR15]
 - Added PRP and PRPC algorithms (option "-PRP") [ALNS15]
 - Added a distributed version of the behavioral cartography (option "-distributed"), with several distribution schemes:
@@ -12,23 +12,17 @@ Major features since 2.6.1:
 	* dynamic [ACN15]
 	* unsupervised / unsupervised multi-threaded (unpublished, EXPERIMENTAL)
 
-Minor features:
-- main binary now in lower case ("imitator")
-- add two more verbose modes: mute and warning-only
-- the result (text) can be exported to a file (option "-output-result")
-- add suffix "-pta.jpg" to PTA2JPG files
-- time elapsing can be applied either at the beginning (new mode, option -no-time-elapsing) or at the end (classical IMITATOR semantics) of the computation of a new state [EXPERIMENTAL]
-- in BC mode: try to reduce the number of constraint (inclusion test in both directions)
-- warning displayed if parameters are not contrained to be >= 0 in the model
-- new options to specify min/max values for x/y axes for the graphical output of the cartography
+Syntax improvement
+- Constant are now supported in the input model
+
+Options
+- Add two new verbose modes: mute and warning-only
+- The result (text) can be exported to a file (option "-output-result")
+- Time elapsing can be applied either at the beginning (new mode, option -no-time-elapsing) or at the end (classical IMITATOR semantics) of the computation of a new state [EXPERIMENTAL]
+- New options to specify min/max values for x/y axes for the graphical output of the cartography
 - Removed -counterex option (stops the analysis as soon as a counterexample is found)
 
-Interfacing with CosyVerif (and support of GrML)
-- Add EF mode support to the CosyVerif interface (using options -fromGrML and -cosyProp)
-- Fix a bug in the GrML output (action labels were removed when exporting to GrML)
-- Add the initial constraint to both the GrML input and the GrML output
-
-Changes in options syntax:
+Changes in options syntax
 - mode "reachability" becomes mode "statespace"
 - "-cart" becomes "-output-cart"
 - "-fancy" becomes true by default; to disable it, use "-output-trace-set-nodetails"
@@ -38,12 +32,23 @@ Changes in options syntax:
 - "-with-log" becomes "-output-states"
 - "-with-parametric-log" is removed (becomes always true when option "-output-states" is enabled)
 
+Interfacing with CosyVerif (and support of GrML)
+- Add EF mode support to the CosyVerif interface (using options -fromGrML and -cosyProp)
+- Fix a bug in the GrML output (action labels were removed when exporting to GrML)
+- Add the initial constraint to both the GrML input and the GrML output
+
 Misc
+- Add suffix "-pta.jpg" to PTA2JPG files
+- In BC mode: try to reduce the number of constraint (inclusion test in both directions)
+- Warning displayed if parameters are not contrained to be >= 0 in the model
 - Improve printing floating numbers (in time and memory statistics)
+
+Versioning
 - Now IMITATOR has a build number (since May 2013)
 - Now IMITATOR has a version name and a version logo (based on traditional Breton "galettes" ingredients!): 2.7 is "Butter Guéméné"
 
 Install and compile
+- Main binary now in lower case ("imitator")
 - Two versions: distributed (sh compile.sh), that creates a dynamic binary, or non-distributed (sh compile-nondistr.sh), that creates a static binary
 
 Internal

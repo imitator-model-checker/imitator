@@ -10,7 +10,7 @@
  * Author:        Etienne Andre
  * 
  * Created:       2009/09/09
- * Last modified: 2015/03/30
+ * Last modified: 2015/07/18
  *
  ****************************************************************)
 
@@ -256,17 +256,22 @@ let get_declared_variable_names variable_declarations =
 			| Some value -> (current_list , (name, value) :: constants)
 		) ([], [])
 	in
-	(* Get all (possibly identical) names of variables in one variable declaration and add it to the computed triple (clocks, discrete, parameters) *)
-	let get_variables_in_variable_declaration (clocks, discrete, parameters, constants) (var_type, list_of_names) =
+	(* Get all (possibly identical) names of variables in one variable declaration and add it to the computed n-uple *)
+	let get_variables_in_variable_declaration (clocks, discrete, parameters, constants, unassigned_constants) (var_type, list_of_names) =
 		let new_list, new_constants = get_variables_and_constants list_of_names in
 		match var_type with
-		| ParsingStructure.Var_type_clock     -> (List.rev_append new_list clocks, discrete, parameters, List.rev_append new_constants constants)
-		| ParsingStructure.Var_type_discrete  -> (clocks, List.rev_append new_list discrete, parameters, List.rev_append new_constants constants)
-		| ParsingStructure.Var_type_parameter -> (clocks, discrete, List.rev_append new_list parameters, List.rev_append new_constants constants)
+		| ParsingStructure.Var_type_clock ->
+			(List.rev_append new_list clocks, discrete, parameters, List.rev_append new_constants constants, unassigned_constants)
+		| ParsingStructure.Var_type_constant ->
+			(clocks, discrete, parameters, List.rev_append new_constants constants, List.rev_append new_list unassigned_constants)
+		| ParsingStructure.Var_type_discrete ->
+			(clocks, List.rev_append new_list discrete, parameters, List.rev_append new_constants constants, unassigned_constants)
+		| ParsingStructure.Var_type_parameter ->
+			(clocks, discrete, List.rev_append new_list parameters, List.rev_append new_constants constants, unassigned_constants)
 	in
-	let (clocks, discrete, parameters, constants) = List.fold_left get_variables_in_variable_declaration ([], [], [], []) variable_declarations in
+	let (clocks, discrete, parameters, constants, unassigned_constants) = List.fold_left get_variables_in_variable_declaration ([], [], [], [], []) variable_declarations in
 	(* Do not reverse lists *)
-	(clocks, discrete, parameters, constants)
+	(clocks, discrete, parameters, constants, unassigned_constants)
 
 
 (*--------------------------------------------------*)
@@ -725,7 +730,7 @@ let check_init discrete variable_names constants index_of_variables type_of_vari
 						(* Get the value of  the variable *)
 						let value = Hashtbl.find constants variable_name in
 						NumConst.mul coef value
-					| _ -> print_error ("The initial value for discrete variable '" ^ discrete_name ^ "' must be under the form of an equality with a constant.");
+					| _ -> print_error ("The initial value for discrete variable '" ^ discrete_name ^ "' must be given in the form '" ^ discrete_name ^ " = c', where c is an integer, a rational or a constant.");
 					well_formed := false;
 					NumConst.zero
 				in
@@ -1611,7 +1616,7 @@ let abstract_model_of_parsing_structure (parsed_variable_declarations, parsed_au
 	(* Get names *) 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Get the declared variable names *)
-	let clock_names, discrete_names, parameters_names, constants = get_declared_variable_names parsed_variable_declarations in
+	let clock_names, discrete_names, parameters_names, constants, unassigned_constants = get_declared_variable_names parsed_variable_declarations in
 	(* Get the declared automata names *)
 	let declared_automata_names = get_declared_automata_names parsed_automata in
 	(* Get the declared synclabs names *)
@@ -1653,7 +1658,23 @@ let abstract_model_of_parsing_structure (parsed_variable_declarations, parsed_au
 	let all_automata_different = check_declared_automata_names declared_automata_names in
 
 	
- 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(* Errors if unassigned constants *) 
+	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	let check_no_unassigned_constants =
+		if unassigned_constants = [] then true
+		else
+		(
+			List.iter (fun unassigned_constant ->
+				print_error("Constant '" ^ unassigned_constant ^ "' is not assigned a value in the variable declarations.");
+			) unassigned_constants;
+			(* Check failed *)
+			false;
+		)
+	in
+
+	
+	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Exit if not well formed *) 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Check that at least one automaton is defined *)
@@ -1884,20 +1905,35 @@ let abstract_model_of_parsing_structure (parsed_variable_declarations, parsed_au
 	
 	
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(* Check the constants *) 
+	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	print_message Verbose_high ("*** Checking constants...");
+	(* Check that each variable declared as a constant is indeed given a value *)
+	
+	(*** blublu ***)
+	
+	
+	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Check the automata *) 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	print_message Verbose_total ("*** Checking automata...");
+	print_message Verbose_high ("*** Checking automata...");
 	let well_formed_automata = check_automata index_of_variables type_of_variables variable_names index_of_automata array_of_location_names constants parsed_automata in
 
 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(* exit if not well formed *)
+	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(*** NOTE: might be a problem in the init checking if the check_automata test fails, hence test first ***)
+	if not (check_no_unassigned_constants && well_formed_automata)
+		then raise InvalidModel;
+	
+
+	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Check the init_definition *) 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	print_message Verbose_total ("*** Checking init definition...");
+	print_message Verbose_high ("*** Checking init definition...");
 	(* Get pairs for the initialisation of the discrete variables, and check the init definition *)
 
-	(*** WARNING: might be a problem if the check_automata test fails ***)
-	
 	let init_discrete_pairs, well_formed_init =
 		check_init discrete variable_names constants index_of_variables type_of_variables automata automata_names index_of_automata array_of_location_names parsed_init_definition observer_automaton in
 
@@ -1943,8 +1979,10 @@ let abstract_model_of_parsing_structure (parsed_variable_declarations, parsed_au
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* exit if not well formed *)
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	if not (well_formed_automata && well_formed_property && well_formed_projection && well_formed_init && !well_formed_carto)
+	if not (check_no_unassigned_constants && well_formed_automata && well_formed_property && well_formed_projection && well_formed_init && !well_formed_carto)
 		then raise InvalidModel;
+	
+	print_message Verbose_medium ("Model syntax successfully checked.");
 
 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)

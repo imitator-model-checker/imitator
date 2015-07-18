@@ -8,7 +8,7 @@
  * Author:        Etienne Andre
  * 
  * Created       : 2009/09/07
- * Last modified : 2015/07/08
+ * Last modified : 2015/07/18
 *****************************************************************)
 
 {
@@ -44,6 +44,7 @@ rule token = parse
  	| "before"         { CT_BEFORE }
 	| "carto"          { CT_CARTO }
 	| "clock"          { CT_CLOCK }
+	| "constant"       { CT_CONSTANT }
 	| "discrete"       { CT_DISCRETE }
 	| "do"             { CT_DO }
 	| "end"            { CT_END }
