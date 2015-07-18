@@ -233,6 +233,8 @@
 % THEOREMS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \newtheorem{definition}{Definition}
+\newtheorem{hint}{Hint}
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % FORMATING
@@ -571,11 +573,15 @@ We can now give a formal definition of \IPTA{}.
 \end{definition}
 %------------------------------------------------------------
 
-Observe that clocks can be updated to any value (\ie{} we can assign a clock, not only to~0, but to any linear term over the other clocks, the parameters and the discrete variables.
+Observe that clocks can be updated to any value, \ie{} a clock can be assigned not only to~0, but to any linear term over the other clocks, the parameters and the discrete variables.
 However, discrete variables can only be assigned to a linear term over~$\DVar$ (including a constant).
 If clocks are always reset (\ie{} not assigned to more complex linear terms), \imitator{} will apply some optimizations that (may) increase the analysis speed.
 	% TODO: nice box with a ``tip'' title
 
+Guards and invariants are constraints over all variables (called \emph{guard} of the transition).
+For example, the following expression can be used in a guard or an invariant:
+$$ \styleIMI{i1 + .5 x1 + 3 x2 >= 2 p1 - i2 \& p2 < 2} $$
+where \styleIMI{i1}, \styleIMI{i2} are discrete variables, \styleIMI{x1}, \styleIMI{x2} are clocks and \styleIMI{p1}, \styleIMI{p2} are parameters.
 
 There are no distinction between clocks and stopwatches.
 That is, any clock can potentially be stopped in some location.
@@ -610,6 +616,7 @@ Note that parameters are not assumed positive; however, the behavior of \imitato
 
 % TODO: example
 
+Finally, note that the number of \IPTA{}, locations, variables and actions that can be defined in a model is bounded in \imitator{} by some very large number (most probably $2^{32}$); but, well, you don't seriously plan to build such a large model, do you?
 
 
 
@@ -623,14 +630,16 @@ Discrete variables\footnote{%
 are global integer-valued variables.
 Their value is global, in the sense that they are shared by all \IPTA{} of the model.
 They can be seen as syntactic sugar to represent a possibly unbounded number of locations.
-	% TODO: how many bits? what happens in case of overflow?
+
+In \imitator{}, integers are exact and unbounded, just as in maths (\ie{}, they are \emph{not} represented using 32 or 64 bits).
+Hence, no overflow can occur.
 
 Discrete variables must be initialized to a single constant value in the \styleIMI{init} definition;
 if they are not, a warning is issued, and they are arbitrarily set to~0.
 
 Discrete variables can be tested in guards, and updated along transitions.
 They are first tested, then updated.
-If two \IPTA{} in parallel update the same variable on the same synchronized transition (\eg{} an \IPTA{} performs \styleIMI{i' = 2} while another one performs \styleIMI{i' = 3}), then a warning is issued, and the behavior of the \NIPTA{} becomes unspecified.
+If two \IPTA{} in parallel update the same variable on the same synchronized transition (\eg{} an \IPTA{} performs \styleIMI{i' = 2} while another one performs \styleIMI{i' = 3}), then a warning is issued, and the behavior of the \NIPTA{} becomes unspecified (\ie{} \imitator{} will choose one or the other assignment in a non-deterministic manner).
 
 
 
@@ -638,7 +647,9 @@ If two \IPTA{} in parallel update the same variable on the same synchronized tra
 \section{Initial State and Initialization of Variables}\label{ss:init}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-The definition of the initial state is very permissive in \imitator{}.
+For each \IPTA{}, a unique initial location must be defined.
+
+For variables, the definition of the initial value is very permissive in \imitator{}.
 Clocks are not necessarily equal to~0, and parameters are not even necessarily positive.
 
 Parameters and clocks can be initially bound by any linear constraint over parameters, clocks, and discrete variables.
@@ -647,7 +658,6 @@ That is, we can define initial constraints such as:
 	\styleIMI{x1 + x2 <= 2 p1 + 0.5 p2 - i}.
 \end{center}
 % TODO: style for sample piece of file
-% TODO: check syntax :)
 
 However, discrete variables must be initialized to a \emph{constant integer}.
 Given a discrete variable \styleIMI{i}, if the definition of the initial state does not contain an equality of the form \styleIMI{i = ...} followed by a linear term in $\LTermXPD$, then \imitator{} will assume that \styleIMI{i} is initially set to~0, and will issue a warning.
@@ -675,14 +685,26 @@ If an \IPTA{} declares an action \styleIMI{a} that is never used in this \IPTA{}
 \section{Constants}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\imitator{} does not strictly speaking support global constants (\ie{} a variable the value of which is known once for all).
-However, using the syntax
-% 
-\begin{center}
-\styleIMI{c = 2: parameter}
-\end{center}
-% 
-in the definition of the parameters is equivalent to replacing \styleIMI{c} with \styleIMI{2} everywhere in the model.
+\imitator{} supports global constants, \ie{} a variable the value of which is known once for all.
+The syntax is the following one:
+	\begin{center}
+		\styleIMI{c = 1: constant;}
+	\end{center}
+Then, any occurrence of \styleIMI{c} in the model is replaced with \styleIMI{1}.
+
+Constants are (unbounded, exact) integers.
+
+
+% TODO : 'hint' box
+\begin{hint}
+	In fact, a variable (\eg{} a parameter) can be turned to a constant as follows in the definition of the parameters:
+	\begin{center}
+		\styleIMI{p = 2: parameter;}
+	\end{center}
+	This is equivalent to replacing \styleIMI{p} with \styleIMI{2} everywhere in the model; this is particularly useful when some parameters should be instantiated.
+	In contrast, if the parameter is instantiated in the initial definition, \imitator{} still counts it as a parameter, which makes all constraints suffer from an additional dimension.
+\end{hint}
+
 
 
 
@@ -1937,6 +1959,7 @@ The following words are reserved keywords and cannot be used as names for automa
 \styleIMI{before},
 \styleIMI{carto},
 \styleIMI{clock},
+\styleIMI{constant},
 \styleIMI{discrete},
 \styleIMI{do},
 \styleIMI{end},
