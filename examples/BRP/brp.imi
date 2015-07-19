@@ -8,7 +8,7 @@
 --   Etienne ANDRE and Laurent FRIBOURG
 --
 --   Created       :    ? (< 09/2007)
---   Last modified : 2014/04/08
+--   Last modified : 2015/07/19
 --****************************************************--
 --****************************************************--
 
@@ -64,7 +64,7 @@ loc idleS: while x>=0 wait {}
 	when True sync Sin do {b1'=1,i'=1,x'=0} goto next_frame; 
 				
 
-loc next_frame: while x=0 wait {}
+urgent loc next_frame: while True wait {}
 
 	when i=N sync F do {bN'=1, rc'=0,x'=0}
 			goto wait_ack;
@@ -82,12 +82,12 @@ loc wait_ack: while x<=T1 wait {}
 	when x=T1 & rc<MAX sync F do {rc'=rc+1,x'=0} goto wait_ack;
 
 
-loc success: while x=0 wait {}
+urgent loc success: while True wait {}
 	when i<N do {i'=i+1,b1'=0,x'=0} goto next_frame;
 	when i=N sync Sout_OK do {x'=0} goto EndS; -- idleS;
 
 
-loc error: while x=0 wait {}
+urgent loc error: while True wait {}
 --	when x=0 & retry<Maxr do {ab'=0, retry'=retry+1} goto idleS;
 	when x=0  do {ab'=0} goto idleS;
 --	while x<=SYNC wait {}

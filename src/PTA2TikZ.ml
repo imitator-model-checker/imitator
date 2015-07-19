@@ -7,7 +7,7 @@
  * Author:        Etienne Andre
  * 
  * Created:       2015/03/24
- * Last modified: 2015/05/18
+ * Last modified: 2015/07/19
  *
  ****************************************************************)
 
@@ -186,10 +186,14 @@ let string_of_location model automaton_index location_index =
 	
 	(* Handle initial *)
 	let initial_str = if location_index = initial_location then "initial, " else "" in
+	
+	(* Handle urgency *)
+	let urgent_str = if model.is_urgent automaton_index location_index then "urgent, " else "" in
 
 	"\n\t\t\\node[location, "
 	^ initial_str
-	^ "fill=loccolor" ^ (string_of_int color_id) ^ "] at (" ^ (string_of_int pos_x) ^ "," ^ (string_of_int pos_y) ^ ") (" ^ location_name ^ ") {\styleloc{" ^ (escape_latex location_name) ^ "}};"
+	^ urgent_str
+	^ "fill=loccolor" ^ (string_of_int color_id) ^ "] at (" ^ (string_of_int pos_x) ^ "," ^ (string_of_int pos_y) ^ ") (" ^ location_name ^ ") {\styleloc{" ^ (if model.is_urgent automaton_index location_index then "U: " else "") ^ (escape_latex location_name) ^ "}};"
 	
 	(* INVARIANT AND STOPWATCHES *)
 (*			% Invariant of location Q1

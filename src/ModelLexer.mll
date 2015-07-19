@@ -8,7 +8,7 @@
  * Author:        Etienne Andre
  * 
  * Created       : 2009/09/07
- * Last modified : 2015/07/18
+ * Last modified : 2015/07/19
 *****************************************************************)
 
 {
@@ -74,6 +74,7 @@ rule token = parse
  	| "then"           { CT_THEN }
 	| "True"           { CT_TRUE }
  	| "unreachable"    { CT_UNREACHABLE }
+ 	| "urgent"         { CT_URGENT }
 	| "var"            { CT_VAR }
 	| "wait"           { CT_WAIT }
 	| "when"           { CT_WHEN }

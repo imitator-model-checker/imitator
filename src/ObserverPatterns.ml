@@ -10,7 +10,7 @@
  * Author:        Etienne Andre
  * 
  * Created:       2013/02/04
- * Last modified: 2013/08/02
+ * Last modified: 2015/07/19
  *
  ****************************************************************)
 
@@ -176,14 +176,18 @@ let get_locations property =
 let get_automaton nb_actions automaton_index nosync_index x_obs property = 
 	(* Create the common structures *)
 	let initialize_structures nb_locations all_actions =
-		(*Array for actions for location *)
+		(* Array for actions for location *)
 		let actions_per_location = 	Array.make nb_locations [] in
+		(* Array for urgency of locations (not used: all locations non urgent) *)
+		let observer_location_urgency = Array.make nb_locations Location_nonurgent in
 		(* All observers are complete: fill *)
 		for i = 0 to nb_locations-1 do
 			actions_per_location.(i) <- all_actions;
 		done;
 		(* Return : *)
 		actions_per_location,
+		(* Urgency *)
+		observer_location_urgency,
 		(* Array for invariants *)
 		Array.make nb_locations (truec ()),
 		(* Array for transitions *)
@@ -212,7 +216,7 @@ let get_automaton nb_actions automaton_index nosync_index x_obs property =
 		let nb_locations = 3 in
 		let all_actions = [a1;a2] in
 		(* Initialize *)
-		let actions_per_location, invariants, transitions, allow_all = initialize_structures nb_locations all_actions in
+		let actions_per_location, observer_location_urgency, invariants, transitions, allow_all = initialize_structures nb_locations all_actions in
 		(* No need to update actions per location (no nosync action here) *)
 		
 		(* Compute transitions *)
@@ -221,7 +225,7 @@ let get_automaton nb_actions automaton_index nosync_index x_obs property =
 		transitions.(1) <- allow_all 1;
 		transitions.(2) <- allow_all 2;
 		(* Return structure *)
-		all_actions, actions_per_location, invariants, transitions,
+		all_actions, actions_per_location, observer_location_urgency, invariants, transitions,
 		(* No init inequality *)
 		None,
 		(* Reduce to reachability property *)
@@ -232,7 +236,7 @@ let get_automaton nb_actions automaton_index nosync_index x_obs property =
 		let nb_locations = 3 in
 		let all_actions = [a1;a2] in
 		(* Initialize *)
-		let actions_per_location, invariants, transitions, allow_all = initialize_structures nb_locations all_actions in
+		let actions_per_location, observer_location_urgency, invariants, transitions, allow_all = initialize_structures nb_locations all_actions in
 		(* No need to update actions per location (no nosync action here) *)
 
 		(* Compute transitions *)
@@ -252,7 +256,7 @@ let get_automaton nb_actions automaton_index nosync_index x_obs property =
 			done;
 		done;*)
 		(* Return structure *)
-		all_actions, actions_per_location, invariants, transitions,
+		all_actions, actions_per_location, observer_location_urgency, invariants, transitions,
 		(* No init inequality *)
 		None,
 		(* Reduce to reachability property *)
@@ -263,7 +267,7 @@ let get_automaton nb_actions automaton_index nosync_index x_obs property =
 		let nb_locations = 3 in
 		let all_actions = [a1;a2] in
 		(* Initialize *)
-		let actions_per_location, invariants, transitions, allow_all = initialize_structures nb_locations all_actions in
+		let actions_per_location, observer_location_urgency, invariants, transitions, allow_all = initialize_structures nb_locations all_actions in
 		(* No need to update actions per location (no nosync action here) *)
 		
 		(* Compute transitions *)
@@ -273,7 +277,7 @@ let get_automaton nb_actions automaton_index nosync_index x_obs property =
 		transitions.(1).(a2) <- untimedt 0;
 		transitions.(2) <- allow_all 2;
 		(* Return structure *)
-		all_actions, actions_per_location, invariants, transitions,
+		all_actions, actions_per_location, observer_location_urgency, invariants, transitions,
 		(* No init inequality *)
 		None,
 		(* Reduce to reachability property *)
@@ -290,7 +294,7 @@ let get_automaton nb_actions automaton_index nosync_index x_obs property =
 		let nb_locations = 3 in
 		let all_actions = [a] in
 		(* Initialize *)
-		let actions_per_location, invariants, transitions, allow_all = initialize_structures nb_locations all_actions in
+		let actions_per_location, observer_location_urgency, invariants, transitions, allow_all = initialize_structures nb_locations all_actions in
 		(* Update actions per location for the silent action *)
 		actions_per_location.(0) <- nosync_index :: all_actions;
 		(* Update invariants *)
@@ -301,7 +305,7 @@ let get_automaton nb_actions automaton_index nosync_index x_obs property =
 		transitions.(1) <- allow_all 1;
 		transitions.(2) <- allow_all 2;
 		(* Return structure (and add silent action) *)
-		nosync_index :: all_actions, actions_per_location, invariants, transitions,
+		nosync_index :: all_actions, actions_per_location, observer_location_urgency, invariants, transitions,
 		(* Return x_obs = 0 *)
 		Some (lc_x_eq_0 x_obs),
 		(* Reduce to reachability property *)
@@ -312,7 +316,7 @@ let get_automaton nb_actions automaton_index nosync_index x_obs property =
 		let nb_locations = 4 in
 		let all_actions = [a1; a2] in
 		(* Initialize *)
-		let actions_per_location, invariants, transitions, allow_all = initialize_structures nb_locations all_actions in
+		let actions_per_location, observer_location_urgency, invariants, transitions, allow_all = initialize_structures nb_locations all_actions in
 		(* No need to update actions per location (no silent action here) *)
 		(* Compute transitions *)
 		transitions.(0).(a1) <- [truec (), Resets [x_obs], [], 1];
@@ -325,7 +329,7 @@ let get_automaton nb_actions automaton_index nosync_index x_obs property =
 		transitions.(2) <- allow_all 2;
 		transitions.(3) <- allow_all 3;
 		(* Return structure *)
-		all_actions, actions_per_location, invariants, transitions,
+		all_actions, actions_per_location, observer_location_urgency, invariants, transitions,
 		(* No init constraint *)
 		None,
 		(* Reduce to reachability property *)
@@ -336,7 +340,7 @@ let get_automaton nb_actions automaton_index nosync_index x_obs property =
 		let nb_locations = 3 in
 		let all_actions = [a1; a2] in
 		(* Initialize *)
-		let actions_per_location, invariants, transitions, allow_all = initialize_structures nb_locations all_actions in
+		let actions_per_location, observer_location_urgency, invariants, transitions, allow_all = initialize_structures nb_locations all_actions in
 		(* No need to update actions per location (no silent action here) *)
 		(* Compute transitions *)
 		transitions.(0).(a1) <- [truec (), Resets [x_obs], [], 1];
@@ -348,7 +352,7 @@ let get_automaton nb_actions automaton_index nosync_index x_obs property =
 			];
 		transitions.(2) <- allow_all 2;
 		(* Return structure *)
-		all_actions, actions_per_location, invariants, transitions,
+		all_actions, actions_per_location, observer_location_urgency, invariants, transitions,
 		(* No init constraint *)
 		None,
 		(* Reduce to reachability property *)
@@ -359,7 +363,7 @@ let get_automaton nb_actions automaton_index nosync_index x_obs property =
 		let nb_locations = 3 in
 		let all_actions = [a1; a2] in
 		(* Initialize *)
-		let actions_per_location, invariants, transitions, allow_all = initialize_structures nb_locations all_actions in
+		let actions_per_location, observer_location_urgency, invariants, transitions, allow_all = initialize_structures nb_locations all_actions in
 		(* No need to update actions per location (no silent action here) *)
 		(* Compute transitions *)
 		transitions.(0).(a1) <- [truec (), Resets [x_obs], [], 1];
@@ -371,7 +375,7 @@ let get_automaton nb_actions automaton_index nosync_index x_obs property =
 			];
 		transitions.(2) <- allow_all 2;
 		(* Return structure *)
-		all_actions, actions_per_location, invariants, transitions,
+		all_actions, actions_per_location, observer_location_urgency, invariants, transitions,
 		(* No init constraint *)
 		None,
 		(* Reduce to reachability property *)
@@ -382,7 +386,7 @@ let get_automaton nb_actions automaton_index nosync_index x_obs property =
 		let nb_locations = 4 in
 		let all_actions = [a1; a2] in
 		(* Initialize *)
-		let actions_per_location, invariants, transitions, allow_all = initialize_structures nb_locations all_actions in
+		let actions_per_location, observer_location_urgency, invariants, transitions, allow_all = initialize_structures nb_locations all_actions in
 		(* Update actions per location for the silent action *)
 		actions_per_location.(1) <- nosync_index :: all_actions;
 		(* Update invariants *)
@@ -396,7 +400,7 @@ let get_automaton nb_actions automaton_index nosync_index x_obs property =
 		transitions.(2) <- allow_all 2;
 		transitions.(3) <- allow_all 3;
 		(* Return structure (and add silent action) *)
-		nosync_index :: all_actions, actions_per_location, invariants, transitions,
+		nosync_index :: all_actions, actions_per_location, observer_location_urgency, invariants, transitions,
 		(* No init constraint *)
 		None,
 		(* Reduce to reachability property *)
@@ -406,7 +410,7 @@ let get_automaton nb_actions automaton_index nosync_index x_obs property =
 		let nb_locations = 3 in
 		let all_actions = [a1; a2] in
 		(* Initialize *)
-		let actions_per_location, invariants, transitions, allow_all = initialize_structures nb_locations all_actions in
+		let actions_per_location, observer_location_urgency, invariants, transitions, allow_all = initialize_structures nb_locations all_actions in
 		(* Update actions per location for the silent action *)
 		actions_per_location.(1) <- nosync_index :: all_actions;
 		(* Update invariants *)
@@ -419,7 +423,7 @@ let get_automaton nb_actions automaton_index nosync_index x_obs property =
 		transitions.(1).(nosync_index) <- [ct_x_eq_d x_obs d, No_update, [], 2];
 		transitions.(2) <- allow_all 2;
 		(* Return structure (and add silent action) *)
-		nosync_index :: all_actions, actions_per_location, invariants, transitions,
+		nosync_index :: all_actions, actions_per_location, observer_location_urgency, invariants, transitions,
 		(* No init constraint *)
 		None,
 		(* Reduce to reachability property *)
@@ -430,7 +434,7 @@ let get_automaton nb_actions automaton_index nosync_index x_obs property =
 		let nb_locations = 3 in
 		let all_actions = [a1; a2] in
 		(* Initialize *)
-		let actions_per_location, invariants, transitions, allow_all = initialize_structures nb_locations all_actions in
+		let actions_per_location, observer_location_urgency, invariants, transitions, allow_all = initialize_structures nb_locations all_actions in
 		(* Update actions per location for the silent action *)
 		actions_per_location.(1) <- nosync_index :: all_actions;
 		(* Update invariants *)
@@ -443,7 +447,7 @@ let get_automaton nb_actions automaton_index nosync_index x_obs property =
 		transitions.(1).(nosync_index) <- [ct_x_eq_d x_obs d, No_update, [], 2];
 		transitions.(2) <- allow_all 2;
 		(* Return structure (and add silent action) *)
-		nosync_index :: all_actions, actions_per_location, invariants, transitions,
+		nosync_index :: all_actions, actions_per_location, observer_location_urgency, invariants, transitions,
 		(* No init constraint *)
 		None,
 		(* Reduce to reachability property *)
@@ -454,7 +458,7 @@ let get_automaton nb_actions automaton_index nosync_index x_obs property =
 		let nb_locations = (List.length list_of_actions) + 2 in
 		let all_actions = list_of_actions in
 		(* Initialize *)
-		let actions_per_location, invariants, transitions, allow_all = initialize_structures nb_locations all_actions in
+		let actions_per_location, observer_location_urgency, invariants, transitions, allow_all = initialize_structures nb_locations all_actions in
 		
 		(* Define 2 useful location indexes *)
 		let lf = nb_locations - 2 in
@@ -481,7 +485,7 @@ let get_automaton nb_actions automaton_index nosync_index x_obs property =
 		transitions.(lbad) <- allow_all lbad;
 		
 		(* Return structure *)
-		all_actions, actions_per_location, invariants, transitions,
+		all_actions, actions_per_location, observer_location_urgency, invariants, transitions,
 		(* No init constraint *)
 		None,
 		(* Reduce to reachability property *)
@@ -492,7 +496,7 @@ let get_automaton nb_actions automaton_index nosync_index x_obs property =
 		let nb_locations = (List.length list_of_actions) + 1 in
 		let all_actions = list_of_actions in
 		(* Initialize *)
-		let actions_per_location, invariants, transitions, allow_all = initialize_structures nb_locations all_actions in
+		let actions_per_location, observer_location_urgency, invariants, transitions, allow_all = initialize_structures nb_locations all_actions in
 		
 		(* Define 2 useful location indexes *)
 		let lbad = nb_locations - 1 in
@@ -523,7 +527,7 @@ let get_automaton nb_actions automaton_index nosync_index x_obs property =
 		transitions.(lbad) <- allow_all lbad;
 		
 		(* Return structure *)
-		all_actions, actions_per_location, invariants, transitions,
+		all_actions, actions_per_location, observer_location_urgency, invariants, transitions,
 		(* No init constraint *)
 		None,
 		(* Reduce to reachability property *)

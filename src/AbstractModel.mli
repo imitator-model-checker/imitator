@@ -8,7 +8,7 @@
  * Author:        Etienne Andre
  * 
  * Created:       2009/09/11
- * Last modified: 2015/03/19
+ * Last modified: 2015/07/19
  *
  ****************************************************************)
 
@@ -59,7 +59,17 @@ type action_type =
 
 
 (****************************************************************)
-(** Transition *)
+(** Locations *)
+(****************************************************************)
+type location_urgency =
+	(* Urgent location *)
+	| Location_urgent
+	(* Non-urgent location *)
+	| Location_nonurgent
+
+
+(****************************************************************)
+(** Transitions *)
 (****************************************************************)
 
 (** update: variable_index := linear_term *)
@@ -164,6 +174,7 @@ type correctness_condition = reachability_property option
 
 type projection = (parameter_index list) option
 
+
 (****************************************************************)
 (** Nature of the tiles *)
 (****************************************************************)
@@ -214,6 +225,8 @@ type abstract_model = {
 	locations_per_automaton : automaton_index -> location_index list;
 	(* The location names for each automaton *)
 	location_names : automaton_index -> location_index -> location_name;
+	(* The urgency for each location *)
+	is_urgent : automaton_index -> location_index -> bool;
 
 	(* All action indexes *)
 	actions : action_index list;

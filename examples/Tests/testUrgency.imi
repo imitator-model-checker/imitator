@@ -1,16 +1,16 @@
 (************************************************************
  *                      IMITATOR MODEL                      
  *
- * Empty template of a case study
+ * Test of syntax for location urgency
  *
- * Description     : TODO
- * Correctness     : TODO
- * Source          : TODO
- * Author          : ME
- * Input by        : ME
+ * Description     : Test of syntax for location urgency
+ * Correctness     : NONE
+ * Source          : Own work
+ * Author          : Etienne Andre
+ * Input by        : Etienne Andre
  *
- * Created         : 1970/01/01
- * Last modified   : 1970/01/01
+ * Created         : 2015/07/19
+ * Last modified   : 2015/07/19
  *
  * IMITATOR version: 2.7-beta4
  ************************************************************)
@@ -18,7 +18,7 @@
 var
 
 (* Clocks *)
- 	x
+ 	x, y
 		: clock;
 
 (* Discrete *)
@@ -32,12 +32,30 @@ var
 
 
 (************************************************************)
-  automaton pta
+  automaton pta1
 (************************************************************)
-synclabs: a;
+synclabs: a, b, c, d;
 
 loc l1: while True wait {}
-	when x = 1 sync a do {x' = 0} goto l1;
+	when x = 0 sync a do {x' = 0} goto l1;
+	when x = 1 sync b goto lu;
+
+urgent loc lu: while True wait {}
+	when True sync b do {x' = 0} goto l1;
+	when x = 1 sync c do {x' = 0} goto l1;
+	when x > 1 sync d do {x' = 0} goto l1;
+
+end (* pta *)
+
+
+(************************************************************)
+  automaton pta2
+(************************************************************)
+synclabs: b;
+
+loc l1: while True wait {}
+	when y = 1 sync b do {y' = 0} goto l1;
+	when y = 2 sync b goto l1;
 
 end (* pta *)
 
@@ -51,12 +69,14 @@ init := True
 	(*------------------------------------------------------------
 	   INITIAL LOCATION
 	  ------------------------------------------------------------*)
-	& loc[pta] = l1
+	& loc[pta1] = l1
+	& loc[pta2] = l1
 
 	(*------------------------------------------------------------
 	   INITIAL CLOCKS
 	  ------------------------------------------------------------*)
 	& x = 0
+	& y >= 0
 
 	(*------------------------------------------------------------
 	   INITIAL DISCRETE

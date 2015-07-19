@@ -10,7 +10,7 @@
  * Author:        Ulrich Kuehne, Etienne Andre
  * 
  * Created:       2010/07/22
- * Last modified: 2015/07/17
+ * Last modified: 2015/07/19
  *
  ****************************************************************)
 
@@ -474,6 +474,21 @@ let prepare_clocks_elimination model =
 	print_message Verbose_low ("*** Building useless clocks per location per automaton...");
 	useless_clocks := find_useless_clocks_in_automata model local_clocks_per_automaton;
 	()
+
+
+(**************************************************************)
+(* Functions related to locations *)
+(**************************************************************)
+(* Check whether at least one local location is urgent *)
+let is_location_urgent model location =
+	(* Subfunction checking that one location is urgent in a given automaton *)
+	let is_local_location_urgent automaton_index =
+		(* Retrieve location *)
+		let location_index = Automaton.get_location location automaton_index in
+		(* Check if urgent *)
+		model.is_urgent automaton_index location_index
+	in
+	List.exists is_local_location_urgent model.automata
 
 
 (**************************************************************)
@@ -1121,29 +1136,36 @@ let compute_stopwatches model location =
 let apply_time_elapsing location the_constraint =
 	(* Get the model *)
 	let model = Input.get_model() in
-	(* Compute the list of stopwatches *)
-	let stopped_clocks, elapsing_clocks = compute_stopwatches model location in
-	print_message Verbose_high ("Computing list of stopwatches");
-	if debug_mode_greater Verbose_total then(
-		let list_of_names = List.map model.variable_names stopped_clocks in
-		print_message Verbose_total ("Stopped clocks : " ^ (string_of_list_of_string_with_sep ", " list_of_names));
-		let list_of_names = List.map model.variable_names elapsing_clocks in
-		print_message Verbose_total ("Elapsing clocks: " ^ (string_of_list_of_string_with_sep ", " list_of_names));
-	);
-	
-	(* Perform time elapsing *)
-	print_message Verbose_high ("Now applying time elapsing...");
-	(*** NOTE: the comment is to be changed in alternative TE mode ***)
-	LinearConstraint.pxd_time_elapse_assign
-		elapsing_clocks
-		(List.rev_append stopped_clocks model.parameters_and_discrete)
-		the_constraint
-	;
-	(* Print some information *)
-	if debug_mode_greater Verbose_total then(
-		print_message Verbose_total (LinearConstraint.string_of_pxd_linear_constraint model.variable_names the_constraint);
-	);
-	()
+	(* If urgent: no time elapsing *)
+	if is_location_urgent model location then (
+		print_message Verbose_high ("Location urgent: NO time elapsing");
+		()
+	(* If not urgent: apply time elapsing *)
+	)else(
+		(* Compute the list of stopwatches *)
+		let stopped_clocks, elapsing_clocks = compute_stopwatches model location in
+		print_message Verbose_high ("Computing list of stopwatches");
+		if debug_mode_greater Verbose_total then(
+			let list_of_names = List.map model.variable_names stopped_clocks in
+			print_message Verbose_total ("Stopped clocks : " ^ (string_of_list_of_string_with_sep ", " list_of_names));
+			let list_of_names = List.map model.variable_names elapsing_clocks in
+			print_message Verbose_total ("Elapsing clocks: " ^ (string_of_list_of_string_with_sep ", " list_of_names));
+		);
+		
+		(* Perform time elapsing *)
+		print_message Verbose_high ("Now applying time elapsing...");
+		(*** NOTE: the comment is to be changed in alternative TE mode ***)
+		LinearConstraint.pxd_time_elapse_assign
+			elapsing_clocks
+			(List.rev_append stopped_clocks model.parameters_and_discrete)
+			the_constraint
+		;
+		(* Print some information *)
+		if debug_mode_greater Verbose_total then(
+			print_message Verbose_total (LinearConstraint.string_of_pxd_linear_constraint model.variable_names the_constraint);
+		);
+		()
+	)
 
 
 (*------------------------------------------------------------*)

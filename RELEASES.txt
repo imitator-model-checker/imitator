@@ -13,10 +13,12 @@ Major algorithmic features since 2.6.1
 	* unsupervised / unsupervised multi-threaded (unpublished, EXPERIMENTAL)
 
 Syntax improvement
-- Constant are now supported in the input model
+- Urgent locations now handled natively (keyword: "urgent loc")
+- Constant now supported in the input model
 
 Options
 - Add two new verbose modes: mute and warning-only
+- Add export to LaTeX/TikZ
 - The result (text) can be exported to a file (option "-output-result")
 - Time elapsing can be applied either at the beginning (new mode, option -no-time-elapsing) or at the end (classical IMITATOR semantics) of the computation of a new state [EXPERIMENTAL]
 - New options to specify min/max values for x/y axes for the graphical output of the cartography

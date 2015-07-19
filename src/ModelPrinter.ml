@@ -1,11 +1,11 @@
 (***************************************************
  *
- *                     IMITATOR II
+ *                     IMITATOR
  * 
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2009/12/02
- * Last modified: 2014/10/24
+ * Last modified: 2015/7/19
  *
  **************************************************)
 
@@ -157,7 +157,8 @@ let string_of_transitions model automaton_index location_index =
 
 (* Convert a location of an automaton into a string *)
 let string_of_location model automaton_index location_index =
-	"\n" ^ "loc: "
+	"\n"
+	^ (if model.is_urgent automaton_index location_index then "urgent loc " else "loc ")
 	^ (model.location_names automaton_index location_index)
 	^ (match model.costs automaton_index location_index with
 		| None -> ""

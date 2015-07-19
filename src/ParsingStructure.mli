@@ -8,7 +8,7 @@
  * Author:        Etienne Andre
  *
  * Created:       2009/09/08
- * Last modified: 2015/07/18
+ * Last modified: 2015/07/19
  *
  ****************************************************************)
 
@@ -75,6 +75,10 @@ type convex_predicate = linear_constraint list
 (****************************************************************)
 (** Automata *)
 (****************************************************************)
+(* Type of locations *)
+type loc_type =
+	| Parsed_location_urgent
+	| Parsed_location_nonurgent
 
 type sync =
 	| Sync of sync_name
@@ -88,10 +92,25 @@ type invariant = convex_predicate
 (* Transition = Guard * update * sync label * destination location *)
 type transition = guard * update list * sync * location_name
 
-(* Location = Name * Cost * Invariant * list of stopped clocks * transitions *)
-type location = location_name * linear_expression option * invariant * (variable_name list) * (transition list)
+(* Location = Name * Urgent type * Cost * Invariant * list of stopped clocks * transitions *)
+type parsed_location = {
+	(* Name *)
+	name : location_name;
+	(* Urgent or not? *)
+	loc_type : loc_type;
+	(* Cost *)
+	cost : linear_expression option;
+	(* Invariant *)
+	invariant : invariant;
+	(* List of stopped clocks *)
+	stopped : (variable_name list);
+	(* Transitions starting from this location *)
+	transitions : transition list;
+}
 
-type automaton = automaton_name * sync_name list * location list
+(* type location = location_name * loc_type * linear_expression option * invariant * (variable_name list) * (transition list) *)
+
+type automaton = automaton_name * sync_name list * parsed_location list
 
 type automata = automaton list
 

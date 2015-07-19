@@ -1,11 +1,11 @@
 (************************************************************
  *
- *                     IMITATOR II
+ *                     IMITATOR
  * 
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2012/08/24
- * Last modified: 2015/05/18
+ * Last modified: 2015/07/19
  *
  ************************************************************)
 
@@ -48,8 +48,8 @@ let escape_string_for_dot str =
 
 
 	
-(* Add a header to the program *)
-let string_of_header program =
+(* Add a header to the model *)
+let string_of_header model =
 	(* Retrieve the input options *)
 	let options = Input.get_options () in
 	          "/************************************************************"
@@ -61,40 +61,40 @@ let string_of_header program =
 	
 
 (* Convert a sync into a string *)
-let string_of_sync program action_index =
-	match program.action_types action_index with
-	| Action_type_sync -> (program.action_names action_index) ^ "\\n"
+let string_of_sync model action_index =
+	match model.action_types action_index with
+	| Action_type_sync -> (model.action_names action_index) ^ "\\n"
 	| Action_type_nosync -> ""
 
 
-let string_of_clock_updates program = function
+let string_of_clock_updates model = function
 	| No_update -> ""
 	| Resets list_of_clocks -> 
 		string_of_list_of_string_with_sep "\\n" (List.map (fun variable_index ->
-			(program.variable_names variable_index)
+			(model.variable_names variable_index)
 			^ ":=0"
 		) list_of_clocks)
 	| Updates list_of_clocks_lt -> 
 		string_of_list_of_string_with_sep "\\n" (List.map (fun (variable_index, linear_term) ->
-			(program.variable_names variable_index)
+			(model.variable_names variable_index)
 			^ ":="
-			^ (LinearConstraint.string_of_pxd_linear_term program.variable_names linear_term)
+			^ (LinearConstraint.string_of_pxd_linear_term model.variable_names linear_term)
 		) list_of_clocks_lt)
 
 	
 (* Convert a list of updates into a string *)
-let string_of_updates program updates =
+let string_of_updates model updates =
 	string_of_list_of_string_with_sep "\\n" (List.map (fun (variable_index, linear_term) ->
 		(* Convert the variable name *)
-		(program.variable_names variable_index)
+		(model.variable_names variable_index)
 		^ ":="
 		(* Convert the linear_term *)
-		^ (LinearConstraint.string_of_pxd_linear_term program.variable_names linear_term)
+		^ (LinearConstraint.string_of_pxd_linear_term model.variable_names linear_term)
 	) updates)
 
 
 (* Convert a transition of a location into a string *)
-let string_of_transition program automaton_index source_location action_index (guard, clock_updates, discrete_updates, destination_location) =
+let string_of_transition model automaton_index source_location action_index (guard, clock_updates, discrete_updates, destination_location) =
 (* s_12 -> s_5 [label="bUp"]; *)
 	"\n\t"
 	(* Source *)
@@ -106,7 +106,7 @@ let string_of_transition program automaton_index source_location action_index (g
 	^ " ["
 	(* Color for sync label *)
 	(* Check if the label is shared *)
-	^ (if List.length (program.automata_per_action action_index) > 1 then
+	^ (if List.length (model.automata_per_action action_index) > 1 then
 		let color = color action_index in
 		"style=bold, color=" ^ color ^ ", "
 		else "")
@@ -115,119 +115,125 @@ let string_of_transition program automaton_index source_location action_index (g
 	(* Guard *)
 	^ (
 		if not (LinearConstraint.pxd_is_true guard) then
-			(escape_string_for_dot (LinearConstraint.string_of_pxd_linear_constraint program.variable_names guard)) ^ "\\n"
+			(escape_string_for_dot (LinearConstraint.string_of_pxd_linear_constraint model.variable_names guard)) ^ "\\n"
 		else ""
 		)
 	(* Sync *)
-	^ (string_of_sync program action_index)
+	^ (string_of_sync model action_index)
 	(* Clock updates *)
-	^ (string_of_clock_updates program clock_updates)
+	^ (string_of_clock_updates model clock_updates)
 	(* Add a \n in case of both clocks and discrete *)
 	^ (if clock_updates != No_update && discrete_updates != [] then "\\n" else "")
 	(* Discrete updates *)
-	^ (string_of_updates program discrete_updates)
+	^ (string_of_updates model discrete_updates)
 	^ "\"];"
 	
 	(* Convert the guard *)
-(* 	^ (LinearConstraint.string_of_linear_constraint program.variable_names guard) *)
+(* 	^ (LinearConstraint.string_of_linear_constraint model.variable_names guard) *)
 	(* Convert the updates *)
 (* 	^ " do {" *)
-(* 	^ (string_of_clock_updates program clock_updates) *)
+(* 	^ (string_of_clock_updates model clock_updates) *)
 	
 	
-(*	^ (string_of_updates program discrete_updates)
+(*	^ (string_of_updates model discrete_updates)
 	^ "} "
 	(* Convert the sync *)
-	^ (string_of_sync program action_index)
+	^ (string_of_sync model action_index)
 	(* Convert the destination location *)
-	^ " goto " ^ (program.location_names automaton_index destination_location)
+	^ " goto " ^ (model.location_names automaton_index destination_location)
 	^ ";"*)
 
 
 (* Convert the transitions of a location into a string *)
-let string_of_transitions program automaton_index location_index =
+let string_of_transitions model automaton_index location_index =
 	string_of_list_of_string (
 	(* For each action *)
 	List.map (fun action_index -> 
 		(* Get the list of transitions *)
-		let transitions = program.transitions automaton_index location_index action_index in
+		let transitions = model.transitions automaton_index location_index action_index in
 		(* Convert to string *)
 		string_of_list_of_string (
 			(* For each transition *)
-			List.map (string_of_transition program automaton_index location_index action_index) transitions
+			List.map (string_of_transition model automaton_index location_index action_index) transitions
 			)
-		) (program.actions_per_location automaton_index location_index)
+		) (model.actions_per_location automaton_index location_index)
 	)
 
 
 (* Convert a location of an automaton into a string *)
-let string_of_location program automaton_index location_index =	
+let string_of_location model automaton_index location_index =	
 (* 	s_0[fillcolor=red, style=filled, shape=Mrecord, label="s_0|{InputInit|And111|Or111}"]; *)
 	"\n"
 	(* Id *)
 	^ (id_of_location automaton_index location_index) ^ "["
 	(* Color *)
-	^ "fillcolor=" ^ "paleturquoise2" (*(color location_index)*) ^ ", style=filled, fontsize=16"
+	^ "fillcolor=" ^ (if model.is_urgent automaton_index location_index then "red" else "paleturquoise2") (*(color location_index)*) ^ ", style=filled, fontsize=16"
+	
+	(* Label: start *)
+	^ ", label=\""
+	(* Label: urgency *)
+	^ (if model.is_urgent automaton_index location_index then "U |" else "")
 	(* Label: name *)
-	^ ", label=\"" ^ (program.location_names automaton_index location_index)
+	^ (model.location_names automaton_index location_index)
 	(* Label: invariant *)
-	^ "|{" ^ (escape_string_for_dot (LinearConstraint.string_of_pxd_linear_constraint program.variable_names (program.invariants automaton_index location_index)))
+	^ "|{" ^ (escape_string_for_dot (LinearConstraint.string_of_pxd_linear_constraint model.variable_names (model.invariants automaton_index location_index)))
 	(* Label: stopwatches *)
-	^ (if program.has_stopwatches then (
-		let stopwatches = program.stopwatches automaton_index location_index in
+	^ (if model.has_stopwatches then (
+		let stopwatches = model.stopwatches automaton_index location_index in
 		"|" ^
-		(if stopwatches != [] then "stop " ^ string_of_list_of_variables program.variable_names stopwatches else "")
+		(if stopwatches != [] then "stop " ^ string_of_list_of_variables model.variable_names stopwatches else "")
 	) else "")
+	
 	(* The end *)
 	^ "}\"];"
 	
 	(* Transitions *)
-	^ (string_of_transitions program automaton_index location_index)
+	^ (string_of_transitions model automaton_index location_index)
 	
 (*	
 	^ 
-	^ (match program.costs automaton_index location_index with
+	^ (match model.costs automaton_index location_index with
 		| None -> ""
-		| Some cost -> "[" ^ (LinearConstraint.string_of_linear_term program.variable_names cost) ^ "]"
+		| Some cost -> "[" ^ (LinearConstraint.string_of_linear_term model.variable_names cost) ^ "]"
 	)
 	^ ": "
-	^ (string_of_invariant program automaton_index location_index)
-	^ (string_of_transitions program automaton_index location_index)*)
+	^ (string_of_invariant model automaton_index location_index)
+	^ (string_of_transitions model automaton_index location_index)*)
 
 
 (* Convert the locations of an automaton into a string *)
-let string_of_locations program automaton_index =
+let string_of_locations model automaton_index =
 	string_of_list_of_string_with_sep "\n " (List.map (fun location_index ->
-		string_of_location program automaton_index location_index
-	) (program.locations_per_automaton automaton_index))
+		string_of_location model automaton_index location_index
+	) (model.locations_per_automaton automaton_index))
 
 
 (* Convert an automaton into a string *)
-let string_of_automaton program automaton_index =
+let string_of_automaton model automaton_index =
 	(* Finding the initial location *)
-	let inital_global_location  = program.initial_location in
+	let inital_global_location  = model.initial_location in
 	let initial_location = Automaton.get_location inital_global_location automaton_index in
 
 	"\n/**************************************************/"
-	^ "\n/* automaton " ^ (program.automata_names automaton_index) ^ " */"
+	^ "\n/* automaton " ^ (model.automata_names automaton_index) ^ " */"
 	^ "\n/**************************************************/"
 	
 	(* Handling the initial arrow *)
-	^ "\n init" ^ (string_of_int automaton_index) ^ "[shape=none, label=\"" ^ (program.automata_names automaton_index) ^ "\"];"
+	^ "\n init" ^ (string_of_int automaton_index) ^ "[shape=none, label=\"" ^ (model.automata_names automaton_index) ^ "\"];"
 	^ "\n init" ^ (string_of_int automaton_index) ^ " -> " ^ (id_of_location automaton_index initial_location) ^ ";"
 
 	(* Handling transitions *)
-	^ "\n " ^ (string_of_locations program automaton_index)
+	^ "\n " ^ (string_of_locations model automaton_index)
 	^ "\n/**************************************************/"
 
 
 (* Convert the automata into a string *)
-let string_of_automata program =
+let string_of_automata model =
 	(* Retrieve the input options *)
 	let options = Input.get_options () in
 	
 	let vertical_string_of_list_of_variables variables =
-		let variables = List.map program.variable_names variables in
+		let variables = List.map model.variable_names variables in
 		string_of_list_of_string_with_sep "\\n" variables
 	in
 
@@ -243,12 +249,12 @@ let string_of_automata program =
 (* 	s_0[fillcolor=red, style=filled, shape=Mrecord, label="s_0|{InputInit|And111|Or111}"]; *)
 ^ "\nname[shape=none, style=bold, fontsize=24, label=\"" ^ options#file ^ "\"];"
 	^ "\ngeneral_info[shape=record, label=\"" (*Model|{*)
-	^ "{Clocks|" ^ (vertical_string_of_list_of_variables program.clocks) ^ "}"
-	^ "|{Parameters|" ^ (vertical_string_of_list_of_variables program.parameters) ^ "}"
-	^ (if program.discrete != [] then
-		"|{Discrete|" ^ (vertical_string_of_list_of_variables program.discrete) ^ "}"
+	^ "{Clocks|" ^ (vertical_string_of_list_of_variables model.clocks) ^ "}"
+	^ "|{Parameters|" ^ (vertical_string_of_list_of_variables model.parameters) ^ "}"
+	^ (if model.discrete != [] then
+		"|{Discrete|" ^ (vertical_string_of_list_of_variables model.discrete) ^ "}"
 		else "")
-	^ "|{Initial|" ^ (escape_string_for_dot (LinearConstraint.string_of_px_linear_constraint program.variable_names program.initial_constraint)) ^ "}"
+	^ "|{Initial|" ^ (escape_string_for_dot (LinearConstraint.string_of_px_linear_constraint model.variable_names model.initial_constraint)) ^ "}"
 	^ "\"];" (*}*)
 	^ "\ngenerator[shape=none, style=bold, fontsize=10, label=\"Generated by " ^ (ImitatorUtilities.program_name_and_version_and_build()) ^ "\"];"
 	^ "\ndate[shape=none, style=bold, fontsize=10, label=\"Generation time: " ^ (now()) ^ "\"];"
@@ -259,32 +265,32 @@ let string_of_automata program =
 
 	
 	^ (string_of_list_of_string_with_sep "\n\n" (
-		List.map (fun automaton_index -> string_of_automaton program automaton_index
-	) program.automata))
+		List.map (fun automaton_index -> string_of_automaton model automaton_index
+	) model.automata))
 	^ "\n\n/**************************************************/"
 	^ "\n/* Ending general graph */"
 	^ "\n/**************************************************/"
 	^ "\n}"
 
 (* Convert an automaton into a string *)
-let string_of_model program =
-	string_of_header program
-(* 	^  "\n" ^ string_of_declarations program *)
-	^  "\n" ^ string_of_automata program
+let string_of_model model =
+	string_of_header model
+(* 	^  "\n" ^ string_of_declarations model *)
+	^  "\n" ^ string_of_automata model
 
 
 (**************************************************)
 (** Pi0 *)
 (**************************************************)
 (* Convert a pi0 into a string *)
-let string_of_pi0 program pi0 =
+let string_of_pi0 model pi0 =
 	"  " ^ (
 	string_of_list_of_string_with_sep "\n& " (
 		List.map (fun parameter ->
-			(program.variable_names parameter)
+			(model.variable_names parameter)
 			^ " = "
 			^ (NumConst.string_of_numconst (pi0 parameter))
-		) program.parameters
+		) model.parameters
 	)
 	)
 

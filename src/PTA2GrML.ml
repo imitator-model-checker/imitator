@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2011/11/22
- * Last modified: 2015/07/13
+ * Last modified: 2015/07/19
  *
  ************************************************************)
 
@@ -49,6 +49,10 @@ let string_of_header model =
 	^ "\n" ^" *   - All variables are declared in all automata."
 	^ "\n" ^" *   - Initial constraint (on all variables) is added to each automaton."
 	^ "\n" ^" *   - We suppose that automata synchronize on variables and actions sharing the same names (common behavior)."
+	^ "\n" ^" * What is NOT taken into account in the GrML output:"
+	^ "\n" ^" *   - Stopwatches"
+	^ "\n" ^" *   - Urgent locations"
+	^ "\n" ^" *   - Costs"
 (* 	^ "\n" ^" * This translation will be improved by the definition of synchronization rules conform with FML. Work in progress." *)
 	^ "\n" ^" ************************************************************ -->"
 	^ "\n"

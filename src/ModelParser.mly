@@ -8,7 +8,7 @@
  * Author:        Etienne Andre
  * 
  * Created       : 2009/09/07
- * Last modified : 2015/07/18
+ * Last modified : 2015/07/19
 ***********************************************/
 
 %{
@@ -55,7 +55,7 @@ let parse_error s =
 	CT_REGION
 	CT_SEQUENCE CT_STOP CT_SYNC CT_SYNCLABS
 	CT_THEN CT_TRUE
-	CT_UNKNOWN CT_UNREACHABLE
+	CT_UNKNOWN CT_UNREACHABLE CT_URGENT
 	CT_VAR
 	CT_WAIT CT_WHEN CT_WHILE CT_WITHIN
 
@@ -147,7 +147,7 @@ automaton:
 prolog:
 	| initialization sync_labels { $2 }
 	| sync_labels initialization { $1 }
-	| sync_labels { $1 } /* L'initialisation n'est pas prise en compte, et est donc facultative */
+	| sync_labels { $1 } /* Initialization is NOT taken into account, and is only allowed for backward-compatibility with HyTech */
 	| initialization { [] }
 	| { [] }
 ;
@@ -195,14 +195,31 @@ locations:
 /**********************************************/
 
 location:
-// 	| CT_LOC location_name COLON CT_WHILE convex_predicate stopwatches CT_WAIT braces_opt transitions {
-	| CT_LOC location_name COLON CT_WHILE convex_predicate stopwatches wait_opt transitions {
+	| loc_urgency_type location_name_and_costs COLON CT_WHILE convex_predicate stopwatches wait_opt transitions {
 		let name, cost = $2 in
-			name, cost, $5, $6, $8
+		{
+			(* Name *)
+			name = name;
+			(* Urgent or not? *)
+			loc_type = $1;
+			(* Cost *)
+			cost = cost;
+			(* Invariant *)
+			invariant = $5;
+			(* List of stopped clocks *)
+			stopped = $6;
+			(* Transitions starting from this location *)
+			transitions = $8;
 		}
+	}
 ;
 
-location_name:
+loc_urgency_type:
+	| CT_LOC { Parsed_location_nonurgent }
+	| CT_URGENT CT_LOC { Parsed_location_urgent }
+;
+
+location_name_and_costs:
 	| NAME { $1, None }
 	| NAME LSQBRA linear_expression RSQBRA { $1, Some $3 }
 ;

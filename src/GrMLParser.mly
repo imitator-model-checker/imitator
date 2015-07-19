@@ -8,7 +8,7 @@
  * Author:        Etienne Andre
  * 
  * Created       : 2011/11/23
- * Last modified : 2015/07/13
+ * Last modified : 2015/07/19
  *
  ****************************************************************/
 
@@ -126,8 +126,25 @@ let convert init_constraint locations transitions =
 		let transitions = try (Hashtbl.find location_transitions location_id) with Not_found -> [] in
 		let invariant = Hashtbl.find invariants location_id in
 		(* Make structure *)
-		(* WARNING: stopwatches and costs not taken into account yet !! *)
-		let location = location_name , None , invariant , [], List.rev transitions in
+		(*** WARNING: urgency / stopwatches / costs not taken into account yet !! ***)
+		let location : parsed_location = 
+			(* location_name , Loc_type_nonurgent , None , invariant , [], List.rev transitions in *)
+			{
+				(* Name *)
+				name = location_name;
+				(* Urgent or not? *)
+				loc_type = Parsed_location_nonurgent;
+				(* Cost *)
+				cost = None;
+				(* Invariant *)
+				invariant = invariant;
+				(* List of stopped clocks *)
+				stopped = [];
+				(* Transitions starting from this location *)
+				transitions = List.rev transitions;
+			}
+		in
+		
 		(* Add it *)
 		location :: current_list
 	) location_names [] in

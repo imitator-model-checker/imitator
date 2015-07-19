@@ -10,7 +10,7 @@
  * Author:        Etienne Andre
  * 
  * Created:       2013/02/04
- * Last modified: 2013/03/06
+ * Last modified: 2015/07/19
  *
  ****************************************************************)
 
@@ -44,6 +44,8 @@ val get_automaton : int -> automaton_index -> action_index -> clock_index -> pro
 	  action_index list
 	(* Actions per location *)
 	* (action_index list) array
+	(* Actions per location *)
+	* location_urgency array
 	(* Invariants *)
 	* (AbstractModel.invariant) array
 	(* Transitions *)
