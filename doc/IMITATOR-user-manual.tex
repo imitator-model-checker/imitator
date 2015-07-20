@@ -1009,7 +1009,7 @@ In short, \imitator{} is written in \ocaml{}, and contains about 26,000 lines of
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 Verification of timed systems (and specially parametric timed systems) is necessarily done in a symbolic manner, in the sense that the timing information is abstracted by clock constraints.
-However, \imitator{} does not perform what is referred to as \emph{symbolic model checking}; in other words, the representation of locations in \imitator{} is explicit.
+However, \imitator{} does not perform what is referred to as \emph{symbolic model checking}; in other words, the representation of locations in \imitator{} is explicit (and not symbolic using, \eg{} binary decision diagrams).
 
 In short, a symbolic state in \imitator{} is made of the following elements:
 \begin{itemize}
@@ -1029,7 +1029,7 @@ This document does not aim at explaining how to install \imitator{}.
 See the installation files available on the website for the most up-to-date information.
 
 Binaries and source code packages are available on \imitator{}'s Web page~\cite{imitator}.
-Note that several standalone binaries are provided online for Linux systems, that require no installation.
+Several standalone binaries are provided for Linux systems, that require no installation.
 
 
 
@@ -1103,7 +1103,7 @@ Print the list of contributors and exits.
 %------------------------------------------------------------
 Limits the depth of the exploration of the state space.
 In the cartography mode, this option gives a limit to \emph{each} call to the inverse method.
-Setting \styleOption{-depth-limit} guarantees the termination of any execution of \imitator{}, but not the correctness of the algorithms.
+Setting \styleOption{-depth-limit} guarantees the termination of any execution of \imitator{}, but not necessarily the correctness of the algorithms.
 
 
 %------------------------------------------------------------
@@ -1116,7 +1116,7 @@ Various distribution modes are possible:
 	\item[\styleOption{no}] Non-distributed mode (default)
 	\item[\styleOption{static}] Static domain decomposition \cite{ACN15}
 	\item[\styleOption{sequential}] Master-worker scheme with sequential point distribution \cite{ACE14}
-	\item[\styleOption{randomXX}] Master-worker scheme with random point distribution (\eg{}, \styleOption{random5} or \styleOption{random10}); after \styleOption{XX} successive unsuccessful attempts (where the generated point is already covered), the algorithm will switch to an exhaustive sequential iteration \cite{ACE14}
+	\item[\styleOption{randomXX}] Master-worker scheme with random point distribution (\eg{} \styleOption{random5} or \styleOption{random10}); after \styleOption{XX} successive unsuccessful attempts (where the generated point is already covered), the algorithm will switch to an exhaustive sequential iteration \cite{ACE14}
 	\item[\styleOption{shuffle}] Master-worker scheme with shuffle point distribution \cite{ACN15}
 	\item[\styleOption{dynamic}] Master-worker dynamic subdomain decomposition \cite{ACN15}
 \end{description}
@@ -1318,7 +1318,7 @@ That is, in order to call \PRP{}, use:
 
 And in order to call \PRPC{}, use:
 
-\styleCommand{\binimitator{} model.imi model.v0 -mode cover -PRPC}
+\styleCommand{\binimitator{} model.imi model.v0 -mode cover -PRP}
 
 
 
@@ -1336,6 +1336,7 @@ Translates the input model to a graphical, human-readable form (in \texttt{.jpg}
 \paragraph{\styleOption{-PTA2TikZ} (default: false)}
 %------------------------------------------------------------
 Translates the input model to a \LaTeX{} representation of the model (using the \texttt{tikz} package) without performing any analysis, and exits.
+Note that node positioning is not (much) supported, so may want to edit manually some positions.
 
 %------------------------------------------------------------
 \paragraph{\styleOption{-states-limit} (default: none)}
@@ -1592,11 +1593,12 @@ We define each of those two components below.
 %------------------------------------------------------------
 \begin{tabular}{l l}
 	\  & \styleIMI{loc} \styleIMI{<name>} \styleIMI{:} \styleIMI{while} \nt{convex\_predicate} \nt{stop\_opt} \npec{\nt{wait\_opt}} \nt{transitions} \\
+	$|$ & \styleIMI{urgent loc} \styleIMI{<name>} \styleIMI{:} \styleIMI{while} \nt{convex\_predicate} \nt{stop\_opt} \npec{\nt{wait\_opt}} \nt{transitions} \\
 % 	$|$ & \styleIMI{loc} \styleIMI{<name>} \styleIMI{:} \styleIMI{while} \nt{convex\_predicate} \nt{transitions} \\
 \end{tabular}
 
 %------------------------------------------------------------
-\regleGrammaire{wait\_opt}
+\regleGrammaire{\npec{wait\_opt}}
 %------------------------------------------------------------
 \begin{tabular}{l l}
 	\ & \npec{\styleIMI{wait()}} \\
@@ -2015,14 +2017,14 @@ Although we try to make \imitator{} as complete as possible, it misses some feat
 We enumerate in the following what seems to us to be the ``most missing'' features and, when applicable, we give hints to overcome these limitations.
 
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Urgent Locations}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-Urgent transitions are locations in which time cannot elapse, \ie{} there must be left immediately after being entered.
-Whereas this feature is not natively implemented in \imitator{}, it can easily be simulated as follows:
-to simulate an urgent location \styleIMI{l}, one can add an extra clock (say \styleIMI{x\_urgent}) initialized to 0 on any transition leading \styleIMI{l}; then, the invariant of \styleIMI{l} is \styleIMI{x\_urgent = 0}.
-Note that a single clock \styleIMI{x\_urgent} is enough to simulate any number of urgent locations.
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% \section{Urgent Locations}
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% 
+% Urgent transitions are locations in which time cannot elapse, \ie{} there must be left immediately after being entered.
+% Whereas this feature is not natively implemented in \imitator{}, it can easily be simulated as follows:
+% to simulate an urgent location \styleIMI{l}, one can add an extra clock (say \styleIMI{x\_urgent}) initialized to 0 on any transition leading \styleIMI{l}; then, the invariant of \styleIMI{l} is \styleIMI{x\_urgent = 0}.
+% Note that a single clock \styleIMI{x\_urgent} is enough to simulate any number of urgent locations.
 
 	% TODO: example
 
@@ -2036,7 +2038,7 @@ ASAP (as soon as possible) transitions are transitions that can be taken as soon
 This is different from urgent transitions, that must be taken in 0 time.
 Here, time can elapse, but not after all \IPTA{} are ready to execute their local transition.
 
-This is not supported by \imitator{}, and we do not see a way to simulate it easily.
+This is not supported by \imitator{}, and we do not see a way to simulate it easily in the current implementation.
 
 
 
