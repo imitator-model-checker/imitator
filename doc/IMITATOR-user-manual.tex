@@ -21,7 +21,7 @@
 \usepackage{amsfonts}
 
 % \usepackage{caption}
-% \usepackage{subcaption}
+\usepackage{subcaption}
 % \usepackage{marginnote}
 
 % \usepackage[pdftex]{graphicx,color}
@@ -54,8 +54,7 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \usepackage{pgf}
 \usepackage{tikz}
-\usetikzlibrary{arrows}
-\usetikzlibrary{decorations.pathmorphing} 
+\usetikzlibrary{arrows,automata,decorations.pathmorphing}
 % Couleurs
 
 \definecolor{darkblue}{rgb}{0, 0, 0.7}
@@ -215,6 +214,7 @@
 \newcommand{\IPTA}{IPTA}
 \newcommand{\NIPTA}{NIPTA}
 \newcommand{\ocaml}{OCaml}
+\newcommand{\pat}{PAT}
 \newcommand{\phaver}{PHAVer}
 % \newcommand{\polka}{NewPolka}
 % \newcommand{\prism}{\textsc{Prism}}
@@ -329,12 +329,20 @@
 \usepackage{listings}
 \newcommand{\IncludeIMIfile}[1]{
 	\lstset{language=Imitator}
-	\lstinputlisting[columns=fixed, numbers=left, numberstyle=\tiny, breaklines=true, breakatwhitespace=true]{#1}
+	\lstinputlisting[
+		basicstyle=\footnotesize,
+		breaklines=true,
+		breakatwhitespace=true,
+		columns=fixed,
+		numbers=left,
+		frame=single,
+		numberstyle=\tiny,
+	]{#1}
 }
 
 \lstdefinelanguage{Imitator}{
 	morekeywords={
-		and, automaton, clock, discrete, do, end, endreach, False, forward, from, goto, if, in, init, initially, loc, locations, not, or, parameter, print, reach, region, unreachable, urgent, sync, synclabs, True, var, wait, when, while
+		and, automaton, clock, constant, discrete, do, end, endreach, False, forward, from, goto, if, in, init, initially, loc, locations, not, or, parameter, print, reach, region, unreachable, urgent, sync, synclabs, True, var, wait, when, while
 	},
 	sensitive=false,
 % 	morecomment=[l][\color{gray}]{--},
@@ -459,11 +467,28 @@ Comments are OCaml-like comments starting with \styleIMI{(*} and ending with \st
 As in OCaml, comments can be nested.
 
 
-\paragraphe{An example of a coffee machine}
-We give below an example of a coffee machine interacting with a researching drinking coffee, given using the \imitator{} syntax.
-	% TODO: point to figure
+\paragraphe{The Fischer mutual exclusion protocol}
+We use as a motivating example one timed version of the Fischer mutual exclusion protocol, coming from the \pat{} model checker~\cite{SLDP09}.
+This version of the protocol is neither the most complete, nor the most simple; we just use here to introduce various aspects of the \imitator{} input syntax.
 
-\IncludeIMIfile{../examples/Coffee/coffeeDrinker.imi}
+Fischer mutual exclusion protocol is a protocol that guarantees the mutual exclusion of several processes (here two) that want to access a shared resource (called the critical section).
+% We give below an example of a coffee machine interacting with a researching drinking coffee, given using the \imitator{} syntax.
+% 	% TODO: point to figure
+% 
+% \IncludeIMIfile{../examples/Coffee/coffeeDrinker.imi}
+
+\paragraphe{Input syntax}
+We give below this example using the \imitator{} syntax.
+Note that this model is given in graphical form in \cref{figure:fischer}.\footnote{%
+	This \LaTeX{} representation, that makes use of the \LaTeX{} TikZ library, was automatically output by \imitator{}, using option \styleOption{-PTA2TikZ}, followed by some manual positioning optimization.
+}
+
+\bigskip
+
+%------------------------------------------------------------
+\IncludeIMIfile{include/fischerPAT_obs.imi}
+%------------------------------------------------------------
+
 
 % TODO: add graphic representation, describe model, make at least one call (or even one call per algo)
 
@@ -471,17 +496,89 @@ We give below an example of a coffee machine interacting with a researching drin
 \paragraphe{Header}
 Let us comment this case model by starting with the header.
 First, text in comments gives generalities about the model (author, date, description, etc.).
-The form is not normalized, but it could be in the future, so it is strongly advised to follow this form.
+The form is not normalized, but it could be in the future, so it is strongly advised to follow this form.\footnote{%
+	An empty model template with all these comments ready to be filled out (containing also a sample \IPTA{} and its initial definitions) is available at:
+	
+	\url{https://github.com/etienneandre/imitator/blob/master/examples/model.imi}.
+}
 
-Then, the variables are declared.
+\paragraphe{Variable declarations}
+The variable declarations starts with keyword \styleIMI{var}.
+
+This model contains two clocks: \styleIMI{x1} is process~1's clock, and \styleIMI{x2} is process~2's clock.
+
+This model contains two parameters: \styleIMI{delta} is the parametric duration specifying how long a process is idle at most, whereas \styleIMI{gamma} is the parametric duration specifying the minimum duration between the time a process checks for the availability of the critical section and the time the same process indeed enters the critical section (if it is still available).
+
+Two discrete variables (\ie{} global, integer-valued variables, see \cref{section:discrete}) are used:
+	\styleIMI{turn} checks which process is attempting to enter the critical section;
+	\styleIMI{counter} records how many processes are in the critical section (this variable will not be used for the verification, but was used in the original \pat{} model, and we choose to keep it).
+	% TODO: use it for verification once IMITATOR supports global variables in properties
+
+Finally, a global constant \styleIMI{IDLE} is set to \styleIMI{-1} (just as in the original \pat{} model), and encodes that no process is attempting to enter the critical section.
+
+
+%------------------------------------------------------------
+\input{include/fischerPAT_obs.tex}
+%------------------------------------------------------------
 
 
 \paragraphe{Automata}
-This model contains two \IPTA{}.
+This model contains three \IPTA{}:
+the first and second ones (\styleIMI{proc1} and \styleIMI{proc2}) model the first and second process, respectively. The third one (\styleIMI{observer}) is an observer, \ie{} an \IPTA{} that checks the system behavior without modifying it.
 
-\paragraphe{Initial Definitions}
+\paragraphe{The first process}
+Let us first describe the \IPTA{} \styleIMI{proc1} (a graphical representation is given in \cref{pta:proc1}):
+\styleIMI{proc1} is initially in location \styleIMI{idle1}, with no invariant (depicted by \styleIMI{while True wait {}}).
+At any time, when the discrete variable \styleIMI{turn} is equal \styleIMI{IDLE}, then this \IPTA{} synchronizes on action \styleIMI{try\_1}, resets its clock \styleIMI{x1}, and enters location \styleIMI{active1}.
+
+The invariant of this location is \styleIMI{x1 <= delta}, \ie{} \styleIMI{proc1} can only remain in \styleIMI{active1} as long as the value of \styleIMI{x1} does not exceed \styleIMI{delta}.
+Then, at any time, this \IPTA{} synchronizes on action \styleIMI{update\_1}, resets its clock \styleIMI{x1} and sets the global variable \styleIMI{turn} to \styleIMI{1}, and enters location \styleIMI{check1}.
+
+In location \styleIMI{check1}, the process wait at least \styleIMI{gamma} time units (modeled by the inequality \styleIMI{x1 >= gamma}, in all outgoing transitions).
+If \styleIMI{turn} is still equal to \styleIMI{1} (that is, no other process attempted in the meanwhile to enter the critical section), then process~1 indeed enters the critical section, by synchronizing \styleIMI{access\_1} and resetting \styleIMI{x1}.
+If \styleIMI{turn} is different from \styleIMI{1} (that is, another process attempted in the meanwhile to enter the critical section, and it is not safe for process~1 to enter), then process~1 returns to its idle location, by synchronizing \styleIMI{no\_access\_1} and resetting \styleIMI{x1}.
+Note that we have to use two transitions checking that either \styleIMI{turn < 1} or \styleIMI{turn > 1} to compensate that the ``different from'' operator (``\styleIMI{$\neq$}'') is not (yet) supported by \imitator{}.
+
+In location \styleIMI{access1}, process~1 can remain any time, and eventually enters the critical section by synchronizing \styleIMI{enter\_1} and incrementing the global variable \styleIMI{counter} by~1.
+
+In location \styleIMI{CS1}, process~1 can remain any time, and eventually leaves it, by decrementing the global variable \styleIMI{counter} by~1, and setting the global variable \styleIMI{turn} to its initial value \styleIMI{IDLE}.
+
+\paragraphe{The second process}
+Process~2 is symmetrical to process~1, except that \styleIMI{x1} is replaced with \styleIMI{x2}, and that the value of \styleIMI{turn} becomes~2.
 
 
+\paragraphe{The observer}
+The observer is in charge to observe that not two processes are in critical section at the same time.\footnote{%
+	This observer is not really necessary to check the correctness of this protocol;
+	instead of adding this observer and checking \styleIMI{unreachable loc[observer] = obs\_violation}, one could just check either \styleIMI{counter > 1} or \styleIMI{loc[proc1] = CS1 \& loc[proc2] = CS2}.
+	However, \imitator{} does not (yet) support checking global variables or more that one location in the \styleIMI{unreachable} property (which should be fixed very soon!); furthermore, introducing an observer is also useful, as it is often used for verification.
+}
+This observer will detect that this situation happens if an action \styleIMI{enter\_1} is followed by an action \styleIMI{enter\_2} without an action \styleIMI{exit\_1} in between (or symmetrically if an action \styleIMI{enter\_2} is followed by an action \styleIMI{enter\_1} without an action \styleIMI{exit\_2} in between).
+Note that the observer simply observes the system state, and synchronizes on the actions used by \styleIMI{proc1} and \styleIMI{proc2}; it does not use any clock nor variable.
+
+A graphical representation of the \IPTA{} \styleIMI{observer} is given in \cref{pta:observer}.
+
+
+\paragraphe{Initial definitions}
+The initial state is defined the part of the file following \styleIMI{init :=}.
+This part must contain the initial location of each \IPTA{}.
+For example, \styleIMI{loc[proc1] = idle1} states that \styleIMI{proc1} is initially in location \styleIMI{idle1}.
+
+The initial definition may (only may, see \cref{section:init}) give an initial value to the clocks, for example requiring them to be equal to some constant (typically~0).
+Here, clocks are only bound to be greater or equal to~0.
+
+The initial definition should assign a constant value to each discrete variable:
+here \styleIMI{turn} is initially equal to \styleIMI{IDLE}, and \styleIMI{counter} is initially equal to~0.
+
+Finally, parameters are bound to be positive or null (this is not assumed by default, so users are strongly advised to add this constraint).
+
+Note that the initial definition can introduce more complex constraints on clocks, parameters and discrete variables; see \cref{section:init} for details.
+
+
+\paragraphe{Property specification}
+
+
+\paragraphe{Parameter synthesis}
 
 
 
@@ -636,7 +733,7 @@ That is, actions, discrete variables, clocks and parameters may be shared betwee
 If a variable is required to be local to an \IPTA{}, then it should just not be used in any other \IPTA{} of the model.
 
 Different from many tools for (parametric) timed automata, clocks are not necessarily initially equal to~0 (this is similar to \hytech{}~\cite{HHW95} but different from \uppaal{}~\cite{LPY97}).
-The initial value of the clocks is defined by~$\Cinit$ (see \cref{ss:init}).
+The initial value of the clocks is defined by~$\Cinit$ (see \cref{section:init}).
 If nothing is defined in~$\Cinit$, then their value is supposed to be arbitrary (any real value greater or equal to~0).
 
 Note that parameters are not assumed positive; however, the behavior of \imitator{} has not been tested for negative parameters, and it is strongly advised to constrain them to be positive in $\Cinit$ (if it is not the case, a warning is issued by \imitator{}).
@@ -648,7 +745,7 @@ Finally, note that the number of \IPTA{}, locations, variables and actions that 
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Discrete Variables}
+\section{Discrete Variables}\label{section:discrete}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 Discrete variables\footnote{%
@@ -672,7 +769,7 @@ If two \IPTA{} in parallel update the same variable on the same synchronized tra
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Initial State and Initialization of Variables}\label{ss:init}
+\section{Initial State and Initialization of Variables}\label{section:init}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 For each \IPTA{}, a unique initial location must be defined.
