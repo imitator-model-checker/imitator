@@ -1,6 +1,6 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % UNCOMMENT THE LINE BELOW TO VIEW COMMENTS
-\def\DraftVersion {}
+% \def\DraftVersion {}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \documentclass[a4paper,11pt]{report}
@@ -244,7 +244,7 @@
 \hyphenation{IMITATOR}
 \hyphenation{Uppaal}
 
-\newcommand{\paragraphe}[1]{\paragraph{#1.}}
+% \newcommand{\paragraphe}[1]{\paragraph{#1.}}
 
 % Non terminal in a grammar
 \newcommand{\nt}[1]{$\langle$\emph{#1}$\rangle$}
@@ -299,6 +299,21 @@
 
 }
 
+\newcommand{\styleTerminalOutput}[1]{
+	\medskip
+	
+	% \mbox{}\hspace{.5cm}
+	\noindent\fcolorbox{white}{black!90}{
+	\begin{minipage}{.97\textwidth}
+		\textcolor{yellow!30}{\texttt{#1}}
+	\end{minipage}
+	}
+	
+	\medskip
+
+}
+
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % I.E. / E.G. / W.R.T.
@@ -314,10 +329,10 @@
 % \newcommand{\eg}{\textcolor{colorok}{\textit{e.g.}}\xspace}
 % \newcommand{\ie}{\textcolor{colorok}{\textit{i.e.}}\xspace}
 % \newcommand{\wrt}{\textcolor{colorok}{w.r.t.}\xspace}
-\newcommand{\adhoc}{\textcolor{colorok}{\textit{ad-hoc} }} % TODO: solve space problems
-\newcommand{\eg}{\textcolor{colorok}{\textit{e.g.}, }}
-\newcommand{\ie}{\textcolor{colorok}{\textit{i.e.}, }}
-\newcommand{\wrt}{\textcolor{colorok}{w.r.t.} }
+\newcommand{\adhoc}{\textcolor{colorok}{\textit{ad-hoc}\@}}
+\newcommand{\eg}{\textcolor{colorok}{\textit{e.g.},\@}}
+\newcommand{\ie}{\textcolor{colorok}{\textit{i.e.},\@}}
+\newcommand{\wrt}{\textcolor{colorok}{w.r.t.}\@}
 
 
 
@@ -337,12 +352,14 @@
 		numbers=left,
 		frame=single,
 		numberstyle=\tiny,
+		tabsize=4,
+% 		title=\lstname
 	]{#1}
 }
 
 \lstdefinelanguage{Imitator}{
 	morekeywords={
-		and, automaton, clock, constant, discrete, do, end, endreach, False, forward, from, goto, if, in, init, initially, loc, locations, not, or, parameter, print, reach, region, unreachable, urgent, sync, synclabs, True, var, wait, when, while
+		and, automaton, clock, constant, discrete, do, end, endreach, False, forward, from, goto, if, in, init, initially, loc, locations, not, or, parameter, print, property, reach, region, unreachable, urgent, sync, synclabs, True, var, wait, when, while
 	},
 	sensitive=false,
 % 	morecomment=[l][\color{gray}]{--},
@@ -435,10 +452,11 @@
 \imitator{} addresses several variants of the following problem:
 ``given a concurrent timed system, what are the values of the timing constants that guarantee that the model of the system satisfies some property?''
 Specifically, \imitator{} implements parametric safety analysis~\cite{AHV93,JLR15}, the inverse method \cite{ACEF09,AM15}, the behavioral cartography~\cite{AF10}, and parametric reachability preservation~\cite{ALNS15}.
+Some algorithms can also run distributed on a cluster.
 Numerous analysis options are available.
 
 \imitator{} is a command-line only tool, but that can output results in graphical form.
-Furthermore, a graphical user interface is available in the \CosyVerif{} platform.
+Furthermore, a graphical user interface is available in the \CosyVerif{} platform~\cite{AHHKLLP13}.
 
 \imitator{} was able to verify numerous case studies from the literature and from the industry, such as communication protocols, hardware asynchronous circuits, schedulability problems and various other systems such as coffee machines (probably the most critical systems from a researcher point of view).
 Numerous benchmarks are available at \imitator{} Web page~\cite{imitator}.
@@ -459,7 +477,11 @@ We first briefly introduce the syntax using a simple example for readers familia
 A formal (and nearly exhaustive) definition of \imitator{} parametric timed automata (\NIPTA{}) can be found in \cref{section:IPTA}.
 The complete syntax is given in \cref{chapter:grammar}.
 
-\paragraphe{Generalities}
+\paragraph{Generalities}
+\imitator{} performs parametric verification of models specified using networks of \imitator{} parametric timed automata (hereafter \NIPTA{}).
+An \imitator{} parametric timed automaton (hereafter \IPTA{}) is a variant of parametric automata (as introduced in~\cite{AHV93}).
+\IPTA{} and \NIPTA{} are formalized in \cref{section:NIPTA}.
+
 The input syntax of \imitator{} is originally based on the syntax of \hytech{}~\cite{HHW95}, with several improvements.
 Actually, all standard \hytech{} files describing only PTA (and not more general systems like linear hybrid automata \cite{achh92}) can be analyzed directly by \imitator{} (sometimes with very minor changes).
 
@@ -467,9 +489,9 @@ Comments are OCaml-like comments starting with \styleIMI{(*} and ending with \st
 As in OCaml, comments can be nested.
 
 
-\paragraphe{The Fischer mutual exclusion protocol}
+\paragraph{The Fischer mutual exclusion protocol}
 We use as a motivating example one timed version of the Fischer mutual exclusion protocol, coming from the \pat{} model checker~\cite{SLDP09}.
-This version of the protocol is neither the most complete, nor the most simple; we just use here to introduce various aspects of the \imitator{} input syntax.
+This version of the protocol is neither the most complete, nor the most simple; we just use it here to introduce various aspects of the \imitator{} input syntax.
 
 Fischer mutual exclusion protocol is a protocol that guarantees the mutual exclusion of several processes (here two) that want to access a shared resource (called the critical section).
 % We give below an example of a coffee machine interacting with a researching drinking coffee, given using the \imitator{} syntax.
@@ -477,8 +499,8 @@ Fischer mutual exclusion protocol is a protocol that guarantees the mutual exclu
 % 
 % \IncludeIMIfile{../examples/Coffee/coffeeDrinker.imi}
 
-\paragraphe{Input syntax}
-We give below this example using the \imitator{} syntax.
+\paragraph{Input syntax}
+We give below this model using the \imitator{} syntax.
 Note that this model is given in graphical form in \cref{figure:fischer}.\footnote{%
 	This \LaTeX{} representation, that makes use of the \LaTeX{} TikZ library, was automatically output by \imitator{}, using option \styleOption{-PTA2TikZ}, followed by some manual positioning optimization.
 }
@@ -493,7 +515,7 @@ Note that this model is given in graphical form in \cref{figure:fischer}.\footno
 % TODO: add graphic representation, describe model, make at least one call (or even one call per algo)
 
 
-\paragraphe{Header}
+\paragraph{Header}
 Let us comment this case model by starting with the header.
 First, text in comments gives generalities about the model (author, date, description, etc.).
 The form is not normalized, but it could be in the future, so it is strongly advised to follow this form.\footnote{%
@@ -502,7 +524,7 @@ The form is not normalized, but it could be in the future, so it is strongly adv
 	\url{https://github.com/etienneandre/imitator/blob/master/examples/model.imi}.
 }
 
-\paragraphe{Variable declarations}
+\paragraph{Variable declarations}
 The variable declarations starts with keyword \styleIMI{var}.
 
 This model contains two clocks: \styleIMI{x1} is process~1's clock, and \styleIMI{x2} is process~2's clock.
@@ -522,20 +544,22 @@ Finally, a global constant \styleIMI{IDLE} is set to \styleIMI{-1} (just as in t
 %------------------------------------------------------------
 
 
-\paragraphe{Automata}
+\paragraph{Automata}
 This model contains three \IPTA{}:
 the first and second ones (\styleIMI{proc1} and \styleIMI{proc2}) model the first and second process, respectively. The third one (\styleIMI{observer}) is an observer, \ie{} an \IPTA{} that checks the system behavior without modifying it.
 
-\paragraphe{The first process}
-Let us first describe the \IPTA{} \styleIMI{proc1} (a graphical representation is given in \cref{pta:proc1}):
-\styleIMI{proc1} is initially in location \styleIMI{idle1}, with no invariant (depicted by \styleIMI{while True wait {}}).
-At any time, when the discrete variable \styleIMI{turn} is equal \styleIMI{IDLE}, then this \IPTA{} synchronizes on action \styleIMI{try\_1}, resets its clock \styleIMI{x1}, and enters location \styleIMI{active1}.
+\paragraph{The first process}
+Let us first describe the \IPTA{} \styleIMI{proc1} (a graphical representation is given in \cref{pta:proc1}).
+This \IPTA{} uses six actions, given in the \styleIMI{synclabs} declaration.
+
+\styleIMI{proc1} is initially in location \styleIMI{idle1}, with no invariant (depicted by \styleIMI{while True wait \{\}}).
+At any time, when the discrete variable \styleIMI{turn} is equal to \styleIMI{IDLE}, then this \IPTA{} may synchronize on action \styleIMI{try\_1}, reset its clock \styleIMI{x1}, and enter location \styleIMI{active1}.
 
 The invariant of this location is \styleIMI{x1 <= delta}, \ie{} \styleIMI{proc1} can only remain in \styleIMI{active1} as long as the value of \styleIMI{x1} does not exceed \styleIMI{delta}.
-Then, at any time, this \IPTA{} synchronizes on action \styleIMI{update\_1}, resets its clock \styleIMI{x1} and sets the global variable \styleIMI{turn} to \styleIMI{1}, and enters location \styleIMI{check1}.
+At any time, this \IPTA{} may synchronize on action \styleIMI{update\_1}, reset its clock \styleIMI{x1} and set the global variable \styleIMI{turn} to \styleIMI{1}, and enter location \styleIMI{check1}.
 
 In location \styleIMI{check1}, the process wait at least \styleIMI{gamma} time units (modeled by the inequality \styleIMI{x1 >= gamma}, in all outgoing transitions).
-If \styleIMI{turn} is still equal to \styleIMI{1} (that is, no other process attempted in the meanwhile to enter the critical section), then process~1 indeed enters the critical section, by synchronizing \styleIMI{access\_1} and resetting \styleIMI{x1}.
+If \styleIMI{turn} is still equal to \styleIMI{1} (that is, no other process attempted in the meanwhile to enter the critical section), then process~1 is indeed ready to enter the critical section, by synchronizing \styleIMI{access\_1} and resetting \styleIMI{x1}.
 If \styleIMI{turn} is different from \styleIMI{1} (that is, another process attempted in the meanwhile to enter the critical section, and it is not safe for process~1 to enter), then process~1 returns to its idle location, by synchronizing \styleIMI{no\_access\_1} and resetting \styleIMI{x1}.
 Note that we have to use two transitions checking that either \styleIMI{turn < 1} or \styleIMI{turn > 1} to compensate that the ``different from'' operator (``\styleIMI{$\neq$}'') is not (yet) supported by \imitator{}.
 
@@ -543,12 +567,12 @@ In location \styleIMI{access1}, process~1 can remain any time, and eventually en
 
 In location \styleIMI{CS1}, process~1 can remain any time, and eventually leaves it, by decrementing the global variable \styleIMI{counter} by~1, and setting the global variable \styleIMI{turn} to its initial value \styleIMI{IDLE}.
 
-\paragraphe{The second process}
-Process~2 is symmetrical to process~1, except that \styleIMI{x1} is replaced with \styleIMI{x2}, and that the value of \styleIMI{turn} becomes~2.
+\paragraph{The second process}
+Process~2 is identical to process~1, except that \styleIMI{x1} is replaced with \styleIMI{x2}, and that the value of \styleIMI{turn} becomes~2.
 
 
-\paragraphe{The observer}
-The observer is in charge to observe that not two processes are in critical section at the same time.\footnote{%
+\paragraph{The observer}
+The observer is in charge to check that no more than one process is in critical section at the same time.\footnote{%
 	This observer is not really necessary to check the correctness of this protocol;
 	instead of adding this observer and checking \styleIMI{unreachable loc[observer] = obs\_violation}, one could just check either \styleIMI{counter > 1} or \styleIMI{loc[proc1] = CS1 \& loc[proc2] = CS2}.
 	However, \imitator{} does not (yet) support checking global variables or more that one location in the \styleIMI{unreachable} property (which should be fixed very soon!); furthermore, introducing an observer is also useful, as it is often used for verification.
@@ -559,7 +583,7 @@ Note that the observer simply observes the system state, and synchronizes on the
 A graphical representation of the \IPTA{} \styleIMI{observer} is given in \cref{pta:observer}.
 
 
-\paragraphe{Initial definitions}
+\paragraph{Initial definitions}
 The initial state is defined the part of the file following \styleIMI{init :=}.
 This part must contain the initial location of each \IPTA{}.
 For example, \styleIMI{loc[proc1] = idle1} states that \styleIMI{proc1} is initially in location \styleIMI{idle1}.
@@ -570,16 +594,39 @@ Here, clocks are only bound to be greater or equal to~0.
 The initial definition should assign a constant value to each discrete variable:
 here \styleIMI{turn} is initially equal to \styleIMI{IDLE}, and \styleIMI{counter} is initially equal to~0.
 
-Finally, parameters are bound to be positive or null (this is not assumed by default, so users are strongly advised to add this constraint).
+Finally, parameters are bound to be positive or null (this is not assumed by default by \imitator{}, so users are strongly advised to add this constraint).
 
 Note that the initial definition can introduce more complex constraints on clocks, parameters and discrete variables; see \cref{section:init} for details.
 
 
-\paragraphe{Property specification}
+\paragraph{Property specification}
+In this model, the correctness property is that two processes cannot be in the critical section at the same time; as explained above, this is equivalent to the fact that the \styleIMI{obs\_violation} location of the \styleIMI{observer} \IPTA{} is unreachable.
+This is input in the model as follows:
+\begin{center}
+	\styleIMI{property := unreachable loc[observer] = obs\_violation;}
+\end{center}
+More elaborate properties are detailed in \cref{ss:mode:prop} (however, they all \emph{reduce} to reachability, so more complex properties such as Büchi-like properties or fairness are not yet supported by \imitator{}).
 
 
-\paragraphe{Parameter synthesis}
+\paragraph{Parameter synthesis}
+Finally, let us run \imitator{} on this case study.
+Quite naturally, what we would be interested in is knowing for which parameter valuations this protocol is correct, \ie{} no more than one process can be present in the critical section at one time.
+Assuming this model is input in file \stylePath{fischer.imi}, the command calling \imitator{} is as follows:
 
+\styleCommand{\binimitator{} fischer.imi -mode EF -merge}
+
+In this command, \styleOption{-mode EF} calls the algorithm \EFsynth{} that synthesizes valuations reaching a given location (see \cref{ss:mode:EFsynth}); and \styleOption{-merge} is a merging technique reducing the state space that, for this model, ensures termination (see \cite{AFS13atva} for more details on merging).
+
+The result of the call to \imitator{} is
+
+\styleTerminalOutput{
+ Final constraint such that the property is *violated* (1 constraint): \\
+     delta >= gamma\\
+    \& gamma >= 0
+}
+
+That is, the system is safe if \styleIMI{delta < gamma}, which is the well-known constraint ensuring mutual exclusion for this protocol.
+	% TODO: ref
 
 
 
@@ -591,7 +638,7 @@ Note that the initial definition can introduce more complex constraints on clock
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Formal Definition}
+\section{Formal Definition}\label{section:NIPTA}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \imitator{} performs parametric verification of models specified using networks of \imitator{} parametric timed automata (hereafter \NIPTA{}).
@@ -851,7 +898,7 @@ For more detailed commands, and a complete list of options, see \cref{chapter:op
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \imitator{} can compute the entire symbolic state space (``parametric zone graph'').
-Of course, the state space may be infinite, and the analysis is not guaranteed to terminate.
+Of course, the state space may be infinite, and this analysis is not guaranteed to terminate.
 
 The standard command is:
 
@@ -2436,7 +2483,7 @@ around~$\pio$.
 
 
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
-\paragraphe{Inverse Method}
+\paragraph{Inverse Method}
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
 When calling \imitator{} to apply the inverse method algorithm, the tool takes as input two files, one describing the network of PTA modeling the system, and the other describing the reference valuation.
 As depicted in Figure~\ref{fig:ioIM}, it synthesizes a constraint on the parameters solving the inverse problem, as well as optionally the corresponding trace set under a graphical form.
@@ -2479,7 +2526,7 @@ The description of all the parametric reachable states can also be optionally ou
 
 
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
-\paragraphe{Behavioral Cartography Algorithm}
+\paragraph{Behavioral Cartography Algorithm}
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
 When calling \imitator{} to apply the behavioral cartography algorithm, the tool takes as an input two files, one describing the network of PTA modeling the system, and the other describing the reference rectangle, \ie{} the bounds to consider for each parameter.
 As depicted in Figure~\ref{fig:ioBC}, it synthesizes a list of tiles, as well as optionally the trace set corresponding to each tile under a graphical form.
@@ -2522,7 +2569,7 @@ The description of all the parametric reachable states for each tile may also op
 
 % 
 % %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
-% \paragraphe{Internal Representation}
+% \paragraph{Internal Representation}
 % %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
 % States are represented using a triple $(q, v, C)$ made of the current location~$q$ in each automaton, a value for each discrete variable\footnote{Discrete variables are syntactic sugar allowing to factorize several locations into a single one. In~\imitator{}, discrete variables are integer variables that can be updated using constants or other discrete variables.}~$v$, and a constraint $C$ on the clocks and the parameters.
 % In order to optimize the test of equality between a new computed state and the set of states computed previously, the states are stored in a hash table as follows:
