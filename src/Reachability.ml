@@ -2903,7 +2903,7 @@ let ef_synthesis model =
 	let result_str = string_of_list_of_string_with_sep "\n OR \n" (List.map (LinearConstraint.string_of_p_linear_constraint model.variable_names) !p_constraints) in
 
 	(* Print the result *)
-	print_message Verbose_standard ("\nFinal constraint such that the property is *violated* (" ^ (string_of_int (List.length !p_constraints)) ^ " constraints): ");
+	print_message Verbose_standard ("\nFinal constraint such that the property is *violated* (" ^ (string_of_int (List.length !p_constraints)) ^ " constraint" ^ (s_of_int (List.length !p_constraints)) ^ "): ");
 	print_message Verbose_standard (result_str);
 	
 	print_message Verbose_low (
