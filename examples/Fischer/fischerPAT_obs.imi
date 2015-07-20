@@ -1,24 +1,25 @@
---************************************************************--
---************************************************************--
---
---   Fischer's mutual exclusion protocol
---
---   From the PAT version of the protocol
---
---                                Created : 2012/10/08
---               Fork from fischerPAT.imi : 2014/04/08
---                          Last modified : 2015/05/15
---************************************************************--
---************************************************************--
+(************************************************************
+ *                      IMITATOR MODEL                      
+ *
+ * Fischer's mutual exclusion protocol
+ *
+ * Description     : Fischer's mutual exclusion protocol with 2 processes
+ * Correctness     : Not 2 processes together in the critical section (location obs_violation unreachable)
+ * Source          : PAT library of benchmarks
+ * Author          : ?
+ * Input by        : Étienne André
+ *
+ * Created         : 2012/10/08
+ * Last modified   : 2015/05/15
+ *
+ * IMITATOR version: 2.7-beta4
+ ************************************************************)
 
 var 
 	-- P1's clock
 	x1,
 	-- P2's clock
 	x2,
-(*	-- P3's clocks
-	x3,
-	y3,*)
 		:clock;
 	
 
@@ -31,8 +32,8 @@ var
 		: parameter;
 		
 
-	IDLE = -1 -- (constant)
-		: parameter; 
+	IDLE = -1
+		: constant; 
 
 		
 (*
@@ -94,8 +95,9 @@ loc active1: while x1 <= delta wait {}
 
 loc check1: while True wait {}
 	when x1 >= epsilon & turn = 1 sync access_1 do {x1' = 0} goto access1;
+(* 	oops, no "<>" operator here! hence we use '>' and '<' *)
 	when x1 >= epsilon & turn < 1 sync no_access_1 do {x1' = 0}  goto idle1;
-	when x1 >= epsilon & turn > 1 sync no_access_1 do {x1' = 0}  goto idle1; -- oops, no "<>" operator here!
+	when x1 >= epsilon & turn > 1 sync no_access_1 do {x1' = 0}  goto idle1; 
 
 loc access1: while True wait {}
 	when True sync enter_1 do {counter' = counter + 1} goto CS1;
@@ -149,8 +151,8 @@ loc obs_2: while True wait {}
 	when True sync exit_2 goto obs_waiting;
 	when True sync enter_1 goto obs_violation;
 
+(* NOTE: no outgoing action to reduce state space *)
 loc obs_violation: while True wait {}
-(* 	HACK : no outgoing action to reduce state space *)
 
 end (* observer *)
 
@@ -172,8 +174,6 @@ init :=
 	----------------------
 	& loc[proc1] = idle1
 	& loc[proc2] = idle2
-(* 	& loc[proc3] = idle3 *)
-(*	& loc[proc4] = idle4*)
 	& loc[observer] = obs_waiting
 	
 	----------------------
@@ -182,9 +182,6 @@ init :=
 	& x1 = 0
 	& x2 = 0
 
-(*	& x3 = 0
-	& y3 = 0
-	*)
 	----------------------
 	-- Discrete
 	----------------------
