@@ -10,14 +10,14 @@
  * Input by        : Étienne André
  *
  * Created         : 2012/10/08
- * Last modified   : 2015/05/15
+ * Last modified   : 2015/07/19
  *
  * IMITATOR version: 2.7-beta4
  ************************************************************)
 
 var 
-	x1, (* P1's clock *)
-	x2, (* P2's clock *)
+	x1, (* proc1's clock *)
+	x2, (* proc2's clock *)
 		:clock;
 
 	turn,
