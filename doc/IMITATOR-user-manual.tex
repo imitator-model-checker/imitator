@@ -144,6 +144,7 @@
 \newcommand{\steps}{ {\rightarrow} }
 \newcommand{\stopwatches}{S}
 \newcommand{\tuple}[1]{\langle#1\rangle}
+\newcommand{\unobs}{\ensuremath{\epsilon}}
 \newcommand{\Var}{\mathit{Var}} % set of variables
 \newcommand{\var}{\mathit{z}} % variable
 \newcommand{\VarCard}{N} % cardinality of variables % TODO: conflict
@@ -502,6 +503,12 @@ An \imitator{} parametric timed automaton (hereafter \IPTA{}) is a variant of pa
 A first difference between \IPTA{} and the PTA of \cite{AHV93} is that \IPTA{} have no accepting / final location;
 furthermore, \IPTA{} augment the expressiveness of PTA with several features such as invariants, discrete (integer) variables, complex guards and invariants (\ie{} not only comparing a single clock to a single parameter), stopwatches (\ie{} the ability to stop some clocks in some locations), and arbitrary clock updates (\ie{} not necessarily to~0).
 
+
+%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-
+\subsection{Linear Constraints}
+%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-
+
+
 \paragraph{Clocks, Parameters, Discrete Variables}
 \emph{Clocks} are real-valued variables all evolving at the same rate (unless they are stopped, which is allowed in \imitator{}).
 A set of clocks is $\Clock = \{ \clock_1, \dots, \clock_\ClockCard \}$;
@@ -546,9 +553,15 @@ We denote by $\LTerm(\Var)$ the set of linear terms over~$\Var$, and by $\LConst
 In \imitator{}, we will consider constraints belonging to sets such as $\LConstraintXP$ (\ie{} the set of constraints over clocks and parameters), or $\LConstraintXPD$ (\ie{} the set of constraints over clocks, parameters and discrete variables).
 
 
+%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-
+\subsection{\imitator{} Parametric Timed Automata}
+%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-
 
-\paragraph{\imitator{} Parametric Timed Automata}
+
+% \paragraph{\imitator{} Parametric Timed Automata}
 We can now give a formal definition of \IPTA{}.
+
+Let $\unobs$ denote the unobservable action.
 
 %------------------------------------------------------------
 \begin{definition}[\IPTA{}]\label{definition:IPTA}
@@ -565,7 +578,7 @@ We can now give a formal definition of \IPTA{}.
 		\item $\steps$ is a set of edges $(\loc, \guard, \action, \Cupdates, \Dupdates, \loc')$, where
 			$\loc, \loc' \in \Loc$ are the source and destination locations,
 			$\guard \in \LConstraintXPD$ is a constraint over all variables (called \emph{guard} of the transition),
-			$\action\in\Sigma$ is the action associated with the transition,
+			$\action \in \Action \cup \{ \unobs \}$ is the action associated with the transition,
 			$\Cupdates : \Clock \rightarrow \LTermXPD$ is the update function for clocks, and % TODO: partial function!
 			% TODO: sure that we can update to anything??
 			$\Dupdates : \DVar \rightarrow \LTermD$ is the update function for discrete variables. % TODO: partial function!
@@ -573,21 +586,35 @@ We can now give a formal definition of \IPTA{}.
 \end{definition}
 %------------------------------------------------------------
 
+In the following, we explain this definition.
+
+\paragraph{Guards and invariants}
+Guards and invariants in \imitator{} are linear constraints over all variables.
+For example, the following expression can be used in a guard or an invariant:
+$$ \styleIMI{i1 + .5 x1 + 3 x2 >= 2 p1 - i2 \& p2 < 1/3} $$
+where \styleIMI{i1}, \styleIMI{i2} are discrete variables, \styleIMI{x1}, \styleIMI{x2} are clocks and \styleIMI{p1}, \styleIMI{p2} are parameters.
+This syntax includes in particular diagonal constraints (\eg{} \styleIMI{x1 - x2 <= 2}), not always supported in other model-checking tools.
+
+\paragraph{Actions}
+Transitions can be synchronized on an action in $\Action$, or have no synchronized action (``$\unobs$''), which is often referred to in the literature as a silent transition, or an $\epsilon$-transition.
+For the semantics of the synchronization model between various \IPTA{}, refer to \cref{sect:synchronization}.
+
+\paragraph{Clock updates}
 Observe that clocks can be updated to any value, \ie{} a clock can be assigned not only to~0, but to any linear term over the other clocks, the parameters and the discrete variables.
 However, discrete variables can only be assigned to a linear term over~$\DVar$ (including a constant).
 If clocks are always reset (\ie{} not assigned to more complex linear terms), \imitator{} will apply some optimizations that (may) increase the analysis speed.
 	% TODO: nice box with a ``tip'' title
 
-Guards and invariants are constraints over all variables (called \emph{guard} of the transition).
-For example, the following expression can be used in a guard or an invariant:
-$$ \styleIMI{i1 + .5 x1 + 3 x2 >= 2 p1 - i2 \& p2 < 2} $$
-where \styleIMI{i1}, \styleIMI{i2} are discrete variables, \styleIMI{x1}, \styleIMI{x2} are clocks and \styleIMI{p1}, \styleIMI{p2} are parameters.
-
+\paragraph{Stopwatches}
 There are no distinction between clocks and stopwatches.
 That is, any clock can potentially be stopped in some location.
 \imitator{} will detect whether a model has or not stopwatches; if there is no stopwatch in some model, \imitator{} will apply some optimizations that (may) increase the analysis speed.
 	% TODO: nice box with a ``tip'' title
 
+
+%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-
+\subsection{Networks of \imitator{} Parametric Timed Automata}
+%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-
 
 %------------------------------------------------------------
 \begin{definition}[\NIPTA{}]
@@ -631,8 +658,9 @@ are global integer-valued variables.
 Their value is global, in the sense that they are shared by all \IPTA{} of the model.
 They can be seen as syntactic sugar to represent a possibly unbounded number of locations.
 
-In \imitator{}, integers are exact and unbounded, just as in maths (\ie{}, they are \emph{not} represented using 32 or 64 bits).
-Hence, no overflow can occur.
+In \imitator{}, integers are exact and unbounded, just as in maths (\ie{}, they are \emph{not} represented using a limited number of bits, such as 32 or 64 bits).
+Hence, no overflow can occur, and the representation of the constraints is always exact.
+Note that floating-point numbers are totally absent from the \imitator{} implementation (except for th generation of graphical outputs).
 
 Discrete variables must be initialized to a single constant value in the \styleIMI{init} definition;
 if they are not, a warning is issued, and they are arbitrarily set to~0.
@@ -665,7 +693,7 @@ Given a discrete variable \styleIMI{i}, if the definition of the initial state d
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Synchronization Model}
+\section{Synchronization Model}\label{sect:synchronization}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 By default, all \IPTA{} of an \imitator{} model declare their set of actions.\footnote{%
