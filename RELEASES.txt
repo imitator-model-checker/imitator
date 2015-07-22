@@ -1,5 +1,5 @@
 *******************************************************
-release XXXX    (XXXX) FUTURE RELEASE
+release 2.7    (2015-07-22)
 
 Major algorithmic features since 2.6.1
 - Added EF-synthesis (option "-mode EF"): synthesize all parameter valuations such that a given state is reachable [AHV93,JLR15]
@@ -20,7 +20,7 @@ Options
 - Add two new verbose modes: mute and warning-only
 - Add export to LaTeX/TikZ
 - The result (text) can be exported to a file (option "-output-result")
-- Time elapsing can be applied either at the beginning (new mode, option -no-time-elapsing) or at the end (classical IMITATOR semantics) of the computation of a new state [EXPERIMENTAL]
+- Time elapsing can be applied either at the beginning (new mode, option -no-time-elapsing) or at the end (classical IMITATOR semantics) of the computation of a new state
 - New options to specify min/max values for x/y axes for the graphical output of the cartography
 - Removed -counterex option (stops the analysis as soon as a counterexample is found)
 
@@ -34,7 +34,7 @@ Changes in options syntax
 - "-with-log" becomes "-output-states"
 - "-with-parametric-log" is removed (becomes always true when option "-output-states" is enabled)
 
-Interfacing with CosyVerif (and support of GrML)
+Interfacing with CosyVerif (and GrML support)
 - Add EF mode support to the CosyVerif interface (using options -fromGrML and -cosyProp)
 - Fix a bug in the GrML output (action labels were removed when exporting to GrML)
 - Add the initial constraint to both the GrML input and the GrML output
@@ -42,12 +42,12 @@ Interfacing with CosyVerif (and support of GrML)
 Misc
 - Add suffix "-pta.jpg" to PTA2JPG files
 - In BC mode: try to reduce the number of constraint (inclusion test in both directions)
-- Warning displayed if parameters are not contrained to be >= 0 in the model
+- Warning displayed if parameters are not constrained to be >= 0 in the model
 - Improve printing floating numbers (in time and memory statistics)
 
 Versioning
 - Now IMITATOR has a build number (since May 2013)
-- Now IMITATOR has a version name and a version logo (based on traditional Breton "galettes" ingredients!): 2.7 is "Butter Guéméné"
+- Now IMITATOR has a version name and a version logo (based on traditional Breton "galettes" ingredients): 2.7 is "Butter Guéméné"
 
 Install and compile
 - Main binary now in lower case ("imitator")
