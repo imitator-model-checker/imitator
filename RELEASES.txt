@@ -1,5 +1,5 @@
 *******************************************************
-release XXXX    (XXXX) PRIVATE RELEASE
+release XXXX    (XXXX) FUTURE RELEASE
 
 Major algorithmic features since 2.6.1
 - Added EF-synthesis (option "-mode EF"): synthesize all parameter valuations such that a given state is reachable [AHV93,JLR15]
@@ -51,7 +51,9 @@ Versioning
 
 Install and compile
 - Main binary now in lower case ("imitator")
-- Two versions: distributed (sh compile.sh), that creates a dynamic binary, or non-distributed (sh compile-nondistr.sh), that creates a static binary
+- Two versions:
+	* non-distributed (sh compile.sh), that creates a static binary "imitator", or 
+	* distributed (sh compile-distr.sh), that creates a dynamic binary "patator"
 
 Internal
 - Moved to OCaml 4.01.0

@@ -3,7 +3,7 @@
 #
 #                       IMITATOR
 #
-# Create a file IMITATOR-nondistr.ml for a non-distributed version
+# Create a file PaTATOR.ml for a distributed version
 #
 # Etienne Andre
 #
@@ -11,11 +11,11 @@
 # Universite Paris 13, Sorbonne Paris Cite, France
 #
 # Created      : 2014/08/18
-# Last modified: 2014/08/18
+# Last modified: 2015/07/22
 #************************************************************
 
 
-# This script copies IMITATOR.ml into IMITATOR-distr.ml and comments out the call to PaTATOR
+# This script copies IMITATOR.ml into IMITATORdistr.ml and uncomments out the call to PaTATOR
 
 
 #************************************************************
@@ -29,11 +29,11 @@ from os import close
 #************************************************************
 # Files
 input_file_path = 'src/IMITATOR.ml'
-output_file_path = 'src/IMITATOR-nondistr.ml'
+output_file_path = 'src/PaTATOR.ml'
 
 # Patterns in IMITATOR.ml
-pattern_begin = '(* ** *** **** ***** ******    BEGIN FORK PaTATOR    ****** ***** **** *** ** *)'
-pattern_end = '(* ** *** **** ***** ******    END FORK PaTATOR    ****** ***** **** *** ** *)'
+pattern_begin = '(*(* ** *** **** ***** ******    BEGIN FORK PaTATOR    ****** ***** **** *** ** *)'
+pattern_end = '(* ** *** **** ***** ******    END FORK PaTATOR    ****** ***** **** *** ** *)*)'
 
 
 #************************************************************
@@ -59,7 +59,7 @@ found_begin_pattern = False
 for line in old_file:
 	if pattern_begin in line:
 		#print 'Begin pattern found in ' + input_file_path + '.'
-		new_file.write(line.replace(pattern_begin, pattern_begin + '(*'))
+		new_file.write(line.replace(pattern_begin, pattern_begin + '*)'))
 		found_begin_pattern = True
 		break
 	else:
@@ -77,7 +77,7 @@ found_end_pattern = False
 for line in old_file:
 	if pattern_end in line:
 		#print 'End pattern found in ' + input_file_path + '.'
-		new_file.write(line.replace(pattern_end, '*)' + pattern_end))
+		new_file.write(line.replace(pattern_end, '(*' + pattern_end))
 		found_end_pattern = True
 		break
 	else:

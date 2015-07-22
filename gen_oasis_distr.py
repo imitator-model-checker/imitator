@@ -11,11 +11,11 @@
 # Universite Paris 13, Sorbonne Paris Cite, France
 #
 # Created      : 2014/08/18
-# Last modified: 2014/08/18
+# Last modified: 2015/07/22
 #************************************************************
 
 
-# This script copies oasis-config-nondistr into _oasis
+# This script copies oasis-config-distr into _oasis
 
 
 #************************************************************
@@ -28,7 +28,7 @@ from os import close
 # CONSTANTS
 #************************************************************
 # Files
-input_file_path = 'oasis-config-nondistr'
+input_file_path = 'oasis-config-distr'
 output_file_path = '_oasis'
 
 

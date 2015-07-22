@@ -19,7 +19,7 @@ Packages:
     imitator:
         Type: binary
         Files:
-            /usr/bin/imitator: _build/src/IMITATOR-nondistr.native
+            /usr/bin/imitator: _build/src/IMITATOR.native
 
         Runtime:
             Dependencies:
@@ -48,7 +48,7 @@ Packages:
                 - make install
                 - cd ../../../
                 - cp METAS/* /usr/lib/ocaml/METAS/
-                - ./compile-nondistr.sh
+                - ./compile.sh
                 - ./_build/sanitize.sh
-                - ./compile-nondistr.sh
+                - ./compile.sh
 

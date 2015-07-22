@@ -8,15 +8,9 @@
  * Author:        Ulrich Kuehne, Etienne Andre
  * 
  * Created:       2009/09/07
- * Last modified: 2015/04/12
+ * Last modified: 2015/07/22
  *
  ****************************************************************)
-
-
-(**************************************************)
-(* External modules *)
-(**************************************************)
-open Gc
 
 
 (**************************************************)
@@ -27,7 +21,6 @@ open CamlUtilities
 
 open ImitatorUtilities
 open AbstractModel
-(* open Arg *)
 open ModelPrinter
 open Options
 open Reachability
@@ -35,15 +28,13 @@ open Reachability
 
 (**************************************************
 
-TAGS POUR CHOSES A FAIRE
-- (*** TO DO ***)
-- (*** BAD PROG ***)
-- (*** TO OPTIMIZE ***)
+TAGS USED THROUGHOUT THIS PROJECT
+- (*** TODO ***)
+- (*** BADPROG ***)
+- (*** NOTE ***)
 - (*** OPTIMIZED ***)
+- (*** TO OPTIMIZE ***)
 - (*** WARNING ***)
-
-<>
-
 **************************************************)
 
 ;;
@@ -117,14 +108,14 @@ if debug_mode_greater Verbose_total then
 (* Case distributed *)
 (**************************************************)
 (*** WARNING:  Do not modify the following lines! (used by an external script to compile the non-distributed version of IMITATOR) ***)
-(* ** *** **** ***** ******    BEGIN FORK PaTATOR    ****** ***** **** *** ** *)
+(*(* ** *** **** ***** ******    BEGIN FORK PaTATOR    ****** ***** **** *** ** *)
 begin
 match options#distribution_mode with
 	(* Fork if distributed *)
 	| Non_distributed -> ()
-	| _ -> (PaTATOR.run(); exit(0))
+	| _ -> (RunPaTATOR.run(); exit(0))
 end;
-(* ** *** **** ***** ******    END FORK PaTATOR    ****** ***** **** *** ** *)
+(* ** *** **** ***** ******    END FORK PaTATOR    ****** ***** **** *** ** *)*)
 (*** WARNING:  Do not modify the previous lines! (used by an external script to compile the non-distributed version of IMITATOR) ***)
 
 
@@ -193,7 +184,7 @@ if options#cartonly then(
 	v0#set_min 1 p2_min;
 	v0#set_max 1 p2_max;
 	(* Call the cartography *)
-	Graphics.cartography model (*[| (p1_min , p1_max); (p2_min , p2_max) |]*) v0 constraints options#files_prefix;
+	Graphics.cartography model v0 constraints options#files_prefix;
 	(* The end *)
 	terminate_program()
 );
@@ -227,10 +218,6 @@ if (options#imitator_mode = Border_cartography && model.correctness_condition = 
 if options#dynamic_clock_elimination then (
 	Reachability.prepare_clocks_elimination model
 );
-
-
-
-
 
 
 
@@ -277,7 +264,6 @@ if options#imitator_mode = Inverse_method && options#branch_and_bound then(
 (**************************************************)
 
 begin
-(* 	let zones = *)
 	match options#imitator_mode with
 		| Translation -> raise (InternalError "Translation cannot be executed here; program should already have terminated at this point.");
 
@@ -285,12 +271,11 @@ begin
 		(* Exploration *)
 		| State_space_exploration
 			-> Reachability.full_state_space_exploration model;
-(* 			[] *)
 			
 		(* Synthesis *)
 		| EF_synthesis 
 			->
-			(*[*)Reachability.ef_synthesis model(*]*)
+			Reachability.ef_synthesis model
 
 			
 		(* Inverse Method *)
@@ -299,11 +284,9 @@ begin
 				(
 					(*** WARNING!!! Why a dedicated function here, whereas for BC+EFIM this function is not (?) called? ***)
 				Reachability.efim model;
-(* 				[] *)
 				)
 			else(
 				Reachability.inverse_method model;
-(* 				[] *)
 			)
 
 
@@ -316,22 +299,6 @@ begin
 		(* Behavioral cartography algorithm with random iterations *)
 			Cartography.random_behavioral_cartography model nb;
 
-			(*
-	in
-
-	(* Computation of the cartography *)
-	if options#cart then (
-			(* No cartography if no zone *)
-			if zones = [] then(
-				print_message Verbose_standard ("\nNo cartography can be generated since the list of constraints is empty.\n");
-			)else(
-				print_message Verbose_standard ("\nGeneration of the graphical cartography...");
-				Graphics.cartography model v0 zones (options#files_prefix ^ "_cart")
-			)
-		) else (
-			print_message Verbose_high "Graphical cartography not asked: graph not generated."
-		)
-	;*)
 end;
 
 

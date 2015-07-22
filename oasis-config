@@ -6,8 +6,8 @@
 #  Laboratoire d'Informatique de Paris Nord (Paris 13, France)
 #
 #  _oasis authors: Etienne Andre, Alban Linard
-#  Created:        2013/12/11
-#  Last modified:  2015/07/10
+#  Created:        2014/08/18
+#  Last modified:  2015/07/22
 ###############################################################
 
 OASISFormat: 0.3
@@ -26,15 +26,14 @@ Executable imitator
   Path:       .
   BuildTools: ocamlbuild
   MainIs:     src/IMITATOR.ml
-  BuildDepends: gmp, extlib, mpi, ppl, str, unix, threads
-  CCLib: -lstdc++
-  # -ltinfo
-#  CCLib: -static '-lppl -ltinfo -lppl_ocaml -lstdc++ -lgmp -lgmpxx -lmpi'
-#  CCLib: -static '-lppl -ltinfo -lppl_ocaml -lstdc++ -lgmp -lgmpxx -llam -llamf77mpi -llammpi++ -llammpio -lmpi -lcamlmpi'
+  BuildDepends: gmp, extlib, ppl, str, unix, threads
+#  CCLib: -lstdc++
+  CCLib: -static '-lppl -ltinfo -lppl_ocaml -lstdc++ -lgmp -lgmpxx'
 
 # -static to have a static compiling (+ ' ' around)
 # I removed -lcamlrun because I wrote "best" instead of "byte"
   CompiledObject: best
+
 
 Test startingcomment
   Command: echo "\n********** STARTING TESTS **********\n"
@@ -55,17 +54,6 @@ Test test4
   Command: echo "\n********** TEST 4 **********\n"; \
       ./bin/imitator examples/Examples/JLR-TACAS13.imi examples/Examples/JLR-TACAS13.v0 -mode cover -PRP -output-result -output-cart -depth-limit 10 -verbose warnings
 
-Test test5
-  Command: echo "\n********** TEST 5 **********\n"; \
-      mpiexec -n 4 ./bin/imitator examples/Flipflop/flipflop.imi examples/Flipflop/flipflop.v0 -mode cover -output-cart -distributed sequential -verbose standard
-
-Test test6
-  Command: echo "\n********** TEST 6 **********\n"; \
-      mpiexec -n 4 ./bin/imitator examples/Flipflop/flipflop.imi examples/Flipflop/flipflop.v0 -mode cover -output-result -output-cart -distributed dynamic -verbose mute
-
 Test finalcomment
   Command: echo "\n********** END TESTS **********\n"
 
-
-# THE MAIN COMMAND TO COMPILE OASIS IS:
-# oasis setup && ocaml setup.ml -configure --enable-tests && ocaml setup.ml -all

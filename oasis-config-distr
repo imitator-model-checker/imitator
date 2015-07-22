@@ -1,0 +1,71 @@
+###############################################################
+#
+#                       IMITATOR
+#
+#  Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
+#  Laboratoire d'Informatique de Paris Nord (Paris 13, France)
+#
+#  _oasis authors: Etienne Andre, Alban Linard
+#  Created:        2013/12/11
+#  Last modified:  2015/07/22
+###############################################################
+
+OASISFormat: 0.3
+Name:        PaTATOR
+Version:     2.7-beta3
+Synopsis:    shortdescription
+Authors:     Etienne Andre et al.
+License:     GPL-3.0
+
+# Handling build number (using Python)
+PreBuildCommand: python gen_build_info.py
+PostBuildCommand: python incrementer.py ; echo "Copying main binary file to bin/patator ..." ; cp _build/src/PaTATOR.native bin/patator
+
+
+Executable patator
+  Path:       .
+  BuildTools: ocamlbuild
+  MainIs:     src/PaTATOR.ml
+  BuildDepends: gmp, extlib, mpi, ppl, str, unix, threads
+  CCLib: -lstdc++
+  # -ltinfo
+#  CCLib: -static '-lppl -ltinfo -lppl_ocaml -lstdc++ -lgmp -lgmpxx -lmpi'
+#  CCLib: -static '-lppl -ltinfo -lppl_ocaml -lstdc++ -lgmp -lgmpxx -llam -llamf77mpi -llammpi++ -llammpio -lmpi -lcamlmpi'
+
+# -static to have a static compiling (+ ' ' around)
+# I removed -lcamlrun because I wrote "best" instead of "byte"
+  CompiledObject: best
+
+Test startingcomment
+  Command: echo "\n********** STARTING TESTS **********\n"
+
+Test tes1
+  Command: echo "\n********** TEST 1 **********\n"; \
+      ./bin/patator examples/Flipflop/flipflop.imi -mode statespace -depth-limit 5
+
+Test test2
+  Command: echo "\n********** TEST 2 **********\n"; \
+      ./bin/patator examples/Flipflop/flipflop.imi examples/Flipflop/flipflop.pi0 -output-trace-set -output-states -output-result -statistics
+
+Test test3
+  Command: echo "\n********** TEST 3 **********\n"; \
+      ./bin/patator examples/Flipflop/flipflop.imi examples/Flipflop/flipflop.v0 -mode cover -output-cart
+
+Test test4
+  Command: echo "\n********** TEST 4 **********\n"; \
+      ./bin/patator examples/Examples/JLR-TACAS13.imi examples/Examples/JLR-TACAS13.v0 -mode cover -PRP -output-result -output-cart -depth-limit 10 -verbose warnings
+
+Test test5
+  Command: echo "\n********** TEST 5 **********\n"; \
+      mpiexec -n 4 ./bin/patator examples/Flipflop/flipflop.imi examples/Flipflop/flipflop.v0 -mode cover -output-cart -distributed sequential -verbose standard
+
+Test test6
+  Command: echo "\n********** TEST 6 **********\n"; \
+      mpiexec -n 4 ./bin/patator examples/Flipflop/flipflop.imi examples/Flipflop/flipflop.v0 -mode cover -output-result -output-cart -distributed dynamic -verbose mute
+
+Test finalcomment
+  Command: echo "\n********** END TESTS **********\n"
+
+
+# THE MAIN COMMAND TO COMPILE OASIS IS:
+# oasis setup && ocaml setup.ml -configure --enable-tests && ocaml setup.ml -all

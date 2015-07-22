@@ -11,7 +11,7 @@
  # Author:        Etienne Andre
  # 
  # Created:       2014/08/18
- # Last modified: 2014/08/18
+ # Last modified: 2015/07/22
  #
 ################################################################
 
@@ -20,8 +20,8 @@ then
   ocaml setup.ml -distclean
 fi
 
-python gen_imitator_nondistr.py \
-&& python gen_oasis_nondistr.py \
+python gen_imitator_distr.py \
+&& python gen_oasis_distr.py \
 && oasis setup \
 && ocaml setup.ml -configure --enable-tests \
 && ocaml setup.ml -all
