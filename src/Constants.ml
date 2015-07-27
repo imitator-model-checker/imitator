@@ -7,14 +7,14 @@
  * Author:        Etienne Andre
  * 
  * Created:       2014/10/24
- * Last modified: 2015/07/22
+ * Last modified: 2015/07/27
  *
  ****************************************************************)
  
 
 let program_name = "IMITATOR"
 
-let version_string = "2.7"
+let version_string = "2.7.1"
 
 let version_name = "Butter Guéméné"
 

@@ -7,7 +7,7 @@
  * Author:        Etienne Andre
  * 
  * Created:       2014/10/24
- * Last modified: 2015/04/12
+ * Last modified: 2015/07/27
  *
  ****************************************************************)
 
@@ -125,6 +125,10 @@ val split : string -> string -> string list
 
 (* 's_of_int i' Return "s" if i > 1, "" otherwise *)
 val s_of_int : int -> string
+
+(** Escape \n & > for use in dot *)
+val escape_string_for_dot : string -> string
+
 
 (****************************************************************)
 (** Useful functions on booleans *)

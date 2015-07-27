@@ -1,4 +1,11 @@
 *******************************************************
+release 2.XXXXX    (XXXXX) FUTURE RELEASE
+
+Options
+- add an option "-output-trace-set-verbose" to print trace set with all information contained in the .states file (i.e., the constraint and the constraint projected onto the parameters)
+
+
+*******************************************************
 release 2.7    (2015-07-22)
 
 Major algorithmic features since 2.6.1

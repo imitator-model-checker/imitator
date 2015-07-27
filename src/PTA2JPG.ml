@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2012/08/24
- * Last modified: 2015/07/19
+ * Last modified: 2015/07/27
  *
  ************************************************************)
 
@@ -35,17 +35,6 @@ let id_of_location automaton_index location_index =
 let string_of_list_of_variables variable_names variables =
 	let variables = List.map variable_names variables in
 	string_of_list_of_string_with_sep "," variables
-
-let escape_string_for_dot str =
-	(** BUG: cannot work with global replace *)
-(*		Str.global_substitute (Str.regexp ">\\|&") (fun s -> if s = ">" then "\\>" else if s = "&" then "\\&" else s)
-			str*)
-(* 		Str.global_replace (Str.regexp "\\(>\\|&\\)") ("\\" ^ "\\(\\1\\)") *)
-	Str.global_replace (Str.regexp "\n") (" \\n ")
-		(Str.global_replace (Str.regexp ">") ("\\>")
-			(Str.global_replace (Str.regexp "&") ("\\&") str)
-		)
-
 
 	
 (* Add a header to the model *)

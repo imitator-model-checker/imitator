@@ -434,10 +434,11 @@ let compute_initial_pi0 () =
 					raise (Failure("V0 does not contain any point multiple of step '" ^ (NumConst.string_of_numconst step) ^"' in some direction."))
 			in
 			(* Assign it to the array *)
-			initial_pi0.(first_dimension) <- local_point;*)
+			initial_pi0.(first_dimension) <- local_point;
 (* 		done; *)
 		(* Set the initial_pi0 *)
 		current_pi0 := Some (initial_pi0)
+		*)
 		
 	| _ -> raise (InternalError("In function 'initial_pi0', the mode should be a cover / border cartography only."))
 	end;

@@ -225,7 +225,7 @@
 
 
 % Current version
-\newcommand{\imitatorversion}{2.7}
+\newcommand{\imitatorversion}{2.7.1}
 \newcommand{\imitatorversionname}{Butter Guéméné}
 	% TODO: add nice picture :-)
 
@@ -1198,7 +1198,7 @@ In \imitator{}, all integers (\ie{} the value of the discrete variables and the 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 This document does not aim at explaining how to install \imitator{}.
-See the installation files available on the website for the most up-to-date information.
+See the installation information available on the website for the most up-to-date information.
 
 Binaries and source code packages are available on \imitator{}'s Web page~\cite{imitator}.
 Several standalone binaries are provided for Linux systems, that require no installation.
@@ -1480,6 +1480,17 @@ Enabling this option may yield a smaller graph, which is useful when generating 
 
 
 %------------------------------------------------------------
+\paragraph{\styleOption{-output-trace-set-verbose} (default: false)}
+%------------------------------------------------------------
+
+In the graphical output of the trace set (see option \styleOption{-output-trace-set}),
+provides very detailed information, by adding to the right of the local locations of the composed \IPTA{} the associated constraint as well.
+In addition, the parametric constraint is printed too.
+Enabling this option will yield a very large graph, and it is useful (and readable) mostly for very small trace sets.
+	% TODO: show examples in the manual
+
+
+%------------------------------------------------------------
 \paragraph{\styleOption{-PRP} (default: false)}
 %------------------------------------------------------------
 Option used to activate \PRP{} or \PRPC{} \cite{ALNS15}.
@@ -1503,12 +1514,14 @@ Translates the input model to a GrML format (used by \CosyVerif{} \cite{AHHKLLP1
 \paragraph{\styleOption{-PTA2JPG} (default: false)}
 %------------------------------------------------------------
 Translates the input model to a graphical, human-readable form (in \texttt{.jpg} format), and exits.
+	% TODO add the graphics of the coffee machine
 
 %------------------------------------------------------------
 \paragraph{\styleOption{-PTA2TikZ} (default: false)}
 %------------------------------------------------------------
 Translates the input model to a \LaTeX{} representation of the model (using the \texttt{tikz} package) without performing any analysis, and exits.
 Note that node positioning is not (much) supported, so may want to edit manually some positions.
+	% TODO refer to the graphics of the coffee machine
 
 %------------------------------------------------------------
 \paragraph{\styleOption{-states-limit} (default: none)}

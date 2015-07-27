@@ -7,7 +7,7 @@
  * Author:        Etienne Andre
  * 
  * Created:       2014/10/24
- * Last modified: 2015/04/12
+ * Last modified: 2015/07/27
  *
  ****************************************************************)
  
@@ -282,6 +282,18 @@ let split sep = Str.split (Str.regexp ("[" ^ sep ^ "]"))
 (* 's_of_int i' Return "s" if i > 1, "" otherwise *)
 let s_of_int i =
 	if i > 1 then "s" else ""
+
+
+(** Escape \n & > for use in dot *)
+let escape_string_for_dot str =
+	(** BUG: cannot work with global replace *)
+(*		Str.global_substitute (Str.regexp ">\\|&") (fun s -> if s = ">" then "\\>" else if s = "&" then "\\&" else s)
+			str*)
+(* 		Str.global_replace (Str.regexp "\\(>\\|&\\)") ("\\" ^ "\\(\\1\\)") *)
+	Str.global_replace (Str.regexp "\n") (" \\n ")
+		(Str.global_replace (Str.regexp ">") ("\\>")
+			(Str.global_replace (Str.regexp "&") ("\\&") str)
+		)
 
 
 

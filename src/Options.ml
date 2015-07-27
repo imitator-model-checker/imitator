@@ -7,7 +7,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Ulrich Kuehne, Etienne Andre
  * Created:       2010
- * Last modified: 2015/07/17
+ * Last modified: 2015/07/27
  *
  ****************************************************************)
  
@@ -88,7 +88,10 @@ class imitator_options =
 		val mutable timed_mode = ref false
 		
 		(* Print graph of reachable states *)
-		val mutable with_dot = ref false
+		val mutable output_trace_set = ref false
+		
+		(* Print graph of reachable states in verbose mode *)
+		val mutable output_trace_set_verbose = ref false
 		
 		(* Keep the source file used for dot *)
 		val mutable with_graphics_source = ref false
@@ -256,7 +259,8 @@ class imitator_options =
 		method timed_mode = !timed_mode
 		method tree = !tree
 		method union = !union
-		method with_dot = !with_dot
+		method output_trace_set = !output_trace_set
+		method output_trace_set_verbose = !output_trace_set_verbose
 		method with_graphics_source = !with_graphics_source
 		method with_log = !with_log
 (* 		method with_parametric_log = !with_parametric_log *)
@@ -443,18 +447,24 @@ class imitator_options =
 				
 				("-output-states", Set with_log, " Generation of the description of all reachable states in a file. Default: false.");
 				
-				("-output-trace-set", Set with_dot, " Trace set under a graphical form (using 'dot'). Default: false.");
+				("-output-trace-set", Set output_trace_set, " Output trace set under a graphical form (using 'dot'). Default: false.");
 				
-				(*** HACK: I didn't find "Unset" constructor and I have no Internet connection to check... ***)
-				("-output-trace-set-nodetails", Unit (fun _ -> fancy := false), " No detailed location information in graphical trace set. Default: false (i.e., with details).");
+				("-output-trace-set-nodetails", Clear fancy, " No detailed location information in graphical trace set. Default: false (i.e., with details).");
 
+				("-output-trace-set-verbose", Unit (fun _ -> output_trace_set := true; output_trace_set_verbose := true), " Output trace set under a graphical form (using 'dot') in verbose mode (print constraints). Default: false.");
+				
 				("-precomputepi0", Set precomputepi0, " Compute the next pi0 before the next reception of a constraint (in PaTATOR mode only). Default: false.");
 
 				("-PRP", Set efim, " Reachability-preservation algorithm mixing IM and EFsynth [ALNS15]. Default: false.");
 				
 				("-PTA2GrML", Unit (fun _ -> pta2gml := true; imitator_mode := Translation), "Translate the model into a GrML program, and exit without performing any analysis. Defaut : 'false'");
 				
-				("-PTA2JPG", Unit (fun _ -> pta2jpg := true; with_dot:= true; imitator_mode := Translation), "Translate the model into a graphics, and exit without performing any analysis. Defaut : 'false'");
+				("-PTA2JPG", Unit (fun _ ->
+					pta2jpg := true;
+					(*** HACK ***)
+					output_trace_set := true;
+					imitator_mode := Translation
+				), "Translate the model into a graphics, and exit without performing any analysis. Defaut : 'false'");
 				
 				("-PTA2TikZ", Unit (fun _ -> pta2tikz := true; imitator_mode := Translation), "Translate the model into LaTeX TikZ code (no positioning yet), and exit without performing any analysis. Defaut : 'false'");
 				
@@ -834,10 +844,16 @@ class imitator_options =
 				print_message Verbose_medium ("No result written into a file (default).")
 			;
 			
-			if !with_dot then
+			if !output_trace_set then
 				print_message Verbose_standard ("The trace set(s) will be generated in a graphical mode.")
 			else
 				print_message Verbose_medium ("No graphical output for trace set(s) (default).")
+			;
+			
+			if !output_trace_set_verbose then
+				print_message Verbose_standard ("The trace set(s) will be generated in a graphical mode with verbose information (with all constraints).")
+			else
+				print_message Verbose_medium ("No verbose graphical output for trace set(s) (default).")
 			;
 			
 			if !fancy then

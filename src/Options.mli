@@ -1,11 +1,11 @@
 (*****************************************************************
  *
- *                     IMITATOR II
+ *                     IMITATOR
  * 
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2012/05/10
- * Last modified: 2015/07/17
+ * Last modified: 2015/07/27
  *
  ****************************************************************)
  
@@ -88,7 +88,8 @@ class imitator_options :
 		method timed_mode : bool
 		method tree : bool
 		method union : bool
-		method with_dot : bool
+		method output_trace_set : bool
+		method output_trace_set_verbose: bool
 		method with_graphics_source : bool
 		method with_log : bool
 (* 		method with_parametric_log : bool *)
