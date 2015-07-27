@@ -1,0 +1,83 @@
+(************************************************************
+ *                      IMITATOR MODEL                      
+ *
+ * A U-PTA constraining two parameters to be equal for AF l4
+ *
+ * Description     : A U-PTA constraining two parameters to be equal for AF l4 (however this is not true for EF l4)
+ * Correctness     : N/A
+ * Source          : own work
+ * Author          : Etienne Andre
+ * Input by        : Etienne Andre
+ *
+ * Created         : 2015/07/27
+ * Last modified   : 2015/07/27
+ *
+ * IMITATOR version: 2.7
+ ************************************************************)
+
+var
+
+(* Clocks *)
+ 	x
+		: clock;
+
+(* Parameters *)
+	p1, p2
+		: parameter;
+
+
+
+(************************************************************)
+  automaton pta
+(************************************************************)
+synclabs: ;
+
+loc l1: while True wait {}
+	when x <= p1 goto l2;
+
+loc l2: while True wait {}
+	when x <= p2 goto l3;
+
+loc l3: while True wait {}
+	when x <= p1 goto l4;
+
+loc l4: while True wait {}
+
+end (* pta *)
+
+
+
+(************************************************************)
+(* Initial state *)
+(************************************************************)
+
+init := True
+	(*------------------------------------------------------------
+	   INITIAL LOCATION
+	  ------------------------------------------------------------*)
+	& loc[pta] = l1
+
+	(*------------------------------------------------------------
+	   INITIAL CLOCKS
+	  ------------------------------------------------------------*)
+	& x = 0
+
+	(*------------------------------------------------------------
+	   PARAMETER CONSTRAINTS
+	  ------------------------------------------------------------*)
+	& p1 >= 0
+	& p2 >= 0
+;
+
+
+(************************************************************)
+(* Property specification *)
+(************************************************************)
+
+(* property := unreachable loc[pta] = l1; *)
+
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end

@@ -1,0 +1,79 @@
+(************************************************************
+ *                      IMITATOR MODEL                      
+ *
+ * A U-PTA with different language for each (integer) parameter valuation
+ *
+ * Description     : A U-PTA with different language for each (integer) parameter valuation. Also note that the number of parametric zones is infinite.
+ * Correctness     : N/A
+ * Source          : [AM15] Language Preservation Problems in Parametric Timed Automata (Etienne Andre, Nicolas Markey) FORMATS 2015
+ * Author          : Etienne Andre and Nicolas Markey
+ * Input by        : Etienne Andre
+ *
+ * Created         : 2015/07/27
+ * Last modified   : 2015/07/27
+ *
+ * IMITATOR version: 2.7
+ ************************************************************)
+
+var
+
+(* Clocks *)
+ 	x1, x2
+		: clock;
+
+(* Parameters *)
+	p
+		: parameter;
+
+
+
+(************************************************************)
+  automaton pta
+(************************************************************)
+synclabs: a, b;
+
+loc l1: while True wait {}
+	when x1 = 1 & x2 <= p sync a do {x1' = 0} goto l1;
+	when x2 <= p sync b goto l2;
+
+loc l2: while True wait {}
+	when True sync b goto l2;
+
+end (* pta *)
+
+
+
+(************************************************************)
+(* Initial state *)
+(************************************************************)
+
+init := True
+	(*------------------------------------------------------------
+	   INITIAL LOCATION
+	  ------------------------------------------------------------*)
+	& loc[pta] = l1
+
+	(*------------------------------------------------------------
+	   INITIAL CLOCKS
+	  ------------------------------------------------------------*)
+	& x1 = 0
+	& x2 = 0
+
+	(*------------------------------------------------------------
+	   PARAMETER CONSTRAINTS
+	  ------------------------------------------------------------*)
+	& p >= 0
+;
+
+
+(************************************************************)
+(* Property specification *)
+(************************************************************)
+
+(* property := unreachable loc[pta] = l1; *)
+
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end
