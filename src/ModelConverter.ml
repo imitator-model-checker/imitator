@@ -10,7 +10,7 @@
  * Author:        Etienne Andre
  * 
  * Created:       2009/09/09
- * Last modified: 2015/07/19
+ * Last modified: 2015/07/30
  *
  ****************************************************************)
 
@@ -2296,6 +2296,14 @@ let abstract_model_of_parsing_structure (parsed_variable_declarations, parsed_au
 	nb_discrete = nb_discrete;
 	nb_parameters = nb_parameters;
 	nb_variables = nb_variables;
+	
+	(* The observer *)
+	observer_pta = observer_automaton;
+	is_observer = (fun automaton_index ->
+		match observer_automaton with
+		| Some pta -> pta = automaton_index
+		| None -> false
+	);
 
 	(* The list of clock indexes *)
 	clocks = clocks;

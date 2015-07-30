@@ -255,9 +255,14 @@ Generation time: " ^ (now()) ^ "\"];"
 	^ "\n generation -> general_info [color=white];"
 
 	
-	^ (string_of_list_of_string_with_sep "\n\n" (
-		List.map (fun automaton_index -> string_of_automaton model automaton_index
-	) model.automata))
+	^ (
+		(* Do not print the observer *)
+		let pta_without_obs = List.filter (fun automaton_index -> not (model.is_observer automaton_index)) model.automata
+		in
+		string_of_list_of_string_with_sep "\n\n" (
+			List.map (fun automaton_index -> string_of_automaton model automaton_index
+		) pta_without_obs)
+	)
 	^ "\n\n/**************************************************/"
 	^ "\n/* Ending general graph */"
 	^ "\n/**************************************************/"

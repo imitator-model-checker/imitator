@@ -8,7 +8,7 @@
  * Author:        Etienne Andre
  * 
  * Created:       2009/09/11
- * Last modified: 2015/07/19
+ * Last modified: 2015/07/30
  *
  ****************************************************************)
 
@@ -197,6 +197,10 @@ type abstract_model = {
 	nb_parameters : int;
 	nb_variables : int;
 	
+	(* The observer *)
+	observer_pta : automaton_index option;
+	is_observer : automaton_index -> bool;
+
 	(* The list of clock indexes *)
 	clocks : clock_index list;
 	(* True for clocks, false otherwise *)
