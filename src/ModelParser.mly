@@ -8,7 +8,7 @@
  * Author:        Etienne Andre
  * 
  * Created       : 2009/09/07
- * Last modified : 2015/07/19
+ * Last modified : 2015/07/30
 ***********************************************/
 
 %{
@@ -557,8 +557,10 @@ pattern:
 	
 	/* sequence a1, ..., an */
 	| CT_SEQUENCE name_nonempty_list { Sequence_acyclic ($2) }
-	/* sequence always a1, ..., an */
-	| CT_SEQUENCE CT_ALWAYS name_nonempty_list { Sequence_cyclic ($3) }
+	| CT_SEQUENCE LPAREN name_nonempty_list RPAREN { Sequence_acyclic ($3) } /* with parentheses */
+	/* always sequence a1, ..., an */
+	| CT_ALWAYS CT_SEQUENCE name_nonempty_list { Sequence_cyclic ($3) }
+	| CT_ALWAYS CT_SEQUENCE LPAREN name_nonempty_list RPAREN { Sequence_cyclic ($4) } /* with parentheses */
 ;
 
 
