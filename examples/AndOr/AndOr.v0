@@ -1,16 +1,20 @@
---****************************************************--
---****************************************************--
---   Laboratoire Specification et Verification
---
---   Modeling of an "AND" and an "OR" logical gate
---   From "Verification of Concurrent Systems with Parametric Delays Using Octahedra" by Clariso and Cortadella
---
---   Modeling: Etienne ANDRE and Laurent FRIBOURG
---
---   Created       : 2010/03/30
---   Last modified : 2013/01/23
---****************************************************--
---****************************************************--
+(************************************************************
+ *                      IMITATOR MODEL                      
+ *
+ * Modeling of an "AND" and an "OR" logical gate
+ *
+ * Description     : Modeling of an "AND" and an "OR" logical gate
+ * Correctness     : Alternating sequence: b- x- a- b+ a+ x+
+ * Source          : From "Verification of Concurrent Systems with Parametric Delays Using Octahedra" (2005) by Clariso and Cortadella; Fig 3a
+ * Author          : Roberto Clariso and Jordi Cortadella
+ * Modeling        : Etienne Andre and Laurent Fribourg
+ * Input by        : Etienne Andre
+ *
+ * Created         : 2008/01
+ * Last modified   : 2015/07/30
+ *
+ * IMITATOR version: 2.7.1
+ ************************************************************)
 
 
 	--- FIRST TRY ---

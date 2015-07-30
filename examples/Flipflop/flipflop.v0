@@ -1,17 +1,20 @@
---****************************************************--
---****************************************************--
---   Laboratoire Specification et Verification
---
---   Modeling of the circuit described in "Verification of timed circuits with symbolic delays" (Clariso -- Cortadella)
---   Non deterministic trace with pi_0 verifying Clariso -- Cortadella's constraints
---
---   Etienne ANDRE and Laurent FRIBOURG
---
---   Created      : 2010/03/24
---   Last modified: 2010/03/24
---****************************************************--
---****************************************************--
-
+(************************************************************
+ *                      IMITATOR MODEL                      
+ *
+ * Modeling of the circuit described in "Verification of timed circuits with symbolic delays" (Clariso -- Cortadella)
+ *
+ * Description     : A flip-flop circuit made of 4 gates
+ * Correctness     : TODO
+ * Source          : "Verification of timed circuits with symbolic delays" (Clariso -- Cortadella); Design Automation Conference, 2004. Proceedings of the ASP-DAC 2004. Asia and South Pacific; DOI: 10.1109/ASPDAC.2004.1337668
+ * Author          : Roberto Clariso and Jordi Cortadella
+ * Modeling        : Etienne Andre and Laurent Fribourg
+ * Input by        : Etienne Andre
+ *
+ * Created         : 2007/11
+ * Last modified   : 2010/03/24
+ *
+ * IMITATOR version: 2.7.1
+ ************************************************************)
 
 
 ----- BAD ONE -----
@@ -31,7 +34,7 @@
 
 
 
--- ----- PI0 IJFCS -----
+-- ----- PI0 IJFCS [ACEF09] -----
 -- 	& tHI=24
 -- 	& tLO=15
 -- 	& tSetup= 10
@@ -45,7 +48,7 @@
 -- 	& dG4_l=3
 -- 	& dG4_u=7
 
------ V0 : dG3_u et dG4_u-----
+----- V0 : dG3_u and dG4_u-----
 	& tHI    = 24
 	& tLO    = 15
 	& tSetup = 10
@@ -59,7 +62,7 @@
 	& dG4_l  = 3
 	& dG4_u  = 3 .. 30 -- 7
 
------ V0 : TOUT-----
+----- V0 : ALL PARAMETRIC-----
 -- 	& tHI    = 0 .. 30 -- 24
 -- 	& tLO    = 0 .. 30 -- 15
 -- 	& tSetup = 0 .. 30 -- 10

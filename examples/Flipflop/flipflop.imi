@@ -1,15 +1,20 @@
---****************************************************--
---****************************************************--
---   Laboratoire Specification et Verification
---
---   Modeling of the circuit described in "Verification of timed circuits with symbolic delays" (Clariso -- Cortadella)
---
---   Etienne ANDRE and Laurent FRIBOURG
---
---   Created      : 2007/11
---   Last modified: 2013/04/09
---****************************************************--
---****************************************************--
+(************************************************************
+ *                      IMITATOR MODEL                      
+ *
+ * Modeling of the circuit described in "Verification of timed circuits with symbolic delays" (Clariso -- Cortadella)
+ *
+ * Description     : A flip-flop circuit made of 4 gates
+ * Correctness     : TODO
+ * Source          : "Verification of timed circuits with symbolic delays" (Clariso -- Cortadella); Design Automation Conference, 2004. Proceedings of the ASP-DAC 2004. Asia and South Pacific; DOI: 10.1109/ASPDAC.2004.1337668
+ * Author          : Roberto Clariso and Jordi Cortadella
+ * Modeling        : Etienne Andre and Laurent Fribourg
+ * Input by        : Etienne Andre
+ *
+ * Created         : 2007/11
+ * Last modified   : 2013/04/09
+ *
+ * IMITATOR version: 2.7.1
+ ************************************************************)
 
 var 	s, ckG1, ckG2, ckG3, ckG4
 		: clock;
@@ -345,38 +350,38 @@ end -- g4
 
 
 
---****************************************************--
---****************************************************--
--- ANALYSIS
---****************************************************--
---****************************************************--
+(************************************************************)
+(* Initial state *)
+(************************************************************)
 
-var init : region;
-
-init := True
-	----------------------
-	-- Initial state
-	----------------------
+init :=
+	(*------------------------------------------------------------*)
+	(*   INITIAL LOCATION *)
+	(*------------------------------------------------------------*)
 	& loc[input] = Input0
 	& loc[g1] = G10011
 	& loc[g2] = G2101
 	& loc[g3] = G30011
 	& loc[g4] = G410
-	& s = 0
+
+	(*------------------------------------------------------------*)
+	(*   INITIAL DISCRETE *)
+	(*------------------------------------------------------------*)
 	& qLevel = 0
 -- 	& ckLevel = 1 -- actually initially CK = 0, then raise to 1, then go back to 0: we are here only interested in the last fall of CK
 
-	----------------------
-	-- Clocks
-	----------------------
+	(*------------------------------------------------------------*)
+	(*   INITIAL CLOCKS *)
+	(*------------------------------------------------------------*)
+	& s = 0
 	& ckG1 >= 0
 	& ckG2 >= 0
 	& ckG3 >= 0
 	& ckG4 >= 0
 
-	----------------------
-	-- Constraints
-	----------------------
+	(*------------------------------------------------------------*)
+	(*   PARAMETER CONSTRAINTS *)
+	(*------------------------------------------------------------*)
 
 	& dG1_l >= 0
 	& dG2_l >= 0
@@ -409,8 +414,6 @@ init := True
 --       & dG4_l <= dG4_u
 --       & dG4_l <= tHold
 
-	
--- 	& False
 
 	----------------------
 	-- Pi0
@@ -429,9 +432,17 @@ init := True
  -- 	& dG4_u  = 7 -- 3 .. 30
 ;
 
+
+(************************************************************)
+(* Property specification *)
+(************************************************************)
+
 (* Not exactly the property that we would like! The real property is qUp and ckDown always occur, and qUp occurs before ckDown *)
 (* property := if qUp then eventually ckDown *)
 property := if ckDown then qUp has happened before;
 
-end
 
+(************************************************************)
+(* The end *)
+(************************************************************)
+end

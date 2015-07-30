@@ -1,19 +1,20 @@
---************************************************************--
---************************************************************--
---
---   Fischer protocol for mutual exclusion (parametric timed version)
---
---   Model described in
---   "Parametric Real-Time Reasoning" (fig. 2)
---   Alur, Henzinger, Vardi (STOC 1993)
---
---   Etienne ANDRE
---   Laboratoire d'Informatique de Paris Nord
---
---                                Created : 2011/11/25
---                          Last modified : 2015/05/15
---************************************************************--
---************************************************************--
+(************************************************************
+ *                      IMITATOR MODEL                      
+ *
+ * Fischer protocol for mutual exclusion (parametric timed version)
+ *
+ * Description     : Fischer protocol for mutual exclusion (parametric timed version). Modeled exactly as in [AHV93] although smarter modeling could have been done thanks to the IMITATOR syntax.
+ * Correctness     : No two processes in the critical section (i.e., in P1_4 and P2_4 at the same time)
+ * Source          : Model described in "Parametric Real-Time Reasoning" (fig. 2) Alur, Henzinger, Vardi (STOC 1993)
+ * Author          : Alur, Henzinger, Vardi
+ * Modeling        : Alur, Henzinger, Vardi
+ * Input by        : Etienne Andre
+ *
+ * Created         : 2011/11/25
+ * Last modified   : 2015/07/30
+ *
+ * IMITATOR version: 2.7.1
+ ************************************************************)
 
 
 var
@@ -113,15 +114,10 @@ loc P2_4: while True wait {}
 end -- P2
 
 
---************************************************************--
---************************************************************--
--- ANALYSIS
---************************************************************--
---************************************************************--
-
-var init, bad, postreg : region;
-
-init := True
+(************************************************************)
+(* Initial state *)
+(************************************************************)
+init :=
 	----------------------
 	-- Initial locations
 	----------------------
@@ -147,16 +143,5 @@ init := True
 
 ;
 
-(*postreg := reach forward from init endreach;
-
-print(hide non_parameters in postreg endhide);
-
-bad := loc[P1] = P1_4 & loc[P2] = P2_4
-;
-
-prints "INTERSECTION";
-
-print(hide non_parameters in (postreg & bad) endhide);
-*)
 
 end

@@ -1,15 +1,19 @@
 (************************************************************
- *                         IMITATOR
+ *                      IMITATOR MODEL                      
  *
  * Model of a small acyclic asynchronous circuit
- * "Preserving Partial Order Runs in Parametric Time Petri Nets"
- * ACSD 2015
- * Etienne Andre, Thomas Chatain, Cesar Rodriguez
  *
- * Author          : Etienne Andre
+ * Description     : Model of a small acyclic asynchronous circuit
+ * Correctness     : Q must not rise
+ * Source          : "Preserving Partial Order Runs in Parametric Time Petri Nets"  (ACSD 2015), Fig. 1
+ * Author          : Etienne Andre, Thomas Chatain, Cesar Rodriguez
+ * Modeling        : Etienne Andre, Thomas Chatain, Cesar Rodriguez
+ * Input by        : Etienne Andre
+ *
  * Created         : 2015/01/29
- * Last modified   : 2015/04/09
- * IMITATOR version: 2.6.3
+ * Last modified   : 2015/07/30
+ *
+ * IMITATOR version: 2.7.1
  ************************************************************)
 
 var 	ckNot1, ckNot2, ckAnd, ckEnv1, ckEnv2
@@ -210,6 +214,7 @@ init := True
 	(*------------------------------------------------------------
 	   PARAMETER VALUATION
 	  ------------------------------------------------------------*)
+	  
 (*(*	& dNot1_l	= 6
 	& dNot1_u	= 7
 	& dNot2_l	= 1
@@ -224,4 +229,16 @@ init := True
 	
 ;
 
+
+(************************************************************)
+(* Property specification *)
+(************************************************************)
+
+property := unreachable loc[AndGate] = And111;
+
+
+(************************************************************)
+(* The end *)
+(************************************************************)
 end
+

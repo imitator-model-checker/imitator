@@ -4,7 +4,7 @@
  * Coffee vending machine with drinker
  *
  * Description     : Coffee vending machine; a single button is used to wake the machine up, and to add sugar. Then a cup, and coffee are delivered after a (parametric) time.
-	Drinker: 
+	Drinker: [ongoing work]
  * Correctness     : Many possibilities (e.g., "it is possible to get a coffee")
  * Source          : Own work
  * Author          : Etienne Andre

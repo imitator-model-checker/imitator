@@ -1,16 +1,22 @@
---****************************************************--
---****************************************************--
---   Laboratoire Specification et Verification
---
---   BRP (Bounded Retransmission Protocol)
---   after "The Bounded Retransmission Protocol Must Be on Time!"
---
---   Etienne ANDRE and Laurent FRIBOURG
---
---   Created       :    ? (< 09/2007)
---   Last modified : 2015/07/19
---****************************************************--
---****************************************************--
+(************************************************************
+ *                      IMITATOR MODEL                      
+ *
+ * BRP (Bounded Retransmission Protocol)
+ *
+ * Description     : Bounded Retransmission Protocol [version slightly modified]
+ * Correctness     : V[] ((S.error ^ x = SYNC) => R.new_file)
+                     V [] (R.firstsafe_frame => rb1 = 1)
+ * Source          : "The Bounded Retransmission Protocol Must Be on Time!"
+ * Author          : Pedro R. D'Argenio , Joost-Pieter Katoen , Theo C. Ruys , G. Jan Tretmans
+ * Modeling        : ?? and Laurent Fribourg
+ * Input by        : ?? and Etienne Andre
+ *
+ * Created         : ? (< 09/2007)
+ * Last modified   : 2015/07/19
+ *
+ * IMITATOR version: 2.7.1
+ ************************************************************)
+ 
 
 var     x,ys, yr,z,w, u,v
            : clock;
@@ -278,10 +284,10 @@ loc transRC: while yr>=0 wait {}
 end --Rclient
 
 
--- analysis commands
 
-var init : region;
-
+(************************************************************)
+(* Initial state *)
+(************************************************************)
 init := loc[sender]=idleS
 	& loc[receiver]=new_file
 	& loc[channelK]=startK
@@ -296,15 +302,6 @@ init := loc[sender]=idleS
 
 	-- & TR>=4T1+3TD	--TR=SYNC>4T1+3TD
 	-- & T1>2TD & TR<=SYNC & TD>0 
-
-	---START PI0---
-(* 	& MAX  = 2 *)
-(* 	& N    = 2  *)
--- -- 	& TD   = 1
--- 	& T1   = 3
--- -- 	& TR   = 16
--- 	& SYNC = 17
-	---END PI0---
 
 (*	& MAX > 0
 	& N > 0*)
@@ -333,4 +330,16 @@ init := loc[sender]=idleS
 
 ;
 
+
+(************************************************************)
+(* Property specification *)
+(************************************************************)
 property := unreachable loc[receiver] = FailureR;
+
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end
+
+

@@ -1,73 +1,73 @@
 (************************************************************
  *                      IMITATOR MODEL                      
  *
- * Empty template of a case study
+ * Small problem to cook noodles
  *
- * Description     : TODO
- * Correctness     : TODO
- * Source          : TODO
- * Author          : ME
- * Modeling        : ME
- * Input by        : ME
+ * Description     : Toy example to cook noodles
+ * Correctness     : The water must not boil over [in fact, no parameter valuation can prevent this, because the timer is not necessarily set from the beginning!]
+ * Source          : "SITH" course final examination at Institut Galilée, Université Paris 13 (2013-2014)
+ * Author          : Étienne André
+ * Modeling        : Étienne André
+ * Input by        : Étienne André
  *
- * Created         : 2015/01/01
+ * Created         : 2014/03/21
  * Last modified   : 2015/07/30
  *
  * IMITATOR version: 2.7.1
  ************************************************************)
 
-var
-
-(* Clocks *)
- 	x
+var 	xPot, xTimer
 		: clock;
-
-(* Discrete *)
-	i
-		: discrete;
-
-(* Parameters *)
-	p
+		
+	dPot, dTimer
 		: parameter;
 
 
 
 (************************************************************)
-  automaton pta
+  automaton system
 (************************************************************)
-synclabs: a;
+synclabs: startTimer, ring, boilover, miam;
+initially heating;
 
-loc l1: while True wait {}
-	when x = 1 sync a do {x' = 0} goto l1;
+loc heating: while xPot <= dPot wait {}
+	when True do {xTimer' = 0} sync startTimer goto ticking;
+	when xPot = dPot sync boilover goto catastrophe;
 
-end (* pta *)
+loc ticking: while xPot <= dPot & xTimer <= dTimer wait {}
+	when xTimer = dTimer sync ring goto cooked;
+	when xPot = dPot sync boilover goto catastrophe;
+
+loc cooked: while xPot <= dPot wait {}
+	when xPot = dPot sync miam goto eating;
+
+loc eating: while True wait {}
+
+loc catastrophe: while True wait {}
+end (* system *)
 
 
 
 (************************************************************)
 (* Initial state *)
 (************************************************************)
-
 init :=
 	(*------------------------------------------------------------*)
 	(*   INITIAL LOCATION *)
 	(*------------------------------------------------------------*)
-	& loc[pta] = l1
-
-	(*------------------------------------------------------------*)
-	(*   INITIAL DISCRETE *)
-	(*------------------------------------------------------------*)
-	& i = 0
+	& loc[system] = heating
 
 	(*------------------------------------------------------------*)
 	(*   INITIAL CLOCKS *)
 	(*------------------------------------------------------------*)
-	& x = 0
-
+	& xPot = 0
+	& xTimer = 0
+	
 	(*------------------------------------------------------------*)
 	(*   PARAMETER CONSTRAINTS *)
 	(*------------------------------------------------------------*)
-	& p >= 0
+	& dPot >= 0
+	& dTimer >= 0
 ;
 
 
@@ -75,7 +75,7 @@ init :=
 (* Property specification *)
 (************************************************************)
 
-(* property := unreachable loc[pta] = l1; *)
+property := unreachable loc[system] = catastrophe;
 
 
 (************************************************************)

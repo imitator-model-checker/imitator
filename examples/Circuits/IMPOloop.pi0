@@ -1,15 +1,19 @@
 (************************************************************
- *                         IMITATOR
+ *                      IMITATOR MODEL                      
  *
- * Model of a small asynchronous circuit with a loop
- * "Preserving Partial Order Runs in Parametric Time Petri Nets"
- * ACSD 2015
- * Etienne Andre, Thomas Chatain, Cesar Rodriguez
+ * Model of a small acyclic asynchronous circuit
  *
- * Author          : Etienne Andre
+ * Description     : Model of a small acyclic asynchronous circuit
+ * Correctness     : Q must not rise
+ * Source          : "Preserving Partial Order Runs in Parametric Time Petri Nets"  (ACSD 2015), Fig. 7
+ * Author          : Etienne Andre, Thomas Chatain, Cesar Rodriguez
+ * Modeling        : Etienne Andre, Thomas Chatain, Cesar Rodriguez
+ * Input by        : Etienne Andre
+ *
  * Created         : 2015/01/29
- * Last modified   : 2015/01/29
- * IMITATOR version: 2.6.2
+ * Last modified   : 2015/07/30
+ *
+ * IMITATOR version: 2.7.1
  ************************************************************)
 
 

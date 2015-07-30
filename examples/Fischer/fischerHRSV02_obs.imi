@@ -1,16 +1,22 @@
---************************************************************--
---************************************************************--
---
---   Fischer's mutual exclusion protocol
---
---   From "Linear Parametric Model Checking of Timed Automata"
---                   Hune, Romijn, Stoelinga, Vaandrager, 2002
---
---                                Created : 2013/12/10
---            Fork from fischerHRSV02.imi : 2014/04/08
---                          Last modified : 2014/04/08
---************************************************************--
---************************************************************--
+(************************************************************
+ *                      IMITATOR MODEL                      
+ *
+ * Fischer's mutual exclusion protocol
+ *
+ * Description     : Fischer's mutual exclusion protocol
+ * Correctness     : No two processes in the mutual exclusion
+ * Source          : From "Linear Parametric Model Checking of Timed Automata" Hune, Romijn, Stoelinga, Vaandrager, 2002
+ * Author          : Hune, Romijn, Stoelinga, Vaandrager
+ * Modeling        : Hune, Romijn, Stoelinga, Vaandrager
+ * Input by        : Etienne Andre
+ *
+ * Created         : 2013/12/10
+ * Fork from fischerHRSV02.imi : 2014/04/08
+ * Last modified   : 2015/07/30
+ *
+ * IMITATOR version: 2.7.1
+ ************************************************************)
+
 
 var 
 	-- P1's clock
@@ -27,6 +33,8 @@ var
 	min_delay = 3, max_delay,
 		: parameter;
 
+		
+
 --************************************************************--
 automaton pta_1
 --************************************************************--
@@ -34,8 +42,7 @@ synclabs: enter_1, leave_1;
 
 loc start_1: while x_1 <= max_rw wait {}
 	(* Actually lock != 0 *)
-	when lock = 1 & x_1 > min_rw do {x_1' = 0} goto start_1;
-	when lock = 2 & x_1 > min_rw do {x_1' = 0} goto start_1;
+	when lock > 0 & x_1 > min_rw do {x_1' = 0} goto start_1;
 
 	when lock = 0 & x_1 > min_rw do {x_1' = 0} goto set_1;
 
@@ -64,8 +71,7 @@ synclabs: enter_2, leave_2;
 
 loc start_2: while x_2 <= max_rw wait {}
 	(* Actually lock != 0 *)
-	when lock = 1 & x_2 > min_rw do {x_2' = 0} goto start_2;
-	when lock = 2 & x_2 > min_rw do {x_2' = 0} goto start_2;
+	when lock > 0 & x_2 > min_rw do {x_2' = 0} goto start_2;
 
 	when lock = 0 & x_2 > min_rw do {x_2' = 0} goto set_2;
 

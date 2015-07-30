@@ -1,4 +1,21 @@
--- GOT FROM ROMAIN 2010/04/23
+(************************************************************
+ *                      IMITATOR MODEL                      
+ *
+ * The Bang&Olufsen protocol
+ *
+ * Description     : TODO; derived from a HyTech model
+ * Correctness     : TODO
+ * Source          : TODO
+ * Author          : ?
+ * Modeling        : ?
+ * Input by        : Romain Soulat
+ *
+ * Created         : < 2010/04/23
+ * Last modified   : 2015/07/30
+ *
+ * IMITATOR version: 2.7.1
+ ************************************************************)
+
 
 var 
 	
@@ -26,8 +43,14 @@ var
 	A_c, B_c
 	: clock;
 
-	t781, t40, t50000, t25000
-	: parameter;
+(*	t781, t40, t50000, t25000
+	: parameter;*)
+	t781 = 781,
+	t40 = 40,
+	t50000 = 50000,
+	t25000 = 25000
+	: constant;
+
 
 
 automaton bus
@@ -389,15 +412,15 @@ end
 
 automaton SUPER_OBSERVER
 
-	synclabs: ERREUR_DECOUVERTE;
+	synclabs: ERROR_FOUND;
 
 	initially No_Error;
 
 	loc No_Error : while True wait {}
-						when  A_eof=1 & A_diff=1  sync ERREUR_DECOUVERTE goto Error;
-						when  A_eof=1 & B_res=0   sync ERREUR_DECOUVERTE goto Error;
-						when  B_eof=1 & B_diff=1  sync ERREUR_DECOUVERTE goto Error;
-						when  B_eof=1 & A_res=0   sync ERREUR_DECOUVERTE goto Error;
+						when  A_eof=1 & A_diff=1  sync ERROR_FOUND goto Error;
+						when  A_eof=1 & B_res=0   sync ERROR_FOUND goto Error;
+						when  B_eof=1 & B_diff=1  sync ERROR_FOUND goto Error;
+						when  B_eof=1 & A_res=0   sync ERROR_FOUND goto Error;
 
 	loc Error : 	while True wait {}
 
@@ -405,8 +428,10 @@ end
 
 
 
-var
-  init : region;
+
+(************************************************************)
+(* Initial state *)
+(************************************************************)
 
 init  :=
 	  loc[bus]               = c_analyze
@@ -420,10 +445,10 @@ init  :=
 	& loc[Observer_B]        = compare
 	& loc[SUPER_OBSERVER]    = No_Error
 
-	& t781   = 781
+(*	& t781   = 781
 	& t40    = 40
 	& t50000 = 50000
-	& t25000 = 25000
+	& t25000 = 25000*)
 
 -- 	& t781   = 3
 -- 	& t40    = 2
@@ -434,9 +459,20 @@ init  :=
 
 
 
-	;
+;
 
 -- final_reg := loc[Sender_A]=hold;
 -- reached := reach forward from init_reg endreach;
 -- print trace to final_reg using reached;
 
+(************************************************************)
+(* Property specification *)
+(************************************************************)
+
+property := unreachable loc[SUPER_OBSERVER] = Error;
+
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end

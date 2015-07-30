@@ -1,4 +1,21 @@
--- GOT FROM ROMAIN 2010/04/23
+(************************************************************
+ *                      IMITATOR MODEL                      
+ *
+ * The Bang&Olufsen protocol
+ *
+ * Description     : TODO; derived from a HyTech model
+ * Correctness     : TODO
+ * Source          : TODO
+ * Author          : ?
+ * Modeling        : ?
+ * Input by        : Romain Soulat
+ *
+ * Created         : < 2010/04/23
+ * Last modified   : 2015/07/30
+ *
+ * IMITATOR version: 2.7.1
+ ************************************************************)
+ 
 	& t781   = 781
 	& t40    = 40
 	& t50000 = 50000
