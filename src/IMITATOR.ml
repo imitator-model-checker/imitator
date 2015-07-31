@@ -105,6 +105,13 @@ if debug_mode_greater Verbose_total then
 
 
 (**************************************************)
+(* Debug print: property *)
+(**************************************************)
+if debug_mode_greater Verbose_low then
+	print_message Verbose_low ("\nProperty:\n" ^ (ModelPrinter.string_of_property model model.user_property) ^ "\n");
+
+
+(**************************************************)
 (* Case distributed *)
 (**************************************************)
 (*** WARNING:  Do not modify the following lines! (used by an external script to compile the non-distributed version of IMITATOR) ***)

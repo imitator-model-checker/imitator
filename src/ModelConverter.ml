@@ -1,4 +1,4 @@
-(*****************************************************************
+(*************************************************************
  *
  *                       IMITATOR
  * 
@@ -10,16 +10,16 @@
  * Author:        Etienne Andre
  * 
  * Created:       2009/09/09
- * Last modified: 2015/07/30
+ * Last modified: 2015/07/31
  *
- ****************************************************************)
+ ************************************************************)
 
 
 
 
-(****************************************************************)
+(************************************************************)
 (** Modules *)
-(****************************************************************)
+(************************************************************)
 open Exceptions
 open CamlUtilities
 open ImitatorUtilities
@@ -29,9 +29,9 @@ open AbstractModel
 open ModelPrinter
 
 
-(****************************************************************)
+(************************************************************)
 (** Exceptions *)
-(****************************************************************)
+(************************************************************)
 (* When checking pi0 *)
 exception InvalidPi0
 
@@ -42,18 +42,18 @@ exception False_exception
 exception String_not_found of string*)
 
 
-(*--------------------------------------------------*)
+(*------------------------------------------------------------*)
 (* Convert a ParsingStructure.tile_nature into a AbstractModel.tile_nature *)
-(*--------------------------------------------------*)
+(*------------------------------------------------------------*)
 let convert_tile_nature = function
 	| ParsingStructure.Good -> AbstractModel.Good
 	| ParsingStructure.Bad -> AbstractModel.Bad
 	| ParsingStructure.Unknown -> AbstractModel.Unknown
 
 
-(*--------------------------------------------------*)
+(*------------------------------------------------------------*)
 (* Convert a ParsingStructure.linear_expression into an array of coef and constant *)
-(*--------------------------------------------------*)
+(*------------------------------------------------------------*)
 let array_of_coef_of_linear_expression index_of_variables constants linear_expression =
 	(* Create an array of coef *)
 	let array_of_coef = Array.make (Hashtbl.length index_of_variables) NumConst.zero in
@@ -104,9 +104,9 @@ let array_of_coef_of_linear_expression index_of_variables constants linear_expre
 	array_of_coef, !constant
 
 
-(*--------------------------------------------------*)
+(*------------------------------------------------------------*)
 (* Convert an array of variable coef into a linear term *)
-(*--------------------------------------------------*)
+(*------------------------------------------------------------*)
 let linear_term_of_array (array_of_coef, constant) =
 	(* Create an empty list of members *)
 	let members = ref [] in
@@ -121,17 +121,17 @@ let linear_term_of_array (array_of_coef, constant) =
 	LinearConstraint.make_pxd_linear_term !members constant
 	
 
-(*--------------------------------------------------*)
+(*------------------------------------------------------------*)
 (* Direct conversion of a ParsingStructure.linear_expression into a Linear_constraint.linear_term *)
-(*--------------------------------------------------*)
+(*------------------------------------------------------------*)
 let linear_term_of_linear_expression index_of_variables constants linear_expression =
 	let array_of_coef, constant = array_of_coef_of_linear_expression index_of_variables constants linear_expression in
 	linear_term_of_array (array_of_coef, constant)
 
 
-(*--------------------------------------------------*)
+(*------------------------------------------------------------*)
 (* Perform the substraction of 2 NumConst array of same size *)
-(*--------------------------------------------------*)
+(*------------------------------------------------------------*)
 let sub_array array1 array2 =
 	(* Create the result *)
 	let result = Array.make (Array.length array1) NumConst.zero in
@@ -144,9 +144,9 @@ let sub_array array1 array2 =
 	result
 
 
-(*--------------------------------------------------*)
+(*------------------------------------------------------------*)
 (* Convert a ParsingStructure.linear_constraint into a Constraint.linear_inequality *)
-(*--------------------------------------------------*)
+(*------------------------------------------------------------*)
 let linear_inequality_of_linear_constraint index_of_variables constants (le1, relop, le2) =
 	(* Get the array of variables and constant associated to the linear terms *)
 	let array1, constant1 = array_of_coef_of_linear_expression index_of_variables constants le1 in
@@ -215,9 +215,9 @@ let linear_inequality_of_linear_constraint index_of_variables constants (le1, re
 (* (Constraint.substract_linear_terms lt1 lt2), Constraint.Op_g *)
 
 
-(*--------------------------------------------------*)
+(*------------------------------------------------------------*)
 (* Convert a ParsingStructure.convex_predicate into a Constraint.linear_constraint *)
-(*--------------------------------------------------*)
+(*------------------------------------------------------------*)
 let linear_constraint_of_convex_predicate index_of_variables constants convex_predicate =
 	try(
 	(* Compute a list of inequalities *)
@@ -233,13 +233,13 @@ let linear_constraint_of_convex_predicate index_of_variables constants convex_pr
 	) with False_exception -> LinearConstraint.pxd_false_constraint ()
 
 
-(****************************************************************)
+(************************************************************)
 (** Functions to get the variable names from the parsing structure *)
-(****************************************************************)
+(************************************************************)
 
-(*--------------------------------------------------*)
+(*------------------------------------------------------------*)
 (* Get all (possibly identical) names of variables in the header *)
-(*--------------------------------------------------*)
+(*------------------------------------------------------------*)
 let get_declared_variable_names variable_declarations =
 	let get_variables_and_constants =
 		List.fold_left (fun (current_list, constants) (name, possible_value) ->
@@ -268,26 +268,26 @@ let get_declared_variable_names variable_declarations =
 	(clocks, discrete, parameters, constants, unassigned_constants)
 
 
-(*--------------------------------------------------*)
+(*------------------------------------------------------------*)
 (* Get all (possibly identical) names of automata *)
-(*--------------------------------------------------*)
+(*------------------------------------------------------------*)
 let get_declared_automata_names =
 	List.map (fun (automaton_name, _, _) -> automaton_name)
 
-(*--------------------------------------------------*)
+(*------------------------------------------------------------*)
 (* Get all (all different) names of synclabs *)
-(*--------------------------------------------------*)
+(*------------------------------------------------------------*)
 let get_declared_synclabs_names =
 	List.fold_left (fun synclabs_names (_, synclabs, _) -> list_union synclabs_names synclabs) []
 
 
-(****************************************************************)
+(************************************************************)
 (** Verification functions *)
-(****************************************************************)
+(************************************************************)
 
-(*--------------------------------------------------*)
+(*------------------------------------------------------------*)
 (* Check that variable names are all different, return false otherwise; warns if a variable is defined twice as the same type *)
-(*--------------------------------------------------*)
+(*------------------------------------------------------------*)
 let check_variable_names clock_names discrete_names parameters_names constants =
 	(* Warn if a variable is defined twice as the same type *)
 	let warn_for_multiply_defined_variables list_of_variables =
@@ -327,9 +327,9 @@ let check_variable_names clock_names discrete_names parameters_names constants =
 	check1 && check2 && check3 && check4 && check5 && check6
 
 
-(*--------------------------------------------------*)
+(*------------------------------------------------------------*)
 (* Check that the names of automata are all different; return false otherwise *)
-(*--------------------------------------------------*)
+(*------------------------------------------------------------*)
 let check_declared_automata_names automata_names =
 	(* Compute the multiply defined variables *)
 	let multiply_defined_names = elements_existing_several_times automata_names in
@@ -339,9 +339,9 @@ let check_declared_automata_names automata_names =
 		| _ -> List.iter (fun variable_name -> print_error ("Several automata have name " ^ variable_name ^ ".")) multiply_defined_names; false
 
 
-(*--------------------------------------------------*)
+(*------------------------------------------------------------*)
 (* Check that all locations of a given automaton are different *)
-(*--------------------------------------------------*)
+(*------------------------------------------------------------*)
 let all_locations_different = 
 	(* Check for every automaton *)
 	List.fold_left
@@ -357,18 +357,18 @@ let all_locations_different =
 	true
 
 
-(*--------------------------------------------------*)
+(*------------------------------------------------------------*)
 (* Check that all variables are defined in a linear_term *)
-(*--------------------------------------------------*)
+(*------------------------------------------------------------*)
 let check_linear_term variable_names constants = function
 	| Constant _ -> true
 	| Variable (_, variable_name) -> if not (List.mem variable_name variable_names) && not (Hashtbl.mem constants variable_name) then(
 		print_error ("The variable '" ^ variable_name ^ "' used in the model was not declared."); false
 		) else true
 
-(*--------------------------------------------------*)
+(*------------------------------------------------------------*)
 (* Check that all variables are defined in a linear_expression *)
-(*--------------------------------------------------*)
+(*------------------------------------------------------------*)
 let rec check_linear_expression variable_names constants = function
 	| Linear_term linear_term -> check_linear_term variable_names constants linear_term
 	| Linear_plus_expression (linear_expression, linear_term)
@@ -377,9 +377,9 @@ let rec check_linear_expression variable_names constants = function
 		-> evaluate_and (check_linear_expression variable_names constants linear_expression) (check_linear_term variable_names constants linear_term)
 
 
-(*--------------------------------------------------*)
+(*------------------------------------------------------------*)
 (* Check that all variables are defined in a linear_constraint *)
-(*--------------------------------------------------*)
+(*------------------------------------------------------------*)
 let check_linear_constraint variable_names constants = function
 	| True_constraint -> true
 	| False_constraint -> true
@@ -388,9 +388,9 @@ let check_linear_constraint variable_names constants = function
 		(check_linear_expression variable_names constants linear_expression2)
 
 
-(*--------------------------------------------------*)
+(*------------------------------------------------------------*)
 (* Check that all variables are defined in a convex predicate *)
-(*--------------------------------------------------*)
+(*------------------------------------------------------------*)
 let check_convex_predicate variable_names constants =
 	List.fold_left
 	(fun all_defined linear_constraint ->
@@ -398,9 +398,9 @@ let check_convex_predicate variable_names constants =
 	)
 	true
 
-(*--------------------------------------------------*)
+(*------------------------------------------------------------*)
 (* Generic function to test something in linear expressions *)
-(*--------------------------------------------------*)
+(*------------------------------------------------------------*)
 let rec check_f_in_linear_expression f index_of_variables type_of_variables constants = function
 	| Linear_term linear_term ->
 		f index_of_variables type_of_variables constants linear_term
@@ -412,9 +412,9 @@ let rec check_f_in_linear_expression f index_of_variables type_of_variables cons
 	&& f index_of_variables type_of_variables constants linear_term
 
 
-(*--------------------------------------------------*)
+(*------------------------------------------------------------*)
 (* Check that a linear expression contains only discrete variables and constants *)
-(*--------------------------------------------------*)
+(*------------------------------------------------------------*)
 let only_discrete_in_linear_term index_of_variables type_of_variables constants = function
 	| Constant _ -> true
 	| Variable (_, variable_name) ->
@@ -427,9 +427,9 @@ let only_discrete_in_linear_term index_of_variables type_of_variables constants 
 
 let only_discrete_in_linear_expression = check_f_in_linear_expression only_discrete_in_linear_term
 
-(*--------------------------------------------------*)
+(*------------------------------------------------------------*)
 (* Check that a linear expression contains no variables (neither discrete nor clock) *)
-(*--------------------------------------------------*)
+(*------------------------------------------------------------*)
 let no_variables_in_linear_term index_of_variables type_of_variables constants = function
 	| Constant _ -> true
 	| Variable (_, variable_name) ->
@@ -444,9 +444,9 @@ let no_variables_in_linear_expression = check_f_in_linear_expression no_variable
 
 
 
-(*--------------------------------------------------*)
+(*------------------------------------------------------------*)
 (* Check that an update is well formed *)
-(*--------------------------------------------------*)
+(*------------------------------------------------------------*)
 let check_update index_of_variables type_of_variables variable_names constants automaton_name (variable_name, linear_expression) =
 	(* Get the index of the variable *)
 	print_message Verbose_total ("              Checking one update");
@@ -489,18 +489,18 @@ let check_update index_of_variables type_of_variables variable_names constants a
 	)
 
 
-(*--------------------------------------------------*)
+(*------------------------------------------------------------*)
 (* Check that a sync is well formed *)
-(*--------------------------------------------------*)
+(*------------------------------------------------------------*)
 let check_sync sync_name_list automaton_name = function
 	| Sync sync_name ->  if not (List.mem sync_name sync_name_list) then (
 		print_error ("The sync label '" ^ sync_name ^ "' used in automaton '" ^ automaton_name ^ "' was not declared for this automaton."); false)
 		else true
 	| NoSync -> true
 
-(*--------------------------------------------------*)
+(*------------------------------------------------------------*)
 (* Check that a sync is used in all the automata where it is declared *)
-(*--------------------------------------------------*)
+(*------------------------------------------------------------*)
 let synclab_used_everywhere automata synclab_name =
 	(* Try to find the synclab in all the automaton where it is declared *)
 	try(
@@ -526,9 +526,9 @@ let synclab_used_everywhere automata synclab_name =
 	) with Not_found -> false
 
 
-(*--------------------------------------------------*)
+(*------------------------------------------------------------*)
 (* Check that all variables mentioned in a list of stopwatches exist and are clocks *)
-(*--------------------------------------------------*)
+(*------------------------------------------------------------*)
 let check_stopwatches index_of_variables type_of_variables stopwatches =
 	let ok = ref true in
 	List.iter (fun stopwatch -> 
@@ -547,9 +547,9 @@ let check_stopwatches index_of_variables type_of_variables stopwatches =
 	!ok
 
 
-(*--------------------------------------------------*)
+(*------------------------------------------------------------*)
 (* Check that the automata are well-formed *)
-(*--------------------------------------------------*)
+(*------------------------------------------------------------*)
 let check_automata index_of_variables type_of_variables variable_names index_of_automata locations_per_automaton constants automata =
 	let well_formed = ref true in
 
@@ -614,9 +614,9 @@ let check_automata index_of_variables type_of_variables variable_names index_of_
 	!well_formed
 
 
-(*--------------------------------------------------*)
+(*------------------------------------------------------------*)
 (* Check that the init_definition are well-formed *)
-(*--------------------------------------------------*)
+(*------------------------------------------------------------*)
 let check_init discrete variable_names constants index_of_variables type_of_variables automata automata_names index_of_automata locations_per_automaton init_definition observer_automaton =
 	let well_formed = ref true in
 	(* Check that (automaton / location / variable) names exist in each predicate *)
@@ -763,43 +763,321 @@ let check_init discrete variable_names constants index_of_variables type_of_vari
 	discrete_values_pairs, !well_formed
 
 
-(*--------------------------------------------------*)
+
+
+(************************************************************)
+(** Verification functions dedicated to property declaration *)
+(************************************************************)
+
+(*------------------------------------------------------------*)
+(* Local functions checking existence of a name in property specifications
+ * May print warnings or errors
+ *)
+(*------------------------------------------------------------*)
+let check_automaton_name index_of_automata automaton_name =
+	if not (Hashtbl.mem index_of_automata automaton_name)
+	then (
+		print_error ("The automaton name '" ^ automaton_name ^ "' used in the correctness property does not exist.");
+		false
+	)
+	else true
+
+(*------------------------------------------------------------*)
+let check_location_name index_of_locations automaton_index automaton_name location_name =
+	if not (Hashtbl.mem index_of_locations.(automaton_index) location_name)
+	then (
+		print_error ("The location name '" ^ location_name ^ "' used in the correctness property does not exist in automaton '" ^ automaton_name ^ "'.");
+		false
+	)
+	else true
+
+(*------------------------------------------------------------*)
+let check_action_name index_of_actions action_name =
+	if not (Hashtbl.mem index_of_actions action_name)
+	then (
+		print_error ("The action '" ^ action_name ^ "' used in the correctness property does not exist in this model.");
+		false
+	)
+	else true
+
+
+(*------------------------------------------------------------*)
+(* Check a list of local location declaration (i.e., of the form 'loc[automaton] = location')
+ * Return a list of unreachable_location, and a Boolean encoding whether all checks passed
+ * May print warnings or errors
+ *)
+(*------------------------------------------------------------*)
+let check_and_convert_unreachable_local_locations index_of_automata index_of_locations parsed_unreachable_locations =
+	(* Create a hash table to check for double declarations *)
+	let hashtable = Hashtbl.create (Hashtbl.length index_of_automata) in
+	
+	(* Global check *)
+	let checks_passed = ref true in
+	
+	(* Iterate on parsed_unreachable_locations and check for names *)
+	List.iter(fun parsed_unreachable_predicate ->
+		let automaton_name , location_name =
+		match parsed_unreachable_predicate with
+		| Parsed_unreachable_loc (automaton_name , location_name) -> automaton_name , location_name
+		| _ -> raise (InternalError("Expecting a Parsed_unreachable_loc, which should have been checked earlier."))
+		in
+		(* Check automaton name *)
+		let check1 = check_automaton_name index_of_automata automaton_name in
+
+		(* Check location name *)
+		let check2 =
+			(* Only perform check2 if check1 passed *)
+			if not check1 then false else(
+				(* Retrieve automaton index *)
+				let automaton_index = Hashtbl.find index_of_automata automaton_name in
+				(* Check location name for this automaton *)
+				check_location_name index_of_locations automaton_index automaton_name location_name
+			)
+		in
+		
+		(* Check whether another location was declared for this automaton and, if not, store the location *)
+		let check3 = if Hashtbl.mem hashtable automaton_name then(
+			(* Retrieve former location name *)
+			let old_name = Hashtbl.find hashtable automaton_name in
+			(* If same name: just warning *)
+			if old_name = location_name then(
+				(* Warning *)
+				print_warning ("Automaton '" ^ automaton_name ^ "' is assigned several times to location name '" ^ location_name ^ "' in the correctness property.");
+				(* No problem *)
+				true
+			)else(
+			(* Otherwise: error *)
+				print_warning ("Automaton '" ^ automaton_name ^ "' is assigned to several different location names (e.g., '" ^ location_name ^ "' and '" ^ old_name ^ "') in the correctness property.");
+				(* Problem *)
+				false
+			)
+		) else (
+			(* Add to hash table *)
+			Hashtbl.add hashtable automaton_name location_name;
+			(* No problem *)
+			true
+		)
+		in
+		
+		(* Update checks *)
+		checks_passed := !checks_passed && check1 && check2 && check3;
+		
+	) parsed_unreachable_locations;
+	
+	(* If problem: returns dummy result *)
+	if not !checks_passed then(
+		[] , false
+	)else(
+	(* Return all pairs 'loc[automaton] = location' *)
+		let pairs = Hashtbl.fold (fun automaton_name location_name former_pairs ->
+			(* Retrieve automaton index (no test because was tested earlier) *)
+			let automaton_index = Hashtbl.find index_of_automata automaton_name in
+			(* Retrieve location index (no test because was tested earlier) *)
+			let location_index = Hashtbl.find index_of_locations.(automaton_index) location_name in
+			(* Add new pair *)
+			(automaton_index, location_index) :: former_pairs
+		) hashtable [] in
+		pairs , true
+	)
+
+
+(*------------------------------------------------------------*)
+(* Check a list of discrete constraints declaration (i.e., of the form 'd ~ constant(s)')
+ * Return a list of discrete_constraint, and a Boolean encoding whether all checks passed
+ * May print warnings or errors
+ *)
+(*------------------------------------------------------------*)
+let check_and_convert_unreachable_discrete_constraints index_of_variables type_of_variables variable_names discrete parsed_unreachable_locations =
+	(* Create a hash table to check for double declarations *)
+	let hashtable = Hashtbl.create (List.length discrete) in
+	
+	(*(* Horrible hack: store not the constants, but their string representation (to allow for a quick representation of single constants and pairs of constants in intervals) *)
+	let string_of_parsed_discrete_constraint = function
+		| Parsed_discrete_l (_ , v)
+			-> "<" ^ (NumConst.string_of_numconst v)
+		| Parsed_discrete_leq (_ , v)
+			-> "<=" ^ (NumConst.string_of_numconst v)
+		| Parsed_discrete_equal (_ , v)
+			-> "=" ^ (NumConst.string_of_numconst v)
+		| Parsed_discrete_geq (_ , v)
+			-> ">=" ^ (NumConst.string_of_numconst v)
+		| Parsed_discrete_g (_ , v)
+			-> ">" ^ (NumConst.string_of_numconst v)
+		| Parsed_discrete_interval (_ , min_bound, max_bound)
+			-> " in [" ^ (NumConst.string_of_numconst min_bound)
+					^ " .. "
+					^ (NumConst.string_of_numconst max_bound)
+					^ "]"
+	in*)
+	
+	(* Local function to convert a parsed constraint into an abstract discrete constraint *)
+	(*** NOTE: will only be called once the discrete variable name has been checked for name and type ***)
+	let convert_discrete_constraint = function
+		| Parsed_discrete_l (discrete_name , v)
+			-> Discrete_l (Hashtbl.find index_of_variables discrete_name , v)
+		| Parsed_discrete_leq (discrete_name , v)
+			-> Discrete_leq (Hashtbl.find index_of_variables discrete_name , v)
+		| Parsed_discrete_equal (discrete_name , v)
+			-> Discrete_equal (Hashtbl.find index_of_variables discrete_name , v)
+		| Parsed_discrete_geq (discrete_name , v)
+			-> Discrete_geq (Hashtbl.find index_of_variables discrete_name , v)
+		| Parsed_discrete_g (discrete_name , v)
+			-> Discrete_g (Hashtbl.find index_of_variables discrete_name , v)
+		| Parsed_discrete_interval (discrete_name , min_bound, max_bound)
+			-> Discrete_interval (Hashtbl.find index_of_variables discrete_name , min_bound, max_bound)
+	in
+	
+	(* Global check *)
+	let checks_passed = ref true in
+	
+	(* Iterate on parsed_unreachable_predicate and check for names and values *)
+	List.iter(fun parsed_unreachable_predicate ->
+		let parsed_discrete_constraint =
+		match parsed_unreachable_predicate with
+		| Parsed_unreachable_discrete parsed_discrete_constraint -> parsed_discrete_constraint
+		| _ -> raise (InternalError("Expecting a Parsed_unreachable_discrete, which should have been checked earlier."))
+		in
+		
+		(* Get discrete variable name *)
+		let discrete_name = match parsed_discrete_constraint with
+		| Parsed_discrete_l (variable_name , _)
+		| Parsed_discrete_leq (variable_name , _)
+		| Parsed_discrete_equal (variable_name , _)
+		| Parsed_discrete_geq (variable_name , _)
+		| Parsed_discrete_g (variable_name , _)
+			-> variable_name 
+		| Parsed_discrete_interval (variable_name , _, _)
+			-> variable_name 
+		in
+
+		(* Check discrete name and type *)
+		let check1 =
+			(* 1a. Check for name *)
+			if not (Hashtbl.mem index_of_variables discrete_name) then(
+				(* Print error *)
+				print_error ("The discrete variable '" ^ discrete_name ^ "' used in the correctness property does not exist in this model.");
+				(* Problem *)
+				false
+			(* 1b. Check for type *)
+			)else(
+				(* Get variable index *)
+				(*** NOTE: safe because Hashtbl.mem was checked in test 1a ***)
+				let variable_index = Hashtbl.find index_of_variables discrete_name in
+				(* Check type *)
+				let variable_type = type_of_variables variable_index in
+				if variable_type <> Var_type_discrete then(
+					(* Print error *)
+					print_error ("The variable '" ^ discrete_name ^ "' used in the correctness property must be a discrete variable (clocks and parameters are not allowed at this stage).");
+					(* Problem *)
+					false
+				)else true
+			)
+		in
+
+		(* Check value1 <= value2 *)
+		let check2 = match parsed_discrete_constraint with
+		| Parsed_discrete_l _
+		| Parsed_discrete_leq _
+		| Parsed_discrete_equal _
+		| Parsed_discrete_geq _
+		| Parsed_discrete_g _
+			-> true
+		| Parsed_discrete_interval (_ , min_bound , max_bound )
+			-> if NumConst.g min_bound max_bound then(
+				print_error ("The interval '[" ^ (NumConst.string_of_numconst min_bound) ^ " , " ^ (NumConst.string_of_numconst max_bound) ^ "]' used in the correctness property is not well-formed.");
+				(* Problem *)
+				false
+			) else true
+		in
+		
+		(* Check whether another value was declared for this discrete and, if not, store the value *)
+		let check3 =
+			(* Only perform this if further checks passed *)
+			if not (check1 && check2) then false else(
+			(* Compute abstract constraint *)
+			let abstract_constraint = convert_discrete_constraint parsed_discrete_constraint in
+			(* Check whether another value was declared for this discrete *)
+			if Hashtbl.mem hashtable discrete_name then(
+				(* Retrieve former value *)
+				let old_constraint = Hashtbl.find hashtable discrete_name in
+				(* If same name: just warning *)
+				if old_constraint = abstract_constraint then(
+					(* Warning *)
+					print_warning ("Discrete variable '" ^ discrete_name ^ "' is compared several times to the same constant in the correctness property.");
+					(* No problem *)
+					true
+				)else(
+				(* Otherwise: error *)
+					print_warning ("Discrete variable '" ^ discrete_name ^ "' is compared several times to different constants in the correctness property.");
+					(* Problem *)
+					false
+				)
+			) else (
+				(* Add to hash table *)
+				Hashtbl.add hashtable discrete_name abstract_constraint;
+				(* No problem *)
+				true
+			)
+		)
+		in
+		
+		(* Update checks *)
+		checks_passed := !checks_passed && check1 && check2 && check3;
+		
+	) parsed_unreachable_locations;
+	
+	(* If problem: returns dummy result *)
+	if not !checks_passed then(
+		[] , false
+	)else(
+	(* Return all abstract constraints *)
+		let abstract_constraints = Hashtbl.fold (fun _ abstract_constraint former_abstract_constraints ->
+(*			(* Retrieve automaton index (no test because was tested earlier) *)
+			let discrete_index = Hashtbl.find index_of_variables discrete_name in*)
+			(* Add new abstract_constraint *)
+			abstract_constraint :: former_abstract_constraints
+		) hashtable [] in
+		abstract_constraints , true
+	)
+
+
+(*------------------------------------------------------------*)
+(* Check one global location declaration (i.e., a list of location predicates and/or of discrete constraints)
+ * Return a converted global location, and a Boolean encoding whether all checks passed
+ * May print warnings or errors
+ *)
+(*------------------------------------------------------------*)
+let check_and_convert_unreachable_global_location index_of_variables type_of_variables discrete variable_names index_of_automata index_of_locations parsed_unreachable_global_location =
+	(* Split the predicates in location and discrete *)
+	let parsed_unreachable_locations, parsed_discrete_constraints = List.partition (function 
+		| Parsed_unreachable_loc _ -> true
+		| _ -> false
+	) parsed_unreachable_global_location
+	in
+	
+	(* Call dedicated functions *)
+	let unreachable_locations, check1 = check_and_convert_unreachable_local_locations index_of_automata index_of_locations parsed_unreachable_locations in
+	let discrete_constraints, check2 = check_and_convert_unreachable_discrete_constraints index_of_variables type_of_variables variable_names discrete parsed_discrete_constraints in
+	
+	(* Return *)
+	{
+		unreachable_locations = unreachable_locations;
+		discrete_constraints  = discrete_constraints;
+	}
+	,
+	check1 && check2
+
+
+(*------------------------------------------------------------*)
 (* Check the correctness property declaration       *)
-(*--------------------------------------------------*)
-let check_and_convert_property index_of_variables type_of_variables variable_names constants index_of_actions index_of_automata index_of_locations parsed_property_definition =
-	(* Local function checking existence of a name *)
-	let check_automaton_name automaton_name =
-		if not (Hashtbl.mem index_of_automata automaton_name)
-		then (
-			print_error ("The automaton name '" ^ automaton_name ^ "' used in the correctness property does not exist.");
-			false
-		)
-		else true
-	in
-	(* Local function checking existence of a name *)
-	let check_location_name automaton_index automaton_name location_name =
-		if not (Hashtbl.mem index_of_locations.(automaton_index) location_name)
-		then (
-			print_error ("The location name '" ^ location_name ^ "' used in the correctness property does not exist in automaton '" ^ automaton_name ^ "'.");
-			false
-		)
-		else true
-	in
-	(* Local function checking existence of a name *)
-	let check_action_name action_name =
-		if not (Hashtbl.mem index_of_actions action_name)
-		then (
-			print_error ("The action '" ^ action_name ^ "' used in the correctness property does not exist in this model.");
-			false
-		)
-		else true
-	in
+(*------------------------------------------------------------*)
+let check_and_convert_property index_of_variables type_of_variables discrete variable_names constants index_of_actions index_of_automata index_of_locations parsed_property_definition =
 	
 	(* Generic check and conversion function for 2 actions *)
 	let gen_check_and_convert_2act property a1 a2 =
 		(* Check action names (perform 2 even if one fails) *)
-		let check1 = check_action_name a1 in
-		let check2 = check_action_name a2 in
+		let check1 = check_action_name index_of_actions a1 in
+		let check2 = check_action_name index_of_actions a2 in
 		if not (check1 && check2)
 		then (Noproperty , false)
 		else (
@@ -812,9 +1090,10 @@ let check_and_convert_property index_of_variables type_of_variables variable_nam
 			| ParsingStructure.Action_precedence_acyclic _ -> AbstractModel.Action_precedence_acyclic (action_index1, action_index2), true
 			| ParsingStructure.Action_precedence_cyclic _ -> AbstractModel.Action_precedence_cyclic (action_index1, action_index2), true
 			| ParsingStructure.Action_precedence_cyclicstrict _ -> AbstractModel.Action_precedence_cyclicstrict (action_index1, action_index2), true
-			| ParsingStructure.Eventual_response_acyclic _ -> AbstractModel.Eventual_response_acyclic (action_index1, action_index2), true
+		(*** NOT IMPLEMENTED ***)
+(*			| ParsingStructure.Eventual_response_acyclic _ -> AbstractModel.Eventual_response_acyclic (action_index1, action_index2), true
 			| ParsingStructure.Eventual_response_cyclic _ -> AbstractModel.Eventual_response_cyclic (action_index1, action_index2), true
-			| ParsingStructure.Eventual_response_cyclicstrict _ -> AbstractModel.Eventual_response_cyclicstrict (action_index1, action_index2), true
+			| ParsingStructure.Eventual_response_cyclicstrict _ -> AbstractModel.Eventual_response_cyclicstrict (action_index1, action_index2), true*)
 			| _ -> raise (InternalError ("Impossible case while looking for properties with 2 actions; all cases should have been taken into account."))
 		)
 	in
@@ -822,8 +1101,8 @@ let check_and_convert_property index_of_variables type_of_variables variable_nam
 	(* Generic check and conversion function for 2 actions and one deadline *)
 	let gen_check_and_convert_2actd property a1 a2 d =
 		(* Check action names and deadline (perform 3 even if one fails) *)
-		let check1 = check_action_name a1 in
-		let check2 = check_action_name a2 in
+		let check1 = check_action_name index_of_actions a1 in
+		let check2 = check_action_name index_of_actions a2 in
 		let check3 = check_linear_expression variable_names constants d in
 		let check4 = (if no_variables_in_linear_expression index_of_variables type_of_variables constants d
 						then true
@@ -856,7 +1135,7 @@ let check_and_convert_property index_of_variables type_of_variables variable_nam
 	(* Generic check and conversion function for a list of actions *)
 	let gen_check_and_convert_list property actions_list =
 		(* Check action names (use a fold_left instead of forall to ensure that all actions will be checked) *)
-		if not (List.fold_left (fun current_result a -> check_action_name a && current_result) true actions_list)
+		if not (List.fold_left (fun current_result a -> check_action_name index_of_actions a && current_result) true actions_list)
 		then (Noproperty , false)
 		else (
 			(* Get action indexes *)
@@ -879,24 +1158,23 @@ let check_and_convert_property index_of_variables type_of_variables variable_nam
 		match property with
 		
 		(* CASE NON-REACHABILITY *)
-		| ParsingStructure.Unreachable_location (automaton_name , location_name) -> 
-			(* First check automaton name *)
-			if not (check_automaton_name automaton_name)
-			then (Noproperty , false)
-			else (
-				(* Get automaton index *)
-				let automaton_index = Hashtbl.find index_of_automata automaton_name in
-				(* Check location name *)
-				if not (check_location_name automaton_index automaton_name location_name)
-					then (Noproperty , false)
-					else (
-						(* Get location index *)
-						let location_index = Hashtbl.find index_of_locations.(automaton_index) location_name in
-						(* Return the property *)
-						AbstractModel.Unreachable_location (automaton_index, location_index) , true
-					)
-				)
-
+		| Parsed_unreachable_locations parsed_unreachable_global_location_list (*(automaton_name , location_name)*) -> 
+			(* Global flag for checks *)
+			let checks_passed = ref true in
+			(* Check and convert each global location *)
+			let unreachable_global_location_list = List.map (fun parsed_unreachable_global_location ->
+				(* Check and convert this parsed_unreachable_global_location *)
+				let unreachable_global_location , checked = check_and_convert_unreachable_global_location index_of_variables type_of_variables discrete variable_names index_of_automata index_of_locations parsed_unreachable_global_location in
+				(* Update global variable *)
+				checks_passed := !checks_passed && checked;
+				(* Keep abstract global location *)
+				unreachable_global_location
+				) parsed_unreachable_global_location_list
+			in
+			(* Return abstract structure and flag for checks *)
+			Unreachable_locations unreachable_global_location_list , !checks_passed
+			
+		
 		(* CASE TWO ACTIONS *)
 		(* if a2 then a1 has happened before *)
 		| ParsingStructure.Action_precedence_acyclic ( a1 , a2 )
@@ -904,19 +1182,20 @@ let check_and_convert_property index_of_variables type_of_variables variable_nam
 		| ParsingStructure.Action_precedence_cyclic ( a1 , a2 )
 		(* everytime a2 then a1 has happened exactly once before *)
 		| ParsingStructure.Action_precedence_cyclicstrict ( a1 , a2 )
-		(* if a1 then eventually a2 *)
+		(*** NOT IMPLEMENTED ***)
+(*		(* if a1 then eventually a2 *)
 		| ParsingStructure.Eventual_response_acyclic ( a1 , a2 )
 		(* everytime a1 then eventually a2 *)
 		| ParsingStructure.Eventual_response_cyclic ( a1 , a2 )
 		(* everytime a1 then eventually a2 once before next *)
-		| ParsingStructure.Eventual_response_cyclicstrict ( a1 , a2 )
+		| ParsingStructure.Eventual_response_cyclicstrict ( a1 , a2 )*)
 			-> gen_check_and_convert_2act property a1 a2
 		
 		(* CASE ACTION + DEADLINE *)
 		| ParsingStructure.Action_deadline ( a , d )
 			-> 
 			(* Check action name and deadline (perform 2 even if one fails) *)
-			let check1 = check_action_name a in
+			let check1 = check_action_name index_of_actions a in
 			let check2 = check_linear_expression variable_names constants d in
 			let check3 = check_linear_expression variable_names constants d in
 			let check4 = (if no_variables_in_linear_expression index_of_variables type_of_variables constants d
@@ -962,9 +1241,15 @@ let check_and_convert_property index_of_variables type_of_variables variable_nam
 
 
 
-(*--------------------------------------------------*)
+
+(************************************************************)
+(** Verification functions w.r.t. parameters *)
+(************************************************************)
+
+
+(*------------------------------------------------------------*)
 (** Check that all parameters in the projection definition are valid *)
-(*--------------------------------------------------*)
+(*------------------------------------------------------------*)
 let check_projection_definition parameters_names = function
 	| None -> true
 	| Some parsed_parameters -> (
@@ -979,9 +1264,9 @@ let check_projection_definition parameters_names = function
 	)
 
 
-(*--------------------------------------------------*)
+(*------------------------------------------------------------*)
 (* Check the pi0 w.r.t. the model parameters *)
-(*--------------------------------------------------*)
+(*------------------------------------------------------------*)
 let check_pi0 pi0 parameters_names =
 	(* Compute the list of variable names *)
 	(**** TO OPTIMIZE: not tail recursvie ****)
@@ -1024,9 +1309,9 @@ let check_pi0 pi0 parameters_names =
 
 
 
-(*--------------------------------------------------*)
+(*------------------------------------------------------------*)
 (* Check the pi0 cube w.r.t. the model parameters *)
-(*--------------------------------------------------*)
+(*------------------------------------------------------------*)
 let check_v0 parsed_v0 parameters_names =
 	(* Compute the list of variable names *)
 	let list_of_variables = List.map (fun (v, _, _) -> v) parsed_v0 in
@@ -1078,9 +1363,14 @@ let check_v0 parsed_v0 parameters_names =
 	multiply_defined_variables = [] && all_defined && all_intervals_ok
 
 
-(*--------------------------------------------------*)
+
+(************************************************************)
+(** MODEL CONVERSION *)
+(************************************************************)
+
+(*------------------------------------------------------------*)
 (* Create the hash table of constants ; check on the fly the validity *)
-(*--------------------------------------------------*)
+(*------------------------------------------------------------*)
 let make_constants constants =
 	(* Create hash table *)
 	let hashtable = Hashtbl.create (List.length constants) in
@@ -1106,13 +1396,9 @@ let make_constants constants =
 	hashtable, !correct
 
 
-(****************************************************************)
-(** MODEL CONVERSION *)
-(****************************************************************)
-
-(*--------------------------------------------------*)
+(*------------------------------------------------------------*)
 (* Get all the declared actions for every automaton *)
-(*--------------------------------------------------*)
+(*------------------------------------------------------------*)
 let make_actions_per_automaton index_of_actions index_of_automata automata =
 	(* Create an empty array for every automaton *)
 	let actions_per_automaton = Array.make (List.length automata) [] in
@@ -1133,9 +1419,9 @@ let make_actions_per_automaton index_of_actions index_of_automata automata =
 	actions_per_automaton
 
 
-(*--------------------------------------------------*)
+(*------------------------------------------------------------*)
 (* Get all the locations for every automaton *)
-(*--------------------------------------------------*)
+(*------------------------------------------------------------*)
 let make_locations_per_automaton index_of_automata parsed_automata nb_automata =
 	(* Create an empty array for every automaton *)
 	let locations_per_automaton = Array.make nb_automata (Array.make 0 "") in
@@ -1158,10 +1444,10 @@ let make_locations_per_automaton index_of_automata parsed_automata nb_automata =
 
 
 
-(*(*--------------------------------------------------*)
+(*(*------------------------------------------------------------*)
 (* Convert the costs *)
 (*** TODO: do not call if actually no cost! ***)
-(*--------------------------------------------------*)
+(*------------------------------------------------------------*)
 (* Convert the structure: 'automaton_index -> location_index -> ParsingStructure.linear_expression' into a structure: 'automaton_index -> location_index -> Constraint.linear_expression' *)
 let convert_costs index_of_variables constants costs =
 	(* Convert for each automaton *)
@@ -1177,9 +1463,9 @@ let convert_costs index_of_variables constants costs =
 	fun automaton_index location_index -> costs.(automaton_index).(location_index)*)
 
 
-(*(*--------------------------------------------------*)
+(*(*------------------------------------------------------------*)
 (* Convert the invariants *)
-(*--------------------------------------------------*)
+(*------------------------------------------------------------*)
 (* Convert the structure: 'automaton_index -> location_index -> ParsingStructure.convex_predicate' into a structure: 'automaton_index -> location_index -> Constraint.linear_constraint' *)
 let convert_invariants index_of_variables constants invariants =
 	(* Convert for each automaton *)
@@ -1191,9 +1477,9 @@ let convert_invariants index_of_variables constants invariants =
 	fun automaton_index location_index -> invariants.(automaton_index).(location_index)*)
 
 
-(*--------------------------------------------------*)
+(*------------------------------------------------------------*)
 (* Get all the possible actions for every location of every automaton *)
-(*--------------------------------------------------*)
+(*------------------------------------------------------------*)
 let make_automata index_of_variables constants index_of_automata index_of_locations labels index_of_actions removed_synclab_names parsed_automata with_observer_action =
 	(* Number of automata *)
 	let nb_automata = Hashtbl.length index_of_automata in
@@ -1354,9 +1640,9 @@ let make_automata index_of_variables constants index_of_automata index_of_locati
 
 
 
-(*--------------------------------------------------*)
+(*------------------------------------------------------------*)
 (* Get the automata for every action *)
-(*--------------------------------------------------*)
+(*------------------------------------------------------------*)
 let make_automata_per_action actions_per_automaton nb_automata nb_actions =
 	(* Create an empty array for actions *)
 	let automata_per_action = Array.make nb_actions [] in
@@ -1375,9 +1661,9 @@ let make_automata_per_action actions_per_automaton nb_automata nb_actions =
 	
 
 
-(*--------------------------------------------------*)
+(*------------------------------------------------------------*)
 (* Convert the transitions *)
-(*--------------------------------------------------*)
+(*------------------------------------------------------------*)
 (* Convert the structure: 'automaton_index -> location_index -> list of (action_index, guard, resets, dest_state)' into a structure: 'automaton_index -> location_index -> action_index -> list of (guard, resets, dest_state)' *)
 let convert_transitions nb_actions index_of_variables constants type_of_variables transitions =
 	(* Create the empty array *)
@@ -1447,9 +1733,9 @@ let convert_transitions nb_actions index_of_variables constants type_of_variable
 
 
 
-(*--------------------------------------------------*)
+(*------------------------------------------------------------*)
 (* Create the initial state *)
-(*--------------------------------------------------*)
+(*------------------------------------------------------------*)
 let make_initial_state index_of_automata locations_per_automaton index_of_locations index_of_variables parameters constants type_of_variables variable_names init_discrete_pairs init_definition =
 	(* Get the location initialisations and the constraint *)
 	let loc_assignments, linear_predicates = List.partition (function
@@ -1529,9 +1815,9 @@ let make_initial_state index_of_automata locations_per_automaton index_of_locati
 	initial_location, initial_constraint
 
 
-(*--------------------------------------------------*)
+(*------------------------------------------------------------*)
 (** Convert a list of parsed parameters into a list of variable_index *)
-(*--------------------------------------------------*)
+(*------------------------------------------------------------*)
 let convert_projection_definition index_of_variables = function
 	| None -> None
 	| Some parsed_parameters -> Some (List.map (fun parsed_parameter ->
@@ -1540,9 +1826,9 @@ let convert_projection_definition index_of_variables = function
 	) parsed_parameters)
 
 
-(*--------------------------------------------------*)
+(*------------------------------------------------------------*)
 (* Convert the parsed pi0 into a valid pi0 *)
-(*--------------------------------------------------*)
+(*------------------------------------------------------------*)
 let make_pi0 parsed_pi0 variables nb_parameters =
 	let pi0 = new PVal.pval in
 	for i = 0 to nb_parameters - 1 do
@@ -1556,9 +1842,9 @@ let make_pi0 parsed_pi0 variables nb_parameters =
 	done;
 	pi0
 
-(*--------------------------------------------------*)
+(*------------------------------------------------------------*)
 (* Convert the parsed v0 into a valid v0 *)
-(*--------------------------------------------------*)
+(*------------------------------------------------------------*)
 let make_v0 parsed_v0 index_of_variables nb_parameters =
 	let v0 = new HyperRectangle.hyper_rectangle in
 	List.iter (fun (variable_name, a, b) ->
@@ -1576,9 +1862,9 @@ let make_v0 parsed_v0 index_of_variables nb_parameters =
 	v0
 
 
-(*--------------------------------------------------*)
+(*------------------------------------------------------------*)
 (* Find the clocks in a linear_constraint *)
-(*--------------------------------------------------*)
+(*------------------------------------------------------------*)
 
 let get_clocks_in_linear_constraint clocks =
 	(* Get a long list with duplicates, and then simplify *)
@@ -1604,9 +1890,9 @@ let get_clocks_in_updates : clock_updates -> Automaton.clock_index list = functi
 
 
 
-(*--------------------------------------------------*)
+(*------------------------------------------------------------*)
 (* Convert the parsing structure into an abstract model *)
-(*--------------------------------------------------*)
+(*------------------------------------------------------------*)
 let abstract_model_of_parsing_structure (parsed_variable_declarations, parsed_automata, parsed_init_definition, parsed_property_definition, parsed_projection_definition, parsed_carto_definition) parsed_pi0 parsed_v0 options =
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Debug functions *) 
@@ -1947,7 +2233,7 @@ let abstract_model_of_parsing_structure (parsed_variable_declarations, parsed_au
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(*** WARNING: might be a problem if the check_automata test fails ***)
 	let property, well_formed_property =
-		check_and_convert_property index_of_variables type_of_variables variable_names constants index_of_actions index_of_automata index_of_locations parsed_property_definition in
+		check_and_convert_property index_of_variables type_of_variables discrete variable_names constants index_of_actions index_of_automata index_of_locations parsed_property_definition in
 		
 		
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -2050,7 +2336,7 @@ let abstract_model_of_parsing_structure (parsed_variable_declarations, parsed_au
 		(* Still check the case of non-reachability user-defined property *)
 		begin
 		match property with
-			| Unreachable_location (automaton_index, location_index) -> Some (Unreachable (automaton_index, location_index)), None
+			| Unreachable_locations unreachable_global_location_list -> Some (Unreachable unreachable_global_location_list), None
 			| _ -> None, None
 		end
 	| Some observer_id -> 

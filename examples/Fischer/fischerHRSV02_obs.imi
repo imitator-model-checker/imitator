@@ -3,7 +3,8 @@
  *
  * Fischer's mutual exclusion protocol
  *
- * Description     : Fischer's mutual exclusion protocol
+ * Description     : Fischer's mutual exclusion protocol. Version with observer.
+	THIS MODEL IS NO LONGER NEEDED SINCE IMITATOR 2.7.2, AS THE TOOL NOW SUPPORTS TO CHECK SEVERAL LOCATIONS AT THE SAME TIME.
  * Correctness     : No two processes in the mutual exclusion
  * Source          : From "Linear Parametric Model Checking of Timed Automata" Hune, Romijn, Stoelinga, Vaandrager, 2002
  * Author          : Hune, Romijn, Stoelinga, Vaandrager
@@ -12,7 +13,7 @@
  *
  * Created         : 2013/12/10
  * Fork from fischerHRSV02.imi : 2014/04/08
- * Last modified   : 2015/07/30
+ * Last modified   : 2015/07/31
  *
  * IMITATOR version: 2.7.1
  ************************************************************)

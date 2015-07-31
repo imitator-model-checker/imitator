@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2009/12/02
- * Last modified: 2015/01/04
+ * Last modified: 2015/07/31
  *
  ****************************************************************)
 
@@ -44,3 +44,5 @@ val string_of_v0 : abstract_model -> v0 -> string
 (* Convert a model into a string *)
 val string_of_model : abstract_model -> string
 
+(** Convert the correctness property to a string *)
+val string_of_property : abstract_model -> property_definition -> string

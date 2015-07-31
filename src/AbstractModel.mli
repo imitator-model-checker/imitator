@@ -8,7 +8,7 @@
  * Author:        Etienne Andre
  * 
  * Created:       2009/09/11
- * Last modified: 2015/07/30
+ * Last modified: 2015/07/31
  *
  ****************************************************************)
 
@@ -108,12 +108,31 @@ type transition = guard * clock_updates * discrete_update list * location_index
 
 type duration = LinearConstraint.p_linear_term
 
+type unreachable_location = automaton_index * location_index
+
+type discrete_value = NumConst.t
+
+type discrete_constraint =
+	| Discrete_l of discrete_index * discrete_value
+	| Discrete_leq of discrete_index * discrete_value
+	| Discrete_equal of discrete_index * discrete_value
+	| Discrete_geq of discrete_index * discrete_value
+	| Discrete_g of discrete_index * discrete_value
+	| Discrete_interval of discrete_index * discrete_value * discrete_value
+
+(* A global location is a list of locations (at most one per IPTA) and of simple atomic constraints on discrete variables (at most one constraint per discrete variable) *)
+type unreachable_global_location = {
+	unreachable_locations: unreachable_location list;
+	discrete_constraints :  discrete_constraint list;
+}
+
 (** Definition of the property by the end user *)
 type property =
 	(* DEPRECATED *)
 (* 	| Exists_action of action_index *)
 
-	| Unreachable_location of automaton_index * location_index
+	(* An "OR" list of global locations *)
+	| Unreachable_locations of unreachable_global_location list
 
 	(* if a2 then a1 has happened before *)
 	| Action_precedence_acyclic of action_index * action_index
@@ -122,12 +141,13 @@ type property =
 	(* everytime a2 then a1 has happened exactly once before *)
 	| Action_precedence_cyclicstrict of action_index * action_index
 
-	(* if a1 then eventually a2 *)
+	(*** NOTE: not implemented ***)
+(*	(* if a1 then eventually a2 *)
 	| Eventual_response_acyclic of action_index * action_index
 	(* everytime a1 then eventually a2 *)
 	| Eventual_response_cyclic of action_index * action_index
 	(* everytime a1 then eventually a2 once before next *)
-	| Eventual_response_cyclicstrict of action_index * action_index
+	| Eventual_response_cyclicstrict of action_index * action_index*)
 
 	(* a no later than d *)
 	| Action_deadline of action_index * duration
@@ -151,23 +171,26 @@ type property =
 	(* sequence: always a1, ..., an *)
 	| Sequence_cyclic of action_index list
 	
-	(* Would be better to have a "option" type *)
+	(* Would be better to have an "option" type *)
 	| Noproperty
 
 
-(* TODO: allow several definitions *)
-type property_definition  = property (*list*)
+type property_definition  = property
 
 
 (** Reduction to (non-)reachability checking *)
 
 type reachability_property =
 	(* Location never reachable *)
-	| Unreachable of automaton_index * location_index
+	| Unreachable of unreachable_global_location list
+
 	(* Location reachable for each trace *)
-	| Reachable of automaton_index * location_index
+	(*** NOTE: not implemented ***)
+	| Reachable of unreachable_global_location list (*automaton_index * location_index*)
+
 	(* Combining the two properties *)
-	| Unreachable_and_reachable of automaton_index * location_index * automaton_index * location_index
+	(*** NOTE: not implemented ***)
+	| Unreachable_and_reachable of (unreachable_global_location list) * (unreachable_global_location list) (*automaton_index * location_index * automaton_index * location_index*)
 
 
 type correctness_condition = reachability_property option

@@ -8,7 +8,7 @@
  * Author:        Etienne Andre
  *
  * Created:       2009/09/08
- * Last modified: 2015/07/19
+ * Last modified: 2015/07/31
  *
  ****************************************************************)
 
@@ -135,10 +135,31 @@ type init_definition = state_predicate list
 
 type duration = linear_expression
 
+(*** NOTE: for now, we restrict to constants (later should be extended to at least constant expressions) *)
+type discrete_value = NumConst.t
+
 (** Predicates for the definition of the correctness property *)
 
-type property =
-	| Unreachable_location of automaton_name * location_name
+type parsed_unreachable_location = automaton_name * location_name
+
+type parsed_discrete_constraint =
+	| Parsed_discrete_l of variable_name * discrete_value
+	| Parsed_discrete_leq of variable_name * discrete_value
+	| Parsed_discrete_equal of variable_name * discrete_value
+	| Parsed_discrete_geq of variable_name * discrete_value
+	| Parsed_discrete_g of variable_name * discrete_value
+	| Parsed_discrete_interval of variable_name * discrete_value * discrete_value
+
+type parsed_unreachable_predicate =
+	| Parsed_unreachable_discrete of parsed_discrete_constraint
+	| Parsed_unreachable_loc of parsed_unreachable_location
+
+(* A global location is a list of locations (at most one per IPTA) and of simple atomic constraints on discrete variables (at most one constraint per discrete variable) *)
+type parsed_unreachable_global_location = parsed_unreachable_predicate list
+
+
+type parsed_property =
+	| Parsed_unreachable_locations of parsed_unreachable_global_location list
 	
 	(* DEPRECATED *)
 (* 	| Unreachable_action of sync_name *)
@@ -150,12 +171,13 @@ type property =
 	(* everytime a2 then a1 has happened exactly once before *)
 	| Action_precedence_cyclicstrict of sync_name * sync_name
 
-	(* if a1 then eventually a2 *)
+		(*** NOT IMPLEMENTED ***)
+(*	(* if a1 then eventually a2 *)
 	| Eventual_response_acyclic of sync_name * sync_name
 	(* everytime a1 then eventually a2 *)
 	| Eventual_response_cyclic of sync_name * sync_name
 	(* everytime a1 then eventually a2 once before next *)
-	| Eventual_response_cyclicstrict of sync_name * sync_name
+	| Eventual_response_cyclicstrict of sync_name * sync_name*)
 
 	(* a no later than d *)
 	| Action_deadline of sync_name * duration
@@ -180,7 +202,7 @@ type property =
 	| Sequence_cyclic of sync_name list
 
 
-type property_definition  = property option
+type property_definition  = parsed_property option
 
 
 (****************************************************************)

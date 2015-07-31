@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2014/03/15
- * Last modified: 2015/07/15
+ * Last modified: 2015/07/31
  *
  ****************************************************************)
 
@@ -142,8 +142,15 @@ let compile options =
 				(* Insert the automaton name in the property *)
 				let property_updated = 
 				match property with 
-				(* Case Unreachable_location: edit *)
-				| Some (ParsingStructure.Unreachable_location (_, location_name)) -> Some (ParsingStructure.Unreachable_location (automaton_name, location_name))
+				(* Case Unreachable_locations: edit *)
+				| Some (ParsingStructure.Parsed_unreachable_locations parsed_unreachable_global_location) ->
+					begin
+					match parsed_unreachable_global_location with
+					(* Expecting a single Unreachable_location *)
+					| [[ParsingStructure.Parsed_unreachable_loc (_, location_name)]] -> 
+						Some (ParsingStructure.Parsed_unreachable_locations [[ParsingStructure.Parsed_unreachable_loc (automaton_name, location_name)]])
+					| _ -> raise (InternalError("Unexpected form of unreachable property found when parsing GrML."))
+					end
 				(* Other: no edit *)
 				| p -> p
 				in

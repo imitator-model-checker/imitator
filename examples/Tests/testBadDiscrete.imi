@@ -1,0 +1,135 @@
+(************************************************************
+ *                      IMITATOR MODEL                      
+ *
+ * Model to test the syntax of IMITATOR (discrete values in bad definition)
+ *
+ * Description     : Testing various discrete values in the bad state definition
+ * Correctness     : N/A
+ * Source          : IMITATOR
+ * Author          : Étienne André
+ * Modeling        : Étienne André
+ * Input by        : Étienne André
+ *
+ * Created         : 2015/07/31
+ * Last modified   : 2015/07/31
+ *
+ * IMITATOR version: 2.7.2
+ ************************************************************)
+
+var
+
+(* Clocks *)
+ 	x, y
+		: clock;
+
+(* Discrete *)
+	i
+		: discrete;
+
+(* Parameters *)
+	p
+		: parameter;
+
+
+
+(************************************************************)
+  automaton pta
+(************************************************************)
+synclabs: a;
+
+loc l1: while True wait {}
+	when x = i & x = p sync a do {x' = 0} goto l2;
+	when y = 1 sync a do {y' = 0, i' = i + 1} goto l1;
+
+loc l2: while True wait {}
+end (* pta *)
+
+
+
+(************************************************************)
+(* Initial state *)
+(************************************************************)
+
+init :=
+	(*------------------------------------------------------------*)
+	(*   INITIAL LOCATION *)
+	(*------------------------------------------------------------*)
+	& loc[pta] = l1
+
+	(*------------------------------------------------------------*)
+	(*   INITIAL DISCRETE *)
+	(*------------------------------------------------------------*)
+	& i = 0
+
+	(*------------------------------------------------------------*)
+	(*   INITIAL CLOCKS *)
+	(*------------------------------------------------------------*)
+	& x = 0
+	& y = 0
+
+	(*------------------------------------------------------------*)
+	(*   PARAMETER CONSTRAINTS *)
+	(*------------------------------------------------------------*)
+	& p >= 0
+;
+
+
+(************************************************************)
+(* Property specification *)
+(************************************************************)
+
+(*** Don't forget that IMITATOR currently supports a single property; hence only one of the following definitions can be uncommented out at a time ***)
+
+(*** Good examples (need to run with -depth-limit ..., otherwise the analysis obviously loops) ***)
+
+(* property := unreachable loc[pta] = l2; *)
+(* property := unreachable i = 2; *)
+(* property := unreachable i < 2 & loc[pta] = l2; *)
+(* property := unreachable i <= 2 & loc[pta] = l2; *)
+(* property := unreachable i = 2 & loc[pta] = l2; *)
+(* property := unreachable i >= 2 & loc[pta] = l2; *)
+(* property := unreachable i > 2 & loc[pta] = l2; *)
+(* property := unreachable i in [2 .. 5] & loc[pta] = l2; *)
+(* property := unreachable i in [4 , 8] & loc[pta] = l2; *)
+
+(* property := unreachable i = 2 or i = 1 ; *)
+(* property := unreachable loc[pta] = l2 & i = 2 or loc[pta] = l2 & i = 1 ; *)
+(* property := unreachable (loc[pta] = l2 & i = 2) or (loc[pta] = l2 & i = 1); *)
+
+
+(*** Warnings ***)
+
+(* property := unreachable i = 2 & i = 2.0; *)
+(* property := unreachable i = 2 & i = 2.0 & i = 4030 / 2015; *)
+(* property := unreachable loc[pta] = l2 & loc[pta] = l2; *)
+(* property := unreachable loc[pta] = l2 & loc[pta] = l2 & i = 2 & i = 2.0 & i = 4030 / 2015; *)
+
+(* property := unreachable (i = 2); *)
+(* property := unreachable (i = 2) & loc[pta] = l2; *)
+(* property := unreachable (i = 2 & loc[pta] = l2); *)
+(* property := unreachable i = 2 & (loc[pta] = l2); *)
+(* property := unreachable (loc[pta] = l2) & loc[pta] = l2 & i = 2 & i = 2.0 & i = 4030 / 2015; *)
+(* property := unreachable (loc[pta] = l2) & ((loc[pta] = l2) & i = 2) & (i = 2.0 & (i = 4030 / 2015)); *)
+(* property := unreachable (loc[pta] = l2) & ((loc[pta] = l2) & i = 2) & (i = 2.0 & (i = 4030 / 2015)); *)
+
+
+(*** Bad examples (need to run with -depth-limit ..., otherwise the analysis obviously loops) ***)
+
+(* property := unreachable i in [2 .. 1]; *)
+(* property := unreachable i in [2 .. 1] & loc[pta] = l2; *)
+(* property := unreachable plouf = 2; *)
+(* property := unreachable x = 2; *)
+(* property := unreachable p = 2; *)
+(* property := unreachable i = 2 + 2; *)
+(* property := unreachable loc[plouf] = l2; *)
+(* property := unreachable loc[pta] = plouf; *)
+(* property := unreachable loc[plouf] = plouf; *)
+(* property := unreachable loc[plouf] = plouf & v = 2 ; *)
+(* property := unreachable (i = 2 or i = 1 ); *)
+
+
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end

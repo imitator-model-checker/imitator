@@ -10,7 +10,7 @@
  * Author:        Etienne Andre
  * 
  * Created:       2013/02/04
- * Last modified: 2015/07/19
+ * Last modified: 2015/07/31
  *
  ****************************************************************)
 
@@ -93,6 +93,17 @@ let lc_x_eq_0 x =
 (** Functions *)
 (****************************************************************)
 
+(* Create a list of unreachable_global_location from a single bad location *)
+let single_unreachable_location automaton_index location_index =
+	(* Create the (single) global location *)
+	let unreachable_global_location = {
+		unreachable_locations= [(automaton_index, location_index)];
+		discrete_constraints =  [];
+	}
+	in
+	Unreachable [unreachable_global_location]
+
+
 (* Create the new automata and new clocks necessary for the observer *)
 let new_elements = function
 	| None -> (None , None)
@@ -100,15 +111,16 @@ let new_elements = function
 	begin
 		match property with
 		(* Not a real observer: does not build anything *)
-		| ParsingStructure.Unreachable_location _ -> (None , None)
+		| ParsingStructure.Parsed_unreachable_locations _ -> (None , None)
 		
 		(* Untimed observers: add automaton, does not add clock *)
 		| ParsingStructure.Action_precedence_acyclic _
 		| ParsingStructure.Action_precedence_cyclic _
 		| ParsingStructure.Action_precedence_cyclicstrict _
-		| ParsingStructure.Eventual_response_acyclic _
+		(*** NOT IMPLEMENTED ***)
+(*		| ParsingStructure.Eventual_response_acyclic _
 		| ParsingStructure.Eventual_response_cyclic _
-		| ParsingStructure.Eventual_response_cyclicstrict _
+		| ParsingStructure.Eventual_response_cyclicstrict _*)
 		| ParsingStructure.Sequence_acyclic _
 		| ParsingStructure.Sequence_cyclic _
 			-> (Some automaton_name, None)
@@ -132,15 +144,16 @@ let get_nb_locations = function
 	begin
 		match property with
 		(* Not a real observer: does not build anything *)
-		| ParsingStructure.Unreachable_location _ -> 0
+		| ParsingStructure.Parsed_unreachable_locations _ -> 0
 		
 		| ParsingStructure.Action_precedence_acyclic _
 		| ParsingStructure.Action_precedence_cyclic _
 		| ParsingStructure.Action_precedence_cyclicstrict _
 			-> 3
-		| ParsingStructure.Eventual_response_acyclic _ -> 3
+		(*** NOT IMPLEMENTED ***)
+(*		| ParsingStructure.Eventual_response_acyclic _ -> 3
 		| ParsingStructure.Eventual_response_cyclic _ -> 2
-		| ParsingStructure.Eventual_response_cyclicstrict _ -> 3
+		| ParsingStructure.Eventual_response_cyclicstrict _ -> 3*)
 		| ParsingStructure.Action_deadline _ -> 3
 		| ParsingStructure.TB_Action_precedence_acyclic _ -> 4
 		| ParsingStructure.TB_Action_precedence_cyclic _ -> 3
@@ -209,7 +222,7 @@ let get_automaton nb_actions automaton_index nosync_index x_obs property =
 	match property with
 	| Noproperty -> raise (InternalError("The function 'get_automaton' should not be called in case of no observer."))
 	(* Not a real observer: does not build anything *)
-	| Unreachable_location _ -> raise (InternalError("The function 'get_automaton' should not be called in case of a degenerate observer."))
+	| Unreachable_locations _ -> raise (InternalError("The function 'get_automaton' should not be called in case of a degenerate observer."))
 	
 	
 	| Action_precedence_acyclic (a1, a2) -> 
@@ -229,7 +242,7 @@ let get_automaton nb_actions automaton_index nosync_index x_obs property =
 		(* No init inequality *)
 		None,
 		(* Reduce to reachability property *)
-		Unreachable (automaton_index, 2)
+		single_unreachable_location automaton_index 2
 	
 	
 	| Action_precedence_cyclic (a1, a2) -> 
@@ -260,7 +273,7 @@ let get_automaton nb_actions automaton_index nosync_index x_obs property =
 		(* No init inequality *)
 		None,
 		(* Reduce to reachability property *)
-		Unreachable (automaton_index, 2)
+		single_unreachable_location automaton_index 2
 	
 	
 	| Action_precedence_cyclicstrict (a1, a2) -> 
@@ -281,13 +294,14 @@ let get_automaton nb_actions automaton_index nosync_index x_obs property =
 		(* No init inequality *)
 		None,
 		(* Reduce to reachability property *)
-		Unreachable (automaton_index, 2)
+		single_unreachable_location automaton_index 2
 		
 	
-	| Eventual_response_acyclic (a1, a2)
+		(*** NOT IMPLEMENTED ***)
+(*	| Eventual_response_acyclic (a1, a2)
 	| Eventual_response_cyclic (a1, a2)
 	| Eventual_response_cyclicstrict (a1, a2)
-		-> raise (InternalError("???"))
+		-> raise (InternalError("Observer not implemented."))*)
 	
 	
 	| Action_deadline (a, d) -> 
@@ -309,7 +323,7 @@ let get_automaton nb_actions automaton_index nosync_index x_obs property =
 		(* Return x_obs = 0 *)
 		Some (lc_x_eq_0 x_obs),
 		(* Reduce to reachability property *)
-		Unreachable (automaton_index, 2)
+		single_unreachable_location automaton_index 2
 		
 	
 	| TB_Action_precedence_acyclic (a1, a2, d) -> 
@@ -333,7 +347,7 @@ let get_automaton nb_actions automaton_index nosync_index x_obs property =
 		(* No init constraint *)
 		None,
 		(* Reduce to reachability property *)
-		Unreachable (automaton_index, 3)
+		single_unreachable_location automaton_index 3
 	
 	
 	| TB_Action_precedence_cyclic (a1, a2, d) -> 
@@ -356,7 +370,7 @@ let get_automaton nb_actions automaton_index nosync_index x_obs property =
 		(* No init constraint *)
 		None,
 		(* Reduce to reachability property *)
-		Unreachable (automaton_index, 2)
+		single_unreachable_location automaton_index 2
 		
 		
 	| TB_Action_precedence_cyclicstrict (a1, a2, d) -> 
@@ -379,7 +393,7 @@ let get_automaton nb_actions automaton_index nosync_index x_obs property =
 		(* No init constraint *)
 		None,
 		(* Reduce to reachability property *)
-		Unreachable (automaton_index, 2)
+		single_unreachable_location automaton_index 2
 		
 
 	| TB_response_acyclic (a1, a2, d) -> 
@@ -404,7 +418,7 @@ let get_automaton nb_actions automaton_index nosync_index x_obs property =
 		(* No init constraint *)
 		None,
 		(* Reduce to reachability property *)
-		Unreachable (automaton_index, 3)
+		single_unreachable_location automaton_index 3
 		
 	| TB_response_cyclic (a1, a2, d) -> 
 		let nb_locations = 3 in
@@ -427,7 +441,7 @@ let get_automaton nb_actions automaton_index nosync_index x_obs property =
 		(* No init constraint *)
 		None,
 		(* Reduce to reachability property *)
-		Unreachable (automaton_index, 2)
+		single_unreachable_location automaton_index 2
 	
 	
 	| TB_response_cyclicstrict (a1, a2, d) -> 
@@ -451,7 +465,7 @@ let get_automaton nb_actions automaton_index nosync_index x_obs property =
 		(* No init constraint *)
 		None,
 		(* Reduce to reachability property *)
-		Unreachable (automaton_index, 2)
+		single_unreachable_location automaton_index 2
 
 
 	| Sequence_acyclic list_of_actions -> 
@@ -489,7 +503,7 @@ let get_automaton nb_actions automaton_index nosync_index x_obs property =
 		(* No init constraint *)
 		None,
 		(* Reduce to reachability property *)
-		Unreachable (automaton_index, lbad)
+		single_unreachable_location automaton_index lbad
 	
 	
 	| Sequence_cyclic list_of_actions -> 
@@ -531,7 +545,7 @@ let get_automaton nb_actions automaton_index nosync_index x_obs property =
 		(* No init constraint *)
 		None,
 		(* Reduce to reachability property *)
-		Unreachable (automaton_index, lbad)
+		single_unreachable_location automaton_index lbad
 	
 	
 (* 	| _ -> raise (InternalError("Not implemented")) *)

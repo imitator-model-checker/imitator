@@ -1,16 +1,16 @@
 (************************************************************
  *                      IMITATOR MODEL                      
  *
- * Empty template of a case study
+ * Model to test the syntax of IMITATOR (no discrete value in bad definition)
  *
- * Description     : TODO
- * Correctness     : TODO
- * Source          : TODO
- * Author          : ME
- * Modeling        : ME
- * Input by        : ME
+ * Description     : Equivalent model of testBadDiscretes (with bounded discrete)
+ * Correctness     : N/A
+ * Source          : IMITATOR
+ * Author          : Étienne André
+ * Modeling        : Étienne André
+ * Input by        : Étienne André
  *
- * Created         : 2015/01/01
+ * Created         : 2015/07/31
  * Last modified   : 2015/07/31
  *
  * IMITATOR version: 2.7.2
@@ -19,12 +19,8 @@
 var
 
 (* Clocks *)
- 	x
+ 	x, y
 		: clock;
-
-(* Discrete *)
-	i
-		: discrete;
 
 (* Parameters *)
 	p
@@ -37,9 +33,22 @@ var
 (************************************************************)
 synclabs: a;
 
-loc l1: while True wait {}
-	when x = 1 sync a do {x' = 0} goto l1;
+loc l1_0: while True wait {}
+	when x = 0 & x = p sync a do {x' = 0} goto l2;
+	when y = 1 sync a do {y' = 0} goto l1_1;
 
+loc l1_1: while True wait {}
+	when x = 1 & x = p sync a do {x' = 0} goto l2;
+	when y = 1 sync a do {y' = 0} goto l1_2;
+
+loc l1_2: while True wait {}
+	when x = 2 & x = p sync a do {x' = 0} goto l2;
+	when y = 1 sync a do {y' = 0} goto l1_3;
+
+loc l1_3: while True wait {}
+	when x = 3 & x = p sync a do {x' = 0} goto l2;
+
+loc l2: while True wait {}
 end (* pta *)
 
 
@@ -50,22 +59,18 @@ end (* pta *)
 
 init :=
 	(*------------------------------------------------------------*)
-	(* Initial location *)
+	(*   INITIAL LOCATION *)
 	(*------------------------------------------------------------*)
-	& loc[pta] = l1
+	& loc[pta] = l1_0
 
 	(*------------------------------------------------------------*)
-	(* Initial discrete assignments *)
-	(*------------------------------------------------------------*)
-	& i = 0
-
-	(*------------------------------------------------------------*)
-	(* Initial clock constraints *)
+	(*   INITIAL CLOCKS *)
 	(*------------------------------------------------------------*)
 	& x = 0
+	& y = 0
 
 	(*------------------------------------------------------------*)
-	(* Parameter constraints *)
+	(*   PARAMETER CONSTRAINTS *)
 	(*------------------------------------------------------------*)
 	& p >= 0
 ;
@@ -75,7 +80,7 @@ init :=
 (* Property specification *)
 (************************************************************)
 
-(* property := unreachable loc[pta] = l1; *)
+property := unreachable loc[pta] = l2;
 
 
 (************************************************************)

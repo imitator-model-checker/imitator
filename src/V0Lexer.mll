@@ -53,7 +53,7 @@ rule token =
 	| ')'              { RPAREN }
 
 	| '&'              { AMPERSAND }
-	| ".."              { DOUBLEDOT }
+	| ".."             { DOUBLEDOT }
 	| ';'              { SEMICOLON }
 
 	| eof              { EOF}

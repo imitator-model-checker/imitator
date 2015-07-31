@@ -2033,14 +2033,14 @@ We define each of those two components below.
 \regleGrammaire{region\_expression\_fol}
 %------------------------------------------------------------
 \begin{tabular}{l l}
-	\  & \nt{state\_predicate} \\
+	\  & \nt{init\_state\_predicate} \\
 	$|$ & \styleIMI{(} \nt{region\_expression\_fol} \styleIMI{)} \\
 	$|$ & \nt{region\_expression\_fol} \styleIMI{\&} \nt{region\_expression\_fol} \\
 \end{tabular}
 
 
 %------------------------------------------------------------
-\regleGrammaire{state\_predicate}
+\regleGrammaire{init\_state\_predicate}
 %------------------------------------------------------------
 \begin{tabular}{l l}
 	\  & \styleIMI{loc} \styleIMI{[} \styleIMI{<name>} \styleIMI{]} \styleIMI{=} \styleIMI{<name>} \\
@@ -2075,9 +2075,12 @@ We define each of those two components below.
 	$|$ & \styleIMI{if <name> then <name> has happened before} \\
 	$|$ & \styleIMI{everytime <name> then <name> has happened before} \\
 	$|$ & \styleIMI{everytime <name> then <name> has happened once before} \\
-	$|$ & \styleIMI{if <name> then eventually <name>} \\
-	$|$ & \styleIMI{everytime <name> then eventually <name>} \\
-	$|$ & \styleIMI{everytime <name> then eventually <name> once before next} \\
+		% TODO
+% 	$|$ & \styleIMI{if <name> then eventually <name>} \\
+		% TODO
+% 	$|$ & \styleIMI{everytime <name> then eventually <name>} \\
+		% TODO
+% 	$|$ & \styleIMI{everytime <name> then eventually <name> once before next} \\
 	$|$ & \styleIMI{<name> within }\nt{linear\_expression} \styleIMI{} \\
 	$|$ & \styleIMI{if <name> then <name> happened within }\nt{linear\_expression} \styleIMI{ before} \\
 	$|$ & \styleIMI{everytime <name> then <name> happened within }\nt{linear\_expression} \styleIMI{ before} \\
@@ -2161,7 +2164,7 @@ The following words are reserved keywords and cannot be used as names for automa
 \styleIMI{happened},
 \styleIMI{has},
 \styleIMI{if},
-% \styleIMI{in},
+\styleIMI{in},
 \styleIMI{init},
 \styleIMI{initially},
 \styleIMI{loc},

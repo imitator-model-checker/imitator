@@ -8,7 +8,7 @@
  * Author:        Etienne Andre
  * 
  * Created       : 2009/09/07
- * Last modified : 2015/07/19
+ * Last modified : 2015/07/31
 *****************************************************************)
 
 {
@@ -55,6 +55,7 @@ rule token = parse
  	| "happened"       { CT_HAPPENED }
  	| "has"            { CT_HAS }
 	| "if"             { CT_IF }
+	| "in"             { CT_IN }
 	| "init"           { CT_INIT }
 	| "initially"      { CT_INITIALLY }
 	| "loc"            { CT_LOC }
@@ -106,6 +107,7 @@ rule token = parse
 	| ']'              { RSQBRA }
 
 	| '&'              { AMPERSAND }
+	| ".."             { DOUBLEDOT }
 	| ','              { COMMA }
 	| '\''             { APOSTROPHE }
 	| '|'              { PIPE }

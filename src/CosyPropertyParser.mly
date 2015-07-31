@@ -11,7 +11,7 @@
  * Author:        Etienne Andre
  * 
  * Created       : 2015/07/10
- * Last modified : 2015/07/13
+ * Last modified : 2015/07/31
 ***********************************************/
 
 %{
@@ -82,6 +82,7 @@ main:
 
 
 // List of patterns
+// NOTE: copied from ModelParser.mly
 pattern:
 	// Unreachability
 	| CT_UNREACHABLE bad_definition { $2 }
@@ -93,12 +94,13 @@ pattern:
 	/* everytime a2 then a1 has happened once before */
 	| CT_EVERYTIME NAME CT_THEN NAME CT_HAS CT_HAPPENED CT_ONCE CT_BEFORE { Action_precedence_cyclicstrict ($4, $2) }
 	
+	// PATTERNS NOT IMPLEMENTED
 	/* if a1 then eventually a2 */
-	| CT_IF NAME CT_THEN CT_EVENTUALLY NAME { Eventual_response_acyclic ($2, $5) }
+// 	| CT_IF NAME CT_THEN CT_EVENTUALLY NAME { Eventual_response_acyclic ($2, $5) }
 	/* everytime a1 then eventually a2 */
-	| CT_EVERYTIME NAME CT_THEN CT_EVENTUALLY NAME { Eventual_response_cyclic ($2, $5) }
+// 	| CT_EVERYTIME NAME CT_THEN CT_EVENTUALLY NAME { Eventual_response_cyclic ($2, $5) }
 	/* everytime a1 then eventually a2 once before next */
-	| CT_EVERYTIME NAME CT_THEN CT_EVENTUALLY NAME CT_ONCE CT_BEFORE CT_NEXT { Eventual_response_cyclicstrict ($2, $5) }
+// 	| CT_EVERYTIME NAME CT_THEN CT_EVENTUALLY NAME CT_ONCE CT_BEFORE CT_NEXT { Eventual_response_cyclicstrict ($2, $5) }
 	
 	/* a within d */
 	| NAME CT_WITHIN linear_expression { Action_deadline ($1, $3) }
@@ -119,14 +121,16 @@ pattern:
 	
 	/* sequence a1, ..., an */
 	| CT_SEQUENCE name_nonempty_list { Sequence_acyclic ($2) }
-	/* sequence always a1, ..., an */
-	| CT_SEQUENCE CT_ALWAYS name_nonempty_list { Sequence_cyclic ($3) }
+	| CT_SEQUENCE LPAREN name_nonempty_list RPAREN { Sequence_acyclic ($3) } /* with parentheses */
+	/* always sequence a1, ..., an */
+	| CT_ALWAYS CT_SEQUENCE name_nonempty_list { Sequence_cyclic ($3) }
+	| CT_ALWAYS CT_SEQUENCE LPAREN name_nonempty_list RPAREN { Sequence_cyclic ($4) } /* with parentheses */
 ;
 
 
 bad_definition:
-	// NOTE: could be removed since only defined using loc_predicate
-	| loc_predicate { let a,b = $1 in (Unreachable_location (a , b)) }
+	// HACK: only allow unreachability of ONE location
+	| loc_predicate { let a,b = $1 in (Parsed_unreachable_locations [[Parsed_unreachable_loc (a , b)]]) }
 ;
 
 loc_predicate:

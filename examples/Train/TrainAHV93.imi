@@ -1,22 +1,21 @@
---************************************************************--
---************************************************************--
---
---   Railroad Gate Controller
---
---   Model described in
---   "Parametric Real-Time Reasoning" (fig. 2)
---   Alur, Henzinger, Vardi (STOC 1993)
---
---   Etienne ANDRE
---   Laboratoire d'Informatique de Paris Nord
---
---                                Created : 2011/11/25
---                          Last modified : 2015/05/12
---                       IMITATOR version : 2.7-beta2
---************************************************************--
---************************************************************--
-
-
+(************************************************************
+ *                      IMITATOR MODEL                      
+ *
+ * Railroad Gate Controller
+ *
+ * Description     : Classical Railroad Gate Controller
+ * Correctness     : "Whenever the train is inside the gate, the gate should be closed"
+ * Source          : Model described in "Parametric Real-Time Reasoning" (fig. 2); Alur, Henzinger, Vardi (STOC 1993)
+ * Author          : Alur, Henzinger, Vardi
+ * Modeling        : Alur, Henzinger, Vardi
+ * Input by        : Etienne Andre
+ *
+ * Created         : 2011/11/25
+ * Last modified   : 2015/07/31
+ *
+ * IMITATOR version: 2.7.2
+ ************************************************************)
+ 
 
 var
  	x, y, z
@@ -26,9 +25,9 @@ var
 			: parameter;
 
 
---************************************************************--
+(************************************************************)
   automaton train
---************************************************************--
+(************************************************************)
 synclabs: approach, inn, out, exit;
 initially train0;
 
@@ -44,34 +43,36 @@ loc train2: while True wait {}
 loc train3: while True wait {}
 	when x < b sync exit do {} goto train0;
 
-end -- train
+end (*train*)
 
 
---************************************************************--
+(************************************************************)
   automaton gate
---************************************************************--
+(************************************************************)
 synclabs: lower, up, down, raise;
 initially gate0;
 
+(* Gate is open *)
 loc gate0: while True wait {}
 	when True sync lower do {y' = 0} goto gate1;
 
 loc gate1: while True wait {}
 	when c < y & y < d sync down do {} goto gate2;
 
+(* Gate is closed *)
 loc gate2: while True wait {}
 	when True sync raise do {y' = 0} goto gate3;
 
 loc gate3: while True wait {}
 	when c < y & y < d sync up do {} goto gate0;
 
-end -- gate
+end (*gate*)
 
 
 
---************************************************************--
+(************************************************************)
   automaton controller
---************************************************************--
+(************************************************************)
 synclabs: approach, lower, exit, raise;
 initially controller0;
 
@@ -87,43 +88,55 @@ loc controller2: while True wait {}
 loc controller3: while True wait {}
 	when e < z & z < f sync raise do {} goto controller0;
 
-end -- controller
+end (*controller*)
 
 
---************************************************************--
---************************************************************--
--- ANALYSIS
---************************************************************--
---************************************************************--
 
-var init : region;
 
-init := True
-	----------------------
-	-- Initial locations
-	----------------------
+(************************************************************)
+(* Initial state *)
+(************************************************************)
+
+init :=
+	(*------------------------------------------------------------*)
+	(* Initial location *)
+	(*------------------------------------------------------------*)
 	& loc[train]      = train0
 	& loc[gate]       = gate0
 	& loc[controller] = controller0
 
-	----------------------
-	-- Clocks
-	----------------------
+	(*------------------------------------------------------------*)
+	(* Initial clock constraints *)
+	(*------------------------------------------------------------*)
 	& x >= 0
 	& y >= 0
 	& z >= 0
 
-	----------------------
-	-- Given constraints
-	----------------------
+	(*------------------------------------------------------------*)
+	(* Parameter constraints *)
+	(*------------------------------------------------------------*)
 	& a >= 0 & a <= b
 	& c >= 0 & c <= d
 	& e >= 0 & e <= f
-
-	----------------------
-	-- Instantiations
-	----------------------
-
 ;
 
+
+(************************************************************)
+(* Property specification *)
+(************************************************************)
+
+property := unreachable
+	(* IMITATOR still misses the "<>", hence we need to enumerate other locations of gate *)
+		loc[train] = train2 & loc[gate] = gate0
+	or
+		loc[train] = train2 & loc[gate] = gate1
+	or
+		loc[train] = train2 & loc[gate] = gate3
+;
+
+
+(************************************************************)
+(* The end *)
+(************************************************************)
 end
+

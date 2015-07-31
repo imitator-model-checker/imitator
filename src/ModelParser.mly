@@ -8,7 +8,7 @@
  * Author:        Etienne Andre
  * 
  * Created       : 2009/09/07
- * Last modified : 2015/07/30
+ * Last modified : 2015/07/31
 ***********************************************/
 
 %{
@@ -34,7 +34,7 @@ let parse_error s =
 %token OP_L OP_LEQ OP_EQ OP_GEQ OP_G OP_ASSIGN
 
 %token LPAREN RPAREN LBRACE RBRACE LSQBRA RSQBRA
-%token AMPERSAND APOSTROPHE COLON COMMA PIPE SEMICOLON
+%token AMPERSAND APOSTROPHE COLON COMMA DOUBLEDOT PIPE SEMICOLON
 
 /* CT_ALL CT_ANALOG CT_ASAP CT_BACKWARD CT_CLDIFF CT_D  CT_ELSE CT_EMPTY  CT_ENDHIDE CT_ENDIF CT_ENDREACH CT_ENDWHILE CT_FORWARD CT_FREE CT_FROM  CT_HIDE CT_HULL CT_INTEGRATOR CT_ITERATE CT_NON_PARAMETERS CT_OMIT CT_POST CT_PRE CT_PRINT CT_PRINTS CT_PRINTSIZE CT_REACH  CT_STOPWATCH CT_THEN CT_TO CT_TRACE CT_USING  CT_WEAKDIFF CT_WEAKEQ CT_WEAKGE CT_WEAKLE  */
 
@@ -47,7 +47,7 @@ let parse_error s =
 	CT_FALSE
 	CT_GOTO
 	CT_HAPPENED CT_HAS
-	CT_IF CT_INIT CT_INITIALLY
+	CT_IF CT_IN CT_INIT CT_INITIALLY
 	CT_LOC CT_LOCATIONS
 	CT_NEXT CT_NOT
 	CT_ONCE CT_OR
@@ -64,6 +64,7 @@ let parse_error s =
 
 %left PIPE CT_OR        /* lowest precedence */
 %left AMPERSAND CT_AND  /* medium precedence */
+%left DOUBLEDOT         /* high precedence */
 %nonassoc CT_NOT        /* highest precedence */
 
 
@@ -407,30 +408,30 @@ commands:
 ;
 
 
-// For retrocompatibility with HyTech only
+// For backward-compatibility with HyTech only
 init_declaration_opt:
 	| init_declaration_useless { }
 	| { }
 ;
 
-// For retrocompatibility with HyTech only
+// For backward-compatibility with HyTech only
 init_declaration_useless:
 	| CT_VAR regions COLON CT_REGION SEMICOLON { }
 ;
 
-// For retrocompatibility with HyTech only
+// For backward-compatibility with HyTech only
 regions:
 	| { }
 	| region_names { }
 ;
 
-// For retrocompatibility with HyTech only
+// For backward-compatibility with HyTech only
 region_names:
 	| region_name COMMA region_names { }
 	| region_name { }
 ;
 
-// For retrocompatibility with HyTech only
+// For backward-compatibility with HyTech only
 region_name:
 	| NAME { }
 	| CT_INIT { }
@@ -462,29 +463,43 @@ anything:
 ;
 
 init_definition:
-	CT_INIT OP_ASSIGN region_expression SEMICOLON { $3 }
+	| CT_INIT OP_ASSIGN region_expression SEMICOLON { $3 }
 ;
 
 
 // We allow here an optional "&" at the beginning
 region_expression:
-	ampersand_opt region_expression_fol { $2 }
+	| ampersand_opt region_expression_fol { $2 }
 ;
 
 region_expression_fol:
-	| state_predicate { [ $1 ] }
+	| init_state_predicate { [ $1 ] }
 	| LPAREN region_expression_fol RPAREN { $2 }
 	| region_expression_fol AMPERSAND region_expression_fol { $1 @ $3 }
 ;
 
-state_predicate:
+// Used in the init definition
+init_state_predicate:
 	| loc_predicate { let a,b = $1 in (Loc_assignment (a,b)) } 
 	| linear_constraint { Linear_predicate $1 }
 ;
 
 loc_predicate:
-	CT_LOC LSQBRA NAME RSQBRA OP_EQ NAME { ($3, $6) }
+	| CT_LOC LSQBRA NAME RSQBRA OP_EQ NAME { ($3, $6) }
 ;
+
+discrete_predicate:
+	| NAME OP_L rational { Parsed_discrete_l($1, $3) }
+	| NAME OP_LEQ rational { Parsed_discrete_leq($1, $3) }
+	| NAME OP_EQ rational { Parsed_discrete_equal($1, $3) }
+	| NAME OP_GEQ rational { Parsed_discrete_geq($1, $3) }
+	| NAME OP_G rational { Parsed_discrete_g($1, $3) }
+	// Two forms allowed for intervals: d in [a, b] or d in [a..b]
+	| NAME CT_IN LSQBRA rational COMMA rational RSQBRA { Parsed_discrete_interval($1, $4, $6) }
+	| NAME CT_IN LSQBRA rational DOUBLEDOT rational RSQBRA { Parsed_discrete_interval($1, $4, $6) }
+;
+
+
 
 
 
@@ -522,7 +537,7 @@ projection_definition:
 // List of patterns
 pattern:
 	// Unreachability
-	| CT_UNREACHABLE bad_definition { $2 }
+	| CT_UNREACHABLE bad_global_predicates { Parsed_unreachable_locations ($2) }
 	
 	/* if a2 then a1 has happened before */
 	| CT_IF NAME CT_THEN NAME CT_HAS CT_HAPPENED CT_BEFORE { Action_precedence_acyclic ($4, $2) }
@@ -531,12 +546,13 @@ pattern:
 	/* everytime a2 then a1 has happened once before */
 	| CT_EVERYTIME NAME CT_THEN NAME CT_HAS CT_HAPPENED CT_ONCE CT_BEFORE { Action_precedence_cyclicstrict ($4, $2) }
 	
-	/* if a1 then eventually a2 */
-	| CT_IF NAME CT_THEN CT_EVENTUALLY NAME { Eventual_response_acyclic ($2, $5) }
-	/* everytime a1 then eventually a2 */
-	| CT_EVERYTIME NAME CT_THEN CT_EVENTUALLY NAME { Eventual_response_cyclic ($2, $5) }
-	/* everytime a1 then eventually a2 once before next */
-	| CT_EVERYTIME NAME CT_THEN CT_EVENTUALLY NAME CT_ONCE CT_BEFORE CT_NEXT { Eventual_response_cyclicstrict ($2, $5) }
+	// PATTERNS NOT IMPLEMENTED
+// 	/* if a1 then eventually a2 */
+// 	| CT_IF NAME CT_THEN CT_EVENTUALLY NAME { Eventual_response_acyclic ($2, $5) }
+// 	/* everytime a1 then eventually a2 */
+// 	| CT_EVERYTIME NAME CT_THEN CT_EVENTUALLY NAME { Eventual_response_cyclic ($2, $5) }
+// 	/* everytime a1 then eventually a2 once before next */
+// 	| CT_EVERYTIME NAME CT_THEN CT_EVENTUALLY NAME CT_ONCE CT_BEFORE CT_NEXT { Eventual_response_cyclicstrict ($2, $5) }
 	
 	/* a within d */
 	| NAME CT_WITHIN linear_expression { Action_deadline ($1, $3) }
@@ -564,15 +580,27 @@ pattern:
 ;
 
 
-bad_definition:
-	// TODO: add more?
-	// NOTE: could be removed since only defined using loc_predicate
-	| loc_predicate { let a,b = $1 in (Unreachable_location (a , b)) }
+// A single definition of one bad location or one bad discrete definition
+bad_simple_predicate:
+	| discrete_predicate { Parsed_unreachable_discrete($1) }
+	| loc_predicate { Parsed_unreachable_loc($1) }
+;
+
+// A global definition of several bad locations and/or bad discrete definitions
+bad_global_predicate:
+	| bad_global_predicate AMPERSAND bad_global_predicate { List.rev_append $1 $3 }
+	| LPAREN bad_global_predicate RPAREN { $2 }
+	| bad_simple_predicate { [$1] }
+;
+
+bad_global_predicates:
+	| bad_global_predicate CT_OR bad_global_predicates { $1 :: $3 }
+	| bad_global_predicate { [$1] }
 ;
 
 
 convex_predicate_with_nature:
-	// TODO WARNING BUG 
+	// TODO
 // 	| convex_predicate LBRACE CT_GOOD RBRACE { $1, Good }
 // 	| convex_predicate LBRACE CT_BAD RBRACE { $1, Bad }
 // 	| convex_predicate LBRACE CT_UNKNOWN RBRACE { $1, Unknown }

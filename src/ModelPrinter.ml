@@ -1,22 +1,22 @@
-(***************************************************
+(************************************************************
  *
  *                     IMITATOR
  * 
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2009/12/02
- * Last modified: 2015/7/19
+ * Last modified: 2015/07/31
  *
- **************************************************)
+ ************************************************************)
 
 
 open CamlUtilities
 open AbstractModel
 
 
-(**************************************************)
+(************************************************************)
 (** Model *)
-(**************************************************)
+(************************************************************)
 
 (* Convert a var_type into a string *)
 let string_of_var_type = function
@@ -178,14 +178,14 @@ let string_of_locations model automaton_index =
 
 (* Convert an automaton into a string *)
 let string_of_automaton model automaton_index =
-	"\n(**************************************************)"
+	"\n(************************************************************)"
 	^ "\n automaton " ^ (model.automata_names automaton_index)
-	^ "\n(**************************************************)"
+	^ "\n(************************************************************)"
 	^ "\n " ^ (string_of_synclabs model automaton_index)
 	^ "\n " ^ (string_of_initially model automaton_index)
 	^ "\n " ^ (string_of_locations model automaton_index)
 	^ "\n end (* " ^ (model.automata_names automaton_index) ^ " *)"
-	^ "\n(**************************************************)"
+	^ "\n(************************************************************)"
 
 
 (* Convert the automata into a string *)
@@ -200,11 +200,103 @@ let string_of_model model =
 	^  "\n" ^ string_of_declarations model
 	^  "\n" ^ string_of_automata model
 	(*** TODO: the initial constraint !! ***)
+	(*** TODO: the property !! ***)
 
 
-(**************************************************)
+(************************************************************)
+(** Property *)
+(************************************************************)
+let string_of_unreachable_location model unreachable_global_location =
+	(* Convert locations *)
+	string_of_list_of_string_with_sep " & " (List.map (fun (automaton_index, location_index) ->
+			"loc[" ^ (model.automata_names automaton_index) ^ "]" ^ " = " ^ (model.location_names automaton_index location_index)
+		) unreachable_global_location.unreachable_locations
+	)
+	^
+	(* Separator *)
+	(if unreachable_global_location.unreachable_locations <> [] && unreachable_global_location.discrete_constraints <> [] then " & " else "")
+	^
+	(* Convert discrete *)
+	string_of_list_of_string_with_sep " & " (List.map (function
+		| Discrete_l (discrete_index , discrete_value)
+			-> (model.variable_names discrete_index) ^ " < " ^ (NumConst.string_of_numconst discrete_value)
+		| Discrete_leq (discrete_index , discrete_value)
+			-> (model.variable_names discrete_index) ^ " <= " ^ (NumConst.string_of_numconst discrete_value)
+		| Discrete_equal (discrete_index , discrete_value)
+			-> (model.variable_names discrete_index) ^ " = " ^ (NumConst.string_of_numconst discrete_value)
+		| Discrete_geq (discrete_index , discrete_value)
+			-> (model.variable_names discrete_index) ^ " >= " ^ (NumConst.string_of_numconst discrete_value)
+		| Discrete_g (discrete_index , discrete_value)
+			-> (model.variable_names discrete_index) ^ " > " ^ (NumConst.string_of_numconst discrete_value)
+		| Discrete_interval (discrete_index , min_discrete_value, max_discrete_value)
+			-> (model.variable_names discrete_index) ^ " in [" ^ (NumConst.string_of_numconst min_discrete_value) ^ " , " ^ (NumConst.string_of_numconst max_discrete_value) ^ "]"
+		) unreachable_global_location.discrete_constraints
+	)
+
+
+(** Convert the correctness property to a string *)
+let string_of_property model = function
+	(* An "OR" list of global locations *)
+	| Unreachable_locations unreachable_global_location_list ->
+		string_of_list_of_string_with_sep "\n or \n " (List.map (string_of_unreachable_location model) unreachable_global_location_list)
+
+	(* if a2 then a1 has happened before *)
+	| Action_precedence_acyclic (a1 , a2) ->
+		"property := if " ^ (model.action_names a2) ^ " then " ^ (model.action_names a1) ^ " has happened before;"
+	(* everytime a2 then a1 has happened before *)
+	| Action_precedence_cyclic (a1 , a2) ->
+		"property := everytime " ^ (model.action_names a2) ^ " then " ^ (model.action_names a1) ^ " has happened before;"
+	(* everytime a2 then a1 has happened exactly once before *)
+	| Action_precedence_cyclicstrict (a1 , a2) ->
+		"property := everytime " ^ (model.action_names a2) ^ " then " ^ (model.action_names a1) ^ " has happened exactly once before;"
+
+	(*** NOTE: not implemented ***)
+(*	(* if a1 then eventually a2 *)
+	| Eventual_response_acyclic (a1 , a2) -> ""
+	(* everytime a1 then eventually a2 *)
+	| Eventual_response_cyclic (a1 , a2) -> ""
+	(* everytime a1 then eventually a2 once before next *)
+	| Eventual_response_cyclicstrict (a1 , a2) -> ""
+	*)
+
+	(* a no later than d *)
+	| Action_deadline (a, d) ->
+		"property := " ^ (model.action_names a) ^ " no later than " ^ (LinearConstraint.string_of_p_linear_term model.variable_names d) ^ ";"
+
+	(* if a2 then a1 happened within d before *)
+	| TB_Action_precedence_acyclic (a1 , a2, d) ->
+		"property := if " ^ (model.action_names a2) ^ " then " ^ (model.action_names a1) ^ " has happened within " ^ (LinearConstraint.string_of_p_linear_term model.variable_names d) ^ " before;"
+	(* everytime a2 then a1 happened within d before *)
+	| TB_Action_precedence_cyclic (a1 , a2, d) ->
+		"property := everytime " ^ (model.action_names a2) ^ " then " ^ (model.action_names a1) ^ " has happened within " ^ (LinearConstraint.string_of_p_linear_term model.variable_names d) ^ " before;"
+	(* everytime a2 then a1 happened once within d before *)
+	| TB_Action_precedence_cyclicstrict (a1 , a2, d) ->
+		"property := everytime " ^ (model.action_names a2) ^ " then " ^ (model.action_names a1) ^ " has happened once within " ^ (LinearConstraint.string_of_p_linear_term model.variable_names d) ^ " before;"
+	
+	(* if a1 then eventually a2 within d *)
+	| TB_response_acyclic (a1 , a2, d) ->
+		"property := if " ^ (model.action_names a2) ^ " then eventually " ^ (model.action_names a1) ^ " within " ^ (LinearConstraint.string_of_p_linear_term model.variable_names d) ^ ";"
+	(* everytime a1 then eventually a2 within d *)
+	| TB_response_cyclic (a1 , a2, d) ->
+		"property := everytime " ^ (model.action_names a2) ^ " then eventually " ^ (model.action_names a1) ^ " within " ^ (LinearConstraint.string_of_p_linear_term model.variable_names d) ^ ";"
+	(* everytime a1 then eventually a2 within d once before next *)
+	| TB_response_cyclicstrict (a1 , a2, d) ->
+		"property := if " ^ (model.action_names a2) ^ " then eventually " ^ (model.action_names a1) ^ " within " ^ (LinearConstraint.string_of_p_linear_term model.variable_names d) ^ " once before next;"
+
+	(* sequence a1, ..., an *)
+	| Sequence_acyclic action_index_list ->
+		"property := sequence (" ^ (string_of_list_of_string_with_sep ", " (List.map model.action_names action_index_list)) ^ ");"
+	(* always sequence a1, ..., an *)
+	| Sequence_cyclic action_index_list ->
+		"property := always sequence (" ^ (string_of_list_of_string_with_sep ", " (List.map model.action_names action_index_list)) ^ ");"
+	
+	(* Would be better to have an "option" type *)
+	| Noproperty -> "(* no property *)"
+
+
+(************************************************************)
 (** States *)
-(**************************************************)
+(************************************************************)
 
 (* Convert a location name into a string *)
 (*let string_of_location_name model location =
@@ -218,9 +310,9 @@ let string_of_state model (global_location, linear_constraint) =
 	"" ^ (Automaton.string_of_location model.automata_names model.location_names model.variable_names global_location) ^ " ==> \n&" ^ (LinearConstraint.string_of_px_linear_constraint model.variable_names linear_constraint) ^ "" 
 
 
-(**************************************************)
+(************************************************************)
 (** Pi0 *)
-(**************************************************)
+(************************************************************)
 (* Convert a pi0 into a string *)
 let string_of_pi0 model pi0 =
 	"  " ^ (
@@ -234,9 +326,9 @@ let string_of_pi0 model pi0 =
 	)
 
 
-(**************************************************)
+(************************************************************)
 (** V0 *)
-(**************************************************)
+(************************************************************)
 (* Convert a V0 into a string *)
 let string_of_v0 model v0 =
 	"  " ^ (
@@ -258,9 +350,9 @@ let string_of_v0 model v0 =
 
 
 
-(**************************************************************)
+(************************************************************)
 (* Result *)
-(**************************************************************)
+(************************************************************)
 let string_of_returned_constraint variable_names = function 
 	| Convex_constraint (linear_constraint, _) -> LinearConstraint.string_of_p_linear_constraint variable_names linear_constraint
 	
