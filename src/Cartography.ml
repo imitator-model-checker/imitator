@@ -10,7 +10,7 @@
  * Author:        Ulrich Kuehne, Etienne Andre
  * 
  * Created:       2012/06/18
- * Last modified: 2015/05/18
+ * Last modified: 2015/07/31
  *
  ****************************************************************)
 
@@ -418,11 +418,11 @@ let compute_initial_pi0 () =
 
 	(* Instantiate with the point in the middle of V0 *)
 	| Border_cartography ->
-		(* Start with the min bounds everywhere *)
-		let initial_pi0 = new PVal.pval in
 		(*** NOTE: to rewrite and retest ***)
-		raise (InternalError ("Not implemented"));
-(*(** 		for i = 0 to (Array.length initial_pi0) - 1 do *)
+		raise (InternalError ("Border cartography is not implemented"));
+(*		(* Start with the min bounds everywhere *)
+		let initial_pi0 = new PVal.pval in
+(** 		for i = 0 to (Array.length initial_pi0) - 1 do *)
 			(* Get some variables *)
 			let min_bound = !min_bounds.(first_dimension) in
 			let max_bound = !max_bounds.(first_dimension) in
