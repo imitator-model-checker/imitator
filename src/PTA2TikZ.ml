@@ -7,7 +7,7 @@
  * Author:        Etienne Andre
  * 
  * Created:       2015/03/24
- * Last modified: 2015/07/19
+ * Last modified: 2015/07/31
  *
  ****************************************************************)
 
@@ -32,17 +32,17 @@ let variable_names_with_style variable_index =
 	let model = Input.get_model() in
 	let name = escape_latex (model.variable_names variable_index) in
 	match model.type_of_variables variable_index with
-	| Var_type_clock -> "\styleclock{" ^ name ^ "}"
-	| Var_type_discrete -> "\styledisc{" ^ name ^ "}"
-	| Var_type_parameter -> "\styleparam{" ^ name ^ "}"
+	| Var_type_clock -> "\\styleclock{" ^ name ^ "}"
+	| Var_type_discrete -> "\\styledisc{" ^ name ^ "}"
+	| Var_type_parameter -> "\\styleparam{" ^ name ^ "}"
 
 
 (** Proper form for constraints *)
 let tikz_string_of_lc_gen lc_fun lc =
 	let lc_string = lc_fun variable_names_with_style lc in
 	(* Do some replacements *)
-	"& $" ^ Str.global_replace (Str.regexp ">=") ("\geq")
-		(Str.global_replace (Str.regexp "&") ("$\\\\\\\\\n\t\t$\land$ & $")
+	"& $" ^ Str.global_replace (Str.regexp ">=") ("\\geq")
+		(Str.global_replace (Str.regexp "&") ("$\\\\\\\\\n\t\t$\\land$ & $")
 			(Str.global_replace (Str.regexp "a") ("a") lc_string)
 		)
 	^ "$"
@@ -70,7 +70,7 @@ let string_of_header model =
 (** Convert a sync into a string *)
 let string_of_sync model action_index =
 	match model.action_types action_index with
-	| Action_type_sync -> "\n\t\t & $\styleact{" ^ (escape_latex (model.action_names action_index)) ^ "}$\\\\"
+	| Action_type_sync -> "\n\t\t & $\\styleact{" ^ (escape_latex (model.action_names action_index)) ^ "}$\\\\"
 	| Action_type_nosync -> ""
 
 
@@ -119,7 +119,7 @@ let string_of_transition model automaton_index source_location action_index (gua
 			\coulact{press?} \\
 			$\coulclock{x} := 0$ \\
 			$\coulclock{y} := 0$ \\
-			\end{tabular}} (Q1);*)
+			\\end{tabular}} (Q1);*)
 	"\n\n\t\t\\path (" ^ source_location_name ^ ") edge node{\\begin{tabular}{@{} c @{\\ } c@{} }"
 	
 	(* GUARD *)
@@ -137,7 +137,7 @@ let string_of_transition model automaton_index source_location action_index (gua
  	^ (string_of_updates model discrete_updates)
 	
 	(* The end *)
-	^ "\n\t\t\end{tabular}} (" ^ destination_location_name ^ ");"
+	^ "\n\t\t\\end{tabular}} (" ^ destination_location_name ^ ");"
 
 
 (* Convert the transitions of a location into a string *)
@@ -193,15 +193,15 @@ let string_of_location model automaton_index location_index =
 	"\n\t\t\\node[location, "
 	^ initial_str
 	^ urgent_str
-	^ "fill=loccolor" ^ (string_of_int color_id) ^ "] at (" ^ (string_of_int pos_x) ^ "," ^ (string_of_int pos_y) ^ ") (" ^ location_name ^ ") {\styleloc{" ^ (if model.is_urgent automaton_index location_index then "U: " else "") ^ (escape_latex location_name) ^ "}};"
+	^ "fill=loccolor" ^ (string_of_int color_id) ^ "] at (" ^ (string_of_int pos_x) ^ "," ^ (string_of_int pos_y) ^ ") (" ^ location_name ^ ") {\\styleloc{" ^ (if model.is_urgent automaton_index location_index then "U: " else "") ^ (escape_latex location_name) ^ "}};"
 	
 	(* INVARIANT AND STOPWATCHES *)
 (*			% Invariant of location Q1
 		\node [invariant,right] at (Q1.east) {
 			\begin{tabular}{c @{\ } c}
 				& $\coulclock{y} \leq \coulparam{p1}$\\
-				$\land$ & $\coulclock{x} \geq 5 \couldisc{i}$\\
-			\end{tabular}
+				$\\land$ & $\coulclock{x} \geq 5 \couldisc{i}$\\
+			\\end{tabular}
 		};*)
 	
 	^ (if has_invariant || has_stopwatches then (
@@ -224,7 +224,7 @@ let string_of_location model automaton_index location_index =
 			(" & stop(" ^ (string_of_list_of_string_with_sep ", " (List.map variable_names_with_style stopwatches)) ^ ")")
 			) else "")
 		(* The end *)
-		^ "\end{tabular}};"
+		^ "\\end{tabular}};"
 	) else "")
 
 
@@ -253,10 +253,10 @@ let string_of_automaton model automaton_index =
 	(* Handling transitions *)
 	^ "\n " ^ (string_of_transitions model automaton_index)
 	
-	^ "\n\t\end{tikzpicture}"
-	^ "\n\t\caption{PTA " ^ automaton_name ^ "}"
-	^ "\n\t\label{pta:" ^ automaton_name ^ "}"
-	^ "\n\t\end{subfigure}"
+	^ "\n\t\\end{tikzpicture}"
+	^ "\n\t\\caption{PTA " ^ automaton_name ^ "}"
+	^ "\n\t\\label{pta:" ^ automaton_name ^ "}"
+	^ "\n\t\\end{subfigure}"
 
 
 (* Convert the automata into a string *)
@@ -309,9 +309,9 @@ let tikz_string_of_model model =
 	^  "\n" ^ string_of_automata model
 	(* Footer *)
 	^ "
-\end{figure}
+\\end{figure}
 
-\end{document}
+\\end{document}
 "
 	in
 	(* Replace escaped characters! *)
