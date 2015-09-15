@@ -7,7 +7,7 @@
  * Author:        Etienne Andre
  * 
  * Created:       2014/10/24
- * Last modified: 2015/07/27
+ * Last modified: 2015/09/15
  *
  ****************************************************************)
  
@@ -310,6 +310,15 @@ let evaluate_and a b =
 (* Evaluate both part of an 'or' comparison and return the disjunction *)
 let evaluate_or a b =
 	a || b
+
+
+(* XOR: returns true if both are different *)
+let xor (a : bool) (b : bool) : bool =
+	a <> b
+
+(* XNOR: returns true if both are true or both are false, i.e., when both are equal to each other *)
+let xnor (a : bool) (b : bool) : bool =
+	a = b
 
 
 (****************************************************************)

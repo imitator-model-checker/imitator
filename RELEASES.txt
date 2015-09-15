@@ -3,6 +3,7 @@ release 2.XXXXX    (XXXXX) FUTURE RELEASE
 
 Major
 - Allow for more complex unreachable states in property definition: several locations in several IPTA can be tested, and discrete variables can be compared with <, <=, =, >=, > and intervals; all this can be mixed using and/or operators.
+- Detection of L/U-PTA, U-PTA and L-PTA [still being tested!]
 
 Bug fixing
 - Solved an inconsistency in the property syntax of the "always sequence" observer pattern

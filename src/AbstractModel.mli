@@ -8,7 +8,7 @@
  * Author:        Etienne Andre
  * 
  * Created:       2009/09/11
- * Last modified: 2015/07/31
+ * Last modified: 2015/09/15
  *
  ****************************************************************)
 
@@ -201,6 +201,20 @@ type projection = (parameter_index list) option
 (****************************************************************)
 (** Nature of the tiles *)
 (****************************************************************)
+type lu_status =
+	(* General PTA *)
+	| PTA_notLU
+	(* L/U-PTA with parameters partitioned into L- and U-parameters *)
+	| PTA_LU of parameter_index list * parameter_index list
+	(* L-PTA *)
+	| PTA_L
+	(* U-PTA *)
+	| PTA_U
+
+
+(****************************************************************)
+(** Nature of the tiles *)
+(****************************************************************)
 (*** BADPROG : nothing to do with abstract model ! ***)
 type tile_nature =
 	| Good
@@ -208,10 +222,13 @@ type tile_nature =
 	| Unknown
 
 
+
+
 (****************************************************************)
 (** The abstract model *)
 (****************************************************************)
 type abstract_model = {
+	(** General information **)
 	(* Cardinality *)
 	nb_automata : int;
 	nb_actions : int;
@@ -220,6 +237,12 @@ type abstract_model = {
 	nb_parameters : int;
 	nb_variables : int;
 	
+	(* Is there any stopwatch in the model? *)
+	has_stopwatches : bool;
+	(* Is the model an L/U-PTA? *)
+	lu_status : lu_status;
+
+	(** Content of the PTA **)
 	(* The observer *)
 	observer_pta : automaton_index option;
 	is_observer : automaton_index -> bool;
@@ -278,8 +301,6 @@ type abstract_model = {
 	transitions : automaton_index -> location_index -> action_index -> (transition list);
 	(* The list of clocks stopped for each automaton and each location *)
 	stopwatches : automaton_index -> location_index -> clock_index list;
-	(* Is there any stopwatch in the model? *)
-	has_stopwatches : bool;
 
 	(* Init : the initial state *)
 	initial_location : global_location;

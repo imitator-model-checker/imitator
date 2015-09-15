@@ -10,7 +10,7 @@
  * Author:        Etienne Andre
  * 
  * Created:       2010/03/04
- * Last modified: 2015/07/17
+ * Last modified: 2015/09/15
  *
  ****************************************************************) 
  
@@ -208,6 +208,10 @@ val pxd_is_constrained : pxd_linear_constraint -> variable -> bool
 (** Return the list of variables from l that are constrained in the constraint *)
 (* val find_variables : variable list -> linear_constraint -> variable list *)
 val pxd_find_variables : variable list -> pxd_linear_constraint -> variable list
+
+
+(** Given a list of variables V and a list of linear_constraint, partition the list V into variables appearing only as lower-bound in inequalities, and variables only appearing as upper-bounds in inequalities; raise Not_LU if some variables in V appear as both (or in equalities) *)
+val partition_lu : variable list -> pxd_linear_constraint list -> (variable list * variable list)
 
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)

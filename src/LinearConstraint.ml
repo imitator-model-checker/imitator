@@ -10,7 +10,7 @@
  * Author:        Etienne Andre
  * 
  * Created:       2010/03/04
- * Last modified: 2015/07/17
+ * Last modified: 2015/09/15
  *
  ****************************************************************) 
  
@@ -173,7 +173,7 @@ type coef = NumConst.t
 (* the linear_term is a generalization of the corresponding  *)
 (* PPL data structure Ppl.linear_expression, using rationals *)
 (* instead of integers. *)
-(*** WARNING: probably useless construction (by Ulrich) ***)
+(*** WARNING: probably useless construction (by Ulrich Kuehne, around 2010) ***)
 type linear_term =
 	  Var of variable
 	| Coef of coef
@@ -300,7 +300,8 @@ let add_constraints x =
 	result
 	
 
-let get_constraints x =
+(* Return the list of inequalities that build the polyhedron (interface to PPL) *)
+let get_inequalities x : linear_inequality list =
 	(* Statistics *)
 	ppl_nb_get_constraints := !ppl_nb_get_constraints + 1;
 	let start = Unix.gettimeofday() in
@@ -511,7 +512,7 @@ let rec string_of_linear_term_ppl names linear_term =
 					match rterm with
 						| Coefficient _ -> fstr ^ "*" ^ tstr
 						| Variable    _ -> fstr ^ "*" ^ tstr
-						| _ -> fstr ^ " * (" ^ tstr ^ ")" ) 				
+						| _ -> fstr ^ " * (" ^ tstr ^ ")" )
 				
 
 (************************************************************)
@@ -918,10 +919,11 @@ let px_contains_integer_point = contains_integer_point
 (** Get the number of inequalities of a constraint *)
 let nb_inequalities linear_constraint = 
 	(* First check if true *)
+	(*** NOTE: might be more costly than the general check; perhaps move after getting the list? ***)
 	if p_is_true linear_constraint || p_is_false linear_constraint then 0
 	else
 	(* Get a list of linear inequalities *)
-	let list_of_inequalities = get_constraints linear_constraint in
+	let list_of_inequalities = get_inequalities linear_constraint in
 	List.length list_of_inequalities
 
 let p_nb_inequalities = nb_inequalities
@@ -929,10 +931,10 @@ let p_nb_inequalities = nb_inequalities
 
 
 
-(** Get the linear inequalities *)
+(*(** Get the linear inequalities *)
 let get_inequalities =
 (*** TODO: add counter ***)
-	ppl_Polyhedron_get_constraints
+	ppl_Polyhedron_get_constraints*)
 
 
 (** Return true if the variable is constrained in a linear_constraint *)
@@ -944,7 +946,7 @@ let pxd_is_constrained = is_constrained
 
 
 (** Return the list of variables from l that are constrained in the constraint *)
-(* WARNING: no idea of the efficiency of this way of doing *)
+(*** WARNING: no idea of the efficiency of this way of doing *)
 (* (but not crucial because only called for preprocessing) *)
 let find_variables variables_list linear_constraint =
 	List.filter (fun variable ->
@@ -956,6 +958,154 @@ let pxd_find_variables = find_variables
 
 
 
+(*
+let partition_lu_ineq variables (current_list_of_l, current_list_of_u) linear_inequality =
+	(* Get the inequalities *)
+	let inequalities = get_inequalities linear_constraint in
+	List.fold_left
+		(* 1st argument of fold_left: the function called on each linear_inequality *)
+		(fun (current_list_of_l, current_list_of_u) linear_inequality -> 
+			(current_list_of_l, current_list_of_u))
+		(* 2nd argument of fold_left: initial list of l, initial list of u *)
+		([], [])
+		(* 3rd argument of fold_left: the list of inequalities *)
+		inequalities*)
+
+
+
+(* Check whether a variable appears in a linear_term (with coeff <> 0) *)
+let rec variable_in_linear_term v = function
+	| Variable variable -> v = variable
+	| Coefficient _ -> false
+	| Unary_Plus linear_expression -> variable_in_linear_term v linear_expression
+	| Unary_Minus linear_expression -> variable_in_linear_term v linear_expression
+	| Plus (linear_expression1, linear_expression2) ->
+		variable_in_linear_term v linear_expression1
+		|| variable_in_linear_term v linear_expression2
+	| Minus (linear_expression1, linear_expression2) ->
+		variable_in_linear_term v linear_expression1
+		|| variable_in_linear_term v linear_expression2
+	| Times (coeff, rterm) ->
+		if Gmp.Z.equal coeff (Gmp.Z.zero) then false
+		else (match rterm with
+			| Variable variable -> v = variable
+			| _ -> raise (InternalError ("In function 'variable_in_linear_term', pattern 'Times' was expected to be only used for coeff * variable."))
+		)
+
+
+type l_u_type =
+	| TypeLU_L
+	| TypeLU_U
+	| TypeLU_unknown
+
+(* Given a list of variables V and a list of linear_constraint, partition the list V into variables appearing only as lower-bound in inequalities, and variables only appearing as upper-bounds in inequalities; raise Not_LU if some variables in V appear as both (or in equalities) *)
+let partition_lu variables linear_constraints =
+
+(*	(*** DEBUG ***)
+	let stringp = fun var -> "p_" ^ (string_of_int var) in*)
+
+	(* Create a hashtable v: l_u_type *)
+	let status_lu = Hashtbl.create (List.length variables) in
+	(* Fill table with TypeLU_unknown *)
+	List.iter (fun variable ->
+		Hashtbl.add status_lu variable TypeLU_unknown
+	) variables;
+	
+	(* Function to update the hash table for one variable; the Bool lower_bound specifies whether the variable was met as a lower bound. Raise Not_LU if the new status is incompatible with the status stored in the hashtable *)
+	let update_variable lower_bound variable =
+		(* Only update if the variable belongs to the list of variables we search for *)
+		if List.mem variable variables then (
+			(* Get the current status of the variable *)
+			let current_status = Hashtbl.find status_lu variable in
+			(* If not yet met: just update the table *)
+			if current_status = TypeLU_unknown then
+				Hashtbl.replace status_lu variable (if lower_bound then TypeLU_L else TypeLU_U)
+			else(
+				(* If met as a lower bound but current status is upper bound *)
+				if lower_bound && current_status = TypeLU_U
+				||
+				(* If met as an upper bound but current status is lower bound *)
+				not lower_bound && current_status = TypeLU_L
+				then raise Not_LU
+			)
+		)
+	in
+	
+	(* Function to update the hash table for a linear_term; the Bool lower_side specifies whether the considered linear_term is on the lower side of an inequality *)
+	let rec check_linear_term lower_side = function
+		| Variable variable -> update_variable lower_side variable
+		| Coefficient _ -> ()
+		| Unary_Plus linear_expression -> check_linear_term lower_side linear_expression
+		| Unary_Minus linear_expression -> check_linear_term (not lower_side) linear_expression
+		| Plus (linear_expression1, linear_expression2) ->
+			check_linear_term lower_side linear_expression1;
+			check_linear_term lower_side linear_expression2
+		| Minus (linear_expression1, linear_expression2) ->
+			check_linear_term lower_side linear_expression1;
+			check_linear_term (not lower_side) linear_expression2
+		| Times (coeff, rterm) ->
+			(* Coeff 0: equivalent to no variable *)
+			if Gmp.Z.equal coeff (Gmp.Z.zero) then ()
+			else (match rterm with
+				| Variable variable ->
+					update_variable
+						(xor (coeff <! Gmp.Z.zero) lower_side)
+						variable
+				| _ -> raise (InternalError ("In function 'check_linear_term', pattern 'Times' was expected to be only used for coeff * variable."))
+			)
+	in
+	
+	(* FOR ALL CONSTRAINTS *)
+	List.iter (fun linear_constraint ->
+	
+		(* Get the inequalities *)
+		let inequalities = get_inequalities linear_constraint in
+		
+		(* FOR ALL INEQUALITIES IN THAT CONSTRAINT *)
+		List.iter (function
+			(* Case 1: equality --> check if any variable in 'variables' appears in it *)
+			| Equal (lterm, rterm) -> 
+				List.iter (fun variable -> 
+					if variable_in_linear_term variable lterm || variable_in_linear_term variable rterm then raise Not_LU
+				) variables
+
+			(* Case 2a: < / <= --> find L/U variables and update the hash table *)
+			| Less_Than (lterm, rterm)
+			| Less_Or_Equal (lterm, rterm) ->
+				check_linear_term true lterm;
+				check_linear_term false rterm;
+			
+			(* Case 2b: > / >= --> find L/U variables and update the hash table *)
+			| Greater_Or_Equal (lterm, rterm)
+			| Greater_Than (lterm, rterm) ->
+				check_linear_term false lterm;
+				check_linear_term true rterm;
+			
+		) inequalities; (* end FOR ALL inequalities *)
+	) linear_constraints; (* end FOR ALL constraints *)
+	
+	(* Extract L and U *)
+	let l_variables, u_variables =
+	Hashtbl.fold
+		(* 1st argument of Hashtbl.fold: the function *)
+		(fun variable status (current_l_variables, current_u_variables) ->
+			if status = TypeLU_L then variable :: current_l_variables, current_u_variables
+			else(
+				if status = TypeLU_U then current_l_variables, variable :: current_u_variables
+				else current_l_variables, current_u_variables
+			)
+		)
+		(* 2nd argument of Hashtbl.fold: the hashtable *)
+		status_lu
+		(* 3rd argument of Hashtbl.fold: the initial value of l_variables, u_variables *)
+		([], [])
+	in
+(*	(*** DEBUG ***)
+	print_string ("\n*** lower-bound parameters {" ^ (string_of_list_of_string_with_sep ", " (List.map stringp l_variables)) ^ "}");
+	(*** DEBUG ***)
+	print_string ("\n*** upper-bound parameters {" ^ (string_of_list_of_string_with_sep ", " (List.map stringp u_variables)) ^ "}");*)
+	(* Return both lists *)
+	l_variables, u_variables
 
 
 
@@ -1141,7 +1291,7 @@ let unserialize_linear_inequality linear_inequality_string =
 (** Serialize a linear constraint *)
 let serialize_linear_constraint linear_constraint =
 	(* Get a list of linear inequalities and serialize *)
-	let list_of_inequalities = List.map serialize_linear_inequality (get_constraints linear_constraint) in
+	let list_of_inequalities = List.map serialize_linear_inequality (get_inequalities linear_constraint) in
 	(* Add separators *)
 	String.concat serialize_SEP_LI list_of_inequalities
 
@@ -1207,7 +1357,7 @@ let string_of_linear_constraint names linear_constraint =
 	else if is_false linear_constraint then string_of_false
 	else
 	(* Get a list of linear inequalities *)
-	let list_of_inequalities = get_constraints linear_constraint in
+	let list_of_inequalities = get_inequalities linear_constraint in
 	" " ^
 	(string_of_list_of_string_with_sep
 		"\n& "
@@ -1656,7 +1806,7 @@ let px_is_positive_in v c =
 (** Check if a linear constraint is pi0-compatible *)
 let is_pi0_compatible pi0 linear_constraint =
 	(* Get a list of linear inequalities *)
-	let list_of_inequalities = get_constraints linear_constraint in
+	let list_of_inequalities = get_inequalities linear_constraint in
 	(* Check the pi0-compatibility for all *)
 	List.for_all (is_pi0_compatible_inequality pi0) list_of_inequalities
 
@@ -1664,7 +1814,7 @@ let is_pi0_compatible pi0 linear_constraint =
 (** Compute the pi0-compatible and pi0-incompatible inequalities within a constraint *)
 let partition_pi0_compatible pi0 linear_constraint =
 	(* Get a list of linear inequalities *)
-	let list_of_inequalities = get_constraints linear_constraint in
+	let list_of_inequalities = get_inequalities linear_constraint in
 	(* Partition *)
 	List.partition (is_pi0_compatible_inequality pi0) list_of_inequalities
 
@@ -1763,7 +1913,7 @@ let grml_of_linear_constraint names t_level linear_constraint =
 	else (if is_false linear_constraint then "<attribute name=\"boolExpr\"><attribute name=\"boolValue\">false</attribute></attribute>"
 	else (
 		(* Get a list of linear inequalities *)
-		let list_of_inequalities = get_constraints linear_constraint in
+		let list_of_inequalities = get_inequalities linear_constraint in
 		let rec grml_of_linear_constraint_rec t_level = function
 		| [] -> ""
 		| first :: rest ->

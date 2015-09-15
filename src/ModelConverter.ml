@@ -10,7 +10,7 @@
  * Author:        Etienne Andre
  * 
  * Created:       2009/09/09
- * Last modified: 2015/07/31
+ * Last modified: 2015/09/15
  *
  ************************************************************)
 
@@ -2446,6 +2446,55 @@ let abstract_model_of_parsing_structure (parsed_variable_declarations, parsed_au
 
 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(* Detect the L/U nature of the PTA *)
+	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	
+	(* 1) Get ALL constraints of guards and invariants *)
+	print_message Verbose_total ("*** Retrieving all constraints to detect the L/U nature of the model...");
+	(*** BADPROG ***)
+	let all_constraints = ref [] in
+	(* For all PTA *)
+	List.iter (fun automaton_index ->
+		let locations_for_this_automaton = locations_per_automaton automaton_index in
+		(* For all locations *)
+		List.iter (fun location_index ->
+			let invariant = invariants automaton_index location_index in
+		
+			(* Add invariant *)
+			all_constraints := invariant :: !all_constraints;
+			
+			let actions_for_this_location = actions_per_location automaton_index location_index in
+			(* For all actions *)
+			List.iter (fun action_index ->
+				let transitions_for_this_location = transitions automaton_index location_index action_index in
+				(* For all transitions *)
+				List.iter (fun (guard, _, _, _) ->
+				
+					(* Add guard *)
+					all_constraints := guard :: !all_constraints;
+					
+				) transitions_for_this_location;
+			) actions_for_this_location;
+		) locations_for_this_automaton;
+	) automata;
+	
+	(* 2) Try to partition parameters as L- and U- *)
+	print_message Verbose_high ("*** Detecting the L/U nature of the model...");
+	let lu_status =
+	try(
+		let l_parameters, u_parameters = LinearConstraint.partition_lu parameters !all_constraints in
+		(*** TODO: check that all parameters are indeed partitioned (if some parameters appear nowhere, that might be a problem) ***)
+		match l_parameters, u_parameters with
+		| [] , [] -> PTA_notLU
+		| _ , [] -> PTA_L
+		| [] , _ -> PTA_U
+		| l_parameters, u_parameters -> PTA_LU (l_parameters, u_parameters)
+	) with Not_LU -> PTA_notLU
+	in
+	
+
+	
+	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Construct the initial state *) 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	print_message Verbose_total ("*** Building initial state...");
@@ -2568,6 +2617,24 @@ let abstract_model_of_parsing_structure (parsed_variable_declarations, parsed_au
 			done;
 	);
 	
+	(* Debug print: L/U *)
+	begin
+	match lu_status with
+	| PTA_notLU ->
+		print_message Verbose_low ("This model is not an L/U-PTA.");
+		
+	| PTA_LU (l_parameters, u_parameters) ->
+		print_message Verbose_standard ("This model is an L/U-PTA:");
+		print_message Verbose_standard ("- lower-bound parameters {" ^ (string_of_list_of_string_with_sep ", " (List.map variable_names l_parameters)) ^ "}");
+		print_message Verbose_standard ("- upper-bound parameters {" ^ (string_of_list_of_string_with_sep ", " (List.map variable_names u_parameters)) ^ "}");
+		
+	| PTA_L ->
+		print_message Verbose_standard ("This model is an L-PTA.");
+		
+	| PTA_U ->
+		print_message Verbose_standard ("This model is a U-PTA.");
+		
+	end;
 	
 	
 	
@@ -2582,6 +2649,12 @@ let abstract_model_of_parsing_structure (parsed_variable_declarations, parsed_au
 	nb_discrete = nb_discrete;
 	nb_parameters = nb_parameters;
 	nb_variables = nb_variables;
+	
+	(* Is there any stopwatch in the model? *)
+	has_stopwatches = has_stopwatches;
+	(* Is the model an L/U-PTA? *)
+	lu_status = lu_status;
+
 	
 	(* The observer *)
 	observer_pta = observer_automaton;
@@ -2645,8 +2718,6 @@ let abstract_model_of_parsing_structure (parsed_variable_declarations, parsed_au
 	transitions = transitions;
 	(* The list of clocks stopped for each automaton and each location *)
 	stopwatches = stopwatches;
-	(* Is there any stopwatch in the model? *)
-	has_stopwatches = has_stopwatches;
 
 	(* Init : the initial state *)
 	initial_location = initial_location;

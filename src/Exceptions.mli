@@ -7,7 +7,7 @@
  * Author:        Etienne Andre
  * 
  * Created:       2014/10/24
- * Last modified: 2015/03/27
+ * Last modified: 2015/09/15
  *
  ****************************************************************)
 
@@ -26,3 +26,7 @@ exception NoIPPTA
 
 (** Parsing exception: starting position of the error symbol, ending position of the error symbol *)
 exception ParsingError of (int * int)
+
+(** When a PTA is not an L/U-PTA *)
+exception Not_LU
+

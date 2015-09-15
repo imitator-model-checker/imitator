@@ -7,7 +7,7 @@
  * Author:        Etienne Andre
  * 
  * Created:       2014/10/24
- * Last modified: 2015/07/27
+ * Last modified: 2015/09/15
  *
  ****************************************************************)
 
@@ -138,6 +138,13 @@ val evaluate_and : bool -> bool -> bool
 
 (* Evaluate both part of an 'or' comparison and return the disjunction *)
 val evaluate_or : bool -> bool -> bool
+
+(* XOR: returns true if both are different *)
+val xor : bool -> bool -> bool
+
+(* XNOR: returns true if both are true or both are false, i.e., when both are equal to each other *)
+val xnor : bool -> bool -> bool
+
 
 (****************************************************************)
 (** Useful functions on floats *)
