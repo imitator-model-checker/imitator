@@ -1,9 +1,9 @@
 (************************************************************
  *                      IMITATOR MODEL                      
  *
- * Empty template of a case study
+ * Producer/Consumer with n=2 processing nodes of length m=3
  *
- * Description     : The network presented in Figure 2 models the system consisting of the Producer feeding the Consumer with data sent through a sequence of nodes with additional processing capabilities. The model is scalable with respect to the number n of the processing nodes and the length m of each processing node and it contains three lower (a,c,e) and three upper (b,d,f) parameters.
+ * Description     : The network presented in Figure 2 models the system consisting of the Producer feeding the Consumer with data sent through a sequence of nodes with additional processing capabilities. The model is scalable with respect to the number n of the processing nodes and the length m of each processing node and it contains three lower (a,c,e) and three upper (b,d,f) parameters. Note: the clocks were renamed (w.r.t. to [KP12]) for sake of simplicity.
  * Correctness     : φ2 = ConsWaiting ∧ ProdReady ∧ xtotal ≥ 5
  * Source          : SMT-based Parameter Synthesis for L/U Automata, Michal Knapik and Wojciech Penczek
  * Author          : Michal Knapik and Wojciech Penczek
@@ -11,7 +11,7 @@
  * Input by        : Étienne André
  *
  * Created         : 2015/09/18
- * Last modified   : 2015/09/18
+ * Last modified   : 2015/09/23
  *
  * IMITATOR version: 2.7.2
  ************************************************************)
@@ -19,7 +19,7 @@
 var
 
 (* Clocks *)
- 	x1, x2, x3, x4
+ 	xprod, xnode1, xnode2, xcons
 		: clock;
 
 (* Parameters *)
@@ -33,11 +33,11 @@ var
 (************************************************************)
 synclabs: ProdReset, Feed2;
 
-loc prodReady: while x1 <= d wait {}
-	when x1 >= c sync Feed2 do {x1' = 0} goto prodWaiting;
+loc prodReady: while xprod <= d wait {}
+	when xprod >= c sync Feed2 do {xprod' = 0} goto prodWaiting;
 
-loc prodWaiting: while x1 <= b wait {}
-	when x1 >= a sync ProdReset do {x1' = 0} goto prodReady;
+loc prodWaiting: while xprod <= b wait {}
+	when xprod >= a sync ProdReset do {xprod' = 0} goto prodReady;
 
 end (* Producer *)
 
@@ -48,11 +48,11 @@ end (* Producer *)
 (************************************************************)
 synclabs: ConsReset, Feed4;
 
-loc consReady: while x4 <= d wait {}
-	when x4 >= c sync Feed4 do {x4' = 0} goto consWaiting;
+loc consReady: while xcons <= d wait {}
+	when xcons >= c sync Feed4 do {xcons' = 0} goto consWaiting;
 
-loc consWaiting: while x4 <= b wait {}
-	when x4 >= a sync ConsReset do {x4' = 0} goto consReady;
+loc consWaiting: while xcons <= b wait {}
+	when xcons >= a sync ConsReset do {xcons' = 0} goto consReady;
 
 end (* Consumer *)
 
@@ -63,20 +63,20 @@ end (* Consumer *)
 (************************************************************)
 synclabs: Node1Process1, Node1Process2, Node1Process3, Feed2, Feed3;
 
-loc node1Ready: while x2 <= d wait {}
-	when x2 >= c sync Feed2 do {x2' = 0} goto intermediate1;
+loc node1Ready: while xnode1 <= d wait {}
+	when xnode1 >= c sync Feed2 do {xnode1' = 0} goto intermediate1;
 
-loc intermediate1: while x2 <= f wait {}
-	when x2 >= e sync Node1Process1 do {x2' = 0} goto intermediate2;
+loc intermediate1: while xnode1 <= f wait {}
+	when xnode1 >= e sync Node1Process1 do {xnode1' = 0} goto intermediate2;
 
-loc intermediate2: while x2 <= f wait {}
-	when x2 >= e sync Node1Process2 do {x2' = 0} goto intermediate3;
+loc intermediate2: while xnode1 <= f wait {}
+	when xnode1 >= e sync Node1Process2 do {xnode1' = 0} goto intermediate3;
 
-loc intermediate3: while x2 <= f wait {}
-	when x2 >= e sync Node1Process3 do {x2' = 0} goto send;
+loc intermediate3: while xnode1 <= f wait {}
+	when xnode1 >= e sync Node1Process3 do {xnode1' = 0} goto send;
 
-loc send: while x2 <= d wait {}
-	when x2 >= c sync Feed3 do {x2' = 0} goto node1Ready;
+loc send: while xnode1 <= d wait {}
+	when xnode1 >= c sync Feed3 do {xnode1' = 0} goto node1Ready;
 
 end (* Node1 *)
 
@@ -86,20 +86,20 @@ end (* Node1 *)
 (************************************************************)
 synclabs: Node2Process1, Node2Process2, Node2Process3, Feed3, Feed4;
 
-loc node2Ready: while x3 <= d wait {}
-	when x3 >= c sync Feed3 do {x3' = 0} goto intermediate1;
+loc node2Ready: while xnode2 <= d wait {}
+	when xnode2 >= c sync Feed3 do {xnode2' = 0} goto intermediate1;
 
-loc intermediate1: while x3 <= f wait {}
-	when x3 >= e sync Node2Process1 do {x3' = 0} goto intermediate2;
+loc intermediate1: while xnode2 <= f wait {}
+	when xnode2 >= e sync Node2Process1 do {xnode2' = 0} goto intermediate2;
 
-loc intermediate2: while x3 <= f wait {}
-	when x3 >= e sync Node2Process2 do {x3' = 0} goto intermediate3;
+loc intermediate2: while xnode2 <= f wait {}
+	when xnode2 >= e sync Node2Process2 do {xnode2' = 0} goto intermediate3;
 
-loc intermediate3: while x3 <= f wait {}
-	when x3 >= e sync Node2Process3 do {x3' = 0} goto send;
+loc intermediate3: while xnode2 <= f wait {}
+	when xnode2 >= e sync Node2Process3 do {xnode2' = 0} goto send;
 
-loc send: while x3 <= d wait {}
-	when x3 >= c sync Feed4 do {x3' = 0} goto node2Ready;
+loc send: while xnode2 <= d wait {}
+	when xnode2 >= c sync Feed4 do {xnode2' = 0} goto node2Ready;
 
 end (* Node2 *)
 
@@ -121,10 +121,10 @@ init :=
 	(*------------------------------------------------------------*)
 	(* Initial clock constraints *)
 	(*------------------------------------------------------------*)
-	& x1 = 0
-	& x2 = 0
-	& x3 = 0
-	& x4 = 0
+	& xprod = 0
+	& xnode1 = 0
+	& xnode2 = 0
+	& xcons = 0
 
 	(*------------------------------------------------------------*)
 	(* Parameter constraints *)
