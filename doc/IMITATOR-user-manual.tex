@@ -575,7 +575,7 @@ Process~2 is identical to process~1, except that \styleIMI{x1} is replaced with 
 The observer is in charge to check that no more than one process is in critical section at the same time.\footnote{%
 	This observer is not really necessary to check the correctness of this protocol;
 	instead of adding this observer and checking \styleIMI{unreachable loc[observer] = obs\_violation}, one could just check either \styleIMI{counter > 1} or \styleIMI{loc[proc1] = CS1 \& loc[proc2] = CS2}.
-	However, \imitator{} does not (yet) support checking global variables or more that one location in the \styleIMI{unreachable} property (which should be fixed very soon!); furthermore, introducing an observer is also useful, as it is often used for verification.
+	However, this example comes from an earlier version of \imitator{} (that did not support checking global variables or more that one location in the \styleIMI{unreachable} property --- which has been fixed since version 2.7); furthermore, introducing an observer is also useful, as it is often used for verification for more complex properties (see, \eg{}, \cite{ABL98,ABBL98}).
 }
 This observer will detect that this situation happens if an action \styleIMI{enter\_1} is followed by an action \styleIMI{enter\_2} without an action \styleIMI{exit\_1} in between (or symmetrically if an action \styleIMI{enter\_2} is followed by an action \styleIMI{enter\_1} without an action \styleIMI{exit\_2} in between).
 Note that the observer simply observes the system state, and synchronizes on the actions used by \styleIMI{proc1} and \styleIMI{proc2}; it does not use any clock nor variable.
