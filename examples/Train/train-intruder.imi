@@ -10,9 +10,9 @@
  * Input by        : Étienne André
  *
  * Created         : 2015/06/30
- * Last modified   : 2015/07/03
+ * Last modified   : 2015/09/24
  *
- * IMITATOR version: 2.7-beta3
+ * IMITATOR version: 2.7.2-working
  ************************************************************)
 
 
@@ -47,10 +47,10 @@ var
 	p_enter_min, p_enter_max,
 		: parameter;
 
-(* Constants (HACK) *)
+(* Constants *)
 	FALSE = 0,
 	TRUE = 1,
-		: parameter;
+		: constant;
 
 
 (************************************************************)
