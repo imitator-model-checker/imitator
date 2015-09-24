@@ -731,12 +731,12 @@ let dot_of_graph model reachability_graph ~fancy =
 		) transitions "")
 
 		(** HANDLE INITIAL STATE *)
-		^ "\n/* Initial state */\n"
+		^ "\n\n/* Initial state */"
 		^ "\n  s_init [shape=none, label=\"init\"];"
 		^ "\n  s_init -> s_" ^ (string_of_int initial_state_index) ^ ";"
 
 		(** NOW HANDLE STATES *)
-		^ "\n/* Colors */\n" ^
+		^ "\n\n/* Colors */\n" ^
 		(**** BAD PROG ****)
 		(let states_encoding = ref "" in
 			iterate_on_states (fun state_index (location_index, linear_constraint) ->
