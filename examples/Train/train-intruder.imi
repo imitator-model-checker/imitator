@@ -1,0 +1,155 @@
+(************************************************************
+ *                      IMITATOR MODEL                      
+ *
+ * Railroad Gate Controller
+ *
+ * Description     : Railway crossing with an intruder that can disable some sensors, provoking a crash.
+ * Correctness     : "Crash" cannot happen
+ * Source          : Own work
+ * Author          : Étienne André, Michał Knapik
+ * Modeling        : Étienne André
+ * Input by        : Étienne André
+ *
+ * Created         : 2015/09/24
+ * Last modified   : 2015/09/24
+ *
+ * IMITATOR version: 2.7.2-working
+ ************************************************************)
+
+var
+
+(* Clocks *)
+ 	x_train,
+ 	x_gate,
+ 	x_intruder,
+		: clock;
+
+(* Discrete *)
+	gate_down,     (* (Boolean) encoding whether the gate is down *)
+	sensors_active,(* (Boolean) encoding whether the sensor is active *)
+		: discrete;
+
+(* Train parameters *)
+	p_far,         (* time between being far and approaching *)
+	p_approaching, (* time between the approach and the passing *)
+	
+(* Gate parameters *)
+	p_waiting,     (* time from the sensor activation until starting lowering the gate *)
+	p_lowering,    (* time to lower the gate *)
+	
+(* Intruder parameters *)
+	p_walking_sensor (* time to walk to (and disable) the sensor *)
+
+		: parameter;
+
+(* Constants *)
+	FALSE = 0,
+	TRUE = 1,
+		: constant;
+
+
+(************************************************************)
+  automaton train
+(************************************************************)
+synclabs: sensor_far, (*sensor_close, emergency_stop, *)pass;
+
+loc far: while x_train <= p_far wait {}
+	(* Normal mode: sensors are on *)
+	when x_train = p_far & sensors_active = TRUE sync sensor_far do {x_train' = 0} goto approaching;
+	(* Failure: sensors are off *)
+	when x_train = p_far & sensors_active = FALSE do {x_train' = 0} goto approaching;
+
+loc approaching: while x_train <= p_approaching wait {}
+	(* Normal situation *)
+	when x_train = p_approaching & gate_down = TRUE do {x_train' = 0} sync pass goto gone;
+	(* Gate not closed! *)
+	when x_train = p_approaching & gate_down = FALSE do {x_train' = 0} sync pass goto crash;
+	
+(** HACK: stop time to reduce state space *)
+loc gone: while x_train <= 0 wait {}
+
+(** HACK: stop time to reduce state space *)
+loc crash: while x_train <= 0 wait {}
+
+
+end (* train *)
+
+
+(************************************************************)
+  automaton gate
+(************************************************************)
+synclabs: (*power_cut, *)sensor_far, start_lowering, end_lowering;
+
+loc up: while True wait {}
+	when True sync sensor_far do {x_gate' = 0} goto waiting;
+
+loc waiting: while x_gate <= p_waiting wait {}
+	when x_gate = p_waiting sync start_lowering do {x_gate' = 0} goto lowering;
+
+loc lowering: while x_gate <= p_lowering wait {}
+	when x_gate = p_lowering sync end_lowering do {x_gate' = 0, gate_down' = TRUE} goto down;
+
+loc down: while True wait {}
+
+end (* gate *)
+
+
+(************************************************************)
+  automaton intruder
+(************************************************************)
+synclabs: (*power_cut, sensor_far, walking_towards_sensor, walking_towards_house, *)break_sensor(*, reach_house*);
+
+loc walking_sensor: while x_intruder <= p_walking_sensor wait {}
+	when x_intruder = p_walking_sensor sync break_sensor do {sensors_active' = FALSE, x_intruder' = 0} goto intruder_done;
+
+loc intruder_done: while True wait {}
+
+end (* intruder *)
+
+
+
+(************************************************************)
+(* Initial state *)
+(************************************************************)
+
+init :=
+	(*------------------------------------------------------------*)
+	(* Initial location *)
+	(*------------------------------------------------------------*)
+	& loc[system]      = Far
+	& loc[intruder]    = walking_sensor
+
+	(*------------------------------------------------------------*)
+	(* Initial discrete *)
+	(*------------------------------------------------------------*)
+	& gate_down      = FALSE
+	& sensors_active = TRUE
+
+	(*------------------------------------------------------------*)
+	(* Initial clock constraints *)
+	(*------------------------------------------------------------*)
+	& x_train    = 0
+	& x_gate     = 0
+	& x_intruder = 0
+
+	(*------------------------------------------------------------*)
+	(* Parameter constraints *)
+	(*------------------------------------------------------------*)
+	& dApproach >= 0
+	& dStartDown >= 0
+	& dGetDown >= 0
+(* 	& dGetDown = 5 *)
+;
+
+
+(************************************************************)
+(* Property specification *)
+(************************************************************)
+
+property := unreachable loc[system] = Crash;
+
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end
