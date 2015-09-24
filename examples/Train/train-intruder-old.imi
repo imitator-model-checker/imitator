@@ -3,7 +3,7 @@
  *
  * Train gate controller with intruder
  *
- * Description     : Train crossing, with an intruder that may weaken the safety
+ * Description     : Train crossing, with an intruder that may weaken the safety. OLD VERSION THAT DOES NOT WORK SO WELL.
  * Correctness     : When the train passes, the gate is closed
  * Source          : Étienne André, Michał Knapik
  * Author          : Étienne André, Michał Knapik
