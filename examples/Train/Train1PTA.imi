@@ -1,34 +1,38 @@
---************************************************************--
---************************************************************--
---
---   Railroad Gate Controller
---
---   Simple model with 1 PTA only
---
---   Etienne ANDRE
---   Universite Paris 13, Sorbonne Paris Cite, LIPN (France)
---
---                                Created : 2012/03/13
---                          Last modified : 2013/03/05
---                       IMITATOR version : 2.6.1
---************************************************************--
---************************************************************--
-
-
+(************************************************************
+ *                      IMITATOR MODEL                      
+ *
+ * Railroad Gate Controller
+ *
+ * Description     : Simple model with 1 PTA only
+ * Correctness     : "Crash" cannot happen
+ * Source          : Own work
+ * Author          : Étienne André
+ * Modeling        : Étienne André
+ * Input by        : Étienne André
+ *
+ * Created         : 2012/03/13
+ * Last modified   : 2013/03/05
+ *
+ * IMITATOR version: 2.6.1
+ ************************************************************)
 
 var
+
+(* Clocks *)
  	x, y
 		: clock;
 
-	dApproach, -- time between the approach and the passing
-	dStartDown, -- time between the approach and the gate starting to go down
-	dGetDown -- time between the gate starts to lower, and the gate is closed
-			: parameter;
+(* Parameters *)
+	dApproach,  (*time between the approach and the passing*)
+	dStartDown, (*time between the approach and the gate starting to go down*)
+	dGetDown    (*time between the gate starts to lower, and the gate is closed*)
+		: parameter;
 
 
---************************************************************--
+
+(************************************************************)
   automaton system
---************************************************************--
+(************************************************************)
 synclabs: approach, startDown, endDown, pass;
 initially Far;
 
@@ -47,44 +51,44 @@ loc Lowering: while x <= dApproach & y <= dGetDown wait {}
 
 loc Safe: while x <= dApproach wait {}
 	when x = dApproach sync pass do {x' = 0, y' = 0} goto Far;
-
-end -- system
-
+end (* system *)
 
 
---************************************************************--
---************************************************************--
--- ANALYSIS
---************************************************************--
---************************************************************--
 
-var init : region;
+(************************************************************)
+(* Initial state *)
+(************************************************************)
 
-init := True
-	----------------------
-	-- Initial locations
-	----------------------
+init :=
+	(*------------------------------------------------------------*)
+	(* Initial location *)
+	(*------------------------------------------------------------*)
 	& loc[system]      = Far
 
-	----------------------
-	-- Clocks
-	----------------------
+	(*------------------------------------------------------------*)
+	(* Initial clock constraints *)
+	(*------------------------------------------------------------*)
 	& x = 0
 	& y = 0
 
-	----------------------
-	-- Given constraints
-	----------------------
+	(*------------------------------------------------------------*)
+	(* Parameter constraints *)
+	(*------------------------------------------------------------*)
 	& dApproach >= 0
 	& dStartDown >= 0
-(* 	& dGetDown >= 0 *)
+	& dGetDown >= 0
 (* 	& dGetDown = 5 *)
-
-	----------------------
-	-- Instantiations
-	----------------------
-
 ;
+
+
+(************************************************************)
+(* Property specification *)
+(************************************************************)
 
 property := unreachable loc[system] = Crash;
 
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end
