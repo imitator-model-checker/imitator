@@ -133,13 +133,13 @@ loc choosing: while True wait {}
 	when True sync walking_towards_house do {x_intruder' = 0} goto walking_house;
 
 loc walking_sensor: while x_intruder <= p_walking_sensor_max wait {}
-	when x_gate >= p_walking_sensor_min sync break_sensor do {sensors_active' = FALSE, x_intruder' = 0} goto intruder_done;
+	when x_intruder >= p_walking_sensor_min sync break_sensor do {sensors_active' = FALSE, x_intruder' = 0} goto intruder_done;
 
 loc walking_house: while x_intruder <= p_walking_house_max wait {}
-	when x_gate >= p_walking_house_min sync reach_house do {x_intruder' = 0} goto enter_house;
+	when x_intruder >= p_walking_house_min sync reach_house do {x_intruder' = 0} goto enter_house;
 
 loc enter_house: while x_intruder <= p_enter_max wait {}
-	when x_gate >= p_enter_min sync power_cut do {sensors_active' = FALSE, x_intruder' = 0} goto intruder_done;
+	when x_intruder >= p_enter_min sync power_cut do {sensors_active' = FALSE, x_intruder' = 0} goto intruder_done;
 
 loc intruder_done: while True wait {}
 
