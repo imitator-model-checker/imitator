@@ -43,7 +43,8 @@ type reachability_graph = {
 	all_states : (state_index, abstract_state) Hashtbl.t;
 	
 	(** The id of the initial state *)
-(* 	initial : state_index option; *)
+	(*** NOTE: mutable due to the fact that the initial state can be merged with another state *)
+	mutable initial : state_index option;
 	
 	(** A hashtable location -> location_index *)
 	index_of_locations : (Automaton.global_location, location_index) Hashtbl.t;
@@ -98,7 +99,7 @@ let make guessed_nb_transitions =
 	{
 		nb_generated_states = ref 0;
 		all_states = states;
-(* 		initial = None; *)
+		initial = None;
 		index_of_locations = index_of_locations;
 		locations = locations;
 		states_for_comparison = states_for_comparison;
@@ -143,6 +144,18 @@ let get_state graph state_index =
 	let global_location = get_location graph location_index in
 	(* Return the state *)
 	(global_location, linear_constraint)
+
+
+(** Return the index of the initial state, or raise Not_found if not defined *)
+let get_initial_state_index graph =
+	match graph.initial with
+	| Some state_index -> state_index
+	| None -> raise Not_found
+
+
+(*(** Return the initial state, or raise Not_found if not defined *)
+let get_initial_state graph =
+	get_state graph (get_initial_state_index graph)*)
 
 
 (** Return the table of transitions *)
@@ -373,7 +386,11 @@ let insert_state graph hash new_state =
 		);
 	) graph.all_states;*)
 	
-	
+	(* Set the initial state if not yet set *)
+	if graph.initial = None then(
+		print_message Verbose_low ("Initial state set in the reachability graph.");
+		graph.initial <- Some new_state_index;
+	);
 	
 	
 	(* Add the state to the tables *)
@@ -500,6 +517,7 @@ let add_transition reachability_graph (orig_state_index, action_index, dest_stat
 
 
 (** Add an inequality to all the states of the graph *)
+(*** NOTE: it is assumed that the p_constraint does not render some states inconsistent! ***)
 let add_p_constraint_to_states graph p_constraint =
 (* 	let constraint_to_add = LinearConstraint.make_p_constraint [inequality] in *)
 	(* For all state: *)
@@ -607,24 +625,24 @@ let merge_2_states graph state_index1 state_index2 =
 
 
 (** Merge two states by replacing the second one by the first one, in the whole graph structure (lists of states, and transitions) *)
-let merge_states_ulrich graph s merged =
+let merge_states_ulrich graph merger_state_index merged =
 	(* NOTE: 'merged' is usually very small, e.g., 1 or 2, so no need to optimize functions using 'merged *) 
-	print_message Verbose_high ("Merging: update tables for state '" ^ (string_of_int s) ^ "' with " ^ (string_of_int (List.length merged)) ^ " merged.");
+	print_message Verbose_high ("Merging: update tables for state '" ^ (string_of_int merger_state_index) ^ "' with " ^ (string_of_int (List.length merged)) ^ " merged.");
 	
 	(* Rebuild transitions table *)
 	print_message Verbose_high ("Merging: update transition table, containing " ^ (string_of_int (Hashtbl.length graph.transitions_table)) ^ " elements");
 	let t' = Hashtbl.copy graph.transitions_table in
 	Hashtbl.clear graph.transitions_table;
 	Hashtbl.iter (fun (src, a) trg -> 
-		let src' = if (List.mem src merged) then s else src 
-		and trg' = if (List.mem trg merged) then s else trg in
+		let src' = if (List.mem src merged) then merger_state_index else src 
+		and trg' = if (List.mem trg merged) then merger_state_index else trg in
 		(* Add if not *)
 		add_transition graph (src', a, trg')
 	) t';
 
 	(* Remove merged from hash table *)
 	print_message Verbose_high "Merging: update hash table";
-	let the_state = get_state graph s in
+	let the_state = get_state graph merger_state_index in
 	let h = hash_code the_state in
 	(* Get all states with that hash *)
 	let bucket = Hashtbl.find_all graph.states_for_comparison h in
@@ -644,7 +662,14 @@ let merge_states_ulrich graph s merged =
 	List.iter (fun s -> 
 		print_message Verbose_high ("Merging: remove state " ^ (string_of_int s));
 (*		while Hashtbl.mem graph.states s do *)
-			Hashtbl.remove graph.all_states s
+			Hashtbl.remove graph.all_states s;
+			
+			(* If the state was the initial state: replace with the merger state_index *)
+			(*** WARNING: situation not much tested ***)
+			if s = (get_initial_state_index graph) then(
+				print_message Verbose_low ("The initial state in the reachability graph has been merged with another one.");
+				graph.initial <- Some merger_state_index;
+			);
 (*		done*)
 	) merged
 	

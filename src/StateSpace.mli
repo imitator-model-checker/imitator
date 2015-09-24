@@ -59,6 +59,9 @@ val get_location : reachability_graph -> location_index -> Automaton.global_loca
 (** Return the state of a state_index *)
 val get_state : reachability_graph -> state_index -> state
 
+(** Return the index of the initial state, or raise Not_found if not defined *)
+val get_initial_state_index : reachability_graph -> state_index
+
 (** Return the table of transitions *)
 val get_transitions : reachability_graph -> ((state_index * action_index), state_index) Hashtbl.t
 
@@ -110,6 +113,7 @@ val add_state : reachability_graph -> state -> (state_index * bool)
 val add_transition : reachability_graph -> (state_index * action_index * state_index) -> unit
 
 (** Add a p_inequality to all the states of the graph *)
+(*** NOTE: it is assumed that the p_constraint does not render some states inconsistent! ***)
 val add_p_constraint_to_states : reachability_graph -> LinearConstraint.p_linear_constraint -> unit
 
 

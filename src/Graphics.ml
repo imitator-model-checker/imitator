@@ -581,7 +581,11 @@ open StateSpace
 let dot_of_graph model reachability_graph ~fancy =
 	(* Retrieve the input options *)
 	let options = Input.get_options () in
+	
+	(* Retrieve info from the graph *)
 	let transitions = get_transitions reachability_graph in
+	let initial_state_index = get_initial_state_index reachability_graph in
+	
 	(* Create the array of dot colors *)
 	let dot_colors = Array.of_list dot_colors in
 	(* Coloring function for each location *)
@@ -650,6 +654,7 @@ let dot_of_graph model reachability_graph ~fancy =
 			string_states := !string_states
 				(* Add the state *)
 				^ "\n\n  /************************************************************/"
+				^ (if initial_state_index = state_index then ("\n  INITIAL") else "")
 				^ "\n  STATE " ^ (string_of_int state_index) ^ ":"
 				^ "\n  " ^ (ModelPrinter.string_of_state model (global_location, linear_constraint))
 				(* Add the constraint with no clocks (NOW ALWAYS DONE) *)
@@ -668,7 +673,7 @@ let dot_of_graph model reachability_graph ~fancy =
 
 	
 	let transitions_description =
-		(* Convert the transitions for human *)
+		(* Convert the transitions for humans *)
 		"\n  DESCRIPTION OF THE TRANSITIONS"
 		^ (Hashtbl.fold (fun (orig_state_index, action_index) dest_state_index my_string ->
 			let is_nosync action =
@@ -725,8 +730,13 @@ let dot_of_graph model reachability_graph ~fancy =
 			^ label
 		) transitions "")
 
-		(*** NOW HANDLE STATES *)
-		^ "\n/*Colors*/\n" ^
+		(** HANDLE INITIAL STATE *)
+		^ "\n/* Initial state */\n"
+		^ "\n  s_init [shape=none, label=\"init\"];"
+		^ "\n  s_init -> s_" ^ (string_of_int initial_state_index) ^ ";"
+
+		(** NOW HANDLE STATES *)
+		^ "\n/* Colors */\n" ^
 		(**** BAD PROG ****)
 		(let states_encoding = ref "" in
 			iterate_on_states (fun state_index (location_index, linear_constraint) ->
