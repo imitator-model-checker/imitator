@@ -10,7 +10,7 @@
  * Author:        Ulrich Kuehne, Etienne Andre
  * 
  * Created:       2010/07/22
- * Last modified: 2015/07/31
+ * Last modified: 2015/09/24
  *
  ****************************************************************)
 
@@ -2107,7 +2107,7 @@ let add_a_new_state model reachability_graph orig_state_index new_states_indexes
 		StateSpace.add_state_dyn model reachability_graph new_state !k_result
 		)
 		else ( *)
-			StateSpace.add_state model reachability_graph new_state
+			StateSpace.add_state reachability_graph new_state
 (* 						  ) *)
 		) in
 		(* If this is really a new state *)
@@ -2555,7 +2555,7 @@ let branch_and_bound model init_state =
 	let reachability_graph = StateSpace.make guessed_nb_transitions in
 
 	(* Add the initial state to the reachable states *)
-	let init_state_index, _ = StateSpace.add_state model reachability_graph init_state in
+	let init_state_index, _ = StateSpace.add_state reachability_graph init_state in
 	
 	(* Increment the number of computed states *)
 	StateSpace.increment_nb_gen_states reachability_graph;
@@ -2722,7 +2722,7 @@ let post_star model init_state =
 	let reachability_graph = StateSpace.make guessed_nb_transitions in
 	
 	(* Add the initial state to the reachable states *)
-	let init_state_index, _ = StateSpace.add_state model reachability_graph init_state in
+	let init_state_index, _ = StateSpace.add_state reachability_graph init_state in
 	
 	(* Increment the number of computed states *)
 	StateSpace.increment_nb_gen_states reachability_graph;
@@ -2799,7 +2799,7 @@ let post_star model init_state =
 		if options#imitator_mode = Inverse_method  && options#check_point then(
 			print_message Verbose_low ("\nMode check-point: checking whether the resulting constraint is restricted to pi0...");
 			(* Get all constraints *)
-			let all_p_constraints = StateSpace.all_p_constraints model reachability_graph in
+			let all_p_constraints = StateSpace.all_p_constraints reachability_graph in
 			(* Computing the constraint intersection *)
 			let current_intersection = LinearConstraint.p_intersection all_p_constraints in
 			(* Get pi0 *)

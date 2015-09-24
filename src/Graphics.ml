@@ -8,7 +8,7 @@
  * Author:        Etienne Andre, Ulrich Kuehne
  * 
  * Created:       2010/07/05
- * Last modified: 2015/07/27
+ * Last modified: 2015/09/24
  *
  ****************************************************************)
 
@@ -626,7 +626,7 @@ let dot_of_graph model reachability_graph ~fancy =
 	print_message Verbose_high "[dot_of_graph] Retrieving states indexes...";
 
 	(* Retrieve the states *)
-	let state_indexes = StateSpace.all_state_indexes model reachability_graph in
+	let state_indexes = StateSpace.all_state_indexes reachability_graph in
 	
 	(* Sort the list (for better presentation in the file) *)
 	let state_indexes = List.sort (fun a b -> if a = b then 0 else if a < b then -1 else 1) state_indexes in

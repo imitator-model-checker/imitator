@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre, Ulrich Kuehne
  * Created:       2009/12/08
- * Last modified: 2015/07/17
+ * Last modified: 2015/09/24
  *
  ****************************************************************)
 
@@ -41,6 +41,9 @@ type reachability_graph = {
 
 	(** An Array 'state_index' -> 'abstract_state'; contains ALL states *)
 	all_states : (state_index, abstract_state) Hashtbl.t;
+	
+	(** The id of the initial state *)
+(* 	initial : state_index option; *)
 	
 	(** A hashtable location -> location_index *)
 	index_of_locations : (Automaton.global_location, location_index) Hashtbl.t;
@@ -95,6 +98,7 @@ let make guessed_nb_transitions =
 	{
 		nb_generated_states = ref 0;
 		all_states = states;
+(* 		initial = None; *)
 		index_of_locations = index_of_locations;
 		locations = locations;
 		states_for_comparison = states_for_comparison;
@@ -147,7 +151,7 @@ let get_transitions graph =
 
 
 (** Return the list of all state indexes *)
-let all_state_indexes program graph =
+let all_state_indexes graph =
 	Hashtbl.fold
 		(fun state_index _ current_list ->
 			state_index :: current_list)
@@ -158,10 +162,10 @@ let all_state_indexes program graph =
 (*** WARNING: big memory, here! Why not perform intersection on the fly? *)
 
 (** Return the list of all constraints on the parameters associated to the states of a graph *)
-let all_p_constraints program graph =
+let all_p_constraints graph =
 	Hashtbl.fold
 		(fun _ (_, linear_constraint) current_list ->
-			let p_constraint = LinearConstraint.px_hide_nonparameters_and_collapse (*program.clocks_and_discrete*) linear_constraint in
+			let p_constraint = LinearConstraint.px_hide_nonparameters_and_collapse linear_constraint in
 			p_constraint :: current_list)
 		graph.all_states []
 
@@ -197,7 +201,7 @@ module StateSet = Set.Make(State)
 (* Uses a depth first search on the reachability graph. The *)
 (* prefix of the current DFS path is kept during the search *)
 (* in order to detect cycles. *) 
-let last_states program graph =
+let last_states model graph =
 	(* list to keep the resulting last states *)
 	let last_states = ref [] in
 	(* Table to keep all states already visited during DFS *)
@@ -211,7 +215,7 @@ let last_states program graph =
 				let succ = Hashtbl.find_all graph.transitions_table (node, action_index) in
 				List.rev_append succ succs 
 			) with Not_found -> succs
-		) [] program.actions in
+		) [] model.actions in
 	(* function to find all last states *)
 	let rec cycle_detect node prefix =
 		(* get all successors of current node *)
@@ -428,7 +432,7 @@ let add_state_dyn program graph new_state constr =
 
 
 (** Add a state to a graph, if it is not present yet *)
-let add_state program graph new_state =
+let add_state graph new_state =
 	(* Retrieve the input options *)
 	let options = Input.get_options () in
 	(* compute hash value for the new state *)
