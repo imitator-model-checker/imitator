@@ -8,7 +8,7 @@
  * Author:        Etienne Andre, Ulrich Kuehne
  * 
  * Created:       2010/07/05
- * Last modified: 2015/09/24
+ * Last modified: 2015/09/25
  *
  ****************************************************************)
 
@@ -565,7 +565,7 @@ if returned_constraint_list = [] then(
 
 let dot_colors = [
 (* I ordered the first colors *)
-(*"red" ; *)"green" ; "blue" ; "yellow" ; "cyan" ; "magenta" ;
+(*"red" ; "green" ; *)"blue" ; "yellow" ; "cyan" ; "magenta" ;
 (* The rest : random ! *)
 "paleturquoise2"; "indianred1"; "goldenrod3"; "darkolivegreen4"; "slategray4"; "turquoise4"; "lightpink"; "salmon"; "pink3"; "chocolate4"; "lightslateblue"; "yellow3"; "red4"; "seashell3"; "cyan2"; "darkgoldenrod3"; "gainsboro"; "yellowgreen"; "peachpuff1"; "oldlace"; "khaki"; "deepskyblue"; "maroon3"; "gold3"; "tan"; "mediumblue"; "lightyellow"; "ivory"; "lightcyan"; "lightsalmon4"; "maroon2"; "maroon4"; "tan3"; "green2"; "ivory2"; "navyblue"; "wheat1"; "navajowhite3"; "darkkhaki"; "whitesmoke"; "goldenrod"; "gold1"; "sandybrown"; "springgreen3"; "magenta2"; "lightskyblue1"; "lightcyan3"; "khaki2"; "khaki3"; "lavender"; "orchid1"; "wheat"; "lavenderblush1"; "firebrick2"; "navajowhite4"; "darkslategray3"; "palegreen2"; "lavenderblush3"; "skyblue3"; "deepskyblue3"; "darkorange"; "magenta1"; "darkorange3"; "violetred1"; "lawngreen"; "deeppink3"; "darkolivegreen1"; "darkorange1"; "darkorchid1"; "limegreen"; "lightslategray"; "deeppink"; "red2"; "goldenrod1"; "mediumorchid4"; "cornsilk1"; 
 "lemonchiffon3"; "gold"; "orchid"; "yellow2"; "lightpink4"; "violetred2"; "mediumpurple"; "lightslategrey"; "lightsalmon1"; "violetred"; "coral2"; "slategray"; "plum2"; "turquoise3"; "lightyellow3"; "green4"; "mediumorchid1"; "lightcyan1"; "lightsalmon3"; "green3"; "lightseagreen"; "mediumpurple1"; "lightskyblue"; "lightyellow2"; "firebrick"; "honeydew2"; "slateblue3"; "navajowhite"; "seagreen1"; "springgreen4"; "peru"; "springgreen2"; "mediumvioletred"; "ivory4"; "olivedrab3"; "lightyellow1"; "hotpink"; "sienna4"; "lightcyan4"; "chartreuse4"; "lemonchiffon4"; "indianred3"; "hotpink4"; "sienna1"; "slategray3"; "darkseagreen2"; "tomato3"; "honeydew3"; "mistyrose2"; "rosybrown1"; "pink2"; "powderblue"; "cornflowerblue"; "tan1"; "indianred4"; "slateblue2"; "palevioletred3"; "ivory1"; "honeydew4"; "white"; "wheat3"; "steelblue4"; "purple2"; "deeppink4"; "royalblue4"; "lightgrey"; "forestgreen"; "palegreen"; "darkorange4"; "lightsteelblue2"; "tomato4"; "royalblue1"; "hotpink1"; "hotpink3";
@@ -588,11 +588,32 @@ let dot_of_graph model reachability_graph ~fancy =
 	
 	(* Create the array of dot colors *)
 	let dot_colors = Array.of_list dot_colors in
-	(* Coloring function for each location *)
-	let color = fun location_index ->
-		(* If more colors than our array: white *)
-		try dot_colors.(location_index) with Invalid_argument _ -> "white"
+	
+	let is_bad_location = fun global_location ->
+		(* If BAD location: red *)
+		match model.correctness_condition with
+		(* If normal location: pick color from array *)
+		| None -> false
+		| Some (Unreachable unreachable_global_locations) ->
+			(* Check whether the current location matches one of the unreachable global locations *)
+			StateSpace.match_unreachable_global_locations unreachable_global_locations global_location
+		| _ -> raise (InternalError("IMITATOR currently ony implements the non-reachability-like properties."))
 	in
+	
+	(* Coloring function for each location *)
+	let get_location_color = fun location_index is_bad ->
+		try(
+		(* If BAD location: red *)
+		if is_bad then "red"
+		else 
+		(* If normal location: pick color from array *)
+			dot_colors.(location_index)
+		)
+		(* If more colors than our array: white *)
+		with Invalid_argument _ -> "white"
+	in
+	
+	
 (*	(* Array location_index -> location *)
 	let locations = DynArray.create () in*)
 	
@@ -657,10 +678,10 @@ let dot_of_graph model reachability_graph ~fancy =
 				^ (if initial_state_index = state_index then ("\n  INITIAL") else "")
 				^ "\n  STATE " ^ (string_of_int state_index) ^ ":"
 				^ "\n  " ^ (ModelPrinter.string_of_state model (global_location, linear_constraint))
-				(* Add the constraint with no clocks (NOW ALWAYS DONE) *)
+				(* Add the projection of the constraint onto the parameters *)
 				^ (
 					(* Eliminate clocks *)
-					let parametric_constraint = LinearConstraint.px_hide_nonparameters_and_collapse (*model.clocks*) linear_constraint in
+					let parametric_constraint = LinearConstraint.px_hide_nonparameters_and_collapse linear_constraint in
 					"\n\n  Projection onto the parameters:"
 					^ "\n  " ^ (LinearConstraint.string_of_p_linear_constraint model.variable_names parametric_constraint);
 				);
@@ -740,6 +761,7 @@ let dot_of_graph model reachability_graph ~fancy =
 		(**** BAD PROG ****)
 		(let states_encoding = ref "" in
 			iterate_on_states (fun state_index (location_index, linear_constraint) ->
+			
 (*			(* Find the location index *)
 			let location_index = try
 				(**** BAD PROG: should be hashed ****)
@@ -748,15 +770,21 @@ let dot_of_graph model reachability_graph ~fancy =
 				(* Else add the location *)
 				with Not_found -> (DynArray.add locations location; DynArray.length locations - 1)
 			in*)
+			
+			(* Get the location *)
+			let global_location = get_location reachability_graph location_index in
+			
+			(* Check whether is bad *)
+			let is_bad = is_bad_location global_location in
+			
 			(* Find the location color *)
-			let location_color = color location_index in
+			let location_color = get_location_color location_index is_bad in
+			
 			(* create node index *)
 			let node_index = "s_" ^ (string_of_int state_index) in
 
 			if fancy || options#output_trace_set_verbose then (
-				(* Get the location *)
-				let global_location = get_location reachability_graph location_index in
-				(* create record label with location names *)			
+				(* create record label with location names *)
 				let loc_names = List.map (fun aut_index -> 
 					let loc_index = Automaton.get_location global_location aut_index in
 					model.location_names aut_index loc_index
@@ -799,14 +827,17 @@ let dot_of_graph model reachability_graph ~fancy =
 					^ "\n  " ^ node_index
 					^ "[fillcolor=" ^ location_color
 					^ ", style=filled, shape=Mrecord, label=\"" 
-					^ node_index ^ "|{" 
+					^ node_index
+					(* Add a smiley if bad location *)
+					^ (if is_bad then "\n:-(" else "")
+					^ "|{" 
 					^ label ^ label_discrete ^ "}" ^ pxd_constraint ^ p_constraint ^ "\"];";
 			) else (
 				(* Create the command *)
 				states_encoding := !states_encoding
 					^ "\n  " ^ node_index
 					^ " [color=" ^ location_color
-					^ ", style=filled];";				
+					^ ", style=filled];";
 			)
 			) reachability_graph;
 		!states_encoding)
@@ -855,7 +886,6 @@ let dot model radical dot_source_file =
 			(*** WARNING: don't change this string (parsed by CosyVerif) **)
 			(*** TODO: add CosyVerif mode with output of the form "key : value" **)
 			print_message Verbose_standard ("Generating graphical output to '" ^ image_file_name ^ "'...");
-			print_message Verbose_medium ("Calling dot...");
 			begin
 			try (
 				let command_result = Sys.command (dot_command ^ " -T" ^ dot_image_extension ^ " " ^ dot_file_name ^ " -o " ^ image_file_name ^ "") in

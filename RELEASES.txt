@@ -13,6 +13,7 @@ Options
 - Added an option "-output-trace-set-verbose" to print trace set with all information contained in the .states file (i.e., the constraint and the constraint projected onto the parameters)
 
 Graphics
+- Added a visualization of the bad states on the trace set (using red color + a frowney)
 - Removed the automatically generated observer from the PTA export
 
 
