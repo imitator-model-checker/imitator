@@ -10,7 +10,7 @@
  * Author:        Ulrich Kuehne, Etienne Andre
  * 
  * Created:       2010/07/22
- * Last modified: 2015/09/24
+ * Last modified: 2015/09/25
  *
  ****************************************************************)
 
@@ -485,6 +485,9 @@ let prepare_clocks_elimination model =
 (*------------------------------------------------------------*)
 (* Check whether at least one local location is urgent *)
 (*------------------------------------------------------------*)
+
+(*** TODO: move to Location.mli ***)
+
 let is_location_urgent model location =
 	(* Subfunction checking that one location is urgent in a given automaton *)
 	let is_local_location_urgent automaton_index =
@@ -494,88 +497,6 @@ let is_location_urgent model location =
 		model.is_urgent automaton_index location_index
 	in
 	List.exists is_local_location_urgent model.automata
-
-
-(*------------------------------------------------------------*)
-(* Get the discrete index from a discrete_constraint *)
-(*------------------------------------------------------------*)
-let get_discrete_index_from_discrete_constraint = function
-	| Discrete_l (discrete_index , _)
-	| Discrete_leq (discrete_index , _)
-	| Discrete_equal (discrete_index , _)
-	| Discrete_geq (discrete_index , _)
-	| Discrete_g (discrete_index , _)
-		-> discrete_index
-	| Discrete_interval (discrete_index , _, _)
-		-> discrete_index
-
-
-(*------------------------------------------------------------*)
-(* Check that a discrete variable matches a discrete_constraint *)
-(*------------------------------------------------------------*)
-let match_discrete_constraint current_value = function
-	| Discrete_l (_, constrained_value )
-		-> NumConst.l current_value constrained_value
-	| Discrete_leq (_, constrained_value )
-		-> NumConst.le current_value constrained_value
-	| Discrete_equal (_, constrained_value )
-		-> NumConst.equal current_value constrained_value
-	| Discrete_geq (_, constrained_value )
-		-> NumConst.ge current_value constrained_value
-	| Discrete_g (_, constrained_value )
-		-> NumConst.g current_value constrained_value
-	| Discrete_interval (_, min_constrained_value, max_constrained_value )
-		-> (NumConst.ge current_value min_constrained_value)
-		&&
-		(NumConst.le current_value max_constrained_value)
-
-
-(*------------------------------------------------------------*)
-(* Check whether the global location matches a list of "unreachable_global_location" *)
-(*------------------------------------------------------------*)
-let match_unreachable_global_locations unreachable_global_locations location =
-	(* Counter (for verbose info) *)
-(* 	let counter_prop = ref 0 in *)
-	(* Iterate on all unreachable global locations *)
-	List.exists (fun unreachable_global_location ->
-		(* Print some information *)
-	(*	counter_prop := !counter_prop + 1;
-		print_message Verbose_low ("Checking property #" ^ (string_of_int !counter_prop));*)
-		
-		(* 1) Check whether all local unreachable locations defined in 'unreachable_global_location' are matched by the current location *)
-		(
-(* 		print_message Verbose_low ("Checking global locations of property #..." ^ (string_of_int !counter_prop)); *)
-		(* Counter (for verbose info) *)
-(* 		let counter_loc = ref 0 in *)
-		List.for_all (fun (unreachable_automaton_index , unreachable_location_index) ->
-			(* Print some information *)
-	(*		counter_loc := !counter_loc + 1;
-			print_message Verbose_low ("Checking local location " ^ (string_of_int !counter_loc) ^ " of property #..." ^ (string_of_int !counter_prop));*)
-			(* Retrieve current location of unreachable_automaton_index *)
-			let current_location_index = Automaton.get_location location unreachable_automaton_index in
-			if debug_mode_greater Verbose_high then(
-				(* Retrieve the model *)
-				let model = Input.get_model() in
-				print_message Verbose_high ("Checking whether loc[" ^ (model.automata_names unreachable_automaton_index) ^ "] = " ^ (model.location_names unreachable_automaton_index unreachable_location_index) ^ " is satisfied when loc[" ^ (model.automata_names unreachable_automaton_index) ^ "] = " ^ (model.location_names unreachable_automaton_index current_location_index) ^ " ");
-(* 					"for property #..." ^ (string_of_int !counter_prop) *)
-			);
-			(* Check equality *)
-			current_location_index = unreachable_location_index
-		) unreachable_global_location.unreachable_locations)
-		
-		&&
-		
-		(* 2) Check whether all discrete constraints defined in 'discrete_constraints' are matched by the current location *)
-		(List.for_all (fun discrete_constraint ->
-			(* Get the discrete index *)
-			let discrete_index = get_discrete_index_from_discrete_constraint discrete_constraint in
-			(* Retrieve current discrete value *)
-			let current_discrete_value = Automaton.get_discrete_value location discrete_index in
-			(* Check matching *)
-			match_discrete_constraint current_discrete_value discrete_constraint
-		) unreachable_global_location.discrete_constraints)
-	) unreachable_global_locations
-
 
 
 
@@ -596,7 +517,7 @@ let update_tile_nature (location, (*linear_constraint*)_) =
 	| None -> ()
 	| Some (Unreachable unreachable_global_locations) ->
 		(* Check whether the current location matches one of the unreachable global locations *)
-		if match_unreachable_global_locations unreachable_global_locations location then(
+		if StateSpace.match_unreachable_global_locations unreachable_global_locations location then(
 		
 			(*** Quite a hack here ***)
 			if options#efim && !tile_nature <> Bad then(
@@ -2134,7 +2055,7 @@ let add_a_new_state model reachability_graph orig_state_index new_states_indexes
 				| Some (Unreachable unreachable_global_locations) ->
 					
 					(* Check whether the current location matches one of the unreachable global locations *)
-					if match_unreachable_global_locations unreachable_global_locations location then(
+					if StateSpace.match_unreachable_global_locations unreachable_global_locations location then(
 					
 						(* Project onto the parameters *)
 						let p_constraint = LinearConstraint.px_hide_nonparameters_and_collapse final_constraint in

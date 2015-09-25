@@ -8,7 +8,13 @@
  * Last modified: 2011/11/20
  *
  ****************************************************************)
- 
+
+
+
+ (*** NOTE: this file has nothing to do with Automata, but only defines locations... ***)
+
+
+
 
 (**************************************************)
 (** {2 Types} *)

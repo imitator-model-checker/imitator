@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2009/12/08
- * Last modified: 2015/09/24
+ * Last modified: 2015/09/25
  *
  ****************************************************************)
 
@@ -132,6 +132,14 @@ val empty_states_for_comparison : reachability_graph -> unit
 (** Iterate over the reachable states (with possible side effects) *)
 val iterate_on_states : (state_index -> abstract_state -> unit) -> reachability_graph -> unit
 
+
+(****************************************************************)
+(** Interrogation on one state *)
+(****************************************************************)
+
+(*** NOTE: should NOT be defined in this module! But rather in some (yet to be created...) State.ml ***)
+
+val match_unreachable_global_locations : unreachable_global_location list -> Automaton.global_location -> bool
 
 
 (****************************************************************)
