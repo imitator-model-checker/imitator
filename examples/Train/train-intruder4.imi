@@ -3,7 +3,9 @@
  *
  * Railroad Gate Controller
  *
- * Description     : Railway crossing with an intruder that can either disable some sensor (preventing the gate do detect that the train is approaching) or cut the power (preventing the gate to lower), possibly provoking a crash. Additionnally, the gate has a security mechanism that lowers the gate some time after the power is cut.
+ * Description     : Railway crossing with an intruder.
+	Two sensors: the far sensor sends a signal to the gate. The close sensor informs the gate that a train is very near, triggering an emergency lowering if the gate is not yet closed.
+	An intruder can either disable the far sensor (preventing the gate do detect that the train is approaching) or cut the power (preventing the gate to lower), possibly provoking a crash. The close sensor is mechanical and cannot be disabled. Additionnally, the gate has a security mechanism that lowers the gate some time after the power is cut, and another security mechanism with an emergency gate lowering when the train is very near.
  * Correctness     : "Crash" cannot happen
  * Source          : Own work
  * Author          : Étienne André, Michał Knapik
@@ -11,7 +13,7 @@
  * Input by        : Étienne André
  *
  * Created         : 2015/09/24
- * Fork from       : train-intruder2.imi
+ * Fork from       : train-intruder3.imi
  * Fork date       : 2015/09/25
  * Last modified   : 2015/09/25
  *
@@ -34,6 +36,7 @@ var
 (* Train parameters *)
 	p_far,                (* time between being far and approaching *)
 	p_approaching,        (* time between the approach and the passing *)
+	p_very_near,          (* time between the sensor very near and the passing *)
 	
 (* Gate parameters *)
 	p_waiting,            (* time from the sensor activation until starting lowering the gate *)
@@ -56,7 +59,7 @@ var
 (************************************************************)
   automaton train
 (************************************************************)
-synclabs: sensor_far, pass;
+synclabs: sensor_far, sensor_close, pass;
 
 loc far: while x_train <= p_far wait {}
 	(* Normal mode: sensors are on *)
@@ -64,7 +67,10 @@ loc far: while x_train <= p_far wait {}
 	(* Failure: sensors are off *)
 	when x_train = p_far & sensors_active = FALSE do {x_train' = 0} goto approaching;
 
-loc approaching: while x_train <= p_approaching wait {}
+loc approaching: while x_train <= p_approaching - p_very_near wait {}
+	when x_train = p_approaching - p_very_near sync sensor_close goto very_near;
+
+loc very_near: while x_train <= p_approaching wait {}
 	(* Normal situation *)
 	when x_train = p_approaching & gate_down = TRUE do {x_train' = 0} sync pass goto gone;
 	(* Gate not closed! *)
@@ -83,24 +89,32 @@ end (* train *)
 (************************************************************)
   automaton gate
 (************************************************************)
-synclabs: pass, power_cut, sensor_far, start_lowering, end_lowering;
+synclabs: pass, power_cut, sensor_far, sensor_close, start_lowering, end_lowering;
 
 loc up: while True wait {}
+	(* Normal situation: train detected *)
 	when True sync sensor_far do {x_gate' = 0} goto waiting;
-	(* Gate is reinitialized whenever the train passes *)
-	when True sync pass do {x_gate' = 0} goto up;
+	(* Emergency situation: train is very near but was not detected when far *)
+	when True sync sensor_close do {x_gate' = 0} goto emergency_lowering;
 	(* When power cut: gate goes to emergency lowering *)
 	when True sync power_cut do {x_gate' = 0} goto no_power;
+	(* Gate is reinitialized whenever the train passes *)
+	when True sync pass do {x_gate' = 0} goto up;
 
 loc no_power: while x_gate <= p_emergency_waiting wait {}
 	(* Lower the gate after some time *)
 	when x_gate = p_emergency_waiting sync start_lowering do {x_gate' = 0} goto emergency_lowering;
+	(* Emergency situation: train is very near but was not detected when far *)
+	when True sync sensor_close do {x_gate' = 0} goto emergency_lowering;
 	(* Just to prevent deadlock *)
 	when True sync pass do {x_gate' = 0} goto no_power;
 	when True sync sensor_far do {x_gate' = 0} goto no_power;
 
 loc waiting: while x_gate <= p_waiting wait {}
+	(* Normal situation: wait a bit before lowering *)
 	when x_gate = p_waiting sync start_lowering do {x_gate' = 0} goto lowering;
+	(* Emergency situation: train is very near but was not detected when far *)
+	when True sync sensor_close do {x_gate' = 0} goto emergency_lowering;
 	(* Gate is reinitialized whenever the train passes *)
 	when True sync pass do {x_gate' = 0} goto up;
 	(* When power cut: gate goes to emergency lowering *)
@@ -110,21 +124,27 @@ loc lowering: while x_gate <= p_lowering wait {}
 	when x_gate = p_lowering sync end_lowering do {x_gate' = 0, gate_down' = TRUE} goto down;
 	(* no influce of power cut when the gate is lowering (which is debatable) *)
 	when True sync power_cut goto lowering;
+	(* no influce of train being near when the gate is lowering (which is debatable, as we could increase the lowering speed) *)
+	when True sync sensor_close goto lowering;
 	(* Gate is reinitialized whenever the train passes *)
 	when True sync pass do {x_gate' = 0} goto up;
 
 loc emergency_lowering: while x_gate <= p_emergency_lowering wait {}
 	when x_gate = p_emergency_lowering sync end_lowering do {x_gate' = 0, gate_down' = TRUE} goto down;
+	(* Gate is reinitialized whenever the train passes *)
+	when True sync pass do {x_gate' = 0} goto up;
 	(* no influce of power cut when the gate is lowering *)
 	when True sync power_cut goto emergency_lowering;
-	(* Gate is reinitialized whenever the train passes *)
-	when True sync pass do {x_gate' = 0} goto up;
+	(* no influce of train being near when the gate is lowering *)
+	when True sync sensor_close goto emergency_lowering;
 
 loc down: while True wait {}
-	(* no influce of power cut when the gate is down *)
-	when True sync power_cut goto down;
 	(* Gate is reinitialized whenever the train passes *)
 	when True sync pass do {x_gate' = 0} goto up;
+	(* no influce of power cut when the gate is down *)
+	when True sync power_cut goto down;
+	(* no influce of train being near when the gate is down *)
+	when True sync sensor_close goto down;
 
 end (* gate *)
 
@@ -178,14 +198,23 @@ init :=
 	(*------------------------------------------------------------*)
 	(* Parameter constraints *)
 	(*------------------------------------------------------------*)
+	(* Train *)
 	& p_far                > 0
 	& p_approaching        > 0
+	& p_very_near          > 0
+
+	& p_very_near <= p_approaching
+	
+	(* Gate *)
 	& p_waiting            >= 0
 	& p_lowering           > 0
-	& p_walking_sensor     > 0
-	& p_walking_house      > 0
 	& p_emergency_waiting  >= 0
 	& p_emergency_lowering > 0
+	& p_emergency_lowering <= p_lowering
+	
+	(* Intruder *)
+	& p_walking_sensor     > 0
+	& p_walking_house      > 0
 ;
 
 
