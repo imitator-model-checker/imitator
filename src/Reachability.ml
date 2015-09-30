@@ -382,7 +382,7 @@ let find_useless_clocks_in_automata model local_clocks_per_automaton =
 			
 			(* Print some information *)
 			if verbose_mode_greater Verbose_medium then(
-				print_message Verbose_medium ("Starting the XXX algorithm for local clock '" ^ (model.variable_names clock_index) ^ "' in automaton '" ^ (model.automata_names automaton_index) ^ "', with initial marked states:");
+				print_message Verbose_medium ("Starting the dynamic clock elimination algorithm for local clock '" ^ (model.variable_names clock_index) ^ "' in automaton '" ^ (model.automata_names automaton_index) ^ "', with initial marked states:");
 				print_message Verbose_medium (	"  " ^ (string_of_list_of_string_with_sep ", " (List.map (model.location_names automaton_index) !marked)));
 			);
 			
@@ -1265,6 +1265,7 @@ let create_initial_state model =
 		
 		
 	(* Remove useless clocks (if option activated) *)
+	(*** WARNING: code duplication!!! ***)
 	if options#dynamic_clock_elimination then(
 		(* Compute the useless clocks *)
 		let clocks_to_remove = List.fold_left (fun current_list_of_clocks automaton_index ->
@@ -1275,8 +1276,8 @@ let create_initial_state model =
 		) [] model.automata in
 		(* Print some information *)
 		if verbose_mode_greater Verbose_low then(
-			print_message Verbose_low ("The following clocks will be dynamically removed:");
-			print_message Verbose_low ("  " ^ (string_of_list_of_string_with_sep ", " (List.map model.variable_names clocks_to_remove)));
+			if clocks_to_remove = [] then print_message Verbose_low ("No clock will be dynamically removed.")
+			else print_message Verbose_low ("The following clock" ^ (s_of_int (List.length clocks_to_remove)) ^ " will be dynamically removed: {" ^ (string_of_list_of_string_with_sep ", " (List.map model.variable_names clocks_to_remove)) ^ "}");
 		);
 		
 		print_message Verbose_high ("\nRemoving useless clocks ");
@@ -1649,6 +1650,7 @@ let compute_new_constraint model orig_constraint (discrete_constr_src : LinearCo
 		
 		
 		(* Remove useless clocks (if option activated) *)
+		(*** WARNING: code duplication!!! ***)
 		if options#dynamic_clock_elimination then(
 			(* Compute the useless clocks *)
 			let clocks_to_remove = List.fold_left (fun current_list_of_clocks automaton_index ->
@@ -1659,8 +1661,8 @@ let compute_new_constraint model orig_constraint (discrete_constr_src : LinearCo
 			) [] model.automata in
 			(* Print some information *)
 			if verbose_mode_greater Verbose_low then(
-				print_message Verbose_low ("The following clocks will be dynamically removed:");
-				print_message Verbose_low ("  " ^ (string_of_list_of_string_with_sep ", " (List.map model.variable_names clocks_to_remove)));
+				if clocks_to_remove = [] then print_message Verbose_low ("No clock will be dynamically removed.")
+				else print_message Verbose_low ("The following clock" ^ (s_of_int (List.length clocks_to_remove)) ^ " will be dynamically removed: {" ^ (string_of_list_of_string_with_sep ", " (List.map model.variable_names clocks_to_remove)) ^ "}");
 			);
 			
 			print_message Verbose_high ("\nRemoving useless clocks ");
