@@ -3,7 +3,7 @@
  *
  * Fischer's mutual exclusion protocol
  *
- * Description     : Fischer's mutual exclusion protocol
+ * Description     : Fischer's mutual exclusion protocol. Version with 2 processes.
  * Correctness     : No two processes in the mutual exclusion
  * Source          : From "Linear Parametric Model Checking of Timed Automata" Hune, Romijn, Stoelinga, Vaandrager, 2002
  * Author          : Hune, Romijn, Stoelinga, Vaandrager
@@ -11,16 +11,15 @@
  * Input by        : Etienne Andre
  *
  * Created         : 2013/12/10
- * Last modified   : 2015/07/31
+ * Last modified   : 2015/09/30
  *
  * IMITATOR version: 2.7.2
  ************************************************************)
 
 var 
-	-- P1's clock
-	x_1,
-	-- P2's clock
-	x_2,
+	
+	x_1, (*P1's clock*)
+	x_2, (*P2's clock*)
 		:clock;
 	
 
@@ -33,7 +32,7 @@ var
 
 
 (************************************************************)
-automaton pta_1
+automaton process_1
 (************************************************************)
 synclabs: ;
 
@@ -57,12 +56,12 @@ loc tryenter_1: while x_1 <= max_delay wait {}
 loc cs_1: while True wait {}
 	when True do {x_1' = 0, lock' = 0} goto start_1;
 
-end -- pta_1
+end (*process_1*)
 
 
 
 (************************************************************)
-automaton pta_2
+automaton process_2
 (************************************************************)
 synclabs: ;
 
@@ -86,7 +85,7 @@ loc tryenter_2: while x_2 <= max_delay wait {}
 loc cs_2: while True wait {}
 	when True do {x_2' = 0, lock' = 0} goto start_2;
 
-end -- pta_2
+end (*process_2*)
 
 
 
@@ -98,8 +97,8 @@ init :=
 	(*------------------------------------------------------------*)
 	(*   INITIAL LOCATION *)
 	(*------------------------------------------------------------*)
-	& loc[pta_1] = start_1
-	& loc[pta_2] = start_2	
+	& loc[process_1] = start_1
+	& loc[process_2] = start_2
 	
 	(*------------------------------------------------------------*)
 	(* Initial discrete assignments *)
@@ -125,7 +124,7 @@ init :=
 (************************************************************)
 (* Property specification *)
 (************************************************************)
-property := unreachable loc[pta_1] = cs_1 & loc[pta_2] = cs_2;
+property := unreachable loc[process_1] = cs_1 & loc[process_2] = cs_2;
 
 
 (************************************************************)
