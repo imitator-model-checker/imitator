@@ -2742,6 +2742,11 @@ let post_star model init_state =
 			);
 		);
 		
+		(* Print some memory information *)
+		if options#statistics then(
+			
+		);
+		
 		(* Clean up a little *)
 		(*** NOTE: LOOKS LIKE COMPLETELY USELESS !!! it even increases memory x-( ***)
 		Gc.major ();

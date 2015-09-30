@@ -7,7 +7,7 @@
  * Author:        Etienne Andre
  * 
  * Created:       2014/10/24
- * Last modified: 2015/05/18
+ * Last modified: 2015/09/28
  *
  ****************************************************************)
  
@@ -356,6 +356,23 @@ let delete_file file_name =
 		print_error ("File " ^ file_name ^ " could not be removed. System says: '" ^ e ^ "'.")
 
 
+(** Convert a number of KiB (float) into KiB/MiB/GiB/TiB *)
+let kiB_MiB_GiB_TiB_of_KiB nb_kib =
+	(* Case KiB *)
+	if nb_kib <= 1024.0 then (round3_float nb_kib) ^ " KiB"
+	else
+	if nb_kib <= 1024.0 ** 2.0 then (round3_float (nb_kib /. 1024.0)) ^ " MiB"
+	else
+	if nb_kib <= 1024.0 ** 3.0 then (round3_float (nb_kib /. (1024.0 ** 2.0))) ^ " GiB"
+	else (round3_float (nb_kib /. (1024.0 ** 3.0))) ^ " TiB"
+
+
+(** Convert a number of words into a memory information *)
+let memory_info_of_words nb_words word_size = 
+	let nb_kib = nb_words *. (float_of_int word_size) /. 1024.0 in
+	 "Estimated memory used: " ^ (kiB_MiB_GiB_TiB_of_KiB nb_kib) ^ " (i.e., " ^ (string_of_int (int_of_float nb_words)) ^ " words of size " ^ (string_of_int word_size) ^ ")"
+
+
 (** Print info on the memory used *)
 let print_memory_used debug_level =
 	(* Print memory information *)
@@ -363,8 +380,8 @@ let print_memory_used debug_level =
 	let nb_words = gc_stat.minor_words +. gc_stat.major_words -. gc_stat.promoted_words in
 	(* Compute the word size in bytes *)
 	let word_size = (*4.0*)Sys.word_size / 8 in
-	let nb_ko = nb_words *. (float_of_int word_size) /. 1024.0 in
-		print_message debug_level ("Estimated memory used: " ^ (round3_float nb_ko) ^ " KiB (i.e., " ^ (string_of_int (int_of_float nb_words)) ^ " words of size " ^ (string_of_int word_size) ^ ")")
+	print_message debug_level (memory_info_of_words nb_words word_size)
+	
 
 
 
