@@ -225,7 +225,7 @@
 
 
 % Current version
-\newcommand{\imitatorversion}{2.7.1}
+\newcommand{\imitatorversion}{2.7.2}
 \newcommand{\imitatorversionname}{Butter Guéméné}
 	% TODO: add nice picture :-)
 
@@ -501,7 +501,7 @@ Fischer mutual exclusion protocol is a protocol that guarantees the mutual exclu
 
 \paragraph{Input syntax}
 We give below this model using the \imitator{} syntax.
-Note that this model is given in graphical form in \cref{figure:fischer}.\footnote{%
+This model is given in graphical form in \cref{figure:fischer}.\footnote{%
 	This \LaTeX{} representation, that makes use of the \LaTeX{} TikZ library, was automatically output by \imitator{}, using option \styleOption{-PTA2TikZ}, followed by some manual positioning optimization.
 }
 
@@ -575,7 +575,7 @@ Process~2 is identical to process~1, except that \styleIMI{x1} is replaced with 
 The observer is in charge to check that no more than one process is in critical section at the same time.\footnote{%
 	This observer is not really necessary to check the correctness of this protocol;
 	instead of adding this observer and checking \styleIMI{unreachable loc[observer] = obs\_violation}, one could just check either \styleIMI{counter > 1} or \styleIMI{loc[proc1] = CS1 \& loc[proc2] = CS2}.
-	However, this example comes from an earlier version of \imitator{} (that did not support checking global variables or more that one location in the \styleIMI{unreachable} property --- which has been fixed since version 2.7); furthermore, introducing an observer is also useful, as it is often used for verification for more complex properties (see, \eg{}, \cite{ABL98,ABBL98}).
+	However, this example comes from an earlier version of \imitator{} (that did not support checking global variables or more that one location in the \styleIMI{unreachable} property --- which has been fixed since version 2.7); furthermore, introducing an observer is also useful, as it is often used for the verification of more complex properties (see, \eg{} \cite{ABL98,ABBL98}).
 }
 This observer will detect that this situation happens if an action \styleIMI{enter\_1} is followed by an action \styleIMI{enter\_2} without an action \styleIMI{exit\_1} in between (or symmetrically if an action \styleIMI{enter\_2} is followed by an action \styleIMI{enter\_1} without an action \styleIMI{exit\_2} in between).
 Note that the observer simply observes the system state, and synchronizes on the actions used by \styleIMI{proc1} and \styleIMI{proc2}; it does not use any clock nor variable.
@@ -625,7 +625,7 @@ The result of the call to \imitator{} is
     \& gamma >= 0
 }
 
-That is, the system is safe if \styleIMI{delta < gamma}, which is the well-known constraint ensuring mutual exclusion for this protocol.
+That is, the system is safe if \styleIMI{O <= delta < gamma}, which is the well-known constraint ensuring mutual exclusion for this protocol.
 	% TODO: ref
 
 
@@ -636,6 +636,9 @@ That is, the system is safe if \styleIMI{delta < gamma}, which is the well-known
 \chapter{IMITATOR Parametric Timed Automata}\label{section:IPTA}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+This chapter formally introduces the input model of \imitator{}.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Formal Definition}\label{section:NIPTA}
@@ -802,9 +805,9 @@ are global integer-valued variables.
 Their value is global, in the sense that they are shared by all \IPTA{} of the model.
 They can be seen as syntactic sugar to represent a possibly unbounded number of locations.
 
-In \imitator{}, integers are exact and unbounded, just as in maths (\ie{}, they are \emph{not} represented using a limited number of bits, such as 32 or 64 bits).
+In \imitator{}, integers are exact and unbounded, just as in maths (\ie{} they are \emph{not} represented using a limited number of bits, such as 32 or 64 bits).
 Hence, no overflow can occur, and the representation of the constraints is always exact.
-Note that floating-point numbers are totally absent from the \imitator{} implementation (except for th generation of graphical outputs).
+Note that floating-point numbers are totally absent from the \imitator{} implementation (except for the generation of graphical outputs).
 
 Discrete variables must be initialized to a single constant value in the \styleIMI{init} definition;
 if they are not, a warning is issued, and they are arbitrarily set to~0.
@@ -917,10 +920,10 @@ A main problem in parametric timed automata is to compute the set of parameter v
 
 The property must be specified as follows, at the end of the model (after the initial state definition):
 
-\styleIMI{property := unreachable loc[AUTOMATON] = LOCATION}\\
+\styleIMI{property := unreachable loc[AUTOMATON] = LOCATION;}\\
 where \styleIMI{AUTOMATON} is an automaton name, and \styleIMI{LOCATION} is a location name.
 
-The algorithm \EFsynth{} implemented in \imitator{} is a basic breadth-first procedure, close to the one described in \cite{AHV93,JLR15}.
+The algorithm \EFsynth{} implemented in \imitator{} is a basic breadth-first procedure, close to the one described in \cite{JLR15}.
 Of course, the EF-emptiness problem being undecidable~\cite{AHV93}, the analysis is not guaranteed to terminate.
 
 The standard command is:
@@ -981,6 +984,8 @@ Then, the command to synthesize parameters is the same as for the EF-synthesis:
 
 \styleCommand{\binimitator{} model.imi -mode EFsynth -merge -incl}
 
+Once more, options \styleOption{-merge} and \styleOption{-incl} are optional, but often improve efficiency and termination.
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Inverse Method: Trace Preservation}\label{ss:mode:IM}
@@ -1039,7 +1044,7 @@ The command is:
 
 \styleCommand{\binimitator{} model.imi model.v0 -mode randomXX}
 
-where \styleOption{XX} is the number of times an integer point is randomly selected within the domain defined in \stylePath{model.v0}.
+\noindent{}where \styleOption{XX} is the number of times an integer point is randomly selected within the domain defined in \stylePath{model.v0}.
 If this point is already covered by one of the tiles, the inverse method is not called, an another point is selected.
 Note that \styleOption{XX} represents the number of integer points randomly selected; the number of calls to the inverse method can be significantly smaller.
 
@@ -1064,7 +1069,7 @@ Note that a bad location (as in \cref{ss:mode:EFsynth}) or a property (as in \cr
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 An extension of $\PRP$ to the cartography (named \PRPC{}) is also available: \PRPC{} synthesizes parameter constraints in which the (non-)reachability of $\loc$ is uniform.
-\PRPC{} was showed in~\cite{ALNS15} to be a good alternative to \EFsynth{}, especially when distributed.
+\PRPC{} was showed in~\cite{ALNS15} to be a good alternative to \EFsynth{}, especially when distributed (see option \styleOption{-distributed}).
 
 This algorithm~$\PRPC$ is called as follows:
 
@@ -1099,6 +1104,9 @@ Note that, beyond about 1,000 states or 1,000 transitions, the \gdot{} utility (
 
 Using \styleOption{-output-trace-set-nodetails} makes a more compact representation (but is also less informative).
 
+Conversely, \styleOption{-output-trace-set-verbose} makes an even more detailed representation, by also adding to the trace set all constraints (the clock and parameter constraints, and below their projection onto the parameters).
+This option is mostly suitable for small trace sets.
+
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1113,7 +1121,7 @@ This will generate file \stylePath{model\_cart\_ef.png} if the algorithm is \EFs
 \stylePath{model\_cart\_bc.png} if the algorithm is \BC{} and its variant,
 or \stylePath{model\_cart\_patator.png} if the algorithm is the distributed \BC{} and its variants.
 
-The 2 dimensions chosen for the plot are the first two (non-constant) parameter dimension in the model.
+The two dimensions chosen for the plot are the first two (non-constant) parameter dimension in the model.
 
 Additional useful options are
 \styleOption{-output-cart-x-min},
@@ -1135,7 +1143,7 @@ To generate a graphic representation of the model without performing any analysi
 
 \styleCommand{\binimitator{} model.imi -PTA2JPG}
 
-\imitator{} will generate a file \stylePath{model-pta.jpg}.
+\imitator{} will generate a file \stylePath{model-pta.jpg} (using the \gdot{} utility).
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1147,7 +1155,7 @@ To generate a \LaTeX{} representation of the model (using the \texttt{tikz} pack
 \styleCommand{\binimitator{} model.imi -PTA2TikZ}
 
 \imitator{} will generate a file \stylePath{model.tex}.
-This file is a standalone \LaTeX{} file containing a single figure, which contains the different \IPTA{} in \texttt{subfigure} environments.
+This file is a standalone \LaTeX{} file containing a single figure, which contains the different \IPTA{} in ``\texttt{subfigure}'' environments.
 The node positioning is not yet supported (locations are depicted vertically), so you may need to manually position all nodes, and bend some transitions if needed.
 
 
@@ -1613,6 +1621,8 @@ Prints \imitator{} header including the version number and exits.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
+We give in this chapter the complete grammar of input models for \imitator{}.
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Variable Names}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -2045,7 +2055,7 @@ We define each of those two components below.
 \regleGrammaire{init\_state\_predicate}
 %------------------------------------------------------------
 \begin{tabular}{l l}
-	\  & \styleIMI{loc} \styleIMI{[} \styleIMI{<name>} \styleIMI{]} \styleIMI{=} \styleIMI{<name>} \\
+	\  & \nt{loc\_predicate} \\
 	$|$ & \nt{linear\_constraint} \\
 \end{tabular}
 
@@ -2057,8 +2067,42 @@ We define each of those two components below.
 \end{tabular}
 
 
+%------------------------------------------------------------
+\regleGrammaire{discrete\_predicate}
+%------------------------------------------------------------
+\begin{tabular}{l l}
+	\  & \styleIMI{<name>} \nt{relop} \nt{rational} \\
+	$|$ & \styleIMI{<name>} \styleIMI{in} \styleIMI{[}\nt{rational} \styleIMI{,} \nt{rational} \styleIMI{]} \\
+	$|$ & \styleIMI{<name>} \styleIMI{in} \styleIMI{[}\nt{rational} \styleIMI{..} \nt{rational} \styleIMI{]} \\
+\end{tabular}
 
 
+%------------------------------------------------------------
+\regleGrammaire{bad\_simple\_predicate}
+%------------------------------------------------------------
+\begin{tabular}{l l}
+	\  & \nt{discrete\_predicate} \\
+	$|$ & \nt{loc\_predicate} \\
+\end{tabular}
+
+
+%------------------------------------------------------------
+\regleGrammaire{bad\_global\_predicate}
+%------------------------------------------------------------
+\begin{tabular}{l l}
+	\  & \nt{bad\_global\_predicate} \styleIMI{\&} \nt{bad\_global\_predicate} \\
+	$|$ & \styleIMI{(} \nt{bad\_global\_predicate} \styleIMI{)} \\
+	$|$ & \styleIMI{(} \nt{bad\_simple\_predicate} \styleIMI{)} \\
+\end{tabular}
+
+
+%------------------------------------------------------------
+\regleGrammaire{bad\_global\_predicates}
+%------------------------------------------------------------
+\begin{tabular}{l l}
+	\  & \nt{bad\_global\_predicate} \styleIMI{or} \nt{bad\_global\_predicates} \\
+	$|$ & \nt{bad\_global\_predicate} \\
+\end{tabular}
 
 
 %------------------------------------------------------------
@@ -2073,7 +2117,7 @@ We define each of those two components below.
 \regleGrammaire{pattern}
 %------------------------------------------------------------
 \begin{tabular}{l l}
-	\  & \styleIMI{unreachable} \nt{loc\_predicate} \\
+	\  & \styleIMI{unreachable} \nt{bad\_global\_predicates} \\
 	$|$ & \styleIMI{if <name> then <name> has happened before} \\
 	$|$ & \styleIMI{everytime <name> then <name> has happened before} \\
 	$|$ & \styleIMI{everytime <name> then <name> has happened once before} \\
@@ -2240,7 +2284,7 @@ This is not supported by \imitator{}, and we do not see a way to simulate it eas
 
 Parameterized models are understood here as models with an arbitrary number of components (\eg{} Fischer's mutual exclusion protocol with $n$ processes), that would be instantiated (\eg{} $n = 15$) before performing the analysis.
 \imitator{} does not currently support such parameterized models, and one should use copy/paste utilities to instantiate $n$ models.
-For complicated models with many processes, we usually write short scripts to generate the model (a script \stylePath{CSMACDgenerator.py} to model the varying part of parameterized models for the CSMA/CD case study is available on \GitHubIMI{}).
+For complicated models with many processes, we usually write short scripts to generate the model (a script \stylePath{CSMACDgenerator.py} to model the varying part of parameterized models for the CSMA/CD case study is available on the \imitator{} project on \GitHubIMI{}).
 
 
 
@@ -2267,7 +2311,7 @@ This can be easily simulated using dedicated discrete variables, that would be r
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Intervals for Discrete Variables}
+\section{Initial Intervals for Discrete Variables}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 Discrete variables must be set to a constant integer in the \styleIMI{init} definition (\eg{} \styleIMI{i = 0}).
@@ -2290,6 +2334,16 @@ However, this can be (partially) simulated with stopwatches: we can replace a di
 
 % TODO: only one PTA/location in the bad state definition
 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Synthesis for L/U-PTA}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\imitator{} does not implement specific algorithms for lower-bound / upper-bound PTA (L/U-PTA).
+This subclass of PTA, introduced in~\cite{HRSV02}, constrains parameters to appear either always as upper-bounds in inequalities comparing them with clocks, or always as lower-bounds.
+L/U-PTA benefit from some decidability results (see \eg{} \cite{HRSV02,BlT09,JLR15,AM15}).
+
+However, \imitator{} does detect whether an input model is an L/U-PTA, in which case a message is printed with the list of lower-bounds parameters and upper-bounds parameters.
 
 
 
