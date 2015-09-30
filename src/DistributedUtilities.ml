@@ -631,7 +631,7 @@ let send_result im_result =
 	let mlc = serialize_im_result im_result in
 	let res_size = String.length mlc in
 
-	if debug_mode_greater Verbose_high then(
+	if verbose_mode_greater Verbose_high then(
 		print_message Verbose_medium ("[Worker " ^ (string_of_int rank) ^ "] Serialized constraint '" ^ mlc ^ "'");
 	);
 	
@@ -684,7 +684,7 @@ let send_tiles im_result_list =
 	let mlc = serialize_im_result_list im_result_list in
 	let res_size = String.length mlc in
 
-	if debug_mode_greater Verbose_high then(
+	if verbose_mode_greater Verbose_high then(
 		print_message Verbose_high ("[Worker " ^ (string_of_int rank) ^ "] Serialized constraint list '" ^ mlc ^ "'");
 	);
 	

@@ -891,7 +891,7 @@ let worker() =
 			(* Perform initialization *)
 			Cartography.bc_initialize_subpart ();
 			
-			if debug_mode_greater Verbose_medium then(
+			if verbose_mode_greater Verbose_medium then(
 				print_message Verbose_medium ("[Worker " ^ (string_of_int rank) ^ "] set v0:");
 				print_message Verbose_medium (ModelPrinter.string_of_v0 model subpart);
 			);
@@ -945,13 +945,13 @@ let worker() =
 				(* Set the new pi0 *)
 				Input.set_pi0 !pi0;
 			
-				(* Save debug mode *)
-				let global_debug_mode = get_debug_mode() in 
+				(* Save verbose mode *)
+				let global_verbose_mode = get_verbose_mode() in 
 
 				
-				(* Prevent the debug messages (except in verbose mode total) *)
-				if not (debug_mode_greater Verbose_total) then
-					set_debug_mode Verbose_mute;
+				(* Prevent the verbose messages (except in verbose mode total) *)
+				if not (verbose_mode_greater Verbose_total) then
+					set_verbose_mode Verbose_mute;
 				
 				counter_worker_IM#start;
 				try(
@@ -961,8 +961,8 @@ let worker() =
 				let im_result , _ = Reachability.inverse_method_gen model init_state in
 (* 			    raise (InternalError("stop here")); *)
 
-				(* Get the debug mode back *)
-				set_debug_mode global_debug_mode;
+				(* Get the verbose mode back *)
+				set_verbose_mode global_verbose_mode;
 				
 				(* Process result *)
 				let added = Cartography.bc_process_im_result im_result in
@@ -1052,7 +1052,7 @@ let collaborator_compute_subpart rank =
 		raise (InternalError("Error when accessing element #" ^ (string_of_int rank) ^ " in the list of subparts."))
 	)
 	in
-	(* Print some debug information *)
+	(* Print some verbose information *)
 	print_message Verbose_low ("[collaborator " ^ (string_of_int rank) ^ "] I picked up subpart #" ^ (string_of_int rank) ^ ".");
 	(* Return subpart *)
 	subpart
@@ -1152,8 +1152,8 @@ let collaborator () =
 	(* Backup the v0, so that the coordinator can put it back before finishing its work (and plotting the cartography) *)
 	let original_v0 = Input.get_v0 () in
 	
-	(* Backup debug mode *)
-	let global_debug_mode = get_debug_mode() in
+	(* Backup verbose mode *)
+	let global_verbose_mode = get_verbose_mode() in
 
 	(* Compute subpart for this collaborator only *)
 	let subpart = collaborator_compute_subpart rank in
@@ -1204,15 +1204,15 @@ let collaborator () =
 		
 		print_message Verbose_high ("[collaborator " ^ (string_of_int rank) ^ "] About to call IM...");
 
-		(* Prevent the debug messages (except in debug medium, high or total) *)
-		if not (debug_mode_greater Verbose_medium) then
-			set_debug_mode Verbose_mute;
+		(* Prevent the verbose messages (except in verbose medium, high or total) *)
+		if not (verbose_mode_greater Verbose_medium) then
+			set_verbose_mode Verbose_mute;
 		
 		(* Call the inverse method *)
 		let im_result, _ = Reachability.inverse_method_gen model init_state in
 		
-		(* Get the debug mode back *)
-		set_debug_mode global_debug_mode;
+		(* Get the verbose mode back *)
+		set_verbose_mode global_verbose_mode;
 		
 		print_message Verbose_high ("[collaborator " ^ (string_of_int rank) ^ "] Processing result of IM...");
 

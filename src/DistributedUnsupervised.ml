@@ -304,17 +304,17 @@ let worker () =
     print_message Verbose_standard(msg_prefix ^ " process a point");
     Input.set_pi0 (pi0);
     
-    (* Save debug mode *)
-    let global_debug_mode = get_debug_mode() in 
+    (* Save verbose mode *)
+    let global_verbose_mode = get_verbose_mode() in 
       
-      (* Prevent the debug messages (except in verbose modes high or total) *)
-      if not (debug_mode_greater Verbose_high) then
-	set_debug_mode Verbose_mute;
+      (* Prevent the verbose messages (except in verbose modes high or total) *)
+      if not (verbose_mode_greater Verbose_high) then
+	set_verbose_mode Verbose_mute;
       
       let res, _ = Reachability.inverse_method_gen model s0 in
 	
-	(* Get the debug mode back *)
-	set_debug_mode global_debug_mode;
+	(* Get the verbose mode back *)
+	set_verbose_mode global_verbose_mode;
 	
 	let useful = Cartography.bc_process_im_result res in
 	  if useful

@@ -409,7 +409,7 @@ let add_state_dyn program graph new_state constr =
 	let options = Input.get_options () in
 	(* compute hash value for the new state *)
 	let hash = hash_code new_state in
-	if debug_mode_greater Verbose_total then (
+	if verbose_mode_greater Verbose_total then (
 		print_message Verbose_standard ("hash : " ^ (string_of_int hash));
 	); 
 	(* In tree mode: does not test anything *)
@@ -424,7 +424,7 @@ let add_state_dyn program graph new_state constr =
 		try (
 			(* use hash table to find states with same locations (modulo hash collisions) *)
 			let old_states = Hashtbl.find_all graph.states_for_comparison hash in
-			if debug_mode_greater Verbose_total then (
+			if verbose_mode_greater Verbose_total then (
 				let nb_old = List.length old_states in
 				print_message Verbose_total ("hashed list of length " ^ (string_of_int nb_old));
 			);
@@ -454,7 +454,7 @@ let add_state graph new_state =
 	let options = Input.get_options () in
 	(* compute hash value for the new state *)
 	let hash = hash_code new_state in
-	if debug_mode_greater Verbose_total then (
+	if verbose_mode_greater Verbose_total then (
 		print_message Verbose_total ("hash : " ^ (string_of_int hash));
 	); 
 	(* In tree mode: does not test anything *)
@@ -469,7 +469,7 @@ let add_state graph new_state =
 		try (
 			(* use hash table to find all states with same locations (modulo hash collisions) *)
 			let old_states = Hashtbl.find_all graph.states_for_comparison hash in
-			if debug_mode_greater Verbose_total then (
+			if verbose_mode_greater Verbose_total then (
 				let nb_old = List.length old_states in
 				print_message Verbose_total ("hashed list of length " ^ (string_of_int nb_old));
 			);
@@ -828,7 +828,7 @@ let match_unreachable_global_locations unreachable_global_locations location =
 		List.for_all (fun (unreachable_automaton_index , unreachable_location_index) ->
 			(* Retrieve current location of unreachable_automaton_index *)
 			let current_location_index = Automaton.get_location location unreachable_automaton_index in
-			if debug_mode_greater Verbose_high then(
+			if verbose_mode_greater Verbose_high then(
 				print_message Verbose_high ("Checking whether loc[" ^ (model.automata_names unreachable_automaton_index) ^ "] = " ^ (model.location_names unreachable_automaton_index unreachable_location_index) ^ " is satisfied when loc[" ^ (model.automata_names unreachable_automaton_index) ^ "] = " ^ (model.location_names unreachable_automaton_index current_location_index) ^ " ");
 			);
 			(* Check equality *)

@@ -10,7 +10,7 @@
  * Author:        Ulrich Kuehne, Etienne Andre
  * 
  * Created:       2010/07/22
- * Last modified: 2015/09/25
+ * Last modified: 2015/09/30
  *
  ****************************************************************)
 
@@ -316,8 +316,8 @@ let find_useless_clocks_in_automata model local_clocks_per_automaton =
 			) actions_for_this_location; (* end for each action *)
 		) locations_for_this_automaton; (* end for each location *)
 		
-		(* Print debug information *)
-		if debug_mode_greater Verbose_total then(
+		(* Print some information *)
+		if verbose_mode_greater Verbose_total then(
 			print_message Verbose_total ("Computed predecessor locations and clock resets for automaton '" ^ (model.automata_names automaton_index) ^ "'");
 			(* Iterate on locations *)
 			List.iter (fun location_index ->
@@ -380,8 +380,8 @@ let find_useless_clocks_in_automata model local_clocks_per_automaton =
 			(* Create a waiting list *)
 			let waiting = ref !marked in
 			
-			(* Print debug information *)
-			if debug_mode_greater Verbose_medium then(
+			(* Print some information *)
+			if verbose_mode_greater Verbose_medium then(
 				print_message Verbose_medium ("Starting the XXX algorithm for local clock '" ^ (model.variable_names clock_index) ^ "' in automaton '" ^ (model.automata_names automaton_index) ^ "', with initial marked states:");
 				print_message Verbose_medium (	"  " ^ (string_of_list_of_string_with_sep ", " (List.map (model.location_names automaton_index) !marked)));
 			);
@@ -391,17 +391,17 @@ let find_useless_clocks_in_automata model local_clocks_per_automaton =
 				(* Pick a location from the waiting list *)
 				match !waiting with
 				| location_index :: rest ->
-					(* Debug information *)
+					(* Print some information *)
 					print_message Verbose_medium ("Pick up location '" ^ (model.location_names automaton_index location_index) ^ "'");
 					(* Remove the first element *)
 					waiting := rest;
 					(* For each transition leading to this location *)
 					List.iter (fun (source_index, reset_local_clocks) ->
-						(* Debug information *)
+						(* Print some information *)
 						print_message Verbose_high ("Considering predecessor transition from '" ^ (model.location_names automaton_index source_index) ^ "'");
 						(* If the clock is not reset by the transition *)
 						if not (List.mem clock_index reset_local_clocks) then(
-							(* Debug information *)
+							(* Print some information *)
 							print_message Verbose_high ("Clock not reset by a transition.");
 							(* If the source location does not belong to the marked list *)
 							if not (List.mem source_index !marked) then(
@@ -424,8 +424,8 @@ let find_useless_clocks_in_automata model local_clocks_per_automaton =
 			(* Return the list of locations where the clock can be removed *)
 			let useless_locations = list_diff locations_for_this_automaton !marked in
 			
-			(* Print debug information *)
-			if debug_mode_greater Verbose_low then(
+			(* Print some information *)
+			if verbose_mode_greater Verbose_low then(
 				print_message Verbose_low ("List of useless locations for local clock '" ^ (model.variable_names clock_index) ^ "' in automaton '" ^ (model.automata_names automaton_index) ^ "'");
 				print_message Verbose_low ("  " ^ (string_of_list_of_string_with_sep ", " (List.map (model.location_names automaton_index) useless_locations)));
 			);
@@ -457,7 +457,7 @@ let prepare_clocks_elimination model =
 	let local_clocks_per_automaton = find_local_clocks model in
 
 	(* Debug print: local clocks per automaton *)
-	if debug_mode_greater Verbose_total then(
+	if verbose_mode_greater Verbose_total then(
 		print_message Verbose_total ("\n*** Local clocks per automaton:");
 		(* For each automaton *)
 		List.iter (fun automaton_index ->
@@ -646,14 +646,14 @@ let merge model action_and_state_list =
 				(* If mergeable *)
 
 				(* Print some information *)
-				if debug_mode_greater Verbose_total then (
+				if verbose_mode_greater Verbose_total then (
 					print_message Verbose_total ("\nConstraint of the eated before merging attempt...\n" ^ (LinearConstraint.string_of_px_linear_constraint model.variable_names eated_constraint));
 					print_message Verbose_total ("\nConstraint of the eater before merging attempt...\n" ^ (LinearConstraint.string_of_px_linear_constraint model.variable_names eater_constraint));
 				);
 
 				
 				if try_to_merge eater_location eater_constraint eated_location eated_constraint then(
-					if debug_mode_greater Verbose_total then (
+					if verbose_mode_greater Verbose_total then (
 						(* Print some information *)
 						print_message Verbose_total ("\nConstraint of the eater after merging...\n" ^ (LinearConstraint.string_of_px_linear_constraint model.variable_names eater_constraint));
 					);
@@ -952,21 +952,21 @@ let rho_assign model (linear_constraint : LinearConstraint.pxd_linear_constraint
 			(* Create the constraint *)
 			let updates = LinearConstraint.make_pxd_constraint updates in
 			(* Print some information *)
-			if debug_mode_greater Verbose_total then(
+			if verbose_mode_greater Verbose_total then(
 				print_message Verbose_total (LinearConstraint.string_of_pxd_linear_constraint model.variable_names updates);
 			);
 			
 			(* Hide clocks updated within the linear constraint, viz., exists X' : lc, for X' in rho(X) *)
 			print_message Verbose_total ("\n -- Computing exists X : lc for reset clocks");
 			LinearConstraint.pxd_hide_assign list_of_clocks_to_update linear_constraint;
-			if debug_mode_greater Verbose_total then(
+			if verbose_mode_greater Verbose_total then(
 				print_message Verbose_total (LinearConstraint.string_of_pxd_linear_constraint model.variable_names linear_constraint);
 			);
 			
 			(* Add the constraints X = 0 *)
 			print_message Verbose_total ("\n -- Adding X = 0 for reset clocks");
 			LinearConstraint.pxd_intersection_assign linear_constraint [updates];
-			if debug_mode_greater Verbose_total then(
+			if verbose_mode_greater Verbose_total then(
 				print_message Verbose_total (LinearConstraint.string_of_pxd_linear_constraint model.variable_names linear_constraint);
 			)
 			
@@ -993,7 +993,7 @@ let rho_assign model (linear_constraint : LinearConstraint.pxd_linear_constraint
 				Hashtbl.add prime_of_variable clock_id !clock_prime_id;
 				Hashtbl.add variable_of_prime !clock_prime_id clock_id;
 				(* Debug message *)
-				if debug_mode_greater Verbose_total then(
+				if verbose_mode_greater Verbose_total then(
 					print_message Verbose_total ("\nThe primed index of variable '" ^ (model.variable_names clock_id) ^ "' (index = " ^ (string_of_int clock_id) ^ ") is set to " ^ (string_of_int !clock_prime_id) ^ ".")
 				);
 				(* Increment the prime id for next variable *)
@@ -1025,7 +1025,7 @@ let rho_assign model (linear_constraint : LinearConstraint.pxd_linear_constraint
 			let inequalities = LinearConstraint.make_pxd_constraint inequalities in
 			(* Print some information *)
 			let print_constraint c = 
-				if debug_mode_greater Verbose_total then(
+				if verbose_mode_greater Verbose_total then(
 					let all_variable_names = fun variable_id ->
 						if variable_id < model.nb_variables then 
 							model.variable_names variable_id
@@ -1051,7 +1051,7 @@ let rho_assign model (linear_constraint : LinearConstraint.pxd_linear_constraint
 			print_message Verbose_total ("\n -- Computing exists X : lc for updated clocks");
 			LinearConstraint.pxd_hide_assign list_of_clocks_to_hide linear_constraint;
 			(* Print some information *)
-			if debug_mode_greater Verbose_total then(
+			if verbose_mode_greater Verbose_total then(
 				print_constraint linear_constraint;
 			);
 			
@@ -1062,7 +1062,7 @@ let rho_assign model (linear_constraint : LinearConstraint.pxd_linear_constraint
 			print_message Verbose_total ("\n -- Renaming clocks X_i' into X_i for updated clocks");
 			LinearConstraint.pxd_rename_variables_assign clocks_and_primes linear_constraint;
 			(* Print some information *)
-			if debug_mode_greater Verbose_total then(
+			if verbose_mode_greater Verbose_total then(
 				print_constraint linear_constraint;
 			);
 
@@ -1072,7 +1072,7 @@ let rho_assign model (linear_constraint : LinearConstraint.pxd_linear_constraint
 			LinearConstraint.set_dimensions model.nb_parameters model.nb_clocks model.nb_discrete;
 			LinearConstraint.pxd_remove_dimensions extra_dimensions linear_constraint;
 			(* Print some information *)
-			if debug_mode_greater Verbose_total then(
+			if verbose_mode_greater Verbose_total then(
 				print_constraint linear_constraint;
 			);
 			
@@ -1157,7 +1157,7 @@ let apply_time_elapsing location the_constraint =
 		(* Compute the list of stopwatches *)
 		let stopped_clocks, elapsing_clocks = compute_stopwatches model location in
 		print_message Verbose_high ("Computing list of stopwatches");
-		if debug_mode_greater Verbose_total then(
+		if verbose_mode_greater Verbose_total then(
 			let list_of_names = List.map model.variable_names stopped_clocks in
 			print_message Verbose_total ("Stopped clocks : " ^ (string_of_list_of_string_with_sep ", " list_of_names));
 			let list_of_names = List.map model.variable_names elapsing_clocks in
@@ -1173,7 +1173,7 @@ let apply_time_elapsing location the_constraint =
 			the_constraint
 		;
 		(* Print some information *)
-		if debug_mode_greater Verbose_total then(
+		if verbose_mode_greater Verbose_total then(
 			print_message Verbose_total (LinearConstraint.string_of_pxd_linear_constraint model.variable_names the_constraint);
 		);
 		()
@@ -1199,7 +1199,7 @@ let create_initial_state model =
 	(* Create the invariant *)
 	let invariant = compute_plain_invariant model initial_location in
 	(* Print some information *)
-	if debug_mode_greater Verbose_total then
+	if verbose_mode_greater Verbose_total then
 		print_message Verbose_total (LinearConstraint.string_of_pxd_linear_constraint model.variable_names invariant);
 	
 	(* Compute constraint for assigning a (constant) value to discrete variables *)
@@ -1208,14 +1208,14 @@ let create_initial_state model =
 	(* Constraint of the form D_i = d_i *)
 	let discrete_constraint = instantiate_discrete discrete_values in
 	(* Print some information *)
-	if debug_mode_greater Verbose_total then
+	if verbose_mode_greater Verbose_total then
 		print_message Verbose_total (LinearConstraint.string_of_pxd_linear_constraint model.variable_names discrete_constraint);
 	
 	(* Perform intersection of C(X) and I_l0(X) and D_i = d_i *)
 	print_message Verbose_high ("Performing intersection of C0(X) and I_l0(X) and D_i = d_i");
 	let current_constraint = LinearConstraint.pxd_intersection [initial_constraint ; invariant ; discrete_constraint (*** TO OPTIMIZE: could be removed ***)] in
 	(* Print some information *)
-	if debug_mode_greater Verbose_total then
+	if verbose_mode_greater Verbose_total then
 		print_message Verbose_total (LinearConstraint.string_of_pxd_linear_constraint model.variable_names current_constraint);
 
 	
@@ -1228,7 +1228,7 @@ let create_initial_state model =
 (*		(* Compute the list of stopwatches *)
 		let stopped_clocks, elapsing_clocks = compute_stopwatches model initial_location in
 		print_message Verbose_high ("Computing list of stopwatches");
-		if debug_mode_greater Verbose_total then(
+		if verbose_mode_greater Verbose_total then(
 			let list_of_names = List.map model.variable_names stopped_clocks in
 			print_message Verbose_total ("Stopped clocks : " ^ (string_of_list_of_string_with_sep ", " list_of_names));
 			let list_of_names = List.map model.variable_names elapsing_clocks in
@@ -1241,7 +1241,7 @@ let create_initial_state model =
 			current_constraint
 		;
 		(* Print some information *)
-		if debug_mode_greater Verbose_total then
+		if verbose_mode_greater Verbose_total then
 			print_message Verbose_total (LinearConstraint.string_of_pxd_linear_constraint model.variable_names current_constraint);*)
 		
 		
@@ -1250,7 +1250,7 @@ let create_initial_state model =
 		print_message Verbose_high ("Performing intersection of [C0(X) and I_l0(X) and D_i = d_i]time and I_l0(X) and D_i = d_i");
 		LinearConstraint.pxd_intersection_assign current_constraint [invariant ; discrete_constraint];
 		(* Print some information *)
-		if debug_mode_greater Verbose_total then
+		if verbose_mode_greater Verbose_total then
 			print_message Verbose_total (LinearConstraint.string_of_pxd_linear_constraint model.variable_names current_constraint);
 	);
 		
@@ -1260,7 +1260,7 @@ let create_initial_state model =
 	print_message Verbose_high ("Hide discrete");
 	let current_constraint = LinearConstraint.pxd_hide_discrete_and_collapse (*model.discrete*) current_constraint in
 	(* Print some information *)
-	if debug_mode_greater Verbose_total then
+	if verbose_mode_greater Verbose_total then
 		print_message Verbose_total (LinearConstraint.string_of_px_linear_constraint model.variable_names current_constraint);
 		
 		
@@ -1274,7 +1274,7 @@ let create_initial_state model =
 			List.rev_append current_list_of_clocks (!useless_clocks automaton_index location_index)
 		) [] model.automata in
 		(* Print some information *)
-		if debug_mode_greater Verbose_low then(
+		if verbose_mode_greater Verbose_low then(
 			print_message Verbose_low ("The following clocks will be dynamically removed:");
 			print_message Verbose_low ("  " ^ (string_of_list_of_string_with_sep ", " (List.map model.variable_names clocks_to_remove)));
 		);
@@ -1282,7 +1282,7 @@ let create_initial_state model =
 		print_message Verbose_high ("\nRemoving useless clocks ");
 		LinearConstraint.px_hide_assign clocks_to_remove current_constraint;
 		(* Print some information *)
-		if debug_mode_greater Verbose_total then(
+		if verbose_mode_greater Verbose_total then(
 			print_message Verbose_total (LinearConstraint.string_of_px_linear_constraint model.variable_names current_constraint);
 		);
 	);
@@ -1301,7 +1301,7 @@ let get_initial_state_or_abort model =
 	let options = Input.get_options () in
 
 	(* Print the initial state *)
-	if debug_mode_greater Verbose_medium then
+	if verbose_mode_greater Verbose_medium then
 		print_message Verbose_medium ("\nInitial state:\n" ^ (ModelPrinter.string_of_state model (model.initial_location, model.initial_constraint)) ^ "\n");
 
 	(* Check the satisfiability *)
@@ -1326,7 +1326,7 @@ let get_initial_state_or_abort model =
 		print_message Verbose_total ("\n" ^ begin_message ^ "is satisfiable.");
 	);
 	(* Print the initial state after time elapsing *)
-	if debug_mode_greater Verbose_medium then
+	if verbose_mode_greater Verbose_medium then
 		print_message Verbose_medium ("\nInitial state computed:\n" ^ (ModelPrinter.string_of_state model init_state_after_time_elapsing) ^ "\n");
 		
 	(* Return the initial state *)
@@ -1358,7 +1358,7 @@ let compute_possible_actions model original_location =
 		) possible_actions_for_this_automaton;
 	done;
 	(* Print some information *)
-	if debug_mode_greater Verbose_total then (
+	if verbose_mode_greater Verbose_total then (
 		print_message Verbose_total ("Possible actions for all the locations are:");
 		Array.iteri (fun action_index possible ->
 			if possible then (print_message Verbose_total (" - " ^ (model.action_names action_index)));
@@ -1378,7 +1378,7 @@ let compute_possible_actions model original_location =
 				&& (List.mem action_index (model.actions_per_location automaton_index (Automaton.get_location original_location automaton_index)))
 			) possible automata_for_this_action in
 		(* Print some information *)
-		if not action_possible && (debug_mode_greater Verbose_total) then (
+		if not action_possible && (verbose_mode_greater Verbose_total) then (
 			print_message Verbose_total ("But action '" ^ (model.action_names action_index) ^ "' is not possible for all declared automata.")
 		);
 		(* Replace the previous value by the new one *)
@@ -1481,7 +1481,7 @@ let compute_new_constraint model orig_constraint (discrete_constr_src : LinearCo
 	(* Retrieve the input options *)
 	let options = Input.get_options () in
 	
-	if debug_mode_greater Verbose_total then(
+	if verbose_mode_greater Verbose_total then(
 		print_message Verbose_total ("\n***********************************");
 		print_message Verbose_total ("Entering compute_new_constraint");	
 		print_message Verbose_total ("***********************************");
@@ -1503,7 +1503,7 @@ let compute_new_constraint model orig_constraint (discrete_constr_src : LinearCo
 			print_message Verbose_total ("\nComputing invariant I_l(X)");
 			let invariant = compute_invariant model orig_location in
 			(* Print some information *)
-			if debug_mode_greater Verbose_total then(
+			if verbose_mode_greater Verbose_total then(
 				print_message Verbose_total (LinearConstraint.string_of_pxd_linear_constraint model.variable_names invariant);
 			);
 
@@ -1518,7 +1518,7 @@ let compute_new_constraint model orig_constraint (discrete_constr_src : LinearCo
 			(* Compute the list of stopwatches *)
 			let stopped_clocks, elapsing_clocks = compute_stopwatches model dest_location in
 			print_message Verbose_high ("Computing list of stopwatches");
-			if debug_mode_greater Verbose_total then(
+			if verbose_mode_greater Verbose_total then(
 				let list_of_names = List.map model.variable_names stopped_clocks in
 				print_message Verbose_total ("Stopped clocks : " ^ (string_of_list_of_string_with_sep ", " list_of_names));
 				let list_of_names = List.map model.variable_names elapsing_clocks in
@@ -1532,7 +1532,7 @@ let compute_new_constraint model orig_constraint (discrete_constr_src : LinearCo
 				current_constraint
 			;
 			(* Print some information *)
-			if debug_mode_greater Verbose_total then(
+			if verbose_mode_greater Verbose_total then(
 				print_message Verbose_total (LinearConstraint.string_of_pxd_linear_constraint model.variable_names current_constraint);
 			);
 		in*)
@@ -1540,7 +1540,7 @@ let compute_new_constraint model orig_constraint (discrete_constr_src : LinearCo
 		let current_constraint = LinearConstraint.pxd_copy discrete_constr_src in
 		
 		(* Print some information *)
-		if debug_mode_greater Verbose_total then(
+		if verbose_mode_greater Verbose_total then(
 			print_message Verbose_total ("\nComputing the guards g(x)");
 			List.iter (fun guard -> 
 				print_message Verbose_total (LinearConstraint.string_of_pxd_linear_constraint model.variable_names guard);
@@ -1551,7 +1551,7 @@ let compute_new_constraint model orig_constraint (discrete_constr_src : LinearCo
 		(* Add the (old) value for discrete to the guards D_i = d_i and g(X) *)
 		LinearConstraint.pxd_intersection_assign current_constraint (orig_constraint_with_maybe_time_elapsing :: guards);
 		(* Print some information *)
-		if debug_mode_greater Verbose_total then(
+		if verbose_mode_greater Verbose_total then(
 			print_message Verbose_total (LinearConstraint.string_of_pxd_linear_constraint model.variable_names current_constraint);
 		);
 		
@@ -1567,14 +1567,14 @@ let compute_new_constraint model orig_constraint (discrete_constr_src : LinearCo
 		(* Remove the discrete variables (Exists D_i : D_i = d_i and g(X)) *)
 		LinearConstraint.pxd_hide_assign model.discrete current_constraint;
 		(* Print some information *)
-		if debug_mode_greater Verbose_total then(
+		if verbose_mode_greater Verbose_total then(
 			print_message Verbose_total (LinearConstraint.string_of_pxd_linear_constraint model.variable_names current_constraint);
 		);
 		
 		print_message Verbose_total ("\nProjecting C(X) and g(X) onto rho");
 		rho_assign model current_constraint clock_updates;
 		(* Print some information *)
-		if debug_mode_greater Verbose_total then(
+		if verbose_mode_greater Verbose_total then(
 			print_message Verbose_total ("\nResult:");
 			print_message Verbose_total (LinearConstraint.string_of_pxd_linear_constraint model.variable_names current_constraint);
 		);
@@ -1583,7 +1583,7 @@ let compute_new_constraint model orig_constraint (discrete_constr_src : LinearCo
 		print_message Verbose_total ("\nComputing invariant I_l'(X)");
 		let invariant = compute_invariant model dest_location in
 		(* Print some information *)
-		if debug_mode_greater Verbose_total then(
+		if verbose_mode_greater Verbose_total then(
 			print_message Verbose_total (LinearConstraint.string_of_pxd_linear_constraint model.variable_names invariant);
 		);
 
@@ -1592,7 +1592,7 @@ let compute_new_constraint model orig_constraint (discrete_constr_src : LinearCo
 		(* (Exists D_i : D_i = d_i and g(X)) *)
 		LinearConstraint.pxd_intersection_assign current_constraint [invariant];
 		(* Print some information *)
-		if debug_mode_greater Verbose_total then(
+		if verbose_mode_greater Verbose_total then(
 			print_message Verbose_total (LinearConstraint.string_of_pxd_linear_constraint model.variable_names current_constraint);
 			if not (LinearConstraint.pxd_is_satisfiable current_constraint) then
 				print_message Verbose_total ("This constraint is NOT satisfiable (after intersection of [C(X) and g(X)] rho and I_l'(X) ).");
@@ -1621,7 +1621,7 @@ let compute_new_constraint model orig_constraint (discrete_constr_src : LinearCo
 				invariant;
 			];
 		(* Print some information *)
-		if debug_mode_greater Verbose_total then(
+		if verbose_mode_greater Verbose_total then(
 			print_message Verbose_total (LinearConstraint.string_of_pxd_linear_constraint model.variable_names current_constraint);
 			if not (LinearConstraint.pxd_is_satisfiable current_constraint) then
 				print_message Verbose_total ("This constraint is NOT satisfiable (after intersection of the constraint with D_i = d_i and I_l'(X)).");
@@ -1641,7 +1641,7 @@ let compute_new_constraint model orig_constraint (discrete_constr_src : LinearCo
 		print_message Verbose_total ("\nHide discrete variables ");
 		let current_constraint = LinearConstraint.pxd_hide_discrete_and_collapse (*(model.discrete)*) current_constraint in
 		(* Print some information *)
-		if debug_mode_greater Verbose_total then(
+		if verbose_mode_greater Verbose_total then(
 			print_message Verbose_total (LinearConstraint.string_of_px_linear_constraint model.variable_names current_constraint);
 			if not (LinearConstraint.px_is_satisfiable current_constraint) then
 				print_message Verbose_total ("This constraint is NOT satisfiable (after hiding discrete variables).");
@@ -1658,7 +1658,7 @@ let compute_new_constraint model orig_constraint (discrete_constr_src : LinearCo
 				List.rev_append current_list_of_clocks (!useless_clocks automaton_index location_index)
 			) [] model.automata in
 			(* Print some information *)
-			if debug_mode_greater Verbose_low then(
+			if verbose_mode_greater Verbose_low then(
 				print_message Verbose_low ("The following clocks will be dynamically removed:");
 				print_message Verbose_low ("  " ^ (string_of_list_of_string_with_sep ", " (List.map model.variable_names clocks_to_remove)));
 			);
@@ -1666,7 +1666,7 @@ let compute_new_constraint model orig_constraint (discrete_constr_src : LinearCo
 			print_message Verbose_high ("\nRemoving useless clocks ");
 			LinearConstraint.px_hide_assign clocks_to_remove current_constraint;
 			(* Print some information *)
-			if debug_mode_greater Verbose_total then(
+			if verbose_mode_greater Verbose_total then(
 				print_message Verbose_total (LinearConstraint.string_of_px_linear_constraint model.variable_names current_constraint);
 			);
 		);
@@ -1738,7 +1738,7 @@ let inverse_method_check_constraint model reachability_graph constr =
 	let p_constraint = LinearConstraint.px_hide_nonparameters_and_collapse (*model.clocks_and_discrete*) constr in
 	print_message Verbose_high ("\nParameters now hidden:");
 	(* Print some information *)
-	if debug_mode_greater Verbose_high then(
+	if verbose_mode_greater Verbose_high then(
 		print_message Verbose_high (LinearConstraint.string_of_p_linear_constraint model.variable_names p_constraint);
 	);
 	(* Check the pi0-compatibility *)
@@ -1750,12 +1750,12 @@ let inverse_method_check_constraint model reachability_graph constr =
 	if is_pi0_incompatible then (
 		print_message Verbose_low ("\nFound a pi0-incompatible state.");
 		(* Print some information *)
-		if debug_mode_greater Verbose_medium then(
+		if verbose_mode_greater Verbose_medium then(
 			print_message Verbose_high ("Associated constraint:");
 			print_message Verbose_high (LinearConstraint.string_of_px_linear_constraint model.variable_names constr);
 			print_message Verbose_medium ("\nThe following inequalities are pi0-incompatible:");
 			List.iter (fun inequality -> print_message Verbose_medium (LinearConstraint.string_of_p_linear_inequality model.variable_names inequality)) incompatible;
-			if debug_mode_greater Verbose_high then(
+			if verbose_mode_greater Verbose_high then(
 				print_message Verbose_high ("\nRecall that pi0 is:");
 				print_message Verbose_high   (ModelPrinter.string_of_pi0 model pi0);
 			);
@@ -1775,7 +1775,7 @@ let inverse_method_check_constraint model reachability_graph constr =
 				else List.nth incompatible 0
 			in
 			(* Print some information *)
-			if debug_mode_greater  Verbose_medium then(
+			if verbose_mode_greater  Verbose_medium then(
 				print_message Verbose_medium ("\nSelecting the following pi0-incompatible inequality:");
 				print_message Verbose_medium (LinearConstraint.string_of_p_linear_inequality model.variable_names p_inequality);
 			);
@@ -1786,7 +1786,7 @@ let inverse_method_check_constraint model reachability_graph constr =
 			(* Negate the inequality *)
 			let negated_inequality = LinearConstraint.negate_wrt_pi0 pi0#get_value p_inequality in
 			(* Print some information *)
-			if debug_mode_greater Verbose_standard then(
+			if verbose_mode_greater Verbose_standard then(
 				let randomly = if not options#no_random then "randomly " else "" in
 				let among = if List.length incompatible > 1 then (" (" ^ randomly ^ "selected among " ^ (string_of_int (List.length incompatible)) ^ " inequalities)") else "" in
 				print_message Verbose_standard ("  Adding the following inequality" ^ among ^ ":");
@@ -1803,7 +1803,7 @@ let inverse_method_check_constraint model reachability_graph constr =
 				print_message Verbose_high ("Updating k_result with the negated inequality");
 				LinearConstraint.p_intersection_assign !k_result [negated_constraint];
 				(* Print some information *)
-				if debug_mode_greater Verbose_low then(
+				if verbose_mode_greater Verbose_low then(
 					print_message Verbose_low ("\nk_result now equal (after addition of neg J) to ");
 					print_message Verbose_low (LinearConstraint.string_of_p_linear_constraint model.variable_names !k_result);
 					print_message Verbose_low ("");
@@ -1845,7 +1845,7 @@ let completeIM_check_constraint model reachability_graph constr =
 	let p_constraint = LinearConstraint.px_hide_nonparameters_and_collapse constr in
 	print_message Verbose_high ("\nParameters now hidden:");
 	(* Print some information *)
-	if debug_mode_greater Verbose_high then(
+	if verbose_mode_greater Verbose_high then(
 		print_message Verbose_high (LinearConstraint.string_of_p_linear_constraint model.variable_names p_constraint);
 	);
 	(* Check the pi0-compatibility *)
@@ -1970,7 +1970,7 @@ let add_a_new_state model reachability_graph orig_state_index new_states_indexes
 				print_message Verbose_high ("Updating k_result");
 				LinearConstraint.p_intersection_assign !k_result [new_p_constraint];
 				(* Print some information *)
-				if debug_mode_greater Verbose_low then(
+				if verbose_mode_greater Verbose_low then(
 					print_message Verbose_low ("\nk_result now equal (after addition of current state's K) to ");
 					print_message Verbose_low (LinearConstraint.string_of_p_linear_constraint model.variable_names !k_result);
 					print_message Verbose_low ("");
@@ -1983,11 +1983,11 @@ let add_a_new_state model reachability_graph orig_state_index new_states_indexes
 		in
 
 		(* Print some information *)
-		if debug_mode_greater Verbose_high then(
+		if verbose_mode_greater Verbose_high then(
 			(* Means state was not compatible *)
 			if not valid_new_state then(
 				let new_state = location, final_constraint in
-				if debug_mode_greater Verbose_high then
+				if verbose_mode_greater Verbose_high then
 					print_message Verbose_high ("The pi-incompatible state had been computed through action '" ^ (model.action_names action_index) ^ "', and was:\n" ^ (string_of_state model new_state));
 			);
 		);
@@ -2004,7 +2004,7 @@ let add_a_new_state model reachability_graph orig_state_index new_states_indexes
 		let new_state = location, final_constraint in
 
 		(* Print some information *)
-		if debug_mode_greater Verbose_total then(
+		if verbose_mode_greater Verbose_total then(
 			print_message Verbose_total ("Consider the state \n" ^ (string_of_state model new_state));
 		);
 
@@ -2086,7 +2086,7 @@ let add_a_new_state model reachability_graph orig_state_index new_states_indexes
 							print_message Verbose_standard "  [EF-synthesis] Found a state violating the property.";
 							
 							(* Print some information *)
-							if debug_mode_greater Verbose_medium then(
+							if verbose_mode_greater Verbose_medium then(
 								print_message Verbose_medium "Adding the following constraint to the list of bad constraints:";
 								print_message Verbose_medium (LinearConstraint.string_of_p_linear_constraint model.variable_names p_constraint);
 							);
@@ -2120,7 +2120,7 @@ let add_a_new_state model reachability_graph orig_state_index new_states_indexes
 		(* Update the transitions *)
 		StateSpace.add_transition reachability_graph (orig_state_index, action_index, new_state_index);
 		(* Print some information *)
-		if debug_mode_greater Verbose_high then (
+		if verbose_mode_greater Verbose_high then (
 			let beginning_message = (if added then "NEW STATE" else "Old state") in
 			print_message Verbose_high ("\n" ^ beginning_message ^ " reachable through action '" ^ (model.action_names action_index) ^ "': ");
 			print_message Verbose_high (string_of_state model new_state);
@@ -2149,8 +2149,8 @@ let post_from_one_state model reachability_graph orig_state_index =
 		orig_constraint
 	in
 
-	(* Debug prints *)
-	if debug_mode_greater Verbose_high then(
+	(* Print some information *)
+	if verbose_mode_greater Verbose_high then(
 		let orig_state = StateSpace.get_state reachability_graph orig_state_index in
 		let _, orig_constraint = orig_state in
 		let orig_constraint_projection = LinearConstraint.px_hide_nonparameters_and_collapse orig_constraint in
@@ -2164,7 +2164,7 @@ let post_from_one_state model reachability_graph orig_state_index =
 	let list_of_possible_actions = compute_possible_actions model original_location in
 
 	(* Print some information *)
-	if debug_mode_greater Verbose_high then (
+	if verbose_mode_greater Verbose_high then (
 		let actions_string = List.map (fun action_index -> model.action_names action_index) list_of_possible_actions in
 		print_message Verbose_high ("Possible synchronized actions are: " ^ (string_of_list_of_string_with_sep ", " actions_string));
 	);
@@ -2219,8 +2219,8 @@ let post_from_one_state model reachability_graph orig_state_index =
 		(* compute the possible combinations of transitions *)
 		let legal_transitions_exist = compute_transitions model original_location orig_plus_discrete action_index automata_for_this_action real_indexes max_indexes possible_transitions in 
 	
-		(* Debug: compute the number of combinations *)
-		if debug_mode_greater Verbose_medium || options#statistics then(
+		(* Print some information: compute the number of combinations *)
+		if verbose_mode_greater Verbose_medium || options#statistics then(
 			let new_nb_combinations = Array.fold_left (fun sum max -> sum * (max + 1)) 1 max_indexes in
 			print_message Verbose_medium ("" ^ (string_of_int new_nb_combinations) ^ " combination" ^ (s_of_int new_nb_combinations) ^ " will be considered for this state and this action\n");
 			(* Update for statistics *)
@@ -2233,7 +2233,7 @@ let post_from_one_state model reachability_graph orig_state_index =
 		while !more_combinations do
 			debug_i := !debug_i +1;
 			(* Print some information *)
-			if debug_mode_greater Verbose_total then (
+			if verbose_mode_greater Verbose_total then (
 				let local_indexes = string_of_array_of_string_with_sep "\n\t" (
 				Array.mapi (fun local_index real_index ->
 					(string_of_int local_index) ^ " -> " ^ (string_of_int real_index) ^ " : " ^ (string_of_int current_indexes.(local_index)) ^ "; ";
@@ -2441,7 +2441,7 @@ let branch_and_bound model init_state =
 	instantiate_costs model pi0;
 	
 	(* Print some information *)
-	if debug_mode_greater Verbose_total then (
+	if verbose_mode_greater Verbose_total then (
 		print_message Verbose_standard ("Print costs");
 		(* For each automaton *)
 		for automaton_index = 0 to model.nb_automata - 1 do
@@ -2484,7 +2484,7 @@ let branch_and_bound model init_state =
 	(* Create the tree for exploration *)
 	let rtree = ReachabilityTree.create guessed_nb_states init_state_index in
 	
-	if debug_mode_greater Verbose_total then(
+	if verbose_mode_greater Verbose_total then(
 		print_message Verbose_total ("\nReachability tree initialized:\n" ^ (ReachabilityTree.string_of_rtree string_of_int rtree));
 	);
 
@@ -2501,10 +2501,10 @@ let branch_and_bound model init_state =
 	
 	(* Check if the list of new states is empty *)
 	while not (!limit_reached  || !nb_states_to_visit = 0) do
-		if debug_mode_greater Verbose_standard then (
+		if verbose_mode_greater Verbose_standard then (
 			print_message Verbose_low ("\n");
 			print_message Verbose_standard ("Computing successors of state " ^ (string_of_int !current_state_index));
-			if debug_mode_greater Verbose_medium then (
+			if verbose_mode_greater Verbose_medium then (
 				print_message Verbose_medium (string_of_state model (StateSpace.get_state reachability_graph !current_state_index ));
 			);
 		);
@@ -2532,12 +2532,12 @@ let branch_and_bound model init_state =
 		ReachabilityTree.set_visited !current_state_index rtree;
 		
 		(* Print some information *)
-		if debug_mode_greater Verbose_medium then (
+		if verbose_mode_greater Verbose_medium then (
 			let beginning_message = if new_states = [] then "\nFound no new state" else ("\nFound " ^ (string_of_int (List.length new_states)) ^ " new state" ^ (s_of_int (List.length new_states)) ^ "") in
 			print_message Verbose_medium (beginning_message ^ ".\n");
 		);
 		
-		if debug_mode_greater Verbose_total then(
+		if verbose_mode_greater Verbose_total then(
 			print_message Verbose_total ("\nReachability tree now as follows:\n" ^ (ReachabilityTree.string_of_rtree string_of_int rtree));
 		);
 		(* If acyclic option: empty the list of already reached states for comparison with former states *)
@@ -2619,7 +2619,7 @@ let post_star model init_state =
 	p_constraints := [];
 
 	(* Print some information *)
-	if debug_mode_greater Verbose_low then(
+	if verbose_mode_greater Verbose_low then(
 		print_message Verbose_low ("Initialized k_result to ");
 		print_message Verbose_low (LinearConstraint.string_of_p_linear_constraint model.variable_names !k_result);
 		print_message Verbose_low ("");
@@ -2659,7 +2659,7 @@ let post_star model init_state =
 	(* Check if the list of new states is empty *)
 	while not (!limit_reached  || !newly_found_new_states = []) do
 		(* Print some information *)
-		if debug_mode_greater Verbose_standard then (
+		if verbose_mode_greater Verbose_standard then (
 			print_message Verbose_low ("\n");
 			print_message Verbose_standard ("Computing post^" ^ (string_of_int (!nb_iterations)) ^ " from "  ^ (string_of_int (List.length !newly_found_new_states)) ^ " state" ^ (s_of_int (List.length !newly_found_new_states)) ^ ".");
 		);
@@ -2677,7 +2677,7 @@ let post_star model init_state =
 			(* Perform the post *)
 			let new_states = post_from_one_state model reachability_graph orig_state_index in
 			(* Print some information *)
-			if debug_mode_greater Verbose_medium then (
+			if verbose_mode_greater Verbose_medium then (
 				let beginning_message = if new_states = [] then "Found no new state" else ("Found " ^ (string_of_int (List.length new_states)) ^ " new state" ^ (s_of_int (List.length new_states)) ^ "") in
 				print_message Verbose_medium (beginning_message ^ " for the post of state " ^ (string_of_int !num_state) ^ " / " ^ (string_of_int nb_states) ^ " in post^" ^ (string_of_int (!nb_iterations)) ^ ".\n");
 			);
@@ -2702,7 +2702,7 @@ let post_star model init_state =
 		(* Update the newly_found_new_states *)
 		newly_found_new_states := !new_states_after_merging;
 		(* Print some information *)
-		if debug_mode_greater Verbose_medium then (
+		if verbose_mode_greater Verbose_medium then (
 			let beginning_message = if !newly_found_new_states = [] then "\nFound no new state" else ("\nFound " ^ (string_of_int (List.length !newly_found_new_states)) ^ " new state" ^ (s_of_int (List.length !newly_found_new_states)) ^ "") in
 			print_message Verbose_medium (beginning_message ^ " for post^" ^ (string_of_int (!nb_iterations)) ^ ".\n");
 		);
@@ -2730,7 +2730,7 @@ let post_star model init_state =
 			(* Converting pi0 to a constraint *)
 			let pi0_constraint = LinearConstraint.p_constraint_of_point pi0_list in
 			(* Print *)
-			if debug_mode_greater Verbose_medium then(
+			if verbose_mode_greater Verbose_medium then(
 				print_message Verbose_medium ("\nPi0: " ^ (LinearConstraint.string_of_p_linear_constraint model.variable_names pi0_constraint));
 			);
 			(* Checking whether the constraint is *included* within pi0 *)
@@ -3184,7 +3184,7 @@ let efim model =
 	);
 
 	(* Print memory information *)
-	if debug_mode_greater Verbose_standard then
+	if verbose_mode_greater Verbose_standard then
 		print_memory_used Verbose_standard;
 	
 	print_message Verbose_low (
@@ -3243,7 +3243,7 @@ let inverse_method model =
 	);
 	
 	(* Print memory information *)
-	if debug_mode_greater Verbose_standard then
+	if verbose_mode_greater Verbose_standard then
 		print_memory_used Verbose_standard;
 	
 	print_message Verbose_low (

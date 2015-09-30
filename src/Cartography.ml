@@ -10,7 +10,7 @@
  * Author:        Ulrich Kuehne, Etienne Andre
  * 
  * Created:       2012/06/18
- * Last modified: 2015/07/31
+ * Last modified: 2015/09/30
  *
  ****************************************************************)
 
@@ -54,8 +54,8 @@ type pi0_list = (Automaton.variable_index * NumConst.t) list
 (* Constants *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
-(* Debug mode *)
-let global_debug_mode = ref (Verbose_standard)
+(* Verbose mode *)
+let global_verbose_mode = ref (Verbose_standard)
 
 (* Number of dimensions in the system *)
 let nb_dimensions = ref 0
@@ -464,7 +464,7 @@ let test_pi0_uncovered current_pi0 found_pi0 =
 	if dynArray_exists (pi0_in_returned_constraint current_pi0) !computed_constraints then (
 		(* Update the number of unsuccessful points *)
 		nb_useless_points := !nb_useless_points + 1;
-		if debug_mode_greater Verbose_medium then (
+		if verbose_mode_greater Verbose_medium then (
 			print_message Verbose_medium "[Cartography.test_pi0_uncovered] The following pi0 is already included in a constraint.";
 			print_message Verbose_medium (ModelPrinter.string_of_pi0 model current_pi0);
 		);
@@ -474,7 +474,7 @@ let test_pi0_uncovered current_pi0 found_pi0 =
 	) else if not (LinearConstraint.is_pi0_compatible current_pi0#get_value !init_constraint) then (
 		(* Update the number of unsuccessful points *)
 		nb_useless_points := !nb_useless_points + 1;
-		if debug_mode_greater Verbose_medium then (
+		if verbose_mode_greater Verbose_medium then (
 			print_message Verbose_medium "[Cartography.test_pi0_uncovered] The following pi0 does not satisfy the initial constraint of the model.";
 			print_message Verbose_medium (ModelPrinter.string_of_pi0 model current_pi0);
 		);
@@ -781,7 +781,7 @@ let find_next_pi0_border latest_nature =
 				) computed_constraints then (
 					(* Update the number of unsuccessful points *)
 					nb_useless_points := !nb_useless_points + 1;
-					if debug_mode_greater Verbose_medium then (
+					if verbose_mode_greater Verbose_medium then (
 						print_message Verbose_medium "The following pi0 is already included in a constraint.";
 						print_message Verbose_medium (ModelPrinter.string_of_pi0 model pi0);
 					);
@@ -1086,8 +1086,8 @@ let bc_initialize () =
 	(* Sum of number of transitions (for information purpose) *)
 	nb_transitions := 0;
 
-	(* Debug mode *)
-	global_debug_mode := get_debug_mode();
+	(* Verbose mode *)
+	global_verbose_mode := get_verbose_mode();
 	
 	(*** TODO : check that initial pi0 is suitable!! (could be incompatible with initial constraint) ***)
 	
@@ -1171,8 +1171,8 @@ let bc_initialize_subpart () =
 	(*** NOTE: what is missing from bc_initialize() is the initialization to 0 of current_iteration, nb_states, nb_transitions, as well as computed_constraints ***)
 
 
-	(* Debug mode *)
-	global_debug_mode := get_debug_mode();
+	(* Verbose mode *)
+	global_verbose_mode := get_verbose_mode();
 	
 	(*** TODO : check that initial pi0 is suitable!! (could be incompatible with initial constraint) ***)
 	()
@@ -1295,7 +1295,7 @@ let bc_process_im_result im_result =
 		let found = ref false in
 		let array_index = ref 0 in
 		while not !found && !array_index < (DynArray.length !computed_constraints) do
-			if debug_mode_greater Verbose_high then
+			if verbose_mode_greater Verbose_high then
 				print_message Verbose_high ("Comparing new constraint with " ^ (string_of_int (!array_index+1)) ^ "th old constraint.");
 			(* Retrieve the i-th constraint *)
 			let ith_constraint = DynArray.get !computed_constraints !array_index in
@@ -1344,8 +1344,8 @@ let bc_process_im_result im_result =
 		
 		(*** TODO: add 1 to the number of invalid points *)
 	
-		(* Print the constraint only in debug mode *)
-		if debug_mode_greater Verbose_low then(
+		(* Print the constraint only in verbose mode *)
+		if verbose_mode_greater Verbose_low then(
 			print_message Verbose_low ("The constraint computed was:");
 			print_message Verbose_low (ModelPrinter.string_of_returned_constraint model.variable_names im_result.result);
 			if model.correctness_condition <> None then(
@@ -1648,9 +1648,9 @@ let cover_behavioral_cartography model =
 			print_message Verbose_standard (ModelPrinter.string_of_pi0 model pi0);
 		);
 		
-		(* Prevent the debug messages (except in debug medium, high or total) *)
-		if not (debug_mode_greater Verbose_medium) then
-			set_debug_mode Verbose_mute;
+		(* Prevent the verbose messages (except in verbose medium, high or total) *)
+		if not (verbose_mode_greater Verbose_medium) then
+			set_verbose_mode Verbose_mute;
 		
 		(* Set the new pi0 *)
 		Input.set_pi0 (pi0);
@@ -1658,8 +1658,8 @@ let cover_behavioral_cartography model =
 		(* Call the inverse method *)
 		let im_result, reachability_graph = Reachability.inverse_method_gen model !init_state in
 		
-		(* Get the debug mode back *)
-		set_debug_mode !global_debug_mode;
+		(* Get the verbose mode back *)
+		set_verbose_mode !global_verbose_mode;
 		
 		(* Process the result by IM *)
 		let _ = bc_process_im_result im_result in ();
@@ -1728,11 +1728,11 @@ let random_behavioral_cartography model nb =
 	(* Index of the iterations where we really found different constraints *)
 	let interesting_interations = ref [] in
 	
-	(* Debug mode *)
-	let global_debug_mode = get_debug_mode() in
+	(* Verbose mode *)
+	let global_verbose_mode = get_verbose_mode() in
 	
 	(* Prevent the printing of messages in algorithm Inverse Method *)
-	let cut_messages = not (debug_mode_greater Verbose_low) in
+	let cut_messages = not (verbose_mode_greater Verbose_low) in
 
 	(* Compute the initial state *)
 	let init_state = get_initial_state_or_abort model in
@@ -1784,7 +1784,7 @@ let random_behavioral_cartography model nb =
 
 				(* Prevent the messages if needed *)
 				if cut_messages then (
-					set_debug_mode Verbose_mute;
+					set_verbose_mode Verbose_mute;
 				);
 				
 				(* Set the new pi0 *)
@@ -1792,8 +1792,8 @@ let random_behavioral_cartography model nb =
 			
 				(* Call the inverse method *)
 				let (*returned_constraint, graph, (*tile_nature*)_, (*deterministic*)_, nb_iterations, total_time*) im_result, reachability_graph = Reachability.inverse_method_gen model init_state in
-				(* Get the debug mode back *)
-				set_debug_mode global_debug_mode;
+				(* Get the verbose mode back *)
+				set_verbose_mode global_verbose_mode;
 
 				(* Retrieve some info *)
 				let current_nb_states = StateSpace.nb_states reachability_graph in

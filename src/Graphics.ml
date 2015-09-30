@@ -301,7 +301,7 @@ if returned_constraint_list = [] then(
 	close_out file_rectangle_v0;
 
 	(* Print some information *)
-	if debug_mode_greater Verbose_total then
+	if verbose_mode_greater Verbose_total then
 		print_message Verbose_total ("str_rectangle_v0 = \n" ^ str_rectangle_v0);
 
 	(* Beginning of the script *)
@@ -441,7 +441,7 @@ if returned_constraint_list = [] then(
 		file_index := !file_index + 1;
 
 		(* Print some information *)
-		if debug_mode_greater Verbose_low then(
+		if verbose_mode_greater Verbose_low then(
 			print_message Verbose_low ("Computing points for constraint " ^ (string_of_int !tile_index) ^ " \n " ^ (LinearConstraint.string_of_p_linear_constraint model.variable_names k) ^ ".");
 		);
 		
@@ -462,7 +462,7 @@ if returned_constraint_list = [] then(
 		output_string file_out the_points;
 
 		(* Print some information *)
-		if debug_mode_greater Verbose_low then(
+		if verbose_mode_greater Verbose_low then(
 			print_message Verbose_low ("  Points \n " ^ the_points ^ "");
 		);
 		

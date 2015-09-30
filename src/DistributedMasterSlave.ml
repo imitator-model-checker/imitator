@@ -411,18 +411,18 @@ let worker() =
 			print_message Verbose_standard ("\n[Worker " ^ (string_of_int rank) ^ "] Launching IM for the following pi:" (*^ (string_of_int !current_iteration)*));
 			print_message Verbose_standard (ModelPrinter.string_of_pi0 model pi0);
 			
-			(* Save debug mode *)
-			let global_debug_mode = get_debug_mode() in 
+			(* Save verbose mode *)
+			let global_verbose_mode = get_verbose_mode() in 
 			
-			(* Prevent the debug messages (except in verbose modes high or total) *)
-			if not (debug_mode_greater Verbose_high) then
-					set_debug_mode Verbose_mute;
+			(* Prevent the verbose messages (except in verbose modes high or total) *)
+			if not (verbose_mode_greater Verbose_high) then
+					set_verbose_mode Verbose_mute;
 			
 			(* Call IM *)
 			let im_result , _ = Reachability.inverse_method_gen model init_state in
 					
-			(* Get the debug mode back *)
-			set_debug_mode global_debug_mode;
+			(* Get the verbose mode back *)
+			set_verbose_mode global_verbose_mode;
 			
 			print_message Verbose_standard ("[Worker " ^ (string_of_int rank) ^ "] finished a computation of IM.");
 					

@@ -86,7 +86,6 @@ let list_union l1 l2 =
 
 (** Returns l1 minus l2, with assumption that all elements of l1 are different *)
 let list_diff (l1 : 'a list) (l2 : 'a list) : 'a list =
-(* 	print_message Debug_standard ("List diff : [" ^ (string_of_int (List.length l1)) ^ "] \ [" ^ (string_of_int (List.length l2)) ^ "]"); *)
 	(* Optimize a little *)
 	if l2 = [] then l1
 	else (if l1 = [] then []

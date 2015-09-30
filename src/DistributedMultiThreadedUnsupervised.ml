@@ -248,12 +248,12 @@ let worker () =
   let worker_job pi0 =
     print_message Verbose_standard (thread_msg_prefix ^ " process a point");
     Input.set_pi0 pi0;
-    let global_debug_mode = get_debug_mode () in
-      if debug_mode_greater Verbose_high
+    let global_verbose_mode = get_verbose_mode () in
+      if verbose_mode_greater Verbose_high
       then ()
-      else set_debug_mode Verbose_mute;
+      else set_verbose_mode Verbose_mute;
       let res, _ = Reachability.inverse_method_gen model s0 in
-	set_debug_mode global_debug_mode;
+	set_verbose_mode global_verbose_mode;
 	print_message Verbose_standard
 	  (thread_msg_prefix ^ " terminate job");
 	Mutex.lock mut;

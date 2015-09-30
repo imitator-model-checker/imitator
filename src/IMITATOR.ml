@@ -100,14 +100,14 @@ Input.set_v0 v0;
 (**************************************************)
 (* Debug print: model *)
 (**************************************************)
-if debug_mode_greater Verbose_total then
+if verbose_mode_greater Verbose_total then
 	print_message Verbose_total ("\nModel:\n" ^ (ModelPrinter.string_of_model model) ^ "\n");
 
 
 (**************************************************)
 (* Debug print: property *)
 (**************************************************)
-if debug_mode_greater Verbose_low then
+if verbose_mode_greater Verbose_low then
 	print_message Verbose_low ("\nProperty:\n" ^ (ModelPrinter.string_of_property model model.user_property) ^ "\n");
 
 
@@ -144,7 +144,7 @@ if options#pta2gml then(
 	print_message Verbose_standard ("Translating model to GrML.");
 	let translated_model = PTA2GrML.string_of_model model in
 	let gml_file = options#files_prefix ^ ".grml" in
-	if debug_mode_greater Verbose_total then(
+	if verbose_mode_greater Verbose_total then(
 		print_message Verbose_total ("\n" ^ translated_model ^ "\n");
 	);
 	(* Write *)
@@ -156,7 +156,7 @@ if options#pta2gml then(
 if options#pta2jpg then(
 	print_message Verbose_standard ("Translating model to a graphics.");
 	let translated_model = PTA2JPG.string_of_model model in
-	if debug_mode_greater Verbose_high then(
+	if verbose_mode_greater Verbose_high then(
 		print_message Verbose_high ("\n" ^ translated_model ^ "\n");
 	);
 	Graphics.dot model (options#files_prefix ^ "-pta") translated_model;
@@ -168,7 +168,7 @@ if options#pta2tikz then(
 	print_message Verbose_standard ("Translating model to LaTeX TikZ code.");
 	let translated_model = PTA2TikZ.tikz_string_of_model model in
 	let latex_file = options#files_prefix ^ ".tex" in
-	if debug_mode_greater Verbose_high then(
+	if verbose_mode_greater Verbose_high then(
 		print_message Verbose_high ("\n" ^ translated_model ^ "\n");
 	);
 	(* Write *)

@@ -729,7 +729,7 @@ let set_dimensions nb_p nb_c nb_d =
 	nb_clocks 		:= nb_c;
 	nb_discrete		:= nb_d;
 	total_dim		:= nb_p + nb_c + nb_d;
-	if debug_mode_greater Verbose_high then(
+	if verbose_mode_greater Verbose_high then(
 		print_message Verbose_high ("\nDimensions set");
 		print_message Verbose_high ("  nb_parameters := " ^ (string_of_int !nb_parameters));
 		print_message Verbose_high ("  nb_clocks := " ^ (string_of_int !nb_clocks));
@@ -1487,10 +1487,10 @@ let hide_assign variables linear_constraint =
 	(* Only hide a non-empty list *)
 	if List.length variables > 0 then (
 		(* debug output *)
-		if debug_mode_greater Verbose_total then (
+(*		if verbose_mode_greater Verbose_total then (
 			print_message Verbose_total "About to hide:";
 			List.iter (fun v -> print_message Verbose_total ("  - v" ^ string_of_int v)) variables;
-		);
+		);*)
 		(* Statistics *)
 		ppl_nb_unconstrain := !ppl_nb_unconstrain + 1;
 		let start = Unix.gettimeofday() in
@@ -1530,7 +1530,7 @@ let hide variables linear_constraint =
 (** Eliminate (using existential quantification) all non-parameters (clocks and discrete) in a px_linear constraint *)
 let px_hide_nonparameters_and_collapse linear_constraint = 
 	let nonparameters = list_of_interval !nb_parameters (!total_dim - 1) in
-		if debug_mode_greater Verbose_total then
+		if verbose_mode_greater Verbose_total then
 			print_message Verbose_total (
 				"Function 'LinearConstraint.px_hide_nonparameters_and_collapse': hiding variables "
 				^ (string_of_list_of_string_with_sep ", " (List.map string_of_int nonparameters) )
@@ -1580,7 +1580,7 @@ let remove_dimensions nb_dimensions linear_constraint =
 	let new_space_dimension = current_space_dimension - nb_dimensions in
 
 	(* Print some information *)
-	if debug_mode_greater Verbose_total then (
+	if verbose_mode_greater Verbose_total then (
 		print_message Verbose_total ("Function 'remove_dimensions': removing " ^ (string_of_int nb_dimensions) ^ " from " ^ (string_of_int current_space_dimension) ^ ", i.e., keeping " ^ (string_of_int new_space_dimension) ^ ".");
 	);
 	
@@ -1608,7 +1608,7 @@ let rename_variables_assign list_of_couples linear_constraint =
 		in 
 	let complete_list = add_id joined_couples (!total_dim - 1) in
   (* debug output *)
-	if debug_mode_greater Verbose_high then (
+	if verbose_mode_greater Verbose_high then (
 		let ndim = space_dimension linear_constraint in
 		print_message Verbose_high ("mapping space dimensions, no. dimensions is " ^ string_of_int ndim);
 		List.iter (fun (a,b) -> (print_message Verbose_high ("map v" ^ string_of_int a ^ " -> v" ^ string_of_int b))) complete_list;
@@ -2106,7 +2106,7 @@ type direction =
 let generate_points x y linear_constraint min_abs min_ord max_abs max_ord =
 
 	(* Print some information *)
-	if debug_mode_greater Verbose_total then (
+	if verbose_mode_greater Verbose_total then (
 		print_message Verbose_total ("Entering generate_points");
 		print_message Verbose_total ("Constraint: " ^ (string_of_linear_constraint (fun i->"v" ^ (string_of_int i)) linear_constraint));
 	);

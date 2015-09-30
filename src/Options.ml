@@ -7,7 +7,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Ulrich Kuehne, Etienne Andre
  * Created:       2010
- * Last modified: 2015/07/27
+ * Last modified: 2015/09/30
  *
  ****************************************************************)
  
@@ -271,17 +271,17 @@ class imitator_options =
 		method parse =
 			let usage_msg = "Usage: " ^ (Sys.argv.(0)) ^ " model" ^ Constants.model_extension ^ " [reference_valuation.pi0] [options]" in
 
-			(* Get the debug mode *)
-			let rec set_debug_mode_ref debug_mode =
-					let mode = try debug_mode_of_string debug_mode
+			(* Get the verbose mode *)
+			let rec set_verbose_mode_ref verbose_mode =
+					let mode = try verbose_mode_of_string verbose_mode
 						with Not_found ->
 						(*** HACK: print header now ***)
 						print_header_string();
-						print_error ("The debug mode '" ^ debug_mode ^ "' is not valid.");
+						print_error ("The verbose mode '" ^ verbose_mode ^ "' is not valid.");
 						Arg.usage speclist usage_msg;
 						abort_program ();
 						exit(1); in
-					set_debug_mode mode
+					set_verbose_mode mode
 
 			(* Get the mode *)
 			and set_mode mode =
@@ -482,7 +482,7 @@ class imitator_options =
 				
 				("-tree", Set tree, " Does not test if a new state was already encountered. To be set ONLY if the reachability graph is a tree (otherwise analysis may loop). Default: 'false'");
 				
-				("-verbose", String set_debug_mode_ref, " Print more or less information. Can be set to 'mute', 'warnings', 'standard', 'low', 'medium', 'high', 'total'. Default: 'standard'");
+				("-verbose", String set_verbose_mode_ref, " Print more or less information. Can be set to 'mute', 'warnings', 'standard', 'low', 'medium', 'high', 'total'. Default: 'standard'");
 				
 				("-version", Unit (fun _ ->
 					(*** HACK: print header now ***)
@@ -911,7 +911,7 @@ class imitator_options =
 			(* Timed mode *)
 			(**************************************************)
 			if !timed_mode then (
-				(* Debug *)
+				(* Print some information *)
 				print_message Verbose_standard ("Timed mode is on.");
 				(* Set the timed mode *)
 				set_timed_mode ();

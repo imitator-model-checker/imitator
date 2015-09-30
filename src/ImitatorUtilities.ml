@@ -7,7 +7,7 @@
  * Author:        Etienne Andre
  * 
  * Created:       2014/10/24
- * Last modified: 2015/09/28
+ * Last modified: 2015/09/30
  *
  ****************************************************************)
  
@@ -94,10 +94,10 @@ let imitator_url = "www.imitator.fr"
 
 
 (****************************************************************)
-(** Debug modes *)
+(** Verbosity modes *)
 (****************************************************************)
 
-type debug_mode =
+type verbose_mode =
 	| Verbose_mute
 	| Verbose_warnings
 	| Verbose_standard
@@ -106,8 +106,8 @@ type debug_mode =
 	| Verbose_high
 	| Verbose_total
 
-(* Associate an integer to each debug mode *)
-let level_of_debug = function
+(* Associate an integer to each verbose mode *)
+let level_of_verbose = function
 	| Verbose_mute		-> 0
 	| Verbose_warnings	-> 1
 	| Verbose_standard	-> 2
@@ -116,53 +116,53 @@ let level_of_debug = function
 	| Verbose_high		-> 5
 	| Verbose_total		-> 6
 
-(* The global debug mode *)
-type global_debug_mode_type =
+(* The global verbose mode *)
+type global_verbose_mode_type =
 	| Verbose_mode_not_set
-	| Verbose_mode_set of debug_mode
+	| Verbose_mode_set of verbose_mode
 
 (* set to standard by default *)
-let global_debug_mode = ref (Verbose_mode_set Verbose_standard)
+let global_verbose_mode = ref (Verbose_mode_set Verbose_standard)
 
 let timed_mode = ref false
 
 
-(* Get the debug mode *)
-let get_debug_mode () =
-	match !global_debug_mode with
-	| Verbose_mode_not_set -> raise (Exceptions.InternalError ("The debug mode has not yet been set."))
-	| Verbose_mode_set debug_mode -> debug_mode
+(* Get the verbose mode *)
+let get_verbose_mode () =
+	match !global_verbose_mode with
+	| Verbose_mode_not_set -> raise (Exceptions.InternalError ("The verbose mode has not yet been set."))
+	| Verbose_mode_set verbose_mode -> verbose_mode
 
 
-(* Set the debug mode *)
-let set_debug_mode debug_mode =
-	(*match !global_debug_mode with
-	| Verbose_mode_not_set -> global_debug_mode := Verbose_mode_set debug_mode
-	| Verbose_mode_set debug_mode -> raise (InternalError ("The debug mode has already been set, impossible to set it again."))*)
-	global_debug_mode := Verbose_mode_set debug_mode
+(* Set the verbose mode *)
+let set_verbose_mode verbose_mode =
+	(*match !global_verbose_mode with
+	| Verbose_mode_not_set -> global_verbose_mode := Verbose_mode_set verbose_mode
+	| Verbose_mode_set verbose_mode -> raise (InternalError ("The verbose mode has already been set, impossible to set it again."))*)
+	global_verbose_mode := Verbose_mode_set verbose_mode
 
 
-(* Return true if the global debug mode is greater than 'debug_mode', false otherwise *)
-let debug_mode_greater debug_mode =
-	(* Get the global debug mode *)
-	let global_debug_mode = get_debug_mode() in
-(*	match !global_debug_mode with
-	| Verbose_mode_not_set -> raise (InternalError ("The debug mode has not been set, impossible to access it."))
-	| Verbose_mode_set global_debug_mode -> global_debug_mode
+(* Return true if the global verbose mode is greater than 'verbose_mode', false otherwise *)
+let verbose_mode_greater verbose_mode =
+	(* Get the global verbose mode *)
+	let global_verbose_mode = get_verbose_mode() in
+(*	match !global_verbose_mode with
+	| Verbose_mode_not_set -> raise (InternalError ("The verbose mode has not been set, impossible to access it."))
+	| Verbose_mode_set global_verbose_mode -> global_verbose_mode
 	in*)
 	(* Compare *)
-	(level_of_debug global_debug_mode) >= (level_of_debug debug_mode)
+	(level_of_verbose global_verbose_mode) >= (level_of_verbose verbose_mode)
 
 
-(* Convert a string into a debug_mode; raise Not_found if not found *)
-let debug_mode_of_string debug_mode =
-	if debug_mode = "mute" then Verbose_mute
-	else if debug_mode = "warnings" then Verbose_warnings
-	else if debug_mode = "standard" then Verbose_standard
-	else if debug_mode = "low" then Verbose_low
-	else if debug_mode = "medium" then Verbose_medium
-	else if debug_mode = "high" then Verbose_high
-	else if debug_mode = "total" then Verbose_total
+(* Convert a string into a verbose_mode; raise Not_found if not found *)
+let verbose_mode_of_string verbose_mode =
+	if verbose_mode = "mute" then Verbose_mute
+	else if verbose_mode = "warnings" then Verbose_warnings
+	else if verbose_mode = "standard" then Verbose_standard
+	else if verbose_mode = "low" then Verbose_low
+	else if verbose_mode = "medium" then Verbose_medium
+	else if verbose_mode = "high" then Verbose_high
+	else if verbose_mode = "total" then Verbose_total
 	else raise Not_found
 
 
@@ -238,15 +238,15 @@ let print_message_generic message =
 	flush Pervasives.stdout
 
 
-(* Print a message if global_debug_mode >= message_debug_mode *)
-let print_message message_debug_mode message =
-	(* Only print the message if its message_debug_mode is smaller or equal to the global_debug_mode *)
-	if debug_mode_greater message_debug_mode then(
-		(* Compute the debug level *)
-		let debug_level = level_of_debug message_debug_mode in
+(* Print a message if global_verbose_mode >= message_verbose_mode *)
+let print_message message_verbose_mode message =
+	(* Only print the message if its message_verbose_mode is smaller or equal to the global_verbose_mode *)
+	if verbose_mode_greater message_verbose_mode then(
+		(* Compute the verbose level *)
+		let verbose_level = level_of_verbose message_verbose_mode in
 		(* Find number of blanks for indentation *)
-		let nb_spaces = if debug_level-1 > 0 then debug_level-1 else 0 in
-		(* Create blanks proportionnally to the debug_level (at least one space) *)
+		let nb_spaces = if verbose_level-1 > 0 then verbose_level-1 else 0 in
+		(* Create blanks proportionnally to the verbose_level (at least one space) *)
 		let spaces = " " ^ (string_n_times nb_spaces "   ") in
 		(* Add new lines and blanks everywhere *)
 		let formatted_message = spaces ^ (Str.global_replace (Str.regexp "\n") ("\n" ^ spaces) message) in
@@ -259,7 +259,7 @@ let print_message message_debug_mode message =
 (* Print a warning *)
 let print_warning message =
 	(* Do not print warnings in mute mode *)
-	if debug_mode_greater Verbose_warnings then(
+	if verbose_mode_greater Verbose_warnings then(
 		let spaces = " " in
 		(* Add new lines and blanks everywhere *)
 		let formatted_message = spaces ^ "*** Warning: " ^ (Str.global_replace (Str.regexp "\n") ("\n" ^ spaces) message) in
@@ -374,13 +374,13 @@ let memory_info_of_words nb_words word_size =
 
 
 (** Print info on the memory used *)
-let print_memory_used debug_level =
+let print_memory_used verbose_level =
 	(* Print memory information *)
 	let gc_stat = Gc.stat () in
 	let nb_words = gc_stat.minor_words +. gc_stat.major_words -. gc_stat.promoted_words in
 	(* Compute the word size in bytes *)
 	let word_size = (*4.0*)Sys.word_size / 8 in
-	print_message debug_level (memory_info_of_words nb_words word_size)
+	print_message verbose_level (memory_info_of_words nb_words word_size)
 	
 
 
@@ -401,7 +401,7 @@ let terminate_program () =
 	print_newline();
 	print_message Verbose_standard (Constants.program_name ^ " successfully terminated (" ^ (after_seconds ()) ^ ")");
 	(* Print memory info *)
-	if debug_mode_greater Verbose_low then(
+	if verbose_mode_greater Verbose_low then(
 		print_memory_used Verbose_low;
 	);
 	(* The end *)

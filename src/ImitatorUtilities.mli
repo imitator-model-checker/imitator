@@ -7,7 +7,7 @@
  * Author:        Etienne Andre
  * 
  * Created:       2014/10/24
- * Last modified: 2015/05/18
+ * Last modified: 2015/09/30
  *
  ****************************************************************)
 
@@ -37,10 +37,10 @@ val imitator_url : string
 
 
 (****************************************************************)
-(** Debug modes *)
+(** Verbosity modes *)
 (****************************************************************)
 
-type debug_mode =
+type verbose_mode =
 	| Verbose_mute
 	| Verbose_warnings
 	| Verbose_standard
@@ -50,17 +50,17 @@ type debug_mode =
 	| Verbose_total
 
 
-(* Return true if the global debug mode is greater than 'debug_mode', false otherwise *)
-val debug_mode_greater : debug_mode -> bool
+(* Return true if the global verbose mode is greater than 'verbose_mode', false otherwise *)
+val verbose_mode_greater : verbose_mode -> bool
 
-(* Convert a string into a debug_mode; raise Not_found if not found *)
-val debug_mode_of_string : string -> debug_mode
+(* Convert a string into a verbose_mode; raise Not_found if not found *)
+val verbose_mode_of_string : string -> verbose_mode
 
-(* Set the debug mode *)
-val set_debug_mode : debug_mode -> unit
+(* Set the verbose mode *)
+val set_verbose_mode : verbose_mode -> unit
 
-(* Get the debug mode *)
-val get_debug_mode : unit -> debug_mode
+(* Get the verbose mode *)
+val get_verbose_mode : unit -> verbose_mode
 
 
 (****************************************************************)
@@ -121,17 +121,15 @@ val set_timed_mode : unit -> unit
 val delete_file : string -> unit
 
 (** Print info on the memory used *)
-val print_memory_used : debug_mode -> unit
+val print_memory_used : verbose_mode -> unit
 
 
 (****************************************************************)
 (** Messages *)
 (****************************************************************)
-(*(* Print a message if global_debug_mode >= message_debug_mode *)
-val print_debug_message : debug_mode -> debug_mode -> string -> unit*)
 
-(* Print a message if global_debug_mode >= message_debug_mode *)
-val print_message : debug_mode -> string -> unit
+(* Print a message if global_verbose_mode >= message_verbose_mode *)
+val print_message : verbose_mode -> string -> unit
 
 (* Print a warning *)
 val print_warning : string -> unit

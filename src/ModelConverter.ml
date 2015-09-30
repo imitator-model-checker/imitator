@@ -1898,9 +1898,9 @@ let abstract_model_of_parsing_structure (parsed_variable_declarations, parsed_au
 	(* Debug functions *) 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Debug print function for arrays *)
-	let debug_print_array debug_level =
+	let debug_print_array verbose_level =
 		Array.iteri (fun i e ->
-			print_message debug_level ((string_of_int i) ^ " -> " ^ e)
+			print_message verbose_level ((string_of_int i) ^ " -> " ^ e)
 		)
 	in
 
@@ -1917,7 +1917,7 @@ let abstract_model_of_parsing_structure (parsed_variable_declarations, parsed_au
 	
 	
 	(* Print some information *)
-	if debug_mode_greater Verbose_total then(
+	if verbose_mode_greater Verbose_total then(
 		print_message Verbose_total ("Automata names : " ^ (string_of_list_of_string_with_sep ", " declared_automata_names));
 	);
 
@@ -1986,7 +1986,7 @@ let abstract_model_of_parsing_structure (parsed_variable_declarations, parsed_au
 	let observer_automaton, observer_clock_option = ObserverPatterns.new_elements parsed_property_definition in
 	
 	(* Print some information *)
-	if debug_mode_greater Verbose_high then(
+	if verbose_mode_greater Verbose_high then(
 		begin
 			match observer_automaton with
 			| None -> ()
@@ -2126,7 +2126,7 @@ let abstract_model_of_parsing_structure (parsed_variable_declarations, parsed_au
 	);
 	
 	(* Automata *)
-	if debug_mode_greater Verbose_high then(
+	if verbose_mode_greater Verbose_high then(
 		print_message Verbose_high ("\n*** Array of automata names:");
 		debug_print_array Verbose_high array_of_automata_names;
 
@@ -2182,7 +2182,7 @@ let abstract_model_of_parsing_structure (parsed_variable_declarations, parsed_au
 
 
 	(* Debug print *)
-	if debug_mode_greater Verbose_high then(
+	if verbose_mode_greater Verbose_high then(
 		print_message Verbose_high ("\n*** Locations per automaton:");
 		List.iter (fun automaton_index ->
 			print_message Verbose_high ((automata_names automaton_index) ^ " : ");
@@ -2521,7 +2521,7 @@ let abstract_model_of_parsing_structure (parsed_variable_declarations, parsed_au
 	(* Debug prints *) 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Variables *)
-	if debug_mode_greater Verbose_high then(
+	if verbose_mode_greater Verbose_high then(
 		print_message Verbose_high ("\n*** All variables:");
 		for i = 0 to nb_variables - 1 do
 			print_message Verbose_high ("  "
@@ -2531,7 +2531,7 @@ let abstract_model_of_parsing_structure (parsed_variable_declarations, parsed_au
 		done;
 	);
 	
-	if debug_mode_greater Verbose_total then(
+	if verbose_mode_greater Verbose_total then(
 		(* All action names *)
 		print_message Verbose_total ("\n*** All action names:");
 		(* For each action *)
@@ -2595,7 +2595,7 @@ let abstract_model_of_parsing_structure (parsed_variable_declarations, parsed_au
 		) automata;	);
 	
 	(* Debut print: Pi0 *)
-	if debug_mode_greater Verbose_medium then(
+	if verbose_mode_greater Verbose_medium then(
 		match options#imitator_mode with
 		| Translation -> ()
 		| State_space_exploration -> ()
