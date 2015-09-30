@@ -35,10 +35,10 @@ formal verification, model checking, software verification, parameter synthesis,
 
 [AFKS12] Étienne André, Laurent Fribourg, Ulrich Kühne and Romain Soulat. **IMITATOR 2.5: A Tool for Analyzing Robustness in Scheduling Problems**. In Dimitra Giannakopoulou and Dominique Méry (eds.), FM’12, LNCS 7436, Springer, pages 33–36, August 2012.
 
-[AHV93] Rajeev Alur, Thomas A. Henzinger and Moshe Y. Vardi. **Parametric real-time reasoning**. STOC’93, ACM, pages 592--601, 1993.
+[AHV93] Rajeev Alur, Thomas A. Henzinger and Moshe Y. Vardi. **Parametric real-time reasoning**. STOC’93, ACM, pages 592–601, 1993.
 
 [ALNS15] Étienne André, Giuseppe Lipari, Nguyễn Hoàng Gia and Sun Youcheng. **Reachability Preservation Based Parameter Synthesis for Timed Automata**. In Klaus Havelund, Gerard Holzmann, Rajeev Joshi (eds.), NFM’15, LNCS 9058, Springer, pages 50–65, April 2015.
 
 [AM15] Étienne André and Nicolas Markey. **Language Preservation Problems in Parametric Timed Automata**. In Sriram Sankaranarayanan and Enrico Vicario (eds.), FORMATS’15, Springer LNCS, September 2015.
 
-[JLR15] Aleksandra Jovanovic, Didier Lime, Olivier H. Roux. **Integer Parameter Synthesis for Real-Time Systems**. IEEE Trans. Software Eng. 41(5): 445-461, 2015.
+[JLR15] Aleksandra Jovanovic, Didier Lime, Olivier H. Roux. **Integer Parameter Synthesis for Real-Time Systems**. IEEE Trans. Software Eng. 41(5): 445–461, 2015.

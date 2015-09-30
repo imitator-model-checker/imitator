@@ -16,6 +16,9 @@ Graphics
 - Added a visualization of the bad states on the trace set (using red color + a frowney)
 - Removed the automatically generated observer from the PTA export
 
+Internal
+- "examples" directory becomes "benchmarks"
+
 
 *******************************************************
 release 2.7.2    (2015-09-30) INTERMEDIATE RELEASE

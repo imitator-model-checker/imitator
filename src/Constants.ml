@@ -14,7 +14,7 @@
 
 let program_name = "IMITATOR"
 
-let version_string = "2.7.2"
+let version_string = "2.7.3-working"
 
 let version_name = "Butter Guéméné"
 
