@@ -1,0 +1,78 @@
+(************************************************************
+ *                      IMITATOR MODEL                      
+ *
+ * U-PTA for which there exists a loop in the trace set of p=infinity, but not for any actual parameter valuation.
+ *
+ * Description     : U-PTA for which there exists a loop in the trace set of p=infinity, but not for any actual parameter valuation.
+ * Correctness     : 
+ * Source          : Didier Lime
+ * Author          : Didier Lime
+ * Modeling        : Étienne André
+ * Input by        : Étienne André
+ *
+ * Created         : 2015/09/30
+ * Last modified   : 2015/09/30
+ *
+ * IMITATOR version: 2.7.3-working
+ ************************************************************)
+
+var
+
+(* Clocks *)
+ 	x, y
+		: clock;
+
+(* Parameters *)
+	p
+		: parameter;
+
+
+
+(************************************************************)
+  automaton pta
+(************************************************************)
+synclabs: ;
+
+loc l1: while y <= p wait {}
+	when x = 1 do {x' = 0} goto l1;
+	when y <= p goto l2;
+
+loc l2: while True wait {}
+end (* pta *)
+
+
+
+(************************************************************)
+(* Initial state *)
+(************************************************************)
+
+init :=
+	(*------------------------------------------------------------*)
+	(* Initial location *)
+	(*------------------------------------------------------------*)
+	& loc[pta] = l1
+
+	(*------------------------------------------------------------*)
+	(* Initial clock constraints *)
+	(*------------------------------------------------------------*)
+	& x = 0
+	& y = 0
+
+	(*------------------------------------------------------------*)
+	(* Parameter constraints *)
+	(*------------------------------------------------------------*)
+	& p >= 0
+;
+
+
+(************************************************************)
+(* Property specification *)
+(************************************************************)
+
+(* property := unreachable loc[pta] = l1; *)
+
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end
