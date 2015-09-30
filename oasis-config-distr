@@ -7,7 +7,7 @@
 #
 #  _oasis authors: Etienne Andre, Alban Linard
 #  Created:        2013/12/11
-#  Last modified:  2015/07/22
+#  Last modified:  2015/09/30
 ###############################################################
 
 OASISFormat: 0.3
@@ -41,27 +41,27 @@ Test startingcomment
 
 Test tes1
   Command: echo "\n********** TEST 1 **********\n"; \
-      ./bin/patator examples/Flipflop/flipflop.imi -mode statespace -depth-limit 5
+      ./bin/patator benchmarks/Flipflop/flipflop.imi -mode statespace -depth-limit 5
 
 Test test2
   Command: echo "\n********** TEST 2 **********\n"; \
-      ./bin/patator examples/Flipflop/flipflop.imi examples/Flipflop/flipflop.pi0 -output-trace-set -output-states -output-result -statistics
+      ./bin/patator benchmarks/Flipflop/flipflop.imi benchmarks/Flipflop/flipflop.pi0 -output-trace-set -output-states -output-result -statistics
 
 Test test3
   Command: echo "\n********** TEST 3 **********\n"; \
-      ./bin/patator examples/Flipflop/flipflop.imi examples/Flipflop/flipflop.v0 -mode cover -output-cart
+      ./bin/patator benchmarks/Flipflop/flipflop.imi benchmarks/Flipflop/flipflop.v0 -mode cover -output-cart
 
 Test test4
   Command: echo "\n********** TEST 4 **********\n"; \
-      ./bin/patator examples/Examples/JLR-TACAS13.imi examples/Examples/JLR-TACAS13.v0 -mode cover -PRP -output-result -output-cart -depth-limit 10 -verbose warnings
+      ./bin/patator benchmarks/Examples/JLR-TACAS13.imi benchmarks/Examples/JLR-TACAS13.v0 -mode cover -PRP -output-result -output-cart -depth-limit 10 -verbose warnings
 
 Test test5
   Command: echo "\n********** TEST 5 **********\n"; \
-      mpiexec -n 4 ./bin/patator examples/Flipflop/flipflop.imi examples/Flipflop/flipflop.v0 -mode cover -output-cart -distributed sequential -verbose standard
+      mpiexec -n 4 ./bin/patator benchmarks/Flipflop/flipflop.imi benchmarks/Flipflop/flipflop.v0 -mode cover -output-cart -distributed sequential -verbose standard
 
 Test test6
   Command: echo "\n********** TEST 6 **********\n"; \
-      mpiexec -n 4 ./bin/patator examples/Flipflop/flipflop.imi examples/Flipflop/flipflop.v0 -mode cover -output-result -output-cart -distributed dynamic -verbose mute
+      mpiexec -n 4 ./bin/patator benchmarks/Flipflop/flipflop.imi benchmarks/Flipflop/flipflop.v0 -mode cover -output-result -output-cart -distributed dynamic -verbose mute
 
 Test finalcomment
   Command: echo "\n********** END TESTS **********\n"
