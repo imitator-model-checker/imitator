@@ -3,7 +3,26 @@ release 2.XXXXX    (XXXXX) FUTURE RELEASE
 
 Major
 - Allow for more complex unreachable states in property definition: several locations in several IPTA can be tested, and discrete variables can be compared with <, <=, =, >=, > and intervals; all this can be mixed using and/or operators.
-- Detection of L/U-PTA, U-PTA and L-PTA [still being tested!]
+- Detection of L/U-PTA, U-PTA and L-PTA
+
+Bug fixing
+- Solved an inconsistency in the property syntax of the "always sequence" observer pattern
+- Remove three observer patterns that were allowed in the input syntax but not implemented
+
+Options
+- Added an option "-output-trace-set-verbose" to print trace set with all information contained in the .states file (i.e., the constraint and the constraint projected onto the parameters)
+
+Graphics
+- Added a visualization of the bad states on the trace set (using red color + a frowney)
+- Removed the automatically generated observer from the PTA export
+
+
+*******************************************************
+release 2.7.2    (2015-09-30) INTERMEDIATE RELEASE
+
+Major
+- Allow for more complex unreachable states in property definition: several locations in several IPTA can be tested, and discrete variables can be compared with <, <=, =, >=, > and intervals; all this can be mixed using and/or operators.
+- Detection of L/U-PTA, U-PTA and L-PTA
 
 Bug fixing
 - Solved an inconsistency in the property syntax of the "always sequence" observer pattern
