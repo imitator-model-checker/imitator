@@ -1,0 +1,83 @@
+(************************************************************
+ *                      IMITATOR MODEL                      
+ *
+ * A U-PTA with constraints i*p1 + p2 - i*c in the state space
+ *
+ * Description     : A U-PTA with constraints i*p1 + p2 - i*c >= x2 - x1 in the state space (infinite statespace). But in fact all these states are equivalent, so an abstraction could be used.
+ * Correctness     : N/A
+ * Source          : own work
+ * Author          : Etienne Andre
+ * Input by        : Etienne Andre
+ *
+ * Created         : 2015/10/07
+ * Last modified   : 2015/10/07
+ *
+ * IMITATOR version: 2.7.2
+ ************************************************************)
+
+var
+
+(* Clocks *)
+ 	x1, x2
+		: clock;
+
+(* Parameters *)
+	p1, p2, p3
+		: parameter;
+
+
+
+(************************************************************)
+  automaton pta
+(************************************************************)
+synclabs: ;
+
+loc l1: while x2 <= 1 wait {}
+	when x1 <= p2 do {x1' = 0} goto l2;
+
+loc l2: while x2 <= p3 wait {}
+	when x1 <= p1 - 2 do {x1' = 0} goto l2;
+	when x2 <= p3 goto l3;
+
+loc l3: while True wait {}
+
+end (* pta *)
+
+
+
+(************************************************************)
+(* Initial state *)
+(************************************************************)
+
+init := True
+	(*------------------------------------------------------------
+	   INITIAL LOCATION
+	  ------------------------------------------------------------*)
+	& loc[pta] = l1
+
+	(*------------------------------------------------------------
+	   INITIAL CLOCKS
+	  ------------------------------------------------------------*)
+	& x1 = 0
+	& x2 = 0
+
+	(*------------------------------------------------------------
+	   PARAMETER CONSTRAINTS
+	  ------------------------------------------------------------*)
+	& p1 >= 0 (*& p1 <= 2*)
+	& p2 >= 0 (*& p2 <= 2*)
+	& p3 >= 0
+;
+
+
+(************************************************************)
+(* Property specification *)
+(************************************************************)
+
+property := unreachable loc[pta] = l3;
+
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end
