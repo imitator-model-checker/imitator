@@ -1,0 +1,79 @@
+(************************************************************
+ *                      IMITATOR MODEL                      
+ *
+ * Toy U-PTA example for which all parameter valuations are solutions of EF l2, but classical synthesis techniques won't terminate.
+ *
+ * Description     : Toy U-PTA example for which all parameter valuations are solutions of EF l2, but classical synthesis techniques won't terminate.
+ * Correctness     : l2 must be reachable
+ * Source          : Étienne André, Didier Lime, Loïg Jézeguel
+ * Author          : Étienne André, Didier Lime, Loïg Jézeguel
+ * Modeling        : Étienne André, Didier Lime, Loïg Jézeguel
+ * Input by        : Étienne André
+ *
+ * Created         : 2015/10/07
+ * Last modified   : 2015/10/07
+ *
+ * IMITATOR version: 2.7.2
+ ************************************************************)
+
+var
+
+(* Clocks *)
+ 	x, y
+		: clock;
+
+(* Parameters *)
+	a
+		: parameter;
+
+
+
+(************************************************************)
+  automaton pta
+(************************************************************)
+synclabs: ;
+
+loc l1: while True wait {}
+	when y <= 1 & x <= a do {x' = 0} goto l1;
+	when y = 1 & x <= a goto l2;
+
+loc l2: while True wait {}
+
+end (* pta *)
+
+
+
+(************************************************************)
+(* Initial state *)
+(************************************************************)
+
+init :=
+	(*------------------------------------------------------------*)
+	(* Initial location *)
+	(*------------------------------------------------------------*)
+	& loc[pta] = l1
+
+	(*------------------------------------------------------------*)
+	(* Initial clock constraints *)
+	(*------------------------------------------------------------*)
+	& x = 0
+	& y = 0
+
+	(*------------------------------------------------------------*)
+	(* Parameter constraints *)
+	(*------------------------------------------------------------*)
+	& a >= 0
+;
+
+
+(************************************************************)
+(* Property specification *)
+(************************************************************)
+
+property := unreachable loc[pta] = l2;
+
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end
