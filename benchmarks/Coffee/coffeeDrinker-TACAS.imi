@@ -21,21 +21,19 @@
 var
 
 (* Clocks *)
- 	x1, x2, y
+ 	x, y1, y2
 		: clock;
 
 (* Parameters *)
-	(* time during which the button cannot be pressed after a pressure *)
- 	p_block_button = 1,
 	(* time during which one can add sugar *)
 	p_add_sugar,
 	(* time needed to prepare the coffee from the first button pressure *)
 	p_coffee,
 
+	(* interval of time between 2 consecutive pressures by the user *)
+ 	p_button,
 	(* interval of work without need for coffee *)
 	p_work_min = 3600, p_work_max = 7200,
-	(* interval of time between 2 consecutive pressures by the user *)
-(* 	p_press, *)
 	(* time after which the drinker gets mad *)
 	p_patience_max = 15
 		: parameter;
@@ -55,20 +53,21 @@ var
 synclabs: press, cup, coffee, sleep;
 
 loc idle: while True wait {}
-	when True sync press do {x1' = 0, x2' = 0} goto add_sugar;
+	when True sync press do {x' = 0} goto add_sugar;
 
-loc add_sugar: while x2 <= p_add_sugar & x2 <= p_coffee wait {}
-	when x1 >= p_block_button sync press do {x1' = 0} goto add_sugar;
-	when x2 = p_add_sugar sync cup do {x2' = 0} goto preparing_coffee;
+loc add_sugar: while x <= p_add_sugar wait {}
+(* 	when x1 < p_button sync press goto add_sugar; *)
+	when True sync press goto add_sugar;
+	when x = p_add_sugar sync cup do {x' = 0} goto preparing_coffee;
 
-loc preparing_coffee: while x2 <= p_coffee wait {}
+loc preparing_coffee: while x <= p_coffee wait {}
 (* 	when x2 = p_coffee sync coffee goto idle; *)
 (* 	when True sync press goto preparing_coffee; *)
-	when x2 = p_coffee sync coffee do {x1' = 0} goto cdone;
+	when x = p_coffee sync coffee do {x' = 0} goto cdone;
 
-loc cdone: while x1 <= 10 wait {}
-	when True sync press do {x1' = 0, x2' = 0} goto add_sugar;
-	when x1 = 10 sync sleep goto idle;
+loc cdone: while x <= 10 wait {}
+	when True sync press do {x' = 0} goto add_sugar;
+	when x = 10 sync sleep goto idle;
 
 end (* machine *)
 
@@ -78,17 +77,18 @@ end (* machine *)
 (************************************************************)
 synclabs: press, coffee;
 
-loc researching: while y <= p_work_max wait {}
-	when y >= p_work_min sync press do {y' = 0, nb_sugar' = 0} goto add_sugar;
+loc researching: while y1 <= p_work_max wait {}
+	when y1 >= p_work_min sync press do {y1' = 0, y2' = 0, nb_sugar' = 0} goto add_sugar;
 
-loc add_sugar: while y <= p_patience_max & nb_sugar <= MAX_SUGAR wait {}
-	when nb_sugar < MAX_SUGAR - 1 sync press do {nb_sugar' = nb_sugar + 1} goto add_sugar;
-	when nb_sugar = MAX_SUGAR - 1 sync press do {nb_sugar' = nb_sugar + 1} goto wait_coffee;
-	when y = p_patience_max goto mad;
+loc add_sugar: while y2 <= p_patience_max & y1 <= p_button & nb_sugar <= MAX_SUGAR - 1 wait {}
+	when y1 = p_button & nb_sugar < MAX_SUGAR - 1 sync press do {y1' = 0, nb_sugar' = nb_sugar + 1} goto add_sugar;
+	when y1 = p_button & nb_sugar = MAX_SUGAR - 1 sync press do {nb_sugar' = nb_sugar + 1} goto wait_coffee;
+	when y2 = p_patience_max goto mad;
+	when True sync coffee goto mad;
 
-loc wait_coffee: while y <= p_patience_max wait {}
-	when y < p_patience_max sync coffee do {y' = 0} goto researching;
-	when y = p_patience_max goto mad;
+loc wait_coffee: while y2 <= p_patience_max wait {}
+	when y2 < p_patience_max sync coffee do {y2' = 0} goto researching;
+	when y2 = p_patience_max goto mad;
 
 loc mad: while True wait {}
 
@@ -109,9 +109,9 @@ init :=
 	(*------------------------------------------------------------
 	   INITIAL CLOCKS
 	  ------------------------------------------------------------*)
-	& x1 = 0
-	& x2 = 0
-	& y >= 0 & y <= p_work_max
+	& x = 0
+	& y1 >= 0 & y1 <= p_work_max (* working since some time *)
+	& y2 >= 0 (* arbitrary *)
 
 	(*------------------------------------------------------------
 	   INITIAL DISCRETE
@@ -121,9 +121,9 @@ init :=
 	(*------------------------------------------------------------
 	   PARAMETER CONSTRAINTS
 	  ------------------------------------------------------------*)
-	& p_block_button >= 0
-	& p_add_sugar >= 0
-	& p_coffee >= 0
+	& p_button > 0
+	& p_add_sugar > 0
+	& p_coffee > 0
 (* 	& p_press >= 0 *)
 	& p_work_min >= 0
 	& p_work_min <= p_work_max
