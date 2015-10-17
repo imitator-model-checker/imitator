@@ -13,7 +13,7 @@
  * Created         : 2011/01/21
  * Fork from       : coffeeDrinker.imi
  * Fork date       : 2015/10/14
- * Last modified   : 2015/10/14
+ * Last modified   : 2015/10/17
  *
  * IMITATOR version: 2.7.2
  ************************************************************)
@@ -44,7 +44,7 @@ var
 
 (* Constants *)
 	MAX_SUGAR = 3
-		: parameter;
+		: constant;
 
 
 (************************************************************)
@@ -87,7 +87,7 @@ loc add_sugar: while y2 <= p_patience_max & y1 <= p_button & nb_sugar <= MAX_SUG
 	when True sync coffee goto mad;
 
 loc wait_coffee: while y2 <= p_patience_max wait {}
-	when y2 < p_patience_max sync coffee do {y2' = 0} goto researching;
+	when y2 < p_patience_max sync coffee do {y1' = 0, y2' = 0} goto researching;
 	when y2 = p_patience_max goto mad;
 
 loc mad: while True wait {}
@@ -135,8 +135,10 @@ init :=
 (* Property specification *)
 (************************************************************)
 
-property := unreachable loc[researcher] = mad;
+(* property := unreachable loc[researcher] = mad; *)
+property := unreachable loc[researcher] = mad or loc[machine] = cdone & nb_sugar < 3;
 (* projectresult((*p_patience_max, *)p_press, p_coffee); *)
+(* property := if press then eventually coffee within 20; *)
 
 
 (************************************************************)
