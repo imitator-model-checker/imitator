@@ -8,7 +8,7 @@
  * Author:        Etienne Andre
  * 
  * Created       : 2009/11/02
- * Last modified : 2013/03/05
+ * Last modified : 2015/10/17
 *****************************************************************)
 
 
@@ -40,12 +40,7 @@ rule token = parse
 	| ['0'-'9']+'.'['0'-'9']+ as lxm { FLOAT(float_of_string lxm) }
 	| ['0'-'9']+ as lxm { INT(int_of_string lxm) }
 
-(*	| "<="             { OP_LEQ }
-	| ">="             { OP_GEQ }
-	| '<'              { OP_L }*)
 	| '='              { OP_EQ }
-(*	| '>'              { OP_G }
-	| ":="             { OP_ASSIGN }*)
 
 	| '+'              { OP_PLUS }
 	| '-'              { OP_MINUS }
@@ -56,6 +51,7 @@ rule token = parse
 	| ')'              { RPAREN }
 
 	| '&'              { AMPERSAND }
+	| ','              { COMMA }
 	| ';'              { SEMICOLON }
 
 	| eof              { EOF}

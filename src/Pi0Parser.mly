@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created       : 2009/11/02
- * Last modified : 2010/03/04
+ * Last modified : 2015/10/17
 ***********************************************/
 
 %{
@@ -43,7 +43,7 @@ let num_of_float f =
 %token OP_PLUS OP_MINUS OP_MULT OP_DIV
 %token OP_EQ
 
-%token LPAREN RPAREN AMPERSAND SEMICOLON
+%token LPAREN RPAREN AMPERSAND COMMA SEMICOLON
 
 %token EOF
 
@@ -58,7 +58,7 @@ let num_of_float f =
 
 /**********************************************/
 main:
-	 declarations semicolon EOF
+	 declarations semicolon_opt EOF
 	{
 		$1
 	}
@@ -74,17 +74,22 @@ declarations:
 /**********************************************/
 
 declaration:
-	ampersand NAME OP_EQ arithmetic_expr { ($2, $4) }
+	ampersand_opt NAME OP_EQ arithmetic_expr comma_opt { ($2, $4) }
 ;
 
 /**********************************************/
 
-ampersand:
+ampersand_opt:
 	AMPERSAND {}
 	| {}
 ;
 
-semicolon:
+comma_opt:
+	COMMA {}
+	| {}
+;
+
+semicolon_opt:
 	SEMICOLON {}
 	| {}
 ;
