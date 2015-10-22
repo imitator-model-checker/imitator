@@ -1,41 +1,36 @@
-(*****************************************************************
+(************************************************************
  *
- *                     IMITATOR II
+ *                       IMITATOR
  * 
- * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
- * Author:        Etienne Andre
- * Created:       2010/03/10
- * Last modified: 2011/11/20
+ * Laboratoire Spécification et Vérification (ENS Cachan & CNRS, France)
+ * LIPN, Université Paris 13, Sorbonne Paris Cité (France)
+ * 
+ * Module description: define global locations
+ * 
+ * File contributors        : Étienne André
+ * Created                  : 2010/03/10
+ * Renamed from Automaton.ml: 2015/10/22
+ * Last modified            : 2015/10/22
  *
- ****************************************************************)
+ ************************************************************)
+ 
 
-(**************************************************)
+(************************************************************)
 (* Modules *)
-(**************************************************)
+(************************************************************)
 open CamlUtilities
+open Automaton
 
 
 
-(**************************************************)
+(************************************************************)
 (** {2 Types} *)
-(**************************************************)
+(************************************************************)
 
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
-(** {3 Variables} *)
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+type discrete_value = NumConst.t
 
-type variable_index = int
-type clock_index = variable_index
-type parameter_index = variable_index
-type discrete_index = variable_index
-type variable_name = string
-type value = NumConst.t
-
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
-(** {3 Locations} *)
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
-type location_index = int
-type location_name = string
+(** Unique identifier for each different global location *)
+type global_location_index = int
 
 (* Array automaton_index -> location_index *)
 type locations = location_index array
@@ -75,9 +70,9 @@ type automaton_name = string
 
 
 
-(**************************************************)
+(************************************************************)
 (** Global variables *)
-(**************************************************)
+(************************************************************)
 
 (* The minimum discrete_index *)
 let min_discrete_index = ref 0
@@ -88,9 +83,9 @@ let nb_discrete = ref 0
 (* The number of automata *)
 let nb_automata = ref 0
 
-(**************************************************)
+(************************************************************)
 (** Useful functions *)
-(**************************************************)
+(************************************************************)
 
 let get_locations (locations, _) =	locations
 
@@ -115,9 +110,9 @@ let string_of_discrete names index =
 	names (index + !min_discrete_index)
 
 
-(**************************************************)
+(************************************************************)
 (** {2 Locations} *)
-(**************************************************)
+(************************************************************)
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
 (** {3 Initialization} *)

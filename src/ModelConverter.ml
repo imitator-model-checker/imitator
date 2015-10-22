@@ -10,7 +10,7 @@
  * Author:        Etienne Andre
  * 
  * Created:       2009/09/09
- * Last modified: 2015/09/15
+ * Last modified: 2015/10/22
  *
  ************************************************************)
 
@@ -24,6 +24,7 @@ open Exceptions
 open CamlUtilities
 open ImitatorUtilities
 open Options
+open Automaton
 open ParsingStructure
 open AbstractModel
 open ModelPrinter
@@ -1756,7 +1757,7 @@ let make_initial_state index_of_automata locations_per_automaton index_of_locati
  		Hashtbl.find index_of_locations.(automaton_index) location_name
 	) initial_locations in
 	(* Construct the initial location *)
-	let initial_location = Automaton.make_location locations init_discrete_pairs in
+	let initial_location = Location.make_location locations init_discrete_pairs in
 	(* Remove the init definitions for discrete variables *)
 	let other_inequalities = List.filter (function
 		(* Check if the left part is only a variable name *)
@@ -1785,7 +1786,7 @@ let make_initial_state index_of_automata locations_per_automaton index_of_locati
 	let initial_constraint : LinearConstraint.px_linear_constraint =
 	
 		(* Create pairs of (index , value) for discrete variables *)
-(* 		let discrete_values = List.map (fun discrete_index -> discrete_index, (Automaton.get_discrete_value initial_location discrete_index)) model.discrete in *)
+(* 		let discrete_values = List.map (fun discrete_index -> discrete_index, (Location.get_discrete_value initial_location discrete_index)) model.discrete in *)
 
 		(* Create a constraint encoding the value of the discretes *)
 		let discretes = LinearConstraint.pxd_constraint_of_discrete_values init_discrete_pairs in
@@ -1879,7 +1880,7 @@ let get_clocks_in_linear_constraint clocks =
 
 
 (*** WARNING: duplicate function in Reachability ***)
-let get_clocks_in_updates : clock_updates -> Automaton.clock_index list = function
+let get_clocks_in_updates : clock_updates -> clock_index list = function
 	(* No update at all *)
 	| No_update -> []
 	(* Reset to 0 only *)
@@ -2421,7 +2422,7 @@ let abstract_model_of_parsing_structure (parsed_variable_declarations, parsed_au
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	let min_discrete_index = first_discrete_index in
 	let max_discrete_index = nb_variables - 1 in
-	Automaton.initialize nb_automata min_discrete_index max_discrete_index;
+	Location.initialize nb_automata min_discrete_index max_discrete_index;
 
 	
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)

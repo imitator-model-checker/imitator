@@ -10,7 +10,7 @@
  * Author:        Ulrich Kuehne, Etienne Andre
  * 
  * Created:       2010/07/22
- * Last modified: 2015/09/30
+ * Last modified: 2015/10/22
  *
  ****************************************************************)
 
@@ -22,6 +22,7 @@ open Exceptions
 open Options
 open CamlUtilities
 open ImitatorUtilities
+open Automaton
 open AbstractModel
 open ModelPrinter
 open StateSpace
@@ -175,7 +176,7 @@ let useless_clocks = ref (fun automaton_index location_index -> [])
 
 
 (** WARNING: duplicate function in ModelConverter *)
-let get_clocks_in_updates : clock_updates -> Automaton.clock_index list = function
+let get_clocks_in_updates : clock_updates -> clock_index list = function
 	(* No update at all *)
 	| No_update -> []
 	(* Reset to 0 only *)
@@ -492,7 +493,7 @@ let is_location_urgent model location =
 	(* Subfunction checking that one location is urgent in a given automaton *)
 	let is_local_location_urgent automaton_index =
 		(* Retrieve location *)
-		let location_index = Automaton.get_location location automaton_index in
+		let location_index = Location.get_location location automaton_index in
 		(* Check if urgent *)
 		model.is_urgent automaton_index location_index
 	in
@@ -593,7 +594,7 @@ let nb_unsat2 = ref 0
 (*let state_mergeable state1 state2 =
 	let (loc1,constr1) = state1 in
 	let (loc2,constr2) = state2 in
-	if not (Automaton.location_equal loc1 loc2) then false else (
+	if not (Location.location_equal loc1 loc2) then false else (
 		LinearConstraint.hull_assign_if_exact constr1 constr2 
 	)*)
 
@@ -842,7 +843,7 @@ let compute_plain_invariant model location =
   (* construct invariant *)
 	let invariants = List.map (fun automaton_index ->
 		(* Get the current location *)
-		let location_index = Automaton.get_location location automaton_index in
+		let location_index = Location.get_location location automaton_index in
 		(* Compute the invariant *)
 		model.invariants automaton_index location_index
 	) model.automata in
@@ -856,7 +857,7 @@ let compute_plain_invariant model location =
 (*------------------------------------------------------------*)
 let compute_invariant model location =
 	(* Strip off discrete for caching scheme  *)
-	let locations = Automaton.get_locations location in
+	let locations = Location.get_locations location in
 	(* check in cache *)
 	let entry = Cache.find inv_cache locations in
 	match entry with
@@ -1117,7 +1118,7 @@ let compute_stopwatches model location =
 		(* Update hash table *)
 		List.iter (fun automaton_index ->
 			(* Get the current location *)
-			let location_index = Automaton.get_location location automaton_index in
+			let location_index = Location.get_location location automaton_index in
 			(* Get the list of stopped clocks *)
 			let stopped = model.stopwatches automaton_index location_index in
 			(* If list non null: we have stopwatches here *)
@@ -1204,7 +1205,7 @@ let create_initial_state model =
 	
 	(* Compute constraint for assigning a (constant) value to discrete variables *)
 	print_message Verbose_high ("Computing constraint for discrete variables");
-	let discrete_values = List.map (fun discrete_index -> discrete_index, (Automaton.get_discrete_value initial_location discrete_index)) model.discrete in
+	let discrete_values = List.map (fun discrete_index -> discrete_index, (Location.get_discrete_value initial_location discrete_index)) model.discrete in
 	(* Constraint of the form D_i = d_i *)
 	let discrete_constraint = instantiate_discrete discrete_values in
 	(* Print some information *)
@@ -1270,7 +1271,7 @@ let create_initial_state model =
 		(* Compute the useless clocks *)
 		let clocks_to_remove = List.fold_left (fun current_list_of_clocks automaton_index ->
 			(* Retrieve dest location for this automaton *)
-			let location_index = Automaton.get_location initial_location automaton_index in
+			let location_index = Location.get_location initial_location automaton_index in
 			(* Get the clocks and append to previously computed clocks (rev_append because the order doesn't matter) *)
 			List.rev_append current_list_of_clocks (!useless_clocks automaton_index location_index)
 		) [] model.automata in
@@ -1343,7 +1344,7 @@ let compute_possible_actions model original_location =
 	(* Fill it with all the possible actions per location *)
 	for automaton_index = 0 to model.nb_automata - 1 do
 		(* Get the current location for automaton_index *)
-		let location_index = Automaton.get_location original_location automaton_index in
+		let location_index = Location.get_location original_location automaton_index in
 		(* Print some information *)
 		print_message Verbose_total ("Considering automaton " ^ (model.automata_names automaton_index) ^ " with location " ^ (model.location_names automaton_index location_index) ^ ".");
 		(* Get the possible actions for this location *)
@@ -1376,7 +1377,7 @@ let compute_possible_actions model original_location =
 		let action_possible =
 			List.fold_left (fun still_possible automaton_index -> 
 				still_possible
-				&& (List.mem action_index (model.actions_per_location automaton_index (Automaton.get_location original_location automaton_index)))
+				&& (List.mem action_index (model.actions_per_location automaton_index (Location.get_location original_location automaton_index)))
 			) possible automata_for_this_action in
 		(* Print some information *)
 		if not action_possible && (verbose_mode_greater Verbose_total) then (
@@ -1402,7 +1403,7 @@ let compute_possible_actions model original_location =
 (*------------------------------------------------------------------*)
 let compute_new_location model aut_table trans_table action_index original_location =
 	(* make a copy of the location *)		
-	let location = Automaton.copy_location original_location in
+	let location = Location.copy_location original_location in
 	(* Create a temporary hashtbl for discrete values *)
 	let updated_discrete = Hashtbl.create model.nb_discrete in
 	(* Check if we actually have updates *)
@@ -1410,7 +1411,7 @@ let compute_new_location model aut_table trans_table action_index original_locat
 	(* Update the location for the automata synchronized with 'action_index'; return the list of guards and updates *)
 	let guards_and_updates = Array.to_list (Array.mapi (fun local_index real_index ->
 		(* Get the current location for this automaton *)
-		let location_index = Automaton.get_location original_location real_index in
+		let location_index = Location.get_location original_location real_index in
 		(* Find the transitions for this automaton *)
 		let transitions = model.transitions real_index location_index action_index in
 		(* Get the index of the examined transition for this automaton *)
@@ -1425,7 +1426,7 @@ let compute_new_location model aut_table trans_table action_index original_locat
 
 			(*** TO OPTIMIZE (in terms of dimensions) ***)
 			
-			let new_value = LinearConstraint.evaluate_pxd_linear_term (Automaton.get_discrete_value original_location) linear_term in
+			let new_value = LinearConstraint.evaluate_pxd_linear_term (Location.get_discrete_value original_location) linear_term in
 			(* Check if already updated *)
 			if Hashtbl.mem updated_discrete discrete_index then (
 				(* Find its value *)
@@ -1441,7 +1442,7 @@ let compute_new_location model aut_table trans_table action_index original_locat
 			);
 		) discrete_updates;
 		(* Update the global location *)
-		Automaton.update_location_with [real_index, dest_index] [] location;
+		Location.update_location_with [real_index, dest_index] [] location;
 		(* Update the update flag *)
 		begin
 		match clock_updates with
@@ -1460,7 +1461,7 @@ let compute_new_location model aut_table trans_table action_index original_locat
 		updated_discrete_couples := (discrete_index, discrete_value) :: !updated_discrete_couples;
 	) updated_discrete;
 	(* Update the global location *)
-	Automaton.update_location_with [] !updated_discrete_couples location;
+	Location.update_location_with [] !updated_discrete_couples location;
   (* return the new location, the guards, and the clock updates (if any!) *)
 	(location, guards, (if !has_updates then clock_updates else []))
 	
@@ -1609,7 +1610,7 @@ let compute_new_constraint model orig_constraint (discrete_constr_src : LinearCo
 	
 	
 		(* Compute the equalities for the discrete variables in destination location *)
-		let discrete_values_dest = List.map (fun discrete_index -> discrete_index, (Automaton.get_discrete_value dest_location discrete_index)) model.discrete in
+		let discrete_values_dest = List.map (fun discrete_index -> discrete_index, (Location.get_discrete_value dest_location discrete_index)) model.discrete in
 		(* Convert to a constraint *)
 		let discrete_constraint_dest = instantiate_discrete discrete_values_dest in
 		
@@ -1655,7 +1656,7 @@ let compute_new_constraint model orig_constraint (discrete_constr_src : LinearCo
 			(* Compute the useless clocks *)
 			let clocks_to_remove = List.fold_left (fun current_list_of_clocks automaton_index ->
 				(* Retrieve dest location for this automaton *)
-				let location_index = Automaton.get_location dest_location automaton_index in
+				let location_index = Location.get_location dest_location automaton_index in
 				(* Get the clocks and append to previously computed clocks (rev_append because the order doesn't matter) *)
 				List.rev_append current_list_of_clocks (!useless_clocks automaton_index location_index)
 			) [] model.automata in
@@ -1878,7 +1879,7 @@ let compute_transitions model location constr action_index automata aut_table ma
 			(* Tabulate the real index *)
 			aut_table.(!current_index) <- automaton_index;
 			(* Get the current location for this automaton *)
-			let location_index = Automaton.get_location location automaton_index in
+			let location_index = Location.get_location location automaton_index in
 			(* Get transitions for this automaton *)
 			let transitions = model.transitions automaton_index location_index action_index in
 			
@@ -2180,7 +2181,7 @@ let post_from_one_state model reachability_graph orig_state_index =
 	
 
 	(* Create a constraint D_i = d_i for the discrete variables *)
-	let discrete_values = List.map (fun discrete_index -> discrete_index, (Automaton.get_discrete_value original_location discrete_index)) model.discrete in
+	let discrete_values = List.map (fun discrete_index -> discrete_index, (Location.get_discrete_value original_location discrete_index)) model.discrete in
 	(* Convert to a constraint *)
 	let discrete_constr = instantiate_discrete discrete_values in
 

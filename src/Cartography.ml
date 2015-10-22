@@ -10,7 +10,7 @@
  * Author:        Ulrich Kuehne, Etienne Andre
  * 
  * Created:       2012/06/18
- * Last modified: 2015/09/30
+ * Last modified: 2015/10/22
  *
  ****************************************************************)
 
@@ -22,6 +22,7 @@
 open Exceptions
 open CamlUtilities
 open ImitatorUtilities
+open Automaton
 open Options
 open AbstractModel
 open StateSpace
@@ -40,7 +41,7 @@ open Reachability
 (* type current_pi0 = NumConst.t array *)
 
 (* List version of pi0 for PaTATOR *)
-type pi0_list = (Automaton.variable_index * NumConst.t) list
+type pi0_list = (variable_index * NumConst.t) list
 
 
 (************************************************************)
@@ -90,7 +91,7 @@ let time_spent_on_IM = ref 0.
 let nb_useless_points = ref 0
 
 (* Compute the initial state (TOTALLY RANDOM VALUE) *)
-let init_state = ref (Automaton.make_location [] [], LinearConstraint.px_true_constraint())
+let init_state = ref (Location.make_location [] [], LinearConstraint.px_true_constraint())
 
 (* Initial constraint of the model *)
 let init_constraint = ref (LinearConstraint.p_true_constraint())

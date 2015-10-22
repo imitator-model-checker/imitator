@@ -8,7 +8,7 @@
  * Author:        Etienne Andre, Ulrich Kuehne
  * 
  * Created:       2010/07/05
- * Last modified: 2015/09/25
+ * Last modified: 2015/10/22
  *
  ****************************************************************)
 
@@ -786,7 +786,7 @@ let dot_of_graph model reachability_graph ~fancy =
 			if fancy || options#output_trace_set_verbose then (
 				(* create record label with location names *)
 				let loc_names = List.map (fun aut_index -> 
-					let loc_index = Automaton.get_location global_location aut_index in
+					let loc_index = Location.get_location global_location aut_index in
 					model.location_names aut_index loc_index
 				) model.automata in
 				let label = string_of_list_of_string_with_sep "|" loc_names in
@@ -794,14 +794,14 @@ let dot_of_graph model reachability_graph ~fancy =
 					if model.nb_discrete > 0 then (
 						"|" ^ (string_of_list_of_string_with_sep "|" (
 							List.map (fun discrete_index -> 
-	(* 						let loc_index = Automaton.get_location global_location aut_index in *)
+	(* 						let loc_index = Location.get_location global_location aut_index in *)
 								"v("
 								(* Variable name *)
 								^ (model.variable_names discrete_index)
 								(* Equal *)
 								^ ")="
 								(* Variable value *)
-								^ (NumConst.string_of_numconst (Automaton.get_discrete_value global_location discrete_index))
+								^ (NumConst.string_of_numconst (Location.get_discrete_value global_location discrete_index))
 							) model.discrete
 						))
 					) else ""

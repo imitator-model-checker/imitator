@@ -1,49 +1,38 @@
-(*****************************************************************
+(************************************************************
  *
  *                       IMITATOR
  * 
- * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
- * Universite Paris 13, Sorbonne Paris Cite, LIPN (France)
+ * Laboratoire Spécification et Vérification (ENS Cachan & CNRS, France)
+ * LIPN, Université Paris 13, Sorbonne Paris Cité (France)
  * 
- * Author:        Etienne Andre
+ * Module description: Abstract description of the input model
  * 
- * Created:       2009/09/11
- * Last modified: 2015/09/15
+ * File contributors : Étienne André
+ * Created           : 2009/09/11
+ * Last modified     : 2015/10/22
  *
- ****************************************************************)
+ ************************************************************)
 
 
-
-(****************************************************************)
+(************************************************************)
 (* Modules *)
-(****************************************************************)
+(************************************************************)
 open Automaton
 open Options
 
-(****************************************************************)
-(** Environment *)
-(****************************************************************)
 
-
-(****************************************************************)
-(** Indexes *)
-(****************************************************************)
-
-type action_index = int
-type action_name = string
-
-(****************************************************************)
+(************************************************************)
 (** Pi 0 *)
-(****************************************************************)
+(************************************************************)
 (* type pi0 = NumConst.t array *)
 type pi0 = (*variable_index -> NumConst.t*)PVal.pval
 
 type v0 = HyperRectangle.hyper_rectangle
 
 
-(****************************************************************)
+(************************************************************)
 (** Types *)
-(****************************************************************)
+(************************************************************)
 
 (** Type of variable in declarations *)
 type var_type =
@@ -58,9 +47,9 @@ type action_type =
 
 
 
-(****************************************************************)
+(************************************************************)
 (** Locations *)
-(****************************************************************)
+(************************************************************)
 type location_urgency =
 	(* Urgent location *)
 	| Location_urgent
@@ -68,9 +57,9 @@ type location_urgency =
 	| Location_nonurgent
 
 
-(****************************************************************)
+(************************************************************)
 (** Transitions *)
-(****************************************************************)
+(************************************************************)
 
 (** update: variable_index := linear_term *)
 type clock_update = clock_index 
@@ -101,9 +90,9 @@ type invariant = LinearConstraint.pxd_linear_constraint
 type transition = guard * clock_updates * discrete_update list * location_index
 
 
-(****************************************************************)
+(************************************************************)
 (** Definition of correctness property *)
-(****************************************************************)
+(************************************************************)
 (** predicates for bad definition *)
 
 type duration = LinearConstraint.p_linear_term
@@ -198,9 +187,9 @@ type correctness_condition = reachability_property option
 type projection = (parameter_index list) option
 
 
-(****************************************************************)
+(************************************************************)
 (** Nature of the tiles *)
-(****************************************************************)
+(************************************************************)
 type lu_status =
 	(* General PTA *)
 	| PTA_notLU
@@ -212,9 +201,9 @@ type lu_status =
 	| PTA_U
 
 
-(****************************************************************)
+(************************************************************)
 (** Nature of the tiles *)
-(****************************************************************)
+(************************************************************)
 (*** BADPROG : nothing to do with abstract model ! ***)
 type tile_nature =
 	| Good
@@ -224,9 +213,9 @@ type tile_nature =
 
 
 
-(****************************************************************)
+(************************************************************)
 (** The abstract model *)
-(****************************************************************)
+(************************************************************)
 type abstract_model = {
 	(** General information **)
 	(* Cardinality *)
@@ -303,7 +292,7 @@ type abstract_model = {
 	stopwatches : automaton_index -> location_index -> clock_index list;
 
 	(* Init : the initial state *)
-	initial_location : global_location;
+	initial_location : Location.global_location;
 	(* Init : the initial state *)
 	initial_constraint : LinearConstraint.px_linear_constraint;
 
@@ -321,9 +310,9 @@ type abstract_model = {
 
 
 
-(****************************************************************)
+(************************************************************)
 (** Result *)
-(****************************************************************)
+(************************************************************)
 
 (*** BADPROG: should NOT be here! but rather in Reachability or something like this ***)
 (** Constraint returned by the inverse method *)

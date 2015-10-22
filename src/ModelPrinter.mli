@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2009/12/02
- * Last modified: 2015/07/31
+ * Last modified: 2015/10/22
  *
  ****************************************************************)
 
@@ -22,7 +22,7 @@ val string_of_var_type : var_type -> string
 (** State *)
 (**************************************************)
 (* Convert a state into a string *)
-val string_of_state : abstract_model -> (Automaton.global_location * LinearConstraint.px_linear_constraint) -> string
+val string_of_state : abstract_model -> (Location.global_location * LinearConstraint.px_linear_constraint) -> string
 
 (**************************************************)
 (** Result *)

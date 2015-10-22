@@ -1,48 +1,54 @@
-(*****************************************************************
+(************************************************************
  *
- *                     IMITATOR
+ *                       IMITATOR
+ * 
+ * Laboratoire Spécification et Vérification (ENS Cachan & CNRS, France)
+ * LIPN, Université Paris 13, Sorbonne Paris Cité (France)
+ * 
+ * Module description: Description of the symbolic states and of the reachability graph
+ * 
+ * File contributors : Étienne André
+ * Created           : 2009/12/08
+ * Last modified     : 2015/10/22
  *
- * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
- * Author:        Etienne Andre
- * Created:       2009/12/08
- * Last modified: 2015/09/25
- *
- ****************************************************************)
+ ************************************************************)
 
 
+(************************************************************)
+(* Modules *)
+(************************************************************)
+open Automaton
 open AbstractModel
 
 
-(****************************************************************)
+(************************************************************)
 (** Reachable states *)
-(****************************************************************)
+(************************************************************)
 type state_index = int
 
-(** Unique identifier for each different global location *)
-type location_index = int
-
 (** State: location and constraint *)
-type state = Automaton.global_location * LinearConstraint.px_linear_constraint
+type state = Location.global_location * LinearConstraint.px_linear_constraint
 
-type abstract_state = location_index * LinearConstraint.px_linear_constraint
+type abstract_state = Location.global_location_index * LinearConstraint.px_linear_constraint
 
-(****************************************************************)
+
+(************************************************************)
 (** Graph structure *)
-(****************************************************************)
+(************************************************************)
 type reachability_graph
 
 
-(****************************************************************)
+(************************************************************)
 (** Graph creation *)
-(****************************************************************)
+(************************************************************)
 
 (** Create a fresh graph *)
 val make : int -> reachability_graph
 
 
-(****************************************************************)
+(************************************************************)
 (** Interrogation on a graph *)
-(****************************************************************)
+(************************************************************)
 
 (** Return the number of generated states (not necessarily present in the graph) *)
 val get_nb_gen_states : reachability_graph -> int
@@ -54,7 +60,7 @@ val nb_states : reachability_graph -> int
 val nb_transitions : reachability_graph -> int
 
 (** Return the global_location corresponding to a location_index *)
-val get_location : reachability_graph -> location_index -> Automaton.global_location
+val get_location : reachability_graph -> Location.global_location_index -> Location.global_location
 
 (** Return the state of a state_index *)
 val get_state : reachability_graph -> state_index -> state
@@ -96,9 +102,9 @@ val last_states: abstract_model -> reachability_graph -> state_index list
 (* val is_bad: abstract_model -> reachability_graph -> bool *)
 
 
-(****************************************************************)
+(************************************************************)
 (** Actions on a graph *)
-(****************************************************************)
+(************************************************************)
 
 (** Increment the number of generated states (even though not member of the graph) *)
 val increment_nb_gen_states : reachability_graph -> unit
@@ -133,18 +139,18 @@ val empty_states_for_comparison : reachability_graph -> unit
 val iterate_on_states : (state_index -> abstract_state -> unit) -> reachability_graph -> unit
 
 
-(****************************************************************)
+(************************************************************)
 (** Interrogation on one state *)
-(****************************************************************)
+(************************************************************)
 
 (*** NOTE: should NOT be defined in this module! But rather in some (yet to be created...) State.ml ***)
 
-val match_unreachable_global_locations : unreachable_global_location list -> Automaton.global_location -> bool
+val match_unreachable_global_locations : unreachable_global_location list -> Location.global_location -> bool
 
 
-(****************************************************************)
+(************************************************************)
 (** Debug and performances *)
-(****************************************************************)
+(************************************************************)
 (** Get statistics on number of comparisons *)
 val get_statistics : unit -> string
 

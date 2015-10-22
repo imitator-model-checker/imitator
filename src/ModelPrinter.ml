@@ -68,7 +68,7 @@ let string_of_synclabs model automaton_index =
 (* Convert the initially of an automaton into a string *)
 let string_of_initially model automaton_index =
 	let inital_global_location  = model.initial_location in
-	let initial_location = Automaton.get_location inital_global_location automaton_index in
+	let initial_location = Location.get_location inital_global_location automaton_index in
 	"initally: "
 	^ (model.location_names automaton_index initial_location)
 	^ ";"
@@ -307,7 +307,7 @@ let string_of_property model = function
 
 (* Convert a state into a string *)
 let string_of_state model (global_location, linear_constraint) =
-	"" ^ (Automaton.string_of_location model.automata_names model.location_names model.variable_names global_location) ^ " ==> \n&" ^ (LinearConstraint.string_of_px_linear_constraint model.variable_names linear_constraint) ^ "" 
+	"" ^ (Location.string_of_location model.automata_names model.location_names model.variable_names global_location) ^ " ==> \n&" ^ (LinearConstraint.string_of_px_linear_constraint model.variable_names linear_constraint) ^ "" 
 
 
 (************************************************************)

@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2012/08/24
- * Last modified: 2015/07/30
+ * Last modified: 2015/10/22
  *
  ************************************************************)
 
@@ -201,7 +201,7 @@ let string_of_locations model automaton_index =
 let string_of_automaton model automaton_index =
 	(* Finding the initial location *)
 	let inital_global_location  = model.initial_location in
-	let initial_location = Automaton.get_location inital_global_location automaton_index in
+	let initial_location = Location.get_location inital_global_location automaton_index in
 
 	"\n/**************************************************/"
 	^ "\n/* automaton " ^ (model.automata_names automaton_index) ^ " */"

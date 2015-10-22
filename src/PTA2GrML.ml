@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2011/11/22
- * Last modified: 2015/07/19
+ * Last modified: 2015/10/22
  *
  ************************************************************)
 
@@ -233,7 +233,7 @@ let string_of_transitions model automaton_index =
 (* Convert a location of an automaton into a string *)
 let string_of_location model automaton_index location_index =
 	let inital_global_location  = model.initial_location in
-	let initial_location = Automaton.get_location inital_global_location automaton_index in
+	let initial_location = Location.get_location inital_global_location automaton_index in
 	
 	(* ID *)
 	"\n\t<node id=\"" ^ (string_of_int location_index) ^ "\" nodeType=\"state\">"

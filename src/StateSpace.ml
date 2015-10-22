@@ -1,40 +1,47 @@
-(*****************************************************************
+(************************************************************
  *
- *                     IMITATOR
+ *                       IMITATOR
  * 
- * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
- * Author:        Etienne Andre, Ulrich Kuehne
- * Created:       2009/12/08
- * Last modified: 2015/09/25
+ * Laboratoire Spécification et Vérification (ENS Cachan & CNRS, France)
+ * LIPN, Université Paris 13, Sorbonne Paris Cité (France)
+ * 
+ * Module description: Description of the symbolic states and of the reachability graph
+ * 
+ * File contributors : Ulrich Kühne, Étienne André
+ * Created           : 2009/12/08
+ * Last modified     : 2015/10/22
  *
- ****************************************************************)
+ ************************************************************)
 
+
+
+(************************************************************)
+(* Modules *)
+(************************************************************)
 module Ppl = Ppl_ocaml
 open Ppl
 
 open Exceptions
 open CamlUtilities
 open ImitatorUtilities
+open Automaton
 open AbstractModel
 
 
-(****************************************************************)
+(************************************************************)
 (** Reachable states *)
-(****************************************************************)
+(************************************************************)
 type state_index = int
 
-(** Unique identifier for each different global location *)
-type location_index = int
-
 (** State: location and constraint *)
-type state = Automaton.global_location * LinearConstraint.px_linear_constraint
+type state = Location.global_location * LinearConstraint.px_linear_constraint
 
-type abstract_state = location_index * LinearConstraint.px_linear_constraint
+type abstract_state = Location.global_location_index * LinearConstraint.px_linear_constraint
 
 
-(****************************************************************)
+(************************************************************)
 (** Graph structure *)
-(****************************************************************)
+(************************************************************)
 type reachability_graph = {
 	(** The number of generated states (even not added to the graph) *)
 	nb_generated_states : int ref;
@@ -47,10 +54,10 @@ type reachability_graph = {
 	mutable initial : state_index option;
 	
 	(** A hashtable location -> location_index *)
-	index_of_locations : (Automaton.global_location, location_index) Hashtbl.t;
+	index_of_locations : (Location.global_location, location_index) Hashtbl.t;
 
 	(** A DynArray location_index -> location *)
-	locations : Automaton.global_location DynArray.t;
+	locations : Location.global_location DynArray.t;
 
 	(** A hashtable to quickly find states with identical locations (? ; made by Ulrich); only for states to be compared *)
 	states_for_comparison : (int, state_index) Hashtbl.t;
@@ -63,24 +70,24 @@ type reachability_graph = {
 }
 
 
-(****************************************************************)
+(************************************************************)
 (** Constant *)
-(****************************************************************)
+(************************************************************)
 (** Initial size of the array of states (will be updated automatically *)
 let initial_size = 100
 
 
-(****************************************************************)
+(************************************************************)
 (** Statistics *)
-(****************************************************************)
+(************************************************************)
 (*** TODO: move to a statistics class / object ***)
 let nb_state_comparisons = ref 0
 let nb_constraint_comparisons = ref 0
 
 
-(****************************************************************)
+(************************************************************)
 (** Graph creation *)
-(****************************************************************)
+(************************************************************)
 
 (** Create a fresh graph *)
 let make guessed_nb_transitions = 
@@ -108,9 +115,9 @@ let make guessed_nb_transitions =
 	}
 
 
-(****************************************************************)
+(************************************************************)
 (** Interrogation on a graph *)
-(****************************************************************)
+(************************************************************)
 
 (** Return the number of generated states (not necessarily present in the graph) *)
 let get_nb_gen_states graph =
@@ -286,15 +293,15 @@ let is_bad program graph =
 	if bad_states = [] then false else (
 		let is_bad_state = fun (location, _) -> 
 			List.for_all (fun (aut_index, loc_index) -> 
-				loc_index = Automaton.get_location location aut_index
+				loc_index = Location.get_location location aut_index
 			) bad_states in
 		exists_state is_bad_state graph
 	) *)
 
 
-(****************************************************************)
+(************************************************************)
 (** Actions on a graph *)
-(****************************************************************)
+(************************************************************)
 exception Found of state_index
 
 (** Increment the number of generated states (even though not member of the graph) *)
@@ -304,14 +311,14 @@ let increment_nb_gen_states graph =
 
 (** compute a hash code for a state, depending only on the location *)
 let hash_code (location, _) =
-	Automaton.hash_code location
+	Location.hash_code location
 
 
 (** Check if two states are equal *)
 let states_equal state1 state2 =
 	let (loc1, constr1) = state1 in
 	let (loc2, constr2) = state2 in
-	if not (Automaton.location_equal loc1 loc2) then false else (
+	if not (Location.location_equal loc1 loc2) then false else (
 		(* Statistics *)
 		print_message Verbose_high ("About to compare equality between two constraints.");
 		nb_constraint_comparisons := !nb_constraint_comparisons + 1;
@@ -323,7 +330,7 @@ let states_equal state1 state2 =
 let states_equal_dyn state1 state2 constr =
 	let (loc1, constr1) = state1 in
 	let (loc2, constr2) = state2 in
-	if not (Automaton.location_equal loc1 loc2) then false else (
+	if not (Location.location_equal loc1 loc2) then false else (
 		(* Statistics *)
 		print_message Verbose_high ("About to compare (dynamic) equality between two constraints.");
 		nb_constraint_comparisons := !nb_constraint_comparisons + 1;
@@ -340,7 +347,7 @@ let states_equal_dyn state1 state2 constr =
 let state_included state1 state2 =
 	let (loc1, constr1) = state1 in
 	let (loc2, constr2) = state2 in
-	if not (Automaton.location_equal loc1 loc2) then false else (
+	if not (Location.location_equal loc1 loc2) then false else (
 		(* Statistics *)
 		print_message Verbose_high ("About to compare inclusion between two constraints.");
 		nb_constraint_comparisons := !nb_constraint_comparisons + 1;
@@ -685,7 +692,7 @@ let get_siblings graph si =
 	List.fold_left (fun siblings sj ->
 		if sj = si then siblings else begin 
 			let l', c' = get_state graph sj in
-			if (Automaton.location_equal l l') then
+			if (Location.location_equal l l') then
 				(sj, (l',c')) :: siblings
 			else
 				siblings
@@ -772,9 +779,9 @@ let empty_states_for_comparison graph =
 	Hashtbl.clear graph.states_for_comparison
 
 
-(****************************************************************)
+(************************************************************)
 (** Interrogation on one state *)
-(****************************************************************)
+(************************************************************)
 
 (*** NOTE: should NOT be defined in this module! But rather in some (yet to be created...) State.ml ***)
 
@@ -827,7 +834,7 @@ let match_unreachable_global_locations unreachable_global_locations location =
 		(
 		List.for_all (fun (unreachable_automaton_index , unreachable_location_index) ->
 			(* Retrieve current location of unreachable_automaton_index *)
-			let current_location_index = Automaton.get_location location unreachable_automaton_index in
+			let current_location_index = Location.get_location location unreachable_automaton_index in
 			if verbose_mode_greater Verbose_high then(
 				print_message Verbose_high ("Checking whether loc[" ^ (model.automata_names unreachable_automaton_index) ^ "] = " ^ (model.location_names unreachable_automaton_index unreachable_location_index) ^ " is satisfied when loc[" ^ (model.automata_names unreachable_automaton_index) ^ "] = " ^ (model.location_names unreachable_automaton_index current_location_index) ^ " ");
 			);
@@ -842,7 +849,7 @@ let match_unreachable_global_locations unreachable_global_locations location =
 			(* Get the discrete index *)
 			let discrete_index = get_discrete_index_from_discrete_constraint discrete_constraint in
 			(* Retrieve current discrete value *)
-			let current_discrete_value = Automaton.get_discrete_value location discrete_index in
+			let current_discrete_value = Location.get_discrete_value location discrete_index in
 			(* Check matching *)
 			match_discrete_constraint current_discrete_value discrete_constraint
 		) unreachable_global_location.discrete_constraints)
@@ -850,9 +857,9 @@ let match_unreachable_global_locations unreachable_global_locations location =
 
 
 
-(****************************************************************)
+(************************************************************)
 (** Statistics *)
-(****************************************************************)
+(************************************************************)
 
 
 (** Get statistics on the number of comparisons between states *)
