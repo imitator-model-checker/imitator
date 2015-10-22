@@ -18,6 +18,7 @@ Graphics
 
 Internal
 - "examples" directory becomes "benchmarks"
+- Automaton becomes Location (and new module Automaton created)
 
 
 *******************************************************
