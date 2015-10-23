@@ -22,7 +22,7 @@ tests = [
 	{
 		'purpose'    : 'Test the state space',
 		'input_files': ['flipflop.imi'],
-		'options'    : '-mode statespace',
+		'options'    : '-mode statespace -output-states',
 		'expectations' : [
 			{'file': 'flipflop.states' , 'content' : """second
 ************************************************************/
