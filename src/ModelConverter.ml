@@ -10,7 +10,7 @@
  * Author:        Etienne Andre
  * 
  * Created:       2009/09/09
- * Last modified: 2015/10/22
+ * Last modified: 2015/10/23
  *
  ************************************************************)
 
@@ -2595,11 +2595,9 @@ let abstract_model_of_parsing_structure (parsed_variable_declarations, parsed_au
 			) (locations_per_automaton automaton_index);
 		) automata;	);
 	
-	(* Debut print: Pi0 *)
+	(* Debut print: Pi0 / V0 *)
 	if verbose_mode_greater Verbose_medium then(
 		match options#imitator_mode with
-		| Translation -> ()
-		| State_space_exploration -> ()
 		| Inverse_method -> 
 			print_message Verbose_medium ("\n*** Reference valuation pi0:");
 			List.iter (fun parameter ->
@@ -2607,7 +2605,8 @@ let abstract_model_of_parsing_structure (parsed_variable_declarations, parsed_au
 					variables.(parameter) ^ " : " ^ (NumConst.string_of_numconst (pi0#get_value parameter))
 				)
 			) parameters;
-		| _ -> 
+			
+		| Cover_cartography | Border_cartography | Random_cartography _ -> 
 			print_message Verbose_medium ("\n*** Reference rectangle V0:");
 			for parameter_index = 0 to nb_parameters - 1 do
 				let min = v0#get_min parameter_index in
@@ -2616,6 +2615,9 @@ let abstract_model_of_parsing_structure (parsed_variable_declarations, parsed_au
 					variables.(parameter_index) ^ " : [" ^ (NumConst.string_of_numconst min) ^ ", " ^ (NumConst.string_of_numconst max) ^ "]"
 				);
 			done;
+		
+		(* If not IM and not BC: no print *)
+		| _ -> ()
 	);
 	
 	(* Debug print: L/U *)
