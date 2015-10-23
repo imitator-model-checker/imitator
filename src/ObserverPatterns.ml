@@ -10,7 +10,7 @@
  * Author:        Etienne Andre
  * 
  * Created:       2013/02/04
- * Last modified: 2015/07/31
+ * Last modified: 2015/10/23
  *
  ****************************************************************)
 
@@ -22,7 +22,6 @@ open Exceptions
 open CamlUtilities
 open ImitatorUtilities
 open AbstractModel
-(* open LinearConstraint *)
 
 
 (****************************************************************)
@@ -45,22 +44,14 @@ let truec = LinearConstraint.pxd_true_constraint
 (****************************************************************)
 let untimedt destination_index = [truec (), No_update, [], destination_index]
 
-(* Constraint x <= d, with d LinearConstraint.p_linear_term : d - x >= 0 *)
+(* Constraint x <= d, with 'd' a LinearConstraint.p_linear_term : d - x >= 0 *)
 let ct_x_leq_d x d =
-	LinearConstraint.pxd_linear_constraint_of_clock_and_parameters x LinearConstraint.Op_ge d false
-(*	(* Build the linear term *)
-	let lt = LinearConstraint.add_linear_terms d (LinearConstraint.make_linear_term [NumConst.minus_one, x] NumConst.zero) in
-	(* Build constraint *)
-	LinearConstraint.make [LinearConstraint.make_linear_inequality lt LinearConstraint.Op_ge]*)
-
-
-(* Constraint x >= d, with d LinearConstraint.p_linear_term : x - d >= 0 *)
-let ct_x_geq_d x d =
 	LinearConstraint.pxd_linear_constraint_of_clock_and_parameters x LinearConstraint.Op_ge d true
-(*	(* Build the linear term *)
-	let lt = LinearConstraint.sub_linear_terms (LinearConstraint.make_linear_term [NumConst.one, x] NumConst.zero) d in
-	(* Build constraint *)
-	LinearConstraint.make [LinearConstraint.make_linear_inequality lt LinearConstraint.Op_ge]*)
+
+
+(* Constraint x >= d, with 'd' a LinearConstraint.p_linear_term : x - d >= 0 *)
+let ct_x_geq_d x d =
+	LinearConstraint.pxd_linear_constraint_of_clock_and_parameters x LinearConstraint.Op_ge d false
 
 
 (*(* Linear inequality x = d, with d LinearConstraint.p_linear_term : d - x = 0 *)
@@ -73,19 +64,13 @@ let lt_x_eq_d x d =
 
 (* Constraint x = d, with d LinearConstraint.p_linear_term : d - x = 0 *)
 let ct_x_eq_d x d =
-	LinearConstraint.pxd_linear_constraint_of_clock_and_parameters x LinearConstraint.Op_eq d true
-	(* Build constraint *)
-(* 	LinearConstraint.make [lt_x_eq_d x d] *)
+	LinearConstraint.pxd_linear_constraint_of_clock_and_parameters x LinearConstraint.Op_eq d false
 
 
 (* Linear constraint x = 0 *)
 let lc_x_eq_0 x =
 	let d = LinearConstraint.make_p_linear_term [] NumConst.zero in
-	LinearConstraint.px_linear_constraint_of_clock_and_parameters x LinearConstraint.Op_ge d true
-(*	(* Build the linear term *)
-	let lt = (LinearConstraint.make_linear_term [NumConst.minus_one, x] NumConst.zero) in
-	(* Build linear constraint *)
-	LinearConstraint.make [LinearConstraint.make_linear_inequality lt LinearConstraint.Op_eq]*)
+	LinearConstraint.px_linear_constraint_of_clock_and_parameters x LinearConstraint.Op_ge d false
 
 
 
@@ -549,5 +534,4 @@ let get_automaton nb_actions automaton_index nosync_index x_obs property =
 	
 	
 (* 	| _ -> raise (InternalError("Not implemented")) *)
-
 

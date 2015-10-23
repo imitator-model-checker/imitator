@@ -185,7 +185,7 @@ val p_true_constraint : unit -> p_linear_constraint
 val px_true_constraint : unit -> px_linear_constraint
 val pxd_true_constraint : unit -> pxd_linear_constraint
 
-(** "pxd_linear_constraint_of_clock_and_parameters x ~ d neg" will create a linear_constraint x ~ d, with x a clock, d a p_linear_term, and "neg" indicates whether x and d should be kept in this direction or reversed (viz., "x < p1 true" generates "x < p1" whereas "x <= p1+p2 false" generates "p1+p2 <= x" *)
+(** "pxd_linear_constraint_of_clock_and_parameters x ~ d neg" will create a linear_constraint x ~ d, with x a clock, d a p_linear_term, and "neg" indicates whether x and d should be kept in this direction or reversed (viz., "x < p1 true" generates "x < p1" whereas "x <= p1+p2 false" generates "x >= p1+p2" *)
 val px_linear_constraint_of_clock_and_parameters : variable -> op -> p_linear_term -> bool -> px_linear_constraint
 val pxd_linear_constraint_of_clock_and_parameters : variable -> op -> p_linear_term -> bool -> pxd_linear_constraint
 

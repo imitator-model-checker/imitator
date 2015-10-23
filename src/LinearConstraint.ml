@@ -806,7 +806,7 @@ let p_constraint_of_point (thepoint : (variable * coef) list) =
 
 
 
-(** "linear_constraint_of_clock_and_parameters x ~ d neg" will create a linear_constraint x ~ d, with "x" a clock, "~" in {>, >=, =}, "d" a PConstraint.linear_term, and "neg" indicates whether x and d should be kept in this direction or reversed (viz., "x > p1 true" generates "x > p1" whereas "x >= p1+p2 false" generates "p1+p2 >= x" *)
+(** "linear_constraint_of_clock_and_parameters x ~ d neg" will create a linear_constraint x ~ d, with "x" a clock, "~" in {>, >=, =}, "d" a PConstraint.linear_term, and "neg" indicates whether x and d should be kept in this direction or reversed (e.g., "x > p1 true" generates "x > p1" whereas "x >= p1+p2 false" generates "p1+p2 >= x" *)
 let linear_constraint_of_clock_and_parameters (x : variable) (op : op) (d : linear_term) (direction : bool) =
 	(* Create a linear term made of x *)
 	let lt_x = make_linear_term [NumConst.one, x] NumConst.zero in
