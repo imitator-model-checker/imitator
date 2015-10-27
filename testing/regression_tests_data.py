@@ -9,7 +9,7 @@
 # Laboratoire d'Informatique de Paris Nord
 # Universite Paris 13, Sorbonne Paris Cite, France
 # Created      : 2015/10/23
-# Last modified: 2015/10/23
+# Last modified: 2015/10/27
 #************************************************************
 
 
@@ -388,9 +388,224 @@ tests = [
   s_1 -> s_2 via "qG1Down"
   s_12 -> s_16 via "qUp"
 			"""
-			}
-		]
-	}
+			} #end statespace file
+		] # end expectations
+	} # end test case
 	,
 	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test the inverse method',
+		'input_files': ['flipflop.imi', 'flipflop.pi0'],
+		'options'    : '-output-result',
+		'expectations' : [
+			{'file': 'flipflop.res' , 'content' : """*)
+
+ dG3_u + dG4_u >= 17
+& 17 > dG3_u
+& 24 > dG3_u + dG4_u
+& dG3_u >= 8
+& dG4_u >= 3
+			"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	,
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test EF with basic unreachability',
+		'input_files': ['F3.imi'],
+		'options'    : '-mode EF -merge -incl -output-result',
+		'expectations' : [
+			{'file': 'F3.res' , 'content' : """*)
+ Delta > delta
+& delta >= 0
+ OR 
+ Delta > 2*delta
+& delta >= 0"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+	,
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test EF with complex unreachability property',
+		'input_files': ['coffeeDrinker-TACAS.imi'],
+		'options'    : '-mode EF -merge -output-result',
+		'expectations' : [
+			{'file': 'coffeeDrinker-TACAS.res' , 'content' : """*)
+
+ p_add_sugar + p_coffee >= 15
+& p_button > 0
+& 15 >= p_add_sugar
+& p_coffee > 0
+& p_add_sugar >= 3*p_button
+ OR 
+ p_add_sugar + p_coffee >= 15
+& p_button >= 5
+& 15 >= p_add_sugar
+& p_coffee > 0
+& p_add_sugar >= 2*p_button
+ OR 
+ 3*p_button >= p_add_sugar + p_coffee
+& p_coffee > 0
+& 15 >= p_add_sugar + p_coffee
+& p_add_sugar >= 2*p_button
+ OR 
+ p_add_sugar >= 15
+& 5 >= p_button
+& p_button > 0
+& p_coffee > 0
+ OR 
+ p_add_sugar >= 15
+& 15 >= 2*p_button
+& p_button >= 5
+& p_coffee > 0
+ OR 
+ p_add_sugar + p_coffee >= 15
+& 2*p_button >= 15
+& 15 >= p_add_sugar
+& p_coffee > 0
+& p_add_sugar >= p_button
+ OR 
+ 2*p_button >= p_add_sugar + p_coffee
+& p_coffee > 0
+& 15 >= p_add_sugar + p_coffee
+& p_add_sugar >= p_button
+ OR 
+ p_add_sugar + p_coffee >= 15
+& p_button >= 15
+& 15 >= p_add_sugar
+& p_coffee > 0
+& p_add_sugar > 0
+ OR 
+ p_button >= p_add_sugar + p_coffee
+& p_coffee > 0
+& 15 >= p_add_sugar + p_coffee
+& p_add_sugar > 0
+ OR 
+ p_add_sugar >= 15
+& 15 >= p_button
+& 2*p_button >= 15
+& p_coffee > 0
+ OR 
+ p_add_sugar >= 15
+& p_button >= 15
+& p_coffee > 0"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+	,
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test BC in mode cover + graphical output',
+		'input_files': ['flipflop.imi', 'flipflop.v0'],
+		'options'    : '-mode cover -output-result -output-cart -output-graphics-source',
+		'expectations' : [
+			{'file': 'flipflop_cart.res' , 'content' : """*)
+
+
+ (***** Constraint 1*****)
+ 17 > dG3_u + dG4_u
+& dG3_u >= 8
+& dG4_u >= 3
+
+
+ (***** Constraint 2*****)
+ dG3_u + dG4_u >= 17
+& 17 > dG3_u
+& 24 > dG3_u + dG4_u
+& dG3_u >= 8
+& dG4_u >= 3
+
+
+ (***** Constraint 3*****)
+ 24 > dG3_u + dG4_u
+& dG3_u >= 17
+& dG4_u >= 3
+
+
+ (***** Constraint 4*****)
+ 7 > dG4_u
+& 24 > dG3_u
+& dG3_u + dG4_u >= 24
+& dG4_u >= 3
+
+
+ (***** Constraint 5*****)
+ 7 > dG4_u
+& dG3_u >= 24
+& dG4_u >= 3
+
+
+ (***** Constraint 6*****)
+ 24 > dG3_u
+& dG4_u >= 7
+& dG3_u >= 17
+
+
+ (***** Constraint 7*****)
+ dG4_u >= 7
+& dG3_u >= 24
+
+
+ (***** Constraint 8*****)
+ 17 > dG3_u
+& dG3_u >= 8
+& dG3_u + dG4_u >= 24
+
+
+"""
+			} # end BC file
+			, 
+			{'file': 'flipflop_cart_bc_points_2.txt' , 'content' : """14. 3.
+8. 9.
+8. 16.
+17. 7.
+17. 3.
+14. 3.
+# """
+			} # end tile file
+			,
+			{'file': 'flipflop_cart_bc_points_8.txt' , 'content' : """17. 31.
+17. 7.
+8. 16.
+8. 31.
+17. 31.
+# """
+			} # end tile file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+	,
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test EF with observer + depth-limit + project-result (quite basic)',
+		'input_files': ['coffeeDrinker-TACAS-within.imi'],
+		'options'    : '-mode EF -merge -output-result -depth-limit 10',
+		'expectations' : [
+			{'file': 'coffeeDrinker-TACAS-within.res' , 'content' : """*)
+ p_coffee > 0
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+	#,
+	##------------------------------------------------------------
+	#{
+		#'purpose'    : 'XXXX',
+		#'input_files': ['XXXX.imi', 'XXXX.pi0'],
+		#'options'    : '-XXXX',
+		#'expectations' : [
+			#{'file': 'XXXX' , 'content' : """XXXX"""
+			#} # end result file
+			#,
+		#] # end expectations
+	#} # end test case
+	##------------------------------------------------------------
 ]
+

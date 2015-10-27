@@ -1,0 +1,147 @@
+(************************************************************
+ *                      IMITATOR MODEL                      
+ *
+ * Coffee vending machine with drinker. Version for an IMITATOR tool paper.
+ *
+ * Description     : Coffee vending machine; a single button is used to wake the machine up, and to add sugar. Then a cup, and coffee are delivered after a (parametric) time.
+	Drinker: [ongoing work]
+ * Correctness     : Many possibilities (e.g., "it is possible to get a coffee")
+ * Source          : Own work
+ * Author          : Etienne Andre
+ * Input by        : Etienne Andre
+ *
+ * Created         : 2011/01/21
+ * Fork from       : coffeeDrinker.imi
+ * Fork date       : 2015/10/14
+ * Last modified   : 2015/10/17
+ *
+ * IMITATOR version: 2.7.2
+ ************************************************************)
+
+var
+
+(* Clocks *)
+ 	x, y1, y2
+		: clock;
+
+(* Parameters *)
+	(* time during which one can add sugar *)
+	p_add_sugar,
+	(* time needed to prepare the coffee from the first button pressure *)
+	p_coffee,
+
+	(* interval of time between 2 consecutive pressures by the user *)
+ 	p_button,
+	(* interval of work without need for coffee *)
+	p_work_min = 3600, p_work_max = 7200,
+	(* time after which the drinker gets mad *)
+	p_patience_max = 15
+		: parameter;
+
+(* Discrete variables *)
+	nb_sugar
+		: discrete;
+
+(* Constants *)
+	MAX_SUGAR = 3
+		: constant;
+
+
+(************************************************************)
+  automaton machine
+(************************************************************)
+synclabs: press, cup, coffee, sleep;
+
+loc idle: while True wait {}
+	when True sync press do {x' = 0} goto add_sugar;
+
+loc add_sugar: while x <= p_add_sugar wait {}
+(* 	when x1 < p_button sync press goto add_sugar; *)
+	when True sync press goto add_sugar;
+	when x = p_add_sugar sync cup do {x' = 0} goto preparing_coffee;
+
+loc preparing_coffee: while x <= p_coffee wait {}
+(* 	when x2 = p_coffee sync coffee goto idle; *)
+(* 	when True sync press goto preparing_coffee; *)
+	when x = p_coffee sync coffee do {x' = 0} goto cdone;
+
+loc cdone: while x <= 10 wait {}
+	when True sync press do {x' = 0} goto add_sugar;
+	when x = 10 sync sleep goto idle;
+
+end (* machine *)
+
+
+(************************************************************)
+  automaton researcher
+(************************************************************)
+synclabs: press, coffee;
+
+loc researching: while y1 <= p_work_max wait {}
+	when y1 >= p_work_min sync press do {y1' = 0, y2' = 0, nb_sugar' = 0} goto add_sugar;
+
+loc add_sugar: while y2 <= p_patience_max & y1 <= p_button & nb_sugar <= MAX_SUGAR - 1 wait {}
+	when y1 = p_button & nb_sugar < MAX_SUGAR - 1 sync press do {y1' = 0, nb_sugar' = nb_sugar + 1} goto add_sugar;
+	when y1 = p_button & nb_sugar = MAX_SUGAR - 1 sync press do {nb_sugar' = nb_sugar + 1} goto wait_coffee;
+	when y2 = p_patience_max goto mad;
+	when True sync coffee goto mad;
+
+loc wait_coffee: while y2 <= p_patience_max wait {}
+	when y2 < p_patience_max sync coffee do {y1' = 0, y2' = 0} goto researching;
+	when y2 = p_patience_max goto mad;
+
+loc mad: while True wait {}
+
+end (* researcher *)
+
+
+(************************************************************)
+(* Initial state *)
+(************************************************************)
+
+init :=
+	(*------------------------------------------------------------
+	   INITIAL LOCATION
+	  ------------------------------------------------------------*)
+	& loc[machine]		= idle
+	& loc[researcher]	= researching
+
+	(*------------------------------------------------------------
+	   INITIAL CLOCKS
+	  ------------------------------------------------------------*)
+	& x = 0
+	& y1 >= 0 & y1 <= p_work_max (* working since some time *)
+	& y2 >= 0 (* arbitrary *)
+
+	(*------------------------------------------------------------
+	   INITIAL DISCRETE
+	  ------------------------------------------------------------*)
+	& nb_sugar = 0
+	
+	(*------------------------------------------------------------
+	   PARAMETER CONSTRAINTS
+	  ------------------------------------------------------------*)
+	& p_button > 0
+	& p_add_sugar > 0
+	& p_coffee > 0
+(* 	& p_press >= 0 *)
+	& p_work_min >= 0
+	& p_work_min <= p_work_max
+	& p_patience_max >= 0
+;
+
+
+(************************************************************)
+(* Property specification *)
+(************************************************************)
+
+(* property := unreachable loc[researcher] = mad; *)
+(* property := unreachable loc[researcher] = mad or loc[machine] = cdone & nb_sugar < 3; *)
+property := if press then eventually coffee within 20;
+projectresult(p_coffee);
+
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end

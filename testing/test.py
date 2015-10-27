@@ -6,11 +6,11 @@
 # 
 # LIPN, Université Paris 13, Sorbonne Paris Cité (France)
 # 
-# Script description: Script for regression tests
+# Script description: TESTATOR (script for regression tests)
 # 
 # File contributors : Étienne André
 # Created           : 2012/05/??
-# Last modified     : 2015/10/23
+# Last modified     : 2015/10/27
 #************************************************************
 
 
@@ -21,6 +21,9 @@ import time
 import datetime
 import os
 import sys
+import subprocess
+#from subprocess import Popen, PIPE
+
 
 
 #************************************************************
@@ -35,7 +38,16 @@ EXAMPLE_PATH = IMITATOR_PATH + 'testing/testcases/'
 BINARY_PATH = IMITATOR_PATH + 'bin/'
 # Name for the binary to test
 BINARY_NAME = 'imitator'
+# Log file
+LOGFILE = IMITATOR_PATH + 'testing/tests.log'
 
+
+#************************************************************
+# BY DEFAULT: ALL TO LOG FILE
+#************************************************************
+orig_stdout = sys.stdout
+logfile = file(LOGFILE, 'w')
+sys.stdout = logfile
 
 
 #************************************************************
@@ -48,15 +60,37 @@ def make_file(file_name) :
 	return EXAMPLE_PATH + file_name
 
 def fail_with(text) :
-	print 'Fatal error!'
-	print text
+	print_to_log('Fatal error!')
+	print_to_log(text)
 	sys.exit(0)
 
 def print_warning(text) :
-	print ' *** Warning: ' + text
+	print_to_log(' *** Warning: ' + text)
 
 def print_error(text) :
-	print ' *** Error: ' + text
+	print_to_log(' *** Error: ' + text)
+
+
+# Print text to log file
+def print_to_log(content):
+	print content
+
+def print_to_screen(content):
+	# Revert stdout
+	sys.stdout = orig_stdout
+	# Print
+	print content
+	# Put back stdout to log file
+	sys.stdout = logfile
+
+# Print text both to log file and to screen
+# NOTE: can probably do better...
+def print_to_screen_and_log(content):
+	# Print to log
+	print_to_log(content)
+	# Also print to screen
+	print_to_screen(content)
+
 
 
 #************************************************************
@@ -71,16 +105,14 @@ tests = regression_tests_data.tests
 #************************************************************
 
 #print '*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-'
-print '############################################################'
-print ' IMITATOR TESTER'
-print ' v0.1'
-print ''
-print ' Étienne André'
-print ' LIPN, Université Paris 13, Sorbonne Paris Cité (France)'
-print '############################################################'
-print 'Starting testing...'
+print_to_screen_and_log('############################################################')
+print_to_screen_and_log(' TESTATOR                                              v0.1')
+print_to_screen_and_log('')
+print_to_screen_and_log(' Étienne André')
+print_to_screen_and_log(' LIPN, Université Paris 13, Sorbonne Paris Cité (France)')
+print_to_screen_and_log('############################################################')
 now = datetime.datetime.now()
-print now.strftime("%A %d. %B %Y %H:%M:%S %z")
+print_to_screen_and_log(now.strftime("%A %d. %B %Y %H:%M:%S %z"))
 
 
 #************************************************************
@@ -95,32 +127,50 @@ if not os.path.exists(file) :
 #************************************************************
 # TEST CASES
 #************************************************************
-test_id = 1
-# TODO => should not print but save to log..
+# Id for benchmarks
+benchmark_id = 1
+# Number of passed benchmarks
+passed_benchmarks = 0
+
+# Id for test case
+test_case_id = 1
+# Number of passed test cases
+passed_test_cases = 0
+
 for test_case in tests:
+	# Initially everything is ok
+	passed = True
+
+	# TODO: remove all expected output files! (otherwise if there is a problem, the test will pass)
+	
 	# Print something
-	print ''
-	print '************************************************************'
-	print ' TEST CASE ' + str(test_id)
-	print ' purpose : ' + test_case['purpose']
-	print ''
+	print_to_log('')
+	print_to_log('************************************************************')
+	print_to_log(' TEST CASE ' + str(benchmark_id))
+	print_to_log(' purpose : ' + test_case['purpose'])
+	print_to_log('')
 
 	# Initialize the string for the proper call
-	cmd = make_binary()
+	#cmd_binary = make_binary()
 	
-	# Add all input files to the command
+	# Add the path to all input files
+	cmd_inputs = []
 	for each_file in test_case['input_files']:
-		cmd += ' ' + make_file(each_file)
+		cmd_inputs += [make_file(each_file)]
 		# TODO: test for existence of files (just in case)
 	
-	# Add options
-	cmd += ' ' + test_case['options']
-
-	# Print something
-	print ' command : ' + cmd
+	# Prepare the command (using a list form)
+	cmd = [make_binary()] + cmd_inputs + (test_case['options']).split()
+	## Add options
+	#cmd_options = test_case['options']
+	
+	# Print the command
+	print_to_log(' command : ' + ' '.join(cmd))
 
 	# Launch!
-	os.system(cmd) # returns the exit status
+	#os.system(cmd)
+	# BUG here: the output is printed AT THE TOP OF logfile, instead of at the right location... anyway I will try to fix that later (FIXME)
+	subprocess.call(cmd, stdout=logfile, stderr=logfile)
 	
 	# Check the expectations
 	expectation_id = 1
@@ -128,11 +178,12 @@ for test_case in tests:
 		# Build file
 		output_file = make_file(expectation['file'])
 		
-		test_expectation_id = str(test_id) + '.' + str(expectation_id)
+		test_expectation_id = str(benchmark_id) + '.' + str(expectation_id)
 		
 		# Check existence of the output file
 		if not os.path.exists(output_file):
-			print ' File ' + output_file + ' does not exist! Test ' + test_expectation_id + ' failed.'
+			print_to_log(' File ' + output_file + ' does not exist! Test ' + test_expectation_id + ' failed.')
+			passed = False
 		else:
 			# Read file
 			with open (output_file, "r") as myfile:
@@ -140,30 +191,63 @@ for test_case in tests:
 				content = myfile.read()
 				# Replace all whitespace characters (space, tab, newline, and so on) with a single space
 				content = ' '.join(content.split())
-				print "\n\n\n" + content + "\n\n\n"
 				
 				# Replace all whitespace characters (space, tab, newline, and so on) with a single space
 				expected_content = ' '.join(expectation['content'].split())
-				print "\n\n\n" + expected_content + "\n\n\n"
 				
 				# Look for the expected content
 				position = content.find(expected_content)
 				
 				if position >= 0:
-					print 'Test ' + test_expectation_id + ' passed.'
+					print_to_log(' Test ' + test_expectation_id + ' passed.')
+					passed_test_cases += 1
 				else:
-					print 'Test ' + test_expectation_id + ' failed.'
-		
-		# Increment the expectation id
-		expectation_id = expectation_id + 1
+					passed = False
+					print_to_log(' Test ' + test_expectation_id + ' failed!')
+					print_to_log("\n" + '*** Expected content for this test:')
+					print_to_log("\n" + expected_content + "\n\n")
+					print_to_log('*** Content found:')
+					print_to_log("\n" + content + "\n\n")
+			# Close file
+			#close (myfile)
+			# Delete file
+			os.remove(output_file)
 
-	# Increment the test id
-	test_id = test_id + 1
+		# Increment the expectation id
+		expectation_id += 1
+		
+		# One more test case
+		test_case_id += 1
+		
+	# If all test cases passed, increment the number of passed benchmarks
+	if passed:
+		passed_benchmarks += 1
+
+	# Increment the benchmark id
+	benchmark_id += 1
 
 
 #************************************************************
 # THE END
 #************************************************************
+print_to_log('')
+print_to_log('************************************************************')
 
-print ''
-print '...The end of IMITATOR TESTER!'
+# NOTE: ugly...
+total_benchmarks = benchmark_id - 1
+total_test_cases = test_case_id - 1
+
+if total_benchmarks == passed_benchmarks and total_test_cases == passed_test_cases:
+	print_to_screen_and_log('All benchmarks (' + str(passed_benchmarks) + '/' + str(total_benchmarks) + ') passed successfully.')
+	print_to_screen_and_log('All tests cases (' + str(passed_test_cases) + '/' + str(total_test_cases) + ') passed successfully.')
+else:
+	print_to_screen_and_log('WARNING! Some tests failed.')
+	print_to_screen_and_log('' + str(passed_benchmarks) + '/' + str(total_benchmarks) + ' benchmarks passed successfully.')
+	print_to_screen_and_log('' + str(total_benchmarks - passed_benchmarks) + '/' + str(total_benchmarks) + ' benchmarks failed.')
+	print_to_screen_and_log('' + str(passed_test_cases) + '/' + str(total_test_cases) + ' test cases passed successfully.')
+	print_to_screen_and_log('' + str(total_test_cases - passed_test_cases) + '/' + str(total_test_cases) + ' test cases failed.')
+
+print_to_screen('(See ' + LOGFILE + ' for details.)')
+
+print_to_log('')
+print_to_screen_and_log('...The end of TESTATOR!')
