@@ -10,7 +10,7 @@
  * Author:        Ulrich Kuehne, Etienne Andre
  * 
  * Created:       2010/07/22
- * Last modified: 2015/10/22
+ * Last modified: 2015/10/28
  *
  ****************************************************************)
 
@@ -2415,6 +2415,27 @@ let print_warnings_limit depth nb_states time nb_states_to_visit =
 	end
 
 
+(*---------------------------------------------------*)
+(* Generic data structure for exploration *)
+(*---------------------------------------------------*)
+
+(*** TODO: move somewhere else ***)
+type poststar_result = {
+	(* Reachability graph *)
+	reachability_graph	: StateSpace.reachability_graph;
+	(* State space depth *)
+	(*** NOTE: does not work for branch and bound... ***)
+	depth				: int;
+	(* Computation time *)
+	total_time			: float;
+	(* Premature stop? (i.e., states / depth / time limit reached) *)
+	premature_stop		: bool;
+	(* Number of random selections *)
+	(*** TODO: remove that, as it is specific to IM... ***)
+	nb_random_selections: int;
+	(* Unexplored states indices in case of early termination *)
+	unexplored_states	: state_index list;
+}
 
 (*---------------------------------------------------*)
 (* EXPERIMENTAL BRANCH AND BOUND FUNCTION *)
@@ -2595,8 +2616,24 @@ let branch_and_bound model init_state =
 		^ " with "
 		^ (string_of_int nb_transitions) ^ " transition" ^ (s_of_int nb_transitions) ^ ".");
 
-	(* Return the graph, the iteration and the counter *)
-	reachability_graph , 0 (** TODO: check depth *) , (time_from start_time) , !premature_stop, !nb_random_selections
+	(*------------------------------------------------------------*)
+	(* Return result *)
+	(*------------------------------------------------------------*)
+	{
+		(* Reachability graph *)
+		reachability_graph	= reachability_graph;
+		(* State space depth *)
+		depth				= 0 (*** TODO: check depth ! ***);
+		(* Computation time *)
+		total_time			= (time_from start_time);
+		(* Premature stop? (i.e., states / depth / time limit reached) *)
+		premature_stop		= !premature_stop;
+		(* Number of random selections *)
+		(*** TODO: remove that, as it is specific to IM... ***)
+		nb_random_selections = !nb_random_selections;
+		(* Unexplored states indices in case of early termination *)
+		unexplored_states	= []; (*** TODO !!! ***)
+	}
 
 
 
@@ -2761,7 +2798,7 @@ let post_star model init_state =
 		limit_reached := !limit_reached || (check_limit !nb_iterations (StateSpace.nb_states reachability_graph) (time_from start_time));
 	done;
 	
-	(* Flat to detect premature stop in case of limit reached *)
+	(* Flag to detect premature stop in case of limit reached *)
 	let premature_stop = ref false in
 	
 	(* There were still states to explore *)
@@ -2777,15 +2814,29 @@ let post_star model init_state =
 		let nb_transitions = StateSpace.nb_transitions reachability_graph in
 		"\nFixpoint reached after "
 		^ (string_of_int !nb_iterations) ^ " iteration" ^ (s_of_int !nb_iterations) ^ ""
-(* 		^ " in " ^ (string_of_seconds (time_from !counter)) *)
 		^ ": "
 		^ (string_of_int nb_states) ^ " state" ^ (s_of_int nb_states)
 		^ " with "
 		^ (string_of_int nb_transitions) ^ " transition" ^ (s_of_int nb_transitions) ^ " explored.");
 
-	(* Return the graph, the iteration and the counter *)
-	reachability_graph , !nb_iterations , (time_from start_time) , !premature_stop, !nb_random_selections
-
+	(*------------------------------------------------------------*)
+	(* Return result *)
+	(*------------------------------------------------------------*)
+	{
+		(* Reachability graph *)
+		reachability_graph	= reachability_graph;
+		(* State space depth *)
+		depth				= !nb_iterations;
+		(* Computation time *)
+		total_time			= (time_from start_time);
+		(* Premature stop? (i.e., states / depth / time limit reached) *)
+		premature_stop		= !premature_stop;
+		(* Number of random selections *)
+		(*** TODO: remove that, as it is specific to IM... ***)
+		nb_random_selections = !nb_random_selections;
+		(* Unexplored states indices in case of early termination *)
+		unexplored_states	= !newly_found_new_states;
+	}
 
 
 
@@ -2796,7 +2847,7 @@ let print_statistics total_time reachability_graph =
 	(* Retrieve the input options *)
 	let options = Input.get_options () in
 
-	(** TODO: better have an independent module (or class) 'statistics' ***)
+	(*** TODO: better have an independent module (or class) 'statistics' ***)
 	
 	(* Generic function for float/int conversion *)
 	let string_of_average average = 
@@ -2878,7 +2929,7 @@ let full_state_space_exploration model =
 	let init_state = get_initial_state_or_abort model in
 
 	(* Call to generic function *)
-	let reachability_graph , _ , total_time ,  _ , _ = post_star model init_state in
+	let post_star_result = post_star model init_state in
 	
 	print_message Verbose_standard (
 		"\nState space exploration completed " ^ (after_seconds ()) ^ "."
@@ -2886,15 +2937,15 @@ let full_state_space_exploration model =
 		
 	print_message Verbose_low (
 		"Computation time: "
-		^ (string_of_seconds total_time) ^ "."
+		^ (string_of_seconds post_star_result.total_time) ^ "."
 	);
 
 	(* Print statistics *)
-	print_statistics total_time reachability_graph;
+	print_statistics post_star_result.total_time post_star_result.reachability_graph;
 	
 	(* Generate graphics *)
 	let radical = options#files_prefix in
-	Graphics.generate_graph model reachability_graph radical;
+	Graphics.generate_graph model post_star_result.reachability_graph radical;
 	
 	(* The end*)
 	()
@@ -2912,7 +2963,7 @@ let ef_synthesis model =
 	let init_state = get_initial_state_or_abort model in
 
 	(* Call to generic function *)
-	let reachability_graph , _ , total_time , _ ,  _ = post_star model init_state in
+	let post_star_result = post_star model init_state in
 	
 	print_message Verbose_standard (
 		"\nState space exploration completed " ^ (after_seconds ()) ^ "."
@@ -2927,7 +2978,7 @@ let ef_synthesis model =
 	
 	print_message Verbose_low (
 		"Computation time: "
-		^ (string_of_seconds total_time) ^ "."
+		^ (string_of_seconds post_star_result.total_time) ^ "."
 	);
 
 	(* Print on terminal *)
@@ -2941,11 +2992,11 @@ let ef_synthesis model =
 	);
 	
 	(* Print statistics *)
-	print_statistics total_time reachability_graph;
+	print_statistics post_star_result.total_time post_star_result.reachability_graph;
 	
 	(* Generate graphics *)
 	let radical = options#files_prefix in
-	Graphics.generate_graph model reachability_graph radical;
+	Graphics.generate_graph model post_star_result.reachability_graph radical;
 	
 	(* Render zones in a graphical form *)
 	let zones = [Union_of_constraints (!p_constraints, Bad)] in
@@ -3052,15 +3103,15 @@ let inverse_method_gen model init_state =
 	(* Choose the correct algorithm *)
 	let algo = if options#branch_and_bound then branch_and_bound else post_star in
 	(* Call to generic functions *)
-	let reachability_graph, nb_iterations, total_time, premature_stop, nb_random_selections = algo model init_state in
+	let post_star_result = algo model init_state in
 	
 	(*------------------------------------------------------------*)
 	(* Print information *)
 	(*------------------------------------------------------------*)
 	if not options#no_random then (
-		if (nb_random_selections > 0) then (
+		if (post_star_result.nb_random_selections > 0) then (
 			print_message Verbose_standard "Analysis may have been non-deterministic:";
-			print_message Verbose_standard ((string_of_int nb_random_selections) ^ " random selection" ^ (s_of_int nb_random_selections) ^ " have been performed.");
+			print_message Verbose_standard ((string_of_int post_star_result.nb_random_selections) ^ " random selection" ^ (s_of_int post_star_result.nb_random_selections) ^ " have been performed.");
 		) else (
 			print_message Verbose_standard "Analysis has been fully deterministic.";
 		)
@@ -3080,7 +3131,7 @@ let inverse_method_gen model init_state =
 			print_message Verbose_medium ("\nOne state found.");
 			(* Get the constraint on clocks and parameters *)
 			let (_, current_constraint) =
-				StateSpace.get_state reachability_graph state_index
+				StateSpace.get_state post_star_result.reachability_graph state_index
 			(* Eliminate clocks *)
 			in LinearConstraint.px_hide_nonparameters_and_collapse current_constraint
 		) !slast
@@ -3090,7 +3141,7 @@ let inverse_method_gen model init_state =
 	(* Case IMorig : return only the current constraint, viz., the constraint of the first state *)
 	(*** NOTE: why not returning just K_result? ***)
 	else if options#pi_compatible then (
-		let (_ , px_constraint) = get_state reachability_graph 0 in
+		let (_ , px_constraint) = get_state post_star_result.reachability_graph 0 in
 			print_message Verbose_total ("\nMode: IMorig.");
 			Convex_constraint (LinearConstraint.px_hide_nonparameters_and_collapse px_constraint , !tile_nature) 
 	)
@@ -3133,15 +3184,15 @@ let inverse_method_gen model init_state =
 	{
 	result 				= returned_constraint;
 	tile_nature			= !tile_nature;
-	premature_stop		= premature_stop;
-	deterministic		= (nb_random_selections > 0);
-	nb_states			= StateSpace.nb_states reachability_graph;
-	nb_transitions		= StateSpace.nb_transitions reachability_graph;
-	nb_iterations		= nb_iterations;
-	total_time			= total_time
+	premature_stop		= post_star_result.premature_stop;
+	deterministic		= (post_star_result.nb_random_selections > 0);
+	nb_states			= StateSpace.nb_states post_star_result.reachability_graph;
+	nb_transitions		= StateSpace.nb_transitions post_star_result.reachability_graph;
+	nb_iterations		= post_star_result.depth;
+	total_time			= post_star_result.total_time
 	}
 	,
-	reachability_graph
+	post_star_result.reachability_graph
 	
 	
 
