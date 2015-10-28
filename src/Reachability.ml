@@ -487,7 +487,7 @@ let prepare_clocks_elimination model =
 (* Check whether at least one local location is urgent *)
 (*------------------------------------------------------------*)
 
-(*** TODO: move to Location.mli ***)
+(*** TODO: move to Location.mli (but creates a dependency problem, as the model is needed...) ***)
 
 let is_location_urgent model location =
 	(* Subfunction checking that one location is urgent in a given automaton *)
@@ -2437,6 +2437,7 @@ type poststar_result = {
 	unexplored_states	: state_index list;
 }
 
+
 (*---------------------------------------------------*)
 (* EXPERIMENTAL BRANCH AND BOUND FUNCTION *)
 (*---------------------------------------------------*)
@@ -2968,6 +2969,10 @@ let ef_synthesis model =
 	print_message Verbose_standard (
 		"\nState space exploration completed " ^ (after_seconds ()) ^ "."
 	);
+	
+	
+	(*** TODO: compute as well *good* zones, depending whether the analysis was exact, or early termination occurred ***)
+	
 	
 	(* Convert result to string *)
 	let result_str = string_of_list_of_string_with_sep "\n OR \n" (List.map (LinearConstraint.string_of_p_linear_constraint model.variable_names) !p_constraints) in
