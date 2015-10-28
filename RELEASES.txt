@@ -1,11 +1,12 @@
 *******************************************************
-release 2.XXXXX    (XXXXX) FUTURE RELEASE
+release 2.XXXXX    (XXXXX) FUTURE MAJOR RELEASE
 
 Major
 - Allow for more complex unreachable states in property definition: several locations in several IPTA can be tested, and discrete variables can be compared with <, <=, =, >=, > and intervals; all this can be mixed using and/or operators.
 - Detection of L/U-PTA, U-PTA and L-PTA
 
 Bug fixing
+- Corrected a problem in the generation of the observer patterns
 - Solved an inconsistency in the property syntax of the "always sequence" observer pattern
 - Remove three observer patterns that were allowed in the input syntax but not implemented
 
@@ -18,7 +19,18 @@ Graphics
 
 Internal
 - "examples" directory becomes "benchmarks"
-- Automaton becomes Location (and new module Automaton created)
+- Automaton.ml becomes Location.ml (and new module Automaton.ml created)
+
+
+*******************************************************
+release 2.7.3    (2015-10-28) INTERMEDIATE RELEASE
+
+Bug fixing
+- Corrected a problem in the generation of the observer patterns
+
+Internal
+- "examples" directory becomes "benchmarks"
+- Automaton.ml becomes Location.ml (and new module Automaton.ml created)
 
 
 *******************************************************
