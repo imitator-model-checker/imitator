@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2012/05/10
- * Last modified: 2015/07/27
+ * Last modified: 2015/10/30
  *
  ****************************************************************)
  
@@ -58,7 +58,6 @@ class imitator_options :
 		method fancy : bool
 		method file : string
 		method files_prefix : string
-(* 		method forcePi0 : bool *)
 		method fromGML : bool
 		method imitator_mode : imitator_mode
 		method inclusion : bool

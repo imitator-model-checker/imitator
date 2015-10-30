@@ -7,7 +7,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Ulrich Kuehne, Etienne Andre
  * Created:       2010
- * Last modified: 2015/09/30
+ * Last modified: 2015/10/30
  *
  ****************************************************************)
  
@@ -230,7 +230,6 @@ class imitator_options =
 		method fancy = !fancy
 		method file = !file
 		method files_prefix = !files_prefix
-(* 		method forcePi0 = !forcePi0 *)
 		method fromGML = !fromGML
 		method imitator_mode = !imitator_mode
 		method inclusion = !inclusion
@@ -400,8 +399,6 @@ class imitator_options =
 				("-distributedKillIM", Set distributedKillIM, " In distributed cartography, kill processes covered by other tiles [ACN15]; only works with selected distribution schemes. Default: false.");
 				
 				("-dynamic-elimination", Set dynamic_clock_elimination, " Dynamic clock elimination [FSFMA13]. Default: false.");
-				
-				(* 				("-forcePi0", Set forcePi0, "Create a predefined pi0 file of the form p1 = 1, p2 = 2, etc. Defaut : 'false'"); *)
 				
 				("-fromGrML", Set fromGML, "GrML syntax for input files (experimental). Defaut : 'false'");
 				
