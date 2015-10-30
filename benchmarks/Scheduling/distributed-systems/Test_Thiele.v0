@@ -1,0 +1,11 @@
+
+(************************************************************
+ *                      IMITATOR MODEL                      
+ *
+ * References: ''Parametric Schedulability Analysis of Fixed Priority Real-Time Distributed Systems'' (2013) by Youcheng Sun, Romain Soulat, Giuseppe Lipari, Etienne Andre and Laurent Fribourg; Test Case 2
+              
+ * Last modified: 2015/10/30
+ ************************************************************)
+ 
+	C_task_11 = 0..30000 & 
+	C_task_15 = 0..30000

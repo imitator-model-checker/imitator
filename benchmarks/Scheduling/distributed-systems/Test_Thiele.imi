@@ -4,6 +4,8 @@
  *
  * References: ''Parametric Schedulability Analysis of Fixed Priority Real-Time Distributed Systems'' (2013) by Youcheng Sun, Romain Soulat, Giuseppe Lipari, Etienne Andre and Laurent Fribourg; Test Case 2
               
+ * Note: might not be the final model of the paper (?)
+ 
  * Last modified: 2015/10/30
  ************************************************************)
 
@@ -311,3 +313,10 @@ init:= True &
 	Token_24 = 0 & 
 	Token_25 = 0 & 
 	True;
+
+property := unreachable(loc[proc_1] = DEADLINE_MISS)
+	or
+	(loc[proc_2] = DEADLINE_MISS)
+	or
+	(loc[proc_3] = DEADLINE_MISS)
+;

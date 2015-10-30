@@ -6,6 +6,7 @@
  *
  * Model derived from the "idle scheduler" in the SynCop 2014 paper with 5 tasks. 
  * Tasks have implicit deadlines; that is, for a task,  its period and deadline are the same in the model.
+ * Model automatically generated from some script
  * Author: Giuseppe Lipari
  * Date: January 2014
  * References: ''Reachability Preservation Based Parameter Synthesis for Timed Automata'' (2015) by 

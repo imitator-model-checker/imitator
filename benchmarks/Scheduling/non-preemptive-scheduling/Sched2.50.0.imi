@@ -10,7 +10,7 @@
  *		     The priority order: tau_1 > tau_2 > tau_3.
  *		     Task periods T1 = a, T2 = 2a, T3 = 3a.
  *		     Execution Times: C1 in [e=10, b], C2 in [c, d], C3 in [C3_BEST, C3_WORST]
- * References      : "Integer Parameter Synthesis for Timed Automata" (2013) by A. Jovanovic, D. Kile and O.H. Roux; Section 6
+ * References      : "Integer Parameter Synthesis for Timed Automata" (2013) by A. Jovanovic, D. Lime and O.H. Roux; Section 6
                      "Reachability Preservation Based Parameter Synthesis for Timed Automata" (2015) by Etienne Andre, Giuseppe Lipari, Hoang Gia Nguyen and Youcheng Sun; Sched2.50.0 
  * Modeling        : Youcheng Sun
  * Input by        : Youcheng Sun
@@ -23,7 +23,7 @@
 
 var 
     p1, p2, p3, c1, c2, c3 : clock;
-    e=10,a=50, c=18, d=28, C3_BEST=20, J2=0: discrete;
+    e=10,a=50, c=18, d=28, C3_BEST=20, J2=0: constant;
     b ,C3_WORST: parameter;
 
 automaton act1

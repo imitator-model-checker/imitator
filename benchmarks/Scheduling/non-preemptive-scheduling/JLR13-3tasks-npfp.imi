@@ -1,16 +1,34 @@
-
 (************************************************************
- * Youcheng: This one is a redundant copy of the file 3tasks-npfp-tacas.imi
+ *                      IMITATOR MODEL                      
+ *
+ *	IMITATOR JLR13-3tasks-npfp.imi -mode EF -incl -merge -output-cart
+ *	IMITATOR JLR13-3tasks-npfp.imi JLR13-3tasks-npfp.v0 -mode cover -PRP -incl -merge -output-cart
+ *
+ * Modeling of the uniprocessor Non-Preemptive Fixed-Priority scheduling of three periodic tasks
+ *
+ * Description     : Three periodic tasks run upon a uniprocessor by their fixed priorites, and the execution of a task cannot be preempted.
+ *		     The priority order: tau_1 > tau_2 > tau_3.
+ *		     Task periods T1 = a, T2 = 2a, T3 = 3a.
+ *		     Execution Times: C1 in [C1_BEST=10, b], C2 in [c, d], C3 in [C3_BEST, C3_WORST]
+ * Source          : From "Integer Parameter Synthesis for Timed Automata" (2013) by A. Jovanovic, D. Lime and O.H. Roux; Section 6
+ * Modeling        : Youcheng Sun
+ * Input by        : Youcheng Sun
+ *
+ * Created         : xxxx
+ * Last modified   : 2015/10/28
+ *
+ * IMITATOR version: 2.xxx
  ************************************************************)
+ 
+
 var 
     p1, p2, p3, c1, c2, c3 : clock;
-    --a=50, b=20, c=18, d=28, C3_BEST=20, C3_WORST=28: discrete;
-    d=28, c=18, C3_BEST=20, C3_WORST=28: discrete;
+    d=28, c=18, C1_BEST = 10, C3_BEST=20, C3_WORST=28: discrete;
     b, a : parameter;
 
 automaton act1
 synclabs: r1;
---loc waiting1 : while a<=50&a>=20&p1<=a wait {}
+
 loc waiting1 : while p1<=a wait {}
     when p1>=a sync r1 do {p1'=0} goto waiting1;
 end
@@ -18,7 +36,6 @@ end
 automaton act2
 synclabs: r2;
 loc waiting2 : while p2<=2*a wait {}
---loc waiting2 : while True wait {}
     when p2>=2*a sync r2 do {p2'=0} goto waiting2;
 end
 
@@ -38,7 +55,7 @@ loc idle : while True wait {}
     when True sync r3 do {c3'=0} goto x3R;
 
 loc x1R : while c1<=b wait {}
-    when c1>=10 do {} goto idle;
+    when c1>=C1_BEST do {} goto idle;
     when c1<b sync r1 do{} goto error;
     when True sync r2 do {} goto x1R2W;
     when True sync r3 do {} goto x1R3W;
@@ -56,13 +73,13 @@ loc x3R : while c3 <= C3_WORST wait {}
     when True sync r2 do {} goto x2W3R;
 
 loc x1R2W : while c1<=b wait {}
-    when c1 >= 10 do {c2'=0} goto x2R;
+    when c1 >= C1_BEST do {c2'=0} goto x2R;
     when c1 < b sync r1 do {} goto error;
     when True sync r2 do {} goto error;
     when True sync r3 do {} goto x1R2W3W;
 
 loc x1R3W : while c1<=b wait {}
-    when c1>=10 do {c3'=0} goto x3R;
+    when c1>=C1_BEST do {c3'=0} goto x3R;
     when c1<b sync r1 do {} goto error;
     when True sync r3 do {} goto error;
     when True sync r2 do {} goto x1R2W3W;
@@ -92,7 +109,7 @@ loc x2W3R : while c3<=C3_WORST wait {}
     when True sync r1 do {} goto x1W2W3R;
 
 loc x1R2W3W : while c1<=b wait {}
-    when c1>=10 do {c2'=0} goto x2R3W;
+    when c1>=C1_BEST do {c2'=0} goto x2R3W;
     when c1<b sync r1 do {} goto error;
     when True sync r2 do {} goto error;
     when True sync r3 do {} goto error;
@@ -114,12 +131,36 @@ loc error : while True wait{}
 end
 
 
-var init: region;
+(************************************************************)
+(* Initial state *)
+(************************************************************)
 
-init := loc[act1]=waiting1 &
-        loc[act2]=waiting2 &
-        loc[act3]=waiting3 &
-        loc[sched]=idle &
-        p1=0 & p2 =0 & p3=0 & c2=0 & c1=0 & c3=0 & a>=0 & b>=0;
 
+init := 
+	(*------------------------------------------------------------*)
+	(* Initial location *)
+	(*------------------------------------------------------------*)
+        & loc[act1] = waiting1 
+        & loc[act2] = waiting2
+        & loc[act3] = waiting3 
+        & loc[sched] = idle 
+	(*------------------------------------------------------------*)
+	(* Initial clock constraints *)
+	(*------------------------------------------------------------*)
+(*         & p1 >= 0 & p1 <= a & p2 >= 0 & p2 <=2*a & p3 >= 0 & p3 <= 3*a & c2 = 0 & c1 = 0 & c3 = 0 *)
+        & p1 >= 0 & p1 <= a & p2 >= 0 & p2 <= 2*a & p3 >= 0 & p3 <= 3*a
+        & c2 = 0 & c1 = 0 & c3 = 0
+	(*------------------------------------------------------------*)
+	(* Parameter constraints *)
+	(*------------------------------------------------------------*)
+	& a >= C1_BEST & b >= C1_BEST & a <= 50 & b <= 50
+	;
+
+(************************************************************)
+(* Property specification *)
+(************************************************************)
 property := unreachable loc[sched] = error;
+
+(************************************************************)
+(* The end *)
+(************************************************************)
