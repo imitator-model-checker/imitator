@@ -10,7 +10,7 @@
 # 
 # File contributors : Étienne André
 # Created           : 2012/05/??
-# Last modified     : 2015/10/27
+# Last modified     : 2015/11/10
 #************************************************************
 
 
@@ -22,7 +22,6 @@ import datetime
 import os
 import sys
 import subprocess
-#from subprocess import Popen, PIPE
 
 
 
@@ -141,18 +140,14 @@ for test_case in tests:
 	# Initially everything is ok
 	passed = True
 
-	# TODO: remove all expected output files! (otherwise if there is a problem, the test will pass)
-	
 	# Print something
 	print_to_log('')
 	print_to_log('************************************************************')
-	print_to_log(' TEST CASE ' + str(benchmark_id))
+	print_to_log(' BENCHMARK ' + str(benchmark_id))
 	print_to_log(' purpose : ' + test_case['purpose'])
 	print_to_log('')
+	print_to_screen(' Benchmark ' + str(benchmark_id) + "...")
 
-	# Initialize the string for the proper call
-	#cmd_binary = make_binary()
-	
 	# Add the path to all input files
 	cmd_inputs = []
 	for each_file in test_case['input_files']:
@@ -161,8 +156,6 @@ for test_case in tests:
 	
 	# Prepare the command (using a list form)
 	cmd = [make_binary()] + cmd_inputs + (test_case['options']).split()
-	## Add options
-	#cmd_options = test_case['options']
 	
 	# Print the command
 	print_to_log(' command : ' + ' '.join(cmd))
@@ -212,6 +205,7 @@ for test_case in tests:
 			#close (myfile)
 			# Delete file
 			os.remove(output_file)
+			# TODO: remove all expected output files AFTER the end of the test case; otherwise, if several tests are made in the same file, it won't work
 
 		# Increment the expectation id
 		expectation_id += 1
@@ -222,6 +216,8 @@ for test_case in tests:
 	# If all test cases passed, increment the number of passed benchmarks
 	if passed:
 		passed_benchmarks += 1
+	else:
+		print_to_screen("FAILED!")
 
 	# Increment the benchmark id
 	benchmark_id += 1
@@ -239,7 +235,7 @@ total_test_cases = test_case_id - 1
 
 if total_benchmarks == passed_benchmarks and total_test_cases == passed_test_cases:
 	print_to_screen_and_log('All benchmarks (' + str(passed_benchmarks) + '/' + str(total_benchmarks) + ') passed successfully.')
-	print_to_screen_and_log('All tests cases (' + str(passed_test_cases) + '/' + str(total_test_cases) + ') passed successfully.')
+	print_to_screen_and_log('All test cases (' + str(passed_test_cases) + '/' + str(total_test_cases) + ') passed successfully.')
 else:
 	print_to_screen_and_log('WARNING! Some tests failed.')
 	print_to_screen_and_log('' + str(passed_benchmarks) + '/' + str(total_benchmarks) + ' benchmarks passed successfully.')
