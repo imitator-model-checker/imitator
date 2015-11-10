@@ -594,6 +594,99 @@ tests = [
 		] # end expectations
 	} # end test case
 	#------------------------------------------------------------
+	,
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Simple example without merging',
+		'input_files': ['exActionsNonPreserved.imi'],
+		'options'    : '-mode statespace -output-states',
+		'expectations' : [
+			{'file': 'exActionsNonPreserved.states' , 'content' : """
+		*/
+
+  DESCRIPTION OF THE STATES
+
+  /************************************************************/
+  INITIAL
+  STATE 0:
+  pta: L1 ==> 
+& 2 >= x
+& p >= 0
+& x >= 0
+
+  Projection onto the parameters:
+   p >= 0
+
+  /************************************************************/
+  STATE 1:
+  pta: L2 ==> 
+& p >= 0
+& x >= 2
+& 2 >= p
+
+  Projection onto the parameters:
+   p >= 0
+& 2 >= p
+
+  /************************************************************/
+  STATE 2:
+  pta: L2 ==> 
+& p >= 2
+& x >= 2
+
+  Projection onto the parameters:
+   p >= 2
+
+  DESCRIPTION OF THE TRANSITIONS
+  s_0 -> s_2 via "b"
+  s_0 -> s_1 via "a"
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+	,
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Simple example with merging',
+		'input_files': ['exActionsNonPreserved.imi'],
+		'options'    : '-mode statespace -output-states -merge',
+		'expectations' : [
+			{'file': 'exActionsNonPreserved.states' , 'content' : """
+		*/
+
+  DESCRIPTION OF THE STATES
+
+  /************************************************************/
+  INITIAL
+  STATE 0:
+  pta: L1 ==> 
+& 2 >= x
+& p >= 0
+& x >= 0
+
+  Projection onto the parameters:
+   p >= 0
+
+  /************************************************************/
+  STATE 1:
+  pta: L2 ==> 
+& p >= 0
+& x >= 2
+
+  Projection onto the parameters:
+   p >= 0
+
+  DESCRIPTION OF THE TRANSITIONS
+  s_0 -> s_1 via "b"
+  s_0 -> s_1 via "a"
+  """
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
 	#,
 	##------------------------------------------------------------
 	#{
