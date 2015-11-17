@@ -1,0 +1,90 @@
+(************************************************************
+ *                      IMITATOR MODEL                      
+ *
+ * Fig.1 in [BlT09]
+ *
+ * Description     : TODO
+ * Correctness     : infinite run visiting infinitely often location 3
+ * Source          : Laura Bozzelli, Salvatore La Torre: Decision problems for lower/upper bound parametric timed automata. Formal Methods in System Design 35(2): 121-151 (2009)
+ * Author          : Laura Bozzelli, Salvatore La Torre
+ * Modeling        : Laura Bozzelli, Salvatore La Torre
+ * Input by        : Étienne André
+ *
+ * Created         : 2015/11/17
+ * Last modified   : 2015/11/17
+ *
+ * IMITATOR version: 2.7.3
+ ************************************************************)
+
+var
+
+(* Clocks *)
+ 	x, y
+		: clock;
+
+(* Parameters *)
+	l, u
+		: parameter;
+
+
+
+(************************************************************)
+  automaton pta
+(************************************************************)
+(* synclabs: a; *)
+
+loc l0: while True wait {}
+	when True goto l0;
+	when True do {x' = 0, y' = 0} goto l1;
+
+loc l1: while True wait {}
+	when True goto l1;
+	when -y < 2 - l goto l2;
+
+
+loc l2: while True wait {}
+	when True goto l2;
+	when x < u goto l3;
+
+loc l3: while True wait {}
+	when True goto l3;
+
+end (* pta *)
+
+
+
+(************************************************************)
+(* Initial state *)
+(************************************************************)
+
+init :=
+	(*------------------------------------------------------------*)
+	(* Initial location *)
+	(*------------------------------------------------------------*)
+	& loc[pta] = l0
+
+	(*------------------------------------------------------------*)
+	(* Initial clock constraints *)
+	(*------------------------------------------------------------*)
+	& x = 0
+	& y = 0
+	
+	(*------------------------------------------------------------*)
+	(* Parameter constraints *)
+	(*------------------------------------------------------------*)
+	& l >= 0
+	& u >= 0
+;
+
+
+(************************************************************)
+(* Property specification *)
+(************************************************************)
+
+(* property := unreachable loc[pta] = l1; *)
+
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end
