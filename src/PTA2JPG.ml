@@ -5,13 +5,14 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2012/08/24
- * Last modified: 2015/10/22
+ * Last modified: 2015/11/23
  *
  ************************************************************)
 
 
 open Exceptions
 open AbstractModel
+open Result
 open CamlUtilities
 
 

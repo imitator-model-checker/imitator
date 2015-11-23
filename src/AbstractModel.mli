@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2009/09/11
- * Last modified     : 2015/10/22
+ * Last modified     : 2015/11/23
  *
  ************************************************************)
 
@@ -309,21 +309,3 @@ type abstract_model = {
 }
 
 
-
-(************************************************************)
-(** Result *)
-(************************************************************)
-
-(*** BADPROG: should NOT be here! but rather in Reachability or something like this ***)
-(** Constraint returned by the inverse method *)
-type returned_constraint =
-	(*** TODO: merge these 2 objects (Convex_constraint and Union_of_constraints) ***)
-	(** Constraint under convex form *)
-	| Convex_constraint of LinearConstraint.p_linear_constraint * tile_nature
-	
-	(** Disjunction of constraints *)
-	| Union_of_constraints of LinearConstraint.p_linear_constraint list * tile_nature
-
-	(*** BADPROG: NNCC should NOT be here! but rather in LinearConstraint ***)
-	(** Non-necessarily convex constraint: set of constraints MINUS a set of negations of constraints *)
-	| NNCConstraint of (LinearConstraint.p_linear_constraint list) * (LinearConstraint.p_linear_constraint list) * tile_nature

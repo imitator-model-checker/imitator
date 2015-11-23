@@ -8,7 +8,7 @@
  * Author:        Etienne Andre, Ulrich Kuehne
  * 
  * Created:       2010/07/05
- * Last modified: 2015/10/22
+ * Last modified: 2015/11/23
  *
  ****************************************************************)
 
@@ -20,7 +20,7 @@
 open Exceptions
 open CamlUtilities
 open ImitatorUtilities
-(* open LinearConstraint *)
+open Result
 open AbstractModel
 
 

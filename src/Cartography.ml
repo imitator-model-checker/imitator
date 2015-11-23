@@ -10,7 +10,7 @@
  * Author:        Ulrich Kuehne, Etienne Andre
  * 
  * Created:       2012/06/18
- * Last modified: 2015/10/22
+ * Last modified: 2015/11/23
  *
  ****************************************************************)
 
@@ -25,6 +25,7 @@ open ImitatorUtilities
 open Automaton
 open Options
 open AbstractModel
+open Result
 open StateSpace
 open Reachability
 
@@ -36,9 +37,6 @@ open Reachability
 (************************************************************)
 (* Types *)
 (************************************************************)
-
-(*** BADPROG ***)
-(* type current_pi0 = NumConst.t array *)
 
 (* List version of pi0 for PaTATOR *)
 type pi0_list = (variable_index * NumConst.t) list

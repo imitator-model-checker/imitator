@@ -9,7 +9,7 @@
  * 
  * File contributors : Ulrich Kühne, Étienne André
  * Created           : 2009/09/07
- * Last modified     : 2015/10/22
+ * Last modified     : 2015/11/23
  *
  ************************************************************)
 
@@ -22,6 +22,7 @@ open CamlUtilities
 
 open ImitatorUtilities
 open AbstractModel
+open Result
 open ModelPrinter
 open Options
 open Reachability

@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre, Ulrich Kuehne
  * Created:       2010/07/05
- * Last modified: 2013/03/20
+ * Last modified: 2015/11/23
  *
  ************************************************************)
 
@@ -32,7 +32,7 @@ val dot_colors : string list
 (************************************************************)
 
 
-val cartography : abstract_model ->  v0 -> returned_constraint list ->  string -> unit
+val cartography : abstract_model ->  v0 -> Result.returned_constraint list ->  string -> unit
 
 val dot : abstract_model -> string -> string -> unit
 

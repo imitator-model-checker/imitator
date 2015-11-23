@@ -10,7 +10,7 @@
  * Author:        Ulrich Kuehne, Etienne Andre
  * 
  * Created:       2010/07/22
- * Last modified: 2015/04/01
+ * Last modified: 2015/11/23
  *
  ****************************************************************)
 
@@ -19,32 +19,6 @@ open AbstractModel
 open Options
 open StateSpace
 open LinearConstraint
-
-
-(****************************************************************)
-(** The result output by IM *)
-(****************************************************************)
-(*** TODO: convert to a separate class ***)
-type im_result = {
-	(* Returned constraint *)
-	result : returned_constraint;
-(*	(* Reachability graph *)
-	reachability_graph : StateSpace.reachability_graph;*)
-	(* Tile nature *)
-	tile_nature : tile_nature;
-	(* Premature stop? (i.e., states / depth / time limit reached) *)
-	premature_stop : bool;
-	(* Deterministic analysis? *)
-	deterministic : bool;
-	(* Number of states *)
-	nb_states : int;
-	(* Number of transitions *)
-	nb_transitions : int;
-	(* Number of iterations *)
-	nb_iterations : int;
-	(* Computation time *)
-	total_time : float;
-}
 
 
 
@@ -74,7 +48,7 @@ val full_state_space_exploration : abstract_model -> unit
 
 val ef_synthesis : abstract_model -> (*returned_constraint*)unit
 
-val inverse_method_gen : abstract_model -> state -> (im_result * StateSpace.reachability_graph)
+val inverse_method_gen : abstract_model -> state -> (Result.im_result * StateSpace.reachability_graph)
 	(*returned_constraint * StateSpace.reachability_graph * tile_nature * bool * int * float*)
 
 val efim : abstract_model -> unit
