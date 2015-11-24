@@ -23,6 +23,40 @@ open AbstractModel
 
 
 (**************************************************************)
+(* Functions *)
+(**************************************************************)
+
+(*------------------------------------------------------------*)
+(* Print warning(s) if the limit of an exploration has been reached, according to the analysis options *)
+(*------------------------------------------------------------*)
+let print_warnings_limit depth nb_states time nb_states_to_visit =
+	(* Retrieve the input options *)
+	let options = Input.get_options () in
+	begin
+	match options#post_limit with
+		| None -> ()
+		| Some limit -> if depth > limit then print_warning (
+			"The limit depth (" ^ (string_of_int limit) ^ ") has been reached. The exploration now stops, although there were still " ^ (string_of_int nb_states_to_visit) ^ " state" ^ (s_of_int nb_states_to_visit) ^ " to explore."
+		);
+	end;
+	begin
+	match options#states_limit with
+		| None -> ()
+		| Some limit -> if nb_states > limit then print_warning (
+			"The limit number of states (" ^ (string_of_int limit) ^ ") has been reached. The exploration now stops, although there were still " ^ (string_of_int nb_states_to_visit) ^ " state" ^ (s_of_int nb_states_to_visit) ^ " to explore."
+		);
+	end;
+	begin
+	match options#time_limit with
+		| None -> ()
+		| Some limit -> if time > (float_of_int limit) then print_warning (
+			"The time limit (" ^ (string_of_int limit) ^ " second" ^ (s_of_int limit) ^ ") has been reached. The exploration now stops, although there were still " ^ (string_of_int nb_states_to_visit) ^ " state" ^ (s_of_int nb_states_to_visit) ^ " to explore at this iteration."
+		);
+	end
+
+	
+	
+(**************************************************************)
 (* Class definition *)
 (**************************************************************)
 class algoBFS =
@@ -41,7 +75,7 @@ class algoBFS =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Main method running the algorithm *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method run (init_state:StateSpace.state) =
+	method run (init_state : StateSpace.state) =
 		(* Retrieve the model *)
 		let model = Input.get_model () in
 		
@@ -57,6 +91,7 @@ class algoBFS =
 		start_time <- Unix.gettimeofday();
 
 		(* copy init state, as it might be destroyed later *)
+		(*** NOTE: this operation appears to be here totally useless ***)
 		let init_loc, init_constr = init_state in
 		let init_state = (init_loc, LinearConstraint.px_copy init_constr) in
 
@@ -140,9 +175,6 @@ class algoBFS =
 			) [] !newly_found_new_states in
 
 			
-			()
-
-(*			JE SUIS LA
 			(* Merge states! *)
 			let new_states_after_merging = ref new_newly_found_new_states in
 			(*** HACK here! For #merge_before, we should ONLY merge here; but, in order not to change the full structure of the post computation, we first merge locally before the pi0-compatibility test, then again here *)
@@ -165,7 +197,7 @@ class algoBFS =
 			(* If acyclic option: empty the list of already reached states for comparison with former states *)
 			if options#acyclic then(
 				print_message Verbose_low ("\nMode acyclic: empty the list of states to be compared.");
-				empty_states_for_comparison state_space;
+				StateSpace.empty_states_for_comparison state_space;
 			);
 			
 	(************************************************************************************************************************)
@@ -178,7 +210,7 @@ class algoBFS =
 	(************************************************************************************************************************)
 	(************************************************************************************************************************)
 	(************************************************************************************************************************)
-			(* If check-point option: check if the constraint is equal to pi0 *)
+(*			(* If check-point option: check if the constraint is equal to pi0 *)
 			(*** TO OPTIMIZE !!! (at least compute pi0_constraint once for all) ***)
 			(*** WARNING!! ONLY works for the classical inverse method (not for variants) ***)
 			(*** TODO: also allow for BC ***)
@@ -205,7 +237,7 @@ class algoBFS =
 					(* Stop *)
 					limit_reached := true;
 				);
-			);
+			);*)
 	(************************************************************************************************************************)
 	(************************************************************************************************************************)
 	(************************************************************************************************************************)
@@ -227,10 +259,10 @@ class algoBFS =
 			Gc.major ();
 			
 			(* Iterate *)
-			nb_iterations := current_depth + 1;
+			current_depth <- current_depth + 1;
 			
 			(* Check if the limit has been reached *)
-			limit_reached := !limit_reached || (check_limit current_depth (StateSpace.nb_states state_space) (time_from start_time));*)
+			limit_reached := !limit_reached || (Reachability.check_limit current_depth (StateSpace.nb_states state_space) (time_from start_time));
 		done;
 		
 		(* Flag to detect premature stop in case of limit reached *)
@@ -241,20 +273,21 @@ class algoBFS =
 			(* Update flag *)
 			premature_stop := true;
 			
-(*			(* Print some information *)
-			print_warnings_limit current_depth (StateSpace.nb_states state_space) (time_from start_time) (List.length !newly_found_new_states);*)
+			(* Print some information *)
+			print_warnings_limit current_depth (StateSpace.nb_states state_space) (time_from start_time) (List.length !newly_found_new_states);
 			
 		);
 
 		print_message Verbose_standard (
 			let nb_states = StateSpace.nb_states state_space in
 			let nb_transitions = StateSpace.nb_transitions state_space in
-			"\nFixpoint reached after "
-			^ (string_of_int current_depth) ^ " iteration" ^ (s_of_int current_depth) ^ ""
+			"\nFixpoint reached at a depth of "
+			^ (string_of_int current_depth) ^ ""
 			^ ": "
 			^ (string_of_int nb_states) ^ " state" ^ (s_of_int nb_states)
 			^ " with "
 			^ (string_of_int nb_transitions) ^ " transition" ^ (s_of_int nb_transitions) ^ " explored.");
+			(*** NOTE: in fact, more states and transitions may have been explored (and deleted); here, these figures are the number of states in the state space. ***)
 
 		(*------------------------------------------------------------*)
 		(* Return result *)
@@ -275,6 +308,14 @@ class algoBFS =
 			unexplored_states	= !newly_found_new_states;
 		}*)
 
-		(*** HACK: just a test ***)
-		Result.Noresultbecausethatsatest
+		self#compute_result()
+
+	
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(* Method packaging the result output by the algorithm *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	method private compute_result () =
+		(* Degenerated result (this algorithm is not supposed to be run as such) *)
+		Result.BFS_noresult
+
 end;;

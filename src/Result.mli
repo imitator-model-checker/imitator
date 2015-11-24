@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/11/23
- * Last modified     : 2015/11/23
+ * Last modified     : 2015/11/24
  *
  ************************************************************)
 
@@ -24,8 +24,10 @@
 (************************************************************)
 
 type imitator_result =
-	(*** HACK: just to test the algorithms ***)
-	| Noresultbecausethatsatest
+	(* Degenerated result for pure BFS algorithm *)
+	| BFS_noresult
+(*	(*** HACK: just to test the algorithms ***)
+	| Noresultbecausethatsatest*)
 
 
 

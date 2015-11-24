@@ -2370,16 +2370,17 @@ let post_from_one_state model reachability_graph orig_state_index =
 (* Full reachability functions *)
 (************************************************************)
 
-(*---------------------------------------------------*)
+(*------------------------------------------------------------*)
 (* Set the PaTATOR termination function *)
-(*---------------------------------------------------*)
+(*------------------------------------------------------------*)
 let set_patator_termination_function f =
 	patator_termination_function := Some f
 
 
-(*---------------------------------------------------*)
+(*------------------------------------------------------------*)
 (* Check whether the limit of an exploration has been reached, according to the analysis options *)
-(*---------------------------------------------------*)
+(*** NOTE: May raise an exception when used in PaTATOR mode (the exception will be caught by PaTATOR) ***)
+(*------------------------------------------------------------*)
 let check_limit depth nb_states time =
 	(* Retrieve the input options *)
 	let options = Input.get_options () in
@@ -2417,9 +2418,10 @@ let check_limit depth nb_states time =
 
 
 
-(*---------------------------------------------------*)
+(*------------------------------------------------------------*)
 (* Print warning(s) if the limit of an exploration has been reached, according to the analysis options *)
-(*---------------------------------------------------*)
+(*** NOTE: copied to BFSalgo already ***)
+(*------------------------------------------------------------*)
 let print_warnings_limit depth nb_states time nb_states_to_visit =
 	(* Retrieve the input options *)
 	let options = Input.get_options () in
@@ -2447,9 +2449,9 @@ let print_warnings_limit depth nb_states time nb_states_to_visit =
 
 
 
-(*---------------------------------------------------*)
+(*------------------------------------------------------------*)
 (* Generic data structure for exploration *)
-(*---------------------------------------------------*)
+(*------------------------------------------------------------*)
 
 (*** TODO: move somewhere else ***)
 type poststar_result = {
@@ -2481,9 +2483,9 @@ type poststar_result = {
 (************************************************************************************************************************)
 (************************************************************************************************************************)
 
-(*---------------------------------------------------*)
+(*------------------------------------------------------------*)
 (* EXPERIMENTAL BRANCH AND BOUND FUNCTION *)
-(*---------------------------------------------------*)
+(*------------------------------------------------------------*)
 let branch_and_bound model init_state = 
 	(* Retrieve the input options *)
 	let options = Input.get_options () in
@@ -2691,9 +2693,9 @@ let branch_and_bound model init_state =
 (************************************************************************************************************************)
 
 
-(*---------------------------------------------------*)
+(*------------------------------------------------------------*)
 (* Compute the reachability graph from a given state *)
-(*---------------------------------------------------*)
+(*------------------------------------------------------------*)
 let post_star model init_state = 
 	(* Retrieve the input options *)
 	let options = Input.get_options () in
