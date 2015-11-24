@@ -2149,10 +2149,7 @@ let add_a_new_state model reachability_graph orig_state_index new_states_indexes
 
 
 (*------------------------------------------------------------*)
-(* Compute the list of possible destination states     *)
-(* wrt. to a reachability_graph, and update this graph *)
-(*------------------------------------------------------------*)
-(* returns a list of (really) new states               *)
+(* Compute the list of successor states of a given state, and update the state space; returns the list of new states' indexes actually added *)
 (*------------------------------------------------------------*)
 let post_from_one_state model reachability_graph orig_state_index =
 	(* Retrieve the input options *)

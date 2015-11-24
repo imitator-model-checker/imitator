@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/11/23
- * Last modified     : 2015/11/23
+ * Last modified     : 2015/11/24
  *
  ************************************************************)
 
@@ -23,5 +23,5 @@
 (**************************************************************)
 class algoBFS :
 	object
-		method run : unit -> Result.imitator_result
+		method run : StateSpace.state -> Result.imitator_result
 end

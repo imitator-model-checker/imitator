@@ -42,6 +42,13 @@ val set_patator_termination_function : (unit -> unit) -> unit
 
 
 (************************************************************)
+(* SUCC functions *)
+(************************************************************)
+(* Compute the list of successor states of a given state, and update the state space; returns the list of new states' indexes actually added *)
+val post_from_one_state : abstract_model ->  StateSpace.reachability_graph -> StateSpace.state_index -> StateSpace.state_index list
+
+
+(************************************************************)
 (* Algorithms *)
 (************************************************************)
 val full_state_space_exploration : abstract_model -> unit
