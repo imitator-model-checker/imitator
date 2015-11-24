@@ -557,7 +557,7 @@ class imitator_options =
 			print_message Verbose_low ("Prefix for output files: " ^ !files_prefix);
 			(* Print full command *)
 			(*** WARNING: this command drops the "" or '' (if any) ***)
-			print_message Verbose_low ("Command: " ^ (CamlUtilities.string_of_array_of_string_with_sep " " Sys.argv));
+			print_message Verbose_low ("Command: " ^ (OCamlUtilities.string_of_array_of_string_with_sep " " Sys.argv));
 
 			(* Global mode *)
 			let message = match !imitator_mode with

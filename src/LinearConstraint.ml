@@ -30,7 +30,7 @@ open Gmp.Z.Infixes
 (* Internal modules *)
 (************************************************************)
 open Exceptions
-open CamlUtilities
+open OCamlUtilities
 open ImitatorUtilities
 
 

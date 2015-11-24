@@ -21,7 +21,7 @@ open Mpi
 (****************************************************************)
 (* Internal modules *)
 (****************************************************************)
-open CamlUtilities
+open OCamlUtilities
 open Exceptions
 open ImitatorUtilities
 open Options

@@ -24,7 +24,7 @@ open Mpi
 (**************************************************)
 open AbstractModel
 open Exceptions
-open CamlUtilities
+open OCamlUtilities
 open ImitatorUtilities
 open Reachability
 

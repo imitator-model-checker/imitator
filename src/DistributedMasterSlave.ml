@@ -23,7 +23,7 @@ open Mpi
 (* Internal modules *)
 (**************************************************)
 open Exceptions
-open CamlUtilities
+open OCamlUtilities
 open ImitatorUtilities
 open Options
 open Reachability

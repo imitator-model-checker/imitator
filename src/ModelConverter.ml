@@ -21,7 +21,7 @@
 (** Modules *)
 (************************************************************)
 open Exceptions
-open CamlUtilities
+open OCamlUtilities
 open ImitatorUtilities
 open Options
 open Automaton

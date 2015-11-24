@@ -21,7 +21,7 @@ open Gc
 (**************************************************)
 open Exceptions
 open AbstractModel
-open CamlUtilities
+open OCamlUtilities
 open ImitatorUtilities
 
 

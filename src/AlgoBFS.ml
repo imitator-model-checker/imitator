@@ -17,7 +17,7 @@
 (**************************************************************)
 (* Modules *)
 (**************************************************************)
-open CamlUtilities
+open OCamlUtilities
 open ImitatorUtilities
 open AbstractModel
 

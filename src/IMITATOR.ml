@@ -18,7 +18,7 @@
 (* Internal modules *)
 (************************************************************)
 open Exceptions
-open CamlUtilities
+open OCamlUtilities
 
 open ImitatorUtilities
 open AbstractModel

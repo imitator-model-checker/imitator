@@ -22,7 +22,7 @@ module Ppl = Ppl_ocaml
 open Ppl
 
 open Exceptions
-open CamlUtilities
+open OCamlUtilities
 open ImitatorUtilities
 open Automaton
 open AbstractModel

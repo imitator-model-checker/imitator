@@ -10,7 +10,7 @@
  ************************************************************)
 
 
-open CamlUtilities
+open OCamlUtilities
 open Result
 open AbstractModel
 

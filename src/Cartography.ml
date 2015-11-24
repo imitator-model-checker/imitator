@@ -20,7 +20,7 @@
 (************************************************************)
 
 open Exceptions
-open CamlUtilities
+open OCamlUtilities
 open ImitatorUtilities
 open Automaton
 open Options
