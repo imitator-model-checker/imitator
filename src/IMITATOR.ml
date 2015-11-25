@@ -9,7 +9,7 @@
  * 
  * File contributors : Ulrich Kühne, Étienne André
  * Created           : 2009/09/07
- * Last modified     : 2015/11/23
+ * Last modified     : 2015/11/25
  *
  ************************************************************)
 
@@ -67,10 +67,8 @@ try(
 
 
 (*** TEST ***)
-let _ = new AlgoBFS.algoBFS in
-
-
-
+let algo = new AlgoEFsynth.algoEFsynth in
+print_string algo#algorithm_name;
 
 
 

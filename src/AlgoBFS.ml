@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/11/23
- * Last modified     : 2015/11/24
+ * Last modified     : 2015/11/25
  *
  ************************************************************)
 
@@ -59,7 +59,7 @@ let print_warnings_limit depth nb_states time nb_states_to_visit =
 (**************************************************************)
 (* Class definition *)
 (**************************************************************)
-class algoBFS =
+class virtual algoBFS =
 	object (self)
 	
 	(* Start time for the algorithm *)
@@ -72,6 +72,20 @@ class algoBFS =
 	val mutable state_space = StateSpace.make 0
 	
 	
+	
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(* Virtual method: the algorithm name is not defined for BFS as it is not supposed to be called *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	method virtual algorithm_name : string
+	
+	
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(* Variable initialization *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	method initialize_variables =
+		print_message Verbose_low ("Initializing algorithm variables...");
+		()
+
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Main method running the algorithm *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -95,19 +109,7 @@ class algoBFS =
 		let init_loc, init_constr = init_state in
 		let init_state = (init_loc, LinearConstraint.px_copy init_constr) in
 
-(*		(* Initialization of global variables *)
-		print_message Verbose_low ("Initializing algorithm variables...");
-		k_result := LinearConstraint.px_hide_nonparameters_and_collapse init_constr;
-		p_constraints := [];
-
-		(* Print some information *)
-		if verbose_mode_greater Verbose_low then(
-			print_message Verbose_low ("Initialized k_result to ");
-			print_message Verbose_low (LinearConstraint.string_of_p_linear_constraint model.variable_names !k_result);
-			print_message Verbose_low ("");
-		);
-
-		(*Initialization of slast : used in union mode only*)
+(*		(*Initialization of slast : used in union mode only*)
 		slast := [];*)
 		
 	(*		(* Set the counter of selections to 0 *)
@@ -308,14 +310,12 @@ class algoBFS =
 			unexplored_states	= !newly_found_new_states;
 		}*)
 
-		self#compute_result()
+		self#compute_result
 
 	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Method packaging the result output by the algorithm *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method private compute_result () =
-		(* Degenerated result (this algorithm is not supposed to be run as such) *)
-		Result.BFS_noresult
+	method virtual compute_result : Result.imitator_result
 
 end;;
