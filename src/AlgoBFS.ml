@@ -34,7 +34,7 @@ let print_warnings_limit depth nb_states time nb_states_to_visit =
 	(* Retrieve the input options *)
 	let options = Input.get_options () in
 	begin
-	match options#post_limit with
+	match options#depth_limit with
 		| None -> ()
 		| Some limit -> if depth > limit then print_warning (
 			"The limit depth (" ^ (string_of_int limit) ^ ") has been reached. The exploration now stops, although there were still " ^ (string_of_int nb_states_to_visit) ^ " state" ^ (s_of_int nb_states_to_visit) ^ " to explore."

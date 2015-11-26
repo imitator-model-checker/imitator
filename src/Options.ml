@@ -7,7 +7,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Ulrich Kuehne, Etienne Andre
  * Created:       2010
- * Last modified: 2015/10/30
+ * Last modified: 2015/11/26
  *
  ****************************************************************)
  
@@ -134,14 +134,17 @@ class imitator_options =
 		(* Check whether the accumulated constraint is restricted to pi0 *)
 		val mutable check_point = ref false
 		
-		(* On-the-fly intersection (DEPRECATED) *)
-(* 		val mutable dynamic = ref false *)
+		(* Limit the depth in a BFS algorithm *)
+		val mutable depth_limit = ref None
 		
 		(* Distributed version of IMITATOR *)
 		val mutable distribution_mode = ref Non_distributed
 		
 		(* For distributed version: kill IM heuristics *)
 		val mutable distributedKillIM = ref false
+		
+		(* On-the-fly intersection (DEPRECATED) *)
+(* 		val mutable dynamic = ref false *)
 		
 		(* Remove useless clocks (slightly experimental) *)
 		val mutable dynamic_clock_elimination = ref false
@@ -160,9 +163,6 @@ class imitator_options =
 		
 		(* Returns contraint K ("algo IMK") *)
 		val mutable pi_compatible = ref false 
-		
-		(* limit number of iterations *)
-		val mutable post_limit = ref None
 		
 		(* Pre-compute pi0 ? (in PaTATOR mode only) *)
 		val mutable precomputepi0 = ref false
@@ -222,9 +222,10 @@ class imitator_options =
 		method completeIM = !completeIM
 		method cosyprop = !cosyprop
 		method counterex = !counterex
-		(* method dynamic = !dynamic *)
+		method depth_limit = !depth_limit
 		method distribution_mode = !distribution_mode
 		method distributedKillIM = !distributedKillIM
+		(* method dynamic = !dynamic *)
 		method dynamic_clock_elimination = !dynamic_clock_elimination
 		method efim = !efim
 		method fancy = !fancy
@@ -244,7 +245,6 @@ class imitator_options =
 		method output_cart_y_max = !output_cart_y_max
 		method output_result = !output_result
 		method pi_compatible = !pi_compatible
-		method post_limit = !post_limit
 		method precomputepi0 = !precomputepi0
 		method pta2clp = !pta2clp
 		method pta2gml = !pta2gml
@@ -385,7 +385,7 @@ class imitator_options =
 				
 (* 				("-counterex", Set counterex, " Stop the analysis as soon as a bad state is discovered (work in progress). Default: false."); *)
 				
-				("-depth-limit", Int (fun i -> post_limit := Some i), " Limits the depth of the exploration of the reachability graph. Default: no limit.");
+				("-depth-limit", Int (fun i -> depth_limit := Some i), " Limits the depth of the exploration of the state space. Default: no limit.");
 				
 				("-distributed", String set_distributed, " Distributed version of the behavioral cartography.
         Use 'no' for the non-distributed mode (default).
@@ -872,9 +872,9 @@ class imitator_options =
 
 			(* LIMIT OF POST *)
 			let _ =
-			match !post_limit with
-				| None -> print_message Verbose_medium "Considering no limit for the depth of the Post operation (default)."
-				| Some limit -> print_warning ("Considering a limit of " ^ (string_of_int limit) ^ " for the depth of the Post operation.")
+			match !depth_limit with
+				| None -> print_message Verbose_medium "Considering no limit for the depth of the state space (default)."
+				| Some limit -> print_warning ("Considering a limit of " ^ (string_of_int limit) ^ " for the depth of the state space.")
 			in ();
 
 			(* LIMIT OF POST *)

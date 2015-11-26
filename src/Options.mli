@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2012/05/10
- * Last modified: 2015/10/30
+ * Last modified: 2015/11/26
  *
  ****************************************************************)
  
@@ -50,9 +50,10 @@ class imitator_options :
 		(** HACK: property input from CosyVerif *)
 		method cosyprop : string
 		method counterex : bool
-(* 		method dynamic : bool *)
+		method depth_limit : int option
 		method distribution_mode : distribution_mode
 		method distributedKillIM : bool
+(* 		method dynamic : bool *)
 		method dynamic_clock_elimination : bool
 		method efim : bool
 		method fancy : bool
@@ -73,7 +74,6 @@ class imitator_options :
 		method output_result : bool
 		method pi0file : string
 		method pi_compatible : bool
-		method post_limit : int option
 		method precomputepi0 : bool
 		method pta2clp : bool
 		method pta2gml : bool
