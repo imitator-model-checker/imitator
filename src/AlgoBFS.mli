@@ -24,7 +24,7 @@
 class virtual algoBFS :
 	object
 		(*** TODO: make private (while accessible to subclasses ***)
-		val mutable state_space : StateSpace.reachability_graph
+		val mutable state_space : StateSpace.state_space
 		
 		method virtual algorithm_name : string
 		

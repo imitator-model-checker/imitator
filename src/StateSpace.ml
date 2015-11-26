@@ -9,7 +9,7 @@
  * 
  * File contributors : Ulrich Kühne, Étienne André
  * Created           : 2009/12/08
- * Last modified     : 2015/10/22
+ * Last modified     : 2015/11/26
  *
  ************************************************************)
 
@@ -42,7 +42,7 @@ type abstract_state = Location.global_location_index * LinearConstraint.px_linea
 (************************************************************)
 (** Graph structure *)
 (************************************************************)
-type reachability_graph = {
+type state_space = {
 	(** The number of generated states (even not added to the graph) *)
 	nb_generated_states : int ref;
 
@@ -519,8 +519,8 @@ let add_transition graph (orig_state_index, action_index, dest_state_index) =
 
 (*		
 (** Add a transition to the graph *)
-let add_transition reachability_graph (orig_state_index, action_index, dest_state_index) =
-	Hashtbl.add reachability_graph.transitions_table (orig_state_index, action_index) dest_state_index*)
+let add_transition state_space (orig_state_index, action_index, dest_state_index) =
+	Hashtbl.add state_space.transitions_table (orig_state_index, action_index) dest_state_index*)
 
 
 (** Add an inequality to all the states of the graph *)

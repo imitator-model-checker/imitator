@@ -47,7 +47,7 @@ type efsynth_result = {
 	constraints			: LinearConstraint.p_linear_constraint list;
 	
 	(* Explored state space *)
-	state_space			: StateSpace.reachability_graph;
+	state_space			: StateSpace.state_space;
 	
 	(* Nature of the state space (needed??) *)
 (* 	tile_nature			: AbstractModel.tile_nature; *)

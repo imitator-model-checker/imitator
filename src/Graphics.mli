@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre, Ulrich Kuehne
  * Created:       2010/07/05
- * Last modified: 2015/11/23
+ * Last modified: 2015/11/26
  *
  ************************************************************)
 
@@ -36,7 +36,7 @@ val cartography : abstract_model ->  v0 -> Result.returned_constraint list ->  s
 
 val dot : abstract_model -> string -> string -> unit
 
-val generate_graph : abstract_model -> StateSpace.reachability_graph -> string -> unit
+val generate_graph : abstract_model -> StateSpace.state_space -> string -> unit
 
 (* Convert a graph to a dot file *)
 (* val dot_of_graph : AbstractModel.abstract_model -> reachability_graph -> fancy:bool -> (string * string) *)

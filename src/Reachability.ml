@@ -10,7 +10,7 @@
  * Author:        Ulrich Kuehne, Etienne Andre
  * 
  * Created:       2010/07/22
- * Last modified: 2015/11/23
+ * Last modified: 2015/11/26
  *
  ****************************************************************)
 
@@ -2456,7 +2456,7 @@ let print_warnings_limit depth nb_states time nb_states_to_visit =
 (*** TODO: move somewhere else ***)
 type poststar_result = {
 	(* Reachability graph *)
-	reachability_graph	: StateSpace.reachability_graph;
+	reachability_graph	: StateSpace.state_space;
 	(* State space depth *)
 	(*** NOTE: does not work for branch and bound... ***)
 	depth				: int;

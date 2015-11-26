@@ -10,7 +10,7 @@
  * Author:        Ulrich Kuehne, Etienne Andre
  * 
  * Created:       2010/07/22
- * Last modified: 2015/11/24
+ * Last modified: 2015/11/26
  *
  ****************************************************************)
 
@@ -45,7 +45,7 @@ val set_patator_termination_function : (unit -> unit) -> unit
 (* SUCC functions *)
 (************************************************************)
 (* Compute the list of successor states of a given state, and update the state space; returns the list of new states' indexes actually added *)
-val post_from_one_state : abstract_model ->  StateSpace.reachability_graph -> StateSpace.state_index -> StateSpace.state_index list
+val post_from_one_state : abstract_model ->  StateSpace.state_space -> StateSpace.state_index -> StateSpace.state_index list
 
 (*---------------------------------------------------*)
 (* Check whether the limit of an exploration has been reached, according to the analysis options *)
@@ -61,8 +61,7 @@ val full_state_space_exploration : abstract_model -> unit
 
 val ef_synthesis : abstract_model -> (*returned_constraint*)unit
 
-val inverse_method_gen : abstract_model -> state -> (Result.im_result * StateSpace.reachability_graph)
-	(*returned_constraint * StateSpace.reachability_graph * tile_nature * bool * int * float*)
+val inverse_method_gen : abstract_model -> state -> (Result.im_result * StateSpace.state_space)
 
 val efim : abstract_model -> unit
 
