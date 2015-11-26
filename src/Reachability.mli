@@ -22,6 +22,20 @@ open LinearConstraint
 
 
 
+type limit_reached =
+	(* No limit *)
+	| Keep_going
+
+	(* Termination due to time limit reached *)
+	| Time_limit_reached
+	
+	(* Termination due to state space depth limit reached *)
+	| Depth_limit_reached
+	
+	(* Termination due to a number of explored states reached *)
+	| States_limit_reached
+
+
 val get_initial_state_or_abort : abstract_model -> state
 
 val print_stats: unit -> unit
@@ -47,11 +61,11 @@ val set_patator_termination_function : (unit -> unit) -> unit
 (* Compute the list of successor states of a given state, and update the state space; returns the list of new states' indexes actually added *)
 val post_from_one_state : abstract_model ->  StateSpace.state_space -> StateSpace.state_index -> StateSpace.state_index list
 
-(*---------------------------------------------------*)
-(* Check whether the limit of an exploration has been reached, according to the analysis options *)
+(*------------------------------------------------------------*)
+(* Check whether the limit of an BFS exploration has been reached, according to the analysis options *)
 (*** NOTE: May raise an exception when used in PaTATOR mode (the exception will be caught by PaTATOR) ***)
-(*---------------------------------------------------*)
-val check_limit : int -> int -> float -> bool
+(*------------------------------------------------------------*)
+val check_bfs_limit : int -> int -> float -> limit_reached
 
 
 (************************************************************)

@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/11/23
- * Last modified     : 2015/11/25
+ * Last modified     : 2015/11/26
  *
  ************************************************************)
 
@@ -30,6 +30,7 @@ open AbstractModel
 (* Print warning(s) if the limit of an exploration has been reached, according to the analysis options *)
 (*------------------------------------------------------------*)
 let print_warnings_limit depth nb_states time nb_states_to_visit =
+(*** TODO: rewrite by passing in addition an argument of type 'Reachability.limit_reached' ***)
 	(* Retrieve the input options *)
 	let options = Input.get_options () in
 	begin
@@ -143,10 +144,10 @@ class virtual algoBFS =
 		let newly_found_new_states = ref [init_state_index] in
 		
 		(* Boolean to check whether the time limit / state limit is reached *)
-		let limit_reached = ref false in
+		let limit_reached = ref Reachability.Keep_going in
 
-		(* Check if the list of new states is empty *)
-		while not (!limit_reached || !newly_found_new_states = []) do
+		(* Explore further until the limit is reached or the list of lastly computed states is empty *)
+		while !limit_reached = Reachability.Keep_going && !newly_found_new_states <> [] do
 			(* Print some information *)
 			if verbose_mode_greater Verbose_standard then (
 				print_message Verbose_low ("\n");
@@ -264,14 +265,16 @@ class virtual algoBFS =
 			current_depth <- current_depth + 1;
 			
 			(* Check if the limit has been reached *)
-			limit_reached := !limit_reached || (Reachability.check_limit current_depth (StateSpace.nb_states state_space) (time_from start_time));
+			limit_reached := Reachability.check_bfs_limit current_depth (StateSpace.nb_states state_space) (time_from start_time);
 		done;
 		
 		(* Flag to detect premature stop in case of limit reached *)
+		(*** NOTE/TODO: this variable is now useless ***)
 		let premature_stop = ref false in
 		
 		(* There were still states to explore *)
-		if !limit_reached && !newly_found_new_states != [] then(
+(* 		if !limit_reached && !newly_found_new_states <> [] then( *)
+		if !limit_reached <> Reachability.Keep_going && !newly_found_new_states <> [] then(
 			(* Update flag *)
 			premature_stop := true;
 			

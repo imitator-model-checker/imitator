@@ -2377,10 +2377,74 @@ let set_patator_termination_function f =
 	patator_termination_function := Some f
 
 
+
+type limit_reached =
+	(* No limit *)
+	| Keep_going
+
+	(* Termination due to time limit reached *)
+	| Time_limit_reached
+	
+	(* Termination due to state space depth limit reached *)
+	| Depth_limit_reached
+	
+	(* Termination due to a number of explored states reached *)
+	| States_limit_reached
+
+
+(*------------------------------------------------------------*)
+(* Check whether the limit of an BFS exploration has been reached, according to the analysis options *)
+(*** NOTE: May raise an exception when used in PaTATOR mode (the exception will be caught by PaTATOR) ***)
+(*------------------------------------------------------------*)
+exception Limit_detected of limit_reached
+
+let check_bfs_limit depth nb_states time =
+	(* Retrieve the input options *)
+	let options = Input.get_options () in
+	
+	(* Check all limits *)
+	
+	(* Depth limit *)
+	try(
+	begin
+	match options#post_limit with
+		| None -> ()
+		| Some limit -> if depth > limit then raise (Limit_detected Depth_limit_reached)
+	end
+	;
+	(* States limit *)
+	begin
+	match options#states_limit with
+		| None -> ()
+		| Some limit -> if nb_states > limit then raise (Limit_detected States_limit_reached)
+	end
+	;
+	(* Time limit *)
+	begin
+	match options#time_limit with
+		| None -> ()
+		| Some limit -> if time > (float_of_int limit) then raise (Limit_detected Time_limit_reached)
+	end
+	;
+	(* External function for PaTATOR (would raise an exception in case of stop needed) *)
+	begin
+	match !patator_termination_function with
+		| None -> ()
+		| Some f -> f (); () (*** NOTE/BADPROG: Does nothing but in fact will directly raise an exception in case of required termination, caught at a higher level (PaTATOR) ***)
+	end
+	;
+	(* If reached here, then everything is fine: keep going *)
+	Keep_going
+	)
+	(* If exception caught, then return the reason *)
+	with Limit_detected reason -> reason
+
+
 (*------------------------------------------------------------*)
 (* Check whether the limit of an exploration has been reached, according to the analysis options *)
 (*** NOTE: May raise an exception when used in PaTATOR mode (the exception will be caught by PaTATOR) ***)
 (*------------------------------------------------------------*)
+(*** NOTE: old functions that should be eventually removed ***)
 let check_limit depth nb_states time =
 	(* Retrieve the input options *)
 	let options = Input.get_options () in
