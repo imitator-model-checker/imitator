@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/11/25
- * Last modified     : 2015/11/25
+ * Last modified     : 2015/11/26
  *
  ************************************************************)
 
@@ -20,6 +20,7 @@
 open OCamlUtilities
 open ImitatorUtilities
 open AbstractModel
+open Result
 open AlgoBFS
 
 
@@ -30,11 +31,8 @@ open AlgoBFS
 class algoEFsynth =
 	object (self) inherit algoBFS as super
 	
-	
-	(*** TODO: put something else there ***)
-	val mutable k_result = LinearConstraint.p_false_constraint()
-	
-	val mutable p_constraints = []
+	(* List of constraints allowing the reachability of the bad location *)
+	val mutable bad_constraints = []
 
 	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -49,21 +47,42 @@ class algoEFsynth =
 		(* First initialize superclass variables *)
 		super#initialize_variables;
 
-		(*** TODO !!! ***)
-(* 		k_result <- LinearConstraint.px_hide_nonparameters_and_collapse init_constr; *)
+		bad_constraints <- [];
 
-		p_constraints <- [];
-
-		(* Print some information *)
+(*		(* Print some information *)
 		if verbose_mode_greater Verbose_low then(
 			(* Retrieve the model *)
 			let model = Input.get_model () in
 			print_message Verbose_low ("Initialized k_result to ");
 			print_message Verbose_low (LinearConstraint.string_of_p_linear_constraint model.variable_names k_result);
 			print_message Verbose_low ("");
-		)
+		)*)
 
+		(* The end *)
+		()
 	
 
-	method compute_result = Result.BFS_noresult
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(* Method packaging the result output by the algorithm *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	method compute_result =
+		(*** HACK: dummy result to ensure compiling ***)
+		EFsynth_result
+		{
+			(* List of constraints ensuring EF location *)
+			constraints			= bad_constraints;
+			
+			(* Explored state space *)
+			state_space			= state_space;
+			
+			(* Nature of the state space (needed??) *)
+		(* 	tile_nature			: AbstractModel.tile_nature; *)
+			
+			(* Total computation time of the algorithm *)
+			computation_time	= 0.;
+			
+			(* Termination *)
+			termination			= Regular_termination;
+		}
+	
 end;;

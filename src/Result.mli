@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/11/23
- * Last modified     : 2015/11/24
+ * Last modified     : 2015/11/26
  *
  ************************************************************)
 
@@ -20,21 +20,49 @@
 
 
 (************************************************************)
+(** Termination of the algorithm *)
+(************************************************************)
+type nb_unexplored_successors = int
+
+type algorithm_termination =
+	(* Fixpoint-like termination *)
+	| Regular_termination
+
+	(* Termination due to time limit reached *)
+	| Time_limit of nb_unexplored_successors
+	
+	(* Termination due to state space depth limit reached *)
+	| Depth_limit of nb_unexplored_successors
+	
+	(* Termination due to a number of explored states reached *)
+	| States_limit of nb_unexplored_successors
+
+
+(************************************************************)
 (** General result for the IMITATOR algorithms *)
 (************************************************************)
 
+type efsynth_result = {
+	(* List of constraints ensuring EF location *)
+	constraints			: LinearConstraint.p_linear_constraint list;
+	
+	(* Explored state space *)
+	state_space			: StateSpace.reachability_graph;
+	
+	(* Nature of the state space (needed??) *)
+(* 	tile_nature			: AbstractModel.tile_nature; *)
+	
+	(* Total computation time of the algorithm *)
+	computation_time	: float;
+	
+	(* Termination *)
+	termination			: algorithm_termination;
+}
+
+
 type imitator_result =
-	(* Degenerated result for pure BFS algorithm *)
-	| BFS_noresult
-(*	(*** HACK: just to test the algorithms ***)
-	| Noresultbecausethatsatest*)
-
-
-
-
-
-
-
+	(* Result for EFsynth *)
+	| EFsynth_result of efsynth_result
 
 
 

@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/11/23
- * Last modified     : 2015/11/25
+ * Last modified     : 2015/11/26
  *
  ************************************************************)
 
@@ -23,6 +23,9 @@
 (**************************************************************)
 class virtual algoBFS :
 	object
+		(*** TODO: make private (while accessible to subclasses ***)
+		val mutable state_space : StateSpace.reachability_graph
+		
 		method virtual algorithm_name : string
 		
 		method initialize_variables : unit
