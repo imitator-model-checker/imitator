@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/11/23
- * Last modified     : 2015/11/26
+ * Last modified     : 2015/11/27
  *
  ************************************************************)
 
@@ -29,6 +29,7 @@ type algorithm_termination =
 	| Regular_termination
 
 	(* Termination due to time limit reached *)
+	(*** TODO: list of state indexes instead of nb ??? ***)
 	| Time_limit of nb_unexplored_successors
 	
 	(* Termination due to state space depth limit reached *)
