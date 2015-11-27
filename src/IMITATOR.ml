@@ -9,7 +9,7 @@
  * 
  * File contributors : Ulrich Kühne, Étienne André
  * Created           : 2009/09/07
- * Last modified     : 2015/11/25
+ * Last modified     : 2015/11/27
  *
  ************************************************************)
 
@@ -236,11 +236,11 @@ if (options#imitator_mode = Border_cartography && model.correctness_condition = 
 
 
 (************************************************************)
-(* EXPERIMENTAL: dynamic clock elimination *)
+(* Dynamic clock elimination *)
 (************************************************************)
 (* Need to be called before initial state is created! *)
 if options#dynamic_clock_elimination then (
-	Reachability.prepare_clocks_elimination model
+	ClocksElimination.prepare_clocks_elimination ()
 );
 
 

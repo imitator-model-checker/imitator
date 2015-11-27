@@ -10,7 +10,7 @@
  * Author:        Ulrich Kuehne, Etienne Andre
  * 
  * Created:       2010/07/22
- * Last modified: 2015/11/26
+ * Last modified: 2015/11/27
  *
  ****************************************************************)
 
@@ -40,13 +40,6 @@ val get_initial_state_or_abort : abstract_model -> state
 
 val print_stats: unit -> unit
 
-
-(************************************************************)
-(* Clock elimination *)
-(************************************************************)
-(* Create data structures for detecting useless clocks (to be called once per model) *)
-(** WARNING: should maybe be somewhere else? *)
-val prepare_clocks_elimination : abstract_model -> unit
 
 
 (************************************************************)

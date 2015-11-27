@@ -1879,7 +1879,7 @@ let get_clocks_in_linear_constraint clocks =
 	LinearConstraint.pxd_find_variables clocks
 
 
-(*** WARNING: duplicate function in Reachability ***)
+(*** WARNING: duplicate function in ClockElimination ***)
 let get_clocks_in_updates : clock_updates -> clock_index list = function
 	(* No update at all *)
 	| No_update -> []

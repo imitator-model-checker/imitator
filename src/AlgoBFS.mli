@@ -5,11 +5,11 @@
  * Laboratoire Spécification et Vérification (ENS Cachan & CNRS, France)
  * LIPN, Université Paris 13, Sorbonne Paris Cité (France)
  * 
- * Module description: main class to explore the state space in breadth-first search manner
+ * Module description: main class to explore the state space in breadth-first search manner; virual class (no concrete instance of this class should be created)
  * 
  * File contributors : Étienne André
  * Created           : 2015/11/23
- * Last modified     : 2015/11/26
+ * Last modified     : 2015/11/27
  *
  ************************************************************)
 
@@ -26,11 +26,15 @@ class virtual algoBFS :
 		(*** TODO: make private (while accessible to subclasses ***)
 		val mutable state_space : StateSpace.state_space
 		
+		(* Name of the algorithm (to be defined in subclasses) *)
 		method virtual algorithm_name : string
 		
-		method initialize_variables : unit
+		(* Variable initialization (to be defined in subclasses) *)
+		method virtual initialize_variables : unit
 		
+		(* Main method to run the algorithm; implements here a BFS search, and call other functions that may be modified in subclasses *)
 		method run : StateSpace.state -> Result.imitator_result
 		
+		(* Packaging the result at the end of the exploration (to be defined in subclasses) *)
 		method virtual compute_result : Result.imitator_result
 end

@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/11/23
- * Last modified     : 2015/11/26
+ * Last modified     : 2015/11/27
  *
  ************************************************************)
 
@@ -83,12 +83,10 @@ class virtual algoBFS =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Variable initialization *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method initialize_variables =
-		print_message Verbose_low ("Initializing algorithm variables...");
-		()
+	method virtual initialize_variables : unit
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Main method running the algorithm *)
+	(* Main method running the algorithm: implements here a BFS search, and call other functions that may be modified in subclasses *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method run (init_state : StateSpace.state) =
 		(* Retrieve the model *)
@@ -115,6 +113,10 @@ class virtual algoBFS =
 		
 	(*		(* Set the counter of selections to 0 *)
 		nb_random_selections := 0;*)
+
+		(* Variable initialization *)
+		print_message Verbose_low ("Initializing algorithm variables...");
+		self#initialize_variables;
 
 		(* Debut prints *)
 		print_message Verbose_low ("Starting exploring the parametric zone graph from the following initial state:");
