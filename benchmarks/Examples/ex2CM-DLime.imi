@@ -1,0 +1,94 @@
+(************************************************************
+ *                      IMITATOR MODEL                      
+ *
+ * Loop to make a parameter be arbitrarily small (coming from the 2-counter machine encoding by Didier Lime in [AM15])
+ *
+ * Description     : Loop to force a parameter to be arbitrarily small
+ * Correctness     : sfinal (un)reachable
+ * Source          : Language Preservation Problems in Parametric Timed Automata (Étienne André, Nicolas Markey, FORMATS 2015)
+ * Author          : Didier Lime
+ * Modeling        : Étienne André
+ * Input by        : Étienne André
+ * License         : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ *
+ * Created         : 2015/12/01
+ * Last modified   : 2015/12/01
+ *
+ * IMITATOR version: 2.7.4-working
+ ************************************************************)
+
+var
+
+(* Clocks *)
+ 	x1, x2, t
+		: clock;
+
+(* Parameters *)
+	p
+		: parameter;
+
+
+
+(************************************************************)
+  automaton pta
+(************************************************************)
+
+loc s0: while True wait {}
+	when x1 = 1 + p & t <= 1 do {x1 ' = 0} goto s1;
+	when x2 = 1 do {x2 ' = 0} goto s1prime;
+
+loc s1: while True wait {}
+	when x2 = 1 do {x2 ' = 0} goto s2;
+	
+loc s1prime: while True wait {}
+	when x1 = 1 + p & t <= 1 do {x1 ' = 0} goto s2;
+	
+loc s2: while True wait {}
+	when t = 1 do {t' = 0} goto s3;
+	
+loc s3: while t = 0 wait {}
+	(* Zero-test *)
+	when x1 = 1 goto sfinal;
+	(* Back to increment again *)
+	when True goto s0;
+
+loc sfinal: while True wait {}
+end (* pta *)
+
+
+
+(************************************************************)
+(* Initial state *)
+(************************************************************)
+
+init :=
+	(*------------------------------------------------------------*)
+	(* Initial location *)
+	(*------------------------------------------------------------*)
+	& loc[pta] = s0
+
+	(*------------------------------------------------------------*)
+	(* Initial clock constraints *)
+	(*------------------------------------------------------------*)
+	& x1 = 1
+	& x2 = 1
+	& t = 0
+
+	(*------------------------------------------------------------*)
+	(* Parameter constraints *)
+	(*------------------------------------------------------------*)
+	& p >= 0
+;
+
+
+(************************************************************)
+(* Property specification *)
+(************************************************************)
+
+property := unreachable loc[pta] = sfinal;
+
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end
