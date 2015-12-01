@@ -3,7 +3,7 @@
  *
  * Loop to make a parameter be arbitrarily small (coming from the 2-counter machine encoding by Didier Lime in [AM15])
  *
- * Description     : Loop to force a parameter to be arbitrarily small
+ * Description     : Loop to force a parameter to be arbitrarily small. This case study consists of the sole gadget encoding the increment of counter 1 (from the 2-counter machine encoding by Didier Lime in [AM15]). x encodes the value of counter 1; y encodes the value of counter 2. p is typically "small", in [0, epsilon], for some epsilon <= 1/(max(c1, c2)).
  * Correctness     : sfinal (un)reachable
  * Source          : Language Preservation Problems in Parametric Timed Automata (Étienne André, Nicolas Markey, FORMATS 2015)
  * Author          : Didier Lime
@@ -20,7 +20,7 @@
 var
 
 (* Clocks *)
- 	x1, x2, t
+ 	x, y, t
 		: clock;
 
 (* Parameters *)
@@ -34,21 +34,21 @@ var
 (************************************************************)
 
 loc s0: while True wait {}
-	when x1 = 1 + p & t <= 1 do {x1 ' = 0} goto s1;
-	when x2 = 1 do {x2 ' = 0} goto s1prime;
+	when x = 1 + p & t <= 1 do {x ' = 0} goto s1;
+	when y = 1 do {y ' = 0} goto s1prime;
 
 loc s1: while True wait {}
-	when x2 = 1 do {x2 ' = 0} goto s2;
+	when y = 1 do {y ' = 0} goto s2;
 	
 loc s1prime: while True wait {}
-	when x1 = 1 + p & t <= 1 do {x1 ' = 0} goto s2;
+	when x = 1 + p & t <= 1 do {x ' = 0} goto s2;
 	
 loc s2: while True wait {}
 	when t = 1 do {t' = 0} goto s3;
 	
 loc s3: while t = 0 wait {}
 	(* Zero-test *)
-	when x1 = 1 goto sfinal;
+	when x = 1 goto sfinal;
 	(* Back to increment again *)
 	when True goto s0;
 
@@ -70,8 +70,8 @@ init :=
 	(*------------------------------------------------------------*)
 	(* Initial clock constraints *)
 	(*------------------------------------------------------------*)
-	& x1 = 1
-	& x2 = 1
+	& x = 1
+	& y = 1
 	& t = 0
 
 	(*------------------------------------------------------------*)
