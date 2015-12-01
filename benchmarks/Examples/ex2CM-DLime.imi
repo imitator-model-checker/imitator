@@ -48,8 +48,8 @@ loc s2: while True wait {}
 	
 loc s3: while t = 0 wait {}
 	(* Zero-test *)
-	when x = 1 goto sfinal;
-	(* Back to increment again *)
+	when x = 1 & t = 0 goto sfinal;
+	(* Non-deterministic choice: go back to increment again *)
 	when True goto s0;
 
 loc sfinal: while True wait {}
