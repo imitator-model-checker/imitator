@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/11/23
- * Last modified     : 2015/11/27
+ * Last modified     : 2015/12/02
  *
  ************************************************************)
 
@@ -20,17 +20,34 @@
 open OCamlUtilities
 open ImitatorUtilities
 open AbstractModel
+open AlgoGeneric
 
 
 (**************************************************************)
 (* Object-independent functions *)
 (**************************************************************)
 
+type limit_reached =
+	(* No limit *)
+	| Keep_going
+
+	(* Termination due to time limit reached *)
+	| Time_limit_reached
+	
+	(* Termination due to state space depth limit reached *)
+	| Depth_limit_reached
+	
+	(* Termination due to a number of explored states reached *)
+	| States_limit_reached
+
+exception Limit_detected of limit_reached
+
+
 (*------------------------------------------------------------*)
 (* Print warning(s) if the limit of an exploration has been reached, according to the analysis options *)
 (*------------------------------------------------------------*)
 let print_warnings_limit depth nb_states time nb_states_to_visit =
-(*** TODO: rewrite by passing in addition an argument of type 'Reachability.limit_reached' ***)
+(*** TODO: rewrite by passing in addition an argument of type 'limit_reached' ***)
 	(* Retrieve the input options *)
 	let options = Input.get_options () in
 	begin
@@ -55,36 +72,80 @@ let print_warnings_limit depth nb_states time nb_states_to_visit =
 		);
 	end
 
+
 	
 	
 (**************************************************************)
 (* Class definition *)
 (**************************************************************)
 class virtual algoBFS =
-	object (self)
-	
-	(* Start time for the algorithm *)
-	val mutable start_time = 0.
-	
+	object (self) inherit algoGeneric as super
+
 	(* Depth in the explored state space *)
 	val mutable current_depth = 0
+	
+	(* Function to be called from the distributed IMITATOR *)
+	val mutable patator_termination_function = None
 	
 	(*** TODO: better have some option, or better initialize it to the good value from now on ***)
 	val mutable state_space = StateSpace.make 0
 	
 	
-	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Virtual method: the algorithm name is not defined for BFS as it is not supposed to be called *)
+	(* Set the PaTATOR termination function *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method virtual algorithm_name : string
-	
-	
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Variable initialization *)
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method virtual initialize_variables : unit
+	method set_patator_termination_function (f : unit -> unit) =
+		patator_termination_function <- Some f
 
+
+	
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(* Check whether the limit of an BFS exploration has been reached, according to the analysis options *)
+	(*** NOTE: May raise an exception when used in PaTATOR mode (the exception will be caught by PaTATOR) ***)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(*** TODO: remove all arguments are all can be retrieve from the object attributes ***)
+	method private check_bfs_limit depth nb_states time =
+		(* Retrieve the input options *)
+		let options = Input.get_options () in
+		
+		(* Check all limits *)
+		
+		(* Depth limit *)
+		try(
+		begin
+		match options#depth_limit with
+			| None -> ()
+			| Some limit -> if depth > limit then raise (Limit_detected Depth_limit_reached)
+		end
+		;
+		(* States limit *)
+		begin
+		match options#states_limit with
+			| None -> ()
+			| Some limit -> if nb_states > limit then raise (Limit_detected States_limit_reached)
+		end
+		;
+		(* Time limit *)
+		begin
+		match options#time_limit with
+			| None -> ()
+			| Some limit -> if time > (float_of_int limit) then raise (Limit_detected Time_limit_reached)
+		end
+		;
+		(* External function for PaTATOR (would raise an exception in case of stop needed) *)
+		begin
+		match patator_termination_function with
+			| None -> ()
+			| Some f -> f (); () (*** NOTE/BADPROG: Does nothing but in fact will directly raise an exception in case of required termination, caught at a higher level (PaTATOR) ***)
+		end
+		;
+		(* If reached here, then everything is fine: keep going *)
+		Keep_going
+		)
+		(* If exception caught, then return the reason *)
+		with Limit_detected reason -> reason
+
+		
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Main method running the algorithm: implements here a BFS search, and call other functions that may be modified in subclasses *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -146,10 +207,10 @@ class virtual algoBFS =
 		let newly_found_new_states = ref [init_state_index] in
 		
 		(* Boolean to check whether the time limit / state limit is reached *)
-		let limit_reached = ref Reachability.Keep_going in
+		let limit_reached = ref Keep_going in
 
 		(* Explore further until the limit is reached or the list of lastly computed states is empty *)
-		while !limit_reached = Reachability.Keep_going && !newly_found_new_states <> [] do
+		while !limit_reached = Keep_going && !newly_found_new_states <> [] do
 			(* Print some information *)
 			if verbose_mode_greater Verbose_standard then (
 				print_message Verbose_low ("\n");
@@ -167,7 +228,7 @@ class virtual algoBFS =
 				(* Count the states for debug purpose: *)
 				num_state := !num_state + 1;
 				(* Perform the post *)
-				let new_states = Reachability.post_from_one_state model state_space orig_state_index in
+				let new_states = self#post_from_one_state state_space orig_state_index in
 				(* Print some information *)
 				if verbose_mode_greater Verbose_medium then (
 					let beginning_message = if new_states = [] then "Found no new state" else ("Found " ^ (string_of_int (List.length new_states)) ^ " new state" ^ (s_of_int (List.length new_states)) ^ "") in
@@ -267,7 +328,7 @@ class virtual algoBFS =
 			current_depth <- current_depth + 1;
 			
 			(* Check if the limit has been reached *)
-			limit_reached := Reachability.check_bfs_limit current_depth (StateSpace.nb_states state_space) (time_from start_time);
+			limit_reached := self#check_bfs_limit current_depth (StateSpace.nb_states state_space) (time_from start_time);
 		done;
 		
 		(* Flag to detect premature stop in case of limit reached *)
@@ -276,7 +337,7 @@ class virtual algoBFS =
 		
 		(* There were still states to explore *)
 (* 		if !limit_reached && !newly_found_new_states <> [] then( *)
-		if !limit_reached <> Reachability.Keep_going && !newly_found_new_states <> [] then(
+		if !limit_reached <> Keep_going && !newly_found_new_states <> [] then(
 			(* Update flag *)
 			premature_stop := true;
 			
@@ -318,9 +379,4 @@ class virtual algoBFS =
 		self#compute_result
 
 	
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Method packaging the result output by the algorithm *)
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method virtual compute_result : Result.imitator_result
-
 end;;

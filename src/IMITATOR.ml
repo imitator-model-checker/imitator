@@ -9,7 +9,7 @@
  * 
  * File contributors : Ulrich Kühne, Étienne André
  * Created           : 2009/09/07
- * Last modified     : 2015/11/27
+ * Last modified     : 2015/12/02
  *
  ************************************************************)
 
@@ -93,7 +93,7 @@ Input.set_options options;
 (* Print startup message *)
 (************************************************************)
 (************************************************************)
-  
+
 (* Print header *)
 print_header_string();
 

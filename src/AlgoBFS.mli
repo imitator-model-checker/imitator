@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/11/23
- * Last modified     : 2015/11/27
+ * Last modified     : 2015/12/02
  *
  ************************************************************)
 
@@ -17,24 +17,20 @@
 (**************************************************************)
 (* Modules *)
 (**************************************************************)
+open AlgoGeneric
 
 (**************************************************************)
 (* Class definition *)
 (**************************************************************)
 class virtual algoBFS :
-	object
+	object inherit algoGeneric
 		(*** TODO: make private (while accessible to subclasses ***)
 		val mutable state_space : StateSpace.state_space
-		
-		(* Name of the algorithm (to be defined in subclasses) *)
-		method virtual algorithm_name : string
-		
-		(* Variable initialization (to be defined in subclasses) *)
-		method virtual initialize_variables : unit
-		
+
+		(* Set the PaTATOR termination function *)
+		method set_patator_termination_function : (unit -> unit) -> unit
+	
 		(* Main method to run the algorithm; implements here a BFS search, and call other functions that may be modified in subclasses *)
 		method run : StateSpace.state -> Result.imitator_result
 		
-		(* Packaging the result at the end of the exploration (to be defined in subclasses) *)
-		method virtual compute_result : Result.imitator_result
 end

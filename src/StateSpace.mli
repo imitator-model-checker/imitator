@@ -27,6 +27,7 @@ open AbstractModel
 type state_index = int
 
 (** State: location and constraint *)
+(*** TODO: hide this definition, and use (at least) structure or functions ***)
 type state = Location.global_location * LinearConstraint.px_linear_constraint
 
 type abstract_state = Location.global_location_index * LinearConstraint.px_linear_constraint
