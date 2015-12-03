@@ -13,6 +13,7 @@
  *
  ************************************************************)
 
+ 
 
 (************************************************************)
 (* Internal modules *)
@@ -67,8 +68,10 @@ try(
 
 
 (*** TEST ***)
-let algo = new AlgoEFsynth.algoEFsynth in
+(*let algo = new AlgoEFsynth.algoEFsynth in
 print_string algo#algorithm_name;
+let result = algo#run() in
+ResultProcessor.process_result result;*)
 
 
 
@@ -299,7 +302,14 @@ begin
 		(* Synthesis *)
 		| EF_synthesis 
 			->
-			Reachability.ef_synthesis model
+			(*** WARNING: work in progress here ***)
+			let algo = new AlgoEFsynth.algoEFsynth in
+			print_string algo#algorithm_name;
+			let result = algo#run() in
+			ResultProcessor.process_result result;
+			(*** WARNING: work in progress here ***)
+
+(* 			Reachability.ef_synthesis model *)
 
 			
 		(* Inverse Method *)

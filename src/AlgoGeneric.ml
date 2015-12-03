@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/12/02
- * Last modified     : 2015/12/02
+ * Last modified     : 2015/12/03
  *
  ************************************************************)
 
@@ -37,37 +37,6 @@ open AbstractModel
 
 exception Unsat_exception
 
-
-
-(**************************************************************)
-(* I/O functions *)
-(**************************************************************)
-
-(*** TODO: move somewhere else ; in some "Export Results" module ***)
-
-let write_result_to_file constraint_str =
-	(* Retrieve the input options *)
-	let options = Input.get_options () in
-	(* Prepare the string to write *)
-	let file_content =
-		(*** WARNING: duplicate code (Cartography.ml) ***)
-		"(*" 
-		(* Program version *)
-		^ "\n  Result output by " ^ Constants.program_name ^ ""
-		^ "\n  Version  : " ^ (ImitatorUtilities.program_name_and_version_and_nickname_and_build())
-		^ "\n  Model    : '" ^ options#file ^ "'"
-		(* Date *)
-		^ "\n  Generated: " ^ (now()) ^ ""
-		(* Command *)
-		^ "\n  Command  : " ^ (string_of_array_of_string_with_sep " " Sys.argv)
-		^ "\n*)\n\n"
-		(* The actual result *)
-		^ constraint_str ^ "\n"
-	in
-	(* Write to file *)
-	let file_name = options#files_prefix ^ Constants.result_file_extension in
-	write_to_file file_name file_content;
-	print_message Verbose_standard ("Result written to file '" ^ file_name ^ "'.")
 
 
 
@@ -164,6 +133,8 @@ let upd_cache = Cache.make upd_hash 100*)
 (**************************************************************)
 (* Statistics *)
 (**************************************************************)
+
+(*** TODO: re use from ResultProcessor (temporarily disabled) ***)
 
 (* Print statistics for cache usage *)
 let print_stats _ =
@@ -641,7 +612,9 @@ let create_initial_state model =
 (*------------------------------------------------------------*)
 (* Compute the initial state with the initial invariants and time elapsing, and check whether it is satisfiable; if not, abort *)
 (*------------------------------------------------------------*)
-let get_initial_state_or_abort model =
+let compute_initial_state_or_abort () =
+	(* Retrieve the model *)
+	let model = Input.get_model() in
 	(* Retrieve the input options *)
 	let options = Input.get_options () in
 
@@ -1099,6 +1072,9 @@ class virtual algoGeneric =
 	(* Start time for the algorithm *)
 	val mutable start_time = 0.
 	
+	(* Nature of the trace set *)
+	val mutable trace_set_nature = Unknown
+	
 	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Virtual method: the algorithm name is not defined for BFS as it is not supposed to be called *)
@@ -1114,6 +1090,32 @@ class virtual algoGeneric =
 	
 	
 
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(* Update the nature of the trace set *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	method update_trace_set_nature ((location : Location.global_location), (_ : LinearConstraint.px_linear_constraint)) =
+		(* Retrieve the model *)
+		let model = Input.get_model() in
+		(* Retrieve the input options *)
+		let options = Input.get_options () in
+
+		match model.correctness_condition with
+		| None -> ()
+		| Some (Unreachable unreachable_global_locations) ->
+			(* Check whether the current location matches one of the unreachable global locations *)
+			if StateSpace.match_unreachable_global_locations unreachable_global_locations location then(
+			
+				(*** Quite a hack here ***)
+				(*** TODO: move elsewhere ***)
+				if options#efim && trace_set_nature <> Bad then(
+					print_message Verbose_standard ("  [EFIM] Bad location found! Switching to bad-driven algorithm");
+				);
+				
+				trace_set_nature <- Bad;
+			);
+		| _ -> raise (InternalError("IMITATOR currently ony implements the non-reachability-like properties."))
+
+	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Add a new state to the reachability_graph (if indeed needed) *)
 	(* Also update tile_nature and slast (*** TODO: remove these operations, and move them back to their algorithms ***) *)
@@ -1350,7 +1352,7 @@ class virtual algoGeneric =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Main method to run the algorithm: virtual method to be defined in subclasses *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method virtual run : StateSpace.state -> Result.imitator_result
+	method virtual run : unit -> Result.imitator_result
 	
 	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)

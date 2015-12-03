@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2009/09/11
- * Last modified     : 2015/11/23
+ * Last modified     : 2015/12/03
  *
  ************************************************************)
 
@@ -205,6 +205,7 @@ type lu_status =
 (** Nature of the tiles *)
 (************************************************************)
 (*** BADPROG : nothing to do with abstract model ! ***)
+(*** TODO: rename into trace set nature ***)
 type tile_nature =
 	| Good
 	| Bad

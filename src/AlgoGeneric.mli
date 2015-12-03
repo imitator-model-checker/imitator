@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/12/02
- * Last modified     : 2015/12/02
+ * Last modified     : 2015/12/03
  *
  ************************************************************)
 
@@ -17,6 +17,12 @@
 (**************************************************************)
 (* Modules *)
 (**************************************************************)
+
+
+(**************************************************************)
+(* Class-independent functions *)
+(**************************************************************)
+val compute_initial_state_or_abort : unit -> StateSpace.state
 
 
 (**************************************************************)
@@ -34,6 +40,9 @@ class virtual algoGeneric :
 		(* Variable initialization (to be defined in subclasses) *)
 		method virtual initialize_variables : unit
 		
+		(* Update the nature of the trace set *)
+		method update_trace_set_nature : StateSpace.state -> unit
+		
 		(*------------------------------------------------------------*)
 		(* Add a new state to the reachability_graph (if indeed needed) *)
 		(* Also update tile_nature and slast (*** TODO: remove these operations, and move them back to their algorithms ***) *)
@@ -47,7 +56,7 @@ class virtual algoGeneric :
 		method post_from_one_state : StateSpace.state_space -> StateSpace.state_index -> StateSpace.state_index list
 
 	(* Main method to run the algorithm: virtual method to be defined in subclasses *)
-		method virtual run : StateSpace.state -> Result.imitator_result
+		method virtual run : unit -> Result.imitator_result
 		
 		(* Packaging the result at the end of the exploration (to be defined in subclasses) *)
 		method virtual compute_result : Result.imitator_result

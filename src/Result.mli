@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/11/23
- * Last modified     : 2015/11/27
+ * Last modified     : 2015/12/03
  *
  ************************************************************)
 

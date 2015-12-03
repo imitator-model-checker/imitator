@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/11/25
- * Last modified     : 2015/12/02
+ * Last modified     : 2015/12/03
  *
  ************************************************************)
 
@@ -26,7 +26,7 @@ class algoEFsynth :
 	object inherit algoBFS
 		method algorithm_name : string
 
-		method run : StateSpace.state -> Result.imitator_result
+		method run : unit -> Result.imitator_result
 		
 		method initialize_variables : unit
 		

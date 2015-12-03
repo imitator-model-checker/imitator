@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/11/23
- * Last modified     : 2015/12/02
+ * Last modified     : 2015/12/03
  *
  ************************************************************)
 
@@ -19,8 +19,10 @@
 (**************************************************************)
 open OCamlUtilities
 open ImitatorUtilities
+open Exceptions
 open AbstractModel
 open AlgoGeneric
+open Result
 
 
 (**************************************************************)
@@ -43,36 +45,6 @@ type limit_reached =
 exception Limit_detected of limit_reached
 
 
-(*------------------------------------------------------------*)
-(* Print warning(s) if the limit of an exploration has been reached, according to the analysis options *)
-(*------------------------------------------------------------*)
-let print_warnings_limit depth nb_states time nb_states_to_visit =
-(*** TODO: rewrite by passing in addition an argument of type 'limit_reached' ***)
-	(* Retrieve the input options *)
-	let options = Input.get_options () in
-	begin
-	match options#depth_limit with
-		| None -> ()
-		| Some limit -> if depth > limit then print_warning (
-			"The limit depth (" ^ (string_of_int limit) ^ ") has been reached. The exploration now stops, although there were still " ^ (string_of_int nb_states_to_visit) ^ " state" ^ (s_of_int nb_states_to_visit) ^ " to explore."
-		);
-	end;
-	begin
-	match options#states_limit with
-		| None -> ()
-		| Some limit -> if nb_states > limit then print_warning (
-			"The limit number of states (" ^ (string_of_int limit) ^ ") has been reached. The exploration now stops, although there were still " ^ (string_of_int nb_states_to_visit) ^ " state" ^ (s_of_int nb_states_to_visit) ^ " to explore."
-		);
-	end;
-	begin
-	match options#time_limit with
-		| None -> ()
-		| Some limit -> if time > (float_of_int limit) then print_warning (
-			"The time limit (" ^ (string_of_int limit) ^ " second" ^ (s_of_int limit) ^ ") has been reached. The exploration now stops, although there were still " ^ (string_of_int nb_states_to_visit) ^ " state" ^ (s_of_int nb_states_to_visit) ^ " to explore at this iteration."
-		);
-	end
-
-
 	
 	
 (**************************************************************)
@@ -89,6 +61,9 @@ class virtual algoBFS =
 	
 	(*** TODO: better have some option, or better initialize it to the good value from now on ***)
 	val mutable state_space = StateSpace.make 0
+	
+	(* Status of the analysis *)
+	val mutable termination_status = None
 	
 	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -115,21 +90,30 @@ class virtual algoBFS =
 		begin
 		match options#depth_limit with
 			| None -> ()
-			| Some limit -> if depth > limit then raise (Limit_detected Depth_limit_reached)
+			| Some limit -> if depth > limit then(
+(* 				termination_status <- Depth_limit; *)
+				raise (Limit_detected Depth_limit_reached)
+			)
 		end
 		;
 		(* States limit *)
 		begin
 		match options#states_limit with
 			| None -> ()
-			| Some limit -> if nb_states > limit then raise (Limit_detected States_limit_reached)
+			| Some limit -> if nb_states > limit then(
+(* 				termination_status <- States_limit; *)
+				raise (Limit_detected States_limit_reached)
+			)
 		end
 		;
 		(* Time limit *)
 		begin
 		match options#time_limit with
 			| None -> ()
-			| Some limit -> if time > (float_of_int limit) then raise (Limit_detected Time_limit_reached)
+			| Some limit -> if time > (float_of_int limit) then(
+(* 				termination_status <- Time_limit; *)
+				raise (Limit_detected Time_limit_reached)
+			)
 		end
 		;
 		(* External function for PaTATOR (would raise an exception in case of stop needed) *)
@@ -142,14 +126,39 @@ class virtual algoBFS =
 		(* If reached here, then everything is fine: keep going *)
 		Keep_going
 		)
-		(* If exception caught, then return the reason *)
+		(* If exception caught, then update termination status, and return the reason *)
 		with Limit_detected reason -> reason
 
 		
+
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(* Print warning(s) if the limit of an exploration has been reached, according to the analysis options *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	method private print_warnings_limit () =
+		match termination_status with
+			| Some Regular_termination -> ()
+
+			| Some (Depth_limit nb_unexplored_successors) -> print_warning (
+				"The limit depth has been reached. The exploration now stops, although there were still " ^ (string_of_int nb_unexplored_successors) ^ " state" ^ (s_of_int nb_unexplored_successors) ^ " to explore."
+			)
+
+			| Some (States_limit nb_unexplored_successors) -> print_warning (
+				"The limit number of states has been reached. The exploration now stops, although there were still " ^ (string_of_int nb_unexplored_successors) ^ " state" ^ (s_of_int nb_unexplored_successors) ^ " to explore."
+			)
+ 
+			| Some (Time_limit nb_unexplored_successors) -> print_warning (
+				"The time limit has been reached. The exploration now stops, although there were still " ^ (string_of_int nb_unexplored_successors) ^ " state" ^ (s_of_int nb_unexplored_successors) ^ " to explore at this iteration."
+					(* (" ^ (string_of_int limit) ^ " second" ^ (s_of_int limit) ^ ")*)
+			)
+			
+			| None -> raise (InternalError "The termination status should be set when displaying warnings concerning early termination.")
+
+
+	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Main method running the algorithm: implements here a BFS search, and call other functions that may be modified in subclasses *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method run (init_state : StateSpace.state) =
+	method run () =
 		(* Retrieve the model *)
 		let model = Input.get_model () in
 		
@@ -164,6 +173,9 @@ class virtual algoBFS =
 		(* Time counter *)
 		start_time <- Unix.gettimeofday();
 
+		(* Compute initial state *)
+		let init_state = AlgoGeneric.compute_initial_state_or_abort() in
+		
 		(* copy init state, as it might be destroyed later *)
 		(*** NOTE: this operation appears to be here totally useless ***)
 		let init_loc, init_constr = init_state in
@@ -331,20 +343,40 @@ class virtual algoBFS =
 			limit_reached := self#check_bfs_limit current_depth (StateSpace.nb_states state_space) (time_from start_time);
 		done;
 		
-		(* Flag to detect premature stop in case of limit reached *)
+(*		(* Flag to detect premature stop in case of limit reached *)
 		(*** NOTE/TODO: this variable is now useless ***)
-		let premature_stop = ref false in
+		let premature_stop = ref false in*)
 		
-		(* There were still states to explore *)
+		(* Were they any more states to explore? *)
+		let nb_unexplored_successors = List.length !newly_found_new_states in
+		
+(*		(* There were still states to explore *)
 (* 		if !limit_reached && !newly_found_new_states <> [] then( *)
-		if !limit_reached <> Keep_going && !newly_found_new_states <> [] then(
+		if !limit_reached <> Keep_going && nb_unexplored_successors > 0 then(
 			(* Update flag *)
 			premature_stop := true;
-			
-			(* Print some information *)
-			print_warnings_limit current_depth (StateSpace.nb_states state_space) (time_from start_time) (List.length !newly_found_new_states);
-			
-		);
+		);*)
+		
+		(* Update termination condition *)
+		begin
+		match !limit_reached with
+		(* No limit: regular termination *)
+		| Keep_going -> termination_status <- Some (Regular_termination)
+		(* Termination due to time limit reached *)
+		| Time_limit_reached -> termination_status <- Some (Time_limit nb_unexplored_successors)
+		
+		(* Termination due to state space depth limit reached *)
+		| Depth_limit_reached -> termination_status <- Some (Depth_limit nb_unexplored_successors)
+		
+		(* Termination due to a number of explored states reached *)
+		| States_limit_reached -> termination_status <- Some (States_limit nb_unexplored_successors)
+		end
+		;
+	
+		(* Print some information *)
+		(*** NOTE: must be done after setting the limit (above) ***)
+		self#print_warnings_limit ();
+
 
 		print_message Verbose_standard (
 			let nb_states = StateSpace.nb_states state_space in
@@ -357,26 +389,10 @@ class virtual algoBFS =
 			^ (string_of_int nb_transitions) ^ " transition" ^ (s_of_int nb_transitions) ^ " explored.");
 			(*** NOTE: in fact, more states and transitions may have been explored (and deleted); here, these figures are the number of states in the state space. ***)
 
-		(*------------------------------------------------------------*)
-		(* Return result *)
-		(*------------------------------------------------------------*)
-(*		{
-			(* State space *)
-			reachability_graph	= state_space;
-			(* State space depth *)
-			depth				= current_depth;
-			(* Computation time *)
-			total_time			= (time_from start_time);
-			(* Premature stop? (i.e., states / depth / time limit reached) *)
-			premature_stop		= !premature_stop;
-			(* Number of random selections *)
-			(*** TODO: remove that, as it is specific to IM... ***)
-			nb_random_selections = !nb_random_selections;
-			(* Unexplored states indices in case of early termination *)
-			unexplored_states	= !newly_found_new_states;
-		}*)
-
+		(* Return the algorithm-dependent result *)
 		self#compute_result
+		
+		(*** TODO: split between process result and return result; in between, add some info (algo_name finished after....., etc.) ***)
 
 	
 end;;
