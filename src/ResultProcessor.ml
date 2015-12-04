@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/12/03
- * Last modified     : 2015/12/03
+ * Last modified     : 2015/12/04
  *
  ************************************************************)
 
@@ -143,6 +143,29 @@ let process_result result =
 	let options = Input.get_options () in
 	
 	match result with
+	| PostStar_result poststar_result ->
+		print_message Verbose_standard (
+			"\nState space exploration completed " ^ (after_seconds ()) ^ "."
+		);
+			
+		print_message Verbose_low (
+			"Computation time: "
+			^ (string_of_seconds poststar_result.computation_time) ^ "."
+		);
+
+		(* Print statistics *)
+		print_statistics poststar_result.computation_time poststar_result.state_space;
+		
+		(* Generate graphics *)
+		let radical = options#files_prefix in
+		Graphics.generate_graph model poststar_result.state_space radical;
+		
+		(* The end*)
+		()
+
+		
+		
+		
 	| EFsynth_result efsynth_result ->
 
 		print_message Verbose_standard (

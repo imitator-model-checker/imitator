@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/11/23
- * Last modified     : 2015/12/03
+ * Last modified     : 2015/12/04
  *
  ************************************************************)
 
@@ -43,6 +43,18 @@ type algorithm_termination =
 (** General result for the IMITATOR algorithms *)
 (************************************************************)
 
+type poststar_result = {
+	(* Explored state space *)
+	state_space			: StateSpace.state_space;
+	
+	(* Total computation time of the algorithm *)
+	computation_time	: float;
+	
+	(* Termination *)
+	termination			: algorithm_termination;
+}
+
+
 type efsynth_result = {
 	(* List of constraints ensuring EF location *)
 	constraints			: LinearConstraint.p_linear_constraint list;
@@ -61,10 +73,13 @@ type efsynth_result = {
 }
 
 
+
 type imitator_result =
+	(* Result for Post* *)
+	| PostStar_result of poststar_result
+
 	(* Result for EFsynth *)
 	| EFsynth_result of efsynth_result
-
 
 
 

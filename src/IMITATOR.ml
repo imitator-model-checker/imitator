@@ -297,7 +297,15 @@ begin
 		
 		(* Exploration *)
 		| State_space_exploration
-			-> Reachability.full_state_space_exploration model;
+			->
+			(*** WARNING: work in progress here ***)
+			let algo = new AlgoPostStar.algoPostStar in
+			print_string algo#algorithm_name;
+			let result = algo#run() in
+			ResultProcessor.process_result result;
+			(*** WARNING: work in progress here ***)
+			
+(* 			Reachability.full_state_space_exploration model; *)
 			
 		(* Synthesis *)
 		| EF_synthesis 

@@ -5,10 +5,10 @@
  * Laboratoire Spécification et Vérification (ENS Cachan & CNRS, France)
  * LIPN, Université Paris 13, Sorbonne Paris Cité (France)
  * 
- * Module description: EFsynth algorithm [JLR15]
+ * Module description: PostStar algorithm, i.e., simple computation of all symbolic states
  * 
  * File contributors : Étienne André
- * Created           : 2015/11/25
+ * Created           : 2015/12/04
  * Last modified     : 2015/12/04
  *
  ************************************************************)
@@ -22,19 +22,18 @@ open AlgoBFS
 (************************************************************)
 (* Class definition *)
 (************************************************************)
-class algoEFsynth :
+class algoPostStar :
 	object inherit algoBFS
+	
 		(************************************************************)
 		(* Class variables *)
 		(************************************************************)
-
 		method algorithm_name : string
 
-
+		
 		(************************************************************)
 		(* Class methods *)
 		(************************************************************)
-		
 		method run : unit -> Result.imitator_result
 		
 		method initialize_variables : unit

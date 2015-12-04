@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/11/23
- * Last modified     : 2015/12/03
+ * Last modified     : 2015/12/04
  *
  ************************************************************)
 
@@ -24,8 +24,20 @@ open AlgoGeneric
 (**************************************************************)
 class virtual algoBFS :
 	object inherit algoGeneric
+		(************************************************************)
+		(* Class variables *)
+		(************************************************************)
 		(*** TODO: make private (while accessible to subclasses ***)
 		val mutable state_space : StateSpace.state_space
+
+		(* Status of the analysis *)
+		(*** TODO: make private (while accessible to subclasses ***)
+		val mutable termination_status : Result.algorithm_termination option
+
+		
+		(************************************************************)
+		(* Class methods *)
+		(************************************************************)
 
 		(* Set the PaTATOR termination function *)
 		method set_patator_termination_function : (unit -> unit) -> unit
