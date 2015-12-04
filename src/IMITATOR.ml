@@ -360,31 +360,31 @@ end;
 ) with
 (*** TODO: factorize a bit ***)
 	| InternalError e -> (
-		print_error ("Fatal internal error: " ^ e ^ "\nPlease (kindly) insult the developers.");
+		print_error ("Fatal internal error: " ^ e ^ "\nPlease (politely) insult the developers.");
 		abort_program ();
 		(* Safety *)
 		exit 1
 	);
 	| Failure msg -> (
-		print_error ("'Failure' exception: '" ^ msg ^ "'\nPlease (kindly) insult the developers.");
+		print_error ("'Failure' exception: '" ^ msg ^ "'\nPlease (politely) insult the developers.");
 		abort_program ();
 		(* Safety *)
 		exit 1
 	);
 	| Invalid_argument msg -> (
-		print_error ("'Invalid_argument' exception: '" ^ msg ^ "'\nPlease (kindly) insult the developers.");
+		print_error ("'Invalid_argument' exception: '" ^ msg ^ "'\nPlease (politely) insult the developers.");
 		abort_program ();
 		(* Safety *)
 		exit 1
 	);
 	| Not_found -> (
-		print_error ("'Not_found' exception!\nPlease (kindly) insult the developers.");
+		print_error ("'Not_found' exception!\nPlease (politely) insult the developers.");
 		abort_program ();
 		(* Safety *)
 		exit 1
 	);
 	| _ -> (
-		print_error ("An unknown exception occurred. Please (kindly) insult the developers.");
+		print_error ("An unknown exception occurred. Please (politely) insult the developers.");
 		abort_program ();
 		(* Safety *)
 		exit 1
