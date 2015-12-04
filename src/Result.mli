@@ -73,6 +73,28 @@ type efsynth_result = {
 }
 
 
+(* Variants of IM with a convex constraint as result *)
+type imconvex_result = {
+	(* Convex constraint *)
+	convex_constraint	: LinearConstraint.p_linear_constraint;
+	
+	(* Explored state space *)
+	state_space			: StateSpace.state_space;
+	
+	(* Nature of the state space (needed??) *)
+(* 	tile_nature			: AbstractModel.tile_nature; *)
+	
+	(* Number of random selections of pi-incompatible inequalities performed *)
+	nb_random_selections: int;
+	
+	(* Total computation time of the algorithm *)
+	computation_time	: float;
+	
+	(* Termination *)
+	termination			: algorithm_termination;
+}
+
+
 
 type imitator_result =
 	(* Result for Post* *)
@@ -80,6 +102,9 @@ type imitator_result =
 
 	(* Result for EFsynth *)
 	| EFsynth_result of efsynth_result
+
+	(* Result for EFsynth *)
+	| IMConvex_result of imconvex_result
 
 
 

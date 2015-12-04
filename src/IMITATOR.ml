@@ -322,6 +322,16 @@ begin
 			
 		(* Inverse Method *)
 		| Inverse_method ->
+			(*** HACK to call the good class ***)
+			(*** TODO: rewrite this part in a more generic manner ***)
+			if options#pi_compatible then
+				(*** WARNING: work in progress here ***)
+				let algo = new AlgoIMK.algoIMK in
+				print_string algo#algorithm_name;
+				let result = algo#run() in
+				ResultProcessor.process_result result;
+				(*** WARNING: work in progress here ***)
+			else
 			if options#efim then
 				(
 					(*** WARNING!!! Why a dedicated function here, whereas for BC+EFIM this function is not (?) called? ***)

@@ -2,7 +2,6 @@
  *
  *                       IMITATOR
  * 
- * Laboratoire Spécification et Vérification (ENS Cachan & CNRS, France)
  * LIPN, Université Paris 13, Sorbonne Paris Cité (France)
  * 
  * Module description: PostStar algorithm, i.e., simple computation of all symbolic states
