@@ -1,0 +1,92 @@
+(************************************************************
+ *                      IMITATOR MODEL                      
+ *
+ * Small example to show the differences between IM, IMK and IMunion
+ *
+ * Description     : Small example to show the differences between IM, IMK and IMunion. Starting from p=2:
+	- IM will output p=2
+	- IMK will output p>1
+	- IMunion will output 1 <= p <= 4
+ * Correctness     : N/A
+ * Source          : Own work
+ * Author          : Étienne André
+ * Modeling        : Étienne André
+ * Input by        : Étienne André
+ * License         : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+
+ *
+ * Created         : 2015/12/04
+ * Last modified   : 2015/12/04
+ *
+ * IMITATOR version: 2.7.4-working
+ ************************************************************)
+
+var
+
+(* Clocks *)
+ 	x
+		: clock;
+
+(* Parameters *)
+	p
+		: parameter;
+
+
+
+(************************************************************)
+  automaton pta
+(************************************************************)
+
+loc l0: while True wait {}
+	(* p <= 1 *)
+	when x <= 1 & x = p goto l1;
+
+	(* 1 <= p <= 2 *)
+	when 1 <= x & x <= 2 & x = p goto l2;
+
+	(* 2 <= p <= 4 *)
+	when 2 <= x & x <= 4 & x = p goto l3;
+
+loc l1: while True wait {}
+
+loc l2: while True wait {}
+
+loc l3: while True wait {}
+
+end (* pta *)
+
+
+
+(************************************************************)
+(* Initial state *)
+(************************************************************)
+
+init :=
+	(*------------------------------------------------------------*)
+	(* Initial location *)
+	(*------------------------------------------------------------*)
+	& loc[pta] = l0
+
+	(*------------------------------------------------------------*)
+	(* Initial clock constraints *)
+	(*------------------------------------------------------------*)
+	& x = 0
+
+	(*------------------------------------------------------------*)
+	(* Parameter constraints *)
+	(*------------------------------------------------------------*)
+	& p >= 0
+;
+
+
+(************************************************************)
+(* Property specification *)
+(************************************************************)
+
+(* property := unreachable loc[pta] = l1; *)
+
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end
