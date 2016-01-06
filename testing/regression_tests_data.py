@@ -537,21 +537,21 @@ tests = [
 	} # end test case
 	#------------------------------------------------------------
 	,
-	##------------------------------------------------------------
-	#{
-		#'purpose'    : 'Test variants of IM: here IMK',
-		#'input_files': ['testIM-IMK-IMunion.imi', 'testIM-IMK-IMunion.pi0'],
-		#'options'    : '-IMK -output-result',
-		#'expectations' : [
-			#{'file': 'testIM-IMK-IMunion.res' , 'content' : """
-		 #1 < p (TODO)
-		#"""
-			#} # end result file
-			#,
-		#] # end expectations
-	#} # end test case
-	##------------------------------------------------------------
-	#,
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test variants of IM: here IMK',
+		'input_files': ['testIM-IMK-IMunion.imi', 'testIM-IMK-IMunion.pi0'],
+		'options'    : '-IMK -output-result',
+		'expectations' : [
+			{'file': 'testIM-IMK-IMunion.res' , 'content' : """
+		 p > 1
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+	,
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test variants of IM: here IMunion',
@@ -588,21 +588,22 @@ tests = [
 	} # end test case
 	#------------------------------------------------------------
 	,
-	##------------------------------------------------------------
-	#{
-		#'purpose'    : 'Test variants of IM (bis): here IMK',
-		#'input_files': ['exVariantes.imi', 'exVariantes.pi0'],
-		#'options'    : '-IMK -output-result',
-		#'expectations' : [
-			#{'file': 'exVariantes.res' , 'content' : """
-		  #(TODO)
-		  #"""
-			#} # end result file
-			#,
-		#] # end expectations
-	#} # end test case
-	##------------------------------------------------------------
-	#,
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test variants of IM (bis): here IMK',
+		'input_files': ['exVariantes.imi', 'exVariantes.pi0'],
+		'options'    : '-IMK -output-result',
+		'expectations' : [
+			{'file': 'exVariantes.res' , 'content' : """
+		   5*p1 > p2
+    & 2*p2 > p1
+		  """
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+	,
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test variants of IM (bis): here IMunion',
