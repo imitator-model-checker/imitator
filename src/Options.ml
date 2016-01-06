@@ -44,6 +44,8 @@ class imitator_options =
 	
 		(* INPUT OPTIONS *)
 		
+		(*** WARNING: why so many mutable ref, although mutable would do ?? ***)
+		
 		(* imitator model input file *)
 		val mutable file = ref ""
 		
