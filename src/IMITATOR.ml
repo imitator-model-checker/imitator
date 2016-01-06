@@ -9,7 +9,7 @@
  * 
  * File contributors : Ulrich Kühne, Étienne André
  * Created           : 2009/09/07
- * Last modified     : 2015/12/02
+ * Last modified     : 2016/01/06
  *
  ************************************************************)
 
@@ -337,8 +337,19 @@ begin
 					(*** WARNING!!! Why a dedicated function here, whereas for BC+EFIM this function is not (?) called? ***)
 				Reachability.efim model;
 				)
-			else(
+			else
+			if options#union then
+				(
 				Reachability.inverse_method model;
+				)
+				else(
+				(* IM *)
+				(*** WARNING: work in progress here ***)
+				let algo = new AlgoIM.algoIM in
+				print_string algo#algorithm_name;
+				let result = algo#run() in
+				ResultProcessor.process_result result;
+				(*** WARNING: work in progress here ***)
 			)
 
 
