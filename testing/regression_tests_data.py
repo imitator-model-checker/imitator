@@ -1,15 +1,16 @@
 #!/usr/bin/python
+# -*- coding: utf-8 -*-
 #************************************************************
 #
 #                       IMITATOR
 #
-#             Script for regression tests
+#             Data for non-regression tests
 #
 # Etienne ANDRE
 # Laboratoire d'Informatique de Paris Nord
 # Universite Paris 13, Sorbonne Paris Cite, France
 # Created      : 2015/10/23
-# Last modified: 2015/10/27
+# Last modified: 2016/01/06
 #************************************************************
 
 
@@ -394,21 +395,27 @@ tests = [
 	,
 	#------------------------------------------------------------
 	{
-		'purpose'    : 'Test the inverse method',
-		'input_files': ['flipflop.imi', 'flipflop.pi0'],
-		'options'    : '-output-result',
+		'purpose'    : 'Test urgency',
+		'input_files': ['testUrgency.imi'],
+		'options'    : '-mode statespace -output-states',
 		'expectations' : [
-			{'file': 'flipflop.res' , 'content' : """*)
-
- dG3_u + dG4_u >= 17
-& 17 > dG3_u
-& 24 > dG3_u + dG4_u
-& dG3_u >= 8
-& dG4_u >= 3
-			"""
-			} #end result file
+			{'file': 'testUrgency.states' , 'content' : """
+		  DESCRIPTION OF THE TRANSITIONS
+  s_4 -> s_4 via "a"
+  s_2 -> s_4 via "c"
+  s_0 -> s_2 via "b"
+  s_0 -> s_1 via "b"
+  s_2 -> s_4 via "b"
+  s_3 -> s_3 via "a"
+  s_3 -> s_1 via "b"
+  s_0 -> s_0 via "a"
+  s_1 -> s_3 via "c"
+		"""
+			} # end result file
+			,
 		] # end expectations
 	} # end test case
+	#------------------------------------------------------------
 	,
 	#------------------------------------------------------------
 	{
@@ -493,6 +500,128 @@ tests = [
 & p_button >= 15
 & p_coffee > 0"""
 			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+	,
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test the inverse method',
+		'input_files': ['flipflop.imi', 'flipflop.pi0'],
+		'options'    : '-output-result',
+		'expectations' : [
+			{'file': 'flipflop.res' , 'content' : """*)
+
+ dG3_u + dG4_u >= 17
+& 17 > dG3_u
+& 24 > dG3_u + dG4_u
+& dG3_u >= 8
+& dG4_u >= 3
+			"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	,
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test variants of IM: here IM',
+		'input_files': ['testIM-IMK-IMunion.imi', 'testIM-IMK-IMunion.pi0'],
+		'options'    : '-output-result',
+		'expectations' : [
+			{'file': 'testIM-IMK-IMunion.res' , 'content' : """
+		  p = 2
+		  """
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+	,
+	##------------------------------------------------------------
+	#{
+		#'purpose'    : 'Test variants of IM: here IMK',
+		#'input_files': ['testIM-IMK-IMunion.imi', 'testIM-IMK-IMunion.pi0'],
+		#'options'    : '-IMK -output-result',
+		#'expectations' : [
+			#{'file': 'testIM-IMK-IMunion.res' , 'content' : """
+		 #1 < p (TODO)
+		#"""
+			#} # end result file
+			#,
+		#] # end expectations
+	#} # end test case
+	##------------------------------------------------------------
+	#,
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test variants of IM: here IMunion',
+		'input_files': ['testIM-IMK-IMunion.imi', 'testIM-IMK-IMunion.pi0'],
+		'options'    : '-IMunion -output-result',
+		'expectations' : [
+			{'file': 'testIM-IMK-IMunion.res' , 'content' : """
+		  p >= 2
+& 4 >= p
+ OR 
+ p > 1
+& 2 >= p
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+	,
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test variants of IM (bis): here IM',
+		'input_files': ['exVariantes.imi', 'exVariantes.pi0'],
+		'options'    : '-output-result',
+		'expectations' : [
+			{'file': 'exVariantes.res' , 'content' : """
+		  p2 >= 4*p1
+    & p2 >= 3
+    & 5*p1 > p2
+		  """
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+	,
+	##------------------------------------------------------------
+	#{
+		#'purpose'    : 'Test variants of IM (bis): here IMK',
+		#'input_files': ['exVariantes.imi', 'exVariantes.pi0'],
+		#'options'    : '-IMK -output-result',
+		#'expectations' : [
+			#{'file': 'exVariantes.res' , 'content' : """
+		  #(TODO)
+		  #"""
+			#} # end result file
+			#,
+		#] # end expectations
+	#} # end test case
+	##------------------------------------------------------------
+	#,
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test variants of IM (bis): here IMunion',
+		'input_files': ['exVariantes.imi', 'exVariantes.pi0'],
+		'options'    : '-IMunion -output-result -no-random',
+		'expectations' : [
+			{'file': 'exVariantes.res' , 'content' : """
+		  p2 >= 4*p1
+    & p2 > 2
+    & 5*p1 > p2
+     OR 
+     p2 >= 3
+    & 5*p1 > p2
+     OR 
+     p2 >= 3
+    & 5*p1 > p2
+		  """
+			} # end result file
+			,
 		] # end expectations
 	} # end test case
 	#------------------------------------------------------------

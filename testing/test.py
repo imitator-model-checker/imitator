@@ -6,11 +6,11 @@
 # 
 # LIPN, Université Paris 13, Sorbonne Paris Cité (France)
 # 
-# Script description: TESTATOR (script for regression tests)
+# Script description: TESTATOR (script for non-regression tests)
 # 
 # File contributors : Étienne André
 # Created           : 2012/05/??
-# Last modified     : 2015/11/10
+# Last modified     : 2016/01/06
 #************************************************************
 
 
@@ -146,7 +146,7 @@ for test_case in tests:
 	print_to_log(' BENCHMARK ' + str(benchmark_id))
 	print_to_log(' purpose : ' + test_case['purpose'])
 	print_to_log('')
-	print_to_screen(' Benchmark ' + str(benchmark_id) + "...")
+	print_to_screen(' Benchmark ' + str(benchmark_id) + " : " + test_case['purpose'] + "...")
 
 	# Add the path to all input files
 	cmd_inputs = []
