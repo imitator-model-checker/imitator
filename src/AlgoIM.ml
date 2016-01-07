@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/01/06
- * Last modified     : 2016/01/06
+ * Last modified     : 2016/01/07
  *
  ************************************************************)
 
@@ -75,10 +75,21 @@ class algoIM =
 	
 		(* IMK: return only the current constraint, viz., the constraint of the first state *)
 		(*** NOTE: better not use just "0" as the initial state may have been merged with another state ***)
+		
+		
+		
+		
+		(*** TODO ***)
+		
 		let initial_state_index = StateSpace.get_initial_state_index state_space in
 		let initial_state = StateSpace.get_state state_space initial_state_index in
 		(* Retrieve the constraint of the initial state *)
 		let (_ , px_constraint ) = initial_state in
+
+		(*** TODO ***)
+		
+		
+		
 		
 		print_message Verbose_total ("\nAlgorithm " ^ self#algorithm_name ^ ": projecting the initial state constraint onto the parameters...");
 		
@@ -97,8 +108,7 @@ class algoIM =
 		(* 	tile_nature			: AbstractModel.tile_nature; *)
 			
 			(* Number of random selections of pi-incompatible inequalities performed *)
-			(*** TODO !!! ***)
-			nb_random_selections= 0 (* super#nb_random_selections*);
+			nb_random_selections= nb_random_selections;
 	
 			(* Total computation time of the algorithm *)
 			computation_time	= time_from start_time;

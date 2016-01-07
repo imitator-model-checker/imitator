@@ -300,7 +300,6 @@ begin
 			->
 			(*** WARNING: work in progress here ***)
 			let algo = new AlgoPostStar.algoPostStar in
-			print_string algo#algorithm_name;
 			let result = algo#run() in
 			ResultProcessor.process_result result;
 			(*** WARNING: work in progress here ***)
@@ -312,7 +311,6 @@ begin
 			->
 			(*** WARNING: work in progress here ***)
 			let algo = new AlgoEFsynth.algoEFsynth in
-			print_string algo#algorithm_name;
 			let result = algo#run() in
 			ResultProcessor.process_result result;
 			(*** WARNING: work in progress here ***)
@@ -327,7 +325,6 @@ begin
 			if options#pi_compatible then
 				(*** WARNING: work in progress here ***)
 				let algo = new AlgoIMK.algoIMK in
-				print_string algo#algorithm_name;
 				let result = algo#run() in
 				ResultProcessor.process_result result;
 				(*** WARNING: work in progress here ***)
@@ -343,10 +340,9 @@ begin
 				Reachability.inverse_method model;
 				)
 				else(
-				(* IM *)
+				(* Classical IM *)
 				(*** WARNING: work in progress here ***)
 				let algo = new AlgoIM.algoIM in
-				print_string algo#algorithm_name;
 				let result = algo#run() in
 				ResultProcessor.process_result result;
 				(*** WARNING: work in progress here ***)

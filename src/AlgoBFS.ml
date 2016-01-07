@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/11/23
- * Last modified     : 2015/12/04
+ * Last modified     : 2016/01/07
  *
  ************************************************************)
 
@@ -201,6 +201,9 @@ class virtual algoBFS =
 	(*		(* Set the counter of selections to 0 *)
 		nb_random_selections := 0;*)
 
+		(* Print some information *)
+		print_message Verbose_standard ("Starting running algorithm " ^ self#algorithm_name ^ "...\n");
+		
 		(* Variable initialization *)
 		print_message Verbose_low ("Initializing the algorithm local variables...");
 		self#initialize_variables;
