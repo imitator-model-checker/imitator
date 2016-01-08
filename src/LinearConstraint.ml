@@ -2708,18 +2708,22 @@ let p_nnconvex_constraint_is_true c =
 let get_disjuncts p_nnconvex_constraint =
 	(* Create ref for the result *)
 	let disjuncts = ref [] in
+
 	(* Create iterator *)
 	let iterator = ppl_Pointset_Powerset_NNC_Polyhedron_begin_iterator p_nnconvex_constraint in
-	(* Iterate *)
-	while true do
-		(* Get the disjunct *)
+	(* Create an iterator for the end *)
+	let end_iterator = ppl_Pointset_Powerset_NNC_Polyhedron_end_iterator p_nnconvex_constraint in
+	
+	(* Iterate until the end *)
+	while not (ppl_Pointset_Powerset_NNC_Polyhedron_iterator_equals_iterator iterator end_iterator) do
+		(* Get the current disjunct *)
 		let disjunct = ppl_Pointset_Powerset_NNC_Polyhedron_get_disjunct iterator in
 		
 		(* Add it to the list of disjuncts *)
 		disjuncts := disjunct :: !disjuncts;
 		
 		(* Increment the iterator *)
-		pointset_powerset_nnc_polyhedron_iterator iterator;
+		ppl_Pointset_Powerset_NNC_Polyhedron_increment_iterator iterator;
 	done;
 	
 	(* Return disjuncts *)
@@ -2782,8 +2786,10 @@ let p_nnconvex_union p_nnconvex_constraint p_linear_constraint =
 (** Convert a p_nnconvex_constraint into a string *)
 let string_of_p_nnconvex_constraint names p_nnconvex_constraint =
 	(* Get the disjuncts *)
-	
+	let disjuncts = get_disjuncts p_nnconvex_constraint in
 	
 	(* Convert each disjunct into a string *)
+	let disjuncts_string = List.map (string_of_p_linear_constraint names) disjuncts in
 	
 	(* Concatenate using an "OR" *)
+	string_of_list_of_string_with_sep " OR " disjuncts_string
