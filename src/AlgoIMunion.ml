@@ -97,13 +97,6 @@ class algoIMunion =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method compute_result =
 	
-	
-	
-		(*** Test ***)
-		let test = ppl_new_Pointset_Powerset_NNC_Polyhedron_from_space_dimension 88 Universe in
-(* 		: pointset_powerset_nnc_polyhedron -> pointset_powerset_nnc_polyhedron *)
-	
-	
 		(* Method used here: intersection of all p-constraints *)
 		(* Alternative methods would have been: 1) on-the-fly intersection (everytime a state is met) or 2) intersection of all final states, i.e., member of a loop, or deadlock states *)
 

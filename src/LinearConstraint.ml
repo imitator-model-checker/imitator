@@ -2701,6 +2701,49 @@ let p_nnconvex_constraint_is_true c =
 
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+(** {3 Access} *)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+
+(** Get the list of p_linear_constraint the disjunction of which makes a p_nnconvex_constraint *)
+let get_disjuncts p_nnconvex_constraint =
+	(* Create ref for the result *)
+	let disjuncts = ref [] in
+	(* Create iterator *)
+	let iterator = ppl_Pointset_Powerset_NNC_Polyhedron_begin_iterator p_nnconvex_constraint in
+	(* Iterate *)
+	while true do
+		(* Get the disjunct *)
+		let disjunct = ppl_Pointset_Powerset_NNC_Polyhedron_get_disjunct iterator in
+		
+		(* Add it to the list of disjuncts *)
+		disjuncts := disjunct :: !disjuncts;
+		
+		(* Increment the iterator *)
+		pointset_powerset_nnc_polyhedron_iterator iterator;
+	done;
+	
+	(* Return disjuncts *)
+	List.rev (!disjuncts)
+
+
+
+(*val ppl_Pointset_Powerset_NNC_Polyhedron_begin_iterator : pointset_powerset_nnc_polyhedron ->
+       pointset_powerset_nnc_polyhedron_iterator
+
+val ppl_Pointset_Powerset_NNC_Polyhedron_end_iterator : pointset_powerset_nnc_polyhedron ->
+       pointset_powerset_nnc_polyhedron_iterator
+
+val ppl_Pointset_Powerset_NNC_Polyhedron_iterator_equals_iterator : pointset_powerset_nnc_polyhedron_iterator ->
+       pointset_powerset_nnc_polyhedron_iterator -> bool
+
+val ppl_Pointset_Powerset_NNC_Polyhedron_increment_iterator : pointset_powerset_nnc_polyhedron_iterator -> unit
+
+val ppl_Pointset_Powerset_NNC_Polyhedron_decrement_iterator : pointset_powerset_nnc_polyhedron_iterator -> unit
+
+val ppl_Pointset_Powerset_NNC_Polyhedron_get_disjunct : pointset_powerset_nnc_polyhedron_iterator -> polyhedron*)
+
+
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
 (** {3 Modifications} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
 
@@ -2731,3 +2774,16 @@ let p_nnconvex_union p_nnconvex_constraint p_linear_constraint =
 	(* Return result *)
 	()
 
+
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+(** {3 Conversion to string} *)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+
+(** Convert a p_nnconvex_constraint into a string *)
+let string_of_p_nnconvex_constraint names p_nnconvex_constraint =
+	(* Get the disjuncts *)
+	
+	
+	(* Convert each disjunct into a string *)
+	
+	(* Concatenate using an "OR" *)

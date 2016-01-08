@@ -476,3 +476,10 @@ val p_nnconvex_intersection  : p_nnconvex_constraint -> p_linear_constraint -> u
 (** Performs the union of a p_nnconvex_constraint with a p_linear_constraint; the p_nnconvex_constraint is modified, the p_linear_constraint is not *)
 val p_nnconvex_union : p_nnconvex_constraint -> p_linear_constraint -> unit
 
+
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+(** {3 Conversion to string} *)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+
+(** Convert a p_nnconvex_constraint into a string *)
+val string_of_p_nnconvex_constraint : (variable -> string) -> p_nnconvex_constraint -> string
