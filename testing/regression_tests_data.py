@@ -10,7 +10,7 @@
 # Laboratoire d'Informatique de Paris Nord
 # Universite Paris 13, Sorbonne Paris Cite, France
 # Created      : 2015/10/23
-# Last modified: 2016/01/06
+# Last modified: 2016/01/08
 #************************************************************
 
 
@@ -506,17 +506,27 @@ tests = [
 	,
 	#------------------------------------------------------------
 	{
-		'purpose'    : 'Test the inverse method',
+		'purpose'    : 'Test the inverse method (flip-flop)',
 		'input_files': ['flipflop.imi', 'flipflop.pi0'],
 		'options'    : '-output-result',
 		'expectations' : [
 			{'file': 'flipflop.res' , 'content' : """*)
-
- dG3_u + dG4_u >= 17
-& 17 > dG3_u
-& 24 > dG3_u + dG4_u
-& dG3_u >= 8
-& dG4_u >= 3
+dG3_u + dG4_u >= 17 & dG3_u >= 8 & dG4_u >= 3 & 17 > dG3_u & 24 > dG3_u + dG4_u
+			"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	,
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test the inverse method (SIMOP)',
+		'input_files': ['simop.imi', 'simop.pi0'],
+		'options'    : '-merge -no-random -output-result',
+		'expectations' : [
+			{'file': 'simop.res' , 'content' : """*)
+500 >= COMct
+    & COMct > 495
+    & SIGmrt > 70 + 4*COMct
 			"""
 			} #end result file
 		] # end expectations
@@ -578,9 +588,7 @@ tests = [
 		'options'    : '-output-result',
 		'expectations' : [
 			{'file': 'exVariantes.res' , 'content' : """
-		  p2 >= 4*p1
-    & p2 >= 3
-    & 5*p1 > p2
+	p2 >= 3 & 5*p1 > p2 & p2 >= 4*p1
 		  """
 			} # end result file
 			,
@@ -592,11 +600,11 @@ tests = [
 	{
 		'purpose'    : 'Test variants of IM (bis): here IMK',
 		'input_files': ['exVariantes.imi', 'exVariantes.pi0'],
-		'options'    : '-IMK -output-result',
+		'options'    : '-IMK -output-result -no-random',
 		'expectations' : [
 			{'file': 'exVariantes.res' , 'content' : """
 		   5*p1 > p2
-    & 2*p2 > p1
+    & p2 > 2
 		  """
 			} # end result file
 			,
