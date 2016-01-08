@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/01/06
- * Last modified     : 2016/01/07
+ * Last modified     : 2016/01/08
  *
  ************************************************************)
 
@@ -72,29 +72,28 @@ class algoIM =
 	(* Method packaging the result output by the algorithm *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method compute_result =
-	
-		(* IMK: return only the current constraint, viz., the constraint of the first state *)
-		(*** NOTE: better not use just "0" as the initial state may have been merged with another state ***)
-		
-		
-		
-		
-		(*** TODO ***)
-		
-		let initial_state_index = StateSpace.get_initial_state_index state_space in
-		let initial_state = StateSpace.get_state state_space initial_state_index in
-		(* Retrieve the constraint of the initial state *)
-		let (_ , px_constraint ) = initial_state in
+		(* Method used here: intersection of all p-constraints *)
+		(* Alternative methods would have been: 1) on-the-fly intersection (everytime a state is met) or 2) intersection of all final states, i.e., member of a loop, or deadlock states *)
 
-		(*** TODO ***)
+		(* Create the result *)
+		let p_constraint = LinearConstraint.p_true_constraint() in
 		
+		print_message Verbose_low ("\nAlgorithm " ^ self#algorithm_name ^ ": performing the intersection of all p-constraints...");
 		
+		(* Iterate on all states *)
+(* 		val iterate_on_states : (state_index -> abstract_state -> unit) -> state_space -> unit *)
+		StateSpace.iterate_on_states (fun state_index abstract_state ->
+			(* Retrieve the px-constraint *)
+			let _, px_linear_constraint = abstract_state in
+			(* Project onto the parameters *)
+			let projection = LinearConstraint.px_hide_nonparameters_and_collapse px_linear_constraint in
+			(* Intersect with the result *)
+
+			(*** TODO: check if only one intersection with the list of all projections gathered would be more efficient ??? ***)
+			
+			LinearConstraint.p_intersection_assign p_constraint [projection];
+		) state_space;
 		
-		
-		print_message Verbose_total ("\nAlgorithm " ^ self#algorithm_name ^ ": projecting the initial state constraint onto the parameters...");
-		
-		let p_constraint = LinearConstraint.px_hide_nonparameters_and_collapse px_constraint in
-(* 		Convex_constraint (LinearConstraint.px_hide_nonparameters_and_collapse px_constraint , !tile_nature)  *)
 	
 		IMConvex_result
 		{
