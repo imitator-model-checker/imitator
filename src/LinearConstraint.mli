@@ -10,7 +10,7 @@
  * Author:        Etienne Andre
  * 
  * Created:       2010/03/04
- * Last modified: 2015/09/15
+ * Last modified: 2016/01/08
  *
  ****************************************************************) 
  
@@ -139,16 +139,13 @@ val string_of_p_linear_inequality : (variable -> string) -> p_linear_inequality 
 (** {3 Type} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
 
-(*** NOTE Should be removed ***)
-(* type linear_constraint *)
-
-(** Constraint on the parameters *)
+(** Convex constraint (polyhedron) on the parameters *)
 type p_linear_constraint
 
-(** Constraint on the parameters and clocks *)
+(** Convex constraint (polyhedron) on the parameters and clocks *)
 type px_linear_constraint
 
-(** Constraint on the parameters, clocks and discrete *)
+(** Convex constraint (polyhedron) on the parameters, clocks and discrete *)
 type pxd_linear_constraint
 
 
@@ -429,3 +426,53 @@ val get_statistics : float -> string
 (** {3 Debug} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
 val test_PDBMs : unit -> unit
+
+
+
+
+
+(************************************************************)
+(** {2 Non-necessarily convex linear Constraints} *)
+(************************************************************)
+
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+(** {3 Type} *)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+
+(** Non-necessarily convex constraint on the parameters ("pointset powerset" in the underlying PPL implementation) *)
+type p_nnconvex_constraint
+
+
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+(** {3 Creation} *)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+
+(** Create a false constraint *)
+val false_p_nnconvex_constraint : unit -> p_nnconvex_constraint
+
+(** Create a true constraint *)
+val true_p_nnconvex_constraint  : unit -> p_nnconvex_constraint
+
+
+
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+(** {3 Tests} *)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+
+(** Check if a nnconvex_constraint is false *)
+val p_nnconvex_constraint_is_false : p_nnconvex_constraint -> bool
+
+(** Check if a nnconvex_constraint is true *)
+val p_nnconvex_constraint_is_true  : p_nnconvex_constraint -> bool
+
+
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+(** {3 Modifications} *)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+
+(** Performs the intersection of a p_nnconvex_constraint with a p_linear_constraint; the p_nnconvex_constraint is modified, the p_linear_constraint is not *)
+val p_nnconvex_intersection  : p_nnconvex_constraint -> p_linear_constraint -> unit
+
+(** Performs the union of a p_nnconvex_constraint with a p_linear_constraint; the p_nnconvex_constraint is modified, the p_linear_constraint is not *)
+val p_nnconvex_union : p_nnconvex_constraint -> p_linear_constraint -> unit
+

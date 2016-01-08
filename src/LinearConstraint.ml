@@ -10,7 +10,7 @@
  * Author:        Etienne Andre
  * 
  * Created:       2010/03/04
- * Last modified: 2015/09/15
+ * Last modified: 2016/01/08
  *
  ****************************************************************) 
  
@@ -201,8 +201,11 @@ type pxd_linear_inequality = linear_inequality
 
 type linear_constraint = Ppl.polyhedron
 
+(** Convex constraint (polyhedron) on the parameters *)
 type p_linear_constraint = linear_constraint
+(** Convex constraint (polyhedron) on the parameters and clocks *)
 type px_linear_constraint = linear_constraint
+(** Convex constraint (polyhedron) on the parameters, clocks and discrete *)
 type pxd_linear_constraint = linear_constraint
 
 
@@ -2612,4 +2615,119 @@ let test_PDBMs () =
 	print_string "\n*%*%*%*%*%*% ENDING PDBMs TESTS *%*%*%*%*%*%";
 	()
 
+
+
+(************************************************************)
+(** {2 Non-necessarily convex linear Constraints} *)
+(************************************************************)
+
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+(** {3 Type} *)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+
+(** Non-necessarily convex constraint on the parameters ("pointset powerset" in the underlying PPL implementation) *)
+type p_nnconvex_constraint = Ppl.pointset_powerset_nnc_polyhedron
+
+
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+(** {3 Creation} *)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+
+(** Create a false constraint *)
+let false_p_nnconvex_constraint () =
+(*	(* Statistics *)
+	ppl_nb_false_constraint := !ppl_nb_false_constraint + 1;
+	let start = Unix.gettimeofday() in*)
+	(* Actual call to PPL *)
+	let result = ppl_new_Pointset_Powerset_NNC_Polyhedron_from_space_dimension !total_dim Empty in
+	(* Statistics *)
+(* 	ppl_t_false_constraint := !ppl_t_false_constraint +. (Unix.gettimeofday() -. start); *)
+	(* Return result *)
+	result
+
+(** Create a true constraint *)
+let true_p_nnconvex_constraint () = 
+	(*	(* Statistics *)
+	ppl_nb_false_constraint := !ppl_nb_false_constraint + 1;
+	let start = Unix.gettimeofday() in*)
+	(* Actual call to PPL *)
+	let result = ppl_new_Pointset_Powerset_NNC_Polyhedron_from_space_dimension !total_dim Universe in
+	(* Statistics *)
+(* 	ppl_t_false_constraint := !ppl_t_false_constraint +. (Unix.gettimeofday() -. start); *)
+	(* Return result *)
+	result
+
+(* Convert a linear_constraint to a p_nnconvex_constraint *)
+let p_nnconvex_constraint_of_p_linear_constraint (p_linear_constraint : p_linear_constraint) =
+(*	(* Statistics *)
+	ppl_nb_false_constraint := !ppl_nb_false_constraint + 1;
+	let start = Unix.gettimeofday() in*)
+	(* Actual call to PPL *)
+	let result = ppl_new_Pointset_Powerset_NNC_Polyhedron_from_NNC_Polyhedron p_linear_constraint in
+	(* Statistics *)
+(* 	ppl_t_false_constraint := !ppl_t_false_constraint +. (Unix.gettimeofday() -. start); *)
+	(* Return result *)
+	result
+
+
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+(** {3 Tests} *)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+
+(** Check if a nnconvex_constraint is false *)
+let p_nnconvex_constraint_is_false c =
+(*	(* Statistics *)
+	ppl_nb_is_false := !ppl_nb_is_false + 1;
+	let start = Unix.gettimeofday() in
+	(* Actual call to PPL *)*)
+	let result = ppl_Pointset_Powerset_NNC_Polyhedron_is_empty c in
+(*	(* Statistics *)
+	ppl_t_is_false := !ppl_t_is_false +. (Unix.gettimeofday() -. start);
+	(* Return result *)*)
+	result
+
+
+(** Check if a nnconvex_constraint is true *)
+let p_nnconvex_constraint_is_true c =
+(*	(* Statistics *)
+	ppl_nb_is_true := !ppl_nb_is_true + 1;
+	let start = Unix.gettimeofday() in*)
+	(* Actual call to PPL *)
+	let result = ppl_Pointset_Powerset_NNC_Polyhedron_is_universe c in
+(*	(* Statistics *)
+	ppl_t_is_true := !ppl_t_is_true +. (Unix.gettimeofday() -. start);*)
+	(* Return result *)
+	result
+
+
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+(** {3 Modifications} *)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+
+(** Performs the intersection of a p_nnconvex_constraint with a p_linear_constraint; the p_nnconvex_constraint is modified, the p_linear_constraint is not *)
+let p_nnconvex_intersection p_nnconvex_constraint p_linear_constraint =
+(*	(* Statistics *)
+	ppl_nb_is_true := !ppl_nb_is_true + 1;
+	let start = Unix.gettimeofday() in*)
+	(* First retrieve inequalities *)
+	let constraint_system =  get_inequalities p_linear_constraint in
+	(* Actual call to PPL *)
+	ppl_Pointset_Powerset_NNC_Polyhedron_add_constraints p_nnconvex_constraint constraint_system;
+(*	(* Statistics *)
+	ppl_t_is_true := !ppl_t_is_true +. (Unix.gettimeofday() -. start);*)
+	(* Return result *)
+	()
+
+
+(** Performs the union of a p_nnconvex_constraint with a p_linear_constraint; the p_nnconvex_constraint is modified, the p_linear_constraint is not *)
+let p_nnconvex_union p_nnconvex_constraint p_linear_constraint =
+(*	(* Statistics *)
+	ppl_nb_is_true := !ppl_nb_is_true + 1;
+	let start = Unix.gettimeofday() in*)
+	(* Actual call to PPL *)
+	ppl_Pointset_Powerset_NNC_Polyhedron_add_disjunct p_nnconvex_constraint p_linear_constraint;
+(*	(* Statistics *)
+	ppl_t_is_true := !ppl_t_is_true +. (Unix.gettimeofday() -. start);*)
+	(* Return result *)
+	()
 
