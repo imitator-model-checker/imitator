@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/12/04
- * Last modified     : 2015/12/04
+ * Last modified     : 2016/01/08
  *
  ************************************************************)
 
@@ -287,18 +287,20 @@ class algoIMK =
 				new_states_indexes := new_state_index :: !new_states_indexes;
 				
 			) (* end if new state *)
-			(* ELSE : add to SLAST if mode union *)
 			else (
+				(* This is a loop *)
+				self#process_looping_state new_state_index;
 	
 	(*** TODO: add back ***)
-(*				if options#union then (
+(*			(* ELSE : add to SLAST if mode union *)
+				if options#union then (
 					print_message Verbose_low ("\nMode union: adding a looping state to SLast.");
 					(* Adding the state *)
 					(*** TODO / TO CHECK: what if new_state_index is already in slast?!! ***)
 					slast := new_state_index :: !slast;
 				);*)
 	
-			); (* end if added *)
+			); (* end else if added *)
 			
 			
 		(*** TODO: move the rest to a higher level function? (post_from_one_state?) ***)
@@ -318,6 +320,18 @@ class algoIMK =
 
 
 
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(* Actions to perform when meeting a state with no successors: nothing to do for this algorithm *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	method process_deadlock_state state_index = ()
+	
+	
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(* Actions to perform when meeting a state that is on a loop: nothing to do for this algorithm, but can be defined in subclasses *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	method process_looping_state state_index = ()
+	
+	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Method packaging the result output by the algorithm *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)

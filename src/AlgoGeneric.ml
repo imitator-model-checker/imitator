@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/12/02
- * Last modified     : 2015/12/03
+ * Last modified     : 2016/01/08
  *
  ************************************************************)
 
@@ -1301,6 +1301,13 @@ class virtual algoGeneric =
 			done; (* while more new states *)
 		) list_of_possible_actions;
 		
+		
+		(* Algorithm-specific handling of deadlock states, i.e., states without successors *)
+		if !new_states_indexes = [] then (
+			(* Virtual function to be defined in subclasses *)
+			self#process_deadlock_state orig_state_index;
+		);
+		
 	(**********************************************************************************************************************)
 	(**********************************************************************************************************************)
 	(**********************************************************************************************************************)
@@ -1356,6 +1363,12 @@ class virtual algoGeneric =
 		List.rev (!new_states_indexes)
 
 
+	
+	
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(* Actions to perform when meeting a state with no successors: virtual method to be defined in subclasses *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	method virtual process_deadlock_state : StateSpace.state_index -> unit
 	
 	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)

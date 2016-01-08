@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/12/02
- * Last modified     : 2015/12/04
+ * Last modified     : 2016/01/08
  *
  ************************************************************)
 
@@ -59,6 +59,8 @@ class virtual algoGeneric :
 		(*** TODO: simplify signature by removing the StateSpace, the StateSpace.state_index list ref and the action_index, and by returning the list of actually added states ***)
 		method virtual add_a_new_state : StateSpace.state_space -> StateSpace.state_index -> StateSpace.state_index list ref -> Automaton.action_index -> Location.global_location -> LinearConstraint.px_linear_constraint -> unit
 		
+		(* Actions to perform when meeting a state with no successors: virtual method to be defined in subclasses *)
+		method virtual process_deadlock_state : StateSpace.state_index -> unit
 		
 		(* Compute the list of successor states of a given state, and update the state space; returns the list of new states' indexes actually added *)
 		(** TODO: to get a more abstract method, should get rid of the state space, and update the state space from another function ***)

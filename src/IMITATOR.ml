@@ -9,7 +9,7 @@
  * 
  * File contributors : Ulrich Kühne, Étienne André
  * Created           : 2009/09/07
- * Last modified     : 2016/01/06
+ * Last modified     : 2016/01/08
  *
  ************************************************************)
 
@@ -337,7 +337,12 @@ begin
 			else
 			if options#union then
 				(
-				Reachability.inverse_method model;
+(* 				Reachability.inverse_method model; *)
+				(*** WARNING: work in progress here ***)
+				let algo = new AlgoIMunion.algoIMunion in
+				let result = algo#run() in
+				ResultProcessor.process_result result;
+				(*** WARNING: work in progress here ***)
 				)
 				else(
 				(* Classical IM *)

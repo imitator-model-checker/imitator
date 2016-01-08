@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/11/25
- * Last modified     : 2015/12/03
+ * Last modified     : 2016/01/08
  *
  ************************************************************)
 
@@ -174,6 +174,12 @@ class algoEFsynth =
 		()
 	
 
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(* Actions to perform when meeting a state with no successors: nothing to do for this algorithm *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	method process_deadlock_state state_index = ()
+	
+	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Method packaging the result output by the algorithm *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)

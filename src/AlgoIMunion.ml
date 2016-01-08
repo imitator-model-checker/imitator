@@ -4,10 +4,10 @@
  * 
  * LIPN, Université Paris 13, Sorbonne Paris Cité (France)
  * 
- * Module description: IM algorithm [ACEF09]
+ * Module description: IMKunion algorithm [AS11]
  * 
  * File contributors : Étienne André
- * Created           : 2016/01/06
+ * Created           : 2016/01/08
  * Last modified     : 2016/01/08
  *
  ************************************************************)
@@ -19,6 +19,7 @@
 (************************************************************)
 (************************************************************)
 open OCamlUtilities
+open Ppl_ocaml
 open ImitatorUtilities
 open Exceptions
 open AbstractModel
@@ -33,12 +34,14 @@ open AlgoIMK
 (* Class definition *)
 (************************************************************)
 (************************************************************)
-class algoIM =
+class algoIMunion =
 	object (self) inherit algoIMK as super
 	
 	(************************************************************)
 	(* Class variables *)
 	(************************************************************)
+	(* List of last states *)
+	val mutable last_states : StateSpace.state_index list = []
 	
 	
 	
@@ -49,7 +52,7 @@ class algoIM =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Name of the algorithm *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method algorithm_name = "IM"
+	method algorithm_name = "IMunion"
 
 	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -57,6 +60,9 @@ class algoIM =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method initialize_variables =
 		super#initialize_variables;
+		
+		last_states <- [];
+		
 		(* The end *)
 		()
 	
@@ -69,15 +75,35 @@ class algoIM =
 	
 	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Actions to perform when meeting a state with no successors: nothing to do for this algorithm *)
+	(* Actions to perform when meeting a state with no successors: add the deadlock state to the list of last states *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method process_deadlock_state state_index = ()
+	method process_deadlock_state state_index =
+		print_message Verbose_low ("\nAlgorithm " ^ self#algorithm_name ^ ": found a state with no successor");
+		(* Add to the list of last states *)
+		last_states <- state_index :: last_states
 	
 	
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(* Actions to perform when meeting a state that is on a loop: nothing to do for this algorithm, but can be defined in subclasses *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	method process_looping_state state_index =
+		print_message Verbose_low ("\nAlgorithm " ^ self#algorithm_name ^ ": found a state in a loop");
+		(* Add to the list of last states *)
+		last_states <- state_index :: last_states
+
+		
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Method packaging the result output by the algorithm *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method compute_result =
+	
+	
+	
+		(*** Test ***)
+		let test = ppl_new_Pointset_Powerset_NNC_Polyhedron_from_space_dimension 88 Universe in
+(* 		: pointset_powerset_nnc_polyhedron -> pointset_powerset_nnc_polyhedron *)
+	
+	
 		(* Method used here: intersection of all p-constraints *)
 		(* Alternative methods would have been: 1) on-the-fly intersection (everytime a state is met) or 2) intersection of all final states, i.e., member of a loop, or deadlock states *)
 
