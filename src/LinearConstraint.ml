@@ -2715,6 +2715,7 @@ let get_disjuncts p_nnconvex_constraint =
 	let end_iterator = ppl_Pointset_Powerset_NNC_Polyhedron_end_iterator p_nnconvex_constraint in
 	
 	(* Iterate until the end *)
+	(*** NOTE: apparently, ppl_Pointset_Powerset_NNC_Polyhedron_end_iterator represents the index AFTER the last element, hence the following test is correct ***)
 	while not (ppl_Pointset_Powerset_NNC_Polyhedron_iterator_equals_iterator iterator end_iterator) do
 		(* Get the current disjunct *)
 		let disjunct = ppl_Pointset_Powerset_NNC_Polyhedron_get_disjunct iterator in
@@ -2793,3 +2794,5 @@ let string_of_p_nnconvex_constraint names p_nnconvex_constraint =
 	
 	(* Concatenate using an "OR" *)
 	string_of_list_of_string_with_sep " OR " disjuncts_string
+
+

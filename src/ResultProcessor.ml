@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/12/03
- * Last modified     : 2016/01/06
+ * Last modified     : 2016/01/11
  *
  ************************************************************)
 
@@ -257,4 +257,45 @@ let process_result result =
 		()
 		
 		
+	| IMNonconvex_result im_result ->
+		print_message Verbose_standard (
+			"\nInverse method successfully finished " ^ (after_seconds ()) ^ "."
+		);
+
+		(* Convert result to string *)
+		let result_str = LinearConstraint.string_of_p_nnconvex_constraint model.variable_names im_result.nonconvex_constraint in
+
+		(* Print on terminal *)
+		print_message Verbose_standard result_str;
+		
+		(* Write to file if requested *)
+		if options#output_result then(
+			write_result_to_file result_str;
+		);
+		
+		(* Print memory information *)
+		if verbose_mode_greater Verbose_standard then
+			print_memory_used Verbose_standard;
+		
+		print_message Verbose_low (
+			"Computation time for IM only: "
+			^ (string_of_seconds im_result.computation_time) ^ "."
+		);
+		
+		(* Print statistics *)
+		print_statistics im_result.computation_time im_result.state_space;
+
+		(* Generate graphics *)
+		(*** TODO: move inside inverse_method_gen ***)
+		let radical = options#files_prefix in
+		Graphics.generate_graph model im_result.state_space radical;
+		
+		(* Render zones in a graphical form *)
+		(*** TODO ***)
+
+		(* The end *)
+		()
+
+
+
 	| _ -> raise (InternalError ("function process_result not implemented for all cases yet"))

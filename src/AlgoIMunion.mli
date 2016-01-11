@@ -27,8 +27,9 @@ class algoIMunion :
 		(************************************************************)
 		(* Class variables *)
 		(************************************************************)
-		(* List of last states *)
-		val mutable last_states : StateSpace.state_index list
+
+		(* Non-necessarily convex parameter constraint *)
+		val mutable result: LinearConstraint.p_nnconvex_constraint 
 
 
 		(************************************************************)

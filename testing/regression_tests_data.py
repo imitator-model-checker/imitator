@@ -569,11 +569,7 @@ dG3_u + dG4_u >= 17 & dG3_u >= 8 & dG4_u >= 3 & 17 > dG3_u & 24 > dG3_u + dG4_u
 		'options'    : '-IMunion -output-result',
 		'expectations' : [
 			{'file': 'testIM-IMK-IMunion.res' , 'content' : """
-		  p >= 2
-& 4 >= p
- OR 
- p > 1
-& 2 >= p
+		p > 1 & 2 >= p OR p >= 2 & 4 >= p
 		"""
 			} # end result file
 			,
@@ -619,15 +615,7 @@ dG3_u + dG4_u >= 17 & dG3_u >= 8 & dG4_u >= 3 & 17 > dG3_u & 24 > dG3_u + dG4_u
 		'options'    : '-IMunion -output-result -no-random',
 		'expectations' : [
 			{'file': 'exVariantes.res' , 'content' : """
-		  p2 >= 4*p1
-    & p2 > 2
-    & 5*p1 > p2
-     OR 
-     p2 >= 3
-    & 5*p1 > p2
-     OR 
-     p2 >= 3
-    & 5*p1 > p2
+		 5*p1 > p2 & p2 >= 3 OR 5*p1 > p2 & p2 >= 3 OR 5*p1 > p2 & p2 > 2 & p2 >= 4*p1
 		  """
 			} # end result file
 			,

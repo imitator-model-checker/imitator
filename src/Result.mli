@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/11/23
- * Last modified     : 2015/12/04
+ * Last modified     : 2016/01/11
  *
  ************************************************************)
 
@@ -94,6 +94,27 @@ type imconvex_result = {
 	termination			: algorithm_termination;
 }
 
+(* Variants of IM with a non-convex constraint as result *)
+type imnonconvex_result = {
+	(* Convex constraint *)
+	nonconvex_constraint: LinearConstraint.p_nnconvex_constraint;
+	
+	(* Explored state space *)
+	state_space			: StateSpace.state_space;
+	
+	(* Nature of the state space (needed??) *)
+(* 	tile_nature			: AbstractModel.tile_nature; *)
+	
+	(* Number of random selections of pi-incompatible inequalities performed *)
+	nb_random_selections: int;
+	
+	(* Total computation time of the algorithm *)
+	computation_time	: float;
+	
+	(* Termination *)
+	termination			: algorithm_termination;
+}
+
 
 
 type imitator_result =
@@ -103,9 +124,11 @@ type imitator_result =
 	(* Result for EFsynth *)
 	| EFsynth_result of efsynth_result
 
-	(* Result for EFsynth *)
+	(* Result for IM, IMK *)
 	| IMConvex_result of imconvex_result
 
+	(* Result for IMunion *)
+	| IMNonconvex_result of imnonconvex_result
 
 
 

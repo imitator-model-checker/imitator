@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/01/08
- * Last modified     : 2016/01/08
+ * Last modified     : 2016/01/11
  *
  ************************************************************)
 
@@ -41,7 +41,10 @@ class algoIMunion =
 	(* Class variables *)
 	(************************************************************)
 	(* List of last states *)
-	val mutable last_states : StateSpace.state_index list = []
+(* 	val mutable last_states : StateSpace.state_index list = [] *)
+
+	(* Non-necessarily convex parameter constraint *)
+	val mutable result : LinearConstraint.p_nnconvex_constraint = LinearConstraint.false_p_nnconvex_constraint ()
 	
 	
 	
@@ -61,10 +64,13 @@ class algoIMunion =
 	method initialize_variables =
 		super#initialize_variables;
 		
-		last_states <- [];
+(* 		last_states <- []; *)
+
+		result <- LinearConstraint.false_p_nnconvex_constraint ();
 		
 		(* The end *)
 		()
+		
 	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Add a new state to the state_space (if indeed needed) *)
@@ -79,8 +85,16 @@ class algoIMunion =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method process_deadlock_state state_index =
 		print_message Verbose_low ("\nAlgorithm " ^ self#algorithm_name ^ ": found a state with no successor");
-		(* Add to the list of last states *)
-		last_states <- state_index :: last_states
+		
+		(* Get the state *)
+		let _, px_constraint = StateSpace.get_state state_space state_index in
+		(* Projet onto P *)
+		let p_constraint = LinearConstraint.px_hide_nonparameters_and_collapse px_constraint in
+		(* Add the constraint to the result *)
+		LinearConstraint.p_nnconvex_union result p_constraint
+		
+(*		(* Add to the list of last states *)
+		last_states <- state_index :: last_states*)
 	
 	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -88,42 +102,42 @@ class algoIMunion =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method process_looping_state state_index =
 		print_message Verbose_low ("\nAlgorithm " ^ self#algorithm_name ^ ": found a state in a loop");
+		
+		(* Get the state *)
+		let _, px_constraint = StateSpace.get_state state_space state_index in
+		(* Projet onto P *)
+		let p_constraint = LinearConstraint.px_hide_nonparameters_and_collapse px_constraint in
+		(* Add the constraint to the result *)
+		LinearConstraint.p_nnconvex_union result p_constraint
 		(* Add to the list of last states *)
-		last_states <- state_index :: last_states
+(* 		last_states <- state_index :: last_states *)
 
 		
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Method packaging the result output by the algorithm *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method compute_result =
-	
-		(* Method used here: intersection of all p-constraints *)
-		(* Alternative methods would have been: 1) on-the-fly intersection (everytime a state is met) or 2) intersection of all final states, i.e., member of a loop, or deadlock states *)
+		
+		(* IMunion: return the disjunction of all constraints AND the current constraint, viz., the constraint of the first state (necessary because the states accumulated may have been restricted with some neg J since they were added to "result") *)
 
-		(* Create the result *)
-		let p_constraint = LinearConstraint.p_true_constraint() in
+		(*** NOTE: code copied from AlgoIMK ***)
+		(*** NOTE: better not use just "0" as the initial state may have been merged with another state ***)
+		let initial_state_index = StateSpace.get_initial_state_index state_space in
+		let initial_state = StateSpace.get_state state_space initial_state_index in
+		(* Retrieve the constraint of the initial state *)
+		let (_ , px_constraint ) = initial_state in
 		
-		print_message Verbose_low ("\nAlgorithm " ^ self#algorithm_name ^ ": performing the intersection of all p-constraints...");
-		
-		(* Iterate on all states *)
-(* 		val iterate_on_states : (state_index -> abstract_state -> unit) -> state_space -> unit *)
-		StateSpace.iterate_on_states (fun state_index abstract_state ->
-			(* Retrieve the px-constraint *)
-			let _, px_linear_constraint = abstract_state in
-			(* Project onto the parameters *)
-			let projection = LinearConstraint.px_hide_nonparameters_and_collapse px_linear_constraint in
-			(* Intersect with the result *)
+		print_message Verbose_total ("\nAlgorithm " ^ self#algorithm_name ^ ": projecting the initial state constraint onto the parameters...");
+		let p_constraint = LinearConstraint.px_hide_nonparameters_and_collapse px_constraint in
 
-			(*** TODO: check if only one intersection with the list of all projections gathered would be more efficient ??? ***)
-			
-			LinearConstraint.p_intersection_assign p_constraint [projection];
-		) state_space;
+		print_message Verbose_total ("\nAlgorithm " ^ self#algorithm_name ^ ": adding the initial constraint to the result");
+		LinearConstraint.p_nnconvex_intersection result p_constraint;
 		
-	
-		IMConvex_result
+		
+		IMNonconvex_result
 		{
 			(* Result of IM *)
-			convex_constraint	= p_constraint;
+			nonconvex_constraint= result;
 			
 			(* Explored state space *)
 			state_space			= state_space;
