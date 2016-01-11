@@ -9,7 +9,7 @@
  * 
  * File contributors : Ulrich Kühne, Étienne André
  * Created           : 2009/09/07
- * Last modified     : 2016/01/08
+ * Last modified     : 2016/01/11
  *
  ************************************************************)
 
@@ -331,8 +331,13 @@ begin
 			else
 			if options#efim then
 				(
-					(*** WARNING!!! Why a dedicated function here, whereas for BC+EFIM this function is not (?) called? ***)
-				Reachability.efim model;
+(*					(*** WARNING!!! Why a dedicated function here, whereas for BC+EFIM this function is not (?) called? ***)
+				Reachability.efim model;*)
+				(*** WARNING: work in progress here ***)
+				let algo = new AlgoPRP.algoPRP in
+				let result = algo#run() in
+				ResultProcessor.process_result result;
+				(*** WARNING: work in progress here ***)
 				)
 			else
 			if options#union then

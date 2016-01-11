@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/12/04
- * Last modified     : 2016/01/08
+ * Last modified     : 2016/01/11
  *
  ************************************************************)
 
@@ -66,8 +66,6 @@ class algoIMK =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Checks a new state for pi0-compatibility and        *)
 	(* updates constraint K if incompatible state is found.*)
-	(* pi0               : reference valuation             *)
-	(* rechability_graph : current reachability graph      *)
 	(* constr            : new state constraint            *)
 	(*------------------------------------------------------------*)
 	(* returns (true, p_constraint) if the state is pi0-compatible, and (false, _) otherwise *)
@@ -75,7 +73,9 @@ class algoIMK =
 	(*------------------------------------------------------------*)
 	(* side effect: add the negation of the p_constraint to all computed states *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method private inverse_method_check_constraint model state_space constr =
+	method private inverse_method_check_constraint constr =
+		(* Retrieve the model *)
+		let model = Input.get_model() in
 		(* Retrieve the input options *)
 		let options = Input.get_options () in
 		(* Retrieve the pi0 (dynamic!) *)
@@ -126,7 +126,7 @@ class algoIMK =
 					else List.nth incompatible 0
 				in
 				(* Print some information *)
-				if verbose_mode_greater  Verbose_medium then(
+				if verbose_mode_greater Verbose_medium then(
 					print_message Verbose_medium ("\nSelecting the following pi0-incompatible inequality:");
 					print_message Verbose_medium (LinearConstraint.string_of_p_linear_inequality model.variable_names p_inequality);
 				);
@@ -207,7 +207,7 @@ class algoIMK =
 		)else( *)
 		(*** NOTE: the addition of neg J to all reached states is performed as a side effect inside the following function ***)
 		(*** BADPROG: same reason ***)
-		let valid_new_state, new_p_constraint = self#inverse_method_check_constraint model state_space final_constraint
+		let valid_new_state, new_p_constraint = self#inverse_method_check_constraint final_constraint
 		in
 		
 		(* If pi-compatible state: add the new state's p_constraint to the on-the-fly computation of the result of IMss *)
@@ -351,7 +351,7 @@ class algoIMK =
 	
 		IMConvex_result
 		{
-			(* Result of IMK *)
+			(* Result of the algorithm *)
 			convex_constraint	= p_constraint;
 			
 			(* Explored state space *)

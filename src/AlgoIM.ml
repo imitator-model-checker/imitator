@@ -103,7 +103,7 @@ class algoIM =
 	
 		IMConvex_result
 		{
-			(* Result of IM *)
+			(* Result of the algorithm *)
 			convex_constraint	= p_constraint;
 			
 			(* Explored state space *)

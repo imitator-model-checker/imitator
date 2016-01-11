@@ -4,10 +4,10 @@
  * 
  * LIPN, Université Paris 13, Sorbonne Paris Cité (France)
  * 
- * Module description: IMKunion algorithm [AS11]
+ * Module description: PRP algorithm [ALNS15]
  * 
  * File contributors : Étienne André
- * Created           : 2016/01/08
+ * Created           : 2016/01/11
  * Last modified     : 2016/01/11
  *
  ************************************************************)
@@ -19,7 +19,6 @@
 (************************************************************)
 (************************************************************)
 open OCamlUtilities
-open Ppl_ocaml
 open ImitatorUtilities
 open Exceptions
 open AbstractModel
@@ -34,18 +33,20 @@ open AlgoIMK
 (* Class definition *)
 (************************************************************)
 (************************************************************)
-class algoIMunion =
+class algoPRP =
 	object (self) inherit algoIMK as super
 	
 	(************************************************************)
 	(* Class variables *)
 	(************************************************************)
-	(* List of last states *)
-(* 	val mutable last_states : StateSpace.state_index list = [] *)
-
-	(* Non-necessarily convex parameter constraint *)
-	val mutable result : LinearConstraint.p_nnconvex_constraint = LinearConstraint.false_p_nnconvex_constraint ()
+	(* Determines the mode of the algorithm: was a bad state already found? *)
+	val mutable bad_state_found: bool = false
 	
+	(* Convex constraint ensuring unreachability of the bad states *)
+	val mutable good_constraint : LinearConstraint.p_linear_constraint = LinearConstraint.p_true_constraint ()
+	
+	(* Non-necessarily convex constraint ensuring reachability of at least one bad state *)
+	val mutable bad_constraint : LinearConstraint.p_nnconvex_constraint = LinearConstraint.false_p_nnconvex_constraint ()
 	
 	
 	(************************************************************)
@@ -55,7 +56,7 @@ class algoIMunion =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Name of the algorithm *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method algorithm_name = "IMunion"
+	method algorithm_name = "PRP"
 
 	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -64,13 +65,12 @@ class algoIMunion =
 	method initialize_variables =
 		super#initialize_variables;
 		
-(* 		last_states <- []; *)
-
-		result <- LinearConstraint.false_p_nnconvex_constraint ();
+		bad_state_found <- false;
+		good_constraint <- LinearConstraint.p_true_constraint ();
+		bad_constraint <- LinearConstraint.false_p_nnconvex_constraint ();
 		
 		(* The end *)
 		()
-		
 	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Add a new state to the state_space (if indeed needed) *)
@@ -81,63 +81,25 @@ class algoIMunion =
 	
 	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Actions to perform when meeting a state with no successors: add the deadlock state to the list of last states *)
+	(* Actions to perform when meeting a state with no successors: nothing to do for this algorithm *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method process_deadlock_state state_index =
-		print_message Verbose_low ("\nAlgorithm " ^ self#algorithm_name ^ ": found a state with no successor");
-		
-		(* Get the state *)
-		let _, px_constraint = StateSpace.get_state state_space state_index in
-		(* Projet onto P *)
-		let p_constraint = LinearConstraint.px_hide_nonparameters_and_collapse px_constraint in
-		(* Add the constraint to the result *)
-		LinearConstraint.p_nnconvex_union result p_constraint
-		
-(*		(* Add to the list of last states *)
-		last_states <- state_index :: last_states*)
+	method process_deadlock_state state_index = ()
 	
 	
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Actions to perform when meeting a state that is on a loop: nothing to do for this algorithm, but can be defined in subclasses *)
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method process_looping_state state_index =
-		print_message Verbose_low ("\nAlgorithm " ^ self#algorithm_name ^ ": found a state in a loop");
-		
-		(* Get the state *)
-		let _, px_constraint = StateSpace.get_state state_space state_index in
-		(* Projet onto P *)
-		let p_constraint = LinearConstraint.px_hide_nonparameters_and_collapse px_constraint in
-		(* Add the constraint to the result *)
-		LinearConstraint.p_nnconvex_union result p_constraint
-		(* Add to the list of last states *)
-(* 		last_states <- state_index :: last_states *)
-
-		
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Method packaging the result output by the algorithm *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method compute_result =
-		
-		(* IMunion: return the disjunction of all constraints AND the current constraint, viz., the constraint of the first state (necessary because the states accumulated may have been restricted with some neg J since they were added to "result") *)
 
-		(*** NOTE: code copied from AlgoIMK ***)
-		(*** NOTE: better not use just "0" as the initial state may have been merged with another state ***)
-		let initial_state_index = StateSpace.get_initial_state_index state_space in
-		let initial_state = StateSpace.get_state state_space initial_state_index in
-		(* Retrieve the constraint of the initial state *)
-		let (_ , px_constraint ) = initial_state in
+	
+		(*** TODO ***)
+	
 		
-		print_message Verbose_total ("\nAlgorithm " ^ self#algorithm_name ^ ": projecting the initial state constraint onto the parameters...");
-		let p_constraint = LinearConstraint.px_hide_nonparameters_and_collapse px_constraint in
-
-		print_message Verbose_total ("\nAlgorithm " ^ self#algorithm_name ^ ": adding the initial constraint to the result");
-		LinearConstraint.p_nnconvex_intersection result p_constraint;
-		
-		
+	
 		IMNonconvex_result
 		{
 			(* Result of the algorithm *)
-			nonconvex_constraint= result;
+			nonconvex_constraint= LinearConstraint.false_p_nnconvex_constraint(); (*** TODO ***)
 			
 			(* Explored state space *)
 			state_space			= state_space;
@@ -154,7 +116,7 @@ class algoIMunion =
 			(* Termination *)
 			termination			= 
 				match termination_status with
-				| None -> raise (InternalError "Termination status not set in IMunion.compute_result")
+				| None -> raise (InternalError "Termination status not set in PRP.compute_result")
 				| Some status -> status
 			;
 		}
