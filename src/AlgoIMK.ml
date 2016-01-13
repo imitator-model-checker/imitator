@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/12/04
- * Last modified     : 2016/01/11
+ * Last modified     : 2016/01/13
  *
  ************************************************************)
 
@@ -82,29 +82,30 @@ class algoIMK =
 		let pi0 = Input.get_pi0 () in
 		
 		(* Hide non-parameters *)
-		print_message Verbose_high ("\nHiding non parameters...");
+		self#print_algo_message Verbose_high ("\nHiding non parameters...");
 		let p_constraint = LinearConstraint.px_hide_nonparameters_and_collapse constr in
-		print_message Verbose_high ("\nParameters now hidden:");
+		self#print_algo_message Verbose_high ("\nParameters now hidden:");
 		(* Print some information *)
 		if verbose_mode_greater Verbose_high then(
 			print_message Verbose_high (LinearConstraint.string_of_p_linear_constraint model.variable_names p_constraint);
 		);
 		(* Check the pi0-compatibility *)
-		print_message Verbose_high ("\nChecking pi-compatibility:");
+		self#print_algo_message Verbose_high ("\nChecking pi-compatibility:");
 		let compatible, incompatible = LinearConstraint.partition_pi0_compatible pi0#get_value p_constraint in
 		let is_pi0_incompatible = incompatible != [] in
 		
 		(* If pi0-incompatible: select an inequality *)
 		if is_pi0_incompatible then (
-			print_message Verbose_low ("\nFound a pi0-incompatible state.");
+			self#print_algo_message Verbose_low ("\nFound a pi0-incompatible state.");
 			(* Print some information *)
 			if verbose_mode_greater Verbose_medium then(
-				print_message Verbose_high ("Associated constraint:");
+				self#print_algo_message Verbose_high ("Associated constraint:");
 				print_message Verbose_high (LinearConstraint.string_of_px_linear_constraint model.variable_names constr);
-				print_message Verbose_medium ("\nThe following inequalities are pi0-incompatible:");
+				print_message Verbose_medium "";
+				self#print_algo_message Verbose_medium ("The following inequalities are pi0-incompatible:");
 				List.iter (fun inequality -> print_message Verbose_medium (LinearConstraint.string_of_p_linear_inequality model.variable_names inequality)) incompatible;
 				if verbose_mode_greater Verbose_high then(
-					print_message Verbose_high ("\nRecall that pi0 is:");
+					self#print_algo_message Verbose_high ("\nRecall that pi0 is:");
 					print_message Verbose_high   (ModelPrinter.string_of_pi0 model pi0);
 				);
 			);
@@ -112,13 +113,18 @@ class algoIMK =
 			
 			(*** TODO: add back later ***)
 			
+			(* Should we explore pi-incompatible states? *)
+			if not (self#explore_pi_incompatible_states()) then(
+				self#print_algo_message Verbose_low ("Cut pi-incompatible branch.");
+				(false , p_constraint)
+			)else(
+			
 (*			(* Case EFIM: no need to select a pi-incompatible inequality if already bad *)
 			if options#efim && !tile_nature = Bad then(
 				print_message Verbose_low ("\n[EFIM] Cut branch.");
 				(false , p_constraint)
-			
+*)
 			(* Case normal IM: select a pi-incompatible inequality *)
-			)else( *)
 				let p_inequality =
 					(* If random selection: pick up a random inequality *)
 					if not options#no_random then random_element incompatible
@@ -127,7 +133,8 @@ class algoIMK =
 				in
 				(* Print some information *)
 				if verbose_mode_greater Verbose_medium then(
-					print_message Verbose_medium ("\nSelecting the following pi0-incompatible inequality:");
+					print_message Verbose_medium "";
+					self#print_algo_message Verbose_medium ("Selecting the following pi0-incompatible inequality:");
 					print_message Verbose_medium (LinearConstraint.string_of_p_linear_inequality model.variable_names p_inequality);
 				);
 
@@ -140,13 +147,13 @@ class algoIMK =
 				if verbose_mode_greater Verbose_standard then(
 					let randomly = if not options#no_random then "randomly " else "" in
 					let among = if List.length incompatible > 1 then (" (" ^ randomly ^ "selected among " ^ (string_of_int (List.length incompatible)) ^ " inequalities)") else "" in
-					print_message Verbose_standard ("  Adding the following inequality" ^ among ^ ":");
+					self#print_algo_message Verbose_standard ("Adding the following inequality" ^ among ^ ":");
 					print_message Verbose_standard ("  " ^ (LinearConstraint.string_of_p_linear_inequality model.variable_names negated_inequality));
 				);
 				
-				(* Transform to constraint *)
-				let negated_constraint = LinearConstraint.make_p_constraint [negated_inequality] in
 				
+				(* Generic function handling the inequality: by default, add its negation to all previous states *)
+				self#process_negated_incompatible_inequality negated_inequality;
 				
 				(* Add the p_constraint to the result (except in case of variants) *)
 				(*** WARNING: why not in case of variants ?! ***)
@@ -169,15 +176,21 @@ class algoIMK =
 
 				(*** TODO: add back later ***)
 (* 				if not options#efim then( *)
-					print_message Verbose_medium ("\nUpdating all the previous states.\n");
+				
+(*								(* Transform to constraint *)
+				let negated_constraint = LinearConstraint.make_p_constraint [negated_inequality] in
+
+				if self#update_all_previous_states () then(
+					print_message Verbose_medium "";
+					self#print_algo_message Verbose_medium ("Updating all the previous states.\n");
 					StateSpace.add_p_constraint_to_states state_space negated_constraint;
-(*				)else(
+				)else(
 					print_message Verbose_standard("  [EFIM] Storing inequality only");
 				);*)
 				
 				(* If pi-incompatible *)
 				(false, p_constraint)
-(* 			)(* Endif normal IM and pi-incompatible *) *)
+ 			)(* Endif explore pi-incompatible state *)
 		) (* end if pi-incompatible *)
 		else (true, p_constraint)
 
@@ -230,7 +243,7 @@ class algoIMK =
 			if not valid_new_state then(
 				let new_state = location, final_constraint in
 				if verbose_mode_greater Verbose_high then
-					print_message Verbose_high ("The pi-incompatible state had been computed through action '" ^ (model.action_names action_index) ^ "', and was:\n" ^ (ModelPrinter.string_of_state model new_state));
+					self#print_algo_message Verbose_high ("The pi-incompatible state had been computed through action '" ^ (model.action_names action_index) ^ "', and was:\n" ^ (ModelPrinter.string_of_state model new_state));
 			);
 		);
 (*		(* Return *)
@@ -244,7 +257,7 @@ class algoIMK =
 
 			(* Print some information *)
 			if verbose_mode_greater Verbose_total then(
-				print_message Verbose_total ("Consider the state \n" ^ (ModelPrinter.string_of_state model new_state));
+				self#print_algo_message Verbose_total ("Consider the state \n" ^ (ModelPrinter.string_of_state model new_state));
 			);
 
 			(* If IM or BC: Add the inequality to the result (except if case variants) *)
@@ -310,7 +323,7 @@ class algoIMK =
 			(* Print some information *)
 			if verbose_mode_greater Verbose_high then (
 				let beginning_message = (if added then "NEW STATE" else "Old state") in
-				print_message Verbose_high ("\n" ^ beginning_message ^ " reachable through action '" ^ (model.action_names action_index) ^ "': ");
+				self#print_algo_message Verbose_high ("\n" ^ beginning_message ^ " reachable through action '" ^ (model.action_names action_index) ^ "': ");
 				print_message Verbose_high (ModelPrinter.string_of_state model new_state);
 			);
 		); (* end if add new state *)
@@ -333,6 +346,26 @@ class algoIMK =
 	
 	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(* Should we explore a pi-incompatible inequality? By default yes *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	method explore_pi_incompatible_states () = true
+	
+	
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(* Actions to perform when a pi-incompatible inequality is found. By default: add its negation to all previous states *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	method process_negated_incompatible_inequality negated_inequality =
+		let negated_constraint = LinearConstraint.make_p_constraint [negated_inequality] in
+		
+		print_message Verbose_medium "";
+		self#print_algo_message Verbose_medium ("Updating all the previous states.\n");
+		
+		StateSpace.add_p_constraint_to_states state_space negated_constraint;
+		()
+				
+	
+	
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Method packaging the result output by the algorithm *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method compute_result =
@@ -344,7 +377,7 @@ class algoIMK =
 		(* Retrieve the constraint of the initial state *)
 		let (_ , px_constraint ) = initial_state in
 		
-		print_message Verbose_total ("\nAlgorithm " ^ self#algorithm_name ^ ": projecting the initial state constraint onto the parameters...");
+		self#print_algo_message Verbose_total ("projecting the initial state constraint onto the parameters...");
 		
 		let p_constraint = LinearConstraint.px_hide_nonparameters_and_collapse px_constraint in
 (* 		Convex_constraint (LinearConstraint.px_hide_nonparameters_and_collapse px_constraint , !tile_nature)  *)

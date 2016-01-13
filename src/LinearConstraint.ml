@@ -10,7 +10,7 @@
  * Author:        Etienne Andre
  * 
  * Created:       2010/03/04
- * Last modified: 2016/01/08
+ * Last modified: 2016/01/13
  *
  ****************************************************************) 
  
@@ -2657,7 +2657,7 @@ let true_p_nnconvex_constraint () =
 	(* Return result *)
 	result
 
-(* Convert a linear_constraint to a p_nnconvex_constraint *)
+(** Create a new p_nnconvex_constraint from a linear_constraint *)
 let p_nnconvex_constraint_of_p_linear_constraint (p_linear_constraint : p_linear_constraint) =
 (*	(* Statistics *)
 	ppl_nb_false_constraint := !ppl_nb_false_constraint + 1;
@@ -2786,6 +2786,11 @@ let p_nnconvex_union p_nnconvex_constraint p_linear_constraint =
 
 (** Convert a p_nnconvex_constraint into a string *)
 let string_of_p_nnconvex_constraint names p_nnconvex_constraint =
+	(* First reduce (avoids identical disjuncts) *)
+	(*** TODO: add counters... ***)
+	ppl_Pointset_Powerset_NNC_Polyhedron_pairwise_reduce p_nnconvex_constraint;
+	ppl_Pointset_Powerset_NNC_Polyhedron_omega_reduce p_nnconvex_constraint;
+	
 	(* Get the disjuncts *)
 	let disjuncts = get_disjuncts p_nnconvex_constraint in
 	

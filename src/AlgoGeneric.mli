@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/12/02
- * Last modified     : 2016/01/08
+ * Last modified     : 2016/01/13
  *
  ************************************************************)
 
@@ -16,7 +16,7 @@
 (**************************************************************)
 (* Modules *)
 (**************************************************************)
-
+open ImitatorUtilities
 
 (**************************************************************)
 (* Class-independent functions *)
@@ -45,6 +45,9 @@ class virtual algoGeneric :
 		(************************************************************)
 		(* Class methods *)
 		(************************************************************)
+		
+		(* Write a message preceeded by "[algorithm_name]" *)
+		method print_algo_message : verbose_mode -> string -> unit
 		
 		(* Variable initialization (to be defined in subclasses) *)
 		method virtual initialize_variables : unit

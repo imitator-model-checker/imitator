@@ -10,7 +10,7 @@
  * Author:        Etienne Andre
  * 
  * Created:       2010/03/04
- * Last modified: 2016/01/08
+ * Last modified: 2016/01/13
  *
  ****************************************************************) 
  
@@ -453,6 +453,8 @@ val false_p_nnconvex_constraint : unit -> p_nnconvex_constraint
 (** Create a true constraint *)
 val true_p_nnconvex_constraint  : unit -> p_nnconvex_constraint
 
+(** Create a new p_nnconvex_constraint from a linear_constraint *)
+val p_nnconvex_constraint_of_p_linear_constraint : p_linear_constraint -> p_nnconvex_constraint
 
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)

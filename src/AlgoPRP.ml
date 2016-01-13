@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/01/11
- * Last modified     : 2016/01/11
+ * Last modified     : 2016/01/13
  *
  ************************************************************)
 
@@ -71,13 +71,116 @@ class algoPRP =
 		
 		(* The end *)
 		()
+		
 	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Add a new state to the state_space (if indeed needed) *)
 	(* Also update tile_nature and slast *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method add_a_new_state state_space orig_state_index new_states_indexes action_index location final_constraint =
-		super#add_a_new_state state_space orig_state_index new_states_indexes action_index location final_constraint
+	(*** WARNING/BADPROG: the following is almost entirely copy/paste from AlgoEFsynth.ml ***)
+	method add_a_new_state state_space orig_state_index new_states_indexes action_index location (final_constraint : LinearConstraint.px_linear_constraint) =
+		(* Retrieve the model *)
+		let model = Input.get_model () in
+
+		(* Retrieve the input options *)
+(* 		let options = Input.get_options () in *)
+
+		(* Build the state *)
+		let new_state = location, final_constraint in
+
+		(* Print some information *)
+		if verbose_mode_greater Verbose_total then(
+			(*** TODO: move that comment to a higher level function? (post_from_one_state?) ***)
+			self#print_algo_message Verbose_total ("Consider the state \n" ^ (ModelPrinter.string_of_state model new_state));
+		);
+
+		let new_state_index, added = (
+			StateSpace.add_state state_space new_state
+		) in
+		(* If this is really a new state *)
+		if added then (
+
+			(* First check whether this is a bad tile according to the property and the nature of the state *)
+			self#update_trace_set_nature new_state;
+			
+			(* Will the state be added to the list of new states (the successors of which will be computed)? *)
+			let to_be_added = ref true in
+			
+			(* If synthesis / EFIM: add the constraint to the list of successful constraints if this corresponds to a bad location *)
+			begin
+			match model.correctness_condition with
+			| None -> raise (InternalError("[EF-synthesis/EFIM] A correctness property must be defined to perform EF-synthesis or EFIM. This should have been checked before."))
+			| Some (Unreachable unreachable_global_locations) ->
+				
+				(* Check whether the current location matches one of the unreachable global locations *)
+				if StateSpace.match_unreachable_global_locations unreachable_global_locations location then(
+				
+					(* Project onto the parameters *)
+					let p_constraint = LinearConstraint.px_hide_nonparameters_and_collapse final_constraint in
+					
+					(* Projecting onto SOME parameters if required *)
+					begin
+					match model.projection with
+					(* Unchanged *)
+					| None -> ()
+					(* Project *)
+					| Some parameters ->
+						self#print_algo_message Verbose_medium "Projecting onto some of the parameters.";
+						(*** TODO! do only once for all... ***)
+						let all_but_projectparameters = list_diff model.parameters parameters in
+						(* Eliminate other parameters *)
+						LinearConstraint.p_hide_assign all_but_projectparameters p_constraint;
+					end;
+					
+					(* Print some information *)
+					self#print_algo_message Verbose_standard "Found a state violating the property.";
+					if verbose_mode_greater Verbose_medium then(
+						self#print_algo_message Verbose_medium "Adding the following constraint to the list of bad constraints:";
+						print_message Verbose_medium (LinearConstraint.string_of_p_linear_constraint model.variable_names p_constraint);
+					);
+					
+					(*** NOTE: not copy paste (actually, to copy when EFsynth will be improved with non-convex constraints) ***)
+					LinearConstraint.p_nnconvex_union bad_constraint p_constraint;
+					
+					(* PRP switches to bad-state algorithm *)
+					if not bad_state_found then(
+						(* Print some information *)
+						self#print_algo_message Verbose_standard "Switching to EFsynth-like algorithm";
+					);
+					bad_state_found <- true;
+				
+					(* Do NOT compute its successors *)
+					to_be_added := false;
+					
+				)else(
+					self#print_algo_message Verbose_medium "State not corresponding to the one wanted.";
+				);
+			| _ -> raise (InternalError("[EFsynth/PRP] IMITATOR currently ony implements the non-reachability-like properties. This should have been checked before."))
+			end
+			;
+
+			(* Add the state_index to the list of new states (used to compute their successors at the next iteration) *)
+			if !to_be_added then
+				new_states_indexes := new_state_index :: !new_states_indexes;
+			
+		) (* end if new state *)
+		;
+		
+		
+		(*** TODO: move the rest to a higher level function? (post_from_one_state?) ***)
+		
+		(* Update the transitions *)
+		StateSpace.add_transition state_space (orig_state_index, action_index, new_state_index);
+		(* Print some information *)
+		if verbose_mode_greater Verbose_high then (
+			let beginning_message = (if added then "NEW STATE" else "Old state") in
+			print_message Verbose_high ("\n" ^ beginning_message ^ " reachable through action '" ^ (model.action_names action_index) ^ "': ");
+			print_message Verbose_high (ModelPrinter.string_of_state model new_state);
+		);
+	
+		(* The end: do nothing *)
+		()
+	(*** END WARNING/BADPROG: the following is almost entirely copy/paste from AlgoEFsynth.ml ***)
 	
 	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -87,19 +190,46 @@ class algoPRP =
 	
 	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(* Should we explore a pi-incompatible inequality? *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	method explore_pi_incompatible_states () =
+		(* Only explore if no bad states found *)
+		not bad_state_found
+
+	
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(* Actions to perform when a pi-incompatible inequality is found. Add its negation to the accumulated good constraint. *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	method process_negated_incompatible_inequality negated_inequality =
+		print_message Verbose_medium "";
+		self#print_algo_message Verbose_medium ("Adding the negation of a pi-incompatible inequality to Kgood.\n");
+		
+		let negated_constraint = LinearConstraint.make_p_constraint [negated_inequality] in
+
+		LinearConstraint.p_intersection_assign good_constraint [negated_constraint];
+		()
+	
+	
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Method packaging the result output by the algorithm *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method compute_result =
 
 	
-		(*** TODO ***)
-	
+		let result = if bad_state_found then(
+			(* Return Kbad *)
+			bad_constraint
+		)else(
+			(* Return Kgood *)
+			LinearConstraint.p_nnconvex_constraint_of_p_linear_constraint good_constraint
+		)
+		in
 		
 	
 		IMNonconvex_result
 		{
 			(* Result of the algorithm *)
-			nonconvex_constraint= LinearConstraint.false_p_nnconvex_constraint(); (*** TODO ***)
+			nonconvex_constraint= result;
 			
 			(* Explored state space *)
 			state_space			= state_space;

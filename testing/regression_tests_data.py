@@ -10,7 +10,7 @@
 # Laboratoire d'Informatique de Paris Nord
 # Universite Paris 13, Sorbonne Paris Cite, France
 # Created      : 2015/10/23
-# Last modified: 2016/01/08
+# Last modified: 2016/01/13
 #************************************************************
 
 
@@ -569,7 +569,7 @@ dG3_u + dG4_u >= 17 & dG3_u >= 8 & dG4_u >= 3 & 17 > dG3_u & 24 > dG3_u + dG4_u
 		'options'    : '-IMunion -output-result',
 		'expectations' : [
 			{'file': 'testIM-IMK-IMunion.res' , 'content' : """
-		p > 1 & 2 >= p OR p >= 2 & 4 >= p
+		4 >= p & p > 1
 		"""
 			} # end result file
 			,
@@ -615,7 +615,7 @@ dG3_u + dG4_u >= 17 & dG3_u >= 8 & dG4_u >= 3 & 17 > dG3_u & 24 > dG3_u + dG4_u
 		'options'    : '-IMunion -output-result -no-random',
 		'expectations' : [
 			{'file': 'exVariantes.res' , 'content' : """
-		 5*p1 > p2 & p2 >= 3 OR 5*p1 > p2 & p2 >= 3 OR 5*p1 > p2 & p2 > 2 & p2 >= 4*p1
+		 5*p1 > p2 & p2 >= 3 OR 5*p1 > p2 & p2 > 2 & p2 >= 4*p1
 		  """
 			} # end result file
 			,

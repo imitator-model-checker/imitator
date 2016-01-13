@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/11/25
- * Last modified     : 2016/01/08
+ * Last modified     : 2016/01/13
  *
  ************************************************************)
 
@@ -68,6 +68,7 @@ class algoEFsynth =
 	(* Add a new state to the state_space (if indeed needed) *)
 	(* Also update tile_nature and slast *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(*** WARNING/BADPROG: the following is almost entirely copy/paste to AlgoPRP.ml ***)
 	method add_a_new_state state_space orig_state_index new_states_indexes action_index location (final_constraint : LinearConstraint.px_linear_constraint) =
 		(* Retrieve the model *)
 		let model = Input.get_model () in
@@ -81,7 +82,7 @@ class algoEFsynth =
 		(* Print some information *)
 		if verbose_mode_greater Verbose_total then(
 			(*** TODO: move that comment to a higher level function? (post_from_one_state?) ***)
-			print_message Verbose_total ("Consider the state \n" ^ (ModelPrinter.string_of_state model new_state));
+			self#print_algo_message Verbose_total ("Consider the state \n" ^ (ModelPrinter.string_of_state model new_state));
 		);
 
 		let new_state_index, added = (
@@ -115,7 +116,7 @@ class algoEFsynth =
 					| None -> ()
 					(* Project *)
 					| Some parameters ->
-						print_message Verbose_medium "  [EF-synthesis] Projecting onto some of the parameters.";
+						self#print_algo_message Verbose_medium "Projecting onto some of the parameters.";
 						(*** TODO! do only once for all... ***)
 						let all_but_projectparameters = list_diff model.parameters parameters in
 						(* Eliminate other parameters *)
@@ -127,15 +128,15 @@ class algoEFsynth =
 					(*** TODO: merge this list on-the-fly!! ***)
 					(*** TODO: even better, directly use a non-convex constraint using PPL, and leave the work to PPL ***)
 					if List.exists (LinearConstraint.p_is_leq p_constraint) bad_constraints then(
-						print_message Verbose_low "  [EF-synthesis] Found a state violating the property but the constraint is not new.";
+						self#print_algo_message Verbose_low "Found a state violating the property but the constraint is not new.";
 					)else(
 						bad_constraints <- p_constraint :: bad_constraints;
 						(* Print some information *)
-						print_message Verbose_standard "  [EF-synthesis] Found a state violating the property.";
+						self#print_algo_message Verbose_standard "Found a state violating the property.";
 						
 						(* Print some information *)
 						if verbose_mode_greater Verbose_medium then(
-							print_message Verbose_medium "Adding the following constraint to the list of bad constraints:";
+							self#print_algo_message Verbose_medium "Adding the following constraint to the list of bad constraints:";
 							print_message Verbose_medium (LinearConstraint.string_of_p_linear_constraint model.variable_names p_constraint);
 						);
 						
@@ -145,9 +146,9 @@ class algoEFsynth =
 					to_be_added := false;
 					
 				)else(
-					print_message Verbose_medium "EF-synthesis: State not corresponding to the one wanted.";
+					self#print_algo_message Verbose_medium "State not corresponding to the one wanted.";
 				);
-			| _ -> raise (InternalError("[EF-synthesis] IMITATOR currently ony implements the non-reachability-like properties. This should have been checked before."))
+			| _ -> raise (InternalError("[EFsynth/PRP] IMITATOR currently ony implements the non-reachability-like properties. This should have been checked before."))
 			end
 			;
 
@@ -172,6 +173,7 @@ class algoEFsynth =
 	
 		(* The end: do nothing *)
 		()
+	(*** END WARNING/BADPROG: the following is almost entirely copy/paste from AlgoEFsynth.ml ***)
 	
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)

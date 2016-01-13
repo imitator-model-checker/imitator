@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/12/03
- * Last modified     : 2016/01/11
+ * Last modified     : 2016/01/13
  *
  ************************************************************)
 
@@ -298,4 +298,4 @@ let process_result result =
 
 
 
-	| _ -> raise (InternalError ("function process_result not implemented for all cases yet"))
+(* 	| _ -> raise (InternalError ("function process_result not implemented for all cases yet")) *)
