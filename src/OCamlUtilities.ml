@@ -7,7 +7,7 @@
  * Author:        Etienne Andre
  * 
  * Created:       2014/10/24
- * Last modified: 2015/09/15
+ * Last modified: 2016/01/15
  *
  ****************************************************************)
  
@@ -278,9 +278,14 @@ let string_of_list_of_string_with_sep sep l =
 let split sep = Str.split (Str.regexp ("[" ^ sep ^ "]"))
 
 
-(* 's_of_int i' Return "s" if i > 1, "" otherwise *)
+(** 's_of_int i' Return "s" if i > 1, "" otherwise *)
 let s_of_int i =
 	if i > 1 then "s" else ""
+
+
+(** 'waswere_of_int i' Return "were" if i > 1, "was" otherwise *)
+let waswere_of_int  i =
+	if i > 1 then "were" else "was"
 
 
 (** Escape \n & > for use in dot *)

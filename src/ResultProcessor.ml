@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/12/03
- * Last modified     : 2016/01/13
+ * Last modified     : 2016/01/15
  *
  ************************************************************)
 
@@ -189,6 +189,7 @@ let process_result result =
 		);
 
 		(* Print on terminal *)
+	(*** TODO: move somewhere else (back to the algorithm class) ***)
 		print_message Verbose_standard (
 			"\nEF-synthesis successfully finished " ^ (after_seconds ()) ^ "."
 		);
@@ -218,6 +219,7 @@ let process_result result =
 
 		
 	| IMConvex_result im_result ->
+	(*** TODO: move somewhere else (back to the algorithm class) ***)
 		print_message Verbose_standard (
 			"\nInverse method successfully finished " ^ (after_seconds ()) ^ "."
 		);
@@ -258,6 +260,7 @@ let process_result result =
 		
 		
 	| IMNonconvex_result im_result ->
+	(*** TODO: move somewhere else (back to the algorithm class) ***)
 		print_message Verbose_standard (
 			"\nInverse method successfully finished " ^ (after_seconds ()) ^ "."
 		);

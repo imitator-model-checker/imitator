@@ -84,7 +84,7 @@ class algoIM =
 		(* Create the result *)
 		let p_constraint = LinearConstraint.p_true_constraint() in
 		
-		self#print_algo_message Verbose_low ("\nAlgorithm " ^ self#algorithm_name ^ ": performing the intersection of all p-constraints...");
+		self#print_algo_message Verbose_low ("Performing the intersection of all p-constraints...");
 		
 		(* Iterate on all states *)
 (* 		val iterate_on_states : (state_index -> abstract_state -> unit) -> state_space -> unit *)

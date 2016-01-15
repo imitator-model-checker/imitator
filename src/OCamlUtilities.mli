@@ -7,7 +7,7 @@
  * Author:        Etienne Andre
  * 
  * Created:       2014/10/24
- * Last modified: 2015/09/15
+ * Last modified: 2016/01/15
  *
  ****************************************************************)
 
@@ -123,8 +123,11 @@ val string_of_list_of_string_with_sep : string -> string list -> string
 (*** WARNING: the behavior of this function is odd (when sep=";;" or "£"; bug hidden here? ***)
 val split : string -> string -> string list
 
-(* 's_of_int i' Return "s" if i > 1, "" otherwise *)
+(** 's_of_int i' Return "s" if i > 1, "" otherwise *)
 val s_of_int : int -> string
+
+(** 'waswere_of_int i' Return "were" if i > 1, "was" otherwise *)
+val waswere_of_int  : int -> string
 
 (** Escape \n & > for use in dot *)
 val escape_string_for_dot : string -> string

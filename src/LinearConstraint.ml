@@ -10,7 +10,7 @@
  * Author:        Etienne Andre
  * 
  * Created:       2010/03/04
- * Last modified: 2016/01/13
+ * Last modified: 2016/01/15
  *
  ****************************************************************) 
  
@@ -2798,6 +2798,6 @@ let string_of_p_nnconvex_constraint names p_nnconvex_constraint =
 	let disjuncts_string = List.map (string_of_p_linear_constraint names) disjuncts in
 	
 	(* Concatenate using an "OR" *)
-	string_of_list_of_string_with_sep " OR " disjuncts_string
+	string_of_list_of_string_with_sep "\nOR\n " disjuncts_string
 
 

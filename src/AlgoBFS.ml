@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/11/23
- * Last modified     : 2016/01/07
+ * Last modified     : 2016/01/15
  *
  ************************************************************)
 
@@ -153,15 +153,15 @@ class virtual algoBFS =
 			| Some Regular_termination -> ()
 
 			| Some (Depth_limit nb_unexplored_successors) -> print_warning (
-				"The limit depth has been reached. The exploration now stops, although there were still " ^ (string_of_int nb_unexplored_successors) ^ " state" ^ (s_of_int nb_unexplored_successors) ^ " to explore."
+				"The limit depth has been reached. The exploration now stops, although there " ^ (waswere_of_int nb_unexplored_successors) ^ " still " ^ (string_of_int nb_unexplored_successors) ^ " state" ^ (s_of_int nb_unexplored_successors) ^ " to explore."
 			)
 
 			| Some (States_limit nb_unexplored_successors) -> print_warning (
-				"The limit number of states has been reached. The exploration now stops, although there were still " ^ (string_of_int nb_unexplored_successors) ^ " state" ^ (s_of_int nb_unexplored_successors) ^ " to explore."
+				"The limit number of states has been reached. The exploration now stops, although there " ^ (waswere_of_int nb_unexplored_successors) ^ " still " ^ (string_of_int nb_unexplored_successors) ^ " state" ^ (s_of_int nb_unexplored_successors) ^ " to explore."
 			)
  
 			| Some (Time_limit nb_unexplored_successors) -> print_warning (
-				"The time limit has been reached. The exploration now stops, although there were still " ^ (string_of_int nb_unexplored_successors) ^ " state" ^ (s_of_int nb_unexplored_successors) ^ " to explore at this iteration."
+				"The time limit has been reached. The exploration now stops, although there " ^ (waswere_of_int nb_unexplored_successors) ^ " still " ^ (string_of_int nb_unexplored_successors) ^ " state" ^ (s_of_int nb_unexplored_successors) ^ " to explore at this iteration."
 					(* (" ^ (string_of_int limit) ^ " second" ^ (s_of_int limit) ^ ")*)
 			)
 			
