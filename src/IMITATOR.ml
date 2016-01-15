@@ -9,7 +9,7 @@
  * 
  * File contributors : Ulrich Kühne, Étienne André
  * Created           : 2009/09/07
- * Last modified     : 2016/01/11
+ * Last modified     : 2016/01/15
  *
  ************************************************************)
 
@@ -32,11 +32,11 @@ open Reachability
 (**************************************************
 
 TAGS USED THROUGHOUT THIS PROJECT
-- (*** TODO ***)
 - (*** BADPROG ***)
 - (*** NOTE ***)
 - (*** OPTIMIZED ***)
 - (*** TO OPTIMIZE ***)
+- (*** TODO ***)
 - (*** WARNING ***)
 **************************************************)
 
@@ -60,23 +60,6 @@ terminate_program();*)
 (************************************************************)
 begin
 try(
-
-
-
-
-
-
-
-(*** TEST ***)
-(*let algo = new AlgoEFsynth.algoEFsynth in
-print_string algo#algorithm_name;
-let result = algo#run() in
-ResultProcessor.process_result result;*)
-
-
-
-
-
 
 
 (************************************************************)
@@ -413,7 +396,5 @@ end; (* try *)
 (************************************************************)
 (* Bye bye! *)
 (************************************************************)
-
-(* Reachability.print_stats (); *)
 
 terminate_program()

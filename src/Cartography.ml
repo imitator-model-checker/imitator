@@ -142,36 +142,7 @@ let get_all_pi0_array_option () =
 	| Some all_pi0_array -> all_pi0_array
 
 
-(*(* Convert the array into a functional representation *)
-let pi0_fun_of_pi0 pi0 =
-	(* Convert to function *)
-	fun parameter_index -> pi0.(parameter_index)*)
 
-
-(*(* Convert the array into a functional representation *)
-let pi0_fun_of_current_pi0 () =
-	(* Retrieve the current pi0 (that must have been initialized before) *)
-	let current_pi0 = get_current_pi0_option () in
-	(* Convert to function *)
-	pi0_fun_of_pi0 current_pi0
-	*)
-
-
-(*
-
-(*------------------------------------------------------------*)
-(* Next point *)
-(*------------------------------------------------------------*)
-
-let counter_next_point = ref 0.0
-let start_time_next_point = ref 0.0
-
-let start_counter_next_point () =
-	start_time_next_point := Unix.gettimeofday()
-
-let stop_counter_next_point () =
-	counter_next_point := !counter_next_point +. Unix.gettimeofday() -. !start_time_next_point
-*)
 
 let counter_next_point = new Counter.counter
 
@@ -455,10 +426,6 @@ let test_pi0_uncovered current_pi0 found_pi0 =
 	(* Retrieve the input options *)
 	let options = Input.get_options () in
 
-(*	(* Convert the current pi0 to functional representation *)
-	let pi0 = fun parameter -> current_pi0.(parameter) in*)
-(* 	let pi0 = current_pi0#get_value in *)
-	
 	(* Check that the current pi0 does not belong to any constraint *)
 	if dynArray_exists (pi0_in_returned_constraint current_pi0) !computed_constraints then (
 		(* Update the number of unsuccessful points *)
@@ -535,10 +502,6 @@ let one_random_pi0 () =
 (*------------------------------------------------------------*)
 let random_pi0 max_tries =
 	counter_next_point#start;
-	(* Get the model *)
-(* 	let model = Input.get_model() in *)
-	(* Get the v0 *)
-(* 	let v0 = Input.get_v0() in *)
 
 	(* Print some information *)
 	print_message Verbose_medium ("Trying to randomly find a fresh pi0 with " ^ (string_of_int max_tries) ^ " tries.");
