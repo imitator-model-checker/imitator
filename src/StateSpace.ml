@@ -857,6 +857,19 @@ let match_unreachable_global_locations unreachable_global_locations location =
 
 
 
+
+(************************************************************)
+(** Misc: tile natures *)
+(************************************************************)
+(** Convert a tile_nature into a string *)
+let string_of_tile_nature = function
+	| Good -> "good"
+	| Bad -> "bad"
+	| Unknown -> "unknown"
+(* 	| _ -> raise (InternalError ("Tile nature should be good or bad only, so far ")) *)
+
+
+	
 (************************************************************)
 (** Statistics *)
 (************************************************************)

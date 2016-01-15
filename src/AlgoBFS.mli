@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/11/23
- * Last modified     : 2015/12/04
+ * Last modified     : 2016/01/15
  *
  ************************************************************)
 
@@ -33,6 +33,9 @@ class virtual algoBFS :
 		(*** TODO: make private (while accessible to subclasses ***)
 		val mutable termination_status : Result.algorithm_termination option
 
+		(* Constraint of the initial state (used by some algorithms to initialize their variables) *)
+		val mutable initial_constraint : LinearConstraint.px_linear_constraint option
+		
 		
 		(************************************************************)
 		(* Class methods *)

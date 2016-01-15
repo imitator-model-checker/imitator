@@ -239,7 +239,12 @@ let process_result result =
 		Graphics.generate_graph model im_result.state_space radical;
 		
 		(* Render zones in a graphical form *)
-		(*** TODO ***)
+		let zones = [Convex_constraint (im_result.convex_constraint, AbstractModel.Unknown (*** TODO ***))] in
+		if options#cart then (
+			Graphics.cartography model (Input.get_v0()) zones (options#files_prefix ^ "_cart_ef")
+		) else (
+				print_message Verbose_high "Graphical cartography not asked: graph not generated.";
+		);
 
 		(* The end *)
 		()
@@ -277,7 +282,14 @@ let process_result result =
 		Graphics.generate_graph model im_result.state_space radical;
 		
 		(* Render zones in a graphical form *)
-		(*** TODO ***)
+		(*** A bit a HACk here ***)
+		let convex_constraints = LinearConstraint.p_linear_constraint_list_of_p_nnconvex_constraint im_result.nonconvex_constraint in
+		let zones = [Union_of_constraints (convex_constraints, AbstractModel.Unknown (*** TODO ***))] in
+		if options#cart then (
+			Graphics.cartography model (Input.get_v0()) zones (options#files_prefix ^ "_cart_ef")
+		) else (
+				print_message Verbose_high "Graphical cartography not asked: graph not generated.";
+		);
 
 		(* The end *)
 		()

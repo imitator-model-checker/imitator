@@ -10,7 +10,7 @@
  * Author:        Ulrich Kuehne, Etienne Andre
  * 
  * Created:       2012/06/18
- * Last modified: 2015/11/23
+ * Last modified: 2016/01/15
  *
  ****************************************************************)
 
@@ -229,12 +229,12 @@ let write_result_to_file total_time =
 	ModelPrinter.string_of_pi0 program pi0_functional
 	*)
 
-(*** TODO: move this translation somewhere else ***)
+(*(*** TODO: move this translation somewhere else ***)
 (*** WARNING: code duplicated ***)
 let string_of_tile_nature = function
 	| Good -> "good"
 	| Bad -> "bad"
-	| _ -> raise (InternalError ("Tile nature should be good or bad only, so far "))
+	| _ -> raise (InternalError ("Tile nature should be good or bad only, so far "))*)
 
 
 let tile_nature_of_returned_constraint = function
@@ -1199,7 +1199,7 @@ let bc_process_im_result im_result =
 		print_message Verbose_low ("Constraint K0 computed:");
 		print_message Verbose_standard (ModelPrinter.string_of_returned_constraint model.variable_names im_result.result);
 		if model.correctness_condition <> None then(
-			print_message Verbose_medium ("This tile is " ^ (string_of_tile_nature im_result.tile_nature) ^ ".");
+			print_message Verbose_medium ("This tile is " ^ (StateSpace.string_of_tile_nature im_result.tile_nature) ^ ".");
 		);
 
 		(* Process the constraint(s) in some cases *)
@@ -1311,7 +1311,7 @@ let bc_process_im_result im_result =
 			print_message Verbose_low ("The constraint computed was:");
 			print_message Verbose_low (ModelPrinter.string_of_returned_constraint model.variable_names im_result.result);
 			if model.correctness_condition <> None then(
-				print_message Verbose_medium ("This tile would have been " ^ (string_of_tile_nature im_result.tile_nature) ^ ".");
+				print_message Verbose_medium ("This tile would have been " ^ (StateSpace.string_of_tile_nature im_result.tile_nature) ^ ".");
 			);
 		);
 		(* Return true only if really added *)

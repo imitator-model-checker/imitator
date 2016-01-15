@@ -8,7 +8,7 @@
  * Author:        Etienne Andre, Ulrich Kuehne
  * 
  * Created:       2010/07/05
- * Last modified: 2015/11/23
+ * Last modified: 2016/01/15
  *
  ****************************************************************)
 
@@ -43,12 +43,13 @@ let cartography_extension = "png"
 
 
 
-(* TODO: move this translation somewhere else
+(*(* TODO: move this translation somewhere else
    WARNING: code duplicated *)
 let string_of_tile_nature = function
 	| Good -> "good"
 	| Bad -> "bad"
-	| _ -> raise (InternalError ("Tile nature should be good or bad only, so far "))
+	| Bad -> "unknown"
+	| _ -> raise (InternalError ("Tile nature should be good or bad only, so far "))*)
 
 
 (************************************************************)
@@ -146,8 +147,8 @@ if returned_constraint_list = [] then(
 	(* If EF-synthesis: choose the first two parameters *)
 	begin
 	match options#imitator_mode with
-		| EF_synthesis ->
-			print_message Verbose_low "Case EF-synthesis: first 2 parameters";
+		| EF_synthesis | Inverse_method ->
+			print_message Verbose_low "Pick up the first 2 parameters to draw the cartography";
 			(* First check that there are at least 2 parameters *)
 			if model.nb_parameters < 2 then(
 				print_error "Could not plot cartography (which requires 2 parameters)";
@@ -475,7 +476,7 @@ if returned_constraint_list = [] then(
 			^ "\n" ^"# Generated: " ^ (now()) ^ ""
 			(* This line is used by Giuseppe Lipari: do not change without prior agreement *)
 			^ (if model.correctness_condition <> None then( 
-				"\n# Tile nature: " ^ (string_of_tile_nature tile_nature) ^ ""
+				"\n# Tile nature: " ^ (StateSpace.string_of_tile_nature tile_nature) ^ ""
 			) else "")
 		in
 		

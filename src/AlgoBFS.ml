@@ -74,6 +74,9 @@ class virtual algoBFS =
 	(* Status of the analysis *)
 	val mutable termination_status = None
 	
+	(* Constraint of the initial state (used by some algorithms to initialize their variables) *)
+	val mutable initial_constraint : LinearConstraint.px_linear_constraint option = None
+	
 	
 	
 	(************************************************************)
@@ -195,12 +198,12 @@ class virtual algoBFS =
 		let init_loc, init_constr = init_state in
 		let init_state = (init_loc, LinearConstraint.px_copy init_constr) in
 
+		(* Set up the initial state constraint *)
+		initial_constraint <- Some init_constr;
+
 (*		(*Initialization of slast : used in union mode only*)
 		slast := [];*)
 		
-	(*		(* Set the counter of selections to 0 *)
-		nb_random_selections := 0;*)
-
 		(* Print some information *)
 		print_message Verbose_standard ("Starting running algorithm " ^ self#algorithm_name ^ "...\n");
 		

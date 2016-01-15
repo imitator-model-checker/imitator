@@ -63,10 +63,20 @@ class algoPRP =
 	(* Variable initialization *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method initialize_variables =
+		(* Retrieve the model *)
+		let model = Input.get_model () in
+
 		super#initialize_variables;
 		
 		bad_state_found <- false;
-		good_constraint <- LinearConstraint.p_true_constraint ();
+		
+		(* Parameter valuations cannot go beyond what is defined in the initial state of the model *)
+		good_constraint <- (
+			match initial_constraint with
+			| None -> raise (InternalError("The initial constraint was not yet set in PRP, although it should have been."))
+			| Some c -> LinearConstraint.px_hide_nonparameters_and_collapse c
+		);
+		
 		bad_constraint <- LinearConstraint.false_p_nnconvex_constraint ();
 		
 		(* The end *)
@@ -158,6 +168,11 @@ class algoPRP =
 						(*** NOTE: not copy paste (actually, to copy when EFsynth will be improved with non-convex constraints) ***)
 						LinearConstraint.p_nnconvex_union bad_constraint p_constraint;
 						
+						if verbose_mode_greater Verbose_low then(
+							self#print_algo_message_newline Verbose_low ("Kbad now equal to:");
+							print_message Verbose_low (LinearConstraint.string_of_p_nnconvex_constraint model.variable_names bad_constraint);
+						);
+
 						(* PRP switches to bad-state algorithm *)
 						if not bad_state_found then(
 							(* Print some information *)
@@ -223,12 +238,18 @@ class algoPRP =
 	(* Actions to perform when a pi-incompatible inequality is found. Add its negation to the accumulated good constraint. *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method process_negated_incompatible_inequality negated_inequality =
-		print_message Verbose_medium "";
-		self#print_algo_message Verbose_medium ("Adding the negation of a pi-incompatible inequality to Kgood.\n");
+		self#print_algo_message_newline Verbose_medium ("Adding the negation of a pi-incompatible inequality to Kgood.\n");
 		
 		let negated_constraint = LinearConstraint.make_p_constraint [negated_inequality] in
 
 		LinearConstraint.p_intersection_assign good_constraint [negated_constraint];
+
+		if verbose_mode_greater Verbose_low then(
+			(* Retrieve the model *)
+			let model = Input.get_model () in
+			self#print_algo_message_newline Verbose_low ("Kgood now equal to:");
+			print_message Verbose_low (LinearConstraint.string_of_p_linear_constraint model.variable_names good_constraint);
+		);
 		()
 	
 	

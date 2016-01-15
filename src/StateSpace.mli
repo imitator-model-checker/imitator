@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2009/12/08
- * Last modified     : 2015/11/26
+ * Last modified     : 2016/01/15
  *
  ************************************************************)
 
@@ -147,6 +147,12 @@ val iterate_on_states : (state_index -> abstract_state -> unit) -> state_space -
 (*** NOTE: should NOT be defined in this module! But rather in some (yet to be created...) State.ml ***)
 
 val match_unreachable_global_locations : unreachable_global_location list -> Location.global_location -> bool
+
+
+(************************************************************)
+(** Misc: tile natures *)
+(************************************************************)
+val string_of_tile_nature : AbstractModel.tile_nature -> string
 
 
 (************************************************************)
