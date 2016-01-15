@@ -101,6 +101,11 @@ class algoIM =
 		) state_space;
 		
 	
+		self#print_algo_message_newline Verbose_standard (
+			"Successfully terminated " ^ (after_seconds ()) ^ "."
+		);
+
+		(* Return result *)
 		IMConvex_result
 		{
 			(* Result of the algorithm *)

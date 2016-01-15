@@ -79,41 +79,34 @@ class algoIMK =
 		(* Retrieve the pi0 (dynamic!) *)
 		let pi0 = Input.get_pi0 () in
 		
-		print_message Verbose_medium "";
-		self#print_algo_message Verbose_medium ("Sarting pi0-compatibility check...");
+		self#print_algo_message_newline Verbose_medium ("Sarting pi0-compatibility check...");
 		
-		print_message Verbose_high "";
-		self#print_algo_message Verbose_high ("Hiding non parameters...");
+		self#print_algo_message_newline Verbose_high ("Hiding non parameters...");
 		
 		(* Hide non-parameters *)
 		let p_constraint = LinearConstraint.px_hide_nonparameters_and_collapse constr in
 		
-		print_message Verbose_high "";
-		self#print_algo_message Verbose_high ("Parameters now hidden:");
+		self#print_algo_message_newline Verbose_high ("Parameters now hidden:");
 		(* Print some information *)
 		if verbose_mode_greater Verbose_high then(
 			print_message Verbose_high (LinearConstraint.string_of_p_linear_constraint model.variable_names p_constraint);
 		);
 		(* Check the pi0-compatibility *)
-		print_message Verbose_high "";
-		self#print_algo_message Verbose_high ("Checking pi-compatibility:");
+		self#print_algo_message_newline Verbose_high ("Checking pi-compatibility:");
 		let compatible, incompatible = LinearConstraint.partition_pi0_compatible pi0#get_value p_constraint in
 		let is_pi0_incompatible = incompatible != [] in
 		
 		(* If pi0-incompatible: select an inequality *)
 		if is_pi0_incompatible then (
-			print_message Verbose_low "";
-			self#print_algo_message Verbose_low ("Found a pi0-incompatible state.");
+			self#print_algo_message_newline Verbose_low ("Found a pi0-incompatible state.");
 			(* Print some information *)
 			if verbose_mode_greater Verbose_medium then(
 				self#print_algo_message Verbose_high ("Associated constraint:");
 				print_message Verbose_high (LinearConstraint.string_of_px_linear_constraint model.variable_names constr);
-				print_message Verbose_medium "";
-				self#print_algo_message Verbose_medium ("The following inequalities are pi0-incompatible:");
+				self#print_algo_message_newline Verbose_medium ("The following inequalities are pi0-incompatible:");
 				List.iter (fun inequality -> print_message Verbose_medium (LinearConstraint.string_of_p_linear_inequality model.variable_names inequality)) incompatible;
 				if verbose_mode_greater Verbose_high then(
-					print_message Verbose_high "";
-					self#print_algo_message Verbose_high ("Recall that pi0 is:");
+					self#print_algo_message_newline Verbose_high ("Recall that pi0 is:");
 					print_message Verbose_high   (ModelPrinter.string_of_pi0 model pi0);
 				);
 			);
@@ -141,8 +134,7 @@ class algoIMK =
 				in
 				(* Print some information *)
 				if verbose_mode_greater Verbose_medium then(
-					print_message Verbose_medium "";
-					self#print_algo_message Verbose_medium ("Selecting the following pi0-incompatible inequality:");
+					self#print_algo_message_newline Verbose_medium ("Selecting the following pi0-incompatible inequality:");
 					print_message Verbose_medium (LinearConstraint.string_of_p_linear_inequality model.variable_names p_inequality);
 				);
 
@@ -365,8 +357,7 @@ class algoIMK =
 	method process_negated_incompatible_inequality negated_inequality =
 		let negated_constraint = LinearConstraint.make_p_constraint [negated_inequality] in
 		
-		print_message Verbose_medium "";
-		self#print_algo_message Verbose_medium ("Updating all the previous states.\n");
+		self#print_algo_message_newline Verbose_medium ("Updating all the previous states.\n");
 		
 		StateSpace.add_p_constraint_to_states state_space negated_constraint;
 		()
@@ -390,6 +381,11 @@ class algoIMK =
 		let p_constraint = LinearConstraint.px_hide_nonparameters_and_collapse px_constraint in
 (* 		Convex_constraint (LinearConstraint.px_hide_nonparameters_and_collapse px_constraint , !tile_nature)  *)
 	
+		self#print_algo_message_newline Verbose_standard (
+			"Successfully terminated " ^ (after_seconds ()) ^ "."
+		);
+
+		(* Return result *)
 		IMConvex_result
 		{
 			(* Result of the algorithm *)

@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/11/25
- * Last modified     : 2016/01/08
+ * Last modified     : 2016/01/15
  *
  ************************************************************)
 
@@ -116,6 +116,11 @@ class algoPostStar =
 	(* Method packaging the result output by the algorithm *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method compute_result =
+		self#print_algo_message_newline Verbose_standard (
+			"State space exploration completed " ^ (after_seconds ()) ^ "."
+		);
+
+		(* Return result *)
 		PostStar_result
 		{
 			(* Explored state space *)

@@ -186,6 +186,14 @@ class algoEFsynth =
 	(* Method packaging the result output by the algorithm *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method compute_result =
+		self#print_algo_message_newline Verbose_standard (
+			"Algorithm completed " ^ (after_seconds ()) ^ "."
+		);
+		
+		
+		(*** TODO: compute as well *good* zones, depending whether the analysis was exact, or early termination occurred ***)
+
+		
 		EFsynth_result
 		{
 			(* List of constraints ensuring EF location *)

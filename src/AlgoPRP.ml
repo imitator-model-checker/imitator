@@ -237,7 +237,6 @@ class algoPRP =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method compute_result =
 
-	
 		let result = if bad_state_found then(
 			(* Return Kbad *)
 			bad_constraint
@@ -247,7 +246,11 @@ class algoPRP =
 		)
 		in
 		
-	
+		self#print_algo_message_newline Verbose_standard (
+			"Successfully terminated " ^ (after_seconds ()) ^ "."
+		);
+
+		(* Return result *)
 		IMNonconvex_result
 		{
 			(* Result of the algorithm *)

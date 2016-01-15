@@ -53,7 +53,7 @@ let write_result_to_file constraint_str =
 	(* Write to file *)
 	let file_name = options#files_prefix ^ Constants.result_file_extension in
 	write_to_file file_name file_content;
-	print_message Verbose_standard ("Result written to file '" ^ file_name ^ "'.")
+	print_message Verbose_standard ("\nResult written to file '" ^ file_name ^ "'.")
 
 
 
@@ -79,7 +79,7 @@ let print_statistics total_time reachability_graph =
 	(* Speed (number of states in the graph) *)
 	let nb_states = StateSpace.nb_states reachability_graph in
 	let average = (float_of_int nb_states) /. total_time in
-	print_message Verbose_standard ("\nStates per second in the graph: " ^ (string_of_average average) ^ " (" ^ (string_of_int nb_states) ^ "/" ^ (string_of_seconds total_time) ^ ")");
+	print_message Verbose_standard ("States per second in the graph: " ^ (string_of_average average) ^ " (" ^ (string_of_int nb_states) ^ "/" ^ (string_of_seconds total_time) ^ ")");
 	
 	(* Speed (number of states computed, even if not kept) *)
 	let nb_gen_states = StateSpace.get_nb_gen_states reachability_graph in
@@ -144,10 +144,6 @@ let process_result result =
 	
 	match result with
 	| PostStar_result poststar_result ->
-		print_message Verbose_standard (
-			"\nState space exploration completed " ^ (after_seconds ()) ^ "."
-		);
-			
 		print_message Verbose_low (
 			"Computation time: "
 			^ (string_of_seconds poststar_result.computation_time) ^ "."
@@ -167,32 +163,25 @@ let process_result result =
 		
 		
 	| EFsynth_result efsynth_result ->
-
-		print_message Verbose_standard (
-			"\nState space exploration completed " ^ (after_seconds ()) ^ "."
-		);
-		
-		
-		(*** TODO: compute as well *good* zones, depending whether the analysis was exact, or early termination occurred ***)
-		
 		
 		(* Convert result to string *)
 		let result_str = string_of_list_of_string_with_sep "\n OR \n" (List.map (LinearConstraint.string_of_p_linear_constraint model.variable_names) efsynth_result.constraints) in
 
 		(* Print the result *)
-		print_message Verbose_standard ("\nFinal constraint such that the property is *violated* (" ^ (string_of_int (List.length efsynth_result.constraints)) ^ " constraint" ^ (s_of_int (List.length efsynth_result.constraints)) ^ "): ");
-		print_message Verbose_standard (result_str);
+		if verbose_mode_greater Verbose_standard then(
+			print_message Verbose_standard ("\nFinal constraint such that the property is *violated* (" ^ (string_of_int (List.length efsynth_result.constraints)) ^ " constraint" ^ (s_of_int (List.length efsynth_result.constraints)) ^ "): ");
+			print_message Verbose_standard (result_str);
+		);
 		
 		print_message Verbose_low (
 			"Computation time: "
 			^ (string_of_seconds efsynth_result.computation_time) ^ "."
 		);
 
-		(* Print on terminal *)
-	(*** TODO: move somewhere else (back to the algorithm class) ***)
+(*		(* Print on terminal *)
 		print_message Verbose_standard (
 			"\nEF-synthesis successfully finished " ^ (after_seconds ()) ^ "."
-		);
+		);*)
 
 		(* Write to file if requested *)
 		if options#output_result then(
@@ -219,16 +208,11 @@ let process_result result =
 
 		
 	| IMConvex_result im_result ->
-	(*** TODO: move somewhere else (back to the algorithm class) ***)
-		print_message Verbose_standard (
-			"\nInverse method successfully finished " ^ (after_seconds ()) ^ "."
-		);
-
 		(* Convert result to string *)
 		let result_str = LinearConstraint.string_of_p_linear_constraint model.variable_names im_result.convex_constraint in
 
 		(* Print on terminal *)
-		print_message Verbose_standard result_str;
+		print_message Verbose_standard ("\nResult:\n" ^ result_str);
 		
 		(* Write to file if requested *)
 		if options#output_result then(
@@ -236,8 +220,10 @@ let process_result result =
 		);
 		
 		(* Print memory information *)
-		if verbose_mode_greater Verbose_standard then
+		if verbose_mode_greater Verbose_standard then(
+			print_newline();
 			print_memory_used Verbose_standard;
+		);
 		
 		print_message Verbose_low (
 			"Computation time for IM only: "
@@ -260,16 +246,11 @@ let process_result result =
 		
 		
 	| IMNonconvex_result im_result ->
-	(*** TODO: move somewhere else (back to the algorithm class) ***)
-		print_message Verbose_standard (
-			"\nInverse method successfully finished " ^ (after_seconds ()) ^ "."
-		);
-
 		(* Convert result to string *)
 		let result_str = LinearConstraint.string_of_p_nnconvex_constraint model.variable_names im_result.nonconvex_constraint in
 
 		(* Print on terminal *)
-		print_message Verbose_standard result_str;
+		print_message Verbose_standard ("\nResult:\n" ^ result_str);
 		
 		(* Write to file if requested *)
 		if options#output_result then(
@@ -277,8 +258,10 @@ let process_result result =
 		);
 		
 		(* Print memory information *)
-		if verbose_mode_greater Verbose_standard then
+		if verbose_mode_greater Verbose_standard then(
+			print_newline();
 			print_memory_used Verbose_standard;
+		);
 		
 		print_message Verbose_low (
 			"Computation time for IM only: "
