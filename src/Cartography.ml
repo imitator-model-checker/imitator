@@ -220,23 +220,6 @@ let write_result_to_file total_time =
 (* Functions on tile nature *)
 (************************************************************)
 
-(* let string_of_array_pi0 pi0_array = 
-	(* Retrieve the program *)
-	let program = Input.get_program () in
-	(* Convert to functional *)
-	let pi0_functional = fun parameter -> pi0_array.(parameter) in
-	(* Convert to string *)
-	ModelPrinter.string_of_pi0 program pi0_functional
-	*)
-
-(*(*** TODO: move this translation somewhere else ***)
-(*** WARNING: code duplicated ***)
-let string_of_tile_nature = function
-	| Good -> "good"
-	| Bad -> "bad"
-	| _ -> raise (InternalError ("Tile nature should be good or bad only, so far "))*)
-
-
 let tile_nature_of_returned_constraint = function
 	| Convex_constraint (_ , tn) -> tn
 	| Union_of_constraints (_ , tn) -> tn

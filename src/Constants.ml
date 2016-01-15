@@ -1,16 +1,24 @@
-(*****************************************************************
+(************************************************************
  *
  *                       IMITATOR
  * 
- * Universite Paris 13, Sorbonne Paris Cite, LIPN (France)
+ * Laboratoire Spécification et Vérification (ENS Cachan & CNRS, France)
+ * LIPN, Université Paris 13, Sorbonne Paris Cité (France)
  * 
- * Author:        Etienne Andre
+ * All (?) constants of IMITATOR
  * 
- * Created:       2014/10/24
- * Last modified: 2015/10/28
+ * File contributors : Étienne André
+ * Created           : 2014/10/24
+ * Last modified     : 2016/01/15
  *
- ****************************************************************)
+ ************************************************************)
+
  
+(************************************************************)
+(************************************************************)
+(* IMITATOR NAME AND VERSION *)
+(************************************************************)
+(************************************************************)
 
 let program_name = "IMITATOR"
 
@@ -18,8 +26,31 @@ let version_string = "2.7.4-working-branch"
 
 let version_name = "Butter Guéméné"
 
+
+
+(************************************************************)
+(************************************************************)
+(* External binaries *)
+(************************************************************)
+(************************************************************)
+
+let dot_command = "dot"
+
+
+(************************************************************)
+(************************************************************)
+(* FILE EXTENSIONS *)
+(************************************************************)
+(************************************************************)
+
+
 (** Extension for input model files *)
 let model_extension = ".imi"
 
 (** Extension for files output *)
 let result_file_extension = ".res"
+
+let dot_image_extension = "jpg"
+let dot_file_extension = "dot"
+let states_file_extension = "states"
+let cartography_extension = "png"

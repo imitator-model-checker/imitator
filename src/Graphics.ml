@@ -17,39 +17,15 @@
 (* Modules *)
 (************************************************************)
 
-open Exceptions
 open OCamlUtilities
+open Exceptions
+open Constants
 open ImitatorUtilities
 open Result
 open AbstractModel
 
 
 
-
-(************************************************************)
-(************************************************************)
-(* GLOBAL CONSTANTS *)
-(************************************************************)
-(************************************************************)
-
-(*** TODO: move to Constants.mli ***)
-let dot_command = "dot"
-let dot_image_extension = "jpg"
-let dot_file_extension = "dot"
-let states_file_extension = "states"
-let cartography_extension = "png"
-
-
-
-
-
-(*(* TODO: move this translation somewhere else
-   WARNING: code duplicated *)
-let string_of_tile_nature = function
-	| Good -> "good"
-	| Bad -> "bad"
-	| Bad -> "unknown"
-	| _ -> raise (InternalError ("Tile nature should be good or bad only, so far "))*)
 
 
 (************************************************************)
