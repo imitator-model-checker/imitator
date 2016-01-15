@@ -1541,7 +1541,7 @@ let bc_result () =
 (*------------------------------------------------------------*)
 let output_graphical_cartography suffix_option =
 	(* Get the model *)
-	let model = Input.get_model() in
+(* 	let model = Input.get_model() in *)
 	(* Retrieve the input options *)
 	let options = Input.get_options () in
 	
@@ -1556,7 +1556,7 @@ let output_graphical_cartography suffix_option =
 	
 	(* Render zones in a graphical form *)
 	if options#cart then (
-		Graphics.cartography model (Input.get_v0()) zones (options#files_prefix ^ suffix)
+		Graphics.cartography zones (options#files_prefix ^ suffix)
 	) else (
 			print_message Verbose_high "Graphical cartography not asked: graph not generated.";
 	)
@@ -1613,7 +1613,7 @@ let cover_behavioral_cartography model =
 		(*** TODO: move inside inverse_method_gen ***)
 		(*** HACK: have to decrease current_iteration because it was increased in bc_process_im_result ... ***)
 		let radical = options#files_prefix ^ "_" ^ (string_of_int (!current_iteration-1)) in
-			Graphics.generate_graph model reachability_graph radical;
+			Graphics.generate_graph reachability_graph radical;
 
 		(* Compute the next pi0 (note that current_pi0 is directly modified by the function!) and return flags for more pi0 and co *)
 		let found_pi0 , _ = find_next_pi0 (Some im_result.tile_nature) in
@@ -1758,7 +1758,7 @@ let random_behavioral_cartography model nb =
 				(* Generate the dot graph *)
 				(*** TODO: move to inverse_method_gen ***)
 				let radical = options#files_prefix ^ "_" ^ (string_of_int !i) in
-				Graphics.generate_graph model reachability_graph radical;
+				Graphics.generate_graph reachability_graph radical;
 				(* Add the index to the interesting list *)
 				interesting_interations := !i :: !interesting_interations;
 
@@ -1810,7 +1810,7 @@ let random_behavioral_cartography model nb =
 	(* Render zones in a graphical form *)
 	(*** WARNING: duplicate code (cannot use output_graphical_cartography due to the different representation of zones here... ***)
 	if options#cart then (
-		Graphics.cartography model (Input.get_v0()) zones (options#files_prefix ^ "_cart_bc_random")
+		Graphics.cartography zones (options#files_prefix ^ "_cart_bc_random")
 	) else (
 			print_message Verbose_high "Graphical cartography not asked: graph not generated.";
 	)

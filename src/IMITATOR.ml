@@ -162,7 +162,7 @@ if options#pta2jpg then(
 	if verbose_mode_greater Verbose_high then(
 		print_message Verbose_high ("\n" ^ translated_model ^ "\n");
 	);
-	Graphics.dot model (options#files_prefix ^ "-pta") translated_model;
+	Graphics.dot (options#files_prefix ^ "-pta") translated_model;
 	terminate_program()
 );
 
@@ -194,7 +194,7 @@ if options#cartonly then(
 	v0#set_min 1 p2_min;
 	v0#set_max 1 p2_max;
 	(* Call the cartography *)
-	Graphics.cartography model v0 constraints options#files_prefix;
+	Graphics.cartography constraints options#files_prefix;
 	(* The end *)
 	terminate_program()
 );

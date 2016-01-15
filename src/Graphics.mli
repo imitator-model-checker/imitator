@@ -29,9 +29,9 @@ val dot_colors : string list
 (* Functions *)
 (************************************************************)
 
-val cartography : abstract_model ->  v0 -> Result.returned_constraint list ->  string -> unit
+val cartography : Result.returned_constraint list ->  string -> unit
 
-val dot : abstract_model -> string -> string -> unit
+val dot : string -> string -> unit
 
-val generate_graph : abstract_model -> StateSpace.state_space -> string -> unit
+val generate_graph : StateSpace.state_space -> string -> unit
 

@@ -154,7 +154,7 @@ let process_result result =
 		
 		(* Generate graphics *)
 		let radical = options#files_prefix in
-		Graphics.generate_graph model poststar_result.state_space radical;
+		Graphics.generate_graph poststar_result.state_space radical;
 		
 		(* The end *)
 		()
@@ -193,12 +193,12 @@ let process_result result =
 		
 		(* Generate graphics *)
 		let radical = options#files_prefix in
-		Graphics.generate_graph model efsynth_result.state_space radical;
+		Graphics.generate_graph efsynth_result.state_space radical;
 		
 		(* Render zones in a graphical form *)
 		let zones = [Union_of_constraints (efsynth_result.constraints, AbstractModel.Bad)] in
 		if options#cart then (
-			Graphics.cartography model (Input.get_v0()) zones (options#files_prefix ^ "_cart_ef")
+			Graphics.cartography zones (options#files_prefix ^ "_cart_ef")
 		) else (
 				print_message Verbose_high "Graphical cartography not asked: graph not generated.";
 		);
@@ -236,12 +236,12 @@ let process_result result =
 		(* Generate graphics *)
 		(*** TODO: move inside inverse_method_gen ***)
 		let radical = options#files_prefix in
-		Graphics.generate_graph model im_result.state_space radical;
+		Graphics.generate_graph im_result.state_space radical;
 		
 		(* Render zones in a graphical form *)
 		let zones = [Convex_constraint (im_result.convex_constraint, AbstractModel.Unknown (*** TODO ***))] in
 		if options#cart then (
-			Graphics.cartography model (Input.get_v0()) zones (options#files_prefix ^ "_cart_ef")
+			Graphics.cartography zones (options#files_prefix ^ "_cart_ef")
 		) else (
 				print_message Verbose_high "Graphical cartography not asked: graph not generated.";
 		);
@@ -279,14 +279,14 @@ let process_result result =
 		(* Generate graphics *)
 		(*** TODO: move inside inverse_method_gen ***)
 		let radical = options#files_prefix in
-		Graphics.generate_graph model im_result.state_space radical;
+		Graphics.generate_graph im_result.state_space radical;
 		
 		(* Render zones in a graphical form *)
 		(*** A bit a HACk here ***)
 		let convex_constraints = LinearConstraint.p_linear_constraint_list_of_p_nnconvex_constraint im_result.nonconvex_constraint in
 		let zones = [Union_of_constraints (convex_constraints, AbstractModel.Unknown (*** TODO ***))] in
 		if options#cart then (
-			Graphics.cartography model (Input.get_v0()) zones (options#files_prefix ^ "_cart_ef")
+			Graphics.cartography zones (options#files_prefix ^ "_cart_ef")
 		) else (
 				print_message Verbose_high "Graphical cartography not asked: graph not generated.";
 		);

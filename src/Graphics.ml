@@ -21,10 +21,9 @@ open OCamlUtilities
 open Exceptions
 open Constants
 open ImitatorUtilities
-open Result
 open AbstractModel
-
-
+open StateSpace
+open Result
 
 
 
@@ -60,27 +59,29 @@ let graph_color_of_int tile_index tile_nature dotted =
 
 
 (*------------------------------------------------------------*)
-(* Create a file name with radical cartography_name and number file_index *)
+(* Create a file name with radical cartography_file_prefix and number file_index *)
 (*------------------------------------------------------------*)
-let make_file_name cartography_name file_index =
-	cartography_name ^ "_points_" ^ (string_of_int file_index) ^ ".txt"
+let make_file_name cartography_file_prefix file_index =
+	cartography_file_prefix ^ "_points_" ^ (string_of_int file_index) ^ ".txt"
 
 
 
 (*------------------------------------------------------------*)
 (* Print the cartography corresponding to the list of constraint *)
 (*------------------------------------------------------------*)
-let cartography model v0 returned_constraint_list cartography_name =
+let cartography returned_constraint_list cartography_file_prefix =
 (* No cartography if no zone *)
 if returned_constraint_list = [] then(
 	print_message Verbose_standard ("\nNo cartography can be generated since the list of constraints is empty.\n");
 )else(
-		print_message Verbose_standard ("\nGeneration of the graphical cartography...");
-(*		Graphics.cartography model v0 zones (options#files_prefix ^ "_cart")
-	)*)
+	print_message Verbose_standard ("\nGeneration of the graphical cartography...");
 
+	(* Retrieve the model *)
+	let model = Input.get_model () in
 	(* Retrieve the input options *)
 	let options = Input.get_options () in
+	(* Retrieve the V0 *)
+	let v0 = Input.get_v0 () in
 	
 	print_message Verbose_low "Starting to compute graphical cartography...";
 	(* For all returned_constraint *)
@@ -241,11 +242,11 @@ if returned_constraint_list = [] then(
 (* 	print_message Verbose_standard ("Cartography will be drawn in 2D for parameters " ^ x_name ^  " and " ^ y_name ^  "."); *)
 	
 	(* Create a script that will print the cartography *)
-	let script_name = cartography_name ^ ".sh" in
+	let script_name = cartography_file_prefix ^ ".sh" in
 	let script = open_out script_name in
 	
 	(* Create a temp file containing the V0 coordinates *)
-	let file_v0_name = cartography_name ^ "_v0.txt" in
+	let file_v0_name = cartography_file_prefix ^ "_v0.txt" in
 	let file_rectangle_v0 = open_out file_v0_name in
 	
 	
@@ -386,7 +387,7 @@ if returned_constraint_list = [] then(
 	(* print_message Verbose_standard ((string_of_float !min_abs)^"  "^(string_of_float !min_ord)); *)
 	(* Create a new file for each constraint *)
 (*		for i=0 to List.length !new_constraint_list-1 do
-		let file_name = cartography_name^"_points_"^(string_of_int i)^".txt" in
+		let file_name = cartography_file_prefix^"_points_"^(string_of_int i)^".txt" in
 		let file_out = open_out file_name in
 		(* find the points satisfying the constraint *)
 		let s=plot_2d (x_param) (y_param) (List.nth !new_constraint_list i) min_abs min_ord max_abs max_ord in
@@ -422,7 +423,7 @@ if returned_constraint_list = [] then(
 			print_message Verbose_low ("Computing points for constraint " ^ (string_of_int !tile_index) ^ " \n " ^ (LinearConstraint.string_of_p_linear_constraint model.variable_names k) ^ ".");
 		);
 		
-		let file_name = make_file_name cartography_name !file_index in
+		let file_name = make_file_name cartography_file_prefix !file_index in
 		let file_out = open_out file_name in
 		
 (*			(* Remove all non-parameter dimensions (the n highest) *)
@@ -500,7 +501,7 @@ if returned_constraint_list = [] then(
 
 	
 	(* File in which the cartography will be printed *)
-	let final_name = cartography_name ^ "." ^ cartography_extension in
+	let final_name = cartography_file_prefix ^ "." ^ cartography_extension in
 	(* last part of the script *)	
 	script_line := !script_line^" -C -m 2 -q -1 " ^ file_v0_name ^ " -L \"" ^ options#files_prefix ^ "\" > "^final_name;
 	(* write the script into a file *)
@@ -528,7 +529,7 @@ if returned_constraint_list = [] then(
 		(* Removing all point files *)
 		for i = 1 to !file_index do
 			print_message Verbose_medium ("Removing points file #" ^ (string_of_int i) ^ "...");
-			delete_file (make_file_name cartography_name i);
+			delete_file (make_file_name cartography_file_prefix i);
 		done;
 	); ()
 
@@ -552,10 +553,10 @@ let dot_colors = [
 "indianred2"; "blanchedalmond"; "gold4"; "paleturquoise3"; "honeydew"; "bisque2"; "bisque3"; "snow3"; "brown"; "deeppink1"; "dimgrey"; "lightgoldenrod2"; "lightskyblue2"; "navajowhite2"; "seashell"; "black"; "cadetblue1"; "cadetblue2"; "darkslategray"; "wheat2"; "burlywood"; "brown1"; "deepskyblue4"; "darkslateblue"; "deepskyblue1"; "slategray2"; "darksalmon"; "burlywood3"; "dodgerblue"; "turquoise1"; "grey"; "ghostwhite"; "thistle"; "blue4"; "cornsilk"; "azure"; "darkgoldenrod2"; "darkslategray2"; "beige"; "burlywood2"; "coral3"; "indigo"; "darkorchid4"; "coral"; "burlywood4"; "brown3"; "cornsilk4"; "wheat4"; "darkgoldenrod4"; "cadetblue4"; "brown4"; "cadetblue"; "azure4"; "darkolivegreen2"; "rosybrown3"; "coral4"; "azure2"; "blue3"; "chartreuse1"; "bisque1"; "aquamarine1"; "azure1"; "bisque"; "aquamarine4"; "antiquewhite3"; "antiquewhite2"; "darkorchid3"; "antiquewhite4"; "aquamarine3"; "aquamarine"; "antiquewhite"; "antiquewhite1"; "aliceblue"
 ]
 
-open StateSpace
-
 (* Convert a graph to a dot file *)
-let dot_of_graph model reachability_graph ~fancy =
+let dot_of_graph reachability_graph ~fancy =
+	(* Retrieve the model *)
+	let model = Input.get_model () in
 	(* Retrieve the input options *)
 	let options = Input.get_options () in
 	
@@ -834,7 +835,9 @@ Generation time: " ^ (now()) ^ "\"];"
 	header ^ states_description ^ transitions_description
 
 
-let dot model radical dot_source_file =
+let dot radical dot_source_file =
+	(* Retrieve the model *)
+(* 	let model = Input.get_model () in *)
 	(* Retrieve the input options *)
 	let options = Input.get_options () in
 
@@ -884,15 +887,17 @@ let dot model radical dot_source_file =
 	
 
 (* Create a jpg graph using dot *)
-let generate_graph model reachability_graph radical =
+let generate_graph reachability_graph radical =
+	(* Retrieve the model *)
+(* 	let model = Input.get_model () in *)
 	(* Retrieve the input options *)
 	let options = Input.get_options () in
 	
 	(* Do not write if no dot AND no log *)
 	if options#output_trace_set || options#with_log then (
-		let dot_model, states = dot_of_graph model reachability_graph ~fancy:options#fancy in
+		let dot_model, states = dot_of_graph reachability_graph ~fancy:options#fancy in
 		
-		dot model radical dot_model;
+		dot radical dot_model;
 		
 		(*(* Get the file names *)
 		let dot_file_name = (radical ^ "." ^ dot_file_extension) in

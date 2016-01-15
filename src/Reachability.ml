@@ -10,7 +10,7 @@
  * Author:        Ulrich Kuehne, Etienne Andre
  * 
  * Created:       2010/07/22
- * Last modified: 2015/12/04
+ * Last modified: 2016/01/15
  *
  ************************************************************)
 
@@ -2583,7 +2583,7 @@ let full_state_space_exploration model =
 	
 	(* Generate graphics *)
 	let radical = options#files_prefix in
-	Graphics.generate_graph model post_star_result.reachability_graph radical;
+	Graphics.generate_graph post_star_result.reachability_graph radical;
 	
 	(* The end*)
 	()
@@ -2651,12 +2651,12 @@ let ef_synthesis model =
 	
 	(* Generate graphics *)
 	let radical = options#files_prefix in
-	Graphics.generate_graph model post_star_result.reachability_graph radical;
+	Graphics.generate_graph post_star_result.reachability_graph radical;
 	
 	(* Render zones in a graphical form *)
 	let zones = [Union_of_constraints (!p_constraints, Bad)] in
 	if options#cart then (
-		Graphics.cartography model (Input.get_v0()) zones (options#files_prefix ^ "_cart_ef")
+		Graphics.cartography zones (options#files_prefix ^ "_cart_ef")
 	) else (
 			print_message Verbose_high "Graphical cartography not asked: graph not generated.";
 	)
@@ -2916,7 +2916,7 @@ let efim model =
 	
 	(* Generate graphics *)
 	let radical = options#files_prefix in
-	Graphics.generate_graph model reachability_graph radical;
+	Graphics.generate_graph reachability_graph radical;
 	
 	(* Print statistics *)
 	print_statistics im_result.total_time reachability_graph;
@@ -2976,7 +2976,7 @@ let inverse_method model =
 	(* Generate graphics *)
 	(*** TODO: move inside inverse_method_gen ***)
 	let radical = options#files_prefix in
-	Graphics.generate_graph model reachability_graph radical;
+	Graphics.generate_graph reachability_graph radical;
 	
 	(* Print statistics *)
 	print_statistics im_result.total_time reachability_graph;

@@ -43,14 +43,18 @@ exception Unsat_exception
 (* Costs *)
 (************************************************************)
 
-(*** TODO: move to the proper class for costs ***)
+(*** TODO: move to a future proper class for costs ***)
 
 (* Instantiated costs (no need to compute them for each location) *)
 let instantiated_costs = ref (Array.make 0 (Array.make 0 NumConst.zero)) (*Array.make (Hashtbl.length index_of_automata) (Array.make 0 (NumConst.zero))*)
 
-let instantiate_costs model pi0 =
+let instantiate_costs pi0 =
+	(* Retrieve the model *)
+	let model = Input.get_model() in
+	
 	(* Create an empty array *)
 	let costs = Array.make model.nb_automata (Array.make 0 NumConst.zero) in
+	
 	(* For each automaton *)
 	for automaton_index = 0 to model.nb_automata - 1 do
 		(* Retrieve the number of locations for this automaton *)
@@ -88,7 +92,10 @@ let instantiate_costs model pi0 =
 
 (*** TODO: move to Location.mli (but creates a dependency problem, as the model is needed...) ***)
 
-let is_location_urgent model location =
+let is_location_urgent location =
+	(* Retrieve the model *)
+	let model = Input.get_model() in
+	
 	(* Subfunction checking that one location is urgent in a given automaton *)
 	let is_local_location_urgent automaton_index =
 		(* Retrieve location *)
@@ -171,7 +178,10 @@ let nb_unsat2 = ref 0
 (*------------------------------------------------------------*)
 (* Compute the invariant associated to a location   *)
 (*------------------------------------------------------------*)
-let compute_plain_invariant model location =
+let compute_plain_invariant location =
+	(* Retrieve the model *)
+	let model = Input.get_model() in
+	
   (* construct invariant *)
 	let invariants = List.map (fun automaton_index ->
 		(* Get the current location *)
@@ -187,7 +197,10 @@ let compute_plain_invariant model location =
 (* Compute the invariant I_l associated to a location  *)
 (* including renaming and time elapse. Uses cache.  *)
 (*------------------------------------------------------------*)
-let compute_invariant model location =
+let compute_invariant location =
+	(* Retrieve the model *)
+(* 	let model = Input.get_model() in *)
+
 	(* Strip off discrete for caching scheme  *)
 	let locations = Location.get_locations location in
 	(* check in cache *)
@@ -196,7 +209,7 @@ let compute_invariant model location =
 		| Some inv -> inv
 		| None -> ( 
 			(* Build plain invariant I_l(X) *)
-			let invariant = compute_plain_invariant model location in
+			let invariant = compute_plain_invariant location in
 			(* Store in cache *)
 			Cache.store inv_cache locations invariant;
 			invariant
@@ -206,7 +219,10 @@ let compute_invariant model location =
 (* Compute the polyhedron p projected onto rho(X) *)
 (*------------------------------------------------------------*)
 (*** TO OPTIMIZE: use cache (?) *)
-let rho_assign model (linear_constraint : LinearConstraint.pxd_linear_constraint) clock_updates =
+let rho_assign (linear_constraint : LinearConstraint.pxd_linear_constraint) clock_updates =
+	(* Retrieve the model *)
+	let model = Input.get_model() in
+
 	if clock_updates != [] then(
 		(* Merge updates *)
 		
@@ -441,7 +457,10 @@ let instantiate_discrete discrete_values =
 (*------------------------------------------------------------*)
 (* Compute the list of stopped and elapsing clocks in a location *)
 (*------------------------------------------------------------*)
-let compute_stopwatches model location =
+let compute_stopwatches location =
+	(* Retrieve the model *)
+	let model = Input.get_model() in
+	
 	(* If no stopwatches at all: just return the set of clocks *)
 	if not model.has_stopwatches then ([], model.clocks) else(
 		(* Hashtbl clock_id --> true if clock should be stopped by some automaton *)
@@ -482,13 +501,13 @@ let apply_time_elapsing location the_constraint =
 	(* Get the model *)
 	let model = Input.get_model() in
 	(* If urgent: no time elapsing *)
-	if is_location_urgent model location then (
+	if is_location_urgent location then (
 		print_message Verbose_high ("Location urgent: NO time elapsing");
 		()
 	(* If not urgent: apply time elapsing *)
 	)else(
 		(* Compute the list of stopwatches *)
-		let stopped_clocks, elapsing_clocks = compute_stopwatches model location in
+		let stopped_clocks, elapsing_clocks = compute_stopwatches location in
 		print_message Verbose_high ("Computing list of stopwatches");
 		if verbose_mode_greater Verbose_total then(
 			let list_of_names = List.map model.variable_names stopped_clocks in
@@ -516,7 +535,9 @@ let apply_time_elapsing location the_constraint =
 (*------------------------------------------------------------*)
 (* Compute the initial state with the initial invariants and time elapsing *)
 (*------------------------------------------------------------*)
-let create_initial_state model =
+let create_initial_state () =
+	(* Retrieve the model *)
+	let model = Input.get_model() in
 	(* Retrieve the input options *)
 	let options = Input.get_options () in
 
@@ -530,7 +551,7 @@ let create_initial_state model =
 	(* Compute the invariants I_l0(X) for the initial locations *)
 	print_message Verbose_high ("\nComputing initial invariant I_l0(X)");
 	(* Create the invariant *)
-	let invariant = compute_plain_invariant model initial_location in
+	let invariant = compute_plain_invariant initial_location in
 	(* Print some information *)
 	if verbose_mode_greater Verbose_total then
 		print_message Verbose_total (LinearConstraint.string_of_pxd_linear_constraint model.variable_names invariant);
@@ -559,7 +580,7 @@ let create_initial_state model =
 		apply_time_elapsing initial_location current_constraint;
 		
 (*		(* Compute the list of stopwatches *)
-		let stopped_clocks, elapsing_clocks = compute_stopwatches model initial_location in
+		let stopped_clocks, elapsing_clocks = compute_stopwatches initial_location in
 		print_message Verbose_high ("Computing list of stopwatches");
 		if verbose_mode_greater Verbose_total then(
 			let list_of_names = List.map model.variable_names stopped_clocks in
@@ -630,7 +651,7 @@ let compute_initial_state_or_abort () =
 	);
 
 	(* Get the initial state after time elapsing *)
-	let init_state_after_time_elapsing = create_initial_state model in
+	let init_state_after_time_elapsing = create_initial_state () in
 	let _, initial_constraint_after_time_elapsing = init_state_after_time_elapsing in
 
 
@@ -653,7 +674,10 @@ let compute_initial_state_or_abort () =
 (*------------------------------------------------------------*)
 (* Compute a list of possible actions for a state   *)
 (*------------------------------------------------------------*)
-let compute_possible_actions model original_location = 
+let compute_possible_actions original_location = 
+	(* Retrieve the model *)
+	let model = Input.get_model() in
+
 	(* Create a boolean array for the possible actions *)
 	let possible_actions = Array.make model.nb_actions false in
 	(* Fill it with all the possible actions per location *)
@@ -717,7 +741,10 @@ let compute_possible_actions model original_location =
 (* returns the new location, the guards, the updates                *)
 (*------------------------------------------------------------------*)
 (*** TODO: remove the model from the arguments, and retrieve it ***)
-let compute_new_location model aut_table trans_table action_index original_location =
+let compute_new_location aut_table trans_table action_index original_location =
+	(* Retrieve the model *)
+	let model = Input.get_model() in
+	
 	(* make a copy of the location *)		
 	let location = Location.copy_location original_location in
 	(* Create a temporary hashtbl for discrete values *)
@@ -788,15 +815,15 @@ let compute_new_location model aut_table trans_table action_index original_locat
 (* Compute the new constraint for a transition      *)
 (* orig_constraint : contraint in source location   *)
 (* discrete_constr_src : contraint D_i = d_i in source location (discrete variables) *)
-(* (* stopped_clocks  : list of clocks stopped         *) *)
-(* (* elapsing_clocks : list of clocks non stopped     *) *)
 (* orig_location   : source location                *)
 (* dest_location   : target location                *)
 (* guards          : guard constraints per automaton*)
 (* clock_updates   : updated clock variables        *)
 (*------------------------------------------------------------*)
 (*** TODO: remove the model from the arguments, and retrieve it ***)
-let compute_new_constraint model orig_constraint (discrete_constr_src : LinearConstraint.pxd_linear_constraint) orig_location dest_location guards clock_updates =
+let compute_new_constraint orig_constraint (discrete_constr_src : LinearConstraint.pxd_linear_constraint) orig_location dest_location guards clock_updates =
+	(* Retrieve the model *)
+	let model = Input.get_model() in	
 	(* Retrieve the input options *)
 	let options = Input.get_options () in
 	
@@ -820,7 +847,7 @@ let compute_new_constraint model orig_constraint (discrete_constr_src : LinearCo
 			(* Compute the invariant in the source location I_l(X) *)
 			(*** TO OPTIMIZE!!! This should be done only once in the function calling this function!! ***)
 			print_message Verbose_total ("\nComputing invariant I_l(X)");
-			let invariant = compute_invariant model orig_location in
+			let invariant = compute_invariant orig_location in
 			(* Print some information *)
 			if verbose_mode_greater Verbose_total then(
 				print_message Verbose_total (LinearConstraint.string_of_pxd_linear_constraint model.variable_names invariant);
@@ -867,7 +894,7 @@ let compute_new_constraint model orig_constraint (discrete_constr_src : LinearCo
 		);
 		
 		print_message Verbose_total ("\nProjecting C(X) and g(X) onto rho");
-		rho_assign model current_constraint clock_updates;
+		rho_assign current_constraint clock_updates;
 		(* Print some information *)
 		if verbose_mode_greater Verbose_total then(
 			print_message Verbose_total ("\nResult:");
@@ -876,7 +903,7 @@ let compute_new_constraint model orig_constraint (discrete_constr_src : LinearCo
 
 		(* Compute the invariant in the destination location I_l'(X) *)
 		print_message Verbose_total ("\nComputing invariant I_l'(X)");
-		let invariant = compute_invariant model dest_location in
+		let invariant = compute_invariant dest_location in
 		(* Print some information *)
 		if verbose_mode_greater Verbose_total then(
 			print_message Verbose_total (LinearConstraint.string_of_pxd_linear_constraint model.variable_names invariant);
@@ -1006,7 +1033,10 @@ let next_combination combination max_indexes =
 (* returns a bool, indicating iff at least one legal     *)
 (* combination exists.                                   *)
 (*-------------------------------------------------------*)
-let compute_transitions model location constr action_index automata aut_table max_indexes possible_transitions  =
+let compute_transitions location constr action_index automata aut_table max_indexes possible_transitions  =
+	(* Retrieve the model *)
+	let model = Input.get_model() in
+	
 	let current_index = ref 0 in 
 	(* Stop computation as soon as one automaton has no legal transition left. *)
 	try (
@@ -1120,7 +1150,7 @@ class virtual algoGeneric =
 		(* Retrieve the model *)
 		let model = Input.get_model() in
 		(* Retrieve the input options *)
-		let options = Input.get_options () in
+(* 		let options = Input.get_options () in *)
 
 		match model.correctness_condition with
 		| None -> ()
@@ -1172,7 +1202,7 @@ class virtual algoGeneric =
 		);
 
 		(* get possible actions originating from current state *)
-		let list_of_possible_actions = compute_possible_actions model original_location in
+		let list_of_possible_actions = compute_possible_actions original_location in
 
 		(* Print some information *)
 		if verbose_mode_greater Verbose_high then (
@@ -1228,7 +1258,7 @@ class virtual algoGeneric =
 			let current_transitions = Array.make nb_automata_for_this_action 0 in
 			
 			(* compute the possible combinations of transitions *)
-			let legal_transitions_exist = compute_transitions model original_location orig_plus_discrete action_index automata_for_this_action real_indexes max_indexes possible_transitions in 
+			let legal_transitions_exist = compute_transitions original_location orig_plus_discrete action_index automata_for_this_action real_indexes max_indexes possible_transitions in 
 		
 			(* Print some information: compute the number of combinations *)
 			if verbose_mode_greater Verbose_medium || options#statistics then(
@@ -1258,10 +1288,10 @@ class virtual algoGeneric =
 				done; 
 		
 				(* Compute the new location for the current combination of transitions *)
-				let location, guards, clock_updates = compute_new_location model real_indexes current_transitions action_index original_location in
+				let location, guards, clock_updates = compute_new_location real_indexes current_transitions action_index original_location in
 				
 				(* Compute the new constraint for the current transition *)
-				let new_constraint = compute_new_constraint model orig_constraint discrete_constr original_location location guards clock_updates in
+				let new_constraint = compute_new_constraint orig_constraint discrete_constr original_location location guards clock_updates in
 				
 				begin
 				(* Check the satisfiability *)
