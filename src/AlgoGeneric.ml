@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/12/02
- * Last modified     : 2016/01/08
+ * Last modified     : 2016/01/15
  *
  ************************************************************)
 
@@ -1120,13 +1120,6 @@ class virtual algoGeneric =
 		| Some (Unreachable unreachable_global_locations) ->
 			(* Check whether the current location matches one of the unreachable global locations *)
 			if StateSpace.match_unreachable_global_locations unreachable_global_locations location then(
-			
-				(*** Quite a hack here ***)
-				(*** TODO: move elsewhere ***)
-				if options#efim && trace_set_nature <> Bad then(
-					print_message Verbose_standard ("  [EFIM] Bad location found! Switching to bad-driven algorithm");
-				);
-				
 				trace_set_nature <- Bad;
 			);
 		| _ -> raise (InternalError("IMITATOR currently ony implements the non-reachability-like properties."))

@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/11/25
- * Last modified     : 2016/01/13
+ * Last modified     : 2016/01/15
  *
  ************************************************************)
 
@@ -68,7 +68,7 @@ class algoEFsynth =
 	(* Add a new state to the state_space (if indeed needed) *)
 	(* Also update tile_nature and slast *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(*** WARNING/BADPROG: the following is almost entirely copy/paste to AlgoPRP.ml ***)
+	(*** WARNING/BADPROG: the following is partially copy/paste to AlgoPRP.ml ***)
 	method add_a_new_state state_space orig_state_index new_states_indexes action_index location (final_constraint : LinearConstraint.px_linear_constraint) =
 		(* Retrieve the model *)
 		let model = Input.get_model () in
@@ -173,7 +173,7 @@ class algoEFsynth =
 	
 		(* The end: do nothing *)
 		()
-	(*** END WARNING/BADPROG: the following is almost entirely copy/paste from AlgoEFsynth.ml ***)
+	(*** END WARNING/BADPROG: the following is partially copy/paste from AlgoEFsynth.ml ***)
 	
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)

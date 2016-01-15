@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/01/11
- * Last modified     : 2016/01/13
+ * Last modified     : 2016/01/15
  *
  ************************************************************)
 
@@ -77,7 +77,8 @@ class algoPRP =
 	(* Add a new state to the state_space (if indeed needed) *)
 	(* Also update tile_nature and slast *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(*** WARNING/BADPROG: the following is almost entirely copy/paste from AlgoEFsynth.ml ***)
+	(*** WARNING/BADPROG: the following is partially copy/paste from AlgoEFsynth.ml and AlgoPRP.ml***)
+	(*** TODO: factorize ***)
 	method add_a_new_state state_space orig_state_index new_states_indexes action_index location (final_constraint : LinearConstraint.px_linear_constraint) =
 		(* Retrieve the model *)
 		let model = Input.get_model () in
@@ -85,98 +86,115 @@ class algoPRP =
 		(* Retrieve the input options *)
 (* 		let options = Input.get_options () in *)
 
-		(* Build the state *)
-		let new_state = location, final_constraint in
+		let pi0compatible = self#check_pi0compatibility final_constraint in
 
 		(* Print some information *)
-		if verbose_mode_greater Verbose_total then(
-			(*** TODO: move that comment to a higher level function? (post_from_one_state?) ***)
-			self#print_algo_message Verbose_total ("Consider the state \n" ^ (ModelPrinter.string_of_state model new_state));
+		if verbose_mode_greater Verbose_high then(
+			(* Means state was not compatible *)
+			if not pi0compatible then(
+				let new_state = location, final_constraint in
+				if verbose_mode_greater Verbose_high then
+					self#print_algo_message Verbose_high ("The pi-incompatible state had been computed through action '" ^ (model.action_names action_index) ^ "', and was:\n" ^ (ModelPrinter.string_of_state model new_state));
+			);
 		);
 
-		let new_state_index, added = (
-			StateSpace.add_state state_space new_state
-		) in
-		(* If this is really a new state *)
-		if added then (
+		(* Only add the new state if it is pi0-compatible *)
+		(*** NOTE: this is a key principle of PRP to NOT explore pi0-incompatible states ***)
+		if pi0compatible then (
+			(* Build the state *)
+			let new_state = location, final_constraint in
 
-			(* First check whether this is a bad tile according to the property and the nature of the state *)
-			self#update_trace_set_nature new_state;
-			
-			(* Will the state be added to the list of new states (the successors of which will be computed)? *)
-			let to_be_added = ref true in
-			
-			(* If synthesis / EFIM: add the constraint to the list of successful constraints if this corresponds to a bad location *)
-			begin
-			match model.correctness_condition with
-			| None -> raise (InternalError("[EF-synthesis/EFIM] A correctness property must be defined to perform EF-synthesis or EFIM. This should have been checked before."))
-			| Some (Unreachable unreachable_global_locations) ->
+			(* Print some information *)
+			if verbose_mode_greater Verbose_total then(
+				(*** TODO: move that comment to a higher level function? (post_from_one_state?) ***)
+				self#print_algo_message Verbose_total ("Consider the state \n" ^ (ModelPrinter.string_of_state model new_state));
+			);
+
+			let new_state_index, added = (
+				StateSpace.add_state state_space new_state
+			) in
+			(* If this is really a new state *)
+			if added then (
+
+				(* First check whether this is a bad tile according to the property and the nature of the state *)
+				self#update_trace_set_nature new_state;
 				
-				(* Check whether the current location matches one of the unreachable global locations *)
-				if StateSpace.match_unreachable_global_locations unreachable_global_locations location then(
+				(* Will the state be added to the list of new states (the successors of which will be computed)? *)
+				let to_be_added = ref true in
 				
-					(* Project onto the parameters *)
-					let p_constraint = LinearConstraint.px_hide_nonparameters_and_collapse final_constraint in
+				(* If synthesis / EFIM: add the constraint to the list of successful constraints if this corresponds to a bad location *)
+				begin
+				match model.correctness_condition with
+				| None -> raise (InternalError("[EF-synthesis/EFIM] A correctness property must be defined to perform EF-synthesis or EFIM. This should have been checked before."))
+				| Some (Unreachable unreachable_global_locations) ->
 					
-					(* Projecting onto SOME parameters if required *)
-					begin
-					match model.projection with
-					(* Unchanged *)
-					| None -> ()
-					(* Project *)
-					| Some parameters ->
-						self#print_algo_message Verbose_medium "Projecting onto some of the parameters.";
-						(*** TODO! do only once for all... ***)
-						let all_but_projectparameters = list_diff model.parameters parameters in
-						(* Eliminate other parameters *)
-						LinearConstraint.p_hide_assign all_but_projectparameters p_constraint;
-					end;
+					(* Check whether the current location matches one of the unreachable global locations *)
+					if StateSpace.match_unreachable_global_locations unreachable_global_locations location then(
 					
-					(* Print some information *)
-					self#print_algo_message Verbose_standard "Found a state violating the property.";
-					if verbose_mode_greater Verbose_medium then(
-						self#print_algo_message Verbose_medium "Adding the following constraint to the list of bad constraints:";
-						print_message Verbose_medium (LinearConstraint.string_of_p_linear_constraint model.variable_names p_constraint);
-					);
-					
-					(*** NOTE: not copy paste (actually, to copy when EFsynth will be improved with non-convex constraints) ***)
-					LinearConstraint.p_nnconvex_union bad_constraint p_constraint;
-					
-					(* PRP switches to bad-state algorithm *)
-					if not bad_state_found then(
+						(* Project onto the parameters *)
+						let p_constraint = LinearConstraint.px_hide_nonparameters_and_collapse final_constraint in
+						
+						(* Projecting onto SOME parameters if required *)
+						begin
+						match model.projection with
+						(* Unchanged *)
+						| None -> ()
+						(* Project *)
+						| Some parameters ->
+							self#print_algo_message Verbose_medium "Projecting onto some of the parameters.";
+							(*** TODO! do only once for all... ***)
+							let all_but_projectparameters = list_diff model.parameters parameters in
+							(* Eliminate other parameters *)
+							LinearConstraint.p_hide_assign all_but_projectparameters p_constraint;
+						end;
+						
 						(* Print some information *)
-						self#print_algo_message Verbose_standard "Switching to EFsynth-like algorithm";
-					);
-					bad_state_found <- true;
-				
-					(* Do NOT compute its successors *)
-					to_be_added := false;
+						self#print_algo_message Verbose_standard "Found a state violating the property.";
+						if verbose_mode_greater Verbose_medium then(
+							self#print_algo_message Verbose_medium "Adding the following constraint to the list of bad constraints:";
+							print_message Verbose_medium (LinearConstraint.string_of_p_linear_constraint model.variable_names p_constraint);
+						);
+						
+						(*** NOTE: not copy paste (actually, to copy when EFsynth will be improved with non-convex constraints) ***)
+						LinearConstraint.p_nnconvex_union bad_constraint p_constraint;
+						
+						(* PRP switches to bad-state algorithm *)
+						if not bad_state_found then(
+							(* Print some information *)
+							self#print_algo_message Verbose_standard "Switching to EFsynth-like algorithm";
+						);
+						bad_state_found <- true;
 					
-				)else(
-					self#print_algo_message Verbose_medium "State not corresponding to the one wanted.";
-				);
-			| _ -> raise (InternalError("[EFsynth/PRP] IMITATOR currently ony implements the non-reachability-like properties. This should have been checked before."))
-			end
-			;
+						(* Do NOT compute its successors *)
+						to_be_added := false;
+						
+					)else(
+						self#print_algo_message Verbose_medium "State not corresponding to the one wanted.";
+					);
+				| _ -> raise (InternalError("[EFsynth/PRP] IMITATOR currently ony implements the non-reachability-like properties. This should have been checked before."))
+				end
+				;
 
-			(* Add the state_index to the list of new states (used to compute their successors at the next iteration) *)
-			if !to_be_added then
-				new_states_indexes := new_state_index :: !new_states_indexes;
+				(* Add the state_index to the list of new states (used to compute their successors at the next iteration) *)
+				if !to_be_added then
+					new_states_indexes := new_state_index :: !new_states_indexes;
+				
+			) (* end if new state *)
+			;
 			
-		) (* end if new state *)
-		;
-		
-		
-		(*** TODO: move the rest to a higher level function? (post_from_one_state?) ***)
-		
-		(* Update the transitions *)
-		StateSpace.add_transition state_space (orig_state_index, action_index, new_state_index);
-		(* Print some information *)
-		if verbose_mode_greater Verbose_high then (
-			let beginning_message = (if added then "NEW STATE" else "Old state") in
-			print_message Verbose_high ("\n" ^ beginning_message ^ " reachable through action '" ^ (model.action_names action_index) ^ "': ");
-			print_message Verbose_high (ModelPrinter.string_of_state model new_state);
-		);
+			
+			(*** TODO: move the rest to a higher level function? (post_from_one_state?) ***)
+			
+			(* Update the transitions *)
+			StateSpace.add_transition state_space (orig_state_index, action_index, new_state_index);
+			(* Print some information *)
+			if verbose_mode_greater Verbose_high then (
+				let beginning_message = (if added then "NEW STATE" else "Old state") in
+				print_message Verbose_high ("\n" ^ beginning_message ^ " reachable through action '" ^ (model.action_names action_index) ^ "': ");
+				print_message Verbose_high (ModelPrinter.string_of_state model new_state);
+			);
+			
+		); (* end if valid new state *)
 	
 		(* The end: do nothing *)
 		()
@@ -190,11 +208,15 @@ class algoPRP =
 	
 	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Should we explore a pi-incompatible inequality? *)
+	(* Should we process a pi-incompatible inequality? *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method explore_pi_incompatible_states () =
+	method process_pi_incompatible_states () =
 		(* Only explore if no bad states found *)
-		not bad_state_found
+		let answer = not bad_state_found in
+		(* Print some information *)
+		self#print_algo_message Verbose_medium ("Exploring pi-incompatible state? " ^ (string_of_bool answer));
+		(* Return *)
+		answer
 
 	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)

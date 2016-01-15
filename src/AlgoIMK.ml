@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/12/04
- * Last modified     : 2016/01/13
+ * Last modified     : 2016/01/15
  *
  ************************************************************)
 
@@ -64,16 +64,14 @@ class algoIMK =
 	
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Checks a new state for pi0-compatibility and        *)
-	(* updates constraint K if incompatible state is found.*)
+	(* Checks a new state for pi0-compatibility .*)
 	(* constr            : new state constraint            *)
 	(*------------------------------------------------------------*)
-	(* returns (true, p_constraint) if the state is pi0-compatible, and (false, _) otherwise *)
-	(*** TODO/BADPROG: no need to return (false, _), better return some Some/None ***)
+	(* returns true if the state is pi0-compatible, and false otherwise *)
 	(*------------------------------------------------------------*)
 	(* side effect: add the negation of the p_constraint to all computed states *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method private inverse_method_check_constraint constr =
+	method check_pi0compatibility (constr : LinearConstraint.px_linear_constraint) : bool =
 		(* Retrieve the model *)
 		let model = Input.get_model() in
 		(* Retrieve the input options *)
@@ -81,22 +79,31 @@ class algoIMK =
 		(* Retrieve the pi0 (dynamic!) *)
 		let pi0 = Input.get_pi0 () in
 		
+		print_message Verbose_medium "";
+		self#print_algo_message Verbose_medium ("Sarting pi0-compatibility check...");
+		
+		print_message Verbose_high "";
+		self#print_algo_message Verbose_high ("Hiding non parameters...");
+		
 		(* Hide non-parameters *)
-		self#print_algo_message Verbose_high ("\nHiding non parameters...");
 		let p_constraint = LinearConstraint.px_hide_nonparameters_and_collapse constr in
-		self#print_algo_message Verbose_high ("\nParameters now hidden:");
+		
+		print_message Verbose_high "";
+		self#print_algo_message Verbose_high ("Parameters now hidden:");
 		(* Print some information *)
 		if verbose_mode_greater Verbose_high then(
 			print_message Verbose_high (LinearConstraint.string_of_p_linear_constraint model.variable_names p_constraint);
 		);
 		(* Check the pi0-compatibility *)
-		self#print_algo_message Verbose_high ("\nChecking pi-compatibility:");
+		print_message Verbose_high "";
+		self#print_algo_message Verbose_high ("Checking pi-compatibility:");
 		let compatible, incompatible = LinearConstraint.partition_pi0_compatible pi0#get_value p_constraint in
 		let is_pi0_incompatible = incompatible != [] in
 		
 		(* If pi0-incompatible: select an inequality *)
 		if is_pi0_incompatible then (
-			self#print_algo_message Verbose_low ("\nFound a pi0-incompatible state.");
+			print_message Verbose_low "";
+			self#print_algo_message Verbose_low ("Found a pi0-incompatible state.");
 			(* Print some information *)
 			if verbose_mode_greater Verbose_medium then(
 				self#print_algo_message Verbose_high ("Associated constraint:");
@@ -105,7 +112,8 @@ class algoIMK =
 				self#print_algo_message Verbose_medium ("The following inequalities are pi0-incompatible:");
 				List.iter (fun inequality -> print_message Verbose_medium (LinearConstraint.string_of_p_linear_inequality model.variable_names inequality)) incompatible;
 				if verbose_mode_greater Verbose_high then(
-					self#print_algo_message Verbose_high ("\nRecall that pi0 is:");
+					print_message Verbose_high "";
+					self#print_algo_message Verbose_high ("Recall that pi0 is:");
 					print_message Verbose_high   (ModelPrinter.string_of_pi0 model pi0);
 				);
 			);
@@ -114,9 +122,9 @@ class algoIMK =
 			(*** TODO: add back later ***)
 			
 			(* Should we explore pi-incompatible states? *)
-			if not (self#explore_pi_incompatible_states()) then(
+			if not (self#process_pi_incompatible_states()) then(
 				self#print_algo_message Verbose_low ("Cut pi-incompatible branch.");
-				(false , p_constraint)
+				false
 			)else(
 			
 (*			(* Case EFIM: no need to select a pi-incompatible inequality if already bad *)
@@ -189,10 +197,10 @@ class algoIMK =
 				);*)
 				
 				(* If pi-incompatible *)
-				(false, p_constraint)
+				false
  			)(* Endif explore pi-incompatible state *)
 		) (* end if pi-incompatible *)
-		else (true, p_constraint)
+		else true
 
 
 	
@@ -220,7 +228,7 @@ class algoIMK =
 		)else( *)
 		(*** NOTE: the addition of neg J to all reached states is performed as a side effect inside the following function ***)
 		(*** BADPROG: same reason ***)
-		let valid_new_state, new_p_constraint = self#inverse_method_check_constraint final_constraint
+		let pi0_compatible = self#check_pi0compatibility final_constraint
 		in
 		
 		(* If pi-compatible state: add the new state's p_constraint to the on-the-fly computation of the result of IMss *)
@@ -240,18 +248,15 @@ class algoIMK =
 		(* Print some information *)
 		if verbose_mode_greater Verbose_high then(
 			(* Means state was not compatible *)
-			if not valid_new_state then(
+			if not pi0_compatible then(
 				let new_state = location, final_constraint in
 				if verbose_mode_greater Verbose_high then
 					self#print_algo_message Verbose_high ("The pi-incompatible state had been computed through action '" ^ (model.action_names action_index) ^ "', and was:\n" ^ (ModelPrinter.string_of_state model new_state));
 			);
 		);
-(*		(* Return *)
-		valid_new_state
-		in*)
 		
 		(* Only add the new state if it is actually valid *)
-		if valid_new_state then (
+		if pi0_compatible then (
 			(* Build the state *)
 			let new_state = location, final_constraint in
 
@@ -326,7 +331,7 @@ class algoIMK =
 				self#print_algo_message Verbose_high ("\n" ^ beginning_message ^ " reachable through action '" ^ (model.action_names action_index) ^ "': ");
 				print_message Verbose_high (ModelPrinter.string_of_state model new_state);
 			);
-		); (* end if add new state *)
+		); (* end if valid new state *)
 		
 		(* The end: do nothing *)
 		()
@@ -346,9 +351,12 @@ class algoIMK =
 	
 	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Should we explore a pi-incompatible inequality? By default yes *)
+	(* Should we process a pi-incompatible inequality? By default yes *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method explore_pi_incompatible_states () = true
+	method process_pi_incompatible_states () =
+		(* Print some information *)
+		self#print_algo_message Verbose_medium ("Exploring pi-incompatible state? yes (default)");
+		true
 	
 	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)

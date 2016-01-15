@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/12/04
- * Last modified     : 2016/01/13
+ * Last modified     : 2016/01/15
  *
  ************************************************************)
 
@@ -42,6 +42,17 @@ class algoIMK :
 		method run : unit -> Result.imitator_result
 		
 		
+		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+		(* Checks a new state for pi0-compatibility .*)
+		(* constr            : new state constraint            *)
+		(*------------------------------------------------------------*)
+		(* returns true if the state is pi0-compatible, and false otherwise *)
+		(*------------------------------------------------------------*)
+		(* side effect: add the negation of the p_constraint to all computed states *)
+		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+		method check_pi0compatibility : LinearConstraint.px_linear_constraint -> bool
+
+		
 		(*------------------------------------------------------------*)
 		(* Add a new state to the reachability_graph (if indeed needed) *)
 		(* Also update tile_nature and slast (*** TODO: remove these operations, and move them back to their algorithms ***) *)
@@ -59,9 +70,9 @@ class algoIMK :
 		
 		
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-		(* Should we explore a pi-incompatible inequality? By default yes *)
+		(* Should we process a pi-incompatible inequality? By default yes *)
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-		method explore_pi_incompatible_states : unit -> bool
+		method process_pi_incompatible_states : unit -> bool
 
 		
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)

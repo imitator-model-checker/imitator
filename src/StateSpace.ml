@@ -9,7 +9,7 @@
  * 
  * File contributors : Ulrich Kühne, Étienne André
  * Created           : 2009/12/08
- * Last modified     : 2015/11/26
+ * Last modified     : 2016/01/15
  *
  ************************************************************)
 
@@ -482,7 +482,7 @@ let add_state graph new_state =
 			);
 
 			(* Statistics *)
-			print_message Verbose_medium ("About to compare new state with " ^ (string_of_int (List.length old_states)) ^ " state(s).");
+			print_message Verbose_medium ("About to compare new state with " ^ (string_of_int (List.length old_states)) ^ " state" ^ (s_of_int (List.length old_states)) ^ ".");
 			nb_state_comparisons := !nb_state_comparisons + (List.length old_states);
 			print_message Verbose_medium ("Already performed " ^ (string_of_int (!nb_state_comparisons)) ^ " comparison" ^ (s_of_int !nb_state_comparisons) ^ ".");
 			

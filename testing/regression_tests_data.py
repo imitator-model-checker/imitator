@@ -10,7 +10,7 @@
 # Laboratoire d'Informatique de Paris Nord
 # Universite Paris 13, Sorbonne Paris Cite, France
 # Created      : 2015/10/23
-# Last modified: 2016/01/13
+# Last modified: 2016/01/15
 #************************************************************
 
 
@@ -616,6 +616,406 @@ dG3_u + dG4_u >= 17 & dG3_u >= 8 & dG4_u >= 3 & 17 > dG3_u & 24 > dG3_u + dG4_u
 		'expectations' : [
 			{'file': 'exVariantes.res' , 'content' : """
 		 5*p1 > p2 & p2 >= 3 OR 5*p1 > p2 & p2 > 2 & p2 >= 4*p1
+		  """
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+	,
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test PRP on a simple example (good reference valuation)',
+		'input_files': ['testPRP.imi', 'testPRP.pigood'],
+		'options'    : '-PRP -output-result -output-states',
+		'expectations' : [
+			{'file': 'testPRP.res' , 'content' : """
+	4 > p2
+    & 3 > p1
+		  """
+			} # end result file
+			,
+			{'file': 'testPRP.states' , 'content' : """
+  DESCRIPTION OF THE STATES
+
+  /************************************************************/
+  INITIAL
+  STATE 0:
+  pta: l1 ==> 
+& p1 >= 0
+& p2 >= 0
+& y >= 0
+& x = y
+
+  Projection onto the parameters:
+   p2 >= 0
+& p1 >= 0
+
+  /************************************************************/
+  STATE 1:
+  pta: l2 ==> 
+& p1 >= 0
+& p2 >= 0
+& x >= 0
+& x = y
+
+  Projection onto the parameters:
+   p2 >= 0
+& p1 >= 0
+
+  /************************************************************/
+  STATE 2:
+  pta: l3 ==> 
+& p1 >= x
+& p2 >= 0
+& x >= 0
+& 1 >= p2
+& x = y
+
+  Projection onto the parameters:
+   p1 >= 0
+& 1 >= p2
+& p2 >= 0
+
+  /************************************************************/
+  STATE 3:
+  pta: l4 ==> 
+& p1 >= p2
+& p2 >= 0
+& y >= 0
+& x = y
+
+  Projection onto the parameters:
+   p2 >= 0
+& p1 >= p2
+
+  DESCRIPTION OF THE TRANSITIONS
+  s_1 -> s_2
+  s_0 -> s_1
+  s_1 -> s_3
+  s_2 -> s_2
+		  """
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+	,
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test PRP on a simple example (bad reference valuation)',
+		'input_files': ['testPRP.imi', 'testPRP.pibad'],
+		'options'    : '-PRP -output-result -output-states',
+		'expectations' : [
+			{'file': 'testPRP.res' , 'content' : """
+		 & p1 >= 0
+OR
+  p2 >= 0
+& p1 >= 3
+		  """
+			} # end result file
+			,
+			{'file': 'testPRP.states' , 'content' : """
+  DESCRIPTION OF THE STATES
+
+  /************************************************************/
+  INITIAL
+  STATE 0:
+  pta: l1 ==> 
+& p1 >= 0
+& p2 >= 0
+& y >= 0
+& x = y
+
+  Projection onto the parameters:
+   p2 >= 0
+& p1 >= 0
+
+  /************************************************************/
+  STATE 1:
+  pta: l2 ==> 
+& p1 >= 0
+& p2 >= 0
+& x >= 0
+& x = y
+
+  Projection onto the parameters:
+   p2 >= 0
+& p1 >= 0
+
+  /************************************************************/
+  STATE 2:
+  pta: locBad1 ==> 
+& p1 >= 0
+& p2 >= 4
+& y >= 0
+& x = y
+
+  Projection onto the parameters:
+   p2 >= 4
+& p1 >= 0
+
+  /************************************************************/
+  STATE 3:
+  pta: l4 ==> 
+& p1 >= p2
+& p2 >= 0
+& y >= 0
+& x = y
+
+  Projection onto the parameters:
+   p2 >= 0
+& p1 >= p2
+
+  /************************************************************/
+  STATE 4:
+  pta: locBad2 ==> 
+& p1 >= 3
+& p2 >= 0
+& y >= 0
+& x = y
+
+  Projection onto the parameters:
+   p2 >= 0
+& p1 >= 3
+
+  DESCRIPTION OF THE TRANSITIONS
+  s_1 -> s_4
+  s_0 -> s_1
+  s_1 -> s_3
+  s_0 -> s_2
+		  """
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+	,
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test PRP on a simple example (looping reference valuation)',
+		'input_files': ['testPRP.imi', 'testPRP.piloop'],
+		'options'    : '-PRP -output-result -output-states -depth-limit 10',
+		'expectations' : [
+			{'file': 'testPRP.res' , 'content' : """
+ p2 >= 4
+    & p1 >= 0
+    OR
+      p2 >= 0
+    & p1 >= 3
+		  """
+			} # end result file
+			,
+			{'file': 'testPRP.states' , 'content' : """
+  DESCRIPTION OF THE STATES
+
+  /************************************************************/
+  INITIAL
+  STATE 0:
+  pta: l1 ==> 
+& p1 >= 0
+& p2 >= 0
+& y >= 0
+& x = y
+
+  Projection onto the parameters:
+   p2 >= 0
+& p1 >= 0
+
+  /************************************************************/
+  STATE 1:
+  pta: l2 ==> 
+& p1 >= 0
+& p2 >= 0
+& x >= 0
+& x = y
+
+  Projection onto the parameters:
+   p2 >= 0
+& p1 >= 0
+
+  /************************************************************/
+  STATE 2:
+  pta: locBad1 ==> 
+& p1 >= 0
+& p2 >= 4
+& y >= 0
+& x = y
+
+  Projection onto the parameters:
+   p2 >= 4
+& p1 >= 0
+
+  /************************************************************/
+  STATE 3:
+  pta: infiniteLoop ==> 
+& 1 >= x
+& p1 >= 0
+& p2 >= 5
+& x >= 0
+& x = y
+
+  Projection onto the parameters:
+   p2 >= 5
+& p1 >= 0
+
+  /************************************************************/
+  STATE 4:
+  pta: l4 ==> 
+& p1 >= p2
+& p2 >= 0
+& y >= 0
+& x = y
+
+  Projection onto the parameters:
+   p2 >= 0
+& p1 >= p2
+
+  /************************************************************/
+  STATE 5:
+  pta: locBad2 ==> 
+& p1 >= 3
+& p2 >= 0
+& y >= 0
+& x = y
+
+  Projection onto the parameters:
+   p2 >= 0
+& p1 >= 3
+
+  /************************************************************/
+  STATE 6:
+  pta: infiniteLoop ==> 
+& 1 >= x
+& p1 >= 0
+& p2 >= 5
+& x >= 0
+& x + 1 = y
+
+  Projection onto the parameters:
+   p2 >= 5
+& p1 >= 0
+
+  /************************************************************/
+  STATE 7:
+  pta: infiniteLoop ==> 
+& 1 >= x
+& p1 >= 0
+& p2 >= 5
+& x >= 0
+& x + 2 = y
+
+  Projection onto the parameters:
+   p2 >= 5
+& p1 >= 0
+
+  /************************************************************/
+  STATE 8:
+  pta: infiniteLoop ==> 
+& 1 >= x
+& p1 >= 0
+& p2 >= 5
+& x >= 0
+& x + 3 = y
+
+  Projection onto the parameters:
+   p2 >= 5
+& p1 >= 0
+
+  /************************************************************/
+  STATE 9:
+  pta: infiniteLoop ==> 
+& 1 >= x
+& p1 >= 0
+& p2 >= 5
+& x >= 0
+& x + 4 = y
+
+  Projection onto the parameters:
+   p2 >= 5
+& p1 >= 0
+
+  /************************************************************/
+  STATE 10:
+  pta: infiniteLoop ==> 
+& 1 >= x
+& p1 >= 0
+& p2 >= 5
+& x >= 0
+& x + 5 = y
+
+  Projection onto the parameters:
+   p2 >= 5
+& p1 >= 0
+
+  /************************************************************/
+  STATE 11:
+  pta: infiniteLoop ==> 
+& 1 >= x
+& p1 >= 0
+& p2 >= 5
+& x >= 0
+& x + 6 = y
+
+  Projection onto the parameters:
+   p2 >= 5
+& p1 >= 0
+
+  /************************************************************/
+  STATE 12:
+  pta: infiniteLoop ==> 
+& 1 >= x
+& p1 >= 0
+& p2 >= 5
+& x >= 0
+& x + 7 = y
+
+  Projection onto the parameters:
+   p2 >= 5
+& p1 >= 0
+
+  /************************************************************/
+  STATE 13:
+  pta: infiniteLoop ==> 
+& 1 >= x
+& p1 >= 0
+& p2 >= 5
+& x >= 0
+& x + 8 = y
+
+  Projection onto the parameters:
+   p2 >= 5
+& p1 >= 0
+
+  /************************************************************/
+  STATE 14:
+  pta: infiniteLoop ==> 
+& 1 >= x
+& p1 >= 0
+& p2 >= 5
+& x >= 0
+& x + 9 = y
+
+  Projection onto the parameters:
+   p2 >= 5
+& p1 >= 0
+
+  DESCRIPTION OF THE TRANSITIONS
+  s_13 -> s_14
+  s_0 -> s_3
+  s_3 -> s_6
+  s_8 -> s_9
+  s_1 -> s_5
+  s_0 -> s_1
+  s_1 -> s_4
+  s_10 -> s_11
+  s_7 -> s_8
+  s_0 -> s_2
+  s_6 -> s_7
+  s_12 -> s_13
+  s_11 -> s_12
+  s_9 -> s_10
+
 		  """
 			} # end result file
 			,
