@@ -4,7 +4,7 @@
  * 
  * LIPN, Université Paris 13, Sorbonne Paris Cité (France)
  * 
- * Module description: Generic class for cartography
+ * Module description: Generic class for cartography-style algorithms
  * 
  * File contributors : Étienne André
  * Created           : 2016/01/19
@@ -23,9 +23,22 @@ open ImitatorUtilities
 open Exceptions
 open AbstractModel
 open Result
-open AlgoBFS
-open AlgoIMK
+open AlgoGeneric
 
+
+
+
+(************************************************************)
+(************************************************************)
+(* Types *)
+(************************************************************)
+(************************************************************)
+(*** NOTE: no use of the "option" type, as we may want to add more values later (e.g., "Maybe more points but could not find any" for the random cartography) ***)
+type more_points =
+	(* No more uncovered parameter valuations *)
+	| No_more
+	(* Some more uncovered parameter valuations *)
+	| Some_pval of PVal.pval
 
 
 (************************************************************)
@@ -33,12 +46,15 @@ open AlgoIMK
 (* Class definition *)
 (************************************************************)
 (************************************************************)
-class algoIM =
-	object (self) inherit algoIMK as super
+class virtual algoCartoGeneric =
+	object (self) inherit algoGeneric as super
+	
 	
 	(************************************************************)
 	(* Class variables *)
 	(************************************************************)
+	(* Current point *)
+	val mutable current_point = No_more
 	
 	
 	
@@ -49,87 +65,99 @@ class algoIM =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Name of the algorithm *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method algorithm_name = "IM"
+(* 	method algorithm_name = "IM" *)
 
 	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Variable initialization *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method initialize_variables =
-		super#initialize_variables;
+(*	method initialize_variables =
+(* 		super#initialize_variables; *)
 		(* The end *)
-		()
+		()*)
 	
+	(* Create the initial point for the analysis *)
+	method virtual get_initial_point : more_points
+
+	(* Find the next point *)
+	method virtual find_next_point : more_points
+
+
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Add a new state to the state_space (if indeed needed) *)
-	(* Also update tile_nature and slast *)
+	(* Main method running the algorithm: implements here a generic cartography, and calls other functions that may be modified in subclasses *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method add_a_new_state state_space orig_state_index new_states_indexes action_index location final_constraint =
-		super#add_a_new_state state_space orig_state_index new_states_indexes action_index location final_constraint
-	
-	
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Actions to perform when meeting a state with no successors: nothing to do for this algorithm *)
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method process_deadlock_state state_index = ()
-	
-	
+	method run () =
+		(* Retrieve the model *)
+		let model = Input.get_model () in
+		
+		(* Retrieve the input options *)
+		let options = Input.get_options () in
+		
+		(* Retrieve the first point *)
+		current_point <- self#get_initial_point;
+		
+		(* While there is another point to explore *)
+		while (match current_point with Some_pval _ -> true | _ -> false) do
+		
+			(* Get the point *)
+			let pi0 = match current_point with
+				| Some_pval pval -> pval
+				| _ -> raise (InternalError("Impossible situation in AlgoCartoGeneric: the point should have been tested before"))
+			in
+			
+			(* Print some messages *)
+			(*** HACK: only print if non-distributed ***)
+			if options#distribution_mode = Options.Non_distributed then(
+				print_message Verbose_standard ("\n**************************************************");
+				(*** TODO: add back ***)
+(* 				print_message Verbose_standard ("BEHAVIORAL CARTOGRAPHY ALGORITHM: " ^ (string_of_int !current_iteration) ^ ""); *)
+(* 				print_message Verbose_standard ("Considering the following pi" ^ (string_of_int !current_iteration)); *)
+				print_message Verbose_standard (ModelPrinter.string_of_pi0 model pi0);
+			);
+			
+			(* Save the verbose mode as it may be modified *)
+			let global_verbose_mode = get_verbose_mode() in
+			
+			(* Prevent the verbose messages (except in verbose medium, high or total) *)
+			if not (verbose_mode_greater Verbose_medium) then
+				set_verbose_mode Verbose_mute;
+			
+			(* Set the new pi0 *)
+			Input.set_pi0 (pi0);
+			
+			(* Call the inverse method *)
+			(*** TODO !!! ***)
+			let algo = new AlgoIM.algoIM in
+			let result = algo#run() in
+			(*** WARNING: what is this going to do, exactly? ***)
+			ResultProcessor.process_result result;
+			
+			(* Get the verbose mode back *)
+			set_verbose_mode global_verbose_mode;
+			
+			(* Process the result by IM *)
+			(*** TODO ***)
+(* 			let _ = bc_process_im_result im_result in (); *)
+			
+			(* Get to the next point *)
+			current_point <- self#find_next_point;
+			
+		done; (* end while more points *)
+		
+		
+		(* Terminate *)
+		(*** TODO ***)
+		
+		(* The end *)
+		raise (InternalError("Not implemented"))
+		
+
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Method packaging the result output by the algorithm *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method compute_result =
-		(* Method used here: intersection of all p-constraints *)
-		(* Alternative methods would have been: 1) on-the-fly intersection (everytime a state is met) or 2) intersection of all final states, i.e., member of a loop, or deadlock states *)
+(*	method compute_result =
+		raise (InternalError("not implemented"))*)
 
-		(* Create the result *)
-		let p_constraint = LinearConstraint.p_true_constraint() in
-		
-		self#print_algo_message Verbose_low ("Performing the intersection of all p-constraints...");
-		
-		(* Iterate on all states *)
-(* 		val iterate_on_states : (state_index -> abstract_state -> unit) -> state_space -> unit *)
-		StateSpace.iterate_on_states (fun state_index abstract_state ->
-			(* Retrieve the px-constraint *)
-			let _, px_linear_constraint = abstract_state in
-			(* Project onto the parameters *)
-			let projection = LinearConstraint.px_hide_nonparameters_and_collapse px_linear_constraint in
-			(* Intersect with the result *)
-
-			(*** TODO: check if only one intersection with the list of all projections gathered would be more efficient ??? ***)
-			
-			LinearConstraint.p_intersection_assign p_constraint [projection];
-		) state_space;
-		
-	
-		self#print_algo_message_newline Verbose_standard (
-			"Successfully terminated " ^ (after_seconds ()) ^ "."
-		);
-
-		(* Return result *)
-		IMConvex_result
-		{
-			(* Result of the algorithm *)
-			convex_constraint	= p_constraint;
-			
-			(* Explored state space *)
-			state_space			= state_space;
-			
-			(* Nature of the state space (needed??) *)
-		(* 	tile_nature			: AbstractModel.tile_nature; *)
-			
-			(* Number of random selections of pi-incompatible inequalities performed *)
-			nb_random_selections= nb_random_selections;
-	
-			(* Total computation time of the algorithm *)
-			computation_time	= time_from start_time;
-			
-			(* Termination *)
-			termination			= 
-				match termination_status with
-				| None -> raise (InternalError "Termination status not set in IM.compute_result")
-				| Some status -> status
-			;
-		}
 	
 (************************************************************)
 (************************************************************)

@@ -9,7 +9,7 @@
  * 
  * File contributors : Ulrich Kühne, Étienne André
  * Created           : 2009/09/07
- * Last modified     : 2016/01/15
+ * Last modified     : 2016/01/19
  *
  ************************************************************)
 
@@ -342,7 +342,15 @@ begin
 			)
 
 
-		| Cover_cartography | Border_cartography ->
+		| Cover_cartography ->
+			(*** WARNING: work in progress here ***)
+			let algo = new AlgoBCCover.algoBCCover in
+			let result = algo#run() in
+			ResultProcessor.process_result result;
+			(*** WARNING: work in progress here ***)
+		
+		
+		| (*Cover_cartography | *)Border_cartography ->
 		(* Behavioral cartography algorithm with full coverage *)
 			Cartography.cover_behavioral_cartography model
 			

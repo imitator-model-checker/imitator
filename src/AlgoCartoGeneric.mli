@@ -4,7 +4,7 @@
  * 
  * LIPN, Université Paris 13, Sorbonne Paris Cité (France)
  * 
- * Module description: Generic class for cartography
+ * Module description: Generic class for cartography-style algorithms
  * 
  * File contributors : Étienne André
  * Created           : 2016/01/19
@@ -16,13 +16,28 @@
 (************************************************************)
 (* Modules *)
 (************************************************************)
-open AlgoIMK
+open AlgoGeneric
 
 
+(************************************************************)
+(************************************************************)
+(* Types *)
+(************************************************************)
+(************************************************************)
+(*** NOTE: no use of the "option" type, as we may want to add more values later (e.g., "Maybe more points but could not find any" for the random cartography) ***)
+type more_points =
+	(* No more uncovered parameter valuations *)
+	| No_more
+	(* Some more uncovered parameter valuations *)
+	| Some_pval of PVal.pval
+
+	
+	
 (************************************************************)
 (* Class definition *)
 (************************************************************)
-class algoCartoGeneric :
+class virtual algoCartoGeneric :
+	object inherit algoGeneric
 		(************************************************************)
 		(* Class variables *)
 		(************************************************************)
@@ -31,21 +46,18 @@ class algoCartoGeneric :
 		(************************************************************)
 		(* Class methods *)
 		(************************************************************)
-		method algorithm_name : string
-		
-		method run : unit -> Result.imitator_result
-		
-		method initialize_variables : unit
-		
-			(*------------------------------------------------------------*)
-		(* Add a new state to the reachability_graph (if indeed needed) *)
-		(* Also update tile_nature and slast (*** TODO: remove these operations, and move them back to their algorithms ***) *)
-		(*------------------------------------------------------------*)
-		(*** TODO: simplify signature by removing the orig_state_index and returning the list of actually added states ***)
-		method add_a_new_state : StateSpace.state_space -> StateSpace.state_index -> StateSpace.state_index list ref -> Automaton.action_index -> Location.global_location -> LinearConstraint.px_linear_constraint -> unit
+		(* Create the initial point for the analysis *)
+		method virtual get_initial_point : more_points
 
-		(* Actions to perform when meeting a state with no successors: nothing to do for this algorithm *)
-		method process_deadlock_state : StateSpace.state_index -> unit
+		(* Find the next point *)
+		method virtual find_next_point : more_points
+
+		(* Variable initialization (to be defined in subclasses) *)
+(* 		method virtual initialize_variables : unit *)
 		
-		method compute_result : Result.imitator_result
+		(* Main method to run the algorithm: virtual method to be defined in subclasses *)
+(* 		method virtual run : unit -> Result.imitator_result *)
+		
+		(* Packaging the result at the end of the exploration (to be defined in subclasses) *)
+(* 		method virtual compute_result : Result.imitator_result *)
 end

@@ -173,7 +173,7 @@ class virtual algoBFS =
 
 	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Main method running the algorithm: implements here a BFS search, and call other functions that may be modified in subclasses *)
+	(* Main method running the algorithm: implements here a BFS search, and calls other functions that may be modified in subclasses *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method run () =
 		(* Retrieve the model *)

@@ -24,8 +24,7 @@ open Options
 (************************************************************)
 (** Pi 0 *)
 (************************************************************)
-(* type pi0 = NumConst.t array *)
-type pi0 = (*variable_index -> NumConst.t*)PVal.pval
+type pi0 = PVal.pval
 
 type v0 = HyperRectangle.hyper_rectangle
 
