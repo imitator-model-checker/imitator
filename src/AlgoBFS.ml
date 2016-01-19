@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/11/23
- * Last modified     : 2016/01/15
+ * Last modified     : 2016/01/19
  *
  ************************************************************)
 
@@ -22,7 +22,7 @@ open OCamlUtilities
 open ImitatorUtilities
 open Exceptions
 open AbstractModel
-open AlgoGeneric
+open AlgoStateBased
 open Result
 
 
@@ -56,7 +56,7 @@ exception Limit_detected of limit_reached
 (************************************************************)
 (************************************************************)
 class virtual algoBFS =
-	object (self) inherit algoGeneric as super
+	object (self) inherit algoStateBased as super
 
 	(************************************************************)
 	(* Class variables *)
@@ -191,7 +191,7 @@ class virtual algoBFS =
 		start_time <- Unix.gettimeofday();
 
 		(* Compute initial state *)
-		let init_state = AlgoGeneric.compute_initial_state_or_abort() in
+		let init_state = AlgoStateBased.compute_initial_state_or_abort() in
 		
 		(* copy init state, as it might be destroyed later *)
 		(*** NOTE: this operation appears to be here totally useless ***)
