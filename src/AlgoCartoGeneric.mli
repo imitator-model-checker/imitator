@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/01/19
- * Last modified     : 2016/01/19
+ * Last modified     : 2016/01/20
  *
  ************************************************************)
 
@@ -41,6 +41,8 @@ class virtual algoCartoGeneric :
 		(************************************************************)
 		(* Class variables *)
 		(************************************************************)
+		(* Current point *)
+(* 		val mutable current_point : more_points *)
 
 
 		(************************************************************)
@@ -60,4 +62,9 @@ class virtual algoCartoGeneric :
 		
 		(* Packaging the result at the end of the exploration (to be defined in subclasses) *)
 (* 		method virtual compute_result : Result.imitator_result *)
+
+(************************************************************)
+(************************************************************)
 end
+(************************************************************)
+(************************************************************)

@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/01/19
- * Last modified     : 2016/01/19
+ * Last modified     : 2016/01/20
  *
  ************************************************************)
 
@@ -138,6 +138,8 @@ class virtual algoCartoGeneric =
 			(* Process the result by IM *)
 			(*** TODO ***)
 (* 			let _ = bc_process_im_result im_result in (); *)
+
+			(*** TODO: check time/etc. limits ***)
 			
 			(* Get to the next point *)
 			current_point <- self#find_next_point;
