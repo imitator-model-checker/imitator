@@ -109,9 +109,19 @@ let string_of_initially model automaton_index = ""
 
 (* Convert the invariant of a location into a string *)
 let string_of_invariant model automaton_index location_index =
+	(* Invariant *)
 	"while "
 	^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names (model.invariants automaton_index location_index))
-	^ " wait"
+	
+	(* Handle stopwatches *)
+	^
+	let stopped = model.stopwatches automaton_index location_index in
+	(* Case 1: no stopwatches *)
+	if stopped = [] then " wait"
+	(* Case 2: some clocks stopped *)
+	else
+	let stopped_str = string_of_list_of_string_with_sep "," (List.map model.variable_names stopped) in
+	" stop{" ^ stopped_str ^ "}"
 
 
 (* Convert a sync into a string *)

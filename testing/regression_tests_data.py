@@ -1242,7 +1242,7 @@ loc t1_loc_idle: while True wait
 loc t1_loc_act_event: while  0 >= t1_urgent wait
 	when  t1_urgent = 0 do {t1_c' = 0, t1_d' = 0}  sync t1_arr goto t1_loc_act;
  
-loc t1_loc_act: while  8 >= t1_d wait
+loc t1_loc_act: while  8 >= t1_d stop{t1_c}
 	when True do {}  sync t1_dis goto t1_loc_exe;
 	when  t1_d >= 8 do {}  sync t1_miss goto t1_loc_miss;
  
@@ -1281,7 +1281,7 @@ loc t2_loc_idle: while True wait
 loc t2_loc_act_event: while  0 >= t2_urgent wait
 	when  t2_urgent = 0 do {t2_c' = 0, t2_d' = 0}  sync t2_arr goto t2_loc_act;
  
-loc t2_loc_act: while  20 >= t2_d wait
+loc t2_loc_act: while  20 >= t2_d stop{t2_c}
 	when True do {}  sync t2_dis goto t2_loc_exe;
 	when  t2_d >= 20 do {}  sync t2_miss goto t2_loc_miss;
  
@@ -1321,7 +1321,7 @@ loc t3_loc_idle: while True wait
 loc t3_loc_act_event: while  0 >= t3_urgent wait
 	when  t3_urgent = 0 do {t3_c' = 0, t3_d' = 0}  sync t3_arr goto t3_loc_act;
  
-loc t3_loc_act: while  50 >= t3_d wait
+loc t3_loc_act: while  50 >= t3_d stop{t3_c}
 	when True do {}  sync t3_dis goto t3_loc_exe;
 	when  t3_d >= 50 do {}  sync t3_miss goto t3_loc_miss;
  
@@ -1361,7 +1361,7 @@ loc t4_loc_idle: while True wait
 loc t4_loc_act_event: while  0 >= t4_urgent wait
 	when  t4_urgent = 0 do {t4_c' = 0, t4_d' = 0}  sync t4_arr goto t4_loc_act;
  
-loc t4_loc_act: while  100 >= t4_d wait
+loc t4_loc_act: while  100 >= t4_d stop{t4_c}
 	when True do {}  sync t4_dis goto t4_loc_exe;
 	when  t4_d >= 100 do {}  sync t4_miss goto t4_loc_miss;
  
@@ -1401,7 +1401,7 @@ loc t5_loc_idle: while True wait
 loc t5_loc_act_event: while  0 >= t5_urgent wait
 	when  t5_urgent = 0 do {t5_c' = 0, t5_d' = 0}  sync t5_arr goto t5_loc_act;
  
-loc t5_loc_act: while  200 >= t5_d wait
+loc t5_loc_act: while  200 >= t5_d stop{t5_c}
 	when True do {}  sync t5_dis goto t5_loc_exe;
 	when  t5_d >= 200 do {}  sync t5_miss goto t5_loc_miss;
  
@@ -1892,7 +1892,7 @@ loc dline_loc_nomiss: while True wait
 	when True do {t1_d' = 0}  sync t4_miss goto dline_loc_miss;
 	when True do {t1_d' = 0}  sync t5_miss goto dline_loc_miss;
  
-loc dline_loc_miss: while  t1_d = 0 wait
+loc dline_loc_miss: while  t1_d = 0 stop{t1_d}
  end (* OBS_dline *)
 (************************************************************)
 
