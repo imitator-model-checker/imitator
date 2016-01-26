@@ -1,14 +1,18 @@
-(*****************************************************************
+(************************************************************
  *
- *                     IMITATOR II
+ *                       IMITATOR
  * 
- * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
- * Author:        Etienne Andre
- * Created:       2009/12/02
- * Last modified: 2015/11/23
+ * Laboratoire Spécification et Vérification (ENS Cachan & CNRS, France)
+ * LIPN, Université Paris 13, Sorbonne Paris Cité (France)
+ * 
+ * Module description: Convert an abstract model to the input syntax of IMITATOR
+ * 
+ * File contributors : Étienne André
+ * Created           : 2009/12/02
+ * Last modified     : 2016/01/26
  *
- ****************************************************************)
-
+ ************************************************************)
+ 
 
 open AbstractModel
 

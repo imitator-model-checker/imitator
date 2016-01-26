@@ -5,7 +5,7 @@
  * Laboratoire Spécification et Vérification (ENS Cachan & CNRS, France)
  * LIPN, Université Paris 13, Sorbonne Paris Cité (France)
  * 
- * Module description: Main file for IMITATOR
+ * Module description: Convert an abstract model to the input syntax of IMITATOR
  * 
  * File contributors : Étienne André
  * Created           : 2009/12/02
