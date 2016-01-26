@@ -10,7 +10,7 @@
  * Author:        Etienne Andre
  * 
  * Created:       2010/03/04
- * Last modified: 2016/01/15
+ * Last modified: 2016/01/26
  *
  ****************************************************************) 
  
@@ -1329,11 +1329,11 @@ let unserialize_linear_constraint linear_constraint_string =
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
 
 (** String for the false constraint *)
-let string_of_false = "false"
+let string_of_false = "False"
 
 
 (** String for the true constraint *)
-let string_of_true = "true"
+let string_of_true = "True"
 
 
 (** Convert a linear constraint into a string *)

@@ -146,16 +146,17 @@ if options#pta2clp then(
 if options#pta2gml then(
 	print_message Verbose_standard ("Translating model to GrML.");
 	let translated_model = PTA2GrML.string_of_model model in
-	let gml_file = options#files_prefix ^ ".grml" in
+	let grml_file = options#files_prefix ^ ".grml" in
 	if verbose_mode_greater Verbose_total then(
 		print_message Verbose_total ("\n" ^ translated_model ^ "\n");
 	);
 	(* Write *)
-	write_to_file gml_file translated_model;
+	write_to_file grml_file translated_model;
+	print_message Verbose_standard ("File '" ^ grml_file ^ "' successfully created.");
 	terminate_program()
 );
 
-(* Translation to JPG *)
+(* Translation to HyTech *)
 if options#pta2hytech then(
 	print_message Verbose_standard ("Translating model to a HyTech input model.");
 	let translated_model = PTA2HyTech.string_of_model model in
@@ -165,6 +166,21 @@ if options#pta2hytech then(
 	);
 	(* Write *)
 	write_to_file hytech_file translated_model;
+	print_message Verbose_standard ("File '" ^ hytech_file ^ "' successfully created.");
+	terminate_program()
+);
+
+(* Translation to IMITATOR *)
+if options#pta2imi then(
+	print_message Verbose_standard ("Regenerating the input model to a new model.");
+	let translated_model = ModelPrinter.string_of_model model in
+	let imi_file = options#files_prefix ^ "-regenerated.imi" in
+	if verbose_mode_greater Verbose_total then(
+		print_message Verbose_total ("\n" ^ translated_model ^ "\n");
+	);
+	(* Write *)
+	write_to_file imi_file translated_model;
+	print_message Verbose_standard ("File '" ^ imi_file ^ "' successfully created.");
 	terminate_program()
 );
 
@@ -176,6 +192,7 @@ if options#pta2jpg then(
 		print_message Verbose_high ("\n" ^ translated_model ^ "\n");
 	);
 	Graphics.dot (options#files_prefix ^ "-pta") translated_model;
+	print_message Verbose_standard ("File successfully created."); (*** TODO: add file name in a proper manner ***)
 	terminate_program()
 );
 
@@ -189,6 +206,7 @@ if options#pta2tikz then(
 	);
 	(* Write *)
 	write_to_file latex_file translated_model;
+	print_message Verbose_standard ("File '" ^ latex_file ^ "' successfully created.");
 	terminate_program()
 );
 (* Direct cartography output *)
@@ -208,6 +226,7 @@ if options#cartonly then(
 	v0#set_max 1 p2_max;
 	(* Call the cartography *)
 	Graphics.cartography constraints options#files_prefix;
+	print_message Verbose_standard ("File successfully created."); (*** TODO: add file name in a proper manner ***)
 	(* The end *)
 	terminate_program()
 );

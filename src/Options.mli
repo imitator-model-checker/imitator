@@ -78,6 +78,7 @@ class imitator_options :
 		method pta2clp : bool
 		method pta2gml : bool
 		method pta2hytech : bool
+		method pta2imi : bool
 		method pta2jpg : bool
 		method pta2tikz : bool
 		method states_limit : int option

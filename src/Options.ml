@@ -200,6 +200,9 @@ class imitator_options =
 		(* Translate PTA model into a HyTech file *)
 		val mutable pta2hytech = ref false
 
+		(* Translate PTA model into a new IMITATOR file *)
+		val mutable pta2imi = ref false
+
 		(* Translate PTA model into a graphics *)
 		val mutable pta2jpg = ref false
 
@@ -253,6 +256,7 @@ class imitator_options =
 		method precomputepi0 = !precomputepi0
 		method pta2clp = !pta2clp
 		method pta2gml = !pta2gml
+		method pta2imi = !pta2imi
 		method pta2hytech = !pta2hytech
 		method pta2jpg = !pta2jpg
 		method pta2tikz = !pta2tikz
@@ -463,6 +467,8 @@ class imitator_options =
 				("-PTA2GrML", Unit (fun _ -> pta2gml := true; imitator_mode := Translation), "Translate the model into a GrML model, and exit without performing any analysis. Defaut : 'false'");
 				
 				("-PTA2HyTech", Unit (fun _ -> pta2hytech := true; imitator_mode := Translation), "Translate the model into a HyTech model, and exit without performing any analysis. Defaut : 'false'");
+				
+				("-PTA2IMI", Unit (fun _ -> pta2imi := true; imitator_mode := Translation), "Regenerate the model into a IMITATOR model, and exit without performing any analysis. Defaut : 'false'");
 				
 				("-PTA2JPG", Unit (fun _ ->
 					pta2jpg := true;

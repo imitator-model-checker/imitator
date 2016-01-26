@@ -25,6 +25,7 @@ val string_of_var_type : var_type -> string
 (**************************************************)
 (** State *)
 (**************************************************)
+(*** TODO/BADPROG : Move elsewhere? ***)
 (* Convert a state into a string *)
 val string_of_state : abstract_model -> (Location.global_location * LinearConstraint.px_linear_constraint) -> string
 
