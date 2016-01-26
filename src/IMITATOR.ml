@@ -9,7 +9,7 @@
  * 
  * File contributors : Ulrich Kühne, Étienne André
  * Created           : 2009/09/07
- * Last modified     : 2016/01/19
+ * Last modified     : 2016/01/26
  *
  ************************************************************)
 
@@ -152,6 +152,19 @@ if options#pta2gml then(
 	);
 	(* Write *)
 	write_to_file gml_file translated_model;
+	terminate_program()
+);
+
+(* Translation to JPG *)
+if options#pta2hytech then(
+	print_message Verbose_standard ("Translating model to a HyTech input model.");
+	let translated_model = PTA2HyTech.string_of_model model in
+	let hytech_file = options#files_prefix ^ ".hy" in
+	if verbose_mode_greater Verbose_total then(
+		print_message Verbose_total ("\n" ^ translated_model ^ "\n");
+	);
+	(* Write *)
+	write_to_file hytech_file translated_model;
 	terminate_program()
 );
 

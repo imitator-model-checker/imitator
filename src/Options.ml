@@ -7,7 +7,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Ulrich Kuehne, Etienne Andre
  * Created:       2010
- * Last modified: 2015/11/26
+ * Last modified: 2016/01/26
  *
  ****************************************************************)
  
@@ -191,16 +191,19 @@ class imitator_options =
 		
 		(* TRANSLATION *)
 		
-		(* Translate PTA into a CLP program *)
+		(* Translate PTA model into a CLP program *)
 		val mutable pta2clp = ref false
 		
-		(* Translate PTA into a GML program *)
+		(* Translate PTA model into a GML model *)
 		val mutable pta2gml = ref false
 		
-		(* Translate PTA into a graphics *)
+		(* Translate PTA model into a HyTech file *)
+		val mutable pta2hytech = ref false
+
+		(* Translate PTA model into a graphics *)
 		val mutable pta2jpg = ref false
 
-		(* Translate PTA into a TikZ LaTeX code *)
+		(* Translate PTA model into a TikZ LaTeX code *)
 		val mutable pta2tikz = ref false
 		
 		
@@ -250,6 +253,7 @@ class imitator_options =
 		method precomputepi0 = !precomputepi0
 		method pta2clp = !pta2clp
 		method pta2gml = !pta2gml
+		method pta2hytech = !pta2hytech
 		method pta2jpg = !pta2jpg
 		method pta2tikz = !pta2tikz
 		method states_limit = !states_limit
@@ -456,7 +460,9 @@ class imitator_options =
 
 				("-PRP", Set efim, " Reachability-preservation algorithm mixing IM and EFsynth [ALNS15]. Default: false.");
 				
-				("-PTA2GrML", Unit (fun _ -> pta2gml := true; imitator_mode := Translation), "Translate the model into a GrML program, and exit without performing any analysis. Defaut : 'false'");
+				("-PTA2GrML", Unit (fun _ -> pta2gml := true; imitator_mode := Translation), "Translate the model into a GrML model, and exit without performing any analysis. Defaut : 'false'");
+				
+				("-PTA2HyTech", Unit (fun _ -> pta2hytech := true; imitator_mode := Translation), "Translate the model into a HyTech model, and exit without performing any analysis. Defaut : 'false'");
 				
 				("-PTA2JPG", Unit (fun _ ->
 					pta2jpg := true;
@@ -486,7 +492,6 @@ class imitator_options =
 				("-version", Unit (fun _ ->
 					(*** HACK: print header now ***)
 					print_header_string();
-(*					print_string ("\n" ^ Constants.program_name ^ " " ^ Constants.version_string ^ "\nBuild: " ^ BuildInfo.build_number ^ " (" ^ BuildInfo.build_time ^ ")\n");*)
 					exit 0), " Print version number and exit.");
 			] in
 					

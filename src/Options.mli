@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2012/05/10
- * Last modified: 2015/11/26
+ * Last modified: 2016/01/26
  *
  ****************************************************************)
  
@@ -77,6 +77,7 @@ class imitator_options :
 		method precomputepi0 : bool
 		method pta2clp : bool
 		method pta2gml : bool
+		method pta2hytech : bool
 		method pta2jpg : bool
 		method pta2tikz : bool
 		method states_limit : int option
