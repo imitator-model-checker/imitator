@@ -17,8 +17,13 @@ Graphics
 - Added a visualization of the bad states on the trace set (using red color + a frowney)
 - Removed the automatically generated observer from the PTA export
 
+Export
+- Added an export to HyTech
+
 Internal
 - "examples" directory becomes "benchmarks"
+- All algorithms rewritten in an object-oriented fashion
+- Added a mode to regenerate the IMITATOR input file (helpful to test input/output models)
 - Automaton.ml becomes Location.ml (and new module Automaton.ml created)
 
 

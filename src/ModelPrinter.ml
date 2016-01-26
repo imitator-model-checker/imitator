@@ -61,10 +61,11 @@ let string_of_var_type = function
 
 (* Convert the initial variable declarations into a string *)
 let string_of_declarations model =
-	"var "
-	^
 	let string_of_variables list_of_variables =
 		string_of_list_of_string_with_sep ", " (List.map model.variable_names list_of_variables) in
+
+		"var "
+	^
 	(if model.nb_clocks > 0 then
 		("\n\t" ^ (string_of_variables model.clocks) ^ "\n\t\t: clock;\n") else "")
 	^
@@ -102,7 +103,7 @@ let string_of_initially model automaton_index = ""
 (*** NOTE: deprecated ***)
 (*	let inital_global_location  = model.initial_location in
 	let initial_location = Location.get_location inital_global_location automaton_index in
-	"initially: "
+	"initially "
 	^ (model.location_names automaton_index initial_location)
 	^ ";"*)
 
@@ -251,18 +252,23 @@ let string_of_initial_state ()=
 	let model = Input.get_model () in
 	
 	(* Header of initial state *)
-	""
+	"\n"
 	^ "\n" ^ "(************************************************************)"
 	^ "\n" ^ "(* Initial state *)"
 	^ "\n" ^ "(************************************************************)"
 	^ "\n" ^ ""
-	^ "\n" ^ "init :="
+	^ "\n" ^ "init := True"
 	
 	(* Initial location *)
 	^ "\n" ^ "\t(*------------------------------------------------------------*)"
 	^ "\n" ^ "\t(* Initial location *)"
 	^ "\n" ^ "\t(*------------------------------------------------------------*)"
 	^
+	(*** WARNING: Do not print the observer ***)
+	let pta_without_obs = List.filter (fun automaton_index -> not (model.is_observer automaton_index)) model.automata
+	in
+
+	(* Handle all (other) PTA *)
 	let inital_global_location  = model.initial_location in
 	let initial_automata = List.map 
 	(fun automaton_index ->
@@ -270,7 +276,7 @@ let string_of_initial_state ()=
 		let initial_location = Location.get_location inital_global_location automaton_index in
 		(* '& loc[pta] = location' *)
 		"\n\t& loc[" ^ (model.automata_names automaton_index) ^ "] = " ^ (model.location_names automaton_index initial_location)
-	) model.automata
+	) pta_without_obs
 	in string_of_list_of_string initial_automata
 	
 	(* Initial discrete assignments *)
