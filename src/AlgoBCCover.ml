@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/01/19
- * Last modified     : 2016/01/20
+ * Last modified     : 2016/01/27
  *
  ************************************************************)
 
@@ -28,21 +28,33 @@ open AlgoCartoGeneric
 
 (************************************************************)
 (************************************************************)
+(* Internal exception *)
+(************************************************************)
+(************************************************************)
+(* To stop a loop when a point is found *)
+exception Found_point of PVal.pval
+
+(* To stop a loop when a point is found or there is no more point *)
+exception Stop_loop of more_points
+
+
+
+(************************************************************)
+(************************************************************)
 (* Class-independent functions *)
 (************************************************************)
 (************************************************************)
 
 
 (*------------------------------------------------------------*)
-(** Check if a pi_0 belongs to a 'returned_constraint'*)
+(** Check if a parameter valuation belongs to the constraint of an im_result *)
 (*------------------------------------------------------------*)
-let pi0_in_returned_constraint pi0 = function
-	| Convex_constraint (k,_) -> LinearConstraint.is_pi0_compatible pi0#get_value k
-	(** Disjunction of constraints *)
-	| Union_of_constraints (k_list , _) -> List.exists (LinearConstraint.is_pi0_compatible pi0#get_value) k_list
-	| NNCConstraint _ -> raise (InternalError ("NNCCs are not available everywhere yet."))
+let pi0_in_tiles pval (abstract_im_result : abstract_im_result) =
+	match abstract_im_result.result with
+	| LinearConstraint.Convex_p_constraint p_linear_constraint -> LinearConstraint.is_pi0_compatible pval#get_value p_linear_constraint
+	| LinearConstraint.Nonconvex_p_constraint p_nnconvex_constraint -> LinearConstraint.p_nnconvex_constraint_is_pi0_compatible pval#get_value p_nnconvex_constraint
 
-	
+
 	
 
 (************************************************************)
@@ -56,16 +68,8 @@ class algoBCCover =
 	(************************************************************)
 	(* Class variables *)
 	(************************************************************)
-	(* Number of dimensions *)
-	val mutable nb_dimensions = 0
-	
-	(* Min & max bounds for the parameters *)
-	val mutable min_bounds = Array.make 0 NumConst.zero
-	val mutable max_bounds = Array.make 0 NumConst.zero
-	
-	(* (Dynamic) Array for the results *)
-	(*** TODO: change the structure kept in memory ***)
-	val mutable computed_constraints : Result.returned_constraint DynArray.t = DynArray.create()
+	(* List of im_results *)
+	val mutable im_results : abstract_im_result list = []
 	
 	(* Initial p-constraint (needed to check whether points satisfy it) *)
 	val mutable init_p_constraint = LinearConstraint.p_true_constraint ()
@@ -89,27 +93,23 @@ class algoBCCover =
 	(* Variable initialization *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method initialize_variables =
-(* 		super#initialize_variables; *)
-		(* The end *)
+		super#initialize_variables;
 		
 		(* Retrieve the model *)
 		let model = Input.get_model() in
-		(* Retrieve the v0 *)
-		let v0 = Input.get_v0() in
 		(* Retrieve the input options *)
 (* 		let options = Input.get_options () in *)
 
 		(* Print some information *)
 (* 		print_message Verbose_medium ("Starting preprocessing for the behavioral cartography"); *)
 
+		(*** TODO ***)
 		(* Time counter for recording the globl time spent on BC *)
 (* 		time_spent_on_IM := 0.; *)
-		(* Record start time to compute the time spent only on calling IM *)
-(* 		start_time := Unix.gettimeofday(); *)
 
-		(* Set the number of dimensions in the system *)
-		nb_dimensions <- model.nb_parameters;
-		
+		(* Time counter for the algorithm *)
+		start_time <- Unix.gettimeofday();
+
 		(* Print some information *)
 		self#print_algo_message Verbose_medium ("Number of dimensions: " ^ (string_of_int nb_dimensions));
 
@@ -119,16 +119,6 @@ class algoBCCover =
 			abort_program();
 		);
 
-		(*** BADPROG (to improve ***)
-		(* Initialize *)
-		min_bounds <- Array.make nb_dimensions NumConst.zero;
-		max_bounds <- Array.make nb_dimensions NumConst.zero;
-		(* Fill *)
-		for parameter_index = 0 to nb_dimensions - 1 do
-			min_bounds.(parameter_index) <- v0#get_min parameter_index;
-			max_bounds.(parameter_index) <- v0#get_max parameter_index;
-		done;
-	
 		(* Compute the initial state *)
 		let init_state = AlgoStateBased.compute_initial_state_or_abort() in
 		
@@ -140,16 +130,27 @@ class algoBCCover =
 		(* Hide non parameters *)
 		init_p_constraint <- LinearConstraint.px_hide_nonparameters_and_collapse init_px_constraint;
 
-		(* (Dynamic) Array for the results *)
-		computed_constraints <- DynArray.create();
+		(* List of im_results *)
+		im_results <- [];
 
 		(* The end *)
 		()
 
 		
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(* Global method on pi0 *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+
+	(* Return the current_point; raises InternalError if current_point was not initialized *)
+	method private get_current_point_option =
+		match current_point with
+		| No_more -> 
+			raise (InternalError("current_point has not been initialized yet, altough it should have at this point."))
+		| Some_pval current_point -> current_point
+
 		
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Generic function checking if a computed pi0 belongs to some constraint and satisfies the init constraint; sets the reference "found_pi0" to true if indeed uncovered *)
+	(* Generic function returning true if a computed pi0 belongs to none of the tiles, and satisfies the init constraint. *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method private test_pi0_uncovered tentative_pi0 =
 		(* Get the model *)
@@ -157,12 +158,12 @@ class algoBCCover =
 		(* Retrieve the input options *)
 (* 		let options = Input.get_options () in *)
 
-		(* Check that the current pi0 does not belong to any constraint *)
-		if dynArray_exists (pi0_in_returned_constraint tentative_pi0) computed_constraints then (
+		(* Check that the point does not belong to any constraint *)
+		if List.exists (pi0_in_tiles tentative_pi0) im_results then (
 			(* Update the number of unsuccessful points *)
 			nb_useless_points <- nb_useless_points + 1;
 			if verbose_mode_greater Verbose_medium then (
-				print_message Verbose_medium "[Cartography.test_pi0_uncovered] The following pi0 is already included in a constraint.";
+				self#print_algo_message Verbose_medium "The following pi0 is already included in a constraint.";
 				print_message Verbose_medium (ModelPrinter.string_of_pi0 model tentative_pi0);
 			);
 			(*** TODO: could be optimized by finding the nearest multiple of tile next to the border, and directly switching to that one ***)
@@ -173,7 +174,7 @@ class algoBCCover =
 			(* Update the number of unsuccessful points *)
 			nb_useless_points <- nb_useless_points + 1;
 			if verbose_mode_greater Verbose_medium then (
-				print_message Verbose_medium "[Cartography.test_pi0_uncovered] The following pi0 does not satisfy the initial constraint of the model.";
+				self#print_algo_message Verbose_medium "The following pi0 does not satisfy the initial constraint of the model.";
 				print_message Verbose_medium (ModelPrinter.string_of_pi0 model tentative_pi0);
 			);
 			false
@@ -196,10 +197,65 @@ class algoBCCover =
 		(*()*)
 
 
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(* Compute the sequential successor of a point. Returns Some next_pi0 if there is indeed one, or None if no more point is available. *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	method private compute_next_sequential_pi0 current_pi0 =
+		(* Retrieve the model *)
+		let model = Input.get_model() in
+		(* Retrieve the input options *)
+		let options = Input.get_options () in
 		
-		
+		let nb_dimensions = model.nb_parameters in
 
+		(* Retrieve the current pi0 (that must have been initialized before) *)
+(* 		let current_pi0 = self#get_current_point_option in *)
+
+		(* Start with the first dimension *)
+		let current_dimension = ref 0 in (*** WARNING: should be sure that 0 is the first parameter dimension ***)
+		(* The current dimension is not yet the maximum *)
+		let reached_max_dimension = ref false in
+		
+		try(
+		while not !reached_max_dimension do
+			(* Try to increment the local dimension *)
+			let current_dimension_incremented = NumConst.add (current_pi0#get_value !current_dimension) options#step in
+			if current_dimension_incremented <= max_bounds.(!current_dimension) then (
+				(* Copy the current point *)
+				let new_point = current_pi0#copy in
+				
+				(* Increment this dimension *)
+				new_point#set_value (!current_dimension) current_dimension_incremented;
+				(* Reset the smaller dimensions to the low bound *)
+				for i = 0 to !current_dimension - 1 do
+					new_point#set_value i min_bounds.(i);
+				done;
+				
+				(* Stop the loop *)
+				raise (Found_point new_point)
+			)
+			(* Else: try the next dimension *)
+			else ( 
+				current_dimension := !current_dimension + 1;
+				(* If last dimension: the end! *)
+				if !current_dimension >= nb_dimensions then(
+					reached_max_dimension := true;
+				)
+			);
+		done; (* while not is max *)
+		
+		(* Found no point *)
+		None
+		
+		(* If exception: found a point! *)
+		) with Found_point point -> Some point
+
+
+      
+      
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Create the initial point for the analysis *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method get_initial_point =
 		(* Retrieve the model *)
 		let model = Input.get_model() in
@@ -214,27 +270,83 @@ class algoBCCover =
 		Some_pval pi0
 
 	
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Find the next point *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method find_next_point =
-		raise (InternalError("not implemented"))
+		(* Get the model *)
+	(* 	let model = Input.get_model() in *)
 
-
+		(* Retrieve the current pi0 (that must have been initialized before) *)
+		let current_pi0 = ref (self#get_current_point_option) in
+		
+	(*		(* Counts the points actually member of an existing constraint (hence useless) for information purpose *)
+		let nb_useless_points = ref 0 in*)
+		
+		try(
+		while true do
+			
+			(* 1) Compute the next pi0 (if any left) in a sequential manner *)
+			let tentative_next_point =
+			match self#compute_next_sequential_pi0 !current_pi0 with
+			| Some point -> point
+			| None -> raise (Stop_loop No_more)
+			in
+			
+			(* 2) Update our local current_pi0 *)
+			current_pi0 := tentative_next_point;
+			
+			(* 3) Check that this pi0 is not covered by any tile *)
+			self#print_algo_message Verbose_high ("Check whether pi0 is covered");
+			(* If uncovered: stop loop and return *)
+			if self#test_pi0_uncovered !current_pi0 then
+				raise (Stop_loop (Some_pval !current_pi0))
+			(* Else: keep running the loop *)
+			
+		done; (* while more pi0 and so on *)
+		
+		(* This point is unreachable *)
+		raise (InternalError("This part of the code should be unreachable in find_next_point"))
+		
+		(* Return the point *)
+		) with Stop_loop sl -> sl
 		
 	
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(* Processing the result of IM *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	method process_result im_result =
+		(* Compute the abstraction *)
+		let abstract_im_result = abstract_im_result_of_im_result im_result in
+		
+		(* Add to the list of tiles *)
+		im_results <- abstract_im_result :: im_results;
 	
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Main method running the algorithm *)
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method run () =
-		raise (InternalError("not implemented"))
+		(* The end *)
+		()
 
+		
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Method packaging the result output by the algorithm *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method compute_result =
-		raise (InternalError("not implemented"))
+		self#print_algo_message_newline Verbose_standard (
+			"Successfully terminated " ^ (after_seconds ()) ^ "."
+		);
 
-	
+		(* Return result *)
+		BC_result {
+			(* List of tiles *)
+			tiles				= im_results;
+			
+			(* Total computation time of the algorithm *)
+			computation_time	= time_from start_time;
+			
+			(* Termination *)
+			termination			= (*** TODO ***) BC_Regular_termination;
+		}
+
+
 (************************************************************)
 (************************************************************)
 end;;

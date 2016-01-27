@@ -5,30 +5,21 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2012/06/18
- * Last modified: 2015/11/23
+ * Last modified: 2016/01/27
  *
  ****************************************************************)
-
-
-(* List version of pi0 for PaTATOR *)
-(* type pi0_list = (Automaton.variable_index * NumConst.t) list *)
 
 
 (************************************************************)
 (** Behavioral cartography auxiliary functions *)
 (************************************************************)
-(*** BADPROG ***)
-(* type current_pi0 = NumConst.t array *)
-
 val bc_initialize : unit -> unit
 
 val bc_initialize_subpart : unit -> unit
 
-val bc_process_im_result : Result.im_result -> bool
+val bc_process_im_result : Result.old_im_result -> bool
 
 val bc_finalize : unit -> unit
-
-(* val bc_result : unit -> AbstractModel.returned_constraint list *)
 
 (** Generate the graphical cartography, and possibly personnalize the file suffix *)
 val output_graphical_cartography : string option -> unit
@@ -86,5 +77,5 @@ val cover_behavioral_cartography : AbstractModel.abstract_model -> (*AbstractMod
  *)
 val constraint_list_init : int -> unit
 val constraint_list_random : unit -> PVal.pval option
-val constraint_list_update : Result.im_result -> unit
+val constraint_list_update : Result.old_im_result -> unit
 val constraint_list_empty : unit -> bool

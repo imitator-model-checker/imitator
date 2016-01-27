@@ -10,7 +10,7 @@
  * Author:        Ulrich Kuehne, Etienne Andre
  * 
  * Created:       2010/07/22
- * Last modified: 2015/02/12
+ * Last modified: 2016/01/27
  *
  ****************************************************************)
 
@@ -49,7 +49,7 @@ val full_state_space_exploration : abstract_model -> unit
 
 val ef_synthesis : abstract_model -> (*returned_constraint*)unit
 
-val inverse_method_gen : abstract_model -> state -> (Result.im_result * StateSpace.state_space)
+val inverse_method_gen : abstract_model -> state -> (Result.old_im_result * StateSpace.state_space)
 
 val efim : abstract_model -> unit
 

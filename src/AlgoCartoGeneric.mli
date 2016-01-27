@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/01/19
- * Last modified     : 2016/01/20
+ * Last modified     : 2016/01/27
  *
  ************************************************************)
 
@@ -32,9 +32,21 @@ type more_points =
 	| Some_pval of PVal.pval
 
 	
-	
+
+
+(************************************************************)
+(************************************************************)
+(* Class-independent functions *)
+(************************************************************)
+(************************************************************)
+(* Convert an 'im_result' into an 'abstract_im_result' *)
+val abstract_im_result_of_im_result : Result.im_result -> Result.abstract_im_result
+
+
+(************************************************************)
 (************************************************************)
 (* Class definition *)
+(************************************************************)
 (************************************************************)
 class virtual algoCartoGeneric :
 	object inherit algoGeneric
@@ -42,9 +54,16 @@ class virtual algoCartoGeneric :
 		(* Class variables *)
 		(************************************************************)
 		(* Current point *)
-(* 		val mutable current_point : more_points *)
+		val mutable current_point : more_points
 
+		(* Number of dimensions *)
+		val mutable nb_dimensions : int
+		
+		(* Min & max bounds for the parameters *)
+		val mutable min_bounds : NumConst.t array
+		val mutable max_bounds : NumConst.t array
 
+		
 		(************************************************************)
 		(* Class methods *)
 		(************************************************************)
@@ -54,13 +73,16 @@ class virtual algoCartoGeneric :
 		(* Find the next point *)
 		method virtual find_next_point : more_points
 
-		(* Variable initialization (to be defined in subclasses) *)
-(* 		method virtual initialize_variables : unit *)
+		(* Variable initialization (to be improved in subclasses) *)
+		method initialize_variables : unit
 		
 		(* Main method to run the algorithm: virtual method to be defined in subclasses *)
-(* 		method virtual run : unit -> Result.imitator_result *)
+		method run : unit -> Result.imitator_result
 		
-		(* Packaging the result at the end of the exploration (to be defined in subclasses) *)
+		(* Processing the result of IM *)
+		method virtual process_result : Result.im_result -> unit
+
+(* Packaging the result at the end of the exploration (to be defined in subclasses) *)
 (* 		method virtual compute_result : Result.imitator_result *)
 
 (************************************************************)

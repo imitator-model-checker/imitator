@@ -10,7 +10,7 @@
  * Author:        Etienne Andre
  * 
  * Created:       2010/03/04
- * Last modified: 2016/01/26
+ * Last modified: 2016/01/27
  *
  ****************************************************************) 
  
@@ -2670,35 +2670,6 @@ let p_nnconvex_constraint_of_p_linear_constraint (p_linear_constraint : p_linear
 	result
 
 
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
-(** {3 Tests} *)
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
-
-(** Check if a nnconvex_constraint is false *)
-let p_nnconvex_constraint_is_false c =
-(*	(* Statistics *)
-	ppl_nb_is_false := !ppl_nb_is_false + 1;
-	let start = Unix.gettimeofday() in
-	(* Actual call to PPL *)*)
-	let result = ppl_Pointset_Powerset_NNC_Polyhedron_is_empty c in
-(*	(* Statistics *)
-	ppl_t_is_false := !ppl_t_is_false +. (Unix.gettimeofday() -. start);
-	(* Return result *)*)
-	result
-
-
-(** Check if a nnconvex_constraint is true *)
-let p_nnconvex_constraint_is_true c =
-(*	(* Statistics *)
-	ppl_nb_is_true := !ppl_nb_is_true + 1;
-	let start = Unix.gettimeofday() in*)
-	(* Actual call to PPL *)
-	let result = ppl_Pointset_Powerset_NNC_Polyhedron_is_universe c in
-(*	(* Statistics *)
-	ppl_t_is_true := !ppl_t_is_true +. (Unix.gettimeofday() -. start);*)
-	(* Return result *)
-	result
-
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
 (** {3 Access} *)
@@ -2746,6 +2717,49 @@ val ppl_Pointset_Powerset_NNC_Polyhedron_increment_iterator : pointset_powerset_
 val ppl_Pointset_Powerset_NNC_Polyhedron_decrement_iterator : pointset_powerset_nnc_polyhedron_iterator -> unit
 
 val ppl_Pointset_Powerset_NNC_Polyhedron_get_disjunct : pointset_powerset_nnc_polyhedron_iterator -> polyhedron*)
+
+
+
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+(** {3 Tests} *)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+
+(** Check if a nnconvex_constraint is false *)
+let p_nnconvex_constraint_is_false c =
+(*	(* Statistics *)
+	ppl_nb_is_false := !ppl_nb_is_false + 1;
+	let start = Unix.gettimeofday() in
+	(* Actual call to PPL *)*)
+	let result = ppl_Pointset_Powerset_NNC_Polyhedron_is_empty c in
+(*	(* Statistics *)
+	ppl_t_is_false := !ppl_t_is_false +. (Unix.gettimeofday() -. start);
+	(* Return result *)*)
+	result
+
+
+(** Check if a nnconvex_constraint is true *)
+let p_nnconvex_constraint_is_true c =
+(*	(* Statistics *)
+	ppl_nb_is_true := !ppl_nb_is_true + 1;
+	let start = Unix.gettimeofday() in*)
+	(* Actual call to PPL *)
+	let result = ppl_Pointset_Powerset_NNC_Polyhedron_is_universe c in
+(*	(* Statistics *)
+	ppl_t_is_true := !ppl_t_is_true +. (Unix.gettimeofday() -. start);*)
+	(* Return result *)
+	result
+
+
+
+(** Check if a nnconvex_constraint is pi0-compatible *)
+(*** NOTE: here, we split the nnconvex_constraint into a list of convex constraints, and we perform the check; the other option would have been to create a nnconvex_constraint from the point, and check inclusion ***)
+(*** WARNING: function not tested ***)
+let p_nnconvex_constraint_is_pi0_compatible pval p_nnconvex_constraint =
+	(* 1) Get the constraints *)
+	let disjuncts = get_disjuncts p_nnconvex_constraint in
+	
+	(* 2) Check each of them *)
+	List.exists (fun p_linear_constraint -> is_pi0_compatible pval p_linear_constraint) disjuncts
 
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
@@ -2810,3 +2824,9 @@ let string_of_p_nnconvex_constraint names p_nnconvex_constraint =
 	string_of_list_of_string_with_sep "\nOR\n " disjuncts_string
 
 
+(************************************************************)
+(** {2 Non-necessarily convex linear Constraints} *)
+(************************************************************)
+type p_convex_or_nonconvex_constraint =
+	| Convex_p_constraint of p_linear_constraint
+	| Nonconvex_p_constraint of p_nnconvex_constraint

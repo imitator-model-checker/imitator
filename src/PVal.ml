@@ -9,7 +9,7 @@
  * Universite Paris 13, Sorbonne Paris Cite, LIPN (France)
  * 
  * Created:       2014/10/01
- * Last modified: 2014/10/02
+ * Last modified: 2016/01/27
  *
  ****************************************************************)
 
@@ -90,7 +90,7 @@ class pval =
 			the_array.(dim) <- value
 			
 		(** Copy a parameter valuation *)
-		method copy () =
+		method copy =
 			(* First check that the number of dimensions has been set *)
 			assert_nb_dim_initialized();
 			(* Create second object *)

@@ -9,7 +9,7 @@
  * 
  * File contributors : Ulrich Kühne, Étienne André
  * Created           : 2009/09/07
- * Last modified     : 2016/01/26
+ * Last modified     : 2016/01/27
  *
  ************************************************************)
 
@@ -103,15 +103,16 @@ Input.set_v0 v0;
 (************************************************************)
 (* Debug print: model *)
 (************************************************************)
-if verbose_mode_greater Verbose_total then
-	print_message Verbose_total ("\nModel:\n" ^ (ModelPrinter.string_of_model model) ^ "\n");
-
+if verbose_mode_greater Verbose_total then(
+	print_message Verbose_total ("\nThe input model is the following one:\n" ^ (ModelPrinter.string_of_model model) ^ "\n");
+);
 
 (************************************************************)
 (* Debug print: property *)
 (************************************************************)
-if verbose_mode_greater Verbose_low then
-	print_message Verbose_low ("\nProperty:\n" ^ (ModelPrinter.string_of_property model model.user_property) ^ "\n");
+if verbose_mode_greater Verbose_low then(
+	print_message Verbose_low ("\nThe property is the following one:\n" ^ (ModelPrinter.string_of_property model model.user_property) ^ "\n");
+);
 
 
 (************************************************************)

@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/11/23
- * Last modified     : 2016/01/11
+ * Last modified     : 2016/01/27
  *
  ************************************************************)
 
@@ -24,7 +24,8 @@
 (************************************************************)
 type nb_unexplored_successors = int
 
-type algorithm_termination =
+(* Termination for state-space based algorithms *)
+type bfs_algorithm_termination =
 	(* Fixpoint-like termination *)
 	| Regular_termination
 
@@ -39,9 +40,26 @@ type algorithm_termination =
 	| States_limit of nb_unexplored_successors
 
 
+(* Termination for cartography algorithms *)
+type bc_algorithm_termination =
+	(* Fixpoint-like termination *)
+	| BC_Regular_termination
+
+	(* Termination due to time limit reached *)
+	(*** TODO: compute a percentage of the points explored ?? ***)
+	| BC_Time_limit (*of nb_unexplored_successors*)
+	
+	(* Termination due to a maximum number of tiles computed *)
+	| BC_Tiles_limit
+	
+
 (************************************************************)
 (** General result for the IMITATOR algorithms *)
 (************************************************************)
+
+(*------------------------------------------------------------*)
+(* BFS algorithms *)
+(*------------------------------------------------------------*)
 
 type poststar_result = {
 	(* Explored state space *)
@@ -51,7 +69,7 @@ type poststar_result = {
 	computation_time	: float;
 	
 	(* Termination *)
-	termination			: algorithm_termination;
+	termination			: bfs_algorithm_termination;
 }
 
 
@@ -69,14 +87,14 @@ type efsynth_result = {
 	computation_time	: float;
 	
 	(* Termination *)
-	termination			: algorithm_termination;
+	termination			: bfs_algorithm_termination;
 }
 
 
-(* Variants of IM with a convex constraint as result *)
-type imconvex_result = {
+(* Result of IM and variants *)
+type im_result = {
 	(* Convex constraint *)
-	convex_constraint	: LinearConstraint.p_linear_constraint;
+	result				: LinearConstraint.p_convex_or_nonconvex_constraint;
 	
 	(* Explored state space *)
 	state_space			: StateSpace.state_space;
@@ -91,10 +109,10 @@ type imconvex_result = {
 	computation_time	: float;
 	
 	(* Termination *)
-	termination			: algorithm_termination;
+	termination			: bfs_algorithm_termination;
 }
 
-(* Variants of IM with a non-convex constraint as result *)
+(*(* Variants of IM with a non-convex constraint as result *)
 type imnonconvex_result = {
 	(* Convex constraint *)
 	nonconvex_constraint: LinearConstraint.p_nnconvex_constraint;
@@ -112,10 +130,60 @@ type imnonconvex_result = {
 	computation_time	: float;
 	
 	(* Termination *)
-	termination			: algorithm_termination;
+	termination			: bfs_algorithm_termination;
+}*)
+
+
+(*------------------------------------------------------------*)
+(* Cartography algorithms *)
+(*------------------------------------------------------------*)
+
+(* Abstract state space of IM for BC (to save memory) *)
+type abstract_state_space = {
+	nb_states			: int;
+	nb_transitions		: int;
+(* 	depth				: int; *)
+}
+
+(* Abstract result of IM for BC (to save memory) *)
+type abstract_im_result = {
+	(* Convex constraint *)
+	result				: LinearConstraint.p_convex_or_nonconvex_constraint;
+	
+	(* Explored state space *)
+	state_space			: abstract_state_space;
+	
+	(* Nature of the state space (needed??) *)
+(* 	tile_nature			: AbstractModel.tile_nature; *)
+
+	(*** TODO: add depth (?) ***)
+	
+	(* Number of random selections of pi-incompatible inequalities performed *)
+	nb_random_selections: int;
+	
+	(* Total computation time of the algorithm *)
+	computation_time	: float;
+	
+	(* Termination *)
+	termination			: bfs_algorithm_termination;
+}
+
+(* Result for BC and variants *)
+type bc_result = {
+	(* List of tiles *)
+	tiles				: abstract_im_result list;
+	
+	(* Total computation time of the algorithm *)
+	computation_time	: float;
+	
+	(* Termination *)
+	termination			: bc_algorithm_termination;
 }
 
 
+(************************************************************)
+(** A unified type for all results *)
+(************************************************************)
 
 type imitator_result =
 	(* Result for Post* *)
@@ -124,11 +192,14 @@ type imitator_result =
 	(* Result for EFsynth *)
 	| EFsynth_result of efsynth_result
 
-	(* Result for IM, IMK *)
-	| IMConvex_result of imconvex_result
+	(* Result for IM, IMK, IMunion *)
+	| IM_result of im_result
 
-	(* Result for IMunion *)
-	| IMNonconvex_result of imnonconvex_result
+(*	(* Result for IMunion *)
+	| IMNonconvex_result of imnonconvex_result*)
+	
+	(* Result for cartography *)
+	| BC_result of bc_result
 
 
 
@@ -174,7 +245,7 @@ type returned_constraint =
 (** The result output by IM *)
 (****************************************************************)
 (*** TODO: convert to a separate class ***)
-type im_result = {
+type old_im_result = {
 	(* Returned constraint *)
 	result : returned_constraint;
 (*	(* Reachability graph *)

@@ -10,7 +10,7 @@
  * Author:        Etienne Andre
  * 
  * Created:       2010/03/04
- * Last modified: 2016/01/15
+ * Last modified: 2016/01/27
  *
  ****************************************************************) 
  
@@ -467,6 +467,10 @@ val p_nnconvex_constraint_is_false : p_nnconvex_constraint -> bool
 (** Check if a nnconvex_constraint is true *)
 val p_nnconvex_constraint_is_true  : p_nnconvex_constraint -> bool
 
+(** Check if a nnconvex_constraint is pi0-compatible *)
+val p_nnconvex_constraint_is_pi0_compatible : (variable -> coef) -> p_nnconvex_constraint -> bool
+
+
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
 (** {3 Modifications} *)
@@ -492,3 +496,12 @@ val p_linear_constraint_list_of_p_nnconvex_constraint : p_nnconvex_constraint ->
 
 (** Convert a p_nnconvex_constraint into a string *)
 val string_of_p_nnconvex_constraint : (variable -> string) -> p_nnconvex_constraint -> string
+
+
+
+(************************************************************)
+(** {2 Non-necessarily convex linear Constraints} *)
+(************************************************************)
+type p_convex_or_nonconvex_constraint =
+	| Convex_p_constraint of p_linear_constraint
+	| Nonconvex_p_constraint of p_nnconvex_constraint

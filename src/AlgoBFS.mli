@@ -31,7 +31,7 @@ class virtual algoBFS :
 
 		(* Status of the analysis *)
 		(*** TODO: make private (while accessible to subclasses ***)
-		val mutable termination_status : Result.algorithm_termination option
+		val mutable termination_status : Result.bfs_algorithm_termination option
 
 		(* Constraint of the initial state (used by some algorithms to initialize their variables) *)
 		val mutable initial_constraint : LinearConstraint.px_linear_constraint option

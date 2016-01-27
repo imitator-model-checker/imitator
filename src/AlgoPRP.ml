@@ -272,10 +272,10 @@ class algoPRP =
 		);
 
 		(* Return result *)
-		IMNonconvex_result
+		IM_result
 		{
 			(* Result of the algorithm *)
-			nonconvex_constraint= result;
+			result				= LinearConstraint.Nonconvex_p_constraint result;
 			
 			(* Explored state space *)
 			state_space			= state_space;

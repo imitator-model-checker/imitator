@@ -10,7 +10,7 @@
  * Author:        Ulrich Kuehne, Etienne Andre
  * 
  * Created:       2012/06/18
- * Last modified: 2016/01/15
+ * Last modified: 2016/01/27
  *
  ****************************************************************)
 
@@ -1432,7 +1432,7 @@ let compute_all_pi0 () =
 	(* Retrieve the initial pi0 (that must have been initialized before) *)
 	let initial_pi0 = get_current_pi0_option () in
 	print_message Verbose_medium ("[Cartography.compute_all_pi0] Copying pi0 just in case");
-	let initial_pi0_copy = initial_pi0#copy() in
+	let initial_pi0_copy = initial_pi0#copy in
 	print_message Verbose_medium ("[Cartography.compute_all_pi0] Setting pi0 to the first point");
 	(* Fill the first point with a COPY of the initial pi0 *)
 	all_points.(0) <- initial_pi0_copy;
@@ -1448,7 +1448,7 @@ let compute_all_pi0 () =
 			raise (InternalError("No more pi0 before completing the fill the static array of all pi0."));
 		);
 		(* Get the current pi0 and COPY it! Very important *)
-		let current_pi0_copy = (get_current_pi0_option ())#copy() in
+		let current_pi0_copy = (get_current_pi0_option ())#copy in
 		(* Fill the array *)
 		all_points.(pi0_index) <- current_pi0_copy;
 		
@@ -1844,7 +1844,7 @@ let pr = print_message Verbose_standard
    (*** WARNING!!! (added by EA, 2014/10/01); this code seems to be duplicated !!! ***)
 let next_pi0 (pi0 : PVal.pval) =
 	let options = Input.get_options () in
-	let res = pi0#copy() in
+	let res = pi0#copy in
 	let found = ref true in
 	let current_dimension = ref 0 in
 	let continue = ref true in
@@ -1896,7 +1896,7 @@ let constraint_list_init size =
   more_pi0 := true;
   next_unproc_max_size := size;
   compute_initial_pi0 ();
-  let first_pi0 = (get_current_pi0_option())#copy() in 
+  let first_pi0 = (get_current_pi0_option())#copy in 
   (*match !current_pi0 with
       None -> raise (InternalError
 		       "init_unprocessed_pi0_list: no first point found")

@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/01/08
- * Last modified     : 2016/01/15
+ * Last modified     : 2016/01/27
  *
  ************************************************************)
 
@@ -139,10 +139,10 @@ class algoIMunion =
 		);
 
 		(* Return result *)
-		IMNonconvex_result
+		IM_result
 		{
 			(* Result of the algorithm *)
-			nonconvex_constraint= result;
+			result				= LinearConstraint.Nonconvex_p_constraint result;
 			
 			(* Explored state space *)
 			state_space			= state_space;

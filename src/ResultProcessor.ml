@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/12/03
- * Last modified     : 2016/01/15
+ * Last modified     : 2016/01/27
  *
  ************************************************************)
 
@@ -207,9 +207,13 @@ let process_result result =
 		()
 
 		
-	| IMConvex_result im_result ->
+	| IM_result im_result ->
 		(* Convert result to string *)
-		let result_str = LinearConstraint.string_of_p_linear_constraint model.variable_names im_result.convex_constraint in
+		let result_str =
+			match im_result.result with
+			| LinearConstraint.Convex_p_constraint p_linear_constraint -> LinearConstraint.string_of_p_linear_constraint model.variable_names p_linear_constraint
+			| LinearConstraint.Nonconvex_p_constraint p_nnconvex_constraint -> LinearConstraint.string_of_p_nnconvex_constraint model.variable_names p_nnconvex_constraint
+		in
 
 		(* Print on terminal *)
 		print_message Verbose_standard ("\nResult:\n" ^ result_str);
@@ -238,10 +242,19 @@ let process_result result =
 		let radical = options#files_prefix in
 		Graphics.generate_graph im_result.state_space radical;
 		
-		(* Render zones in a graphical form *)
-		let zones = [Convex_constraint (im_result.convex_constraint, AbstractModel.Unknown (*** TODO ***))] in
 		if options#cart then (
-			Graphics.cartography zones (options#files_prefix ^ "_cart_ef")
+			(* Render zones in a graphical form *)
+			let zones =
+				match im_result.result with
+				| LinearConstraint.Convex_p_constraint p_linear_constraint -> [Convex_constraint (p_linear_constraint, AbstractModel.Unknown (*** TODO ***))]
+				
+				(*** A bit a HACk here ***)
+				| LinearConstraint.Nonconvex_p_constraint p_nnconvex_constraint ->
+					let convex_constraints = LinearConstraint.p_linear_constraint_list_of_p_nnconvex_constraint p_nnconvex_constraint in
+					[Union_of_constraints (convex_constraints, AbstractModel.Unknown (*** TODO ***))]
+			in
+
+			Graphics.cartography zones (options#files_prefix ^ "_cart_im")
 		) else (
 				print_message Verbose_high "Graphical cartography not asked: graph not generated.";
 		);
@@ -250,7 +263,7 @@ let process_result result =
 		()
 		
 		
-	| IMNonconvex_result im_result ->
+(*	| IMNonconvex_result im_result ->
 		(* Convert result to string *)
 		let result_str = LinearConstraint.string_of_p_nnconvex_constraint model.variable_names im_result.nonconvex_constraint in
 
@@ -292,8 +305,8 @@ let process_result result =
 		);
 
 		(* The end *)
-		()
+		()*)
 
 
 
-(* 	| _ -> raise (InternalError ("function process_result not implemented for all cases yet")) *)
+	| _ -> raise (InternalError ("function process_result not implemented for all cases yet"))

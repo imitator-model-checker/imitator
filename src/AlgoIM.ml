@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/01/06
- * Last modified     : 2016/01/08
+ * Last modified     : 2016/01/27
  *
  ************************************************************)
 
@@ -106,10 +106,10 @@ class algoIM =
 		);
 
 		(* Return result *)
-		IMConvex_result
+		IM_result
 		{
 			(* Result of the algorithm *)
-			convex_constraint	= p_constraint;
+			result				= LinearConstraint.Convex_p_constraint p_constraint;
 			
 			(* Explored state space *)
 			state_space			= state_space;

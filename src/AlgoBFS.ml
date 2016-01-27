@@ -187,7 +187,7 @@ class virtual algoBFS =
 		let nb_variables = model.nb_variables in
 		let nb_automata = model.nb_automata in
 
-		(* Time counter *)
+		(* Time counter for the algorithm *)
 		start_time <- Unix.gettimeofday();
 
 		(* Compute initial state *)
