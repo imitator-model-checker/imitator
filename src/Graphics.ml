@@ -8,7 +8,7 @@
  * Author:        Etienne Andre, Ulrich Kuehne
  * 
  * Created:       2010/07/05
- * Last modified: 2016/01/15
+ * Last modified: 2016/01/28
  *
  ****************************************************************)
 
@@ -122,6 +122,7 @@ if returned_constraint_list = [] then(
 	let bounds = ref (Array.make 2 (NumConst.zero, NumConst.zero)) in
 
 	(* If EF-synthesis: choose the first two parameters *)
+	(*** TODO: take the projection into account! ***)
 	begin
 	match options#imitator_mode with
 		| EF_synthesis | Inverse_method ->
@@ -159,6 +160,7 @@ if returned_constraint_list = [] then(
 			!bounds.(1) <- ef_y_min, ef_y_max;
 	
 	(* If cartography: find indices of first two variables with a parameter range *)
+	(*** TODO: take the projection into account! ***)
 		| Cover_cartography | Random_cartography _ | Border_cartography ->
 			print_message Verbose_low "Case real cartography: first 2 parameters with a range";
 			for index = 0 to model.nb_parameters - 1 do
