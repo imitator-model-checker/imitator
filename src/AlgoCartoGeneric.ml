@@ -92,8 +92,8 @@ let abstract_im_result_of_im_result (im_result : im_result) reference_val : abst
 	(* Abstracted version of the explored state space *)
 	abstract_state_space	= abstract_state_space;
 	
-	(* Nature of the state space (needed??) *)
-(* 	tile_nature			: AbstractModel.tile_nature; *)
+	(* Nature of the state space *)
+	statespace_nature		= im_result.statespace_nature;
 	
 	(* Number of random selections of pi-incompatible inequalities performed *)
 	nb_random_selections= im_result.nb_random_selections;

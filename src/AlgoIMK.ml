@@ -293,7 +293,7 @@ class algoIMK =
 	
 				
 				(* First check whether this is a bad tile according to the property and the nature of the state *)
-				self#update_trace_set_nature new_state;
+				self#update_statespace_nature new_state;
 				
 				(* Add the state_index to the list of new states (used to compute their successors at the next iteration) *)
 				new_states_indexes := new_state_index :: !new_states_indexes;
@@ -387,6 +387,13 @@ class algoIMK =
 			"Successfully terminated " ^ (after_seconds ()) ^ "."
 		);
 
+		(* The tile nature is good if 1) it is not bad, and 2) the analysis terminated normally *)
+		let statespace_nature =
+			if statespace_nature = StateSpace.Unknown && termination_status = Some Regular_termination then StateSpace.Good
+			(* Otherwise: unchanged *)
+			else statespace_nature
+		in
+
 		(* Return result *)
 		IM_result
 		{
@@ -396,8 +403,8 @@ class algoIMK =
 			(* Explored state space *)
 			state_space			= state_space;
 			
-			(* Nature of the state space (needed??) *)
-		(* 	tile_nature			: AbstractModel.tile_nature; *)
+			(* Nature of the state space *)
+			statespace_nature	= statespace_nature;
 			
 			(* Number of random selections of pi-incompatible inequalities performed *)
 			nb_random_selections= nb_random_selections;

@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/12/02
- * Last modified     : 2016/01/19
+ * Last modified     : 2016/01/28
  *
  ************************************************************)
 
@@ -42,7 +42,10 @@ class virtual algoStateBased :
 		(* Name of the algorithm (to be defined in subclasses) *)
 		method virtual algorithm_name : string
 		
+		(* Nature of the state space according to a property *)
+		val mutable statespace_nature : StateSpace.statespace_nature
 
+		
 		(************************************************************)
 		(* Class methods *)
 		(************************************************************)
@@ -57,7 +60,7 @@ class virtual algoStateBased :
 		method initialize_variables : unit
 		
 		(* Update the nature of the trace set *)
-		method update_trace_set_nature : StateSpace.state -> unit
+		method update_statespace_nature : StateSpace.state -> unit
 		
 		(*------------------------------------------------------------*)
 		(* Add a new state to the reachability_graph (if indeed needed) *)

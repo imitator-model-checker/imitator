@@ -297,7 +297,7 @@ let process_result result prefix_option =
 		if options#cart then (
 			(* Render zones in a graphical form *)
 			let zones =
-			[im_result.result, StateSpace.Unknown] (*** TODO ***)
+			[im_result.result, im_result.statespace_nature]
 (*				match im_result.result with
 				| LinearConstraint.Convex_p_constraint p_linear_constraint -> [Convex_constraint (p_linear_constraint, AbstractModel.Unknown (*** TODO ***))]
 				
@@ -376,7 +376,7 @@ let process_result result prefix_option =
 
 		if options#cart then (
 			(* Render zones in a graphical form *)
-			let zones = List.map (fun abstract_im_result -> (abstract_im_result.result , StateSpace.Unknown (*** TODO ***))) bc_result.tiles in
+			let zones = List.map (fun abstract_im_result -> (abstract_im_result.result, abstract_im_result.statespace_nature)) bc_result.tiles in
 			Graphics.draw_cartography zones (file_prefix ^ "_cart_bc")
 		) else (
 				print_message Verbose_high "Graphical cartography not asked: not drawn.";

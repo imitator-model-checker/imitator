@@ -44,9 +44,9 @@ let graph_color_of_int tile_index statespace_nature dotted =
 	if model.correctness_condition <> None then(
 		(* Go for a good / bad coloring *)
 		match statespace_nature with
-		| Good -> 2 (* green *)
-		| Bad -> 1 (* red *)
-		| Unknown -> 5 (* cyan *)
+		| StateSpace.Good -> 2 (* green *)
+		| StateSpace.Bad -> 1 (* red *)
+		| StateSpace.Unknown -> 5 (* cyan *)
 	(* Else random coloring *)
 	)else(
 		(* Only 5 colors from 1 to 5 *)

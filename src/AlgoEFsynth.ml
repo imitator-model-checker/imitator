@@ -93,7 +93,7 @@ class algoEFsynth =
 		if added then (
 
 			(* First check whether this is a bad tile according to the property and the nature of the state *)
-			self#update_trace_set_nature new_state;
+			self#update_statespace_nature new_state;
 			
 			(* Will the state be added to the list of new states (the successors of which will be computed)? *)
 			let to_be_added = ref true in
@@ -193,6 +193,13 @@ class algoEFsynth =
 		
 		
 		(*** TODO: compute as well *good* zones, depending whether the analysis was exact, or early termination occurred ***)
+		
+		(* The tile nature is good if 1) it is not bad, and 2) the analysis terminated normally *)
+		let statespace_nature =
+			if statespace_nature = StateSpace.Unknown && termination_status = Some Regular_termination then StateSpace.Good
+			(* Otherwise: unchanged *)
+			else statespace_nature
+		in
 
 		
 		EFsynth_result
@@ -203,8 +210,8 @@ class algoEFsynth =
 			(* Explored state space *)
 			state_space			= state_space;
 			
-			(* Nature of the state space (needed??) *)
-		(* 	tile_nature			: AbstractModel.tile_nature; *)
+			(* Nature of the state space *)
+			statespace_nature	= statespace_nature;
 			
 			(* Total computation time of the algorithm *)
 			computation_time	= time_from start_time;

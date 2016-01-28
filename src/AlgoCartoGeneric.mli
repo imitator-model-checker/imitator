@@ -72,6 +72,9 @@ class virtual algoCartoGeneric :
 		(* Counts the points actually member of an existing constraint (hence useless) for information purpose *)
 		val mutable nb_useless_points = 0*)
 
+		(* Status of the analysis *)
+		val mutable termination_status : Result.bc_algorithm_termination option
+
 		
 		(************************************************************)
 		(* Class methods *)

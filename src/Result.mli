@@ -14,10 +14,6 @@
  ************************************************************)
 
 
-(**************************************************************)
-(* Modules *)
-(**************************************************************)
-
 
 (************************************************************)
 (** Termination of the algorithm *)
@@ -64,6 +60,9 @@ type poststar_result = {
 	(* Explored state space *)
 	state_space			: StateSpace.state_space;
 	
+	(* Nature of the state space *)
+	statespace_nature	: StateSpace.statespace_nature;
+
 	(* Total computation time of the algorithm *)
 	computation_time	: float;
 	
@@ -79,8 +78,8 @@ type efsynth_result = {
 	(* Explored state space *)
 	state_space			: StateSpace.state_space;
 	
-	(* Nature of the state space (needed??) *)
-(* 	tile_nature			: tile_nature; *)
+	(* Nature of the state space *)
+	statespace_nature	: StateSpace.statespace_nature;
 	
 	(* Total computation time of the algorithm *)
 	computation_time	: float;
@@ -98,8 +97,8 @@ type im_result = {
 	(* Explored state space *)
 	state_space			: StateSpace.state_space;
 	
-	(* Nature of the state space (needed??) *)
-(* 	tile_nature			: tile_nature; *)
+	(* Nature of the state space *)
+	statespace_nature	: StateSpace.statespace_nature;
 	
 	(* Number of random selections of pi-incompatible inequalities performed *)
 	nb_random_selections: int;
@@ -155,8 +154,8 @@ type abstract_im_result = {
 	(* Abstracted version of the explored state space *)
 	abstract_state_space			: abstract_state_space;
 	
-	(* Nature of the state space (needed??) *)
-(* 	tile_nature			: tile_nature; *)
+	(* Nature of the state space *)
+	statespace_nature	: StateSpace.statespace_nature;
 
 	(*** TODO: add depth (?) ***)
 	

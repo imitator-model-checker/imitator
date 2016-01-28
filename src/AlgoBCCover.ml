@@ -41,16 +41,6 @@ exception Stop_loop of more_points
 
 (************************************************************)
 (************************************************************)
-(* Class-independent functions *)
-(************************************************************)
-(************************************************************)
-
-
-
-	
-
-(************************************************************)
-(************************************************************)
 (* Class definition *)
 (************************************************************)
 (************************************************************)
@@ -79,18 +69,6 @@ class algoBCCover =
 	method initialize_variables =
 		super#initialize_variables;
 		
-		(* Retrieve the model *)
-(* 		let model = Input.get_model() in *)
-		(* Retrieve the input options *)
-(* 		let options = Input.get_options () in *)
-
-		(* Print some information *)
-(* 		print_message Verbose_medium ("Starting preprocessing for the behavioral cartography"); *)
-
-		(*** TODO ***)
-		(* Time counter for recording the globl time spent on BC *)
-(* 		time_spent_on_IM := 0.; *)
-
 		(* The end *)
 		()
 
@@ -255,7 +233,11 @@ class algoBCCover =
 			computation_time	= time_from start_time;
 			
 			(* Termination *)
-			termination			= (*** TODO ***) BC_Regular_termination;
+			termination			= 
+				match termination_status with
+				| None -> raise (InternalError "Termination status not set in BCCover.compute_result")
+				| Some status -> status
+			;
 		}
 
 

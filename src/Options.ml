@@ -676,6 +676,8 @@ class imitator_options =
 			if (!imitator_mode = State_space_exploration || !imitator_mode = Translation) && (!union || !pi_compatible) then
 				print_warning (Constants.program_name ^ " is run in state space exploration mode; options regarding to the variant of the inverse method will thus be ignored.");
 
+			
+			(*** TODO: add warning if -cart but mode translation or statespace ***)
 
 
 

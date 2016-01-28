@@ -1103,8 +1103,8 @@ class virtual algoStateBased =
 	(* Class variables *)
 	(************************************************************)
 
-	(* Nature of the trace set *)
-	val mutable trace_set_nature = StateSpace.Unknown
+	(* Nature of the state space according to a property *)
+	val mutable statespace_nature = StateSpace.Unknown
 	
 	
 	
@@ -1122,7 +1122,7 @@ class virtual algoStateBased =
 	(* Variable initialization *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method initialize_variables =
-		trace_set_nature <- StateSpace.Unknown;
+		statespace_nature <- StateSpace.Unknown;
 		
 		(* The end *)
 
@@ -1132,7 +1132,7 @@ class virtual algoStateBased =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Update the nature of the trace set *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method update_trace_set_nature ((location : Location.global_location), (_ : LinearConstraint.px_linear_constraint)) =
+	method update_statespace_nature ((location : Location.global_location), (_ : LinearConstraint.px_linear_constraint)) =
 		(* Retrieve the model *)
 		let model = Input.get_model() in
 		(* Retrieve the input options *)
@@ -1143,7 +1143,7 @@ class virtual algoStateBased =
 		| Some (Unreachable unreachable_global_locations) ->
 			(* Check whether the current location matches one of the unreachable global locations *)
 			if StateSpace.match_unreachable_global_locations unreachable_global_locations location then(
-				trace_set_nature <- StateSpace.Bad;
+				statespace_nature <- StateSpace.Bad;
 			);
 		| _ -> raise (InternalError("IMITATOR currently ony implements the non-reachability-like properties."))
 
