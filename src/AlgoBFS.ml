@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/11/23
- * Last modified     : 2016/01/19
+ * Last modified     : 2016/01/28
  *
  ************************************************************)
 
@@ -95,8 +95,7 @@ class virtual algoBFS =
 	(* Check whether the limit of an BFS exploration has been reached, according to the analysis options *)
 	(*** NOTE: May raise an exception when used in PaTATOR mode (the exception will be caught by PaTATOR) ***)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(*** TODO: remove all arguments are all can be retrieve from the object attributes ***)
-	method private check_bfs_limit depth nb_states time =
+	method private check_bfs_limit =
 		(* Retrieve the input options *)
 		let options = Input.get_options () in
 		
@@ -107,7 +106,7 @@ class virtual algoBFS =
 		begin
 		match options#depth_limit with
 			| None -> ()
-			| Some limit -> if depth > limit then(
+			| Some limit -> if current_depth >= limit then(
 (* 				termination_status <- Depth_limit; *)
 				raise (Limit_detected Depth_limit_reached)
 			)
@@ -117,7 +116,7 @@ class virtual algoBFS =
 		begin
 		match options#states_limit with
 			| None -> ()
-			| Some limit -> if nb_states > limit then(
+			| Some limit -> if StateSpace.nb_states state_space > limit then(
 (* 				termination_status <- States_limit; *)
 				raise (Limit_detected States_limit_reached)
 			)
@@ -127,7 +126,7 @@ class virtual algoBFS =
 		begin
 		match options#time_limit with
 			| None -> ()
-			| Some limit -> if time > (float_of_int limit) then(
+			| Some limit -> if time_from start_time > (float_of_int limit) then(
 (* 				termination_status <- Time_limit; *)
 				raise (Limit_detected Time_limit_reached)
 			)
@@ -360,7 +359,7 @@ class virtual algoBFS =
 			current_depth <- current_depth + 1;
 			
 			(* Check if the limit has been reached *)
-			limit_reached := self#check_bfs_limit current_depth (StateSpace.nb_states state_space) (time_from start_time);
+			limit_reached := self#check_bfs_limit;
 		done;
 		
 		(* Were they any more states to explore? *)
