@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/01/19
- * Last modified     : 2016/01/27
+ * Last modified     : 2016/01/28
  *
  ************************************************************)
 
@@ -43,7 +43,7 @@ class algoBCCover :
 		method find_next_point : more_points
 
 		(* Processing the result of IM *)
-		method process_result : Result.im_result -> unit
+		method process_result : Result.im_result -> PVal.pval -> unit
 
 (* 		method run : unit -> Result.imitator_result *)
 		

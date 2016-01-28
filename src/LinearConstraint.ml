@@ -10,7 +10,7 @@
  * Author:        Etienne Andre
  * 
  * Created:       2010/03/04
- * Last modified: 2016/01/27
+ * Last modified: 2016/01/28
  *
  ****************************************************************) 
  
@@ -2830,3 +2830,8 @@ let string_of_p_nnconvex_constraint names p_nnconvex_constraint =
 type p_convex_or_nonconvex_constraint =
 	| Convex_p_constraint of p_linear_constraint
 	| Nonconvex_p_constraint of p_nnconvex_constraint
+
+(** Convert a p_convex_or_nonconvex_constraint into a string *)
+let string_of_p_convex_or_nonconvex_constraint names = function
+	| Convex_p_constraint p_linear_constraint ->  string_of_p_linear_constraint names p_linear_constraint
+	| Nonconvex_p_constraint p_nnconvex_constraint -> string_of_p_nnconvex_constraint names p_nnconvex_constraint

@@ -7,7 +7,7 @@
  * Author:        Etienne Andre
  * 
  * Created:       2014/10/24
- * Last modified: 2016/01/15
+ * Last modified: 2016/01/28
  *
  ****************************************************************)
  
@@ -391,6 +391,17 @@ let format_time time =
 let now () = "" ^ (format_time (Unix.gettimeofday ()))
 (* printf "format_time gives: %s\n" (format_time time) *)
 
+
+(*** TODO: factor the 2 following functions ***)
+
+(** Round a float with 1 digit after comma, and convert to string *)
+let round1_float d =
+	(* Integer part *)
+	let int_part = string_of_int (int_of_float (floor d)) in
+	(* Floating part on 3 digits *)
+	let real_part = add_digits 1 ((int_of_float (d *. 10.0)) mod 10) in
+	(* Concatenate both *)
+	int_part ^ "." ^ real_part
 
 (* Round a float with 3 digits after comma, and convert to string *)
 let round3_float d =

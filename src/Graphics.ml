@@ -67,14 +67,14 @@ let make_file_name cartography_file_prefix file_index =
 
 
 (*------------------------------------------------------------*)
-(* Print the cartography corresponding to the list of constraint *)
+(** Draw the cartography corresponding to a list of constraints. Takes as second argument the file name prefix. *)
 (*------------------------------------------------------------*)
-let cartography returned_constraint_list cartography_file_prefix =
+let draw_cartography (returned_constraint_list : (LinearConstraint.p_convex_or_nonconvex_constraint * StateSpace.tile_nature) list) cartography_file_prefix =
 (* No cartography if no zone *)
 if returned_constraint_list = [] then(
-	print_message Verbose_standard ("\nNo cartography can be generated since the list of constraints is empty.\n");
+	print_message Verbose_standard ("\nNo cartography can be drawn since the list of constraints is empty.\n");
 )else(
-	print_message Verbose_standard ("\nGeneration of the graphical cartography...");
+	print_message Verbose_standard ("\nDrawing the cartography...");
 
 	(* Retrieve the model *)
 	let model = Input.get_model () in
@@ -84,14 +84,29 @@ if returned_constraint_list = [] then(
 	let v0 = Input.get_v0 () in
 	
 	print_message Verbose_low "Starting to compute graphical cartography...";
-	(* For all returned_constraint *)
+	
+	(* Converting to convex constraints *)
+	(*** BADPROG: creating a list of singletons and lists, and then flatten ***)
+	let returned_constraint_list = List.flatten (List.map (function
+		| LinearConstraint.Convex_p_constraint p_linear_constraint, tile_nature -> [LinearConstraint.render_non_strict_p_linear_constraint p_linear_constraint , tile_nature]
+		| LinearConstraint.Nonconvex_p_constraint p_nnconvex_constraint, tile_nature ->
+			(* Get the convex constraints *)
+			let p_linear_constraints = LinearConstraint.p_linear_constraint_list_of_p_nnconvex_constraint p_nnconvex_constraint in
+			(* Render non-strict *)
+			List.map (fun p_linear_constraint -> LinearConstraint.render_non_strict_p_linear_constraint p_linear_constraint, tile_nature) p_linear_constraints
+		) returned_constraint_list
+	)  in
+	
+(*	(* For all returned_constraint *)
 	let new_returned_constraint_list = List.map (
 		fun returned_constraint -> match returned_constraint with
 			| Convex_constraint (k, tn) -> Convex_constraint (LinearConstraint.render_non_strict_p_linear_constraint k , tn)
 			| Union_of_constraints (list_of_k, tn) -> Union_of_constraints (List.map LinearConstraint.render_non_strict_p_linear_constraint list_of_k , tn)
 			| NNCConstraint _ -> raise (InternalError ("NNCCs are not available everywhere yet."))
 	) returned_constraint_list
-	in
+	in*)
+	
+	(* From now on, we work with a list [(LinearConstraint.p_linear_constraint, tile_nature), ...] *)
 
 
 (*	(*** HORRIBLE IMPERATIVE (and not tail recursive) programming !!!!! ***)
@@ -121,7 +136,7 @@ if returned_constraint_list = [] then(
 	let range_params : int list ref = ref [] in
 	let bounds = ref (Array.make 2 (NumConst.zero, NumConst.zero)) in
 
-	(* If EF-synthesis: choose the first two parameters *)
+	(* If EF-synthesis / IM: choose the first two parameters *)
 	(*** TODO: take the projection into account! ***)
 	begin
 	match options#imitator_mode with
@@ -187,9 +202,8 @@ if returned_constraint_list = [] then(
 
 		
 	(* Else: no reason to draw a cartography *)
-	(*** TODO: should be allowed for IM too ***)
 		| _ -> 
-			print_error "Cartography can only be drawn while in cartography or EF-synthesis mode.";
+			print_error "Cartography can only be drawn while in inverse method, cartography or EF-synthesis mode.";
 			abort_program();
 	end;
 	
@@ -338,11 +352,12 @@ if returned_constraint_list = [] then(
 		) points;
 	in
 	(* Update min / max for all returned constraint *)
-	List.iter (function
+(*	List.iter (function
 		| Convex_constraint (k, _) -> update_min_max k
 		| Union_of_constraints (list_of_k, _) -> List.iter update_min_max list_of_k
 		| NNCConstraint _ -> raise (InternalError ("NNCCs are not available everywhere yet."))
-	) new_returned_constraint_list;
+	) new_returned_constraint_list;*)
+	List.iter (function (p_linear_constraint, _) -> update_min_max p_linear_constraint) returned_constraint_list;
 
 	(* Print some information *)
 	print_message Verbose_low ("Adding a 1-unit margin...");
@@ -477,7 +492,7 @@ if returned_constraint_list = [] then(
 	in
 	
 	(* For all returned_constraint *)
-	List.iter (function
+(*	List.iter (function
 		| Convex_constraint (k, tn) ->
 			(*** WARNING: duplicate code ***)
 			(* Test just in case ! (otherwise an exception arises *)
@@ -499,8 +514,17 @@ if returned_constraint_list = [] then(
 				)
 			) list_of_k
 		| NNCConstraint _ -> raise (InternalError ("NNCCs are not available everywhere yet."))
-	) new_returned_constraint_list;
-
+	) new_returned_constraint_list;*)
+	List.iter (fun (p_linear_constraint, tile_nature) ->
+		(* Test just in case ! (otherwise an exception arises *)
+		if LinearConstraint.p_is_false p_linear_constraint then(
+			print_warning " Found a false constraint when computing the cartography. Ignored."
+		)else(
+			tile_index := !tile_index + 1;
+			create_file_for_constraint p_linear_constraint tile_nature
+		)
+	) returned_constraint_list;
+	
 	
 	(* File in which the cartography will be printed *)
 	let final_name = cartography_file_prefix ^ "." ^ cartography_extension in

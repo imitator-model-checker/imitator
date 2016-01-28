@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/12/02
- * Last modified     : 2016/01/19
+ * Last modified     : 2016/01/28
  *
  ************************************************************)
 
@@ -1104,7 +1104,7 @@ class virtual algoStateBased =
 	(************************************************************)
 
 	(* Nature of the trace set *)
-	val mutable trace_set_nature = Unknown
+	val mutable trace_set_nature = StateSpace.Unknown
 	
 	
 	
@@ -1140,7 +1140,7 @@ class virtual algoStateBased =
 		| Some (Unreachable unreachable_global_locations) ->
 			(* Check whether the current location matches one of the unreachable global locations *)
 			if StateSpace.match_unreachable_global_locations unreachable_global_locations location then(
-				trace_set_nature <- Bad;
+				trace_set_nature <- StateSpace.Bad;
 			);
 		| _ -> raise (InternalError("IMITATOR currently ony implements the non-reachability-like properties."))
 

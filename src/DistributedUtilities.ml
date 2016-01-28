@@ -26,7 +26,6 @@ open AbstractModel
 open Exceptions
 open OCamlUtilities
 open ImitatorUtilities
-open Reachability
 
 
 (****************************************************************)

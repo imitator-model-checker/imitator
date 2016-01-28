@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2009/12/02
- * Last modified     : 2016/01/26
+ * Last modified     : 2016/01/28
  *
  ************************************************************)
 
@@ -490,7 +490,7 @@ let string_of_v0 model v0 =
 
 (************************************************************)
 (* Result *)
-(************************************************************)
+(************************************************************)(*
 let string_of_returned_constraint variable_names = function 
 	| Convex_constraint (linear_constraint, _) -> LinearConstraint.string_of_p_linear_constraint variable_names linear_constraint
 	
@@ -503,4 +503,4 @@ let string_of_returned_constraint variable_names = function
 	) ^ (
 		string_of_list_of_string_with_sep "\n AND NOT \n" (List.map (LinearConstraint.string_of_p_linear_constraint variable_names) k_bad)
 	)
-
+*)

@@ -25,7 +25,6 @@ open OCamlUtilities
 open Exceptions
 open ImitatorUtilities
 open Options
-open Reachability
 open DistributedUtilities
 
 exception KillIM;;

@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/12/03
- * Last modified     : 2016/01/27
+ * Last modified     : 2016/01/28
  *
  ************************************************************)
 
@@ -31,22 +31,29 @@ open Result
 (* I/O functions *)
 (************************************************************)
 
-let write_result_to_file constraint_str =
+(* Header for result files *)
+let file_header () =
+	(* Retrieve the input options *)
+	let options = Input.get_options () in
+	"(*" 
+	(* Program version *)
+	^ "\n  Result output by " ^ Constants.program_name ^ ""
+	^ "\n  Version  : " ^ (ImitatorUtilities.program_name_and_version_and_nickname_and_build())
+	^ "\n  Model    : '" ^ options#file ^ "'"
+	(* Date *)
+	^ "\n  Generated: " ^ (now()) ^ ""
+	(* Command *)
+	^ "\n  Command  : " ^ (string_of_array_of_string_with_sep " " Sys.argv)
+	^ "\n*)\n\n"
+
+
+(* Write constraint to file (from im_result) *)
+let write_constraint_to_file constraint_str =
 	(* Retrieve the input options *)
 	let options = Input.get_options () in
 	(* Prepare the string to write *)
 	let file_content =
-		(*** WARNING: duplicate code (Cartography.ml) ***)
-		"(*" 
-		(* Program version *)
-		^ "\n  Result output by " ^ Constants.program_name ^ ""
-		^ "\n  Version  : " ^ (ImitatorUtilities.program_name_and_version_and_nickname_and_build())
-		^ "\n  Model    : '" ^ options#file ^ "'"
-		(* Date *)
-		^ "\n  Generated: " ^ (now()) ^ ""
-		(* Command *)
-		^ "\n  Command  : " ^ (string_of_array_of_string_with_sep " " Sys.argv)
-		^ "\n*)\n\n"
+		file_header ()
 		(* The actual result *)
 		^ constraint_str ^ "\n"
 	in
@@ -57,12 +64,49 @@ let write_result_to_file constraint_str =
 
 
 
+(* Write result of BC to file *)
+let write_bc_result_to_file bc_result =
+	(* Retrieve the model *)
+	let model = Input.get_model() in
+	(* Retrieve the input options *)
+	let options = Input.get_options () in
+	
+	(* Convert the im_result's to string *)
+	let im_results_str = string_of_list_of_string_with_sep "\n" (
+		List.mapi (fun index abstract_im_result ->
+			(* mapi starts counting from 0, but we like starting counting from 1 *)
+			let real_index = index + 1 in
+			"\n(************************************************************)"
+			^ "\n Tile #" ^ (string_of_int real_index)
+			^ "\n\n Pi" ^ (string_of_int real_index) ^ ":"
+			^ (ModelPrinter.string_of_pi0 model abstract_im_result.reference_val)
+			^ "\n\n K" ^ (string_of_int real_index) ^ ":"
+			^ (LinearConstraint.string_of_p_convex_or_nonconvex_constraint model.variable_names abstract_im_result.result)
+			
+			(*** TODO: other statistics (number of states, transitions, etc.) ***)
+			
+			^ "\n(************************************************************)\n"
+		) bc_result.tiles
+	)
+	in
+	
+	(* Prepare the string to write *)
+	let file_content =
+		file_header ()
+		(* The actual result *)
+		^ im_results_str ^ "\n"
+	in
+	(* Write to file *)
+	let file_name = options#files_prefix ^ Constants.result_file_extension in
+	write_to_file file_name file_content;
+	print_message Verbose_standard ("\nResult written to file '" ^ file_name ^ "'.")
+
 
 
 (*------------------------------------------------------------*)
 (* Performances *)
 (*------------------------------------------------------------*)
-let print_statistics total_time reachability_graph =
+let print_statespace_statistics total_time state_space =
 	(* Retrieve the model *)
 (* 	let model = Input.get_model() in *)
 	(* Retrieve the input options *)
@@ -77,12 +121,12 @@ let print_statistics total_time reachability_graph =
 	in
 	
 	(* Speed (number of states in the graph) *)
-	let nb_states = StateSpace.nb_states reachability_graph in
+	let nb_states = StateSpace.nb_states state_space in
 	let average = (float_of_int nb_states) /. total_time in
 	print_message Verbose_standard ("States per second in the graph: " ^ (string_of_average average) ^ " (" ^ (string_of_int nb_states) ^ "/" ^ (string_of_seconds total_time) ^ ")");
 	
 	(* Speed (number of states computed, even if not kept) *)
-	let nb_gen_states = StateSpace.get_nb_gen_states reachability_graph in
+	let nb_gen_states = StateSpace.get_nb_gen_states state_space in
 	let average = (float_of_int nb_gen_states) /. total_time in
 	print_message Verbose_standard ("States computed per second: " ^ (string_of_average average) ^ " (" ^ (string_of_int nb_gen_states) ^ "/" ^ (string_of_seconds total_time) ^ ")");
 
@@ -98,7 +142,7 @@ let print_statistics total_time reachability_graph =
 		print_message Verbose_standard "Statistics on Graph";
 		print_message Verbose_standard "--------------------";
 		print_message Verbose_standard (StateSpace.get_statistics ());
-		print_message Verbose_standard (StateSpace.get_statistics_states reachability_graph);
+		print_message Verbose_standard (StateSpace.get_statistics_states state_space);
 		
 		print_message Verbose_standard "--------------------";
 		print_message Verbose_standard "Statistics on Cache";
@@ -135,6 +179,9 @@ let print_statistics total_time reachability_graph =
 
 	
 
+(************************************************************)
+(* Main function to process IMITATOR result *)
+(************************************************************)
 
 let process_result result =
 	(* Retrieve the model *)
@@ -150,7 +197,7 @@ let process_result result =
 		);
 
 		(* Print statistics *)
-		print_statistics poststar_result.computation_time poststar_result.state_space;
+		print_statespace_statistics poststar_result.computation_time poststar_result.state_space;
 		
 		(* Generate graphics *)
 		let radical = options#files_prefix in
@@ -185,22 +232,22 @@ let process_result result =
 
 		(* Write to file if requested *)
 		if options#output_result then(
-			write_result_to_file result_str;
+			write_constraint_to_file result_str;
 		);
 		
 		(* Print statistics *)
-		print_statistics efsynth_result.computation_time efsynth_result.state_space;
+		print_statespace_statistics efsynth_result.computation_time efsynth_result.state_space;
 		
 		(* Generate graphics *)
 		let radical = options#files_prefix in
 		Graphics.generate_graph efsynth_result.state_space radical;
 		
 		(* Render zones in a graphical form *)
-		let zones = [Union_of_constraints (efsynth_result.constraints, AbstractModel.Bad)] in
 		if options#cart then (
-			Graphics.cartography zones (options#files_prefix ^ "_cart_ef")
+			let zones = List.map (fun p_linear_constraint -> (LinearConstraint.Convex_p_constraint p_linear_constraint, StateSpace.Bad)) efsynth_result.constraints in
+			Graphics.draw_cartography zones (options#files_prefix ^ "_cart_ef")
 		) else (
-				print_message Verbose_high "Graphical cartography not asked: graph not generated.";
+				print_message Verbose_high "Graphical cartography not asked: not drawn.";
 		);
 		
 		(* The end *)
@@ -209,18 +256,14 @@ let process_result result =
 		
 	| IM_result im_result ->
 		(* Convert result to string *)
-		let result_str =
-			match im_result.result with
-			| LinearConstraint.Convex_p_constraint p_linear_constraint -> LinearConstraint.string_of_p_linear_constraint model.variable_names p_linear_constraint
-			| LinearConstraint.Nonconvex_p_constraint p_nnconvex_constraint -> LinearConstraint.string_of_p_nnconvex_constraint model.variable_names p_nnconvex_constraint
-		in
+		let result_str = LinearConstraint.string_of_p_convex_or_nonconvex_constraint model.variable_names im_result.result in
 
 		(* Print on terminal *)
 		print_message Verbose_standard ("\nResult:\n" ^ result_str);
 		
 		(* Write to file if requested *)
 		if options#output_result then(
-			write_result_to_file result_str;
+			write_constraint_to_file result_str;
 		);
 		
 		(* Print memory information *)
@@ -235,7 +278,7 @@ let process_result result =
 		);
 		
 		(* Print statistics *)
-		print_statistics im_result.computation_time im_result.state_space;
+		print_statespace_statistics im_result.computation_time im_result.state_space;
 
 		(* Generate graphics *)
 		(*** TODO: move inside inverse_method_gen ***)
@@ -245,34 +288,67 @@ let process_result result =
 		if options#cart then (
 			(* Render zones in a graphical form *)
 			let zones =
-				match im_result.result with
+			[im_result.result, StateSpace.Unknown] (*** TODO ***)
+(*				match im_result.result with
 				| LinearConstraint.Convex_p_constraint p_linear_constraint -> [Convex_constraint (p_linear_constraint, AbstractModel.Unknown (*** TODO ***))]
 				
 				(*** A bit a HACk here ***)
 				| LinearConstraint.Nonconvex_p_constraint p_nnconvex_constraint ->
 					let convex_constraints = LinearConstraint.p_linear_constraint_list_of_p_nnconvex_constraint p_nnconvex_constraint in
-					[Union_of_constraints (convex_constraints, AbstractModel.Unknown (*** TODO ***))]
+					[Union_of_constraints (convex_constraints, AbstractModel.Unknown (*** TODO ***))]*)
 			in
-
-			Graphics.cartography zones (options#files_prefix ^ "_cart_im")
+			Graphics.draw_cartography zones (options#files_prefix ^ "_cart_im")
 		) else (
-				print_message Verbose_high "Graphical cartography not asked: graph not generated.";
+				print_message Verbose_high "Graphical cartography not asked: not drawn.";
 		);
 
 		(* The end *)
 		()
-		
-		
-(*	| IMNonconvex_result im_result ->
-		(* Convert result to string *)
-		let result_str = LinearConstraint.string_of_p_nnconvex_constraint model.variable_names im_result.nonconvex_constraint in
 
-		(* Print on terminal *)
-		print_message Verbose_standard ("\nResult:\n" ^ result_str);
+
+
+	| BC_result bc_result ->
+		(* Store number of tiles *)
+		let nb_tiles = List.length bc_result.tiles in
+		
+		(* First, compute average number of states and transitions (for info purpose) *)
+		(*** WARNING: use int, but using NumConst (unbounded) would be smarter in case of very large state spaces ***)
+		let total_states, total_transitions = List.fold_left (
+			fun (current_sum_states, current_sum_transitions) abstract_im_result ->
+				(current_sum_states + abstract_im_result.abstract_state_space.nb_states, current_sum_transitions +  + abstract_im_result.abstract_state_space.nb_transitions)
+		) (0,0) bc_result.tiles
+		in
+		(* Compute average *)
+		let average_nb_states = (float_of_int total_states) /. (float_of_int nb_tiles) in
+		let average_nb_transitions = (float_of_int total_transitions) /. (float_of_int nb_tiles) in
+
+		
+		(* Print some information *)
+		print_message Verbose_standard ("\n**************************************************");
+		print_message Verbose_standard (" END OF THE BEHAVIORAL CARTOGRAPHY ALGORITHM");
+		
+		(*** TODO! need to access the algorithm variable... (or add info to bc_result) ***)
+(* 		print_message Verbose_standard ("Size of V0: " ^ (NumConst.string_of_numconst nb_points) ^ ""); *)
+
+		(*** TODO! need to access the algorithm variable... (or add info to bc_result) ***)
+(* 		print_message Verbose_standard ("Unsuccessful points: " ^ (string_of_int !nb_useless_points) ^ ""); *)
+
+		print_message Verbose_standard ("Number of tiles                 : " ^ (string_of_int nb_tiles) ^ "");
+		print_message Verbose_standard ("Average number of states        : " ^ (round1_float average_nb_states) ^ "");
+		print_message Verbose_standard ("Average number of transitions   : " ^ (round1_float average_nb_transitions) ^ "");
+
+		print_message Verbose_standard ("Global time spent               : " ^ (string_of_seconds bc_result.computation_time) ^ "");
+		(*** TODO: require a new counter, and a new field in bc_result ***)
+(* 		print_message Verbose_standard ("Time spent on IM                : " ^ (string_of_float (!time_spent_on_IM)) ^ " s"); *)
+	(* 	print_message Verbose_standard ("Time spent on BC only: " ^ (string_of_float (time_spent_on_BC)) ^ " s"); *)
+		(*** TODO: require a new counter, and a new field in bc_result ***)
+(* 		print_message Verbose_standard ("Time spent to compute next point: " ^ (string_of_float (counter_next_point#value)) ^ " s"); *)
+		print_message Verbose_standard ("**************************************************");
+			
 		
 		(* Write to file if requested *)
 		if options#output_result then(
-			write_result_to_file result_str;
+			write_bc_result_to_file bc_result;
 		);
 		
 		(* Print memory information *)
@@ -281,32 +357,24 @@ let process_result result =
 			print_memory_used Verbose_standard;
 		);
 		
-		print_message Verbose_low (
+		(*** TODO: BC ***)
+(*		print_message Verbose_low (
 			"Computation time for IM only: "
 			^ (string_of_seconds im_result.computation_time) ^ "."
-		);
+		);*)
 		
-		(* Print statistics *)
-		print_statistics im_result.computation_time im_result.state_space;
 
-		(* Generate graphics *)
-		(*** TODO: move inside inverse_method_gen ***)
-		let radical = options#files_prefix in
-		Graphics.generate_graph im_result.state_space radical;
-		
-		(* Render zones in a graphical form *)
-		(*** A bit a HACk here ***)
-		let convex_constraints = LinearConstraint.p_linear_constraint_list_of_p_nnconvex_constraint im_result.nonconvex_constraint in
-		let zones = [Union_of_constraints (convex_constraints, AbstractModel.Unknown (*** TODO ***))] in
 		if options#cart then (
-			Graphics.cartography zones (options#files_prefix ^ "_cart_ef")
+			(* Render zones in a graphical form *)
+			let zones = List.map (fun abstract_im_result -> (abstract_im_result.result , StateSpace.Unknown (*** TODO ***))) bc_result.tiles in
+			Graphics.draw_cartography zones (options#files_prefix ^ "_cart_bc")
 		) else (
-				print_message Verbose_high "Graphical cartography not asked: graph not generated.";
+				print_message Verbose_high "Graphical cartography not asked: not drawn.";
 		);
 
 		(* The end *)
-		()*)
-
-
-
-	| _ -> raise (InternalError ("function process_result not implemented for all cases yet"))
+		()
+		
+		
+		
+(* 	| _ -> raise (InternalError ("function process_result not implemented for all cases yet")) *)

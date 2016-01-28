@@ -7,7 +7,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Ulrich Kuehne, Etienne Andre
  * Created:       2010
- * Last modified: 2016/01/26
+ * Last modified: 2016/01/28
  *
  ****************************************************************)
  
@@ -396,8 +396,9 @@ class imitator_options =
 (* 				("-counterex", Set counterex, " Stop the analysis as soon as a bad state is discovered (work in progress). Default: false."); *)
 				
 				("-depth-limit", Int (fun i -> depth_limit := Some i), " Limits the depth of the exploration of the state space. Default: no limit.");
-				
-				("-distributed", String set_distributed, " Distributed version of the behavioral cartography.
+
+				(*** TODO: disabled for now due to refactoring IM/BC ***)
+(*				("-distributed", String set_distributed, " Distributed version of the behavioral cartography.
         Use 'no' for the non-distributed mode (default).
         Use 'static' for a static domain partitioning [ACN15].
         Use 'sequential' for a master-worker scheme with sequential point distribution [ACE14].
@@ -407,6 +408,7 @@ class imitator_options =
 				");
 				
 				("-distributedKillIM", Set distributedKillIM, " In distributed cartography, kill processes covered by other tiles [ACN15]; only works with selected distribution schemes. Default: false.");
+				*)
 				
 				("-dynamic-elimination", Set dynamic_clock_elimination, " Dynamic clock elimination [FSFMA13]. Default: false.");
 				

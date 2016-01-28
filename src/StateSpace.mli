@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2009/12/08
- * Last modified     : 2016/01/15
+ * Last modified     : 2016/01/28
  *
  ************************************************************)
 
@@ -18,7 +18,7 @@
 (* Modules *)
 (************************************************************)
 open Automaton
-open AbstractModel
+(* open AbstractModel *)
 
 
 (************************************************************)
@@ -33,6 +33,19 @@ type state = Location.global_location * LinearConstraint.px_linear_constraint
 type abstract_state = Location.global_location_index * LinearConstraint.px_linear_constraint
 
 
+
+
+(************************************************************)
+(** Nature of the tiles *)
+(************************************************************)
+(*** TODO: rename into trace set nature ***)
+type tile_nature =
+	| Good
+	| Bad
+	| Unknown
+
+
+	
 (************************************************************)
 (** Graph structure *)
 (************************************************************)
@@ -97,7 +110,7 @@ val exists_state: (state -> bool) -> state_space -> bool
 val forall_state: (state -> bool) -> state_space -> bool*)
 
 (** Find all "last" states on finite or infinite runs *)
-val last_states: abstract_model -> state_space -> state_index list 
+val last_states: AbstractModel.abstract_model -> state_space -> state_index list 
 
 (** Check if bad states are reached *)
 (* val is_bad: abstract_model -> state_space -> bool *)
@@ -146,13 +159,13 @@ val iterate_on_states : (state_index -> abstract_state -> unit) -> state_space -
 
 (*** NOTE: should NOT be defined in this module! But rather in some (yet to be created...) State.ml ***)
 
-val match_unreachable_global_locations : unreachable_global_location list -> Location.global_location -> bool
+val match_unreachable_global_locations : AbstractModel.unreachable_global_location list -> Location.global_location -> bool
 
 
 (************************************************************)
 (** Misc: tile natures *)
 (************************************************************)
-val string_of_tile_nature : AbstractModel.tile_nature -> string
+val string_of_tile_nature : tile_nature -> string
 
 
 (************************************************************)

@@ -10,7 +10,7 @@
  * Author:        Etienne Andre
  * 
  * Created:       2009/09/09
- * Last modified: 2015/10/23
+ * Last modified: 2016/01/28
  *
  ************************************************************)
 
@@ -44,12 +44,13 @@ exception String_not_found of string*)
 
 
 (*------------------------------------------------------------*)
-(* Convert a ParsingStructure.tile_nature into a AbstractModel.tile_nature *)
+(* Convert a ParsingStructure.tile_nature into a Result.tile_nature *)
 (*------------------------------------------------------------*)
+(*** TODO: this part has nothing to do with model conversion and should preferably go elsewhere... ***)
 let convert_tile_nature = function
-	| ParsingStructure.Good -> AbstractModel.Good
-	| ParsingStructure.Bad -> AbstractModel.Bad
-	| ParsingStructure.Unknown -> AbstractModel.Unknown
+	| ParsingStructure.Good -> StateSpace.Good
+	| ParsingStructure.Bad -> StateSpace.Bad
+	| ParsingStructure.Unknown -> StateSpace.Unknown
 
 
 (*------------------------------------------------------------*)
@@ -2241,7 +2242,11 @@ let abstract_model_of_parsing_structure (parsed_variable_declarations, parsed_au
 	(* Check polyhedra definition in (optional) carto mode *)
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	let well_formed_carto = ref true in
-	let parsed_constraints , (p1_min , p1_max) , (p2_min , p2_max)  = parsed_carto_definition in
+	
+	
+	
+	(*** TODO!!! reintroduce differently ***)
+(*	let parsed_constraints , (p1_min , p1_max) , (p2_min , p2_max)  = parsed_carto_definition in
 	let carto_linear_constraints = List.map (fun (parsed_convex_predicate , tile_nature) ->
 		(* Check well-formedness *)
 		if check_convex_predicate variable_names constants parsed_convex_predicate then(
@@ -2256,7 +2261,8 @@ let abstract_model_of_parsing_structure (parsed_variable_declarations, parsed_au
 			(* Return anything *)
 			LinearConstraint.p_false_constraint () , AbstractModel.Unknown
 		)
-	) parsed_constraints in
+	) parsed_constraints in*)
+	(*** TODO!!! reintroduce differently ***)
 	
 	
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -2734,7 +2740,7 @@ let abstract_model_of_parsing_structure (parsed_variable_declarations, parsed_au
 	projection = projection;
 
 	(* Optional polyhedra *)
-	carto = carto_linear_constraints , (p1_min , p1_max) , (p2_min , p2_max);
+(* 	carto = carto_linear_constraints , (p1_min , p1_max) , (p2_min , p2_max); *)
 	}
 
 	,

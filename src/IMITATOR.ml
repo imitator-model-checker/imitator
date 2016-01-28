@@ -9,7 +9,7 @@
  * 
  * File contributors : Ulrich Kühne, Étienne André
  * Created           : 2009/09/07
- * Last modified     : 2016/01/27
+ * Last modified     : 2016/01/28
  *
  ************************************************************)
 
@@ -26,7 +26,7 @@ open AbstractModel
 open Result
 open ModelPrinter
 open Options
-open Reachability
+
 
 
 (**************************************************
@@ -212,7 +212,11 @@ if options#pta2tikz then(
 );
 (* Direct cartography output *)
 if options#cartonly then(
-	print_message Verbose_standard ("Direct output of a cartography (no analysis will be run).");
+	raise (InternalError("Not implemented! "))
+
+	(*** TODO ***)
+	
+(*	print_message Verbose_standard ("Direct output of a cartography (no analysis will be run).");
 	(* Get the parameters *)
 	let constraints , (p1_min , p1_max) , (p2_min , p2_max) = model.carto in
 	(* Transform the constraint for cartography *)
@@ -229,7 +233,7 @@ if options#cartonly then(
 	Graphics.cartography constraints options#files_prefix;
 	print_message Verbose_standard ("File successfully created."); (*** TODO: add file name in a proper manner ***)
 	(* The end *)
-	terminate_program()
+	terminate_program()*)
 );
 
 
@@ -385,12 +389,14 @@ begin
 		
 		| (*Cover_cartography | *)Border_cartography ->
 		(* Behavioral cartography algorithm with full coverage *)
-			Cartography.cover_behavioral_cartography model
+(* 			Cartography.cover_behavioral_cartography model *)
+			raise (InternalError("Not implemented !!!"))
 			
 			
 		| Random_cartography nb ->
 		(* Behavioral cartography algorithm with random iterations *)
-			Cartography.random_behavioral_cartography model nb;
+(* 			Cartography.random_behavioral_cartography model nb; *)
+			raise (InternalError("Not implemented !!!"))
 
 end;
 

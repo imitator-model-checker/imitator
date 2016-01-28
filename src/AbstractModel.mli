@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2009/09/11
- * Last modified     : 2015/12/03
+ * Last modified     : 2016/01/28
  *
  ************************************************************)
 
@@ -18,7 +18,7 @@
 (* Modules *)
 (************************************************************)
 open Automaton
-open Options
+(* open Options *)
 
 
 (************************************************************)
@@ -200,16 +200,6 @@ type lu_status =
 	| PTA_U
 
 
-(************************************************************)
-(** Nature of the tiles *)
-(************************************************************)
-(*** BADPROG : nothing to do with abstract model ! ***)
-(*** TODO: rename into trace set nature ***)
-type tile_nature =
-	| Good
-	| Bad
-	| Unknown
-
 
 
 
@@ -305,7 +295,8 @@ type abstract_model = {
 	
 	(* Set of polyhedra (only used for direct cartography without running the model) *)
 	(*** BADPROG ***)
-	carto : (LinearConstraint.p_linear_constraint * tile_nature) list * (NumConst.t * NumConst.t) * (NumConst.t * NumConst.t);
+	(*** TODO: simplify this mode!!! (and remove from abstract model...) ***)
+(* 	carto : (LinearConstraint.p_linear_constraint * StateSpace.tile_nature) list * (NumConst.t * NumConst.t) * (NumConst.t * NumConst.t); *)
 }
 
 

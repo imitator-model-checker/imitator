@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/01/19
- * Last modified     : 2016/01/27
+ * Last modified     : 2016/01/28
  *
  ************************************************************)
 
@@ -96,7 +96,7 @@ class algoBCCover =
 		super#initialize_variables;
 		
 		(* Retrieve the model *)
-		let model = Input.get_model() in
+(* 		let model = Input.get_model() in *)
 		(* Retrieve the input options *)
 (* 		let options = Input.get_options () in *)
 
@@ -315,9 +315,9 @@ class algoBCCover =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Processing the result of IM *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method process_result im_result =
+	method process_result im_result reference_val =
 		(* Compute the abstraction *)
-		let abstract_im_result = abstract_im_result_of_im_result im_result in
+		let abstract_im_result = abstract_im_result_of_im_result im_result reference_val in
 		
 		(* Add to the list of tiles *)
 		im_results <- abstract_im_result :: im_results;
@@ -337,7 +337,8 @@ class algoBCCover =
 		(* Return result *)
 		BC_result {
 			(* List of tiles *)
-			tiles				= im_results;
+			(*** NOTE: reverse as each im_result was added as first element ***)
+			tiles				= List.rev im_results;
 			
 			(* Total computation time of the algorithm *)
 			computation_time	= time_from start_time;

@@ -7,7 +7,7 @@
  * Author:        Etienne Andre
  * 
  * Created:       2014/10/24
- * Last modified: 2016/01/15
+ * Last modified: 2016/01/28
  *
  ****************************************************************)
 
@@ -23,6 +23,9 @@ val is_a_power_of_2 : int -> bool
 (****************************************************************)
 (** Useful functions on float *)
 (****************************************************************)
+(** Round a float with 1 digit after comma, and convert to string *)
+val round1_float : float -> string
+
 (** Round a float with 3 digits after comma, and convert to string *)
 val round3_float : float -> string
 

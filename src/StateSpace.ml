@@ -39,6 +39,19 @@ type state = Location.global_location * LinearConstraint.px_linear_constraint
 type abstract_state = Location.global_location_index * LinearConstraint.px_linear_constraint
 
 
+
+
+(************************************************************)
+(** Nature of the tiles *)
+(************************************************************)
+(*** TODO: rename into trace set nature ***)
+type tile_nature =
+	| Good
+	| Bad
+	| Unknown
+
+
+	
 (************************************************************)
 (** Graph structure *)
 (************************************************************)

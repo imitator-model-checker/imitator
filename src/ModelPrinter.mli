@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2009/12/02
- * Last modified     : 2016/01/26
+ * Last modified     : 2016/01/28
  *
  ************************************************************)
  
@@ -33,7 +33,7 @@ val string_of_state : abstract_model -> (Location.global_location * LinearConstr
 (** Result *)
 (**************************************************)
 (*** TODO/BADPROG : Move elsewhere? ***)
-val string_of_returned_constraint : (int -> string) -> Result.returned_constraint -> string
+(* val string_of_returned_constraint : (int -> string) -> Result.returned_constraint -> string *)
 
 
 

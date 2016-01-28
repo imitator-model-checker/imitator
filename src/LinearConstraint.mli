@@ -10,7 +10,7 @@
  * Author:        Etienne Andre
  * 
  * Created:       2010/03/04
- * Last modified: 2016/01/27
+ * Last modified: 2016/01/28
  *
  ****************************************************************) 
  
@@ -505,3 +505,6 @@ val string_of_p_nnconvex_constraint : (variable -> string) -> p_nnconvex_constra
 type p_convex_or_nonconvex_constraint =
 	| Convex_p_constraint of p_linear_constraint
 	| Nonconvex_p_constraint of p_nnconvex_constraint
+
+(** Convert a p_convex_or_nonconvex_constraint into a string *)
+val string_of_p_convex_or_nonconvex_constraint : (variable -> string) -> p_convex_or_nonconvex_constraint -> string

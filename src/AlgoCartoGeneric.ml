@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/01/19
- * Last modified     : 2016/01/27
+ * Last modified     : 2016/01/28
  *
  ************************************************************)
 
@@ -49,7 +49,7 @@ type more_points =
 (************************************************************)
 (************************************************************)
 (* Convert an 'im_result' into an 'abstract_im_result' *)
-let abstract_im_result_of_im_result (im_result : im_result) : abstract_im_result =
+let abstract_im_result_of_im_result (im_result : im_result) reference_val : abstract_im_result =
 	(* First, abstract state space *)
 	let abstract_state_space = {
 		nb_states		= StateSpace.nb_states im_result.state_space;
@@ -60,11 +60,14 @@ let abstract_im_result_of_im_result (im_result : im_result) : abstract_im_result
 	
 	(* Construct the abstraction *)
 	{
+	(* Reference valuation *)
+	reference_val		= reference_val;
+
 	(* Convex constraint *)
 	result				= im_result.result;
 	
-	(* Explored state space *)
-	state_space			= abstract_state_space;
+	(* Abstracted version of the explored state space *)
+	abstract_state_space	= abstract_state_space;
 	
 	(* Nature of the state space (needed??) *)
 (* 	tile_nature			: AbstractModel.tile_nature; *)
@@ -246,9 +249,10 @@ class virtual algoCartoGeneric =
 			
 			(* Call the inverse method *)
 			let algo = new AlgoIM.algoIM in
-			let result = algo#run() in
+			let imitator_result : imitator_result = algo#run() in
 			(*** WARNING: what is this going to do, exactly? ***)
-			ResultProcessor.process_result result;
+			(*** TODO: handle file suffix, etc. ***)
+			ResultProcessor.process_result imitator_result;
 			
 			(* Get the verbose mode back *)
 			set_verbose_mode global_verbose_mode;
@@ -256,14 +260,42 @@ class virtual algoCartoGeneric =
 			(* Print some information *)
 			self#print_algo_message Verbose_low ("Processing the result by IM...");
 
+			(* Get the result *)
+			let im_result =  match imitator_result with
+				| IM_result im_result -> im_result
+				| _ -> raise (InternalError("The result of IM must be an im_result."))
+			in
+
 			(* Process the result by IM *)
-			begin
-			match result with
-			| IM_result im_result -> self#process_result im_result;
-			| _ -> raise (InternalError("The result of IM must be an im_result."));
-			end;
+			self#process_result im_result pi0;
+			
+			
+			(*** TODO: check validity of result! ***)
+			(* may not be valid if early termination for PRP without bad state, for example *)
+			
+			
+			(* Print some information *)
+			let nb_states = StateSpace.nb_states im_result.state_space in
+			let nb_transitions = StateSpace.nb_transitions im_result.state_space in
+			print_message Verbose_standard (
+				"\nK" ^ (string_of_int current_iteration) ^ " computed by " ^ algo#algorithm_name
+(* 					^ " after " ^ (string_of_int im_result.nb_iterations) ^ " iteration" ^ (s_of_int im_result.nb_iterations) ^ "" *)
+				^ " in " ^ (string_of_seconds im_result.computation_time) ^ ": "
+				^ (string_of_int nb_states) ^ " state" ^ (s_of_int nb_states)
+				^ " with "
+				^ (string_of_int nb_transitions) ^ " transition" ^ (s_of_int nb_transitions) ^ " explored.");
+
+			print_message Verbose_low ("Constraint K0 computed:");
+			print_message Verbose_standard (LinearConstraint.string_of_p_convex_or_nonconvex_constraint model.variable_names im_result.result);
+			
+			(*** TODO ***)
+(*			if model.correctness_condition <> None then(
+				print_message Verbose_medium ("This tile is " ^ (StateSpace.string_of_tile_nature im_result.tile_nature) ^ ".");
+			);*)
+
 
 			(*** TODO: check time/etc. limits ***)
+			
 			
 			(* Print some information *)
 			self#print_algo_message Verbose_low ("Computing the next point...");
@@ -271,6 +303,7 @@ class virtual algoCartoGeneric =
 			(* Get to the next point *)
 			current_point <- self#find_next_point;
 			
+			(* Iterate *)
 			current_iteration <- current_iteration + 1;
 			
 		done; (* end while more points *)
@@ -284,7 +317,7 @@ class virtual algoCartoGeneric =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Processing the result of IM *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method virtual process_result : Result.im_result -> unit
+	method virtual process_result : Result.im_result -> PVal.pval -> unit
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Method packaging the result output by the algorithm *)
