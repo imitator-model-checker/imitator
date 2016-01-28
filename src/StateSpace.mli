@@ -36,10 +36,9 @@ type abstract_state = Location.global_location_index * LinearConstraint.px_linea
 
 
 (************************************************************)
-(** Nature of the tiles *)
+(** Nature of a state space (according to some property) *)
 (************************************************************)
-(*** TODO: rename into trace set nature ***)
-type tile_nature =
+type statespace_nature =
 	| Good
 	| Bad
 	| Unknown
@@ -165,7 +164,7 @@ val match_unreachable_global_locations : AbstractModel.unreachable_global_locati
 (************************************************************)
 (** Misc: tile natures *)
 (************************************************************)
-val string_of_tile_nature : tile_nature -> string
+val string_of_statespace_nature : statespace_nature -> string
 
 
 (************************************************************)

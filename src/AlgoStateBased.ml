@@ -1121,7 +1121,10 @@ class virtual algoStateBased =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Variable initialization *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method virtual initialize_variables : unit
+	method initialize_variables =
+		trace_set_nature <- StateSpace.Unknown;
+		
+		(* The end *)
 
 	
 	

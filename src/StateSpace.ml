@@ -9,7 +9,7 @@
  * 
  * File contributors : Ulrich Kühne, Étienne André
  * Created           : 2009/12/08
- * Last modified     : 2016/01/15
+ * Last modified     : 2016/01/28
  *
  ************************************************************)
 
@@ -45,7 +45,7 @@ type abstract_state = Location.global_location_index * LinearConstraint.px_linea
 (** Nature of the tiles *)
 (************************************************************)
 (*** TODO: rename into trace set nature ***)
-type tile_nature =
+type statespace_nature =
 	| Good
 	| Bad
 	| Unknown
@@ -874,8 +874,8 @@ let match_unreachable_global_locations unreachable_global_locations location =
 (************************************************************)
 (** Misc: tile natures *)
 (************************************************************)
-(** Convert a tile_nature into a string *)
-let string_of_tile_nature = function
+(** Convert a statespace_nature into a string *)
+let string_of_statespace_nature = function
 	| Good -> "good"
 	| Bad -> "bad"
 	| Unknown -> "unknown"

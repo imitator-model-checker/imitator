@@ -54,7 +54,7 @@ class virtual algoStateBased :
 		method print_algo_message_newline : verbose_mode -> string -> unit
 		
 		(* Variable initialization (to be defined in subclasses) *)
-		method virtual initialize_variables : unit
+		method initialize_variables : unit
 		
 		(* Update the nature of the trace set *)
 		method update_trace_set_nature : StateSpace.state -> unit

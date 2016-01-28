@@ -34,7 +34,7 @@ open Result
 (*------------------------------------------------------------*)
 (* Convert a tile_index into a color for graph (actually an integer from 1 to 5) *)
 (*------------------------------------------------------------*)
-let graph_color_of_int tile_index tile_nature dotted =
+let graph_color_of_int tile_index statespace_nature dotted =
 	(* Retrieve model *)
 	let model = Input.get_model() in
 	
@@ -43,7 +43,7 @@ let graph_color_of_int tile_index tile_nature dotted =
 	(* If bad state defined *)
 	if model.correctness_condition <> None then(
 		(* Go for a good / bad coloring *)
-		match tile_nature with
+		match statespace_nature with
 		| Good -> 2 (* green *)
 		| Bad -> 1 (* red *)
 		| Unknown -> 5 (* cyan *)
@@ -69,7 +69,7 @@ let make_file_name cartography_file_prefix file_index =
 (*------------------------------------------------------------*)
 (** Draw the cartography corresponding to a list of constraints. Takes as second argument the file name prefix. *)
 (*------------------------------------------------------------*)
-let draw_cartography (returned_constraint_list : (LinearConstraint.p_convex_or_nonconvex_constraint * StateSpace.tile_nature) list) cartography_file_prefix =
+let draw_cartography (returned_constraint_list : (LinearConstraint.p_convex_or_nonconvex_constraint * StateSpace.statespace_nature) list) cartography_file_prefix =
 (* No cartography if no zone *)
 if returned_constraint_list = [] then(
 	print_message Verbose_standard ("\nNo cartography can be drawn since the list of constraints is empty.\n");
@@ -88,12 +88,12 @@ if returned_constraint_list = [] then(
 	(* Converting to convex constraints *)
 	(*** BADPROG: creating a list of singletons and lists, and then flatten ***)
 	let returned_constraint_list = List.flatten (List.map (function
-		| LinearConstraint.Convex_p_constraint p_linear_constraint, tile_nature -> [LinearConstraint.render_non_strict_p_linear_constraint p_linear_constraint , tile_nature]
-		| LinearConstraint.Nonconvex_p_constraint p_nnconvex_constraint, tile_nature ->
+		| LinearConstraint.Convex_p_constraint p_linear_constraint, statespace_nature -> [LinearConstraint.render_non_strict_p_linear_constraint p_linear_constraint , statespace_nature]
+		| LinearConstraint.Nonconvex_p_constraint p_nnconvex_constraint, statespace_nature ->
 			(* Get the convex constraints *)
 			let p_linear_constraints = LinearConstraint.p_linear_constraint_list_of_p_nnconvex_constraint p_nnconvex_constraint in
 			(* Render non-strict *)
-			List.map (fun p_linear_constraint -> LinearConstraint.render_non_strict_p_linear_constraint p_linear_constraint, tile_nature) p_linear_constraints
+			List.map (fun p_linear_constraint -> LinearConstraint.render_non_strict_p_linear_constraint p_linear_constraint, statespace_nature) p_linear_constraints
 		) returned_constraint_list
 	)  in
 	
@@ -106,7 +106,7 @@ if returned_constraint_list = [] then(
 	) returned_constraint_list
 	in*)
 	
-	(* From now on, we work with a list [(LinearConstraint.p_linear_constraint, tile_nature), ...] *)
+	(* From now on, we work with a list [(LinearConstraint.p_linear_constraint, statespace_nature), ...] *)
 
 
 (*	(*** HORRIBLE IMPERATIVE (and not tail recursive) programming !!!!! ***)
@@ -430,7 +430,7 @@ if returned_constraint_list = [] then(
 	let file_index = ref 0 in
 	let tile_index = ref 0 in
 	(* Creation of files (Daphne wrote this?) *)
-	let create_file_for_constraint k tile_nature =
+	let create_file_for_constraint k statespace_nature =
 	
 		(* Increment the file index *)
 		file_index := !file_index + 1;
@@ -470,7 +470,7 @@ if returned_constraint_list = [] then(
 			^ "\n" ^"# Generated: " ^ (now()) ^ ""
 			(* This line is used by Giuseppe Lipari: do not change without prior agreement *)
 			^ (if model.correctness_condition <> None then( 
-				"\n# Tile nature: " ^ (StateSpace.string_of_tile_nature tile_nature) ^ ""
+				"\n# Tile nature: " ^ (StateSpace.string_of_statespace_nature statespace_nature) ^ ""
 			) else "")
 		in
 		
@@ -486,8 +486,8 @@ if returned_constraint_list = [] then(
 		(* instructions to have the zones colored. If fst s = true then the zone is infinite *)
 		if fst s
 			(*** TODO : same color for one disjunctive tile ***)
-			then script_line := !script_line ^ "-m " ^ (graph_color_of_int !tile_index tile_nature true) ^ " -q 0.3 " ^ file_name ^ " "
-			else script_line := !script_line ^ "-m " ^ (graph_color_of_int !tile_index tile_nature false) ^ " -q 0.7 " ^ file_name ^ " "
+			then script_line := !script_line ^ "-m " ^ (graph_color_of_int !tile_index statespace_nature true) ^ " -q 0.3 " ^ file_name ^ " "
+			else script_line := !script_line ^ "-m " ^ (graph_color_of_int !tile_index statespace_nature false) ^ " -q 0.7 " ^ file_name ^ " "
 		;
 	in
 	
@@ -515,13 +515,13 @@ if returned_constraint_list = [] then(
 			) list_of_k
 		| NNCConstraint _ -> raise (InternalError ("NNCCs are not available everywhere yet."))
 	) new_returned_constraint_list;*)
-	List.iter (fun (p_linear_constraint, tile_nature) ->
+	List.iter (fun (p_linear_constraint, statespace_nature) ->
 		(* Test just in case ! (otherwise an exception arises *)
 		if LinearConstraint.p_is_false p_linear_constraint then(
 			print_warning " Found a false constraint when computing the cartography. Ignored."
 		)else(
 			tile_index := !tile_index + 1;
-			create_file_for_constraint p_linear_constraint tile_nature
+			create_file_for_constraint p_linear_constraint statespace_nature
 		)
 	) returned_constraint_list;
 	

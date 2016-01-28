@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/11/25
- * Last modified     : 2016/01/15
+ * Last modified     : 2016/01/28
  *
  ************************************************************)
 
@@ -58,6 +58,7 @@ class algoEFsynth =
 	(* Variable initialization *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method initialize_variables =
+		super#initialize_variables;
 		bad_constraints <- [];
 
 		(* The end *)

@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/12/04
- * Last modified     : 2016/01/27
+ * Last modified     : 2016/01/28
  *
  ************************************************************)
 
@@ -57,6 +57,8 @@ class algoIMK =
 	(* Variable initialization *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method initialize_variables =
+		super#initialize_variables;
+		
 		nb_random_selections <- 0;
 
 		(* The end *)

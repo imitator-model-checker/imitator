@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/11/23
- * Last modified     : 2016/01/19
+ * Last modified     : 2016/01/28
  *
  ************************************************************)
 
@@ -40,6 +40,11 @@ class virtual algoBFS :
 		(************************************************************)
 		(* Class methods *)
 		(************************************************************)
+
+		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+		(* Variable initialization *)
+		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+		method initialize_variables : unit
 
 		(* Set the PaTATOR termination function *)
 		method set_patator_termination_function : (unit -> unit) -> unit
