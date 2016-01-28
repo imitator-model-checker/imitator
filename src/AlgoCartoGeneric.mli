@@ -63,6 +63,15 @@ class virtual algoCartoGeneric :
 		val mutable min_bounds : NumConst.t array
 		val mutable max_bounds : NumConst.t array
 
+		(* List of im_results *)
+		val mutable im_results : Result.abstract_im_result list
+		
+(*		(* Initial p-constraint (needed to check whether points satisfy it) *)
+		val mutable init_p_constraint = LinearConstraint.p_true_constraint ()
+
+		(* Counts the points actually member of an existing constraint (hence useless) for information purpose *)
+		val mutable nb_useless_points = 0*)
+
 		
 		(************************************************************)
 		(* Class methods *)
@@ -70,14 +79,24 @@ class virtual algoCartoGeneric :
 		(* Create the initial point for the analysis *)
 		method virtual get_initial_point : more_points
 
+		
 		(* Find the next point *)
 		method virtual find_next_point : more_points
 
+		
 		(* Variable initialization (to be improved in subclasses) *)
 		method initialize_variables : unit
 		
+		
+		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+		(* Generic function returning true if a computed pi0 belongs to none of the tiles, and satisfies the init constraint. *)
+		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+		method test_pi0_uncovered : PVal.pval -> bool
+
+		
 		(* Main method to run the algorithm: virtual method to be defined in subclasses *)
 		method run : unit -> Result.imitator_result
+		
 		
 		(* Processing the result of IM *)
 		method virtual process_result : Result.im_result -> PVal.pval -> unit

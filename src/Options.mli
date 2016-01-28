@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2012/05/10
- * Last modified: 2016/01/26
+ * Last modified: 2016/01/28
  *
  ****************************************************************)
  
@@ -44,6 +44,8 @@ class imitator_options :
 		method branch_and_bound_unset : unit
 		method cart : bool
 		method cartonly : bool
+		method carto_tiles_limit : int option
+		method carto_time_limit : int option
 		method check_ippta : bool
 		method check_point : bool
 		method completeIM : bool

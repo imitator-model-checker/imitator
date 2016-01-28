@@ -42,13 +42,36 @@ type more_points =
 
 
 
+(************************************************************)
+(************************************************************)
+(* Limit type and exception *)
+(************************************************************)
+(************************************************************)
+
+type limit_reached =
+	(* No limit *)
+	| Keep_going
+
+	(* Termination due to time limit reached *)
+	| Time_limit_reached
+	
+	(* Termination due to state space depth limit reached *)
+	| Tiles_limit_reached
+	
+
+exception Limit_detected of limit_reached
+
+
 
 (************************************************************)
 (************************************************************)
 (* Class-independent functions *)
 (************************************************************)
 (************************************************************)
+
+(*------------------------------------------------------------*)
 (* Convert an 'im_result' into an 'abstract_im_result' *)
+(*------------------------------------------------------------*)
 let abstract_im_result_of_im_result (im_result : im_result) reference_val : abstract_im_result =
 	(* First, abstract state space *)
 	let abstract_state_space = {
@@ -83,7 +106,16 @@ let abstract_im_result_of_im_result (im_result : im_result) reference_val : abst
 }
 
 
+(*------------------------------------------------------------*)
+(** Check if a parameter valuation belongs to the constraint of an im_result *)
+(*------------------------------------------------------------*)
+let pi0_in_tiles pval (abstract_im_result : abstract_im_result) =
+	match abstract_im_result.result with
+	| LinearConstraint.Convex_p_constraint p_linear_constraint -> LinearConstraint.is_pi0_compatible pval#get_value p_linear_constraint
+	| LinearConstraint.Nonconvex_p_constraint p_nnconvex_constraint -> LinearConstraint.p_nnconvex_constraint_is_pi0_compatible pval#get_value p_nnconvex_constraint
 
+
+	
 
 (************************************************************)
 (************************************************************)
@@ -113,6 +145,17 @@ class virtual algoCartoGeneric =
 	(* Current iteration (number of times IM is called); used for printing only *)
 	val mutable current_iteration = 0
 	
+	(* List of im_results *)
+	val mutable im_results : abstract_im_result list = []
+	
+	(* Initial p-constraint (needed to check whether points satisfy it) *)
+	val mutable init_p_constraint = LinearConstraint.p_true_constraint ()
+
+	(* Counts the points actually member of an existing constraint (hence useless) for information purpose *)
+	val mutable nb_useless_points = 0
+	
+	(* Status of the analysis *)
+	val mutable termination_status = None
 	
 	
 	(************************************************************)
@@ -129,6 +172,9 @@ class virtual algoCartoGeneric =
 	(* Variable initialization *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method initialize_variables =
+		(* Time counter for the algorithm *)
+		start_time <- Unix.gettimeofday();
+
 		(* Retrieve the model *)
 		let model = Input.get_model () in
 		(* Retrieve the v0 *)
@@ -173,14 +219,136 @@ class virtual algoCartoGeneric =
 			;
 		done;
 
+		(* Print some information *)
+		self#print_algo_message Verbose_medium ("Number of dimensions: " ^ (string_of_int nb_dimensions));
+
+		(* Check that the cartography is not applied to 0 dimension! *)
+		if nb_dimensions = 0 then(
+			print_error "The cartography has 0 dimension in V0, and cannot be applied.";
+			abort_program();
+		);
+
+		(* Compute the initial state *)
+		let init_state = AlgoStateBased.compute_initial_state_or_abort() in
+		
+		(* Set the counter of useless points to 0 *)
+		nb_useless_points <- 0;
+
+		(* Initial constraint of the model *)
+		let _, init_px_constraint = init_state in
+		(* Hide non parameters *)
+		init_p_constraint <- LinearConstraint.px_hide_nonparameters_and_collapse init_px_constraint;
+
+		(* List of tiles *)
+		im_results <- [];
+
+		(* Status of the analysis *)
+		termination_status <- None;
+
 		(* The end *)
 		()
 	
+	
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Create the initial point for the analysis *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method virtual get_initial_point : more_points
 
+	
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Find the next point *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method virtual find_next_point : more_points
+
+
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(* Check whether the limit of the cartography has been reached, according to the analysis options *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	method private check_bc_limit =
+		(* Retrieve the input options *)
+		let options = Input.get_options () in
+		
+		(* Check all limits *)
+		
+		(* Depth limit *)
+		try(
+		begin
+		match options#carto_tiles_limit with
+			| None -> ()
+			| Some limit -> if List.length im_results >= limit then(
+				raise (Limit_detected Tiles_limit_reached)
+			)
+		end
+		;
+		(* Time limit *)
+		begin
+		match options#carto_time_limit with
+			| None -> ()
+			| Some limit -> if (time_from start_time) > (float_of_int limit) then(
+				raise (Limit_detected Time_limit_reached)
+			)
+		end
+		;
+		(* If reached here, then everything is fine: keep going *)
+		Keep_going
+		)
+		(* If exception caught, then update termination status, and return the reason *)
+		with Limit_detected reason -> reason
+
+		
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(* Generic function returning true if a computed pi0 belongs to none of the tiles, and satisfies the init constraint. *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	method test_pi0_uncovered tentative_pi0 =
+		(* Get the model *)
+		let model = Input.get_model() in
+		(* Retrieve the input options *)
+(* 		let options = Input.get_options () in *)
+
+		(* Check that the point does not belong to any constraint *)
+		if List.exists (pi0_in_tiles tentative_pi0) im_results then (
+			(* Update the number of unsuccessful points *)
+			nb_useless_points <- nb_useless_points + 1;
+			if verbose_mode_greater Verbose_medium then (
+				self#print_algo_message Verbose_medium "The following pi0 is already included in a constraint.";
+				print_message Verbose_medium (ModelPrinter.string_of_pi0 model tentative_pi0);
+			);
+			(*** TODO: could be optimized by finding the nearest multiple of tile next to the border, and directly switching to that one ***)
+			false
+			
+		(* Check that it satisfies the initial constraint *)
+		) else if not (LinearConstraint.is_pi0_compatible tentative_pi0#get_value init_p_constraint) then (
+			(* Update the number of unsuccessful points *)
+			nb_useless_points <- nb_useless_points + 1;
+			if verbose_mode_greater Verbose_medium then (
+				self#print_algo_message Verbose_medium "The following pi0 does not satisfy the initial constraint of the model.";
+				print_message Verbose_medium (ModelPrinter.string_of_pi0 model tentative_pi0);
+			);
+			false
+		(* If both checks passed, then pi0 found *)
+		)else(
+			true
+		)(*;*)
+		
+		
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(* Print warning(s) if the limit of an exploration has been reached, according to the analysis options *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	method private print_warnings_limit () =
+		match termination_status with
+			| Some BC_Regular_termination -> ()
+
+			| Some BC_Tiles_limit -> print_warning (
+				"The limit number of tiles has been computed. The exploration now stops although there may be some more points to cover."
+					(*** TODO (one day): really say whether some points are still uncovered ***)
+			)
+
+			| Some BC_Time_limit -> print_warning (
+				"The time limit for the cartography has been reached. The exploration now stops although there may be some more points to cover."
+					(*** TODO (one day): really say whether some points are still uncovered ***)
+			)
+			
+			| None -> raise (InternalError "The termination status should be set when displaying warnings concerning early termination.")
 
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -213,10 +381,14 @@ class virtual algoCartoGeneric =
 		self#print_algo_message Verbose_low ("Retrieving initial point...");
 		current_point <- self#get_initial_point;
 		
+		
 		(*** TODO : check that initial pi0 is suitable!! (could be incompatible with initial constraint) ***)
+		
+		
+		let limit_reached = ref Keep_going in
 
 		(* While there is another point to explore *)
-		while (match current_point with Some_pval _ -> true | _ -> false) do
+		while !limit_reached = Keep_going && (match current_point with Some_pval _ -> true | _ -> false) do
 		
 			(* Get the point *)
 			let pi0 = match current_point with
@@ -248,6 +420,7 @@ class virtual algoCartoGeneric =
 				set_verbose_mode Verbose_mute;
 			
 			(* Call the inverse method *)
+			(*** NOTE: the bc time limit is NOT checked inside one execution of IM ***)
 			let algo = new AlgoIM.algoIM in
 			let imitator_result : imitator_result = algo#run() in
 			(*** WARNING: what is this going to do, exactly? ***)
@@ -294,20 +467,44 @@ class virtual algoCartoGeneric =
 			);*)
 
 
-			(*** TODO: check time/etc. limits ***)
-			
-			
-			(* Print some information *)
-			self#print_algo_message Verbose_low ("Computing the next point...");
+			(* Check if the limit has been reached *)
+			(*** NOTE: the bc time limit is NOT checked inside one execution of IM ***)
+			limit_reached := self#check_bc_limit;
 
-			(* Get to the next point *)
-			current_point <- self#find_next_point;
-			
-			(* Iterate *)
-			current_iteration <- current_iteration + 1;
+			(* Only compute next point if limit not reached *)
+			if !limit_reached = Keep_going then(
+				(* Print some information *)
+				self#print_algo_message Verbose_low ("Computing the next point...");
+
+				(* Get to the next point *)
+				current_point <- self#find_next_point;
+				
+				(* Iterate *)
+				current_iteration <- current_iteration + 1;
+				
+				(* Check again the limit (especially for time, that may have elapsed) *)
+				limit_reached := self#check_bc_limit;
+			);
 			
 		done; (* end while more points *)
-		
+
+		(* Update termination condition *)
+		begin
+		match !limit_reached with
+			(* No limit: regular termination *)
+			| Keep_going -> termination_status <- Some BC_Regular_termination
+			
+			(* Termination due to the number of tiles reached *)
+			| Tiles_limit_reached -> termination_status <- Some BC_Tiles_limit
+			
+			(* Termination due to time limit reached *)
+			| Time_limit_reached -> termination_status <- Some BC_Time_limit
+		end
+		;
+	
+		(* Print some information *)
+		(*** NOTE: must be done after setting the limit (above) ***)
+		self#print_warnings_limit ();
 		
 		(* Return the algorithm-dependent result *)
 		self#compute_result

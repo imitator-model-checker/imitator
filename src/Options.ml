@@ -1,17 +1,30 @@
-(*****************************************************************
+(************************************************************
  *
- *                     IMITATOR
+ *                       IMITATOR
+ * 
+ * Laboratoire Spécification et Vérification (ENS Cachan & CNRS, France)
+ * LIPN, Université Paris 13, Sorbonne Paris Cité (France)
+ * 
+ * Module description: Options definitions
+ * 
+ * File contributors : Ulrich Kühne, Étienne André
+ * Created           : 2010
+ * Last modified     : 2016/01/28
  *
- * Options definitions
- *
- * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
- * Author:        Ulrich Kuehne, Etienne Andre
- * Created:       2010
- * Last modified: 2016/01/28
- *
- ****************************************************************)
- 
+ ************************************************************)
+
+
+
+(************************************************************)
+(* External modules *)
+(************************************************************)
 open Arg
+
+
+(************************************************************)
+(* Internal modules *)
+(************************************************************)
+open Exceptions
 open ImitatorUtilities
 
 
@@ -127,6 +140,12 @@ class imitator_options =
 		(* acyclic mode: only compare inclusion or equality of a new state with former states of the same iteration (graph depth) *)
 		val mutable acyclic = ref false 
 		
+		(* limit on number of tiles computed by a cartography *)
+		val mutable carto_tiles_limit = ref None
+		
+		(* limit on global runtime for cartography *)
+		val mutable carto_time_limit = ref None
+		
 		(* stop the analysis as soon as a counterexample is found *)
 		val mutable counterex = ref false
 
@@ -224,6 +243,8 @@ class imitator_options =
 		method branch_and_bound = !branch_and_bound
 		method branch_and_bound_unset = (branch_and_bound := false)
 		method cart = !cart
+		method carto_tiles_limit = !carto_tiles_limit
+		method carto_time_limit = !carto_time_limit
 		method cartonly = !cartonly
 		method check_ippta = !check_ippta
 		method check_point = !check_point
@@ -374,6 +395,10 @@ class imitator_options =
 (* 				Temporarily disabled (March 2014) *)
 (* 				("-bab", Set branch_and_bound, " Experimental new feature of IMITATOR, based on cost optimization (WORK IN PROGRESS). Default: 'false'"); *)
 				
+				("-cart-tiles-limit", Int (fun i -> carto_tiles_limit := Some i), " Set a maximum number of tiles computed for the cartography. Default: no limit.");
+
+				("-cart-time-limit", Int (fun i -> carto_time_limit := Some i), " Set a global time limit (in seconds) for the cartography (in which case the -time-limit option only applies to each call to IM). Default: no limit.");
+
 				("-cartonly", Unit (fun _ -> cart := true; cartonly := true; imitator_mode := Translation), " Only outputs a cartography. Default: false.");
 
 				(* 				("-dynamic", Set dynamic, "Perform the on-the-fly intersection. Defaut : 'false'"); *)
@@ -489,7 +514,7 @@ class imitator_options =
 				
 				("-sync-auto-detect", Set sync_auto_detection, " Detect automatically the synchronized actions in each automaton. Default: false (consider the actions declared by the user)");
 				
-				("-time-limit", Int (fun i -> time_limit := Some i), " Time limit in seconds. Warning: no guarantee that the program will stop exactly after the given amount of time. Default: no limit.");
+				("-time-limit", Int (fun i -> time_limit := Some i), " Time limit in seconds. Warning: no guarantee that the program will stop exactly after the given amount of time. In cartography, this limit applies to each call to IM; use -cart-time-limit for a global limit. Default: no limit.");
 				
 				("-timed", Set timed_mode, " Adds a timing information to each output of the program. Default: none.");
 				
@@ -589,6 +614,30 @@ class imitator_options =
 			(*** TODO : print the user-defined correctness condition, if any ***)
 			
 			
+			
+			(* Shortcut *)
+			let in_cartography_mode =
+				match !imitator_mode with
+				| Translation | State_space_exploration | EF_synthesis | Inverse_method -> false
+				| Cover_cartography | Border_cartography | Random_cartography _ -> true	
+			in
+			
+			
+			(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+			(* Force options *) 
+			(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+			
+			(* If a time limit is defined for BC but NOT for IM, then define it for IM too (otherwise may yield an infinite loop in IM...) *)
+			if in_cartography_mode && !carto_time_limit <> None && !time_limit = None then(
+				print_warning ("A time limit is defined for BC but not for IM: forcing time limit for IM too.");
+				let limit = match !carto_time_limit with
+					| None -> raise (InternalError ("Impossible situation in options, carto_time_limit is set at that point"))
+					| Some limit -> limit
+				in
+				time_limit := Some limit;
+			);
+			
+
 			(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 			(* Check compatibility between options *) 
 			(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -615,6 +664,18 @@ class imitator_options =
 (*			if !with_parametric_log && not !with_log then (
 				print_warning ("Parametric log was asked, but log was not asked. No log will be output.");
 			);*)
+
+			
+			(* No cart options if not in cartography *)
+			if not in_cartography_mode && !carto_tiles_limit <> None then print_warning ("A maximum number of tiles has been set, but " ^ Constants.program_name ^ " does not run in cartography mode. Ignored.");
+			if not in_cartography_mode && !carto_time_limit <> None then print_warning ("A maximum computation for the cartography has been set, but " ^ Constants.program_name ^ " does not run in cartography mode. Ignored.");
+			if not in_cartography_mode && (NumConst.neq !step NumConst.one) then
+				print_warning (Constants.program_name ^ " is not run in cartography mode; the option regarding to the step of the cartography algorithm will thus be ignored.");
+			
+			(* Options for variants of IM, but not in IM mode *)
+			if (!imitator_mode = State_space_exploration || !imitator_mode = Translation) && (!union || !pi_compatible) then
+				print_warning (Constants.program_name ^ " is run in state space exploration mode; options regarding to the variant of the inverse method will thus be ignored.");
+
 
 
 
@@ -810,13 +871,14 @@ class imitator_options =
 				print_message Verbose_medium ("No check of the constraint equality with pi0 (default).");
 
 				
-				
-			(*============================================================*)
-			(* OUTPUT *)
-			(*============================================================*)
+
+			
+			(************************************************************)
+			(* Recall output options *)
+			(************************************************************)
 
 			if !cart then
-				print_message Verbose_standard ("The cartography will be output in a graphical mode.")
+				print_message Verbose_standard ("The cartography will be drawn.")
 			else
 				print_message Verbose_medium ("No graphical output for the cartography (default).");
 			
@@ -885,36 +947,46 @@ class imitator_options =
 			else
 				print_message Verbose_medium ("No parametric description of states (default).");*)
 
-			(* LIMIT OF POST *)
+				
+			(************************************************************)
+			(* Limit options *)
+			(************************************************************)
+			
+			(* Depth limit *)
 			let _ =
 			match !depth_limit with
 				| None -> print_message Verbose_medium "Considering no limit for the depth of the state space (default)."
 				| Some limit -> print_warning ("Considering a limit of " ^ (string_of_int limit) ^ " for the depth of the state space.")
 			in ();
 
-			(* LIMIT OF POST *)
+			(* Limit of the number of states *)
 			begin
 			match !states_limit with
 				| None -> print_message Verbose_medium "Considering no limit for the number of states (default)."
 				| Some limit -> print_warning ("Considering a limit of " ^ (string_of_int limit) ^ " for the number of states.")
 			end;
 
-			(* TIME LIMIT *)
-			let _ =
+			(* Time limit *)
+			begin
 			match !time_limit with
 				| None -> print_message Verbose_medium "Considering no time limit (default)."
-				| Some limit -> print_warning ("The program will try to stop after " ^ (string_of_int limit) ^ " seconds.")
-			in ();
-
-
-			(* Verification of incompatibilities between options *)
-
-			if (!imitator_mode = State_space_exploration || !imitator_mode = Translation) && (!union || !pi_compatible) then
-				print_warning ("The program will be launched in state space exploration mode; options regarding to the variant of the inverse method will thus be ignored.");
-
-			if (!imitator_mode = State_space_exploration || !imitator_mode = Translation || !imitator_mode = Inverse_method) && (NumConst.neq !step NumConst.one) then
-				print_warning ("The program will be launched in state space exploration mode; option regarding to the step of the cartography algorithm will thus be ignored.");
-
+				| Some limit -> print_warning (Constants.program_name ^ " will try to stop after " ^ (string_of_int limit) ^ " seconds.")
+			end;
+			
+			(* Cartography: Tiles limit *)
+			begin
+			match !carto_tiles_limit with
+				| None -> print_message Verbose_medium "Considering no limit of tiles for the cartography (default)."
+				| Some limit -> print_warning (Constants.program_name ^ " will stop after the cartography computed (at most) " ^ (string_of_int limit) ^ " tiles.")
+			end;
+			
+			(* Cartography: Time limit *)
+			begin
+			match !carto_time_limit with
+				| None -> print_message Verbose_medium "Considering no time limit for the cartography (default)."
+				| Some limit -> print_warning (Constants.program_name ^ " will try to stop the cartography after " ^ (string_of_int limit) ^ " seconds.")
+			end;
+			
 
 
 

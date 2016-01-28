@@ -46,8 +46,7 @@ type bc_algorithm_termination =
 	| BC_Regular_termination
 
 	(* Termination due to time limit reached *)
-	(*** TODO: compute a percentage of the points explored ?? ***)
-	| BC_Time_limit (*of nb_unexplored_successors*)
+	| BC_Time_limit
 	
 	(* Termination due to a maximum number of tiles computed *)
 	| BC_Tiles_limit
@@ -181,6 +180,8 @@ type bc_result = {
 	
 	(* Termination *)
 	termination			: bc_algorithm_termination;
+
+	(*** TODO: compute a percentage of the points explored ?? ***)
 }
 
 

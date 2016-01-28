@@ -48,8 +48,8 @@ type limit_reached =
 exception Limit_detected of limit_reached
 
 
-	
-	
+
+
 (************************************************************)
 (************************************************************)
 (* Class definition *)
@@ -369,16 +369,16 @@ class virtual algoBFS =
 		(* Update termination condition *)
 		begin
 		match !limit_reached with
-		(* No limit: regular termination *)
-		| Keep_going -> termination_status <- Some (Regular_termination)
-		(* Termination due to time limit reached *)
-		| Time_limit_reached -> termination_status <- Some (Time_limit nb_unexplored_successors)
-		
-		(* Termination due to state space depth limit reached *)
-		| Depth_limit_reached -> termination_status <- Some (Depth_limit nb_unexplored_successors)
-		
-		(* Termination due to a number of explored states reached *)
-		| States_limit_reached -> termination_status <- Some (States_limit nb_unexplored_successors)
+			(* No limit: regular termination *)
+			| Keep_going -> termination_status <- Some (Regular_termination)
+			(* Termination due to time limit reached *)
+			| Time_limit_reached -> termination_status <- Some (Time_limit nb_unexplored_successors)
+			
+			(* Termination due to state space depth limit reached *)
+			| Depth_limit_reached -> termination_status <- Some (Depth_limit nb_unexplored_successors)
+			
+			(* Termination due to a number of explored states reached *)
+			| States_limit_reached -> termination_status <- Some (States_limit nb_unexplored_successors)
 		end
 		;
 	

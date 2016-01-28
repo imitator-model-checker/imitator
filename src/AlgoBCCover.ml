@@ -46,14 +46,6 @@ exception Stop_loop of more_points
 (************************************************************)
 
 
-(*------------------------------------------------------------*)
-(** Check if a parameter valuation belongs to the constraint of an im_result *)
-(*------------------------------------------------------------*)
-let pi0_in_tiles pval (abstract_im_result : abstract_im_result) =
-	match abstract_im_result.result with
-	| LinearConstraint.Convex_p_constraint p_linear_constraint -> LinearConstraint.is_pi0_compatible pval#get_value p_linear_constraint
-	| LinearConstraint.Nonconvex_p_constraint p_nnconvex_constraint -> LinearConstraint.p_nnconvex_constraint_is_pi0_compatible pval#get_value p_nnconvex_constraint
-
 
 	
 
@@ -68,14 +60,6 @@ class algoBCCover =
 	(************************************************************)
 	(* Class variables *)
 	(************************************************************)
-	(* List of im_results *)
-	val mutable im_results : abstract_im_result list = []
-	
-	(* Initial p-constraint (needed to check whether points satisfy it) *)
-	val mutable init_p_constraint = LinearConstraint.p_true_constraint ()
-
-	(* Counts the points actually member of an existing constraint (hence useless) for information purpose *)
-	val mutable nb_useless_points = 0
 
 	
 	
@@ -107,32 +91,6 @@ class algoBCCover =
 		(* Time counter for recording the globl time spent on BC *)
 (* 		time_spent_on_IM := 0.; *)
 
-		(* Time counter for the algorithm *)
-		start_time <- Unix.gettimeofday();
-
-		(* Print some information *)
-		self#print_algo_message Verbose_medium ("Number of dimensions: " ^ (string_of_int nb_dimensions));
-
-		(* Check that the cartography is not applied to 0 dimension! *)
-		if nb_dimensions = 0 then(
-			print_error "The cartography has 0 dimension in V0, and cannot be applied.";
-			abort_program();
-		);
-
-		(* Compute the initial state *)
-		let init_state = AlgoStateBased.compute_initial_state_or_abort() in
-		
-		(* Set the counter of useless points to 0 *)
-		nb_useless_points <- 0;
-
-		(* Initial constraint of the model *)
-		let _, init_px_constraint = init_state in
-		(* Hide non parameters *)
-		init_p_constraint <- LinearConstraint.px_hide_nonparameters_and_collapse init_px_constraint;
-
-		(* List of im_results *)
-		im_results <- [];
-
 		(* The end *)
 		()
 
@@ -148,53 +106,6 @@ class algoBCCover =
 			raise (InternalError("current_point has not been initialized yet, altough it should have at this point."))
 		| Some_pval current_point -> current_point
 
-		
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Generic function returning true if a computed pi0 belongs to none of the tiles, and satisfies the init constraint. *)
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method private test_pi0_uncovered tentative_pi0 =
-		(* Get the model *)
-		let model = Input.get_model() in
-		(* Retrieve the input options *)
-(* 		let options = Input.get_options () in *)
-
-		(* Check that the point does not belong to any constraint *)
-		if List.exists (pi0_in_tiles tentative_pi0) im_results then (
-			(* Update the number of unsuccessful points *)
-			nb_useless_points <- nb_useless_points + 1;
-			if verbose_mode_greater Verbose_medium then (
-				self#print_algo_message Verbose_medium "The following pi0 is already included in a constraint.";
-				print_message Verbose_medium (ModelPrinter.string_of_pi0 model tentative_pi0);
-			);
-			(*** TODO: could be optimized by finding the nearest multiple of tile next to the border, and directly switching to that one ***)
-			false
-			
-		(* Check that it satisfies the initial constraint *)
-		) else if not (LinearConstraint.is_pi0_compatible tentative_pi0#get_value init_p_constraint) then (
-			(* Update the number of unsuccessful points *)
-			nb_useless_points <- nb_useless_points + 1;
-			if verbose_mode_greater Verbose_medium then (
-				self#print_algo_message Verbose_medium "The following pi0 does not satisfy the initial constraint of the model.";
-				print_message Verbose_medium (ModelPrinter.string_of_pi0 model tentative_pi0);
-			);
-			false
-		(* If both checks passed, then pi0 found *)
-		)else(
-			true
-		)(*;*)
-		
-		(*** TODO: add back ***)
-(*		(*** BADPROG: this check has nothing to do in this function! put back to the BC algorithm ***)
-		(* If pi0 still not found, check time limit *)
-		if not !found_pi0 then(
-			(* Stop if the time limit has been reached *)
-			match options#time_limit with
-			| None -> ()
-			| Some limit ->
-				if (get_time()) > (float_of_int limit)
-					then time_limit_reached := true;
-		);*)
-		(*()*)
 
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
