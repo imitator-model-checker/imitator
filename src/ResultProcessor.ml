@@ -201,7 +201,7 @@ let process_result result =
 		
 		(* Generate graphics *)
 		let radical = options#files_prefix in
-		Graphics.generate_graph poststar_result.state_space radical;
+		Graphics.draw_statespace poststar_result.state_space radical;
 		
 		(* The end *)
 		()
@@ -240,7 +240,7 @@ let process_result result =
 		
 		(* Generate graphics *)
 		let radical = options#files_prefix in
-		Graphics.generate_graph efsynth_result.state_space radical;
+		Graphics.draw_statespace efsynth_result.state_space radical;
 		
 		(* Render zones in a graphical form *)
 		if options#cart then (
@@ -283,7 +283,7 @@ let process_result result =
 		(* Generate graphics *)
 		(*** TODO: move inside inverse_method_gen ***)
 		let radical = options#files_prefix in
-		Graphics.generate_graph im_result.state_space radical;
+		Graphics.draw_statespace im_result.state_space radical;
 		
 		if options#cart then (
 			(* Render zones in a graphical form *)

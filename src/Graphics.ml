@@ -580,15 +580,15 @@ let dot_colors = [
 ]
 
 (* Convert a graph to a dot file *)
-let dot_of_graph reachability_graph ~fancy =
+let dot_of_statespace state_space ~fancy =
 	(* Retrieve the model *)
 	let model = Input.get_model () in
 	(* Retrieve the input options *)
 	let options = Input.get_options () in
 	
 	(* Retrieve info from the graph *)
-	let transitions = get_transitions reachability_graph in
-	let initial_state_index = get_initial_state_index reachability_graph in
+	let transitions = get_transitions state_space in
+	let initial_state_index = get_initial_state_index state_space in
 	
 	(* Create the array of dot colors *)
 	let dot_colors = Array.of_list dot_colors in
@@ -621,7 +621,7 @@ let dot_of_graph reachability_graph ~fancy =
 (*	(* Array location_index -> location *)
 	let locations = DynArray.create () in*)
 	
-	print_message Verbose_high "\n[dot_of_graph] Starting to convert states to a graphics.";
+	print_message Verbose_high "\n[dot_of_statespace] Starting to convert states to a graphics.";
 	
 	let header =
 		(* Header *)
@@ -643,24 +643,24 @@ let dot_of_graph reachability_graph ~fancy =
 					^ "\n" ^ (ModelPrinter.string_of_pi0 model pi0)
 		)
 		^ "\n *"
-		^ "\n * " ^ (string_of_int (nb_states reachability_graph)) ^ " states and "
+		^ "\n * " ^ (string_of_int (nb_states state_space)) ^ " states and "
 			^ (string_of_int (Hashtbl.length transitions)) ^ " transitions"
 		^ "\n *" 
 		^ "\n * Program terminated " ^ (after_seconds ())
 		^ "\n************************************************************/"
 	in
 	
-	print_message Verbose_high "[dot_of_graph] Header completed.";
+	print_message Verbose_high "[dot_of_statespace] Header completed.";
 
-	print_message Verbose_high "[dot_of_graph] Retrieving states indexes...";
+	print_message Verbose_high "[dot_of_statespace] Retrieving states indexes...";
 
 	(* Retrieve the states *)
-	let state_indexes = StateSpace.all_state_indexes reachability_graph in
+	let state_indexes = StateSpace.all_state_indexes state_space in
 	
 	(* Sort the list (for better presentation in the file) *)
 	let state_indexes = List.sort (fun a b -> if a = b then 0 else if a < b then -1 else 1) state_indexes in
 	
-	print_message Verbose_high "[dot_of_graph] Starting to convert states...";
+	print_message Verbose_high "[dot_of_statespace] Starting to convert states...";
 
 	let states_description =	
 		(* Give the state indexes in comments *)
@@ -671,9 +671,9 @@ let dot_of_graph reachability_graph ~fancy =
 		(let string_states = ref "" in
 			List.iter (fun state_index ->
 			(* Retrieve location and constraint *)
-			let global_location, linear_constraint = StateSpace.get_state reachability_graph state_index in
+			let global_location, linear_constraint = StateSpace.get_state state_space state_index in
 
-			print_message Verbose_high ("[dot_of_graph] Converting state " ^ (string_of_int state_index) ^ "");
+			print_message Verbose_high ("[dot_of_statespace] Converting state " ^ (string_of_int state_index) ^ "");
 
 			(* Construct the string *)
 			string_states := !string_states
@@ -694,7 +694,7 @@ let dot_of_graph reachability_graph ~fancy =
 		^ "\n"
 	in
 	
-	print_message Verbose_high "[dot_of_graph] Starting to convert transitions...";
+	print_message Verbose_high "[dot_of_statespace] Starting to convert transitions...";
 
 	
 	let transitions_description =
@@ -720,7 +720,7 @@ let dot_of_graph reachability_graph ~fancy =
 		^ "\n"
 	in
 	
-	print_message Verbose_high "[dot_of_graph] Generating dot file...";
+	print_message Verbose_high "[dot_of_statespace] Generating dot file...";
 	
 	let dot_file =
 		"\n\ndigraph G { label=\"Trace set for
@@ -776,7 +776,7 @@ let dot_of_graph reachability_graph ~fancy =
 			in*)
 			
 			(* Get the location *)
-			let global_location = get_location reachability_graph location_index in
+			let global_location = get_location state_space location_index in
 			
 			(* Check whether is bad *)
 			let is_bad = is_bad_location global_location in
@@ -843,7 +843,7 @@ let dot_of_graph reachability_graph ~fancy =
 					^ " [color=" ^ location_color
 					^ ", style=filled];";
 			)
-			) reachability_graph;
+			) state_space;
 		!states_encoding)
 		
 		(* Version and generation time infos *)
@@ -853,7 +853,7 @@ Generation time: " ^ (now()) ^ "\"];"
 		^ "\n}"
 
 	in
-	print_message Verbose_high "[dot_of_graph] Done.";
+	print_message Verbose_high "[dot_of_statespace] Done.";
 
 	(* Dot file *)
 	header ^ dot_file,
@@ -861,6 +861,7 @@ Generation time: " ^ (now()) ^ "\"];"
 	header ^ states_description ^ transitions_description
 
 
+(** Execute the 'dot' with a source file name as argument *)
 let dot radical dot_source_file =
 	(* Retrieve the model *)
 (* 	let model = Input.get_model () in *)
@@ -912,8 +913,8 @@ let dot radical dot_source_file =
 	)
 	
 
-(* Create a jpg graph using dot *)
-let generate_graph reachability_graph radical =
+(** Draw the state space using dot *)
+let draw_statespace state_space radical =
 	(* Retrieve the model *)
 (* 	let model = Input.get_model () in *)
 	(* Retrieve the input options *)
@@ -921,7 +922,7 @@ let generate_graph reachability_graph radical =
 	
 	(* Do not write if no dot AND no log *)
 	if options#output_trace_set || options#with_log then (
-		let dot_model, states = dot_of_graph reachability_graph ~fancy:options#fancy in
+		let dot_model, states = dot_of_statespace state_space ~fancy:options#fancy in
 		
 		dot radical dot_model;
 		

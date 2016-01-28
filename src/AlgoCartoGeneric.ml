@@ -416,20 +416,23 @@ class virtual algoCartoGeneric =
 			let global_verbose_mode = get_verbose_mode() in
 			
 			(* Prevent the verbose messages (except in verbose medium, high or total) *)
+			(*------------------------------------------------------------*)
 			if not (verbose_mode_greater Verbose_medium) then
 				set_verbose_mode Verbose_mute;
-			
+						
 			(* Call the inverse method *)
 			(*** NOTE: the bc time limit is NOT checked inside one execution of IM ***)
 			let algo = new AlgoIM.algoIM in
 			let imitator_result : imitator_result = algo#run() in
+
 			(*** WARNING: what is this going to do, exactly? ***)
 			(*** TODO: handle file suffix, etc. ***)
 			ResultProcessor.process_result imitator_result;
 			
 			(* Get the verbose mode back *)
 			set_verbose_mode global_verbose_mode;
-			
+			(*------------------------------------------------------------*)
+
 			(* Print some information *)
 			self#print_algo_message Verbose_low ("Processing the result by IM...");
 
