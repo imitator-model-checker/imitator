@@ -48,9 +48,9 @@ let file_header () =
 
 
 (* Write constraint to file (from im_result) *)
-let write_constraint_to_file constraint_str =
+let write_constraint_to_file file_name constraint_str =
 	(* Retrieve the input options *)
-	let options = Input.get_options () in
+(* 	let options = Input.get_options () in *)
 	(* Prepare the string to write *)
 	let file_content =
 		file_header ()
@@ -58,18 +58,17 @@ let write_constraint_to_file constraint_str =
 		^ constraint_str ^ "\n"
 	in
 	(* Write to file *)
-	let file_name = options#files_prefix ^ Constants.result_file_extension in
 	write_to_file file_name file_content;
 	print_message Verbose_standard ("\nResult written to file '" ^ file_name ^ "'.")
 
 
 
 (* Write result of BC to file *)
-let write_bc_result_to_file bc_result =
+let write_bc_result_to_file file_name bc_result =
 	(* Retrieve the model *)
 	let model = Input.get_model() in
 	(* Retrieve the input options *)
-	let options = Input.get_options () in
+(* 	let options = Input.get_options () in *)
 	
 	(* Convert the im_result's to string *)
 	let im_results_str = string_of_list_of_string_with_sep "\n" (
@@ -97,7 +96,6 @@ let write_bc_result_to_file bc_result =
 		^ im_results_str ^ "\n"
 	in
 	(* Write to file *)
-	let file_name = options#files_prefix ^ Constants.result_file_extension in
 	write_to_file file_name file_content;
 	print_message Verbose_standard ("\nResult written to file '" ^ file_name ^ "'.")
 
@@ -183,11 +181,20 @@ let print_statespace_statistics total_time state_space =
 (* Main function to process IMITATOR result *)
 (************************************************************)
 
-let process_result result =
+(** Process the result of IMITATOR. The 2nd optional argument is the file name prefix (otherwise options#files_prefix is used). *)
+let process_result result prefix_option =
 	(* Retrieve the model *)
 	let model = Input.get_model() in
 	(* Retrieve the input options *)
 	let options = Input.get_options () in
+	
+	(* Define the file prefix for all outputs *)
+	let file_prefix = match prefix_option with
+		(* Use the user-defined prefix *)
+		| Some prefix -> prefix
+		(* Otherwise: by default use the model file prefix *)
+		| None -> options#files_prefix
+	in
 	
 	match result with
 	| PostStar_result poststar_result ->
@@ -199,8 +206,8 @@ let process_result result =
 		(* Print statistics *)
 		print_statespace_statistics poststar_result.computation_time poststar_result.state_space;
 		
-		(* Generate graphics *)
-		let radical = options#files_prefix in
+		(* Draw state space *)
+		let radical = file_prefix ^ "-statespace" in
 		Graphics.draw_statespace poststar_result.state_space radical;
 		
 		(* The end *)
@@ -232,20 +239,21 @@ let process_result result =
 
 		(* Write to file if requested *)
 		if options#output_result then(
-			write_constraint_to_file result_str;
+			let file_name = file_prefix ^ Constants.result_file_extension in
+			write_constraint_to_file file_name result_str;
 		);
 		
 		(* Print statistics *)
 		print_statespace_statistics efsynth_result.computation_time efsynth_result.state_space;
 		
-		(* Generate graphics *)
-		let radical = options#files_prefix in
+		(* Draw state space *)
+		let radical = file_prefix ^ "-statespace" in
 		Graphics.draw_statespace efsynth_result.state_space radical;
 		
 		(* Render zones in a graphical form *)
 		if options#cart then (
 			let zones = List.map (fun p_linear_constraint -> (LinearConstraint.Convex_p_constraint p_linear_constraint, StateSpace.Bad)) efsynth_result.constraints in
-			Graphics.draw_cartography zones (options#files_prefix ^ "_cart_ef")
+			Graphics.draw_cartography zones (file_prefix ^ "_cart_ef")
 		) else (
 				print_message Verbose_high "Graphical cartography not asked: not drawn.";
 		);
@@ -263,7 +271,8 @@ let process_result result =
 		
 		(* Write to file if requested *)
 		if options#output_result then(
-			write_constraint_to_file result_str;
+			let file_name = file_prefix ^ Constants.result_file_extension in
+			write_constraint_to_file file_name result_str;
 		);
 		
 		(* Print memory information *)
@@ -280,9 +289,9 @@ let process_result result =
 		(* Print statistics *)
 		print_statespace_statistics im_result.computation_time im_result.state_space;
 
-		(* Generate graphics *)
+		(* Draw state space *)
 		(*** TODO: move inside inverse_method_gen ***)
-		let radical = options#files_prefix in
+		let radical = file_prefix ^ "-statespace" in
 		Graphics.draw_statespace im_result.state_space radical;
 		
 		if options#cart then (
@@ -297,7 +306,7 @@ let process_result result =
 					let convex_constraints = LinearConstraint.p_linear_constraint_list_of_p_nnconvex_constraint p_nnconvex_constraint in
 					[Union_of_constraints (convex_constraints, AbstractModel.Unknown (*** TODO ***))]*)
 			in
-			Graphics.draw_cartography zones (options#files_prefix ^ "_cart_im")
+			Graphics.draw_cartography zones (file_prefix ^ "_cart_im")
 		) else (
 				print_message Verbose_high "Graphical cartography not asked: not drawn.";
 		);
@@ -348,7 +357,8 @@ let process_result result =
 		
 		(* Write to file if requested *)
 		if options#output_result then(
-			write_bc_result_to_file bc_result;
+			let file_name = file_prefix ^ Constants.result_file_extension in
+			write_bc_result_to_file file_name bc_result;
 		);
 		
 		(* Print memory information *)
@@ -367,7 +377,7 @@ let process_result result =
 		if options#cart then (
 			(* Render zones in a graphical form *)
 			let zones = List.map (fun abstract_im_result -> (abstract_im_result.result , StateSpace.Unknown (*** TODO ***))) bc_result.tiles in
-			Graphics.draw_cartography zones (options#files_prefix ^ "_cart_bc")
+			Graphics.draw_cartography zones (file_prefix ^ "_cart_bc")
 		) else (
 				print_message Verbose_high "Graphical cartography not asked: not drawn.";
 		);

@@ -321,7 +321,7 @@ begin
 			(*** WARNING: work in progress here ***)
 			let algo = new AlgoPostStar.algoPostStar in
 			let result = algo#run() in
-			ResultProcessor.process_result result;
+			ResultProcessor.process_result result None;
 			(*** WARNING: work in progress here ***)
 			
 (* 			Reachability.full_state_space_exploration model; *)
@@ -332,7 +332,7 @@ begin
 			(*** WARNING: work in progress here ***)
 			let algo = new AlgoEFsynth.algoEFsynth in
 			let result = algo#run() in
-			ResultProcessor.process_result result;
+			ResultProcessor.process_result result None;
 			(*** WARNING: work in progress here ***)
 
 (* 			Reachability.ef_synthesis model *)
@@ -346,7 +346,7 @@ begin
 				(*** WARNING: work in progress here ***)
 				let algo = new AlgoIMK.algoIMK in
 				let result = algo#run() in
-				ResultProcessor.process_result result;
+				ResultProcessor.process_result result None;
 				(*** WARNING: work in progress here ***)
 			else
 			if options#efim then
@@ -356,7 +356,7 @@ begin
 				(*** WARNING: work in progress here ***)
 				let algo = new AlgoPRP.algoPRP in
 				let result = algo#run() in
-				ResultProcessor.process_result result;
+				ResultProcessor.process_result result None;
 				(*** WARNING: work in progress here ***)
 				)
 			else
@@ -366,7 +366,7 @@ begin
 				(*** WARNING: work in progress here ***)
 				let algo = new AlgoIMunion.algoIMunion in
 				let result = algo#run() in
-				ResultProcessor.process_result result;
+				ResultProcessor.process_result result None;
 				(*** WARNING: work in progress here ***)
 				)
 				else(
@@ -374,7 +374,7 @@ begin
 				(*** WARNING: work in progress here ***)
 				let algo = new AlgoIM.algoIM in
 				let result = algo#run() in
-				ResultProcessor.process_result result;
+				ResultProcessor.process_result result None;
 				(*** WARNING: work in progress here ***)
 			)
 
@@ -383,7 +383,7 @@ begin
 			(*** WARNING: work in progress here ***)
 			let algo = new AlgoBCCover.algoBCCover in
 			let result = algo#run() in
-			ResultProcessor.process_result result;
+			ResultProcessor.process_result result None;
 			(*** WARNING: work in progress here ***)
 		
 		

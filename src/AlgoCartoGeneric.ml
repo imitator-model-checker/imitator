@@ -425,9 +425,9 @@ class virtual algoCartoGeneric =
 			let algo = new AlgoIM.algoIM in
 			let imitator_result : imitator_result = algo#run() in
 
-			(*** WARNING: what is this going to do, exactly? ***)
-			(*** TODO: handle file suffix, etc. ***)
-			ResultProcessor.process_result imitator_result;
+			(** Create auxiliary files with the proper file prefix, if requested *)
+			let file_prefix = options#files_prefix ^ "-" ^ (string_of_int current_iteration) in
+			ResultProcessor.process_result imitator_result (Some file_prefix);
 			
 			(* Get the verbose mode back *)
 			set_verbose_mode global_verbose_mode;

@@ -9,9 +9,9 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/12/03
- * Last modified     : 2015/12/03
+ * Last modified     : 2016/01/28
  *
  ************************************************************)
 
-
-val process_result : Result.imitator_result -> unit
+(** Process the result of IMITATOR. The 2nd optional argument is the file name prefix (otherwise options#files_prefix is used). *)
+val process_result : Result.imitator_result -> string option -> unit
