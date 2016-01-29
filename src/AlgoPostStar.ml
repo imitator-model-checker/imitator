@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/11/25
- * Last modified     : 2016/01/28
+ * Last modified     : 2016/01/29
  *
  ************************************************************)
 
@@ -123,9 +123,15 @@ class algoPostStar =
 			"State space exploration completed " ^ (after_seconds ()) ^ "."
 		);
 
-		(* The tile nature is good if 1) it is not bad, and 2) the analysis terminated normally *)
+		(* Get the termination status *)
+		 let termination_status = match termination_status with
+			| None -> raise (InternalError "Termination status not set in EFsynth.compute_result")
+			| Some status -> status
+		in
+
+		(* The state space nature is good if 1) it is not bad, and 2) the analysis terminated normally *)
 		let statespace_nature =
-			if statespace_nature = StateSpace.Unknown && termination_status = Some Regular_termination then StateSpace.Good
+			if statespace_nature = StateSpace.Unknown && termination_status = Regular_termination then StateSpace.Good
 			(* Otherwise: unchanged *)
 			else statespace_nature
 		in
@@ -143,11 +149,7 @@ class algoPostStar =
 			computation_time	= time_from start_time;
 			
 			(* Termination *)
-			termination			= 
-				match termination_status with
-				| None -> raise (InternalError "Termination status not set in PostStar.compute_result")
-				| Some status -> status
-			;
+			termination			= termination_status;
 		}
 	
 (************************************************************)

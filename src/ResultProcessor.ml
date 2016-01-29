@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/12/03
- * Last modified     : 2016/01/28
+ * Last modified     : 2016/01/29
  *
  ************************************************************)
 
@@ -35,25 +35,63 @@ open Result
 let file_header () =
 	(* Retrieve the input options *)
 	let options = Input.get_options () in
-	"(*" 
+	    "(************************************************************" 
 	(* Program version *)
-	^ "\n  Result output by " ^ Constants.program_name ^ ""
-	^ "\n  Version  : " ^ (ImitatorUtilities.program_name_and_version_and_nickname_and_build())
-	^ "\n  Model    : '" ^ options#file ^ "'"
+	^ "\n * Result output by " ^ Constants.program_name ^ ""
+	^ "\n * Version  : " ^ (ImitatorUtilities.program_name_and_version_and_nickname_and_build())
+	^ "\n * Model    : '" ^ options#file ^ "'"
 	(* Date *)
-	^ "\n  Generated: " ^ (now()) ^ ""
+	^ "\n * Generated: " ^ (now()) ^ ""
 	(* Command *)
-	^ "\n  Command  : " ^ (string_of_array_of_string_with_sep " " Sys.argv)
-	^ "\n*)\n\n"
+	^ "\n * Command  : " ^ (string_of_array_of_string_with_sep " " Sys.argv)
+	^ "\n ************************************************************)\n\n"
 
 
-(* Write constraint to file (from im_result) *)
+(* Write an ef_synth result to the result file *)
+(*** NOTE: this part should be modified with care, as external tools calling IMITATOR may use this syntax ***)
+let write_efsynth_result_to_file file_name efsynth_result =
+	(* Retrieve the model *)
+	let model = Input.get_model() in
+	(* Retrieve the input options *)
+(* 	let options = Input.get_options () in *)
+
+	(* Convert the constraint to a string *)
+	let result_str = string_of_list_of_string_with_sep "\n OR \n" (List.map (LinearConstraint.string_of_p_linear_constraint model.variable_names) efsynth_result.constraints) in
+
+	(* Prepare the string to write *)
+	let file_content =
+		(* 1) Header *)
+		file_header ()
+		
+		(* 2) The actual result *)
+		(* begin delimiter *)
+		^ "\nBEGIN CONSTRAINT\n"
+		^ result_str ^ ""
+		(* end delimiter *)
+		^ "\nEND CONSTRAINT\n"
+		
+		(* 3) Some statistics *)
+		^ "\n------------------------------------------------------------"
+		^ "\nNumber of states       : " ^ (string_of_int (StateSpace.nb_states efsynth_result.state_space))
+			(*** TODO: other statistics (number of states, transitions, etc.) ***)
+		^ "\n------------------------------------------------------------"
+	in
+	
+	(* Write to file *)
+	write_to_file file_name file_content;
+	print_message Verbose_standard ("\nResult written to file '" ^ file_name ^ "'.")
+
+
+
+	(* Write constraint to file (from im_result) *)
+(*** TODO: remove ***)
 let write_constraint_to_file file_name constraint_str =
 	(* Retrieve the input options *)
 (* 	let options = Input.get_options () in *)
 	(* Prepare the string to write *)
 	let file_content =
 		file_header ()
+			(*** TODO: other statistics (number of states, transitions, etc.) ***)
 		(* The actual result *)
 		^ constraint_str ^ "\n"
 	in
@@ -218,11 +256,13 @@ let process_result result prefix_option =
 		
 	| EFsynth_result efsynth_result ->
 		
-		(* Convert result to string *)
-		let result_str = string_of_list_of_string_with_sep "\n OR \n" (List.map (LinearConstraint.string_of_p_linear_constraint model.variable_names) efsynth_result.constraints) in
 
 		(* Print the result *)
 		if verbose_mode_greater Verbose_standard then(
+			(* Convert result to string *)
+			(*** NOTE: this conversion to string is duplicate, since it will again be converted in write_efsynth_result_to_file; but it not sure wether both operations are done, in addition they are not extremely time consuming, and they are not part of the computation time anyway *)
+			let result_str = string_of_list_of_string_with_sep "\n OR \n" (List.map (LinearConstraint.string_of_p_linear_constraint model.variable_names) efsynth_result.constraints) in
+			
 			print_message Verbose_standard ("\nFinal constraint such that the property is *violated* (" ^ (string_of_int (List.length efsynth_result.constraints)) ^ " constraint" ^ (s_of_int (List.length efsynth_result.constraints)) ^ "): ");
 			print_message Verbose_standard (result_str);
 		);
@@ -240,7 +280,7 @@ let process_result result prefix_option =
 		(* Write to file if requested *)
 		if options#output_result then(
 			let file_name = file_prefix ^ Constants.result_file_extension in
-			write_constraint_to_file file_name result_str;
+			write_efsynth_result_to_file file_name efsynth_result;
 		);
 		
 		(* Print statistics *)

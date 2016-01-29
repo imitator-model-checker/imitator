@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/11/23
- * Last modified     : 2016/01/28
+ * Last modified     : 2016/01/29
  *
  ************************************************************)
 
@@ -49,6 +49,30 @@ type bc_algorithm_termination =
 	
 
 (************************************************************)
+(** Soudness/completeness of the constraints *)
+(************************************************************)
+type constraint_soundness =
+	(* Constraint strictly included in the real result *)
+(* 	| Constraint_under *)
+	
+	(* Constraint included in or equal to the real result *)
+	| Constraint_maybe_under
+	
+	(* Exact result *)
+	| Constraint_exact
+	
+	(* Constraint equal to or larger than the real result *)
+	| Constraint_maybe_over
+	
+	(* Constraint strictly larger than the real result *)
+(* 	| Constraint_over *)
+
+	(* Impossible to compare the constraint with the original result *)
+	(*** NOTE: technically it used by variants of IM where the intersection with the real result is not null ***)
+	| Constraint_maybe_invalid
+
+
+(************************************************************)
 (** General result for the IMITATOR algorithms *)
 (************************************************************)
 
@@ -84,6 +108,9 @@ type efsynth_result = {
 	(* Total computation time of the algorithm *)
 	computation_time	: float;
 	
+	(* Soudndness of the result *)
+	soundness			: constraint_soundness;
+	
 	(* Termination *)
 	termination			: bfs_algorithm_termination;
 }
@@ -106,30 +133,12 @@ type im_result = {
 	(* Total computation time of the algorithm *)
 	computation_time	: float;
 	
+	(* Soudndness of the result *)
+	soundness			: constraint_soundness;
+	
 	(* Termination *)
 	termination			: bfs_algorithm_termination;
 }
-
-(*(* Variants of IM with a non-convex constraint as result *)
-type imnonconvex_result = {
-	(* Convex constraint *)
-	nonconvex_constraint: LinearConstraint.p_nnconvex_constraint;
-	
-	(* Explored state space *)
-	state_space			: StateSpace.state_space;
-	
-	(* Nature of the state space (needed??) *)
-(* 	tile_nature			: tile_nature; *)
-	
-	(* Number of random selections of pi-incompatible inequalities performed *)
-	nb_random_selections: int;
-	
-	(* Total computation time of the algorithm *)
-	computation_time	: float;
-	
-	(* Termination *)
-	termination			: bfs_algorithm_termination;
-}*)
 
 
 (*------------------------------------------------------------*)

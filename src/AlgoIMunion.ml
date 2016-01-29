@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/01/08
- * Last modified     : 2016/01/27
+ * Last modified     : 2016/01/29
  *
  ************************************************************)
 
@@ -138,12 +138,22 @@ class algoIMunion =
 			"Successfully terminated " ^ (after_seconds ()) ^ "."
 		);
 
-		(* The tile nature is good if 1) it is not bad, and 2) the analysis terminated normally *)
+		(* Get the termination status *)
+		 let termination_status = match termination_status with
+			| None -> raise (InternalError "Termination status not set in EFsynth.compute_result")
+			| Some status -> status
+		in
+
+		(* The state space nature is good if 1) it is not bad, and 2) the analysis terminated normally *)
+		(*** NOTE: unsure of this computation (if it has any meaning for this algorithm anyway) ***)
 		let statespace_nature =
-			if statespace_nature = StateSpace.Unknown && termination_status = Some Regular_termination then StateSpace.Good
+			if statespace_nature = StateSpace.Unknown && termination_status = Regular_termination then StateSpace.Good
 			(* Otherwise: unchanged *)
 			else statespace_nature
 		in
+
+		(* Constraint is exact if termination is normal, unknown otherwise (on the one hand, pi-incompatible inequalities (that would restrain the constraint) may be missing, and on the other hand union of good states (that would enlarge the constraint) may be missing too) *)
+		let soundness = if termination_status = Regular_termination then Constraint_exact else Constraint_maybe_invalid in
 
 		(* Return result *)
 		IM_result
@@ -163,12 +173,11 @@ class algoIMunion =
 			(* Total computation time of the algorithm *)
 			computation_time	= time_from start_time;
 			
+			(* Soudndness of the result *)
+			soundness			= soundness;
+	
 			(* Termination *)
-			termination			= 
-				match termination_status with
-				| None -> raise (InternalError "Termination status not set in IMunion.compute_result")
-				| Some status -> status
-			;
+			termination			= termination_status;
 		}
 	
 (************************************************************)

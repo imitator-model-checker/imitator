@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/01/06
- * Last modified     : 2016/01/27
+ * Last modified     : 2016/01/29
  *
  ************************************************************)
 
@@ -105,12 +105,21 @@ class algoIM =
 			"Successfully terminated " ^ (after_seconds ()) ^ "."
 		);
 
-		(* The tile nature is good if 1) it is not bad, and 2) the analysis terminated normally *)
+		(* Get the termination status *)
+		 let termination_status = match termination_status with
+			| None -> raise (InternalError "Termination status not set in EFsynth.compute_result")
+			| Some status -> status
+		in
+
+		(* The state space nature is good if 1) it is not bad, and 2) the analysis terminated normally *)
 		let statespace_nature =
-			if statespace_nature = StateSpace.Unknown && termination_status = Some Regular_termination then StateSpace.Good
+			if statespace_nature = StateSpace.Unknown && termination_status = Regular_termination then StateSpace.Good
 			(* Otherwise: unchanged *)
 			else statespace_nature
 		in
+		
+		(* Constraint is exact if termination is normal, possibly over-approximated otherwise (as there may be pi-incompatible inequalities missing, and good states inequalities to add to the intersection also missing) *)
+		let soundness = if termination_status = Regular_termination then Constraint_exact else Constraint_maybe_over in
 
 		(* Return result *)
 		IM_result
@@ -130,12 +139,11 @@ class algoIM =
 			(* Total computation time of the algorithm *)
 			computation_time	= time_from start_time;
 			
+			(* Soudndness of the result *)
+			soundness			= soundness;
+	
 			(* Termination *)
-			termination			= 
-				match termination_status with
-				| None -> raise (InternalError "Termination status not set in IM.compute_result")
-				| Some status -> status
-			;
+			termination			= termination_status;
 		}
 	
 (************************************************************)

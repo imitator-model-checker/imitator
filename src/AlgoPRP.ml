@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/01/11
- * Last modified     : 2016/01/15
+ * Last modified     : 2016/01/29
  *
  ************************************************************)
 
@@ -271,6 +271,30 @@ class algoPRP =
 			"Successfully terminated " ^ (after_seconds ()) ^ "."
 		);
 
+		(* Get the termination status *)
+		 let termination_status = match termination_status with
+			| None -> raise (InternalError "Termination status not set in EFsynth.compute_result")
+			| Some status -> status
+		in
+
+		(* The state space nature is good if 1) it is not bad, and 2) the analysis terminated normally;
+			It is bad if any bad state was met. *)
+		let statespace_nature =
+			if statespace_nature = StateSpace.Unknown && termination_status = Regular_termination then StateSpace.Good
+			(* Otherwise: unchanged *)
+			else statespace_nature
+		in
+		
+		(* Constraint is... *)
+		let soundness =
+			(* EXACT if termination is normal, whatever the state space nature is *)
+			if termination_status = Regular_termination then Constraint_exact
+			(* POSSIBLY UNDERAPPROXIMATED if state space nature is bad and termination is not normal *)
+			else if statespace_nature = StateSpace.Bad then Constraint_maybe_under
+			(* INVALID if state space nature is good and termination is not normal *)
+			else Constraint_maybe_invalid
+		in
+
 		(* Return result *)
 		IM_result
 		{
@@ -281,7 +305,7 @@ class algoPRP =
 			state_space			= state_space;
 			
 			(* Nature of the state space *)
-			statespace_nature	= StateSpace.Unknown (*** TODO ***);
+			statespace_nature	= statespace_nature;
 			
 			(* Number of random selections of pi-incompatible inequalities performed *)
 			nb_random_selections= nb_random_selections;
@@ -289,12 +313,11 @@ class algoPRP =
 			(* Total computation time of the algorithm *)
 			computation_time	= time_from start_time;
 			
+			(* Soudndness of the result *)
+			soundness			= soundness;
+	
 			(* Termination *)
-			termination			= 
-				match termination_status with
-				| None -> raise (InternalError "Termination status not set in PRP.compute_result")
-				| Some status -> status
-			;
+			termination			= termination_status;
 		}
 	
 (************************************************************)

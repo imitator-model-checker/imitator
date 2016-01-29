@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/11/25
- * Last modified     : 2016/01/28
+ * Last modified     : 2016/01/29
  *
  ************************************************************)
 
@@ -98,10 +98,10 @@ class algoEFsynth =
 			(* Will the state be added to the list of new states (the successors of which will be computed)? *)
 			let to_be_added = ref true in
 			
-			(* If synthesis / EFIM: add the constraint to the list of successful constraints if this corresponds to a bad location *)
+			(* If synthesis / PRP: add the constraint to the list of successful constraints if this corresponds to a bad location *)
 			begin
 			match model.correctness_condition with
-			| None -> raise (InternalError("[EF-synthesis/EFIM] A correctness property must be defined to perform EF-synthesis or EFIM. This should have been checked before."))
+			| None -> raise (InternalError("A correctness property must be defined to perform EF-synthesis or PRP. This should have been checked before."))
 			| Some (Unreachable unreachable_global_locations) ->
 				
 				(* Check whether the current location matches one of the unreachable global locations *)
@@ -194,14 +194,23 @@ class algoEFsynth =
 		
 		(*** TODO: compute as well *good* zones, depending whether the analysis was exact, or early termination occurred ***)
 		
+		(* Get the termination status *)
+		 let termination_status = match termination_status with
+			| None -> raise (InternalError "Termination status not set in EFsynth.compute_result")
+			| Some status -> status
+		in
+
 		(* The tile nature is good if 1) it is not bad, and 2) the analysis terminated normally *)
 		let statespace_nature =
-			if statespace_nature = StateSpace.Unknown && termination_status = Some Regular_termination then StateSpace.Good
+			if statespace_nature = StateSpace.Unknown && termination_status = Regular_termination then StateSpace.Good
 			(* Otherwise: unchanged *)
 			else statespace_nature
 		in
-
 		
+		(* Constraint is exact if termination is normal, possibly under-approximated otherwise *)
+		let soundness = if termination_status = Regular_termination then Constraint_exact else Constraint_maybe_under in
+
+		(* Return the result *)
 		EFsynth_result
 		{
 			(* List of constraints ensuring EF location *)
@@ -216,12 +225,11 @@ class algoEFsynth =
 			(* Total computation time of the algorithm *)
 			computation_time	= time_from start_time;
 			
+			(* Soudndness of the result *)
+			soundness			= soundness;
+	
 			(* Termination *)
-			termination			= 
-				match termination_status with
-				| None -> raise (InternalError "Termination status not set in EFsynth.compute_result")
-				| Some status -> status
-			;
+			termination			= termination_status;
 		}
 	
 (************************************************************)
