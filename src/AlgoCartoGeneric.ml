@@ -259,6 +259,12 @@ class virtual algoCartoGeneric =
 	
 	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(** Return a new instance of the algorithm to be iteratively called (typically IM or PRP) *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	method virtual algorithm_instance : AlgoIMK.algoIMK
+
+		
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Create the initial point for the analysis *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method virtual get_initial_point : more_points
@@ -433,9 +439,9 @@ class virtual algoCartoGeneric =
 			if not (verbose_mode_greater Verbose_medium) then
 				set_verbose_mode Verbose_mute;
 						
-			(* Call the inverse method *)
-			(*** NOTE: the bc time limit is NOT checked inside one execution of IM ***)
-			let algo = new AlgoIM.algoIM in
+			(* Call the algorithm to be iterated on (typically IM or PRP) *)
+			(*** NOTE: the bc time limit is NOT checked inside one execution of the algorithm to be iterated (but also note that the max execution time of the algorithm to be iterated is set to that of BC, in the Options pre-processing) ***)
+			let algo = self#algorithm_instance in
 			let imitator_result : imitator_result = algo#run() in
 
 			(** Create auxiliary files with the proper file prefix, if requested *)

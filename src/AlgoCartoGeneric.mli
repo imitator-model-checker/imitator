@@ -86,6 +86,10 @@ class virtual algoCartoGeneric :
 		(************************************************************)
 		(* Class methods *)
 		(************************************************************)
+		(** Return a new instance of the algorithm to be iteratively called (typically IM or PRP) *)
+		method virtual algorithm_instance : AlgoIMK.algoIMK
+
+		
 		(* Create the initial point for the analysis *)
 		method virtual get_initial_point : more_points
 

@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/01/19
- * Last modified     : 2016/01/28
+ * Last modified     : 2016/01/29
  *
  ************************************************************)
 
@@ -25,6 +25,9 @@ open AbstractModel
 open Result
 open AlgoCartoGeneric
 
+open AlgoBFS
+open AlgoIMK
+open AlgoIM
 
 (************************************************************)
 (************************************************************)
@@ -139,9 +142,16 @@ class algoBCCover =
 		(* If exception: found a point! *)
 		) with Found_point point -> Some point
 
+      
+      
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(** Return a new instance of the algorithm to be iteratively called (typically IM or PRP) *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	method algorithm_instance =
+		(* Create a new instance of IM *)
+		new AlgoIM.algoIM
 
-      
-      
+	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Create the initial point for the analysis *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
