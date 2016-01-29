@@ -4,10 +4,10 @@
  * 
  * LIPN, Université Paris 13, Sorbonne Paris Cité (France)
  * 
- * Module description: Classical Behavioral Cartography with exhaustive coverage of integer points [AF10]
+ * Module description: Parametric reachability preservation-based cartography (PRPC) [ALNS15]
  * 
  * File contributors : Étienne André
- * Created           : 2016/01/19
+ * Created           : 2016/01/29
  * Last modified     : 2016/01/29
  *
  ************************************************************)
@@ -16,15 +16,15 @@
 (************************************************************)
 (* Modules *)
 (************************************************************)
-open AlgoCartoGeneric
+open AlgoBCCover
 
 
 
 (************************************************************)
 (* Class definition *)
 (************************************************************)
-class algoBCCover :
-	object inherit algoCartoGeneric
+class algoPRPC :
+	object inherit algoBCCover
 		(************************************************************)
 		(* Class variables *)
 		(************************************************************)
@@ -35,19 +35,19 @@ class algoBCCover :
 		(************************************************************)
 		method algorithm_name : string
 		
-		method initialize_variables : unit
+(*		method initialize_variables : unit*)
 		
 		(** Return a new instance of the algorithm to be iteratively called (typically IM or PRP) *)
 		method algorithm_instance : AlgoIMK.algoIMK
 
-		(* Create the initial point for the analysis *)
+(*		(* Create the initial point for the analysis *)
 		method get_initial_point : more_points
 
 		(* Find the next point *)
 		method find_next_point : more_points
 
 		(* Processing the result of IM *)
-		method process_result : Result.im_result -> PVal.pval -> unit
+		method process_result : Result.im_result -> PVal.pval -> unit*)
 
 		method compute_result : Result.imitator_result
 end

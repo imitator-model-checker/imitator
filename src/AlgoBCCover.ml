@@ -25,13 +25,10 @@ open AbstractModel
 open Result
 open AlgoCartoGeneric
 
-open AlgoBFS
-open AlgoIMK
-open AlgoIM
 
 (************************************************************)
 (************************************************************)
-(* Internal exception *)
+(* Internal exceptions *)
 (************************************************************)
 (************************************************************)
 (* To stop a loop when a point is found *)

@@ -9,7 +9,7 @@
  * 
  * File contributors : Ulrich Kühne, Étienne André
  * Created           : 2009/09/07
- * Last modified     : 2016/01/28
+ * Last modified     : 2016/01/29
  *
  ************************************************************)
 
@@ -312,28 +312,25 @@ if options#imitator_mode = Inverse_method && options#branch_and_bound then(
 
 begin
 	match options#imitator_mode with
-		| Translation -> raise (InternalError "Translation cannot be executed here; program should already have terminated at this point.");
-
+		
+		(*** TODO: rewrite this part in a more generic manner ***)
+		
 		
 		(* Exploration *)
 		| State_space_exploration
 			->
-			(*** WARNING: work in progress here ***)
 			let algo = new AlgoPostStar.algoPostStar in
 			let result = algo#run() in
 			ResultProcessor.process_result result None;
-			(*** WARNING: work in progress here ***)
 			
 (* 			Reachability.full_state_space_exploration model; *)
 			
 		(* Synthesis *)
 		| EF_synthesis 
 			->
-			(*** WARNING: work in progress here ***)
 			let algo = new AlgoEFsynth.algoEFsynth in
 			let result = algo#run() in
 			ResultProcessor.process_result result None;
-			(*** WARNING: work in progress here ***)
 
 (* 			Reachability.ef_synthesis model *)
 
@@ -341,50 +338,46 @@ begin
 		(* Inverse Method *)
 		| Inverse_method ->
 			(*** HACK to call the good class ***)
-			(*** TODO: rewrite this part in a more generic manner ***)
 			if options#pi_compatible then
-				(*** WARNING: work in progress here ***)
 				let algo = new AlgoIMK.algoIMK in
 				let result = algo#run() in
 				ResultProcessor.process_result result None;
-				(*** WARNING: work in progress here ***)
 			else
 			if options#efim then
 				(
-(*					(*** WARNING!!! Why a dedicated function here, whereas for BC+EFIM this function is not (?) called? ***)
-				Reachability.efim model;*)
-				(*** WARNING: work in progress here ***)
 				let algo = new AlgoPRP.algoPRP in
 				let result = algo#run() in
 				ResultProcessor.process_result result None;
-				(*** WARNING: work in progress here ***)
 				)
 			else
 			if options#union then
 				(
 (* 				Reachability.inverse_method model; *)
-				(*** WARNING: work in progress here ***)
 				let algo = new AlgoIMunion.algoIMunion in
 				let result = algo#run() in
 				ResultProcessor.process_result result None;
-				(*** WARNING: work in progress here ***)
 				)
 				else(
 				(* Classical IM *)
-				(*** WARNING: work in progress here ***)
 				let algo = new AlgoIM.algoIM in
 				let result = algo#run() in
 				ResultProcessor.process_result result None;
-				(*** WARNING: work in progress here ***)
 			)
 
 
 		| Cover_cartography ->
-			(*** WARNING: work in progress here ***)
-			let algo = new AlgoBCCover.algoBCCover in
-			let result = algo#run() in
-			ResultProcessor.process_result result None;
-			(*** WARNING: work in progress here ***)
+			(* PRPC *)
+			if options#efim then(
+				let algo = new AlgoPRPC.algoPRPC in
+				let result = algo#run() in
+				ResultProcessor.process_result result None;
+			
+			(* Regular cartography *)
+			)else(
+				let algo = new AlgoBCCover.algoBCCover in
+				let result = algo#run() in
+				ResultProcessor.process_result result None;
+			)
 		
 		
 		| (*Cover_cartography | *)Border_cartography ->
@@ -397,6 +390,8 @@ begin
 		(* Behavioral cartography algorithm with random iterations *)
 (* 			Cartography.random_behavioral_cartography model nb; *)
 			raise (InternalError("Not implemented !!!"))
+
+		| Translation -> raise (InternalError "Translation cannot be executed here; program should already have terminated at this point.");
 
 end;
 
