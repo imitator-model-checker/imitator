@@ -79,6 +79,28 @@ let verbose_string_of_soundness = function
 	| Constraint_maybe_invalid -> "The validity of this constraint cannot be assessed"
 
 
+let string_of_coverage = function
+	(* Full coverage in all dimensions, including rational points *)
+	| Coverage_full -> "full"
+
+	(* At least all integers are covered, rationals perhaps not *)
+	| Coverage_integer_complete -> "integer-complete"
+
+	(* No indication of coverage *)
+	| Coverage_unknown -> "unknown"
+
+
+let verbose_string_of_coverage = function
+	(* Full coverage in all dimensions, including rational points *)
+	| Coverage_full -> "The entire input parameter domain has been covered by tiles."
+
+	(* At least all integers are covered, rationals perhaps not *)
+	| Coverage_integer_complete -> "All integer points of the input parameter domain have been covered by tiles; rational points may have been covered too (not evaluated)."
+
+	(* No indication of coverage *)
+	| Coverage_unknown -> "The coverage of the input parameter domain is probably incomplete and cannot be evaluated."
+
+
 (* Header for result files *)
 let file_header () =
 	(* Retrieve the input options *)
@@ -240,26 +262,21 @@ let general_bc_statistics bc_result =
 	(* Compute average *)
 	let average_nb_states = (float_of_int total_states) /. (float_of_int nb_tiles) in
 	let average_nb_transitions = (float_of_int total_transitions) /. (float_of_int nb_tiles) in
-
-	(*** TODO! need to access the algorithm variable... (or add info to bc_result) ***)
-(* 		print_message Verbose_standard ("Size of V0: " ^ (NumConst.string_of_numconst nb_points) ^ ""); *)
-
-	(*** TODO! need to access the algorithm variable... (or add info to bc_result) ***)
-(* 		print_message Verbose_standard ("Unsuccessful points: " ^ (string_of_int !nb_useless_points) ^ ""); *)
-
-
-	(*** TODO: require a new counter, and a new field in bc_result ***)
-(* 		print_message Verbose_standard ("Time spent on IM                : " ^ (string_of_float (!time_spent_on_IM)) ^ " s"); *)
-(* 	print_message Verbose_standard ("Time spent on BC only: " ^ (string_of_float (time_spent_on_BC)) ^ " s"); *)
-	(*** TODO: require a new counter, and a new field in bc_result ***)
-(* 		print_message Verbose_standard ("Time spent to compute next point: " ^ (string_of_float (counter_next_point#value)) ^ " s"); *)
+	
+	(* Then: compute the total time to run IM *)
+	let time_im = List.fold_left (fun current_sum (abstract_im_result : Result.abstract_im_result) -> current_sum +. abstract_im_result.computation_time) 0. bc_result.tiles in
 
        ""
-    ^   "Computation time              : " ^ (string_of_seconds bc_result.computation_time)
-	^ "\nNumber of tiles               : " ^ (string_of_int nb_tiles)
+	^   "Number of integers in v0      : " ^ (NumConst.string_of_numconst bc_result.size_v0)
+	^ "\nNumber of tiles computed      : " ^ (string_of_int nb_tiles)
+	^ "\nCoverage                      : " ^ (string_of_coverage bc_result.coverage)
+	^ "\nTermination                   : " ^ (string_of_bc_algorithm_termination bc_result.termination)
+	^ "\nNumber of unsuccessful points : " ^ (string_of_int bc_result.nb_unsuccessful_points)
 	^ "\nAverage number of states      : " ^ (round1_float average_nb_states)
 	^ "\nAverage number of transitions : " ^ (round1_float average_nb_transitions)
-	^ "\nTermination                   : " ^ (string_of_bc_algorithm_termination bc_result.termination)
+    ^ "\nComputation time              : " ^ (string_of_seconds bc_result.computation_time)
+	^ "\nComputation time (IM)         : " ^ (string_of_seconds time_im)
+	^ "\nComputation time (find point) : " ^ (string_of_seconds bc_result.find_point_time)
 
 		
 (* Write result of BC to file *)
@@ -559,11 +576,15 @@ let process_result result prefix_option =
 
 	| BC_result bc_result ->
 		(* Print some information *)
-		print_message Verbose_standard ("\n**************************************************");
-		print_message Verbose_standard (" END OF THE BEHAVIORAL CARTOGRAPHY ALGORITHM");
-		print_message Verbose_standard ("" ^ general_bc_statistics bc_result);
-		print_message Verbose_standard ("**************************************************");
-			
+		if verbose_mode_greater Verbose_standard then(
+			print_message Verbose_standard ("\n**************************************************");
+			print_message Verbose_standard (" END OF THE BEHAVIORAL CARTOGRAPHY ALGORITHM");
+			print_message Verbose_standard ("" ^ general_bc_statistics bc_result);
+			print_message Verbose_standard ("**************************************************");
+		
+			print_message Verbose_standard ("\n" ^ (verbose_string_of_coverage bc_result.coverage));
+		);
+		
 		(* Print memory information *)
 		if verbose_mode_greater Verbose_standard then(
 			print_newline();

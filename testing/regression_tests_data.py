@@ -1158,12 +1158,13 @@ Number of random selections   : 0
 			} # end BC file
 			, 
 			{'file': 'flipflop.res' , 'content' : """
-Number of tiles               : 8
+Number of integers in v0      : 644
+Number of tiles computed      : 8
+Coverage                      : integer-complete
+Termination                   : regular termination
+Number of unsuccessful points : 636
 Average number of states      : 15.1
 Average number of transitions : 14.1
-Termination                   : regular termination
-------------------------------------------------------------
-
 """
 			} # end BC file
 			, 

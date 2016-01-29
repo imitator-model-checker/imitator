@@ -100,7 +100,7 @@ let abstract_im_result_of_im_result (im_result : im_result) reference_val : abst
 	
 	(* Total computation time of the algorithm *)
 	computation_time	= im_result.computation_time;
-	
+		
 	(* Soundness of the result *)
 	soundness			= im_result.soundness;
 	
@@ -154,9 +154,12 @@ class virtual algoCartoGeneric =
 	(* Initial p-constraint (needed to check whether points satisfy it) *)
 	val mutable init_p_constraint = LinearConstraint.p_true_constraint ()
 
-	(* Counts the points actually member of an existing constraint (hence useless) for information purpose *)
-	val mutable nb_useless_points = 0
+	(* Counts the points actually member of an existing constraint for information purpose *)
+	val mutable nb_unsuccessful_points = 0
 	
+	(* Counter tracking the computation time to look for points *)
+	val find_next_point_counter = new Counter.counter
+
 	(* Status of the analysis *)
 	val mutable termination_status = None
 	
@@ -235,7 +238,10 @@ class virtual algoCartoGeneric =
 		let init_state = AlgoStateBased.compute_initial_state_or_abort() in
 		
 		(* Set the counter of useless points to 0 *)
-		nb_useless_points <- 0;
+		nb_unsuccessful_points <- 0;
+		
+		(* Initialize the counter *)
+		find_next_point_counter#init;
 
 		(* Initial constraint of the model *)
 		let _, init_px_constraint = init_state in
@@ -311,7 +317,7 @@ class virtual algoCartoGeneric =
 		(* Check that the point does not belong to any constraint *)
 		if List.exists (pi0_in_tiles tentative_pi0) im_results then (
 			(* Update the number of unsuccessful points *)
-			nb_useless_points <- nb_useless_points + 1;
+			nb_unsuccessful_points <- nb_unsuccessful_points + 1;
 			if verbose_mode_greater Verbose_medium then (
 				self#print_algo_message Verbose_medium "The following pi0 is already included in a constraint.";
 				print_message Verbose_medium (ModelPrinter.string_of_pi0 model tentative_pi0);
@@ -322,7 +328,7 @@ class virtual algoCartoGeneric =
 		(* Check that it satisfies the initial constraint *)
 		) else if not (LinearConstraint.is_pi0_compatible tentative_pi0#get_value init_p_constraint) then (
 			(* Update the number of unsuccessful points *)
-			nb_useless_points <- nb_useless_points + 1;
+			nb_unsuccessful_points <- nb_unsuccessful_points + 1;
 			if verbose_mode_greater Verbose_medium then (
 				self#print_algo_message Verbose_medium "The following pi0 does not satisfy the initial constraint of the model.";
 				print_message Verbose_medium (ModelPrinter.string_of_pi0 model tentative_pi0);
@@ -382,7 +388,11 @@ class virtual algoCartoGeneric =
 
 		(* Retrieve the first point *)
 		self#print_algo_message Verbose_low ("Retrieving initial point...");
+		(* Count! *)
+		find_next_point_counter#start;
 		current_point <- self#get_initial_point;
+		(* Count! *)
+		find_next_point_counter#stop;
 		
 		
 		(*** TODO : check that initial pi0 is suitable!! (could be incompatible with initial constraint) ***)
@@ -482,8 +492,12 @@ class virtual algoCartoGeneric =
 				(* Print some information *)
 				self#print_algo_message Verbose_low ("Computing the next point...");
 
+				(* Count! *)
+				find_next_point_counter#start;
 				(* Get to the next point *)
 				current_point <- self#find_next_point;
+				(* Count! *)
+				find_next_point_counter#stop;
 				
 				(* Iterate *)
 				current_iteration <- current_iteration + 1;

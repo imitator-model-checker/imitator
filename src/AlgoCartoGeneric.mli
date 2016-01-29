@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/01/19
- * Last modified     : 2016/01/28
+ * Last modified     : 2016/01/29
  *
  ************************************************************)
 
@@ -59,6 +59,9 @@ class virtual algoCartoGeneric :
 		(* Number of dimensions *)
 		val mutable nb_dimensions : int
 		
+		(* Number of points in V0 (slightly approximated) *)
+		val mutable nb_points : NumConst.t
+
 		(* Min & max bounds for the parameters *)
 		val mutable min_bounds : NumConst.t array
 		val mutable max_bounds : NumConst.t array
@@ -68,10 +71,14 @@ class virtual algoCartoGeneric :
 		
 (*		(* Initial p-constraint (needed to check whether points satisfy it) *)
 		val mutable init_p_constraint = LinearConstraint.p_true_constraint ()
+*)
 
-		(* Counts the points actually member of an existing constraint (hence useless) for information purpose *)
-		val mutable nb_useless_points = 0*)
+		(* Counts the points actually member of an existing constraint for information purpose *)
+		val mutable nb_unsuccessful_points : int
 
+		(* Counter tracking the computation time to look for points *)
+		val find_next_point_counter : Counter.counter
+		
 		(* Status of the analysis *)
 		val mutable termination_status : Result.bc_algorithm_termination option
 

@@ -5,7 +5,7 @@
  * Laboratoire Spécification et Vérification (ENS Cachan & CNRS, France)
  * LIPN, Université Paris 13, Sorbonne Paris Cité (France)
  * 
- * Module description: result output by IMITATOR
+ * Module description: description of the result output by IMITATOR
  * 
  * File contributors : Étienne André
  * Created           : 2015/11/23
@@ -70,6 +70,20 @@ type constraint_soundness =
 	(* Impossible to compare the constraint with the original result *)
 	(*** NOTE: technically it used by variants of IM where the intersection with the real result is not null ***)
 	| Constraint_maybe_invalid
+
+
+(************************************************************)
+(** Coverage of the cartography *)
+(************************************************************)
+type bc_coverage =
+	(* Full coverage in all dimensions, including rational points *)
+	| Coverage_full
+
+	(* At least all integers are covered, rationals perhaps not *)
+	| Coverage_integer_complete
+
+	(* No indication of coverage *)
+	| Coverage_unknown
 
 
 (************************************************************)
@@ -183,11 +197,24 @@ type abstract_im_result = {
 
 (* Result for BC and variants *)
 type bc_result = {
+	(* Number of points in V0 *)
+	(*** NOTE: not technically part of the result, but useful to have it here *)
+	size_v0				: NumConst.t;
+	
 	(* List of tiles *)
 	tiles				: abstract_im_result list;
 	
 	(* Total computation time of the algorithm *)
 	computation_time	: float;
+	
+	(* Computation time to look for points *)
+	find_point_time		: float;
+	
+	(* Number of points on which IM could not be called because already covered *)
+	nb_unsuccessful_points: int;
+	
+	(* Evaluation of the coverage of V0 by tiles computed by the cartography *)
+	coverage			: bc_coverage;
 	
 	(* Termination *)
 	termination			: bc_algorithm_termination;
