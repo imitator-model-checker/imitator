@@ -140,7 +140,7 @@ class algoIMunion =
 
 		(* Get the termination status *)
 		 let termination_status = match termination_status with
-			| None -> raise (InternalError "Termination status not set in EFsynth.compute_result")
+			| None -> raise (InternalError "Termination status not set in IMunion.compute_result")
 			| Some status -> status
 		in
 
