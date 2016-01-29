@@ -9,7 +9,7 @@
  * 
  * File contributors : Ulrich Kühne, Étienne André
  * Created           : 2010
- * Last modified     : 2016/01/28
+ * Last modified     : 2016/01/29
  *
  ************************************************************)
 
@@ -87,14 +87,23 @@ class imitator_options =
 		(* prefix for output files *)
 		val mutable files_prefix = ref ""
 		
+		(* plot cartography for BC *)
+		val mutable output_bc_cart = ref false
+		
+		(* Output result for BC to a file *)
+		val mutable output_bc_result = ref false
+		
 		(* min/max values for the cartography *)
 		val mutable output_cart_x_min = ref None
 		val mutable output_cart_x_max = ref None
 		val mutable output_cart_y_min = ref None
 		val mutable output_cart_y_max = ref None
 
-		(* Result output to a file *)
+		(* Output result to a file *)
 		val mutable output_result = ref false
+		
+		(* In cartography mode, output all tiles to files *)
+		val mutable output_tiles_files = ref false
 
 		(* Gives statistics on number of calls *)
 		val mutable statistics = ref false
@@ -268,11 +277,14 @@ class imitator_options =
 		method merge_before = !merge_before
 		method no_time_elapsing = !no_time_elapsing
 		method no_random = !no_random
+		method output_bc_cart = !output_bc_cart
+		method output_bc_result = !output_bc_result
 		method output_cart_x_min = !output_cart_x_min
 		method output_cart_x_max = !output_cart_x_max
 		method output_cart_y_min = !output_cart_y_min
 		method output_cart_y_max = !output_cart_y_max
 		method output_result = !output_result
+		method output_tiles_files = !output_tiles_files
 		method pi_compatible = !pi_compatible
 		method precomputepi0 = !precomputepi0
 		method pta2clp = !pta2clp
@@ -475,11 +487,13 @@ class imitator_options =
 
 (* 				("-output-parametric-states", Set with_parametric_log, " Adds the elimination of the clock variables to the constraints in the description of all reachable states. Default: false."); *)
 
-				("-output-prefix", Set_string files_prefix, " Sets the prefix for output files. Default: [model].");
+				("-output-prefix", Set_string files_prefix, " Set the prefix for output files. Default: [model].");
 				
-				("-output-result", Set output_result, " Writes the result to a file. Default: false.");
+				("-output-result", Set output_result, " Write the result to a file. Default: false.");
 				
-				("-output-states", Set with_log, " Generation of the description of all reachable states in a file. Default: false.");
+				("-output-states", Set with_log, " Generate the description of all reachable states in a file. Default: false.");
+				
+				("-output-tiles-files", Set output_tiles_files, " In cartography, generate the required files for each tile (works together with -output-cart, -output-result). Default: false.");
 				
 				("-output-trace-set", Set output_trace_set, " Output trace set under a graphical form (using 'dot'). Default: false.");
 				
@@ -587,9 +601,10 @@ class imitator_options =
 
 			
 			
-			
-			
+
+		(************************************************************)		
 		(* Recall options and print info *)
+		(************************************************************)		
 		method recall() =
 			(* File *)
 			print_message Verbose_standard ("Model: " ^ !file);
@@ -613,7 +628,9 @@ class imitator_options =
 
 			(*** TODO : print the user-defined correctness condition, if any ***)
 			
-			
+			(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+			(* Some useful variables *)
+			(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 			
 			(* Shortcut *)
 			let in_cartography_mode =
@@ -636,6 +653,31 @@ class imitator_options =
 				in
 				time_limit := Some limit;
 			);
+			
+			
+			(* Handling BC tiles files output *)
+			if in_cartography_mode then(
+				(* Case cartograpy output requested *)
+				if !cart then(
+					(* Enable cartography for BC *)
+					output_bc_cart := true;
+					(* Disable cartography for instances unless requested *)
+					if not !output_tiles_files then cart := false
+				);
+			
+				(* Case result output requested *)
+				if !output_result then(
+					(* Enable result for BC *)
+					output_bc_result := true;
+					(* Disable cartography for instances unless requested *)
+					if not !output_tiles_files then output_result := false
+				);
+			
+			);
+			
+			
+			
+			(*** TODO: warning if output_tiles_files but no cartography ***)
 			
 
 			(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)

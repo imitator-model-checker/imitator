@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2012/05/10
- * Last modified: 2016/01/28
+ * Last modified: 2016/01/29
  *
  ****************************************************************)
  
@@ -69,11 +69,14 @@ class imitator_options :
 		method merge_before : bool
 		method no_random : bool
 		method no_time_elapsing : bool
+		method output_bc_cart : bool
+		method output_bc_result : bool
 		method output_cart_x_min : int option
 		method output_cart_x_max : int option
 		method output_cart_y_min : int option
 		method output_cart_y_max : int option
 		method output_result : bool
+		method output_tiles_files : bool
 		method pi0file : string
 		method pi_compatible : bool
 		method precomputepi0 : bool

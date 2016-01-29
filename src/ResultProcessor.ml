@@ -570,19 +570,14 @@ let process_result result prefix_option =
 			print_memory_used Verbose_standard;
 		);
 		
-		(* Write to file if requested *)
-		if options#output_result then(
+		(* Write to file if requested for BC *)
+		if options#output_bc_result then(
 			let file_name = file_prefix ^ Constants.result_file_extension in
 			write_bc_result_to_file file_name bc_result;
 		);
 		
-		(*** TODO: BC ***)
-(*		print_message Verbose_low (
-			"Computation time for IM only: "
-			^ (string_of_seconds im_result.computation_time) ^ "."
-		);*)
-		
-		if options#cart then (
+		(* If cartography required for BC *)
+		if options#output_bc_cart then (
 			(* Render zones in a graphical form *)
 			let zones = List.map (fun abstract_im_result -> (abstract_im_result.result, abstract_im_result.statespace_nature)) bc_result.tiles in
 			Graphics.draw_cartography zones (file_prefix ^ "_cart_bc")
@@ -595,4 +590,4 @@ let process_result result prefix_option =
 		
 		
 		
-(* 	| _ -> raise (InternalError ("function process_result not implemented for all cases yet")) *)
+(* 	| _ -> raise (InternalError ("function process_result not implemented for all cases")) *)
