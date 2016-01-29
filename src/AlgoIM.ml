@@ -78,7 +78,10 @@ class algoIM =
 	(* Method packaging the result output by the algorithm *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method compute_result =
-		(* Method used here: intersection of all p-constraints *)
+		(* Retrieve the input options *)
+		let options = Input.get_options () in
+		
+		(*** NOTE: Method used here: intersection of all p-constraints ***)
 		(* Alternative methods would have been: 1) on-the-fly intersection (everytime a state is met) or 2) intersection of all final states, i.e., member of a loop, or deadlock states *)
 
 		(* Create the result *)
@@ -118,8 +121,17 @@ class algoIM =
 			else statespace_nature
 		in
 		
-		(* Constraint is exact if termination is normal, possibly over-approximated otherwise (as there may be pi-incompatible inequalities missing, and good states inequalities to add to the intersection also missing) *)
-		let soundness = if termination_status = Regular_termination then Constraint_exact else Constraint_maybe_over in
+		(* Constraint is... *)
+		let soundness = 
+			(* EXACT if termination is normal and no random selections and no incl and no merge were performed *)
+			if termination_status = Regular_termination && nb_random_selections = 0 && not options#inclusion && not options#merge then Constraint_exact
+			(* UNDER-APPROXIMATED if termination is normal and random selections and no incl and no merge were performed  were performed *)
+			else if termination_status = Regular_termination && nb_random_selections > 0 && not options#inclusion && not options#merge then Constraint_maybe_under
+			(* OVER-APPROXIMATED if no random selections were performed and either termination is not normal or merging was used or state inclusion was used *)
+			else if nb_random_selections = 0 && (termination_status <> Regular_termination || options#inclusion || options#merge) then Constraint_maybe_over
+			(* UNKNOWN otherwise *)
+			else Constraint_maybe_invalid
+		in
 
 		(* Return result *)
 		IM_result

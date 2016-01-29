@@ -142,7 +142,8 @@ for test_case in tests:
 
 	# Print something
 	print_to_log('')
-	print_to_log('************************************************************')
+	print_to_log('')
+	print_to_log('############################################################')
 	print_to_log(' BENCHMARK ' + str(benchmark_id))
 	print_to_log(' purpose : ' + test_case['purpose'])
 	print_to_log('')
@@ -162,8 +163,13 @@ for test_case in tests:
 
 	# Launch!
 	#os.system(cmd)
-	# BUG here: the output is printed AT THE TOP OF logfile, instead of at the right location... anyway I will try to fix that later (FIXME)
+	# NOTE: flushing avoids to mix between results of IMITATOR, and text printed by this script
+	logfile.flush()
 	subprocess.call(cmd, stdout=logfile, stderr=logfile)
+	logfile.flush()
+	
+	# Files to remove
+	files_to_remove = []
 	
 	# Check the expectations
 	expectation_id = 1
@@ -203,9 +209,10 @@ for test_case in tests:
 					print_to_log("\n" + content + "\n\n")
 			# Close file
 			#close (myfile)
-			# Delete file
-			os.remove(output_file)
-			# TODO: remove all expected output files AFTER the end of the test case; otherwise, if several tests are made in the same file, it won't work
+			
+			# Add file to list of files to remove if not already present
+			if not output_file in files_to_remove:
+				files_to_remove.append(output_file)
 
 		# Increment the expectation id
 		expectation_id += 1
@@ -213,6 +220,10 @@ for test_case in tests:
 		# One more test case
 		test_case_id += 1
 		
+	# Remove all output files
+	for my_file in files_to_remove:
+		os.remove(my_file)
+	
 	# If all test cases passed, increment the number of passed benchmarks
 	if passed:
 		passed_benchmarks += 1
@@ -227,7 +238,8 @@ for test_case in tests:
 # THE END
 #************************************************************
 print_to_log('')
-print_to_log('************************************************************')
+print_to_log('')
+print_to_log('############################################################')
 
 # NOTE: ugly...
 total_benchmarks = benchmark_id - 1

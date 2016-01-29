@@ -41,11 +41,11 @@ type bc_algorithm_termination =
 	(* Fixpoint-like termination *)
 	| BC_Regular_termination
 
-	(* Termination due to time limit reached *)
-	| BC_Time_limit
-	
 	(* Termination due to a maximum number of tiles computed *)
 	| BC_Tiles_limit
+	
+	(* Termination due to time limit reached *)
+	| BC_Time_limit
 	
 
 (************************************************************)
@@ -108,7 +108,7 @@ type efsynth_result = {
 	(* Total computation time of the algorithm *)
 	computation_time	: float;
 	
-	(* Soudndness of the result *)
+	(* Soundness of the result *)
 	soundness			: constraint_soundness;
 	
 	(* Termination *)
@@ -133,7 +133,7 @@ type im_result = {
 	(* Total computation time of the algorithm *)
 	computation_time	: float;
 	
-	(* Soudndness of the result *)
+	(* Soundness of the result *)
 	soundness			: constraint_soundness;
 	
 	(* Termination *)
@@ -173,6 +173,9 @@ type abstract_im_result = {
 	
 	(* Total computation time of the algorithm *)
 	computation_time	: float;
+	
+	(* Soundness of the result *)
+	soundness			: constraint_soundness;
 	
 	(* Termination *)
 	termination			: bfs_algorithm_termination;

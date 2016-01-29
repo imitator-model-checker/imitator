@@ -31,6 +31,54 @@ open Result
 (* I/O functions *)
 (************************************************************)
 
+(*** NOTE: this part should be modified with care, as external tools calling IMITATOR may use this syntax ***)
+
+
+let string_of_bfs_algorithm_termination = function
+	(* Fixpoint-like termination *)
+	| Regular_termination -> "regular termination"
+	(* Termination due to time limit reached *)
+	| Time_limit nb_unexplored_successors -> "time limit (" ^ (string_of_int nb_unexplored_successors) ^ " successor" ^ (s_of_int nb_unexplored_successors) ^ " unexplored)"
+	(* Termination due to state space depth limit reached *)
+	| Depth_limit nb_unexplored_successors -> "time limit (" ^ (string_of_int nb_unexplored_successors) ^ " successor" ^ (s_of_int nb_unexplored_successors) ^ " unexplored)"
+	(* Termination due to a number of explored states reached *)
+	| States_limit nb_unexplored_successors -> "time limit (" ^ (string_of_int nb_unexplored_successors) ^ " successor" ^ (s_of_int nb_unexplored_successors) ^ " unexplored)"
+
+
+let string_of_bc_algorithm_termination = function
+	(* Fixpoint-like termination *)
+	| BC_Regular_termination -> "regular termination"
+
+	(* Termination due to a maximum number of tiles computed *)
+	| BC_Tiles_limit -> "tiles limit"
+
+	(* Termination due to time limit reached *)
+	| BC_Time_limit -> "time limit"
+	
+	
+	
+let string_of_soundness = function
+	(* Constraint included in or equal to the real result *)
+	| Constraint_maybe_under -> "possible under-approximation"
+	(* Exact result *)
+	| Constraint_exact -> "exact"
+	(* Constraint equal to or larger than the real result *)
+	| Constraint_maybe_over -> "possible over-approximation"
+	(* Impossible to compare the constraint with the original result *)
+	| Constraint_maybe_invalid -> "possibly invalid"
+
+
+let verbose_string_of_soundness = function
+	(* Constraint included in or equal to the real result *)
+	| Constraint_maybe_under -> "This constraint is an under-approximation of the actual result (or the actual result itself)"
+	(* Exact result *)
+	| Constraint_exact -> "This constraint is exact (sound and complete)"
+	(* Constraint equal to or larger than the real result *)
+	| Constraint_maybe_over -> "This constraint is an over-approximation of the actual result (or the actual result itself)"
+	(* Impossible to compare the constraint with the original result *)
+	| Constraint_maybe_invalid -> "The validity of this constraint cannot be assessed"
+
+
 (* Header for result files *)
 let file_header () =
 	(* Retrieve the input options *)
@@ -46,9 +94,44 @@ let file_header () =
 	^ "\n * Command  : " ^ (string_of_array_of_string_with_sep " " Sys.argv)
 	^ "\n ************************************************************)\n\n"
 
+	
+(* Return a string made of some statistics for the state space *)
+let statespace_statistics state_space total_time =
+	(* Speed: number of states computed and still in the state space *)
+	let nb_states = StateSpace.nb_states state_space in
+	let states_per_second = (float_of_int nb_states) /. total_time in
+	
+	(* Speed: number of states computed, even if not kept (because merged, deleted...) *)
+	let nb_gen_states = StateSpace.get_nb_gen_states state_space in
+	let gen_states_per_second = (float_of_int nb_gen_states) /. total_time in
+	
+	    "Number of states              : " ^ (string_of_int nb_states)
+	^ "\nNumber of transitions         : " ^ (string_of_int (StateSpace.nb_transitions state_space))
+	^ "\nNumber of computed states     : " ^ (string_of_int nb_gen_states)
+	^ "\nStates/second in state space  : " ^ (round1_float states_per_second) ^ " (" ^ (string_of_int nb_states) ^ "/" ^ (string_of_seconds total_time) ^ ")"
+	^ "\nComputed states/second        : " ^ (round1_float gen_states_per_second) ^ " (" ^ (string_of_int nb_gen_states) ^ "/" ^ (string_of_seconds total_time) ^ ")"
+
+	
+(* Return a string made of some statistics for the abstract state space *)
+let abstract_statespace_statistics abstract_state_space total_time =
+	(* Speed: number of states computed and still in the state space *)
+	let states_per_second = (float_of_int abstract_state_space.nb_states) /. total_time in
+	
+	    "Number of states              : " ^ (string_of_int abstract_state_space.nb_states)
+	^ "\nNumber of transitions         : " ^ (string_of_int abstract_state_space.nb_transitions)
+	^ "\nComputation time              : " ^ (string_of_seconds total_time)
+	^ "\nStates/second in state space  : " ^ (round1_float states_per_second) ^ " (" ^ (string_of_int abstract_state_space.nb_states) ^ "/" ^ (string_of_seconds total_time) ^ ")"
+
+
+	
+(* Return a string made of some information concerning the result *)
+let result_nature_statistics soundness termination statespace_nature =
+	    "Constraint soundness          : " ^ (string_of_soundness soundness)
+	^ "\nTermination                   : " ^ (string_of_bfs_algorithm_termination termination)
+	^ "\nState space nature            : " ^ (StateSpace.string_of_statespace_nature statespace_nature)
+
 
 (* Write an ef_synth result to the result file *)
-(*** NOTE: this part should be modified with care, as external tools calling IMITATOR may use this syntax ***)
 let write_efsynth_result_to_file file_name efsynth_result =
 	(* Retrieve the model *)
 	let model = Input.get_model() in
@@ -70,10 +153,13 @@ let write_efsynth_result_to_file file_name efsynth_result =
 		(* end delimiter *)
 		^ "\nEND CONSTRAINT\n"
 		
-		(* 3) Some statistics *)
+		(* 3) Statistics about result *)
 		^ "\n------------------------------------------------------------"
-		^ "\nNumber of states       : " ^ (string_of_int (StateSpace.nb_states efsynth_result.state_space))
-			(*** TODO: other statistics (number of states, transitions, etc.) ***)
+		^ "\n" ^ (result_nature_statistics efsynth_result.soundness efsynth_result.termination efsynth_result.statespace_nature)
+		
+		(* 4) Statistics about state space *)
+		^ "\n------------------------------------------------------------"
+		^ "\n" ^ (statespace_statistics efsynth_result.state_space efsynth_result.computation_time)
 		^ "\n------------------------------------------------------------"
 	in
 	
@@ -82,7 +168,46 @@ let write_efsynth_result_to_file file_name efsynth_result =
 	print_message Verbose_standard ("\nResult written to file '" ^ file_name ^ "'.")
 
 
+(* Write an ef_synth result to the result file *)
+let write_im_result_to_file file_name (im_result : Result.im_result) =
+	(* Retrieve the model *)
+	let model = Input.get_model() in
+	(* Retrieve the input options *)
+(* 	let options = Input.get_options () in *)
 
+	(* Convert the constraint to a string *)
+	let result_str = LinearConstraint.string_of_p_convex_or_nonconvex_constraint model.variable_names im_result.result in
+
+	(* Prepare the string to write *)
+	let file_content =
+		(* 1) Header *)
+		file_header ()
+		
+		(* 2) The actual result *)
+		(* begin delimiter *)
+		^ "\nBEGIN CONSTRAINT\n"
+		^ result_str ^ ""
+		(* end delimiter *)
+		^ "\nEND CONSTRAINT\n"
+		
+		(* 3) Statistics about result *)
+		^ "\n------------------------------------------------------------"
+		^ "\n" ^ (result_nature_statistics im_result.soundness im_result.termination im_result.statespace_nature)
+		^ "\nNumber of random selections   : " ^ (string_of_int im_result.nb_random_selections)
+		
+		(* 4) Statistics about state space *)
+		^ "\n------------------------------------------------------------"
+		^ "\n" ^ (statespace_statistics im_result.state_space im_result.computation_time)
+		^ "\n------------------------------------------------------------"
+		^ "\n"
+	in
+	
+	(* Write to file *)
+	write_to_file file_name file_content;
+	print_message Verbose_standard ("\nResult written to file '" ^ file_name ^ "'.")
+
+
+(*
 	(* Write constraint to file (from im_result) *)
 (*** TODO: remove ***)
 let write_constraint_to_file file_name constraint_str =
@@ -98,9 +223,45 @@ let write_constraint_to_file file_name constraint_str =
 	(* Write to file *)
 	write_to_file file_name file_content;
 	print_message Verbose_standard ("\nResult written to file '" ^ file_name ^ "'.")
+*)
 
 
+let general_bc_statistics bc_result =
+	(* Store number of tiles *)
+	let nb_tiles = List.length bc_result.tiles in
 
+	(* First, compute average number of states and transitions (for info purpose) *)
+	(*** WARNING: use int, but using NumConst (unbounded) would be smarter in case of very large state spaces ***)
+	let total_states, total_transitions = List.fold_left (
+		fun (current_sum_states, current_sum_transitions) abstract_im_result ->
+			(current_sum_states + abstract_im_result.abstract_state_space.nb_states, current_sum_transitions +  + abstract_im_result.abstract_state_space.nb_transitions)
+	) (0,0) bc_result.tiles
+	in
+	(* Compute average *)
+	let average_nb_states = (float_of_int total_states) /. (float_of_int nb_tiles) in
+	let average_nb_transitions = (float_of_int total_transitions) /. (float_of_int nb_tiles) in
+
+	(*** TODO! need to access the algorithm variable... (or add info to bc_result) ***)
+(* 		print_message Verbose_standard ("Size of V0: " ^ (NumConst.string_of_numconst nb_points) ^ ""); *)
+
+	(*** TODO! need to access the algorithm variable... (or add info to bc_result) ***)
+(* 		print_message Verbose_standard ("Unsuccessful points: " ^ (string_of_int !nb_useless_points) ^ ""); *)
+
+
+	(*** TODO: require a new counter, and a new field in bc_result ***)
+(* 		print_message Verbose_standard ("Time spent on IM                : " ^ (string_of_float (!time_spent_on_IM)) ^ " s"); *)
+(* 	print_message Verbose_standard ("Time spent on BC only: " ^ (string_of_float (time_spent_on_BC)) ^ " s"); *)
+	(*** TODO: require a new counter, and a new field in bc_result ***)
+(* 		print_message Verbose_standard ("Time spent to compute next point: " ^ (string_of_float (counter_next_point#value)) ^ " s"); *)
+
+       ""
+    ^   "Computation time              : " ^ (string_of_seconds bc_result.computation_time)
+	^ "\nNumber of tiles               : " ^ (string_of_int nb_tiles)
+	^ "\nAverage number of states      : " ^ (round1_float average_nb_states)
+	^ "\nAverage number of transitions : " ^ (round1_float average_nb_transitions)
+	^ "\nTermination                   : " ^ (string_of_bc_algorithm_termination bc_result.termination)
+
+		
 (* Write result of BC to file *)
 let write_bc_result_to_file file_name bc_result =
 	(* Retrieve the model *)
@@ -112,16 +273,26 @@ let write_bc_result_to_file file_name bc_result =
 	let im_results_str = string_of_list_of_string_with_sep "\n" (
 		List.mapi (fun index abstract_im_result ->
 			(* mapi starts counting from 0, but we like starting counting from 1 *)
-			let real_index = index + 1 in
+			let index_from_one = index + 1 in
 			"\n(************************************************************)"
-			^ "\n Tile #" ^ (string_of_int real_index)
-			^ "\n\n Pi" ^ (string_of_int real_index) ^ ":"
-			^ (ModelPrinter.string_of_pi0 model abstract_im_result.reference_val)
-			^ "\n\n K" ^ (string_of_int real_index) ^ ":"
-			^ (LinearConstraint.string_of_p_convex_or_nonconvex_constraint model.variable_names abstract_im_result.result)
+			^ "\n Tile #" ^ (string_of_int index_from_one)
+			(* 1) Reference valuation *)
+			^ "\n\n Pi" ^ (string_of_int index_from_one) ^ ":"
+			^ "\n" ^ (ModelPrinter.string_of_pi0 model abstract_im_result.reference_val)
+
+			(* 2) Constraint *)
+			^ "\n\n K" ^ (string_of_int index_from_one) ^ ":"
+			^ "\n" ^ (LinearConstraint.string_of_p_convex_or_nonconvex_constraint model.variable_names abstract_im_result.result)
 			
-			(*** TODO: other statistics (number of states, transitions, etc.) ***)
+			(* 3) Statistics about result *)
+			^ "\n\n------------------------------------------------------------"
+			^ "\n" ^ (result_nature_statistics abstract_im_result.soundness abstract_im_result.termination abstract_im_result.statespace_nature)
+			^ "\nNumber of random selections   : " ^ (string_of_int abstract_im_result.nb_random_selections)
 			
+			(* 4) Statistics about state space *)
+			^ "\n------------------------------------------------------------"
+			^ "\n" ^ (abstract_statespace_statistics abstract_im_result.abstract_state_space abstract_im_result.computation_time)
+			^ "\n------------------------------------------------------------"
 			^ "\n(************************************************************)\n"
 		) bc_result.tiles
 	)
@@ -132,6 +303,14 @@ let write_bc_result_to_file file_name bc_result =
 		file_header ()
 		(* The actual result *)
 		^ im_results_str ^ "\n"
+		(* Statistics on BC *)
+		^ "\n(************************************************************)"
+		^ "\nGENERAL STATISTICS"
+		^ "\n(************************************************************)"
+		^ "\n------------------------------------------------------------"
+		^ "\n" ^ (general_bc_statistics bc_result)
+		^ "\n------------------------------------------------------------"
+		^ "\n"
 	in
 	(* Write to file *)
 	write_to_file file_name file_content;
@@ -142,7 +321,7 @@ let write_bc_result_to_file file_name bc_result =
 (*------------------------------------------------------------*)
 (* Performances *)
 (*------------------------------------------------------------*)
-let print_statespace_statistics total_time state_space =
+let print_statistics total_time state_space =
 	(* Retrieve the model *)
 (* 	let model = Input.get_model() in *)
 	(* Retrieve the input options *)
@@ -150,13 +329,14 @@ let print_statespace_statistics total_time state_space =
 
 	(*** TODO: better have an independent module (or class) 'statistics' ***)
 	
+	
+(*	(* Speed (number of states in the graph) *)
+	(*** WARNING: duplicate code from write_efsynth_result_to_file ***)
 	(* Generic function for float/int conversion *)
 	let string_of_average average = 
 		if average < 10.0 then string_of_float average
 		else string_of_int (int_of_float average)
 	in
-	
-	(* Speed (number of states in the graph) *)
 	let nb_states = StateSpace.nb_states state_space in
 	let average = (float_of_int nb_states) /. total_time in
 	print_message Verbose_standard ("States per second in the graph: " ^ (string_of_average average) ^ " (" ^ (string_of_int nb_states) ^ "/" ^ (string_of_seconds total_time) ^ ")");
@@ -164,7 +344,14 @@ let print_statespace_statistics total_time state_space =
 	(* Speed (number of states computed, even if not kept) *)
 	let nb_gen_states = StateSpace.get_nb_gen_states state_space in
 	let average = (float_of_int nb_gen_states) /. total_time in
-	print_message Verbose_standard ("States computed per second: " ^ (string_of_average average) ^ " (" ^ (string_of_int nb_gen_states) ^ "/" ^ (string_of_seconds total_time) ^ ")");
+	print_message Verbose_standard ("States computed per second: " ^ (string_of_average average) ^ " (" ^ (string_of_int nb_gen_states) ^ "/" ^ (string_of_seconds total_time) ^ ")");*)
+	
+	if verbose_mode_greater Verbose_standard then(
+		print_message Verbose_standard "\n--------------------";
+		print_message Verbose_standard "Statistics on state space";
+		print_message Verbose_standard "--------------------";
+		print_message Verbose_standard (statespace_statistics state_space total_time);
+	);
 
 	
 	if options#statistics then (
@@ -242,7 +429,7 @@ let process_result result prefix_option =
 		);
 
 		(* Print statistics *)
-		print_statespace_statistics poststar_result.computation_time poststar_result.state_space;
+		print_statistics poststar_result.computation_time poststar_result.state_space;
 		
 		(* Draw state space *)
 		let radical = file_prefix ^ "-statespace" in
@@ -265,6 +452,9 @@ let process_result result prefix_option =
 			
 			print_message Verbose_standard ("\nFinal constraint such that the property is *violated* (" ^ (string_of_int (List.length efsynth_result.constraints)) ^ " constraint" ^ (s_of_int (List.length efsynth_result.constraints)) ^ "): ");
 			print_message Verbose_standard (result_str);
+
+			(* Give a comment on the validity of the result *)
+			print_message Verbose_standard (verbose_string_of_soundness efsynth_result.soundness);
 		);
 		
 		print_message Verbose_low (
@@ -272,6 +462,12 @@ let process_result result prefix_option =
 			^ (string_of_seconds efsynth_result.computation_time) ^ "."
 		);
 
+		(* Print memory information *)
+		if verbose_mode_greater Verbose_standard then(
+			print_newline();
+			print_memory_used Verbose_standard;
+		);
+		
 (*		(* Print on terminal *)
 		print_message Verbose_standard (
 			"\nEF-synthesis successfully finished " ^ (after_seconds ()) ^ "."
@@ -284,7 +480,7 @@ let process_result result prefix_option =
 		);
 		
 		(* Print statistics *)
-		print_statespace_statistics efsynth_result.computation_time efsynth_result.state_space;
+		print_statistics efsynth_result.computation_time efsynth_result.state_space;
 		
 		(* Draw state space *)
 		let radical = file_prefix ^ "-statespace" in
@@ -303,16 +499,15 @@ let process_result result prefix_option =
 
 		
 	| IM_result im_result ->
-		(* Convert result to string *)
-		let result_str = LinearConstraint.string_of_p_convex_or_nonconvex_constraint model.variable_names im_result.result in
 
 		(* Print on terminal *)
-		print_message Verbose_standard ("\nResult:\n" ^ result_str);
-		
-		(* Write to file if requested *)
-		if options#output_result then(
-			let file_name = file_prefix ^ Constants.result_file_extension in
-			write_constraint_to_file file_name result_str;
+		if verbose_mode_greater Verbose_standard then(
+			(* Convert result to string *)
+			let result_str = LinearConstraint.string_of_p_convex_or_nonconvex_constraint model.variable_names im_result.result in
+			print_message Verbose_standard ("\nResult:\n" ^ result_str);
+			
+			(* Give a comment on the validity of the result *)
+			print_message Verbose_standard (verbose_string_of_soundness im_result.soundness);
 		);
 		
 		(* Print memory information *)
@@ -321,13 +516,19 @@ let process_result result prefix_option =
 			print_memory_used Verbose_standard;
 		);
 		
+		(* Write to file if requested *)
+		if options#output_result then(
+			let file_name = file_prefix ^ Constants.result_file_extension in
+			write_im_result_to_file file_name im_result;
+		);
+
 		print_message Verbose_low (
 			"Computation time for IM only: "
 			^ (string_of_seconds im_result.computation_time) ^ "."
 		);
 		
 		(* Print statistics *)
-		print_statespace_statistics im_result.computation_time im_result.state_space;
+		print_statistics im_result.computation_time im_result.state_space;
 
 		(* Draw state space *)
 		(*** TODO: move inside inverse_method_gen ***)
@@ -357,54 +558,22 @@ let process_result result prefix_option =
 
 
 	| BC_result bc_result ->
-		(* Store number of tiles *)
-		let nb_tiles = List.length bc_result.tiles in
-		
-		(* First, compute average number of states and transitions (for info purpose) *)
-		(*** WARNING: use int, but using NumConst (unbounded) would be smarter in case of very large state spaces ***)
-		let total_states, total_transitions = List.fold_left (
-			fun (current_sum_states, current_sum_transitions) abstract_im_result ->
-				(current_sum_states + abstract_im_result.abstract_state_space.nb_states, current_sum_transitions +  + abstract_im_result.abstract_state_space.nb_transitions)
-		) (0,0) bc_result.tiles
-		in
-		(* Compute average *)
-		let average_nb_states = (float_of_int total_states) /. (float_of_int nb_tiles) in
-		let average_nb_transitions = (float_of_int total_transitions) /. (float_of_int nb_tiles) in
-
-		
 		(* Print some information *)
 		print_message Verbose_standard ("\n**************************************************");
 		print_message Verbose_standard (" END OF THE BEHAVIORAL CARTOGRAPHY ALGORITHM");
-		
-		(*** TODO! need to access the algorithm variable... (or add info to bc_result) ***)
-(* 		print_message Verbose_standard ("Size of V0: " ^ (NumConst.string_of_numconst nb_points) ^ ""); *)
-
-		(*** TODO! need to access the algorithm variable... (or add info to bc_result) ***)
-(* 		print_message Verbose_standard ("Unsuccessful points: " ^ (string_of_int !nb_useless_points) ^ ""); *)
-
-		print_message Verbose_standard ("Number of tiles                 : " ^ (string_of_int nb_tiles) ^ "");
-		print_message Verbose_standard ("Average number of states        : " ^ (round1_float average_nb_states) ^ "");
-		print_message Verbose_standard ("Average number of transitions   : " ^ (round1_float average_nb_transitions) ^ "");
-
-		print_message Verbose_standard ("Global time spent               : " ^ (string_of_seconds bc_result.computation_time) ^ "");
-		(*** TODO: require a new counter, and a new field in bc_result ***)
-(* 		print_message Verbose_standard ("Time spent on IM                : " ^ (string_of_float (!time_spent_on_IM)) ^ " s"); *)
-	(* 	print_message Verbose_standard ("Time spent on BC only: " ^ (string_of_float (time_spent_on_BC)) ^ " s"); *)
-		(*** TODO: require a new counter, and a new field in bc_result ***)
-(* 		print_message Verbose_standard ("Time spent to compute next point: " ^ (string_of_float (counter_next_point#value)) ^ " s"); *)
+		print_message Verbose_standard ("" ^ general_bc_statistics bc_result);
 		print_message Verbose_standard ("**************************************************");
 			
+		(* Print memory information *)
+		if verbose_mode_greater Verbose_standard then(
+			print_newline();
+			print_memory_used Verbose_standard;
+		);
 		
 		(* Write to file if requested *)
 		if options#output_result then(
 			let file_name = file_prefix ^ Constants.result_file_extension in
 			write_bc_result_to_file file_name bc_result;
-		);
-		
-		(* Print memory information *)
-		if verbose_mode_greater Verbose_standard then(
-			print_newline();
-			print_memory_used Verbose_standard;
 		);
 		
 		(*** TODO: BC ***)
@@ -413,7 +582,6 @@ let process_result result prefix_option =
 			^ (string_of_seconds im_result.computation_time) ^ "."
 		);*)
 		
-
 		if options#cart then (
 			(* Render zones in a graphical form *)
 			let zones = List.map (fun abstract_im_result -> (abstract_im_result.result, abstract_im_result.statespace_nature)) bc_result.tiles in

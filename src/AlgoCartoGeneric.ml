@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/01/19
- * Last modified     : 2016/01/28
+ * Last modified     : 2016/01/29
  *
  ************************************************************)
 
@@ -100,6 +100,9 @@ let abstract_im_result_of_im_result (im_result : im_result) reference_val : abst
 	
 	(* Total computation time of the algorithm *)
 	computation_time	= im_result.computation_time;
+	
+	(* Soundness of the result *)
+	soundness			= im_result.soundness;
 	
 	(* Termination *)
 	termination			= im_result.termination;

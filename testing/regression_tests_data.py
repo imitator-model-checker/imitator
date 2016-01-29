@@ -10,7 +10,7 @@
 # Laboratoire d'Informatique de Paris Nord
 # Universite Paris 13, Sorbonne Paris Cite, France
 # Created      : 2015/10/23
-# Last modified: 2016/01/26
+# Last modified: 2016/01/29
 #************************************************************
 
 
@@ -25,7 +25,7 @@ tests = [
 		'input_files': ['flipflop.imi'],
 		'options'    : '-mode statespace -output-states',
 		'expectations' : [
-			{'file': 'flipflop.states' , 'content' : """second
+			{'file': 'flipflop-statespace.states' , 'content' : """second
 ************************************************************/
 
   DESCRIPTION OF THE STATES
@@ -399,7 +399,7 @@ tests = [
 		'input_files': ['testUrgency.imi'],
 		'options'    : '-mode statespace -output-states',
 		'expectations' : [
-			{'file': 'testUrgency.states' , 'content' : """
+			{'file': 'testUrgency-statespace.states' , 'content' : """
 		  DESCRIPTION OF THE TRANSITIONS
   s_4 -> s_4 via "a"
   s_2 -> s_4 via "c"
@@ -423,12 +423,15 @@ tests = [
 		'input_files': ['F3.imi'],
 		'options'    : '-mode EF -merge -incl -output-result',
 		'expectations' : [
-			{'file': 'F3.res' , 'content' : """*)
+			{'file': 'F3.res' , 'content' : """
+BEGIN CONSTRAINT
  Delta > delta
 & delta >= 0
  OR 
  Delta > 2*delta
-& delta >= 0"""
+& delta >= 0
+END CONSTRAINT
+"""
 			} #end result file
 		] # end expectations
 	} # end test case
@@ -440,8 +443,8 @@ tests = [
 		'input_files': ['coffeeDrinker-TACAS.imi'],
 		'options'    : '-mode EF -merge -output-result',
 		'expectations' : [
-			{'file': 'coffeeDrinker-TACAS.res' , 'content' : """*)
-
+			{'file': 'coffeeDrinker-TACAS.res' , 'content' : """
+BEGIN CONSTRAINT
  p_add_sugar + p_coffee >= 15
 & p_button > 0
 & 15 >= p_add_sugar
@@ -498,7 +501,9 @@ tests = [
  OR 
  p_add_sugar >= 15
 & p_button >= 15
-& p_coffee > 0"""
+& p_coffee > 0
+END CONSTRAINT
+"""
 			} #end result file
 		] # end expectations
 	} # end test case
@@ -510,8 +515,10 @@ tests = [
 		'input_files': ['flipflop.imi', 'flipflop.pi0'],
 		'options'    : '-output-result',
 		'expectations' : [
-			{'file': 'flipflop.res' , 'content' : """*)
+			{'file': 'flipflop.res' , 'content' : """
+BEGIN CONSTRAINT
 dG3_u + dG4_u >= 17 & dG3_u >= 8 & dG4_u >= 3 & 17 > dG3_u & 24 > dG3_u + dG4_u
+END CONSTRAINT
 			"""
 			} #end result file
 		] # end expectations
@@ -523,10 +530,12 @@ dG3_u + dG4_u >= 17 & dG3_u >= 8 & dG4_u >= 3 & 17 > dG3_u & 24 > dG3_u + dG4_u
 		'input_files': ['simop.imi', 'simop.pi0'],
 		'options'    : '-merge -no-random -output-result',
 		'expectations' : [
-			{'file': 'simop.res' , 'content' : """*)
+			{'file': 'simop.res' , 'content' : """
+BEGIN CONSTRAINT
 500 >= COMct
     & COMct > 495
     & SIGmrt > 70 + 4*COMct
+END CONSTRAINT
 			"""
 			} #end result file
 		] # end expectations
@@ -630,12 +639,16 @@ dG3_u + dG4_u >= 17 & dG3_u >= 8 & dG4_u >= 3 & 17 > dG3_u & 24 > dG3_u + dG4_u
 		'options'    : '-PRP -output-result -output-states',
 		'expectations' : [
 			{'file': 'testPRP.res' , 'content' : """
+BEGIN CONSTRAINT
 	4 > p2
     & 3 > p1
+    & p1 >= 0
+    & p2 >= 0
+END CONSTRAINT
 		  """
 			} # end result file
 			,
-			{'file': 'testPRP.states' , 'content' : """
+			{'file': 'testPRP-statespace.states' , 'content' : """
   DESCRIPTION OF THE STATES
 
   /************************************************************/
@@ -715,7 +728,7 @@ OR
 		  """
 			} # end result file
 			,
-			{'file': 'testPRP.states' , 'content' : """
+			{'file': 'testPRP-statespace.states' , 'content' : """
   DESCRIPTION OF THE STATES
 
   /************************************************************/
@@ -806,7 +819,7 @@ OR
 		  """
 			} # end result file
 			,
-			{'file': 'testPRP.states' , 'content' : """
+			{'file': 'testPRP-statespace.states' , 'content' : """
   DESCRIPTION OF THE STATES
 
   /************************************************************/
@@ -987,21 +1000,7 @@ OR
    p2 >= 5
 & p1 >= 0
 
-  /************************************************************/
-  STATE 14:
-  pta: infiniteLoop ==> 
-& 1 >= x
-& p1 >= 0
-& p2 >= 5
-& x >= 0
-& x + 9 = y
-
-  Projection onto the parameters:
-   p2 >= 5
-& p1 >= 0
-
   DESCRIPTION OF THE TRANSITIONS
-  s_13 -> s_14
   s_0 -> s_3
   s_3 -> s_6
   s_8 -> s_9
@@ -1016,6 +1015,7 @@ OR
   s_11 -> s_12
   s_9 -> s_10
 
+
 		  """
 			} # end result file
 			,
@@ -1029,58 +1029,140 @@ OR
 		'input_files': ['flipflop.imi', 'flipflop.v0'],
 		'options'    : '-mode cover -output-result -output-cart -output-graphics-source',
 		'expectations' : [
-			{'file': 'flipflop_cart.res' , 'content' : """*)
+			# WARNING: no other way for now that checking separately the constraints (because the computation times may of course differ)
+			{'file': 'flipflop.res' , 'content' : """
+ Pi1:
+  dG3_u = 8
+& dG4_u = 3
 
+ K1:
+ dG3_u >= 8
+& dG4_u >= 3
+& 17 > dG3_u + dG4_u
 
- (***** Constraint 1*****)
- 17 > dG3_u + dG4_u
+"""
+			} # end BC file
+			, 
+			{'file': 'flipflop.res' , 'content' : """
+Tile #2
+
+ Pi2:
+  dG3_u = 14
+& dG4_u = 3
+
+ K2:
+ dG3_u + dG4_u >= 17
 & dG3_u >= 8
 & dG4_u >= 3
-
-
- (***** Constraint 2*****)
- dG3_u + dG4_u >= 17
 & 17 > dG3_u
 & 24 > dG3_u + dG4_u
-& dG3_u >= 8
+"""
+			} # end BC file
+			, 
+			{'file': 'flipflop.res' , 'content' : """
+ Tile #3
+
+ Pi3:
+  dG3_u = 17
+& dG4_u = 3
+
+ K3:
+ dG3_u >= 17
 & dG4_u >= 3
+& 24 > dG3_u + dG4_u
+"""
+			} # end BC file
+			, 
+			{'file': 'flipflop.res' , 'content' : """
+Tile #4
 
+ Pi4:
+  dG3_u = 21
+& dG4_u = 3
 
- (***** Constraint 3*****)
- 24 > dG3_u + dG4_u
-& dG3_u >= 17
+ K4:
+ dG3_u + dG4_u >= 24
 & dG4_u >= 3
-
-
- (***** Constraint 4*****)
- 7 > dG4_u
+& 7 > dG4_u
 & 24 > dG3_u
-& dG3_u + dG4_u >= 24
+"""
+			} # end BC file
+			, 
+			{'file': 'flipflop.res' , 'content' : """
+Tile #5
+
+ Pi5:
+  dG3_u = 24
+& dG4_u = 3
+
+ K5:
+ dG3_u >= 24
 & dG4_u >= 3
+& 7 > dG4_u
+"""
+			} # end BC file
+			, 
+			{'file': 'flipflop.res' , 'content' : """
+Tile #6
 
+ Pi6:
+  dG3_u = 17
+& dG4_u = 7
 
- (***** Constraint 5*****)
- 7 > dG4_u
-& dG3_u >= 24
-& dG4_u >= 3
-
-
- (***** Constraint 6*****)
- 24 > dG3_u
+ K6:
+ dG3_u >= 17
 & dG4_u >= 7
-& dG3_u >= 17
+& 24 > dG3_u
+"""
+			} # end BC file
+			, 
+			{'file': 'flipflop.res' , 'content' : """
+Tile #7
 
+ Pi7:
+  dG3_u = 24
+& dG4_u = 7
 
- (***** Constraint 7*****)
- dG4_u >= 7
-& dG3_u >= 24
+ K7:
+ dG3_u >= 24
+& dG4_u >= 7
 
+------------------------------------------------------------
+Constraint soundness          : exact
+Termination                   : regular termination
+State space nature            : bad
+Number of random selections   : 0
+------------------------------------------------------------
+"""
+			} # end BC file
+			, 
+			{'file': 'flipflop.res' , 'content' : """
+ Tile #8
 
- (***** Constraint 8*****)
- 17 > dG3_u
-& dG3_u >= 8
+ Pi8:
+  dG3_u = 16
+& dG4_u = 8
+
+ K8:
+ dG3_u >= 8
 & dG3_u + dG4_u >= 24
+& 17 > dG3_u
 
+------------------------------------------------------------
+Constraint soundness          : exact
+Termination                   : regular termination
+State space nature            : bad
+Number of random selections   : 0
+------------------------------------------------------------
+"""
+			} # end BC file
+			, 
+			{'file': 'flipflop.res' , 'content' : """
+Number of tiles               : 8
+Average number of states      : 15.1
+Average number of transitions : 14.1
+Termination                   : regular termination
+------------------------------------------------------------
 
 """
 			} # end BC file
@@ -1112,8 +1194,10 @@ OR
 		'input_files': ['coffeeDrinker-TACAS-within.imi'],
 		'options'    : '-mode EF -merge -output-result -depth-limit 10',
 		'expectations' : [
-			{'file': 'coffeeDrinker-TACAS-within.res' , 'content' : """*)
+			{'file': 'coffeeDrinker-TACAS-within.res' , 'content' : """
+BEGIN CONSTRAINT
  p_coffee > 0
+END CONSTRAINT
 """
 			} # end result file
 			,
@@ -1127,7 +1211,7 @@ OR
 		'input_files': ['exActionsNonPreserved.imi'],
 		'options'    : '-mode statespace -output-states',
 		'expectations' : [
-			{'file': 'exActionsNonPreserved.states' , 'content' : """
+			{'file': 'exActionsNonPreserved-statespace.states' , 'content' : """
 		*/
 
   DESCRIPTION OF THE STATES
@@ -1179,7 +1263,7 @@ OR
 		'input_files': ['exActionsNonPreserved.imi'],
 		'options'    : '-mode statespace -output-states -merge',
 		'expectations' : [
-			{'file': 'exActionsNonPreserved.states' , 'content' : """
+			{'file': 'exActionsNonPreserved-statespace.states' , 'content' : """
 		*/
 
   DESCRIPTION OF THE STATES
