@@ -4,11 +4,12 @@
  * 
  * LIPN, Université Paris 13, Sorbonne Paris Cité (France)
  * 
- * Module description: Classical Behavioral Cartography with exhaustive coverage of integer points [AF10]
+ * Module description: Random Behavioral Cartography with a maximum number of consecutive failed attempts to find a non-integer point not covered by any tile [AF10]
+ * Note: the algorithm does NOT track points already computed randomly but not kept because covered by some tile.
  * 
  * File contributors : Étienne André
- * Created           : 2016/01/19
- * Last modified     : 2016/01/29
+ * Created           : 2016/02/02
+ * Last modified     : 2016/02/02
  *
  ************************************************************)
 
@@ -35,7 +36,7 @@ open AlgoCartoGeneric
 exception Found_point of PVal.pval
 
 (* To stop a loop when a point is found or there is no more point *)
-exception Stop_loop of more_points
+(* exception Stop_loop of more_points *)
 
 
 
@@ -44,13 +45,14 @@ exception Stop_loop of more_points
 (* Class definition *)
 (************************************************************)
 (************************************************************)
-class algoBCCover =
+class algoBCRandom =
 	object (self) inherit algoCartoGeneric as super
 	
 	(************************************************************)
 	(* Class variables *)
 	(************************************************************)
-
+	(* Current number of failed attempts to find an integer point not covered by any tile *)
+(* 	val mutable nb_failed_attempts = 0 *)
 	
 	
 	(************************************************************)
@@ -60,7 +62,7 @@ class algoBCCover =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Name of the algorithm *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method algorithm_name = "BC (full coverage)"
+	method algorithm_name = "BC (random coverage)"
 
 	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -68,6 +70,8 @@ class algoBCCover =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method initialize_variables =
 		super#initialize_variables;
+		
+(* 		nb_failed_attempts <- 0; *)
 		
 		(* The end *)
 		()
@@ -78,7 +82,7 @@ class algoBCCover =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 	(* Return the current_point; raises InternalError if current_point was not initialized *)
-	(*** WARNING: duplicate code (see AlgoBCRandom) ***)
+	(*** WARNING: duplicate code (see AlgoBCCover) ***)
 	method private get_current_point_option =
 		match current_point with
 		| No_more -> 
@@ -86,62 +90,44 @@ class algoBCCover =
 		| Some_pval current_point -> current_point
 
 
-
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Compute the sequential successor of a point. Returns Some next_pi0 if there is indeed one, or None if no more point is available. *)
+	(* Methods on random generation of a pi0 *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method private compute_next_sequential_pi0 current_pi0 =
-		(* Retrieve the model *)
-		let model = Input.get_model() in
-		(* Retrieve the input options *)
-		let options = Input.get_options () in
-		
-		let nb_dimensions = model.nb_parameters in
 
-		(* Retrieve the current pi0 (that must have been initialized before) *)
-(* 		let current_pi0 = self#get_current_point_option in *)
+	method private one_random_pi0 : PVal.pval =
+	(* Get the model *)
+	let model = Input.get_model() in
+	(* Get the v0 *)
+	let v0 = Input.get_v0() in
+	(* Retrieve the input options *)
+	let options = Input.get_options () in
+	
+	(*** WARNING! Does not work with step <> 1 !!!! ***)
+	if options#step <> NumConst.one then
+		raise (InternalError("Random pi0 not implemented with steps <> 1."));
+	
+	(* Create the pi0 *)
+	let random_pi0 = new PVal.pval in
+	(* Fill it *)
+	for i = 0 to model.nb_parameters - 1 do
+		let min = v0#get_min i in
+		let max = v0#get_max i in
+		(* Generate a random value in the interval *)
+		let random_value = NumConst.random_integer min max in
+		
+		(* Print some information *)
+		if verbose_mode_greater Verbose_medium then(
+			self#print_algo_message Verbose_medium ("Generating randomly value '" ^ (NumConst.string_of_numconst random_value) ^ "' for parameter '" ^ (model.variable_names i) ^ "'.");
+		);
+ 		
+		(* Add to the array *)
+		random_pi0#set_value i random_value;
+	done;
+	
+	(* Return the result *)
+	random_pi0
 
-		(* Start with the first dimension *)
-		let current_dimension = ref 0 in (*** WARNING: should be sure that 0 is the first parameter dimension ***)
-		(* The current dimension is not yet the maximum *)
-		let reached_max_dimension = ref false in
-		
-		try(
-		while not !reached_max_dimension do
-			(* Try to increment the local dimension *)
-			let current_dimension_incremented = NumConst.add (current_pi0#get_value !current_dimension) options#step in
-			if current_dimension_incremented <= max_bounds.(!current_dimension) then (
-				(* Copy the current point *)
-				let new_point = current_pi0#copy in
-				
-				(* Increment this dimension *)
-				new_point#set_value (!current_dimension) current_dimension_incremented;
-				(* Reset the smaller dimensions to the low bound *)
-				for i = 0 to !current_dimension - 1 do
-					new_point#set_value i min_bounds.(i);
-				done;
-				
-				(* Stop the loop *)
-				raise (Found_point new_point)
-			)
-			(* Else: try the next dimension *)
-			else ( 
-				current_dimension := !current_dimension + 1;
-				(* If last dimension: the end! *)
-				if !current_dimension >= nb_dimensions then(
-					reached_max_dimension := true;
-				)
-			);
-		done; (* while not is max *)
-		
-		(* Found no point *)
-		None
-		
-		(* If exception: found a point! *)
-		) with Found_point point -> Some point
-
-      
-      
+	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(** Return a new instance of the algorithm to be iteratively called (typically IM or PRP) *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -157,14 +143,8 @@ class algoBCCover =
 		(* Retrieve the model *)
 		let model = Input.get_model() in
 
-		let pi0 = new PVal.pval in
-		(* Copy min bounds *)
-		for parameter_index = 0 to model.nb_parameters - 1 do
-			pi0#set_value parameter_index min_bounds.(parameter_index);
-		done;
-		
-		(* Return the point *)
-		Some_pval pi0
+		(* Return a random point *)
+		Some_pval (self#one_random_pi0)
 
 	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -172,39 +152,61 @@ class algoBCCover =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method find_next_point =
 		(* Get the model *)
-	(* 	let model = Input.get_model() in *)
+		let model = Input.get_model() in
+		(* Retrieve the input options *)
+		let options = Input.get_options () in
+		
+		(* Get the max number of tries of BC *)
+		(*** NOTE: a bit ugly. Having a class parameterized by max_tries would be more elegant. ***)
+		let max_tries = match options#imitator_mode with
+			 | Random_cartography i -> i
+			 | _ -> raise (InternalError ("Calling algoBCRandom.find_next_point should be done using the random cartography only"))
+		in
 
 		(* Retrieve the current pi0 (that must have been initialized before) *)
 		let current_pi0 = ref (self#get_current_point_option) in
 		
+			(* Print some information *)
+		self#print_algo_message Verbose_low ("Trying to randomly find a fresh pi0 with " ^ (string_of_int max_tries) ^ " tries.");
+
+		(* Counter *)
+		let nb_tries = ref 0 in
+		
 		try(
-		while true do
+			(* Loop until exceed the number of tries *)
+			while !nb_tries < max_tries do
+				(* Generate a random pi0 *)
+				let tentative_pi0 = self#one_random_pi0 in
+				(* Try to see if valid (and updates found_pi0) *)
+				if self#test_pi0_uncovered tentative_pi0 then(
+					(* Print some information *)
+					self#print_algo_message  Verbose_low ("Try " ^ (string_of_int (!nb_tries + 1)) ^ " successful!");
+
+					raise (Found_point tentative_pi0);
+					
+				(* Otherwise: go further *)
+				)else(
+					(* Print some information *)
+					self#print_algo_message  Verbose_low ("Try " ^ (string_of_int (!nb_tries + 1)) ^ " unsuccessful.");
+					
+					(* Increment local counter *)
+					nb_tries := !nb_tries + 1;
+					
+					(* Increment global counter *)
+					nb_unsuccessful_points <- nb_unsuccessful_points + 1;
+				);
+			done;
+
+			(* Print some information *)
+			self#print_algo_message  Verbose_low ("Could not find a pi0 within " ^ (string_of_int max_tries) ^ " tries.");
 			
-			(* 1) Compute the next pi0 (if any left) in a sequential manner *)
-			let tentative_next_point =
-			match self#compute_next_sequential_pi0 !current_pi0 with
-			| Some point -> point
-			| None -> raise (Stop_loop No_more)
-			in
+			(* Could not find point *)
+			No_more
 			
-			(* 2) Update our local current_pi0 *)
-			current_pi0 := tentative_next_point;
-			
-			(* 3) Check that this pi0 is not covered by any tile *)
-			self#print_algo_message Verbose_high ("Check whether pi0 is covered");
-			(* If uncovered: stop loop and return *)
-			if self#test_pi0_uncovered !current_pi0 then
-				raise (Stop_loop (Some_pval !current_pi0))
-			(* Else: keep running the loop *)
-			
-		done; (* while more pi0 and so on *)
-		
-		(* This point is unreachable *)
-		raise (InternalError("This part of the code should be unreachable in find_next_point"))
-		
-		(* Return the point *)
-		) with Stop_loop sl -> sl
-		
+		(* Handle the Found_point exception *)
+		) with Found_point tentative_pi0 -> Some_pval tentative_pi0
+
+
 	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Processing the result of IM *)
@@ -231,21 +233,13 @@ class algoBCCover =
 		
 		(* Get the termination status *)
 		 let termination_status = match termination_status with
-			| None -> raise (InternalError "Termination status not set in BCCover.compute_result")
+			| None -> raise (InternalError "Termination status not set in BCRandom.compute_result")
 			| Some status -> status
 		in
 
 		(* Coverage is... *)
-		(*** NOTE: this is only true for the original behavioral cartography; for variants this may not hold ***)
-		let coverage =
-			(* INTEGER COMPLETE if termination is regular and all tiles are exact or under-approximations *)
-			if termination_status = BC_Regular_termination && (List.for_all (fun abstract_im_result -> match abstract_im_result.soundness with
-					| Constraint_exact | Constraint_maybe_under -> true
-					| Constraint_maybe_over | Constraint_maybe_invalid -> false
-				) im_results)
-				then Coverage_integer_complete
-			(* UNKNOWN otherwise *)
-			else Coverage_unknown
+		(*** TODO: could perhaps check manually (!) if the coverage is integer complete, or even complete ***)
+		let coverage = Coverage_unknown
 		in
 		
 		(* Return result *)

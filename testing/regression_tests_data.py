@@ -10,7 +10,7 @@
 # Laboratoire d'Informatique de Paris Nord
 # Universite Paris 13, Sorbonne Paris Cite, France
 # Created      : 2015/10/23
-# Last modified: 2016/01/29
+# Last modified: 2016/02/02
 #************************************************************
 
 
@@ -1185,6 +1185,115 @@ Average number of transitions : 14.1
 # """
 			} # end tile file
 			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+	,
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test BC in mode random',
+		'input_files': ['flipflop.imi', 'flipflop.v0'],
+		'options'    : '-mode random200 -output-result',
+		'expectations' : [
+			# WARNING: this algorithm is… random! hence no absolute guarantee to find the result (this said, a max_tries of 200 generally allows one to find all tiles with a good probability)
+			# WARNING: no other way for now that checking separately the constraints (because the computation times may of course differ)… and to check them separately as the order is of course unknown
+			{'file': 'flipflop.res' , 'content' : """
+ dG3_u >= 8
+& dG4_u >= 3
+& 17 > dG3_u + dG4_u
+
+"""
+			} # end BC file
+			, 
+			{'file': 'flipflop.res' , 'content' : """
+ dG3_u + dG4_u >= 17
+& dG3_u >= 8
+& dG4_u >= 3
+& 17 > dG3_u
+& 24 > dG3_u + dG4_u
+"""
+			} # end BC file
+			, 
+			{'file': 'flipflop.res' , 'content' : """
+ dG3_u >= 17
+& dG4_u >= 3
+& 24 > dG3_u + dG4_u
+"""
+			} # end BC file
+			, 
+			{'file': 'flipflop.res' , 'content' : """
+ dG3_u + dG4_u >= 24
+& dG4_u >= 3
+& 7 > dG4_u
+& 24 > dG3_u
+"""
+			} # end BC file
+			, 
+			{'file': 'flipflop.res' , 'content' : """
+ dG3_u >= 24
+& dG4_u >= 3
+& 7 > dG4_u
+"""
+			} # end BC file
+			, 
+			{'file': 'flipflop.res' , 'content' : """
+ dG3_u >= 17
+& dG4_u >= 7
+& 24 > dG3_u
+"""
+			} # end BC file
+			, 
+			{'file': 'flipflop.res' , 'content' : """
+ dG3_u >= 24
+& dG4_u >= 7
+
+------------------------------------------------------------
+Constraint soundness          : exact
+Termination                   : regular termination
+State space nature            : bad
+Number of random selections   : 0
+------------------------------------------------------------
+"""
+			} # end BC file
+			, 
+			{'file': 'flipflop.res' , 'content' : """
+ dG3_u >= 8
+& dG3_u + dG4_u >= 24
+& 17 > dG3_u
+
+------------------------------------------------------------
+Constraint soundness          : exact
+Termination                   : regular termination
+State space nature            : bad
+Number of random selections   : 0
+------------------------------------------------------------
+"""
+			} # end BC file
+			, 
+			{'file': 'flipflop.res' , 'content' : """
+Average number of states      : 15.1
+Average number of transitions : 14.1
+"""
+			} # end BC file
+			, 
+			# NOTE: impossible to check graphics source, as the order of the tiles is not known
+			#{'file': 'flipflop_cart_bc_points_2.txt' , 'content' : """14. 3.
+#8. 9.
+#8. 16.
+#17. 7.
+#17. 3.
+#14. 3.
+## """
+			#} # end tile file
+			#,
+			#{'file': 'flipflop_cart_bc_points_8.txt' , 'content' : """17. 31.
+#17. 7.
+#8. 16.
+#8. 31.
+#17. 31.
+## """
+			#} # end tile file
+			#,
 		] # end expectations
 	} # end test case
 	#------------------------------------------------------------

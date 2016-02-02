@@ -9,7 +9,7 @@
  * 
  * File contributors : Ulrich Kühne, Étienne André
  * Created           : 2009/09/07
- * Last modified     : 2016/01/29
+ * Last modified     : 2016/02/02
  *
  ************************************************************)
 
@@ -389,7 +389,9 @@ begin
 		| Random_cartography nb ->
 		(* Behavioral cartography algorithm with random iterations *)
 (* 			Cartography.random_behavioral_cartography model nb; *)
-			raise (InternalError("Not implemented !!!"))
+			let algo = new AlgoBCRandom.algoBCRandom in
+			let result = algo#run() in
+			ResultProcessor.process_result result None;
 
 		| Translation -> raise (InternalError "Translation cannot be executed here; program should already have terminated at this point.");
 
