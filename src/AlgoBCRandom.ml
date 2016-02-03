@@ -141,7 +141,7 @@ class algoBCRandom =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method get_initial_point =
 		(* Retrieve the model *)
-		let model = Input.get_model() in
+(* 		let model = Input.get_model() in *)
 
 		(* Return a random point *)
 		Some_pval (self#one_random_pi0)
@@ -152,7 +152,7 @@ class algoBCRandom =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method find_next_point =
 		(* Get the model *)
-		let model = Input.get_model() in
+(* 		let model = Input.get_model() in *)
 		(* Retrieve the input options *)
 		let options = Input.get_options () in
 		
@@ -164,7 +164,7 @@ class algoBCRandom =
 		in
 
 		(* Retrieve the current pi0 (that must have been initialized before) *)
-		let current_pi0 = ref (self#get_current_point_option) in
+(* 		let current_pi0 = ref (self#get_current_point_option) in *)
 		
 			(* Print some information *)
 		self#print_algo_message Verbose_low ("Trying to randomly find a fresh pi0 with " ^ (string_of_int max_tries) ^ " tries.");

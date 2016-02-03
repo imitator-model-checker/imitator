@@ -310,93 +310,58 @@ if options#imitator_mode = Inverse_method && options#branch_and_bound then(
 (* Execute IMITATOR *)
 (************************************************************)
 
-begin
-	match options#imitator_mode with
+let algorithm : AlgoGeneric.algoGeneric = match options#imitator_mode with
+	
+	(* Exploration *)
+	| State_space_exploration ->
+			(*** NOTE: this is static subclass coercition; see https://ocaml.org/learn/tutorials/objects.html ***)
+		let myalgo :> AlgoGeneric.algoGeneric = new AlgoPostStar.algoPostStar in myalgo
 		
-		(*** TODO: rewrite this part in a more generic manner ***)
-		
-		
-		(* Exploration *)
-		| State_space_exploration
-			->
-			let algo = new AlgoPostStar.algoPostStar in
-			let result = algo#run() in
-			ResultProcessor.process_result result None;
-			
-(* 			Reachability.full_state_space_exploration model; *)
-			
-		(* Synthesis *)
-		| EF_synthesis 
-			->
-			let algo = new AlgoEFsynth.algoEFsynth in
-			let result = algo#run() in
-			ResultProcessor.process_result result None;
+	(* EF-synthesis *)
+	| EF_synthesis ->
+		let myalgo :> AlgoGeneric.algoGeneric = new AlgoEFsynth.algoEFsynth in myalgo
+	
+	(* Inverse Method *)
+	| Inverse_method ->
+		(*** HACK to call the good class ***)
+		if options#pi_compatible then
+			let myalgo :> AlgoGeneric.algoGeneric = new AlgoIMK.algoIMK in myalgo
+		else
+		if options#efim then
+			let myalgo :> AlgoGeneric.algoGeneric = new AlgoPRP.algoPRP in myalgo
+		else
+		if options#union then
+			let myalgo :> AlgoGeneric.algoGeneric = new AlgoIMunion.algoIMunion in myalgo
+		else
+			let myalgo :> AlgoGeneric.algoGeneric = new AlgoIM.algoIM in myalgo
 
-(* 			Reachability.ef_synthesis model *)
-
-			
-		(* Inverse Method *)
-		| Inverse_method ->
-			(*** HACK to call the good class ***)
-			if options#pi_compatible then
-				let algo = new AlgoIMK.algoIMK in
-				let result = algo#run() in
-				ResultProcessor.process_result result None;
-			else
-			if options#efim then
-				(
-				let algo = new AlgoPRP.algoPRP in
-				let result = algo#run() in
-				ResultProcessor.process_result result None;
-				)
-			else
-			if options#union then
-				(
-(* 				Reachability.inverse_method model; *)
-				let algo = new AlgoIMunion.algoIMunion in
-				let result = algo#run() in
-				ResultProcessor.process_result result None;
-				)
-				else(
-				(* Classical IM *)
-				let algo = new AlgoIM.algoIM in
-				let result = algo#run() in
-				ResultProcessor.process_result result None;
-			)
-
-
-		| Cover_cartography ->
-			(* PRPC *)
-			if options#efim then(
-				let algo = new AlgoPRPC.algoPRPC in
-				let result = algo#run() in
-				ResultProcessor.process_result result None;
-			
-			(* Regular cartography *)
-			)else(
-				let algo = new AlgoBCCover.algoBCCover in
-				let result = algo#run() in
-				ResultProcessor.process_result result None;
-			)
-		
-		
-		| (*Cover_cartography | *)Border_cartography ->
-		(* Behavioral cartography algorithm with full coverage *)
+	| Cover_cartography ->
+		(* PRPC *)
+		if options#efim then
+			let myalgo :> AlgoGeneric.algoGeneric = new AlgoPRPC.algoPRPC in myalgo
+		(* Regular cartography *)
+		else
+			let myalgo :> AlgoGeneric.algoGeneric = new AlgoBCCover.algoBCCover in myalgo
+	
+	| Border_cartography ->
+	(* Behavioral cartography algorithm with full coverage *)
 (* 			Cartography.cover_behavioral_cartography model *)
-			raise (InternalError("Not implemented !!!"))
-			
-			
-		| Random_cartography nb ->
-		(* Behavioral cartography algorithm with random iterations *)
-(* 			Cartography.random_behavioral_cartography model nb; *)
-			let algo = new AlgoBCRandom.algoBCRandom in
-			let result = algo#run() in
-			ResultProcessor.process_result result None;
+		raise (InternalError("Not implemented !!!"))
+		
+		
+	| Random_cartography nb ->
+		let myalgo :> AlgoGeneric.algoGeneric = new AlgoBCRandom.algoBCRandom in myalgo
 
-		| Translation -> raise (InternalError "Translation cannot be executed here; program should already have terminated at this point.");
+	| Translation -> raise (InternalError "Translation cannot be executed here; program should already have terminated at this point.");
+in
 
-end;
+(* Run! *)
+let result = algorithm#run() in
 
+(* Process *)
+ResultProcessor.process_result result None;
+
+		
 
 (************************************************************)
 (* END EXCEPTION MECHANISM *)
