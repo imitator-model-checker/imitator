@@ -317,38 +317,44 @@ let algorithm : AlgoGeneric.algoGeneric = match options#imitator_mode with
 			(*** NOTE: this is static subclass coercition; see https://ocaml.org/learn/tutorials/objects.html ***)
 		let myalgo :> AlgoGeneric.algoGeneric = new AlgoPostStar.algoPostStar in myalgo
 		
+		
 	(* EF-synthesis *)
 	| EF_synthesis ->
 		let myalgo :> AlgoGeneric.algoGeneric = new AlgoEFsynth.algoEFsynth in myalgo
 	
+	
+	(* IMK *)
+	(*** TODO: use four different modes ***)
+	| Inverse_method when options#pi_compatible ->
+			let myalgo :> AlgoGeneric.algoGeneric = new AlgoIMK.algoIMK in myalgo
+
+	(* PRP *)
+	| Inverse_method when options#efim ->
+			let myalgo :> AlgoGeneric.algoGeneric = new AlgoPRP.algoPRP in myalgo
+
+	(* IMunion *)
+	| Inverse_method when options#union ->
+			let myalgo :> AlgoGeneric.algoGeneric = new AlgoIMunion.algoIMunion in myalgo
+
 	(* Inverse Method *)
 	| Inverse_method ->
-		(*** HACK to call the good class ***)
-		if options#pi_compatible then
-			let myalgo :> AlgoGeneric.algoGeneric = new AlgoIMK.algoIMK in myalgo
-		else
-		if options#efim then
-			let myalgo :> AlgoGeneric.algoGeneric = new AlgoPRP.algoPRP in myalgo
-		else
-		if options#union then
-			let myalgo :> AlgoGeneric.algoGeneric = new AlgoIMunion.algoIMunion in myalgo
-		else
 			let myalgo :> AlgoGeneric.algoGeneric = new AlgoIM.algoIM in myalgo
 
-	| Cover_cartography ->
-		(* PRPC *)
-		if options#efim then
+
+	(* PRPC *)
+	(*** TODO: use two different modes for PRPC and BC ***)
+	| Cover_cartography when options#efim ->
 			let myalgo :> AlgoGeneric.algoGeneric = new AlgoPRPC.algoPRPC in myalgo
-		(* Regular cartography *)
-		else
+
+	(* BC with full coverage *)
+	| Cover_cartography ->
 			let myalgo :> AlgoGeneric.algoGeneric = new AlgoBCCover.algoBCCover in myalgo
 	
 	| Border_cartography ->
-	(* Behavioral cartography algorithm with full coverage *)
 (* 			Cartography.cover_behavioral_cartography model *)
 		raise (InternalError("Not implemented !!!"))
 		
-		
+	(* BC with random coverage *)
 	| Random_cartography nb ->
 		let myalgo :> AlgoGeneric.algoGeneric = new AlgoBCRandom.algoBCRandom in myalgo
 
