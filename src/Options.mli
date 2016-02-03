@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2012/05/10
- * Last modified: 2016/01/29
+ * Last modified: 2016/02/03
  *
  ****************************************************************)
  
@@ -38,10 +38,18 @@ type distribution_mode =
 class imitator_options :
 	object
 		
+		(************************************************************)
+		(* Class methods *)
+		(************************************************************)
+		
+		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+		(* Get methods *)
+		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+		
 		method acyclic : bool
-		method acyclic_unset : unit
+(* 		method acyclic_unset : unit *)
 		method branch_and_bound : bool
-		method branch_and_bound_unset : unit
+(* 		method branch_and_bound_unset : unit *)
 		method cart : bool
 		method cartonly : bool
 		method carto_tiles_limit : int option
@@ -51,7 +59,7 @@ class imitator_options :
 		method completeIM : bool
 		(** HACK: property input from CosyVerif *)
 		method cosyprop : string
-		method counterex : bool
+(* 		method counterex : bool *)
 		method depth_limit : int option
 		method distribution_mode : distribution_mode
 		method distributedKillIM : bool
@@ -99,6 +107,11 @@ class imitator_options :
 		method with_graphics_source : bool
 		method with_log : bool
 (* 		method with_parametric_log : bool *)
+
+		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+		(* Other methods *)
+		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+		
 		method parse : unit
 		
 		(* Recall options *)

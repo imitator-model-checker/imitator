@@ -51,8 +51,18 @@ type distribution_mode =
 	| Distributed_unsupervised_multi_threaded
 
 
+
+let do_unit something =
+	Unit (fun () -> something)
+
+			
+
 class imitator_options =
 	object
+		(************************************************************)
+		(* Class variables *)
+		(************************************************************)
+
 		val mutable nb_args = 0
 	
 	
@@ -61,26 +71,26 @@ class imitator_options =
 		(*** WARNING: why so many mutable ref, although mutable would do ?? ***)
 		
 		(* imitator model input file *)
-		val mutable file = ref ""
+		val mutable file = ""
 		
 		(* pi0 file *)
-		val mutable pi0file = ref ""
+		val mutable pi0file = ""
 		
 		(* Create a "fake" pi0 file (USELESS) *)
 (* 		val mutable forcePi0 = ref false *)
 		
 		(* GML syntax *)
-		val mutable fromGML = ref false
+		val mutable fromGML = false
 		
 		
 	
 		(* OUTPUT OPTIONS *)
 		
 		(* plot cartography *)
-		val mutable cart = ref false
+		val mutable cart = false
 		
 		(* only plot cartography *)
-		val mutable cartonly = ref false
+		val mutable cartonly = false
 		
 		(* Give location detais in dot *)
 		val mutable fancy = ref true
@@ -141,7 +151,7 @@ class imitator_options =
 		val mutable cosyprop = ref ""
 		
 		(* imitator mode *)
-		val mutable imitator_mode = ref Inverse_method
+		val mutable imitator_mode = Inverse_method
 
 		
 		
@@ -151,13 +161,13 @@ class imitator_options =
 		val mutable acyclic = ref false 
 		
 		(* limit on number of tiles computed by a cartography *)
-		val mutable carto_tiles_limit = ref None
+		val mutable carto_tiles_limit = None
 		
 		(* limit on global runtime for cartography *)
-		val mutable carto_time_limit = ref None
+		val mutable carto_time_limit = None
 		
 		(* stop the analysis as soon as a counterexample is found *)
-		val mutable counterex = ref false
+(* 		val mutable counterex = ref false *)
 
 		(* Check whether each constraint contains an integer point *)
 		val mutable check_ippta = ref false
@@ -247,20 +257,27 @@ class imitator_options =
 		val mutable merge_before = ref false
 
 
+		(************************************************************)
+		(* Class methods *)
+		(************************************************************)
+
+		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+		(* Get methods *)
+		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		
 		method acyclic = !acyclic
-		method acyclic_unset = (acyclic := false)
+(* 		method acyclic_unset = (acyclic := false) *)
 		method branch_and_bound = !branch_and_bound
-		method branch_and_bound_unset = (branch_and_bound := false)
-		method cart = !cart
-		method carto_tiles_limit = !carto_tiles_limit
-		method carto_time_limit = !carto_time_limit
-		method cartonly = !cartonly
+(* 		method branch_and_bound_unset = (branch_and_bound := false) *)
+		method cart = cart
+		method carto_tiles_limit = carto_tiles_limit
+		method carto_time_limit = carto_time_limit
+		method cartonly = cartonly
 		method check_ippta = !check_ippta
 		method check_point = !check_point
 		method completeIM = !completeIM
 		method cosyprop = !cosyprop
-		method counterex = !counterex
+(* 		method counterex = !counterex *)
 		method depth_limit = !depth_limit
 		method distribution_mode = !distribution_mode
 		method distributedKillIM = !distributedKillIM
@@ -268,10 +285,10 @@ class imitator_options =
 		method dynamic_clock_elimination = !dynamic_clock_elimination
 		method efim = !efim
 		method fancy = !fancy
-		method file = !file
+		method file = file
 		method files_prefix = !files_prefix
-		method fromGML = !fromGML
-		method imitator_mode = !imitator_mode
+		method fromGML = fromGML
+		method imitator_mode = imitator_mode
 		method inclusion = !inclusion
 		method nb_args = nb_args
 		method merge = !merge
@@ -308,7 +325,13 @@ class imitator_options =
 		method with_log = !with_log
 (* 		method with_parametric_log = !with_parametric_log *)
 
-		method pi0file = !pi0file
+		method pi0file = pi0file
+		
+		
+		
+		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+		(* Parse method *)
+		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 		
 		method parse =
@@ -330,26 +353,26 @@ class imitator_options =
 			and set_mode mode =
 				(* Case: state space exploration *)
 				if mode = "statespace" then 
-					imitator_mode := State_space_exploration
+					imitator_mode <- State_space_exploration
 				(* Case: EF-synthesis *)
 				else if mode = "EF" then 
-					imitator_mode := EF_synthesis
+					imitator_mode <- EF_synthesis
 				(* Case: inverse method *)
 				else if mode = "inversemethod" then 
-					imitator_mode := Inverse_method
+					imitator_mode <- Inverse_method
 				(* Case: cover *)
 				else if mode = "cover" then 
-					imitator_mode := Cover_cartography
+					imitator_mode <- Cover_cartography
 				(* Case: border *)
 				else if mode = "border" then 
-					imitator_mode := Border_cartography
+					imitator_mode <- Border_cartography
 				(* Case: number of iterations *)
 				else try (
 					(* Find the 'random' string *)
 					if not (String.sub mode 0 6 = "random") then raise (Failure "toto");
 					(* Find the number *)
 					let number = String.sub mode 6 (String.length mode - 6) in
-					imitator_mode := (Random_cartography (int_of_string number))
+					imitator_mode <- (Random_cartography (int_of_string number))
 				) with Failure _ | Invalid_argument _-> (
 					(*** HACK: print header now ***)
 					print_header_string();
@@ -408,11 +431,11 @@ class imitator_options =
 (* 				Temporarily disabled (March 2014) *)
 (* 				("-bab", Set branch_and_bound, " Experimental new feature of IMITATOR, based on cost optimization (WORK IN PROGRESS). Default: 'false'"); *)
 				
-				("-cart-tiles-limit", Int (fun i -> carto_tiles_limit := Some i), " Set a maximum number of tiles computed for the cartography. Default: no limit.");
+				("-cart-tiles-limit", Int (fun i -> carto_tiles_limit <- Some i), " Set a maximum number of tiles computed for the cartography. Default: no limit.");
 
-				("-cart-time-limit", Int (fun i -> carto_time_limit := Some i), " Set a global time limit (in seconds) for the cartography (in which case the -time-limit option only applies to each call to IM). Default: no limit.");
+				("-cart-time-limit", Int (fun i -> carto_time_limit <- Some i), " Set a global time limit (in seconds) for the cartography (in which case the -time-limit option only applies to each call to IM). Default: no limit.");
 
-				("-cartonly", Unit (fun _ -> cart := true; cartonly := true; imitator_mode := Translation), " Only outputs a cartography. Default: false.");
+				("-cartonly", Unit (fun () -> cart <- true; cartonly <- true; imitator_mode <- Translation), " Only outputs a cartography. Default: false.");
 
 				(* 				("-dynamic", Set dynamic, "Perform the on-the-fly intersection. Defaut : 'false'"); *)
 				
@@ -449,7 +472,7 @@ class imitator_options =
 				
 				("-dynamic-elimination", Set dynamic_clock_elimination, " Dynamic clock elimination [FSFMA13]. Default: false.");
 				
-				("-fromGrML", Set fromGML, "GrML syntax for input files (experimental). Defaut : 'false'");
+				("-fromGrML", Unit (fun () -> fromGML <- true), "GrML syntax for input files (experimental). Defaut : 'false'");
 				
 				("-IMK", Set pi_compatible, " Algorithm IMoriginal (defined in [AS11]): return a constraint such that no pi-incompatible state can be reached. Default: 'false'");
 				
@@ -473,9 +496,9 @@ class imitator_options =
 
 				("-no-random", Set no_random, " No random selection of the pi0-incompatible inequality (select the first found). Default: false.");
 
-				(* 				("-PTA2CLP", Unit (fun _ -> pta2clp := true; imitator_mode := Translation), "Translate PTA into a CLP program, and exit without performing any analysis. Work in progress! Defaut : 'false'"); *)
+				(* 				("-PTA2CLP", Unit (fun _ -> pta2clp := true; imitator_mode <- Translation), "Translate PTA into a CLP program, and exit without performing any analysis. Work in progress! Defaut : 'false'"); *)
 				
-				("-output-cart", Set cart, " Plot cartography before terminating the program. Uses the first two parameters with ranges. Default: false.");
+				("-output-cart", Unit (fun () -> cart <- true), " Plot cartography before terminating the program. Uses the first two parameters with ranges. Default: false.");
 				
 				(*** WARNING: only works partially ***)
 				("-output-cart-x-min", Int (fun n -> output_cart_x_min := Some n), " Set minimum value for the x axis when plotting the cartography (not entirely functional yet). Default: 0.");
@@ -505,20 +528,20 @@ class imitator_options =
 
 				("-PRP", Set efim, " Reachability-preservation algorithm mixing IM and EFsynth [ALNS15]. Default: false.");
 				
-				("-PTA2GrML", Unit (fun _ -> pta2gml := true; imitator_mode := Translation), "Translate the model into a GrML model, and exit without performing any analysis. Defaut : 'false'");
+				("-PTA2GrML", Unit (fun _ -> pta2gml := true; imitator_mode <- Translation), "Translate the model into a GrML model, and exit without performing any analysis. Defaut : 'false'");
 				
-				("-PTA2HyTech", Unit (fun _ -> pta2hytech := true; imitator_mode := Translation), "Translate the model into a HyTech model, and exit without performing any analysis. Defaut : 'false'");
+				("-PTA2HyTech", Unit (fun _ -> pta2hytech := true; imitator_mode <- Translation), "Translate the model into a HyTech model, and exit without performing any analysis. Defaut : 'false'");
 				
-				("-PTA2IMI", Unit (fun _ -> pta2imi := true; imitator_mode := Translation), "Regenerate the model into a IMITATOR model, and exit without performing any analysis. Defaut : 'false'");
+				("-PTA2IMI", Unit (fun _ -> pta2imi := true; imitator_mode <- Translation), "Regenerate the model into a IMITATOR model, and exit without performing any analysis. Defaut : 'false'");
 				
 				("-PTA2JPG", Unit (fun _ ->
 					pta2jpg := true;
 					(*** HACK ***)
 					output_trace_set := true;
-					imitator_mode := Translation
+					imitator_mode <- Translation
 				), "Translate the model into a graphics, and exit without performing any analysis. Defaut : 'false'");
 				
-				("-PTA2TikZ", Unit (fun _ -> pta2tikz := true; imitator_mode := Translation), "Translate the model into LaTeX TikZ code (no positioning yet), and exit without performing any analysis. Defaut : 'false'");
+				("-PTA2TikZ", Unit (fun _ -> pta2tikz := true; imitator_mode <- Translation), "Translate the model into LaTeX TikZ code (no positioning yet), and exit without performing any analysis. Defaut : 'false'");
 				
 				("-states-limit", Int (fun i -> states_limit := Some i), " States limit: will try to stop after reaching this number of states. Warning: the program may have to first finish computing the current iteration before stopping. Default: no limit.");
 				
@@ -547,12 +570,12 @@ class imitator_options =
 				(* If 1st argument: main file *)
 				if nb_args = 0 then(
 					nb_args <- nb_args + 1;
-					file := arg;
+					file <- arg;
 				)
 				(* If 2nd argument: pi0 file *)
 				else if nb_args = 1 then(
 					nb_args <- nb_args + 1;
-					pi0file := arg;
+					pi0file <- arg;
 				)
 				(* If more than one argument : warns *)
 				else (
@@ -572,7 +595,7 @@ class imitator_options =
 			);
 			
 			(* Case no pi0 file *)
-			if nb_args = 1 && (!imitator_mode != State_space_exploration) && (!imitator_mode != EF_synthesis) && (!imitator_mode != Translation) (*&& not !forcePi0*) then(
+			if nb_args = 1 && (imitator_mode != State_space_exploration) && (imitator_mode != EF_synthesis) && (imitator_mode != Translation) (*&& not !forcePi0*) then(
 				(*** HACK: print header now ***)
 				print_header_string();
 				print_error ("Please give a file name for the reference valuation.");
@@ -584,7 +607,7 @@ class imitator_options =
 			(* Set prefix for files *)
 			if !files_prefix = "" then
 				(*** WHAT ? ***)
-			  files_prefix := !file
+			  files_prefix := file
 			;
 			  
 			(* Remove the ".imi" at the end of the program prefix, if any *)
@@ -602,12 +625,12 @@ class imitator_options =
 			
 			
 
-		(************************************************************)		
+		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		(* Recall options and print info *)
-		(************************************************************)		
+		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		method recall() =
 			(* File *)
-			print_message Verbose_standard ("Model: " ^ !file);
+			print_message Verbose_standard ("Model: " ^ file);
 			(* File prefix *)
 			print_message Verbose_low ("Prefix for output files: " ^ !files_prefix);
 			(* Print full command *)
@@ -615,7 +638,7 @@ class imitator_options =
 			print_message Verbose_low ("Command: " ^ (OCamlUtilities.string_of_array_of_string_with_sep " " Sys.argv));
 
 			(* Global mode *)
-			let message = match !imitator_mode with
+			let message = match imitator_mode with
 				| Translation -> "translation"
 				| State_space_exploration -> "parametric state space exploration"
 				| EF_synthesis -> "EF-synthesis"
@@ -634,7 +657,7 @@ class imitator_options =
 			
 			(* Shortcut *)
 			let in_cartography_mode =
-				match !imitator_mode with
+				match imitator_mode with
 				| Translation | State_space_exploration | EF_synthesis | Inverse_method -> false
 				| Cover_cartography | Border_cartography | Random_cartography _ -> true	
 			in
@@ -645,9 +668,9 @@ class imitator_options =
 			(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 			
 			(* If a time limit is defined for BC but NOT for IM, then define it for IM too (otherwise may yield an infinite loop in IM...) *)
-			if in_cartography_mode && !carto_time_limit <> None && !time_limit = None then(
+			if in_cartography_mode && carto_time_limit <> None && !time_limit = None then(
 				print_warning ("A time limit is defined for BC but not for IM: forcing time limit for IM too.");
-				let limit = match !carto_time_limit with
+				let limit = match carto_time_limit with
 					| None -> raise (InternalError ("Impossible situation in options, carto_time_limit is set at that point"))
 					| Some limit -> limit
 				in
@@ -658,11 +681,11 @@ class imitator_options =
 			(* Handling BC tiles files output *)
 			if in_cartography_mode then(
 				(* Case cartograpy output requested *)
-				if !cart then(
+				if cart then(
 					(* Enable cartography for BC *)
 					output_bc_cart := true;
 					(* Disable cartography for instances unless requested *)
-					if not !output_tiles_files then cart := false
+					if not !output_tiles_files then cart <- false
 				);
 			
 				(* Case result output requested *)
@@ -684,14 +707,14 @@ class imitator_options =
 			(* Check compatibility between options *) 
 			(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 			if nb_args = 2 then(
-				if !imitator_mode = Translation then
-					print_warning ("The pi0 file " ^ !pi0file ^ " will be ignored since this is a translation.")
+				if imitator_mode = Translation then
+					print_warning ("The pi0 file " ^ pi0file ^ " will be ignored since this is a translation.")
 				;
-				if !imitator_mode = State_space_exploration then
-					print_warning ("The pi0 file " ^ !pi0file ^ " will be ignored since this is a state space exploration.")
+				if imitator_mode = State_space_exploration then
+					print_warning ("The pi0 file " ^ pi0file ^ " will be ignored since this is a state space exploration.")
 				;
-				if !imitator_mode = EF_synthesis then
-					print_warning ("The pi0 file " ^ !pi0file ^ " will be ignored since this is a synthesis with respect to a property.")
+				if imitator_mode = EF_synthesis then
+					print_warning ("The pi0 file " ^ pi0file ^ " will be ignored since this is a synthesis with respect to a property.")
 				;
 			(*	if !forcePi0 then
 					print_warning ("The pi0 file " ^ !pi0file ^ " will be ignored since this the pi0 file is automatically generated.")
@@ -709,13 +732,13 @@ class imitator_options =
 
 			
 			(* No cart options if not in cartography *)
-			if not in_cartography_mode && !carto_tiles_limit <> None then print_warning ("A maximum number of tiles has been set, but " ^ Constants.program_name ^ " does not run in cartography mode. Ignored.");
-			if not in_cartography_mode && !carto_time_limit <> None then print_warning ("A maximum computation for the cartography has been set, but " ^ Constants.program_name ^ " does not run in cartography mode. Ignored.");
+			if not in_cartography_mode && carto_tiles_limit <> None then print_warning ("A maximum number of tiles has been set, but " ^ Constants.program_name ^ " does not run in cartography mode. Ignored.");
+			if not in_cartography_mode && carto_time_limit <> None then print_warning ("A maximum computation for the cartography has been set, but " ^ Constants.program_name ^ " does not run in cartography mode. Ignored.");
 			if not in_cartography_mode && (NumConst.neq !step NumConst.one) then
 				print_warning (Constants.program_name ^ " is not run in cartography mode; the option regarding to the step of the cartography algorithm will thus be ignored.");
 			
 			(* Options for variants of IM, but not in IM mode *)
-			if (!imitator_mode = State_space_exploration || !imitator_mode = Translation) && (!union || !pi_compatible) then
+			if (imitator_mode = State_space_exploration || imitator_mode = Translation) && (!union || !pi_compatible) then
 				print_warning (Constants.program_name ^ " is run in state space exploration mode; options regarding to the variant of the inverse method will thus be ignored.");
 
 			
@@ -730,7 +753,7 @@ class imitator_options =
 			(* Variant of the inverse method *)
 			if !inclusion then
 				begin
-				match !imitator_mode with
+				match imitator_mode with
 				| Inverse_method | Cover_cartography | Border_cartography | Random_cartography _
 					-> print_message Verbose_standard ("Considering variant of IM with inclusion in the fixpoint [AS11].")
 				| _ -> print_message Verbose_standard ("Considering fixpoint variant with inclusion of symbolic zones (instead of equality).")
@@ -770,44 +793,44 @@ class imitator_options =
 				print_message Verbose_medium ("Non-distributed mode (default).");
 			| Distributed_unsupervised ->(
 				print_message Verbose_standard ("Considering a distributed mode with unsupervised workers (work in progress).");
-				if !imitator_mode <> Cover_cartography then(
+				if imitator_mode <> Cover_cartography then(
 					print_warning "The distributed mode is only valid for the cartography. Option will be ignored.";
 				)
 			)
 			| Distributed_unsupervised_multi_threaded ->(
 				print_message Verbose_standard ("Considering a distributed mode with unsupervised multi-threaded workers (work in progress).");
-				if !imitator_mode <> Cover_cartography then(
+				if imitator_mode <> Cover_cartography then(
 					print_warning "The distributed mode is only valid for the cartography. Option will be ignored.";
 				)
 			)
 			| Distributed_static ->(
 				print_message Verbose_standard ("Considering a distributed mode with static splitting [ACN15].");
-				if !imitator_mode <> Cover_cartography then(
+				if imitator_mode <> Cover_cartography then(
 					print_warning "The distributed mode is only valid for the cartography. Option will be ignored.";
 				)
 			)
 			| Distributed_ms_sequential ->(
 				print_message Verbose_standard ("Considering a distributed mode with sequential enumeration of pi0 points [ACE14].");
-				if !imitator_mode <> Cover_cartography then(
+				if imitator_mode <> Cover_cartography then(
 					print_warning "The distributed mode is only valid for the cartography. Option will be ignored.";
 				)
 			)
 			| Distributed_ms_shuffle ->(
 				print_message Verbose_standard ("Considering a distributed mode with \"shuffle\" enumeration of pi0 points.");
-				if !imitator_mode <> Cover_cartography then(
+				if imitator_mode <> Cover_cartography then(
 					print_warning "The distributed mode is only valid for the cartography. Option will be ignored.";
 				)
 			)
 			| Distributed_ms_random max -> (
 				print_message Verbose_standard ("Considering a distributed mode with random generation of pi0 points with up to " ^ (string_of_int max) ^ " successive failure before switching to exhaustive enumeration [ACE14].");
-				if !imitator_mode <> Cover_cartography then(
+				if imitator_mode <> Cover_cartography then(
 					print_warning "The distributed mode is only valid for the cartography. Option will be ignored.";
 				)
 			)
 			(*************)
 			| Distributed_ms_subpart -> (
 				print_message Verbose_standard ("Considering a distributed mode with a dynamic domain decomposition [ACN15].");
-				if !imitator_mode <> Cover_cartography then(
+				if imitator_mode <> Cover_cartography then(
 					print_warning "The distributed mode is only valid for the cartography. Option will be ignored.";
 				)
 			)
@@ -815,7 +838,7 @@ class imitator_options =
 
 			if !distributedKillIM then(
 				print_message Verbose_standard ("Heuristics to kill a process when its point is covered by another tile, in the distributed cartography [ACN15]; only works with some distribution schemes.");
-				if !imitator_mode <> Cover_cartography || !distribution_mode = Non_distributed then(
+				if imitator_mode <> Cover_cartography || !distribution_mode = Non_distributed then(
 					print_warning "The killIM heuristics is only valid for the distributed cartography. Option will be ignored.";
 				);
 			)else
@@ -840,7 +863,7 @@ class imitator_options =
 
 
 			(* Syntax *)
-			if !fromGML then
+			if fromGML then
 				print_message Verbose_standard ("GrML syntax used.");
 
 			(* Syntax *)
@@ -908,7 +931,7 @@ class imitator_options =
 			(*** TODO: check that only in IM/BC mode ***)
 			if !check_point then(
 				print_message Verbose_standard ("At each iteration, it will be checked whether the parameter constraint is restricted to the sole pi0 point (experimental and costly!).");
-				if !imitator_mode <> Inverse_method then
+				if imitator_mode <> Inverse_method then
 					print_warning("The -check-point option is only valid for the inverse method. It will hence be ignored.");
 			)
 			else
@@ -921,7 +944,7 @@ class imitator_options =
 			(* Recall output options *)
 			(************************************************************)
 
-			if !cart then
+			if cart then
 				print_message Verbose_standard ("The cartography will be drawn.")
 			else
 				print_message Verbose_medium ("No graphical output for the cartography (default).");
@@ -932,21 +955,21 @@ class imitator_options =
 			match !output_cart_x_min with
 				| None -> print_message Verbose_medium ("No specified minimum value for the x axis for the cartography (default).");
 				| Some n ->
-					if not !cart then (print_warning "A minimum value for the x axis for the cartography is specified, but no cartography will be output. Ignored.")
+					if not cart then (print_warning "A minimum value for the x axis for the cartography is specified, but no cartography will be output. Ignored.")
 					else print_message Verbose_low ("The minimum value for the x axis for the cartography will be " ^ (string_of_int n) ^ ".");
 			end;
 			begin
 			match !output_cart_x_max with
 				| None -> print_message Verbose_medium ("No specified minimum value for the x axis for the cartography (default).");
 				| Some n ->
-					if not !cart then (print_warning "A maximum value for the x axis for the cartography is specified, but no cartography will be output. Ignored.")
+					if not cart then (print_warning "A maximum value for the x axis for the cartography is specified, but no cartography will be output. Ignored.")
 					else print_message Verbose_low ("The maximum value for the x axis for the cartography will be " ^ (string_of_int n) ^ ".");
 			end;
 			begin
 			match !output_cart_y_min with
 				| None -> print_message Verbose_medium ("No specified minimum value for the y axis for the cartography (default).");
 				| Some n ->
-					if not !cart then (print_warning "A minimum value for the y axis for the cartography is specified, but no cartography will be output. Ignored.")
+					if not cart then (print_warning "A minimum value for the y axis for the cartography is specified, but no cartography will be output. Ignored.")
 					else print_message Verbose_low ("The minimum value for the y axis for the cartography will be " ^ (string_of_int n) ^ ".");
 			end;
 			begin
@@ -1019,14 +1042,14 @@ class imitator_options =
 			
 			(* Cartography: Tiles limit *)
 			begin
-			match !carto_tiles_limit with
+			match carto_tiles_limit with
 				| None -> print_message Verbose_medium "Considering no limit of tiles for the cartography (default)."
 				| Some limit -> print_warning (Constants.program_name ^ " will stop after the cartography computed (at most) " ^ (string_of_int limit) ^ " tiles.")
 			end;
 			
 			(* Cartography: Time limit *)
 			begin
-			match !carto_time_limit with
+			match carto_time_limit with
 				| None -> print_message Verbose_medium "Considering no time limit for the cartography (default)."
 				| Some limit -> print_warning (Constants.program_name ^ " will try to stop the cartography after " ^ (string_of_int limit) ^ " seconds.")
 			end;
