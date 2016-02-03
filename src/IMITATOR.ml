@@ -9,7 +9,7 @@
  * 
  * File contributors : Ulrich Kühne, Étienne André
  * Created           : 2009/09/07
- * Last modified     : 2016/02/02
+ * Last modified     : 2016/02/03
  *
  ************************************************************)
 
@@ -114,20 +114,6 @@ if verbose_mode_greater Verbose_low then(
 	print_message Verbose_low ("\nThe property is the following one:\n" ^ (ModelPrinter.string_of_property model model.user_property) ^ "\n");
 );
 
-
-(************************************************************)
-(* Case distributed *)
-(************************************************************)
-(*** WARNING:  Do not modify the following lines! (used by an external script to compile the non-distributed version of IMITATOR) ***)
-(*(* ** *** **** ***** ******    BEGIN FORK PaTATOR    ****** ***** **** *** ** *)
-begin
-match options#distribution_mode with
-	(* Fork if distributed *)
-	| Non_distributed -> ()
-	| _ -> (RunPaTATOR.run(); exit(0))
-end;
-(* ** *** **** ***** ******    END FORK PaTATOR    ****** ***** **** *** ** *)*)
-(*** WARNING:  Do not modify the previous lines! (used by an external script to compile the non-distributed version of IMITATOR) ***)
 
 
 
@@ -307,22 +293,31 @@ if options#imitator_mode = Inverse_method && options#branch_and_bound then(
 
 
 (************************************************************)
+(************************************************************)
 (* Execute IMITATOR *)
+(************************************************************)
 (************************************************************)
 
 let algorithm : AlgoGeneric.algoGeneric = match options#imitator_mode with
 	
+	(************************************************************)
 	(* Exploration *)
+	(************************************************************)
 	| State_space_exploration ->
 			(*** NOTE: this is static subclass coercition; see https://ocaml.org/learn/tutorials/objects.html ***)
 		let myalgo :> AlgoGeneric.algoGeneric = new AlgoPostStar.algoPostStar in myalgo
 		
 		
+	(************************************************************)
 	(* EF-synthesis *)
+	(************************************************************)
 	| EF_synthesis ->
 		let myalgo :> AlgoGeneric.algoGeneric = new AlgoEFsynth.algoEFsynth in myalgo
 	
 	
+	(************************************************************)
+	(* Inverse method and variants *)
+	(************************************************************)
 	(* IMK *)
 	(*** TODO: use four different modes ***)
 	| Inverse_method when options#pi_compatible ->
@@ -341,6 +336,30 @@ let algorithm : AlgoGeneric.algoGeneric = match options#imitator_mode with
 			let myalgo :> AlgoGeneric.algoGeneric = new AlgoIM.algoIM in myalgo
 
 
+
+	(************************************************************)
+	(* Begin distributed cartography *)
+	(************************************************************)
+	(*** WARNING:  Do not modify the following lines! (used by an external script to compile the non-distributed version of IMITATOR) ***)
+	(*(* ** *** **** ***** ******    BEGIN FORK PaTATOR    ****** ***** **** *** ** *)
+(*	begin
+	match options#distribution_mode with
+		(* Fork if distributed *)
+		| Non_distributed -> ()
+		| _ -> (RunPaTATOR.run(); exit(0))
+	end;*)
+	| Cover_cartography when options#distribution_mode <> Non_distributed ->
+			let myalgo :> AlgoGeneric.algoGeneric = new AlgoBCCoverDistributedMSSeq.algoBCCoverDistributedMSSeq in myalgo
+	(* ** *** **** ***** ******    END FORK PaTATOR    ****** ***** **** *** ** *)*)
+	(*** WARNING:  Do not modify the previous lines! (used by an external script to compile the non-distributed version of IMITATOR) ***)
+	(************************************************************)
+	(* End distributed cartography *)
+	(************************************************************)
+	
+	
+	(************************************************************)
+	(* Non-distributed cartography *)
+	(************************************************************)
 	(* PRPC *)
 	(*** TODO: use two different modes for PRPC and BC ***)
 	| Cover_cartography when options#efim ->
@@ -357,6 +376,12 @@ let algorithm : AlgoGeneric.algoGeneric = match options#imitator_mode with
 	(* BC with random coverage *)
 	| Random_cartography nb ->
 		let myalgo :> AlgoGeneric.algoGeneric = new AlgoBCRandom.algoBCRandom in myalgo
+		
+	
+		
+	(************************************************************)
+	(* Translation has been handled already *)
+	(************************************************************)
 
 	| Translation -> raise (InternalError "Translation cannot be executed here; program should already have terminated at this point.");
 in
@@ -374,8 +399,8 @@ ResultProcessor.process_result result None;
 (************************************************************)
 ) with
 (*** TODO: factorize a bit ***)
-	| InternalError e -> (
-		print_error ("Fatal internal error: " ^ e ^ "\nPlease (politely) insult the developers.");
+	| InternalError msg -> (
+		print_error ("Fatal internal error: " ^ msg ^ "\nPlease (politely) insult the developers.");
 		abort_program ();
 		(* Safety *)
 		exit 1
@@ -388,6 +413,12 @@ ResultProcessor.process_result result None;
 	);
 	| Invalid_argument msg -> (
 		print_error ("'Invalid_argument' exception: '" ^ msg ^ "'\nPlease (politely) insult the developers.");
+		abort_program ();
+		(* Safety *)
+		exit 1
+	);
+	| SerializationError msg -> (
+		print_error ("Serialization error: " ^ msg ^ "\nPlease (politely) insult the developers.");
 		abort_program ();
 		(* Safety *)
 		exit 1

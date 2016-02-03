@@ -8,7 +8,7 @@
  * Author:        Etienne Andre, Camille Coti
  * 
  * Created:       2014/03/24
- * Last modified: 2015/04/20
+ * Last modified: 2016/02/03
  *
  ****************************************************************)
 
@@ -26,6 +26,7 @@ open AbstractModel
 open Exceptions
 open OCamlUtilities
 open ImitatorUtilities
+open Result
 
 
 (****************************************************************)
@@ -36,21 +37,21 @@ type rank = int
 (** Tags sent by workers *)
 type pull_request =
 	| PullOnly of rank
-	| Tile of rank * Reachability.im_result
+	| Tile of rank * Result.abstract_im_result
 	| OutOfBound of rank
 	(* Subpart tags *)
-	| Tiles of rank * (Reachability.im_result list) (** NEW TAG **)
-	| Pi0 of rank * AbstractModel.pi0
+	| Tiles of rank * (Result.abstract_im_result list) (** NEW TAG **)
+	| Pi0 of rank * PVal.pval
 	| UpdateRequest of rank
 
 
 (** Tags sent by the master *)
 type work_assignment =
-	| Work of AbstractModel.pi0
+	| Work of PVal.pval
 	| Stop
 	(* Subpart tags *)
 	| Subpart of HyperRectangle.hyper_rectangle
-	| TileUpdate of Reachability.im_result
+	| TileUpdate of Result.abstract_im_result
 	| Terminate
 	| Continue
 
@@ -143,7 +144,7 @@ let serialize_pi0_pair (variable_index , value) =
 	(serialize_numconst value)
 
 
-let serialize_pi0 (pi0:AbstractModel.pi0) =
+let serialize_pi0 (pi0:PVal.pval) =
 	let nb_parameters = PVal.get_dimensions () in
 	(* Create an array *)
 	let pi0_array = Array.create nb_parameters (0, NumConst.zero) in
@@ -241,19 +242,19 @@ let unserialize_hyper_rectangle hyper_rectangle_string =
 (*------------------------------------------------------------*)
 
 let serialize_tile_nature = function
-	| Good -> "G"
-	| Bad -> "B"
-	| Unknown -> "U"
+	| StateSpace.Good -> "G"
+	| StateSpace.Bad -> "B"
+	| StateSpace.Unknown -> "U"
 
 
 let unserialize_tile_nature = function
-	| "G" -> Good
-	| "B" -> Bad
-	| "U" -> Unknown
+	| "G" -> StateSpace.Good
+	| "B" -> StateSpace.Bad
+	| "U" -> StateSpace.Unknown
 	| other -> raise (InternalError ("Impossible match '" ^ other ^ "' in unserialize_tile_nature."))
 
 
-let serialize_returned_constraint = function
+(*let serialize_returned_constraint = function
 	(* Constraint under convex form *)
 	| Convex_constraint (p_linear_constraint , tile_nature) ->
 		(* Serialize the constraints *)
@@ -293,10 +294,11 @@ let unserialize_returned_constraint returned_constraint_string =
 		| _ -> Union_of_constraints (constraints , tile_nature)
 		(*** WARNING: NNCConstraint case not implemented ! ***)
 	in result 
-	
+	*)
 
 let serialize_im_result im_result =
-	(* Returned constraint *)
+	raise (InternalError("Not implemented"))
+(*	(* Returned constraint *)
 	(serialize_returned_constraint im_result.result)
 	^
 	serialize_SEP_STRUCT
@@ -332,11 +334,13 @@ let serialize_im_result im_result =
 	serialize_SEP_STRUCT
 	^
 	(* Computation time *)
-	(string_of_float im_result.total_time)
+	(string_of_float im_result.total_time)*)
 
 
 let unserialize_im_result im_result_string =
-	print_message Verbose_medium ( "[Master] About to unserialize '" ^ im_result_string ^ "'");
+		raise (InternalError("Not implemented"))
+
+(*	print_message Verbose_medium ( "[Master] About to unserialize '" ^ im_result_string ^ "'");
 	let returned_constraint_string , tile_nature_str , premature_stop_string ,  deterministic_string , nb_states_string , nb_transitions_string , nb_iterations_string , total_time_string =
 	match split serialize_SEP_STRUCT im_result_string with
 		| [returned_constraint_string ; tile_nature_str ; premature_stop_string ; deterministic_string ; nb_states_string ; nb_transitions_string ; nb_iterations_string ; total_time_string ]
@@ -353,7 +357,7 @@ let unserialize_im_result im_result_string =
 		nb_iterations		= int_of_string nb_iterations_string;
 		total_time			= float_of_string total_time_string;
 	}
-	
+	*)
 
 (** Serialize a list of im_result *)
 let serialize_im_result_list im_result_list =
@@ -418,6 +422,7 @@ abort_program();;*)
 (* Tests *)
 (*------------------------------------------------------------*)
 
+(*
 let debug_string_of_pi0 pi0 =
 	let nb_parameters = PVal.get_dimensions () in
 	(*** BADPROG ***)
@@ -522,7 +527,7 @@ let test_serialization () =
 	()
 
 ;;
-(*test_serialization();
+test_serialization();
 abort_program();;*)
 	
 
@@ -717,7 +722,7 @@ let send_tileupdate im_result slave_rank =
 (*** WARNING / BADPROG : these 2 functions seem to be almost identical !! ***)
 (*** TODO: factorize! ***)
 (* Sends a point (first the size then the point), by the master *)
-let send_pi0 (pi0 : AbstractModel.pi0) slave_rank =
+let send_pi0 (pi0 : PVal.pval) slave_rank =
 	let mpi0 = serialize_pi0 pi0 in
 	let res_size = String.length mpi0 in
 	

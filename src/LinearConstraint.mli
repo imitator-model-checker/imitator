@@ -10,7 +10,7 @@
  * Author:        Etienne Andre
  * 
  * Created:       2010/03/04
- * Last modified: 2016/01/28
+ * Last modified: 2016/02/03
  *
  ****************************************************************) 
  
@@ -407,26 +407,6 @@ val shape_of_poly : variable -> variable -> p_linear_constraint -> (float*float)
 val plot_2d : variable -> variable -> p_linear_constraint -> float -> float -> float -> float -> bool*string
 
 
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
-(** {2 Serialization} *)
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
-val serialize_variable : variable -> string
-val unserialize_variable : string -> variable
-
-val serialize_linear_constraint : p_linear_constraint -> string
-val unserialize_linear_constraint : string -> p_linear_constraint
-
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
-(** {3 Statistics on performances} *)
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
-val get_statistics : float -> string
-
-
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
-(** {3 Debug} *)
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
-val test_PDBMs : unit -> unit
-
 
 
 
@@ -455,6 +435,9 @@ val true_p_nnconvex_constraint  : unit -> p_nnconvex_constraint
 
 (** Create a new p_nnconvex_constraint from a linear_constraint *)
 val p_nnconvex_constraint_of_p_linear_constraint : p_linear_constraint -> p_nnconvex_constraint
+
+(** Create a new non-convex p_nnconvex_constraint from a list of linear_constraint *)
+val p_nnconvex_constraint_of_p_linear_constraints : p_linear_constraint list -> p_nnconvex_constraint
 
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
@@ -508,3 +491,33 @@ type p_convex_or_nonconvex_constraint =
 
 (** Convert a p_convex_or_nonconvex_constraint into a string *)
 val string_of_p_convex_or_nonconvex_constraint : (variable -> string) -> p_convex_or_nonconvex_constraint -> string
+
+
+
+
+(************************************************************)
+(** {2 Serialization} *)
+(************************************************************)
+val serialize_variable : variable -> string
+val unserialize_variable : string -> variable
+
+val serialize_linear_constraint : p_linear_constraint -> string
+val unserialize_linear_constraint : string -> p_linear_constraint
+
+val serialize_p_nnconvex_constraint : p_nnconvex_constraint -> string
+val unserialize_p_nnconvex_constraint : string -> p_nnconvex_constraint
+
+val serialize_p_convex_or_nonconvex_constraint : p_convex_or_nonconvex_constraint -> string
+val unserialize_p_convex_or_nonconvex_constraint : string -> p_convex_or_nonconvex_constraint
+
+
+(************************************************************)
+(** {2 Statistics on performances} *)
+(************************************************************)
+val get_statistics : float -> string
+
+
+(************************************************************)
+(** {2 Tests} *)
+(************************************************************)
+val test_PDBMs : unit -> unit
