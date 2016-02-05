@@ -25,6 +25,7 @@ open AbstractModel
 open Result
 open AlgoBCCover
 open AlgoCartoGeneric
+open AlgoCartoMaster
 open DistributedUtilities
 
 
@@ -41,7 +42,9 @@ open DistributedUtilities
 (************************************************************)
 (************************************************************)
 class algoBCCoverDistributedMSSeq =
-	object (self) inherit algoBCCover as super
+	object (self)
+	inherit algoBCCover as super
+	inherit algoMaster as master
 	
 	(************************************************************)
 	(* Class variables *)
