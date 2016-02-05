@@ -9,7 +9,7 @@
  * 
  * File contributors : Ulrich Kühne, Étienne André
  * Created           : 2010
- * Last modified     : 2016/02/03
+ * Last modified     : 2016/02/05
  *
  ************************************************************)
 
@@ -492,9 +492,9 @@ class imitator_options =
         
         
 				
-				("-no-time-elapsing", Set no_time_elapsing, " No time elapsing in zone computation (i.e., time elapsing is performed before taking a transition, not after). Default: false.");
-
 				("-no-random", Set no_random, " No random selection of the pi0-incompatible inequality (select the first found). Default: false.");
+
+				("-no-time-elapsing", Set no_time_elapsing, " No time elapsing in zone computation (i.e., time elapsing is performed before taking a transition, not after). Default: false.");
 
 				(* 				("-PTA2CLP", Unit (fun _ -> pta2clp := true; imitator_mode <- Translation), "Translate PTA into a CLP program, and exit without performing any analysis. Work in progress! Defaut : 'false'"); *)
 				
