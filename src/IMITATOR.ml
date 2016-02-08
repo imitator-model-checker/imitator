@@ -9,7 +9,7 @@
  * 
  * File contributors : Ulrich Kühne, Étienne André
  * Created           : 2009/09/07
- * Last modified     : 2016/02/03
+ * Last modified     : 2016/02/08
  *
  ************************************************************)
 
@@ -313,6 +313,13 @@ let algorithm : AlgoGeneric.algoGeneric = match options#imitator_mode with
 	(************************************************************)
 	| EF_synthesis ->
 		let myalgo :> AlgoGeneric.algoGeneric = new AlgoEFsynth.algoEFsynth in myalgo
+	
+	
+	(************************************************************)
+	(* Parametric deadlock checking *)
+	(************************************************************)
+	| Parametric_deadlock_checking ->
+		let myalgo :> AlgoGeneric.algoGeneric = new AlgoDeadlockFree.algoDeadlockFree in myalgo
 	
 	
 	(************************************************************)

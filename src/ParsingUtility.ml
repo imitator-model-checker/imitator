@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2014/03/15
- * Last modified: 2016/01/26
+ * Last modified: 2016/02/08
  *
  ****************************************************************)
 
@@ -176,9 +176,11 @@ let compile options =
 		(* Depending on which operation we are performing *)
 		match options#imitator_mode with
 			(* If translation, reachability, synthesis: no pi0 *)
+			(*** BADPROG!!! This should be defined elsewhere... ***)
 			| Translation
 			| State_space_exploration
 			| EF_synthesis
+			| Parametric_deadlock_checking
 				-> [], []
 			
 			(* Inverse method : pi0 *)

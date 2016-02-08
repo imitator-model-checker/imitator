@@ -10,7 +10,7 @@
  * Author:        Etienne Andre
  * 
  * Created:       2009/09/09
- * Last modified: 2016/01/28
+ * Last modified: 2016/02/08
  *
  ************************************************************)
 
@@ -2282,7 +2282,7 @@ let abstract_model_of_parsing_structure (parsed_variable_declarations, parsed_au
 		match options#imitator_mode with
 		(* No pi0 / v0 *)
 		(*** BADPROG : should be an option !!! ***)
-		| Translation | State_space_exploration | EF_synthesis ->
+		| Translation | State_space_exploration | EF_synthesis | Parametric_deadlock_checking ->
 			(* Return blank values *)
 			(new PVal.pval)
 			,

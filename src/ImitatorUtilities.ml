@@ -7,7 +7,7 @@
  * Author:        Etienne Andre
  * 
  * Created:       2014/10/24
- * Last modified: 2015/09/30
+ * Last modified: 2016/02/08
  *
  ****************************************************************)
  
@@ -175,20 +175,27 @@ let verbose_mode_of_string verbose_mode =
 type imitator_mode =
 	(** Translation to another language: no analysis *)
 	| Translation
+	
 	(** Classical state space exploration *)
 	| State_space_exploration
+	
 	(** EF-synthesis *)
 	| EF_synthesis
+	
+	(** Parametric deadlock-checking *)
+	| Parametric_deadlock_checking
+	
 	(** Classical inverse method *)
 	| Inverse_method
+	
 	(** Cover the whole cartography *)
 	| Cover_cartography
+	
 	(** Look for the border using the cartography*)
 	| Border_cartography
+	
 	(** Randomly pick up values for a given number of iterations *)
 	| Random_cartography of int
-
-
 
 
 

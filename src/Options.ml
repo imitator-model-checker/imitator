@@ -9,7 +9,7 @@
  * 
  * File contributors : Ulrich Kühne, Étienne André
  * Created           : 2010
- * Last modified     : 2016/02/05
+ * Last modified     : 2016/02/08
  *
  ************************************************************)
 
@@ -354,18 +354,27 @@ class imitator_options =
 				(* Case: state space exploration *)
 				if mode = "statespace" then 
 					imitator_mode <- State_space_exploration
+					
 				(* Case: EF-synthesis *)
 				else if mode = "EF" then 
 					imitator_mode <- EF_synthesis
+					
+				(* Case: Parametric deadlock checking *)
+				else if mode = "PDC" then 
+					imitator_mode <- Parametric_deadlock_checking
+					
 				(* Case: inverse method *)
 				else if mode = "inversemethod" then 
 					imitator_mode <- Inverse_method
+					
 				(* Case: cover *)
 				else if mode = "cover" then 
 					imitator_mode <- Cover_cartography
+					
 				(* Case: border *)
 				else if mode = "border" then 
 					imitator_mode <- Border_cartography
+					
 				(* Case: number of iterations *)
 				else try (
 					(* Find the 'random' string *)
@@ -487,6 +496,7 @@ class imitator_options =
 				("-mode", String set_mode, " Mode for " ^ Constants.program_name ^ ".
         Use 'statespace' for the generation of the entire parametric state space (no pi0 needed).
         Use 'EF' for a parametric non-reachability analysis (no pi0 needed).
+        Use 'PDC' for parametric non-deadlock checking (no pi0 needed). [WORK IN PROGRESS]
         Use 'inversemethod' for the inverse method.
         For the behavioral cartography algorithm, use 'cover' to cover all the points within V0, 'border' to find the border between a small-valued good and a large-valued bad zone (experimental), or 'randomXX' where XX is a number to iterate random calls to IM (e.g., random5 or random10000). Default: 'inversemethod'.");
         
@@ -595,7 +605,7 @@ class imitator_options =
 			);
 			
 			(* Case no pi0 file *)
-			if nb_args = 1 && (imitator_mode != State_space_exploration) && (imitator_mode != EF_synthesis) && (imitator_mode != Translation) (*&& not !forcePi0*) then(
+			if nb_args = 1 && (imitator_mode != State_space_exploration) && (imitator_mode != EF_synthesis) && (imitator_mode != Parametric_deadlock_checking) && (imitator_mode != Translation) (*&& not !forcePi0*) then(
 				(*** HACK: print header now ***)
 				print_header_string();
 				print_error ("Please give a file name for the reference valuation.");
@@ -642,6 +652,7 @@ class imitator_options =
 				| Translation -> "translation"
 				| State_space_exploration -> "parametric state space exploration"
 				| EF_synthesis -> "EF-synthesis"
+				| Parametric_deadlock_checking -> "Parametric deadlock-checking"
 				| Inverse_method -> "inverse method"
 				| Cover_cartography -> "behavioral cartography algorithm with full coverage and step " ^ (NumConst.string_of_numconst !step)
 				| Border_cartography -> "behavioral cartography algorithm with border detection (experimental) and step " ^ (NumConst.string_of_numconst !step)
@@ -658,7 +669,7 @@ class imitator_options =
 			(* Shortcut *)
 			let in_cartography_mode =
 				match imitator_mode with
-				| Translation | State_space_exploration | EF_synthesis | Inverse_method -> false
+				| Translation | State_space_exploration | EF_synthesis| Parametric_deadlock_checking | Inverse_method -> false
 				| Cover_cartography | Border_cartography | Random_cartography _ -> true	
 			in
 			
@@ -716,6 +727,9 @@ class imitator_options =
 				if imitator_mode = EF_synthesis then
 					print_warning ("The pi0 file " ^ pi0file ^ " will be ignored since this is a synthesis with respect to a property.")
 				;
+				if imitator_mode = Parametric_deadlock_checking then
+					print_warning ("The pi0 file " ^ pi0file ^ " will be ignored since this is parametric deadlock checking.")
+				;
 			(*	if !forcePi0 then
 					print_warning ("The pi0 file " ^ !pi0file ^ " will be ignored since this the pi0 file is automatically generated.")
 				;*)
@@ -738,7 +752,7 @@ class imitator_options =
 				print_warning (Constants.program_name ^ " is not run in cartography mode; the option regarding to the step of the cartography algorithm will thus be ignored.");
 			
 			(* Options for variants of IM, but not in IM mode *)
-			if (imitator_mode = State_space_exploration || imitator_mode = Translation) && (!union || !pi_compatible) then
+			if (imitator_mode = State_space_exploration || imitator_mode = Translation || imitator_mode = EF_synthesis || imitator_mode = Parametric_deadlock_checking) && (!union || !pi_compatible) then
 				print_warning (Constants.program_name ^ " is run in state space exploration mode; options regarding to the variant of the inverse method will thus be ignored.");
 
 			
