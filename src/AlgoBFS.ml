@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/11/23
- * Last modified     : 2016/01/28
+ * Last modified     : 2016/02/08
  *
  ************************************************************)
 
@@ -243,27 +243,25 @@ class virtual algoBFS =
 		(* Perform the post^* *)
 		(*------------------------------------------------------------*)
 		(* Set of states computed at the previous depth *)
-		let newly_found_new_states = ref [init_state_index] in
+		let post_n = ref [init_state_index] in
 		
 		(* Boolean to check whether the time limit / state limit is reached *)
 		let limit_reached = ref Keep_going in
 
 		(* Explore further until the limit is reached or the list of lastly computed states is empty *)
-		while !limit_reached = Keep_going && !newly_found_new_states <> [] do
+		while !limit_reached = Keep_going && !post_n <> [] do
 			(* Print some information *)
 			if verbose_mode_greater Verbose_standard then (
 				print_message Verbose_low ("\n");
-				print_message Verbose_standard ("Computing post^" ^ (string_of_int current_depth) ^ " from "  ^ (string_of_int (List.length !newly_found_new_states)) ^ " state" ^ (s_of_int (List.length !newly_found_new_states)) ^ ".");
+				print_message Verbose_standard ("Computing post^" ^ (string_of_int current_depth) ^ " from "  ^ (string_of_int (List.length !post_n)) ^ " state" ^ (s_of_int (List.length !post_n)) ^ ".");
 			);
 			
 			(* Count the states for debug purpose: *)
 			let num_state = ref 0 in
-			(* Length of 'newly_found_new_states' for debug purpose *)
-			let nb_newly_found_states = List.length !newly_found_new_states in
 
-			let new_newly_found_new_states =
+			let post_n_plus_1 =
 			(* For each newly found state: *)
-			List.fold_left (fun new_newly_found_new_states orig_state_index ->
+			List.fold_left (fun current_post_n_plus_1 orig_state_index ->
 				(* Count the states for debug purpose: *)
 				num_state := !num_state + 1;
 				(* Perform the post *)
@@ -271,17 +269,17 @@ class virtual algoBFS =
 				(* Print some information *)
 				if verbose_mode_greater Verbose_medium then (
 					let beginning_message = if new_states = [] then "Found no new state" else ("Found " ^ (string_of_int (List.length new_states)) ^ " new state" ^ (s_of_int (List.length new_states)) ^ "") in
-					print_message Verbose_medium (beginning_message ^ " for the post of state " ^ (string_of_int !num_state) ^ " / " ^ (string_of_int nb_newly_found_states) ^ " in post^" ^ (string_of_int current_depth) ^ ".\n");
+					print_message Verbose_medium (beginning_message ^ " for the post of state " ^ (string_of_int !num_state) ^ " / " ^ (string_of_int (List.length !post_n)) ^ " in post^" ^ (string_of_int current_depth) ^ ".\n");
 				);
 				
 				(* Return the concatenation of the new states *)
-				(**** OPTIMIZED: do not care about order (else shoud consider 'list_append new_newly_found_new_states (List.rev new_states)') *)
-				List.rev_append new_newly_found_new_states new_states
-			) [] !newly_found_new_states in
+				(**** OPTIMIZED: do not care about order (else shoud consider 'list_append current_post_n_plus_1 (List.rev new_states)') *)
+				List.rev_append current_post_n_plus_1 new_states
+			) [] !post_n in
 
 			
 			(* Merge states! *)
-			let new_states_after_merging = ref new_newly_found_new_states in
+			let new_states_after_merging = ref post_n_plus_1 in
 			(*** HACK here! For #merge_before, we should ONLY merge here; but, in order not to change the full structure of the post computation, we first merge locally before the pi0-compatibility test, then again here ***)
 			if options#merge || options#merge_before then (
 	(* 			new_states_after_merging := try_to_merge_states state_space !new_states_after_merging; *)
@@ -291,11 +289,11 @@ class virtual algoBFS =
 			);
 
 
-			(* Update the newly_found_new_states *)
-			newly_found_new_states := !new_states_after_merging;
+			(* Update the post_n *)
+			post_n := !new_states_after_merging;
 			(* Print some information *)
 			if verbose_mode_greater Verbose_medium then (
-				let beginning_message = if !newly_found_new_states = [] then "\nFound no new state" else ("\nFound " ^ (string_of_int (List.length !newly_found_new_states)) ^ " new state" ^ (s_of_int (List.length !newly_found_new_states)) ^ "") in
+				let beginning_message = if !post_n = [] then "\nFound no new state" else ("\nFound " ^ (string_of_int (List.length !post_n)) ^ " new state" ^ (s_of_int (List.length !post_n)) ^ "") in
 				print_message Verbose_medium (beginning_message ^ " for post^" ^ (string_of_int current_depth) ^ ".\n");
 			);
 			
@@ -371,7 +369,7 @@ class virtual algoBFS =
 		done;
 		
 		(* Were they any more states to explore? *)
-		let nb_unexplored_successors = List.length !newly_found_new_states in
+		let nb_unexplored_successors = List.length !post_n in
 		
 		(* Update termination condition *)
 		begin
