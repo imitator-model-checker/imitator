@@ -5,12 +5,12 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Universite Paris 13, Sorbonne Paris Cite, LIPN (France)
  *
- * Description: common definitions for linear terms and constraints (based on PPL)
+ * Description: common definitions for linear terms and constraints (interface to PPL)
  *
  * Author:        Etienne Andre
  * 
  * Created:       2010/03/04
- * Last modified: 2016/02/03
+ * Last modified: 2016/02/08
  *
  ****************************************************************) 
  
@@ -1538,7 +1538,7 @@ let time_backward_assign variables_elapse variables_constant linear_constraint =
 (** Perform an operation (?) on a set of variables: the first variable list will elapse, the second will remain constant *)
 (** TODO: describe better *)
 (** WARNING: this function is certainly not optimized at all! somehow we don't care considering it's not called "often" in IMITATOR *)
-let grow_to_infinite_assign variables_elapse variables_constant linear_constraint =
+let grow_to_infinity_assign variables_elapse variables_constant linear_constraint =
 	(* Compute all variables *)
 	let all_variables = List.rev_append variables_elapse variables_constant in
 	(* Perform time elapsing on each variable *)

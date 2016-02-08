@@ -5,12 +5,12 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Universite Paris 13, Sorbonne Paris Cite, LIPN (France)
  *
- * Description: common definitions for linear terms and constraints (based on PPL)
+ * Description: common definitions for linear terms and constraints (interface to PPL)
  *
  * Author:        Etienne Andre
  * 
  * Created:       2010/03/04
- * Last modified: 2016/02/03
+ * Last modified: 2016/02/08
  *
  ****************************************************************) 
  
@@ -323,7 +323,7 @@ val pxd_time_elapse_assign : variable list -> variable list -> pxd_linear_constr
 
 (** Perform an operation (?) on a set of variables: the first variable list will elapse, the second will remain constant *)
 (** TODO: describe better *)
-val grow_to_infinite_assign : variable list -> variable list -> p_linear_constraint -> unit
+val grow_to_infinity_assign : variable list -> variable list -> p_linear_constraint -> unit
 
 (** Perform an operation (?) on a set of variables: the first variable list will elapse, the second will remain constant *)
 (** TODO: describe better *)
