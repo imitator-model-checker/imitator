@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/12/04
- * Last modified     : 2016/01/29
+ * Last modified     : 2016/02/08
  *
  ************************************************************)
 
@@ -201,7 +201,8 @@ class algoIMK =
 	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Add a new state to the state_space (if indeed needed) *)
-	(* Also update tile_nature and slast *)
+	(* Side-effects: modify new_states_indexes *)
+	(*** TODO: move new_states_indexes to a variable of the class ***)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method add_a_new_state state_space orig_state_index new_states_indexes action_index location (final_constraint : LinearConstraint.px_linear_constraint) =
 		(* Retrieve the model *)

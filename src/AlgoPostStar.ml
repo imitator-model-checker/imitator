@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/11/25
- * Last modified     : 2016/01/29
+ * Last modified     : 2016/02/08
  *
  ************************************************************)
 
@@ -61,7 +61,8 @@ class algoPostStar =
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Add a new state to the reachability_graph (if indeed needed) *)
-	(* Also update tile_nature and slast *)
+	(* Side-effects: modify new_states_indexes *)
+	(*** TODO: move new_states_indexes to a variable of the class ***)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method add_a_new_state reachability_graph orig_state_index new_states_indexes action_index location (final_constraint : LinearConstraint.px_linear_constraint) =
 		(* Retrieve the model *)

@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/12/02
- * Last modified     : 2016/01/28
+ * Last modified     : 2016/02/08
  *
  ************************************************************)
 
@@ -64,7 +64,8 @@ class virtual algoStateBased :
 		
 		(*------------------------------------------------------------*)
 		(* Add a new state to the reachability_graph (if indeed needed) *)
-		(* Also update tile_nature and slast (*** TODO: remove these operations, and move them back to their algorithms ***) *)
+		(* Side-effects: modify new_states_indexes *)
+		(*** TODO: move new_states_indexes to a variable of the class ***)
 		(*------------------------------------------------------------*)
 		(*** TODO: simplify signature by removing the StateSpace, the StateSpace.state_index list ref and the action_index, and by returning the list of actually added states ***)
 		method virtual add_a_new_state : StateSpace.state_space -> StateSpace.state_index -> StateSpace.state_index list ref -> Automaton.action_index -> Location.global_location -> LinearConstraint.px_linear_constraint -> unit
