@@ -180,6 +180,12 @@ class virtual algoBFS =
 		()
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(** Actions to perform at the end of the computation of the *successors* of post^n (i.e., when this method is called, the successors were just computed) *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	method virtual process_post_n : StateSpace.state_index list -> unit
+
+	
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Main method running the algorithm: implements here a BFS search, and calls other functions that may be modified in subclasses *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method run () =
@@ -276,7 +282,8 @@ class virtual algoBFS =
 				(**** OPTIMIZED: do not care about order (else shoud consider 'list_append current_post_n_plus_1 (List.rev new_states)') *)
 				List.rev_append current_post_n_plus_1 new_states
 			) [] !post_n in
-
+			
+			self#process_post_n !post_n;
 			
 			(* Merge states! *)
 			let new_states_after_merging = ref post_n_plus_1 in
@@ -289,7 +296,7 @@ class virtual algoBFS =
 			);
 
 
-			(* Update the post_n *)
+			(* Update the post_n, i.e., at that point we replace the post^n by post^n+1 in our BFS algorithm, and go one step deeper in the state space *)
 			post_n := !new_states_after_merging;
 			(* Print some information *)
 			if verbose_mode_greater Verbose_medium then (

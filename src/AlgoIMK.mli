@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/12/04
- * Last modified     : 2016/01/15
+ * Last modified     : 2016/02/08
  *
  ************************************************************)
 
@@ -79,6 +79,12 @@ class algoIMK :
 		(* Actions to perform when a pi-incompatible inequality is found. By default: add its negation to all previous states *)
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		method process_negated_incompatible_inequality : LinearConstraint.p_linear_inequality -> unit
+
+		
+		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+		(** Actions to perform at the end of the computation of the *successors* of post^n (i.e., when this method is called, the successors were just computed). Nothing to do for this algorithm. *)
+		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+		method process_post_n : StateSpace.state_index list -> unit
 
 		
 		method compute_result : Result.imitator_result
