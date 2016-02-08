@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2009/12/08
- * Last modified     : 2016/01/28
+ * Last modified     : 2016/02/08
  *
  ************************************************************)
 
@@ -80,6 +80,12 @@ val get_state : state_space -> state_index -> state
 
 (** Return the index of the initial state, or raise Not_found if not defined *)
 val get_initial_state_index : state_space -> state_index
+
+(** Compte and return the list of index successors of a state *)
+val get_successors : state_space -> state_index -> state_index list
+
+(** Compte and return the list of pairs (index successor of a state, corresponding action) *)
+val get_successors_with_actions : state_space -> state_index -> (state_index * action_index) list
 
 (** Return the table of transitions *)
 val get_transitions : state_space -> ((state_index * action_index), state_index) Hashtbl.t

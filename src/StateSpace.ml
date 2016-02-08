@@ -9,7 +9,7 @@
  * 
  * File contributors : Ulrich Kühne, Étienne André
  * Created           : 2009/12/08
- * Last modified     : 2016/01/28
+ * Last modified     : 2016/02/08
  *
  ************************************************************)
 
@@ -42,16 +42,30 @@ type abstract_state = Location.global_location_index * LinearConstraint.px_linea
 
 
 (************************************************************)
-(** Nature of the tiles *)
+(** Nature of a state space according to some property *)
 (************************************************************)
-(*** TODO: rename into trace set nature ***)
 type statespace_nature =
 	| Good
 	| Bad
 	| Unknown
 
 
-	
+
+(************************************************************)
+(** Set of state index *)
+(************************************************************)
+
+(* state struct for constructing set type *)
+module State = struct
+	type t = state_index
+	let compare = compare
+end
+
+(* set of states for efficient lookup *)
+module StateIndexSet = Set.Make(State)
+
+
+
 (************************************************************)
 (** Graph structure *)
 (************************************************************)
@@ -183,6 +197,33 @@ let get_transitions graph =
 	graph.transitions_table
 
 
+(** Compte and return the list of index successors of a state *)
+let get_successors graph state_index =
+	(* Retrieve the model *)
+	let model = Input.get_model() in
+	
+	List.fold_left (fun succs action_index -> 
+		try (
+			let succ = Hashtbl.find_all graph.transitions_table (state_index, action_index) in
+			List.rev_append succ succs 
+		) with Not_found -> succs
+	) [] model.actions
+
+
+(** Compte and return the list of pairs (index successor of a state, corresponding action) *)
+let get_successors_with_actions graph state_index =
+	(* Retrieve the model *)
+	let model = Input.get_model() in
+	
+	List.fold_left (fun succs action_index -> 
+		try (
+			let succ = Hashtbl.find_all graph.transitions_table (state_index, action_index) in
+			let succ_with_action = List.map (fun state_index -> state_index , action_index) succ in
+			List.rev_append succ_with_action succs
+		) with Not_found -> succs
+	) [] model.actions
+
+
 (** Return the list of all state indexes *)
 let all_state_indexes graph =
 	Hashtbl.fold
@@ -220,16 +261,6 @@ let compute_k0_destructive program graph =
 	) graph;
 	k0*)
 
-
-(* state struct for constructing set type *)
-module State = struct
-	type t = int
-	let compare = compare
-end
-
-(* set of states for efficient lookup *)
-module StateSet = Set.Make(State)
-
 (** find all "last" states on finite or infinite runs *)
 (* Uses a depth first search on the reachability graph. The *)
 (* prefix of the current DFS path is kept during the search *)
@@ -238,40 +269,36 @@ let last_states model graph =
 	(* list to keep the resulting last states *)
 	let last_states = ref [] in
 	(* Table to keep all states already visited during DFS *)
-	let dfs_table = ref StateSet.empty in
+	let dfs_table = ref StateIndexSet.empty in
+
 	(* functional version for lookup *)
-	let already_seen node = StateSet.mem node !dfs_table in
-	(* function to find all successors of a state *)
-	let successors node = 
-		List.fold_left (fun succs action_index -> 
-			try (
-				let succ = Hashtbl.find_all graph.transitions_table (node, action_index) in
-				List.rev_append succ succs 
-			) with Not_found -> succs
-		) [] model.actions in
+	let already_seen node = StateIndexSet.mem node !dfs_table in
+	
 	(* function to find all last states *)
 	let rec cycle_detect node prefix =
 		(* get all successors of current node *)
-		let succs = successors node in
+		let succs = get_successors graph node in
 		if succs = [] then
 			(* no successors -> last node on finite path *)
 			last_states := node :: !last_states
 		else (
 			(* insert node in DFS table *)
-			dfs_table := StateSet.add node !dfs_table;
+			dfs_table := StateIndexSet.add node !dfs_table;
 			(* go on with successors *)
 			List.iter (fun succ -> 
 				(* successor in current path prefix (or self-cycle)? *)
-				if succ = node || StateSet.mem succ prefix then
+				if succ = node || StateIndexSet.mem succ prefix then
 					(* found cycle *)
 					last_states := succ :: !last_states
 				else if not (already_seen succ) then
 					(* go on recursively on newly found node *)
-					cycle_detect succ (StateSet.add node prefix)					
+					cycle_detect succ (StateIndexSet.add node prefix)					
 			) succs;
 		) in
+		
 	(* start cycle detection with initial state *)
-	cycle_detect 0 StateSet.empty;
+	cycle_detect 0 StateIndexSet.empty;
+	
 	(* return collected last states *)
 	!last_states
 
