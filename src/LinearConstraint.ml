@@ -1516,8 +1516,8 @@ let substitute_variables sub linear_inequality =
 				let rsub = substitute_variables_in_term sub rterm in
 				Greater_Or_Equal (lsub, rsub))*)
 
-(** Time elapsing function, in backward direction *)
-let time_backward_assign variables_elapse variables_constant linear_constraint =
+(** Time elapsing function, in backward direction (corresponds to the "past" operation in, e.g., [JLR15]) *)
+let time_past_assign variables_elapse variables_constant linear_constraint =
 	(* 1) Apply generic function *)
 	time_elapse_gen_assign NumConst.one variables_elapse variables_constant linear_constraint;
 	
@@ -1557,7 +1557,7 @@ let grow_to_zero_assign variables_elapse variables_constant linear_constraint =
 	let all_variables = List.rev_append variables_elapse variables_constant in
 	(* Perform time elapsing on each variable *)
 	List.iter (fun variable ->
-		time_backward_assign [variable] (list_diff all_variables [variable]) linear_constraint;
+		time_past_assign [variable] (list_diff all_variables [variable]) linear_constraint;
 	) variables_elapse;
 	(* The end *)
 	()
