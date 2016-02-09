@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/02/08
- * Last modified     : 2016/02/08
+ * Last modified     : 2016/02/09
  *
  ************************************************************)
 
@@ -77,7 +77,7 @@ let get_guard state_space state_index action_index state_index' =
 			)
 
 		(* Otherwise, if the source and destination locations differ: necessarily a transition with this action *)
-		)else (
+		) else (
 			(* Find the transitions l -> action_index -> l' *)
 			let transitions = List.filter (fun (_,_,_, destination) -> destination = l') (model.transitions automaton_index l action_index) in
 			
@@ -102,15 +102,17 @@ let get_guard state_space state_index action_index state_index' =
 	
 	) model.automata;
 	
-	(* Create the constraint *)
-	let guard = LinearConstraint.pxd_intersection !local_guards in
+	(* Compute constraint for assigning a (constant) value to discrete variables *)
+	print_message Verbose_high ("Computing constraint for discrete variables");
+	let discrete_values = List.map (fun discrete_index -> discrete_index, (Location.get_discrete_value location discrete_index)) model.discrete in
+	(* Constraint of the form D_i = d_i *)
+	let discrete_constraint = LinearConstraint.pxd_constraint_of_point discrete_values in
+
+	(* Create the constraint guard ^ D_i = d_i *)
+	let guard = LinearConstraint.pxd_intersection (discrete_constraint :: !local_guards) in
 	
-	(* Valuate the discrete variables in the guard *)
-	(*** TODO ***)
-	
-	(*** WORK IN PROGRESS ***)
-	
-	() (*** TODO ***)
+	(* Finally! Return the guard *)
+	guard
 
 
 (************************************************************)
@@ -163,17 +165,16 @@ class algoDeadlockFree =
 	(** Actions to perform at the end of the computation of the *successors* of post^n (i.e., when this method is called, the successors were just computed). Nothing to do for this algorithm. *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method process_post_n (post_n : StateSpace.state_index list) =
-	
-	
-	
-		(*** WORK IN PROGRESS ***)
 		
 		self#print_algo_message Verbose_standard "Entering process_post_n";
 		
 		(* For all state s in post^n *)
 		List.iter (fun state_index ->
-			(* Define a local constraint *)
-			let bad_constraint_s = LinearConstraint.false_p_nnconvex_constraint () in
+			(* Get the constraint of s *)
+			let s_location, s_constraint = StateSpace.get_state state_space state_index in
+		
+			(* Define a local constraint storing the union of PX-constraints allowing to leave s *)
+			let good_constraint_s = LinearConstraint.false_px_nnconvex_constraint () in
 			
 			(* Retrieve all successors of this state with their action *)
 			let succs_of_s = StateSpace.get_successors_with_actions state_space state_index in
@@ -183,28 +184,40 @@ class algoDeadlockFree =
 			
 				(* retrieve the guard *)
 				(*** WARNING! big hack: due to the fact that StateSpace only maintains the action, then we have to hope that the PTA is deterministic to retrieve the edge, and hence the guard ***)
-				let _ = get_guard state_space state_index action_index state_index' in
-				(*** TODO ***)
+				let guard = get_guard state_space state_index action_index state_index' in
 				
-				(* Intersect with s *)
+				(* Print some information *)
+				if verbose_mode_greater Verbose_standard then(
+					(* Retrieve the model *)
+					let model = Input.get_model () in
+					print_message Verbose_standard ("Guard computed:" ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names guard));
+				);
+	
+				(* Intersect with the guard with s *)
+				(*** UGLY: conversion of dimensions..... ***)
+				LinearConstraint.pxd_intersection_assign guard [LinearConstraint.pxd_of_px_constraint s_constraint];
 				
 				(* Process past *)
+				AlgoStateBased.apply_time_past s_location guard;
 				
-				(* Update the local constraint *)
-				()
+				(* Update the local constraint by adding the new constraint as a union *)
+				(*** WARNING: ugly (and expensive) to convert from pxd to px ***)
+				(*** NOTE: still safe since discrete values are all instantiated ***)
+				LinearConstraint.px_nnconvex_px_union good_constraint_s (LinearConstraint.pxd_hide_discrete_and_collapse guard);
 				
 			) succs_of_s;
 				
+			(* Compute the difference True \ good_constraint_s *)
+			let px_bad_constraint_s = LinearConstraint.true_px_nnconvex_constraint() in
+			LinearConstraint.px_nnconvex_difference px_bad_constraint_s good_constraint_s;
+			
+			(* Project onto the parameters *)
+			let p_bad_constraint_s = LinearConstraint.px_nnconvex_hide_nonparameters_and_collapse px_bad_constraint_s in
+				
 			(* Update the bad constraint using the local constraint *)
-		
+			LinearConstraint.p_nnconvex_union bad_constraint p_bad_constraint_s;
 		
 		) post_n;
-		
-		
-		(*** WORK IN PROGRESS ***)
-		
-		
-		
 
 		(* The end *)
 		()
