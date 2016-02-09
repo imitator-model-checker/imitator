@@ -476,6 +476,8 @@ val p_nnconvex_intersection  : p_nnconvex_constraint -> p_linear_constraint -> u
 val p_nnconvex_p_union : p_nnconvex_constraint -> p_linear_constraint -> unit
 val px_nnconvex_px_union : px_nnconvex_constraint -> px_linear_constraint -> unit
 
+(** Performs the union of a p_nnconvex_constraint with another p_nnconvex_constraint; the first p_nnconvex_constraint is modified, the second is not *)
+val p_nnconvex_union : p_nnconvex_constraint -> p_nnconvex_constraint -> unit
 
 (** Performs the difference between a first px_nnconvex_constraint and a second px_nnconvex_constraint; the first is modified, the second is not *)
 val px_nnconvex_difference : px_nnconvex_constraint -> px_nnconvex_constraint -> unit
