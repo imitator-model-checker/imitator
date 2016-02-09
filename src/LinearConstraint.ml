@@ -10,7 +10,7 @@
  * Author:        Etienne Andre
  * 
  * Created:       2010/03/04
- * Last modified: 2016/02/08
+ * Last modified: 2016/02/09
  *
  ****************************************************************) 
  
@@ -794,19 +794,21 @@ let make_pxd_constraint = make
 
 
 (** Create a linear constraint from a single point *)
-(* WARNING: non-robust (no check for variable existence) *)
-let p_constraint_of_point (thepoint : (variable * coef) list) =
+(*** WARNING: non-robust (no check for variable existence) ***)
+let constraint_of_point (thepoint : (variable * coef) list) =
 	let inequalities =
 	List.map (fun (variable , value) ->
 		(* Create linear inequality "variable = value" *)
 		make_linear_inequality
 			(* Create linear term "variable - value" *)
-			(make_p_linear_term [NumConst.one, variable] (NumConst.neg value))
+			(make_linear_term [NumConst.one, variable] (NumConst.neg value))
 			Op_eq
 	) thepoint
 	in
-	make_p_constraint inequalities
+	make inequalities
 
+let p_constraint_of_point = constraint_of_point
+let pxd_constraint_of_point = constraint_of_point
 
 
 (** "linear_constraint_of_clock_and_parameters x ~ d neg" will create a linear_constraint x ~ d, with "x" a clock, "~" in {>, >=, =}, "d" a PConstraint.linear_term, and "neg" indicates whether x and d should be kept in this direction or reversed (e.g., "x > p1 true" generates "x > p1" whereas "x >= p1+p2 false" generates "p1+p2 >= x" *)

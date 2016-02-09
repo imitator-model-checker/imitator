@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/12/02
- * Last modified     : 2016/02/08
+ * Last modified     : 2016/02/09
  *
  ************************************************************)
 
@@ -432,29 +432,6 @@ let rho_assign (linear_constraint : LinearConstraint.pxd_linear_constraint) cloc
 
 
 (*------------------------------------------------------------*)
-(* Create a fresh constraint of the form 'D = d' for any discrete variable D with value d *)
-(*------------------------------------------------------------*)
-
-
-(*** SHALL BE REMPLACED WITH THE LINEAR_CONSTRAINT FUNCTION ***)
-
-
-
-let instantiate_discrete discrete_values =
-	let inequalities = List.map (fun (discrete_index, discrete_value) ->
-		(* Create a linear term 'D - d' *)
-		let linear_term = LinearConstraint.make_pxd_linear_term
-			[(NumConst.one, discrete_index)]
-			(NumConst.neg discrete_value)
-		in
-		(* Create a linear equality *)
-		LinearConstraint.make_pxd_linear_inequality linear_term LinearConstraint.Op_eq
-	) discrete_values in
-	(* Create the linear constraint *)
-	LinearConstraint.make_pxd_constraint inequalities
-
-
-(*------------------------------------------------------------*)
 (* Compute the list of stopped and elapsing clocks in a location *)
 (*------------------------------------------------------------*)
 let compute_stopwatches location =
@@ -560,7 +537,7 @@ let create_initial_state () =
 	print_message Verbose_high ("Computing constraint for discrete variables");
 	let discrete_values = List.map (fun discrete_index -> discrete_index, (Location.get_discrete_value initial_location discrete_index)) model.discrete in
 	(* Constraint of the form D_i = d_i *)
-	let discrete_constraint = instantiate_discrete discrete_values in
+	let discrete_constraint = LinearConstraint.pxd_constraint_of_point discrete_values in
 	(* Print some information *)
 	if verbose_mode_greater Verbose_total then
 		print_message Verbose_total (LinearConstraint.string_of_pxd_linear_constraint model.variable_names discrete_constraint);
@@ -932,7 +909,7 @@ let compute_new_constraint orig_constraint (discrete_constr_src : LinearConstrai
 		(* Compute the equalities for the discrete variables in destination location *)
 		let discrete_values_dest = List.map (fun discrete_index -> discrete_index, (Location.get_discrete_value dest_location discrete_index)) model.discrete in
 		(* Convert to a constraint *)
-		let discrete_constraint_dest = instantiate_discrete discrete_values_dest in
+		let discrete_constraint_dest = LinearConstraint.pxd_constraint_of_point discrete_values_dest in
 		
 		(* Perform the intersection *)
 		print_message Verbose_total ("\nPerforming intersection of the constraint with D_i = d_i and I_l'(X) ");
@@ -1208,7 +1185,7 @@ class virtual algoStateBased =
 		(* Create a constraint D_i = d_i for the discrete variables *)
 		let discrete_values = List.map (fun discrete_index -> discrete_index, (Location.get_discrete_value original_location discrete_index)) model.discrete in
 		(* Convert to a constraint *)
-		let discrete_constr = instantiate_discrete discrete_values in
+		let discrete_constr = LinearConstraint.pxd_constraint_of_point discrete_values in
 
 		(* FOR ALL ACTION DO: *)
 		List.iter (fun action_index ->

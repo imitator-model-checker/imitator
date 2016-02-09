@@ -10,7 +10,7 @@
  * Author:        Etienne Andre
  * 
  * Created:       2010/03/04
- * Last modified: 2016/02/08
+ * Last modified: 2016/02/09
  *
  ****************************************************************) 
  
@@ -170,6 +170,7 @@ val make_pxd_constraint : pxd_linear_inequality list -> pxd_linear_constraint
 
 (** Create a linear constraint from a single point *)
 val p_constraint_of_point : (variable * coef) list -> p_linear_constraint
+val pxd_constraint_of_point : (variable * coef) list -> pxd_linear_constraint
 
 (** Create a false constraint *)
 (* val false_constraint : unit -> linear_constraint *)
@@ -313,9 +314,6 @@ val pxd_remove_dimensions : int -> pxd_linear_constraint -> unit
 (** 'rename_variables renaming_couples c' renames all variables according to the couples of the form (old, new), with side effects *)
 (* val rename_variables_assign : (variable * variable) list -> linear_constraint -> unit *)
 val pxd_rename_variables_assign : (variable * variable) list -> pxd_linear_constraint -> unit
-
-(** Perform time elapsing on a set of variables: the first variable list will elapse, the second will remain constant *)
-(* val time_elapse  : variable list -> variable list -> linear_constraint -> linear_constraint *)
 
 (** 'time_elapse_assign variables_elapse variables_constant linear_constraint' performs time elapsing on a set of variables variables_elapse; other variables remain constant; version with side effects; behavior is unspecified if some variables within linear_constraint do not appear in any set of variables *)
 (* val time_elapse_assign : variable list -> variable list -> linear_constraint -> unit *)
