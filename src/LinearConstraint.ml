@@ -277,6 +277,14 @@ let nb_discrete		= ref 0
 let total_dim		= ref 0
 
 
+
+(************************************************************)
+(* PPL-independent function *)
+(************************************************************)
+(*** WARNING: this strongly relies on the fact that the parameters are the latest dimensions ***)
+let nonparameters () = list_of_interval !nb_parameters (!total_dim - 1)
+
+
 (************************************************************)
 (* Encapsulation of PPL functions *)
 (************************************************************)
@@ -1329,30 +1337,20 @@ let hide variables linear_constraint =
 
 (** Eliminate (using existential quantification) all non-parameters (clocks and discrete) in a px_linear constraint *)
 let px_hide_nonparameters_and_collapse linear_constraint = 
-	let nonparameters = list_of_interval !nb_parameters (!total_dim - 1) in
-		if verbose_mode_greater Verbose_total then
-			print_message Verbose_total (
-				"Function 'LinearConstraint.px_hide_nonparameters_and_collapse': hiding variables "
-				^ (string_of_list_of_string_with_sep ", " (List.map string_of_int nonparameters) )
-				^ "."
-			);
-		hide nonparameters linear_constraint 
+	let non_parameter_variables = nonparameters () in
+	if verbose_mode_greater Verbose_total then
+		print_message Verbose_total (
+			"Function 'LinearConstraint.px_hide_nonparameters_and_collapse': hiding variables "
+			^ (string_of_list_of_string_with_sep ", " (List.map string_of_int non_parameter_variables) )
+			^ "."
+		);
+	hide non_parameter_variables linear_constraint 
 
 
 
 let pxd_hide_discrete_and_collapse linear_constraint = 
 	let discretes = list_of_interval (!nb_parameters + !nb_clocks) (!total_dim - 1) in
 	hide discretes linear_constraint
-
-
-
-(*(** Eliminate (using existential quantification) the non-parameters in a pxd_linear constraint, and remove the corresponding dimensions *)
-
-(*** TO IMPLEMENT !!! ***)
-
-let pxd_hide_nonparameters_and_collapse = 
-	raise (InternalError "Not implemented!!!")*)
-
 
 
 
@@ -1535,6 +1533,7 @@ let time_past_assign variables_elapse variables_constant linear_constraint =
 	intersection_assign linear_constraint [(make inequalities_nonnegative)]
 	
 
+let pxd_time_past_assign = time_past_assign
 
 
 (** Perform an operation (?) on a set of variables: the first variable list will elapse, the second will remain constant *)
@@ -2423,7 +2422,10 @@ let test_PDBMs () =
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
 
 (** Non-necessarily convex constraint on the parameters ("pointset powerset" in the underlying PPL implementation) *)
-type p_nnconvex_constraint = Ppl.pointset_powerset_nnc_polyhedron
+type nnconvex_constraint = Ppl.pointset_powerset_nnc_polyhedron
+
+type p_nnconvex_constraint = nnconvex_constraint
+type px_nnconvex_constraint = nnconvex_constraint
 
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
@@ -2442,6 +2444,9 @@ let false_p_nnconvex_constraint () =
 	(* Return result *)
 	result
 
+let false_px_nnconvex_constraint = false_p_nnconvex_constraint
+
+
 (** Create a true constraint *)
 let true_p_nnconvex_constraint () = 
 	(*	(* Statistics *)
@@ -2453,6 +2458,9 @@ let true_p_nnconvex_constraint () =
 (* 	ppl_t_false_constraint := !ppl_t_false_constraint +. (Unix.gettimeofday() -. start); *)
 	(* Return result *)
 	result
+
+let true_px_nnconvex_constraint = true_p_nnconvex_constraint
+
 
 (** Create a new p_nnconvex_constraint from a linear_constraint *)
 let p_nnconvex_constraint_of_p_linear_constraint (p_linear_constraint : p_linear_constraint) =
@@ -2467,6 +2475,22 @@ let p_nnconvex_constraint_of_p_linear_constraint (p_linear_constraint : p_linear
 	result
 
 
+(** Copy a nnconvex_constraint *)
+let nnconvex_copy nnconvex_constraint =
+	(*** TODO ***)
+(*	(* Statistics *)
+	ppl_nb_copy_polyhedron := !ppl_nb_copy_polyhedron + 1;
+	let start = Unix.gettimeofday() in*)
+	(* Actual call to PPL *)
+	let result = ppl_new_Pointset_Powerset_NNC_Polyhedron_from_Pointset_Powerset_NNC_Polyhedron nnconvex_constraint in
+	(*** TODO ***)
+(*	(* Statistics *)
+	ppl_t_copy_polyhedron := !ppl_t_copy_polyhedron +. (Unix.gettimeofday() -. start);*)
+	(* Return result *)
+	result
+
+let p_nnconvex_copy = nnconvex_copy
+let px_nnconvex_copy = nnconvex_copy
 
 
 
@@ -2581,7 +2605,7 @@ let p_nnconvex_intersection p_nnconvex_constraint p_linear_constraint =
 
 
 (** Performs the union of a p_nnconvex_constraint with a p_linear_constraint; the p_nnconvex_constraint is modified, the p_linear_constraint is not *)
-let p_nnconvex_union p_nnconvex_constraint p_linear_constraint =
+let p_nnconvex_p_union p_nnconvex_constraint p_linear_constraint =
 (*	(* Statistics *)
 	ppl_nb_is_true := !ppl_nb_is_true + 1;
 	let start = Unix.gettimeofday() in*)
@@ -2592,6 +2616,66 @@ let p_nnconvex_union p_nnconvex_constraint p_linear_constraint =
 	(* Return result *)
 	()
 
+let px_nnconvex_px_union = p_nnconvex_p_union
+
+
+(** Performs the union of a p_nnconvex_constraint with another p_nnconvex_constraint; the first p_nnconvex_constraint is modified, the second is not *)
+(* let p_nnconvex_union p_nnconvex_constraint p_linear_constraint = *)
+
+
+(** Performs the difference between a first p_nnconvex_constraint and a second p_nnconvex_constraint; the first is modified, the second is not *)
+let p_nnconvex_difference p_nnconvex_constraint p_nnconvex_constraint' =
+(*	(* Statistics *)
+	ppl_nb_is_true := !ppl_nb_is_true + 1;
+	let start = Unix.gettimeofday() in*)
+	(* Actual call to PPL *)
+	ppl_Pointset_Powerset_NNC_Polyhedron_difference_assign p_nnconvex_constraint p_nnconvex_constraint';
+(*	(* Statistics *)
+	ppl_t_is_true := !ppl_t_is_true +. (Unix.gettimeofday() -. start);*)
+	(* Return result *)
+	()
+
+let px_nnconvex_difference = p_nnconvex_difference
+
+
+(** Eliminate a set of variables, side effects version *)
+let nnconvex_hide_assign variables nnconvex_constraint =
+	(* Only hide a non-empty list *)
+	if List.length variables > 0 then (
+		(* debug output *)
+(*		if verbose_mode_greater Verbose_total then (
+			print_message Verbose_total "About to hide:";
+			List.iter (fun v -> print_message Verbose_total ("  - v" ^ string_of_int v)) variables;
+		);*)
+		(* Statistics *)
+		(*** TODO ***)
+(*		ppl_nb_unconstrain := !ppl_nb_unconstrain + 1;
+		let start = Unix.gettimeofday() in*)
+		(* Actual call to PPL *)
+		ppl_Pointset_Powerset_NNC_Polyhedron_unconstrain_space_dimensions nnconvex_constraint variables;
+		(* Statistics *)
+		(*** TODO ***)
+(* 		ppl_t_unconstrain := !ppl_t_unconstrain +. (Unix.gettimeofday() -. start); *)
+		(*** TODO ***)
+(* 		assert_dimensions linear_constraint *)
+	)
+
+let p_nnconvex_hide_assign = nnconvex_hide_assign
+let px_nnconvex_hide_assign = nnconvex_hide_assign
+
+
+(** Eliminate (using existential quantification) all non-parameters (clocks) in a px_linear constraint *)
+let px_nnconvex_hide_nonparameters_and_collapse px_nnconvex_constraint =
+	(* First: copy *)
+	let copy = px_nnconvex_copy px_nnconvex_constraint in
+	(* Compute non-parameters *)
+	let non_parameter_variables = nonparameters () in
+	(* Call the elimination function *)
+	nnconvex_hide_assign non_parameter_variables copy;
+	(* Return result *)
+	copy
+	
+
 
 (** Create a new p_nnconvex_constraint from a linear_constraint *)
 let p_nnconvex_constraint_of_p_linear_constraints (p_linear_constraints : p_linear_constraint list) =
@@ -2599,7 +2683,7 @@ let p_nnconvex_constraint_of_p_linear_constraints (p_linear_constraints : p_line
 	let result = false_p_nnconvex_constraint() in
 	(* Add each constraint as a disjunction *)
 	List.iter (fun p_linear_constraint -> 
-		p_nnconvex_union result p_linear_constraint;
+		p_nnconvex_p_union result p_linear_constraint;
 	) p_linear_constraints;
 	(* Return result *)
 	result

@@ -472,10 +472,59 @@ let compute_stopwatches location =
 
 
 (*------------------------------------------------------------*)
-(* Apply time elapsing in location to the_constraint (the location is needed to retrieve the stopwatches stopped in this location) *)
+(* Generic function to apply either time elapsing or time past to a costraint in a location *)
 (*------------------------------------------------------------*)
-let apply_time_elapsing location the_constraint =
+type time_direction = Forward | Backward
+
+let apply_time_shift direction location the_constraint =
 	(* Get the model *)
+	let model = Input.get_model() in
+	
+	let direction_str = match direction with
+		| Forward -> "elapsing"
+		| Backward -> "past"
+	in
+	
+	(* If urgent: no time elapsing *)
+	if is_location_urgent location then (
+		print_message Verbose_high ("Location urgent: NO time " ^ direction_str);
+		()
+	(* If not urgent: apply time elapsing *)
+	)else(
+		(* Compute the list of stopwatches *)
+		let stopped_clocks, elapsing_clocks = compute_stopwatches location in
+		print_message Verbose_high ("Computing list of stopwatches");
+		if verbose_mode_greater Verbose_total then(
+			let list_of_names = List.map model.variable_names stopped_clocks in
+			print_message Verbose_total ("Stopped clocks : " ^ (string_of_list_of_string_with_sep ", " list_of_names));
+			let list_of_names = List.map model.variable_names elapsing_clocks in
+			print_message Verbose_total ("Elapsing clocks: " ^ (string_of_list_of_string_with_sep ", " list_of_names));
+		);
+		
+		(* Perform time elapsing *)
+		print_message Verbose_high ("Now applying time " ^ direction_str ^ "...");
+		let time_shift_function = match direction with
+			| Forward -> LinearConstraint.pxd_time_elapse_assign
+			| Backward -> LinearConstraint.pxd_time_past_assign
+		in
+		(*** NOTE: the comment is to be changed in alternative TE mode ***)
+		time_shift_function
+			elapsing_clocks
+			(List.rev_append stopped_clocks model.parameters_and_discrete)
+			the_constraint
+		;
+		(* Print some information *)
+		if verbose_mode_greater Verbose_total then(
+			print_message Verbose_total (LinearConstraint.string_of_pxd_linear_constraint model.variable_names the_constraint);
+		);
+		()
+	)
+
+(*------------------------------------------------------------*)
+(** Apply time elapsing in location to the_constraint (the location is needed to retrieve the stopwatches stopped in this location) *)
+(*------------------------------------------------------------*)
+let apply_time_elapsing location the_constraint = apply_time_shift Forward location the_constraint
+(*	(* Get the model *)
 	let model = Input.get_model() in
 	(* If urgent: no time elapsing *)
 	if is_location_urgent location then (
@@ -506,11 +555,16 @@ let apply_time_elapsing location the_constraint =
 			print_message Verbose_total (LinearConstraint.string_of_pxd_linear_constraint model.variable_names the_constraint);
 		);
 		()
-	)
+	)*)
+
+(*------------------------------------------------------------*)
+(** Apply time past in location to the_constraint (the location is needed to retrieve the stopwatches stopped in this location) *)
+(*------------------------------------------------------------*)
+let apply_time_past location the_constraint = apply_time_shift Backward location the_constraint
 
 
 (*------------------------------------------------------------*)
-(* Compute the initial state with the initial invariants and time elapsing *)
+(** Compute the initial state with the initial invariants and time elapsing *)
 (*------------------------------------------------------------*)
 let create_initial_state () =
 	(* Retrieve the model *)

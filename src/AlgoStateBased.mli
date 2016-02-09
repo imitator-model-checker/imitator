@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/12/02
- * Last modified     : 2016/02/08
+ * Last modified     : 2016/02/09
  *
  ************************************************************)
 
@@ -23,6 +23,16 @@ open AlgoGeneric
 (* Class-independent functions *)
 (**************************************************************)
 val compute_initial_state_or_abort : unit -> StateSpace.state
+
+(*------------------------------------------------------------*)
+(** Apply time elapsing in location to the_constraint (the location is needed to retrieve the stopwatches stopped in this location) *)
+(*------------------------------------------------------------*)
+(* val apply_time_elapsing : Location.global_location -> LinearConstraint.pxd_linear_constraint -> unit *)
+
+(*------------------------------------------------------------*)
+(** Apply time past in location to the_constraint (the location is needed to retrieve the stopwatches stopped in this location) *)
+(*------------------------------------------------------------*)
+val apply_time_past : Location.global_location -> LinearConstraint.pxd_linear_constraint -> unit
 
 
 (**************************************************************)

@@ -167,7 +167,7 @@ class algoPRP =
 						);
 						
 						(*** NOTE: not copy paste (actually, to copy when EFsynth will be improved with non-convex constraints) ***)
-						LinearConstraint.p_nnconvex_union bad_constraint p_constraint;
+						LinearConstraint.p_nnconvex_p_union bad_constraint p_constraint;
 						
 						if verbose_mode_greater Verbose_low then(
 							self#print_algo_message_newline Verbose_low ("Kbad now equal to:");
