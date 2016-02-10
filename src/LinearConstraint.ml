@@ -10,7 +10,7 @@
  * Author:        Etienne Andre
  * 
  * Created:       2010/03/04
- * Last modified: 2016/02/09
+ * Last modified: 2016/02/10
  *
  ****************************************************************) 
  
@@ -2717,11 +2717,15 @@ let string_of_p_nnconvex_constraint names p_nnconvex_constraint =
 	(* Get the disjuncts *)
 	let disjuncts = get_disjuncts p_nnconvex_constraint in
 	
-	(* Convert each disjunct into a string *)
-	let disjuncts_string = List.map (string_of_p_linear_constraint names) disjuncts in
+	(* Case false *)
+	if disjuncts = [] then string_of_false else(
 	
-	(* Concatenate using an "OR" *)
-	string_of_list_of_string_with_sep "\nOR\n " disjuncts_string
+		(* Convert each disjunct into a string *)
+		let disjuncts_string = List.map (string_of_p_linear_constraint names) disjuncts in
+		
+		(* Concatenate using an "OR" *)
+		string_of_list_of_string_with_sep "\nOR\n " disjuncts_string
+	)
 
 
 (************************************************************)
