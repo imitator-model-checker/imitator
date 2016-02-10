@@ -10,7 +10,7 @@
  * Author:        Etienne Andre
  * 
  * Created:       2010/03/04
- * Last modified: 2016/02/09
+ * Last modified: 2016/02/10
  *
  ****************************************************************) 
  
@@ -503,6 +503,7 @@ val p_linear_constraint_list_of_p_nnconvex_constraint : p_nnconvex_constraint ->
 
 (** Convert a p_nnconvex_constraint into a string *)
 val string_of_p_nnconvex_constraint : (variable -> string) -> p_nnconvex_constraint -> string
+val string_of_px_nnconvex_constraint : (variable -> string) -> px_nnconvex_constraint -> string
 
 
 

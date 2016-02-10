@@ -2727,6 +2727,8 @@ let string_of_p_nnconvex_constraint names p_nnconvex_constraint =
 		string_of_list_of_string_with_sep "\nOR\n " disjuncts_string
 	)
 
+let string_of_px_nnconvex_constraint = string_of_p_nnconvex_constraint
+
 
 (************************************************************)
 (** {2 Non-necessarily convex linear Constraints} *)
