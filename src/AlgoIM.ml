@@ -64,8 +64,8 @@ class algoIM =
 	(* Add a new state to the state_space (if indeed needed) *)
 	(* Also update tile_nature and slast *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method add_a_new_state state_space orig_state_index new_states_indexes action_index location final_constraint =
-		super#add_a_new_state state_space orig_state_index new_states_indexes action_index location final_constraint
+(*	method add_a_new_state state_space orig_state_index new_states_indexes action_index location final_constraint =
+		super#add_a_new_state state_space orig_state_index new_states_indexes action_index location final_constraint*)
 	
 	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)

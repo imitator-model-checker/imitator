@@ -8,7 +8,7 @@
  * Author:        Etienne Andre, Ulrich Kuehne
  * 
  * Created:       2010/07/05
- * Last modified: 2016/01/28
+ * Last modified: 2016/02/10
  *
  ****************************************************************)
 
@@ -140,7 +140,7 @@ if returned_constraint_list = [] then(
 	(*** TODO: take the projection into account! ***)
 	begin
 	match options#imitator_mode with
-		| EF_synthesis | Inverse_method ->
+		| EF_synthesis | Parametric_deadlock_checking | Inverse_method ->
 			print_message Verbose_low "Pick up the first 2 parameters to draw the cartography";
 			(* First check that there are at least 2 parameters *)
 			if model.nb_parameters < 2 then(
@@ -203,7 +203,7 @@ if returned_constraint_list = [] then(
 		
 	(* Else: no reason to draw a cartography *)
 		| _ -> 
-			print_error "Cartography can only be drawn while in inverse method, cartography or EF-synthesis mode.";
+			print_error "Cartography cannot be drawn in this mode.";
 			abort_program();
 	end;
 	

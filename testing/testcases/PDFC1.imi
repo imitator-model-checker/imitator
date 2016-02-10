@@ -4,7 +4,7 @@
  * Dummy example to test parametric deadlock-freeness checking
  *
  * Description     : Dummy example to test parametric deadlock-freeness checking
- * Correctness     : The system is deadlock-free (should be if p1 <= p2 AND p1 <= 5)
+ * Correctness     : The system is deadlock-free (should be if p1 <= p2)
  * Source          : Own work
  * Author          : Étienne André
  * Modeling        : Étienne André
@@ -33,12 +33,9 @@ synclabs: a, b;
 
 loc l1: while True wait {}
 	when p1 <= p2 sync a goto l2;
-	when p1 > 5 sync b goto l3;
 
 loc l2: while True wait {}
 	when True sync a goto l2;
-
-loc l3: while p1 > 5 wait {}
 
 end (* pta *)
 

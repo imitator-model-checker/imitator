@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/01/08
- * Last modified     : 2016/01/29
+ * Last modified     : 2016/02/10
  *
  ************************************************************)
 
@@ -71,14 +71,6 @@ class algoIMunion =
 		(* The end *)
 		()
 		
-	
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Add a new state to the state_space (if indeed needed) *)
-	(* Also update tile_nature and slast *)
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method add_a_new_state state_space orig_state_index new_states_indexes action_index location final_constraint =
-		super#add_a_new_state state_space orig_state_index new_states_indexes action_index location final_constraint
-	
 	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Actions to perform when meeting a state with no successors: add the deadlock state to the list of last states *)

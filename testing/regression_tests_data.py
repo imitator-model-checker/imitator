@@ -10,7 +10,7 @@
 # Laboratoire d'Informatique de Paris Nord
 # Universite Paris 13, Sorbonne Paris Cite, France
 # Created      : 2015/10/23
-# Last modified: 2016/02/02
+# Last modified: 2016/02/10
 #************************************************************
 
 
@@ -503,6 +503,62 @@ BEGIN CONSTRAINT
 & p_button >= 15
 & p_coffee > 0
 END CONSTRAINT
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+	,
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test PDFC: very basic example without clocks',
+		'input_files': ['PDFC1.imi'],
+		'options'    : '-mode PDFC -output-result  -output-states',
+		'expectations' : [
+			{'file': 'PDFC1.res' , 'content' : """
+BEGIN CONSTRAINT
+ p1 >= 0
+& p2 >= p1
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness          : exact
+Termination                   : regular termination
+State space nature            : good
+------------------------------------------------------------
+Number of states              : 2
+Number of transitions         : 2
+Number of computed states     : 3
+"""
+			} #end result file
+			,
+			{'file': 'PDFC1-statespace.states' , 'content' : """
+  DESCRIPTION OF THE STATES
+
+  /************************************************************/
+  INITIAL
+  STATE 0:
+  pta: l1 ==> 
+& p1 >= 0
+& p2 >= 0
+
+  Projection onto the parameters:
+   p1 >= 0
+& p2 >= 0
+
+  /************************************************************/
+  STATE 1:
+  pta: l2 ==> 
+& p1 >= 0
+& p2 >= p1
+
+  Projection onto the parameters:
+   p1 >= 0
+& p2 >= p1
+
+  DESCRIPTION OF THE TRANSITIONS
+  s_0 -> s_1 via "a"
+  s_1 -> s_1 via "a"
 """
 			} #end result file
 		] # end expectations

@@ -76,9 +76,10 @@ class virtual algoStateBased :
 		(* Add a new state to the reachability_graph (if indeed needed) *)
 		(* Side-effects: modify new_states_indexes *)
 		(*** TODO: move new_states_indexes to a variable of the class ***)
+		(* Return true if the state is not discarded by the algorithm, i.e., if it is either added OR was already present before *)
 		(*------------------------------------------------------------*)
 		(*** TODO: simplify signature by removing the StateSpace, the StateSpace.state_index list ref and the action_index, and by returning the list of actually added states ***)
-		method virtual add_a_new_state : StateSpace.state_space -> StateSpace.state_index -> StateSpace.state_index list ref -> Automaton.action_index -> Location.global_location -> LinearConstraint.px_linear_constraint -> unit
+		method virtual add_a_new_state : StateSpace.state_space -> StateSpace.state_index -> StateSpace.state_index list ref -> Automaton.action_index -> Location.global_location -> LinearConstraint.px_linear_constraint -> bool
 		
 		(* Actions to perform when meeting a state with no successors: virtual method to be defined in subclasses *)
 		method virtual process_deadlock_state : StateSpace.state_index -> unit

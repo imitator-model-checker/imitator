@@ -9,7 +9,7 @@
  * 
  * File contributors : Ulrich Kühne, Étienne André
  * Created           : 2010
- * Last modified     : 2016/02/08
+ * Last modified     : 2016/02/10
  *
  ************************************************************)
 
@@ -360,7 +360,7 @@ class imitator_options =
 					imitator_mode <- EF_synthesis
 					
 				(* Case: Parametric deadlock checking *)
-				else if mode = "PDC" then 
+				else if mode = "PDFC" then 
 					imitator_mode <- Parametric_deadlock_checking
 					
 				(* Case: inverse method *)
@@ -496,7 +496,7 @@ class imitator_options =
 				("-mode", String set_mode, " Mode for " ^ Constants.program_name ^ ".
         Use 'statespace' for the generation of the entire parametric state space (no pi0 needed).
         Use 'EF' for a parametric non-reachability analysis (no pi0 needed).
-        Use 'PDC' for parametric non-deadlock checking (no pi0 needed). [WORK IN PROGRESS]
+        Use 'PDFC' for parametric non-deadlock checking (no pi0 needed). [WORK IN PROGRESS]
         Use 'inversemethod' for the inverse method.
         For the behavioral cartography algorithm, use 'cover' to cover all the points within V0, 'border' to find the border between a small-valued good and a large-valued bad zone (experimental), or 'randomXX' where XX is a number to iterate random calls to IM (e.g., random5 or random10000). Default: 'inversemethod'.");
         

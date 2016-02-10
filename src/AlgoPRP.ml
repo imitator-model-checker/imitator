@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/01/11
- * Last modified     : 2016/02/08
+ * Last modified     : 2016/02/10
  *
  ************************************************************)
 
@@ -87,6 +87,7 @@ class algoPRP =
 	(* Add a new state to the state_space (if indeed needed) *)
 	(* Side-effects: modify new_states_indexes *)
 	(*** TODO: move new_states_indexes to a variable of the class ***)
+		(* Return true if the state is not discarded by the algorithm, i.e., if it is either added OR was already present before *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(*** WARNING/BADPROG: the following is partially copy/paste from AlgoEFsynth.ml and AlgoPRP.ml***)
 	(*** TODO: factorize ***)
@@ -212,9 +213,9 @@ class algoPRP =
 			
 		); (* end if valid new state *)
 	
-		(* The end: do nothing *)
-		()
-	(*** END WARNING/BADPROG: the following is almost entirely copy/paste from AlgoEFsynth.ml ***)
+		(* The state is kept only if pi-compatible *)
+		pi0compatible
+	(*** END WARNING/BADPROG: what preceedes is almost entirely copy/paste from AlgoEFsynth.ml ***)
 	
 	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)

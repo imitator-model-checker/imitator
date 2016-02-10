@@ -1183,9 +1183,10 @@ class virtual algoStateBased =
 	(* Add a new state to the reachability_graph (if indeed needed) *)
 	(* Side-effects: modify new_states_indexes *)
 	(*** TODO: move new_states_indexes to a variable of the class ***)
+	(* Return true if the state is not discarded by the algorithm, i.e., if it is either added OR was already present before *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(*** TODO: simplify signature by removing the orig_state_index and returning the list of actually added states ***)
-	method virtual add_a_new_state : StateSpace.state_space -> StateSpace.state_index -> StateSpace.state_index list ref -> Automaton.action_index -> Location.global_location -> LinearConstraint.px_linear_constraint -> unit
+	method virtual add_a_new_state : StateSpace.state_space -> StateSpace.state_index -> StateSpace.state_index list ref -> Automaton.action_index -> Location.global_location -> LinearConstraint.px_linear_constraint -> bool
 
 		
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -1234,6 +1235,9 @@ class virtual algoStateBased =
 		(* Build the list of new states (for variant of merging only) *)
 		(* EXPERIMENTAL BRANCHING: MERGE BEFORE OR AFTER? *)
 		let new_action_and_state_list = ref [] in
+		
+		(* Flag to check whether the state of which the successors are computed is a deadlock or not *)
+		let has_successors = ref false in
 		
 
 		(* Create a constraint D_i = d_i for the discrete variables *)
@@ -1342,7 +1346,10 @@ class virtual algoStateBased =
 						)else(
 						
 						(* EXPERIMENTAL BRANCHING: CASE MERGE BEFORE (classical version) *)
-							self#add_a_new_state state_space orig_state_index new_states_indexes action_index location final_constraint;
+							let added = self#add_a_new_state state_space orig_state_index new_states_indexes action_index location final_constraint in
+							
+							(* Update *)
+							has_successors := !has_successors || added;
 							
 						); (* EXPERIMENTAL BRANCHING: END CASE MERGE BEFORE (classical version) *)
 						
@@ -1356,12 +1363,6 @@ class virtual algoStateBased =
 			done; (* while more new states *)
 		) list_of_possible_actions;
 		
-		
-		(* Algorithm-specific handling of deadlock states, i.e., states without successors *)
-		if !new_states_indexes = [] then (
-			(* Virtual function to be defined in subclasses *)
-			self#process_deadlock_state orig_state_index;
-		);
 		
 	(**********************************************************************************************************************)
 	(**********************************************************************************************************************)
@@ -1406,13 +1407,22 @@ class virtual algoStateBased =
 				(* Iterate on all actions *)
 				(*** WARNING: not very beautiful !! ***)
 				List.iter (fun action_index ->
-					self#add_a_new_state state_space orig_state_index new_states_indexes action_index location final_constraint;
+					let added = self#add_a_new_state state_space orig_state_index new_states_indexes action_index location final_constraint in
+					(* Update flag for deadlock checking *)
+					has_successors := !has_successors || added;
 				) action_index_list;
 			) !new_action_and_state_list
 			
 		); (* EXPERIMENTAL BRANCHING: END CASE MERGE AFTER *)
 		
 		
+		(* Algorithm-specific handling of deadlock states, i.e., states without successors *)
+		if not !has_successors then (
+			(* Virtual function to be defined in subclasses *)
+			self#process_deadlock_state orig_state_index;
+		);
+		
+
 		(* Return the list of (really) new states *)
 		(*** NOTE: List.rev really useful??!!!! ***)
 		List.rev (!new_states_indexes)

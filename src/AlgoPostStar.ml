@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/11/25
- * Last modified     : 2016/02/08
+ * Last modified     : 2016/02/10
  *
  ************************************************************)
 
@@ -63,6 +63,7 @@ class algoPostStar =
 	(* Add a new state to the reachability_graph (if indeed needed) *)
 	(* Side-effects: modify new_states_indexes *)
 	(*** TODO: move new_states_indexes to a variable of the class ***)
+	(* Return true if the state is not discarded by the algorithm, i.e., if it is either added OR was already present before *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method add_a_new_state reachability_graph orig_state_index new_states_indexes action_index location (final_constraint : LinearConstraint.px_linear_constraint) =
 		(* Retrieve the model *)
@@ -106,8 +107,8 @@ class algoPostStar =
 			print_message Verbose_high (ModelPrinter.string_of_state model new_state);
 		);
 	
-		(* The end: do nothing *)
-		()
+		(* The state is necessarily kept by the algorithm *)
+		true
 	
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)

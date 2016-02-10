@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/12/03
- * Last modified     : 2016/01/29
+ * Last modified     : 2016/02/10
  *
  ************************************************************)
 
@@ -153,8 +153,11 @@ let result_nature_statistics soundness termination statespace_nature =
 	^ "\nState space nature            : " ^ (StateSpace.string_of_statespace_nature statespace_nature)
 
 
+
+(*** TODO: would be smarter to have a generic function write_result_to_file : imitator_result -> unit () ***)
+
 (* Write an ef_synth result to the result file *)
-let write_efsynth_result_to_file file_name efsynth_result =
+let write_efsynth_result_to_file file_name (efsynth_result : Result.efsynth_result) =
 	(* Retrieve the model *)
 	let model = Input.get_model() in
 	(* Retrieve the input options *)
@@ -188,6 +191,44 @@ let write_efsynth_result_to_file file_name efsynth_result =
 	(* Write to file *)
 	write_to_file file_name file_content;
 	print_message Verbose_standard ("\nResult written to file '" ^ file_name ^ "'.")
+
+
+(* Write a pdfc_result to the result file *)
+let write_pdfc_result_to_file file_name (pdfc_result : Result.pdfc_result) =
+	(* Retrieve the model *)
+	let model = Input.get_model() in
+	(* Retrieve the input options *)
+(* 	let options = Input.get_options () in *)
+
+	(* Convert the constraint to a string *)
+	let result_str = LinearConstraint.string_of_p_nnconvex_constraint model.variable_names pdfc_result.result in
+
+	(* Prepare the string to write *)
+	let file_content =
+		(* 1) Header *)
+		file_header ()
+		
+		(* 2) The actual result *)
+		(* begin delimiter *)
+		^ "\nBEGIN CONSTRAINT\n"
+		^ result_str ^ ""
+		(* end delimiter *)
+		^ "\nEND CONSTRAINT\n"
+		
+		(* 3) Statistics about result *)
+		^ "\n------------------------------------------------------------"
+		^ "\n" ^ (result_nature_statistics pdfc_result.soundness pdfc_result.termination pdfc_result.statespace_nature)
+		
+		(* 4) Statistics about state space *)
+		^ "\n------------------------------------------------------------"
+		^ "\n" ^ (statespace_statistics pdfc_result.state_space pdfc_result.computation_time)
+		^ "\n------------------------------------------------------------"
+	in
+	
+	(* Write to file *)
+	write_to_file file_name file_content;
+	print_message Verbose_standard ("\nResult written to file '" ^ file_name ^ "'.")
+
 
 
 (* Write an ef_synth result to the result file *)
@@ -514,7 +555,68 @@ let process_result result prefix_option =
 		(* The end *)
 		()
 
+
+
+	(*** NOTE: copied from ef_synth ***)
+	(*** TODO: merge both when efsynth becomes non convex ***)
+	| PDFC_result pdfc_result ->
 		
+
+		(* Print the result *)
+		if verbose_mode_greater Verbose_standard then(
+			(* Convert result to string *)
+			(*** NOTE: this conversion to string is duplicate, since it will again be converted in write_pdfc_result_to_file; but it not sure wether both operations are done, in addition they are not extremely time consuming, and they are not part of the computation time anyway *)
+			let result_str = LinearConstraint.string_of_p_nnconvex_constraint model.variable_names pdfc_result.result in
+			
+			print_message Verbose_standard ("\nFinal constraint such that the system is deadlock-free:");
+			print_message Verbose_standard (result_str);
+
+			(* Give a comment on the validity of the result *)
+			print_message Verbose_standard (verbose_string_of_soundness pdfc_result.soundness);
+		);
+		
+		print_message Verbose_low (
+			"Computation time: "
+			^ (string_of_seconds pdfc_result.computation_time) ^ "."
+		);
+
+		(* Print memory information *)
+		if verbose_mode_greater Verbose_standard then(
+			print_newline();
+			print_memory_used Verbose_standard;
+		);
+		
+(*		(* Print on terminal *)
+		print_message Verbose_standard (
+			"\nEF-synthesis successfully finished " ^ (after_seconds ()) ^ "."
+		);*)
+
+		(* Write to file if requested *)
+		if options#output_result then(
+			let file_name = file_prefix ^ Constants.result_file_extension in
+			write_pdfc_result_to_file file_name pdfc_result;
+		);
+		
+		(* Print statistics *)
+		print_statistics pdfc_result.computation_time pdfc_result.state_space;
+		
+		(* Draw state space *)
+		let radical = file_prefix ^ "-statespace" in
+		Graphics.draw_statespace pdfc_result.state_space radical;
+		
+		(* Render zones in a graphical form *)
+		if options#cart then (
+			let zones = List.map (fun p_linear_constraint -> (LinearConstraint.Convex_p_constraint p_linear_constraint, StateSpace.Bad (*** TODO ? ***))) (LinearConstraint.p_linear_constraint_list_of_p_nnconvex_constraint pdfc_result.result) in
+			Graphics.draw_cartography zones (file_prefix ^ "_cart_pdfc")
+		) else (
+				print_message Verbose_high "Graphical cartography not asked: not drawn.";
+		);
+		
+		(* The end *)
+		()
+
+	
+
 	| IM_result im_result ->
 
 		(* Print on terminal *)
