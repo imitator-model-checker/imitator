@@ -188,6 +188,12 @@ val px_linear_constraint_of_clock_and_parameters : variable -> op -> p_linear_te
 val pxd_linear_constraint_of_clock_and_parameters : variable -> op -> p_linear_term -> bool -> pxd_linear_constraint
 
 
+(** Create a constraint bounding all variables in the list to non-negative *)
+val p_constraint_of_nonnegative_variables : variable list -> p_linear_constraint
+val px_constraint_of_nonnegative_variables : variable list -> px_linear_constraint
+val pxd_constraint_of_nonnegative_variables : variable list -> pxd_linear_constraint
+
+
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
 (** {3 Access} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
@@ -445,6 +451,7 @@ val px_nnconvex_copy : px_nnconvex_constraint -> px_nnconvex_constraint
 
 (** Create a new p_nnconvex_constraint from a linear_constraint *)
 val p_nnconvex_constraint_of_p_linear_constraint : p_linear_constraint -> p_nnconvex_constraint
+val px_nnconvex_constraint_of_px_linear_constraint : px_linear_constraint -> px_nnconvex_constraint
 
 (** Create a new non-convex p_nnconvex_constraint from a list of linear_constraint *)
 val p_nnconvex_constraint_of_p_linear_constraints : p_linear_constraint list -> p_nnconvex_constraint
@@ -480,11 +487,12 @@ val px_nnconvex_px_union : px_nnconvex_constraint -> px_linear_constraint -> uni
 val p_nnconvex_union : p_nnconvex_constraint -> p_nnconvex_constraint -> unit
 
 (** Performs the difference between a first px_nnconvex_constraint and a second px_nnconvex_constraint; the first is modified, the second is not *)
+val p_nnconvex_difference : p_nnconvex_constraint -> p_nnconvex_constraint -> unit
 val px_nnconvex_difference : px_nnconvex_constraint -> px_nnconvex_constraint -> unit
 
-(** Eliminate a set of variables (side effects version) *)
-val p_nnconvex_hide_assign : variable list -> p_nnconvex_constraint -> unit
-val px_nnconvex_hide_assign : variable list -> px_nnconvex_constraint -> unit
+(** Eliminate a set of variables *)
+val p_nnconvex_hide : variable list -> p_nnconvex_constraint -> p_nnconvex_constraint
+val px_nnconvex_hide : variable list -> px_nnconvex_constraint -> px_nnconvex_constraint
 
 (** Eliminate (using existential quantification) all non-parameters (clocks) in a px_linear constraint *)
 val px_nnconvex_hide_nonparameters_and_collapse : px_nnconvex_constraint -> p_nnconvex_constraint

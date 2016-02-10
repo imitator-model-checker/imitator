@@ -281,7 +281,7 @@ let total_dim		= ref 0
 (************************************************************)
 (* PPL-independent function *)
 (************************************************************)
-(*** WARNING: this strongly relies on the fact that the parameters are the latest dimensions ***)
+(*** WARNING: this strongly relies on the fact that the parameters are the first dimensions (followed by clocks and then discrete) ***)
 let nonparameters () = list_of_interval !nb_parameters (!total_dim - 1)
 
 
@@ -834,6 +834,25 @@ let linear_constraint_of_clock_and_parameters (x : variable) (op : op) (d : line
 
 let px_linear_constraint_of_clock_and_parameters = linear_constraint_of_clock_and_parameters
 let pxd_linear_constraint_of_clock_and_parameters = linear_constraint_of_clock_and_parameters
+
+
+(** Create a constraint bounding all variables in the list to non-negative *)
+let constraint_of_nonnegative_variables variables = 
+	let inequalities =
+	List.map (fun variable ->
+		(* Create linear inequality "variable >= 0" *)
+		make_linear_inequality
+			(* Create linear term "variable + 0" *)
+			(make_linear_term [NumConst.one, variable] (NumConst.zero))
+			Op_ge
+	) variables
+	in
+	make inequalities
+
+let p_constraint_of_nonnegative_variables = constraint_of_nonnegative_variables
+let px_constraint_of_nonnegative_variables = constraint_of_nonnegative_variables
+let pxd_constraint_of_nonnegative_variables = constraint_of_nonnegative_variables
+
 
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
@@ -2474,6 +2493,7 @@ let p_nnconvex_constraint_of_p_linear_constraint (p_linear_constraint : p_linear
 	(* Return result *)
 	result
 
+let px_nnconvex_constraint_of_px_linear_constraint = p_nnconvex_constraint_of_p_linear_constraint
 
 (** Copy a nnconvex_constraint *)
 let nnconvex_copy nnconvex_constraint =
@@ -2585,6 +2605,34 @@ let p_nnconvex_constraint_is_pi0_compatible pval p_nnconvex_constraint =
 	List.exists (fun p_linear_constraint -> is_pi0_compatible pval p_linear_constraint) disjuncts
 
 
+
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+(** {3 Conversion to string} *)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+
+(** Convert a p_nnconvex_constraint into a string *)
+let string_of_p_nnconvex_constraint names p_nnconvex_constraint =
+	(* First reduce (avoids identical disjuncts) *)
+	(*** TODO: add counters... ***)
+	ppl_Pointset_Powerset_NNC_Polyhedron_pairwise_reduce p_nnconvex_constraint;
+	ppl_Pointset_Powerset_NNC_Polyhedron_omega_reduce p_nnconvex_constraint;
+	
+	(* Get the disjuncts *)
+	let disjuncts = get_disjuncts p_nnconvex_constraint in
+	
+	(* Case false *)
+	if disjuncts = [] then string_of_false else(
+	
+		(* Convert each disjunct into a string *)
+		let disjuncts_string = List.map (string_of_p_linear_constraint names) disjuncts in
+		
+		(* Concatenate using an "OR" *)
+		string_of_list_of_string_with_sep "\nOR\n " disjuncts_string
+	)
+
+let string_of_px_nnconvex_constraint = string_of_p_nnconvex_constraint
+
+
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
 (** {3 Modifications} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
@@ -2643,11 +2691,19 @@ let p_nnconvex_difference p_nnconvex_constraint p_nnconvex_constraint' =
 let px_nnconvex_difference = p_nnconvex_difference
 
 
-(** Eliminate a set of variables, side effects version *)
+(*(** Eliminate a set of variables, side effects version *)
 let nnconvex_hide_assign variables nnconvex_constraint =
+
+	if List.length variables = 0 then(
+		(*** DEBUG ***)
+		print_warning "Attempting to hide an empty list of variables in nnconvex_hide_assign";
+	)
 	(* Only hide a non-empty list *)
-	if List.length variables > 0 then (
-		(* debug output *)
+	else (
+		(*** DEBUG ***)
+		print_string ("\nBefore eliminating non-parameters in: \n" ^ (string_of_p_nnconvex_constraint (fun i -> "v_" ^ (string_of_int i)) nnconvex_constraint));
+
+	(* debug output *)
 (*		if verbose_mode_greater Verbose_total then (
 			print_message Verbose_total "About to hide:";
 			List.iter (fun v -> print_message Verbose_total ("  - v" ^ string_of_int v)) variables;
@@ -2658,31 +2714,21 @@ let nnconvex_hide_assign variables nnconvex_constraint =
 		let start = Unix.gettimeofday() in*)
 		(* Actual call to PPL *)
 		ppl_Pointset_Powerset_NNC_Polyhedron_unconstrain_space_dimensions nnconvex_constraint variables;
+
+		(*** DEBUG ***)
+		print_string ("\nAfter eliminating non-parameters in: \n" ^ (string_of_p_nnconvex_constraint (fun i -> "v_" ^ (string_of_int i)) nnconvex_constraint));
+		
 		(* Statistics *)
 		(*** TODO ***)
 (* 		ppl_t_unconstrain := !ppl_t_unconstrain +. (Unix.gettimeofday() -. start); *)
 		(*** TODO ***)
 (* 		assert_dimensions linear_constraint *)
 	)
-
-let p_nnconvex_hide_assign = nnconvex_hide_assign
-let px_nnconvex_hide_assign = nnconvex_hide_assign
+*)
 
 
-(** Eliminate (using existential quantification) all non-parameters (clocks) in a px_linear constraint *)
-let px_nnconvex_hide_nonparameters_and_collapse px_nnconvex_constraint =
-	(* First: copy *)
-	let copy = px_nnconvex_copy px_nnconvex_constraint in
-	(* Compute non-parameters *)
-	let non_parameter_variables = nonparameters () in
-	(* Call the elimination function *)
-	nnconvex_hide_assign non_parameter_variables copy;
-	(* Return result *)
-	copy
-	
 
-
-(** Create a new p_nnconvex_constraint from a linear_constraint *)
+(** Create a new p_nnconvex_constraint from a list of linear_constraint *)
 let p_nnconvex_constraint_of_p_linear_constraints (p_linear_constraints : p_linear_constraint list) =
 	(* Create a false constraint *)
 	let result = false_p_nnconvex_constraint() in
@@ -2694,6 +2740,62 @@ let p_nnconvex_constraint_of_p_linear_constraints (p_linear_constraints : p_line
 	result
 
 
+
+let adhoc_nnconvex_hide variables nnconvex_constraint =
+	(* 1) Get disjuncts *)
+	let disjuncts = get_disjuncts nnconvex_constraint in
+	
+	(* 2) Hide in each disjuncts *)
+	let disjuncts_hidden = List.map (hide variables) disjuncts in
+(*	let disjuncts_hidden = List.map (function p_constraint ->
+		(*** DEBUG ***)
+		print_string ("\n------About to eliminate non-parameters in: \n" ^ (string_of_p_linear_constraint (fun i -> "v_" ^ (string_of_int i)) p_constraint));
+		let result = hide variables p_constraint in
+		(*** DEBUG ***)
+		print_string ("\n------After eliminating non-parameters: \n" ^ (string_of_p_linear_constraint (fun i -> "v_" ^ (string_of_int i)) result));
+		result
+	) disjuncts in*)
+	
+	(*** DEBUG ***)
+(* 	print_string ("\n------"); *)
+	
+	(* 3) Recreate the nnconvex_constraint *)
+	p_nnconvex_constraint_of_p_linear_constraints disjuncts_hidden
+	
+
+
+let p_nnconvex_hide = adhoc_nnconvex_hide
+let px_nnconvex_hide = adhoc_nnconvex_hide
+
+
+
+
+
+(** Eliminate (using existential quantification) all non-parameters (clocks) in a px_linear constraint *)
+let px_nnconvex_hide_nonparameters_and_collapse px_nnconvex_constraint =
+	(*** DEBUG ***)
+(* 	print_string ("\nAbout to eliminate non-parameters in: \n" ^ (string_of_p_nnconvex_constraint (fun i -> "v_" ^ (string_of_int i)) px_nnconvex_constraint)); *)
+
+	(* First: copy *)
+(* 	let copy = px_nnconvex_copy px_nnconvex_constraint in *)
+	(* Compute non-parameters *)
+	let non_parameter_variables = nonparameters () in
+	
+	(*** DEBUG ***)
+(* 	print_string ("\nAbout to eliminate " ^ (string_of_int (List.length non_parameter_variables)) ^ " variables:\n"); 
+	List.iter (fun i -> print_string ("v_" ^ (string_of_int i) ^ "\n") ) non_parameter_variables;
+	*)
+	(* Call the actual elimination function *)
+	let result = px_nnconvex_hide non_parameter_variables px_nnconvex_constraint in
+	
+	(*** DEBUG ***)
+(* 	print_string ("\nAfter eliminating non-parameters in: \n" ^ (string_of_p_nnconvex_constraint (fun i -> "v_" ^ (string_of_int i)) result)); *)
+
+	(* Return result *)
+	result
+	
+
+
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
 (** {3 Conversion to a list of p_linear_constraint} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
@@ -2703,32 +2805,10 @@ let p_linear_constraint_list_of_p_nnconvex_constraint =
 	get_disjuncts
 
 
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
-(** {3 Conversion to string} *)
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
-
-(** Convert a p_nnconvex_constraint into a string *)
-let string_of_p_nnconvex_constraint names p_nnconvex_constraint =
-	(* First reduce (avoids identical disjuncts) *)
-	(*** TODO: add counters... ***)
-	ppl_Pointset_Powerset_NNC_Polyhedron_pairwise_reduce p_nnconvex_constraint;
-	ppl_Pointset_Powerset_NNC_Polyhedron_omega_reduce p_nnconvex_constraint;
 	
-	(* Get the disjuncts *)
-	let disjuncts = get_disjuncts p_nnconvex_constraint in
 	
-	(* Case false *)
-	if disjuncts = [] then string_of_false else(
 	
-		(* Convert each disjunct into a string *)
-		let disjuncts_string = List.map (string_of_p_linear_constraint names) disjuncts in
-		
-		(* Concatenate using an "OR" *)
-		string_of_list_of_string_with_sep "\nOR\n " disjuncts_string
-	)
-
-let string_of_px_nnconvex_constraint = string_of_p_nnconvex_constraint
-
+	
 
 (************************************************************)
 (** {2 Non-necessarily convex linear Constraints} *)
