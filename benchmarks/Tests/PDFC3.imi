@@ -4,7 +4,7 @@
  * Dummy example to test parametric deadlock-freeness checking
  *
  * Description     : Dummy example to test parametric deadlock-freeness checking
- * Correctness     : The system is deadlock-free (should be if p1 <= p2)
+ * Correctness     : The system is deadlock-free (should be if p2 >= 5+p1 AND p2 <= 10)
  * Source          : Own work
  * Author          : Étienne André
  * Modeling        : Étienne André
@@ -20,6 +20,10 @@
 
 var
 
+(* Clocks *)
+ 	x
+		: clock;
+
 (* Parameters *)
 	p1, p2
 		: parameter;
@@ -29,13 +33,12 @@ var
 (************************************************************)
   automaton pta
 (************************************************************)
-synclabs: a, b;
+synclabs: a;
 
-loc l1: while True wait {}
-	when p1 <= p2 sync a goto l2;
+loc l1: while x <= 5 + p1 wait {}
+	when x >= p2 sync a goto l2;
 
-loc l2: while True wait {}
-	when True sync a goto l2;
+loc l2: while x <= 10 wait {}
 
 end (* pta *)
 
@@ -54,6 +57,7 @@ init :=
 	(*------------------------------------------------------------*)
 	(* Initial clock constraints *)
 	(*------------------------------------------------------------*)
+	& x = 0
 
 	(*------------------------------------------------------------*)
 	(* Parameter constraints *)
