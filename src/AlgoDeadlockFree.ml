@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/02/08
- * Last modified     : 2016/02/09
+ * Last modified     : 2016/02/10
  *
  ************************************************************)
 
@@ -231,8 +231,7 @@ class algoDeadlockFree =
 			"Algorithm completed " ^ (after_seconds ()) ^ "."
 		);
 		
-		raise (InternalError("Not implemented"))
-(*		(*** TODO: compute as well *good* zones, depending whether the analysis was exact, or early termination occurred ***)
+		(*** TODO: compute as well *good* zones, depending whether the analysis was exact, or early termination occurred ***)
 		
 		(* Get the termination status *)
 		 let termination_status = match termination_status with
@@ -251,10 +250,10 @@ class algoDeadlockFree =
 		let soundness = if termination_status = Regular_termination then Constraint_exact else Constraint_maybe_under in
 
 		(* Return the result *)
-		EFsynth_result
+		PDFC_result
 		{
-			(* List of constraints ensuring EF location *)
-			constraints			= bad_constraints;
+			(* List of constraints ensuring potential deadlocks *)
+			result				= bad_constraint;
 			
 			(* Explored state space *)
 			state_space			= state_space;
@@ -270,7 +269,7 @@ class algoDeadlockFree =
 	
 			(* Termination *)
 			termination			= termination_status;
-		}*)
+		}
 	
 (************************************************************)
 (************************************************************)

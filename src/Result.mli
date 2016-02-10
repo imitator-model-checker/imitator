@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/11/23
- * Last modified     : 2016/01/29
+ * Last modified     : 2016/02/10
  *
  ************************************************************)
 
@@ -109,9 +109,31 @@ type poststar_result = {
 }
 
 
+(*** TODO: merge with pdfc_result when EFsynth will allow for non-convex constraints ***)
 type efsynth_result = {
 	(* List of constraints ensuring EF location *)
 	constraints			: LinearConstraint.p_linear_constraint list;
+	
+	(* Explored state space *)
+	state_space			: StateSpace.state_space;
+	
+	(* Nature of the state space *)
+	statespace_nature	: StateSpace.statespace_nature;
+	
+	(* Total computation time of the algorithm *)
+	computation_time	: float;
+	
+	(* Soundness of the result *)
+	soundness			: constraint_soundness;
+	
+	(* Termination *)
+	termination			: bfs_algorithm_termination;
+}
+
+
+type pdfc_result = {
+	(* List of constraints *)
+	result				: LinearConstraint.p_nnconvex_constraint;
 	
 	(* Explored state space *)
 	state_space			: StateSpace.state_space;
@@ -233,6 +255,9 @@ type imitator_result =
 
 	(* Result for EFsynth *)
 	| EFsynth_result of efsynth_result
+	
+	(* Result for Parametric_deadlock_checking *)
+	| PDFC_result of pdfc_result
 
 	(* Result for IM, IMK, IMunion *)
 	| IM_result of im_result
@@ -243,68 +268,3 @@ type imitator_result =
 	(* Result for cartography *)
 	| BC_result of bc_result
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-(*
-(************************************************************)
-(** Result *)
-(************************************************************)
-
-(** Result returned by IMITATOR *)
-type old_returned_constraint =
-	(*** TODO: merge these 2 objects (Convex_constraint and Union_of_constraints) ***)
-	(** Constraint under convex form *)
-	| Convex_constraint of LinearConstraint.p_linear_constraint * StateSpace.tile_nature
-	
-	(** Disjunction of constraints *)
-	| Union_of_constraints of LinearConstraint.p_linear_constraint list * StateSpace.tile_nature
-
-	(*** BADPROG: NNCC should NOT be here! but rather in LinearConstraint ***)
-	(** Non-necessarily convex constraint: set of constraints MINUS a set of negations of constraints *)
-	| NNCConstraint of (LinearConstraint.p_linear_constraint list) * (LinearConstraint.p_linear_constraint list) * StateSpace.tile_nature
- 
-
-
-(****************************************************************)
-(** The result output by IM *)
-(****************************************************************)
-(*** TODO: convert to a separate class ***)
-type old_im_result = {
-	(* Returned constraint *)
-	result : old_returned_constraint;
-(*	(* Reachability graph *)
-	reachability_graph : StateSpace.reachability_graph;*)
-	(* Tile nature *)
-	tile_nature : StateSpace.tile_nature;
-	(* Premature stop? (i.e., states / depth / time limit reached) *)
-	premature_stop : bool;
-	(* Deterministic analysis? *)
-	deterministic : bool;
-	(* Number of states *)
-	nb_states : int;
-	(* Number of transitions *)
-	nb_transitions : int;
-	(* Number of iterations *)
-	nb_iterations : int;
-	(* Computation time *)
-	total_time : float;
-}
-*)
