@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/11/23
- * Last modified     : 2016/02/08
+ * Last modified     : 2016/02/11
  *
  ************************************************************)
 
@@ -183,6 +183,11 @@ class virtual algoBFS =
 	(** Actions to perform at the end of the computation of the *successors* of post^n (i.e., when this method is called, the successors were just computed) *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method virtual process_post_n : StateSpace.state_index list -> unit
+	
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(** Check whether the algorithm should terminate at the end of some post, independently of the number of states to be processed (e.g., if the constraint is already true or false) *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	method virtual check_termination_at_post_n : bool
 
 	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -253,9 +258,12 @@ class virtual algoBFS =
 		
 		(* Boolean to check whether the time limit / state limit is reached *)
 		let limit_reached = ref Keep_going in
+		
+		(* Flag modified by the algorithm to perhaps terminate earlier *)
+		let algorithm_keep_going = ref true in
 
 		(* Explore further until the limit is reached or the list of lastly computed states is empty *)
-		while !limit_reached = Keep_going && !post_n <> [] do
+		while !limit_reached = Keep_going && !post_n <> [] && !algorithm_keep_going do
 			(* Print some information *)
 			if verbose_mode_greater Verbose_standard then (
 				print_message Verbose_low ("\n");
@@ -373,6 +381,14 @@ class virtual algoBFS =
 			
 			(* Check if the limit has been reached *)
 			limit_reached := self#check_bfs_limit;
+			
+			(* If still going, ask the concrete algorithm whether it wants to terminate for other reasons *)
+			if !limit_reached = Keep_going then(
+				if self#check_termination_at_post_n then(
+					algorithm_keep_going := false;
+				);
+			);
+			
 		done;
 		
 		(* Were they any more states to explore? *)
@@ -397,6 +413,10 @@ class virtual algoBFS =
 		(* Print some information *)
 		(*** NOTE: must be done after setting the limit (above) ***)
 		self#print_warnings_limit ();
+		
+		if not !algorithm_keep_going && nb_unexplored_successors > 0 then(
+			self#print_algo_message Verbose_standard ("A sufficient condition to ensure termination was met although there were still " ^ (string_of_int nb_unexplored_successors) ^ " state" ^ (s_of_int nb_unexplored_successors) ^ " to explore");
+		);
 
 
 		print_message Verbose_standard (
