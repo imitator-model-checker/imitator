@@ -10,7 +10,7 @@
  * Author:        Etienne Andre
  * 
  * Created:       2009/09/09
- * Last modified: 2016/02/08
+ * Last modified: 2016/02/11
  *
  ************************************************************)
 
@@ -2731,6 +2731,7 @@ let abstract_model_of_parsing_structure (parsed_variable_declarations, parsed_au
 	(* Init : the initial state *)
 	initial_location = initial_location;
 	initial_constraint = initial_constraint;
+	initial_p_constraint = LinearConstraint.px_hide_nonparameters_and_collapse initial_constraint;
 	
 	(* Property defined by the user *)
 	user_property = property;

@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2009/09/11
- * Last modified     : 2016/01/28
+ * Last modified     : 2016/02/11
  *
  ************************************************************)
 
@@ -18,7 +18,6 @@
 (* Modules *)
 (************************************************************)
 open Automaton
-(* open Options *)
 
 
 (************************************************************)
@@ -281,10 +280,12 @@ type abstract_model = {
 	(* The list of clocks stopped for each automaton and each location *)
 	stopwatches : automaton_index -> location_index -> clock_index list;
 
-	(* Init : the initial state *)
+	(* Initial location of the model *)
 	initial_location : Location.global_location;
-	(* Init : the initial state *)
+	(* Initial constraint of the model *)
 	initial_constraint : LinearConstraint.px_linear_constraint;
+	(* Initial constraint of the model projected onto P *)
+	initial_p_constraint : LinearConstraint.p_linear_constraint;
 
 	(* Property defined by the user *)
 	user_property : property_definition;
