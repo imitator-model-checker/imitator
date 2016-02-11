@@ -479,6 +479,7 @@ val p_nnconvex_constraint_is_leq : p_nnconvex_constraint -> p_nnconvex_constrain
 
 (** Performs the intersection of a p_nnconvex_constraint with a p_linear_constraint; the p_nnconvex_constraint is modified, the p_linear_constraint is not *)
 val p_nnconvex_intersection  : p_nnconvex_constraint -> p_linear_constraint -> unit
+val px_nnconvex_intersection  : px_nnconvex_constraint -> px_linear_constraint -> unit
 
 (** Performs the union of a p_nnconvex_constraint with a p_linear_constraint; the p_nnconvex_constraint is modified, the p_linear_constraint is not *)
 val p_nnconvex_p_union : p_nnconvex_constraint -> p_linear_constraint -> unit

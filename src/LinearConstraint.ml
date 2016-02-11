@@ -2613,6 +2613,15 @@ let p_nnconvex_constraint_is_leq p_nnconvex_constraint p_nnconvex_constraint' =
 	(*** TODO: counter ***)
 
 
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+(** {3 Simplification} *)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+let simplify p_nnconvex_constraint =
+	(*** TODO: add counters... ***)
+	ppl_Pointset_Powerset_NNC_Polyhedron_pairwise_reduce p_nnconvex_constraint;
+	ppl_Pointset_Powerset_NNC_Polyhedron_omega_reduce p_nnconvex_constraint;
+	()
+	
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
 (** {3 Conversion to string} *)
@@ -2621,9 +2630,7 @@ let p_nnconvex_constraint_is_leq p_nnconvex_constraint p_nnconvex_constraint' =
 (** Convert a p_nnconvex_constraint into a string *)
 let string_of_p_nnconvex_constraint names p_nnconvex_constraint =
 	(* First reduce (avoids identical disjuncts) *)
-	(*** TODO: add counters... ***)
-	ppl_Pointset_Powerset_NNC_Polyhedron_pairwise_reduce p_nnconvex_constraint;
-	ppl_Pointset_Powerset_NNC_Polyhedron_omega_reduce p_nnconvex_constraint;
+	simplify p_nnconvex_constraint;
 	
 	(* Get the disjuncts *)
 	let disjuncts = get_disjuncts p_nnconvex_constraint in
@@ -2656,8 +2663,14 @@ let p_nnconvex_intersection p_nnconvex_constraint p_linear_constraint =
 	ppl_Pointset_Powerset_NNC_Polyhedron_add_constraints p_nnconvex_constraint constraint_system;
 (*	(* Statistics *)
 	ppl_t_is_true := !ppl_t_is_true +. (Unix.gettimeofday() -. start);*)
-	(* Return result *)
+
+	(* Simplify the constraint (avoids identical disjuncts) *)
+	simplify p_nnconvex_constraint;
+	
+	(* The end *)
 	()
+
+let px_nnconvex_intersection = p_nnconvex_intersection
 
 
 (** Performs the union of a p_nnconvex_constraint with a p_linear_constraint; the p_nnconvex_constraint is modified, the p_linear_constraint is not *)
@@ -2669,8 +2682,13 @@ let p_nnconvex_p_union p_nnconvex_constraint p_linear_constraint =
 	ppl_Pointset_Powerset_NNC_Polyhedron_add_disjunct p_nnconvex_constraint p_linear_constraint;
 (*	(* Statistics *)
 	ppl_t_is_true := !ppl_t_is_true +. (Unix.gettimeofday() -. start);*)
-	(* Return result *)
+
+	(* Simplify the constraint (avoids identical disjuncts) *)
+	simplify p_nnconvex_constraint;
+	
+	(* The end *)
 	()
+
 
 let px_nnconvex_px_union = p_nnconvex_p_union
 
@@ -2693,7 +2711,11 @@ let p_nnconvex_difference p_nnconvex_constraint p_nnconvex_constraint' =
 	ppl_Pointset_Powerset_NNC_Polyhedron_difference_assign p_nnconvex_constraint p_nnconvex_constraint';
 (*	(* Statistics *)
 	ppl_t_is_true := !ppl_t_is_true +. (Unix.gettimeofday() -. start);*)
-	(* Return result *)
+
+	(* Simplify the constraint (avoids identical disjuncts) *)
+	simplify p_nnconvex_constraint;
+	
+	(* The end *)
 	()
 
 let px_nnconvex_difference = p_nnconvex_difference
