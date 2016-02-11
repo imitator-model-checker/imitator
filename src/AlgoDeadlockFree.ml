@@ -69,7 +69,7 @@ let get_guard state_space state_index action_index state_index' =
 			(* If more than one: take the first one (*** HACK ***) and warn *)
 			else(
 				(* Warning *)
-				print_warning ("Non-deterministic PTA! Selecting a guard arbitrarily among the " ^ (string_of_int (List.length transitions)) ^ " transitions from '" ^ (model.location_names automaton_index l) ^ "' to '" ^ (model.location_names automaton_index l') ^ "' with action to '" ^ (model.action_names action_index) ^ "' in automaton '" ^ (model.automata_names automaton_index) ^ "'.");
+				print_warning ("Non-deterministic PTA! Selecting a guard arbitrarily among the " ^ (string_of_int (List.length transitions)) ^ " transitions from '" ^ (model.location_names automaton_index l) ^ "' via action '" ^ (model.action_names action_index) ^ "' to '" ^ (model.location_names automaton_index l') ^ "' in automaton '" ^ (model.automata_names automaton_index) ^ "'.");
 				
 				(* Take arbitrarily the first element *)
 				let g,_,_,_ = List.nth transitions 0 in g
@@ -89,7 +89,7 @@ let get_guard state_space state_index action_index state_index' =
 			(* If more than one: take the first one (*** HACK ***) and warn *)
 			else(
 				(* Warning *)
-				print_warning ("Non-deterministic PTA! Selecting a guard arbitrarily among the " ^ (string_of_int (List.length transitions)) ^ " transitions from '" ^ (model.location_names automaton_index l) ^ "' to '" ^ (model.location_names automaton_index l') ^ "' with action to '" ^ (model.action_names action_index) ^ "' in automaton '" ^ (model.automata_names automaton_index) ^ "'.");
+				print_warning ("Non-deterministic PTA! Selecting a guard arbitrarily among the " ^ (string_of_int (List.length transitions)) ^ " transitions from '" ^ (model.location_names automaton_index l) ^ "' via action '" ^ (model.action_names action_index) ^ "' to '" ^ (model.location_names automaton_index l') ^ "' in automaton '" ^ (model.automata_names automaton_index) ^ "'.");
 				
 				(* Take arbitrarily the first element *)
 				let g,_,_,_ = List.nth transitions 0 in g
@@ -130,6 +130,26 @@ class algoDeadlockFree =
 	(* Non-necessarily convex parameter constraint for which deadlocks may arise *)
 	val mutable bad_constraint : LinearConstraint.p_nnconvex_constraint = LinearConstraint.false_p_nnconvex_constraint ()
 
+	(* Convex parameter constraint ensuring all clocks and parameters are non-negative (constant object used as a shortcut, as it is often used in the algorithm) *)
+	
+	(*** NOTE/TODO: technically, clocks should be non-negative, but parameters should just be conform to the initial p_constraint ***)
+	
+	val all_clocks_and_parameters_nonnegative : LinearConstraint.px_linear_constraint =
+		(* Retrieve the model *)
+		let model = Input.get_model () in
+		(* Find clocks and parameters *)
+		let clocks_and_parameters = list_union model.clocks model.parameters in
+		(* Constrain non-negative *)
+		(*let px_linear_constraint = *)LinearConstraint.px_constraint_of_nonnegative_variables clocks_and_parameters (*in
+		(* Convert to px_nnconvex_constraint *)
+		LinearConstraint.px_nnconvex_constraint_of_px_linear_constraint px_linear_constraint*)
+
+	(* Non-necessarily convex parameter constraint of the initial state (constant object used as a shortcut, as it is often used in the algorithm) *)
+	val init_p_nnconvex_constraint : LinearConstraint.p_nnconvex_constraint =
+		(* Retrieve the model *)
+		let model = Input.get_model () in
+		LinearConstraint.p_nnconvex_constraint_of_p_linear_constraint model.initial_p_constraint
+	
 	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Name of the algorithm *)
@@ -177,7 +197,7 @@ class algoDeadlockFree =
 		(* Retrieve the model *)
 		let model = Input.get_model () in
 		
-		self#print_algo_message Verbose_low "Entering process_post_n";
+		self#print_algo_message Verbose_medium "Entering process_post_n";
 		
 		(* For all state s in post^n *)
 		List.iter (fun state_index ->
@@ -198,8 +218,8 @@ class algoDeadlockFree =
 				let guard = get_guard state_space state_index action_index state_index' in
 				
 				(* Print some information *)
-				if verbose_mode_greater Verbose_low then(
-					self#print_algo_message Verbose_low ("Guard computed via action '" ^ (model.action_names action_index) ^ "': " ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names guard));
+				if verbose_mode_greater Verbose_high then(
+					self#print_algo_message Verbose_high ("Guard computed via action '" ^ (model.action_names action_index) ^ "': " ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names guard));
 				);
 	
 				(* Intersect with the guard with s *)
@@ -207,16 +227,16 @@ class algoDeadlockFree =
 				LinearConstraint.pxd_intersection_assign guard [LinearConstraint.pxd_of_px_constraint s_constraint];
 				
 				(* Print some information *)
-				if verbose_mode_greater Verbose_low then(
-					self#print_algo_message Verbose_low ("Intersection of guards: " ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names guard));
+				if verbose_mode_greater Verbose_high then(
+					self#print_algo_message Verbose_high ("Intersection of guards: " ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names guard));
 				);
 	
 				(* Process past *)
 				AlgoStateBased.apply_time_past s_location guard;
 				
 				(* Print some information *)
-				if verbose_mode_greater Verbose_low then(
-					self#print_algo_message Verbose_low ("After time past: " ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names guard));
+				if verbose_mode_greater Verbose_high then(
+					self#print_algo_message Verbose_high ("After time past: " ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names guard));
 				);
 	
 				(* Update the local constraint by adding the new constraint as a union *)
@@ -225,8 +245,8 @@ class algoDeadlockFree =
 				LinearConstraint.px_nnconvex_px_union good_constraint_s (LinearConstraint.pxd_hide_discrete_and_collapse guard);
 				
 				(* Print some information *)
-				if verbose_mode_greater Verbose_low then(
-					self#print_algo_message Verbose_low ("The local good constraint (allowing exit) is now: " ^ (LinearConstraint.string_of_px_nnconvex_constraint model.variable_names good_constraint_s));
+				if verbose_mode_greater Verbose_medium then(
+					self#print_algo_message Verbose_medium ("The local good constraint (allowing exit) is now: " ^ (LinearConstraint.string_of_px_nnconvex_constraint model.variable_names good_constraint_s));
 				);
 			) succs_of_s;
 				
@@ -250,41 +270,51 @@ class algoDeadlockFree =
 			*)
 
 			(* Compute the difference s \ good_constraint_s *)
-			(*** TODO: add a field clocks_and_parameters to abstract_model ***)
 			let nnonvex_s = LinearConstraint.px_nnconvex_constraint_of_px_linear_constraint s_constraint in
 			
 			(* Print some information *)
-			if verbose_mode_greater Verbose_medium then(
-				self#print_algo_message Verbose_medium ("nnonvex_s (= s) is: " ^ (LinearConstraint.string_of_px_nnconvex_constraint model.variable_names nnonvex_s));
+			if verbose_mode_greater Verbose_high then(
+				self#print_algo_message Verbose_high ("nnonvex_s (= s) is: " ^ (LinearConstraint.string_of_px_nnconvex_constraint model.variable_names nnonvex_s));
 			);
 
 			LinearConstraint.px_nnconvex_difference nnonvex_s good_constraint_s;
 			
-			
 			(* Print some information *)
-			if verbose_mode_greater Verbose_low then(
-				self#print_algo_message Verbose_low ("nnonvex_s (s \ good, not allowing exit) is now: " ^ (LinearConstraint.string_of_px_nnconvex_constraint model.variable_names nnonvex_s));
+			if verbose_mode_greater Verbose_high then(
+				self#print_algo_message Verbose_high ("nnonvex_s (s - good, not allowing exit) is now: " ^ (LinearConstraint.string_of_px_nnconvex_constraint model.variable_names nnonvex_s));
 			);
 			
-
+			(* Ensure clocks and parameters are not negative *)
+			LinearConstraint.px_nnconvex_intersection nnonvex_s all_clocks_and_parameters_nonnegative;
+			
+			
+			(* Print some information *)
+			if verbose_mode_greater Verbose_high then(
+				self#print_algo_message Verbose_high ("After constraining clocks and parameters to be positive, nnonvex_s (s - good, not allowing exit) is now: " ^ (LinearConstraint.string_of_px_nnconvex_constraint model.variable_names nnonvex_s));
+			);
 			
 			(* Project onto the parameters *)
 			let p_bad_constraint_s = LinearConstraint.px_nnconvex_hide_nonparameters_and_collapse nnonvex_s(*px_bad_constraint_s*) in
 				
 			(* Print some information *)
-			if verbose_mode_greater Verbose_low then(
-				self#print_algo_message Verbose_low ("p_bad_constraint_s (True \ good, not allowing exit, projected onto P) is now: " ^ (LinearConstraint.string_of_p_nnconvex_constraint model.variable_names p_bad_constraint_s));
+			if verbose_mode_greater Verbose_medium then(
+				self#print_algo_message Verbose_medium ("p_bad_constraint_s (True - good, not allowing exit, projected onto P) is now: " ^ (LinearConstraint.string_of_p_nnconvex_constraint model.variable_names p_bad_constraint_s));
 			);
 
 			(* Update the bad constraint using the local constraint *)
 			LinearConstraint.p_nnconvex_union bad_constraint p_bad_constraint_s;
 		
 			(* Print some information *)
-			if verbose_mode_greater Verbose_low then(
-				self#print_algo_message Verbose_low ("The global bad constraint is now: " ^ (LinearConstraint.string_of_p_nnconvex_constraint model.variable_names bad_constraint));
+			if verbose_mode_greater Verbose_medium then(
+				self#print_algo_message Verbose_medium ("The global bad constraint is now: " ^ (LinearConstraint.string_of_p_nnconvex_constraint model.variable_names bad_constraint));
 			);
 		) post_n;
 
+		(* Print some information *)
+		if verbose_mode_greater Verbose_low then(
+			self#print_algo_message Verbose_low ("After processing post^n, the global bad constraint is now: " ^ (LinearConstraint.string_of_p_nnconvex_constraint model.variable_names bad_constraint));
+		);
+		
 		print_message Verbose_low ("");
 
 		(* The end *)
@@ -332,10 +362,28 @@ class algoDeadlockFree =
 	(** Check whether the algorithm should terminate at the end of some post, independently of the number of states to be processed (e.g., if the constraint is already true or false) *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method check_termination_at_post_n =
+		(* Print some information *)
+		self#print_algo_message Verbose_high ("Entering check_termination_at_post_n...");
+		
+		(* Retrieve the model *)
+		let model = Input.get_model () in
+
 		(* True if the computed bad constraint is exactly equal to (or larger than) the initial parametric constraint *)
-		(*** TODO ***)
-		false
-		(*LinearConstraint bad_constraint*)
+		let stop = LinearConstraint.p_nnconvex_constraint_is_leq init_p_nnconvex_constraint bad_constraint in
+		
+		(* Print some information *)
+		if (stop && verbose_mode_greater Verbose_medium) || verbose_mode_greater Verbose_medium then(
+			self#print_algo_message Verbose_medium ("Initial constraint:\n" ^ (LinearConstraint.string_of_p_nnconvex_constraint model.variable_names init_p_nnconvex_constraint));
+			self#print_algo_message Verbose_medium ("Current bad constraint:\n" ^ (LinearConstraint.string_of_p_nnconvex_constraint model.variable_names bad_constraint));
+		);
+		
+		(* Print some information *)
+		if stop then(
+			self#print_algo_message Verbose_standard ("None of the parameter valuations compatible with the initial state is deadlock-free: terminate.");
+		);
+		
+		(* Return result *)
+		stop
 	
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -343,26 +391,16 @@ class algoDeadlockFree =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method compute_result =
 		(* Retrieve the model *)
-		let model = Input.get_model () in
+(* 		let model = Input.get_model () in *)
 		
 		self#print_algo_message_newline Verbose_standard (
 			"Algorithm completed " ^ (after_seconds ()) ^ "."
 		);
 		
 		(* Perform result = initial_state|P \ bad_constraint *)
-		
-(* 		let initial_constraint =  *)
-		
-		
-		
-		(*** TODO ***)
-		
-		
-		
-		let trueplus = LinearConstraint.p_constraint_of_nonnegative_variables model.parameters in
-		let result = LinearConstraint.p_nnconvex_constraint_of_p_linear_constraint trueplus in
+		let result = init_p_nnconvex_constraint in
+		(*** WARNING: will actually MODIFY init_p_nnconvex_constraint; but not a problem since about to exit the algorithm, and variable not used anymore afterwards ***)
 		LinearConstraint.p_nnconvex_difference result bad_constraint;
-			
 		
 		(* Get the termination status *)
 		 let termination_status = match termination_status with

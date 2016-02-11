@@ -384,6 +384,9 @@ class virtual algoBFS =
 			
 			(* If still going, ask the concrete algorithm whether it wants to terminate for other reasons *)
 			if !limit_reached = Keep_going then(
+				(* Print some information *)
+				self#print_algo_message Verbose_low("Checking termination at post^" ^ (string_of_int current_depth) ^ "...");
+
 				if self#check_termination_at_post_n then(
 					algorithm_keep_going := false;
 				);
@@ -422,7 +425,8 @@ class virtual algoBFS =
 		print_message Verbose_standard (
 			let nb_states = StateSpace.nb_states state_space in
 			let nb_transitions = StateSpace.nb_transitions state_space in
-			"\nFixpoint reached at a depth of "
+			let fixpoint_str = if nb_unexplored_successors > 0 then "State space exploration stopped" else "Fixpoint reached" in
+			"\n" ^ fixpoint_str ^ " at a depth of "
 			^ (string_of_int current_depth) ^ ""
 			^ ": "
 			^ (string_of_int nb_states) ^ " state" ^ (s_of_int nb_states)
