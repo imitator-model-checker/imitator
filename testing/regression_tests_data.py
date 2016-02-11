@@ -634,7 +634,7 @@ END CONSTRAINT
 		'options'    : '-IMunion -output-result',
 		'expectations' : [
 			{'file': 'testIM-IMK-IMunion.res' , 'content' : """
-		4 >= p & p > 1
+		p > 1 & 4 >= p
 		"""
 			} # end result file
 			,
