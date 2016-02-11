@@ -229,6 +229,21 @@ init :=
 	----------------------
 	-- Parameters
 	----------------------
+
+	& dClockLow		>= 0
+	& dClockHigh	>= 0
+	& dHold			>= 0
+	& dNot2Up		>= 0
+	& dXorUp2Up		>= 0
+	& dLatchUp>=0
+	& dAndUp2 >=0
+	& dNot2Down>=0
+	& dNot1Up>=0
+	& dNot1Down>=0
+	& dXorDown1Up>=0
+	& dAndDown1>=0
+	& dSetup>=0
+ 
 --	& dLatchUp>0
 --	& dAndUp2 >0
 --	& dNot2Down>0
