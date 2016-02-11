@@ -10,7 +10,7 @@
  * Author:        Etienne Andre
  * 
  * Created:       2010/03/04
- * Last modified: 2016/02/10
+ * Last modified: 2016/02/11
  *
  ****************************************************************) 
  
@@ -2603,6 +2603,13 @@ let p_nnconvex_constraint_is_pi0_compatible pval p_nnconvex_constraint =
 	
 	(* 2) Check each of them *)
 	List.exists (fun p_linear_constraint -> is_pi0_compatible pval p_linear_constraint) disjuncts
+
+
+(** Check if a nnconvex_constraint is included in another one *)
+let p_nnconvex_constraint_is_leq p_nnconvex_constraint p_nnconvex_constraint' =
+	(*** TODO: counter ***)
+	ppl_Pointset_Powerset_NNC_Polyhedron_contains_Pointset_Powerset_NNC_Polyhedron p_nnconvex_constraint p_nnconvex_constraint'
+	(*** TODO: counter ***)
 
 
 

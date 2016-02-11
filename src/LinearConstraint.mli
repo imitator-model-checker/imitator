@@ -10,7 +10,7 @@
  * Author:        Etienne Andre
  * 
  * Created:       2010/03/04
- * Last modified: 2016/02/10
+ * Last modified: 2016/02/11
  *
  ****************************************************************) 
  
@@ -243,7 +243,6 @@ val p_is_equal : p_linear_constraint -> p_linear_constraint -> bool
 val px_is_equal : px_linear_constraint -> px_linear_constraint -> bool
 
 (** Check if a constraint is included in another one *)
-(* val is_leq : linear_constraint -> linear_constraint -> bool *)
 val p_is_leq : p_linear_constraint -> p_linear_constraint -> bool
 val px_is_leq : px_linear_constraint -> px_linear_constraint -> bool
 
@@ -470,6 +469,8 @@ val p_nnconvex_constraint_is_true  : p_nnconvex_constraint -> bool
 (** Check if a nnconvex_constraint is pi0-compatible *)
 val p_nnconvex_constraint_is_pi0_compatible : (variable -> coef) -> p_nnconvex_constraint -> bool
 
+(** Check if a nnconvex_constraint is included in another one *)
+val p_nnconvex_constraint_is_leq : p_nnconvex_constraint -> p_nnconvex_constraint -> bool
 
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
