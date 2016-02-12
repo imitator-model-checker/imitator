@@ -567,7 +567,7 @@ Number of computed states     : 3
 	,
 	#------------------------------------------------------------
 	{
-		'purpose'    : 'Test PDFC: very basic example with clocks (false result)',
+		'purpose'    : 'Test PDFC: very basic example (false result)',
 		'input_files': ['PDFC3.imi'],
 		'options'    : '-mode PDFC -output-result  -output-states',
 		'expectations' : [
@@ -628,7 +628,7 @@ Number of computed states     : 2
 	,
 	#------------------------------------------------------------
 	{
-		'purpose'    : 'Test PDFC: very basic example with clocks (normal result)',
+		'purpose'    : 'Test PDFC: very basic example (normal result)',
 		'input_files': ['PDFC4.imi'],
 		'options'    : '-mode PDFC -output-result  -output-states',
 		'expectations' : [
@@ -685,6 +685,131 @@ Number of computed states     : 3
   DESCRIPTION OF THE TRANSITIONS
   s_0 -> s_1 via "a"
   s_1 -> s_1 via "a"
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+	,
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test PDFC: basic example with disjunction',
+		'input_files': ['PDFC5.imi'],
+		'options'    : '-mode PDFC -output-result  -output-states',
+		'expectations' : [
+			{'file': 'PDFC5.res' , 'content' : """
+BEGIN CONSTRAINT
+ p1 >= 0
+& p2 >= 0
+& p1 + 5 = p3
+OR
+  p1 >= 0
+& p3 > 5 + p1
+& p2 >= 5 + p1
+OR
+  p1 >= 0
+& p1 + 5 > p3
+& p3 >= 0
+& p2 >= 5 + p1
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness          : exact
+Termination                   : regular termination
+State space nature            : good
+------------------------------------------------------------
+Number of states              : 5
+Number of transitions         : 6
+Number of computed states     : 7
+"""
+			} #end result file
+			,
+			{'file': 'PDFC5-statespace.states' , 'content' : """
+  DESCRIPTION OF THE STATES
+
+  /************************************************************/
+  INITIAL
+  STATE 0:
+  pta: l1 ==> 
+& p1 + 5 >= x1
+& p1 >= 0
+& p2 >= 0
+& p3 >= 0
+& x1 >= 0
+& x1 = x2
+
+  Projection onto the parameters:
+   p2 >= 0
+& p3 >= 0
+& p1 >= 0
+
+  /************************************************************/
+  STATE 1:
+  pta: l2 ==> 
+& p1 >= 0
+& p2 >= 0
+& p3 >= 0
+& x1 >= 0
+& x1 = x2
+
+  Projection onto the parameters:
+   p2 >= 0
+& p3 >= 0
+& p1 >= 0
+
+  /************************************************************/
+  STATE 2:
+  pta: l3 ==> 
+& p1 >= 0
+& p1 + 5 >= p3
+& p2 >= 0
+& p3 >= 0
+& x1 >= p3
+& x1 = x2
+
+  Projection onto the parameters:
+   p1 + 5 >= p3
+& p2 >= 0
+& p3 >= 0
+& p1 >= 0
+
+  /************************************************************/
+  STATE 3:
+  pta: l3 ==> 
+& p1 >= 0
+& p2 >= 0
+& p3 >= 0
+& x1 >= 0
+& x1 = x2
+
+  Projection onto the parameters:
+   p2 >= 0
+& p3 >= 0
+& p1 >= 0
+
+  /************************************************************/
+  STATE 4:
+  pta: l2 ==> 
+& p1 >= 0
+& p1 + 5 >= p3
+& p2 >= 0
+& p3 >= 0
+& x1 >= p3
+& x1 = x2
+
+  Projection onto the parameters:
+   p1 + 5 >= p3
+& p2 >= 0
+& p3 >= 0
+& p1 >= 0
+
+  DESCRIPTION OF THE TRANSITIONS
+  s_0 -> s_2
+  s_4 -> s_2 via "a"
+  s_1 -> s_3 via "a"
+  s_3 -> s_1 via "a"
+  s_2 -> s_4 via "a"
+  s_0 -> s_1 via "a"
 """
 			} #end result file
 		] # end expectations
