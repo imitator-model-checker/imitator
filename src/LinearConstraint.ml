@@ -1789,7 +1789,8 @@ let pxd_constraint_of_discrete_values (discrete_values : (variable * coef) list)
 
 
 (** Convert (and copy) a PX into a PXD constraint by extending the number of dimensions; the original constraint remains unchanged *)
-let pxd_of_px_constraint c = copy c
+let pxd_of_p_constraint c = copy c
+let pxd_of_px_constraint = pxd_of_p_constraint
 
 
 

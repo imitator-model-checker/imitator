@@ -10,7 +10,7 @@
  * Author:        Etienne Andre
  * 
  * Created:       2010/03/04
- * Last modified: 2016/02/11
+ * Last modified: 2016/02/12
  *
  ****************************************************************) 
  
@@ -359,6 +359,7 @@ val partition_pi0_compatible : (variable -> coef) -> p_linear_constraint -> (p_l
 val pxd_constraint_of_discrete_values : (variable * coef) list -> pxd_linear_constraint
 
 (** Convert (and copy) a PX into a PXD constraint by extending the number of dimensions; the original constraint remains unchanged *)
+val pxd_of_p_constraint : p_linear_constraint -> pxd_linear_constraint
 val pxd_of_px_constraint : px_linear_constraint -> pxd_linear_constraint
 
 
