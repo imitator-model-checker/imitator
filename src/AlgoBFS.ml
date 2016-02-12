@@ -376,9 +376,6 @@ class virtual algoBFS =
 			(*** NOTE: LOOKS LIKE COMPLETELY USELESS !!! it even increases memory x-( ***)
 			Gc.major ();
 			
-			(* Iterate *)
-			current_depth <- current_depth + 1;
-			
 			(* Check if the limit has been reached *)
 			limit_reached := self#check_bfs_limit;
 			
@@ -392,6 +389,8 @@ class virtual algoBFS =
 				);
 			);
 			
+			(* Iterate *)
+			current_depth <- current_depth + 1;
 		done;
 		
 		(* Were they any more states to explore? *)
