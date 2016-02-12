@@ -12,9 +12,9 @@
  * Input by        : Étienne André
  *
  * Created         : 2015/05/13
- * Last modified   : 2015/05/14
+ * Last modified   : 2016/02/12
  *
- * IMITATOR version: 2.7-beta2
+ * IMITATOR version: 2.8-working
  ************************************************************)
 
 var
@@ -65,36 +65,33 @@ end (* sensor2 *)
 synclabs: result1, wakeup1, result2, wakeup2;
 
 loc cont_1: while x < 2 & y <= 20 wait {}
-	when True sync result1 goto fail_or_timeout(*fail*);
-	when True sync result2 goto fail_or_timeout(*fail*);
+	when True sync result1 goto fail;
+	when True sync result2 goto fail;
 	when x < 2 sync wakeup1 goto cont_2;
-	when y = 20 goto fail_or_timeout(*timeout*);
+	when y = 20 goto timeout;
 
 loc cont_2: while x <= p1 & y <= 20 wait {}
-	when True sync result2 goto fail_or_timeout(*fail*);
+	when True sync result2 goto fail;
 	when x = p1 do {x' = 0} goto cont_3;
 	when x < p1 sync result1 do {x' = 0} goto cont_3;
-	when y = 20 goto fail_or_timeout(*timeout*);
+	when y = 20 goto timeout;
 
 loc cont_3: while x < 2 & y <= 20 wait {}
-	when True sync result1 goto fail_or_timeout(*fail*);
-	when True sync result2 goto fail_or_timeout(*fail*);
+	when True sync result1 goto fail;
+	when True sync result2 goto fail;
 	when x < 2 sync wakeup2 goto cont_4;
-	when y = 20 goto fail_or_timeout(*timeout*);
+	when y = 20 goto timeout;
 
 loc cont_4: while x <= p2 & y <= 20 wait {}
-	when True sync result1 goto fail_or_timeout(*fail*);
+	when True sync result1 goto fail;
 		(* BUG in the paper? I replaced 'x < p2' with 'x = p2' *)
 	when x = p2 do {x' = 0, y' = 0} goto cont_1;
 	when x < p2 sync result2 do {x' = 0, y' = 0} goto cont_1;
-	when y = 20 goto fail_or_timeout(*timeout*);
+	when y = 20 goto timeout;
 
-(*loc fail: while True wait {}
+loc fail: while True wait {}
 
-loc timeout: while True wait {}*)
-
-(* HACK for IMITATOR: can only test ONE bad location *)
-loc fail_or_timeout: while True wait {}
+loc timeout: while True wait {}
 
 end (* controller *)
 
@@ -148,6 +145,6 @@ init := True
 (* Analysis *)
 (************************************************************)
 
-property := unreachable loc[controller] = fail_or_timeout;
+property := unreachable loc[controller] = fail or loc[controller] = timeout;
 
 end
