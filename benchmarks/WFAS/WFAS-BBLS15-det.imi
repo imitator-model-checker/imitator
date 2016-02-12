@@ -3,7 +3,7 @@
  *
  * Wireless fire alarm system
  *
- * Description     : wireless fire alarm system. Note that [BBLS15] only synthesize point valuations, and not the most general constraint satisfying correctness.
+ * Description     : wireless fire alarm system. Version with no non-determinism within a local PTA. Note that [BBLS15] only synthesize point valuations, and not the most general constraint satisfying correctness.
  * Correctness     : No failure and no timeout (safety property)
  *
  * Source          : "Language Emptiness of Continuous-Time Parametric Timed Automata" by Nikola Benes, Peter Bezdek, Kim G. Larsen, and Jiri Srba (the model was described in Sergio Feo-Arenis, Bernd Westphal, Daniel Dietsch, Marco Mun ̃iz, and Siyar An- disha. The wireless fire alarm system: Ensuring conformance to industrial standards through formal verification. In FM'14, volume 8442 of LNCS, pages 658–672. Springer, 2014.)
@@ -12,9 +12,11 @@
  * Input by        : Étienne André
  *
  * Created         : 2015/05/13
- * Last modified   : 2015/05/14
+ * Fork from       : WFAS-BBLS15.imi
+ * Fork date       : 2016/02/12
+ * Last modified   : 2016/02/12
  *
- * IMITATOR version: 2.7-beta2
+ * IMITATOR version: 2.8-working
  ************************************************************)
 
 var
@@ -47,38 +49,41 @@ end (* sensor1 *)
 (************************************************************)
   automaton sensor2
 (************************************************************)
-synclabs: result2, wakeup2;
+synclabs: result2a, result2b, wakeup2;
 
 loc idle: while True wait {}
 	when True sync wakeup2 do {x2' = 0} goto awake;
 
 loc awake: while x2 < 17 wait {}
 	when True sync wakeup2 goto awake;
-	when x2 > 2 & x2 < 3 sync result2 goto idle;
-	when x2 > 16 & x2 < 17 sync result2 goto idle;
+	when x2 > 2 & x2 < 3 sync result2a goto idle;
+	when x2 > 16 & x2 < 17 sync result2b goto idle;
 end (* sensor2 *)
 
 
 (************************************************************)
   automaton controller
 (************************************************************)
-synclabs: result1, wakeup1, result2, wakeup2;
+synclabs: result1, wakeup1, result2a, result2b, wakeup2;
 
 loc cont_1: while x < 2 & y <= 20 wait {}
 	when True sync result1 goto fail_or_timeout(*fail*);
-	when True sync result2 goto fail_or_timeout(*fail*);
+	when True sync result2a goto fail_or_timeout(*fail*);
+	when True sync result2b goto fail_or_timeout(*fail*);
 	when x < 2 sync wakeup1 goto cont_2;
 	when y = 20 goto fail_or_timeout(*timeout*);
 
 loc cont_2: while x <= p1 & y <= 20 wait {}
-	when True sync result2 goto fail_or_timeout(*fail*);
+	when True sync result2a goto fail_or_timeout(*fail*);
+	when True sync result2b goto fail_or_timeout(*fail*);
 	when x = p1 do {x' = 0} goto cont_3;
 	when x < p1 sync result1 do {x' = 0} goto cont_3;
 	when y = 20 goto fail_or_timeout(*timeout*);
 
 loc cont_3: while x < 2 & y <= 20 wait {}
 	when True sync result1 goto fail_or_timeout(*fail*);
-	when True sync result2 goto fail_or_timeout(*fail*);
+	when True sync result2a goto fail_or_timeout(*fail*);
+	when True sync result2b goto fail_or_timeout(*fail*);
 	when x < 2 sync wakeup2 goto cont_4;
 	when y = 20 goto fail_or_timeout(*timeout*);
 
@@ -86,7 +91,8 @@ loc cont_4: while x <= p2 & y <= 20 wait {}
 	when True sync result1 goto fail_or_timeout(*fail*);
 		(* BUG in the paper? I replaced 'x < p2' with 'x = p2' *)
 	when x = p2 do {x' = 0, y' = 0} goto cont_1;
-	when x < p2 sync result2 do {x' = 0, y' = 0} goto cont_1;
+	when x < p2 sync result2a do {x' = 0, y' = 0} goto cont_1;
+	when x < p2 sync result2b do {x' = 0, y' = 0} goto cont_1;
 	when y = 20 goto fail_or_timeout(*timeout*);
 
 (*loc fail: while True wait {}
