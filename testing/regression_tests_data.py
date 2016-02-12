@@ -693,6 +693,112 @@ Number of computed states     : 3
 	,
 	#------------------------------------------------------------
 	{
+		'purpose'    : 'Test PDFC: very basic example (false result)',
+		'input_files': ['PDFC6.imi'],
+		'options'    : '-mode PDFC -output-result  -output-states',
+		'expectations' : [
+			{'file': 'PDFC6.res' , 'content' : """
+BEGIN CONSTRAINT
+False
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness          : exact
+Termination                   : regular termination
+State space nature            : good
+------------------------------------------------------------
+Number of states              : 2
+Number of transitions         : 1
+Number of computed states     : 2
+"""
+			} #end result file
+			,
+			{'file': 'PDFC6-statespace.states' , 'content' : """
+  DESCRIPTION OF THE STATES
+
+  /************************************************************/
+  INITIAL
+  STATE 0:
+  pta: l1 ==> 
+& p >= 0
+& x1 >= 0
+
+  Projection onto the parameters:
+   p >= 0
+
+  /************************************************************/
+  STATE 1:
+  pta: l2 ==> 
+& p >= 0
+& x1 >= 0
+
+  Projection onto the parameters:
+   p >= 0
+
+  DESCRIPTION OF THE TRANSITIONS
+  s_0 -> s_1 via "a"
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+	,
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test PDFC: very basic example (true result)',
+		'input_files': ['PDFC7.imi'],
+		'options'    : '-mode PDFC -output-result  -output-states',
+		'expectations' : [
+			{'file': 'PDFC7.res' , 'content' : """
+BEGIN CONSTRAINT
+ p >= 0
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness          : exact
+Termination                   : regular termination
+State space nature            : good
+------------------------------------------------------------
+Number of states              : 2
+Number of transitions         : 2
+Number of computed states     : 3
+"""
+			} #end result file
+			,
+			{'file': 'PDFC7-statespace.states' , 'content' : """
+
+  DESCRIPTION OF THE STATES
+
+  /************************************************************/
+  INITIAL
+  STATE 0:
+  pta: l1 ==> 
+& p >= 0
+& x1 >= 0
+
+  Projection onto the parameters:
+   p >= 0
+
+  /************************************************************/
+  STATE 1:
+  pta: l2 ==> 
+& p >= 0
+& x1 >= p
+
+  Projection onto the parameters:
+   p >= 0
+
+  DESCRIPTION OF THE TRANSITIONS
+  s_0 -> s_1 via "a"
+  s_1 -> s_1 via "a"
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+	,
+	#------------------------------------------------------------
+	{
 		'purpose'    : 'Test PDFC: basic example with disjunction',
 		'input_files': ['PDFC5.imi'],
 		'options'    : '-mode PDFC -output-result  -output-states',

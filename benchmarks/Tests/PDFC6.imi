@@ -1,0 +1,81 @@
+(************************************************************
+ *                      IMITATOR MODEL                      
+ *
+ * Dummy example to test parametric deadlock-freeness checking
+ *
+ * Description     : Dummy example to test parametric deadlock-freeness checking
+ * Correctness     : The system is deadlock-free (in fact for no parameter valuation, even if p is not used)
+ * Source          : Own work
+ * Author          : Étienne André
+ * Modeling        : Étienne André
+ * Input by        : Étienne André
+ * License         : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+
+ *
+ * Created         : 2016/02/12
+ * Last modified   : 2016/02/12
+ *
+ * IMITATOR version: 2.8-working
+ ************************************************************)
+ 
+
+var
+
+(* Clocks *)
+ 	x1
+		: clock;
+
+(* Parameters *)
+	p
+		: parameter;
+
+
+
+(************************************************************)
+  automaton pta
+(************************************************************)
+synclabs: a;
+
+loc l1: while True wait {}
+	when x1 <= 1 sync a goto l2;
+
+loc l2: while True wait {}
+	when True sync a goto l2;
+
+end (* pta *)
+
+
+
+(************************************************************)
+(* Initial state *)
+(************************************************************)
+
+init :=
+	(*------------------------------------------------------------*)
+	(* Initial location *)
+	(*------------------------------------------------------------*)
+	& loc[pta] = l1
+
+	(*------------------------------------------------------------*)
+	(* Initial clock constraints *)
+	(*------------------------------------------------------------*)
+	& x1 = 0
+
+	(*------------------------------------------------------------*)
+	(* Parameter constraints *)
+	(*------------------------------------------------------------*)
+	& p >= 0
+;
+
+
+(************************************************************)
+(* Property specification *)
+(************************************************************)
+
+(* property := unreachable loc[pta] = l1; *)
+
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end
