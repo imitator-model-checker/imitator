@@ -425,8 +425,8 @@ class algoDeadlockFree =
 			else statespace_nature
 		in
 		
-		(* Constraint is exact if termination is normal, possibly under-approximated otherwise *)
-		let soundness = if termination_status = Regular_termination then Constraint_exact else Constraint_maybe_under in
+		(* Constraint is exact if termination is normal, possibly over-approximated otherwise (since we compute the negation) *)
+		let soundness = if termination_status = Regular_termination then Constraint_exact else Constraint_maybe_over in
 
 		(* Return the result *)
 		PDFC_result
