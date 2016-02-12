@@ -187,9 +187,9 @@ for test_case in tests:
 			# Read file
 			with open (output_file, "r") as myfile:
 				# Get the content
-				content = myfile.read()
+				original_content = myfile.read()
 				# Replace all whitespace characters (space, tab, newline, and so on) with a single space
-				content = ' '.join(content.split())
+				content = ' '.join(original_content.split())
 				
 				# Replace all whitespace characters (space, tab, newline, and so on) with a single space
 				expected_content = ' '.join(expectation['content'].split())
@@ -204,9 +204,9 @@ for test_case in tests:
 					passed = False
 					print_to_log(' Test ' + test_expectation_id + ' failed!')
 					print_to_log("\n" + '*** Expected content for this test:')
-					print_to_log("\n" + expected_content + "\n\n")
+					print_to_log("\n" + expectation['content'] + "\n\n")
 					print_to_log('*** Content found:')
-					print_to_log("\n" + content + "\n\n")
+					print_to_log("\n" + original_content + "\n\n")
 			# Close file
 			#close (myfile)
 			

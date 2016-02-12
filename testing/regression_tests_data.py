@@ -567,6 +567,67 @@ Number of computed states     : 3
 	,
 	#------------------------------------------------------------
 	{
+		'purpose'    : 'Test PDFC: very basic example with clocks',
+		'input_files': ['PDFC3.imi'],
+		'options'    : '-mode PDFC -output-result  -output-states',
+		'expectations' : [
+			{'file': 'PDFC3.res' , 'content' : """
+BEGIN CONSTRAINT
+False
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness          : exact
+Termination                   : regular termination
+State space nature            : good
+------------------------------------------------------------
+Number of states              : 2
+Number of transitions         : 1
+Number of computed states     : 2
+"""
+			} #end result file
+			,
+			{'file': 'PDFC3-statespace.states' , 'content' : """
+  DESCRIPTION OF THE STATES
+
+  /************************************************************/
+  INITIAL
+  STATE 0:
+  pta: l1 ==> 
+& p1 + 5 >= x
+& p1 >= 0
+& p2 >= 0
+& x >= 0
+
+  Projection onto the parameters:
+   p1 >= 0
+& p2 >= 0
+
+  /************************************************************/
+  STATE 1:
+  pta: l2 ==> 
+& p1 >= 0
+& p1 + 5 >= p2
+& p2 >= 0
+& x >= p2
+& 10 >= x
+
+  Projection onto the parameters:
+   10 >= p2
+& p1 + 5 >= p2
+& p2 >= 0
+& p1 >= 0
+
+  DESCRIPTION OF THE TRANSITIONS
+  s_0 -> s_1 via "a"
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+	,
+	#------------------------------------------------------------
+	{
 		'purpose'    : 'Test the inverse method (flip-flop)',
 		'input_files': ['flipflop.imi', 'flipflop.pi0'],
 		'options'    : '-output-result',
