@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/11/23
- * Last modified     : 2016/02/11
+ * Last modified     : 2016/02/12
  *
  ************************************************************)
 
@@ -376,21 +376,23 @@ class virtual algoBFS =
 			(*** NOTE: LOOKS LIKE COMPLETELY USELESS !!! it even increases memory x-( ***)
 			Gc.major ();
 			
+			(* Go one step deeper *)
+			current_depth <- current_depth + 1;
+			
 			(* Check if the limit has been reached *)
 			limit_reached := self#check_bfs_limit;
 			
 			(* If still going, ask the concrete algorithm whether it wants to terminate for other reasons *)
 			if !limit_reached = Keep_going then(
 				(* Print some information *)
-				self#print_algo_message Verbose_low("Checking termination at post^" ^ (string_of_int current_depth) ^ "...");
+				(*** HACK: 'current_depth - 1' because current_depth was just incremented... ***)
+				self#print_algo_message Verbose_low("Checking termination at post^" ^ (string_of_int (current_depth - 1)) ^ "...");
 
 				if self#check_termination_at_post_n then(
 					algorithm_keep_going := false;
 				);
 			);
 			
-			(* Iterate *)
-			current_depth <- current_depth + 1;
 		done;
 		
 		(* Were they any more states to explore? *)

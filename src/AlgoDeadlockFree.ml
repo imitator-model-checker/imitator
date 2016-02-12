@@ -37,9 +37,6 @@ let get_guard state_space state_index action_index state_index' =
 	(* Retrieve the model *)
 	let model = Input.get_model () in
 	
-	
-	(*** WORK IN PROGRESS ***)
-	
 	(* Retrieve source and destination locations *)
 	let (location : Location.global_location), _ = StateSpace.get_state state_space state_index in
 	let (location' : Location.global_location), _ = StateSpace.get_state state_space state_index' in
