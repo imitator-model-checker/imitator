@@ -407,10 +407,18 @@ class algoDeadlockFree =
 			"Algorithm completed " ^ (after_seconds ()) ^ "."
 		);
 		
+		self#print_algo_message_newline Verbose_low (
+			"Performing negation of final constraint..."
+		);
+		
 		(* Perform result = initial_state|P \ bad_constraint *)
 		let result = init_p_nnconvex_constraint in
 		(*** WARNING: will actually MODIFY init_p_nnconvex_constraint; but not a problem since about to exit the algorithm, and variable not used anymore afterwards ***)
 		LinearConstraint.p_nnconvex_difference result bad_constraint;
+		
+		self#print_algo_message_newline Verbose_medium (
+			"Negation of final constraint completed."
+		);
 		
 		(* Get the termination status *)
 		 let termination_status = match termination_status with
