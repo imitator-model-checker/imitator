@@ -13,7 +13,7 @@
 
  *
  * Created         : 2016/02/12
- * Last modified   : 2016/02/15
+ * Last modified   : 2016/02/12
  *
  * IMITATOR version: 2.8-working
  ************************************************************)
@@ -39,7 +39,7 @@ loc l1: while x <= 5 + p1 wait {}
 	when x >= p2 sync a goto l2;
 
 loc l2: while x <= 10 wait {}
-	when True do {x' = 0} sync a goto l2;
+	when True sync a goto l2;
 
 end (* pta *)
 
