@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/12/03
- * Last modified     : 2016/02/10
+ * Last modified     : 2016/02/15
  *
  ************************************************************)
 
@@ -116,7 +116,24 @@ let file_header () =
 	^ "\n * Command  : " ^ (string_of_array_of_string_with_sep " " Sys.argv)
 	^ "\n ************************************************************)\n\n"
 
-	
+(* Return a string made of some information concerning the input model *)
+let model_statistics () =
+	(* Retrieve the model *)
+	let model = Input.get_model() in
+	(* Compute the number of locations *)
+	let nb_total_locations = List.fold_left (fun current_sum automaton_index -> current_sum + (List.length (model.locations_per_automaton automaton_index))) 0 model.automata in
+	(* Create the statistics *)
+	    "Number of IPTAs               : " ^ (string_of_int model.nb_automata)
+	^ "\nNumber of clocks              : " ^ (string_of_int model.nb_clocks)
+	^ "\nHas stopwatches?              : " ^ (string_of_bool model.has_stopwatches)
+	^ "\nNumber of parameters          : " ^ (string_of_int model.nb_parameters)
+	^ "\nNumber of discrete variables  : " ^ (string_of_int model.nb_discrete)
+	^ "\nNumber of actions             : " ^ (string_of_int model.nb_actions)
+	^ "\nTotal number of locations     : " ^ (string_of_int nb_total_locations)
+	^ "\nAverage locations per IPTA    : " ^ (round1_float ((float_of_int nb_total_locations) /. (float_of_int model.nb_automata)))
+
+
+
 (* Return a string made of some statistics for the state space *)
 let statespace_statistics state_space total_time =
 	(* Speed: number of states computed and still in the state space *)
@@ -171,18 +188,23 @@ let write_efsynth_result_to_file file_name (efsynth_result : Result.efsynth_resu
 		(* 1) Header *)
 		file_header ()
 		
-		(* 2) The actual result *)
+		(* 2) Statistics about model *)
+		^ "\n------------------------------------------------------------"
+		^ "\n" ^ (model_statistics ())
+		^ "\n------------------------------------------------------------"
+
+		(* 3) The actual result *)
 		(* begin delimiter *)
-		^ "\nBEGIN CONSTRAINT\n"
+		^ "\n\nBEGIN CONSTRAINT\n"
 		^ result_str ^ ""
 		(* end delimiter *)
 		^ "\nEND CONSTRAINT\n"
 		
-		(* 3) Statistics about result *)
+		(* 4) Statistics about result *)
 		^ "\n------------------------------------------------------------"
 		^ "\n" ^ (result_nature_statistics efsynth_result.soundness efsynth_result.termination efsynth_result.statespace_nature)
 		
-		(* 4) Statistics about state space *)
+		(* 5) Statistics about state space *)
 		^ "\n------------------------------------------------------------"
 		^ "\n" ^ (statespace_statistics efsynth_result.state_space efsynth_result.computation_time)
 		^ "\n------------------------------------------------------------"
@@ -208,18 +230,23 @@ let write_pdfc_result_to_file file_name (pdfc_result : Result.pdfc_result) =
 		(* 1) Header *)
 		file_header ()
 		
-		(* 2) The actual result *)
+		(* 2) Statistics about model *)
+		^ "\n------------------------------------------------------------"
+		^ "\n" ^ (model_statistics ())
+		^ "\n------------------------------------------------------------"
+
+		(* 3) The actual result *)
 		(* begin delimiter *)
-		^ "\nBEGIN CONSTRAINT\n"
+		^ "\n\nBEGIN CONSTRAINT\n"
 		^ result_str ^ ""
 		(* end delimiter *)
 		^ "\nEND CONSTRAINT\n"
 		
-		(* 3) Statistics about result *)
+		(* 4) Statistics about result *)
 		^ "\n------------------------------------------------------------"
 		^ "\n" ^ (result_nature_statistics pdfc_result.soundness pdfc_result.termination pdfc_result.statespace_nature)
 		
-		(* 4) Statistics about state space *)
+		(* 5) Statistics about state space *)
 		^ "\n------------------------------------------------------------"
 		^ "\n" ^ (statespace_statistics pdfc_result.state_space pdfc_result.computation_time)
 		^ "\n------------------------------------------------------------"
@@ -246,19 +273,24 @@ let write_im_result_to_file file_name (im_result : Result.im_result) =
 		(* 1) Header *)
 		file_header ()
 		
-		(* 2) The actual result *)
+		(* 2) Statistics about model *)
+		^ "\n------------------------------------------------------------"
+		^ "\n" ^ (model_statistics ())
+		^ "\n------------------------------------------------------------"
+
+		(* 3) The actual result *)
 		(* begin delimiter *)
-		^ "\nBEGIN CONSTRAINT\n"
+		^ "\n\nBEGIN CONSTRAINT\n"
 		^ result_str ^ ""
 		(* end delimiter *)
 		^ "\nEND CONSTRAINT\n"
 		
-		(* 3) Statistics about result *)
+		(* 4) Statistics about result *)
 		^ "\n------------------------------------------------------------"
 		^ "\n" ^ (result_nature_statistics im_result.soundness im_result.termination im_result.statespace_nature)
 		^ "\nNumber of random selections   : " ^ (string_of_int im_result.nb_random_selections)
 		
-		(* 4) Statistics about state space *)
+		(* 5) Statistics about state space *)
 		^ "\n------------------------------------------------------------"
 		^ "\n" ^ (statespace_statistics im_result.state_space im_result.computation_time)
 		^ "\n------------------------------------------------------------"
@@ -358,10 +390,18 @@ let write_bc_result_to_file file_name bc_result =
 	
 	(* Prepare the string to write *)
 	let file_content =
+		(* 1) The file header *)
 		file_header ()
-		(* The actual result *)
-		^ im_results_str ^ "\n"
-		(* Statistics on BC *)
+		
+		(* 2) Statistics about model *)
+		^ "\n------------------------------------------------------------"
+		^ "\n" ^ (model_statistics ())
+		^ "\n------------------------------------------------------------"
+
+		(* 3) The actual result *)
+		^ "\n" ^ im_results_str ^ "\n"
+		
+		(* 4) Statistics on BC *)
 		^ "\n(************************************************************)"
 		^ "\nGENERAL STATISTICS"
 		^ "\n(************************************************************)"
