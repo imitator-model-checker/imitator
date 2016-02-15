@@ -147,6 +147,7 @@ let statespace_statistics state_space total_time =
 	    "Number of states              : " ^ (string_of_int nb_states)
 	^ "\nNumber of transitions         : " ^ (string_of_int (StateSpace.nb_transitions state_space))
 	^ "\nNumber of computed states     : " ^ (string_of_int nb_gen_states)
+	^ "\nComputation time              : " ^ (string_of_seconds total_time)
 	^ "\nStates/second in state space  : " ^ (round1_float states_per_second) ^ " (" ^ (string_of_int nb_states) ^ "/" ^ (string_of_seconds total_time) ^ ")"
 	^ "\nComputed states/second        : " ^ (round1_float gen_states_per_second) ^ " (" ^ (string_of_int nb_gen_states) ^ "/" ^ (string_of_seconds total_time) ^ ")"
 
