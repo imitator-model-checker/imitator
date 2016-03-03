@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/12/03
- * Last modified     : 2016/02/15
+ * Last modified     : 2016/03/03
  *
  ************************************************************)
 
@@ -271,27 +271,35 @@ let write_im_result_to_file file_name (im_result : Result.im_result) =
 
 	(* Prepare the string to write *)
 	let file_content =
+		let pi0 = Input.get_pi0 () in
+		
 		(* 1) Header *)
 		file_header ()
-		
+
 		(* 2) Statistics about model *)
 		^ "\n------------------------------------------------------------"
 		^ "\n" ^ (model_statistics ())
 		^ "\n------------------------------------------------------------"
 
-		(* 3) The actual result *)
+		(* 3) Recall pi0 *)
+		^ "\n\n------------------------------------------------------------"
+		^ "\n Reference parameter valuation:"
+		^ "\n" ^ (ModelPrinter.string_of_pi0 model pi0)
+		^ "\n------------------------------------------------------------"
+		
+		(* 4) The actual result *)
 		(* begin delimiter *)
 		^ "\n\nBEGIN CONSTRAINT\n"
 		^ result_str ^ ""
 		(* end delimiter *)
 		^ "\nEND CONSTRAINT\n"
 		
-		(* 4) Statistics about result *)
+		(* 5) Statistics about result *)
 		^ "\n------------------------------------------------------------"
 		^ "\n" ^ (result_nature_statistics im_result.soundness im_result.termination im_result.statespace_nature)
 		^ "\nNumber of random selections   : " ^ (string_of_int im_result.nb_random_selections)
 		
-		(* 5) Statistics about state space *)
+		(* 6) Statistics about state space *)
 		^ "\n------------------------------------------------------------"
 		^ "\n" ^ (statespace_statistics im_result.state_space im_result.computation_time)
 		^ "\n------------------------------------------------------------"
@@ -391,6 +399,8 @@ let write_bc_result_to_file file_name bc_result =
 	
 	(* Prepare the string to write *)
 	let file_content =
+		let v0 = Input.get_v0 () in
+
 		(* 1) The file header *)
 		file_header ()
 		
@@ -399,10 +409,16 @@ let write_bc_result_to_file file_name bc_result =
 		^ "\n" ^ (model_statistics ())
 		^ "\n------------------------------------------------------------"
 
-		(* 3) The actual result *)
+		(* 3) Recall v0 *)
+		^ "\n\n------------------------------------------------------------"
+		^ "\n Reference parameter domain:"
+		^ "\n" ^ (ModelPrinter.string_of_v0 model v0)
+		^ "\n------------------------------------------------------------"
+		
+		(* 4) The actual result *)
 		^ "\n" ^ im_results_str ^ "\n"
 		
-		(* 4) Statistics on BC *)
+		(* 5) Statistics on BC *)
 		^ "\n(************************************************************)"
 		^ "\nGENERAL STATISTICS"
 		^ "\n(************************************************************)"
@@ -505,8 +521,8 @@ let print_statistics total_time state_space =
 (* Main function to process IMITATOR result *)
 (************************************************************)
 
-(** Process the result of IMITATOR. The 2nd optional argument is the file name prefix (otherwise options#files_prefix is used). *)
-let process_result result prefix_option =
+(** Process the result of IMITATOR. The 3rd optional argument is the file name prefix (otherwise options#files_prefix is used). *)
+let process_result result algorithm_name prefix_option =
 	(* Retrieve the model *)
 	let model = Input.get_model() in
 	(* Retrieve the input options *)
@@ -532,7 +548,7 @@ let process_result result prefix_option =
 		
 		(* Draw state space *)
 		let radical = file_prefix ^ "-statespace" in
-		Graphics.draw_statespace poststar_result.state_space radical;
+		Graphics.draw_statespace poststar_result.state_space algorithm_name radical;
 		
 		(* The end *)
 		()
@@ -583,7 +599,7 @@ let process_result result prefix_option =
 		
 		(* Draw state space *)
 		let radical = file_prefix ^ "-statespace" in
-		Graphics.draw_statespace efsynth_result.state_space radical;
+		Graphics.draw_statespace efsynth_result.state_space algorithm_name radical;
 		
 		(* Render zones in a graphical form *)
 		if options#cart then (
@@ -643,7 +659,7 @@ let process_result result prefix_option =
 		
 		(* Draw state space *)
 		let radical = file_prefix ^ "-statespace" in
-		Graphics.draw_statespace pdfc_result.state_space radical;
+		Graphics.draw_statespace pdfc_result.state_space algorithm_name radical;
 		
 		(* Render zones in a graphical form *)
 		if options#cart then (
@@ -693,7 +709,7 @@ let process_result result prefix_option =
 		(* Draw state space *)
 		(*** TODO: move inside inverse_method_gen ***)
 		let radical = file_prefix ^ "-statespace" in
-		Graphics.draw_statespace im_result.state_space radical;
+		Graphics.draw_statespace im_result.state_space algorithm_name radical;
 		
 		if options#cart then (
 			(* Render zones in a graphical form *)

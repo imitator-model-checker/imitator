@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre, Ulrich Kuehne
  * Created:       2010/07/05
- * Last modified: 2016/01/28
+ * Last modified: 2016/03/03
  *
  ************************************************************)
 
@@ -33,5 +33,5 @@ val draw_cartography : (LinearConstraint.p_convex_or_nonconvex_constraint * Stat
 (** Execute the 'dot' with a source file name as argument *)
 val dot : string -> string -> unit
 
-(** Draw the state space using dot *)
-val draw_statespace : StateSpace.state_space -> string -> unit
+(** 'draw_statespace state_space algorithm_name radical' draws the state space using dot *)
+val draw_statespace : StateSpace.state_space -> string -> string -> unit

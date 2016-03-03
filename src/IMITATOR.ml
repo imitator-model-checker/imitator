@@ -9,7 +9,7 @@
  * 
  * File contributors : Ulrich Kühne, Étienne André
  * Created           : 2009/09/07
- * Last modified     : 2016/02/08
+ * Last modified     : 2016/03/03
  *
  ************************************************************)
 
@@ -397,7 +397,7 @@ in
 let result = algorithm#run() in
 
 (* Process *)
-ResultProcessor.process_result result None;
+ResultProcessor.process_result result algorithm#algorithm_name None;
 
 		
 

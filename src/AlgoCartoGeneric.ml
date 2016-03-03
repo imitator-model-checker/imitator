@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/01/19
- * Last modified     : 2016/01/29
+ * Last modified     : 2016/03/03
  *
  ************************************************************)
 
@@ -446,7 +446,7 @@ class virtual algoCartoGeneric =
 
 			(** Create auxiliary files with the proper file prefix, if requested *)
 			let file_prefix = options#files_prefix ^ "-" ^ (string_of_int current_iteration) in
-			ResultProcessor.process_result imitator_result (Some file_prefix);
+			ResultProcessor.process_result imitator_result algo#algorithm_name (Some file_prefix);
 			
 			(* Get the verbose mode back *)
 			set_verbose_mode global_verbose_mode;
