@@ -79,20 +79,6 @@ class virtual algoBCCoverDistributedMSPointBased =
 	method virtual bc_instance : AlgoCartoGeneric.algoCartoGeneric
 
 	
-(*	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Create the initial point for the analysis *)
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method get_initial_point =
-		super#get_initial_point
-
-	
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Find the next point *)
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method find_next_point =
-		super#find_next_point*)
-
-
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Generic algorithm *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -107,7 +93,7 @@ class virtual algoBCCoverDistributedMSPointBased =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method run_as_master : Result.imitator_result =
 		(* Retrieve the model *)
-		let model = Input.get_model () in
+(* 		let model = Input.get_model () in *)
 		(* Retrieve the input options *)
 (* 		let options = Input.get_options () in *)
 
@@ -164,18 +150,19 @@ class virtual algoBCCoverDistributedMSPointBased =
 
 			(*** TODO here: call the worker! ***)
 			
-			let imitator_result = raise (InternalError("todo !! ")) in
+			let abstract_result = raise (InternalError("todo !! ")) in
 			
 			
 			(** Create auxiliary files with the proper file prefix, if requested *)
-			bc#create_auxiliary_files imitator_result;
+			(*** NOTE: cannot create files, as the real state space is on the worker machine ***)
+(* 			bc#create_auxiliary_files imitator_result; *)
 
 			(* Get the verbose mode back *)
 (* 			set_verbose_mode global_verbose_mode; *)
 			(*------------------------------------------------------------*)
 
 			(* Process result *)
-			bc#process_result imitator_result;
+			bc#process_result abstract_result;
 			
 			(* Update limits *)
 			bc#update_limit;
@@ -204,14 +191,6 @@ class virtual algoBCCoverDistributedMSPointBased =
 	method run_as_worker : Result.imitator_result =
 		raise (InternalError("not implemented"))
 
-		(*	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Processing the result of IM *)
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method process_result im_result reference_val =
-		super#process_result im_result reference_val;
-	
-		(* The end *)
-		()*)
 
 		
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)

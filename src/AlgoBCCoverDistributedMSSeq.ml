@@ -36,7 +36,6 @@ open AlgoBCCoverDistributedMSPointBased
 class algoBCCoverDistributedMSSeq =
 	object (self)
 	inherit algoBCCoverDistributedMSPointBased as super
-(* 	inherit algoMaster as master *)
 	
 	(************************************************************)
 	(* Class variables *)
@@ -63,10 +62,6 @@ class algoBCCoverDistributedMSSeq =
 		(* The end *)
 		()*)
 
-		
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Global method on pi0 *)
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(** Return a new instance of the algorithm to be iteratively called (typically BCrandom or BCcover) *)
