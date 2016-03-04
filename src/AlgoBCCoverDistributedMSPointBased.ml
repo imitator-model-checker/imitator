@@ -23,10 +23,7 @@ open ImitatorUtilities
 open Exceptions
 open AbstractModel
 open Result
-(* open AlgoBCCover *)
 open AlgoGeneric
-(*open AlgoCartoGeneric
-open AlgoCartoMaster*)
 open DistributedUtilities
 
 
@@ -79,7 +76,7 @@ class virtual algoBCCoverDistributedMSPointBased =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(** Return a new instance of the algorithm to be iteratively called (typically BCrandom or BCcover) *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method virtual algorithm_instance : AlgoCartoGeneric.algoCartoGeneric
+	method virtual bc_instance : AlgoCartoGeneric.algoCartoGeneric
 
 	
 (*	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -97,18 +94,110 @@ class virtual algoBCCoverDistributedMSPointBased =
 
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Algorithm for the master *)
+	(* Generic algorithm *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method run () =
-		raise (InternalError("not implemented"))
+		(* Fork between master and worker *)
+		if DistributedUtilities.get_rank() = DistributedUtilities.masterrank then self#run_as_master
+		else self#run_as_worker
 
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Algorithm for the master *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method run_as_master : Result.imitator_result =
-		raise (InternalError("not implemented"))
+		(* Retrieve the model *)
+		let model = Input.get_model () in
+		(* Retrieve the input options *)
+(* 		let options = Input.get_options () in *)
 
+		(* Create an object responsible to handle everything linked to the cartography *)
+		let bc = self#bc_instance in
+
+		(* Factoring initialization *)
+		bc#initialize_cartography;
+		
+
+		
+		(*** TODO : check that initial pi0 is suitable!! (could be incompatible with initial constraint) ***)
+		
+		
+
+		(* While there is another point to explore *)
+		while bc#check_iteration_condition do
+		
+			(************************************************************)
+			(*** BEGIN USELESS: to be carried out by workers ***)
+(*			(* Get the point *)
+			let pi0 = self#get_current_point_instance in
+			
+			(* Print some messages *)
+			(*** HACK: only print if non-distributed ***)
+(* 			if options#distribution_mode = Options.Non_distributed then( *)
+			print_message Verbose_standard ("\n**************************************************");
+			print_message Verbose_standard ("BEHAVIORAL CARTOGRAPHY ALGORITHM: " ^ (string_of_int current_iteration) ^ "");
+			print_message Verbose_standard ("Considering the following pi" ^ (string_of_int current_iteration));
+			print_message Verbose_standard (ModelPrinter.string_of_pi0 model pi0);
+(* 			); *)
+			
+			
+			(* Print some information *)
+			self#print_algo_message Verbose_low ("Setting new pi0...");
+
+			(* Set the new pi0 *)
+			Input.set_pi0 (pi0);
+			
+			(* Save the verbose mode as it may be modified *)
+			let global_verbose_mode = get_verbose_mode() in
+			
+			(* Prevent the verbose messages (except in verbose medium, high or total) *)
+			(*------------------------------------------------------------*)
+			if not (verbose_mode_greater Verbose_medium) then
+				set_verbose_mode Verbose_mute;
+						
+			(* Call the algorithm to be iterated on (typically IM or PRP) *)
+			(*** NOTE: the bc time limit is NOT checked inside one execution of the algorithm to be iterated (but also note that the max execution time of the algorithm to be iterated is set to that of BC, in the Options pre-processing) ***)
+			algo_instance <- self#algorithm_instance;
+			let imitator_result : imitator_result = algo_instance#run() in*)
+			(*** END USELESS: to be carried out by workers ***)
+			(************************************************************)
+
+			(*** TODO here: call the worker! ***)
+			
+			let imitator_result = raise (InternalError("todo !! ")) in
+			
+			
+			(** Create auxiliary files with the proper file prefix, if requested *)
+			bc#create_auxiliary_files imitator_result;
+
+			(* Get the verbose mode back *)
+(* 			set_verbose_mode global_verbose_mode; *)
+			(*------------------------------------------------------------*)
+
+			(* Process result *)
+			bc#process_result imitator_result;
+			
+			(* Update limits *)
+			bc#update_limit;
+
+		done; (* end while more points *)
+
+		(* Update termination condition *)
+		bc#update_termination_condition;
+	
+		(* Print some information *)
+		(*** NOTE: must be done after setting the limit (above) ***)
+		bc#print_warnings_limit;
+		
+		(*** TODO: wait for remaining workers (except when limits reached?) ***)
+		
+		(* Return the algorithm-dependent result *)
+		bc#compute_result
+
+	
+	
+	
+	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Algorithm for the worker *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)

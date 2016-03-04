@@ -17,7 +17,7 @@
 (* Modules *)
 (************************************************************)
 open AlgoGeneric
-open AlgoCartoMaster
+(* open AlgoCartoMaster *)
 
 
 (************************************************************)
@@ -42,7 +42,7 @@ class virtual algoBCCoverDistributedMSPointBased :
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		(** Return a new instance of the algorithm to be iteratively called (typically BCrandom or BCcover) *)
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-		method virtual algorithm_instance : AlgoCartoGeneric.algoCartoGeneric
+		method virtual bc_instance : AlgoCartoGeneric.algoCartoGeneric
 
 (*		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		(* Create the initial point for the analysis *)

@@ -1,3 +1,8 @@
+
+
+***** THIS FILE IS CURRENTLY NOT USED *****
+(this comment should prevent compiling)
+
 (************************************************************
  *
  *                       IMITATOR
@@ -8,7 +13,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/02/05
- * Last modified     : 2016/02/05
+ * Last modified     : 2016/03/04
  *
  ************************************************************)
 

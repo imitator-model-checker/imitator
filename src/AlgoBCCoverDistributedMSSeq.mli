@@ -38,6 +38,6 @@ class algoBCCoverDistributedMSSeq :
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		(** Return a new instance of the algorithm to be iteratively called (typically BCrandom or BCcover) *)
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-		method algorithm_instance : AlgoCartoGeneric.algoCartoGeneric
+		method bc_instance : AlgoCartoGeneric.algoCartoGeneric
 
 end
