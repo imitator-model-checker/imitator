@@ -113,7 +113,7 @@ class virtual algoCartoGeneric :
 		
 		
 		(* Processing the result of IM *)
-		method virtual process_result : Result.im_result -> PVal.pval -> unit
+(* 		method virtual process_result : Result.im_result -> PVal.pval -> unit *)
 
 (* Packaging the result at the end of the exploration (to be defined in subclasses) *)
 (* 		method virtual compute_result : Result.imitator_result *)

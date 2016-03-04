@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/02/02
- * Last modified     : 2016/02/02
+ * Last modified     : 2016/03/04
  *
  ************************************************************)
 
@@ -207,21 +207,7 @@ class algoBCRandom =
 		) with Found_point tentative_pi0 -> Some_pval tentative_pi0
 
 
-	
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Processing the result of IM *)
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method process_result im_result reference_val =
-		(* Compute the abstraction *)
-		let abstract_im_result = abstract_im_result_of_im_result im_result reference_val in
-		
-		(* Add to the list of tiles *)
-		im_results <- abstract_im_result :: im_results;
-	
-		(* The end *)
-		()
 
-		
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Method packaging the result output by the algorithm *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
