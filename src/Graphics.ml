@@ -8,7 +8,7 @@
  * Author:        Etienne Andre, Ulrich Kuehne
  * 
  * Created:       2010/07/05
- * Last modified: 2016/03/03
+ * Last modified: 2016/03/04
  *
  ****************************************************************)
 
@@ -69,11 +69,17 @@ let make_file_name cartography_file_prefix file_index =
 (*------------------------------------------------------------*)
 (** Draw the cartography corresponding to a list of constraints. Takes as second argument the file name prefix. *)
 (*------------------------------------------------------------*)
+exception CartographyError
+
+
 let draw_cartography (returned_constraint_list : (LinearConstraint.p_convex_or_nonconvex_constraint * StateSpace.statespace_nature) list) cartography_file_prefix =
-(* No cartography if no zone *)
-if returned_constraint_list = [] then(
-	print_message Verbose_standard ("\nNo cartography can be drawn since the list of constraints is empty.\n");
-)else(
+try(
+	(* No cartography if no zone *)
+	if returned_constraint_list = [] then(
+		print_warning ("No cartography can be drawn since the list of constraints is empty.");
+		raise CartographyError
+	);
+
 	print_message Verbose_standard ("\nDrawing the cartography...");
 
 	(* Retrieve the model *)
@@ -145,7 +151,7 @@ if returned_constraint_list = [] then(
 			(* First check that there are at least 2 parameters *)
 			if model.nb_parameters < 2 then(
 				print_error "Could not plot cartography (which requires 2 parameters)";
-				abort_program();
+				raise CartographyError
 			);
 			(* Choose the first 2 *)
 			range_params := [ List.nth model.parameters 0 ; List.nth model.parameters 1];
@@ -193,7 +199,7 @@ if returned_constraint_list = [] then(
 			
 			if (List.length !range_params) < 2 then(
 				print_error "Could not plot cartography (region of interest has too few dimensions)";
-				abort_program();
+				raise CartographyError
 			);
 
 			(* Update bounds *)
@@ -204,7 +210,7 @@ if returned_constraint_list = [] then(
 	(* Else: no reason to draw a cartography *)
 		| _ -> 
 			print_error "Cartography cannot be drawn in this mode.";
-			abort_program();
+			raise CartographyError
 	end;
 	
 	(*** WARNING: only works partially ***)
@@ -541,7 +547,7 @@ if returned_constraint_list = [] then(
 	(*** TODO: Improve! Should perform an automatic detection of the model! ***)
 	let execution = Sys.command !script_line in
 	if execution != 0 then
-		(print_error ("Something went wrong in the command. Exit code: " ^ (string_of_int execution) ^ ". Maybe you forgot to install the 'graph' utility (from the 'plotutils' package)."););
+		(print_error ("Something went wrong in the command. Exit code: " ^ (string_of_int execution) ^ ". Maybe you forgot to install the 'graph' utility (from the 'plotutils' package in Debian)."););
 	
 	(* Print some information *)
 	print_message Verbose_high ("Result of the cartography execution: exit code " ^ (string_of_int execution));
@@ -557,8 +563,12 @@ if returned_constraint_list = [] then(
 			print_message Verbose_medium ("Removing points file #" ^ (string_of_int i) ^ "...");
 			delete_file (make_file_name cartography_file_prefix i);
 		done;
-	); ()
+	);
+	()
 
+) with
+	| CartographyError -> (print_error "Error while printing the cartography";
+	()
 	)
 
 
@@ -900,7 +910,7 @@ let dot radical dot_source_file =
 				print_message Verbose_medium ("Result of the 'dot' command: " ^ (string_of_int command_result));
 				
 				if command_result != 0 then
-					print_error ("Something went wrong when calling 'dot'. Exit code: " ^ (string_of_int command_result) ^ ". Maybe you forgot to install the 'dot' utility.");
+					print_error ("Something went wrong when calling 'dot'. Exit code: " ^ (string_of_int command_result) ^ ". Maybe you forgot to install the 'dot' utility (from the 'graphviz' package in Debian).");
 			) with 
 				| Sys_error error_message -> print_error ("System error while calling 'dot'. Error message: '" ^ error_message ^ "'.");
 			end;
