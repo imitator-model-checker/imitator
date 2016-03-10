@@ -394,7 +394,14 @@ let algorithm : AlgoGeneric.algoGeneric = match options#imitator_mode with
 		
 	(* BC with random coverage *)
 	| Random_cartography nb ->
-		let myalgo :> AlgoGeneric.algoGeneric = new AlgoBCRandom.algoBCRandom in myalgo
+		let algo_bcrandom = new AlgoBCRandom.algoBCRandom in
+		(*** NOTE: very important: must set NOW the maximum number of tries! ***)
+		algo_bcrandom#set_max_tries nb;
+		let myalgo :> AlgoGeneric.algoGeneric = algo_bcrandom in
+	
+(* 		let myalgo :> AlgoGeneric.algoGeneric = new AlgoBCRandom.algoBCRandom in *)
+		(* Return the algo *)
+		myalgo
 		
 	
 		

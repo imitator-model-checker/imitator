@@ -23,7 +23,8 @@ open AlgoCartoGeneric
 (************************************************************)
 (* Class definition *)
 (************************************************************)
-class algoBCRandom :
+(*** NOTE: this function cannot have max_tries as a parameter, as it it inherits algoCartoGeneric which has none ***)
+class algoBCRandom : (*int ->*)
 	object inherit algoCartoGeneric
 		(************************************************************)
 		(* Class variables *)
@@ -34,6 +35,11 @@ class algoBCRandom :
 		(* Class methods *)
 		(************************************************************)
 		method algorithm_name : string
+		
+		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+		(* Set the maximum number of tries (must be done right after creating the algorithm object!) *)
+		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+		method set_max_tries : int -> unit
 		
 		method initialize_variables : unit
 		

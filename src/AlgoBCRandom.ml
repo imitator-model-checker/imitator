@@ -45,7 +45,8 @@ exception Found_point of PVal.pval
 (* Class definition *)
 (************************************************************)
 (************************************************************)
-class algoBCRandom =
+(*** NOTE: this function cannot have max_tries as a parameter, as it it inherits algoCartoGeneric which has none ***)
+class algoBCRandom (*max_tries*) =
 	object (self) inherit algoCartoGeneric as super
 	
 	(************************************************************)
@@ -53,6 +54,9 @@ class algoBCRandom =
 	(************************************************************)
 	(* Current number of failed attempts to find an integer point not covered by any tile *)
 (* 	val mutable nb_failed_attempts = 0 *)
+
+	(* Variable to be initialized *)
+	val mutable max_tries : int option = None
 	
 	
 	(************************************************************)
@@ -65,6 +69,22 @@ class algoBCRandom =
 	method algorithm_name = "BC (random coverage)"
 
 	
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(* Set the maximum number of tries (must be done right after creating the algorithm object!) *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	method set_max_tries m =
+		max_tries <- Some m
+	
+	
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(* Getting max_tries *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	method private get_max_tries : int =
+		match max_tries with
+			| Some m -> m
+			| None -> raise (InternalError ("In algoBCRandom.get_max_tries, the number of maximum tries should have been already initialized."))
+
+		
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Variable initialization *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -154,19 +174,16 @@ class algoBCRandom =
 		(* Get the model *)
 (* 		let model = Input.get_model() in *)
 		(* Retrieve the input options *)
-		let options = Input.get_options () in
+(* 		let options = Input.get_options () in *)
 		
 		(* Get the max number of tries of BC *)
-		(*** NOTE: a bit ugly. Having a class parameterized by max_tries would be more elegant. ***)
-		let max_tries = match options#imitator_mode with
+		let max_tries = (*match options#imitator_mode with
 			 | Random_cartography i -> i
-			 | _ -> raise (InternalError ("Calling algoBCRandom.find_next_point should be done using the random cartography only"))
+			 | _ -> raise (InternalError ("Calling algoBCRandom.find_next_point should be done using the random cartography only"))*)
+			 self#get_max_tries
 		in
 
-		(* Retrieve the current pi0 (that must have been initialized before) *)
-(* 		let current_pi0 = ref (self#get_current_point_option) in *)
-		
-			(* Print some information *)
+		(* Print some information *)
 		self#print_algo_message Verbose_low ("Trying to randomly find a fresh pi0 with " ^ (string_of_int max_tries) ^ " tries.");
 
 		(* Counter *)
