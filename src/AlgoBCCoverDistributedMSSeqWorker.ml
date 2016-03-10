@@ -19,7 +19,7 @@
 (* Modules *)
 (************************************************************)
 (************************************************************)
-
+open AlgoBCCoverDistributedMSPointBasedWorker
 
 (************************************************************)
 (************************************************************)
@@ -50,18 +50,9 @@ class algoBCCoverDistributedMSSeqWorker =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Name of the algorithm *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method algorithm_name = "BC (full coverage) distr MS seq WORKER"
+	method algorithm_name = "BC (full cov) distr MS seq WORKER#" ^ (string_of_int worker_rank) ^ ""
 
 	
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Variable initialization *)
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-(*	method initialize_variables =
-		super#initialize_variables;
-		
-		(* The end *)
-		()*)
-
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(** Return a new instance of the algorithm to be iteratively called (typically IM or PRP) *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)

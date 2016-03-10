@@ -79,7 +79,7 @@ class virtual algoBCCoverDistributedMSPointBased =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Method packaging the result output by the algorithm *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method virtual compute_result : Result.imitator_result
+(* 	method virtual compute_result : Result.imitator_result *)
 
 (************************************************************)
 (************************************************************)

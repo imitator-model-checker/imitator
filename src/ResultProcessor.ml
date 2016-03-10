@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/12/03
- * Last modified     : 2016/03/03
+ * Last modified     : 2016/03/10
  *
  ************************************************************)
 
@@ -766,6 +766,10 @@ let process_result result algorithm_name prefix_option =
 		);
 
 		(* The end *)
+		()
+	
+	(* Nothing to do for workers in distributed mode *)
+	| Distributed_worker_result ->
 		()
 		
 		

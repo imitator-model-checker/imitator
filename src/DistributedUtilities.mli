@@ -63,17 +63,17 @@ val get_rank : unit -> rank
 (** Send functions *)
 (****************************************************************)
 
-val send_result : Result.abstract_im_result -> unit
+val send_abstract_im_result : Result.abstract_im_result -> unit
 
 (** Master sends a tile update to a worker *)
-val send_tileupdate : Result.abstract_im_result -> rank -> unit
+(* val send_tileupdate : Result.abstract_im_result -> rank -> unit *)
 
 (** Sends a list of tiles from the worker to the master *)
-val send_tiles : Result.abstract_im_result list -> unit
+(* val send_tiles : Result.abstract_im_result list -> unit *)
 
 val send_pi0 : PVal.pval -> rank -> unit
 
-val send_pi0_worker : PVal.pval -> unit
+(* val send_pi0_worker : PVal.pval -> unit *)
 
 val send_work_request : unit -> unit
 
@@ -81,11 +81,11 @@ val send_update_request : unit -> unit
 
 val send_subpart : HyperRectangle.hyper_rectangle -> rank -> unit
 
-val send_finished : rank -> unit
+val send_stop : rank -> unit
 
-val send_terminate : rank -> unit
+(* val send_terminate : rank -> unit *)
 
-val send_continue : rank -> unit
+(* val send_continue : rank -> unit *)
 
 
 (****************************************************************)
@@ -101,15 +101,15 @@ val receive_work : unit -> work_assignment
 (** Serialization functions *)
 (****************************************************************)
 
-val serialize_pi0 : PVal.pval -> string
+(* val serialize_pi0 : PVal.pval -> string *)
 
-val unserialize_pi0 : string -> PVal.pval
+(* val unserialize_pi0 : string -> PVal.pval *)
 
-val serialize_im_result : Result.abstract_im_result -> string
+(* val serialize_im_result : Result.abstract_im_result -> string *)
 
-val unserialize_im_result : string -> Result.abstract_im_result
+(* val unserialize_im_result : string -> Result.abstract_im_result *)
 
-val unserialize_im_result_list : string -> Result.abstract_im_result list
+(* val unserialize_im_result_list : string -> Result.abstract_im_result list *)
 
 (** Convert a list of serialized im_result into a serialized list of im_result (ad-hoc function to save time in subparts handling) *)
-val serialized_imresultlist_of_serializedimresult_list : string list -> string
+(* val serialized_imresultlist_of_serializedimresult_list : string list -> string *)

@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/11/23
- * Last modified     : 2016/02/10
+ * Last modified     : 2016/03/10
  *
  ************************************************************)
 
@@ -267,4 +267,7 @@ type imitator_result =
 	
 	(* Result for cartography *)
 	| BC_result of bc_result
+	
+	(* No result for workers in distributed mode *)
+	| Distributed_worker_result
 

@@ -37,21 +37,21 @@ class virtual algoBCCoverDistributedMSPointBasedMaster :
 		
 		method initialize_variables : unit
 		
+		
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		(** Return a new instance of the underlying cartography algorithm (typically BCrandom or BCcover) *)
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		method virtual bc_instance : AlgoCartoGeneric.algoCartoGeneric
 
+		
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		(* Processing the result of IM *)
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		method run : unit -> Result.imitator_result
 
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-		(* Processing the result of IM *)
+		(* Method packaging the result output by the algorithm *)
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-(* 		method process_result : Result.im_result -> PVal.pval -> unit *)
-
-		
-		method compute_result : Result.imitator_result
+		method compute_bc_result : Result.imitator_result
+	
 end

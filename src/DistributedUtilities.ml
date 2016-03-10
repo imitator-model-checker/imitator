@@ -8,7 +8,7 @@
  * Author:        Etienne Andre, Camille Coti
  * 
  * Created:       2014/03/24
- * Last modified: 2016/02/03
+ * Last modified: 2016/03/10
  *
  ****************************************************************)
 
@@ -76,10 +76,11 @@ type mpi_slave_tag =
 (** Tags sent by master *)
 type mpi_master_tag =
 	| Master_data_tag (*pi0*)
-	| Master_finished_tag (*Stop tags*)
+	| Master_stop_tag (*Stop tags*)
 	(* Subpart tags *)
 	| Master_tileupdate_tag
 	| Master_subpart_tag
+	(*** NOTE: difference with Master_stop_tag ??? ***)
 	| Master_terminate_tag
 	| Master_continue_tag
 
@@ -238,20 +239,70 @@ let unserialize_hyper_rectangle hyper_rectangle_string =
 
 
 (*------------------------------------------------------------*)
-(* Result of IM *)
+(* Result of IMITATOR *)
 (*------------------------------------------------------------*)
 
-let serialize_tile_nature = function
+let serialize_statespace_nature = function
 	| StateSpace.Good -> "G"
 	| StateSpace.Bad -> "B"
 	| StateSpace.Unknown -> "U"
 
 
-let unserialize_tile_nature = function
+let unserialize_statespace_nature = function
 	| "G" -> StateSpace.Good
 	| "B" -> StateSpace.Bad
 	| "U" -> StateSpace.Unknown
-	| other -> raise (InternalError ("Impossible match '" ^ other ^ "' in unserialize_tile_nature."))
+	| other -> raise (InternalError ("Impossible match '" ^ other ^ "' in unserialize_statespace_nature."))
+
+let serialize_bfs_algorithm_termination = function
+	(* Fixpoint-like termination *)
+	| Result.Regular_termination -> "R"
+	(* Termination due to time limit reached *)
+	| Result.Time_limit nb -> "T" ^ (string_of_int nb)
+	(* Termination due to state space depth limit reached *)
+	| Result.Depth_limit nb -> "D" ^ (string_of_int nb)
+	(* Termination due to a number of explored states reached *)
+	| Result.States_limit nb -> "S" ^ (string_of_int nb)
+
+(*** TODO ***)
+let unserialize_bfs_algorithm_termination = function
+	(* Fixpoint-like termination *)
+	| "R" -> Result.Regular_termination
+	| other when other <> "" ->(
+		(* Get first character *)
+		let first_char = String.get other 0 in
+		(* Get rest *)
+		let rest = String.sub other 1 (String.length other - 1) in
+		match first_char with
+		| 'T' -> Result.Time_limit (int_of_string rest)
+		| 'D' -> Result.Depth_limit (int_of_string rest)
+		| 'S' -> Result.States_limit (int_of_string rest)
+		| _ -> raise (InternalError ("Impossible match '" ^ other ^ "' in unserialize_bfs_algorithm_termination."))
+	)
+	| other -> raise (InternalError ("Impossible match '" ^ other ^ "' in unserialize_bfs_algorithm_termination."))
+		
+
+
+let serialize_constraint_soundness = function
+	(* Constraint included in or equal to the real result *)
+	| Result.Constraint_maybe_under -> "U"
+	
+	(* Exact result *)
+	| Result.Constraint_exact -> "E"
+	
+	(* Constraint equal to or larger than the real result *)
+	| Result.Constraint_maybe_over -> "O"
+	
+	(* Impossible to compare the constraint with the original result *)
+	| Result.Constraint_maybe_invalid -> "I"
+
+(*** TODO ***)
+let unserialize_constraint_soundness = function
+	| "U" -> Result.Constraint_maybe_under
+	| "E" -> Result.Constraint_exact
+	| "O" -> Result.Constraint_maybe_over
+	| "I" -> Result.Constraint_maybe_invalid
+	| other -> raise (InternalError ("Impossible match '" ^ other ^ "' in unserialize_constraint_soundness."))
 
 
 (*let serialize_returned_constraint = function
@@ -261,7 +312,7 @@ let unserialize_tile_nature = function
 		(LinearConstraint.serialize_linear_constraint p_linear_constraint)
 		^ serialize_SEP_PAIR
 		(* Serialize the tile nature *)
-		^ (serialize_tile_nature tile_nature)
+		^ (serialize_statespace_nature tile_nature)
 	
 	(* Disjunction of constraints *)
 	| Union_of_constraints (p_linear_constraint_list , tile_nature) ->
@@ -269,7 +320,7 @@ let unserialize_tile_nature = function
 		String.concat serialize_SEP_LIST  (List.map LinearConstraint.serialize_linear_constraint p_linear_constraint_list)
 		^ serialize_SEP_PAIR
 		(* Serialize the tile nature *)
-		^ (serialize_tile_nature tile_nature)
+		^ (serialize_statespace_nature tile_nature)
 
 	(* Non-necessarily convex constraint: set of constraints MINUS a set of negations of constraints *)
 	| NNCConstraint _ -> raise (SerializationError ("Cannot serialize NNCConstraint yet."))
@@ -286,7 +337,7 @@ let unserialize_returned_constraint returned_constraint_string =
 	(* Retrieve the list of constraints *)
 	let constraints = List.map LinearConstraint.unserialize_linear_constraint (split serialize_SEP_LIST constraints_str) in
 	(* Unserialize tile nature *)
-	let tile_nature = unserialize_tile_nature tile_nature_str in
+	let tile_nature = unserialize_statespace_nature tile_nature_str in
 	(* Return *)
 	let result =
 	match constraints with
@@ -296,80 +347,101 @@ let unserialize_returned_constraint returned_constraint_string =
 	in result 
 	*)
 
-let serialize_im_result im_result =
-	raise (InternalError("Not implemented"))
-(*	(* Returned constraint *)
-	(serialize_returned_constraint im_result.result)
-	^
-	serialize_SEP_STRUCT
-	^
-	(* Tile nature *)
-	(serialize_tile_nature im_result.tile_nature)
-	^
-	serialize_SEP_STRUCT
-	^
-	(* Premature stop? *)
-	(string_of_bool im_result.premature_stop)
-	^
-	serialize_SEP_STRUCT
-	^
-	(* Deterministic analysis? *)
-	(string_of_bool im_result.deterministic)
-	^
-	serialize_SEP_STRUCT
-	^
+let serialize_abstract_state_space abstract_state_space =
 	(* Number of states *)
-	(string_of_int im_result.nb_states)
+	(string_of_int abstract_state_space.nb_states)
 	^
-	serialize_SEP_STRUCT
+	serialize_SEP_PAIR
 	^
 	(* Number of transitions *)
-	(string_of_int im_result.nb_transitions)
+	(string_of_int abstract_state_space.nb_transitions)
+
+
+let unserialize_abstract_state_space abstract_state_space_string =
+	match split serialize_SEP_PAIR abstract_state_space_string with
+	| [nb_states_str; nb_transitions_str] ->
+		(* Abstract state space of IM for BC (to save memory) *)
+		{
+			nb_states			= int_of_string nb_states_str;
+			nb_transitions		= int_of_string nb_transitions_str;
+		}
+	| _ -> raise (SerializationError ("Cannot unserialize abstract_state_space_string value '" ^ abstract_state_space_string ^ "'."))
+
+
+let serialize_abstract_im_result abstract_im_result =
+	(* Reference valuation *)
+	(serialize_pi0 abstract_im_result.reference_val)
 	^
 	serialize_SEP_STRUCT
 	^
-	(* Number of iterations *)
-	(string_of_int im_result.nb_iterations)
+	(* Convex constraint *)
+	(LinearConstraint.serialize_p_convex_or_nonconvex_constraint abstract_im_result.result)
 	^
 	serialize_SEP_STRUCT
 	^
-	(* Computation time *)
-	(string_of_float im_result.total_time)*)
+	(* Abstracted version of the explored state space *)
+	(serialize_abstract_state_space abstract_im_result.abstract_state_space)
+	^
+	serialize_SEP_STRUCT
+	^
+	(* Nature of the state space *)
+	(serialize_statespace_nature abstract_im_result.statespace_nature)
+	^
+	serialize_SEP_STRUCT
+	^
+	(* Number of random selections of pi-incompatible inequalities performed *)
+	(string_of_int abstract_im_result.nb_random_selections)
+	^
+	serialize_SEP_STRUCT
+	^
+	(* Total computation time of the algorithm *)
+	(string_of_float abstract_im_result.computation_time)
+	^
+	serialize_SEP_STRUCT
+	^
+	(* Soundness of the result *)
+	(serialize_constraint_soundness abstract_im_result.soundness)
+	^
+	serialize_SEP_STRUCT
+	^
+	(* Termination *)
+	(serialize_bfs_algorithm_termination abstract_im_result.termination)
 
 
-let unserialize_im_result im_result_string =
-		raise (InternalError("Not implemented"))
 
-(*	print_message Verbose_medium ( "[Master] About to unserialize '" ^ im_result_string ^ "'");
-	let returned_constraint_string , tile_nature_str , premature_stop_string ,  deterministic_string , nb_states_string , nb_transitions_string , nb_iterations_string , total_time_string =
-	match split serialize_SEP_STRUCT im_result_string with
-		| [returned_constraint_string ; tile_nature_str ; premature_stop_string ; deterministic_string ; nb_states_string ; nb_transitions_string ; nb_iterations_string ; total_time_string ]
-			-> returned_constraint_string , tile_nature_str , premature_stop_string , deterministic_string ,  nb_states_string , nb_transitions_string , nb_iterations_string , total_time_string
-		| _ -> raise (SerializationError ("Cannot unserialize im_result '" ^ im_result_string ^ "'."))
+
+let unserialize_abstract_im_result abstract_im_result_string =
+
+	print_message Verbose_medium ( "[Master] About to unserialize '" ^ abstract_im_result_string ^ "'");
+	let reference_val_str, result_str, abstract_state_space_str, statespace_nature_str, nb_random_selections_str , computation_time_str, soundness_str, termination_str =
+	match split serialize_SEP_STRUCT abstract_im_result_string with
+		| [reference_val_str; result_str; abstract_state_space_str; statespace_nature_str; nb_random_selections_str ; computation_time_str; soundness_str; termination_str ]
+			-> reference_val_str, result_str, abstract_state_space_str, statespace_nature_str, nb_random_selections_str , computation_time_str, soundness_str, termination_str
+		| _ -> raise (SerializationError ("Cannot unserialize im_result '" ^ abstract_im_result_string ^ "'."))
 	in
 	{
-		result 				= unserialize_returned_constraint returned_constraint_string;
-		tile_nature			= unserialize_tile_nature tile_nature_str;
-		premature_stop		= bool_of_string premature_stop_string;
-		deterministic		= bool_of_string deterministic_string;
-		nb_states			= int_of_string nb_states_string;
-		nb_transitions		= int_of_string nb_transitions_string;
-		nb_iterations		= int_of_string nb_iterations_string;
-		total_time			= float_of_string total_time_string;
+		reference_val 			= unserialize_pi0 reference_val_str;
+		result 					= LinearConstraint.unserialize_p_convex_or_nonconvex_constraint result_str;
+		abstract_state_space 	= unserialize_abstract_state_space abstract_state_space_str;
+		statespace_nature		= unserialize_statespace_nature statespace_nature_str;
+		nb_random_selections	= int_of_string nb_random_selections_str;
+		computation_time		= float_of_string computation_time_str;
+		soundness				= unserialize_constraint_soundness soundness_str;
+		termination				= unserialize_bfs_algorithm_termination termination_str;
 	}
-	*)
 
-(** Serialize a list of im_result *)
+
+(*(** Serialize a list of im_result *)
 let serialize_im_result_list im_result_list =
-	String.concat serialize_SEP_LIST_IMRESULT (List.map serialize_im_result im_result_list)
+	String.concat serialize_SEP_LIST_IMRESULT (List.map serialize_im_result im_result_list)*)
 
 
-(** Convert a list of serialized im_result into a serialized list of im_result (ad-hoc function to save time in subparts handling) *)
+(*(** Convert a list of serialized im_result into a serialized list of im_result (ad-hoc function to save time in subparts handling) *)
 let serialized_imresultlist_of_serializedimresult_list =
-	String.concat serialize_SEP_LIST_IMRESULT
+	String.concat serialize_SEP_LIST_IMRESULT*)
 
 
-(** Unserialize a list of im_result *)
+(*(** Unserialize a list of im_result *)
 let unserialize_im_result_list im_result_list_string =
 	(* Retrieve the list of im_result *)
 	let split_list = split serialize_SEP_LIST_IMRESULT im_result_list_string in
@@ -384,7 +456,7 @@ let unserialize_im_result_list im_result_list_string =
 	) split_list;
 	print_string "\n**********";*)
 	
-	List.map unserialize_im_result split_list
+	List.map unserialize_im_result split_list*)
 
 (*
 ;;
@@ -553,7 +625,7 @@ let int_of_slave_tag = function
 
 let int_of_master_tag = function
 	| Master_data_tag -> 17
-	| Master_finished_tag -> 18
+	| Master_stop_tag -> 18
 	(*Hoang Gia new tags*)
 	| Master_tileupdate_tag -> 19
 	| Master_subpart_tag -> 20
@@ -576,7 +648,7 @@ let slave_tag_of_int = function
 
 let master_tag_of_int = function
 	| 17 -> Master_data_tag 
-	| 18 -> Master_finished_tag
+	| 18 -> Master_stop_tag
 	(*Hoang Gia new tags*)
 	| 19 -> Master_tileupdate_tag
 	| 20 -> Master_subpart_tag
@@ -628,58 +700,23 @@ let message_MAX_SIZE = 100
 (*** WARNING / BADPROG : these 3 functions seem to be almost identical !! ***)
 (*** TODO: factorize! ***)
 (* Sends a result (first the size then the constraint), by the slave *)
-let send_result im_result =
+let send_abstract_im_result abstract_im_result =
 	let rank = get_rank() in
 
-	print_message Verbose_medium ("[Worker " ^ (string_of_int rank) ^ "] Entering send_constraint");
-	let mlc = serialize_im_result im_result in
+	print_message Verbose_medium ("[Worker " ^ (string_of_int rank) ^ "] Entering send_abstract_im_result");
+	let mlc = serialize_abstract_im_result abstract_im_result in
 	let res_size = String.length mlc in
 
 	if verbose_mode_greater Verbose_high then(
-		print_message Verbose_medium ("[Worker " ^ (string_of_int rank) ^ "] Serialized constraint '" ^ mlc ^ "'");
+		print_message Verbose_medium ("[Worker " ^ (string_of_int rank) ^ "] Serialized abstract_im_result '" ^ mlc ^ "'");
 	);
 	
 	(* Send the result: 1st send the data size, then the data *)
-	print_message Verbose_medium ("[Worker " ^ (string_of_int rank) ^ "] About to send the size (" ^ (string_of_int res_size) ^ ") of the constraint.");
+	print_message Verbose_medium ("[Worker " ^ (string_of_int rank) ^ "] About to send the size (" ^ (string_of_int res_size) ^ ") of the abstract_im_result.");
 	Mpi.send res_size masterrank (int_of_slave_tag Slave_tile_tag) Mpi.comm_world;
 	Mpi.send mlc masterrank (int_of_slave_tag Slave_tile_tag) Mpi.comm_world
 
-(*	(*** HACK: cut the constraint to try to solve a strange bug with MPI ***)
-	if res_size <= message_MAX_SIZE then(
-		(* Normal situation *)
-		print_message Verbose_high ("[Worker " ^ (string_of_int rank) ^ "] About to send a constraint.");
-		Mpi.send mlc masterrank (int_of_slave_tag Slave_tile_tag) Mpi.comm_world ;
-		print_message Verbose_low ("[Worker " ^ (string_of_int rank) ^ "] Sent constraint '" ^ mlc ^ "'");
-		()
-	)else(
-		(* Cutting situation *)
-		print_message Verbose_low ("[Worker " ^ (string_of_int rank) ^ "] About to cut a constraint into smaller parts.");
-		let remainder = res_size mod message_MAX_SIZE in
-		let nb_parts = res_size / message_MAX_SIZE in
-		print_message Verbose_medium ("[Worker " ^ (string_of_int rank) ^ "] There will be " ^ (string_of_int nb_parts) ^ " parts and " ^ (if remainder = 0 then "no" else "a") ^ " remainder.");
-		for i = 0 to nb_parts - 1 do
-			(* Cut the string *)
-			let substring = String.sub mlc (i * message_MAX_SIZE) message_MAX_SIZE in
-			print_message Verbose_high ("[Worker " ^ (string_of_int rank) ^ "] About to send a piece of constraint.");
-			Mpi.send substring masterrank (int_of_slave_tag Slave_tile_tag) Mpi.comm_world ;
-			print_message Verbose_medium ("[Worker " ^ (string_of_int rank) ^ "] Sent piece of constraint #" ^ (string_of_int i) ^ " '" ^ substring ^ "'");
-		done;
-		
-		(* Send the remainder if not null *)
-		if remainder <> 0 then(
-			(* Cut the string *)
-			let substring = String.sub mlc (nb_parts * message_MAX_SIZE) remainder in
-			print_message Verbose_high ("[Worker " ^ (string_of_int rank) ^ "] About to send the last piece of a constraint.");
-			Mpi.send substring masterrank (int_of_slave_tag Slave_tile_tag) Mpi.comm_world ;
-			print_message Verbose_medium ("[Worker " ^ (string_of_int rank) ^ "] Sent (last) piece of constraint #" ^ (string_of_int nb_parts) ^ " '" ^ substring ^ "'");
-		);
- 
-		print_message Verbose_low ("[Worker " ^ (string_of_int rank) ^ "] Sent constraint '" ^ mlc ^ "'  in small pieces.");
-		
- 		()
-	)
- *)
- 
+(* 
 (** Sends a list of tiles from the worker to the master *)
 let send_tiles im_result_list =
 	let rank = get_rank() in
@@ -699,11 +736,11 @@ let send_tiles im_result_list =
 	Mpi.send res_size masterrank (int_of_slave_tag Slave_tiles_tag) Mpi.comm_world;
 	
 	print_message Verbose_high ("[Worker " ^ (string_of_int rank) ^ "] Sending tiles");
-	Mpi.send mlc masterrank (int_of_slave_tag Slave_tiles_tag) Mpi.comm_world
+	Mpi.send mlc masterrank (int_of_slave_tag Slave_tiles_tag) Mpi.comm_world*)
 
 	
 
-(** Master sends a tile update to a worker *)
+(*(** Master sends a tile update to a worker *)
 let send_tileupdate im_result slave_rank =
 	(*let rank = rank() in*)
 
@@ -717,10 +754,8 @@ let send_tileupdate im_result slave_rank =
 	(*print_message Verbose_medium ("[Worker " ^ (string_of_int rank) ^ "] About to send the size (" ^ (string_of_int res_size) ^ ") of the constraint.");*)
 	Mpi.send res_size slave_rank (int_of_master_tag Master_tileupdate_tag) Mpi.comm_world;
 	Mpi.send mlc slave_rank (int_of_master_tag Master_tileupdate_tag) Mpi.comm_world
-	
+	*)
 
-(*** WARNING / BADPROG : these 2 functions seem to be almost identical !! ***)
-(*** TODO: factorize! ***)
 (* Sends a point (first the size then the point), by the master *)
 let send_pi0 (pi0 : PVal.pval) slave_rank =
 	let mpi0 = serialize_pi0 pi0 in
@@ -731,7 +766,7 @@ let send_pi0 (pi0 : PVal.pval) slave_rank =
 	Mpi.send mpi0 slave_rank (int_of_master_tag Master_data_tag) Mpi.comm_world
 
 
-(* Sends a point (first the size then the point), by the slave *)
+(*(* Sends a point (first the size then the point), by the slave *)
 (*** TODO: factorize! ***)
 let send_pi0_worker pi0  =
 	let rank = get_rank() in
@@ -742,7 +777,7 @@ let send_pi0_worker pi0  =
 
         (* Send the result: 1st send the data size, then the data *)
 	Mpi.send res_size masterrank (int_of_slave_tag Slave_pi0_tag) Mpi.comm_world;
-	Mpi.send mpi0 masterrank (int_of_slave_tag Slave_pi0_tag) Mpi.comm_world
+	Mpi.send mpi0 masterrank (int_of_slave_tag Slave_pi0_tag) Mpi.comm_world*)
 
 let send_work_request () =
 	Mpi.send (get_rank()) masterrank (int_of_slave_tag Slave_work_tag) Mpi.comm_world
@@ -790,11 +825,13 @@ let receive_pull_request () =
      print_message Verbose_medium("[Master] received buffer " ^ !res ^ " of size " ^ ( string_of_int l) ^ " from [Worker "  ^ (string_of_int source_rank) ^ "]");	
 			
      (* Get the constraint *)
-     let im_result = unserialize_im_result !res in
+     let abstract_im_result = unserialize_abstract_im_result !res in
      
-     Tile (source_rank , im_result)
+     Tile (source_rank , abstract_im_result)
 		   
   | Slave_tiles_tag ->
+		raise (InternalError("Not implemented"))
+  (*
       print_message Verbose_medium ("[Master] Received Slave_tiles_tag from " ^ ( string_of_int source_rank) );
 
      print_message Verbose_medium ("[Master] Expecting a result of size " ^ ( string_of_int l) ^ " from [Worker " ^ (string_of_int source_rank) ^ "]" );
@@ -810,7 +847,7 @@ let receive_pull_request () =
      (* Get the constraint *)
      let im_result_list = unserialize_im_result_list !res in
      
-     Tiles (source_rank , im_result_list)
+     Tiles (source_rank , im_result_list)*)
 		   
   (* Case error *)
   | Slave_outofbound_tag ->
@@ -847,11 +884,11 @@ let receive_pull_request () =
 
 
 
-let send_finished source_rank = 
+let send_stop source_rank = 
   print_message Verbose_medium( "[Master] Sending STOP to [Worker " ^ (string_of_int source_rank ) ^"].");
-  Mpi.send (weird_stuff()) source_rank (int_of_master_tag Master_finished_tag) Mpi.comm_world 
+  Mpi.send (weird_stuff()) source_rank (int_of_master_tag Master_stop_tag) Mpi.comm_world 
   
-(*Hoang Gia send TERMINATE tag*)
+(*(*Hoang Gia send TERMINATE tag*)
 let send_terminate source_rank = 
   print_message Verbose_medium( "[Master] Sending TERMINATE to [Worker " ^ (string_of_int source_rank ) ^"].");
   Mpi.send (weird_stuff()) source_rank (int_of_master_tag Master_terminate_tag) Mpi.comm_world 
@@ -859,7 +896,7 @@ let send_terminate source_rank =
 (*Hoang Gia send Continue tag*)
 let send_continue source_rank = 
   print_message Verbose_medium( "[Master] Sending CONTINUE to [Worker " ^ (string_of_int source_rank ) ^"].");
-  Mpi.send (weird_stuff()) source_rank (int_of_master_tag Master_continue_tag) Mpi.comm_world 
+  Mpi.send (weird_stuff()) source_rank (int_of_master_tag Master_continue_tag) Mpi.comm_world *)
 
 let receive_work () =
 	(* Get the model *)
@@ -892,7 +929,7 @@ let receive_work () =
 		let pi0_fun = fun parameter -> array_pi0.(parameter) in*)
 		Work (*pi0_fun*)pi0
 
-	| Master_finished_tag -> Stop
+	| Master_stop_tag -> Stop
 	
 	
 	(*Hoang Gia new tags*)
@@ -905,9 +942,9 @@ let receive_work () =
 		
 		print_message Verbose_high ("Received " ^ (string_of_int w) ^ " bytes of work '" ^ !work1 ^ "' with tag " ^ (string_of_int (int_of_master_tag Master_tileupdate_tag)));
 		
-		(* Get the K *)
-		let im_result = unserialize_im_result !work1 in
-		TileUpdate im_result
+		(* Get the result *)
+		let abstract_im_result = unserialize_abstract_im_result !work1 in
+		TileUpdate abstract_im_result
 		
 	| Master_subpart_tag -> 
 	  	(* Receive the data itself *)

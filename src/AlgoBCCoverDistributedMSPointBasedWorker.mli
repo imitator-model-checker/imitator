@@ -28,6 +28,8 @@ class virtual algoBCCoverDistributedMSPointBasedWorker :
 		(************************************************************)
 		(* Class variables *)
 		(************************************************************)
+		(* Rank of the worker *)
+		val worker_rank : DistributedUtilities.rank
 
 
 		(************************************************************)
@@ -37,11 +39,13 @@ class virtual algoBCCoverDistributedMSPointBasedWorker :
 		
 		method initialize_variables : unit
 		
+		
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		(** Return a new instance of the algorithm to be iteratively called (typically IM or PRP) *)
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		method virtual im_instance : AlgoIMK.algoIMK
 
+		
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		(* Processing the result of IM *)
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -49,10 +53,7 @@ class virtual algoBCCoverDistributedMSPointBasedWorker :
 
 
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-		(* Processing the result of IM *)
+		(* Method packaging the result output by the algorithm *)
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-(* 		method process_result : Result.im_result -> PVal.pval -> unit *)
-
-		
-		method compute_result : Result.imitator_result
+		method compute_bc_result : Result.imitator_result
 end

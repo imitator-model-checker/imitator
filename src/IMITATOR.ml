@@ -353,12 +353,19 @@ let algorithm : AlgoGeneric.algoGeneric = match options#imitator_mode with
 
 	(*** NOTE: only one distribution mode so far ***)
 	| Cover_cartography when options#distribution_mode <> Non_distributed ->
-			
-				(* Branch between master and worker *)
-				if DistributedUtilities.get_rank() = DistributedUtilities.masterrank then
-					let myalgo :> AlgoGeneric.algoGeneric = new AlgoBCCoverDistributedMSSeqMaster.algoBCCoverDistributedMSSeqMaster in myalgo
-				else
-					let myalgo :> AlgoGeneric.algoGeneric = new AlgoBCCoverDistributedMSSeqWorker.algoBCCoverDistributedMSSeqWorker in myalgo
+		let algo = match options#distribution_mode with
+
+		(*** TODO: PRP ***)
+		
+		| Distributed_ms_sequential ->
+			(* Branch between master and worker *)
+			if DistributedUtilities.get_rank() = DistributedUtilities.masterrank then
+				let myalgo :> AlgoGeneric.algoGeneric = new AlgoBCCoverDistributedMSSeqMaster.algoBCCoverDistributedMSSeqMaster in myalgo
+			else
+				let myalgo :> AlgoGeneric.algoGeneric = new AlgoBCCoverDistributedMSSeqWorker.algoBCCoverDistributedMSSeqWorker in myalgo
+		| Distributed_ms_random _
+		| _ -> raise (InternalError("Other distribution modes not yet implemented"))
+		in algo
 				
 			
 	(* ** *** **** ***** ******    END FORK PaTATOR    ****** ***** **** *** ** *)*)

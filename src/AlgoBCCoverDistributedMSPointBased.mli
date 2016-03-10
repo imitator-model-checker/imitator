@@ -56,5 +56,5 @@ class virtual algoBCCoverDistributedMSPointBased :
 (* 		method process_result : Result.im_result -> PVal.pval -> unit *)
 
 		
-		method virtual compute_result : Result.imitator_result
+(* 		method virtual compute_result : Result.imitator_result *)
 end

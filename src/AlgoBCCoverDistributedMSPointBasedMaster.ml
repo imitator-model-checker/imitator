@@ -78,15 +78,8 @@ class virtual algoBCCoverDistributedMSPointBasedMaster =
 	(** Return a new instance of the underlying cartography algorithm (typically BCrandom or BCcover) *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method virtual bc_instance : AlgoCartoGeneric.algoCartoGeneric
-
 	
-	
-	(*(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Compute point *)
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method private master_process_tile abstract_im_result =
 
-	*)
 (*	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Processing requests *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -113,13 +106,13 @@ class virtual algoBCCoverDistributedMSPointBasedMaster =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method private send_termination_signal worker_rank =
 		(* Send termination signal *)
-		DistributedUtilities.send_terminate worker_rank;
+		DistributedUtilities.send_stop worker_rank;
 		
 		(* Update the number of finished workers *)
 		nb_finished_workers <- nb_finished_workers + 1;
 		
 		(* Print some information *)
-		self#print_algo_message Verbose_medium( "\t[Master] Worker " ^ (string_of_int worker_rank ) ^ " is done");
+		self#print_algo_message Verbose_medium( "Worker " ^ (string_of_int worker_rank ) ^ " is done");
 		
 		(* The end *)
 		()
@@ -150,7 +143,7 @@ class virtual algoBCCoverDistributedMSPointBasedMaster =
 	(* Processing requests from worker *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method private process_pull_request bc =
-		self#print_algo_message Verbose_high ("[Master] Entered function 'process_pull_request'...");
+		self#print_algo_message Verbose_high ("Entered function 'process_pull_request'...");
 		
 		(*** TODO ***)
 (* 		counter_master_waiting#start; *)
@@ -160,7 +153,7 @@ class virtual algoBCCoverDistributedMSPointBasedMaster =
 		
 		match pull_request with
 		| PullOnly worker_rank ->
-			self#print_algo_message Verbose_low ("[Master] Received PullOnly request...");
+			self#print_algo_message Verbose_low ("Received PullOnly request...");
 			
 			(* Compute the next point and send it to the worker, or send terminate message if no more point *)
 			self#compute_and_send_point bc worker_rank;
@@ -170,13 +163,15 @@ class virtual algoBCCoverDistributedMSPointBasedMaster =
 
 		
 		| OutOfBound worker_rank ->
-			self#print_algo_message Verbose_low ("[Master] Received OutOfBound request...");
+			self#print_algo_message Verbose_low ("Received OutOfBound request...");
 			(*** TODO: DO SOMETHING TO HANDLE THE CASE OF A POINT THAT WAS NOT SUCCESSFUL ***)
 			raise (InternalError("OutOfBound not implemented."))
 
 		| Tile (worker_rank , abstract_im_result) -> 
-			self#print_algo_message Verbose_low ("[Master] Received Tile request...");
-			self#print_algo_message Verbose_standard ("\n[Master] Received the following constraint from worker " ^ (string_of_int worker_rank));
+			self#print_algo_message Verbose_low ("Received Tile request...");
+			self#print_algo_message_newline Verbose_standard ("[Master] Received the following constraint from worker " ^ (string_of_int worker_rank));
+			
+			(*** TODO: we may want to store somewhere the computation time of the worker, in order to infer its waiting/working time ***)
 			
 			(* Process result (before computing next point) *)
 			bc#process_result abstract_im_result;
@@ -194,7 +189,7 @@ class virtual algoBCCoverDistributedMSPointBasedMaster =
 	(* Processing last requests from worker, always send termination signal *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method private process_termination_pull_request bc =
-		self#print_algo_message Verbose_high ("[Master] Entered function 'process_termination_pull_request'...");
+		self#print_algo_message Verbose_high ("Entered function 'process_termination_pull_request'...");
 		
 		(*** TODO ***)
 (* 		counter_master_waiting#start; *)
@@ -204,7 +199,7 @@ class virtual algoBCCoverDistributedMSPointBasedMaster =
 		
 		match pull_request with
 		| PullOnly worker_rank ->
-			self#print_algo_message Verbose_low ("[Master] Received PullOnly request...");
+			self#print_algo_message Verbose_low ("Received PullOnly request...");
 			
 			(* Send termination signal and keep track of the number of terminated workers *)
 			self#send_termination_signal worker_rank;
@@ -214,14 +209,16 @@ class virtual algoBCCoverDistributedMSPointBasedMaster =
 
 		
 		| OutOfBound worker_rank ->
-			self#print_algo_message Verbose_low ("[Master] Received OutOfBound request...");
+			self#print_algo_message Verbose_low ("Received OutOfBound request...");
 			(*** TODO: DO SOMETHING TO HANDLE THE CASE OF A POINT THAT WAS NOT SUCCESSFUL ***)
 			raise (InternalError("OutOfBound not implemented."))
 
 		| Tile (worker_rank , abstract_im_result) -> 
-			self#print_algo_message Verbose_low ("[Master] Received Tile request...");
-			self#print_algo_message Verbose_standard ("\n[Master] Received the following constraint from worker " ^ (string_of_int worker_rank));
+			self#print_algo_message Verbose_low ("Received Tile request...");
+			self#print_algo_message Verbose_standard ("Received the following constraint from worker " ^ (string_of_int worker_rank));
 			
+			(*** TODO: we may want to store somewhere the computation time of the worker, in order to infer its waiting/working time ***)
+
 			(* Process result *)
 			bc#process_result abstract_im_result;
 			
@@ -254,7 +251,7 @@ class virtual algoBCCoverDistributedMSPointBasedMaster =
 		(* Initialize the number of finished workers *)
 		nb_finished_workers <- 0;
 
-		self#print_algo_message Verbose_standard ("[Master] Starting...");
+		self#print_algo_message Verbose_standard ("Starting...");
 
 		
 		(*** TODO : check that initial pi0 is suitable!! (could be incompatible with initial constraint) ***)
@@ -266,17 +263,17 @@ class virtual algoBCCoverDistributedMSPointBasedMaster =
 			self#process_pull_request bc;
 		done; (* end while more points *)
 		
-		self#print_algo_message Verbose_standard ("[Master] Done with sending points; waiting for last results.");
+		self#print_algo_message Verbose_standard ("Done with sending points; waiting for last results.");
 
 		(*** TODO: do not wait for remaining workers when limits reached? and if fully covered?? (or rather kill them, as not sending termination will leave zombies) ***)
 		
 		(* Receive remaining tiles *)
 		while nb_finished_workers < nb_workers do
-			self#print_algo_message Verbose_medium ("[Master] " ^ ( string_of_int ( nb_workers - nb_finished_workers )) ^ " workers left" );
+			self#print_algo_message Verbose_medium ("" ^ ( string_of_int ( nb_workers - nb_finished_workers )) ^ " workers left" );
 			self#process_termination_pull_request bc;
 		done;
 
-		self#print_algo_message Verbose_standard ("[Master] All workers done");
+		self#print_algo_message Verbose_standard ("All workers done");
 
 		(* Update termination condition *)
 		bc#update_termination_condition;
@@ -286,7 +283,7 @@ class virtual algoBCCoverDistributedMSPointBasedMaster =
 		bc#print_warnings_limit;
 		
 		(* Return the algorithm-dependent result *)
-		bc#compute_result
+		bc#compute_bc_result
 
 
 
@@ -294,7 +291,7 @@ class virtual algoBCCoverDistributedMSPointBasedMaster =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Method packaging the result output by the algorithm *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method compute_result =
+	method compute_bc_result : Result.imitator_result =
 		raise (InternalError("not implemented"))
 (*		self#print_algo_message_newline Verbose_standard (
 			"Successfully terminated " ^ (after_seconds ()) ^ "."
