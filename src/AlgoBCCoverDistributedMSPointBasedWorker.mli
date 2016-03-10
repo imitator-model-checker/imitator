@@ -7,8 +7,8 @@
  * Module description: Classical Behavioral Cartography with exhaustive coverage of integer points [AF10]. Distribution mode: master-slave with point-based distribution of points. [ACE14,ACN15]
  * 
  * File contributors : Étienne André
- * Created           : 2016/03/04
- * Last modified     : 2016/03/04
+ * Created           : 2016/03/10
+ * Last modified     : 2016/03/10
  *
  ************************************************************)
 
@@ -17,16 +17,14 @@
 (* Modules *)
 (************************************************************)
 open AlgoGeneric
-(* open AlgoCartoMaster *)
-
 
 (************************************************************)
 (* Class definition *)
 (************************************************************)
-class virtual algoBCCoverDistributedMSPointBased :
+class virtual algoBCCoverDistributedMSPointBasedWorker :
 	object
-	inherit algoGeneric
-(* 	inherit algoMaster *)
+	inherit AlgoBCCoverDistributedMSPointBased.algoBCCoverDistributedMSPointBased
+
 		(************************************************************)
 		(* Class variables *)
 		(************************************************************)
@@ -37,17 +35,17 @@ class virtual algoBCCoverDistributedMSPointBased :
 		(************************************************************)
 		method virtual algorithm_name : string
 		
-		method virtual initialize_variables : unit
+		method initialize_variables : unit
 		
-(*		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-		(** Return a new instance of the algorithm to be iteratively called (typically BCrandom or BCcover) *)
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-		method virtual bc_instance : AlgoCartoGeneric.algoCartoGeneric*)
+		(** Return a new instance of the algorithm to be iteratively called (typically IM or PRP) *)
+		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+		method virtual im_instance : AlgoIMK.algoIMK
 
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		(* Processing the result of IM *)
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-		method virtual run : unit -> Result.imitator_result
+		method run : unit -> Result.imitator_result
 
 
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -56,5 +54,5 @@ class virtual algoBCCoverDistributedMSPointBased :
 (* 		method process_result : Result.im_result -> PVal.pval -> unit *)
 
 		
-		method virtual compute_result : Result.imitator_result
+		method compute_result : Result.imitator_result
 end

@@ -9,7 +9,7 @@
  * 
  * File contributors : Ulrich Kühne, Étienne André
  * Created           : 2009/09/07
- * Last modified     : 2016/03/03
+ * Last modified     : 2016/03/10
  *
  ************************************************************)
 
@@ -347,18 +347,23 @@ let algorithm : AlgoGeneric.algoGeneric = match options#imitator_mode with
 	(************************************************************)
 	(* Begin distributed cartography *)
 	(************************************************************)
+	
 	(*** WARNING:  Do not modify the following lines! (used by an external script to compile the non-distributed version of IMITATOR) ***)
 	(*(* ** *** **** ***** ******    BEGIN FORK PaTATOR    ****** ***** **** *** ** *)
-(*	begin
-	match options#distribution_mode with
-		(* Fork if distributed *)
-		| Non_distributed -> ()
-		| _ -> (RunPaTATOR.run(); exit(0))
-	end;*)
+
+	(*** NOTE: only one distribution mode so far ***)
 	| Cover_cartography when options#distribution_mode <> Non_distributed ->
-			let myalgo :> AlgoGeneric.algoGeneric = new AlgoBCCoverDistributedMSSeq.algoBCCoverDistributedMSSeq in myalgo
+			
+				(* Branch between master and worker *)
+				if DistributedUtilities.get_rank() = DistributedUtilities.masterrank then
+					let myalgo :> AlgoGeneric.algoGeneric = new AlgoBCCoverDistributedMSSeqMaster.algoBCCoverDistributedMSSeqMaster in myalgo
+				else
+					let myalgo :> AlgoGeneric.algoGeneric = new AlgoBCCoverDistributedMSSeqWorker.algoBCCoverDistributedMSSeqWorker in myalgo
+				
+			
 	(* ** *** **** ***** ******    END FORK PaTATOR    ****** ***** **** *** ** *)*)
 	(*** WARNING:  Do not modify the previous lines! (used by an external script to compile the non-distributed version of IMITATOR) ***)
+	
 	(************************************************************)
 	(* End distributed cartography *)
 	(************************************************************)

@@ -4,10 +4,11 @@
  * 
  * LIPN, Université Paris 13, Sorbonne Paris Cité (France)
  * 
- * Module description: Classical Behavioral Cartography with exhaustive coverage of integer points [AF10]. Distribution mode: master-slave with point-based distribution of points. [ACE14,ACN15]
+ * Module description: Classical Behavioral Cartography with exhaustive coverage of integer points [AF10]. Distribution mode: master-slave with sequential distribution of points. [ACE14]
+ * Worker algorithm
  * 
  * File contributors : Étienne André
- * Created           : 2016/03/04
+ * Created           : 2016/03/10
  * Last modified     : 2016/03/10
  *
  ************************************************************)
@@ -18,13 +19,6 @@
 (* Modules *)
 (************************************************************)
 (************************************************************)
-open OCamlUtilities
-open ImitatorUtilities
-open Exceptions
-open AbstractModel
-open Result
-open AlgoGeneric
-open DistributedUtilities
 
 
 (************************************************************)
@@ -39,13 +33,14 @@ open DistributedUtilities
 (* Class definition *)
 (************************************************************)
 (************************************************************)
-class virtual algoBCCoverDistributedMSPointBased =
+class algoBCCoverDistributedMSSeqWorker =
 	object (self)
-	inherit algoGeneric as super
+	inherit AlgoBCCoverDistributedMSPointBasedWorker.algoBCCoverDistributedMSPointBasedWorker as super
 	
 	(************************************************************)
 	(* Class variables *)
 	(************************************************************)
+
 	
 	
 	(************************************************************)
@@ -55,31 +50,25 @@ class virtual algoBCCoverDistributedMSPointBased =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Name of the algorithm *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-(* 	method virtual algorithm_name : string *)
+	method algorithm_name = "BC (full coverage) distr MS seq WORKER"
 
 	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Variable initialization *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method virtual initialize_variables : unit
-
-
-(*	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(** Return a new instance of the algorithm to be iteratively called (typically BCrandom or BCcover) *)
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method virtual bc_instance : AlgoCartoGeneric.algoCartoGeneric
-
-	*)
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Generic algorithm *)
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method virtual run : unit -> Result.imitator_result
-
+(*	method initialize_variables =
+		super#initialize_variables;
 		
+		(* The end *)
+		()*)
+
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Method packaging the result output by the algorithm *)
+	(** Return a new instance of the algorithm to be iteratively called (typically IM or PRP) *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method virtual compute_result : Result.imitator_result
+	method im_instance : AlgoIMK.algoIMK =
+		(* Create a new instance of IM *)
+		new AlgoIM.algoIM
+
 
 (************************************************************)
 (************************************************************)
