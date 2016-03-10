@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/01/19
- * Last modified     : 2016/03/04
+ * Last modified     : 2016/03/10
  *
  ************************************************************)
 
@@ -240,6 +240,8 @@ class virtual algoCartoGeneric =
 			print_error "The cartography has 0 dimension in V0, and cannot be applied.";
 			abort_program();
 		);
+		
+		(*** TODO: check that the V0 is not empty ***)
 
 		(* Compute the initial state *)
 		let init_state = AlgoStateBased.compute_initial_state_or_abort() in
@@ -489,9 +491,9 @@ class virtual algoCartoGeneric =
 
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Update the limits *)
+	(* Compute the next point and store it; update limits before and after computing next point *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method update_limit =
+	method private compute_next_point_and_update_limit =
 	(* Check if the limit has been reached *)
 		(*** NOTE: the bc time limit is NOT checked inside one execution of IM ***)
 		limit_reached <- self#check_bc_limit;
@@ -517,6 +519,18 @@ class virtual algoCartoGeneric =
 		
 		(* The end *)
 		()
+	
+	
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(* Compute the next point, store it; return it if new point exists and limits not reached *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	method compute_and_return_next_point =
+		(* Actual computation *)
+		self#compute_next_point_and_update_limit;
+		
+		(* Only return if valid *)
+		if current_point <> No_more && limit_reached = Keep_going then current_point
+		else No_more
 
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -623,8 +637,8 @@ class virtual algoCartoGeneric =
 			(* Process result *)
 			self#process_result abstract_result;
 			
-			(* Update limits *)
-			self#update_limit;
+			(* Compute the next point and store it; update limits before and after computing next point *)
+			self#compute_next_point_and_update_limit;
 
 		done; (* end while more points *)
 
