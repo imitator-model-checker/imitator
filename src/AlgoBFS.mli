@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/11/23
- * Last modified     : 2016/02/11
+ * Last modified     : 2016/03/10
  *
  ************************************************************)
 
@@ -69,5 +69,11 @@ class virtual algoBFS :
 		(* Main method to run the algorithm; implements here a BFS search, and call other functions that may be modified in subclasses *)
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		method run : unit -> Result.imitator_result
+		
+		
+		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+		(* Packaging the result at the end of the exploration (to be defined in subclasses) *)
+		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+		method virtual compute_result : Result.imitator_result
 		
 end

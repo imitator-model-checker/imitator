@@ -164,6 +164,11 @@ class virtual algoCartoGeneric :
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		method print_warnings_limit : unit
 		
+		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+		(* Method packaging the result output by the algorithm *)
+		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+		(* Packaging the result at the end of the exploration (to be defined in subclasses) *)
+		method virtual compute_bc_result : Result.imitator_result
 
 (************************************************************)
 (************************************************************)

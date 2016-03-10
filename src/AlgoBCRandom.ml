@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/02/02
- * Last modified     : 2016/03/04
+ * Last modified     : 2016/03/10
  *
  ************************************************************)
 
@@ -211,7 +211,7 @@ class algoBCRandom =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Method packaging the result output by the algorithm *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method compute_result =
+	method compute_bc_result =
 		self#print_algo_message_newline Verbose_standard (
 			"Successfully terminated " ^ (after_seconds ()) ^ "."
 		);
@@ -219,7 +219,7 @@ class algoBCRandom =
 		
 		(* Get the termination status *)
 		 let termination_status = match termination_status with
-			| None -> raise (InternalError "Termination status not set in BCRandom.compute_result")
+			| None -> raise (InternalError "Termination status not set in BCRandom.compute_bc_result")
 			| Some status -> status
 		in
 

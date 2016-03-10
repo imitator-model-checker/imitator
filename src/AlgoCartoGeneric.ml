@@ -650,7 +650,7 @@ class virtual algoCartoGeneric =
 		self#print_warnings_limit;
 		
 		(* Return the algorithm-dependent result *)
-		self#compute_result
+		self#compute_bc_result
 
 
 
@@ -659,8 +659,8 @@ class virtual algoCartoGeneric =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Method packaging the result output by the algorithm *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-(*	method compute_result =
-		raise (InternalError("not implemented"))*)
+	(* Packaging the result at the end of the exploration (to be defined in subclasses) *)
+	method virtual compute_bc_result : Result.imitator_result
 
 	
 (************************************************************)

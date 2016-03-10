@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/01/19
- * Last modified     : 2016/03/04
+ * Last modified     : 2016/03/10
  *
  ************************************************************)
 
@@ -209,7 +209,7 @@ class algoBCCover =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Method packaging the result output by the algorithm *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method compute_result =
+	method compute_bc_result =
 		self#print_algo_message_newline Verbose_standard (
 			"Successfully terminated " ^ (after_seconds ()) ^ "."
 		);
@@ -217,7 +217,7 @@ class algoBCCover =
 		
 		(* Get the termination status *)
 		 let termination_status = match termination_status with
-			| None -> raise (InternalError "Termination status not set in BCCover.compute_result")
+			| None -> raise (InternalError "Termination status not set in BCCover.compute_bc_result")
 			| Some status -> status
 		in
 

@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/12/02
- * Last modified     : 2016/02/09
+ * Last modified     : 2016/03/10
  *
  ************************************************************)
 
@@ -1442,10 +1442,6 @@ class virtual algoStateBased =
 	method virtual run : unit -> Result.imitator_result
 	
 	
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Method packaging the result output by the algorithm *)
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method virtual compute_result : Result.imitator_result
 
 (************************************************************)
 (************************************************************)

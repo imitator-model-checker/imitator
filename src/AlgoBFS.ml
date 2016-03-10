@@ -440,6 +440,11 @@ class virtual algoBFS =
 		
 		(*** TODO: split between process result and return result; in between, add some info (algo_name finished after....., etc.) ***)
 
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(* Packaging the result at the end of the exploration (to be defined in subclasses) *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	method virtual compute_result : Result.imitator_result
+
 	
 (************************************************************)
 (************************************************************)

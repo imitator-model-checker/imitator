@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/02/02
- * Last modified     : 2016/03/04
+ * Last modified     : 2016/03/10
  *
  ************************************************************)
 
@@ -49,5 +49,5 @@ class algoBCRandom :
 		(* Processing the result of IM *)
 (* 		method process_result : Result.im_result -> PVal.pval -> unit *)
 
-		method compute_result : Result.imitator_result
+		method compute_bc_result : Result.imitator_result
 end

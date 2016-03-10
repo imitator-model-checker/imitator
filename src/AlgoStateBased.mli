@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/12/02
- * Last modified     : 2016/02/09
+ * Last modified     : 2016/03/10
  *
  ************************************************************)
 
@@ -91,8 +91,6 @@ class virtual algoStateBased :
 		(* Main method to run the algorithm: virtual method to be defined in subclasses *)
 		method virtual run : unit -> Result.imitator_result
 		
-		(* Packaging the result at the end of the exploration (to be defined in subclasses) *)
-		method virtual compute_result : Result.imitator_result
 (************************************************************)
 (************************************************************)
 end
