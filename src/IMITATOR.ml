@@ -9,7 +9,7 @@
  * 
  * File contributors : Ulrich Kühne, Étienne André
  * Created           : 2009/09/07
- * Last modified     : 2016/03/10
+ * Last modified     : 2016/03/14
  *
  ************************************************************)
 
@@ -387,6 +387,10 @@ let algorithm : AlgoGeneric.algoGeneric = match options#imitator_mode with
 	(* BC with full coverage *)
 	| Cover_cartography ->
 			let myalgo :> AlgoGeneric.algoGeneric = new AlgoBCCover.algoBCCover in myalgo
+	
+	(* BC with full coverage (shuffled version) *)
+	| Shuffle_cartography ->
+			let myalgo :> AlgoGeneric.algoGeneric = new AlgoBCShuffle.algoBCShuffle in myalgo
 	
 	| Border_cartography ->
 (* 			Cartography.cover_behavioral_cartography model *)

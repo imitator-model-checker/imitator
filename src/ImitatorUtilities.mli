@@ -7,7 +7,7 @@
  * Author:        Etienne Andre
  * 
  * Created:       2014/10/24
- * Last modified: 2016/02/08
+ * Last modified: 2016/03/14
  *
  ****************************************************************)
 
@@ -86,6 +86,9 @@ type imitator_mode =
 	
 	(** Cover the whole cartography *)
 	| Cover_cartography
+	
+	(** Cover the whole cartography after shuffling point (mostly useful for the distributed IMITATOR) *)
+	| Shuffle_cartography
 	
 	(** Look for the border using the cartography*)
 	| Border_cartography

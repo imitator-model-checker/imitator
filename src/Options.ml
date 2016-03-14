@@ -9,7 +9,7 @@
  * 
  * File contributors : Ulrich Kühne, Étienne André
  * Created           : 2010
- * Last modified     : 2016/02/10
+ * Last modified     : 2016/03/14
  *
  ************************************************************)
 
@@ -371,6 +371,10 @@ class imitator_options =
 				else if mode = "cover" then 
 					imitator_mode <- Cover_cartography
 					
+				(* Case: cover *)
+				else if mode = "shuffle" then 
+					imitator_mode <- Shuffle_cartography
+					
 				(* Case: border *)
 				else if mode = "border" then 
 					imitator_mode <- Border_cartography
@@ -499,7 +503,7 @@ class imitator_options =
         Use 'PDFC' for parametric non-deadlock checking (no pi0 needed). [WORK IN PROGRESS]
         Use 'inversemethod' for the inverse method.
         For the behavioral cartography algorithm, use 'cover' to cover all the points within V0, 'border' to find the border between a small-valued good and a large-valued bad zone (experimental), or 'randomXX' where XX is a number to iterate random calls to IM (e.g., random5 or random10000). Default: 'inversemethod'.");
-        
+				(*** NOTE: hidden option! 'shuffle' to cover all the points within v0 after shuffling the array. (Reason for hiding: only useful in the distributed cartography) ***)
         
 				
 				("-no-random", Set no_random, " No random selection of the pi0-incompatible inequality (select the first found). Default: false.");
@@ -655,6 +659,7 @@ class imitator_options =
 				| Parametric_deadlock_checking -> "Parametric deadlock-checking"
 				| Inverse_method -> "inverse method"
 				| Cover_cartography -> "behavioral cartography algorithm with full coverage and step " ^ (NumConst.string_of_numconst !step)
+				| Shuffle_cartography -> "behavioral cartography algorithm with full coverage (shuffled version) and step " ^ (NumConst.string_of_numconst !step)
 				| Border_cartography -> "behavioral cartography algorithm with border detection (experimental) and step " ^ (NumConst.string_of_numconst !step)
 				| Random_cartography nb -> "behavioral cartography algorithm with " ^ (string_of_int nb) ^ " random iterations and step " ^ (NumConst.string_of_numconst !step)
 			in print_message Verbose_standard ("Mode: " ^ message ^ ".");
@@ -670,7 +675,7 @@ class imitator_options =
 			let in_cartography_mode =
 				match imitator_mode with
 				| Translation | State_space_exploration | EF_synthesis| Parametric_deadlock_checking | Inverse_method -> false
-				| Cover_cartography | Border_cartography | Random_cartography _ -> true	
+				| Cover_cartography | Shuffle_cartography | Border_cartography | Random_cartography _ -> true	
 			in
 			
 			
@@ -766,9 +771,10 @@ class imitator_options =
 
 			(* Variant of the inverse method *)
 			if !inclusion then
+				(*** NOTE: why this test??? better to warn if this option is used in another context ***)
 				begin
 				match imitator_mode with
-				| Inverse_method | Cover_cartography | Border_cartography | Random_cartography _
+				| Inverse_method | Cover_cartography | Shuffle_cartography | Border_cartography | Random_cartography _
 					-> print_message Verbose_standard ("Considering variant of IM with inclusion in the fixpoint [AS11].")
 				| _ -> print_message Verbose_standard ("Considering fixpoint variant with inclusion of symbolic zones (instead of equality).")
 				end
@@ -807,44 +813,44 @@ class imitator_options =
 				print_message Verbose_medium ("Non-distributed mode (default).");
 			| Distributed_unsupervised ->(
 				print_message Verbose_standard ("Considering a distributed mode with unsupervised workers (work in progress).");
-				if imitator_mode <> Cover_cartography then(
+				if not in_cartography_mode then(
 					print_warning "The distributed mode is only valid for the cartography. Option will be ignored.";
 				)
 			)
 			| Distributed_unsupervised_multi_threaded ->(
 				print_message Verbose_standard ("Considering a distributed mode with unsupervised multi-threaded workers (work in progress).");
-				if imitator_mode <> Cover_cartography then(
+				if not in_cartography_mode then(
 					print_warning "The distributed mode is only valid for the cartography. Option will be ignored.";
 				)
 			)
 			| Distributed_static ->(
 				print_message Verbose_standard ("Considering a distributed mode with static splitting [ACN15].");
-				if imitator_mode <> Cover_cartography then(
+				if not in_cartography_mode then(
 					print_warning "The distributed mode is only valid for the cartography. Option will be ignored.";
 				)
 			)
 			| Distributed_ms_sequential ->(
 				print_message Verbose_standard ("Considering a distributed mode with sequential enumeration of pi0 points [ACE14].");
-				if imitator_mode <> Cover_cartography then(
+				if not in_cartography_mode then(
 					print_warning "The distributed mode is only valid for the cartography. Option will be ignored.";
 				)
 			)
 			| Distributed_ms_shuffle ->(
 				print_message Verbose_standard ("Considering a distributed mode with \"shuffle\" enumeration of pi0 points.");
-				if imitator_mode <> Cover_cartography then(
+				if not in_cartography_mode then(
 					print_warning "The distributed mode is only valid for the cartography. Option will be ignored.";
 				)
 			)
 			| Distributed_ms_random max -> (
 				print_message Verbose_standard ("Considering a distributed mode with random generation of pi0 points with up to " ^ (string_of_int max) ^ " successive failure before switching to exhaustive enumeration [ACE14].");
-				if imitator_mode <> Cover_cartography then(
+				if not in_cartography_mode then(
 					print_warning "The distributed mode is only valid for the cartography. Option will be ignored.";
 				)
 			)
 			(*************)
 			| Distributed_ms_subpart -> (
 				print_message Verbose_standard ("Considering a distributed mode with a dynamic domain decomposition [ACN15].");
-				if imitator_mode <> Cover_cartography then(
+				if not in_cartography_mode then(
 					print_warning "The distributed mode is only valid for the cartography. Option will be ignored.";
 				)
 			)
@@ -852,7 +858,7 @@ class imitator_options =
 
 			if !distributedKillIM then(
 				print_message Verbose_standard ("Heuristics to kill a process when its point is covered by another tile, in the distributed cartography [ACN15]; only works with some distribution schemes.");
-				if imitator_mode <> Cover_cartography || !distribution_mode = Non_distributed then(
+				if not in_cartography_mode || !distribution_mode = Non_distributed then(
 					print_warning "The killIM heuristics is only valid for the distributed cartography. Option will be ignored.";
 				);
 			)else
