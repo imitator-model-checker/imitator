@@ -9,7 +9,7 @@
 # Laboratoire d'Informatique de Paris Nord
 # Universite Paris 13, Sorbonne Paris Cite, France
 # Created      : 2013/05/22
-# Last modified: 2013/09/25
+# Last modified: 2016/03/14
 #************************************************************
 
 
@@ -19,15 +19,30 @@ from time import gmtime, strftime
 #************************************************************
 # CONSTANTS
 #************************************************************
-build_number_file_name = "build_number.txt"
+# The file containing the build number
+build_number_file_name	= "build_number.txt"
 
-print "Incrementing build number..."
+# The empty file (not synchronized with the IMITATOR repository) acting as a flag: if it exists, the build number is incremented, otherwise it is not
+flag_file_name 			= "iamadeveloper"
+
+
+
+#************************************************************
+# CHECK WHETHER THE BUILD NUMBER SHOULD BE INCREMENTED
+#************************************************************
+
+if not os.path.isfile(flag_file_name):
+	print "File '" + flag_file_name + "' not found: build number kept unchanged."
+	exit(0)
 
 
 
 #************************************************************
 # GET CURRENT BUILD NUMBER
 #************************************************************
+print "Incrementing build number..."
+
+
 # Open file in read mode
 file_handler = open(build_number_file_name)
 

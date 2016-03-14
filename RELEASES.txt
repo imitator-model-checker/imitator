@@ -28,6 +28,7 @@ Internal
 - All algorithms rewritten in an object-oriented fashion
 - Added a mode to regenerate the IMITATOR input file (helpful to test input/output models)
 - Automaton.ml becomes Location.ml (and new module Automaton.ml created); and reorganization of numerous other modules
+- Build number only incremented when a flag file "iamadeveloper" is present in the imitator root directory
 
 
 *******************************************************
