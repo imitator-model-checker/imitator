@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/03/14
- * Last modified     : 2016/03/14
+ * Last modified     : 2016/03/15
  *
  ************************************************************)
 
@@ -106,20 +106,20 @@ class algoBCShuffle =
 		
 		(* Create a array for all the pi0, initially containing a useless object everywhere *)
 		let useless_pi0 = new PVal.pval in
-		self#print_algo_message Verbose_medium ("[Cartography.compute_all_pi0] Creating an array of " ^ (string_of_int int_nb_points) ^ " points");
+		self#print_algo_message Verbose_medium ("[compute_all_pi0] Creating an array of " ^ (string_of_int int_nb_points) ^ " points");
 		let all_points = Array.make int_nb_points useless_pi0 in
 		
-		self#print_algo_message Verbose_medium ("[Cartography.compute_all_pi0] Computing the initial pi0");
+		self#print_algo_message Verbose_medium ("[compute_all_pi0] Computing the initial pi0");
 		(* Set the first point *)
 		let first_point = self#compute_smallest_point in
-		self#print_algo_message Verbose_medium ("[Cartography.compute_all_pi0] Done computing the initial pi0");
+		self#print_algo_message Verbose_medium ("[compute_all_pi0] Done computing the initial pi0");
 		
-		self#print_algo_message Verbose_medium ("[Cartography.compute_all_pi0] Setting pi0 to the first point");
+		self#print_algo_message Verbose_medium ("[compute_all_pi0] Setting pi0 to the first point");
 		(* Fill the first point with the initial pi0 *)
 		all_points.(0) <- first_point;
 		
-		self#print_algo_message Verbose_medium ("[Cartography.compute_all_pi0] Computing the other points");
-		self#print_algo_message Verbose_medium ("[Cartography.compute_all_pi0] Computing the other points");
+		self#print_algo_message Verbose_medium ("[compute_all_pi0] Computing the other points");
+		self#print_algo_message Verbose_medium ("[compute_all_pi0] Computing the other points");
 		(* Fill it for the other points *)
 		let current_point = ref first_point in
 		for pi0_index = 1 to int_nb_points - 1 do
@@ -142,10 +142,10 @@ class algoBCShuffle =
 			all_points.(pi0_index) <- !current_point;
 		done;
 		
-		self#print_algo_message Verbose_medium ("[Cartography.compute_all_pi0] Done computing the other points");
+		self#print_algo_message Verbose_medium ("[compute_all_pi0] Done computing the other points");
 		
 		(* Print some information *)
-		if verbose_mode_greater Verbose_high then(
+		if verbose_mode_greater Verbose_total then(
 			(*** BEGIN DEBUG ***)
 			(* Print all pi0 *)
 			let model = Input.get_model() in
@@ -182,9 +182,11 @@ class algoBCShuffle =
 		let all_points = self#compute_all_points in
 		
 		(* 2. shuffle *)
+		(*** TODO: add counter ***)
 		(*** NOTE: applied two times, because once is quite deterministic (see warning in the array_shuffle code) ***)
 		array_shuffle all_points;
 		array_shuffle all_points;
+		(*** TODO: add counter ***)
 		
 		(* 3. Set it *)
 		all_points_array <- Some all_points;
@@ -192,6 +194,18 @@ class algoBCShuffle =
 		(* 4. Initialize the index *)
 		next_point_index <- 0;
 		
+		(* Print some information *)
+		if verbose_mode_greater Verbose_high then(
+			(*** BEGIN DEBUG ***)
+			(* Print all pi0 *)
+			let model = Input.get_model() in
+			for pi0_index = 0 to Array.length all_points - 1 do
+				print_message Verbose_standard ((string_of_int pi0_index) ^ ":");
+				print_message Verbose_standard (ModelPrinter.string_of_pi0 model all_points.(pi0_index));
+			done;
+			(*** END DEBUG ***)
+		);
+
 		(* The end *)
 		()
 
