@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/03/10
- * Last modified     : 2016/03/10
+ * Last modified     : 2016/03/15
  *
  ************************************************************)
 
@@ -20,6 +20,7 @@
 (************************************************************)
 (************************************************************)
 (* open AlgoBCCoverDistributedMSPointBasedMaster *)
+open AlgoBCCover
 
 
 (************************************************************)
@@ -58,7 +59,8 @@ class algoBCCoverDistributedMSSeqMaster =
 	(** Return a new instance of the underlying cartography algorithm (typically BCrandom or BCcover) *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method bc_instance =
-		new AlgoBCCover.algoBCCover
+		let myalgo :> AlgoCartoGeneric.algoCartoGeneric = new AlgoBCCover.algoBCCover in myalgo
+(* 		new AlgoBCCover.algoBCCover *)
 
 
 (************************************************************)
