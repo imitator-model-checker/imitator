@@ -4,7 +4,7 @@
  * 
  * LIPN, Université Paris 13, Sorbonne Paris Cité (France)
  * 
- * Module description: Classical Behavioral Cartography with exhaustive coverage of integer points [AF10]. Distribution mode: master-slave with sequential distribution of points. [ACE14]
+ * Module description: Classical Behavioral Cartography with exhaustive coverage of integer points [AF10]. Distribution mode: master-worker with sequential distribution of points. [ACE14]
  * Master algorithm
  * 
  * File contributors : Étienne André
@@ -60,7 +60,6 @@ class algoBCCoverDistributedMSSeqMaster =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method bc_instance =
 		let myalgo :> AlgoCartoGeneric.algoCartoGeneric = new AlgoBCCover.algoBCCover in myalgo
-(* 		new AlgoBCCover.algoBCCover *)
 
 
 (************************************************************)

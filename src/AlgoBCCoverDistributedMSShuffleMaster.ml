@@ -4,7 +4,7 @@
  * 
  * LIPN, Université Paris 13, Sorbonne Paris Cité (France)
  * 
- * Module description: Classical Behavioral Cartography with exhaustive coverage of integer points [AF10]. Distribution mode: master-slave with shuffle distribution of points. [ACN15]
+ * Module description: Classical Behavioral Cartography with exhaustive coverage of integer points [AF10]. Distribution mode: master-worker with shuffle distribution of points. [ACN15]
  * Master algorithm
  * 
  * File contributors : Étienne André
@@ -59,7 +59,6 @@ class algoBCCoverDistributedMSShuffleMaster =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method bc_instance =
 		let myalgo :> AlgoCartoGeneric.algoCartoGeneric = new AlgoBCShuffle.algoBCShuffle in myalgo
-(* 		new AlgoBCCover.algoBCCover *)
 
 
 (************************************************************)

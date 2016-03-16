@@ -4,7 +4,7 @@
  * 
  * LIPN, Université Paris 13, Sorbonne Paris Cité (France)
  * 
- * Module description: Classical Behavioral Cartography with exhaustive coverage of integer points [AF10]. Distribution mode: master-slave with point-based distribution of points. [ACE14,ACN15]
+ * Module description: Classical Behavioral Cartography with exhaustive coverage of integer points [AF10]. Distribution mode: master-worker with point-based distribution of points. [ACE14,ACN15]
  * 
  * File contributors : Étienne André
  * Created           : 2016/03/10
@@ -245,11 +245,6 @@ class virtual algoBCCoverDistributedMSPointBasedMaster =
 	(* Algorithm for the master *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method run () =
-		(* Retrieve the model *)
-(* 		let model = Input.get_model () in *)
-		(* Retrieve the input options *)
-(* 		let options = Input.get_options () in *)
-
 		(* Create an object responsible to handle everything linked to the cartography *)
 		let bc = self#bc_instance in
 
@@ -293,62 +288,6 @@ class virtual algoBCCoverDistributedMSPointBasedMaster =
 		(* Return the algorithm-dependent result *)
 		bc#compute_bc_result
 
-
-
-
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Method packaging the result output by the algorithm *)
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method compute_bc_result : Result.imitator_result =
-		raise (InternalError("not implemented"))
-(*		self#print_algo_message_newline Verbose_standard (
-			"Successfully terminated " ^ (after_seconds ()) ^ "."
-		);
-
-		
-		(* Get the termination status *)
-		 let termination_status = match termination_status with
-			| None -> raise (InternalError "Termination status not set in BCCover.compute_result")
-			| Some status -> status
-		in
-
-		(* Coverage is... *)
-		(*** NOTE: this is only true for the original behavioral cartography; for variants this may not hold ***)
-		let coverage =
-			(* INTEGER COMPLETE if termination is regular and all tiles are exact or under-approximations *)
-			if termination_status = BC_Regular_termination && (List.for_all (fun abstract_im_result -> match abstract_im_result.soundness with
-					| Constraint_exact | Constraint_maybe_under -> true
-					| Constraint_maybe_over | Constraint_maybe_invalid -> false
-				) im_results)
-				then Coverage_integer_complete
-			(* UNKNOWN otherwise *)
-			else Coverage_unknown
-		in
-		
-		(* Return result *)
-		BC_result {
-			(* Number of points in V0 *)
-			size_v0				= nb_points;
-			
-			(* List of tiles *)
-			(*** NOTE: reverse as each im_result was added as first element ***)
-			tiles				= List.rev im_results;
-			
-			(* Total computation time of the algorithm *)
-			computation_time	= time_from start_time;
-			
-			(* Computation time to look for points *)
-			find_point_time		= find_next_point_counter#value;
-			
-			(* Number of points on which IM could not be called because already covered *)
-			nb_unsuccessful_points = nb_unsuccessful_points;
-			
-			(* Evaluation of the coverage of V0 by tiles computed by the cartography *)
-			coverage			= coverage;
-			
-			(* Termination *)
-			termination			= termination_status;
-		}*)
 
 
 (************************************************************)
