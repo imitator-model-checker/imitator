@@ -9,7 +9,7 @@
  * 
  * File contributors : Ulrich Kühne, Étienne André
  * Created           : 2009/09/07
- * Last modified     : 2016/03/14
+ * Last modified     : 2016/03/16
  *
  ************************************************************)
 
@@ -357,13 +357,22 @@ let algorithm : AlgoGeneric.algoGeneric = match options#imitator_mode with
 
 		(*** TODO: PRP ***)
 		
+		(** Distributed mode: Master slave with sequential pi0 *)
 		| Distributed_ms_sequential ->
 			(* Branch between master and worker *)
 			if DistributedUtilities.get_rank() = DistributedUtilities.masterrank then
 				let myalgo :> AlgoGeneric.algoGeneric = new AlgoBCCoverDistributedMSSeqMaster.algoBCCoverDistributedMSSeqMaster in myalgo
 			else
 				let myalgo :> AlgoGeneric.algoGeneric = new AlgoBCCoverDistributedMSSeqWorker.algoBCCoverDistributedMSSeqWorker in myalgo
-		| Distributed_ms_random _
+
+		(** Distributed mode: Master slave with sequential pi0 shuffled *)
+		| Distributed_ms_shuffle ->
+			(* Branch between master and worker *)
+			if DistributedUtilities.get_rank() = DistributedUtilities.masterrank then
+				let myalgo :> AlgoGeneric.algoGeneric = new AlgoBCCoverDistributedMSShuffleMaster.algoBCCoverDistributedMSShuffleMaster in myalgo
+			else
+				let myalgo :> AlgoGeneric.algoGeneric = new AlgoBCCoverDistributedMSShuffleWorker.algoBCCoverDistributedMSShuffleWorker in myalgo
+
 		| _ -> raise (InternalError("Other distribution modes not yet implemented"))
 		in algo
 				
