@@ -26,18 +26,6 @@ open Result
 open AlgoCartoGeneric
 
 
-(************************************************************)
-(************************************************************)
-(* Internal exceptions *)
-(************************************************************)
-(************************************************************)
-(* To stop a loop when a point is found *)
-exception Found_point of PVal.pval
-
-(* To stop a loop when a point is found or there is no more point *)
-exception Stop_loop of more_points
-
-
 
 (************************************************************)
 (************************************************************)
@@ -94,39 +82,8 @@ class algoBCCover =
 	(* Find the next point *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method find_next_point =
-		(* Get the model *)
-	(* 	let model = Input.get_model() in *)
-
-		(* Retrieve the current pi0 (that must have been initialized before) *)
-		let current_pi0 = ref (self#get_current_point_option) in
-		
-		try(
-		while true do
-			
-			(* 1) Compute the next pi0 (if any left) in a sequential manner *)
-			let tentative_next_point =
-			match self#compute_next_sequential_pi0 !current_pi0 with
-			| Some_pval point -> point
-			| No_more -> raise (Stop_loop No_more)
-			in
-			
-			(* 2) Update our local current_pi0 *)
-			current_pi0 := tentative_next_point;
-			
-			(* 3) Check that this pi0 is not covered by any tile *)
-			self#print_algo_message Verbose_high ("Check whether pi0 is covered");
-			(* If uncovered: stop loop and return *)
-			if self#test_pi0_uncovered !current_pi0 then
-				raise (Stop_loop (Some_pval !current_pi0))
-			(* Else: keep running the loop *)
-			
-		done; (* while more pi0 and so on *)
-		
-		(* This point is unreachable *)
-		raise (InternalError("This part of the code should be unreachable in find_next_point"))
-		
-		(* Return the point *)
-		) with Stop_loop sl -> sl
+		(* Directly call dedicated function *)
+		self#compute_next_sequential_uncovered_pi0
 		
 	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)

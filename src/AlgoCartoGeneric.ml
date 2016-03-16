@@ -70,6 +70,9 @@ exception Limit_detected of limit_reached
 (* To stop a loop when a point is found *)
 exception Found_point of PVal.pval
 
+(* To stop a loop when a point is found or there is no more point *)
+exception Stop_loop of more_points
+
 
 
 (************************************************************)
@@ -269,6 +272,42 @@ class virtual algoCartoGeneric =
 		) with Found_point point -> Some_pval point
 
       
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(** Compute the sequential uncovered successor of a point. Returns Some next_pi0 if there is indeed one, or None if no more point is available. *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	method compute_next_sequential_uncovered_pi0 =
+		(* Retrieve the current pi0 (that must have been initialized before) *)
+		let current_pi0 = ref (self#get_current_point_option) in
+		
+		try(
+		while true do
+			
+			(* 1) Compute the next pi0 (if any left) in a sequential manner *)
+			let tentative_next_point =
+			match self#compute_next_sequential_pi0 !current_pi0 with
+			| Some_pval point -> point
+			| No_more -> raise (Stop_loop No_more)
+			in
+			
+			(* 2) Update our local current_pi0 *)
+			current_pi0 := tentative_next_point;
+			
+			(* 3) Check that this pi0 is not covered by any tile *)
+			self#print_algo_message Verbose_high ("Check whether pi0 is covered");
+			(* If uncovered: stop loop and return *)
+			if self#test_pi0_uncovered !current_pi0 then
+				raise (Stop_loop (Some_pval !current_pi0))
+			(* Else: keep running the loop *)
+			
+		done; (* while more pi0 and so on *)
+		
+		(* This point is unreachable *)
+		raise (InternalError("This part of the code should be unreachable in compute_next_sequential_uncovered_pi0"))
+		
+		(* Return the point *)
+		) with Stop_loop sl -> sl
+		
+	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Methods on random generation of a pi0 *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
