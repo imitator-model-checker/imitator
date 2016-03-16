@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/01/19
- * Last modified     : 2016/03/14
+ * Last modified     : 2016/03/16
  *
  ************************************************************)
 
@@ -72,91 +72,7 @@ class algoBCCover =
 		(* The end *)
 		()
 
-		
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Global method on pi0 *)
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
-	(* Return the current_point; raises InternalError if current_point was not initialized *)
-	(*** WARNING: duplicate code (see AlgoBCRandom) ***)
-	method get_current_point_option =
-		match current_point with
-		| No_more -> 
-			raise (InternalError("current_point has not been initialized yet, altough it should have at this point."))
-		| Some_pval current_point -> current_point
-
-
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(** Compute the smallest point (according to the min bounds) *)
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method compute_smallest_point =
-		(* Retrieve the model *)
-		let model = Input.get_model() in
-
-		let point = new PVal.pval in
-		(* Copy min bounds *)
-		for parameter_index = 0 to model.nb_parameters - 1 do
-			point#set_value parameter_index min_bounds.(parameter_index);
-		done;
-		
-		(* Return the point *)
-		point
-		
-
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(** Compute the sequential successor of a point. Returns Some next_pi0 if there is indeed one, or None if no more point is available. *)
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method compute_next_sequential_pi0 current_pi0 =
-		(* Retrieve the model *)
-		let model = Input.get_model() in
-		(* Retrieve the input options *)
-		let options = Input.get_options () in
-		
-		let nb_dimensions = model.nb_parameters in
-
-		(* Retrieve the current pi0 (that must have been initialized before) *)
-(* 		let current_pi0 = self#get_current_point_option in *)
-
-		(* Start with the first dimension *)
-		let current_dimension = ref 0 in (*** WARNING: should be sure that 0 is the first parameter dimension ***)
-		(* The current dimension is not yet the maximum *)
-		let reached_max_dimension = ref false in
-		
-		try(
-		while not !reached_max_dimension do
-			(* Try to increment the local dimension *)
-			let current_dimension_incremented = NumConst.add (current_pi0#get_value !current_dimension) options#step in
-			if current_dimension_incremented <= max_bounds.(!current_dimension) then (
-				(* Copy the current point *)
-				let new_point = current_pi0#copy in
-				
-				(* Increment this dimension *)
-				new_point#set_value (!current_dimension) current_dimension_incremented;
-				(* Reset the smaller dimensions to the low bound *)
-				for i = 0 to !current_dimension - 1 do
-					new_point#set_value i min_bounds.(i);
-				done;
-				
-				(* Stop the loop *)
-				raise (Found_point new_point)
-			)
-			(* Else: try the next dimension *)
-			else ( 
-				current_dimension := !current_dimension + 1;
-				(* If last dimension: the end! *)
-				if !current_dimension >= nb_dimensions then(
-					reached_max_dimension := true;
-				)
-			);
-		done; (* while not is max *)
-		
-		(* Found no point *)
-		None
-		
-		(* If exception: found a point! *)
-		) with Found_point point -> Some point
-
-      
       
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(** Return a new instance of the algorithm to be iteratively called (typically IM or PRP) *)
@@ -190,8 +106,8 @@ class algoBCCover =
 			(* 1) Compute the next pi0 (if any left) in a sequential manner *)
 			let tentative_next_point =
 			match self#compute_next_sequential_pi0 !current_pi0 with
-			| Some point -> point
-			| None -> raise (Stop_loop No_more)
+			| Some_pval point -> point
+			| No_more -> raise (Stop_loop No_more)
 			in
 			
 			(* 2) Update our local current_pi0 *)

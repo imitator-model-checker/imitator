@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/01/19
- * Last modified     : 2016/03/10
+ * Last modified     : 2016/03/16
  *
  ************************************************************)
 
@@ -82,6 +82,40 @@ class virtual algoCartoGeneric :
 		(* Status of the analysis *)
 		val mutable termination_status : Result.bc_algorithm_termination option
 
+		
+		(************************************************************)
+		(* Class methods: methods used in subclasses as building blocks *)
+		(************************************************************)
+
+		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+		(* Return the current_point; raises InternalError if current_point was not initialized *)
+		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+		method get_current_point_option : PVal.pval
+		
+		
+		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+		(** Compute the smallest point (according to the min bounds) *)
+		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+		method compute_smallest_point : PVal.pval
+
+
+		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+		(** Compute the sequential successor of a point. Returns Some next_pi0 if there is indeed one, or None if no more point is available. *)
+		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+		method compute_next_sequential_pi0 : PVal.pval ->  more_points
+		
+
+		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+		(* Methods on random generation of a pi0 *)
+		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+		method one_random_pi0 : PVal.pval
+		
+		
+		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+		(* Try to generate a random pi0; after unsuccessful max_tries (because the randomly generated point was always covered by a tile), return No_more *)
+		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+		method try_random_pi0 : int -> more_points
+			
 		
 		(************************************************************)
 		(* Class methods *)

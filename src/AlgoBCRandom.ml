@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/02/02
- * Last modified     : 2016/03/10
+ * Last modified     : 2016/03/16
  *
  ************************************************************)
 
@@ -26,17 +26,6 @@ open AbstractModel
 open Result
 open AlgoCartoGeneric
 
-
-(************************************************************)
-(************************************************************)
-(* Internal exceptions *)
-(************************************************************)
-(************************************************************)
-(* To stop a loop when a point is found *)
-exception Found_point of PVal.pval
-
-(* To stop a loop when a point is found or there is no more point *)
-(* exception Stop_loop of more_points *)
 
 
 
@@ -98,57 +87,6 @@ class algoBCRandom (*max_tries*) =
 
 		
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Global method on pi0 *)
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-
-	(* Return the current_point; raises InternalError if current_point was not initialized *)
-	(*** WARNING: duplicate code (see AlgoBCCover) ***)
-	method private get_current_point_option =
-		match current_point with
-		| No_more -> 
-			raise (InternalError("current_point has not been initialized yet, altough it should have at this point."))
-		| Some_pval current_point -> current_point
-
-
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Methods on random generation of a pi0 *)
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-
-	method private one_random_pi0 : PVal.pval =
-	(* Get the model *)
-	let model = Input.get_model() in
-	(* Get the v0 *)
-	let v0 = Input.get_v0() in
-	(* Retrieve the input options *)
-	let options = Input.get_options () in
-	
-	(*** WARNING! Does not work with step <> 1 !!!! ***)
-	if options#step <> NumConst.one then
-		raise (InternalError("Random pi0 not implemented with steps <> 1."));
-	
-	(* Create the pi0 *)
-	let random_pi0 = new PVal.pval in
-	(* Fill it *)
-	for i = 0 to model.nb_parameters - 1 do
-		let min = v0#get_min i in
-		let max = v0#get_max i in
-		(* Generate a random value in the interval *)
-		let random_value = NumConst.random_integer min max in
-		
-		(* Print some information *)
-		if verbose_mode_greater Verbose_medium then(
-			self#print_algo_message Verbose_medium ("Generating randomly value '" ^ (NumConst.string_of_numconst random_value) ^ "' for parameter '" ^ (model.variable_names i) ^ "'.");
-		);
- 		
-		(* Add to the array *)
-		random_pi0#set_value i random_value;
-	done;
-	
-	(* Return the result *)
-	random_pi0
-
-	
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(** Return a new instance of the algorithm to be iteratively called (typically IM or PRP) *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method algorithm_instance =
@@ -171,57 +109,14 @@ class algoBCRandom (*max_tries*) =
 	(* Find the next point *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method find_next_point =
-		(* Get the model *)
-(* 		let model = Input.get_model() in *)
-		(* Retrieve the input options *)
-(* 		let options = Input.get_options () in *)
-		
 		(* Get the max number of tries of BC *)
-		let max_tries = (*match options#imitator_mode with
-			 | Random_cartography i -> i
-			 | _ -> raise (InternalError ("Calling algoBCRandom.find_next_point should be done using the random cartography only"))*)
-			 self#get_max_tries
+		let max_tries = self#get_max_tries
 		in
 
 		(* Print some information *)
 		self#print_algo_message Verbose_low ("Trying to randomly find a fresh pi0 with " ^ (string_of_int max_tries) ^ " tries.");
 
-		(* Counter *)
-		let nb_tries = ref 0 in
-		
-		try(
-			(* Loop until exceed the number of tries *)
-			while !nb_tries < max_tries do
-				(* Generate a random pi0 *)
-				let tentative_pi0 = self#one_random_pi0 in
-				(* Try to see if valid (and updates found_pi0) *)
-				if self#test_pi0_uncovered tentative_pi0 then(
-					(* Print some information *)
-					self#print_algo_message  Verbose_low ("Try " ^ (string_of_int (!nb_tries + 1)) ^ " successful!");
-
-					raise (Found_point tentative_pi0);
-					
-				(* Otherwise: go further *)
-				)else(
-					(* Print some information *)
-					self#print_algo_message  Verbose_low ("Try " ^ (string_of_int (!nb_tries + 1)) ^ " unsuccessful.");
-					
-					(* Increment local counter *)
-					nb_tries := !nb_tries + 1;
-					
-					(* Increment global counter *)
-					nb_unsuccessful_points <- nb_unsuccessful_points + 1;
-				);
-			done;
-
-			(* Print some information *)
-			self#print_algo_message  Verbose_low ("Could not find a pi0 within " ^ (string_of_int max_tries) ^ " tries.");
-			
-			(* Could not find point *)
-			No_more
-			
-		(* Handle the Found_point exception *)
-		) with Found_point tentative_pi0 -> Some_pval tentative_pi0
+		self#try_random_pi0 max_tries
 
 
 

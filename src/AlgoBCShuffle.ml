@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/03/14
- * Last modified     : 2016/03/15
+ * Last modified     : 2016/03/16
  *
  ************************************************************)
 
@@ -24,7 +24,6 @@ open Exceptions
 open AbstractModel
 open Result
 open AlgoCartoGeneric
-open AlgoBCCover
 
 
 (************************************************************)
@@ -46,7 +45,7 @@ exception Stop_loop of more_points
 (************************************************************)
 (************************************************************)
 class algoBCShuffle =
-	object (self) inherit algoBCCover as super
+	object (self) inherit algoCartoGeneric as super
 	
 	(************************************************************)
 	(* Class variables *)
@@ -128,8 +127,8 @@ class algoBCShuffle =
 			
 			let next_pi0 = match next_pi0_option with
 				(* If no more pi0: problem! *)
-				| None -> raise (InternalError("No more pi0 before completing to fill the static array of all pi0."))
-				| Some next_pi0 -> next_pi0
+				| No_more -> raise (InternalError("No more pi0 before completing to fill the static array of all pi0."))
+				| Some_pval next_pi0 -> next_pi0
 			in
 
 			(* Update the current point *)

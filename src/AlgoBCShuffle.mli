@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/03/14
- * Last modified     : 2016/03/14
+ * Last modified     : 2016/03/16
  *
  ************************************************************)
 
@@ -17,15 +17,13 @@
 (* Modules *)
 (************************************************************)
 open AlgoCartoGeneric
-open AlgoBCCover
-
 
 
 (************************************************************)
 (* Class definition *)
 (************************************************************)
 class algoBCShuffle :
-	object inherit algoBCCover
+	object inherit algoCartoGeneric
 		(************************************************************)
 		(* Class variables *)
 		(************************************************************)
