@@ -7,7 +7,7 @@
  * Author:        Etienne Andre
  * 
  * Created:       2014/10/24
- * Last modified: 2016/03/14
+ * Last modified: 2016/03/16
  *
  ****************************************************************)
 
@@ -95,7 +95,10 @@ type imitator_mode =
 	
 	(** Randomly pick up values for a given number of iterations *)
 	| Random_cartography of int
-
+	
+	(** Randomly pick up values for a given number of iterations, then switch to sequential algorithm once no more point has been found after a given max number of attempts (mostly useful for the distributed IMITATOR) *)
+	| RandomSeq_cartography of int
+	
 
 (****************************************************************)
 (** Global time counter *)

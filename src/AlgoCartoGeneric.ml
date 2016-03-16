@@ -219,7 +219,7 @@ class virtual algoCartoGeneric =
 
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(** Compute the sequential successor of a point. Returns Some next_pi0 if there is indeed one, or None if no more point is available. *)
+	(** Compute the sequential successor of a given point. *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method compute_next_sequential_pi0 (current_pi0 : PVal.pval) : more_points =
 		(* Retrieve the model *)
@@ -271,13 +271,13 @@ class virtual algoCartoGeneric =
 		(* If exception: found a point! *)
 		) with Found_point point -> Some_pval point
 
-      
+     
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(** Compute the sequential uncovered successor of a point. Returns Some next_pi0 if there is indeed one, or None if no more point is available. *)
+	(** Compute the sequential uncovered successor of a given point. *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method compute_next_sequential_uncovered_pi0 =
+	method compute_next_sequential_uncovered_pi0_from point =
 		(* Retrieve the current pi0 (that must have been initialized before) *)
-		let current_pi0 = ref (self#get_current_point_option) in
+		let current_pi0 = ref point in
 		
 		try(
 		while true do
@@ -306,6 +306,14 @@ class virtual algoCartoGeneric =
 		
 		(* Return the point *)
 		) with Stop_loop sl -> sl
+		
+		
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(** Compute the sequential uncovered successor of the current point. *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	method compute_next_sequential_uncovered_pi0 =
+		(* Retrieve the current pi0 (that must have been initialized before) *)
+		self#compute_next_sequential_uncovered_pi0_from (self#get_current_point_option)
 		
 	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)

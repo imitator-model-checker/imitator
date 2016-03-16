@@ -357,7 +357,7 @@ let algorithm : AlgoGeneric.algoGeneric = match options#imitator_mode with
 
 		(*** TODO: PRP ***)
 		
-		(** Distributed mode: Master slave with sequential pi0 *)
+		(** Distributed mode: Master worker with sequential pi0 *)
 		| Distributed_ms_sequential ->
 			(* Branch between master and worker *)
 			if DistributedUtilities.get_rank() = DistributedUtilities.masterrank then
@@ -365,7 +365,7 @@ let algorithm : AlgoGeneric.algoGeneric = match options#imitator_mode with
 			else
 				let myalgo :> AlgoGeneric.algoGeneric = new AlgoBCCoverDistributedMSSeqWorker.algoBCCoverDistributedMSSeqWorker in myalgo
 
-		(** Distributed mode: Master slave with sequential pi0 shuffled *)
+		(** Distributed mode: Master worker with sequential pi0 shuffled *)
 		| Distributed_ms_shuffle ->
 			(* Branch between master and worker *)
 			if DistributedUtilities.get_rank() = DistributedUtilities.masterrank then
@@ -373,7 +373,20 @@ let algorithm : AlgoGeneric.algoGeneric = match options#imitator_mode with
 			else
 				let myalgo :> AlgoGeneric.algoGeneric = new AlgoBCCoverDistributedMSShuffleWorker.algoBCCoverDistributedMSShuffleWorker in myalgo
 
+		(** Distributed mode: Master worker with random pi0 and n retries before switching to sequential mode *)
+		| Distributed_ms_random nb_tries ->
+			(* Branch between master and worker *)
+			if DistributedUtilities.get_rank() = DistributedUtilities.masterrank then
+				let algo = new AlgoBCCoverDistributedMSRandomSeqMaster.algoBCCoverDistributedMSRandomSeqMaster in
+				(*** NOTE: very important: must set NOW the maximum number of tries! ***)
+				algo#set_max_tries nb_tries;
+				let myalgo :> AlgoGeneric.algoGeneric = algo in
+				myalgo
+			else
+				let myalgo :> AlgoGeneric.algoGeneric = new AlgoBCCoverDistributedMSRandomSeqWorker.algoBCCoverDistributedMSRandomSeqWorker in myalgo
+
 		| _ -> raise (InternalError("Other distribution modes not yet implemented"))
+		
 		in algo
 				
 			
@@ -411,11 +424,16 @@ let algorithm : AlgoGeneric.algoGeneric = match options#imitator_mode with
 		(*** NOTE: very important: must set NOW the maximum number of tries! ***)
 		algo_bcrandom#set_max_tries nb;
 		let myalgo :> AlgoGeneric.algoGeneric = algo_bcrandom in
-	
-(* 		let myalgo :> AlgoGeneric.algoGeneric = new AlgoBCRandom.algoBCRandom in *)
-		(* Return the algo *)
 		myalgo
-		
+
+	
+	(* BC with random coverage followed by sequential coverage *)
+	| RandomSeq_cartography nb ->
+		let algo_bcrandomseq = new AlgoBCRandomSeq.algoBCRandomSeq in
+		(*** NOTE: very important: must set NOW the maximum number of tries! ***)
+		algo_bcrandomseq#set_max_tries nb;
+		let myalgo :> AlgoGeneric.algoGeneric = algo_bcrandomseq in
+		myalgo
 	
 		
 	(************************************************************)

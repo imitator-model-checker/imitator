@@ -115,6 +115,285 @@ Termination                   : regular termination
 	
 	#------------------------------------------------------------
 	{
+		'purpose'    : 'Distributed cartography: BC random+seq (2 nodes)',
+		'input_files': ['flipflop.imi', 'flipflop.v0'],
+		'options'    : '-mode cover -distributed random5 -output-result',
+		'nb_nodes'   : 2,
+		'expectations' : [
+		# NOTE: not much to test here, as the number of tiles/states/unsuccessful points/etc. all depend on the relative speed of the workers, and is hence entirely non-deterministic
+			# WARNING: no other way for now that checking separately the constraints (because the computation times may of course differ)… and to check them separately as the order is of course unknown
+			{'file': 'flipflop.res' , 'content' : """
+ dG3_u >= 8
+& dG4_u >= 3
+& 17 > dG3_u + dG4_u
+
+"""
+			} # end BC file
+			, 
+			{'file': 'flipflop.res' , 'content' : """
+ dG3_u + dG4_u >= 17
+& dG3_u >= 8
+& dG4_u >= 3
+& 17 > dG3_u
+& 24 > dG3_u + dG4_u
+"""
+			} # end BC file
+			, 
+			{'file': 'flipflop.res' , 'content' : """
+ dG3_u >= 17
+& dG4_u >= 3
+& 24 > dG3_u + dG4_u
+"""
+			} # end BC file
+			, 
+			{'file': 'flipflop.res' , 'content' : """
+ dG3_u + dG4_u >= 24
+& dG4_u >= 3
+& 7 > dG4_u
+& 24 > dG3_u
+"""
+			} # end BC file
+			, 
+			{'file': 'flipflop.res' , 'content' : """
+ dG3_u >= 24
+& dG4_u >= 3
+& 7 > dG4_u
+"""
+			} # end BC file
+			, 
+			{'file': 'flipflop.res' , 'content' : """
+ dG3_u >= 17
+& dG4_u >= 7
+& 24 > dG3_u
+"""
+			} # end BC file
+			, 
+			{'file': 'flipflop.res' , 'content' : """
+ dG3_u >= 24
+& dG4_u >= 7
+
+------------------------------------------------------------
+Constraint soundness          : exact
+Termination                   : regular termination
+State space nature            : bad
+Number of random selections   : 0
+------------------------------------------------------------
+"""
+			} # end BC file
+			, 
+			{'file': 'flipflop.res' , 'content' : """
+ dG3_u >= 8
+& dG3_u + dG4_u >= 24
+& 17 > dG3_u
+
+------------------------------------------------------------
+Constraint soundness          : exact
+Termination                   : regular termination
+State space nature            : bad
+Number of random selections   : 0
+------------------------------------------------------------
+"""
+			} # end BC file
+			, 
+			# NOTE: the actual result
+			{'file': 'flipflop.res' , 'content' : """
+Coverage                      : integer-complete
+Termination                   : regular termination
+		"""
+			} #end statespace file
+		] # end expectations
+	} # end test case
+	
+	,
+	
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Distributed cartography: BC random+seq (4 nodes)',
+		'input_files': ['flipflop.imi', 'flipflop.v0'],
+		'options'    : '-mode cover -distributed random5 -output-result',
+		'nb_nodes'   : 4,
+		'expectations' : [
+		# NOTE: not much to test here, as the number of tiles/states/unsuccessful points/etc. all depend on the relative speed of the workers, and is hence entirely non-deterministic
+			# WARNING: no other way for now that checking separately the constraints (because the computation times may of course differ)… and to check them separately as the order is of course unknown
+			{'file': 'flipflop.res' , 'content' : """
+ dG3_u >= 8
+& dG4_u >= 3
+& 17 > dG3_u + dG4_u
+
+"""
+			} # end BC file
+			, 
+			{'file': 'flipflop.res' , 'content' : """
+ dG3_u + dG4_u >= 17
+& dG3_u >= 8
+& dG4_u >= 3
+& 17 > dG3_u
+& 24 > dG3_u + dG4_u
+"""
+			} # end BC file
+			, 
+			{'file': 'flipflop.res' , 'content' : """
+ dG3_u >= 17
+& dG4_u >= 3
+& 24 > dG3_u + dG4_u
+"""
+			} # end BC file
+			, 
+			{'file': 'flipflop.res' , 'content' : """
+ dG3_u + dG4_u >= 24
+& dG4_u >= 3
+& 7 > dG4_u
+& 24 > dG3_u
+"""
+			} # end BC file
+			, 
+			{'file': 'flipflop.res' , 'content' : """
+ dG3_u >= 24
+& dG4_u >= 3
+& 7 > dG4_u
+"""
+			} # end BC file
+			, 
+			{'file': 'flipflop.res' , 'content' : """
+ dG3_u >= 17
+& dG4_u >= 7
+& 24 > dG3_u
+"""
+			} # end BC file
+			, 
+			{'file': 'flipflop.res' , 'content' : """
+ dG3_u >= 24
+& dG4_u >= 7
+
+------------------------------------------------------------
+Constraint soundness          : exact
+Termination                   : regular termination
+State space nature            : bad
+Number of random selections   : 0
+------------------------------------------------------------
+"""
+			} # end BC file
+			, 
+			{'file': 'flipflop.res' , 'content' : """
+ dG3_u >= 8
+& dG3_u + dG4_u >= 24
+& 17 > dG3_u
+
+------------------------------------------------------------
+Constraint soundness          : exact
+Termination                   : regular termination
+State space nature            : bad
+Number of random selections   : 0
+------------------------------------------------------------
+"""
+			} # end BC file
+			, 
+			# NOTE: the actual result
+			{'file': 'flipflop.res' , 'content' : """
+Coverage                      : integer-complete
+Termination                   : regular termination
+		"""
+			} #end statespace file
+		] # end expectations
+	} # end test case
+	
+	,
+	
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Distributed cartography: BC random+seq (40 nodes)',
+		'input_files': ['flipflop.imi', 'flipflop.v0'],
+		'options'    : '-mode cover -distributed random5 -output-result',
+		'nb_nodes'   : 40,
+		'expectations' : [
+		# NOTE: not much to test here, as the number of tiles/states/unsuccessful points/etc. all depend on the relative speed of the workers, and is hence entirely non-deterministic
+			# WARNING: no other way for now that checking separately the constraints (because the computation times may of course differ)… and to check them separately as the order is of course unknown
+			{'file': 'flipflop.res' , 'content' : """
+ dG3_u >= 8
+& dG4_u >= 3
+& 17 > dG3_u + dG4_u
+
+"""
+			} # end BC file
+			, 
+			{'file': 'flipflop.res' , 'content' : """
+ dG3_u + dG4_u >= 17
+& dG3_u >= 8
+& dG4_u >= 3
+& 17 > dG3_u
+& 24 > dG3_u + dG4_u
+"""
+			} # end BC file
+			, 
+			{'file': 'flipflop.res' , 'content' : """
+ dG3_u >= 17
+& dG4_u >= 3
+& 24 > dG3_u + dG4_u
+"""
+			} # end BC file
+			, 
+			{'file': 'flipflop.res' , 'content' : """
+ dG3_u + dG4_u >= 24
+& dG4_u >= 3
+& 7 > dG4_u
+& 24 > dG3_u
+"""
+			} # end BC file
+			, 
+			{'file': 'flipflop.res' , 'content' : """
+ dG3_u >= 24
+& dG4_u >= 3
+& 7 > dG4_u
+"""
+			} # end BC file
+			, 
+			{'file': 'flipflop.res' , 'content' : """
+ dG3_u >= 17
+& dG4_u >= 7
+& 24 > dG3_u
+"""
+			} # end BC file
+			, 
+			{'file': 'flipflop.res' , 'content' : """
+ dG3_u >= 24
+& dG4_u >= 7
+
+------------------------------------------------------------
+Constraint soundness          : exact
+Termination                   : regular termination
+State space nature            : bad
+Number of random selections   : 0
+------------------------------------------------------------
+"""
+			} # end BC file
+			, 
+			{'file': 'flipflop.res' , 'content' : """
+ dG3_u >= 8
+& dG3_u + dG4_u >= 24
+& 17 > dG3_u
+
+------------------------------------------------------------
+Constraint soundness          : exact
+Termination                   : regular termination
+State space nature            : bad
+Number of random selections   : 0
+------------------------------------------------------------
+"""
+			} # end BC file
+			, 
+			# NOTE: the actual result
+			{'file': 'flipflop.res' , 'content' : """
+Coverage                      : integer-complete
+Termination                   : regular termination
+		"""
+			} #end statespace file
+		] # end expectations
+	} # end test case
+	
+	,
+	
+	#------------------------------------------------------------
+	{
 		'purpose'    : 'Distributed cartography: BC shuffle',
 		'input_files': ['flipflop.imi', 'flipflop.v0'],
 		'options'    : '-mode cover -distributed shuffle -output-result',
@@ -203,8 +482,7 @@ Termination                   : regular termination
 			} #end statespace file
 		] # end expectations
 	} # end test case
-	
-	#,
+		#,
 	##------------------------------------------------------------
 	#{
 		#'purpose'    : 'XXXX',

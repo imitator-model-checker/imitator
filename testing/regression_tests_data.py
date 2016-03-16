@@ -10,7 +10,7 @@
 # Laboratoire d'Informatique de Paris Nord
 # Universite Paris 13, Sorbonne Paris Cite, France
 # Created      : 2015/10/23
-# Last modified: 2016/03/15
+# Last modified: 2016/03/16
 #************************************************************
 
 
@@ -2096,6 +2096,98 @@ Average number of transitions : 14.1
 ## """
 			#} # end tile file
 			#,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+	,
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test BC in mode random+seq',
+		'input_files': ['flipflop.imi', 'flipflop.v0'],
+		'options'    : '-mode randomseq3 -output-result',
+		'expectations' : [
+			# WARNING: no other way for now that checking separately the constraints (because the computation times may of course differ)… and to check them separately as the order is of course unknown
+			{'file': 'flipflop.res' , 'content' : """
+ dG3_u >= 8
+& dG4_u >= 3
+& 17 > dG3_u + dG4_u
+
+"""
+			} # end BC file
+			, 
+			{'file': 'flipflop.res' , 'content' : """
+ dG3_u + dG4_u >= 17
+& dG3_u >= 8
+& dG4_u >= 3
+& 17 > dG3_u
+& 24 > dG3_u + dG4_u
+"""
+			} # end BC file
+			, 
+			{'file': 'flipflop.res' , 'content' : """
+ dG3_u >= 17
+& dG4_u >= 3
+& 24 > dG3_u + dG4_u
+"""
+			} # end BC file
+			, 
+			{'file': 'flipflop.res' , 'content' : """
+ dG3_u + dG4_u >= 24
+& dG4_u >= 3
+& 7 > dG4_u
+& 24 > dG3_u
+"""
+			} # end BC file
+			, 
+			{'file': 'flipflop.res' , 'content' : """
+ dG3_u >= 24
+& dG4_u >= 3
+& 7 > dG4_u
+"""
+			} # end BC file
+			, 
+			{'file': 'flipflop.res' , 'content' : """
+ dG3_u >= 17
+& dG4_u >= 7
+& 24 > dG3_u
+"""
+			} # end BC file
+			, 
+			{'file': 'flipflop.res' , 'content' : """
+ dG3_u >= 24
+& dG4_u >= 7
+
+------------------------------------------------------------
+Constraint soundness          : exact
+Termination                   : regular termination
+State space nature            : bad
+Number of random selections   : 0
+------------------------------------------------------------
+"""
+			} # end BC file
+			, 
+			{'file': 'flipflop.res' , 'content' : """
+ dG3_u >= 8
+& dG3_u + dG4_u >= 24
+& 17 > dG3_u
+
+------------------------------------------------------------
+Constraint soundness          : exact
+Termination                   : regular termination
+State space nature            : bad
+Number of random selections   : 0
+------------------------------------------------------------
+"""
+			} # end BC file
+			, 
+			{'file': 'flipflop.res' , 'content' : """
+Number of integers in v0      : 644
+Number of tiles computed      : 8
+Coverage                      : integer-complete
+Termination                   : regular termination
+"""
+			} # end BC file
+			, 
 		] # end expectations
 	} # end test case
 	#------------------------------------------------------------

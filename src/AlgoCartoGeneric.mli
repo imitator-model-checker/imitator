@@ -100,13 +100,19 @@ class virtual algoCartoGeneric :
 
 
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-		(** Compute the sequential successor of a point. Returns Some next_pi0 if there is indeed one, or None if no more point is available. *)
+		(** Compute the sequential successor of a given point. *)
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		method compute_next_sequential_pi0 : PVal.pval ->  more_points
 		
 
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-		(** Compute the sequential uncovered successor of a point. Returns Some next_pi0 if there is indeed one, or None if no more point is available. *)
+		(** Compute the sequential uncovered successor of a given point. *)
+		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+		method compute_next_sequential_uncovered_pi0_from : PVal.pval -> more_points
+
+	
+		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+		(** Compute the sequential uncovered successor of the current point. *)
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		method compute_next_sequential_uncovered_pi0 : more_points
 

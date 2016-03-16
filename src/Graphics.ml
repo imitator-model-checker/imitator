@@ -8,7 +8,7 @@
  * Author:        Etienne Andre, Ulrich Kuehne
  * 
  * Created:       2010/07/05
- * Last modified: 2016/03/15
+ * Last modified: 2016/03/16
  *
  ****************************************************************)
 
@@ -183,7 +183,7 @@ try(
 	(* If cartography: find indices of first two variables with a parameter range *)
 	(*** TODO: better use an option "cartography mode" ***)
 	(*** TODO: take the projection into account! ***)
-		| Cover_cartography | Shuffle_cartography | Random_cartography _ | Border_cartography ->
+		| Cover_cartography | Shuffle_cartography | Random_cartography _ | RandomSeq_cartography _ | Border_cartography ->
 			print_message Verbose_low "Case real cartography: first 2 parameters with a range";
 			for index = 0 to model.nb_parameters - 1 do
 (* 			Array.iteri (fun index (a,b) ->  *)

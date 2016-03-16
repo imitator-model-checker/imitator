@@ -9,7 +9,7 @@
  * 
  * File contributors : Ulrich Kühne, Étienne André
  * Created           : 2010
- * Last modified     : 2016/03/14
+ * Last modified     : 2016/03/16
  *
  ************************************************************)
 
@@ -381,11 +381,19 @@ class imitator_options =
 					
 				(* Case: number of iterations *)
 				else try (
+					(* Find the 'randomseq' string *)
+					if String.sub mode 0 9 = "randomseq" then(
+						(* Find the number *)
+						let number = String.sub mode 9 (String.length mode - 9) in
+						imitator_mode <- (RandomSeq_cartography (int_of_string number))
+					)
 					(* Find the 'random' string *)
-					if not (String.sub mode 0 6 = "random") then raise (Failure "toto");
-					(* Find the number *)
-					let number = String.sub mode 6 (String.length mode - 6) in
-					imitator_mode <- (Random_cartography (int_of_string number))
+					else if String.sub mode 0 6 = "random" then (
+						(* Find the number *)
+						let number = String.sub mode 6 (String.length mode - 6) in
+						imitator_mode <- (Random_cartography (int_of_string number))
+					)
+					else raise (Failure "toto")
 				) with Failure _ | Invalid_argument _-> (
 					(*** HACK: print header now ***)
 					print_header_string();
@@ -504,7 +512,7 @@ class imitator_options =
         Use 'inversemethod' for the inverse method.
         For the behavioral cartography algorithm, use 'cover' to cover all the points within V0, 'border' to find the border between a small-valued good and a large-valued bad zone (experimental), or 'randomXX' where XX is a number to iterate random calls to IM (e.g., random5 or random10000). Default: 'inversemethod'.");
 				(*** NOTE: hidden option! 'shuffle' to cover all the points within v0 after shuffling the array. (Reason for hiding: only useful in the distributed cartography) ***)
-        
+				(*** NOTE: hidden option! or 'randomseqXX' where XX is a number to iterate random calls to IM followed by a sequential check (e.g., randomseq5 or randomseq10000) (Reason for hiding: only useful in the distributed cartography) ***)
 				
 				("-no-random", Set no_random, " No random selection of the pi0-incompatible inequality (select the first found). Default: false.");
 
@@ -662,6 +670,7 @@ class imitator_options =
 				| Shuffle_cartography -> "behavioral cartography algorithm with full coverage (shuffled version) and step " ^ (NumConst.string_of_numconst !step)
 				| Border_cartography -> "behavioral cartography algorithm with border detection (experimental) and step " ^ (NumConst.string_of_numconst !step)
 				| Random_cartography nb -> "behavioral cartography algorithm with " ^ (string_of_int nb) ^ " random iterations and step " ^ (NumConst.string_of_numconst !step)
+				| RandomSeq_cartography nb -> "behavioral cartography algorithm with " ^ (string_of_int nb) ^ " random iterations + sequential phase and step " ^ (NumConst.string_of_numconst !step)
 			in print_message Verbose_standard ("Mode: " ^ message ^ ".");
 
 
@@ -675,7 +684,7 @@ class imitator_options =
 			let in_cartography_mode =
 				match imitator_mode with
 				| Translation | State_space_exploration | EF_synthesis| Parametric_deadlock_checking | Inverse_method -> false
-				| Cover_cartography | Shuffle_cartography | Border_cartography | Random_cartography _ -> true	
+				| Cover_cartography | Shuffle_cartography | Border_cartography | Random_cartography _  | RandomSeq_cartography _ -> true	
 			in
 			
 			
@@ -774,7 +783,7 @@ class imitator_options =
 				(*** NOTE: why this test??? better to warn if this option is used in another context ***)
 				begin
 				match imitator_mode with
-				| Inverse_method | Cover_cartography | Shuffle_cartography | Border_cartography | Random_cartography _
+				| Inverse_method | Cover_cartography | Shuffle_cartography | Border_cartography | Random_cartography _ | RandomSeq_cartography _
 					-> print_message Verbose_standard ("Considering variant of IM with inclusion in the fixpoint [AS11].")
 				| _ -> print_message Verbose_standard ("Considering fixpoint variant with inclusion of symbolic zones (instead of equality).")
 				end

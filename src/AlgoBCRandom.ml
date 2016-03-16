@@ -80,8 +80,6 @@ class algoBCRandom (*max_tries*) =
 	method initialize_variables =
 		super#initialize_variables;
 		
-(* 		nb_failed_attempts <- 0; *)
-		
 		(* The end *)
 		()
 
@@ -110,14 +108,12 @@ class algoBCRandom (*max_tries*) =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method find_next_point =
 		(* Get the max number of tries of BC *)
-		let max_tries = self#get_max_tries
-		in
+		let max_tries = self#get_max_tries in
 
 		(* Print some information *)
 		self#print_algo_message Verbose_low ("Trying to randomly find a fresh pi0 with " ^ (string_of_int max_tries) ^ " tries.");
 
 		self#try_random_pi0 max_tries
-
 
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)

@@ -10,7 +10,7 @@
  * Author:        Etienne Andre
  * 
  * Created:       2009/09/09
- * Last modified: 2016/03/14
+ * Last modified: 2016/03/16
  *
  ************************************************************)
 
@@ -2301,7 +2301,7 @@ let abstract_model_of_parsing_structure (parsed_variable_declarations, parsed_au
 			(new HyperRectangle.hyper_rectangle)
 			
 		(* BC : V0 *)
-		| Cover_cartography | Shuffle_cartography | Random_cartography _ | Border_cartography -> 
+		| Cover_cartography | Shuffle_cartography | Random_cartography _ | RandomSeq_cartography _ | Border_cartography -> 
 			print_message Verbose_total ("*** Building reference rectangle...");
 			(* Verification of the pi_0 *)
 			if not (check_v0 parsed_v0 parameters_names) then raise InvalidPi0;
