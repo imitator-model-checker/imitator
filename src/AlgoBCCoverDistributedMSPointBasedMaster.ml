@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/03/10
- * Last modified     : 2016/03/10
+ * Last modified     : 2016/03/16
  *
  ************************************************************)
 
@@ -108,11 +108,11 @@ class virtual algoBCCoverDistributedMSPointBasedMaster =
 		(* Send termination signal *)
 		DistributedUtilities.send_stop worker_rank;
 		
+		(* Print some information *)
+		self#print_algo_message Verbose_standard("Sending termination message to worker " ^ (string_of_int worker_rank ) ^ "");
+		
 		(* Update the number of finished workers *)
 		nb_finished_workers <- nb_finished_workers + 1;
-		
-		(* Print some information *)
-		self#print_algo_message Verbose_medium( "Worker " ^ (string_of_int worker_rank ) ^ " is done");
 		
 		(* The end *)
 		()
@@ -122,6 +122,9 @@ class virtual algoBCCoverDistributedMSPointBasedMaster =
 	(* Compute the next point and send it to the worker, or send terminate message (and update the number of terminated workers) if no more point *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method private compute_and_send_point bc worker_rank =
+	
+		self#print_algo_message Verbose_low ("Computing next point to send...");
+		
 		(* Find next point (dynamic fashion) *)
 		let next_point = bc#compute_and_return_next_point in
 		
@@ -129,6 +132,11 @@ class virtual algoBCCoverDistributedMSPointBasedMaster =
 		begin
 		match next_point with
 		| AlgoCartoGeneric.Some_pval pi0 ->
+		
+			(* Print some information *)
+			self#print_algo_message Verbose_standard("Sending point to worker " ^ (string_of_int worker_rank ) ^ "");
+			self#print_algo_message Verbose_standard (ModelPrinter.string_of_pi0 (Input.get_model()) pi0);
+		
 			(* Send to node *)
 			DistributedUtilities.send_pi0 pi0 worker_rank;
 		| AlgoCartoGeneric.No_more ->
@@ -169,7 +177,7 @@ class virtual algoBCCoverDistributedMSPointBasedMaster =
 
 		| Tile (worker_rank , abstract_im_result) -> 
 			self#print_algo_message Verbose_low ("Received Tile request...");
-			self#print_algo_message_newline Verbose_standard ("[Master] Received the following constraint from worker " ^ (string_of_int worker_rank));
+			self#print_algo_message_newline Verbose_standard ("Received the following constraint from worker " ^ (string_of_int worker_rank));
 			
 			(*** TODO: we may want to store somewhere the computation time of the worker, in order to infer its waiting/working time ***)
 			
