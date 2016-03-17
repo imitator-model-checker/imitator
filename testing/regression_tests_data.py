@@ -10,7 +10,7 @@
 # Laboratoire d'Informatique de Paris Nord
 # Universite Paris 13, Sorbonne Paris Cite, France
 # Created      : 2015/10/23
-# Last modified: 2016/03/16
+# Last modified: 2016/03/17
 #************************************************************
 
 
@@ -505,6 +505,23 @@ BEGIN CONSTRAINT
 END CONSTRAINT
 """
 			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+	,
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test EF with observer + depth-limit + project-result (quite basic)',
+		'input_files': ['coffeeDrinker-TACAS-within.imi'],
+		'options'    : '-mode EF -merge -depth-limit 10 -output-result',
+		'expectations' : [
+			{'file': 'coffeeDrinker-TACAS-within.res' , 'content' : """
+BEGIN CONSTRAINT
+ p_coffee > 0
+END CONSTRAINT
+"""
+			} # end result file
+			,
 		] # end expectations
 	} # end test case
 	#------------------------------------------------------------
@@ -1610,7 +1627,7 @@ OR
 	{
 		'purpose'    : 'Test PRP on a simple example (looping reference valuation)',
 		'input_files': ['testPRP.imi', 'testPRP.piloop'],
-		'options'    : '-PRP -output-result -output-states -depth-limit 10',
+		'options'    : '-PRP -output-result -depth-limit 10 -output-states',
 		'expectations' : [
 			{'file': 'testPRP.res' , 'content' : """
  p2 >= 4
@@ -1824,14 +1841,164 @@ OR
 		] # end expectations
 	} # end test case
 	#------------------------------------------------------------
+	
 	,
+	
 	#------------------------------------------------------------
 	{
-		'purpose'    : 'Test BC in mode cover + graphical output',
+		'purpose'    : 'Test BC in mode cover with depth limit (JLR15)',
+		'input_files': ['JLR-TACAS13.imi', 'JLR-TACAS13.v0'],
+		'options'    : '-mode cover -depth-limit 10 -output-result',
+		'expectations' : [
+			# NOTE: no other way for now that checking separately the constraints (because the computation times may of course differ)
+			{'file': 'JLR-TACAS13.res' , 'content' : """
+(************************************************************)
+ Tile #1
+
+ Pi1:
+  a = 0
+& b = 0
+
+ K1:
+ 1 > 4*b
+& 2 > 9*b
+& b >= a
+& a >= 0
+
+------------------------------------------------------------
+Constraint soundness          : possible over-approximation
+Termination                   : time limit (1 successor unexplored)
+State space nature            : unknown
+Number of random selections   : 0
+------------------------------------------------------------
+Number of states              : 10
+Number of transitions         : 9
+"""
+			} # end BC file
+			, 
+			{'file': 'JLR-TACAS13.res' , 'content' : """
+(************************************************************)
+ Tile #2
+
+ Pi2:
+  a = 1
+& b = 0
+
+ K2:
+ a > b
+& b >= 0
+& 2 > b
+& 10 >= a
+
+------------------------------------------------------------
+Constraint soundness          : exact
+Termination                   : regular termination
+State space nature            : good
+Number of random selections   : 0
+------------------------------------------------------------
+Number of states              : 1
+Number of transitions         : 0
+"""
+			} # end BC file
+			, 
+			{'file': 'JLR-TACAS13.res' , 'content' : """
+(************************************************************)
+ Tile #3
+
+ Pi3:
+  a = 0
+& b = 1
+
+ K3:
+ b >= 1
+& 2 > b
+& b >= a
+& a >= 0
+
+------------------------------------------------------------
+Constraint soundness          : possible over-approximation
+Termination                   : time limit (2 successors unexplored)
+State space nature            : bad
+Number of random selections   : 0
+------------------------------------------------------------
+Number of states              : 18
+Number of transitions         : 17
+"""
+			} # end BC file
+			, 
+			{'file': 'JLR-TACAS13.res' , 'content' : """
+(************************************************************)
+ Tile #4
+
+ Pi4:
+  a = 0
+& b = 2
+
+ K4:
+ b >= 2
+& 10 >= b
+& b >= a
+& a >= 0
+
+------------------------------------------------------------
+Constraint soundness          : possible over-approximation
+Termination                   : time limit (2 successors unexplored)
+State space nature            : bad
+Number of random selections   : 0
+------------------------------------------------------------
+Number of states              : 19
+Number of transitions         : 18
+"""
+			} # end BC file
+			, 
+			{'file': 'JLR-TACAS13.res' , 'content' : """
+(************************************************************)
+ Tile #5
+
+ Pi5:
+  a = 3
+& b = 2
+
+ K5:
+ a > b
+& b >= 2
+& 10 >= a
+
+------------------------------------------------------------
+Constraint soundness          : exact
+Termination                   : regular termination
+State space nature            : bad
+Number of random selections   : 0
+------------------------------------------------------------
+Number of states              : 2
+Number of transitions         : 1
+"""
+			} # end BC file
+			, 
+			{'file': 'JLR-TACAS13.res' , 'content' : """
+------------------------------------------------------------
+Number of integers in v0      : 121
+Number of tiles computed      : 5
+Coverage                      : unknown
+Termination                   : regular termination
+Number of unsuccessful points : 116
+Average number of states      : 10.0
+Average number of transitions : 9.0
+"""
+			} # end BC file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+	
+	,
+	
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test BC in mode cover + graphical output (flip-flop)',
 		'input_files': ['flipflop.imi', 'flipflop.v0'],
 		'options'    : '-mode cover -output-result -output-cart -output-graphics-source',
 		'expectations' : [
-			# WARNING: no other way for now that checking separately the constraints (because the computation times may of course differ)
+			# NOTE: no other way for now that checking separately the constraints (because the computation times may of course differ)
 			{'file': 'flipflop.res' , 'content' : """
  Pi1:
   dG3_u = 8
@@ -1990,7 +2157,132 @@ Average number of transitions : 14.1
 		] # end expectations
 	} # end test case
 	#------------------------------------------------------------
+
 	,
+	
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test BC in mode cover with tiles limit',
+		'input_files': ['flipflop.imi', 'flipflop.v0'],
+		'options'    : '-mode cover -cart-tiles-limit 4 -output-result',
+		'expectations' : [
+			# NOTE: no other way for now that checking separately the constraints (because the computation times may of course differ)
+			{'file': 'flipflop.res' , 'content' : """
+(************************************************************)
+ Tile #1
+
+ Pi1:
+  dG3_u = 8
+& dG4_u = 3
+
+ K1:
+ dG3_u >= 8
+& dG4_u >= 3
+& 17 > dG3_u + dG4_u
+
+------------------------------------------------------------
+Constraint soundness          : exact
+Termination                   : regular termination
+State space nature            : good
+Number of random selections   : 0
+------------------------------------------------------------
+Number of states              : 8
+Number of transitions         : 7
+"""
+			} # end BC file
+			, 
+			{'file': 'flipflop.res' , 'content' : """
+(************************************************************)
+ Tile #2
+
+ Pi2:
+  dG3_u = 14
+& dG4_u = 3
+
+ K2:
+ dG3_u + dG4_u >= 17
+& dG3_u >= 8
+& dG4_u >= 3
+& 17 > dG3_u
+& 24 > dG3_u + dG4_u
+
+------------------------------------------------------------
+Constraint soundness          : exact
+Termination                   : regular termination
+State space nature            : good
+Number of random selections   : 0
+------------------------------------------------------------
+Number of states              : 11
+Number of transitions         : 10
+"""
+			} # end BC file
+			, 
+			{'file': 'flipflop.res' , 'content' : """
+(************************************************************)
+ Tile #3
+
+ Pi3:
+  dG3_u = 17
+& dG4_u = 3
+
+ K3:
+ dG3_u >= 17
+& dG4_u >= 3
+& 24 > dG3_u + dG4_u
+
+------------------------------------------------------------
+Constraint soundness          : exact
+Termination                   : regular termination
+State space nature            : good
+Number of random selections   : 0
+------------------------------------------------------------
+Number of states              : 15
+Number of transitions         : 14
+"""
+			} # end BC file
+			, 
+			{'file': 'flipflop.res' , 'content' : """
+(************************************************************)
+ Tile #4
+
+ Pi4:
+  dG3_u = 21
+& dG4_u = 3
+
+ K4:
+ dG3_u + dG4_u >= 24
+& dG4_u >= 3
+& 7 > dG4_u
+& 24 > dG3_u
+
+------------------------------------------------------------
+Constraint soundness          : exact
+Termination                   : regular termination
+State space nature            : bad
+Number of random selections   : 0
+------------------------------------------------------------
+Number of states              : 17
+Number of transitions         : 16
+"""
+			} # end BC file
+			, 
+			{'file': 'flipflop.res' , 'content' : """
+------------------------------------------------------------
+Number of integers in v0      : 644
+Number of tiles computed      : 4
+Coverage                      : unknown
+Termination                   : tiles limit
+Number of unsuccessful points : 10
+Average number of states      : 12.7
+Average number of transitions : 11.7
+"""
+			} # end BC file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+	
+	,
+	
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test BC in mode random',
@@ -1998,7 +2290,7 @@ Average number of transitions : 14.1
 		'options'    : '-mode random200 -output-result',
 		'expectations' : [
 			# WARNING: this algorithm is… random! hence no absolute guarantee to find the result (this said, a max_tries of 200 generally allows one to find all tiles with a good probability)
-			# WARNING: no other way for now that checking separately the constraints (because the computation times may of course differ)… and to check them separately as the order is of course unknown
+			# NOTE: no other way for now that checking separately the constraints (because the computation times may of course differ)… and to check them separately as the order is of course unknown
 			{'file': 'flipflop.res' , 'content' : """
  dG3_u >= 8
 & dG4_u >= 3
@@ -2106,7 +2398,7 @@ Average number of transitions : 14.1
 		'input_files': ['flipflop.imi', 'flipflop.v0'],
 		'options'    : '-mode randomseq3 -output-result',
 		'expectations' : [
-			# WARNING: no other way for now that checking separately the constraints (because the computation times may of course differ)… and to check them separately as the order is of course unknown
+			# NOTE: no other way for now that checking separately the constraints (because the computation times may of course differ)… and to check them separately as the order is of course unknown
 			{'file': 'flipflop.res' , 'content' : """
  dG3_u >= 8
 & dG4_u >= 3
@@ -2198,7 +2490,7 @@ Termination                   : regular termination
 		'input_files': ['flipflop.imi', 'flipflop.v0'],
 		'options'    : '-mode shuffle -output-result',
 		'expectations' : [
-			# WARNING: no other way for now that checking separately the constraints (because the computation times may of course differ)… and to check them separately as the order is of course unknown
+			# NOTE: no other way for now that checking separately the constraints (because the computation times may of course differ)… and to check them separately as the order is of course unknown
 			{'file': 'flipflop.res' , 'content' : """
  dG3_u >= 8
 & dG4_u >= 3
@@ -2286,24 +2578,134 @@ Average number of transitions : 14.1
 		] # end expectations
 	} # end test case
 	#------------------------------------------------------------
+	
 	,
+	
 	#------------------------------------------------------------
 	{
-		'purpose'    : 'Test EF with observer + depth-limit + project-result (quite basic)',
-		'input_files': ['coffeeDrinker-TACAS-within.imi'],
-		'options'    : '-mode EF -merge -output-result -depth-limit 10',
+		'purpose'    : 'Test PRPC in mode cover with depth limit (JLR15)',
+		'input_files': ['JLR-TACAS13.imi', 'JLR-TACAS13.v0'],
+		'options'    : '-mode cover -PRP -depth-limit 10 -output-result',
 		'expectations' : [
-			{'file': 'coffeeDrinker-TACAS-within.res' , 'content' : """
-BEGIN CONSTRAINT
- p_coffee > 0
-END CONSTRAINT
+			# NOTE: no other way for now that checking separately the constraints (because the computation times may of course differ)
+			{'file': 'JLR-TACAS13.res' , 'content' : """
+(************************************************************)
+ Tile #1
+
+ Pi1:
+  a = 0
+& b = 0
+
+ K1:
+ a >= 0
+& b >= 0
+& 2 > 9*b
+& 1 > 4*b
+& 10 >= a
+
+------------------------------------------------------------
+Constraint soundness          : possibly invalid
+Termination                   : time limit (1 successor unexplored)
+State space nature            : unknown
+Number of random selections   : 0
+------------------------------------------------------------
+Number of states              : 10
+Number of transitions         : 9
 """
-			} # end result file
+			} # end BC file
+			, 
+			{'file': 'JLR-TACAS13.res' , 'content' : """
+(************************************************************)
+ Tile #2
+
+ Pi2:
+  a = 0
+& b = 1
+
+ K2:
+ b >= a
+& 9*b >= 2
+& a >= 0
+& 10 >= b
+
+------------------------------------------------------------
+Constraint soundness          : possible under-approximation
+Termination                   : time limit (1 successor unexplored)
+State space nature            : bad
+Number of random selections   : 0
+------------------------------------------------------------
+Number of states              : 18
+Number of transitions         : 17
+"""
+			} # end BC file
+			, 
+			{'file': 'JLR-TACAS13.res' , 'content' : """
+(************************************************************)
+ Tile #3
+
+ Pi3:
+  a = 2
+& b = 1
+
+ K3:
+ 2 > b
+& b >= 0
+& a > b
+& 10 >= a
+
+------------------------------------------------------------
+Constraint soundness          : exact
+Termination                   : regular termination
+State space nature            : good
+Number of random selections   : 0
+------------------------------------------------------------
+Number of states              : 1
+Number of transitions         : 0
+"""
+			} # end BC file
+			, 
+			{'file': 'JLR-TACAS13.res' , 'content' : """
+(************************************************************)
+ Tile #4
+
+ Pi4:
+  a = 3
+& b = 2
+
+ K4:
+ b >= 2
+& 10 >= b
+& 10 >= a
+& a >= 0
+
+------------------------------------------------------------
+Constraint soundness          : exact
+Termination                   : regular termination
+State space nature            : bad
+Number of random selections   : 0
+------------------------------------------------------------
+Number of states              : 2
+Number of transitions         : 1
+"""
+			} # end BC file
 			,
+			{'file': 'JLR-TACAS13.res' , 'content' : """
+------------------------------------------------------------
+Number of integers in v0      : 121
+Number of tiles computed      : 4
+Coverage                      : unknown
+Termination                   : regular termination
+Number of unsuccessful points : 117
+Average number of states      : 7.7
+Average number of transitions : 6.7
+"""
+			} # end BC file
 		] # end expectations
 	} # end test case
 	#------------------------------------------------------------
+	
 	,
+	
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Simple example without merging',

@@ -1,0 +1,19 @@
+--************************************************************--
+--************************************************************--
+--
+--   Example fro Figure 1 in "Integer Parameter Synthesis for Timed Automata"
+--         by Jovanovic, Lime, Roux (TACAS, 2013)
+
+--
+--   Etienne ANDRE
+--   Universite Paris 13, Sorbonne Paris Cite, LIPN (France)
+--
+--                                Created : 2014/06/06
+--                          Last modified : 2014/06/06
+--                       IMITATOR version : 2.6.2
+--************************************************************--
+--************************************************************--
+
+
+	& a = 0..10
+	& b = 0..10
