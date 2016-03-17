@@ -39,7 +39,7 @@ open DistributedUtilities
 (* Class definition *)
 (************************************************************)
 (************************************************************)
-class virtual algoBCCoverDistributedMSPointBased =
+class virtual algoBCCoverDistributed =
 	object (self)
 	inherit algoGeneric as super
 	

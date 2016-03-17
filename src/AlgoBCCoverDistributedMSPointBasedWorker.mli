@@ -23,7 +23,7 @@ open AlgoGeneric
 (************************************************************)
 class virtual algoBCCoverDistributedMSPointBasedWorker :
 	object
-	inherit AlgoBCCoverDistributedMSPointBased.algoBCCoverDistributedMSPointBased
+	inherit AlgoBCCoverDistributed.algoBCCoverDistributed
 
 		(************************************************************)
 		(* Class variables *)

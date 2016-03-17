@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/03/10
- * Last modified     : 2016/03/16
+ * Last modified     : 2016/03/17
  *
  ************************************************************)
 
@@ -41,7 +41,7 @@ open DistributedUtilities
 (************************************************************)
 class virtual algoBCCoverDistributedMSPointBasedMaster =
 	object (self)
-	inherit AlgoBCCoverDistributedMSPointBased.algoBCCoverDistributedMSPointBased as super
+	inherit AlgoBCCoverDistributed.algoBCCoverDistributed as super
 	
 	(************************************************************)
 	(* Class variables *)

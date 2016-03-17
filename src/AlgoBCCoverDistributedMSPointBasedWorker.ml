@@ -41,7 +41,7 @@ open DistributedUtilities
 (************************************************************)
 class virtual algoBCCoverDistributedMSPointBasedWorker =
 	object (self)
-	inherit AlgoBCCoverDistributedMSPointBased.algoBCCoverDistributedMSPointBased as super
+	inherit AlgoBCCoverDistributed.algoBCCoverDistributed as super
 	
 	
 	(************************************************************)
