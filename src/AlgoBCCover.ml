@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/01/19
- * Last modified     : 2016/03/16
+ * Last modified     : 2016/03/17
  *
  ************************************************************)
 
@@ -62,12 +62,12 @@ class algoBCCover =
 
 
       
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+(*	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(** Return a new instance of the algorithm to be iteratively called (typically IM or PRP) *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method algorithm_instance =
 		(* Create a new instance of IM *)
-		new AlgoIM.algoIM
+		new AlgoIM.algoIM*)
 
 	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -113,6 +113,18 @@ class algoBCCover =
 			(* UNKNOWN otherwise *)
 			else Coverage_unknown
 		in
+(*		(* Coverage is... *)
+		(*** NOTE: this is only true for the original behavioral cartography; for variants this may not hold ***)
+		let coverage =
+			(* INTEGER COMPLETE if termination is regular and all tiles are valid *)
+			if termination_status = BC_Regular_termination && (List.for_all (fun abstract_im_result -> match abstract_im_result.soundness with
+					| Constraint_maybe_under | Constraint_exact | Constraint_maybe_over -> true
+					| Constraint_maybe_invalid -> false
+				) im_results)
+				then Coverage_integer_complete
+			(* UNKNOWN otherwise *)
+			else Coverage_unknown
+		in*)
 		
 		(* Return result *)
 		BC_result {

@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/01/19
- * Last modified     : 2016/03/16
+ * Last modified     : 2016/03/17
  *
  ************************************************************)
 
@@ -84,6 +84,14 @@ class virtual algoCartoGeneric :
 
 		
 		(************************************************************)
+		(* Class methods to simulate class parameters *)
+		(************************************************************)
+		
+		(* Sets the function creating a new instance of the algorithm to call (typically IM or PRP) *)
+		method set_algo_instance_function : (unit -> AlgoIMK.algoIMK) -> unit
+
+		
+		(************************************************************)
 		(* Class methods: methods used in subclasses as building blocks *)
 		(************************************************************)
 
@@ -133,7 +141,7 @@ class virtual algoCartoGeneric :
 		(* Class methods *)
 		(************************************************************)
 		(** Return a new instance of the algorithm to be iteratively called (typically IM or PRP) *)
-		method virtual algorithm_instance : AlgoIMK.algoIMK
+(* 		method virtual algorithm_instance : AlgoIMK.algoIMK *)
 
 		
 		(* Create the initial point for the analysis *)

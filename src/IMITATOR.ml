@@ -9,7 +9,7 @@
  * 
  * File contributors : Ulrich Kühne, Étienne André
  * Created           : 2009/09/07
- * Last modified     : 2016/03/16
+ * Last modified     : 2016/03/17
  *
  ************************************************************)
 
@@ -298,6 +298,17 @@ if options#imitator_mode = Inverse_method && options#branch_and_bound then(
 (************************************************************)
 (************************************************************)
 
+(* Generic method for the cartography to create either a new IM instance, or a new PRP instance *)
+(*** TODO: also add IMK, etc., if needed ***)
+let new_im_or_prp =
+	if options#efim then
+		fun () -> new AlgoPRP.algoPRP
+	else
+		fun () -> new AlgoIM.algoIM
+in
+
+
+(* Find the correct algorithm to execute *)
 let algorithm : AlgoGeneric.algoGeneric = match options#imitator_mode with
 	
 	(************************************************************)
@@ -354,8 +365,6 @@ let algorithm : AlgoGeneric.algoGeneric = match options#imitator_mode with
 	(*** NOTE: only one distribution mode so far ***)
 	| Cover_cartography when options#distribution_mode <> Non_distributed ->
 		let algo = match options#distribution_mode with
-
-		(*** TODO: PRP ***)
 		
 		(** Distributed mode: Master worker with sequential pi0 *)
 		| Distributed_ms_sequential ->
@@ -377,10 +386,11 @@ let algorithm : AlgoGeneric.algoGeneric = match options#imitator_mode with
 		| Distributed_ms_random nb_tries ->
 			(* Branch between master and worker *)
 			if DistributedUtilities.get_rank() = DistributedUtilities.masterrank then
-				let algo = new AlgoBCCoverDistributedMSRandomSeqMaster.algoBCCoverDistributedMSRandomSeqMaster in
-				(*** NOTE: very important: must set NOW the maximum number of tries! ***)
-				algo#set_max_tries nb_tries;
-				let myalgo :> AlgoGeneric.algoGeneric = algo in
+				let bc_algo = new AlgoBCCoverDistributedMSRandomSeqMaster.algoBCCoverDistributedMSRandomSeqMaster in
+				(*** NOTE: very important: must set NOW the parameters ***)
+				bc_algo#set_max_tries nb_tries;
+				bc_algo#set_algo_instance_function new_im_or_prp;
+				let myalgo :> AlgoGeneric.algoGeneric = bc_algo in
 				myalgo
 			else
 				let myalgo :> AlgoGeneric.algoGeneric = new AlgoBCCoverDistributedMSRandomSeqWorker.algoBCCoverDistributedMSRandomSeqWorker in myalgo
@@ -401,18 +411,30 @@ let algorithm : AlgoGeneric.algoGeneric = match options#imitator_mode with
 	(************************************************************)
 	(* Non-distributed cartography *)
 	(************************************************************)
-	(* PRPC *)
-	(*** TODO: use two different modes for PRPC and BC ***)
+	(*** NOTE: IM-based and PRP-based algorithms are handled in a unified manner, thanks to the generic function new_im_or_prp *)
+(*	(*** TODO: use two different modes for PRPC and BC ***)
 	| Cover_cartography when options#efim ->
-			let myalgo :> AlgoGeneric.algoGeneric = new AlgoPRPC.algoPRPC in myalgo
+		let bc_algo = 
+			let myalgo :> AlgoGeneric.algoGeneric = new AlgoPRPC.algoPRPC in myalgo*)
 
 	(* BC with full coverage *)
 	| Cover_cartography ->
-			let myalgo :> AlgoGeneric.algoGeneric = new AlgoBCCover.algoBCCover in myalgo
+		let bc_algo = new AlgoBCCover.algoBCCover in
+		(*** NOTE: very important: must set NOW the parameters ***)
+		bc_algo#set_algo_instance_function new_im_or_prp;
+		let myalgo :> AlgoGeneric.algoGeneric = bc_algo in
+		myalgo
+(* 		let myalgo :> AlgoGeneric.algoGeneric = new AlgoBCCover.algoBCCover in myalgo *)
+	
 	
 	(* BC with full coverage (shuffled version) *)
 	| Shuffle_cartography ->
-			let myalgo :> AlgoGeneric.algoGeneric = new AlgoBCShuffle.algoBCShuffle in myalgo
+		let bc_algo = new AlgoBCShuffle.algoBCShuffle in
+		(*** NOTE: very important: must set NOW the parameters ***)
+		bc_algo#set_algo_instance_function new_im_or_prp;
+		let myalgo :> AlgoGeneric.algoGeneric = bc_algo in
+		myalgo
+(* 		let myalgo :> AlgoGeneric.algoGeneric = new AlgoBCShuffle.algoBCShuffle in myalgo *)
 	
 	| Border_cartography ->
 (* 			Cartography.cover_behavioral_cartography model *)
@@ -420,19 +442,21 @@ let algorithm : AlgoGeneric.algoGeneric = match options#imitator_mode with
 		
 	(* BC with random coverage *)
 	| Random_cartography nb ->
-		let algo_bcrandom = new AlgoBCRandom.algoBCRandom in
-		(*** NOTE: very important: must set NOW the maximum number of tries! ***)
-		algo_bcrandom#set_max_tries nb;
-		let myalgo :> AlgoGeneric.algoGeneric = algo_bcrandom in
+		let bc_algo = new AlgoBCRandom.algoBCRandom in
+		(*** NOTE: very important: must set NOW the parameters ***)
+		bc_algo#set_max_tries nb;
+		bc_algo#set_algo_instance_function new_im_or_prp;
+		let myalgo :> AlgoGeneric.algoGeneric = bc_algo in
 		myalgo
 
 	
 	(* BC with random coverage followed by sequential coverage *)
 	| RandomSeq_cartography nb ->
-		let algo_bcrandomseq = new AlgoBCRandomSeq.algoBCRandomSeq in
-		(*** NOTE: very important: must set NOW the maximum number of tries! ***)
-		algo_bcrandomseq#set_max_tries nb;
-		let myalgo :> AlgoGeneric.algoGeneric = algo_bcrandomseq in
+		let bc_algo = new AlgoBCRandomSeq.algoBCRandomSeq in
+		(*** NOTE: very important: must set NOW the parameters ***)
+		bc_algo#set_max_tries nb;
+		bc_algo#set_algo_instance_function new_im_or_prp;
+		let myalgo :> AlgoGeneric.algoGeneric = bc_algo in
 		myalgo
 	
 		

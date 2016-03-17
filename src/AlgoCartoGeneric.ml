@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/01/19
- * Last modified     : 2016/03/16
+ * Last modified     : 2016/03/17
  *
  ************************************************************)
 
@@ -144,7 +144,20 @@ class virtual algoCartoGeneric =
 	(************************************************************)
 	(* Class variables *)
 	(************************************************************)
-	(* Number of dimensions *)
+	
+	(* The function creating a new instance of the algorithm to call (typically IM or PRP). Initially None, to be updated immediatly after the object creation. *)
+	(*** NOTE: this should be a parameter of the class; but cannot due to inheritance from AlgoGeneric ***)
+	val mutable algo_instance_function = None
+	
+	
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(** Given a cartography termination and a list of abstract_im_result, evalutes the coverage of the cartography *)
+	(*** NOTE: this should be a parameter of the class; but cannot due to inheritance from AlgoGeneric ***)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+(* 	val mutable coverage_evaluation_function = None *)
+
+	
+	(* Number of dimensions (shortcut) *)
 	val mutable nb_dimensions = 0
 	
 	(* Number of points in V0 (slightly approximated) *)
@@ -162,7 +175,7 @@ class virtual algoCartoGeneric =
 	
 	(* The current algorithm instance *)
 	(*** NOTE: this initialiation is useless (and time consuming?), as a new instance will be overwritten when needed ***)
-	val mutable algo_instance : AlgoIMK.algoIMK = new AlgoIMK.algoIMK
+	val mutable current_algo_instance : AlgoIMK.algoIMK = new AlgoIMK.algoIMK
 	
 	(* List of im_results *)
 	val mutable im_results : abstract_im_result list = []
@@ -184,6 +197,35 @@ class virtual algoCartoGeneric =
 	
 	
 	
+	(************************************************************)
+	(* Class methods to simulate class parameters *)
+	(************************************************************)
+	
+	(* Sets the function creating a new instance of the algorithm to call (typically IM or PRP) *)
+	method set_algo_instance_function (f : unit -> AlgoIMK.algoIMK) : unit =
+		match algo_instance_function with
+		| Some _ -> 
+			raise (InternalError("algo_instance_function was already set in AlgoCartoGeneric."))
+		| None ->
+			algo_instance_function <- Some f
+	
+	(* Get the function creating a new instance of the algorithm to call (typically IM or PRP) *)
+	method private get_algo_instance_function =
+		match algo_instance_function with
+		| Some f -> f
+		| None ->
+			raise (InternalError("algo_instance_function notyet set in AlgoCartoGeneric."))
+		
+(*	(* Sets the coverage evaluation function *)
+	method set_coverage_evaluation_function : (f : Result.bc_algorithm_termination -> Result.abstract_im_result list -> Result.bc_coverage) =
+		match coverage_evaluation_function with
+		| Some _ -> 
+			raise (InternalError("coverage_evaluation_function was already set in AlgoCartoGeneric."))
+		| None ->
+			coverage_evaluation_function <- f*)
+	
+
+
 	(************************************************************)
 	(* Class methods: methods used in subclasses as building blocks *)
 	(************************************************************)
@@ -493,7 +535,7 @@ class virtual algoCartoGeneric =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(** Return a new instance of the algorithm to be iteratively called (typically IM or PRP) *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method virtual algorithm_instance : AlgoIMK.algoIMK
+(* 	method virtual algorithm_instance : AlgoIMK.algoIMK *)
 
 		
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -645,7 +687,7 @@ class virtual algoCartoGeneric =
 		let options = Input.get_options () in
 
 		let file_prefix = options#files_prefix ^ "-" ^ (string_of_int current_iteration) in
-		ResultProcessor.process_result imitator_result algo_instance#algorithm_name (Some file_prefix);
+		ResultProcessor.process_result imitator_result current_algo_instance#algorithm_name (Some file_prefix);
 		
 		(* The end *)
 		()
@@ -693,7 +735,7 @@ class virtual algoCartoGeneric =
 		let nb_states = abstract_result.abstract_state_space.nb_states (*StateSpace.nb_states im_result.state_space*) in
 		let nb_transitions = abstract_result.abstract_state_space.nb_transitions (*StateSpace.nb_transitions im_result.state_space*) in
 		print_message Verbose_standard (
-			"\nK" ^ (string_of_int current_iteration) ^ " computed by " ^ algo_instance#algorithm_name
+			"\nK" ^ (string_of_int current_iteration) ^ " computed by " ^ current_algo_instance#algorithm_name
 (* 					^ " after " ^ (string_of_int im_result.nb_iterations) ^ " iteration" ^ (s_of_int im_result.nb_iterations) ^ "" *)
 			^ " in " ^ (string_of_seconds abstract_result.computation_time) ^ ": "
 			^ (string_of_int nb_states) ^ " state" ^ (s_of_int nb_states)
@@ -844,8 +886,8 @@ class virtual algoCartoGeneric =
 						
 			(* Call the algorithm to be iterated on (typically IM or PRP) *)
 			(*** NOTE: the bc time limit is NOT checked inside one execution of the algorithm to be iterated (but also note that the max execution time of the algorithm to be iterated is set to that of BC, in the Options pre-processing) ***)
-			algo_instance <- self#algorithm_instance;
-			let imitator_result : imitator_result = algo_instance#run() in
+			current_algo_instance <- self#get_algo_instance_function ();
+			let imitator_result : imitator_result = current_algo_instance#run() in
 
 			(** Create auxiliary files with the proper file prefix, if requested *)
 			self#create_auxiliary_files imitator_result;
