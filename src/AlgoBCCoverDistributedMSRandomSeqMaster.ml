@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/03/16
- * Last modified     : 2016/03/16
+ * Last modified     : 2016/03/17
  *
  ************************************************************)
 
@@ -74,6 +74,8 @@ class algoBCCoverDistributedMSRandomSeqMaster =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Name of the algorithm *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(*** NOTE: raises an exception due to access to get_max_tries before setting max_tries ***)
+(* 	method algorithm_name = "BC (full cov) distr MS random(" ^ (string_of_int self#get_max_tries) ^ ")+seq MASTER" *)
 	method algorithm_name = "BC (full cov) distr MS random+seq MASTER"
 
 	

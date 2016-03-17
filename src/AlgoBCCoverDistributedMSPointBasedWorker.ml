@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/03/10
- * Last modified     : 2016/03/10
+ * Last modified     : 2016/03/17
  *
  ************************************************************)
 
@@ -75,7 +75,7 @@ class virtual algoBCCoverDistributedMSPointBasedWorker =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(** Return a new instance of the algorithm to be iteratively called (typically IM or PRP) *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method virtual im_instance : AlgoIMK.algoIMK
+(* 	method virtual im_instance : AlgoIMK.algoIMK *)
 
 	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -115,7 +115,7 @@ class virtual algoBCCoverDistributedMSPointBasedWorker =
 				self#print_algo_message Verbose_medium("Received work.");
 
 				(* Create instance of the algorithm to be called *)
-				let algo = self#im_instance in
+				let algo = self#get_algo_instance_function () in
 				
 				(* Set up the pi0 *)
 				(*** NOTE/BADPROG: a bit ugly… pi0 could have been a parameter of the algorithm! ***)

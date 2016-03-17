@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/03/16
- * Last modified     : 2016/03/16
+ * Last modified     : 2016/03/17
  *
  ************************************************************)
 
@@ -53,12 +53,12 @@ class algoBCCoverDistributedMSRandomSeqWorker =
 	method algorithm_name = "BC (full cov) distr MS random+seq WORKER#" ^ (string_of_int worker_rank) ^ ""
 
 	
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+(*	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(** Return a new instance of the algorithm to be iteratively called (typically IM or PRP) *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method im_instance : AlgoIMK.algoIMK =
 		(* Create a new instance of IM *)
-		new AlgoIM.algoIM
+		new AlgoIM.algoIM*)
 
 
 (************************************************************)

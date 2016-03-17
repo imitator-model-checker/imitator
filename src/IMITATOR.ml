@@ -370,17 +370,33 @@ let algorithm : AlgoGeneric.algoGeneric = match options#imitator_mode with
 		| Distributed_ms_sequential ->
 			(* Branch between master and worker *)
 			if DistributedUtilities.get_rank() = DistributedUtilities.masterrank then
-				let myalgo :> AlgoGeneric.algoGeneric = new AlgoBCCoverDistributedMSSeqMaster.algoBCCoverDistributedMSSeqMaster in myalgo
+				let bc_algo = new AlgoBCCoverDistributedMSSeqMaster.algoBCCoverDistributedMSSeqMaster in
+				(*** NOTE: very important: must set NOW the parameters ***)
+				bc_algo#set_algo_instance_function new_im_or_prp;
+				let myalgo :> AlgoGeneric.algoGeneric = bc_algo in
+				myalgo
 			else
-				let myalgo :> AlgoGeneric.algoGeneric = new AlgoBCCoverDistributedMSSeqWorker.algoBCCoverDistributedMSSeqWorker in myalgo
+				let bc_algo = new AlgoBCCoverDistributedMSSeqWorker.algoBCCoverDistributedMSSeqWorker in
+				(*** NOTE: very important: must set NOW the parameters ***)
+				bc_algo#set_algo_instance_function new_im_or_prp;
+				let myalgo :> AlgoGeneric.algoGeneric = bc_algo in
+				myalgo
 
 		(** Distributed mode: Master worker with sequential pi0 shuffled *)
 		| Distributed_ms_shuffle ->
 			(* Branch between master and worker *)
 			if DistributedUtilities.get_rank() = DistributedUtilities.masterrank then
-				let myalgo :> AlgoGeneric.algoGeneric = new AlgoBCCoverDistributedMSShuffleMaster.algoBCCoverDistributedMSShuffleMaster in myalgo
+				let bc_algo = new AlgoBCCoverDistributedMSShuffleMaster.algoBCCoverDistributedMSShuffleMaster in
+				(*** NOTE: very important: must set NOW the parameters ***)
+				bc_algo#set_algo_instance_function new_im_or_prp;
+				let myalgo :> AlgoGeneric.algoGeneric = bc_algo in
+				myalgo
 			else
-				let myalgo :> AlgoGeneric.algoGeneric = new AlgoBCCoverDistributedMSShuffleWorker.algoBCCoverDistributedMSShuffleWorker in myalgo
+				let bc_algo = new AlgoBCCoverDistributedMSShuffleWorker.algoBCCoverDistributedMSShuffleWorker in
+				(*** NOTE: very important: must set NOW the parameters ***)
+				bc_algo#set_algo_instance_function new_im_or_prp;
+				let myalgo :> AlgoGeneric.algoGeneric = bc_algo in
+				myalgo
 
 		(** Distributed mode: Master worker with random pi0 and n retries before switching to sequential mode *)
 		| Distributed_ms_random nb_tries ->
@@ -393,7 +409,12 @@ let algorithm : AlgoGeneric.algoGeneric = match options#imitator_mode with
 				let myalgo :> AlgoGeneric.algoGeneric = bc_algo in
 				myalgo
 			else
-				let myalgo :> AlgoGeneric.algoGeneric = new AlgoBCCoverDistributedMSRandomSeqWorker.algoBCCoverDistributedMSRandomSeqWorker in myalgo
+				let bc_algo = new AlgoBCCoverDistributedMSRandomSeqWorker.algoBCCoverDistributedMSRandomSeqWorker in
+				(*** NOTE: very important: must set NOW the parameters ***)
+(* 				bc_algo#set_max_tries nb_tries; *)
+				bc_algo#set_algo_instance_function new_im_or_prp;
+				let myalgo :> AlgoGeneric.algoGeneric = bc_algo in
+				myalgo
 
 		| _ -> raise (InternalError("Other distribution modes not yet implemented"))
 		
@@ -402,7 +423,7 @@ let algorithm : AlgoGeneric.algoGeneric = match options#imitator_mode with
 			
 	(* ** *** **** ***** ******    END FORK PaTATOR    ****** ***** **** *** ** *)*)
 	(*** WARNING:  Do not modify the previous lines! (used by an external script to compile the non-distributed version of IMITATOR) ***)
-	
+
 	(************************************************************)
 	(* End distributed cartography *)
 	(************************************************************)
@@ -424,8 +445,6 @@ let algorithm : AlgoGeneric.algoGeneric = match options#imitator_mode with
 		bc_algo#set_algo_instance_function new_im_or_prp;
 		let myalgo :> AlgoGeneric.algoGeneric = bc_algo in
 		myalgo
-(* 		let myalgo :> AlgoGeneric.algoGeneric = new AlgoBCCover.algoBCCover in myalgo *)
-	
 	
 	(* BC with full coverage (shuffled version) *)
 	| Shuffle_cartography ->
@@ -434,10 +453,8 @@ let algorithm : AlgoGeneric.algoGeneric = match options#imitator_mode with
 		bc_algo#set_algo_instance_function new_im_or_prp;
 		let myalgo :> AlgoGeneric.algoGeneric = bc_algo in
 		myalgo
-(* 		let myalgo :> AlgoGeneric.algoGeneric = new AlgoBCShuffle.algoBCShuffle in myalgo *)
 	
 	| Border_cartography ->
-(* 			Cartography.cover_behavioral_cartography model *)
 		raise (InternalError("Not implemented !!!"))
 		
 	(* BC with random coverage *)

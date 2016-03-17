@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/03/10
- * Last modified     : 2016/03/10
+ * Last modified     : 2016/03/17
  *
  ************************************************************)
 
@@ -37,9 +37,9 @@ class algoBCCoverDistributedMSSeqWorker :
 		method algorithm_name : string
 
 		
-		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+(*		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		(** Return a new instance of the algorithm to be iteratively called (typically IM or PRP) *)
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-		method im_instance : AlgoIMK.algoIMK
+		method im_instance : AlgoIMK.algoIMK*)
 
 end

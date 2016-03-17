@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/03/04
- * Last modified     : 2016/03/04
+ * Last modified     : 2016/03/17
  *
  ************************************************************)
 
@@ -32,6 +32,17 @@ class virtual algoBCCoverDistributedMSPointBased :
 		(************************************************************)
 
 
+		(************************************************************)
+		(* Class methods to simulate class parameters *)
+		(************************************************************)
+		
+		(* Sets the function creating a new instance of the algorithm to call (typically IM or PRP) *)
+		method set_algo_instance_function : (unit -> AlgoIMK.algoIMK) -> unit
+
+		(* Get the function creating a new instance of the algorithm to call (typically IM or PRP) *)
+		method get_algo_instance_function : (unit -> AlgoIMK.algoIMK)
+
+		
 		(************************************************************)
 		(* Class methods *)
 		(************************************************************)

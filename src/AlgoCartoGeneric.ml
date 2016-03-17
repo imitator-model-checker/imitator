@@ -145,6 +145,7 @@ class virtual algoCartoGeneric =
 	(* Class variables *)
 	(************************************************************)
 	
+	(*** BADPROG: code shared with AlgoBCCoverDistributedMSPointBased ***)
 	(* The function creating a new instance of the algorithm to call (typically IM or PRP). Initially None, to be updated immediatly after the object creation. *)
 	(*** NOTE: this should be a parameter of the class; but cannot due to inheritance from AlgoGeneric ***)
 	val mutable algo_instance_function = None
@@ -201,6 +202,7 @@ class virtual algoCartoGeneric =
 	(* Class methods to simulate class parameters *)
 	(************************************************************)
 	
+	(*** BADPROG: code shared with AlgoBCCoverDistributedMSPointBased ***)
 	(* Sets the function creating a new instance of the algorithm to call (typically IM or PRP) *)
 	method set_algo_instance_function (f : unit -> AlgoIMK.algoIMK) : unit =
 		match algo_instance_function with
@@ -209,12 +211,13 @@ class virtual algoCartoGeneric =
 		| None ->
 			algo_instance_function <- Some f
 	
+	(*** BADPROG: code shared with AlgoBCCoverDistributedMSPointBased ***)
 	(* Get the function creating a new instance of the algorithm to call (typically IM or PRP) *)
 	method private get_algo_instance_function =
 		match algo_instance_function with
 		| Some f -> f
 		| None ->
-			raise (InternalError("algo_instance_function notyet set in AlgoCartoGeneric."))
+			raise (InternalError("algo_instance_function not yet set in AlgoCartoGeneric."))
 		
 (*	(* Sets the coverage evaluation function *)
 	method set_coverage_evaluation_function : (f : Result.bc_algorithm_termination -> Result.abstract_im_result list -> Result.bc_coverage) =

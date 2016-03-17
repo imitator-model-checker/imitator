@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/03/16
- * Last modified     : 2016/03/16
+ * Last modified     : 2016/03/17
  *
  ************************************************************)
 
@@ -36,10 +36,10 @@ class algoBCCoverDistributedMSRandomSeqWorker :
 		(************************************************************)
 		method algorithm_name : string
 
-		
+		(*
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		(** Return a new instance of the algorithm to be iteratively called (typically IM or PRP) *)
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-		method im_instance : AlgoIMK.algoIMK
+		method im_instance : AlgoIMK.algoIMK*)
 
 end

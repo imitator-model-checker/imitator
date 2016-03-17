@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/03/10
- * Last modified     : 2016/03/10
+ * Last modified     : 2016/03/17
  *
  ************************************************************)
 
@@ -43,11 +43,11 @@ class virtual algoBCCoverDistributedMSPointBasedWorker :
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		(** Return a new instance of the algorithm to be iteratively called (typically IM or PRP) *)
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-		method virtual im_instance : AlgoIMK.algoIMK
+(* 		method virtual im_instance : AlgoIMK.algoIMK *)
 
 		
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-		(* Processing the result of IM *)
+		(* Run the worker algorithm *)
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		method run : unit -> Result.imitator_result
 

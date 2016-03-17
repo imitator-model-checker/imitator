@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/03/10
- * Last modified     : 2016/03/16
+ * Last modified     : 2016/03/17
  *
  ************************************************************)
 
@@ -45,7 +45,7 @@ class virtual algoBCCoverDistributedMSPointBasedMaster :
 
 		
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-		(* Processing the result of IM *)
+		(* Run the master algorithm *)
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		method run : unit -> Result.imitator_result
 
