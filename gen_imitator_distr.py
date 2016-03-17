@@ -11,7 +11,7 @@
 # Universite Paris 13, Sorbonne Paris Cite, France
 #
 # Created      : 2014/08/18
-# Last modified: 2015/07/22
+# Last modified: 2016/03/17
 #************************************************************
 
 
@@ -39,6 +39,8 @@ pattern_end = '(* ** *** **** ***** ******    END FORK PaTATOR    ****** ***** *
 #************************************************************
 # GO
 #************************************************************
+print "\nGenerating file '" + output_file_path + "'..."
+
 # Open file
 old_file = open(input_file_path)
 
@@ -67,7 +69,7 @@ for line in old_file:
 
 # Check if pattern was found
 if not found_begin_pattern:
-	print 'Begin pattern not found in ' + input_file_path + '! Aborting.'
+	print "Begin pattern not found in '" + input_file_path + "'! Aborting."
 	exit(1)
 
 #************************************************************
