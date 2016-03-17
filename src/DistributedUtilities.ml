@@ -40,7 +40,7 @@ type pull_request =
 	| Tile of rank * Result.abstract_im_result
 	| OutOfBound of rank
 	(* Subpart tags *)
-	| Tiles of rank * (Result.abstract_im_result list) (** NEW TAG **)
+	| Tiles of rank * (Result.abstract_im_result list)
 	| Pi0 of rank * PVal.pval
 	| UpdateRequest of rank
 
@@ -122,7 +122,7 @@ let serialize_SEP_LIST = ";"
 let serialize_SEP_STRUCT = "|"
 
 (* Separator between the elements of a list of im_results (need to be different from serialize_SEP_LIST because im_result contains itself some serialize_SEP_LIST *)
-(*** WARNING: when using some symboles (e.g., "£" or two symboles like ";;") it does NOT work, and creates a list with alternating elements and empty string ***)
+(*** WARNING: when using some symbols (e.g., "£" or two symboles like ";;") it does NOT work, and creates a list with alternating elements and empty string ***)
 let serialize_SEP_LIST_IMRESULT = "#"
 
 
@@ -426,20 +426,15 @@ let unserialize_abstract_im_result abstract_im_result_string =
 	}
 
 
-(*(** Serialize a list of im_result *)
-let serialize_im_result_list im_result_list =
-	String.concat serialize_SEP_LIST_IMRESULT (List.map serialize_im_result im_result_list)*)
+(** Serialize a list of abstract_im_result *)
+let serialize_abstract_im_result_list abstract_im_result_list =
+	String.concat serialize_SEP_LIST_IMRESULT (List.map serialize_abstract_im_result abstract_im_result_list)
 
 
-(*(** Convert a list of serialized im_result into a serialized list of im_result (ad-hoc function to save time in subparts handling) *)
-let serialized_imresultlist_of_serializedimresult_list =
-	String.concat serialize_SEP_LIST_IMRESULT*)
-
-
-(*(** Unserialize a list of im_result *)
-let unserialize_im_result_list im_result_list_string =
+(** Unserialize a list of im_result *)
+let unserialize_abstract_im_result_list abstract_im_result_list_string =
 	(* Retrieve the list of im_result *)
-	let split_list = split serialize_SEP_LIST_IMRESULT im_result_list_string in
+	let split_list = split serialize_SEP_LIST_IMRESULT abstract_im_result_list_string in
 	
 (*	(* DEBUG *)
 	print_string "\n**********";
@@ -451,7 +446,7 @@ let unserialize_im_result_list im_result_list_string =
 	) split_list;
 	print_string "\n**********";*)
 	
-	List.map unserialize_im_result split_list*)
+	List.map unserialize_abstract_im_result split_list
 
 (*
 ;;
@@ -684,19 +679,67 @@ let is_coordinator () =
 
 
 
+(** Generic function to send something *)
+let send_serialized_data recipient tag serialized_data =
+	(* For information purpose *)
+	let rank = get_rank() in
+
+	print_message Verbose_medium ("[Node " ^ (string_of_int rank) ^ "] Entering send_serialized_data");
+	let data_size = String.length serialized_data in
+
+	if verbose_mode_greater Verbose_high then(
+		print_message Verbose_medium ("[Node " ^ (string_of_int rank) ^ "] Serialized abstract_im_result '" ^ serialized_data ^ "'");
+	);
+	
+	(* Send the result: 1st send the data size, then the data *)
+	print_message Verbose_medium ("[Node " ^ (string_of_int rank) ^ "] About to send the size (" ^ (string_of_int data_size) ^ ") of the data.");
+	Mpi.send data_size recipient tag Mpi.comm_world;
+	Mpi.send serialized_data recipient tag Mpi.comm_world
+
+
+let send_abstract_im_result abstract_im_result =
+	(* For information purpose *)
+	let rank = get_rank() in
+
+	let serialized_data = serialize_abstract_im_result abstract_im_result in
+	
+	print_message Verbose_medium ("[Worker " ^ (string_of_int rank) ^ "] Serialized abstract_im_result '" ^ serialized_data ^ "'");
+	
+	(* Call generic function *)
+	send_serialized_data master_rank (int_of_slave_tag Slave_tile_tag) serialized_data
+
+
+let send_abstract_im_result_list abstract_im_result_list =
+	(* For information purpose *)
+	let rank = get_rank() in
+
+	let serialized_data = serialize_abstract_im_result_list abstract_im_result_list in
+	
+	print_message Verbose_medium ("[Worker " ^ (string_of_int rank) ^ "] Serialized abstract_im_result_list '" ^ serialized_data ^ "'");
+	
+	(* Call generic function *)
+	send_serialized_data master_rank (int_of_slave_tag Slave_tiles_tag) serialized_data
+
+
+(* Sends a point (first the size then the point), by the master *)
+let send_pi0 (pi0 : PVal.pval) slave_rank =
+	let serialized_data = serialize_pi0 pi0 in
+	
+	print_message Verbose_medium ("[Master] Serialized pi0 '" ^ serialized_data ^ "'");
+	
+	(* Call generic function *)
+	send_serialized_data slave_rank (int_of_master_tag Master_data_tag) serialized_data
+
+(*	let mpi0 = serialize_pi0 pi0 in
+	let res_size = String.length mpi0 in
+	
+	(* Send the result: 1st send the data size, then the data *)
+	Mpi.send res_size slave_rank (int_of_master_tag Master_data_tag) Mpi.comm_world;
+	Mpi.send mpi0 slave_rank (int_of_master_tag Master_data_tag) Mpi.comm_world*)
 
 
 
-
-
-
-
-(*** TODO  / BADPROG: we must factor all these functions ***)
-
-
-(*** WARNING / BADPROG : these 3 functions seem to be almost identical !! ***)
-(*** TODO: factorize! ***)
-(* Sends a result (first the size then the constraint), by the slave *)
+(*(* Sends a result (first the size then the constraint), by the slave *)
 let send_abstract_im_result abstract_im_result =
 	let rank = get_rank() in
 
@@ -711,7 +754,7 @@ let send_abstract_im_result abstract_im_result =
 	(* Send the result: 1st send the data size, then the data *)
 	print_message Verbose_medium ("[Worker " ^ (string_of_int rank) ^ "] About to send the size (" ^ (string_of_int res_size) ^ ") of the abstract_im_result.");
 	Mpi.send res_size master_rank (int_of_slave_tag Slave_tile_tag) Mpi.comm_world;
-	Mpi.send mlc master_rank (int_of_slave_tag Slave_tile_tag) Mpi.comm_world
+	Mpi.send mlc master_rank (int_of_slave_tag Slave_tile_tag) Mpi.comm_world*)
 
 (* 
 (** Sends a list of tiles from the worker to the master *)
@@ -752,15 +795,6 @@ let send_tileupdate im_result slave_rank =
 	Mpi.send res_size slave_rank (int_of_master_tag Master_tileupdate_tag) Mpi.comm_world;
 	Mpi.send mlc slave_rank (int_of_master_tag Master_tileupdate_tag) Mpi.comm_world
 	*)
-
-(* Sends a point (first the size then the point), by the master *)
-let send_pi0 (pi0 : PVal.pval) slave_rank =
-	let mpi0 = serialize_pi0 pi0 in
-	let res_size = String.length mpi0 in
-	
-	(* Send the result: 1st send the data size, then the data *)
-	Mpi.send res_size slave_rank (int_of_master_tag Master_data_tag) Mpi.comm_world;
-	Mpi.send mpi0 slave_rank (int_of_master_tag Master_data_tag) Mpi.comm_world
 
 
 (*(* Sends a point (first the size then the point), by the slave *)

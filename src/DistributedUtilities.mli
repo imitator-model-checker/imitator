@@ -25,7 +25,7 @@ type pull_request =
 	| Tile of rank * Result.abstract_im_result
 	| OutOfBound of rank
 	(* Subpart tags *)
-	| Tiles of rank * (Result.abstract_im_result list) (** NEW TAG **)
+	| Tiles of rank * (Result.abstract_im_result list)
 	| Pi0 of rank * PVal.pval
 	| UpdateRequest of rank
 
@@ -63,11 +63,10 @@ val is_coordinator : unit -> bool
 
 val send_abstract_im_result : Result.abstract_im_result -> unit
 
+val send_abstract_im_result_list : Result.abstract_im_result list -> unit
+
 (** Master sends a tile update to a worker *)
 (* val send_tileupdate : Result.abstract_im_result -> rank -> unit *)
-
-(** Sends a list of tiles from the worker to the master *)
-(* val send_tiles : Result.abstract_im_result list -> unit *)
 
 val send_pi0 : PVal.pval -> rank -> unit
 
@@ -75,9 +74,9 @@ val send_pi0 : PVal.pval -> rank -> unit
 
 val send_work_request : unit -> unit
 
-val send_update_request : unit -> unit
+(*val send_update_request : unit -> unit
 
-val send_subpart : HyperRectangle.hyper_rectangle -> rank -> unit
+val send_subpart : HyperRectangle.hyper_rectangle -> rank -> unit*)
 
 val send_stop : rank -> unit
 

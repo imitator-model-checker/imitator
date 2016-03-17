@@ -30,7 +30,6 @@ open Options
 
 
 (**************************************************
-
 TAGS USED THROUGHOUT THIS PROJECT
 - (*** BADPROG ***)
 - (*** NOTE ***)
@@ -39,6 +38,7 @@ TAGS USED THROUGHOUT THIS PROJECT
 - (*** TODO ***)
 - (*** WARNING ***)
 **************************************************)
+
 
 ;;
 
@@ -415,7 +415,36 @@ let algorithm : AlgoGeneric.algoGeneric = match options#imitator_mode with
 				bc_algo#set_algo_instance_function new_im_or_prp;
 				let myalgo :> AlgoGeneric.algoGeneric = bc_algo in
 				myalgo
+		
+		(** Distributed mode: Master worker with subdomain distribution *)
+		| Distributed_ms_subpart ->
+			(* Branch between master and worker *)
+			if DistributedUtilities.is_master() then
+				let bc_algo = new AlgoBCCoverDistributedSubdomainDynamicCoordinator.algoBCCoverDistributedSubdomainDynamicCoordinator in
+				(*** NOTE: very important: must set NOW the parameters ***)
+				bc_algo#set_algo_instance_function new_im_or_prp;
+				let myalgo :> AlgoGeneric.algoGeneric = bc_algo in
+				myalgo
+			else
+				raise (InternalError("not implemented"))
 
+		(** Distributed mode: static distribution mode (each node has its own subdomain with no communication) *)
+		| Distributed_static ->
+			(* Branch between collaborator and coordinator *)
+			if DistributedUtilities.is_coordinator() then
+				let bc_algo = new AlgoBCCoverDistributedSubdomainStaticCoordinator.algoBCCoverDistributedSubdomainStaticCoordinator in
+				(*** NOTE: very important: must set NOW the parameters ***)
+				bc_algo#set_algo_instance_function new_im_or_prp;
+				let myalgo :> AlgoGeneric.algoGeneric = bc_algo in
+				myalgo
+			else
+				let bc_algo = new AlgoBCCoverDistributedSubdomainStaticCollaborator.algoBCCoverDistributedSubdomainStaticCollaborator in
+				(*** NOTE: very important: must set NOW the parameters ***)
+				bc_algo#set_algo_instance_function new_im_or_prp;
+				let myalgo :> AlgoGeneric.algoGeneric = bc_algo in
+				myalgo
+
+				
 		| _ -> raise (InternalError("Other distribution modes not yet implemented"))
 		
 		in algo
