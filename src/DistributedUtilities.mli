@@ -8,7 +8,7 @@
  * Author:        Etienne Andre, Camille Coti
  * 
  * Created:       2014/03/24
- * Last modified: 2016/02/03
+ * Last modified: 2016/03/17
  *
  ****************************************************************)
 
@@ -43,20 +43,18 @@ type work_assignment =
 
 
 (****************************************************************)
-(** Constants *)
-(****************************************************************)
-
-(** Who is the master? *)
-val masterrank : rank
-
-
-(****************************************************************)
 (** Access functions *)
 (****************************************************************)
 
 
 val get_nb_nodes : unit -> int
 val get_rank : unit -> rank
+
+(* Check if a node is the master (for master-worker scheme) *)
+val is_master : unit -> bool
+
+(* Check if a node is the coordinator (for collaborator-based scheme) *)
+val is_coordinator : unit -> bool
 
 
 (****************************************************************)
@@ -96,20 +94,3 @@ val receive_pull_request : unit -> pull_request
 
 val receive_work : unit -> work_assignment
 
-
-(****************************************************************)
-(** Serialization functions *)
-(****************************************************************)
-
-(* val serialize_pi0 : PVal.pval -> string *)
-
-(* val unserialize_pi0 : string -> PVal.pval *)
-
-(* val serialize_im_result : Result.abstract_im_result -> string *)
-
-(* val unserialize_im_result : string -> Result.abstract_im_result *)
-
-(* val unserialize_im_result_list : string -> Result.abstract_im_result list *)
-
-(** Convert a list of serialized im_result into a serialized list of im_result (ad-hoc function to save time in subparts handling) *)
-(* val serialized_imresultlist_of_serializedimresult_list : string list -> string *)

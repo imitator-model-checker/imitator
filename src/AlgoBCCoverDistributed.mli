@@ -17,7 +17,6 @@
 (* Modules *)
 (************************************************************)
 open AlgoGeneric
-(* open AlgoCartoMaster *)
 
 
 (************************************************************)
@@ -26,7 +25,6 @@ open AlgoGeneric
 class virtual algoBCCoverDistributed :
 	object
 	inherit algoGeneric
-(* 	inherit algoMaster *)
 		(************************************************************)
 		(* Class variables *)
 		(************************************************************)

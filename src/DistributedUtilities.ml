@@ -8,7 +8,7 @@
  * Author:        Etienne Andre, Camille Coti
  * 
  * Created:       2014/03/24
- * Last modified: 2016/03/10
+ * Last modified: 2016/03/17
  *
  ****************************************************************)
 
@@ -84,22 +84,17 @@ type mpi_master_tag =
 	| Master_terminate_tag
 	| Master_continue_tag
 
-(*	let data_tag = 1        (* used when we are sending input data           *)
-let finished_tag = 2    (* used to mean that work is done                *)
-let result_tag = 3      (* used when we are sending computation results  *)
-let work_tag = 4        (* used to ask for some work                     *)
-let outofbound_tag = 5  (* used by slave if out of time or depth         *)*)
-
-
 
 
 
 (****************************************************************)
 (** Constants *)
 (****************************************************************)
-(* Who is the master? *)
-let masterrank = 0
+(* Who is the master? (in a master-worker algorithm) *)
+let master_rank = 0
 
+(* Who is the coordinator? (in a collaborator-based algorithm) *)
+let coordinator_rank = 0
 
 
 (****************************************************************)
@@ -657,22 +652,24 @@ let master_tag_of_int = function
 	| other -> raise (InternalError ("Impossible match '" ^ (string_of_int other) ^ "' in master_tag_of_int."))
 
 
+
+
+(****************************************************************)
+(** Public access functions *)
+(****************************************************************)
+
 let get_nb_nodes () = Mpi.comm_size Mpi.comm_world
 let get_rank () = Mpi.comm_rank Mpi.comm_world
 
 
-(*
-***NOTE : doesn't work with the constraints***
-let serialize( data ) =
-	(*** WARNING: mis "No_sharing" completement au pif ***)
-	Marshal.to_string data [(*No_sharing; *)Closures]
+(* Check if a node is the master (for master-worker scheme) *)
+let is_master () =
+	get_rank () = master_rank
 
+(* Check if a node is the coordinator (for collaborator-based scheme) *)
+let is_coordinator () =
+	get_rank () = coordinator_rank
 
-let unserialize( str ) =
-	Marshal.from_string str 0*)
-
-
-let message_MAX_SIZE = 100
 
 
 
@@ -713,8 +710,8 @@ let send_abstract_im_result abstract_im_result =
 	
 	(* Send the result: 1st send the data size, then the data *)
 	print_message Verbose_medium ("[Worker " ^ (string_of_int rank) ^ "] About to send the size (" ^ (string_of_int res_size) ^ ") of the abstract_im_result.");
-	Mpi.send res_size masterrank (int_of_slave_tag Slave_tile_tag) Mpi.comm_world;
-	Mpi.send mlc masterrank (int_of_slave_tag Slave_tile_tag) Mpi.comm_world
+	Mpi.send res_size master_rank (int_of_slave_tag Slave_tile_tag) Mpi.comm_world;
+	Mpi.send mlc master_rank (int_of_slave_tag Slave_tile_tag) Mpi.comm_world
 
 (* 
 (** Sends a list of tiles from the worker to the master *)
@@ -733,10 +730,10 @@ let send_tiles im_result_list =
 	print_message Verbose_medium ("[Worker " ^ (string_of_int rank) ^ "] About to send the size (" ^ (string_of_int res_size) ^ ") of the constraint.");
 
 	print_message Verbose_high ("[Worker " ^ (string_of_int rank) ^ "] Sending size");
-	Mpi.send res_size masterrank (int_of_slave_tag Slave_tiles_tag) Mpi.comm_world;
+	Mpi.send res_size master_rank (int_of_slave_tag Slave_tiles_tag) Mpi.comm_world;
 	
 	print_message Verbose_high ("[Worker " ^ (string_of_int rank) ^ "] Sending tiles");
-	Mpi.send mlc masterrank (int_of_slave_tag Slave_tiles_tag) Mpi.comm_world*)
+	Mpi.send mlc master_rank (int_of_slave_tag Slave_tiles_tag) Mpi.comm_world*)
 
 	
 
@@ -776,14 +773,14 @@ let send_pi0_worker pi0  =
 	print_message Verbose_medium ("[Worker " ^ (string_of_int rank) ^ "] Size of pi0: " ^ (string_of_int res_size ) );
 
         (* Send the result: 1st send the data size, then the data *)
-	Mpi.send res_size masterrank (int_of_slave_tag Slave_pi0_tag) Mpi.comm_world;
-	Mpi.send mpi0 masterrank (int_of_slave_tag Slave_pi0_tag) Mpi.comm_world*)
+	Mpi.send res_size master_rank (int_of_slave_tag Slave_pi0_tag) Mpi.comm_world;
+	Mpi.send mpi0 master_rank (int_of_slave_tag Slave_pi0_tag) Mpi.comm_world*)
 
 let send_work_request () =
-	Mpi.send (get_rank()) masterrank (int_of_slave_tag Slave_work_tag) Mpi.comm_world
+	Mpi.send (get_rank()) master_rank (int_of_slave_tag Slave_work_tag) Mpi.comm_world
 	
 let send_update_request () =
-	Mpi.send (get_rank()) masterrank (int_of_slave_tag Slave_updaterequest_tag) Mpi.comm_world
+	Mpi.send (get_rank()) master_rank (int_of_slave_tag Slave_updaterequest_tag) Mpi.comm_world
 	
 	
 (*Hoang Gia send subpart by the Master*)
@@ -903,7 +900,7 @@ let receive_work () =
 (* 	let model = Input.get_model() in *)
 
 	let ( w, _, tag ) =
-	Mpi.receive_status masterrank Mpi.any_tag Mpi.comm_world in
+	Mpi.receive_status master_rank Mpi.any_tag Mpi.comm_world in
 
 	let tag = master_tag_of_int tag in
 
@@ -913,7 +910,7 @@ let receive_work () =
 		let buff = String.create w in
 		let work = ref buff in
 
-		work := Mpi.receive masterrank (int_of_master_tag Master_data_tag) Mpi.comm_world;
+		work := Mpi.receive master_rank (int_of_master_tag Master_data_tag) Mpi.comm_world;
 		
 		print_message Verbose_high ("Received " ^ (string_of_int w) ^ " bytes of work '" ^ !work ^ "' with tag " ^ (string_of_int (int_of_master_tag Master_data_tag)));
 		
@@ -938,7 +935,7 @@ let receive_work () =
 		let buff1 = String.create w in
 		let work1 = ref buff1 in
 
-		work1 := Mpi.receive masterrank (int_of_master_tag Master_tileupdate_tag) Mpi.comm_world;
+		work1 := Mpi.receive master_rank (int_of_master_tag Master_tileupdate_tag) Mpi.comm_world;
 		
 		print_message Verbose_high ("Received " ^ (string_of_int w) ^ " bytes of work '" ^ !work1 ^ "' with tag " ^ (string_of_int (int_of_master_tag Master_tileupdate_tag)));
 		
@@ -951,7 +948,7 @@ let receive_work () =
 		let buff2 = String.create w in
 		let work2 = ref buff2 in
 
-		work2 := Mpi.receive masterrank (int_of_master_tag Master_subpart_tag) Mpi.comm_world;
+		work2 := Mpi.receive master_rank (int_of_master_tag Master_subpart_tag) Mpi.comm_world;
 		
 		print_message Verbose_high ("Received " ^ (string_of_int w) ^ " bytes of work '" ^ !work2 ^ "' with tag " ^ (string_of_int (int_of_master_tag Master_subpart_tag)));
 		

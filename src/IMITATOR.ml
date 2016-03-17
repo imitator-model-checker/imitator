@@ -369,7 +369,7 @@ let algorithm : AlgoGeneric.algoGeneric = match options#imitator_mode with
 		(** Distributed mode: Master worker with sequential pi0 *)
 		| Distributed_ms_sequential ->
 			(* Branch between master and worker *)
-			if DistributedUtilities.get_rank() = DistributedUtilities.masterrank then
+			if DistributedUtilities.is_master() then
 				let bc_algo = new AlgoBCCoverDistributedMSSeqMaster.algoBCCoverDistributedMSSeqMaster in
 				(*** NOTE: very important: must set NOW the parameters ***)
 				bc_algo#set_algo_instance_function new_im_or_prp;
@@ -385,7 +385,7 @@ let algorithm : AlgoGeneric.algoGeneric = match options#imitator_mode with
 		(** Distributed mode: Master worker with sequential pi0 shuffled *)
 		| Distributed_ms_shuffle ->
 			(* Branch between master and worker *)
-			if DistributedUtilities.get_rank() = DistributedUtilities.masterrank then
+			if DistributedUtilities.is_master() then
 				let bc_algo = new AlgoBCCoverDistributedMSShuffleMaster.algoBCCoverDistributedMSShuffleMaster in
 				(*** NOTE: very important: must set NOW the parameters ***)
 				bc_algo#set_algo_instance_function new_im_or_prp;
@@ -401,7 +401,7 @@ let algorithm : AlgoGeneric.algoGeneric = match options#imitator_mode with
 		(** Distributed mode: Master worker with random pi0 and n retries before switching to sequential mode *)
 		| Distributed_ms_random nb_tries ->
 			(* Branch between master and worker *)
-			if DistributedUtilities.get_rank() = DistributedUtilities.masterrank then
+			if DistributedUtilities.is_master() then
 				let bc_algo = new AlgoBCCoverDistributedMSRandomSeqMaster.algoBCCoverDistributedMSRandomSeqMaster in
 				(*** NOTE: very important: must set NOW the parameters ***)
 				bc_algo#set_max_tries nb_tries;
