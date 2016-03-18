@@ -1,0 +1,86 @@
+(************************************************************
+ *                      IMITATOR MODEL                      
+ *
+ * Toy example to test BC
+ *
+ * Description     : Example for which each square of size 1x1 has its own behavior, and hence yields a different tile in BC
+ * Correctness     : N/A
+ * Source          : Own work
+ * Author          : Étienne André
+ * Modeling        : Étienne André
+ * Input by        : Étienne André
+ * License         : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+
+ *
+ * Created         : 2016/03/18
+ * Last modified   : 2016/03/18
+ *
+ * IMITATOR version: 2.7.4-working
+ ************************************************************)
+
+var
+
+(* Clocks *)
+ 	x, y
+		: clock;
+
+(* Parameters *)
+	p1, p2
+		: parameter;
+
+
+
+(************************************************************)
+  automaton pta
+(************************************************************)
+synclabs: a, b;
+
+loc l1: while y <= p1 wait {}
+	when x = 1 sync a do {x' = 0} goto l1;
+	when p1-1 < y && y <= p1 & x = 0 sync b do {y' = 0} goto l2;
+
+loc l2: while y <= p2 wait {}
+	when x = 1 sync a do {x' = 0} goto l2;
+	when p2-1 < y && y <= p2 & x = 0 sync b goto l3;
+
+loc l3: while True wait {}
+
+end (* pta *)
+
+
+
+(************************************************************)
+(* Initial state *)
+(************************************************************)
+
+init :=
+	(*------------------------------------------------------------*)
+	(* Initial location *)
+	(*------------------------------------------------------------*)
+	& loc[pta] = l1
+
+	(*------------------------------------------------------------*)
+	(* Initial clock constraints *)
+	(*------------------------------------------------------------*)
+	& x = 0
+	& y = 0
+
+	(*------------------------------------------------------------*)
+	(* Parameter constraints *)
+	(*------------------------------------------------------------*)
+	& p1 >= 0
+	& p2 >= 0
+;
+
+
+(************************************************************)
+(* Property specification *)
+(************************************************************)
+
+(* property := unreachable loc[pta] = l1; *)
+
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end
