@@ -228,7 +228,10 @@ class virtual algoBCCoverDistributedSubdomain =
 		
 		(*** NOTE: code originally from DistributedMasterSlaveSubdomains.ml, written by Hoang Gia Nguyen (2014) ***)
 		let subdomains = ref [v0] in
-		for l = 0 to nb_collaborators - 1 do 
+		
+		(*** WARNING: I am totally incapable of understanding why "-2" below (ÉA, 2016/03/18) ***)
+		(*** NOTE: there was indeeed a "-1" in the function argument of Hoang Gia's code before moving it to here, which is equivalent to the following "-2" ***) 
+		for l = 0 to nb_collaborators - 2 do 
 		begin
 		
 	(* Find the largest subdomain to split *)

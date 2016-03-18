@@ -71,10 +71,20 @@ class virtual algoBCCoverDistributedSubdomainStatic =
 	method private compute_own_subdomain =
 
 		(* Compute all subdomains *)
-		(*** WARNING: there used to be a "-1" in the code before ***)
 		let subdomains = self#compute_initial_subdomains in
 		
-		self#print_algo_message Verbose_low ("I computed " ^ (string_of_int (List.length subdomains)) ^ " subdomain" ^ (s_of_int (List.length subdomains)) ^ ".");
+		(* Print some information *)
+		if verbose_mode_greater Verbose_low then(
+			(* Retrive the model *)
+			let model = Input.get_model() in
+			
+			self#print_algo_message Verbose_low ("I computed the following " ^ (string_of_int (List.length subdomains)) ^ " subdomain" ^ (s_of_int (List.length subdomains)) ^ ".");
+			
+			List.iteri (fun i subdomain ->
+				print_message Verbose_low("Subdomain #" ^ (string_of_int (i+1)) ^ ":\n" ^ (ModelPrinter.string_of_v0 model subdomain));
+			) subdomains;
+		);
+
 		
 		(* Select subdomain # rank *)
 		let subdomain =
@@ -116,6 +126,11 @@ class virtual algoBCCoverDistributedSubdomainStatic =
 		(* Compute subdomain for this collaborator only *)
 		let subdomain = self#compute_own_subdomain in
 
+		(* Print some information *)
+		if verbose_mode_greater Verbose_low then(
+			self#print_algo_message Verbose_low("Own static subdomain: " ^ (ModelPrinter.string_of_v0 (Input.get_model()) subdomain));
+		);
+		
 		(* Assign subdomain *)
 		Input.set_v0 subdomain;
 		
