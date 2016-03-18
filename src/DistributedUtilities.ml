@@ -8,7 +8,7 @@
  * Author:        Etienne Andre, Camille Coti
  * 
  * Created:       2014/03/24
- * Last modified: 2016/03/17
+ * Last modified: 2016/03/18
  *
  ****************************************************************)
 
@@ -40,7 +40,8 @@ type pull_request =
 	| Tile of rank * Result.abstract_im_result
 	| OutOfBound of rank
 	(* Subpart tags *)
-	| Tiles of rank * (Result.abstract_im_result list)
+(* 	| Tiles of rank * (Result.abstract_im_result list) *)
+(* 	| BC_result of rank * bc_result *)
 	| Pi0 of rank * PVal.pval
 	| UpdateRequest of rank
 
@@ -70,6 +71,7 @@ type mpi_slave_tag =
 	| Slave_outofbound_tag (* out of bounded workers exception *)
 	(* Subpart tags *)
 	| Slave_tiles_tag (** NEW TAG **)
+	| Slave_bcresult_tag
 	| Slave_pi0_tag
 	| Slave_updaterequest_tag
 
@@ -124,6 +126,9 @@ let serialize_SEP_STRUCT = "|"
 (* Separator between the elements of a list of im_results (need to be different from serialize_SEP_LIST because im_result contains itself some serialize_SEP_LIST *)
 (*** WARNING: when using some symbols (e.g., "£" or two symboles like ";;") it does NOT work, and creates a list with alternating elements and empty string ***)
 let serialize_SEP_LIST_IMRESULT = "#"
+
+(* Separator between the elements of a structure containing itself structures *)
+let serialize_SEP_SUPER_STRUCT = "@"
 
 
 (*------------------------------------------------------------*)
@@ -234,7 +239,7 @@ let unserialize_hyper_rectangle hyper_rectangle_string =
 
 
 (*------------------------------------------------------------*)
-(* Result of IMITATOR *)
+(* BFS result *)
 (*------------------------------------------------------------*)
 
 let serialize_statespace_nature = function
@@ -291,7 +296,6 @@ let serialize_constraint_soundness = function
 	(* Impossible to compare the constraint with the original result *)
 	| Result.Constraint_maybe_invalid -> "I"
 
-(*** TODO ***)
 let unserialize_constraint_soundness = function
 	| "U" -> Result.Constraint_maybe_under
 	| "E" -> Result.Constraint_exact
@@ -426,6 +430,45 @@ let unserialize_abstract_im_result abstract_im_result_string =
 	}
 
 
+(*------------------------------------------------------------*)
+(* Cartography result *)
+(*------------------------------------------------------------*)
+
+(* Termination for cartography algorithms *)
+let serialize_bc_termination = function
+	(* Fixpoint-like termination *)
+	| BC_Regular_termination -> "R"
+	(* Termination due to a maximum number of tiles computed *)
+	| BC_Tiles_limit -> "L"
+	(* Termination due to time limit reached *)
+	| BC_Time_limit -> "T"
+	(* Termination due to several limits (only possible in distributed setting) *)
+	| BC_Mixed_limit -> "M"
+
+
+let unserialize_bc_termination  = function
+	| "R" -> BC_Regular_termination
+	| "L" -> BC_Tiles_limit
+	| "T" -> BC_Time_limit
+	| "M" -> BC_Mixed_limit
+	| other -> raise (InternalError ("Impossible match '" ^ other ^ "' in unserialize_bc_termination."))
+
+(* Termination for cartography algorithms *)
+let serialize_bc_coverage = function
+	(* Full coverage in all dimensions, including rational points *)
+	| Coverage_full -> "F"
+	(* At least all integers are covered, rationals perhaps not *)
+	| Coverage_integer_complete -> "I"
+	(* No indication of coverage *)
+	| Coverage_unknown -> "U"
+
+let unserialize_bc_coverage = function
+	| "F" -> Coverage_full
+	| "I" -> Coverage_integer_complete
+	| "U" -> Coverage_unknown
+	| other -> raise (InternalError ("Impossible match '" ^ other ^ "' in unserialize_bc_coverage."))
+
+	
 (** Serialize a list of abstract_im_result *)
 let serialize_abstract_im_result_list abstract_im_result_list =
 	String.concat serialize_SEP_LIST_IMRESULT (List.map serialize_abstract_im_result abstract_im_result_list)
@@ -447,6 +490,67 @@ let unserialize_abstract_im_result_list abstract_im_result_list_string =
 	print_string "\n**********";*)
 	
 	List.map unserialize_abstract_im_result split_list
+
+
+
+
+let serialize_bc_result bc_result =
+	(* Number of points in V0 *)
+	(serialize_numconst bc_result.size_v0)
+	^
+	serialize_SEP_SUPER_STRUCT
+	^
+	(* List of tiles *)
+	(serialize_abstract_im_result_list bc_result.tiles)
+	^
+	serialize_SEP_SUPER_STRUCT
+	^
+	(* Total computation time of the algorithm *)
+	(string_of_float bc_result.computation_time)
+	^
+	serialize_SEP_SUPER_STRUCT
+	^
+	(* Computation time to look for points *)
+	(string_of_float bc_result.find_point_time)
+	^
+	serialize_SEP_SUPER_STRUCT
+	^
+	(* Number of points on which IM could not be called because already covered *)
+	(string_of_int bc_result.nb_unsuccessful_points)
+	^
+	serialize_SEP_SUPER_STRUCT
+	^
+	(* Evaluation of the coverage of V0 by tiles computed by the cartography *)
+	(serialize_bc_coverage bc_result.coverage)
+	^
+	serialize_SEP_SUPER_STRUCT
+	^
+	(* Termination *)
+	(serialize_bc_termination bc_result.termination)
+
+
+let unserialize_bc_result bc_result_string =
+	print_message Verbose_medium ("[Coordinator] About to unserialize '" ^ bc_result_string ^ "'");
+	let size_v0_str, tiles_str, computation_time_str, find_point_time_str, nb_unsuccessful_points_str , coverage_str, termination_str =
+	match split serialize_SEP_SUPER_STRUCT bc_result_string with
+		| [size_v0_str; tiles_str; computation_time_str; find_point_time_str; nb_unsuccessful_points_str ; coverage_str; termination_str ]
+			-> size_v0_str, tiles_str, computation_time_str, find_point_time_str, nb_unsuccessful_points_str , coverage_str, termination_str
+		| _ -> raise (SerializationError ("Cannot unserialize im_result '" ^ bc_result_string ^ "'."))
+	in
+	{
+		size_v0 				= NumConst.numconst_of_string size_v0_str;
+		tiles 					= unserialize_abstract_im_result_list tiles_str;
+		computation_time		= float_of_string computation_time_str;
+		find_point_time 		= float_of_string find_point_time_str;
+		nb_unsuccessful_points	= int_of_string nb_unsuccessful_points_str;
+		coverage				= unserialize_bc_coverage coverage_str;
+		termination				= unserialize_bc_termination termination_str;
+	}
+
+
+(*------------------------------------------------------------*)
+(* Old tests *)
+(*------------------------------------------------------------*)
 
 (*
 ;;
@@ -606,11 +710,12 @@ let int_of_slave_tag = function
 	| Slave_work_tag -> 2
 	| Slave_outofbound_tag -> 3
 	(* Subpart tags *)
-	| Slave_tiles_tag -> 4 (** NEW TAG **)
-	| Slave_pi0_tag -> 5
-	| Slave_updaterequest_tag -> 6
+	| Slave_tiles_tag -> 4
+	| Slave_bcresult_tag -> 5
+	| Slave_pi0_tag -> 6
+	| Slave_updaterequest_tag -> 7
 	(*** NOTE: unused match case (but safer!) ***)
-	| _ -> raise (InternalError ("Impossible match in int_of_slave_tag."))
+(* 	| _ -> raise (InternalError ("Impossible match in int_of_slave_tag.")) *)
 
 
 let int_of_master_tag = function
@@ -622,19 +727,19 @@ let int_of_master_tag = function
 	| Master_terminate_tag -> 21
 	| Master_continue_tag -> 22
 	(*** NOTE: unused match case (but safer!) ***)
-	| _ -> raise (InternalError ("Impossible match in int_of_master_tag."))
+(* 	| _ -> raise (InternalError ("Impossible match in int_of_master_tag.")) *)
 	
 
-let slave_tag_of_int = function
+let worker_tag_of_int = function
 	| 1 -> Slave_tile_tag
 	| 2 -> Slave_work_tag
 	| 3 -> Slave_outofbound_tag
 	(* Subpart tags *)
-	(*Hoang Gia new tags*)
 	| 4 -> Slave_tiles_tag
-	| 5 -> Slave_pi0_tag
-	| 6 -> Slave_updaterequest_tag
-	| other -> raise (InternalError ("Impossible match '" ^ (string_of_int other) ^ "' in slave_tag_of_int."))
+	| 5 -> Slave_bcresult_tag
+	| 6 -> Slave_pi0_tag
+	| 7 -> Slave_updaterequest_tag
+	| other -> raise (InternalError ("Impossible match '" ^ (string_of_int other) ^ "' in worker_tag_of_int."))
 
 let master_tag_of_int = function
 	| 17 -> Master_data_tag 
@@ -664,12 +769,6 @@ let is_master () =
 (* Check if a node is the coordinator (for collaborator-based scheme) *)
 let is_coordinator () =
 	get_rank () = coordinator_rank
-
-
-
-
-
-
 
 
 
@@ -709,7 +808,7 @@ let send_abstract_im_result abstract_im_result =
 	send_serialized_data master_rank (int_of_slave_tag Slave_tile_tag) serialized_data
 
 
-let send_abstract_im_result_list abstract_im_result_list =
+(*let send_abstract_im_result_list abstract_im_result_list =
 	(* For information purpose *)
 	let rank = get_rank() in
 
@@ -718,8 +817,20 @@ let send_abstract_im_result_list abstract_im_result_list =
 	print_message Verbose_medium ("[Worker " ^ (string_of_int rank) ^ "] Serialized abstract_im_result_list '" ^ serialized_data ^ "'");
 	
 	(* Call generic function *)
-	send_serialized_data master_rank (int_of_slave_tag Slave_tiles_tag) serialized_data
+	send_serialized_data master_rank (int_of_slave_tag Slave_tiles_tag) serialized_data*)
 
+
+let send_bc_result bc_result =
+	(* For information purpose *)
+	let rank = get_rank() in
+
+	let serialized_data = serialize_bc_result bc_result in
+	
+	print_message Verbose_medium ("[Worker " ^ (string_of_int rank) ^ "] Serialized serialize_bc_result '" ^ serialized_data ^ "'");
+	
+	(* Call generic function *)
+	send_serialized_data master_rank (int_of_slave_tag Slave_bcresult_tag) serialized_data
+	
 
 (* Sends a point (first the size then the point), by the master *)
 let send_pi0 (pi0 : PVal.pval) slave_rank =
@@ -838,7 +949,7 @@ let receive_pull_request () =
   print_message Verbose_medium ("\t[Master] MPI status received from [Worker " ^ ( string_of_int source_rank) ^"]");
   print_message Verbose_medium ("\t[Master] Tag decoded from [Worker " ^ ( string_of_int source_rank) ^"] : " ^ ( string_of_int tag ) );
 
-  let tag = slave_tag_of_int tag in  
+  let tag = worker_tag_of_int tag in  
 
   (* Is this a result or a simple pull ? *)
 (*** TODO: factorize a bit ***)
@@ -861,7 +972,7 @@ let receive_pull_request () =
      Tile (source_rank , abstract_im_result)
 		   
   | Slave_tiles_tag ->
-		raise (InternalError("Not implemented"))
+		raise (InternalError("Tag 'Slave_tiles_tag' not implemented in receive_pull_request"))
   (*
       print_message Verbose_medium ("[Master] Received Slave_tiles_tag from " ^ ( string_of_int source_rank) );
 
@@ -910,7 +1021,9 @@ let receive_pull_request () =
     (* Get the constraint *)
     let pi0 = (unserialize_pi0 !res) in
     Pi0 (source_rank , pi0)
-    
+
+	| Slave_bcresult_tag ->
+		raise (InternalError("Cannot receive a Slave_bcresult_tag at that point"))
 ;;
 
 
@@ -993,3 +1106,38 @@ let receive_work () =
 	| Master_terminate_tag -> Terminate
 	
 	| Master_continue_tag -> Continue
+
+
+(* Function used for collaborator - coordinator static distribution scheme *)
+let receive_bcresult () =
+	(* First receive the length of the data we are about to receive *)
+	let (l, source_rank, tag) = 
+		Mpi.receive_status Mpi.any_source Mpi.any_tag Mpi.comm_world
+	in
+
+	print_message Verbose_medium ("[Coordinator] MPI status received from Worker " ^ ( string_of_int source_rank) ^"");
+	print_message Verbose_medium ("[Coordinator] Tag decoded from Worker " ^ ( string_of_int source_rank) ^" : " ^ ( string_of_int tag ) );
+
+	let tag = worker_tag_of_int tag in  
+
+	(*** TODO: factorize a bit ***)
+	match tag with
+	| Slave_bcresult_tag ->
+		print_message Verbose_medium ("[Coordinator] Received Slave_bcresult_tag from " ^ ( string_of_int source_rank) );
+
+		print_message Verbose_medium ("[Coordinator] Expecting a result of size " ^ ( string_of_int l) ^ " from [Worker " ^ (string_of_int source_rank) ^ "]" );
+
+		(* receive the result itself *)
+		let buff = String.create l in
+		let res = ref buff in
+		print_message Verbose_medium ("[Coordinator] Buffer created with length " ^ (string_of_int l)^"");	
+		res := Mpi.receive source_rank (int_of_slave_tag Slave_bcresult_tag) Mpi.comm_world ;
+		print_message Verbose_medium("[Coordinator] received buffer " ^ !res ^ " of size " ^ ( string_of_int l) ^ " from Worker "  ^ (string_of_int source_rank) ^ "");
+				
+		(* Get the bc_result *)
+		let bc_result = unserialize_bc_result !res in
+		
+		(* Return rank and result *)
+		source_rank , bc_result
+	
+	| _ -> raise (InternalError("Unexpected tag received in receive_bcresult"))

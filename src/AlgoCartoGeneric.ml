@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/01/19
- * Last modified     : 2016/03/17
+ * Last modified     : 2016/03/18
  *
  ************************************************************)
 
@@ -80,6 +80,7 @@ exception Stop_loop of more_points
 (* Class-independent functions *)
 (************************************************************)
 (************************************************************)
+
 
 (*------------------------------------------------------------*)
 (* Convert an 'im_result' into an 'abstract_im_result' *)
@@ -162,6 +163,7 @@ class virtual algoCartoGeneric =
 	val mutable nb_dimensions = 0
 	
 	(* Number of points in V0 (slightly approximated) *)
+	(*** NOTE: why slightly approximated? Because of step? ***)
 	val mutable nb_points = NumConst.zero
 	
 	(* Min & max bounds for the parameters *)
@@ -481,24 +483,7 @@ class virtual algoCartoGeneric =
 		(* Start counting from 1 *)
 		current_iteration <- 1;
 		
-		(* Compute the (actually slightly approximate) number of points in V0 (for information purpose) *)
-		nb_points <- NumConst.one;
-		for parameter_index = 0 to nb_dimensions - 1 do
-			nb_points <-
-			let low = v0#get_min parameter_index in
-			let high = v0#get_max parameter_index in
-			(* Multiply current number of points by the interval + 1, itself divided by the step *)
-			NumConst.mul
-				nb_points
-				(NumConst.div
-					(NumConst.add
-						(NumConst.sub high low)
-						NumConst.one
-					)
-					options#step
-				)
-			;
-		done;
+		nb_points <- v0#get_nb_points options#step;
 
 		(* Print some information *)
 		self#print_algo_message Verbose_medium ("Number of dimensions: " ^ (string_of_int nb_dimensions));
@@ -646,6 +631,11 @@ class virtual algoCartoGeneric =
 		(* Print some information *)
 		self#print_algo_message Verbose_standard ("Starting running cartography...\n"); (* " ^ self#algorithm_name ^ " *)
 		
+		(* Variable initialization *)
+		(*** NOTE: done before printing, since the number of points is needed just below ***)
+		self#print_algo_message Verbose_low ("Initializing the algorithm local variables...");
+		self#initialize_variables;
+
 		(* Print some information *)
 		print_message Verbose_standard ("\n**************************************************");
 		print_message Verbose_standard (" START THE BEHAVIORAL CARTOGRAPHY ALGORITHM");
@@ -653,10 +643,6 @@ class virtual algoCartoGeneric =
 		print_message Verbose_standard (" Parametric rectangle V0: ");
 		print_message Verbose_standard (ModelPrinter.string_of_v0 model v0);
 		print_message Verbose_standard (" Number of points inside V0: " ^ (NumConst.string_of_numconst nb_points));
-
-		(* Variable initialization *)
-		self#print_algo_message Verbose_low ("Initializing the algorithm local variables...");
-		self#initialize_variables;
 
 		(* Retrieve the first point *)
 		self#print_algo_message Verbose_low ("Retrieving initial point...");
@@ -842,6 +828,8 @@ class virtual algoCartoGeneric =
 				"The time limit for the cartography has been reached. The exploration now stops although there may be some more points to cover."
 					(*** TODO (one day): really say whether some points are still uncovered ***)
 			)
+			
+			| Some BC_Mixed_limit -> raise (InternalError "The termination status 'BC_Mixed_limit' should not be called in a single non-distributed instance of BC.")
 			
 			| None -> raise (InternalError "The termination status should be set when displaying warnings concerning early termination.")
 

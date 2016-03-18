@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/03/17
- * Last modified     : 2016/03/17
+ * Last modified     : 2016/03/18
  *
  ************************************************************)
 
@@ -27,12 +27,6 @@ open Result
 open AlgoGeneric
 open DistributedUtilities
 
-
-(************************************************************)
-(************************************************************)
-(* Internal exceptions *)
-(************************************************************)
-(************************************************************)
 
 
 (************************************************************)
@@ -72,18 +66,27 @@ class algoBCCoverDistributedSubdomainStaticCollaborator =
 
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(* Initialization method (only non-empty for coordinator) *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	method initialize = ()
+	
+	
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Finalize: send all tiles to the coordinator *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Send tiles to the coordinator *)
-	method private finalize =
+	method finalize bc_result =
 		self#print_algo_message Verbose_low ("About to send all my tiles to the coordinator...");
 
-		(* Retrieve the abstract_im_results *)
+(*		(* Retrieve the abstract_im_results *)
 		let abstract_im_result_list = current_bc_algo_instance#get_abstract_im_result_list in
 		
 		(* Send all tiles to the coordinator *)
-		send_abstract_im_result_list abstract_im_result_list;
+		send_abstract_im_result_list abstract_im_result_list;*)
 		
+		(* Send the cartography to the coordinator *)
+		send_bc_result bc_result;
+
 		(* Print some information *)
 		self#print_algo_message Verbose_low ("Tiles sent! The end for me.");
 		
@@ -93,10 +96,10 @@ class algoBCCoverDistributedSubdomainStaticCollaborator =
 
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Method packaging the result output by the algorithm *)
+	(* Method packaging the result output by the algorithm (useless method for regular collaborator) *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method compute_bc_result =
-		raise (InternalError ("not implemented"))
+		Distributed_worker_result
 
 
 (************************************************************)

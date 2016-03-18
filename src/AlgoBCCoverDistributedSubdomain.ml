@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/03/17
- * Last modified     : 2016/03/17
+ * Last modified     : 2016/03/18
  *
  ************************************************************)
 
@@ -193,7 +193,7 @@ class virtual algoBCCoverDistributedSubdomain =
 	
 	(* The current algorithm instance *)
 	(*** NOTE: this initialiation is useless (and time consuming?), as a new instance will be overwritten when needed ***)
-	val mutable current_bc_algo_instance : AlgoBCCover.algoBCCover = new AlgoBCCover.algoBCCover
+(* 	val mutable current_bc_algo_instance : AlgoBCCover.algoBCCover = new AlgoBCCover.algoBCCover *)
 	
 	
 

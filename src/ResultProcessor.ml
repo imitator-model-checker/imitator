@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/12/03
- * Last modified     : 2016/03/10
+ * Last modified     : 2016/03/18
  *
  ************************************************************)
 
@@ -54,6 +54,9 @@ let string_of_bc_algorithm_termination = function
 
 	(* Termination due to time limit reached *)
 	| BC_Time_limit -> "time limit"
+	
+	(* Termination due to several limits (only possible in distributed setting) *)
+	| BC_Mixed_limit -> "mixed limit"
 	
 	
 	

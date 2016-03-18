@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/03/17
- * Last modified     : 2016/03/17
+ * Last modified     : 2016/03/18
  *
  ************************************************************)
 
@@ -31,8 +31,11 @@ class virtual algoBCCoverDistributedSubdomain :
 		(* Rank of the collaborator *)
 		val collaborator_rank : DistributedUtilities.rank
 
+		(* Number of collaborators (including the coordinator) *)
+		val nb_collaborators : int
+	
 		(* The current algorithm instance *)
-		val mutable current_bc_algo_instance : AlgoBCCover.algoBCCover
+(* 		val mutable current_bc_algo_instance : AlgoBCCover.algoBCCover *)
 
 		
 		(************************************************************)

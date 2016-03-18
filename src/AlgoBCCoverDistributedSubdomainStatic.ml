@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/03/17
- * Last modified     : 2016/03/17
+ * Last modified     : 2016/03/18
  *
  ************************************************************)
 
@@ -26,12 +26,6 @@ open Result
 open AlgoGeneric
 open DistributedUtilities
 
-
-(************************************************************)
-(************************************************************)
-(* Internal exceptions *)
-(************************************************************)
-(************************************************************)
 
 
 (************************************************************)
@@ -82,7 +76,7 @@ class virtual algoBCCoverDistributedSubdomainStatic =
 		
 		self#print_algo_message Verbose_low ("I computed " ^ (string_of_int (List.length subdomains)) ^ " subdomain" ^ (s_of_int (List.length subdomains)) ^ ".");
 		
-		(* Select subpart # rank *)
+		(* Select subdomain # rank *)
 		let subdomain =
 		try(
 			List.nth subdomains collaborator_rank
@@ -99,11 +93,60 @@ class virtual algoBCCoverDistributedSubdomainStatic =
 
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Generic algorithm *)
+	(* Initialization method (only non-empty for coordinator) *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	method virtual initialize : unit
+	
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(* Finalization method to process results communication to the coordinator *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	method virtual finalize : Result.bc_result -> unit
+	
+	
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(* Generic algorithm for all collaborators (including the coordinator) *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method run () =
-		raise (InternalError ("not implemented"))
+		(* Initialize: will do nothing for regular collaborators, and a few things (including a check that the number of nodes is a power of 2) for the coordinator) *)
+		self#initialize;
+		
+		(* Print some information *)
+		self#print_algo_message Verbose_standard ("Computing own static subdomain...");
+		
+		(* Compute subdomain for this collaborator only *)
+		let subdomain = self#compute_own_subdomain in
 
+		(* Assign subdomain *)
+		Input.set_v0 subdomain;
+		
+		(* Print some information *)
+		self#print_algo_message Verbose_low ("Subdomain assigned.");
+		
+		(* Create an instance of the sequential cartography *)
+		(*** NOTE: in static distribution mode, since each collaborator is responsible for its own cartography, the sequential cartography is perfectly suited ***)
+		let bc_instance = new AlgoBCCover.algoBCCover in
+		(* Set the instance of IM / PRP that was itself set from the current cartography class *)
+		bc_instance#set_algo_instance_function self#get_algo_instance_function;
+		
+		(* Print some information *)
+		self#print_algo_message Verbose_standard ("Launching cartography on own static subdomain...");
+		
+		(* Launch the cartography *)
+		let imitator_result = bc_instance#run () in
+
+		(* Retrieve the result *)
+		let bc_result =
+		match imitator_result with
+			| BC_result bc_result -> bc_result
+			| _ -> raise (InternalError ("The result of BC should be 'BC_result bc_result'"))
+		in
+		
+		(* Send the results to the coordinator (if collaborator), or collect results from collaborators (if coordinator) *)
+		self#finalize bc_result;
+		
+		(* Return the result *)
+		self#compute_bc_result
+		
 		
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Method packaging the result output by the algorithm *)
