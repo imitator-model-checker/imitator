@@ -45,7 +45,7 @@ open DistributedUtilities
 (* Generic functions *)
 (************************************************************)
 
-(*** NOTE: code originally from DistributedMasterSlaveSubparts.ml, written by Hoang Gia Nguyen (2014) ***)
+(*** NOTE: code originally from DistributedMasterSlaveSubdomains.ml, written by Hoang Gia Nguyen (2014) ***)
 (*** TODO: rewrite better (including exceptions) and move to OCamlUtilities ***)
 (*remove element at*)	
 let rec remove_at (lst : 'a list) (n : int) : 'a list=
@@ -58,12 +58,12 @@ let rec remove_at (lst : 'a list) (n : int) : 'a list=
 (* Simple functions *)
 (************************************************************)
 	
-(*** NOTE: code originally from DistributedMasterSlaveSubparts.ml, written by Hoang Gia Nguyen (2014) ***)
-(*get total pi0 inside subpart put the subpart and number of dimensions then get the number of the pi0s inside it*) 
-let getTotalPi0 (subpart : HyperRectangle.hyper_rectangle) (d : int) = 
+(*** NOTE: code originally from DistributedMasterSlaveSubdomains.ml, written by Hoang Gia Nguyen (2014) ***)
+(*get total pi0 inside subdomain put the subdomain and number of dimensions then get the number of the pi0s inside it*) 
+let getTotalPi0 (subdomain : HyperRectangle.hyper_rectangle) (d : int) = 
 	let temp = ref 1 in
 	for i = 0 to d do
-		temp := !temp*( (NumConst.to_int(subpart#get_max i) - NumConst.to_int(subpart#get_min i) ) +1);
+		temp := !temp*( (NumConst.to_int(subdomain#get_max i) - NumConst.to_int(subdomain#get_min i) ) +1);
 	done ;
 	!temp
 
@@ -72,10 +72,10 @@ let getTotalPi0 (subpart : HyperRectangle.hyper_rectangle) (d : int) =
 (* Splitting functions *)
 (************************************************************)
 
-(*** NOTE: code originally from DistributedMasterSlaveSubparts.ml, written by Hoang Gia Nguyen (2014) ***)
+(*** NOTE: code originally from DistributedMasterSlaveSubdomains.ml, written by Hoang Gia Nguyen (2014) ***)
 let split s dimension = 
 	let d = HyperRectangle.get_dimensions() -1 in
-	(* Sliptting subpart into 2 smaller subparts*)
+	(* Sliptting subdomain into 2 smaller subdomains*)
 	(*Display information of s*)
 	(*print_message Verbose_standard ("\nSplitting............! ");
 	print_message Verbose_standard ("\ns infomation: ");
@@ -83,7 +83,7 @@ let split s dimension =
 	for j = 0 to d do
 	print_message Verbose_standard ("Dimension " ^(string_of_int j)^" : "^ " min = " ^ (string_of_int (NumConst.to_int(s#get_min j)))^";"^ " max = " ^ (string_of_int (NumConst.to_int(s#get_max j))));
 	done;
-	(*check pi0 in subpart*)
+	(*check pi0 in subdomain*)
 	let totalpi0 = getTotalPi0 s d in
 	print_message Verbose_standard ("Total pi0s in s is : " ^ (string_of_int totalpi0) );*)
 	(**********************************end printing***************************************************)
@@ -91,8 +91,8 @@ let split s dimension =
 	(*count from zero so that add 1 unit*)
 	max_d_l := ( (NumConst.to_int(s#get_max dimension)) - (NumConst.to_int(s#get_min dimension)) +1 );
 	if (!max_d_l = 1) then raise (InternalError ("the length is minimum, could not split smaller "));
-	print_message Verbose_medium ("\ndetected Max dimension length in this subpart is : " ^ (string_of_int (!max_d_l)) ^ " unit at dimension " ^ (string_of_int (dimension))); 
-	  (*create new subparts*)
+	print_message Verbose_medium ("\ndetected Max dimension length in this subdomain is : " ^ (string_of_int (!max_d_l)) ^ " unit at dimension " ^ (string_of_int (dimension))); 
+	  (*create new subdomains*)
 	  let s1 = new HyperRectangle.hyper_rectangle in
 	  let s2 = new HyperRectangle.hyper_rectangle in
 	    for i = 0 to d do
@@ -130,7 +130,7 @@ let split s dimension =
 	for i = 0 to d do
 	print_message Verbose_standard ("Dimension " ^(string_of_int i)^" : "^ " min = " ^ (string_of_int (NumConst.to_int(s1#get_min i)))^";"^ " max = " ^ (string_of_int (NumConst.to_int(s1#get_max i))));
 	done;
-	(*check pi0 in subpart*)
+	(*check pi0 in subdomain*)
 	let totalpi0s1 = getTotalPi0 s1 d in
 	print_message Verbose_standard ("Total pi0s in s1 is : " ^ (string_of_int totalpi0s1) );
 	(*Display information of s2*)
@@ -138,18 +138,18 @@ let split s dimension =
 	for i = 0 to d do
 	print_message Verbose_standard ("Dimension " ^(string_of_int i)^" : "^ " min = " ^ (string_of_int (NumConst.to_int(s2#get_min i)))^";"^ " max = " ^ (string_of_int (NumConst.to_int(s2#get_max i))));
 	done;
-	(*check pi0 in subpart*)
+	(*check pi0 in subdomain*)
 	let totalpi0s2 = getTotalPi0 s2 d in
 	print_message Verbose_standard ("Total pi0s in s2 is : " ^ (string_of_int totalpi0s2) );*)
 	(***************************************************************************)
 	[s1;s2]
 	
 
-(*** NOTE: code originally from DistributedMasterSlaveSubparts.ml, written by Hoang Gia Nguyen (2014) ***)
-(* Slipt subpart put HyperRectangle s return List [s1;s2] !! the number of pi0 in subpart must be larger or equals 2*)
-let sliptLongestDimensionSubpart (s : HyperRectangle.hyper_rectangle) =
+(*** NOTE: code originally from DistributedMasterSlaveSubdomains.ml, written by Hoang Gia Nguyen (2014) ***)
+(* Slipt subdomain put HyperRectangle s return List [s1;s2] !! the number of pi0 in subdomain must be larger or equals 2*)
+let sliptLongestDimensionSubdomain (s : HyperRectangle.hyper_rectangle) =
 	let d = HyperRectangle.get_dimensions() -1 in
-	(* Sliptting subpart into 2 smaller subparts*)
+	(* Sliptting subdomain into 2 smaller subdomains*)
 	let max_d_l = ref 0 in
 	let max_d = ref 0 in
 	let temp = ref 0 in
@@ -165,9 +165,9 @@ let sliptLongestDimensionSubpart (s : HyperRectangle.hyper_rectangle) =
 	    end
 	done;
 	
-	let listSubpart = split s !max_d in
+	let listSubdomain = split s !max_d in
 
-	listSubpart
+	listSubdomain
 	
 	
 	
@@ -226,16 +226,16 @@ class virtual algoBCCoverDistributedSubdomain =
 		(* Get the v0 *)
 		let v0 = Input.get_v0() in
 		
-		(*** NOTE: code originally from DistributedMasterSlaveSubparts.ml, written by Hoang Gia Nguyen (2014) ***)
-		let subparts = ref [v0] in
+		(*** NOTE: code originally from DistributedMasterSlaveSubdomains.ml, written by Hoang Gia Nguyen (2014) ***)
+		let subdomains = ref [v0] in
 		for l = 0 to nb_collaborators - 1 do 
 		begin
 		
-	(* Find the largest subpart to split *)
+	(* Find the largest subdomain to split *)
 		let max_pi0s = ref 0 in
 		let subno = ref 0 in
-		for i = 0 to (List.length !subparts)-1 do
-			let temp = getTotalPi0 (List.nth !subparts i) (HyperRectangle.get_dimensions() -1) in
+		for i = 0 to (List.length !subdomains)-1 do
+			let temp = getTotalPi0 (List.nth !subdomains i) (HyperRectangle.get_dimensions() -1) in
 			if (!max_pi0s < temp) then
 			begin
 			max_pi0s := temp; 
@@ -245,14 +245,14 @@ class virtual algoBCCoverDistributedSubdomain =
 		(*check if length every edge if equals to unit*)
 		if (!max_pi0s != 1) then 
 		begin
-			self#print_algo_message_newline Verbose_medium ("Max pi0s in list is : " ^ (string_of_int !max_pi0s) ^ " in subpart : " ^ (string_of_int !subno));
-			(*get list split subparts*)
-			let newSubpartList = sliptLongestDimensionSubpart (List.nth !subparts !subno) in (*!subno*)
-			(*remove old subpart*)
-			subparts := (remove_at !subparts !subno);
-			(*add new subparts*)
-			subparts := !subparts @ newSubpartList;
-			self#print_algo_message_newline Verbose_medium ("List length : " ^ (string_of_int (List.length !subparts) ) );
+			self#print_algo_message_newline Verbose_medium ("Max pi0s in list is : " ^ (string_of_int !max_pi0s) ^ " in subdomain : " ^ (string_of_int !subno));
+			(*get list split subdomains*)
+			let newSubdomainList = sliptLongestDimensionSubdomain (List.nth !subdomains !subno) in (*!subno*)
+			(*remove old subdomain*)
+			subdomains := (remove_at !subdomains !subno);
+			(*add new subdomains*)
+			subdomains := !subdomains @ newSubdomainList;
+			self#print_algo_message_newline Verbose_medium ("List length : " ^ (string_of_int (List.length !subdomains) ) );
 		end
 		else
 		begin
@@ -262,7 +262,7 @@ class virtual algoBCCoverDistributedSubdomain =
 		done;
 		
 		(* Return the subdomains *)
-		!subparts
+		!subdomains
 
 		
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
