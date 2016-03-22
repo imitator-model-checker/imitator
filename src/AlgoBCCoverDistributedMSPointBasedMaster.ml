@@ -125,18 +125,23 @@ class virtual algoBCCoverDistributedMSPointBasedMaster =
 	(* Compute the next point and send it to the worker, or send terminate message (and update the number of terminated workers) if no more point *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method private compute_and_send_point bc worker_rank =
-	
+
+		(* Print some information *)
 		self#print_algo_message Verbose_low ("Computing next point to send...");
 		
 		(* Find next point (dynamic fashion) *)
 		(*** NOTE: this operation (checking first point) could have been rather embedded in CartoGeneric ***)
 		let next_point = 
 		if first_point then(
+			(* Print some information *)
+			self#print_algo_message Verbose_low ("Asking BC to compute the first point...");		
 			(* Unset flag *)
 			first_point <- false;
 			(* Call specific function *)
 			bc#get_initial_point
 		)else(
+			(* Print some information *)
+			self#print_algo_message Verbose_low ("Asking BC to compute the next point...");
 			bc#compute_and_return_next_point
 		)
 		in

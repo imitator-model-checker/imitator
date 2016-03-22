@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/03/14
- * Last modified     : 2016/03/17
+ * Last modified     : 2016/03/22
  *
  ************************************************************)
 
@@ -117,7 +117,6 @@ class algoBCShuffle =
 		(* Fill the first point with the initial pi0 *)
 		all_points.(0) <- first_point;
 		
-		self#print_algo_message Verbose_medium ("[compute_all_pi0] Computing the other points");
 		self#print_algo_message Verbose_medium ("[compute_all_pi0] Computing the other points");
 		(* Fill it for the other points *)
 		let current_point = ref first_point in
@@ -231,14 +230,18 @@ class algoBCShuffle =
 	(* Create the initial point for the analysis *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method get_initial_point =
+		(* Print some information *)
+		self#print_algo_message Verbose_medium ("Selecting the initial point (next point index = " ^ (string_of_int next_point_index) ^ ")");
+		
 		(* Retrieve the array *)
 		let all_points = self#get_all_points_array_option in
 	
 		(* Get the point *)
 		let initial_point = all_points.(0) in
 		
-		(* Increment the next point index *)
-		next_point_index <- next_point_index + 1;
+		(* Set the next to 1 *)
+		(*** WARNING: incrementing is NOT good, as this function may in fact be called several times, in particular when called from distributed cartography ***)
+		next_point_index <- 1;
 		
 		(* Return the point *)
 		Some_pval initial_point
@@ -273,6 +276,9 @@ class algoBCShuffle =
 	method find_next_point =
 		(* Get the model *)
 	(* 	let model = Input.get_model() in *)
+
+		(* Print some information *)
+		self#print_algo_message Verbose_medium ("Finding the next point (next point index = " ^ (string_of_int next_point_index) ^ ")");
 
 		(* Retrieve the current pi0 (that must have been initialized before) *)
 		let current_pi0 = ref (self#get_current_point_option) in
