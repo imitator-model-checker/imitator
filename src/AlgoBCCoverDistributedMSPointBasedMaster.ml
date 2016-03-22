@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/03/10
- * Last modified     : 2016/03/17
+ * Last modified     : 2016/03/22
  *
  ************************************************************)
 
@@ -52,6 +52,9 @@ class virtual algoBCCoverDistributedMSPointBasedMaster =
 	
 	(* Shortcut to avoid repeated computations *)
 	val nb_workers = DistributedUtilities.get_nb_nodes() - 1
+	
+	(* Flag to discriminate between first point called and further points *)
+	val mutable first_point = true
 	
 	
 	(************************************************************)
@@ -126,7 +129,17 @@ class virtual algoBCCoverDistributedMSPointBasedMaster =
 		self#print_algo_message Verbose_low ("Computing next point to send...");
 		
 		(* Find next point (dynamic fashion) *)
-		let next_point = bc#compute_and_return_next_point in
+		(*** NOTE: this operation (checking first point) could have been rather embedded in CartoGeneric ***)
+		let next_point = 
+		if first_point then(
+			(* Unset flag *)
+			first_point <- false;
+			(* Call specific function *)
+			bc#get_initial_point
+		)else(
+			bc#compute_and_return_next_point
+		)
+		in
 		
 		(* If point valid *)
 		begin
