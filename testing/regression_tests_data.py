@@ -10,7 +10,7 @@
 # Laboratoire d'Informatique de Paris Nord
 # Universite Paris 13, Sorbonne Paris Cite, France
 # Created      : 2015/10/23
-# Last modified: 2016/03/17
+# Last modified: 2016/03/22
 #************************************************************
 
 
@@ -25,9 +25,7 @@ tests = [
 		'input_files': ['flipflop.imi'],
 		'options'    : '-mode statespace -output-states',
 		'expectations' : [
-			{'file': 'flipflop-statespace.states' , 'content' : """second
-************************************************************/
-
+			{'file': 'flipflop-statespace.states' , 'content' : """
   DESCRIPTION OF THE STATES
 
   /************************************************************/
@@ -1844,6 +1842,584 @@ OR
 	
 	,
 	
+	
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test BC in mode cover (grid)',
+		'input_files': ['testBC-grid-plain.imi', 'testBC-grid4x4.v0'],
+		'options'    : '-mode cover -output-result',
+		'expectations' : [
+			# NOTE: no other way for now that checking separately the constraints (because the computation times may of course differ)
+			{'file': 'testBC-grid-plain.res' , 'content' : """
+(************************************************************)
+ Tile #1
+
+ Pi1:
+  p1 = 1
+& p2 = 1
+
+ K1:
+ p2 >= 1
+& p1 >= 1
+& 2 > p2
+& 2 > p1
+
+------------------------------------------------------------
+Constraint soundness          : exact
+Termination                   : regular termination
+State space nature            : good
+Number of random selections   : 0
+------------------------------------------------------------
+Number of states              : 5
+Number of transitions         : 4
+"""
+			} # end BC file
+			, 
+			{'file': 'testBC-grid-plain.res' , 'content' : """
+(************************************************************)
+ Tile #2
+
+ Pi2:
+  p1 = 2
+& p2 = 1
+
+ K2:
+ p2 >= 1
+& p1 >= 2
+& 2 > p2
+& 3 > p1
+
+------------------------------------------------------------
+Constraint soundness          : exact
+Termination                   : regular termination
+State space nature            : good
+Number of random selections   : 0
+------------------------------------------------------------
+Number of states              : 6
+Number of transitions         : 5
+"""
+			} # end BC file
+			, 
+			{'file': 'testBC-grid-plain.res' , 'content' : """
+(************************************************************)
+ Tile #3
+
+ Pi3:
+  p1 = 3
+& p2 = 1
+
+ K3:
+ p2 >= 1
+& p1 >= 3
+& 2 > p2
+& 4 > p1
+
+------------------------------------------------------------
+Constraint soundness          : exact
+Termination                   : regular termination
+State space nature            : good
+Number of random selections   : 0
+------------------------------------------------------------
+Number of states              : 7
+Number of transitions         : 6
+"""
+			} # end BC file
+			, 
+			{'file': 'testBC-grid-plain.res' , 'content' : """
+(************************************************************)
+ Tile #4
+
+ Pi4:
+  p1 = 4
+& p2 = 1
+
+ K4:
+ p2 >= 1
+& p1 >= 4
+& 2 > p2
+& 5 > p1
+
+------------------------------------------------------------
+Constraint soundness          : exact
+Termination                   : regular termination
+State space nature            : good
+Number of random selections   : 0
+------------------------------------------------------------
+Number of states              : 8
+Number of transitions         : 7
+"""
+			} # end BC file
+			, 
+			{'file': 'testBC-grid-plain.res' , 'content' : """
+(************************************************************)
+ Tile #5
+
+ Pi5:
+  p1 = 1
+& p2 = 2
+
+ K5:
+ p2 >= 2
+& p1 >= 1
+& 3 > p2
+& 2 > p1
+
+------------------------------------------------------------
+Constraint soundness          : exact
+Termination                   : regular termination
+State space nature            : good
+Number of random selections   : 0
+------------------------------------------------------------
+Number of states              : 6
+Number of transitions         : 5
+"""
+			} # end BC file
+			, 
+			{'file': 'testBC-grid-plain.res' , 'content' : """
+(************************************************************)
+ Tile #6
+
+ Pi6:
+  p1 = 2
+& p2 = 2
+
+ K6:
+ p2 >= 2
+& p1 >= 2
+& 3 > p2
+& 3 > p1
+
+------------------------------------------------------------
+Constraint soundness          : exact
+Termination                   : regular termination
+State space nature            : good
+Number of random selections   : 0
+------------------------------------------------------------
+Number of states              : 7
+Number of transitions         : 6
+"""
+			} # end BC file
+			, 
+			{'file': 'testBC-grid-plain.res' , 'content' : """
+(************************************************************)
+ Tile #7
+
+ Pi7:
+  p1 = 3
+& p2 = 2
+
+ K7:
+ p2 >= 2
+& p1 >= 3
+& 3 > p2
+& 4 > p1
+
+------------------------------------------------------------
+Constraint soundness          : exact
+Termination                   : regular termination
+State space nature            : good
+Number of random selections   : 0
+------------------------------------------------------------
+Number of states              : 8
+Number of transitions         : 7
+"""
+			} # end BC file
+			, 
+			{'file': 'testBC-grid-plain.res' , 'content' : """
+(************************************************************)
+ Tile #8
+
+ Pi8:
+  p1 = 4
+& p2 = 2
+
+ K8:
+ p2 >= 2
+& p1 >= 4
+& 3 > p2
+& 5 > p1
+
+------------------------------------------------------------
+Constraint soundness          : exact
+Termination                   : regular termination
+State space nature            : good
+Number of random selections   : 0
+------------------------------------------------------------
+Number of states              : 9
+Number of transitions         : 8
+"""
+			} # end BC file
+			, 
+			{'file': 'testBC-grid-plain.res' , 'content' : """
+(************************************************************)
+ Tile #9
+
+ Pi9:
+  p1 = 1
+& p2 = 3
+
+ K9:
+ p2 >= 3
+& p1 >= 1
+& 4 > p2
+& 2 > p1
+
+------------------------------------------------------------
+Constraint soundness          : exact
+Termination                   : regular termination
+State space nature            : good
+Number of random selections   : 0
+------------------------------------------------------------
+Number of states              : 7
+Number of transitions         : 6
+"""
+			} # end BC file
+			, 
+			{'file': 'testBC-grid-plain.res' , 'content' : """
+(************************************************************)
+ Tile #10
+
+ Pi10:
+  p1 = 2
+& p2 = 3
+
+ K10:
+ p2 >= 3
+& p1 >= 2
+& 4 > p2
+& 3 > p1
+
+------------------------------------------------------------
+Constraint soundness          : exact
+Termination                   : regular termination
+State space nature            : good
+Number of random selections   : 0
+------------------------------------------------------------
+Number of states              : 8
+Number of transitions         : 7
+"""
+			} # end BC file
+			, 
+			{'file': 'testBC-grid-plain.res' , 'content' : """
+(************************************************************)
+ Tile #11
+
+ Pi11:
+  p1 = 3
+& p2 = 3
+
+ K11:
+ p2 >= 3
+& p1 >= 3
+& 4 > p2
+& 4 > p1
+
+------------------------------------------------------------
+Constraint soundness          : exact
+Termination                   : regular termination
+State space nature            : good
+Number of random selections   : 0
+------------------------------------------------------------
+Number of states              : 9
+Number of transitions         : 8
+"""
+			} # end BC file
+			, 
+			{'file': 'testBC-grid-plain.res' , 'content' : """
+(************************************************************)
+ Tile #12
+
+ Pi12:
+  p1 = 4
+& p2 = 3
+
+ K12:
+ p2 >= 3
+& p1 >= 4
+& 4 > p2
+& 5 > p1
+
+------------------------------------------------------------
+Constraint soundness          : exact
+Termination                   : regular termination
+State space nature            : good
+Number of random selections   : 0
+------------------------------------------------------------
+Number of states              : 10
+Number of transitions         : 9
+"""
+			} # end BC file
+			, 
+			{'file': 'testBC-grid-plain.res' , 'content' : """
+(************************************************************)
+ Tile #13
+
+ Pi13:
+  p1 = 1
+& p2 = 4
+
+ K13:
+ p2 >= 4
+& p1 >= 1
+& 5 > p2
+& 2 > p1
+
+------------------------------------------------------------
+Constraint soundness          : exact
+Termination                   : regular termination
+State space nature            : good
+Number of random selections   : 0
+------------------------------------------------------------
+Number of states              : 8
+Number of transitions         : 7
+"""
+			} # end BC file
+			, 
+			{'file': 'testBC-grid-plain.res' , 'content' : """
+(************************************************************)
+ Tile #14
+
+ Pi14:
+  p1 = 2
+& p2 = 4
+
+ K14:
+ p2 >= 4
+& p1 >= 2
+& 5 > p2
+& 3 > p1
+
+------------------------------------------------------------
+Constraint soundness          : exact
+Termination                   : regular termination
+State space nature            : good
+Number of random selections   : 0
+------------------------------------------------------------
+Number of states              : 9
+Number of transitions         : 8
+"""
+			} # end BC file
+			, 
+			{'file': 'testBC-grid-plain.res' , 'content' : """
+(************************************************************)
+ Tile #15
+
+ Pi15:
+  p1 = 3
+& p2 = 4
+
+ K15:
+ p2 >= 4
+& p1 >= 3
+& 5 > p2
+& 4 > p1
+
+------------------------------------------------------------
+Constraint soundness          : exact
+Termination                   : regular termination
+State space nature            : good
+Number of random selections   : 0
+------------------------------------------------------------
+Number of states              : 10
+Number of transitions         : 9
+"""
+			} # end BC file
+			, 
+			{'file': 'testBC-grid-plain.res' , 'content' : """
+(************************************************************)
+ Tile #16
+
+ Pi16:
+  p1 = 4
+& p2 = 4
+
+ K16:
+ p2 >= 4
+& p1 >= 4
+& 5 > p2
+& 5 > p1
+
+------------------------------------------------------------
+Constraint soundness          : exact
+Termination                   : regular termination
+State space nature            : good
+Number of random selections   : 0
+------------------------------------------------------------
+Number of states              : 11
+Number of transitions         : 10
+"""
+			} # end BC file
+			, 
+			# NOTE: actual result
+			{'file': 'testBC-grid-plain.res' , 'content' : """
+(************************************************************)
+GENERAL STATISTICS
+(************************************************************)
+------------------------------------------------------------
+Number of integers in v0      : 16
+Number of tiles computed      : 16
+Coverage                      : integer-complete
+Termination                   : regular termination
+Number of unsuccessful points : 0
+Average number of states      : 8.0
+Average number of transitions : 7.0
+
+"""
+			} # end BC file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+	
+	,
+	
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test BC in mode cover + depth-limit (grid)',
+		'input_files': ['testBC-grid-plain.imi', 'testBC-grid4x4.v0'],
+		'options'    : '-mode cover -depth-limit 5 -output-result',
+		'expectations' : [
+			# NOTE: no other way for now that checking separately the constraints (because the computation times may of course differ)
+			{'file': 'testBC-grid-plain.res' , 'content' : """
+(************************************************************)
+ Tile #1
+
+ Pi1:
+  p1 = 1
+& p2 = 1
+
+ K1:
+ p2 >= 1
+& p1 >= 1
+& 2 > p2
+& 2 > p1
+
+------------------------------------------------------------
+Constraint soundness          : possible over-approximation
+Termination                   : time limit (1 successor unexplored)
+State space nature            : unknown
+Number of random selections   : 0
+------------------------------------------------------------
+Number of states              : 5
+Number of transitions         : 4
+"""
+			} # end BC file
+			, 
+			{'file': 'testBC-grid-plain.res' , 'content' : """
+(************************************************************)
+ Tile #2
+
+ Pi2:
+  p1 = 2
+& p2 = 1
+
+ K2:
+ p2 >= 1
+& p1 >= 2
+& 3 > p1
+
+------------------------------------------------------------
+Constraint soundness          : possible over-approximation
+Termination                   : time limit (1 successor unexplored)
+State space nature            : unknown
+Number of random selections   : 0
+------------------------------------------------------------
+Number of states              : 5
+Number of transitions         : 4
+"""
+			} # end BC file
+			, 
+			{'file': 'testBC-grid-plain.res' , 'content' : """
+(************************************************************)
+ Tile #3
+
+ Pi3:
+  p1 = 3
+& p2 = 1
+
+ K3:
+ p2 >= 0
+& p1 >= 3
+& 4 > p1
+
+------------------------------------------------------------
+Constraint soundness          : possible over-approximation
+Termination                   : time limit (1 successor unexplored)
+State space nature            : unknown
+Number of random selections   : 0
+------------------------------------------------------------
+Number of states              : 5
+Number of transitions         : 4
+"""
+			} # end BC file
+			, 
+			{'file': 'testBC-grid-plain.res' , 'content' : """
+(************************************************************)
+ Tile #4
+
+ Pi4:
+  p1 = 4
+& p2 = 1
+
+ K4:
+ p1 >= 4
+& p2 >= 0
+
+------------------------------------------------------------
+Constraint soundness          : possible over-approximation
+Termination                   : time limit (1 successor unexplored)
+State space nature            : unknown
+Number of random selections   : 0
+------------------------------------------------------------
+Number of states              : 5
+Number of transitions         : 4
+"""
+			} # end BC file
+			, 
+			{'file': 'testBC-grid-plain.res' , 'content' : """
+(************************************************************)
+ Tile #5
+
+ Pi5:
+  p1 = 1
+& p2 = 2
+
+ K5:
+ p2 >= 2
+& p1 >= 1
+& 2 > p1
+
+------------------------------------------------------------
+Constraint soundness          : possible over-approximation
+Termination                   : time limit (1 successor unexplored)
+State space nature            : unknown
+Number of random selections   : 0
+------------------------------------------------------------
+Number of states              : 5
+Number of transitions         : 4
+"""
+			} # end BC file
+			, 
+			# NOTE: actual result
+			{'file': 'testBC-grid-plain.res' , 'content' : """
+(************************************************************)
+GENERAL STATISTICS
+(************************************************************)
+------------------------------------------------------------
+Number of integers in v0      : 16
+Number of tiles computed      : 5
+Coverage                      : unknown
+Termination                   : regular termination
+Number of unsuccessful points : 11
+Average number of states      : 5.0
+Average number of transitions : 4.0
+"""
+			} # end BC file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+	
+	,
+	
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test BC in mode cover with depth limit (JLR15)',
@@ -2162,7 +2738,7 @@ Average number of transitions : 14.1
 	
 	#------------------------------------------------------------
 	{
-		'purpose'    : 'Test BC in mode cover with tiles limit',
+		'purpose'    : 'Test BC in mode cover with tiles limit (flip-flop)',
 		'input_files': ['flipflop.imi', 'flipflop.v0'],
 		'options'    : '-mode cover -cart-tiles-limit 4 -output-result',
 		'expectations' : [
@@ -2285,7 +2861,322 @@ Average number of transitions : 11.7
 	
 	#------------------------------------------------------------
 	{
-		'purpose'    : 'Test BC in mode random',
+		'purpose'    : 'Test BC in mode random (grid)',
+		'input_files': ['testBC-grid-plain.imi', 'testBC-grid4x4.v0'],
+		'options'    : '-mode random200 -output-result',
+		'expectations' : [
+			# WARNING: this algorithm is… random! hence no absolute guarantee to find the result (this said, a max_tries of 20 generally allows one to find all tiles with a good probability)
+			# NOTE: no other way for now that checking separately the constraints (because the computation times may of course differ)
+			{'file': 'testBC-grid-plain.res' , 'content' : """
+:
+ p2 >= 1
+& p1 >= 1
+& 2 > p2
+& 2 > p1
+
+------------------------------------------------------------
+Constraint soundness          : exact
+Termination                   : regular termination
+State space nature            : good
+Number of random selections   : 0
+------------------------------------------------------------
+Number of states              : 5
+Number of transitions         : 4
+"""
+			} # end BC file
+			, 
+			{'file': 'testBC-grid-plain.res' , 'content' : """
+:
+ p2 >= 1
+& p1 >= 2
+& 2 > p2
+& 3 > p1
+
+------------------------------------------------------------
+Constraint soundness          : exact
+Termination                   : regular termination
+State space nature            : good
+Number of random selections   : 0
+------------------------------------------------------------
+Number of states              : 6
+Number of transitions         : 5
+"""
+			} # end BC file
+			, 
+			{'file': 'testBC-grid-plain.res' , 'content' : """
+:
+ p2 >= 1
+& p1 >= 3
+& 2 > p2
+& 4 > p1
+
+------------------------------------------------------------
+Constraint soundness          : exact
+Termination                   : regular termination
+State space nature            : good
+Number of random selections   : 0
+------------------------------------------------------------
+Number of states              : 7
+Number of transitions         : 6
+"""
+			} # end BC file
+			, 
+			{'file': 'testBC-grid-plain.res' , 'content' : """
+:
+ p2 >= 1
+& p1 >= 4
+& 2 > p2
+& 5 > p1
+
+------------------------------------------------------------
+Constraint soundness          : exact
+Termination                   : regular termination
+State space nature            : good
+Number of random selections   : 0
+------------------------------------------------------------
+Number of states              : 8
+Number of transitions         : 7
+"""
+			} # end BC file
+			, 
+			{'file': 'testBC-grid-plain.res' , 'content' : """
+:
+ p2 >= 2
+& p1 >= 1
+& 3 > p2
+& 2 > p1
+
+------------------------------------------------------------
+Constraint soundness          : exact
+Termination                   : regular termination
+State space nature            : good
+Number of random selections   : 0
+------------------------------------------------------------
+Number of states              : 6
+Number of transitions         : 5
+"""
+			} # end BC file
+			, 
+			{'file': 'testBC-grid-plain.res' , 'content' : """
+:
+ p2 >= 2
+& p1 >= 2
+& 3 > p2
+& 3 > p1
+
+------------------------------------------------------------
+Constraint soundness          : exact
+Termination                   : regular termination
+State space nature            : good
+Number of random selections   : 0
+------------------------------------------------------------
+Number of states              : 7
+Number of transitions         : 6
+"""
+			} # end BC file
+			, 
+			{'file': 'testBC-grid-plain.res' , 'content' : """
+:
+ p2 >= 2
+& p1 >= 3
+& 3 > p2
+& 4 > p1
+
+------------------------------------------------------------
+Constraint soundness          : exact
+Termination                   : regular termination
+State space nature            : good
+Number of random selections   : 0
+------------------------------------------------------------
+Number of states              : 8
+Number of transitions         : 7
+"""
+			} # end BC file
+			, 
+			{'file': 'testBC-grid-plain.res' , 'content' : """
+:
+ p2 >= 2
+& p1 >= 4
+& 3 > p2
+& 5 > p1
+
+------------------------------------------------------------
+Constraint soundness          : exact
+Termination                   : regular termination
+State space nature            : good
+Number of random selections   : 0
+------------------------------------------------------------
+Number of states              : 9
+Number of transitions         : 8
+"""
+			} # end BC file
+			, 
+			{'file': 'testBC-grid-plain.res' , 'content' : """
+:
+ p2 >= 3
+& p1 >= 1
+& 4 > p2
+& 2 > p1
+
+------------------------------------------------------------
+Constraint soundness          : exact
+Termination                   : regular termination
+State space nature            : good
+Number of random selections   : 0
+------------------------------------------------------------
+Number of states              : 7
+Number of transitions         : 6
+"""
+			} # end BC file
+			, 
+			{'file': 'testBC-grid-plain.res' , 'content' : """
+:
+ p2 >= 3
+& p1 >= 2
+& 4 > p2
+& 3 > p1
+
+------------------------------------------------------------
+Constraint soundness          : exact
+Termination                   : regular termination
+State space nature            : good
+Number of random selections   : 0
+------------------------------------------------------------
+Number of states              : 8
+Number of transitions         : 7
+"""
+			} # end BC file
+			, 
+			{'file': 'testBC-grid-plain.res' , 'content' : """
+:
+ p2 >= 3
+& p1 >= 3
+& 4 > p2
+& 4 > p1
+
+------------------------------------------------------------
+Constraint soundness          : exact
+Termination                   : regular termination
+State space nature            : good
+Number of random selections   : 0
+------------------------------------------------------------
+Number of states              : 9
+Number of transitions         : 8
+"""
+			} # end BC file
+			, 
+			{'file': 'testBC-grid-plain.res' , 'content' : """
+:
+ p2 >= 3
+& p1 >= 4
+& 4 > p2
+& 5 > p1
+
+------------------------------------------------------------
+Constraint soundness          : exact
+Termination                   : regular termination
+State space nature            : good
+Number of random selections   : 0
+------------------------------------------------------------
+Number of states              : 10
+Number of transitions         : 9
+"""
+			} # end BC file
+			, 
+			{'file': 'testBC-grid-plain.res' , 'content' : """
+:
+ p2 >= 4
+& p1 >= 1
+& 5 > p2
+& 2 > p1
+
+------------------------------------------------------------
+Constraint soundness          : exact
+Termination                   : regular termination
+State space nature            : good
+Number of random selections   : 0
+------------------------------------------------------------
+Number of states              : 8
+Number of transitions         : 7
+"""
+			} # end BC file
+			, 
+			{'file': 'testBC-grid-plain.res' , 'content' : """
+:
+ p2 >= 4
+& p1 >= 2
+& 5 > p2
+& 3 > p1
+
+------------------------------------------------------------
+Constraint soundness          : exact
+Termination                   : regular termination
+State space nature            : good
+Number of random selections   : 0
+------------------------------------------------------------
+Number of states              : 9
+Number of transitions         : 8
+"""
+			} # end BC file
+			, 
+			{'file': 'testBC-grid-plain.res' , 'content' : """
+:
+ p2 >= 4
+& p1 >= 3
+& 5 > p2
+& 4 > p1
+
+------------------------------------------------------------
+Constraint soundness          : exact
+Termination                   : regular termination
+State space nature            : good
+Number of random selections   : 0
+------------------------------------------------------------
+Number of states              : 10
+Number of transitions         : 9
+"""
+			} # end BC file
+			, 
+			{'file': 'testBC-grid-plain.res' , 'content' : """
+:
+ p2 >= 4
+& p1 >= 4
+& 5 > p2
+& 5 > p1
+
+------------------------------------------------------------
+Constraint soundness          : exact
+Termination                   : regular termination
+State space nature            : good
+Number of random selections   : 0
+------------------------------------------------------------
+Number of states              : 11
+Number of transitions         : 10
+"""
+			} # end BC file
+			, 
+			# NOTE: actual result
+			{'file': 'testBC-grid-plain.res' , 'content' : """
+(************************************************************)
+GENERAL STATISTICS
+(************************************************************)
+------------------------------------------------------------
+Number of integers in v0      : 16
+Number of tiles computed      : 16
+Coverage                      : unknown
+Termination                   : regular termination
+
+"""
+			} # end BC file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+	
+	,
+	
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test BC in mode random (flip-flop)',
 		'input_files': ['flipflop.imi', 'flipflop.v0'],
 		'options'    : '-mode random200 -output-result',
 		'expectations' : [
@@ -2484,9 +3375,326 @@ Termination                   : regular termination
 	} # end test case
 	#------------------------------------------------------------
 	,
+	
 	#------------------------------------------------------------
 	{
-		'purpose'    : 'Test BC in mode shuffle',
+		'purpose'    : 'Test BC in mode shuffle (grid)',
+		'input_files': ['testBC-grid-plain.imi', 'testBC-grid4x4.v0'],
+		'options'    : '-mode shuffle -output-result',
+		'expectations' : [
+			# NOTE: no other way for now that checking separately the constraints (because the computation times may of course differ)
+			{'file': 'testBC-grid-plain.res' , 'content' : """
+:
+ p2 >= 1
+& p1 >= 1
+& 2 > p2
+& 2 > p1
+
+------------------------------------------------------------
+Constraint soundness          : exact
+Termination                   : regular termination
+State space nature            : good
+Number of random selections   : 0
+------------------------------------------------------------
+Number of states              : 5
+Number of transitions         : 4
+"""
+			} # end BC file
+			, 
+			{'file': 'testBC-grid-plain.res' , 'content' : """
+:
+ p2 >= 1
+& p1 >= 2
+& 2 > p2
+& 3 > p1
+
+------------------------------------------------------------
+Constraint soundness          : exact
+Termination                   : regular termination
+State space nature            : good
+Number of random selections   : 0
+------------------------------------------------------------
+Number of states              : 6
+Number of transitions         : 5
+"""
+			} # end BC file
+			, 
+			{'file': 'testBC-grid-plain.res' , 'content' : """
+:
+ p2 >= 1
+& p1 >= 3
+& 2 > p2
+& 4 > p1
+
+------------------------------------------------------------
+Constraint soundness          : exact
+Termination                   : regular termination
+State space nature            : good
+Number of random selections   : 0
+------------------------------------------------------------
+Number of states              : 7
+Number of transitions         : 6
+"""
+			} # end BC file
+			, 
+			{'file': 'testBC-grid-plain.res' , 'content' : """
+:
+ p2 >= 1
+& p1 >= 4
+& 2 > p2
+& 5 > p1
+
+------------------------------------------------------------
+Constraint soundness          : exact
+Termination                   : regular termination
+State space nature            : good
+Number of random selections   : 0
+------------------------------------------------------------
+Number of states              : 8
+Number of transitions         : 7
+"""
+			} # end BC file
+			, 
+			{'file': 'testBC-grid-plain.res' , 'content' : """
+:
+ p2 >= 2
+& p1 >= 1
+& 3 > p2
+& 2 > p1
+
+------------------------------------------------------------
+Constraint soundness          : exact
+Termination                   : regular termination
+State space nature            : good
+Number of random selections   : 0
+------------------------------------------------------------
+Number of states              : 6
+Number of transitions         : 5
+"""
+			} # end BC file
+			, 
+			{'file': 'testBC-grid-plain.res' , 'content' : """
+:
+ p2 >= 2
+& p1 >= 2
+& 3 > p2
+& 3 > p1
+
+------------------------------------------------------------
+Constraint soundness          : exact
+Termination                   : regular termination
+State space nature            : good
+Number of random selections   : 0
+------------------------------------------------------------
+Number of states              : 7
+Number of transitions         : 6
+"""
+			} # end BC file
+			, 
+			{'file': 'testBC-grid-plain.res' , 'content' : """
+:
+ p2 >= 2
+& p1 >= 3
+& 3 > p2
+& 4 > p1
+
+------------------------------------------------------------
+Constraint soundness          : exact
+Termination                   : regular termination
+State space nature            : good
+Number of random selections   : 0
+------------------------------------------------------------
+Number of states              : 8
+Number of transitions         : 7
+"""
+			} # end BC file
+			, 
+			{'file': 'testBC-grid-plain.res' , 'content' : """
+:
+ p2 >= 2
+& p1 >= 4
+& 3 > p2
+& 5 > p1
+
+------------------------------------------------------------
+Constraint soundness          : exact
+Termination                   : regular termination
+State space nature            : good
+Number of random selections   : 0
+------------------------------------------------------------
+Number of states              : 9
+Number of transitions         : 8
+"""
+			} # end BC file
+			, 
+			{'file': 'testBC-grid-plain.res' , 'content' : """
+:
+ p2 >= 3
+& p1 >= 1
+& 4 > p2
+& 2 > p1
+
+------------------------------------------------------------
+Constraint soundness          : exact
+Termination                   : regular termination
+State space nature            : good
+Number of random selections   : 0
+------------------------------------------------------------
+Number of states              : 7
+Number of transitions         : 6
+"""
+			} # end BC file
+			, 
+			{'file': 'testBC-grid-plain.res' , 'content' : """
+:
+ p2 >= 3
+& p1 >= 2
+& 4 > p2
+& 3 > p1
+
+------------------------------------------------------------
+Constraint soundness          : exact
+Termination                   : regular termination
+State space nature            : good
+Number of random selections   : 0
+------------------------------------------------------------
+Number of states              : 8
+Number of transitions         : 7
+"""
+			} # end BC file
+			, 
+			{'file': 'testBC-grid-plain.res' , 'content' : """
+:
+ p2 >= 3
+& p1 >= 3
+& 4 > p2
+& 4 > p1
+
+------------------------------------------------------------
+Constraint soundness          : exact
+Termination                   : regular termination
+State space nature            : good
+Number of random selections   : 0
+------------------------------------------------------------
+Number of states              : 9
+Number of transitions         : 8
+"""
+			} # end BC file
+			, 
+			{'file': 'testBC-grid-plain.res' , 'content' : """
+:
+ p2 >= 3
+& p1 >= 4
+& 4 > p2
+& 5 > p1
+
+------------------------------------------------------------
+Constraint soundness          : exact
+Termination                   : regular termination
+State space nature            : good
+Number of random selections   : 0
+------------------------------------------------------------
+Number of states              : 10
+Number of transitions         : 9
+"""
+			} # end BC file
+			, 
+			{'file': 'testBC-grid-plain.res' , 'content' : """
+:
+ p2 >= 4
+& p1 >= 1
+& 5 > p2
+& 2 > p1
+
+------------------------------------------------------------
+Constraint soundness          : exact
+Termination                   : regular termination
+State space nature            : good
+Number of random selections   : 0
+------------------------------------------------------------
+Number of states              : 8
+Number of transitions         : 7
+"""
+			} # end BC file
+			, 
+			{'file': 'testBC-grid-plain.res' , 'content' : """
+:
+ p2 >= 4
+& p1 >= 2
+& 5 > p2
+& 3 > p1
+
+------------------------------------------------------------
+Constraint soundness          : exact
+Termination                   : regular termination
+State space nature            : good
+Number of random selections   : 0
+------------------------------------------------------------
+Number of states              : 9
+Number of transitions         : 8
+"""
+			} # end BC file
+			, 
+			{'file': 'testBC-grid-plain.res' , 'content' : """
+:
+ p2 >= 4
+& p1 >= 3
+& 5 > p2
+& 4 > p1
+
+------------------------------------------------------------
+Constraint soundness          : exact
+Termination                   : regular termination
+State space nature            : good
+Number of random selections   : 0
+------------------------------------------------------------
+Number of states              : 10
+Number of transitions         : 9
+"""
+			} # end BC file
+			, 
+			{'file': 'testBC-grid-plain.res' , 'content' : """
+:
+ p2 >= 4
+& p1 >= 4
+& 5 > p2
+& 5 > p1
+
+------------------------------------------------------------
+Constraint soundness          : exact
+Termination                   : regular termination
+State space nature            : good
+Number of random selections   : 0
+------------------------------------------------------------
+Number of states              : 11
+Number of transitions         : 10
+"""
+			} # end BC file
+			, 
+			# NOTE: actual result
+			{'file': 'testBC-grid-plain.res' , 'content' : """
+(************************************************************)
+GENERAL STATISTICS
+(************************************************************)
+------------------------------------------------------------
+Number of integers in v0      : 16
+Number of tiles computed      : 16
+Coverage                      : integer-complete
+Termination                   : regular termination
+Number of unsuccessful points : 0
+Average number of states      : 8.0
+Average number of transitions : 7.0
+"""
+			} # end BC file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+	
+	,
+	
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test BC in mode shuffle (flip-flop)',
 		'input_files': ['flipflop.imi', 'flipflop.v0'],
 		'options'    : '-mode shuffle -output-result',
 		'expectations' : [
