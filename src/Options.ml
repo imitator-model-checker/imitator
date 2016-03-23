@@ -9,7 +9,7 @@
  * 
  * File contributors : Ulrich Kühne, Étienne André
  * Created           : 2010
- * Last modified     : 2016/03/16
+ * Last modified     : 2016/03/23
  *
  ************************************************************)
 
@@ -382,21 +382,22 @@ class imitator_options =
 				(* Case: number of iterations *)
 				else try (
 					(* Find the 'randomseq' string *)
-					if String.sub mode 0 9 = "randomseq" then(
+					if String.length mode >= 9 && String.sub mode 0 9 = "randomseq" then(
 						(* Find the number *)
 						let number = String.sub mode 9 (String.length mode - 9) in
 						imitator_mode <- (RandomSeq_cartography (int_of_string number))
 					)
 					(* Find the 'random' string *)
-					else if String.sub mode 0 6 = "random" then (
+					else if String.length mode >= 6 && String.sub mode 0 6 = "random" then (
 						(* Find the number *)
 						let number = String.sub mode 6 (String.length mode - 6) in
 						imitator_mode <- (Random_cartography (int_of_string number))
 					)
-					else raise (Failure "toto")
-				) with Failure _ | Invalid_argument _-> (
+					else raise (Failure "'randomseq' and 'random' not found")
+				) with Failure e | Invalid_argument e-> (
 					(*** HACK: print header now ***)
 					print_header_string();
+(* 					print_error("Error '" ^ e ^ "'"); *)
 					print_error ("The mode '" ^ mode ^ "' is not valid.");
 					Arg.usage speclist usage_msg;
 					abort_program ();
