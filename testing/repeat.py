@@ -76,11 +76,11 @@ def test(nb_times):
 	for i in range(1, nb_times):
 	
 		print i
-		cmd = [binary] + [make_file('flipflop.imi')] + [make_file('flipflop.v0')] + ('-mode random200').split()
+		cmd = [binary] + [make_file('flipflop.imi')] + [make_file('flipflop.v0')] + ('-mode random1').split()
 
 		result = subprocess.call(cmd, stdout=logfile) # , stderr=logfile
 		if result != 0:
-			print('...oops!')
+			print('...oops! Something went wrong, it seems.')
 			print ' '.join(cmd)
 			sys.exit(1)
 
