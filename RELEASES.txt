@@ -11,6 +11,7 @@ Bug fixing
 - Solved an inconsistency in the property syntax of the "always sequence" observer pattern
 - Remove three observer patterns that were allowed in the input syntax but not implemented
 - Correct the depth-limit option behavior (that used to compute one step further than requested)
+- All error messages now displayed on stderr (instead of stdout)
 
 Options
 - Added an option "-output-trace-set-verbose" to print trace set with all information contained in the .states file (i.e., the constraint and the constraint projected onto the parameters)
