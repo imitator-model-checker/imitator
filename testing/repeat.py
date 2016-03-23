@@ -75,7 +75,9 @@ def test(nb_times):
 	#*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
 	for i in range(1, nb_times):
 	
-		print i
+		# Do not print each step
+		if i % 25 == 0:
+			print i
 		cmd = [binary] + [make_file('flipflop.imi')] + [make_file('flipflop.v0')] + ('-mode random1').split()
 
 		result = subprocess.call(cmd, stdout=logfile) # , stderr=logfile
@@ -104,7 +106,7 @@ print(now.strftime("%A %d. %B %Y %H:%M:%S %z"))
 #************************************************************
 # TESTING
 #************************************************************
-test(10000)
+test(100000)
 
 #************************************************************
 # THE END
