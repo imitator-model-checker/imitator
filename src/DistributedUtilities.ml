@@ -8,7 +8,7 @@
  * Author:        Etienne Andre, Camille Coti
  * 
  * Created:       2014/03/24
- * Last modified: 2016/03/18
+ * Last modified: 2016/03/23
  *
  ****************************************************************)
 
@@ -891,12 +891,18 @@ let send_tiles im_result_list =
 
 	
 
-(*(** Master sends a tile update to a worker *)
-let send_tileupdate im_result slave_rank =
-	(*let rank = rank() in*)
+(** Master sends a tile update to a worker *)
+let send_tileupdate abstract_im_result slave_rank =
+	let serialized_data = serialize_abstract_im_result abstract_im_result in
+	
+	print_message Verbose_medium ("[Master] Serialized pi0 '" ^ serialized_data ^ "'");
+	
+	(* Call generic function *)
+	send_serialized_data slave_rank (int_of_master_tag Master_tileupdate_tag) serialized_data
 
-	(*print_message Verbose_medium ("[Worker " ^ (string_of_int rank) ^ "] Entering send_constraint");*)
-	let mlc = serialize_im_result im_result in
+	
+(*	(*print_message Verbose_medium ("[Worker " ^ (string_of_int rank) ^ "] Entering send_constraint");*)
+	let mlc =  in
 	let res_size = String.length mlc in
 
 	(*print_message Verbose_medium ("[Worker " ^ (string_of_int rank) ^ "] Serialized constraint '" ^ mlc ^ "'");*)
@@ -1032,7 +1038,7 @@ let send_stop source_rank =
   print_message Verbose_medium( "[Master] Sending STOP to [Worker " ^ (string_of_int source_rank ) ^"].");
   Mpi.send (weird_stuff()) source_rank (int_of_master_tag Master_stop_tag) Mpi.comm_world 
   
-(*(*Hoang Gia send TERMINATE tag*)
+(*Hoang Gia send TERMINATE tag*)
 let send_terminate source_rank = 
   print_message Verbose_medium( "[Master] Sending TERMINATE to [Worker " ^ (string_of_int source_rank ) ^"].");
   Mpi.send (weird_stuff()) source_rank (int_of_master_tag Master_terminate_tag) Mpi.comm_world 
@@ -1040,7 +1046,8 @@ let send_terminate source_rank =
 (*Hoang Gia send Continue tag*)
 let send_continue source_rank = 
   print_message Verbose_medium( "[Master] Sending CONTINUE to [Worker " ^ (string_of_int source_rank ) ^"].");
-  Mpi.send (weird_stuff()) source_rank (int_of_master_tag Master_continue_tag) Mpi.comm_world *)
+  Mpi.send (weird_stuff()) source_rank (int_of_master_tag Master_continue_tag) Mpi.comm_world 
+
 
 let receive_work () =
 	(* Get the model *)

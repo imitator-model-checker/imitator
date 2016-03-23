@@ -8,7 +8,7 @@
  * Author:        Etienne Andre, Camille Coti
  * 
  * Created:       2014/03/24
- * Last modified: 2016/03/18
+ * Last modified: 2016/03/23
  *
  ****************************************************************)
 
@@ -84,16 +84,18 @@ val send_pi0 : PVal.pval -> rank -> unit
 
 (* val send_pi0_worker : PVal.pval -> unit *)
 
-(* val send_subpart : HyperRectangle.hyper_rectangle -> rank -> unit*)
 
 val send_stop : rank -> unit
 
-(* val send_terminate : rank -> unit *)
 
-(* val send_continue : rank -> unit *)
-
+(** Used for dynamic subdomain *)
+val send_subpart : HyperRectangle.hyper_rectangle -> rank -> unit
+val send_terminate : rank -> unit
 (** Master sends a tile update to a worker *)
-(* val send_tileupdate : Result.abstract_im_result -> rank -> unit *)
+val send_tileupdate : Result.abstract_im_result -> rank -> unit
+
+val send_continue : rank -> unit
+
 
 
 
