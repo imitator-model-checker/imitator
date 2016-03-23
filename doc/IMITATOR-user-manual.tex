@@ -1333,7 +1333,7 @@ Various distribution modes are possible:
 
 \begin{description}
 	\item[\styleOption{no}] Non-distributed mode (default)
-	\item[\styleOption{static}] Static domain decomposition \cite{ACN15}; the number of nodes should be a power of~2 (the behavior of \imitator{} is unspecified otherwise)
+	\item[\styleOption{static}] Static domain decomposition \cite{ACN15}; %the number of nodes should be a power of~2 (the behavior of \imitator{} is unspecified otherwise)
 	\item[\styleOption{sequential}] Master-worker scheme with sequential point distribution \cite{ACE14}
 	\item[\styleOption{randomXX}] Master-worker scheme with random point distribution (\eg{} \styleOption{random5} or \styleOption{random10}); after \styleOption{XX} successive unsuccessful attempts (where the generated point is already covered), the algorithm will switch to an exhaustive sequential iteration \cite{ACE14}
 	\item[\styleOption{shuffle}] Master-worker scheme with shuffle point distribution \cite{ACN15}

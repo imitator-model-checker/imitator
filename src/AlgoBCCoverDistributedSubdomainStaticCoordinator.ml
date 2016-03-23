@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/03/17
- * Last modified     : 2016/03/18
+ * Last modified     : 2016/03/23
  *
  ************************************************************)
 
@@ -75,7 +75,7 @@ class algoBCCoverDistributedSubdomainStaticCoordinator =
 		(* The end *)
 		()
 
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+(*	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Initialization method (only non-empty for coordinator) *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method initialize =
@@ -84,7 +84,7 @@ class algoBCCoverDistributedSubdomainStaticCoordinator =
 			print_warning ("The number of nodes in the static distribution scheme must be a power of 2, but it is here equal to " ^ (string_of_int nb_collaborators) ^ "; the behavior of " ^ Constants.program_name ^ " is NOT specified.");
 		
 		(* The end *)
-		()
+		()*)
 
 	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)

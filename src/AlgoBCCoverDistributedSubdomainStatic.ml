@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/03/17
- * Last modified     : 2016/03/18
+ * Last modified     : 2016/03/23
  *
  ************************************************************)
 
@@ -105,7 +105,7 @@ class virtual algoBCCoverDistributedSubdomainStatic =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Initialization method (only non-empty for coordinator) *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method virtual initialize : unit
+(* 	method virtual initialize : unit *)
 	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Finalization method to process results communication to the coordinator *)
@@ -117,8 +117,8 @@ class virtual algoBCCoverDistributedSubdomainStatic =
 	(* Generic algorithm for all collaborators (including the coordinator) *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method run () =
-		(* Initialize: will do nothing for regular collaborators, and a few things (including a check that the number of nodes is a power of 2) for the coordinator) *)
-		self#initialize;
+(*		(* Initialize: will do nothing for regular collaborators, and a few things (including a check that the number of nodes is a power of 2) for the coordinator) *)
+		self#initialize;*)
 		
 		(* Print some information *)
 		self#print_algo_message Verbose_standard ("Computing own static subdomain...");
