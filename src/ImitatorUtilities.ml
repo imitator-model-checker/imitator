@@ -7,7 +7,7 @@
  * Author:        Etienne Andre
  * 
  * Created:       2014/10/24
- * Last modified: 2016/03/16
+ * Last modified: 2016/03/23
  *
  ****************************************************************)
  
@@ -239,13 +239,13 @@ let set_timed_mode () =
 (** Messages *)
 (****************************************************************)
 (* Print a string *)
-let print_message_generic message =
+let print_message_generic printing_function message =
 	(* Timed mode *)
 	let time_info =
 		if !timed_mode then (" (at t = " ^ (string_of_seconds (get_time())) ^ ")")
 		else "" in
 	(* Print message *)
-	print_string (message ^ time_info ^ "\n");
+	printing_function (message ^ time_info ^ "\n");
 	(* Flush! *)
 	flush Pervasives.stdout
 
@@ -263,7 +263,7 @@ let print_message message_verbose_mode message =
 		(* Add new lines and blanks everywhere *)
 		let formatted_message = spaces ^ (Str.global_replace (Str.regexp "\n") ("\n" ^ spaces) message) in
 		(* Print *)
-		print_message_generic formatted_message
+		print_message_generic print_string formatted_message
 	)
 
 
@@ -276,7 +276,8 @@ let print_warning message =
 		(* Add new lines and blanks everywhere *)
 		let formatted_message = spaces ^ "*** Warning: " ^ (Str.global_replace (Str.regexp "\n") ("\n" ^ spaces) message) in
 		(* Print *)
-		print_message_generic formatted_message
+		(*** NOTE: warnings are displaied to stderr (hence the OCaml function 'prerr_string') ***)
+		print_message_generic prerr_string formatted_message
 	)
 
 
@@ -286,7 +287,7 @@ let print_error message =
 	(* Add new lines and blanks everywhere *)
 	let formatted_message = spaces ^ "*** ERROR: " ^ (Str.global_replace (Str.regexp "\n") ("\n" ^ spaces) message) in
 	(* Print *)
-	print_message_generic formatted_message
+	print_message_generic prerr_string formatted_message
 
 
 
@@ -404,9 +405,11 @@ let print_memory_used verbose_level =
 (* Abort program *)
 let abort_program () =
 	print_error (Constants.program_name ^ " aborted (" ^ (after_seconds ()) ^ ")");
-	print_newline();
+	(*** NOTE: print new line to stderr ***)
+	prerr_newline();
 	flush Pervasives.stdout;
 	exit(1)
+
 
 (* Terminate program *)
 let terminate_program () =

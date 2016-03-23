@@ -1,14 +1,18 @@
-(*****************************************************************
+(************************************************************
  *
- *                     IMITATOR II
+ *                       IMITATOR
  * 
- * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
- * Author:        Etienne Andre
- * Created:       2010/03/04
- * Last modified: 2014/06/20
+ * Laboratoire Spécification et Vérification (ENS Cachan & CNRS, France)
+ * LIPN, Université Paris 13, Sorbonne Paris Cité (France)
+ * 
+ * Module description: unbounded exact rational computation using GMP
+ * 
+ * File contributors : Étienne André
+ * Created           : 2010/03/04
+ * Last modified     : 2016/03/23
  *
- ****************************************************************)
-
+ ************************************************************)
+ 
 (**************************************************)
 (* Type definition *)
 (**************************************************)
@@ -26,7 +30,6 @@ exception Unknown_numconst of string
 (* Global constants (for random generator) *)
 (**************************************************)
 let random_generator_state = ref None
-exception Random_generator_initialization_exception of string
 
 
 (**************************************************)
@@ -311,7 +314,9 @@ let random_generator() =
 			
 			(* Initialize random *)
 			(*** EXPLANATION: total HACK here, tried greater than 128 (e.g. 255) entails 'exception Invalid_argument("Gmp.Random.randinit"); WARNING! Got one time "Fatal error: exception Invalid_argument("Gmp.Random.randinit")" with 128 too; should add an exception mechanism with retry, just in case...' ***)
-			let random_value = Random.int (*max_int*)128 in
+			let max_random = (*max_int*)128 in
+			
+			let random_value = ref (Random.int max_random + 1) in
 			(*** HACK: The 4 lines below are written to empirically try a good value ! ***)
 		(*	for i = 0 to 100000 do
 				print_string ".";
@@ -319,7 +324,8 @@ let random_generator() =
 			done;*)
 			
 			(* Try several times just in case of a "Fatal error: exception Invalid_argument("Gmp.Random.randinit")" *)
-			let max_tries = 5 in
+			(*** NOTE (2016/03/23: in fact, it seems the problem simply occurs when random_value = 0! Solution: 1) add "+1" 2) Calling again Random.int is enough ***)
+			let max_tries = 10(*5*) in
 			let nb_tries = ref 0 in
 			let random_generator = ref None in
 			while !random_generator = None && !nb_tries < max_tries do
@@ -327,11 +333,14 @@ let random_generator() =
 				nb_tries := !nb_tries + 1;
 				try (
 					(*** WARNING: not sure to understand what I did there (EA, 26/4/2014) ***)
-					random_generator := Some (Gmp.RNG.randinit (Gmp.RNG.GMP_RAND_ALG_LC random_value));
+					random_generator := Some (Gmp.RNG.randinit (Gmp.RNG.GMP_RAND_ALG_LC !random_value));
 				) with Invalid_argument _ ->(
-					random_generator := None;
-(* 					print_string "\nPROBLEM WHILE INITIALIZING RANDOM GENERATOR"; *)
-(* 					print_newline(); *)
+(* 					random_generator := None; *)
+					prerr_string("WARNING: problem with random generator parameterized with " ^ (string_of_int !random_value) ^ ";");
+					(* Change random_value *)
+					random_value := Random.int max_random + 1;
+					prerr_string(" trying again with " ^ (string_of_int !random_value) ^ "");
+					prerr_newline();
 				);
 			done;
 			
@@ -343,12 +352,12 @@ let random_generator() =
 					(* Return *)
 					random_generator
 				| None -> (
-					(* Double printing for MPI-based version that does not report exceptions *)
+					(*** NOTE: Double printing for MPI-based version that does not report exceptions ***)
 					(*** TODO: this mechanism should be factored in a "super Global.ml" module ***)
-					print_string("Fatal error during random generator initialization. Aborting.");
-					print_newline();
+					prerr_string("Fatal error during random generator initialization. Aborting.");
+					prerr_newline();
 					flush Pervasives.stdout;
-					raise (Random_generator_initialization_exception("Fatal error during random generator initialization."));
+					raise (Exceptions.Random_generator_initialization_exception);
 				);
 			in result
 

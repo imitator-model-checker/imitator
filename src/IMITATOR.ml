@@ -9,7 +9,7 @@
  * 
  * File contributors : Ulrich Kühne, Étienne André
  * Created           : 2009/09/07
- * Last modified     : 2016/03/17
+ * Last modified     : 2016/03/23
  *
  ************************************************************)
 
@@ -552,6 +552,12 @@ ResultProcessor.process_result result algorithm#algorithm_name None;
 	);
 	| Not_found -> (
 		print_error ("'Not_found' exception!\nPlease (politely) insult the developers.");
+		abort_program ();
+		(* Safety *)
+		exit 1
+	);
+	| Random_generator_initialization_exception-> (
+		print_error ("A fatal error occurred during the random generator initialization.\nPlease (politely) insult the developers.");
 		abort_program ();
 		(* Safety *)
 		exit 1
