@@ -10,7 +10,7 @@
 # 
 # File contributors : Étienne André
 # Created           : 2012/05/??
-# Last modified     : 2016/03/14
+# Last modified     : 2016/03/23
 #************************************************************
 
 
@@ -67,7 +67,7 @@ def make_file(file_name) :
 def fail_with(text) :
 	print_to_log('Fatal error!')
 	print_to_log(text)
-	sys.exit(0)
+	sys.exit(1)
 
 def print_warning(text) :
 	print_to_log(' *** Warning: ' + text)
@@ -314,3 +314,5 @@ test(DISTRIBUTED_BINARY_NAME, tests_distr + tests, logfile, DISTRIBUTED_LOGFILE)
 
 print_to_screen_and_log('')
 print_to_screen_and_log('...The end of TESTATOR!')
+
+sys.exit(0)
