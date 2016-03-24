@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/03/17
- * Last modified     : 2016/03/18
+ * Last modified     : 2016/03/24
  *
  ************************************************************)
 
@@ -219,19 +219,16 @@ class virtual algoBCCoverDistributedSubdomain =
 
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(** Initialize the subdomains *)
+	(** Compute the initial subdomains (with the v0 and the number of collaborators as arguments) *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(*** WARNING: this function was originaly called with -1 for the number of collaborators ***)
-	method compute_initial_subdomains =
-		(* Get the v0 *)
-		let v0 = Input.get_v0() in
-		
-		(*** NOTE: code originally from DistributedMasterSlaveSubdomains.ml, written by Hoang Gia Nguyen (2014) ***)
+	(*** NOTE: code originally from DistributedMasterSlaveSubdomains.ml, written by Hoang Gia Nguyen (2014) ***)
+	method compute_initial_subdomains_with v0 nb_nodes =
 		let subdomains = ref [v0] in
-		
+
 		(*** WARNING: I am totally incapable of understanding why "-2" below (ÉA, 2016/03/18) ***)
-		(*** NOTE: there was indeeed a "-1" in the function argument of Hoang Gia's code before moving it to here, which is equivalent to the following "-2" ***) 
-		for l = 0 to nb_collaborators - 2 do 
+		(*** QUESTION ***)
+		for l = 0 to (*nb_collaborators - 2*)nb_nodes - 1 do 
 		begin
 		
 	(* Find the largest subdomain to split *)
@@ -266,6 +263,20 @@ class virtual algoBCCoverDistributedSubdomain =
 		
 		(* Return the subdomains *)
 		!subdomains
+	
+	
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(** Compute the initial subdomains (retrieving automatically v0 and the number of collaborators) *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(*** WARNING: this function was originaly called with -1 for the number of collaborators ***)
+	method compute_initial_subdomains =
+		(* Get the v0 *)
+		let v0 = Input.get_v0() in
+		
+		(* Call generic method *)
+		self#compute_initial_subdomains_with v0 (nb_collaborators - 1)
+		
+
 
 		
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)

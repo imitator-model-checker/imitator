@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/03/17
- * Last modified     : 2016/03/18
+ * Last modified     : 2016/03/24
  *
  ************************************************************)
 
@@ -45,11 +45,18 @@ class virtual algoBCCoverDistributedSubdomain :
 		
 		method initialize_variables : unit
 		
+			
+		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+		(** Compute the initial subdomains (with the v0 and the number of collaborators as arguments) *)
+		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+		method compute_initial_subdomains_with : HyperRectangle.hyper_rectangle -> int -> HyperRectangle.hyper_rectangle list
+
 		
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-		(** Initialize the subdomains *)
+		(** Compute the initial subdomains (retrieving automatically v0 and the number of collaborators) *)
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		method compute_initial_subdomains : HyperRectangle.hyper_rectangle list
+		
 		
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		(* Generic algorithm *)

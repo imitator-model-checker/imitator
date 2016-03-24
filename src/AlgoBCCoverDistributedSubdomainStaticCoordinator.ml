@@ -189,6 +189,7 @@ class algoBCCoverDistributedSubdomainStaticCoordinator =
 			tiles				= !tiles;
 			
 			(* Total computation time of the algorithm *)
+			(*** NOTE: here the sum of all computation times (?) ***)
 			computation_time	= !computation_time;
 			
 			(* Computation time to look for points *)
