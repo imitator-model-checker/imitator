@@ -5,6 +5,7 @@
  * LIPN, Université Paris 13, Sorbonne Paris Cité (France)
  * 
  * Module description: Classical Behavioral Cartography with exhaustive coverage of integer points [AF10]. Distribution mode: subdomain. [ACN15]
+ * Coordinator algorithm
  * 
  * File contributors : Étienne André
  * Created           : 2016/03/17

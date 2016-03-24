@@ -426,7 +426,11 @@ let algorithm : AlgoGeneric.algoGeneric = match options#imitator_mode with
 				let myalgo :> AlgoGeneric.algoGeneric = bc_algo in
 				myalgo
 			else
-				raise (InternalError("not implemented"))
+				let bc_algo = new AlgoBCCoverDistributedSubdomainDynamicCollaborator.algoBCCoverDistributedSubdomainDynamicCollaborator in
+				(*** NOTE: very important: must set NOW the parameters ***)
+				bc_algo#set_algo_instance_function new_im_or_prp;
+				let myalgo :> AlgoGeneric.algoGeneric = bc_algo in
+				myalgo
 
 		(** Distributed mode: static distribution mode (each node has its own subdomain with no communication) *)
 		| Distributed_static ->

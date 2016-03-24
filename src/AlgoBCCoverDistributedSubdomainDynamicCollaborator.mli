@@ -5,11 +5,11 @@
  * LIPN, Université Paris 13, Sorbonne Paris Cité (France)
  * 
  * Module description: Classical Behavioral Cartography with exhaustive coverage of integer points [AF10]. Distribution mode: subdomain. [ACN15]
- * Coordinator algorithm
+ * Collaborator (non-coordinator) algorithm
  * 
  * File contributors : Étienne André
- * Created           : 2016/03/17
- * Last modified     : 2016/03/17
+ * Created           : 2016/03/24
+ * Last modified     : 2016/03/24
  *
  ************************************************************)
 
@@ -22,7 +22,7 @@ open AlgoGeneric
 (************************************************************)
 (* Class definition *)
 (************************************************************)
-class algoBCCoverDistributedSubdomainDynamicCoordinator :
+class algoBCCoverDistributedSubdomainDynamicCollaborator :
 	object
 	inherit AlgoBCCoverDistributedSubdomain.algoBCCoverDistributedSubdomain
 
