@@ -8,7 +8,7 @@
  * Author:        Etienne Andre, Camille Coti
  * 
  * Created:       2014/03/24
- * Last modified: 2016/03/23
+ * Last modified: 2016/03/24
  *
  ****************************************************************)
 
@@ -39,7 +39,7 @@ type pull_request =
 	| PullOnly of rank
 	| Tile of rank * Result.abstract_im_result
 	| OutOfBound of rank
-	(* Subpart tags *)
+	(* Subdomain tags *)
 (* 	| Tiles of rank * (Result.abstract_im_result list) *)
 (* 	| BC_result of rank * bc_result *)
 	| Pi0 of rank * PVal.pval
@@ -50,8 +50,8 @@ type pull_request =
 type work_assignment =
 	| Work of PVal.pval
 	| Stop
-	(* Subpart tags *)
-	| Subpart of HyperRectangle.hyper_rectangle
+	(* Subdomain tags *)
+	| Subdomain of HyperRectangle.hyper_rectangle
 	| TileUpdate of Result.abstract_im_result
 	| Terminate
 	| Continue
@@ -69,7 +69,7 @@ type mpi_slave_tag =
 	| Slave_tile_tag (*Tile tag or constraint K*)
 	| Slave_work_tag (*Pull tag*)
 	| Slave_outofbound_tag (* out of bounded workers exception *)
-	(* Subpart tags *)
+	(* Subdomain tags *)
 	| Slave_tiles_tag (** NEW TAG **)
 	| Slave_bcresult_tag
 	| Slave_pi0_tag
@@ -79,9 +79,9 @@ type mpi_slave_tag =
 type mpi_master_tag =
 	| Master_data_tag (*pi0*)
 	| Master_stop_tag (*Stop tags*)
-	(* Subpart tags *)
+	(* Subdomain tags *)
 	| Master_tileupdate_tag
-	| Master_subpart_tag
+	| Master_subdomain_tag
 	(*** NOTE: difference with Master_stop_tag ??? ***)
 	| Master_terminate_tag
 	| Master_continue_tag
@@ -709,7 +709,7 @@ let int_of_slave_tag = function
 	| Slave_tile_tag -> 1
 	| Slave_work_tag -> 2
 	| Slave_outofbound_tag -> 3
-	(* Subpart tags *)
+	(* Subdomain tags *)
 	| Slave_tiles_tag -> 4
 	| Slave_bcresult_tag -> 5
 	| Slave_pi0_tag -> 6
@@ -723,7 +723,7 @@ let int_of_master_tag = function
 	| Master_stop_tag -> 18
 	(*Hoang Gia new tags*)
 	| Master_tileupdate_tag -> 19
-	| Master_subpart_tag -> 20
+	| Master_subdomain_tag -> 20
 	| Master_terminate_tag -> 21
 	| Master_continue_tag -> 22
 	(*** NOTE: unused match case (but safer!) ***)
@@ -734,7 +734,7 @@ let worker_tag_of_int = function
 	| 1 -> Slave_tile_tag
 	| 2 -> Slave_work_tag
 	| 3 -> Slave_outofbound_tag
-	(* Subpart tags *)
+	(* Subdomain tags *)
 	| 4 -> Slave_tiles_tag
 	| 5 -> Slave_bcresult_tag
 	| 6 -> Slave_pi0_tag
@@ -746,7 +746,7 @@ let master_tag_of_int = function
 	| 18 -> Master_stop_tag
 	(*Hoang Gia new tags*)
 	| 19 -> Master_tileupdate_tag
-	| 20 -> Master_subpart_tag
+	| 20 -> Master_subdomain_tag
 	| 21 -> Master_terminate_tag
 	| 22 -> Master_continue_tag
 	| other -> raise (InternalError ("Impossible match '" ^ (string_of_int other) ^ "' in master_tag_of_int."))
@@ -934,14 +934,14 @@ let send_update_request () =
 	Mpi.send (get_rank()) master_rank (int_of_slave_tag Slave_updaterequest_tag) Mpi.comm_world
 	
 	
-(*Hoang Gia send subpart by the Master*)
-let send_subpart (subpart : HyperRectangle.hyper_rectangle) slave_rank =
-	let msubpart = serialize_hyper_rectangle subpart in
-	let res_size = String.length msubpart in
+(*Hoang Gia send subdomain by the Master*)
+let send_subdomain (subdomain : HyperRectangle.hyper_rectangle) slave_rank =
+	let msubdomain = serialize_hyper_rectangle subdomain in
+	let res_size = String.length msubdomain in
 	
-	(* Send the subpart: 1st send the data size, then the data *)
-	Mpi.send res_size slave_rank (int_of_master_tag Master_subpart_tag ) Mpi.comm_world;
-	Mpi.send msubpart slave_rank (int_of_master_tag Master_subpart_tag) Mpi.comm_world
+	(* Send the subdomain: 1st send the data size, then the data *)
+	Mpi.send res_size slave_rank (int_of_master_tag Master_subdomain_tag ) Mpi.comm_world;
+	Mpi.send msubdomain slave_rank (int_of_master_tag Master_subdomain_tag) Mpi.comm_world
 	
 
 (** Handle reception by the master *)
@@ -1097,18 +1097,18 @@ let receive_work () =
 		let abstract_im_result = unserialize_abstract_im_result !work1 in
 		TileUpdate abstract_im_result
 		
-	| Master_subpart_tag -> 
+	| Master_subdomain_tag -> 
 	  	(* Receive the data itself *)
 		let buff2 = String.create w in
 		let work2 = ref buff2 in
 
-		work2 := Mpi.receive master_rank (int_of_master_tag Master_subpart_tag) Mpi.comm_world;
+		work2 := Mpi.receive master_rank (int_of_master_tag Master_subdomain_tag) Mpi.comm_world;
 		
-		print_message Verbose_high ("Received " ^ (string_of_int w) ^ " bytes of work '" ^ !work2 ^ "' with tag " ^ (string_of_int (int_of_master_tag Master_subpart_tag)));
+		print_message Verbose_high ("Received " ^ (string_of_int w) ^ " bytes of work '" ^ !work2 ^ "' with tag " ^ (string_of_int (int_of_master_tag Master_subdomain_tag)));
 		
 		(* Get the K *)
-		let subpart = unserialize_hyper_rectangle !work2 in
-		Subpart subpart
+		let subdomain = unserialize_hyper_rectangle !work2 in
+		Subdomain subdomain
 
 	| Master_terminate_tag -> Terminate
 	

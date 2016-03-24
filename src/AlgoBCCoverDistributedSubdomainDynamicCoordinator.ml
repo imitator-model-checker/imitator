@@ -48,16 +48,16 @@ let rec remove_at (lst : 'a list) (n : int) : 'a list=
 	| h :: t -> if n = 0 then t else h :: remove_at t (n-1);;
 	
 
-(*get number of points in subpart*)
-let compute_nb_points_in_subpart (s : HyperRectangle.hyper_rectangle)=
+(*get number of points in subdomain*)
+let compute_nb_points_in_subdomain (s : HyperRectangle.hyper_rectangle)=
 	let total = ref 1 in
 	for i=0 to (HyperRectangle.get_dimensions()-1) do
 	total := !total * (NumConst.to_int(s#get_max i) - NumConst.to_int(s#get_min i) + 1);
 	done;
 	!total
 	
-(*compute the how many points was done in subpart*)
-let compute_nb_done_points_in_subpart (s : HyperRectangle.hyper_rectangle) (arr : AbstractModel.pi0) =
+(*compute the how many points was done in subdomain*)
+let compute_nb_done_points_in_subdomain (s : HyperRectangle.hyper_rectangle) (arr : AbstractModel.pi0) =
 	let sum = ref 0 in
 	let tail = ref 1 in
 	for i= 1 to (HyperRectangle.get_dimensions()-1) do
@@ -72,7 +72,7 @@ let compute_nb_done_points_in_subpart (s : HyperRectangle.hyper_rectangle) (arr 
 
 let split2 s dimension n = 
 	let d = HyperRectangle.get_dimensions() -1 in
-	(* Sliptting subpart into 2 smaller subparts*)
+	(* Sliptting subdomain into 2 smaller subdomains*)
 	(*Display information of s*)
 	(*print_message Verbose_standard ("\nSplitting............! ");
 	print_message Verbose_standard ("\ns infomation: ");
@@ -80,7 +80,7 @@ let split2 s dimension n =
 	for j = 0 to d do
 	print_message Verbose_standard ("Dimension " ^(string_of_int j)^" : "^ " min = " ^ (string_of_int (NumConst.to_int(s#get_min j)))^";"^ " max = " ^ (string_of_int (NumConst.to_int(s#get_max j))));
 	done;
-	(*check pi0 in subpart*)
+	(*check pi0 in subdomain*)
 	let totalpi0 = getTotalPi0 s d in
 	print_message Verbose_standard ("Total pi0s in s is : " ^ (string_of_int totalpi0) );*)
 	(**********************************end printing***************************************************)
@@ -88,8 +88,8 @@ let split2 s dimension n =
 	(*count from zero so that add 1 unit*)
 	max_d_l := ( (NumConst.to_int(s#get_max dimension)) - (NumConst.to_int(s#get_min dimension)) +1 );
 	if (!max_d_l = 1) then raise (InternalError ("the length is minimum, could not split smaller "));
-	print_message Verbose_medium ("\ndetected Max dimension length in this subpart is : " ^ (string_of_int (!max_d_l)) ^ " unit at dimension " ^ (string_of_int (dimension))); 
-	  (*create new subparts*)
+	print_message Verbose_medium ("\ndetected Max dimension length in this subdomain is : " ^ (string_of_int (!max_d_l)) ^ " unit at dimension " ^ (string_of_int (dimension))); 
+	  (*create new subdomains*)
 	  let s1 = new HyperRectangle.hyper_rectangle in
 	  let s2 = new HyperRectangle.hyper_rectangle in
 	    for i = 0 to d do
@@ -127,7 +127,7 @@ let split2 s dimension n =
 	for i = 0 to d do
 	print_message Verbose_standard ("Dimension " ^(string_of_int i)^" : "^ " min = " ^ (string_of_int (NumConst.to_int(s1#get_min i)))^";"^ " max = " ^ (string_of_int (NumConst.to_int(s1#get_max i))));
 	done;
-	(*check pi0 in subpart*)
+	(*check pi0 in subdomain*)
 	let totalpi0s1 = getTotalPi0 s1 d in
 	print_message Verbose_standard ("Total pi0s in s1 is : " ^ (string_of_int totalpi0s1) );
 	(*Display information of s2*)
@@ -135,7 +135,7 @@ let split2 s dimension n =
 	for i = 0 to d do
 	print_message Verbose_standard ("Dimension " ^(string_of_int i)^" : "^ " min = " ^ (string_of_int (NumConst.to_int(s2#get_min i)))^";"^ " max = " ^ (string_of_int (NumConst.to_int(s2#get_max i))));
 	done;
-	(*check pi0 in subpart*)
+	(*check pi0 in subdomain*)
 	let totalpi0s2 = getTotalPi0 s2 d in
 	print_message Verbose_standard ("Total pi0s in s2 is : " ^ (string_of_int totalpi0s2) );*)
 	(***************************************************************************)
@@ -143,22 +143,22 @@ let split2 s dimension n =
 	()
 	
 
-(* dynamic split subpart *)
-let dynamicSplitSubpart (s : HyperRectangle.hyper_rectangle) pi0 n : HyperRectangle.hyper_rectangle list =
+(* dynamic split subdomain *)
+let dynamicSplitSubdomain (s : HyperRectangle.hyper_rectangle) pi0 n : HyperRectangle.hyper_rectangle list =
 	print_message Verbose_medium ("\n entering dynamic splitting process" );
-	(*let pi0 = get_next_sequential_pi0_in_subpart pi0 s in *)
+	(*let pi0 = get_next_sequential_pi0_in_subdomain pi0 s in *)
 	let notFound = ref true in
 	let max_d_l = ref 0 in
 	let j = ref (HyperRectangle.get_dimensions()-1) in
 	let lst = ref [] in
 	while( !notFound (*&& (!j != -1)*) ) do
 	  begin
-	   (* if(!j = -1) then  print_message Verbose_medium ("\n all demensions of subpart could not split" ); raise (InternalError (" there are only 1 pi0 left in subpart, could not split! "));*)
-	    (*if current pi0 at max dimension j but the Min at demension j of subpart is lower, split all the done pi0 below j*)
-	    (*update subpart*)
+	   (* if(!j = -1) then  print_message Verbose_medium ("\n all demensions of subdomain could not split" ); raise (InternalError (" there are only 1 pi0 left in subdomain, could not split! "));*)
+	    (*if current pi0 at max dimension j but the Min at demension j of subdomain is lower, split all the done pi0 below j*)
+	    (*update subdomain*)
 	    if ( NumConst.to_int(s#get_min (!j)) < pi0.(!j) ) then begin s#set_min (!j) (NumConst.numconst_of_int (pi0.(!j))) end;
 	    max_d_l := ( (NumConst.to_int(s#get_max (!j)) - pi0.(!j) ) +1 ) ;
-	    (*split subpart if the remain distance from pi0 to max dimension at leat 2 points*)
+	    (*split subdomain if the remain distance from pi0 to max dimension at leat 2 points*)
 	    if( !max_d_l > 1 ) then
 	      begin
 		print_message Verbose_medium ("\nBegin split at demension : " ^ (string_of_int (!j) ) );
@@ -211,7 +211,7 @@ class algoBCCoverDistributedSubdomainDynamicCoordinator =
 	val mutable termination = None
 
 	(* Create an index(worker,supart) *)
-	val mutable current_subparts = []
+	val mutable current_subdomains = []
 	
 	(* Workers in waiting list *)
 	val mutable waiting_workers = []
@@ -281,17 +281,17 @@ class algoBCCoverDistributedSubdomainDynamicCoordinator =
 		
 		self#print_algo_message Verbose_standard ("Hello world");
 		
-		(* List of subparts maintained by the master *)
+		(* List of subdomains maintained by the master *)
 		subdomains <- [];
 		
 
 		(* Create an index(worker,supart) *)
-		current_subparts <- [];
+		current_subdomains <- [];
 
 		(* Initialize waiting list  *)
 		waiting_workers <- [];
 		
-		(*initialize list of subpart*)
+		(*initialize list of subdomain*)
 		(*** TODO ***)
 (* 		counter_master_split#start; *)
 		subdomains <- self#compute_initial_subdomains;
@@ -326,18 +326,18 @@ class algoBCCoverDistributedSubdomainDynamicCoordinator =
 			| PullOnly source_rank ->
 				self#print_algo_message Verbose_medium ("Received a pull request from worker " ^ (string_of_int source_rank) ^ "");
 				(* check to delete if the worker comeback *)
-				if List.mem_assoc source_rank current_subparts then
-					current_subparts <- List.remove_assoc source_rank current_subparts;
+				if List.mem_assoc source_rank current_subdomains then
+					current_subdomains <- List.remove_assoc source_rank current_subdomains;
 				
 				if subdomains <> [] then( 
-					(*send new subpart *)
-					DistributedUtilities.send_subpart (List.hd subdomains) source_rank;
-					self#print_algo_message Verbose_medium ("Sent Subpart to worker " ^ (string_of_int source_rank) ^ "");
-					(*add into current_subparts*)
-					current_subparts <- current_subparts @ [( source_rank, (List.hd subdomains) )];
+					(*send new subdomain *)
+					DistributedUtilities.send_subdomain (List.hd subdomains) source_rank;
+					self#print_algo_message Verbose_medium ("Sent Subdomain to worker " ^ (string_of_int source_rank) ^ "");
+					(*add into current_subdomains*)
+					current_subdomains <- current_subdomains @ [( source_rank, (List.hd subdomains) )];
 					subdomains <- List.tl subdomains;
 				)
-				(*have not any subpart in list -> splitting* , if could not split -> terminate*)
+				(*have not any subdomain in list -> splitting* , if could not split -> terminate*)
 				else(
 
 					waiting_workers <- waiting_workers @ [source_rank];
@@ -359,10 +359,10 @@ class algoBCCoverDistributedSubdomainDynamicCoordinator =
 
 				if constraint_added then(
 					(*receive abstract_im_result then send to the other workers to update*)
-					for i = 0 to (List.length current_subparts)-1 do
-						if (fst (List.nth current_subparts i)) <> source_rank then(
-							(* send_tile abstract_im_result (first (List.nth current_subparts i));*)
-							tiles_buffer <- tiles_buffer @ [(fst (List.nth current_subparts i)), abstract_im_result];
+					for i = 0 to (List.length current_subdomains)-1 do
+						if (fst (List.nth current_subdomains i)) <> source_rank then(
+							(* send_tile abstract_im_result (first (List.nth current_subdomains i));*)
+							tiles_buffer <- tiles_buffer @ [(fst (List.nth current_subdomains i)), abstract_im_result];
 						);
 					done
 				) (* end if constraint_added *)
@@ -389,14 +389,14 @@ class algoBCCoverDistributedSubdomainDynamicCoordinator =
 					self#print_algo_message Verbose_medium ("waiting List : " ^ (string_of_int (List.length waiting_workers) ) ^ "");
 					
 					(*** QUESTION: what is s? ***)
-					let s = List.assoc source_rank current_subparts in
+					let s = List.assoc source_rank current_subdomains in
 					
-					(*compute the remain points int this subpart*)
+					(*compute the remain points int this subdomain*)
 					
 				(*** TODO ***)
 (* 					counter_master_split#start; *)
-					let max_size = compute_nb_points_in_subpart s in
-					let done_points = compute_nb_done_points_in_subpart s pi0 in
+					let max_size = compute_nb_points_in_subdomain s in
+					let done_points = compute_nb_done_points_in_subdomain s pi0 in
 				(*** TODO ***)
 (* 					counter_master_split#stop; *)
 
@@ -410,26 +410,26 @@ class algoBCCoverDistributedSubdomainDynamicCoordinator =
 					if remaining_points > 1 (*(List.length waiting_workers)*) then(
 						self#print_algo_message Verbose_medium ("Splitting ....... ");
 						
-						(*if splitable, remove it in the current_subparts*)
-						current_subparts <- (List.remove_assoc source_rank current_subparts);
+						(*if splitable, remove it in the current_subdomains*)
+						current_subdomains <- (List.remove_assoc source_rank current_subdomains);
 						
 						let pi0arr = pval2array pi0 in
 						
 						(*** TODO ***)
 (* 							counter_master_split#start; *)
-						let newSubparts = dynamicSplitSubpart s pi0arr ((List.length waiting_workers)+1)in
+						let newSubdomains = dynamicSplitSubdomain s pi0arr ((List.length waiting_workers)+1)in
 						(*** TODO ***)
 (* 							counter_master_split#stop; *)
 						
 						(*send back to this worker*)
-						let subpart1 = List.hd newSubparts in
-						send_subpart subpart1 source_rank;
-						self#print_algo_message Verbose_medium ("sent split subpart 1....... ");
+						let subdomain1 = List.hd newSubdomains in
+						send_subdomain subdomain1 source_rank;
+						self#print_algo_message Verbose_medium ("sent split subdomain 1....... ");
 						
-						current_subparts <- current_subparts @ [source_rank, subpart1];
+						current_subdomains <- current_subdomains @ [source_rank, subdomain1];
 						
-						let subpart2 = (at newSubparts 1) in
-						let size = compute_nb_points_in_subpart subpart2 in
+						let subdomain2 = (at newSubdomains 1) in
+						let size = compute_nb_points_in_subdomain subdomain2 in
 						let n =
 							(*** QUESTION/WARNING: why -1 ??? ***)
 							if size >= (List.length waiting_workers) then (List.length waiting_workers) - 1
@@ -437,11 +437,11 @@ class algoBCCoverDistributedSubdomainDynamicCoordinator =
 							else size - 1
 						in
 						
-						let newSubparts2 = self#compute_initial_subdomains_with subpart2 n in
-						for i = 0 to ( (List.length newSubparts2) -1) do
+						let newSubdomains2 = self#compute_initial_subdomains_with subdomain2 n in
+						for i = 0 to ( (List.length newSubdomains2) -1) do
 							let w = List.hd waiting_workers in
-							send_subpart (at newSubparts2 i) w;
-							current_subparts <- current_subparts @ [w, (at newSubparts2 i)];
+							send_subdomain (at newSubdomains2 i) w;
+							current_subdomains <- current_subdomains @ [w, (at newSubdomains2 i)];
 							waiting_workers <- remove_at waiting_workers 0;
 						done;
 						
@@ -467,8 +467,8 @@ class algoBCCoverDistributedSubdomainDynamicCoordinator =
 			|_ -> raise (InternalError("There should be no other case here."));
 			end; (* match *)
 
-			(* Stop condition 1: no subparts? *)
-			if current_subparts = [] then(
+			(* Stop condition 1: no subdomains? *)
+			if current_subdomains = [] then(
 				covered <- true;
 			);
 

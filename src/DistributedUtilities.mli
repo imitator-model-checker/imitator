@@ -8,7 +8,7 @@
  * Author:        Etienne Andre, Camille Coti
  * 
  * Created:       2014/03/24
- * Last modified: 2016/03/23
+ * Last modified: 2016/03/24
  *
  ****************************************************************)
 
@@ -24,7 +24,7 @@ type pull_request =
 	| PullOnly of rank
 	| Tile of rank * Result.abstract_im_result
 	| OutOfBound of rank
-	(* Subpart tags *)
+	(* Subdomain tags *)
 (* 	| Tiles of rank * (Result.abstract_im_result list) *)
 (* 	| BC_result of rank * Result.bc_result *)
 	| Pi0 of rank * PVal.pval
@@ -35,8 +35,8 @@ type pull_request =
 type work_assignment =
 	| Work of PVal.pval
 	| Stop
-	(* Subpart tags *)
-	| Subpart of HyperRectangle.hyper_rectangle
+	(* Subdomain tags *)
+	| Subdomain of HyperRectangle.hyper_rectangle
 	| TileUpdate of Result.abstract_im_result
 	| Terminate
 	| Continue
@@ -89,7 +89,7 @@ val send_stop : rank -> unit
 
 
 (** Used for dynamic subdomain *)
-val send_subpart : HyperRectangle.hyper_rectangle -> rank -> unit
+val send_subdomain : HyperRectangle.hyper_rectangle -> rank -> unit
 val send_terminate : rank -> unit
 (** Master sends a tile update to a worker *)
 val send_tileupdate : Result.abstract_im_result -> rank -> unit
