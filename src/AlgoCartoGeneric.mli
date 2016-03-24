@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/01/19
- * Last modified     : 2016/03/17
+ * Last modified     : 2016/03/24
  *
  ************************************************************)
 
@@ -41,6 +41,11 @@ type more_points =
 (************************************************************)
 (* Convert an 'im_result' into an 'abstract_im_result' *)
 val abstract_im_result_of_im_result : Result.im_result -> PVal.pval -> Result.abstract_im_result
+
+(*------------------------------------------------------------*)
+(* Print warning(s) depending on a Result.bc_algorithm_termination *)
+(*------------------------------------------------------------*)
+val print_warnings_limit_for : Result.bc_algorithm_termination -> unit
 
 
 (************************************************************)

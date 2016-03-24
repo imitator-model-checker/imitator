@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/01/19
- * Last modified     : 2016/03/18
+ * Last modified     : 2016/03/24
  *
  ************************************************************)
 
@@ -130,8 +130,25 @@ let pi0_in_tiles pval (abstract_im_result : abstract_im_result) =
 	| LinearConstraint.Convex_p_constraint p_linear_constraint -> LinearConstraint.is_pi0_compatible pval#get_value p_linear_constraint
 	| LinearConstraint.Nonconvex_p_constraint p_nnconvex_constraint -> LinearConstraint.p_nnconvex_constraint_is_pi0_compatible pval#get_value p_nnconvex_constraint
 
+(*------------------------------------------------------------*)
+(* Print warning(s) depending on a Result.bc_algorithm_termination *)
+(*------------------------------------------------------------*)
+let print_warnings_limit_for = function
+	| BC_Regular_termination -> ()
 
+	| BC_Tiles_limit -> print_warning (
+		"The limit number of tiles has been computed. The exploration now stops although there may be some more points to cover."
+			(*** TODO (one day): really say whether some points are still uncovered ***)
+	)
+
+	| BC_Time_limit -> print_warning (
+		"The time limit for the cartography has been reached. The exploration now stops although there may be some more points to cover."
+			(*** TODO (one day): really say whether some points are still uncovered ***)
+	)
 	
+	| BC_Mixed_limit -> raise (InternalError "The termination status 'BC_Mixed_limit' should not be called in a single non-distributed instance of BC.")
+
+
 
 (************************************************************)
 (************************************************************)
@@ -556,7 +573,7 @@ class virtual algoCartoGeneric =
 		
 		(* Check all limits *)
 		
-		(* Depth limit *)
+		(* Tiles limit *)
 		try(
 		begin
 		match options#carto_tiles_limit with
@@ -570,7 +587,7 @@ class virtual algoCartoGeneric =
 		begin
 		match options#carto_time_limit with
 			| None -> ()
-			| Some limit -> if (time_from start_time) > (float_of_int limit) then(
+			| Some limit -> if (time_from start_time) >= (float_of_int limit) then(
 				raise (Limit_detected Time_limit_reached)
 			)
 		end
@@ -817,20 +834,7 @@ class virtual algoCartoGeneric =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method print_warnings_limit =
 		match termination_status with
-			| Some BC_Regular_termination -> ()
-
-			| Some BC_Tiles_limit -> print_warning (
-				"The limit number of tiles has been computed. The exploration now stops although there may be some more points to cover."
-					(*** TODO (one day): really say whether some points are still uncovered ***)
-			)
-
-			| Some BC_Time_limit -> print_warning (
-				"The time limit for the cartography has been reached. The exploration now stops although there may be some more points to cover."
-					(*** TODO (one day): really say whether some points are still uncovered ***)
-			)
-			
-			| Some BC_Mixed_limit -> raise (InternalError "The termination status 'BC_Mixed_limit' should not be called in a single non-distributed instance of BC.")
-			
+			| Some status -> print_warnings_limit_for status
 			| None -> raise (InternalError "The termination status should be set when displaying warnings concerning early termination.")
 
 	
