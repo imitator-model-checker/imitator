@@ -7,7 +7,7 @@
  * Author:        Etienne Andre
  * 
  * Created:       2014/10/24
- * Last modified: 2016/03/23
+ * Last modified: 2016/03/29
  *
  ****************************************************************)
  
@@ -239,7 +239,7 @@ let set_timed_mode () =
 (** Messages *)
 (****************************************************************)
 (* Print a string *)
-let print_message_generic printing_function message =
+let print_message_generic printing_function channel message =
 	(* Timed mode *)
 	let time_info =
 		if !timed_mode then (" (at t = " ^ (string_of_seconds (get_time())) ^ ")")
@@ -247,7 +247,7 @@ let print_message_generic printing_function message =
 	(* Print message *)
 	printing_function (message ^ time_info ^ "\n");
 	(* Flush! *)
-	flush Pervasives.stdout
+	flush channel
 
 
 (* Print a message if global_verbose_mode >= message_verbose_mode *)
@@ -263,7 +263,7 @@ let print_message message_verbose_mode message =
 		(* Add new lines and blanks everywhere *)
 		let formatted_message = spaces ^ (Str.global_replace (Str.regexp "\n") ("\n" ^ spaces) message) in
 		(* Print *)
-		print_message_generic print_string formatted_message
+		print_message_generic print_string Pervasives.stdout formatted_message
 	)
 
 
@@ -277,7 +277,7 @@ let print_warning message =
 		let formatted_message = spaces ^ "*** Warning: " ^ (Str.global_replace (Str.regexp "\n") ("\n" ^ spaces) message) in
 		(* Print *)
 		(*** NOTE: warnings are displaied to stderr (hence the OCaml function 'prerr_string') ***)
-		print_message_generic prerr_string formatted_message
+		print_message_generic prerr_string Pervasives.stderr formatted_message
 	)
 
 
@@ -287,7 +287,7 @@ let print_error message =
 	(* Add new lines and blanks everywhere *)
 	let formatted_message = spaces ^ "*** ERROR: " ^ (Str.global_replace (Str.regexp "\n") ("\n" ^ spaces) message) in
 	(* Print *)
-	print_message_generic prerr_string formatted_message
+	print_message_generic prerr_string Pervasives.stderr formatted_message
 
 
 
