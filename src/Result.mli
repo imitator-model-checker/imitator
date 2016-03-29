@@ -49,7 +49,7 @@ type bc_algorithm_termination =
 	
 	(* Termination due to several limits (only possible in distributed setting) *)
 	| BC_Mixed_limit
-	
+
 
 (************************************************************)
 (** Soudness/completeness of the constraints *)
