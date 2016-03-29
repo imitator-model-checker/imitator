@@ -8,7 +8,7 @@
  * Author:        Etienne Andre, Camille Coti
  * 
  * Created:       2014/03/24
- * Last modified: 2016/03/24
+ * Last modified: 2016/03/29
  *
  ****************************************************************)
 
@@ -74,7 +74,7 @@ val send_bc_result : Result.bc_result -> unit
 
 val send_work_request : unit -> unit
 
-(* val send_update_request : unit -> unit *)
+val send_update_request : unit -> unit
 
 
 (*------------------------------------------------------------*)

@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/03/17
- * Last modified     : 2016/03/24
+ * Last modified     : 2016/03/29
  *
  ************************************************************)
 
@@ -235,9 +235,7 @@ class algoBCCoverDistributedSubdomainDynamicCoordinator =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Name of the algorithm *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method algorithm_name =
-		raise (InternalError ("not implemented"))
-
+	method algorithm_name = "BC (full cov) distr DynamicSubdomain coordinator"
 	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Variable initialization *)

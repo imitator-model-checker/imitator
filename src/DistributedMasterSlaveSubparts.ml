@@ -930,6 +930,7 @@ let worker() =
 					match check with
 					
 					| TileUpdate tile -> 		print_message Verbose_medium ("[Worker " ^ (string_of_int rank) ^ "] received Tile from Master.");
+						(*** QUESTION/WARNING: why is this line commented out ???? This should absolutely be done! Otherwise it means all tiles are lost! ***)
 (* 									let b = Cartography.bc_process_im_result tile in *)
 								print_message Verbose_medium ("[Worker " ^ (string_of_int rank) ^ "] received Tile from Master.");
 								
