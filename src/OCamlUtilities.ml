@@ -1,26 +1,28 @@
-(*****************************************************************
+(************************************************************
  *
  *                       IMITATOR
  * 
- * Universite Paris 13, Sorbonne Paris Cite, LIPN (France)
+ * Laboratoire Spécification et Vérification (ENS Cachan & CNRS, France)
+ * LIPN, Université Paris 13, Sorbonne Paris Cité (France)
  * 
- * Author:        Etienne Andre
+ * Module description: Useful OCaml functions
  * 
- * Created:       2014/10/24
- * Last modified: 2016/01/28
+ * File contributors : Étienne André
+ * Created           : 2014/10/24
+ * Last modified     : 2016/03/29
  *
- ****************************************************************)
+ ************************************************************)
  
 
-(****************************************************************)
+(************************************************************)
 (** Modules *)
-(****************************************************************)
+(************************************************************)
 open Unix
 
 
-(****************************************************************)
+(************************************************************)
 (** Useful functions on integers *)
-(****************************************************************)
+(************************************************************)
 let rec is_a_power_of_2_rec n =
 	if n mod 2 <> 0 then false
 	else if n = 2 then true
@@ -40,9 +42,19 @@ List.iter (fun n ->
 exit(1)*)
 
 
-(****************************************************************)
+(************************************************************)
+(** Useful functions on options *)
+(************************************************************)
+(** Get the value of an 'a option that is assumed to be different from None, or raise NoneException otherwise *)
+let a_of_a_option = function
+	| Some thing -> thing
+	| None -> raise Exceptions.NoneException
+
+
+
+(************************************************************)
 (** Useful functions on lists *)
-(****************************************************************)
+(************************************************************)
 
 (* Check if a list is empty *)
 let list_empty l =
@@ -174,9 +186,9 @@ let list_set_nth i elem l =
 	set i elem l
 
 
-(****************************************************************)
+(************************************************************)
 (** Useful functions on arrays *)
-(****************************************************************)
+(************************************************************)
 
 (* Check if an element belongs to an array *)
 let in_array e a =
@@ -227,9 +239,9 @@ let array_shuffle a = Array.sort (fun _ _ -> (Random.int 3) - 1) a
 
 
 
-(****************************************************************)
+(************************************************************)
 (** Useful functions on dynamic arrays *)
-(****************************************************************)
+(************************************************************)
 
 (* exists p {a1; ...; an} checks if at least one element of the DynArray satisfies the predicate p. That is, it returns (p a1) || (p a2) || ... || (p an). *)
 let dynArray_exists p a =
@@ -242,9 +254,9 @@ let dynArray_exists p a =
 	) with Exceptions.Found -> true
 
 
-(****************************************************************)
+(************************************************************)
 (** Useful functions on string *)
-(****************************************************************)
+(************************************************************)
 (* Convert an array of string into a string *)
 let string_of_array_of_string =
 	Array.fold_left (fun the_string s -> the_string ^ s) ""
@@ -301,9 +313,9 @@ let escape_string_for_dot str =
 
 
 
-(****************************************************************)
+(************************************************************)
 (** Useful functions on booleans *)
-(****************************************************************)
+(************************************************************)
 (* Evaluate both part of an 'and' comparison and return the conjunction *)
 let evaluate_and a b =
 (*	let computed_a = a in
@@ -325,9 +337,9 @@ let xnor (a : bool) (b : bool) : bool =
 	a = b
 
 
-(****************************************************************)
+(************************************************************)
 (** Useful functions on floats *)
-(****************************************************************)
+(************************************************************)
 (*
 (** round_n n f rounds float f with n decimal digits *)
 let round_n n f =
@@ -337,9 +349,9 @@ let round_n n f =
 	(float_of_int (int_of_float (floor  (f *. factor)))) /. factor*)
 
 
-(****************************************************************)
+(************************************************************)
 (** Printing time functions *)
-(****************************************************************)
+(************************************************************)
 let days = [| "Sun"; "Mon"; "Tue"; "Wed"; "Thu"; "Fri"; "Sat" |]
 let months = [| "Jan"; "Feb"; "Mar"; "Apr"; "May"; "Jun";
 				"Jul"; "Aug"; "Sep"; "Oct"; "Nov"; "Dec" |]

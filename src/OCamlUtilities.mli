@@ -1,28 +1,30 @@
-(*****************************************************************
+(************************************************************
  *
  *                       IMITATOR
  * 
- * Universite Paris 13, Sorbonne Paris Cite, LIPN (France)
+ * Laboratoire Spécification et Vérification (ENS Cachan & CNRS, France)
+ * LIPN, Université Paris 13, Sorbonne Paris Cité (France)
  * 
- * Author:        Etienne Andre
+ * Module description: Useful OCaml functions
  * 
- * Created:       2014/10/24
- * Last modified: 2016/01/28
+ * File contributors : Étienne André
+ * Created           : 2014/10/24
+ * Last modified     : 2016/03/29
  *
- ****************************************************************)
+ ************************************************************)
 
  
-(****************************************************************)
+(************************************************************)
 (** Useful functions on integers *)
-(****************************************************************)
+(************************************************************)
 (** Check if an integer is a power of two, i.e., n = 2^m, with m >= 1 *)
 val is_a_power_of_2 : int -> bool
 
 
 
-(****************************************************************)
+(************************************************************)
 (** Useful functions on float *)
-(****************************************************************)
+(************************************************************)
 (** Round a float with 1 digit after comma, and convert to string *)
 val round1_float : float -> string
 
@@ -30,10 +32,16 @@ val round1_float : float -> string
 val round3_float : float -> string
 
 
+(************************************************************)
+(** Useful functions on options *)
+(************************************************************)
+(** Get the value of an 'a option that is assumed to be different from None, or raise NoneException otherwise *)
+val a_of_a_option : 'a option -> 'a
 
-(****************************************************************)
+
+(************************************************************)
 (** Useful functions on lists *)
-(****************************************************************)
+(************************************************************)
 (** Check if a list is empty *)
 val list_empty : 'a list -> bool
 
@@ -73,9 +81,9 @@ val list_delete_at : int -> 'a list -> 'a list
 val list_set_nth : int -> 'a -> 'a list -> 'a list
 
 
-(****************************************************************)
+(************************************************************)
 (** Useful functions on arrays *)
-(****************************************************************)
+(************************************************************)
 
 (* Check if an element belongs to an array *)
 val in_array : 'a -> 'a array -> bool
@@ -96,17 +104,17 @@ val array_exists : ('a -> bool) -> 'a array -> bool
 val array_shuffle : 'a array -> unit
 
 
-(****************************************************************)
+(************************************************************)
 (** Useful functions on dynamic arrays *)
-(****************************************************************)
+(************************************************************)
 
 (* exists p {a1; ...; an} checks if at least one element of the DynArray satisfies the predicate p. That is, it returns (p a1) || (p a2) || ... || (p an). *)
 val dynArray_exists : ('a -> bool) -> 'a DynArray.t -> bool
 
 
-(****************************************************************)
+(************************************************************)
 (** Useful functions on string *)
-(****************************************************************)
+(************************************************************)
 (** Returns a fresh string made of 'n' times 's' *)
 val string_n_times : int -> string -> string
 
@@ -136,9 +144,9 @@ val waswere_of_int  : int -> string
 val escape_string_for_dot : string -> string
 
 
-(****************************************************************)
+(************************************************************)
 (** Useful functions on booleans *)
-(****************************************************************)
+(************************************************************)
 (* Evaluate both part of an 'and' comparison and return the conjunction *)
 val evaluate_and : bool -> bool -> bool
 
@@ -152,15 +160,9 @@ val xor : bool -> bool -> bool
 val xnor : bool -> bool -> bool
 
 
-(****************************************************************)
-(** Useful functions on floats *)
-(****************************************************************)
-(** round_n n f rounds float f with n decimal digits *)
-(* val round_n : int -> float -> float *)
-
-(****************************************************************)
+(************************************************************)
 (** Date functions *)
-(****************************************************************)
+(************************************************************)
 
 (** Print the current date and time under the form of a string *)
 val now : unit -> string

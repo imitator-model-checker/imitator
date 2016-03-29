@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2014/10/24
- * Last modified     : 2016/03/23
+ * Last modified     : 2016/03/29
  *
  ************************************************************)
 
@@ -34,3 +34,6 @@ exception Not_LU
 
 (** Exception when a problem occurs in NumConst with the random generator initialization *)
 exception Random_generator_initialization_exception
+
+(* When trying to get the value of an 'a option that is in fact None *)
+exception NoneException
