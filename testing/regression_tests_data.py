@@ -10,7 +10,7 @@
 # Laboratoire d'Informatique de Paris Nord
 # Universite Paris 13, Sorbonne Paris Cite, France
 # Created      : 2015/10/23
-# Last modified: 2016/03/23
+# Last modified: 2016/03/29
 #************************************************************
 
 
@@ -2550,7 +2550,7 @@ Average number of transitions : 4.0
 
 ------------------------------------------------------------
 Constraint soundness          : possible over-approximation
-Termination                   : time limit (1 successor unexplored)
+Termination                   : depth limit (1 successor unexplored)
 State space nature            : unknown
 Number of random selections   : 0
 ------------------------------------------------------------
@@ -2574,7 +2574,7 @@ Number of transitions         : 4
 
 ------------------------------------------------------------
 Constraint soundness          : possible over-approximation
-Termination                   : time limit (1 successor unexplored)
+Termination                   : depth limit (1 successor unexplored)
 State space nature            : unknown
 Number of random selections   : 0
 ------------------------------------------------------------
@@ -2598,7 +2598,7 @@ Number of transitions         : 4
 
 ------------------------------------------------------------
 Constraint soundness          : possible over-approximation
-Termination                   : time limit (1 successor unexplored)
+Termination                   : depth limit (1 successor unexplored)
 State space nature            : unknown
 Number of random selections   : 0
 ------------------------------------------------------------
@@ -2621,7 +2621,7 @@ Number of transitions         : 4
 
 ------------------------------------------------------------
 Constraint soundness          : possible over-approximation
-Termination                   : time limit (1 successor unexplored)
+Termination                   : depth limit (1 successor unexplored)
 State space nature            : unknown
 Number of random selections   : 0
 ------------------------------------------------------------
@@ -2645,7 +2645,7 @@ Number of transitions         : 4
 
 ------------------------------------------------------------
 Constraint soundness          : possible over-approximation
-Termination                   : time limit (1 successor unexplored)
+Termination                   : depth limit (1 successor unexplored)
 State space nature            : unknown
 Number of random selections   : 0
 ------------------------------------------------------------
@@ -2698,7 +2698,7 @@ Average number of transitions : 4.0
 
 ------------------------------------------------------------
 Constraint soundness          : possible over-approximation
-Termination                   : time limit (1 successor unexplored)
+Termination                   : depth limit (1 successor unexplored)
 State space nature            : unknown
 Number of random selections   : 0
 ------------------------------------------------------------
@@ -2748,7 +2748,7 @@ Number of transitions         : 0
 
 ------------------------------------------------------------
 Constraint soundness          : possible over-approximation
-Termination                   : time limit (2 successors unexplored)
+Termination                   : depth limit (2 successors unexplored)
 State space nature            : bad
 Number of random selections   : 0
 ------------------------------------------------------------
@@ -2773,7 +2773,7 @@ Number of transitions         : 17
 
 ------------------------------------------------------------
 Constraint soundness          : possible over-approximation
-Termination                   : time limit (2 successors unexplored)
+Termination                   : depth limit (2 successors unexplored)
 State space nature            : bad
 Number of random selections   : 0
 ------------------------------------------------------------
@@ -2815,6 +2815,257 @@ Termination                   : regular termination
 Number of unsuccessful points : 116
 Average number of states      : 10.0
 Average number of transitions : 9.0
+"""
+			} # end BC file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+	
+	,
+	
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test BC in mode sequential + depth limit (grid with loop)',
+		'input_files': ['testBC-grid-plain-loop.imi', 'testBC-grid3x3.v0'],
+		'options'    : '-mode cover -depth-limit 10 -output-result',
+		'expectations' : [
+			# NOTE: no other way for now that checking separately the constraints (because the computation times may of course differ)
+			{'file': 'testBC-grid-plain-loop.res' , 'content' : """
+ (************************************************************)
+Tile #1
+
+ Pi1:
+  p1 = 1
+& p2 = 1
+
+ K1:
+ p1 = 1
+& p2 = 1
+
+------------------------------------------------------------
+Constraint soundness          : possible over-approximation
+Termination                   : depth limit (1 successor unexplored)
+State space nature            : unknown
+Number of random selections   : 0
+------------------------------------------------------------
+Number of states              : 14
+Number of transitions         : 13
+"""
+			} # end BC file
+			, 
+			{'file': 'testBC-grid-plain-loop.res' , 'content' : """
+(************************************************************)
+ Tile #2
+
+ Pi2:
+  p1 = 2
+& p2 = 1
+
+ K2:
+ p2 >= 1
+& p1 >= 2
+& 2 > p2
+& 3 > p1
+
+------------------------------------------------------------
+Constraint soundness          : exact
+Termination                   : regular termination
+State space nature            : good
+Number of random selections   : 0
+------------------------------------------------------------
+Number of states              : 6
+Number of transitions         : 5
+"""
+			} # end BC file
+			, 
+			{'file': 'testBC-grid-plain-loop.res' , 'content' : """
+(************************************************************)
+ Tile #3
+
+ Pi3:
+  p1 = 3
+& p2 = 1
+
+ K3:
+ p2 >= 1
+& p1 >= 3
+& 2 > p2
+& 4 > p1
+
+------------------------------------------------------------
+Constraint soundness          : exact
+Termination                   : regular termination
+State space nature            : good
+Number of random selections   : 0
+------------------------------------------------------------
+Number of states              : 7
+Number of transitions         : 6
+"""
+			} # end BC file
+			, 
+			{'file': 'testBC-grid-plain-loop.res' , 'content' : """
+(************************************************************)
+ Tile #4
+
+ Pi4:
+  p1 = 1
+& p2 = 2
+
+ K4:
+ p2 >= 2
+& p1 >= 1
+& 3 > p2
+& 2 > p1
+
+------------------------------------------------------------
+Constraint soundness          : exact
+Termination                   : regular termination
+State space nature            : good
+Number of random selections   : 0
+------------------------------------------------------------
+Number of states              : 6
+Number of transitions         : 5
+"""
+			} # end BC file
+			, 
+			{'file': 'testBC-grid-plain-loop.res' , 'content' : """
+(************************************************************)
+ Tile #5
+
+ Pi5:
+  p1 = 2
+& p2 = 2
+
+ K5:
+ p2 >= 2
+& p1 >= 2
+& 3 > p2
+& 3 > p1
+
+------------------------------------------------------------
+Constraint soundness          : possible under-approximation
+Termination                   : regular termination
+State space nature            : good
+Number of random selections   : 1
+------------------------------------------------------------
+Number of states              : 7
+Number of transitions         : 6
+"""
+			} # end BC file
+			, 
+			{'file': 'testBC-grid-plain-loop.res' , 'content' : """
+(************************************************************)
+ Tile #6
+
+ Pi6:
+  p1 = 3
+& p2 = 2
+
+ K6:
+ p2 >= 2
+& p1 >= 3
+& 3 > p2
+& 4 > p1
+
+------------------------------------------------------------
+Constraint soundness          : possible under-approximation
+Termination                   : regular termination
+State space nature            : good
+Number of random selections   : 1
+------------------------------------------------------------
+Number of states              : 8
+Number of transitions         : 7
+"""
+			} # end BC file
+			, 
+			{'file': 'testBC-grid-plain-loop.res' , 'content' : """
+(************************************************************)
+ Tile #7
+
+ Pi7:
+  p1 = 1
+& p2 = 3
+
+ K7:
+ p2 >= 3
+& p1 >= 1
+& 4 > p2
+& 2 > p1
+
+------------------------------------------------------------
+Constraint soundness          : exact
+Termination                   : regular termination
+State space nature            : good
+Number of random selections   : 0
+------------------------------------------------------------
+Number of states              : 7
+Number of transitions         : 6
+"""
+			} # end BC file
+			, 
+			{'file': 'testBC-grid-plain-loop.res' , 'content' : """
+(************************************************************)
+ Tile #8
+
+ Pi8:
+  p1 = 2
+& p2 = 3
+
+ K8:
+ p2 >= 3
+& p1 >= 2
+& 4 > p2
+& 3 > p1
+
+------------------------------------------------------------
+Constraint soundness          : possible under-approximation
+Termination                   : regular termination
+State space nature            : good
+Number of random selections   : 1
+------------------------------------------------------------
+Number of states              : 8
+Number of transitions         : 7
+"""
+			} # end BC file
+			, 
+			{'file': 'testBC-grid-plain-loop.res' , 'content' : """
+(************************************************************)
+ Tile #9
+
+ Pi9:
+  p1 = 3
+& p2 = 3
+
+ K9:
+ p2 >= 3
+& p1 >= 3
+& 4 > p2
+& 4 > p1
+
+------------------------------------------------------------
+Constraint soundness          : possibly invalid
+Termination                   : depth limit (0 successor unexplored)
+State space nature            : unknown
+Number of random selections   : 1
+------------------------------------------------------------
+Number of states              : 9
+Number of transitions         : 8
+"""
+			} # end BC file
+			, 
+			# NOTE: actual result
+			{'file': 'testBC-grid-plain-loop.res' , 'content' : """
+(************************************************************)
+GENERAL STATISTICS
+(************************************************************)
+------------------------------------------------------------
+Number of integers in v0      : 9
+Number of tiles computed      : 9
+Coverage                      : unknown
+Termination                   : regular termination
+Number of unsuccessful points : 0
+Average number of states      : 8.0
+Average number of transitions : 7.0
 """
 			} # end BC file
 		] # end expectations
@@ -4321,7 +4572,7 @@ Average number of transitions : 4.0
 		] # end expectations
 	} # end test case
 	#------------------------------------------------------------
-	
+
 	,
 	
 	#------------------------------------------------------------
@@ -4445,7 +4696,7 @@ Average number of transitions : 14.1
 
 ------------------------------------------------------------
 Constraint soundness          : possibly invalid
-Termination                   : time limit (1 successor unexplored)
+Termination                   : depth limit (1 successor unexplored)
 State space nature            : unknown
 Number of random selections   : 0
 ------------------------------------------------------------
@@ -4470,7 +4721,7 @@ Number of transitions         : 9
 
 ------------------------------------------------------------
 Constraint soundness          : possible under-approximation
-Termination                   : time limit (1 successor unexplored)
+Termination                   : depth limit (1 successor unexplored)
 State space nature            : bad
 Number of random selections   : 0
 ------------------------------------------------------------
