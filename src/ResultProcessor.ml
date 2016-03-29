@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/12/03
- * Last modified     : 2016/03/18
+ * Last modified     : 2016/03/29
  *
  ************************************************************)
 
@@ -40,9 +40,9 @@ let string_of_bfs_algorithm_termination = function
 	(* Termination due to time limit reached *)
 	| Time_limit nb_unexplored_successors -> "time limit (" ^ (string_of_int nb_unexplored_successors) ^ " successor" ^ (s_of_int nb_unexplored_successors) ^ " unexplored)"
 	(* Termination due to state space depth limit reached *)
-	| Depth_limit nb_unexplored_successors -> "time limit (" ^ (string_of_int nb_unexplored_successors) ^ " successor" ^ (s_of_int nb_unexplored_successors) ^ " unexplored)"
+	| Depth_limit nb_unexplored_successors -> "depth limit (" ^ (string_of_int nb_unexplored_successors) ^ " successor" ^ (s_of_int nb_unexplored_successors) ^ " unexplored)"
 	(* Termination due to a number of explored states reached *)
-	| States_limit nb_unexplored_successors -> "time limit (" ^ (string_of_int nb_unexplored_successors) ^ " successor" ^ (s_of_int nb_unexplored_successors) ^ " unexplored)"
+	| States_limit nb_unexplored_successors -> "states limit (" ^ (string_of_int nb_unexplored_successors) ^ " successor" ^ (s_of_int nb_unexplored_successors) ^ " unexplored)"
 
 
 let string_of_bc_algorithm_termination = function
