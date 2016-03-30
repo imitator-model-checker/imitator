@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/01/19
- * Last modified     : 2016/03/10
+ * Last modified     : 2016/03/30
  *
  ************************************************************)
 
@@ -46,7 +46,12 @@ class virtual algoGeneric :
 		(* Write a message preceeded by "\n[algorithm_name]" *)
 		method print_algo_message_newline : verbose_mode -> string -> unit
 		
-		(* Variable initialization (to be defined in subclasses) *)
+		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+		(* Write an error message preceeded by "[algorithm_name]" *)
+		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+		method print_algo_error : string -> unit
+
+	(* Variable initialization (to be defined in subclasses) *)
 		method virtual initialize_variables : unit
 		
 		(* Main method to run the algorithm: virtual method to be defined in subclasses *)

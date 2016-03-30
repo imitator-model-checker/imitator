@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/01/19
- * Last modified     : 2016/03/10
+ * Last modified     : 2016/03/30
  *
  ************************************************************)
 
@@ -46,6 +46,13 @@ class virtual algoGeneric =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method print_algo_message verbose_mode message =
 		print_message verbose_mode ("  [" ^ self#algorithm_name ^ "] " ^ message)
+	
+	
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(* Write an error message preceeded by "[algorithm_name]" *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	method print_algo_error message =
+		print_error ("  [" ^ self#algorithm_name ^ "] " ^ message)
 	
 	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
