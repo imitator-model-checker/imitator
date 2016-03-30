@@ -252,9 +252,16 @@ class algoBCCoverDistributedSubdomainDynamicCoordinator =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method private add_abstract_im_result abstract_im_result =
 		(* Check if already present *)
+		
+		
+		(*** TODO ***)
+		
+		
 		(* Otherwise add *)
-		raise (InternalError ("not implemented"))
-	
+		abstract_im_results <- abstract_im_result :: abstract_im_results;
+		
+		(* For now always add, hence return true *)
+		true
 	
 	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)

@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/03/04
- * Last modified     : 2016/03/17
+ * Last modified     : 2016/03/30
  *
  ************************************************************)
 
@@ -47,6 +47,12 @@ class virtual algoBCCoverDistributed :
 		method virtual algorithm_name : string
 		
 		method virtual initialize_variables : unit
+		
+		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+		(* Run IM and return an abstract_im_result *)
+		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+		method run_im : PVal.pval -> Result.abstract_im_result
+		
 		
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		(* Processing the result of IM *)

@@ -8,7 +8,7 @@
  * Author:        Etienne Andre, Camille Coti
  * 
  * Created:       2014/03/24
- * Last modified: 2016/03/24
+ * Last modified: 2016/03/30
  *
  ****************************************************************)
 
@@ -895,37 +895,21 @@ let send_tiles im_result_list =
 let send_tileupdate abstract_im_result slave_rank =
 	let serialized_data = serialize_abstract_im_result abstract_im_result in
 	
-	print_message Verbose_medium ("[Master] Serialized pi0 '" ^ serialized_data ^ "'");
+	print_message Verbose_medium ("[Master] Serialized abstract_im_result '" ^ serialized_data ^ "'");
 	
 	(* Call generic function *)
 	send_serialized_data slave_rank (int_of_master_tag Master_tileupdate_tag) serialized_data
 
+
+(* Function to send a point from a worker to the master *)
+let send_point_to_master point =
+	let serialized_data = serialize_pi0 point in
 	
-(*	(*print_message Verbose_medium ("[Worker " ^ (string_of_int rank) ^ "] Entering send_constraint");*)
-	let mlc =  in
-	let res_size = String.length mlc in
-
-	(*print_message Verbose_medium ("[Worker " ^ (string_of_int rank) ^ "] Serialized constraint '" ^ mlc ^ "'");*)
+	print_message Verbose_medium ("[Worker] Serialized pi0 '" ^ serialized_data ^ "'");
 	
-	(* Send the result: 1st send my rank, then the data size, then the data *)
-	(*print_message Verbose_medium ("[Worker " ^ (string_of_int rank) ^ "] About to send the size (" ^ (string_of_int res_size) ^ ") of the constraint.");*)
-	Mpi.send res_size slave_rank (int_of_master_tag Master_tileupdate_tag) Mpi.comm_world;
-	Mpi.send mlc slave_rank (int_of_master_tag Master_tileupdate_tag) Mpi.comm_world
-	*)
-
-
-(*(* Sends a point (first the size then the point), by the slave *)
-(*** TODO: factorize! ***)
-let send_pi0_worker pi0  =
-	let rank = get_rank() in
-	print_message Verbose_medium ("[Worker " ^ (string_of_int rank) ^ "] Entering send_pi0");
-	let mpi0 = serialize_pi0 pi0 in
-	let res_size = String.length mpi0 in
-	print_message Verbose_medium ("[Worker " ^ (string_of_int rank) ^ "] Size of pi0: " ^ (string_of_int res_size ) );
-
-        (* Send the result: 1st send the data size, then the data *)
-	Mpi.send res_size master_rank (int_of_slave_tag Slave_pi0_tag) Mpi.comm_world;
-	Mpi.send mpi0 master_rank (int_of_slave_tag Slave_pi0_tag) Mpi.comm_world*)
+	(* Call generic function *)
+	send_serialized_data master_rank (int_of_slave_tag Slave_pi0_tag) serialized_data
+	
 
 let send_work_request () =
 	Mpi.send (get_rank()) master_rank (int_of_slave_tag Slave_work_tag) Mpi.comm_world

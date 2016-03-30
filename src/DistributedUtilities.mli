@@ -8,7 +8,7 @@
  * Author:        Etienne Andre, Camille Coti
  * 
  * Created:       2014/03/24
- * Last modified: 2016/03/29
+ * Last modified: 2016/03/30
  *
  ****************************************************************)
 
@@ -76,13 +76,15 @@ val send_work_request : unit -> unit
 
 val send_update_request : unit -> unit
 
+(* Function to send a point from a worker to the master *)
+val send_point_to_master : PVal.pval -> unit
+
 
 (*------------------------------------------------------------*)
 (* Send to worker / collaborator *)
 (*------------------------------------------------------------*)
 val send_pi0 : PVal.pval -> rank -> unit
 
-(* val send_pi0_worker : PVal.pval -> unit *)
 
 
 val send_stop : rank -> unit

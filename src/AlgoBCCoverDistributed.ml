@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/03/04
- * Last modified     : 2016/03/17
+ * Last modified     : 2016/03/30
  *
  ************************************************************)
 
@@ -85,6 +85,61 @@ class virtual algoBCCoverDistributed =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method virtual initialize_variables : unit
 
+	
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(* Run IM and return an abstract_im_result *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	method run_im pi0 =
+		(* Create instance of the algorithm to be called *)
+		let algo = self#get_algo_instance_function () in
+		
+		(* Set up the pi0 *)
+		(*** NOTE/BADPROG: a bit ugly… pi0 could have been a parameter of the algorithm! ***)
+		Input.set_pi0 pi0;
+		
+		(* Print some messages *)
+		if verbose_mode_greater Verbose_low then(
+			(* Retrieve the model *)
+			let model = Input.get_model() in
+			
+			self#print_algo_message Verbose_medium ("**************************************************");
+			self#print_algo_message Verbose_medium ("BEHAVIORAL CARTOGRAPHY ALGORITHM: "(* ^ (string_of_int !current_iteration) ^ ""*));
+			self#print_algo_message Verbose_low ("Launching IM for the following pi:" (*^ (string_of_int !current_iteration)*));
+			self#print_algo_message Verbose_low (ModelPrinter.string_of_pi0 model pi0);
+		);
+
+		(* Save verbose mode *)
+		let global_verbose_mode = get_verbose_mode() in 
+		
+		(* Prevent the verbose messages (except in verbose modes high or total) *)
+		if not (verbose_mode_greater Verbose_high) then
+				set_verbose_mode Verbose_mute;
+
+		(* Call IM *)
+		
+		(*** NOTE: the initial state is computed again and again for each new instance of IM; TO OPTIMIZE? ***)
+		
+		let imitator_result = algo#run() in
+
+		(* Get the verbose mode back *)
+		set_verbose_mode global_verbose_mode;
+		
+		self#print_algo_message Verbose_low ("Finished a computation of " ^ (algo#algorithm_name) ^ ".");
+		
+		(* Checking the result type *)
+		let im_result = match imitator_result with
+			(* Result for IM, IMK, IMunion *)
+			| IM_result im_result -> im_result
+			(* Other *)
+			| _ -> raise (InternalError("An im_result is expected as an output of the execution of " ^ algo#algorithm_name ^ "."))
+		in
+		
+		(* Abstracting the result *)
+		let abstract_im_result = AlgoCartoGeneric.abstract_im_result_of_im_result im_result pi0 in
+		
+		(* Return the abstract result *)
+		abstract_im_result
+	
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Generic algorithm *)

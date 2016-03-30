@@ -153,7 +153,9 @@ class virtual algoCartoGeneric :
 		method virtual get_initial_point : more_points
 
 		
-		(* Find the next point *)
+		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+		(* Find the next uncovered point *)
+		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		method virtual find_next_point : more_points
 
 		

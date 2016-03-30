@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/03/24
- * Last modified     : 2016/03/29
+ * Last modified     : 2016/03/30
  *
  ************************************************************)
 
@@ -33,7 +33,12 @@ open DistributedUtilities
 (* Local exceptions *)
 (************************************************************)
 (************************************************************)
+
+(* Exception when the master orders to suddenly stop an execution of IM *)
 exception KillIM
+
+(* Exception when the master sends a new subdomain while a previous one was processed *)
+exception NewSubdomainAssigned of HyperRectangle.hyper_rectangle
 
 
 (************************************************************)
@@ -56,11 +61,14 @@ class algoBCCoverDistributedSubdomainDynamicCollaborator =
 	(* Class variables *)
 	(************************************************************)
 	(* The current point *)
-	val mutable current_point : PVal.pval option = None
+	val mutable current_point : AlgoCartoGeneric.more_points = AlgoCartoGeneric.No_more
 
 	(* The current cartography instance *)
-	val mutable bc : AlgoBCCover.algoBCCover option = None
+	val mutable bc_option : AlgoBCCover.algoBCCover option = None
 	
+	(* Flag to discriminate between first point called and further points *)
+	val mutable first_point = true
+
 	
 	(************************************************************)
 	(* Class methods *)
@@ -79,8 +87,9 @@ class algoBCCoverDistributedSubdomainDynamicCollaborator =
 (* 		super#initialize_variables; *)
 
 		(* Rest instances *)
-		current_point <- None;
-		bc <- None;
+		current_point <- AlgoCartoGeneric.No_more;
+		bc_option <- None;
+		first_point <- true;
 		
 		(* The end *)
 		()
@@ -94,6 +103,16 @@ class algoBCCoverDistributedSubdomainDynamicCollaborator =
 		let bc_instance = new AlgoBCCover.algoBCCover in
 		(* Set the instance of IM / PRP that was itself set from the current cartography class *)
 		bc_instance#set_algo_instance_function self#get_algo_instance_function;
+		
+		(* Initialize *)
+		bc_instance#initialize_cartography;
+		
+		(* Set current point *)
+		current_point <- AlgoCartoGeneric.No_more;
+		
+		(* Set first point *)
+		first_point <- true;
+		
 		(* Return instance *)
 		bc_instance
 
@@ -122,16 +141,22 @@ class algoBCCoverDistributedSubdomainDynamicCollaborator =
 			let check = receive_work () in
 			match check with
 							
-			(*** TODO: how can the worker receive a tile from the master ??? ***)
+			(*** TODO/QUESTION: how can the worker receive a tile from the master here??? ***)
 			| TileUpdate tile ->
-				self#print_algo_message Verbose_medium ("received Tile from Master.");
+				self#print_algo_error ("A worker is not supposed to receive a TileUpdate from the master here");
 				raise (InternalError("A worker is not supposed to receive a TileUpdate from the master here"))
 						
 			| Continue ->  
 				self#print_algo_message Verbose_medium ("received continue tag from Master.");
+				
 				(* Retrieve current info *)
-				let currentPi0 = a_of_a_option current_point in
-				let current_bc = a_of_a_option bc in
+				(*** WARNING: safe???? ***)
+				let currentPi0 = match current_point with
+					| AlgoCartoGeneric.Some_pval pval -> pval
+					| AlgoCartoGeneric.No_more -> raise (InternalError("Unexpected situation where no more point is found in the worker although it should be set at that point."))
+				in
+				
+				let current_bc = a_of_a_option bc_option in
 				(* Test if uncovered *)
 				let uncovered = current_bc#test_pi0_uncovered currentPi0 in
 				(* If not: kill *)
@@ -141,8 +166,8 @@ class algoBCCoverDistributedSubdomainDynamicCollaborator =
 				receivedContinue := true;	
 				self#print_algo_message Verbose_medium ("received Tile from Master.");
 										
-			| _ -> 			self#print_algo_message Verbose_medium ("error!!! receive tile at worker side." ^ (*(string_of_int rank) ^*) " ");
-						raise (InternalError("error!!! receive tile at worker side."));
+			| _ -> self#print_algo_message Verbose_medium ("received unexpected tag at worker side in method 'check_stop_order'.");
+				raise (InternalError("received unexpected tag at worker side in method 'check_stop_order'."));
 							
 		done; (* end while *)
 		
@@ -150,7 +175,191 @@ class algoBCCoverDistributedSubdomainDynamicCollaborator =
 		
 		(* The end *)
 		()
+	
+	
+	
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(* Compute the next point *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	method private compute_next_point =
+	
+		let bc = a_of_a_option bc_option in
 
+		(* Print some information *)
+		self#print_algo_message Verbose_low ("Computing next point...");
+		
+		(* Find next point (dynamic fashion) *)
+		(*** NOTE: this operation (checking first point) could have been rather embedded in CartoGeneric ***)
+		let next_point = 
+		if first_point then(
+			(* Print some information *)
+			self#print_algo_message Verbose_low ("Asking BC to compute the first point...");		
+			(* Unset flag *)
+			first_point <- false;
+			(* Call specific function *)
+			bc#get_initial_point
+		)else(
+			(* Print some information *)
+			self#print_algo_message Verbose_low ("Asking BC to compute the next point...");
+			bc#compute_and_return_next_point
+		)
+		in
+		
+		(* Set point *)
+		current_point <- next_point;
+
+		(* The end *)
+		()
+		
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(* Find the next point, process it, send the tile to the master (and possibly stop or raise NewSubdomainAssigned depending on the master orders) *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	method private process_one_point =
+		(* Retrieve the model *)
+		let model = Input.get_model() in
+		
+		(* Compute next point *)
+		self#compute_next_point;
+		
+		(* Check nature of this point *)
+		begin
+		match current_point with
+		(* No more point: do nothing, and the calling method (process_subdomain) will safely terminate thanks to fixpoint condition self#check_iteration_condition *)
+		| AlgoCartoGeneric.No_more -> ()
+		
+		(* Otherwise: some work! *)
+		| AlgoCartoGeneric.Some_pval pi0 ->
+		
+		if verbose_mode_greater Verbose_medium then(
+			self#print_algo_message Verbose_medium ("pi0:");
+			self#print_algo_message Verbose_medium   (ModelPrinter.string_of_pi0 model pi0);
+		);
+		
+		(* Send to master *)
+		send_point_to_master pi0;
+		
+		self#print_algo_message Verbose_medium (" sent pi0 to master ");
+		
+		let receivedContinue = ref false in
+		
+		(* First communicate with the master: send the point, then ask for reply *)
+		while not !receivedContinue do
+	
+			let check = receive_work () in
+			match check with
+			
+			| TileUpdate tile -> self#print_algo_message Verbose_medium ("received Tile from Master.");
+				(*** QUESTION: why is this line commented out ???? ***)
+(* 									let b = Cartography.bc_process_im_result tile in *)
+						()
+						
+			| Subdomain subdomain -> self#print_algo_message Verbose_medium ("received scaled subdomain tag from Master.");
+(*						Input.set_v0 subdomain;
+						Cartography.bc_initialize_subdomain ();*)
+						raise (NewSubdomainAssigned subdomain)
+			
+			| Continue -> self#print_algo_message Verbose_medium ("received continue tag from Master.");
+						receivedContinue := true;	
+						
+			| _ -> self#print_algo_error ("received unexpected tag at worker side in method 'process_one_point'.");
+				raise (InternalError("received unexpected tag at worker side in method 'process_one_point'."));
+			
+		done; (* end while *)
+		
+		
+		(*** WARNING/QUESTION: why is the point not AGAIN sent to the master? Its choice may have been changed due to the new reception of tiles!!! ***)
+	
+	
+		(* An exception KillIM can be raised *)
+		
+		(*** QUESTION: by whom? how? ***)
+
+		try(
+		
+		(* Call IM *)
+		let abstract_im_result = self#run_im pi0 in
+		
+		(* Send the result to the master *)
+		DistributedUtilities.send_abstract_im_result abstract_im_result;
+				
+		(*** NOTE for the collaborator version: keep it in memory 
+			all_tiles := im_result :: !all_tiles;
+		***)
+		
+(*		(* Print some info *)
+		self#print_algo_message Verbose_medium (" Constraint really added? " ^ (string_of_bool added) ^ "");
+		compute_next_pi0_sequentially more_pi0 limit_reached first_point (Some im_result.tile_nature);*)
+		)
+		with KillIM ->(
+			self#print_algo_message Verbose_medium "\n -------------Killed IM-----------------"; 
+			(* Do nothing: the next call to this function will take care of the next point, if necessary *)
+		);
+		
+		end; (* match current_point *)
+		
+		(* The end *)
+		()
+
+	
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(* Process subdomain received from the master: initialize, cover it, and send all tiles to the master *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	method private process_subdomain subdomain =
+			
+		(* To differentiate between initialization of pi0 / next_point *)
+(* 				let first_point = ref true in *)
+		
+(* 				let more_pi0 = ref true in *)
+		
+(* 				let limit_reached = ref false in *)
+		
+		(* Set the subdomain *)
+		(*** NOTE: would be better to have a nicer mechanism than that one… ***)
+		Input.set_v0 subdomain;
+		
+		(* Perform initialization *)
+		bc_option <- Some self#new_bc_instance;
+		
+		if verbose_mode_greater Verbose_medium then(
+			(* Retrieve the model *)
+			let model = Input.get_model() in
+			self#print_algo_message Verbose_medium ("set v0:");
+			self#print_algo_message Verbose_medium (ModelPrinter.string_of_v0 model subdomain);
+		);
+		
+		
+		(* The following loop may raise an exception NewSubdomainAssigned, in which case we iteratively process this new subdomain *)
+		try(
+		
+		(* While there is another point to explore *)
+		while (a_of_a_option bc_option)#check_iteration_condition do
+			(* Find the next point, process it *)
+			self#process_one_point;
+		done; (* end while more points *)
+		
+		(*** NOTE: No need to process the result of BC, totally useless here ***)
+		
+		) with
+		(* If new subdomain: recursive call *)
+		| NewSubdomainAssigned subdomain' -> self#process_subdomain subdomain'
+		;
+		
+(*		(*initial pi0*)
+		Cartography.compute_initial_pi0();
+		
+		self#print_algo_message Verbose_medium ("Initial pi0:");
+		self#print_algo_message Verbose_medium   (ModelPrinter.string_of_pi0 model (Cartography.get_current_pi0()));
+		
+		let pi0 = ref (Cartography.get_current_pi0()) in
+		
+		while (!more_pi0 && not !limit_reached) do 			    
+			
+		
+			
+		done;
+*)
+	(* The end *)
+	()
 
 	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -158,7 +367,7 @@ class algoBCCoverDistributedSubdomainDynamicCollaborator =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method run () =
 		(* Get the model *)
-		let model = Input.get_model() in
+(* 		let model = Input.get_model() in *)
 		(* Retrieve the input options *)
 		let options = Input.get_options () in
 		
@@ -190,7 +399,8 @@ class algoBCCoverDistributedSubdomainDynamicCollaborator =
 		
 		(* Initialize the cartography *)
 		(*** NOTE: useful?? probably not ***)
-		bc <- Some self#new_bc_instance;
+(* 		bc <- Some self#new_bc_instance; *)
+		
 		
 		(*let main_loop () = *)
 		while not !finished do
@@ -206,124 +416,22 @@ class algoBCCoverDistributedSubdomainDynamicCollaborator =
 			| Subdomain subdomain -> 
 				self#print_algo_message Verbose_medium ("received subdomain from Master.");
 				
-				
-				(* To differentiate between initialization of pi0 / next_point *)
-				let first_point = ref true in
-				
-				let more_pi0 = ref true in
-				
-				let limit_reached = ref false in
-				
-				(*initialize subdomain*)
-				Input.set_v0 subdomain;
-				
-				(* Perform initialization *)
-				bc <- Some self#new_bc_instance;
-(* 				Cartography.bc_initialize_subdomain (); *)
-				
-				if verbose_mode_greater Verbose_medium then(
-					self#print_algo_message Verbose_medium ("set v0:");
-					self#print_algo_message Verbose_medium (ModelPrinter.string_of_v0 model subdomain);
-				);
-				(*
-				TODO 
-				(*initial pi0*)
-				Cartography.compute_initial_pi0();
-				
-				self#print_algo_message Verbose_medium ("Initial pi0:");
-				self#print_algo_message Verbose_medium   (ModelPrinter.string_of_pi0 model (Cartography.get_current_pi0()));
-				
-				let pi0 = ref (Cartography.get_current_pi0()) in
-				
-				while (!more_pi0 && not !limit_reached) do 			    
-					
-					self#print_algo_message Verbose_medium ("pi0:");
-					self#print_algo_message Verbose_medium   (ModelPrinter.string_of_pi0 model !pi0);
-					
-					pi0 := (Cartography.get_current_pi0());
-					
-					send_pi0_worker !pi0;
-					
-					self#print_algo_message Verbose_medium (" send pi0 to master ");
-					
-					let receivedContinue = ref false in
-					
-					while (not !receivedContinue) do
-				
-						let check = receive_work () in
-						match check with
-						
-						| TileUpdate tile -> 		self#print_algo_message Verbose_medium ("received Tile from Master.");
-	(* 									let b = Cartography.bc_process_im_result tile in *)
-									self#print_algo_message Verbose_medium ("received Tile from Master.");
-									
-						| Subdomain subdomain ->	self#print_algo_message Verbose_medium ("received scaled subdomain tag from Master.");
-									Input.set_v0 subdomain;
-									Cartography.bc_initialize_subdomain ();
-						
-						| Continue ->  		self#print_algo_message Verbose_medium ("received continue tag from Master.");
-									receivedContinue := true;	
-									self#print_algo_message Verbose_medium ("received Tile from Master.");
-									
-						| _ -> 			self#print_algo_message Verbose_medium ("error!!! receive tile at worker side." ^ (string_of_int collaborator_rank) ^ " ");
-									raise (InternalError("error!!! receive tile at worker side."));
-						
-					done; (* end while *)
-				
-					(* Set the new pi0 *)
-					Input.set_pi0 !pi0;
-				
-					(* Save verbose mode *)
-					let global_verbose_mode = get_verbose_mode() in 
-
-					
-					(* Prevent the verbose messages (except in verbose mode total) *)
-					if not (verbose_mode_greater Verbose_total) then
-						set_verbose_mode Verbose_mute;
-					
-					(*** TODO ***)
-(* 					counter_worker_IM#start; *)
-					try(
-					
-					(* Compute IM *)
-					(*counter_worker_IM#start;*)
-					let im_result , _ = Reachability.inverse_method_gen model init_state in
-
-					(* Get the verbose mode back *)
-					set_verbose_mode global_verbose_mode;
-					
-					(* Process result *)
-					let added = Cartography.bc_process_im_result im_result in
-					(*** TODO ***)
-(* 					counter_worker_IM#stop; *)
-					
-					(*** NOTE for the collaborator version: keep it in memory 
-						all_tiles := im_result :: !all_tiles;
-					***)
-					
-					(*send result to master*)
-					send_result im_result;
-
-					(* Print some info *)
-					self#print_algo_message Verbose_medium (" Constraint really added? " ^ (string_of_bool added) ^ "");
-					compute_next_pi0_sequentially more_pi0 limit_reached first_point (Some im_result.tile_nature);
-					)
-					with KillIM ->(
-					(*** TODO ***)
-						self#print_algo_message Verbose_medium "\n -------------Killed IM-----------------"; 
-						compute_next_pi0_sequentially more_pi0 limit_reached first_point (None);
-					);
-					
-					
-				done;*)
+				self#process_subdomain subdomain;
 				
 			| Terminate -> 
 					self#print_algo_message Verbose_medium (" Terminate ");
 					self#print_algo_message Verbose_medium ("I was just told to terminate work.");
 					finished := true
 				
-			| _ -> 		self#print_algo_message Verbose_medium ("error!!! not implemented.");
-					raise (InternalError("not implemented."));
+			(* Otherwise: error! *)
+			| Work _ -> self#print_algo_error ("received unexpected Work tag from the master in method 'run'.");
+					raise (InternalError("received unexpected Work tag from the master in method 'run'."));
+			| Stop -> self#print_algo_error ("received unexpected Stop tag from the master in method 'run'.");
+					raise (InternalError("received unexpected Stop tag from the master in method 'run'."));
+			| TileUpdate _ -> self#print_algo_error ("received unexpected TileUpdate tag from the master in method 'run'.");
+					raise (InternalError("received unexpected TileUpdate tag from the master in method 'run'."));
+			| Continue -> self#print_algo_error ("received unexpected Continue tag from the master in method 'run'.");
+					raise (InternalError("received unexpected Continue tag from the master in method 'run'."));
 			
 		done;
 
