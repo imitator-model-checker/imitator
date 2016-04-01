@@ -131,7 +131,7 @@ class algoBCCoverDistributedSubdomainDynamicCollaborator =
 		
 		send_update_request();
 						
-		self#print_algo_message Verbose_medium ("sent update request to master ");
+		self#print_algo_message Verbose_medium ("sent update request to the coordinator ");
 		
 		let killIM = ref false in
 		
@@ -147,7 +147,7 @@ class algoBCCoverDistributedSubdomainDynamicCollaborator =
 				raise (InternalError("A worker is not supposed to receive a TileUpdate from the master here"))
 						
 			| Continue ->  
-				self#print_algo_message Verbose_medium ("received continue tag from Master.");
+				self#print_algo_message Verbose_medium ("received continue tag from the coordinator.");
 				
 				(* Retrieve current info *)
 				(*** WARNING: safe???? ***)
@@ -164,7 +164,7 @@ class algoBCCoverDistributedSubdomainDynamicCollaborator =
 				if not uncovered then killIM := true;
 		
 				receivedContinue := true;	
-				self#print_algo_message Verbose_medium ("received Tile from Master.");
+				self#print_algo_message Verbose_medium ("received Tile from the coordinator.");
 										
 			| _ -> self#print_algo_message Verbose_medium ("received unexpected tag at worker side in method 'check_stop_order'.");
 				raise (InternalError("received unexpected tag at worker side in method 'check_stop_order'."));
@@ -210,7 +210,8 @@ class algoBCCoverDistributedSubdomainDynamicCollaborator =
 
 		(* The end *)
 		()
-		
+	
+	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Find the next point, process it, send the tile to the master (and possibly stop or raise NewSubdomainAssigned depending on the master orders) *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -237,10 +238,10 @@ class algoBCCoverDistributedSubdomainDynamicCollaborator =
 			self#print_algo_message Verbose_medium   (ModelPrinter.string_of_pi0 model pi0);
 		);
 		
-		(* Send to master *)
+		(* Send to the coordinator *)
 		send_point_to_master pi0;
 		
-		self#print_algo_message Verbose_medium (" sent pi0 to master ");
+		self#print_algo_message Verbose_medium ("Sent pi0 to the coordinator ");
 		
 		let receivedContinue = ref false in
 		
@@ -250,17 +251,17 @@ class algoBCCoverDistributedSubdomainDynamicCollaborator =
 			let check = receive_work () in
 			match check with
 			
-			| TileUpdate tile -> self#print_algo_message Verbose_medium ("received Tile from Master.");
+			| TileUpdate tile -> self#print_algo_message Verbose_medium ("Received a tile from the coordinator.");
 				(*** QUESTION: why is this line commented out ???? ***)
 (* 									let b = Cartography.bc_process_im_result tile in *)
 						()
 						
-			| Subdomain subdomain -> self#print_algo_message Verbose_medium ("received scaled subdomain tag from Master.");
+			| Subdomain subdomain -> self#print_algo_message Verbose_medium ("received scaled subdomain tag from the coordinator.");
 (*						Input.set_v0 subdomain;
 						Cartography.bc_initialize_subdomain ();*)
 						raise (NewSubdomainAssigned subdomain)
 			
-			| Continue -> self#print_algo_message Verbose_medium ("received continue tag from Master.");
+			| Continue -> self#print_algo_message Verbose_medium ("received continue tag from the coordinator.");
 						receivedContinue := true;	
 						
 			| _ -> self#print_algo_error ("received unexpected tag at worker side in method 'process_one_point'.");
@@ -297,7 +298,8 @@ class algoBCCoverDistributedSubdomainDynamicCollaborator =
 			compute_next_pi0_sequentially more_pi0 limit_reached first_point (Some im_result.tile_nature);*)
 		)
 		with KillIM ->(
-			self#print_algo_message Verbose_medium "\n -------------Killed IM-----------------"; 
+			(*** TODO: manage counter to count the number of kills ***)
+			self#print_algo_message Verbose_low "\n -------------Killed IM-----------------"; 
 			(* Do nothing: the next call to this function will take care of the next point, if necessary *)
 		);
 		
@@ -311,14 +313,6 @@ class algoBCCoverDistributedSubdomainDynamicCollaborator =
 	(* Process subdomain received from the master: initialize, cover it, and send all tiles to the master *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method private process_subdomain subdomain =
-			
-		(* To differentiate between initialization of pi0 / next_point *)
-(* 				let first_point = ref true in *)
-		
-(* 				let more_pi0 = ref true in *)
-		
-(* 				let limit_reached = ref false in *)
-		
 		(* Set the subdomain *)
 		(*** NOTE: would be better to have a nicer mechanism than that one… ***)
 		Input.set_v0 subdomain;
@@ -329,7 +323,7 @@ class algoBCCoverDistributedSubdomainDynamicCollaborator =
 		if verbose_mode_greater Verbose_medium then(
 			(* Retrieve the model *)
 			let model = Input.get_model() in
-			self#print_algo_message Verbose_medium ("set v0:");
+			self#print_algo_message Verbose_medium ("Set subdomain:");
 			self#print_algo_message Verbose_medium (ModelPrinter.string_of_v0 model subdomain);
 		);
 		
@@ -337,17 +331,19 @@ class algoBCCoverDistributedSubdomainDynamicCollaborator =
 		(* The following loop may raise an exception NewSubdomainAssigned, in which case we iteratively process this new subdomain *)
 		try(
 		
-		(* While there is another point to explore *)
-		while (a_of_a_option bc_option)#check_iteration_condition do
-			(* Find the next point, process it *)
-			self#process_one_point;
-		done; (* end while more points *)
-		
-		(*** NOTE: No need to process the result of BC, totally useless here ***)
+			(* While there is another point to explore *)
+			while (a_of_a_option bc_option)#check_iteration_condition do
+				(* Find the next point, process it *)
+				self#process_one_point;
+			done; (* end while more points *)
+			
+			(*** NOTE: No need to process the result of BC, totally useless here ***)
 		
 		) with
 		(* If new subdomain: recursive call *)
-		| NewSubdomainAssigned subdomain' -> self#process_subdomain subdomain'
+		| NewSubdomainAssigned subdomain' ->
+			self#print_algo_message Verbose_low ("I have been assigned a new subdomain!");
+			self#process_subdomain subdomain'
 		;
 		
 (*		(*initial pi0*)
@@ -372,10 +368,8 @@ class algoBCCoverDistributedSubdomainDynamicCollaborator =
 	(* Generic algorithm *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method run () =
-		(* Get the model *)
-(* 		let model = Input.get_model() in *)
 		(* Retrieve the input options *)
-		let options = Input.get_options () in
+(* 		let options = Input.get_options () in *)
 		
 		(* Init counters *)
 		(*** TODO ***)
@@ -392,18 +386,14 @@ class algoBCCoverDistributedSubdomainDynamicCollaborator =
 		
 		let finished = ref false in
 		
-		(* In the meanwhile: compute the initial state *)
-(* 		let init_state = Reachability.get_initial_state_or_abort model in *)
-		
 		(* Initialize the cartography *)
 		(*** NOTE: useful?? probably not ***)
 (* 		bc <- Some self#new_bc_instance; *)
 		
 		
-		(*let main_loop () = *)
 		while not !finished do
 			send_work_request ();
-			self#print_algo_message Verbose_medium ("sent pull request to the master.");
+			self#print_algo_message Verbose_medium ("Sent pull request to the master.");
 			(*** TODO ***)
 (* 			counter_worker_waiting#start; *)
 
@@ -412,12 +402,11 @@ class algoBCCoverDistributedSubdomainDynamicCollaborator =
 (* 			counter_worker_waiting#stop; *)
 			match work with
 			| Subdomain subdomain -> 
-				self#print_algo_message Verbose_medium ("received subdomain from Master.");
+				self#print_algo_message Verbose_medium ("Received subdomain from the coordinator.");
 				
 				self#process_subdomain subdomain;
 				
 			| Terminate -> 
-					self#print_algo_message Verbose_medium (" Terminate ");
 					self#print_algo_message Verbose_medium ("I was just told to terminate work.");
 					finished := true
 				
@@ -435,6 +424,8 @@ class algoBCCoverDistributedSubdomainDynamicCollaborator =
 
 
 
+		self#print_algo_message Verbose_low ("I am done.");
+		
 		(** THE END **)
 		
 		(* Stop global counter *)

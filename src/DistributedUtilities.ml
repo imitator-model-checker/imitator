@@ -8,7 +8,7 @@
  * Author:        Etienne Andre, Camille Coti
  * 
  * Created:       2014/03/24
- * Last modified: 2016/03/30
+ * Last modified: 2016/04/01
  *
  ****************************************************************)
 
@@ -411,7 +411,7 @@ let serialize_abstract_im_result abstract_im_result =
 
 let unserialize_abstract_im_result abstract_im_result_string =
 
-	print_message Verbose_medium ( "[Master] About to unserialize '" ^ abstract_im_result_string ^ "'");
+	print_message Verbose_high ( "[Master] About to unserialize '" ^ abstract_im_result_string ^ "'");
 	let reference_val_str, result_str, abstract_state_space_str, statespace_nature_str, nb_random_selections_str , computation_time_str, soundness_str, termination_str =
 	match split serialize_SEP_STRUCT abstract_im_result_string with
 		| [reference_val_str; result_str; abstract_state_space_str; statespace_nature_str; nb_random_selections_str ; computation_time_str; soundness_str; termination_str ]
@@ -530,7 +530,7 @@ let serialize_bc_result bc_result =
 
 
 let unserialize_bc_result bc_result_string =
-	print_message Verbose_medium ("[Coordinator] About to unserialize '" ^ bc_result_string ^ "'");
+	print_message Verbose_high ("[Coordinator] About to unserialize '" ^ bc_result_string ^ "'");
 	let size_v0_str, tiles_str, computation_time_str, find_point_time_str, nb_unsuccessful_points_str , coverage_str, termination_str =
 	match split serialize_SEP_SUPER_STRUCT bc_result_string with
 		| [size_v0_str; tiles_str; computation_time_str; find_point_time_str; nb_unsuccessful_points_str ; coverage_str; termination_str ]
@@ -783,15 +783,15 @@ let send_serialized_data recipient tag serialized_data =
 	(* For information purpose *)
 	let rank = get_rank() in
 
-	print_message Verbose_medium ("[Node " ^ (string_of_int rank) ^ "] Entering send_serialized_data");
+	print_message Verbose_high ("[Node " ^ (string_of_int rank) ^ "] Entering send_serialized_data");
 	let data_size = String.length serialized_data in
 
 	if verbose_mode_greater Verbose_high then(
-		print_message Verbose_medium ("[Node " ^ (string_of_int rank) ^ "] Serialized abstract_im_result '" ^ serialized_data ^ "'");
+		print_message Verbose_high ("[Node " ^ (string_of_int rank) ^ "] Serialized abstract_im_result '" ^ serialized_data ^ "'");
 	);
 	
 	(* Send the result: 1st send the data size, then the data *)
-	print_message Verbose_medium ("[Node " ^ (string_of_int rank) ^ "] About to send the size (" ^ (string_of_int data_size) ^ ") of the data.");
+	print_message Verbose_high ("[Node " ^ (string_of_int rank) ^ "] About to send the size (" ^ (string_of_int data_size) ^ ") of the data.");
 	Mpi.send data_size recipient tag Mpi.comm_world;
 	Mpi.send serialized_data recipient tag Mpi.comm_world
 
@@ -802,7 +802,7 @@ let send_abstract_im_result abstract_im_result =
 
 	let serialized_data = serialize_abstract_im_result abstract_im_result in
 	
-	print_message Verbose_medium ("[Worker " ^ (string_of_int rank) ^ "] Serialized abstract_im_result '" ^ serialized_data ^ "'");
+	print_message Verbose_high ("[Worker " ^ (string_of_int rank) ^ "] Serialized abstract_im_result '" ^ serialized_data ^ "'");
 	
 	(* Call generic function *)
 	send_serialized_data master_rank (int_of_slave_tag Slave_tile_tag) serialized_data
@@ -814,7 +814,7 @@ let send_abstract_im_result abstract_im_result =
 
 	let serialized_data = serialize_abstract_im_result_list abstract_im_result_list in
 	
-	print_message Verbose_medium ("[Worker " ^ (string_of_int rank) ^ "] Serialized abstract_im_result_list '" ^ serialized_data ^ "'");
+	print_message Verbose_high ("[Worker " ^ (string_of_int rank) ^ "] Serialized abstract_im_result_list '" ^ serialized_data ^ "'");
 	
 	(* Call generic function *)
 	send_serialized_data master_rank (int_of_slave_tag Slave_tiles_tag) serialized_data*)
@@ -826,7 +826,7 @@ let send_bc_result bc_result =
 
 	let serialized_data = serialize_bc_result bc_result in
 	
-	print_message Verbose_medium ("[Worker " ^ (string_of_int rank) ^ "] Serialized serialize_bc_result '" ^ serialized_data ^ "'");
+	print_message Verbose_high ("[Worker " ^ (string_of_int rank) ^ "] Serialized serialize_bc_result '" ^ serialized_data ^ "'");
 	
 	(* Call generic function *)
 	send_serialized_data master_rank (int_of_slave_tag Slave_bcresult_tag) serialized_data
@@ -836,7 +836,7 @@ let send_bc_result bc_result =
 let send_pi0 (pi0 : PVal.pval) slave_rank =
 	let serialized_data = serialize_pi0 pi0 in
 	
-	print_message Verbose_medium ("[Master] Serialized pi0 '" ^ serialized_data ^ "'");
+	print_message Verbose_high ("[Master] Serialized pi0 '" ^ serialized_data ^ "'");
 	
 	(* Call generic function *)
 	send_serialized_data slave_rank (int_of_master_tag Master_data_tag) serialized_data
@@ -854,16 +854,16 @@ let send_pi0 (pi0 : PVal.pval) slave_rank =
 let send_abstract_im_result abstract_im_result =
 	let rank = get_rank() in
 
-	print_message Verbose_medium ("[Worker " ^ (string_of_int rank) ^ "] Entering send_abstract_im_result");
+	print_message Verbose_high ("[Worker " ^ (string_of_int rank) ^ "] Entering send_abstract_im_result");
 	let mlc = serialize_abstract_im_result abstract_im_result in
 	let res_size = String.length mlc in
 
 	if verbose_mode_greater Verbose_high then(
-		print_message Verbose_medium ("[Worker " ^ (string_of_int rank) ^ "] Serialized abstract_im_result '" ^ mlc ^ "'");
+		print_message Verbose_high ("[Worker " ^ (string_of_int rank) ^ "] Serialized abstract_im_result '" ^ mlc ^ "'");
 	);
 	
 	(* Send the result: 1st send the data size, then the data *)
-	print_message Verbose_medium ("[Worker " ^ (string_of_int rank) ^ "] About to send the size (" ^ (string_of_int res_size) ^ ") of the abstract_im_result.");
+	print_message Verbose_high ("[Worker " ^ (string_of_int rank) ^ "] About to send the size (" ^ (string_of_int res_size) ^ ") of the abstract_im_result.");
 	Mpi.send res_size master_rank (int_of_slave_tag Slave_tile_tag) Mpi.comm_world;
 	Mpi.send mlc master_rank (int_of_slave_tag Slave_tile_tag) Mpi.comm_world*)
 
@@ -872,7 +872,7 @@ let send_abstract_im_result abstract_im_result =
 let send_tiles im_result_list =
 	let rank = get_rank() in
 
-	print_message Verbose_low ("[Worker " ^ (string_of_int rank) ^ "] Entering send_tiles");
+	print_message Verbose_high ("[Worker " ^ (string_of_int rank) ^ "] Entering send_tiles");
 	let mlc = serialize_im_result_list im_result_list in
 	let res_size = String.length mlc in
 
@@ -881,7 +881,7 @@ let send_tiles im_result_list =
 	);
 	
 	(* Send the result: 1st send the data size, then the data *)
-	print_message Verbose_medium ("[Worker " ^ (string_of_int rank) ^ "] About to send the size (" ^ (string_of_int res_size) ^ ") of the constraint.");
+	print_message Verbose_high ("[Worker " ^ (string_of_int rank) ^ "] About to send the size (" ^ (string_of_int res_size) ^ ") of the constraint.");
 
 	print_message Verbose_high ("[Worker " ^ (string_of_int rank) ^ "] Sending size");
 	Mpi.send res_size master_rank (int_of_slave_tag Slave_tiles_tag) Mpi.comm_world;
@@ -895,7 +895,7 @@ let send_tiles im_result_list =
 let send_tileupdate abstract_im_result slave_rank =
 	let serialized_data = serialize_abstract_im_result abstract_im_result in
 	
-	print_message Verbose_medium ("[Master] Serialized abstract_im_result '" ^ serialized_data ^ "'");
+	print_message Verbose_high ("[Master] Serialized abstract_im_result '" ^ serialized_data ^ "'");
 	
 	(* Call generic function *)
 	send_serialized_data slave_rank (int_of_master_tag Master_tileupdate_tag) serialized_data
@@ -905,7 +905,7 @@ let send_tileupdate abstract_im_result slave_rank =
 let send_point_to_master point =
 	let serialized_data = serialize_pi0 point in
 	
-	print_message Verbose_medium ("[Worker] Serialized pi0 '" ^ serialized_data ^ "'");
+	print_message Verbose_high ("[Worker] Serialized pi0 '" ^ serialized_data ^ "'");
 	
 	(* Call generic function *)
 	send_serialized_data master_rank (int_of_slave_tag Slave_pi0_tag) serialized_data
@@ -936,8 +936,8 @@ let receive_pull_request () =
     Mpi.receive_status Mpi.any_source Mpi.any_tag Mpi.comm_world
   in
 
-  print_message Verbose_medium ("\t[Master] MPI status received from [Worker " ^ ( string_of_int source_rank) ^"]");
-  print_message Verbose_medium ("\t[Master] Tag decoded from [Worker " ^ ( string_of_int source_rank) ^"] : " ^ ( string_of_int tag ) );
+  print_message Verbose_high ("\t[Master] MPI status received from [Worker " ^ ( string_of_int source_rank) ^"]");
+  print_message Verbose_high ("\t[Master] Tag decoded from [Worker " ^ ( string_of_int source_rank) ^"] : " ^ ( string_of_int tag ) );
 
   let tag = worker_tag_of_int tag in  
 
@@ -945,16 +945,16 @@ let receive_pull_request () =
 (*** TODO: factorize a bit ***)
   match tag with
   | Slave_tile_tag ->
-     print_message Verbose_medium ("[Master] Received Slave_tile_tag from " ^ ( string_of_int source_rank) );
+     print_message Verbose_high ("[Master] Received Slave_tile_tag from " ^ ( string_of_int source_rank) );
 
-     print_message Verbose_medium ("[Master] Expecting a result of size " ^ ( string_of_int l) ^ " from [Worker " ^ (string_of_int source_rank) ^ "]" );
+     print_message Verbose_high ("[Master] Expecting a result of size " ^ ( string_of_int l) ^ " from [Worker " ^ (string_of_int source_rank) ^ "]" );
 
      (* receive the result itself *)
      let buff = String.create l in
      let res = ref buff in
-     print_message Verbose_medium ("[Master] Buffer created with length " ^ (string_of_int l)^"");	
+     print_message Verbose_high ("[Master] Buffer created with length " ^ (string_of_int l)^"");	
      res := Mpi.receive source_rank (int_of_slave_tag Slave_tile_tag) Mpi.comm_world ;
-     print_message Verbose_medium("[Master] received buffer " ^ !res ^ " of size " ^ ( string_of_int l) ^ " from [Worker "  ^ (string_of_int source_rank) ^ "]");	
+     print_message Verbose_high("[Master] received buffer " ^ !res ^ " of size " ^ ( string_of_int l) ^ " from [Worker "  ^ (string_of_int source_rank) ^ "]");	
 			
      (* Get the constraint *)
      let abstract_im_result = unserialize_abstract_im_result !res in
@@ -962,18 +962,19 @@ let receive_pull_request () =
      Tile (source_rank , abstract_im_result)
 		   
   | Slave_tiles_tag ->
+		print_error "Tag 'Slave_tiles_tag' not implemented in receive_pull_request";
 		raise (InternalError("Tag 'Slave_tiles_tag' not implemented in receive_pull_request"))
   (*
-      print_message Verbose_medium ("[Master] Received Slave_tiles_tag from " ^ ( string_of_int source_rank) );
+      print_message Verbose_high ("[Master] Received Slave_tiles_tag from " ^ ( string_of_int source_rank) );
 
-     print_message Verbose_medium ("[Master] Expecting a result of size " ^ ( string_of_int l) ^ " from [Worker " ^ (string_of_int source_rank) ^ "]" );
+     print_message Verbose_high ("[Master] Expecting a result of size " ^ ( string_of_int l) ^ " from [Worker " ^ (string_of_int source_rank) ^ "]" );
 
      (* receive the result itself *)
      let buff = String.create l in
      let res = ref buff in
-     print_message Verbose_medium ("[Master] Buffer created with length " ^ (string_of_int l)^"");	
+     print_message Verbose_high ("[Master] Buffer created with length " ^ (string_of_int l)^"");	
      res := Mpi.receive source_rank (int_of_slave_tag Slave_tiles_tag) Mpi.comm_world ;
-     print_message Verbose_medium("[Master] received buffer " ^ !res ^ " of size " ^ ( string_of_int l) ^ " from [Worker "  ^ (string_of_int source_rank) ^ "]");	
+     print_message Verbose_high("[Master] received buffer " ^ !res ^ " of size " ^ ( string_of_int l) ^ " from [Worker "  ^ (string_of_int source_rank) ^ "]");	
 
 			
      (* Get the constraint *)
@@ -983,16 +984,16 @@ let receive_pull_request () =
 		   
   (* Case error *)
   | Slave_outofbound_tag ->
-     print_message Verbose_medium ("[Master] Received Slave_outofbound_tag");
+     print_message Verbose_high ("[Master] Received Slave_outofbound_tag");
      OutOfBound source_rank
 		
   (* Case simple pull? *)
   | Slave_work_tag ->
-     print_message Verbose_medium ("[Master] Received Slave_work_tag from [Worker " ^ ( string_of_int source_rank) ^ "] : " ^  ( string_of_int l ));
+     print_message Verbose_high ("[Master] Received Slave_work_tag from [Worker " ^ ( string_of_int source_rank) ^ "] : " ^  ( string_of_int l ));
      PullOnly (* source_rank *) l
      
   | Slave_updaterequest_tag ->
-     print_message Verbose_medium ("[Master] Received Slave_updaterequest_tag from [Worker " ^ ( string_of_int source_rank) ^ "] : " ^  ( string_of_int l ));
+     print_message Verbose_high ("[Master] Received Slave_updaterequest_tag from [Worker " ^ ( string_of_int source_rank) ^ "] : " ^  ( string_of_int l ));
      UpdateRequest (* source_rank *) l
      
      
@@ -1000,14 +1001,14 @@ let receive_pull_request () =
   
   (* pi0 tags same as Master_data_tag*)
   | Slave_pi0_tag ->
-    print_message Verbose_medium ("[Master] Received Slave_pi0_tag from " ^ ( string_of_int source_rank) );
-    print_message Verbose_medium ("[Master] Expecting a result of size " ^ ( string_of_int l) ^ " from [Worker " ^ (string_of_int source_rank) ^ "]" );
+    print_message Verbose_high ("[Master] Received Slave_pi0_tag from " ^ ( string_of_int source_rank) );
+    print_message Verbose_high ("[Master] Expecting a result of size " ^ ( string_of_int l) ^ " from [Worker " ^ (string_of_int source_rank) ^ "]" );
      (* Receive the data itself *)
     let buff = String.create l in
     let res = ref buff in
-    print_message Verbose_medium ("[Master] Buffer created with length " ^ (string_of_int l)^"");	
+    print_message Verbose_high ("[Master] Buffer created with length " ^ (string_of_int l)^"");	
     res := Mpi.receive source_rank (int_of_slave_tag Slave_pi0_tag) Mpi.comm_world ;
-    print_message Verbose_medium("[Master] received buffer " ^ !res ^ " of size " ^ ( string_of_int l) ^ " from [Worker "  ^ (string_of_int source_rank) ^ "]");	
+    print_message Verbose_high("[Master] received buffer " ^ !res ^ " of size " ^ ( string_of_int l) ^ " from [Worker "  ^ (string_of_int source_rank) ^ "]");	
     (* Get the constraint *)
     let pi0 = (unserialize_pi0 !res) in
     Pi0 (source_rank , pi0)
@@ -1019,17 +1020,17 @@ let receive_pull_request () =
 
 
 let send_stop source_rank = 
-  print_message Verbose_medium( "[Master] Sending STOP to [Worker " ^ (string_of_int source_rank ) ^"].");
+  print_message Verbose_high( "[Master] Sending STOP to [Worker " ^ (string_of_int source_rank ) ^"].");
   Mpi.send (weird_stuff()) source_rank (int_of_master_tag Master_stop_tag) Mpi.comm_world 
   
 (*Hoang Gia send TERMINATE tag*)
 let send_terminate source_rank = 
-  print_message Verbose_medium( "[Master] Sending TERMINATE to [Worker " ^ (string_of_int source_rank ) ^"].");
+  print_message Verbose_high( "[Master] Sending TERMINATE to [Worker " ^ (string_of_int source_rank ) ^"].");
   Mpi.send (weird_stuff()) source_rank (int_of_master_tag Master_terminate_tag) Mpi.comm_world 
  
 (*Hoang Gia send Continue tag*)
 let send_continue source_rank = 
-  print_message Verbose_medium( "[Master] Sending CONTINUE to [Worker " ^ (string_of_int source_rank ) ^"].");
+  print_message Verbose_high( "[Master] Sending CONTINUE to [Worker " ^ (string_of_int source_rank ) ^"].");
   Mpi.send (weird_stuff()) source_rank (int_of_master_tag Master_continue_tag) Mpi.comm_world 
 
 
@@ -1106,24 +1107,24 @@ let receive_bcresult () =
 		Mpi.receive_status Mpi.any_source Mpi.any_tag Mpi.comm_world
 	in
 
-	print_message Verbose_medium ("[Coordinator] MPI status received from Worker " ^ ( string_of_int source_rank) ^"");
-	print_message Verbose_medium ("[Coordinator] Tag decoded from Worker " ^ ( string_of_int source_rank) ^" : " ^ ( string_of_int tag ) );
+	print_message Verbose_high ("[Coordinator] MPI status received from Worker " ^ ( string_of_int source_rank) ^"");
+	print_message Verbose_high ("[Coordinator] Tag decoded from Worker " ^ ( string_of_int source_rank) ^" : " ^ ( string_of_int tag ) );
 
 	let tag = worker_tag_of_int tag in  
 
 	(*** TODO: factorize a bit ***)
 	match tag with
 	| Slave_bcresult_tag ->
-		print_message Verbose_medium ("[Coordinator] Received Slave_bcresult_tag from " ^ ( string_of_int source_rank) );
+		print_message Verbose_high ("[Coordinator] Received Slave_bcresult_tag from " ^ ( string_of_int source_rank) );
 
-		print_message Verbose_medium ("[Coordinator] Expecting a result of size " ^ ( string_of_int l) ^ " from [Worker " ^ (string_of_int source_rank) ^ "]" );
+		print_message Verbose_high ("[Coordinator] Expecting a result of size " ^ ( string_of_int l) ^ " from [Worker " ^ (string_of_int source_rank) ^ "]" );
 
 		(* receive the result itself *)
 		let buff = String.create l in
 		let res = ref buff in
-		print_message Verbose_medium ("[Coordinator] Buffer created with length " ^ (string_of_int l)^"");	
+		print_message Verbose_high ("[Coordinator] Buffer created with length " ^ (string_of_int l)^"");	
 		res := Mpi.receive source_rank (int_of_slave_tag Slave_bcresult_tag) Mpi.comm_world ;
-		print_message Verbose_medium("[Coordinator] received buffer " ^ !res ^ " of size " ^ ( string_of_int l) ^ " from Worker "  ^ (string_of_int source_rank) ^ "");
+		print_message Verbose_high("[Coordinator] received buffer " ^ !res ^ " of size " ^ ( string_of_int l) ^ " from Worker "  ^ (string_of_int source_rank) ^ "");
 				
 		(* Get the bc_result *)
 		let bc_result = unserialize_bc_result !res in

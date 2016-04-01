@@ -111,7 +111,7 @@ class virtual algoBCCoverDistributed =
 			
 			self#print_algo_message Verbose_medium ("**************************************************");
 			self#print_algo_message Verbose_medium ("BEHAVIORAL CARTOGRAPHY ALGORITHM: "(* ^ (string_of_int !current_iteration) ^ ""*));
-			self#print_algo_message Verbose_low ("Launching IM for the following pi:" (*^ (string_of_int !current_iteration)*));
+			self#print_algo_message Verbose_low ("Running IM for the following reference valuation:" (*^ (string_of_int !current_iteration)*));
 			self#print_algo_message Verbose_low (ModelPrinter.string_of_pi0 model pi0);
 		);
 
