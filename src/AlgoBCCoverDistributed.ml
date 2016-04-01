@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/03/04
- * Last modified     : 2016/03/30
+ * Last modified     : 2016/04/01
  *
  ************************************************************)
 
@@ -89,13 +89,20 @@ class virtual algoBCCoverDistributed =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Run IM and return an abstract_im_result *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method run_im pi0 =
+	method run_im pi0 patator_termination_function_option =
 		(* Create instance of the algorithm to be called *)
 		let algo = self#get_algo_instance_function () in
 		
 		(* Set up the pi0 *)
 		(*** NOTE/BADPROG: a bit ugly… pi0 could have been a parameter of the algorithm! ***)
 		Input.set_pi0 pi0;
+		
+		(* Set up the termination function for PaTATOR *)
+		begin
+		match patator_termination_function_option with
+			| None -> ()
+			| Some f -> algo#set_patator_termination_function f;
+		end;
 		
 		(* Print some messages *)
 		if verbose_mode_greater Verbose_low then(

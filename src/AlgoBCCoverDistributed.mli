@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/03/04
- * Last modified     : 2016/03/30
+ * Last modified     : 2016/04/01
  *
  ************************************************************)
 
@@ -49,9 +49,9 @@ class virtual algoBCCoverDistributed :
 		method virtual initialize_variables : unit
 		
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-		(* Run IM and return an abstract_im_result *)
+		(* Run IM and return an abstract_im_result. Parameters are the reference valuation and the termination function to be set in IM (for PaTATOR). *)
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-		method run_im : PVal.pval -> Result.abstract_im_result
+		method run_im : PVal.pval -> (unit -> unit) option -> Result.abstract_im_result
 		
 		
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)

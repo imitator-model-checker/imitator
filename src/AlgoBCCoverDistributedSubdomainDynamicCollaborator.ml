@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/03/24
- * Last modified     : 2016/03/30
+ * Last modified     : 2016/04/01
  *
  ************************************************************)
 
@@ -217,6 +217,8 @@ class algoBCCoverDistributedSubdomainDynamicCollaborator =
 	method private process_one_point =
 		(* Retrieve the model *)
 		let model = Input.get_model() in
+		(* Retrieve the input options *)
+		let options = Input.get_options () in
 		
 		(* Compute next point *)
 		self#compute_next_point;
@@ -270,25 +272,29 @@ class algoBCCoverDistributedSubdomainDynamicCollaborator =
 		(*** WARNING/QUESTION: why is the point not AGAIN sent to the master? Its choice may have been changed due to the new reception of tiles!!! ***)
 	
 	
-		(* An exception KillIM can be raised *)
+		(* An exception KillIM can be raised by check_order *)
 		
 		(*** QUESTION: by whom? how? ***)
-
+		
+		(* Prepare the special termination function for the inverse method *)
+		let termination_function_option =
+			if options#distributedKillIM then Some (fun () -> self#check_stop_order) else None
+		in
+		
 		try(
-		
-		(* Call IM *)
-		let abstract_im_result = self#run_im pi0 in
-		
-		(* Send the result to the master *)
-		DistributedUtilities.send_abstract_im_result abstract_im_result;
-				
-		(*** NOTE for the collaborator version: keep it in memory 
-			all_tiles := im_result :: !all_tiles;
-		***)
-		
-(*		(* Print some info *)
-		self#print_algo_message Verbose_medium (" Constraint really added? " ^ (string_of_bool added) ^ "");
-		compute_next_pi0_sequentially more_pi0 limit_reached first_point (Some im_result.tile_nature);*)
+			(* Call IM *)
+			let abstract_im_result = self#run_im pi0 termination_function_option in
+			
+			(* Send the result to the master *)
+			DistributedUtilities.send_abstract_im_result abstract_im_result;
+					
+			(*** NOTE for the collaborator version: keep it in memory 
+				all_tiles := im_result :: !all_tiles;
+			***)
+			
+	(*		(* Print some info *)
+			self#print_algo_message Verbose_medium (" Constraint really added? " ^ (string_of_bool added) ^ "");
+			compute_next_pi0_sequentially more_pi0 limit_reached first_point (Some im_result.tile_nature);*)
 		)
 		with KillIM ->(
 			self#print_algo_message Verbose_medium "\n -------------Killed IM-----------------"; 
@@ -381,14 +387,6 @@ class algoBCCoverDistributedSubdomainDynamicCollaborator =
 		(* Start global counter *)
 		(*** TODO ***)
 (* 		counter_worker_total#start; *)
-		
-		(* Assign the termination function to the inverse method *)
-		if options#distributedKillIM then(
-			
-			(*** TODO ***)
-			
-(* 			Reachability.set_patator_termination_function check_stop_order; *)
-		);
 		
 		self#print_algo_message Verbose_medium ("I am worker " ^ (string_of_int collaborator_rank) ^ "/" ^ (string_of_int (nb_collaborators-1)) ^ ".");
 		

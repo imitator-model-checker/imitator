@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/03/10
- * Last modified     : 2016/03/30
+ * Last modified     : 2016/04/01
  *
  ************************************************************)
 
@@ -115,7 +115,7 @@ class virtual algoBCCoverDistributedMSPointBasedWorker =
 				self#print_algo_message Verbose_medium("Received work.");
 
 				(* Call IM *)
-				let abstract_im_result = self#run_im pi0 in
+				let abstract_im_result = self#run_im  pi0 None in
 				
 				(* Send the result to the master *)
 				DistributedUtilities.send_abstract_im_result abstract_im_result;
