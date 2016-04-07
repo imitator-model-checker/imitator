@@ -13,6 +13,11 @@
  ****************************************************************)
 
 
+  !!!***!!!***!!!***!!!***!!!***!!!***!!!***!!!***!!!***!!!***!!!***!!!***!!!***!!!***!!!***!!!
+ WARNING !!! THIS FILE IS NOW UNPLUGGED FROM THE IMITATOR SOURCE CODE (as of 2016/03/10)
+ This paragraph should raise a compiling error (syntax error) if by any chance this file was linked from another file.
+  !!!***!!!***!!!***!!!***!!!***!!!***!!!***!!!***!!!***!!!***!!!***!!!***!!!***!!!***!!!***!!!
+
 (**************************************************)
 (* External modules *)
 (**************************************************)
@@ -23,10 +28,9 @@ open Mpi
 (* Internal modules *)
 (**************************************************)
 open Exceptions
-open CamlUtilities
+open OCamlUtilities
 open ImitatorUtilities
 open Options
-open Reachability
 open DistributedUtilities
 
 

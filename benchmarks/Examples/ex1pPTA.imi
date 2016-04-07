@@ -1,0 +1,107 @@
+(************************************************************
+ *                      IMITATOR MODEL                      
+ *
+ * Empty template of a case study
+ *
+ * Description     : Example with 1 parameter and 3 clocks over bounded time
+ * Correctness     : lbad unreachable
+ * Source          : Own work
+ * Author          : Étienne André
+ * Modeling        : Étienne André
+ * Input by        : Étienne André
+ *
+ * Created         : 2015/12/01
+ * Last modified   : 2015/12/01
+ *
+ * IMITATOR version: 2.7.4-working
+ ************************************************************)
+
+var
+
+(* Clocks *)
+ 	x, y, z, t
+		: clock;
+
+(* Parameters *)
+	p
+		: parameter;
+
+
+(* Constant for bounded-time analysis *)
+	T = 10
+		: constant;
+
+
+(************************************************************)
+  automaton pta
+(************************************************************)
+
+loc l1: while True wait {}
+	when x <= p goto l1;
+	when y = p do {z' = 0} goto l2;
+
+loc l2: while True wait {}
+	when z >= p do {y' = 0} goto l2;
+	when z = 0 goto l1;
+	when y < p goto l3;
+
+loc l3: while True wait {}
+	when y = p do {y' = 0} goto l3;
+	when z = 1 do {z' = 0} goto l3;
+	when z = 1 goto lbad;
+	when x = 1 goto l2;
+
+loc lbad: while True wait {}
+end (* pta *)
+
+
+
+(************************************************************)
+  automaton timechecker
+(************************************************************)
+synclabs: time_limit;
+
+loc running: while t <= T wait {}
+(*	when t = T do {t' = 0} sync time_limit goto blocked;
+
+loc blocked: while t <= 0 wait {}*)
+end (* timechecker *)
+
+
+(************************************************************)
+(* Initial state *)
+(************************************************************)
+
+init :=
+	(*------------------------------------------------------------*)
+	(* Initial location *)
+	(*------------------------------------------------------------*)
+	& loc[pta]			= l1
+	& loc[timechecker]	= running
+
+	(*------------------------------------------------------------*)
+	(* Initial clock constraints *)
+	(*------------------------------------------------------------*)
+	& x = 0
+	& y = 0
+	& z = 0
+	& t = 0
+
+	(*------------------------------------------------------------*)
+	(* Parameter constraints *)
+	(*------------------------------------------------------------*)
+	& p >= 0
+;
+
+
+(************************************************************)
+(* Property specification *)
+(************************************************************)
+
+property := unreachable loc[pta] = lbad;
+
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end

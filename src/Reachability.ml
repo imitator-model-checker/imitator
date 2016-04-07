@@ -1,4 +1,4 @@
-(*****************************************************************
+(************************************************************
  *
  *                       IMITATOR
  * 
@@ -10,70 +10,46 @@
  * Author:        Ulrich Kuehne, Etienne Andre
  * 
  * Created:       2010/07/22
- * Last modified: 2015/10/28
+ * Last modified: 2016/01/15
  *
- ****************************************************************)
+ ************************************************************)
 
+ 
+  !!!***!!!***!!!***!!!***!!!***!!!***!!!***!!!***!!!***!!!***!!!***!!!***!!!***!!!***!!!***!!!
+ WARNING !!! THIS FILE IS NOW UNPLUGGED FROM THE IMITATOR SOURCE CODE (as for 28 January 2016)
+ This paragraph should raise a compiling error (syntax error) if by any chance this file was linked from another file.
+  !!!***!!!***!!!***!!!***!!!***!!!***!!!***!!!***!!!***!!!***!!!***!!!***!!!***!!!***!!!***!!!
 
-(**************************************************************)
+ 
+ 
+(************************************************************)
 (* Modules *)
-(**************************************************************)
+(************************************************************)
 open Exceptions
 open Options
-open CamlUtilities
+open OCamlUtilities
 open ImitatorUtilities
 open Automaton
 open AbstractModel
+open Result
 open ModelPrinter
 open StateSpace
+open Result
 open Gc
 
 
-(**************************************************************)
-(* Exception *)
-(**************************************************************)
-
-exception Unsat_exception
 
 
-
-
-(****************************************************************)
-(** The result output by IM *)
-(****************************************************************)
-type im_result = {
-	(* Returned constraint *)
-	result : returned_constraint;
-(*	(* Reachability graph *)
-	reachability_graph : StateSpace.reachability_graph;*)
-	(* Tile nature *)
-	tile_nature : tile_nature;
-	(* Premature stop? (i.e., states / depth / time limit reached) *)
-	premature_stop : bool;
-	(* Deterministic analysis? *)
-	deterministic : bool;
-	(* Number of states *)
-	nb_states : int;
-	(* Number of transitions *)
-	nb_transitions : int;
-	(* Number of iterations *)
-	nb_iterations : int;
-	(* Computation time *)
-	total_time : float;
-}
-
-
-
-(**************************************************************)
+(************************************************************)
 (* Constants *)
-(**************************************************************)
+(************************************************************)
 (* Experimental try to merge states earlier (may be more efficient and more interesting!) *)
 (* let options#merge_before = false *)
 
 
-(**************************************************************)
+(************************************************************)
 (* Global variables *)
-(**************************************************************)
+(************************************************************)
 
 (* Constraint for result (used for IM and EFIM) *)
 let k_result = ref ( LinearConstraint.p_true_constraint () )
@@ -101,9 +77,61 @@ let tile_nature = ref Unknown
 let patator_termination_function = ref None
 
 
-(**************************************************************)
+
+
+
+
+(************************************************************************************************************************)
+(************************************************************************************************************************)
+(************************************************************************************************************************)
+(************************************************************************************************************************)
+(***                                        BEGIN FUNCTIONS ALREADY COPIED TO ALGOGEN.ML (or other subclasses)                              ***)
+(************************************************************************************************************************)
+(************************************************************************************************************************)
+(************************************************************************************************************************)
+(************************************************************************************************************************)
+(************************************************************************************************************************)
+
+
+(************************************************************)
+(* Functions related to states *)
+(************************************************************)
+
+(*------------------------------------------------------------*)
+(* Check whether a state is bad *)
+(*------------------------------------------------------------*)
+let update_tile_nature (location, (*linear_constraint*)_) =
+	(* Retrieve the model *)
+	let model = Input.get_model() in
+	(* Retrieve the input options *)
+	let options = Input.get_options () in
+
+	match model.correctness_condition with
+	| None -> ()
+	| Some (Unreachable unreachable_global_locations) ->
+		(* Check whether the current location matches one of the unreachable global locations *)
+		if StateSpace.match_unreachable_global_locations unreachable_global_locations location then(
+		
+			(*** Quite a hack here ***)
+			if options#efim && !tile_nature <> Bad then(
+				print_message Verbose_standard ("  [EFIM] Bad location found! Switching to bad-driven algorithm");
+			);
+			tile_nature := Bad;
+		);
+	| _ -> raise (InternalError("IMITATOR currently ony implements the non-reachability-like properties."))
+
+
+
+(************************************************************)
+(* Exception *)
+(************************************************************)
+
+exception Unsat_exception
+
+
+(************************************************************)
 (* I/O functions *)
-(**************************************************************)
+(************************************************************)
 let write_result_to_file constraint_str =
 	(* Retrieve the input options *)
 	let options = Input.get_options () in
@@ -130,9 +158,9 @@ let write_result_to_file constraint_str =
 
 
 
-(**************************************************************)
+(************************************************************)
 (* Costs *)
-(**************************************************************)
+(************************************************************)
 
 (* Instantiated costs (no need to compute them for each location) *)
 let instantiated_costs = ref (Array.make 0 (Array.make 0 NumConst.zero)) (*Array.make (Hashtbl.length index_of_automata) (Array.make 0 (NumConst.zero))*)
@@ -166,322 +194,10 @@ let instantiate_costs model pi0 =
 
 
 
-(**************************************************************)
-(* Local Clocks *)
-(**************************************************************)
 
-(* Global variable *)
-(** WARNING: initial value quite ugly; but using a Some / None would be a bit troublesome *)
-let useless_clocks = ref (fun automaton_index location_index -> [])
-
-
-(** WARNING: duplicate function in ModelConverter *)
-let get_clocks_in_updates : clock_updates -> clock_index list = function
-	(* No update at all *)
-	| No_update -> []
-	(* Reset to 0 only *)
-	| Resets clock_reset_list -> clock_reset_list
-	(* Reset to arbitrary value (including discrete, parameters and clocks) *)
-	| Updates clock_update_list -> let result, _ = List.split clock_update_list in result
-
-
-(*------------------------------------------------------------*)
-(* Find the local clocks per automaton *)
-(*------------------------------------------------------------*)
-(** WARNING: the use of clock_offset is not beautiful (and error prone) here *)
-let find_local_clocks model =
-	(** HACK: yes, clock_offset is the number of parameters, but quite hard coded *)
-	let clock_offset = model.nb_parameters in
-	
-	(* Create an empty array for the clocks of each automaton *)
-	let clocks_per_automaton = Array.make model.nb_automata [] in
-	(* Create an empty array for the local clocks of each automaton *)
-	let local_clocks_per_automaton = Array.make model.nb_automata [] in
-	(* Create an empty array for the automata associated with each clock *)
-	let automata_per_clock = Array.make model.nb_clocks [] in
-	
-	(* For each automaton *)
-	for automaton_index = 0 to model.nb_automata - 1 do
-		(* Get the locations for this automaton *)
-		let locations = model.locations_per_automaton automaton_index in
-		(* For each location *)
-		let clocks_for_locations = List.fold_left (fun list_of_clocks_for_previous_locations location_index ->
-			(* Get the clocks in the invariant *)
-			let invariant = model.invariants automaton_index location_index in
-			let clocks_in_invariant = LinearConstraint.pxd_find_variables model.clocks invariant in
-			(* Get the clocks from the stopwatches *)
-			let clocks_in_stopwatches = model.stopwatches automaton_index location_index in
-			
-			(* Now find clocks in guards *)
-			(* For each action for this automaton and location *)
-			let actions_for_this_location = model.actions_per_location automaton_index location_index in
-			let clocks_for_actions = List.fold_left (fun list_of_clocks_for_previous_actions action_index ->
-				(* For each transition for this automaton, location and action *)
-				let transitions_for_this_action = model.transitions automaton_index location_index action_index in
-				let clocks_for_transitions = List.fold_left (fun list_of_clocks_for_previous_transitions transition ->
-					(* Name the elements in the transition *)
-					let guard , clock_updates , _ , _ = transition in
-					let clocks_in_guards = LinearConstraint.pxd_find_variables model.clocks guard in
-					let clocks_in_updates = get_clocks_in_updates clock_updates in
-						(* Add these 2 new lists to the current list *)
-						List.rev_append (List.rev_append clocks_in_guards clocks_in_updates) list_of_clocks_for_previous_transitions
-				) [] transitions_for_this_action in
-				(* Add the list for this action to the one for previous actions *)
-				List.rev_append clocks_for_transitions list_of_clocks_for_previous_actions
-			) [] actions_for_this_location in
-			
-			(* Add all clocks *)
-			List.rev_append (List.rev_append (List.rev_append clocks_in_invariant clocks_in_stopwatches) clocks_for_actions) list_of_clocks_for_previous_locations
-		) [] locations in
-		
-		(* Collapse the list *)
-		let clocks_for_this_automaton = list_only_once clocks_for_locations in
-		(* Update the clocks per automaton *)
-		clocks_per_automaton.(automaton_index) <- clocks_for_this_automaton;
-		(* Update the automaton for all clocks *)
-		List.iter (fun clock ->
-			(* Add current automaton to the list of automata for this clock *)
-			automata_per_clock.(clock - clock_offset) <- (automaton_index :: automata_per_clock.(clock - clock_offset));
-		) clocks_for_this_automaton;
-	done; (* end for each automaton *)
-	
-	(* Now compute the local clocks *)
-	for clock_index = clock_offset to clock_offset + model.nb_clocks - 1 do
-		(* Retrieve the automata in which this clock appears *)
-		let automata_for_this_clock = automata_per_clock.(clock_index - clock_offset) in
-		(* If size is 1, the clock is local *)
-		match automata_for_this_clock with
-			(* Only one element: clock is local *)
-			| [automaton_index] -> 
-(* 				print_message Verbose_high ("Automaton " ^ (string_of_int automaton_index) ^ " has local clock " ^ (string_of_int clock_index)); *)
-				(* Add the clock to the automaton *)
-				local_clocks_per_automaton.(automaton_index) <- (clock_index) :: local_clocks_per_automaton.(automaton_index);
-			(* Otherwise, clock is not local *)
-			| _ -> ()
-	done;
-
-	(*clocks_per_automaton, automata_per_clock,*) local_clocks_per_automaton
-	
-
-(*------------------------------------------------------------*)
-(* Find the useless clocks in automata locations *)
-(*------------------------------------------------------------*)
-(** NOTE: this function is not related to model conversion, and could (should?) be defined elsewhere *)
-let find_useless_clocks_in_automata model local_clocks_per_automaton =
-
-	(* Create the data structure *)
-	let useless_clocks_per_location = Array.make model.nb_automata (Array.make 0 []) in
-	
-	(* For each automaton *)
-	for automaton_index = 0 to model.nb_automata - 1 do
-	
-	
-		(* Get the locations for this automaton *)
-		let locations_for_this_automaton = model.locations_per_automaton automaton_index in
-		let nb_locations = List.length locations_for_this_automaton in
-	
-		(* Initialize the data structure for this automaton *)
-		useless_clocks_per_location.(automaton_index) <- Array.make nb_locations [];
-		
-		(* Retrieve the local clocks for this automaton *)
-		let local_clocks = local_clocks_per_automaton.(automaton_index) in
-
-		(* Compute the predecessor locations and lists of local clock reset *)
-		let predecessors = Array.make nb_locations [] in
-		(* For each location in this automaton: *)
-		List.iter (fun location_index ->
-			(* Get the actions for this location *)
-			let actions_for_this_location = model.actions_per_location automaton_index location_index in
-			
-			(* For each action available in this location *)
-			List.iter (fun action_index ->
-				(* Retrieve the transitions from this location & action *)
-				let transitions = model.transitions automaton_index location_index action_index in
-				
-				(* For each transition starting from this location *)
-				List.iter (fun ((*guard*) _ , clock_updates , (*discrete_update*) _ , destination_index) ->
-					(* Get the clocks updated or reset *)
-					let reset_clocks =
-					match clock_updates with
-					| No_update -> []
-					| Resets list_of_clocks -> list_of_clocks
-					| Updates list_of_clocks_and_updates ->
-						(* Keep only the left part (the clock indexes) *)
-						let left, _ =  List.split list_of_clocks_and_updates in left
-					in
-					(* Compute the local clocks updated or reset *)
-					let reset_local_clocks = list_inter reset_clocks local_clocks in
-					(* Update the predecessors *)
-					predecessors.(destination_index) <- (location_index, reset_local_clocks) :: predecessors.(destination_index);
-				) transitions; (* end for each transition *)
-			) actions_for_this_location; (* end for each action *)
-		) locations_for_this_automaton; (* end for each location *)
-		
-		(* Print some information *)
-		if verbose_mode_greater Verbose_total then(
-			print_message Verbose_total ("Computed predecessor locations and clock resets for automaton '" ^ (model.automata_names automaton_index) ^ "'");
-			(* Iterate on locations *)
-			List.iter (fun location_index ->
-				print_message Verbose_total ("  Location '" ^ (model.location_names automaton_index location_index) ^ "' has predecessors:");
-				let predecessors_string = string_of_list_of_string_with_sep ", " (List.map (
-					fun (source_index, reset_local_clocks) ->
-						(model.location_names automaton_index source_index) ^ "[resets: " ^ (string_of_list_of_string_with_sep ", " (List.map model.variable_names reset_local_clocks)) ^ "]"
-					) predecessors.(location_index)) in
-				print_message Verbose_total ("    " ^ predecessors_string);
-			) locations_for_this_automaton; (* end for each location *)
-		);
-	
-		(* For each local clock for this automaton *)
-		List.iter(fun clock_index ->
-			(* Create a list of marked locations (i.e., where the clock is useful) *)
-			let marked = ref (list_union 
-				(* All locations with an invariant involving this clock *)
-				(List.filter (fun location_index ->
-					(* Retrieve the invariant *)
-					let invariant = model.invariants automaton_index location_index in
-					(* Check if the clock is present in the invariant *)
-					let constrained = LinearConstraint.pxd_is_constrained invariant clock_index in
-					(* Print some information *)
-					print_message Verbose_total ("Clock '" ^ (model.variable_names clock_index) ^ "' is " ^ (if constrained then "" else "NOT ") ^ "constrained in invariant of location '" ^ (model.location_names automaton_index location_index) ^ "'");
-					(* Return true or false *)
-					constrained
-				) locations_for_this_automaton
-				) 
-				(* All predecessor locations of transitions with a guard involving this clock *)
-				(
-					(* For each location *)
-					List.fold_left (fun current_list_of_locations location_index ->
-						(* Get the actions for this location *)
-						let actions_for_this_location = model.actions_per_location automaton_index location_index in
-						(* For each action available in this location *)
-						List.fold_left (fun current_list_of_locations action_index ->
-							(* Retrieve the transitions from this location & action *)
-							let transitions = model.transitions automaton_index location_index action_index in
-							(* Check if there exists a guard in an outgoing transition where the clock is constrained *)
-							let exists_guard = List.exists (fun (guard , (*clock_updates*)_ , (*discrete_update_list*)_ , (*destination_index*)_) ->
-								(* Check if the clock is present in the guard *)
-								let constrained = LinearConstraint.pxd_is_constrained guard clock_index in
-								(* Print some information *)
-								if constrained then (
-									print_message Verbose_high ("Found a transition where clock '" ^ (model.variable_names clock_index) ^ "' is constrained in guard from location '" ^ (model.location_names automaton_index location_index) ^ "', through '" ^ (model.action_names action_index) ^ "'");
-								) else (
-									print_message Verbose_total ("Clock '" ^ (model.variable_names clock_index) ^ "' is not constrained in guard from location '" ^ (model.location_names automaton_index location_index) ^ "' through '" ^ (model.action_names action_index) ^ "'");
-								);
-								(* Return true or false *)
-								constrained
-							) transitions in
-							(* Keep the location if there exists a guard *)
-							if exists_guard then location_index :: current_list_of_locations
-							else current_list_of_locations
-						) current_list_of_locations actions_for_this_location
-					) [] locations_for_this_automaton
-				)
-			) in
-
-			(* Create a waiting list *)
-			let waiting = ref !marked in
-			
-			(* Print some information *)
-			if verbose_mode_greater Verbose_medium then(
-				print_message Verbose_medium ("Starting the dynamic clock elimination algorithm for local clock '" ^ (model.variable_names clock_index) ^ "' in automaton '" ^ (model.automata_names automaton_index) ^ "', with initial marked states:");
-				print_message Verbose_medium (	"  " ^ (string_of_list_of_string_with_sep ", " (List.map (model.location_names automaton_index) !marked)));
-			);
-			
-			(* Start the algorithm *)
-			while !waiting != [] do
-				(* Pick a location from the waiting list *)
-				match !waiting with
-				| location_index :: rest ->
-					(* Print some information *)
-					print_message Verbose_medium ("Pick up location '" ^ (model.location_names automaton_index location_index) ^ "'");
-					(* Remove the first element *)
-					waiting := rest;
-					(* For each transition leading to this location *)
-					List.iter (fun (source_index, reset_local_clocks) ->
-						(* Print some information *)
-						print_message Verbose_high ("Considering predecessor transition from '" ^ (model.location_names automaton_index source_index) ^ "'");
-						(* If the clock is not reset by the transition *)
-						if not (List.mem clock_index reset_local_clocks) then(
-							(* Print some information *)
-							print_message Verbose_high ("Clock not reset by a transition.");
-							(* If the source location does not belong to the marked list *)
-							if not (List.mem source_index !marked) then(
-								(* Add it to the marked list *)
-								marked := source_index :: !marked;
-								print_message Verbose_high ("Location marked.");
-								(* Add it to the waiting list (if not present) *)
-								if not (List.mem source_index !waiting) then
-									print_message Verbose_high ("Location added to waiting list.");
-									waiting := source_index :: !waiting;
-							); (* end if not in marked list *)
-						);(* end if clock not reset *)
-					) predecessors.(location_index); (* end for each transition *)
-					
-				| _ -> raise (InternalError "Impossible situation: list should not be empty.");
-
-			(* End the algorithm *)
-			done;
-			
-			(* Return the list of locations where the clock can be removed *)
-			let useless_locations = list_diff locations_for_this_automaton !marked in
-			
-			(* Print some information *)
-			if verbose_mode_greater Verbose_low then(
-				print_message Verbose_low ("List of useless locations for local clock '" ^ (model.variable_names clock_index) ^ "' in automaton '" ^ (model.automata_names automaton_index) ^ "'");
-				print_message Verbose_low ("  " ^ (string_of_list_of_string_with_sep ", " (List.map (model.location_names automaton_index) useless_locations)));
-			);
-			
-			(* Update the data structure *)
-			List.iter (fun location_index ->
-				(useless_clocks_per_location.(automaton_index)).(location_index) <- clock_index :: (useless_clocks_per_location.(automaton_index)).(location_index);
-			) useless_locations;
-			
-			
-		) local_clocks; (* end for each local clock *)
-	done; (* end for each automaton *)
-	
-	(* Return a functional structure *)
-	(fun automaton_index location_index ->
-		(useless_clocks_per_location.(automaton_index)).(location_index)
-	)
-	(* THE END *)
-
-
-
-(*------------------------------------------------------------*)
-(* Function for preparing data structures for dynamic clock elimination *)
-(*------------------------------------------------------------*)
-(* NOTE: This function is only called if the dynamic clock elimination option is activated *)
-let prepare_clocks_elimination model =
-	(* Compute the local clocks per automaton *)
-	print_message Verbose_low ("*** Building local clocks per automaton...");
-	let local_clocks_per_automaton = find_local_clocks model in
-
-	(* Debug print: local clocks per automaton *)
-	if verbose_mode_greater Verbose_total then(
-		print_message Verbose_total ("\n*** Local clocks per automaton:");
-		(* For each automaton *)
-		List.iter (fun automaton_index ->
-			(* Get the actions *)
-			let clocks = local_clocks_per_automaton.(automaton_index) in
-			(* Print it *)
-			let clocks_string = string_of_list_of_string_with_sep ", " (List.map model.variable_names clocks) in
-			print_message Verbose_total ("  " ^ (model.automata_names automaton_index) ^ " : " ^ clocks_string)
-		) model.automata;
-	);
-	
-	
-	(* Compute and update useless clocks *)
-	print_message Verbose_low ("*** Building useless clocks per location per automaton...");
-	useless_clocks := find_useless_clocks_in_automata model local_clocks_per_automaton;
-	()
-
-
-
-
-(**************************************************************)
+(************************************************************)
 (* Functions related to locations *)
-(**************************************************************)
+(************************************************************)
 
 (*------------------------------------------------------------*)
 (* Check whether at least one local location is urgent *)
@@ -501,38 +217,10 @@ let is_location_urgent model location =
 
 
 
-(**************************************************************)
-(* Functions related to states *)
-(**************************************************************)
 
-(*------------------------------------------------------------*)
-(* Check whether a state is bad *)
-(*------------------------------------------------------------*)
-let update_tile_nature (location, (*linear_constraint*)_) =
-	(* Retrieve the model *)
-	let model = Input.get_model() in
-	(* Retrieve the input options *)
-	let options = Input.get_options () in
-
-	match model.correctness_condition with
-	| None -> ()
-	| Some (Unreachable unreachable_global_locations) ->
-		(* Check whether the current location matches one of the unreachable global locations *)
-		if StateSpace.match_unreachable_global_locations unreachable_global_locations location then(
-		
-			(*** Quite a hack here ***)
-			if options#efim && !tile_nature <> Bad then(
-				print_message Verbose_standard ("  [EFIM] Bad location found! Switching to bad-driven algorithm");
-			);
-			tile_nature := Bad;
-		);
-	| _ -> raise (InternalError("IMITATOR currently ony implements the non-reachability-like properties."))
-
-
-
-(**************************************************************)
+(************************************************************)
 (* Cache *)
-(**************************************************************)
+(************************************************************)
 
 (* hash function for locations *)
 let loc_hash locations =
@@ -555,9 +243,9 @@ let inv_cache = Cache.make loc_hash 200
 let upd_cache = Cache.make upd_hash 100*)
 
 
-(**************************************************************)
+(************************************************************)
 (* Statistics *)
-(**************************************************************)
+(************************************************************)
 
 (* Print statistics for cache usage *)
 let print_stats _ =
@@ -584,257 +272,9 @@ let nb_unsat2 = ref 0
 
 
 
-
-
-
-(**************************************************************)
-(* Merging functions *)
-(**************************************************************)
-(** Check if two states are mergeable: return True if the convex hull is equal to the union, False otherwise*)
-(*let state_mergeable state1 state2 =
-	let (loc1,constr1) = state1 in
-	let (loc2,constr2) = state2 in
-	if not (Location.location_equal loc1 loc2) then false else (
-		LinearConstraint.hull_assign_if_exact constr1 constr2 
-	)*)
-
-(*------------------------------------------------------------*)
-(* Check whether two states (location1 , constraint1) and (location2 , constraint2) are mergeable*)
-(* Warning! Performs the merging constraint1 := constraint1 U constraint2 if indeed mergeable *)
-(*------------------------------------------------------------*)
-let try_to_merge location1 constraint1 location2 constraint2 =
-	(* First check equality of locations *)
-	if location1 <> location2 then false
-	else(
-		(* Check convex union of constraints *)
-		LinearConstraint.px_hull_assign_if_exact constraint1 constraint2
-	)
-
-(*------------------------------------------------------------*)
-(* Merge states in a list (action_index, location, constraint) *)
-(* Return the updated list *)
-(*------------------------------------------------------------*)
-(*** WARNING: horrible imperative style (and probably not efficient and not tail-recursive at all!) programming in this function *)
-let merge model action_and_state_list =
-
-	(* Print some information *)
-	print_message Verbose_low ("\nStarting merging algorithm (before pi0-compatibility test) on a list of " ^ (string_of_int (List.length (!action_and_state_list))) ^ " state" ^ (s_of_int (List.length (!action_and_state_list))) ^ "");
-	
-	(* Number of eated states (for printing purpose) *)
-	let nb_eated = ref 0 in
-
-	(* Outer loop: iterate on potential eaters *)
-	let eater_index = ref 0 in
-	(* while eater_index is in the list *)
-	while !eater_index < List.length (!action_and_state_list) do
-		(* Print some information *)
-		print_message Verbose_high ("\n eater = " ^ (string_of_int !eater_index));
-
-		(* Retrieve the eater *)
-		let eater_actions, eater_location, eater_constraint = List.nth !action_and_state_list !eater_index in
-		
-		(* Inner loop: iterate on potential eated *)
-		let eated_index = ref 0 in
-		while !eated_index < List.length (!action_and_state_list) do
-			(* Print some information *)
-			print_message Verbose_high ("\n eater = " ^ (string_of_int !eater_index));
-			
-			(* Don't eat yourself *)
-			if !eater_index <> !eated_index then(
-				(* Retrieve the potential eated *)
-				let eated_actions, eated_location, eated_constraint = List.nth !action_and_state_list !eated_index in
-				
-				(* If mergeable *)
-
-				(* Print some information *)
-				if verbose_mode_greater Verbose_total then (
-					print_message Verbose_total ("\nConstraint of the eated before merging attempt...\n" ^ (LinearConstraint.string_of_px_linear_constraint model.variable_names eated_constraint));
-					print_message Verbose_total ("\nConstraint of the eater before merging attempt...\n" ^ (LinearConstraint.string_of_px_linear_constraint model.variable_names eater_constraint));
-				);
-
-				
-				if try_to_merge eater_location eater_constraint eated_location eated_constraint then(
-					if verbose_mode_greater Verbose_total then (
-						(* Print some information *)
-						print_message Verbose_total ("\nConstraint of the eater after merging...\n" ^ (LinearConstraint.string_of_px_linear_constraint model.variable_names eater_constraint));
-					);
-						
-					(* Due to side effects in try_to_merge, the merging is already performed at this point! *)
-					
-					(* Set the actions of the eated to the eater *)
-					(*** TODO: first check that some actions in the eated do not appear in the eater *)
-					action_and_state_list := list_set_nth !eater_index (list_union eater_actions eated_actions, eater_location, eater_constraint) !action_and_state_list;
-
-					(* Now remove the eated *)
-					action_and_state_list := list_delete_at !eated_index !action_and_state_list;
-					
-					
-					(* If eated_index < eater_index, then decrement the eater index since the list is now shorter on the left side *)
-					if !eated_index < !eater_index then(
-(* 						eated_index := !eated_index - 1; *)
-						eater_index := !eater_index - 1;
-					);
-					
-					(* Update the counter *)
-					nb_eated := !nb_eated + 1;
-					
-					(* Try again to eat from the beginning *)
-					eated_index := 0;
-				) (* end if mergeable *)
-				else(
-					(* Otherwise: Go to the next eated state *)
-					eated_index := !eated_index + 1;
-				) (* end if not mergeable *)
-
-			) (* end don't eat yourself *)
-			else(
-				(* Otherwise: Go to the next eated state *)
-				eated_index := !eated_index + 1;
-			);
-		done; (* end inner loop *)
-		
-		(* Go to the next eater *)
-		eater_index := !eater_index + 1;
-	done; (* end outer loop *)
-	
-	(* Print some information *)
-	if !nb_eated > 0 then
-		print_message Verbose_standard ("  " ^ (string_of_int !nb_eated) ^ " state" ^ (s_of_int !nb_eated) ^ " merged before pi0-compatibility test.")
-	else
-		print_message Verbose_low ("  (No state merged before pi0-compatibility test)")
-	;
-	
-	
-	!action_and_state_list
-
-(*let rec merging_of_states graph index_state list_index_states list_new_states =
-	match list_index_states with
-	  | [] -> (false, -1)
-	  | first :: rest  -> let (loc_state, constr_state) =  (get_state graph index_state) in
-		  let (loc_hd, constr_hd) = (get_state graph first) in
-		  if (state_mergeable (loc_state, constr_state) (loc_hd, constr_hd)) then (
-			print_message Verbose_total ("Mergeable states");
-			merge_states graph index_state first;
-			print_message Verbose_total ("States merged");
-			(* TO OPTIMIZE: operation already performed in state_mergeable !! *)
-			LinearConstraint.hull_assign constr_state constr_hd;
-			(true, first)
-		  )
-		  else ( merging_of_states graph index_state rest (first :: list_new_states); )*)
-
-
-(*let try_to_merge_states graph list_of_states =
-	print_message Verbose_high ("Starting merging");
-	
-	(* Count states (for statistics only *)
-	let nb_merged = ref 0 in
-	(* Check if we have to start the whole merging again (case a merging was found *)
-	let start_again = ref true in
-	(* Copy the list of states to work on it *)
-	let current_list_of_states = ref list_of_states in
-
-	(* DEFINITION OF AN AUXILIARY FUNCTION: 'eater' state id will try to merge with elements within 'eated_list' states id list *)
-	let merge_states_aux eater eated_list =
-		(* Flag to check if states were merged *)
-		let merged_states = ref true in
-		(* Copy eated list *)
-		let eated_list_copy = ref eated_list in
-		
-		(* Loop as long as we merged states, i.e., always start again to try to marge eater if some states were merged *)
-		while !merged_states do
-			print_message Verbose_total ("Starting inner loop in merging");
-			(* Set flag to false: no states merged yet *)
-			merged_states := false;
-			(* Get the real state *)
-			let s1 = get_state graph eater in
-			(* Iterate on all elements of eated_list, and update the eated_list *)
-			eated_list_copy := List.fold_left (fun current_list current_element ->
-				(* Get the real state *)
-				let s2 = get_state graph current_element in
-				(* Try to merge eater with current_element *)
-				if state_mergeable s1 s2 then (
-					print_message Verbose_total ("Found a mergeable state");
-					StateSpace.merge_2_states graph eater current_element;
-					print_message Verbose_total ("States successfully merged");
-					(** Optimized: hull already performed in state_mergeable !! *)
-					(* Update flags (we will have to start everything again) *)
-					start_again := true;
-					merged_states := true;
-					nb_merged := !nb_merged + 1;
-					(* Return current list only, i.e., discard s2 *)
-					current_list
-				) else (
-					(* Keep s2 *)
-					current_element :: current_list
-				)
-				(* NOTE THAT THE LIST WAS REVERSED; IMPORTANT? *)
-			) [] !eated_list_copy;
-		done; (* end while merge first with rest *)
-		(* Result: *)
-		!eated_list_copy
-	(* END AUXILIARY FUNCTION *)
-	in
-
-	while !start_again do
-		(* Set flag to false: no states merged yet *)
-		start_again := false;
-
-		print_message Verbose_total ("Starting one iteration of the outer loop in merging");
-
-		let beginning = ref [] in
-		let remaining = ref (!current_list_of_states) in
-		
-		while !remaining != [] do
-			match !remaining with
-			| [] -> raise (InternalError("Impossible case in 'merge_states'."))
-			| first_remaining :: rest_remaining ->
-				(* Call auxiliary function *)
-				print_message Verbose_high ("Considered one more state");
-				remaining := merge_states_aux first_remaining rest_remaining;
-				(* Add first to rest, i.e., move one step within the list *)
-				beginning := first_remaining :: !beginning;
-		done;
-		(* Update list of states *)
-		current_list_of_states := !beginning;
-	done;
-
-	(* Some debug message *)
-	if !nb_merged > 0 then
-		print_message Verbose_standard ("  " ^ (string_of_int !nb_merged) ^ " state" ^ (s_of_int !nb_merged) ^ " merged.");
-	
-	(* Return something *)
-	!current_list_of_states
-
-
-(*
-		match !new_states_after_merging with
-			(* If empty list: do nothing *)
-			| [] -> ()
-			(* Otherwise: *)
-			| first :: rest -> (
-				let (result, state_merged) = merging_of_states reachability_graph first rest [] in
-					print_message Verbose_total ("Test for debugging the fatal error 2/5");
-					if result then (
-						print_message Verbose_total ("Test for debugging the fatal error 3/5");
-						merging := true;
-						nb_merged := !nb_merged + 1;
-						print_message Verbose_total ("Test for debugging the fatal error 4/5");
-						new_states_after_merging := list_remove_first_occurence state_merged !new_states_after_merging ;
-						print_message Verbose_total ("Test for debugging the fatal error 5/5");
-					);
-				print_message Verbose_total ("Looping merging");
-				);
-
-						(** DEBUT LOOP *)
-
-				
-				done;*)*)
-
-
-
-(**************************************************************)
+(************************************************************)
 (* Main functions *)
-(**************************************************************)
+(************************************************************)
 
 (*------------------------------------------------------------*)
 (* Compute the invariant associated to a location   *)
@@ -1266,27 +706,8 @@ let create_initial_state model =
 		
 		
 	(* Remove useless clocks (if option activated) *)
-	(*** WARNING: code duplication!!! ***)
 	if options#dynamic_clock_elimination then(
-		(* Compute the useless clocks *)
-		let clocks_to_remove = List.fold_left (fun current_list_of_clocks automaton_index ->
-			(* Retrieve dest location for this automaton *)
-			let location_index = Location.get_location initial_location automaton_index in
-			(* Get the clocks and append to previously computed clocks (rev_append because the order doesn't matter) *)
-			List.rev_append current_list_of_clocks (!useless_clocks automaton_index location_index)
-		) [] model.automata in
-		(* Print some information *)
-		if verbose_mode_greater Verbose_low then(
-			if clocks_to_remove = [] then print_message Verbose_low ("No clock will be dynamically removed.")
-			else print_message Verbose_low ("The following clock" ^ (s_of_int (List.length clocks_to_remove)) ^ " will be dynamically removed: {" ^ (string_of_list_of_string_with_sep ", " (List.map model.variable_names clocks_to_remove)) ^ "}");
-		);
-		
-		print_message Verbose_high ("\nRemoving useless clocks ");
-		LinearConstraint.px_hide_assign clocks_to_remove current_constraint;
-		(* Print some information *)
-		if verbose_mode_greater Verbose_total then(
-			print_message Verbose_total (LinearConstraint.string_of_px_linear_constraint model.variable_names current_constraint);
-		);
+		ClocksElimination.dynamic_clock_elimination initial_location current_constraint;
 	);
 	
 	
@@ -1515,30 +936,6 @@ let compute_new_constraint model orig_constraint (discrete_constr_src : LinearCo
 		);
 
 		
-(*		(* Factor time-elapsing because it can be used at two different places depending on the options *)
-		let apply_time_elapsing () =
-			(* Compute the list of stopwatches *)
-			let stopped_clocks, elapsing_clocks = compute_stopwatches model dest_location in
-			print_message Verbose_high ("Computing list of stopwatches");
-			if verbose_mode_greater Verbose_total then(
-				let list_of_names = List.map model.variable_names stopped_clocks in
-				print_message Verbose_total ("Stopped clocks : " ^ (string_of_list_of_string_with_sep ", " list_of_names));
-				let list_of_names = List.map model.variable_names elapsing_clocks in
-				print_message Verbose_total ("Elapsing clocks: " ^ (string_of_list_of_string_with_sep ", " list_of_names));
-			);
-			
-			(* Perform time elapsing *)
-			LinearConstraint.pxd_time_elapse_assign
-				elapsing_clocks
-				(List.rev_append stopped_clocks model.parameters_and_discrete)
-				current_constraint
-			;
-			(* Print some information *)
-			if verbose_mode_greater Verbose_total then(
-				print_message Verbose_total (LinearConstraint.string_of_pxd_linear_constraint model.variable_names current_constraint);
-			);
-		in*)
-
 		let current_constraint = LinearConstraint.pxd_copy discrete_constr_src in
 		
 		(* Print some information *)
@@ -1653,27 +1050,8 @@ let compute_new_constraint model orig_constraint (discrete_constr_src : LinearCo
 		(* Remove useless clocks (if option activated) *)
 		(*** WARNING: code duplication!!! ***)
 		if options#dynamic_clock_elimination then(
-			(* Compute the useless clocks *)
-			let clocks_to_remove = List.fold_left (fun current_list_of_clocks automaton_index ->
-				(* Retrieve dest location for this automaton *)
-				let location_index = Location.get_location dest_location automaton_index in
-				(* Get the clocks and append to previously computed clocks (rev_append because the order doesn't matter) *)
-				List.rev_append current_list_of_clocks (!useless_clocks automaton_index location_index)
-			) [] model.automata in
-			(* Print some information *)
-			if verbose_mode_greater Verbose_low then(
-				if clocks_to_remove = [] then print_message Verbose_low ("No clock will be dynamically removed.")
-				else print_message Verbose_low ("The following clock" ^ (s_of_int (List.length clocks_to_remove)) ^ " will be dynamically removed: {" ^ (string_of_list_of_string_with_sep ", " (List.map model.variable_names clocks_to_remove)) ^ "}");
-			);
-			
-			print_message Verbose_high ("\nRemoving useless clocks ");
-			LinearConstraint.px_hide_assign clocks_to_remove current_constraint;
-			(* Print some information *)
-			if verbose_mode_greater Verbose_total then(
-				print_message Verbose_total (LinearConstraint.string_of_px_linear_constraint model.variable_names current_constraint);
-			);
+			ClocksElimination.dynamic_clock_elimination dest_location current_constraint;
 		);
-		
 		
 		
 		(* return the final constraint *)
@@ -1681,15 +1059,15 @@ let compute_new_constraint model orig_constraint (discrete_constr_src : LinearCo
 	) with Unsat_exception -> None
 
 
-(*------------------------------------------------*)
+(*------------------------------------------------------------*)
 (* Computes next combination of indices           *)
 (* current_indexes : combination                  *)
 (* max_indexes     : maximum indices              *)
-(*------------------------------------------------*)
+(*------------------------------------------------------------*)
 (* returns a boolean, indicating that the         *)
 (* new combination is valid (false if the old     *)
 (* combination was the last one)                  *)
-(*------------------------------------------------*)
+(*------------------------------------------------------------*)
 let next_combination combination max_indexes =
 	let len = Array.length combination in 
 	let valid_combination = ref true in 
@@ -1718,18 +1096,21 @@ let next_combination combination max_indexes =
 
 
 
-(*-----------------------------------------------------*)
+
+
+
+(*------------------------------------------------------------*)
 (* Checks a new state for pi0-compatibility and        *)
 (* updates constraint K if incompatible state is found.*)
 (* pi0               : reference valuation             *)
 (* rechability_graph : current reachability graph      *)
 (* constr            : new state constraint            *)
-(*-----------------------------------------------------*)
+(*------------------------------------------------------------*)
 (* returns (true, p_constraint) if the state is pi0-compatible, and (false, _) otherwise *)
 (*** BADPROG: no need to return (false, _), better return some Some/None ***)
-(*-----------------------------------------------------*)
+(*------------------------------------------------------------*)
 (* side effect: add the negation of the p_constraint to all computed states *)
-(*-----------------------------------------------------*)
+(*------------------------------------------------------------*)
 let inverse_method_check_constraint model reachability_graph constr =
 	(* Retrieve the input options *)
 	let options = Input.get_options () in
@@ -1829,14 +1210,42 @@ let inverse_method_check_constraint model reachability_graph constr =
 	) else (true, p_constraint)
 
 
-(*-----------------------------------------------------*)
+
+(************************************************************************************************************************)
+(************************************************************************************************************************)
+(************************************************************************************************************************)
+(************************************************************************************************************************)
+(***                                       END FUNCTIONS ALREADY COPIED TO ALGOGEN.ML (or other subclasses)                                 ***)
+(************************************************************************************************************************)
+(************************************************************************************************************************)
+(************************************************************************************************************************)
+(************************************************************************************************************************)
+(************************************************************************************************************************)
+
+
+
+
+
+(************************************************************************************************************************)
+(************************************************************************************************************************)
+(************************************************************************************************************************)
+(************************************************************************************************************************)
+(***                                        BEGIN ALGORITHM-SPECIFIC CODE                                             ***)
+(************************************************************************************************************************)
+(************************************************************************************************************************)
+(************************************************************************************************************************)
+(************************************************************************************************************************)
+(************************************************************************************************************************)
+
+
+(*------------------------------------------------------------*)
 (* Checks a new state for pi0-compatibility, and add its projection onto the parameters if incompatible.*)
 (* pi0               : reference valuation             *)
 (* rechability_graph : current reachability graph      *)
 (* constr            : new state constraint            *)
-(*-----------------------------------------------------*)
+(*------------------------------------------------------------*)
 (* returns (true, _) if the state is pi0-compatible (false, p_constraint) otherwise *)
-(*-----------------------------------------------------*)
+(*------------------------------------------------------------*)
 let completeIM_check_constraint model reachability_graph constr =
 	(* Retrieve the input options *)
 (* 	let options = Input.get_options () in *)
@@ -1857,6 +1266,29 @@ let completeIM_check_constraint model reachability_graph constr =
 	(* Return the pi0-compatibility and the p_constraint *)
 	is_compatible , p_constraint
 	
+
+(************************************************************************************************************************)
+(************************************************************************************************************************)
+(************************************************************************************************************************)
+(************************************************************************************************************************)
+(***                                          END ALGORITHM-SPECIFIC CODE                                             ***)
+(************************************************************************************************************************)
+(************************************************************************************************************************)
+(************************************************************************************************************************)
+(************************************************************************************************************************)
+(************************************************************************************************************************)
+
+
+(************************************************************************************************************************)
+(************************************************************************************************************************)
+(************************************************************************************************************************)
+(************************************************************************************************************************)
+(***                                        BEGIN FUNCTIONS ALREADY COPIED TO ALGOGEN.ML (or other subclasses)                              ***)
+(************************************************************************************************************************)
+(************************************************************************************************************************)
+(************************************************************************************************************************)
+(************************************************************************************************************************)
+(************************************************************************************************************************)
 
 (*-------------------------------------------------------*)
 (* Computes all possible transition combinations for the *)
@@ -1926,24 +1358,44 @@ let compute_transitions model location constr action_index automata aut_table ma
 
 
 
+(************************************************************************************************************************)
+(************************************************************************************************************************)
+(************************************************************************************************************************)
+(************************************************************************************************************************)
+(***                                        END FUNCTIONS ALREADY COPIED TO ALGOGEN.ML (or other subclasses)                                ***)
+(************************************************************************************************************************)
+(************************************************************************************************************************)
+(************************************************************************************************************************)
+(************************************************************************************************************************)
+(************************************************************************************************************************)
+
 
 (************************************************************)
 (* Post functions *)
 (************************************************************)
-(*-----------------------------------------------------*)
+(*------------------------------------------------------------*)
 (* Add a new state to the reachability_graph (if indeed needed) *)
 (* Also update tile_nature and slast *)
-(*-----------------------------------------------------*)
+(*------------------------------------------------------------*)
 let add_a_new_state model reachability_graph orig_state_index new_states_indexes action_index location (final_constraint : LinearConstraint.px_linear_constraint) =
 	(* Retrieve the input options *)
 	let options = Input.get_options () in
 
 	(* Is the new state valid? *)
 	let valid_new_state =
-	(*------------------------------------------------------------*)
+(************************************************************************************************************************)
+(************************************************************************************************************************)
+(************************************************************************************************************************)
+(************************************************************************************************************************)
+(***                                        BEGIN ALGORITHM-SPECIFIC CODE                                             ***)
+(************************************************************************************************************************)
+(************************************************************************************************************************)
+(************************************************************************************************************************)
+(************************************************************************************************************************)
+(************************************************************************************************************************)	(*------------------------------------------------------------*)
 	(* Branching between algorithms: reachability, synthesis or IM *)
 	(*------------------------------------------------------------*)
-	match options#imitator_mode with 
+	match options#imitator_mode with
 	(* Pure state space exploration *)
 	| State_space_exploration -> true
 	(* Synthesis *)
@@ -1981,7 +1433,6 @@ let add_a_new_state model reachability_graph orig_state_index new_states_indexes
 			);
 			(* Return locally the result *)
 			valid_new_state
-		
 		)
 		in
 
@@ -1999,6 +1450,16 @@ let add_a_new_state model reachability_graph orig_state_index new_states_indexes
 	(*------------------------------------------------------------*)
 	(* end branch between algorithms *)
 	(*------------------------------------------------------------*)
+(************************************************************************************************************************)
+(************************************************************************************************************************)
+(************************************************************************************************************************)
+(************************************************************************************************************************)
+(***                                          END ALGORITHM-SPECIFIC CODE                                             ***)
+(************************************************************************************************************************)
+(************************************************************************************************************************)
+(************************************************************************************************************************)
+(************************************************************************************************************************)
+(************************************************************************************************************************)
 	in
 	
 	(* Only add the new state if it is actually valid *)
@@ -2036,6 +1497,16 @@ let add_a_new_state model reachability_graph orig_state_index new_states_indexes
 		) in
 		(* If this is really a new state *)
 		if added then (
+(************************************************************************************************************************)
+(************************************************************************************************************************)
+(************************************************************************************************************************)
+(************************************************************************************************************************)
+(***                                        BEGIN ALGORITHM-SPECIFIC CODE                                             ***)
+(************************************************************************************************************************)
+(************************************************************************************************************************)
+(************************************************************************************************************************)
+(************************************************************************************************************************)
+(************************************************************************************************************************)
 			(* Check if the new state contains an integer point *)
 			if options#check_ippta then(
 				if not (LinearConstraint.px_contains_integer_point final_constraint) then(
@@ -2044,6 +1515,16 @@ let add_a_new_state model reachability_graph orig_state_index new_states_indexes
 					raise NoIPPTA
 				);
 			);
+(************************************************************************************************************************)
+(************************************************************************************************************************)
+(************************************************************************************************************************)
+(************************************************************************************************************************)
+(***                                        END ALGORITHM-SPECIFIC CODE                                             ***)
+(************************************************************************************************************************)
+(************************************************************************************************************************)
+(************************************************************************************************************************)
+(************************************************************************************************************************)
+(************************************************************************************************************************)
 			
 			(* First check whether this is a bad tile according to the property and the nature of the state *)
 			update_tile_nature new_state;
@@ -2051,6 +1532,16 @@ let add_a_new_state model reachability_graph orig_state_index new_states_indexes
 			(* Will the state be added to the list of new states (the successors of which will be computed)? *)
 			let to_be_added = ref true in
 			
+(************************************************************************************************************************)
+(************************************************************************************************************************)
+(************************************************************************************************************************)
+(************************************************************************************************************************)
+(***                                        BEGIN ALGORITHM-SPECIFIC CODE                                             ***)
+(************************************************************************************************************************)
+(************************************************************************************************************************)
+(************************************************************************************************************************)
+(************************************************************************************************************************)
+(************************************************************************************************************************)
 			(* If synthesis / EFIM: add the constraint to the list of successful constraints if this corresponds to a bad location *)
 			if options#imitator_mode = EF_synthesis || options#efim then(
 			match model.correctness_condition with
@@ -2104,6 +1595,16 @@ let add_a_new_state model reachability_graph orig_state_index new_states_indexes
 					);
 				| _ -> raise (InternalError("[EF-synthesis] IMITATOR currently ony implements the non-reachability-like properties. This should have been checked before."))
 			); (* end if EF_synthesis *)
+(************************************************************************************************************************)
+(************************************************************************************************************************)
+(************************************************************************************************************************)
+(************************************************************************************************************************)
+(***                                          END ALGORITHM-SPECIFIC CODE                                             ***)
+(************************************************************************************************************************)
+(************************************************************************************************************************)
+(************************************************************************************************************************)
+(************************************************************************************************************************)
+(************************************************************************************************************************)
 
 			(* Add the state_index to the list of new states (used to compute their successors at the next iteration) *)
 			if !to_be_added then
@@ -2112,12 +1613,32 @@ let add_a_new_state model reachability_graph orig_state_index new_states_indexes
 		) (* end if new state *)
 		(* ELSE : add to SLAST if mode union *)
 		else (
+(************************************************************************************************************************)
+(************************************************************************************************************************)
+(************************************************************************************************************************)
+(************************************************************************************************************************)
+(***                                        BEGIN ALGORITHM-SPECIFIC CODE                                             ***)
+(************************************************************************************************************************)
+(************************************************************************************************************************)
+(************************************************************************************************************************)
+(************************************************************************************************************************)
+(************************************************************************************************************************)
 			if options#union then (
 				print_message Verbose_low ("\nMode union: adding a looping state to SLast.");
 				(* Adding the state *)
 				(*** TODO / TO CHECK: what if new_state_index is already in slast?!! ***)
 				slast := new_state_index :: !slast;
 			);
+(************************************************************************************************************************)
+(************************************************************************************************************************)
+(************************************************************************************************************************)
+(************************************************************************************************************************)
+(***                                        END ALGORITHM-SPECIFIC CODE                                             ***)
+(************************************************************************************************************************)
+(************************************************************************************************************************)
+(************************************************************************************************************************)
+(************************************************************************************************************************)
+(************************************************************************************************************************)
 		);
 		
 		(* Update the transitions *)
@@ -2129,17 +1650,27 @@ let add_a_new_state model reachability_graph orig_state_index new_states_indexes
 			print_message Verbose_high (string_of_state model new_state);
 		);
 	); (* end if add new state *)
-	(* Return void *)
+	
+	(* Return unit *)
 	()
 
 
 
-(*-----------------------------------------------------*)
-(* Compute the list of possible destination states     *)
-(* wrt. to a reachability_graph, and update this graph *)
-(*-----------------------------------------------------*)
-(* returns a list of (really) new states               *)
-(*-----------------------------------------------------*)
+(************************************************************************************************************************)
+(************************************************************************************************************************)
+(************************************************************************************************************************)
+(************************************************************************************************************************)
+(***                                        BEGIN FUNCTIONS ALREADY COPIED TO ALGOGEN.ML (or other subclasses)                              ***)
+(************************************************************************************************************************)
+(************************************************************************************************************************)
+(************************************************************************************************************************)
+(************************************************************************************************************************)
+(************************************************************************************************************************)
+
+
+(*------------------------------------------------------------*)
+(* Compute the list of successor states of a given state, and update the state space; returns the list of new states' indexes actually added *)
+(*------------------------------------------------------------*)
 let post_from_one_state model reachability_graph orig_state_index =
 	(* Retrieve the input options *)
 	let options = Input.get_options () in
@@ -2193,9 +1724,9 @@ let post_from_one_state model reachability_graph orig_state_index =
 		let automata_for_this_action = model.automata_per_action action_index in
 		let nb_automata_for_this_action = List.length automata_for_this_action in
 	
-		(*------------------------------------------------*)
+		(*------------------------------------------------------------*)
 		(* Compute the reachable states on the fly: i.e., all the possible transitions for all the automata belonging to 'automata' *)
-		(*------------------------------------------------*)
+		(*------------------------------------------------------------*)
 		
 		(* Compute conjunction with current constraint *)
 		(*** To optimize: it seems intersection_assign could be used instead ***)
@@ -2272,9 +1803,9 @@ let post_from_one_state model reachability_graph orig_state_index =
 					(* Increment a counter: this state IS generated (although maybe it will be discarded because equal / merged / algorithmic discarding ...) *)
 					StateSpace.increment_nb_gen_states reachability_graph;
 			
-					(**************************************************************)
+					(************************************************************)
 					(* EXPERIMENTAL BRANCHING: MERGE BEFORE OR AFTER? *)
-					(**************************************************************)
+					(************************************************************)
 					(* EXPERIMENTAL BRANCHING: CASE MERGE AFTER (this new version may be better?) *)
 					if options#imitator_mode <> State_space_exploration && options#merge_before then(
 					
@@ -2299,22 +1830,42 @@ let post_from_one_state model reachability_graph orig_state_index =
 		done; (* while more new states *)
 	) list_of_possible_actions;
 	
+(************************************************************************************************************************)
+(************************************************************************************************************************)
+(************************************************************************************************************************)
+(************************************************************************************************************************)
+(***                                        BEGIN ALGORITHM-SPECIFIC CODE                                             ***)
+(************************************************************************************************************************)
+(************************************************************************************************************************)
+(************************************************************************************************************************)
+(************************************************************************************************************************)
+(************************************************************************************************************************)
 	(* If new_states is empty : the current state is a last state *)
 	if options#union && !new_states_indexes = [] then (
 		print_message Verbose_low ("\nMode union: adding a state without successor to SLast.");
 		(* Adding the state *)
 		slast := orig_state_index :: !slast;
 	);
+(************************************************************************************************************************)
+(************************************************************************************************************************)
+(************************************************************************************************************************)
+(************************************************************************************************************************)
+(***                                          END ALGORITHM-SPECIFIC CODE                                             ***)
+(************************************************************************************************************************)
+(************************************************************************************************************************)
+(************************************************************************************************************************)
+(************************************************************************************************************************)
+(************************************************************************************************************************)
+
 	
-	
-	(**************************************************************)
+	(************************************************************)
 	(* EXPERIMENTAL BRANCHING: MERGE BEFORE OR AFTER? *)
-	(**************************************************************)
+	(************************************************************)
 	(* EXPERIMENTAL BRANCHING: CASE MERGE AFTER (this new version may be better?) *)
 	if options#imitator_mode <> State_space_exploration && options#merge_before then(
 	
 		(* Merge *)
-		new_action_and_state_list := merge model new_action_and_state_list;
+		StatesMerging.merge new_action_and_state_list;
 		
 		(* Add the remaining states *)
 		List.iter (fun (action_index_list, location, final_constraint) ->
@@ -2334,21 +1885,23 @@ let post_from_one_state model reachability_graph orig_state_index =
 
 
 
-
 (************************************************************)
 (* Full reachability functions *)
 (************************************************************)
 
-(*---------------------------------------------------*)
+(*------------------------------------------------------------*)
 (* Set the PaTATOR termination function *)
-(*---------------------------------------------------*)
+(*------------------------------------------------------------*)
 let set_patator_termination_function f =
 	patator_termination_function := Some f
 
 
-(*---------------------------------------------------*)
+
+(*------------------------------------------------------------*)
 (* Check whether the limit of an exploration has been reached, according to the analysis options *)
-(*---------------------------------------------------*)
+(*** NOTE: May raise an exception when used in PaTATOR mode (the exception will be caught by PaTATOR) ***)
+(*------------------------------------------------------------*)
+(*** NOTE: old function that should be eventually removed ***)
 let check_limit depth nb_states time =
 	(* Retrieve the input options *)
 	let options = Input.get_options () in
@@ -2357,7 +1910,7 @@ let check_limit depth nb_states time =
 	
 	(* Depth limit *)
 	begin
-	match options#post_limit with
+	match options#depth_limit with
 		| None -> false
 		| Some limit -> depth > limit
 	end
@@ -2386,14 +1939,14 @@ let check_limit depth nb_states time =
 
 
 
-(*---------------------------------------------------*)
+(*------------------------------------------------------------*)
 (* Print warning(s) if the limit of an exploration has been reached, according to the analysis options *)
-(*---------------------------------------------------*)
+(*------------------------------------------------------------*)
 let print_warnings_limit depth nb_states time nb_states_to_visit =
 	(* Retrieve the input options *)
 	let options = Input.get_options () in
 	begin
-	match options#post_limit with
+	match options#depth_limit with
 		| None -> ()
 		| Some limit -> if depth > limit then print_warning (
 			"The limit depth (" ^ (string_of_int limit) ^ ") has been reached. The exploration now stops, although there were still " ^ (string_of_int nb_states_to_visit) ^ " state" ^ (s_of_int nb_states_to_visit) ^ " to explore."
@@ -2414,15 +1967,27 @@ let print_warnings_limit depth nb_states time nb_states_to_visit =
 		);
 	end
 
+(************************************************************************************************************************)
+(************************************************************************************************************************)
+(************************************************************************************************************************)
+(************************************************************************************************************************)
+(***                                        END FUNCTIONS ALREADY COPIED TO ALGOGEN.ML (or other subclasses)                                ***)
+(************************************************************************************************************************)
+(************************************************************************************************************************)
+(************************************************************************************************************************)
+(************************************************************************************************************************)
+(************************************************************************************************************************)
 
-(*---------------------------------------------------*)
+
+
+(*------------------------------------------------------------*)
 (* Generic data structure for exploration *)
-(*---------------------------------------------------*)
+(*------------------------------------------------------------*)
 
-(*** TODO: move somewhere else ***)
+(*** NOTE: TO BE DELETED AS THE CLASSES WILL NOW HANDLE THAT ***)
 type poststar_result = {
 	(* Reachability graph *)
-	reachability_graph	: StateSpace.reachability_graph;
+	reachability_graph	: StateSpace.state_space;
 	(* State space depth *)
 	(*** NOTE: does not work for branch and bound... ***)
 	depth				: int;
@@ -2438,9 +2003,20 @@ type poststar_result = {
 }
 
 
-(*---------------------------------------------------*)
+(************************************************************************************************************************)
+(************************************************************************************************************************)
+(************************************************************************************************************************)
+(************************************************************************************************************************)
+(***                                        BEGIN ALGORITHM-SPECIFIC CODE                                             ***)
+(************************************************************************************************************************)
+(************************************************************************************************************************)
+(************************************************************************************************************************)
+(************************************************************************************************************************)
+(************************************************************************************************************************)
+
+(*------------------------------------------------------------*)
 (* EXPERIMENTAL BRANCH AND BOUND FUNCTION *)
-(*---------------------------------------------------*)
+(*------------------------------------------------------------*)
 let branch_and_bound model init_state = 
 	(* Retrieve the input options *)
 	let options = Input.get_options () in
@@ -2636,11 +2212,34 @@ let branch_and_bound model init_state =
 		unexplored_states	= []; (*** TODO !!! ***)
 	}
 
+(************************************************************************************************************************)
+(************************************************************************************************************************)
+(************************************************************************************************************************)
+(************************************************************************************************************************)
+(***                                          END ALGORITHM-SPECIFIC CODE                                             ***)
+(************************************************************************************************************************)
+(************************************************************************************************************************)
+(************************************************************************************************************************)
+(************************************************************************************************************************)
+(************************************************************************************************************************)
 
 
-(*---------------------------------------------------*)
+(************************************************************************************************************************)
+(************************************************************************************************************************)
+(************************************************************************************************************************)
+(************************************************************************************************************************)
+(***                                      BEGIN FUNCTIONS ALREADY COPIED TO ALGOGEN.ML (or other subclasses)                                ***)
+(************************************************************************************************************************)
+(************************************************************************************************************************)
+(************************************************************************************************************************)
+(************************************************************************************************************************)
+(************************************************************************************************************************)
+
+
+
+(*------------------------------------------------------------*)
 (* Compute the reachability graph from a given state *)
-(*---------------------------------------------------*)
+(*------------------------------------------------------------*)
 let post_star model init_state = 
 	(* Retrieve the input options *)
 	let options = Input.get_options () in
@@ -2754,6 +2353,16 @@ let post_star model init_state =
 			empty_states_for_comparison reachability_graph;
 		);
 		
+(************************************************************************************************************************)
+(************************************************************************************************************************)
+(************************************************************************************************************************)
+(************************************************************************************************************************)
+(***                                        BEGIN ALGORITHM-SPECIFIC CODE                                             ***)
+(************************************************************************************************************************)
+(************************************************************************************************************************)
+(************************************************************************************************************************)
+(************************************************************************************************************************)
+(************************************************************************************************************************)
 		(* If check-point option: check if the constraint is equal to pi0 *)
 		(*** TO OPTIMIZE !!! (at least compute pi0_constraint once for all) ***)
 		(*** WARNING!! ONLY works for the classical inverse method (not for variants) ***)
@@ -2782,6 +2391,16 @@ let post_star model init_state =
 				limit_reached := true;
 			);
 		);
+(************************************************************************************************************************)
+(************************************************************************************************************************)
+(************************************************************************************************************************)
+(************************************************************************************************************************)
+(***                                          END ALGORITHM-SPECIFIC CODE                                             ***)
+(************************************************************************************************************************)
+(************************************************************************************************************************)
+(************************************************************************************************************************)
+(************************************************************************************************************************)
+(************************************************************************************************************************)
 		
 		(* Print some memory information *)
 		if options#statistics then(
@@ -2838,6 +2457,7 @@ let post_star model init_state =
 		(* Unexplored states indices in case of early termination *)
 		unexplored_states	= !newly_found_new_states;
 	}
+
 
 
 
@@ -2911,12 +2531,36 @@ let print_statistics total_time reachability_graph =
 
 
 
+(************************************************************************************************************************)
+(************************************************************************************************************************)
+(************************************************************************************************************************)
+(************************************************************************************************************************)
+(***                                        END FUNCTIONS ALREADY COPIED TO ALGOGEN.ML (or other subclasses)                                ***)
+(************************************************************************************************************************)
+(************************************************************************************************************************)
+(************************************************************************************************************************)
+(************************************************************************************************************************)
+(************************************************************************************************************************)
+
+
+
 
 (************************************************************)
 (************************************************************)
 (** Main functions *)
 (************************************************************)
 (************************************************************)
+
+(************************************************************************************************************************)
+(************************************************************************************************************************)
+(************************************************************************************************************************)
+(************************************************************************************************************************)
+(***                                        BEGIN ALGORITHM-SPECIFIC CODE                                             ***)
+(************************************************************************************************************************)
+(************************************************************************************************************************)
+(************************************************************************************************************************)
+(************************************************************************************************************************)
+(************************************************************************************************************************)
 
 
 (************************************************************)
@@ -2946,11 +2590,24 @@ let full_state_space_exploration model =
 	
 	(* Generate graphics *)
 	let radical = options#files_prefix in
-	Graphics.generate_graph model post_star_result.reachability_graph radical;
+	Graphics.generate_graph post_star_result.reachability_graph radical;
 	
 	(* The end*)
 	()
 
+
+
+
+(************************************************************************************************************************)
+(************************************************************************************************************************)
+(************************************************************************************************************************)
+(************************************************************************************************************************)
+(***                                      BEGIN FUNCTIONS ALREADY COPIED TO ALGOGEN.ML (or other subclasses)                                ***)
+(************************************************************************************************************************)
+(************************************************************************************************************************)
+(************************************************************************************************************************)
+(************************************************************************************************************************)
+(************************************************************************************************************************)
 
 
 (************************************************************)
@@ -3001,17 +2658,30 @@ let ef_synthesis model =
 	
 	(* Generate graphics *)
 	let radical = options#files_prefix in
-	Graphics.generate_graph model post_star_result.reachability_graph radical;
+	Graphics.generate_graph post_star_result.reachability_graph radical;
 	
 	(* Render zones in a graphical form *)
 	let zones = [Union_of_constraints (!p_constraints, Bad)] in
 	if options#cart then (
-		Graphics.cartography model (Input.get_v0()) zones (options#files_prefix ^ "_cart_ef")
+		Graphics.cartography zones (options#files_prefix ^ "_cart_ef")
 	) else (
 			print_message Verbose_high "Graphical cartography not asked: graph not generated.";
 	)
 
-	
+
+
+(************************************************************************************************************************)
+(************************************************************************************************************************)
+(************************************************************************************************************************)
+(************************************************************************************************************************)
+(***                                        END FUNCTIONS ALREADY COPIED TO ALGOGEN.ML (or other subclasses)                                ***)
+(************************************************************************************************************************)
+(************************************************************************************************************************)
+(************************************************************************************************************************)
+(************************************************************************************************************************)
+(************************************************************************************************************************)
+
+
 
 (*------------------------------------------------------------*)
 (* Auxiliary function *)
@@ -3253,7 +2923,7 @@ let efim model =
 	
 	(* Generate graphics *)
 	let radical = options#files_prefix in
-	Graphics.generate_graph model reachability_graph radical;
+	Graphics.generate_graph reachability_graph radical;
 	
 	(* Print statistics *)
 	print_statistics im_result.total_time reachability_graph;
@@ -3313,7 +2983,7 @@ let inverse_method model =
 	(* Generate graphics *)
 	(*** TODO: move inside inverse_method_gen ***)
 	let radical = options#files_prefix in
-	Graphics.generate_graph model reachability_graph radical;
+	Graphics.generate_graph reachability_graph radical;
 	
 	(* Print statistics *)
 	print_statistics im_result.total_time reachability_graph;
@@ -3321,3 +2991,14 @@ let inverse_method model =
 	(* The end *)
 	()
 
+
+(************************************************************************************************************************)
+(************************************************************************************************************************)
+(************************************************************************************************************************)
+(************************************************************************************************************************)
+(***                                          END ALGORITHM-SPECIFIC CODE                                             ***)
+(************************************************************************************************************************)
+(************************************************************************************************************************)
+(************************************************************************************************************************)
+(************************************************************************************************************************)
+(************************************************************************************************************************)

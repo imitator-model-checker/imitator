@@ -1,14 +1,19 @@
-(*****************************************************************
+(************************************************************
  *
- *                     IMITATOR II
+ *                       IMITATOR
  * 
- * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
- * Author:        Etienne Andre
- * Created:       2010/03/04
- * Last modified: 2014/06/20
+ * Laboratoire Spécification et Vérification (ENS Cachan & CNRS, France)
+ * LIPN, Université Paris 13, Sorbonne Paris Cité (France)
+ * 
+ * Module description: unbounded exact rational computation using GMP
+ * 
+ * File contributors : Étienne André
+ * Created           : 2010/03/04
+ * Last modified     : 2014/06/20
  *
- ****************************************************************)
+ ************************************************************)
  
+
 (**************************************************)
 (* Type definition *)
 (**************************************************)

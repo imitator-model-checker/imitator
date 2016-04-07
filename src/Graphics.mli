@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre, Ulrich Kuehne
  * Created:       2010/07/05
- * Last modified: 2013/03/20
+ * Last modified: 2016/03/03
  *
  ************************************************************)
 
@@ -14,16 +14,12 @@
 (************************************************************)
 
 open Global
-open LinearConstraint
-open AbstractModel
 
 
 
 (************************************************************)
 (* Constants *)
 (************************************************************)
-val dot_image_extension : string
-
 val dot_colors : string list
 
 
@@ -31,12 +27,11 @@ val dot_colors : string list
 (* Functions *)
 (************************************************************)
 
+(** Draw the cartography corresponding to a list of constraints. Takes as second argument the file name prefix. *)
+val draw_cartography : (LinearConstraint.p_convex_or_nonconvex_constraint * StateSpace.statespace_nature) list ->  string -> unit
 
-val cartography : abstract_model ->  v0 -> returned_constraint list ->  string -> unit
+(** Execute the 'dot' with a source file name as argument *)
+val dot : string -> string -> unit
 
-val dot : abstract_model -> string -> string -> unit
-
-val generate_graph : abstract_model -> StateSpace.reachability_graph -> string -> unit
-
-(* Convert a graph to a dot file *)
-(* val dot_of_graph : AbstractModel.abstract_model -> reachability_graph -> fancy:bool -> (string * string) *)
+(** 'draw_statespace state_space algorithm_name radical' draws the state space using dot *)
+val draw_statespace : StateSpace.state_space -> string -> string -> unit

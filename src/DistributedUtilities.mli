@@ -8,7 +8,7 @@
  * Author:        Etienne Andre, Camille Coti
  * 
  * Created:       2014/03/24
- * Last modified: 2015/04/12
+ * Last modified: 2016/03/30
  *
  ****************************************************************)
 
@@ -22,32 +22,25 @@ type rank = int
 (** Tags sent by workers *)
 type pull_request =
 	| PullOnly of rank
-	| Tile of rank * Reachability.im_result
+	| Tile of rank * Result.abstract_im_result
 	| OutOfBound of rank
-	(* Subpart tags *)
-	| Tiles of rank * (Reachability.im_result list) (** NEW TAG **)
-	| Pi0 of rank * AbstractModel.pi0
+	(* Subdomain tags *)
+(* 	| Tiles of rank * (Result.abstract_im_result list) *)
+(* 	| BC_result of rank * Result.bc_result *)
+	| Pi0 of rank * PVal.pval
 	| UpdateRequest of rank
 
 
 (** Tags sent by the master *)
 type work_assignment =
-	| Work of AbstractModel.pi0
+	| Work of PVal.pval
 	| Stop
-	(* Subpart tags *)
-	| Subpart of HyperRectangle.hyper_rectangle
-	| TileUpdate of Reachability.im_result
+	(* Subdomain tags *)
+	| Subdomain of HyperRectangle.hyper_rectangle
+	| TileUpdate of Result.abstract_im_result
 	| Terminate
 	| Continue
 
-
-
-(****************************************************************)
-(** Constants *)
-(****************************************************************)
-
-(** Who is the master? *)
-val masterrank : rank
 
 
 (****************************************************************)
@@ -58,34 +51,54 @@ val masterrank : rank
 val get_nb_nodes : unit -> int
 val get_rank : unit -> rank
 
+(* Check if a node is the master (for master-worker scheme) *)
+val is_master : unit -> bool
+
+(* Check if a node is the coordinator (for collaborator-based scheme) *)
+val is_coordinator : unit -> bool
+
 
 (****************************************************************)
 (** Send functions *)
 (****************************************************************)
 
-val send_result : Reachability.im_result -> unit
+(*------------------------------------------------------------*)
+(* Send to master / coordinator *)
+(*------------------------------------------------------------*)
 
-(** Master sends a tile update to a worker *)
-val send_tileupdate : Reachability.im_result -> rank -> unit
+val send_abstract_im_result : Result.abstract_im_result -> unit
 
-(** Sends a list of tiles from the worker to the master *)
-val send_tiles : Reachability.im_result list -> unit
+(* val send_abstract_im_result_list : Result.abstract_im_result list -> unit *)
 
-val send_pi0 : AbstractModel.pi0 -> rank -> unit
-
-val send_pi0_worker : AbstractModel.pi0 -> unit
+val send_bc_result : Result.bc_result -> unit
 
 val send_work_request : unit -> unit
 
 val send_update_request : unit -> unit
 
-val send_subpart : HyperRectangle.hyper_rectangle -> rank -> unit
+(* Function to send a point from a worker to the master *)
+val send_point_to_master : PVal.pval -> unit
 
-val send_finished : rank -> unit
 
+(*------------------------------------------------------------*)
+(* Send to worker / collaborator *)
+(*------------------------------------------------------------*)
+val send_pi0 : PVal.pval -> rank -> unit
+
+
+
+val send_stop : rank -> unit
+
+
+(** Used for dynamic subdomain *)
+val send_subdomain : HyperRectangle.hyper_rectangle -> rank -> unit
 val send_terminate : rank -> unit
+(** Master sends a tile update to a worker *)
+val send_tileupdate : Result.abstract_im_result -> rank -> unit
 
 val send_continue : rank -> unit
+
+
 
 
 (****************************************************************)
@@ -96,20 +109,7 @@ val receive_pull_request : unit -> pull_request
 
 val receive_work : unit -> work_assignment
 
+(* Function used for collaborator - coordinator static distribution scheme *)
+val receive_bcresult : unit -> rank * Result.bc_result
 
-(****************************************************************)
-(** Serialization functions *)
-(****************************************************************)
 
-val serialize_pi0 : AbstractModel.pi0 -> string
-
-val unserialize_pi0 : string -> AbstractModel.pi0
-
-val serialize_im_result : Reachability.im_result -> string
-
-val unserialize_im_result : string -> Reachability.im_result
-
-val unserialize_im_result_list : string -> Reachability.im_result list
-
-(** Convert a list of serialized im_result into a serialized list of im_result (ad-hoc function to save time in subparts handling) *)
-val serialized_imresultlist_of_serializedimresult_list : string list -> string

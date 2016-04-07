@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2012/05/10
- * Last modified: 2015/10/30
+ * Last modified: 2016/02/03
  *
  ****************************************************************)
  
@@ -38,21 +38,32 @@ type distribution_mode =
 class imitator_options :
 	object
 		
+		(************************************************************)
+		(* Class methods *)
+		(************************************************************)
+		
+		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+		(* Get methods *)
+		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+		
 		method acyclic : bool
-		method acyclic_unset : unit
+(* 		method acyclic_unset : unit *)
 		method branch_and_bound : bool
-		method branch_and_bound_unset : unit
+(* 		method branch_and_bound_unset : unit *)
 		method cart : bool
 		method cartonly : bool
+		method carto_tiles_limit : int option
+		method carto_time_limit : int option
 		method check_ippta : bool
 		method check_point : bool
 		method completeIM : bool
 		(** HACK: property input from CosyVerif *)
 		method cosyprop : string
-		method counterex : bool
-(* 		method dynamic : bool *)
+(* 		method counterex : bool *)
+		method depth_limit : int option
 		method distribution_mode : distribution_mode
 		method distributedKillIM : bool
+(* 		method dynamic : bool *)
 		method dynamic_clock_elimination : bool
 		method efim : bool
 		method fancy : bool
@@ -66,17 +77,21 @@ class imitator_options :
 		method merge_before : bool
 		method no_random : bool
 		method no_time_elapsing : bool
+		method output_bc_cart : bool
+		method output_bc_result : bool
 		method output_cart_x_min : int option
 		method output_cart_x_max : int option
 		method output_cart_y_min : int option
 		method output_cart_y_max : int option
 		method output_result : bool
+		method output_tiles_files : bool
 		method pi0file : string
 		method pi_compatible : bool
-		method post_limit : int option
 		method precomputepi0 : bool
 		method pta2clp : bool
 		method pta2gml : bool
+		method pta2hytech : bool
+		method pta2imi : bool
 		method pta2jpg : bool
 		method pta2tikz : bool
 		method states_limit : int option
@@ -92,6 +107,11 @@ class imitator_options :
 		method with_graphics_source : bool
 		method with_log : bool
 (* 		method with_parametric_log : bool *)
+
+		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+		(* Other methods *)
+		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+		
 		method parse : unit
 		
 		(* Recall options *)

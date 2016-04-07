@@ -16,7 +16,7 @@
 %{
 open Exceptions;;
 open ParsingStructure;;
-open CamlUtilities;;
+open OCamlUtilities;;
 open ImitatorUtilities;;
 open NumConst;;
 

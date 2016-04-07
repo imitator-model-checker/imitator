@@ -7,7 +7,7 @@
  * Author:        Etienne Andre
  * 
  * Created:       2014/10/24
- * Last modified: 2015/09/30
+ * Last modified: 2016/03/16
  *
  ****************************************************************)
 
@@ -71,19 +71,34 @@ val get_verbose_mode : unit -> verbose_mode
 type imitator_mode =
 	(** Translation to another language: no analysis *)
 	| Translation
+	
 	(** Classical state space exploration *)
 	| State_space_exploration
+	
 	(** EF-synthesis *)
 	| EF_synthesis
+	
+	(** Parametric deadlock-checking *)
+	| Parametric_deadlock_checking
+	
 	(** Classical inverse method *)
 	| Inverse_method
+	
 	(** Cover the whole cartography *)
 	| Cover_cartography
+	
+	(** Cover the whole cartography after shuffling point (mostly useful for the distributed IMITATOR) *)
+	| Shuffle_cartography
+	
 	(** Look for the border using the cartography*)
 	| Border_cartography
+	
 	(** Randomly pick up values for a given number of iterations *)
 	| Random_cartography of int
-
+	
+	(** Randomly pick up values for a given number of iterations, then switch to sequential algorithm once no more point has been found after a given max number of attempts (mostly useful for the distributed IMITATOR) *)
+	| RandomSeq_cartography of int
+	
 
 (****************************************************************)
 (** Global time counter *)

@@ -9,7 +9,7 @@
  * Universite Paris 13, Sorbonne Paris Cite, LIPN (France)
  * 
  * Created:       2014/10/01
- * Last modified: 2014/10/02
+ * Last modified: 2016/01/27
  *
  ****************************************************************)
 
@@ -31,6 +31,6 @@ class pval :
 		method set_value : int -> NumConst.t -> unit
 
 		(** Copy a parameter valuation *)
-		method copy : unit -> pval
+		method copy : pval
 
 end

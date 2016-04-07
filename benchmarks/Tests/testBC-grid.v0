@@ -1,0 +1,22 @@
+(************************************************************
+ *                      IMITATOR MODEL                      
+ *
+ * Toy example to test BC
+ *
+ * Description     : Example for which each integer point has its own behavior, and hence yields a different tile in BC
+ * Correctness     : N/A
+ * Source          : Own work
+ * Author          : Étienne André
+ * Modeling        : Étienne André
+ * Input by        : Étienne André
+ * License         : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+
+ *
+ * Created         : 2016/03/18
+ * Last modified   : 2016/03/18
+ *
+ * IMITATOR version: 2.7.4-working
+ ************************************************************)
+
+p1 = 0..8
+p2 = 0..8

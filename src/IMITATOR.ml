@@ -9,34 +9,37 @@
  * 
  * File contributors : Ulrich Kühne, Étienne André
  * Created           : 2009/09/07
- * Last modified     : 2015/10/22
+ * Last modified     : 2016/03/23
  *
  ************************************************************)
 
+ 
 
 (************************************************************)
 (* Internal modules *)
 (************************************************************)
 open Exceptions
-open CamlUtilities
+open OCamlUtilities
 
 open ImitatorUtilities
 open AbstractModel
+open Result
 open ModelPrinter
 open Options
-open Reachability
+
 
 
 (**************************************************
-
 TAGS USED THROUGHOUT THIS PROJECT
-- (*** TODO ***)
 - (*** BADPROG ***)
 - (*** NOTE ***)
 - (*** OPTIMIZED ***)
+- (*** QUESTION ***)
 - (*** TO OPTIMIZE ***)
+- (*** TODO ***)
 - (*** WARNING ***)
 **************************************************)
+
 
 ;;
 
@@ -77,7 +80,7 @@ Input.set_options options;
 (* Print startup message *)
 (************************************************************)
 (************************************************************)
-  
+
 (* Print header *)
 print_header_string();
 
@@ -101,30 +104,17 @@ Input.set_v0 v0;
 (************************************************************)
 (* Debug print: model *)
 (************************************************************)
-if verbose_mode_greater Verbose_total then
-	print_message Verbose_total ("\nModel:\n" ^ (ModelPrinter.string_of_model model) ^ "\n");
-
+if verbose_mode_greater Verbose_total then(
+	print_message Verbose_total ("\nThe input model is the following one:\n" ^ (ModelPrinter.string_of_model model) ^ "\n");
+);
 
 (************************************************************)
 (* Debug print: property *)
 (************************************************************)
-if verbose_mode_greater Verbose_low then
-	print_message Verbose_low ("\nProperty:\n" ^ (ModelPrinter.string_of_property model model.user_property) ^ "\n");
+if verbose_mode_greater Verbose_low then(
+	print_message Verbose_low ("\nThe property is the following one:\n" ^ (ModelPrinter.string_of_property model model.user_property) ^ "\n");
+);
 
-
-(************************************************************)
-(* Case distributed *)
-(************************************************************)
-(*** WARNING:  Do not modify the following lines! (used by an external script to compile the non-distributed version of IMITATOR) ***)
-(*(* ** *** **** ***** ******    BEGIN FORK PaTATOR    ****** ***** **** *** ** *)
-begin
-match options#distribution_mode with
-	(* Fork if distributed *)
-	| Non_distributed -> ()
-	| _ -> (RunPaTATOR.run(); exit(0))
-end;
-(* ** *** **** ***** ******    END FORK PaTATOR    ****** ***** **** *** ** *)*)
-(*** WARNING:  Do not modify the previous lines! (used by an external script to compile the non-distributed version of IMITATOR) ***)
 
 
 
@@ -144,12 +134,41 @@ if options#pta2clp then(
 if options#pta2gml then(
 	print_message Verbose_standard ("Translating model to GrML.");
 	let translated_model = PTA2GrML.string_of_model model in
-	let gml_file = options#files_prefix ^ ".grml" in
+	let grml_file = options#files_prefix ^ ".grml" in
 	if verbose_mode_greater Verbose_total then(
 		print_message Verbose_total ("\n" ^ translated_model ^ "\n");
 	);
 	(* Write *)
-	write_to_file gml_file translated_model;
+	write_to_file grml_file translated_model;
+	print_message Verbose_standard ("File '" ^ grml_file ^ "' successfully created.");
+	terminate_program()
+);
+
+(* Translation to HyTech *)
+if options#pta2hytech then(
+	print_message Verbose_standard ("Translating model to a HyTech input model.");
+	let translated_model = PTA2HyTech.string_of_model model in
+	let hytech_file = options#files_prefix ^ ".hy" in
+	if verbose_mode_greater Verbose_total then(
+		print_message Verbose_total ("\n" ^ translated_model ^ "\n");
+	);
+	(* Write *)
+	write_to_file hytech_file translated_model;
+	print_message Verbose_standard ("File '" ^ hytech_file ^ "' successfully created.");
+	terminate_program()
+);
+
+(* Translation to IMITATOR *)
+if options#pta2imi then(
+	print_message Verbose_standard ("Regenerating the input model to a new model.");
+	let translated_model = ModelPrinter.string_of_model model in
+	let imi_file = options#files_prefix ^ "-regenerated.imi" in
+	if verbose_mode_greater Verbose_total then(
+		print_message Verbose_total ("\n" ^ translated_model ^ "\n");
+	);
+	(* Write *)
+	write_to_file imi_file translated_model;
+	print_message Verbose_standard ("File '" ^ imi_file ^ "' successfully created.");
 	terminate_program()
 );
 
@@ -160,7 +179,8 @@ if options#pta2jpg then(
 	if verbose_mode_greater Verbose_high then(
 		print_message Verbose_high ("\n" ^ translated_model ^ "\n");
 	);
-	Graphics.dot model (options#files_prefix ^ "-pta") translated_model;
+	Graphics.dot (options#files_prefix ^ "-pta") translated_model;
+	print_message Verbose_standard ("File successfully created."); (*** TODO: add file name in a proper manner ***)
 	terminate_program()
 );
 
@@ -174,11 +194,16 @@ if options#pta2tikz then(
 	);
 	(* Write *)
 	write_to_file latex_file translated_model;
+	print_message Verbose_standard ("File '" ^ latex_file ^ "' successfully created.");
 	terminate_program()
 );
 (* Direct cartography output *)
 if options#cartonly then(
-	print_message Verbose_standard ("Direct output of a cartography (no analysis will be run).");
+	raise (InternalError("Not implemented! "))
+
+	(*** TODO ***)
+	
+(*	print_message Verbose_standard ("Direct output of a cartography (no analysis will be run).");
 	(* Get the parameters *)
 	let constraints , (p1_min , p1_max) , (p2_min , p2_max) = model.carto in
 	(* Transform the constraint for cartography *)
@@ -192,9 +217,10 @@ if options#cartonly then(
 	v0#set_min 1 p2_min;
 	v0#set_max 1 p2_max;
 	(* Call the cartography *)
-	Graphics.cartography model v0 constraints options#files_prefix;
+	Graphics.cartography constraints options#files_prefix;
+	print_message Verbose_standard ("File successfully created."); (*** TODO: add file name in a proper manner ***)
 	(* The end *)
-	terminate_program()
+	terminate_program()*)
 );
 
 
@@ -220,11 +246,11 @@ if (options#imitator_mode = Border_cartography && model.correctness_condition = 
 
 
 (************************************************************)
-(* EXPERIMENTAL: dynamic clock elimination *)
+(* Dynamic clock elimination *)
 (************************************************************)
 (* Need to be called before initial state is created! *)
 if options#dynamic_clock_elimination then (
-	Reachability.prepare_clocks_elimination model
+	ClocksElimination.prepare_clocks_elimination ()
 );
 
 
@@ -268,79 +294,276 @@ if options#imitator_mode = Inverse_method && options#branch_and_bound then(
 
 
 (************************************************************)
+(************************************************************)
 (* Execute IMITATOR *)
 (************************************************************)
+(************************************************************)
 
-begin
-	match options#imitator_mode with
-		| Translation -> raise (InternalError "Translation cannot be executed here; program should already have terminated at this point.");
+(* Generic method for the cartography to create either a new IM instance, or a new PRP instance *)
+(*** TODO: also add IMK, etc., if needed ***)
+let new_im_or_prp =
+	if options#efim then
+		fun () -> new AlgoPRP.algoPRP
+	else
+		fun () -> new AlgoIM.algoIM
+in
+
+
+(* Find the correct algorithm to execute *)
+let algorithm : AlgoGeneric.algoGeneric = match options#imitator_mode with
+	
+	(************************************************************)
+	(* Exploration *)
+	(************************************************************)
+	| State_space_exploration ->
+			(*** NOTE: this is static subclass coercition; see https://ocaml.org/learn/tutorials/objects.html ***)
+		let myalgo :> AlgoGeneric.algoGeneric = new AlgoPostStar.algoPostStar in myalgo
+		
+		
+	(************************************************************)
+	(* EF-synthesis *)
+	(************************************************************)
+	| EF_synthesis ->
+		let myalgo :> AlgoGeneric.algoGeneric = new AlgoEFsynth.algoEFsynth in myalgo
+	
+	
+	(************************************************************)
+	(* Parametric deadlock checking *)
+	(************************************************************)
+	| Parametric_deadlock_checking ->
+		let myalgo :> AlgoGeneric.algoGeneric = new AlgoDeadlockFree.algoDeadlockFree in myalgo
+	
+	
+	(************************************************************)
+	(* Inverse method and variants *)
+	(************************************************************)
+	(* IMK *)
+	(*** TODO: use four different modes ***)
+	| Inverse_method when options#pi_compatible ->
+			let myalgo :> AlgoGeneric.algoGeneric = new AlgoIMK.algoIMK in myalgo
+
+	(* PRP *)
+	| Inverse_method when options#efim ->
+			let myalgo :> AlgoGeneric.algoGeneric = new AlgoPRP.algoPRP in myalgo
+
+	(* IMunion *)
+	| Inverse_method when options#union ->
+			let myalgo :> AlgoGeneric.algoGeneric = new AlgoIMunion.algoIMunion in myalgo
+
+	(* Inverse Method *)
+	| Inverse_method ->
+			let myalgo :> AlgoGeneric.algoGeneric = new AlgoIM.algoIM in myalgo
+
+
+
+	(************************************************************)
+	(* Begin distributed cartography *)
+	(************************************************************)
+	
+	(*** WARNING:  Do not modify the following lines! (used by an external script to compile the non-distributed version of IMITATOR) ***)
+	(*(* ** *** **** ***** ******    BEGIN FORK PaTATOR    ****** ***** **** *** ** *)
+
+	(*** NOTE: only one distribution mode so far ***)
+	| Cover_cartography when options#distribution_mode <> Non_distributed ->
+		let algo = match options#distribution_mode with
+		
+		(** Distributed mode: Master worker with sequential pi0 *)
+		| Distributed_ms_sequential ->
+			(* Branch between master and worker *)
+			if DistributedUtilities.is_master() then
+				let bc_algo = new AlgoBCCoverDistributedMSSeqMaster.algoBCCoverDistributedMSSeqMaster in
+				(*** NOTE: very important: must set NOW the parameters ***)
+				bc_algo#set_algo_instance_function new_im_or_prp;
+				let myalgo :> AlgoGeneric.algoGeneric = bc_algo in
+				myalgo
+			else
+				let bc_algo = new AlgoBCCoverDistributedMSSeqWorker.algoBCCoverDistributedMSSeqWorker in
+				(*** NOTE: very important: must set NOW the parameters ***)
+				bc_algo#set_algo_instance_function new_im_or_prp;
+				let myalgo :> AlgoGeneric.algoGeneric = bc_algo in
+				myalgo
+
+		(** Distributed mode: Master worker with sequential pi0 shuffled *)
+		| Distributed_ms_shuffle ->
+			(* Branch between master and worker *)
+			if DistributedUtilities.is_master() then
+				let bc_algo = new AlgoBCCoverDistributedMSShuffleMaster.algoBCCoverDistributedMSShuffleMaster in
+				(*** NOTE: very important: must set NOW the parameters ***)
+				bc_algo#set_algo_instance_function new_im_or_prp;
+				let myalgo :> AlgoGeneric.algoGeneric = bc_algo in
+				myalgo
+			else
+				let bc_algo = new AlgoBCCoverDistributedMSShuffleWorker.algoBCCoverDistributedMSShuffleWorker in
+				(*** NOTE: very important: must set NOW the parameters ***)
+				bc_algo#set_algo_instance_function new_im_or_prp;
+				let myalgo :> AlgoGeneric.algoGeneric = bc_algo in
+				myalgo
+
+		(** Distributed mode: Master worker with random pi0 and n retries before switching to sequential mode *)
+		| Distributed_ms_random nb_tries ->
+			(* Branch between master and worker *)
+			if DistributedUtilities.is_master() then
+				let bc_algo = new AlgoBCCoverDistributedMSRandomSeqMaster.algoBCCoverDistributedMSRandomSeqMaster in
+				(*** NOTE: very important: must set NOW the parameters ***)
+				bc_algo#set_max_tries nb_tries;
+				bc_algo#set_algo_instance_function new_im_or_prp;
+				let myalgo :> AlgoGeneric.algoGeneric = bc_algo in
+				myalgo
+			else
+				let bc_algo = new AlgoBCCoverDistributedMSRandomSeqWorker.algoBCCoverDistributedMSRandomSeqWorker in
+				(*** NOTE: very important: must set NOW the parameters ***)
+(* 				bc_algo#set_max_tries nb_tries; *)
+				bc_algo#set_algo_instance_function new_im_or_prp;
+				let myalgo :> AlgoGeneric.algoGeneric = bc_algo in
+				myalgo
+		
+		(** Distributed mode: Master worker with subdomain distribution *)
+		| Distributed_ms_subpart ->
+			(* Branch between master and worker *)
+			if DistributedUtilities.is_master() then
+				let bc_algo = new AlgoBCCoverDistributedSubdomainDynamicCoordinator.algoBCCoverDistributedSubdomainDynamicCoordinator in
+				(*** NOTE: very important: must set NOW the parameters ***)
+				bc_algo#set_algo_instance_function new_im_or_prp;
+				let myalgo :> AlgoGeneric.algoGeneric = bc_algo in
+				myalgo
+			else
+				let bc_algo = new AlgoBCCoverDistributedSubdomainDynamicCollaborator.algoBCCoverDistributedSubdomainDynamicCollaborator in
+				(*** NOTE: very important: must set NOW the parameters ***)
+				bc_algo#set_algo_instance_function new_im_or_prp;
+				let myalgo :> AlgoGeneric.algoGeneric = bc_algo in
+				myalgo
+
+		(** Distributed mode: static distribution mode (each node has its own subdomain with no communication) *)
+		| Distributed_static ->
+			(* Branch between collaborator and coordinator *)
+			if DistributedUtilities.is_coordinator() then
+				let bc_algo = new AlgoBCCoverDistributedSubdomainStaticCoordinator.algoBCCoverDistributedSubdomainStaticCoordinator in
+				(*** NOTE: very important: must set NOW the parameters ***)
+				bc_algo#set_algo_instance_function new_im_or_prp;
+				let myalgo :> AlgoGeneric.algoGeneric = bc_algo in
+				myalgo
+			else
+				let bc_algo = new AlgoBCCoverDistributedSubdomainStaticCollaborator.algoBCCoverDistributedSubdomainStaticCollaborator in
+				(*** NOTE: very important: must set NOW the parameters ***)
+				bc_algo#set_algo_instance_function new_im_or_prp;
+				let myalgo :> AlgoGeneric.algoGeneric = bc_algo in
+				myalgo
+
+				
+		| _ -> raise (InternalError("Other distribution modes not yet implemented"))
+		
+		in algo
+				
+			
+	(* ** *** **** ***** ******    END FORK PaTATOR    ****** ***** **** *** ** *)*)
+	(*** WARNING:  Do not modify the previous lines! (used by an external script to compile the non-distributed version of IMITATOR) ***)
+
+	(************************************************************)
+	(* End distributed cartography *)
+	(************************************************************)
+	
+	
+	(************************************************************)
+	(* Non-distributed cartography *)
+	(************************************************************)
+
+	(* BC with full coverage *)
+	| Cover_cartography ->
+		let bc_algo = new AlgoBCCover.algoBCCover in
+		(*** NOTE: very important: must set NOW the parameters ***)
+		bc_algo#set_algo_instance_function new_im_or_prp;
+		let myalgo :> AlgoGeneric.algoGeneric = bc_algo in
+		myalgo
+	
+	(* BC with full coverage (shuffled version) *)
+	| Shuffle_cartography ->
+		let bc_algo = new AlgoBCShuffle.algoBCShuffle in
+		(*** NOTE: very important: must set NOW the parameters ***)
+		bc_algo#set_algo_instance_function new_im_or_prp;
+		let myalgo :> AlgoGeneric.algoGeneric = bc_algo in
+		myalgo
+	
+	| Border_cartography ->
+		raise (InternalError("Not implemented !!!"))
+		
+	(* BC with random coverage *)
+	| Random_cartography nb ->
+		let bc_algo = new AlgoBCRandom.algoBCRandom in
+		(*** NOTE: very important: must set NOW the parameters ***)
+		bc_algo#set_max_tries nb;
+		bc_algo#set_algo_instance_function new_im_or_prp;
+		let myalgo :> AlgoGeneric.algoGeneric = bc_algo in
+		myalgo
+
+	
+	(* BC with random coverage followed by sequential coverage *)
+	| RandomSeq_cartography nb ->
+		let bc_algo = new AlgoBCRandomSeq.algoBCRandomSeq in
+		(*** NOTE: very important: must set NOW the parameters ***)
+		bc_algo#set_max_tries nb;
+		bc_algo#set_algo_instance_function new_im_or_prp;
+		let myalgo :> AlgoGeneric.algoGeneric = bc_algo in
+		myalgo
+	
+		
+	(************************************************************)
+	(* Translation has been handled already *)
+	(************************************************************)
+
+	| Translation -> raise (InternalError "Translation cannot be executed here; program should already have terminated at this point.");
+in
+
+(* Run! *)
+let result = algorithm#run() in
+
+(* Process *)
+ResultProcessor.process_result result algorithm#algorithm_name None;
 
 		
-		(* Exploration *)
-		| State_space_exploration
-			-> Reachability.full_state_space_exploration model;
-			
-		(* Synthesis *)
-		| EF_synthesis 
-			->
-			Reachability.ef_synthesis model
-
-			
-		(* Inverse Method *)
-		| Inverse_method ->
-			if options#efim then
-				(
-					(*** WARNING!!! Why a dedicated function here, whereas for BC+EFIM this function is not (?) called? ***)
-				Reachability.efim model;
-				)
-			else(
-				Reachability.inverse_method model;
-			)
-
-
-		| Cover_cartography | Border_cartography ->
-		(* Behavioral cartography algorithm with full coverage *)
-			Cartography.cover_behavioral_cartography model
-			
-			
-		| Random_cartography nb ->
-		(* Behavioral cartography algorithm with random iterations *)
-			Cartography.random_behavioral_cartography model nb;
-
-end;
-
 
 (************************************************************)
 (* END EXCEPTION MECHANISM *)
 (************************************************************)
 ) with
 (*** TODO: factorize a bit ***)
-	| InternalError e -> (
-		print_error ("Fatal internal error: " ^ e ^ "\nPlease (kindly) insult the developers.");
+	| InternalError msg -> (
+		print_error ("Fatal internal error: " ^ msg ^ "\nPlease (politely) insult the developers.");
 		abort_program ();
 		(* Safety *)
 		exit 1
 	);
 	| Failure msg -> (
-		print_error ("'Failure' exception: '" ^ msg ^ "'\nPlease (kindly) insult the developers.");
+		print_error ("'Failure' exception: '" ^ msg ^ "'\nPlease (politely) insult the developers.");
 		abort_program ();
 		(* Safety *)
 		exit 1
 	);
 	| Invalid_argument msg -> (
-		print_error ("'Invalid_argument' exception: '" ^ msg ^ "'\nPlease (kindly) insult the developers.");
+		print_error ("'Invalid_argument' exception: '" ^ msg ^ "'\nPlease (politely) insult the developers.");
+		abort_program ();
+		(* Safety *)
+		exit 1
+	);
+	| SerializationError msg -> (
+		print_error ("Serialization error: " ^ msg ^ "\nPlease (politely) insult the developers.");
 		abort_program ();
 		(* Safety *)
 		exit 1
 	);
 	| Not_found -> (
-		print_error ("'Not_found' exception!\nPlease (kindly) insult the developers.");
+		print_error ("'Not_found' exception!\nPlease (politely) insult the developers.");
+		abort_program ();
+		(* Safety *)
+		exit 1
+	);
+	| Random_generator_initialization_exception-> (
+		print_error ("A fatal error occurred during the random generator initialization.\nPlease (politely) insult the developers.");
 		abort_program ();
 		(* Safety *)
 		exit 1
 	);
 	| _ -> (
-		print_error ("An unknown exception occurred. Please (kindly) insult the developers.");
+		print_error ("An unknown exception occurred. Please (politely) insult the developers.");
 		abort_program ();
 		(* Safety *)
 		exit 1
@@ -352,7 +575,5 @@ end; (* try *)
 (************************************************************)
 (* Bye bye! *)
 (************************************************************)
-
-(* Reachability.print_stats (); *)
 
 terminate_program()

@@ -1,0 +1,19 @@
+--****************************************************--
+--****************************************************--
+--
+--   Example for non termination of Inverse Method
+--   Equivalent to a PTPN with concurrency
+--
+--   LIPN
+--   ENS de Cachan, France
+--
+--   Thomas Chatain
+--                                Created : 02/07/2012
+--                              fork from : contrexTermination.imi
+--                                   fork : 27/11/2015
+--                          Last modified : 27/11/2015
+--****************************************************--
+--****************************************************--
+
+p1 = 2
+p2 = 2

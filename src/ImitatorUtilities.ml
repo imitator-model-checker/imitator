@@ -7,7 +7,7 @@
  * Author:        Etienne Andre
  * 
  * Created:       2014/10/24
- * Last modified: 2015/09/30
+ * Last modified: 2016/03/29
  *
  ****************************************************************)
  
@@ -20,7 +20,7 @@ open Gc
 (****************************************************************)
 (** Internal modules *)
 (****************************************************************)
-open CamlUtilities
+open OCamlUtilities
 
 
 (****************************************************************)
@@ -175,21 +175,33 @@ let verbose_mode_of_string verbose_mode =
 type imitator_mode =
 	(** Translation to another language: no analysis *)
 	| Translation
+	
 	(** Classical state space exploration *)
 	| State_space_exploration
+	
 	(** EF-synthesis *)
 	| EF_synthesis
+	
+	(** Parametric deadlock-checking *)
+	| Parametric_deadlock_checking
+	
 	(** Classical inverse method *)
 	| Inverse_method
+	
 	(** Cover the whole cartography *)
 	| Cover_cartography
+	
+	(** Cover the whole cartography after shuffling point (mostly useful for the distributed IMITATOR) *)
+	| Shuffle_cartography
+	
 	(** Look for the border using the cartography*)
 	| Border_cartography
+	
 	(** Randomly pick up values for a given number of iterations *)
 	| Random_cartography of int
 
-
-
+	(** Randomly pick up values for a given number of iterations, then switch to sequential algorithm once no more point has been found after a given max number of attempts (mostly useful for the distributed IMITATOR) *)
+	| RandomSeq_cartography of int
 
 
 (** Get the value of the counter *)
@@ -227,15 +239,15 @@ let set_timed_mode () =
 (** Messages *)
 (****************************************************************)
 (* Print a string *)
-let print_message_generic message =
+let print_message_generic printing_function channel message =
 	(* Timed mode *)
 	let time_info =
 		if !timed_mode then (" (at t = " ^ (string_of_seconds (get_time())) ^ ")")
 		else "" in
 	(* Print message *)
-	print_string (message ^ time_info ^ "\n");
+	printing_function (message ^ time_info ^ "\n");
 	(* Flush! *)
-	flush Pervasives.stdout
+	flush channel
 
 
 (* Print a message if global_verbose_mode >= message_verbose_mode *)
@@ -251,7 +263,7 @@ let print_message message_verbose_mode message =
 		(* Add new lines and blanks everywhere *)
 		let formatted_message = spaces ^ (Str.global_replace (Str.regexp "\n") ("\n" ^ spaces) message) in
 		(* Print *)
-		print_message_generic formatted_message
+		print_message_generic print_string Pervasives.stdout formatted_message
 	)
 
 
@@ -264,7 +276,8 @@ let print_warning message =
 		(* Add new lines and blanks everywhere *)
 		let formatted_message = spaces ^ "*** Warning: " ^ (Str.global_replace (Str.regexp "\n") ("\n" ^ spaces) message) in
 		(* Print *)
-		print_message_generic formatted_message
+		(*** NOTE: warnings are displaied to stderr (hence the OCaml function 'prerr_string') ***)
+		print_message_generic prerr_string Pervasives.stderr formatted_message
 	)
 
 
@@ -274,7 +287,7 @@ let print_error message =
 	(* Add new lines and blanks everywhere *)
 	let formatted_message = spaces ^ "*** ERROR: " ^ (Str.global_replace (Str.regexp "\n") ("\n" ^ spaces) message) in
 	(* Print *)
-	print_message_generic formatted_message
+	print_message_generic prerr_string Pervasives.stderr formatted_message
 
 
 
@@ -392,9 +405,11 @@ let print_memory_used verbose_level =
 (* Abort program *)
 let abort_program () =
 	print_error (Constants.program_name ^ " aborted (" ^ (after_seconds ()) ^ ")");
-	print_newline();
+	(*** NOTE: print new line to stderr ***)
+	prerr_newline();
 	flush Pervasives.stdout;
 	exit(1)
+
 
 (* Terminate program *)
 let terminate_program () =

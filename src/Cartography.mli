@@ -5,30 +5,21 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2012/06/18
- * Last modified: 2015/04/12
+ * Last modified: 2016/01/27
  *
  ****************************************************************)
-
-
-(* List version of pi0 for PaTATOR *)
-(* type pi0_list = (Automaton.variable_index * NumConst.t) list *)
 
 
 (************************************************************)
 (** Behavioral cartography auxiliary functions *)
 (************************************************************)
-(*** BADPROG ***)
-(* type current_pi0 = NumConst.t array *)
-
 val bc_initialize : unit -> unit
 
 val bc_initialize_subpart : unit -> unit
 
-val bc_process_im_result : Reachability.im_result -> bool
+val bc_process_im_result : Result.old_im_result -> bool
 
 val bc_finalize : unit -> unit
-
-(* val bc_result : unit -> AbstractModel.returned_constraint list *)
 
 (** Generate the graphical cartography, and possibly personnalize the file suffix *)
 val output_graphical_cartography : string option -> unit
@@ -52,7 +43,7 @@ val get_nb_unsuccessful_points : unit -> int
 (** Get the list of *all* points in V0 (for PaTATOR) *)
 (* val compute_all_pi0 : unit -> (*pi0_list*)PVal.pval list *)
 
-val pi0_in_returned_constraint: AbstractModel.pi0 -> AbstractModel.returned_constraint -> bool
+val pi0_in_returned_constraint: AbstractModel.pi0 -> Result.returned_constraint -> bool
 
 (* Move to the next uncovered pi0 and do not move if the current pi0 is still not covered; update global variable current_pi0 (if necessary); return true if indeed moved *)
 val move_to_next_uncovered_pi0 : unit -> bool
@@ -86,5 +77,5 @@ val cover_behavioral_cartography : AbstractModel.abstract_model -> (*AbstractMod
  *)
 val constraint_list_init : int -> unit
 val constraint_list_random : unit -> PVal.pval option
-val constraint_list_update : Reachability.im_result -> unit
+val constraint_list_update : Result.old_im_result -> unit
 val constraint_list_empty : unit -> bool

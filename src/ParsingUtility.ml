@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2014/03/15
- * Last modified: 2015/07/31
+ * Last modified: 2016/02/08
  *
  ****************************************************************)
 
@@ -21,7 +21,7 @@ open Gc
 (**************************************************)
 open Exceptions
 open AbstractModel
-open CamlUtilities
+open OCamlUtilities
 open ImitatorUtilities
 
 
@@ -55,7 +55,7 @@ let parser_lexer_gen the_parser the_lexer lexbuf string_of_input file_name =
 					let lines = Str.split (Str.regexp "\n") beginning_of_the_file in
 					let line = List.length lines in
 					(* Make the message *)
-					"next to '" ^ error_symbol ^ "' at line " ^ (string_of_int line) ^ ".")
+					"near '" ^ error_symbol ^ "' at line " ^ (string_of_int line) ^ ".")
 				else "somewhere in the file, most probably in the very beginning."
 			in
 			(* Print the error message *)
@@ -176,9 +176,11 @@ let compile options =
 		(* Depending on which operation we are performing *)
 		match options#imitator_mode with
 			(* If translation, reachability, synthesis: no pi0 *)
+			(*** BADPROG!!! This should be defined elsewhere... ***)
 			| Translation
 			| State_space_exploration
 			| EF_synthesis
+			| Parametric_deadlock_checking
 				-> [], []
 			
 			(* Inverse method : pi0 *)

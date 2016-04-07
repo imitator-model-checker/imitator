@@ -1,0 +1,24 @@
+(************************************************************
+ *                      IMITATOR MODEL                      
+ *
+ * Small example to show the differences between IM, IMK and IMunion
+ *
+ * Description     : Small example to show the differences between IM, IMK and IMunion. Starting from p=2:
+	- IM will output p=2
+	- IMK will output p>1
+	- IMunion will output 1 <= p <= 4
+ * Correctness     : N/A
+ * Source          : Own work
+ * Author          : Étienne André
+ * Modeling        : Étienne André
+ * Input by        : Étienne André
+ * License         : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+
+ *
+ * Created         : 2015/12/04
+ * Last modified   : 2015/12/04
+ *
+ * IMITATOR version: 2.7.4-working
+ ************************************************************)
+
+p = 2

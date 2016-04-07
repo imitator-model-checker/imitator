@@ -5,12 +5,12 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Universite Paris 13, Sorbonne Paris Cite, LIPN (France)
  *
- * Description: common definitions for linear terms and constraints (based on PPL)
+ * Description: common definitions for linear terms and constraints (interface to PPL)
  *
  * Author:        Etienne Andre
  * 
  * Created:       2010/03/04
- * Last modified: 2015/09/15
+ * Last modified: 2016/02/11
  *
  ****************************************************************) 
  
@@ -30,7 +30,7 @@ open Gmp.Z.Infixes
 (* Internal modules *)
 (************************************************************)
 open Exceptions
-open CamlUtilities
+open OCamlUtilities
 open ImitatorUtilities
 
 
@@ -201,8 +201,11 @@ type pxd_linear_inequality = linear_inequality
 
 type linear_constraint = Ppl.polyhedron
 
+(** Convex constraint (polyhedron) on the parameters *)
 type p_linear_constraint = linear_constraint
+(** Convex constraint (polyhedron) on the parameters and clocks *)
 type px_linear_constraint = linear_constraint
+(** Convex constraint (polyhedron) on the parameters, clocks and discrete *)
 type pxd_linear_constraint = linear_constraint
 
 
@@ -272,6 +275,14 @@ let nb_parameters	= ref 0
 let nb_clocks		= ref 0
 let nb_discrete		= ref 0
 let total_dim		= ref 0
+
+
+
+(************************************************************)
+(* PPL-independent function *)
+(************************************************************)
+(*** WARNING: this strongly relies on the fact that the parameters are the first dimensions (followed by clocks and then discrete) ***)
+let nonparameters () = list_of_interval !nb_parameters (!total_dim - 1)
 
 
 (************************************************************)
@@ -791,19 +802,21 @@ let make_pxd_constraint = make
 
 
 (** Create a linear constraint from a single point *)
-(* WARNING: non-robust (no check for variable existence) *)
-let p_constraint_of_point (thepoint : (variable * coef) list) =
+(*** WARNING: non-robust (no check for variable existence) ***)
+let constraint_of_point (thepoint : (variable * coef) list) =
 	let inequalities =
 	List.map (fun (variable , value) ->
 		(* Create linear inequality "variable = value" *)
 		make_linear_inequality
 			(* Create linear term "variable - value" *)
-			(make_p_linear_term [NumConst.one, variable] (NumConst.neg value))
+			(make_linear_term [NumConst.one, variable] (NumConst.neg value))
 			Op_eq
 	) thepoint
 	in
-	make_p_constraint inequalities
+	make inequalities
 
+let p_constraint_of_point = constraint_of_point
+let pxd_constraint_of_point = constraint_of_point
 
 
 (** "linear_constraint_of_clock_and_parameters x ~ d neg" will create a linear_constraint x ~ d, with "x" a clock, "~" in {>, >=, =}, "d" a PConstraint.linear_term, and "neg" indicates whether x and d should be kept in this direction or reversed (e.g., "x > p1 true" generates "x > p1" whereas "x >= p1+p2 false" generates "p1+p2 >= x" *)
@@ -821,6 +834,25 @@ let linear_constraint_of_clock_and_parameters (x : variable) (op : op) (d : line
 
 let px_linear_constraint_of_clock_and_parameters = linear_constraint_of_clock_and_parameters
 let pxd_linear_constraint_of_clock_and_parameters = linear_constraint_of_clock_and_parameters
+
+
+(** Create a constraint bounding all variables in the list to non-negative *)
+let constraint_of_nonnegative_variables variables = 
+	let inequalities =
+	List.map (fun variable ->
+		(* Create linear inequality "variable >= 0" *)
+		make_linear_inequality
+			(* Create linear term "variable + 0" *)
+			(make_linear_term [NumConst.one, variable] (NumConst.zero))
+			Op_ge
+	) variables
+	in
+	make inequalities
+
+let p_constraint_of_nonnegative_variables = constraint_of_nonnegative_variables
+let px_constraint_of_nonnegative_variables = constraint_of_nonnegative_variables
+let pxd_constraint_of_nonnegative_variables = constraint_of_nonnegative_variables
+
 
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
@@ -1109,211 +1141,6 @@ let partition_lu variables linear_constraints =
 
 
 
-
-(*############################################################*)
-(* BEGIN TO MOVE TO THE BOTTOM *)
-(*############################################################*)
-
-(************************************************************)
-(** {2 Serialization for PaTATOR} *)
-(************************************************************)
-
-(*
-	General translation :
-
-	2 p1 + p2 + p3 <= 4 p4
-	^ 2/3 p1 + 5 p2 > 7 p3
-	=>
-	2,1+1,2+1,3l4,4^2/3,1+5,2>7,3
-	
-	Operators:
-	< l = g >
-*)
-
-(** Separator between coef and variable *)
-let serialize_SEP_CV = "*"
-
-(** Separator between linear terms *)
-let serialize_SEP_LT = "+"
-
-(** Separator between linear inequalities ('a' stands for 'and'; not using '^' because makes conflicts in regular expressions) *)
-let serialize_SEP_LI = "a"
-
-
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-(** {3 Variables} *)
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-
-let serialize_variable = string_of_int
-
-let unserialize_variable variable_string =
-	(* First check that it is an integer *)
-	(*** NOTE: test already performed by int_of_string? ***)
-	if not (Str.string_match (Str.regexp "^[0-9]+$") variable_string 0) then
-		raise (SerializationError ("Cannot unserialize variable '" ^ variable_string ^ "': int expected."));
-	(* First check that it is an integer *)
-	int_of_string variable_string
-
-
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-(** {3 Coefficients} *)
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-let serialize_coef = Gmp.Z.string_from
-
-let unserialize_coef = (*NumConst.numconst_of_string*)Gmp.Z.from_string
-
-
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-(** {3 Operators} *)
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-let serialize_ALL_OPS = "<l=g>"
-
-let serialize_op = function
-	| Less_Than_RS -> "<"
-	| Less_Or_Equal_RS -> "l"
-	| Equal_RS -> "="
-	| Greater_Or_Equal_RS -> "g"
-	| Greater_Than_RS -> ">"
-
-let unserialize_op s = match s with
-	| "<" -> Less_Than_RS
-	| "l" -> Less_Or_Equal_RS
-	| "=" -> Equal_RS
-	| "g" -> Greater_Or_Equal_RS
-	| ">" -> Greater_Than_RS
-	| _ -> raise (SerializationError ("Cannot unserialize op '" ^ s ^ "'."))
-
-
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-(** {3 Coefficients} *)
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-(** Unserialize a pair (coef, variable) or a coef *)
-let unserialize_coef_var coef_var_pair_string =
-	match split serialize_SEP_CV coef_var_pair_string with
-	(* Case variable with a coefficient *)
-	| [coef_string ; variable_string ] ->
-		Times (unserialize_coef coef_string , Variable (unserialize_variable variable_string))
-	(* Case coefficient alone *)
-	| [coef_string ] ->
-		Coefficient (unserialize_coef coef_string)
-	| _ -> raise (SerializationError ("Cannot unserialize string '" ^ coef_var_pair_string ^ "': (coef, variable_index) or coef expected."))
-
-
-
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-(** {3 Linear term} *)
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-
-(** Convert a linear term (PPL) into a string *)
-let rec serialize_linear_term linear_term =
-	match linear_term with
-	(*** WARNING: slightly problematic translation, as we do not check that a variable is never without a coefficient (in which case it will be interpreted as a coefficient instead of a variable) ***)
-		| Coefficient z -> serialize_coef z
-		| Variable v -> serialize_variable v
-		| Unary_Plus t -> (*serialize_linear_term t*)raise (InternalError("Match Unary_Plus not taken into account in serialization"))
-		| Unary_Minus t -> raise (InternalError("Match Unary_Minus not taken into account in serialization"))
-		| Plus (lterm, rterm) -> (
-			  let lstr = serialize_linear_term lterm in
-				let rstr = serialize_linear_term rterm in
-				lstr ^ serialize_SEP_LT ^ rstr )
-		| Minus (lterm, rterm) -> raise (InternalError("Match Minus not taken into account in serialization"))
-		| Times (z, rterm) -> (
-				let fstr = serialize_coef z in
-				let tstr = serialize_linear_term rterm in
-					match rterm with
-						| Coefficient _ -> raise (InternalError("Case 'z * Coefficient' not taken into account in serialization"))
-						| Variable    _ -> fstr ^ serialize_SEP_CV ^ tstr
-						| _ -> raise (InternalError("Case '_ * Coefficient' not taken into account in serialization"))
-						
-				)
-
-
-let unserialize_linear_term linear_term_string =
-	(* Split according to the separator '+' *)
-	let coef_var_pairs_string = split serialize_SEP_LT linear_term_string in
-	(* Convert to proper coefs and vars *)
-	let coef_var_pairs = List.map unserialize_coef_var coef_var_pairs_string in
-	(* Reconstruct the linear_term *)
-	match coef_var_pairs with
-	(* Only one linear term *)
-	| [ coef_var ] -> coef_var
-	(* More than one linear term *)
-	| coef_var :: rest ->
-		List.fold_left (fun current_lt coef_var ->
-			Plus(coef_var, current_lt)
-		) coef_var rest
-	| _ -> raise (SerializationError("Found empty linear term when unserializing."))
-
-
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-(** {3 Linear inequalities} *)
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-
-(** Serialize a linear inequality *)
-let serialize_linear_inequality linear_inequality =
-(* 	let normal_ineq = normalize_inequality linear_inequality in *)
-	let lterm, rterm, op = split_linear_inequality linear_inequality in
-	let lstr = serialize_linear_term lterm in
-	let rstr = serialize_linear_term rterm in
-	lstr ^ (serialize_op op) ^ rstr
-
-
-let unserialize_linear_inequality linear_inequality_string =
-	(* Split according to the operators *)
-	let s = ("^\\(.+\\)\\([" ^ serialize_ALL_OPS ^ "]\\)\\(.+\\)$") in
-	let r = Str.regexp s in
-	(* Check accuracy *)
-	let matched = (*try*)
-		Str.string_match r linear_inequality_string 0
-		(*with Failure f -> raise (SerializationError("Failure while unserializing linear inequality '" ^ linear_inequality_string ^ "'. Expected: (lterm, op, rterm). Error: " ^ f));*)
-	in
-	if not matched then(
-		raise (SerializationError("Found unexpected linear inequality '" ^ linear_inequality_string ^ "'. Expected: (lterm, op, rterm)."))
-	);
-	(* Retrieve the 3 groups *)
-	let lstr = Str.matched_group 1 linear_inequality_string in
-	let op_string = Str.matched_group 2 linear_inequality_string in
-	let rstr = Str.matched_group 3 linear_inequality_string in
-	
-	(*try*)
-	(* Unserialize and build *)
-	build_linear_inequality
-		(unserialize_linear_term lstr)
-		(unserialize_linear_term rstr)
-		(unserialize_op op_string)
-	(*with Failure f -> raise (SerializationError("Failure while unserializing linear inequality '" ^ linear_inequality_string ^ "'. Error: " ^ f))*)
-	
-
-
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-(** {3 Linear constraints} *)
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-(** Serialize a linear constraint *)
-let serialize_linear_constraint linear_constraint =
-	(* Get a list of linear inequalities and serialize *)
-	let list_of_inequalities = List.map serialize_linear_inequality (get_inequalities linear_constraint) in
-	(* Add separators *)
-	String.concat serialize_SEP_LI list_of_inequalities
-
-
-
-let unserialize_linear_constraint linear_constraint_string =
-	(* Split according to the separator '^' *)
-	let inequalities_string =
-		try
-			split serialize_SEP_LI linear_constraint_string
-		with Failure f -> raise (SerializationError("Splitting failure while unserializing linear inequality '" ^ linear_constraint_string ^ "'. Error: " ^ f))
-	in
-	(* Convert to linear inequalities *)
-	let inequalities =  List.map unserialize_linear_inequality inequalities_string in
-	(* Reconstruct the linear constraint *)
-	make inequalities
-
-
-(*############################################################*)
-(* END TO MOVE TO THE BOTTOM *)
-(*############################################################*)
-
 	
 	
 	
@@ -1326,11 +1153,11 @@ let unserialize_linear_constraint linear_constraint_string =
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
 
 (** String for the false constraint *)
-let string_of_false = "false"
+let string_of_false = "False"
 
 
 (** String for the true constraint *)
-let string_of_true = "true"
+let string_of_true = "True"
 
 
 (** Convert a linear constraint into a string *)
@@ -1529,30 +1356,20 @@ let hide variables linear_constraint =
 
 (** Eliminate (using existential quantification) all non-parameters (clocks and discrete) in a px_linear constraint *)
 let px_hide_nonparameters_and_collapse linear_constraint = 
-	let nonparameters = list_of_interval !nb_parameters (!total_dim - 1) in
-		if verbose_mode_greater Verbose_total then
-			print_message Verbose_total (
-				"Function 'LinearConstraint.px_hide_nonparameters_and_collapse': hiding variables "
-				^ (string_of_list_of_string_with_sep ", " (List.map string_of_int nonparameters) )
-				^ "."
-			);
-		hide nonparameters linear_constraint 
+	let non_parameter_variables = nonparameters () in
+	if verbose_mode_greater Verbose_total then
+		print_message Verbose_total (
+			"Function 'LinearConstraint.px_hide_nonparameters_and_collapse': hiding variables "
+			^ (string_of_list_of_string_with_sep ", " (List.map string_of_int non_parameter_variables) )
+			^ "."
+		);
+	hide non_parameter_variables linear_constraint 
 
 
 
 let pxd_hide_discrete_and_collapse linear_constraint = 
 	let discretes = list_of_interval (!nb_parameters + !nb_clocks) (!total_dim - 1) in
 	hide discretes linear_constraint
-
-
-
-(*(** Eliminate (using existential quantification) the non-parameters in a pxd_linear constraint, and remove the corresponding dimensions *)
-
-(*** TO IMPLEMENT !!! ***)
-
-let pxd_hide_nonparameters_and_collapse = 
-	raise (InternalError "Not implemented!!!")*)
-
 
 
 
@@ -1718,8 +1535,8 @@ let substitute_variables sub linear_inequality =
 				let rsub = substitute_variables_in_term sub rterm in
 				Greater_Or_Equal (lsub, rsub))*)
 
-(** Time elapsing function, in backward direction *)
-let time_backward_assign variables_elapse variables_constant linear_constraint =
+(** Time elapsing function, in backward direction (corresponds to the "past" operation in, e.g., [JLR15]) *)
+let time_past_assign variables_elapse variables_constant linear_constraint =
 	(* 1) Apply generic function *)
 	time_elapse_gen_assign NumConst.one variables_elapse variables_constant linear_constraint;
 	
@@ -1735,12 +1552,13 @@ let time_backward_assign variables_elapse variables_constant linear_constraint =
 	intersection_assign linear_constraint [(make inequalities_nonnegative)]
 	
 
+let pxd_time_past_assign = time_past_assign
 
 
 (** Perform an operation (?) on a set of variables: the first variable list will elapse, the second will remain constant *)
 (** TODO: describe better *)
 (** WARNING: this function is certainly not optimized at all! somehow we don't care considering it's not called "often" in IMITATOR *)
-let grow_to_infinite_assign variables_elapse variables_constant linear_constraint =
+let grow_to_infinity_assign variables_elapse variables_constant linear_constraint =
 	(* Compute all variables *)
 	let all_variables = List.rev_append variables_elapse variables_constant in
 	(* Perform time elapsing on each variable *)
@@ -1759,7 +1577,7 @@ let grow_to_zero_assign variables_elapse variables_constant linear_constraint =
 	let all_variables = List.rev_append variables_elapse variables_constant in
 	(* Perform time elapsing on each variable *)
 	List.iter (fun variable ->
-		time_backward_assign [variable] (list_diff all_variables [variable]) linear_constraint;
+		time_past_assign [variable] (list_diff all_variables [variable]) linear_constraint;
 	) variables_elapse;
 	(* The end *)
 	()
@@ -1971,7 +1789,8 @@ let pxd_constraint_of_discrete_values (discrete_values : (variable * coef) list)
 
 
 (** Convert (and copy) a PX into a PXD constraint by extending the number of dimensions; the original constraint remains unchanged *)
-let pxd_of_px_constraint c = copy c
+let pxd_of_p_constraint c = copy c
+let pxd_of_px_constraint = pxd_of_p_constraint
 
 
 
@@ -2613,3 +2432,667 @@ let test_PDBMs () =
 	()
 
 
+
+(************************************************************)
+(** {2 Non-necessarily convex linear Constraints} *)
+(************************************************************)
+
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+(** {3 Type} *)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+
+(** Non-necessarily convex constraint on the parameters ("pointset powerset" in the underlying PPL implementation) *)
+type nnconvex_constraint = Ppl.pointset_powerset_nnc_polyhedron
+
+type p_nnconvex_constraint = nnconvex_constraint
+type px_nnconvex_constraint = nnconvex_constraint
+
+
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+(** {3 Creation} *)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+
+(** Create a false constraint *)
+let false_p_nnconvex_constraint () =
+(*	(* Statistics *)
+	ppl_nb_false_constraint := !ppl_nb_false_constraint + 1;
+	let start = Unix.gettimeofday() in*)
+	(* Actual call to PPL *)
+	let result = ppl_new_Pointset_Powerset_NNC_Polyhedron_from_space_dimension !total_dim Empty in
+	(* Statistics *)
+(* 	ppl_t_false_constraint := !ppl_t_false_constraint +. (Unix.gettimeofday() -. start); *)
+	(* Return result *)
+	result
+
+let false_px_nnconvex_constraint = false_p_nnconvex_constraint
+
+
+(** Create a true constraint *)
+let true_p_nnconvex_constraint () = 
+	(*	(* Statistics *)
+	ppl_nb_false_constraint := !ppl_nb_false_constraint + 1;
+	let start = Unix.gettimeofday() in*)
+	(* Actual call to PPL *)
+	let result = ppl_new_Pointset_Powerset_NNC_Polyhedron_from_space_dimension !total_dim Universe in
+	(* Statistics *)
+(* 	ppl_t_false_constraint := !ppl_t_false_constraint +. (Unix.gettimeofday() -. start); *)
+	(* Return result *)
+	result
+
+let true_px_nnconvex_constraint = true_p_nnconvex_constraint
+
+
+(** Create a new p_nnconvex_constraint from a linear_constraint *)
+let p_nnconvex_constraint_of_p_linear_constraint (p_linear_constraint : p_linear_constraint) =
+(*	(* Statistics *)
+	ppl_nb_false_constraint := !ppl_nb_false_constraint + 1;
+	let start = Unix.gettimeofday() in*)
+	(* Actual call to PPL *)
+	let result = ppl_new_Pointset_Powerset_NNC_Polyhedron_from_NNC_Polyhedron p_linear_constraint in
+	(* Statistics *)
+(* 	ppl_t_false_constraint := !ppl_t_false_constraint +. (Unix.gettimeofday() -. start); *)
+	(* Return result *)
+	result
+
+let px_nnconvex_constraint_of_px_linear_constraint = p_nnconvex_constraint_of_p_linear_constraint
+
+(** Copy a nnconvex_constraint *)
+let nnconvex_copy nnconvex_constraint =
+	(*** TODO ***)
+(*	(* Statistics *)
+	ppl_nb_copy_polyhedron := !ppl_nb_copy_polyhedron + 1;
+	let start = Unix.gettimeofday() in*)
+	(* Actual call to PPL *)
+	let result = ppl_new_Pointset_Powerset_NNC_Polyhedron_from_Pointset_Powerset_NNC_Polyhedron nnconvex_constraint in
+	(*** TODO ***)
+(*	(* Statistics *)
+	ppl_t_copy_polyhedron := !ppl_t_copy_polyhedron +. (Unix.gettimeofday() -. start);*)
+	(* Return result *)
+	result
+
+let p_nnconvex_copy = nnconvex_copy
+let px_nnconvex_copy = nnconvex_copy
+
+
+
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+(** {3 Access} *)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+
+(** Get the list of p_linear_constraint the disjunction of which makes a p_nnconvex_constraint *)
+let get_disjuncts p_nnconvex_constraint =
+	(* Create ref for the result *)
+	let disjuncts = ref [] in
+
+	(* Create iterator *)
+	let iterator = ppl_Pointset_Powerset_NNC_Polyhedron_begin_iterator p_nnconvex_constraint in
+	(* Create an iterator for the end *)
+	let end_iterator = ppl_Pointset_Powerset_NNC_Polyhedron_end_iterator p_nnconvex_constraint in
+	
+	(* Iterate until the end *)
+	(*** NOTE: apparently, ppl_Pointset_Powerset_NNC_Polyhedron_end_iterator represents the index AFTER the last element, hence the following test is correct ***)
+	while not (ppl_Pointset_Powerset_NNC_Polyhedron_iterator_equals_iterator iterator end_iterator) do
+		(* Get the current disjunct *)
+		let disjunct = ppl_Pointset_Powerset_NNC_Polyhedron_get_disjunct iterator in
+		
+		(* Add it to the list of disjuncts *)
+		disjuncts := disjunct :: !disjuncts;
+		
+		(* Increment the iterator *)
+		ppl_Pointset_Powerset_NNC_Polyhedron_increment_iterator iterator;
+	done;
+	
+	(* Return disjuncts *)
+	List.rev (!disjuncts)
+
+
+
+(*val ppl_Pointset_Powerset_NNC_Polyhedron_begin_iterator : pointset_powerset_nnc_polyhedron ->
+       pointset_powerset_nnc_polyhedron_iterator
+
+val ppl_Pointset_Powerset_NNC_Polyhedron_end_iterator : pointset_powerset_nnc_polyhedron ->
+       pointset_powerset_nnc_polyhedron_iterator
+
+val ppl_Pointset_Powerset_NNC_Polyhedron_iterator_equals_iterator : pointset_powerset_nnc_polyhedron_iterator ->
+       pointset_powerset_nnc_polyhedron_iterator -> bool
+
+val ppl_Pointset_Powerset_NNC_Polyhedron_increment_iterator : pointset_powerset_nnc_polyhedron_iterator -> unit
+
+val ppl_Pointset_Powerset_NNC_Polyhedron_decrement_iterator : pointset_powerset_nnc_polyhedron_iterator -> unit
+
+val ppl_Pointset_Powerset_NNC_Polyhedron_get_disjunct : pointset_powerset_nnc_polyhedron_iterator -> polyhedron*)
+
+
+
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+(** {3 Tests} *)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+
+(** Check if a nnconvex_constraint is false *)
+let p_nnconvex_constraint_is_false c =
+(*	(* Statistics *)
+	ppl_nb_is_false := !ppl_nb_is_false + 1;
+	let start = Unix.gettimeofday() in
+	(* Actual call to PPL *)*)
+	let result = ppl_Pointset_Powerset_NNC_Polyhedron_is_empty c in
+(*	(* Statistics *)
+	ppl_t_is_false := !ppl_t_is_false +. (Unix.gettimeofday() -. start);
+	(* Return result *)*)
+	result
+
+
+(** Check if a nnconvex_constraint is true *)
+let p_nnconvex_constraint_is_true c =
+(*	(* Statistics *)
+	ppl_nb_is_true := !ppl_nb_is_true + 1;
+	let start = Unix.gettimeofday() in*)
+	(* Actual call to PPL *)
+	let result = ppl_Pointset_Powerset_NNC_Polyhedron_is_universe c in
+(*	(* Statistics *)
+	ppl_t_is_true := !ppl_t_is_true +. (Unix.gettimeofday() -. start);*)
+	(* Return result *)
+	result
+
+
+
+(** Check if a nnconvex_constraint is pi0-compatible *)
+(*** NOTE: here, we split the nnconvex_constraint into a list of convex constraints, and we perform the check; the other option would have been to create a nnconvex_constraint from the point, and check inclusion ***)
+(*** WARNING: function not tested ***)
+let p_nnconvex_constraint_is_pi0_compatible pval p_nnconvex_constraint =
+	(* 1) Get the constraints *)
+	let disjuncts = get_disjuncts p_nnconvex_constraint in
+	
+	(* 2) Check each of them *)
+	List.exists (fun p_linear_constraint -> is_pi0_compatible pval p_linear_constraint) disjuncts
+
+
+(** Check if a nnconvex_constraint is included in another one *)
+let p_nnconvex_constraint_is_leq p_nnconvex_constraint p_nnconvex_constraint' =
+	(*** TODO: counter ***)
+	(*** NOTE: PPL works in the reverse order: the 2nd contains the 1st one ***)
+	ppl_Pointset_Powerset_NNC_Polyhedron_contains_Pointset_Powerset_NNC_Polyhedron p_nnconvex_constraint' p_nnconvex_constraint
+	(*** TODO: counter ***)
+
+
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+(** {3 Simplification} *)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+let simplify p_nnconvex_constraint =
+	(*** TODO: add counters... ***)
+	ppl_Pointset_Powerset_NNC_Polyhedron_pairwise_reduce p_nnconvex_constraint;
+	ppl_Pointset_Powerset_NNC_Polyhedron_omega_reduce p_nnconvex_constraint;
+	()
+	
+
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+(** {3 Conversion to string} *)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+
+(** Convert a p_nnconvex_constraint into a string *)
+let string_of_p_nnconvex_constraint names p_nnconvex_constraint =
+	(* First reduce (avoids identical disjuncts) *)
+	simplify p_nnconvex_constraint;
+	
+	(* Get the disjuncts *)
+	let disjuncts = get_disjuncts p_nnconvex_constraint in
+	
+	(* Case false *)
+	if disjuncts = [] then string_of_false else(
+	
+		(* Convert each disjunct into a string *)
+		let disjuncts_string = List.map (string_of_p_linear_constraint names) disjuncts in
+		
+		(* Concatenate using an "OR" *)
+		string_of_list_of_string_with_sep "\nOR\n " disjuncts_string
+	)
+
+let string_of_px_nnconvex_constraint = string_of_p_nnconvex_constraint
+
+
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+(** {3 Modifications} *)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+
+(** Performs the intersection of a p_nnconvex_constraint with a p_linear_constraint; the p_nnconvex_constraint is modified, the p_linear_constraint is not *)
+let p_nnconvex_intersection p_nnconvex_constraint p_linear_constraint =
+(*	(* Statistics *)
+	ppl_nb_is_true := !ppl_nb_is_true + 1;
+	let start = Unix.gettimeofday() in*)
+	(* First retrieve inequalities *)
+	let constraint_system =  get_inequalities p_linear_constraint in
+	(* Actual call to PPL *)
+	ppl_Pointset_Powerset_NNC_Polyhedron_add_constraints p_nnconvex_constraint constraint_system;
+(*	(* Statistics *)
+	ppl_t_is_true := !ppl_t_is_true +. (Unix.gettimeofday() -. start);*)
+
+	(* Simplify the constraint (avoids identical disjuncts) *)
+	simplify p_nnconvex_constraint;
+	
+	(* The end *)
+	()
+
+let px_nnconvex_intersection = p_nnconvex_intersection
+
+
+(** Performs the union of a p_nnconvex_constraint with a p_linear_constraint; the p_nnconvex_constraint is modified, the p_linear_constraint is not *)
+let p_nnconvex_p_union p_nnconvex_constraint p_linear_constraint =
+(*	(* Statistics *)
+	ppl_nb_is_true := !ppl_nb_is_true + 1;
+	let start = Unix.gettimeofday() in*)
+	(* Actual call to PPL *)
+	ppl_Pointset_Powerset_NNC_Polyhedron_add_disjunct p_nnconvex_constraint p_linear_constraint;
+(*	(* Statistics *)
+	ppl_t_is_true := !ppl_t_is_true +. (Unix.gettimeofday() -. start);*)
+
+	(* Simplify the constraint (avoids identical disjuncts) *)
+	simplify p_nnconvex_constraint;
+	
+	(* The end *)
+	()
+
+
+let px_nnconvex_px_union = p_nnconvex_p_union
+
+
+(** Performs the union of a p_nnconvex_constraint with another p_nnconvex_constraint; the first p_nnconvex_constraint is modified, the second is not *)
+let p_nnconvex_union p_nnconvex_constraint p_nnconvex_constraint' =
+	(* Get the disjuncts of the second p_nnconvex_constraint *)
+	let disjuncts = get_disjuncts p_nnconvex_constraint' in
+	
+	(* Add each of them as a union *)
+	List.iter (p_nnconvex_p_union p_nnconvex_constraint) disjuncts
+
+
+(** Performs the difference between a first p_nnconvex_constraint and a second p_nnconvex_constraint; the first is modified, the second is not *)
+let p_nnconvex_difference p_nnconvex_constraint p_nnconvex_constraint' =
+(*	(* Statistics *)
+	ppl_nb_is_true := !ppl_nb_is_true + 1;
+	let start = Unix.gettimeofday() in*)
+	(* Actual call to PPL *)
+	ppl_Pointset_Powerset_NNC_Polyhedron_difference_assign p_nnconvex_constraint p_nnconvex_constraint';
+(*	(* Statistics *)
+	ppl_t_is_true := !ppl_t_is_true +. (Unix.gettimeofday() -. start);*)
+
+	(* Simplify the constraint (avoids identical disjuncts) *)
+	simplify p_nnconvex_constraint;
+	
+	(* The end *)
+	()
+
+let px_nnconvex_difference = p_nnconvex_difference
+
+
+(*(** Eliminate a set of variables, side effects version *)
+let nnconvex_hide_assign variables nnconvex_constraint =
+
+	if List.length variables = 0 then(
+		(*** DEBUG ***)
+		print_warning "Attempting to hide an empty list of variables in nnconvex_hide_assign";
+	)
+	(* Only hide a non-empty list *)
+	else (
+		(*** DEBUG ***)
+		print_string ("\nBefore eliminating non-parameters in: \n" ^ (string_of_p_nnconvex_constraint (fun i -> "v_" ^ (string_of_int i)) nnconvex_constraint));
+
+	(* debug output *)
+(*		if verbose_mode_greater Verbose_total then (
+			print_message Verbose_total "About to hide:";
+			List.iter (fun v -> print_message Verbose_total ("  - v" ^ string_of_int v)) variables;
+		);*)
+		(* Statistics *)
+		(*** TODO ***)
+(*		ppl_nb_unconstrain := !ppl_nb_unconstrain + 1;
+		let start = Unix.gettimeofday() in*)
+		(* Actual call to PPL *)
+		ppl_Pointset_Powerset_NNC_Polyhedron_unconstrain_space_dimensions nnconvex_constraint variables;
+
+		(*** DEBUG ***)
+		print_string ("\nAfter eliminating non-parameters in: \n" ^ (string_of_p_nnconvex_constraint (fun i -> "v_" ^ (string_of_int i)) nnconvex_constraint));
+		
+		(* Statistics *)
+		(*** TODO ***)
+(* 		ppl_t_unconstrain := !ppl_t_unconstrain +. (Unix.gettimeofday() -. start); *)
+		(*** TODO ***)
+(* 		assert_dimensions linear_constraint *)
+	)
+*)
+
+
+
+(** Create a new p_nnconvex_constraint from a list of linear_constraint *)
+let p_nnconvex_constraint_of_p_linear_constraints (p_linear_constraints : p_linear_constraint list) =
+	(* Create a false constraint *)
+	let result = false_p_nnconvex_constraint() in
+	(* Add each constraint as a disjunction *)
+	List.iter (fun p_linear_constraint -> 
+		p_nnconvex_p_union result p_linear_constraint;
+	) p_linear_constraints;
+	(* Return result *)
+	result
+
+
+
+let adhoc_nnconvex_hide variables nnconvex_constraint =
+	(* 1) Get disjuncts *)
+	let disjuncts = get_disjuncts nnconvex_constraint in
+	
+	(* 2) Hide in each disjuncts *)
+	let disjuncts_hidden = List.map (hide variables) disjuncts in
+(*	let disjuncts_hidden = List.map (function p_constraint ->
+		(*** DEBUG ***)
+		print_string ("\n------About to eliminate non-parameters in: \n" ^ (string_of_p_linear_constraint (fun i -> "v_" ^ (string_of_int i)) p_constraint));
+		let result = hide variables p_constraint in
+		(*** DEBUG ***)
+		print_string ("\n------After eliminating non-parameters: \n" ^ (string_of_p_linear_constraint (fun i -> "v_" ^ (string_of_int i)) result));
+		result
+	) disjuncts in*)
+	
+	(*** DEBUG ***)
+(* 	print_string ("\n------"); *)
+	
+	(* 3) Recreate the nnconvex_constraint *)
+	p_nnconvex_constraint_of_p_linear_constraints disjuncts_hidden
+	
+
+
+let p_nnconvex_hide = adhoc_nnconvex_hide
+let px_nnconvex_hide = adhoc_nnconvex_hide
+
+
+
+
+
+(** Eliminate (using existential quantification) all non-parameters (clocks) in a px_linear constraint *)
+let px_nnconvex_hide_nonparameters_and_collapse px_nnconvex_constraint =
+	(*** DEBUG ***)
+(* 	print_string ("\nAbout to eliminate non-parameters in: \n" ^ (string_of_p_nnconvex_constraint (fun i -> "v_" ^ (string_of_int i)) px_nnconvex_constraint)); *)
+
+	(* First: copy *)
+(* 	let copy = px_nnconvex_copy px_nnconvex_constraint in *)
+	(* Compute non-parameters *)
+	let non_parameter_variables = nonparameters () in
+	
+	(*** DEBUG ***)
+(* 	print_string ("\nAbout to eliminate " ^ (string_of_int (List.length non_parameter_variables)) ^ " variables:\n"); 
+	List.iter (fun i -> print_string ("v_" ^ (string_of_int i) ^ "\n") ) non_parameter_variables;
+	*)
+	(* Call the actual elimination function *)
+	let result = px_nnconvex_hide non_parameter_variables px_nnconvex_constraint in
+	
+	(*** DEBUG ***)
+(* 	print_string ("\nAfter eliminating non-parameters in: \n" ^ (string_of_p_nnconvex_constraint (fun i -> "v_" ^ (string_of_int i)) result)); *)
+
+	(* Return result *)
+	result
+	
+
+
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+(** {3 Conversion to a list of p_linear_constraint} *)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+(** Converts a p_nnconvex_constraint into a list of p_linear_constraint such that the union of this list is equal to the p_nnconvex_constraint *)
+let p_linear_constraint_list_of_p_nnconvex_constraint =
+	(* Get the disjuncts *)
+	get_disjuncts
+
+
+	
+	
+	
+	
+
+(************************************************************)
+(** {2 Non-necessarily convex linear Constraints} *)
+(************************************************************)
+type p_convex_or_nonconvex_constraint =
+	| Convex_p_constraint of p_linear_constraint
+	| Nonconvex_p_constraint of p_nnconvex_constraint
+
+(** Convert a p_convex_or_nonconvex_constraint into a string *)
+let string_of_p_convex_or_nonconvex_constraint names = function
+	| Convex_p_constraint p_linear_constraint ->  string_of_p_linear_constraint names p_linear_constraint
+	| Nonconvex_p_constraint p_nnconvex_constraint -> string_of_p_nnconvex_constraint names p_nnconvex_constraint
+
+
+
+
+
+(************************************************************)
+(** {2 Serialization for PaTATOR} *)
+(************************************************************)
+
+(*
+	General translation :
+
+	2 p1 + p2 + p3 <= 4 p4
+	^ 2/3 p1 + 5 p2 > 7 p3
+	=>
+	2,1+1,2+1,3l4,4^2/3,1+5,2>7,3
+	
+	Operators:
+	< l = g >
+*)
+
+(** Separator between coef and variable *)
+let serialize_SEP_CV = "*"
+
+(** Separator between linear terms *)
+let serialize_SEP_LT = "+"
+
+(** Separator between linear inequalities ('a' stands for 'and'; not using '^' because makes conflicts in regular expressions) *)
+let serialize_SEP_AND = "a"
+
+(** Separator between non-convex linear constraints ('o' stands for 'or') *)
+let serialize_SEP_OR = "o"
+
+
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+(** {3 Variables} *)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+
+let serialize_variable = string_of_int
+
+let unserialize_variable variable_string =
+	(* First check that it is an integer *)
+	(*** NOTE: test already performed by int_of_string? ***)
+	if not (Str.string_match (Str.regexp "^[0-9]+$") variable_string 0) then
+		raise (SerializationError ("Cannot unserialize variable '" ^ variable_string ^ "': int expected."));
+	(* First check that it is an integer *)
+	int_of_string variable_string
+
+
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+(** {3 Coefficients} *)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+let serialize_coef = Gmp.Z.string_from
+
+let unserialize_coef = (*NumConst.numconst_of_string*)Gmp.Z.from_string
+
+
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+(** {3 Operators} *)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+let serialize_ALL_OPS = "<l=g>"
+
+let serialize_op = function
+	| Less_Than_RS -> "<"
+	| Less_Or_Equal_RS -> "l"
+	| Equal_RS -> "="
+	| Greater_Or_Equal_RS -> "g"
+	| Greater_Than_RS -> ">"
+
+let unserialize_op s = match s with
+	| "<" -> Less_Than_RS
+	| "l" -> Less_Or_Equal_RS
+	| "=" -> Equal_RS
+	| "g" -> Greater_Or_Equal_RS
+	| ">" -> Greater_Than_RS
+	| _ -> raise (SerializationError ("Cannot unserialize op '" ^ s ^ "'."))
+
+
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+(** {3 Coefficients} *)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+(** Unserialize a pair (coef, variable) or a coef *)
+let unserialize_coef_var coef_var_pair_string =
+	match split serialize_SEP_CV coef_var_pair_string with
+	(* Case variable with a coefficient *)
+	| [coef_string ; variable_string ] ->
+		Times (unserialize_coef coef_string , Variable (unserialize_variable variable_string))
+	(* Case coefficient alone *)
+	| [coef_string ] ->
+		Coefficient (unserialize_coef coef_string)
+	| _ -> raise (SerializationError ("Cannot unserialize string '" ^ coef_var_pair_string ^ "': (coef, variable_index) or coef expected."))
+
+
+
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+(** {3 Linear term} *)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+
+(** Convert a linear term (PPL) into a string *)
+let rec serialize_linear_term linear_term =
+	match linear_term with
+	(*** WARNING: slightly problematic translation, as we do not check that a variable is never without a coefficient (in which case it will be interpreted as a coefficient instead of a variable) ***)
+		| Coefficient z -> serialize_coef z
+		| Variable v -> serialize_variable v
+		| Unary_Plus t -> (*serialize_linear_term t*)raise (InternalError("Match Unary_Plus not taken into account in serialization"))
+		| Unary_Minus t -> raise (InternalError("Match Unary_Minus not taken into account in serialization"))
+		| Plus (lterm, rterm) -> (
+			  let lstr = serialize_linear_term lterm in
+				let rstr = serialize_linear_term rterm in
+				lstr ^ serialize_SEP_LT ^ rstr )
+		| Minus (lterm, rterm) -> raise (InternalError("Match Minus not taken into account in serialization"))
+		| Times (z, rterm) -> (
+				let fstr = serialize_coef z in
+				let tstr = serialize_linear_term rterm in
+					match rterm with
+						| Coefficient _ -> raise (InternalError("Case 'z * Coefficient' not taken into account in serialization"))
+						| Variable    _ -> fstr ^ serialize_SEP_CV ^ tstr
+						| _ -> raise (InternalError("Case '_ * Coefficient' not taken into account in serialization"))
+						
+				)
+
+
+let unserialize_linear_term linear_term_string =
+	(* Split according to the separator '+' *)
+	let coef_var_pairs_string = split serialize_SEP_LT linear_term_string in
+	(* Convert to proper coefs and vars *)
+	let coef_var_pairs = List.map unserialize_coef_var coef_var_pairs_string in
+	(* Reconstruct the linear_term *)
+	match coef_var_pairs with
+	(* Only one linear term *)
+	| [ coef_var ] -> coef_var
+	(* More than one linear term *)
+	| coef_var :: rest ->
+		List.fold_left (fun current_lt coef_var ->
+			Plus(coef_var, current_lt)
+		) coef_var rest
+	| _ -> raise (SerializationError("Found empty linear term when unserializing."))
+
+
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+(** {3 Linear inequalities} *)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+
+(** Serialize a linear inequality *)
+let serialize_linear_inequality linear_inequality =
+(* 	let normal_ineq = normalize_inequality linear_inequality in *)
+	let lterm, rterm, op = split_linear_inequality linear_inequality in
+	let lstr = serialize_linear_term lterm in
+	let rstr = serialize_linear_term rterm in
+	lstr ^ (serialize_op op) ^ rstr
+
+
+let unserialize_linear_inequality linear_inequality_string =
+	(* Split according to the operators *)
+	let s = ("^\\(.+\\)\\([" ^ serialize_ALL_OPS ^ "]\\)\\(.+\\)$") in
+	let r = Str.regexp s in
+	(* Check accuracy *)
+	let matched = (*try*)
+		Str.string_match r linear_inequality_string 0
+		(*with Failure f -> raise (SerializationError("Failure while unserializing linear inequality '" ^ linear_inequality_string ^ "'. Expected: (lterm, op, rterm). Error: " ^ f));*)
+	in
+	if not matched then(
+		raise (SerializationError("Found unexpected linear inequality '" ^ linear_inequality_string ^ "'. Expected: (lterm, op, rterm)."))
+	);
+	(* Retrieve the 3 groups *)
+	let lstr = Str.matched_group 1 linear_inequality_string in
+	let op_string = Str.matched_group 2 linear_inequality_string in
+	let rstr = Str.matched_group 3 linear_inequality_string in
+	
+	(*try*)
+	(* Unserialize and build *)
+	build_linear_inequality
+		(unserialize_linear_term lstr)
+		(unserialize_linear_term rstr)
+		(unserialize_op op_string)
+	(*with Failure f -> raise (SerializationError("Failure while unserializing linear inequality '" ^ linear_inequality_string ^ "'. Error: " ^ f))*)
+	
+
+
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+(** {3 Linear constraints} *)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+(** Serialize a linear constraint *)
+let serialize_linear_constraint linear_constraint =
+	(* Get a list of linear inequalities and serialize *)
+	let list_of_inequalities = List.map serialize_linear_inequality (get_inequalities linear_constraint) in
+	(* Add separators *)
+	String.concat serialize_SEP_AND list_of_inequalities
+
+
+
+let unserialize_linear_constraint linear_constraint_string =
+	(* Split according to the separator serialize_SEP_AND *)
+	let inequalities_string =
+		try
+			split serialize_SEP_AND linear_constraint_string
+		with Failure f -> raise (SerializationError("Splitting failure while unserializing linear inequality '" ^ linear_constraint_string ^ "'. Error: " ^ f))
+	in
+	(* Convert to linear inequalities *)
+	let inequalities =  List.map unserialize_linear_inequality inequalities_string in
+	(* Reconstruct the linear constraint *)
+	make inequalities
+
+
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+(** {3 Parametric non-necessarily convex constraints} *)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+let serialize_p_nnconvex_constraint p_nnconvex_constraint =
+	(* Get a list of linear constraints and serialize *)
+	let list_of_constraints = List.map serialize_linear_constraint (get_disjuncts p_nnconvex_constraint) in
+	(* Add separators *)
+	String.concat serialize_SEP_OR list_of_constraints
+
+let unserialize_p_nnconvex_constraint p_nnconvex_constraint_string =
+	(* Split according to the separator serialize_SEP_OR *)
+	let constraints_string =
+		try
+			split serialize_SEP_OR p_nnconvex_constraint_string
+		with Failure f -> raise (SerializationError("Splitting failure while unserializing linear inequality '" ^ p_nnconvex_constraint_string ^ "'. Error: " ^ f))
+	in
+	(* Convert to linear constraints *)
+	let constraints =  List.map unserialize_linear_constraint constraints_string in
+	(* Reconstruct the p_nnconvex_constraint *)
+	p_nnconvex_constraint_of_p_linear_constraints constraints
+
+
+
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+(** {3 Non-necessarily convex linear Constraints} *)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+let serialize_p_convex_or_nonconvex_constraint = function
+	| Convex_p_constraint p_linear_constraint -> serialize_linear_constraint p_linear_constraint
+	| Nonconvex_p_constraint p_nnconvex_constraint -> serialize_p_nnconvex_constraint p_nnconvex_constraint
+
+let unserialize_p_convex_or_nonconvex_constraint p_convex_or_nonconvex_constraint_string =
+	(* A bit a hack: if there is a disjunction, then this is a p_nnconvex_constraint *)
+	(* First convert serialize_SEP_OR into a char *)
+	(*** HACK ***)
+	if String.length serialize_SEP_OR <> 1 then raise (InternalError("It was assumed that '" ^ serialize_SEP_OR ^ "' was only one character long."));
+	let sep_char = String.get serialize_SEP_OR 0 in
+	if String.contains p_convex_or_nonconvex_constraint_string sep_char then
+		Nonconvex_p_constraint (unserialize_p_nnconvex_constraint p_convex_or_nonconvex_constraint_string)
+	else
+		Convex_p_constraint (unserialize_linear_constraint p_convex_or_nonconvex_constraint_string)

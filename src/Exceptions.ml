@@ -1,15 +1,17 @@
-(*****************************************************************
+(************************************************************
  *
  *                       IMITATOR
  * 
- * Universite Paris 13, Sorbonne Paris Cite, LIPN (France)
+ * Laboratoire Spécification et Vérification (ENS Cachan & CNRS, France)
+ * LIPN, Université Paris 13, Sorbonne Paris Cité (France)
  * 
- * Author:        Etienne Andre
+ * Module description: all public exceptions used in IMITATOR
  * 
- * Created:       2014/10/24
- * Last modified: 2015/09/15
+ * File contributors : Étienne André
+ * Created           : 2014/10/24
+ * Last modified     : 2016/03/29
  *
- ****************************************************************)
+ ************************************************************)
 
 
 (****************************************************************)
@@ -30,3 +32,8 @@ exception ParsingError of (int * int)
 (** When a PTA is not an L/U-PTA *)
 exception Not_LU
 
+(** Exception when a problem occurs in NumConst with the random generator initialization *)
+exception Random_generator_initialization_exception
+
+(* When trying to get the value of an 'a option that is in fact None *)
+exception NoneException

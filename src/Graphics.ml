@@ -8,7 +8,7 @@
  * Author:        Etienne Andre, Ulrich Kuehne
  * 
  * Created:       2010/07/05
- * Last modified: 2015/10/22
+ * Last modified: 2016/03/16
  *
  ****************************************************************)
 
@@ -17,38 +17,14 @@
 (* Modules *)
 (************************************************************)
 
+open OCamlUtilities
 open Exceptions
-open CamlUtilities
+open Constants
 open ImitatorUtilities
-(* open LinearConstraint *)
 open AbstractModel
+open StateSpace
+open Result
 
-
-
-
-(************************************************************)
-(************************************************************)
-(* GLOBAL CONSTANTS *)
-(************************************************************)
-(************************************************************)
-
-(*** TODO: move to Constants.mli ***)
-let dot_command = "dot"
-let dot_image_extension = "jpg"
-let dot_file_extension = "dot"
-let states_file_extension = "states"
-let cartography_extension = "png"
-
-
-
-
-
-(* TODO: move this translation somewhere else
-   WARNING: code duplicated *)
-let string_of_tile_nature = function
-	| Good -> "good"
-	| Bad -> "bad"
-	| _ -> raise (InternalError ("Tile nature should be good or bad only, so far "))
 
 
 (************************************************************)
@@ -58,7 +34,7 @@ let string_of_tile_nature = function
 (*------------------------------------------------------------*)
 (* Convert a tile_index into a color for graph (actually an integer from 1 to 5) *)
 (*------------------------------------------------------------*)
-let graph_color_of_int tile_index tile_nature dotted =
+let graph_color_of_int tile_index statespace_nature dotted =
 	(* Retrieve model *)
 	let model = Input.get_model() in
 	
@@ -67,10 +43,10 @@ let graph_color_of_int tile_index tile_nature dotted =
 	(* If bad state defined *)
 	if model.correctness_condition <> None then(
 		(* Go for a good / bad coloring *)
-		match tile_nature with
-		| Good -> 2 (* green *)
-		| Bad -> 1 (* red *)
-		| Unknown -> 5 (* cyan *)
+		match statespace_nature with
+		| StateSpace.Good -> 2 (* green *)
+		| StateSpace.Bad -> 1 (* red *)
+		| StateSpace.Unknown -> 5 (* cyan *)
 	(* Else random coloring *)
 	)else(
 		(* Only 5 colors from 1 to 5 *)
@@ -83,37 +59,60 @@ let graph_color_of_int tile_index tile_nature dotted =
 
 
 (*------------------------------------------------------------*)
-(* Create a file name with radical cartography_name and number file_index *)
+(* Create a file name with radical cartography_file_prefix and number file_index *)
 (*------------------------------------------------------------*)
-let make_file_name cartography_name file_index =
-	cartography_name ^ "_points_" ^ (string_of_int file_index) ^ ".txt"
+let make_file_name cartography_file_prefix file_index =
+	cartography_file_prefix ^ "_points_" ^ (string_of_int file_index) ^ ".txt"
 
 
 
 (*------------------------------------------------------------*)
-(* Print the cartography corresponding to the list of constraint *)
+(** Draw the cartography corresponding to a list of constraints. Takes as second argument the file name prefix. *)
 (*------------------------------------------------------------*)
-let cartography model v0 returned_constraint_list cartography_name =
-(* No cartography if no zone *)
-if returned_constraint_list = [] then(
-	print_message Verbose_standard ("\nNo cartography can be generated since the list of constraints is empty.\n");
-)else(
-		print_message Verbose_standard ("\nGeneration of the graphical cartography...");
-(*		Graphics.cartography model v0 zones (options#files_prefix ^ "_cart")
-	)*)
+exception CartographyError
 
+
+let draw_cartography (returned_constraint_list : (LinearConstraint.p_convex_or_nonconvex_constraint * StateSpace.statespace_nature) list) cartography_file_prefix =
+try(
+	(* No cartography if no zone *)
+	if returned_constraint_list = [] then(
+		print_warning ("No cartography can be drawn since the list of constraints is empty.");
+		raise CartographyError
+	);
+
+	print_message Verbose_standard ("\nDrawing the cartography...");
+
+	(* Retrieve the model *)
+	let model = Input.get_model () in
 	(* Retrieve the input options *)
 	let options = Input.get_options () in
+	(* Retrieve the V0 *)
+	let v0 = Input.get_v0 () in
 	
 	print_message Verbose_low "Starting to compute graphical cartography...";
-	(* For all returned_constraint *)
+	
+	(* Converting to convex constraints *)
+	(*** BADPROG: creating a list of singletons and lists, and then flatten ***)
+	let returned_constraint_list = List.flatten (List.map (function
+		| LinearConstraint.Convex_p_constraint p_linear_constraint, statespace_nature -> [LinearConstraint.render_non_strict_p_linear_constraint p_linear_constraint , statespace_nature]
+		| LinearConstraint.Nonconvex_p_constraint p_nnconvex_constraint, statespace_nature ->
+			(* Get the convex constraints *)
+			let p_linear_constraints = LinearConstraint.p_linear_constraint_list_of_p_nnconvex_constraint p_nnconvex_constraint in
+			(* Render non-strict *)
+			List.map (fun p_linear_constraint -> LinearConstraint.render_non_strict_p_linear_constraint p_linear_constraint, statespace_nature) p_linear_constraints
+		) returned_constraint_list
+	)  in
+	
+(*	(* For all returned_constraint *)
 	let new_returned_constraint_list = List.map (
 		fun returned_constraint -> match returned_constraint with
 			| Convex_constraint (k, tn) -> Convex_constraint (LinearConstraint.render_non_strict_p_linear_constraint k , tn)
 			| Union_of_constraints (list_of_k, tn) -> Union_of_constraints (List.map LinearConstraint.render_non_strict_p_linear_constraint list_of_k , tn)
 			| NNCConstraint _ -> raise (InternalError ("NNCCs are not available everywhere yet."))
 	) returned_constraint_list
-	in
+	in*)
+	
+	(* From now on, we work with a list [(LinearConstraint.p_linear_constraint, statespace_nature), ...] *)
 
 
 (*	(*** HORRIBLE IMPERATIVE (and not tail recursive) programming !!!!! ***)
@@ -143,15 +142,16 @@ if returned_constraint_list = [] then(
 	let range_params : int list ref = ref [] in
 	let bounds = ref (Array.make 2 (NumConst.zero, NumConst.zero)) in
 
-	(* If EF-synthesis: choose the first two parameters *)
+	(* If EF-synthesis / IM: choose the first two parameters *)
+	(*** TODO: take the projection into account! ***)
 	begin
 	match options#imitator_mode with
-		| EF_synthesis ->
-			print_message Verbose_low "Case EF-synthesis: first 2 parameters";
+		| EF_synthesis | Parametric_deadlock_checking | Inverse_method ->
+			print_message Verbose_low "Pick up the first 2 parameters to draw the cartography";
 			(* First check that there are at least 2 parameters *)
 			if model.nb_parameters < 2 then(
 				print_error "Could not plot cartography (which requires 2 parameters)";
-				abort_program();
+				raise CartographyError
 			);
 			(* Choose the first 2 *)
 			range_params := [ List.nth model.parameters 0 ; List.nth model.parameters 1];
@@ -181,7 +181,9 @@ if returned_constraint_list = [] then(
 			!bounds.(1) <- ef_y_min, ef_y_max;
 	
 	(* If cartography: find indices of first two variables with a parameter range *)
-		| Cover_cartography | Random_cartography _ | Border_cartography ->
+	(*** TODO: better use an option "cartography mode" ***)
+	(*** TODO: take the projection into account! ***)
+		| Cover_cartography | Shuffle_cartography | Random_cartography _ | RandomSeq_cartography _ | Border_cartography ->
 			print_message Verbose_low "Case real cartography: first 2 parameters with a range";
 			for index = 0 to model.nb_parameters - 1 do
 (* 			Array.iteri (fun index (a,b) ->  *)
@@ -198,7 +200,7 @@ if returned_constraint_list = [] then(
 			
 			if (List.length !range_params) < 2 then(
 				print_error "Could not plot cartography (region of interest has too few dimensions)";
-				abort_program();
+				raise CartographyError
 			);
 
 			(* Update bounds *)
@@ -207,10 +209,9 @@ if returned_constraint_list = [] then(
 
 		
 	(* Else: no reason to draw a cartography *)
-	(*** TODO: should be allowed for IM too ***)
 		| _ -> 
-			print_error "Cartography can only be drawn while in cartography or EF-synthesis mode.";
-			abort_program();
+			print_error "Cartography cannot be drawn in this mode.";
+			raise CartographyError
 	end;
 	
 	(*** WARNING: only works partially ***)
@@ -264,11 +265,11 @@ if returned_constraint_list = [] then(
 (* 	print_message Verbose_standard ("Cartography will be drawn in 2D for parameters " ^ x_name ^  " and " ^ y_name ^  "."); *)
 	
 	(* Create a script that will print the cartography *)
-	let script_name = cartography_name ^ ".sh" in
+	let script_name = cartography_file_prefix ^ ".sh" in
 	let script = open_out script_name in
 	
 	(* Create a temp file containing the V0 coordinates *)
-	let file_v0_name = cartography_name ^ "_v0.txt" in
+	let file_v0_name = cartography_file_prefix ^ "_v0.txt" in
 	let file_rectangle_v0 = open_out file_v0_name in
 	
 	
@@ -358,11 +359,12 @@ if returned_constraint_list = [] then(
 		) points;
 	in
 	(* Update min / max for all returned constraint *)
-	List.iter (function
+(*	List.iter (function
 		| Convex_constraint (k, _) -> update_min_max k
 		| Union_of_constraints (list_of_k, _) -> List.iter update_min_max list_of_k
 		| NNCConstraint _ -> raise (InternalError ("NNCCs are not available everywhere yet."))
-	) new_returned_constraint_list;
+	) new_returned_constraint_list;*)
+	List.iter (function (p_linear_constraint, _) -> update_min_max p_linear_constraint) returned_constraint_list;
 
 	(* Print some information *)
 	print_message Verbose_low ("Adding a 1-unit margin...");
@@ -409,7 +411,7 @@ if returned_constraint_list = [] then(
 	(* print_message Verbose_standard ((string_of_float !min_abs)^"  "^(string_of_float !min_ord)); *)
 	(* Create a new file for each constraint *)
 (*		for i=0 to List.length !new_constraint_list-1 do
-		let file_name = cartography_name^"_points_"^(string_of_int i)^".txt" in
+		let file_name = cartography_file_prefix^"_points_"^(string_of_int i)^".txt" in
 		let file_out = open_out file_name in
 		(* find the points satisfying the constraint *)
 		let s=plot_2d (x_param) (y_param) (List.nth !new_constraint_list i) min_abs min_ord max_abs max_ord in
@@ -435,7 +437,7 @@ if returned_constraint_list = [] then(
 	let file_index = ref 0 in
 	let tile_index = ref 0 in
 	(* Creation of files (Daphne wrote this?) *)
-	let create_file_for_constraint k tile_nature =
+	let create_file_for_constraint k statespace_nature =
 	
 		(* Increment the file index *)
 		file_index := !file_index + 1;
@@ -445,7 +447,7 @@ if returned_constraint_list = [] then(
 			print_message Verbose_low ("Computing points for constraint " ^ (string_of_int !tile_index) ^ " \n " ^ (LinearConstraint.string_of_p_linear_constraint model.variable_names k) ^ ".");
 		);
 		
-		let file_name = make_file_name cartography_name !file_index in
+		let file_name = make_file_name cartography_file_prefix !file_index in
 		let file_out = open_out file_name in
 		
 (*			(* Remove all non-parameter dimensions (the n highest) *)
@@ -471,11 +473,11 @@ if returned_constraint_list = [] then(
 			"\n# File automatically generated by " ^ Constants.program_name ^ ""
 			^ "\n" ^"# Version  : " ^ (ImitatorUtilities.program_name_and_version_and_nickname_and_build())
 			^ "\n" ^"# Model    : '" ^ options#file ^ "'"
-			^ "\n" ^"# Command  : " ^ (CamlUtilities.string_of_array_of_string_with_sep " " Sys.argv) ^ ""
+			^ "\n" ^"# Command  : " ^ (OCamlUtilities.string_of_array_of_string_with_sep " " Sys.argv) ^ ""
 			^ "\n" ^"# Generated: " ^ (now()) ^ ""
 			(* This line is used by Giuseppe Lipari: do not change without prior agreement *)
 			^ (if model.correctness_condition <> None then( 
-				"\n# Tile nature: " ^ (string_of_tile_nature tile_nature) ^ ""
+				"\n# Tile nature: " ^ (StateSpace.string_of_statespace_nature statespace_nature) ^ ""
 			) else "")
 		in
 		
@@ -491,13 +493,13 @@ if returned_constraint_list = [] then(
 		(* instructions to have the zones colored. If fst s = true then the zone is infinite *)
 		if fst s
 			(*** TODO : same color for one disjunctive tile ***)
-			then script_line := !script_line ^ "-m " ^ (graph_color_of_int !tile_index tile_nature true) ^ " -q 0.3 " ^ file_name ^ " "
-			else script_line := !script_line ^ "-m " ^ (graph_color_of_int !tile_index tile_nature false) ^ " -q 0.7 " ^ file_name ^ " "
+			then script_line := !script_line ^ "-m " ^ (graph_color_of_int !tile_index statespace_nature true) ^ " -q 0.3 " ^ file_name ^ " "
+			else script_line := !script_line ^ "-m " ^ (graph_color_of_int !tile_index statespace_nature false) ^ " -q 0.7 " ^ file_name ^ " "
 		;
 	in
 	
 	(* For all returned_constraint *)
-	List.iter (function
+(*	List.iter (function
 		| Convex_constraint (k, tn) ->
 			(*** WARNING: duplicate code ***)
 			(* Test just in case ! (otherwise an exception arises *)
@@ -519,11 +521,20 @@ if returned_constraint_list = [] then(
 				)
 			) list_of_k
 		| NNCConstraint _ -> raise (InternalError ("NNCCs are not available everywhere yet."))
-	) new_returned_constraint_list;
-
+	) new_returned_constraint_list;*)
+	List.iter (fun (p_linear_constraint, statespace_nature) ->
+		(* Test just in case ! (otherwise an exception arises *)
+		if LinearConstraint.p_is_false p_linear_constraint then(
+			print_warning " Found a false constraint when computing the cartography. Ignored."
+		)else(
+			tile_index := !tile_index + 1;
+			create_file_for_constraint p_linear_constraint statespace_nature
+		)
+	) returned_constraint_list;
+	
 	
 	(* File in which the cartography will be printed *)
-	let final_name = cartography_name ^ "." ^ cartography_extension in
+	let final_name = cartography_file_prefix ^ "." ^ cartography_extension in
 	(* last part of the script *)	
 	script_line := !script_line^" -C -m 2 -q -1 " ^ file_v0_name ^ " -L \"" ^ options#files_prefix ^ "\" > "^final_name;
 	(* write the script into a file *)
@@ -537,7 +548,7 @@ if returned_constraint_list = [] then(
 	(*** TODO: Improve! Should perform an automatic detection of the model! ***)
 	let execution = Sys.command !script_line in
 	if execution != 0 then
-		(print_error ("Something went wrong in the command. Exit code: " ^ (string_of_int execution) ^ ". Maybe you forgot to install the 'graph' utility (from the 'plotutils' package)."););
+		(print_error ("Something went wrong in the command. Exit code: " ^ (string_of_int execution) ^ ". Maybe you forgot to install the 'graph' utility (from the 'plotutils' package in Debian)."););
 	
 	(* Print some information *)
 	print_message Verbose_high ("Result of the cartography execution: exit code " ^ (string_of_int execution));
@@ -551,10 +562,14 @@ if returned_constraint_list = [] then(
 		(* Removing all point files *)
 		for i = 1 to !file_index do
 			print_message Verbose_medium ("Removing points file #" ^ (string_of_int i) ^ "...");
-			delete_file (make_file_name cartography_name i);
+			delete_file (make_file_name cartography_file_prefix i);
 		done;
-	); ()
+	);
+	()
 
+) with
+	| CartographyError -> (print_error "Error while printing the cartography";
+	()
 	)
 
 
@@ -575,16 +590,16 @@ let dot_colors = [
 "indianred2"; "blanchedalmond"; "gold4"; "paleturquoise3"; "honeydew"; "bisque2"; "bisque3"; "snow3"; "brown"; "deeppink1"; "dimgrey"; "lightgoldenrod2"; "lightskyblue2"; "navajowhite2"; "seashell"; "black"; "cadetblue1"; "cadetblue2"; "darkslategray"; "wheat2"; "burlywood"; "brown1"; "deepskyblue4"; "darkslateblue"; "deepskyblue1"; "slategray2"; "darksalmon"; "burlywood3"; "dodgerblue"; "turquoise1"; "grey"; "ghostwhite"; "thistle"; "blue4"; "cornsilk"; "azure"; "darkgoldenrod2"; "darkslategray2"; "beige"; "burlywood2"; "coral3"; "indigo"; "darkorchid4"; "coral"; "burlywood4"; "brown3"; "cornsilk4"; "wheat4"; "darkgoldenrod4"; "cadetblue4"; "brown4"; "cadetblue"; "azure4"; "darkolivegreen2"; "rosybrown3"; "coral4"; "azure2"; "blue3"; "chartreuse1"; "bisque1"; "aquamarine1"; "azure1"; "bisque"; "aquamarine4"; "antiquewhite3"; "antiquewhite2"; "darkorchid3"; "antiquewhite4"; "aquamarine3"; "aquamarine"; "antiquewhite"; "antiquewhite1"; "aliceblue"
 ]
 
-open StateSpace
-
 (* Convert a graph to a dot file *)
-let dot_of_graph model reachability_graph ~fancy =
+let dot_of_statespace state_space algorithm_name ~fancy =
+	(* Retrieve the model *)
+	let model = Input.get_model () in
 	(* Retrieve the input options *)
 	let options = Input.get_options () in
 	
 	(* Retrieve info from the graph *)
-	let transitions = get_transitions reachability_graph in
-	let initial_state_index = get_initial_state_index reachability_graph in
+	let transitions = get_transitions state_space in
+	let initial_state_index = get_initial_state_index state_space in
 	
 	(* Create the array of dot colors *)
 	let dot_colors = Array.of_list dot_colors in
@@ -617,7 +632,7 @@ let dot_of_graph model reachability_graph ~fancy =
 (*	(* Array location_index -> location *)
 	let locations = DynArray.create () in*)
 	
-	print_message Verbose_high "\n[dot_of_graph] Starting to convert states to a graphics.";
+	print_message Verbose_high "\n[dot_of_statespace] Starting to convert states to a graphics.";
 	
 	let header =
 		(* Header *)
@@ -625,9 +640,10 @@ let dot_of_graph model reachability_graph ~fancy =
 		^ "\n * File automatically generated by " ^ Constants.program_name ^ ""
 		^ "\n" ^" * Version  : " ^ (ImitatorUtilities.program_name_and_version_and_nickname_and_build())
 		^ "\n" ^" * Model    : '" ^ options#file ^ "'"
-		^ "\n" ^" * Command  : " ^ (CamlUtilities.string_of_array_of_string_with_sep " " Sys.argv) ^ ""
+		^ "\n" ^" * Algorithm: " ^ algorithm_name ^ ""
+		^ "\n" ^" * Command  : " ^ (OCamlUtilities.string_of_array_of_string_with_sep " " Sys.argv) ^ ""
 		^ "\n" ^" * Generated: " ^ (now()) ^ ""
-		^ (
+(*		^ (
 			match options#imitator_mode with
 				| State_space_exploration -> "\n * State space exploration"
 				| EF_synthesis -> "\n * EF-synthesis"
@@ -637,26 +653,26 @@ let dot_of_graph model reachability_graph ~fancy =
 					"\n *"
 					^ "\n * The following pi0 was considered:"
 					^ "\n" ^ (ModelPrinter.string_of_pi0 model pi0)
-		)
+		)*)
 		^ "\n *"
-		^ "\n * " ^ (string_of_int (nb_states reachability_graph)) ^ " states and "
+		^ "\n * " ^ (string_of_int (nb_states state_space)) ^ " states and "
 			^ (string_of_int (Hashtbl.length transitions)) ^ " transitions"
 		^ "\n *" 
-		^ "\n * Program terminated " ^ (after_seconds ())
+		^ "\n * " ^ Constants.program_name ^ " terminated " ^ (after_seconds ())
 		^ "\n************************************************************/"
 	in
 	
-	print_message Verbose_high "[dot_of_graph] Header completed.";
+	print_message Verbose_high "[dot_of_statespace] Header completed.";
 
-	print_message Verbose_high "[dot_of_graph] Retrieving states indexes...";
+	print_message Verbose_high "[dot_of_statespace] Retrieving states indexes...";
 
 	(* Retrieve the states *)
-	let state_indexes = StateSpace.all_state_indexes reachability_graph in
+	let state_indexes = StateSpace.all_state_indexes state_space in
 	
 	(* Sort the list (for better presentation in the file) *)
 	let state_indexes = List.sort (fun a b -> if a = b then 0 else if a < b then -1 else 1) state_indexes in
 	
-	print_message Verbose_high "[dot_of_graph] Starting to convert states...";
+	print_message Verbose_high "[dot_of_statespace] Starting to convert states...";
 
 	let states_description =	
 		(* Give the state indexes in comments *)
@@ -667,9 +683,9 @@ let dot_of_graph model reachability_graph ~fancy =
 		(let string_states = ref "" in
 			List.iter (fun state_index ->
 			(* Retrieve location and constraint *)
-			let global_location, linear_constraint = StateSpace.get_state reachability_graph state_index in
+			let global_location, linear_constraint = StateSpace.get_state state_space state_index in
 
-			print_message Verbose_high ("[dot_of_graph] Converting state " ^ (string_of_int state_index) ^ "");
+			print_message Verbose_high ("[dot_of_statespace] Converting state " ^ (string_of_int state_index) ^ "");
 
 			(* Construct the string *)
 			string_states := !string_states
@@ -690,7 +706,7 @@ let dot_of_graph model reachability_graph ~fancy =
 		^ "\n"
 	in
 	
-	print_message Verbose_high "[dot_of_graph] Starting to convert transitions...";
+	print_message Verbose_high "[dot_of_statespace] Starting to convert transitions...";
 
 	
 	let transitions_description =
@@ -716,7 +732,7 @@ let dot_of_graph model reachability_graph ~fancy =
 		^ "\n"
 	in
 	
-	print_message Verbose_high "[dot_of_graph] Generating dot file...";
+	print_message Verbose_high "[dot_of_statespace] Generating dot file...";
 	
 	let dot_file =
 		"\n\ndigraph G { label=\"Trace set for
@@ -772,7 +788,7 @@ let dot_of_graph model reachability_graph ~fancy =
 			in*)
 			
 			(* Get the location *)
-			let global_location = get_location reachability_graph location_index in
+			let global_location = get_location state_space location_index in
 			
 			(* Check whether is bad *)
 			let is_bad = is_bad_location global_location in
@@ -839,7 +855,7 @@ let dot_of_graph model reachability_graph ~fancy =
 					^ " [color=" ^ location_color
 					^ ", style=filled];";
 			)
-			) reachability_graph;
+			) state_space;
 		!states_encoding)
 		
 		(* Version and generation time infos *)
@@ -849,7 +865,7 @@ Generation time: " ^ (now()) ^ "\"];"
 		^ "\n}"
 
 	in
-	print_message Verbose_high "[dot_of_graph] Done.";
+	print_message Verbose_high "[dot_of_statespace] Done.";
 
 	(* Dot file *)
 	header ^ dot_file,
@@ -857,7 +873,10 @@ Generation time: " ^ (now()) ^ "\"];"
 	header ^ states_description ^ transitions_description
 
 
-let dot model radical dot_source_file =
+(** Execute the 'dot' with a source file name as argument *)
+let dot radical dot_source_file =
+	(* Retrieve the model *)
+(* 	let model = Input.get_model () in *)
 	(* Retrieve the input options *)
 	let options = Input.get_options () in
 
@@ -892,7 +911,7 @@ let dot model radical dot_source_file =
 				print_message Verbose_medium ("Result of the 'dot' command: " ^ (string_of_int command_result));
 				
 				if command_result != 0 then
-					print_error ("Something went wrong when calling 'dot'. Exit code: " ^ (string_of_int command_result) ^ ". Maybe you forgot to install the 'dot' utility.");
+					print_error ("Something went wrong when calling 'dot'. Exit code: " ^ (string_of_int command_result) ^ ". Maybe you forgot to install the 'dot' utility (from the 'graphviz' package in Debian).");
 			) with 
 				| Sys_error error_message -> print_error ("System error while calling 'dot'. Error message: '" ^ error_message ^ "'.");
 			end;
@@ -906,16 +925,18 @@ let dot model radical dot_source_file =
 	)
 	
 
-(* Create a jpg graph using dot *)
-let generate_graph model reachability_graph radical =
+(** Draw the state space using dot *)
+let draw_statespace state_space algorithm_name radical =
+	(* Retrieve the model *)
+(* 	let model = Input.get_model () in *)
 	(* Retrieve the input options *)
 	let options = Input.get_options () in
 	
 	(* Do not write if no dot AND no log *)
 	if options#output_trace_set || options#with_log then (
-		let dot_model, states = dot_of_graph model reachability_graph ~fancy:options#fancy in
+		let dot_model, states = dot_of_statespace state_space algorithm_name ~fancy:options#fancy in
 		
-		dot model radical dot_model;
+		dot radical dot_model;
 		
 		(*(* Get the file names *)
 		let dot_file_name = (radical ^ "." ^ dot_file_extension) in

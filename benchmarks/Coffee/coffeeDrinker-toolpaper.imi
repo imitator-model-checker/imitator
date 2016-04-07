@@ -13,9 +13,9 @@
  * Created         : 2011/01/21
  * Fork from       : coffeeDrinker.imi
  * Fork date       : 2015/10/14
- * Last modified   : 2015/10/17
+ * Last modified   : 2016/01/28
  *
- * IMITATOR version: 2.7.2
+ * IMITATOR version: 2.7.3
  ************************************************************)
 
 var
@@ -24,20 +24,48 @@ var
  	x, y1, y2
 		: clock;
 
+
 (* Parameters *)
 	(* time during which one can add sugar *)
 	p_add_sugar,
+	
 	(* time needed to prepare the coffee from the first button pressure *)
 	p_coffee,
 
+	
 	(* interval of time between 2 consecutive pressures by the user *)
- 	p_button,
+ 	p_button (*= 2*),
+ 	
+ 	
 	(* interval of work without need for coffee *)
 	p_work_min = 3600, p_work_max = 7200,
+	
 	(* time after which the drinker gets mad *)
-	p_patience_max = 15
+	p_patience_max = 15,
+	
+	(* Parametric time before one can get a coffee *)
+	p_max = 0,
+	
+	
+	(* First parameter valuation (non-parametric model) *)
+(*	p_button = 1,
+	p_add_sugar = 4,
+	p_coffee = 7 *)
+	
+	(* Second parameter valuation (non-parametric model) *)
+(*	p_button = 2,
+	p_add_sugar = 6,
+	p_coffee = 8 *)
+	
+	(* Third parameter valuation (non-parametric model) *)
+(*	p_button = 1,
+	p_add_sugar = 7,
+	p_coffee = 12,
+	p_max = 20,*)
+	
 		: parameter;
 
+	
 (* Discrete variables *)
 	nb_sugar
 		: discrete;
@@ -91,6 +119,8 @@ loc wait_coffee: while y2 <= p_patience_max wait {}
 	when y2 = p_patience_max goto mad;
 
 loc mad: while True wait {}
+	(* Self-loop to avoid deadlocks when the researcher is already mad *)
+	when True sync coffee goto mad;
 
 end (* researcher *)
 
@@ -128,6 +158,8 @@ init :=
 	& p_work_min >= 0
 	& p_work_min <= p_work_max
 	& p_patience_max >= 0
+	
+	& p_max >= 0
 ;
 
 
@@ -135,10 +167,18 @@ init :=
 (* Property specification *)
 (************************************************************)
 
+(* Comment out at most ONE of the following properties, and run EFsynth *)
+
+(* First property: the researcher never gets mad *)
 (* property := unreachable loc[researcher] = mad; *)
+
+(* Second property: the researcher never gets mad AND is ensured to have 3 doses of sugar *)
 property := unreachable loc[researcher] = mad or loc[machine] = cdone & nb_sugar < 3;
 (* projectresult((*p_patience_max, *)p_press, p_coffee); *)
-(* property := if press then eventually coffee within 20; *)
+
+(* Third property: after the button is pressed, then coffee comes after a parametric time p_max *)
+(* property := if press then eventually coffee within p_max; (** Add option -depth-limit 15, or remove the 'sleep' transition in the machine PTA to avoid an unnecessary loop in the analysis (as we are interested in the first coffee here) **) *)
+(* projectresult(p_coffee, p_button, p_add_sugar); *)
 
 
 (************************************************************)

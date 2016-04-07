@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2009/09/11
- * Last modified     : 2015/10/22
+ * Last modified     : 2016/02/11
  *
  ************************************************************)
 
@@ -18,14 +18,12 @@
 (* Modules *)
 (************************************************************)
 open Automaton
-open Options
 
 
 (************************************************************)
 (** Pi 0 *)
 (************************************************************)
-(* type pi0 = NumConst.t array *)
-type pi0 = (*variable_index -> NumConst.t*)PVal.pval
+type pi0 = PVal.pval
 
 type v0 = HyperRectangle.hyper_rectangle
 
@@ -201,15 +199,6 @@ type lu_status =
 	| PTA_U
 
 
-(************************************************************)
-(** Nature of the tiles *)
-(************************************************************)
-(*** BADPROG : nothing to do with abstract model ! ***)
-type tile_nature =
-	| Good
-	| Bad
-	| Unknown
-
 
 
 
@@ -291,10 +280,12 @@ type abstract_model = {
 	(* The list of clocks stopped for each automaton and each location *)
 	stopwatches : automaton_index -> location_index -> clock_index list;
 
-	(* Init : the initial state *)
+	(* Initial location of the model *)
 	initial_location : Location.global_location;
-	(* Init : the initial state *)
+	(* Initial constraint of the model *)
 	initial_constraint : LinearConstraint.px_linear_constraint;
+	(* Initial constraint of the model projected onto P *)
+	initial_p_constraint : LinearConstraint.p_linear_constraint;
 
 	(* Property defined by the user *)
 	user_property : property_definition;
@@ -305,25 +296,8 @@ type abstract_model = {
 	
 	(* Set of polyhedra (only used for direct cartography without running the model) *)
 	(*** BADPROG ***)
-	carto : (LinearConstraint.p_linear_constraint * tile_nature) list * (NumConst.t * NumConst.t) * (NumConst.t * NumConst.t);
+	(*** TODO: simplify this mode!!! (and remove from abstract model...) ***)
+(* 	carto : (LinearConstraint.p_linear_constraint * StateSpace.tile_nature) list * (NumConst.t * NumConst.t) * (NumConst.t * NumConst.t); *)
 }
 
 
-
-(************************************************************)
-(** Result *)
-(************************************************************)
-
-(*** BADPROG: should NOT be here! but rather in Reachability or something like this ***)
-(** Constraint returned by the inverse method *)
-type returned_constraint =
-	(*** TODO: merge these 2 objects (Convex_constraint and Union_of_constraints) ***)
-	(** Constraint under convex form *)
-	| Convex_constraint of LinearConstraint.p_linear_constraint * tile_nature
-	
-	(** Disjunction of constraints *)
-	| Union_of_constraints of LinearConstraint.p_linear_constraint list * tile_nature
-
-	(*** BADPROG: NNCC should NOT be here! but rather in LinearConstraint ***)
-	(** Non-necessarily convex constraint: set of constraints MINUS a set of negations of constraints *)
-	| NNCConstraint of (LinearConstraint.p_linear_constraint list) * (LinearConstraint.p_linear_constraint list) * tile_nature

@@ -1,0 +1,213 @@
+(************************************************************
+ *
+ *                       IMITATOR
+ * 
+ * LIPN, Université Paris 13, Sorbonne Paris Cité (France)
+ * 
+ * Module description: Classical Behavioral Cartography with exhaustive coverage of integer points [AF10]. Distribution mode: subdomain with static distribution. [ACN15]
+ * Coordinator algorithm
+ * 
+ * File contributors : Étienne André
+ * Created           : 2016/03/17
+ * Last modified     : 2016/03/23
+ *
+ ************************************************************)
+
+
+(************************************************************)
+(************************************************************)
+(* Modules *)
+(************************************************************)
+(************************************************************)
+open OCamlUtilities
+open ImitatorUtilities
+open Exceptions
+open AbstractModel
+open Result
+open AlgoGeneric
+open DistributedUtilities
+open AlgoBCCoverDistributedSubdomain
+
+
+
+(************************************************************)
+(************************************************************)
+(* Class definition *)
+(************************************************************)
+(************************************************************)
+class algoBCCoverDistributedSubdomainStaticCoordinator =
+	object (self)
+	inherit AlgoBCCoverDistributedSubdomainStatic.algoBCCoverDistributedSubdomainStatic as super
+	
+	
+	(************************************************************)
+	(* Class variables *)
+	(************************************************************)
+	(* Number of collaborators (excluding the coordinator) *)
+	val nb_other_collaborators = DistributedUtilities.get_nb_nodes () - 1
+	
+	(* Keep the original v0, to set it back at the end (otherwise Graphics, which will collect it by get_v0, will get the split v0) *)
+	val original_v0 = Input.get_v0 ()
+	
+	(* Number of points in the original v0 (before splitting for the own exploration of the coordinator) *)
+	val original_nb_points : NumConst.t = (Input.get_v0 ())#get_nb_points (Input.get_options())#step
+	
+	(* List of bc_results received from the collaborators *)
+	val mutable bc_results = []
+
+	
+	(************************************************************)
+	(* Class methods *)
+	(************************************************************)
+
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(* Name of the algorithm *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	method algorithm_name = "BC (full cov) distr StaticSubdomain coordinator"
+
+	
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(* Variable initialization *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	method initialize_variables =
+(* 		super#initialize_variables; *)
+		
+		(* The end *)
+		()
+
+(*	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(* Initialization method (only non-empty for coordinator) *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	method initialize =
+		(* The coordinator will issue a warning if the number of nodes is NOT a power of 2 *)
+		if not (OCamlUtilities.is_a_power_of_2 nb_collaborators) then
+			print_warning ("The number of nodes in the static distribution scheme must be a power of 2, but it is here equal to " ^ (string_of_int nb_collaborators) ^ "; the behavior of " ^ Constants.program_name ^ " is NOT specified.");
+		
+		(* The end *)
+		()*)
+
+	
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(* Finalization method to process results communication to the coordinator *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(* At the end, the coordinator (collaborator #0) receives all tiles, and handles the result *)
+	method finalize bc_result =
+		self#print_algo_message Verbose_standard ( "Coordinator starting finalization");
+		
+		(* First add its own bc_result to the list *)
+		bc_results <- [bc_result];
+		
+		(* Then collect the others collaborators results *)
+		let nb_collaborators_done = ref 0 in
+
+		(* Print some information *)
+		self#print_algo_message Verbose_low ("Expecting to receive " ^ (string_of_int nb_other_collaborators) ^ " results from my collaborators.");
+		
+		while !nb_collaborators_done < nb_other_collaborators do
+			(* Print some information *)
+			self#print_algo_message Verbose_low ("" ^ ( string_of_int ( nb_other_collaborators - !nb_collaborators_done )) ^ " collaborators left." );
+
+			(* Receive *)
+			let collaborator_rank , bc_result = DistributedUtilities.receive_bcresult () in
+			
+			(* Print some information *)
+			self#print_algo_message Verbose_standard ("Received a result with " ^ (string_of_int (List.length bc_result.tiles)) ^ " tile" ^ (s_of_int (List.length bc_result.tiles)) ^ " from collaborator " ^ (string_of_int collaborator_rank ) ^ ".");
+			
+			(* Add to list *)
+			bc_results <- bc_result :: bc_results;
+
+			(* Increment the number of collaborators that finished their job *)
+			nb_collaborators_done := !nb_collaborators_done + 1;
+			
+		done;
+		
+		(* Print some information *)
+		self#print_algo_message Verbose_standard ("All collaborators done" );
+		
+		(* The end *)
+		()
+	
+	
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(* Method packaging the result output by the algorithm *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	method compute_bc_result =
+	
+		(* Now append all bc_results to make a unique bc_result *)
+		
+		let tiles = ref [] in
+		let computation_time = ref 0. in
+		let find_point_time = ref 0. in
+		let nb_unsuccessful_points = ref 0 in
+		(* Best possible value for coverage *)
+		let coverage = ref Coverage_full in
+		(* Best possible value for termination *)
+		let termination = ref BC_Regular_termination in
+		
+		(* Iterate on all received results *)
+		List.iter (fun bc_result -> 
+			(* Update tiles *)
+			tiles := List.rev_append !tiles bc_result.tiles;
+			
+			(* Update computation_time *)
+			computation_time := !computation_time +. bc_result.computation_time;
+			
+			(* Update find_point_time *)
+			find_point_time := !find_point_time +. bc_result.find_point_time;
+			
+			(* Update nb_unsuccessful_points *)
+			nb_unsuccessful_points := !nb_unsuccessful_points + bc_result.nb_unsuccessful_points;
+			
+			(* Update coverage to worst one *)
+			let new_coverage = match !coverage, bc_result.coverage with
+				| Coverage_full, other -> other
+				| Coverage_integer_complete, Coverage_full -> Coverage_integer_complete
+				| Coverage_integer_complete, other -> other
+				| Coverage_unknown, _ -> Coverage_unknown
+			in coverage := new_coverage;
+			
+			(* Update termination to worst one *)
+			let new_termination = match !termination, bc_result.termination with
+				| BC_Regular_termination, other -> other
+				| other, BC_Regular_termination -> other
+				| BC_Tiles_limit, BC_Tiles_limit -> BC_Tiles_limit
+				| BC_Time_limit, BC_Time_limit -> BC_Time_limit
+				| _, _ -> BC_Mixed_limit
+			in termination := new_termination;
+		) bc_results;
+		
+		(* Before terminating, set back the original v0 *)
+		(*** BADPROG: because Graphics will collect v0 directly from Input.get_v0, instead of bc_result ***)
+		Input.set_v0 original_v0;
+		
+		(* Return the bc_result *)
+		BC_result
+		{
+			size_v0				= original_nb_points;
+			
+			(* List of tiles *)
+			tiles				= !tiles;
+			
+			(* Total computation time of the algorithm *)
+			(*** NOTE: here the sum of all computation times (?) ***)
+			computation_time	= !computation_time;
+			
+			(* Computation time to look for points *)
+			find_point_time		= !find_point_time;
+			
+			(* Number of points on which IM could not be called because already covered *)
+			nb_unsuccessful_points= !nb_unsuccessful_points;
+			
+			(* Evaluation of the coverage of V0 by tiles computed by the cartography *)
+			coverage			= !coverage;
+			
+			(* Termination *)
+			termination			= !termination;
+		}
+
+
+(************************************************************)
+(************************************************************)
+end;;
+(************************************************************)
+(************************************************************)

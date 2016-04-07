@@ -4,22 +4,32 @@ release 2.XXXXX    (XXXXX) FUTURE MAJOR RELEASE
 Major
 - Allow for more complex unreachable states in property definition: several locations in several IPTA can be tested, and discrete variables can be compared with <, <=, =, >=, > and intervals; all this can be mixed using and/or operators.
 - Detection of L/U-PTA, U-PTA and L-PTA
+- Standardized output for the results of IMITATOR (including a notion of validity of the constraint output)
 
 Bug fixing
 - Corrected a problem in the generation of the observer patterns
 - Solved an inconsistency in the property syntax of the "always sequence" observer pattern
 - Remove three observer patterns that were allowed in the input syntax but not implemented
+- Correct the depth-limit option behavior (that used to compute one step further than requested)
+- All error messages now displayed on stderr (instead of stdout)
 
 Options
 - Added an option "-output-trace-set-verbose" to print trace set with all information contained in the .states file (i.e., the constraint and the constraint projected onto the parameters)
+- New options -cart-tiles-limit and -cart-time-limit that operate on the cartography algorithms
 
 Graphics
 - Added a visualization of the bad states on the trace set (using red color + a frowney)
 - Removed the automatically generated observer from the PTA export
 
+Export
+- Added an export to HyTech
+
 Internal
 - "examples" directory becomes "benchmarks"
-- Automaton.ml becomes Location.ml (and new module Automaton.ml created)
+- All algorithms rewritten in an object-oriented fashion
+- Added a mode to regenerate the IMITATOR input file (helpful to test input/output models)
+- Automaton.ml becomes Location.ml (and new module Automaton.ml created); and reorganization of numerous other modules
+- Build number only incremented when a flag file "iamadeveloper" is present in the imitator root directory
 
 
 *******************************************************

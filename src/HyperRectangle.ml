@@ -7,7 +7,7 @@
  * Author:        Etienne Andre
  * 
  * Created:       2014/09/24
- * Last modified: 2014/10/01
+ * Last modified: 2016/03/18
  *
  ****************************************************************)
 
@@ -59,15 +59,24 @@ let assert_dim_valid dim =
 let get_dimensions = get_dim
 
 
-(****************************************************************)
+(************************************************************)
+(************************************************************)
+(* Class definition *)
+(************************************************************)
+(************************************************************)
 class hyper_rectangle =
-(****************************************************************)
-	object
+	object (self)
+	(************************************************************)
+	(* Class variables *)
+	(************************************************************)
 		val mutable the_array =
 			assert_nb_dim_initialized ();
 			(* Initialize to pairs (0,0) *)
 			Array.make (get_dim()) (NumConst.zero, NumConst.zero)
 		
+	(************************************************************)
+	(* Class methods *)
+	(************************************************************)
 		(** Get the minimum value for a dimension *)
 		method get_min dim =
 			(* First check that the number of dimensions has been set *)
@@ -109,30 +118,56 @@ class hyper_rectangle =
 			let (min, _) = the_array.(dim) in
 			the_array.(dim) <- (min, value)
 
-(*		(** Get the smallest point in the hyper rectangle (i.e., the list of min) in the form of a list of n values *)
- 		method get_smallest_point () =
-			(* First check that the number of dimensions has been set *)
-			assert_nb_dim_initialized();
-			(* Convert using predefined functions *)
-			let first, _ = List.split (Array.to_list(the_array)) in
-			first*)
-			
 		(** Get the smallest point in the hyper rectangle (i.e., the list of min) in the form of a PVal.pval *)
  		method get_smallest_point () =
 			(* First check that the number of dimensions has been set *)
 			assert_nb_dim_initialized();
+			
 			(* Create parameter valuation *)
 			let pval = new PVal.pval in
-			(* Assign for all dimensions *)
+			
+			(* Retrieve the number of dimensions *)
 			let nb_dim = get_dim () in
+			
+			(* Assign for all dimensions *)
 			for dim = 0 to nb_dim - 1 do
 				(* Get the minimum value *)
 				let min, _ = the_array.(dim) in
 				(* Assign *)
 				pval#set_value dim min;
 			done;
+			
 			(* Return *)
 			pval
+
+		
+		(** Compute the (actually slightly approximated) number of points in V0 (for information purpose) *)
+		(*** NOTE: why slightly approximated??? when step is used? ***)
+		method get_nb_points step = 
+			(* Retrieve the number of dimensions *)
+			let nb_dim = get_dim () in
+			
+			let nb_points = ref NumConst.one in
+			for parameter_index = 0 to nb_dim - 1 do
+				nb_points :=
+				let low = self#get_min parameter_index in
+				let high = self#get_max parameter_index in
+				(* Multiply current number of points by the interval + 1, itself divided by the step *)
+				NumConst.mul
+					!nb_points
+					(NumConst.div
+						(NumConst.add
+							(NumConst.sub high low)
+							NumConst.one
+						)
+						step
+					)
+				;
+			done;
+			
+			(* Return *)
+			!nb_points
+	
 	;
 end
 

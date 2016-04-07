@@ -7,7 +7,9 @@
 --   Model by LSV
 --
 --   Created       : < 2007
---   Last modified : 2010/03/03
+--   Frozen        : 2010/03/03
+--   Unfrozen      : 2016/02/12
+--   Last modified : 2016/02/12
 --****************************************************--
 --****************************************************--
 
@@ -39,7 +41,7 @@
 	d_up_d_h, d_dn_d_h,
 
 	tHI, tLO, tsetupd, tsetupwen
-		: parameter; -- 28 parameters
+		: parameter; -- 26 parameters
 
 
 
@@ -484,7 +486,23 @@ init := True
 --       & tLO + d_dn_wen_h < d_up_net45 + d_up_net45a + tsetupwen + d_up_en_latchwen
 --       & d_dn_en_latchwen < d_dn_net13a
 
+(* Parameters should be non-negative *)
 
+	&
+	d_up_q_0 >= 0 & 
+	d_up_net27 >= 0 & 
+	d_up_d_inta >= 0 &  d_dn_d_inta >= 0 & 
+	d_up_wela >= 0 &  d_dn_wela >= 0 & 
+	d_up_net45a >= 0 &  d_dn_net45a >= 0 & 
+	d_up_net13a >= 0 &  d_dn_net13a >= 0 & 
+	d_up_net45 >= 0 &  d_dn_net45 >= 0 & 
+	d_up_d_int >= 0 &  d_dn_d_int >= 0 & 
+	d_up_en_latchd >= 0 &  d_dn_en_latchd >= 0 & 
+	d_up_en_latchwen >= 0 &  d_dn_en_latchwen >= 0 & 
+	d_up_wen_h >= 0 &  d_dn_wen_h >= 0 & 
+	d_up_d_h >= 0 &  d_dn_d_h >= 0 & 
+
+	tHI >= 0 &  tLO >= 0 &  tsetupd >= 0 &  tsetupwen  >= 0 
 	
 ;
 

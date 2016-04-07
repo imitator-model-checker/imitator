@@ -1,14 +1,18 @@
-(*****************************************************************
+(************************************************************
  *
- *                     IMITATOR II
+ *                       IMITATOR
  * 
- * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
- * Author:        Etienne Andre
- * Created:       2009/12/02
- * Last modified: 2015/10/22
+ * Laboratoire Spécification et Vérification (ENS Cachan & CNRS, France)
+ * LIPN, Université Paris 13, Sorbonne Paris Cité (France)
+ * 
+ * Module description: Convert an abstract model to the input syntax of IMITATOR
+ * 
+ * File contributors : Étienne André
+ * Created           : 2009/12/02
+ * Last modified     : 2016/01/28
  *
- ****************************************************************)
-
+ ************************************************************)
+ 
 
 open AbstractModel
 
@@ -21,6 +25,7 @@ val string_of_var_type : var_type -> string
 (**************************************************)
 (** State *)
 (**************************************************)
+(*** TODO/BADPROG : Move elsewhere? ***)
 (* Convert a state into a string *)
 val string_of_state : abstract_model -> (Location.global_location * LinearConstraint.px_linear_constraint) -> string
 
@@ -28,7 +33,7 @@ val string_of_state : abstract_model -> (Location.global_location * LinearConstr
 (** Result *)
 (**************************************************)
 (*** TODO/BADPROG : Move elsewhere? ***)
-val string_of_returned_constraint : (int -> string) -> returned_constraint -> string
+(* val string_of_returned_constraint : (int -> string) -> Result.returned_constraint -> string *)
 
 
 

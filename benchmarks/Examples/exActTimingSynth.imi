@@ -1,0 +1,95 @@
+(************************************************************
+ *                      IMITATOR MODEL                      
+ *
+ * Empty template of a case study
+ *
+ * Description     : Sample model to exemplify the description of the algorithm for timing and action synthesis
+ * Correctness     : not EF(l4, l5)
+ * Source          : Own work
+ * Author          : Étienne André
+ * Modeling        : Étienne André
+ * Input by        : Étienne André
+ * License         : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+
+ *
+ * Created         : 2016/01/22
+ * Last modified   : 2016/01/22
+ *
+ * IMITATOR version: 2.7.4-working
+ ************************************************************)
+
+var
+
+(* Clocks *)
+ 	x
+		: clock;
+
+(* Parameters *)
+	p
+		: parameter;
+
+
+
+(************************************************************)
+  automaton pta
+(************************************************************)
+synclabs: a, b, c, d;
+
+loc l1: while x <= 4 wait {}
+	when x >= p sync a do {x' = 0} goto l2;
+	when True sync a goto l3;
+
+loc l2: while x <= p wait {}
+	when x >= 3 sync b goto l4;
+	when x = 2 & x = p sync c goto l5;
+
+loc l3: while True wait {}
+	when True sync b goto l6;
+
+loc l4: while True wait {}
+	when True sync a goto l7;
+
+loc l5: while True wait {}
+	when True sync d goto l5;
+
+loc l6: while True wait {}
+
+loc l7: while True wait {}
+
+end (* pta *)
+
+
+
+(************************************************************)
+(* Initial state *)
+(************************************************************)
+
+init :=
+	(*------------------------------------------------------------*)
+	(* Initial location *)
+	(*------------------------------------------------------------*)
+	& loc[pta] = l1
+
+	(*------------------------------------------------------------*)
+	(* Initial clock constraints *)
+	(*------------------------------------------------------------*)
+	& x = 0
+
+	(*------------------------------------------------------------*)
+	(* Parameter constraints *)
+	(*------------------------------------------------------------*)
+	& p >= 0
+;
+
+
+(************************************************************)
+(* Property specification *)
+(************************************************************)
+
+property := unreachable loc[pta] = l4 or loc[pta] = l5;
+
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end

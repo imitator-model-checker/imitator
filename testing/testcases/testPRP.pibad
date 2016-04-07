@@ -1,0 +1,22 @@
+(************************************************************
+ *                      IMITATOR MODEL                      
+ *
+ * Empty template of a case study
+ *
+ * Description     : Sample PTA to test PRP
+ * Correctness     : locBad1 and locBad2 unreachable
+ * Source          : Own work
+ * Author          : Étienne André
+ * Modeling        : Étienne André
+ * Input by        : Étienne André
+ * License         : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+
+ *
+ * Created         : 2016/01/15
+ * Last modified   : 2016/01/15
+ *
+ * IMITATOR version: 2.7.4-working
+ ************************************************************)
+
+	& p1 = 4
+	& p2 = 4

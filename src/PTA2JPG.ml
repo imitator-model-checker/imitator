@@ -5,14 +5,15 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2012/08/24
- * Last modified: 2015/10/22
+ * Last modified: 2016/01/28
  *
  ************************************************************)
 
 
+open OCamlUtilities
 open Exceptions
 open AbstractModel
-open CamlUtilities
+open Result
 
 
 
@@ -273,33 +274,4 @@ let string_of_model model =
 	string_of_header model
 (* 	^  "\n" ^ string_of_declarations model *)
 	^  "\n" ^ string_of_automata model
-
-
-(**************************************************)
-(** Pi0 *)
-(**************************************************)
-(* Convert a pi0 into a string *)
-let string_of_pi0 model pi0 =
-	"  " ^ (
-	string_of_list_of_string_with_sep "\n& " (
-		List.map (fun parameter ->
-			(model.variable_names parameter)
-			^ " = "
-			^ (NumConst.string_of_numconst (pi0 parameter))
-		) model.parameters
-	)
-	)
-
-
-
-(**************************************************************)
-(* Result *)
-(**************************************************************)
-let string_of_returned_constraint variable_names = function 
-	| Convex_constraint (linear_constraint , _) -> LinearConstraint.string_of_p_linear_constraint variable_names linear_constraint
-
-	(** Disjunction of constraints *)
-	| Union_of_constraints (k_list,_) -> string_of_list_of_string_with_sep "\n OR \n" (List.map (LinearConstraint.string_of_p_linear_constraint variable_names) k_list)
-	
-	| NNCConstraint _ -> raise (InternalError ("NNCCs are not available everywhere yet."))
 

@@ -10,21 +10,30 @@
  * Author:        Ulrich Kuehne, Etienne Andre
  * 
  * Created:       2012/06/18
- * Last modified: 2015/10/22
+ * Last modified: 2016/01/27
  *
  ****************************************************************)
 
+ 
 
+  !!!***!!!***!!!***!!!***!!!***!!!***!!!***!!!***!!!***!!!***!!!***!!!***!!!***!!!***!!!***!!!
+ WARNING !!! THIS FILE IS NOW UNPLUGGED FROM THE IMITATOR SOURCE CODE (as for 28 January 2016)
+ This paragraph should raise a compiling error (syntax error) if by any chance this file was linked from another file.
+  !!!***!!!***!!!***!!!***!!!***!!!***!!!***!!!***!!!***!!!***!!!***!!!***!!!***!!!***!!!***!!!
+
+
+ 
 (************************************************************)
 (* Modules *)
 (************************************************************)
 
 open Exceptions
-open CamlUtilities
+open OCamlUtilities
 open ImitatorUtilities
 open Automaton
 open Options
 open AbstractModel
+open Result
 open StateSpace
 open Reachability
 
@@ -36,9 +45,6 @@ open Reachability
 (************************************************************)
 (* Types *)
 (************************************************************)
-
-(*** BADPROG ***)
-(* type current_pi0 = NumConst.t array *)
 
 (* List version of pi0 for PaTATOR *)
 type pi0_list = (variable_index * NumConst.t) list
@@ -144,36 +150,7 @@ let get_all_pi0_array_option () =
 	| Some all_pi0_array -> all_pi0_array
 
 
-(*(* Convert the array into a functional representation *)
-let pi0_fun_of_pi0 pi0 =
-	(* Convert to function *)
-	fun parameter_index -> pi0.(parameter_index)*)
 
-
-(*(* Convert the array into a functional representation *)
-let pi0_fun_of_current_pi0 () =
-	(* Retrieve the current pi0 (that must have been initialized before) *)
-	let current_pi0 = get_current_pi0_option () in
-	(* Convert to function *)
-	pi0_fun_of_pi0 current_pi0
-	*)
-
-
-(*
-
-(*------------------------------------------------------------*)
-(* Next point *)
-(*------------------------------------------------------------*)
-
-let counter_next_point = ref 0.0
-let start_time_next_point = ref 0.0
-
-let start_counter_next_point () =
-	start_time_next_point := Unix.gettimeofday()
-
-let stop_counter_next_point () =
-	counter_next_point := !counter_next_point +. Unix.gettimeofday() -. !start_time_next_point
-*)
 
 let counter_next_point = new Counter.counter
 
@@ -250,23 +227,6 @@ let write_result_to_file total_time =
 (************************************************************)
 (* Functions on tile nature *)
 (************************************************************)
-
-(* let string_of_array_pi0 pi0_array = 
-	(* Retrieve the program *)
-	let program = Input.get_program () in
-	(* Convert to functional *)
-	let pi0_functional = fun parameter -> pi0_array.(parameter) in
-	(* Convert to string *)
-	ModelPrinter.string_of_pi0 program pi0_functional
-	*)
-
-(*** TODO: move this translation somewhere else ***)
-(*** WARNING: code duplicated ***)
-let string_of_tile_nature = function
-	| Good -> "good"
-	| Bad -> "bad"
-	| _ -> raise (InternalError ("Tile nature should be good or bad only, so far "))
-
 
 let tile_nature_of_returned_constraint = function
 	| Convex_constraint (_ , tn) -> tn
@@ -457,10 +417,6 @@ let test_pi0_uncovered current_pi0 found_pi0 =
 	(* Retrieve the input options *)
 	let options = Input.get_options () in
 
-(*	(* Convert the current pi0 to functional representation *)
-	let pi0 = fun parameter -> current_pi0.(parameter) in*)
-(* 	let pi0 = current_pi0#get_value in *)
-	
 	(* Check that the current pi0 does not belong to any constraint *)
 	if dynArray_exists (pi0_in_returned_constraint current_pi0) !computed_constraints then (
 		(* Update the number of unsuccessful points *)
@@ -537,10 +493,6 @@ let one_random_pi0 () =
 (*------------------------------------------------------------*)
 let random_pi0 max_tries =
 	counter_next_point#start;
-	(* Get the model *)
-(* 	let model = Input.get_model() in *)
-	(* Get the v0 *)
-(* 	let v0 = Input.get_v0() in *)
 
 	(* Print some information *)
 	print_message Verbose_medium ("Trying to randomly find a fresh pi0 with " ^ (string_of_int max_tries) ^ " tries.");
@@ -1238,7 +1190,7 @@ let bc_process_im_result im_result =
 		print_message Verbose_low ("Constraint K0 computed:");
 		print_message Verbose_standard (ModelPrinter.string_of_returned_constraint model.variable_names im_result.result);
 		if model.correctness_condition <> None then(
-			print_message Verbose_medium ("This tile is " ^ (string_of_tile_nature im_result.tile_nature) ^ ".");
+			print_message Verbose_medium ("This tile is " ^ (StateSpace.string_of_tile_nature im_result.tile_nature) ^ ".");
 		);
 
 		(* Process the constraint(s) in some cases *)
@@ -1350,7 +1302,7 @@ let bc_process_im_result im_result =
 			print_message Verbose_low ("The constraint computed was:");
 			print_message Verbose_low (ModelPrinter.string_of_returned_constraint model.variable_names im_result.result);
 			if model.correctness_condition <> None then(
-				print_message Verbose_medium ("This tile would have been " ^ (string_of_tile_nature im_result.tile_nature) ^ ".");
+				print_message Verbose_medium ("This tile would have been " ^ (StateSpace.string_of_tile_nature im_result.tile_nature) ^ ".");
 			);
 		);
 		(* Return true only if really added *)
@@ -1488,7 +1440,7 @@ let compute_all_pi0 () =
 	(* Retrieve the initial pi0 (that must have been initialized before) *)
 	let initial_pi0 = get_current_pi0_option () in
 	print_message Verbose_medium ("[Cartography.compute_all_pi0] Copying pi0 just in case");
-	let initial_pi0_copy = initial_pi0#copy() in
+	let initial_pi0_copy = initial_pi0#copy in
 	print_message Verbose_medium ("[Cartography.compute_all_pi0] Setting pi0 to the first point");
 	(* Fill the first point with a COPY of the initial pi0 *)
 	all_points.(0) <- initial_pi0_copy;
@@ -1504,7 +1456,7 @@ let compute_all_pi0 () =
 			raise (InternalError("No more pi0 before completing the fill the static array of all pi0."));
 		);
 		(* Get the current pi0 and COPY it! Very important *)
-		let current_pi0_copy = (get_current_pi0_option ())#copy() in
+		let current_pi0_copy = (get_current_pi0_option ())#copy in
 		(* Fill the array *)
 		all_points.(pi0_index) <- current_pi0_copy;
 		
@@ -1597,7 +1549,7 @@ let bc_result () =
 (*------------------------------------------------------------*)
 let output_graphical_cartography suffix_option =
 	(* Get the model *)
-	let model = Input.get_model() in
+(* 	let model = Input.get_model() in *)
 	(* Retrieve the input options *)
 	let options = Input.get_options () in
 	
@@ -1612,7 +1564,7 @@ let output_graphical_cartography suffix_option =
 	
 	(* Render zones in a graphical form *)
 	if options#cart then (
-		Graphics.cartography model (Input.get_v0()) zones (options#files_prefix ^ suffix)
+		Graphics.cartography zones (options#files_prefix ^ suffix)
 	) else (
 			print_message Verbose_high "Graphical cartography not asked: graph not generated.";
 	)
@@ -1669,7 +1621,7 @@ let cover_behavioral_cartography model =
 		(*** TODO: move inside inverse_method_gen ***)
 		(*** HACK: have to decrease current_iteration because it was increased in bc_process_im_result ... ***)
 		let radical = options#files_prefix ^ "_" ^ (string_of_int (!current_iteration-1)) in
-			Graphics.generate_graph model reachability_graph radical;
+			Graphics.generate_graph reachability_graph radical;
 
 		(* Compute the next pi0 (note that current_pi0 is directly modified by the function!) and return flags for more pi0 and co *)
 		let found_pi0 , _ = find_next_pi0 (Some im_result.tile_nature) in
@@ -1814,7 +1766,7 @@ let random_behavioral_cartography model nb =
 				(* Generate the dot graph *)
 				(*** TODO: move to inverse_method_gen ***)
 				let radical = options#files_prefix ^ "_" ^ (string_of_int !i) in
-				Graphics.generate_graph model reachability_graph radical;
+				Graphics.generate_graph reachability_graph radical;
 				(* Add the index to the interesting list *)
 				interesting_interations := !i :: !interesting_interations;
 
@@ -1866,7 +1818,7 @@ let random_behavioral_cartography model nb =
 	(* Render zones in a graphical form *)
 	(*** WARNING: duplicate code (cannot use output_graphical_cartography due to the different representation of zones here... ***)
 	if options#cart then (
-		Graphics.cartography model (Input.get_v0()) zones (options#files_prefix ^ "_cart_bc_random")
+		Graphics.cartography zones (options#files_prefix ^ "_cart_bc_random")
 	) else (
 			print_message Verbose_high "Graphical cartography not asked: graph not generated.";
 	)
@@ -1900,7 +1852,7 @@ let pr = print_message Verbose_standard
    (*** WARNING!!! (added by EA, 2014/10/01); this code seems to be duplicated !!! ***)
 let next_pi0 (pi0 : PVal.pval) =
 	let options = Input.get_options () in
-	let res = pi0#copy() in
+	let res = pi0#copy in
 	let found = ref true in
 	let current_dimension = ref 0 in
 	let continue = ref true in
@@ -1952,7 +1904,7 @@ let constraint_list_init size =
   more_pi0 := true;
   next_unproc_max_size := size;
   compute_initial_pi0 ();
-  let first_pi0 = (get_current_pi0_option())#copy() in 
+  let first_pi0 = (get_current_pi0_option())#copy in 
   (*match !current_pi0 with
       None -> raise (InternalError
 		       "init_unprocessed_pi0_list: no first point found")

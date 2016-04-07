@@ -12,6 +12,11 @@
  ****************************************************************)
 
  
+  !!!***!!!***!!!***!!!***!!!***!!!***!!!***!!!***!!!***!!!***!!!***!!!***!!!***!!!***!!!***!!!
+ WARNING !!! THIS FILE IS NOW UNPLUGGED FROM THE IMITATOR SOURCE CODE (as of 2016/03/10)
+ This paragraph should raise a compiling error (syntax error) if by any chance this file was linked from another file.
+  !!!***!!!***!!!***!!!***!!!***!!!***!!!***!!!***!!!***!!!***!!!***!!!***!!!***!!!***!!!***!!!
+
 (****************************************************************)
 (* External modules *)
 (****************************************************************)
@@ -21,11 +26,10 @@ open Mpi
 (****************************************************************)
 (* Internal modules *)
 (****************************************************************)
-open CamlUtilities
+open OCamlUtilities
 open Exceptions
 open ImitatorUtilities
 open Options
-open Reachability
 open DistributedUtilities
 
 exception KillIM;;
@@ -926,6 +930,7 @@ let worker() =
 					match check with
 					
 					| TileUpdate tile -> 		print_message Verbose_medium ("[Worker " ^ (string_of_int rank) ^ "] received Tile from Master.");
+						(*** QUESTION/WARNING: why is this line commented out ???? This should absolutely be done! Otherwise it means all tiles are lost! ***)
 (* 									let b = Cartography.bc_process_im_result tile in *)
 								print_message Verbose_medium ("[Worker " ^ (string_of_int rank) ^ "] received Tile from Master.");
 								

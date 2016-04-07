@@ -61,6 +61,10 @@ Test test5
 
 Test test6
   Command: echo "\n********** TEST 6 **********\n"; \
+      mpiexec -n 4 ./bin/patator testing/testcases/testBC-grid-plain.imi testing/testcases/testBC-grid3x3.v0 -mode cover -output-result -output-cart -distributed dynamic -verbose low
+
+Test test7
+  Command: echo "\n********** TEST 7 **********\n"; \
       mpiexec -n 4 ./bin/patator benchmarks/Flipflop/flipflop.imi benchmarks/Flipflop/flipflop.v0 -mode cover -output-result -output-cart -distributed dynamic -verbose mute
 
 Test finalcomment
