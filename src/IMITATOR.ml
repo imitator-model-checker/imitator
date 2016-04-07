@@ -34,6 +34,7 @@ TAGS USED THROUGHOUT THIS PROJECT
 - (*** BADPROG ***)
 - (*** NOTE ***)
 - (*** OPTIMIZED ***)
+- (*** QUESTION ***)
 - (*** TO OPTIMIZE ***)
 - (*** TODO ***)
 - (*** WARNING ***)
@@ -465,11 +466,6 @@ let algorithm : AlgoGeneric.algoGeneric = match options#imitator_mode with
 	(************************************************************)
 	(* Non-distributed cartography *)
 	(************************************************************)
-	(*** NOTE: IM-based and PRP-based algorithms are handled in a unified manner, thanks to the generic function new_im_or_prp *)
-(*	(*** TODO: use two different modes for PRPC and BC ***)
-	| Cover_cartography when options#efim ->
-		let bc_algo = 
-			let myalgo :> AlgoGeneric.algoGeneric = new AlgoPRPC.algoPRPC in myalgo*)
 
 	(* BC with full coverage *)
 	| Cover_cartography ->
