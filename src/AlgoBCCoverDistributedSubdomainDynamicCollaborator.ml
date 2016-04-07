@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/03/24
- * Last modified     : 2016/04/01
+ * Last modified     : 2016/04/07
  *
  ************************************************************)
 
@@ -171,7 +171,9 @@ class algoBCCoverDistributedSubdomainDynamicCollaborator =
 							
 		done; (* end while *)
 		
-		if !killIM then raise KillIM;
+		if !killIM then(
+			raise KillIM;
+		);
 		
 		(* The end *)
 		()
@@ -259,6 +261,15 @@ class algoBCCoverDistributedSubdomainDynamicCollaborator =
 			| Subdomain subdomain -> self#print_algo_message Verbose_medium ("received scaled subdomain tag from the coordinator.");
 (*						Input.set_v0 subdomain;
 						Cartography.bc_initialize_subdomain ();*)
+						(*** NOTE: the master still sends a continue message after sending a subpart, so we have to wait for that message ***)
+						(*** TODO: simplify the algorithm! ***)
+						let check = receive_work () in
+						begin
+						match check with
+							| Continue ->  ()
+							| _ -> (self#print_algo_message Verbose_medium ("received unexpected tag at worker side in test inside method 'process_one_point'.");
+								raise (InternalError("received unexpected tag at worker side in test inside method 'process_one_point'."));)
+						end;
 						raise (NewSubdomainAssigned subdomain)
 			
 			| Continue -> self#print_algo_message Verbose_medium ("received continue tag from the coordinator.");
