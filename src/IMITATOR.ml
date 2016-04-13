@@ -9,7 +9,7 @@
  * 
  * File contributors : Ulrich Kühne, Étienne André
  * Created           : 2009/09/07
- * Last modified     : 2016/03/23
+ * Last modified     : 2016/04/13
  *
  ************************************************************)
 
@@ -27,6 +27,9 @@ open Result
 open ModelPrinter
 open Options
 
+
+(*** NOTE: just to allow compiling ***)
+open CUBchecker
 
 
 (**************************************************
