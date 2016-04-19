@@ -7,7 +7,7 @@
  * Author:        Etienne Andre
  * 
  * Created:       2014/10/24
- * Last modified: 2016/03/29
+ * Last modified: 2016/04/19
  *
  ****************************************************************)
  
@@ -87,6 +87,15 @@ let program_name_and_version_and_nickname_and_build_time () =
 	^ "\" ("
 	^ BuildInfo.build_time
 	^ ")"
+
+
+(* Git branch and git hash (if applicable) *)
+let git_branch_and_hash =
+	match BuildInfo.git_branch, BuildInfo.git_hash with
+	| None, None -> "unknown git info"
+	| Some branch, None -> branch ^ "/unknown hash"
+	| None, Some hash -> "unknown/" ^ hash
+	| Some branch, Some hash -> branch ^ "/" ^ hash
 
 
 (* URL of IMITATOR without http:// *)
@@ -319,6 +328,7 @@ let print_header_string () =
 	^ "*  " ^ (string_n_times (length_header - (String.length imitator_url)) " ") ^ imitator_url ^ "  *\n"
 	^ "*                                                          *\n"
 	^ "*  " ^ (string_n_times (length_header - (String.length build_info)) " ") ^ build_info ^ "  *\n"
+	^ "*  " ^ (string_n_times (length_header - (String.length git_branch_and_hash)) " ") ^ git_branch_and_hash ^ "  *\n"
 	^ "************************************************************"
 	
 	in print_message Verbose_standard header_string

@@ -3,7 +3,7 @@
 #
 #                       IMITATOR
 #
-#               Increment the build number
+#               Create module BuildInfo
 #
 # Etienne Andre
 #
@@ -11,12 +11,15 @@
 # Universite Paris 13, Sorbonne Paris Cite, France
 #
 # Created      : 2013/09/26
-# Last modified: 2014/03/22
+# Last modified: 2016/04/19
 #************************************************************
 
 
 import os
 from time import gmtime, strftime
+
+import subprocess
+
 
 #************************************************************
 # CONSTANTS
@@ -56,6 +59,47 @@ current_build = int(content)
 # Close file
 file_handler.close()
 
+
+#************************************************************
+# TRY TO GET GIT INFORMATION
+#************************************************************
+
+# 1) Retrieve the git hash number
+git_hash = ""
+try:
+	# NOTE: command is 'git rev-parse HEAD'
+	git_hash = (subprocess.check_output(["git", "rev-parse", "HEAD"])).rstrip()
+# Case: exception with problem (typically return code <> 1)
+except subprocess.CalledProcessError:
+	# nothing
+	git_hash = ""
+
+print 'Retrieved git hash: ' + git_hash + ''
+
+# Handle what to print in OCaml
+git_hash_ocaml = "Some \"" + git_hash + "\""
+if git_hash == "":
+	git_hash_ocaml = "None"
+
+
+# 2) Retrieve the branch
+git_branch = ""
+try:
+	# NOTE: command is 'git rev-parse --abbrev-ref HEAD'
+	git_branch = (subprocess.check_output(["git", "rev-parse", "--abbrev-ref", "HEAD"])).rstrip()
+# Case: exception with problem (typically return code <> 1)
+except subprocess.CalledProcessError:
+	# nothing
+	git_branch = ""
+
+print 'Retrieved git branch: ' + git_branch + ''
+
+# Handle what to print in OCaml
+git_branch_ocaml = "Some \"" + git_branch + "\""
+if git_branch == "":
+	git_branch_ocaml = "None"
+
+
 #************************************************************
 # CREATES OCAML FILES
 #************************************************************
@@ -88,6 +132,8 @@ write_to_file(ml_file_name, """
 let build_number = \"""" + str (current_build) + """\"
 let build_time = \"""" + current_build_date + """\"
 let build_year = \"""" + year_str + """\"
+let git_branch = """ + git_branch_ocaml + """
+let git_hash = """ + git_hash_ocaml + """
 
 """)
 
@@ -108,8 +154,10 @@ write_to_file(mli_file_name, """
  ****************************************************************)
  
 val build_number : string
-val build_time : string
-val build_year : string
+val build_time   : string
+val build_year   : string
+val git_branch   : string option
+val git_hash     : string option
 """)
 
 

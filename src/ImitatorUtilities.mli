@@ -7,7 +7,7 @@
  * Author:        Etienne Andre
  * 
  * Created:       2014/10/24
- * Last modified: 2016/03/16
+ * Last modified: 2016/04/19
  *
  ****************************************************************)
 
@@ -31,6 +31,9 @@ val program_name_and_version_and_nickname_and_build : unit -> string
 
 (* Name + version + nickname + build number + build time *)
 val program_name_and_version_and_nickname_and_build_time : unit -> string
+
+(* Git branch and git hash (if applicable) *)
+val git_branch_and_hash : string
 
 (* URL of IMITATOR without http:// *)
 val imitator_url : string
