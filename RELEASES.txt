@@ -24,6 +24,9 @@ Graphics
 Export
 - Added an export to HyTech
 
+Versioning
+- Now IMITATOR integrates the hash number of GitHub in all outputs
+
 Internal
 - "examples" directory becomes "benchmarks"
 - All algorithms rewritten in an object-oriented fashion
