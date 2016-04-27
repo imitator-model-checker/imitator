@@ -296,7 +296,12 @@ let nonparameters () = list_of_interval !nb_parameters (!total_dim - 1)
 (* Encapsulation of PPL functions *)
 (************************************************************)
 (************************************************************)
-let space_dimension x =
+
+(*** NOTE: "ippl" stands for "interface to PPL" ***)
+(*** TODO: all PPL functions should be encapsulated that way ***)
+(*** TODO: factor! (as they all follow the same scheme) ***)
+
+let ippl_space_dimension x =
 	(* Statistics *)
 	ppl_nb_space_dimension := !ppl_nb_space_dimension + 1;
 	let start = Unix.gettimeofday() in
@@ -307,7 +312,7 @@ let space_dimension x =
 	(* Return result *)
 	result
 
-let add_constraints x =
+let ippl_add_constraints x =
 	(* Statistics *)
 	ppl_nb_add_constraints := !ppl_nb_add_constraints + 1;
 	let start = Unix.gettimeofday() in
@@ -320,7 +325,7 @@ let add_constraints x =
 	
 
 (* Return the list of inequalities that build the polyhedron (interface to PPL) *)
-let get_inequalities x : linear_inequality list =
+let ippl_get_inequalities x : linear_inequality list =
 	(* Statistics *)
 	ppl_nb_get_constraints := !ppl_nb_get_constraints + 1;
 	let start = Unix.gettimeofday() in
@@ -332,7 +337,7 @@ let get_inequalities x : linear_inequality list =
 	result
 	
 
-let get_generators poly =	
+let ippl_get_generators poly =	
 	(* Statistics *)
 	ppl_nb_get_generators := !ppl_nb_get_generators + 1;
 	let start = Unix.gettimeofday() in
@@ -344,7 +349,7 @@ let get_generators poly =
 	result
 
 
-let ppl_intersection_assign x =
+let ippl_intersection_assign x =
 	(* Statistics *)
 	ppl_nb_intersection_assign := !ppl_nb_intersection_assign + 1;
 	let start = Unix.gettimeofday() in
@@ -356,7 +361,7 @@ let ppl_intersection_assign x =
 	result
 
 
-let ppl_remove_dim poly remove =
+let ippl_remove_dim poly remove =
 	(* Statistics *)
 	ppl_nb_remove_dim := !ppl_nb_remove_dim + 1;
 	let start = Unix.gettimeofday() in
@@ -376,7 +381,7 @@ let ppl_remove_dim poly remove =
 (** check the dimensionality of a polyhedron *)
 let assert_dimensions poly =
 	if check_assert_dimensions then(
-		let ndim = space_dimension poly in
+		let ndim = ippl_space_dimension poly in
 		if not (ndim = !total_dim) then (
 			print_error ("Polyhedron has too few dimensions (" ^ (string_of_int ndim) ^ " / " ^ (string_of_int !total_dim) ^ ")");
 			raise (InternalError "Inconsistent polyhedron found")
@@ -620,8 +625,8 @@ let evaluate_linear_inequality valuation_function linear_inequality =
 (* Transform a strict inequality into a not strict inequality *)
 let strict_to_not_strict_inequality inequality =
 	match inequality with
-		|Less_Than (x,y) -> Less_Or_Equal (x,y)
-		|Greater_Than (x,y) -> Greater_Or_Equal (x,y)
+		| Less_Than (x,y) -> Less_Or_Equal (x,y)
+		| Greater_Than (x,y) -> Greater_Or_Equal (x,y)
 		|_ -> inequality
 
 
@@ -741,6 +746,13 @@ let string_of_linear_inequality names linear_inequality =
 let string_of_p_linear_inequality = string_of_linear_inequality
 
 
+exception Not_a_clock_guard
+(** Convert a linear inequality into a clock guard (i.e. a triple clock, operator, parametric linear term); raises Not_a_clock_guard if the linear_inequality is not well-formed *)
+let clock_guard_of_linear_inequality l =
+	()
+
+
+
 (************************************************************)
 (************************************************************)
 (** {2 Linear Constraints} *)
@@ -812,7 +824,7 @@ let pxd_true_constraint = true_constraint
 (** Create a linear constraint from a list of linear inequalities *)
 let make inequalities = 
 	let poly = true_constraint () in
-	add_constraints poly inequalities;
+	ippl_add_constraints poly inequalities;
 	assert_dimensions poly;
   poly
 
@@ -976,18 +988,12 @@ let nb_inequalities linear_constraint =
 	if p_is_true linear_constraint || p_is_false linear_constraint then 0
 	else
 	(* Get a list of linear inequalities *)
-	let list_of_inequalities = get_inequalities linear_constraint in
+	let list_of_inequalities = ippl_get_inequalities linear_constraint in
 	List.length list_of_inequalities
 
 let p_nb_inequalities = nb_inequalities
 
 
-
-
-(*(** Get the linear inequalities *)
-let get_inequalities =
-(*** TODO: add counter ***)
-	ppl_Polyhedron_get_constraints*)
 
 
 (** Return true if the variable is constrained in a linear_constraint *)
@@ -1014,7 +1020,7 @@ let pxd_find_variables = find_variables
 (*
 let partition_lu_ineq variables (current_list_of_l, current_list_of_u) linear_inequality =
 	(* Get the inequalities *)
-	let inequalities = get_inequalities linear_constraint in
+	let inequalities = ippl_get_inequalities linear_constraint in
 	List.fold_left
 		(* 1st argument of fold_left: the function called on each linear_inequality *)
 		(fun (current_list_of_l, current_list_of_u) linear_inequality -> 
@@ -1112,7 +1118,7 @@ let partition_lu variables linear_constraints =
 	List.iter (fun linear_constraint ->
 	
 		(* Get the inequalities *)
-		let inequalities = get_inequalities linear_constraint in
+		let inequalities = ippl_get_inequalities linear_constraint in
 		
 		(* FOR ALL INEQUALITIES IN THAT CONSTRAINT *)
 		List.iter (function
@@ -1205,7 +1211,7 @@ let string_of_linear_constraint names linear_constraint =
 	else if is_false linear_constraint then string_of_false
 	else
 	(* Get a list of linear inequalities *)
-	let list_of_inequalities = get_inequalities linear_constraint in
+	let list_of_inequalities = ippl_get_inequalities linear_constraint in
 	" " ^
 	(string_of_list_of_string_with_sep
 		"\n& "
@@ -1242,7 +1248,7 @@ let intersection_assign linear_constraint constrs =
 (* 	try( *)
 		List.iter (fun poly ->
 			(* Perform the actual intersection *)
-			ppl_intersection_assign linear_constraint poly;
+			ippl_intersection_assign linear_constraint poly;
 			(* Check satisfiability *)
 			(** ACTUALLY: this does not bring anything on the examples I tried -- on the contrary! *)
 (* 			if not (is_satisfiable linear_constraint) then raise Unsat_exception; *)
@@ -1447,7 +1453,7 @@ let rename_variables_assign list_of_couples linear_constraint =
 	let complete_list = add_id joined_couples (!total_dim - 1) in
   (* debug output *)
 	if verbose_mode_greater Verbose_high then (
-		let ndim = space_dimension linear_constraint in
+		let ndim = ippl_space_dimension linear_constraint in
 		print_message Verbose_high ("mapping space dimensions, no. dimensions is " ^ string_of_int ndim);
 		List.iter (fun (a,b) -> (print_message Verbose_high ("map v" ^ string_of_int a ^ " -> v" ^ string_of_int b))) complete_list;
 	);
@@ -1608,7 +1614,7 @@ let grow_to_zero_assign variables_elapse variables_constant linear_constraint =
 (** Replace all strict inequalities with non-strict (and keeps others unchanged) within a p_linear_constraint *)
 let render_non_strict_p_linear_constraint k =
 	(* Get the list of inequalities *)
-	let inequality_list = get_inequalities k in 
+	let inequality_list = ippl_get_inequalities k in 
 	(* Replace inequelities and convert back to a linear_constraint *)
 	make_p_constraint (List.map strict_to_not_strict_inequality inequality_list)
 
@@ -1645,7 +1651,7 @@ let px_is_positive_in v c =
 (** Check if a linear constraint is pi0-compatible *)
 let is_pi0_compatible pi0 linear_constraint =
 	(* Get a list of linear inequalities *)
-	let list_of_inequalities = get_inequalities linear_constraint in
+	let list_of_inequalities = ippl_get_inequalities linear_constraint in
 	(* Check the pi0-compatibility for all *)
 	List.for_all (is_pi0_compatible_inequality pi0) list_of_inequalities
 
@@ -1653,7 +1659,7 @@ let is_pi0_compatible pi0 linear_constraint =
 (** Compute the pi0-compatible and pi0-incompatible inequalities within a constraint *)
 let partition_pi0_compatible pi0 linear_constraint =
 	(* Get a list of linear inequalities *)
-	let list_of_inequalities = get_inequalities linear_constraint in
+	let list_of_inequalities = ippl_get_inequalities linear_constraint in
 	(* Partition *)
 	List.partition (is_pi0_compatible_inequality pi0) list_of_inequalities
 
@@ -1752,7 +1758,7 @@ let grml_of_linear_constraint names t_level linear_constraint =
 	else (if is_false linear_constraint then "<attribute name=\"boolExpr\"><attribute name=\"boolValue\">false</attribute></attribute>"
 	else (
 		(* Get a list of linear inequalities *)
-		let list_of_inequalities = get_inequalities linear_constraint in
+		let list_of_inequalities = ippl_get_inequalities linear_constraint in
 		let rec grml_of_linear_constraint_rec t_level = function
 		| [] -> ""
 		| first :: rest ->
@@ -1911,10 +1917,8 @@ let shape_of_poly x y linear_constraint =
 		if i <> x && i <> y then
 			remove := i :: !remove
 	done;
-	(* Statistics *)
-	ppl_nb_remove_dim := !ppl_nb_remove_dim + 1;
-	ppl_remove_dim poly !remove;
-	let generators = get_generators poly in
+	ippl_remove_dim poly !remove;
+	let generators = ippl_get_generators poly in
 	(* collect points for the generators *)
 	let points = List.fold_left (fun ps gen ->
 		let p = point_of_generator gen in 
@@ -2685,7 +2689,7 @@ let p_nnconvex_intersection p_nnconvex_constraint p_linear_constraint =
 	ppl_nb_is_true := !ppl_nb_is_true + 1;
 	let start = Unix.gettimeofday() in*)
 	(* First retrieve inequalities *)
-	let constraint_system =  get_inequalities p_linear_constraint in
+	let constraint_system =  ippl_get_inequalities p_linear_constraint in
 	(* Actual call to PPL *)
 	ppl_Pointset_Powerset_NNC_Polyhedron_add_constraints p_nnconvex_constraint constraint_system;
 (*	(* Statistics *)
@@ -3067,7 +3071,7 @@ let unserialize_linear_inequality linear_inequality_string =
 (** Serialize a linear constraint *)
 let serialize_linear_constraint linear_constraint =
 	(* Get a list of linear inequalities and serialize *)
-	let list_of_inequalities = List.map serialize_linear_inequality (get_inequalities linear_constraint) in
+	let list_of_inequalities = List.map serialize_linear_inequality (ippl_get_inequalities linear_constraint) in
 	(* Add separators *)
 	String.concat serialize_SEP_AND list_of_inequalities
 
