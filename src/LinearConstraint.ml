@@ -1,19 +1,19 @@
-(*****************************************************************
+(************************************************************
  *
  *                       IMITATOR
  * 
- * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
- * Universite Paris 13, Sorbonne Paris Cite, LIPN (France)
- *
- * Description: common definitions for linear terms and constraints (interface to PPL)
- *
- * Author:        Etienne Andre
+ * Laboratoire Spécification et Vérification (ENS Cachan & CNRS, France)
+ * LIPN, Université Paris 13, Sorbonne Paris Cité (France)
  * 
- * Created:       2010/03/04
- * Last modified: 2016/04/27
+ * Module description: ommon definitions for linear terms and constraints (interface to PPL)
+ * 
+ * File contributors : Étienne André
+ * Created           : 2010/03/04
+ * Last modified     : 2016/04/27
  *
- ****************************************************************) 
- 
+ ************************************************************)
+
+
 
 (************************************************************)
 (* External modules *)
@@ -263,7 +263,9 @@ let string_of_var names variable =
 
 	
 (************************************************************)
+(************************************************************)
 (** Global variables *)
+(************************************************************)
 (************************************************************)
 
 (* The number of integer dimensions *)
@@ -281,14 +283,18 @@ let total_dim		= ref 0
 
 
 (************************************************************)
+(************************************************************)
 (* PPL-independent function *)
+(************************************************************)
 (************************************************************)
 (*** WARNING: this strongly relies on the fact that the parameters are the first dimensions (followed by clocks and then discrete) ***)
 let nonparameters () = list_of_interval !nb_parameters (!total_dim - 1)
 
 
 (************************************************************)
+(************************************************************)
 (* Encapsulation of PPL functions *)
+(************************************************************)
 (************************************************************)
 let space_dimension x =
 	(* Statistics *)
@@ -362,7 +368,9 @@ let ppl_remove_dim poly remove =
 	
 	
 (************************************************************)
+(************************************************************)
 (* Useful Functions *)
+(************************************************************)
 (************************************************************)
 
 (** check the dimensionality of a polyhedron *)
@@ -377,12 +385,14 @@ let assert_dimensions poly =
 
 
 (************************************************************)
+(************************************************************)
 (** {2 Linear terms} *)
 (************************************************************)
+(************************************************************)
 
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 (** {3 Creation} *)
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 (** Create a linear term from its list of members and its constant coefficient *)
 let make_linear_term members coef =
@@ -401,9 +411,9 @@ let make_pxd_linear_term = make_linear_term
 
 
 
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 (** {3 Functions} *)
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 (** Add two linear terms *)
 let add_linear_terms lt1 lt2 =
@@ -417,9 +427,9 @@ let sub_linear_terms lt1 lt2 =
 	Mi (lt1, lt2)
 
 
-(*--------------------------------------------------*)
+(*------------------------------------------------------------*)
 (* Evaluation *)
-(*--------------------------------------------------*)
+(*------------------------------------------------------------*)
 
 (** Evaluate a linear term with a function assigning a value to each variable. *)
 let rec evaluate_linear_term valuation_function linear_term =
@@ -467,9 +477,9 @@ let rec evaluate_linear_term_ppl valuation_function linear_term =
 				NumConst.mul (NumConst.numconst_of_mpz z) rval)
 
 
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 (** {3 Conversion to string} *)
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 let string_of_coef = NumConst.string_of_numconst
 let string_of_constant = NumConst.string_of_numconst
@@ -529,18 +539,20 @@ let rec string_of_linear_term_ppl names linear_term =
 				
 
 (************************************************************)
+(************************************************************)
 (** {2 Linear inequalities} *)
 (************************************************************)
+(************************************************************)
 
-(************** TO DO : minimize inequalities as soon as they have been created / changed *)
+(*** TODO : minimize inequalities as soon as they have been created / changed ***)
 
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 (* Functions *)
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 (** {3 Creation} *)
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 (** Create a linear inequality using a linear term and an operator *)
 let make_linear_inequality linear_term op =
@@ -559,9 +571,9 @@ let make_linear_inequality linear_term op =
 let make_px_linear_inequality = make_linear_inequality
 let make_pxd_linear_inequality = make_linear_inequality
 
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 (** {3 Functions} *)
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 (** split a linear inequality into its two terms and the operator *)
 let split_linear_inequality = function
@@ -615,9 +627,9 @@ let strict_to_not_strict_inequality inequality =
 
 
 
-(*--------------------------------------------------*)
+(*------------------------------------------------------------*)
 (* Pi0-compatibility *)
-(*--------------------------------------------------*)
+(*------------------------------------------------------------*)
 
 (** Check if a linear inequality is pi0-compatible *)
 let is_pi0_compatible_inequality pi0 linear_inequality =
@@ -644,9 +656,9 @@ let negate_wrt_pi0 pi0 linear_inequality =
 			)
 
 
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 (** {3 Conversion} *)
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)				   	
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)				   	
 
 
 let is_zero_coef = function
@@ -730,13 +742,18 @@ let string_of_p_linear_inequality = string_of_linear_inequality
 
 
 (************************************************************)
+(************************************************************)
 (** {2 Linear Constraints} *)
+(************************************************************)
 (************************************************************)
 
 
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+
+
+
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 (** {3 Initialization} *)
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 (** Set the number of dimensions *)
 let set_dimensions nb_p nb_c nb_d =
@@ -754,9 +771,9 @@ let set_dimensions nb_p nb_c nb_d =
 	()
 
 
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 (** {3 Creation} *)
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 (** Create a false constraint *)
 let false_constraint () =
@@ -859,9 +876,9 @@ let pxd_constraint_of_nonnegative_variables = constraint_of_nonnegative_variable
 
 
 
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 (** {3 Tests} *)
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 (** Check if a constraint is false *)
 let is_false c =
@@ -948,9 +965,9 @@ let contains_integer_point c =
 let px_contains_integer_point = contains_integer_point
 
 
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 (** {3 Access} *)
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 (** Get the number of inequalities of a constraint *)
 let nb_inequalities linear_constraint = 
@@ -1152,9 +1169,9 @@ let partition_lu variables linear_constraints =
 	
 	
 	
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 (** {3 Conversion} *)
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 (** String for the false constraint *)
 let string_of_false = "False"
@@ -1200,9 +1217,9 @@ let string_of_px_linear_constraint = string_of_linear_constraint
 let string_of_pxd_linear_constraint = string_of_linear_constraint 
 
 
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 (** {3 Functions} *)
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 let copy linear_constraint =
 	(* Statistics *)
 	ppl_nb_copy_polyhedron := !ppl_nb_copy_polyhedron + 1;
@@ -1596,9 +1613,9 @@ let render_non_strict_p_linear_constraint k =
 	make_p_constraint (List.map strict_to_not_strict_inequality inequality_list)
 
 
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 (** {3 More testing functions} *)
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 (** Check if a variable v is bound to be >= 0 in a constraint c *)
 let px_is_positive_in v c =
@@ -1621,9 +1638,9 @@ let px_is_positive_in v c =
 	not (is_satisfiable v_l_zero)
 
 
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 (** {3 Pi0-compatibility} *)
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 (** Check if a linear constraint is pi0-compatible *)
 let is_pi0_compatible pi0 linear_constraint =
@@ -1642,9 +1659,9 @@ let partition_pi0_compatible pi0 linear_constraint =
 
 
 
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 (** {3 Conversion to GrML} *)
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 (** Convert a linear term (PPL) into a string *)								
 let rec grml_of_linear_term_ppl names t_level = function
@@ -1771,9 +1788,9 @@ let grml_of_px_linear_constraint = grml_of_linear_constraint
 let grml_of_pxd_linear_constraint = grml_of_linear_constraint
 
 
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 (** {3 Conversion between types of constraints } *)
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 (** Create a pxd_linear_constraint from a set of pairs (discrete variable, value) *)
 let pxd_constraint_of_discrete_values (discrete_values : (variable * coef) list) =
@@ -1798,18 +1815,18 @@ let pxd_of_px_constraint = pxd_of_p_constraint
 
 
 
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 (** {3 Brute-force casts (argh) } *)
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 (** "cast_p_of_pxd_linear_term p c" converts a PXD-constraint p to a P-constraint ; if c then a test if performed to check casting validity *)
 let cast_p_of_pxd_linear_term p c = p (*** WARNING! should be copied here! *)
 let cast_p_of_pxd_linear_constraint p c = copy p
 
 
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 (** {3 Plot interactions} *)
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 
 let unit_vector i =
@@ -2034,9 +2051,14 @@ let plot_2d x y linear_constraint min_abs min_ord max_abs max_ord =
 
 
 (************************************************************)
+(************************************************************)
 (** {2 PDBMs} *)
 (************************************************************)
-(** WARNING! work in progress *)
+(************************************************************)
+
+
+(*** WARNING! work in progress ***)
+
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 (** Types *)
@@ -2441,9 +2463,9 @@ let test_PDBMs () =
 (** {2 Non-necessarily convex linear Constraints} *)
 (************************************************************)
 
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 (** {3 Type} *)
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 (** Non-necessarily convex constraint on the parameters ("pointset powerset" in the underlying PPL implementation) *)
 type nnconvex_constraint = Ppl.pointset_powerset_nnc_polyhedron
@@ -2452,9 +2474,9 @@ type p_nnconvex_constraint = nnconvex_constraint
 type px_nnconvex_constraint = nnconvex_constraint
 
 
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 (** {3 Creation} *)
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 (** Create a false constraint *)
 let false_p_nnconvex_constraint () =
@@ -2519,9 +2541,9 @@ let px_nnconvex_copy = nnconvex_copy
 
 
 
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 (** {3 Access} *)
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 (** Get the list of p_linear_constraint the disjunction of which makes a p_nnconvex_constraint *)
 let get_disjuncts p_nnconvex_constraint =
@@ -2568,9 +2590,9 @@ val ppl_Pointset_Powerset_NNC_Polyhedron_get_disjunct : pointset_powerset_nnc_po
 
 
 
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 (** {3 Tests} *)
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 (** Check if a nnconvex_constraint is false *)
 let p_nnconvex_constraint_is_false c =
@@ -2618,9 +2640,9 @@ let p_nnconvex_constraint_is_leq p_nnconvex_constraint p_nnconvex_constraint' =
 	(*** TODO: counter ***)
 
 
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 (** {3 Simplification} *)
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 let simplify p_nnconvex_constraint =
 	(*** TODO: add counters... ***)
 	ppl_Pointset_Powerset_NNC_Polyhedron_pairwise_reduce p_nnconvex_constraint;
@@ -2628,9 +2650,9 @@ let simplify p_nnconvex_constraint =
 	()
 	
 
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 (** {3 Conversion to string} *)
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 (** Convert a p_nnconvex_constraint into a string *)
 let string_of_p_nnconvex_constraint names p_nnconvex_constraint =
@@ -2653,9 +2675,9 @@ let string_of_p_nnconvex_constraint names p_nnconvex_constraint =
 let string_of_px_nnconvex_constraint = string_of_p_nnconvex_constraint
 
 
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 (** {3 Modifications} *)
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 (** Performs the intersection of a p_nnconvex_constraint with a p_linear_constraint; the p_nnconvex_constraint is modified, the p_linear_constraint is not *)
 let p_nnconvex_intersection p_nnconvex_constraint p_linear_constraint =
@@ -2831,9 +2853,9 @@ let px_nnconvex_hide_nonparameters_and_collapse px_nnconvex_constraint =
 	
 
 
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 (** {3 Conversion to a list of p_linear_constraint} *)
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 (** Converts a p_nnconvex_constraint into a list of p_linear_constraint such that the union of this list is equal to the p_nnconvex_constraint *)
 let p_linear_constraint_list_of_p_nnconvex_constraint =
 	(* Get the disjuncts *)
@@ -2846,7 +2868,9 @@ let p_linear_constraint_list_of_p_nnconvex_constraint =
 	
 
 (************************************************************)
+(************************************************************)
 (** {2 Non-necessarily convex linear Constraints} *)
+(************************************************************)
 (************************************************************)
 type p_convex_or_nonconvex_constraint =
 	| Convex_p_constraint of p_linear_constraint
@@ -2862,7 +2886,9 @@ let string_of_p_convex_or_nonconvex_constraint names = function
 
 
 (************************************************************)
+(************************************************************)
 (** {2 Serialization for PaTATOR} *)
+(************************************************************)
 (************************************************************)
 
 (*
