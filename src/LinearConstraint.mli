@@ -10,7 +10,7 @@
  * Author:        Etienne Andre
  * 
  * Created:       2010/03/04
- * Last modified: 2016/02/12
+ * Last modified: 2016/04/27
  *
  ****************************************************************) 
  
@@ -91,6 +91,8 @@ type op =
 	| Op_g
 	| Op_ge
 	| Op_eq
+	| Op_le
+	| Op_l
 
 (* type linear_inequality *)
 type p_linear_inequality

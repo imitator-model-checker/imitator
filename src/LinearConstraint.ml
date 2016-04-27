@@ -10,7 +10,7 @@
  * Author:        Etienne Andre
  * 
  * Created:       2010/03/04
- * Last modified: 2016/02/11
+ * Last modified: 2016/04/27
  *
  ****************************************************************) 
  
@@ -191,6 +191,8 @@ type op =
 	| Op_g
 	| Op_ge
 	| Op_eq
+	| Op_le
+	| Op_l
 
 
 type linear_inequality = Ppl.linear_constraint
@@ -550,6 +552,8 @@ let make_linear_inequality linear_term op =
 		| Op_g -> Greater_Than (lin_term, zero_term)
 		| Op_ge -> Greater_Or_Equal (lin_term, zero_term)
 		| Op_eq -> Equal (lin_term, zero_term)
+		| Op_le -> Less_Or_Equal (lin_term, zero_term)
+		| Op_l -> Less_Than (lin_term, zero_term)
 
 
 let make_px_linear_inequality = make_linear_inequality
