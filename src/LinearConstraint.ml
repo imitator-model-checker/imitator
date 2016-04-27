@@ -417,7 +417,7 @@ let make_pxd_linear_term = make_linear_term
 
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-(** {3 Functions} *)
+(** {3 Modification functions} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 (** Add two linear terms *)
@@ -432,9 +432,84 @@ let sub_linear_terms lt1 lt2 =
 	Mi (lt1, lt2)
 
 
+
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+(** {3 Access functions} *)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+
 (*------------------------------------------------------------*)
-(* Evaluation *)
+(** Check whether a variable appears in a linear_term (with coeff <> 0) *)
 (*------------------------------------------------------------*)
+let rec variable_in_linear_term v = function
+	| Variable variable -> v = variable
+	| Coefficient _ -> false
+	| Unary_Plus linear_expression -> variable_in_linear_term v linear_expression
+	| Unary_Minus linear_expression -> variable_in_linear_term v linear_expression
+	| Plus (linear_expression1, linear_expression2) ->
+		variable_in_linear_term v linear_expression1
+		|| variable_in_linear_term v linear_expression2
+	| Minus (linear_expression1, linear_expression2) ->
+		variable_in_linear_term v linear_expression1
+		|| variable_in_linear_term v linear_expression2
+	| Times (coeff, rterm) ->
+		if Gmp.Z.equal coeff (Gmp.Z.zero) then false
+		else (match rterm with
+			| Variable variable -> v = variable
+			| _ -> raise (InternalError ("In function 'variable_in_linear_term', pattern 'Times' was expected to be only used for coeff * variable."))
+		)
+
+(*------------------------------------------------------------*)
+(** Check whether a variable appears exactly one time in a linear_term (with coeff <> 0): if yes, return Some i, where i is its coefficient; otherwise return None *)
+(*------------------------------------------------------------*)
+
+(* Intermediate, recursive function. nb_times_ref is an int ref. coeff_option is a NumConst.t ref option. minus_flag is a flag to check whether we are in some negative coefficient. *)
+
+let rec get_variable_coef_in_linear_term_rec nb_times_ref coeff_option minus_flag v = function
+	| Variable variable -> if v = variable then(
+			nb_times_ref := !nb_times_ref + 1;
+			coeff_option := Some (if minus_flag then NumConst.minus_one else NumConst.one);
+		)
+	| Coefficient _ -> ()
+	| Unary_Plus linear_expression -> get_variable_coef_in_linear_term_rec nb_times_ref coeff_option minus_flag v linear_expression
+	(* If minus: revert flag *)
+	| Unary_Minus linear_expression -> get_variable_coef_in_linear_term_rec nb_times_ref coeff_option (not minus_flag) v linear_expression
+	| Plus (linear_expression1, linear_expression2) ->
+		get_variable_coef_in_linear_term_rec nb_times_ref coeff_option minus_flag v linear_expression1;
+		get_variable_coef_in_linear_term_rec nb_times_ref coeff_option minus_flag v linear_expression2
+	| Minus (linear_expression1, linear_expression2) ->
+		get_variable_coef_in_linear_term_rec nb_times_ref coeff_option minus_flag v linear_expression1;
+		get_variable_coef_in_linear_term_rec nb_times_ref coeff_option (not minus_flag) v linear_expression2;
+	| Times (coeff, rterm) ->
+		if Gmp.Z.equal coeff (Gmp.Z.zero) then ()
+		else (match rterm with
+			| Variable variable -> if v = variable then(
+				nb_times_ref := !nb_times_ref + 1;
+				coeff_option := Some (if minus_flag then NumConst.neg (NumConst.numconst_of_mpz coeff) else (NumConst.numconst_of_mpz coeff));
+			)
+			| _ -> raise (InternalError ("In function 'get_variable_coef_in_linear_term_rec', pattern 'Times' was expected to be only used for coeff * variable."))
+		)
+
+let get_variable_coef_in_linear_term v linear_term =
+	let nb_times_ref = ref 0 in
+	let coeff_option = ref None in
+	(* Call the recursive function (the flag is initially false) *)
+	get_variable_coef_in_linear_term_rec nb_times_ref coeff_option false v linear_term;
+	(* If no occurrence: return none *)
+	if !nb_times_ref = 0 then None else(
+		(* If more than one occurrence: InternalError *)
+		if !nb_times_ref > 1 then(
+			raise (InternalError ("Variable found several times in a linear_term in 'get_variable_coef_in_linear_term'; that was assumed not to happen."));
+		);
+		(* Else: return the coefficient (and do a safety check that everything happened as expected...) *)
+		match !coeff_option with
+			| None -> raise (InternalError ("Impossible situation in 'get_variable_coef_in_linear_term': a coefficient was found > 0 times, but the coefficient was not saved."));
+			| Some c -> Some c
+	)
+
+
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+(** {3 Evaluation functions} *)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 (** Evaluate a linear term with a function assigning a value to each variable. *)
 let rec evaluate_linear_term valuation_function linear_term =
@@ -748,7 +823,19 @@ let string_of_p_linear_inequality = string_of_linear_inequality
 
 exception Not_a_clock_guard
 (** Convert a linear inequality into a clock guard (i.e. a triple clock, operator, parametric linear term); raises Not_a_clock_guard if the linear_inequality is not well-formed *)
-let clock_guard_of_linear_inequality l =
+let clock_guard_of_linear_inequality linear_inequality =
+	(* First get both linear terms *)
+	let lterm, rterm =
+	match linear_inequality with
+	| Less_Than (lterm, rterm) | Less_Or_Equal (lterm, rterm)  | Greater_Than (lterm, rterm)  | Greater_Or_Equal (lterm, rterm) | Equal (lterm, rterm) ->
+		lterm, rterm
+	in
+	
+	(* Compute lterm - rterm *)
+	let linear_term = Minus (lterm, rterm) in
+	
+	
+	(*** I AM HERE ***)
 	()
 
 
@@ -1031,25 +1118,6 @@ let partition_lu_ineq variables (current_list_of_l, current_list_of_u) linear_in
 		inequalities*)
 
 
-
-(* Check whether a variable appears in a linear_term (with coeff <> 0) *)
-let rec variable_in_linear_term v = function
-	| Variable variable -> v = variable
-	| Coefficient _ -> false
-	| Unary_Plus linear_expression -> variable_in_linear_term v linear_expression
-	| Unary_Minus linear_expression -> variable_in_linear_term v linear_expression
-	| Plus (linear_expression1, linear_expression2) ->
-		variable_in_linear_term v linear_expression1
-		|| variable_in_linear_term v linear_expression2
-	| Minus (linear_expression1, linear_expression2) ->
-		variable_in_linear_term v linear_expression1
-		|| variable_in_linear_term v linear_expression2
-	| Times (coeff, rterm) ->
-		if Gmp.Z.equal coeff (Gmp.Z.zero) then false
-		else (match rterm with
-			| Variable variable -> v = variable
-			| _ -> raise (InternalError ("In function 'variable_in_linear_term', pattern 'Times' was expected to be only used for coeff * variable."))
-		)
 
 
 type l_u_type =
