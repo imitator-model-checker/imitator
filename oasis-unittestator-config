@@ -1,0 +1,31 @@
+###############################################################
+#
+#                       UNITTESTATOR
+#
+#  Laboratoire d'Informatique de Paris Nord (Paris 13, France)
+#
+#  _oasis       : Étienne André
+#  Created      : 2016/04/30
+#  Last modified: 2016/04/30
+###############################################################
+
+OASISFormat: 0.3
+Name:        TESTATOR
+Version:     0.1
+Synopsis:    shortdescription
+Authors:     Etienne Andre
+License:     GPL-3.0
+
+# PreBuildCommand: 
+PostBuildCommand: echo "Copying main binary file to bin/UnitTestator ..." ; cp _build/src/UnitTestator.native bin/UnitTestator ; strip bin/UnitTestator
+
+
+Executable testator
+  Path:       src/
+  BuildTools: ocamlbuild
+  MainIs:     UnitTestator.ml
+  BuildDepends: gmp, extlib, ppl, str, unix, threads
+  CCLib: -static '-lppl -ltinfo -lppl_ocaml -lstdc++ -lgmp -lgmpxx'
+
+  CompiledObject: best
+
