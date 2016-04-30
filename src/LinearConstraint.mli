@@ -9,10 +9,19 @@
  * 
  * File contributors : Étienne André
  * Created           : 2010/03/04
- * Last modified     : 2016/04/27
+ * Last modified     : 2016/04/30
  *
  ************************************************************)
  
+
+(************************************************************)
+(************************************************************)
+(* Exceptions *)
+(************************************************************)
+(************************************************************)
+(* Raised when a linear_term is not a clock guard, i.e., of the form x ~ plterm *)
+exception Not_a_clock_guard
+
 
 (************************************************************)
 (** {2 Variables and coefficients} *)
@@ -127,9 +136,18 @@ val negate_wrt_pi0 : (variable -> coef) -> p_linear_inequality -> p_linear_inequ
 (** {3 Conversion} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
+
+(*------------------------------------------------------------*)
+(** Convert a linear inequality into a clock guard (i.e. a triple clock, operator, parametric linear term); raises Not_a_clock_guard if the linear_inequality is not a proper clock guard x ~ plterm *)
+(*------------------------------------------------------------*)
+val clock_guard_of_linear_inequality : pxd_linear_inequality -> (variable * op * p_linear_term)
+
+
 (** Convert a linear inequality into a string *)
 (* val string_of_linear_inequality : (variable -> string) -> linear_inequality -> string *)
+val string_of_pxd_linear_inequality : (variable -> string) -> pxd_linear_inequality -> string
 val string_of_p_linear_inequality : (variable -> string) -> p_linear_inequality -> string
+
 
 
 (************************************************************)
@@ -203,9 +221,8 @@ val pxd_constraint_of_nonnegative_variables : variable list -> pxd_linear_constr
 (* val nb_inequalities : linear_constraint -> int *)
 val p_nb_inequalities : p_linear_constraint -> int
 
-(** Get the linear inequalities *)
-(* WARNING: NOT SO BEAUTIFUL, is only needed by Graphics, and should be removed *)
-(* val get_inequalities : linear_constraint -> linear_inequality list *)
+(** Get the linear inequalities of a constraint *)
+val pxd_get_inequalities : pxd_linear_constraint -> pxd_linear_inequality list
 
 (** Return true if the variable is constrained in a linear_constraint *)
 val pxd_is_constrained : pxd_linear_constraint -> variable -> bool
