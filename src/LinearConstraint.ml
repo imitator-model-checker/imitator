@@ -794,7 +794,8 @@ let negate_wrt_pi0 pi0 linear_inequality =
 
 
 let is_zero_coef = function
-	| Coefficient c -> c <> Gmp.Z.zero
+	(*** NOTE: "=!" is the equality comparison, not the "!=" operator :) ***)
+	| Coefficient c -> c =! Gmp.Z.zero
 	| _ -> false
 
 
