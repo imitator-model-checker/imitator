@@ -44,6 +44,13 @@ open ImitatorUtilities
 exception Not_a_clock_guard
 
 
+
+
+(*** WARNING: bug in this file in the constraint printing (and construction???) function !! ***)
+
+
+
+
 (************************************************************)
 (* CONSTANTS *)
 (************************************************************)
