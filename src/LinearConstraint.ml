@@ -45,12 +45,6 @@ exception Not_a_clock_guard
 
 
 
-
-(*** WARNING: bug in this file in the constraint printing (and construction???) function !! ***)
-
-
-
-
 (************************************************************)
 (* CONSTANTS *)
 (************************************************************)
@@ -500,7 +494,8 @@ let rec get_variable_coef_in_linear_term_rec nb_times_ref coeff_option minus_fla
 		else (match rterm with
 			| Variable variable -> if v = variable then(
 				nb_times_ref := !nb_times_ref + 1;
-				coeff_option := Some (if minus_flag then NumConst.neg (NumConst.numconst_of_mpz coeff) else (NumConst.numconst_of_mpz coeff));
+				let coef = NumConst.numconst_of_mpz coeff in
+				coeff_option := Some (if minus_flag then NumConst.neg coef else coef);
 			)
 			| _ -> raise (InternalError ("In function 'get_variable_coef_in_linear_term_rec', pattern 'Times' was expected to be only used for coeff * variable."))
 		)
@@ -882,6 +877,10 @@ let clock_guard_of_linear_inequality linear_inequality =
 
 	(*** NOTE: strongly relies on the fact that parameters indexes are from 0 to M-1, and clock indexes from M to M+H-1 ***)
 	
+(*	print_newline();
+	print_string (string_of_pxd_linear_inequality (fun i -> "v_" ^ (string_of_int i)) linear_inequality);
+	print_newline();*)
+
 	(* First get both linear terms *)
 	let lterm, rterm =
 	match linear_inequality with
@@ -891,6 +890,11 @@ let clock_guard_of_linear_inequality linear_inequality =
 	
 	(* Compute lterm - rterm *)
 	let linear_term = Minus (lterm, rterm) in
+	
+(*	print_newline();
+	print_string (string_of_linear_term_ppl (fun i -> "v_" ^ (string_of_int i)) linear_term);
+	print_newline();*)
+
 	
 	(* Variable to store the (necessarily unique) clock index *)
 	let clock_index_option = ref None in
@@ -925,8 +929,11 @@ let clock_guard_of_linear_inequality linear_inequality =
 			clock_index_option := Some (clock_index);
 			if NumConst.equal coeff NumConst.one then(
 				positive_clock_option := Some true;
-			)else(
+			)else if NumConst.equal coeff NumConst.minus_one then(
 				positive_clock_option := Some false;
+			)else(
+			(* Safety guard *)
+				raise (InternalError("The clock coefficient must be either 1 or -1 at that point"))
 			);
 	done;
 	
@@ -976,10 +983,10 @@ let clock_guard_of_linear_inequality linear_inequality =
 	(* Reconstruct the parametric linear term *)
 	let parametric_linear_term = make_linear_term !members coefficient in
 	
-	(* Negate it if needed *)
+	(* Negate it if needed: if the clock is NEGATIVE, it will be naturally moved to the other side, hence no need to change the sign of the plterm *)
 	let parametric_linear_term = if !positive_clock_option = Some true
-		then parametric_linear_term
-		else Mi ((make_linear_term [] NumConst.zero) , parametric_linear_term)
+		then Mi ((make_linear_term [] NumConst.zero) , parametric_linear_term)
+		else parametric_linear_term
 	in
 	
 	(* Retrieve the operator *)
