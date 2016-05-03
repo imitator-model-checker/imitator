@@ -5,11 +5,11 @@
  * Laboratoire Spécification et Vérification (ENS Cachan & CNRS, France)
  * LIPN, Université Paris 13, Sorbonne Paris Cité (France)
  * 
- * Module description: Description of the symbolic states and of the reachability graph
+ * Module description: Description of the symbolic states and of the state space
  * 
  * File contributors : Étienne André
  * Created           : 2009/12/08
- * Last modified     : 2016/02/08
+ * Last modified     : 2016/05/03
  *
  ************************************************************)
 
@@ -46,66 +46,96 @@ type statespace_nature =
 
 	
 (************************************************************)
-(** Graph structure *)
+(** State space structure *)
 (************************************************************)
 type state_space
 
 
 (************************************************************)
-(** Graph creation *)
+(** State space creation *)
 (************************************************************)
 
-(** Create a fresh graph *)
+(** Create a fresh state space *)
 val make : int -> state_space
 
 
 (************************************************************)
-(** Interrogation on a graph *)
+(** Interrogation on a state space *)
 (************************************************************)
 
-(** Return the number of generated states (not necessarily present in the graph) *)
+(*------------------------------------------------------------*)
+(** Return the number of generated states (not necessarily present in the state space) *)
+(*------------------------------------------------------------*)
 val get_nb_gen_states : state_space -> int
 
-(** Return the number of states in a graph *)
+(*------------------------------------------------------------*)
+(** Return the number of states in a state space *)
+(*------------------------------------------------------------*)
 val nb_states : state_space -> int
 
-(** Return the number of transitions in a graph *)
+(*------------------------------------------------------------*)
+(** Return the number of transitions in a state space *)
+(*------------------------------------------------------------*)
 val nb_transitions : state_space -> int
 
+(*------------------------------------------------------------*)
 (** Return the global_location corresponding to a location_index *)
+(*------------------------------------------------------------*)
 val get_location : state_space -> Location.global_location_index -> Location.global_location
 
+(*------------------------------------------------------------*)
 (** Return the state of a state_index *)
+(*------------------------------------------------------------*)
 val get_state : state_space -> state_index -> state
 
+(*------------------------------------------------------------*)
 (** Return the index of the initial state, or raise Not_found if not defined *)
+(*------------------------------------------------------------*)
 val get_initial_state_index : state_space -> state_index
 
+(*------------------------------------------------------------*)
 (** Compte and return the list of index successors of a state *)
+(*------------------------------------------------------------*)
 val get_successors : state_space -> state_index -> state_index list
 
+(*------------------------------------------------------------*)
 (** Compte and return the list of pairs (index successor of a state, corresponding action) *)
+(*------------------------------------------------------------*)
 val get_successors_with_actions : state_space -> state_index -> (state_index * action_index) list
 
+(*------------------------------------------------------------*)
+(** Compute and return a predecessor table state_index -> (state_index, action_index) list *)
+(*------------------------------------------------------------*)
+val compute_predecessors_with_actions : state_space -> (state_index , (state_index * action_index) list) Hashtbl.t
+
+(*------------------------------------------------------------*)
 (** Return the table of transitions *)
+(*------------------------------------------------------------*)
 val get_transitions : state_space -> ((state_index * action_index), state_index) Hashtbl.t
 
+(*------------------------------------------------------------*)
 (** Return the list of all state indexes *)
+(*------------------------------------------------------------*)
 val all_state_indexes : state_space -> state_index list
 
 
+(*------------------------------------------------------------*)
 (*** WARNING: big memory, here! Why not perform intersection on the fly? *)
-
-(** Return the list of all constraints on the parameters associated to the states of a graph *)
+(** Return the list of all constraints on the parameters associated to the states of a state space *)
+(*------------------------------------------------------------*)
 val all_p_constraints : state_space -> LinearConstraint.p_linear_constraint list
 
 (** Returns the intersection of all parameter constraints, thereby destroying all constraints *)
 (* val compute_k0_destructive : abstract_model -> state_space -> LinearConstraint.linear_constraint *)
 
+(*------------------------------------------------------------*)
 (** Check if two states are equal *)
+(*------------------------------------------------------------*)
 val states_equal: state -> state -> bool
 
+(*------------------------------------------------------------*)
 (** Check dynamically if two states are equal, i.e., if the first one + constraint equals second one + constraint *)
+(*------------------------------------------------------------*)
 val states_equal_dyn: state -> state -> LinearConstraint.px_linear_constraint -> bool
 
 (*(** Test if a state exists satisfying predicate s *)
@@ -114,7 +144,9 @@ val exists_state: (state -> bool) -> state_space -> bool
 (** test if all states satisfy predicate s *)
 val forall_state: (state -> bool) -> state_space -> bool*)
 
+(*------------------------------------------------------------*)
 (** Find all "last" states on finite or infinite runs *)
+(*------------------------------------------------------------*)
 val last_states: AbstractModel.abstract_model -> state_space -> state_index list 
 
 (** Check if bad states are reached *)
@@ -122,30 +154,30 @@ val last_states: AbstractModel.abstract_model -> state_space -> state_index list
 
 
 (************************************************************)
-(** Actions on a graph *)
+(** Actions on a state space *)
 (************************************************************)
 
-(** Increment the number of generated states (even though not member of the graph) *)
+(** Increment the number of generated states (even though not member of the state space) *)
 val increment_nb_gen_states : state_space -> unit
 
-(** Add a state to a graph: return (state_index, added), where state_index is the index of the state, and 'added' is false if the state was already in the graph, true otherwise *)
+(** Add a state to a state space: return (state_index, added), where state_index is the index of the state, and 'added' is false if the state was already in the state space, true otherwise *)
 val add_state : state_space -> state -> (state_index * bool)
 
-(**Add a state to a graph dynamically**)
+(**Add a state to a state space dynamically**)
 (* val add_state_dyn : AbstractModel.abstract_model -> state_space -> state -> LinearConstraint.linear_constraint -> (state_index * bool) *)
 
-(** Add a transition to the graph *)
+(** Add a transition to the state space *)
 val add_transition : state_space -> (state_index * action_index * state_index) -> unit
 
-(** Add a p_inequality to all the states of the graph *)
+(** Add a p_inequality to all the states of the state space *)
 (*** NOTE: it is assumed that the p_constraint does not render some states inconsistent! ***)
 val add_p_constraint_to_states : state_space -> LinearConstraint.p_linear_constraint -> unit
 
 
-(** Replace the constraint of a state in a graph by another one (the constraint is copied to avoid side-effects later) *)
+(** Replace the constraint of a state in a state space by another one (the constraint is copied to avoid side-effects later) *)
 (* val replace_constraint : state_space -> LinearConstraint.linear_constraint -> state_index -> unit *)
 
-(** Merge two states by replacing the second one by the first one, in the whole graph structure (lists of states, and transitions) *)
+(** Merge two states by replacing the second one by the first one, in the whole state space structure (lists of states, and transitions) *)
 (* val merge_2_states : state_space -> state_index -> state_index -> unit *)
 
 (* Try to merge new states with existing ones. Returns updated list of new states (ULRICH) *)
