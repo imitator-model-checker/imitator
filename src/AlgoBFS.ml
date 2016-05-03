@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/11/23
- * Last modified     : 2016/02/12
+ * Last modified     : 2016/05/03
  *
  ************************************************************)
 
@@ -28,10 +28,9 @@ open Result
 
 (************************************************************)
 (************************************************************)
-(* Class-independent functions *)
+(* Exceptions *)
 (************************************************************)
 (************************************************************)
-
 type limit_reached =
 	(* No limit *)
 	| Keep_going
@@ -48,6 +47,19 @@ type limit_reached =
 exception Limit_detected of limit_reached
 
 
+(************************************************************)
+(************************************************************)
+(* Types *)
+(************************************************************)
+(************************************************************)
+
+(* Type to define the state_index that have unexplored successors in case of premature termination *)
+type unexplored_successors =
+	(* Not defined (i.e., not yet defined, or no premature termination) *)
+	| UnexSucc_undef
+	(* A list of states with unexplored successors *)
+	| UnexSucc_some of StateSpace.state_index list
+	
 
 
 (************************************************************)
@@ -76,6 +88,9 @@ class virtual algoBFS =
 	
 	(* Constraint of the initial state (used by some algorithms to initialize their variables) *)
 	val mutable initial_constraint : LinearConstraint.px_linear_constraint option = None
+	
+	(* List of state_index that have unexplored successors in case of premature termination *)
+	val mutable unexplored_successors : unexplored_successors = UnexSucc_undef
 	
 	
 	
@@ -175,6 +190,8 @@ class virtual algoBFS =
 	(* Variable initialization *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method initialize_variables =
+		unexplored_successors <- UnexSucc_undef;
+		
 		super#initialize_variables;
 		(* The end *)
 		()
@@ -397,6 +414,11 @@ class virtual algoBFS =
 		
 		(* Were they any more states to explore? *)
 		let nb_unexplored_successors = List.length !post_n in
+		
+		(* Set the list of states with unexplored successors, if any *)
+		if nb_unexplored_successors > 0 then(
+			unexplored_successors <- UnexSucc_some !post_n;
+		);
 		
 		(* Update termination condition *)
 		begin

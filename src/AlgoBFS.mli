@@ -8,18 +8,37 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/11/23
- * Last modified     : 2016/03/10
+ * Last modified     : 2016/05/03
  *
  ************************************************************)
 
 
 (**************************************************************)
+(**************************************************************)
 (* Modules *)
+(**************************************************************)
 (**************************************************************)
 open AlgoStateBased
 
+
+(************************************************************)
+(************************************************************)
+(* Types *)
+(************************************************************)
+(************************************************************)
+
+(* Type to define the state_index that have unexplored successors in case of premature termination *)
+type unexplored_successors =
+	(* Not defined (i.e., not yet defined, or no premature termination) *)
+	| UnexSucc_undef
+	(* A list of states with unexplored successors *)
+	| UnexSucc_some of StateSpace.state_index list
+	
+
+(**************************************************************)
 (**************************************************************)
 (* Class definition *)
+(**************************************************************)
 (**************************************************************)
 class virtual algoBFS :
 	object inherit algoStateBased
@@ -35,6 +54,9 @@ class virtual algoBFS :
 
 		(* Constraint of the initial state (used by some algorithms to initialize their variables) *)
 		val mutable initial_constraint : LinearConstraint.px_linear_constraint option
+		
+		(* List of state_index that have unexplored successors in case of premature termination *)
+		val mutable unexplored_successors : unexplored_successors
 		
 		
 		(************************************************************)
