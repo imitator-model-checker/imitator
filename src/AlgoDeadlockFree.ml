@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/02/08
- * Last modified     : 2016/02/12
+ * Last modified     : 2016/05/03
  *
  ************************************************************)
 
@@ -110,6 +110,7 @@ let get_guard state_space state_index action_index state_index' =
 	
 	(* Finally! Return the guard *)
 	guard
+
 
 
 (************************************************************)
@@ -394,7 +395,64 @@ class algoDeadlockFree =
 		
 		(* Return result *)
 		stop
+
 	
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(* Method to compute an under-approximation in a backward manner, when the analysis stopped prematurely *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	method private backward_underapproximation =
+		
+		(* Retrieve predecessors *)
+		let predecessors = StateSpace.compute_predecessors_with_actions state_space in
+		
+		(*------------------------------------------------------------*)
+		(* Print successors and predecessors *)
+		if verbose_mode_greater Verbose_high then(
+			(* Retrieve the model *)
+			let model = Input.get_model () in
+
+			(* Successors *)
+			self#print_algo_message_newline Verbose_high ("SUCCESSORS");
+			(* Iterate on all states in the state space *)
+			List.iter (fun state_index ->
+				self#print_algo_message_newline Verbose_high ("State " ^ (string_of_int state_index) ^ ":");
+				(* Retrieve successors *)
+				let successors = StateSpace.get_successors_with_actions state_space state_index in
+				(* Print each of them *)
+				List.iter (fun (state_index' , action_index) -> 
+					self#print_algo_message Verbose_high ("- " ^ (string_of_int state_index') ^ " (via action " ^ (model.action_names action_index) ^ ")");
+				) successors;
+			) (StateSpace.all_state_indexes state_space);
+
+			(* Predecessors *)
+			self#print_algo_message_newline Verbose_high ("PREDECESSORS");
+			(* Iterate on all states in the state space *)
+			List.iter(fun state_index ->
+				self#print_algo_message_newline Verbose_high ("State " ^ (string_of_int state_index) ^ ":");
+				(* Retrieve predecessors *)
+				let predecessors = if Hashtbl.mem predecessors state_index then Hashtbl.find predecessors state_index else [] in
+				(* Print each of them *)
+				List.iter (fun (state_index' , action_index) -> 
+					self#print_algo_message Verbose_high ("- " ^ (string_of_int state_index') ^ " (via action " ^ (model.action_names action_index) ^ ")");
+				) predecessors;
+			) (StateSpace.all_state_indexes state_space);
+		); (* end if verbose_mode >= high *)
+		(*------------------------------------------------------------*)
+		
+		(* Retrieve states with unexplored successors *)
+		let unexplored_successors =
+		match unexplored_successors with
+			| UnexSucc_undef -> raise (InternalError "Impossible situation: unexplored_successors should not be undefined at that point (method backward_underapproximation)")
+			| UnexSucc_some l -> l
+		in
+		
+		(* Mark all states with potential successors *)
+		(*** TODO ***)
+
+		(* The end *)
+		()
+		
+			
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Method packaging the result output by the algorithm *)
@@ -425,6 +483,12 @@ class algoDeadlockFree =
 			| None -> raise (InternalError "Termination status not set in EFsynth.compute_result")
 			| Some status -> status
 		in
+		
+		(* If non-exact: compute backward under-approximation *)
+		if termination_status <> Regular_termination then(
+			(* Update the constraint so as to obtain an under-approximation rather than an over-approximation *)
+			self#backward_underapproximation;
+		); (* end if not regular termination *)
 
 		(* The tile nature is good if 1) it is not bad, and 2) the analysis terminated normally *)
 		let statespace_nature =
