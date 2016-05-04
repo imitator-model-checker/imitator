@@ -163,6 +163,13 @@ class stateIndexSet =
 
 		
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(* Does the set contain a given element? *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	method mem element =
+		StateIndexSet.mem element the_set
+
+		
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Retrieve all elements in the form of a list *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method all_elements =
@@ -194,7 +201,7 @@ class stateIndexSet =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method remove element =
 		(* First check *)
-		if not (StateIndexSet.mem element the_set) then raise Not_found;
+		if not (self#mem element) then raise Not_found;
 		(* Then remove *)
 		self#remove_or_do_nothing element
 
