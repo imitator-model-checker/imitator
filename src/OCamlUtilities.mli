@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2014/10/24
- * Last modified     : 2016/03/29
+ * Last modified     : 2016/05/04
  *
  ************************************************************)
 
@@ -110,6 +110,14 @@ val array_shuffle : 'a array -> unit
 
 (* exists p {a1; ...; an} checks if at least one element of the DynArray satisfies the predicate p. That is, it returns (p a1) || (p a2) || ... || (p an). *)
 val dynArray_exists : ('a -> bool) -> 'a DynArray.t -> bool
+
+
+(************************************************************)
+(** Useful functions on hash tables *)
+(************************************************************)
+(** Get all bound keys in an hash table; multiple bindings yield multiple (identical) keys *)
+(*** NOTE: indeed, in our setting, we only use hashtbl with a single binding ***)
+val hashtbl_get_all_keys : ('a , 'b) Hashtbl.t -> 'a list
 
 
 (************************************************************)

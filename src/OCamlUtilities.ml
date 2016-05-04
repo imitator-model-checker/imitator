@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2014/10/24
- * Last modified     : 2016/03/29
+ * Last modified     : 2016/05/04
  *
  ************************************************************)
  
@@ -252,6 +252,19 @@ let dynArray_exists p a =
 		(* Not found *)
 		false
 	) with Exceptions.Found -> true
+
+	
+
+(************************************************************)
+(** Useful functions on hash tables *)
+(************************************************************)
+(** Get all bound keys in an hash table; multiple bindings yield multiple (identical) keys *)
+(*** NOTE: indeed, in our setting, we only use hashtbl with a single binding ***)
+let hashtbl_get_all_keys hashtbl =
+	Hashtbl.fold
+		(fun key _ current_list ->
+			key :: current_list)
+		hashtbl []
 
 
 (************************************************************)
