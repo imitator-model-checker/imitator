@@ -8,8 +8,8 @@
  * Module description: Description of a state_index, a symbolic state and sets of states indexes
  * 
  * File contributors : Étienne André
- * Created           : 2016/05/03
- * Last modified     : 2016/05/03
+ * Created           : 2016/05/04
+ * Last modified     : 2016/05/04
  *
  ************************************************************)
 
@@ -39,20 +39,6 @@ type state = Location.global_location * LinearConstraint.px_linear_constraint
 type abstract_state = Location.global_location_index * LinearConstraint.px_linear_constraint
 
 
-
-
-(************************************************************)
-(** Set of state index *)
-(************************************************************)
-
-(* state struct for constructing set type *)
-module State = struct
-	type t = state_index
-	let compare = compare
-end
-
-(* set of states for efficient lookup *)
-module StateIndexSet = Set.Make(State)
 
 
 
@@ -134,16 +120,94 @@ let match_unreachable_global_locations unreachable_global_locations location =
 
 
 (************************************************************)
+(************************************************************)
 (** Structure to define sets of state_index *)
 (************************************************************)
+(************************************************************)
 
-(* Set of state indexes *)
-(*** BADPROG: already defined in StateSpace ***)
-(*** TODO: create standalone module? Or add to (yet to create) module State? ***)
-(*module State = struct
+(* state struct for constructing set type *)
+module State = struct
 	type t = state_index
 	let compare = compare
 end
 
 (* set of states for efficient lookup *)
-module StateIndexSet = Set.Make(State)*)
+module StateIndexSet = Set.Make(State)
+
+
+
+
+(**************************************************************)
+(* Encapsulation in a class *)
+(*** NOTE: technically, we could better create a *generic* class and instantiate it with StateIndexSet when needed ***)
+(**************************************************************)
+class stateIndexSet =
+	object (self)
+
+	(************************************************************)
+	(* Class variables *)
+	(************************************************************)
+	(* Initially, the set is empty *)
+	val mutable the_set = StateIndexSet.empty
+	
+
+	
+	(************************************************************)
+	(* Access methods *)
+	(************************************************************)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(* Is the set empty? *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	method is_empty =
+		StateIndexSet.is_empty the_set
+
+		
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(* Retrieve all elements in the form of a list *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	method all_elements =
+		StateIndexSet.elements the_set
+	
+	
+	
+	(************************************************************)
+	(* Modification methods *)
+	(************************************************************)
+	
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(* Empty the set *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	method empty =
+		(* Directly replace the set with a new empty set *)
+		the_set <- StateIndexSet.empty
+	
+	
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(* Add an element to the set *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	method add element =
+		the_set <- StateIndexSet.add element the_set
+
+		
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(* Remove an element; raises Not_found if the element was not in the set *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	method remove element =
+		(* First check *)
+		if not (StateIndexSet.mem element the_set) then raise Not_found;
+		(* Then remove *)
+		self#remove_or_do_nothing element
+
+	
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(* Remove an element or do nothing if the element was not in the set *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	method remove_or_do_nothing element =
+		the_set <- StateIndexSet.remove element the_set
+	
+
+(************************************************************)
+(************************************************************)
+end;;
+(************************************************************)
+(************************************************************)
