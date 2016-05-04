@@ -779,12 +779,12 @@ let get_siblings state_space si =
 	) [] sibs
 	
 
-module IntSet = Set.Make(
+(*module IntSet = Set.Make(
 	struct
 		type t = state_index
 		let compare a b = compare a b
 	end
-)
+)*)
 
 
 
