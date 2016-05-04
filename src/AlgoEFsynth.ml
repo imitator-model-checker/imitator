@@ -107,7 +107,7 @@ class algoEFsynth =
 			| Some (Unreachable unreachable_global_locations) ->
 				
 				(* Check whether the current location matches one of the unreachable global locations *)
-				if StateSpace.match_unreachable_global_locations unreachable_global_locations location then(
+				if State.match_unreachable_global_locations unreachable_global_locations location then(
 				
 					(* Project onto the parameters *)
 					let p_constraint = LinearConstraint.px_hide_nonparameters_and_collapse final_constraint in
@@ -188,7 +188,7 @@ class algoEFsynth =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(** Actions to perform at the end of the computation of the *successors* of post^n (i.e., when this method is called, the successors were just computed). Nothing to do for this algorithm. *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method process_post_n (post_n : StateSpace.state_index list) = ()
+	method process_post_n (post_n : State.state_index list) = ()
 
 	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)

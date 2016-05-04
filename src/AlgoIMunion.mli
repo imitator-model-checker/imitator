@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/01/08
- * Last modified     : 2016/02/10
+ * Last modified     : 2016/05/04
  *
  ************************************************************)
 
@@ -42,10 +42,10 @@ class algoIMunion :
 		method initialize_variables : unit
 		
 		(* Actions to perform when meeting a state with no successors: add the state to the list of "last" states *)
-		method process_deadlock_state : StateSpace.state_index -> unit
+		method process_deadlock_state : State.state_index -> unit
 		
 		(* Actions to perform when meeting a state that is on a loop: add the state to the list of "last" states *)
-		method process_looping_state : StateSpace.state_index -> unit
+		method process_looping_state : State.state_index -> unit
 		
 		method compute_result : Result.imitator_result
 end

@@ -612,7 +612,7 @@ let dot_of_statespace state_space algorithm_name ~fancy =
 		| None -> false
 		| Some (Unreachable unreachable_global_locations) ->
 			(* Check whether the current location matches one of the unreachable global locations *)
-			StateSpace.match_unreachable_global_locations unreachable_global_locations global_location
+			State.match_unreachable_global_locations unreachable_global_locations global_location
 		| _ -> raise (InternalError("IMITATOR currently ony implements the non-reachability-like properties."))
 	in
 	

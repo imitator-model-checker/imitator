@@ -1,0 +1,149 @@
+(************************************************************
+ *
+ *                       IMITATOR
+ * 
+ * Laboratoire Spécification et Vérification (ENS Cachan & CNRS, France)
+ * LIPN, Université Paris 13, Sorbonne Paris Cité (France)
+ * 
+ * Module description: Description of a state_index, a symbolic state and sets of states indexes
+ * 
+ * File contributors : Étienne André
+ * Created           : 2016/05/03
+ * Last modified     : 2016/05/03
+ *
+ ************************************************************)
+
+
+
+(************************************************************)
+(* Modules *)
+(************************************************************)
+(*module Ppl = Ppl_ocaml
+open Ppl*)
+
+open Exceptions
+open OCamlUtilities
+open ImitatorUtilities
+open Automaton
+open AbstractModel
+
+
+(************************************************************)
+(** Reachable states *)
+(************************************************************)
+type state_index = int
+
+(** State: location and constraint *)
+type state = Location.global_location * LinearConstraint.px_linear_constraint
+
+type abstract_state = Location.global_location_index * LinearConstraint.px_linear_constraint
+
+
+
+
+(************************************************************)
+(** Set of state index *)
+(************************************************************)
+
+(* state struct for constructing set type *)
+module State = struct
+	type t = state_index
+	let compare = compare
+end
+
+(* set of states for efficient lookup *)
+module StateIndexSet = Set.Make(State)
+
+
+
+
+(************************************************************)
+(** Interrogation on one state *)
+(************************************************************)
+
+(*------------------------------------------------------------*)
+(* Get the discrete index from a discrete_constraint *)
+(*------------------------------------------------------------*)
+let get_discrete_index_from_discrete_constraint = function
+	| Discrete_l (discrete_index , _)
+	| Discrete_leq (discrete_index , _)
+	| Discrete_equal (discrete_index , _)
+	| Discrete_geq (discrete_index , _)
+	| Discrete_g (discrete_index , _)
+		-> discrete_index
+	| Discrete_interval (discrete_index , _, _)
+		-> discrete_index
+
+
+(*------------------------------------------------------------*)
+(* Check that a discrete variable matches a discrete_constraint *)
+(*------------------------------------------------------------*)
+let match_discrete_constraint current_value = function
+	| Discrete_l (_, constrained_value )
+		-> NumConst.l current_value constrained_value
+	| Discrete_leq (_, constrained_value )
+		-> NumConst.le current_value constrained_value
+	| Discrete_equal (_, constrained_value )
+		-> NumConst.equal current_value constrained_value
+	| Discrete_geq (_, constrained_value )
+		-> NumConst.ge current_value constrained_value
+	| Discrete_g (_, constrained_value )
+		-> NumConst.g current_value constrained_value
+	| Discrete_interval (_, min_constrained_value, max_constrained_value )
+		-> (NumConst.ge current_value min_constrained_value)
+		&&
+		(NumConst.le current_value max_constrained_value)
+
+
+(*------------------------------------------------------------*)
+(* Check whether the global location matches a list of "unreachable_global_location" *)
+(*------------------------------------------------------------*)
+let match_unreachable_global_locations unreachable_global_locations location =
+	(* Retrieve the model *)
+	let model = Input.get_model() in
+	
+	(* Iterate on all unreachable global locations *)
+	List.exists (fun unreachable_global_location ->
+		
+		(* 1) Check whether all local unreachable locations defined in 'unreachable_global_location' are matched by the current location *)
+		(
+		List.for_all (fun (unreachable_automaton_index , unreachable_location_index) ->
+			(* Retrieve current location of unreachable_automaton_index *)
+			let current_location_index = Location.get_location location unreachable_automaton_index in
+			if verbose_mode_greater Verbose_high then(
+				print_message Verbose_high ("Checking whether loc[" ^ (model.automata_names unreachable_automaton_index) ^ "] = " ^ (model.location_names unreachable_automaton_index unreachable_location_index) ^ " is satisfied when loc[" ^ (model.automata_names unreachable_automaton_index) ^ "] = " ^ (model.location_names unreachable_automaton_index current_location_index) ^ " ");
+			);
+			(* Check equality *)
+			current_location_index = unreachable_location_index
+		) unreachable_global_location.unreachable_locations)
+		
+		&&
+		
+		(* 2) Check whether all discrete constraints defined in 'discrete_constraints' are matched by the current location *)
+		(List.for_all (fun discrete_constraint ->
+			(* Get the discrete index *)
+			let discrete_index = get_discrete_index_from_discrete_constraint discrete_constraint in
+			(* Retrieve current discrete value *)
+			let current_discrete_value = Location.get_discrete_value location discrete_index in
+			(* Check matching *)
+			match_discrete_constraint current_discrete_value discrete_constraint
+		) unreachable_global_location.discrete_constraints)
+	) unreachable_global_locations
+
+
+
+
+(************************************************************)
+(** Structure to define sets of state_index *)
+(************************************************************)
+
+(* Set of state indexes *)
+(*** BADPROG: already defined in StateSpace ***)
+(*** TODO: create standalone module? Or add to (yet to create) module State? ***)
+(*module State = struct
+	type t = state_index
+	let compare = compare
+end
+
+(* set of states for efficient lookup *)
+module StateIndexSet = Set.Make(State)*)

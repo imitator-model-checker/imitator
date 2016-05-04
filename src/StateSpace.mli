@@ -18,20 +18,8 @@
 (* Modules *)
 (************************************************************)
 open Automaton
+open State
 (* open AbstractModel *)
-
-
-(************************************************************)
-(** Reachable states *)
-(************************************************************)
-type state_index = int
-
-(** State: location and constraint *)
-(*** TODO: hide this definition, and use (at least) structure or functions ***)
-type state = Location.global_location * LinearConstraint.px_linear_constraint
-
-type abstract_state = Location.global_location_index * LinearConstraint.px_linear_constraint
-
 
 
 
@@ -189,14 +177,6 @@ val empty_states_for_comparison : state_space -> unit
 (** Iterate over the reachable states (with possible side effects) *)
 val iterate_on_states : (state_index -> abstract_state -> unit) -> state_space -> unit
 
-
-(************************************************************)
-(** Interrogation on one state *)
-(************************************************************)
-
-(*** NOTE: should NOT be defined in this module! But rather in some (yet to be created...) State.ml ***)
-
-val match_unreachable_global_locations : AbstractModel.unreachable_global_location list -> Location.global_location -> bool
 
 
 (************************************************************)

@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/12/02
- * Last modified     : 2016/03/10
+ * Last modified     : 2016/05/03
  *
  ************************************************************)
 
@@ -18,11 +18,12 @@
 (**************************************************************)
 open ImitatorUtilities
 open AlgoGeneric
+open State
 
 (**************************************************************)
 (* Class-independent functions *)
 (**************************************************************)
-val compute_initial_state_or_abort : unit -> StateSpace.state
+val compute_initial_state_or_abort : unit -> State.state
 
 (*------------------------------------------------------------*)
 (** Apply time elapsing in location to the_constraint (the location is needed to retrieve the stopwatches stopped in this location) *)
@@ -70,7 +71,7 @@ class virtual algoStateBased :
 		method initialize_variables : unit
 		
 		(* Update the nature of the trace set *)
-		method update_statespace_nature : StateSpace.state -> unit
+		method update_statespace_nature : State.state -> unit
 		
 		(*------------------------------------------------------------*)
 		(* Add a new state to the reachability_graph (if indeed needed) *)
@@ -78,15 +79,15 @@ class virtual algoStateBased :
 		(*** TODO: move new_states_indexes to a variable of the class ***)
 		(* Return true if the state is not discarded by the algorithm, i.e., if it is either added OR was already present before *)
 		(*------------------------------------------------------------*)
-		(*** TODO: simplify signature by removing the StateSpace, the StateSpace.state_index list ref and the action_index, and by returning the list of actually added states ***)
-		method virtual add_a_new_state : StateSpace.state_space -> StateSpace.state_index -> StateSpace.state_index list ref -> Automaton.action_index -> Location.global_location -> LinearConstraint.px_linear_constraint -> bool
+		(*** TODO: simplify signature by removing the StateSpace, the state_index list ref and the action_index, and by returning the list of actually added states ***)
+		method virtual add_a_new_state : StateSpace.state_space -> state_index -> state_index list ref -> Automaton.action_index -> Location.global_location -> LinearConstraint.px_linear_constraint -> bool
 		
 		(* Actions to perform when meeting a state with no successors: virtual method to be defined in subclasses *)
-		method virtual process_deadlock_state : StateSpace.state_index -> unit
+		method virtual process_deadlock_state : state_index -> unit
 		
 		(* Compute the list of successor states of a given state, and update the state space; returns the list of new states' indexes actually added *)
 		(** TODO: to get a more abstract method, should get rid of the state space, and update the state space from another function ***)
-		method post_from_one_state : StateSpace.state_space -> StateSpace.state_index -> StateSpace.state_index list
+		method post_from_one_state : StateSpace.state_space -> state_index -> state_index list
 
 		(* Main method to run the algorithm: virtual method to be defined in subclasses *)
 		method virtual run : unit -> Result.imitator_result

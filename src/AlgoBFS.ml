@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/11/23
- * Last modified     : 2016/05/03
+ * Last modified     : 2016/05/04
  *
  ************************************************************)
 
@@ -24,6 +24,7 @@ open Exceptions
 open AbstractModel
 open AlgoStateBased
 open Result
+open State
 
 
 (************************************************************)
@@ -58,7 +59,7 @@ type unexplored_successors =
 	(* Not defined (i.e., not yet defined, or no premature termination) *)
 	| UnexSucc_undef
 	(* A list of states with unexplored successors *)
-	| UnexSucc_some of StateSpace.state_index list
+	| UnexSucc_some of state_index list
 	
 
 
@@ -199,7 +200,7 @@ class virtual algoBFS =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(** Actions to perform at the end of the computation of the *successors* of post^n (i.e., when this method is called, the successors were just computed) *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method virtual process_post_n : StateSpace.state_index list -> unit
+	method virtual process_post_n : state_index list -> unit
 	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(** Check whether the algorithm should terminate at the end of some post, independently of the number of states to be processed (e.g., if the constraint is already true or false) *)

@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/12/02
- * Last modified     : 2016/03/10
+ * Last modified     : 2016/05/04
  *
  ************************************************************)
 
@@ -21,6 +21,7 @@ open ImitatorUtilities
 open Exceptions
 open AbstractModel
 open AlgoGeneric
+open State
 
 
 
@@ -1173,7 +1174,7 @@ class virtual algoStateBased =
 		| None -> ()
 		| Some (Unreachable unreachable_global_locations) ->
 			(* Check whether the current location matches one of the unreachable global locations *)
-			if StateSpace.match_unreachable_global_locations unreachable_global_locations location then(
+			if State.match_unreachable_global_locations unreachable_global_locations location then(
 				statespace_nature <- StateSpace.Bad;
 			);
 		| _ -> raise (InternalError("IMITATOR currently ony implements the non-reachability-like properties."))
@@ -1186,7 +1187,7 @@ class virtual algoStateBased =
 	(* Return true if the state is not discarded by the algorithm, i.e., if it is either added OR was already present before *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(*** TODO: simplify signature by removing the orig_state_index and returning the list of actually added states ***)
-	method virtual add_a_new_state : StateSpace.state_space -> StateSpace.state_index -> StateSpace.state_index list ref -> Automaton.action_index -> Location.global_location -> LinearConstraint.px_linear_constraint -> bool
+	method virtual add_a_new_state : StateSpace.state_space -> state_index -> state_index list ref -> Automaton.action_index -> Location.global_location -> LinearConstraint.px_linear_constraint -> bool
 
 		
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -1433,7 +1434,7 @@ class virtual algoStateBased =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Actions to perform when meeting a state with no successors: virtual method to be defined in subclasses *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method virtual process_deadlock_state : StateSpace.state_index -> unit
+	method virtual process_deadlock_state : state_index -> unit
 	
 	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)

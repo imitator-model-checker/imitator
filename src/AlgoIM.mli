@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/01/06
- * Last modified     : 2016/01/08
+ * Last modified     : 2016/05/04
  *
  ************************************************************)
 
@@ -46,7 +46,7 @@ class algoIM :
 (* 		method add_a_new_state : StateSpace.state_space -> StateSpace.state_index -> StateSpace.state_index list ref -> Automaton.action_index -> Location.global_location -> LinearConstraint.px_linear_constraint -> unit *)
 
 		(* Actions to perform when meeting a state with no successors: nothing to do for this algorithm *)
-		method process_deadlock_state : StateSpace.state_index -> unit
+		method process_deadlock_state : State.state_index -> unit
 		
 		method compute_result : Result.imitator_result
 end
