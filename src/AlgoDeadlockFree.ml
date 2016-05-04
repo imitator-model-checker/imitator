@@ -612,8 +612,7 @@ class algoDeadlockFree =
 		);
 		
 		(* Perform result = initial_state|P \ bad_constraint *)
-		let result = init_p_nnconvex_constraint in
-		(*** WARNING: will actually MODIFY init_p_nnconvex_constraint; but not a problem since about to exit the algorithm, and variable not used anymore afterwards ***)
+		let result = LinearConstraint.p_nnconvex_copy init_p_nnconvex_constraint in
 		LinearConstraint.p_nnconvex_difference result bad_constraint;
 		
 		self#print_algo_message_newline Verbose_medium (
@@ -626,16 +625,6 @@ class algoDeadlockFree =
 			| Some status -> status
 		in
 		
-		(* If non-exact: compute backward under-approximation *)
-		if termination_status <> Regular_termination then(
-			(* Update the constraint so as to obtain an under-approximation rather than an over-approximation *)
-			self#backward_underapproximation;
-			
-			self#print_algo_message_newline Verbose_standard (
-				"Backward under-approximation completed " ^ (after_seconds ()) ^ "."
-			);
-		); (* end if not regular termination *)
-
 		(* The tile nature is good if 1) it is not bad, and 2) the analysis terminated normally *)
 		let statespace_nature =
 			if statespace_nature = StateSpace.Unknown && termination_status = Regular_termination then StateSpace.Good
@@ -646,6 +635,36 @@ class algoDeadlockFree =
 		(* Constraint is exact if termination is normal, possibly over-approximated otherwise (since we compute the negation) *)
 		let soundness = if termination_status = Regular_termination then Constraint_exact else Constraint_maybe_over in
 
+		let result =
+		(* If exact: everything is fine *)
+		if termination_status = Regular_termination then(
+			Single_constraint (result, soundness)
+		)
+		(* Else: compute backward under-approximation *)
+		else(
+			(* Update the constraint so as to obtain an under-approximation in addition to the over-approximation *)
+			self#backward_underapproximation;
+			
+			self#print_algo_message_newline Verbose_standard (
+				"Backward under-approximation completed " ^ (after_seconds ()) ^ "."
+			);
+			
+			self#print_algo_message_newline Verbose_low (
+				"Performing negation of final under-approximated constraint..."
+			);
+			
+			(* Perform result = initial_state|P \ bad_constraint *)
+			let under_result = LinearConstraint.p_nnconvex_copy init_p_nnconvex_constraint in
+			LinearConstraint.p_nnconvex_difference under_result bad_constraint;
+			
+			self#print_algo_message_newline Verbose_medium (
+				"Negation of final under-approximated constraint completed."
+			);
+			
+			Under_over_constraint (under_result, result)
+		) (* end if not regular termination *)
+		in
+		
 		(* Return the result *)
 		PDFC_result
 		{
@@ -661,12 +680,12 @@ class algoDeadlockFree =
 			(* Total computation time of the algorithm *)
 			computation_time	= time_from start_time;
 			
-			(* Soudndness of the result *)
-			soundness			= soundness;
-	
+			(* No soundness as it is included in constraint_interval *)
+
 			(* Termination *)
 			termination			= termination_status;
 		}
+		
 	
 (************************************************************)
 (************************************************************)

@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/12/03
- * Last modified     : 2016/04/19
+ * Last modified     : 2016/05/04
  *
  ************************************************************)
 
@@ -67,6 +67,8 @@ let string_of_soundness = function
 	| Constraint_exact -> "exact"
 	(* Constraint equal to or larger than the real result *)
 	| Constraint_maybe_over -> "possible over-approximation"
+	(* Pair of constraints: one under-approximation and one over-approximation *)
+	| Constraint_under_over -> "both a possible under- and a possible over-approximation"
 	(* Impossible to compare the constraint with the original result *)
 	| Constraint_maybe_invalid -> "possibly invalid"
 
@@ -78,6 +80,8 @@ let verbose_string_of_soundness = function
 	| Constraint_exact -> "This constraint is exact (sound and complete)"
 	(* Constraint equal to or larger than the real result *)
 	| Constraint_maybe_over -> "This constraint is an over-approximation of the actual result (or the actual result itself)"
+	(* Pair of constraints: one under-approximation and one over-approximation *)
+	| Constraint_under_over -> "This constraint is both a possibly under-approximation and a possibly over-approximation (or the actual result itself)"
 	(* Impossible to compare the constraint with the original result *)
 	| Constraint_maybe_invalid -> "The validity of this constraint cannot be assessed"
 
@@ -226,9 +230,39 @@ let write_pdfc_result_to_file file_name (pdfc_result : Result.pdfc_result) =
 	let model = Input.get_model() in
 	(* Retrieve the input options *)
 (* 	let options = Input.get_options () in *)
+	let result_str, soundness = match pdfc_result.result with
+		| Single_constraint (result, soundness) ->
+			(
+			(* Convert the constraint to a string *)
+			let result_str = LinearConstraint.string_of_p_nnconvex_constraint model.variable_names result in
 
-	(* Convert the constraint to a string *)
-	let result_str = LinearConstraint.string_of_p_nnconvex_constraint model.variable_names pdfc_result.result in
+			(* begin delimiter *)
+			"\n\nBEGIN CONSTRAINT\n"
+			^ result_str ^ ""
+			(* end delimiter *)
+			^ "\nEND CONSTRAINT\n"
+			)
+			, soundness
+			
+		| Under_over_constraint (under, over) ->
+			(
+			(* Convert the constraints to a string *)
+			let under_str = LinearConstraint.string_of_p_nnconvex_constraint model.variable_names under in
+			let over_str = LinearConstraint.string_of_p_nnconvex_constraint model.variable_names over in
+
+			(* begin delimiter *)
+			"\n\nBEGIN UNDER CONSTRAINT\n"
+			^ under_str ^ ""
+			(* end delimiter *)
+			^ "\nEND UNDER CONSTRAINT\n"
+			(* begin delimiter *)
+			^ "\n\nBEGIN OVER CONSTRAINT\n"
+			^ over_str ^ ""
+			(* end delimiter *)
+			^ "\nEND OVER CONSTRAINT\n"
+			)
+			, Constraint_under_over
+	in
 
 	(* Prepare the string to write *)
 	let file_content =
@@ -241,15 +275,11 @@ let write_pdfc_result_to_file file_name (pdfc_result : Result.pdfc_result) =
 		^ "\n------------------------------------------------------------"
 
 		(* 3) The actual result *)
-		(* begin delimiter *)
-		^ "\n\nBEGIN CONSTRAINT\n"
-		^ result_str ^ ""
-		(* end delimiter *)
-		^ "\nEND CONSTRAINT\n"
+		^ result_str
 		
 		(* 4) Statistics about result *)
 		^ "\n------------------------------------------------------------"
-		^ "\n" ^ (result_nature_statistics pdfc_result.soundness pdfc_result.termination pdfc_result.statespace_nature)
+		^ "\n" ^ (result_nature_statistics soundness pdfc_result.termination pdfc_result.statespace_nature)
 		
 		(* 5) Statistics about state space *)
 		^ "\n------------------------------------------------------------"
@@ -618,22 +648,41 @@ let process_result result algorithm_name prefix_option =
 
 
 
-	(*** NOTE: copied from ef_synth ***)
-	(*** TODO: merge both when efsynth becomes non convex ***)
+	(*** TODO: merge with efsynth when efsynth becomes non convex, with possible under/over-approximation? ***)
 	| PDFC_result pdfc_result ->
 		
-
 		(* Print the result *)
 		if verbose_mode_greater Verbose_standard then(
 			(* Convert result to string *)
 			(*** NOTE: this conversion to string is duplicate, since it will again be converted in write_pdfc_result_to_file; but it not sure wether both operations are done, in addition they are not extremely time consuming, and they are not part of the computation time anyway *)
-			let result_str = LinearConstraint.string_of_p_nnconvex_constraint model.variable_names pdfc_result.result in
-			
-			print_message Verbose_standard ("\nFinal constraint such that the system is deadlock-free:");
-			print_message Verbose_standard (result_str);
+		
+			begin
+			match pdfc_result.result with
+				| Single_constraint (result, _) ->
+					let result_str = LinearConstraint.string_of_p_nnconvex_constraint model.variable_names result in
+					
+					print_message Verbose_standard ("\nFinal constraint such that the system is deadlock-free:");
+					print_message Verbose_standard (result_str);
 
+				| Under_over_constraint (under, over) ->
+					(* Convert the constraints to a string *)
+					let under_str = LinearConstraint.string_of_p_nnconvex_constraint model.variable_names under in
+					let over_str = LinearConstraint.string_of_p_nnconvex_constraint model.variable_names over in
+
+					print_message Verbose_standard ("\nFinal possibly under-approximated constraint such that the system is deadlock-free:");
+					print_message Verbose_standard (under_str);
+					print_message Verbose_standard ("\nFinal possibly over-approximated constraint such that the system is deadlock-free:");
+					print_message Verbose_standard (over_str);
+			
+			end;
+
+			let soundness = match pdfc_result.result with
+				| Single_constraint (_, soundness) -> soundness
+				| Under_over_constraint _ -> Constraint_under_over
+			in
+			
 			(* Give a comment on the validity of the result *)
-			print_message Verbose_standard (verbose_string_of_soundness pdfc_result.soundness);
+			print_message Verbose_standard (verbose_string_of_soundness soundness);
 		);
 		
 		print_message Verbose_low (
@@ -667,7 +716,12 @@ let process_result result algorithm_name prefix_option =
 		
 		(* Render zones in a graphical form *)
 		if options#cart then (
-			let zones = List.map (fun p_linear_constraint -> (LinearConstraint.Convex_p_constraint p_linear_constraint, StateSpace.Bad (*** TODO ? ***))) (LinearConstraint.p_linear_constraint_list_of_p_nnconvex_constraint pdfc_result.result) in
+			let result = match pdfc_result.result with
+				| Single_constraint (result, _) -> result
+				| _ -> raise (InternalError("not implemented"))
+			in
+
+			let zones = List.map (fun p_linear_constraint -> (LinearConstraint.Convex_p_constraint p_linear_constraint, StateSpace.Bad (*** TODO ? ***))) (LinearConstraint.p_linear_constraint_list_of_p_nnconvex_constraint result) in
 			Graphics.draw_cartography zones (file_prefix ^ "_cart_pdfc")
 		) else (
 				print_message Verbose_high "Graphical cartography not asked: not drawn.";

@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/11/23
- * Last modified     : 2016/03/18
+ * Last modified     : 2016/05/04
  *
  ************************************************************)
 
@@ -70,9 +70,23 @@ type constraint_soundness =
 	(* Constraint strictly larger than the real result *)
 (* 	| Constraint_over *)
 
+	(* Pair of constraints: one under-approximation and one over-approximation *)
+	| Constraint_under_over
+	
 	(* Impossible to compare the constraint with the original result *)
 	(*** NOTE: technically it used by variants of IM where the intersection with the real result is not null ***)
 	| Constraint_maybe_invalid
+
+
+(************************************************************)
+(** Constraint that can be exact, over, under or an interval under/over-approximation *)
+(************************************************************)
+type constraint_interval =
+	(* One constraint that can be exact, approximated or invalid *)
+	| Single_constraint of LinearConstraint.p_nnconvex_constraint * constraint_soundness
+	
+	(* One under-approximated p-constraint, and one over-approximated p-constraint *)
+	| Under_over_constraint of LinearConstraint.p_nnconvex_constraint * LinearConstraint.p_nnconvex_constraint
 
 
 (************************************************************)
@@ -135,8 +149,8 @@ type efsynth_result = {
 
 
 type pdfc_result = {
-	(* List of constraints *)
-	result				: LinearConstraint.p_nnconvex_constraint;
+	(* Non-necessarily convex constraint *)
+	result				: constraint_interval;
 	
 	(* Explored state space *)
 	state_space			: StateSpace.state_space;
@@ -147,8 +161,7 @@ type pdfc_result = {
 	(* Total computation time of the algorithm *)
 	computation_time	: float;
 	
-	(* Soundness of the result *)
-	soundness			: constraint_soundness;
+	(* No soundness as it is included in constraint_interval *)
 	
 	(* Termination *)
 	termination			: bfs_algorithm_termination;

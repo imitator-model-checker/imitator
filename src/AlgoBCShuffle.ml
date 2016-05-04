@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/03/14
- * Last modified     : 2016/03/22
+ * Last modified     : 2016/05/04
  *
  ************************************************************)
 
@@ -334,6 +334,7 @@ class algoBCShuffle =
 			if termination_status = BC_Regular_termination && (List.for_all (fun abstract_im_result -> match abstract_im_result.soundness with
 					| Constraint_exact | Constraint_maybe_under -> true
 					| Constraint_maybe_over | Constraint_maybe_invalid -> false
+					| Constraint_under_over -> raise (InternalError("BC is not suppose to handle under/over-approximations"))
 				) im_results)
 				then Coverage_integer_complete
 			(* UNKNOWN otherwise *)
