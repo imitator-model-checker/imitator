@@ -9,7 +9,7 @@
  * 
  * File contributors : Ulrich Kühne, Étienne André
  * Created           : 2009/12/08
- * Last modified     : 2016/05/03
+ * Last modified     : 2016/05/04
  *
  ************************************************************)
 
@@ -263,11 +263,12 @@ let compute_predecessors_with_actions state_space =
 
 
 (** Return the list of all state indexes *)
-let all_state_indexes state_space =
+let all_state_indexes state_space = hashtbl_get_all_keys state_space.all_states
+(*let all_state_indexes state_space =
 	Hashtbl.fold
 		(fun state_index _ current_list ->
 			state_index :: current_list)
-		state_space.all_states []
+		state_space.all_states []*)
 
 	
 
