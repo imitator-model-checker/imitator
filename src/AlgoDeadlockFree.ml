@@ -628,8 +628,12 @@ class algoDeadlockFree =
 		done; (* end while there are marked states *)
 		
 		(* Print some information *)
-		self#print_algo_message_newline Verbose_low ("No marked state anymore. The end.");
-
+		if verbose_mode_greater Verbose_low then(
+			self#print_algo_message_newline Verbose_low ("No marked state anymore. The end.");
+			let nb_disabled = disabled#cardinal in
+			self#print_algo_message Verbose_low ((string_of_int nb_disabled) ^ " state" ^ (s_of_int nb_disabled) ^ " disabled.");
+		);
+		
 		(* The end *)
 		()
 		
