@@ -28,6 +28,9 @@ open ModelPrinter
 open Options
 
 
+(*** NOTE: just to allow compiling ***)
+open CUBchecker
+
 
 (**************************************************
 TAGS USED THROUGHOUT THIS PROJECT

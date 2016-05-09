@@ -1,19 +1,27 @@
-(*****************************************************************
+(************************************************************
  *
  *                       IMITATOR
  * 
- * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
- * Universite Paris 13, Sorbonne Paris Cite, LIPN (France)
- *
- * Description: common definitions for linear terms and constraints (interface to PPL)
- *
- * Author:        Etienne Andre
+ * Laboratoire Spécification et Vérification (ENS Cachan & CNRS, France)
+ * LIPN, Université Paris 13, Sorbonne Paris Cité (France)
  * 
- * Created:       2010/03/04
- * Last modified: 2016/02/12
+ * Module description: ommon definitions for linear terms and constraints (interface to PPL)
+ * 
+ * File contributors : Étienne André
+ * Created           : 2010/03/04
+ * Last modified     : 2016/04/30
  *
- ****************************************************************) 
+ ************************************************************)
  
+
+(************************************************************)
+(************************************************************)
+(* Exceptions *)
+(************************************************************)
+(************************************************************)
+(* Raised when a linear_term is not a clock guard, i.e., of the form x ~ plterm *)
+exception Not_a_clock_guard
+
 
 (************************************************************)
 (** {2 Variables and coefficients} *)
@@ -31,9 +39,9 @@ val string_of_var : (variable -> string) -> variable -> string
 (** {2 Linear terms} *)
 (************************************************************)
 
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 (** {3 Type} *)
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 (* type linear_term *)
 type p_linear_term
@@ -41,9 +49,9 @@ type p_linear_term
 type pxd_linear_term
 
 
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 (** {3 Creation} *)
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 (* val normalize_linear_term : linear_term -> Ppl_ocaml.linear_expression * NumConst.t *)
 
@@ -53,9 +61,9 @@ val make_p_linear_term : (coef * variable) list -> coef -> p_linear_term
 val make_pxd_linear_term : (coef * variable) list -> coef -> pxd_linear_term
 
 
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 (** {3 Functions} *)
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 (** Add two linear terms *)
 (* val add_linear_terms : linear_term -> linear_term -> linear_term *)
@@ -70,9 +78,9 @@ val evaluate_p_linear_term : (variable -> coef) -> p_linear_term -> coef
 val evaluate_pxd_linear_term : (variable -> coef) -> pxd_linear_term -> coef
 
 
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 (** {3 Conversion} *)
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 (** Convert a linear term into a string *)
 (* val string_of_linear_term : (variable -> string) -> linear_term -> string *)
@@ -84,13 +92,15 @@ val string_of_pxd_linear_term : (variable -> string) -> pxd_linear_term -> strin
 (** {2 Linear inequalities} *)
 (************************************************************)
 
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 (** {3 Type} *)
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 type op =
 	| Op_g
 	| Op_ge
 	| Op_eq
+	| Op_le
+	| Op_l
 
 (* type linear_inequality *)
 type p_linear_inequality
@@ -98,18 +108,18 @@ type px_linear_inequality
 type pxd_linear_inequality
 
 
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 (** {3 Creation} *)
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 (** Create a linear inequality using linear term and an operator *)
 (* val make_linear_inequality : linear_term -> op -> linear_inequality *)
 val make_pxd_linear_inequality : pxd_linear_term -> op -> pxd_linear_inequality
 
 
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 (** {3 Functions} *)
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 (** Convert to a nonstrict inequality *)
 (* val strict_to_not_strict_inequality : linear_inequality -> linear_inequality *)
@@ -122,22 +132,31 @@ val make_pxd_linear_inequality : pxd_linear_term -> op -> pxd_linear_inequality
 val negate_wrt_pi0 : (variable -> coef) -> p_linear_inequality -> p_linear_inequality
 
 
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 (** {3 Conversion} *)
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+
+
+(*------------------------------------------------------------*)
+(** Convert a linear inequality into a clock guard (i.e. a triple clock, operator, parametric linear term); raises Not_a_clock_guard if the linear_inequality is not a proper clock guard x ~ plterm *)
+(*------------------------------------------------------------*)
+val clock_guard_of_linear_inequality : pxd_linear_inequality -> (variable * op * p_linear_term)
+
 
 (** Convert a linear inequality into a string *)
 (* val string_of_linear_inequality : (variable -> string) -> linear_inequality -> string *)
+val string_of_pxd_linear_inequality : (variable -> string) -> pxd_linear_inequality -> string
 val string_of_p_linear_inequality : (variable -> string) -> p_linear_inequality -> string
+
 
 
 (************************************************************)
 (** {2 Linear Constraints} *)
 (************************************************************)
 
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 (** {3 Type} *)
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 (** Convex constraint (polyhedron) on the parameters *)
 type p_linear_constraint
@@ -149,18 +168,18 @@ type px_linear_constraint
 type pxd_linear_constraint
 
 
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 (** {3 Initialization} *)
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 (** Set the number of dimensions *)
 val set_dimensions : int -> int -> int -> unit
 
 
 
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 (** {3 Creation} *)
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 (** Create a linear constraint from a list of linear inequalities *)
 (* val make : linear_inequality list -> linear_constraint *)
@@ -194,17 +213,16 @@ val px_constraint_of_nonnegative_variables : variable list -> px_linear_constrai
 val pxd_constraint_of_nonnegative_variables : variable list -> pxd_linear_constraint
 
 
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 (** {3 Access} *)
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 (** Get the number of inequalities of a constraint *)
 (* val nb_inequalities : linear_constraint -> int *)
 val p_nb_inequalities : p_linear_constraint -> int
 
-(** Get the linear inequalities *)
-(* WARNING: NOT SO BEAUTIFUL, is only needed by Graphics, and should be removed *)
-(* val get_inequalities : linear_constraint -> linear_inequality list *)
+(** Get the linear inequalities of a constraint *)
+val pxd_get_inequalities : pxd_linear_constraint -> pxd_linear_inequality list
 
 (** Return true if the variable is constrained in a linear_constraint *)
 val pxd_is_constrained : pxd_linear_constraint -> variable -> bool
@@ -218,9 +236,9 @@ val pxd_find_variables : variable list -> pxd_linear_constraint -> variable list
 val partition_lu : variable list -> pxd_linear_constraint list -> (variable list * variable list)
 
 
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 (** {3 Tests} *)
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 (** Check if a constraint is false *)
 (* val is_false : linear_constraint -> bool *)
@@ -253,9 +271,9 @@ val px_is_positive_in : variable -> px_linear_constraint -> bool
 val px_contains_integer_point : px_linear_constraint -> bool
 
 
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 (** {3 Functions} *)
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 (** makes a copy of a constraint *)
 (* val copy : linear_constraint -> linear_constraint *)
@@ -341,9 +359,9 @@ val render_non_strict_p_linear_constraint : p_linear_constraint -> p_linear_cons
 
 
 
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 (** {3 Pi0-compatibility} *)
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 (** Check if a linear constraint is pi0-compatible *)
 val is_pi0_compatible : (variable -> coef) -> p_linear_constraint -> bool
@@ -352,9 +370,9 @@ val is_pi0_compatible : (variable -> coef) -> p_linear_constraint -> bool
 val partition_pi0_compatible : (variable -> coef) -> p_linear_constraint -> (p_linear_inequality list * p_linear_inequality list)
 
 
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 (** {3 Conversion between types of constraints } *)
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 (** Create a pxd_linear_constraint from a set of pairs (discrete variable, value) *)
 val pxd_constraint_of_discrete_values : (variable * coef) list -> pxd_linear_constraint
 
@@ -363,9 +381,9 @@ val pxd_of_p_constraint : p_linear_constraint -> pxd_linear_constraint
 val pxd_of_px_constraint : px_linear_constraint -> pxd_linear_constraint
 
 
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 (** {3 Brute-force casts (argh) } *)
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 (** "cast_p_of_pxd_linear_term p c" converts a PXD-term p to a P-term ; if c then a test if performed to check casting validity *)
 val cast_p_of_pxd_linear_term : pxd_linear_term -> bool -> p_linear_term
@@ -374,9 +392,9 @@ val cast_p_of_pxd_linear_constraint : pxd_linear_constraint -> bool -> p_linear_
 
 
 
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 (** {3 Conversion to string} *)
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 (** Convert a linear constraint into a string *)
 (* val string_of_linear_constraint : (variable -> string) -> linear_constraint -> string *)
@@ -391,9 +409,9 @@ val string_of_pxd_linear_constraint : (variable -> string) -> pxd_linear_constra
 (* val string_of_true : string *)
 
 
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 (** {3 Conversion to GrML} *)
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 (** Convert a linear term into a string for GML *)
 val grml_of_pxd_linear_term : (variable -> string) -> int -> pxd_linear_term -> string
 
@@ -403,9 +421,9 @@ val grml_of_pxd_linear_constraint : (variable -> string) -> int -> pxd_linear_co
 
 
 
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 (** {3 Conversion to plot} *)
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 (** converts a linear_constraint to a set of 2d points wrt. the variables x,y *)
 val shape_of_poly : variable -> variable -> p_linear_constraint -> (float*float) list *(float*float) list
@@ -422,18 +440,18 @@ val plot_2d : variable -> variable -> p_linear_constraint -> float -> float -> f
 (** {2 Non-necessarily convex linear Constraints} *)
 (************************************************************)
 
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 (** {3 Type} *)
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 (** Non-necessarily convex constraint on the parameters ("pointset powerset" in the underlying PPL implementation) *)
 type p_nnconvex_constraint
 type px_nnconvex_constraint
 
 
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 (** {3 Creation} *)
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 (** Create a false constraint *)
 val false_p_nnconvex_constraint : unit -> p_nnconvex_constraint
@@ -457,9 +475,9 @@ val px_nnconvex_constraint_of_px_linear_constraint : px_linear_constraint -> px_
 val p_nnconvex_constraint_of_p_linear_constraints : p_linear_constraint list -> p_nnconvex_constraint
 
 
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 (** {3 Tests} *)
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 (** Check if a nnconvex_constraint is false *)
 val p_nnconvex_constraint_is_false : p_nnconvex_constraint -> bool
@@ -477,9 +495,9 @@ val p_nnconvex_constraint_is_leq : p_nnconvex_constraint -> p_nnconvex_constrain
 val p_nnconvex_constraint_is_equal : p_nnconvex_constraint -> p_nnconvex_constraint -> bool
 
 
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 (** {3 Modifications} *)
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 (** Performs the intersection of a p_nnconvex_constraint with a p_linear_constraint; the p_nnconvex_constraint is modified, the p_linear_constraint is not *)
 val p_nnconvex_intersection  : p_nnconvex_constraint -> p_linear_constraint -> unit
@@ -504,16 +522,16 @@ val px_nnconvex_hide : variable list -> px_nnconvex_constraint -> px_nnconvex_co
 val px_nnconvex_hide_nonparameters_and_collapse : px_nnconvex_constraint -> p_nnconvex_constraint
 
 
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 (** {3 Conversion to a list of p_linear_constraint} *)
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 (** Converts a p_nnconvex_constraint into a list of p_linear_constraint such that the union of this list is equal to the p_nnconvex_constraint *)
 val p_linear_constraint_list_of_p_nnconvex_constraint : p_nnconvex_constraint -> p_linear_constraint list
 
 
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 (** {3 Conversion to string} *)
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 (** Convert a p_nnconvex_constraint into a string *)
 val string_of_p_nnconvex_constraint : (variable -> string) -> p_nnconvex_constraint -> string

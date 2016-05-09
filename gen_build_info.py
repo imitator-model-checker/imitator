@@ -105,10 +105,10 @@ if git_branch == "":
 #************************************************************
 def write_to_file(file_name, content):
 	# Open and create if non existing
-	if os.path.exists(file_name):
-		file_handler = file(file_name, "r+")
-	else:
-		file_handler = file(file_name, "w")
+	#if os.path.exists(file_name):
+		#file_handler = file(file_name, "r+")
+	#else:
+	file_handler = file(file_name, "w")
 	# Write content
 	file_handler.write(content)
 	# Close
