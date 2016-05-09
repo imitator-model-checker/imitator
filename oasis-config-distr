@@ -19,7 +19,7 @@ License:     GPL-3.0
 
 # Handling build number (using Python)
 PreBuildCommand: python gen_build_info.py
-PostBuildCommand: python incrementer.py ; echo "Copying main binary file to bin/patator ..." ; cp _build/src/PaTATOR.native bin/patator ; strip bin/imitator
+PostBuildCommand: python incrementer.py ; echo "Copying main binary file to bin/patator ..." ; cp _build/src/PaTATOR.native bin/patator ; strip bin/patator
 
 
 Executable patator
