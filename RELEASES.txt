@@ -27,6 +27,9 @@ Export
 Versioning
 - Now IMITATOR integrates the hash number of GitHub in all outputs
 
+Install and compile
+- Using "strip" the binary is now (much) smaller
+
 Internal
 - "examples" directory becomes "benchmarks"
 - All algorithms rewritten in an object-oriented fashion

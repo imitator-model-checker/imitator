@@ -7,12 +7,12 @@
 #
 #  _oasis authors: Etienne Andre, Alban Linard
 #  Created:        2014/08/18
-#  Last modified:  2015/09/30
+#  Last modified:  2016/05/09
 ###############################################################
 
 OASISFormat: 0.3
 Name:        IMITATOR
-Version:     2.7-beta3
+Version:     2.8-alpha
 Synopsis:    shortdescription
 Authors:     Etienne Andre et al.
 License:     GPL-3.0
