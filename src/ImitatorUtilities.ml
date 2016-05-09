@@ -7,7 +7,7 @@
  * Author:        Etienne Andre
  * 
  * Created:       2014/10/24
- * Last modified: 2016/04/19
+ * Last modified: 2016/05/09
  *
  ****************************************************************)
  
@@ -417,6 +417,7 @@ let abort_program () =
 	print_error (Constants.program_name ^ " aborted (" ^ (after_seconds ()) ^ ")");
 	(*** NOTE: print new line to stderr ***)
 	prerr_newline();
+	flush Pervasives.stderr;
 	flush Pervasives.stdout;
 	exit(1)
 
@@ -431,5 +432,6 @@ let terminate_program () =
 	);
 	(* The end *)
 	print_newline();
+	flush Pervasives.stderr;
 	flush Pervasives.stdout;
 	exit(0)
