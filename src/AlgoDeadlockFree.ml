@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/02/08
- * Last modified     : 2016/05/04
+ * Last modified     : 2016/05/09
  *
  ************************************************************)
 
@@ -113,6 +113,9 @@ let get_guard state_space state_index action_index state_index' =
 	guard
 
 
+(* Convert a state_index for pretty-printing purpose *)
+let debug_string_of_state state_index =
+	"s_" ^ (string_of_int state_index)
 
 
 (************************************************************)
@@ -416,7 +419,11 @@ class algoDeadlockFree =
 	(* Method to compute an under-approximation in a backward manner, when the analysis stopped prematurely *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method private backward_underapproximation =
+		(* Retrieve the model *)
+		let model = Input.get_model () in
 		
+		self#print_algo_message_newline Verbose_low "Retrieving successors...";
+
 		(* Retrieve predecessors *)
 		let predecessors = StateSpace.compute_predecessors_with_actions state_space in
 		
@@ -426,9 +433,6 @@ class algoDeadlockFree =
 		(*------------------------------------------------------------*)
 		(* Print successors and predecessors *)
 		if verbose_mode_greater Verbose_high then(
-			(* Retrieve the model *)
-			let model = Input.get_model () in
-
 			(* Successors *)
 			self#print_algo_message_newline Verbose_high ("SUCCESSORS");
 			(* Iterate on all states in the state space *)
@@ -464,26 +468,6 @@ class algoDeadlockFree =
 			| UnexSucc_some l -> l
 		in
 
-		(*------------------------------------------------------------*)
-		(* Create a structure for marking states: state_index --> bool Hashtbl *)
-
-		(*** NOTE: below: old version using hashtbl ***)
-		(*** NOTE: we (totally arbitrarily) guess that the initial size will be 4 times smaller than the number of states in the state space ***)
-		(*** NOTE: not sure whether the hastbl implementation is more efficient than, e.g., a state_index set ***)
-		(*let marked_states : (State.state_index , bool) Hashtbl.t = Hashtbl.create (List.length all_state_indexes / 4) in
-		
-		(* Create modification functions *)
-		let mark_state state_index = Hashtbl.replace marked_states state_index true in
-		let unmark_state state_index = Hashtbl.remove marked_states state_index in
-
-		(* Create access functions *)
-		let is_marked state_index = try(
-			Hashtbl.find marked_states state_index
-		) with Not_found -> false
-		in
-		let get_marked () = OCamlUtilities.hashtbl_get_all_keys marked_states in*)
-		(*------------------------------------------------------------*)
-		
 		(* Define a set of (currently) marked state_index *)
 		let marked = new State.stateIndexSet in
 
@@ -496,13 +480,31 @@ class algoDeadlockFree =
 		(* Initialize variables before backward exploration *)
 		let current_marked_states = ref (marked#all_elements) in
 		
+		(* Only for debug and pretty-printing purpose *)
+		let iteration = ref 1 in
+		
 		(* While there are some marked states *)
 		while List.length !current_marked_states > 0 do
 		
+			(* Print some information *)
+			if verbose_mode_greater Verbose_low then(
+				print_message Verbose_medium ("\n------------------------------------------------------------");
+				self#print_algo_message Verbose_low ("Backward underapproximation: iteration " ^ (string_of_int !iteration) ^ " (" ^ (string_of_int (List.length !current_marked_states)) ^ " marked state" ^ (s_of_int (List.length !current_marked_states)) ^ ")");
+				
+				self#print_algo_message_newline Verbose_medium ("List of marked states: ");
+				self#print_algo_message Verbose_medium (string_of_list_of_string_with_sep " - " (List.map debug_string_of_state !current_marked_states));
+			);
+
+			(*------------------------------------------------------------*)
 			(* Step 1: Negate the constraint associated with marked states *)
+
+			(* Print some information *)
+			self#print_algo_message_newline Verbose_low ("Negating constraints assocated with marked states...");
+
 			List.iter (fun state_index -> 
 				(* Only consider this state if it is not already disabled *)
 				if not (disabled#mem state_index) then(
+					
 					(* Retrieve the state constraint *)
 					let _, s_constraint = StateSpace.get_state state_space state_index in
 					
@@ -511,10 +513,30 @@ class algoDeadlockFree =
 					
 					(* Remove its constraint, i.e., add not C to bad *)
 					LinearConstraint.p_nnconvex_p_union bad_constraint p_constraint;
+					
+					(* Print some information *)
+					if verbose_mode_greater Verbose_medium then(
+						self#print_algo_message Verbose_medium ("Negating the constraint associated with state " ^ (debug_string_of_state state_index) ^ ":");
+						
+						self#print_algo_message Verbose_medium (LinearConstraint.string_of_p_linear_constraint model.variable_names p_constraint);
+						
+						self#print_algo_message Verbose_medium ("The global bad constraint is now:\n" ^ (LinearConstraint.string_of_p_nnconvex_constraint model.variable_names bad_constraint));
+					);
+
 				) (* end if not a member of marked *)
+				else(
+					(* Print some information *)
+					self#print_algo_message Verbose_medium ("State " ^ (debug_string_of_state state_index) ^ " already disabled: skip");
+				);
 			) !current_marked_states;
 			
+			
+			(*------------------------------------------------------------*)
 			(* Step 2: Compute predecessors of marked states *)
+
+			(* Print some information *)
+			self#print_algo_message_newline Verbose_low ("Computing predecessors of marked states...");
+
 			let predecessors_of_marked = new State.stateIndexSet in
 			List.iter (fun state_index -> 
 				(* Only consider this state if it is not already disabled *)
@@ -532,7 +554,13 @@ class algoDeadlockFree =
 			(* Create the set of newly marked states (for the next iteration) *)
 			let newly_marked = new State.stateIndexSet in
 			
+
+			(*------------------------------------------------------------*)
 			(* Step 3: Update the deadlock-freeness constraint for all predecessors of marked states *)
+			
+			(* Print some information *)
+			self#print_algo_message_newline Verbose_low ("Updating the deadlock-freeness constraint for all predecessors of marked states...");
+
 			List.iter (fun state_index ->
 				(* Find its successors *)
 				let successors = StateSpace.get_successors_with_actions state_space state_index in
@@ -574,9 +602,17 @@ class algoDeadlockFree =
 				
 			) predecessors_of_marked#all_elements;
 			
+
+			(*------------------------------------------------------------*)
 			(* Step 4: Disable marked states *)
+
+			(* Print some information *)
+			self#print_algo_message_newline Verbose_low ("Disabling marked states...");
+
 			List.iter disabled#add !current_marked_states;
 			
+			
+			(*------------------------------------------------------------*)
 			(* Step 5: Update marked states: newly marked = {predecessors of marked} \ {marked} *)
 			(*** NOTE: no need to mark states already marked, as they have been processed (and disabled) ***)
 			marked#empty;
@@ -586,10 +622,13 @@ class algoDeadlockFree =
 			(* Update variable *)
 			current_marked_states := marked#all_elements;
 			
+			(* Update iteration *)
+			iteration := !iteration + 1;
+			
 		done; (* end while there are marked states *)
 		
-		
-		(*** TODO ***)
+		(* Print some information *)
+		self#print_algo_message_newline Verbose_low ("No marked state anymore. The end.");
 
 		(* The end *)
 		()
@@ -601,7 +640,7 @@ class algoDeadlockFree =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method compute_result =
 		(* Retrieve the model *)
-(* 		let model = Input.get_model () in *)
+		let model = Input.get_model () in
 		
 		self#print_algo_message_newline Verbose_standard (
 			"Algorithm completed " ^ (after_seconds ()) ^ "."
@@ -642,10 +681,18 @@ class algoDeadlockFree =
 		)
 		(* Else: compute backward under-approximation *)
 		else(
+			(* Print some information *)
+			if verbose_mode_greater Verbose_low then(
+				self#print_algo_message_newline Verbose_low "Over-approximated constraint:";
+				self#print_algo_message Verbose_low (LinearConstraint.string_of_p_nnconvex_constraint model.variable_names result);
+			);
+			
+			self#print_algo_message_newline Verbose_standard "Starting backward under-approximation...";
+			
 			(* Update the constraint so as to obtain an under-approximation in addition to the over-approximation *)
 			self#backward_underapproximation;
 			
-			self#print_algo_message_newline Verbose_standard (
+			self#print_algo_message Verbose_standard (
 				"Backward under-approximation completed " ^ (after_seconds ()) ^ "."
 			);
 			
@@ -661,7 +708,20 @@ class algoDeadlockFree =
 				"Negation of final under-approximated constraint completed."
 			);
 			
-			Under_over_constraint (under_result, result)
+			(* Test if under=over (in which case the result is exact *)
+			if LinearConstraint.p_nnconvex_constraint_is_equal under_result result then(
+				(* Print some information *)
+				self#print_algo_message_newline Verbose_standard (
+					"Under-approximation is equal to over-approximation: result is exact."
+				);
+			
+				Single_constraint (result, Constraint_exact)
+			
+			)else(
+				Under_over_constraint (under_result, result)
+			
+			);
+			
 		) (* end if not regular termination *)
 		in
 		
