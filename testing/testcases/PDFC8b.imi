@@ -1,0 +1,96 @@
+(************************************************************
+ *                      IMITATOR MODEL                      
+ *
+ * Dummy example to test parametric deadlock-freeness checking
+ *
+ * Description     : Dummy example to test parametric deadlock-freeness checking
+ * Correctness     : The system is deadlock-free: for p1 in (0, 2) U (2, 3]
+ * Source          : Own work
+ * Author          : Étienne André
+ * Modeling        : Étienne André
+ * Input by        : Étienne André
+ * License         : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+
+ *
+ * Created         : 2016/05/09
+ * Last modified   : 2016/05/09
+ *
+ * IMITATOR version: 2.8-alpha
+ ************************************************************)
+
+var
+
+(* Clocks *)
+ 	x, y
+		: clock;
+
+(* Parameters *)
+	p1
+		: parameter;
+
+
+
+(************************************************************)
+  automaton pta
+(************************************************************)
+synclabs: ;
+
+loc l1: while x <= p1 wait {}
+	(* To location with deadlock *)
+	when x = p1 & x = 2 goto l2;
+
+	(* To location with infinite loop *)
+	when x = p1 & x = 0 goto l3;
+
+	(* To location with no deadlock *)
+	when x = p1 & x <= 3 goto l4;
+
+(* Obvious deadlock *)
+loc l2: while True wait {}
+
+(* Classical infinite loop AND entirely deadlocked *)
+loc l3: while True wait {}
+	when x = 1 do {x' = 0} goto l3;
+
+(* Dummy deadlock-freeness *)
+loc l4: while True wait {}
+	when True goto l4;
+
+end (* pta *)
+
+
+
+(************************************************************)
+(* Initial state *)
+(************************************************************)
+
+init :=
+	(*------------------------------------------------------------*)
+	(* Initial location *)
+	(*------------------------------------------------------------*)
+	& loc[pta] = l1
+
+	(*------------------------------------------------------------*)
+	(* Initial clock constraints *)
+	(*------------------------------------------------------------*)
+	& x = 0
+	& y = 0
+
+	(*------------------------------------------------------------*)
+	(* Parameter constraints *)
+	(*------------------------------------------------------------*)
+	& p1 >= 0
+;
+
+
+(************************************************************)
+(* Property specification *)
+(************************************************************)
+
+(* property := unreachable loc[pta] = l1; *)
+
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end

@@ -10,7 +10,7 @@
 # Laboratoire d'Informatique de Paris Nord
 # Universite Paris 13, Sorbonne Paris Cite, France
 # Created      : 2015/10/23
-# Last modified: 2016/03/29
+# Last modified: 2016/05/08
 #************************************************************
 
 
@@ -1325,6 +1325,71 @@ Number of computed states     : 20
 		] # end expectations
 	} # end test case
 	#------------------------------------------------------------
+	,
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test PDFC: example with basic backward under-approximation',
+		'input_files': ['PDFC8.imi'],
+		'options'    : '-mode PDFC -output-result -depth-limit 5',
+		'expectations' : [
+			{'file': 'PDFC8.res' , 'content' : """
+BEGIN UNDER CONSTRAINT
+ p1 > 2
+& 3 >= p1
+OR
+  p1 > 0
+& 2 > p1
+END UNDER CONSTRAINT
+
+
+BEGIN OVER CONSTRAINT
+ p1 > 2
+& 3 >= p1
+OR
+  p1 >= 0
+& 2 > p1
+END OVER CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness          : both a possible under- and a possible over-approximation
+Termination                   : depth limit (1 successor unexplored)
+State space nature            : unknown
+------------------------------------------------------------
+Number of states              : 7
+Number of transitions         : 7
+Number of computed states     : 8
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	,
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test PDFC: example with basic backward under-approximation and exact result',
+		'input_files': ['PDFC8b.imi'],
+		'options'    : '-mode PDFC -output-result -depth-limit 5',
+		'expectations' : [
+			{'file': 'PDFC8b.res' , 'content' : """
+BEGIN CONSTRAINT
+ p1 > 2
+& 3 >= p1
+OR
+  p1 > 0
+& 2 > p1
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness          : exact
+Termination                   : depth limit (1 successor unexplored)
+State space nature            : unknown
+------------------------------------------------------------
+Number of states              : 7
+Number of transitions         : 7
+Number of computed states     : 8
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
 	,
 	#------------------------------------------------------------
 	{
