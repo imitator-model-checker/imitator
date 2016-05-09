@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/05/04
- * Last modified     : 2016/05/04
+ * Last modified     : 2016/05/09
  *
  ************************************************************)
 
@@ -167,6 +167,13 @@ class stateIndexSet =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method mem element =
 		StateIndexSet.mem element the_set
+
+		
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(* Retrieve the number of elements *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	method cardinal =
+		StateIndexSet.cardinal the_set
 
 		
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)

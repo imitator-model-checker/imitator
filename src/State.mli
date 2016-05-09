@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/05/04
- * Last modified     : 2016/05/04
+ * Last modified     : 2016/05/09
  *
  ************************************************************)
 
@@ -70,6 +70,12 @@ class stateIndexSet :
 		method mem : state_index -> bool
 
 		
+		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+		(* Retrieve the number of elements *)
+		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+		method cardinal : int
+		
+
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		(* Retrieve all elements in the form of a list *)
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
