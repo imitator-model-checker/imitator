@@ -9,7 +9,7 @@
  * 
  * File contributors : Ulrich Kühne, Étienne André
  * Created           : 2009/09/07
- * Last modified     : 2016/03/23
+ * Last modified     : 2016/05/09
  *
  ************************************************************)
 
@@ -76,6 +76,14 @@ Input.set_options options;
 
 
 (************************************************************)
+(* Record backtrace if verbose > standard *)
+(************************************************************)
+if verbose_mode_greater Verbose_low then(
+	Printexc.record_backtrace true;
+);
+
+
+(************************************************************)
 (************************************************************)
 (* Print startup message *)
 (************************************************************)
@@ -108,14 +116,13 @@ if verbose_mode_greater Verbose_total then(
 	print_message Verbose_total ("\nThe input model is the following one:\n" ^ (ModelPrinter.string_of_model model) ^ "\n");
 );
 
+
 (************************************************************)
 (* Debug print: property *)
 (************************************************************)
 if verbose_mode_greater Verbose_low then(
 	print_message Verbose_low ("\nThe property is the following one:\n" ^ (ModelPrinter.string_of_property model model.user_property) ^ "\n");
 );
-
-
 
 
 (************************************************************)
@@ -519,55 +526,30 @@ let result = algorithm#run() in
 (* Process *)
 ResultProcessor.process_result result algorithm#algorithm_name None;
 
-		
 
 (************************************************************)
 (* END EXCEPTION MECHANISM *)
 (************************************************************)
 ) with
-(*** TODO: factorize a bit ***)
-	| InternalError msg -> (
-		print_error ("Fatal internal error: " ^ msg ^ "\nPlease (politely) insult the developers.");
-		abort_program ();
-		(* Safety *)
-		exit 1
-	);
-	| Failure msg -> (
-		print_error ("'Failure' exception: '" ^ msg ^ "'\nPlease (politely) insult the developers.");
-		abort_program ();
-		(* Safety *)
-		exit 1
-	);
-	| Invalid_argument msg -> (
-		print_error ("'Invalid_argument' exception: '" ^ msg ^ "'\nPlease (politely) insult the developers.");
-		abort_program ();
-		(* Safety *)
-		exit 1
-	);
-	| SerializationError msg -> (
-		print_error ("Serialization error: " ^ msg ^ "\nPlease (politely) insult the developers.");
-		abort_program ();
-		(* Safety *)
-		exit 1
-	);
-	| Not_found -> (
-		print_error ("'Not_found' exception!\nPlease (politely) insult the developers.");
-		abort_program ();
-		(* Safety *)
-		exit 1
-	);
-	| Random_generator_initialization_exception-> (
-		print_error ("A fatal error occurred during the random generator initialization.\nPlease (politely) insult the developers.");
-		abort_program ();
-		(* Safety *)
-		exit 1
-	);
-	| _ -> (
-		print_error ("An unknown exception occurred. Please (politely) insult the developers.");
-		abort_program ();
-		(* Safety *)
-		exit 1
-	);
+	e ->(
+	let error_message = match e with
+		| InternalError msg -> "Fatal internal error: " ^ msg ^ ""
+		| Failure msg -> "'Failure' exception: '" ^ msg ^ "'"
+		| Invalid_argument msg -> "'Invalid_argument' exception: '" ^ msg ^ "'"
+		| SerializationError msg -> "Serialization error: " ^ msg ^ ""
+		| Not_found -> "'Not_found' exception!"
+		| Random_generator_initialization_exception-> "A fatal error occurred during the random generator initialization."
+		| e -> "Fatal exception '" ^ (Printexc.to_string e) ^ "'."
+	in
+	
+	print_error (error_message ^ "\nPlease (politely) insult the developers.");
+	Printexc.print_backtrace Pervasives.stderr;
+	
+	abort_program ();
+	(* Safety *)
+	exit 1
+	
+	)
 end; (* try *)
 
 
