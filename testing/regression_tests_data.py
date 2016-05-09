@@ -1393,6 +1393,64 @@ Number of computed states     : 8
 	,
 	#------------------------------------------------------------
 	{
+		'purpose'    : 'Test PDFC: another example with basic backward under-approximation',
+		'input_files': ['PDFC9.imi'],
+		'options'    : '-mode PDFC -output-result -depth-limit 5',
+		'expectations' : [
+			{'file': 'PDFC9.res' , 'content' : """
+BEGIN UNDER CONSTRAINT
+ p1 > 2
+END UNDER CONSTRAINT
+
+
+BEGIN OVER CONSTRAINT
+ p1 >= 2
+END OVER CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness          : both a possible under- and a possible over-approximation
+Termination                   : depth limit (1 successor unexplored)
+State space nature            : unknown
+------------------------------------------------------------
+Number of states              : 7
+Number of transitions         : 8
+Number of computed states     : 9
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	,
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test PDFC: again another example with basic backward under-approximation',
+		'input_files': ['PDFC9b.imi'],
+		'options'    : '-mode PDFC -output-result -depth-limit 5',
+		'expectations' : [
+			{'file': 'PDFC9b.res' , 'content' : """
+BEGIN UNDER CONSTRAINT
+ p1 > 2
+END UNDER CONSTRAINT
+
+
+BEGIN OVER CONSTRAINT
+ p1 >= 2
+END OVER CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness          : both a possible under- and a possible over-approximation
+Termination                   : depth limit (1 successor unexplored)
+State space nature            : unknown
+------------------------------------------------------------
+Number of states              : 7
+Number of transitions         : 8
+Number of computed states     : 9
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	,
+	#------------------------------------------------------------
+	{
 		'purpose'    : 'Test the inverse method (flip-flop)',
 		'input_files': ['flipflop.imi', 'flipflop.pi0'],
 		'options'    : '-output-result',
