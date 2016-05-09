@@ -8,7 +8,7 @@
  * Author:        Etienne Andre, Camille Coti
  * 
  * Created:       2014/03/24
- * Last modified: 2016/04/01
+ * Last modified: 2016/05/09
  *
  ****************************************************************)
 
@@ -295,6 +295,9 @@ let serialize_constraint_soundness = function
 	
 	(* Impossible to compare the constraint with the original result *)
 	| Result.Constraint_maybe_invalid -> "I"
+	
+	| Result.Constraint_under_over -> raise (InternalError("BC is not suppose to handle under/over-approximations"))
+	
 
 let unserialize_constraint_soundness = function
 	| "U" -> Result.Constraint_maybe_under

@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/03/17
- * Last modified     : 2016/04/01
+ * Last modified     : 2016/05/09
  *
  ************************************************************)
 
@@ -627,6 +627,7 @@ class algoBCCoverDistributedSubdomainDynamicCoordinator =
 			if termination = BC_Regular_termination && (List.for_all (fun abstract_im_result -> match abstract_im_result.soundness with
 					| Constraint_exact | Constraint_maybe_under -> true
 					| Constraint_maybe_over | Constraint_maybe_invalid -> false
+					| Constraint_under_over -> raise (InternalError("BC is not suppose to handle under/over-approximations"))
 				) abstract_im_results)
 				then Coverage_integer_complete
 			(* UNKNOWN otherwise *)
