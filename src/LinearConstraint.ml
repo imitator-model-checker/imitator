@@ -2613,6 +2613,14 @@ let p_nnconvex_constraint_is_leq p_nnconvex_constraint p_nnconvex_constraint' =
 	ppl_Pointset_Powerset_NNC_Polyhedron_contains_Pointset_Powerset_NNC_Polyhedron p_nnconvex_constraint' p_nnconvex_constraint
 	(*** TODO: counter ***)
 
+(** Check if a nnconvex_constraint is equal to another one *)
+let p_nnconvex_constraint_is_equal p_nnconvex_constraint p_nnconvex_constraint' =
+	(*** TODO: counter ***)
+	(*** NOTE: PPL works in the reverse order: the 2nd contains the 1st one ***)
+	ppl_Pointset_Powerset_NNC_Polyhedron_equals_Pointset_Powerset_NNC_Polyhedron p_nnconvex_constraint' p_nnconvex_constraint
+	(*** TODO: counter ***)
+
+
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
 (** {3 Simplification} *)
