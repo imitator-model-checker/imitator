@@ -585,6 +585,8 @@ class imitator_options =
 				("-version", Unit (fun _ ->
 					(*** HACK: print header now ***)
 					print_header_string();
+					print_string ("GitHub branch and hash: " ^ ImitatorUtilities.git_branch_and_full_hash);
+					print_newline();
 					exit 0), " Print version number and exit.");
 			] in
 					

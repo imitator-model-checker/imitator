@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2014/10/24
- * Last modified     : 2016/05/09
+ * Last modified     : 2016/05/11
  *
  ************************************************************)
 
@@ -92,8 +92,22 @@ let program_name_and_version_and_nickname_and_build_time () =
 	^ ")"
 
 
-(* Git branch and git hash (if applicable) *)
+(* Shorten the hash to 7 characters *)
+let shorten_hash_7 hash =
+	if String.length hash < 7 then hash
+	else String.sub hash 0 7
+
+(** GitHub branch and first 7 characters of git hash (if applicable) *)
 let git_branch_and_hash =
+	match BuildInfo.git_branch, BuildInfo.git_hash with
+	| None, None -> "unknown git info"
+	| Some branch, None -> branch ^ "/unknown hash"
+	| None, Some hash -> "unknown/" ^ (shorten_hash_7 hash)
+	| Some branch, Some hash -> branch ^ "/" ^ (shorten_hash_7 hash)
+
+
+(** GitHub branch and full git hash (if applicable) *)
+let git_branch_and_full_hash =
 	match BuildInfo.git_branch, BuildInfo.git_hash with
 	| None, None -> "unknown git info"
 	| Some branch, None -> branch ^ "/unknown hash"

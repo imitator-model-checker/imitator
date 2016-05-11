@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2014/10/24
- * Last modified     : 2016/05/09
+ * Last modified     : 2016/05/11
  *
  ************************************************************)
 
@@ -34,8 +34,11 @@ val program_name_and_version_and_nickname_and_build : unit -> string
 (* Name + version + nickname + build number + build time *)
 val program_name_and_version_and_nickname_and_build_time : unit -> string
 
-(* Git branch and git hash (if applicable) *)
+(** GitHub branch and first 7 characters of git hash (if applicable) *)
 val git_branch_and_hash : string
+
+(** GitHub branch and full git hash (if applicable) *)
+val git_branch_and_full_hash : string
 
 (* URL of IMITATOR without http:// *)
 val imitator_url : string
