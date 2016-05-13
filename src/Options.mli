@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2012/05/10
- * Last modified: 2016/02/03
+ * Last modified: 2016/05/13
  *
  ****************************************************************)
  
@@ -71,6 +71,8 @@ class imitator_options :
 		method files_prefix : string
 		method fromGML : bool
 		method imitator_mode : imitator_mode
+		(* experimental variant for EFsynth *)
+		method new_ef_mode : bool
 		method inclusion : bool
 		method nb_args : int
 		method merge : bool

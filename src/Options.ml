@@ -9,7 +9,7 @@
  * 
  * File contributors : Ulrich Kühne, Étienne André
  * Created           : 2010
- * Last modified     : 2016/03/23
+ * Last modified     : 2016/05/13
  *
  ************************************************************)
 
@@ -152,6 +152,9 @@ class imitator_options =
 		
 		(* imitator mode *)
 		val mutable imitator_mode = Inverse_method
+		
+		(* experimental variant for EFsynth *)
+		val mutable new_ef_mode = false
 
 		
 		
@@ -289,6 +292,7 @@ class imitator_options =
 		method files_prefix = !files_prefix
 		method fromGML = fromGML
 		method imitator_mode = imitator_mode
+		method new_ef_mode = new_ef_mode
 		method inclusion = !inclusion
 		method nb_args = nb_args
 		method merge = !merge
@@ -358,6 +362,12 @@ class imitator_options =
 				(* Case: EF-synthesis *)
 				else if mode = "EF" then 
 					imitator_mode <- EF_synthesis
+					
+				(* Case: new experimental EF-synthesis using PointSetPowerSet *)
+				else if mode = "EFnew" then(
+					new_ef_mode <- true;
+					imitator_mode <- EF_synthesis
+					)
 					
 				(* Case: Parametric deadlock checking *)
 				else if mode = "PDFC" then 

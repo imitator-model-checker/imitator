@@ -9,7 +9,7 @@
  * 
  * File contributors : Ulrich Kühne, Étienne André
  * Created           : 2009/09/07
- * Last modified     : 2016/05/09
+ * Last modified     : 2016/05/13
  *
  ************************************************************)
 
@@ -333,8 +333,14 @@ let algorithm : AlgoGeneric.algoGeneric = match options#imitator_mode with
 	(************************************************************)
 	(* EF-synthesis *)
 	(************************************************************)
-	| EF_synthesis ->
+	(* Experimental mode with PointSetPowerSet *)
+	| EF_synthesis when options#new_ef_mode ->
 		let myalgo :> AlgoGeneric.algoGeneric = new AlgoEFsynth.algoEFsynth in myalgo
+	
+	(* Normal (and old) mode *)
+	| EF_synthesis when not options#new_ef_mode ->
+		let myalgo :> AlgoGeneric.algoGeneric = new AlgoEFsynthOld.algoEFsynth in myalgo
+	
 	
 	
 	(************************************************************)

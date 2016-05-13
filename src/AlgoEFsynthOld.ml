@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/11/25
- * Last modified     : 2016/05/13
+ * Last modified     : 2016/02/11
  *
  ************************************************************)
 
@@ -39,22 +39,14 @@ class algoEFsynth =
 	(* Class variables *)
 	(************************************************************)
 	
-	(* Non-necessarily convex constraint allowing the reachability of the bad location *)
-	val mutable bad_constraint : LinearConstraint.p_nnconvex_constraint = LinearConstraint.false_p_nnconvex_constraint ()
-
-	
-	(* Non-necessarily convex parameter constraint of the initial state (constant object used as a shortcut, as it is used at the end of the algorithm) *)
-	(*** WARNING: these lines are copied from AlgoDeadlockFree ***)
-	val init_p_nnconvex_constraint : LinearConstraint.p_nnconvex_constraint =
-		(* Retrieve the model *)
-		let model = Input.get_model () in
-		LinearConstraint.p_nnconvex_constraint_of_p_linear_constraint model.initial_p_constraint
+	(* List of constraints allowing the reachability of the bad location *)
+	val mutable bad_constraints = []
 
 	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Name of the algorithm *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method algorithm_name = "EFsynth experimental"
+	method algorithm_name = "EFsynth"
 	
 	
 	
@@ -67,8 +59,7 @@ class algoEFsynth =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method initialize_variables =
 		super#initialize_variables;
-		(*** NOTE: duplicate operation ***)
-		bad_constraint <- LinearConstraint.false_p_nnconvex_constraint ();
+		bad_constraints <- [];
 
 		(* The end *)
 		()
@@ -81,7 +72,7 @@ class algoEFsynth =
 	(* Return true if the state is not discarded by the algorithm, i.e., if it is either added OR was already present before *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(*** WARNING/BADPROG: the following is partially copy/paste to AlgoPRP.ml ***)
-	method add_a_new_state state_space orig_state_index new_states_indexes action_index location (current_constraint : LinearConstraint.px_linear_constraint) =
+	method add_a_new_state state_space orig_state_index new_states_indexes action_index location (final_constraint : LinearConstraint.px_linear_constraint) =
 		(* Retrieve the model *)
 		let model = Input.get_model () in
 
@@ -89,7 +80,7 @@ class algoEFsynth =
 (* 		let options = Input.get_options () in *)
 
 		(* Build the state *)
-		let new_state = location, current_constraint in
+		let new_state = location, final_constraint in
 
 		(* Print some information *)
 		if verbose_mode_greater Verbose_total then(
@@ -119,7 +110,7 @@ class algoEFsynth =
 				if State.match_unreachable_global_locations unreachable_global_locations location then(
 				
 					(* Project onto the parameters *)
-					let p_constraint = LinearConstraint.px_hide_nonparameters_and_collapse current_constraint in
+					let p_constraint = LinearConstraint.px_hide_nonparameters_and_collapse final_constraint in
 					
 					(* Projecting onto SOME parameters if required *)
 					begin
@@ -134,21 +125,27 @@ class algoEFsynth =
 						(* Eliminate other parameters *)
 						LinearConstraint.p_hide_assign all_but_projectparameters p_constraint;
 					end;
-
-					(* Print some information *)
-					self#print_algo_message Verbose_standard "Found a state violating the property.";
-						
-					(* Update the bad constraint using the current constraint *)
-					(*** NOTE: perhaps try first whether p_constraint <= bad_constraint ? ***)
-					LinearConstraint.p_nnconvex_p_union bad_constraint p_constraint;
 					
-					(* Print some information *)
-					if verbose_mode_greater Verbose_medium then(
-						self#print_algo_message Verbose_medium "Adding the following constraint to the list of bad constraints:";
-						print_message Verbose_medium (LinearConstraint.string_of_p_linear_constraint model.variable_names p_constraint);
+					(* Add the constraint to the list of constraints, unless it is already present there *)
+					(*** TODO: also check for REVERSE inclusion (old included in new) ***)
+					(*** TODO: merge this list on-the-fly!! ***)
+					(*** TODO: even better, directly use a non-convex constraint using PPL, and leave the work to PPL ***)
+					if List.exists (LinearConstraint.p_is_leq p_constraint) bad_constraints then(
+						self#print_algo_message Verbose_low "Found a state violating the property but the constraint is not new.";
+					)else(
+						bad_constraints <- p_constraint :: bad_constraints;
+						(* Print some information *)
+						self#print_algo_message Verbose_standard "Found a state violating the property.";
+						
+						(* Print some information *)
+						if verbose_mode_greater Verbose_medium then(
+							self#print_algo_message Verbose_medium "Adding the following constraint to the list of bad constraints:";
+							print_message Verbose_medium (LinearConstraint.string_of_p_linear_constraint model.variable_names p_constraint);
+						);
+						
 					);
 					
-					(* Do NOT compute its successors; cut the branch *)
+					(* Do NOT compute its successors *)
 					to_be_added := false;
 					
 				)else(
@@ -157,24 +154,6 @@ class algoEFsynth =
 			| _ -> raise (InternalError("[EFsynth/PRP] IMITATOR currently ony implements the non-reachability-like properties. This should have been checked before."))
 			end
 			;
-			
-			(* If to be added: if the state is included into the bad constraint, no need to explore further, and hence do not add *)
-			if !to_be_added then(
-			
-				(*** WARNING: this may have been computed above! ***)
-				(*** TODO: use a small ad-hoc cache system ***)
-				(* Project onto the parameters *)
-				let p_constraint = LinearConstraint.px_hide_nonparameters_and_collapse current_constraint in
-				
-				(* if p_constraint <= bad_constraint *)
-				if LinearConstraint.p_nnconvex_constraint_is_leq (LinearConstraint.p_nnconvex_constraint_of_p_linear_constraint p_constraint) bad_constraint then (
-					(* Print some information *)
-					self#print_algo_message Verbose_standard "Found a state included in bad valuations; cut branch.";
-					
-					(* Do NOT compute its successors; cut the branch *)
-					to_be_added := false;
-				);
-			);
 
 			(* Add the state_index to the list of new states (used to compute their successors at the next iteration) *)
 			if !to_be_added then
@@ -182,6 +161,7 @@ class algoEFsynth =
 			
 		) (* end if new state *)
 		;
+		
 		
 		(*** TODO: move the rest to a higher level function? (post_from_one_state?) ***)
 		
@@ -229,18 +209,6 @@ class algoEFsynth =
 		
 		(*** TODO: compute as well *good* zones, depending whether the analysis was exact, or early termination occurred ***)
 		
-		self#print_algo_message_newline Verbose_low (
-			"Performing negation of final constraint..."
-		);
-		
-		(* Perform result = initial_state|P \ bad_constraint *)
-		let result = LinearConstraint.p_nnconvex_copy init_p_nnconvex_constraint in
-		LinearConstraint.p_nnconvex_difference result bad_constraint;
-		
-		self#print_algo_message_newline Verbose_medium (
-			"Negation of final constraint completed."
-		);
-		
 		(* Get the termination status *)
 		 let termination_status = match termination_status with
 			| None -> raise (InternalError "Termination status not set in EFsynth.compute_result")
@@ -258,10 +226,10 @@ class algoEFsynth =
 		let soundness = if termination_status = Regular_termination then Constraint_exact else Constraint_maybe_under in
 
 		(* Return the result *)
-		PDFC_result
+		EFsynth_result
 		{
-			(* Non-necessarily convex constraint guaranteeing the non-reachability of the bad location *)
-			result				= Single_constraint(result, soundness);
+			(* List of constraints ensuring EF location *)
+			constraints			= bad_constraints;
 			
 			(* Explored state space *)
 			state_space			= state_space;
@@ -272,6 +240,9 @@ class algoEFsynth =
 			(* Total computation time of the algorithm *)
 			computation_time	= time_from start_time;
 			
+			(* Soudndness of the result *)
+			soundness			= soundness;
+	
 			(* Termination *)
 			termination			= termination_status;
 		}
