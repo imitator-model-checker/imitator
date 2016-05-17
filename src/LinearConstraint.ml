@@ -14,7 +14,6 @@
  ************************************************************)
 
 
-
 (************************************************************)
 (* External modules *)
 (************************************************************)
@@ -65,27 +64,49 @@ let ppl_nb_normalize_linear_term = ref 0
 
 let ppl_nb_true_constraint = ref 0
 	let ppl_t_true_constraint = ref 0.0
+	let ppl_tcounter_true_constraint = create_and_register "true_constraint" PPL_counter Verbose_low
+
 let ppl_nb_false_constraint = ref 0
 	let ppl_t_false_constraint = ref 0.0
+	let ppl_tcounter_false_constraint = create_and_register "false_constraint" PPL_counter Verbose_low
 
 let ppl_nb_is_true = ref 0
 	let ppl_t_is_true = ref 0.0
+	let ppl_tcounter_is_true = create_and_register "is_true" PPL_counter Verbose_low
+
 let ppl_nb_is_false = ref 0
 	let ppl_t_is_false = ref 0.0
+	let ppl_tcounter_is_false = create_and_register "is_false" PPL_counter Verbose_low
+
 let ppl_nb_is_equal = ref 0
 	let ppl_t_is_equal = ref 0.0
+	let ppl_tcounter_is_equal = create_and_register "is_equal" PPL_counter Verbose_low
+
 let ppl_nb_contains = ref 0
 	let ppl_t_contains = ref 0.0
+	let ppl_tcounter_contains = create_and_register "contains" PPL_counter Verbose_low
+
+
 let ppl_nb_contains_integer_point = ref 0
 	let ppl_t_contains_integer_point = ref 0.0
+	let ppl_tcounter_contains_integer_point = create_and_register "contains_integer_point" PPL_counter Verbose_low
+
 
 let ppl_nb_get_constraints = ref 0
 	let ppl_t_get_constraints = ref 0.0
+	let ppl_tcounter_get_inequalities = create_and_register "get_inequalities" PPL_counter Verbose_low
+	
 let ppl_nb_get_generators = ref 0
 	let ppl_t_get_generators = ref 0.0
+	let ppl_tcounter_get_generators = create_and_register "get_generators" PPL_counter Verbose_low
+	
 
 let ppl_nb_add_constraints = ref 0
 	let ppl_t_add_constraints = ref 0.0
+	let ppl_tcounter_add_constraints = create_and_register "add_constraints" PPL_counter Verbose_low
+
+
+	let ppl_tcounter_constrains = create_and_register "constrains" PPL_counter Verbose_low
 
 let ppl_nb_hull = ref 0
 	let ppl_t_hull = ref 0.0
@@ -98,21 +119,29 @@ let ppl_nb_hull_assign_if_exact_false = ref 0
 
 let ppl_nb_difference = ref 0
 	let ppl_t_difference = ref 0.0
+
 let ppl_nb_intersection_assign = ref 0
 	let ppl_t_intersection_assign = ref 0.0
+	let ppl_tcounter_intersection_assign = create_and_register "intersection_assign" PPL_counter Verbose_low
+
 let ppl_nb_unconstrain = ref 0
 	let ppl_t_unconstrain = ref 0.0
 let ppl_nb_map = ref 0
 	let ppl_t_map = ref 0.0
 (*let ppl_nb_preimage = ref 0
 	let ppl_t_preimage = ref 0*)
+
 let ppl_nb_remove_dim = ref 0
 	let ppl_t_remove_dim = ref 0.0
+	let ppl_tcounter_remove_space_dimensions = create_and_register "remove_space_dimensions" PPL_counter Verbose_low
+
+	
 let ppl_nb_elapse = ref 0
 	let ppl_t_elapse = ref 0.0
 
 let ppl_nb_copy_polyhedron = ref 0
 	let ppl_t_copy_polyhedron = ref 0.0
+	let ppl_tcounter_copy = create_and_register "NNC_Polyhedron_from_NNC_Polyhedron" PPL_counter Verbose_low
 
 
 let get_statistics total_time =
@@ -232,8 +261,8 @@ let normalize_linear_term lt =
 	ppl_tcounter_normalize_linear_term#start;
 	
 	let rec normalize_linear_term_rec lt =
-	(*	(* Statistics *)
-		let start = Unix.gettimeofday() in*)
+	(*	(* Statistics *)*)
+	(*** TODO ***)
 		ppl_nb_normalize_linear_term := !ppl_nb_normalize_linear_term + 1;
 
 		let result =
@@ -267,8 +296,6 @@ let normalize_linear_term lt =
 					let q = NumConst.get_den fac in
 					term_norm, NumConst.mul r (NumConst.numconst_of_zfrac p q))
 		in
-	(* Statistics *)
-(* 	ppl_t_normalize_linear_term := !ppl_t_normalize_linear_term +. (Unix.gettimeofday() -. start); *)
 	(* Return result *)
 		result
 	in
@@ -328,83 +355,95 @@ let nonparameters () = list_of_interval !nb_parameters (!total_dim - 1)
 (*** TODO: all PPL functions should be encapsulated that way ***)
 (*** TODO: factor! (as they all follow the same scheme) ***)
 
-let ippl_space_dimension x =
-	(* Statistics *)
-	ppl_nb_space_dimension := !ppl_nb_space_dimension + 1;
-(* 	let start = Unix.gettimeofday() in *)
-
-	(* Start counter *)
-	ppl_tcounter_space_dimension#start;
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+(* Generic and polymorphic function to encapsulate a PPL function with a counter:
+ * 1) start the counter
+ * 2) call the PPL function f (that must be of type unit -> _ )
+ * 3) stop the counter
+ * 4) return the result
+ *)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+let ippl_generic f counter =
+	(*** TODO: increment discrete counter ***)
+	
+	(* Start time counter *)
+	counter#start;
+	
 	(* Actual call to PPL *)
-	let result = ppl_Polyhedron_space_dimension x in
+	let result = f() in
+	
 	(* Stop counter *)
-	ppl_tcounter_space_dimension#stop;
-	(* Statistics *)
-(* 	ppl_t_space_dimension := !ppl_t_space_dimension +. (Unix.gettimeofday() -. start); *)
+	counter#stop;
 	
 	(* Return result *)
 	result
+
+
+let ippl_space_dimension x =
+	ippl_generic (fun () -> ppl_Polyhedron_space_dimension x) ppl_tcounter_space_dimension
 
 let ippl_add_constraints x =
-	(* Statistics *)
-	ppl_nb_add_constraints := !ppl_nb_add_constraints + 1;
-	let start = Unix.gettimeofday() in
-	(* Actual call to PPL *)
-	let result = ppl_Polyhedron_add_constraints x in
-	(* Statistics *)
-	ppl_t_add_constraints := !ppl_t_add_constraints +. (Unix.gettimeofday() -. start);
-	(* Return result *)
-	result
-	
+	ippl_generic (fun () -> ppl_Polyhedron_add_constraints x) ppl_tcounter_add_constraints
 
 (* Return the list of inequalities that build the polyhedron (interface to PPL) *)
 let ippl_get_inequalities x : linear_inequality list =
-	(* Statistics *)
-	ppl_nb_get_constraints := !ppl_nb_get_constraints + 1;
-	let start = Unix.gettimeofday() in
-	(* Actual call to PPL *)
-	let result = ppl_Polyhedron_get_constraints x in
-	(* Statistics *)
-	ppl_t_get_constraints := !ppl_t_get_constraints +. (Unix.gettimeofday() -. start);
-	(* Return result *)
-	result
-	
+	ippl_generic (fun () -> ppl_Polyhedron_get_constraints x) ppl_tcounter_get_inequalities
 
-let ippl_get_generators poly =	
-	(* Statistics *)
-	ppl_nb_get_generators := !ppl_nb_get_generators + 1;
-	let start = Unix.gettimeofday() in
-	(* Actual call to PPL *)
-	let result = ppl_Polyhedron_get_generators poly in
-	(* Statistics *)
-	ppl_t_get_generators := !ppl_t_get_generators +. (Unix.gettimeofday() -. start);
-	(* Return result *)
-	result
-
+let ippl_get_generators poly =
+	ippl_generic (fun () -> ppl_Polyhedron_get_generators poly) ppl_tcounter_get_generators
 
 let ippl_intersection_assign x =
-	(* Statistics *)
-	ppl_nb_intersection_assign := !ppl_nb_intersection_assign + 1;
-	let start = Unix.gettimeofday() in
-	(* Actual call to PPL *)
-	let result = ppl_Polyhedron_intersection_assign x in
-	(* Statistics *)
-	ppl_t_intersection_assign := !ppl_t_intersection_assign +. (Unix.gettimeofday() -. start);
-	(* Return result *)
-	result
-
+	ippl_generic (fun () -> ppl_Polyhedron_intersection_assign x) ppl_tcounter_intersection_assign
 
 let ippl_remove_dim poly remove =
-	(* Statistics *)
-	ppl_nb_remove_dim := !ppl_nb_remove_dim + 1;
-	let start = Unix.gettimeofday() in
-	(* Actual call to PPL *)
-	ppl_Polyhedron_remove_space_dimensions poly remove;
-	(* Statistics *)
-	ppl_t_remove_dim := !ppl_t_remove_dim +. (Unix.gettimeofday() -. start)
+	ippl_generic (fun () -> ppl_Polyhedron_remove_space_dimensions poly remove) ppl_tcounter_remove_space_dimensions
 
+(** Create a false constraint *)
+let ippl_false_constraint () =
+	ippl_generic (fun () -> ppl_new_NNC_Polyhedron_from_space_dimension !total_dim Empty) ppl_tcounter_false_constraint
+
+
+let ippl_true_constraint () = 
+	ippl_generic (fun () -> ppl_new_NNC_Polyhedron_from_space_dimension !total_dim Universe) ppl_tcounter_true_constraint
+
+
+(** Check if a constraint is false *)
+let ippl_is_false c =
+	ippl_generic (fun () -> ppl_Polyhedron_is_empty c) ppl_tcounter_is_false
+
+
+(** Check if a constraint is true *)
+let ippl_is_true c =
+	ippl_generic (fun () -> ppl_Polyhedron_is_universe c) ppl_tcounter_is_true
+
+
+(** Check if 2 constraints are equal *)
+let ippl_is_equal c1 c2 =
+	ippl_generic (fun () -> ppl_Polyhedron_equals_Polyhedron c1 c2) ppl_tcounter_is_equal
+
+
+(** Check if a constraint is included in another one *)
+let ippl_is_leq x y =
+	ippl_generic (fun () -> ppl_Polyhedron_contains_Polyhedron y x) ppl_tcounter_contains
+
+
+(** Check if a constraint contains an integer point *)
+let ippl_contains_integer_point c =
+	ippl_generic (fun () -> ppl_Polyhedron_contains_integer_point c) ppl_tcounter_contains_integer_point
+
+(** Return true if the variable is constrained in a linear_constraint *)
+let ippl_is_constrained =
+	ippl_generic (fun () -> ppl_Polyhedron_constrains) ppl_tcounter_constrains
 	
-	
+
+let ippl_copy_linear_constraint linear_constraint =
+	ippl_generic (fun () -> ppl_new_NNC_Polyhedron_from_NNC_Polyhedron linear_constraint) ppl_tcounter_copy
+
+
+
+(*** TODO: more PPL interfaces ***)
+
+
 (************************************************************)
 (************************************************************)
 (* Useful Functions *)
@@ -1062,37 +1101,16 @@ let set_dimensions nb_p nb_c nb_d =
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 (** Create a false constraint *)
-let false_constraint () =
-	(* Statistics *)
-	ppl_nb_false_constraint := !ppl_nb_false_constraint + 1;
-	let start = Unix.gettimeofday() in
-	(* Actual call to PPL *)
-	let result = ppl_new_NNC_Polyhedron_from_space_dimension !total_dim Empty in
-	(* Statistics *)
-	ppl_t_false_constraint := !ppl_t_false_constraint +. (Unix.gettimeofday() -. start);
-	(* Return result *)
-	result
-
-let p_false_constraint = false_constraint
-let pxd_false_constraint = false_constraint
+let p_false_constraint = ippl_false_constraint
+let pxd_false_constraint = ippl_false_constraint
 
 
 
 (** Create a true constraint *)
-let true_constraint () = 
-	(* Statistics *)
-	ppl_nb_true_constraint := !ppl_nb_true_constraint + 1;
-	let start = Unix.gettimeofday() in
-	(* Actual call to PPL *)
-	let result = ppl_new_NNC_Polyhedron_from_space_dimension !total_dim Universe in
-	(* Statistics *)
-	ppl_t_true_constraint := !ppl_t_true_constraint +. (Unix.gettimeofday() -. start);
-	(* Return result *)
-	result
-
-let p_true_constraint = true_constraint
-let px_true_constraint = true_constraint
-let pxd_true_constraint = true_constraint
+let true_constraint = ippl_true_constraint
+let p_true_constraint = ippl_true_constraint
+let px_true_constraint = ippl_true_constraint
+let pxd_true_constraint = ippl_true_constraint
 
 
 (** Create a linear constraint from a list of linear inequalities *)
@@ -1167,36 +1185,15 @@ let pxd_constraint_of_nonnegative_variables = constraint_of_nonnegative_variable
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 (** Check if a constraint is false *)
-let is_false c =
-	(* Statistics *)
-	ppl_nb_is_false := !ppl_nb_is_false + 1;
-	let start = Unix.gettimeofday() in
-	(* Actual call to PPL *)
-	let result = ppl_Polyhedron_is_empty c in
-	(* Statistics *)
-	ppl_t_is_false := !ppl_t_is_false +. (Unix.gettimeofday() -. start);
-	(* Return result *)
-	result
-
-let p_is_false = is_false
-let px_is_false = is_false
+let is_false = ippl_is_false
+let p_is_false = ippl_is_false
+let px_is_false = ippl_is_false
 
 
 (** Check if a constraint is true *)
-let is_true c =
-	(* Statistics *)
-	ppl_nb_is_true := !ppl_nb_is_true + 1;
-	let start = Unix.gettimeofday() in
-	(* Actual call to PPL *)
-	let result = ppl_Polyhedron_is_universe c in
-	(* Statistics *)
-	ppl_t_is_true := !ppl_t_is_true +. (Unix.gettimeofday() -. start);
-	(* Return result *)
-	result
-
-let p_is_true = is_true
-let pxd_is_true = is_true
-
+let is_true = ippl_is_true
+let p_is_true = ippl_is_true
+let pxd_is_true = ippl_is_true
 
 
 (** Check if a constraint is satisfiable *)
@@ -1205,50 +1202,22 @@ let p_is_satisfiable = is_satisfiable
 let px_is_satisfiable = is_satisfiable
 let pxd_is_satisfiable = is_satisfiable
 
-(** Check if 2 constraints are equal *)
-let is_equal c1 c2 =
-	(* Statistics *)
-	ppl_nb_is_equal := !ppl_nb_is_equal + 1;
-	let start = Unix.gettimeofday() in
-	(* Actual call to PPL *)
-	let result = ppl_Polyhedron_equals_Polyhedron c1 c2 in
-	(* Statistics *)
-	ppl_t_is_equal := !ppl_t_is_equal +. (Unix.gettimeofday() -. start);
-	(* Return result *)
-	result
 
-let p_is_equal = is_equal
-let px_is_equal = is_equal
+(** Check if 2 constraints are equal *)
+let is_equal = ippl_is_equal
+let p_is_equal = ippl_is_equal
+let px_is_equal = ippl_is_equal
+
 
 (** Check if a constraint is included in another one *)
-let is_leq x y =
-	(* Statistics *)
-	ppl_nb_contains := !ppl_nb_contains + 1;
-	let start = Unix.gettimeofday() in
-	(* Actual call to PPL *)
-	let result = ppl_Polyhedron_contains_Polyhedron y x in
-	(* Statistics *)
-	ppl_t_contains := !ppl_t_contains +. (Unix.gettimeofday() -. start);
-	(* Return result *)
-	result
-
-let p_is_leq = is_leq
-let px_is_leq = is_leq
+let is_leq = ippl_is_leq
+let p_is_leq = ippl_is_leq
+let px_is_leq = ippl_is_leq
 
 
 (** Check if a constraint contains an integer point *)
-let contains_integer_point c =
-	(* Statistics *)
-	ppl_nb_contains_integer_point := !ppl_nb_contains_integer_point + 1;
-	let start = Unix.gettimeofday() in
-	(* Actual call to PPL *)
-	let result = ppl_Polyhedron_contains_integer_point c in
-	(* Statistics *)
-	ppl_t_contains_integer_point := !ppl_t_contains_integer_point +. (Unix.gettimeofday() -. start);
-	(* Return result *)
-	result
-
-let px_contains_integer_point = contains_integer_point
+let contains_integer_point = ippl_contains_integer_point
+let px_contains_integer_point = ippl_contains_integer_point
 
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -1272,17 +1241,13 @@ let p_nb_inequalities = nb_inequalities
 let pxd_get_inequalities = ippl_get_inequalities
 
 
-
 (** Return true if the variable is constrained in a linear_constraint *)
-(*** TODO: add counter ***)
-let is_constrained =
-	ppl_Polyhedron_constrains
-
-let pxd_is_constrained = is_constrained
+let is_constrained = ippl_is_constrained
+let pxd_is_constrained = ippl_is_constrained
 
 
 (** Return the list of variables from l that are constrained in the constraint *)
-(*** WARNING: no idea of the efficiency of this way of doing *)
+(*** WARNING: no idea of the efficiency of this way of doing ***)
 (* (but not crucial because only called for preprocessing) *)
 let find_variables variables_list linear_constraint =
 	List.filter (fun variable ->
@@ -1484,21 +1449,10 @@ let string_of_pxd_linear_constraint = string_of_linear_constraint
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 (** {3 Functions} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-let copy linear_constraint =
-	(* Statistics *)
-	ppl_nb_copy_polyhedron := !ppl_nb_copy_polyhedron + 1;
-	let start = Unix.gettimeofday() in
-	(* Actual call to PPL *)
-	let result = ppl_new_NNC_Polyhedron_from_NNC_Polyhedron linear_constraint in
-	(* Statistics *)
-	ppl_t_copy_polyhedron := !ppl_t_copy_polyhedron +. (Unix.gettimeofday() -. start);
-	(* Return result *)
-	result
-
-
-let p_copy = copy
-let px_copy = copy
-let pxd_copy = copy
+let copy = ippl_copy_linear_constraint
+let p_copy = ippl_copy_linear_constraint
+let px_copy = ippl_copy_linear_constraint
+let pxd_copy = ippl_copy_linear_constraint
 
 
 (** Perform the intersection of a linear constrain with a list of constraints (with side effect) *)
