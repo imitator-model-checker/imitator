@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2014/10/24
- * Last modified     : 2016/05/11
+ * Last modified     : 2016/05/17
  *
  ************************************************************)
 
@@ -172,10 +172,6 @@ let set_verbose_mode verbose_mode =
 let verbose_mode_greater verbose_mode =
 	(* Get the global verbose mode *)
 	let global_verbose_mode = get_verbose_mode() in
-(*	match !global_verbose_mode with
-	| Verbose_mode_not_set -> raise (InternalError ("The verbose mode has not been set, impossible to access it."))
-	| Verbose_mode_set global_verbose_mode -> global_verbose_mode
-	in*)
 	(* Compare *)
 	(level_of_verbose global_verbose_mode) >= (level_of_verbose verbose_mode)
 
