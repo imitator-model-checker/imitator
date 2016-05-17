@@ -83,6 +83,12 @@ class timeCounter (name : string) (counter_type : counterType) (level : Imitator
 	
 	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(** Get the level *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	method level = level
+	
+	
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(** Start the counter *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method start =
@@ -166,11 +172,14 @@ let print_all_counters () =
 	print_message Verbose_standard " Statistics";
 	print_message Verbose_standard "------------------------------------------------------------";
 	List.iter (fun counter ->
-		let counter_name_length = String.length counter#name in
-		let name = if counter_name_length <= max_name_size then
-			(counter#name ^ (string_n_times (max_name_size - counter_name_length) " "))
-		else
-			counter#name
-		in
-		print_message Verbose_standard (name ^ ": " ^ (string_of_seconds counter#value));
+		(* Only print suitable counters *)
+		if verbose_mode_greater counter#level then(
+			let counter_name_length = String.length counter#name in
+			let name = if counter_name_length <= max_name_size then
+				(counter#name ^ (string_n_times (max_name_size - counter_name_length) " "))
+			else
+				counter#name
+			in
+			print_message Verbose_standard (name ^ ": " ^ (string_of_seconds counter#value));
+		);
 	) !all_counters
