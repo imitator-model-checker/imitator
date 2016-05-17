@@ -143,14 +143,15 @@ let create_and_register (name : string) (counter_type : counterType) (level : Im
 	let my_new_counter = new timeCounter name counter_type level in
 	
 	(* Only register if verbose mode allows for it *)
-	if verbose_mode_greater level then(
+	(*** NOTE: for now, register all counters (as the verbose_mode may not be initialized when the counters are created ***)
+(* 	if verbose_mode_greater level then( *)
 		(* Print some information *)
 		print_message Verbose_low ("Registered counter " ^ name ^ ".");
 		register my_new_counter
-	)else(
+(*	)else(
 		(* Print some information *)
 		print_message Verbose_low ("Counter " ^ name ^ " NOT registered.");
-	);
+	)*);
 	
 	(* Return counter *)
 	my_new_counter
