@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2010/03/04
- * Last modified     : 2016/04/30
+ * Last modified     : 2016/05/17
  *
  ************************************************************)
 
@@ -32,7 +32,7 @@ open Gmp.Z.Infixes
 open Exceptions
 open OCamlUtilities
 open ImitatorUtilities
-
+open TimeCounter
 
 
 (************************************************************)
@@ -57,9 +57,11 @@ let check_assert_dimensions = false
 (************************************************************)
 let ppl_nb_space_dimension = ref 0
 	let ppl_t_space_dimension = ref 0.0
+	let ppl_tcounter_space_dimension = create_and_register "space_dimension" PPL_counter Verbose_low
 
 let ppl_nb_normalize_linear_term = ref 0
 	let ppl_t_normalize_linear_term = ref 0.0
+	let ppl_tcounter_normalize_linear_term = create_and_register "normalize_linear_term" PPL_counter Verbose_low
 
 let ppl_nb_true_constraint = ref 0
 	let ppl_t_true_constraint = ref 0.0
@@ -225,45 +227,60 @@ type pxd_linear_constraint = linear_constraint
 (* to the corresponding PPL data structure, it is normalized such *)
 (* that the only non-rational coefficient is outside the term:    *)
 (* p/q * ( ax + by + c ) *)
-let rec normalize_linear_term lt =
+let normalize_linear_term lt =
+	(* Start counter *)
+	ppl_tcounter_normalize_linear_term#start;
+	
+	let rec normalize_linear_term_rec lt =
+	(*	(* Statistics *)
+		let start = Unix.gettimeofday() in*)
+		ppl_nb_normalize_linear_term := !ppl_nb_normalize_linear_term + 1;
+
+		let result =
+		match lt with
+			| Var v -> Variable v, NumConst.one
+			| Coef c -> (
+					let p = NumConst.get_num c in
+					let q = NumConst.get_den c in
+					Coefficient p, NumConst.numconst_of_zfrac Gmp.Z.one q )
+			| Pl (lterm, rterm) -> (
+					let lterm_norm, fl = normalize_linear_term_rec lterm in
+					let rterm_norm, fr = normalize_linear_term_rec rterm in
+					let pl = NumConst.get_num fl in
+					let ql = NumConst.get_den fl in
+					let pr = NumConst.get_num fr in
+					let qr = NumConst.get_den fr in
+					(Plus (Times (pl *! qr, lterm_norm), (Times (pr *! ql, rterm_norm)))),
+					NumConst.numconst_of_zfrac Gmp.Z.one (ql *! qr))
+			| Mi (lterm, rterm) -> (
+					let lterm_norm, fl = normalize_linear_term_rec lterm in
+					let rterm_norm, fr = normalize_linear_term_rec rterm in
+					let pl = NumConst.get_num fl in
+					let ql = NumConst.get_den fl in
+					let pr = NumConst.get_num fr in
+					let qr = NumConst.get_den fr in
+					(Minus (Times (pl *! qr, lterm_norm), (Times (pr *! ql, rterm_norm)))),
+					NumConst.numconst_of_zfrac Gmp.Z.one (ql *! qr))
+			| Ti (fac, term) -> (
+					let term_norm, r = normalize_linear_term_rec term in
+					let p = NumConst.get_num fac in
+					let q = NumConst.get_den fac in
+					term_norm, NumConst.mul r (NumConst.numconst_of_zfrac p q))
+		in
 	(* Statistics *)
-	let start = Unix.gettimeofday() in
-	ppl_nb_normalize_linear_term := !ppl_nb_normalize_linear_term + 1;
-	let result =
-	match lt with
-		| Var v -> Variable v, NumConst.one
-		| Coef c -> (
-				let p = NumConst.get_num c in
-				let q = NumConst.get_den c in
-				Coefficient p, NumConst.numconst_of_zfrac Gmp.Z.one q )
-		| Pl (lterm, rterm) -> (
-				let lterm_norm, fl = normalize_linear_term lterm in
-				let rterm_norm, fr = normalize_linear_term rterm in
-				let pl = NumConst.get_num fl in
-				let ql = NumConst.get_den fl in
-				let pr = NumConst.get_num fr in
-				let qr = NumConst.get_den fr in
-				(Plus (Times (pl *! qr, lterm_norm), (Times (pr *! ql, rterm_norm)))),
-				NumConst.numconst_of_zfrac Gmp.Z.one (ql *! qr))
-		| Mi (lterm, rterm) -> (
-				let lterm_norm, fl = normalize_linear_term lterm in
-				let rterm_norm, fr = normalize_linear_term rterm in
-				let pl = NumConst.get_num fl in
-				let ql = NumConst.get_den fl in
-				let pr = NumConst.get_num fr in
-				let qr = NumConst.get_den fr in
-				(Minus (Times (pl *! qr, lterm_norm), (Times (pr *! ql, rterm_norm)))),
-				NumConst.numconst_of_zfrac Gmp.Z.one (ql *! qr))
-		| Ti (fac, term) -> (
-				let term_norm, r = normalize_linear_term term in
-				let p = NumConst.get_num fac in
-				let q = NumConst.get_den fac in
-				term_norm, NumConst.mul r (NumConst.numconst_of_zfrac p q))
+(* 	ppl_t_normalize_linear_term := !ppl_t_normalize_linear_term +. (Unix.gettimeofday() -. start); *)
+	(* Return result *)
+		result
 	in
-	(* Statistics *)
-	ppl_t_normalize_linear_term := !ppl_t_normalize_linear_term +. (Unix.gettimeofday() -. start);
+	
+	let result = normalize_linear_term_rec lt in
+
+	(* Stop counter *)
+	ppl_tcounter_normalize_linear_term#stop;
+	
 	(* Return result *)
 	result
+	
 
 
 (** Add on for TA2CLP *)
@@ -314,11 +331,17 @@ let nonparameters () = list_of_interval !nb_parameters (!total_dim - 1)
 let ippl_space_dimension x =
 	(* Statistics *)
 	ppl_nb_space_dimension := !ppl_nb_space_dimension + 1;
-	let start = Unix.gettimeofday() in
+(* 	let start = Unix.gettimeofday() in *)
+
+	(* Start counter *)
+	ppl_tcounter_space_dimension#start;
 	(* Actual call to PPL *)
 	let result = ppl_Polyhedron_space_dimension x in
+	(* Stop counter *)
+	ppl_tcounter_space_dimension#stop;
 	(* Statistics *)
-	ppl_t_space_dimension := !ppl_t_space_dimension +. (Unix.gettimeofday() -. start);
+(* 	ppl_t_space_dimension := !ppl_t_space_dimension +. (Unix.gettimeofday() -. start); *)
+	
 	(* Return result *)
 	result
 

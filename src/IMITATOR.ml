@@ -9,7 +9,7 @@
  * 
  * File contributors : Ulrich Kühne, Étienne André
  * Created           : 2009/09/07
- * Last modified     : 2016/05/13
+ * Last modified     : 2016/05/17
  *
  ************************************************************)
 
@@ -26,6 +26,7 @@ open AbstractModel
 open Result
 open ModelPrinter
 open Options
+open TimeCounter
 
 
 (*** NOTE: just to allow compiling ***)
@@ -58,6 +59,12 @@ TAGS USED THROUGHOUT THIS PROJECT
 (*LinearConstraint.test_PDBMs();
 terminate_program();*)
 
+(************************************************************)
+(* Start the global counter *)
+(************************************************************)
+let global_counter = create_and_register "total" Global_counter Verbose_standard in
+global_counter#start;
+
 
 (************************************************************)
 (* BEGIN EXCEPTION MECHANISM *)
@@ -65,10 +72,13 @@ terminate_program();*)
 begin
 try(
 
-
 (************************************************************)
 (* Get the arguments *)
 (************************************************************)
+
+let options_parsing_counter = create_and_register "options parsing" Parsing_counter Verbose_low in
+options_parsing_counter#start;
+
 (* object with command line options *)
 let options = new imitator_options in
 
@@ -77,6 +87,7 @@ options#parse;
 (* Set the options (for other modules) *)
 Input.set_options options;
 
+options_parsing_counter#stop;
 
 (************************************************************)
 (* Record backtrace if verbose > standard *)
@@ -105,11 +116,16 @@ options#recall();
 (************************************************************)
 (* Get input *)
 (************************************************************)
+let parsing_counter = create_and_register "model parsing" Parsing_counter Verbose_standard in
+parsing_counter#start;
+
 let model, pi0, v0 = ParsingUtility.compile options in
 
 Input.set_model model;
 Input.set_pi0 pi0;
 Input.set_v0 v0;
+
+parsing_counter#stop;
 
 
 (************************************************************)
@@ -561,6 +577,13 @@ ResultProcessor.process_result result algorithm#algorithm_name None;
 	)
 end; (* try *)
 
+
+
+(************************************************************)
+(* Handling statistics *)
+(************************************************************)
+global_counter#stop;
+print_all_counters();
 
 
 (************************************************************)

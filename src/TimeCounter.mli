@@ -49,6 +49,11 @@ class timeCounter : string -> counterType -> ImitatorUtilities.verbose_mode ->
 	object
 		
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+		(** Get the name *)
+		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+		method name : string
+		
+		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		(** Start the counter *)
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		method start : unit
@@ -85,4 +90,7 @@ val create_and_register : string -> counterType -> ImitatorUtilities.verbose_mod
 
 (** Register a counter *)
 val register : timeCounter -> unit
+
+(** Print all counters values *)
+val print_all_counters : unit -> unit
 

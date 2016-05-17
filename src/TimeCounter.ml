@@ -21,6 +21,7 @@
 (* Modules *)
 (************************************************************)
 (************************************************************)
+open OCamlUtilities
 open ImitatorUtilities
 
 
@@ -66,22 +67,27 @@ class timeCounter (name : string) (counter_type : counterType) (level : Imitator
 	val level = level
 
 	(* Current value *)
-	val mutable value = ref 0.0
+	val mutable value = 0.0
 	(* Latest start time *)
-	val mutable start_time = ref 0.0
+	val mutable start_time = 0.0
 	
 	
 	(************************************************************)
 	(* Class methods *)
 	(************************************************************)
 
-
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(** Get the name *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	method name = name
+	
+	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(** Start the counter *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method start =
 		if verbose_mode_greater level then(
-			start_time := Unix.gettimeofday()
+			start_time <- Unix.gettimeofday()
 		)
 	
 	
@@ -90,7 +96,7 @@ class timeCounter (name : string) (counter_type : counterType) (level : Imitator
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method stop =
 		if verbose_mode_greater level then(
-			value := !value +. Unix.gettimeofday() -. !start_time
+			value <- value +. Unix.gettimeofday() -. start_time
 		)
 			
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -98,14 +104,14 @@ class timeCounter (name : string) (counter_type : counterType) (level : Imitator
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method reset =
 		if verbose_mode_greater level then(
-			value := 0.0
+			value <- 0.0
 		)
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-		(** Get the counter's value *)
+	(** Get the counter's value *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method value =
-		!value
+		value
 
 	
 (************************************************************)
@@ -133,7 +139,37 @@ let register (counter : timeCounter) =
 
 (** Shortcut: create new counter and register it *)
 let create_and_register (name : string) (counter_type : counterType) (level : ImitatorUtilities.verbose_mode) =
+	(* Create counter *)
 	let my_new_counter = new timeCounter name counter_type level in
-	register my_new_counter;
+	
+	(* Only register if verbose mode allows for it *)
+	if verbose_mode_greater level then(
+		(* Print some information *)
+		print_message Verbose_low ("Registered counter " ^ name ^ ".");
+		register my_new_counter
+	)else(
+		(* Print some information *)
+		print_message Verbose_low ("Counter " ^ name ^ " NOT registered.");
+	);
+	
+	(* Return counter *)
 	my_new_counter
 
+
+
+(** Print all counters values *)
+let print_all_counters () =
+	let max_name_size = 40 in
+	(*** TODO: add categories, etc. ***)
+	print_message Verbose_standard "\n------------------------------------------------------------";
+	print_message Verbose_standard " Statistics";
+	print_message Verbose_standard "------------------------------------------------------------";
+	List.iter (fun counter ->
+		let counter_name_length = String.length counter#name in
+		let name = if counter_name_length <= max_name_size then
+			(counter#name ^ (string_n_times (max_name_size - counter_name_length) " "))
+		else
+			counter#name
+		in
+		print_message Verbose_standard (name ^ ": " ^ (string_of_seconds counter#value));
+	) !all_counters
