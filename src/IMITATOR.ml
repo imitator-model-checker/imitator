@@ -87,7 +87,9 @@ options#parse;
 (* Set the options (for other modules) *)
 Input.set_options options;
 
+(*** BUG: verbose mode has been set before the start and the stop; this particular counter may never stop! ***)
 options_parsing_counter#stop;
+
 
 (************************************************************)
 (* Record backtrace if verbose > standard *)
