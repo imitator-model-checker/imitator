@@ -9,7 +9,7 @@
  * 
  * File contributors : Ulrich Kühne, Étienne André
  * Created           : 2009/09/07
- * Last modified     : 2016/05/17
+ * Last modified     : 2016/05/18
  *
  ************************************************************)
 
@@ -26,7 +26,7 @@ open AbstractModel
 open Result
 open ModelPrinter
 open Options
-open TimeCounter
+open Statistics
 
 
 (*** NOTE: just to allow compiling ***)

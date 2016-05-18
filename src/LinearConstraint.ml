@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2010/03/04
- * Last modified     : 2016/05/17
+ * Last modified     : 2016/05/18
  *
  ************************************************************)
 
@@ -31,7 +31,7 @@ open Gmp.Z.Infixes
 open Exceptions
 open OCamlUtilities
 open ImitatorUtilities
-open TimeCounter
+open Statistics
 
 
 (************************************************************)
