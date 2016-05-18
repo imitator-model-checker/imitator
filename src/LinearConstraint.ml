@@ -105,29 +105,47 @@ let ppl_nb_add_constraints = ref 0
 	let ppl_t_add_constraints = ref 0.0
 	let ppl_tcounter_add_constraints = create_and_register "add_constraints" PPL_counter Verbose_low
 
+	let ppl_tcounter_add_space_dimensions_and_project = create_and_register "add_space_dimensions_and_project" PPL_counter Verbose_low
+
+	let ppl_tcounter_remove_higher_dimensions = create_and_register "remove_higher_space_dimensions" PPL_counter Verbose_low
+	
 
 	let ppl_tcounter_constrains = create_and_register "constrains" PPL_counter Verbose_low
 
-let ppl_nb_hull = ref 0
+
+
+(*let ppl_nb_hull = ref 0
 	let ppl_t_hull = ref 0.0
+	let ppl_tcounter_hull_assign = create_and_register "hull_assign" PPL_counter Verbose_low*)
+
 let ppl_nb_hull_assign_if_exact = ref 0
 	let ppl_t_hull_assign_if_exact = ref 0.0
-let ppl_nb_hull_assign_if_exact_true = ref 0
+	let ppl_tcounter_hull_assign_if_exact = create_and_register "hull_assign_if_exact" PPL_counter Verbose_low
+
+(*let ppl_nb_hull_assign_if_exact_true = ref 0
 	let ppl_t_hull_assign_if_exact_true = ref 0.0
 let ppl_nb_hull_assign_if_exact_false = ref 0
-	let ppl_t_hull_assign_if_exact_false = ref 0.0
+	let ppl_t_hull_assign_if_exact_false = ref 0.0*)
 
-let ppl_nb_difference = ref 0
+(*let ppl_nb_difference = ref 0
 	let ppl_t_difference = ref 0.0
+	let ppl_tcounter_difference_assign = create_and_register "difference_assign" PPL_counter Verbose_low*)
 
+	
 let ppl_nb_intersection_assign = ref 0
 	let ppl_t_intersection_assign = ref 0.0
 	let ppl_tcounter_intersection_assign = create_and_register "intersection_assign" PPL_counter Verbose_low
 
 let ppl_nb_unconstrain = ref 0
 	let ppl_t_unconstrain = ref 0.0
+	let ppl_tcounter_unconstrain = create_and_register "unconstrain" PPL_counter Verbose_low
+	
+
+
 let ppl_nb_map = ref 0
 	let ppl_t_map = ref 0.0
+	let ppl_tcounter_map_space_dimensions = create_and_register "map_space_dimensions" PPL_counter Verbose_low
+
 (*let ppl_nb_preimage = ref 0
 	let ppl_t_preimage = ref 0*)
 
@@ -138,6 +156,8 @@ let ppl_nb_remove_dim = ref 0
 	
 let ppl_nb_elapse = ref 0
 	let ppl_t_elapse = ref 0.0
+	let ppl_time_elapse_assign = create_and_register "time_elapse_assign" PPL_counter Verbose_low
+
 
 let ppl_nb_copy_polyhedron = ref 0
 	let ppl_t_copy_polyhedron = ref 0.0
@@ -158,11 +178,11 @@ let get_statistics total_time =
 		("get_constraints" , !ppl_nb_get_constraints  , !ppl_t_get_constraints ) ;
 		("get_generators" , !ppl_nb_get_generators, !ppl_t_get_generators) ;
 		("add_constraints" , !ppl_nb_add_constraints, !ppl_t_add_constraints) ;
-		("difference_assign" , !ppl_nb_difference, !ppl_t_difference) ;
-		("hull_assign" , !ppl_nb_hull, !ppl_t_hull) ;
+(* 		("difference_assign" , !ppl_nb_difference, !ppl_t_difference) ; *)
+(* 		("hull_assign" , !ppl_nb_hull, !ppl_t_hull) ; *)
 		("hull_assign_if_exact" , !ppl_nb_hull_assign_if_exact, !ppl_t_hull_assign_if_exact) ;
-		("hull_assign_if_exact_true" , !ppl_nb_hull_assign_if_exact_true, !ppl_t_hull_assign_if_exact_true) ;
-		("hull_assign_if_exact_false" , !ppl_nb_hull_assign_if_exact_false, !ppl_t_hull_assign_if_exact_false) ;
+(* 		("hull_assign_if_exact_true" , !ppl_nb_hull_assign_if_exact_true, !ppl_t_hull_assign_if_exact_true) ; *)
+(* 		("hull_assign_if_exact_false" , !ppl_nb_hull_assign_if_exact_false, !ppl_t_hull_assign_if_exact_false) ; *)
 		("intersection_assign" , !ppl_nb_intersection_assign, !ppl_t_intersection_assign) ;
 		("unconstrain" , !ppl_nb_unconstrain, !ppl_t_unconstrain) ;
 		("map" , !ppl_nb_map, !ppl_t_map) ;
@@ -189,8 +209,8 @@ let get_statistics total_time =
 	in
 	(* Totals *)
 	(* Should not sum up hull_assign_if_exact / hull_assign_if_exact_false / hull_assign_if_exact_true *)
-	let total_ppl_nb = total_ppl_nb - !ppl_nb_hull_assign_if_exact_true - !ppl_nb_hull_assign_if_exact_false in
-	let total_ppl_t = total_ppl_t -. !ppl_t_hull_assign_if_exact_true -. !ppl_t_hull_assign_if_exact_false in
+(*	let total_ppl_nb = total_ppl_nb - !ppl_nb_hull_assign_if_exact_true - !ppl_nb_hull_assign_if_exact_false in
+	let total_ppl_t = total_ppl_t -. !ppl_t_hull_assign_if_exact_true -. !ppl_t_hull_assign_if_exact_false in*)
 	let total_str = 
 		"\n" ^ (string_of_int total_ppl_nb) ^ " calls to PPL functions"
 		^ "\nTotal PPL time: " ^ (string_of_seconds total_ppl_t)
@@ -342,6 +362,7 @@ let total_dim		= ref 0
 (************************************************************)
 (************************************************************)
 (*** WARNING: this strongly relies on the fact that the parameters are the first dimensions (followed by clocks and then discrete) ***)
+(*** NOTE: would be smarter to compute this list only once, when the dimensions have been initialized ***)
 let nonparameters () = list_of_interval !nb_parameters (!total_dim - 1)
 
 
@@ -352,8 +373,6 @@ let nonparameters () = list_of_interval !nb_parameters (!total_dim - 1)
 (************************************************************)
 
 (*** NOTE: "ippl" stands for "interface to PPL" ***)
-(*** TODO: all PPL functions should be encapsulated that way ***)
-(*** TODO: factor! (as they all follow the same scheme) ***)
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 (* Generic and polymorphic function to encapsulate a PPL function with a counter:
@@ -439,6 +458,64 @@ let ippl_is_constrained =
 let ippl_copy_linear_constraint linear_constraint =
 	ippl_generic (fun () -> ppl_new_NNC_Polyhedron_from_NNC_Polyhedron linear_constraint) ppl_tcounter_copy
 
+(*
+(** Perform the hull (version with side effect) *)
+let ippl_hull_assign linear_constraint1 linear_constraint2 =
+	ippl_generic (fun () -> ppl_Polyhedron_poly_hull_assign linear_constraint1 linear_constraint2) ppl_tcounter_hull_assign
+*)
+
+(** Perform the hull if the result is exact (version with side effect) *)
+let ippl_hull_assign_if_exact linear_constraint1 linear_constraint2 =
+	ippl_generic (fun () -> ppl_Polyhedron_poly_hull_assign_if_exact linear_constraint1 linear_constraint2) ppl_tcounter_hull_assign_if_exact
+(*** TODO: also count if false / if true ***)
+(*
+	let hull_assign_if_exact linear_constraint1 linear_constraint2 =
+	
+	let start = Unix.gettimeofday() in
+
+	(* Statistics *)
+	ppl_nb_hull_assign_if_exact := !ppl_nb_hull_assign_if_exact + 1;
+	
+	(* Actual call to PPL *)
+	let result =  in
+	
+	(* Statistics *)
+	ppl_t_hull_assign_if_exact := !ppl_t_hull_assign_if_exact +. (Unix.gettimeofday() -. start);
+	if result then(
+		ppl_nb_hull_assign_if_exact_true := !ppl_nb_hull_assign_if_exact_true + 1;
+		ppl_t_hull_assign_if_exact_true := !ppl_t_hull_assign_if_exact_true +. (Unix.gettimeofday() -. start);
+	)else(
+		ppl_nb_hull_assign_if_exact_false := !ppl_nb_hull_assign_if_exact_false + 1;
+		ppl_t_hull_assign_if_exact_false := !ppl_t_hull_assign_if_exact_false +. (Unix.gettimeofday() -. start);
+	);
+	
+	(* Return result *)
+	result*)
+
+(*(** Perform difference (version with side effect) *)
+let ippl_difference_assign linear_constraint1 linear_constraint2 =
+	ippl_generic (fun () -> ppl_Polyhedron_poly_difference_assign linear_constraint1 linear_constraint2) ppl_tcounter_difference_assign*)
+
+(* Unconstrain, i.e., remove dimensions using variable elimination *)
+let ippl_unconstrain linear_constraint variables =
+	ippl_generic (fun () -> ppl_Polyhedron_unconstrain_space_dimensions linear_constraint variables) ppl_tcounter_unconstrain
+
+
+(** Add nb_dimensions to a linear_constraint *)
+let ippl_add_dimensions nb_dimensions linear_constraint =
+	ippl_generic (fun () -> ppl_Polyhedron_add_space_dimensions_and_project linear_constraint nb_dimensions) ppl_tcounter_add_space_dimensions_and_project
+	
+(** Remove dimensions beyond 'new_dimensions' *)
+let ippl_remove_higher_dimensions linear_constraint new_dimensions =
+	ippl_generic (fun () -> ppl_Polyhedron_remove_higher_space_dimensions linear_constraint new_dimensions) ppl_tcounter_remove_higher_dimensions
+	
+(** Rename variables *)
+let ippl_map_space_dimensions linear_constraint list_of_pairs =
+	ippl_generic (fun () -> ppl_Polyhedron_map_space_dimensions linear_constraint list_of_pairs) ppl_tcounter_map_space_dimensions
+
+(** Time elapsing *)
+let ippl_time_elapse_assign linear_constraint linear_constraint_time =
+	ippl_generic (fun () -> ppl_Polyhedron_time_elapse_assign linear_constraint linear_constraint_time) ppl_time_elapse_assign
 
 
 (*** TODO: more PPL interfaces ***)
@@ -1066,6 +1143,49 @@ let clock_guard_of_linear_inequality linear_inequality =
 
 
 
+	
+(*(** substitutes all variables in a linear term.
+		The substitution is given as a function sub: var -> linear_term *)
+let rec substitute_variables_in_term sub linear_term =
+	match linear_term with		
+		| Coefficient z -> Coefficient z
+		| Variable v -> sub v
+		| Unary_Plus t -> Unary_Plus t
+		| Unary_Minus t -> Unary_Minus t
+		| Plus (lterm, rterm) -> (
+				Plus (substitute_variables_in_term sub lterm,
+							substitute_variables_in_term sub rterm))
+		| Minus (lterm, rterm) -> (
+				Minus (substitute_variables_in_term sub lterm,
+							 substitute_variables_in_term sub rterm))
+		| Times (z, rterm) -> (
+				Times (z, substitute_variables_in_term sub rterm))
+
+		
+(** substitutes all variables in a linear inequality *)
+let substitute_variables sub linear_inequality =
+	match linear_inequality with
+		| Less_Than (lterm, rterm) -> (
+				let lsub = substitute_variables_in_term sub lterm in
+				let rsub = substitute_variables_in_term sub rterm in
+				Less_Than (lsub, rsub))
+		| Less_Or_Equal (lterm, rterm) -> (
+				let lsub = substitute_variables_in_term sub lterm in
+				let rsub = substitute_variables_in_term sub rterm in
+				Less_Or_Equal (lsub, rsub))
+		| Equal (lterm, rterm) -> (
+				let lsub = substitute_variables_in_term sub lterm in
+				let rsub = substitute_variables_in_term sub rterm in
+				Equal (lsub, rsub))
+		| Greater_Than (lterm, rterm) -> (
+				let lsub = substitute_variables_in_term sub lterm in
+				let rsub = substitute_variables_in_term sub rterm in
+				Greater_Than (lsub, rsub))
+		| Greater_Or_Equal (lterm, rterm) -> (
+				let lsub = substitute_variables_in_term sub lterm in
+				let rsub = substitute_variables_in_term sub rterm in
+				Greater_Or_Equal (lsub, rsub))*)
+
 (************************************************************)
 (************************************************************)
 (** {2 Linear Constraints} *)
@@ -1449,11 +1569,20 @@ let string_of_pxd_linear_constraint = string_of_linear_constraint
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 (** {3 Functions} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+
+(*------------------------------------------------------------*)
+(* Copy *)
+(*------------------------------------------------------------*)
+
 let copy = ippl_copy_linear_constraint
 let p_copy = ippl_copy_linear_constraint
 let px_copy = ippl_copy_linear_constraint
 let pxd_copy = ippl_copy_linear_constraint
 
+
+(*------------------------------------------------------------*)
+(* Intersection *)
+(*------------------------------------------------------------*)
 
 (** Perform the intersection of a linear constrain with a list of constraints (with side effect) *)
 let intersection_assign linear_constraint constrs =
@@ -1494,76 +1623,35 @@ let p_intersection = intersection
 let px_intersection = intersection
 let pxd_intersection = intersection
 
-(** Perform the hull (version with side effect) *)
-let hull_assign linear_constraint1 linear_constraint2 =
-	(* Statistics *)
-	ppl_nb_hull := !ppl_nb_hull + 1;
-	let start = Unix.gettimeofday() in
-	(* Actual call to PPL *)
-	let result = ppl_Polyhedron_poly_hull_assign linear_constraint1 linear_constraint2 in
-	(* Statistics *)
-	ppl_t_hull := !ppl_t_hull +. (Unix.gettimeofday() -. start);
-	(* Return result *)
-	result
-	
 
-(** Perform the hull if the result is exact (version with side effect) *)
-let hull_assign_if_exact linear_constraint1 linear_constraint2 =
-	
-	let start = Unix.gettimeofday() in
+(*------------------------------------------------------------*)
+(* Difference *)
+(*------------------------------------------------------------*)
 
-	(* Statistics *)
-	ppl_nb_hull_assign_if_exact := !ppl_nb_hull_assign_if_exact + 1;
-	
-	(* Actual call to PPL *)
-	let result = ppl_Polyhedron_poly_hull_assign_if_exact linear_constraint1 linear_constraint2 in
-	
-	(* Statistics *)
-	ppl_t_hull_assign_if_exact := !ppl_t_hull_assign_if_exact +. (Unix.gettimeofday() -. start);
-	if result then(
-		ppl_nb_hull_assign_if_exact_true := !ppl_nb_hull_assign_if_exact_true + 1;
-		ppl_t_hull_assign_if_exact_true := !ppl_t_hull_assign_if_exact_true +. (Unix.gettimeofday() -. start);
-	)else(
-		ppl_nb_hull_assign_if_exact_false := !ppl_nb_hull_assign_if_exact_false + 1;
-		ppl_t_hull_assign_if_exact_false := !ppl_t_hull_assign_if_exact_false +. (Unix.gettimeofday() -. start);
-	);
-	
-	(* Return result *)
-	result
-
-
-let px_hull_assign_if_exact = hull_assign_if_exact
-
-
+(*** NOTE: unused function ***)
 (** Perform difference (version with side effect) *)
-let difference_assign linear_constraint1 linear_constraint2 =
-	(* Statistics *)
-	ppl_nb_difference := !ppl_nb_difference + 1;
-	let start = Unix.gettimeofday() in
-	(* Actual call to PPL *)
-	let result = ppl_Polyhedron_poly_difference_assign linear_constraint1 linear_constraint2 in
-	(* Statistics *)
-	ppl_t_difference := !ppl_t_difference +. (Unix.gettimeofday() -. start);
-	(* Return result *)
-	result
+(* let difference_assign = ippl_difference_assign *)
 
+
+(*------------------------------------------------------------*)
+(* Hull *)
+(*------------------------------------------------------------*)
+
+(** Perform the hull (version with side effect) *)
+(* let hull_assign = ippl_hull_assign *)
 	
+let px_hull_assign_if_exact = ippl_hull_assign_if_exact
+
+
+(*------------------------------------------------------------*)
+(* Variable elimination *)
+(*------------------------------------------------------------*)
+
 (** Eliminate a set of variables, side effects version *)
 let hide_assign variables linear_constraint =
 	(* Only hide a non-empty list *)
 	if List.length variables > 0 then (
-		(* debug output *)
-(*		if verbose_mode_greater Verbose_total then (
-			print_message Verbose_total "About to hide:";
-			List.iter (fun v -> print_message Verbose_total ("  - v" ^ string_of_int v)) variables;
-		);*)
-		(* Statistics *)
-		ppl_nb_unconstrain := !ppl_nb_unconstrain + 1;
-		let start = Unix.gettimeofday() in
-		(* Actual call to PPL *)
-		ppl_Polyhedron_unconstrain_space_dimensions linear_constraint variables;
-		(* Statistics *)
-		ppl_t_unconstrain := !ppl_t_unconstrain +. (Unix.gettimeofday() -. start);
+		ippl_unconstrain linear_constraint variables;
 		assert_dimensions linear_constraint
 	)
 
@@ -1574,21 +1662,11 @@ let pxd_hide_assign = hide_assign
 
 (** Eliminate (using existential quantification) a set of variables in a linear constraint *)
 let hide variables linear_constraint =
-
-
-
-	(*** TO OPTIMIZE: check if variables is different from [] ***)
-	
-	
-	
 	(* copy polyhedron, as PPL function has sideeffects *)
 	let poly = copy linear_constraint in
 	(* Call the function with side-effects *)
 	hide_assign variables poly;
 	poly
-
-
-
 
 
 
@@ -1607,19 +1685,18 @@ let px_hide_nonparameters_and_collapse linear_constraint =
 
 
 let pxd_hide_discrete_and_collapse linear_constraint = 
+	(*** TODO: to move elsewhere, and to compute once for all, when the dimensions have been set ***)
 	let discretes = list_of_interval (!nb_parameters + !nb_clocks) (!total_dim - 1) in
 	hide discretes linear_constraint
 
 
 
+(*------------------------------------------------------------*)
+(* Adding and removing dimensions *)
+(*------------------------------------------------------------*)
 
 (** Add nb_dimensions to a linear_constraint *)
-let add_dimensions nb_dimensions linear_constraint =
-
-	(* TODO: add a counter *)
-	
-	ppl_Polyhedron_add_space_dimensions_and_project linear_constraint nb_dimensions
-
+let add_dimensions = ippl_add_dimensions
 
 let pxd_add_dimensions = add_dimensions
 
@@ -1628,11 +1705,8 @@ let pxd_add_dimensions = add_dimensions
 
 (** Remove the highest nb_dimensions from a linear_constraint *)
 let remove_dimensions nb_dimensions linear_constraint =
-
-	(* TODO: add a counter *)
-	
 	(* Compute the highest space dimension to keep *)
-	let current_space_dimension = ppl_Polyhedron_space_dimension linear_constraint in
+	let current_space_dimension = ippl_space_dimension linear_constraint in
 	let new_space_dimension = current_space_dimension - nb_dimensions in
 
 	(* Print some information *)
@@ -1641,11 +1715,15 @@ let remove_dimensions nb_dimensions linear_constraint =
 	);
 	
 	(* Projects the polyhedron referenced to by handle onto the first space_dimension dimensions *)
-	ppl_Polyhedron_remove_higher_space_dimensions linear_constraint new_space_dimension
+	ippl_remove_higher_dimensions linear_constraint new_space_dimension
+
 
 let pxd_remove_dimensions = remove_dimensions
 
 
+(*------------------------------------------------------------*)
+(* Renaming *)
+(*------------------------------------------------------------*)
 
 (** rename variables in a constraint, with side effects *)
 let rename_variables_assign list_of_couples linear_constraint =
@@ -1662,21 +1740,19 @@ let rename_variables_assign list_of_couples linear_constraint =
 			else
 				add_id list (i-1)
 		in 
+	
 	let complete_list = add_id joined_couples (!total_dim - 1) in
-  (* debug output *)
+	
+	(* Print some information *)
 	if verbose_mode_greater Verbose_high then (
 		let ndim = ippl_space_dimension linear_constraint in
 		print_message Verbose_high ("mapping space dimensions, no. dimensions is " ^ string_of_int ndim);
 		List.iter (fun (a,b) -> (print_message Verbose_high ("map v" ^ string_of_int a ^ " -> v" ^ string_of_int b))) complete_list;
 	);
+	
 	(* perfom the mapping *)
-	(* Statistics *)
-	ppl_nb_map := !ppl_nb_map + 1;
-	let start = Unix.gettimeofday() in
-	(* Actual call to PPL *)
-	ppl_Polyhedron_map_space_dimensions linear_constraint complete_list;
-	(* Statistics *)
-	ppl_t_map := !ppl_t_map +. (Unix.gettimeofday() -. start);
+	ippl_map_space_dimensions linear_constraint complete_list;
+
 	assert_dimensions linear_constraint
 
 let pxd_rename_variables_assign = rename_variables_assign
@@ -1690,6 +1766,11 @@ let rename_variables list_of_couples linear_constraint =
 	poly
 
 (* let pxd_rename_variables = rename_variables *)
+
+
+(*------------------------------------------------------------*)
+(* Time elapsing and time past *)
+(*------------------------------------------------------------*)
 
 (* Generic time elapsing function *)
 (* 'reverse_direction' should be minus_one for growing, one for decreasing *)
@@ -1710,14 +1791,10 @@ let time_elapse_gen_assign reverse_direction variables_elapse variables_constant
 	) variables_constant in
 	(* Convert both sets of inequalities to a constraint *)
 	let linear_constraint_time = make (List.rev_append inequalities_elapse inequalities_constant) in
-	(* Assign the time elapsing using PPL *)
-	(* Statistics *)
-	ppl_nb_elapse := !ppl_nb_elapse + 1;
-	let start = Unix.gettimeofday() in
-	(* Actual call to PPL *)
-	ppl_Polyhedron_time_elapse_assign linear_constraint linear_constraint_time;
-	(* Statistics *)
-	ppl_t_elapse := !ppl_t_elapse +. (Unix.gettimeofday() -. start)
+	
+	(* Apply the time elapsing using PPL *)
+	ippl_time_elapse_assign linear_constraint linear_constraint_time
+
 
 (** Time elapsing function *)
 let time_elapse_assign = time_elapse_gen_assign NumConst.minus_one
@@ -1731,48 +1808,6 @@ let time_elapse variables_elapse variables_constant linear_constraint =
 	time_elapse_assign variables_elapse variables_constant linear_constraint;
 	linear_constraint
 
-	
-(*(** substitutes all variables in a linear term.
-		The substitution is given as a function sub: var -> linear_term *)
-let rec substitute_variables_in_term sub linear_term =
-	match linear_term with		
-		| Coefficient z -> Coefficient z
-		| Variable v -> sub v
-		| Unary_Plus t -> Unary_Plus t
-		| Unary_Minus t -> Unary_Minus t
-		| Plus (lterm, rterm) -> (
-				Plus (substitute_variables_in_term sub lterm,
-							substitute_variables_in_term sub rterm))
-		| Minus (lterm, rterm) -> (
-				Minus (substitute_variables_in_term sub lterm,
-							 substitute_variables_in_term sub rterm))
-		| Times (z, rterm) -> (
-				Times (z, substitute_variables_in_term sub rterm))
-
-		
-(** substitutes all variables in a linear inequality *)
-let substitute_variables sub linear_inequality =
-	match linear_inequality with
-		| Less_Than (lterm, rterm) -> (
-				let lsub = substitute_variables_in_term sub lterm in
-				let rsub = substitute_variables_in_term sub rterm in
-				Less_Than (lsub, rsub))
-		| Less_Or_Equal (lterm, rterm) -> (
-				let lsub = substitute_variables_in_term sub lterm in
-				let rsub = substitute_variables_in_term sub rterm in
-				Less_Or_Equal (lsub, rsub))
-		| Equal (lterm, rterm) -> (
-				let lsub = substitute_variables_in_term sub lterm in
-				let rsub = substitute_variables_in_term sub rterm in
-				Equal (lsub, rsub))
-		| Greater_Than (lterm, rterm) -> (
-				let lsub = substitute_variables_in_term sub lterm in
-				let rsub = substitute_variables_in_term sub rterm in
-				Greater_Than (lsub, rsub))
-		| Greater_Or_Equal (lterm, rterm) -> (
-				let lsub = substitute_variables_in_term sub lterm in
-				let rsub = substitute_variables_in_term sub rterm in
-				Greater_Or_Equal (lsub, rsub))*)
 
 (** Time elapsing function, in backward direction (corresponds to the "past" operation in, e.g., [JLR15]) *)
 let time_past_assign variables_elapse variables_constant linear_constraint =
@@ -1794,9 +1829,13 @@ let time_past_assign variables_elapse variables_constant linear_constraint =
 let pxd_time_past_assign = time_past_assign
 
 
+(*------------------------------------------------------------*)
+(* Extrapolation to zero/infinity *)
+(*------------------------------------------------------------*)
+
 (** Perform an operation (?) on a set of variables: the first variable list will elapse, the second will remain constant *)
-(** TODO: describe better *)
-(** WARNING: this function is certainly not optimized at all! somehow we don't care considering it's not called "often" in IMITATOR *)
+(*** TODO: describe better ***)
+(*** WARNING: this function is certainly not optimized at all! somehow we don't care considering it's not called "often" in IMITATOR ***)
 let grow_to_infinity_assign variables_elapse variables_constant linear_constraint =
 	(* Compute all variables *)
 	let all_variables = List.rev_append variables_elapse variables_constant in
@@ -1822,6 +1861,9 @@ let grow_to_zero_assign variables_elapse variables_constant linear_constraint =
 	()
 
 
+(*------------------------------------------------------------*)
+(* Strict to non-strict *)
+(*------------------------------------------------------------*)
 
 (** Replace all strict inequalities with non-strict (and keeps others unchanged) within a p_linear_constraint *)
 let render_non_strict_p_linear_constraint k =
@@ -1834,6 +1876,8 @@ let render_non_strict_p_linear_constraint k =
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 (** {3 More testing functions} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+
+(*** NOTE: function after the modification functions, because makes use of 'px_intersection_assign' ***)
 
 (** Check if a variable v is bound to be >= 0 in a constraint c *)
 let px_is_positive_in v c =
@@ -2120,7 +2164,7 @@ let shape_of_poly x y linear_constraint =
 	print_message Verbose_total ("Entering generate_points");
 	
 	(* Get the current number of dimensions *)
-	let space_dimension = ppl_Polyhedron_space_dimension linear_constraint in
+	let space_dimension = ippl_space_dimension linear_constraint in
 
 	let poly = copy linear_constraint in
 	(* project on variables x,y *)
@@ -2251,7 +2295,7 @@ let generate_points x y linear_constraint min_abs min_ord max_abs max_ord =
 
 	
 (* returns a string which indicate if some points have been found from ray and a string with 2d points of the given constraint *)
-(*** WARNING: does not work if parameters are negative (which should not happen but...) *)
+(*** WARNING: does not work if parameters are negative ***)
 let plot_2d x y linear_constraint min_abs min_ord max_abs max_ord =
 
 	(* Print some information *)
