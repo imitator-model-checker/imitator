@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/12/03
- * Last modified     : 2016/05/04
+ * Last modified     : 2016/05/23
  *
  ************************************************************)
 
@@ -158,6 +158,7 @@ let statespace_statistics state_space total_time =
 	^ "\nComputation time              : " ^ (string_of_seconds total_time)
 	^ "\nStates/second in state space  : " ^ (round1_float states_per_second) ^ " (" ^ (string_of_int nb_states) ^ "/" ^ (string_of_seconds total_time) ^ ")"
 	^ "\nComputed states/second        : " ^ (round1_float gen_states_per_second) ^ " (" ^ (string_of_int nb_gen_states) ^ "/" ^ (string_of_seconds total_time) ^ ")"
+	^ "\nEstimated memory              : " ^ (memory_used ())
 
 	
 (* Return a string made of some statistics for the abstract state space *)
@@ -393,6 +394,7 @@ let general_bc_statistics bc_result =
     ^ "\nComputation time              : " ^ (string_of_seconds bc_result.computation_time)
 	^ "\nComputation time (IM)         : " ^ (string_of_seconds time_im)
 	^ "\nComputation time (find point) : " ^ (string_of_seconds bc_result.find_point_time)
+	^ "\nEstimated memory              : " ^ (memory_used ())
 
 		
 (* Write result of BC to file *)
@@ -539,7 +541,7 @@ let print_statistics total_time state_space =
 		print_message Verbose_standard "--------------------";
 		print_message Verbose_standard "Statistics on memory";
 		print_message Verbose_standard "--------------------";
-		print_memory_used Verbose_standard;
+		print_message Verbose_standard (memory_used ());
 		Gc.print_stat stdout;
 (*		print_message Verbose_standard "--------------------";
 		Gc.major();
@@ -614,7 +616,7 @@ let process_result result algorithm_name prefix_option =
 		(* Print memory information *)
 		if verbose_mode_greater Verbose_standard then(
 			print_newline();
-			print_memory_used Verbose_standard;
+			print_message Verbose_standard (memory_used ());
 		);
 		
 (*		(* Print on terminal *)
@@ -693,7 +695,7 @@ let process_result result algorithm_name prefix_option =
 		(* Print memory information *)
 		if verbose_mode_greater Verbose_standard then(
 			print_newline();
-			print_memory_used Verbose_standard;
+			print_message Verbose_standard (memory_used ());
 		);
 		
 (*		(* Print on terminal *)
@@ -747,7 +749,7 @@ let process_result result algorithm_name prefix_option =
 		(* Print memory information *)
 		if verbose_mode_greater Verbose_standard then(
 			print_newline();
-			print_memory_used Verbose_standard;
+			print_message Verbose_standard (memory_used ());
 		);
 		
 		(* Write to file if requested *)
@@ -805,7 +807,7 @@ let process_result result algorithm_name prefix_option =
 		(* Print memory information *)
 		if verbose_mode_greater Verbose_standard then(
 			print_newline();
-			print_memory_used Verbose_standard;
+			print_message Verbose_standard (memory_used ());
 		);
 		
 		(* Write to file if requested for BC *)

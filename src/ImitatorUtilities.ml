@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2014/10/24
- * Last modified     : 2016/05/17
+ * Last modified     : 2016/05/23
  *
  ************************************************************)
 
@@ -406,20 +406,18 @@ let kiB_MiB_GiB_TiB_of_KiB nb_kib =
 (** Convert a number of words into a memory information *)
 let memory_info_of_words nb_words word_size = 
 	let nb_kib = nb_words *. (float_of_int word_size) /. 1024.0 in
-	 "Estimated memory used: " ^ (kiB_MiB_GiB_TiB_of_KiB nb_kib) ^ " (i.e., " ^ (string_of_int (int_of_float nb_words)) ^ " words of size " ^ (string_of_int word_size) ^ ")"
+	 (kiB_MiB_GiB_TiB_of_KiB nb_kib) ^ " (i.e., " ^ (string_of_int (int_of_float nb_words)) ^ " words of size " ^ (string_of_int word_size) ^ ")"
 
 
-(** Print info on the memory used *)
-let print_memory_used verbose_level =
+(** Obtain a string giving information on the memory used *)
+let memory_used () =
 	(* Print memory information *)
 	let gc_stat = Gc.stat () in
 	let nb_words = gc_stat.minor_words +. gc_stat.major_words -. gc_stat.promoted_words in
 	(* Compute the word size in bytes *)
 	let word_size = (*4.0*)Sys.word_size / 8 in
-	print_message verbose_level (memory_info_of_words nb_words word_size)
+	memory_info_of_words nb_words word_size
 	
-
-
 
 (************************************************************)
 (** Terminating functions *)
@@ -440,8 +438,8 @@ let terminate_program () =
 	print_newline();
 	print_message Verbose_standard (Constants.program_name ^ " successfully terminated (" ^ (after_seconds ()) ^ ")");
 	(* Print memory info *)
-	if verbose_mode_greater Verbose_low then(
-		print_memory_used Verbose_low;
+	if verbose_mode_greater Verbose_standard then(
+		print_message Verbose_standard ("Estimated memory used: " ^ (memory_used ()));
 	);
 	(* The end *)
 	print_newline();

@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2014/10/24
- * Last modified     : 2016/05/11
+ * Last modified     : 2016/05/23
  *
  ************************************************************)
 
@@ -143,8 +143,11 @@ val set_timed_mode : unit -> unit
 
 val delete_file : string -> unit
 
+(** Obtain a string giving information on the memory used *)
+val memory_used : unit -> string
+
 (** Print info on the memory used *)
-val print_memory_used : verbose_mode -> unit
+(* val print_memory_used : verbose_mode -> unit *)
 
 
 (************************************************************)

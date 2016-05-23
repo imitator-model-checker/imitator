@@ -21,6 +21,10 @@ Graphics
 - Added a visualization of the bad states on the trace set (using red color + a frowney)
 - Removed the automatically generated observer from the PTA export
 
+Misc
+- Memory information now displayed at the end of the execution even in -verbose standard
+- Memory information now added to the .res files
+
 Export
 - Added an export to HyTech
 
