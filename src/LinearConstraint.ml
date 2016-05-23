@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2010/03/04
- * Last modified     : 2016/05/18
+ * Last modified     : 2016/05/23
  *
  ************************************************************)
 
@@ -162,6 +162,16 @@ let ppl_nb_elapse = ref 0
 let ppl_nb_copy_polyhedron = ref 0
 	let ppl_t_copy_polyhedron = ref 0.0
 	let ppl_tcounter_copy = create_and_register "NNC_Polyhedron_from_NNC_Polyhedron" PPL_counter Verbose_low
+
+
+	let ppl_nncc_false_constraint = create_and_register "nncc_false_constraint" PPL_counter Verbose_low
+
+	let ppl_nncc_true_constraint = create_and_register "nncc_true_constraint" PPL_counter Verbose_low
+
+	let ppl_nncc_from_poly = create_and_register "nncc_from_poly" PPL_counter Verbose_low
+
+	let ppl_nncc_copy = create_and_register "nncc_copy" PPL_counter Verbose_low
+
 
 
 let get_statistics total_time =
@@ -516,6 +526,27 @@ let ippl_map_space_dimensions linear_constraint list_of_pairs =
 (** Time elapsing *)
 let ippl_time_elapse_assign linear_constraint linear_constraint_time =
 	ippl_generic (fun () -> ppl_Polyhedron_time_elapse_assign linear_constraint linear_constraint_time) ppl_time_elapse_assign
+
+
+(*------------------------------------------------------------*)
+(* Pointset powerset NNC polyhedra *)
+(*------------------------------------------------------------*)
+
+(** Create a false non-necessarily convex constraint *)
+let ippl_nncc_false_constraint () =
+	ippl_generic (fun () -> ppl_new_Pointset_Powerset_NNC_Polyhedron_from_space_dimension !total_dim Empty) ppl_nncc_false_constraint
+
+(** Create a true non-necessarily convex constraint *)
+let ippl_nncc_true_constraint () =
+	ippl_generic (fun () -> ppl_new_Pointset_Powerset_NNC_Polyhedron_from_space_dimension !total_dim Universe) ppl_nncc_true_constraint
+
+(** Create a new p_nnconvex_constraint from a linear_constraint *)
+let ippl_nncc_from_poly polyhedron =
+	ippl_generic (fun () -> ppl_new_Pointset_Powerset_NNC_Polyhedron_from_NNC_Polyhedron polyhedron) ppl_nncc_from_poly
+
+(** Create a true non-necessarily convex constraint *)
+let ippl_nncc_copy nnconvex_constraint  =
+	ippl_generic (fun () -> ppl_new_Pointset_Powerset_NNC_Polyhedron_from_Pointset_Powerset_NNC_Polyhedron nnconvex_constraint ) ppl_nncc_copy
 
 
 (*** TODO: more PPL interfaces ***)
@@ -2738,64 +2769,22 @@ type px_nnconvex_constraint = nnconvex_constraint
 (** {3 Creation} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
-(** Create a false constraint *)
-let false_p_nnconvex_constraint () =
-(*	(* Statistics *)
-	ppl_nb_false_constraint := !ppl_nb_false_constraint + 1;
-	let start = Unix.gettimeofday() in*)
-	(* Actual call to PPL *)
-	let result = ppl_new_Pointset_Powerset_NNC_Polyhedron_from_space_dimension !total_dim Empty in
-	(* Statistics *)
-(* 	ppl_t_false_constraint := !ppl_t_false_constraint +. (Unix.gettimeofday() -. start); *)
-	(* Return result *)
-	result
-
+(** Create a false non-necessarily convex constraint *)
+let false_p_nnconvex_constraint = ippl_nncc_false_constraint
 let false_px_nnconvex_constraint = false_p_nnconvex_constraint
 
 
-(** Create a true constraint *)
-let true_p_nnconvex_constraint () = 
-	(*	(* Statistics *)
-	ppl_nb_false_constraint := !ppl_nb_false_constraint + 1;
-	let start = Unix.gettimeofday() in*)
-	(* Actual call to PPL *)
-	let result = ppl_new_Pointset_Powerset_NNC_Polyhedron_from_space_dimension !total_dim Universe in
-	(* Statistics *)
-(* 	ppl_t_false_constraint := !ppl_t_false_constraint +. (Unix.gettimeofday() -. start); *)
-	(* Return result *)
-	result
-
+(** Create a true non-necessarily convex constraint *)
+let true_p_nnconvex_constraint = ippl_nncc_true_constraint
 let true_px_nnconvex_constraint = true_p_nnconvex_constraint
 
 
 (** Create a new p_nnconvex_constraint from a linear_constraint *)
-let p_nnconvex_constraint_of_p_linear_constraint (p_linear_constraint : p_linear_constraint) =
-(*	(* Statistics *)
-	ppl_nb_false_constraint := !ppl_nb_false_constraint + 1;
-	let start = Unix.gettimeofday() in*)
-	(* Actual call to PPL *)
-	let result = ppl_new_Pointset_Powerset_NNC_Polyhedron_from_NNC_Polyhedron p_linear_constraint in
-	(* Statistics *)
-(* 	ppl_t_false_constraint := !ppl_t_false_constraint +. (Unix.gettimeofday() -. start); *)
-	(* Return result *)
-	result
-
+let p_nnconvex_constraint_of_p_linear_constraint (p_linear_constraint : p_linear_constraint) = ippl_nncc_from_poly p_linear_constraint
 let px_nnconvex_constraint_of_px_linear_constraint = p_nnconvex_constraint_of_p_linear_constraint
 
 (** Copy a nnconvex_constraint *)
-let nnconvex_copy nnconvex_constraint =
-	(*** TODO ***)
-(*	(* Statistics *)
-	ppl_nb_copy_polyhedron := !ppl_nb_copy_polyhedron + 1;
-	let start = Unix.gettimeofday() in*)
-	(* Actual call to PPL *)
-	let result = ppl_new_Pointset_Powerset_NNC_Polyhedron_from_Pointset_Powerset_NNC_Polyhedron nnconvex_constraint in
-	(*** TODO ***)
-(*	(* Statistics *)
-	ppl_t_copy_polyhedron := !ppl_t_copy_polyhedron +. (Unix.gettimeofday() -. start);*)
-	(* Return result *)
-	result
-
+let nnconvex_copy nnconvex_constraint = ippl_nncc_copy nnconvex_constraint
 let p_nnconvex_copy = nnconvex_copy
 let px_nnconvex_copy = nnconvex_copy
 
