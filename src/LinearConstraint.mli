@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2010/03/04
- * Last modified     : 2016/04/30
+ * Last modified     : 2016/05/24
  *
  ************************************************************)
  
@@ -571,7 +571,7 @@ val unserialize_p_convex_or_nonconvex_constraint : string -> p_convex_or_nonconv
 (************************************************************)
 (** {2 Statistics on performances} *)
 (************************************************************)
-val get_statistics : float -> string
+(* val get_statistics : float -> string *)
 
 
 (************************************************************)

@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/12/03
- * Last modified     : 2016/05/23
+ * Last modified     : 2016/05/24
  *
  ************************************************************)
 
@@ -506,10 +506,10 @@ let print_statistics total_time state_space =
 
 	
 	if options#statistics then (
-		(* PPL *)
+(*		(* PPL *)
 		print_message Verbose_standard "--------------------";
 		print_message Verbose_standard "Statistics on PPL";
-		print_message Verbose_standard ("--------------------" ^ (LinearConstraint.get_statistics total_time));
+		print_message Verbose_standard ("--------------------" ^ (LinearConstraint.get_statistics total_time));*)
 		
 		(* Graph *)
 		print_message Verbose_standard "--------------------";

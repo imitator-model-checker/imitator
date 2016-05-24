@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2010/03/04
- * Last modified     : 2016/05/23
+ * Last modified     : 2016/05/24
  *
  ************************************************************)
 
@@ -172,9 +172,39 @@ let ppl_nb_copy_polyhedron = ref 0
 
 	let ppl_nncc_copy = create_and_register "nncc_copy" PPL_counter Verbose_low
 
+	let ppl_nncc_begin_iterator = create_and_register "nncc_begin_iterator" PPL_counter Verbose_low
+
+	let ppl_nncc_end_iterator = create_and_register "nncc_end_iterator" PPL_counter Verbose_low
+
+	let ppl_nncc_equals_iterator = create_and_register "nncc_equals_iterator" PPL_counter Verbose_low
+
+	let ppl_nncc_increment_iterator = create_and_register "nncc_increment_iterator" PPL_counter Verbose_low
+
+	let ppl_nncc_get_disjunct = create_and_register "nncc_get_disjunct" PPL_counter Verbose_low
+	
+	(* Counter for the higher-level function implemented here *)
+	let ppl_nncc_get_disjuncts = create_and_register "nncc_get_disjuncts" PPL_counter Verbose_low
+
+	let ppl_nncc_is_empty = create_and_register "nncc_is_empty" PPL_counter Verbose_low
+	
+	let ppl_nncc_is_universe = create_and_register "nncc_is_universe" PPL_counter Verbose_low
+	
+	let ppl_nncc_contains = create_and_register "nncc_contains" PPL_counter Verbose_low
+	
+	let ppl_nncc_equals = create_and_register "nncc_equals" PPL_counter Verbose_low
+	
+	let ppl_nncc_pairwise_reduce = create_and_register "nncc_pairwise_reduce" PPL_counter Verbose_low
+	
+	let ppl_nncc_omega_reduce = create_and_register "nncc_omega_reduce" PPL_counter Verbose_low
+
+	let ppl_nncc_add_constraints = create_and_register "nncc_add_constraints" PPL_counter Verbose_low
+
+	let ppl_nncc_add_disjunct = create_and_register "nncc_add_disjunct" PPL_counter Verbose_low
+
+	let ppl_nncc_difference_assign = create_and_register "nncc_difference_assign" PPL_counter Verbose_low
 
 
-let get_statistics total_time =
+(*let get_statistics total_time =
 	let which_statistics = [
 		("space_dimension" , !ppl_nb_space_dimension , !ppl_t_space_dimension) ;
 		("normalize_linear_term" , !ppl_nb_normalize_linear_term , !ppl_t_normalize_linear_term) ;
@@ -227,7 +257,7 @@ let get_statistics total_time =
 		(* % of total time *)
 		^ " (" ^ (string_of_percent (total_ppl_t /. total_time) ) ^ ")"
 	in
-	statistics_string ^ total_str
+	statistics_string ^ total_str*)
 
 
 
@@ -545,8 +575,56 @@ let ippl_nncc_from_poly polyhedron =
 	ippl_generic (fun () -> ppl_new_Pointset_Powerset_NNC_Polyhedron_from_NNC_Polyhedron polyhedron) ppl_nncc_from_poly
 
 (** Create a true non-necessarily convex constraint *)
-let ippl_nncc_copy nnconvex_constraint  =
+let ippl_nncc_copy nnconvex_constraint =
 	ippl_generic (fun () -> ppl_new_Pointset_Powerset_NNC_Polyhedron_from_Pointset_Powerset_NNC_Polyhedron nnconvex_constraint ) ppl_nncc_copy
+
+(** Iterators *)
+
+let ippl_nncc_begin_iterator nnconvex_constraint =
+	ippl_generic (fun () -> ppl_Pointset_Powerset_NNC_Polyhedron_begin_iterator nnconvex_constraint) ppl_nncc_begin_iterator
+
+let ippl_nncc_end_iterator nnconvex_constraint =
+	ippl_generic (fun () -> ppl_Pointset_Powerset_NNC_Polyhedron_end_iterator nnconvex_constraint) ppl_nncc_end_iterator
+
+let ippl_nncc_equals_iterator iterator1 iterator2 =
+	ippl_generic (fun () -> ppl_Pointset_Powerset_NNC_Polyhedron_iterator_equals_iterator iterator1 iterator2) ppl_nncc_equals_iterator
+
+let ippl_nncc_increment_iterator iterator =
+	ippl_generic (fun () -> ppl_Pointset_Powerset_NNC_Polyhedron_increment_iterator iterator) ppl_nncc_increment_iterator
+
+let ippl_nncc_get_disjunct iterator =
+	ippl_generic (fun () -> ppl_Pointset_Powerset_NNC_Polyhedron_get_disjunct iterator) ppl_nncc_get_disjunct
+
+
+(** Check if a nnconvex_constraint is false *)
+let ippl_nncc_is_empty nnconvex_constraint =
+	ippl_generic (fun () -> ppl_Pointset_Powerset_NNC_Polyhedron_is_empty nnconvex_constraint) ppl_nncc_is_empty
+
+(** Check if a nnconvex_constraint is true *)
+let ippl_nncc_is_universe nnconvex_constraint =
+	ippl_generic (fun () -> ppl_Pointset_Powerset_NNC_Polyhedron_is_universe nnconvex_constraint) ppl_nncc_is_universe
+
+let ippl_nncc_contains nnconvex_constraint nnconvex_constraint' =
+	ippl_generic (fun () -> ppl_Pointset_Powerset_NNC_Polyhedron_contains_Pointset_Powerset_NNC_Polyhedron nnconvex_constraint nnconvex_constraint') ppl_nncc_contains
+
+let ippl_nncc_equals nnconvex_constraint nnconvex_constraint' =
+	ippl_generic (fun () -> ppl_Pointset_Powerset_NNC_Polyhedron_equals_Pointset_Powerset_NNC_Polyhedron nnconvex_constraint nnconvex_constraint') ppl_nncc_equals
+
+let ippl_nncc_pairwise_reduce nnconvex_constraint =
+	ippl_generic (fun () -> ppl_Pointset_Powerset_NNC_Polyhedron_pairwise_reduce nnconvex_constraint) ppl_nncc_pairwise_reduce
+
+let ippl_nncc_omega_reduce nnconvex_constraint =
+	ippl_generic (fun () -> ppl_Pointset_Powerset_NNC_Polyhedron_omega_reduce nnconvex_constraint) ppl_nncc_omega_reduce
+	
+let ippl_nncc_add_constraints nnconvex_constraint constraint_system =
+	ippl_generic (fun () -> ppl_Pointset_Powerset_NNC_Polyhedron_add_constraints nnconvex_constraint constraint_system) ppl_nncc_add_constraints
+
+let ippl_nncc_add_disjunct nnconvex_constraint p_linear_constraint=
+	ippl_generic (fun () -> ppl_Pointset_Powerset_NNC_Polyhedron_add_disjunct nnconvex_constraint p_linear_constraint) ppl_nncc_add_disjunct
+
+let ippl_nncc_difference_assign nnconvex_constraint nnconvex_constraint' =
+	ippl_generic (fun () -> ppl_Pointset_Powerset_NNC_Polyhedron_difference_assign nnconvex_constraint nnconvex_constraint') ppl_nncc_difference_assign
+
 
 
 (*** TODO: more PPL interfaces ***)
@@ -2796,46 +2874,37 @@ let px_nnconvex_copy = nnconvex_copy
 
 (** Get the list of p_linear_constraint the disjunction of which makes a p_nnconvex_constraint *)
 let get_disjuncts p_nnconvex_constraint =
+	(* Start counter *)
+	ppl_nncc_get_disjuncts#start;
+
 	(* Create ref for the result *)
 	let disjuncts = ref [] in
 
 	(* Create iterator *)
-	let iterator = ppl_Pointset_Powerset_NNC_Polyhedron_begin_iterator p_nnconvex_constraint in
+	let iterator = ippl_nncc_begin_iterator p_nnconvex_constraint in
 	(* Create an iterator for the end *)
-	let end_iterator = ppl_Pointset_Powerset_NNC_Polyhedron_end_iterator p_nnconvex_constraint in
+	let end_iterator = ippl_nncc_end_iterator p_nnconvex_constraint in
 	
 	(* Iterate until the end *)
 	(*** NOTE: apparently, ppl_Pointset_Powerset_NNC_Polyhedron_end_iterator represents the index AFTER the last element, hence the following test is correct ***)
-	while not (ppl_Pointset_Powerset_NNC_Polyhedron_iterator_equals_iterator iterator end_iterator) do
+	while not (ippl_nncc_equals_iterator iterator end_iterator) do
 		(* Get the current disjunct *)
-		let disjunct = ppl_Pointset_Powerset_NNC_Polyhedron_get_disjunct iterator in
+		let disjunct = ippl_nncc_get_disjunct iterator in
 		
 		(* Add it to the list of disjuncts *)
 		disjuncts := disjunct :: !disjuncts;
 		
 		(* Increment the iterator *)
-		ppl_Pointset_Powerset_NNC_Polyhedron_increment_iterator iterator;
+		ippl_nncc_increment_iterator iterator;
 	done;
 	
 	(* Return disjuncts *)
-	List.rev (!disjuncts)
+	let result = List.rev (!disjuncts) in
 
-
-
-(*val ppl_Pointset_Powerset_NNC_Polyhedron_begin_iterator : pointset_powerset_nnc_polyhedron ->
-       pointset_powerset_nnc_polyhedron_iterator
-
-val ppl_Pointset_Powerset_NNC_Polyhedron_end_iterator : pointset_powerset_nnc_polyhedron ->
-       pointset_powerset_nnc_polyhedron_iterator
-
-val ppl_Pointset_Powerset_NNC_Polyhedron_iterator_equals_iterator : pointset_powerset_nnc_polyhedron_iterator ->
-       pointset_powerset_nnc_polyhedron_iterator -> bool
-
-val ppl_Pointset_Powerset_NNC_Polyhedron_increment_iterator : pointset_powerset_nnc_polyhedron_iterator -> unit
-
-val ppl_Pointset_Powerset_NNC_Polyhedron_decrement_iterator : pointset_powerset_nnc_polyhedron_iterator -> unit
-
-val ppl_Pointset_Powerset_NNC_Polyhedron_get_disjunct : pointset_powerset_nnc_polyhedron_iterator -> polyhedron*)
+	(* Start counter *)
+	ppl_nncc_get_disjuncts#stop;
+	
+	result
 
 
 
@@ -2844,30 +2913,11 @@ val ppl_Pointset_Powerset_NNC_Polyhedron_get_disjunct : pointset_powerset_nnc_po
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 (** Check if a nnconvex_constraint is false *)
-let p_nnconvex_constraint_is_false c =
-(*	(* Statistics *)
-	ppl_nb_is_false := !ppl_nb_is_false + 1;
-	let start = Unix.gettimeofday() in
-	(* Actual call to PPL *)*)
-	let result = ppl_Pointset_Powerset_NNC_Polyhedron_is_empty c in
-(*	(* Statistics *)
-	ppl_t_is_false := !ppl_t_is_false +. (Unix.gettimeofday() -. start);
-	(* Return result *)*)
-	result
+let p_nnconvex_constraint_is_false = ippl_nncc_is_empty
 
 
 (** Check if a nnconvex_constraint is true *)
-let p_nnconvex_constraint_is_true c =
-(*	(* Statistics *)
-	ppl_nb_is_true := !ppl_nb_is_true + 1;
-	let start = Unix.gettimeofday() in*)
-	(* Actual call to PPL *)
-	let result = ppl_Pointset_Powerset_NNC_Polyhedron_is_universe c in
-(*	(* Statistics *)
-	ppl_t_is_true := !ppl_t_is_true +. (Unix.gettimeofday() -. start);*)
-	(* Return result *)
-	result
-
+let p_nnconvex_constraint_is_true = ippl_nncc_is_universe
 
 
 (** Check if a nnconvex_constraint is pi0-compatible *)
@@ -2883,27 +2933,19 @@ let p_nnconvex_constraint_is_pi0_compatible pval p_nnconvex_constraint =
 
 (** Check if a nnconvex_constraint is included in another one *)
 let p_nnconvex_constraint_is_leq p_nnconvex_constraint p_nnconvex_constraint' =
-	(*** TODO: counter ***)
 	(*** NOTE: PPL works in the reverse order: the 2nd contains the 1st one ***)
-	ppl_Pointset_Powerset_NNC_Polyhedron_contains_Pointset_Powerset_NNC_Polyhedron p_nnconvex_constraint' p_nnconvex_constraint
-	(*** TODO: counter ***)
+	ippl_nncc_contains p_nnconvex_constraint' p_nnconvex_constraint
 
 (** Check if a nnconvex_constraint is equal to another one *)
-let p_nnconvex_constraint_is_equal p_nnconvex_constraint p_nnconvex_constraint' =
-	(*** TODO: counter ***)
-	(*** NOTE: PPL works in the reverse order: the 2nd contains the 1st one ***)
-	ppl_Pointset_Powerset_NNC_Polyhedron_equals_Pointset_Powerset_NNC_Polyhedron p_nnconvex_constraint' p_nnconvex_constraint
-	(*** TODO: counter ***)
-
+let p_nnconvex_constraint_is_equal = ippl_nncc_equals
 
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 (** {3 Simplification} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 let simplify p_nnconvex_constraint =
-	(*** TODO: add counters... ***)
-	ppl_Pointset_Powerset_NNC_Polyhedron_pairwise_reduce p_nnconvex_constraint;
-	ppl_Pointset_Powerset_NNC_Polyhedron_omega_reduce p_nnconvex_constraint;
+	ippl_nncc_pairwise_reduce p_nnconvex_constraint;
+	ippl_nncc_omega_reduce p_nnconvex_constraint;
 	()
 	
 
@@ -2938,15 +2980,10 @@ let string_of_px_nnconvex_constraint = string_of_p_nnconvex_constraint
 
 (** Performs the intersection of a p_nnconvex_constraint with a p_linear_constraint; the p_nnconvex_constraint is modified, the p_linear_constraint is not *)
 let p_nnconvex_intersection p_nnconvex_constraint p_linear_constraint =
-(*	(* Statistics *)
-	ppl_nb_is_true := !ppl_nb_is_true + 1;
-	let start = Unix.gettimeofday() in*)
 	(* First retrieve inequalities *)
 	let constraint_system =  ippl_get_inequalities p_linear_constraint in
-	(* Actual call to PPL *)
-	ppl_Pointset_Powerset_NNC_Polyhedron_add_constraints p_nnconvex_constraint constraint_system;
-(*	(* Statistics *)
-	ppl_t_is_true := !ppl_t_is_true +. (Unix.gettimeofday() -. start);*)
+
+	ippl_nncc_add_constraints p_nnconvex_constraint constraint_system;
 
 	(* Simplify the constraint (avoids identical disjuncts) *)
 	simplify p_nnconvex_constraint;
@@ -2959,13 +2996,7 @@ let px_nnconvex_intersection = p_nnconvex_intersection
 
 (** Performs the union of a p_nnconvex_constraint with a p_linear_constraint; the p_nnconvex_constraint is modified, the p_linear_constraint is not *)
 let p_nnconvex_p_union p_nnconvex_constraint p_linear_constraint =
-(*	(* Statistics *)
-	ppl_nb_is_true := !ppl_nb_is_true + 1;
-	let start = Unix.gettimeofday() in*)
-	(* Actual call to PPL *)
-	ppl_Pointset_Powerset_NNC_Polyhedron_add_disjunct p_nnconvex_constraint p_linear_constraint;
-(*	(* Statistics *)
-	ppl_t_is_true := !ppl_t_is_true +. (Unix.gettimeofday() -. start);*)
+	ippl_nncc_add_disjunct p_nnconvex_constraint p_linear_constraint;
 
 	(* Simplify the constraint (avoids identical disjuncts) *)
 	simplify p_nnconvex_constraint;
@@ -2988,13 +3019,7 @@ let p_nnconvex_union p_nnconvex_constraint p_nnconvex_constraint' =
 
 (** Performs the difference between a first p_nnconvex_constraint and a second p_nnconvex_constraint; the first is modified, the second is not *)
 let p_nnconvex_difference p_nnconvex_constraint p_nnconvex_constraint' =
-(*	(* Statistics *)
-	ppl_nb_is_true := !ppl_nb_is_true + 1;
-	let start = Unix.gettimeofday() in*)
-	(* Actual call to PPL *)
-	ppl_Pointset_Powerset_NNC_Polyhedron_difference_assign p_nnconvex_constraint p_nnconvex_constraint';
-(*	(* Statistics *)
-	ppl_t_is_true := !ppl_t_is_true +. (Unix.gettimeofday() -. start);*)
+	ippl_nncc_difference_assign p_nnconvex_constraint p_nnconvex_constraint';
 
 	(* Simplify the constraint (avoids identical disjuncts) *)
 	simplify p_nnconvex_constraint;
