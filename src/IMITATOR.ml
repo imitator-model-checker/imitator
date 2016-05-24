@@ -62,7 +62,7 @@ terminate_program();*)
 (************************************************************)
 (* Start the global counter *)
 (************************************************************)
-let global_counter = create_and_register "total" Global_counter Verbose_standard in
+let global_counter = create_time_counter_and_register "total" Global_counter Verbose_standard in
 global_counter#start;
 
 
@@ -76,7 +76,7 @@ try(
 (* Get the arguments *)
 (************************************************************)
 
-let options_parsing_counter = create_and_register "options parsing" Parsing_counter Verbose_low in
+let options_parsing_counter = create_time_counter_and_register "options parsing" Parsing_counter Verbose_low in
 options_parsing_counter#start;
 
 (* object with command line options *)
@@ -118,7 +118,7 @@ options#recall();
 (************************************************************)
 (* Get input *)
 (************************************************************)
-let parsing_counter = create_and_register "model parsing" Parsing_counter Verbose_standard in
+let parsing_counter = create_time_counter_and_register "model parsing" Parsing_counter Verbose_standard in
 parsing_counter#start;
 
 let model, pi0, v0 = ParsingUtility.compile options in

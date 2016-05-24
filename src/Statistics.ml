@@ -11,7 +11,7 @@
  * Created           : 2014/04/27
  * Fork from         : Counter.ml
  * Fork date         : 2016/05/17
- * Last modified     : 2016/05/18
+ * Last modified     : 2016/05/24
  *
  ************************************************************)
 
@@ -31,7 +31,7 @@ open ImitatorUtilities
 (************************************************************)
 (************************************************************)
 
-type counterType =
+type counterCategory =
 	(** Algorithm functions *)
 	| Algorithm_counter
 	
@@ -51,10 +51,10 @@ type counterType =
 
 (************************************************************)
 (************************************************************)
-(* Class definition *)
+(* Class definition for time counters *)
 (************************************************************)
 (************************************************************)
-class timeCounter (name : string) (counter_type : counterType) (level : ImitatorUtilities.verbose_mode) =
+class timeCounter (name : string) (counter_category : counterCategory) (level : ImitatorUtilities.verbose_mode) =
 	object(self)
 
 	(************************************************************)
@@ -63,7 +63,7 @@ class timeCounter (name : string) (counter_type : counterType) (level : Imitator
 	
 	(* Counter attributes *)
 	val name = name
-	val counter_type = counter_type
+	val counter_category = counter_category
 	val level = level
 
 	(* Current value *)
@@ -114,7 +114,7 @@ class timeCounter (name : string) (counter_type : counterType) (level : Imitator
 		)
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(** Get the counter's value *)
+	(** Get the counter's continuous value *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method value =
 		value
@@ -127,6 +127,41 @@ end;;
 (************************************************************)
 
 
+(************************************************************)
+(************************************************************)
+(* Class definition for hybrid counters (discrete increment + time counters) *)
+(************************************************************)
+(************************************************************)
+class hybridCounter (name : string) (counter_category : counterCategory) (level : ImitatorUtilities.verbose_mode) =
+	object(self) inherit timeCounter name counter_category level as super
+		
+	(************************************************************)
+	(* Class variables *)
+	(************************************************************)
+	val mutable discrete_counter = 0
+	
+	(************************************************************)
+	(* Class methods *)
+	(************************************************************)
+
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(** Increment the discrete part *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	method increment =
+		discrete_counter <- discrete_counter + 1
+		
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(** Get the counter's discrete value *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	method discrete_value = discrete_counter
+		
+(************************************************************)
+(************************************************************)
+end
+(************************************************************)
+(************************************************************)
+
+
 
 (************************************************************)
 (************************************************************)
@@ -135,18 +170,37 @@ end;;
 (************************************************************)
 
 (* Global variable listing all counters (useful to get all statistics at once) *)
-let all_counters = ref []
+let all_counters : timeCounter list ref= ref []
 
 
 (* Register a counter *)
-let register (counter : timeCounter) =
-	all_counters := counter :: !all_counters;
+let register (* ( *)counter (*: timeCounter)*) =
+	let time_counter :> timeCounter = counter in
+	all_counters := time_counter :: !all_counters;
 	()
-
+(*
 (** Shortcut: create new counter and register it *)
-let create_and_register (name : string) (counter_type : counterType) (level : ImitatorUtilities.verbose_mode) =
+let create_gen_counter_and_register creation_function (name : string) (counter_category : counterCategory) (level : ImitatorUtilities.verbose_mode) =
 	(* Create counter *)
-	let my_new_counter = new timeCounter name counter_type level in
+	let my_new_counter :> timeCounter = (creation_function()) name counter_category level in
+	
+	(* Only register if verbose mode allows for it *)
+	(*** NOTE: for now, register all counters (as the verbose_mode may not be initialized when the counters are created ***)
+(* 	if verbose_mode_greater level then( *)
+		(* Print some information *)
+		print_message Verbose_low ("Registered counter " ^ name ^ ".");
+		register my_new_counter
+(*	)else(
+		(* Print some information *)
+		print_message Verbose_low ("Counter " ^ name ^ " NOT registered.");
+	)*);
+	
+	(* Return counter *)
+	my_new_counter*)
+
+let create_time_counter_and_register (name : string) (counter_category : counterCategory) (level : ImitatorUtilities.verbose_mode) =
+	(* Create counter *)
+	let my_new_counter = new timeCounter name counter_category level in
 	
 	(* Only register if verbose mode allows for it *)
 	(*** NOTE: for now, register all counters (as the verbose_mode may not be initialized when the counters are created ***)
@@ -162,6 +216,25 @@ let create_and_register (name : string) (counter_type : counterType) (level : Im
 	(* Return counter *)
 	my_new_counter
 
+
+let create_hybrid_counter_and_register (name : string) (counter_category : counterCategory) (level : ImitatorUtilities.verbose_mode) =
+	(* Create counter *)
+	let my_new_counter = new hybridCounter name counter_category level in
+
+	(* Only register if verbose mode allows for it *)
+	(*** NOTE: for now, register all counters (as the verbose_mode may not be initialized when the counters are created ***)
+(* 	if verbose_mode_greater level then( *)
+		(* Print some information *)
+		print_message Verbose_low ("Registered counter " ^ name ^ ".");
+		register my_new_counter
+(*	)else(
+		(* Print some information *)
+		print_message Verbose_low ("Counter " ^ name ^ " NOT registered.");
+	)*);
+	
+	(* Return counter *)
+	my_new_counter
+	
 
 
 (** Print all counters values *)

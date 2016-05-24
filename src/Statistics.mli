@@ -11,7 +11,7 @@
  * Created           : 2014/04/27
  * Fork from         : Counter.mli
  * Fork date         : 2016/05/17
- * Last modified     : 2016/05/18
+ * Last modified     : 2016/05/24
  *
  ************************************************************)
 
@@ -21,7 +21,7 @@
 (************************************************************)
 (************************************************************)
 
-type counterType =
+type counterCategory =
 	(** Algorithm functions *)
 	| Algorithm_counter
 	
@@ -42,10 +42,10 @@ type counterType =
 
 (************************************************************)
 (************************************************************)
-(* Class definition *)
+(* Class definition for time counters *)
 (************************************************************)
 (************************************************************)
-class timeCounter : string -> counterType -> ImitatorUtilities.verbose_mode ->
+class timeCounter : string -> counterCategory -> ImitatorUtilities.verbose_mode ->
 	object
 		
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -74,7 +74,7 @@ class timeCounter : string -> counterType -> ImitatorUtilities.verbose_mode ->
 		method reset : unit
 
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-		(** Get the counter's value *)
+		(** Get the counter's continuous value *)
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		method value : float
 (************************************************************)
@@ -83,6 +83,31 @@ end
 (************************************************************)
 (************************************************************)
 
+(************************************************************)
+(************************************************************)
+(* Class definition for hybrid counters (discrete increment + time counters) *)
+(************************************************************)
+(************************************************************)
+class hybridCounter : string -> counterCategory -> ImitatorUtilities.verbose_mode ->
+	object inherit timeCounter
+		
+		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+		(** Increment the discrete part *)
+		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+		method increment : unit
+		
+		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+		(** Get the counter's discrete value *)
+		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+		method discrete_value : int
+		
+(************************************************************)
+(************************************************************)
+end
+(************************************************************)
+(************************************************************)
+
+		
 
 (************************************************************)
 (************************************************************)
@@ -91,7 +116,8 @@ end
 (************************************************************)
 
 (** Shortcut: create new counter and register it *)
-val create_and_register : string -> counterType -> ImitatorUtilities.verbose_mode -> timeCounter
+val create_time_counter_and_register : string -> counterCategory -> ImitatorUtilities.verbose_mode -> timeCounter
+val create_hybrid_counter_and_register : string -> counterCategory -> ImitatorUtilities.verbose_mode -> hybridCounter
 
 (** Register a counter *)
 val register : timeCounter -> unit

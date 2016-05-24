@@ -54,73 +54,73 @@ let check_assert_dimensions = false
 (************************************************************)
 (* Statistics for the use of PPL *)
 (************************************************************)
-let ppl_nb_space_dimension = ref 0
-	let ppl_t_space_dimension = ref 0.0
-	let ppl_tcounter_space_dimension = create_and_register "space_dimension" PPL_counter Verbose_low
+(*let ppl_nb_space_dimension = ref 0
+	let ppl_t_space_dimension = ref 0.0*)
+	let ppl_tcounter_space_dimension = create_hybrid_counter_and_register "space_dimension" PPL_counter Verbose_low
 
-let ppl_nb_normalize_linear_term = ref 0
-	let ppl_t_normalize_linear_term = ref 0.0
-	let ppl_tcounter_normalize_linear_term = create_and_register "normalize_linear_term" PPL_counter Verbose_low
+(*let ppl_nb_normalize_linear_term = ref 0
+	let ppl_t_normalize_linear_term = ref 0.0*)
+	let ppl_tcounter_normalize_linear_term = create_hybrid_counter_and_register "normalize_linear_term" PPL_counter Verbose_low
 
-let ppl_nb_true_constraint = ref 0
-	let ppl_t_true_constraint = ref 0.0
-	let ppl_tcounter_true_constraint = create_and_register "true_constraint" PPL_counter Verbose_low
+(*let ppl_nb_true_constraint = ref 0
+	let ppl_t_true_constraint = ref 0.0*)
+	let ppl_tcounter_true_constraint = create_hybrid_counter_and_register "true_constraint" PPL_counter Verbose_low
 
-let ppl_nb_false_constraint = ref 0
-	let ppl_t_false_constraint = ref 0.0
-	let ppl_tcounter_false_constraint = create_and_register "false_constraint" PPL_counter Verbose_low
+(*let ppl_nb_false_constraint = ref 0
+	let ppl_t_false_constraint = ref 0.0*)
+	let ppl_tcounter_false_constraint = create_hybrid_counter_and_register "false_constraint" PPL_counter Verbose_low
 
-let ppl_nb_is_true = ref 0
-	let ppl_t_is_true = ref 0.0
-	let ppl_tcounter_is_true = create_and_register "is_true" PPL_counter Verbose_low
+(*let ppl_nb_is_true = ref 0
+	let ppl_t_is_true = ref 0.0*)
+	let ppl_tcounter_is_true = create_hybrid_counter_and_register "is_true" PPL_counter Verbose_low
 
-let ppl_nb_is_false = ref 0
-	let ppl_t_is_false = ref 0.0
-	let ppl_tcounter_is_false = create_and_register "is_false" PPL_counter Verbose_low
+(*let ppl_nb_is_false = ref 0
+	let ppl_t_is_false = ref 0.0*)
+	let ppl_tcounter_is_false = create_hybrid_counter_and_register "is_false" PPL_counter Verbose_low
 
-let ppl_nb_is_equal = ref 0
-	let ppl_t_is_equal = ref 0.0
-	let ppl_tcounter_is_equal = create_and_register "is_equal" PPL_counter Verbose_low
+(*let ppl_nb_is_equal = ref 0
+	let ppl_t_is_equal = ref 0.0*)
+	let ppl_tcounter_is_equal = create_hybrid_counter_and_register "is_equal" PPL_counter Verbose_low
 
-let ppl_nb_contains = ref 0
-	let ppl_t_contains = ref 0.0
-	let ppl_tcounter_contains = create_and_register "contains" PPL_counter Verbose_low
-
-
-let ppl_nb_contains_integer_point = ref 0
-	let ppl_t_contains_integer_point = ref 0.0
-	let ppl_tcounter_contains_integer_point = create_and_register "contains_integer_point" PPL_counter Verbose_low
+(*let ppl_nb_contains = ref 0
+	let ppl_t_contains = ref 0.0*)
+	let ppl_tcounter_contains = create_hybrid_counter_and_register "contains" PPL_counter Verbose_low
 
 
-let ppl_nb_get_constraints = ref 0
-	let ppl_t_get_constraints = ref 0.0
-	let ppl_tcounter_get_inequalities = create_and_register "get_inequalities" PPL_counter Verbose_low
+(*let ppl_nb_contains_integer_point = ref 0
+	let ppl_t_contains_integer_point = ref 0.0*)
+	let ppl_tcounter_contains_integer_point = create_hybrid_counter_and_register "contains_integer_point" PPL_counter Verbose_low
+
+
+(*let ppl_nb_get_constraints = ref 0
+	let ppl_t_get_constraints = ref 0.0*)
+	let ppl_tcounter_get_inequalities = create_hybrid_counter_and_register "get_inequalities" PPL_counter Verbose_low
 	
-let ppl_nb_get_generators = ref 0
-	let ppl_t_get_generators = ref 0.0
-	let ppl_tcounter_get_generators = create_and_register "get_generators" PPL_counter Verbose_low
+(*let ppl_nb_get_generators = ref 0
+	let ppl_t_get_generators = ref 0.0*)
+	let ppl_tcounter_get_generators = create_hybrid_counter_and_register "get_generators" PPL_counter Verbose_low
 	
 
 let ppl_nb_add_constraints = ref 0
-	let ppl_t_add_constraints = ref 0.0
-	let ppl_tcounter_add_constraints = create_and_register "add_constraints" PPL_counter Verbose_low
+(*	let ppl_t_add_constraints = ref 0.0*)
+	let ppl_tcounter_add_constraints = create_hybrid_counter_and_register "add_constraints" PPL_counter Verbose_low
 
-	let ppl_tcounter_add_space_dimensions_and_project = create_and_register "add_space_dimensions_and_project" PPL_counter Verbose_low
+	let ppl_tcounter_add_space_dimensions_and_project = create_hybrid_counter_and_register "add_space_dimensions_and_project" PPL_counter Verbose_low
 
-	let ppl_tcounter_remove_higher_dimensions = create_and_register "remove_higher_space_dimensions" PPL_counter Verbose_low
+	let ppl_tcounter_remove_higher_dimensions = create_hybrid_counter_and_register "remove_higher_space_dimensions" PPL_counter Verbose_low
 	
 
-	let ppl_tcounter_constrains = create_and_register "constrains" PPL_counter Verbose_low
+	let ppl_tcounter_constrains = create_hybrid_counter_and_register "constrains" PPL_counter Verbose_low
 
 
 
 (*let ppl_nb_hull = ref 0
 	let ppl_t_hull = ref 0.0
-	let ppl_tcounter_hull_assign = create_and_register "hull_assign" PPL_counter Verbose_low*)
+	let ppl_tcounter_hull_assign = create_hybrid_counter_and_register "hull_assign" PPL_counter Verbose_low*)
 
-let ppl_nb_hull_assign_if_exact = ref 0
-	let ppl_t_hull_assign_if_exact = ref 0.0
-	let ppl_tcounter_hull_assign_if_exact = create_and_register "hull_assign_if_exact" PPL_counter Verbose_low
+(*let ppl_nb_hull_assign_if_exact = ref 0
+	let ppl_t_hull_assign_if_exact = ref 0.0*)
+	let ppl_tcounter_hull_assign_if_exact = create_hybrid_counter_and_register "hull_assign_if_exact" PPL_counter Verbose_low
 
 (*let ppl_nb_hull_assign_if_exact_true = ref 0
 	let ppl_t_hull_assign_if_exact_true = ref 0.0
@@ -129,79 +129,79 @@ let ppl_nb_hull_assign_if_exact_false = ref 0
 
 (*let ppl_nb_difference = ref 0
 	let ppl_t_difference = ref 0.0
-	let ppl_tcounter_difference_assign = create_and_register "difference_assign" PPL_counter Verbose_low*)
+	let ppl_tcounter_difference_assign = create_hybrid_counter_and_register "difference_assign" PPL_counter Verbose_low*)
 
 	
-let ppl_nb_intersection_assign = ref 0
-	let ppl_t_intersection_assign = ref 0.0
-	let ppl_tcounter_intersection_assign = create_and_register "intersection_assign" PPL_counter Verbose_low
+(*let ppl_nb_intersection_assign = ref 0
+	let ppl_t_intersection_assign = ref 0.0*)
+	let ppl_tcounter_intersection_assign = create_hybrid_counter_and_register "intersection_assign" PPL_counter Verbose_low
 
-let ppl_nb_unconstrain = ref 0
-	let ppl_t_unconstrain = ref 0.0
-	let ppl_tcounter_unconstrain = create_and_register "unconstrain" PPL_counter Verbose_low
+(*let ppl_nb_unconstrain = ref 0
+	let ppl_t_unconstrain = ref 0.0*)
+	let ppl_tcounter_unconstrain = create_hybrid_counter_and_register "unconstrain" PPL_counter Verbose_low
 	
 
 
-let ppl_nb_map = ref 0
-	let ppl_t_map = ref 0.0
-	let ppl_tcounter_map_space_dimensions = create_and_register "map_space_dimensions" PPL_counter Verbose_low
+(*let ppl_nb_map = ref 0
+	let ppl_t_map = ref 0.0*)
+	let ppl_tcounter_map_space_dimensions = create_hybrid_counter_and_register "map_space_dimensions" PPL_counter Verbose_low
 
 (*let ppl_nb_preimage = ref 0
 	let ppl_t_preimage = ref 0*)
 
-let ppl_nb_remove_dim = ref 0
-	let ppl_t_remove_dim = ref 0.0
-	let ppl_tcounter_remove_space_dimensions = create_and_register "remove_space_dimensions" PPL_counter Verbose_low
+(*let ppl_nb_remove_dim = ref 0
+	let ppl_t_remove_dim = ref 0.0*)
+	let ppl_tcounter_remove_space_dimensions = create_hybrid_counter_and_register "remove_space_dimensions" PPL_counter Verbose_low
 
 	
-let ppl_nb_elapse = ref 0
-	let ppl_t_elapse = ref 0.0
-	let ppl_time_elapse_assign = create_and_register "time_elapse_assign" PPL_counter Verbose_low
+(*let ppl_nb_elapse = ref 0
+	let ppl_t_elapse = ref 0.0*)
+	let ppl_time_elapse_assign = create_hybrid_counter_and_register "time_elapse_assign" PPL_counter Verbose_low
 
 
-let ppl_nb_copy_polyhedron = ref 0
-	let ppl_t_copy_polyhedron = ref 0.0
-	let ppl_tcounter_copy = create_and_register "NNC_Polyhedron_from_NNC_Polyhedron" PPL_counter Verbose_low
+(*let ppl_nb_copy_polyhedron = ref 0
+	let ppl_t_copy_polyhedron = ref 0.0*)
+	let ppl_tcounter_copy = create_hybrid_counter_and_register "NNC_Polyhedron_from_NNC_Polyhedron" PPL_counter Verbose_low
 
 
-	let ppl_nncc_false_constraint = create_and_register "nncc_false_constraint" PPL_counter Verbose_low
+	let ppl_nncc_false_constraint = create_hybrid_counter_and_register "nncc_false_constraint" PPL_counter Verbose_low
 
-	let ppl_nncc_true_constraint = create_and_register "nncc_true_constraint" PPL_counter Verbose_low
+	let ppl_nncc_true_constraint = create_hybrid_counter_and_register "nncc_true_constraint" PPL_counter Verbose_low
 
-	let ppl_nncc_from_poly = create_and_register "nncc_from_poly" PPL_counter Verbose_low
+	let ppl_nncc_from_poly = create_hybrid_counter_and_register "nncc_from_poly" PPL_counter Verbose_low
 
-	let ppl_nncc_copy = create_and_register "nncc_copy" PPL_counter Verbose_low
+	let ppl_nncc_copy = create_hybrid_counter_and_register "nncc_copy" PPL_counter Verbose_low
 
-	let ppl_nncc_begin_iterator = create_and_register "nncc_begin_iterator" PPL_counter Verbose_low
+	let ppl_nncc_begin_iterator = create_hybrid_counter_and_register "nncc_begin_iterator" PPL_counter Verbose_low
 
-	let ppl_nncc_end_iterator = create_and_register "nncc_end_iterator" PPL_counter Verbose_low
+	let ppl_nncc_end_iterator = create_hybrid_counter_and_register "nncc_end_iterator" PPL_counter Verbose_low
 
-	let ppl_nncc_equals_iterator = create_and_register "nncc_equals_iterator" PPL_counter Verbose_low
+	let ppl_nncc_equals_iterator = create_hybrid_counter_and_register "nncc_equals_iterator" PPL_counter Verbose_low
 
-	let ppl_nncc_increment_iterator = create_and_register "nncc_increment_iterator" PPL_counter Verbose_low
+	let ppl_nncc_increment_iterator = create_hybrid_counter_and_register "nncc_increment_iterator" PPL_counter Verbose_low
 
-	let ppl_nncc_get_disjunct = create_and_register "nncc_get_disjunct" PPL_counter Verbose_low
+	let ppl_nncc_get_disjunct = create_hybrid_counter_and_register "nncc_get_disjunct" PPL_counter Verbose_low
 	
 	(* Counter for the higher-level function implemented here *)
-	let ppl_nncc_get_disjuncts = create_and_register "nncc_get_disjuncts" PPL_counter Verbose_low
+	let ppl_nncc_get_disjuncts = create_hybrid_counter_and_register "nncc_get_disjuncts" PPL_counter Verbose_low
 
-	let ppl_nncc_is_empty = create_and_register "nncc_is_empty" PPL_counter Verbose_low
+	let ppl_nncc_is_empty = create_hybrid_counter_and_register "nncc_is_empty" PPL_counter Verbose_low
 	
-	let ppl_nncc_is_universe = create_and_register "nncc_is_universe" PPL_counter Verbose_low
+	let ppl_nncc_is_universe = create_hybrid_counter_and_register "nncc_is_universe" PPL_counter Verbose_low
 	
-	let ppl_nncc_contains = create_and_register "nncc_contains" PPL_counter Verbose_low
+	let ppl_nncc_contains = create_hybrid_counter_and_register "nncc_contains" PPL_counter Verbose_low
 	
-	let ppl_nncc_equals = create_and_register "nncc_equals" PPL_counter Verbose_low
+	let ppl_nncc_equals = create_hybrid_counter_and_register "nncc_equals" PPL_counter Verbose_low
 	
-	let ppl_nncc_pairwise_reduce = create_and_register "nncc_pairwise_reduce" PPL_counter Verbose_low
+	let ppl_nncc_pairwise_reduce = create_hybrid_counter_and_register "nncc_pairwise_reduce" PPL_counter Verbose_low
 	
-	let ppl_nncc_omega_reduce = create_and_register "nncc_omega_reduce" PPL_counter Verbose_low
+	let ppl_nncc_omega_reduce = create_hybrid_counter_and_register "nncc_omega_reduce" PPL_counter Verbose_low
 
-	let ppl_nncc_add_constraints = create_and_register "nncc_add_constraints" PPL_counter Verbose_low
+	let ppl_nncc_add_constraints = create_hybrid_counter_and_register "nncc_add_constraints" PPL_counter Verbose_low
 
-	let ppl_nncc_add_disjunct = create_and_register "nncc_add_disjunct" PPL_counter Verbose_low
+	let ppl_nncc_add_disjunct = create_hybrid_counter_and_register "nncc_add_disjunct" PPL_counter Verbose_low
 
-	let ppl_nncc_difference_assign = create_and_register "nncc_difference_assign" PPL_counter Verbose_low
+	let ppl_nncc_difference_assign = create_hybrid_counter_and_register "nncc_difference_assign" PPL_counter Verbose_low
 
 
 (*let get_statistics total_time =
@@ -317,13 +317,16 @@ type pxd_linear_constraint = linear_constraint
 (* that the only non-rational coefficient is outside the term:    *)
 (* p/q * ( ax + by + c ) *)
 let normalize_linear_term lt =
-	(* Start counter *)
+	(* Increment discrete counter *)
+	ppl_tcounter_normalize_linear_term#increment;
+	
+	(* Start continuous counter *)
 	ppl_tcounter_normalize_linear_term#start;
 	
 	let rec normalize_linear_term_rec lt =
-	(*	(* Statistics *)*)
+(*	(*	(* Statistics *)*)
 	(*** TODO ***)
-		ppl_nb_normalize_linear_term := !ppl_nb_normalize_linear_term + 1;
+		ppl_nb_normalize_linear_term := !ppl_nb_normalize_linear_term + 1;*)
 
 		let result =
 		match lt with
@@ -362,7 +365,7 @@ let normalize_linear_term lt =
 	
 	let result = normalize_linear_term_rec lt in
 
-	(* Stop counter *)
+	(* Stop continuous counter *)
 	ppl_tcounter_normalize_linear_term#stop;
 	
 	(* Return result *)
@@ -423,7 +426,8 @@ let nonparameters () = list_of_interval !nb_parameters (!total_dim - 1)
  *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 let ippl_generic f counter =
-	(*** TODO: increment discrete counter ***)
+	(* Increment discrete counter *)
+	counter#increment;
 	
 	(* Start time counter *)
 	counter#start;
@@ -431,7 +435,7 @@ let ippl_generic f counter =
 	(* Actual call to PPL *)
 	let result = f() in
 	
-	(* Stop counter *)
+	(* Stop continuous counter *)
 	counter#stop;
 	
 	(* Return result *)
@@ -2874,7 +2878,10 @@ let px_nnconvex_copy = nnconvex_copy
 
 (** Get the list of p_linear_constraint the disjunction of which makes a p_nnconvex_constraint *)
 let get_disjuncts p_nnconvex_constraint =
-	(* Start counter *)
+	(* Increment discrete counter *)
+	ppl_nncc_get_disjuncts#increment;
+	
+	(* Start continuous counter *)
 	ppl_nncc_get_disjuncts#start;
 
 	(* Create ref for the result *)
@@ -2901,7 +2908,7 @@ let get_disjuncts p_nnconvex_constraint =
 	(* Return disjuncts *)
 	let result = List.rev (!disjuncts) in
 
-	(* Start counter *)
+	(* Start continuous counter *)
 	ppl_nncc_get_disjuncts#stop;
 	
 	result
