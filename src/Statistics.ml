@@ -11,7 +11,7 @@
  * Created           : 2014/04/27
  * Fork from         : Counter.ml
  * Fork date         : 2016/05/17
- * Last modified     : 2016/05/24
+ * Last modified     : 2016/05/27
  *
  ************************************************************)
 
@@ -89,6 +89,12 @@ class timeCounter (name : string) (counter_category : counterCategory) (level : 
 	
 	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(** Get the category *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	method category = counter_category
+	
+	
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(** Start the counter *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method start =
@@ -118,6 +124,12 @@ class timeCounter (name : string) (counter_category : counterCategory) (level : 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method value =
 		value
+
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(** Get the counter's value in the form of a string *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	method string_of_value =
+		string_of_seconds value
 
 	
 (************************************************************)
@@ -155,6 +167,26 @@ class hybridCounter (name : string) (counter_category : counterCategory) (level 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method discrete_value = discrete_counter
 		
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(** Get the counter's value in the form of a string: continuous value, number of calls, and average call excecution *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	method string_of_value =
+		(* Continuous value *)
+		(string_of_seconds value)
+		(* Discrete value *)
+		^ " (" ^ (string_of_int discrete_counter) ^ " call" ^ (s_of_int discrete_counter)
+		(* If nb calls > 0: Compute average *)
+		 ^ (if discrete_counter = 0 then "" else(
+			let average = value /. (float_of_int discrete_counter) in
+			" | "
+			(* Note: no "string_of_seconds" because not precise enough *)
+			^ (string_of_float average)
+			^ " second/call"
+			)
+		)
+		(* The end *)
+		^ ")"
+
 (************************************************************)
 (************************************************************)
 end
@@ -165,12 +197,40 @@ end
 
 (************************************************************)
 (************************************************************)
-(* Class-independent functions and variables *)
+(* Class-independent global variables *)
 (************************************************************)
 (************************************************************)
 
+(* Shortcut to iterate on categories *)
+let all_categories = [Algorithm_counter ; Global_counter ; Graphics_counter ; Parsing_counter ; PPL_counter]
+
 (* Global variable listing all counters (useful to get all statistics at once) *)
 let all_counters : timeCounter list ref= ref []
+
+
+(************************************************************)
+(************************************************************)
+(* Class-independent functions *)
+(************************************************************)
+(************************************************************)
+
+let string_of_category = function
+	(** Algorithm functions *)
+	| Algorithm_counter -> "Algorithm counters"
+	
+	(** The global counter *)
+	(*** TODO: prevent more than one such counter to be created ***)
+	| Global_counter -> "Global counter"
+	
+	(** Everything related to graphics generation *)
+	| Graphics_counter -> "Graphics-related counters"
+	
+	(** Lexing and parsing *)
+	| Parsing_counter -> "Parsing counters"
+
+	(** All calls to PPL *)
+	| PPL_counter -> "PPL counters"
+
 
 
 (* Register a counter *)
@@ -234,25 +294,43 @@ let create_hybrid_counter_and_register (name : string) (counter_category : count
 	
 	(* Return counter *)
 	my_new_counter
-	
+
+
+(** Retrieve all counters of a category *)
+(*** NOTE: not smart programming (we have to go through the entire list of counters once for each category) but, come on, there are relatively few counters and few categories.... ***)
+let get_counters_by_category counter_category =
+	List.filter (fun counter -> counter#category = counter_category) !all_counters
 
 
 (** Print all counters values *)
 let print_all_counters () =
+	(* Try to get something nicely justified *) 
 	let max_name_size = 40 in
-	(*** TODO: add categories, etc. ***)
-	print_message Verbose_standard "\n------------------------------------------------------------";
-	print_message Verbose_standard " Statistics";
-	print_message Verbose_standard "------------------------------------------------------------";
-	List.iter (fun counter ->
-		(* Only print suitable counters *)
-		if verbose_mode_greater counter#level then(
-			let counter_name_length = String.length counter#name in
-			let name = if counter_name_length <= max_name_size then
-				(counter#name ^ (string_n_times (max_name_size - counter_name_length) " "))
-			else
-				counter#name
-			in
-			print_message Verbose_standard (name ^ ": " ^ (string_of_seconds counter#value));
-		);
-	) !all_counters
+
+	print_message Verbose_standard "\n";
+	
+	(* Iterate on categories *)
+	List.iter (fun category -> 
+		(* Retrieve counters *)
+		let counters = get_counters_by_category category in
+		(* Only print non-empty categories *)
+		(*** TODO: also restrain to active counters for this level of verbosity ***)
+		if List.length counters > 0 then(
+			print_message Verbose_standard "------------------------------------------------------------";
+			print_message Verbose_standard (" Statistics: " ^ (string_of_category category));
+			print_message Verbose_standard "------------------------------------------------------------";
+			List.iter (fun counter ->
+				(* Only print suitable counters *)
+				if verbose_mode_greater counter#level then(
+					let counter_name_length = String.length counter#name in
+					let name = if counter_name_length <= max_name_size then
+						(counter#name ^ (string_n_times (max_name_size - counter_name_length) " "))
+					else
+						counter#name
+					in
+					print_message Verbose_standard (name ^ ": " ^ counter#string_of_value);
+				);
+			(*** NOTE: the list is reversed for a nicer printing since newer registered counters were added to the head ***)
+			) (List.rev counters)
+		) (* end if |counters| > 0 *)
+	) all_categories;

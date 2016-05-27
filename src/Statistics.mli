@@ -11,7 +11,7 @@
  * Created           : 2014/04/27
  * Fork from         : Counter.mli
  * Fork date         : 2016/05/17
- * Last modified     : 2016/05/24
+ * Last modified     : 2016/05/27
  *
  ************************************************************)
 
@@ -59,6 +59,11 @@ class timeCounter : string -> counterCategory -> ImitatorUtilities.verbose_mode 
 		method level : ImitatorUtilities.verbose_mode
 		
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+		(** Get the category *)
+		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+		method category : counterCategory
+		
+		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		(** Start the counter *)
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		method start : unit
@@ -77,6 +82,12 @@ class timeCounter : string -> counterCategory -> ImitatorUtilities.verbose_mode 
 		(** Get the counter's continuous value *)
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		method value : float
+		
+		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+		(** Get the counter's value in the form of a string *)
+		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+		method string_of_value : string
+
 (************************************************************)
 (************************************************************)
 end
