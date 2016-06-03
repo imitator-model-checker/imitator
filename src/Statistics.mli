@@ -41,6 +41,9 @@ type counterCategory =
 	(** All calls to PPL *)
 	| PPL_counter
 
+	(** States computations *)
+	| States_counter
+	
 
 
 (************************************************************)
@@ -130,6 +133,11 @@ class discreteCounter : string -> counterCategory -> ImitatorUtilities.verbose_m
 		(** Increment the discrete part *)
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		method increment : unit
+		
+		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+		(** Increment the discrete counter by some integer *)
+		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+		method increment_by : int -> unit
 		
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		(** Get the counter's discrete value *)

@@ -50,6 +50,10 @@ type counterCategory =
 
 	(** All calls to PPL *)
 	| PPL_counter
+	
+	(** States computations *)
+	| States_counter
+	
 
 (************************************************************)
 (************************************************************)
@@ -188,10 +192,16 @@ class discreteCounter (name : string) (counter_category : counterCategory) (leve
 	(************************************************************)
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(** Increment the discrete part *)
+	(** Increment the discrete counter *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method increment =
 		discrete_counter <- discrete_counter + 1
+		
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(** Increment the discrete counter by some integer *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	method increment_by n =
+		discrete_counter <- discrete_counter + n
 		
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(** Get the counter's discrete value *)
@@ -280,7 +290,7 @@ end
 
 (* Shortcut to iterate on categories *)
 (*** NOTE: counters will be printed in this order ***)
-let all_categories = [Algorithm_counter ; Parsing_counter ; Cache_counter ; PPL_counter ; Graphics_counter ; Global_counter]
+let all_categories = [Algorithm_counter ; Parsing_counter ; Cache_counter ; PPL_counter ; States_counter ;  Graphics_counter ; Global_counter]
 
 (* Global variable listing all counters (useful to get all statistics at once) *)
 let all_counters : counter list ref= ref []
@@ -312,6 +322,9 @@ let string_of_category = function
 	(** All calls to PPL *)
 	| PPL_counter -> "PPL counters"
 
+	(** States computations *)
+	| States_counter -> "State computation counters"
+	
 
 
 (* Register a counter *)

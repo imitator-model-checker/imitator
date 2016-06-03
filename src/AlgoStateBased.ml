@@ -17,8 +17,9 @@
 (* Modules *)
 (************************************************************)
 open OCamlUtilities
-open ImitatorUtilities
 open Exceptions
+open ImitatorUtilities
+open Statistics
 open AbstractModel
 open AlgoGeneric
 open State
@@ -138,10 +139,8 @@ let upd_cache = Cache.make upd_hash 100*)
 
 
 (************************************************************)
-(* Statistics *)
+(** Statistics *)
 (************************************************************)
-
-(*** TODO: re use from ResultProcessor (temporarily disabled) ***)
 
 (*(* Print statistics for cache usage *)
 let print_stats _ =
@@ -149,24 +148,24 @@ let print_stats _ =
 	Cache.print_stats inv_cache(*;
  	print_message Verbose_standard "clock update cache:"; *)
 (* 	Cache.print_stats upd_cache *)*)
-	
- 
- 
-(*** TODO: move to the class ***)
-(*** TODO: use integer counters in a new class... ***)
-
+	 
 
 (* Number of constraints checked unsatisfiable while looking for the actions *)
-let nb_early_unsatisfiable = ref 0
-(* Number of actions discarded *)
-let nb_early_skip = ref 0
-(* Number of constraints computed but unsatisfiable *)
-let nb_unsatisfiable = ref 0
-(* Number of different combinations considered when computing post *)
-let nb_combinations = ref 0
+let counter_nb_early_unsatisfiable = create_discrete_counter_and_register "early unsat states (guard)" States_counter Verbose_low
 
-let nb_unsat1 = ref 0
-let nb_unsat2 = ref 0
+(* Number of actions discarded *)
+let counter_nb_early_skip = create_discrete_counter_and_register "early skips" States_counter Verbose_low
+
+(* Number of constraints computed but unsatisfiable *)
+let counter_nb_unsatisfiable = create_discrete_counter_and_register "unsatisfiable constraints" States_counter Verbose_low
+
+(* Number of different combinations considered when computing post *)
+let counter_nb_combinations = create_discrete_counter_and_register "different combinations" States_counter Verbose_low
+
+(* Early unsatisfiability when computing new states, after performing intersection of Di = di and C(X) and g(X) *)
+let counter_nb_unsat1 = create_discrete_counter_and_register "early unsat (D ^ g)" States_counter Verbose_low
+
+(* let nb_unsat2 = ref 0 *)
 
 
 
@@ -912,7 +911,7 @@ let compute_new_constraint orig_constraint (discrete_constr_src : LinearConstrai
 		(* Check here for unsatisfiability *)
 		if not (LinearConstraint.pxd_is_satisfiable current_constraint) then (
 			(* Statistics *)
-			nb_unsat1 := !nb_unsat1 + 1;
+			counter_nb_unsat1#increment;
 			print_message Verbose_high "skip transition";
 			raise Unsat_exception
 		);
@@ -1088,7 +1087,7 @@ let compute_transitions location constr action_index automata aut_table max_inde
  				let is_possible = LinearConstraint.pxd_is_satisfiable constr_and_guard in 
 				if not is_possible then (
 					(* Statistics *)
-					nb_early_unsatisfiable := !nb_early_unsatisfiable + 1;
+					counter_nb_early_unsatisfiable#increment;
 					print_message Verbose_medium "** early skip transition **"
 				);
 				is_possible(*true*)
@@ -1104,7 +1103,7 @@ let compute_transitions location constr action_index automata aut_table max_inde
 			(* Stop computation if no legal transition exists *)
 			if !legal_transitions = [] then (
 				(* Statistics *)
-				nb_early_skip := !nb_early_skip + 1;
+				counter_nb_early_skip#increment;
 				print_message Verbose_medium "*** early skip action ***";
 				raise Unsat_exception
 			);
@@ -1288,7 +1287,7 @@ class virtual algoStateBased =
 				let new_nb_combinations = Array.fold_left (fun sum max -> sum * (max + 1)) 1 max_indexes in
 				print_message Verbose_medium ("" ^ (string_of_int new_nb_combinations) ^ " combination" ^ (s_of_int new_nb_combinations) ^ " will be considered for this state and this action\n");
 				(* Update for statistics *)
-				nb_combinations := !nb_combinations + new_nb_combinations;
+				counter_nb_combinations#increment_by new_nb_combinations;
 			);
 		
 			(* Loop on all the transition combinations *)
@@ -1321,12 +1320,12 @@ class virtual algoStateBased =
 				match new_constraint with
 					| None -> 
 						(* Statistics *)
-						nb_unsatisfiable := !nb_unsatisfiable + 1;
+						counter_nb_unsatisfiable#increment;
 						print_message Verbose_high ("\nThis constraint is not satisfiable ('None').");
 					| Some (final_constraint : LinearConstraint.px_linear_constraint) -> (
 						if not (LinearConstraint.px_is_satisfiable final_constraint) then(
 							(* Statistics *)
-							nb_unsatisfiable := !nb_unsatisfiable + 1;
+							counter_nb_unsatisfiable#increment;
 							print_message Verbose_high ("\nThis constraint is not satisfiable ('Some unsatisfiable').");
 						) else (
 						
