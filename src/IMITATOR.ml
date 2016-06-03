@@ -356,7 +356,7 @@ let algorithm : AlgoGeneric.algoGeneric = match options#imitator_mode with
 		let myalgo :> AlgoGeneric.algoGeneric = new AlgoEFsynth.algoEFsynth in myalgo
 	
 	(* Normal (and old) mode *)
-	| EF_synthesis when not options#new_ef_mode ->
+	| EF_synthesis (*when not options#new_ef_mode*) ->
 		let myalgo :> AlgoGeneric.algoGeneric = new AlgoEFsynthOld.algoEFsynth in myalgo
 	
 	
