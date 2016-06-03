@@ -48,30 +48,23 @@ type counterCategory =
 	(** All calls to PPL *)
 	| PPL_counter
 
-
 (************************************************************)
 (************************************************************)
-(* Class definition for time counters *)
+(* Class definition for generic counters *)
 (************************************************************)
 (************************************************************)
-class timeCounter (name : string) (counter_category : counterCategory) (level : ImitatorUtilities.verbose_mode) =
+class virtual counter (name : string) (counter_category : counterCategory) (level : ImitatorUtilities.verbose_mode) =
 	object(self)
 
 	(************************************************************)
 	(* Class variables *)
 	(************************************************************)
-	
+
 	(* Counter attributes *)
 	val name = name
 	val counter_category = counter_category
 	val level = level
 
-	(* Current value *)
-	val mutable value = 0.0
-	(* Latest start time *)
-	val mutable start_time = 0.0
-	
-	
 	(************************************************************)
 	(* Class methods *)
 	(************************************************************)
@@ -93,7 +86,41 @@ class timeCounter (name : string) (counter_category : counterCategory) (level : 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method category = counter_category
 	
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(** Get the counter's value in the form of a string *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	method virtual string_of_value : string
 	
+
+(************************************************************)
+(************************************************************)
+end;;
+(************************************************************)
+(************************************************************)
+
+
+(************************************************************)
+(************************************************************)
+(* Class definition for time counters *)
+(************************************************************)
+(************************************************************)
+class timeCounter (name : string) (counter_category : counterCategory) (level : ImitatorUtilities.verbose_mode) =
+	object(self) inherit counter name counter_category level as super
+
+	(************************************************************)
+	(* Class variables *)
+	(************************************************************)
+	
+	(* Current value *)
+	val mutable value = 0.0
+	(* Latest start time *)
+	val mutable start_time = 0.0
+	
+	
+	(************************************************************)
+	(* Class methods *)
+	(************************************************************)
+
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(** Start the counter *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -141,16 +168,17 @@ end;;
 
 (************************************************************)
 (************************************************************)
-(* Class definition for hybrid counters (discrete increment + time counters) *)
+(* Class definition for discrete counters *)
 (************************************************************)
 (************************************************************)
-class hybridCounter (name : string) (counter_category : counterCategory) (level : ImitatorUtilities.verbose_mode) =
-	object(self) inherit timeCounter name counter_category level as super
+class discreteCounter (name : string) (counter_category : counterCategory) (level : ImitatorUtilities.verbose_mode) =
+	object(self) inherit counter name counter_category level as super
 		
 	(************************************************************)
 	(* Class variables *)
 	(************************************************************)
 	val mutable discrete_counter = 0
+	
 	
 	(************************************************************)
 	(* Class methods *)
@@ -165,7 +193,53 @@ class hybridCounter (name : string) (counter_category : counterCategory) (level 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(** Get the counter's discrete value *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method discrete_value = discrete_counter
+(* 	method discrete_value = discrete_counter *)
+		
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(** Get the counter's value in the form of a string: continuous value, number of calls, and average call excecution *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	method string_of_value =
+		(* Discrete value *)
+		string_of_int discrete_counter
+
+
+(************************************************************)
+(************************************************************)
+end
+(************************************************************)
+(************************************************************)
+
+
+
+(************************************************************)
+(************************************************************)
+(* Class definition for hybrid counters (discrete increment + time counters) *)
+(************************************************************)
+(************************************************************)
+(*** TODO: rather use multiple inheritance from discreteCounter? ***)
+class hybridCounter (name : string) (counter_category : counterCategory) (level : ImitatorUtilities.verbose_mode) =
+	object(self) inherit timeCounter name counter_category level as super
+		
+	(************************************************************)
+	(* Class variables *)
+	(************************************************************)
+	val mutable discrete_counter = 0
+	
+	
+	(************************************************************)
+	(* Class methods *)
+	(************************************************************)
+
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(** Increment the discrete part *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	method increment =
+		discrete_counter <- discrete_counter + 1
+		
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(** Get the counter's discrete value *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+(* 	method discrete_value = discrete_counter *)
 		
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(** Get the counter's value in the form of a string: continuous value, number of calls, and average call excecution *)
@@ -206,7 +280,7 @@ end
 let all_categories = [Algorithm_counter ; Parsing_counter ; PPL_counter ; Graphics_counter ; Global_counter]
 
 (* Global variable listing all counters (useful to get all statistics at once) *)
-let all_counters : timeCounter list ref= ref []
+let all_counters : counter list ref= ref []
 
 
 (************************************************************)
@@ -235,9 +309,9 @@ let string_of_category = function
 
 
 (* Register a counter *)
-let register (* ( *)counter (*: timeCounter)*) =
-	let time_counter :> timeCounter = counter in
-	all_counters := time_counter :: !all_counters;
+let register counter =
+	let well_typed_counter :> counter = counter in
+	all_counters := well_typed_counter :: !all_counters;
 	()
 (*
 (** Shortcut: create new counter and register it *)
