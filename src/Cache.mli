@@ -1,3 +1,19 @@
+(************************************************************
+ *
+ *                       IMITATOR
+ * 
+ * Laboratoire Spécification et Vérification (ENS Cachan & CNRS, France)
+ * LIPN, Université Paris 13, Sorbonne Paris Cité (France)
+ * 
+ * Module description: Cache
+ * 
+ * File contributors : Ulrich Kühne, Étienne André
+ * Created           : 2010 (?)
+ * Last modified     : 2016/06/03
+ *
+ ************************************************************)
+
+
 open LinearConstraint
 open Automaton
 
@@ -18,5 +34,5 @@ val find: ('a, 'b) t -> 'a -> 'b option
 (** store an item associated with a key *)
 val store: ('a, 'b) t -> 'a -> 'b -> unit
 
-(** print statistics *)
-val print_stats: ('a, 'b) t -> unit
+(*(** print statistics *)
+val print_stats: ('a, 'b) t -> unit*)

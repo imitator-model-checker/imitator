@@ -1,19 +1,33 @@
-(*****************************************************************
+(************************************************************
  *
  *                       IMITATOR
  * 
- * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
- * LIPN, Universite Paris 13, Sorbonne Paris Cite (France)
+ * Laboratoire Spécification et Vérification (ENS Cachan & CNRS, France)
+ * LIPN, Université Paris 13, Sorbonne Paris Cité (France)
  * 
- * Author:        Ulrich Kuehne, Etienne Andre
+ * Module description: Cache
  * 
- * Created:       2010 (?)
- * Last modified: 2015/03/30
+ * File contributors : Ulrich Kühne, Étienne André
+ * Created           : 2010 (?)
+ * Last modified     : 2016/06/03
  *
- ****************************************************************)
+ ************************************************************)
 
  
+
+(************************************************************)
+(* Internal modules *)
+(************************************************************)
 open ImitatorUtilities
+open Statistics
+
+
+(************************************************************)
+(** Statistics *)
+(************************************************************)
+let counter_hits = create_discrete_counter_and_register "cache hits" Cache_counter Verbose_low
+let counter_misses = create_discrete_counter_and_register "cache misses" Cache_counter Verbose_low
+let counter_collisions = create_discrete_counter_and_register "cache collisions" Cache_counter Verbose_low
 
 
 type ('a, 'b) t = {
@@ -22,9 +36,9 @@ type ('a, 'b) t = {
 	mutable hash  : 'a -> int;
 	
 	(* statistics *)
-	mutable hits : int;
+(*	mutable hits : int;
 	mutable misses : int;
-	mutable collisions : int;
+	mutable collisions : int;*)
 }
 
 
@@ -33,17 +47,17 @@ let make hash_fun max_size =
 		size = max_size;
 		table = Hashtbl.create 0;
 		hash = hash_fun;
-		hits = 0;
+(*		hits = 0;
 		misses = 0;
-		collisions = 0;
+		collisions = 0;*)
 	}
 	
 	
 let flush cache =
-	Hashtbl.clear cache.table;
-	cache.hits <- 0;
+	Hashtbl.clear cache.table
+(*	cache.hits <- 0;
 	cache.misses <- 0;
-	cache.collisions <- 0
+	cache.collisions <- 0*)
 
 
 let resize cache new_size =
@@ -57,14 +71,20 @@ let find cache key =
 	try (                                                                    
 		let stored_key, item = Hashtbl.find cache.table h in                    
 		if key = stored_key then (
-			cache.hits <- cache.hits + 1; 
+			(* Statistics *)
+			counter_hits#increment;
+(* 			cache.hits <- cache.hits + 1;  *)
 			Some item 
 		) else (
-			cache.collisions <- cache.collisions + 1; 
+			(* Statistics *)
+			counter_collisions#increment;
+(* 			cache.collisions <- cache.collisions + 1;  *)
 			None  
 		)          
 	) with Not_found -> (
-			cache.misses <- cache.misses + 1; 
+			(* Statistics *)
+			counter_misses#increment;
+(* 			cache.misses <- cache.misses + 1;  *)
 			None
 		) 
 		
@@ -75,10 +95,10 @@ let store cache key item =
 	Hashtbl.replace cache.table h (key, item)
 	
 	
-let print_stats cache =
+(*let print_stats cache =
 	let fill_rate = 100.0 *. (float_of_int (Hashtbl.length cache.table)) /. (float_of_int cache.size) in
 	print_message Verbose_standard ("filled: " ^ (string_of_float fill_rate) ^ "%");
 	print_message Verbose_standard ("hits  : " ^ (string_of_int cache.hits));
 	print_message Verbose_standard ("misses: " ^ (string_of_int cache.misses));
-	print_message Verbose_standard ("coll. : " ^ (string_of_int cache.collisions))
+	print_message Verbose_standard ("coll. : " ^ (string_of_int cache.collisions))*)
 	

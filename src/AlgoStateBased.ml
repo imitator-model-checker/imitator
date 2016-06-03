@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/12/02
- * Last modified     : 2016/05/04
+ * Last modified     : 2016/06/03
  *
  ************************************************************)
 
@@ -143,12 +143,12 @@ let upd_cache = Cache.make upd_hash 100*)
 
 (*** TODO: re use from ResultProcessor (temporarily disabled) ***)
 
-(* Print statistics for cache usage *)
+(*(* Print statistics for cache usage *)
 let print_stats _ =
 	print_message Verbose_standard "invariant cache:"; 
 	Cache.print_stats inv_cache(*;
  	print_message Verbose_standard "clock update cache:"; *)
-(* 	Cache.print_stats upd_cache *)
+(* 	Cache.print_stats upd_cache *)*)
 	
  
  
