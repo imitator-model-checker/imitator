@@ -547,6 +547,80 @@ let algorithm : AlgoGeneric.algoGeneric = match options#imitator_mode with
 	| Translation -> raise (InternalError "Translation cannot be executed here; program should already have terminated at this point.");
 in
 
+
+
+
+
+(**************************************************)
+(* GIA'S TESTING *)
+(**************************************************)
+
+List.iter (fun automaton_index -> print_message Verbose_standard ("Automaton: " ^ (model.automata_names automaton_index) );
+	
+
+		(*Checking bounded clocked in invariant (Location)*)
+        List.iter (fun location_index -> print_message Verbose_standard (" Location: " ^ (model.location_names automaton_index location_index) ) ;
+
+        		let invariant = model.invariants automaton_index location_index in
+        
+                print_message Verbose_standard ("   Ivariant: " ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names invariant ) )  ;
+                    		
+                	List.iter (fun clock_index -> print_message Verbose_standard ("   Checking clock " ^ (model.variable_names clock_index));
+						
+                        if LinearConstraint.pxd_is_constrained invariant clock_index then (print_message Verbose_standard "    This clock is bound!!");
+						
+						
+                                (** WORK HERE **)
+						
+						
+                    ) model.clocks;
+
+		
+                	(*Checking bounded clocked in guards (Transition)*)
+                	List.iter (fun action_index -> print_message Verbose_standard ("    Action(Transition): " ^ (model.action_names action_index) );
+            
+                    	List.iter (fun (guard, clock_updates, _, destlocation_index) -> print_message Verbose_standard ("     Guard: " ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names guard));
+					
+                        
+                    		List.iter (fun clock_index -> print_message Verbose_standard ("     Checking clock " ^ (model.variable_names clock_index));
+						
+                            	if LinearConstraint.pxd_is_constrained guard clock_index then (print_message Verbose_standard "      This clock is bound!!");
+						
+						
+                                        (** WORK HERE **)
+						
+						
+                        	) model.clocks;
+
+
+                    	) (model.transitions automaton_index location_index action_index); 
+
+                	) (model.actions_per_location automaton_index location_index); 
+
+
+            		 print_message Verbose_standard ("\n");
+
+        ) (model.locations_per_automaton automaton_index);
+
+        print_message Verbose_standard ("\n");
+
+) model.automata;
+
+terminate_program();
+
+
+
+
+
+
+
+(**************************************************)
+(* GIA'S TESTING *)
+(**************************************************)
+
+
+
+
 (* Run! *)
 let result = algorithm#run() in
 
