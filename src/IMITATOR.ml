@@ -9,7 +9,7 @@
  * 
  * File contributors : Ulrich Kühne, Étienne André
  * Created           : 2009/09/07
- * Last modified     : 2016/05/18
+ * Last modified     : 2016/06/03
  *
  ************************************************************)
 
@@ -76,8 +76,8 @@ try(
 (* Get the arguments *)
 (************************************************************)
 
-let options_parsing_counter = create_time_counter_and_register "options parsing" Parsing_counter Verbose_low in
-options_parsing_counter#start;
+(* let options_parsing_counter = create_time_counter_and_register "options parsing" Parsing_counter Verbose_low in 
+options_parsing_counter#start;*)
 
 (* object with command line options *)
 let options = new imitator_options in
@@ -88,7 +88,7 @@ options#parse;
 Input.set_options options;
 
 (*** BUG: verbose mode has been set before the start and the stop; this particular counter may never stop! ***)
-options_parsing_counter#stop;
+(* options_parsing_counter#stop; *)
 
 
 (************************************************************)

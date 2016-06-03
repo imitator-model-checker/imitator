@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/12/03
- * Last modified     : 2016/05/24
+ * Last modified     : 2016/06/03
  *
  ************************************************************)
 
@@ -21,6 +21,7 @@
 open OCamlUtilities
 open ImitatorUtilities
 open Exceptions
+open Statistics
 open AbstractModel
 open Result
 
@@ -185,6 +186,13 @@ let result_nature_statistics soundness termination statespace_nature =
 
 (* Write an ef_synth result to the result file *)
 let write_efsynth_result_to_file file_name (efsynth_result : Result.efsynth_result) =
+	(*** WARNING: duplicate code concerning the counter creation ***)
+	(* Create counter *)
+	let counter = Statistics.create_time_counter_and_register "file generation" Graphics_counter Verbose_low in
+	
+	(* Start counter *)
+	counter#start;
+	
 	(* Retrieve the model *)
 	let model = Input.get_model() in
 	(* Retrieve the input options *)
@@ -222,11 +230,24 @@ let write_efsynth_result_to_file file_name (efsynth_result : Result.efsynth_resu
 	
 	(* Write to file *)
 	write_to_file file_name file_content;
-	print_message Verbose_standard ("\nResult written to file '" ^ file_name ^ "'.")
+	print_message Verbose_standard ("\nResult written to file '" ^ file_name ^ "'.");
+	
+	(* Stop counter *)
+	counter#stop;
+	
+	(* The end *)
+	()
 
 
 (* Write a pdfc_result to the result file *)
 let write_pdfc_result_to_file file_name (pdfc_result : Result.pdfc_result) =
+	(*** WARNING: duplicate code concerning the counter creation ***)
+	(* Create counter *)
+	let counter = Statistics.create_time_counter_and_register "file generation" Graphics_counter Verbose_low in
+	
+	(* Start counter *)
+	counter#start;
+
 	(* Retrieve the model *)
 	let model = Input.get_model() in
 	(* Retrieve the input options *)
@@ -290,12 +311,25 @@ let write_pdfc_result_to_file file_name (pdfc_result : Result.pdfc_result) =
 	
 	(* Write to file *)
 	write_to_file file_name file_content;
-	print_message Verbose_standard ("\nResult written to file '" ^ file_name ^ "'.")
+	print_message Verbose_standard ("\nResult written to file '" ^ file_name ^ "'.");
+	
+	(* Stop counter *)
+	counter#stop;
+	
+	(* The end *)
+	()
 
 
 
 (* Write an ef_synth result to the result file *)
 let write_im_result_to_file file_name (im_result : Result.im_result) =
+	(*** WARNING: duplicate code concerning the counter creation ***)
+	(* Create counter *)
+	let counter = Statistics.create_time_counter_and_register "file generation" Graphics_counter Verbose_low in
+	
+	(* Start counter *)
+	counter#start;
+
 	(* Retrieve the model *)
 	let model = Input.get_model() in
 	(* Retrieve the input options *)
@@ -343,7 +377,13 @@ let write_im_result_to_file file_name (im_result : Result.im_result) =
 	
 	(* Write to file *)
 	write_to_file file_name file_content;
-	print_message Verbose_standard ("\nResult written to file '" ^ file_name ^ "'.")
+	print_message Verbose_standard ("\nResult written to file '" ^ file_name ^ "'.");
+	
+	(* Stop counter *)
+	counter#stop;
+	
+	(* The end *)
+	()
 
 
 (*
@@ -399,6 +439,13 @@ let general_bc_statistics bc_result =
 		
 (* Write result of BC to file *)
 let write_bc_result_to_file file_name bc_result =
+	(*** WARNING: duplicate code concerning the counter creation ***)
+	(* Create counter *)
+	let counter = Statistics.create_time_counter_and_register "file generation" Graphics_counter Verbose_low in
+	
+	(* Start counter *)
+	counter#start;
+
 	(* Retrieve the model *)
 	let model = Input.get_model() in
 	(* Retrieve the input options *)
@@ -465,7 +512,13 @@ let write_bc_result_to_file file_name bc_result =
 	in
 	(* Write to file *)
 	write_to_file file_name file_content;
-	print_message Verbose_standard ("\nResult written to file '" ^ file_name ^ "'.")
+	print_message Verbose_standard ("\nResult written to file '" ^ file_name ^ "'.");
+	
+	(* Stop counter *)
+	counter#stop;
+	
+	(* The end *)
+	()
 
 
 

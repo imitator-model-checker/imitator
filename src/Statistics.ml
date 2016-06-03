@@ -11,7 +11,7 @@
  * Created           : 2014/04/27
  * Fork from         : Counter.ml
  * Fork date         : 2016/05/17
- * Last modified     : 2016/05/27
+ * Last modified     : 2016/06/03
  *
  ************************************************************)
 
@@ -202,7 +202,8 @@ end
 (************************************************************)
 
 (* Shortcut to iterate on categories *)
-let all_categories = [Algorithm_counter ; Global_counter ; Graphics_counter ; Parsing_counter ; PPL_counter]
+(*** NOTE: counters will be printed in this order ***)
+let all_categories = [Algorithm_counter ; Parsing_counter ; PPL_counter ; Graphics_counter ; Global_counter]
 
 (* Global variable listing all counters (useful to get all statistics at once) *)
 let all_counters : timeCounter list ref= ref []
@@ -313,9 +314,12 @@ let print_all_counters () =
 	List.iter (fun category -> 
 		(* Retrieve counters *)
 		let counters = get_counters_by_category category in
+		
+		(* Filter active counters for this level of verbosity *)
+		let active_counters = List.filter (fun counter -> verbose_mode_greater counter#level) counters in
+		
 		(* Only print non-empty categories *)
-		(*** TODO: also restrain to active counters for this level of verbosity ***)
-		if List.length counters > 0 then(
+		if List.length active_counters > 0 then(
 			print_message Verbose_standard "------------------------------------------------------------";
 			print_message Verbose_standard (" Statistics: " ^ (string_of_category category));
 			print_message Verbose_standard "------------------------------------------------------------";
@@ -331,6 +335,6 @@ let print_all_counters () =
 					print_message Verbose_standard (name ^ ": " ^ counter#string_of_value);
 				);
 			(*** NOTE: the list is reversed for a nicer printing since newer registered counters were added to the head ***)
-			) (List.rev counters)
+			) (List.rev active_counters)
 		) (* end if |counters| > 0 *)
 	) all_categories;

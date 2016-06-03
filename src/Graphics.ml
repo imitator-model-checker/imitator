@@ -8,7 +8,7 @@
  * Author:        Etienne Andre, Ulrich Kuehne
  * 
  * Created:       2010/07/05
- * Last modified: 2016/04/19
+ * Last modified: 2016/06/03
  *
  ****************************************************************)
 
@@ -21,10 +21,17 @@ open OCamlUtilities
 open Exceptions
 open Constants
 open ImitatorUtilities
+open Statistics
 open AbstractModel
 open StateSpace
 open Result
 
+
+(************************************************************)
+(** Statistics *)
+(************************************************************)
+let counter_graphics_cartography = create_time_counter_and_register "cartography drawing" Graphics_counter Verbose_standard
+let counter_graphics_statespace = create_time_counter_and_register "state space drawing" Graphics_counter Verbose_standard
 
 
 (************************************************************)
@@ -74,6 +81,9 @@ exception CartographyError
 
 let draw_cartography (returned_constraint_list : (LinearConstraint.p_convex_or_nonconvex_constraint * StateSpace.statespace_nature) list) cartography_file_prefix =
 try(
+	(* Statistics *)
+	counter_graphics_cartography#start;
+	
 	(* No cartography if no zone *)
 	if returned_constraint_list = [] then(
 		print_warning ("No cartography can be drawn since the list of constraints is empty.");
@@ -566,10 +576,14 @@ try(
 			delete_file (make_file_name cartography_file_prefix i);
 		done;
 	);
+	(* Statistics *)
+	counter_graphics_cartography#stop;
 	()
 
 ) with
 	| CartographyError -> (print_error "Error while printing the cartography";
+	(* Statistics *)
+	counter_graphics_cartography#stop;
 	()
 	)
 
@@ -928,8 +942,9 @@ let dot radical dot_source_file =
 
 (** Draw the state space using dot *)
 let draw_statespace state_space algorithm_name radical =
-	(* Retrieve the model *)
-(* 	let model = Input.get_model () in *)
+	(* Statistics *)
+	counter_graphics_statespace#start;
+
 	(* Retrieve the input options *)
 	let options = Input.get_options () in
 	
@@ -978,7 +993,13 @@ let draw_statespace state_space algorithm_name radical =
 			print_message Verbose_standard ("Writing the states description to file '" ^ states_file_name ^ "'...");
 			write_to_file states_file_name states;
 		);
-	)
+	);
+	
+	(* Statistics *)
+	counter_graphics_statespace#stop;
+	
+	(* The end *)
+	()
 
 
 
