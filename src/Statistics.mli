@@ -25,6 +25,9 @@ type counterCategory =
 	(** Algorithm functions *)
 	| Algorithm_counter
 	
+	(** Cache counters *)
+	| Cache_counter
+	
 	(** The global counter *)
 	(*** TODO: prevent more than one such counter to be created ***)
 	| Global_counter
@@ -179,10 +182,11 @@ end
 
 (** Shortcut: create new counter and register it *)
 val create_time_counter_and_register : string -> counterCategory -> ImitatorUtilities.verbose_mode -> timeCounter
+val create_discrete_counter_and_register : string -> counterCategory -> ImitatorUtilities.verbose_mode -> discreteCounter
 val create_hybrid_counter_and_register : string -> counterCategory -> ImitatorUtilities.verbose_mode -> hybridCounter
 
 (** Register a counter *)
-val register : timeCounter -> unit
+(* val register : timeCounter -> unit *)
 
 (** Print all counters values *)
 val print_all_counters : unit -> unit

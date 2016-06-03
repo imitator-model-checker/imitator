@@ -35,6 +35,9 @@ type counterCategory =
 	(** Algorithm functions *)
 	| Algorithm_counter
 	
+	(** Cache counters *)
+	| Cache_counter
+	
 	(** The global counter *)
 	(*** TODO: prevent more than one such counter to be created ***)
 	| Global_counter
@@ -277,7 +280,7 @@ end
 
 (* Shortcut to iterate on categories *)
 (*** NOTE: counters will be printed in this order ***)
-let all_categories = [Algorithm_counter ; Parsing_counter ; PPL_counter ; Graphics_counter ; Global_counter]
+let all_categories = [Algorithm_counter ; Parsing_counter ; Cache_counter ; PPL_counter ; Graphics_counter ; Global_counter]
 
 (* Global variable listing all counters (useful to get all statistics at once) *)
 let all_counters : counter list ref= ref []
@@ -292,6 +295,9 @@ let all_counters : counter list ref= ref []
 let string_of_category = function
 	(** Algorithm functions *)
 	| Algorithm_counter -> "Algorithm counters"
+	
+	(** Cache counters *)
+	| Cache_counter -> "Cache counters"
 	
 	(** The global counter *)
 	(*** TODO: prevent more than one such counter to be created ***)
@@ -352,7 +358,19 @@ let create_time_counter_and_register (name : string) (counter_category : counter
 	my_new_counter
 
 
-let create_hybrid_counter_and_register (name : string) (counter_category : counterCategory) (level : ImitatorUtilities.verbose_mode) =
+let create_discrete_counter_and_register (name : string) (counter_category : counterCategory) (level : ImitatorUtilities.verbose_mode) =
+	(* Create counter *)
+	let my_new_counter = new discreteCounter name counter_category level in
+
+	(* Print some information *)
+	print_message Verbose_low ("Registered counter " ^ name ^ ".");
+	register my_new_counter;
+	
+	(* Return counter *)
+	my_new_counter
+
+
+	let create_hybrid_counter_and_register (name : string) (counter_category : counterCategory) (level : ImitatorUtilities.verbose_mode) =
 	(* Create counter *)
 	let my_new_counter = new hybridCounter name counter_category level in
 
