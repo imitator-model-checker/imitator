@@ -122,6 +122,8 @@ class timeCounter (name : string) (counter_category : counterCategory) (level : 
 	val mutable value = 0.0
 	(* Latest start time *)
 	val mutable start_time = 0.0
+	(* Running or not? *)
+	val mutable running = false
 	
 	
 	(************************************************************)
@@ -133,6 +135,7 @@ class timeCounter (name : string) (counter_category : counterCategory) (level : 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method start =
 		if verbose_mode_greater level then(
+			running <- true;
 			start_time <- Unix.gettimeofday()
 		)
 	
@@ -142,6 +145,7 @@ class timeCounter (name : string) (counter_category : counterCategory) (level : 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method stop =
 		if verbose_mode_greater level then(
+			running <- false;
 			value <- value +. Unix.gettimeofday() -. start_time
 		)
 			
@@ -157,13 +161,20 @@ class timeCounter (name : string) (counter_category : counterCategory) (level : 
 	(** Get the counter's continuous value *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method value =
+		(* if running: first stop the counter to update the value *)
+		if running then(
+			self#stop;
+			(* then restart it *)
+			self#start;
+		);
+		(* Now get the value *)
 		value
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(** Get the counter's value in the form of a string *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method string_of_value =
-		string_of_seconds value
+		string_of_seconds self#value
 
 	
 (************************************************************)
