@@ -1,18 +1,18 @@
 (************************************************************
  *                      IMITATOR MODEL                      
  *
- * Looping Automaton (Analysis possible using dynamic clock elimination only)
+ * Very classical looping timed automaton that loops without the use of a proper extrapolation or clock elimination techniques
  *
- * Description     : Looping Automaton (Analysis possible using dynamic clock elimination only)
+ * Description     : Very classical looping timed automaton that loops without the use of a proper extrapolation or clock elimination techniques
  * Correctness     : N/A
- * Source          : Own work
+ * Source          : Own work (?)
  * Author          : Étienne André
  * Modeling        : Étienne André
  * Input by        : Étienne André
  * License         : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
 
  *
- * Created         : 2013
+ * Created         : 2009/12/23
  * Last modified   : 2016/06/08
  *
  * IMITATOR version: 2.8-alpha
@@ -24,10 +24,6 @@ var
  	x, y
 		: clock;
 
-(* Parameters *)
-	p1, p2
-		: parameter;
-
 
 
 (************************************************************)
@@ -35,11 +31,8 @@ var
 (************************************************************)
 synclabs: a;
 
-loc A0: while True wait {}
-	when y = p2 do {x' = 0} goto A1;
-
-loc A1: while True wait {}
-	when x = p1 do {x' = 0} goto A1;
+loc l1: while True wait {}
+	when x = 1 sync a do {x' = 0} goto l1;
 
 end (* pta *)
 
@@ -53,18 +46,14 @@ init :=
 	(*------------------------------------------------------------*)
 	(* Initial location *)
 	(*------------------------------------------------------------*)
-	& loc[pta] = A0
+	& loc[pta] = l1
 
 	(*------------------------------------------------------------*)
 	(* Initial clock constraints *)
 	(*------------------------------------------------------------*)
-	& x = y
+	& x = 0
+	& y = 0
 
-	(*------------------------------------------------------------*)
-	(* Parameter constraints *)
-	(*------------------------------------------------------------*)
-	& p1 >= 0
-	& p2 >= 0
 ;
 
 
@@ -77,5 +66,3 @@ init :=
 (* The end *)
 (************************************************************)
 end
-
-
