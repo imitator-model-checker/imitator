@@ -10,7 +10,7 @@
 # Laboratoire d'Informatique de Paris Nord
 # Universite Paris 13, Sorbonne Paris Cite, France
 # Created      : 2015/10/23
-# Last modified: 2016/05/08
+# Last modified: 2016/06/08
 #************************************************************
 
 
@@ -408,6 +408,42 @@ tests = [
   s_3 -> s_1 via "b"
   s_0 -> s_0 via "a"
   s_1 -> s_3 via "c"
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+	,
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test clock elimination',
+		'input_files': ['loopingTAdyn.imi'],
+		'options'    : '-mode statespace -dynamic-elimination -output-states -depth-limit 10', # NOTE: depth-limit is just a safety to avoid yielding a loop if the test fails!
+		'expectations' : [
+			{'file': 'loopingTAdyn-statespace.states' , 'content' : """
+  DESCRIPTION OF THE STATES
+
+  /************************************************************/
+  INITIAL
+  STATE 0:
+  pta: l0 ==> 
+&True
+
+  Projection onto the parameters:
+  True
+
+  /************************************************************/
+  STATE 1:
+  pta: l1 ==> 
+& x >= 0
+
+  Projection onto the parameters:
+  True
+
+  DESCRIPTION OF THE TRANSITIONS
+  s_0 -> s_1
+  s_1 -> s_1 via "a"
 		"""
 			} # end result file
 			,
