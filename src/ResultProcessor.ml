@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/12/03
- * Last modified     : 2016/06/07
+ * Last modified     : 2016/06/08
  *
  ************************************************************)
 
@@ -132,14 +132,14 @@ let model_statistics () =
 	(* Compute the number of locations *)
 	let nb_total_locations = List.fold_left (fun current_sum automaton_index -> current_sum + (List.length (model.locations_per_automaton automaton_index))) 0 model.automata in
 	(* Create the statistics *)
-	    "Number of IPTAs               : " ^ (string_of_int model.nb_automata)
-	^ "\nNumber of clocks              : " ^ (string_of_int model.nb_clocks)
-	^ "\nHas stopwatches?              : " ^ (string_of_bool model.has_stopwatches)
-	^ "\nNumber of parameters          : " ^ (string_of_int model.nb_parameters)
-	^ "\nNumber of discrete variables  : " ^ (string_of_int model.nb_discrete)
-	^ "\nNumber of actions             : " ^ (string_of_int model.nb_actions)
-	^ "\nTotal number of locations     : " ^ (string_of_int nb_total_locations)
-	^ "\nAverage locations per IPTA    : " ^ (round1_float ((float_of_int nb_total_locations) /. (float_of_int model.nb_automata)))
+	    "Number of IPTAs                         : " ^ (string_of_int model.nb_automata)
+	^ "\nNumber of clocks                        : " ^ (string_of_int model.nb_clocks)
+	^ "\nHas stopwatches?                        : " ^ (string_of_bool model.has_stopwatches)
+	^ "\nNumber of parameters                    : " ^ (string_of_int model.nb_parameters)
+	^ "\nNumber of discrete variables            : " ^ (string_of_int model.nb_discrete)
+	^ "\nNumber of actions                       : " ^ (string_of_int model.nb_actions)
+	^ "\nTotal number of locations               : " ^ (string_of_int nb_total_locations)
+	^ "\nAverage locations per IPTA              : " ^ (round1_float ((float_of_int nb_total_locations) /. (float_of_int model.nb_automata)))
 
 
 
@@ -153,13 +153,13 @@ let statespace_statistics state_space total_time =
 	let nb_gen_states = StateSpace.get_nb_gen_states state_space in
 	let gen_states_per_second = (float_of_int nb_gen_states) /. total_time in
 	
-	    "Number of states              : " ^ (string_of_int nb_states)
-	^ "\nNumber of transitions         : " ^ (string_of_int (StateSpace.nb_transitions state_space))
-	^ "\nNumber of computed states     : " ^ (string_of_int nb_gen_states)
-	^ "\nComputation time              : " ^ (string_of_seconds total_time)
-	^ "\nStates/second in state space  : " ^ (round1_float states_per_second) ^ " (" ^ (string_of_int nb_states) ^ "/" ^ (string_of_seconds total_time) ^ ")"
-	^ "\nComputed states/second        : " ^ (round1_float gen_states_per_second) ^ " (" ^ (string_of_int nb_gen_states) ^ "/" ^ (string_of_seconds total_time) ^ ")"
-	^ "\nEstimated memory              : " ^ (memory_used ())
+	    "Number of states                        : " ^ (string_of_int nb_states)
+	^ "\nNumber of transitions                   : " ^ (string_of_int (StateSpace.nb_transitions state_space))
+	^ "\nNumber of computed states               : " ^ (string_of_int nb_gen_states)
+	^ "\nComputation time                        : " ^ (string_of_seconds total_time)
+	^ "\nStates/second in state space            : " ^ (round1_float states_per_second) ^ " (" ^ (string_of_int nb_states) ^ "/" ^ (string_of_seconds total_time) ^ ")"
+	^ "\nComputed states/second                  : " ^ (round1_float gen_states_per_second) ^ " (" ^ (string_of_int nb_gen_states) ^ "/" ^ (string_of_seconds total_time) ^ ")"
+	^ "\nEstimated memory                        : " ^ (memory_used ())
 
 	
 (* Return a string made of some statistics for the abstract state space *)
@@ -167,18 +167,18 @@ let abstract_statespace_statistics abstract_state_space total_time =
 	(* Speed: number of states computed and still in the state space *)
 	let states_per_second = (float_of_int abstract_state_space.nb_states) /. total_time in
 	
-	    "Number of states              : " ^ (string_of_int abstract_state_space.nb_states)
-	^ "\nNumber of transitions         : " ^ (string_of_int abstract_state_space.nb_transitions)
-	^ "\nComputation time              : " ^ (string_of_seconds total_time)
-	^ "\nStates/second in state space  : " ^ (round1_float states_per_second) ^ " (" ^ (string_of_int abstract_state_space.nb_states) ^ "/" ^ (string_of_seconds total_time) ^ ")"
+	    "Number of states                        : " ^ (string_of_int abstract_state_space.nb_states)
+	^ "\nNumber of transitions                   : " ^ (string_of_int abstract_state_space.nb_transitions)
+	^ "\nComputation time                        : " ^ (string_of_seconds total_time)
+	^ "\nStates/second in state space            : " ^ (round1_float states_per_second) ^ " (" ^ (string_of_int abstract_state_space.nb_states) ^ "/" ^ (string_of_seconds total_time) ^ ")"
 
 
 	
 (* Return a string made of some information concerning the result *)
 let result_nature_statistics soundness termination statespace_nature =
-	    "Constraint soundness          : " ^ (string_of_soundness soundness)
-	^ "\nTermination                   : " ^ (string_of_bfs_algorithm_termination termination)
-	^ "\nState space nature            : " ^ (StateSpace.string_of_statespace_nature statespace_nature)
+	    "Constraint soundness                    : " ^ (string_of_soundness soundness)
+	^ "\nTermination                             : " ^ (string_of_bfs_algorithm_termination termination)
+	^ "\nState space nature                      : " ^ (StateSpace.string_of_statespace_nature statespace_nature)
 
 
 
@@ -374,7 +374,7 @@ let write_im_result_to_file file_name (im_result : Result.im_result) =
 		(* 5) Statistics about result *)
 		^ "\n------------------------------------------------------------"
 		^ "\n" ^ (result_nature_statistics im_result.soundness im_result.termination im_result.statespace_nature)
-		^ "\nNumber of random selections   : " ^ (string_of_int im_result.nb_random_selections)
+		^ "\nNumber of random selections             : " ^ (string_of_int im_result.nb_random_selections)
 		
 		(* 6) Statistics about state space *)
 		^ "\n------------------------------------------------------------"
@@ -436,17 +436,17 @@ let general_bc_statistics bc_result =
 	let time_im = List.fold_left (fun current_sum (abstract_im_result : Result.abstract_im_result) -> current_sum +. abstract_im_result.computation_time) 0. bc_result.tiles in
 
        ""
-	^   "Number of integers in v0      : " ^ (NumConst.string_of_numconst bc_result.size_v0)
-	^ "\nNumber of tiles computed      : " ^ (string_of_int nb_tiles)
-	^ "\nCoverage                      : " ^ (string_of_coverage bc_result.coverage)
-	^ "\nTermination                   : " ^ (string_of_bc_algorithm_termination bc_result.termination)
-	^ "\nNumber of unsuccessful points : " ^ (string_of_int bc_result.nb_unsuccessful_points)
-	^ "\nAverage number of states      : " ^ (round1_float average_nb_states)
-	^ "\nAverage number of transitions : " ^ (round1_float average_nb_transitions)
-    ^ "\nComputation time              : " ^ (string_of_seconds bc_result.computation_time)
-	^ "\nComputation time (IM)         : " ^ (string_of_seconds time_im)
-	^ "\nComputation time (find point) : " ^ (string_of_seconds bc_result.find_point_time)
-	^ "\nEstimated memory              : " ^ (memory_used ())
+	^   "Number of integers in v0                : " ^ (NumConst.string_of_numconst bc_result.size_v0)
+	^ "\nNumber of tiles computed                : " ^ (string_of_int nb_tiles)
+	^ "\nCoverage                                : " ^ (string_of_coverage bc_result.coverage)
+	^ "\nTermination                             : " ^ (string_of_bc_algorithm_termination bc_result.termination)
+	^ "\nNumber of unsuccessful points           : " ^ (string_of_int bc_result.nb_unsuccessful_points)
+	^ "\nAverage number of states                : " ^ (round1_float average_nb_states)
+	^ "\nAverage number of transitions           : " ^ (round1_float average_nb_transitions)
+    ^ "\nComputation time                        : " ^ (string_of_seconds bc_result.computation_time)
+	^ "\nComputation time (IM)                   : " ^ (string_of_seconds time_im)
+	^ "\nComputation time (find point)           : " ^ (string_of_seconds bc_result.find_point_time)
+	^ "\nEstimated memory                        : " ^ (memory_used ())
 
 		
 (* Write result of BC to file *)
@@ -481,7 +481,7 @@ let write_bc_result_to_file file_name bc_result =
 			(* 3) Statistics about result *)
 			^ "\n\n------------------------------------------------------------"
 			^ "\n" ^ (result_nature_statistics abstract_im_result.soundness abstract_im_result.termination abstract_im_result.statespace_nature)
-			^ "\nNumber of random selections   : " ^ (string_of_int abstract_im_result.nb_random_selections)
+			^ "\nNumber of random selections             : " ^ (string_of_int abstract_im_result.nb_random_selections)
 			
 			(* 4) Statistics about state space *)
 			^ "\n------------------------------------------------------------"
@@ -567,41 +567,30 @@ let print_statistics total_time state_space =
 	print_message Verbose_standard ("States computed per second: " ^ (string_of_average average) ^ " (" ^ (string_of_int nb_gen_states) ^ "/" ^ (string_of_seconds total_time) ^ ")");*)
 	
 	if verbose_mode_greater Verbose_standard then(
-		print_message Verbose_standard "\n--------------------";
-		print_message Verbose_standard "Statistics on state space";
-		print_message Verbose_standard "--------------------";
+		print_message Verbose_standard "\n------------------------------------------------------------";
+		print_message Verbose_standard "Statistics: State space";
+		print_message Verbose_standard "------------------------------------------------------------";
 		print_message Verbose_standard (statespace_statistics state_space total_time);
 	);
 
 	
 	if options#statistics then (
-		(* Graph *)
-		print_message Verbose_standard "--------------------";
-		print_message Verbose_standard "Statistics on Graph";
-		print_message Verbose_standard "--------------------";
+		(* State space *)
+(*		print_message Verbose_standard "------------------------------------------------------------";
+		print_message Verbose_standard "Statistics: Graph";
+		print_message Verbose_standard "------------------------------------------------------------";*)
 		print_message Verbose_standard (StateSpace.get_statistics ());
 		print_message Verbose_standard (StateSpace.get_statistics_states state_space);
 		
-		print_message Verbose_standard "--------------------";
-		print_message Verbose_standard "Statistics on Cache";
-		print_message Verbose_standard "--------------------";
-		
-		(*** TODO: re-enable later (using counters or something like that ??? ***)
-(* 		print_stats (); *)
-		
-		print_message Verbose_standard "--------------------";
-		print_message Verbose_standard "Statistics on Reachability";
-		print_message Verbose_standard "--------------------";
-		
-		print_message Verbose_standard "--------------------";
+		print_message Verbose_standard "------------------------------------------------------------";
 		print_message Verbose_standard "Statistics on memory";
-		print_message Verbose_standard "--------------------";
+		print_message Verbose_standard "------------------------------------------------------------";
 		print_message Verbose_standard (memory_used ());
 		Gc.print_stat stdout;
-(*		print_message Verbose_standard "--------------------";
+(*		print_message Verbose_standard "------------------------------------------------------------";
 		Gc.major();
 		Gc.print_stat stdout;
-		print_message Verbose_standard "--------------------";
+		print_message Verbose_standard "------------------------------------------------------------";
 		Gc.full_major();
 		Gc.print_stat stdout;*)
 	)
