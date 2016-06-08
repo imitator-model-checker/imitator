@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/12/03
- * Last modified     : 2016/06/03
+ * Last modified     : 2016/06/07
  *
  ************************************************************)
 
@@ -226,6 +226,10 @@ let write_efsynth_result_to_file file_name (efsynth_result : Result.efsynth_resu
 		^ "\n------------------------------------------------------------"
 		^ "\n" ^ (statespace_statistics efsynth_result.state_space efsynth_result.computation_time)
 		^ "\n------------------------------------------------------------"
+		
+		(* 6) General statistics *)
+		^ "\n" ^ (Statistics.string_of_all_counters())
+		^ "\n------------------------------------------------------------"
 	in
 	
 	(* Write to file *)
@@ -307,6 +311,10 @@ let write_pdfc_result_to_file file_name (pdfc_result : Result.pdfc_result) =
 		^ "\n------------------------------------------------------------"
 		^ "\n" ^ (statespace_statistics pdfc_result.state_space pdfc_result.computation_time)
 		^ "\n------------------------------------------------------------"
+		
+		(* 6) General statistics *)
+		^ "\n" ^ (Statistics.string_of_all_counters())
+		^ "\n------------------------------------------------------------"
 	in
 	
 	(* Write to file *)
@@ -371,6 +379,10 @@ let write_im_result_to_file file_name (im_result : Result.im_result) =
 		(* 6) Statistics about state space *)
 		^ "\n------------------------------------------------------------"
 		^ "\n" ^ (statespace_statistics im_result.state_space im_result.computation_time)
+		^ "\n------------------------------------------------------------"
+		
+		(* 7) General statistics *)
+		^ "\n" ^ (Statistics.string_of_all_counters())
 		^ "\n------------------------------------------------------------"
 		^ "\n"
 	in
@@ -508,6 +520,10 @@ let write_bc_result_to_file file_name bc_result =
 		^ "\n------------------------------------------------------------"
 		^ "\n" ^ (general_bc_statistics bc_result)
 		^ "\n------------------------------------------------------------"
+		
+		(* 6) General statistics *)
+		^ "\n" ^ (Statistics.string_of_all_counters())
+		^ "\n------------------------------------------------------------"
 		^ "\n"
 	in
 	(* Write to file *)
@@ -559,11 +575,6 @@ let print_statistics total_time state_space =
 
 	
 	if options#statistics then (
-(*		(* PPL *)
-		print_message Verbose_standard "--------------------";
-		print_message Verbose_standard "Statistics on PPL";
-		print_message Verbose_standard ("--------------------" ^ (LinearConstraint.get_statistics total_time));*)
-		
 		(* Graph *)
 		print_message Verbose_standard "--------------------";
 		print_message Verbose_standard "Statistics on Graph";
@@ -581,15 +592,6 @@ let print_statistics total_time state_space =
 		print_message Verbose_standard "--------------------";
 		print_message Verbose_standard "Statistics on Reachability";
 		print_message Verbose_standard "--------------------";
-		
-		(*** TODO: re-enable later (using counters) ***)
-(*		print_message Verbose_standard ("Number of early skips because of unsatisfiable guards: " ^ (string_of_int !nb_early_unsatisfiable));
-		print_message Verbose_standard ("Number of early skips because no actions: " ^ (string_of_int !nb_early_skip));
-		print_message Verbose_standard ("Number of unsatisfiable constraints: " ^ (string_of_int !nb_unsatisfiable));
-		print_message Verbose_standard ("Number of unsat1: " ^ (string_of_int !nb_unsat1));
-		print_message Verbose_standard ("Number of unsat2: " ^ (string_of_int !nb_unsat2));
-		print_message Verbose_standard ("Number of combinations considered: " ^ (string_of_int !nb_combinations));*)
-		
 		
 		print_message Verbose_standard "--------------------";
 		print_message Verbose_standard "Statistics on memory";

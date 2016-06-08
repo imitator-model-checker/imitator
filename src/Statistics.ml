@@ -11,7 +11,7 @@
  * Created           : 2014/04/27
  * Fork from         : Counter.ml
  * Fork date         : 2016/05/17
- * Last modified     : 2016/06/03
+ * Last modified     : 2016/06/07
  *
  ************************************************************)
 
@@ -408,12 +408,12 @@ let get_counters_by_category counter_category =
 	List.filter (fun counter -> counter#category = counter_category) !all_counters
 
 
-(** Print all counters values *)
-let print_all_counters () =
+(** Get all counters values with a pretty-printed string *)
+let string_of_all_counters () =
 	(* Try to get something nicely justified *) 
 	let max_name_size = 40 in
 
-	print_message Verbose_standard "\n";
+	let result = ref "" in
 	
 	(* Iterate on categories *)
 	List.iter (fun category -> 
@@ -425,9 +425,9 @@ let print_all_counters () =
 		
 		(* Only print non-empty categories *)
 		if List.length active_counters > 0 then(
-			print_message Verbose_standard "------------------------------------------------------------";
-			print_message Verbose_standard (" Statistics: " ^ (string_of_category category));
-			print_message Verbose_standard "------------------------------------------------------------";
+			result := !result ^ "\n------------------------------------------------------------"
+				^ "\n Statistics: " ^ (string_of_category category)
+				^ "\n------------------------------------------------------------";
 			List.iter (fun counter ->
 				(* Only print suitable counters *)
 				if verbose_mode_greater counter#level then(
@@ -437,9 +437,12 @@ let print_all_counters () =
 					else
 						counter#name
 					in
-					print_message Verbose_standard (name ^ ": " ^ counter#string_of_value);
+					result := !result ^ "\n" ^ name ^ ": " ^ counter#string_of_value;
 				);
 			(*** NOTE: the list is reversed for a nicer printing since newer registered counters were added to the head ***)
 			) (List.rev active_counters)
 		) (* end if |counters| > 0 *)
 	) all_categories;
+	
+	(* Return the string *)
+	!result

@@ -11,7 +11,7 @@
  * Created           : 2014/04/27
  * Fork from         : Counter.mli
  * Fork date         : 2016/05/17
- * Last modified     : 2016/06/03
+ * Last modified     : 2016/06/07
  *
  ************************************************************)
 
@@ -196,6 +196,6 @@ val create_hybrid_counter_and_register : string -> counterCategory -> ImitatorUt
 (** Register a counter *)
 (* val register : timeCounter -> unit *)
 
-(** Print all counters values *)
-val print_all_counters : unit -> unit
+(** Get all counters values with a pretty-printed string *)
+val string_of_all_counters : unit -> string
 

@@ -9,7 +9,7 @@
  * 
  * File contributors : Ulrich Kühne, Étienne André
  * Created           : 2009/09/07
- * Last modified     : 2016/06/03
+ * Last modified     : 2016/06/07
  *
  ************************************************************)
 
@@ -585,7 +585,7 @@ end; (* try *)
 (* Handling statistics *)
 (************************************************************)
 global_counter#stop;
-print_all_counters();
+print_message Verbose_standard (string_of_all_counters());
 
 
 (************************************************************)
