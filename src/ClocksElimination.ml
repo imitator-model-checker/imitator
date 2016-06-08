@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/11/27
- * Last modified     : 2015/11/27
+ * Last modified     : 2016/06/08
  *
  ************************************************************)
 
@@ -20,6 +20,7 @@
 open OCamlUtilities
 open ImitatorUtilities
 open Exceptions
+open Statistics
 open AbstractModel
  
 
@@ -31,6 +32,12 @@ open AbstractModel
 (**************************************************************)
 let useless_clocks = ref None (* not yet initialized *)
 
+
+(**************************************************************)
+(* Statistics *)
+(**************************************************************)
+let counter_preparation = create_time_counter_and_register "dynamic clock elimination (preparation)" Algorithm_counter Verbose_standard
+let counter_elimination = create_hybrid_counter_and_register "dynamic clock elimination" Algorithm_counter Verbose_standard
 
 (**************************************************************)
 (* Functions *)
@@ -319,6 +326,9 @@ let find_useless_clocks_in_automata local_clocks_per_automaton =
 (*------------------------------------------------------------*)
 (* NOTE: This function is only called if the dynamic clock elimination option is activated *)
 let prepare_clocks_elimination () =
+	(* Start counter *)
+	counter_preparation#start;
+	
 	(* Retrieve the model *)
 	let model = Input.get_model() in
 
@@ -343,6 +353,11 @@ let prepare_clocks_elimination () =
 	(* Compute and update useless clocks *)
 	print_message Verbose_low ("*** Building useless clocks per location per automaton...");
 	useless_clocks := Some (find_useless_clocks_in_automata local_clocks_per_automaton);
+
+	(* Stop counter *)
+	counter_preparation#stop;
+	
+	(* The end *)
 	()
 
 
@@ -350,6 +365,11 @@ let prepare_clocks_elimination () =
 (* Eliminating useless clocks in a linear constraint *)
 (*------------------------------------------------------------*)
 let dynamic_clock_elimination dest_location current_constraint =
+	(* Start counter *)
+	counter_elimination#start;
+	(* Increment counter *)
+	counter_elimination#increment;
+	
 	(* Retrieve the model *)
 	let model = Input.get_model() in
 
@@ -379,6 +399,9 @@ let dynamic_clock_elimination dest_location current_constraint =
 	if verbose_mode_greater Verbose_total then(
 		print_message Verbose_total (LinearConstraint.string_of_px_linear_constraint model.variable_names current_constraint);
 	);
+	
+	(* Stop counter *)
+	counter_elimination#stop;
 	
 	(* The end *)
 	()
