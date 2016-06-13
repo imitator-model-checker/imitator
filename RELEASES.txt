@@ -2,8 +2,9 @@
 release 2.XXXXX    (XXXXX) FUTURE MAJOR RELEASE
 
 Major
+- New algorithm: parametric deadlock-freeness checking
 - Allow for more complex unreachable states in property definition: several locations in several IPTA can be tested, and discrete variables can be compared with <, <=, =, >=, > and intervals; all this can be mixed using and/or operators.
-- Detection of L/U-PTA, U-PTA and L-PTA
+- Automatic detection of L/U-PTA, U-PTA and L-PTA
 - Standardized output for the results of IMITATOR (including a notion of validity of the constraint output)
 
 Bug fixing
@@ -27,6 +28,7 @@ Misc
 
 Export
 - Added an export to HyTech
+- Statistics better integrated both in the terminal output and in the .res files
 
 Versioning
 - Now IMITATOR integrates the hash number of GitHub in all outputs
@@ -35,11 +37,11 @@ Install and compile
 - Using "strip" the binary is now (much) smaller
 
 Internal
-- "examples" directory becomes "benchmarks"
 - All algorithms rewritten in an object-oriented fashion
 - Added a mode to regenerate the IMITATOR input file (helpful to test input/output models)
 - Automaton.ml becomes Location.ml (and new module Automaton.ml created); and reorganization of numerous other modules
 - Build number only incremented when a flag file "iamadeveloper" is present in the imitator root directory
+- "examples" directory becomes "benchmarks"
 
 
 *******************************************************
