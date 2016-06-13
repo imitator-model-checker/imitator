@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2014/10/24
- * Last modified     : 2016/04/07
+ * Last modified     : 2016/06/13
  *
  ************************************************************)
 
@@ -22,7 +22,7 @@
 
 let program_name = "IMITATOR"
 
-let version_string = "2.8-alpha"
+let version_string = "2.8-beta1"
 
 let version_name = "Butter Ham"
 
