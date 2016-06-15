@@ -9,7 +9,7 @@
  * 
  * File contributors : Ulrich Kühne, Étienne André
  * Created           : 2010
- * Last modified     : 2016/05/13
+ * Last modified     : 2016/06/15
  *
  ************************************************************)
 
@@ -471,13 +471,13 @@ class imitator_options =
 
 				(* 				("-dynamic", Set dynamic, "Perform the on-the-fly intersection. Defaut : 'false'"); *)
 				
-				("-check-ippta", Set check_ippta, " Check that every new state contains an integer point; raises an exception if not. Default: false.");
+				("-check-ippta", Set check_ippta, " Check that every new symbolic state contains an integer point; raises an exception if not. Default: false.");
 				
-				("-check-point", Set check_point, " Check at each iteration whether the accumulated parameter constraint is restricted to pi0 (warning! very costly). Default: false.");
+				("-check-point", Set check_point, " For IM, check at each iteration whether the accumulated parameter constraint is restricted to pi0 (warning! very costly). Default: false.");
 				
 				("-completeIM", Set completeIM, " Experimental version of IM that outputs a complete (full) result. Default: false.");
 				
-				(** HACK: property input from CosyVerif *)
+				(*** HACK: property input from CosyVerif ***)
 				("-cosyProp", Set_string cosyprop, " File name containing the property (for the CosyVerif input only! This option should not be called manually). Default: none.");
 		
 				("-contributors", Unit (fun _ ->
@@ -519,13 +519,13 @@ class imitator_options =
 				("-mode", String set_mode, " Mode for " ^ Constants.program_name ^ ".
         Use 'statespace' for the generation of the entire parametric state space (no pi0 needed).
         Use 'EF' for a parametric non-reachability analysis (no pi0 needed).
-        Use 'PDFC' for parametric non-deadlock checking (no pi0 needed). [WORK IN PROGRESS]
+        Use 'PDFC' for parametric non-deadlock checking (no pi0 needed).
         Use 'inversemethod' for the inverse method.
         For the behavioral cartography algorithm, use 'cover' to cover all the points within V0, 'border' to find the border between a small-valued good and a large-valued bad zone (experimental), or 'randomXX' where XX is a number to iterate random calls to IM (e.g., random5 or random10000). Default: 'inversemethod'.");
 				(*** NOTE: hidden option! 'shuffle' to cover all the points within v0 after shuffling the array. (Reason for hiding: only useful in the distributed cartography) ***)
 				(*** NOTE: hidden option! or 'randomseqXX' where XX is a number to iterate random calls to IM followed by a sequential check (e.g., randomseq5 or randomseq10000) (Reason for hiding: only useful in the distributed cartography) ***)
 				
-				("-no-random", Set no_random, " No random selection of the pi0-incompatible inequality (select the first found). Default: false.");
+				("-no-random", Set no_random, " In IM, no random selection of the pi0-incompatible inequality (select the first found). Default: false.");
 
 				("-no-time-elapsing", Set no_time_elapsing, " No time elapsing in zone computation (i.e., time elapsing is performed before taking a transition, not after). Default: false.");
 
