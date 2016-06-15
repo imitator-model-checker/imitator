@@ -555,42 +555,69 @@ in
 (* GIA'S TESTING *)
 (**************************************************)
 
+
+
+
+let rec detect_upper_bound = function 
+							[] -> ()
+							| h::l -> let (clock_index, operator, parametric_linear_term) = LinearConstraint.clock_guard_of_linear_inequality h in 
+
+							(* print_message Verbose_standard ("df" ^(ModelPrinter.string_of_var_type (model.type_of_variables clock_index) )^ " gdf"); *)
+							let clockString = model.variable_names clock_index in
+							let operatorString = LinearConstraint.operator2string operator in
+							let parametric_linear_termString = LinearConstraint.string_of_p_linear_term model.variable_names parametric_linear_term in
+
+							print_message Verbose_standard ("   Detecting upper-bounded clock: " 
+															^ clockString 
+															^ operatorString
+															^ parametric_linear_termString );
+
+							if (operatorString = "<" or operatorString = "<=")  
+							then (print_message Verbose_standard ("     => Clock: " ^ clockString ^ " bounded by (" ^ parametric_linear_termString ^ ")!" ) );
+
+							(*print_message Verbose_standard (" ") ;*) 
+
+							detect_upper_bound l in
+
+
 List.iter (fun automaton_index -> print_message Verbose_standard ("Automaton: " ^ (model.automata_names automaton_index) );
 	
 
 		(*Checking bounded clocked in invariant (Location)*)
-        List.iter (fun location_index -> print_message Verbose_standard (" Location: " ^ (model.location_names automaton_index location_index) ) ;
+        List.iter (fun location_index -> print_message Verbose_standard (" State/Location: " ^ (model.location_names automaton_index location_index) ) ;
 
         		let invariant = model.invariants automaton_index location_index in
         
                 print_message Verbose_standard ("   Ivariant: " ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names invariant ) )  ;
                     		
-                	List.iter (fun clock_index -> print_message Verbose_standard ("   Checking clock " ^ (model.variable_names clock_index));
-						
-                        if LinearConstraint.pxd_is_constrained invariant clock_index then (print_message Verbose_standard "    This clock is bound!!");
-						
-						
-                                (** WORK HERE **)
-						
-						
-                    ) model.clocks;
+                	
+                	(* List.iter (fun clock_index -> print_message Verbose_standard ("   Checking clock " ^ (model.variable_names clock_index));
+                		if LinearConstraint.pxd_is_constrained invariant clock_index then (print_message Verbose_standard "    This clock is bound!!");
+                	) model.clocks; *)
 
-		
+                	(** WORK HERE **)
+
+                		let inequalities = LinearConstraint.pxd_get_inequalities invariant in
+						detect_upper_bound inequalities;
+
+						print_message Verbose_standard ("\n");
+
                 	(*Checking bounded clocked in guards (Transition)*)
-                	List.iter (fun action_index -> print_message Verbose_standard ("    Action(Transition): " ^ (model.action_names action_index) );
+                	List.iter (fun action_index -> print_message Verbose_standard (" Transition/Action: " ^ (model.action_names action_index) );
             
-                    	List.iter (fun (guard, clock_updates, _, destlocation_index) -> print_message Verbose_standard ("     Guard: " ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names guard));
+                    	List.iter (fun (guard, clock_updates, _, destlocation_index) 
+                    		-> print_message Verbose_standard ("   Guard: " ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names guard));
 					
                         
-                    		List.iter (fun clock_index -> print_message Verbose_standard ("     Checking clock " ^ (model.variable_names clock_index));
-						
+                    		(* List.iter (fun clock_index -> print_message Verbose_standard ("     Checking clock " ^ (model.variable_names clock_index));	
                             	if LinearConstraint.pxd_is_constrained guard clock_index then (print_message Verbose_standard "      This clock is bound!!");
-						
-						
-                                        (** WORK HERE **)
-						
-						
-                        	) model.clocks;
+                        	) model.clocks; *)
+
+                        	(** WORK HERE **)
+
+
+                			let inequalities = LinearConstraint.pxd_get_inequalities guard in
+							detect_upper_bound inequalities;
 
 
                     	) (model.transitions automaton_index location_index action_index); 

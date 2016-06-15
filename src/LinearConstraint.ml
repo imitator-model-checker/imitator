@@ -3394,3 +3394,26 @@ let unserialize_p_convex_or_nonconvex_constraint p_convex_or_nonconvex_constrain
 		Nonconvex_p_constraint (unserialize_p_nnconvex_constraint p_convex_or_nonconvex_constraint_string)
 	else
 		Convex_p_constraint (unserialize_linear_constraint p_convex_or_nonconvex_constraint_string)
+
+
+
+
+
+
+
+
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+(** Gia's function for CUB **)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+(** IMITATOR operator style to string **)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+
+let operator2string op = match op with
+	| Op_g  -> ">"
+	| Op_ge -> ">="
+	| Op_eq -> "="
+	| Op_le -> "<="
+	| Op_l  -> "<"
+	| _ -> "error!"
