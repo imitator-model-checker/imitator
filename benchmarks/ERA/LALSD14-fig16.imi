@@ -1,0 +1,123 @@
+(************************************************************
+ *                      IMITATOR MODEL                      
+ *
+ * Fig.16 from [LALSD14]
+ *
+ * Description     : Fig.16 from "Learning Assumptions for Compositional Verification of Timed Systems" [LALSD14]
+ * Correctness     : Pviolated not reachable
+ * Source          : "Learning Assumptions for Compositional Verification of Timed Systems" [LALSD14]
+ * Author          : Lin Shang-Wei
+ * Modeling        : Lin Shang-Wei
+ * Input by        : Étienne André
+ * License         : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+
+ *
+ * Created         : 2016/07/01
+ * Last modified   : 2016/07/01
+ *
+ * IMITATOR version: 2.8-beta
+ ************************************************************)
+
+var
+
+(* Clocks *)
+ 	xa, xi, xo, xs
+		: clock;
+
+(* Parameters *)
+(*	p
+		: parameter;*)
+
+
+
+(************************************************************)
+  automaton input
+(************************************************************)
+synclabs: input, send, ack;
+
+loc I0: while True wait {}
+	when xa <= 1 sync input do {xi' = 0} goto I1;
+
+loc I1: while True wait {}
+	when xi <= 1 sync send do {xs' = 0} goto I2;
+
+loc I2: while True wait {}
+	when True sync ack do {xa' = 0} goto I0;
+
+end (* input *)
+
+(************************************************************)
+  automaton output
+(************************************************************)
+synclabs: output, send, ack;
+
+loc O0: while True wait {}
+	when True sync send do {xs' = 0} goto O1;
+
+loc O1: while True wait {}
+	when xs <= 1 sync output do {xo' = 0} goto O2;
+
+loc O2: while True wait {}
+	when xo <= 1 sync ack do {xa' = 0} goto O0;
+
+end (* output *)
+
+(************************************************************)
+  automaton Mphihat
+(************************************************************)
+synclabs: input, output;
+
+loc P0: while True wait {}
+	when xo > 5 sync input do {xi' = 0} goto Pviolated;
+	when True sync output do {xo' = 0} goto Pviolated;
+	when xo <= 5 sync input do {xi' = 0} goto P1;
+
+loc P1: while True wait {}
+	when xi <= 5 sync output do {xo' = 0} goto P0;
+	when xi > 5 sync output do {xo' = 0} goto Pviolated;
+	when True sync input do {xi' = 0} goto Pviolated;
+
+loc Pviolated: while True wait {}
+
+end (* Mphihat *)
+
+
+
+(************************************************************)
+(* Initial state *)
+(************************************************************)
+
+init :=
+	(*------------------------------------------------------------*)
+	(* Initial location *)
+	(*------------------------------------------------------------*)
+	& loc[input] = I0
+	& loc[output] = O0
+	& loc[Mphihat] = P0
+
+	(*------------------------------------------------------------*)
+	(* Initial clock constraints *)
+	(*------------------------------------------------------------*)
+	& xa = 0
+	& xi = 0
+	& xo = 0
+	& xs = 0
+
+	(*------------------------------------------------------------*)
+	(* Parameter constraints *)
+	(*------------------------------------------------------------*)
+(* 	& p >= 0 *)
+;
+
+
+(************************************************************)
+(* Property specification *)
+(************************************************************)
+
+property := unreachable loc[Mphihat] = Pviolated;
+
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end
