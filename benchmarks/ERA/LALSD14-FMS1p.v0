@@ -1,0 +1,22 @@
+(************************************************************
+ *                      IMITATOR MODEL                      
+ *
+ * FMS-1 from [LALSD14] (parameterized version)
+ *
+ * Description     : A flexible manufacturing system (FMS) [QCW05] produces blocks with a cylindrical painted pin from raw blocks and raw pegs. It consists of eleven devices, namely three conveyors, a mill, a lathe, a painting device, four robots, and an assembly machine. The devices are connected through six buffers, and the capacity of each buffer is one part. We modeled the FMS system in a constructive way such that three versions of models have been obtained, namely FMS-1 (the simplest one), FMS-2 (the medium one), and FMS-3 (the most complex one). Properties requiring that each buffer should not overflow or underflow and that output of each buffer should be within three time units after its input are verified. After verification, we found that three buffers have overflow and underflow problems. This model was extended to time in "Learning Assumptions for Compositional Verification of Timed Systems" [LALSD14]
+ * Correctness     : Error state unreachable
+ * Source          : M. H. Queiroz, J. E. R. Cury, and W. M. Wonham. Multitasking supervisory control of discrete-event systems. Discrete Event Dynamic Systems, 15(4), 2005.
+ * Author          : M. H. Queiroz, J. E. R. Cury, and W. M. Wonham
+ * Modeling        : Lin Shang-Wei
+ * Input by        : Étienne André
+ * License         : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+
+ *
+ * Created         : 2016/07/05
+ * Last modified   : 2016/07/05
+ *
+ * IMITATOR version: 2.8-beta
+ ************************************************************)
+
+	p_conveyor = 0 .. 100 (* time from c_B1_in to I_B1_C1 *)
+	& p_deadline = 0 .. 100 (* maximum time between B1_in and B1_out *)
