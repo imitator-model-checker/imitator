@@ -13,7 +13,7 @@
 
  *
  * Created         : 2016/07/05
- * Last modified   : 2016/07/06
+ * Last modified   : 2016/07/07
  *
  * IMITATOR version: 2.8-beta
  ************************************************************)
@@ -350,6 +350,224 @@ end (*  AssemblyStation_2  *)
 
 
 (************************************************************)
+  automaton  Spec_1
+(************************************************************)
+synclabs: 
+O_L1_AS1_1, I_L1_AS1_1, task1A, task1B;
+
+loc T0: while True wait {}
+	when True sync O_L1_AS1_1 do {xO_L1_AS1_1' = 0} goto T1;
+
+loc T1: while True wait {}
+	when True sync task1A do {xtask1A' = 0} goto T2;
+	when True sync I_L1_AS1_1 do {xI_L1_AS1_1' = 0} goto ERROR;
+	when True sync task1B do {xtask1B' = 0} goto ERROR;
+	
+loc T2: while True wait {}
+	when True sync task1B do {xtask1B' = 0} goto T3;
+	when True sync I_L1_AS1_1 do {xI_L1_AS1_1' = 0} goto ERROR;
+	when True sync task1A do {xtask1A' = 0} goto ERROR;
+	
+loc T3: while True wait {}
+	when True sync I_L1_AS1_1 do {xI_L1_AS1_1' = 0} goto T0;
+	when True sync task1A do {xtask1A' = 0} goto ERROR;
+	when True sync task1B do {xtask1B' = 0} goto ERROR;
+	
+loc ERROR: while True wait {}
+
+end (*  Spec_1 *)
+
+
+(*(************************************************************)
+  automaton  Spec_2
+(************************************************************)
+synclabs: 
+O_L1_AS1_2, I_L1_AS1_2, task1A, task1B;
+
+loc T0: while True wait {}
+	when True sync O_L1_AS1_2 do {xO_L1_AS1_2' = 0} goto T1;
+
+loc T1: while True wait {}
+	when True sync task1B do {xtask1B' = 0} goto T2;
+	when True sync I_L1_AS1_2 do {xI_L1_AS1_2' = 0} goto ERROR;
+	when True sync task1A do {xtask1A' = 0} goto ERROR;
+	
+loc T2: while True wait {}
+	when True sync task1A do {xtask1A' = 0} goto T3;
+	when True sync I_L1_AS1_2 do {xI_L1_AS1_2' = 0} goto ERROR;
+	when True sync task1B do {xtask1B' = 0} goto ERROR;
+	
+loc T3: while True wait {}
+	when True sync I_L1_AS1_2 do {xI_L1_AS1_2' = 0} goto T0;
+	when True sync task1A do {xtask1A' = 0} goto ERROR;
+	when True sync task1B do {xtask1B' = 0} goto ERROR;
+	
+loc ERROR: while True wait {}
+
+end (*  Spec_2 *)*)
+
+
+(*(************************************************************)
+  automaton  Spec_3
+(************************************************************)
+synclabs: 
+O_L2_AS2_1, I_L2_AS2_1, task2A, task2B;
+
+loc T0: while True wait {}
+	when True sync O_L2_AS2_1 do {xO_L2_AS2_1' = 0} goto T1;
+
+loc T1: while True wait {}
+	when True sync task2A do {xtask2A' = 0} goto T2;
+	when True sync I_L2_AS2_1 do {xI_L2_AS2_1' = 0} goto ERROR;
+	when True sync task2B do {xtask2B' = 0} goto ERROR;
+	
+loc T2: while True wait {}
+	when True sync task2B do {xtask2B' = 0} goto T3;
+	when True sync I_L2_AS2_1 do {xI_L2_AS2_1' = 0} goto ERROR;
+	when True sync task2A do {xtask2A' = 0} goto ERROR;
+	
+loc T3: while True wait {}
+	when True sync I_L2_AS2_1 do {xI_L2_AS2_1' = 0} goto T0;
+	when True sync task2A do {xtask2A' = 0} goto ERROR;
+	when True sync task2B do {xtask2B' = 0} goto ERROR;
+	
+loc ERROR: while True wait {}
+
+end (*  Spec_3 *)*)
+
+
+(*(************************************************************)
+  automaton  Spec_4
+(************************************************************)
+synclabs: 
+O_L2_AS2_2, I_L2_AS2_2, task2A, task2B;
+
+loc T0: while True wait {}
+	when True sync O_L2_AS2_2 do {xO_L2_AS2_2' = 0} goto T1;
+
+loc T1: while True wait {}
+	when True sync task2B do {xtask2B' = 0} goto T2;
+	when True sync I_L2_AS2_2 do {xI_L2_AS2_2' = 0} goto ERROR;
+	when True sync task2A do {xtask2A' = 0} goto ERROR;
+	
+loc T2: while True wait {}
+	when True sync task2A do {xtask2A' = 0} goto T3;
+	when True sync I_L2_AS2_2 do {xI_L2_AS2_2' = 0} goto ERROR;
+	when True sync task2B do {xtask2B' = 0} goto ERROR;
+	
+loc T3: while True wait {}
+	when True sync I_L2_AS2_2 do {xI_L2_AS2_2' = 0} goto T0;
+	when True sync task2A do {xtask2A' = 0} goto ERROR;
+	when True sync task2B do {xtask2B' = 0} goto ERROR;
+	
+loc ERROR: while True wait {}
+
+end (*  Spec_4 *)*)
+
+
+(*(************************************************************)
+  automaton  Spec_5
+(************************************************************)
+synclabs: 
+I_L1_TU1_1, O_L1_TU1_1, I_L1_TU1_2, O_L1_TU1_2;
+
+loc T0: while True wait {}
+	when True sync I_L1_TU1_1 do {xI_L1_TU1_1' = 0} goto T1;
+	when True sync O_L1_TU1_2 do {xO_L1_TU1_2' = 0} goto T2;
+	when True sync O_L1_TU1_1 do {xO_L1_TU1_1' = 0} goto ERROR;
+	when True sync O_L1_TU1_2 do {xO_L1_TU1_2' = 0} goto ERROR;
+
+loc T1: while True wait {}
+	when True sync O_L1_TU1_1 do {xO_L1_TU1_1' = 0} goto T0;
+	when True sync I_L1_TU1_1 do {xI_L1_TU1_1' = 0} goto ERROR;
+	when True sync I_L1_TU1_2 do {xI_L1_TU1_2' = 0} goto ERROR;
+	
+loc T2: while True wait {}
+	when True sync I_L1_TU1_2 do {xI_L1_TU1_2' = 0} goto T0;
+	when True sync I_L1_TU1_1 do {xI_L1_TU1_1' = 0} goto ERROR;
+	when True sync I_L1_TU1_2 do {xI_L1_TU1_2' = 0} goto ERROR;
+	
+loc ERROR: while True wait {}
+
+end (*  Spec_5 *)*)
+
+
+(*(************************************************************)
+  automaton  Spec_6 
+(************************************************************)
+synclabs: 
+I_L2_TU2_1, O_L2_TU2_1, I_L2_TU2_2, O_L2_TU2_2;
+
+loc T0: while True wait {}
+	when True sync I_L2_TU2_1 do {xI_L2_TU2_1' = 0} goto T1;
+	when True sync I_L2_TU2_2 do {xI_L2_TU2_2' = 0} goto T2;
+	when True sync O_L2_TU2_1 do {xO_L2_TU2_1' = 0} goto ERROR;
+	when True sync O_L2_TU2_2 do {xO_L2_TU2_2' = 0} goto ERROR;
+
+loc T1: while True wait {}
+	when True sync O_L2_TU2_1 do {xO_L2_TU2_1' = 0} goto T0;
+	when True sync I_L2_TU2_1 do {xI_L2_TU2_1' = 0} goto ERROR;
+	when True sync I_L2_TU2_2 do {xI_L2_TU2_2' = 0} goto ERROR;
+	
+loc T2: while True wait {}
+	when True sync O_L2_TU2_2 do {xI_CL_TU1_1' = 0} goto T0;
+	when True sync I_L2_TU2_1 do {xI_L2_TU2_1' = 0} goto ERROR;
+	when True sync I_L2_TU2_2 do {xI_L2_TU2_2' = 0} goto ERROR;
+	
+loc ERROR: while True wait {}
+
+end (*  Spec_6 *)*)
+
+
+(*(************************************************************)
+  automaton  Spec_7 
+(************************************************************)
+synclabs: 
+I_CL_TU3_1, O_CL_TU1_1, O_CL_TU2_1, I_CL_TU1_1;
+
+loc T0: while True wait {}
+	when True sync I_CL_TU3_1 do {xI_CL_TU3_1' = 0} goto T1;
+
+loc T1: while True wait {}
+	when True sync O_CL_TU1_1 do {xO_CL_TU1_1' = 0} goto T2;
+	when True sync O_CL_TU2_1 do {xO_CL_TU2_1' = 0} goto ERROR;
+	
+loc T2: while True wait {}
+	when True sync I_CL_TU1_1 do {xI_CL_TU1_1' = 0} goto T3;
+
+loc T3: while True wait {}
+	when True sync O_CL_TU2_1 do {xO_CL_TU2_1' = 0} goto T0;
+	
+loc ERROR: while True wait {}
+
+end (*  Spec_7 *)*)
+
+
+(*(************************************************************)
+  automaton  Spec_8 
+(************************************************************)
+synclabs: 
+I_CL_TU3_2, O_CL_TU2_2, O_CL_TU1_2, I_CL_TU2_2;
+
+loc T0: while True wait {}
+	when True sync I_CL_TU3_2 do {xI_CL_TU3_2' = 0} goto T1;
+
+loc T1: while True wait {}
+	when True sync O_CL_TU2_2 do {xO_CL_TU2_2' = 0} goto T2;
+	when True sync O_CL_TU1_2 do {xO_CL_TU1_2' = 0} goto ERROR;
+	
+loc T2: while True wait {}
+	when True sync I_CL_TU2_2 do {xI_CL_TU2_2' = 0} goto T3;
+
+loc T3: while True wait {}
+	when True sync O_CL_TU1_2 do {xO_CL_TU1_2' = 0} goto T0;
+	
+loc ERROR: while True wait {}
+
+end (*  Spec_8 *)*)
+
+
+(*(************************************************************)
   automaton  Spec_9 
 (************************************************************)
 synclabs: 
@@ -366,7 +584,32 @@ loc T1: while True wait {}
 
 loc ERROR: while True wait {}
 
-end (*  Spec_9 *)
+end (*  Spec_9 *)*)
+
+
+
+(*(************************************************************)
+  automaton  Spec_10 
+(************************************************************)
+synclabs: 
+L3_in_I2, L3_out_TU3_2;
+
+loc T0: while True wait {}
+	when True sync L3_in_I2 do {c_L3_in_I2' = 0} goto T1;
+	when True sync L3_out_TU3_2 do {xL3_out_TU3_2' = 0} goto ERROR;
+
+loc T1: while True wait {}
+	when c_L3_in_I2 <= 3 sync L3_out_TU3_2 do {xL3_out_TU3_2' = 0} goto T0;
+	when True sync L3_in_I2 do {c_L3_in_I2' = 0} goto ERROR;
+	when c_L3_in_I2 > 3 sync L3_out_TU3_2 do {xL3_out_TU3_2' = 0} goto ERROR;
+
+loc ERROR: while True wait {}
+
+end (*  Spec_10 *)*)
+
+
+(************************************************************)
+(************************************************************)
 
 
 (************************************************************)
@@ -387,7 +630,16 @@ init :=
 	& loc[TransportUnit_3C] = T0
 	& loc[AssemblyStation_1] = T0
 	& loc[AssemblyStation_2] = T0
-	& loc[Spec_9] = T0
+	& loc[Spec_1] = T0
+	(*& loc[Spec_2] = T0*)
+	(*& loc[Spec_3] = T0*)
+	(*& loc[Spec_4] = T0*)
+	(*& loc[Spec_5] = T0*)
+	(*& loc[Spec_6] = T0*)
+	(*& loc[Spec_7] = T0*)
+	(*& loc[Spec_8] = T0*)
+	(*& loc[Spec_9] = T0*)
+	(*& loc[Spec_10] = T0*)
 	
 	(*------------------------------------------------------------*)
 	(* Initial clock constraints *)
@@ -459,4 +711,13 @@ init :=
 (* Property specification *)
 (************************************************************)
 
-property := unreachable loc[Spec_9] = ERROR;
+property := unreachable loc[Spec_1] = ERROR;
+(*property := unreachable loc[Spec_2] = ERROR;*)
+(*property := unreachable loc[Spec_3] = ERROR;*)
+(*property := unreachable loc[Spec_4] = ERROR;*)
+(*property := unreachable loc[Spec_5] = ERROR;*)
+(*property := unreachable loc[Spec_6] = ERROR;*)
+(*property := unreachable loc[Spec_7] = ERROR;*)
+(*property := unreachable loc[Spec_8] = ERROR;*)
+(*property := unreachable loc[Spec_9] = ERROR;*)
+(*property := unreachable loc[Spec_10] = ERROR;*)

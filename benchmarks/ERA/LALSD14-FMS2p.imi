@@ -1,9 +1,9 @@
 (************************************************************
  *                      IMITATOR MODEL                      
  *
- * FMS-1 from [LALSD14]
+ * FMS-2 from [LALSD14] (parameterized version)
  *
- * Description     : A flexible manufacturing system (FMS) [QCW05] produces blocks with a cylindrical painted pin from raw blocks and raw pegs. It consists of eleven devices, namely three conveyors, a mill, a lathe, a painting device, four robots, and an assembly machine. The devices are connected through six buffers, and the capacity of each buffer is one part. We modeled the FMS system in a constructive way such that three versions of models have been obtained, namely FMS-1 (the simplest one), FMS-2 (the medium one), and FMS-3 (the most complex one). Properties requiring that each buffer should not overflow or underflow and that output of each buffer should be within three time units after its input are verified. After verification, we found that three buffers have overflow and underflow problems. This model was extended to time in "Learning Assumptions for Compositional Verification of Timed Systems" [LALSD14]
+ * Description     : A flexible manufacturing system (FMS) [QCW05] produces blocks with a cylindrical painted pin from raw blocks and raw pegs. It consists of eleven devices, namely three conveyors, a mill, a lathe, a painting device, four robots, and an assembly machine. The devices are connected through six buffers, and the capacity of each buffer is one part. We modeled the FMS system in a constructive way such that three versions of models have been obtained, namely FMS-2 (the simplest one), FMS-2 (the medium one), and FMS-3 (the most complex one). Properties requiring that each buffer should not overflow or underflow and that output of each buffer should be within three time units after its input are verified. After verification, we found that three buffers have overflow and underflow problems. This model was extended to time in "Learning Assumptions for Compositional Verification of Timed Systems" [LALSD14]
  * Correctness     : Error state unreachable
  * Source          : M. H. Queiroz, J. E. R. Cury, and W. M. Wonham. Multitasking supervisory control of discrete-event systems. Discrete Event Dynamic Systems, 15(4), 2005.
  * Author          : M. H. Queiroz, J. E. R. Cury, and W. M. Wonham
@@ -12,7 +12,7 @@
  * License         : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
 
  *
- * Created         : 2016/07/05
+ * Created         : 2016/07/07
  * Last modified   : 2016/07/07
  *
  * IMITATOR version: 2.8-beta
@@ -24,8 +24,14 @@ var
 	(* Conveyor1 *)
  	c_B1_in, c_I_B1_C1, xO_B1_R1,
  	
+ 	(* Conveyor2 *)
+ 	c_B2_in, c_I_B2_C2, xO_B2_R3,
+ 	
  	(* Mill *)
  	xI_B3_R1, xB3_in_M, xB3_out_M, xI_B3_M, xO_B3_R2, xO_B3_M,
+ 	
+ 	(* Lathe *)
+ 	xI_B4_R3, xB4_in_L, xB4_out_L, xO_B4_L, xI_B4_L, xO_B4_R4,
  	
  	(* Robot1 *)
  	(*c_I_B1_C1, *)xB1_out, (*xO_B1_R1, *)xB3_in_R1, (*xI_B3_R1, *)(*xO_B3_M, *)
@@ -33,8 +39,14 @@ var
  	(* Robot2 *)
  	(*xI_B3_M, *)xB3_out_R2, (*xO_B3_R2, *)xB5_in_R2, xI_B5_R2, xO_B5_A,
  	
+ 	(* Robot3 *)
+ 	(*c_I_B2_C2, *)xB2_out, (*xO_B2_R3, *)xB4_in_R3, (*xI_B4_R3, xO_B4_L,*)
+ 	
+ 	(* Robot4 *)
+ 	(*xI_B4_L, *)xB4_out_R4, (*xO_B4_R4, *)c_B6_in_R4, c_I_B6_R4, xO_B6_A,
+ 	
  	(* AssemblyStation *)
- 	(*xI_B5_R2, *)xB5_out_A, (*xO_B5_A, *)xproduct,
+ 	(*xI_B5_R2, *)xB5_out_A, (*xO_B5_A, c_I_B6_R4, *)xB6_out_A, (*xO_B6_A, *)xproduct,
  	
  	(* Spec1 *)
 	(*c_B1_in, xB1_out*)
@@ -42,9 +54,11 @@ var
 	(* Spec3 *)
 	(*xO_B3_M, xI_B3_M*)
 		: clock;
+
 (* Parameters *)
-(*	p
-		: parameter;*)
+	p_conveyor = 1, (* time from c_B1_in to I_B1_C1 *)
+	p_deadline = 3 (* maximum time between B1_in and B1_out *)
+		: parameter;
 
 
 
@@ -53,16 +67,34 @@ var
 (************************************************************)
 synclabs: B1_in, I_B1_C1, O_B1_R1;
 
-loc C0: while True wait {}
-	when True sync B1_in do {c_B1_in' = 0} goto C1;
+loc C1_0: while True wait {}
+	when True sync B1_in do {c_B1_in' = 0} goto C1_1;
 
-loc C1: while True wait {}
-	when c_B1_in <= 1 sync I_B1_C1 do {c_I_B1_C1' = 0} goto C2;
+loc C1_1: while True wait {}
+	when c_B1_in <= p_conveyor sync I_B1_C1 do {c_I_B1_C1' = 0} goto C1_2;
 
-loc C2: while True wait {}
-	when True sync O_B1_R1 do {xO_B1_R1' = 0} goto C0;
+loc C1_2: while True wait {}
+	when True sync O_B1_R1 do {xO_B1_R1' = 0} goto C1_0;
 
 end (* Conveyor1 *)
+
+
+(************************************************************)
+  automaton Conveyor2
+(************************************************************)
+synclabs: B2_in, I_B2_C2, O_B2_R3;
+
+loc C2_0: while True wait {}
+	when True sync B2_in do {c_B2_in' = 0} goto C2_1;
+
+loc C2_1: while True wait {}
+	when c_B2_in <= 1 sync I_B2_C2 do {c_I_B2_C2' = 0} goto C2_2;
+
+loc C2_2: while True wait {}
+	when True sync O_B2_R3 do {xO_B2_R3' = 0} goto C2_0;
+
+end (* Conveyor1 *)
+
 
 (************************************************************)
   automaton Mill
@@ -86,6 +118,31 @@ loc M4: while True wait {}
 	when True sync O_B3_R2 do {xO_B3_R2' = 0} goto M0;
 
 end (* Mill *)
+
+
+(************************************************************)
+  automaton Lathe
+(************************************************************)
+synclabs: I_B4_R3, B4_in_L, B4_out_L, O_B4_L, I_B4_L, O_B4_R4;
+
+loc L0: while True wait {}
+	when True sync I_B4_R3 do {xI_B4_R3' = 0} goto L1;
+	when True sync B4_in_L do {xB4_in_L' = 0} goto L3;
+
+loc L1: while True wait {}
+	when True sync B4_out_L do {xB4_out_L' = 0} goto L2;
+
+loc L2: while True wait {}
+	when True sync O_B4_L do {xO_B4_L' = 0} goto L0;
+
+loc L3: while True wait {}
+	when True sync I_B4_L do {xI_B4_L' = 0} goto L4;
+
+loc L4: while True wait {}
+	when True sync O_B4_R4 do {xO_B4_R4' = 0} goto L0;
+
+end (* Lathe *)
+
 
 (************************************************************)
   automaton Robot1
@@ -112,6 +169,7 @@ loc R1_5: while True wait {}
 
 end (* Robot1 *)
 
+
 (************************************************************)
   automaton Robot2
 (************************************************************)
@@ -137,10 +195,63 @@ loc R2_5: while True wait {}
 
 end (* Robot2 *)
 
+
+(************************************************************)
+  automaton Robot3
+(************************************************************)
+synclabs: I_B2_C2, B2_out, O_B2_R3, B4_in_R3, I_B4_R3, O_B4_L;
+
+loc R3_0: while True wait {}
+	when True sync I_B2_C2 do {c_I_B2_C2' = 0} goto R3_1;
+
+loc R3_1: while True wait {}
+	when c_I_B2_C2 <= 3 sync B2_out do {xB2_out' = 0} goto R3_2;
+
+loc R3_2: while True wait {}
+	when True sync O_B2_R3 do {xO_B2_R3' = 0} goto R3_3;
+
+loc R3_3: while True wait {}
+	when True sync B4_in_R3 do {xB4_in_R3' = 0} goto R3_4;
+
+loc R3_4: while True wait {}
+	when True sync I_B4_R3 do {xI_B4_R3' = 0} goto R3_5;
+
+loc R3_5: while True wait {}
+	when True sync O_B4_L do {xO_B4_L' = 0} goto R3_0;
+
+end (* Robot3 *)
+
+
+(************************************************************)
+  automaton Robot4
+(************************************************************)
+synclabs: I_B4_L, B4_out_R4, O_B4_R4, B6_in_R4, I_B6_R4, O_B6_A;
+
+loc R4_0: while True wait {}
+	when True sync I_B4_L do {xI_B4_L' = 0} goto R4_1;
+
+loc R4_1: while True wait {}
+	when True sync B4_out_R4 do {xB4_out_R4' = 0} goto R4_2;
+
+loc R4_2: while True wait {}
+	when True sync O_B4_R4 do {xO_B4_R4' = 0} goto R4_3;
+
+loc R4_3: while True wait {}
+	when True sync B6_in_R4 do {c_B6_in_R4' = 0} goto R4_4;
+
+loc R4_4: while True wait {}
+	when c_B6_in_R4 <= 1 sync I_B6_R4 do {c_I_B6_R4' = 0} goto R4_5;
+
+loc R4_5: while True wait {}
+	when True sync O_B6_A do {xO_B6_A' = 0} goto R4_0;
+
+end (* Robot4 *)
+
+
 (************************************************************)
   automaton AssemblyStation
 (************************************************************)
-synclabs: I_B5_R2, B5_out_A, O_B5_A, product;
+synclabs: I_B5_R2, B5_out_A, O_B5_A, I_B6_R4, B6_out_A, O_B6_A, product;
 
 loc A0: while True wait {}
 	when True sync I_B5_R2 do {xI_B5_R2' = 0} goto A1;
@@ -152,6 +263,15 @@ loc A2: while True wait {}
 	when True sync O_B5_A do {xO_B5_A' = 0} goto A3;
 
 loc A3: while True wait {}
+	when True sync I_B6_R4 do {c_I_B6_R4' = 0} goto A4;
+
+loc A4: while True wait {}
+	when c_I_B6_R4 <= 1 sync B6_out_A do {xB6_out_A' = 0} goto A5;
+
+loc A5: while True wait {}
+	when True sync O_B6_A do {xO_B6_A' = 0} goto A6;
+
+loc A6: while True wait {}
 	when True sync product do {xproduct' = 0} goto A0;
 
 end (* AssemblyStation *)
@@ -167,51 +287,14 @@ loc S0: while True wait {}
 	when True sync B1_out do {xB1_out' = 0} goto Serror;
 
 loc S1: while True wait {}
-	when c_B1_in <= 3 sync B1_out do {xB1_out' = 0} goto S0;
-	when c_B1_in > 3 sync B1_out do {xB1_out' = 0} goto Serror;
+	when c_B1_in <= p_deadline sync B1_out do {xB1_out' = 0} goto S0;
+	when c_B1_in > p_deadline sync B1_out do {xB1_out' = 0} goto Serror;
 	when True sync B1_in do {c_B1_in' = 0} goto Serror;
 
 loc Serror: while True wait {}
 
 end (* Spec1 *)
 
-(*
-
-(************************************************************)
-  automaton Spec3
-(************************************************************)
-synclabs: O_B3_M, I_B3_M;
-
-loc S0: while True wait {}
-	when True sync O_B3_M do {xO_B3_M' = 0} goto S1;
-	when True sync I_B3_M do {xI_B3_M' = 0} goto Serror;
-
-loc S1: while True wait {}
-	when True sync O_B3_M do {xO_B3_M' = 0} goto Serror;
-	when True sync I_B3_M do {xI_B3_M' = 0} goto S0;
-
-loc Serror: while True wait {}
-
-end (* Spec3 *)
-
-
-(************************************************************)
-  automaton Spec5
-(************************************************************)
-synclabs: B5_in_R2, B5_out_A;
-
-loc S0: while True wait {}
-	when True sync B5_in_R2 do {xB5_in_R2' = 0} goto S1;
-	when True sync B5_out_A do {xB5_out_A' = 0} goto Serror;
-
-loc S1: while True wait {}
-	when True sync B5_in_R2 do {xB5_in_R2' = 0} goto Serror;
-	when True sync B5_out_A do {xB5_out_A' = 0} goto S0;
-
-loc Serror: while True wait {}
-
-end (* Spec5 *)
-*)
 
 (************************************************************)
 (* Initial state *)
@@ -221,13 +304,17 @@ init :=
 	(*------------------------------------------------------------*)
 	(* Initial location *)
 	(*------------------------------------------------------------*)
-	& loc[Conveyor1]		= C0
+	& loc[Conveyor1]		= C1_0
+	& loc[Conveyor2]		= C2_0
 	& loc[Mill]				= M0
+	& loc[Lathe]			= L0
 	& loc[Robot1]			= R1_0
 	& loc[Robot2]			= R2_0
+	& loc[Robot3]			= R3_0
+	& loc[Robot4]			= R4_0
 	& loc[AssemblyStation]	= A0
 	& loc[Spec1]			= S0
-
+	
 	(*------------------------------------------------------------*)
 	(* Initial clock constraints *)
 	(*------------------------------------------------------------*)
@@ -235,8 +322,14 @@ init :=
 	(* Conveyor1 *)
  	c_B1_in = 0 &  c_I_B1_C1 = 0 &  xO_B1_R1 = 0 & 
  	
+ 	(* Conveyor2 *)
+ 	c_B2_in = 0 & c_I_B2_C2 = 0 & xO_B2_R3 = 0 &
+ 	
  	(* Mill *)
  	xI_B3_R1 = 0 &  xB3_in_M = 0 &  xB3_out_M = 0 &  xI_B3_M = 0 &  xO_B3_R2 = 0 &  xO_B3_M = 0 & 
+ 	
+ 	(* Lathe *)
+ 	xI_B4_R3 = 0 & xB4_in_L = 0 & xB4_out_L = 0 & xO_B4_L = 0 & xI_B4_L = 0 & xO_B4_R4 = 0 &
  	
  	(* Robot1 *)
  	(*c_I_B1_C1 = 0 &  *)xB1_out = 0 &  (*xO_B1_R1 = 0 &  *)xB3_in_R1 = 0 &  (*xI_B3_R1 = 0 &  *)(*xO_B3_M = 0 &  *)
@@ -244,16 +337,24 @@ init :=
  	(* Robot2 *)
  	(*xI_B3_M = 0 &  *)xB3_out_R2 = 0 &  (*xO_B3_R2 = 0 &  *)xB5_in_R2 = 0 &  xI_B5_R2 = 0 &  xO_B5_A = 0 & 
  	
+ 	(* Robot3 *)
+ 	(*c_I_B2_C2 = 0 & *)xB2_out = 0 & (*xO_B2_R3 = 0 & *)xB4_in_R3 = 0 & (*xI_B4_R3 = 0 & xO_B4_L = 0 &*)
+ 	
+ 	(* Robot4 *)
+ 	(*xI_B4_L = 0 & *)xB4_out_R4 = 0 & (*xO_B4_R4 = 0 & *)c_B6_in_R4 = 0 & c_I_B6_R4 = 0 & xO_B6_A = 0 &
+ 	
  	(* AssemblyStation *)
  	(*xI_B5_R2 = 0 &  *)xB5_out_A = 0 &  (*xO_B5_A = 0 &  *)xproduct = 0
  	
  	(* Spec1 *)
 	(*c_B1_in = 0 &  xB1_out*)
-
+ 	
+	
 	(*------------------------------------------------------------*)
 	(* Parameter constraints *)
 	(*------------------------------------------------------------*)
-(* 	& p >= 0 *)
+	& p_conveyor >= 0
+	& p_deadline >= 0
 ;
 
 

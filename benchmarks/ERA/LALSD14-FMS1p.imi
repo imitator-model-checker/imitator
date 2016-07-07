@@ -13,7 +13,7 @@
 
  *
  * Created         : 2016/07/05
- * Last modified   : 2016/07/05
+ * Last modified   : 2016/07/07
  *
  * IMITATOR version: 2.8-beta
  ************************************************************)
@@ -21,12 +21,26 @@
 var
 
 (* Clocks *)
+	(* Conveyor1 *)
  	c_B1_in, c_I_B1_C1, xO_B1_R1,
+ 	
+ 	(* Mill *)
  	xI_B3_R1, xB3_in_M, xB3_out_M, xI_B3_M, xO_B3_R2, xO_B3_M,
+ 	
+ 	(* Robot1 *)
  	(*c_I_B1_C1, *)xB1_out, (*xO_B1_R1, *)xB3_in_R1, (*xI_B3_R1, *)(*xO_B3_M, *)
+ 	
+ 	(* Robot2 *)
  	(*xI_B3_M, *)xB3_out_R2, (*xO_B3_R2, *)xB5_in_R2, xI_B5_R2, xO_B5_A,
+ 	
+ 	(* AssemblyStation *)
  	(*xI_B5_R2, *)xB5_out_A, (*xO_B5_A, *)xproduct,
+ 	
+ 	(* Spec1 *)
 	(*c_B1_in, xB1_out*)
+	
+	(* Spec3 *)
+	(*xO_B3_M, xI_B3_M*)
 		: clock;
 
 (* Parameters *)
@@ -123,7 +137,7 @@ loc R2_4: while True wait {}
 loc R2_5: while True wait {}
 	when True sync O_B5_A do {xO_B5_A' = 0} goto R2_0;
 
-end (* Robot1 *)
+end (* Robot2 *)
 
 (************************************************************)
   automaton AssemblyStation
@@ -152,11 +166,12 @@ synclabs: B1_in, B1_out;
 
 loc S0: while True wait {}
 	when True sync B1_in do {c_B1_in' = 0} goto S1;
-	when True sync B1_out do {c_B1_in' = 0} goto Serror;
+	when True sync B1_out do {xB1_out' = 0} goto Serror;
 
 loc S1: while True wait {}
 	when c_B1_in <= p_deadline sync B1_out do {xB1_out' = 0} goto S0;
 	when c_B1_in > p_deadline sync B1_out do {xB1_out' = 0} goto Serror;
+	when True sync B1_in do {c_B1_in' = 0} goto Serror;
 
 loc Serror: while True wait {}
 
@@ -219,11 +234,22 @@ init :=
 	(* Initial clock constraints *)
 	(*------------------------------------------------------------*)
 	&
+	(* Conveyor1 *)
  	c_B1_in = 0 &  c_I_B1_C1 = 0 &  xO_B1_R1 = 0 & 
+ 	
+ 	(* Mill *)
  	xI_B3_R1 = 0 &  xB3_in_M = 0 &  xB3_out_M = 0 &  xI_B3_M = 0 &  xO_B3_R2 = 0 &  xO_B3_M = 0 & 
+ 	
+ 	(* Robot1 *)
  	(*c_I_B1_C1 = 0 &  *)xB1_out = 0 &  (*xO_B1_R1 = 0 &  *)xB3_in_R1 = 0 &  (*xI_B3_R1 = 0 &  *)(*xO_B3_M = 0 &  *)
+ 	
+ 	(* Robot2 *)
  	(*xI_B3_M = 0 &  *)xB3_out_R2 = 0 &  (*xO_B3_R2 = 0 &  *)xB5_in_R2 = 0 &  xI_B5_R2 = 0 &  xO_B5_A = 0 & 
+ 	
+ 	(* AssemblyStation *)
  	(*xI_B5_R2 = 0 &  *)xB5_out_A = 0 &  (*xO_B5_A = 0 &  *)xproduct = 0
+ 	
+ 	(* Spec1 *)
 	(*c_B1_in = 0 &  xB1_out*)
 
 	(*------------------------------------------------------------*)
