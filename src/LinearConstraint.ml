@@ -336,7 +336,7 @@ let string_of_var names variable =
 
 
 	
-(************************************************************)
+(***********************************************coef*************)
 (************************************************************)
 (** Global variables *)
 (************************************************************)
@@ -690,6 +690,12 @@ let get_coefficient_in_linear_term linear_term =
 		(* If exception not raised: return 0 *)
 		NumConst.zero
 	) with Found_coef coef -> coef
+
+
+
+
+
+
 
 
 
@@ -1123,10 +1129,14 @@ let clock_guard_of_linear_inequality linear_inequality =
 	let parametric_linear_term = make_linear_term !members coefficient in
 	
 	(* Negate it if needed: if the clock is NEGATIVE, it will be naturally moved to the other side, hence no need to change the sign of the plterm *)
+	
+	(*check this small code again*)
+	(* 
 	let parametric_linear_term = if !positive_clock_option = Some true
 		then Mi ((make_linear_term [] NumConst.zero) , parametric_linear_term)
-		else parametric_linear_term
+		else parametric_linear_term 
 	in
+	*)
 	
 	(* Retrieve the operator *)
 	let operator =
@@ -3410,10 +3420,136 @@ let unserialize_p_convex_or_nonconvex_constraint p_convex_or_nonconvex_constrain
 (** IMITATOR operator style to string **)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
+(*using *)
+let compare coeff1 coeff2 = let first_minus_second = Gmp.Z.compare coeff1 coeff2 in first_minus_second 
+
+
+(*get string of operators*)
 let operator2string op = match op with
 	| Op_g  -> ">"
 	| Op_ge -> ">="
 	| Op_eq -> "="
 	| Op_le -> "<="
 	| Op_l  -> "<"
-	| _ -> "error!"
+	| _ -> "error!" 
+
+
+let get_coef term = match term with
+	| Coef coef -> coef 
+	
+	(* | Pl of linear_term * linear_term
+	| Mi of linear_term * linear_term *)
+	(* | Ti of coef * linear_term -> coef *)
+
+	| _ -> raise (SerializationError("get_coef function error")) 	
+
+
+
+(*
+detect form of linear_expression -> return the value:
+0: can not compare (more complicated)
+1: single variable
+2: single coefficient
+3: coefficient*variable with coefficient!=0
+4:  +01: problem with lterm
+	+11: variable + coefficient
+	+21: coefficient*variable + coefficient
+5:  +01: problem with lterm
+	+11: variable + coefficient
+	+21: coefficient*variable + coefficient
+*)
+
+let determine_linear_term term = match term with 
+	| Var var -> 1
+	| Coef coef -> 2 
+	| Ti (lterm, rterm) -> (
+					match rterm with
+						| Var var -> 3;
+						| _ -> raise (InternalError("check var after z")); 
+						(* | _ -> 0 *)
+							)
+	| Pl (lterm, rterm) -> (
+					match rterm with
+						| Coef coef -> 401;
+						| _ -> raise (InternalError("check var after z")); 
+						(* | _ -> 0 *)
+
+					match lterm with
+						| Var var -> 411;
+						| Ti (lterm, rterm) -> (
+										match rterm with
+											| Var var -> 421;
+											| _ -> raise (InternalError("check var after z")); 
+											(* | _ -> 0 *)
+												)
+						| _ -> raise (InternalError("check var after z")); 
+						(* | _ -> 0 *)
+							)
+	| Mi (lterm, rterm) -> (
+					match rterm with
+						| Coef coef -> 501;
+						| _ -> raise (InternalError("check var after z")); 
+						(* | _ -> 0 *)
+
+					match lterm with
+						| Var var -> 511;
+						| Ti (lterm, rterm) -> (
+										match rterm with
+											| Var var -> 521;
+											| _ -> raise (InternalError("check var after z")); 
+											(* | _ -> 0 *)
+												)
+						| _ -> raise (InternalError("check var after z")); 
+						(* | _ -> 0 *)
+							)
+	| _ -> raise (SerializationError("error")) 
+	(* | _ -> 0 *)
+
+
+
+(*return true if 2 linear terms contain the same clocks*)
+let check_mutual_variables term1 term2 variables_list =	let l_variables1 = ref [] in
+														let l_variables2 = ref [] in
+														let result = ref true in
+														
+														for i = 1 to List.length variables_list do
+
+  															let clock_index = List.nth variables_list i in
+  															
+
+  															if ( (variable_in_linear_term clock_index term1) = true ) then
+  															l_variables1 := !l_variables1@[clock_index];
+  															
+  															if ( (variable_in_linear_term clock_index term2) = true ) then
+  															l_variables2 := !l_variables2@[clock_index];
+
+														done;
+														
+														(*compare number of elements in 2 variable lists*)
+  														if ((List.length !l_variables1) != (List.length !l_variables2)) then
+  														result := false;
+
+  														(*check 2 lists contain the same variables*)
+  														for i = 1 to List.length !l_variables1 do
+  															if ( List.mem (List.nth !l_variables1 i) !l_variables2 ) = false then
+  															result := false;
+  														done;
+  														!result;
+
+
+
+(*
+
+let check_comparable term1 term2 =	let no_term1 = determine_linear_term term1 in
+									let no_term2 = determine_linear_term term2 in
+
+									match no_term1, no_term2 with 
+									| 1, 1 -> 1 
+									| 2, 2 -> if 1
+									| 411, 411 -> if  *)
+
+(* 
+
+let get_coefficient_in_linear_term2 a =
+	let lex = (normalize_linear_term a) in () ;;
+	(* get_coefficient_in_linear_term linear_expression *)  *)

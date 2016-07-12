@@ -12,6 +12,11 @@
  * Last modified     : 2016/04/30
  *
  ************************************************************)
+
+ 
+(*  module Ppl = Ppl_ocaml
+open Ppl *)
+
  
 
 (************************************************************)
@@ -585,3 +590,9 @@ val test_PDBMs : unit -> unit
 (** Gia's function for CUB **)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 val operator2string : op -> string
+val get_coef : p_linear_term -> coef
+
+
+
+(* val get_coefficient_in_linear_term : Ppl.linear_expression -> NumConst.t   *) 
+
