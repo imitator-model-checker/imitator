@@ -3434,6 +3434,7 @@ let operator2string op = match op with
 	| _ -> "error!" 
 
 
+(*)
 let get_coef term = match term with
 	| Coef coef -> coef 
 	
@@ -3442,6 +3443,212 @@ let get_coef term = match term with
 	(* | Ti of coef * linear_term -> coef *)
 
 	| _ -> raise (SerializationError("get_coef function error")) 	
+*)
+
+
+(*for linear term*)
+let rec isMinus linear_term =	(* let coef = ref NumConst.zero in *)
+								let b = ref false in
+								let _ = match linear_term with
+								| Coef c -> ()
+								| Var v -> ()
+								| Pl (lterm, rterm) -> (
+			  						isMinus lterm;
+									isMinus rterm;
+									() )
+								| Mi (lterm, rterm) -> ( b := true; () )
+
+								| Ti (c1, rterm) -> ()
+								| _ -> raise (InternalError("Detection error 'get_coef' function"))
+								in
+								!b
+
+
+(*for linear term*)
+let rec get_coef linear_term =	(* let coef = ref NumConst.zero in *)
+										
+								match linear_term with
+								| Coef c -> [c]
+								| Var v -> []
+								| Pl (lterm, rterm) -> (
+			  						get_coef lterm;
+									get_coef rterm;
+								)
+								| Mi (lterm, rterm) -> (
+									get_coef lterm;
+									get_coef rterm;
+								)
+								| Ti (c1, rterm) -> []
+								| _ -> raise (InternalError("Detection error 'get_coef' function"))
+
+
+(*for linear term, can not use 'option' for this! *)
+let rec get_var linear_term =	(* let coef = ref NumConst.zero in *)
+										
+								match linear_term with
+								| Coef c -> []
+								| Var v -> [v]
+								| Pl (lterm, rterm) -> (
+			  						get_var lterm;
+									get_var rterm;
+								)
+								| Mi (lterm, rterm) -> (
+									get_var lterm;
+									get_var rterm;
+								)
+								| Ti (c1, rterm) -> []
+								| _ -> raise (InternalError("Detection error 'get_var' function"))
+										
+
+(*for linear term*)
+let rec get_coefs_vars linear_term =
+										let coefs_vars = ref [] in
+										let _ = match linear_term with
+										| Coef c ->()
+										| Var v -> ()
+										| Pl (lterm, rterm) -> (
+			  								coefs_vars := !coefs_vars@get_coefs_vars lterm;
+											coefs_vars := !coefs_vars@get_coefs_vars rterm;
+											() )
+										| Mi (lterm, rterm) -> (
+			  								coefs_vars := !coefs_vars@get_coefs_vars lterm;
+											coefs_vars := !coefs_vars@get_coefs_vars rterm;
+											() )
+										| Ti (c1, rterm) -> (
+											match rterm with
+												| Var  v1 -> coefs_vars := !coefs_vars@[(c1, v1)]
+												| _ -> raise (InternalError("Could not detect RightTerm in Time*RightTerm error 'get_coefs_vars' function")) )
+										| _ -> raise (InternalError("Detection error 'get_coefs_vars' function"))
+										in 
+
+										!coefs_vars
+
+
+
+(* let filter_coefs_vars coefs vars = 		List.iter () coefs *)
+
+
+
+
+(*return true if 2 linear terms contain the same clocks*)
+let isComparable_linear_terms term1 term2 	=	
+												print_message Verbose_standard ("\n	 Analyzing!!!!!");
+												let coefs_vars1 = get_coefs_vars term1 in
+												let var1 = get_var term1 in
+												let coef1 = get_coef term1 in
+
+												(*length of linear term 1*)
+												let length_coefs_vars1 = List.length coefs_vars1 in
+												let length_var1 = List.length var1 in
+												let length_coef1 = List.length coef1 in
+												let length_total_1 = length_coefs_vars1 + length_var1 + length_coef1 in
+
+												let coefs_vars2 = get_coefs_vars term2 in
+												let var2 = get_var term2 in
+												let coef2 = get_coef term2 in
+
+												(*length of linear term 2*)
+												let length_coefs_vars2 = List.length coefs_vars2 in
+												let length_var2 = List.length var2 in
+												let length_coef2 = List.length coef2 in
+												let length_total_2 = length_coefs_vars2 + length_var2 + length_coef2 in
+
+												
+												print_message Verbose_standard ("\n	 Linear term 1:");
+												print_message Verbose_standard ("\n	 length:" ^ (string_of_int length_total_1) );
+
+												(*)
+												print_string "\n	 Linear term 2:";
+												print_string "\n	 length:" ^ (string_of_int length_total_2) ^ "";
+												*)
+												
+
+
+												if ( length_var1 > 1 || length_coef1 > 1 || length_var2 > 1 || length_coef2 > 1 )
+												then raise (InternalError("There is problem with getting single variable or get_coefficient!!!")) ;
+
+
+												
+
+												let checkMinus1 = isMinus term1 in
+												let checkMinus2 = isMinus term2 in
+
+												if checkMinus1 || checkMinus2 then
+												print_string "	 Contain Minus Operation!!!!!"
+												else
+												print_string "\n	 Not Contain Minus Operation!!!!!";
+
+
+
+
+												
+												let l_variables1 = ref [] in
+												let l_variables2 = ref [] in
+												let result = ref true in
+												
+
+												
+												(*)
+												for i = 0 to !nb_parameters - 1 do
+
+
+  															
+  												let expr1,_ = normalize_linear_term in
+  												let expr2,_ = normalize_linear_term in
+
+  												if ( variable_in_linear_term i expr1= true ) then
+  													l_variables1 := !l_variables1@[index];
+  															
+  												if ( variable_in_linear_term i expr2= true ) then
+  													l_variables2 := !l_variables2@[index];
+
+												done;
+														
+												(*compare number of elements in 2 variable lists*)
+  												if ((List.length !l_variables1) != (List.length !l_variables2)) then
+  												result := false;
+
+  												(*check 2 lists contain the same variables*)
+  												for i = 0 to List.length !l_variables1 -1 do
+  												if ( List.mem (List.nth !l_variables1 i) !l_variables2 ) = false then
+  												result := false;
+  												done;
+												*)
+  												
+  											
+  												!result;
+
+
+
+
+(*
+let isComparable_linear_terms term1 term2 variables_list =  let result = ref true in
+														 	
+													  	 	let a = match term1 with
+													  	 					| Coef c -> true
+																			(*| Coef coef -> ()
+																			| Pl linear_term * linear_term -> ()
+																			| Mi linear_term * linear_term -> ()
+																			| Ti coef * linear_term -> () *)
+																			| _ -> false
+															in
+															
+
+															let varList1 = pxd_find_variables variables_list term1 in
+													  	 	let varList2 = pxd_find_variables variables_list term2 in
+													  	 	if (List.length varList1 = List.length varList2)
+													  	 	then 
+													  	 		(* let dif = *)
+													  	 		(*List.nth varList1 0 = List.nth varList2 0*)
+													  	 		(*get_variable_coef_in_linear_term parameter_index linear_term*)
+													  	 		true
+													  	 	else 
+													  	 		false
+													  		;
+*)
+
+
+
 
 
 
@@ -3458,7 +3665,7 @@ detect form of linear_expression -> return the value:
 	+11: variable + coefficient
 	+21: coefficient*variable + coefficient
 *)
-
+(*
 let determine_linear_term term = match term with 
 	| Var var -> 1
 	| Coef coef -> 2 
@@ -3504,39 +3711,7 @@ let determine_linear_term term = match term with
 							)
 	| _ -> raise (SerializationError("error")) 
 	(* | _ -> 0 *)
-
-
-
-(*return true if 2 linear terms contain the same clocks*)
-let check_mutual_variables term1 term2 variables_list =	let l_variables1 = ref [] in
-														let l_variables2 = ref [] in
-														let result = ref true in
-														
-														for i = 1 to List.length variables_list do
-
-  															let clock_index = List.nth variables_list i in
-  															
-
-  															if ( (variable_in_linear_term clock_index term1) = true ) then
-  															l_variables1 := !l_variables1@[clock_index];
-  															
-  															if ( (variable_in_linear_term clock_index term2) = true ) then
-  															l_variables2 := !l_variables2@[clock_index];
-
-														done;
-														
-														(*compare number of elements in 2 variable lists*)
-  														if ((List.length !l_variables1) != (List.length !l_variables2)) then
-  														result := false;
-
-  														(*check 2 lists contain the same variables*)
-  														for i = 1 to List.length !l_variables1 do
-  															if ( List.mem (List.nth !l_variables1 i) !l_variables2 ) = false then
-  															result := false;
-  														done;
-  														!result;
-
-
+*)
 
 (*
 

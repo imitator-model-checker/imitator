@@ -575,6 +575,7 @@ let is_smaller_coeff coeff1 coeff2 =	let first_minus_second = Gmp.Z.compare (Num
 										else true
 										in 
 
+
 (*
 get lower upper-bound
 return a tupel (number, linear_term)
@@ -584,9 +585,18 @@ number:
 3: u1 is equal u2
 4: u1, u2 are incomparable
 *)
-let get_lower_upperbound (op1, term1) (op2, term2) =	
-														let coeff1	= LinearConstraint.get_coef term1 in
-														let coeff2	= LinearConstraint.get_coef term2 in 
+let get_lower_upperbound (op1, term1) (op2, term2) =	let isComparable = LinearConstraint.isComparable_linear_terms term1 term2 in
+
+														print_message Verbose_standard ("\n isComparable: " ^ string_of_bool isComparable );
+
+														let coeff1	= match LinearConstraint.get_coef term1 with
+														| [coeff1] -> coeff1
+														| _ -> raise (InternalError("Detected no coeff!!! "))
+														 in
+														let coeff2	= match LinearConstraint.get_coef term2 with
+														| [coeff2] -> coeff2
+														| _ -> raise (InternalError("Detected no coeff!!! "))
+														 in
 														
 														(*check the input, start*)
 														match (op1, coeff1), (op2, coeff2) with
@@ -623,8 +633,17 @@ let get_lower_upperbound (op1, term1) (op2, term2) =
 
 
 
-let is_smaller_linear_term term1 term2 =  let coeff1 =	LinearConstraint.get_coef term1 in
-														let coeff2 = LinearConstraint.get_coef term2 in 
+let is_smaller_linear_term term1 term2 =  
+														let coeff1	= match LinearConstraint.get_coef term1 with
+														| [coeff1] -> coeff1
+														| _ -> raise (InternalError("Detected no coeff!!! "))
+														 in
+														
+														let coeff2	= match LinearConstraint.get_coef term2 with
+														| [coeff2] -> coeff2
+														| _ -> raise (InternalError("Detected no coeff!!! "))
+														 in
+
 														let first_minus_second = get_smaller_coeff coeff1 coeff2 in
 														if ( NumConst.ge first_minus_second NumConst.zero ) 
 														then false
@@ -651,7 +670,11 @@ let is_smaller_linear_term term1 term2 =  let coeff1 =	LinearConstraint.get_coef
 							in *)
 
 
-(* simple funtion to covert from list of inequalities to list of tuple (clock; operator; linear expression) *)
+(* 
+Simple funtion to covert from list of inequalities to list of tuple (clock; operator; linear expression) 
+Note that: if there are True constraints, it will return back a list of clock greater than Zero
+This only uses to indicate clock smaller than INFINITE, not for lower-bound
+*)
 let convert_inequality_list_2_tuple_list inequalities =	let list_s0 = ref [] in 
 														match inequalities with 
 														(*True constraints -> list of clocks >= 0*)
@@ -739,7 +762,7 @@ let filter_upperbound_by_clock clock_index tuple_inequalities_s0 =
 let cub_check invariant_s0 guard_t invariant_s1 clock_updates = 	
 																(*ppl*)
 
-																print_message Verbose_standard (" CUB engine check, Start:");
+																print_message Verbose_standard (" CUB check, Start:");
 																print_message Verbose_standard ("\n");
 
 																let inequalities_s0 = LinearConstraint.pxd_get_inequalities invariant_s0 in
@@ -866,7 +889,7 @@ let cub_check invariant_s0 guard_t invariant_s1 clock_updates =
                 												) model.clocks; 
 
 																print_message Verbose_standard ("\n");
-																print_message Verbose_standard (" CUB engine check, End!");
+																print_message Verbose_standard (" CUB check, End!");
 																print_message Verbose_standard ("\n");
 
 																!isCUB_PTA;

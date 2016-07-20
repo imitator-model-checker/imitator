@@ -589,8 +589,19 @@ val test_PDBMs : unit -> unit
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 (** Gia's function for CUB **)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+(*for linear term*)
 val operator2string : op -> string
-val get_coef : p_linear_term -> coef
+
+(*for linear term*)
+val get_coef : p_linear_term -> coef list
+
+(*for linear term*)
+val get_var : p_linear_term -> variable list
+
+val get_coefs_vars : p_linear_term -> (coef*variable) list
+
+(*for linear term*)
+val isComparable_linear_terms : p_linear_term -> p_linear_term -> bool
 
 
 
