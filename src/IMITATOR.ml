@@ -743,11 +743,11 @@ let filter_upperbound_by_clock clock_index tuple_inequalities_s0 =
                 													);
 																done;
 																(*just for printing, start*)
-																if !index = 0
+																if !count = 0
 																then print_message Verbose_standard ("	Upper-bound not found:!, return clock  " ^ (model.variable_names clock_index) ^">= 0" );
 																(*just for printing, end*)
 																(* if there is no upper-bound -> reutrn (clock >= 0) *)
-																if !index = 0
+																if !count = 0
 																then
 																	( clock_index, LinearConstraint.Op_ge, LinearConstraint.make_p_linear_term [] NumConst.zero ) (* make_linear_term [] NumConst.zero) *)
 																else
