@@ -381,7 +381,11 @@ class imitator_options =
 				else if mode = "cover" then 
 					imitator_mode <- Cover_cartography
 					
-				(* Case: cover *)
+				(* Case: learning *)
+				else if mode = "coverlearning" then 
+					imitator_mode <- Learning_cartography
+					
+				(* Case: shuffle *)
 				else if mode = "shuffle" then 
 					imitator_mode <- Shuffle_cartography
 					
@@ -680,6 +684,7 @@ class imitator_options =
 				| Parametric_deadlock_checking -> "Parametric deadlock-checking"
 				| Inverse_method -> "inverse method"
 				| Cover_cartography -> "behavioral cartography algorithm with full coverage and step " ^ (NumConst.string_of_numconst !step)
+				| Learning_cartography -> "behavioral cartography algorithm with full coverage and step " ^ (NumConst.string_of_numconst !step) ^ " and using learning-based abstractions"
 				| Shuffle_cartography -> "behavioral cartography algorithm with full coverage (shuffled version) and step " ^ (NumConst.string_of_numconst !step)
 				| Border_cartography -> "behavioral cartography algorithm with border detection (experimental) and step " ^ (NumConst.string_of_numconst !step)
 				| Random_cartography nb -> "behavioral cartography algorithm with " ^ (string_of_int nb) ^ " random iterations and step " ^ (NumConst.string_of_numconst !step)
@@ -697,7 +702,7 @@ class imitator_options =
 			let in_cartography_mode =
 				match imitator_mode with
 				| Translation | State_space_exploration | EF_synthesis| Parametric_deadlock_checking | Inverse_method -> false
-				| Cover_cartography | Shuffle_cartography | Border_cartography | Random_cartography _  | RandomSeq_cartography _ -> true	
+				| Cover_cartography | Learning_cartography | Shuffle_cartography | Border_cartography | Random_cartography _  | RandomSeq_cartography _ -> true	
 			in
 			
 			
@@ -744,6 +749,9 @@ class imitator_options =
 			(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 			(* Check compatibility between options *) 
 			(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+			
+			(*** TODO: add warning if Learning_cartography is used with some incompatible options (such as -PRP) ***)
+			
 			if nb_args = 2 then(
 				if imitator_mode = Translation then
 					print_warning ("The pi0 file " ^ pi0file ^ " will be ignored since this is a translation.")
@@ -796,7 +804,7 @@ class imitator_options =
 				(*** NOTE: why this test??? better to warn if this option is used in another context ***)
 				begin
 				match imitator_mode with
-				| Inverse_method | Cover_cartography | Shuffle_cartography | Border_cartography | Random_cartography _ | RandomSeq_cartography _
+				| Inverse_method | Cover_cartography | Learning_cartography | Shuffle_cartography | Border_cartography | Random_cartography _ | RandomSeq_cartography _
 					-> print_message Verbose_standard ("Considering variant of IM with inclusion in the fixpoint [AS11].")
 				| _ -> print_message Verbose_standard ("Considering fixpoint variant with inclusion of symbolic zones (instead of equality).")
 				end

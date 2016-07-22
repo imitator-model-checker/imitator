@@ -213,6 +213,9 @@ type imitator_mode =
 	(** Cover the whole cartography *)
 	| Cover_cartography
 	
+	(** Cover the whole cartography using learning-based abstractions *)
+	| Learning_cartography
+	
 	(** Cover the whole cartography after shuffling point (mostly useful for the distributed IMITATOR) *)
 	| Shuffle_cartography
 	

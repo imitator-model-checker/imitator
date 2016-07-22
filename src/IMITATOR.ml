@@ -510,6 +510,14 @@ let algorithm : AlgoGeneric.algoGeneric = match options#imitator_mode with
 		let myalgo :> AlgoGeneric.algoGeneric = bc_algo in
 		myalgo
 	
+	(* BC with full coverage and learning-based abstractions *)
+	| Learning_cartography ->
+		let bc_algo = new AlgoBCCoverLearning.algoBCCoverLearning in
+		(*** NOTE: very important: the algo instance function should NOT be set for this algorithm (as it always uses EFsynth or PRP anyway) ***)
+(* 		bc_algo#set_algo_instance_function new_im_or_prp; *)
+		let myalgo :> AlgoGeneric.algoGeneric = bc_algo in
+		myalgo
+	
 	(* BC with full coverage (shuffled version) *)
 	| Shuffle_cartography ->
 		let bc_algo = new AlgoBCShuffle.algoBCShuffle in
