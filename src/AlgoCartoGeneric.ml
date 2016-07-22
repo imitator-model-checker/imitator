@@ -813,6 +813,35 @@ class virtual algoCartoGeneric =
 
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(* Call the algorithm on the current point (typically call IM or PRP) *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	method call_point =
+		(* Save the verbose mode as it may be modified *)
+		let global_verbose_mode = get_verbose_mode() in
+
+		(* Prevent the verbose messages (except in verbose medium, high or total) *)
+		(*------------------------------------------------------------*)
+		if not (verbose_mode_greater Verbose_medium) then
+			set_verbose_mode Verbose_mute;
+					
+		(* Call the algorithm to be iterated on (typically IM or PRP) *)
+		(*** NOTE: the bc time limit is NOT checked inside one execution of the algorithm to be iterated (but also note that the max execution time of the algorithm to be iterated is set to that of BC, in the Options pre-processing) ***)
+		current_algo_instance <- self#get_algo_instance_function ();
+		let imitator_result : imitator_result = current_algo_instance#run() in
+
+		(** Create auxiliary files with the proper file prefix, if requested *)
+		self#create_auxiliary_files imitator_result;
+
+		(* Get the verbose mode back *)
+		set_verbose_mode global_verbose_mode;
+		(*------------------------------------------------------------*)
+		
+		(* Return result *)
+		imitator_result
+		
+
+	
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Update termination condition, depending on the limit reached *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method update_termination_condition =
@@ -879,25 +908,8 @@ class virtual algoCartoGeneric =
 			(* Set the new pi0 *)
 			Input.set_pi0 (pi0);
 			
-			(* Save the verbose mode as it may be modified *)
-			let global_verbose_mode = get_verbose_mode() in
-			
-			(* Prevent the verbose messages (except in verbose medium, high or total) *)
-			(*------------------------------------------------------------*)
-			if not (verbose_mode_greater Verbose_medium) then
-				set_verbose_mode Verbose_mute;
-						
-			(* Call the algorithm to be iterated on (typically IM or PRP) *)
-			(*** NOTE: the bc time limit is NOT checked inside one execution of the algorithm to be iterated (but also note that the max execution time of the algorithm to be iterated is set to that of BC, in the Options pre-processing) ***)
-			current_algo_instance <- self#get_algo_instance_function ();
-			let imitator_result : imitator_result = current_algo_instance#run() in
-
-			(** Create auxiliary files with the proper file prefix, if requested *)
-			self#create_auxiliary_files imitator_result;
-
-			(* Get the verbose mode back *)
-			set_verbose_mode global_verbose_mode;
-			(*------------------------------------------------------------*)
+			(* Actual call to IM/PRP (or whatever) *)
+			let imitator_result = self#call_point in
 			
 			(* Create the abstraction of the result *)
 			let abstract_result = self#abstract_result imitator_result pi0 in
