@@ -93,7 +93,7 @@ class virtual algoCartoGeneric :
 		(************************************************************)
 		
 		(* Sets the function creating a new instance of the algorithm to call (typically IM or PRP) *)
-		method set_algo_instance_function : (unit -> AlgoIMK.algoIMK) -> unit
+		method set_algo_instance_function : (unit -> AlgoBFS.algoBFS) -> unit
 
 		
 		(************************************************************)

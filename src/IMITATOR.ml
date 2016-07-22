@@ -331,9 +331,10 @@ if options#imitator_mode = Inverse_method && options#branch_and_bound then(
 (*** TODO: also add IMK, etc., if needed ***)
 let new_im_or_prp =
 	if options#efim then
-		fun () -> new AlgoPRP.algoPRP
+		fun () ->
+		let myalgo :> AlgoBFS.algoBFS = new AlgoPRP.algoPRP in myalgo
 	else
-		fun () -> new AlgoIM.algoIM
+		fun () -> (*new AlgoIM.algoIM*)let myalgo :> AlgoBFS.algoBFS = new AlgoIM.algoIM in myalgo
 in
 
 

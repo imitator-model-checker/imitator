@@ -60,7 +60,7 @@ class virtual algoBCCoverDistributed =
 	
 	(*** BADPROG: code shared with AlgoBCCoverDistributedMSPointBased ***)
 	(* Sets the function creating a new instance of the algorithm to call (typically IM or PRP) *)
-	method set_algo_instance_function (f : unit -> AlgoIMK.algoIMK) : unit =
+	method set_algo_instance_function (f : unit -> AlgoBFS.algoBFS) : unit =
 		match algo_instance_function with
 		| Some _ -> 
 			raise (InternalError("algo_instance_function was already set in algoBCCoverDistributedMSPointBased."))

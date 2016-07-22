@@ -35,10 +35,10 @@ class virtual algoBCCoverDistributed :
 		(************************************************************)
 		
 		(* Sets the function creating a new instance of the algorithm to call (typically IM or PRP) *)
-		method set_algo_instance_function : (unit -> AlgoIMK.algoIMK) -> unit
+		method set_algo_instance_function : (unit -> AlgoBFS.algoBFS) -> unit
 
 		(* Get the function creating a new instance of the algorithm to call (typically IM or PRP) *)
-		method get_algo_instance_function : (unit -> AlgoIMK.algoIMK)
+		method get_algo_instance_function : (unit -> AlgoBFS.algoBFS)
 
 		
 		(************************************************************)
