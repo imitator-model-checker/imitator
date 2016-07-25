@@ -3463,8 +3463,148 @@ let rec isMinus linear_term =	(* let coef = ref NumConst.zero in *)
 								in
 								!b
 
+										
 
 (*for linear term*)
+let rec get_coefs_vars linear_term =
+										let coefs_vars = ref [] in
+										let _ = match linear_term with
+										| Coef c -> coefs_vars := !coefs_vars@[(9999, c)]
+										| Var v -> coefs_vars := !coefs_vars@[(v, NumConst.one)] (*()*)
+										| Pl (lterm, rterm) -> (
+			  								coefs_vars := !coefs_vars@get_coefs_vars lterm;
+											coefs_vars := !coefs_vars@get_coefs_vars rterm;
+											() )
+										| Mi (lterm, rterm) -> (
+			  								coefs_vars := !coefs_vars@get_coefs_vars lterm;
+											coefs_vars := !coefs_vars@get_coefs_vars rterm;
+											() )
+										| Ti (c1, rterm) -> (
+											match rterm with
+												| Var  v1 -> coefs_vars := !coefs_vars@[(v1, c1)]
+												| _ -> raise (InternalError("Could not detect RightTerm in Time*RightTerm error 'get_coefs_vars' function")) )
+										| _ -> raise (InternalError("Detection error 'get_coefs_vars' function"))
+										in 
+
+										!coefs_vars
+
+
+
+(* check whether list of coefs contains a negative coef*)
+let is_mem_in_coef_list_less_than_zero	list_coef	=	let result = ref false in
+														List.iter (fun coef ->
+															if (NumConst.l coef NumConst.zero)
+															then (
+																result := true; 
+																print_message Verbose_standard ("\n	 coef: "^ NumConst.string_of_numconst coef ^" less than 0");
+																);
+
+														) list_coef;
+														!result
+
+(* check whether vars in liear term 1 is a subset of linear term 2 *)
+let is_var_subset var_list1 var_list2 = 	let result = ref true in
+											let all_coef_greater_1 = ref true in
+											List.iter (fun var ->
+												if not (List.mem var var_list2) 
+												then (
+													result := false;
+													print_message Verbose_standard ("\n	 the var1: "^ string_of_int var ^" is not in var_list2 ");
+													);
+
+												) var_list1;
+											!result
+
+let is_all_smaller_mems coefs_vars1 coefs_vars2 = 	let result = ref true in
+													List.iter (fun (var1, coef1) ->
+														let coef2 = List.assoc var1 coefs_vars2 in
+														if NumConst.g coef1 coef2
+														then result := false
+													) coefs_vars1; 
+													!result
+
+
+
+(*return true if 2 linear terms contain the same clocks*)
+let isComparable_linear_terms term1 term2 	=	
+												let result = ref true in
+
+												print_message Verbose_standard ("\n	 Analyzing!!!!!");
+
+												let coefs_vars1 = get_coefs_vars term1 in
+												(*length of linear term 1*)
+												let length_coefs_vars1 = (List.length coefs_vars1)*2 in
+
+
+												let coefs_vars2 = get_coefs_vars term2 in
+												(*length of linear term 2*)
+												let length_coefs_vars2 = (List.length coefs_vars2)*2 in
+
+
+												print_message Verbose_standard ("\n	 Linear term 1:");
+												print_message Verbose_standard ("\n	 length:" ^ (string_of_int length_coefs_vars1) );
+												
+												print_message Verbose_standard ("\n	 Linear term2:");
+												print_message Verbose_standard ("\n	 length:" ^ (string_of_int length_coefs_vars2) );
+												
+
+												(*check if there have minus operation inside the linear term or coeff < 0*)
+												let checkMinus1 = isMinus term1 in
+												let checkMinus2 = isMinus term2 in		
+
+												(*check whether the both linear terms contain negative coef*)
+												let (vars1, coefs1) = List.split coefs_vars1 in
+												let (vars2, coefs2) = List.split coefs_vars2 in
+												let less_than_zero1 = is_mem_in_coef_list_less_than_zero coefs1 in
+												let less_than_zero2 = is_mem_in_coef_list_less_than_zero coefs2 in
+												
+												(*check*)
+												if (checkMinus1 || checkMinus2 || less_than_zero1 || less_than_zero2) 
+												then
+													let _ = result := false in 
+													print_message Verbose_standard ("\n	 Contain Minus Sign!!!!!")
+												else
+													print_message Verbose_standard ("\n	 Not Contain Minus Sign!!!!!");
+												
+
+												(*check whether 1/2 is subset of the other*)
+												let vars_temp1 = ref [] in
+												let vars_temp2 = ref [] in
+												let smaller_term = ref 0 in 
+												if !result = true
+												then (
+												if length_coefs_vars1 - length_coefs_vars2 <= 0 
+												then
+													if is_var_subset vars1 vars2 
+													then smaller_term := 1
+													else smaller_term := 0
+												else
+													if is_var_subset vars2 vars1 
+													then smaller_term := 2
+													else smaller_term := 0;
+
+												match !smaller_term with 
+												| 0 -> result := false
+												| 1 -> vars_temp1 := coefs_vars1; vars_temp2 := coefs_vars2
+												| 2 -> vars_temp1 := coefs_vars2; vars_temp2 := coefs_vars1
+												| _ -> raise (InternalError("Error Detected!!"));		
+												);
+
+												(*this conditon will check whether a set of vars in linear_term1/2 is subset of linear_term2/1 *)
+												if !result = true
+												then (
+													(*can not uncomment the line below!!! don't know why? attention!!!*)
+													if is_all_smaller_mems !vars_temp1 !vars_temp2 = false
+													then result := false
+												);
+
+  												(!result,!smaller_term);
+
+
+
+(*
+(*for linear term*)
+(*in case we have more than 1 coef, we can sum them up into one*)
 let rec get_coef linear_term =	(* let coef = ref NumConst.zero in *)
 										
 								match linear_term with
@@ -3482,284 +3622,24 @@ let rec get_coef linear_term =	(* let coef = ref NumConst.zero in *)
 								| _ -> raise (InternalError("Detection error 'get_coef' function"))
 
 
+
 (*for linear term, can not use 'option' for this! *)
 let rec get_var linear_term =	(* let coef = ref NumConst.zero in *)
-										
-								match linear_term with
-								| Coef c -> []
-								| Var v -> [v]
+								let single_vars = ref [] in	
+								let _ = match linear_term with
+								| Coef c -> ()
+								| Var v -> single_vars := !single_vars@[v]
 								| Pl (lterm, rterm) -> (
-			  						get_var lterm;
-									get_var rterm;
+			  						single_vars := !single_vars@get_var lterm;
+									single_vars := !single_vars@get_var rterm;
 								)
 								| Mi (lterm, rterm) -> (
-									get_var lterm;
-									get_var rterm;
+									single_vars := !single_vars@get_var lterm;
+									single_vars := !single_vars@get_var rterm;
 								)
-								| Ti (c1, rterm) -> []
+								| Ti (c1, rterm) -> ()
 								| _ -> raise (InternalError("Detection error 'get_var' function"))
-										
+								in
 
-(*for linear term*)
-let rec get_coefs_vars linear_term =
-										let coefs_vars = ref [] in
-										let _ = match linear_term with
-										| Coef c ->()
-										| Var v -> ()
-										| Pl (lterm, rterm) -> (
-			  								coefs_vars := !coefs_vars@get_coefs_vars lterm;
-											coefs_vars := !coefs_vars@get_coefs_vars rterm;
-											() )
-										| Mi (lterm, rterm) -> (
-			  								coefs_vars := !coefs_vars@get_coefs_vars lterm;
-											coefs_vars := !coefs_vars@get_coefs_vars rterm;
-											() )
-										| Ti (c1, rterm) -> (
-											match rterm with
-												| Var  v1 -> coefs_vars := !coefs_vars@[(c1, v1)]
-												| _ -> raise (InternalError("Could not detect RightTerm in Time*RightTerm error 'get_coefs_vars' function")) )
-										| _ -> raise (InternalError("Detection error 'get_coefs_vars' function"))
-										in 
-
-										!coefs_vars
-
-
-
-(* let filter_coefs_vars coefs vars = 		List.iter () coefs *)
-
-
-
-
-
-
-(*return true if 2 linear terms contain the same clocks*)
-let isComparable_linear_terms term1 term2 	=	
-												let result = ref true in
-
-												print_message Verbose_standard ("\n	 Analyzing!!!!!");
-												let coefs_vars1 = get_coefs_vars term1 in
-												let var1 = get_var term1 in
-												let coef1 = get_coef term1 in
-
-												(*length of linear term 1*)
-												let length_coefs_vars1 = (List.length coefs_vars1)*2 in
-												let length_var1 = List.length var1 in
-												let length_coef1 = List.length coef1 in
-												let length_total_1 = length_coefs_vars1 + length_var1 + length_coef1 in
-
-												let coefs_vars2 = get_coefs_vars term2 in
-												let var2 = get_var term2 in
-												let coef2 = get_coef term2 in
-
-												(*length of linear term 2*)
-												let length_coefs_vars2 = (List.length coefs_vars2)*2 in
-												let length_var2 = List.length var2 in
-												let length_coef2 = List.length coef2 in
-												let length_total_2 = length_coefs_vars2 + length_var2 + length_coef2 in
-
-												
-												print_message Verbose_standard ("\n	 Linear term 1:");
-												print_message Verbose_standard ("\n	 length:" ^ (string_of_int length_total_1) );
-
-												
-												print_message Verbose_standard ("\n	 Linear term2:");
-												print_message Verbose_standard ("\n	 length:" ^ (string_of_int length_total_2) );
-												
-												
-
-												(*check if the list of single var of coef is larger than 1*)
-												if ( length_var1 > 1 || length_coef1 > 1 || length_var2 > 1 || length_coef2 > 1 )
-												then raise (InternalError("There is problem with getting single variable or get_coefficient!!!")) ;
-												
-
-
-												(*Main checking*)
-												let _ =
-												(*check numbers of elements of 2 linear terms*)
-												if length_total_1 = length_total_2 
-												then
-													(*can not uncomment the line below!!! don't know why? attention!!!*)
-													(* print_message Verbose_standard ("\n	 numbers of elements of 2 linear terms are equal!!!!!") *)
-
-													(*check if there have minus operation inside the linear term or coeff < 0*)
-													let checkMinus1 = isMinus term1 in
-													let checkMinus2 = isMinus term2 in		
-
-													print_message Verbose_standard ("\n	 numbers of elements of 2 linear terms are equal!!!!!");
-													
-													if (checkMinus1 || checkMinus2) 
-													then
-														let _ = result := false in 
-														print_message Verbose_standard ("\n	 Contain Minus Operation!!!!!")
-													else
-														print_message Verbose_standard ("\n	 Not Contain Minus Operation!!!!!");
-													
-			
-													(*Compare each element*)
-													let (coefs1, vars1) = List.split coefs_vars1 in
-													let (coefs2, vars2) = List.split coefs_vars2 in
-													(*linear term 1*)
-													List.iter (fun (coef1, var1) ->
-														if (NumConst.l coef1 NumConst.zero)
-														then (
-															result := false; 
-															print_message Verbose_standard ("\n	 coef1: "^ NumConst.string_of_numconst coef1 ^" less than 0");
-															);
-
-														if not (List.mem var1 vars2) 
-														then (
-															result := false;
-															print_message Verbose_standard ("\n	 the var1: "^ string_of_int var1 ^" is not in vars2 ");
-															);
-
-													) coefs_vars1;
-
-													(*linear term 2*)
-													List.iter (fun (coef2, var2) ->
-														if (NumConst.l coef2 NumConst.zero)
-														then (
-															result := false;
-															print_message Verbose_standard ("\n	 coef2: "^ NumConst.string_of_numconst coef2 ^" less than 0");
-															);
-
-														if not (List.mem var2 vars1) 
-														then (
-															result := false;
-															print_message Verbose_standard ("\n	 the var2: "^ string_of_int var2 ^" is not in vars1 ");
-															);
-
-													) coefs_vars2;
-
-
-													(*check single var*)
-													(* note: have to implement with more than 1 single var*)
-													if var1 != var2 
-													then (
-														print_message Verbose_standard ("\n	 the single var1: "^ string_of_int (List.hd var1)
-																						^" the single var2: "^ string_of_int (List.hd var2) 
-																						^" are not equal!!!");
-														result := false;
-														);
-
-
-
-
-
-												else
-													let _ = result := false in 
-													print_message Verbose_standard ("\n	 numbers of elements of 2 linear terms are not equal!!!!!"); 
-												in
-  												
-  											
-  												!result;
-
-
-
-
-(*
-let isComparable_linear_terms term1 term2 variables_list =  let result = ref true in
-														 	
-													  	 	let a = match term1 with
-													  	 					| Coef c -> true
-																			(*| Coef coef -> ()
-																			| Pl linear_term * linear_term -> ()
-																			| Mi linear_term * linear_term -> ()
-																			| Ti coef * linear_term -> () *)
-																			| _ -> false
-															in
-															
-
-															let varList1 = pxd_find_variables variables_list term1 in
-													  	 	let varList2 = pxd_find_variables variables_list term2 in
-													  	 	if (List.length varList1 = List.length varList2)
-													  	 	then 
-													  	 		(* let dif = *)
-													  	 		(*List.nth varList1 0 = List.nth varList2 0*)
-													  	 		(*get_variable_coef_in_linear_term parameter_index linear_term*)
-													  	 		true
-													  	 	else 
-													  	 		false
-													  		;
+								!single_vars
 *)
-
-
-
-
-
-
-(*
-detect form of linear_expression -> return the value:
-0: can not compare (more complicated)
-1: single variable
-2: single coefficient
-3: coefficient*variable with coefficient!=0
-4:  +01: problem with lterm
-	+11: variable + coefficient
-	+21: coefficient*variable + coefficient
-5:  +01: problem with lterm
-	+11: variable + coefficient
-	+21: coefficient*variable + coefficient
-*)
-(*
-let determine_linear_term term = match term with 
-	| Var var -> 1
-	| Coef coef -> 2 
-	| Ti (lterm, rterm) -> (
-					match rterm with
-						| Var var -> 3;
-						| _ -> raise (InternalError("check var after z")); 
-						(* | _ -> 0 *)
-							)
-	| Pl (lterm, rterm) -> (
-					match rterm with
-						| Coef coef -> 401;
-						| _ -> raise (InternalError("check var after z")); 
-						(* | _ -> 0 *)
-
-					match lterm with
-						| Var var -> 411;
-						| Ti (lterm, rterm) -> (
-										match rterm with
-											| Var var -> 421;
-											| _ -> raise (InternalError("check var after z")); 
-											(* | _ -> 0 *)
-												)
-						| _ -> raise (InternalError("check var after z")); 
-						(* | _ -> 0 *)
-							)
-	| Mi (lterm, rterm) -> (
-					match rterm with
-						| Coef coef -> 501;
-						| _ -> raise (InternalError("check var after z")); 
-						(* | _ -> 0 *)
-
-					match lterm with
-						| Var var -> 511;
-						| Ti (lterm, rterm) -> (
-										match rterm with
-											| Var var -> 521;
-											| _ -> raise (InternalError("check var after z")); 
-											(* | _ -> 0 *)
-												)
-						| _ -> raise (InternalError("check var after z")); 
-						(* | _ -> 0 *)
-							)
-	| _ -> raise (SerializationError("error")) 
-	(* | _ -> 0 *)
-*)
-
-(*
-
-let check_comparable term1 term2 =	let no_term1 = determine_linear_term term1 in
-									let no_term2 = determine_linear_term term2 in
-
-									match no_term1, no_term2 with 
-									| 1, 1 -> 1 
-									| 2, 2 -> if 1
-									| 411, 411 -> if  *)
-
-(* 
-
-let get_coefficient_in_linear_term2 a =
-	let lex = (normalize_linear_term a) in () ;;
-	(* get_coefficient_in_linear_term linear_expression *)  *)

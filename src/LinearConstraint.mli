@@ -592,16 +592,11 @@ val test_PDBMs : unit -> unit
 (*for linear term*)
 val operator2string : op -> string
 
-(*for linear term*)
-val get_coef : p_linear_term -> coef list
+
+val get_coefs_vars : p_linear_term -> (variable*coef) list
 
 (*for linear term*)
-val get_var : p_linear_term -> variable list
-
-val get_coefs_vars : p_linear_term -> (coef*variable) list
-
-(*for linear term*)
-val isComparable_linear_terms : p_linear_term -> p_linear_term -> bool
+val isComparable_linear_terms : p_linear_term -> p_linear_term -> (bool*int)
 
 
 

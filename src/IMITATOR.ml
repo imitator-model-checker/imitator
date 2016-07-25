@@ -585,89 +585,31 @@ number:
 3: u1 is equal u2
 4: u1, u2 are incomparable
 *)
-let get_lower_upperbound (op1, term1) (op2, term2) =	let isComparable = LinearConstraint.isComparable_linear_terms term1 term2 in
-
+let get_lower_upperbound (op1, term1) (op2, term2) =	let (isComparable, linear_term_number ) = LinearConstraint.isComparable_linear_terms term1 term2 in
 														print_message Verbose_standard ("\n isComparable: " ^ string_of_bool isComparable );
-
-														let coeff1	= match LinearConstraint.get_coef term1 with
-														| [coeff1] -> coeff1
-														| _ -> raise (InternalError("Detected no coeff!!! "))
-														 in
-														let coeff2	= match LinearConstraint.get_coef term2 with
-														| [coeff2] -> coeff2
-														| _ -> raise (InternalError("Detected no coeff!!! "))
-														 in
-														
 														(*check the input, start*)
-														match (op1, coeff1), (op2, coeff2) with
-														 (LinearConstraint.Op_ge, _), (LinearConstraint.Op_ge, _)	-> raise (InternalError("Detected lower bounded contraints in both inputs!!! "))
-														|(LinearConstraint.Op_g , _), (LinearConstraint.Op_ge, _)	-> raise (InternalError("Detected lower bounded contraints in both inputs!!! "))
-														|(LinearConstraint.Op_ge, _), (LinearConstraint.Op_g , _)	-> raise (InternalError("Detected lower bounded contraints in both inputs!!! "))
-														|(LinearConstraint.Op_g , _), (LinearConstraint.Op_g , _)	-> raise (InternalError("Detected lower bounded contraints in both inputs!!! "))
+														match op1, op2 with
+														| LinearConstraint.Op_ge, LinearConstraint.Op_ge-> raise (InternalError("Detected lower bounded contraints in both inputs!!! "))
+														| LinearConstraint.Op_g, LinearConstraint.Op_ge	-> raise (InternalError("Detected lower bounded contraints in both inputs!!! "))
+														| LinearConstraint.Op_ge, LinearConstraint.Op_g	-> raise (InternalError("Detected lower bounded contraints in both inputs!!! "))
+														| LinearConstraint.Op_g, LinearConstraint.Op_g 	-> raise (InternalError("Detected lower bounded contraints in both inputs!!! "))
 
-														|(LinearConstraint.Op_ge, _), _								-> raise (InternalError("Detected lower bounded contraints in the first input!!! "))
-														|(LinearConstraint.Op_g , _), _								-> raise (InternalError("Detected lower bounded contraints in the first input!!! "))
-														| _		  					, (LinearConstraint.Op_ge, _)	-> raise (InternalError("Detected lower bounded contraints in the second input!!! "))
-														| _		  					, (LinearConstraint.Op_g , _)	-> raise (InternalError("Detected lower bounded contraints in the second input!!! "))
+														| LinearConstraint.Op_ge, _						-> raise (InternalError("Detected lower bounded contraints in the first input!!! "))
+														| LinearConstraint.Op_g, _						-> raise (InternalError("Detected lower bounded contraints in the first input!!! "))
+														| _		  			, LinearConstraint.Op_ge	-> raise (InternalError("Detected lower bounded contraints in the second input!!! "))
+														| _		  				, LinearConstraint.Op_g	-> raise (InternalError("Detected lower bounded contraints in the second input!!! "))
 														(*check the input, end*)
-														| _		  					, _								-> 
+														| _		  					, _					-> 
+																											match  (isComparable, linear_term_number ) with
+																											| true, 1 -> (match (op1, op2) with
+																															| (LinearConstraint.Op_le), (LinearConstraint.Op_l)	-> (2, op2, term2)
+																															| _						  , _						-> (1, op1, term1) );
+																											| true, 2 -> (match (op2, op1) with
+																															| (LinearConstraint.Op_le), (LinearConstraint.Op_l)	-> (1, op1, term1)
+																															| _						  , _						-> (2, op2, term2) );
+																											| false, _ -> (0, op1, term1);
+														in
 
-														
-														(*case 2: u1 and u2 are equal*)
-														(*test for the constant need for parameter*)
-														if ( NumConst.equal coeff1 coeff2 ) 
-														then 
-															match (op1, op2) with
-															  (LinearConstraint.Op_l) , (LinearConstraint.Op_le) 	-> (1, op1, term1)
-															| (LinearConstraint.Op_le), (LinearConstraint.Op_l)		-> (2, op2, term2)
-															| _						  , _							-> (3, op1, term1)
-														(*case 2: u1 and u2 are not equal*)
-														else 
-															if ( is_smaller_coeff coeff1 coeff2 )
-															then (1, op1, term1)
-															else (2, op2, term2)
-														
-
-														in 
-
-
-
-
-let is_smaller_linear_term term1 term2 =  
-														let coeff1	= match LinearConstraint.get_coef term1 with
-														| [coeff1] -> coeff1
-														| _ -> raise (InternalError("Detected no coeff!!! "))
-														 in
-														
-														let coeff2	= match LinearConstraint.get_coef term2 with
-														| [coeff2] -> coeff2
-														| _ -> raise (InternalError("Detected no coeff!!! "))
-														 in
-
-														let first_minus_second = get_smaller_coeff coeff1 coeff2 in
-														if ( NumConst.ge first_minus_second NumConst.zero ) 
-														then false
-														else true
-														in 
-
-
-
-
-
-
-
-
-(* Integer *)
-(* let get_the_lowerest_linear_term lis = 	let lis_length = List.length lis in 
-							let count = ref 2 in
-							let result = ref (List.nth lis 1) in 
-							
-							while ( !count != lis_length ) do
-							result := (get_lower_linear_term (!result) (List.nth lis !count)) ;
-							count := !count +1;
-							done;
-							!result
-							in *)
 
 
 (* 
@@ -895,44 +837,6 @@ let cub_check invariant_s0 guard_t invariant_s1 clock_updates =
 																!isCUB_PTA;
 																in
 
-
-
-(* let rec upper_bounded_clock_filter inequalities =
-							let ls = None in 
-							match inequalities with 
-							[] -> ls
-							| h::l -> let (clock_index, operator, parametric_linear_term) = LinearConstraint.clock_guard_of_linear_inequality h in 
-
-							(* print_message Verbose_standard ("df" ^(ModelPrinter.string_of_var_type (model.type_of_variables clock_index) )^ " gdf"); *)
-							let clockString = model.variable_names clock_index in
-							let operatorString = LinearConstraint.operator2string operator in
-							let parametric_linear_termString = LinearConstraint.string_of_p_linear_term model.variable_names parametric_linear_term in
-
-							print_message Verbose_standard ("   Detecting upper-bounded clock: " 
-															^ clockString 
-															^ operatorString
-															^ parametric_linear_termString );
-
-							(* if (operatorString = "<" or operatorString = "<=")  
-							then (print_message Verbose_standard ("     => Clock: " ^ clockString ^ " bounded by (" ^ parametric_linear_termString ^ ")!" ) ); *)
-							ls::[(clock_index, operator, parametric_linear_term)];
-
-							ls::(upper_bounded_clock_filter l) in *)
-
-(* let upper_bounded_clock_filter inequalities =
-	let inequalities_length = (List.length inequalities) in 
-	let count = ref inequalities_length in
-	let lis = ref [] in 
-	while (!count != 0) do
-		count := !count -1;
-		let inequality = List.nth inequalities (inequalities_length - !count) in
-		let (clock_index, operator, parametric_linear_term) = LinearConstraint.clock_guard_of_linear_inequality inequality in
-		let tuple = (clock_index, operator, parametric_linear_term) in 
-		lis := !lis::tuple;
-	done
-
-
-in *)
 
 
 
