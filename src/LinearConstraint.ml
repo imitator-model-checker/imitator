@@ -3555,11 +3555,15 @@ let isComparable_linear_terms term1 term2 	=
 												(*check whether the both linear terms contain negative coef*)
 												let (vars1, coefs1) = List.split coefs_vars1 in
 												let (vars2, coefs2) = List.split coefs_vars2 in
+												
+												(*
 												let less_than_zero1 = is_mem_in_coef_list_less_than_zero coefs1 in
 												let less_than_zero2 = is_mem_in_coef_list_less_than_zero coefs2 in
+												*)
 												
 												(*check*)
-												if (checkMinus1 || checkMinus2 || less_than_zero1 || less_than_zero2) 
+												(* if (checkMinus1 || checkMinus2 || less_than_zero1 || less_than_zero2) *)
+												if (checkMinus1 || checkMinus2) 
 												then
 													let _ = result := false in 
 													print_message Verbose_standard ("\n	 Contain Minus Sign!!!!!")

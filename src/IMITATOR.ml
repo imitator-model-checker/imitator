@@ -703,7 +703,7 @@ let filter_upperbound_by_clock clock_index tuple_inequalities_s0 =
 
 let cub_check invariant_s0 guard_t invariant_s1 clock_updates = 	
 																(*ppl*)
-
+																let inequalities_need_to_solve = ref [] in
 																print_message Verbose_standard (" CUB check, Start:");
 																print_message Verbose_standard ("\n");
 
@@ -747,14 +747,13 @@ let cub_check invariant_s0 guard_t invariant_s1 clock_updates =
 
                 													(* if List.mem clock_index reset_clocks = true 
                 													then lower_inequality := linear_term_t; *)
-
-
+                
                 													(* let result = ref true in *)
                 													let result = match (op_s0, linear_term_s0), (op_t, linear_term_t), (op_s1, linear_term_s1) with
 
 														 			 (LinearConstraint.Op_ge, _), (LinearConstraint.Op_ge, _), (LinearConstraint.Op_ge, _)	->	true;
 
-														 			|(LinearConstraint.Op_ge, _), _							 , (LinearConstraint.Op_ge, _)	->	false; 
+														 			|(LinearConstraint.Op_ge, _), _							 , (LinearConstraint.Op_ge, _)	->	false;
 
 														 			|(LinearConstraint.Op_ge, _), (LinearConstraint.Op_ge, _), _							->	(*reset*)
 														 																										if List.mem clock_index clock_updates = true
@@ -767,7 +766,9 @@ let cub_check invariant_s0 guard_t invariant_s1 clock_updates =
 														 																											true
 														 																									
 														 																										else
+														 																											(
 														 																											false;
+														 																											);
 
 														 			|(LinearConstraint.Op_ge, _), _							 , _							-> 	(*reset but useless*)
 														 																										false; 
@@ -790,9 +791,16 @@ let cub_check invariant_s0 guard_t invariant_s1 clock_updates =
 														 																											true
 														 																										else
  																																									let (typ, op, term) = get_lower_upperbound (op_s0, linear_term_s0)  (op_s1, linear_term_s1) in
-														 																											if typ = 1
+														 																											(*if typ = 1
 														 																												then true
-														 																												else false;
+														 																												else false;*)
+														 																											(
+														 																											match typ with
+														 																											| 0 -> (inequalities_need_to_solve := !inequalities_need_to_solve@[(op_s0, linear_term_s0); (op_s1, linear_term_s1)] ; 
+														 																													false);
+														 																											| 1 -> true
+														 																											| 2 -> false;
+														 																											);
 
 														 			| _							, _							 , _							-> 	(*reset*)
 														 																										let (typ, op, term) = if List.mem clock_index clock_updates = true
@@ -808,9 +816,16 @@ let cub_check invariant_s0 guard_t invariant_s1 clock_updates =
 														 																											let (typ2, op2, term2) = get_lower_upperbound (op_s0, linear_term_s0) (op1, term1) in
 														 																											(typ2, op2, term2) in
 
-														 																										if typ = 1
+														 																											(*if typ = 1
 														 																												then true
-														 																												else false;
+														 																												else false;*)
+														 																											(
+														 																											match typ with
+														 																											| 0 -> (inequalities_need_to_solve := !inequalities_need_to_solve@[(op_s0, linear_term_s0); (op_s1, linear_term_s1)] ; 
+														 																													false);
+														 																											| 1 -> true
+														 																											| 2 -> false;
+														 																											);
 
 
 														 			in
@@ -834,13 +849,15 @@ let cub_check invariant_s0 guard_t invariant_s1 clock_updates =
 																print_message Verbose_standard (" CUB check, End!");
 																print_message Verbose_standard ("\n");
 
-																!isCUB_PTA;
+																(!isCUB_PTA, !inequalities_need_to_solve);
 																in
 
 
 
 
+
 let isCUB_PTA = ref true in
+let inequalities_need_to_solve = ref [] in
 
 (*main function for CUB-PTA*)
 List.iter (fun automaton_index -> print_message Verbose_standard ("Automaton: " ^ (model.automata_names automaton_index) );
@@ -900,12 +917,13 @@ List.iter (fun automaton_index -> print_message Verbose_standard ("Automaton: " 
 												| Resets clock_update -> clock_update
 												| Updates clock_update_with_linear_expression -> raise (InternalError(" Clock_update are not supported currently! ")); in
 
-                			let result = ref true in
+                			(*let result = ref true in*)
 
 
-                			result := cub_check invariant1 guard invariant2 clock_updates;
+                			let (result, inequalities) = cub_check invariant1 guard invariant2 clock_updates in
                 			
-                			if !result = false
+                			inequalities_need_to_solve := !inequalities_need_to_solve@inequalities;
+                			if result = false
 							then
     							isCUB_PTA := false;
 
@@ -933,7 +951,17 @@ if !isCUB_PTA = true
 then
     print_message Verbose_standard ("   The model is CUB-PTA! ")
 else 
-    print_message Verbose_standard ("   The model is not CUB-PTA! ") ;
+	(
+	if (!inequalities_need_to_solve = [])
+	then 
+    	print_message Verbose_standard ("   The model is impossible CUB-PTA! ") 
+    else
+    	print_message Verbose_standard ("   The model is possible CUB-PTA! \nbut you need to solve the inequalities below!!: ") ;
+    	List.iter (fun (op, linear_term) -> 
+    		print_message Verbose_standard ( (LinearConstraint.operator2string op) ^ " " ^ (LinearConstraint.string_of_p_linear_term model.variable_names linear_term) );
+    	) !inequalities_need_to_solve
+    );
+
 
 
 terminate_program();
