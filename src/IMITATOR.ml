@@ -921,6 +921,9 @@ List.iter (fun automaton_index -> print_message Verbose_standard ("Automaton: " 
 
 
                 			let (result, inequalities) = cub_check invariant1 guard invariant2 clock_updates in
+
+                			if !isCUB_PTA = false && !inequalities_need_to_solve = []
+                			then raise (InternalError("   The model is impossible CUB-PTA! "));
                 			
                 			inequalities_need_to_solve := !inequalities_need_to_solve@inequalities;
                 			if result = false
@@ -952,10 +955,10 @@ then
     print_message Verbose_standard ("   The model is CUB-PTA! ")
 else 
 	(
-	if (!inequalities_need_to_solve = [])
+	(*if (!inequalities_need_to_solve = [])
 	then 
     	print_message Verbose_standard ("   The model is impossible CUB-PTA! ") 
-    else
+    else*)
     	print_message Verbose_standard ("   The model is possible CUB-PTA! \nbut you need to solve the inequalities below!!: ") ;
     	List.iter (fun (op, linear_term) -> 
     		print_message Verbose_standard ( (LinearConstraint.operator2string op) ^ " " ^ (LinearConstraint.string_of_p_linear_term model.variable_names linear_term) );
