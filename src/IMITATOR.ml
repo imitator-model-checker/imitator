@@ -790,6 +790,7 @@ let cub_check invariant_s0 guard_t invariant_s1 clock_updates =
 														 																											in
 														 																											true
 														 																										else
+														 																											(
  																																									let (typ, op, term) = get_lower_upperbound (op_s0, linear_term_s0)  (op_s1, linear_term_s1) in
 														 																											(*if typ = 1
 														 																												then true
@@ -801,31 +802,52 @@ let cub_check invariant_s0 guard_t invariant_s1 clock_updates =
 														 																											| 1 -> true
 														 																											| 2 -> false;
 														 																											);
+														 																											);
 
 														 			| _							, _							 , _							-> 	(*reset*)
-														 																										let (typ, op, term) = if List.mem clock_index clock_updates = true
+														 																										if List.mem clock_index clock_updates = true
 														 																										then
 														 																											let (typ2, op2, term2) = get_lower_upperbound (op_s0, linear_term_s0) (op_t, linear_term_t) in
 														 																											print_message Verbose_standard (" 	 Detected " 
 														 																																			^ (model.variable_names clock_index) 
 														 																																			^ " was a reset clock!\n 	 skipping the process: (" 
 														 																																			^ t_upperbound_str ^ ") /\\ (" ^ s1_upperbound_str ^ ")!" ); 
-														 																											(typ2, op2, term2)
-														 																										else
-														 																											let (typ1, op1, term1) = get_lower_upperbound (op_t, linear_term_t)  (op_s1, linear_term_s1) in
-														 																											let (typ2, op2, term2) = get_lower_upperbound (op_s0, linear_term_s0) (op1, term1) in
-														 																											(typ2, op2, term2) in
-
-														 																											(*if typ = 1
-														 																												then true
-														 																												else false;*)
 														 																											(
-														 																											match typ with
-														 																											| 0 -> (inequalities_need_to_solve := !inequalities_need_to_solve@[(op_s0, linear_term_s0); (op_s1, linear_term_s1)] ; 
-														 																													false);
+														 																											match typ2 with
+														 																											| 0 -> (inequalities_need_to_solve := !inequalities_need_to_solve@[(op_s0, linear_term_s0); (op_t, linear_term_t)] ; 
+														 																														false);
 														 																											| 1 -> true
 														 																											| 2 -> false;
 														 																											);
+														 																										else
+														 																											(
+														 																											let (typ1, op1, term1) = get_lower_upperbound (op_t, linear_term_t)  (op_s1, linear_term_s1) in 
+														 																											(
+														 																											match typ1 with
+														 																											| 0 -> (inequalities_need_to_solve := !inequalities_need_to_solve@[(op_t, linear_term_t); (op_s1, linear_term_s1)] ; 
+														 																														false);
+														 																											| 1 -> true
+														 																											| 2 -> false;
+														 																											);
+
+														 																											if typ1 != 2
+														 																											then 
+														 																												let (typ2, op2, term2) = get_lower_upperbound (op_s0, linear_term_s0) (op1, term1) in
+														 																												match typ2 with
+														 																												| 0 -> (inequalities_need_to_solve := !inequalities_need_to_solve@[(op_s0, linear_term_s0); (op1, term1)] ; 
+														 																															false);
+														 																												| 1 -> true
+														 																												| 2 -> false
+														 																											else
+														 																												false
+														 																											);
+
+														 																										
+														 																									
+
+														 																										
+
+
 
 
 														 			in

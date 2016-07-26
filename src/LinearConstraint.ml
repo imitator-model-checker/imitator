@@ -3577,21 +3577,59 @@ let isComparable_linear_terms term1 term2 	=
 												let smaller_term = ref 0 in 
 												if !result = true
 												then (
-												if length_coefs_vars1 - length_coefs_vars2 <= 0 
+
+												if length_coefs_vars1 - length_coefs_vars2 = 0 
 												then
+													(
+													print_message Verbose_standard ("\n	 length_coefs_vars1 - length_coefs_vars2 = 0!!!!!");
+													if is_var_subset vars2 vars1 && is_var_subset vars1 vars2 
+													then (
+														print_message Verbose_standard ("\n	 is_var_subset vars2 vars1 && is_var_subset vars1 vars2!!!!!");
+														if is_all_smaller_mems coefs_vars1 coefs_vars2
+														then
+															(
+															smaller_term := 1;
+															print_message Verbose_standard ("\n	 is_all_smaller_mems coefs_vars1 coefs_vars2!!!!!");
+															)
+														else
+															(
+															smaller_term := 2;
+															print_message Verbose_standard ("\n	 is_all_smaller_mems coefs_vars2 coefs_vars1!!!!!");
+															);
+														)
+													else 
+														(
+														print_message Verbose_standard ("\n	 not is_var_subset vars2 vars1 && is_var_subset vars1 vars2!!!!!");
+														smaller_term := 0;
+														result := false
+														);
+													); 
+
+												if length_coefs_vars1 - length_coefs_vars2 < 0 
+												then(
+													print_message Verbose_standard ("\n	 length_coefs_vars1 - length_coefs_vars2 < 0!!!!!");
 													if is_var_subset vars1 vars2 
 													then smaller_term := 1
 													else smaller_term := 0
-												else
+													);
+
+												if length_coefs_vars1 - length_coefs_vars2 > 0 
+												then(
+													print_message Verbose_standard ("\n	 length_coefs_vars1 - length_coefs_vars2 > 0!!!!!");
 													if is_var_subset vars2 vars1 
 													then smaller_term := 2
 													else smaller_term := 0;
+													);
 
+
+
+												
 												match !smaller_term with 
 												| 0 -> result := false
 												| 1 -> vars_temp1 := coefs_vars1; vars_temp2 := coefs_vars2
 												| 2 -> vars_temp1 := coefs_vars2; vars_temp2 := coefs_vars1
 												| _ -> raise (InternalError("Error Detected!!"));		
+												
 												);
 
 												(*this conditon will check whether a set of vars in linear_term1/2 is subset of linear_term2/1 *)
@@ -3601,6 +3639,7 @@ let isComparable_linear_terms term1 term2 	=
 													if is_all_smaller_mems !vars_temp1 !vars_temp2 = false
 													then result := false
 												);
+												
 
   												(!result,!smaller_term);
 
