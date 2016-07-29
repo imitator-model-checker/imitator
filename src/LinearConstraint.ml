@@ -255,6 +255,14 @@ type op =
 	| Op_le
 	| Op_l
 
+(** Reverse an operator: <= becomes >= and conversely. < becomes > and conversely. = remains =. *)
+let reverse_op = function 
+	| Op_g		-> Op_l
+	| Op_ge		-> Op_le
+	| Op_eq		-> Op_eq
+	| Op_le		-> Op_ge
+	| Op_l		-> Op_g
+
 
 type linear_inequality = Ppl.linear_constraint
 type p_linear_inequality = linear_inequality
@@ -840,6 +848,7 @@ let make_linear_inequality linear_term op =
 		| Op_l -> Less_Than (lin_term, zero_term)
 
 
+let make_p_linear_inequality = make_linear_inequality
 let make_px_linear_inequality = make_linear_inequality
 let make_pxd_linear_inequality = make_linear_inequality
 

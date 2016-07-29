@@ -76,7 +76,7 @@ val add_pxd_linear_terms : pxd_linear_term -> pxd_linear_term -> pxd_linear_term
 
 
 (** Perform linear_term1 - linear_term2 *)
-(* val sub_linear_terms : linear_term -> linear_term -> linear_term *)
+val sub_linear_terms : linear_term -> linear_term -> linear_term
 
 (** Evaluate a linear term with a function assigning a value to each variable. *)
 val evaluate_p_linear_term : (variable -> coef) -> p_linear_term -> coef
@@ -107,6 +107,9 @@ type op =
 	| Op_le
 	| Op_l
 
+(** Reverse an operator: <= becomes >= and conversely. < becomes > and conversely. = remains =. *)
+val reverse_op : op -> op
+
 (* type linear_inequality *)
 type p_linear_inequality
 type px_linear_inequality
@@ -119,6 +122,7 @@ type pxd_linear_inequality
 
 (** Create a linear inequality using linear term and an operator *)
 (* val make_linear_inequality : linear_term -> op -> linear_inequality *)
+val make_p_linear_inequality : p_linear_term -> op -> p_linear_inequality
 val make_pxd_linear_inequality : pxd_linear_term -> op -> pxd_linear_inequality
 
 
