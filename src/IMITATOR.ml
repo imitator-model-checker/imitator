@@ -703,7 +703,7 @@ let filter_upperbound_by_clock clock_index tuple_inequalities_s0 =
 
 let cub_check invariant_s0 guard_t invariant_s1 clock_updates = 	
 																(*ppl*)
-																let inequalities_need_to_solve = ref [] in
+																let inequalities_need_to_solve : (LinearConstraint.op * LinearConstraint.p_linear_term) list ref = ref [] in
 																print_message Verbose_standard (" CUB check, Start:");
 																print_message Verbose_standard ("\n");
 
@@ -896,7 +896,7 @@ List.iter (fun automaton_index -> print_message Verbose_standard ("Automaton: " 
 
         		let invariant1 = model.invariants automaton_index location_index in
         
-                print_message Verbose_standard ("   Ivariant(S): " ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names invariant1 ) )  ;
+                print_message Verbose_standard ("   Invariant(S): " ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names invariant1 ) )  ;
                     		
                 	
 
@@ -924,7 +924,7 @@ List.iter (fun automaton_index -> print_message Verbose_standard ("Automaton: " 
 
 							print_message Verbose_standard ("\n");
                 			print_message Verbose_standard (" State/Location(D): " ^ (model.location_names automaton_index destination_location_index) ) ;
-                			print_message Verbose_standard ("   Ivariant(D): " ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names invariant2 ) ) ;
+                			print_message Verbose_standard ("   Invariant(D): " ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names invariant2 ) ) ;
                 			print_message Verbose_standard ("	  ----Map:(" 
                 											^ (model.location_names automaton_index location_index) 
                 											^ ")--" ^ (model.action_names action_index) ^ "-->(" 
@@ -981,10 +981,22 @@ else
 	then 
     	print_message Verbose_standard ("   The model is impossible CUB-PTA! ") 
     else*)
-    	print_message Verbose_standard ("   The model is possible CUB-PTA! \nbut you need to solve the inequalities below!!: ") ;
-    	List.iter (fun (op, linear_term) -> 
+    
+	(* Convert the inequalities to LinearConstraint.linear_inequality *)
+	let p_linear_inequality_list = List.map (fun (op, linear_term) -> 
+		LinearConstraint.make_p_linear_inequality linear_term (LinearConstraint.reverse_op op)
+	) !inequalities_need_to_solve in
+	
+	(* Create the parametric constraint *)
+	let constraint_for_cub = LinearConstraint.make_p_constraint p_linear_inequality_list in
+	
+	(* Print some information *)
+   	print_message Verbose_standard ("   The model is possible CUB-PTA! \nbut you need to solve the inequalities below!!: ");
+   	print_message Verbose_standard ("\n" ^ (LinearConstraint.string_of_p_linear_constraint model.variable_names constraint_for_cub));
+   	
+(*    	List.iter (fun (op, linear_term) -> 
     		print_message Verbose_standard ( (LinearConstraint.operator2string op) ^ " " ^ (LinearConstraint.string_of_p_linear_term model.variable_names linear_term) );
-    	) !inequalities_need_to_solve
+    	) !inequalities_need_to_solve*)
     );
 
 
