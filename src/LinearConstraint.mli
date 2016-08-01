@@ -76,7 +76,11 @@ val add_pxd_linear_terms : pxd_linear_term -> pxd_linear_term -> pxd_linear_term
 
 
 (** Perform linear_term1 - linear_term2 *)
-val sub_linear_terms : linear_term -> linear_term -> linear_term
+(* val sub_linear_terms : linear_term -> linear_term -> linear_term *)
+
+val sub_p_linear_terms : p_linear_term -> p_linear_term -> p_linear_term
+(*val sub_px_linear_terms : px_linear_term -> px_linear_term -> px_linear_term*)
+val sub_pxd_linear_terms : pxd_linear_term -> pxd_linear_term -> pxd_linear_term
 
 (** Evaluate a linear term with a function assigning a value to each variable. *)
 val evaluate_p_linear_term : (variable -> coef) -> p_linear_term -> coef
@@ -601,7 +605,6 @@ val get_coefs_vars : p_linear_term -> (variable*coef) list
 
 (*for linear term*)
 val isComparable_linear_terms : p_linear_term -> p_linear_term -> (bool*int)
-
 
 
 (* val get_coefficient_in_linear_term : Ppl.linear_expression -> NumConst.t   *) 

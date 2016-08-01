@@ -589,6 +589,10 @@ let sub_linear_terms lt1 lt2 =
 	Mi (lt1, lt2)
 
 
+let sub_p_linear_terms = sub_linear_terms
+let sub_px_linear_terms = sub_linear_terms
+let sub_pxd_linear_terms = sub_linear_terms
+
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 (** {3 Access functions} *)
@@ -3455,6 +3459,7 @@ let get_coef term = match term with
 *)
 
 
+
 (*for linear term*)
 let rec isMinus linear_term =	(* let coef = ref NumConst.zero in *)
 								let b = ref false in
@@ -3524,15 +3529,18 @@ let is_var_subset var_list1 var_list2 = 	let result = ref true in
 												) var_list1;
 											!result
 
-let is_all_smaller_mems coefs_vars1 coefs_vars2 = 	let result = ref true in
+let is_all_smaller_or_equal_mems coefs_vars1 coefs_vars2 = 	let result = ref true in
 													List.iter (fun (var1, coef1) ->
 														let coef2 = List.assoc var1 coefs_vars2 in
-														if NumConst.g coef1 coef2
+														if not ( NumConst.le coef1 coef2 )
 														then result := false
 													) coefs_vars1; 
 													!result
 
-
+type smaller_term =
+	| Not (*not determined*)
+	| First
+	| Second
 
 (*return true if 2 linear terms contain the same clocks*)
 let isComparable_linear_terms term1 term2 	=	
@@ -3542,20 +3550,17 @@ let isComparable_linear_terms term1 term2 	=
 
 												let coefs_vars1 = get_coefs_vars term1 in
 												(*length of linear term 1*)
-												let length_coefs_vars1 = (List.length coefs_vars1)*2 in
-
+												let length_coefs_vars1 = List.length coefs_vars1 in
 
 												let coefs_vars2 = get_coefs_vars term2 in
 												(*length of linear term 2*)
-												let length_coefs_vars2 = (List.length coefs_vars2)*2 in
-
+												let length_coefs_vars2 = List.length coefs_vars2 in
 
 												print_message Verbose_standard ("\n	 Linear term 1:");
-												print_message Verbose_standard ("\n	 length:" ^ (string_of_int length_coefs_vars1) );
+												print_message Verbose_standard ("\n	 Mems/Length:" ^ (string_of_int length_coefs_vars1) );
 												
-												print_message Verbose_standard ("\n	 Linear term2:");
-												print_message Verbose_standard ("\n	 length:" ^ (string_of_int length_coefs_vars2) );
-												
+												print_message Verbose_standard ("\n	 Linear term 2:");
+												print_message Verbose_standard ("\n	 Mems/Length:" ^ (string_of_int length_coefs_vars2) );
 
 												(*check if there have minus operation inside the linear term or coeff < 0*)
 												let checkMinus1 = isMinus term1 in
@@ -3578,120 +3583,121 @@ let isComparable_linear_terms term1 term2 	=
 													print_message Verbose_standard ("\n	 Contain Minus Sign!!!!!")
 												else
 													print_message Verbose_standard ("\n	 Not Contain Minus Sign!!!!!");
-												
 
 												(*check whether 1/2 is subset of the other*)
 												let vars_temp1 = ref [] in
 												let vars_temp2 = ref [] in
-												let smaller_term = ref 0 in 
+												let smaller = ref 0 in 
 												if !result = true
 												then (
-
+												(*case: mems term 1 = mems term 2*)
 												if length_coefs_vars1 - length_coefs_vars2 = 0 
 												then
 													(
-													print_message Verbose_standard ("\n	 length_coefs_vars1 - length_coefs_vars2 = 0!!!!!");
+													print_message Verbose_standard ("\n	 mems of term and term 2 are equal!!!!!");
+													(*check 2 sets of vars are equal*)
 													if is_var_subset vars2 vars1 && is_var_subset vars1 vars2 
 													then (
-														print_message Verbose_standard ("\n	 is_var_subset vars2 vars1 && is_var_subset vars1 vars2!!!!!");
-														if is_all_smaller_mems coefs_vars1 coefs_vars2
+														print_message Verbose_standard ("\n Sets of vars of term 1 and term 2 are equal!!!!!");
+														if is_all_smaller_or_equal_mems coefs_vars1 coefs_vars2
 														then
 															(
-															smaller_term := 1;
-															print_message Verbose_standard ("\n	 is_all_smaller_mems coefs_vars1 coefs_vars2!!!!!");
+															smaller := 1;
+															print_message Verbose_standard ("\n	 coefs in term 1 less than or equal coefs in term 2!!!!!");
 															)
 														else
 															(
-															smaller_term := 2;
-															print_message Verbose_standard ("\n	 is_all_smaller_mems coefs_vars2 coefs_vars1!!!!!");
+															if is_all_smaller_or_equal_mems coefs_vars2 coefs_vars1
+															then
+																(
+																smaller := 2;
+																print_message Verbose_standard ("\n	 coefs in term 2 less than or equal coefs in term 1!!!!!");
+																)
+															(*coefs of term 1 = coefs of term 2*)
+															else
+																(
+																smaller := 0;
+																result := false;
+																print_message Verbose_standard ("\n	 Could not determine!!!!!");
+																);
 															);
 														)
 													else 
 														(
 														print_message Verbose_standard ("\n	 not is_var_subset vars2 vars1 && is_var_subset vars1 vars2!!!!!");
-														smaller_term := 0;
+														smaller := 0;
 														result := false
 														);
-													); 
+													) 
+												else
+													(
+														if length_coefs_vars1 - length_coefs_vars2 < 0 
+														then(
+															print_message Verbose_standard ("\n	 length_coefs_vars1 - length_coefs_vars2 < 0!!!!!");
+															if is_var_subset vars1 vars2 
+															then
+																( 
+																smaller := 1;
+																print_message Verbose_standard ("\n	 Set of vars of term 1 is subset of term 2!!!!!");
 
-												if length_coefs_vars1 - length_coefs_vars2 < 0 
-												then(
-													print_message Verbose_standard ("\n	 length_coefs_vars1 - length_coefs_vars2 < 0!!!!!");
-													if is_var_subset vars1 vars2 
-													then smaller_term := 1
-													else smaller_term := 0
-													);
+																(*test*)
+																if is_all_smaller_or_equal_mems coefs_vars1 coefs_vars2
+																then 
+																	(
+																	print_message Verbose_standard ("\n	 coefs in term 1 less than or equal coefs in term 2!!!!!");
+																	)
+																else
+																	(
+																	smaller := 0;
+																	result := false;
+																	print_message Verbose_standard ("\n	 coefs in term 1 not less than or equal coefs in term 2!!!!!");
+																	);
+																(*test*)
 
-												if length_coefs_vars1 - length_coefs_vars2 > 0 
-												then(
-													print_message Verbose_standard ("\n	 length_coefs_vars1 - length_coefs_vars2 > 0!!!!!");
-													if is_var_subset vars2 vars1 
-													then smaller_term := 2
-													else smaller_term := 0;
-													);
+																)
+															else
+																( 
+																if length_coefs_vars1 - length_coefs_vars2 > 0 
+																then(
+																	print_message Verbose_standard ("\n	 length_coefs_vars1 - length_coefs_vars2 > 0!!!!!");
+																	if is_var_subset vars2 vars1 
+																	then 
+																		(
+																		smaller := 2;
+																		print_message Verbose_standard ("\n	 Set of vars of term 2 is subset of term 1!!!!!");
 
+																		(*test*)
+																		if is_all_smaller_or_equal_mems coefs_vars2 coefs_vars1
+																		then 
+																			(
+																			print_message Verbose_standard ("\n	 coefs in term 2 less than or equal coefs in term 1!!!!!");
+																			)
+																		else
+																			(
+																			smaller := 0;
+																			result := false;
+																			print_message Verbose_standard ("\n	 coefs in term 2 not less than or equal coefs in term 1!!!!!");
+																			);
+																		(*test*)
 
+																		)
+																	else 
+																		(
+																		smaller := 0;
+																		result := false;
+																		print_message Verbose_standard ("\n	 Could not determine!!!!!");
+																		);
+																	);
+																);
+															);
 
-												
-												match !smaller_term with 
-												| 0 -> result := false
-												| 1 -> vars_temp1 := coefs_vars1; vars_temp2 := coefs_vars2
-												| 2 -> vars_temp1 := coefs_vars2; vars_temp2 := coefs_vars1
-												| _ -> raise (InternalError("Error Detected!!"));		
-												
+														
+
+														);
+
 												);
 
-												(*this conditon will check whether a set of vars in linear_term1/2 is subset of linear_term2/1 *)
-												if !result = true
-												then (
-													(*can not uncomment the line below!!! don't know why? attention!!!*)
-													if is_all_smaller_mems !vars_temp1 !vars_temp2 = false
-													then result := false
-												);
-												
-
-  												(!result,!smaller_term);
+  												(!result,!smaller);
 
 
 
-(*
-(*for linear term*)
-(*in case we have more than 1 coef, we can sum them up into one*)
-let rec get_coef linear_term =	(* let coef = ref NumConst.zero in *)
-										
-								match linear_term with
-								| Coef c -> [c]
-								| Var v -> []
-								| Pl (lterm, rterm) -> (
-			  						get_coef lterm;
-									get_coef rterm;
-								)
-								| Mi (lterm, rterm) -> (
-									get_coef lterm;
-									get_coef rterm;
-								)
-								| Ti (c1, rterm) -> []
-								| _ -> raise (InternalError("Detection error 'get_coef' function"))
-
-
-
-(*for linear term, can not use 'option' for this! *)
-let rec get_var linear_term =	(* let coef = ref NumConst.zero in *)
-								let single_vars = ref [] in	
-								let _ = match linear_term with
-								| Coef c -> ()
-								| Var v -> single_vars := !single_vars@[v]
-								| Pl (lterm, rterm) -> (
-			  						single_vars := !single_vars@get_var lterm;
-									single_vars := !single_vars@get_var rterm;
-								)
-								| Mi (lterm, rterm) -> (
-									single_vars := !single_vars@get_var lterm;
-									single_vars := !single_vars@get_var rterm;
-								)
-								| Ti (c1, rterm) -> ()
-								| _ -> raise (InternalError("Detection error 'get_var' function"))
-								in
-
-								!single_vars
-*)
