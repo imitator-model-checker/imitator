@@ -3444,10 +3444,9 @@ let operator2string op = match op with
 	| Op_eq -> "="
 	| Op_le -> "<="
 	| Op_l  -> "<"
-	| _ -> "error!" 
 
 
-(*)
+(*
 let get_coef term = match term with
 	| Coef coef -> coef 
 	
@@ -3466,22 +3465,24 @@ let rec isMinus linear_term =	(* let coef = ref NumConst.zero in *)
 								let _ = match linear_term with
 								| Coef c -> ()
 								| Var v -> ()
-								| Pl (lterm, rterm) -> (
-			  						isMinus lterm;
-									isMinus rterm;
-									() )
-								| Mi (lterm, rterm) -> ( b := true; () )
-
+								| Pl (lterm, rterm) -> 	(
+			  											isMinus lterm;
+														isMinus rterm;
+														()
+														)
+								| Mi (lterm, rterm) -> 	( 
+														b := true; 
+														() 
+														)
 								| Ti (c1, rterm) -> ()
-								| _ -> raise (InternalError("Detection error 'get_coef' function"))
+								(*| _ -> raise (InternalError("Detection error 'get_coef' function"))*)
 								in
 								!b
 
 										
 
 (*for linear term*)
-let rec get_coefs_vars linear_term =
-										let coefs_vars = ref [] in
+let rec get_coefs_vars linear_term =	let coefs_vars = ref [] in
 										let _ = match linear_term with
 										| Coef c -> coefs_vars := !coefs_vars@[(9999, c)]
 										| Var v -> coefs_vars := !coefs_vars@[(v, NumConst.one)] (*()*)
@@ -3494,10 +3495,10 @@ let rec get_coefs_vars linear_term =
 											coefs_vars := !coefs_vars@get_coefs_vars rterm;
 											() )
 										| Ti (c1, rterm) -> (
-											match rterm with
-												| Var  v1 -> coefs_vars := !coefs_vars@[(v1, c1)]
-												| _ -> raise (InternalError("Could not detect RightTerm in Time*RightTerm error 'get_coefs_vars' function")) )
-										| _ -> raise (InternalError("Detection error 'get_coefs_vars' function"))
+															match rterm with
+															| Var  v1 -> coefs_vars := !coefs_vars@[(v1, c1)]
+															| _ -> raise (InternalError("Could not detect RightTerm in Time*RightTerm error 'get_coefs_vars' function")) 
+															)
 										in 
 
 										!coefs_vars
@@ -3517,28 +3518,28 @@ let is_mem_in_coef_list_less_than_zero	list_coef	=	let result = ref false in
 														!result
 
 (* check whether vars in liear term 1 is a subset of linear term 2 *)
-let is_var_subset var_list1 var_list2 = 	let result = ref true in
-											let all_coef_greater_1 = ref true in
-											List.iter (fun var ->
-												if not (List.mem var var_list2) 
-												then (
-													result := false;
-													print_message Verbose_standard ("\n	 the var1: "^ string_of_int var ^" is not in var_list2 ");
-													);
+let is_var_subset var_list1 var_list2 = let result = ref true in
+										List.iter 	(fun var ->	if not (List.mem var var_list2) 
+																then 
+																	(
+																	result := false;
+																	print_message Verbose_standard ("\n	 the var1: "^ string_of_int var ^" is not in var_list2 ");
+																	);
 
-												) var_list1;
-											!result
+													) var_list1;
+										!result
 
 let is_all_smaller_or_equal_mems coefs_vars1 coefs_vars2 = 	let result = ref true in
-													List.iter (fun (var1, coef1) ->
-														let coef2 = List.assoc var1 coefs_vars2 in
-														if not ( NumConst.le coef1 coef2 )
-														then result := false
-													) coefs_vars1; 
-													!result
+															List.iter 	(fun (var1, coef1) ->
+																		let coef2 = List.assoc var1 coefs_vars2 in
+																		if not ( NumConst.le coef1 coef2 )
+																		then 
+																			result := false
+																		) coefs_vars1; 
+															!result
 
 type smaller_term =
-	| Not (*not determined*)
+	| NotDetermine (*not determined*)
 	| First
 	| Second
 
@@ -3585,9 +3586,7 @@ let isComparable_linear_terms term1 term2 	=
 													print_message Verbose_standard ("\n	 Not Contain Minus Sign!!!!!");
 
 												(*check whether 1/2 is subset of the other*)
-												let vars_temp1 = ref [] in
-												let vars_temp2 = ref [] in
-												let smaller = ref 0 in 
+												let smaller = ref NotDetermine in 
 												if !result = true
 												then (
 												(*case: mems term 1 = mems term 2*)
@@ -3602,7 +3601,7 @@ let isComparable_linear_terms term1 term2 	=
 														if is_all_smaller_or_equal_mems coefs_vars1 coefs_vars2
 														then
 															(
-															smaller := 1;
+															smaller := First;
 															print_message Verbose_standard ("\n	 coefs in term 1 less than or equal coefs in term 2!!!!!");
 															)
 														else
@@ -3610,13 +3609,13 @@ let isComparable_linear_terms term1 term2 	=
 															if is_all_smaller_or_equal_mems coefs_vars2 coefs_vars1
 															then
 																(
-																smaller := 2;
+																smaller := Second;
 																print_message Verbose_standard ("\n	 coefs in term 2 less than or equal coefs in term 1!!!!!");
 																)
 															(*coefs of term 1 = coefs of term 2*)
 															else
 																(
-																smaller := 0;
+																smaller := NotDetermine;
 																result := false;
 																print_message Verbose_standard ("\n	 Could not determine!!!!!");
 																);
@@ -3625,7 +3624,7 @@ let isComparable_linear_terms term1 term2 	=
 													else 
 														(
 														print_message Verbose_standard ("\n	 not is_var_subset vars2 vars1 && is_var_subset vars1 vars2!!!!!");
-														smaller := 0;
+														smaller := NotDetermine;
 														result := false
 														);
 													) 
@@ -3637,7 +3636,7 @@ let isComparable_linear_terms term1 term2 	=
 															if is_var_subset vars1 vars2 
 															then
 																( 
-																smaller := 1;
+																smaller := First;
 																print_message Verbose_standard ("\n	 Set of vars of term 1 is subset of term 2!!!!!");
 
 																(*test*)
@@ -3648,7 +3647,7 @@ let isComparable_linear_terms term1 term2 	=
 																	)
 																else
 																	(
-																	smaller := 0;
+																	smaller := NotDetermine;
 																	result := false;
 																	print_message Verbose_standard ("\n	 coefs in term 1 not less than or equal coefs in term 2!!!!!");
 																	);
@@ -3663,7 +3662,7 @@ let isComparable_linear_terms term1 term2 	=
 																	if is_var_subset vars2 vars1 
 																	then 
 																		(
-																		smaller := 2;
+																		smaller := Second;
 																		print_message Verbose_standard ("\n	 Set of vars of term 2 is subset of term 1!!!!!");
 
 																		(*test*)
@@ -3674,7 +3673,7 @@ let isComparable_linear_terms term1 term2 	=
 																			)
 																		else
 																			(
-																			smaller := 0;
+																			smaller := NotDetermine;
 																			result := false;
 																			print_message Verbose_standard ("\n	 coefs in term 2 not less than or equal coefs in term 1!!!!!");
 																			);
@@ -3683,7 +3682,7 @@ let isComparable_linear_terms term1 term2 	=
 																		)
 																	else 
 																		(
-																		smaller := 0;
+																		smaller := NotDetermine;
 																		result := false;
 																		print_message Verbose_standard ("\n	 Could not determine!!!!!");
 																		);

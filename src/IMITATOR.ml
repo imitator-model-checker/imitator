@@ -561,19 +561,22 @@ in
 
 (*check CUB condition function -> return boolean value*)
 
-
+(*
 let get_smaller_coeff coeff1 coeff2 =	let first_minus_second = Gmp.Z.compare (NumConst.get_num coeff1) (NumConst.get_num coeff2) in
 										if first_minus_second >= 0 
 										then coeff2 
 										else coeff1
 										in 
+*)
 
 
+(*
 let is_smaller_coeff coeff1 coeff2 =	let first_minus_second = Gmp.Z.compare (NumConst.get_num coeff1) (NumConst.get_num coeff2) in
 										if first_minus_second >= 0 
 										then false
 										else true
 										in 
+*)
 
 
 (*
@@ -590,29 +593,36 @@ let get_lower_upperbound (op1, term1) (op2, term2) =	let (isComparable, linear_t
 														(*check the input, start*)
 														match op1, op2 with
 														| LinearConstraint.Op_ge, LinearConstraint.Op_ge-> raise (InternalError("Detected lower bounded contraints in both inputs!!! "))
-														| LinearConstraint.Op_g, LinearConstraint.Op_ge	-> raise (InternalError("Detected lower bounded contraints in both inputs!!! "))
+														| LinearConstraint.Op_g , LinearConstraint.Op_ge-> raise (InternalError("Detected lower bounded contraints in both inputs!!! "))
 														| LinearConstraint.Op_ge, LinearConstraint.Op_g	-> raise (InternalError("Detected lower bounded contraints in both inputs!!! "))
-														| LinearConstraint.Op_g, LinearConstraint.Op_g 	-> raise (InternalError("Detected lower bounded contraints in both inputs!!! "))
+														| LinearConstraint.Op_g , LinearConstraint.Op_g -> raise (InternalError("Detected lower bounded contraints in both inputs!!! "))
 
 														| LinearConstraint.Op_ge, _						-> raise (InternalError("Detected lower bounded contraints in the first input!!! "))
-														| LinearConstraint.Op_g, _						-> raise (InternalError("Detected lower bounded contraints in the first input!!! "))
-														| _		  			, LinearConstraint.Op_ge	-> raise (InternalError("Detected lower bounded contraints in the second input!!! "))
+														| LinearConstraint.Op_g , _						-> raise (InternalError("Detected lower bounded contraints in the first input!!! "))
+														| _		  				, LinearConstraint.Op_ge-> raise (InternalError("Detected lower bounded contraints in the second input!!! "))
 														| _		  				, LinearConstraint.Op_g	-> raise (InternalError("Detected lower bounded contraints in the second input!!! "))
 														(*check the input, end*)
-														| _		  					, _					-> 
+														| _		  				, _						-> 
 																											match  (isComparable, linear_term_number ) with
-																											| true, 1 -> (match (op1, op2) with
-																															| (LinearConstraint.Op_le), (LinearConstraint.Op_l)	-> (2, op2, term2)
-																															| _						  , _						-> (1, op1, term1) );
-																											| true, 2 -> (match (op2, op1) with
-																															| (LinearConstraint.Op_le), (LinearConstraint.Op_l)	-> (1, op1, term1)
-																															| _						  , _						-> (2, op2, term2) );
-																											| true, _ -> raise (InternalError("error!!! "))
-																											| false, _ -> (0, op1, term1);
+																											| true 	, LinearConstraint.First -> 	(
+																																					match (op1, op2) with
+																																					| (LinearConstraint.Op_le), (LinearConstraint.Op_l)	-> (LinearConstraint.Second, op2, term2)
+																																					| _						  , _						-> (LinearConstraint.First, op1, term1) 
+																																					);
+
+																											| true 	, LinearConstraint.Second -> 	(
+																																					match (op2, op1) with
+																																					| (LinearConstraint.Op_le), (LinearConstraint.Op_l)	-> (LinearConstraint.First, op1, term1)
+																																					| _						  , _						-> (LinearConstraint.Second, op2, term2) 
+																																					);
+
+																											| true 	, _ 							-> 	raise (InternalError("error!!! "))
+
+																											| false	, _ 							-> 	(LinearConstraint.NotDetermine, op1, term1);
 														in
 
 
-
+(*
 (*intersec*)
 let get_intersec_upperbounds (op1, term1) (op2, term2) =	(* let (isComparable, linear_term_number ) = LinearConstraint.isComparable_linear_terms term1 term2 in *)
 														let one_term = (LinearConstraint.make_p_linear_term [] NumConst.one) in
@@ -655,6 +665,7 @@ let get_intersec_upperbounds (op1, term1) (op2, term2) =	(* let (isComparable, l
 																											| false, _ -> (0, op1, term1);
 																										*) ()
 														in
+*)
 
 
 
@@ -666,21 +677,21 @@ This only uses to indicate clock smaller than INFINITE, not for lower-bound
 let convert_inequality_list_2_tuple_list inequalities =	let list_s0 = ref [] in 
 														match inequalities with 
 														(*True constraints -> list of clocks >= 0*)
-														 [] ->  List.iter (	fun clock_index -> 
-														 		list_s0 := !list_s0@[(clock_index, LinearConstraint.Op_ge, LinearConstraint.make_p_linear_term [] NumConst.zero)] 
-																) model.clocks; 
+														 [] ->  List.iter 	(fun clock_index -> 
+														 					list_s0 := !list_s0@[(clock_index, LinearConstraint.Op_ge, LinearConstraint.make_p_linear_term [] NumConst.zero)] 
+																			) model.clocks; 
 														 		!list_s0
 
 														| _ ->	print_message Verbose_standard (" Covert inequalities -> list(clock; operator; linear expression) Start:");
-																List.iter (fun inequality -> (
-																	let (clock_index_2, operator, parametric_linear_term) = LinearConstraint.clock_guard_of_linear_inequality inequality in
-                													list_s0 := !list_s0@[(clock_index_2, operator, parametric_linear_term)]; 
-                													print_message Verbose_standard (" inequality: " ^ (model.variable_names clock_index_2) 
-																									^ " " ^ (LinearConstraint.operator2string operator) 
-																									^ " " ^ (LinearConstraint.string_of_p_linear_term model.variable_names parametric_linear_term) 
-																									^ " added!");
-                														) 
-                													) inequalities; 
+																List.iter 	(fun inequality -> (
+																			let (clock_index_2, operator, parametric_linear_term) = LinearConstraint.clock_guard_of_linear_inequality inequality in
+                															list_s0 := !list_s0@[(clock_index_2, operator, parametric_linear_term)]; 
+                															print_message Verbose_standard (" inequality: " ^ (model.variable_names clock_index_2) 
+																											^ " " ^ (LinearConstraint.operator2string operator) 
+																											^ " " ^ (LinearConstraint.string_of_p_linear_term model.variable_names parametric_linear_term) 
+																											^ " added!");
+                																) 
+                															) inequalities; 
                 												print_message Verbose_standard (" Covert inequalities -> list(clock; operator; linear expression) End!");
                 												print_message Verbose_standard ("\n");
                 												!list_s0
@@ -688,7 +699,7 @@ let convert_inequality_list_2_tuple_list inequalities =	let list_s0 = ref [] in
 
 
 
-
+(*
 let get_clock_inequalities clock_index converted_inequalities =	let list_s0 = ref [] in
                 											List.iter (	fun (clock_index_2, operator, parametric_linear_term) -> 
                 															if ( clock_index == clock_index_2 )
@@ -697,6 +708,7 @@ let get_clock_inequalities clock_index converted_inequalities =	let list_s0 = re
                 														) converted_inequalities; 
 															!list_s0
 															in 
+*)
 
 
 
@@ -717,23 +729,24 @@ let filter_upperbound_by_clock clock_index tuple_inequalities_s0 =
 																	let (clock_index_2, operator, parametric_linear_term) = (List.nth tuple_inequalities_s0 i) in 
 
 																	if ( (clock_index == clock_index_2) && ( operator == LinearConstraint.Op_l || operator == LinearConstraint.Op_le ) )
-                													then (
-                													print_message Verbose_standard ("	Upper-bounded found: " ^ (model.variable_names clock_index_2) 
-																									^ " " ^ (LinearConstraint.operator2string operator) 
-																									^ " " ^ (LinearConstraint.string_of_p_linear_term model.variable_names parametric_linear_term) 
-																									^ " !");
-                													index := i; 
-                													count := (!count + 1);
-																	if !count > 1
-																	then  raise (InternalError("Detected more than 1 different upperbounds of the same clock in same constraint!!! "))
+                													then 
+                														(
+                														print_message Verbose_standard ("	Upper-bounded found: " ^ (model.variable_names clock_index_2) 
+																										^ " " ^ (LinearConstraint.operator2string operator) 
+																										^ " " ^ (LinearConstraint.string_of_p_linear_term model.variable_names parametric_linear_term) 
+																										^ " !");
+                														index := i; 
+                														count := (!count + 1);
+																		if !count > 1
+																		then  raise (InternalError("Detected more than 1 different upperbounds of the same clock in same constraint!!! "))
 
-                													);
+                														);
 																done;
 																(*just for printing, start*)
 																if !count = 0
 																then print_message Verbose_standard ("	Upper-bound not found:!, return clock  " ^ (model.variable_names clock_index) ^">= 0" );
-																(*just for printing, end*)
-																(* if there is no upper-bound -> reutrn (clock >= 0) *)
+																	(*just for printing, end*)
+																	(* if there is no upper-bound -> reutrn (clock >= 0) *)
 																if !count = 0
 																then
 																	( clock_index, LinearConstraint.Op_ge, LinearConstraint.make_p_linear_term [] NumConst.zero ) (* make_linear_term [] NumConst.zero) *)
@@ -835,16 +848,14 @@ let cub_check invariant_s0 guard_t invariant_s1 clock_updates =
  																	|_							, (LinearConstraint.Op_ge, _), (LinearConstraint.Op_ge, _)	->	true;
 
  																	|_							, _							 , (LinearConstraint.Op_ge, _)	->	let (typ, op, term) = get_lower_upperbound (op_s0, linear_term_s0) (op_t, linear_term_t) in
- 																																								(*let _ = get_intersec_upperbounds (op_s0, linear_term_s0) (op_t, linear_term_t) in*)
-														 																										(* if typ = 1
-														 																										then true
-														 																										else false; *)
 														 																										(
 														 																										match typ with
-														 																										| 0 -> (inequalities_need_to_solve := !inequalities_need_to_solve@[make_CUB_constraint (op_s0, linear_term_s0) (op_t, linear_term_t)] ; 
-														 																												false);
-														 																										| 1 -> true
-														 																										| 2 -> false;
+														 																										| LinearConstraint.NotDetermine -> 	(
+														 																																			inequalities_need_to_solve := !inequalities_need_to_solve@[make_CUB_constraint (op_s0, linear_term_s0) (op_t, linear_term_t)] ; 
+														 																																			false
+														 																																			);
+														 																										| LinearConstraint.First 		-> 	true
+														 																										| LinearConstraint.Second 		-> 	false;
 														 																										);
 
  																	|_							, (LinearConstraint.Op_ge, _), _							->	(*reset*)
@@ -861,10 +872,12 @@ let cub_check invariant_s0 guard_t invariant_s1 clock_updates =
  																																									let (typ, op, term) = get_lower_upperbound (op_s0, linear_term_s0)  (op_s1, linear_term_s1) in
 														 																											(*let _ = get_intersec_upperbounds (op_s0, linear_term_s0)  (op_s1, linear_term_s1) in*)
 														 																											match typ with
-														 																											| 0 -> (inequalities_need_to_solve := !inequalities_need_to_solve@[make_CUB_constraint (op_s0, linear_term_s0) (op_s1, linear_term_s1)] ; 
-														 																													false);
-														 																											| 1 -> true
-														 																											| 2 -> false;
+														 																											| LinearConstraint.NotDetermine -> 	(
+														 																																				inequalities_need_to_solve := !inequalities_need_to_solve@[make_CUB_constraint (op_s0, linear_term_s0) (op_s1, linear_term_s1)] ; 
+														 																																				false
+														 																																				);
+														 																											| LinearConstraint.First 		-> 	true
+														 																											| LinearConstraint.Second 		-> 	false;
 														 																											);
 														 																											
 
@@ -879,10 +892,12 @@ let cub_check invariant_s0 guard_t invariant_s1 clock_updates =
 														 																																			^ t_upperbound_str ^ ") /\\ (" ^ s1_upperbound_str ^ ")!" ); 
 														 																											(
 														 																											match typ2 with
-														 																											| 0 -> (inequalities_need_to_solve := !inequalities_need_to_solve@[make_CUB_constraint (op_s0, linear_term_s0) (op_t, linear_term_t)] ; 
-														 																														false);
-														 																											| 1 -> true
-														 																											| 2 -> false;
+														 																											| LinearConstraint.NotDetermine -> 	(
+														 																																				inequalities_need_to_solve := !inequalities_need_to_solve@[make_CUB_constraint (op_s0, linear_term_s0) (op_t, linear_term_t)] ; 
+														 																																				false
+														 																																				);
+														 																											| LinearConstraint.First 		-> 	true
+														 																											| LinearConstraint.Second 		-> 	false;
 														 																											);
 														 																										else
 														 																											(
@@ -890,32 +905,32 @@ let cub_check invariant_s0 guard_t invariant_s1 clock_updates =
 														 																											(*let _ = get_intersec_upperbounds (op_t, linear_term_t)  (op_s1, linear_term_s1) in*)
 														 																											
 														 																											match typ1 with
-														 																											| 0 -> 	(
+														 																											| LinearConstraint.NotDetermine -> 	(
 
-														 																													inequalities_need_to_solve := !inequalities_need_to_solve@[make_CUB_constraint (op_s0, linear_term_s0) (op_t, linear_term_t)] ; 
-														 																													inequalities_need_to_solve := !inequalities_need_to_solve@[make_CUB_constraint (op_s0, linear_term_s0) (op_s1, linear_term_s1)] ; 
-														 																													false
-														 																													);
-														 																											| 1 -> 	(
-														 																													let (typ2, op2, term2) = get_lower_upperbound (op_s0, linear_term_s0) (op1, term1) in
-														 																													match typ2 with
-														 																													| 0 -> 	(
-														 																															inequalities_need_to_solve := !inequalities_need_to_solve@[make_CUB_constraint (op_s0, linear_term_s0) (op1, term1)] ; 
-														 																															false
-														 																															);
-														 																													| 1 -> true
-														 																													| 2 -> false
-														 																													);
-														 																											| 2 -> 	(
-														 																													let (typ2, op2, term2) = get_lower_upperbound (op_s0, linear_term_s0) (op1, term1) in
-														 																													match typ2 with
-														 																													| 0 -> 	(
-														 																															inequalities_need_to_solve := !inequalities_need_to_solve@[make_CUB_constraint (op_s0, linear_term_s0) (op1, term1)] ; 
-														 																															false
-														 																															);
-														 																													| 1 -> true
-														 																													| 2 -> false
-														 																													);
+														 																																				inequalities_need_to_solve := !inequalities_need_to_solve@[make_CUB_constraint (op_s0, linear_term_s0) (op_t, linear_term_t)] ; 
+														 																																				inequalities_need_to_solve := !inequalities_need_to_solve@[make_CUB_constraint (op_s0, linear_term_s0) (op_s1, linear_term_s1)] ; 
+														 																																				false
+														 																																				);
+														 																											| LinearConstraint.First -> (
+														 																																		let (typ2, op2, term2) = get_lower_upperbound (op_s0, linear_term_s0) (op1, term1) in
+														 																																		match typ2 with
+														 																																		| LinearConstraint.NotDetermine -> 	(
+														 																																											inequalities_need_to_solve := !inequalities_need_to_solve@[make_CUB_constraint (op_s0, linear_term_s0) (op1, term1)] ; 
+														 																																											false
+														 																																											);
+														 																																		| LinearConstraint.First 		-> 	true
+														 																																		| LinearConstraint.Second 		-> 	false
+														 																																		);
+														 																											| LinearConstraint.Second -> 	(
+														 																																			let (typ2, op2, term2) = get_lower_upperbound (op_s0, linear_term_s0) (op1, term1) in
+														 																																			match typ2 with
+														 																																			| LinearConstraint.NotDetermine -> 	(
+														 																																												inequalities_need_to_solve := !inequalities_need_to_solve@[make_CUB_constraint (op_s0, linear_term_s0) (op1, term1)] ; 
+														 																																												false
+														 																																												);
+														 																																			| LinearConstraint.First 		-> 	true
+														 																																			| LinearConstraint.Second 		-> 	false
+														 																																			);
 														 																											
 														 																											);
 

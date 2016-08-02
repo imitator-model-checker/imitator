@@ -603,8 +603,13 @@ val operator2string : op -> string
 
 val get_coefs_vars : p_linear_term -> (variable*coef) list
 
+type smaller_term =
+	| NotDetermine (*not determined*)
+	| First
+	| Second
+
 (*for linear term*)
-val isComparable_linear_terms : p_linear_term -> p_linear_term -> (bool*int)
+val isComparable_linear_terms : p_linear_term -> p_linear_term -> (bool*smaller_term)
 
 
 (* val get_coefficient_in_linear_term : Ppl.linear_expression -> NumConst.t   *) 
