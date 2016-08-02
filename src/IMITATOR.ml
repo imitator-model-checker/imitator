@@ -762,9 +762,9 @@ let make_CUB_constraint (op1, linear_term1) (op2, linear_term2) =
 																	let linear_term = LinearConstraint.sub_p_linear_terms linear_term1 linear_term2 in
 																	match op1, op2 with
 																	(*linear_term1 < linear_term2*)
-																	| LinearConstraint.Op_le, LinearConstraint.Op_l -> LinearConstraint.make_p_linear_inequality linear_term LinearConstraint.Op_g
+																	| LinearConstraint.Op_le, LinearConstraint.Op_l -> LinearConstraint.make_p_linear_inequality linear_term LinearConstraint.Op_l
 																	(*linear_term1 <= linear_term2*)
-																	| _, _ -> LinearConstraint.make_p_linear_inequality linear_term LinearConstraint.Op_ge
+																	| _, _ -> LinearConstraint.make_p_linear_inequality linear_term LinearConstraint.Op_le
 
 																 	in
 
@@ -775,7 +775,7 @@ let make_CUB_constraint (op1, linear_term1) (op2, linear_term2) =
 let cub_check invariant_s0 guard_t invariant_s1 clock_updates = 	
 																(*ppl*)
 																(* let inequalities_need_to_solve : (LinearConstraint.op * LinearConstraint.p_linear_term) list ref = ref [] in *)
-																let inequalities_need_to_solve = ref [] in
+																let inequalities = ref [] in
 																print_message Verbose_standard (" CUB check, Start:");
 																print_message Verbose_standard ("\n");
 
@@ -793,6 +793,7 @@ let cub_check invariant_s0 guard_t invariant_s1 clock_updates =
 																let isCUB_PTA = ref true in
 
 																 List.iter (	fun clock_index -> 
+																 	let inequalities_need_to_solve = ref [] in
 																 	print_message Verbose_standard ("   Checking CUB condtions at clock (" ^ (model.variable_names clock_index) ^ "):");
 
 																 	print_message Verbose_standard ("\n 	**Beginning state/location** :");
@@ -823,11 +824,14 @@ let cub_check invariant_s0 guard_t invariant_s1 clock_updates =
                 													(* let result = ref true in *)
                 													let result = match (op_s0, linear_term_s0), (op_t, linear_term_t), (op_s1, linear_term_s1) with
 
-														 			 (LinearConstraint.Op_ge, _), (LinearConstraint.Op_ge, _), (LinearConstraint.Op_ge, _)	->	true;
+														 			 (LinearConstraint.Op_ge, _), (LinearConstraint.Op_ge, _), (LinearConstraint.Op_ge, _)	->	print_message Verbose_standard (" 	 Case 1 " );
+														 			 																							true;
 
-														 			|(LinearConstraint.Op_ge, _), _							 , (LinearConstraint.Op_ge, _)	->	false;
+														 			|(LinearConstraint.Op_ge, _), _							 , (LinearConstraint.Op_ge, _)	->	print_message Verbose_standard (" 	 Case 2 " );
+														 																										false;
 
 														 			|(LinearConstraint.Op_ge, _), (LinearConstraint.Op_ge, _), _							->	(*reset*)
+														 																										print_message Verbose_standard (" 	 Case 3 " );
 														 																										if List.mem clock_index clock_updates = true
 														 																										then
 														 																											let _ = print_message Verbose_standard (" 	 Detected " 
@@ -944,8 +948,13 @@ let cub_check invariant_s0 guard_t invariant_s1 clock_updates =
 
 														 			in
 
-														 			if (result = false)
-														 			then isCUB_PTA := false;
+														 			if (result = false && !inequalities_need_to_solve = [])
+														 			then 	(
+														 					isCUB_PTA := false;
+														 					raise (InternalError("   The model is impossible CUB-PTA! "));
+														 					);
+														 			
+														 			inequalities := !inequalities@(!inequalities_need_to_solve);
 
 														 			if (result = false)
 														 			then
@@ -963,7 +972,7 @@ let cub_check invariant_s0 guard_t invariant_s1 clock_updates =
 																print_message Verbose_standard (" CUB check, End!");
 																print_message Verbose_standard ("\n");
 
-																(!isCUB_PTA, !inequalities_need_to_solve);
+																(!isCUB_PTA, !inequalities);
 																in
 
 
@@ -1036,8 +1045,10 @@ List.iter (fun automaton_index -> print_message Verbose_standard ("Automaton: " 
 
                 			let (result, inequalities) = cub_check invariant1 guard invariant2 clock_updates in
 
-                			if !isCUB_PTA = false && !inequalities_need_to_solve = []
-                			then raise (InternalError("   The model is impossible CUB-PTA! "));
+                			(*
+                			if (!isCUB_PTA = false && !inequalities_need_to_solve = [])
+                			then ( raise (InternalError("   The model is impossible CUB-PTA! ")); );
+                			*)
                 			
                 			inequalities_need_to_solve := !inequalities_need_to_solve@inequalities;
                 			if result = false
@@ -1064,7 +1075,7 @@ List.iter (fun automaton_index -> print_message Verbose_standard ("Automaton: " 
 
 
 
-if !isCUB_PTA = true 
+if (!isCUB_PTA && !inequalities_need_to_solve = []) = true 
 then
     print_message Verbose_standard ("   The model is CUB-PTA! ")
 else 
