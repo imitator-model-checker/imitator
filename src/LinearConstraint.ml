@@ -3446,6 +3446,7 @@ let operator2string op = match op with
 	| Op_l  -> "<"
 
 
+
 (*
 let get_coef term = match term with
 	| Coef coef -> coef 
@@ -3458,7 +3459,7 @@ let get_coef term = match term with
 *)
 
 
-
+(*
 (*for linear term*)
 let rec isMinus linear_term =	(* let coef = ref NumConst.zero in *)
 								let b = ref false in
@@ -3478,9 +3479,10 @@ let rec isMinus linear_term =	(* let coef = ref NumConst.zero in *)
 								(*| _ -> raise (InternalError("Detection error 'get_coef' function"))*)
 								in
 								!b
+*)
 
 										
-
+(*
 (*for linear term*)
 let rec get_coefs_vars linear_term =	let coefs_vars = ref [] in
 										let _ = match linear_term with
@@ -3502,9 +3504,10 @@ let rec get_coefs_vars linear_term =	let coefs_vars = ref [] in
 										in 
 
 										!coefs_vars
+*)
 
 
-
+(*
 (* check whether list of coefs contains a negative coef*)
 let is_mem_in_coef_list_less_than_zero	list_coef	=	let result = ref false in
 														List.iter (fun coef ->
@@ -3516,7 +3519,9 @@ let is_mem_in_coef_list_less_than_zero	list_coef	=	let result = ref false in
 
 														) list_coef;
 														!result
+*)
 
+(*
 (* check whether vars in liear term 1 is a subset of linear term 2 *)
 let is_var_subset var_list1 var_list2 = let result = ref true in
 										List.iter 	(fun var ->	if not (List.mem var var_list2) 
@@ -3528,7 +3533,10 @@ let is_var_subset var_list1 var_list2 = let result = ref true in
 
 													) var_list1;
 										!result
+*)
 
+
+(*
 let is_all_smaller_or_equal_mems coefs_vars1 coefs_vars2 = 	let result = ref true in
 															List.iter 	(fun (var1, coef1) ->
 																		let coef2 = List.assoc var1 coefs_vars2 in
@@ -3537,6 +3545,13 @@ let is_all_smaller_or_equal_mems coefs_vars1 coefs_vars2 = 	let result = ref tru
 																			result := false
 																		) coefs_vars1; 
 															!result
+*)
+
+
+
+
+
+(*
 
 type smaller_term =
 	| NotDetermine (*not determined*)
@@ -3696,7 +3711,13 @@ let isComparable_linear_terms term1 term2 	=
 
 												);
 
-  												(!result,!smaller);
+  												(!result,!smaller)
+*)
+
+
+
+
+
 
 
 

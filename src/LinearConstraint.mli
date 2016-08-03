@@ -600,9 +600,11 @@ val test_PDBMs : unit -> unit
 (*for linear term*)
 val operator2string : op -> string
 
-
+(*
 val get_coefs_vars : p_linear_term -> (variable*coef) list
+*)
 
+(*
 type smaller_term =
 	| NotDetermine (*not determined*)
 	| First
@@ -611,6 +613,8 @@ type smaller_term =
 (*for linear term*)
 val isComparable_linear_terms : p_linear_term -> p_linear_term -> (bool*smaller_term)
 
-
+val isComparable_linear_terms_2 : p_linear_term -> p_linear_term -> p_linear_constraint
 (* val get_coefficient_in_linear_term : Ppl.linear_expression -> NumConst.t   *) 
+
+*)
 
