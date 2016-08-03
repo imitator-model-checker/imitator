@@ -3433,10 +3433,6 @@ let unserialize_p_convex_or_nonconvex_constraint p_convex_or_nonconvex_constrain
 (** IMITATOR operator style to string **)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
-(*using *)
-let compare coeff1 coeff2 = let first_minus_second = Gmp.Z.compare coeff1 coeff2 in first_minus_second 
-
-
 (*get string of operators*)
 let operator2string op = match op with
 	| Op_g  -> ">"
@@ -3446,6 +3442,27 @@ let operator2string op = match op with
 	| Op_l  -> "<"
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+(*olde version code, maybe reuse in future*)
+
+(*
+(*using *)
+let compare coeff1 coeff2 = let first_minus_second = Gmp.Z.compare coeff1 coeff2 in first_minus_second 
+*)
 
 (*
 let get_coef term = match term with
@@ -3457,7 +3474,6 @@ let get_coef term = match term with
 
 	| _ -> raise (SerializationError("get_coef function error")) 	
 *)
-
 
 (*
 (*for linear term*)
@@ -3480,7 +3496,6 @@ let rec isMinus linear_term =	(* let coef = ref NumConst.zero in *)
 								in
 								!b
 *)
-
 										
 (*
 (*for linear term*)
@@ -3505,7 +3520,6 @@ let rec get_coefs_vars linear_term =	let coefs_vars = ref [] in
 
 										!coefs_vars
 *)
-
 
 (*
 (* check whether list of coefs contains a negative coef*)
