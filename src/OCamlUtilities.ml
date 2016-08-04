@@ -443,6 +443,12 @@ let round3_float d =
 (** System functions *)
 (**************************************************)
 
+(** Read the first line of a file and convert to string *)
+let read_first_line_from_file file_name =
+	(*** TODO: test for file existence! ***)
+	let ic = open_in file_name in
+	input_line ic
+
 (** Read a file and convert to string *)
 let read_from_file file_name =
 	(*** TODO: test for file existence! ***)

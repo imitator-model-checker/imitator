@@ -181,6 +181,9 @@ val now : unit -> string
 (** System functions *)
 (**************************************************)
 
+(** Read the first line of a file and convert to string *)
+val read_first_line_from_file : string -> string
+
 (** Read a file and convert to string *)
 val read_from_file : string -> string
 
