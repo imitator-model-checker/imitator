@@ -60,6 +60,9 @@ class virtual algoCartoGeneric :
 		(************************************************************)
 		(* Current point *)
 		val mutable current_point : more_points
+		
+		(* Current iteration (number of times IM is called); used for printing only *)
+		val mutable current_iteration : int
 
 		(* Number of dimensions *)
 		val mutable nb_dimensions : int
