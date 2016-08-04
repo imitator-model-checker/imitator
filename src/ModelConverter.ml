@@ -1938,12 +1938,6 @@ let abstract_model_of_parsing_structure options (parsed_variable_declarations, p
 	print_message Verbose_high ("\nSetting dimensions...");
 	LinearConstraint.set_dimensions nb_parameters nb_clocks nb_discrete;
 	
-	(* Set dimensions for hyper rectangles *)
-	HyperRectangle.set_dimensions nb_parameters;
-	(* Set dimensions for parameter valuations *)
-	PVal.set_dimensions nb_parameters;
-
-	
 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Construct the arrays of automata, variables and actions *) 

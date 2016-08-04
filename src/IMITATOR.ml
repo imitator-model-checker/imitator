@@ -130,6 +130,19 @@ Input.set_model model;
 
 
 (*------------------------------------------------------------*)
+(* Set the parameter dimensions *)
+(*------------------------------------------------------------*)
+
+(*** NOTE: must be done one and exactly one time ***)
+
+(* Set dimensions for hyper rectangles *)
+HyperRectangle.set_dimensions model.nb_parameters;
+
+(* Set dimensions for parameter valuations *)
+PVal.set_dimensions model.nb_parameters;
+
+
+(*------------------------------------------------------------*)
 (* Parse the additional file (pi0 or v0) *)
 (*------------------------------------------------------------*)
 begin
