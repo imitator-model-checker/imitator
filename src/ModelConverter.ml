@@ -1,24 +1,24 @@
-(*************************************************************
+(************************************************************
  *
  *                       IMITATOR
  * 
- * Convert a parsing structure into an abstract model
- *
- * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
- * Universite Paris 13, Sorbonne Paris Cite, LIPN (France)
+ * Laboratoire Spécification et Vérification (ENS Cachan & CNRS, France)
+ * LIPN, Université Paris 13, Sorbonne Paris Cité (France)
  * 
- * Author:        Etienne Andre
+ * Module description: Convert a parsing structure into an abstract model
  * 
- * Created:       2009/09/09
- * Last modified: 2016/03/16
+ * File contributors : Étienne André
+ * Created           : 2009/09/09
+ * Last modified     : 2016/08/04
  *
  ************************************************************)
 
 
 
-
+(************************************************************)
 (************************************************************)
 (** Modules *)
+(************************************************************)
 (************************************************************)
 open Exceptions
 open OCamlUtilities
@@ -31,10 +31,14 @@ open ModelPrinter
 
 
 (************************************************************)
+(************************************************************)
 (** Exceptions *)
+(************************************************************)
 (************************************************************)
 (* When checking pi0 *)
 exception InvalidPi0
+(* When checking V0 *)
+exception InvalidV0
 
 (* For constraint conversion *)
 exception False_exception
@@ -42,6 +46,27 @@ exception False_exception
 (*(* When a particular string is not found *)
 exception String_not_found of string*)
 
+
+(************************************************************)
+(************************************************************)
+(** Global variables: saved data structures between model parsing and second file parsing *)
+(************************************************************)
+(************************************************************)
+
+(*** HACK: at the end of model parsing, we will backup some data structures that will be used for reference valuation (pi0) / reference hyper-rectangle (v0) parsing and checking ***)
+let saved_index_of_variables	= ref None
+let saved_nb_parameters			= ref None
+let saved_parameters			= ref None
+let saved_parameters_names		= ref None
+let saved_variables				= ref None
+
+
+
+(************************************************************)
+(************************************************************)
+(** Model conversion *)
+(************************************************************)
+(************************************************************)
 
 (*------------------------------------------------------------*)
 (* Convert a ParsingStructure.tile_nature into a Result.tile_nature *)
@@ -1266,106 +1291,6 @@ let check_projection_definition parameters_names = function
 	)
 
 
-(*------------------------------------------------------------*)
-(* Check the pi0 w.r.t. the model parameters *)
-(*------------------------------------------------------------*)
-let check_pi0 pi0 parameters_names =
-	(* Compute the list of variable names *)
-	(**** TO OPTIMIZE: not tail recursvie ****)
-	let list_of_variables, _ = List.split pi0 in
-
-	(* Compute the multiply defined variables *)
-	let multiply_defined_variables = elements_existing_several_times list_of_variables in
-	(* Print an error for each of them *)
-	List.iter (fun variable_name -> print_error ("The parameter '" ^ variable_name ^ "' was assigned several times a valuation in pi0.")) multiply_defined_variables;
-
-	(*** TODO: only warns if it is always defined to the same value ***)
-
-	(* Check if the variables are all defined *)
-	let all_defined = List.fold_left
-		(fun all_defined variable_name ->
-			if List.mem variable_name list_of_variables then all_defined
-			else (
-				print_error ("The parameter '" ^ variable_name ^ "' was not assigned a valuation in pi0.");
-				false
-			)
-		)
-		true
-		parameters_names
-	in
-
-	(* Check if some defined variables are not parameters (and warn) *)
-	List.iter
-		(fun variable_name ->
-			if not (List.mem variable_name parameters_names) then (
-				print_warning ("'" ^ variable_name ^ "', which is assigned a valuation in pi0, is not a valid parameter name.")
-			)
-		)
-		list_of_variables
-	;
-
-	(* If something went wrong: launch an error *)
-(*	if multiply_defined_variables != [] || not all_defined
-	then false else true*)
-	multiply_defined_variables = [] && all_defined
-
-
-
-(*------------------------------------------------------------*)
-(* Check the pi0 cube w.r.t. the model parameters *)
-(*------------------------------------------------------------*)
-let check_v0 parsed_v0 parameters_names =
-	(* Compute the list of variable names *)
-	let list_of_variables = List.map (fun (v, _, _) -> v) parsed_v0 in
-
-	(* Compute the multiply defined variables *)
-	let multiply_defined_variables = elements_existing_several_times list_of_variables in
-	(* Print an error for each of them *)
-	List.iter (fun variable_name -> print_error ("The parameter '" ^ variable_name ^ "' was assigned several times a valuation in v0.")) multiply_defined_variables;
-	
-	(*** TODO: only warns if it is always defined to the same value ***)
-
-	(* Check if the variables are all defined *)
-	let all_defined = List.fold_left
-		(fun all_defined variable_name ->
-			if List.mem variable_name list_of_variables then all_defined
-			else (
-				print_error ("The parameter '" ^ variable_name ^ "' was not assigned a valuation in v0.");
-				false
-			)
-		)
-		true
-		parameters_names
-	in
-
-	(* Check that the intervals are not null *)
-	let all_intervals_ok = List.fold_left
-		(fun all_intervals_ok (variable_name, a, b) ->
-			if NumConst.le a b then all_intervals_ok
-			else (
-				print_error ("The interval [" ^ (NumConst.string_of_numconst a) ^ ", " ^ (NumConst.string_of_numconst b) ^ "] is null for parameter '" ^ variable_name ^ "' in v0.");
-				false
-			)
-		)
-		true
-		parsed_v0
-	in
-
-	(* Check if some defined variables are not parameters (and warn) *)
-	List.iter
-		(fun variable_name ->
-			if not (List.mem variable_name parameters_names) then (
-				print_warning ("'" ^ variable_name ^ "', which is assigned a valuation in v0, is not a valid parameter name.")
-			)
-		)
-		list_of_variables
-	;
-
-	(* If something went wrong: launch an error *)
-	multiply_defined_variables = [] && all_defined && all_intervals_ok
-
-
-
 (************************************************************)
 (** MODEL CONVERSION *)
 (************************************************************)
@@ -1828,40 +1753,6 @@ let convert_projection_definition index_of_variables = function
 	) parsed_parameters)
 
 
-(*------------------------------------------------------------*)
-(* Convert the parsed pi0 into a valid pi0 *)
-(*------------------------------------------------------------*)
-let make_pi0 parsed_pi0 variables nb_parameters =
-	let pi0 = new PVal.pval in
-	for i = 0 to nb_parameters - 1 do
-		let parameter_name = variables.(i) in
-		let value = try(
-			List.assoc parameter_name parsed_pi0
-			) with Not_found ->
-			raise (InternalError ("The parameter name '" ^ parameter_name ^ "' was not found in pi0 although checks should have been performed before."))
-		in
-		pi0#set_value i value
-	done;
-	pi0
-
-(*------------------------------------------------------------*)
-(* Convert the parsed v0 into a valid v0 *)
-(*------------------------------------------------------------*)
-let make_v0 parsed_v0 index_of_variables nb_parameters =
-	let v0 = new HyperRectangle.hyper_rectangle in
-	List.iter (fun (variable_name, a, b) ->
-		try
-		(* Get the variable index *)
-		let variable_index = Hashtbl.find index_of_variables variable_name in
-		(* Update the variable value *)
-		v0#set_min variable_index a;
-		v0#set_max variable_index b;
-		with Not_found -> 
-			(* No problem: this must be an invalid parameter name (which is ignored) *)
-			()
-(* 			raise (InternalError ("The variable name '" ^ variable_name ^ "' was not found in the list of variables although checks should have been performed before.")) *)
-	) parsed_v0;
-	v0
 
 
 (*------------------------------------------------------------*)
@@ -1895,7 +1786,7 @@ let get_clocks_in_updates : clock_updates -> clock_index list = function
 (*------------------------------------------------------------*)
 (* Convert the parsing structure into an abstract model *)
 (*------------------------------------------------------------*)
-let abstract_model_of_parsing_structure (parsed_variable_declarations, parsed_automata, parsed_init_definition, parsed_property_definition, parsed_projection_definition, parsed_carto_definition) parsed_pi0 parsed_v0 options =
+let abstract_model_of_parsing_structure options (parsed_variable_declarations, parsed_automata, parsed_init_definition, parsed_property_definition, parsed_projection_definition, parsed_carto_definition) =
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Debug functions *) 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -2275,49 +2166,6 @@ let abstract_model_of_parsing_structure (parsed_variable_declarations, parsed_au
 
 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Constuct the pi0 *)
-	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-
-	let (pi0 : AbstractModel.pi0), (v0 : AbstractModel.v0) =
-		match options#imitator_mode with
-		(* No pi0 / v0 *)
-		(*** BADPROG : should be an option !!! ***)
-		| Translation | State_space_exploration | EF_synthesis | Parametric_deadlock_checking ->
-			(* Return blank values *)
-			(new PVal.pval)
-			,
-			(new HyperRectangle.hyper_rectangle)
-
-		(* IM : Pi0 *)
-		| Inverse_method -> 
-			print_message Verbose_total ("*** Building reference valuation...");
-			(* Verification of the pi_0 *)
-			if not (check_pi0 parsed_pi0 parameters_names) then raise InvalidPi0;
-			(* Construction of the pi_0 *)
-			let pi0 = make_pi0 parsed_pi0 variables nb_parameters in
-			(* Return the pair *)
-			pi0
-			,
-			(new HyperRectangle.hyper_rectangle)
-			
-		(* BC : V0 *)
-		| Cover_cartography | Learning_cartography | Shuffle_cartography | Random_cartography _ | RandomSeq_cartography _ | Border_cartography -> 
-			print_message Verbose_total ("*** Building reference rectangle...");
-			(* Verification of the pi_0 *)
-			if not (check_v0 parsed_v0 parameters_names) then raise InvalidPi0;
-			(* Construction of the pi_0 *)
-			let v0 = make_v0 parsed_v0 index_of_variables nb_parameters in
-			(* Return the pair *)
-			(new PVal.pval)
-			,
-			v0
-	in
-	
-(*	(* Make a functional version of the pi0 *)
-	let pi0 = fun index -> pi0.(index) in*)
-
-
-	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Construct the automata *) 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	print_message Verbose_total ("*** Building automata...");
@@ -2601,31 +2449,7 @@ let abstract_model_of_parsing_structure (parsed_variable_declarations, parsed_au
 			) (locations_per_automaton automaton_index);
 		) automata;	);
 	
-	(* Debut print: Pi0 / V0 *)
-	if verbose_mode_greater Verbose_medium then(
-		match options#imitator_mode with
-		| Inverse_method -> 
-			print_message Verbose_medium ("\n*** Reference valuation pi0:");
-			List.iter (fun parameter ->
-				print_message Verbose_medium (
-					variables.(parameter) ^ " : " ^ (NumConst.string_of_numconst (pi0#get_value parameter))
-				)
-			) parameters;
-			
-		| Cover_cartography | Border_cartography | Random_cartography _ -> 
-			print_message Verbose_medium ("\n*** Reference rectangle V0:");
-			for parameter_index = 0 to nb_parameters - 1 do
-				let min = v0#get_min parameter_index in
-				let max = v0#get_max parameter_index in
-				print_message Verbose_medium (
-					variables.(parameter_index) ^ " : [" ^ (NumConst.string_of_numconst min) ^ ", " ^ (NumConst.string_of_numconst max) ^ "]"
-				);
-			done;
-		
-		(* If not IM and not BC: no print *)
-		| _ -> ()
-	);
-	
+
 	(* Debug print: L/U *)
 	begin
 	match lu_status with
@@ -2645,6 +2469,15 @@ let abstract_model_of_parsing_structure (parsed_variable_declarations, parsed_au
 		
 	end;
 	
+	
+	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(*** HACK (big big hack): save some data structures to be used by the parsing and checking of additional file (pi0 or v0), if any ***)
+	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	saved_index_of_variables	:= Some index_of_variables;
+	saved_nb_parameters			:= Some nb_parameters;
+	saved_parameters			:= Some parameters;
+	saved_parameters_names		:= Some parameters_names;
+	saved_variables				:= Some variables;
 	
 	
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -2744,9 +2577,288 @@ let abstract_model_of_parsing_structure (parsed_variable_declarations, parsed_au
 (* 	carto = carto_linear_constraints , (p1_min , p1_max) , (p2_min , p2_max); *)
 	}
 
-	,
-	(* Also return the pi0 *)
+
+
+
+(************************************************************)
+(************************************************************)
+(** Pi0 conversion *)
+(************************************************************)
+(************************************************************)
+
+(*------------------------------------------------------------*)
+(* Check the pi0 w.r.t. the model parameters *)
+(*------------------------------------------------------------*)
+let check_pi0 pi0 parameters_names =
+	(* Compute the list of variable names *)
+	(**** TO OPTIMIZE: not tail recursvie ****)
+	let list_of_variables, _ = List.split pi0 in
+
+	(* Compute the multiply defined variables *)
+	let multiply_defined_variables = elements_existing_several_times list_of_variables in
+	(* Print an error for each of them *)
+	List.iter (fun variable_name -> print_error ("The parameter '" ^ variable_name ^ "' was assigned several times a valuation in pi0.")) multiply_defined_variables;
+
+	(*** TODO: only warns if it is always defined to the same value ***)
+
+	(* Check if the variables are all defined *)
+	let all_defined = List.fold_left
+		(fun all_defined variable_name ->
+			if List.mem variable_name list_of_variables then all_defined
+			else (
+				print_error ("The parameter '" ^ variable_name ^ "' was not assigned a valuation in pi0.");
+				false
+			)
+		)
+		true
+		parameters_names
+	in
+
+	(* Check if some defined variables are not parameters (and warn) *)
+	List.iter
+		(fun variable_name ->
+			if not (List.mem variable_name parameters_names) then (
+				print_warning ("'" ^ variable_name ^ "', which is assigned a valuation in pi0, is not a valid parameter name.")
+			)
+		)
+		list_of_variables
+	;
+
+	(* If something went wrong: launch an error *)
+(*	if multiply_defined_variables != [] || not all_defined
+	then false else true*)
+	multiply_defined_variables = [] && all_defined
+
+
+
+(*------------------------------------------------------------*)
+(* Convert the parsed pi0 into a valid pi0 *)
+(*------------------------------------------------------------*)
+let make_pi0 parsed_pi0 variables nb_parameters =
+	let pi0 = new PVal.pval in
+	for i = 0 to nb_parameters - 1 do
+		let parameter_name = variables.(i) in
+		let value = try(
+			List.assoc parameter_name parsed_pi0
+			) with Not_found ->
+			raise (InternalError ("The parameter name '" ^ parameter_name ^ "' was not found in pi0 although checks should have been performed before."))
+		in
+		pi0#set_value i value
+	done;
 	pi0
-	,
-	(* Also return the v0 *)
+
+
+(*------------------------------------------------------------*)
+(* Main function for pi0 parsing and converting *)
+(*------------------------------------------------------------*)
+let check_and_make_pi0 parsed_pi0 =
+	(* Print some information *)
+	print_message Verbose_total ("*** Building reference valuation...");
+	
+	(*** HACK (big big hack): retrieve the structures saved at the end of the model parsing, and kept for efficiency ***)
+	let nb_parameters, parameters, parameters_names, variables =
+	match !saved_nb_parameters, !saved_parameters, !saved_parameters_names, !saved_variables with
+	| Some nb_parameters, Some parameters, Some parameters_names, Some variables -> nb_parameters, parameters, parameters_names, variables
+	| _ -> raise (InternalError("Saved data structures (nb_parameters, parameters_names, variables) not available when parsing reference valuation"))
+	in
+	
+	(* Verification of the pi0 *)
+	if not (check_pi0 parsed_pi0 parameters_names) then raise InvalidPi0;
+	
+	(* Construction of the pi0 *)
+	let pi0 = make_pi0 parsed_pi0 variables nb_parameters in
+	
+	(* Print some information *)
+	print_message Verbose_medium ("\n*** Reference valuation pi0:");
+	List.iter (fun parameter ->
+		print_message Verbose_medium (
+			variables.(parameter) ^ " : " ^ (NumConst.string_of_numconst (pi0#get_value parameter))
+		)
+	) parameters;
+	
+	(* Return the valuation *)
+	pi0
+
+
+
+(************************************************************)
+(************************************************************)
+(** V0 conversion *)
+(************************************************************)
+(************************************************************)
+
+(*------------------------------------------------------------*)
+(* Check the V0 w.r.t. the model parameters *)
+(*------------------------------------------------------------*)
+let check_v0 parsed_v0 parameters_names =
+	(* Compute the list of variable names *)
+	let list_of_variables = List.map (fun (v, _, _) -> v) parsed_v0 in
+
+	(* Compute the multiply defined variables *)
+	let multiply_defined_variables = elements_existing_several_times list_of_variables in
+	(* Print an error for each of them *)
+	List.iter (fun variable_name -> print_error ("The parameter '" ^ variable_name ^ "' was assigned several times a valuation in v0.")) multiply_defined_variables;
+	
+	(*** TODO: only warns if it is always defined to the same value ***)
+
+	(* Check if the variables are all defined *)
+	let all_defined = List.fold_left
+		(fun all_defined variable_name ->
+			if List.mem variable_name list_of_variables then all_defined
+			else (
+				print_error ("The parameter '" ^ variable_name ^ "' was not assigned a valuation in v0.");
+				false
+			)
+		)
+		true
+		parameters_names
+	in
+
+	(* Check that the intervals are not null *)
+	let all_intervals_ok = List.fold_left
+		(fun all_intervals_ok (variable_name, a, b) ->
+			if NumConst.le a b then all_intervals_ok
+			else (
+				print_error ("The interval [" ^ (NumConst.string_of_numconst a) ^ ", " ^ (NumConst.string_of_numconst b) ^ "] is null for parameter '" ^ variable_name ^ "' in v0.");
+				false
+			)
+		)
+		true
+		parsed_v0
+	in
+
+	(* Check if some defined variables are not parameters (and warn) *)
+	List.iter
+		(fun variable_name ->
+			if not (List.mem variable_name parameters_names) then (
+				print_warning ("'" ^ variable_name ^ "', which is assigned a valuation in v0, is not a valid parameter name.")
+			)
+		)
+		list_of_variables
+	;
+
+	(* If something went wrong: launch an error *)
+	multiply_defined_variables = [] && all_defined && all_intervals_ok
+
+
+(*------------------------------------------------------------*)
+(* Convert the parsed v0 into a valid v0 *)
+(*------------------------------------------------------------*)
+let make_v0 parsed_v0 index_of_variables =
+	let v0 = new HyperRectangle.hyper_rectangle in
+	List.iter (fun (variable_name, a, b) ->
+		try
+		(* Get the variable index *)
+		let variable_index = Hashtbl.find index_of_variables variable_name in
+		(* Update the variable value *)
+		v0#set_min variable_index a;
+		v0#set_max variable_index b;
+		with Not_found -> 
+			(* No problem: this must be an invalid parameter name (which is ignored) *)
+			()
+(* 			raise (InternalError ("The variable name '" ^ variable_name ^ "' was not found in the list of variables although checks should have been performed before.")) *)
+	) parsed_v0;
 	v0
+
+
+(*------------------------------------------------------------*)
+(* Main function for v0 parsing and converting *)
+(*------------------------------------------------------------*)
+let check_and_make_v0 parsed_v0 =
+	(* Print some information *)
+	print_message Verbose_total ("*** Building reference hyper-rectangle...");
+	
+	(*** HACK (big big hack): retrieve the structures saved at the end of the model parsing, and kept for efficiency ***)
+	let index_of_variables, nb_parameters, parameters_names, variables =
+	match !saved_index_of_variables, !saved_nb_parameters, !saved_parameters_names, !saved_variables with
+	| Some index_of_variables, Some nb_parameters, Some parameters_names, Some variables -> index_of_variables, nb_parameters, parameters_names, variables
+	| _ -> raise (InternalError("Saved data structures (index_of_variables, nb_parameters, parameters_names, variables) not available when parsing hyper-rectangle"))
+	in
+	
+	(* Verification *)
+	if not (check_v0 parsed_v0 parameters_names) then raise InvalidV0;
+	
+	(* Construction *)
+	let v0 = make_v0 parsed_v0 index_of_variables in	
+	
+	(* Print some information *)
+	print_message Verbose_medium ("\n*** Reference rectangle V0:");
+	for parameter_index = 0 to nb_parameters - 1 do
+		let min = v0#get_min parameter_index in
+		let max = v0#get_max parameter_index in
+		print_message Verbose_medium (
+			variables.(parameter_index) ^ " : [" ^ (NumConst.string_of_numconst min) ^ ", " ^ (NumConst.string_of_numconst max) ^ "]"
+		);
+	done;
+
+	(* Return the hyper-rectangle *)
+	v0
+
+
+
+(*
+	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(* Constuct the pi0 *)
+	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+
+	let (pi0 : AbstractModel.pi0), (v0 : AbstractModel.v0) =
+		match options#imitator_mode with
+		(* No pi0 / v0 *)
+		(*** BADPROG : should be an option !!! ***)
+		| Translation | State_space_exploration | EF_synthesis | Parametric_deadlock_checking ->
+			(* Return blank values *)
+			(new PVal.pval)
+			,
+			(new HyperRectangle.hyper_rectangle)
+
+		(* IM : Pi0 *)
+		| Inverse_method -> 
+			print_message Verbose_total ("*** Building reference valuation...");
+			(* Verification of the pi0 *)
+			if not (check_pi0 parsed_pi0 parameters_names) then raise InvalidPi0;
+			(* Construction of the pi0 *)
+			let pi0 = make_pi0 parsed_pi0 variables nb_parameters in
+			(* Return the pair *)
+			pi0
+			,
+			(new HyperRectangle.hyper_rectangle)
+			
+		(* BC : V0 *)
+		| Cover_cartography | Learning_cartography | Shuffle_cartography | Random_cartography _ | RandomSeq_cartography _ | Border_cartography -> 
+			print_message Verbose_total ("*** Building reference rectangle...");
+			(* Verification of the pi0 *)
+			if not (check_v0 parsed_v0 parameters_names) then raise InvalidV0;
+			(* Construction of the pi0 *)
+			let v0 = make_v0 parsed_v0 index_of_variables nb_parameters in
+			(* Return the pair *)
+			(new PVal.pval)
+			,
+			v0
+	in
+	
+
+	(* Debut print: Pi0 / V0 *)
+	if verbose_mode_greater Verbose_medium then(
+		match options#imitator_mode with
+		| Inverse_method -> 
+			print_message Verbose_medium ("\n*** Reference valuation pi0:");
+			List.iter (fun parameter ->
+				print_message Verbose_medium (
+					variables.(parameter) ^ " : " ^ (NumConst.string_of_numconst (pi0#get_value parameter))
+				)
+			) parameters;
+			
+		| Cover_cartography | Border_cartography | Random_cartography _ -> 
+			print_message Verbose_medium ("\n*** Reference rectangle V0:");
+			for parameter_index = 0 to nb_parameters - 1 do
+				let min = v0#get_min parameter_index in
+				let max = v0#get_max parameter_index in
+				print_message Verbose_medium (
+					variables.(parameter_index) ^ " : [" ^ (NumConst.string_of_numconst min) ^ ", " ^ (NumConst.string_of_numconst max) ^ "]"
+				);
+			done;
+		
+		(* If not IM and not BC: no print *)
+		| _ -> ()
+	);
+	*)

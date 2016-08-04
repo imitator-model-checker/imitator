@@ -121,11 +121,49 @@ options#recall();
 let parsing_counter = create_time_counter_and_register "model parsing" Parsing_counter Verbose_standard in
 parsing_counter#start;
 
-let model, pi0, v0 = ParsingUtility.compile options in
+(*------------------------------------------------------------*)
+(* Parse the model *)
+(*------------------------------------------------------------*)
+let model = ParsingUtility.compile_model options in
 
 Input.set_model model;
-Input.set_pi0 pi0;
-Input.set_v0 v0;
+
+
+(*------------------------------------------------------------*)
+(* Parse the additional file (pi0 or v0) *)
+(*------------------------------------------------------------*)
+begin
+match options#imitator_mode with
+	(*** BADPROG!!! This should be defined elsewhere... ***)
+	| Translation
+	| State_space_exploration
+	| EF_synthesis
+	| Parametric_deadlock_checking
+	(* Case: no additional file *)
+	-> ()
+	
+	(* Inverse method : pi0 *)
+	| Inverse_method
+	(* Case: pi0 *)
+	->
+		let pi0 = ParsingUtility.compile_pi0 options in
+		Input.set_pi0 pi0;
+
+		
+	| Cover_cartography
+	| Border_cartography
+	| Random_cartography _
+	| Learning_cartography
+	| Shuffle_cartography
+	| RandomSeq_cartography _
+	(* Case: v0 *)
+	->
+		let v0 = ParsingUtility.compile_v0 options in
+		Input.set_v0 v0;
+	
+end;
+
+
 
 parsing_counter#stop;
 
