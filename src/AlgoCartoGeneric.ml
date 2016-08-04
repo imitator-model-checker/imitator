@@ -123,6 +123,45 @@ let abstract_im_result_of_im_result (im_result : im_result) reference_val : abst
 
 
 (*------------------------------------------------------------*)
+(* Convert a 'pdfc_result' into an 'abstract_im_result' *)
+(*------------------------------------------------------------*)
+let abstract_im_result_of_pdfc_result (pdfc_result : pdfc_result) reference_val : abstract_im_result =
+	raise (InternalError("not implemented"))
+(*	(* First, abstract state space *)
+	let abstract_state_space = {
+		nb_states		= StateSpace.nb_states im_result.state_space;
+		nb_transitions	= StateSpace.nb_transitions im_result.state_space;
+	}
+	in
+	
+	(* Construct the abstraction *)
+	{
+	(* Reference valuation *)
+	reference_val		= reference_val;
+
+	(* Convex constraint *)
+	result				= pdfc_result.result;
+	
+	(* Abstracted version of the explored state space *)
+	abstract_state_space	= abstract_state_space;
+	
+	(* Nature of the state space *)
+	statespace_nature		= im_result.statespace_nature;
+	
+	(* Number of random selections of pi-incompatible inequalities performed *)
+	nb_random_selections= im_result.nb_random_selections;
+	
+	(* Total computation time of the algorithm *)
+	computation_time	= im_result.computation_time;
+		
+	(* Soundness of the result *)
+	soundness			= im_result.soundness;
+	
+	(* Termination *)
+	termination			= im_result.termination;
+}*)
+
+(*------------------------------------------------------------*)
 (** Check if a parameter valuation belongs to the constraint of an im_result *)
 (*------------------------------------------------------------*)
 let pi0_in_tiles pval (abstract_im_result : abstract_im_result) =
@@ -711,14 +750,18 @@ class virtual algoCartoGeneric =
 	(* Abstract the result of IM *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method private abstract_result imitator_result reference_val =
-		(* Get the result *)
-		let im_result =  match imitator_result with
-			| IM_result im_result -> im_result
-			| _ -> raise (InternalError("The result of IM must be an im_result."))
-		in
+		(* Get the result and compute the abstraction *)
+		match imitator_result with
+			(* Result for IM (or PRP) *)
+			| IM_result im_result -> abstract_im_result_of_im_result im_result reference_val
+			
+			(* Result for PDFC *)
+			| PDFC_result pdfc_result -> abstract_im_result_of_pdfc_result pdfc_result reference_val
 
-		(* Compute the abstraction *)
-		abstract_im_result_of_im_result im_result reference_val
+			(* Result for EFsynth *)
+			| EFsynth_result efsynth_result -> raise (InternalError("The result of IM must be an im_result (here seen EFsynth)."))
+			| _ -> raise (InternalError("The result of IM must be an im_result (in function abstract_result)."))
+
 
 	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
