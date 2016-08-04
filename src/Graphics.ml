@@ -96,8 +96,6 @@ try(
 	let model = Input.get_model () in
 	(* Retrieve the input options *)
 	let options = Input.get_options () in
-	(* Retrieve the V0 *)
-	let v0 = Input.get_v0 () in
 	
 	print_message Verbose_low "Starting to compute graphical cartography...";
 	
@@ -194,6 +192,10 @@ try(
 	(*** TODO: better use an option "cartography mode" ***)
 	(*** TODO: take the projection into account! ***)
 		| Cover_cartography | Shuffle_cartography | Random_cartography _ | RandomSeq_cartography _ | Border_cartography ->
+			(* Retrieve the V0 *)
+			(*** NOTE: only retrieve here because, in other mode (e.g., EF or IM) this object is not defined ***)
+			let v0 = Input.get_v0 () in
+			
 			print_message Verbose_low "Case real cartography: first 2 parameters with a range";
 			for index = 0 to model.nb_parameters - 1 do
 (* 			Array.iteri (fun index (a,b) ->  *)
