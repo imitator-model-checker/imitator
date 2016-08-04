@@ -332,6 +332,17 @@ class imitator_options =
 		method pi0file = pi0file
 		
 		
+		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+		(* Set methods *)
+		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+		
+		(*** NOTE: set methods are only used for the learning-based abstraction construction ***)
+		
+		method set_file file_name =
+			file <- file_name
+
+		method set_files_prefix file_name =
+			files_prefix <- ref file_name
 		
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		(* Parse method *)
