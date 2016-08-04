@@ -22,6 +22,8 @@ exception SerializationError of string
 exception Found
 exception InvalidModel
 exception UnexpectedToken of char
+(** Exception when interfacing with another program *)
+exception InterfacingError of string
 
 (** When a constraint contains no integer point *)
 exception NoIPPTA

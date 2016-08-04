@@ -611,6 +611,7 @@ ResultProcessor.process_result result algorithm#algorithm_name None;
 		| Failure msg -> "'Failure' exception: '" ^ msg ^ "'"
 		| Invalid_argument msg -> "'Invalid_argument' exception: '" ^ msg ^ "'"
 		| SerializationError msg -> "Serialization error: " ^ msg ^ ""
+		| InterfacingError msg -> "Interfacing error: " ^ msg ^ ""
 		| Not_found -> "'Not_found' exception!"
 		| Random_generator_initialization_exception-> "A fatal error occurred during the random generator initialization."
 		| e -> "Fatal exception '" ^ (Printexc.to_string e) ^ "'."
