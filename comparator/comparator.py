@@ -17,6 +17,7 @@
 #************************************************************
 # MODULES
 #************************************************************
+import re
 import time
 import datetime
 import os
@@ -53,13 +54,121 @@ sys.stdout = logfile
 
 
 #************************************************************
+# VERSIONS, OPTIONS AND SYNTAX
+#************************************************************
+
+#------------------------------------------------------------
+# Versions
+#------------------------------------------------------------
+# NOTE: really ugly to manually assign a value…
+V_2_5	= 1
+V_2_6_1	= 2
+V_2_7_3	= 3
+V_2_8	= 4
+
+#------------------------------------------------------------
+# Options
+#------------------------------------------------------------
+# NOTE: really ugly to manually assign a value…
+OPT_INCLUSION			= 1
+OPT_MERGING				= 2
+OPT_OUTPUT_PREFIX		= 3
+OPT_OUTPUT_RES			= 4
+OPT_OUTPUT_TRACE_SET	= 5
+
+UNDEFINED_SYNTAX = -1
+
+# Critical options, i.e., without which the analysis shall not be run; in other words, if a version does not implement an option required by the analysis and belonging to this list, the benchmark is not run
+critical_options = [OPT_MERGING]
+
+# Mainly needed for printing and info purpose
+option_names = {
+	OPT_INCLUSION			: 'inclusion',
+	OPT_MERGING				: 'merging',
+	OPT_OUTPUT_PREFIX		: 'output-prefix',
+	OPT_OUTPUT_RES			: 'output-result',
+	OPT_OUTPUT_TRACE_SET	: 'output-trace-set',
+}
+
+#------------------------------------------------------------
+# Binaries
+#------------------------------------------------------------
+
+versions = {
+	#------------------------------------------------------------
+	V_2_5 : {
+		'version_name'		: '2.5',
+		'binary'			: 'imitator25',
+		'syntax':
+			{
+			OPT_INCLUSION			: '-incl',
+			OPT_MERGING				: '-with-merging',
+			OPT_OUTPUT_PREFIX		: '-log-prefix',
+			OPT_OUTPUT_RES			: UNDEFINED_SYNTAX,
+			OPT_OUTPUT_TRACE_SET	: '-with-dot',
+			},
+		'files_suffix'			: '_2_5',
+	},
+	#------------------------------------------------------------
+	V_2_6_1 : {
+		'version_name'		: '2.6.1',
+		'binary'			: 'imitator261',
+		'syntax':
+			{
+			OPT_INCLUSION			: '-incl',
+			OPT_MERGING				: '-merge',
+			OPT_OUTPUT_PREFIX		: '-log-prefix',
+			OPT_OUTPUT_RES			: UNDEFINED_SYNTAX,
+			OPT_OUTPUT_TRACE_SET	: '-with-dot',
+			},
+		'files_suffix'			: '_2_6_1',
+	},
+	#------------------------------------------------------------
+	V_2_7_3 : {
+		'version_name'		: '2.7.3',
+		'binary'			: 'imitator273',
+		'syntax':
+			{
+			OPT_INCLUSION			: '-incl',
+			OPT_MERGING				: '-merge',
+			OPT_OUTPUT_PREFIX		: '-output-prefix',
+			OPT_OUTPUT_RES			: '-output-result',
+			OPT_OUTPUT_TRACE_SET	: '-output-trace-set',
+			},
+		'files_suffix'			: '_2_7_3',
+	},
+	#------------------------------------------------------------
+	V_2_8 : {
+		'version_name'		: '2.8',
+		'binary'			: 'imitator',
+		'syntax':
+			{
+			OPT_INCLUSION			: '-incl',
+			OPT_MERGING				: '-merge',
+			OPT_OUTPUT_PREFIX		: '-output-prefix',
+			OPT_OUTPUT_RES			: '-output-result',
+			OPT_OUTPUT_TRACE_SET	: '-output-trace-set',
+			},
+		'files_suffix'			: '_2_8',
+	},
+}
+
+
+
+#************************************************************
 # FUNCTIONS
 #************************************************************
+ANALYSIS_FAILED = -1
+
+
 def make_binary(binary) :
 	return BINARY_PATH + binary
 
 def make_file(file_name) :
 	return BENCHMARKS_PATH + file_name
+
+def make_log_file(benchmark, version):
+	return RESULT_FILES_PATH + benchmark['log_prefix'] +  versions[version]['files_suffix'] + ".benchlog"
 
 def fail_with(text) :
 	print_to_log('Fatal error!')
@@ -94,117 +203,64 @@ def print_to_screen_and_log(content):
 	print_to_screen(content)
 
 
-#************************************************************
-# VERSIONS, OPTIONS AND SYNTAX
-#************************************************************
 
-#------------------------------------------------------------
-# Versions
-#------------------------------------------------------------
-# NOTE: really ugly to manually assign a value…
-V_2_5	= 1
-V_2_6_1	= 2
-V_2_7_3	= 3
-V_2_8	= 4
+# Function to retrieve the computation time depending on the benchmark
+def get_computation_time(benchmark, version):
+	if version == V_2_5 or version == V_2_6_1 or version == V_2_7_3:
+		# TODO: check if files exist
+		# Open log file
+		log_file = make_log_file(benchmark, version)
+		
+		# "Inverse method successfully finished after 0.048 second."
+		pattern = re.compile("successfully finished after (\d*\.\d*) second")
 
-#------------------------------------------------------------
-# Options
-#------------------------------------------------------------
-# NOTE: really ugly to manually assign a value…
-OPT_MERGING				= 1
-OPT_OUTPUT_PREFIX		= 2
-OPT_OUTPUT_RES			= 3
-OPT_OUTPUT_TRACE_SET	= 4
+		for i, line in enumerate(open(log_file)):
+			for match in re.finditer(pattern, line):
+				#print_to_screen('Found on line %s: %s' % (i+1, match.groups()))
+				return match.groups()[0]
+		
+		print_error("Time not found for benchmark " + benchmark['name'] + " with version " + versions[version]['version_name'])
+		return ANALYSIS_FAILED
+	
+	if version == V_2_8:
+		# Open res file
+		res_file = RESULT_FILES_PATH + benchmark['log_prefix'] +  versions[version]['files_suffix'] + ".res"
+	
+		# Pattern: Computation time                        : 0.041 second
+		pattern = re.compile("Computation time\s*:\s*(\d*\.\d*) second")
 
-UNDEFINED_SYNTAX = -1
-
-# Critical options, i.e., without which the analysis shall not be run; in other words, if a version does not implement an option required by the analysis and belonging to this list, the benchmark is not run
-critical_options = [OPT_MERGING]
-
-# Mainly needed for printing and info purpose
-option_names = {
-	OPT_MERGING				: 'merging',
-	OPT_OUTPUT_PREFIX		: 'output-prefix',
-	OPT_OUTPUT_RES			: 'output-result',
-	OPT_OUTPUT_TRACE_SET	: 'output-trace-set',
-}
-
-#------------------------------------------------------------
-# Binaries
-#------------------------------------------------------------
-
-versions = {
-	#------------------------------------------------------------
-	V_2_5 : {
-		'version_name'		: '2.5',
-		'binary'			: 'imitator25',
-		'syntax':
-			{
-			OPT_MERGING				: '-with-merging',
-			OPT_OUTPUT_PREFIX		: '-log-prefix',
-			OPT_OUTPUT_RES			: UNDEFINED_SYNTAX,
-			OPT_OUTPUT_TRACE_SET	: '-with-dot',
-			},
-		'files_suffix'			: '_2_5',
-	},
-	#------------------------------------------------------------
-	V_2_6_1 : {
-		'version_name'		: '2.6.1',
-		'binary'			: 'imitator261',
-		'syntax':
-			{
-			OPT_MERGING				: '-merge',
-			OPT_OUTPUT_PREFIX		: '-log-prefix',
-			OPT_OUTPUT_RES			: UNDEFINED_SYNTAX,
-			OPT_OUTPUT_TRACE_SET	: '-with-dot',
-			},
-		'files_suffix'			: '_2_6_1',
-	},
-	#------------------------------------------------------------
-	V_2_7_3 : {
-		'version_name'		: '2.7.3',
-		'binary'			: 'imitator273',
-		'syntax':
-			{
-			OPT_MERGING				: '-merge',
-			OPT_OUTPUT_PREFIX		: '-output-prefix',
-			OPT_OUTPUT_RES			: '-output-result',
-			OPT_OUTPUT_TRACE_SET	: '-output-trace-set',
-			},
-		'files_suffix'			: '_2_7_3',
-	},
-	#------------------------------------------------------------
-	V_2_8 : {
-		'version_name'		: '2.8',
-		'binary'			: 'imitator',
-		'syntax':
-			{
-			OPT_MERGING				: '-merge',
-			OPT_OUTPUT_PREFIX		: '-output-prefix',
-			OPT_OUTPUT_RES			: '-output-result',
-			OPT_OUTPUT_TRACE_SET	: '-output-trace-set',
-			},
-		'files_suffix'			: '_2_8',
-	},
-}
+		for i, line in enumerate(open(res_file)):
+			for match in re.finditer(pattern, line):
+				#print_to_screen('Found on line %s: %s' % (i+1, match.groups()))
+				return match.groups()[0]
+		
+		print_error("Time not found for benchmark " + benchmark['name'] + " with version " + versions[version]['version_name'])
+		return ANALYSIS_FAILED
 
 
 #************************************************************
 # MAIN RUNNING FUNCTION
 #************************************************************
+
+# Global result
+results = {}
+
 def run(benchmark, versions_to_test, logfile):
 	
 	# Print something
-	print_to_log('')
+	print_to_screen_and_log('')
 	print_to_log('')
 	print_to_log('############################################################')
-	print_to_log(' BENCHMARK ' + benchmark['name'])
-	print_to_log('')
-	print_to_screen(' Benchmark ' + benchmark['name'])
+	print_to_screen_and_log(' BENCHMARK ' + benchmark['name'])
+	
+	# Create the row in the results array
+	results[benchmark['log_prefix']] = {}
 	
 	# Prepare command
 	for version in versions_to_test:
 		
+		print_to_log('')
+
 		# If a critical option is not defined for this version, do not run
 		to_run = True
 		for option in benchmark['options']:
@@ -213,6 +269,8 @@ def run(benchmark, versions_to_test, logfile):
 				to_run = False
 		if not to_run:
 			print_to_screen_and_log(' Skip version ' + versions[version]['version_name'] + '')
+			# Store result
+			results[benchmark['log_prefix']][version] = ANALYSIS_FAILED
 		else:
 			
 			# Create the binary
@@ -226,7 +284,7 @@ def run(benchmark, versions_to_test, logfile):
 					# Add the option with the correct syntax
 					options_str_list.append(versions[version]['syntax'][option])
 			# Add the option to redirect log files to the dedicated dir
-			options_str_list.extend([versions[version]['syntax'][OPT_OUTPUT_PREFIX] , RESULT_FILES_PATH + benchmark['log_prefix'] +  versions[version]['files_suffix'] ])
+			options_str_list.extend([versions[version]['syntax'][OPT_OUTPUT_PREFIX] , RESULT_FILES_PATH + benchmark['log_prefix'] + versions[version]['files_suffix'] ])
 					
 			# Add the path to all input files
 			cmd_inputs = []
@@ -252,7 +310,7 @@ def run(benchmark, versions_to_test, logfile):
 			print_to_screen_and_log(' command: ' + ' '.join(cmd))
 			
 			# Create dedicated log file
-			version_log_file = file(RESULT_FILES_PATH + benchmark['log_prefix'] +  versions[version]['files_suffix'] + ".benchlog", 'w')
+			version_log_file = file(make_log_file(benchmark, version), 'w')
 			version_err_file = file(RESULT_FILES_PATH + benchmark['log_prefix'] +  versions[version]['files_suffix'] + ".bencherr", 'w')
 
 			# NOTE: flushing avoids to mix between results of IMITATOR, and text printed by this script
@@ -260,9 +318,27 @@ def run(benchmark, versions_to_test, logfile):
 			subprocess.call(cmd, stdout=version_log_file, stderr=version_err_file)
 			logfile.flush()
 			
+			# Retrieve the computation time
+			time = get_computation_time(benchmark, version)
+			
+			# Store result
+			results[benchmark['log_prefix']][version] = time
+	
+
+			
 			# TODO: test whether the termination is ok
 		
-	
+
+def print_results(versions_to_test):
+	for benchmark_id, result in results.iteritems():
+		# Create text line
+		line = benchmark_id + ": "
+		
+		for version in versions_to_test:
+			line = line + str(result[version]) + "; "
+		
+		print_to_screen(line)
+
 
 #************************************************************
 # RUN!
@@ -279,6 +355,7 @@ print_to_screen('')
 for test in tests:
 	run(test, all_versions, logfile)
 
+print_results(all_versions)
 
 #************************************************************
 # THE END
