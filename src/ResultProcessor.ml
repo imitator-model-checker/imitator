@@ -862,13 +862,18 @@ let process_result result algorithm_name prefix_option =
 		
 		(* If cartography required for BC *)
 		if options#output_bc_cart then (
+			(* Print some information *)
+			print_message Verbose_high "Graphical cartography asked: prepare tiles to be drawn...";
+
 			(* Keep only valid tiles, i.e., underapproximations or exact *)
 			let valid_tiles = List.filter (fun abstract_im_result -> abstract_im_result.soundness = Result.Constraint_maybe_under || abstract_im_result.soundness = Result.Constraint_exact) bc_result.tiles in
+			
 			(* Render zones in a graphical form *)
 			let zones = List.map (fun abstract_im_result -> (abstract_im_result.result, abstract_im_result.statespace_nature)) valid_tiles in
 			Graphics.draw_cartography zones (file_prefix ^ "_cart_bc")
 		) else (
-				print_message Verbose_high "Graphical cartography not asked: not drawn.";
+			(* Print some information *)
+			print_message Verbose_high "Graphical cartography not asked: not drawn.";
 		);
 
 		(* The end *)

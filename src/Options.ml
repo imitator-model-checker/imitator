@@ -9,7 +9,7 @@
  * 
  * File contributors : Ulrich Kühne, Étienne André
  * Created           : 2010
- * Last modified     : 2016/06/15
+ * Last modified     : 2016/08/08
  *
  ************************************************************)
 
@@ -86,7 +86,7 @@ class imitator_options =
 	
 		(* OUTPUT OPTIONS *)
 		
-		(* plot cartography *)
+		(* Plot cartography; in cartography mode, this option means ANY tile will output a cartography (activated if both -cart and -output-tiles-files are true) *)
 		val mutable cart = false
 		
 		(* only plot cartography *)
@@ -98,7 +98,7 @@ class imitator_options =
 		(* prefix for output files *)
 		val mutable files_prefix = ref ""
 		
-		(* plot cartography for BC *)
+		(* plot cartography for BC; this options means that the global cartography of all tiles will be generated (activated if -cart is true) *)
 		val mutable output_bc_cart = ref false
 		
 		(* Output result for BC to a file *)
