@@ -29,6 +29,7 @@ Misc
 Export
 - Added an export to HyTech
 - Statistics better integrated both in the terminal output and in the .res files
+- When exporting to jpg (option -PTA2JPG), the urgent locations are now colored in yellow, and the nosync action (no synchronization name) are now dashed
 
 Versioning
 - Now IMITATOR integrates the hash number of GitHub in all outputs
