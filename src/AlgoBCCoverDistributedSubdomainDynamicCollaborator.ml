@@ -156,6 +156,7 @@ class algoBCCoverDistributedSubdomainDynamicCollaborator =
 					| AlgoCartoGeneric.No_more -> raise (InternalError("Unexpected situation where no more point is found in the worker although it should be set at that point."))
 				in
 				
+				(* Retrieve cartography algorithm instance *)
 				let current_bc = a_of_a_option bc_option in
 				(* Test if uncovered *)
 				let uncovered = current_bc#test_pi0_uncovered currentPi0 in
@@ -185,11 +186,9 @@ class algoBCCoverDistributedSubdomainDynamicCollaborator =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method private compute_next_point =
 	
+		(* Retrieve cartography algorithm instance *)
 		let bc = a_of_a_option bc_option in
 
-		(* Print some information *)
-		self#print_algo_message Verbose_low ("Computing next point...");
-		
 		(* Find next point (dynamic fashion) *)
 		(*** NOTE: this operation (checking first point) could have been rather embedded in CartoGeneric ***)
 		let next_point = 
@@ -299,6 +298,12 @@ class algoBCCoverDistributedSubdomainDynamicCollaborator =
 			
 			(* Send the result to the master *)
 			DistributedUtilities.send_abstract_im_result abstract_im_result;
+			
+			(* Retrieve cartography algorithm instance *)
+			let bc = a_of_a_option bc_option in
+
+			(* Process it locally as it will be useful to find next points! *)
+			bc#process_result abstract_im_result;
 					
 			(*** NOTE for the collaborator version: keep it in memory 
 				all_tiles := im_result :: !all_tiles;

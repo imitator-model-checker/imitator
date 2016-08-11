@@ -270,9 +270,8 @@ class algoBCCoverDistributedSubdomainDynamicCoordinator =
 	(* Add an abstract_im_result to the list of received abstract_im_result *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method private add_abstract_im_result (abstract_im_result : abstract_im_result) =
-		(* Check if already present *)
-		print_message Verbose_low ("Received an abstract_im_result computed in " ^ (string_of_seconds abstract_im_result.computation_time) ^ "");
 		
+		(* Check if already present *)
 		
 		(*** TODO ***)
 		
@@ -384,7 +383,17 @@ class algoBCCoverDistributedSubdomainDynamicCoordinator =
 				
 			(*Tile Tag*)
 			| Tile (collaborator_rank , abstract_im_result) ->
-				self#print_algo_message Verbose_medium ("Received an abstract_im_result from collaborator " ^ (string_of_int collaborator_rank) ^ "");
+				(* Print some information *)
+				if verbose_mode_greater Verbose_low then(
+					(* Retrieve the model *)
+					let model = Input.get_model() in
+					
+					self#print_algo_message Verbose_low ("Received an abstract_im_result from collaborator " ^ (string_of_int collaborator_rank) ^ " computed in " ^ (string_of_seconds abstract_im_result.computation_time)
+						^ "\nConstraint:\n"
+						^ (LinearConstraint.string_of_p_convex_or_nonconvex_constraint model.variable_names abstract_im_result.result)
+						^ ""
+					);
+				);
 				
 				(* Check duplicated tile *)
 				(* Count! *)
