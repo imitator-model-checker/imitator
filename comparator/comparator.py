@@ -39,18 +39,10 @@ BINARY_PATH = IMITATOR_PATH + 'bin/'
 
 # Name for the non-distributed binary to test
 BINARY_NAME = 'imitator'
-# Log file for the non-distributed binary
-LOGFILE = IMITATOR_PATH + 'comparator/comparator.log'
 # Result files prefix
 RESULT_FILES_PATH = IMITATOR_PATH + 'comparator/results/'
 
-
-#************************************************************
-# BY DEFAULT: ALL TO LOG FILE
-#************************************************************
 orig_stdout = sys.stdout
-logfile = file(LOGFILE, 'w')
-sys.stdout = logfile
 
 
 #************************************************************
@@ -190,36 +182,19 @@ def make_log_file(benchmark, version):
 	return RESULT_FILES_PATH + benchmark['log_prefix'] +  versions[version]['files_suffix'] + ".benchlog"
 
 def fail_with(text) :
-	print_to_log('Fatal error!')
-	print_to_log(text)
+	print_to_screen('Fatal error!')
+	print_to_screen(text)
 	sys.exit(1)
 
 def print_warning(text) :
-	print_to_log(' *** Warning: ' + text)
+	print_to_screen(' *** Warning: ' + text)
 
 def print_error(text) :
-	print_to_log(' *** Error: ' + text)
-
-
-# Print text to log file
-def print_to_log(content):
-	print content
+	print_to_screen(' *** Error: ' + text)
 
 def print_to_screen(content):
-	# Revert stdout
-	sys.stdout = orig_stdout
 	# Print
 	print content
-	# Put back stdout to log file
-	sys.stdout = logfile
-
-# Print text both to log file and to screen
-# NOTE: can probably do better...
-def print_to_screen_and_log(content):
-	# Print to log
-	print_to_log(content)
-	# Also print to screen
-	print_to_screen(content)
 
 
 # Function to retrieve the computation time depending on the benchmark
@@ -281,13 +256,12 @@ def get_computation_time(benchmark, version, cartography_mode):
 # Global result
 results = {}
 
-def run(benchmark, versions_to_test, logfile):
+def run(benchmark, versions_to_test):
 	
 	# Print something
-	print_to_screen_and_log('')
-	print_to_log('')
-	print_to_log('############################################################')
-	print_to_screen_and_log(' BENCHMARK ' + benchmark['name'])
+	print_to_screen('')
+	print_to_screen('############################################################')
+	print_to_screen(' BENCHMARK ' + benchmark['name'])
 	
 	# Create the row in the results array
 	results[benchmark['log_prefix']] = {}
@@ -295,8 +269,6 @@ def run(benchmark, versions_to_test, logfile):
 	# Prepare command
 	for version in versions_to_test:
 		
-		print_to_log('')
-
 		# If a critical option is not defined for this version, do not run
 		to_run = True
 		for option in benchmark['options']:
@@ -349,16 +321,16 @@ def run(benchmark, versions_to_test, logfile):
 			#------------------------------------------------------------
 			
 			# Print the command
-			print_to_screen_and_log(' command: ' + ' '.join(cmd))
+			print_to_screen(' command: ' + ' '.join(cmd))
 			
 			# Create dedicated log file
 			version_log_file = file(make_log_file(benchmark, version), 'w')
 			version_err_file = file(RESULT_FILES_PATH + benchmark['log_prefix'] +  versions[version]['files_suffix'] + ".bencherr", 'w')
 
 			# NOTE: flushing avoids to mix between results of IMITATOR, and text printed by this script
-			logfile.flush()
+			#stdout.flush()
 			subprocess.call(cmd, stdout=version_log_file, stderr=version_err_file)
-			logfile.flush()
+			#stdout.flush()
 			
 			# Retrieve the computation time
 			# HACK: need to take the cartography mode into consideration (for v.2.7.3 at least)
@@ -376,6 +348,11 @@ def run(benchmark, versions_to_test, logfile):
 		
 
 def print_results(versions_to_test):
+	# Print something
+	print_to_screen('')
+	print_to_screen('############################################################')
+	print_to_screen(' RESULTS')
+
 	for benchmark_id, result in results.iteritems():
 		# Create text line
 		line = benchmark_id + ": "
@@ -399,7 +376,7 @@ tests = comparator_data.data
 print_to_screen('')
 
 for test in tests:
-	run(test, all_versions, logfile)
+	run(test, all_versions)
 
 print_results(all_versions)
 
@@ -407,7 +384,7 @@ print_results(all_versions)
 # THE END
 #************************************************************
 
-print_to_screen_and_log('')
-print_to_screen_and_log('...The end of COMPARATOR!')
+print_to_screen('')
+print_to_screen('...The end of COMPARATOR!')
 
 sys.exit(0)
