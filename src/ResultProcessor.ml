@@ -423,18 +423,21 @@ let general_bc_statistics bc_result =
 
 	(* First, compute average number of states and transitions (for info purpose) *)
 	(*** WARNING: use int, but using NumConst (unbounded) would be smarter in case of very large state spaces ***)
-	let total_states, total_transitions = List.fold_left (
-		fun (current_sum_states, current_sum_transitions) abstract_im_result ->
-			(current_sum_states + abstract_im_result.abstract_state_space.nb_states, current_sum_transitions +  + abstract_im_result.abstract_state_space.nb_transitions)
-	) (0,0) bc_result.tiles
+	let total_states, total_transitions, time_im = List.fold_left (
+		fun (current_sum_states, current_sum_transitions, current_sum_time) abstract_im_result ->
+			(
+				current_sum_states + abstract_im_result.abstract_state_space.nb_states
+				,
+				current_sum_transitions +  + abstract_im_result.abstract_state_space.nb_transitions
+				,
+				current_sum_time +. abstract_im_result.computation_time
+			)
+	) (0, 0, 0.0) bc_result.tiles
 	in
 	(* Compute average *)
 	let average_nb_states = (float_of_int total_states) /. (float_of_int nb_tiles) in
 	let average_nb_transitions = (float_of_int total_transitions) /. (float_of_int nb_tiles) in
 	
-	(* Then: compute the total time to run IM *)
-	let time_im = List.fold_left (fun current_sum (abstract_im_result : Result.abstract_im_result) -> current_sum +. abstract_im_result.computation_time) 0. bc_result.tiles in
-
        ""
 	^   "Number of integers in v0                : " ^ (NumConst.string_of_numconst bc_result.size_v0)
 	^ "\nNumber of tiles computed                : " ^ (string_of_int nb_tiles)
