@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/03/24
- * Last modified     : 2016/04/07
+ * Last modified     : 2016/08/11
  *
  ************************************************************)
 
@@ -388,6 +388,9 @@ class algoBCCoverDistributedSubdomainDynamicCollaborator =
 		counter_worker_waiting#init;
 		counter_worker_IM#init;
 		counter_worker_find_next_pi0#init;*)
+		
+		(* Time counter for the algorithm *)
+		start_time <- Unix.gettimeofday();
 		
 		(* Start global counter *)
 		(*** TODO ***)

@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/03/17
- * Last modified     : 2016/05/09
+ * Last modified     : 2016/08/11
  *
  ************************************************************)
 
@@ -257,8 +257,9 @@ class algoBCCoverDistributedSubdomainDynamicCoordinator =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Add an abstract_im_result to the list of received abstract_im_result *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method private add_abstract_im_result abstract_im_result =
+	method private add_abstract_im_result (abstract_im_result : abstract_im_result) =
 		(* Check if already present *)
+		print_message Verbose_low ("Received an abstract_im_result computed in " ^ (string_of_seconds abstract_im_result.computation_time) ^ "");
 		
 		
 		(*** TODO ***)
@@ -292,6 +293,9 @@ class algoBCCoverDistributedSubdomainDynamicCoordinator =
 		(*** TODO ***)
 (* 		counter_master_total#start; *)
 		
+		(* Time counter for the algorithm *)
+		start_time <- Unix.gettimeofday();
+
 		self#print_algo_message Verbose_standard ("Hello world");
 		
 		(* List of subdomains maintained by the master *)
