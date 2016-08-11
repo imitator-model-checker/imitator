@@ -132,6 +132,7 @@ versions = {
 	V_2_7_3 : {
 		'version_name'		: '2.7.3',
 		'binary'			: 'imitator273',
+		'binary_dist'		: 'patator273',
 		'syntax':
 			{
 			OPT_DISTR_SUBDOMAIN		: '-distributed dynamic',
@@ -149,6 +150,7 @@ versions = {
 	V_2_8 : {
 		'version_name'		: '2.8',
 		'binary'			: 'imitator',
+		'binary_dist'		: 'patator',
 		'syntax':
 			{
 			OPT_DISTR_SUBDOMAIN		: '-distributed dynamic',
@@ -266,23 +268,47 @@ def run(benchmark, versions_to_test):
 	# Create the row in the results array
 	results[benchmark['log_prefix']] = {}
 	
+	# Check if distributed
+	distributed = (benchmark.has_key('nb_nodes') and benchmark['nb_nodes'] > 1)
+	
+	
 	# Prepare command
 	for version in versions_to_test:
 		
-		# If a critical option is not defined for this version, do not run
+		# If a critical option is not defined for this version or the binary is not defined, do not run
 		to_run = True
+		
+		
+		# Create the binary
+		
+		# Case non-distributed:
+		binary = make_binary(versions[version]['binary'])
+		# Case distributed:
+		if distributed:
+			# First check that the distributed binary exists:
+			if versions[version].has_key('binary_dist'):
+				binary = make_binary(versions[version]['binary_dist'])
+			else:
+				print_warning('Distributed binary not defined for version ' + versions[version]['version_name'] + '!')
+				to_run = False
+		
+		
+		# Check that all options are defined
+		
 		for option in benchmark['options']:
 			if option in critical_options and versions[version]['syntax'][option] == UNDEFINED_SYNTAX:
 				print_warning('Option ' + option_names[option] + ' not defined for version ' + versions[version]['version_name'] + '!')
 				to_run = False
+		
+		
+		# Stop if should not run this version
+		
 		if not to_run:
 			print_warning('Skip version ' + versions[version]['version_name'] + '')
 			# Store result
 			results[benchmark['log_prefix']][version] = ANALYSIS_FAILED
 		else:
 			
-			# Create the binary
-			binary = make_binary(versions[version]['binary'])
 			
 			# Create the options
 			options_str_list = []
@@ -311,7 +337,7 @@ def run(benchmark, versions_to_test):
 			cmd = ''
 			
 			# Case 1: distributed: binary = mpiexec, options = all the rest including IMITATOR binary
-			if(benchmark.has_key('nb_nodes') and benchmark['nb_nodes'] > 1):
+			if distributed:
 				# Add the mpiexecc if distributed
 				cmd = ['mpiexec'] + ['-n'] + [str(benchmark['nb_nodes'])] + [binary] + cmd_inputs + options_str_list
 			# Case 2: non-distributed: binary = IMITATOR, options = all the rest

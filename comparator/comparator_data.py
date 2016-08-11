@@ -157,18 +157,30 @@ data = [
 	#,
 	
 	
-	##------------------------------------------------------------
-	## BEGIN benchmark
-	#{
-		#'name'				: 'SPSMALL distributed(4)',
-		#'nb_nodes'			: 4,
-		#'log_prefix'		: 'spsmall_distr_4',
-		#'input_files'		: ['Valmem/spsmall.imi', 'Valmem/spsmall.v0'],
-		#'options'			: [OPT_MERGING, OPT_MODE_COVER, OPT_OUTPUT_RES, OPT_DISTR_SUBDOMAIN, OPT_PRP],
-	#}
-	## END benchmark
-	##------------------------------------------------------------
-	#,
+	#------------------------------------------------------------
+	# BEGIN benchmark
+	{
+		'name'				: 'Flip-flop circuit',
+		'nb_nodes'			: 4,
+		'log_prefix'		: 'flipflop_bc_distr_4',
+		'input_files'		: ['Flipflop/flipflop.imi', 'Flipflop/flipflop.v0'],
+		'options'			: [OPT_MODE_COVER, OPT_OUTPUT_RES, OPT_DISTR_SUBDOMAIN],
+	}
+	# END benchmark
+	#------------------------------------------------------------
+	,
+	#------------------------------------------------------------
+	# BEGIN benchmark
+	{
+		'name'				: 'SPSMALL distributed(4)',
+		'nb_nodes'			: 4,
+		'log_prefix'		: 'spsmall_distr_4',
+		'input_files'		: ['Valmem/spsmall.imi', 'Valmem/spsmall.v0'],
+		'options'			: [OPT_MERGING, OPT_MODE_COVER, OPT_OUTPUT_RES, OPT_DISTR_SUBDOMAIN, OPT_PRP],
+	}
+	# END benchmark
+	#------------------------------------------------------------
+	,
 	##------------------------------------------------------------
 	## BEGIN benchmark
 	#{
