@@ -1,22 +1,17 @@
-(************************************************************
- *                      IMITATOR MODEL                      
- *
- * Portion of the SPSMALL memory circuit ("spsmall_blueb_lsv")
- *
- * Description     : Model with observer (to check whether tCKQ is conform with ST specification)
- * Correctness     : s <= 166
- * Source          : Project ANR Valmem
- * Author          : ST-Microelectronics (design)
- * Modeling        : LSV (timings by LIP6)
- * Input by        : Emmanuelle Encrenaz, Laurent Fribourg, Étienne André
- * License         : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
-
- *
- * Created         : < 2007
- * Last modified   : 2014/03/26
- *
- * IMITATOR version: 2.8-alpha
- ************************************************************)
+--****************************************************--
+--****************************************************--
+--   Portion of the SPSMALL memory circuit ("spsmall_blueb_lsv")
+--
+--   Design by ST-Microelectronics
+--   Timings by LIP6
+--   Model by LSV
+--
+--   Created       : < 2007
+--   Frozen        : 2010/03/03
+--   Unfrozen      : 2016/02/12
+--   Last modified : 2016/02/12
+--****************************************************--
+--****************************************************--
 
    var
 
@@ -29,11 +24,10 @@
 	x_en_latchd,
 	x_en_latchwen,
 	x_wen_h,
-	x_d_h,
-	x_observer
-		: clock;
+	x_d_h
+		: clock; -- 10 clocks
 
-(*	d_up_q_0,
+	d_up_q_0,
 	d_up_net27,
 	d_up_d_inta, d_dn_d_inta,
 	d_up_wela, d_dn_wela,
@@ -47,39 +41,8 @@
 	d_up_d_h, d_dn_d_h,
 
 	tHI, tLO, tsetupd, tsetupwen
-		: parameter; -- 28 parameters*)
+		: parameter; -- 26 parameters
 
-	d_up_q_0         = 21,
-	d_up_net27       = 0,
-	d_up_d_inta      = 22,
-	d_dn_d_inta      = 45,
-	d_up_wela        = 0,
-	d_dn_wela        = 22,
-	d_up_net45a      = 5,
-	d_dn_net45a      = 4,
-	d_up_net13a      = 19,
-	d_dn_net13a      = 13,
-	d_up_net45       = 21,
-	d_dn_net45       = 22,
-	d_up_d_int       = 14,
-	d_dn_d_int       = 18,
-	d_up_en_latchd   = 28,
- 	d_dn_en_latchd   = 32,
-	d_up_en_latchwen = 5,
- 	d_dn_en_latchwen = 4, 
-	d_up_wen_h       = 11,
-	d_dn_wen_h       = 8,
-	d_up_d_h         = 95,
-  	d_dn_d_h         = 66,
-
-	tHI              = 45,
-	tLO              = 65,
-	tsetupd          (*65 .. 110*),
-	tsetupwen        (*0 .. 66*)
-		: parameter; (*2 parameters only*)
-
--- 	second_cycle -- becomes 1 at the beginning of the second clock cycle
--- 		: discrete;
 
 
 --****************************************************--
@@ -95,8 +58,7 @@
 			-- ######### ce qui supprime l'autom. ret_q_0 ######
 --****************************************************--
 synclabs: down_wela, up_wela,
-	    down_d_inta, up_d_inta,
-		qUp;
+	    down_d_inta, up_d_inta;
 initially init_abs_net27;
 
 loc  init_abs_net27 : while True wait {}
@@ -116,7 +78,7 @@ loc  B_abs_net27 : while x_net27 <= d_up_net27 + d_up_q_0 wait {}
 	 when True sync up_wela goto C_abs_net27;
  	 when True sync up_d_inta goto C_abs_net27;
 	 when True sync down_d_inta goto B_abs_net27;
-	 when x_net27 = d_up_net27+ d_up_q_0 sync qUp --sync up_net27
+	 when x_net27 = d_up_net27+ d_up_q_0 --sync up_net27
 	      	      do {} goto C_abs_net27;
 
 loc  C_abs_net27 : while True wait{}
@@ -137,7 +99,7 @@ synclabs: up_net45a, down_net45a,
 
 initially e_01_1_wela;
 
-loc  e_00_0_wela : while True wait {}
+loc  e_00_0_wela : while True wait {} 
 	 when True sync up_net45a  do {x_wela'=0} goto e_01_X_wela;
 	 when True sync up_net13a  do {x_wela'=0} goto e_10_X_wela;
 	 when True sync down_net45a  do {} goto e_00_0_wela;
@@ -409,58 +371,27 @@ synclabs: up_d_0, down_d_0, up_wen, down_wen,
 	  down_ck, up_ck;
 initially init_env;
 
-loc init_env : while s <= tHI + tLO - tsetupd wait {}
+loc  init_env : while s <= tHI + tLO - tsetupd wait {}
 	 when s = tHI + tLO - tsetupd sync up_d_0 goto env1;
 
-loc env1 : while s <= tHI  wait {}
+loc  env1 : while s <= tHI  wait {}
 	 when s = tHI  sync down_ck goto env2;
 
-loc env2 : while s <= tHI + tLO - tsetupwen wait {}
+loc  env2 : while s <= tHI + tLO - tsetupwen wait {}
 	 when s = tHI + tLO - tsetupwen sync down_wen goto env3;
 
-loc env3 : while s <= tHI + tLO wait {}
-	 when s = tHI + tLO sync up_ck goto env3bis; -- env4 modified
+loc  env3 : while s <= tHI + tLO wait {}
+	 when s = tHI + tLO sync up_ck goto env4;
 
--- RAJOUT PAR ETIENNE ET ROMAIN 2010/09/09
-loc env3bis : while s <= 2tHI + 2tLO - tsetupd wait {}
-	 when s = 2tHI + 2tLO - tsetupd sync down_d_0 goto env4;
-
-loc env4 : while s <= 2 tHI + tLO wait {}
+loc  env4 : while s <= 2 tHI + tLO wait {}
 	 when s = 2 tHI + tLO sync down_ck goto env5;
 
-loc env5 : while s <= 2 tHI + 2 tLO wait {}
-	 when s = 2 tHI + 2 tLO sync up_ck do {} goto env6; -- end_of_cycle' = 1
+loc  env5 : while s <= 2 tHI + 2 tLO wait {}
+	 when s = 2 tHI + 2 tLO sync up_ck goto env6;
 
 loc env6 : while True wait{}
 --     	 when True goto env6;
-end -- env
-
-
---****************************************************--
-automaton observer
---****************************************************--
-synclabs: qUp, CHECKED_______GOOD, CHECKED_______BAD, CHECKED_______TOO_LATE ;
-initially waiting;
-
-loc waiting : while True wait {}
--- 	when s < 2 tHI + tLO sync up_d_inta do {} goto waiting;
--- 	when s >= 2 tHI + tLO & s <= tHI + tLO + 109 sync up_d_inta do {x_observer' = 0} goto soon_good;
--- 	when s >= 2 tHI + tLO & s > tHI + tLO + 109 sync up_d_inta do {x_observer' = 0} goto soon_bad;
-	when s <= 166 sync qUp do {x_observer' = 0} goto soon_good; -- tHI + tLO + 56
-	when s  > 166 sync qUp do {x_observer' = 0} goto soon_bad; -- tHI + tLO + 56
-	when s  = 2tHI + 2tLO sync CHECKED_______TOO_LATE do {x_observer' = 0} goto observer_bad;
-
-loc soon_bad : while x_observer <= 0 wait{}
-	when x_observer = 0 sync CHECKED_______BAD goto observer_bad;
-
-loc soon_good : while x_observer <= 0 wait{}
-	when x_observer = 0 sync CHECKED_______GOOD goto observer_good;
-
-loc observer_bad : while True wait{}
-
-loc observer_good : while True wait{}
-
-end -- observer
+end -- not_d_h
 
 
 
@@ -484,7 +415,6 @@ init := True
 	& loc[retard_d_h]      = init_ret_d_h
 
 	& loc[env]             = init_env
-	& loc[observer]        = waiting
 
 
 	& s             = 0
@@ -497,24 +427,33 @@ init := True
 	& x_en_latchwen = 0
 	& x_wen_h       = 0
 	& x_d_h         = 0
-	
--- 	& end_of_cycle  = 0
 
 -- delais pour SP1 (cf. WSEAS06, Fig.5)
 
-	& tsetupd >= 0
-	& tsetupwen >= 0
-
-	---START PI0---
-
-(*	& tsetupd          = 100
-	& tsetupwen        = 65*)
--- 	-- VALEURS RAPPORT ABDEL
--- 	& tHI              = 45
--- 	& tLO              = 65
--- 	& tsetupd          = 96
--- 	& tsetupwen        = 29
-	-- VALEURS DATASHEET SP1
+-- 	---START PI0---
+-- 	& d_up_q_0         = 21
+-- 	& d_up_net27       = 0
+-- 	& d_up_d_inta      = 22
+-- 	& d_dn_d_inta      = 45
+-- 	& d_up_wela        = 0
+-- 	& d_dn_wela        = 22
+-- 	& d_up_net45a      = 5
+-- 	& d_dn_net45a      = 4
+-- 	& d_up_net13a      = 19
+-- 	& d_dn_net13a      = 13
+-- 	& d_up_net45       = 21
+-- 	& d_dn_net45       = 22
+-- 	& d_up_d_int       = 14
+-- 	& d_dn_d_int       = 18
+-- 	& d_up_en_latchd   = 28
+--  	& d_dn_en_latchd   = 32
+-- 	& d_up_en_latchwen = 5
+--  	& d_dn_en_latchwen = 4  
+-- 	& d_up_wen_h       = 11
+-- 	& d_dn_wen_h       = 8
+-- 	& d_up_d_h         = 95
+--   	& d_dn_d_h         = 66
+-- 
 -- 	& tHI              = 45
 -- 	& tLO              = 65
 -- 	& tsetupd          = 108
@@ -547,9 +486,24 @@ init := True
 --       & tLO + d_dn_wen_h < d_up_net45 + d_up_net45a + tsetupwen + d_up_en_latchwen
 --       & d_dn_en_latchwen < d_dn_net13a
 
+(* Parameters should be non-negative *)
 
+	&
+	d_up_q_0 >= 0 & 
+	d_up_net27 >= 0 & 
+	d_up_d_inta >= 0 &  d_dn_d_inta >= 0 & 
+	d_up_wela >= 0 &  d_dn_wela >= 0 & 
+	d_up_net45a >= 0 &  d_dn_net45a >= 0 & 
+	d_up_net13a >= 0 &  d_dn_net13a >= 0 & 
+	d_up_net45 >= 0 &  d_dn_net45 >= 0 & 
+	d_up_d_int >= 0 &  d_dn_d_int >= 0 & 
+	d_up_en_latchd >= 0 &  d_dn_en_latchd >= 0 & 
+	d_up_en_latchwen >= 0 &  d_dn_en_latchwen >= 0 & 
+	d_up_wen_h >= 0 &  d_dn_wen_h >= 0 & 
+	d_up_d_h >= 0 &  d_dn_d_h >= 0 & 
+
+	tHI >= 0 &  tLO >= 0 &  tsetupd >= 0 &  tsetupwen  >= 0 
+	
 ;
 
-
-(* New (2014): property! *)
-property := unreachable loc[observer] = observer_bad;
+-- print (reach forward from init endreach);
