@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/12/03
- * Last modified     : 2016/06/08
+ * Last modified     : 2016/08/11
  *
  ************************************************************)
 
@@ -156,7 +156,7 @@ let statespace_statistics state_space total_time =
 	    "Number of states                        : " ^ (string_of_int nb_states)
 	^ "\nNumber of transitions                   : " ^ (string_of_int (StateSpace.nb_transitions state_space))
 	^ "\nNumber of computed states               : " ^ (string_of_int nb_gen_states)
-	^ "\nComputation time                        : " ^ (string_of_seconds total_time)
+	^ "\nTotal computation time                  : " ^ (string_of_seconds total_time)
 	^ "\nStates/second in state space            : " ^ (round1_float states_per_second) ^ " (" ^ (string_of_int nb_states) ^ "/" ^ (string_of_seconds total_time) ^ ")"
 	^ "\nComputed states/second                  : " ^ (round1_float gen_states_per_second) ^ " (" ^ (string_of_int nb_gen_states) ^ "/" ^ (string_of_seconds total_time) ^ ")"
 	^ "\nEstimated memory                        : " ^ (memory_used ())
@@ -167,9 +167,9 @@ let abstract_statespace_statistics abstract_state_space total_time =
 	(* Speed: number of states computed and still in the state space *)
 	let states_per_second = (float_of_int abstract_state_space.nb_states) /. total_time in
 	
-	    "Number of states                        : " ^ (string_of_int abstract_state_space.nb_states)
-	^ "\nNumber of transitions                   : " ^ (string_of_int abstract_state_space.nb_transitions)
-	^ "\nComputation time                        : " ^ (string_of_seconds total_time)
+	    "Local number of states                  : " ^ (string_of_int abstract_state_space.nb_states)
+	^ "\nLocal number of transitions             : " ^ (string_of_int abstract_state_space.nb_transitions)
+	^ "\nLocal computation time                  : " ^ (string_of_seconds total_time)
 	^ "\nStates/second in state space            : " ^ (round1_float states_per_second) ^ " (" ^ (string_of_int abstract_state_space.nb_states) ^ "/" ^ (string_of_seconds total_time) ^ ")"
 
 
@@ -443,9 +443,9 @@ let general_bc_statistics bc_result =
 	^ "\nNumber of unsuccessful points           : " ^ (string_of_int bc_result.nb_unsuccessful_points)
 	^ "\nAverage number of states                : " ^ (round1_float average_nb_states)
 	^ "\nAverage number of transitions           : " ^ (round1_float average_nb_transitions)
-    ^ "\nComputation time                        : " ^ (string_of_seconds bc_result.computation_time)
-	^ "\nComputation time (IM)                   : " ^ (string_of_seconds time_im)
-	^ "\nComputation time (find point)           : " ^ (string_of_seconds bc_result.find_point_time)
+    ^ "\nTotal computation time                  : " ^ (string_of_seconds bc_result.computation_time)
+	^ "\nTotal computation time (IM)             : " ^ (string_of_seconds time_im)
+	^ "\nTotal computation time (find point)     : " ^ (string_of_seconds bc_result.find_point_time)
 	^ "\nEstimated memory                        : " ^ (memory_used ())
 
 		

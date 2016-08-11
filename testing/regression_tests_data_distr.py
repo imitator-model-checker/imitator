@@ -11,7 +11,7 @@
 # Laboratoire d'Informatique de Paris Nord
 # Universite Paris 13, Sorbonne Paris Cite, France
 # Created      : 2016/03/14
-# Last modified: 2016/04/07
+# Last modified: 2016/08/11
 #************************************************************
 
 
@@ -41,8 +41,8 @@ Termination                   : regular termination
 State space nature            : good
 Number of random selections   : 0
 ------------------------------------------------------------
-Number of states              : 5
-Number of transitions         : 4
+Local number of states        : 5
+Local number of transitions   : 4
 """
 			} # end BC file
 			, 
@@ -59,8 +59,8 @@ Termination                   : regular termination
 State space nature            : good
 Number of random selections   : 0
 ------------------------------------------------------------
-Number of states              : 6
-Number of transitions         : 5
+Local number of states        : 6
+Local number of transitions   : 5
 """
 			} # end BC file
 			, 
@@ -77,8 +77,8 @@ Termination                   : regular termination
 State space nature            : good
 Number of random selections   : 0
 ------------------------------------------------------------
-Number of states              : 7
-Number of transitions         : 6
+Local number of states        : 7
+Local number of transitions   : 6
 """
 			} # end BC file
 			, 
@@ -95,8 +95,8 @@ Termination                   : regular termination
 State space nature            : good
 Number of random selections   : 0
 ------------------------------------------------------------
-Number of states              : 6
-Number of transitions         : 5
+Local number of states        : 6
+Local number of transitions   : 5
 """
 			} # end BC file
 			, 
@@ -113,8 +113,8 @@ Termination                   : regular termination
 State space nature            : good
 Number of random selections   : 0
 ------------------------------------------------------------
-Number of states              : 7
-Number of transitions         : 6
+Local number of states        : 7
+Local number of transitions   : 6
 """
 			} # end BC file
 			, 
@@ -131,8 +131,8 @@ Termination                   : regular termination
 State space nature            : good
 Number of random selections   : 0
 ------------------------------------------------------------
-Number of states              : 8
-Number of transitions         : 7
+Local number of states        : 8
+Local number of transitions   : 7
 """
 			} # end BC file
 			, 
@@ -149,8 +149,8 @@ Termination                   : regular termination
 State space nature            : good
 Number of random selections   : 0
 ------------------------------------------------------------
-Number of states              : 7
-Number of transitions         : 6
+Local number of states        : 7
+Local number of transitions   : 6
 """
 			} # end BC file
 			, 
@@ -167,8 +167,8 @@ Termination                   : regular termination
 State space nature            : good
 Number of random selections   : 0
 ------------------------------------------------------------
-Number of states              : 8
-Number of transitions         : 7
+Local number of states        : 8
+Local number of transitions   : 7
 """
 			} # end BC file
 			, 
@@ -185,8 +185,8 @@ Termination                   : regular termination
 State space nature            : good
 Number of random selections   : 0
 ------------------------------------------------------------
-Number of states              : 9
-Number of transitions         : 8
+Local number of states        : 9
+Local number of transitions   : 8
 """
 			} # end BC file
 			,
@@ -232,8 +232,8 @@ Termination                   : regular termination
 State space nature            : good
 Number of random selections   : 0
 ------------------------------------------------------------
-Number of states              : 3
-Number of transitions         : 2
+Local number of states        : 3
+Local number of transitions   : 2
 """
 			} # end BC file
 			, 
@@ -250,8 +250,8 @@ Termination                   : regular termination
 State space nature            : good
 Number of random selections   : 0
 ------------------------------------------------------------
-Number of states              : 4
-Number of transitions         : 3
+Local number of states        : 4
+Local number of transitions   : 3
 """
 			} # end BC file
 			, 
@@ -268,8 +268,8 @@ Termination                   : regular termination
 State space nature            : good
 Number of random selections   : 0
 ------------------------------------------------------------
-Number of states              : 5
-Number of transitions         : 4
+Local number of states        : 5
+Local number of transitions   : 4
 """
 			} # end BC file
 			, 
@@ -286,8 +286,8 @@ Termination                   : regular termination
 State space nature            : good
 Number of random selections   : 0
 ------------------------------------------------------------
-Number of states              : 4
-Number of transitions         : 3
+Local number of states        : 4
+Local number of transitions   : 3
 """
 			} # end BC file
 			, 
@@ -304,8 +304,8 @@ Termination                   : regular termination
 State space nature            : good
 Number of random selections   : 0
 ------------------------------------------------------------
-Number of states              : 5
-Number of transitions         : 4
+Local number of states        : 5
+Local number of transitions   : 4
 """
 			} # end BC file
 			, 
@@ -322,8 +322,8 @@ Termination                   : regular termination
 State space nature            : good
 Number of random selections   : 0
 ------------------------------------------------------------
-Number of states              : 6
-Number of transitions         : 5
+Local number of states        : 6
+Local number of transitions   : 5
 """
 			} # end BC file
 			, 
@@ -340,8 +340,8 @@ Termination                   : regular termination
 State space nature            : good
 Number of random selections   : 0
 ------------------------------------------------------------
-Number of states              : 5
-Number of transitions         : 4
+Local number of states        : 5
+Local number of transitions   : 4
 """
 			} # end BC file
 			, 
@@ -358,8 +358,8 @@ Termination                   : regular termination
 State space nature            : good
 Number of random selections   : 0
 ------------------------------------------------------------
-Number of states              : 6
-Number of transitions         : 5
+Local number of states        : 6
+Local number of transitions   : 5
 """
 			} # end BC file
 			, 
@@ -376,8 +376,8 @@ Termination                   : regular termination
 State space nature            : good
 Number of random selections   : 0
 ------------------------------------------------------------
-Number of states              : 7
-Number of transitions         : 6
+Local number of states        : 7
+Local number of transitions   : 6
 """
 			} # end BC file
 			, 
@@ -507,8 +507,8 @@ Termination                   : regular termination
 State space nature            : good
 Number of random selections   : 0
 ------------------------------------------------------------
-Number of states              : 5
-Number of transitions         : 4
+Local number of states        : 5
+Local number of transitions   : 4
 """
 			} # end BC file
 			, 
@@ -525,8 +525,8 @@ Termination                   : regular termination
 State space nature            : good
 Number of random selections   : 0
 ------------------------------------------------------------
-Number of states              : 6
-Number of transitions         : 5
+Local number of states        : 6
+Local number of transitions   : 5
 """
 			} # end BC file
 			, 
@@ -543,8 +543,8 @@ Termination                   : regular termination
 State space nature            : good
 Number of random selections   : 0
 ------------------------------------------------------------
-Number of states              : 7
-Number of transitions         : 6
+Local number of states        : 7
+Local number of transitions   : 6
 """
 			} # end BC file
 			, 
@@ -561,8 +561,8 @@ Termination                   : regular termination
 State space nature            : good
 Number of random selections   : 0
 ------------------------------------------------------------
-Number of states              : 6
-Number of transitions         : 5
+Local number of states        : 6
+Local number of transitions   : 5
 """
 			} # end BC file
 			, 
@@ -579,8 +579,8 @@ Termination                   : regular termination
 State space nature            : good
 Number of random selections   : 0
 ------------------------------------------------------------
-Number of states              : 7
-Number of transitions         : 6
+Local number of states        : 7
+Local number of transitions   : 6
 """
 			} # end BC file
 			, 
@@ -597,8 +597,8 @@ Termination                   : regular termination
 State space nature            : good
 Number of random selections   : 0
 ------------------------------------------------------------
-Number of states              : 8
-Number of transitions         : 7
+Local number of states        : 8
+Local number of transitions   : 7
 """
 			} # end BC file
 			, 
@@ -615,8 +615,8 @@ Termination                   : regular termination
 State space nature            : good
 Number of random selections   : 0
 ------------------------------------------------------------
-Number of states              : 7
-Number of transitions         : 6
+Local number of states        : 7
+Local number of transitions   : 6
 """
 			} # end BC file
 			, 
@@ -633,8 +633,8 @@ Termination                   : regular termination
 State space nature            : good
 Number of random selections   : 0
 ------------------------------------------------------------
-Number of states              : 8
-Number of transitions         : 7
+Local number of states        : 8
+Local number of transitions   : 7
 """
 			} # end BC file
 			, 
@@ -651,8 +651,8 @@ Termination                   : regular termination
 State space nature            : good
 Number of random selections   : 0
 ------------------------------------------------------------
-Number of states              : 9
-Number of transitions         : 8
+Local number of states        : 9
+Local number of transitions   : 8
 """
 			} # end BC file
 			,
@@ -689,8 +689,8 @@ Termination                   : regular termination
 State space nature            : good
 Number of random selections   : 0
 ------------------------------------------------------------
-Number of states              : 3
-Number of transitions         : 2
+Local number of states        : 3
+Local number of transitions   : 2
 """
 			} # end BC file
 			, 
@@ -707,8 +707,8 @@ Termination                   : regular termination
 State space nature            : good
 Number of random selections   : 0
 ------------------------------------------------------------
-Number of states              : 4
-Number of transitions         : 3
+Local number of states        : 4
+Local number of transitions   : 3
 """
 			} # end BC file
 			, 
@@ -725,8 +725,8 @@ Termination                   : regular termination
 State space nature            : good
 Number of random selections   : 0
 ------------------------------------------------------------
-Number of states              : 5
-Number of transitions         : 4
+Local number of states        : 5
+Local number of transitions   : 4
 """
 			} # end BC file
 			, 
@@ -743,8 +743,8 @@ Termination                   : regular termination
 State space nature            : good
 Number of random selections   : 0
 ------------------------------------------------------------
-Number of states              : 4
-Number of transitions         : 3
+Local number of states        : 4
+Local number of transitions   : 3
 """
 			} # end BC file
 			, 
@@ -761,8 +761,8 @@ Termination                   : regular termination
 State space nature            : good
 Number of random selections   : 0
 ------------------------------------------------------------
-Number of states              : 5
-Number of transitions         : 4
+Local number of states        : 5
+Local number of transitions   : 4
 """
 			} # end BC file
 			, 
@@ -779,8 +779,8 @@ Termination                   : regular termination
 State space nature            : good
 Number of random selections   : 0
 ------------------------------------------------------------
-Number of states              : 6
-Number of transitions         : 5
+Local number of states        : 6
+Local number of transitions   : 5
 """
 			} # end BC file
 			, 
@@ -797,8 +797,8 @@ Termination                   : regular termination
 State space nature            : good
 Number of random selections   : 0
 ------------------------------------------------------------
-Number of states              : 5
-Number of transitions         : 4
+Local number of states        : 5
+Local number of transitions   : 4
 """
 			} # end BC file
 			, 
@@ -815,8 +815,8 @@ Termination                   : regular termination
 State space nature            : good
 Number of random selections   : 0
 ------------------------------------------------------------
-Number of states              : 6
-Number of transitions         : 5
+Local number of states        : 6
+Local number of transitions   : 5
 """
 			} # end BC file
 			, 
@@ -833,8 +833,8 @@ Termination                   : regular termination
 State space nature            : good
 Number of random selections   : 0
 ------------------------------------------------------------
-Number of states              : 7
-Number of transitions         : 6
+Local number of states        : 7
+Local number of transitions   : 6
 """
 			} # end BC file
 			, 
@@ -1151,8 +1151,8 @@ Termination                   : regular termination
 State space nature            : good
 Number of random selections   : 0
 ------------------------------------------------------------
-Number of states              : 5
-Number of transitions         : 4
+Local number of states        : 5
+Local number of transitions   : 4
 """
 			} # end BC file
 			, 
@@ -1169,8 +1169,8 @@ Termination                   : regular termination
 State space nature            : good
 Number of random selections   : 0
 ------------------------------------------------------------
-Number of states              : 6
-Number of transitions         : 5
+Local number of states        : 6
+Local number of transitions   : 5
 """
 			} # end BC file
 			, 
@@ -1187,8 +1187,8 @@ Termination                   : regular termination
 State space nature            : good
 Number of random selections   : 0
 ------------------------------------------------------------
-Number of states              : 7
-Number of transitions         : 6
+Local number of states        : 7
+Local number of transitions   : 6
 """
 			} # end BC file
 			, 
@@ -1205,8 +1205,8 @@ Termination                   : regular termination
 State space nature            : good
 Number of random selections   : 0
 ------------------------------------------------------------
-Number of states              : 6
-Number of transitions         : 5
+Local number of states        : 6
+Local number of transitions   : 5
 """
 			} # end BC file
 			, 
@@ -1223,8 +1223,8 @@ Termination                   : regular termination
 State space nature            : good
 Number of random selections   : 0
 ------------------------------------------------------------
-Number of states              : 7
-Number of transitions         : 6
+Local number of states        : 7
+Local number of transitions   : 6
 """
 			} # end BC file
 			, 
@@ -1241,8 +1241,8 @@ Termination                   : regular termination
 State space nature            : good
 Number of random selections   : 0
 ------------------------------------------------------------
-Number of states              : 8
-Number of transitions         : 7
+Local number of states        : 8
+Local number of transitions   : 7
 """
 			} # end BC file
 			, 
@@ -1259,8 +1259,8 @@ Termination                   : regular termination
 State space nature            : good
 Number of random selections   : 0
 ------------------------------------------------------------
-Number of states              : 7
-Number of transitions         : 6
+Local number of states        : 7
+Local number of transitions   : 6
 """
 			} # end BC file
 			, 
@@ -1277,8 +1277,8 @@ Termination                   : regular termination
 State space nature            : good
 Number of random selections   : 0
 ------------------------------------------------------------
-Number of states              : 8
-Number of transitions         : 7
+Local number of states        : 8
+Local number of transitions   : 7
 """
 			} # end BC file
 			, 
@@ -1295,8 +1295,8 @@ Termination                   : regular termination
 State space nature            : good
 Number of random selections   : 0
 ------------------------------------------------------------
-Number of states              : 9
-Number of transitions         : 8
+Local number of states        : 9
+Local number of transitions   : 8
 """
 			} # end BC file
 			,
@@ -1342,8 +1342,8 @@ Termination                   : regular termination
 State space nature            : good
 Number of random selections   : 0
 ------------------------------------------------------------
-Number of states              : 3
-Number of transitions         : 2
+Local number of states        : 3
+Local number of transitions   : 2
 """
 			} # end BC file
 			, 
@@ -1360,8 +1360,8 @@ Termination                   : regular termination
 State space nature            : good
 Number of random selections   : 0
 ------------------------------------------------------------
-Number of states              : 4
-Number of transitions         : 3
+Local number of states        : 4
+Local number of transitions   : 3
 """
 			} # end BC file
 			, 
@@ -1378,8 +1378,8 @@ Termination                   : regular termination
 State space nature            : good
 Number of random selections   : 0
 ------------------------------------------------------------
-Number of states              : 5
-Number of transitions         : 4
+Local number of states        : 5
+Local number of transitions   : 4
 """
 			} # end BC file
 			, 
@@ -1396,8 +1396,8 @@ Termination                   : regular termination
 State space nature            : good
 Number of random selections   : 0
 ------------------------------------------------------------
-Number of states              : 4
-Number of transitions         : 3
+Local number of states        : 4
+Local number of transitions   : 3
 """
 			} # end BC file
 			, 
@@ -1414,8 +1414,8 @@ Termination                   : regular termination
 State space nature            : good
 Number of random selections   : 0
 ------------------------------------------------------------
-Number of states              : 5
-Number of transitions         : 4
+Local number of states        : 5
+Local number of transitions   : 4
 """
 			} # end BC file
 			, 
@@ -1432,8 +1432,8 @@ Termination                   : regular termination
 State space nature            : good
 Number of random selections   : 0
 ------------------------------------------------------------
-Number of states              : 6
-Number of transitions         : 5
+Local number of states        : 6
+Local number of transitions   : 5
 """
 			} # end BC file
 			, 
@@ -1450,8 +1450,8 @@ Termination                   : regular termination
 State space nature            : good
 Number of random selections   : 0
 ------------------------------------------------------------
-Number of states              : 5
-Number of transitions         : 4
+Local number of states        : 5
+Local number of transitions   : 4
 """
 			} # end BC file
 			, 
@@ -1468,8 +1468,8 @@ Termination                   : regular termination
 State space nature            : good
 Number of random selections   : 0
 ------------------------------------------------------------
-Number of states              : 6
-Number of transitions         : 5
+Local number of states        : 6
+Local number of transitions   : 5
 """
 			} # end BC file
 			, 
@@ -1486,8 +1486,8 @@ Termination                   : regular termination
 State space nature            : good
 Number of random selections   : 0
 ------------------------------------------------------------
-Number of states              : 7
-Number of transitions         : 6
+Local number of states        : 7
+Local number of transitions   : 6
 """
 			} # end BC file
 			, 
@@ -1617,8 +1617,8 @@ Termination                   : regular termination
 State space nature            : good
 Number of random selections   : 0
 ------------------------------------------------------------
-Number of states              : 5
-Number of transitions         : 4
+Local number of states        : 5
+Local number of transitions   : 4
 """
 			} # end BC file
 			, 
@@ -1635,8 +1635,8 @@ Termination                   : regular termination
 State space nature            : good
 Number of random selections   : 0
 ------------------------------------------------------------
-Number of states              : 6
-Number of transitions         : 5
+Local number of states        : 6
+Local number of transitions   : 5
 """
 			} # end BC file
 			, 
@@ -1653,8 +1653,8 @@ Termination                   : regular termination
 State space nature            : good
 Number of random selections   : 0
 ------------------------------------------------------------
-Number of states              : 7
-Number of transitions         : 6
+Local number of states        : 7
+Local number of transitions   : 6
 """
 			} # end BC file
 			, 
@@ -1671,8 +1671,8 @@ Termination                   : regular termination
 State space nature            : good
 Number of random selections   : 0
 ------------------------------------------------------------
-Number of states              : 6
-Number of transitions         : 5
+Local number of states        : 6
+Local number of transitions   : 5
 """
 			} # end BC file
 			, 
@@ -1689,8 +1689,8 @@ Termination                   : regular termination
 State space nature            : good
 Number of random selections   : 0
 ------------------------------------------------------------
-Number of states              : 7
-Number of transitions         : 6
+Local number of states        : 7
+Local number of transitions   : 6
 """
 			} # end BC file
 			, 
@@ -1707,8 +1707,8 @@ Termination                   : regular termination
 State space nature            : good
 Number of random selections   : 0
 ------------------------------------------------------------
-Number of states              : 8
-Number of transitions         : 7
+Local number of states        : 8
+Local number of transitions   : 7
 """
 			} # end BC file
 			, 
@@ -1725,8 +1725,8 @@ Termination                   : regular termination
 State space nature            : good
 Number of random selections   : 0
 ------------------------------------------------------------
-Number of states              : 7
-Number of transitions         : 6
+Local number of states        : 7
+Local number of transitions   : 6
 """
 			} # end BC file
 			, 
@@ -1743,8 +1743,8 @@ Termination                   : regular termination
 State space nature            : good
 Number of random selections   : 0
 ------------------------------------------------------------
-Number of states              : 8
-Number of transitions         : 7
+Local number of states        : 8
+Local number of transitions   : 7
 """
 			} # end BC file
 			, 
@@ -1761,8 +1761,8 @@ Termination                   : regular termination
 State space nature            : good
 Number of random selections   : 0
 ------------------------------------------------------------
-Number of states              : 9
-Number of transitions         : 8
+Local number of states        : 9
+Local number of transitions   : 8
 """
 			} # end BC file
 			,
@@ -1808,8 +1808,8 @@ Termination                   : regular termination
 State space nature            : good
 Number of random selections   : 0
 ------------------------------------------------------------
-Number of states              : 3
-Number of transitions         : 2
+Local number of states        : 3
+Local number of transitions   : 2
 """
 			} # end BC file
 			, 
@@ -1826,8 +1826,8 @@ Termination                   : regular termination
 State space nature            : good
 Number of random selections   : 0
 ------------------------------------------------------------
-Number of states              : 4
-Number of transitions         : 3
+Local number of states        : 4
+Local number of transitions   : 3
 """
 			} # end BC file
 			, 
@@ -1844,8 +1844,8 @@ Termination                   : regular termination
 State space nature            : good
 Number of random selections   : 0
 ------------------------------------------------------------
-Number of states              : 5
-Number of transitions         : 4
+Local number of states        : 5
+Local number of transitions   : 4
 """
 			} # end BC file
 			, 
@@ -1862,8 +1862,8 @@ Termination                   : regular termination
 State space nature            : good
 Number of random selections   : 0
 ------------------------------------------------------------
-Number of states              : 4
-Number of transitions         : 3
+Local number of states        : 4
+Local number of transitions   : 3
 """
 			} # end BC file
 			, 
@@ -1880,8 +1880,8 @@ Termination                   : regular termination
 State space nature            : good
 Number of random selections   : 0
 ------------------------------------------------------------
-Number of states              : 5
-Number of transitions         : 4
+Local number of states        : 5
+Local number of transitions   : 4
 """
 			} # end BC file
 			, 
@@ -1898,8 +1898,8 @@ Termination                   : regular termination
 State space nature            : good
 Number of random selections   : 0
 ------------------------------------------------------------
-Number of states              : 6
-Number of transitions         : 5
+Local number of states        : 6
+Local number of transitions   : 5
 """
 			} # end BC file
 			, 
@@ -1916,8 +1916,8 @@ Termination                   : regular termination
 State space nature            : good
 Number of random selections   : 0
 ------------------------------------------------------------
-Number of states              : 5
-Number of transitions         : 4
+Local number of states        : 5
+Local number of transitions   : 4
 """
 			} # end BC file
 			, 
@@ -1934,8 +1934,8 @@ Termination                   : regular termination
 State space nature            : good
 Number of random selections   : 0
 ------------------------------------------------------------
-Number of states              : 6
-Number of transitions         : 5
+Local number of states        : 6
+Local number of transitions   : 5
 """
 			} # end BC file
 			, 
@@ -1952,8 +1952,8 @@ Termination                   : regular termination
 State space nature            : good
 Number of random selections   : 0
 ------------------------------------------------------------
-Number of states              : 7
-Number of transitions         : 6
+Local number of states        : 7
+Local number of transitions   : 6
 """
 			} # end BC file
 			, 
@@ -2092,8 +2092,8 @@ Termination                   : regular termination
 State space nature            : good
 Number of random selections   : 0
 ------------------------------------------------------------
-Number of states              : 5
-Number of transitions         : 4
+Local number of states        : 5
+Local number of transitions   : 4
 """
 			} # end BC file
 			, 
@@ -2110,8 +2110,8 @@ Termination                   : regular termination
 State space nature            : good
 Number of random selections   : 0
 ------------------------------------------------------------
-Number of states              : 6
-Number of transitions         : 5
+Local number of states        : 6
+Local number of transitions   : 5
 """
 			} # end BC file
 			, 
@@ -2128,8 +2128,8 @@ Termination                   : regular termination
 State space nature            : good
 Number of random selections   : 0
 ------------------------------------------------------------
-Number of states              : 7
-Number of transitions         : 6
+Local number of states        : 7
+Local number of transitions   : 6
 """
 			} # end BC file
 			, 
@@ -2146,8 +2146,8 @@ Termination                   : regular termination
 State space nature            : good
 Number of random selections   : 0
 ------------------------------------------------------------
-Number of states              : 6
-Number of transitions         : 5
+Local number of states        : 6
+Local number of transitions   : 5
 """
 			} # end BC file
 			, 
@@ -2164,8 +2164,8 @@ Termination                   : regular termination
 State space nature            : good
 Number of random selections   : 0
 ------------------------------------------------------------
-Number of states              : 7
-Number of transitions         : 6
+Local number of states        : 7
+Local number of transitions   : 6
 """
 			} # end BC file
 			, 
@@ -2182,8 +2182,8 @@ Termination                   : regular termination
 State space nature            : good
 Number of random selections   : 0
 ------------------------------------------------------------
-Number of states              : 8
-Number of transitions         : 7
+Local number of states        : 8
+Local number of transitions   : 7
 """
 			} # end BC file
 			, 
@@ -2200,8 +2200,8 @@ Termination                   : regular termination
 State space nature            : good
 Number of random selections   : 0
 ------------------------------------------------------------
-Number of states              : 7
-Number of transitions         : 6
+Local number of states        : 7
+Local number of transitions   : 6
 """
 			} # end BC file
 			, 
@@ -2218,8 +2218,8 @@ Termination                   : regular termination
 State space nature            : good
 Number of random selections   : 0
 ------------------------------------------------------------
-Number of states              : 8
-Number of transitions         : 7
+Local number of states        : 8
+Local number of transitions   : 7
 """
 			} # end BC file
 			, 
@@ -2236,8 +2236,8 @@ Termination                   : regular termination
 State space nature            : good
 Number of random selections   : 0
 ------------------------------------------------------------
-Number of states              : 9
-Number of transitions         : 8
+Local number of states        : 9
+Local number of transitions   : 8
 """
 			} # end BC file
 			,
@@ -2283,8 +2283,8 @@ Termination                   : regular termination
 State space nature            : good
 Number of random selections   : 0
 ------------------------------------------------------------
-Number of states              : 3
-Number of transitions         : 2
+Local number of states        : 3
+Local number of transitions   : 2
 """
 			} # end BC file
 			, 
@@ -2301,8 +2301,8 @@ Termination                   : regular termination
 State space nature            : good
 Number of random selections   : 0
 ------------------------------------------------------------
-Number of states              : 4
-Number of transitions         : 3
+Local number of states        : 4
+Local number of transitions   : 3
 """
 			} # end BC file
 			, 
@@ -2319,8 +2319,8 @@ Termination                   : regular termination
 State space nature            : good
 Number of random selections   : 0
 ------------------------------------------------------------
-Number of states              : 5
-Number of transitions         : 4
+Local number of states        : 5
+Local number of transitions   : 4
 """
 			} # end BC file
 			, 
@@ -2337,8 +2337,8 @@ Termination                   : regular termination
 State space nature            : good
 Number of random selections   : 0
 ------------------------------------------------------------
-Number of states              : 4
-Number of transitions         : 3
+Local number of states        : 4
+Local number of transitions   : 3
 """
 			} # end BC file
 			, 
@@ -2355,8 +2355,8 @@ Termination                   : regular termination
 State space nature            : good
 Number of random selections   : 0
 ------------------------------------------------------------
-Number of states              : 5
-Number of transitions         : 4
+Local number of states        : 5
+Local number of transitions   : 4
 """
 			} # end BC file
 			, 
@@ -2373,8 +2373,8 @@ Termination                   : regular termination
 State space nature            : good
 Number of random selections   : 0
 ------------------------------------------------------------
-Number of states              : 6
-Number of transitions         : 5
+Local number of states        : 6
+Local number of transitions   : 5
 """
 			} # end BC file
 			, 
@@ -2391,8 +2391,8 @@ Termination                   : regular termination
 State space nature            : good
 Number of random selections   : 0
 ------------------------------------------------------------
-Number of states              : 5
-Number of transitions         : 4
+Local number of states        : 5
+Local number of transitions   : 4
 """
 			} # end BC file
 			, 
@@ -2409,8 +2409,8 @@ Termination                   : regular termination
 State space nature            : good
 Number of random selections   : 0
 ------------------------------------------------------------
-Number of states              : 6
-Number of transitions         : 5
+Local number of states        : 6
+Local number of transitions   : 5
 """
 			} # end BC file
 			, 
@@ -2427,8 +2427,8 @@ Termination                   : regular termination
 State space nature            : good
 Number of random selections   : 0
 ------------------------------------------------------------
-Number of states              : 7
-Number of transitions         : 6
+Local number of states        : 7
+Local number of transitions   : 6
 """
 			} # end BC file
 			, 
