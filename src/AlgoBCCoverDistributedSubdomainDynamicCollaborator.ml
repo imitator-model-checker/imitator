@@ -333,9 +333,21 @@ class algoBCCoverDistributedSubdomainDynamicCollaborator =
 		(*** NOTE: would be better to have a nicer mechanism than that one… ***)
 		Input.set_v0 subdomain;
 		
-		(* Perform initialization *)
-		bc_option <- Some self#new_bc_instance;
+		(* Retrieve the tiles computed previously (if any) *)
+		let previous_tiles = match bc_option with
+			| Some bc -> bc#get_abstract_im_result_list
+			| None -> []
+		in
 		
+		(* Perform initialization *)
+		let bc = self#new_bc_instance in
+		
+		(* Set the previously computed tiles *)
+		bc#set_abstract_im_result_list previous_tiles;
+		
+		(* Set BC *)
+		bc_option <- Some bc;
+
 		if verbose_mode_greater Verbose_medium then(
 			(* Retrieve the model *)
 			let model = Input.get_model() in
