@@ -10,7 +10,7 @@
 # 
 # File contributors : Étienne André
 # Created           : 2016/08/08
-# Last modified     : 2016/08/08
+# Last modified     : 2016/08/11
 #************************************************************
 
 
@@ -70,24 +70,31 @@ V_2_8	= 4
 # Options
 #------------------------------------------------------------
 # NOTE: really ugly to manually assign a value…
-OPT_INCLUSION			= 1
-OPT_MERGING				= 2
-OPT_OUTPUT_PREFIX		= 3
-OPT_OUTPUT_RES			= 4
-OPT_OUTPUT_TRACE_SET	= 5
+OPT_DISTR_SUBDOMAIN		= 1
+OPT_INCLUSION			= 2
+OPT_MERGING				= 3
+OPT_MODE_COVER			= 4
+OPT_OUTPUT_PREFIX		= 5
+OPT_OUTPUT_RES			= 6
+OPT_OUTPUT_TRACE_SET	= 7
+OPT_PRP					= 8
+
 
 UNDEFINED_SYNTAX = -1
 
 # Critical options, i.e., without which the analysis shall not be run; in other words, if a version does not implement an option required by the analysis and belonging to this list, the benchmark is not run
-critical_options = [OPT_MERGING]
+critical_options = [OPT_DISTR_SUBDOMAIN , OPT_MERGING , OPT_PRP]
 
 # Mainly needed for printing and info purpose
 option_names = {
+	OPT_DISTR_SUBDOMAIN		: 'distr:subdomain',
 	OPT_INCLUSION			: 'inclusion',
 	OPT_MERGING				: 'merging',
+	OPT_MODE_COVER			: 'mode:cover',
 	OPT_OUTPUT_PREFIX		: 'output-prefix',
 	OPT_OUTPUT_RES			: 'output-result',
 	OPT_OUTPUT_TRACE_SET	: 'output-trace-set',
+	OPT_PRP					: 'PRP',
 }
 
 #------------------------------------------------------------
@@ -101,11 +108,14 @@ versions = {
 		'binary'			: 'imitator25',
 		'syntax':
 			{
+			OPT_DISTR_SUBDOMAIN		: UNDEFINED_SYNTAX,
 			OPT_INCLUSION			: '-incl',
 			OPT_MERGING				: '-with-merging',
+			OPT_MODE_COVER			: '-mode cover',
 			OPT_OUTPUT_PREFIX		: '-log-prefix',
 			OPT_OUTPUT_RES			: UNDEFINED_SYNTAX,
 			OPT_OUTPUT_TRACE_SET	: '-with-dot',
+			OPT_PRP					: UNDEFINED_SYNTAX,
 			},
 		'files_suffix'			: '_2_5',
 	},
@@ -115,11 +125,14 @@ versions = {
 		'binary'			: 'imitator261',
 		'syntax':
 			{
+			OPT_DISTR_SUBDOMAIN		: UNDEFINED_SYNTAX,
 			OPT_INCLUSION			: '-incl',
 			OPT_MERGING				: '-merge',
+			OPT_MODE_COVER			: '-mode cover',
 			OPT_OUTPUT_PREFIX		: '-log-prefix',
 			OPT_OUTPUT_RES			: UNDEFINED_SYNTAX,
 			OPT_OUTPUT_TRACE_SET	: '-with-dot',
+			OPT_PRP					: UNDEFINED_SYNTAX,
 			},
 		'files_suffix'			: '_2_6_1',
 	},
@@ -129,11 +142,14 @@ versions = {
 		'binary'			: 'imitator273',
 		'syntax':
 			{
+			OPT_DISTR_SUBDOMAIN		: '-distributed dynamic',
 			OPT_INCLUSION			: '-incl',
 			OPT_MERGING				: '-merge',
+			OPT_MODE_COVER			: '-mode cover',
 			OPT_OUTPUT_PREFIX		: '-output-prefix',
 			OPT_OUTPUT_RES			: '-output-result',
 			OPT_OUTPUT_TRACE_SET	: '-output-trace-set',
+			OPT_PRP					: '-PRP',
 			},
 		'files_suffix'			: '_2_7_3',
 	},
@@ -143,11 +159,14 @@ versions = {
 		'binary'			: 'imitator',
 		'syntax':
 			{
+			OPT_DISTR_SUBDOMAIN		: '-distributed dynamic',
 			OPT_INCLUSION			: '-incl',
 			OPT_MERGING				: '-merge',
+			OPT_MODE_COVER			: '-mode cover',
 			OPT_OUTPUT_PREFIX		: '-output-prefix',
 			OPT_OUTPUT_RES			: '-output-result',
 			OPT_OUTPUT_TRACE_SET	: '-output-trace-set',
+			OPT_PRP					: '-PRP',
 			},
 		'files_suffix'			: '_2_8',
 	},
@@ -203,9 +222,26 @@ def print_to_screen_and_log(content):
 	print_to_screen(content)
 
 
-
 # Function to retrieve the computation time depending on the benchmark
-def get_computation_time(benchmark, version):
+def get_computation_time(benchmark, version, cartography_mode):
+	
+	# NOTE: special case for v2.7.3 for BC as the .res file already contains the stats line (unfortunately not for other modes)
+	if cartography_mode and version == V_2_7_3:
+		# TODO: check if files exist
+		# Open res file
+		# NOTE: remark the "_cart" suffix…
+		res_file = RESULT_FILES_PATH + benchmark['log_prefix'] +  versions[version]['files_suffix'] + "_cart.res"
+		
+		# "Stats    :  4 6 2 0 3321 8.68716406823 3"
+		pattern = re.compile("Stats    :  \d+ \d+ \d+ \d+ \d+ (\d*\.\d*) \d+")
+
+		for i, line in enumerate(open(res_file)):
+			for match in re.finditer(pattern, line):
+				return match.groups()[0]
+		
+		print_error("Time not found for benchmark " + benchmark['name'] + " (cartography mode) with version " + versions[version]['version_name'])
+		return ANALYSIS_FAILED
+	
 	if version == V_2_5 or version == V_2_6_1 or version == V_2_7_3:
 		# TODO: check if files exist
 		# Open log file
@@ -227,7 +263,7 @@ def get_computation_time(benchmark, version):
 		res_file = RESULT_FILES_PATH + benchmark['log_prefix'] +  versions[version]['files_suffix'] + ".res"
 	
 		# Pattern: Computation time                        : 0.041 second
-		pattern = re.compile("Computation time\s*:\s*(\d*\.\d*) second")
+		pattern = re.compile("Total computation time\s*:\s*(\d*\.\d*) second")
 
 		for i, line in enumerate(open(res_file)):
 			for match in re.finditer(pattern, line):
@@ -265,10 +301,10 @@ def run(benchmark, versions_to_test, logfile):
 		to_run = True
 		for option in benchmark['options']:
 			if option in critical_options and versions[version]['syntax'][option] == UNDEFINED_SYNTAX:
-				print_to_screen_and_log(' Option ' + option_names[option] + ' not defined for version ' + versions[version]['version_name'] + '!')
+				print_warning('Option ' + option_names[option] + ' not defined for version ' + versions[version]['version_name'] + '!')
 				to_run = False
 		if not to_run:
-			print_to_screen_and_log(' Skip version ' + versions[version]['version_name'] + '')
+			print_warning('Skip version ' + versions[version]['version_name'] + '')
 			# Store result
 			results[benchmark['log_prefix']][version] = ANALYSIS_FAILED
 		else:
@@ -282,13 +318,19 @@ def run(benchmark, versions_to_test, logfile):
 				# Only add option if syntax defined for this version
 				if versions[version]['syntax'][option] != UNDEFINED_SYNTAX:
 					# Add the option with the correct syntax
-					options_str_list.append(versions[version]['syntax'][option])
+					options_str_list.extend((versions[version]['syntax'][option]).split())
 			# Add the option to redirect log files to the dedicated dir
 			options_str_list.extend([versions[version]['syntax'][OPT_OUTPUT_PREFIX] , RESULT_FILES_PATH + benchmark['log_prefix'] + versions[version]['files_suffix'] ])
-					
+			
+			# Find input files (that might have been redefined for this specific version)
+			input_files = benchmark['input_files']
+			# Input files refined using key 'input_files_v' and version
+			if 'input_files_v' in benchmark.keys() and version in benchmark['input_files_v'].keys():
+				input_files = benchmark['input_files_v'][version]
+			
 			# Add the path to all input files
 			cmd_inputs = []
-			for each_file in benchmark['input_files']:
+			for each_file in input_files:
 				cmd_inputs += [make_file(each_file)]
 				# TODO: test for existence of files (just in case)
 			
@@ -319,7 +361,11 @@ def run(benchmark, versions_to_test, logfile):
 			logfile.flush()
 			
 			# Retrieve the computation time
-			time = get_computation_time(benchmark, version)
+			# HACK: need to take the cartography mode into consideration (for v.2.7.3 at least)
+			cartography_mode = False
+			if OPT_MODE_COVER in benchmark['options']:
+				cartography_mode = True
+			time = get_computation_time(benchmark, version, cartography_mode)
 			
 			# Store result
 			results[benchmark['log_prefix']][version] = time
