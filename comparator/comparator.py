@@ -371,7 +371,20 @@ def run(benchmark, versions_to_test):
 
 			
 			# TODO: test whether the termination is ok
-		
+	# Print the current benchmark
+	print_line(versions_to_test, benchmark['log_prefix'], results[benchmark['log_prefix']])
+
+
+
+def print_line(versions_to_test, benchmark_id, result):
+	# Create text line
+	line = benchmark_id + ": "
+	
+	for version in versions_to_test:
+		line = line + str(result[version]) + "; "
+	
+	print_to_screen(line)
+
 
 def print_results(versions_to_test):
 	# Print something
@@ -380,13 +393,7 @@ def print_results(versions_to_test):
 	print_to_screen(' RESULTS')
 
 	for benchmark_id, result in results.iteritems():
-		# Create text line
-		line = benchmark_id + ": "
-		
-		for version in versions_to_test:
-			line = line + str(result[version]) + "; "
-		
-		print_to_screen(line)
+		print_line(versions_to_test, benchmark_id, result)
 
 
 #************************************************************

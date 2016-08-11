@@ -181,18 +181,30 @@ data = [
 	# END benchmark
 	#------------------------------------------------------------
 	,
-	##------------------------------------------------------------
-	## BEGIN benchmark
-	#{
-		#'name'				: 'Sched2.50.0 distributed(4)',
-		#'nb_nodes'			: 4,
-		#'log_prefix'		: 'sched5_50_0_prpc_distr_4',
-		#'input_files'		: ['Scheduling/non-preemptive-scheduling/Sched2.50.0.imi', 'Scheduling/non-preemptive-scheduling/Sched2.50.0.v0'],
-		#'options'			: [OPT_MERGING, OPT_MODE_COVER, OPT_OUTPUT_RES, OPT_DISTR_SUBDOMAIN, OPT_PRP],
-	#}
-	## END benchmark
-	##------------------------------------------------------------
-	#,
+	#------------------------------------------------------------
+	# BEGIN benchmark
+	{
+		'name'				: 'Sched2.50.0 distributed(4)',
+		'nb_nodes'			: 4,
+		'log_prefix'		: 'sched2_50_0_prpc_distr_4',
+		'input_files'		: ['Scheduling/non-preemptive-scheduling/Sched2.50.0.imi', 'Scheduling/non-preemptive-scheduling/Sched2.50.0.v0'],
+		'options'			: [OPT_MERGING, OPT_MODE_COVER, OPT_OUTPUT_RES, OPT_DISTR_SUBDOMAIN, OPT_PRP],
+	}
+	# END benchmark
+	#------------------------------------------------------------
+	,
+	#------------------------------------------------------------
+	# BEGIN benchmark
+	{
+		'name'				: 'Sched2.100.0 distributed(4)',
+		'nb_nodes'			: 4,
+		'log_prefix'		: 'sched2_100_0_prpc_distr_4',
+		'input_files'		: ['Scheduling/non-preemptive-scheduling/Sched2.100.0.imi', 'Scheduling/non-preemptive-scheduling/Sched2.100.0.v0'],
+		'options'			: [OPT_MERGING, OPT_MODE_COVER, OPT_OUTPUT_RES, OPT_DISTR_SUBDOMAIN, OPT_PRP],
+	}
+	# END benchmark
+	#------------------------------------------------------------
+	,
 	##------------------------------------------------------------
 	## BEGIN benchmark
 	#{
