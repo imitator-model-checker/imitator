@@ -1,0 +1,346 @@
+--****************************************************--
+--****************************************************--
+--   Protocol described in
+--   "Parameterized Reachability Analysis of the IEEE 1394 Root Contention Protocol using TReX"
+--   Collomb-Annichini, Sighireanu (RTTOOLS 2001)
+--
+--   Etienne ANDRE and Laurent FRIBOURG
+--   Laboratoire Specification et Verification
+--
+--                                Created : 2008/01/10
+--                          Last modified : 2014/03/26
+--                       IMITATOR version : 2.6.1.2
+--****************************************************--
+--****************************************************--
+
+var 	ckN1, ckN2, ckW12x, ckW12y, ckW21x, ckW21y
+		: clock;
+
+(*	rc_fast_min, rc_fast_max,
+	rc_slow_min, rc_slow_max,
+	delay
+			: parameter;*)
+
+	rc_fast_min = 76, rc_fast_max = 85,
+	rc_slow_min, rc_slow_max = 167,
+	delay
+			: parameter;
+
+
+--****************************************************--
+  automaton node1
+--****************************************************--
+synclabs: snd_ack12, rec_ack21,
+	snd_idle12, rec_idle21,	
+	snd_req12, rec_req21,
+	root1, child1;
+initially N1root_contention;
+
+loc N1root_contention: while ckN1 <= 0 wait {}
+	when True sync snd_idle12 do {ckN1' = 0} goto N1rec_req_fast;
+	when True sync snd_idle12 do {ckN1' = 0} goto N1rec_req_slow;
+	when True sync rec_idle21 do {ckN1' = 0} goto N1rec_idle;
+
+loc N1rec_req_fast: while ckN1 <= rc_fast_max wait {}
+	when ckN1 >= rc_fast_min sync snd_ack12 do {ckN1' = 0} goto N1almost_root;
+	when True sync rec_idle21 do {} goto N1rec_idle_fast;
+	
+loc N1rec_req_slow: while ckN1 <= rc_slow_max wait {}
+	when ckN1 >= rc_slow_min sync snd_ack12 do {ckN1' = 0} goto N1almost_root;
+	when True sync rec_idle21 do {} goto N1rec_idle_slow;
+
+loc N1almost_root: while ckN1 <= 0 wait {}
+	when True sync root1 do {} goto N1root;
+
+loc N1root: while ckN1 >= 0 wait {}
+-- 	when True do {} goto N1root;
+
+loc N1rec_idle: while ckN1 <= 0 wait {}
+	when True sync snd_idle12 do {ckN1' = 0} goto N1rec_idle_fast;
+	when True sync snd_idle12 do {ckN1' = 0} goto N1rec_idle_slow;
+	when True sync rec_req21 do {ckN1' = 0} goto N1root_contention;
+
+loc N1rec_idle_fast: while ckN1 <= rc_fast_max wait {}
+	when ckN1 >= rc_fast_min sync snd_req12 do {} goto N1snt_req;
+	when True sync rec_req21 do {} goto N1rec_req_fast;
+
+loc N1rec_idle_slow: while ckN1 <= rc_slow_max wait {}
+	when ckN1 >= rc_slow_min sync snd_req12 do {} goto N1snt_req;
+	when True sync rec_req21 do {} goto N1rec_req_slow;
+
+loc N1snt_req: while ckN1 >= 0 wait {}
+	when True sync rec_ack21 do {ckN1' = 0} goto N1almost_child;
+	when True sync rec_req21 do {ckN1' = 0} goto N1root_contention;
+
+loc N1almost_child: while ckN1 <= 0 wait {}
+	when True sync child1 do {} goto N1child;
+
+loc N1child: while ckN1 >= 0 wait {}
+-- 	when True do {} goto N1child;
+end -- node1
+
+
+
+--****************************************************--
+  automaton node2
+--****************************************************--
+synclabs: snd_ack21, rec_ack12,
+	snd_idle21, rec_idle12,
+	snd_req21, rec_req12,
+	root2, child2;
+initially N2root_contention;
+
+loc N2root_contention: while ckN2 <= 0 wait {}
+	when True sync snd_idle21 do {ckN2' = 0} goto N2rec_req_fast;
+	when True sync snd_idle21 do {ckN2' = 0} goto N2rec_req_slow;
+	when True sync rec_idle12 do {ckN2' = 0} goto N2rec_idle;
+
+loc N2rec_req_fast: while ckN2 <= rc_fast_max wait {}
+	when ckN2 >= rc_fast_min sync snd_ack21 do {ckN2' = 0} goto N2almost_root;
+	when True sync rec_idle12 do {} goto N2rec_idle_fast;
+	
+loc N2rec_req_slow: while ckN2 <= rc_slow_max wait {}
+	when ckN2 >= rc_slow_min sync snd_ack21 do {ckN2' = 0} goto N2almost_root;
+	when True sync rec_idle12 do {} goto N2rec_idle_slow;
+
+loc N2almost_root: while ckN2 <= 0 wait {}
+	when True sync root2 do {} goto N2root;
+
+loc N2root: while ckN2 >= 0 wait {}
+-- 	when True do {} goto N2root;
+
+loc N2rec_idle: while ckN2 <= 0 wait {}
+	when True sync snd_idle21 do {ckN2' = 0} goto N2rec_idle_fast;
+	when True sync snd_idle21 do {ckN2' = 0} goto N2rec_idle_slow;
+	when True sync rec_req12 do {ckN2' = 0} goto N2root_contention;
+
+loc N2rec_idle_fast: while ckN2 <= rc_fast_max wait {}
+	when ckN2 >= rc_fast_min sync snd_req21 do {} goto N2snt_req;
+	when True sync rec_req12 do {} goto N2rec_req_fast;
+
+loc N2rec_idle_slow: while ckN2 <= rc_slow_max wait {}
+	when ckN2 >= rc_slow_min sync snd_req21 do {} goto N2snt_req;
+	when True sync rec_req12 do {} goto N2rec_req_slow;
+
+loc N2snt_req: while ckN2 >= 0 wait {}
+	when True sync rec_ack12 do {ckN2' = 0} goto N2almost_child;
+	when True sync rec_req12 do {ckN2' = 0} goto N2root_contention;
+
+loc N2almost_child: while ckN2 <= 0 wait {}
+	when True sync child2 do {} goto N2child;
+
+loc N2child: while ckN2 >= 0 wait {}
+-- 	when True do {} goto N2child;
+end -- node2
+
+
+--****************************************************--
+  automaton wire12
+--****************************************************--
+synclabs: snd_ack12, rec_ack12,
+	snd_idle12, rec_idle12,
+	snd_req12, rec_req12;
+initially W12empty;
+
+loc W12empty: while True wait {}
+	when True sync snd_ack12 do {ckW12x' = 0, ckW12y' = 0} goto W12rec_ack;
+	when True sync snd_idle12 do {ckW12x' = 0, ckW12y' = 0} goto W12rec_idle;
+	when True sync snd_req12 do {ckW12x' = 0, ckW12y' = 0} goto W12rec_req;
+
+loc W12rec_ack: while ckW12y <= delay wait {}
+	when True sync snd_ack12 do {} goto W12rec_ack;
+	when True sync snd_idle12 do {ckW12y' = 0} goto W12rec_ack_idle;
+	when True sync snd_req12 do {ckW12y' = 0} goto W12rec_ack_req;
+	when True sync rec_ack12 do {} goto W12empty;
+
+loc W12rec_idle: while ckW12y <= delay wait {}
+	when True sync snd_ack12 do {ckW12y' = 0} goto W12rec_idle_ack;
+	when True sync snd_idle12 do {} goto W12rec_idle;
+	when True sync snd_req12 do {ckW12y' = 0} goto W12rec_idle_req;
+	when True sync rec_idle12 do {} goto W12empty;
+
+loc W12rec_req: while ckW12y <= delay wait {}
+	when True sync snd_ack12 do {ckW12y' = 0} goto W12rec_req_ack;
+	when True sync snd_idle12 do {ckW12y' = 0} goto W12rec_req_idle;
+	when True sync snd_req12 do {} goto W12rec_req;
+	when True sync rec_req12 do {} goto W12empty;
+
+loc W12rec_ack_idle: while ckW12x <= delay wait {}
+	when True sync snd_idle12 do {} goto W12rec_ack_idle;
+	when True sync rec_ack12 do {} goto W12rec_idle;
+
+loc W12rec_idle_req: while ckW12x <= delay wait {}
+	when True sync snd_req12 do {} goto W12rec_idle_req;
+	when True sync rec_idle12 do {} goto W12rec_req;
+
+loc W12rec_req_ack: while ckW12x <= delay wait {}
+	when True sync snd_ack12 do {} goto W12rec_req_ack;
+	when True sync rec_req12 do {} goto W12rec_ack;
+
+loc W12rec_ack_req: while ckW12x <= delay wait {}
+	when True sync snd_req12 do {} goto W12rec_ack_req;
+	when True sync rec_ack12 do {} goto W12rec_req;
+
+loc W12rec_idle_ack: while ckW12x <= delay wait {}
+	when True sync snd_ack12 do {} goto W12rec_idle_ack;
+	when True sync rec_idle12 do {} goto W12rec_ack;
+
+loc W12rec_req_idle: while ckW12x <= delay wait {}
+	when True sync snd_idle12 do {} goto W12rec_req_idle;
+	when True sync rec_req12 do {} goto W12rec_idle;
+end -- wire12
+
+
+--****************************************************--
+  automaton wire21
+--****************************************************--
+synclabs: snd_ack21, rec_ack21,
+	snd_idle21, rec_idle21,
+	snd_req21, rec_req21;
+initially W21empty;
+
+loc W21empty: while True wait {}
+	when True sync snd_ack21 do {ckW21x' = 0, ckW21y' = 0} goto W21rec_ack;
+	when True sync snd_idle21 do {ckW21x' = 0, ckW21y' = 0} goto W21rec_idle;
+	when True sync snd_req21 do {ckW21x' = 0, ckW21y' = 0} goto W21rec_req;
+
+loc W21rec_ack: while ckW21y <= delay wait {}
+	when True sync snd_ack21 do {} goto W21rec_ack;
+	when True sync snd_idle21 do {ckW21y' = 0} goto W21rec_ack_idle;
+	when True sync snd_req21 do {ckW21y' = 0} goto W21rec_ack_req;
+	when True sync rec_ack21 do {} goto W21empty;
+
+loc W21rec_idle: while ckW21y <= delay wait {}
+	when True sync snd_ack21 do {ckW21y' = 0} goto W21rec_idle_ack;
+	when True sync snd_idle21 do {} goto W21rec_idle;
+	when True sync snd_req21 do {ckW21y' = 0} goto W21rec_idle_req;
+	when True sync rec_idle21 do {} goto W21empty;
+
+loc W21rec_req: while ckW21y <= delay wait {}
+	when True sync snd_ack21 do {ckW21y' = 0} goto W21rec_req_ack;
+	when True sync snd_idle21 do {ckW21y' = 0} goto W21rec_req_idle;
+	when True sync snd_req21 do {} goto W21rec_req;
+	when True sync rec_req21 do {} goto W21empty;
+
+loc W21rec_ack_idle: while ckW21x <= delay wait {}
+	when True sync snd_idle21 do {} goto W21rec_ack_idle;
+	when True sync rec_ack21 do {} goto W21rec_idle;
+
+loc W21rec_idle_req: while ckW21x <= delay wait {}
+	when True sync snd_req21 do {} goto W21rec_idle_req;
+	when True sync rec_idle21 do {} goto W21rec_req;
+
+loc W21rec_req_ack: while ckW21x <= delay wait {}
+	when True sync snd_ack21 do {} goto W21rec_req_ack;
+	when True sync rec_req21 do {} goto W21rec_ack;
+
+loc W21rec_ack_req: while ckW21x <= delay wait {}
+	when True sync snd_req21 do {} goto W21rec_ack_req;
+	when True sync rec_ack21 do {} goto W21rec_req;
+
+loc W21rec_idle_ack: while ckW21x <= delay wait {}
+	when True sync snd_ack21 do {} goto W21rec_idle_ack;
+	when True sync rec_idle21 do {} goto W21rec_ack;
+
+loc W21rec_req_idle: while ckW21x <= delay wait {}
+	when True sync snd_idle21 do {} goto W21rec_req_idle;
+	when True sync rec_req21 do {} goto W21rec_idle;
+end -- wire2
+
+
+
+--****************************************************--
+  automaton s1o -- Safety 1 Observer
+--****************************************************--
+synclabs: child1, child2,
+	root1, root2;
+initially S1oStart;
+
+loc S1oStart: while True wait {}
+	when True sync root1 do {} goto S1o1;
+	when True sync child1 do {} goto S1o2;
+	when True sync child2 do {} goto S1o3;
+	when True sync root2 do {} goto S1o4;
+
+loc S1o1: while True wait {}
+	when True sync child2 do {} goto S1oEnd;
+
+loc S1o2: while True wait {}
+	when True sync root2 do {} goto S1oEnd;
+
+loc S1o3: while True wait {}
+	when True sync root1 do {} goto S1oEnd;
+
+loc S1o4: while True wait {}
+	when True sync child1 do {} goto S1oEnd;
+
+loc S1oEnd: while True wait {}
+-- 	when True do {} goto S1oEnd;
+end -- s1o
+
+
+--****************************************************--
+--****************************************************--
+-- ANALYSIS
+--****************************************************--
+--****************************************************--
+
+var init : region;
+
+init := True
+	----------------------
+	-- Initial locations
+	----------------------
+	& loc[node1] = N1root_contention
+	& loc[node2] = N2root_contention
+	& loc[wire12] = W12empty
+	& loc[wire21] = W21empty
+	& loc[s1o] = S1oStart
+
+	----------------------
+	-- Clocks
+	----------------------
+	& ckN1 = 0
+	& ckN2 = 0
+	& ckW12x = 0
+	& ckW12y = 0
+	& ckW21x = 0
+	& ckW21y = 0
+
+	----------------------
+	-- Given constraints
+	----------------------
+	& delay >= 0 
+	& rc_fast_min >= 0
+	& rc_fast_max >= 0
+	& rc_slow_max >= 0
+	& rc_slow_min >= 0
+
+	& rc_fast_min <= rc_fast_max
+	& rc_slow_min <= rc_slow_max
+
+	----------------------
+	-- Instantiations
+	----------------------
+-- 	& rc_fast_max	= 85 -- 76 .. 100 (* 85 *)
+-- 	& rc_fast_min	= 76
+-- 	& rc_slow_max	= 159 .. 200 (* 167 *)
+-- 	& rc_slow_min	= 159
+-- 	& delay		= 30
+	
+-- 	& rc_fast_max <= 100
+-- 	& rc_slow_max <= 200
+
+	----------------------
+	-- Constraint output by IMITATOR 1
+	----------------------
+--       & 2delay + rc_fast_max < rc_slow_min
+--       & rc_slow_min <= rc_slow_max
+--       & 2delay < rc_fast_min
+--       & 0 <= delay
+--       & rc_fast_min <= rc_fast_max
+
+
+
+;
+
