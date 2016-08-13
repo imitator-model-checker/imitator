@@ -11,7 +11,7 @@
 # Laboratoire d'Informatique de Paris Nord
 # Universite Paris 13, Sorbonne Paris Cite, France
 # Created      : 2016/03/14
-# Last modified: 2016/08/11
+# Last modified: 2016/08/13
 #************************************************************
 
 
@@ -2437,8 +2437,8 @@ Local number of transitions   : 6
 Coverage                      : integer-complete
 Termination                   : regular termination
 Number of unsuccessful points : 0
-Average number of states      : 5.0
-Average number of transitions : 4.0
+Average number of states      : 5.1
+Average number of transitions : 4.1
 """
 #(************************************************************)
 #GENERAL STATISTICS
