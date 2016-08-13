@@ -10,7 +10,7 @@
 # 
 # File contributors : Étienne André
 # Created           : 2016/08/08
-# Last modified     : 2016/08/11
+# Last modified     : 2016/08/13
 #************************************************************
 
 
@@ -33,10 +33,11 @@ OPT_DISTR_SUBDOMAIN		= 1
 OPT_INCLUSION			= 2
 OPT_MERGING				= 3
 OPT_MODE_COVER			= 4
-OPT_OUTPUT_PREFIX		= 5
-OPT_OUTPUT_RES			= 6
-OPT_OUTPUT_TRACE_SET	= 7
-OPT_PRP					= 8
+OPT_OUTPUT_CART			= 5
+OPT_OUTPUT_PREFIX		= 6
+OPT_OUTPUT_RES			= 7
+OPT_OUTPUT_TRACE_SET	= 8
+OPT_PRP					= 9
 
 
 #************************************************************
@@ -44,29 +45,29 @@ OPT_PRP					= 8
 #************************************************************
 
 data = [
-	#------------------------------------------------------------
-	# BEGIN benchmark
-	{
-		'name'				: 'Flip-flop circuit',
-		'log_prefix'		: 'flipflop_im',
-		'input_files'		: ['Flipflop/flipflop.imi', 'Flipflop/flipflop.pi0'],
-		'input_files_v'		: {V_2_5 : ['Flipflop/flipflop_v_2_5.imi', 'Flipflop/flipflop.pi0'] },
-		'options'			: [OPT_MERGING, OPT_OUTPUT_RES, OPT_OUTPUT_TRACE_SET],
-	}
-	# END benchmark
-	#------------------------------------------------------------
-	,
 	##------------------------------------------------------------
 	## BEGIN benchmark
 	#{
-		#'name'				: 'LA02_2',
-		#'log_prefix'		: 'LA02_2_im',
-		#'input_files'		: ['Scheduling/LA02_2.imi', 'Scheduling/LA02_2.pi0'],
+		#'name'				: 'Flip-flop circuit',
+		#'log_prefix'		: 'flipflop_im',
+		#'input_files'		: ['Flipflop/flipflop.imi', 'Flipflop/flipflop.pi0'],
+		#'input_files_v'		: {V_2_5 : ['Flipflop/flipflop_v_2_5.imi', 'Flipflop/flipflop.pi0'] },
 		#'options'			: [OPT_MERGING, OPT_OUTPUT_RES, OPT_OUTPUT_TRACE_SET],
 	#}
 	## END benchmark
 	##------------------------------------------------------------
 	#,
+	#------------------------------------------------------------
+	# BEGIN benchmark
+	{
+		'name'				: 'LA02_2',
+		'log_prefix'		: 'LA02_2_im',
+		'input_files'		: ['Scheduling/LA02_2.imi', 'Scheduling/LA02_2.pi0'],
+		'options'			: [OPT_MERGING, OPT_OUTPUT_RES, OPT_OUTPUT_TRACE_SET],
+	}
+	# END benchmark
+	#------------------------------------------------------------
+	,
 	##------------------------------------------------------------
 	## BEGIN benchmark
 	#{
@@ -157,54 +158,54 @@ data = [
 	#,
 	
 	
-	#------------------------------------------------------------
-	# BEGIN benchmark
-	{
-		'name'				: 'Flip-flop circuit',
-		'nb_nodes'			: 4,
-		'log_prefix'		: 'flipflop_bc_distr_4',
-		'input_files'		: ['Flipflop/flipflop.imi', 'Flipflop/flipflop.v0'],
-		'options'			: [OPT_MODE_COVER, OPT_OUTPUT_RES, OPT_DISTR_SUBDOMAIN],
-	}
-	# END benchmark
-	#------------------------------------------------------------
-	,
-	#------------------------------------------------------------
-	# BEGIN benchmark
-	{
-		'name'				: 'SPSMALL distributed(4)',
-		'nb_nodes'			: 4,
-		'log_prefix'		: 'spsmall_distr_4',
-		'input_files'		: ['Valmem/spsmall.imi', 'Valmem/spsmall.v0'],
-		'options'			: [OPT_MERGING, OPT_MODE_COVER, OPT_OUTPUT_RES, OPT_DISTR_SUBDOMAIN, OPT_PRP],
-	}
-	# END benchmark
-	#------------------------------------------------------------
-	,
-	#------------------------------------------------------------
-	# BEGIN benchmark
-	{
-		'name'				: 'Sched2.50.0 distributed(4)',
-		'nb_nodes'			: 4,
-		'log_prefix'		: 'sched2_50_0_prpc_distr_4',
-		'input_files'		: ['Scheduling/non-preemptive-scheduling/Sched2.50.0.imi', 'Scheduling/non-preemptive-scheduling/Sched2.50.0.v0'],
-		'options'			: [OPT_MERGING, OPT_MODE_COVER, OPT_OUTPUT_RES, OPT_DISTR_SUBDOMAIN, OPT_PRP],
-	}
-	# END benchmark
-	#------------------------------------------------------------
-	,
-	#------------------------------------------------------------
-	# BEGIN benchmark
-	{
-		'name'				: 'Sched2.100.0 distributed(4)',
-		'nb_nodes'			: 4,
-		'log_prefix'		: 'sched2_100_0_prpc_distr_4',
-		'input_files'		: ['Scheduling/non-preemptive-scheduling/Sched2.100.0.imi', 'Scheduling/non-preemptive-scheduling/Sched2.100.0.v0'],
-		'options'			: [OPT_MERGING, OPT_MODE_COVER, OPT_OUTPUT_RES, OPT_DISTR_SUBDOMAIN, OPT_PRP],
-	}
-	# END benchmark
-	#------------------------------------------------------------
-	,
+	##------------------------------------------------------------
+	## BEGIN benchmark
+	#{
+		#'name'				: 'Flip-flop circuit',
+		#'nb_nodes'			: 4,
+		#'log_prefix'		: 'flipflop_bc_distr_4',
+		#'input_files'		: ['Flipflop/flipflop.imi', 'Flipflop/flipflop.v0'],
+		#'options'			: [OPT_MODE_COVER, OPT_OUTPUT_RES, OPT_DISTR_SUBDOMAIN],
+	#}
+	## END benchmark
+	##------------------------------------------------------------
+	#,
+	##------------------------------------------------------------
+	## BEGIN benchmark
+	#{
+		#'name'				: 'SPSMALL distributed(4)',
+		#'nb_nodes'			: 4,
+		#'log_prefix'		: 'spsmall_distr_4',
+		#'input_files'		: ['Valmem/spsmall.imi', 'Valmem/spsmall.v0'],
+		#'options'			: [OPT_MERGING, OPT_MODE_COVER, OPT_OUTPUT_RES, OPT_DISTR_SUBDOMAIN, OPT_PRP],
+	#}
+	## END benchmark
+	##------------------------------------------------------------
+	#,
+	##------------------------------------------------------------
+	## BEGIN benchmark
+	#{
+		#'name'				: 'Sched2.50.0 distributed(4)',
+		#'nb_nodes'			: 4,
+		#'log_prefix'		: 'sched2_50_0_prpc_distr_4',
+		#'input_files'		: ['Scheduling/non-preemptive-scheduling/Sched2.50.0.imi', 'Scheduling/non-preemptive-scheduling/Sched2.50.0.v0'],
+		#'options'			: [OPT_MERGING, OPT_MODE_COVER, OPT_OUTPUT_RES, OPT_DISTR_SUBDOMAIN, OPT_PRP],
+	#}
+	## END benchmark
+	##------------------------------------------------------------
+	#,
+	##------------------------------------------------------------
+	## BEGIN benchmark
+	#{
+		#'name'				: 'Sched2.100.0 distributed(4)',
+		#'nb_nodes'			: 4,
+		#'log_prefix'		: 'sched2_100_0_prpc_distr_4',
+		#'input_files'		: ['Scheduling/non-preemptive-scheduling/Sched2.100.0.imi', 'Scheduling/non-preemptive-scheduling/Sched2.100.0.v0'],
+		#'options'			: [OPT_MERGING, OPT_MODE_COVER, OPT_OUTPUT_RES, OPT_DISTR_SUBDOMAIN, OPT_PRP],
+	#}
+	## END benchmark
+	##------------------------------------------------------------
+	#,
 	##------------------------------------------------------------
 	## BEGIN benchmark
 	#{

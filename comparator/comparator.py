@@ -10,7 +10,7 @@
 # 
 # File contributors : Étienne André
 # Created           : 2016/08/08
-# Last modified     : 2016/08/11
+# Last modified     : 2016/08/13
 #************************************************************
 
 
@@ -53,10 +53,11 @@ orig_stdout = sys.stdout
 # Versions
 #------------------------------------------------------------
 # NOTE: really ugly to manually assign a value…
-V_2_5	= 1
-V_2_6_1	= 2
-V_2_7_3	= 3
-V_2_8	= 4
+V_2_5		= 1
+V_2_6_1		= 2
+V_2_6_2_825	= 3
+V_2_7_3		= 4
+V_2_8		= 5
 
 #------------------------------------------------------------
 # Options
@@ -66,10 +67,11 @@ OPT_DISTR_SUBDOMAIN		= 1
 OPT_INCLUSION			= 2
 OPT_MERGING				= 3
 OPT_MODE_COVER			= 4
-OPT_OUTPUT_PREFIX		= 5
-OPT_OUTPUT_RES			= 6
-OPT_OUTPUT_TRACE_SET	= 7
-OPT_PRP					= 8
+OPT_OUTPUT_CART			= 5
+OPT_OUTPUT_PREFIX		= 6
+OPT_OUTPUT_RES			= 7
+OPT_OUTPUT_TRACE_SET	= 8
+OPT_PRP					= 9
 
 
 UNDEFINED_SYNTAX = -1
@@ -83,6 +85,7 @@ option_names = {
 	OPT_INCLUSION			: 'inclusion',
 	OPT_MERGING				: 'merging',
 	OPT_MODE_COVER			: 'mode:cover',
+	OPT_OUTPUT_CART			: 'output-cart',
 	OPT_OUTPUT_PREFIX		: 'output-prefix',
 	OPT_OUTPUT_RES			: 'output-result',
 	OPT_OUTPUT_TRACE_SET	: 'output-trace-set',
@@ -104,6 +107,7 @@ versions = {
 			OPT_INCLUSION			: '-incl',
 			OPT_MERGING				: '-with-merging',
 			OPT_MODE_COVER			: '-mode cover',
+			OPT_OUTPUT_CART			: '-cart',
 			OPT_OUTPUT_PREFIX		: '-log-prefix',
 			OPT_OUTPUT_RES			: UNDEFINED_SYNTAX,
 			OPT_OUTPUT_TRACE_SET	: '-with-dot',
@@ -121,12 +125,32 @@ versions = {
 			OPT_INCLUSION			: '-incl',
 			OPT_MERGING				: '-merge',
 			OPT_MODE_COVER			: '-mode cover',
+			OPT_OUTPUT_CART			: '-cart',
 			OPT_OUTPUT_PREFIX		: '-log-prefix',
 			OPT_OUTPUT_RES			: UNDEFINED_SYNTAX,
 			OPT_OUTPUT_TRACE_SET	: '-with-dot',
 			OPT_PRP					: UNDEFINED_SYNTAX,
 			},
 		'files_suffix'			: '_2_6_1',
+	},
+	#------------------------------------------------------------
+	V_2_6_2_825 : {
+		'version_name'		: '2.6.2 build 825',
+		'binary'			: 'imitator262_825',
+		'binary_dist'		: 'patator262_825',
+		'syntax':
+			{
+			OPT_DISTR_SUBDOMAIN		: UNDEFINED_SYNTAX,
+			OPT_INCLUSION			: '-incl',
+			OPT_MERGING				: '-merge',
+			OPT_MODE_COVER			: '-mode cover',
+			OPT_OUTPUT_CART			: '-output-cart',
+			OPT_OUTPUT_PREFIX		: '-output-prefix',
+			OPT_OUTPUT_RES			: UNDEFINED_SYNTAX,
+			OPT_OUTPUT_TRACE_SET	: '-output-trace-set',
+			OPT_PRP					: '-EFIM',
+			},
+		'files_suffix'			: '_2_6_2_825',
 	},
 	#------------------------------------------------------------
 	V_2_7_3 : {
@@ -139,6 +163,7 @@ versions = {
 			OPT_INCLUSION			: '-incl',
 			OPT_MERGING				: '-merge',
 			OPT_MODE_COVER			: '-mode cover',
+			OPT_OUTPUT_CART			: '-output-cart',
 			OPT_OUTPUT_PREFIX		: '-output-prefix',
 			OPT_OUTPUT_RES			: '-output-result',
 			OPT_OUTPUT_TRACE_SET	: '-output-trace-set',
@@ -157,6 +182,7 @@ versions = {
 			OPT_INCLUSION			: '-incl',
 			OPT_MERGING				: '-merge',
 			OPT_MODE_COVER			: '-mode cover',
+			OPT_OUTPUT_CART			: '-output-cart',
 			OPT_OUTPUT_PREFIX		: '-output-prefix',
 			OPT_OUTPUT_RES			: '-output-result',
 			OPT_OUTPUT_TRACE_SET	: '-output-trace-set',
@@ -219,7 +245,7 @@ def get_computation_time(benchmark, version, cartography_mode):
 		print_error("Time not found for benchmark " + benchmark['name'] + " (cartography mode) with version " + versions[version]['version_name'])
 		return ANALYSIS_FAILED
 	
-	if version == V_2_5 or version == V_2_6_1 or version == V_2_7_3:
+	if version == V_2_5 or version == V_2_6_1 or version == V_2_6_2_825 or version == V_2_7_3:
 		# TODO: check if files exist
 		# Open log file
 		log_file = make_log_file(benchmark, version)
@@ -400,7 +426,7 @@ def print_results(versions_to_test):
 # RUN!
 #************************************************************
 
-all_versions = [V_2_5, V_2_6_1, V_2_7_3, V_2_8]
+all_versions = [V_2_5, V_2_6_1, V_2_6_2_825, V_2_7_3, V_2_8]
 
 # IMPORTING THE BENCHMARKS CONTENT
 import comparator_data
