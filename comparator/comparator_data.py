@@ -19,10 +19,11 @@
 #------------------------------------------------------------
 # HACK: copied these constants from comparator.py
 # NOTE: really ugly to manually assign a value…
-V_2_5	= 1
-V_2_6_1	= 2
-V_2_7_3	= 3
-V_2_8	= 4
+V_2_5		= 1
+V_2_6_1		= 2
+V_2_6_2_825	= 3
+V_2_7_3		= 4
+V_2_8		= 5
 
 #------------------------------------------------------------
 # Options
@@ -91,17 +92,18 @@ data = [
 	# END benchmark
 	#------------------------------------------------------------
 	,
-	#------------------------------------------------------------
-	# BEGIN benchmark
-	{
-		'benchmark_name'	: 'full_cpr08',
-		'log_prefix'		: 'full_cpr08_im',
-		'input_files'		: ['Scheduling/full_cpr08.imi', 'Scheduling/full_cpr08.pi0'],
-		'options'			: [OPT_MERGING, OPT_OUTPUT_RES, OPT_OUTPUT_TRACE_SET],
-	}
-	# END benchmark
-	#------------------------------------------------------------
-	,
+	##------------------------------------------------------------
+	## BEGIN benchmark
+	## NOTE: requires a depth limit (so better avoid for now)
+	#{
+		#'benchmark_name'	: 'full_cpr08',
+		#'log_prefix'		: 'full_cpr08_im',
+		#'input_files'		: ['Scheduling/full_cpr08.imi', 'Scheduling/full_cpr08.pi0'],
+		#'options'			: [OPT_MERGING, OPT_OUTPUT_RES, OPT_OUTPUT_TRACE_SET],
+	#}
+	## END benchmark
+	##------------------------------------------------------------
+	#,
 	#------------------------------------------------------------
 	# BEGIN benchmark
 	{
@@ -130,6 +132,9 @@ data = [
 		'benchmark_name'	: 'am02',
 		'log_prefix'		: 'am02_im',
 		'input_files'		: ['Scheduling/am02.imi', 'Scheduling/am02.pi0'],
+		'input_files_v'		: {
+				V_2_5 : ['Scheduling/am02_v_2_5.imi', 'Scheduling/am02.pi0'],
+		},
 		'options'			: [OPT_MERGING, OPT_OUTPUT_RES, OPT_OUTPUT_TRACE_SET, OPT_INCLUSION],
 	}
 	# END benchmark
@@ -141,6 +146,11 @@ data = [
 		'benchmark_name'	: 'Bounded retransmission protocol',
 		'log_prefix'		: 'BRP_im',
 		'input_files'		: ['BRP/brp.imi', 'BRP/brp.pi0'],
+		'input_files_v'		: {
+				V_2_5 : ['BRP/brp_v_2_5.imi', 'BRP/brp.pi0'],
+				V_2_6_1 : ['BRP/brp_v_2_5.imi', 'BRP/brp.pi0'],
+				V_2_6_2_825 : ['BRP/brp_v_2_5.imi', 'BRP/brp.pi0'],
+		},
 		'options'			: [OPT_MERGING, OPT_OUTPUT_RES, OPT_OUTPUT_TRACE_SET],
 	}
 	# END benchmark
@@ -152,6 +162,9 @@ data = [
 		'benchmark_name'	: 'Root contention protocol',
 		'log_prefix'		: 'RCP_im',
 		'input_files'		: ['RCP/RCP.imi', 'RCP/RCP.pi0'],
+		'input_files_v'		: {
+				V_2_5 : ['RCP/RCP_v_2_5.imi', 'RCP/RCP.pi0'],
+		},
 		'options'			: [OPT_MERGING, OPT_OUTPUT_RES, OPT_OUTPUT_TRACE_SET],
 	}
 	# END benchmark
@@ -172,7 +185,7 @@ data = [
 	#------------------------------------------------------------
 	# BEGIN benchmark
 	{
-		'benchmark_name'	: 'Flip-flop circuit',
+		'benchmark_name'	: 'Flip-flop PRPC distributed(4)',
 		'nb_nodes'			: 4,
 		'log_prefix'		: 'flipflop_bc_distr_4',
 		'input_files'		: ['Flipflop/flipflop.imi', 'Flipflop/flipflop.v0'],
@@ -217,15 +230,16 @@ data = [
 	# END benchmark
 	#------------------------------------------------------------
 	,
-	#------------------------------------------------------------
-	# BEGIN benchmark
-	{
-		'benchmark_name'	: 'the benchmark name',
-		'log_prefix'		: 'the_benchmark_prefix',
-		'input_files'		: ['file.imi'],
-		'options'			: [OPT_MERGING, OPT_OUTPUT_RES],
-	}
-	# END benchmark
-	#------------------------------------------------------------
-	,
+
+	##------------------------------------------------------------
+	## BEGIN benchmark
+	#{
+		#'benchmark_name'	: 'the benchmark name',
+		#'log_prefix'		: 'the_benchmark_prefix',
+		#'input_files'		: ['file.imi'],
+		#'options'			: [OPT_MERGING, OPT_OUTPUT_RES],
+	#}
+	## END benchmark
+	##------------------------------------------------------------
+	#,
 ]
