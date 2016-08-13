@@ -22,15 +22,15 @@
 
 
 	---IEEE VALUES---
-(*	& rc_fast_min	= 760
+	& rc_fast_min	= 760
 	& rc_fast_max	= 850
 	& rc_slow_min	= 1590
 	& rc_slow_max	= 1670
-	& delay			= 360*)
+	& delay			= 360
 	
 	---2D (as for BC)---
-	& rc_slow_min = 159
-	& delay       = 36
+(*	& rc_slow_min = 159
+	& delay       = 36*)
 	
 
 

@@ -1,10 +1,14 @@
 *******************************************************
 release 2.XXXXX    (XXXXX) FUTURE MAJOR RELEASE
 
+
+*******************************************************
+release 2.8    (2016-08-13) MAJOR RELEASE
+
 Major
 - New algorithm: parametric deadlock-freeness checking
-- Allow for more complex unreachable states in property definition: several locations in several IPTA can be tested, and discrete variables can be compared with <, <=, =, >=, > and intervals; all this can be mixed using and/or operators.
-- Automatic detection of L/U-PTA, U-PTA and L-PTA
+- Allow for more complex unreachable states in property definition: several locations in several IPTAs can be tested, and discrete variables can be compared with <, <=, =, >=, > and intervals; all this can be mixed using and/or operators.
+- Automatic detection of L/U-PTAs, U-PTAs and L-PTAs
 - Standardized output for the results of IMITATOR (including a notion of validity of the constraint output)
 
 Bug fixing
@@ -20,15 +24,16 @@ Options
 
 Graphics
 - Added a visualization of the bad states on the trace set (using red color + a frowney)
-- Removed the automatically generated observer from the PTA export
 
 Misc
 - Memory information now displayed at the end of the execution even in -verbose standard
 - Memory information now added to the .res files
 
 Export
-- Added an export to HyTech
-- Statistics better integrated both in the terminal output and in the .res files
+- Result file (.res) much more nicely structured. Statistics better integrated both in the terminal output and in the .res files
+- Added an export to HyTech (option -PTA2HyTech)
+- Removed the automatically generated observer from the PTA export (option -PTA2JPG)
+- When exporting to jpg (option -PTA2JPG), the urgent locations are now colored in yellow, and the nosync action (no synchronization name) are now dashed
 
 Versioning
 - Now IMITATOR integrates the hash number of GitHub in all outputs
@@ -37,11 +42,14 @@ Install and compile
 - Using "strip" the binary is now (much) smaller
 
 Internal
-- All algorithms rewritten in an object-oriented fashion
+- Entire reorganization of the core of IMITATOR: all algorithms rewritten in an object-oriented fashion
 - Added a mode to regenerate the IMITATOR input file (helpful to test input/output models)
 - Automaton.ml becomes Location.ml (and new module Automaton.ml created); and reorganization of numerous other modules
 - Build number only incremented when a flag file "iamadeveloper" is present in the imitator root directory
 - "examples" directory becomes "benchmarks"
+- New experimental version of EFsynth (usable with a hidden option)
+- Non-regression tests now implemented in an external Python script
+- Comparator of efficiency with former versions now implemented in an external Python script
 
 
 *******************************************************

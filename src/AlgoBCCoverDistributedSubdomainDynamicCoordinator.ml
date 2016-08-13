@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/03/17
- * Last modified     : 2016/05/09
+ * Last modified     : 2016/08/11
  *
  ************************************************************)
 
@@ -26,6 +26,7 @@ open AbstractModel
 open Result
 open AlgoGeneric
 open DistributedUtilities
+open Statistics
 
 
 (************************************************************)
@@ -232,6 +233,17 @@ class algoBCCoverDistributedSubdomainDynamicCoordinator =
 		
 	(*** QUESTION: what is this exactly? ***)
 	val mutable points_buffer = []
+	
+	
+	
+	(* Counter tracking the computation time to split subdomains *)
+	val tcounter_split_subdomains = create_hybrid_counter_and_register "split subdomains" Algorithm_counter Verbose_low
+	
+	(* Counter tracking the computation time to process results from the collaborators *)
+	val tcounter_process_result = create_hybrid_counter_and_register "process abstract results" Algorithm_counter Verbose_low
+
+	(* Counter tracking the computation time to wait for collaborators to send requests *)
+	val tcounter_wait_requests = create_hybrid_counter_and_register "wait requests" Algorithm_counter Verbose_low
 
 	
 	
@@ -257,9 +269,9 @@ class algoBCCoverDistributedSubdomainDynamicCoordinator =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Add an abstract_im_result to the list of received abstract_im_result *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method private add_abstract_im_result abstract_im_result =
-		(* Check if already present *)
+	method private add_abstract_im_result (abstract_im_result : abstract_im_result) =
 		
+		(* Check if already present *)
 		
 		(*** TODO ***)
 		
@@ -280,23 +292,17 @@ class algoBCCoverDistributedSubdomainDynamicCoordinator =
  		let options = Input.get_options () in 
  		
 		(* Initialize counters *)
-		(*** TODO ***)
-	(* 	counter_master_find_nextpi0#init; *)
-(*		counter_master_total#init;
-		counter_master_processing#init;
-		counter_master_waiting#init;
-		counter_master_split#init;*)
-		(*** TODO ***)
+		tcounter_split_subdomains#reset;
+		tcounter_process_result#reset;
+		tcounter_wait_requests#reset;
 			
-		(* Start total counter *)
-		(*** TODO ***)
-(* 		counter_master_total#start; *)
-		
+		(* Time counter for the algorithm *)
+		start_time <- Unix.gettimeofday();
+
 		self#print_algo_message Verbose_standard ("Hello world");
 		
 		(* List of subdomains maintained by the master *)
 		subdomains <- [];
-		
 
 		(* Create an index(collaborator,supart) *)
 		current_subdomains <- [];
@@ -304,12 +310,13 @@ class algoBCCoverDistributedSubdomainDynamicCoordinator =
 		(* Initialize waiting list  *)
 		waiting_collaborators <- [];
 		
-		(*initialize list of subdomain*)
-		(*** TODO ***)
-(* 		counter_master_split#start; *)
+		(* Initialize list of subdomain*)
+		(* Count! *)
+		tcounter_split_subdomains#start;
+		tcounter_split_subdomains#increment;
 		subdomains <- self#compute_initial_subdomains;
-		(*** TODO ***)
-(* 		counter_master_split#stop; *)
+		(* Count! *)
+		tcounter_split_subdomains#stop;
 
 		(* Print some information *)
 		if verbose_mode_greater Verbose_low then(
@@ -338,11 +345,12 @@ class algoBCCoverDistributedSubdomainDynamicCoordinator =
 			
 			self#print_algo_message Verbose_medium ("About to receive a pull request");
 			
-			(*** TODO ***)
-(* 			counter_master_waiting#start; *)
+			(* Count! *)
+			tcounter_wait_requests#start;
+			tcounter_wait_requests#increment;
 			let pull_request = DistributedUtilities.receive_pull_request () in
-			(*** TODO ***)
-(* 			counter_master_waiting#stop; *)
+			(* Count! *)
+			tcounter_wait_requests#stop;
 			
 			begin
 			match pull_request with 
@@ -375,13 +383,25 @@ class algoBCCoverDistributedSubdomainDynamicCoordinator =
 				
 			(*Tile Tag*)
 			| Tile (collaborator_rank , abstract_im_result) ->
-				self#print_algo_message Verbose_medium ("Received an abstract_im_result from collaborator " ^ (string_of_int collaborator_rank) ^ "");
-				(*check duplicated tile*)
-				(*** TODO ***)
-(* 						counter_master_processing#start; *)
-				let constraint_added = self#add_abstract_im_result abstract_im_result (*Cartography.bc_process_im_result abstract_im_result*) in
-					(*** TODO ***)
-(* 						counter_master_processing#stop; *)
+				(* Print some information *)
+				if verbose_mode_greater Verbose_low then(
+					(* Retrieve the model *)
+					let model = Input.get_model() in
+					
+					self#print_algo_message Verbose_low ("Received an abstract_im_result from collaborator " ^ (string_of_int collaborator_rank) ^ " computed in " ^ (string_of_seconds abstract_im_result.computation_time)
+						^ "\nConstraint:\n"
+						^ (LinearConstraint.string_of_p_convex_or_nonconvex_constraint model.variable_names abstract_im_result.result)
+						^ ""
+					);
+				);
+				
+				(* Check duplicated tile *)
+				(* Count! *)
+				tcounter_process_result#start;
+				tcounter_process_result#increment;
+				let constraint_added = self#add_abstract_im_result abstract_im_result in
+				(* Count! *)
+				tcounter_process_result#stop;
 
 				if constraint_added then(
 					(*receive abstract_im_result then send to the other collaborators to update*)
@@ -429,12 +449,14 @@ class algoBCCoverDistributedSubdomainDynamicCoordinator =
 					
 					(*compute the remain points int this subdomain*)
 					
-				(*** TODO ***)
-(* 					counter_master_split#start; *)
+					(* Count! *)
+					tcounter_split_subdomains#start;
+					(*** QUESTION: why two times incrementing that counter? ***)
+					tcounter_split_subdomains#increment;
 					let max_size = compute_nb_points_in_subdomain s in
 					let done_points = compute_nb_done_points_in_subdomain s pi0 in
-				(*** TODO ***)
-(* 					counter_master_split#stop; *)
+					(* Count! *)
+					tcounter_split_subdomains#stop;
 
 					let remaining_points = max_size - done_points in
 
@@ -452,12 +474,14 @@ class algoBCCoverDistributedSubdomainDynamicCoordinator =
 						(*** QUESTION: what is this? ***)
 						let pi0arr = pval2array pi0 in
 						
-						(*** TODO ***)
-(* 							counter_master_split#start; *)
+						(* Count! *)
+						tcounter_split_subdomains#start;
+						(*** QUESTION: why two times incrementing that counter? ***)
+						tcounter_split_subdomains#increment;
 						(*** QUESTION: why "+1"? ***)
 						let newSubdomains = dynamicSplitSubdomain s pi0arr ((List.length waiting_collaborators)+1)in
-						(*** TODO ***)
-(* 							counter_master_split#stop; *)
+						(* Count! *)
+						tcounter_split_subdomains#stop;
 						
 						(*send back to this collaborator*)
 						(*** QUESTION: what is subdomain1? ***)
@@ -647,7 +671,8 @@ class algoBCCoverDistributedSubdomainDynamicCoordinator =
 			computation_time	= time_from start_time;
 			
 			(* Computation time to look for points *)
-			find_point_time		= 0. (*** TODO ***);
+			(*** NOTE: the coordinator is NOT responsible for finding next points ***)
+			find_point_time		= 0.;
 			
 			(* Number of points on which IM could not be called because already covered *)
 			nb_unsuccessful_points= 0 (*** TODO ***);

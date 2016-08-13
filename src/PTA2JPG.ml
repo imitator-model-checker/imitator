@@ -1,11 +1,26 @@
 (************************************************************
  *
+ *                       IMITATOR
+ * 
+ * Laboratoire Spécification et Vérification (ENS Cachan & CNRS, France)
+ * LIPN, Université Paris 13, Sorbonne Paris Cité (France)
+ * 
+ * Module description: Convert an IMITATOR model to a .jpg file generated thanks to the dot utility
+ * 
+ * File contributors : Étienne André
+ * Created           : 2012/08/24
+ * Last modified     : 2016/08/11
+ *
+ ************************************************************)
+ 
+ (************************************************************
+ *
  *                     IMITATOR
  * 
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
- * Created:       2012/08/24
- * Last modified: 2016/04/19
+ * Created:       
+ * Last modified: 
  *
  ************************************************************)
 
@@ -95,12 +110,17 @@ let string_of_transition model automaton_index source_location action_index (gua
 	^ (id_of_location automaton_index destination_location)
 	
 	^ " ["
-	(* Color for sync label *)
+	(* Color and style for sync label *)
 	(* Check if the label is shared *)
 	^ (if List.length (model.automata_per_action action_index) > 1 then
 		let color = color action_index in
 		"style=bold, color=" ^ color ^ ", "
-		else "")
+		(* Check if this is a Action_type_nosync action: in which case dotted *)
+		else match model.action_types action_index with
+			| Action_type_sync -> ""
+			| Action_type_nosync -> "style=dashed, "
+		)
+		
 	(* LABEL *)
 	^ "label=\""
 	(* Guard *)
@@ -158,7 +178,7 @@ let string_of_location model automaton_index location_index =
 	(* Id *)
 	^ (id_of_location automaton_index location_index) ^ "["
 	(* Color *)
-	^ "fillcolor=" ^ (if model.is_urgent automaton_index location_index then "red" else "paleturquoise2") (*(color location_index)*) ^ ", style=filled, fontsize=16"
+	^ "fillcolor=" ^ (if model.is_urgent automaton_index location_index then "yellow" else "paleturquoise2") (*(color location_index)*) ^ ", style=filled, fontsize=16"
 	
 	(* Label: start *)
 	^ ", label=\""

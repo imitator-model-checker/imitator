@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/03/24
- * Last modified     : 2016/04/07
+ * Last modified     : 2016/08/11
  *
  ************************************************************)
 
@@ -156,6 +156,7 @@ class algoBCCoverDistributedSubdomainDynamicCollaborator =
 					| AlgoCartoGeneric.No_more -> raise (InternalError("Unexpected situation where no more point is found in the worker although it should be set at that point."))
 				in
 				
+				(* Retrieve cartography algorithm instance *)
 				let current_bc = a_of_a_option bc_option in
 				(* Test if uncovered *)
 				let uncovered = current_bc#test_pi0_uncovered currentPi0 in
@@ -185,11 +186,9 @@ class algoBCCoverDistributedSubdomainDynamicCollaborator =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method private compute_next_point =
 	
+		(* Retrieve cartography algorithm instance *)
 		let bc = a_of_a_option bc_option in
 
-		(* Print some information *)
-		self#print_algo_message Verbose_low ("Computing next point...");
-		
 		(* Find next point (dynamic fashion) *)
 		(*** NOTE: this operation (checking first point) could have been rather embedded in CartoGeneric ***)
 		let next_point = 
@@ -299,6 +298,12 @@ class algoBCCoverDistributedSubdomainDynamicCollaborator =
 			
 			(* Send the result to the master *)
 			DistributedUtilities.send_abstract_im_result abstract_im_result;
+			
+			(* Retrieve cartography algorithm instance *)
+			let bc = a_of_a_option bc_option in
+
+			(* Process it locally as it will be useful to find next points! *)
+			bc#process_result abstract_im_result;
 					
 			(*** NOTE for the collaborator version: keep it in memory 
 				all_tiles := im_result :: !all_tiles;
@@ -328,9 +333,21 @@ class algoBCCoverDistributedSubdomainDynamicCollaborator =
 		(*** NOTE: would be better to have a nicer mechanism than that one… ***)
 		Input.set_v0 subdomain;
 		
-		(* Perform initialization *)
-		bc_option <- Some self#new_bc_instance;
+		(* Retrieve the tiles computed previously (if any) *)
+		let previous_tiles = match bc_option with
+			| Some bc -> bc#get_abstract_im_result_list
+			| None -> []
+		in
 		
+		(* Perform initialization *)
+		let bc = self#new_bc_instance in
+		
+		(* Set the previously computed tiles *)
+		bc#set_abstract_im_result_list previous_tiles;
+		
+		(* Set BC *)
+		bc_option <- Some bc;
+
 		if verbose_mode_greater Verbose_medium then(
 			(* Retrieve the model *)
 			let model = Input.get_model() in
@@ -388,6 +405,9 @@ class algoBCCoverDistributedSubdomainDynamicCollaborator =
 		counter_worker_waiting#init;
 		counter_worker_IM#init;
 		counter_worker_find_next_pi0#init;*)
+		
+		(* Time counter for the algorithm *)
+		start_time <- Unix.gettimeofday();
 		
 		(* Start global counter *)
 		(*** TODO ***)

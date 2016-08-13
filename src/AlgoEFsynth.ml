@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/11/25
- * Last modified     : 2016/05/13
+ * Last modified     : 2016/08/13
  *
  ************************************************************)
 
@@ -128,11 +128,19 @@ class algoEFsynth =
 					| None -> ()
 					(* Project *)
 					| Some parameters ->
+						(* Print some information *)
 						self#print_algo_message Verbose_medium "Projecting onto some of the parameters.";
+
 						(*** TODO! do only once for all... ***)
 						let all_but_projectparameters = list_diff model.parameters parameters in
+						
 						(* Eliminate other parameters *)
 						LinearConstraint.p_hide_assign all_but_projectparameters p_constraint;
+
+						(* Print some information *)
+						if verbose_mode_greater Verbose_medium then(
+							print_message Verbose_medium (LinearConstraint.string_of_p_linear_constraint model.variable_names p_constraint);
+						);
 					end;
 
 					(* Print some information *)
@@ -146,6 +154,9 @@ class algoEFsynth =
 					if verbose_mode_greater Verbose_medium then(
 						self#print_algo_message Verbose_medium "Adding the following constraint to the list of bad constraints:";
 						print_message Verbose_medium (LinearConstraint.string_of_p_linear_constraint model.variable_names p_constraint);
+						
+						self#print_algo_message Verbose_medium "The bad constraint is now:";
+						print_message Verbose_medium (LinearConstraint.string_of_p_nnconvex_constraint model.variable_names bad_constraint);
 					);
 					
 					(* Do NOT compute its successors; cut the branch *)
@@ -222,6 +233,10 @@ class algoEFsynth =
 	(* Method packaging the result output by the algorithm *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method compute_result =
+		(* Retrieve the model *)
+		let model = Input.get_model () in
+
+		(* Print some information *)
 		self#print_algo_message_newline Verbose_standard (
 			"Algorithm completed " ^ (after_seconds ()) ^ "."
 		);
@@ -229,14 +244,49 @@ class algoEFsynth =
 		
 		(*** TODO: compute as well *good* zones, depending whether the analysis was exact, or early termination occurred ***)
 		
+		(* Print some information *)
 		self#print_algo_message_newline Verbose_low (
 			"Performing negation of final constraint..."
 		);
 		
+		
 		(* Perform result = initial_state|P \ bad_constraint *)
-		let result = LinearConstraint.p_nnconvex_copy init_p_nnconvex_constraint in
+		
+		(* Projecting onto SOME parameters if required *)
+		let result =
+		match model.projection with
+		(* No projection: copy the initial p constraint *)
+		| None -> LinearConstraint.p_nnconvex_copy init_p_nnconvex_constraint
+		(* Project *)
+		| Some parameters ->
+			(* Print some information *)
+			if verbose_mode_greater Verbose_medium then(
+				self#print_algo_message Verbose_medium "Projecting the initial constraint onto some of the parameters.";
+				self#print_algo_message Verbose_medium "Before projection:";
+				print_message Verbose_medium (LinearConstraint.string_of_p_nnconvex_constraint model.variable_names init_p_nnconvex_constraint);
+			);
+
+			(*** TODO! do only once for all... ***)
+			let all_but_projectparameters = list_diff model.parameters parameters in
+			
+			(* Eliminate other parameters *)
+			let projected_init_p_nnconvex_constraint = LinearConstraint.p_nnconvex_hide all_but_projectparameters init_p_nnconvex_constraint in
+
+			(* Print some information *)
+			if verbose_mode_greater Verbose_medium then(
+				self#print_algo_message Verbose_medium "After projection:";
+				print_message Verbose_medium (LinearConstraint.string_of_p_nnconvex_constraint model.variable_names projected_init_p_nnconvex_constraint);
+			);
+			
+			(* Return *)
+			projected_init_p_nnconvex_constraint
+		in
+		
+		(* Perform the difference *)
 		LinearConstraint.p_nnconvex_difference result bad_constraint;
 		
+		
+		(* Print some information *)
 		self#print_algo_message_newline Verbose_medium (
 			"Negation of final constraint completed."
 		);

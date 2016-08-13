@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/12/03
- * Last modified     : 2016/06/08
+ * Last modified     : 2016/08/11
  *
  ************************************************************)
 
@@ -156,7 +156,7 @@ let statespace_statistics state_space total_time =
 	    "Number of states                        : " ^ (string_of_int nb_states)
 	^ "\nNumber of transitions                   : " ^ (string_of_int (StateSpace.nb_transitions state_space))
 	^ "\nNumber of computed states               : " ^ (string_of_int nb_gen_states)
-	^ "\nComputation time                        : " ^ (string_of_seconds total_time)
+	^ "\nTotal computation time                  : " ^ (string_of_seconds total_time)
 	^ "\nStates/second in state space            : " ^ (round1_float states_per_second) ^ " (" ^ (string_of_int nb_states) ^ "/" ^ (string_of_seconds total_time) ^ ")"
 	^ "\nComputed states/second                  : " ^ (round1_float gen_states_per_second) ^ " (" ^ (string_of_int nb_gen_states) ^ "/" ^ (string_of_seconds total_time) ^ ")"
 	^ "\nEstimated memory                        : " ^ (memory_used ())
@@ -167,9 +167,9 @@ let abstract_statespace_statistics abstract_state_space total_time =
 	(* Speed: number of states computed and still in the state space *)
 	let states_per_second = (float_of_int abstract_state_space.nb_states) /. total_time in
 	
-	    "Number of states                        : " ^ (string_of_int abstract_state_space.nb_states)
-	^ "\nNumber of transitions                   : " ^ (string_of_int abstract_state_space.nb_transitions)
-	^ "\nComputation time                        : " ^ (string_of_seconds total_time)
+	    "Local number of states                  : " ^ (string_of_int abstract_state_space.nb_states)
+	^ "\nLocal number of transitions             : " ^ (string_of_int abstract_state_space.nb_transitions)
+	^ "\nLocal computation time                  : " ^ (string_of_seconds total_time)
 	^ "\nStates/second in state space            : " ^ (round1_float states_per_second) ^ " (" ^ (string_of_int abstract_state_space.nb_states) ^ "/" ^ (string_of_seconds total_time) ^ ")"
 
 
@@ -423,18 +423,21 @@ let general_bc_statistics bc_result =
 
 	(* First, compute average number of states and transitions (for info purpose) *)
 	(*** WARNING: use int, but using NumConst (unbounded) would be smarter in case of very large state spaces ***)
-	let total_states, total_transitions = List.fold_left (
-		fun (current_sum_states, current_sum_transitions) abstract_im_result ->
-			(current_sum_states + abstract_im_result.abstract_state_space.nb_states, current_sum_transitions +  + abstract_im_result.abstract_state_space.nb_transitions)
-	) (0,0) bc_result.tiles
+	let total_states, total_transitions, time_im = List.fold_left (
+		fun (current_sum_states, current_sum_transitions, current_sum_time) abstract_im_result ->
+			(
+				current_sum_states + abstract_im_result.abstract_state_space.nb_states
+				,
+				current_sum_transitions +  + abstract_im_result.abstract_state_space.nb_transitions
+				,
+				current_sum_time +. abstract_im_result.computation_time
+			)
+	) (0, 0, 0.0) bc_result.tiles
 	in
 	(* Compute average *)
 	let average_nb_states = (float_of_int total_states) /. (float_of_int nb_tiles) in
 	let average_nb_transitions = (float_of_int total_transitions) /. (float_of_int nb_tiles) in
 	
-	(* Then: compute the total time to run IM *)
-	let time_im = List.fold_left (fun current_sum (abstract_im_result : Result.abstract_im_result) -> current_sum +. abstract_im_result.computation_time) 0. bc_result.tiles in
-
        ""
 	^   "Number of integers in v0                : " ^ (NumConst.string_of_numconst bc_result.size_v0)
 	^ "\nNumber of tiles computed                : " ^ (string_of_int nb_tiles)
@@ -443,9 +446,9 @@ let general_bc_statistics bc_result =
 	^ "\nNumber of unsuccessful points           : " ^ (string_of_int bc_result.nb_unsuccessful_points)
 	^ "\nAverage number of states                : " ^ (round1_float average_nb_states)
 	^ "\nAverage number of transitions           : " ^ (round1_float average_nb_transitions)
-    ^ "\nComputation time                        : " ^ (string_of_seconds bc_result.computation_time)
-	^ "\nComputation time (IM)                   : " ^ (string_of_seconds time_im)
-	^ "\nComputation time (find point)           : " ^ (string_of_seconds bc_result.find_point_time)
+    ^ "\nTotal computation time                  : " ^ (string_of_seconds bc_result.computation_time)
+	^ "\nTotal computation time (IM)             : " ^ (string_of_seconds time_im)
+	^ "\nTotal computation time (find point)     : " ^ (string_of_seconds bc_result.find_point_time)
 	^ "\nEstimated memory                        : " ^ (memory_used ())
 
 		
@@ -862,13 +865,18 @@ let process_result result algorithm_name prefix_option =
 		
 		(* If cartography required for BC *)
 		if options#output_bc_cart then (
+			(* Print some information *)
+			print_message Verbose_high "Graphical cartography asked: prepare tiles to be drawn...";
+
 			(* Keep only valid tiles, i.e., underapproximations or exact *)
 			let valid_tiles = List.filter (fun abstract_im_result -> abstract_im_result.soundness = Result.Constraint_maybe_under || abstract_im_result.soundness = Result.Constraint_exact) bc_result.tiles in
+			
 			(* Render zones in a graphical form *)
 			let zones = List.map (fun abstract_im_result -> (abstract_im_result.result, abstract_im_result.statespace_nature)) valid_tiles in
 			Graphics.draw_cartography zones (file_prefix ^ "_cart_bc")
 		) else (
-				print_message Verbose_high "Graphical cartography not asked: not drawn.";
+			(* Print some information *)
+			print_message Verbose_high "Graphical cartography not asked: not drawn.";
 		);
 
 		(* The end *)

@@ -1,0 +1,329 @@
+--****************************************************--
+--****************************************************--
+--   Laboratoire Specification et Verification
+--
+--   BRP (Bounded Retransmission Protocol)
+--   after "The Bounded Retransmission Protocol Must Be on Time!"
+--
+--   Etienne ANDRE and Laurent FRIBOURG
+--
+--   Created       :    ? (< 09/2007)
+--   Last modified : 2009/12/28
+--****************************************************--
+--****************************************************--
+
+var     x,ys, yr,z,w, u,v
+           : clock;
+
+	i,	-- subscript of the chunk currently beeing processed (1<=i<=N)
+	ab,	-- alternating bit accompanying the next chunk to be sent
+	rc, 	-- nb of attempt undertaken by S to retransmit d_i (0<=rc<=MAX)
+
+	b1,bN, rb1,rbN, 
+
+
+	retry,	-- specifique ici (borne le nombre de retentatives du sender
+		-- lors d'une erreur a Maxr)
+	Maxr,
+
+	rab, exp_ab 
+           : discrete;
+	
+
+        MAX = 2, 	-- maximal number of retransmissions
+	N = 2, 	-- number of chunks of a file
+	SYNC = 17, 	-- delay added after a failure in order to assure 
+		-- that S does not start transmitting a new file before 
+		-- the receiver has properly reacted to the failure
+	T1 = 3,	-- time-out of the sender for initiating a retransmission
+		-- when S has not received an ack from S
+	TR,	-- time-out of the receiver for indicating failure
+		-- when R has not received the last chunk of a file
+	TD  	-- maximum delay in channel K (and L)
+           : parameter;
+-- -----------------------------------------------
+
+
+
+--****************************************************--
+--****************************************************--
+-- AUTOMATA
+--****************************************************--
+--****************************************************--
+
+
+--****************************************************--
+  automaton sender
+--****************************************************--
+synclabs: Sin, B, F, Sout_DK, Sout_NOK, Sout_OK;
+
+initially idleS;
+
+
+loc idleS: while x>=0 wait {}
+	when True sync Sin do {b1'=1,i'=1,x'=0} goto next_frame; 
+				
+
+loc next_frame: while x=0 wait {}
+
+	when i=N sync F do {bN'=1, rc'=0,x'=0}
+			goto wait_ack;
+	when i<N sync F do {bN'=0, rc'=0,x'=0}
+			goto wait_ack;
+
+
+loc wait_ack: while x<=T1 wait {}
+	when x=T1 & rc=MAX & i=N sync Sout_DK do {x'=0} goto error;
+	when x=T1 & rc=MAX & i<N sync Sout_NOK do {x'=0} goto error;
+
+	when x<T1 & ab=1 sync B do {ab'=0,x'=0} goto success;
+	when x<T1 & ab=0 sync B do {ab'=1,x'=0} goto success;
+
+	when x=T1 & rc<MAX sync F do {rc'=rc+1,x'=0} goto wait_ack;
+
+
+loc success: while x=0 wait {}
+	when i<N do {i'=i+1,b1'=0,x'=0} goto next_frame;
+	when i=N sync Sout_OK do {x'=0} goto EndS; -- idleS;
+
+
+loc error: while x=0 wait {}
+--	when x=0 & retry<Maxr do {ab'=0, retry'=retry+1} goto idleS;
+	when x=0  do {ab'=0} goto idleS;
+--	while x<=SYNC wait {}
+--	when x=SYNC do {ab'=0} goto idleS;
+
+
+loc EndS: while x>=0 wait {}
+
+end --sender
+
+
+--****************************************************--
+  automaton receiver	
+--****************************************************--
+synclabs: G, A, Rout_NOK, Rout_OK, Rout_FST, Rout_INC;
+
+initially new_file;
+
+
+loc new_file: while z>=0 wait {}
+
+	when True sync G 
+		do {z'=0,w'=0}	
+		goto fst_safe;
+
+
+loc fst_safe: while w=0 wait {}
+
+	when rab=0 & rb1=1 do {exp_ab'=0} goto frame_received;
+	when rab=1 & rb1=1 do {exp_ab'=1} goto frame_received;
+	when rb1=0 goto FailureR;
+
+loc frame_received: while w=0 wait {}
+
+	when rab=0 & exp_ab=0 & rb1=1 & rbN=0 sync Rout_FST
+			do {} goto frame_reported;
+
+	when rab=0 & exp_ab=0 & rb1=0 & rbN=0 sync Rout_INC
+			do {} goto frame_reported;
+
+	when rab=0 & exp_ab=0 & rbN=1 sync Rout_OK
+			do {} goto frame_reported;
+
+	when rab=1 & exp_ab=1 & rb1=1 & rbN=0 sync Rout_FST
+			do {} goto frame_reported;
+
+	when rab=1 & exp_ab=1 & rb1=0 & rbN=0 sync Rout_INC
+			do {} goto frame_reported;
+
+	when rab=1 & exp_ab=1 & rbN=1 sync Rout_OK
+			do {} goto frame_reported;
+
+
+	when rab=1 & exp_ab=0 sync A do {} goto idleR;	-- do {z'=0} ???
+	when rab=0 & exp_ab=1 sync A do {} goto idleR;	-- do {z'=0} ???
+
+
+
+loc frame_reported: while w=0 wait {}
+
+	when exp_ab=0 sync A do {exp_ab'=1,z'=0} goto idleR;
+	when exp_ab=1 sync A do {exp_ab'=0,z'=0} goto idleR;
+
+
+loc idleR: while z<=TR wait {}
+
+	when z<TR sync G do {w'=0} goto frame_received;
+	when z=TR & rbN=0 sync Rout_NOK do {} goto new_file;
+	when z=TR & rbN=1 goto new_file;
+
+
+loc FailureR: while z>=0 wait {}
+
+end --receiver
+
+
+
+
+--****************************************************--
+automaton channelK
+--****************************************************--
+synclabs: F,G;
+initially startK;
+
+loc startK: while u>=0 wait {}
+
+	when True sync F do {u'=0} goto in_transitK;   
+
+
+loc in_transitK: while u<=TD wait {}
+
+	when u<=TD & u>0 goto startK;  -- lost ??? (proba 0.02)
+
+	when u<=TD & u>0 & b1=0 & bN=0 & ab=0
+		do {rb1'=0, rbN'=0, rab'=0}
+		sync G  goto startK;
+	when u<=TD & u>0 & b1=0 & bN=0 & ab=1
+		do {rb1'=0, rbN'=0, rab'=1}
+		sync G  goto startK;
+	when u<=TD & u>0 & b1=0 & bN=1 & ab=0
+		do {rb1'=0, rbN'=1, rab'=0}
+		sync G  goto startK;
+	when u<=TD & u>0 & b1=0 & bN=1 & ab=1
+		do {rb1'=0, rbN'=1, rab'=1}
+		sync G  goto startK;
+	when u<=TD & u>0 & b1=1 & bN=0 & ab=0
+		do {rb1'=1, rbN'=0, rab'=0}
+		sync G  goto startK;
+	when u<=TD & u>0 & b1=1 & bN=0 & ab=1
+		do {rb1'=1, rbN'=0, rab'=1}
+		sync G  goto startK;
+	when u<=TD & u>0 & b1=1 & bN=1 & ab=0
+		do {rb1'=1, rbN'=1, rab'=0}
+		sync G  goto startK;
+	when u<=TD & u>0 & b1=1 & bN=1 & ab=1
+		do {rb1'=1, rbN'=1, rab'=1}
+		sync G  goto startK;
+
+	when True sync F  goto BadK;
+
+loc BadK: while u>=0 wait {}
+
+end -- channelK
+
+
+
+--****************************************************--
+automaton channelL
+--****************************************************--
+synclabs: A,B;
+initially startL;
+
+loc startL: while v>=0 wait {}
+
+	when True sync A do {v'=0} goto in_transitL;   
+
+
+
+loc in_transitL: while v<=TD wait {}
+
+	when v<=TD & v>0 sync B  goto startL;
+	when v<=TD & v>0  goto startL;   -- lost ??? (proba 0.01)
+
+	when True sync A  goto BadL;
+
+loc BadL: while v>=0 wait {}
+
+end -- channelL
+
+
+--****************************************************--
+automaton Sclient	
+--****************************************************--
+synclabs: Sin, Sout_OK, Sout_DK, Sout_NOK;
+initially startSC;
+
+loc startSC: while ys<=SYNC wait {} 		 -- while ys>=0 wait {}
+
+	when ys=SYNC & retry<=Maxr sync Sin do {ys'=0, retry'=retry+1} 
+				goto transSC; 
+	-- when True sync Sin do {ys'=0}
+
+loc transSC: while ys>=0 wait {}
+
+	when True sync Sout_OK do {ys'=0} goto startSC;  -- do{}
+	when True sync Sout_DK do {ys'=0} goto startSC;  -- do{}
+	when True sync Sout_NOK do {ys'=0} goto startSC; -- do{}
+
+end --Sclient
+
+--****************************************************--
+automaton Rclient	
+--****************************************************--
+synclabs: Rout_FST, Rout_OK, Rout_INC, Rout_NOK;
+initially startRC;
+
+loc startRC: while yr>=0 wait {}
+
+	when True sync Rout_FST do {yr'=0} goto transRC;
+	when True sync Rout_OK  goto startRC;
+
+loc transRC: while yr>=0 wait {}
+
+	when True sync Rout_OK  goto startRC; 
+	when True sync Rout_INC  goto transRC; 
+	when True sync Rout_NOK  goto startRC; 
+
+end --Rclient
+
+
+-- analysis commands
+
+var init : region;
+
+init := loc[sender]=idleS
+	& loc[receiver]=new_file
+	& loc[channelK]=startK
+	& loc[channelL]=startL
+	& loc[Sclient]=startSC
+	& loc[Rclient]=startRC
+	& x=0 & ys=0 & yr=0 & z=0 & w=0 & u=0 & v=0
+	& rc=0 & i=0 & ab=0 
+	& b1=0 & bN=0 & rb1=0 & rbN=0
+	& rab=0 & exp_ab=0
+	& retry=0 & Maxr=0 	--Maxr=1
+
+	-- & TR>=4T1+3TD	--TR=SYNC>4T1+3TD
+	-- & T1>2TD & TR<=SYNC & TD>0 
+
+	---START PI0---
+	& MAX  = 2
+	& N    = 2 
+-- -- 	& TD   = 1
+-- 	& T1   = 3
+-- -- 	& TR   = 16
+-- 	& SYNC = 17
+	---END PI0---
+
+	& MAX > 0
+	& N > 0
+	& TD > 0
+	& T1 > 0
+	& TR > 0
+	& SYNC > 0
+	
+	
+	----------------------
+	-- Constraint output by IMITATOR 1
+	----------------------
+-- 	& 5T1 < TD + TR
+--       & N = 2
+--       & MAX = 2
+--       & 0 < TD
+--       & TR <= TD + SYNC
+--       & 2TD < T1
+--       & 3TD + 4T1 <= TR
+--       & TR < 2TD + 5T1
+
+;
