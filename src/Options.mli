@@ -89,7 +89,7 @@ class imitator_options :
 		method output_tiles_files : bool
 		method pi_compatible : bool
 		method precomputepi0 : bool
-		method pta2clp : bool
+(* 		method pta2clp : bool *)
 		method pta2gml : bool
 		method pta2hytech : bool
 		method pta2imi : bool

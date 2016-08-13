@@ -233,8 +233,8 @@ class imitator_options =
 		
 		(* TRANSLATION *)
 		
-		(* Translate PTA model into a CLP program *)
-		val mutable pta2clp = ref false
+(*		(* Translate PTA model into a CLP program *)
+		val mutable pta2clp = ref false*)
 		
 		(* Translate PTA model into a GML model *)
 		val mutable pta2gml = ref false
@@ -309,7 +309,7 @@ class imitator_options =
 		method output_tiles_files = !output_tiles_files
 		method pi_compatible = !pi_compatible
 		method precomputepi0 = !precomputepi0
-		method pta2clp = !pta2clp
+(* 		method pta2clp = !pta2clp *)
 		method pta2gml = !pta2gml
 		method pta2imi = !pta2imi
 		method pta2hytech = !pta2hytech

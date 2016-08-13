@@ -201,13 +201,13 @@ if verbose_mode_greater Verbose_low then(
 (* Case translation *)
 (************************************************************)
 
-(* Translation to CLP (work in progress) *)
+(*(* Translation to CLP (work in progress) *)
 if options#pta2clp then(
 	print_message Verbose_standard ("Translating model to CLP.");
 	print_warning ("Work in progress!!!!");
 	print_message Verbose_standard ("\nmodel in CLP:\n" ^ (PTA2CLP.string_of_model model) ^ "\n");
 	terminate_program()
-);
+);*)
 
 (* Translation to GrML (experimental) *)
 if options#pta2gml then(

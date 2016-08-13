@@ -9,7 +9,12 @@
  *
  **************************************************)
 
+  !!!***!!!***!!!***!!!***!!!***!!!***!!!***!!!***!!!***!!!***!!!***!!!***!!!***!!!***!!!***!!!
+ WARNING !!! THIS FILE IS NOW UNPLUGGED FROM THE IMITATOR SOURCE CODE (as for 13th August 2016)
+ This paragraph should raise a compiling error (syntax error) if by mistake this file was linked from another file.
+  !!!***!!!***!!!***!!!***!!!***!!!***!!!***!!!***!!!***!!!***!!!***!!!***!!!***!!!***!!!***!!!
 
+  
 open OCamlUtilities
 open AbstractModel
 
