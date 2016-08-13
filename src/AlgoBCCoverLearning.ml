@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/07/22
- * Last modified     : 2016/08/04
+ * Last modified     : 2016/08/13
  *
  ************************************************************)
 
@@ -63,7 +63,7 @@ class algoBCCoverLearning =
 	(* Backup the original model (for final postprocessing) *)
 	val original_model = Input.get_model ()
 	(* Backup the original model file names *)
-	val original_file = (Input.get_options ())#file
+	val original_file = (Input.get_options ())#model_input_file_name
 	val original_files_prefix = (Input.get_options ())#files_prefix
 	
 	
@@ -118,7 +118,7 @@ class algoBCCoverLearning =
 		(* Prepare command *)
 		let script_line = "python " ^ interface_script_name
 			(* 1st argument: input model *)
-			^ " " ^ options#file
+			^ " " ^ options#model_input_file_name
 			(* 2nd argument: output model name *)
 			^ " " ^ learning_based_model_filename
 			(* 3rd argument: pi0 *)

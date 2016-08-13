@@ -9,7 +9,7 @@
  * 
  * File contributors : Ulrich Kühne, Étienne André
  * Created           : 2010
- * Last modified     : 2016/08/08
+ * Last modified     : 2016/08/13
  *
  ************************************************************)
 
@@ -71,10 +71,10 @@ class imitator_options =
 		(*** WARNING: why so many mutable ref, although mutable would do ?? ***)
 		
 		(* imitator model input file *)
-		val mutable file = ""
+		val mutable model_input_file_name = ""
 		
 		(* pi0 file *)
-		val mutable pi0file = ""
+		val mutable second_file_name = ""
 		
 		(* Create a "fake" pi0 file (USELESS) *)
 (* 		val mutable forcePi0 = ref false *)
@@ -288,15 +288,15 @@ class imitator_options =
 		method dynamic_clock_elimination = !dynamic_clock_elimination
 		method efim = !efim
 		method fancy = !fancy
-		method file = file
 		method files_prefix = !files_prefix
 		method fromGML = fromGML
 		method imitator_mode = imitator_mode
 		method new_ef_mode = new_ef_mode
 		method inclusion = !inclusion
-		method nb_args = nb_args
 		method merge = !merge
 		method merge_before = !merge_before
+		method model_input_file_name = model_input_file_name
+		method nb_args = nb_args
 		method no_time_elapsing = !no_time_elapsing
 		method no_random = !no_random
 		method output_bc_cart = !output_bc_cart
@@ -315,6 +315,7 @@ class imitator_options =
 		method pta2hytech = !pta2hytech
 		method pta2jpg = !pta2jpg
 		method pta2tikz = !pta2tikz
+		method second_file_name = second_file_name
 		method states_limit = !states_limit
 		method statistics = !statistics
 		method step = !step
@@ -329,7 +330,6 @@ class imitator_options =
 		method with_log = !with_log
 (* 		method with_parametric_log = !with_parametric_log *)
 
-		method pi0file = pi0file
 		
 		
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -339,7 +339,7 @@ class imitator_options =
 		(*** NOTE: set methods are only used for the learning-based abstraction construction ***)
 		
 		method set_file file_name =
-			file <- file_name
+			model_input_file_name <- file_name
 
 		method set_files_prefix file_name =
 			files_prefix <- ref file_name
@@ -620,12 +620,12 @@ class imitator_options =
 				(* If 1st argument: main file *)
 				if nb_args = 0 then(
 					nb_args <- nb_args + 1;
-					file <- arg;
+					model_input_file_name <- arg;
 				)
 				(* If 2nd argument: pi0 file *)
 				else if nb_args = 1 then(
 					nb_args <- nb_args + 1;
-					pi0file <- arg;
+					second_file_name <- arg;
 				)
 				(* If more than one argument : warns *)
 				else (
@@ -657,7 +657,7 @@ class imitator_options =
 			(* Set prefix for files *)
 			if !files_prefix = "" then
 				(*** WHAT ? ***)
-			  files_prefix := file
+			  files_prefix := model_input_file_name
 			;
 			  
 			(* Remove the ".imi" at the end of the program prefix, if any *)
@@ -680,7 +680,7 @@ class imitator_options =
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		method recall() =
 			(* File *)
-			print_message Verbose_standard ("Model: " ^ file);
+			print_message Verbose_standard ("Model: " ^ model_input_file_name);
 			(* File prefix *)
 			print_message Verbose_low ("Prefix for output files: " ^ !files_prefix);
 			(* Print full command *)
@@ -765,19 +765,19 @@ class imitator_options =
 			
 			if nb_args = 2 then(
 				if imitator_mode = Translation then
-					print_warning ("The pi0 file " ^ pi0file ^ " will be ignored since this is a translation.")
+					print_warning ("The second file " ^ second_file_name ^ " will be ignored since this is a translation.")
 				;
 				if imitator_mode = State_space_exploration then
-					print_warning ("The pi0 file " ^ pi0file ^ " will be ignored since this is a state space exploration.")
+					print_warning ("The second file " ^ second_file_name ^ " will be ignored since this is a state space exploration.")
 				;
 				if imitator_mode = EF_synthesis then
-					print_warning ("The pi0 file " ^ pi0file ^ " will be ignored since this is a synthesis with respect to a property.")
+					print_warning ("The second file " ^ second_file_name ^ " will be ignored since this is a synthesis with respect to a property.")
 				;
 				if imitator_mode = Parametric_deadlock_checking then
-					print_warning ("The pi0 file " ^ pi0file ^ " will be ignored since this is parametric deadlock checking.")
+					print_warning ("The second file " ^ second_file_name ^ " will be ignored since this is parametric deadlock checking.")
 				;
 			(*	if !forcePi0 then
-					print_warning ("The pi0 file " ^ !pi0file ^ " will be ignored since this the pi0 file is automatically generated.")
+					print_warning ("The second " ^ !second_file_name ^ " will be ignored since this the pi0 file is automatically generated.")
 				;*)
 			);
 

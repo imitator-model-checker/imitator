@@ -9,7 +9,7 @@
  * 
  * File contributors : Ulrich Kühne, Étienne André
  * Created           : 2014/03/15
- * Last modified     : 2016/08/04
+ * Last modified     : 2016/08/13
  *
  ************************************************************)
 
@@ -114,7 +114,7 @@ let compile_model options =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 	(* Parsing the main model *)
-	print_message Verbose_low ("Parsing file " ^ options#file ^ "...");
+	print_message Verbose_low ("Parsing file " ^ options#model_input_file_name ^ "...");
 	let parsing_structure = 
 		(* Branching between 2 input syntaxes *)
 		
@@ -122,7 +122,7 @@ let compile_model options =
 		if options#fromGML then(
 			(*** HACK: for EFsynth, we will have to get the property from the command line and insert it into the parsed structure ***)
 			let variable_declarations, automata, init_definition, noproperty_definition, noprojection, nocarto_definition =
-			try parser_lexer_from_file GrMLParser.main GrMLLexer.token options#file
+			try parser_lexer_from_file GrMLParser.main GrMLLexer.token options#model_input_file_name
 			with InvalidModel -> (print_error ("GrML input contains error. Please check it again."); abort_program (); exit 1)
 			in
 			if options#imitator_mode = EF_synthesis then(
@@ -169,7 +169,7 @@ let compile_model options =
 		) (* end if GrML *)
 		
 		(* Case normal parsing *)
-		else parser_lexer_from_file ModelParser.main ModelLexer.token options#file
+		else parser_lexer_from_file ModelParser.main ModelLexer.token options#model_input_file_name
 	in
 
 	print_message Verbose_low ("\nParsing completed " ^ (after_seconds ()) ^ ".");
@@ -217,7 +217,7 @@ let compile_model options =
 (************************************************************)
 let compile_pi0 options =
 	(* Print some information *)
-	print_message Verbose_low ("Parsing reference valuation in file " ^ options#pi0file ^ "...");
+	print_message Verbose_low ("Parsing reference valuation in file " ^ options#second_file_name ^ "...");
 	
 	(* Pi0 Parsing *)
 	let pi0_parsed =
@@ -227,7 +227,7 @@ let compile_pi0 options =
 	(* Normal case *)
 	else
 	*)
-	parser_lexer_from_file Pi0Parser.main Pi0Lexer.token options#pi0file
+	parser_lexer_from_file Pi0Parser.main Pi0Lexer.token options#second_file_name
 	in
 	
 	(* Convert to an abstract representation *)
@@ -250,10 +250,10 @@ let compile_pi0 options =
 (************************************************************)
 let compile_v0 options =
 	(* Print some information *)
-	print_message Verbose_low ("Parsing hyper-rectangle in file " ^ options#pi0file ^ "...");
+	print_message Verbose_low ("Parsing hyper-rectangle in file " ^ options#second_file_name ^ "...");
 	
 	(* Parsing *)
-	let v0_parsed = parser_lexer_from_file V0Parser.main V0Lexer.token options#pi0file in
+	let v0_parsed = parser_lexer_from_file V0Parser.main V0Lexer.token options#second_file_name in
 	
 	(* Convert to an abstract representation *)
 	let v0 =
