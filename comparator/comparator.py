@@ -404,7 +404,7 @@ def run(benchmark, versions_to_test):
 
 def print_line(versions_to_test, benchmark_id, result):
 	# Create text line
-	line = benchmark_id + ": "
+	line = benchmark_id + "; "
 	
 	for version in versions_to_test:
 		line = line + str(result[version]) + "; "
@@ -417,6 +417,15 @@ def print_results(versions_to_test):
 	print_to_screen('')
 	print_to_screen('############################################################')
 	print_to_screen(' RESULTS')
+	
+	header_line = ''
+	
+	for version in versions_to_test:
+		# First line with all version names
+		header_line += versions[version]['version_name'] + "; "
+	
+	print_to_screen(header_line)
+	print_to_screen('------------------------------------------------------------')
 
 	for benchmark_id, result in results.iteritems():
 		print_line(versions_to_test, benchmark_id, result)
