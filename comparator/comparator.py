@@ -67,17 +67,18 @@ OPT_DISTR_SUBDOMAIN		= 1
 OPT_INCLUSION			= 2
 OPT_MERGING				= 3
 OPT_MODE_COVER			= 4
-OPT_OUTPUT_CART			= 5
-OPT_OUTPUT_PREFIX		= 6
-OPT_OUTPUT_RES			= 7
-OPT_OUTPUT_TRACE_SET	= 8
-OPT_PRP					= 9
+OPT_MODE_EF				= 5
+OPT_OUTPUT_CART			= 6
+OPT_OUTPUT_PREFIX		= 7
+OPT_OUTPUT_RES			= 8
+OPT_OUTPUT_TRACE_SET	= 9
+OPT_PRP					= 10
 
 
 UNDEFINED_SYNTAX = -1
 
 # Critical options, i.e., without which the analysis shall not be run; in other words, if a version does not implement an option required by the analysis and belonging to this list, the benchmark is not run
-critical_options = [OPT_DISTR_SUBDOMAIN , OPT_MERGING , OPT_PRP]
+critical_options = [OPT_DISTR_SUBDOMAIN , OPT_MERGING , OPT_MODE_COVER, OPT_MODE_EF, OPT_PRP]
 
 # Mainly needed for printing and info purpose
 option_names = {
@@ -85,6 +86,7 @@ option_names = {
 	OPT_INCLUSION			: 'inclusion',
 	OPT_MERGING				: 'merging',
 	OPT_MODE_COVER			: 'mode:cover',
+	OPT_MODE_EF				: 'mode:EF',
 	OPT_OUTPUT_CART			: 'output-cart',
 	OPT_OUTPUT_PREFIX		: 'output-prefix',
 	OPT_OUTPUT_RES			: 'output-result',
@@ -107,6 +109,7 @@ versions = {
 			OPT_INCLUSION			: '-incl',
 			OPT_MERGING				: '-with-merging',
 			OPT_MODE_COVER			: '-mode cover',
+			OPT_MODE_EF				: UNDEFINED_SYNTAX,
 			OPT_OUTPUT_CART			: '-cart',
 			OPT_OUTPUT_PREFIX		: '-log-prefix',
 			OPT_OUTPUT_RES			: UNDEFINED_SYNTAX,
@@ -125,6 +128,7 @@ versions = {
 			OPT_INCLUSION			: '-incl',
 			OPT_MERGING				: '-merge',
 			OPT_MODE_COVER			: '-mode cover',
+			OPT_MODE_EF				: UNDEFINED_SYNTAX,
 			OPT_OUTPUT_CART			: '-cart',
 			OPT_OUTPUT_PREFIX		: '-log-prefix',
 			OPT_OUTPUT_RES			: UNDEFINED_SYNTAX,
@@ -144,6 +148,7 @@ versions = {
 			OPT_INCLUSION			: '-incl',
 			OPT_MERGING				: '-merge',
 			OPT_MODE_COVER			: '-mode cover',
+			OPT_MODE_EF				: '-mode EF',
 			OPT_OUTPUT_CART			: '-output-cart',
 			OPT_OUTPUT_PREFIX		: '-output-prefix',
 			OPT_OUTPUT_RES			: UNDEFINED_SYNTAX,
@@ -163,6 +168,7 @@ versions = {
 			OPT_INCLUSION			: '-incl',
 			OPT_MERGING				: '-merge',
 			OPT_MODE_COVER			: '-mode cover',
+			OPT_MODE_EF				: '-mode EF',
 			OPT_OUTPUT_CART			: '-output-cart',
 			OPT_OUTPUT_PREFIX		: '-output-prefix',
 			OPT_OUTPUT_RES			: '-output-result',
@@ -182,6 +188,7 @@ versions = {
 			OPT_INCLUSION			: '-incl',
 			OPT_MERGING				: '-merge',
 			OPT_MODE_COVER			: '-mode cover',
+			OPT_MODE_EF				: '-mode EF',
 			OPT_OUTPUT_CART			: '-output-cart',
 			OPT_OUTPUT_PREFIX		: '-output-prefix',
 			OPT_OUTPUT_RES			: '-output-result',
@@ -197,7 +204,8 @@ versions = {
 #************************************************************
 # FUNCTIONS
 #************************************************************
-ANALYSIS_FAILED = -1
+ANALYSIS_NOT_RUN	= -1
+ANALYSIS_FAILED		= -2
 
 
 def make_binary(binary) :
@@ -242,7 +250,7 @@ def get_computation_time(benchmark, version, cartography_mode):
 			for match in re.finditer(pattern, line):
 				return match.groups()[0]
 		
-		print_error("Time not found for benchmark " + benchmark['name'] + " (cartography mode) with version " + versions[version]['version_name'])
+		print_error("Time not found for benchmark " + benchmark['benchmark_name'] + " (cartography mode) with version " + versions[version]['version_name'])
 		return ANALYSIS_FAILED
 	
 	if version == V_2_5 or version == V_2_6_1 or version == V_2_6_2_825 or version == V_2_7_3:
@@ -258,12 +266,15 @@ def get_computation_time(benchmark, version, cartography_mode):
 				#print_to_screen('Found on line %s: %s' % (i+1, match.groups()))
 				return match.groups()[0]
 		
-		print_error("Time not found for benchmark " + benchmark['name'] + " with version " + versions[version]['version_name'])
+		print_error("Time not found for benchmark " + benchmark['benchmark_name'] + " with version " + versions[version]['version_name'])
 		return ANALYSIS_FAILED
 	
 	if version == V_2_8:
 		# Open res file
 		res_file = RESULT_FILES_PATH + benchmark['log_prefix'] +  versions[version]['files_suffix'] + ".res"
+		if not os.path.isfile(res_file):
+			print_error("Result file '" + res_file + "' not found for benchmark " + benchmark['benchmark_name'] + " with version " + versions[version]['version_name'])
+			return ANALYSIS_FAILED
 	
 		# Pattern: Computation time                        : 0.041 second
 		pattern = re.compile("Total computation time\s*:\s*(\d*\.\d*) second")
@@ -273,7 +284,7 @@ def get_computation_time(benchmark, version, cartography_mode):
 				#print_to_screen('Found on line %s: %s' % (i+1, match.groups()))
 				return match.groups()[0]
 		
-		print_error("Time not found for benchmark " + benchmark['name'] + " with version " + versions[version]['version_name'])
+		print_error("Time not found for benchmark " + benchmark['benchmark_name'] + " with version " + versions[version]['version_name'])
 		return ANALYSIS_FAILED
 
 
@@ -289,7 +300,7 @@ def run(benchmark, versions_to_test):
 	# Print something
 	print_to_screen('')
 	print_to_screen('############################################################')
-	print_to_screen(' BENCHMARK ' + benchmark['name'])
+	print_to_screen(' BENCHMARK ' + benchmark['benchmark_name'])
 	
 	# Create the row in the results array
 	results[benchmark['log_prefix']] = {}
@@ -332,7 +343,7 @@ def run(benchmark, versions_to_test):
 		if not to_run:
 			print_warning('Skip version ' + versions[version]['version_name'] + '')
 			# Store result
-			results[benchmark['log_prefix']][version] = ANALYSIS_FAILED
+			results[benchmark['log_prefix']][version] = ANALYSIS_NOT_RUN
 		else:
 			
 			
@@ -398,16 +409,25 @@ def run(benchmark, versions_to_test):
 			
 			# TODO: test whether the termination is ok
 	# Print the current benchmark
-	print_line(versions_to_test, benchmark['log_prefix'], results[benchmark['log_prefix']])
+	print_line(versions_to_test, benchmark['benchmark_name'], results[benchmark['log_prefix']])
 
 
 
-def print_line(versions_to_test, benchmark_id, result):
+def print_line(versions_to_test, benchmark_name, result):
 	# Create text line
-	line = benchmark_id + "; "
+	line = benchmark_name + "; "
 	
 	for version in versions_to_test:
-		line = line + str(result[version]) + "; "
+		# Normal case
+		result_str = str(result[version])
+		# Case: not run
+		if result[version] == ANALYSIS_NOT_RUN:
+			result_str = 'not run'
+		# Case: could not get the result (analys failed)
+		else:
+			if result[version] == ANALYSIS_FAILED:
+				result_str = 'failed'
+		line = line + result_str + "; "
 	
 	print_to_screen(line)
 
@@ -418,7 +438,7 @@ def print_results(versions_to_test):
 	print_to_screen('############################################################')
 	print_to_screen(' RESULTS')
 	
-	header_line = ''
+	header_line = 'version; '
 	
 	for version in versions_to_test:
 		# First line with all version names
