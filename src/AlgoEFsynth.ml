@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/11/25
- * Last modified     : 2016/05/13
+ * Last modified     : 2016/08/13
  *
  ************************************************************)
 
@@ -128,11 +128,19 @@ class algoEFsynth =
 					| None -> ()
 					(* Project *)
 					| Some parameters ->
+						(* Print some information *)
 						self#print_algo_message Verbose_medium "Projecting onto some of the parameters.";
+
 						(*** TODO! do only once for all... ***)
 						let all_but_projectparameters = list_diff model.parameters parameters in
+						
 						(* Eliminate other parameters *)
 						LinearConstraint.p_hide_assign all_but_projectparameters p_constraint;
+
+						(* Print some information *)
+						if verbose_mode_greater Verbose_medium then(
+							print_message Verbose_medium (LinearConstraint.string_of_p_linear_constraint model.variable_names p_constraint);
+						);
 					end;
 
 					(* Print some information *)
@@ -146,6 +154,9 @@ class algoEFsynth =
 					if verbose_mode_greater Verbose_medium then(
 						self#print_algo_message Verbose_medium "Adding the following constraint to the list of bad constraints:";
 						print_message Verbose_medium (LinearConstraint.string_of_p_linear_constraint model.variable_names p_constraint);
+						
+						self#print_algo_message Verbose_medium "The bad constraint is now:";
+						print_message Verbose_medium (LinearConstraint.string_of_p_nnconvex_constraint model.variable_names bad_constraint);
 					);
 					
 					(* Do NOT compute its successors; cut the branch *)
