@@ -355,7 +355,7 @@ let print_contributors()  =
 	print_string "    * Daphne Dussaud      (2010)\n";
 	print_string "    * Sami Evangelista    (2014)\n";
 	print_string "    * Ulrich Kuehne       (2010 - 2011)\n";
-	print_string "    * Nguyen Hoang Gia    (2014 - 2015)\n";
+	print_string "    * Nguyen Hoang Gia    (2014 - 2016)\n";
 	print_string "    * Romain Soulat       (2010 - 2013)\n";
 	print_string "\n";
 	print_string "    Compiling and packaging:\n";
