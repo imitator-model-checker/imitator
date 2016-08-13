@@ -30,12 +30,12 @@ var     x,ys, yr,z,w, u,v
            : discrete;
 	
 
-        MAX, 	-- maximal number of retransmissions
-	N, 	-- number of chunks of a file
-	SYNC, 	-- delay added after a failure in order to assure 
+        MAX = 2, 	-- maximal number of retransmissions
+	N = 2, 	-- number of chunks of a file
+	SYNC = 17, 	-- delay added after a failure in order to assure 
 		-- that S does not start transmitting a new file before 
 		-- the receiver has properly reacted to the failure
-	T1,	-- time-out of the sender for initiating a retransmission
+	T1 = 3,	-- time-out of the sender for initiating a retransmission
 		-- when S has not received an ack from S
 	TR,	-- time-out of the receiver for indicating failure
 		-- when R has not received the last chunk of a file
@@ -327,5 +327,3 @@ init := loc[sender]=idleS
 --       & TR < 2TD + 5T1
 
 ;
-
-print(reach forward from init endreach);
