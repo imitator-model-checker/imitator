@@ -1,6 +1,9 @@
 *******************************************************
 release 2.XXXXX    (XXXXX) FUTURE MAJOR RELEASE
 
+Install and compile
+- To compile, now use build.sh to compile IMITATOR (in non-distributed mode) and build-patator.sh to compile PaTATOR (distributed mode)
+
 
 *******************************************************
 release 2.8    (2016-08-13) MAJOR RELEASE
