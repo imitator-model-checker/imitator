@@ -8,7 +8,7 @@
 --   Etienne ANDRE and Laurent FRIBOURG
 --
 --   Created       :    ? (< 09/2007)
---   Last modified : 2014/04/08
+--   Last modified : 2009/12/28
 --****************************************************--
 --****************************************************--
 
@@ -30,12 +30,12 @@ var     x,ys, yr,z,w, u,v
            : discrete;
 	
 
-        MAX = 2, 	-- maximal number of retransmissions
-	N = 2, 	-- number of chunks of a file
-	SYNC = 17, 	-- delay added after a failure in order to assure 
+        MAX, 	-- maximal number of retransmissions
+	N, 	-- number of chunks of a file
+	SYNC, 	-- delay added after a failure in order to assure 
 		-- that S does not start transmitting a new file before 
 		-- the receiver has properly reacted to the failure
-	T1 = 3,	-- time-out of the sender for initiating a retransmission
+	T1,	-- time-out of the sender for initiating a retransmission
 		-- when S has not received an ack from S
 	TR,	-- time-out of the receiver for indicating failure
 		-- when R has not received the last chunk of a file
@@ -298,25 +298,20 @@ init := loc[sender]=idleS
 	-- & T1>2TD & TR<=SYNC & TD>0 
 
 	---START PI0---
-(* 	& MAX  = 2 *)
-(* 	& N    = 2  *)
+	& MAX  = 2
+	& N    = 2 
 -- -- 	& TD   = 1
 -- 	& T1   = 3
 -- -- 	& TR   = 16
 -- 	& SYNC = 17
 	---END PI0---
 
-(*	& MAX > 0
-	& N > 0*)
+	& MAX > 0
+	& N > 0
 	& TD > 0
 	& T1 > 0
 	& TR > 0
 	& SYNC > 0
-	
-(* 	Constraint for EF to be fair with EFIM or IM *)
-	& TD   >= 1 & TD <= 50
-	& TR   >= 1 & TR <= 50
-
 	
 	
 	----------------------
@@ -333,4 +328,4 @@ init := loc[sender]=idleS
 
 ;
 
-property := unreachable loc[receiver] = FailureR;
+print(reach forward from init endreach);

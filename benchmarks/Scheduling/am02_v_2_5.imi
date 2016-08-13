@@ -1,0 +1,136 @@
+var time: clock;
+	 deadline = 10
+	 : parameter;
+
+	c1 : clock;
+	wcet_m1_job1, wcet_m2_job1, wcet_m3_job1: parameter;
+
+	c2: clock;
+	wcet_m2_job2: parameter;
+
+	 
+automaton checker
+
+synclabs: DEADLINE, m3_j1_finished, m2_j2_finished, m1_j1_begin, m1_j1_finished, m2_j1_begin, m2_j1_finished, m3_j1_begin, m2_j2_begin;
+
+loc nop: while time <= deadline wait {}
+	when time < deadline sync m3_j1_finished goto nop_1;
+	when time < deadline sync m2_j2_finished goto nop_1;
+
+	when time < deadline sync m1_j1_begin goto nop;
+	when time < deadline sync m1_j1_finished goto nop;
+	when time < deadline sync m2_j1_begin goto nop;
+	when time < deadline sync m2_j1_finished goto nop;
+	when time < deadline sync m3_j1_begin goto nop;
+	when time < deadline sync m1_j1_finished goto nop;
+	when time < deadline sync m2_j2_begin goto nop;
+
+	when time = deadline sync DEADLINE goto error;
+
+loc nop_1: while time <= deadline wait {}
+	when time < deadline sync m3_j1_finished goto finished;
+	when time < deadline sync m2_j2_finished goto finished;
+
+	when time < deadline sync m1_j1_begin goto nop_1;
+	when time < deadline sync m1_j1_finished goto nop_1;
+	when time < deadline sync m2_j1_begin goto nop_1;
+	when time < deadline sync m2_j1_finished goto nop_1;
+	when time < deadline sync m3_j1_begin goto nop_1;
+	when time < deadline sync m1_j1_finished goto nop_1;
+	when time < deadline sync m2_j2_begin goto nop_1;
+
+	when time = deadline sync DEADLINE goto error;
+
+loc finished: while time <= deadline wait {}
+
+loc error: while time <= deadline wait {}
+
+end	
+
+automaton job1
+
+synclabs: m1_j1_begin, m1_j1_finished, m2_j1_begin, m2_j1_finished, m3_j1_begin, m3_j1_finished, m2_j2_begin;
+
+
+loc m1_begin: while True wait {}
+	when True sync m1_j1_begin do {c1'=0} goto m1_running;
+	when True sync m2_j2_begin do {} goto m1_begin;
+
+loc m1_running: while c1 <= wcet_m1_job1 wait {}
+	when c1 = wcet_m1_job1 sync m1_j1_finished do {} goto m2_begin;
+	when True sync m2_j2_begin do {} goto m1_running;
+
+loc m1_preempted: while True stop{c1} wait {}
+	when True sync m1_j1_begin do {} goto m1_running;
+	when True sync m2_j2_begin do {} goto m1_preempted;
+
+loc m2_begin: while True stop{c1} wait {}
+	when True sync m2_j1_begin do {c1'=0} goto m2_running;
+	when True sync m2_j2_begin do {} goto m2_begin;
+
+loc m2_running: while c1 <= wcet_m2_job1 wait {}
+	when c1 < wcet_m2_job1 sync m2_j2_begin do {} goto m2_preempted;
+	when c1 = wcet_m2_job1 sync m2_j1_finished do {} goto m3_begin;
+
+loc m2_preempted: while True stop{c1} wait {}
+	when True sync m2_j1_begin do {} goto m2_running;
+	when True sync m2_j2_begin do {} goto m2_preempted;
+
+loc m3_begin: while True stop{c1} wait {}
+	when True sync m3_j1_begin do {c1'=0} goto m3_running;
+	when True sync m2_j2_begin do {} goto m3_begin;
+
+loc m3_running: while c1 <= wcet_m3_job1 wait {}
+	when c1 = wcet_m3_job1 sync m3_j1_finished do {}  goto finished;
+	when True sync m2_j2_begin do {} goto m3_running;
+
+loc m3_preempted: while True stop{c1} wait {}
+	when True sync m3_j1_begin do {} goto m3_running;
+	when True sync m2_j2_begin do {} goto m3_preempted;
+
+loc finished: while True stop{c1} wait {}
+	when True sync m2_j2_begin do {} goto finished;
+
+end
+
+automaton job2
+
+synclabs: m2_j2_begin, m2_j1_begin, m2_j2_finished;
+
+
+loc m2_begin: while True stop{c2} wait {}
+	when True sync m2_j2_begin do {c2'=0} goto m2_running;
+	when True sync m2_j1_begin do {} goto m2_begin;
+
+loc m2_running: while c2 <= wcet_m2_job2 wait {}
+	when c2 < wcet_m2_job2 sync m2_j1_begin do {} goto m2_preempted;
+	when c2 = wcet_m2_job2 sync m2_j2_finished do {} goto finished;
+
+loc m2_preempted: while True stop{c2} wait {}
+	when True sync m2_j2_begin do {} goto m2_running;
+	when True sync m2_j1_begin do {} goto m2_preempted;
+
+loc finished: while True stop{c2} wait {}
+	when True sync m2_j1_begin do {} goto finished;
+
+end
+
+var init: region;
+
+init:= 	loc[checker] = nop &
+			loc[job1] = m1_begin &
+			loc[job2] = m2_begin &
+			c1 = 0 &	
+			c2 = 0 &
+			time = 0 &
+			-----------------
+			--	PI 0 			--
+			-----------------
+--			wcet_m1_job1 = 3 &
+--			wcet_m2_job1 = 2 &
+--			wcet_m3_job1 = 4 &
+--			wcet_m2_job2 = 5 &
+
+			-----------------
+			True
+;
