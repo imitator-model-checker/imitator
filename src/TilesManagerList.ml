@@ -32,12 +32,28 @@ open TilesManager
 (************************************************************)
 
 (*------------------------------------------------------------*)
-(** Check if a parameter valuation belongs to the constraint of an im_result *)
+(** Check if a parameter valuation belongs to the constraint of an abstract_point_based_result *)
 (*------------------------------------------------------------*)
-let pi0_in_tiles pval (abstract_im_result : abstract_im_result) =
-	match abstract_im_result.result with
-	| LinearConstraint.Convex_p_constraint p_linear_constraint -> LinearConstraint.is_pi0_compatible pval#get_value p_linear_constraint
-	| LinearConstraint.Nonconvex_p_constraint p_nnconvex_constraint -> LinearConstraint.p_nnconvex_constraint_is_pi0_compatible pval#get_value p_nnconvex_constraint
+let pi0_in_tiles pval (abstract_point_based_result : abstract_point_based_result) =
+	match abstract_point_based_result.result with
+(*	| LinearConstraint.Convex_p_constraint p_linear_constraint -> LinearConstraint.is_pi0_compatible pval#get_value p_linear_constraint
+	| LinearConstraint.Nonconvex_p_constraint p_nnconvex_constraint -> LinearConstraint.p_nnconvex_constraint_is_pi0_compatible pval#get_value p_nnconvex_constraint*)
+	
+	(*** NOTE: we do not investigate soundness; i.e., even if the tile is invalid, we still check whether the valuation belongs to the tile ***)
+	
+	(* Only good valuations *)
+	| Good_constraint (p_nnconvex_constraint, _)
+	(* Only bad valuations *)
+	| Bad_constraint (p_nnconvex_constraint, _)
+		-> LinearConstraint.p_nnconvex_constraint_is_pi0_compatible pval#get_value p_nnconvex_constraint
+		
+	(* Both good and bad valuations *)
+	| Good_bad_constraint good_and_bad_constraint ->
+		let good_p_nnconvex_constraint, _ = good_and_bad_constraint.good in
+		let bad_p_nnconvex_constraint, _ = good_and_bad_constraint.bad in
+		LinearConstraint.p_nnconvex_constraint_is_pi0_compatible pval#get_value good_p_nnconvex_constraint
+		||
+		LinearConstraint.p_nnconvex_constraint_is_pi0_compatible pval#get_value bad_p_nnconvex_constraint
 
 
 
@@ -55,7 +71,7 @@ class tilesManagerList =
 	(************************************************************)
 	
 	(* List of results stored as a list *)
-	val mutable im_results : abstract_im_result list = []
+	val mutable abstract_point_based_results : abstract_point_based_result list = []
 
 	
 	(************************************************************)
@@ -66,28 +82,28 @@ class tilesManagerList =
 	(* Initialize the manager *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method initialize =
-		im_results <- []
+		abstract_point_based_results <- []
 
 	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Get the number of results processed and stored *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method get_nb_results =
-		List.length im_results
+		List.length abstract_point_based_results
 
 	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Check if a parameter valuation belongs to the tiles *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method pval_in_tiles pval =
-		List.exists (pi0_in_tiles pval) im_results
+		List.exists (pi0_in_tiles pval) abstract_point_based_results
 	
 	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Process a new tile, i.e., add it to the tiles *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method process_tile tile =
-		im_results <- tile :: im_results
+		abstract_point_based_results <- tile :: abstract_point_based_results
 
 	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -104,11 +120,38 @@ class tilesManagerList =
 			| None ->
 			(*** NOTE: this is only true for the original behavioral cartography; for variants this may not hold ***)
 			(* INTEGER COMPLETE if termination is regular and all tiles are exact or under-approximations *)
-			if termination_status = BC_Regular_termination && (List.for_all (fun abstract_im_result -> match abstract_im_result.soundness with
+			if termination_status = BC_Regular_termination &&
+(*				(List.for_all (fun abstract_point_based_result -> match abstract_point_based_result.soundness with
 					| Constraint_exact | Constraint_maybe_under -> true
 					| Constraint_maybe_over | Constraint_maybe_invalid -> false
 					| Constraint_under_over -> raise (InternalError("BC is not suppose to handle under/over-approximations"))
-				) im_results)
+				) abstract_point_based_results*)
+				(List.for_all (fun (abstract_point_based_result : abstract_point_based_result) -> match abstract_point_based_result.result with
+					| Good_constraint (_, Constraint_exact)
+					| Good_constraint (_, Constraint_maybe_under)
+					| Bad_constraint (_, Constraint_exact)
+					| Bad_constraint (_, Constraint_maybe_under)
+					-> true
+					| Good_constraint (_, Constraint_maybe_over)
+					| Good_constraint (_, Constraint_maybe_invalid)
+					| Bad_constraint (_, Constraint_maybe_over)
+					| Bad_constraint (_, Constraint_maybe_invalid)
+					-> false
+					| Good_bad_constraint good_and_bad_constraint ->
+						let _, good_soundness = good_and_bad_constraint.good in
+						let _, bad_soundness = good_and_bad_constraint.bad in
+						let result =
+						match (good_soundness, bad_soundness) with
+						| Constraint_exact, Constraint_exact
+						| Constraint_exact, Constraint_maybe_under
+						| Constraint_maybe_under, Constraint_exact
+						| Constraint_maybe_under, Constraint_maybe_under
+						-> true
+						| _ -> false
+						in
+						result
+				) abstract_point_based_results
+				)
 				then Coverage_integer_complete
 			(* UNKNOWN otherwise *)
 			else Coverage_unknown
@@ -121,20 +164,20 @@ class tilesManagerList =
 			if termination_status = BC_Regular_termination && (List.for_all (fun abstract_im_result -> match abstract_im_result.soundness with
 					| Constraint_maybe_under | Constraint_exact | Constraint_maybe_over -> true
 					| Constraint_maybe_invalid -> false
-				) im_results)
+				) abstract_point_based_results)
 				then Coverage_integer_complete
 			(* UNKNOWN otherwise *)
 			else Coverage_unknown
 		in*)
 		
 		(* Return result *)
-		BC_result {
+		Cartography_result {
 			(* Number of points in V0 *)
 			size_v0				= nb_points_in_v0;
 			
 			(* List of tiles *)
-			(*** NOTE: reverse as each im_result was added as first element ***)
-			tiles				= List.rev im_results;
+			(*** NOTE: reverse as each result was added as first element ***)
+			tiles				= List.rev abstract_point_based_results;
 			
 			(* Total computation time of the algorithm *)
 			computation_time	= time_from start_time;

@@ -38,8 +38,7 @@ tests_distr = [
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : good
-Number of random selections   : 0
+Constraint nature             : good
 ------------------------------------------------------------
 Local number of states        : 5
 Local number of transitions   : 4
@@ -56,8 +55,7 @@ Local number of transitions   : 4
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : good
-Number of random selections   : 0
+Constraint nature             : good
 ------------------------------------------------------------
 Local number of states        : 6
 Local number of transitions   : 5
@@ -74,8 +72,7 @@ Local number of transitions   : 5
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : good
-Number of random selections   : 0
+Constraint nature             : good
 ------------------------------------------------------------
 Local number of states        : 7
 Local number of transitions   : 6
@@ -92,8 +89,7 @@ Local number of transitions   : 6
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : good
-Number of random selections   : 0
+Constraint nature             : good
 ------------------------------------------------------------
 Local number of states        : 6
 Local number of transitions   : 5
@@ -110,8 +106,7 @@ Local number of transitions   : 5
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : good
-Number of random selections   : 0
+Constraint nature             : good
 ------------------------------------------------------------
 Local number of states        : 7
 Local number of transitions   : 6
@@ -128,8 +123,7 @@ Local number of transitions   : 6
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : good
-Number of random selections   : 0
+Constraint nature             : good
 ------------------------------------------------------------
 Local number of states        : 8
 Local number of transitions   : 7
@@ -146,8 +140,7 @@ Local number of transitions   : 7
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : good
-Number of random selections   : 0
+Constraint nature             : good
 ------------------------------------------------------------
 Local number of states        : 7
 Local number of transitions   : 6
@@ -164,8 +157,7 @@ Local number of transitions   : 6
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : good
-Number of random selections   : 0
+Constraint nature             : good
 ------------------------------------------------------------
 Local number of states        : 8
 Local number of transitions   : 7
@@ -182,8 +174,7 @@ Local number of transitions   : 7
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : good
-Number of random selections   : 0
+Constraint nature             : good
 ------------------------------------------------------------
 Local number of states        : 9
 Local number of transitions   : 8
@@ -229,8 +220,7 @@ Average number of transitions : 6.0
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : good
-Number of random selections   : 0
+Constraint nature             : good
 ------------------------------------------------------------
 Local number of states        : 3
 Local number of transitions   : 2
@@ -247,8 +237,7 @@ Local number of transitions   : 2
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : good
-Number of random selections   : 0
+Constraint nature             : good
 ------------------------------------------------------------
 Local number of states        : 4
 Local number of transitions   : 3
@@ -265,8 +254,7 @@ Local number of transitions   : 3
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : good
-Number of random selections   : 0
+Constraint nature             : good
 ------------------------------------------------------------
 Local number of states        : 5
 Local number of transitions   : 4
@@ -283,8 +271,7 @@ Local number of transitions   : 4
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : good
-Number of random selections   : 0
+Constraint nature             : good
 ------------------------------------------------------------
 Local number of states        : 4
 Local number of transitions   : 3
@@ -301,8 +288,7 @@ Local number of transitions   : 3
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : good
-Number of random selections   : 0
+Constraint nature             : good
 ------------------------------------------------------------
 Local number of states        : 5
 Local number of transitions   : 4
@@ -319,8 +305,7 @@ Local number of transitions   : 4
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : good
-Number of random selections   : 0
+Constraint nature             : good
 ------------------------------------------------------------
 Local number of states        : 6
 Local number of transitions   : 5
@@ -337,8 +322,7 @@ Local number of transitions   : 5
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : good
-Number of random selections   : 0
+Constraint nature             : good
 ------------------------------------------------------------
 Local number of states        : 5
 Local number of transitions   : 4
@@ -355,8 +339,7 @@ Local number of transitions   : 4
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : good
-Number of random selections   : 0
+Constraint nature             : good
 ------------------------------------------------------------
 Local number of states        : 6
 Local number of transitions   : 5
@@ -373,8 +356,7 @@ Local number of transitions   : 5
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : good
-Number of random selections   : 0
+Constraint nature             : good
 ------------------------------------------------------------
 Local number of states        : 7
 Local number of transitions   : 6
@@ -455,8 +437,7 @@ Termination                   : regular termination
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : bad
-Number of random selections   : 0
+Constraint nature             : bad
 ------------------------------------------------------------
 """
 			} # end BC file
@@ -469,8 +450,7 @@ Number of random selections   : 0
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : bad
-Number of random selections   : 0
+Constraint nature             : bad
 ------------------------------------------------------------
 """
 			} # end BC file
@@ -504,8 +484,7 @@ Termination                   : regular termination
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : good
-Number of random selections   : 0
+Constraint nature             : good
 ------------------------------------------------------------
 Local number of states        : 5
 Local number of transitions   : 4
@@ -522,8 +501,7 @@ Local number of transitions   : 4
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : good
-Number of random selections   : 0
+Constraint nature             : good
 ------------------------------------------------------------
 Local number of states        : 6
 Local number of transitions   : 5
@@ -540,8 +518,7 @@ Local number of transitions   : 5
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : good
-Number of random selections   : 0
+Constraint nature             : good
 ------------------------------------------------------------
 Local number of states        : 7
 Local number of transitions   : 6
@@ -558,8 +535,7 @@ Local number of transitions   : 6
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : good
-Number of random selections   : 0
+Constraint nature             : good
 ------------------------------------------------------------
 Local number of states        : 6
 Local number of transitions   : 5
@@ -576,8 +552,7 @@ Local number of transitions   : 5
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : good
-Number of random selections   : 0
+Constraint nature             : good
 ------------------------------------------------------------
 Local number of states        : 7
 Local number of transitions   : 6
@@ -594,8 +569,7 @@ Local number of transitions   : 6
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : good
-Number of random selections   : 0
+Constraint nature             : good
 ------------------------------------------------------------
 Local number of states        : 8
 Local number of transitions   : 7
@@ -612,8 +586,7 @@ Local number of transitions   : 7
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : good
-Number of random selections   : 0
+Constraint nature             : good
 ------------------------------------------------------------
 Local number of states        : 7
 Local number of transitions   : 6
@@ -630,8 +603,7 @@ Local number of transitions   : 6
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : good
-Number of random selections   : 0
+Constraint nature             : good
 ------------------------------------------------------------
 Local number of states        : 8
 Local number of transitions   : 7
@@ -648,8 +620,7 @@ Local number of transitions   : 7
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : good
-Number of random selections   : 0
+Constraint nature             : good
 ------------------------------------------------------------
 Local number of states        : 9
 Local number of transitions   : 8
@@ -686,8 +657,7 @@ Termination                   : regular termination
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : good
-Number of random selections   : 0
+Constraint nature             : good
 ------------------------------------------------------------
 Local number of states        : 3
 Local number of transitions   : 2
@@ -704,8 +674,7 @@ Local number of transitions   : 2
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : good
-Number of random selections   : 0
+Constraint nature             : good
 ------------------------------------------------------------
 Local number of states        : 4
 Local number of transitions   : 3
@@ -722,8 +691,7 @@ Local number of transitions   : 3
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : good
-Number of random selections   : 0
+Constraint nature             : good
 ------------------------------------------------------------
 Local number of states        : 5
 Local number of transitions   : 4
@@ -740,8 +708,7 @@ Local number of transitions   : 4
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : good
-Number of random selections   : 0
+Constraint nature             : good
 ------------------------------------------------------------
 Local number of states        : 4
 Local number of transitions   : 3
@@ -758,8 +725,7 @@ Local number of transitions   : 3
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : good
-Number of random selections   : 0
+Constraint nature             : good
 ------------------------------------------------------------
 Local number of states        : 5
 Local number of transitions   : 4
@@ -776,8 +742,7 @@ Local number of transitions   : 4
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : good
-Number of random selections   : 0
+Constraint nature             : good
 ------------------------------------------------------------
 Local number of states        : 6
 Local number of transitions   : 5
@@ -794,8 +759,7 @@ Local number of transitions   : 5
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : good
-Number of random selections   : 0
+Constraint nature             : good
 ------------------------------------------------------------
 Local number of states        : 5
 Local number of transitions   : 4
@@ -812,8 +776,7 @@ Local number of transitions   : 4
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : good
-Number of random selections   : 0
+Constraint nature             : good
 ------------------------------------------------------------
 Local number of states        : 6
 Local number of transitions   : 5
@@ -830,8 +793,7 @@ Local number of transitions   : 5
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : good
-Number of random selections   : 0
+Constraint nature             : good
 ------------------------------------------------------------
 Local number of states        : 7
 Local number of transitions   : 6
@@ -913,8 +875,7 @@ Termination                   : regular termination
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : bad
-Number of random selections   : 0
+Constraint nature             : bad
 ------------------------------------------------------------
 """
 			} # end BC file
@@ -927,8 +888,7 @@ Number of random selections   : 0
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : bad
-Number of random selections   : 0
+Constraint nature             : bad
 ------------------------------------------------------------
 """
 			} # end BC file
@@ -1006,8 +966,7 @@ Termination                   : regular termination
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : bad
-Number of random selections   : 0
+Constraint nature             : bad
 ------------------------------------------------------------
 """
 			} # end BC file
@@ -1020,8 +979,7 @@ Number of random selections   : 0
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : bad
-Number of random selections   : 0
+Constraint nature             : bad
 ------------------------------------------------------------
 """
 			} # end BC file
@@ -1099,8 +1057,7 @@ Termination                   : regular termination
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : bad
-Number of random selections   : 0
+Constraint nature             : bad
 ------------------------------------------------------------
 """
 			} # end BC file
@@ -1113,8 +1070,7 @@ Number of random selections   : 0
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : bad
-Number of random selections   : 0
+Constraint nature             : bad
 ------------------------------------------------------------
 """
 			} # end BC file
@@ -1148,8 +1104,7 @@ Termination                   : regular termination
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : good
-Number of random selections   : 0
+Constraint nature             : good
 ------------------------------------------------------------
 Local number of states        : 5
 Local number of transitions   : 4
@@ -1166,8 +1121,7 @@ Local number of transitions   : 4
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : good
-Number of random selections   : 0
+Constraint nature             : good
 ------------------------------------------------------------
 Local number of states        : 6
 Local number of transitions   : 5
@@ -1184,8 +1138,7 @@ Local number of transitions   : 5
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : good
-Number of random selections   : 0
+Constraint nature             : good
 ------------------------------------------------------------
 Local number of states        : 7
 Local number of transitions   : 6
@@ -1202,8 +1155,7 @@ Local number of transitions   : 6
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : good
-Number of random selections   : 0
+Constraint nature             : good
 ------------------------------------------------------------
 Local number of states        : 6
 Local number of transitions   : 5
@@ -1220,8 +1172,7 @@ Local number of transitions   : 5
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : good
-Number of random selections   : 0
+Constraint nature             : good
 ------------------------------------------------------------
 Local number of states        : 7
 Local number of transitions   : 6
@@ -1238,8 +1189,7 @@ Local number of transitions   : 6
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : good
-Number of random selections   : 0
+Constraint nature             : good
 ------------------------------------------------------------
 Local number of states        : 8
 Local number of transitions   : 7
@@ -1256,8 +1206,7 @@ Local number of transitions   : 7
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : good
-Number of random selections   : 0
+Constraint nature             : good
 ------------------------------------------------------------
 Local number of states        : 7
 Local number of transitions   : 6
@@ -1274,8 +1223,7 @@ Local number of transitions   : 6
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : good
-Number of random selections   : 0
+Constraint nature             : good
 ------------------------------------------------------------
 Local number of states        : 8
 Local number of transitions   : 7
@@ -1292,8 +1240,7 @@ Local number of transitions   : 7
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : good
-Number of random selections   : 0
+Constraint nature             : good
 ------------------------------------------------------------
 Local number of states        : 9
 Local number of transitions   : 8
@@ -1339,8 +1286,7 @@ Average number of transitions : 6.0
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : good
-Number of random selections   : 0
+Constraint nature             : good
 ------------------------------------------------------------
 Local number of states        : 3
 Local number of transitions   : 2
@@ -1357,8 +1303,7 @@ Local number of transitions   : 2
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : good
-Number of random selections   : 0
+Constraint nature             : good
 ------------------------------------------------------------
 Local number of states        : 4
 Local number of transitions   : 3
@@ -1375,8 +1320,7 @@ Local number of transitions   : 3
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : good
-Number of random selections   : 0
+Constraint nature             : good
 ------------------------------------------------------------
 Local number of states        : 5
 Local number of transitions   : 4
@@ -1393,8 +1337,7 @@ Local number of transitions   : 4
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : good
-Number of random selections   : 0
+Constraint nature             : good
 ------------------------------------------------------------
 Local number of states        : 4
 Local number of transitions   : 3
@@ -1411,8 +1354,7 @@ Local number of transitions   : 3
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : good
-Number of random selections   : 0
+Constraint nature             : good
 ------------------------------------------------------------
 Local number of states        : 5
 Local number of transitions   : 4
@@ -1429,8 +1371,7 @@ Local number of transitions   : 4
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : good
-Number of random selections   : 0
+Constraint nature             : good
 ------------------------------------------------------------
 Local number of states        : 6
 Local number of transitions   : 5
@@ -1447,8 +1388,7 @@ Local number of transitions   : 5
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : good
-Number of random selections   : 0
+Constraint nature             : good
 ------------------------------------------------------------
 Local number of states        : 5
 Local number of transitions   : 4
@@ -1465,8 +1405,7 @@ Local number of transitions   : 4
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : good
-Number of random selections   : 0
+Constraint nature             : good
 ------------------------------------------------------------
 Local number of states        : 6
 Local number of transitions   : 5
@@ -1483,8 +1422,7 @@ Local number of transitions   : 5
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : good
-Number of random selections   : 0
+Constraint nature             : good
 ------------------------------------------------------------
 Local number of states        : 7
 Local number of transitions   : 6
@@ -1565,8 +1503,7 @@ Termination                   : regular termination
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : bad
-Number of random selections   : 0
+Constraint nature             : bad
 ------------------------------------------------------------
 """
 			} # end BC file
@@ -1579,8 +1516,7 @@ Number of random selections   : 0
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : bad
-Number of random selections   : 0
+Constraint nature             : bad
 ------------------------------------------------------------
 """
 			} # end BC file
@@ -1614,8 +1550,7 @@ Termination                   : regular termination
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : good
-Number of random selections   : 0
+Constraint nature             : good
 ------------------------------------------------------------
 Local number of states        : 5
 Local number of transitions   : 4
@@ -1632,8 +1567,7 @@ Local number of transitions   : 4
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : good
-Number of random selections   : 0
+Constraint nature             : good
 ------------------------------------------------------------
 Local number of states        : 6
 Local number of transitions   : 5
@@ -1650,8 +1584,7 @@ Local number of transitions   : 5
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : good
-Number of random selections   : 0
+Constraint nature             : good
 ------------------------------------------------------------
 Local number of states        : 7
 Local number of transitions   : 6
@@ -1668,8 +1601,7 @@ Local number of transitions   : 6
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : good
-Number of random selections   : 0
+Constraint nature             : good
 ------------------------------------------------------------
 Local number of states        : 6
 Local number of transitions   : 5
@@ -1686,8 +1618,7 @@ Local number of transitions   : 5
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : good
-Number of random selections   : 0
+Constraint nature             : good
 ------------------------------------------------------------
 Local number of states        : 7
 Local number of transitions   : 6
@@ -1704,8 +1635,7 @@ Local number of transitions   : 6
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : good
-Number of random selections   : 0
+Constraint nature             : good
 ------------------------------------------------------------
 Local number of states        : 8
 Local number of transitions   : 7
@@ -1722,8 +1652,7 @@ Local number of transitions   : 7
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : good
-Number of random selections   : 0
+Constraint nature             : good
 ------------------------------------------------------------
 Local number of states        : 7
 Local number of transitions   : 6
@@ -1740,8 +1669,7 @@ Local number of transitions   : 6
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : good
-Number of random selections   : 0
+Constraint nature             : good
 ------------------------------------------------------------
 Local number of states        : 8
 Local number of transitions   : 7
@@ -1758,8 +1686,7 @@ Local number of transitions   : 7
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : good
-Number of random selections   : 0
+Constraint nature             : good
 ------------------------------------------------------------
 Local number of states        : 9
 Local number of transitions   : 8
@@ -1805,8 +1732,7 @@ Average number of transitions : 6.0
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : good
-Number of random selections   : 0
+Constraint nature             : good
 ------------------------------------------------------------
 Local number of states        : 3
 Local number of transitions   : 2
@@ -1823,8 +1749,7 @@ Local number of transitions   : 2
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : good
-Number of random selections   : 0
+Constraint nature             : good
 ------------------------------------------------------------
 Local number of states        : 4
 Local number of transitions   : 3
@@ -1841,8 +1766,7 @@ Local number of transitions   : 3
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : good
-Number of random selections   : 0
+Constraint nature             : good
 ------------------------------------------------------------
 Local number of states        : 5
 Local number of transitions   : 4
@@ -1859,8 +1783,7 @@ Local number of transitions   : 4
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : good
-Number of random selections   : 0
+Constraint nature             : good
 ------------------------------------------------------------
 Local number of states        : 4
 Local number of transitions   : 3
@@ -1877,8 +1800,7 @@ Local number of transitions   : 3
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : good
-Number of random selections   : 0
+Constraint nature             : good
 ------------------------------------------------------------
 Local number of states        : 5
 Local number of transitions   : 4
@@ -1895,8 +1817,7 @@ Local number of transitions   : 4
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : good
-Number of random selections   : 0
+Constraint nature             : good
 ------------------------------------------------------------
 Local number of states        : 6
 Local number of transitions   : 5
@@ -1913,8 +1834,7 @@ Local number of transitions   : 5
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : good
-Number of random selections   : 0
+Constraint nature             : good
 ------------------------------------------------------------
 Local number of states        : 5
 Local number of transitions   : 4
@@ -1931,8 +1851,7 @@ Local number of transitions   : 4
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : good
-Number of random selections   : 0
+Constraint nature             : good
 ------------------------------------------------------------
 Local number of states        : 6
 Local number of transitions   : 5
@@ -1949,8 +1868,7 @@ Local number of transitions   : 5
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : good
-Number of random selections   : 0
+Constraint nature             : good
 ------------------------------------------------------------
 Local number of states        : 7
 Local number of transitions   : 6
@@ -2040,8 +1958,7 @@ Average number of transitions : 4.0
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : bad
-Number of random selections   : 0
+Constraint nature             : bad
 ------------------------------------------------------------
 """
 			} # end BC file
@@ -2054,8 +1971,7 @@ Number of random selections   : 0
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : bad
-Number of random selections   : 0
+Constraint nature             : bad
 ------------------------------------------------------------
 """
 			} # end BC file
@@ -2089,8 +2005,7 @@ Termination                   : regular termination
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : good
-Number of random selections   : 0
+Constraint nature             : good
 ------------------------------------------------------------
 Local number of states        : 5
 Local number of transitions   : 4
@@ -2107,8 +2022,7 @@ Local number of transitions   : 4
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : good
-Number of random selections   : 0
+Constraint nature             : good
 ------------------------------------------------------------
 Local number of states        : 6
 Local number of transitions   : 5
@@ -2125,8 +2039,7 @@ Local number of transitions   : 5
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : good
-Number of random selections   : 0
+Constraint nature             : good
 ------------------------------------------------------------
 Local number of states        : 7
 Local number of transitions   : 6
@@ -2143,8 +2056,7 @@ Local number of transitions   : 6
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : good
-Number of random selections   : 0
+Constraint nature             : good
 ------------------------------------------------------------
 Local number of states        : 6
 Local number of transitions   : 5
@@ -2161,8 +2073,7 @@ Local number of transitions   : 5
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : good
-Number of random selections   : 0
+Constraint nature             : good
 ------------------------------------------------------------
 Local number of states        : 7
 Local number of transitions   : 6
@@ -2179,8 +2090,7 @@ Local number of transitions   : 6
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : good
-Number of random selections   : 0
+Constraint nature             : good
 ------------------------------------------------------------
 Local number of states        : 8
 Local number of transitions   : 7
@@ -2197,8 +2107,7 @@ Local number of transitions   : 7
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : good
-Number of random selections   : 0
+Constraint nature             : good
 ------------------------------------------------------------
 Local number of states        : 7
 Local number of transitions   : 6
@@ -2215,8 +2124,7 @@ Local number of transitions   : 6
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : good
-Number of random selections   : 0
+Constraint nature             : good
 ------------------------------------------------------------
 Local number of states        : 8
 Local number of transitions   : 7
@@ -2233,8 +2141,7 @@ Local number of transitions   : 7
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : good
-Number of random selections   : 0
+Constraint nature             : good
 ------------------------------------------------------------
 Local number of states        : 9
 Local number of transitions   : 8
@@ -2280,8 +2187,7 @@ Average number of transitions : 6.0
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : good
-Number of random selections   : 0
+Constraint nature             : good
 ------------------------------------------------------------
 Local number of states        : 3
 Local number of transitions   : 2
@@ -2298,8 +2204,7 @@ Local number of transitions   : 2
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : good
-Number of random selections   : 0
+Constraint nature             : good
 ------------------------------------------------------------
 Local number of states        : 4
 Local number of transitions   : 3
@@ -2316,8 +2221,7 @@ Local number of transitions   : 3
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : good
-Number of random selections   : 0
+Constraint nature             : good
 ------------------------------------------------------------
 Local number of states        : 5
 Local number of transitions   : 4
@@ -2334,8 +2238,7 @@ Local number of transitions   : 4
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : good
-Number of random selections   : 0
+Constraint nature             : good
 ------------------------------------------------------------
 Local number of states        : 4
 Local number of transitions   : 3
@@ -2352,8 +2255,7 @@ Local number of transitions   : 3
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : good
-Number of random selections   : 0
+Constraint nature             : good
 ------------------------------------------------------------
 Local number of states        : 5
 Local number of transitions   : 4
@@ -2370,8 +2272,7 @@ Local number of transitions   : 4
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : good
-Number of random selections   : 0
+Constraint nature             : good
 ------------------------------------------------------------
 Local number of states        : 6
 Local number of transitions   : 5
@@ -2388,8 +2289,7 @@ Local number of transitions   : 5
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : good
-Number of random selections   : 0
+Constraint nature             : good
 ------------------------------------------------------------
 Local number of states        : 5
 Local number of transitions   : 4
@@ -2406,8 +2306,7 @@ Local number of transitions   : 4
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : good
-Number of random selections   : 0
+Constraint nature             : good
 ------------------------------------------------------------
 Local number of states        : 6
 Local number of transitions   : 5
@@ -2424,8 +2323,7 @@ Local number of transitions   : 5
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : good
-Number of random selections   : 0
+Constraint nature             : good
 ------------------------------------------------------------
 Local number of states        : 7
 Local number of transitions   : 6

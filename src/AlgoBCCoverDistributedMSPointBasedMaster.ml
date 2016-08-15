@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/03/10
- * Last modified     : 2016/03/22
+ * Last modified     : 2016/08/15
  *
  ************************************************************)
 
@@ -86,7 +86,7 @@ class virtual algoBCCoverDistributedMSPointBasedMaster =
 (*	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Processing requests *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method private master_process_tile abstract_im_result =
+	method private master_process_tile abstract_point_based_result =
 		(** Create auxiliary files with the proper file prefix, if requested *)
 		(*** NOTE: cannot create files, as the real state space is on the worker machine ***)
 (* 			bc#create_auxiliary_files imitator_result; *)
@@ -96,7 +96,7 @@ class virtual algoBCCoverDistributedMSPointBasedMaster =
 		(*------------------------------------------------------------*)
 
 		(* Process result *)
-		bc#process_result abstract_im_result;
+		bc#process_result abstract_point_based_result;
 		
 		(* Update limits *)
 		bc#update_limit;
@@ -193,14 +193,14 @@ class virtual algoBCCoverDistributedMSPointBasedMaster =
 			(*** TODO: DO SOMETHING TO HANDLE THE CASE OF A POINT THAT WAS NOT SUCCESSFUL ***)
 			raise (InternalError("OutOfBound not implemented."))
 
-		| Tile (worker_rank , abstract_im_result) -> 
+		| Tile (worker_rank , abstract_point_based_result) -> 
 			self#print_algo_message Verbose_low ("Received Tile request...");
 			self#print_algo_message_newline Verbose_standard ("Received the following constraint from worker " ^ (string_of_int worker_rank));
 			
 			(*** TODO: we may want to store somewhere the computation time of the worker, in order to infer its waiting/working time ***)
 			
 			(* Process result (before computing next point) *)
-			bc#process_result abstract_im_result;
+			bc#process_result abstract_point_based_result;
 			
 			(* Compute the next point and send it to the worker, or send terminate message if no more point *)
 			self#compute_and_send_point bc worker_rank;
@@ -239,14 +239,14 @@ class virtual algoBCCoverDistributedMSPointBasedMaster =
 			(*** TODO: DO SOMETHING TO HANDLE THE CASE OF A POINT THAT WAS NOT SUCCESSFUL ***)
 			raise (InternalError("OutOfBound not implemented."))
 
-		| Tile (worker_rank , abstract_im_result) -> 
+		| Tile (worker_rank , abstract_point_based_result) -> 
 			self#print_algo_message Verbose_low ("Received Tile request...");
 			self#print_algo_message Verbose_standard ("Received the following constraint from worker " ^ (string_of_int worker_rank));
 			
 			(*** TODO: we may want to store somewhere the computation time of the worker, in order to infer its waiting/working time ***)
 
 			(* Process result *)
-			bc#process_result abstract_im_result;
+			bc#process_result abstract_point_based_result;
 			
 			(* Send termination signal and keep track of the number of terminated workers *)
 			self#send_termination_signal worker_rank;

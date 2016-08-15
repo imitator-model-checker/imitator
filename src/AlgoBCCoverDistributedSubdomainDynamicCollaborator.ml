@@ -295,16 +295,16 @@ class algoBCCoverDistributedSubdomainDynamicCollaborator =
 		
 		try(
 			(* Call IM *)
-			let abstract_im_result = self#run_im pi0 termination_function_option in
+			let abstract_point_based_result = self#run_im pi0 termination_function_option in
 			
 			(* Send the result to the master *)
-			DistributedUtilities.send_abstract_im_result abstract_im_result;
+			DistributedUtilities.send_abstract_point_based_result abstract_point_based_result;
 			
 			(* Retrieve cartography algorithm instance *)
 			let bc = a_of_a_option bc_option in
 
 			(* Process it locally as it will be useful to find next points! *)
-			bc#process_result abstract_im_result;
+			bc#process_result abstract_point_based_result;
 					
 			(*** NOTE for the collaborator version: keep it in memory 
 				all_tiles := im_result :: !all_tiles;

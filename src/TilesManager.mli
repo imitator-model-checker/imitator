@@ -53,7 +53,7 @@ class virtual tilesManager:
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		(* Process a new tile, i.e., add it to the tiles *)
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-		method virtual process_tile : Result.abstract_im_result -> unit
+		method virtual process_tile : Result.abstract_point_based_result -> unit
 		
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		(* Process the result of the cartography *)

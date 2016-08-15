@@ -103,7 +103,7 @@ class virtual algoBCCoverDistributed =
 
 	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Run IM and return an abstract_im_result *)
+	(* Run IM and return an abstract_point_based_result *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method run_im pi0 patator_termination_function_option =
 		(* Create instance of the algorithm to be called *)
@@ -149,19 +149,18 @@ class virtual algoBCCoverDistributed =
 		
 		self#print_algo_message Verbose_low ("Finished a computation of " ^ (algo#algorithm_name) ^ ".");
 		
-		(* Checking the result type *)
-		let im_result = match imitator_result with
+		(* Checking the result type, and computing abstraction *)
+		let abstract_point_based_result = match imitator_result with
 			(* Result for IM, IMK, IMunion *)
-			| IM_result im_result -> im_result
+			| Single_synthesis_result single_synthesis_result -> AlgoCartoGeneric.abstract_point_based_result_of_single_synthesis_result single_synthesis_result pi0
+			(* Result for IM, IMK, IMunion *)
+			| Point_based_result point_based_result -> AlgoCartoGeneric.abstract_point_based_result_of_point_based_result point_based_result pi0
 			(* Other *)
-			| _ -> raise (InternalError("An im_result is expected as an output of the execution of " ^ algo#algorithm_name ^ "."))
+			| _ -> raise (InternalError("A point_based_result is expected as an output of the execution of " ^ algo#algorithm_name ^ "."))
 		in
 		
-		(* Abstracting the result *)
-		let abstract_im_result = AlgoCartoGeneric.abstract_im_result_of_im_result im_result pi0 in
-		
 		(* Return the abstract result *)
-		abstract_im_result
+		abstract_point_based_result
 	
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)

@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/12/04
- * Last modified     : 2016/02/11
+ * Last modified     : 2016/08/15
  *
  ************************************************************)
 
@@ -419,30 +419,30 @@ class algoIMK =
 		(* Constraint is exact if termination is normal, possibly over-approximated otherwise (as there may be pi-incompatible inequalities missing) *)
 		let soundness = if termination_status = Regular_termination then Constraint_exact else Constraint_maybe_over in
 
+		let result = match statespace_nature with
+			| StateSpace.Good | StateSpace.Unknown -> Good_constraint(LinearConstraint.p_nnconvex_constraint_of_p_linear_constraint p_constraint, soundness)
+			| StateSpace.Bad -> Bad_constraint(LinearConstraint.p_nnconvex_constraint_of_p_linear_constraint p_constraint, soundness)
+		in
+
 		(* Return result *)
-		IM_result
+		Point_based_result
 		{
+			(* Reference valuation *)
+			reference_val		= Input.get_pi0();
+			
 			(* Result of the algorithm *)
-			result				= LinearConstraint.Convex_p_constraint p_constraint;
+			result				= result;
 			
 			(* Explored state space *)
 			state_space			= state_space;
 			
-			(* Nature of the state space *)
-			statespace_nature	= statespace_nature;
-			
-			(* Number of random selections of pi-incompatible inequalities performed *)
-			nb_random_selections= nb_random_selections;
-	
 			(* Total computation time of the algorithm *)
 			computation_time	= time_from start_time;
 			
-			(* Soudndness of the result *)
-			soundness			= soundness;
-	
 			(* Termination *)
 			termination			= termination_status;
 		}
+		
 	
 (************************************************************)
 (************************************************************)

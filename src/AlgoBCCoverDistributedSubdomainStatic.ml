@@ -110,7 +110,7 @@ class virtual algoBCCoverDistributedSubdomainStatic =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Finalization method to process results communication to the coordinator *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method virtual finalize : Result.bc_result -> unit
+	method virtual finalize : Result.cartography_result -> unit
 	
 	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -151,14 +151,14 @@ class virtual algoBCCoverDistributedSubdomainStatic =
 		let imitator_result = bc_instance#run () in
 
 		(* Retrieve the result *)
-		let bc_result =
+		let cartography_result =
 		match imitator_result with
-			| BC_result bc_result -> bc_result
-			| _ -> raise (InternalError ("The result of BC should be 'BC_result bc_result'"))
+			| Cartography_result cartography_result -> cartography_result
+			| _ -> raise (InternalError ("The result of BC should be 'BC_result cartography_result'"))
 		in
 		
 		(* Send the results to the coordinator (if collaborator), or collect results from collaborators (if coordinator) *)
-		self#finalize bc_result;
+		self#finalize cartography_result;
 		
 		(* Return the result *)
 		self#compute_bc_result

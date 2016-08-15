@@ -4,6 +4,10 @@ release 2.XXXXX    (XXXXX) FUTURE MAJOR RELEASE
 Bug fixing
 - May have fixed a bug in PaTATOR for "-mode cover -distributed sequential" and "-mode cover -distributed shuffle" for PRPC (IM may have been used instead of PRP)
 
+Export
+- PDFC now exports both an under-approximated good constraint and an under-approximated bad constraint (instead of an over-approximated good constraint for the latter)
+- Field "State space nature" becomes "Constraint nature" in result (.res) files
+
 Install and compile
 - To compile, now use build.sh to compile IMITATOR (in non-distributed mode) and build-patator.sh to compile PaTATOR (distributed mode)
 

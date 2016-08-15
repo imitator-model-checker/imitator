@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/03/17
- * Last modified     : 2016/03/23
+ * Last modified     : 2016/08/15
  *
  ************************************************************)
 
@@ -46,7 +46,7 @@ class algoBCCoverDistributedSubdomainStaticCollaborator :
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		(* Finalization method to process results communication to the coordinator *)
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-		method finalize : Result.bc_result -> unit
+		method finalize : Result.cartography_result -> unit
 	
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		(* Method packaging the result output by the algorithm *)

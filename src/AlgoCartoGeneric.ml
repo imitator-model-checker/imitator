@@ -89,16 +89,15 @@ exception Stop_loop of more_points
 (************************************************************)
 (************************************************************)
 
-
 (*------------------------------------------------------------*)
-(* Convert an 'im_result' into an 'abstract_im_result' *)
+(** Convert a 'single_synthesis_result' into an 'abstract_point_based_result' *)
 (*------------------------------------------------------------*)
-let abstract_im_result_of_im_result (im_result : im_result) reference_val : abstract_im_result =
+let abstract_point_based_result_of_single_synthesis_result (single_synthesis_result : single_synthesis_result) reference_val : abstract_point_based_result =
 	(* First, abstract state space *)
 	let abstract_state_space = {
-		nb_states		= StateSpace.nb_states im_result.state_space;
-		nb_transitions	= StateSpace.nb_transitions im_result.state_space;
-(* 		depth		 	= im_result.state_space; *)
+		nb_states		= StateSpace.nb_states single_synthesis_result.state_space;
+		nb_transitions	= StateSpace.nb_transitions single_synthesis_result.state_space;
+(* 		depth		 	= single_synthesis_result.state_space; *)
 	}
 	in
 	
@@ -108,37 +107,37 @@ let abstract_im_result_of_im_result (im_result : im_result) reference_val : abst
 	reference_val		= reference_val;
 
 	(* Convex constraint *)
-	result				= im_result.result;
+	result				= single_synthesis_result.result;
 	
 	(* Abstracted version of the explored state space *)
 	abstract_state_space	= abstract_state_space;
 	
 	(* Nature of the state space *)
-	statespace_nature		= im_result.statespace_nature;
+(* 	statespace_nature		= single_synthesis_result.statespace_nature; *)
 	
 	(* Number of random selections of pi-incompatible inequalities performed *)
-	nb_random_selections= im_result.nb_random_selections;
+(* 	nb_random_selections= im_result.nb_random_selections; *)
 	
 	(* Total computation time of the algorithm *)
-	computation_time	= im_result.computation_time;
+	computation_time	= single_synthesis_result.computation_time;
 		
 	(* Soundness of the result *)
-	soundness			= im_result.soundness;
+(* 	soundness			= single_synthesis_result.soundness; *)
 	
 	(* Termination *)
-	termination			= im_result.termination;
+	termination			= single_synthesis_result.termination;
 }
 
 
 (*------------------------------------------------------------*)
-(* Convert a 'pdfc_result' into an 'abstract_im_result' *)
+(** Convert a 'point_based_result' into an 'abstract_point_based_result' *)
 (*------------------------------------------------------------*)
-let abstract_im_result_of_pdfc_result (pdfc_result : pdfc_result) reference_val : abstract_im_result =
-	raise (InternalError("not implemented"))
-(*	(* First, abstract state space *)
+let abstract_point_based_result_of_point_based_result (point_based_result : point_based_result) reference_val : abstract_point_based_result =
+	(* First, abstract state space *)
 	let abstract_state_space = {
-		nb_states		= StateSpace.nb_states im_result.state_space;
-		nb_transitions	= StateSpace.nb_transitions im_result.state_space;
+		nb_states		= StateSpace.nb_states point_based_result.state_space;
+		nb_transitions	= StateSpace.nb_transitions point_based_result.state_space;
+(* 		depth		 	= point_based_result.state_space; *)
 	}
 	in
 	
@@ -148,26 +147,26 @@ let abstract_im_result_of_pdfc_result (pdfc_result : pdfc_result) reference_val 
 	reference_val		= reference_val;
 
 	(* Convex constraint *)
-	result				= pdfc_result.result;
+	result				= point_based_result.result;
 	
 	(* Abstracted version of the explored state space *)
 	abstract_state_space	= abstract_state_space;
 	
 	(* Nature of the state space *)
-	statespace_nature		= im_result.statespace_nature;
+(* 	statespace_nature		= point_based_result.statespace_nature; *)
 	
 	(* Number of random selections of pi-incompatible inequalities performed *)
-	nb_random_selections= im_result.nb_random_selections;
+(* 	nb_random_selections= im_result.nb_random_selections; *)
 	
 	(* Total computation time of the algorithm *)
-	computation_time	= im_result.computation_time;
+	computation_time	= point_based_result.computation_time;
 		
 	(* Soundness of the result *)
-	soundness			= im_result.soundness;
+(* 	soundness			= point_based_result.soundness; *)
 	
 	(* Termination *)
-	termination			= im_result.termination;
-}*)
+	termination			= point_based_result.termination;
+}
 
 
 (*------------------------------------------------------------*)
@@ -215,7 +214,7 @@ class virtual algoCartoGeneric =
 	
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(** Given a cartography termination and a list of abstract_im_result, evalutes the coverage of the cartography *)
+	(** Given a cartography termination and a list of abstract_point_based_result, evalutes the coverage of the cartography *)
 	(*** NOTE: this should be a parameter of the class; but cannot due to inheritance from AlgoGeneric ***)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 (* 	val mutable coverage_evaluation_function = None *)
@@ -244,7 +243,7 @@ class virtual algoCartoGeneric =
 		let myalgo :> AlgoBFS.algoBFS = new AlgoIMK.algoIMK in myalgo
 	
 (*	(* List of im_results *)
-	val mutable im_results : abstract_im_result list = []*)
+	val mutable im_results : abstract_point_based_result list = []*)
 	
 	(* Manager for the tiles, the class of which depends on the tiles_storage type *)
 	(*** NOTE: arbitrarily set to TilesManagerList, but will be initialized later anyway ***)
@@ -290,7 +289,7 @@ class virtual algoCartoGeneric =
 			raise (InternalError("algo_instance_function not yet set in AlgoCartoGeneric."))
 		
 (*	(* Sets the coverage evaluation function *)
-	method set_coverage_evaluation_function : (f : Result.bc_algorithm_termination -> Result.abstract_im_result list -> Result.bc_coverage) =
+	method set_coverage_evaluation_function : (f : Result.bc_algorithm_termination -> Result.abstract_point_based_result list -> Result.bc_coverage) =
 		match coverage_evaluation_function with
 		| Some _ -> 
 			raise (InternalError("coverage_evaluation_function was already set in AlgoCartoGeneric."))
@@ -801,15 +800,13 @@ class virtual algoCartoGeneric =
 	method private abstract_result imitator_result reference_val =
 		(* Get the result and compute the abstraction *)
 		match imitator_result with
-			(* Result for IM (or PRP) *)
-			| IM_result im_result -> abstract_im_result_of_im_result im_result reference_val
+			(* Result for most regular algorithms (EF, PDFC) *)
+			| Single_synthesis_result single_synthesis_result -> abstract_point_based_result_of_single_synthesis_result single_synthesis_result reference_val
 			
-			(* Result for PDFC *)
-			| PDFC_result pdfc_result -> abstract_im_result_of_pdfc_result pdfc_result reference_val
-
-			(* Result for EFsynth *)
-			| EFsynth_result efsynth_result -> raise (InternalError("The result of IM must be an im_result (here seen EFsynth)."))
-			| _ -> raise (InternalError("The result of IM must be an im_result (in function abstract_result)."))
+			(* Result for point-based algorithms (IM, PRP…) *)
+			| Point_based_result point_based_result -> abstract_point_based_result_of_point_based_result point_based_result reference_val
+			
+			| _ -> raise (InternalError("The expected result must be a Single_synthesis_result or a Point_based_result (in function AlgoCartoGeneric.abstract_result)."))
 
 
 	
@@ -832,7 +829,7 @@ class virtual algoCartoGeneric =
 			^ (string_of_int nb_transitions) ^ " transition" ^ (s_of_int nb_transitions) ^ " explored.");
 
 		print_message Verbose_low ("Constraint K0 computed:");
-		print_message Verbose_standard (LinearConstraint.string_of_p_convex_or_nonconvex_constraint model.variable_names abstract_result.result);
+		print_message Verbose_standard (ResultProcessor.string_of_good_or_bad_constraint model.variable_names abstract_result.result);
 		
 		
 		(* Print some information *)

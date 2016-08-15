@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/03/10
- * Last modified     : 2016/04/01
+ * Last modified     : 2016/08/15
  *
  ************************************************************)
 
@@ -115,19 +115,19 @@ class virtual algoBCCoverDistributedMSPointBasedWorker =
 				self#print_algo_message Verbose_medium("Received work.");
 
 				(* Call IM *)
-				let abstract_im_result = self#run_im  pi0 None in
+				let abstract_point_based_result = self#run_im  pi0 None in
 				
 				(* Send the result to the master *)
-				DistributedUtilities.send_abstract_im_result abstract_im_result;
+				DistributedUtilities.send_abstract_point_based_result abstract_point_based_result;
 				
 				(* Print some information *)
 				self#print_algo_message_newline Verbose_medium (
 						"K computed" (*^ " by " ^ (algo#algorithm_name) *)(*^ " after "
 						^ (string_of_int im_result.nb_iterations) ^ " iteration" ^ (s_of_int im_result.nb_iterations) ^ ""*)
-						^ " in " ^ (string_of_seconds abstract_im_result.computation_time) ^ ": "
-						^ (string_of_int abstract_im_result.abstract_state_space.nb_states) ^ " state" ^ (s_of_int abstract_im_result.abstract_state_space.nb_states)
+						^ " in " ^ (string_of_seconds abstract_point_based_result.computation_time) ^ ": "
+						^ (string_of_int abstract_point_based_result.abstract_state_space.nb_states) ^ " state" ^ (s_of_int abstract_point_based_result.abstract_state_space.nb_states)
 						^ " with "
-						^ (string_of_int abstract_im_result.abstract_state_space.nb_transitions) ^ " transition" ^ (s_of_int abstract_im_result.abstract_state_space.nb_transitions) ^ " explored.");
+						^ (string_of_int abstract_point_based_result.abstract_state_space.nb_transitions) ^ " transition" ^ (s_of_int abstract_point_based_result.abstract_state_space.nb_transitions) ^ " explored.");
 
 				self#print_algo_message Verbose_medium ("Sent the result to the master");
 

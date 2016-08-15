@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/03/17
- * Last modified     : 2016/03/23
+ * Last modified     : 2016/08/15
  *
  ************************************************************)
 
@@ -75,7 +75,7 @@ class algoBCCoverDistributedSubdomainStaticCollaborator =
 	(* Finalize: send all tiles to the coordinator *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Send tiles to the coordinator *)
-	method finalize bc_result =
+	method finalize cartography_result =
 		self#print_algo_message Verbose_low ("About to send all my tiles to the coordinator...");
 
 (*		(* Retrieve the abstract_im_results *)
@@ -85,7 +85,7 @@ class algoBCCoverDistributedSubdomainStaticCollaborator =
 		send_abstract_im_result_list abstract_im_result_list;*)
 		
 		(* Send the cartography to the coordinator *)
-		send_bc_result bc_result;
+		send_cartography_result cartography_result;
 
 		(* Print some information *)
 		self#print_algo_message Verbose_low ("Tiles sent! The end for me.");

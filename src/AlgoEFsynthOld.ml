@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/11/25
- * Last modified     : 2016/02/11
+ * Last modified     : 2016/08/15
  *
  ************************************************************)
 
@@ -226,7 +226,7 @@ class algoEFsynth =
 		let soundness = if termination_status = Regular_termination then Constraint_exact else Constraint_maybe_under in
 
 		(* Return the result *)
-		EFsynth_result
+		Deprecated_efsynth_result
 		{
 			(* List of constraints ensuring EF location *)
 			constraints			= bad_constraints;

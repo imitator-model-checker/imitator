@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/01/11
- * Last modified     : 2016/05/04
+ * Last modified     : 2016/08/15
  *
  ************************************************************)
 
@@ -303,30 +303,30 @@ class algoPRP =
 			else Constraint_maybe_invalid
 		in
 
+		let result = match statespace_nature with
+			| StateSpace.Good | StateSpace.Unknown -> Good_constraint(result, soundness)
+			| StateSpace.Bad -> Bad_constraint(result, soundness)
+		in
+
 		(* Return result *)
-		IM_result
+		Point_based_result
 		{
+			(* Reference valuation *)
+			reference_val		= Input.get_pi0();
+			
 			(* Result of the algorithm *)
-			result				= LinearConstraint.Nonconvex_p_constraint result;
+			result				= result;
 			
 			(* Explored state space *)
 			state_space			= state_space;
 			
-			(* Nature of the state space *)
-			statespace_nature	= statespace_nature;
-			
-			(* Number of random selections of pi-incompatible inequalities performed *)
-			nb_random_selections= nb_random_selections;
-	
 			(* Total computation time of the algorithm *)
 			computation_time	= time_from start_time;
 			
-			(* Soudndness of the result *)
-			soundness			= soundness;
-	
 			(* Termination *)
 			termination			= termination_status;
 		}
+
 	
 (************************************************************)
 (************************************************************)

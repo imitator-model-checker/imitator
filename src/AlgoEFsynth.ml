@@ -297,27 +297,24 @@ class algoEFsynth =
 			| Some status -> status
 		in
 
-		(* The tile nature is good if 1) it is not bad, and 2) the analysis terminated normally *)
+(*		(* The tile nature is good if 1) it is not bad, and 2) the analysis terminated normally *)
 		let statespace_nature =
 			if statespace_nature = StateSpace.Unknown && termination_status = Regular_termination then StateSpace.Good
 			(* Otherwise: unchanged *)
 			else statespace_nature
-		in
+		in*)
 		
 		(* Constraint is exact if termination is normal, possibly under-approximated otherwise *)
 		let soundness = if termination_status = Regular_termination then Constraint_exact else Constraint_maybe_under in
 
 		(* Return the result *)
-		PDFC_result
+		Single_synthesis_result
 		{
 			(* Non-necessarily convex constraint guaranteeing the non-reachability of the bad location *)
-			result				= Single_constraint(result, soundness);
+			result				= Good_constraint (result, soundness);
 			
 			(* Explored state space *)
 			state_space			= state_space;
-			
-			(* Nature of the state space *)
-			statespace_nature	= statespace_nature;
 			
 			(* Total computation time of the algorithm *)
 			computation_time	= time_from start_time;
@@ -325,6 +322,8 @@ class algoEFsynth =
 			(* Termination *)
 			termination			= termination_status;
 		}
+
+
 	
 (************************************************************)
 (************************************************************)

@@ -209,8 +209,8 @@ class algoBCCoverDistributedSubdomainDynamicCoordinator =
 	(* List of subdomains maintained by the coordinator *)
 	val mutable subdomains : HyperRectangle.hyper_rectangle list = []
 	
-	(* List of abstract_im_results received by the coordinator *)
-(* 	val mutable abstract_im_results : Result.abstract_im_result list = [] *)
+	(* List of abstract_point_based_results received by the coordinator *)
+(* 	val mutable abstract_point_based_results : Result.abstract_point_based_result list = [] *)
 	
 	(* Manager for the tiles, the class of which depends on the tiles_storage type *)
 	(*** NOTE: arbitrarily set to TilesManagerList, but will be initialized later anyway ***)
@@ -282,9 +282,9 @@ class algoBCCoverDistributedSubdomainDynamicCoordinator =
 
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Add an abstract_im_result to the list of received abstract_im_result *)
+	(* Add an abstract_point_based_result to the list of received abstract_point_based_result *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method private add_abstract_im_result (abstract_im_result : abstract_im_result) =
+	method private add_abstract_point_based_result (abstract_point_based_result : abstract_point_based_result) =
 		
 		(* Check if already present *)
 		
@@ -292,8 +292,8 @@ class algoBCCoverDistributedSubdomainDynamicCoordinator =
 		
 		
 		(* Otherwise add *)
-(* 		abstract_im_results <- abstract_im_result :: abstract_im_results; *)
-		tiles_manager#process_tile abstract_im_result;
+(* 		abstract_point_based_results <- abstract_point_based_result :: abstract_point_based_results; *)
+		tiles_manager#process_tile abstract_point_based_result;
 		
 		(* For now always add, hence return true *)
 		true
@@ -398,15 +398,15 @@ class algoBCCoverDistributedSubdomainDynamicCoordinator =
 				self#print_algo_message Verbose_total ("Received a pull request from collaborator " ^ (string_of_int collaborator_rank) ^ "; end.");
 				
 			(*Tile Tag*)
-			| Tile (collaborator_rank , abstract_im_result) ->
+			| Tile (collaborator_rank , abstract_point_based_result) ->
 				(* Print some information *)
 				if verbose_mode_greater Verbose_low then(
 					(* Retrieve the model *)
 					let model = Input.get_model() in
 					
-					self#print_algo_message Verbose_low ("Received an abstract_im_result from collaborator " ^ (string_of_int collaborator_rank) ^ " computed in " ^ (string_of_seconds abstract_im_result.computation_time)
+					self#print_algo_message Verbose_low ("Received an abstract_point_based_result from collaborator " ^ (string_of_int collaborator_rank) ^ " computed in " ^ (string_of_seconds abstract_point_based_result.computation_time)
 						^ "\nConstraint:\n"
-						^ (LinearConstraint.string_of_p_convex_or_nonconvex_constraint model.variable_names abstract_im_result.result)
+						^ (ResultProcessor.string_of_good_or_bad_constraint model.variable_names abstract_point_based_result.result)
 						^ ""
 					);
 				);
@@ -415,19 +415,19 @@ class algoBCCoverDistributedSubdomainDynamicCoordinator =
 				(* Count! *)
 				tcounter_process_result#start;
 				tcounter_process_result#increment;
-				let constraint_added = self#add_abstract_im_result abstract_im_result in
+				let constraint_added = self#add_abstract_point_based_result abstract_point_based_result in
 				(* Count! *)
 				tcounter_process_result#stop;
 
 				if constraint_added then(
-					(*receive abstract_im_result then send to the other collaborators to update*)
+					(*receive abstract_point_based_result then send to the other collaborators to update*)
 					for i = 0 to (List.length current_subdomains)-1 do
 						if (fst (List.nth current_subdomains i)) <> collaborator_rank then(
 							(*** QUESTION: why is the following line commented out? So the other collaborators are NEVER informed of a tile computation? ***)
-							(* send_tile abstract_im_result (first (List.nth current_subdomains i));*)
+							(* send_tile abstract_point_based_result (first (List.nth current_subdomains i));*)
 							
 							(*** NOTE: this structure seems really inaccurate to me; TODO: improve ***)
-							tiles_buffer <- tiles_buffer @ [(fst (List.nth current_subdomains i)), abstract_im_result];
+							tiles_buffer <- tiles_buffer @ [(fst (List.nth current_subdomains i)), abstract_point_based_result];
 						);
 					done
 				) (* end if constraint_added *)
@@ -435,7 +435,7 @@ class algoBCCoverDistributedSubdomainDynamicCoordinator =
 				else(
 					nb_wasted_tiles <- nb_wasted_tiles + 1;
 				);
-				self#print_algo_message Verbose_total ("Received an abstract_im_result from collaborator " ^ (string_of_int collaborator_rank) ^ ": end.");
+				self#print_algo_message Verbose_total ("Received an abstract_point_based_result from collaborator " ^ (string_of_int collaborator_rank) ^ ": end.");
 
 			(*Pi0 Tag*)
 			| Pi0 (collaborator_rank , pi0) -> 
@@ -592,7 +592,7 @@ class algoBCCoverDistributedSubdomainDynamicCoordinator =
 			begin
 			match options#carto_tiles_limit with
 				| None -> ()
-				| Some limit -> if (*List.length abstract_im_results*)tiles_manager#get_nb_results >= limit then(
+				| Some limit -> if (*List.length abstract_point_based_results*)tiles_manager#get_nb_results >= limit then(
 					termination <- Some BC_Tiles_limit
 				)
 			end

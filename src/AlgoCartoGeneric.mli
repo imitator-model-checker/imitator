@@ -45,8 +45,11 @@ type tiles_storage =
 (* Class-independent functions *)
 (************************************************************)
 (************************************************************)
-(* Convert an 'im_result' into an 'abstract_im_result' *)
-val abstract_im_result_of_im_result : Result.im_result -> PVal.pval -> Result.abstract_im_result
+(** Convert a 'single_synthesis_result' into an 'abstract_point_based_result' *)
+val abstract_point_based_result_of_single_synthesis_result : Result.single_synthesis_result -> PVal.pval -> Result.abstract_point_based_result
+
+(** Convert a 'point_based_result' into an 'abstract_point_based_result' *)
+val abstract_point_based_result_of_point_based_result : Result.point_based_result -> PVal.pval -> Result.abstract_point_based_result
 
 (*------------------------------------------------------------*)
 (* Print warning(s) depending on a Result.bc_algorithm_termination *)
@@ -233,7 +236,7 @@ class virtual algoCartoGeneric :
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		(* Process one result of an abstract version of an instance of IM *)
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-		method process_result : Result.abstract_im_result -> unit
+		method process_result : Result.abstract_point_based_result -> unit
 		
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		(* Compute the next point, store it; return it if new point exists and limits not reached *)
