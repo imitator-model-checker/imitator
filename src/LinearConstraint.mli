@@ -256,6 +256,7 @@ val partition_lu : variable list -> pxd_linear_constraint list -> (variable list
 (** Check if a constraint is false *)
 (* val is_false : linear_constraint -> bool *)
 val p_is_false : p_linear_constraint -> bool
+val pxd_is_false : pxd_linear_constraint -> bool
 
 (** Check if a constraint is true *)
 (* val is_true : linear_constraint -> bool *)
@@ -272,10 +273,12 @@ val pxd_is_satisfiable : pxd_linear_constraint -> bool
 (* val is_equal : linear_constraint -> linear_constraint -> bool *)
 val p_is_equal : p_linear_constraint -> p_linear_constraint -> bool
 val px_is_equal : px_linear_constraint -> px_linear_constraint -> bool
+val pxd_is_equal : pxd_linear_constraint -> pxd_linear_constraint -> bool
 
 (** Check if a constraint is included in another one *)
 val p_is_leq : p_linear_constraint -> p_linear_constraint -> bool
 val px_is_leq : px_linear_constraint -> px_linear_constraint -> bool
+val pxd_is_leq : pxd_linear_constraint -> pxd_linear_constraint -> bool
 
 (** Check if a variable v is bound to be >= 0 in a constraint c *)
 val px_is_positive_in : variable -> px_linear_constraint -> bool
@@ -617,4 +620,25 @@ val isComparable_linear_terms_2 : p_linear_term -> p_linear_term -> p_linear_con
 (* val get_coefficient_in_linear_term : Ppl.linear_expression -> NumConst.t   *) 
 
 *)
+
+
+
+type smaller_term =
+	| NotDetermine (*not determined*)
+	| First
+	| Second
+
+(*for linear term*)
+(*val isSmaller : p_linear_term -> p_linear_term -> (bool*smaller_term)*)
+val isSmaller : p_linear_term -> p_linear_term -> smaller_term
+
+(*
+val isComparable_linear_terms : p_linear_term -> p_linear_term -> (bool*smaller_term)
+*)
+
+(*
+val isComparable_linear_terms_2 : p_linear_term -> p_linear_term -> p_linear_constraint
+(* val get_coefficient_in_linear_term : Ppl.linear_expression -> NumConst.t   *) 
+*)
+
 
