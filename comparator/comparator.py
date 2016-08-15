@@ -10,7 +10,7 @@
 # 
 # File contributors : Étienne André
 # Created           : 2016/08/08
-# Last modified     : 2016/08/13
+# Last modified     : 2016/08/15
 #************************************************************
 
 
@@ -58,6 +58,7 @@ V_2_6_1		= 2
 V_2_6_2_825	= 3
 V_2_7_3		= 4
 V_2_8		= 5
+V_current	= 6
 
 #------------------------------------------------------------
 # Options
@@ -180,6 +181,26 @@ versions = {
 	#------------------------------------------------------------
 	V_2_8 : {
 		'version_name'		: '2.8',
+		'binary'			: 'imitator28',
+		'binary_dist'		: 'patator28',
+		'syntax':
+			{
+			OPT_DISTR_SUBDOMAIN		: '-distributed dynamic',
+			OPT_INCLUSION			: '-incl',
+			OPT_MERGING				: '-merge',
+			OPT_MODE_COVER			: '-mode cover',
+			OPT_MODE_EF				: '-mode EF',
+			OPT_OUTPUT_CART			: '-output-cart',
+			OPT_OUTPUT_PREFIX		: '-output-prefix',
+			OPT_OUTPUT_RES			: '-output-result',
+			OPT_OUTPUT_TRACE_SET	: '-output-trace-set',
+			OPT_PRP					: '-PRP',
+			},
+		'files_suffix'			: '_2_8',
+	},
+	#------------------------------------------------------------
+	V_current : {
+		'version_name'		: 'current',
 		'binary'			: 'imitator',
 		'binary_dist'		: 'patator',
 		'syntax':
@@ -195,7 +216,7 @@ versions = {
 			OPT_OUTPUT_TRACE_SET	: '-output-trace-set',
 			OPT_PRP					: '-PRP',
 			},
-		'files_suffix'			: '_2_8',
+		'files_suffix'			: '_current',
 	},
 }
 
@@ -269,7 +290,7 @@ def get_computation_time(benchmark, version, cartography_mode):
 		print_error("Time not found for benchmark " + benchmark['benchmark_name'] + " with version " + versions[version]['version_name'])
 		return ANALYSIS_FAILED
 	
-	if version == V_2_8:
+	if version == V_2_8 or version == V_current:
 		# Open res file
 		res_file = RESULT_FILES_PATH + benchmark['log_prefix'] +  versions[version]['files_suffix'] + ".res"
 		if not os.path.isfile(res_file):
@@ -455,7 +476,7 @@ def print_results(versions_to_test):
 # RUN!
 #************************************************************
 
-all_versions = [V_2_5, V_2_6_1, V_2_6_2_825, V_2_7_3, V_2_8]
+all_versions = [V_2_5, V_2_6_1, V_2_6_2_825, V_2_7_3, V_2_8, V_current]
 
 # IMPORTING THE BENCHMARKS CONTENT
 import comparator_data
