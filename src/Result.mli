@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/11/23
- * Last modified     : 2016/05/04
+ * Last modified     : 2016/08/15
  *
  ************************************************************)
 
@@ -246,7 +246,7 @@ type bc_result = {
 	computation_time	: float;
 	
 	(* Computation time to look for points *)
-	find_point_time		: float;
+(* 	find_point_time		: float; *)
 	
 	(* Number of points on which IM could not be called because already covered *)
 	nb_unsuccessful_points: int;

@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/03/24
- * Last modified     : 2016/08/11
+ * Last modified     : 2016/08/15
  *
  ************************************************************)
 
@@ -103,6 +103,7 @@ class algoBCCoverDistributedSubdomainDynamicCollaborator =
 		let bc_instance = new AlgoBCCover.algoBCCover in
 		(* Set the instance of IM / PRP that was itself set from the current cartography class *)
 		bc_instance#set_algo_instance_function self#get_algo_instance_function;
+		bc_instance#set_tiles_manager_type (self#get_tiles_manager_type);
 		
 		(* Initialize *)
 		bc_instance#initialize_cartography;
@@ -333,17 +334,18 @@ class algoBCCoverDistributedSubdomainDynamicCollaborator =
 		(*** NOTE: would be better to have a nicer mechanism than that one… ***)
 		Input.set_v0 subdomain;
 		
-		(* Retrieve the tiles computed previously (if any) *)
-		let previous_tiles = match bc_option with
-			| Some bc -> bc#get_abstract_im_result_list
-			| None -> []
-		in
-		
 		(* Perform initialization *)
 		let bc = self#new_bc_instance in
 		
-		(* Set the previously computed tiles *)
-		bc#set_abstract_im_result_list previous_tiles;
+		(* Retrieve and set back the tiles computed previously (if any) *)
+		begin
+		match bc_option with
+			| Some previous_bc ->
+				let previous_manager = previous_bc#get_tiles_manager in
+				(* Set the previously computed tiles *)
+				bc#set_tiles_manager previous_manager;
+			| None -> ()
+		end;
 		
 		(* Set BC *)
 		bc_option <- Some bc;

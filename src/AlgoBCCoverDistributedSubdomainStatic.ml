@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/03/17
- * Last modified     : 2016/03/23
+ * Last modified     : 2016/08/15
  *
  ************************************************************)
 
@@ -142,6 +142,7 @@ class virtual algoBCCoverDistributedSubdomainStatic =
 		let bc_instance = new AlgoBCCover.algoBCCover in
 		(* Set the instance of IM / PRP that was itself set from the current cartography class *)
 		bc_instance#set_algo_instance_function self#get_algo_instance_function;
+		bc_instance#set_tiles_manager_type (self#get_tiles_manager_type);
 		
 		(* Print some information *)
 		self#print_algo_message Verbose_standard ("Launching cartography on own static subdomain...");

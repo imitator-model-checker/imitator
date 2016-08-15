@@ -1,8 +1,14 @@
 *******************************************************
 release 2.XXXXX    (XXXXX) FUTURE MAJOR RELEASE
 
+Bug fixing
+- May have fixed a bug in PaTATOR for "-mode cover -distributed sequential" and "-mode cover -distributed shuffle" for PRPC (IM may have been used instead of PRP)
+
 Install and compile
 - To compile, now use build.sh to compile IMITATOR (in non-distributed mode) and build-patator.sh to compile PaTATOR (distributed mode)
+
+Internal
+- In cartography algorithms, the list of tiles is now externalized to a dedicated manager (that can store a list of tiles, or a single good/bad constraints)
 
 
 *******************************************************

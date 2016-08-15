@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/02/02
- * Last modified     : 2016/03/17
+ * Last modified     : 2016/08/15
  *
  ************************************************************)
 
@@ -131,35 +131,15 @@ class algoBCRandom (*max_tries*) =
 			| Some status -> status
 		in
 
-		(* Coverage is... *)
+		(* Force coverage to Coverage_unknown  *)
 		(*** TODO: could perhaps check manually (!) if the coverage is integer complete, or even complete ***)
-		let coverage = Coverage_unknown
-		in
+		let forced_coverage_option = Some Coverage_unknown in
+
+		(* Retrieve the manager *)
+		let tiles_manager = self#get_tiles_manager in
 		
-		(* Return result *)
-		BC_result {
-			(* Number of points in V0 *)
-			size_v0				= nb_points;
-			
-			(* List of tiles *)
-			(*** NOTE: reverse as each im_result was added as first element ***)
-			tiles				= List.rev im_results;
-			
-			(* Total computation time of the algorithm *)
-			computation_time	= time_from start_time;
-			
-			(* Computation time to look for points *)
-			find_point_time		= find_next_point_counter#value;
-			
-			(* Number of points on which IM could not be called because already covered *)
-			nb_unsuccessful_points = nb_unsuccessful_points;
-			
-			(* Evaluation of the coverage of V0 by tiles computed by the cartography *)
-			coverage			= coverage;
-			
-			(* Termination *)
-			termination			= termination_status;
-		}
+		(* Ask the tiles manager to process the result itself, by passing the appropriate arguments *)
+		tiles_manager#process_result start_time nb_points nb_unsuccessful_points termination_status forced_coverage_option
 
 
 (************************************************************)

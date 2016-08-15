@@ -87,8 +87,11 @@ class algoBCCoverDistributedMSRandomSeqMaster =
 		self#print_algo_message Verbose_standard ("Creating BC instance...");
 		
 		let algo_bcrandom = new AlgoBCRandomSeq.algoBCRandomSeq in
+		
 		(*** NOTE: very important: must set NOW the maximum number of tries! ***)
 		algo_bcrandom#set_max_tries (self#get_max_tries);
+		algo_bcrandom#set_tiles_manager_type (self#get_tiles_manager_type);
+
 		let myalgo :> AlgoCartoGeneric.algoCartoGeneric = algo_bcrandom in
 		myalgo
 		

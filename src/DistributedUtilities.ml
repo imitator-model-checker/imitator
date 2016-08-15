@@ -1,27 +1,28 @@
-(*****************************************************************
+(************************************************************
  *
  *                       IMITATOR
  * 
- * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
- * Universite Paris 13, Sorbonne Paris Cite, LIPN (France)
+ * Laboratoire Spécification et Vérification (ENS Cachan & CNRS, France)
+ * LIPN, Université Paris 13, Sorbonne Paris Cité (France)
  * 
- * Author:        Etienne Andre, Camille Coti
+ * Module description: All common functions needed for the interface with MPI
  * 
- * Created:       2014/03/24
- * Last modified: 2016/05/09
+ * File contributors : Étienne André, Camille Coti
+ * Created           : 2014/03/24
+ * Last modified     : 2016/08/15
  *
- ****************************************************************)
+ ************************************************************)
+ 
 
-
-(**************************************************)
+(************************************************************)
 (* External modules *)
-(**************************************************)
+(************************************************************)
 open Mpi
 
 
-(**************************************************)
+(************************************************************)
 (* Internal modules *)
-(**************************************************)
+(************************************************************)
 open AbstractModel
 open Exceptions
 open OCamlUtilities
@@ -29,9 +30,9 @@ open ImitatorUtilities
 open Result
 
 
-(****************************************************************)
+(************************************************************)
 (** Public types *)
-(****************************************************************)
+(************************************************************)
 type rank = int
 
 (** Tags sent by workers *)
@@ -61,9 +62,9 @@ type pi0_list = (Automaton.variable_index * NumConst.t) list
 
 
 
-(****************************************************************)
+(************************************************************)
 (** Private types *)
-(****************************************************************)
+(************************************************************)
 (** Tags sent by slave *)
 type mpi_slave_tag =
 	| Slave_tile_tag (*Tile tag or constraint K*)
@@ -89,9 +90,9 @@ type mpi_master_tag =
 
 
 
-(****************************************************************)
+(************************************************************)
 (** Constants *)
-(****************************************************************)
+(************************************************************)
 (* Who is the master? (in a master-worker algorithm) *)
 let master_rank = 0
 
@@ -99,9 +100,9 @@ let master_rank = 0
 let coordinator_rank = 0
 
 
-(****************************************************************)
+(************************************************************)
 (** Serialization Functions *)
-(****************************************************************)
+(************************************************************)
 (*------------------------------------------------------------*)
 (* General *)
 (*------------------------------------------------------------*)
@@ -513,11 +514,11 @@ let serialize_bc_result bc_result =
 	^
 	serialize_SEP_SUPER_STRUCT
 	^
-	(* Computation time to look for points *)
+(*	(* Computation time to look for points *)
 	(string_of_float bc_result.find_point_time)
 	^
 	serialize_SEP_SUPER_STRUCT
-	^
+	^*)
 	(* Number of points on which IM could not be called because already covered *)
 	(string_of_int bc_result.nb_unsuccessful_points)
 	^
@@ -534,17 +535,17 @@ let serialize_bc_result bc_result =
 
 let unserialize_bc_result bc_result_string =
 	print_message Verbose_high ("[Coordinator] About to unserialize '" ^ bc_result_string ^ "'");
-	let size_v0_str, tiles_str, computation_time_str, find_point_time_str, nb_unsuccessful_points_str , coverage_str, termination_str =
+	let size_v0_str, tiles_str, computation_time_str, (*find_point_time_str, *)nb_unsuccessful_points_str , coverage_str, termination_str =
 	match split serialize_SEP_SUPER_STRUCT bc_result_string with
-		| [size_v0_str; tiles_str; computation_time_str; find_point_time_str; nb_unsuccessful_points_str ; coverage_str; termination_str ]
-			-> size_v0_str, tiles_str, computation_time_str, find_point_time_str, nb_unsuccessful_points_str , coverage_str, termination_str
+		| [size_v0_str; tiles_str; computation_time_str; (*find_point_time_str; *)nb_unsuccessful_points_str ; coverage_str; termination_str ]
+			-> size_v0_str, tiles_str, computation_time_str, (*find_point_time_str, *)nb_unsuccessful_points_str , coverage_str, termination_str
 		| _ -> raise (SerializationError ("Cannot unserialize im_result '" ^ bc_result_string ^ "'."))
 	in
 	{
 		size_v0 				= NumConst.numconst_of_string size_v0_str;
 		tiles 					= unserialize_abstract_im_result_list tiles_str;
 		computation_time		= float_of_string computation_time_str;
-		find_point_time 		= float_of_string find_point_time_str;
+(* 		find_point_time 		= float_of_string find_point_time_str; *)
 		nb_unsuccessful_points	= int_of_string nb_unsuccessful_points_str;
 		coverage				= unserialize_bc_coverage coverage_str;
 		termination				= unserialize_bc_termination termination_str;
@@ -700,9 +701,9 @@ test_serialization();
 abort_program();;*)
 	
 
-(****************************************************************)
+(************************************************************)
 (** MPI Functions *)
-(****************************************************************)
+(************************************************************)
 (*** NOTE: le "ref 1" ne signifie rien du tout ***)
 let weird_stuff() = ref 1
 
@@ -757,9 +758,9 @@ let master_tag_of_int = function
 
 
 
-(****************************************************************)
+(************************************************************)
 (** Public access functions *)
-(****************************************************************)
+(************************************************************)
 
 let get_nb_nodes () = Mpi.comm_size Mpi.comm_world
 let get_rank () = Mpi.comm_rank Mpi.comm_world

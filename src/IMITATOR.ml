@@ -9,7 +9,7 @@
  * 
  * File contributors : Ulrich Kühne, Étienne André
  * Created           : 2009/09/07
- * Last modified     : 2016/06/07
+ * Last modified     : 2016/08/15
  *
  ************************************************************)
 
@@ -460,12 +460,14 @@ let algorithm : AlgoGeneric.algoGeneric = match options#imitator_mode with
 				let bc_algo = new AlgoBCCoverDistributedMSSeqMaster.algoBCCoverDistributedMSSeqMaster in
 				(*** NOTE: very important: must set NOW the parameters ***)
 				bc_algo#set_algo_instance_function new_im_or_prp;
+				bc_algo#set_tiles_manager_type AlgoCartoGeneric.Tiles_list;
 				let myalgo :> AlgoGeneric.algoGeneric = bc_algo in
 				myalgo
 			else
 				let bc_algo = new AlgoBCCoverDistributedMSSeqWorker.algoBCCoverDistributedMSSeqWorker in
 				(*** NOTE: very important: must set NOW the parameters ***)
 				bc_algo#set_algo_instance_function new_im_or_prp;
+				bc_algo#set_tiles_manager_type AlgoCartoGeneric.Tiles_list;
 				let myalgo :> AlgoGeneric.algoGeneric = bc_algo in
 				myalgo
 
@@ -476,12 +478,14 @@ let algorithm : AlgoGeneric.algoGeneric = match options#imitator_mode with
 				let bc_algo = new AlgoBCCoverDistributedMSShuffleMaster.algoBCCoverDistributedMSShuffleMaster in
 				(*** NOTE: very important: must set NOW the parameters ***)
 				bc_algo#set_algo_instance_function new_im_or_prp;
+				bc_algo#set_tiles_manager_type AlgoCartoGeneric.Tiles_list;
 				let myalgo :> AlgoGeneric.algoGeneric = bc_algo in
 				myalgo
 			else
 				let bc_algo = new AlgoBCCoverDistributedMSShuffleWorker.algoBCCoverDistributedMSShuffleWorker in
 				(*** NOTE: very important: must set NOW the parameters ***)
 				bc_algo#set_algo_instance_function new_im_or_prp;
+				bc_algo#set_tiles_manager_type AlgoCartoGeneric.Tiles_list;
 				let myalgo :> AlgoGeneric.algoGeneric = bc_algo in
 				myalgo
 
@@ -493,6 +497,7 @@ let algorithm : AlgoGeneric.algoGeneric = match options#imitator_mode with
 				(*** NOTE: very important: must set NOW the parameters ***)
 				bc_algo#set_max_tries nb_tries;
 				bc_algo#set_algo_instance_function new_im_or_prp;
+				bc_algo#set_tiles_manager_type AlgoCartoGeneric.Tiles_list;
 				let myalgo :> AlgoGeneric.algoGeneric = bc_algo in
 				myalgo
 			else
@@ -500,6 +505,7 @@ let algorithm : AlgoGeneric.algoGeneric = match options#imitator_mode with
 				(*** NOTE: very important: must set NOW the parameters ***)
 (* 				bc_algo#set_max_tries nb_tries; *)
 				bc_algo#set_algo_instance_function new_im_or_prp;
+				bc_algo#set_tiles_manager_type AlgoCartoGeneric.Tiles_list;
 				let myalgo :> AlgoGeneric.algoGeneric = bc_algo in
 				myalgo
 		
@@ -510,12 +516,14 @@ let algorithm : AlgoGeneric.algoGeneric = match options#imitator_mode with
 				let bc_algo = new AlgoBCCoverDistributedSubdomainDynamicCoordinator.algoBCCoverDistributedSubdomainDynamicCoordinator in
 				(*** NOTE: very important: must set NOW the parameters ***)
 				bc_algo#set_algo_instance_function new_im_or_prp;
+				bc_algo#set_tiles_manager_type AlgoCartoGeneric.Tiles_list;
 				let myalgo :> AlgoGeneric.algoGeneric = bc_algo in
 				myalgo
 			else
 				let bc_algo = new AlgoBCCoverDistributedSubdomainDynamicCollaborator.algoBCCoverDistributedSubdomainDynamicCollaborator in
 				(*** NOTE: very important: must set NOW the parameters ***)
 				bc_algo#set_algo_instance_function new_im_or_prp;
+				bc_algo#set_tiles_manager_type AlgoCartoGeneric.Tiles_list;
 				let myalgo :> AlgoGeneric.algoGeneric = bc_algo in
 				myalgo
 
@@ -526,12 +534,14 @@ let algorithm : AlgoGeneric.algoGeneric = match options#imitator_mode with
 				let bc_algo = new AlgoBCCoverDistributedSubdomainStaticCoordinator.algoBCCoverDistributedSubdomainStaticCoordinator in
 				(*** NOTE: very important: must set NOW the parameters ***)
 				bc_algo#set_algo_instance_function new_im_or_prp;
+				bc_algo#set_tiles_manager_type AlgoCartoGeneric.Tiles_list;
 				let myalgo :> AlgoGeneric.algoGeneric = bc_algo in
 				myalgo
 			else
 				let bc_algo = new AlgoBCCoverDistributedSubdomainStaticCollaborator.algoBCCoverDistributedSubdomainStaticCollaborator in
 				(*** NOTE: very important: must set NOW the parameters ***)
 				bc_algo#set_algo_instance_function new_im_or_prp;
+				bc_algo#set_tiles_manager_type AlgoCartoGeneric.Tiles_list;
 				let myalgo :> AlgoGeneric.algoGeneric = bc_algo in
 				myalgo
 
@@ -558,6 +568,7 @@ let algorithm : AlgoGeneric.algoGeneric = match options#imitator_mode with
 		let bc_algo = new AlgoBCCover.algoBCCover in
 		(*** NOTE: very important: must set NOW the parameters ***)
 		bc_algo#set_algo_instance_function new_im_or_prp;
+		bc_algo#set_tiles_manager_type AlgoCartoGeneric.Tiles_list;
 		let myalgo :> AlgoGeneric.algoGeneric = bc_algo in
 		myalgo
 	
@@ -566,6 +577,8 @@ let algorithm : AlgoGeneric.algoGeneric = match options#imitator_mode with
 		let bc_algo = new AlgoBCCoverLearning.algoBCCoverLearning in
 		(*** NOTE: very important: the algo instance function should NOT be set for this algorithm (as it always uses EFsynth or PRP anyway) ***)
 (* 		bc_algo#set_algo_instance_function new_im_or_prp; *)
+		(*** TODO: here, it will probably not be AlgoCartoGeneric.Tiles_list ***)
+		bc_algo#set_tiles_manager_type AlgoCartoGeneric.Tiles_list;
 		let myalgo :> AlgoGeneric.algoGeneric = bc_algo in
 		myalgo
 	
@@ -574,6 +587,7 @@ let algorithm : AlgoGeneric.algoGeneric = match options#imitator_mode with
 		let bc_algo = new AlgoBCShuffle.algoBCShuffle in
 		(*** NOTE: very important: must set NOW the parameters ***)
 		bc_algo#set_algo_instance_function new_im_or_prp;
+		bc_algo#set_tiles_manager_type AlgoCartoGeneric.Tiles_list;
 		let myalgo :> AlgoGeneric.algoGeneric = bc_algo in
 		myalgo
 	
@@ -586,6 +600,7 @@ let algorithm : AlgoGeneric.algoGeneric = match options#imitator_mode with
 		(*** NOTE: very important: must set NOW the parameters ***)
 		bc_algo#set_max_tries nb;
 		bc_algo#set_algo_instance_function new_im_or_prp;
+		bc_algo#set_tiles_manager_type AlgoCartoGeneric.Tiles_list;
 		let myalgo :> AlgoGeneric.algoGeneric = bc_algo in
 		myalgo
 
@@ -596,6 +611,7 @@ let algorithm : AlgoGeneric.algoGeneric = match options#imitator_mode with
 		(*** NOTE: very important: must set NOW the parameters ***)
 		bc_algo#set_max_tries nb;
 		bc_algo#set_algo_instance_function new_im_or_prp;
+		bc_algo#set_tiles_manager_type AlgoCartoGeneric.Tiles_list;
 		let myalgo :> AlgoGeneric.algoGeneric = bc_algo in
 		myalgo
 	

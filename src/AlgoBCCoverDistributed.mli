@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/03/04
- * Last modified     : 2016/04/01
+ * Last modified     : 2016/08/15
  *
  ************************************************************)
 
@@ -17,6 +17,7 @@
 (* Modules *)
 (************************************************************)
 open AlgoGeneric
+open AlgoCartoGeneric
 
 
 (************************************************************)
@@ -40,6 +41,12 @@ class virtual algoBCCoverDistributed :
 		(* Get the function creating a new instance of the algorithm to call (typically IM or PRP) *)
 		method get_algo_instance_function : (unit -> AlgoBFS.algoBFS)
 
+		(* Set the tiles_manager type *)
+		method set_tiles_manager_type : tiles_storage -> unit
+		
+		(* Get the tiles_manager type *)
+		method get_tiles_manager_type : tiles_storage
+		
 		
 		(************************************************************)
 		(* Class methods *)

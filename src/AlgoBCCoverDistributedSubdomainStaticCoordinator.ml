@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/03/17
- * Last modified     : 2016/03/23
+ * Last modified     : 2016/08/15
  *
  ************************************************************)
 
@@ -94,6 +94,9 @@ class algoBCCoverDistributedSubdomainStaticCoordinator =
 	method finalize bc_result =
 		self#print_algo_message Verbose_standard ( "Coordinator starting finalization");
 		
+		(* Create the manager *)
+		
+		
 		(* First add its own bc_result to the list *)
 		bc_results <- [bc_result];
 		
@@ -135,9 +138,16 @@ class algoBCCoverDistributedSubdomainStaticCoordinator =
 	
 		(* Now append all bc_results to make a unique bc_result *)
 		
-		let tiles = ref [] in
+		(* First create a manager *)
+		let tiles_manager = match self#get_tiles_manager_type with
+			| AlgoCartoGeneric.Tiles_list -> new TilesManagerList.tilesManagerList
+			| AlgoCartoGeneric.Tiles_good_bad_constraint -> raise (InternalError "not implemented yet")
+		in
+		(* Now initialize the tiles manager *)
+		tiles_manager#initialize;
+
 		let computation_time = ref 0. in
-		let find_point_time = ref 0. in
+(* 		let find_point_time = ref 0. in *)
 		let nb_unsuccessful_points = ref 0 in
 		(* Best possible value for coverage *)
 		let coverage = ref Coverage_full in
@@ -145,15 +155,19 @@ class algoBCCoverDistributedSubdomainStaticCoordinator =
 		let termination = ref BC_Regular_termination in
 		
 		(* Iterate on all received results *)
-		List.iter (fun bc_result -> 
-			(* Update tiles *)
-			tiles := List.rev_append !tiles bc_result.tiles;
+		List.iter (fun bc_result ->
+			(* Add all tiles to the manager *)
+(* 			tiles := List.rev_append !tiles bc_result.tiles; *)
+			List.iter (fun tile -> tiles_manager#process_tile tile) bc_result.tiles;
 			
 			(* Update computation_time *)
 			computation_time := !computation_time +. bc_result.computation_time;
 			
 			(* Update find_point_time *)
-			find_point_time := !find_point_time +. bc_result.find_point_time;
+			
+			(*** TODO: try to find a way to add it back (as it is likely lost for now) ***)
+			
+(* 			find_point_time := !find_point_time +. bc_result.find_point_time; *)
 			
 			(* Update nb_unsuccessful_points *)
 			nb_unsuccessful_points := !nb_unsuccessful_points + bc_result.nb_unsuccessful_points;
@@ -180,30 +194,8 @@ class algoBCCoverDistributedSubdomainStaticCoordinator =
 		(*** BADPROG: because Graphics will collect v0 directly from Input.get_v0, instead of bc_result ***)
 		Input.set_v0 original_v0;
 		
-		(* Return the bc_result *)
-		BC_result
-		{
-			size_v0				= original_nb_points;
-			
-			(* List of tiles *)
-			tiles				= !tiles;
-			
-			(* Total computation time of the algorithm *)
-			(*** NOTE: here the sum of all computation times (?) ***)
-			computation_time	= !computation_time;
-			
-			(* Computation time to look for points *)
-			find_point_time		= !find_point_time;
-			
-			(* Number of points on which IM could not be called because already covered *)
-			nb_unsuccessful_points= !nb_unsuccessful_points;
-			
-			(* Evaluation of the coverage of V0 by tiles computed by the cartography *)
-			coverage			= !coverage;
-			
-			(* Termination *)
-			termination			= !termination;
-		}
+		(* Ask the tiles manager to process the result itself, by passing the appropriate arguments *)
+		tiles_manager#process_result start_time original_nb_points !nb_unsuccessful_points !termination (Some !coverage)
 
 
 (************************************************************)

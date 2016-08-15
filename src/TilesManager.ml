@@ -4,11 +4,10 @@
  * 
  * LIPN, Université Paris 13, Sorbonne Paris Cité (France)
  * 
- * Module description: Classical Behavioral Cartography with exhaustive coverage of integer points [AF10]. Distribution mode: master-worker with shuffle distribution of points. [ACN15]
- * Master algorithm
+ * Module description: Abstract tiles manager class to manage the tiles received in the cartography algorithms.
  * 
  * File contributors : Étienne André
- * Created           : 2016/03/16
+ * Created           : 2016/08/15
  * Last modified     : 2016/08/15
  *
  ************************************************************)
@@ -19,14 +18,9 @@
 (* Modules *)
 (************************************************************)
 (************************************************************)
-open AlgoBCCover
+open OCamlUtilities
+open ImitatorUtilities
 
-
-(************************************************************)
-(************************************************************)
-(* Internal exceptions *)
-(************************************************************)
-(************************************************************)
 
 
 (************************************************************)
@@ -34,36 +28,43 @@ open AlgoBCCover
 (* Class definition *)
 (************************************************************)
 (************************************************************)
-class algoBCCoverDistributedMSShuffleMaster =
+class virtual tilesManager =
 	object (self)
-	inherit AlgoBCCoverDistributedMSPointBasedMaster.algoBCCoverDistributedMSPointBasedMaster as super
+	
 	
 	(************************************************************)
 	(* Class variables *)
 	(************************************************************)
 
 	
-	
 	(************************************************************)
 	(* Class methods *)
 	(************************************************************)
-
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Name of the algorithm *)
+	(* Initialize the manager *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method algorithm_name = "BC (full cov) distr MS shuffle MASTER"
-
+	method virtual initialize : unit
 	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(** Return a new instance of the underlying cartography algorithm (typically BCrandom or BCcover) *)
+	(* Get the number of results processed and stored *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method bc_instance =
-		let myalgo :> AlgoCartoGeneric.algoCartoGeneric = new AlgoBCShuffle.algoBCShuffle in
-		(* Important: set now the parameters *)
-		(* Set the instance of IM / PRP that was itself set from the current cartography class *)
-		myalgo#set_algo_instance_function self#get_algo_instance_function;
-		myalgo#set_tiles_manager_type self#get_tiles_manager_type;
-		myalgo
+	method virtual get_nb_results : int
+	
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(* Check if a parameter valuation belongs to the tiles *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	method virtual pval_in_tiles : PVal.pval -> bool
+
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(* Process a new tile, i.e., add it to the tiles *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	method virtual process_tile : Result.abstract_im_result -> unit
+
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(* Process the result of the cartography *)
+	(* If forced_coverage_option <> None, then the coverage is set to this argument; otherwise, it is computed as exepected (*** NOTE: used in Random to force the coverage to Unknown ***) *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	method virtual process_result : float -> NumConst.t -> int -> Result.bc_algorithm_termination -> Result.bc_coverage option -> Result.imitator_result
 
 
 (************************************************************)

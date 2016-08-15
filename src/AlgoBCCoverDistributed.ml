@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/03/04
- * Last modified     : 2016/04/01
+ * Last modified     : 2016/08/15
  *
  ************************************************************)
 
@@ -52,30 +52,46 @@ class virtual algoBCCoverDistributed =
 	(*** NOTE: this should be a parameter of the class; but cannot due to inheritance from AlgoGeneric ***)
 	val mutable algo_instance_function = None
 	
+	(*** BADPROG: code shared with AlgoCartoGeneric ***)
+	(* The type of the tiles manager *)
+	(*** NOTE: must be initialized first (and should be in the future passed as a class paramater) ***)
+	val mutable tiles_manager_type : AlgoCartoGeneric.tiles_storage option = None
 		
 	
 	(************************************************************)
 	(* Class methods to simulate class parameters *)
 	(************************************************************)
 	
-	(*** BADPROG: code shared with AlgoBCCoverDistributedMSPointBased ***)
+	(*** BADPROG: code shared with AlgoCartoGeneric ***)
 	(* Sets the function creating a new instance of the algorithm to call (typically IM or PRP) *)
 	method set_algo_instance_function (f : unit -> AlgoBFS.algoBFS) : unit =
 		match algo_instance_function with
 		| Some _ -> 
-			raise (InternalError("algo_instance_function was already set in algoBCCoverDistributedMSPointBased."))
+			raise (InternalError("algo_instance_function was already set in algoBCCoverDistributed."))
 		| None ->
 			algo_instance_function <- Some f
 	
-	(*** BADPROG: code shared with AlgoBCCoverDistributedMSPointBased ***)
+	(*** BADPROG: code shared with AlgoCartoGeneric ***)
 	(* Get the function creating a new instance of the algorithm to call (typically IM or PRP) *)
 	method get_algo_instance_function =
 		match algo_instance_function with
 		| Some f -> f
 		| None ->
-			raise (InternalError("algo_instance_function not yet set in algoBCCoverDistributedMSPointBased."))
+			raise (InternalError("algo_instance_function not yet set in algoBCCoverDistributed."))
 
-			
+	(*** BADPROG: code shared with AlgoCartoGeneric ***)
+	(* Set the tiles_manager type *)
+	method set_tiles_manager_type new_tiles_manager_type =
+		tiles_manager_type <- Some new_tiles_manager_type
+
+	(*** BADPROG: code shared with AlgoCartoGeneric ***)
+	(* Get the tiles_manager type *)
+	method get_tiles_manager_type =
+	match tiles_manager_type with
+		| Some t -> t
+		| None -> raise (InternalError("tiles_manager_type not yet set in algoBCCoverDistributed."))
+
+
 	(************************************************************)
 	(* Class methods *)
 	(************************************************************)

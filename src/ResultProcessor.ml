@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/12/03
- * Last modified     : 2016/08/13
+ * Last modified     : 2016/08/15
  *
  ************************************************************)
 
@@ -448,7 +448,7 @@ let general_bc_statistics bc_result =
 	^ "\nAverage number of transitions           : " ^ (round1_float average_nb_transitions)
     ^ "\nTotal computation time                  : " ^ (string_of_seconds bc_result.computation_time)
 	^ "\nTotal computation time (IM)             : " ^ (string_of_seconds time_im)
-	^ "\nTotal computation time (find point)     : " ^ (string_of_seconds bc_result.find_point_time)
+(* 	^ "\nTotal computation time (find point)     : " ^ (string_of_seconds bc_result.find_point_time) *)
 	^ "\nEstimated memory                        : " ^ (memory_used ())
 
 		
