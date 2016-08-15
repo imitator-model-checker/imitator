@@ -158,7 +158,7 @@ try(
 			print_message Verbose_low "Pick up the first 2 parameters to draw the cartography";
 			(* First check that there are at least 2 parameters *)
 			if model.nb_parameters < 2 then(
-				print_error "Could not plot cartography (which requires 2 parameters)";
+				print_error ("Could not plot cartography (which requires 2 parameters) because there is only " ^ (string_of_int model.nb_parameters) ^ " parameter.");
 				raise CartographyError
 			);
 			(* Choose the first 2 *)
