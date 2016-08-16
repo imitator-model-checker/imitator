@@ -8,7 +8,7 @@
  * Author:        Etienne Andre, Ulrich Kuehne
  * 
  * Created:       2010/07/05
- * Last modified: 2016/08/13
+ * Last modified: 2016/08/16
  *
  ****************************************************************)
 
@@ -191,7 +191,7 @@ try(
 	(* If cartography: find indices of first two variables with a parameter range *)
 	(*** TODO: better use an option "cartography mode" ***)
 	(*** TODO: take the projection into account! ***)
-		| Cover_cartography | Shuffle_cartography | Random_cartography _ | RandomSeq_cartography _ | Border_cartography ->
+		| Cover_cartography | Shuffle_cartography | Random_cartography _ | RandomSeq_cartography _ | Learning_cartography | Border_cartography ->
 			(* Retrieve the V0 *)
 			(*** NOTE: only retrieve here because, in other mode (e.g., EF or IM) this object is not defined ***)
 			let v0 = Input.get_v0 () in
