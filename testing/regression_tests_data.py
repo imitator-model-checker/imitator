@@ -10,7 +10,7 @@
 # Laboratoire d'Informatique de Paris Nord
 # Universite Paris 13, Sorbonne Paris Cite, France
 # Created      : 2015/10/23
-# Last modified: 2016/08/15
+# Last modified: 2016/08/16
 #************************************************************
 
 
@@ -628,28 +628,10 @@ END CONSTRAINT
 		] # end expectations
 	} # end test case
 	#------------------------------------------------------------
-	,
-	#------------------------------------------------------------
-	{
-		'purpose'    : 'FMTV challenge: Test EFnew with project-result',
-		'input_files': ['fmtv1A1-v2.imi'],
-		'options'    : '-mode EFnew -merge -incl -output-result',
-		'expectations' : [
-			{'file': 'fmtv1A1-v2.res' , 'content' : """
-BEGIN CONSTRAINT
-63 > e2e
-& e2e >= 0
-OR
-125*e2e > 18126
-END CONSTRAINT
-"""
-			} # end result file
-			,
-		] # end expectations
-	} # end test case
-	#------------------------------------------------------------
+	
 	,
 	
+
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test PDFC: very basic example without clocks',
@@ -4810,6 +4792,438 @@ Average number of transitions : 14.1
 	
 	#------------------------------------------------------------
 	{
+		'purpose'    : 'Test BC in mode cover (on the case study BC vs. PRPC)',
+		'input_files': ['diffBCPRPC.imi', 'diffBCPRPC.v0'],
+		'options'    : '-mode cover -no-random -output-result',
+		'expectations' : [
+			# NOTE: no other way for now that checking separately the constraints (because the computation times may of course differ)
+			{'file': 'diffBCPRPC.res' , 'content' : """
+(************************************************************)
+ Tile #1
+
+ Pi1:
+  p1 = 0
+& p2 = 0
+
+ K1:
+ p2 >= 0
+& p1 >= 0
+& 1 > p2
+& 1 > p1
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+Local number of states                  : 8
+Local number of transitions             : 12
+"""
+			} # end BC file
+			, 
+			{'file': 'diffBCPRPC.res' , 'content' : """
+(************************************************************)
+ Tile #2
+
+ Pi2:
+  p1 = 1
+& p2 = 0
+
+ K2:
+ p2 >= 0
+& p1 >= 1
+& 1 > p2
+& 2 > p1
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+Local number of states                  : 8
+Local number of transitions             : 12
+"""
+			} # end BC file
+			, 
+			{'file': 'diffBCPRPC.res' , 'content' : """
+(************************************************************)
+ Tile #3
+
+ Pi3:
+  p1 = 2
+& p2 = 0
+
+ K3:
+ p2 >= 0
+& p1 >= 2
+& 1 > p2
+& 3 > p1
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : bad
+------------------------------------------------------------
+Local number of states                  : 7
+Local number of transitions             : 10
+"""
+			} # end BC file
+			, 
+			{'file': 'diffBCPRPC.res' , 'content' : """
+(************************************************************)
+ Tile #4
+
+ Pi4:
+  p1 = 3
+& p2 = 0
+
+ K4:
+ p2 >= 0
+& p1 >= 3
+& 1 > p2
+& 4 >= p1
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : bad
+------------------------------------------------------------
+Local number of states                  : 7
+Local number of transitions             : 10
+"""
+			} # end BC file
+			,
+			{'file': 'diffBCPRPC.res' , 'content' : """
+(************************************************************)
+ Tile #5
+
+ Pi5:
+  p1 = 0
+& p2 = 1
+
+ K5:
+ p2 >= 1
+& p1 >= 0
+& 2 > p2
+& 1 > p1
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+Local number of states                  : 7
+Local number of transitions             : 11
+"""
+			} # end BC file
+			, 
+			{'file': 'diffBCPRPC.res' , 'content' : """
+(************************************************************)
+ Tile #6
+
+ Pi6:
+  p1 = 1
+& p2 = 1
+
+ K6:
+ p2 >= 1
+& p1 >= 1
+& 2 > p2
+& 2 > p1
+
+------------------------------------------------------------
+Constraint soundness                    : possible under-approximation
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+Local number of states                  : 8
+Local number of transitions             : 12
+"""
+			} # end BC file
+			, 
+			{'file': 'diffBCPRPC.res' , 'content' : """
+(************************************************************)
+ Tile #7
+
+ Pi7:
+  p1 = 2
+& p2 = 1
+
+ K7:
+ p2 >= 1
+& p1 >= 2
+& 2 > p2
+& 3 > p1
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : bad
+------------------------------------------------------------
+Local number of states                  : 7
+Local number of transitions             : 10
+"""
+			} # end BC file
+			, 
+			{'file': 'diffBCPRPC.res' , 'content' : """
+(************************************************************)
+ Tile #8
+
+ Pi8:
+  p1 = 3
+& p2 = 1
+
+ K8:
+ p2 >= 1
+& p1 >= 3
+& 2 > p2
+& 4 >= p1
+
+------------------------------------------------------------
+Constraint soundness                    : possible under-approximation
+Termination                             : regular termination
+Constraint nature                       : bad
+------------------------------------------------------------
+Local number of states                  : 7
+Local number of transitions             : 10
+"""
+			} # end BC file
+			,
+			{'file': 'diffBCPRPC.res' , 'content' : """
+(************************************************************)
+ Tile #9
+
+ Pi9:
+  p1 = 0
+& p2 = 2
+
+ K9:
+ p1 >= 0
+& p2 >= 2
+& 4 >= p2
+& 2 > p1
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : bad
+------------------------------------------------------------
+Local number of states                  : 7
+Local number of transitions             : 10
+"""
+			} # end BC file
+			, 
+			{'file': 'diffBCPRPC.res' , 'content' : """
+(************************************************************)
+ Tile #10
+
+ Pi10:
+  p1 = 2
+& p2 = 2
+
+ K10:
+ p1 >= 2
+& p2 >= 2
+& 4 >= p2
+& 4 >= p1
+
+------------------------------------------------------------
+Constraint soundness                    : possible under-approximation
+Termination                             : regular termination
+Constraint nature                       : bad
+------------------------------------------------------------
+Local number of states                  : 8
+Local number of transitions             : 11
+"""
+			} # end BC file
+			,
+			{'file': 'diffBCPRPC.res' , 'content' : """
+------------------------------------------------------------
+Number of integers in v0                : 25
+Number of tiles computed                : 10
+Coverage                                : integer-complete
+Termination                             : regular termination
+Number of unsuccessful points           : 15
+Average number of states                : 7.4
+Average number of transitions           : 10.8
+"""
+			} # end BC file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+	
+	,
+	
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test PRPC in mode cover (on the case study BC vs. PRPC)',
+		'input_files': ['diffBCPRPC.imi', 'diffBCPRPC.v0'],
+		'options'    : '-mode cover -PRP -no-random -output-result',
+		'expectations' : [
+			# NOTE: no other way for now that checking separately the constraints (because the computation times may of course differ)
+			{'file': 'diffBCPRPC.res' , 'content' : """
+(************************************************************)
+ Tile #1
+
+ Pi1:
+  p1 = 0
+& p2 = 0
+
+ K1:
+ p2 >= 0
+& p1 >= 0
+& 1 > p1
+& 1 > p2
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+Local number of states                  : 8
+Local number of transitions             : 12
+"""
+			} # end BC file
+			, 
+			{'file': 'diffBCPRPC.res' , 'content' : """
+(************************************************************)
+ Tile #2
+
+ Pi2:
+  p1 = 1
+& p2 = 0
+
+ K2:
+ p2 >= 0
+& 2 > p1
+& 1 > p2
+& p1 >= 1
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+Local number of states                  : 8
+Local number of transitions             : 12
+"""
+			} # end BC file
+			, 
+			{'file': 'diffBCPRPC.res' , 'content' : """
+(************************************************************)
+ Tile #3
+
+ Pi3:
+  p1 = 2
+& p2 = 0
+
+ K3:
+ p2 >= 0
+& 4 >= p2
+& 4 >= p1
+& p1 >= 2
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : bad
+------------------------------------------------------------
+Local number of states                  : 6
+Local number of transitions             : 9
+"""
+			} # end BC file
+			, 
+			{'file': 'diffBCPRPC.res' , 'content' : """
+(************************************************************)
+ Tile #4
+
+ Pi4:
+  p1 = 0
+& p2 = 1
+
+ K4:
+ p1 >= 0
+& 1 > p1
+& 2 > p2
+& p2 >= 1
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+Local number of states                  : 7
+Local number of transitions             : 11
+"""
+			} # end BC file
+			,
+			{'file': 'diffBCPRPC.res' , 'content' : """
+(************************************************************)
+ Tile #5
+
+ Pi5:
+  p1 = 1
+& p2 = 1
+
+ K5:
+ p1 >= 0
+& 2 > p1
+& 2 > p2
+& p2 >= 1
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+Local number of states                  : 8
+Local number of transitions             : 12
+"""
+			} # end BC file
+			, 
+			{'file': 'diffBCPRPC.res' , 'content' : """
+(************************************************************)
+ Tile #6
+
+ Pi6:
+  p1 = 0
+& p2 = 2
+
+ K6:
+ p1 >= 0
+& p2 >= 2
+& 4 >= p2
+& 4 >= p1
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : bad
+------------------------------------------------------------
+Local number of states                  : 7
+Local number of transitions             : 10
+"""
+			} # end BC file
+			, 
+			{'file': 'diffBCPRPC.res' , 'content' : """
+------------------------------------------------------------
+Number of integers in v0                : 25
+Number of tiles computed                : 6
+Coverage                                : integer-complete
+Termination                             : regular termination
+Number of unsuccessful points           : 19
+Average number of states                : 7.3
+Average number of transitions           : 11.0
+"""
+			} # end BC file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+	
+	,
+	
+	#------------------------------------------------------------
+	{
 		'purpose'    : 'Test PRPC in mode cover with depth limit (JLR15)',
 		'input_files': ['JLR-TACAS13.imi', 'JLR-TACAS13.v0'],
 		'options'    : '-mode cover -PRP -depth-limit 10 -output-result',
@@ -6133,7 +6547,31 @@ init := True
 		] # end expectations
 	} # end test case
 	#------------------------------------------------------------
-	#,
+	
+	,
+	
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'FMTV challenge: Test EFnew with project-result',
+		'input_files': ['fmtv1A1-v2.imi'],
+		'options'    : '-mode EFnew -merge -incl -output-result',
+		'expectations' : [
+			{'file': 'fmtv1A1-v2.res' , 'content' : """
+BEGIN CONSTRAINT
+63 > e2e
+& e2e >= 0
+OR
+125*e2e > 18126
+END CONSTRAINT
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+	
+	,
+	
 	##------------------------------------------------------------
 	#{
 		#'purpose'    : 'XXXX',
