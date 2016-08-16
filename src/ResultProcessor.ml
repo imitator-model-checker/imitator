@@ -906,7 +906,7 @@ let process_result result algorithm_name prefix_option =
 		(* Render zones in a graphical form *)
 		if options#cart then (
 			let zones = List.map (fun p_linear_constraint -> (LinearConstraint.Convex_p_constraint p_linear_constraint, StateSpace.Bad)) efsynth_result.constraints in
-			Graphics.draw_cartography zones (file_prefix ^ "_cart_ef")
+			Graphics.draw_cartography zones (file_prefix ^ "_cart")
 		) else (
 				print_message Verbose_high "Graphical cartography not asked: not drawn.";
 		);
