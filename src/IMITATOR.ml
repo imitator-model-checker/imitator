@@ -981,7 +981,7 @@ terminate_program();
 (**************************************************)
 (* PART 2 - CUB-PTA Transformation*)
 (**************************************************)
-
+(*
 let cub_check_3 invariant_s0 guard_t invariant_s1 clock_updates = 	
 	(*ppl*)
 	(* let inequalities_need_to_solve : (LinearConstraint.op * LinearConstraint.p_linear_term) list ref = ref [] in *)
@@ -1257,118 +1257,515 @@ let cub_check_3 invariant_s0 guard_t invariant_s1 clock_updates =
 
 	(!isCUB_PTA, !inequalities);
 	in
+*)
+
 
 
 (*Array of models*)
-let models = DynArray.make 0 in
-
-(*elements of a model*)
+let submodels = DynArray.make 0 in
+(*elements of a submodels*)
+(*initial*)
 let states = Hashtbl.create 0 in
 let transitions = DynArray.make 0 in
 let clocks_constraints = Hashtbl.create 0 in
 let parameters_constraints = DynArray.make 0 in
+(*initial - end*)
 
-(*main function for CUB-PTA*)
+
 (*covert input model into specific data stucture*)
-List.iter (fun automaton_index -> print_message Verbose_standard ("Automaton: " ^ (model.automata_names automaton_index) );
-
-		(*Checking bounded clocked in invariant (Location)*)
-        List.iter (fun location_index -> print_message Verbose_standard ("----------------Begin checking at " ^ (model.location_names automaton_index location_index) ^ "-------------------");
-
-        		print_message Verbose_standard ("\n");
-
-        		print_message Verbose_standard (" State/Location(S): " ^ (model.location_names automaton_index location_index) ) ;
-
-        		let invariant1 = model.invariants automaton_index location_index in
-        
-                print_message Verbose_standard ("   Invariant(S): " ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names invariant1 ) )  ;
-						
-
-						print_message Verbose_standard ("\n");
-
-                	(*Checking bounded clocked in guards (Transition)*)
-                	List.iter (fun action_index -> print_message Verbose_standard (" Transition/Action: " ^ (model.action_names action_index) );
-            
-                    	List.iter (fun (guard, clock_updates, _, destination_location_index) 
-                    		-> print_message Verbose_standard ("   Guard: " ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names guard));		
-
-                        	(** WORK HERE **)
-
-                        	let invariant2 = model.invariants automaton_index destination_location_index in
-
-							print_message Verbose_standard ("\n");
-                			print_message Verbose_standard (" State/Location(D): " ^ (model.location_names automaton_index destination_location_index) ) ;
-                			print_message Verbose_standard ("   Invariant(D): " ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names invariant2 ) ) ;
-                			print_message Verbose_standard ("	  ----Map:(" 
-                											^ (model.location_names automaton_index location_index) 
-                											^ ")--" ^ (model.action_names action_index) ^ "-->(" 
-                											^ (model.location_names automaton_index destination_location_index) 
-                											^ ") ----" );
-                			print_message Verbose_standard ("\n");
-
-                        	let clock_updates = match clock_updates with
-                        						  No_update -> []
-												| Resets clock_update -> clock_update
-												| Updates clock_update_with_linear_expression -> raise (InternalError(" Clock_update are not supported currently! ")); in
-
-
-							Hashtbl.add states (location_index, invariant1);
-							DynArray.add transitions (location_index, destination_location_index, guard, clock_updates);
-
-
-                			(* 
-                			let (result, inequalities) = cub_check_3 invariant1 guard invariant2 clock_updates in 
-                			
-                			inequalities_need_to_solve := !inequalities_need_to_solve@inequalities;
-                			if result = false
-							then
-    							isCUB_PTA := false;
-    						*)
-
-                			()
-
-                    	) (model.transitions automaton_index location_index action_index); 
-
-                	) (model.actions_per_location automaton_index location_index); 
-
-            		 print_message Verbose_standard ("----------------End checking " ^ (model.location_names automaton_index location_index) ^ "---------------------");
-
-            		 print_message Verbose_standard ("\n");
-
-        ) (model.locations_per_automaton automaton_index);
-
-        print_message Verbose_standard ("\n");
-
+List.iter (fun automaton_index -> 
+	print_message Verbose_standard ("Converting automaton: " 
+									^ (model.automata_names automaton_index) 
+									^ "!!!!!!!");
+	(*Checking bounded clocked in invariant (Location)*)
+    List.iter (fun location_index -> 
+    	print_message Verbose_standard ("----------------Begin at " ^ (model.location_names automaton_index location_index) ^ "-------------------");
+		print_message Verbose_standard ("\n");
+		print_message Verbose_standard (" State/Location(S): " ^ (model.location_names automaton_index location_index) ) ;
+		let invariant1 = model.invariants automaton_index location_index in
+		(*add states*)
+		Hashtbl.add states location_index invariant1;
+        print_message Verbose_standard ("   Invariant(S): " ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names invariant1 ) )  ;
+		print_message Verbose_standard ("\n");
+        	(*Checking bounded clocked in guards (Transition)*)
+        	List.iter (fun action_index -> print_message Verbose_standard (" Transition/Action: " ^ (model.action_names action_index) );
+    
+            	List.iter (fun (guard, clock_updates, _, destination_location_index) 
+            		-> print_message Verbose_standard ("   Guard: " ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names guard));		
+                	(** WORK HERE **)
+                	let invariant2 = model.invariants automaton_index destination_location_index in
+					print_message Verbose_standard ("\n");
+        			print_message Verbose_standard (" State/Location(D): " ^ (model.location_names automaton_index destination_location_index) ) ;
+        			print_message Verbose_standard ("   Invariant(D): " ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names invariant2 ) ) ;
+        			print_message Verbose_standard ("	  ----Map:(" 
+        											^ (model.location_names automaton_index location_index) 
+        											^ ")--" ^ (model.action_names action_index) ^ "-->(" 
+        											^ (model.location_names automaton_index destination_location_index) 
+        											^ ") ----" );
+        			print_message Verbose_standard ("\n");
+                	let clock_updates = match clock_updates with
+                						  No_update -> []
+										| Resets clock_update -> clock_update
+										| Updates clock_update_with_linear_expression -> raise (InternalError(" Clock_update are not supported currently! ")); 
+					in
+					(*add transitions*)
+					DynArray.add transitions (location_index, destination_location_index, guard, clock_updates);
+        			()
+            	) (model.transitions automaton_index location_index action_index); 
+        	) (model.actions_per_location automaton_index location_index); 
+    		print_message Verbose_standard ("----------------End converting " ^ (model.location_names automaton_index location_index) ^ "!!!---------------------");
+    		print_message Verbose_standard ("\n");
+    ) (model.locations_per_automaton automaton_index);
+    print_message Verbose_standard ("\n");
 ) model.automata;
+(*covert input model into specific data stucture - end*)
 
 
 
 
-let models_length = DynArray.length models in
-print_message Verbose_standard ("\n lenth of models: " ^ (string_of_int models_length) );
+(*generated_constraints: we describe Disjunction by a list of conjunction constraints*)
+let disjunction_constraints param_constraints =
+	let generated_constraints = ref [LinearConstraint.p_true_constraint ()] in
+	DynArray.iter ( fun (is_and, constraint_list) ->
+		if(is_and = true)
+		then
+			(
+				if List.length constraint_list <> 1
+				then raise (InternalError(" Conjunction constraint_list error! "));
+				generated_constraints := List.map (fun con -> 
+					LinearConstraint.p_intersection ([con]@constraint_list);
+				) !generated_constraints;
+			)
+		else 
+			(
+				if List.length constraint_list = 0
+				then raise (InternalError(" Disjunction constraint_list error! "));
+				let temp = ref [] in
+				List.iter (fun cons1 -> 
+					List.iter (fun cons2 ->
+						let con3 = LinearConstraint.p_intersection [cons1; cons2] in 
+						temp := !temp@[con3];
+					) !generated_constraints
+				) constraint_list;
+				generated_constraints := !temp;
+			);
+	) param_constraints;
+	!generated_constraints
+in
+(*generated_constraints: we describe Disjunction by a list of conjunction constraints - end*)
 
-DynArray.add models (states, transitions, clocks_constraints, parameters_constraints);
 
-let models_length = DynArray.length models in
-print_message Verbose_standard ("\n lenth of models: " ^ (string_of_int models_length) );
 
+(*set true constraint*)
+let true_constraint = LinearConstraint.p_true_constraint () in
+DynArray.add parameters_constraints (true,[true_constraint]); 
+(*Adding the first sub-model*)
+DynArray.add submodels (states, transitions, clocks_constraints, parameters_constraints);
+let submodels_length = DynArray.length submodels in
+print_message Verbose_standard ("\n Check lenth of submodels: " ^ (string_of_int submodels_length) );
+
+
+
+
+(*loop through each submodel*)
 let count_m = ref 1 in
-DynArray.iter ( fun model ->
-	print_message Verbose_standard ("\n Model: " ^ (string_of_int !count_m) );
-	let (states, transitions, clocks_constraints, parameters_constraints) = model in
+while (!count_m) <= (DynArray.length submodels) do
+	let submodel = DynArray.get submodels (!count_m-1) in
+	print_message Verbose_standard ("\n Sub-model no: " ^ (string_of_int !count_m) );
+	let (states, transitions, clocks_constraints, parameters_constraints) = submodel in
 
+	print_message Verbose_standard ("\n Number of states: " ^ (string_of_int (Hashtbl.length states)) );
+	print_message Verbose_standard ("\n Number of transitions: " ^ (string_of_int (DynArray.length transitions)) );
+
+	(*stage 1*)
 	let count_t = ref 1 in
 	DynArray.iter ( fun transition -> 
-		print_message Verbose_standard ("\n Transition: " ^ (string_of_int !count_t) );
+		print_message Verbose_standard ("\n Transition no: " ^ (string_of_int !count_t) );
+		let (location_index, destination_location_index, guard, clock_updates) = transition in
+
+		(*work here*)
+		let invariant_s0 = Hashtbl.find states location_index in
+		let guard_t = guard in
+		let invariant_s1 = Hashtbl.find states destination_location_index in
+		
+		(*ppl*)
+		(* let inequalities_need_to_solve : (LinearConstraint.op * LinearConstraint.p_linear_term) list ref = ref [] in *)
+		let inequalities = ref [] in
+		print_message Verbose_standard (" CUB transformation, Start:");
+		print_message Verbose_standard ("\n");
+		(*transform constraints into inequality lists*)
+		let inequalities_s0 = LinearConstraint.pxd_get_inequalities invariant_s0 in
+		let inequalities_t 	= LinearConstraint.pxd_get_inequalities guard_t in
+		let inequalities_s1 = LinearConstraint.pxd_get_inequalities invariant_s1 in
+		(*transform inequality list into tuple inequality list*)
+		print_message Verbose_standard (" **Beginning state/location** :");
+		let tuple_inequalities_s0 	= convert_inequality_list_2_tuple_list inequalities_s0 in
+		print_message Verbose_standard (" **Transition** :");
+		let tuple_inequalities_t 	= convert_inequality_list_2_tuple_list inequalities_t in
+		print_message Verbose_standard (" **Destination state/location** :");
+		let tuple_inequalities_s1 	= convert_inequality_list_2_tuple_list inequalities_s1 in
+
+		(*check inequalities for each clock c on s0 -t-> s1*)
+		List.iter (	fun clock_index -> 
+		 	let inequalities_need_to_solve = ref [] in
+		 	print_message Verbose_standard ("   Checking CUB condtions at clock (" ^ (model.variable_names clock_index) ^ "):");
+		 	(*get each element of tuple of each clock - NOTE: the input musts contain 1 upper-bounded*)
+		 	print_message Verbose_standard ("\n 	**Beginning state/location** :");
+			let (_, op_s0, linear_term_s0) 	= filter_upperbound_by_clock clock_index tuple_inequalities_s0 in
+			print_message Verbose_standard ("\n 	**Transition** :");
+			let (_, op_t, linear_term_t) 	= filter_upperbound_by_clock clock_index tuple_inequalities_t in
+			print_message Verbose_standard ("\n 	**Destination state/location** :");
+			let (_, op_s1, linear_term_s1) 	= filter_upperbound_by_clock clock_index tuple_inequalities_s1 in
+			(*get each element of tuple of each clock - end*)
+			(*convert back to constraint for each inequality*)
+			let clock_term = LinearConstraint.make_p_linear_term [NumConst.one,clock_index] NumConst.zero in
+			print_message Verbose_standard ("\n clock_term:" ^ (LinearConstraint.string_of_p_linear_term model.variable_names clock_term)); 
+			let linear_inequality_s0 = LinearConstraint.make_p_linear_inequality (LinearConstraint.sub_p_linear_terms clock_term linear_term_s0) op_s0 in
+			let constraint_s0 = LinearConstraint.make_p_constraint [linear_inequality_s0] in
+			let constraint_s0 = LinearConstraint.pxd_of_p_constraint constraint_s0 in
+			print_message Verbose_standard ("\n constraint_s0:" ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names constraint_s0)); 
+			let linear_inequality_t = LinearConstraint.make_p_linear_inequality (LinearConstraint.sub_p_linear_terms clock_term linear_term_t) op_t in
+			let constraint_t = LinearConstraint.make_p_constraint [linear_inequality_t] in
+			let constraint_t = LinearConstraint.pxd_of_p_constraint constraint_t in
+			print_message Verbose_standard ("\n constraint_t:" ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names constraint_t));
+			let linear_inequality_s1 = LinearConstraint.make_p_linear_inequality (LinearConstraint.sub_p_linear_terms clock_term linear_term_s1) op_s1 in
+			let constraint_s1 = LinearConstraint.make_p_constraint [linear_inequality_s1] in
+			let constraint_s1 = LinearConstraint.pxd_of_p_constraint constraint_s1 in
+			print_message Verbose_standard ("\n constraint_s1:" ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names constraint_s1));  
+			(*convert back to constraint for each inequality - end*)
+			print_message Verbose_standard ("\n");
+			print_message Verbose_standard ("Comparing: ");
+			(*just for printing*)
+			let s0_upperbound_str = (LinearConstraint.operator2string op_s0) ^ " " 
+									^ (LinearConstraint.string_of_p_linear_term model.variable_names linear_term_s0) in
+			let t_upperbound_str  = (LinearConstraint.operator2string op_t) ^ " " 
+									^ (LinearConstraint.string_of_p_linear_term model.variable_names linear_term_t) in
+			let s1_upperbound_str = (LinearConstraint.operator2string op_s1) ^ " " 
+									^ (LinearConstraint.string_of_p_linear_term model.variable_names linear_term_s1) in
+			print_message Verbose_standard (" 	 get upper-bound s0: " ^ s0_upperbound_str );
+			print_message Verbose_standard (" 	 get upper-bound t: " ^ t_upperbound_str );
+			print_message Verbose_standard (" 	 get upper-bound s1: " ^ s1_upperbound_str );
+			print_message Verbose_standard (" 	 evaluating: (" ^ s0_upperbound_str ^ ") <= (" ^ t_upperbound_str ^ ") /\\ (" ^ s1_upperbound_str ^ ")!");
+			(*just for printing - end*)
+			
+			(* let result = ref true in *)
+			let result = match (op_s0, linear_term_s0), (op_t, linear_term_t), (op_s1, linear_term_s1) with
+
+				|(LinearConstraint.Op_ge, _), (LinearConstraint.Op_ge, _), (LinearConstraint.Op_ge, _)	->	
+				 	(*Case 1*)
+				 	print_message Verbose_standard (" 	 Case 1 " );
+				 	true;
+				 	(*Case 1 - end*)
+
+				|(LinearConstraint.Op_ge, _), _							 , (LinearConstraint.Op_ge, _)	->	
+					(*Case 2*)
+					print_message Verbose_standard (" 	 Case 2 " );
+					false;
+					(*Case 2 - end*)
+
+				|(LinearConstraint.Op_ge, _), (LinearConstraint.Op_ge, _), _							->	
+					(*Case 3*)
+					(*reset*)
+					print_message Verbose_standard (" 	 Case 3 " );
+					if List.mem clock_index clock_updates = true
+					then
+						(
+						let _ = print_message Verbose_standard (" 	 Detected " 
+																^ (model.variable_names clock_index) 
+																^ " was a reset clock!\n 	 skipping the process: (" 
+																^ t_upperbound_str ^ ") /\\ (" ^ s1_upperbound_str 
+																^ ")!" ) 
+						in
+						true
+						)
+					else
+						(
+						false;
+						);
+					(*Case 3 - end*)
+
+				|(LinearConstraint.Op_ge, _), _							 , _							->
+					(*Case 4*)
+					(*reset but useless*)
+					print_message Verbose_standard (" 	 Case 4 " );
+					false; 
+					(*Case 4 - end*)
+
+				|_							, (LinearConstraint.Op_ge, _), (LinearConstraint.Op_ge, _)	->	
+					(*Case 5*)
+					print_message Verbose_standard (" 	 Case 5 " );
+					true;
+					(*Case 5 - end*)
+
+				|_							, _							 , (LinearConstraint.Op_ge, _)	->	
+					(*Case 6*)
+					print_message Verbose_standard (" 	 Case 6 " );
+					let ineq = make_CUB_inequality (op_s0, linear_term_s0) (op_t, linear_term_t) in
+					print_message Verbose_standard (" Forming inequality: " 
+													^ LinearConstraint.string_of_p_linear_inequality model.variable_names ineq 
+													^ "!!!\n");
+					let constr = make_CUB_constraint [ineq] in
+					
+					if LinearConstraint.p_is_true constr
+					then true
+					else
+						(
+						if LinearConstraint.p_is_false constr
+						then 
+							(*inequalities_need_to_solve := !inequalities_need_to_solve@[ineq];*)
+							false
+						else
+							(
+							inequalities_need_to_solve := !inequalities_need_to_solve@[ineq];
+							false;
+							);
+						);
+					(*Case 6 - end*)
+
+				|_							, (LinearConstraint.Op_ge, _), _							->	
+					(*Case 7*)
+					print_message Verbose_standard (" 	 Case 7 " );
+					(*reset*)
+					if List.mem clock_index clock_updates = true
+					then
+						(
+						let _ = print_message Verbose_standard (" 	 Detected " 
+														^ (model.variable_names clock_index) 
+														^ " was a reset clock!\n 	 skipping the process: (" 
+														^ t_upperbound_str ^ ") /\\ (" ^ s1_upperbound_str ^ ")!" ) 
+						in
+						true
+						)
+					else
+						(
+						let ineq = make_CUB_inequality (op_s0, linear_term_s0) (op_s1, linear_term_s1) in
+						print_message Verbose_standard (" Forming inequality: " ^ LinearConstraint.string_of_p_linear_inequality model.variable_names ineq ^ "!!!\n");
+						let constr = make_CUB_constraint [ineq] in
+						if LinearConstraint.p_is_true constr
+						then 
+							true
+						else
+							(
+							if LinearConstraint.p_is_false constr
+							then 
+								false
+							else
+								(
+								inequalities_need_to_solve := !inequalities_need_to_solve@[ineq];
+								false;
+								);
+							);
+						);
+					(*Case 7 - end*)
+																												
+
+				| _							, _							 , _							-> 	
+					(*Case 8*)
+					print_message Verbose_standard (" 	 Case 8 " );
+					(*reset*)
+					if List.mem clock_index clock_updates = true
+					then
+						(
+						print_message Verbose_standard (" 	 Detected " 
+														^ (model.variable_names clock_index) 
+														^ " was a reset clock!\n 	 skipping the process: (" 
+														^ t_upperbound_str ^ ") /\\ (" ^ s1_upperbound_str ^ ")!" ); 
+						
+						let ineq = make_CUB_inequality (op_s0, linear_term_s0) (op_t, linear_term_t) in
+						print_message Verbose_standard (" Forming inequality: " 
+														^ LinearConstraint.string_of_p_linear_inequality model.variable_names ineq ^ "!!!\n");
+						let constr = make_CUB_constraint [ineq] in
+						if LinearConstraint.p_is_true constr
+						then 
+							true
+							else
+							(
+							if LinearConstraint.p_is_false constr
+							then 
+								false
+							else
+								(
+								inequalities_need_to_solve := !inequalities_need_to_solve@[ineq];
+								false;
+								);
+							);
+						)
+					else
+						(
+						let ineq1 = make_CUB_inequality (op_s0, linear_term_s0) (op_t, linear_term_t) in
+						print_message Verbose_standard (" Forming inequality: " 
+														^ LinearConstraint.string_of_p_linear_inequality model.variable_names ineq1 ^ "!!!\n");
+						let ineq2 = make_CUB_inequality (op_s0, linear_term_s0) (op_s1, linear_term_s1) in
+						print_message Verbose_standard (" Forming inequality: " 
+														^ LinearConstraint.string_of_p_linear_inequality model.variable_names ineq2 ^ "!!!\n");
+						let constr = make_CUB_constraint [ineq1;ineq2] in
+						(*
+						let constr = LinearConstraint.make_pxd_constraint (inequalities_s0@inequalities_t@inequalities_s1) in
+							print_message Verbose_standard ("\n constr:" ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names constr)); 
+						(*testing ppl function*)
+						let constr_inter = LinearConstraint.pxd_intersection [constr] in
+							print_message Verbose_standard ("\n constr_inter:" ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names constr_inter)); 
+						let constr1 = LinearConstraint.make_p_constraint ([ineq1]) in
+							print_message Verbose_standard ("\n constr1:" ^ (LinearConstraint.string_of_p_linear_constraint model.variable_names constr1)); 
+						let constr2 = LinearConstraint.make_p_constraint ([ineq2]) in
+							print_message Verbose_standard ("\n constr2:" ^ (LinearConstraint.string_of_p_linear_constraint model.variable_names constr2)); 
+						let abc = LinearConstraint.pxd_is_leq invariant_s0 guard_t in
+							print_message Verbose_standard ("\n abc:" ^ string_of_bool abc ); 
+						(*testing ppl function*)
+						*)
+						if LinearConstraint.p_is_true constr
+						then 
+							(
+							print_message Verbose_standard (" true, comparable ");
+							true
+							)
+						else
+							(
+							if LinearConstraint.p_is_false constr
+							then 
+								(
+								print_message Verbose_standard (" false, comparable ");
+								(* inequalities_need_to_solve := !inequalities_need_to_solve@[ineq2]; *)
+								false
+								)
+							else
+								(
+								print_message Verbose_standard (" false, not determined ");
+
+								(*for checking the first parameters constraints*)
+								print_message Verbose_standard ("\n Showing current parameters constraints!!!! ");
+								DynArray.iter ( fun (is_and, constraint_list) ->
+									print_message Verbose_standard (" Is Disjunction: " ^ string_of_bool is_and ^ ": ");
+									List.iter (fun cons1 -> 
+										print_message Verbose_standard (" 	followed constraints: " 
+																^ (LinearConstraint.string_of_p_linear_constraint model.variable_names cons1) );
+									) constraint_list;
+								) parameters_constraints;
+								print_message Verbose_standard (" Showing current parameters constraints end!!!! ");
+								(*for checking the first parameters constraints - end*)
+
+								(*turn the messy parameters_constraints(mix of con and disjunction constrains) 
+								into list of disjucntion of conjunction constraints*)
+								let disjunction_cons = disjunction_constraints parameters_constraints in
+								(*show disjunction_cons*)
+								print_message Verbose_standard ("\n Disjunction constraints: " );
+								List.iter (fun con -> 
+									print_message Verbose_standard (LinearConstraint.string_of_p_linear_constraint model.variable_names con);
+								) disjunction_cons;
+								(*show disjunction_cons - end*)
+
+								(*check whether the current model conlicts with parameters constraints *)
+								let check = ref true in
+								List.iter (fun con -> 
+									let con_intersection = LinearConstraint.p_intersection [constr; con] in 
+									print_message Verbose_standard ("\n conjuncting: " 
+																^ (LinearConstraint.string_of_p_linear_constraint model.variable_names constr)
+																^ " (cub cons) and " 
+																^ (LinearConstraint.string_of_p_linear_constraint model.variable_names con)
+																^ " (params cons) = " 
+																^ (LinearConstraint.string_of_p_linear_constraint model.variable_names con_intersection) );
+									if LinearConstraint.p_is_false con_intersection
+									then
+										check := false;
+								) disjunction_cons;
+								(*check whether the current model conlicts with parameters constraints - end*)
+
+								if !check = false
+								then
+									(
+									print_message Verbose_standard ("\n Cub constraints conflicted with parameters constraints!!! " );
+									(*add new constraints into the clocks_constraints*)
+									print_message Verbose_standard (" Adding new constraints into clocks_constraints" );
+									let clocks_cons = LinearConstraint.pxd_intersection ([constraint_s0; constraint_t; constraint_s1]) in
+									Hashtbl.add clocks_constraints location_index clocks_cons;
+									print_message Verbose_standard (" Added constraints: " 
+																	^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names clocks_cons)  
+																	^ "\n at state: " 
+																	^ string_of_int location_index );
+
+									(*print_message Verbose_standard ("\n constr1:" ^ (LinearConstraint.string_of_p_linear_constraint model.variable_names constr1));*)
+									)
+								else
+									(
+									print_message Verbose_standard ("\n cub constraints did not conflict with parameters constraints!!! " );
+
+									(*Add First parameter constraints in the current submodel*)
+									(*inequalities_need_to_solve := !inequalities_need_to_solve@[ineq1;ineq2];*)
+									print_message Verbose_standard ("\n Add constraint " 
+																	^ (LinearConstraint.string_of_p_linear_constraint model.variable_names constr) 
+																	^ " into submodel ((parameters_constraints)) " 
+																	^ string_of_int (!count_m)  );
+									DynArray.add parameters_constraints (true, [constr]);
+
+
+									(*Create new submodel with Second constraint*)
+									
+									let (states1, transitions1, clocks_constraints1, parameters_constraints1) = DynArray.get submodels (!count_m -1) in
+									DynArray.add submodels (states1, transitions1, Hashtbl.create 0, DynArray.make 0);
+
+
+									let submodels_length = DynArray.length submodels in
+									print_message Verbose_standard ("\n Check lenth of submodels: " ^ (string_of_int submodels_length) );
+									let statesl, transitions1l, clocks_constraintsl, parameters_constraintsl = DynArray.last submodels in
+
+									let linear_term_1 = LinearConstraint.sub_p_linear_terms linear_term_s0 linear_term_t in
+									let linear_term_2 = LinearConstraint.sub_p_linear_terms linear_term_s0 linear_term_s1 in
+									let linear_inequality_1 = LinearConstraint.make_p_linear_inequality linear_term_1 LinearConstraint.Op_g in
+									let linear_inequality_2 = LinearConstraint.make_p_linear_inequality linear_term_2 LinearConstraint.Op_g in
+									let constr1 = LinearConstraint.make_p_constraint ([linear_inequality_1]) in
+									let constr2 = LinearConstraint.make_p_constraint ([linear_inequality_2]) in
+
+									print_message Verbose_standard (" Add constraint " 
+																	^ (LinearConstraint.string_of_p_linear_constraint model.variable_names constr1) 
+																	^ " into submodel (parameters_constraints) " 
+																	^ string_of_int (submodels_length)  );
+									print_message Verbose_standard (" Add constraint " 
+																	^ (LinearConstraint.string_of_p_linear_constraint model.variable_names constr2) 
+																	^ " into submodel (parameters_constraints) " 
+																	^ string_of_int (submodels_length)  );
+
+									DynArray.add parameters_constraintsl (false, [constr1;constr2]);
+
+									(*
+									(*add clocks_cons (not needed)*)
+									let clocks_cons = LinearConstraint.pxd_intersection ([constraint_s0;constraint_t;constraint_s1]) in
+									print_message Verbose_standard (" Add constraint " 
+																	^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names clocks_cons) 
+																	^ " into submodel (clocks_constraintsl) " 
+																	^ string_of_int (submodels_length)  );
+									Hashtbl.add clocks_constraintsl location_index clocks_cons;
+									print_message Verbose_standard ("\n constr1:" ^ (LinearConstraint.string_of_p_linear_constraint model.variable_names constr1)); 
+									(*add clocks_cons - end*)
+									*)
+
+									);
+
+								false;
+								
+
+								);
+							);
+						
+
+						);
+					(*Case 8 - end*)
+			in
+			
+
+		print_message Verbose_standard ("\n");
+		) model.clocks; 
+
+
+		(*work here - end*)
+
 		count_t := !count_t+1;
 		();
 	) transitions;
-	
+	(*stage 1 - end*)
+
 	count_m := !count_m+1;
 	();
-
-) models;
-
+done;
 
 
 
