@@ -1395,13 +1395,20 @@ let isContraintConflictsParametersConstraints con p_cons =
 	let check = ref true in
 	List.iter (fun con1 -> 
 		let con_intersection = LinearConstraint.p_intersection [con; con1] in 
+		print_message Verbose_standard ("\n Constraint1: \n" ^ (LinearConstraint.string_of_p_linear_constraint model.variable_names con)  
+										^ "\n Constraint2: \n" ^ (LinearConstraint.string_of_p_linear_constraint model.variable_names con1) );
 		if LinearConstraint.p_is_false con_intersection
 		then
+			(
+			print_message Verbose_standard ("\n Conflict!!! ");
 			check := false;
+			);
 	) disjunction_cons;
 	!check;
 in
 (*Check cub_contraint conflict with parameters_constraints - end*)
+
+
 
 
 
@@ -1472,7 +1479,7 @@ let getInfoCurrentModel submodel = let (states, transitions, clocks_constraints,
 								print_message Verbose_standard ("\n Current clocks constrains!!!!: ");
 								(
 								Hashtbl.iter (fun index cons -> 
-									print_message Verbose_standard ("\n Clock: " ^ (string_of_int index) );
+									print_message Verbose_standard ("\n Location: " ^ (string_of_int (index+1) ) );
 									
 									print_message Verbose_standard ("  Constraints: \n" 
 																^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names cons) );
@@ -2050,6 +2057,7 @@ while (!count_m) <= (DynArray.length submodels) do
 										let linear_inequality_2 = LinearConstraint.make_p_linear_inequality linear_term_2 LinearConstraint.Op_g in
 										let constr1 = LinearConstraint.make_p_constraint ([linear_inequality_1]) in
 										let constr2 = LinearConstraint.make_p_constraint ([linear_inequality_2]) in
+										
 										print_message Verbose_standard ("\n Add constraint " 
 																		^ (LinearConstraint.string_of_p_linear_constraint model.variable_names constr1) 
 																		^ " into submodel (parameters_constraints) " 
@@ -2069,6 +2077,7 @@ while (!count_m) <= (DynArray.length submodels) do
 											DynArray.add submodels (states, transitions, Hashtbl.create 0, new_parameters_constraints);
 											);
 
+										
 
 										);
 									);
@@ -2243,13 +2252,21 @@ while (!count_m) <= (DynArray.length submodels) do
 
 															let constr2 = LinearConstraint.make_p_constraint (!linear_inequality_2) in
 
-															print_message Verbose_standard (" Add constraint " 
+
+															let checkConflict2 = isContraintConflictsParametersConstraints constr2 new_parameters_constraints in
+															(
+															match checkConflict2 with
+															| true  -> print_message Verbose_standard ("\n conflict!!");
+
+															| false -> print_message Verbose_standard ("\n not conflict!!");
+																				DynArray.add new_parameters_constraints (false, [constr2]);
+																				print_message Verbose_standard (" Add constraint " 
 																							^ (LinearConstraint.string_of_p_linear_constraint model.variable_names constr2) 
 																							^ " into submodel (parameters_constraints) " 
 																							^ string_of_int ((DynArray.length submodels) +1) );
+															);
 
-															DynArray.add new_parameters_constraints (false, [constr2]);
-															if is_parameters_constraints_false new_parameters_constraints
+															if (is_parameters_constraints_false new_parameters_constraints) || checkConflict2
 															then 
 																(
 																print_message Verbose_standard ("\n New parameters relations all False!!!, not created new submodel!!");
@@ -2258,6 +2275,7 @@ while (!count_m) <= (DynArray.length submodels) do
 																(
 																DynArray.add submodels (states, transitions, Hashtbl.create 0, new_parameters_constraints);
 																);
+
 															);
 														);
 													);
@@ -2352,12 +2370,23 @@ while (!count_m) <= (DynArray.length submodels) do
 															let linear_term_1 = LinearConstraint.sub_p_linear_terms linear_term_s0 linear_term_t in
 															let linear_inequality_1 = LinearConstraint.make_p_linear_inequality linear_term_1 LinearConstraint.Op_g in
 															let constr1 = LinearConstraint.make_p_constraint ([linear_inequality_1]) in
-															print_message Verbose_standard ("\n Add constraint " 
-																							^ (LinearConstraint.string_of_p_linear_constraint model.variable_names constr1) 
-																							^ " into submodel (parameters_constraints) " 
-																							^ string_of_int ((DynArray.length submodels) +1) );
-															DynArray.add new_parameters_constraints (false, [constr1]);
-															if is_parameters_constraints_false new_parameters_constraints
+
+
+															let checkConflict1 = isContraintConflictsParametersConstraints constr1 new_parameters_constraints in
+															(
+															match checkConflict1 with
+															| true   -> print_message Verbose_standard ("\n conflict!!");
+
+															| false  -> print_message Verbose_standard ("\n conflict!!");
+																		DynArray.add new_parameters_constraints (false, [constr1]);
+																		print_message Verbose_standard ("\n Add constraint " 
+																					^ (LinearConstraint.string_of_p_linear_constraint model.variable_names constr1) 
+																					^ " into submodel (parameters_constraints) " 
+																					^ string_of_int ((DynArray.length submodels) +1) );
+
+															);
+
+															if ( (is_parameters_constraints_false new_parameters_constraints) || checkConflict1 )
 															then 
 																(
 																print_message Verbose_standard ("\n New parameters relations all False!!!, not created new submodel!!");
@@ -2366,6 +2395,8 @@ while (!count_m) <= (DynArray.length submodels) do
 																(
 																DynArray.add submodels (states, transitions, Hashtbl.create 0, new_parameters_constraints);
 																);
+
+
 															);
 														);
 													);
@@ -2481,8 +2512,42 @@ while (!count_m) <= (DynArray.length submodels) do
 																							^ " into submodel (parameters_constraints) " 
 																							^ string_of_int ((DynArray.length submodels) +1) );
 
-															DynArray.add new_parameters_constraints (false, [constr1;constr2]);
-															if is_parameters_constraints_false new_parameters_constraints
+
+															(* DynArray.add new_parameters_constraints (false, [constr1;constr2]); *)
+
+															let checkConflict1 = isContraintConflictsParametersConstraints constr1 new_parameters_constraints in
+															let checkConflict2 = isContraintConflictsParametersConstraints constr2 new_parameters_constraints in
+															(
+															match (checkConflict1, checkConflict2) with
+															| (true , true)  -> print_message Verbose_standard ("\n 1 2 conflict!!");
+
+															| (false, true)  -> print_message Verbose_standard ("\n 2 conflict!!");
+																				DynArray.add new_parameters_constraints (false, [constr1]);
+																				print_message Verbose_standard ("\n Add constraint " 
+																							^ (LinearConstraint.string_of_p_linear_constraint model.variable_names constr1) 
+																							^ " into submodel (parameters_constraints) " 
+																							^ string_of_int ((DynArray.length submodels) +1) );
+
+															| (true , false) -> print_message Verbose_standard ("\n 1 conflict!!");
+																				DynArray.add new_parameters_constraints (false, [constr2]);
+																				print_message Verbose_standard (" Add constraint " 
+																							^ (LinearConstraint.string_of_p_linear_constraint model.variable_names constr2) 
+																							^ " into submodel (parameters_constraints) " 
+																							^ string_of_int ((DynArray.length submodels) +1) );
+
+															| (false, false) -> print_message Verbose_standard ("\n not conflict!!");
+																				DynArray.add new_parameters_constraints (false, [constr1;constr2]);
+																				print_message Verbose_standard ("\n Add constraint " 
+																							^ (LinearConstraint.string_of_p_linear_constraint model.variable_names constr1) 
+																							^ " into submodel (parameters_constraints) " 
+																							^ string_of_int ((DynArray.length submodels) +1) );
+																				print_message Verbose_standard (" Add constraint " 
+																							^ (LinearConstraint.string_of_p_linear_constraint model.variable_names constr2) 
+																							^ " into submodel (parameters_constraints) " 
+																							^ string_of_int ((DynArray.length submodels) +1) );
+															);
+
+															if (is_parameters_constraints_false new_parameters_constraints) || (checkConflict1 && checkConflict2)
 															then 
 																(
 																print_message Verbose_standard ("\n New parameters relations all False!!!, not created new submodel!!");
@@ -2528,9 +2593,8 @@ done;
 (*models summary*)
 print_message Verbose_standard ("\n ----------------------------Models Summary------------------------------- ");
 print_message Verbose_standard ("\n Number of models: " ^ (string_of_int (DynArray.length submodels) ) );
-
+let model_count = ref 1 in
 DynArray.iter (fun (states, transitions, c_constraints, parameters_constraints) ->
-	let model_count = ref 1 in
 
 	print_message Verbose_standard ("\n ----------------------Sub Model "^ (string_of_int !model_count) ^"----------------------------- " );
 
@@ -2547,7 +2611,7 @@ DynArray.iter (fun (states, transitions, c_constraints, parameters_constraints) 
 
 	print_message Verbose_standard ("\n Showing clocks constraints!!!! ");
 	Hashtbl.iter (fun i c -> 
-		print_message Verbose_standard ("\n Location: " ^ (string_of_int i) ^ " (will be a new state) with constraint: \n" 
+		print_message Verbose_standard ("\n Location: " ^ (string_of_int (i +1) ) ^ " (will be a new state) with constraint: \n" 
 										^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names c) ); 
 	) c_constraints;
 
