@@ -1743,20 +1743,7 @@ while (!count_m) <= (DynArray.length submodels) do
 						print_message Verbose_standard (" Inequality s0 <= s1: \n" 
 														^ LinearConstraint.string_of_p_linear_inequality model.variable_names ineq2 ^ "!!!\n");
 						let constr = make_CUB_constraint [ineq1;ineq2] in
-						(*
-						let constr = LinearConstraint.make_pxd_constraint (inequalities_s0@inequalities_t@inequalities_s1) in
-							print_message Verbose_standard ("\n constr:" ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names constr)); 
-						(*testing ppl function*)
-						let constr_inter = LinearConstraint.pxd_intersection [constr] in
-							print_message Verbose_standard ("\n constr_inter:" ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names constr_inter)); 
-						let constr1 = LinearConstraint.make_p_constraint ([ineq1]) in
-							print_message Verbose_standard ("\n constr1:" ^ (LinearConstraint.string_of_p_linear_constraint model.variable_names constr1)); 
-						let constr2 = LinearConstraint.make_p_constraint ([ineq2]) in
-							print_message Verbose_standard ("\n constr2:" ^ (LinearConstraint.string_of_p_linear_constraint model.variable_names constr2)); 
-						let abc = LinearConstraint.pxd_is_leq invariant_s0 guard_t in
-							print_message Verbose_standard ("\n abc:" ^ string_of_bool abc ); 
-						(*testing ppl function*)
-						*)
+
 						if LinearConstraint.p_is_true constr
 						then 
 							(
@@ -1770,6 +1757,8 @@ while (!count_m) <= (DynArray.length submodels) do
 								(
 								print_message Verbose_standard (" false, comparable ");
 								(* inequalities_need_to_solve := !inequalities_need_to_solve@[ineq2]; *)
+								let clock_cons = LinearConstraint.pxd_intersection ([constraint_s0; constraint_t; constraint_s1]) in
+								Hashtbl.add clocks_constraints location_index clock_cons;
 								false
 								)
 							else
@@ -1926,6 +1915,8 @@ while (!count_m) <= (DynArray.length submodels) do
 												(
 												print_message Verbose_standard (" false, comparable ");
 												(* inequalities_need_to_solve := !inequalities_need_to_solve@[ineq2]; *)
+												let clock_cons = LinearConstraint.pxd_intersection ([constraint_s0; constraint_t; constraint_s1]) in
+												Hashtbl.add clocks_constraints location_index clock_cons;
 												)
 											else
 												(
@@ -2141,7 +2132,20 @@ terminate_program()
 
 
 
-
+(*
+let constr = LinearConstraint.make_pxd_constraint (inequalities_s0@inequalities_t@inequalities_s1) in
+	print_message Verbose_standard ("\n constr:" ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names constr)); 
+(*testing ppl function*)
+let constr_inter = LinearConstraint.pxd_intersection [constr] in
+	print_message Verbose_standard ("\n constr_inter:" ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names constr_inter)); 
+let constr1 = LinearConstraint.make_p_constraint ([ineq1]) in
+	print_message Verbose_standard ("\n constr1:" ^ (LinearConstraint.string_of_p_linear_constraint model.variable_names constr1)); 
+let constr2 = LinearConstraint.make_p_constraint ([ineq2]) in
+	print_message Verbose_standard ("\n constr2:" ^ (LinearConstraint.string_of_p_linear_constraint model.variable_names constr2)); 
+let abc = LinearConstraint.pxd_is_leq invariant_s0 guard_t in
+	print_message Verbose_standard ("\n abc:" ^ string_of_bool abc ); 
+(*testing ppl function*)
+*)
 
 
 
