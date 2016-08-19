@@ -2174,7 +2174,10 @@ while (!count_m) <= (DynArray.length submodels) do
 											let check2 = isConstraintContainedInClocksConstraints location_index clock_cons clocks_constraints in
 											if check2 = false 
 											then
-											Hashtbl.add clocks_constraints location_index clock_cons;
+												(
+												Hashtbl.add clocks_constraints location_index clock_cons;
+												adding := true;
+												)
 											);
 										(*Case 1 - end*)
 
@@ -2191,7 +2194,10 @@ while (!count_m) <= (DynArray.length submodels) do
 										let check2 = (isConstraintContainedInClocksConstraints location_index !clock_cons clocks_constraints) in
 										if check2 = false 
 										then
-										Hashtbl.add clocks_constraints location_index !clock_cons;
+											(
+											Hashtbl.add clocks_constraints location_index !clock_cons;
+											adding := true;
+											);
 										(*Case 2 - end*)
 
 									|_							, (LinearConstraint.Op_ge, _)	->	
@@ -2200,9 +2206,6 @@ while (!count_m) <= (DynArray.length submodels) do
 										if (List.mem clock_index clock_updates) = false
 										then
 											(
-
-											(*form parameters relation*)
-											(* let ineq1 = make_CUB_inequality (op_s0, linear_term_s0) (op_t, linear_term_t) in *)
 
 											let ineq2 = ref [] in
 											List.iter (fun  (_, op_s1, linear_term_s1) ->
@@ -2220,16 +2223,18 @@ while (!count_m) <= (DynArray.length submodels) do
 												)
 											else
 												(
+												let clock_cons = LinearConstraint.pxd_intersection ([constraint_s0; c_s1]) in
+												let check2 = isConstraintContainedInClocksConstraints location_index clock_cons clocks_constraints in
 												if LinearConstraint.p_is_false cub_cons
 												then 
 													(
 													print_message Verbose_standard (" false, comparable ");
-													(* inequalities_need_to_solve := !inequalities_need_to_solve@[ineq2]; *)
-													let clock_cons = LinearConstraint.pxd_intersection ([constraint_s0; c_s1]) in
-													let check2 = isConstraintContainedInClocksConstraints location_index clock_cons clocks_constraints in
 													if check2 = false 
 													then
-													Hashtbl.add clocks_constraints location_index clock_cons;
+														(
+														Hashtbl.add clocks_constraints location_index clock_cons;
+														adding := true;
+														);
 													)
 												else
 													(
@@ -2238,10 +2243,6 @@ while (!count_m) <= (DynArray.length submodels) do
 													(*get submodel info*)
 													getInfoCurrentModel submodel;
 													let check1 = isContraintConflictsParametersConstraints cub_cons parameters_constraints in
-													let clock_cons = LinearConstraint.pxd_intersection ([constraint_s0; c_s1]) in
-													(* print_message Verbose_standard ("\n Gather required constraint for check 2: " 
-																					^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names clock_cons) ); *)
-													let check2 = isConstraintContainedInClocksConstraints location_index clock_cons clocks_constraints in
 													let check3 = isConstraintContainedInParametersConstraints cub_cons parameters_constraints in
 
 													print_message Verbose_standard ("\n Check 1 - CUB-Cons conflicted with parameters relation: " ^ string_of_bool check1
@@ -2384,7 +2385,10 @@ while (!count_m) <= (DynArray.length submodels) do
 													print_message Verbose_standard (" false, comparable ");
 													if check2 = false 
 													then
-													Hashtbl.add clocks_constraints location_index clock_cons;
+														(
+														Hashtbl.add clocks_constraints location_index clock_cons;
+														adding := true;
+														);
 													)
 												else
 													(
@@ -2511,7 +2515,10 @@ while (!count_m) <= (DynArray.length submodels) do
 													print_message Verbose_standard (" false, comparable ");
 													if check2 = false 
 													then
-													Hashtbl.add clocks_constraints location_index clock_cons;
+														(
+														Hashtbl.add clocks_constraints location_index clock_cons;
+														adding := true;
+														);
 													)
 												else
 													(
