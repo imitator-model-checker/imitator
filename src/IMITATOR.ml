@@ -2256,7 +2256,6 @@ while (!count_m) <= (DynArray.length submodels) do
 															(
 															print_message Verbose_standard ("\n Cub constraints conflicted with parameters constraints!!! " );
 															print_message Verbose_standard (" Adding new clocks constraints" );
-															Hashtbl.add clocks_constraints location_index clock_cons;
 
 															(* test *)
 															let new_parameters_constraints = DynArray.copy parameters_constraints in
