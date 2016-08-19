@@ -1729,7 +1729,7 @@ while (!count_m) <= (DynArray.length submodels) do
 							if check1 = true
 							then
 								(
-								if check2 = false
+								(* if check2 = false
 								then
 									(
 									print_message Verbose_standard ("\n Cub constraints conflicted with parameters constraints!!! " );
@@ -1740,7 +1740,7 @@ while (!count_m) <= (DynArray.length submodels) do
 																	^ "\n at state: " 
 																	^ string_of_int location_index );
 									adding := true; 
-									);
+									); *)
 								)
 							else
 								(
@@ -1771,7 +1771,9 @@ while (!count_m) <= (DynArray.length submodels) do
 										)
 									else
 										(
-										DynArray.add submodels (states, transitions, Hashtbl.create 0, new_parameters_constraints);
+										let new_clocks_constraints = Hashtbl.create 0 in
+										Hashtbl.add new_clocks_constraints location_index clock_cons;
+										DynArray.add submodels (states, transitions, new_clocks_constraints, new_parameters_constraints);
 										);
 									);
 								);
@@ -1838,7 +1840,7 @@ while (!count_m) <= (DynArray.length submodels) do
 								if check1 = true
 								then
 									(
-									if check2 = false
+									(* if check2 = false
 									then
 										(
 										print_message Verbose_standard ("\n Cub constraints conflicted with parameters constraints!!! " );
@@ -1849,7 +1851,7 @@ while (!count_m) <= (DynArray.length submodels) do
 																		^ "\n at state: " 
 																		^ string_of_int location_index );
 										adding := true; 
-										);
+										); *)
 									)
 								else
 									(
@@ -1880,7 +1882,9 @@ while (!count_m) <= (DynArray.length submodels) do
 											)
 										else
 											(
-											DynArray.add submodels (states, transitions, Hashtbl.create 0, new_parameters_constraints);
+											let new_clocks_constraints = Hashtbl.create 0 in
+											Hashtbl.add new_clocks_constraints location_index clock_cons;
+											DynArray.add submodels (states, transitions, new_clocks_constraints, new_parameters_constraints);
 											);
 										);
 									);
@@ -1944,7 +1948,7 @@ while (!count_m) <= (DynArray.length submodels) do
 								if check1 = true
 								then
 									(
-									if check2 = false
+									(* if check2 = false
 									then
 										(
 										print_message Verbose_standard ("\n Cub constraints conflicted with parameters constraints!!! " );
@@ -1955,7 +1959,7 @@ while (!count_m) <= (DynArray.length submodels) do
 																		^ "\n at state: " 
 																		^ string_of_int location_index );
 										adding := true; 
-										);
+										); *)
 									)
 								else
 									(
@@ -1986,7 +1990,9 @@ while (!count_m) <= (DynArray.length submodels) do
 											)
 										else
 											(
-											DynArray.add submodels (states, transitions, Hashtbl.create 0, new_parameters_constraints);
+											let new_clocks_constraints = Hashtbl.create 0 in
+											Hashtbl.add new_clocks_constraints location_index clock_cons;
+											DynArray.add submodels (states, transitions, new_clocks_constraints, new_parameters_constraints);
 											);
 										);
 									);
@@ -2041,7 +2047,7 @@ while (!count_m) <= (DynArray.length submodels) do
 								if check1 = true
 								then
 									(
-									if check2 = false
+									(* if check2 = false
 									then
 										(
 										print_message Verbose_standard ("\n Cub constraints conflicted with parameters constraints!!! " );
@@ -2052,7 +2058,7 @@ while (!count_m) <= (DynArray.length submodels) do
 																		^ "\n at state: " 
 																		^ string_of_int location_index );
 										adding := true; 
-										);
+										); *)
 									)
 								else
 									(
@@ -2090,7 +2096,9 @@ while (!count_m) <= (DynArray.length submodels) do
 											)
 										else
 											(
-											DynArray.add submodels (states, transitions, Hashtbl.create 0, new_parameters_constraints);
+											let new_clocks_constraints = Hashtbl.create 0 in
+											Hashtbl.add new_clocks_constraints location_index clock_cons;
+											DynArray.add submodels (states, transitions, new_clocks_constraints, new_parameters_constraints);
 											);
 										);
 									);
@@ -2284,7 +2292,9 @@ while (!count_m) <= (DynArray.length submodels) do
 																)
 															else
 																(
-																DynArray.add submodels (states, transitions, Hashtbl.create 0, new_parameters_constraints);
+																let new_clocks_constraints = Hashtbl.create 0 in
+																Hashtbl.add new_clocks_constraints location_index clock_cons;
+																DynArray.add submodels (states, transitions, new_clocks_constraints, new_parameters_constraints);
 																);
 
 															);
@@ -2303,6 +2313,7 @@ while (!count_m) <= (DynArray.length submodels) do
 										if List.mem clock_index clock_updates = true
 										then
 											(
+											(* reset zone *)
 											print_message Verbose_standard (" 	 Detected " 
 																			^ (model.variable_names clock_index) 
 																			^ " was a reset clock!\n 	 skipping the process: (" 
@@ -2409,7 +2420,9 @@ while (!count_m) <= (DynArray.length submodels) do
 																)
 															else
 																(
-																DynArray.add submodels (states, transitions, Hashtbl.create 0, new_parameters_constraints);
+																let new_clocks_constraints = Hashtbl.create 0 in
+																Hashtbl.add new_clocks_constraints location_index clock_cons;
+																DynArray.add submodels (states, transitions, new_clocks_constraints, new_parameters_constraints);
 																);
 
 
@@ -2418,11 +2431,11 @@ while (!count_m) <= (DynArray.length submodels) do
 													);
 												);
 
-
+											(* reset zone - end *)
 											)
 										else
 											(
-
+											(* none reset zone *)
 											(*form parameters relation*)
 											let ineq1 = make_CUB_inequality (op_s0, linear_term_s0) (op_t, linear_term_t) in
 
@@ -2486,11 +2499,12 @@ while (!count_m) <= (DynArray.length submodels) do
 																							^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names clock_cons)  
 																							^ "\n at state: " 
 																							^ string_of_int location_index );
-
+															(* test *)
+															DynArray.add parameters_constraints (true, [cub_cons]);
 															
 															adding := true;
 															)
-														else
+														(* else
 															(
 															(* test *)
 															let new_parameters_constraints = DynArray.copy parameters_constraints in
@@ -2510,26 +2524,47 @@ while (!count_m) <= (DynArray.length submodels) do
 															let constr1 = LinearConstraint.make_p_constraint ([linear_inequality_1]) in
 															let constr2 = LinearConstraint.make_p_constraint (!linear_inequality_2) in
 
-															print_message Verbose_standard ("\n Add constraint " 
-																							^ (LinearConstraint.string_of_p_linear_constraint model.variable_names constr1) 
-																							^ " into submodel (parameters_constraints) " 
-																							^ string_of_int ((DynArray.length submodels) +1) );
-															print_message Verbose_standard (" Add constraint " 
-																							^ (LinearConstraint.string_of_p_linear_constraint model.variable_names constr2) 
-																							^ " into submodel (parameters_constraints) " 
-																							^ string_of_int ((DynArray.length submodels) +1) );
-
-
 															DynArray.add parameters_constraints (false, [constr1;constr2]);
 															(* LinearConstraint.p_intersection *)
-
-
 															(* test - end *)
-															);
+															); *)
 
 														)
 													else
 														(
+														(* test *)
+														let new_parameters_constraints = DynArray.copy parameters_constraints in
+
+														let linear_term_1 = LinearConstraint.sub_p_linear_terms linear_term_s0 linear_term_t in
+														let linear_term_2 = ref [] in
+														List.iter (fun  (_, op_s1, linear_term_s1) ->
+															linear_term_2 := !linear_term_2@[(LinearConstraint.sub_p_linear_terms linear_term_s0 linear_term_s1)];
+														) tuple_inequalities_s1;
+
+														let linear_inequality_1 = LinearConstraint.make_p_linear_inequality linear_term_1 LinearConstraint.Op_g in
+														let linear_inequality_2 = ref [] in
+														List.iter (fun term ->
+															linear_inequality_2 := !linear_inequality_2@[(LinearConstraint.make_p_linear_inequality term LinearConstraint.Op_g)];
+														) !linear_term_2;
+
+														let constr1 = LinearConstraint.make_p_constraint ([linear_inequality_1]) in
+														let constr2 = LinearConstraint.make_p_constraint (!linear_inequality_2) in
+
+														let conj =  (LinearConstraint.p_intersection [constr1;constr2]) in
+														let check = isContraintConflictsParametersConstraints conj parameters_constraints in
+
+														if check
+														then
+															(
+															DynArray.add parameters_constraints (false, [constr1;constr2]);
+															);
+														(* LinearConstraint.p_intersection *)
+														(* test - end *)
+
+
+
+
+
 														if check3 = false
 														then
 															(
@@ -2611,13 +2646,16 @@ while (!count_m) <= (DynArray.length submodels) do
 																)
 															else
 																(
-																DynArray.add submodels (states, transitions, Hashtbl.create 0, new_parameters_constraints);
+																let new_clocks_constraints = Hashtbl.create 0 in
+																Hashtbl.add new_clocks_constraints location_index clock_cons;
+																DynArray.add submodels (states, transitions, new_clocks_constraints, new_parameters_constraints);
 																);
 															(* print_message Verbose_standard ("\n Check lenth of submodels: " ^ (string_of_int (DynArray.length submodels)) ); *)
 															);
 														);
 													);
 												);
+											(* none reset zone *)
 											);
 											(*Case 4 - end*)
 								);
@@ -2626,7 +2664,7 @@ while (!count_m) <= (DynArray.length submodels) do
 					) constraints_s1;
 				);
 			(*check 2 - end*)
-			print_message Verbose_standard ("\n --------------------1st check end----------------------- ");
+			print_message Verbose_standard ("\n --------------------2nd check end----------------------- ");
 			
 		print_message Verbose_standard ("\n");
 		) model.clocks; 
