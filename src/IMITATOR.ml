@@ -1278,71 +1278,6 @@ let cub_check_3 invariant_s0 guard_t invariant_s1 clock_updates =
 	(!isCUB_PTA, !inequalities);
 	in
 *)
-
-
-
-(*Array of models*)
-let submodels = DynArray.make 0 in
-(*elements of a submodels*)
-(*initial*)
-let states_ini = Hashtbl.create 0 in
-let transitions_ini = DynArray.make 0 in
-let clocks_constraints_ini = Hashtbl.create 0 in
-let parameters_constraints_ini = DynArray.make 0 in
-(*initial - end*)
-
-
-(*covert input model into specific data stucture*)
-List.iter (fun automaton_index -> 
-	print_message Verbose_standard ("Converting automaton: " 
-									^ (model.automata_names automaton_index) 
-									^ "!!!!!!!");
-	(*Checking bounded clocked in invariant (Location)*)
-    List.iter (fun location_index -> 
-    	print_message Verbose_standard ("----------------Begin at " ^ (model.location_names automaton_index location_index) ^ "-------------------");
-		print_message Verbose_standard ("\n");
-		print_message Verbose_standard (" State/Location(S): " ^ (model.location_names automaton_index location_index) ) ;
-		let invariant1 = model.invariants automaton_index location_index in
-		(*add states*)
-		Hashtbl.add states_ini location_index invariant1;
-        print_message Verbose_standard ("   Invariant(S): " ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names invariant1 ) )  ;
-		print_message Verbose_standard ("\n");
-        	(*Checking bounded clocked in guards (Transition)*)
-        	List.iter (fun action_index -> print_message Verbose_standard (" Transition/Action: " ^ (model.action_names action_index) );
-    
-            	List.iter (fun (guard, clock_updates, _, destination_location_index) 
-            		-> print_message Verbose_standard ("   Guard: " ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names guard));		
-                	(** WORK HERE **)
-                	let invariant2 = model.invariants automaton_index destination_location_index in
-					print_message Verbose_standard ("\n");
-        			print_message Verbose_standard (" State/Location(D): " ^ (model.location_names automaton_index destination_location_index) ) ;
-        			print_message Verbose_standard ("   Invariant(D): " ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names invariant2 ) ) ;
-        			print_message Verbose_standard ("	  ----Map:(" 
-        											^ (model.location_names automaton_index location_index) 
-        											^ ")--" ^ (model.action_names action_index) ^ "-->(" 
-        											^ (model.location_names automaton_index destination_location_index) 
-        											^ ") ----" );
-        			print_message Verbose_standard ("\n");
-                	let clock_updates = match clock_updates with
-                						  No_update -> []
-										| Resets clock_update -> clock_update
-										| Updates clock_update_with_linear_expression -> raise (InternalError(" Clock_update are not supported currently! ")); 
-					in
-					(*add transitions*)
-					DynArray.add transitions_ini (location_index, destination_location_index, guard, clock_updates);
-        			()
-            	) (model.transitions automaton_index location_index action_index); 
-        	) (model.actions_per_location automaton_index location_index); 
-    		print_message Verbose_standard ("----------------End converting " ^ (model.location_names automaton_index location_index) ^ "!!!---------------------");
-    		print_message Verbose_standard ("\n");
-    ) (model.locations_per_automaton automaton_index);
-    print_message Verbose_standard ("\n");
-) model.automata;
-(*covert input model into specific data stucture - end*)
-
-
-
-
 (*generated_constraints: we describe Disjunction by a list of conjunction constraints*)
 let disjunction_constraints param_constraints =
 	let generated_constraints = ref [LinearConstraint.p_true_constraint ()] in
@@ -1430,6 +1365,26 @@ in
 (*Check cub_contraint conflict with parameters_constraints - end*)
 
 
+(*Check cub_contraint all conflict with parameters_constraints*)
+let isContraintAllConflictsParametersConstraints2 con p_cons = 
+	let disjunction_cons = disjunction_constraints p_cons in
+	let check = ref true in
+	List.iter (fun con1 -> 
+		let con_intersection = LinearConstraint.pxd_intersection [con; (LinearConstraint.pxd_of_p_constraint con1)] in 
+		print_message Verbose_standard ("\n Constraint1: \n" ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names con)  
+										^ "\n Constraint2: \n" ^ (LinearConstraint.string_of_p_linear_constraint model.variable_names con1) );
+		if not (LinearConstraint.pxd_is_false con_intersection)
+		then
+			(
+			print_message Verbose_standard ("\n Conflict!!! ");
+			check := false;
+			);
+	) disjunction_cons;
+	!check;
+in
+(*Check cub_contraint conflict with parameters_constraints - end*)
+
+
 
 
 
@@ -1467,17 +1422,6 @@ let isConstraintContainedInParametersConstraints con p_cons =
 in
 (*Check whether a constraint conatained in parameters relation - end*)
 
-
-
-(*set true constraint*)
-let true_constraint = LinearConstraint.p_true_constraint () in
-DynArray.add parameters_constraints_ini (true,[true_constraint]); 
-(*Adding the first sub-model*)
-DynArray.add submodels (states_ini, transitions_ini, clocks_constraints_ini, parameters_constraints_ini);
-let submodels_length = DynArray.length submodels in
-print_message Verbose_standard ("\n Check lenth of submodels: " ^ (string_of_int submodels_length) );
-
-
 let getInfoCurrentModel submodel = let (states, transitions, clocks_constraints, parameters_constraints) = submodel in
 								print_message Verbose_standard ("\n ------------------------Submodel Info------------------------------- ");
 
@@ -1500,7 +1444,7 @@ let getInfoCurrentModel submodel = let (states, transitions, clocks_constraints,
 								print_message Verbose_standard ("\n Current clocks constrains!!!!: ");
 								(
 								Hashtbl.iter (fun index cons -> 
-									print_message Verbose_standard ("\n Location: " ^ (string_of_int (index+1) ) );
+									(* print_message Verbose_standard ("\n Location: " ^ (string_of_int (index+1) ) ); *)
 									
 									print_message Verbose_standard ("  Constraints: \n" 
 																^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names cons) );
@@ -1510,6 +1454,81 @@ let getInfoCurrentModel submodel = let (states, transitions, clocks_constraints,
 
 								print_message Verbose_standard ("\n ------------------------Submodel Info end--------------------------- ");
 							in
+
+
+(*Array of models*)
+let submodels = DynArray.make 0 in
+(*elements of a submodels*)
+(*initial*)
+let states_ini = Hashtbl.create 0 in
+let transitions_ini = DynArray.make 0 in
+let clocks_constraints_ini = Hashtbl.create 0 in
+let parameters_constraints_ini = DynArray.make 0 in
+(*initial - end*)
+
+
+(*covert input model into specific data stucture*)
+List.iter (fun automaton_index -> 
+	print_message Verbose_standard ("Converting automaton: " 
+									^ (model.automata_names automaton_index) 
+									^ "!!!!!!!");
+	(*Checking bounded clocked in invariant (Location)*)
+    List.iter (fun location_index -> 
+    	print_message Verbose_standard ("----------------Begin at " ^ (model.location_names automaton_index location_index) ^ "-------------------");
+		print_message Verbose_standard ("\n");
+		print_message Verbose_standard (" State/Location(S): " ^ (model.location_names automaton_index location_index) ) ;
+		let invariant1 = model.invariants automaton_index location_index in
+		(*add states*)
+		let location_index_string = (model.location_names automaton_index location_index) in
+		Hashtbl.add states_ini location_index_string invariant1;
+        print_message Verbose_standard ("   Invariant(S): " ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names invariant1 ) )  ;
+		print_message Verbose_standard ("\n");
+        	(*Checking bounded clocked in guards (Transition)*)
+        	List.iter (fun action_index -> print_message Verbose_standard (" Transition/Action: " ^ (model.action_names action_index) );
+    
+            	List.iter (fun (guard, clock_updates, _, destination_location_index) 
+            		-> print_message Verbose_standard ("   Guard: " ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names guard));		
+                	(** WORK HERE **)
+                	let invariant2 = model.invariants automaton_index destination_location_index in
+					print_message Verbose_standard ("\n");
+        			print_message Verbose_standard (" State/Location(D): " ^ (model.location_names automaton_index destination_location_index) ) ;
+        			print_message Verbose_standard ("   Invariant(D): " ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names invariant2 ) ) ;
+        			print_message Verbose_standard ("	  ----Map:(" 
+        											^ (model.location_names automaton_index location_index) 
+        											^ ")--" ^ (model.action_names action_index) ^ "-->(" 
+        											^ (model.location_names automaton_index destination_location_index) 
+        											^ ") ----" );
+        			print_message Verbose_standard ("\n");
+                	let clock_updates = match clock_updates with
+                						  No_update -> []
+										| Resets clock_update -> clock_update
+										| Updates clock_update_with_linear_expression -> raise (InternalError(" Clock_update are not supported currently! ")); 
+					in
+					(*add transitions*)
+					DynArray.add transitions_ini ((model.location_names automaton_index location_index), (model.location_names automaton_index destination_location_index), guard, clock_updates);
+        			()
+            	) (model.transitions automaton_index location_index action_index); 
+        	) (model.actions_per_location automaton_index location_index); 
+    		print_message Verbose_standard ("----------------End converting " ^ (model.location_names automaton_index location_index) ^ "!!!---------------------");
+    		print_message Verbose_standard ("\n");
+    ) (model.locations_per_automaton automaton_index);
+    print_message Verbose_standard ("\n");
+(* ) model.automata; *)
+(*covert input model into specific data stucture - end*)
+
+
+
+
+
+
+(*set true constraint*)
+let true_constraint = LinearConstraint.p_true_constraint () in
+DynArray.add parameters_constraints_ini (true,[true_constraint]); 
+(*Adding the first sub-model*)
+DynArray.add submodels (states_ini, transitions_ini, clocks_constraints_ini, parameters_constraints_ini);
+let submodels_length = DynArray.length submodels in
+print_message Verbose_standard ("\n Check lenth of submodels: " ^ (string_of_int submodels_length) );
+
 
 
 
@@ -1794,7 +1813,7 @@ while (!count_m) <= (DynArray.length submodels) do
 										(
 										let new_clocks_constraints = Hashtbl.create 0 in
 										Hashtbl.add new_clocks_constraints location_index clock_cons;
-										DynArray.add submodels (states, transitions, new_clocks_constraints, new_parameters_constraints);
+										DynArray.add submodels (Hashtbl.copy states, DynArray.copy transitions, new_clocks_constraints, new_parameters_constraints);
 										);
 									);
 								);
@@ -1905,7 +1924,7 @@ while (!count_m) <= (DynArray.length submodels) do
 											(
 											let new_clocks_constraints = Hashtbl.create 0 in
 											Hashtbl.add new_clocks_constraints location_index clock_cons;
-											DynArray.add submodels (states, transitions, new_clocks_constraints, new_parameters_constraints);
+											DynArray.add submodels (Hashtbl.copy states, DynArray.copy transitions, new_clocks_constraints, new_parameters_constraints);
 											);
 										);
 									);
@@ -2013,7 +2032,7 @@ while (!count_m) <= (DynArray.length submodels) do
 											(
 											let new_clocks_constraints = Hashtbl.create 0 in
 											Hashtbl.add new_clocks_constraints location_index clock_cons;
-											DynArray.add submodels (states, transitions, new_clocks_constraints, new_parameters_constraints);
+											DynArray.add submodels (Hashtbl.copy states, DynArray.copy transitions, new_clocks_constraints, new_parameters_constraints);
 											);
 										);
 									);
@@ -2119,7 +2138,7 @@ while (!count_m) <= (DynArray.length submodels) do
 											(
 											let new_clocks_constraints = Hashtbl.create 0 in
 											Hashtbl.add new_clocks_constraints location_index clock_cons;
-											DynArray.add submodels (states, transitions, new_clocks_constraints, new_parameters_constraints);
+											DynArray.add submodels (Hashtbl.copy states, DynArray.copy transitions, new_clocks_constraints, new_parameters_constraints);
 											);
 										);
 									);
@@ -2139,7 +2158,7 @@ while (!count_m) <= (DynArray.length submodels) do
 			if (Hashtbl.length clocks_constraints) <> 0
 			then
 				(	
-					print_message Verbose_standard ("\n Location: " ^ string_of_int destination_location_index );
+					(* print_message Verbose_standard ("\n Location: " ^ string_of_int destination_location_index ); *)
 					let constraints_s0 = Hashtbl.find_all clocks_constraints location_index in
 					let constraints_s1 = Hashtbl.find_all clocks_constraints destination_location_index in
 					List.iter (fun c_s1 ->
@@ -2285,10 +2304,10 @@ while (!count_m) <= (DynArray.length submodels) do
 																);
 															(* test - end *)
 
-															print_message Verbose_standard (" Added constraints: " 
+															(* print_message Verbose_standard (" Added constraints: " 
 																							^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names clock_cons)  
 																							^ "\n at state: " 
-																							^ string_of_int location_index );
+																							^ string_of_int location_index ); *)
 															);
 														)
 													else
@@ -2340,7 +2359,7 @@ while (!count_m) <= (DynArray.length submodels) do
 																(
 																let new_clocks_constraints = Hashtbl.create 0 in
 																Hashtbl.add new_clocks_constraints location_index clock_cons;
-																DynArray.add submodels (states, transitions, new_clocks_constraints, new_parameters_constraints);
+																DynArray.add submodels (Hashtbl.copy states, DynArray.copy transitions, new_clocks_constraints, new_parameters_constraints);
 																);
 
 															);
@@ -2433,10 +2452,10 @@ while (!count_m) <= (DynArray.length submodels) do
 																);
 															(* test - end *)
 
-															print_message Verbose_standard (" Added constraints: " 
+															(* print_message Verbose_standard (" Added constraints: " 
 																							^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names clock_cons)  
 																							^ "\n at state: " 
-																							^ string_of_int location_index );
+																							^ string_of_int location_index ); *)
 															);
 														)
 													else
@@ -2478,7 +2497,7 @@ while (!count_m) <= (DynArray.length submodels) do
 																(
 																let new_clocks_constraints = Hashtbl.create 0 in
 																Hashtbl.add new_clocks_constraints location_index clock_cons;
-																DynArray.add submodels (states, transitions, new_clocks_constraints, new_parameters_constraints);
+																DynArray.add submodels (Hashtbl.copy states, DynArray.copy transitions, new_clocks_constraints, new_parameters_constraints);
 																);
 															);
 														);
@@ -2571,10 +2590,10 @@ while (!count_m) <= (DynArray.length submodels) do
 																);
 															(* test - end *)
 
-															print_message Verbose_standard (" Added constraints: " 
+															(* print_message Verbose_standard (" Added constraints: " 
 																							^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names clock_cons)  
 																							^ "\n at state: " 
-																							^ string_of_int location_index );
+																							^ string_of_int location_index ); *)
 															)
 														)
 													else
@@ -2662,7 +2681,7 @@ while (!count_m) <= (DynArray.length submodels) do
 																(
 																let new_clocks_constraints = Hashtbl.create 0 in
 																Hashtbl.add new_clocks_constraints location_index clock_cons;
-																DynArray.add submodels (states, transitions, new_clocks_constraints, new_parameters_constraints);
+																DynArray.add submodels (Hashtbl.copy states, DynArray.copy transitions, new_clocks_constraints, new_parameters_constraints);
 																);
 															);
 														);
@@ -2718,8 +2737,8 @@ DynArray.iter (fun (states, transitions, c_constraints, parameters_constraints) 
 
 
 	print_message Verbose_standard ("\n Showing clocks constraints!!!! ");
-	Hashtbl.iter (fun i c -> 
-		print_message Verbose_standard ("\n Location: " ^ (string_of_int (i +1) ) ^ " (will be a new state) with constraint: \n" 
+	Hashtbl.iter (fun l c -> 
+		print_message Verbose_standard ("\n (will be a new state): \n" 
 										^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names c) ); 
 	) c_constraints;
 
@@ -2732,6 +2751,260 @@ DynArray.iter (fun (states, transitions, c_constraints, parameters_constraints) 
 print_message Verbose_standard ("\n ----------------------------Models Summary End--------------------------- ");
 (*models summary - end*)
 
+
+
+(* stage 2 *)
+let newSubModels = DynArray.make 0 in
+DynArray.iter (fun (ss, ts, c_constraints, p_constraints) ->
+	let count = ref 0 in 
+	let inx = Hashtbl.create 0 in
+	Hashtbl.iter (fun loc cons ->
+		
+		let locName = ("cub-l" ^ (string_of_int !count)) in
+		Hashtbl.add ss locName cons;
+		Hashtbl.add inx loc locName;
+		count :=  !count + 1;
+
+	) c_constraints;
+	DynArray.add newSubModels (ss, ts, c_constraints, p_constraints, inx);
+) submodels;
+(* stage 2 - end*)
+
+
+(*models summary*)
+print_message Verbose_standard ("\n ----------------------------Models Summary------------------------------- ");
+print_message Verbose_standard ("\n Number of models: " ^ (string_of_int (DynArray.length submodels) ) );
+let model_count = ref 1 in
+DynArray.iter (fun (states, transitions, c_constraints, p_constraints, index) ->
+
+	print_message Verbose_standard ("\n ----------------------Sub Model "^ (string_of_int !model_count) ^"----------------------------- " );
+
+
+	print_message Verbose_standard ("\n Showing parameters relations!!!! ");
+	DynArray.iter ( fun (is_and, constraint_list) ->
+		print_message Verbose_standard (" Is Disjunction: " ^ string_of_bool is_and ^ ": ");
+		List.iter (fun cons1 -> 
+			print_message Verbose_standard (" 	followed constraints: " 
+									^ (LinearConstraint.string_of_p_linear_constraint model.variable_names cons1) );
+		) constraint_list;
+	) p_constraints;
+
+
+	print_message Verbose_standard ("\n Showing clocks constraints!!!! ");
+	Hashtbl.iter (fun l c -> 
+		print_message Verbose_standard ("\n State: "^ l 
+										^ "(will be a new state) \n Constraint: \n" 
+										^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names c) ); 
+	) c_constraints;
+
+
+	print_message Verbose_standard ("\n Number of states :"^ string_of_int (Hashtbl.length states) );
+	Hashtbl.iter (fun loc cons ->
+		print_message Verbose_standard ("\n State: "^ loc 
+										^ "\n Constraint: \n" 
+										^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names cons) ); 		
+	) states;
+
+	print_message Verbose_standard ("\n Index table :" );
+	Hashtbl.iter (fun from_loc cub_loc ->
+		print_message Verbose_standard ("\n CUB Location " ^ cub_loc ^ " comes from " ^ from_loc );		
+	) index;
+
+
+	print_message Verbose_standard ("\n ----------------------Sub Model "^ (string_of_int !model_count) ^" End!------------------------ " );
+
+	model_count := !model_count+1;
+
+) newSubModels;
+print_message Verbose_standard ("\n ----------------------------Models Summary End--------------------------- ");
+(*models summary - end*)
+
+
+
+(* third stage *)
+DynArray.iter (fun (states, transitions, c_constraints, p_constraints, index) ->
+
+	DynArray.iter ( fun (location_index, destination_location_index, guard, clock_updates) ->
+		let listCubLoc1 = Hashtbl.find_all index location_index in
+		let listCubLoc2 = Hashtbl.find_all index destination_location_index in
+
+		List.iter (fun loc1 ->  
+			DynArray.add transitions (loc1, destination_location_index, guard, clock_updates);
+		) listCubLoc1;
+
+		List.iter (fun loc2 ->  
+			DynArray.add transitions (location_index, loc2, guard, clock_updates);
+		) listCubLoc2;
+
+		List.iter (fun loc1 -> 
+			List.iter (fun loc2 -> 
+				DynArray.add transitions (loc1, loc2, guard, clock_updates);
+			) listCubLoc2;
+		) listCubLoc1;
+
+	) transitions;
+
+) newSubModels;
+(* third stage - end *)
+
+
+
+(*models summary*)
+print_message Verbose_standard ("\n ----------------------------Models Summary------------------------------- ");
+print_message Verbose_standard ("\n Number of models: " ^ (string_of_int (DynArray.length submodels) ) );
+let model_count = ref 1 in
+DynArray.iter (fun (states, transitions, c_constraints, p_constraints, index) ->
+
+	print_message Verbose_standard ("\n ----------------------Sub Model "^ (string_of_int !model_count) ^"----------------------------- " );
+
+
+	print_message Verbose_standard ("\n Showing parameters relations!!!! ");
+	DynArray.iter ( fun (is_and, constraint_list) ->
+		print_message Verbose_standard (" Is Disjunction: " ^ string_of_bool is_and ^ ": ");
+		List.iter (fun cons1 -> 
+			print_message Verbose_standard (" 	followed constraints: " 
+									^ (LinearConstraint.string_of_p_linear_constraint model.variable_names cons1) );
+		) constraint_list;
+	) p_constraints;
+
+
+	print_message Verbose_standard ("\n Showing clocks constraints!!!! ");
+	Hashtbl.iter (fun l c -> 
+		print_message Verbose_standard ("\n State: "^ l 
+										^ "(will be a new state) \n Constraint: \n" 
+										^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names c) ); 
+	) c_constraints;
+
+
+	print_message Verbose_standard ("\n Number of states :"^ string_of_int (Hashtbl.length states) );
+	Hashtbl.iter (fun loc cons ->
+		print_message Verbose_standard ("\n State: "^ loc 
+										^ "\n Constraint: \n" 
+										^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names cons) ); 		
+	) states;
+
+	print_message Verbose_standard ("\n Index table :" );
+	Hashtbl.iter (fun from_loc cub_loc ->
+		print_message Verbose_standard ("\n CUB Location " ^ cub_loc ^ " comes from " ^ from_loc );		
+	) index;
+
+
+	print_message Verbose_standard ("\n Number of transitions :"^ string_of_int (DynArray.length transitions) );
+	DynArray.iter ( fun (location_index, destination_location_index, guard, clock_updates) ->
+		print_message Verbose_standard ("\n" ^ location_index ^ " |-----> " ^ destination_location_index );
+	) transitions;	
+
+
+	print_message Verbose_standard ("\n ----------------------Sub Model "^ (string_of_int !model_count) ^" End!------------------------ " );
+
+	model_count := !model_count+1;
+
+
+) newSubModels;
+print_message Verbose_standard ("\n ----------------------------Models Summary End--------------------------- ");
+(*models summary - end*)
+
+
+ 
+(* final stage *)
+DynArray.iter (fun (states, transitions, c_constraints, p_constraints, index) ->
+
+	for i = 1 to (DynArray.length transitions) do
+		let (location_index, destination_location_index, guard, clock_updates) = DynArray.get transitions (i-1) in
+		let s0_cons = Hashtbl.find states location_index in
+		let s1_cons = Hashtbl.find states destination_location_index in
+
+		let inequalities_t = LinearConstraint.pxd_get_inequalities guard in
+		let tuple_inequalities_t = convert_inequality_list_2_tuple_list inequalities_t in
+		let (_, op_t, linear_term_t) = filter_upperbound_by_clock (List.hd model.clocks) tuple_inequalities_t in
+		(* let (_, op_t, linear_term_t) = LinearConstraint.clock_guard_of_linear_inequality (List.hd tuple_inequalities_t) in *)
+
+		let cons_inter = 
+		(
+		match op_t with
+		 | LinearConstraint.Op_ge -> LinearConstraint.pxd_intersection [s0_cons; s1_cons] 
+		 | _ -> LinearConstraint.pxd_intersection [s0_cons; guard; s1_cons];
+		);
+		in
+
+		print_message Verbose_standard ("\n Constraint s0: \n" 
+										^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names s0_cons)
+										^ "\n Constraint s1: \n"
+										 ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names s1_cons)
+										^ "(\n result constraint: \n" 
+										^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names cons_inter) ); 
+
+		let check = isContraintAllConflictsParametersConstraints2 cons_inter p_constraints in 
+		if check 
+		then
+			( 
+			DynArray.delete transitions (i-1);
+			);
+		
+	done;
+
+) newSubModels;
+(* final stage - end *)
+
+
+(*models summary*)
+print_message Verbose_standard ("\n ----------------------------Models Summary------------------------------- ");
+print_message Verbose_standard ("\n Number of models: " ^ (string_of_int (DynArray.length submodels) ) );
+let model_count = ref 1 in
+DynArray.iter (fun (states, transitions, c_constraints, p_constraints, index) ->
+
+	print_message Verbose_standard ("\n ----------------------Sub Model "^ (string_of_int !model_count) ^"----------------------------- " );
+
+
+	print_message Verbose_standard ("\n Showing parameters relations!!!! ");
+	DynArray.iter ( fun (is_and, constraint_list) ->
+		print_message Verbose_standard (" Is Disjunction: " ^ string_of_bool is_and ^ ": ");
+		List.iter (fun cons1 -> 
+			print_message Verbose_standard (" 	followed constraints: " 
+									^ (LinearConstraint.string_of_p_linear_constraint model.variable_names cons1) );
+		) constraint_list;
+	) p_constraints;
+
+
+	print_message Verbose_standard ("\n Showing clocks constraints!!!! ");
+	Hashtbl.iter (fun l c -> 
+		print_message Verbose_standard ("\n State: "^ l 
+										^ "(will be a new state) \n Constraint: \n" 
+										^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names c) ); 
+	) c_constraints;
+
+
+	print_message Verbose_standard ("\n Number of states :"^ string_of_int (Hashtbl.length states) );
+	Hashtbl.iter (fun loc cons ->
+		print_message Verbose_standard ("\n State: "^ loc 
+										^ "\n Constraint: \n" 
+										^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names cons) ); 		
+	) states;
+
+	print_message Verbose_standard ("\n Index table :" );
+	Hashtbl.iter (fun from_loc cub_loc ->
+		print_message Verbose_standard ("\n CUB Location " ^ cub_loc ^ " comes from " ^ from_loc );		
+	) index;
+
+
+	print_message Verbose_standard ("\n Number of transitions :"^ string_of_int (DynArray.length transitions) );
+	DynArray.iter ( fun (location_index, destination_location_index, guard, clock_updates) ->
+		print_message Verbose_standard ("\n" ^ location_index ^ " |-----> " ^ destination_location_index );
+	) transitions;	
+
+
+	print_message Verbose_standard ("\n ----------------------Sub Model "^ (string_of_int !model_count) ^" End!------------------------ " );
+
+	model_count := !model_count+1;
+
+
+) newSubModels;
+print_message Verbose_standard ("\n ----------------------------Models Summary End--------------------------- ");
+(*models summary - end*)
+
+
+
+) model.automata;
 
 terminate_program();
 
