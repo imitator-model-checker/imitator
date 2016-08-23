@@ -1330,12 +1330,12 @@ let isContraintConflictsParametersConstraints con p_cons =
 	let check = ref false in
 	List.iter (fun con1 -> 
 		let con_intersection = LinearConstraint.p_intersection [con; con1] in 
-		print_message Verbose_standard ("\n Constraint1: \n" ^ (LinearConstraint.string_of_p_linear_constraint model.variable_names con)  
-										^ "\n Constraint2: \n" ^ (LinearConstraint.string_of_p_linear_constraint model.variable_names con1) );
+		(* print_message Verbose_standard ("\n Constraint1: \n" ^ (LinearConstraint.string_of_p_linear_constraint model.variable_names con)  
+										^ "\n Constraint2: \n" ^ (LinearConstraint.string_of_p_linear_constraint model.variable_names con1) ) ; *)
 		if LinearConstraint.p_is_false con_intersection
 		then
 			(
-			print_message Verbose_standard ("\n Conflict!!! ");
+			(* print_message Verbose_standard ("\n Conflict!!! "); *)
 			check := true;
 			);
 	) disjunction_cons;
@@ -2778,7 +2778,7 @@ DynArray.iter (fun (ss, ts, c_constraints, p_constraints) ->
 
 
 (*models summary*)
-print_message Verbose_standard ("\n ----------------------------Models Summary------------------------------- ");
+(* print_message Verbose_standard ("\n ----------------------------Models Summary------------------------------- ");
 print_message Verbose_standard ("\n Number of models: " ^ (string_of_int (DynArray.length submodels) ) );
 let model_count = ref 1 in
 DynArray.iter (fun (states, transitions, c_constraints, p_constraints, index) ->
@@ -2822,7 +2822,7 @@ DynArray.iter (fun (states, transitions, c_constraints, p_constraints, index) ->
 	model_count := !model_count+1;
 
 ) newSubModels;
-print_message Verbose_standard ("\n ----------------------------Models Summary End--------------------------- ");
+print_message Verbose_standard ("\n ----------------------------Models Summary End--------------------------- "); *)
 (*models summary - end*)
 
 
@@ -2856,7 +2856,7 @@ DynArray.iter (fun (states, transitions, c_constraints, p_constraints, index) ->
 
 
 (*models summary*)
-print_message Verbose_standard ("\n ----------------------------Models Summary------------------------------- ");
+(* print_message Verbose_standard ("\n ----------------------------Models Summary------------------------------- ");
 print_message Verbose_standard ("\n Number of models: " ^ (string_of_int (DynArray.length submodels) ) );
 let model_count = ref 1 in
 DynArray.iter (fun (states, transitions, c_constraints, p_constraints, index) ->
@@ -2907,7 +2907,7 @@ DynArray.iter (fun (states, transitions, c_constraints, p_constraints, index) ->
 
 
 ) newSubModels;
-print_message Verbose_standard ("\n ----------------------------Models Summary End--------------------------- ");
+print_message Verbose_standard ("\n ----------------------------Models Summary End--------------------------- "); *)
 (*models summary - end*)
 
 
@@ -2954,7 +2954,7 @@ DynArray.iter (fun (states, transitions, c_constraints, p_constraints, index) ->
 
 
 (*models summary*)
-print_message Verbose_standard ("\n ----------------------------Models Summary------------------------------- ");
+(* print_message Verbose_standard ("\n ----------------------------Models Summary------------------------------- ");
 print_message Verbose_standard ("\n Number of models: " ^ (string_of_int (DynArray.length submodels) ) );
 let model_count = ref 1 in
 DynArray.iter (fun (states, transitions, c_constraints, p_constraints, index) ->
@@ -3005,7 +3005,7 @@ DynArray.iter (fun (states, transitions, c_constraints, p_constraints, index) ->
 
 
 ) newSubModels;
-print_message Verbose_standard ("\n ----------------------------Models Summary End--------------------------- ");
+print_message Verbose_standard ("\n ----------------------------Models Summary End--------------------------- "); *)
 (*models summary - end*)
 
 
@@ -3057,12 +3057,12 @@ let finalModel = (newstates, newtransitions) in
 
 
 (*models summary*)
-print_message Verbose_standard ("\n ----------------------------Models Summary------------------------------- ");
+print_message Verbose_standard ("\n ----------------------------Models Summary Final------------------------------- ");
 
 	print_message Verbose_standard ("\n Number of states :"^ string_of_int (Hashtbl.length newstates) );
 	Hashtbl.iter (fun loc cons ->
 		print_message Verbose_standard ("\n State: "^ loc 
-										^ "\n Constraint: \n" 
+										^ "\n Constraint(Invariant): \n" 
 										^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names cons) ); 		
 	) newstates;
 
@@ -3070,17 +3070,19 @@ print_message Verbose_standard ("\n ----------------------------Models Summary--
 	print_message Verbose_standard ("\n Number of transitions :"^ string_of_int (DynArray.length newtransitions) );
 	DynArray.iter ( fun (location_index, destination_location_index, guard, clock_updates) ->
 		print_message Verbose_standard ("\n" ^ location_index ^ " |-----> " ^ destination_location_index );
+	print_message Verbose_standard ("\n Constraint(Guard): \n" 
+									^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names guard) ); 	
 	) newtransitions;	
 
 
-	print_message Verbose_standard ("\n Number of states :"^ string_of_int (Hashtbl.length newstates) );
+	(* print_message Verbose_standard ("\n Number of states :"^ string_of_int (Hashtbl.length newstates) );
 	Hashtbl.iter (fun location_index cons ->
 		print_message Verbose_standard ("\n" ^ location_index );
-	) newstates;	
+	) newstates;	 *)
 
 
 
-print_message Verbose_standard ("\n ----------------------------Models Summary End--------------------------- ");
+print_message Verbose_standard ("\n ----------------------------Models Summary Final End--------------------------- ");
 (*models summary - end*)
 
 
