@@ -10,7 +10,7 @@
 # 
 # File contributors : Étienne André
 # Created           : 2016/08/08
-# Last modified     : 2016/08/15
+# Last modified     : 2016/08/24
 #************************************************************
 
 
@@ -209,7 +209,7 @@ versions = {
 			OPT_INCLUSION			: '-incl',
 			OPT_MERGING				: '-merge',
 			OPT_MODE_COVER			: '-mode cover',
-			OPT_MODE_EF				: '-mode EF',
+			OPT_MODE_EF				: '-mode EFold',
 			OPT_OUTPUT_CART			: '-output-cart',
 			OPT_OUTPUT_PREFIX		: '-output-prefix',
 			OPT_OUTPUT_RES			: '-output-result',

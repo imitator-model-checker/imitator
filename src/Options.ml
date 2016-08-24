@@ -9,7 +9,7 @@
  * 
  * File contributors : Ulrich Kühne, Étienne André
  * Created           : 2010
- * Last modified     : 2016/08/13
+ * Last modified     : 2016/08/24
  *
  ************************************************************)
 
@@ -370,12 +370,12 @@ class imitator_options =
 				if mode = "statespace" then 
 					imitator_mode <- State_space_exploration
 					
-				(* Case: EF-synthesis *)
-				else if mode = "EF" then 
+				(* Case: old version of EF-synthesis using a list of constraints *)
+				else if mode = "EFold" then 
 					imitator_mode <- EF_synthesis
 					
-				(* Case: new experimental EF-synthesis using PointSetPowerSet *)
-				else if mode = "EFnew" then(
+				(* Case: new EF-synthesis using PointSetPowerSet *)
+				else if mode = "EF" then(
 					new_ef_mode <- true;
 					imitator_mode <- EF_synthesis
 					)

@@ -10,7 +10,7 @@
 # Laboratoire d'Informatique de Paris Nord
 # Universite Paris 13, Sorbonne Paris Cite, France
 # Created      : 2015/10/23
-# Last modified: 2016/08/16
+# Last modified: 2016/08/24
 #************************************************************
 
 
@@ -453,9 +453,9 @@ tests = [
 	,
 	#------------------------------------------------------------
 	{
-		'purpose'    : 'Test EF with basic unreachability',
+		'purpose'    : 'Test EF (old version) with basic unreachability',
 		'input_files': ['F3.imi'],
-		'options'    : '-mode EF -merge -incl -output-result',
+		'options'    : '-mode EFold -merge -incl -output-result',
 		'expectations' : [
 			{'file': 'F3.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -473,9 +473,9 @@ END CONSTRAINT
 	,
 	#------------------------------------------------------------
 	{
-		'purpose'    : 'Test EFnew with basic unreachability',
+		'purpose'    : 'Test EF with basic unreachability',
 		'input_files': ['F3.imi'],
-		'options'    : '-mode EFnew -merge -incl -output-result',
+		'options'    : '-mode EF -merge -incl -output-result',
 		'expectations' : [
 			{'file': 'F3.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -490,9 +490,9 @@ END CONSTRAINT
 	,
 	#------------------------------------------------------------
 	{
-		'purpose'    : 'Test EF with complex unreachability property',
+		'purpose'    : 'Test EF (old version) with complex unreachability property',
 		'input_files': ['coffeeDrinker-TACAS.imi'],
-		'options'    : '-mode EF -merge -output-result',
+		'options'    : '-mode EFold -merge -output-result',
 		'expectations' : [
 			{'file': 'coffeeDrinker-TACAS.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -562,9 +562,9 @@ END CONSTRAINT
 	,
 	#------------------------------------------------------------
 	{
-		'purpose'    : 'Test EFnew with complex unreachability property',
+		'purpose'    : 'Test EF with complex unreachability property',
 		'input_files': ['coffeeDrinker-TACAS.imi'],
-		'options'    : '-mode EFnew -merge -output-result',
+		'options'    : '-mode EF -merge -output-result',
 		'expectations' : [
 			{'file': 'coffeeDrinker-TACAS.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -597,9 +597,9 @@ END CONSTRAINT
 	,
 	#------------------------------------------------------------
 	{
-		'purpose'    : 'Test EF with observer + depth-limit + project-result (quite basic)',
+		'purpose'    : 'Test EF (old version) with observer + depth-limit + project-result (quite basic)',
 		'input_files': ['coffeeDrinker-TACAS-within.imi'],
-		'options'    : '-mode EF -merge -depth-limit 10 -output-result',
+		'options'    : '-mode EFold -merge -depth-limit 10 -output-result',
 		'expectations' : [
 			{'file': 'coffeeDrinker-TACAS-within.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -614,9 +614,9 @@ END CONSTRAINT
 	,
 	#------------------------------------------------------------
 	{
-		'purpose'    : 'Test EFnew with observer + depth-limit + project-result (quite basic)',
+		'purpose'    : 'Test EF with observer + depth-limit + project-result (quite basic)',
 		'input_files': ['coffeeDrinker-TACAS-within.imi'],
-		'options'    : '-mode EFnew -merge -depth-limit 10 -output-result',
+		'options'    : '-mode EF -merge -depth-limit 10 -output-result',
 		'expectations' : [
 			{'file': 'coffeeDrinker-TACAS-within.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -6552,9 +6552,9 @@ init := True
 	
 	#------------------------------------------------------------
 	{
-		'purpose'    : 'FMTV challenge: Test EFnew with project-result',
+		'purpose'    : 'FMTV challenge: Test EF with project-result',
 		'input_files': ['fmtv1A1-v2.imi'],
-		'options'    : '-mode EFnew -merge -incl -output-result',
+		'options'    : '-mode EF -merge -incl -output-result',
 		'expectations' : [
 			{'file': 'fmtv1A1-v2.res' , 'content' : """
 BEGIN CONSTRAINT
