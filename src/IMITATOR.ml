@@ -9,7 +9,7 @@
  * 
  * File contributors : Ulrich Kühne, Étienne André
  * Created           : 2009/09/07
- * Last modified     : 2016/08/15
+ * Last modified     : 2016/08/24
  *
  ************************************************************)
 
@@ -151,6 +151,7 @@ match options#imitator_mode with
 	| Translation
 	| State_space_exploration
 	| EF_synthesis
+	| Loop_synthesis
 	| Parametric_deadlock_checking
 	(* Case: no additional file *)
 	-> ()
@@ -411,6 +412,13 @@ let algorithm : AlgoGeneric.algoGeneric = match options#imitator_mode with
 	| EF_synthesis (*when not options#new_ef_mode*) ->
 		let myalgo :> AlgoGeneric.algoGeneric = new AlgoEFsynthOld.algoEFsynth in myalgo
 	
+	
+	
+	(************************************************************)
+	(* Parametric loop synthesis *)
+	(************************************************************)
+	| Loop_synthesis ->
+		let myalgo :> AlgoGeneric.algoGeneric = new AlgoLoopSynth.algoLoopSynth in myalgo
 	
 	
 	(************************************************************)

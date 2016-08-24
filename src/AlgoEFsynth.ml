@@ -116,6 +116,7 @@ class algoEFsynth =
 					let p_constraint = LinearConstraint.px_hide_nonparameters_and_collapse current_constraint in
 					
 					(* Projecting onto SOME parameters if required *)
+					(*** BADPROG: Duplicate code (AlgoLoopSynth / AlgoPRP) ***)
 					begin
 					match model.projection with
 					(* Unchanged *)
@@ -146,7 +147,7 @@ class algoEFsynth =
 					
 					(* Print some information *)
 					if verbose_mode_greater Verbose_medium then(
-						self#print_algo_message Verbose_medium "Adding the following constraint to the list of bad constraints:";
+						self#print_algo_message Verbose_medium "Adding the following constraint to the bad constraint:";
 						print_message Verbose_medium (LinearConstraint.string_of_p_linear_constraint model.variable_names p_constraint);
 						
 						self#print_algo_message Verbose_medium "The bad constraint is now:";

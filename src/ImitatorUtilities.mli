@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2014/10/24
- * Last modified     : 2016/05/23
+ * Last modified     : 2016/08/24
  *
  ************************************************************)
 
@@ -85,6 +85,9 @@ type imitator_mode =
 	
 	(** EF-synthesis *)
 	| EF_synthesis
+	
+	(** Parametric loop synthesis *)
+	| Loop_synthesis
 	
 	(** Parametric deadlock-checking *)
 	| Parametric_deadlock_checking

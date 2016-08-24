@@ -634,6 +634,92 @@ END CONSTRAINT
 
 	#------------------------------------------------------------
 	{
+		'purpose'    : 'Test LoopSynth: flip-flop (no loop)',
+		'input_files': ['flipflop.imi'],
+		'options'    : '-mode LoopSynth -output-result',
+		'expectations' : [
+			{'file': 'flipflop.res' , 'content' : """
+BEGIN CONSTRAINT
+False
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+Number of states                        : 20
+Number of transitions                   : 19
+Number of computed states               : 20
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+	
+	,
+	
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test LoopSynth: simple example with loop',
+		'input_files': ['PDFC4.imi'],
+		'options'    : '-mode LoopSynth -output-result',
+		'expectations' : [
+			{'file': 'PDFC4.res' , 'content' : """
+BEGIN CONSTRAINT
+ 10 >= p2
+& p1 + 5 >= p2
+& p2 >= 0
+& p1 >= 0
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+Number of states                        : 2
+Number of transitions                   : 2
+Number of computed states               : 3
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+	
+	,
+	
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test LoopSynth: simple example with loop for any valuation',
+		'input_files': ['PDFC5.imi'],
+		'options'    : '-mode LoopSynth -output-result',
+		'expectations' : [
+			{'file': 'PDFC5.res' , 'content' : """
+BEGIN CONSTRAINT
+ p2 >= 0
+& p3 >= 0
+& p1 >= 0
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+Number of states                        : 5
+Number of transitions                   : 6
+Number of computed states               : 7
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+	
+	,
+	
+	#------------------------------------------------------------
+	{
 		'purpose'    : 'Test PDFC: very basic example without clocks',
 		'input_files': ['PDFC1.imi'],
 		'options'    : '-mode PDFC -output-result -output-states',
@@ -687,7 +773,9 @@ Number of computed states     : 3
 		] # end expectations
 	} # end test case
 	#------------------------------------------------------------
+	
 	,
+	
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test PDFC: very basic example (false result)',
@@ -748,7 +836,9 @@ Number of computed states     : 2
 		] # end expectations
 	} # end test case
 	#------------------------------------------------------------
+	
 	,
+	
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test PDFC: very basic example (normal result)',
@@ -813,7 +903,9 @@ Number of computed states     : 3
 		] # end expectations
 	} # end test case
 	#------------------------------------------------------------
+
 	,
+	
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test PDFC: very basic example (false result)',

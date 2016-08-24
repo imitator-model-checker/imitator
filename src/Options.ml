@@ -380,6 +380,10 @@ class imitator_options =
 					imitator_mode <- EF_synthesis
 					)
 					
+				(* Case: Parametric loop synthesis *)
+				else if mode = "LoopSynth" then 
+					imitator_mode <- Loop_synthesis
+					
 				(* Case: Parametric deadlock checking *)
 				else if mode = "PDFC" then 
 					imitator_mode <- Parametric_deadlock_checking
@@ -645,7 +649,7 @@ class imitator_options =
 			);
 			
 			(* Case no pi0 file *)
-			if nb_args = 1 && (imitator_mode != State_space_exploration) && (imitator_mode != EF_synthesis) && (imitator_mode != Parametric_deadlock_checking) && (imitator_mode != Translation) (*&& not !forcePi0*) then(
+			if nb_args = 1 && (imitator_mode != State_space_exploration) && (imitator_mode != EF_synthesis) && (imitator_mode != Loop_synthesis) && (imitator_mode != Parametric_deadlock_checking) && (imitator_mode != Translation) then(
 				(*** HACK: print header now ***)
 				print_header_string();
 				print_error ("Please give a file name for the reference valuation.");
@@ -692,6 +696,7 @@ class imitator_options =
 				| Translation -> "translation"
 				| State_space_exploration -> "parametric state space exploration"
 				| EF_synthesis -> "EF-synthesis"
+				| Loop_synthesis -> "loop-synthesis"
 				| Parametric_deadlock_checking -> "Parametric deadlock-checking"
 				| Inverse_method -> "inverse method"
 				| Cover_cartography -> "behavioral cartography algorithm with full coverage and step " ^ (NumConst.string_of_numconst !step)
@@ -712,7 +717,7 @@ class imitator_options =
 			(* Shortcut *)
 			let in_cartography_mode =
 				match imitator_mode with
-				| Translation | State_space_exploration | EF_synthesis| Parametric_deadlock_checking | Inverse_method -> false
+				| Translation | State_space_exploration | EF_synthesis| Loop_synthesis | Parametric_deadlock_checking | Inverse_method -> false
 				| Cover_cartography | Learning_cartography | Shuffle_cartography | Border_cartography | Random_cartography _  | RandomSeq_cartography _ -> true	
 			in
 			
@@ -773,6 +778,9 @@ class imitator_options =
 				if imitator_mode = EF_synthesis then
 					print_warning ("The second file " ^ second_file_name ^ " will be ignored since this is a synthesis with respect to a property.")
 				;
+				if imitator_mode = Loop_synthesis then
+					print_warning ("The second file " ^ second_file_name ^ " will be ignored since this is a loop synthesis.")
+				;
 				if imitator_mode = Parametric_deadlock_checking then
 					print_warning ("The second file " ^ second_file_name ^ " will be ignored since this is parametric deadlock checking.")
 				;
@@ -798,7 +806,7 @@ class imitator_options =
 				print_warning (Constants.program_name ^ " is not run in cartography mode; the option regarding to the step of the cartography algorithm will thus be ignored.");
 			
 			(* Options for variants of IM, but not in IM mode *)
-			if (imitator_mode = State_space_exploration || imitator_mode = Translation || imitator_mode = EF_synthesis || imitator_mode = Parametric_deadlock_checking) && (!union || !pi_compatible) then
+			if (imitator_mode = State_space_exploration || imitator_mode = Translation || imitator_mode = EF_synthesis || imitator_mode = Loop_synthesis || imitator_mode = Parametric_deadlock_checking) && (!union || !pi_compatible) then
 				print_warning (Constants.program_name ^ " is run in state space exploration mode; options regarding to the variant of the inverse method will thus be ignored.");
 
 			

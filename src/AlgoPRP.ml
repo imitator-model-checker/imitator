@@ -141,6 +141,7 @@ class algoPRP =
 						let p_constraint = LinearConstraint.px_hide_nonparameters_and_collapse final_constraint in
 						
 						(* Projecting onto SOME parameters if required *)
+						(*** BADPROG: Duplicate code (EFsynth / AlgoLoopSynth) ***)
 						begin
 						match model.projection with
 						(* Unchanged *)

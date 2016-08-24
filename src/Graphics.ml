@@ -8,7 +8,7 @@
  * Author:        Etienne Andre, Ulrich Kuehne
  * 
  * Created:       2010/07/05
- * Last modified: 2016/08/16
+ * Last modified: 2016/08/24
  *
  ****************************************************************)
 
@@ -154,7 +154,8 @@ try(
 	(*** TODO: take the projection into account! ***)
 	begin
 	match options#imitator_mode with
-		| EF_synthesis | Parametric_deadlock_checking | Inverse_method ->
+		(*** TODO: better use an option "is_cartography" ***)
+		| EF_synthesis | Loop_synthesis | Parametric_deadlock_checking | Inverse_method ->
 			print_message Verbose_low "Pick up the first 2 parameters to draw the cartography";
 			(* First check that there are at least 2 parameters *)
 			if model.nb_parameters < 2 then(
