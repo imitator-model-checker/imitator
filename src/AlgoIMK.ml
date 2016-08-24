@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/12/04
- * Last modified     : 2016/08/15
+ * Last modified     : 2016/08/24
  *
  ************************************************************)
 
@@ -255,11 +255,6 @@ class algoIMK =
 		if pi0_compatible then (
 			(* Build the state *)
 			let new_state = location, final_constraint in
-
-			(* Print some information *)
-			if verbose_mode_greater Verbose_total then(
-				self#print_algo_message Verbose_total ("Consider the state \n" ^ (ModelPrinter.string_of_state model new_state));
-			);
 
 			(* If IM or BC: Add the inequality to the result (except if case variants) *)
 	(*		begin

@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/11/25
- * Last modified     : 2016/08/13
+ * Last modified     : 2016/08/24
  *
  ************************************************************)
 
@@ -90,12 +90,6 @@ class algoEFsynth =
 
 		(* Build the state *)
 		let new_state = location, current_constraint in
-
-		(* Print some information *)
-		if verbose_mode_greater Verbose_total then(
-			(*** TODO: move that comment to a higher level function? (post_from_one_state?) ***)
-			self#print_algo_message Verbose_total ("Consider the state \n" ^ (ModelPrinter.string_of_state model new_state));
-		);
 
 		let new_state_index, added = (
 			StateSpace.add_state state_space new_state

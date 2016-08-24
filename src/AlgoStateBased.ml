@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/12/02
- * Last modified     : 2016/06/03
+ * Last modified     : 2016/08/24
  *
  ************************************************************)
 
@@ -1346,6 +1346,13 @@ class virtual algoStateBased =
 						)else(
 						
 						(* EXPERIMENTAL BRANCHING: CASE MERGE BEFORE (classical version) *)
+							(* Print some information *)
+							if verbose_mode_greater Verbose_total then(
+								(* Build the state *)
+								let new_state = location, final_constraint in
+								self#print_algo_message Verbose_total ("Consider the state \n" ^ (ModelPrinter.string_of_state model new_state));
+							);
+
 							let added = self#add_a_new_state state_space orig_state_index new_states_indexes action_index location final_constraint in
 							
 							(* Update *)
@@ -1407,6 +1414,13 @@ class virtual algoStateBased =
 				(* Iterate on all actions *)
 				(*** WARNING: not very beautiful !! ***)
 				List.iter (fun action_index ->
+					(* Print some information *)
+					if verbose_mode_greater Verbose_total then(
+						(* Build the state *)
+						let new_state = location, final_constraint in
+						self#print_algo_message Verbose_total ("Consider the state \n" ^ (ModelPrinter.string_of_state model new_state));
+					);
+
 					let added = self#add_a_new_state state_space orig_state_index new_states_indexes action_index location final_constraint in
 					(* Update flag for deadlock checking *)
 					has_successors := !has_successors || added;
