@@ -4,10 +4,10 @@
  * 
  * LIPN, Université Paris 13, Sorbonne Paris Cité (France)
  * 
- * Module description: Concrete implementation of the tiles manager class to manage the tiles received in the cartography algorithms, using a list of Result.good_or_bad_constraint
+ * Module description: Concrete implementation of the tiles manager class to manage the tiles received in the cartography algorithms, using a single Result.good_or_bad_constraint
  * 
  * File contributors : Étienne André
- * Created           : 2016/08/15
+ * Created           : 2016/08/26
  * Last modified     : 2016/08/26
  *
  ************************************************************)
@@ -26,13 +26,12 @@ open TilesManager
 
 
 
-
 (************************************************************)
 (************************************************************)
 (* Class definition *)
 (************************************************************)
 (************************************************************)
-class tilesManagerList =
+class tilesManagerConstraint =
 	object (self) inherit tilesManager as super
 	
 	
@@ -40,8 +39,16 @@ class tilesManagerList =
 	(* Class variables *)
 	(************************************************************)
 	
-	(* List of results stored as a list *)
-	val mutable abstract_point_based_results : Result.abstract_point_based_result list = []
+	(* List of results stored as a single good_or_bad_constraint *)
+	(*** NOTE: initially, both constraints are false (no valuation computed) and exact ***)
+	val mutable result : good_or_bad_constraint =
+		Good_bad_constraint {
+			good	= LinearConstraint.false_p_nnconvex_constraint (), Constraint_exact;
+			bad		= LinearConstraint.false_p_nnconvex_constraint (), Constraint_exact;
+		}
+	
+	(* Keep track of the number of results processed and added *)
+	val mutable nb_results_added = 0
 
 	
 	(************************************************************)
@@ -52,31 +59,38 @@ class tilesManagerList =
 	(* Initialize the manager *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method initialize =
-		abstract_point_based_results <- []
+	(*** BADPROG: in fact, this initialization is already done when the object is created (but safer to reinitialize just in case) ***)
+	(*** NOTE: initially, both constraints are false (no valuation computed) and exact ***)
+	result <-
+		Good_bad_constraint {
+			good	= LinearConstraint.false_p_nnconvex_constraint (), Constraint_exact;
+			bad		= LinearConstraint.false_p_nnconvex_constraint (), Constraint_exact;
+		}
+	;
+	(* Also reset the number of results processed *)
+	nb_results_added <- 0
 
 	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Get the number of results processed and stored *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method get_nb_results =
-		List.length abstract_point_based_results
+		nb_results_added
 
 	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Check if a parameter valuation belongs to the tiles *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method pval_in_tiles pval =
-		(*** NOTE: obliged to define a non-anonymous function; otherwise OCaml makes a wrong type inference... ***)
-		let pval_in_abstract_point_based_result (abstract_point_based_result : abstract_point_based_result) =
-			pval_in_good_or_bad_constraint pval abstract_point_based_result.result in
-		List.exists pval_in_abstract_point_based_result abstract_point_based_results
+		pval_in_good_or_bad_constraint pval result
 	
 	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Process a new tile, i.e., add it to the tiles *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method process_tile tile =
-		abstract_point_based_results <- tile :: abstract_point_based_results
+		(*** TODO: increment nb_results_added ***)
+		raise (InternalError("not implemented"))
 
 	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -93,42 +107,23 @@ class tilesManagerList =
 			| None ->
 			(*** NOTE: this is only true for the original behavioral cartography; for variants this may not hold ***)
 			(* INTEGER COMPLETE if termination is regular and all tiles are exact or under-approximations *)
-			if termination_status = BC_Regular_termination &&
-(*				(List.for_all (fun abstract_point_based_result -> match abstract_point_based_result.soundness with
-					| Constraint_exact | Constraint_maybe_under -> true
-					| Constraint_maybe_over | Constraint_maybe_invalid -> false
-					| Constraint_under_over -> raise (InternalError("BC is not suppose to handle under/over-approximations"))
-				) abstract_point_based_results*)
-				(List.for_all (fun (abstract_point_based_result : abstract_point_based_result) ->
-					is_good_or_bad_constraint_sound abstract_point_based_result.result
-				) abstract_point_based_results
-				)
+			if termination_status = BC_Regular_termination && is_good_or_bad_constraint_sound result
 				then Coverage_integer_complete
 			(* UNKNOWN otherwise *)
 			else Coverage_unknown
 		in
 
-		(*		(* Coverage is... *)
-		(*** NOTE: this is only true for the original behavioral cartography; for variants this may not hold ***)
-		let coverage =
-			(* INTEGER COMPLETE if termination is regular and all tiles are valid *)
-			if termination_status = BC_Regular_termination && (List.for_all (fun abstract_im_result -> match abstract_im_result.soundness with
-					| Constraint_maybe_under | Constraint_exact | Constraint_maybe_over -> true
-					| Constraint_maybe_invalid -> false
-				) abstract_point_based_results)
-				then Coverage_integer_complete
-			(* UNKNOWN otherwise *)
-			else Coverage_unknown
-		in*)
-		
 		(* Return result *)
-		Cartography_result {
+		Multiple_synthesis_result {
 			(* Number of points in V0 *)
 			size_v0				= nb_points_in_v0;
 			
+			(* Good and/or bad valuations *)
+			result				= result;
+
 			(* List of tiles *)
 			(*** NOTE: reverse as each result was added as first element ***)
-			tiles				= List.rev abstract_point_based_results;
+(* 			tiles				= List.rev abstract_point_based_results; *)
 			
 			(* Total computation time of the algorithm *)
 			computation_time	= time_from start_time;

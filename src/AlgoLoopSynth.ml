@@ -182,7 +182,7 @@ class algoLoopSynth =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method compute_result =
 		(* Retrieve the model *)
-		let model = Input.get_model () in
+(* 		let model = Input.get_model () in *)
 
 		(* Print some information *)
 		self#print_algo_message_newline Verbose_standard (

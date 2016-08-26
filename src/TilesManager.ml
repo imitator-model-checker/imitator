@@ -32,10 +32,40 @@ open Result
 (************************************************************)
 
 (*------------------------------------------------------------*)
-(** Check if a parameter valuation belongs to the constraint of an abstract_point_based_result *)
+(** Check if a good_or_bad_constraint is sound *)
 (*------------------------------------------------------------*)
-let pi0_in_tiles pval (abstract_point_based_result : abstract_point_based_result) =
-	match abstract_point_based_result.result with
+let is_good_or_bad_constraint_sound (good_or_bad_constraint : good_or_bad_constraint) =
+	match good_or_bad_constraint with
+	| Good_constraint (_, Constraint_exact)
+	| Good_constraint (_, Constraint_maybe_under)
+	| Bad_constraint (_, Constraint_exact)
+	| Bad_constraint (_, Constraint_maybe_under)
+	-> true
+	| Good_constraint (_, Constraint_maybe_over)
+	| Good_constraint (_, Constraint_maybe_invalid)
+	| Bad_constraint (_, Constraint_maybe_over)
+	| Bad_constraint (_, Constraint_maybe_invalid)
+	-> false
+	| Good_bad_constraint good_and_bad_constraint ->
+		let _, good_soundness = good_and_bad_constraint.good in
+		let _, bad_soundness = good_and_bad_constraint.bad in
+		let is_sound =
+		match (good_soundness, bad_soundness) with
+		| Constraint_exact, Constraint_exact
+		| Constraint_exact, Constraint_maybe_under
+		| Constraint_maybe_under, Constraint_exact
+		| Constraint_maybe_under, Constraint_maybe_under
+		-> true
+		| _ -> false
+		in
+		is_sound
+
+
+(*------------------------------------------------------------*)
+(** Check if a parameter valuation belongs to a good_or_bad_constraint *)
+(*------------------------------------------------------------*)
+let pval_in_good_or_bad_constraint pval (good_or_bad_constraint : good_or_bad_constraint) =
+	match good_or_bad_constraint with
 (*	| LinearConstraint.Convex_p_constraint p_linear_constraint -> LinearConstraint.is_pi0_compatible pval#get_value p_linear_constraint
 	| LinearConstraint.Nonconvex_p_constraint p_nnconvex_constraint -> LinearConstraint.p_nnconvex_constraint_is_pi0_compatible pval#get_value p_nnconvex_constraint*)
 	
@@ -54,6 +84,7 @@ let pi0_in_tiles pval (abstract_point_based_result : abstract_point_based_result
 		LinearConstraint.p_nnconvex_constraint_is_pi0_compatible pval#get_value good_p_nnconvex_constraint
 		||
 		LinearConstraint.p_nnconvex_constraint_is_pi0_compatible pval#get_value bad_p_nnconvex_constraint
+
 
 
 (************************************************************)

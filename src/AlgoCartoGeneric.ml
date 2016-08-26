@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/01/19
- * Last modified     : 2016/08/15
+ * Last modified     : 2016/08/26
  *
  ************************************************************)
 
@@ -596,7 +596,7 @@ class virtual algoCartoGeneric =
 		begin
 		match self#get_tiles_manager_type with
 			| Tiles_list -> tiles_manager <- new TilesManagerList.tilesManagerList
-			| Tiles_good_bad_constraint -> raise (InternalError "not implemented yet")
+			| Tiles_good_bad_constraint -> tiles_manager <- new TilesManagerConstraint.tilesManagerConstraint
 		end;
 		(* Now initialize the tiles manager *)
 		tiles_manager#initialize;

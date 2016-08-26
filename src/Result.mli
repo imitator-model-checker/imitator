@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/11/23
- * Last modified     : 2016/08/15
+ * Last modified     : 2016/08/26
  *
  ************************************************************)
 
@@ -267,9 +267,9 @@ type multiple_synthesis_result = {
 	result				: good_or_bad_constraint;
 
 	(* List of tiles *)
-	(*** NOTE: so far we keep everything ***)
+	(*** NOTE: so far we do NOT keep tiles ***)
 	(*** TODO: compact to save memory? ***)
-	tiles				: abstract_point_based_result list;
+(* 	tiles				: abstract_point_based_result list; *)
 	
 	(* Total computation time of the algorithm *)
 	computation_time	: float;

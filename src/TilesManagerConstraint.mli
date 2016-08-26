@@ -4,10 +4,10 @@
  * 
  * LIPN, Université Paris 13, Sorbonne Paris Cité (France)
  * 
- * Module description: Abstract tiles manager class to manage the tiles received in the cartography algorithms.
+ * Module description: Concrete implementation of the tiles manager class to manage the tiles received in the cartography algorithms, using a single Result.good_or_bad_constraint
  * 
  * File contributors : Étienne André
- * Created           : 2016/08/15
+ * Created           : 2016/08/26
  * Last modified     : 2016/08/26
  *
  ************************************************************)
@@ -16,32 +16,15 @@
 (************************************************************)
 (* Modules *)
 (************************************************************)
-
-(************************************************************)
-(************************************************************)
-(* Class-independent functions *)
-(************************************************************)
-(************************************************************)
-
-(*------------------------------------------------------------*)
-(** Check if a good_or_bad_constraint is sound *)
-(*------------------------------------------------------------*)
-val is_good_or_bad_constraint_sound : Result.good_or_bad_constraint -> bool
-
-
-(*------------------------------------------------------------*)
-(** Check if a parameter valuation belongs to a good_or_bad_constraint *)
-(*------------------------------------------------------------*)
-val pval_in_good_or_bad_constraint : PVal.pval -> Result.good_or_bad_constraint -> bool
-
+open TilesManager
 
 (************************************************************)
 (************************************************************)
 (* Class definition *)
 (************************************************************)
 (************************************************************)
-class virtual tilesManager:
-	object
+class tilesManagerConstraint:
+	object inherit tilesManager
 
 		(************************************************************)
 		(* Class variables *)
@@ -51,32 +34,33 @@ class virtual tilesManager:
 		(************************************************************)
 		(* Class methods *)
 		(************************************************************)
-
+		
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		(* Initialize the manager *)
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-		method virtual initialize : unit
+		method initialize : unit
 		
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		(* Get the number of results processed and stored *)
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-		method virtual get_nb_results : int
+		method get_nb_results : int
 		
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		(* Check if a parameter valuation belongs to the tiles *)
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-		method virtual pval_in_tiles : PVal.pval -> bool
+		method pval_in_tiles : PVal.pval -> bool
 
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		(* Process a new tile, i.e., add it to the tiles *)
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-		method virtual process_tile : Result.abstract_point_based_result -> unit
+		method process_tile : Result.abstract_point_based_result -> unit
 		
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		(* Process the result of the cartography *)
 		(* If forced_coverage_option <> None, then the coverage is set to this argument; otherwise, it is computed as exepected (*** NOTE: used in Random to force the coverage to Unknown ***) *)
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-		method virtual process_result : float -> NumConst.t -> int -> Result.bc_algorithm_termination -> Result.bc_coverage option -> Result.imitator_result
+		method process_result : float -> NumConst.t -> int -> Result.bc_algorithm_termination -> Result.bc_coverage option -> Result.imitator_result
+
 
 (************************************************************)
 end
