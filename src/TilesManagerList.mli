@@ -4,7 +4,7 @@
  * 
  * LIPN, Université Paris 13, Sorbonne Paris Cité (France)
  * 
- * Module description: Abstract tiles manager class to manage the tiles received in the cartography algorithms.
+ * Module description: Concrete implementation of the tiles manager class to manage the tiles received in the cartography algorithms, using a list of Result.good_or_bad_constraint
  * 
  * File contributors : Étienne André
  * Created           : 2016/08/15

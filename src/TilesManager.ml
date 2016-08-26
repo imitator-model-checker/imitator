@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/08/15
- * Last modified     : 2016/08/15
+ * Last modified     : 2016/08/26
  *
  ************************************************************)
 
@@ -20,7 +20,40 @@
 (************************************************************)
 open OCamlUtilities
 open ImitatorUtilities
+open Result
 
+
+
+
+(************************************************************)
+(************************************************************)
+(* Class-independent functions *)
+(************************************************************)
+(************************************************************)
+
+(*------------------------------------------------------------*)
+(** Check if a parameter valuation belongs to the constraint of an abstract_point_based_result *)
+(*------------------------------------------------------------*)
+let pi0_in_tiles pval (abstract_point_based_result : abstract_point_based_result) =
+	match abstract_point_based_result.result with
+(*	| LinearConstraint.Convex_p_constraint p_linear_constraint -> LinearConstraint.is_pi0_compatible pval#get_value p_linear_constraint
+	| LinearConstraint.Nonconvex_p_constraint p_nnconvex_constraint -> LinearConstraint.p_nnconvex_constraint_is_pi0_compatible pval#get_value p_nnconvex_constraint*)
+	
+	(*** NOTE: we do not investigate soundness; i.e., even if the tile is invalid, we still check whether the valuation belongs to the tile ***)
+	
+	(* Only good valuations *)
+	| Good_constraint (p_nnconvex_constraint, _)
+	(* Only bad valuations *)
+	| Bad_constraint (p_nnconvex_constraint, _)
+		-> LinearConstraint.p_nnconvex_constraint_is_pi0_compatible pval#get_value p_nnconvex_constraint
+		
+	(* Both good and bad valuations *)
+	| Good_bad_constraint good_and_bad_constraint ->
+		let good_p_nnconvex_constraint, _ = good_and_bad_constraint.good in
+		let bad_p_nnconvex_constraint, _ = good_and_bad_constraint.bad in
+		LinearConstraint.p_nnconvex_constraint_is_pi0_compatible pval#get_value good_p_nnconvex_constraint
+		||
+		LinearConstraint.p_nnconvex_constraint_is_pi0_compatible pval#get_value bad_p_nnconvex_constraint
 
 
 (************************************************************)
