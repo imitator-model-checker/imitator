@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/08/15
- * Last modified     : 2016/08/26
+ * Last modified     : 2016/08/30
  *
  ************************************************************)
 
@@ -22,6 +22,12 @@
 (* Class-independent functions *)
 (************************************************************)
 (************************************************************)
+
+(*------------------------------------------------------------*)
+(** 'good_or_bad_constraint_union_assign good_or_bad_constraint1 good_or_bad_constraint2' performs the union of two good_or_bad_constraint, by assigning the result to the first and leaving the second unchanged *)
+(*------------------------------------------------------------*)
+val good_or_bad_constraint_union_assign : Result.good_or_bad_constraint -> Result.good_or_bad_constraint -> unit
+
 
 (*------------------------------------------------------------*)
 (** Check if a good_or_bad_constraint is sound *)

@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/08/15
- * Last modified     : 2016/08/26
+ * Last modified     : 2016/08/30
  *
  ************************************************************)
 
@@ -20,6 +20,7 @@
 (************************************************************)
 open OCamlUtilities
 open ImitatorUtilities
+open Exceptions
 open Result
 
 
@@ -30,6 +31,39 @@ open Result
 (* Class-independent functions *)
 (************************************************************)
 (************************************************************)
+
+(*------------------------------------------------------------*)
+(** 'good_or_bad_constraint_union_assign good_or_bad_constraint1 good_or_bad_constraint2' performs the union of two good_or_bad_constraint, by assigning the result to the first and leaving the second unchanged *)
+(*------------------------------------------------------------*)
+let good_or_bad_constraint_union_assign (good_or_bad_constraint1 : good_or_bad_constraint) (good_or_bad_constraint2 : good_or_bad_constraint) =
+	match (good_or_bad_constraint1, good_or_bad_constraint2) with
+
+	| Good_bad_constraint good_and_bad_constraint1, Good_constraint good_constraint2 ->
+		(* Get good part *)
+		let constraint1, _ = good_and_bad_constraint1.good in
+		let constraint2, _ = good_constraint2 in
+		(* Add second good part to the first *)
+		LinearConstraint.p_nnconvex_union constraint1 constraint2
+	
+	| Good_bad_constraint good_and_bad_constraint1, Bad_constraint bad_constraint2 ->
+		(* Get bad part *)
+		let constraint1, _ = good_and_bad_constraint1.bad in
+		let constraint2, _ = bad_constraint2 in
+		(* Add second bad part to the first *)
+		LinearConstraint.p_nnconvex_union constraint1 constraint2
+	
+	| Good_bad_constraint good_and_bad_constraint1, Good_bad_constraint good_and_bad_constraint2 ->
+		(* Add second good part to the first *)
+		let gconstraint1, _ = good_and_bad_constraint1.good in
+		let gconstraint2, _ = good_and_bad_constraint2.good in
+		LinearConstraint.p_nnconvex_union gconstraint1 gconstraint2;
+		(* Add second bad part to the first *)
+		let bconstraint1, _ = good_and_bad_constraint1.bad in
+		let bconstraint2, _ = good_and_bad_constraint2.bad in
+		LinearConstraint.p_nnconvex_union bconstraint1 bconstraint2
+	
+	| _ -> raise (InternalError("Case not supported in good_or_bad_constraint_union_assign"))
+
 
 (*------------------------------------------------------------*)
 (** Check if a good_or_bad_constraint is sound *)
