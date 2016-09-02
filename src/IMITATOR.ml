@@ -613,6 +613,7 @@ let filter_upperbound_by_clock clock_index tuple_inequalities_s0 =
 																let index = ref 0 in
 																(*count is the number of upperbounds*)
 																let count = ref 0 in
+
 																for i = 0 to length -1
 																do 
 																	let (clock_index_2, operator, parametric_linear_term) = (List.nth tuple_inequalities_s0 i) in 
@@ -649,11 +650,20 @@ let filter_upperbound_by_clock clock_index tuple_inequalities_s0 =
 
 
 let filter_upperbound_by_clock_2 clock_index tuple_inequalities_s0 =
+																let ls =
+																( 
 																match tuple_inequalities_s0 with
     															| [] ->  raise (InternalError("Detected empty list, check again the input inequalities or it might be True constraint "))
     															| _  -> 
-																List.find_all (fun (index,_,_) -> index = clock_index ) tuple_inequalities_s0;
-																
+																(List.find_all (fun (index, op,_) -> index = clock_index && (op = LinearConstraint.Op_le ||op = LinearConstraint.Op_l) ) tuple_inequalities_s0);
+																);
+																in
+																(* if !ls = []
+																then
+																	(
+																	ls := [( clock_index, LinearConstraint.Op_ge, LinearConstraint.make_p_linear_term [] NumConst.zero )]; 		
+																	); *)
+																ls;													
 															in 
 
 
@@ -895,6 +905,148 @@ let cub_check_2 invariant_s0 guard_t invariant_s1 clock_updates =
 
 																(!isCUB_PTA, !inequalities);
 																in
+
+
+
+(* use for removing problematic transitions *)
+let cub_check_3 invariant_s0 guard_t invariant_s1 clock_updates = 	
+	let inequalities = ref [] in
+	let inequalities_s0 = LinearConstraint.pxd_get_inequalities invariant_s0 in
+	let inequalities_t 	= LinearConstraint.pxd_get_inequalities guard_t in
+	let inequalities_s1 = LinearConstraint.pxd_get_inequalities invariant_s1 in
+	let tuple_inequalities_s0 	= convert_inequality_list_2_tuple_list inequalities_s0 in
+	let tuple_inequalities_t 	= convert_inequality_list_2_tuple_list inequalities_t in
+	let tuple_inequalities_s1 	= convert_inequality_list_2_tuple_list inequalities_s1 in
+
+	let isCUB_PTA = ref true in
+	let inequalities_need_to_solve = ref [] in
+
+	 List.iter (	fun clock_index -> 
+		let ls_tup_ineq_s0 	= (filter_upperbound_by_clock_2 clock_index tuple_inequalities_s0) in
+		let ls_tup_ineq_t 	= (filter_upperbound_by_clock_2 clock_index tuple_inequalities_t) in
+		let ls_tup_ineq_s1 	= (filter_upperbound_by_clock_2 clock_index tuple_inequalities_s1) in
+
+		if List.mem clock_index clock_updates = true
+		then 
+			(
+			match ls_tup_ineq_s0, ls_tup_ineq_t with
+			| [], [] 	-> ()
+			| [], _ 	-> isCUB_PTA := false
+			| _, []		-> ()
+			| _, _ 		-> 	(
+							List.iter (fun (_, op_s0, linear_term_s0) -> 
+								List.iter (fun (_, op_t, linear_term_t) -> 
+									let ineq = make_CUB_inequality (op_s0, linear_term_s0) (op_t, linear_term_t) in
+									let constr = make_CUB_constraint [ineq] in
+									if LinearConstraint.p_is_true constr
+									then 
+										(
+										)
+									else
+										(
+										if LinearConstraint.p_is_false constr
+										then 
+											(
+											isCUB_PTA := false;
+											);
+										);
+								) ls_tup_ineq_t;
+							) ls_tup_ineq_s0;
+							);
+			)
+		else
+			(
+				match ls_tup_ineq_s0, ls_tup_ineq_t, ls_tup_ineq_s1 with
+				| [], [], [] 	-> print_message Verbose_standard (" 1 " ); ()
+				| [],  _, _ 	-> print_message Verbose_standard (" 2 " );()
+				| _,  [], _ 	-> 	( print_message Verbose_standard (" 3 " );
+									List.iter (fun (_, op_s0, linear_term_s0) -> 
+										List.iter (fun (_, op_s1, linear_term_s1) -> 
+										let ineq = make_CUB_inequality (op_s0, linear_term_s0) (op_s1, linear_term_s1) in
+										let constr = make_CUB_constraint [ineq] in
+										if LinearConstraint.p_is_true constr
+										then 
+											(
+											)
+										else
+											(
+											if LinearConstraint.p_is_false constr
+											then 
+												(
+												isCUB_PTA := false;
+												);
+											);
+										) ls_tup_ineq_s1;
+									) ls_tup_ineq_s0;
+									);
+				| _,   _, [] 	-> 	( print_message Verbose_standard (" 4 " );
+									List.iter (fun (_, op_s0, linear_term_s0) -> 
+										List.iter (fun (_, op_t, linear_term_t) -> 
+										let ineq = make_CUB_inequality (op_s0, linear_term_s0) (op_t, linear_term_t) in
+										let constr = make_CUB_constraint [ineq] in
+										if LinearConstraint.p_is_true constr
+										then 
+											(
+											)
+										else
+											(
+											if LinearConstraint.p_is_false constr
+											then 
+												(
+												isCUB_PTA := false;
+												);
+											);
+										) ls_tup_ineq_t;
+									) ls_tup_ineq_s0;
+									);
+				| [], [], _ 	-> print_message Verbose_standard (" 5 " ); isCUB_PTA := false; 
+				| [],  _, [] 	-> print_message Verbose_standard (" 6 " ); isCUB_PTA := false;
+				| _,  [], [] 	-> print_message Verbose_standard (" 7 " ); ()
+				| _,   _, _ 	-> 	( print_message Verbose_standard (" 8 " );
+									List.iter (fun (_, op_s0, linear_term_s0) -> 
+										List.iter (fun (_, op_t, linear_term_t) -> 
+											List.iter (fun (_, op_s1, linear_term_s1) -> 
+												let ineq1 = make_CUB_inequality (op_s0, linear_term_s0) (op_t, linear_term_t) in
+												let ineq2 = make_CUB_inequality (op_s0, linear_term_s0) (op_s1, linear_term_s1) in
+												let const = make_CUB_constraint [ineq1;ineq2] in
+												if LinearConstraint.p_is_true const
+												then 
+													(
+													)
+												else
+													(
+													if LinearConstraint.p_is_false const
+													then 
+														(
+														isCUB_PTA := false;
+														);
+													);
+											) ls_tup_ineq_s1;
+										) ls_tup_ineq_t;
+									) ls_tup_ineq_s0;
+									);
+
+			); 
+
+
+	) model.clocks; 
+
+
+	
+	(!isCUB_PTA, !inequalities);
+	in
+
+
+
+(* print_message Verbose_standard ("\n const: \n" ^ (LinearConstraint.string_of_p_linear_constraint model.variable_names const) );
+
+print_message Verbose_standard (" Inequality s0 <= t: \n" 
+								^ LinearConstraint.string_of_p_linear_inequality model.variable_names ineq1 ^ "!!!\n");
+
+print_message Verbose_standard (" Inequality s0 <= s1: \n" 
+								^ LinearConstraint.string_of_p_linear_inequality model.variable_names ineq2 ^ "!!!\n");
+(* ^ "\n Constraint2: \n" ^ (LinearConstraint.string_of_p_linear_constraint model.variable_names con1) ); *) *)
+
 
 
 (*
@@ -1490,6 +1642,14 @@ let find_all_clocks_constraints clocks_constraints location_index = let ls = ref
 																	!ls;
 																in
 
+let init_loc = ref "" in
+
+(* initial_location *)
+
+
+(*single clock bounded*)
+if List.length model.automata > 1
+then raise (InternalError(" Sorry, we only support for single model currently. Multi-clocks and multi-constraint will be implemented in next version! "));
 
 
 (*covert input model into specific data stucture*)
@@ -1509,6 +1669,8 @@ List.iter (fun automaton_index ->
 	(*set true constraint*)
 	let true_constraint = LinearConstraint.p_true_constraint () in
 	DynArray.add parameters_constraints_ini (true,[true_constraint]); 
+
+	init_loc := (model.location_names automaton_index (List.hd (model.locations_per_automaton automaton_index)));
 
 
 	(*Checking bounded clocked in invariant (Location)*)
@@ -3017,7 +3179,8 @@ DynArray.iter (fun (ss, ts, c_constraints, p_constraints) ->
 		count :=  !count + 1;
 
 	) c_constraints;
-	DynArray.add newSubModels (ss, ts, c_constraints, p_constraints, inx);
+	let init_locs = (Hashtbl.find_all inx !init_loc) in
+	DynArray.add newSubModels (ss, ts, c_constraints, p_constraints, inx, init_locs@[!init_loc]);
 ) submodels;
 (* stage 2 - end*)
 
@@ -3026,7 +3189,7 @@ DynArray.iter (fun (ss, ts, c_constraints, p_constraints) ->
 print_message Verbose_standard ("\n ----------------------------Models Summary (stage 2-add states)------------------------------- ");
 print_message Verbose_standard ("\n Number of models: " ^ (string_of_int (DynArray.length submodels) ) );
 let model_count = ref 1 in
-DynArray.iter (fun (states, transitions, c_constraints, p_constraints, index) ->
+DynArray.iter (fun (states, transitions, c_constraints, p_constraints, index, init_locs) ->
 
 	print_message Verbose_standard ("\n ----------------------Sub Model "^ (string_of_int !model_count) ^"----------------------------- " );
 
@@ -3073,7 +3236,7 @@ print_message Verbose_standard ("\n ----------------------------Models Summary (
 
 
 (* third stage - add transitions *)
-DynArray.iter (fun (states, transitions, c_constraints, p_constraints, index) ->
+DynArray.iter (fun (states, transitions, c_constraints, p_constraints, index, init_locs) ->
 
 	DynArray.iter ( fun (location_index, destination_location_index, guard, clock_updates) ->
 		let listCubLoc1 = Hashtbl.find_all index location_index in
@@ -3104,7 +3267,7 @@ DynArray.iter (fun (states, transitions, c_constraints, p_constraints, index) ->
 print_message Verbose_standard ("\n ----------------------------Models Summary (stage 2-add transitions)------------------------------- ");
 print_message Verbose_standard ("\n Number of models: " ^ (string_of_int (DynArray.length submodels) ) );
 let model_count = ref 1 in
-DynArray.iter (fun (states, transitions, c_constraints, p_constraints, index) ->
+DynArray.iter (fun (states, transitions, c_constraints, p_constraints, index, init_locs) ->
 
 	print_message Verbose_standard ("\n ----------------------Sub Model "^ (string_of_int !model_count) ^"----------------------------- " );
 
@@ -3159,14 +3322,14 @@ print_message Verbose_standard ("\n ----------------------------Models Summary (
  
 (* final stage *)
 let new_transitions = DynArray.make 0 in
-DynArray.iter (fun (states, transitions, c_constraints, p_constraints, index) ->
+DynArray.iter (fun (states, transitions, c_constraints, p_constraints, index, init_locs) ->
 
 	for i = 1 to (DynArray.length transitions) do
 		let (location_index, destination_location_index, guard, clock_updates) = DynArray.get transitions (i-1) in
 		let s0_cons = Hashtbl.find states location_index in
 		let s1_cons = Hashtbl.find states destination_location_index in
 
-		let (a, b) = cub_check_2 s0_cons guard s1_cons clock_updates in 
+		let (a, b) = cub_check_3 s0_cons guard s1_cons clock_updates in 
 		
 		if a = true
 		then
@@ -3175,18 +3338,18 @@ DynArray.iter (fun (states, transitions, c_constraints, p_constraints, index) ->
 			)
 		else
 			( 
-				if b != []
+				(* if b != []
 				then
 					(
 					let con = LinearConstraint.pxd_of_p_constraint (LinearConstraint.make_p_constraint b) in
 					let check = isContraintAllConflictsParametersConstraints2 con p_constraints in 
 					if check = false
 					then
-						(
-						DynArray.add new_transitions (DynArray.get transitions (i-1)); 
-						);
+						( *)
+						(* DynArray.add new_transitions (DynArray.get transitions (i-1));  *)
+						(* );
 						
-					);
+					); *)
 			);
 		
 	done;
@@ -3203,7 +3366,7 @@ DynArray.iter (fun (states, transitions, c_constraints, p_constraints, index) ->
 print_message Verbose_standard ("\n ----------------------------Models Summary (Final stage-remove problematic transitions)------------------------------- ");
 print_message Verbose_standard ("\n Number of models: " ^ (string_of_int (DynArray.length submodels) ) );
 let model_count = ref 1 in
-DynArray.iter (fun (states, transitions, c_constraints, p_constraints, index) ->
+DynArray.iter (fun (states, transitions, c_constraints, p_constraints, index, init_locs) ->
 
 	print_message Verbose_standard ("\n ----------------------Sub Model "^ (string_of_int !model_count) ^"----------------------------- " );
 
@@ -3264,22 +3427,18 @@ let i = ref 1 in
 let s0 = "cub-init" in
 let newstates =  Hashtbl.create 0 in
 Hashtbl.add newstates s0 (LinearConstraint.pxd_true_constraint ());
+
 let newtransitions = DynArray.make 0 in
-DynArray.iter (fun (states, transitions, _, p_constraints, _) ->
+DynArray.iter (fun (states, transitions, _, p_constraints, index, init_locs) ->
 	
-	let first = ref 1 in
-	let first_state = ref "" in
 	Hashtbl.iter (fun location_index cons -> 
 		let newloc = (location_index ^ "-m" ^ (string_of_int !i) ) in
 		Hashtbl.add newstates newloc cons;
-		if !first = 1
-		then first_state := newloc;
-		first := !first + 1;
 	) states;
 
 	DynArray.iter (fun (location_index, destination_location_index, guard, clock_updates) -> 
 		let newloc1 = (location_index ^ "-m" ^ (string_of_int !i) ) in
-		let newloc2 = (destination_location_index ^ "-" ^ (string_of_int !i) ) in
+		let newloc2 = (destination_location_index ^ "-m" ^ (string_of_int !i) ) in
 		DynArray.add newtransitions (newloc1, newloc2, guard, clock_updates);
 	) transitions;
 
@@ -3287,7 +3446,12 @@ DynArray.iter (fun (states, transitions, _, p_constraints, _) ->
 	List.iter( fun cons ->
 		let pxd_cons = LinearConstraint.pxd_of_p_constraint cons in
 		if (LinearConstraint.pxd_is_false pxd_cons = false)
-		then DynArray.add newtransitions (s0, !first_state, pxd_cons, [] ) ;
+		then 
+			(
+			List.iter (fun loc -> 
+				DynArray.add newtransitions (s0, (loc ^ "-m" ^ (string_of_int !i)), pxd_cons, [] ) ;
+			) init_locs;
+			);
 	) listParaRelations;
 
 	(* DynArray.add finalModel (newstates, newtransitions); *)
@@ -3296,14 +3460,14 @@ DynArray.iter (fun (states, transitions, _, p_constraints, _) ->
 
 ) newSubModels;
 
-let finalModel = (newstates, newtransitions) in ()
+let finalModel = (newstates, newtransitions) in 
 (* additional stage - end *)
 
 
 
 
 (*models summary*)
-(* print_message Verbose_standard ("\n ----------------------------Models Summary Final------------------------------- ");
+print_message Verbose_standard ("\n ----------------------------Models Summary Final------------------------------- ");
 
 	print_message Verbose_standard ("\n Number of states :"^ string_of_int (Hashtbl.length newstates) );
 	Hashtbl.iter (fun loc cons ->
@@ -3328,7 +3492,7 @@ let finalModel = (newstates, newtransitions) in ()
 
 
 
-print_message Verbose_standard ("\n ----------------------------Models Summary Final End--------------------------- "); *)
+print_message Verbose_standard ("\n ----------------------------Models Summary Final End--------------------------- ");
 (*models summary - end*)
 
 
