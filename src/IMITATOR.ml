@@ -648,8 +648,25 @@ let filter_upperbound_by_clock clock_index tuple_inequalities_s0 =
 															in 
 
 
-
 let filter_upperbound_by_clock_2 clock_index tuple_inequalities_s0 =
+																let ls = ref
+																( 
+																match tuple_inequalities_s0 with
+    															| [] ->  raise (InternalError("Detected empty list, check again the input inequalities or it might be True constraint "))
+    															| _  -> 
+																(List.find_all (fun (index, _,_) -> index = clock_index ) tuple_inequalities_s0);
+																);
+																in
+																if !ls = []
+																then
+																	(
+																	ls := [( clock_index, LinearConstraint.Op_ge, LinearConstraint.make_p_linear_term [] NumConst.zero )]; 		
+																	);
+																!ls;													
+															in 
+
+
+let filter_upperbound_by_clock_3 clock_index tuple_inequalities_s0 =
 																let ls =
 																( 
 																match tuple_inequalities_s0 with
@@ -658,11 +675,6 @@ let filter_upperbound_by_clock_2 clock_index tuple_inequalities_s0 =
 																(List.find_all (fun (index, op,_) -> index = clock_index && (op = LinearConstraint.Op_le ||op = LinearConstraint.Op_l) ) tuple_inequalities_s0);
 																);
 																in
-																(* if !ls = []
-																then
-																	(
-																	ls := [( clock_index, LinearConstraint.Op_ge, LinearConstraint.make_p_linear_term [] NumConst.zero )]; 		
-																	); *)
 																ls;													
 															in 
 
@@ -922,9 +934,9 @@ let cub_check_3 invariant_s0 guard_t invariant_s1 clock_updates =
 	let inequalities_need_to_solve = ref [] in
 
 	 List.iter (	fun clock_index -> 
-		let ls_tup_ineq_s0 	= (filter_upperbound_by_clock_2 clock_index tuple_inequalities_s0) in
-		let ls_tup_ineq_t 	= (filter_upperbound_by_clock_2 clock_index tuple_inequalities_t) in
-		let ls_tup_ineq_s1 	= (filter_upperbound_by_clock_2 clock_index tuple_inequalities_s1) in
+		let ls_tup_ineq_s0 	= (filter_upperbound_by_clock_3 clock_index tuple_inequalities_s0) in
+		let ls_tup_ineq_t 	= (filter_upperbound_by_clock_3 clock_index tuple_inequalities_t) in
+		let ls_tup_ineq_s1 	= (filter_upperbound_by_clock_3 clock_index tuple_inequalities_s1) in
 
 		if List.mem clock_index clock_updates = true
 		then 
@@ -2433,6 +2445,11 @@ while (!count_m) <= (DynArray.length submodels) do
 		(* let conj = LinearConstraint.pxd_intersection !cons in
 		DynArray.add clocks_constraints (location_index, (LinearConstraint.pxd_false_constraint ())); *)
 
+
+
+		
+		
+
 		print_message Verbose_standard ("\n --------------------2nd check start---------------------- ");
 
 		List.iter (	fun clock_index -> 
@@ -3037,12 +3054,15 @@ while (!count_m) <= (DynArray.length submodels) do
 							);
 					) constraints_s1;
 				);
-			(*check 2 - end*)
-			print_message Verbose_standard ("\n --------------------2nd check end----------------------- ");
-
+			
 			
 		print_message Verbose_standard ("\n");
 		) model.clocks;  
+
+		(*check 2 - end*)
+		print_message Verbose_standard ("\n --------------------2nd check end----------------------- ");
+
+	
 
 		DynArray.add clocks_constraints (location_index, (LinearConstraint.pxd_true_constraint ()));
 
@@ -3075,19 +3095,17 @@ while (!count_m) <= (DynArray.length submodels) do
 			 	(
 			 		(*  *)
 			 	);
-
 		done;
-
 		DynArray.clear clocks_constraints; 
 		DynArray.append (DynArray.copy loc_clocks_constraints) clocks_constraints;
-		if !adding = false
+(* 		if !adding = false
 		then
 			(
 			DynArray.clear loc_clocks_constraints; 
-			);	
+			);	 *)
 
 		
-
+		
 
 		(*work here - end*)
 
