@@ -871,7 +871,8 @@ let cub_check_2 invariant_s0 guard_t invariant_s1 clock_updates =
 														 			if (result = false && !inequalities_need_to_solve = [])
 														 			then 	(
 														 					isCUB_PTA := false;
-														 					raise (InternalError("   The model is impossible CUB-PTA! "));
+														 					(*comment this line below for the CUB-PTA transformation*)
+														 					(* raise (InternalError("   The model is impossible CUB-PTA! ")); *) 
 														 					);
 														 			
 														 			inequalities := !inequalities@(!inequalities_need_to_solve);
@@ -3157,59 +3158,49 @@ print_message Verbose_standard ("\n ----------------------------Models Summary (
 
  
 (* final stage *)
-(* DynArray.iter (fun (states, transitions, c_constraints, p_constraints, index) ->
+let new_transitions = DynArray.make 0 in
+DynArray.iter (fun (states, transitions, c_constraints, p_constraints, index) ->
 
 	for i = 1 to (DynArray.length transitions) do
 		let (location_index, destination_location_index, guard, clock_updates) = DynArray.get transitions (i-1) in
 		let s0_cons = Hashtbl.find states location_index in
 		let s1_cons = Hashtbl.find states destination_location_index in
 
-		let inequalities_t = LinearConstraint.pxd_get_inequalities guard in
-		let tuple_inequalities_t = convert_inequality_list_2_tuple_list inequalities_t in
-		let (_, op_t, linear_term_t) = filter_upperbound_by_clock (List.hd model.clocks) tuple_inequalities_t in
-		(* let (_, op_t, linear_term_t) = LinearConstraint.clock_guard_of_linear_inequality (List.hd tuple_inequalities_t) in *)
-
-		let cons_inter = 
-		(
-		match op_t with
-		 | LinearConstraint.Op_ge -> LinearConstraint.pxd_intersection [s0_cons; s1_cons] 
-		 | _ -> LinearConstraint.pxd_intersection [s0_cons; guard; s1_cons];
-		);
-		in
-
-		let cons_inter2 = LinearConstraint.pxd_intersection [guard,s1_cons] in
-
-		print_message Verbose_standard ("\n Constraint s0: \n" 
-										^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names s0_cons)
-										^ "\n Constraint s1: \n"
-										 ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names s1_cons)
-										^ "(\n result constraint: \n" 
-										^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names cons_inter) ); 
-
-		let check1 = isContraintAllConflictsParametersConstraints2 cons_inter p_constraints in 
+		let (a, b) = cub_check_2 s0_cons guard s1_cons clock_updates in 
 		
-		let check2 = 
-		(
-		match op_t with
-		 | LinearConstraint.Op_ge -> LinearConstraint.pxd_is_leq s0_cons guard
-		 | _ -> LinearConstraint.pxd_intersection [s0_cons; guard; s1_cons];
-		);
-		in
-		
-		if check1 || check2 = false
+		if a = true
 		then
+			(
+				DynArray.add new_transitions (DynArray.get transitions (i-1)); 
+			)
+		else
 			( 
-			DynArray.delete transitions (i-1);
+				if b != []
+				then
+					(
+					let con = LinearConstraint.pxd_of_p_constraint (LinearConstraint.make_p_constraint b) in
+					let check = isContraintAllConflictsParametersConstraints2 con p_constraints in 
+					if check = false
+					then
+						(
+						DynArray.add new_transitions (DynArray.get transitions (i-1)); 
+						);
+						
+					);
 			);
 		
 	done;
 
-) newSubModels; *)
+	DynArray.clear transitions;
+	DynArray.append new_transitions transitions;
+	DynArray.clear new_transitions;
+
+) newSubModels;
 (* final stage - end *)
 
 
 (*models summary*)
-(* print_message Verbose_standard ("\n ----------------------------Models Summary (Final stage-remove problematic transitions)------------------------------- ");
+print_message Verbose_standard ("\n ----------------------------Models Summary (Final stage-remove problematic transitions)------------------------------- ");
 print_message Verbose_standard ("\n Number of models: " ^ (string_of_int (DynArray.length submodels) ) );
 let model_count = ref 1 in
 DynArray.iter (fun (states, transitions, c_constraints, p_constraints, index) ->
@@ -3260,7 +3251,7 @@ DynArray.iter (fun (states, transitions, c_constraints, p_constraints, index) ->
 
 
 ) newSubModels;
-print_message Verbose_standard ("\n ----------------------------Models Summary (Final stage-remove problematic transitions) End--------------------------- "); *)
+print_message Verbose_standard ("\n ----------------------------Models Summary (Final stage-remove problematic transitions) End--------------------------- ");
 (*models summary - end*)
 
 
@@ -3269,7 +3260,7 @@ print_message Verbose_standard ("\n ----------------------------Models Summary (
 
 (* additional stage *)
 (* let finalModel = DynArray.make 0 in *)
-(* let i = ref 1 in
+let i = ref 1 in
 let s0 = "cub-init" in
 let newstates =  Hashtbl.create 0 in
 Hashtbl.add newstates s0 (LinearConstraint.pxd_true_constraint ());
@@ -3305,7 +3296,7 @@ DynArray.iter (fun (states, transitions, _, p_constraints, _) ->
 
 ) newSubModels;
 
-let finalModel = (newstates, newtransitions) in *)
+let finalModel = (newstates, newtransitions) in ()
 (* additional stage - end *)
 
 
