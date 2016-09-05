@@ -12,6 +12,11 @@
  * Last modified     : 2016/05/24
  *
  ************************************************************)
+
+ 
+(*  module Ppl = Ppl_ocaml
+open Ppl *)
+
  
 
 (************************************************************)
@@ -73,6 +78,10 @@ val add_pxd_linear_terms : pxd_linear_term -> pxd_linear_term -> pxd_linear_term
 (** Perform linear_term1 - linear_term2 *)
 (* val sub_linear_terms : linear_term -> linear_term -> linear_term *)
 
+val sub_p_linear_terms : p_linear_term -> p_linear_term -> p_linear_term
+(*val sub_px_linear_terms : px_linear_term -> px_linear_term -> px_linear_term*)
+val sub_pxd_linear_terms : pxd_linear_term -> pxd_linear_term -> pxd_linear_term
+
 (** Evaluate a linear term with a function assigning a value to each variable. *)
 val evaluate_p_linear_term : (variable -> coef) -> p_linear_term -> coef
 val evaluate_pxd_linear_term : (variable -> coef) -> pxd_linear_term -> coef
@@ -102,6 +111,9 @@ type op =
 	| Op_le
 	| Op_l
 
+(** Reverse an operator: <= becomes >= and conversely. < becomes > and conversely. = remains =. *)
+val reverse_op : op -> op
+
 (* type linear_inequality *)
 type p_linear_inequality
 type px_linear_inequality
@@ -114,6 +126,7 @@ type pxd_linear_inequality
 
 (** Create a linear inequality using linear term and an operator *)
 (* val make_linear_inequality : linear_term -> op -> linear_inequality *)
+val make_p_linear_inequality : p_linear_term -> op -> p_linear_inequality
 val make_pxd_linear_inequality : pxd_linear_term -> op -> pxd_linear_inequality
 
 
@@ -243,6 +256,7 @@ val partition_lu : variable list -> pxd_linear_constraint list -> (variable list
 (** Check if a constraint is false *)
 (* val is_false : linear_constraint -> bool *)
 val p_is_false : p_linear_constraint -> bool
+val pxd_is_false : pxd_linear_constraint -> bool
 
 (** Check if a constraint is true *)
 (* val is_true : linear_constraint -> bool *)
@@ -259,10 +273,12 @@ val pxd_is_satisfiable : pxd_linear_constraint -> bool
 (* val is_equal : linear_constraint -> linear_constraint -> bool *)
 val p_is_equal : p_linear_constraint -> p_linear_constraint -> bool
 val px_is_equal : px_linear_constraint -> px_linear_constraint -> bool
+val pxd_is_equal : pxd_linear_constraint -> pxd_linear_constraint -> bool
 
 (** Check if a constraint is included in another one *)
 val p_is_leq : p_linear_constraint -> p_linear_constraint -> bool
 val px_is_leq : px_linear_constraint -> px_linear_constraint -> bool
+val pxd_is_leq : pxd_linear_constraint -> pxd_linear_constraint -> bool
 
 (** Check if a variable v is bound to be >= 0 in a constraint c *)
 val px_is_positive_in : variable -> px_linear_constraint -> bool
@@ -578,3 +594,51 @@ val unserialize_p_convex_or_nonconvex_constraint : string -> p_convex_or_nonconv
 (** {2 Tests} *)
 (************************************************************)
 val test_PDBMs : unit -> unit
+
+
+
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+(** Gia's function for CUB **)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+(*for linear term*)
+val operator2string : op -> string
+
+(*
+val get_coefs_vars : p_linear_term -> (variable*coef) list
+*)
+
+(*
+type smaller_term =
+	| NotDetermine (*not determined*)
+	| First
+	| Second
+
+(*for linear term*)
+val isComparable_linear_terms : p_linear_term -> p_linear_term -> (bool*smaller_term)
+
+val isComparable_linear_terms_2 : p_linear_term -> p_linear_term -> p_linear_constraint
+(* val get_coefficient_in_linear_term : Ppl.linear_expression -> NumConst.t   *) 
+
+*)
+
+
+
+type smaller_term =
+	| NotDetermine (*not determined*)
+	| First
+	| Second
+
+(*for linear term*)
+(*val isSmaller : p_linear_term -> p_linear_term -> (bool*smaller_term)*)
+val isSmaller : p_linear_term -> p_linear_term -> smaller_term
+
+(*
+val isComparable_linear_terms : p_linear_term -> p_linear_term -> (bool*smaller_term)
+*)
+
+(*
+val isComparable_linear_terms_2 : p_linear_term -> p_linear_term -> p_linear_constraint
+(* val get_coefficient_in_linear_term : Ppl.linear_expression -> NumConst.t   *) 
+*)
+
+
