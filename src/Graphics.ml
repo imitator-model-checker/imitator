@@ -5,10 +5,10 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Universite Paris 13, Sorbonne Paris Cite, LIPN (France)
  * 
- * Author:        Etienne Andre, Ulrich Kuehne
+ * Author:        Etienne Andre, Ulrich Kühne
  * 
  * Created:       2010/07/05
- * Last modified: 2016/08/24
+ * Last modified: 2016/09/05
  *
  ****************************************************************)
 
@@ -155,7 +155,7 @@ try(
 	begin
 	match options#imitator_mode with
 		(*** TODO: better use an option "is_cartography" ***)
-		| EF_synthesis | Loop_synthesis | Parametric_deadlock_checking | Inverse_method ->
+		| EF_synthesis | Loop_synthesis | Parametric_NC_CUBtransform | Parametric_deadlock_checking | Inverse_method ->
 			print_message Verbose_low "Pick up the first 2 parameters to draw the cartography";
 			(* First check that there are at least 2 parameters *)
 			if model.nb_parameters < 2 then(
