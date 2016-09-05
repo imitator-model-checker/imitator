@@ -427,7 +427,15 @@ let algorithm : AlgoGeneric.algoGeneric = match options#imitator_mode with
 	| Parametric_NC_CUBtransform ->
 		(*** HACK: so far, call Gia's function (that itself raises an exception) and raise an exception to make compiler happy ***)
 		let cub_model = CUBchecker.cubpta_of_pta model in
-
+			
+		let translated_model = PTA2JPG.string_of_model cub_model in
+		if verbose_mode_greater Verbose_high then(
+			print_message Verbose_high ("\n" ^ translated_model ^ "\n");
+		);
+		Graphics.dot (options#files_prefix ^ "-pta") translated_model;
+		print_message Verbose_standard ("File successfully created."); (*** TODO: add file name in a proper manner ***)
+		terminate_program();
+		
 		(*** TODO: the algorithm shall be NZ-Büchi ***)
 		raise (InternalError "not implemented")
 
