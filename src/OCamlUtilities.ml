@@ -201,7 +201,7 @@ let index_of e a =
 	let i = ref 0 in
 	while not !found && !i < length do
 		if a.(!i) = e then found := true;
-		incr !i;
+		incr i;
 	done;
 	if not !found then raise Not_found;
 	(* Return the index *)
