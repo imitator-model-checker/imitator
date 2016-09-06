@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/08/26
- * Last modified     : 2016/08/26
+ * Last modified     : 2016/09/06
  *
  ************************************************************)
 
@@ -88,9 +88,14 @@ class tilesManagerConstraint =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Process a new tile, i.e., add it to the tiles *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method process_tile tile =
-		(*** TODO: increment nb_results_added ***)
-		raise (InternalError("not implemented"))
+	method process_tile abstract_point_based_result =
+		(*** NOTE: for now, we do not keep the tiles in memory ***)
+		(* Get the constraint *)
+		let tile_result = abstract_point_based_result.result in
+		(* Add to the local result *)
+		good_or_bad_constraint_union_assign result tile_result;
+		(* Increment nb_results_added (for statistics purpose) *)
+		nb_results_added <- nb_results_added + 1
 
 	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
