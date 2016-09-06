@@ -10,7 +10,7 @@
 # Laboratoire d'Informatique de Paris Nord
 # Universite Paris 13, Sorbonne Paris Cite, France
 # Created      : 2015/10/23
-# Last modified: 2016/08/24
+# Last modified: 2016/09/06
 #************************************************************
 
 
@@ -1767,7 +1767,7 @@ END CONSTRAINT
 	,
 	#------------------------------------------------------------
 	{
-		'purpose'    : 'Test PRP on a simple example (good reference valuation)',
+		'purpose'    : 'Test PRP (old version) on a simple example (good reference valuation)',
 		'input_files': ['testPRP.imi', 'testPRP.pigood'],
 		'options'    : '-PRP -output-result -output-states',
 		'expectations' : [
@@ -1849,7 +1849,89 @@ END CONSTRAINT
 	,
 	#------------------------------------------------------------
 	{
-		'purpose'    : 'Test PRP on a simple example (bad reference valuation)',
+		'purpose'    : 'Test PRP on a simple example (good reference valuation)',
+		'input_files': ['testPRP.imi', 'testPRP.pigood'],
+		'options'    : '-mode PRP -output-result -output-states',
+		'expectations' : [
+			{'file': 'testPRP.res' , 'content' : """
+BEGIN CONSTRAINT
+	4 > p2
+    & 3 > p1
+    & p1 >= 0
+    & p2 >= 0
+END CONSTRAINT
+		  """
+			} # end result file
+			,
+			{'file': 'testPRP-statespace.states' , 'content' : """
+  DESCRIPTION OF THE STATES
+
+  /************************************************************/
+  INITIAL
+  STATE 0:
+  pta: l1 ==> 
+& p1 >= 0
+& p2 >= 0
+& y >= 0
+& x = y
+
+  Projection onto the parameters:
+   p2 >= 0
+& p1 >= 0
+
+  /************************************************************/
+  STATE 1:
+  pta: l2 ==> 
+& p1 >= 0
+& p2 >= 0
+& x >= 0
+& x = y
+
+  Projection onto the parameters:
+   p2 >= 0
+& p1 >= 0
+
+  /************************************************************/
+  STATE 2:
+  pta: l3 ==> 
+& p1 >= x
+& p2 >= 0
+& x >= 0
+& 1 >= p2
+& x = y
+
+  Projection onto the parameters:
+   p1 >= 0
+& 1 >= p2
+& p2 >= 0
+
+  /************************************************************/
+  STATE 3:
+  pta: l4 ==> 
+& p1 >= p2
+& p2 >= 0
+& y >= 0
+& x = y
+
+  Projection onto the parameters:
+   p2 >= 0
+& p1 >= p2
+
+  DESCRIPTION OF THE TRANSITIONS
+  s_1 -> s_2
+  s_0 -> s_1
+  s_1 -> s_3
+  s_2 -> s_2
+		  """
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+	,
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test PRP (old version) on a simple example (bad reference valuation)',
 		'input_files': ['testPRP.imi', 'testPRP.pibad'],
 		'options'    : '-PRP -output-result -output-states',
 		'expectations' : [
@@ -1939,7 +2021,97 @@ OR
 	,
 	#------------------------------------------------------------
 	{
-		'purpose'    : 'Test PRP on a simple example (looping reference valuation)',
+		'purpose'    : 'Test PRP on a simple example (bad reference valuation)',
+		'input_files': ['testPRP.imi', 'testPRP.pibad'],
+		'options'    : '-mode PRP -output-result -output-states',
+		'expectations' : [
+			{'file': 'testPRP.res' , 'content' : """
+		 & p1 >= 0
+OR
+  p2 >= 0
+& p1 >= 3
+		  """
+			} # end result file
+			,
+			{'file': 'testPRP-statespace.states' , 'content' : """
+  DESCRIPTION OF THE STATES
+
+  /************************************************************/
+  INITIAL
+  STATE 0:
+  pta: l1 ==> 
+& p1 >= 0
+& p2 >= 0
+& y >= 0
+& x = y
+
+  Projection onto the parameters:
+   p2 >= 0
+& p1 >= 0
+
+  /************************************************************/
+  STATE 1:
+  pta: l2 ==> 
+& p1 >= 0
+& p2 >= 0
+& x >= 0
+& x = y
+
+  Projection onto the parameters:
+   p2 >= 0
+& p1 >= 0
+
+  /************************************************************/
+  STATE 2:
+  pta: locBad1 ==> 
+& p1 >= 0
+& p2 >= 4
+& y >= 0
+& x = y
+
+  Projection onto the parameters:
+   p2 >= 4
+& p1 >= 0
+
+  /************************************************************/
+  STATE 3:
+  pta: l4 ==> 
+& p1 >= p2
+& p2 >= 0
+& y >= 0
+& x = y
+
+  Projection onto the parameters:
+   p2 >= 0
+& p1 >= p2
+
+  /************************************************************/
+  STATE 4:
+  pta: locBad2 ==> 
+& p1 >= 3
+& p2 >= 0
+& y >= 0
+& x = y
+
+  Projection onto the parameters:
+   p2 >= 0
+& p1 >= 3
+
+  DESCRIPTION OF THE TRANSITIONS
+  s_1 -> s_4
+  s_0 -> s_1
+  s_1 -> s_3
+  s_0 -> s_2
+		  """
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+	,
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test PRP (old version) on a simple example (looping reference valuation)',
 		'input_files': ['testPRP.imi', 'testPRP.piloop'],
 		'options'    : '-PRP -output-result -depth-limit 10 -output-states',
 		'expectations' : [
@@ -2158,6 +2330,226 @@ OR
 	
 	,
 	
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test PRP on a simple example (looping reference valuation)',
+		'input_files': ['testPRP.imi', 'testPRP.piloop'],
+		'options'    : '-mode PRP -output-result -depth-limit 10 -output-states',
+		'expectations' : [
+			{'file': 'testPRP.res' , 'content' : """
+ p2 >= 4
+    & p1 >= 0
+    OR
+      p2 >= 0
+    & p1 >= 3
+		  """
+			} # end result file
+			,
+			{'file': 'testPRP-statespace.states' , 'content' : """
+  DESCRIPTION OF THE STATES
+
+  /************************************************************/
+  INITIAL
+  STATE 0:
+  pta: l1 ==> 
+& p1 >= 0
+& p2 >= 0
+& y >= 0
+& x = y
+
+  Projection onto the parameters:
+   p2 >= 0
+& p1 >= 0
+
+  /************************************************************/
+  STATE 1:
+  pta: l2 ==> 
+& p1 >= 0
+& p2 >= 0
+& x >= 0
+& x = y
+
+  Projection onto the parameters:
+   p2 >= 0
+& p1 >= 0
+
+  /************************************************************/
+  STATE 2:
+  pta: locBad1 ==> 
+& p1 >= 0
+& p2 >= 4
+& y >= 0
+& x = y
+
+  Projection onto the parameters:
+   p2 >= 4
+& p1 >= 0
+
+  /************************************************************/
+  STATE 3:
+  pta: infiniteLoop ==> 
+& 1 >= x
+& p1 >= 0
+& p2 >= 5
+& x >= 0
+& x = y
+
+  Projection onto the parameters:
+   p2 >= 5
+& p1 >= 0
+
+  /************************************************************/
+  STATE 4:
+  pta: l4 ==> 
+& p1 >= p2
+& p2 >= 0
+& y >= 0
+& x = y
+
+  Projection onto the parameters:
+   p2 >= 0
+& p1 >= p2
+
+  /************************************************************/
+  STATE 5:
+  pta: locBad2 ==> 
+& p1 >= 3
+& p2 >= 0
+& y >= 0
+& x = y
+
+  Projection onto the parameters:
+   p2 >= 0
+& p1 >= 3
+
+  /************************************************************/
+  STATE 6:
+  pta: infiniteLoop ==> 
+& 1 >= x
+& p1 >= 0
+& p2 >= 5
+& x >= 0
+& x + 1 = y
+
+  Projection onto the parameters:
+   p2 >= 5
+& p1 >= 0
+
+  /************************************************************/
+  STATE 7:
+  pta: infiniteLoop ==> 
+& 1 >= x
+& p1 >= 0
+& p2 >= 5
+& x >= 0
+& x + 2 = y
+
+  Projection onto the parameters:
+   p2 >= 5
+& p1 >= 0
+
+  /************************************************************/
+  STATE 8:
+  pta: infiniteLoop ==> 
+& 1 >= x
+& p1 >= 0
+& p2 >= 5
+& x >= 0
+& x + 3 = y
+
+  Projection onto the parameters:
+   p2 >= 5
+& p1 >= 0
+
+  /************************************************************/
+  STATE 9:
+  pta: infiniteLoop ==> 
+& 1 >= x
+& p1 >= 0
+& p2 >= 5
+& x >= 0
+& x + 4 = y
+
+  Projection onto the parameters:
+   p2 >= 5
+& p1 >= 0
+
+  /************************************************************/
+  STATE 10:
+  pta: infiniteLoop ==> 
+& 1 >= x
+& p1 >= 0
+& p2 >= 5
+& x >= 0
+& x + 5 = y
+
+  Projection onto the parameters:
+   p2 >= 5
+& p1 >= 0
+
+  /************************************************************/
+  STATE 11:
+  pta: infiniteLoop ==> 
+& 1 >= x
+& p1 >= 0
+& p2 >= 5
+& x >= 0
+& x + 6 = y
+
+  Projection onto the parameters:
+   p2 >= 5
+& p1 >= 0
+
+  /************************************************************/
+  STATE 12:
+  pta: infiniteLoop ==> 
+& 1 >= x
+& p1 >= 0
+& p2 >= 5
+& x >= 0
+& x + 7 = y
+
+  Projection onto the parameters:
+   p2 >= 5
+& p1 >= 0
+
+  /************************************************************/
+  STATE 13:
+  pta: infiniteLoop ==> 
+& 1 >= x
+& p1 >= 0
+& p2 >= 5
+& x >= 0
+& x + 8 = y
+
+  Projection onto the parameters:
+   p2 >= 5
+& p1 >= 0
+
+  DESCRIPTION OF THE TRANSITIONS
+  s_0 -> s_3
+  s_3 -> s_6
+  s_8 -> s_9
+  s_1 -> s_5
+  s_0 -> s_1
+  s_1 -> s_4
+  s_10 -> s_11
+  s_7 -> s_8
+  s_0 -> s_2
+  s_6 -> s_7
+  s_12 -> s_13
+  s_11 -> s_12
+  s_9 -> s_10
+
+
+		  """
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+	
+	,
 	
 	#------------------------------------------------------------
 	{
@@ -5148,7 +5540,7 @@ Average number of transitions           : 10.8
 	
 	#------------------------------------------------------------
 	{
-		'purpose'    : 'Test PRPC in mode cover (on the case study BC vs. PRPC)',
+		'purpose'    : 'Test PRPC (old version) in mode cover (on the case study BC vs. PRPC)',
 		'input_files': ['diffBCPRPC.imi', 'diffBCPRPC.v0'],
 		'options'    : '-mode cover -PRP -no-random -output-result',
 		'expectations' : [
@@ -5316,7 +5708,43 @@ Average number of transitions           : 11.0
 	
 	#------------------------------------------------------------
 	{
-		'purpose'    : 'Test PRPC in mode cover with depth limit (JLR15)',
+		'purpose'    : 'Test PRPC (on the case study BC vs. PRPC)',
+		'input_files': ['diffBCPRPC.imi', 'diffBCPRPC.v0'],
+		'options'    : '-mode PRPC -no-random -output-result',
+		'expectations' : [
+			{'file': 'diffBCPRPC.res' , 'content' : """
+BEGIN CONSTRAINT
+ p1 >= 0
+& p2 >= 0
+& 2 > p2
+& 2 > p1
+<good|bad>
+ p2 >= 0
+& 4 >= p2
+& 4 >= p1
+& p1 >= 2
+OR
+  p1 >= 0
+& p2 >= 2
+& 4 >= p2
+& 4 >= p1
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact <good|bad> exact
+Termination                             : regular termination
+Constraint nature                       : good/bad
+"""
+			} # end BC file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+	
+	,
+	
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test PRPC (old version) in mode cover with depth limit (JLR15)',
 		'input_files': ['JLR-TACAS13.imi', 'JLR-TACAS13.v0'],
 		'options'    : '-mode cover -PRP -depth-limit 10 -output-result',
 		'expectations' : [

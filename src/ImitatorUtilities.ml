@@ -213,8 +213,11 @@ type imitator_mode =
 	(** Parametric deadlock-checking *)
 	| Parametric_deadlock_checking
 	
-	(** Classical inverse method *)
+	(** Inverse method *)
 	| Inverse_method
+	
+	(** Parametric reachability preservation *)
+	| PRP
 	
 	(** Cover the whole cartography *)
 	| Cover_cartography
@@ -230,9 +233,12 @@ type imitator_mode =
 	
 	(** Randomly pick up values for a given number of iterations *)
 	| Random_cartography of int
-
+	
 	(** Randomly pick up values for a given number of iterations, then switch to sequential algorithm once no more point has been found after a given max number of attempts (mostly useful for the distributed IMITATOR) *)
 	| RandomSeq_cartography of int
+
+	(** Synthesis using iterative calls to PRP *)
+	| PRPC
 
 
 (** Get the value of the counter *)

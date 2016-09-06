@@ -9,7 +9,7 @@
  * 
  * File contributors : Ulrich Kühne, Étienne André
  * Created           : 2009/09/07
- * Last modified     : 2016/09/05
+ * Last modified     : 2016/09/06
  *
  ************************************************************)
 
@@ -159,6 +159,7 @@ match options#imitator_mode with
 	
 	(* Inverse method : pi0 *)
 	| Inverse_method
+	| PRP
 	(* Case: pi0 *)
 	->
 		let pi0 = ParsingUtility.compile_pi0 options in
@@ -171,6 +172,7 @@ match options#imitator_mode with
 	| Learning_cartography
 	| Shuffle_cartography
 	| RandomSeq_cartography _
+	| PRPC
 	(* Case: v0 *)
 	->
 		let v0 = ParsingUtility.compile_v0 options in
@@ -421,6 +423,7 @@ let algorithm : AlgoGeneric.algoGeneric = match options#imitator_mode with
 	| Loop_synthesis ->
 		let myalgo :> AlgoGeneric.algoGeneric = new AlgoLoopSynth.algoLoopSynth in myalgo
 	
+	
 	(************************************************************)
 	(* Parametric Büchi-emptiness checking with non-Zenoness (method: transformation into a CUB-PTA) *)
 	(************************************************************)
@@ -456,6 +459,7 @@ let algorithm : AlgoGeneric.algoGeneric = match options#imitator_mode with
 			let myalgo :> AlgoGeneric.algoGeneric = new AlgoIMK.algoIMK in myalgo
 
 	(* PRP *)
+	(*** NOTE: deprecated ***)
 	| Inverse_method when options#efim ->
 			let myalgo :> AlgoGeneric.algoGeneric = new AlgoPRP.algoPRP in myalgo
 
@@ -467,6 +471,11 @@ let algorithm : AlgoGeneric.algoGeneric = match options#imitator_mode with
 	| Inverse_method ->
 			let myalgo :> AlgoGeneric.algoGeneric = new AlgoIM.algoIM in myalgo
 
+	(************************************************************)
+	(* PRP *)
+	(************************************************************)
+	| PRP ->
+			let myalgo :> AlgoGeneric.algoGeneric = new AlgoPRP.algoPRP in myalgo
 
 
 	(************************************************************)
@@ -638,6 +647,16 @@ let algorithm : AlgoGeneric.algoGeneric = match options#imitator_mode with
 		bc_algo#set_max_tries nb;
 		bc_algo#set_algo_instance_function new_im_or_prp;
 		bc_algo#set_tiles_manager_type AlgoCartoGeneric.Tiles_list;
+		let myalgo :> AlgoGeneric.algoGeneric = bc_algo in
+		myalgo
+	
+	(* Iterative calls to PRP *)
+	| PRPC ->
+		let bc_algo = new AlgoBCCover.algoBCCover in
+		(*** NOTE: very important: must set NOW the parameters ***)
+		bc_algo#set_algo_instance_function (fun () -> let myalgo :> AlgoBFS.algoBFS = new AlgoPRP.algoPRP in myalgo);
+		(*** NOTE: for PRPC, we use a constraint manager! ***)
+		bc_algo#set_tiles_manager_type AlgoCartoGeneric.Tiles_good_bad_constraint;
 		let myalgo :> AlgoGeneric.algoGeneric = bc_algo in
 		myalgo
 	

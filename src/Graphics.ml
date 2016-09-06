@@ -8,7 +8,7 @@
  * Author:        Etienne Andre, Ulrich Kühne
  * 
  * Created:       2010/07/05
- * Last modified: 2016/09/05
+ * Last modified: 2016/09/06
  *
  ****************************************************************)
 
@@ -155,7 +155,7 @@ try(
 	begin
 	match options#imitator_mode with
 		(*** TODO: better use an option "is_cartography" ***)
-		| EF_synthesis | Loop_synthesis | Parametric_NC_CUBtransform | Parametric_deadlock_checking | Inverse_method ->
+		| EF_synthesis | Loop_synthesis | Parametric_NC_CUBtransform | Parametric_deadlock_checking | Inverse_method | PRP ->
 			print_message Verbose_low "Pick up the first 2 parameters to draw the cartography";
 			(* First check that there are at least 2 parameters *)
 			if model.nb_parameters < 2 then(
@@ -192,7 +192,7 @@ try(
 	(* If cartography: find indices of first two variables with a parameter range *)
 	(*** TODO: better use an option "cartography mode" ***)
 	(*** TODO: take the projection into account! ***)
-		| Cover_cartography | Shuffle_cartography | Random_cartography _ | RandomSeq_cartography _ | Learning_cartography | Border_cartography ->
+		| Cover_cartography | Shuffle_cartography | Random_cartography _ | RandomSeq_cartography _ | Learning_cartography | Border_cartography | PRPC ->
 			(* Retrieve the V0 *)
 			(*** NOTE: only retrieve here because, in other mode (e.g., EF or IM) this object is not defined ***)
 			let v0 = Input.get_v0 () in

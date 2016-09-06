@@ -666,11 +666,9 @@ let write_cartography_result_to_file file_name (cartography_result : Result.cart
 
 
 (*------------------------------------------------------------*)
-(* Performances *)
+(* Display statistics on the state space *)
 (*------------------------------------------------------------*)
-let print_statistics total_time state_space =
-	(* Retrieve the model *)
-(* 	let model = Input.get_model() in *)
+let print_state_space_statistics total_time state_space =
 	(* Retrieve the input options *)
 	let options = Input.get_options () in
 
@@ -701,7 +699,7 @@ let print_statistics total_time state_space =
 	);
 
 	
-	if options#statistics then (
+	if options#statistics || verbose_mode_greater Verbose_low then (
 		(* State space *)
 (*		print_message Verbose_standard "------------------------------------------------------------";
 		print_message Verbose_standard "Statistics: Graph";
@@ -709,6 +707,17 @@ let print_statistics total_time state_space =
 		print_message Verbose_standard (StateSpace.get_statistics ());
 		print_message Verbose_standard (StateSpace.get_statistics_states state_space);
 		
+	)
+
+
+(*------------------------------------------------------------*)
+(* Display statistics on the memory used (only in mode statistics or if verbose enough) *)
+(*------------------------------------------------------------*)
+let print_memory_statistics () =
+	(* Retrieve the input options *)
+	let options = Input.get_options () in
+
+	if options#statistics || verbose_mode_greater Verbose_low then (
 		print_message Verbose_standard "------------------------------------------------------------";
 		print_message Verbose_standard "Statistics on memory";
 		print_message Verbose_standard "------------------------------------------------------------";
@@ -721,7 +730,6 @@ let print_statistics total_time state_space =
 		Gc.full_major();
 		Gc.print_stat stdout;*)
 	)
-
 	
 
 (************************************************************)
@@ -775,7 +783,8 @@ let process_single_synthesis_or_point_based_result file_prefix algorithm_name re
 	let options = Input.get_options () in
 
 	(* Print statistics *)
-	print_statistics computation_time state_space;
+	print_state_space_statistics computation_time state_space;
+	print_memory_statistics ();
 	
 	(* Draw state space *)
 	let radical = file_prefix ^ "-statespace" in
@@ -810,6 +819,7 @@ let process_result result algorithm_name prefix_option =
 		| None -> options#files_prefix
 	in
 	
+	
 	match result with
 	| PostStar_result poststar_result ->
 		print_message Verbose_low (
@@ -818,7 +828,8 @@ let process_result result algorithm_name prefix_option =
 		);
 
 		(* Print statistics *)
-		print_statistics poststar_result.computation_time poststar_result.state_space;
+		print_state_space_statistics poststar_result.computation_time poststar_result.state_space;
+		print_memory_statistics ();
 		
 		(* Draw state space *)
 		let radical = file_prefix ^ "-statespace" in
@@ -827,9 +838,7 @@ let process_result result algorithm_name prefix_option =
 		(* The end *)
 		()
 
-		
-		
-		
+
 	| Deprecated_efsynth_result efsynth_result ->
 		
 		(* Print the result *)
@@ -868,10 +877,13 @@ let process_result result algorithm_name prefix_option =
 		if options#output_result then(
 			let file_name = file_prefix ^ Constants.result_file_extension in
 			write_deprecated_efsynth_result_to_file file_name efsynth_result;
+		)else(
+			print_message Verbose_high "No result export to file requested.";
 		);
 		
 		(* Print statistics *)
-		print_statistics efsynth_result.computation_time efsynth_result.state_space;
+		print_state_space_statistics efsynth_result.computation_time efsynth_result.state_space;
+		print_memory_statistics ();
 		
 		(* Draw state space *)
 		let radical = file_prefix ^ "-statespace" in
@@ -882,12 +894,11 @@ let process_result result algorithm_name prefix_option =
 			let zones = List.map (fun p_linear_constraint -> (LinearConstraint.Convex_p_constraint p_linear_constraint, StateSpace.Bad)) efsynth_result.constraints in
 			Graphics.draw_cartography zones (file_prefix ^ "_cart")
 		) else (
-				print_message Verbose_high "Graphical cartography not asked: not drawn.";
+			print_message Verbose_high "Graphical cartography not asked: not drawn.";
 		);
 		
 		(* The end *)
 		()
-
 
 
 	| Single_synthesis_result result ->
@@ -898,6 +909,8 @@ let process_result result algorithm_name prefix_option =
 		if options#output_result then(
 			let file_name = file_prefix ^ Constants.result_file_extension in
 			write_single_synthesis_result file_name result;
+		)else(
+			print_message Verbose_high "No result export to file requested.";
 		);
 		
 		(* Generic handling for drawing etc. *)
@@ -912,6 +925,8 @@ let process_result result algorithm_name prefix_option =
 		if options#output_result then(
 			let file_name = file_prefix ^ Constants.result_file_extension in
 			write_point_based_result_to_file file_name result;
+		)else(
+			print_message Verbose_high "No result export to file requested.";
 		);
 		
 		(* Generic handling for drawing etc. *)
@@ -939,6 +954,8 @@ let process_result result algorithm_name prefix_option =
 		if options#output_bc_result then(
 			let file_name = file_prefix ^ Constants.result_file_extension in
 			write_cartography_result_to_file file_name cartography_result;
+		)else(
+			print_message Verbose_high "No result export to file requested.";
 		);
 		
 		(* If cartography required for BC *)
@@ -974,35 +991,32 @@ let process_result result algorithm_name prefix_option =
 		print_single_synthesis_or_point_based_result result.result result.computation_time;
 
 		(* Write to file if requested *)
-		if options#output_result then(
+		if options#output_bc_result then(
 			let file_name = file_prefix ^ Constants.result_file_extension in
 			write_multiple_synthesis_result file_name result;
 			()
+		)else(
+			print_message Verbose_high "No result export to file requested.";
 		);
 		
 		(* Print statistics *)
-(* 		print_statistics computation_time state_space; *)
-		
-(*		(* Draw state space *)
-		let radical = file_prefix ^ "-statespace" in
-		Graphics.draw_statespace state_space algorithm_name radical;*)
-		
+		print_memory_statistics ();
+
 		(* Render zones in a graphical form *)
-		if options#cart then (
+		if options#output_bc_cart then (
 			let zones = zones_of_good_bad_constraint result.result in
 			Graphics.draw_cartography zones (file_prefix ^ "_cart")
 		) else (
-				print_message Verbose_high "Graphical cartography not asked: not drawn.";
+			print_message Verbose_high "Graphical cartography not asked: not drawn.";
 		);
 		
 		(* The end *)
 		()
 
-	
+
 	(* Nothing to do for workers in distributed mode *)
 	| Distributed_worker_result ->
 		()
-		
-		
-		
+
+
 (* 	| _ -> raise (InternalError ("function process_result not implemented for all cases")) *)

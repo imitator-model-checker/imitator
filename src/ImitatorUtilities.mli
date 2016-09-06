@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2014/10/24
- * Last modified     : 2016/09/05
+ * Last modified     : 2016/09/06
  *
  ************************************************************)
 
@@ -95,8 +95,11 @@ type imitator_mode =
 	(** Parametric deadlock-checking *)
 	| Parametric_deadlock_checking
 	
-	(** Classical inverse method *)
+	(** Inverse method *)
 	| Inverse_method
+	
+	(** Parametric reachability preservation *)
+	| PRP
 	
 	(** Cover the whole cartography *)
 	| Cover_cartography
@@ -115,7 +118,11 @@ type imitator_mode =
 	
 	(** Randomly pick up values for a given number of iterations, then switch to sequential algorithm once no more point has been found after a given max number of attempts (mostly useful for the distributed IMITATOR) *)
 	| RandomSeq_cartography of int
+
+	(** Synthesis using iterative calls to PRP *)
+	| PRPC
 	
+
 
 (************************************************************)
 (** Global time counter *)

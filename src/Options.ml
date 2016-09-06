@@ -9,7 +9,7 @@
  * 
  * File contributors : Ulrich Kühne, Étienne André
  * Created           : 2010
- * Last modified     : 2016/09/05
+ * Last modified     : 2016/09/06
  *
  ************************************************************)
 
@@ -396,6 +396,10 @@ class imitator_options =
 				else if mode = "inversemethod" then 
 					imitator_mode <- Inverse_method
 					
+				(* Case: PRP *)
+				else if mode = "PRP" then 
+					imitator_mode <- PRP
+					
 				(* Case: cover *)
 				else if mode = "cover" then 
 					imitator_mode <- Cover_cartography
@@ -411,6 +415,10 @@ class imitator_options =
 				(* Case: border *)
 				else if mode = "border" then 
 					imitator_mode <- Border_cartography
+					
+				(* Case: PRPC *)
+				else if mode = "PRPC" then 
+					imitator_mode <- PRPC
 					
 				(* Case: number of iterations *)
 				else try (
@@ -582,7 +590,7 @@ class imitator_options =
 				
 				("-precomputepi0", Set precomputepi0, " Compute the next pi0 before the next reception of a constraint (in PaTATOR mode only). Default: false.");
 
-				("-PRP", Set efim, " Reachability-preservation algorithm mixing IM and EFsynth [ALNS15]. Default: false.");
+				("-PRP", Set efim, " Reachability-preservation algorithm mixing IM and EFsynth [ALNS15]. Default: false. WARNING: deprecated option (use -mode PRP or -mode PRPC)");
 				
 				("-PTA2GrML", Unit (fun _ -> pta2gml := true; imitator_mode <- Translation), "Translate the model into a GrML model, and exit without performing any analysis. Defaut : 'false'");
 				
@@ -704,12 +712,14 @@ class imitator_options =
 				| Parametric_NC_CUBtransform -> "parametric non-Zeno emptiness checking"
 				| Parametric_deadlock_checking -> "Parametric deadlock-checking"
 				| Inverse_method -> "inverse method"
+				| PRP -> "parametric reachability preservation"
 				| Cover_cartography -> "behavioral cartography algorithm with full coverage and step " ^ (NumConst.string_of_numconst !step)
 				| Learning_cartography -> "behavioral cartography algorithm with full coverage and step " ^ (NumConst.string_of_numconst !step) ^ " and using learning-based abstractions"
 				| Shuffle_cartography -> "behavioral cartography algorithm with full coverage (shuffled version) and step " ^ (NumConst.string_of_numconst !step)
 				| Border_cartography -> "behavioral cartography algorithm with border detection (experimental) and step " ^ (NumConst.string_of_numconst !step)
 				| Random_cartography nb -> "behavioral cartography algorithm with " ^ (string_of_int nb) ^ " random iterations and step " ^ (NumConst.string_of_numconst !step)
 				| RandomSeq_cartography nb -> "behavioral cartography algorithm with " ^ (string_of_int nb) ^ " random iterations + sequential phase and step " ^ (NumConst.string_of_numconst !step)
+				| PRPC -> "parametric reachability preservation cartography"
 			in print_message Verbose_standard ("Mode: " ^ message ^ ".");
 
 
@@ -722,8 +732,8 @@ class imitator_options =
 			(* Shortcut *)
 			let in_cartography_mode =
 				match imitator_mode with
-				| Translation | State_space_exploration | EF_synthesis| Loop_synthesis | Parametric_NC_CUBtransform | Parametric_deadlock_checking | Inverse_method -> false
-				| Cover_cartography | Learning_cartography | Shuffle_cartography | Border_cartography | Random_cartography _  | RandomSeq_cartography _ -> true	
+				| Translation | State_space_exploration | EF_synthesis| Loop_synthesis | Parametric_NC_CUBtransform | Parametric_deadlock_checking | Inverse_method | PRP -> false
+				| Cover_cartography | Learning_cartography | Shuffle_cartography | Border_cartography | Random_cartography _  | RandomSeq_cartography _ | PRPC -> true
 			in
 			
 			
@@ -857,8 +867,10 @@ class imitator_options =
 			(* Should add a warning in case of incompatible mode (IMoriginal incompatible with IMunion) + VARIANT ROMAIN *)
 
 
-			if !efim then
-				print_message Verbose_standard ("Considering algorithm PRP [ALNS15].")
+			if !efim then(
+				print_message Verbose_standard ("Considering algorithm PRP [ALNS15].");
+				print_warning ("Option -prp is deprecated. Use '-mode PRP' or '-mode PRPC' instead.");
+			)
 			else
 				print_message Verbose_medium ("No PRP algorithm (default).")
 			;
