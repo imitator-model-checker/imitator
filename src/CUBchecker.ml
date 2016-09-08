@@ -118,7 +118,7 @@ let filter_upperbound_by_clock_2 clock_index tuple_inequalities_s0 =
 	match tuple_inequalities_s0 with
 	| [] ->  raise (InternalError("Detected empty list, check again the input inequalities or it might be True constraint "))
 	| _  -> 
-	(List.find_all (fun (index, op,_) -> index == clock_index && (op == LinearConstraint.Op_le ||op == LinearConstraint.Op_l) ) tuple_inequalities_s0);
+	(List.find_all (fun (index, op,_) -> index == clock_index && (op == LinearConstraint.Op_le ||op == LinearConstraint.Op_l || op == LinearConstraint.Op_eq) ) tuple_inequalities_s0);
 	);
 	in
 	if !ls = []
