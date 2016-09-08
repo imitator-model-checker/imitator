@@ -1166,11 +1166,11 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 			 	print_message Verbose_standard ("   Checking CUB condtions at clock (" ^ (model.variable_names clock_index) ^ "):"); 	
 			 	(*get each element of tuple of each clock - NOTE: the input musts contain 1 upper-bounded*)
 			 	(* print_message Verbose_standard ("\n 	**Beginning state/location** :"); *)
-				let (clock_index_s0 , op_s0, linear_term_s0) 	= filter_upperbound_by_clock clock_index tuple_inequalities_s0 in
+				let (clock_index_s0 , op_s0, linear_term_s0) 	= List.hd (filter_upperbound_by_clock_2 clock_index tuple_inequalities_s0) in
 				(* print_message Verbose_standard ("\n 	**Transition** :"); *)
-				let (clock_index_t, op_t, linear_term_t) 	= filter_upperbound_by_clock clock_index tuple_inequalities_t in
+				let (clock_index_t, op_t, linear_term_t) 	= List.hd (filter_upperbound_by_clock_2 clock_index tuple_inequalities_t) in
 				(* print_message Verbose_standard ("\n 	**Destination state/location** :"); *)
-				let (clock_index_s1, op_s1, linear_term_s1) 	= filter_upperbound_by_clock clock_index tuple_inequalities_s1 in
+				let (clock_index_s1, op_s1, linear_term_s1) 	= List.hd (filter_upperbound_by_clock_2 clock_index tuple_inequalities_s1) in
 
 				(*convert back to constraint for each inequality*)
 				(* print_message Verbose_standard ("\n clock_term:" ^ (LinearConstraint.string_of_p_linear_term model.variable_names clock_term));  *)
@@ -1761,7 +1761,7 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 		count_loop := !count_loop + 1;
 
 		
-
+		
 
 		let count_t = ref 1 in
 		DynArray.iter ( fun transition -> 
@@ -1838,30 +1838,87 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 
 				let _ =
 				( 
-					match (op_s0, linear_term_s0), (op_t, linear_term_t) with
-					|(LinearConstraint.Op_ge, _), (LinearConstraint.Op_ge, _)	->	 
+					match (op_s0, linear_term_s0), (op_t, linear_term_t), (op_s1, linear_term_s1) with
+					|(LinearConstraint.Op_ge, _), (LinearConstraint.Op_ge, _), (LinearConstraint.Op_ge, _)	-> 
 						(*Case 1*)
-						print_message Verbose_standard (" 	 Case 1 (2) " );
-						if List.mem clock_index clock_updates = false
-						then
-							(
-							print_message Verbose_standard (" false, comparable ");
-							let clock_cons = LinearConstraint.pxd_intersection ([constraint_s1; (get_all_clocks_ge_zero_comstraint model)]) in
-							(* let check2 = isConstraintContainedInClocksConstraints location_index clock_cons clocks_constraints in
-							if check2 = false 
-							then *)
-								(
-								DynArray.add clocks_constraints (location_index, clock_cons);
-								print_message Verbose_standard (" Added constraints: " 
-																			^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names clock_cons)  
-																			^ "\n at state: " 
-																			^ location_index );
-								)
-							);
-						(*Case 1 - end*)
-					|(LinearConstraint.Op_ge, _), _								->
+					 	print_message Verbose_standard (" 	 Case 1 (2) " );
+					 	();
+					 	(*Case 1 - end*)
+
+					|(LinearConstraint.Op_ge, _), _							 , (LinearConstraint.Op_ge, _)	->	
 						(*Case 2*)
 						print_message Verbose_standard (" 	 Case 2 (2) " );
+						(* none reset zone *)
+						let clock_cons = (LinearConstraint.pxd_intersection [constraint_t; (get_all_clocks_ge_zero_comstraint model)]) in
+						let check2 = isConstraintContainedInClocksConstraints location_index clock_cons clocks_constraints in
+						if check2 = false 
+						then
+							(
+							DynArray.add clocks_constraints (location_index, clock_cons);
+							);
+						(* none reset zone - end *)
+						(*Case 2 - end*)
+
+					|(LinearConstraint.Op_ge, _), (LinearConstraint.Op_ge, _), _							->	
+						(*Case 3*)
+						(*reset*)
+						print_message Verbose_standard (" 	 Case 3 (2) " );
+						if List.mem clock_index clock_updates = true
+						then
+							(
+							(* reset zone *)
+							let _ = print_message Verbose_standard (" 	 Detected " 
+																	^ (model.variable_names clock_index) 
+																	^ " was a reset clock!\n 	 skipping the process: (" 
+																	^ t_upperbound_str ^ ") /\\ (" ^ s1_upperbound_str 
+																	^ ")!" ) 
+							in
+							();
+							(* reset zone - end *)
+							)
+						else
+							(
+							(* none reset zone *)
+
+							let clock_cons = (LinearConstraint.pxd_intersection [constraint_s1; (get_all_clocks_ge_zero_comstraint model)]) in
+							let check2 = isConstraintContainedInClocksConstraints location_index clock_cons clocks_constraints in
+							if check2 = false 
+							then
+								(
+								DynArray.add clocks_constraints (location_index, clock_cons);
+								);
+							();
+
+							(* none reset zone - end *)
+							);
+						(*Case 3 - end*)
+
+					|(LinearConstraint.Op_ge, _), _							 , _							->
+						(*Case 4*)
+						(*reset but useless*)
+						print_message Verbose_standard (" 	 Case 4 (2) " );
+						(*reset*)
+						let clock_cons = ref (LinearConstraint.pxd_intersection [constraint_t; constraint_s1; (get_all_clocks_ge_zero_comstraint model)]) in
+						(* reset zone *)
+						if (List.mem clock_index clock_updates) = true
+						then
+							(
+							clock_cons := (LinearConstraint.pxd_intersection [constraint_t; (get_all_clocks_ge_zero_comstraint model)]);
+							);
+						(* reset zone - end*)
+
+						let check2 = isConstraintContainedInClocksConstraints location_index !clock_cons clocks_constraints in
+						if check2 = false 
+						then
+							(
+							DynArray.add clocks_constraints (location_index, !clock_cons);
+							);
+						(); 
+						(*Case 4 - end*)
+
+					|(LinearConstraint.Op_ge, _), _		, _						->
+						(*Case *)
+						print_message Verbose_standard (" 	 Case  (2) " );
 						print_message Verbose_standard (" false, comparable ");
 						let clock_cons = ref (LinearConstraint.pxd_intersection [constraint_t; constraint_s1; get_all_clocks_ge_zero_comstraint model]) in
 						if (List.mem clock_index clock_updates) = true
@@ -1879,9 +1936,9 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 																			^ "\n at state: " 
 																			^ location_index );
 							);
-						(*Case 2 - end*)
+						(*Case  - end*)
 
-					|_							, (LinearConstraint.Op_ge, _)	->	
+					|_							, (LinearConstraint.Op_ge, _), _	->	
 						(*Case 3*)
 						print_message Verbose_standard (" 	 Case 3 (2) " );
 						if (List.mem clock_index clock_updates) = false
@@ -2033,9 +2090,250 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 							);
 						(*Case 3 - end*)
 
-					|_							, _								->	
+					|(LinearConstraint.Op_ge, _), _							 , _							->
 						(*Case 4*)
-						print_message Verbose_standard (" 	 Case 4 (2) " );	
+						(*reset but useless*)
+						print_message Verbose_standard (" 	 Case 4 (2) " );
+						(*reset*)
+						let clock_cons = ref (LinearConstraint.pxd_intersection [constraint_t; constraint_s1; (get_all_clocks_ge_zero_comstraint model)]) in
+						(* reset zone *)
+						if (List.mem clock_index clock_updates) = true
+						then
+							(
+							clock_cons := (LinearConstraint.pxd_intersection [constraint_t; (get_all_clocks_ge_zero_comstraint model)]);
+							);
+						(* reset zone - end*)
+
+						let check2 = isConstraintContainedInClocksConstraints location_index !clock_cons clocks_constraints in
+						if check2 = false 
+						then
+							(
+							DynArray.add clocks_constraints (location_index, !clock_cons);
+							);
+						(); 
+						(*Case 4 - end*)
+					|_							, (LinearConstraint.Op_ge, _), (LinearConstraint.Op_ge, _)	->	
+						(*Case 5*)
+						print_message Verbose_standard (" 	 Case 5 (2) " );
+						();
+						(*Case 5 - end*)
+					|_							, _							 , (LinearConstraint.Op_ge, _)	->	
+						(*Case 6*)
+						(* none reset zone *)
+						print_message Verbose_standard (" 	 Case 6 (2) " );
+						let ineq = make_CUB_inequality (op_s0, linear_term_s0) (op_t, linear_term_t) in
+						print_message Verbose_standard (" Forming inequality: " 
+														^ LinearConstraint.string_of_p_linear_inequality model.variable_names ineq 
+														^ "!!!\n");
+						let constr = make_CUB_constraint [ineq] in
+			
+						if LinearConstraint.p_is_true constr
+						then
+							(
+							print_message Verbose_standard (" true, comparable "); 
+							()
+							)
+						else
+							(
+							let clock_cons = LinearConstraint.pxd_intersection ([constraint_s0; constraint_t; (get_all_clocks_ge_zero_comstraint model)]) in
+							let check2 = isConstraintContainedInClocksConstraints location_index clock_cons clocks_constraints in
+							if LinearConstraint.p_is_false constr
+							then 
+								(
+								print_message Verbose_standard (" false, comparable ");
+
+								if check2 = false 
+								then
+									(
+									DynArray.add clocks_constraints (location_index, clock_cons);
+									);
+								()
+
+								)
+							else
+								(
+								print_message Verbose_standard (" false, not determined ");
+								(*submodel info*)
+								getInfoCurrentModel model submodel;
+								let check1 = isContraintConflictsParametersConstraints constr parameters_constraints in
+								let check3 = isConstraintContainedInParametersConstraints constr parameters_constraints in
+								print_message Verbose_standard ("\n Check 1 - CUB-Cons conflicted with parameters relation: " ^ string_of_bool check1
+																(* ^ "\n Check 2 - Constraint Contained In Clocks Constraints: " ^ string_of_bool check2 *)
+																^ "\n Check 3 - CUB-Cons Contained In parameters relation:: " ^ string_of_bool check3 );
+
+								if check1 = true
+								then
+									(
+									if check2 = false
+									then
+										(
+										print_message Verbose_standard ("\n Cub constraints conflicted with parameters constraints!!! " );
+										print_message Verbose_standard (" Adding new clocks constraints" );
+										DynArray.add clocks_constraints (location_index, clock_cons);
+										(* print_message Verbose_standard (" Added constraints: " 
+																		^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names clock_cons)  
+																		^ "\n at state: " 
+																		^ string_of_int location_index ); *)
+										);
+									)
+								else
+									(
+									if check3 = false
+									then
+										(
+										print_message Verbose_standard ("\n cub constraints did not conflict with parameters constraints!!! " );
+										(*Add First parameter constraints in the current submodel*)
+										let new_parameters_constraints = DynArray.copy parameters_constraints in
+										print_message Verbose_standard ("\n Add constraint " 
+																		^ (LinearConstraint.string_of_p_linear_constraint model.variable_names constr) 
+																		^ " into submodel ((parameters_constraints)) " 
+																		^ string_of_int (!count_m)  );
+										DynArray.add parameters_constraints (true, [constr]);
+										(*Create new submodel with Second constraint*)
+										let linear_term_1 = LinearConstraint.sub_p_linear_terms linear_term_s0 linear_term_t in
+										let linear_inequality_1 = LinearConstraint.make_p_linear_inequality linear_term_1 LinearConstraint.Op_g in
+										let constr1 = LinearConstraint.make_p_constraint ([linear_inequality_1]) in
+										print_message Verbose_standard ("\n Add constraint " 
+																		^ (LinearConstraint.string_of_p_linear_constraint model.variable_names constr1) 
+																		^ " into submodel (parameters_constraints) " 
+																		^ string_of_int ((DynArray.length submodels) +1) );
+										DynArray.add new_parameters_constraints (false, [constr1]);
+										if is_parameters_constraints_false new_parameters_constraints
+										then 
+											(
+											print_message Verbose_standard ("\n New parameters relations all False!!!, not created new submodel!!");
+											)
+										else
+											(
+											let new_clocks_constraints = DynArray.make 0 in
+											(* let new_clocks_constraints = DynArray.copy clocks_constraints in *)
+											(* DynArray.add new_clocks_constraints (location_index, clock_cons); *)
+											DynArray.add submodels (Hashtbl.copy locations, DynArray.copy transitions, new_clocks_constraints, new_parameters_constraints);
+											);
+										);
+									);
+								();
+								);
+							);
+						(* none reset zone - end*)
+						(*Case 6 - end*)
+					|_							, (LinearConstraint.Op_ge, _), _							->	
+						(*Case 7*)
+						print_message Verbose_standard (" 	 Case 7 (2) " );
+						(*reset*)
+						if List.mem clock_index clock_updates = true
+						then
+							(
+							(* reset zone *)
+							let _ = print_message Verbose_standard (" 	 Detected " 
+															^ (model.variable_names clock_index) 
+															^ " was a reset clock!\n 	 skipping the process: (" 
+															^ t_upperbound_str ^ ") /\\ (" ^ s1_upperbound_str ^ ")!" ) 
+							in
+							()
+							(* reset zone - end*)
+							)
+						else
+							(
+							(* none reset zone *)
+							let ineq = make_CUB_inequality (op_s0, linear_term_s0) (op_s1, linear_term_s1) in
+							print_message Verbose_standard (" Forming inequality: " ^ LinearConstraint.string_of_p_linear_inequality model.variable_names ineq ^ "!!!\n");
+							let constr = make_CUB_constraint [ineq] in
+							if LinearConstraint.p_is_true constr
+							then 
+								(
+								print_message Verbose_standard (" true, comparable ");
+								()
+								)
+							else
+								(
+								let clock_cons = LinearConstraint.pxd_intersection ([constraint_s0; constraint_s1; (get_all_clocks_ge_zero_comstraint model)]) in
+								let check2 = isConstraintContainedInClocksConstraints location_index clock_cons clocks_constraints in
+								if LinearConstraint.p_is_false constr
+								then 
+									(
+									print_message Verbose_standard (" false, comparable ");
+
+									if check2 = false 
+									then
+										(
+										DynArray.add clocks_constraints (location_index, clock_cons);
+										);
+									()
+
+									)
+								else
+									(
+									print_message Verbose_standard (" false, not determined ");
+									(*submodel info*)
+									getInfoCurrentModel model submodel;
+									let check1 = isContraintConflictsParametersConstraints constr parameters_constraints in
+									let check3 = isConstraintContainedInParametersConstraints constr parameters_constraints in
+									print_message Verbose_standard ("\n Check 1 - CUB-Cons conflicted with parameters relation: " ^ string_of_bool check1
+																	^ "\n Check 2 - Constraint Contained In Clocks Constraints: " ^ string_of_bool check2
+																	^ "\n Check 3 - CUB-Cons Contained In parameters relation:: " ^ string_of_bool check3 );
+									if check1 = true
+									then
+										(
+										if check2 = false
+										then
+											(
+											print_message Verbose_standard ("\n Cub constraints conflicted with parameters constraints!!! " );
+											print_message Verbose_standard (" Adding new clocks constraints" );
+											DynArray.add clocks_constraints (location_index, clock_cons);
+											(* print_message Verbose_standard (" Added constraints: " 
+																			^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names clock_cons)  
+																			^ "\n at state: " 
+																			^ string_of_int location_index ); *)
+											);
+										)
+									else
+										(
+										if check3 = false
+										then
+											(
+											print_message Verbose_standard ("\n cub constraints did not conflict with parameters constraints!!! " );
+											(*Add First parameter constraints in the current submodel*)
+											let new_parameters_constraints = DynArray.copy parameters_constraints in
+											print_message Verbose_standard ("\n Add constraint " 
+																			^ (LinearConstraint.string_of_p_linear_constraint model.variable_names constr) 
+																			^ " into submodel ((parameters_constraints)) " 
+																			^ string_of_int (!count_m)  );
+											DynArray.add parameters_constraints (true, [constr]);
+
+											(*Create new submodel with Second constraint*)
+											let linear_term_2 = LinearConstraint.sub_p_linear_terms linear_term_s0 linear_term_s1 in
+											let linear_inequality_2 = LinearConstraint.make_p_linear_inequality linear_term_2 LinearConstraint.Op_g in
+											let constr2 = LinearConstraint.make_p_constraint ([linear_inequality_2]) in
+											print_message Verbose_standard (" Add constraint " 
+																			^ (LinearConstraint.string_of_p_linear_constraint model.variable_names constr2) 
+																			^ " into submodel (parameters_constraints) " 
+																			^ string_of_int ((DynArray.length submodels) +1) );
+											DynArray.add new_parameters_constraints (false, [constr2]);
+
+											if is_parameters_constraints_false new_parameters_constraints
+											then 
+												(
+												print_message Verbose_standard ("\n New parameters relations all False!!!, not created new submodel!!");
+												)
+											else
+												(
+												let new_clocks_constraints = DynArray.make 0 in
+												(* let new_clocks_constraints = DynArray.copy clocks_constraints in *)
+												(* DynArray.add new_clocks_constraints (location_index, clock_cons); *)
+												DynArray.add submodels (Hashtbl.copy locations, DynArray.copy transitions, new_clocks_constraints, new_parameters_constraints);
+												);
+											);
+										);
+									();
+									);
+								);
+							(* none reset zone *)
+							);
+						(*Case 7 - end*)																						
+					| _							, _							 , _							-> 	
+						(*Case 8*)
+						print_message Verbose_standard (" 	 Case 8 (2) " );
 						(*reset*)
 						if List.mem clock_index clock_updates = true
 						then
@@ -2055,6 +2353,7 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 							then 
 								(
 								print_message Verbose_standard (" true, comparable ");
+								()
 								)
 							else
 								(
@@ -2064,11 +2363,12 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 								then 
 									(
 									print_message Verbose_standard (" false, comparable ");
+
 									if check2 = false 
 									then
-										(
-										DynArray.add clocks_constraints (location_index, clock_cons);
-										);
+									DynArray.add clocks_constraints (location_index, clock_cons);
+									()
+
 									)
 								else
 									(
@@ -2079,7 +2379,7 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 									let check1 = isContraintConflictsParametersConstraints constr parameters_constraints in
 									let check3 = isConstraintContainedInParametersConstraints constr parameters_constraints in
 									print_message Verbose_standard ("\n Check 1 - CUB-Cons conflicted with parameters relation: " ^ string_of_bool check1
-																	^ "\n Check 2 - Constraint Contained In Clocks Constraints: " ^ string_of_bool check2
+																	(* ^ "\n Check 2 - Constraint Contained In Clocks Constraints: " ^ string_of_bool check2 *)
 																	^ "\n Check 3 - CUB-Cons Contained In parameters relation:: " ^ string_of_bool check3 );
 									if check1 = true
 									then
@@ -2089,27 +2389,7 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 											(
 											print_message Verbose_standard ("\n Cub constraints conflicted with parameters constraints!!! " );
 											print_message Verbose_standard (" Adding new clocks constraints" );
-
-											(* test *)
-											let new_parameters_constraints = DynArray.copy parameters_constraints in
-
-											let linear_term_1 = LinearConstraint.sub_p_linear_terms linear_term_s0 linear_term_t in
-
-											let linear_inequality_1 = LinearConstraint.make_p_linear_inequality linear_term_1 LinearConstraint.Op_g in
-
-											let constr1 = LinearConstraint.make_p_constraint ([linear_inequality_1]) in
-
-											let conj =  (LinearConstraint.p_intersection [constr1]) in
-											let check = isContraintAllConflictsParametersConstraints conj parameters_constraints in
-
-											if not check
-											then
-												(
-												DynArray.add parameters_constraints (false, [constr1]);
-												DynArray.add clocks_constraints (location_index, clock_cons);
-												);
-											(* test - end *)
-
+											DynArray.add clocks_constraints (location_index, clock_cons);
 											(* print_message Verbose_standard (" Added constraints: " 
 																			^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names clock_cons)  
 																			^ "\n at state: " 
@@ -2133,86 +2413,74 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 											let linear_term_1 = LinearConstraint.sub_p_linear_terms linear_term_s0 linear_term_t in
 											let linear_inequality_1 = LinearConstraint.make_p_linear_inequality linear_term_1 LinearConstraint.Op_g in
 											let constr1 = LinearConstraint.make_p_constraint ([linear_inequality_1]) in
-
-											let checkConflict1 = isContraintConflictsParametersConstraints constr1 new_parameters_constraints in
-											(
-											match checkConflict1 with
-											| true (* false *)  -> print_message Verbose_standard ("\n conflict!!");
-
-											| false (* true *)  -> print_message Verbose_standard ("\n conflict!!");
-														DynArray.add new_parameters_constraints (false, [constr1]);
-														print_message Verbose_standard ("\n Add constraint " 
-																	^ (LinearConstraint.string_of_p_linear_constraint model.variable_names constr1) 
-																	^ " into submodel (parameters_constraints) " 
-																	^ string_of_int ((DynArray.length submodels) +1) );
-											);
-											if ( (is_parameters_constraints_false new_parameters_constraints) || checkConflict1 )
+											print_message Verbose_standard ("\n Add constraint " 
+																			^ (LinearConstraint.string_of_p_linear_constraint model.variable_names constr1) 
+																			^ " into submodel (parameters_constraints) " 
+																			^ string_of_int ((DynArray.length submodels) +1) );
+											DynArray.add new_parameters_constraints (false, [constr1]);
+											if is_parameters_constraints_false new_parameters_constraints
 											then 
 												(
 												print_message Verbose_standard ("\n New parameters relations all False!!!, not created new submodel!!");
 												)
 											else
 												(
-												(* let new_clocks_constraints = Hashtbl.create 0 in
-												Hashtbl.add new_clocks_constraints location_index clock_cons;
-												DynArray.add submodels (Hashtbl.copy locations, DynArray.copy transitions, new_clocks_constraints, new_parameters_constraints); *)
-
-												(* let new_clocks_constraints = Hashtbl.create 0 in *)
-												let new_clocks_constraints = DynArray.copy clocks_constraints in
+												let new_clocks_constraints = DynArray.make 0 in
+												(* let new_clocks_constraints = DynArray.copy clocks_constraints in *)
 												(* DynArray.add new_clocks_constraints (location_index, clock_cons); *)
 												DynArray.add submodels (Hashtbl.copy locations, DynArray.copy transitions, new_clocks_constraints, new_parameters_constraints);
 												);
 											);
 										);
+									();
 									);
 								);
-
 							(* reset zone - end *)
 							)
 						else
 							(
 							(* none reset zone *)
-							(*form parameters relation*)
 							let ineq1 = make_CUB_inequality (op_s0, linear_term_s0) (op_t, linear_term_t) in
-							let ineq2 = ref [] in
-							List.iter (fun  (_, op_s1, linear_term_s1) ->
-								ineq2 := !ineq2@[(make_CUB_inequality (op_s0, linear_term_s0) (op_s1, linear_term_s1))];
-							) tuple_inequalities_s1;
+							print_message Verbose_standard (" Inequality s0 <= t: \n" 
+															^ LinearConstraint.string_of_p_linear_inequality model.variable_names ineq1 ^ "!!!\n");
+							let ineq2 = make_CUB_inequality (op_s0, linear_term_s0) (op_s1, linear_term_s1) in
+							print_message Verbose_standard (" Inequality s0 <= s1: \n" 
+															^ LinearConstraint.string_of_p_linear_inequality model.variable_names ineq2 ^ "!!!\n");
+							let constr = make_CUB_constraint [ineq1;ineq2] in
 
-							let cub_cons = make_CUB_constraint ([ineq1]@(!ineq2)) in
-							print_message Verbose_standard ("\n CUB constraint: " 
-																^ (LinearConstraint.string_of_p_linear_constraint model.variable_names cub_cons));
-							if LinearConstraint.p_is_true cub_cons
+							if LinearConstraint.p_is_true constr
 							then 
 								(
 								print_message Verbose_standard (" true, comparable ");
+								()
 								)
 							else
 								(
 								let clock_cons = LinearConstraint.pxd_intersection ([constraint_s0; constraint_t; constraint_s1; (get_all_clocks_ge_zero_comstraint model)]) in
 								let check2 = isConstraintContainedInClocksConstraints location_index clock_cons clocks_constraints in
-								if LinearConstraint.p_is_false cub_cons
+								if LinearConstraint.p_is_false constr
 								then 
 									(
 									print_message Verbose_standard (" false, comparable ");
+
 									if check2 = false 
 									then
 										(
 										DynArray.add clocks_constraints (location_index, clock_cons);
 										);
+									()
+
 									)
 								else
 									(
 									print_message Verbose_standard (" false, not determined ");
-
-									(*get submodel info*)
+									(*submodel info*)
 									getInfoCurrentModel model submodel;
-									let check1 = isContraintConflictsParametersConstraints cub_cons parameters_constraints in
-									let check3 = isConstraintContainedInParametersConstraints cub_cons parameters_constraints in
+									let check1 = isContraintConflictsParametersConstraints constr parameters_constraints in
+									let check3 = isConstraintContainedInParametersConstraints constr parameters_constraints in
 									print_message Verbose_standard ("\n Check 1 - CUB-Cons conflicted with parameters relation: " ^ string_of_bool check1
 																	^ "\n Check 2 - Constraint Contained In Clocks Constraints: " ^ string_of_bool check2
 																	^ "\n Check 3 - CUB-Cons Contained In parameters relation:: " ^ string_of_bool check3 );
-
 									if check1 = true
 									then
 										(
@@ -2221,75 +2489,33 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 											(
 											print_message Verbose_standard ("\n Cub constraints conflicted with parameters constraints!!! " );
 											print_message Verbose_standard (" Adding new clocks constraints" );
-
-											(* test *)
-											let new_parameters_constraints = DynArray.copy parameters_constraints in
-
-											let linear_term_1 = LinearConstraint.sub_p_linear_terms linear_term_s0 linear_term_t in
-											let linear_term_2 = ref [] in
-											List.iter (fun  (_, op_s1, linear_term_s1) ->
-												linear_term_2 := !linear_term_2@[(LinearConstraint.sub_p_linear_terms linear_term_s0 linear_term_s1)];
-											) tuple_inequalities_s1;
-
-											let linear_inequality_1 = LinearConstraint.make_p_linear_inequality linear_term_1 LinearConstraint.Op_g in
-											let linear_inequality_2 = ref [] in
-											List.iter (fun term ->
-												linear_inequality_2 := !linear_inequality_2@[(LinearConstraint.make_p_linear_inequality term LinearConstraint.Op_g)];
-											) !linear_term_2;
-
-											let constr1 = LinearConstraint.make_p_constraint ([linear_inequality_1]) in
-											let constr2 = LinearConstraint.make_p_constraint (!linear_inequality_2) in
-
-											let conj =  (LinearConstraint.p_intersection [constr1;constr2]) in
-											let check = isContraintAllConflictsParametersConstraints conj parameters_constraints in
-
-											if not check
-											then
-												(
-												DynArray.add parameters_constraints (false, [constr1;constr2]);
-												DynArray.add clocks_constraints (location_index, clock_cons);
-												(* adding := true; *)
-												);
-											(* test - end *)
-
+											DynArray.add clocks_constraints (location_index, clock_cons);
 											(* print_message Verbose_standard (" Added constraints: " 
 																			^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names clock_cons)  
 																			^ "\n at state: " 
 																			^ string_of_int location_index ); *)
-											)
+											); 
 										)
 									else
 										(
-
 										if check3 = false
 										then
 											(
 											print_message Verbose_standard ("\n cub constraints did not conflict with parameters constraints!!! " );
-
 											(*Add First parameter constraints in the current submodel*)
 											let new_parameters_constraints = DynArray.copy parameters_constraints in
 											print_message Verbose_standard ("\n Add constraint " 
-																			^ (LinearConstraint.string_of_p_linear_constraint model.variable_names cub_cons) 
+																			^ (LinearConstraint.string_of_p_linear_constraint model.variable_names constr) 
 																			^ " into submodel ((parameters_constraints)) " 
 																			^ string_of_int (!count_m)  );
-											DynArray.add parameters_constraints (true, [cub_cons]);
-
+											DynArray.add parameters_constraints (true, [constr]);
 											(*Create new submodel with Second constraint*)
 											let linear_term_1 = LinearConstraint.sub_p_linear_terms linear_term_s0 linear_term_t in
-											let linear_term_2 = ref [] in
-											List.iter (fun  (_, op_s1, linear_term_s1) ->
-												linear_term_2 := !linear_term_2@[(LinearConstraint.sub_p_linear_terms linear_term_s0 linear_term_s1)];
-											) tuple_inequalities_s1;
-
+											let linear_term_2 = LinearConstraint.sub_p_linear_terms linear_term_s0 linear_term_s1 in
 											let linear_inequality_1 = LinearConstraint.make_p_linear_inequality linear_term_1 LinearConstraint.Op_g in
-											let linear_inequality_2 = ref [] in
-											List.iter (fun term ->
-												linear_inequality_2 := !linear_inequality_2@[(LinearConstraint.make_p_linear_inequality term LinearConstraint.Op_g)];
-											) !linear_term_2;
-
+											let linear_inequality_2 = LinearConstraint.make_p_linear_inequality linear_term_2 LinearConstraint.Op_g in
 											let constr1 = LinearConstraint.make_p_constraint ([linear_inequality_1]) in
-											let constr2 = LinearConstraint.make_p_constraint (!linear_inequality_2) in
-
+											let constr2 = LinearConstraint.make_p_constraint ([linear_inequality_2]) in
 											print_message Verbose_standard ("\n Add constraint " 
 																			^ (LinearConstraint.string_of_p_linear_constraint model.variable_names constr1) 
 																			^ " into submodel (parameters_constraints) " 
@@ -2298,63 +2524,28 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 																			^ (LinearConstraint.string_of_p_linear_constraint model.variable_names constr2) 
 																			^ " into submodel (parameters_constraints) " 
 																			^ string_of_int ((DynArray.length submodels) +1) );
-
-											(* DynArray.add new_parameters_constraints (false, [constr1;constr2]); *)
-											let checkConflict1 = isContraintConflictsParametersConstraints constr1 new_parameters_constraints in
-											let checkConflict2 = isContraintConflictsParametersConstraints constr2 new_parameters_constraints in
-											(
-											match (checkConflict1, checkConflict2) with
-											| (true , true)  -> print_message Verbose_standard ("\n 1 2 conflict!!");
-
-											| (false, true)  -> print_message Verbose_standard ("\n 2 conflict!!");
-																DynArray.add new_parameters_constraints (false, [constr1]);
-																print_message Verbose_standard ("\n Add constraint " 
-																			^ (LinearConstraint.string_of_p_linear_constraint model.variable_names constr1) 
-																			^ " into submodel (parameters_constraints) " 
-																			^ string_of_int ((DynArray.length submodels) +1) );
-
-											| (true , false) -> print_message Verbose_standard ("\n 1 conflict!!");
-																DynArray.add new_parameters_constraints (false, [constr2]);
-																print_message Verbose_standard (" Add constraint " 
-																			^ (LinearConstraint.string_of_p_linear_constraint model.variable_names constr2) 
-																			^ " into submodel (parameters_constraints) " 
-																			^ string_of_int ((DynArray.length submodels) +1) );
-
-											| (false, false) -> print_message Verbose_standard ("\n not conflict!!");
-																DynArray.add new_parameters_constraints (false, [constr1;constr2]);
-																print_message Verbose_standard ("\n Add constraint " 
-																			^ (LinearConstraint.string_of_p_linear_constraint model.variable_names constr1) 
-																			^ " into submodel (parameters_constraints) " 
-																			^ string_of_int ((DynArray.length submodels) +1) );
-																print_message Verbose_standard (" Add constraint " 
-																			^ (LinearConstraint.string_of_p_linear_constraint model.variable_names constr2) 
-																			^ " into submodel (parameters_constraints) " 
-																			^ string_of_int ((DynArray.length submodels) +1) );
-											);
-
-											if (is_parameters_constraints_false new_parameters_constraints) || (checkConflict1 && checkConflict2)
+											DynArray.add new_parameters_constraints (false, [constr1;constr2]);
+											if is_parameters_constraints_false new_parameters_constraints
 											then 
 												(
 												print_message Verbose_standard ("\n New parameters relations all False!!!, not created new submodel!!");
 												)
 											else
 												(
-												(* let new_clocks_constraints = Hashtbl.create 0 in
-												Hashtbl.add new_clocks_constraints location_index clock_cons;
-												DynArray.add submodels (Hashtbl.copy locations, DynArray.copy transitions, new_clocks_constraints, new_parameters_constraints); *)
-												
-												(* let new_clocks_constraints = Hashtbl.create 0 in *)
-												let new_clocks_constraints = DynArray.copy clocks_constraints in
+												let new_clocks_constraints = DynArray.make 0 in
+												(* let new_clocks_constraints = DynArray.copy clocks_constraints in *)
 												(* DynArray.add new_clocks_constraints (location_index, clock_cons); *)
 												DynArray.add submodels (Hashtbl.copy locations, DynArray.copy transitions, new_clocks_constraints, new_parameters_constraints);
-												);
+												); 
 											);
 										);
+									();
 									);
 								);
-							(* none reset zone *)
+							(* none reset zone - end*)
 							);
-							(*Case 4 - end*)
+						(*Case 8 - end*)
+
 					);
 					in ();
 
@@ -2421,6 +2612,8 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 			();
 		) transitions;
 		(*stage 1 - end*)
+
+	
 
 		);
 		(* end - while adding loop *)
