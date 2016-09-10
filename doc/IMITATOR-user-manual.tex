@@ -234,6 +234,7 @@
 % THEOREMS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \newtheorem{definition}{Definition}
+\newtheorem{remark}{Remark}
 \newtheorem{hint}{Hint}
 
 
@@ -1166,11 +1167,21 @@ Both parts of the results are then separated using the keyword \styleFileContent
 The resulting constraint comes with two other information:
 \begin{itemize}
 	\item its nature, \ie{} whether it attempts to characterize a good set of valuations, a bad set of valuations, or both a good set and a bad of valuations.
-		It is only an \emph{attempt}, as the constraint may not always be sound (see below).
+		``Good'' and ``bad'' must be understood to the property that is being checked (non-reachability of some states, deadlock-freeness, etc.).
+		The constraint nature is only an \emph{attempt}, as the constraint may not always be sound (see below).
 	\item its soundness, \ie{} whether the constraint is exact (\imitator{} returned exactly the set of parameter valuations solution to the analysis requested), a possible under-approximation of that result, a possible over-approximation of that result (in some rare cases), or a possibly invalid constraint (in which case the result output by \imitator{} shall not be used).
 \end{itemize}
 Note that in almost all analyses, \imitator{} return an exact or an under-approximated constraint.
 A possibly invalid constraint can be synthesized when some options are used: for example, computing the result of \IM{} with the merging enabled (\styleOption{-merge}) yields a possibly invalid constraint, as it was shown that the merging optimization does not preserve the validity of the result of~\IM{}~\cite{AFS13atva}.
+
+\begin{remark}
+	\IM{} is independent of the property, and therefore the constraint nature is not really interesting.
+	\imitator{} performs the following:
+	if a safety property is defined and if the state space reaches some unsafe states, then the constraint is considered as bad.
+	In any other case (safe state space, or no safety property defined), the constraint nature is considered as good.
+	The same applies for \BC{}.
+\end{remark}
+
 
 Finally, the result also comes with an evaluation of the termination: the termination can be regular (the analysis went to its end without interruption) or an early termination, with some states unexplored (\eg{} if a maximum analysis time (\styleOption{-time-limit}), a maximum exploration depth (\styleOption{-depth-limit}), etc., was set).
 

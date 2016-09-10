@@ -134,6 +134,8 @@ class algoIM =
 		in
 		
 		let result = match statespace_nature with
+			(*** NOTE: if a safety property is defined and if the state space reaches some unsafe states, then the constraint is considered as bad.
+	In any other case (safe state space, or no safety property defined), the constraint nature is considered as good. ***)
 			| StateSpace.Good | StateSpace.Unknown -> Good_constraint(LinearConstraint.p_nnconvex_constraint_of_p_linear_constraint p_constraint, soundness)
 			| StateSpace.Bad -> Bad_constraint(LinearConstraint.p_nnconvex_constraint_of_p_linear_constraint p_constraint, soundness)
 		in
