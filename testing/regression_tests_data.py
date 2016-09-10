@@ -10,7 +10,7 @@
 # Laboratoire d'Informatique de Paris Nord
 # Universite Paris 13, Sorbonne Paris Cite, France
 # Created      : 2015/10/23
-# Last modified: 2016/09/06
+# Last modified: 2016/09/10
 #************************************************************
 
 
@@ -3234,7 +3234,7 @@ Average number of transitions : 4.0
 ------------------------------------------------------------
 Constraint soundness          : possible over-approximation
 Termination                   : depth limit (1 successor unexplored)
-Constraint nature             : unknown
+Constraint nature             : good
 ------------------------------------------------------------
 Local number of states        : 5
 Local number of transitions   : 4
@@ -3257,7 +3257,7 @@ Local number of transitions   : 4
 ------------------------------------------------------------
 Constraint soundness          : possible over-approximation
 Termination                   : depth limit (1 successor unexplored)
-Constraint nature             : unknown
+Constraint nature             : good
 ------------------------------------------------------------
 Local number of states        : 5
 Local number of transitions   : 4
@@ -3280,7 +3280,7 @@ Local number of transitions   : 4
 ------------------------------------------------------------
 Constraint soundness          : possible over-approximation
 Termination                   : depth limit (1 successor unexplored)
-Constraint nature             : unknown
+Constraint nature             : good
 ------------------------------------------------------------
 Local number of states        : 5
 Local number of transitions   : 4
@@ -3302,7 +3302,7 @@ Local number of transitions   : 4
 ------------------------------------------------------------
 Constraint soundness          : possible over-approximation
 Termination                   : depth limit (1 successor unexplored)
-Constraint nature             : unknown
+Constraint nature             : good
 ------------------------------------------------------------
 Local number of states        : 5
 Local number of transitions   : 4
@@ -3325,7 +3325,7 @@ Local number of transitions   : 4
 ------------------------------------------------------------
 Constraint soundness          : possible over-approximation
 Termination                   : depth limit (1 successor unexplored)
-Constraint nature             : unknown
+Constraint nature             : good
 ------------------------------------------------------------
 Local number of states        : 5
 Local number of transitions   : 4
@@ -3377,7 +3377,7 @@ Average number of transitions : 4.0
 ------------------------------------------------------------
 Constraint soundness          : possible over-approximation
 Termination                   : depth limit (1 successor unexplored)
-Constraint nature             : unknown
+Constraint nature             : good
 ------------------------------------------------------------
 Local number of states        : 10
 Local number of transitions   : 9
@@ -3518,7 +3518,7 @@ Tile #1
 ------------------------------------------------------------
 Constraint soundness          : possible over-approximation
 Termination                   : depth limit (1 successor unexplored)
-Constraint nature             : unknown
+Constraint nature             : good
 ------------------------------------------------------------
 Local number of states        : 14
 Local number of transitions   : 13
@@ -3710,7 +3710,7 @@ Local number of transitions   : 7
 ------------------------------------------------------------
 Constraint soundness          : possibly invalid
 Termination                   : depth limit (0 successor unexplored)
-Constraint nature             : unknown
+Constraint nature             : good
 ------------------------------------------------------------
 Local number of states        : 9
 Local number of transitions   : 8
@@ -3881,7 +3881,7 @@ Average number of transitions : 14.1
 """
 			} # end BC file
 			, 
-			{'file': 'flipflop_cart_bc_points_2.txt' , 'content' : """14. 3.
+			{'file': 'flipflop_cart_points_2.txt' , 'content' : """14. 3.
 8. 9.
 8. 16.
 17. 7.
@@ -3890,7 +3890,7 @@ Average number of transitions : 14.1
 # """
 			} # end tile file
 			,
-			{'file': 'flipflop_cart_bc_points_8.txt' , 'content' : """17. 31.
+			{'file': 'flipflop_cart_points_8.txt' , 'content' : """17. 31.
 17. 7.
 8. 16.
 8. 31.
@@ -4586,7 +4586,7 @@ Average number of transitions : 14.1
 			} # end BC file
 			, 
 			# NOTE: impossible to check graphics source, as the order of the tiles is not known
-			#{'file': 'flipflop_cart_bc_points_2.txt' , 'content' : """14. 3.
+			#{'file': 'flipflop_cart_points_2.txt' , 'content' : """14. 3.
 #8. 9.
 #8. 16.
 #17. 7.
@@ -4595,7 +4595,7 @@ Average number of transitions : 14.1
 ## """
 			#} # end tile file
 			#,
-			#{'file': 'flipflop_cart_bc_points_8.txt' , 'content' : """17. 31.
+			#{'file': 'flipflop_cart_points_8.txt' , 'content' : """17. 31.
 #17. 7.
 #8. 16.
 #8. 31.
@@ -5767,7 +5767,7 @@ Constraint nature                       : good/bad
 ------------------------------------------------------------
 Constraint soundness          : possibly invalid
 Termination                   : depth limit (1 successor unexplored)
-Constraint nature             : unknown
+Constraint nature             : good
 ------------------------------------------------------------
 Local number of states        : 10
 Local number of transitions   : 9
