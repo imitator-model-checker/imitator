@@ -11,7 +11,7 @@
 # Laboratoire d'Informatique de Paris Nord
 # Universite Paris 13, Sorbonne Paris Cite, France
 # Created      : 2016/03/14
-# Last modified: 2016/08/16
+# Last modified: 2016/09/10
 #************************************************************
 
 
@@ -443,8 +443,8 @@ Constraint nature             : bad
 			} # end BC file
 			, 
 			{'file': 'flipflop.res' , 'content' : """
- dG3_u >= 8
-& dG3_u + dG4_u >= 24
+ dG3_u + dG4_u >= 24
+& dG3_u >= 8
 & 17 > dG3_u
 
 ------------------------------------------------------------
@@ -881,8 +881,8 @@ Constraint nature             : bad
 			} # end BC file
 			, 
 			{'file': 'flipflop.res' , 'content' : """
- dG3_u >= 8
-& dG3_u + dG4_u >= 24
+ dG3_u + dG4_u >= 24
+& dG3_u >= 8
 & 17 > dG3_u
 
 ------------------------------------------------------------
@@ -972,8 +972,8 @@ Constraint nature             : bad
 			} # end BC file
 			, 
 			{'file': 'flipflop.res' , 'content' : """
- dG3_u >= 8
-& dG3_u + dG4_u >= 24
+ dG3_u + dG4_u >= 24
+& dG3_u >= 8
 & 17 > dG3_u
 
 ------------------------------------------------------------
@@ -1063,8 +1063,8 @@ Constraint nature             : bad
 			} # end BC file
 			, 
 			{'file': 'flipflop.res' , 'content' : """
- dG3_u >= 8
-& dG3_u + dG4_u >= 24
+ dG3_u + dG4_u >= 24
+& dG3_u >= 8
 & 17 > dG3_u
 
 ------------------------------------------------------------
@@ -1509,8 +1509,8 @@ Constraint nature             : bad
 			} # end BC file
 			, 
 			{'file': 'flipflop.res' , 'content' : """
- dG3_u >= 8
-& dG3_u + dG4_u >= 24
+ dG3_u + dG4_u >= 24
+& dG3_u >= 8
 & 17 > dG3_u
 
 ------------------------------------------------------------
@@ -1964,8 +1964,8 @@ Constraint nature             : bad
 			} # end BC file
 			, 
 			{'file': 'flipflop.res' , 'content' : """
- dG3_u >= 8
-& dG3_u + dG4_u >= 24
+ dG3_u + dG4_u >= 24
+& dG3_u >= 8
 & 17 > dG3_u
 
 ------------------------------------------------------------
@@ -2711,7 +2711,7 @@ Termination                             : regular termination
 	
 	#------------------------------------------------------------
 	{
-		'purpose'    : 'Distributed cartography: PRPC with sequential distribution (on the case study BC vs. PRPC)',
+		'purpose'    : 'Distributed cartography: PRPC (old version) with sequential distribution (on the case study BC vs. PRPC)',
 		'input_files': ['diffBCPRPC.imi', 'diffBCPRPC.v0'],
 		'options'    : '-mode cover -PRP -no-random -distributed sequential -output-result',
 		'nb_nodes'   : 4,
@@ -2826,7 +2826,7 @@ Termination                             : regular termination
 	
 	#------------------------------------------------------------
 	{
-		'purpose'    : 'Distributed cartography: PRPC with shuffle distribution (on the case study BC vs. PRPC)',
+		'purpose'    : 'Distributed cartography: PRPC (old version) with shuffle distribution (on the case study BC vs. PRPC)',
 		'input_files': ['diffBCPRPC.imi', 'diffBCPRPC.v0'],
 		'options'    : '-mode cover -PRP -no-random -distributed shuffle -output-result',
 		'nb_nodes'   : 4,
@@ -2917,14 +2917,19 @@ Local number of transitions             : 12
 & p2 >= 2
 & 4 >= p2
 & 4 >= p1
+OR
+  p1 >= 2
+& p2 >= 0
+& 4 >= p2
+& 4 >= p1
 
 ------------------------------------------------------------
 Constraint soundness                    : exact
 Termination                             : regular termination
 Constraint nature                       : bad
 ------------------------------------------------------------
-Local number of states                  : 7
-Local number of transitions             : 10
+Local number of states                  : 8
+Local number of transitions             : 11
 """
 			} # end BC file
 			, 
@@ -2941,7 +2946,7 @@ Termination                             : regular termination
 	
 	#------------------------------------------------------------
 	{
-		'purpose'    : 'Distributed cartography: PRPC with static distribution (on the case study BC vs. PRPC)',
+		'purpose'    : 'Distributed cartography: PRPC (old version) with static distribution (on the case study BC vs. PRPC)',
 		'input_files': ['diffBCPRPC.imi', 'diffBCPRPC.v0'],
 		'options'    : '-mode cover -PRP -no-random -distributed static -output-result',
 		'nb_nodes'   : 4,
@@ -3057,7 +3062,7 @@ Termination                             : regular termination
 	
 	#------------------------------------------------------------
 	{
-		'purpose'    : 'Distributed cartography: PRPC with dynamic distribution (on the case study BC vs. PRPC)',
+		'purpose'    : 'Distributed cartography: PRPC (old version) with dynamic distribution (on the case study BC vs. PRPC)',
 		'input_files': ['diffBCPRPC.imi', 'diffBCPRPC.v0'],
 		'options'    : '-mode cover -PRP -no-random -distributed dynamic -output-result',
 		'nb_nodes'   : 4,
