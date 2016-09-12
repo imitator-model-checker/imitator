@@ -116,16 +116,39 @@ let filter_upperbound_by_clock_2 clock_index tuple_inequalities_s0 =
 	let ls = ref
 	( 
 	match tuple_inequalities_s0 with
-	| [] ->  raise (InternalError("Detected empty list, check again the input inequalities or it might be True constraint "))
+	| [] -> [( clock_index, LinearConstraint.Op_ge, LinearConstraint.make_p_linear_term [] NumConst.zero )]	
 	| _  -> 
-	(List.find_all (fun (index, op,_) -> index == clock_index && (op == LinearConstraint.Op_le ||op == LinearConstraint.Op_l || op == LinearConstraint.Op_eq) ) tuple_inequalities_s0);
-	);
+			(
+			List.find_all (fun (index, op,_) -> index == clock_index && (op == LinearConstraint.Op_le ||op == LinearConstraint.Op_l || op == LinearConstraint.Op_eq) ) tuple_inequalities_s0);
+			);
 	in
-	if !ls = []
-	then
-		(
-		ls := [( clock_index, LinearConstraint.Op_ge, LinearConstraint.make_p_linear_term [] NumConst.zero )]; 		
-		);
+	!ls	
+
+
+
+(* 
+THE NEW UPDATED FUNCTION OF "filter_upperbound_by_clock_2", THE EQUAL "=" WILL BE FILTERED AS "<=" (NOTE: "=" <=> "<=" AND ">=")
+ *)
+let filter_upperbound_by_clock_3 clock_index tuple_inequalities_s0 =
+	let ls = ref [] in
+	( 
+	match tuple_inequalities_s0 with
+	| [] -> ls := [( clock_index, LinearConstraint.Op_ge, LinearConstraint.make_p_linear_term [] NumConst.zero )]
+	| _  -> 
+			(	
+			List.iter ( fun (index, op, linear_term)-> 
+				if index == clock_index
+				then
+					(
+						match op with
+						| LinearConstraint.Op_le -> ls := !ls@[( clock_index, LinearConstraint.Op_le, linear_term )]
+						| LinearConstraint.Op_l  -> ls := !ls@[( clock_index, LinearConstraint.Op_l, linear_term )]
+						| LinearConstraint.Op_eq -> ls := !ls@[( clock_index, LinearConstraint.Op_le, linear_term )]
+						| _ -> ();
+					);
+			) tuple_inequalities_s0;
+			);
+	);
 	!ls												
 
 
@@ -722,9 +745,9 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 		let isCUB = ref true in
 		let inequalities_need_to_solve = ref [] in
 		List.iter (	fun clock_index -> 
-			let ls_tup_ineq_s0 	= (filter_upperbound_by_clock_2 clock_index tuple_inequalities_s0) in
-			let ls_tup_ineq_t 	= (filter_upperbound_by_clock_2 clock_index tuple_inequalities_t) in
-			let ls_tup_ineq_s1 	= (filter_upperbound_by_clock_2 clock_index tuple_inequalities_s1) in
+			let ls_tup_ineq_s0 	= (filter_upperbound_by_clock_3 clock_index tuple_inequalities_s0) in
+			let ls_tup_ineq_t 	= (filter_upperbound_by_clock_3 clock_index tuple_inequalities_t) in
+			let ls_tup_ineq_s1 	= (filter_upperbound_by_clock_3 clock_index tuple_inequalities_s1) in
 			List.iter (fun (clock_index_s0, op_s0, linear_term_s0) -> 
 				List.iter (fun (clock_index_t, op_t, linear_term_t) -> 
 					List.iter (fun (clock_index_s1, op_s1, linear_term_s1) -> 
@@ -1166,11 +1189,11 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 			 	print_message Verbose_standard ("   Checking CUB condtions at clock (" ^ (model.variable_names clock_index) ^ "):"); 	
 			 	(*get each element of tuple of each clock - NOTE: the input musts contain 1 upper-bounded*)
 			 	(* print_message Verbose_standard ("\n 	**Beginning state/location** :"); *)
-				let (clock_index_s0 , op_s0, linear_term_s0) 	= List.hd (filter_upperbound_by_clock_2 clock_index tuple_inequalities_s0) in
+				let (clock_index_s0 , op_s0, linear_term_s0) 	= List.hd (filter_upperbound_by_clock_3 clock_index tuple_inequalities_s0) in
 				(* print_message Verbose_standard ("\n 	**Transition** :"); *)
-				let (clock_index_t, op_t, linear_term_t) 	= List.hd (filter_upperbound_by_clock_2 clock_index tuple_inequalities_t) in
+				let (clock_index_t, op_t, linear_term_t) 	= List.hd (filter_upperbound_by_clock_3 clock_index tuple_inequalities_t) in
 				(* print_message Verbose_standard ("\n 	**Destination state/location** :"); *)
-				let (clock_index_s1, op_s1, linear_term_s1) 	= List.hd (filter_upperbound_by_clock_2 clock_index tuple_inequalities_s1) in
+				let (clock_index_s1, op_s1, linear_term_s1) 	= List.hd (filter_upperbound_by_clock_3 clock_index tuple_inequalities_s1) in
 
 				(*convert back to constraint for each inequality*)
 				(* print_message Verbose_standard ("\n clock_term:" ^ (LinearConstraint.string_of_p_linear_term model.variable_names clock_term));  *)
@@ -1806,7 +1829,7 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 			 	(* print_message Verbose_standard ("\n 	**Beginning state/location** :"); *)
 				let (clock_index_s0 , op_s0, linear_term_s0) 	= filter_upperbound_by_clock clock_index tuple_inequalities_s0 in
 				let (clock_index_t, op_t, linear_term_t) 	= filter_upperbound_by_clock clock_index tuple_inequalities_t in
-				let list_s1_filtered = ref (filter_upperbound_by_clock_2 clock_index tuple_inequalities_s1) in
+				let list_s1_filtered = ref (filter_upperbound_by_clock_3 clock_index tuple_inequalities_s1) in
 				if !list_s1_filtered = [] 
 				then list_s1_filtered := !list_s1_filtered@[(clock_index, LinearConstraint.Op_ge, LinearConstraint.make_p_linear_term [] NumConst.zero)]; 
 
