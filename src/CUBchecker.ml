@@ -8,7 +8,7 @@
  * 
  * File contributors : Nguyen Hoang Gia, Étienne André
  * Created           : 2016/04/13
- * Last modified     : 2016/09/05
+ * Last modified     : 2016/09/12
  *
  ************************************************************)
 
@@ -724,248 +724,146 @@ let check_cub abstract_model =
 
 
 
-(************************************************************)
-(************************************************************)
-(* Main function for CUB transforming *)
-(************************************************************)
-(************************************************************)
 
-(** Takes an abstract model as input, and convert it into an equivalent CUB-PTA *)
-let cubpta_of_pta model : AbstractModel.abstract_model =
 
+(************************************************************)
+(************************************************************)
+(* Local function for CUB transforming *)
+(************************************************************)
+(************************************************************)
 	(* [CUB-PTA TRANSFORMATION] THIS FUNCTION USED FOR REMOVING PROBLEMATIC TRANSITIONS *)
-	let check_problematic_transition (invariant_s0, guard_t, invariant_s1, clock_updates, parameters_constraints) = 	
-		(* print_message Verbose_standard ("\nCHECKING FOR REMOVING PROBLEMATIC TRANSITIONS!" ); *)
-		let inequalities_s0 = LinearConstraint.pxd_get_inequalities invariant_s0 in
-		let inequalities_t 	= LinearConstraint.pxd_get_inequalities guard_t in
-		let inequalities_s1 = LinearConstraint.pxd_get_inequalities invariant_s1 in
-		let tuple_inequalities_s0 	= convert_inequality_list_2_tuple_list model inequalities_s0 in
-		let tuple_inequalities_t 	= convert_inequality_list_2_tuple_list model inequalities_t in
-		let tuple_inequalities_s1 	= convert_inequality_list_2_tuple_list model inequalities_s1 in
-		let isCUB = ref true in
-		let inequalities_need_to_solve = ref [] in
-		List.iter (	fun clock_index -> 
-			let ls_tup_ineq_s0 	= (filter_upperbound_by_clock_3 clock_index tuple_inequalities_s0) in
-			let ls_tup_ineq_t 	= (filter_upperbound_by_clock_3 clock_index tuple_inequalities_t) in
-			let ls_tup_ineq_s1 	= (filter_upperbound_by_clock_3 clock_index tuple_inequalities_s1) in
-			List.iter (fun (clock_index_s0, op_s0, linear_term_s0) -> 
-				List.iter (fun (clock_index_t, op_t, linear_term_t) -> 
-					List.iter (fun (clock_index_s1, op_s1, linear_term_s1) -> 
-						match (op_s0, linear_term_s0), (op_t, linear_term_t), (op_s1, linear_term_s1) with
-						|(LinearConstraint.Op_ge, _), (LinearConstraint.Op_ge, _), (LinearConstraint.Op_ge, _)	->	
-							(*Case 1*)
-					 		(* print_message Verbose_standard ("\nCASE 1 " );
-					 		print_message Verbose_standard ("SATISFIED CUB! " ); *)
-					 		();
-					 		(*Case 1 - end*)
-					 	|(LinearConstraint.Op_ge, _), _							 , (LinearConstraint.Op_ge, _)	->	
-							(*Case 2*)
-							(* print_message Verbose_standard ("\nCASE 2 " );
-							print_message Verbose_standard ("NOT SATISFIED CUB! " ); *)
-							(* none reset zone *)
-							isCUB := false;
-							(* none reset zone - end *)
-							(*Case 2 - end*)
-						|(LinearConstraint.Op_ge, _), (LinearConstraint.Op_ge, _), _							->	
-							(*Case 3*)
-							(*reset*)
-							(* print_message Verbose_standard ("\nCASE 3 " ); *)
-							if List.mem clock_index clock_updates = true
-							then
-								(
-								(* reset zone *)
-								(* print_message Verbose_standard ("DETECTED RESET CLOCK! " );
-								print_message Verbose_standard ("SATISFIED CUB! " ); *)
-								();
-								(* reset zone - end *)
-								)
-							else
-								(
-								(* none reset zone *)
-								(* print_message Verbose_standard ("NOT SATISFIED CUB! " ); *)
-								isCUB := false;
-								(* none reset zone - end *)
-								);
-							(*Case 3 - end*)
-						|(LinearConstraint.Op_ge, _), _							 , _							->
-							(*Case 4*)
-							(*reset but useless*)
-							(* print_message Verbose_standard ("\nCASE 4 " );
-							print_message Verbose_standard ("NOT SATISFIED CUB! " ); *)
-							isCUB := false;
-							(*Case 4 - end*)
-						|_							, (LinearConstraint.Op_ge, _), (LinearConstraint.Op_ge, _)	->	
-							(*Case 5*)
-							(* print_message Verbose_standard ("\nCASE 5 " );
-							print_message Verbose_standard ("SATISFIED CUB! " ); *)
-							();
-							(*Case 5 - end*)
-						|_							, _							 , (LinearConstraint.Op_ge, _)	->	
-							(*Case 6*)
-							(* none reset zone *)
-							(* print_message Verbose_standard ("\nCASE 6 " ); *)
-							let ineq = make_CUB_inequality (op_s0, linear_term_s0) (op_t, linear_term_t) in
-							(* print_message Verbose_standard ("FORMING INEQUALITY: " 
-															^ LinearConstraint.string_of_p_linear_inequality model.variable_names ineq 
-															^ "!!!\n"); *)
-							let constr = make_CUB_constraint [ineq] in
-				
-							if LinearConstraint.p_is_true constr
-							then
-								(
-								(* print_message Verbose_standard ("TRUE, COMPARABLE! "); 
-								print_message Verbose_standard ("SATISFIED CUB! " ); *)
-								();
-								)
-							else
-								(
-								if LinearConstraint.p_is_false constr
-								then 
-									(
-									(* print_message Verbose_standard ("FALSE, COMPARABLE! ");
-									print_message Verbose_standard ("NOT SATISFIED CUB! " ); *)
-									isCUB := false;
-									)
-								else
-									(
-									(* print_message Verbose_standard ("NOT DETERMINED! "); *)
-									if isContraintConflictsParametersConstraints constr parameters_constraints
-									then
-										(
-										(* print_message Verbose_standard ("ONE OF PARAMETER RELATIONS CONFLICTED! " );
-										print_message Verbose_standard ("NOT SATISFIED CUB! " ); *)
-										isCUB := false;
-										)
-									else
-										(
-										(* print_message Verbose_standard ("NOT CONFLICTED! " );
-										print_message Verbose_standard ("SATISFIED CUB! " ); *)
-										);
-									);
-								);
-							(* none reset zone - end*)
-							(*Case 6 - end*)
-						|_							, (LinearConstraint.Op_ge, _), _							->	
-							(*Case 7*)
-							(* print_message Verbose_standard ("\nCASE 7 " ); *)
-							(*reset*)
-							if List.mem clock_index clock_updates = true
-							then
-								(
-								(* reset zone *)
-								(* print_message Verbose_standard ("DETECTED RESET CLOCK! " );
-								print_message Verbose_standard ("SATISFIED CUB! " ); *)
-								();
-								(* reset zone - end*)
-								)
-							else
-								(
-								(* none reset zone *)
-								let ineq = make_CUB_inequality (op_s0, linear_term_s0) (op_s1, linear_term_s1) in
-								(* print_message Verbose_standard ("FORMING INEQUALITY: " 
-																^ LinearConstraint.string_of_p_linear_inequality model.variable_names ineq 
-																^ "!!!\n"); *)
-								let constr = make_CUB_constraint [ineq] in
-								if LinearConstraint.p_is_true constr
-								then 
-									(
-									(* print_message Verbose_standard ("TRUE, COMPARABLE! ");
-									print_message Verbose_standard ("SATISFIED CUB! " ); *)
-									();
-									)
-								else
-									(
-									if LinearConstraint.p_is_false constr
-									then 
-										(
-										(* print_message Verbose_standard ("FALSE, COMPARABLE! ");
-										print_message Verbose_standard ("NOT SATISFIED CUB! " ); *)
-										isCUB := false;
-
-										)
-									else
-										(
-										(* print_message Verbose_standard ("FALSE, NOT DETERMINED! "); *)
-										if isContraintConflictsParametersConstraints constr parameters_constraints
-										then
-											(
-											(* print_message Verbose_standard ("ONE OF PARAMETER RELATIONS CONFLICTED! " );
-											print_message Verbose_standard ("NOT SATISFIED CUB! " ); *)
-											isCUB := false;
-											)
-										else
-											(
-											(* print_message Verbose_standard ("NOT CONFLICTED! " );
-											print_message Verbose_standard ("SATISFIED CUB! " ); *)
-											);
-										);
-									);
-								(* none reset zone *)
-								);
-							(*Case 7 - end*)																						
-					| _							, _							 , _							-> 	
-						(*Case 8*)
-						(* print_message Verbose_standard ("\nCASE 8 " ); *)
+let check_problematic_transition model (invariant_s0, guard_t, invariant_s1, clock_updates, parameters_constraints) = 	
+	(* print_message Verbose_standard ("\nCHECKING FOR REMOVING PROBLEMATIC TRANSITIONS!" ); *)
+	let inequalities_s0 = LinearConstraint.pxd_get_inequalities invariant_s0 in
+	let inequalities_t 	= LinearConstraint.pxd_get_inequalities guard_t in
+	let inequalities_s1 = LinearConstraint.pxd_get_inequalities invariant_s1 in
+	let tuple_inequalities_s0 	= convert_inequality_list_2_tuple_list model inequalities_s0 in
+	let tuple_inequalities_t 	= convert_inequality_list_2_tuple_list model inequalities_t in
+	let tuple_inequalities_s1 	= convert_inequality_list_2_tuple_list model inequalities_s1 in
+	let isCUB = ref true in
+	let inequalities_need_to_solve = ref [] in
+	List.iter (	fun clock_index -> 
+		let ls_tup_ineq_s0 	= (filter_upperbound_by_clock_3 clock_index tuple_inequalities_s0) in
+		let ls_tup_ineq_t 	= (filter_upperbound_by_clock_3 clock_index tuple_inequalities_t) in
+		let ls_tup_ineq_s1 	= (filter_upperbound_by_clock_3 clock_index tuple_inequalities_s1) in
+		List.iter (fun (clock_index_s0, op_s0, linear_term_s0) -> 
+			List.iter (fun (clock_index_t, op_t, linear_term_t) -> 
+				List.iter (fun (clock_index_s1, op_s1, linear_term_s1) -> 
+					match (op_s0, linear_term_s0), (op_t, linear_term_t), (op_s1, linear_term_s1) with
+					|(LinearConstraint.Op_ge, _), (LinearConstraint.Op_ge, _), (LinearConstraint.Op_ge, _)	->	
+						(*Case 1*)
+						(* print_message Verbose_standard ("\nCASE 1 " );
+						print_message Verbose_standard ("SATISFIED CUB! " ); *)
+						();
+						(*Case 1 - end*)
+					|(LinearConstraint.Op_ge, _), _							 , (LinearConstraint.Op_ge, _)	->	
+						(*Case 2*)
+						(* print_message Verbose_standard ("\nCASE 2 " );
+						print_message Verbose_standard ("NOT SATISFIED CUB! " ); *)
+						(* none reset zone *)
+						isCUB := false;
+						(* none reset zone - end *)
+						(*Case 2 - end*)
+					|(LinearConstraint.Op_ge, _), (LinearConstraint.Op_ge, _), _							->	
+						(*Case 3*)
 						(*reset*)
+						(* print_message Verbose_standard ("\nCASE 3 " ); *)
 						if List.mem clock_index clock_updates = true
 						then
 							(
 							(* reset zone *)
-							(* print_message Verbose_standard ("DETECTED RESET CLOCK! " ); *)
-							let ineq = make_CUB_inequality (op_s0, linear_term_s0) (op_t, linear_term_t) in
-							(* print_message Verbose_standard ("FORMING INEQUALITY: " 
-															^ LinearConstraint.string_of_p_linear_inequality model.variable_names ineq 
-															^ "!!!\n"); *)
-							let constr = make_CUB_constraint [ineq] in
-							if LinearConstraint.p_is_true constr
-							then 
-								(
-								(* print_message Verbose_standard ("TRUE, COMPARABLE! ");
-								print_message Verbose_standard ("SATISFIED CUB! " ); *)
-								();
-								)
-							else
-								(
-
-								if LinearConstraint.p_is_false constr
-								then 
-									(
-									(* print_message Verbose_standard ("FALSE, COMPARABLE! ");
-									print_message Verbose_standard ("NOT SATISFIED CUB! " ); *)
-									isCUB := false;
-									)
-								else
-									(
-									(* print_message Verbose_standard ("FALSE, NOT DETERMINED "); *)
-									if isContraintConflictsParametersConstraints constr parameters_constraints
-									then
-										(
-										(* print_message Verbose_standard ("ONE OF PARAMETER RELATIONS CONFLICTED! " );
-										print_message Verbose_standard ("NOT SATISFIED CUB! " ); *)
-										isCUB := false;
-										)
-									else
-										(
-										(* print_message Verbose_standard ("NOT CONFLICTED! " );
-										print_message Verbose_standard ("SATISFIED CUB! " ); *)
-										);
-									);
-								);
+							(* print_message Verbose_standard ("DETECTED RESET CLOCK! " );
+							print_message Verbose_standard ("SATISFIED CUB! " ); *)
+							();
 							(* reset zone - end *)
 							)
 						else
 							(
 							(* none reset zone *)
-							let ineq1 = make_CUB_inequality (op_s0, linear_term_s0) (op_t, linear_term_t) in
-							(* print_message Verbose_standard ("INEQUALITY S0 =< T: \n" 
-															^ LinearConstraint.string_of_p_linear_inequality model.variable_names ineq1 
+							(* print_message Verbose_standard ("NOT SATISFIED CUB! " ); *)
+							isCUB := false;
+							(* none reset zone - end *)
+							);
+						(*Case 3 - end*)
+					|(LinearConstraint.Op_ge, _), _							 , _							->
+						(*Case 4*)
+						(*reset but useless*)
+						(* print_message Verbose_standard ("\nCASE 4 " );
+						print_message Verbose_standard ("NOT SATISFIED CUB! " ); *)
+						isCUB := false;
+						(*Case 4 - end*)
+					|_							, (LinearConstraint.Op_ge, _), (LinearConstraint.Op_ge, _)	->	
+						(*Case 5*)
+						(* print_message Verbose_standard ("\nCASE 5 " );
+						print_message Verbose_standard ("SATISFIED CUB! " ); *)
+						();
+						(*Case 5 - end*)
+					|_							, _							 , (LinearConstraint.Op_ge, _)	->	
+						(*Case 6*)
+						(* none reset zone *)
+						(* print_message Verbose_standard ("\nCASE 6 " ); *)
+						let ineq = make_CUB_inequality (op_s0, linear_term_s0) (op_t, linear_term_t) in
+						(* print_message Verbose_standard ("FORMING INEQUALITY: " 
+														^ LinearConstraint.string_of_p_linear_inequality model.variable_names ineq 
+														^ "!!!\n"); *)
+						let constr = make_CUB_constraint [ineq] in
+			
+						if LinearConstraint.p_is_true constr
+						then
+							(
+							(* print_message Verbose_standard ("TRUE, COMPARABLE! "); 
+							print_message Verbose_standard ("SATISFIED CUB! " ); *)
+							();
+							)
+						else
+							(
+							if LinearConstraint.p_is_false constr
+							then 
+								(
+								(* print_message Verbose_standard ("FALSE, COMPARABLE! ");
+								print_message Verbose_standard ("NOT SATISFIED CUB! " ); *)
+								isCUB := false;
+								)
+							else
+								(
+								(* print_message Verbose_standard ("NOT DETERMINED! "); *)
+								if isContraintConflictsParametersConstraints constr parameters_constraints
+								then
+									(
+									(* print_message Verbose_standard ("ONE OF PARAMETER RELATIONS CONFLICTED! " );
+									print_message Verbose_standard ("NOT SATISFIED CUB! " ); *)
+									isCUB := false;
+									)
+								else
+									(
+									(* print_message Verbose_standard ("NOT CONFLICTED! " );
+									print_message Verbose_standard ("SATISFIED CUB! " ); *)
+									);
+								);
+							);
+						(* none reset zone - end*)
+						(*Case 6 - end*)
+					|_							, (LinearConstraint.Op_ge, _), _							->	
+						(*Case 7*)
+						(* print_message Verbose_standard ("\nCASE 7 " ); *)
+						(*reset*)
+						if List.mem clock_index clock_updates = true
+						then
+							(
+							(* reset zone *)
+							(* print_message Verbose_standard ("DETECTED RESET CLOCK! " );
+							print_message Verbose_standard ("SATISFIED CUB! " ); *)
+							();
+							(* reset zone - end*)
+							)
+						else
+							(
+							(* none reset zone *)
+							let ineq = make_CUB_inequality (op_s0, linear_term_s0) (op_s1, linear_term_s1) in
+							(* print_message Verbose_standard ("FORMING INEQUALITY: " 
+															^ LinearConstraint.string_of_p_linear_inequality model.variable_names ineq 
 															^ "!!!\n"); *)
-							let ineq2 = make_CUB_inequality (op_s0, linear_term_s0) (op_s1, linear_term_s1) in
-							(* print_message Verbose_standard ("INEQUALITY S0 =< S1: \n" 
-															^ LinearConstraint.string_of_p_linear_inequality model.variable_names ineq2 
-															^ "!!!\n"); *)
-							let constr = make_CUB_constraint [ineq1;ineq2] in
-
+							let constr = make_CUB_constraint [ineq] in
 							if LinearConstraint.p_is_true constr
 							then 
 								(
@@ -1000,23 +898,154 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 										);
 									);
 								);
-							(* none reset zone - end*)
+							(* none reset zone *)
 							);
-						(*Case 8 - end*)
-					) ls_tup_ineq_s1;
-				) ls_tup_ineq_t;
-			) ls_tup_ineq_s0;
-		) model.clocks; 
-		(* print_message Verbose_standard ("CHECKING FOR REMOVING PROBLEMATIC TRANSITIONS - END!!" ); *)
-		!isCUB;
-		in
+						(*Case 7 - end*)																						
+				| _							, _							 , _							-> 	
+					(*Case 8*)
+					(* print_message Verbose_standard ("\nCASE 8 " ); *)
+					(*reset*)
+					if List.mem clock_index clock_updates = true
+					then
+						(
+						(* reset zone *)
+						(* print_message Verbose_standard ("DETECTED RESET CLOCK! " ); *)
+						let ineq = make_CUB_inequality (op_s0, linear_term_s0) (op_t, linear_term_t) in
+						(* print_message Verbose_standard ("FORMING INEQUALITY: " 
+														^ LinearConstraint.string_of_p_linear_inequality model.variable_names ineq 
+														^ "!!!\n"); *)
+						let constr = make_CUB_constraint [ineq] in
+						if LinearConstraint.p_is_true constr
+						then 
+							(
+							(* print_message Verbose_standard ("TRUE, COMPARABLE! ");
+							print_message Verbose_standard ("SATISFIED CUB! " ); *)
+							();
+							)
+						else
+							(
+
+							if LinearConstraint.p_is_false constr
+							then 
+								(
+								(* print_message Verbose_standard ("FALSE, COMPARABLE! ");
+								print_message Verbose_standard ("NOT SATISFIED CUB! " ); *)
+								isCUB := false;
+								)
+							else
+								(
+								(* print_message Verbose_standard ("FALSE, NOT DETERMINED "); *)
+								if isContraintConflictsParametersConstraints constr parameters_constraints
+								then
+									(
+									(* print_message Verbose_standard ("ONE OF PARAMETER RELATIONS CONFLICTED! " );
+									print_message Verbose_standard ("NOT SATISFIED CUB! " ); *)
+									isCUB := false;
+									)
+								else
+									(
+									(* print_message Verbose_standard ("NOT CONFLICTED! " );
+									print_message Verbose_standard ("SATISFIED CUB! " ); *)
+									);
+								);
+							);
+						(* reset zone - end *)
+						)
+					else
+						(
+						(* none reset zone *)
+						let ineq1 = make_CUB_inequality (op_s0, linear_term_s0) (op_t, linear_term_t) in
+						(* print_message Verbose_standard ("INEQUALITY S0 =< T: \n" 
+														^ LinearConstraint.string_of_p_linear_inequality model.variable_names ineq1 
+														^ "!!!\n"); *)
+						let ineq2 = make_CUB_inequality (op_s0, linear_term_s0) (op_s1, linear_term_s1) in
+						(* print_message Verbose_standard ("INEQUALITY S0 =< S1: \n" 
+														^ LinearConstraint.string_of_p_linear_inequality model.variable_names ineq2 
+														^ "!!!\n"); *)
+						let constr = make_CUB_constraint [ineq1;ineq2] in
+
+						if LinearConstraint.p_is_true constr
+						then 
+							(
+							(* print_message Verbose_standard ("TRUE, COMPARABLE! ");
+							print_message Verbose_standard ("SATISFIED CUB! " ); *)
+							();
+							)
+						else
+							(
+							if LinearConstraint.p_is_false constr
+							then 
+								(
+								(* print_message Verbose_standard ("FALSE, COMPARABLE! ");
+								print_message Verbose_standard ("NOT SATISFIED CUB! " ); *)
+								isCUB := false;
+
+								)
+							else
+								(
+								(* print_message Verbose_standard ("FALSE, NOT DETERMINED! "); *)
+								if isContraintConflictsParametersConstraints constr parameters_constraints
+								then
+									(
+									(* print_message Verbose_standard ("ONE OF PARAMETER RELATIONS CONFLICTED! " );
+									print_message Verbose_standard ("NOT SATISFIED CUB! " ); *)
+									isCUB := false;
+									)
+								else
+									(
+									(* print_message Verbose_standard ("NOT CONFLICTED! " );
+									print_message Verbose_standard ("SATISFIED CUB! " ); *)
+									);
+								);
+							);
+						(* none reset zone - end*)
+						);
+					(*Case 8 - end*)
+				) ls_tup_ineq_s1;
+			) ls_tup_ineq_t;
+		) ls_tup_ineq_s0;
+	) model.clocks; 
+	(* print_message Verbose_standard ("CHECKING FOR REMOVING PROBLEMATIC TRANSITIONS - END!!" ); *)
+	!isCUB
 
 
+(************************************************************)
+(************************************************************)
+(* Main function for CUB transforming *)
+(************************************************************)
+(************************************************************)
 
+(** Takes an abstract model as input, and convert it into an equivalent CUB-PTA *)
+let cubpta_of_pta model : AbstractModel.abstract_model =
 
 	(*Array of models*)
 	let submodels = DynArray.make 0 in
+	
+	
+	
+	(*------------------------------------------------------------*)
+	(* Create structures for the new abstract_model *)
+	(*------------------------------------------------------------*)
+	
+	(* Locations per PTA: Array : automaton_index : -> (List of location_index) *)
+	let new_locations_per_automaton_array = Array.make (model.nb_automata) [] in
+	
+	(* Location names per PTA: Array : automaton_index : -> (Array : location_index -> location_name) *)
+	let new_location_names_array = Array.make (model.nb_automata) (Array.make 0 "UNINITIALIZED") in
+	
+	(* Invariants: Array : automaton_index  -> (Array : location_index -> invariant) *)
+	let new_invariants_array : ( (LinearConstraint.pxd_linear_constraint array) array ) = Array.make (model.nb_automata) (Array.make 0 (LinearConstraint.pxd_true_constraint())) in
 
+	(* Transitions : Array : automaton_index  -> (Array : location_index -> (Hashtbl : action_index -> transitions list)) *)
+	let new_transitions_array_hashtbl : ( (( (Automaton.action_index , AbstractModel.transition list) Hashtbl.t) array) array ) = Array.make (model.nb_automata) (Array.make 0 (Hashtbl.create 0)) in
+
+	
+	
+	
+	(*------------------------------------------------------------*)
+	(* *)
+	(*------------------------------------------------------------*)
+	
 	let find_all_clocks_constraints clocks_constraints location_index = let ls = ref [] in
 		DynArray.iter (fun (loc_index, cons) ->
 			if loc_index = location_index 
@@ -1037,7 +1066,10 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 	);
 
 
+	
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
 	(*covert input model into specific data stucture*)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
 	List.iter (fun automaton_index -> 
 		(* print_message Verbose_standard ("Converting automaton: " 
 										^ (model.automata_names automaton_index) 
@@ -2859,7 +2891,7 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 									^ "\nINV LOC 2: "
 									^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names s1_cons) 
 									); *)
-			let isCUB = check_problematic_transition (s0_cons, guard, s1_cons, clock_updates, p_constraints) in 
+			let isCUB = check_problematic_transition model (s0_cons, guard, s1_cons, clock_updates, p_constraints) in 
 			if isCUB = true
 			then
 				(
@@ -2913,22 +2945,26 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 
 
 	(* [CUB-PTA TRANSFORMATION] FINAL STAGE - MERGING SUB-MODELS *)
-	let i = ref 1 in
+	let submodel_index = ref 1 in
 	let s0 = "cub-init" in
-	let newslocations =  Hashtbl.create 0 in
-	Hashtbl.add newslocations s0 (LinearConstraint.pxd_true_constraint ());
+
+	(* Data structure: location_name -> invariant *)
+	let new_invariants_per_location_hashtbl =  Hashtbl.create 0 in
+	
+	(* Adding the initial state *)
+	Hashtbl.add new_invariants_per_location_hashtbl s0 (LinearConstraint.pxd_true_constraint ());
 
 	let newtransitions = DynArray.make 0 in
 	DynArray.iter (fun (locations, transitions, c_constraints, p_constraints, index, init_locs) ->
 		
 		Hashtbl.iter (fun location_index cons -> 
-			let newloc = (location_index ^ "-m" ^ (string_of_int !i) ) in
-			Hashtbl.add newslocations newloc cons;
+			let newloc = (location_index ^ "-m" ^ (string_of_int !submodel_index) ) in
+			Hashtbl.add new_invariants_per_location_hashtbl newloc cons;
 		) locations;
 
 		DynArray.iter (fun (location_index, destination_location_index, guard, clock_updates) -> 
-			let newloc1 = (location_index ^ "-m" ^ (string_of_int !i) ) in
-			let newloc2 = (destination_location_index ^ "-m" ^ (string_of_int !i) ) in
+			let newloc1 = (location_index ^ "-m" ^ (string_of_int !submodel_index) ) in
+			let newloc2 = (destination_location_index ^ "-m" ^ (string_of_int !submodel_index) ) in
 			DynArray.add newtransitions (newloc1, newloc2, guard, clock_updates);
 		) transitions;
 
@@ -2939,16 +2975,16 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 			then 
 				(
 				List.iter (fun loc -> 
-					DynArray.add newtransitions (s0, (loc ^ "-m" ^ (string_of_int !i)), pxd_cons, [] ) ;
+					DynArray.add newtransitions (s0, (loc ^ "-m" ^ (string_of_int !submodel_index)), pxd_cons, [] ) ;
 				) init_locs;
 				);
 		) listParaRelations;
 
-		i := !i + 1;
+		incr submodel_index;
 
 	) newSubModels;
 
-	let finalModel = (newslocations, newtransitions) in 
+	let finalModel = (new_invariants_per_location_hashtbl, newtransitions) in 
 	(* additional stage - end *)
 
 
@@ -2958,12 +2994,12 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 	(* [CUB-PTA TRANSFORMATION] FINAL STAGE - MERGING SUB-MODELS *)
 	print_message Verbose_standard ("\nFINAL STAGE - MERGING SUB-MODELS ");
 
-		print_message Verbose_standard ("\nNUMBER OF LOCATIONS:"^ string_of_int (Hashtbl.length newslocations) );
+		print_message Verbose_standard ("\nNUMBER OF LOCATIONS:"^ string_of_int (Hashtbl.length new_invariants_per_location_hashtbl) );
 		Hashtbl.iter (fun location invariant ->
 			print_message Verbose_standard ("\n LOCATION: "^ location 
 											^ "\n INVARIANT: \n" 
 											^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names invariant) ); 		
-		) newslocations;
+		) new_invariants_per_location_hashtbl;
 
 		print_message Verbose_standard ("\nNUMBER OF TRANSITIONS :"^ string_of_int (DynArray.length newtransitions) );
 		DynArray.iter ( fun (source_location_index, destination_location_index, guard, clock_updates) ->
@@ -2978,7 +3014,111 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 			print_message Verbose_standard ("\n" ^ location_index );
 		) newstates;	 *)
 	print_message Verbose_standard ("\nFINAL STAGE - MERGING SUB-MODELS - END ");
+	
+	
+	
+	(*------------------------------------------------------------*)
+	(* Now update the data structures for THIS PTA *)
+	(*------------------------------------------------------------*)
+	
+	(* First get the number of new locations for this PTA *)
+	let new_nb_locations = Hashtbl.length new_invariants_per_location_hashtbl in
+	
+	(* Create the list of location_index for this PTA *)
+	let list_of_location_index_for_this_pta = list_of_interval 0 (new_nb_locations-1) in
 
+	
+	(* 1) Handle locations per automaton *)
+	new_locations_per_automaton_array.(automaton_index) <- list_of_location_index_for_this_pta;
+	
+	
+	(* 2a) Convert location_names into location_index *)
+	(* 2b) Handle invariants *)
+
+	(* Create the structure location_name -> location_index *)
+	let location_index_of_location_name = Hashtbl.create new_nb_locations in
+	
+	(* Create the structure location_index -> location_name *)
+	let location_name_of_location_index = Array.create new_nb_locations "UNINITIALIZED" in
+	
+	(* Initialize the invariants for this PTA (initially all true) *)
+	(*** NOTE: would be better to first create to a dummy constraint, instead of creating a new p_true_constraint() for each cell, that will be overwritten anyway ***)
+	new_invariants_array.(automaton_index) <- Array.make new_nb_locations (LinearConstraint.pxd_true_constraint());
+	
+	let current_location_index = ref 0 in
+
+	(* Fill location_index_of_location_name , location_name_of_location_index and new_invariants_array *)
+	Hashtbl.iter (fun location_name location_invariant ->
+		(* Add the binding location_name , location_index to the new structure *)
+		Hashtbl.add location_index_of_location_name location_name !current_location_index;
+		
+		(* Add the binding location_index , location_name to the new structure *)
+		location_name_of_location_index.(!current_location_index) <- location_name;
+		
+		(* And we update the invariant as well *)
+		new_invariants_array.(automaton_index).(!current_location_index) <- location_invariant;
+
+		(* Increment the current location_index *)
+		incr current_location_index;
+	
+	) new_invariants_per_location_hashtbl;
+	
+	
+	(* 3) Handle location names *)
+	new_location_names_array.(automaton_index) <- location_name_of_location_index;
+
+	
+	(* 4) Transitions *)
+	
+	(* First initialize the array for this PTA *)
+	new_transitions_array_hashtbl.(automaton_index) <- Array.make new_nb_locations (Hashtbl.create 0);
+	
+	(* Sort the transitions according to their origin location index using a structure Array : location_index -> transition list *)
+	let transitions_per_location = Array.create new_nb_locations [] in
+	
+	DynArray.iter (fun (newloc1, newloc2, guard, clock_updates) -> 
+		(* Get the source location index *)
+		(*** WARNING: no exception mechanism! ***)
+		let source_location_index = Hashtbl.find location_index_of_location_name newloc1 in
+		let target_location_index = Hashtbl.find location_index_of_location_name newloc2 in
+		
+		(* Convert to abstract_model.transition *)
+		(* type transition = guard * clock_updates * discrete_update list * location_index *)
+
+		(*** WARNING! discrete updates not considered so far ***)
+		(*** WARNING: other updates than clock updates not considered so far ***)
+		
+		let new_transition = guard, Resets clock_updates, [], target_location_index in
+		
+		(* Add to array *)
+		transitions_per_location.(source_location_index) <- new_transition :: transitions_per_location.(source_location_index);
+	) newtransitions;
+	
+	
+	
+	(*** WARNING: no action maintained by Gia, so we use a dummy action instead ***)
+	
+	(* We take the first action used in this PTA *)
+	if List.length (model.actions_per_automaton automaton_index) = 0 then(
+		raise (InternalError("Case with 0 action in a PTA not considered :("))
+	);
+	let dummy_action : Automaton.action_index = List.nth (model.actions_per_automaton automaton_index) 0 in
+	
+
+	(* Iterate on locations for this automaton *)
+	List.iter (fun location_index ->
+		(* Initialize the hashtbl for this PTA and this location *)
+		(*** NOTE: unnecessary, as done just above ***)
+(* 		new_transitions_array_hashtbl.(automaton_index).(location_index) <- Hashtbl.create 0; *)
+		
+		(* Retrieve the transitions for this location *)
+		let transitions_for_this_location = transitions_per_location.(location_index) in
+
+		Hashtbl.add new_transitions_array_hashtbl.(automaton_index).(location_index) dummy_action transitions_for_this_location;
+
+	) list_of_location_index_for_this_pta;
+
+	
 
 
 
@@ -3279,7 +3419,50 @@ let cub_check_3 model invariant_s0 guard_t invariant_s1 clock_updates =
 
 
 
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
 	) model.automata; (* end List.iter on automata *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+	
+	
+	(*------------------------------------------------------------*)
+	(* Convert to the desired functional style *)
+	(*------------------------------------------------------------*)
+	let new_invariants_function automaton_index location_index = new_invariants_array.(automaton_index).(location_index) in
+	
+	
+	let new_locations_per_automaton_function automaton_index = new_locations_per_automaton_array.(automaton_index) in
+	
+	
+	let new_location_names_function automaton_index location_index = new_location_names_array.(automaton_index).(location_index) in
+	
+	
+	(*** WARNING! assume that initial locations always have location_index = 0, which is the case in the current code; but a better handling would be much better ***)
+ 	let new_initial_location =
+
+		(* Shortcut *)
+		let former_initial_location = model.initial_location in
+
+		(* First get the new initial locations *)
+		let initial_PTA_locations = List.map (fun automaton_index -> automaton_index, 0) model.automata in
+
+		(* Second get the discrete values from the former initial location *)	
+		let discrete_values = List.map (fun discrete_index -> discrete_index , (Location.get_discrete_value former_initial_location discrete_index)) model.discrete in
+
+		Location.make_location initial_PTA_locations discrete_values
+	in
+
+
+	(* 	transitions : automaton_index -> location_index -> action_index -> (transition list); *)
+	let new_transitions_function automaton_index location_index action_index =
+		(* Retrieve the hash table *)
+		let hashtable_for_this_location = new_transitions_array_hashtbl.(automaton_index).(location_index) in
+		
+		(* Try to get the list of transitions for this actions (which may not be defined) *)
+		try(
+			Hashtbl.find hashtable_for_this_location action_index
+		) with
+			Not_found -> []
+	in
 	
 	
 	(************************************************************)
@@ -3334,14 +3517,17 @@ let cub_check_3 model invariant_s0 guard_t invariant_s1 clock_updates =
 		automata_names = model.automata_names;
 		
 		(* The locations for each automaton *)
-			(*** TODO ***)
-		locations_per_automaton = (*automaton_index -> location_index list*)raise (InternalError ("Not finished yet"));
+		locations_per_automaton = new_locations_per_automaton_function;
 		(* The location names for each automaton *)
-			(*** TODO ***)
-		location_names = (*automaton_index -> location_index -> location_name*)(fun automaton_index location_index -> "A_" ^ (string_of_int automaton_index) ^ ":l_" ^ (string_of_int location_index));
+		location_names = new_location_names_function;
 		(* The urgency for each location *)
 			(*** TODO ***)
-		is_urgent = (*automaton_index -> location_index -> bool*)raise (InternalError ("Not finished yet"));
+		is_urgent = (*automaton_index -> location_index -> bool*)
+			(*** WARNING! dummy function to test ***)
+			(*** TODO ***)
+			(fun automaton_index location_index -> false)
+		;
+		(*** NOTE: all new initial locations shall be urgent! ***)
 
 		(* All action indexes *)
 		actions = model.actions;
@@ -3362,19 +3548,17 @@ let cub_check_3 model invariant_s0 guard_t invariant_s1 clock_updates =
 		costs = model.costs;
 		
 		(* The invariant for each automaton and each location *)
-			(*** TODO ***)
-		invariants = (*automaton_index -> location_index -> invariant*)raise (InternalError ("Not finished yet"));
+		invariants = new_invariants_function;
 		
 		(* The transitions for each automaton and each location and each action *)
-			(*** TODO ***)
-		transitions = raise (InternalError ("Not finished yet"))(*automaton_index -> location_index -> action_index -> (transition list)*);
+		transitions = new_transitions_function;
 		(* The list of clocks stopped for each automaton and each location *)
 		(*** TODO ***)
 		stopwatches = model.stopwatches;
 
 		(* Initial location of the model *)
 			(*** TODO ***)
-		initial_location = raise (InternalError ("Not finished yet"))(*Location.global_location*);
+		initial_location = new_initial_location;
 		(* Initial constraint of the model *)
 		initial_constraint = model.initial_constraint;
 		(* Initial constraint of the model projected onto P *)
@@ -3382,6 +3566,7 @@ let cub_check_3 model invariant_s0 guard_t invariant_s1 clock_updates =
 
 		(* Property defined by the user *)
 		(*** TODO ***)
+		(*** WARNING: not changing this cannot work in the case of reachability properties! ***)
 		user_property = model.user_property;
 		(* Property defined by the model *)
 		(*** TODO ***)
