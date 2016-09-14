@@ -9,7 +9,7 @@
  * 
  * File contributors : Ulrich Kühne, Étienne André
  * Created           : 2009/12/08
- * Last modified     : 2016/05/04
+ * Last modified     : 2016/09/14
  *
  ************************************************************)
 
@@ -24,6 +24,7 @@ open Ppl*)
 open Exceptions
 open OCamlUtilities
 open ImitatorUtilities
+open Statistics
 open Automaton
 open AbstractModel
 open State
@@ -96,9 +97,17 @@ let initial_size = 100
 (************************************************************)
 (** Statistics *)
 (************************************************************)
-(*** TODO: move to a statistics class / object ***)
-let nb_state_comparisons = ref 0
-let nb_constraint_comparisons = ref 0
+(*let nb_state_comparisons = ref 0
+let nb_constraint_comparisons = ref 0*)
+let statespace_dcounter_nb_state_comparisons = create_discrete_counter_and_register "number of state comparisons" States_counter Verbose_standard
+let statespace_dcounter_nb_constraint_comparisons = create_discrete_counter_and_register "number of constraints comparisons" States_counter Verbose_standard
+
+
+
+(************************************************************)
+(** Local exception *)
+(************************************************************)
+exception Found_cycle
 
 
 (************************************************************)
@@ -389,8 +398,15 @@ let states_equal state1 state2 =
 	if not (Location.location_equal loc1 loc2) then false else (
 		(* Statistics *)
 		print_message Verbose_high ("About to compare equality between two constraints.");
-		nb_constraint_comparisons := !nb_constraint_comparisons + 1;
-		print_message Verbose_high ("Already performed " ^ (string_of_int (!nb_constraint_comparisons)) ^ " constraint comparison" ^ (s_of_int !nb_constraint_comparisons) ^ ".");
+
+		statespace_dcounter_nb_constraint_comparisons#increment;
+(* 		nb_constraint_comparisons := !nb_constraint_comparisons + 1; *)
+
+		if verbose_mode_greater Verbose_high then(
+			let nb_comparisons = statespace_dcounter_nb_constraint_comparisons#discrete_value in
+			print_message Verbose_high ("Already performed " ^ (string_of_int nb_comparisons) ^ " constraint comparison" ^ (s_of_int nb_comparisons) ^ ".");
+		);
+		
 		LinearConstraint.px_is_equal constr1 constr2
 	)
 	
@@ -401,8 +417,14 @@ let states_equal_dyn state1 state2 constr =
 	if not (Location.location_equal loc1 loc2) then false else (
 		(* Statistics *)
 		print_message Verbose_high ("About to compare (dynamic) equality between two constraints.");
-		nb_constraint_comparisons := !nb_constraint_comparisons + 1;
-		print_message Verbose_high ("Already performed " ^ (string_of_int (!nb_constraint_comparisons)) ^ " constraint comparison" ^ (s_of_int !nb_constraint_comparisons) ^ ".");
+		statespace_dcounter_nb_constraint_comparisons#increment;
+(* 		nb_constraint_comparisons := !nb_constraint_comparisons + 1; *)
+
+		if verbose_mode_greater Verbose_high then(
+			let nb_comparisons = statespace_dcounter_nb_constraint_comparisons#discrete_value in
+			print_message Verbose_high ("Already performed " ^ (string_of_int nb_comparisons) ^ " constraint comparison" ^ (s_of_int nb_comparisons) ^ ".");
+		);
+		
 		(*** WARNING!!! Really sure that one wants do MODIFY the constraints here?!!! ***)
 		LinearConstraint.px_intersection_assign constr1  [constr];
 		LinearConstraint.px_intersection_assign constr2 [constr];
@@ -417,9 +439,14 @@ let state_included state1 state2 =
 	let (loc2, constr2) = state2 in
 	if not (Location.location_equal loc1 loc2) then false else (
 		(* Statistics *)
-		print_message Verbose_high ("About to compare inclusion between two constraints.");
-		nb_constraint_comparisons := !nb_constraint_comparisons + 1;
-		print_message Verbose_high ("Already performed " ^ (string_of_int (!nb_constraint_comparisons)) ^ " constraint comparison" ^ (s_of_int !nb_constraint_comparisons) ^ ".");
+		statespace_dcounter_nb_constraint_comparisons#increment;
+(* 		nb_constraint_comparisons := !nb_constraint_comparisons + 1; *)
+
+		if verbose_mode_greater Verbose_high then(
+			let nb_comparisons = statespace_dcounter_nb_constraint_comparisons#discrete_value in
+			print_message Verbose_high ("Already performed " ^ (string_of_int nb_comparisons) ^ " constraint comparison" ^ (s_of_int nb_comparisons) ^ ".");
+		);
+
 		LinearConstraint.px_is_leq constr1 constr2
 	)
 
@@ -551,8 +578,14 @@ let add_state state_space new_state =
 
 			(* Statistics *)
 			print_message Verbose_medium ("About to compare new state with " ^ (string_of_int (List.length old_states)) ^ " state" ^ (s_of_int (List.length old_states)) ^ ".");
-			nb_state_comparisons := !nb_state_comparisons + (List.length old_states);
-			print_message Verbose_medium ("Already performed " ^ (string_of_int (!nb_state_comparisons)) ^ " comparison" ^ (s_of_int !nb_state_comparisons) ^ ".");
+			
+			statespace_dcounter_nb_state_comparisons#increment_by (List.length old_states);
+			
+(* 			nb_state_comparisons := !nb_state_comparisons + (List.length old_states); *)
+			if verbose_mode_greater Verbose_medium then(
+				let nb_comparisons = statespace_dcounter_nb_state_comparisons#discrete_value in
+				print_message Verbose_medium ("Already performed " ^ (string_of_int nb_comparisons) ^ " comparison" ^ (s_of_int nb_comparisons) ^ ".");
+			);
 			
 			List.iter (fun index -> 
 				let state = get_state state_space index in
@@ -847,6 +880,12 @@ let empty_states_for_comparison state_space =
 	Hashtbl.clear state_space.states_for_comparison
 
 
+(*(************************************************************)
+(** Loop detection *)
+(************************************************************)
+(* When a state is encountered for a second time, then a loop exists: 'reconstruct_cycle state_space state_index' reconstructs the cycle from state_index to state_index (using the actions); raises InternalError if no cycle found (which should not happen) *)
+let reconstruct_cycle state_space state_index =*)
+
 
 (************************************************************)
 (** Misc: tile natures *)
@@ -865,10 +904,10 @@ let string_of_statespace_nature = function
 (************************************************************)
 
 
-(** Get statistics on the number of comparisons between states *)
+(*(** Get statistics on the number of comparisons between states *)
 let get_statistics () =
 	(string_of_int !nb_state_comparisons) ^ " comparison" ^ (s_of_int !nb_state_comparisons) ^ " between states were performed."
-	^ "\n" ^ (string_of_int !nb_constraint_comparisons) ^ " comparison" ^ (s_of_int !nb_constraint_comparisons) ^ " between constraints were performed."
+	^ "\n" ^ (string_of_int !nb_constraint_comparisons) ^ " comparison" ^ (s_of_int !nb_constraint_comparisons) ^ " between constraints were performed."*)
 
 
 (** Get statistics on the structure of the states: number of different locations, number of different constraints *)

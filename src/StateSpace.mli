@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2009/12/08
- * Last modified     : 2016/05/03
+ * Last modified     : 2016/09/14
  *
  ************************************************************)
 
@@ -188,8 +188,8 @@ val string_of_statespace_nature : statespace_nature -> string
 (************************************************************)
 (** Debug and performances *)
 (************************************************************)
-(** Get statistics on number of comparisons *)
-val get_statistics : unit -> string
+(*(** Get statistics on number of comparisons *)
+val get_statistics : unit -> string*)
 
 (** Get statistics on states *)
 val get_statistics_states : state_space -> string

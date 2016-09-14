@@ -11,7 +11,7 @@
  * Created           : 2014/04/27
  * Fork from         : Counter.mli
  * Fork date         : 2016/05/17
- * Last modified     : 2016/06/07
+ * Last modified     : 2016/09/14
  *
  ************************************************************)
 
@@ -142,7 +142,7 @@ class discreteCounter : string -> counterCategory -> ImitatorUtilities.verbose_m
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		(** Get the counter's discrete value *)
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-(* 		method discrete_value : int *)
+		method discrete_value : int
 
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		(** Get the counter's value in the form of a string *)

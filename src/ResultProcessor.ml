@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/12/03
- * Last modified     : 2016/09/06
+ * Last modified     : 2016/09/14
  *
  ************************************************************)
 
@@ -704,7 +704,7 @@ let print_state_space_statistics total_time state_space =
 (*		print_message Verbose_standard "------------------------------------------------------------";
 		print_message Verbose_standard "Statistics: Graph";
 		print_message Verbose_standard "------------------------------------------------------------";*)
-		print_message Verbose_standard (StateSpace.get_statistics ());
+(* 		print_message Verbose_standard (StateSpace.get_statistics ()); *)
 		print_message Verbose_standard (StateSpace.get_statistics_states state_space);
 		
 	)

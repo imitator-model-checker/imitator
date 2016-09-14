@@ -11,7 +11,7 @@
  * Created           : 2014/04/27
  * Fork from         : Counter.ml
  * Fork date         : 2016/05/17
- * Last modified     : 2016/06/07
+ * Last modified     : 2016/09/14
  *
  ************************************************************)
 
@@ -217,7 +217,7 @@ class discreteCounter (name : string) (counter_category : counterCategory) (leve
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(** Get the counter's discrete value *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-(* 	method discrete_value = discrete_counter *)
+	method discrete_value = discrete_counter
 		
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(** Get the counter's value in the form of a string: continuous value, number of calls, and average call excecution *)
