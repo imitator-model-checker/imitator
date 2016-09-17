@@ -719,8 +719,95 @@ terminate_program();
 
 
 (** Takes an abstract model as input, and infers a constraint on the parameters (possibly false) under which this PTA is a CUB-PTA *)
-let check_cub abstract_model =
-	raise (InternalError "not implemented")
+let check_cub model =
+	(* raise (InternalError "not implemented") *)
+
+	let isCUB_PTA = ref true in
+	let inequalities_need_to_solve = ref [] in
+	(*main function for CUB-PTA*)
+	List.iter (fun automaton_index -> print_message Verbose_standard ("Automaton: " ^ (model.automata_names automaton_index) );
+
+			(*Checking bounded clocked in invariant (Location)*)
+	        List.iter (fun location_index -> print_message Verbose_standard ("----------------Begin checking at " ^ (model.location_names automaton_index location_index) ^ "-------------------");
+
+	        		print_message Verbose_standard ("\n");
+
+	        		print_message Verbose_standard (" State/Location(S): " ^ (model.location_names automaton_index location_index) ) ;
+
+	        		let invariant1 = model.invariants automaton_index location_index in
+	        
+	                print_message Verbose_standard ("   Invariant(S): " ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names invariant1 ) )  ;
+							
+
+							print_message Verbose_standard ("\n");
+
+	                	(*Checking bounded clocked in guards (Transition)*)
+	                	List.iter (fun action_index -> print_message Verbose_standard (" Transition/Action: " ^ (model.action_names action_index) );
+	            
+	                    	List.iter (fun (guard, clock_updates, _, destination_location_index) 
+	                    		-> print_message Verbose_standard ("   Guard: " ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names guard));		
+
+	                        	(** WORK HERE **)
+
+	                        	let invariant2 = model.invariants automaton_index destination_location_index in
+
+								print_message Verbose_standard ("\n");
+	                			print_message Verbose_standard (" State/Location(D): " ^ (model.location_names automaton_index destination_location_index) ) ;
+	                			print_message Verbose_standard ("   Invariant(D): " ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names invariant2 ) ) ;
+	                			print_message Verbose_standard ("	  ----Map:(" 
+	                											^ (model.location_names automaton_index location_index) 
+	                											^ ")--" ^ (model.action_names action_index) ^ "-->(" 
+	                											^ (model.location_names automaton_index destination_location_index) 
+	                											^ ") ----" );
+	                			print_message Verbose_standard ("\n");
+
+	                        	let clock_updates = match clock_updates with
+	                        						  No_update -> []
+													| Resets clock_update -> clock_update
+													| Updates clock_update_with_linear_expression -> raise (InternalError(" Clock_update are not supported currently! ")); in
+
+
+	                			let (result, inequalities) = cub_check_2 model invariant1 guard invariant2 clock_updates in
+	                			
+	                			inequalities_need_to_solve := !inequalities_need_to_solve@inequalities;
+	                			if result = false
+								then
+	    							isCUB_PTA := false;
+	                			()
+
+	                    	) (model.transitions automaton_index location_index action_index); 
+
+	                	) (model.actions_per_location automaton_index location_index); 
+
+	            		 print_message Verbose_standard ("----------------End checking " ^ (model.location_names automaton_index location_index) ^ "---------------------");
+
+	            		 print_message Verbose_standard ("\n");
+
+	        ) (model.locations_per_automaton automaton_index);
+
+	        print_message Verbose_standard ("\n");
+
+	) model.automata;
+
+
+	let constraint_for_cub = ref (LinearConstraint.p_true_constraint ()) in
+	(
+	if (!isCUB_PTA && !inequalities_need_to_solve = []) = true 
+	then
+		(
+	    print_message Verbose_standard ("   The model is CUB-PTA! ");
+		)
+	else 
+		(
+		constraint_for_cub := (LinearConstraint.make_p_constraint (!inequalities_need_to_solve) );
+
+	   	print_message Verbose_standard ("   The model is possible CUB-PTA! \nbut you need to solve the inequalities below!!: "); 
+	   	print_message Verbose_standard ("\n" ^ (LinearConstraint.string_of_p_linear_constraint model.variable_names !constraint_for_cub));
+	    );
+	 );
+	!constraint_for_cub
+
+
 
 
 
