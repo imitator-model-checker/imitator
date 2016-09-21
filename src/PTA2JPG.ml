@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2012/08/24
- * Last modified     : 2016/08/13
+ * Last modified     : 2016/09/21
  *
  ************************************************************)
 
@@ -18,6 +18,7 @@ open OCamlUtilities
 open Exceptions
 open AbstractModel
 open Result
+open ImitatorUtilities
 
 
 
@@ -229,6 +230,9 @@ let string_of_automaton model automaton_index =
 
 (* Convert the automata into a string *)
 let string_of_automata model =
+	(* Print some information *)
+	print_message Verbose_medium "Entering string_of_automata...";
+
 	(* Retrieve the input options *)
 	let options = Input.get_options () in
 	
