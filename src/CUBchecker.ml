@@ -2449,7 +2449,7 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 	
 	let new_location_names_function automaton_index location_index = new_location_names_array.(automaton_index).(location_index) in
 	
-	
+
 	(*** WARNING! assume that initial locations always have location_index = 0, which is the case in the current code; but a better handling would be much better ***)
  	let new_initial_location =
 
@@ -2478,7 +2478,59 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 			Not_found -> []
 	in
 	
+	(*------------------------------------------------------------*)
+	(* Print some information *)
+	(*------------------------------------------------------------*)
+	if verbose_mode_greater Verbose_low then(
+		
 	
+		print_message Verbose_low ("\nNew locations per automaton:");
+		Array.iteri(fun automaton_index list_of_locations ->
+			print_message Verbose_low ("Automaton #" ^ (string_of_int automaton_index ) ^ " -> " ^ (
+				string_of_list_of_string_with_sep ", " (List.map (fun location_index -> "l_" ^ (string_of_int location_index)) list_of_locations)
+			) ^ "");
+		) new_locations_per_automaton_array;
+	
+		print_message Verbose_low ("\nNew location names:");
+		(* Iterate on automata *)
+		Array.iteri(fun automaton_index array_of_names ->
+			print_message Verbose_low ("Automaton #" ^ (string_of_int automaton_index ) ^ ":");
+			(* Iterate on locations for this automaton *)
+			Array.iteri(fun location_index location_name ->
+				print_message Verbose_low ("  Location l_" ^ (string_of_int location_index ) ^ " -> " ^ location_name);
+			) array_of_names;
+		) new_location_names_array;
+	
+		print_message Verbose_low ("\nNew invariants:");
+		(* Iterate on automata *)
+		Array.iteri(fun automaton_index array_of_invariants ->
+			print_message Verbose_low ("Automaton #" ^ (string_of_int automaton_index ) ^ ":");
+			(* Iterate on locations for this automaton *)
+			Array.iteri(fun location_index invariant ->
+				print_message Verbose_low ("  Location l_" ^ (string_of_int location_index ) ^ " -> " ^ (LinearConstraint.string_of_pxd_linear_constraint (fun v -> "v_" ^ (string_of_int v)) invariant));
+			) array_of_invariants;
+		) new_invariants_array;
+	
+	
+		let string_of_transition transition = "TODO" in
+		
+		print_message Verbose_low ("\nNew transitions:");
+		(* Iterate on automata *)
+		Array.iteri(fun automaton_index array_of_hashtables ->
+			print_message Verbose_low ("Automaton #" ^ (string_of_int automaton_index ) ^ ":");
+			(* Iterate on locations for this automaton *)
+			Array.iteri(fun location_index action_hashtable ->
+				print_message Verbose_low ("  Location l_" ^ (string_of_int location_index ) ^ ":");
+				(* Iterate on actions for this automaton *)
+				Hashtbl.iter(fun action_index transition ->
+					print_message Verbose_low ("    Transition via action " ^ (string_of_int action_index) ^ ":\n    " ^ (string_of_transition transition) ^ "");
+				)action_hashtable;
+			) array_of_hashtables;
+		) new_transitions_array_hashtbl;
+	
+	); (* end Verbose_low *)
+	
+		
 	(************************************************************)
 	(** Return the abstract model *)
 	(************************************************************)
