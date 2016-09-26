@@ -2398,7 +2398,7 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 		(*** WARNING! discrete updates not considered so far ***)
 		(*** WARNING: other updates than clock updates not considered so far ***)
 		
-		let new_transition = guard, Resets clock_updates, [], target_location_index in
+		let new_transition = guard, Resets clock_updates, discrete_update, target_location_index in
 		
 		(* Add to array *)
 		transitions_per_location.(source_location_index) <- new_transition :: transitions_per_location.(source_location_index);
