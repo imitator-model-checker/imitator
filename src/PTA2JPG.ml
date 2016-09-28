@@ -147,22 +147,44 @@ let string_of_transition model automaton_index source_location action_index (gua
 
 (* Convert the transitions of a location into a string *)
 let string_of_transitions model automaton_index location_index =
+	print_message Verbose_medium "\n Entering string_of_transitions...1";
+
+	let result =
 	string_of_list_of_string (
+	print_message Verbose_medium "Entering string_of_transitions...2";
+	
+	print_message Verbose_medium ("automaton_index " ^ (string_of_int automaton_index ));
+	print_message Verbose_medium ("location_index " ^ (string_of_int location_index ));
+
+	print_message Verbose_medium ("List length string_of_transitions " ^ (string_of_int (List.length (model.actions_per_location automaton_index location_index)) ));
+	
+	print_message Verbose_medium "Entering string_of_transitions...4";
+
 	(* For each action *)
 	List.map (fun action_index -> 
 		(* Get the list of transitions *)
+		print_message Verbose_medium "Entering string_of_transitions...5";
 		let transitions = model.transitions automaton_index location_index action_index in
+		print_message Verbose_medium "Entering string_of_transitions...6";
 		(* Convert to string *)
 		string_of_list_of_string (
 			(* For each transition *)
 			List.map (string_of_transition model automaton_index location_index action_index) transitions
 			)
 		) (model.actions_per_location automaton_index location_index)
+
+	(* print_message Verbose_medium "Entering string_of_transitions...5"; *)
 	)
+	in
+	print_message Verbose_medium "Entering string_of_transitions...7";
+	result
 
 
 (* Convert a location of an automaton into a string *)
 let string_of_location model automaton_index location_index =	
+	print_message Verbose_medium "\n Entering string_of_location...1";
+
+	let result =
 (* 	s_0[fillcolor=red, style=filled, shape=Mrecord, label="s_0|{InputInit|And111|Or111}"]; *)
 	"\n"
 	(* Id *)
@@ -189,7 +211,7 @@ let string_of_location model automaton_index location_index =
 	^ "}\"];"
 	
 	(* Transitions *)
-	^ (string_of_transitions model automaton_index location_index)
+	^ (string_of_transitions model automaton_index location_index) (*problem here*)
 	
 (*	
 	^ 
@@ -201,37 +223,70 @@ let string_of_location model automaton_index location_index =
 	^ (string_of_invariant model automaton_index location_index)
 	^ (string_of_transitions model automaton_index location_index)*)
 
+	in
+	print_message Verbose_medium "Entering string_of_location...3";
+	result
+
 
 (* Convert the locations of an automaton into a string *)
 let string_of_locations model automaton_index =
+	print_message Verbose_medium "\n Entering string_of_locations...1";
+	print_message Verbose_medium ("List length" ^ (string_of_int (List.length (model.locations_per_automaton automaton_index) )));
+
+	let result =
 	string_of_list_of_string_with_sep "\n " (List.map (fun location_index ->
-		string_of_location model automaton_index location_index
+		print_message Verbose_medium "Entering string_of_locations...2.1";
+		print_message Verbose_medium ("automaton_index: " ^ string_of_int automaton_index ^ " location_index: " ^ string_of_int location_index);
+		string_of_location model automaton_index location_index;
+		(* print_message Verbose_medium "Entering string_of_locations...2.2"; *)
 	) (model.locations_per_automaton automaton_index))
+	in
+	print_message Verbose_medium "Entering string_of_locations...3";
+	result
 
 
 (* Convert an automaton into a string *)
 let string_of_automaton model automaton_index =
+
+	print_message Verbose_medium "\n Entering string_of_automaton...1";
+
 	(* Finding the initial location *)
 	let inital_global_location  = model.initial_location in
 	let initial_location = Location.get_location inital_global_location automaton_index in
 
+	let t1 = "\n init" ^ (string_of_int automaton_index) ^ "[shape=none, label=\"" ^ (model.automata_names automaton_index) ^ "\"];" in
+	let t2 = "\n init" ^ (string_of_int automaton_index) ^ " -> " ^ (id_of_location automaton_index initial_location) ^ ";" in
+	let t3 = "\n/* automaton " ^ (model.automata_names automaton_index) ^ " */" in
+	let t4 = "\n " ^ (string_of_locations model automaton_index) in (*problem here!*)
+
+	print_message Verbose_medium "Entering string_of_automaton...2";
+
+	let result =
+
 	"\n/**************************************************/"
-	^ "\n/* automaton " ^ (model.automata_names automaton_index) ^ " */"
+	(* ^ "\n/* automaton " ^ (model.automata_names automaton_index) ^ " */" *)
+	^ t3
 	^ "\n/**************************************************/"
 	
 	(* Handling the initial arrow *)
-	^ "\n init" ^ (string_of_int automaton_index) ^ "[shape=none, label=\"" ^ (model.automata_names automaton_index) ^ "\"];"
-	^ "\n init" ^ (string_of_int automaton_index) ^ " -> " ^ (id_of_location automaton_index initial_location) ^ ";"
+	(* ^ "\n init" ^ (string_of_int automaton_index) ^ "[shape=none, label=\"" ^ (model.automata_names automaton_index) ^ "\"];" *)
+	^ t1
+	(* ^ "\n init" ^ (string_of_int automaton_index) ^ " -> " ^ (id_of_location automaton_index initial_location) ^ ";" *)
+	^ t2
 
 	(* Handling transitions *)
-	^ "\n " ^ (string_of_locations model automaton_index)
+	(* ^ "\n " ^ (string_of_locations model automaton_index) *)
+	^ t4
 	^ "\n/**************************************************/"
+	in
+	print_message Verbose_medium "Entering string_of_automaton...3";
+	result
 
 
 (* Convert the automata into a string *)
 let string_of_automata model =
 	(* Print some information *)
-	print_message Verbose_medium "Entering string_of_automata...";
+ 	print_message Verbose_medium "Entering string_of_automata...1";
 
 	(* Retrieve the input options *)
 	let options = Input.get_options () in
@@ -241,6 +296,9 @@ let string_of_automata model =
 		string_of_list_of_string_with_sep "\\n" variables
 	in
 
+	print_message Verbose_medium "Entering string_of_automata...2";
+
+	let result =
 	
 	"\n/**************************************************/"
 	^ "\n/* Starting general graph */"
@@ -274,6 +332,7 @@ Generation time: " ^ (now()) ^ "\"];"
 		(* Do not print the observer *)
 		let pta_without_obs = List.filter (fun automaton_index -> not (model.is_observer automaton_index)) model.automata
 		in
+		print_message Verbose_medium "Entering string_of_automata...2.1";
 		string_of_list_of_string_with_sep "\n\n" (
 			List.map (fun automaton_index -> string_of_automaton model automaton_index
 		) pta_without_obs)
@@ -282,6 +341,9 @@ Generation time: " ^ (now()) ^ "\"];"
 	^ "\n/* Ending general graph */"
 	^ "\n/**************************************************/"
 	^ "\n}"
+	in
+	print_message Verbose_medium "Entering string_of_automata...3";
+	result
 
 (* Convert an automaton into a string *)
 let string_of_model model =
