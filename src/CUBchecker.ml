@@ -2277,7 +2277,7 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 			then 
 				(
 				List.iter (fun loc -> 
-					DynArray.add newtransitions (s0, (loc ^ "-m" ^ (string_of_int !submodel_index)), pxd_cons, [], numberOfAction, [] ) ;
+					DynArray.add newtransitions (s0, (loc ^ "-m" ^ (string_of_int !submodel_index)), pxd_cons, [], 0, [] ) ;
 				) init_locs;
 				);
 		) listParaRelations;
@@ -2309,6 +2309,8 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 											^ source_location_index ^ " |-----> " ^ destination_location_index 
 											^ "\n GUARD: \n"
 											^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names guard)
+											^ "\n Action index: " 
+											^ (string_of_int action_index)
 											);
 		) newtransitions;	
 		(* print_message Verbose_standard ("\n Number of locations :"^ string_of_int (Hashtbl.length newstates) );
