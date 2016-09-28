@@ -8,7 +8,7 @@
  * 
  * File contributors : Nguyen Hoang Gia, Étienne André
  * Created           : 2016/04/13
- * Last modified     : 2016/09/12
+ * Last modified     : 2016/09/28
  *
  ************************************************************)
 
@@ -1695,6 +1695,9 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 	(* Location names per PTA: Array : automaton_index : -> (Array : location_index -> location_name) *)
 	let new_location_names_array = Array.make (model.nb_automata) (Array.make 0 "UNINITIALIZED") in
 	
+	(* Actions per location per PTA: Array : automaton_index : -> (Array : location_index -> action_index list) *)
+	let new_actions_per_location_array = Array.make (model.nb_automata) (Array.make 0 []) in
+	
 	(* Invariants: Array : automaton_index  -> (Array : location_index -> invariant) *)
 	let new_invariants_array : ( (LinearConstraint.pxd_linear_constraint array) array ) = Array.make (model.nb_automata) (Array.make 0 (LinearConstraint.pxd_true_constraint())) in
 
@@ -1732,6 +1735,9 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 	(*covert input model into specific data stucture*)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
 	List.iter (fun automaton_index -> 
+	
+		print_message Verbose_low ("\nConverting automaton " ^ (model.automata_names automaton_index) ^ "...");
+
 		(* print_message Verbose_standard ("Converting automaton: " 
 										^ (model.automata_names automaton_index) 
 										^ "!!!!!!!"); *)
@@ -2351,6 +2357,9 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 	(* Create the structure location_index -> location_name *)
 	let location_name_of_location_index = Array.make new_nb_locations "UNINITIALIZED" in
 	
+	(* Create the structure location_index -> action_index list *)
+	let actions_per_location_array = Array.make new_nb_locations [] in
+	
 	(* Initialize the invariants for this PTA (initially all true) *)
 	(*** NOTE: would be better to first create to a dummy constraint, instead of creating a new p_true_constraint() for each cell, that will be overwritten anyway ***)
 	new_invariants_array.(automaton_index) <- Array.make new_nb_locations (LinearConstraint.pxd_true_constraint());
@@ -2376,17 +2385,25 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 	
 	(* 3) Handle location names *)
 	new_location_names_array.(automaton_index) <- location_name_of_location_index;
-
+	
 	
 	(* 4) Transitions *)
 	
 	(* First initialize the array for this PTA *)
 	new_transitions_array_hashtbl.(automaton_index) <- Array.make new_nb_locations (Hashtbl.create 0);
 	
-	(* Sort the transitions according to their origin location index using a structure Array : location_index -> transition list *)
+	(* Sort the transitions according to their origin location index using a structure Array : location_index -> (action_index, transition) list *)
 	let transitions_per_location = Array.create new_nb_locations [] in
 	
+	print_message Verbose_low ("\nSorting new transitions per origin location...");
+	
 	DynArray.iter (fun (newloc1, newloc2, guard, clock_updates, action_index, discrete_update) -> 
+	
+		(* Print some information *)
+		if verbose_mode_greater Verbose_low then(
+			print_message Verbose_low ("  Considering transition (newloc1 = " ^ (newloc1) ^ ", newloc2 = " ^ (newloc2) ^ ", guard = " ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names guard) ^ ", clock_updates = reset [" ^ (string_of_list_of_string_with_sep "-" (List.map model.variable_names clock_updates)) ^ "], action_index = " ^ (string_of_int action_index) ^ ", discrete_update = TODO)...");
+		);
+	
 		(* Get the source location index *)
 		(*** WARNING: no exception mechanism! ***)
 		let source_location_index = Hashtbl.find location_index_of_location_name newloc1 in
@@ -2395,10 +2412,9 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 		(* Convert to abstract_model.transition *)
 		(* type transition = guard * clock_updates * discrete_update list * location_index *)
 
-		(*** WARNING! discrete updates not considered so far ***)
 		(*** WARNING: other updates than clock updates not considered so far ***)
 		
-		let new_transition = guard, Resets clock_updates, discrete_update, target_location_index in
+		let new_transition = action_index , (guard, Resets clock_updates, discrete_update, target_location_index) in
 		
 		(* Add to array *)
 		transitions_per_location.(source_location_index) <- new_transition :: transitions_per_location.(source_location_index);
@@ -2406,14 +2422,10 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 	
 	
 	
-	(*** WARNING: no action maintained by Gia, so we use a dummy action instead ***)
-	
 	(* We take the first action used in this PTA *)
 	if List.length (model.actions_per_automaton automaton_index) = 0 then(
 		raise (InternalError("Case with 0 action in a PTA not considered :("))
 	);
-	let dummy_action : Automaton.action_index = List.nth (model.actions_per_automaton automaton_index) 0 in
-	
 
 	(* Iterate on locations for this automaton *)
 	List.iter (fun location_index ->
@@ -2423,13 +2435,32 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 		
 		(* Retrieve the transitions for this location *)
 		let transitions_for_this_location = transitions_per_location.(location_index) in
+		
+		(*** BADPROG: unnecessary exponential blow-up (consider all transitions for EACH action); but anyway the model is still "relatively" small so that shouldn't be harmful ***)
+		List.iter(fun action_index ->
+			(* First retrieve the transitions for this location and for this action *)
+			let actions_and_transitions_for_this_location_and_action = List.filter (fun (action_index', _) -> action_index' = action_index) transitions_for_this_location in
 
-		Hashtbl.add new_transitions_array_hashtbl.(automaton_index).(location_index) dummy_action transitions_for_this_location;
+			(* Then only keep the transitions (not the actions, as they are now all equal to action_index) *)
+			let _ , transitions_for_this_location_and_action = List.split actions_and_transitions_for_this_location_and_action in
 
+			Hashtbl.add new_transitions_array_hashtbl.(automaton_index).(location_index) action_index transitions_for_this_location_and_action;
+		) model.actions;
+		
+		
+		(* Also find the set of actions available in this location *)
+		(*** BADPROG: clearly not optimal way of computing the set of actions; but anyway the model is still "relatively" small so that shouldn't be harmful ***)
+		let multiply_defined_actions, _ = List.split transitions_for_this_location in
+		let actions_for_this_location = list_only_once multiply_defined_actions in
+		
+		(* Set the actions for this location *)
+		actions_per_location_array.(location_index) <- actions_for_this_location;
+		
 	) list_of_location_index_for_this_pta;
 
-
-
+	
+	(* 5) Handle actions per location *)
+	new_actions_per_location_array.(automaton_index) <- actions_per_location_array;
 
 
 
@@ -2445,6 +2476,9 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 	
 	
 	let new_locations_per_automaton_function automaton_index = new_locations_per_automaton_array.(automaton_index) in
+	
+	
+	let new_actions_per_location_function automaton_index location_index = new_actions_per_location_array.(automaton_index).(location_index) in
 	
 	
 	let new_location_names_function automaton_index location_index = new_location_names_array.(automaton_index).(location_index) in
@@ -2491,6 +2525,7 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 			) ^ "");
 		) new_locations_per_automaton_array;
 	
+	
 		print_message Verbose_low ("\nNew location names:");
 		(* Iterate on automata *)
 		Array.iteri(fun automaton_index array_of_names ->
@@ -2500,6 +2535,24 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 				print_message Verbose_low ("  Location l_" ^ (string_of_int location_index ) ^ " -> " ^ location_name);
 			) array_of_names;
 		) new_location_names_array;
+	
+	
+		print_message Verbose_low ("\nAll actions:");
+		print_message Verbose_low (string_of_list_of_string_with_sep " - " (List.map model.action_names model.actions) );
+
+		
+		print_message Verbose_low ("\nNew actions per location:");
+		(* Iterate on automata *)
+		Array.iteri(fun automaton_index array_of_names ->
+			print_message Verbose_low ("Automaton #" ^ (string_of_int automaton_index ) ^ ":");
+			(* Iterate on locations for this automaton *)
+			Array.iteri(fun location_index location_name ->
+				print_message Verbose_low ("  Location l_" ^ (string_of_int location_index ) ^ " -> " ^ "");
+				let actions_for_this_location = new_actions_per_location_function automaton_index location_index in
+				print_message Verbose_low (string_of_list_of_string_with_sep " - " (List.map model.action_names actions_for_this_location) );
+			) array_of_names;
+		) new_location_names_array;
+	
 	
 		print_message Verbose_low ("\nNew invariants:");
 		(* Iterate on automata *)
@@ -2512,6 +2565,7 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 		) new_invariants_array;
 	
 	
+		(*** TODO ***)
 		let string_of_transition transition = "TODO" in
 		
 		print_message Verbose_low ("\nNew transitions:");
@@ -2527,6 +2581,7 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 				)action_hashtable;
 			) array_of_hashtables;
 		) new_transitions_array_hashtbl;
+		print_message Verbose_low ("\n(end transitions)");
 	
 	); (* end Verbose_low *)
 	
@@ -2606,8 +2661,7 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 		(* The list of automatons for each action *)
 		automata_per_action = model.automata_per_action;
 		(* The list of actions for each automaton for each location *)
-			(*** TODO ***)
-		actions_per_location = model.actions_per_location;
+		actions_per_location = new_actions_per_location_function;
 
 		(* The cost for each automaton and each location *)
 		(*** TODO ***)
