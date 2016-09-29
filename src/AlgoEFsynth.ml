@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/11/25
- * Last modified     : 2016/08/24
+ * Last modified     : 2016/09/14
  *
  ************************************************************)
 
@@ -146,12 +146,12 @@ class algoEFsynth =
 					LinearConstraint.p_nnconvex_p_union bad_constraint p_constraint;
 					
 					(* Print some information *)
-					if verbose_mode_greater Verbose_medium then(
+					if verbose_mode_greater Verbose_low then(
 						self#print_algo_message Verbose_medium "Adding the following constraint to the bad constraint:";
-						print_message Verbose_medium (LinearConstraint.string_of_p_linear_constraint model.variable_names p_constraint);
+						print_message Verbose_low (LinearConstraint.string_of_p_linear_constraint model.variable_names p_constraint);
 						
-						self#print_algo_message Verbose_medium "The bad constraint is now:";
-						print_message Verbose_medium (LinearConstraint.string_of_p_nnconvex_constraint model.variable_names bad_constraint);
+						self#print_algo_message Verbose_low "The bad constraint is now:";
+						print_message Verbose_low (LinearConstraint.string_of_p_nnconvex_constraint model.variable_names bad_constraint);
 					);
 					
 					(* Do NOT compute its successors; cut the branch *)
