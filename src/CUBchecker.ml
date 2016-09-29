@@ -8,7 +8,7 @@
  * 
  * File contributors : Nguyen Hoang Gia, Étienne André
  * Created           : 2016/04/13
- * Last modified     : 2016/09/12
+ * Last modified     : 2016/09/28
  *
  ************************************************************)
 
@@ -1695,6 +1695,9 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 	(* Location names per PTA: Array : automaton_index : -> (Array : location_index -> location_name) *)
 	let new_location_names_array = Array.make (model.nb_automata) (Array.make 0 "UNINITIALIZED") in
 	
+	(* Actions per location per PTA: Array : automaton_index : -> (Array : location_index -> action_index list) *)
+	let new_actions_per_location_array = Array.make (model.nb_automata) (Array.make 0 []) in
+	
 	(* Invariants: Array : automaton_index  -> (Array : location_index -> invariant) *)
 	let new_invariants_array : ( (LinearConstraint.pxd_linear_constraint array) array ) = Array.make (model.nb_automata) (Array.make 0 (LinearConstraint.pxd_true_constraint())) in
 
@@ -1732,6 +1735,9 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 	(*covert input model into specific data stucture*)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
 	List.iter (fun automaton_index -> 
+	
+		print_message Verbose_low ("\nConverting automaton " ^ (model.automata_names automaton_index) ^ "...");
+
 		(* print_message Verbose_standard ("Converting automaton: " 
 										^ (model.automata_names automaton_index) 
 										^ "!!!!!!!"); *)
@@ -1766,7 +1772,7 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 				(*Checking bounded clocked in guards (Transition)*)
 				List.iter (fun action_index -> print_message Verbose_standard (" Transition/Action: " ^ (model.action_names action_index) );
 		
-					List.iter (fun (guard, clock_updates, _, destination_location_index) 
+					List.iter (fun (guard, clock_updates, discrete_update, destination_location_index) 
 						-> (* print_message Verbose_standard ("   Guard: " ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names guard)); *)		
 						(** WORK HERE **)
 						let invariant2 = model.invariants automaton_index destination_location_index in
@@ -1786,7 +1792,8 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 						in
 
 						(*add transitions*)
-						DynArray.add transitions_ini ((model.location_names automaton_index location_index), (model.location_names automaton_index destination_location_index), guard, clock_updates, action_index);
+						DynArray.add transitions_ini ((model.location_names automaton_index location_index), (model.location_names automaton_index destination_location_index),
+														guard, clock_updates, action_index, discrete_update);
 						
 						()
 					) (model.transitions automaton_index location_index action_index); 
@@ -1841,7 +1848,7 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 			let count_t = ref 1 in
 			DynArray.iter ( fun transition -> 
 				print_message Verbose_standard ("\n Transition No: " ^ (string_of_int !count_t) );
-				let (location_index, destination_location_index, guard, clock_updates, action_index) = transition in
+				let (location_index, destination_location_index, guard, clock_updates, action_index, discrete_update) = transition in
 				(*work here*)
 				let invariant_s0 = Hashtbl.find locations location_index in
 				let guard_t = guard in
@@ -1899,7 +1906,7 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 		let count_t = ref 1 in
 		DynArray.iter ( fun transition -> 
 			print_message Verbose_standard ("\n Transition No: " ^ (string_of_int !count_t) );
-			let (location_index, destination_location_index, guard, clock_updates, action_index) = transition in
+			let (location_index, destination_location_index, guard, clock_updates, action_index, discrete_update) = transition in
 			let invariant_s0 = Hashtbl.find locations location_index in
 			let guard_t = guard in
 			print_message Verbose_standard (" CUB transformation, Start:");
@@ -2016,7 +2023,7 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 		) locations;
 
 		print_message Verbose_standard ("\nNUMBER OF TRANSITIONS :"^ string_of_int (DynArray.length transitions) );
-		DynArray.iter ( fun (source_location_index, destination_location_index, guard, clock_updates, action_index) ->
+		DynArray.iter ( fun (source_location_index, destination_location_index, guard, clock_updates, action_index, discrete_update) ->
 			print_message Verbose_standard ("\n" 
 											^ source_location_index ^ " |-----> " ^ destination_location_index 
 											^ "\n GUARD: \n"
@@ -2115,21 +2122,21 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 	(* [CUB-PTA TRANSFORMATION] STAGE 3 - ADDING TRANSITIONS *)
 	DynArray.iter (fun (_, transitions, _, _, index, init_locs) ->
 
-		DynArray.iter ( fun (source_location_index, destination_location_index, guard, clock_updates, action_index) ->
+		DynArray.iter ( fun (source_location_index, destination_location_index, guard, clock_updates, action_index, discrete_update) ->
 			let listCubLoc1 = Hashtbl.find_all index source_location_index in
 			let listCubLoc2 = Hashtbl.find_all index destination_location_index in
 
 			List.iter (fun loc1 ->  
-				DynArray.add transitions (loc1, destination_location_index, guard, clock_updates, action_index);
+				DynArray.add transitions (loc1, destination_location_index, guard, clock_updates, action_index, discrete_update);
 			) listCubLoc1;
 
 			List.iter (fun loc2 ->  
-				DynArray.add transitions (source_location_index, loc2, guard, clock_updates, action_index);
+				DynArray.add transitions (source_location_index, loc2, guard, clock_updates, action_index, discrete_update);
 			) listCubLoc2;
 
 			List.iter (fun loc1 -> 
 				List.iter (fun loc2 -> 
-					DynArray.add transitions (loc1, loc2, guard, clock_updates, action_index);
+					DynArray.add transitions (loc1, loc2, guard, clock_updates, action_index, discrete_update);
 				) listCubLoc2;
 			) listCubLoc1;
 
@@ -2149,7 +2156,7 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 		print_message Verbose_standard ("\n----------------SUB MODEL: "^ (string_of_int !model_count) ^"----------------" );
 
 		print_message Verbose_standard ("\nNUMBER OF TRANSITIONS :"^ string_of_int (DynArray.length transitions) );
-		DynArray.iter ( fun (source_location_index, destination_location_index, guard, clock_updates, action_index) ->
+		DynArray.iter ( fun (source_location_index, destination_location_index, guard, clock_updates, action_index, discrete_update) ->
 			print_message Verbose_standard ("\n" 
 											^ source_location_index ^ " |-----> " ^ destination_location_index 
 											(* ^ "\n GUARD: \n"
@@ -2175,7 +2182,7 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 	let new_transitions = DynArray.make 0 in
 	DynArray.iter (fun (locations, transitions, c_constraints, p_constraints, index, init_locs) ->
 		for i = 1 to (DynArray.length transitions) do
-			let (location_index, destination_location_index, guard, clock_updates, action_index) = DynArray.get transitions (i-1) in
+			let (location_index, destination_location_index, guard, clock_updates, action_index, discrete_update) = DynArray.get transitions (i-1) in
 			let s0_cons = Hashtbl.find locations location_index in
 			let s1_cons = Hashtbl.find locations destination_location_index in
 			(* print_message Verbose_standard ("\nINV LOC 1: "
@@ -2216,7 +2223,7 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 		print_message Verbose_standard ("\n----------------SUB MODEL: "^ (string_of_int !model_count) ^"----------------" );
 
 		print_message Verbose_standard ("\nNUMBER OF TRANSITIONS :"^ string_of_int (DynArray.length transitions) );
-		DynArray.iter ( fun (source_location_index, destination_location_index, guard, clock_updates, action_index) ->
+		DynArray.iter ( fun (source_location_index, destination_location_index, guard, clock_updates, action_index, discrete_update) ->
 			print_message Verbose_standard ("\n" 
 											^ source_location_index ^ " |-----> " ^ destination_location_index 
 											(* ^ "\n GUARD: \n"
@@ -2257,10 +2264,10 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 			Hashtbl.add new_invariants_per_location_hashtbl newloc cons;
 		) locations;
 
-		DynArray.iter (fun (location_index, destination_location_index, guard, clock_updates, action_index) -> 
+		DynArray.iter (fun (location_index, destination_location_index, guard, clock_updates, action_index, discrete_update) -> 
 			let newloc1 = (location_index ^ "-m" ^ (string_of_int !submodel_index) ) in
 			let newloc2 = (destination_location_index ^ "-m" ^ (string_of_int !submodel_index) ) in
-			DynArray.add newtransitions (newloc1, newloc2, guard, clock_updates, action_index);
+			DynArray.add newtransitions (newloc1, newloc2, guard, clock_updates, action_index, discrete_update);
 		) transitions;
 
 		let listParaRelations = disjunction_constraints p_constraints in
@@ -2270,7 +2277,7 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 			then 
 				(
 				List.iter (fun loc -> 
-					DynArray.add newtransitions (s0, (loc ^ "-m" ^ (string_of_int !submodel_index)), pxd_cons, [], numberOfAction ) ;
+					DynArray.add newtransitions (s0, (loc ^ "-m" ^ (string_of_int !submodel_index)), pxd_cons, [], 0, [] ) ;
 				) init_locs;
 				);
 		) listParaRelations;
@@ -2297,11 +2304,13 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 		) new_invariants_per_location_hashtbl;
 
 		print_message Verbose_standard ("\nNUMBER OF TRANSITIONS :"^ string_of_int (DynArray.length newtransitions) );
-		DynArray.iter ( fun (source_location_index, destination_location_index, guard, clock_updates, action_index) ->
+		DynArray.iter ( fun (source_location_index, destination_location_index, guard, clock_updates, action_index, discrete_update) ->
 			print_message Verbose_standard ("\n" 
 											^ source_location_index ^ " |-----> " ^ destination_location_index 
 											^ "\n GUARD: \n"
 											^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names guard)
+											^ "\n Action index: " 
+											^ (string_of_int action_index)
 											);
 		) newtransitions;	
 		(* print_message Verbose_standard ("\n Number of locations :"^ string_of_int (Hashtbl.length newstates) );
@@ -2318,9 +2327,23 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 	
 	(* First get the number of new locations for this PTA *)
 	let new_nb_locations = Hashtbl.length new_invariants_per_location_hashtbl in
+
+	(* print_message Verbose_standard ("\n New number of locations :"^ string_of_int new_nb_locations ); *)
 	
 	(* Create the list of location_index for this PTA *)
-	let list_of_location_index_for_this_pta = list_of_interval 0 (new_nb_locations-1) in
+	let list_of_location_index_for_this_pta = (* list_of_interval 0 (new_nb_locations-1) in *)
+	let ls = ref [] in
+	if new_nb_locations != 0
+	then
+		(
+		for i = 0 to new_nb_locations - 1 do
+	      ls := !ls@[i];
+	    done
+		);
+	!ls;
+	in
+
+	(* print_message Verbose_standard ("\n list_of_location_index_for_this_pta :"^ string_of_int (List.length list_of_location_index_for_this_pta) ); *)
 
 	
 	(* 1) Handle locations per automaton *)
@@ -2334,7 +2357,10 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 	let location_index_of_location_name = Hashtbl.create new_nb_locations in
 	
 	(* Create the structure location_index -> location_name *)
-	let location_name_of_location_index = Array.create new_nb_locations "UNINITIALIZED" in
+	let location_name_of_location_index = Array.make new_nb_locations "UNINITIALIZED" in
+	
+	(* Create the structure location_index -> action_index list *)
+	let actions_per_location_array = Array.make new_nb_locations [] in
 	
 	(* Initialize the invariants for this PTA (initially all true) *)
 	(*** NOTE: would be better to first create to a dummy constraint, instead of creating a new p_true_constraint() for each cell, that will be overwritten anyway ***)
@@ -2361,17 +2387,25 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 	
 	(* 3) Handle location names *)
 	new_location_names_array.(automaton_index) <- location_name_of_location_index;
-
+	
 	
 	(* 4) Transitions *)
 	
 	(* First initialize the array for this PTA *)
 	new_transitions_array_hashtbl.(automaton_index) <- Array.make new_nb_locations (Hashtbl.create 0);
 	
-	(* Sort the transitions according to their origin location index using a structure Array : location_index -> transition list *)
+	(* Sort the transitions according to their origin location index using a structure Array : location_index -> (action_index, transition) list *)
 	let transitions_per_location = Array.create new_nb_locations [] in
 	
-	DynArray.iter (fun (newloc1, newloc2, guard, clock_updates, action_index) -> 
+	print_message Verbose_low ("\nSorting new transitions per origin location...");
+	
+	DynArray.iter (fun (newloc1, newloc2, guard, clock_updates, action_index, discrete_update) -> 
+	
+		(* Print some information *)
+		if verbose_mode_greater Verbose_low then(
+			print_message Verbose_low ("  Considering transition (newloc1 = " ^ (newloc1) ^ ", newloc2 = " ^ (newloc2) ^ ", guard = " ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names guard) ^ ", clock_updates = reset [" ^ (string_of_list_of_string_with_sep "-" (List.map model.variable_names clock_updates)) ^ "], action_index = " ^ (string_of_int action_index) ^ ", discrete_update = TODO)...");
+		);
+	
 		(* Get the source location index *)
 		(*** WARNING: no exception mechanism! ***)
 		let source_location_index = Hashtbl.find location_index_of_location_name newloc1 in
@@ -2380,10 +2414,9 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 		(* Convert to abstract_model.transition *)
 		(* type transition = guard * clock_updates * discrete_update list * location_index *)
 
-		(*** WARNING! discrete updates not considered so far ***)
 		(*** WARNING: other updates than clock updates not considered so far ***)
 		
-		let new_transition = guard, Resets clock_updates, [], target_location_index in
+		let new_transition = action_index , (guard, Resets clock_updates, discrete_update, target_location_index) in
 		
 		(* Add to array *)
 		transitions_per_location.(source_location_index) <- new_transition :: transitions_per_location.(source_location_index);
@@ -2391,14 +2424,10 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 	
 	
 	
-	(*** WARNING: no action maintained by Gia, so we use a dummy action instead ***)
-	
 	(* We take the first action used in this PTA *)
 	if List.length (model.actions_per_automaton automaton_index) = 0 then(
 		raise (InternalError("Case with 0 action in a PTA not considered :("))
 	);
-	let dummy_action : Automaton.action_index = List.nth (model.actions_per_automaton automaton_index) 0 in
-	
 
 	(* Iterate on locations for this automaton *)
 	List.iter (fun location_index ->
@@ -2408,309 +2437,32 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 		
 		(* Retrieve the transitions for this location *)
 		let transitions_for_this_location = transitions_per_location.(location_index) in
+		
+		(*** BADPROG: unnecessary exponential blow-up (consider all transitions for EACH action); but anyway the model is still "relatively" small so that shouldn't be harmful ***)
+		List.iter(fun action_index ->
+			(* First retrieve the transitions for this location and for this action *)
+			let actions_and_transitions_for_this_location_and_action = List.filter (fun (action_index', _) -> action_index' = action_index) transitions_for_this_location in
 
-		Hashtbl.add new_transitions_array_hashtbl.(automaton_index).(location_index) dummy_action transitions_for_this_location;
+			(* Then only keep the transitions (not the actions, as they are now all equal to action_index) *)
+			let _ , transitions_for_this_location_and_action = List.split actions_and_transitions_for_this_location_and_action in
 
+			Hashtbl.add new_transitions_array_hashtbl.(automaton_index).(location_index) action_index transitions_for_this_location_and_action;
+		) model.actions;
+		
+		
+		(* Also find the set of actions available in this location *)
+		(*** BADPROG: clearly not optimal way of computing the set of actions; but anyway the model is still "relatively" small so that shouldn't be harmful ***)
+		let multiply_defined_actions, _ = List.split transitions_for_this_location in
+		let actions_for_this_location = list_only_once multiply_defined_actions in
+		
+		(* Set the actions for this location *)
+		actions_per_location_array.(location_index) <- actions_for_this_location;
+		
 	) list_of_location_index_for_this_pta;
 
 	
-
-
-
-
-(**************************************************)
-(* GIA'S TESTING *)
-(**************************************************)
-
-
-
-
-(**************************************************)
-(* PART 2 - CUB-PTA Transformation*)
-(*
-This is the beta version (simple), allow one clock, one constraint for each clock.
-released version will be soon!!!!
-*)
-(**************************************************)
-(*
-let cub_check_3 model invariant_s0 guard_t invariant_s1 clock_updates = 	
-	(*ppl*)
-	(* let inequalities_need_to_solve : (LinearConstraint.op * LinearConstraint.p_linear_term) list ref = ref [] in *)
-	let inequalities = ref [] in
-	print_message Verbose_standard (" CUB check, Start:");
-	print_message Verbose_standard ("\n");
-
-	(*transform constraints into inequality lists*)
-	let inequalities_s0 = LinearConstraint.pxd_get_inequalities invariant_s0 in
-	let inequalities_t 	= LinearConstraint.pxd_get_inequalities guard_t in
-	let inequalities_s1 = LinearConstraint.pxd_get_inequalities invariant_s1 in
-
-	(*transform inequality list into tuple inequality list*)
-	print_message Verbose_standard (" **Beginning state/location** :");
-	let tuple_inequalities_s0 	= convert_inequality_list_2_tuple_list model inequalities_s0 in
-	print_message Verbose_standard (" **Transition** :");
-	let tuple_inequalities_t 	= convert_inequality_list_2_tuple_list model inequalities_t in
-	print_message Verbose_standard (" **Destination state/location** :");
-	let tuple_inequalities_s1 	= convert_inequality_list_2_tuple_list model inequalities_s1 in
-
-
-	let isCUB_PTA = ref true in
-
-	(*check inequalities for each clock c on s0 -t-> s1*)
-	List.iter (	fun clock_index -> 
-	 	let inequalities_need_to_solve = ref [] in
-	 	print_message Verbose_standard ("   Checking CUB condtions at clock (" ^ (model.variable_names clock_index) ^ "):");
-
-	 	(*get each element of tuple of each clock - NOTE: the input musts contain 1 upper-bounded*)
-	 	print_message Verbose_standard ("\n 	**Beginning state/location** :");
-		let (_, op_s0, linear_term_s0) 	= filter_upperbound_by_clock clock_index tuple_inequalities_s0 in
-		print_message Verbose_standard ("\n 	**Transition** :");
-		let (_, op_t, linear_term_t) 	= filter_upperbound_by_clock clock_index tuple_inequalities_t in
-		print_message Verbose_standard ("\n 	**Destination state/location** :");
-		let (_, op_s1, linear_term_s1) 	= filter_upperbound_by_clock clock_index tuple_inequalities_s1 in
-
-		(*convert back to constraint for each inequality*)
-		let clock_term = LinearConstraint.make_p_linear_term [NumConst.one,clock_index] NumConst.zero in
-		print_message Verbose_standard ("\n clock_term:" ^ (LinearConstraint.string_of_p_linear_term model.variable_names clock_term)); 
-		let linear_inequality_s0 = LinearConstraint.make_p_linear_inequality (LinearConstraint.sub_p_linear_terms clock_term linear_term_s0) op_s0 in
-		let constraint_s0 = LinearConstraint.make_p_constraint [linear_inequality_s0] in
-		let constraint_s0 = LinearConstraint.pxd_of_p_constraint constraint_s0 in
-		print_message Verbose_standard ("\n constraint_s0:" ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names constraint_s0)); 
-		let linear_inequality_t = LinearConstraint.make_p_linear_inequality (LinearConstraint.sub_p_linear_terms clock_term linear_term_t) op_t in
-		let constraint_t = LinearConstraint.make_p_constraint [linear_inequality_t] in
-		let constraint_t = LinearConstraint.pxd_of_p_constraint constraint_t in
-		print_message Verbose_standard ("\n constraint_t:" ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names constraint_t));
-		let linear_inequality_s1 = LinearConstraint.make_p_linear_inequality (LinearConstraint.sub_p_linear_terms clock_term linear_term_s1) op_s1 in
-		let constraint_s1 = LinearConstraint.make_p_constraint [linear_inequality_s1] in
-		let constraint_s1 = LinearConstraint.pxd_of_p_constraint constraint_s1 in
-		print_message Verbose_standard ("\n constraint_s1:" ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names constraint_s1));  
-
-
-		print_message Verbose_standard ("\n");
-		print_message Verbose_standard ("Comparing: ");
-
-		(*just for printing*)
-		let s0_upperbound_str = (LinearConstraint.operator2string op_s0) ^ " " ^ (LinearConstraint.string_of_p_linear_term model.variable_names linear_term_s0) in
-		let t_upperbound_str  = (LinearConstraint.operator2string op_t) ^ " " ^ (LinearConstraint.string_of_p_linear_term model.variable_names linear_term_t) in
-		let s1_upperbound_str = (LinearConstraint.operator2string op_s1) ^ " " ^ (LinearConstraint.string_of_p_linear_term model.variable_names linear_term_s1) in
-		print_message Verbose_standard (" 	 get upper-bound s0: " ^ s0_upperbound_str );
-		print_message Verbose_standard (" 	 get upper-bound t: " ^ t_upperbound_str );
-		print_message Verbose_standard (" 	 get upper-bound s1: " ^ s1_upperbound_str );
-		print_message Verbose_standard (" 	 evaluating: (" ^ s0_upperbound_str ^ ") <= (" ^ t_upperbound_str ^ ") /\\ (" ^ s1_upperbound_str ^ ")!");
-		(*just for printing*)
-
-		(* if List.mem clock_index reset_clocks = true 
-		then lower_inequality := linear_term_t; *)
-
-		(* let result = ref true in *)
-		let result = match (op_s0, linear_term_s0), (op_t, linear_term_t), (op_s1, linear_term_s1) with
-
-			 (LinearConstraint.Op_ge, _), (LinearConstraint.Op_ge, _), (LinearConstraint.Op_ge, _)	->	print_message Verbose_standard (" 	 Case 1 " );
-			 																							true;
-
-			|(LinearConstraint.Op_ge, _), _							 , (LinearConstraint.Op_ge, _)	->	print_message Verbose_standard (" 	 Case 2 " );
-																										false;
-
-			|(LinearConstraint.Op_ge, _), (LinearConstraint.Op_ge, _), _							->	(*reset*)
-																										print_message Verbose_standard (" 	 Case 3 " );
-																										if List.mem clock_index clock_updates = true
-																										then
-																											(
-																											let _ = print_message Verbose_standard (" 	 Detected " 
-																																			^ (model.variable_names clock_index) 
-																																			^ " was a reset clock!\n 	 skipping the process: (" 
-																																			^ t_upperbound_str ^ ") /\\ (" ^ s1_upperbound_str ^ ")!" ) 
-																											in
-																											true
-																											)
-																										else
-																											(
-																											false;
-																											);
-
-			|(LinearConstraint.Op_ge, _), _							 , _							-> 	(*reset but useless*)
-																										false; 
-
-			|_							, (LinearConstraint.Op_ge, _), (LinearConstraint.Op_ge, _)	->	print_message Verbose_standard (" 	 Case 4 " );
-																										true;
-
-			|_							, _							 , (LinearConstraint.Op_ge, _)	->	print_message Verbose_standard (" 	 Case 5 " );
-																										let ineq = make_CUB_inequality (op_s0, linear_term_s0) (op_t, linear_term_t) in
-																										print_message Verbose_standard (" Forming inequality: " ^ LinearConstraint.string_of_p_linear_inequality model.variable_names ineq ^ "!!!\n");
-																										let constr = make_CUB_constraint [ineq] in
-																										
-																										if LinearConstraint.p_is_true constr
-																										then true
-																										else
-																											(
-																											if LinearConstraint.p_is_false constr
-																											then 
-																												(*inequalities_need_to_solve := !inequalities_need_to_solve@[ineq];*)
-																												false
-																											else
-																												(
-																												inequalities_need_to_solve := !inequalities_need_to_solve@[ineq];
-																												false;
-																												);
-																											);
-
-
-
-			|_							, (LinearConstraint.Op_ge, _), _							->	print_message Verbose_standard (" 	 Case 5 " );
-																										(*reset*)
-																										if List.mem clock_index clock_updates = true
-																										then
-																											(
-																											let _ = print_message Verbose_standard (" 	 Detected " 
-																																			^ (model.variable_names clock_index) 
-																																			^ " was a reset clock!\n 	 skipping the process: (" 
-																																			^ t_upperbound_str ^ ") /\\ (" ^ s1_upperbound_str ^ ")!" ) 
-																											in
-																											true
-																											)
-																										else
-																											(
-																											let ineq = make_CUB_inequality (op_s0, linear_term_s0) (op_s1, linear_term_s1) in
-																											print_message Verbose_standard (" Forming inequality: " ^ LinearConstraint.string_of_p_linear_inequality model.variable_names ineq ^ "!!!\n");
-																											let constr = make_CUB_constraint [ineq] in
-																											if LinearConstraint.p_is_true constr
-																											then 
-																												true
-																											else
-																												(
-																												if LinearConstraint.p_is_false constr
-																												then 
-																													false
-																												else
-																													(
-																													inequalities_need_to_solve := !inequalities_need_to_solve@[ineq];
-																													false;
-																													);
-																												);
-																											);
-																											
-
-			| _							, _							 , _							-> 	print_message Verbose_standard (" 	 Case 6 " );
-																										(*reset*)
-																										if List.mem clock_index clock_updates = true
-																										then
-																											(
-																											print_message Verbose_standard (" 	 Detected " 
-																																			^ (model.variable_names clock_index) 
-																																			^ " was a reset clock!\n 	 skipping the process: (" 
-																																			^ t_upperbound_str ^ ") /\\ (" ^ s1_upperbound_str ^ ")!" ); 
-																											
-																											let ineq = make_CUB_inequality (op_s0, linear_term_s0) (op_t, linear_term_t) in
-																											print_message Verbose_standard (" Forming inequality: " ^ LinearConstraint.string_of_p_linear_inequality model.variable_names ineq ^ "!!!\n");
-																											let constr = make_CUB_constraint [ineq] in
-																											if LinearConstraint.p_is_true constr
-																											then 
-																												true
-																												else
-																												(
-																												if LinearConstraint.p_is_false constr
-																												then 
-																													false
-																												else
-																													(
-																													inequalities_need_to_solve := !inequalities_need_to_solve@[ineq];
-																													false;
-																													);
-																												);
-																											)
-																										else
-																											(
-
-																											
-																											let ineq1 = make_CUB_inequality (op_s0, linear_term_s0) (op_t, linear_term_t) in
-																											print_message Verbose_standard (" Forming inequality: " ^ LinearConstraint.string_of_p_linear_inequality model.variable_names ineq1 ^ "!!!\n");
-																											let ineq2 = make_CUB_inequality (op_s0, linear_term_s0) (op_s1, linear_term_s1) in
-																											print_message Verbose_standard (" Forming inequality: " ^ LinearConstraint.string_of_p_linear_inequality model.variable_names ineq2 ^ "!!!\n");
-
-																											(*let constr = make_CUB_constraint [ineq1;ineq2] in*)
-																											let constr = LinearConstraint.make_pxd_constraint (inequalities_s0@inequalities_t@inequalities_s1) in
-																												print_message Verbose_standard ("\n constr:" ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names constr)); 
-																											
-																											(*testing ppl function*)
-																											let constr_inter = LinearConstraint.pxd_intersection [constr] in
-																												print_message Verbose_standard ("\n constr_inter:" ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names constr_inter)); 
-
-																											let constr1 = LinearConstraint.make_p_constraint ([ineq1]) in
-																												print_message Verbose_standard ("\n constr1:" ^ (LinearConstraint.string_of_p_linear_constraint model.variable_names constr1)); 
-
-																											let constr2 = LinearConstraint.make_p_constraint ([ineq2]) in
-																												print_message Verbose_standard ("\n constr2:" ^ (LinearConstraint.string_of_p_linear_constraint model.variable_names constr2)); 
-
-																											let abc = LinearConstraint.pxd_is_leq invariant_s0 guard_t in
-																												print_message Verbose_standard ("\n abc:" ^ string_of_bool abc ); 
-																											(*testing ppl function*)
-																											
-
-
-																											
-																											
-																											if LinearConstraint.pxd_is_true constr
-																											then 
-																												(
-																												print_message Verbose_standard (" true ");
-																												true
-																												)
-																											else
-																												(
-																												if LinearConstraint.pxd_is_false constr
-																												then 
-																													(
-																													print_message Verbose_standard (" false ");
-																													inequalities_need_to_solve := !inequalities_need_to_solve@[ineq2];
-																													false
-																													)
-																												else
-																													(
-																													print_message Verbose_standard (" false, not determined ");
-																													inequalities_need_to_solve := !inequalities_need_to_solve@[ineq1;ineq2];
-																													false;
-																													);
-																												);
-																											
-
-																											);
-
-																										
-																									
-
-																										
-
-
-
-
-			in
-			
-
-			inequalities := !inequalities@(!inequalities_need_to_solve);
-
-			if (result = false)
-			then
-				(
-			isCUB_PTA := false;
-				print_message Verbose_standard (" This is not satisfied CUB-PTA! ");
-				)
-			else 
-				print_message Verbose_standard (" This is satisfied CUB-PTA! ");
-
-
-
-	print_message Verbose_standard ("\n");
-	) model.clocks; 
-
-	print_message Verbose_standard ("\n");
-	print_message Verbose_standard (" CUB check, End!");
-	print_message Verbose_standard ("\n");
-
-	(!isCUB_PTA, !inequalities);
-	in
-*)
-
-
+	(* 5) Handle actions per location *)
+	new_actions_per_location_array.(automaton_index) <- actions_per_location_array;
 
 
 
@@ -2728,9 +2480,12 @@ let cub_check_3 model invariant_s0 guard_t invariant_s1 clock_updates =
 	let new_locations_per_automaton_function automaton_index = new_locations_per_automaton_array.(automaton_index) in
 	
 	
+	let new_actions_per_location_function automaton_index location_index = new_actions_per_location_array.(automaton_index).(location_index) in
+	
+	
 	let new_location_names_function automaton_index location_index = new_location_names_array.(automaton_index).(location_index) in
 	
-	
+
 	(*** WARNING! assume that initial locations always have location_index = 0, which is the case in the current code; but a better handling would be much better ***)
  	let new_initial_location =
 
@@ -2759,7 +2514,80 @@ let cub_check_3 model invariant_s0 guard_t invariant_s1 clock_updates =
 			Not_found -> []
 	in
 	
+	(*------------------------------------------------------------*)
+	(* Print some information *)
+	(*------------------------------------------------------------*)
+	if verbose_mode_greater Verbose_low then(
+		
 	
+		print_message Verbose_low ("\nNew locations per automaton:");
+		Array.iteri(fun automaton_index list_of_locations ->
+			print_message Verbose_low ("Automaton #" ^ (string_of_int automaton_index ) ^ " -> " ^ (
+				string_of_list_of_string_with_sep ", " (List.map (fun location_index -> "l_" ^ (string_of_int location_index)) list_of_locations)
+			) ^ "");
+		) new_locations_per_automaton_array;
+	
+	
+		print_message Verbose_low ("\nNew location names:");
+		(* Iterate on automata *)
+		Array.iteri(fun automaton_index array_of_names ->
+			print_message Verbose_low ("Automaton #" ^ (string_of_int automaton_index ) ^ ":");
+			(* Iterate on locations for this automaton *)
+			Array.iteri(fun location_index location_name ->
+				print_message Verbose_low ("  Location l_" ^ (string_of_int location_index ) ^ " -> " ^ location_name);
+			) array_of_names;
+		) new_location_names_array;
+	
+	
+		print_message Verbose_low ("\nAll actions:");
+		print_message Verbose_low (string_of_list_of_string_with_sep " - " (List.map model.action_names model.actions) );
+
+		
+		print_message Verbose_low ("\nNew actions per location:");
+		(* Iterate on automata *)
+		Array.iteri(fun automaton_index array_of_names ->
+			print_message Verbose_low ("Automaton #" ^ (string_of_int automaton_index ) ^ ":");
+			(* Iterate on locations for this automaton *)
+			Array.iteri(fun location_index location_name ->
+				print_message Verbose_low ("  Location l_" ^ (string_of_int location_index ) ^ " -> " ^ "");
+				let actions_for_this_location = new_actions_per_location_function automaton_index location_index in
+				print_message Verbose_low (string_of_list_of_string_with_sep " - " (List.map model.action_names actions_for_this_location) );
+			) array_of_names;
+		) new_location_names_array;
+	
+	
+		print_message Verbose_low ("\nNew invariants:");
+		(* Iterate on automata *)
+		Array.iteri(fun automaton_index array_of_invariants ->
+			print_message Verbose_low ("Automaton #" ^ (string_of_int automaton_index ) ^ ":");
+			(* Iterate on locations for this automaton *)
+			Array.iteri(fun location_index invariant ->
+				print_message Verbose_low ("  Location l_" ^ (string_of_int location_index ) ^ " -> " ^ (LinearConstraint.string_of_pxd_linear_constraint (fun v -> "v_" ^ (string_of_int v)) invariant));
+			) array_of_invariants;
+		) new_invariants_array;
+	
+	
+		(*** TODO ***)
+		let string_of_transition transition = "TODO" in
+		
+		print_message Verbose_low ("\nNew transitions:");
+		(* Iterate on automata *)
+		Array.iteri(fun automaton_index array_of_hashtables ->
+			print_message Verbose_low ("Automaton #" ^ (string_of_int automaton_index ) ^ ":");
+			(* Iterate on locations for this automaton *)
+			Array.iteri(fun location_index action_hashtable ->
+				print_message Verbose_low ("  Location l_" ^ (string_of_int location_index ) ^ ":");
+				(* Iterate on actions for this automaton *)
+				Hashtbl.iter(fun action_index transition ->
+					print_message Verbose_low ("    Transition via action " ^ (string_of_int action_index) ^ ":\n    " ^ (string_of_transition transition) ^ "");
+				)action_hashtable;
+			) array_of_hashtables;
+		) new_transitions_array_hashtbl;
+		print_message Verbose_low ("\n(end transitions)");
+	
+	); (* end Verbose_low *)
+	
+		
 	(************************************************************)
 	(** Return the abstract model *)
 	(************************************************************)
@@ -2835,8 +2663,7 @@ let cub_check_3 model invariant_s0 guard_t invariant_s1 clock_updates =
 		(* The list of automatons for each action *)
 		automata_per_action = model.automata_per_action;
 		(* The list of actions for each automaton for each location *)
-			(*** TODO ***)
-		actions_per_location = model.actions_per_location;
+		actions_per_location = new_actions_per_location_function;
 
 		(* The cost for each automaton and each location *)
 		(*** TODO ***)
@@ -3205,4 +3032,296 @@ if LinearConstraint.pxd_is_leq invariant_s0 guard_t
 then print_message Verbose_standard ("s0 is included in t")
 else  print_message Verbose_standard ("s0 is not included in t");
 
+*)
+
+(**************************************************)
+(* GIA'S TESTING *)
+(**************************************************)
+
+
+
+
+(**************************************************)
+(* PART 2 - CUB-PTA Transformation*)
+(*
+This is the beta version (simple), allow one clock, one constraint for each clock.
+released version will be soon!!!!
+*)
+(**************************************************)
+(*
+let cub_check_3 model invariant_s0 guard_t invariant_s1 clock_updates = 	
+	(*ppl*)
+	(* let inequalities_need_to_solve : (LinearConstraint.op * LinearConstraint.p_linear_term) list ref = ref [] in *)
+	let inequalities = ref [] in
+	print_message Verbose_standard (" CUB check, Start:");
+	print_message Verbose_standard ("\n");
+
+	(*transform constraints into inequality lists*)
+	let inequalities_s0 = LinearConstraint.pxd_get_inequalities invariant_s0 in
+	let inequalities_t 	= LinearConstraint.pxd_get_inequalities guard_t in
+	let inequalities_s1 = LinearConstraint.pxd_get_inequalities invariant_s1 in
+
+	(*transform inequality list into tuple inequality list*)
+	print_message Verbose_standard (" **Beginning state/location** :");
+	let tuple_inequalities_s0 	= convert_inequality_list_2_tuple_list model inequalities_s0 in
+	print_message Verbose_standard (" **Transition** :");
+	let tuple_inequalities_t 	= convert_inequality_list_2_tuple_list model inequalities_t in
+	print_message Verbose_standard (" **Destination state/location** :");
+	let tuple_inequalities_s1 	= convert_inequality_list_2_tuple_list model inequalities_s1 in
+
+
+	let isCUB_PTA = ref true in
+
+	(*check inequalities for each clock c on s0 -t-> s1*)
+	List.iter (	fun clock_index -> 
+	 	let inequalities_need_to_solve = ref [] in
+	 	print_message Verbose_standard ("   Checking CUB condtions at clock (" ^ (model.variable_names clock_index) ^ "):");
+
+	 	(*get each element of tuple of each clock - NOTE: the input musts contain 1 upper-bounded*)
+	 	print_message Verbose_standard ("\n 	**Beginning state/location** :");
+		let (_, op_s0, linear_term_s0) 	= filter_upperbound_by_clock clock_index tuple_inequalities_s0 in
+		print_message Verbose_standard ("\n 	**Transition** :");
+		let (_, op_t, linear_term_t) 	= filter_upperbound_by_clock clock_index tuple_inequalities_t in
+		print_message Verbose_standard ("\n 	**Destination state/location** :");
+		let (_, op_s1, linear_term_s1) 	= filter_upperbound_by_clock clock_index tuple_inequalities_s1 in
+
+		(*convert back to constraint for each inequality*)
+		let clock_term = LinearConstraint.make_p_linear_term [NumConst.one,clock_index] NumConst.zero in
+		print_message Verbose_standard ("\n clock_term:" ^ (LinearConstraint.string_of_p_linear_term model.variable_names clock_term)); 
+		let linear_inequality_s0 = LinearConstraint.make_p_linear_inequality (LinearConstraint.sub_p_linear_terms clock_term linear_term_s0) op_s0 in
+		let constraint_s0 = LinearConstraint.make_p_constraint [linear_inequality_s0] in
+		let constraint_s0 = LinearConstraint.pxd_of_p_constraint constraint_s0 in
+		print_message Verbose_standard ("\n constraint_s0:" ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names constraint_s0)); 
+		let linear_inequality_t = LinearConstraint.make_p_linear_inequality (LinearConstraint.sub_p_linear_terms clock_term linear_term_t) op_t in
+		let constraint_t = LinearConstraint.make_p_constraint [linear_inequality_t] in
+		let constraint_t = LinearConstraint.pxd_of_p_constraint constraint_t in
+		print_message Verbose_standard ("\n constraint_t:" ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names constraint_t));
+		let linear_inequality_s1 = LinearConstraint.make_p_linear_inequality (LinearConstraint.sub_p_linear_terms clock_term linear_term_s1) op_s1 in
+		let constraint_s1 = LinearConstraint.make_p_constraint [linear_inequality_s1] in
+		let constraint_s1 = LinearConstraint.pxd_of_p_constraint constraint_s1 in
+		print_message Verbose_standard ("\n constraint_s1:" ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names constraint_s1));  
+
+
+		print_message Verbose_standard ("\n");
+		print_message Verbose_standard ("Comparing: ");
+
+		(*just for printing*)
+		let s0_upperbound_str = (LinearConstraint.operator2string op_s0) ^ " " ^ (LinearConstraint.string_of_p_linear_term model.variable_names linear_term_s0) in
+		let t_upperbound_str  = (LinearConstraint.operator2string op_t) ^ " " ^ (LinearConstraint.string_of_p_linear_term model.variable_names linear_term_t) in
+		let s1_upperbound_str = (LinearConstraint.operator2string op_s1) ^ " " ^ (LinearConstraint.string_of_p_linear_term model.variable_names linear_term_s1) in
+		print_message Verbose_standard (" 	 get upper-bound s0: " ^ s0_upperbound_str );
+		print_message Verbose_standard (" 	 get upper-bound t: " ^ t_upperbound_str );
+		print_message Verbose_standard (" 	 get upper-bound s1: " ^ s1_upperbound_str );
+		print_message Verbose_standard (" 	 evaluating: (" ^ s0_upperbound_str ^ ") <= (" ^ t_upperbound_str ^ ") /\\ (" ^ s1_upperbound_str ^ ")!");
+		(*just for printing*)
+
+		(* if List.mem clock_index reset_clocks = true 
+		then lower_inequality := linear_term_t; *)
+
+		(* let result = ref true in *)
+		let result = match (op_s0, linear_term_s0), (op_t, linear_term_t), (op_s1, linear_term_s1) with
+
+			 (LinearConstraint.Op_ge, _), (LinearConstraint.Op_ge, _), (LinearConstraint.Op_ge, _)	->	print_message Verbose_standard (" 	 Case 1 " );
+			 																							true;
+
+			|(LinearConstraint.Op_ge, _), _							 , (LinearConstraint.Op_ge, _)	->	print_message Verbose_standard (" 	 Case 2 " );
+																										false;
+
+			|(LinearConstraint.Op_ge, _), (LinearConstraint.Op_ge, _), _							->	(*reset*)
+																										print_message Verbose_standard (" 	 Case 3 " );
+																										if List.mem clock_index clock_updates = true
+																										then
+																											(
+																											let _ = print_message Verbose_standard (" 	 Detected " 
+																																			^ (model.variable_names clock_index) 
+																																			^ " was a reset clock!\n 	 skipping the process: (" 
+																																			^ t_upperbound_str ^ ") /\\ (" ^ s1_upperbound_str ^ ")!" ) 
+																											in
+																											true
+																											)
+																										else
+																											(
+																											false;
+																											);
+
+			|(LinearConstraint.Op_ge, _), _							 , _							-> 	(*reset but useless*)
+																										false; 
+
+			|_							, (LinearConstraint.Op_ge, _), (LinearConstraint.Op_ge, _)	->	print_message Verbose_standard (" 	 Case 4 " );
+																										true;
+
+			|_							, _							 , (LinearConstraint.Op_ge, _)	->	print_message Verbose_standard (" 	 Case 5 " );
+																										let ineq = make_CUB_inequality (op_s0, linear_term_s0) (op_t, linear_term_t) in
+																										print_message Verbose_standard (" Forming inequality: " ^ LinearConstraint.string_of_p_linear_inequality model.variable_names ineq ^ "!!!\n");
+																										let constr = make_CUB_constraint [ineq] in
+																										
+																										if LinearConstraint.p_is_true constr
+																										then true
+																										else
+																											(
+																											if LinearConstraint.p_is_false constr
+																											then 
+																												(*inequalities_need_to_solve := !inequalities_need_to_solve@[ineq];*)
+																												false
+																											else
+																												(
+																												inequalities_need_to_solve := !inequalities_need_to_solve@[ineq];
+																												false;
+																												);
+																											);
+
+
+
+			|_							, (LinearConstraint.Op_ge, _), _							->	print_message Verbose_standard (" 	 Case 5 " );
+																										(*reset*)
+																										if List.mem clock_index clock_updates = true
+																										then
+																											(
+																											let _ = print_message Verbose_standard (" 	 Detected " 
+																																			^ (model.variable_names clock_index) 
+																																			^ " was a reset clock!\n 	 skipping the process: (" 
+																																			^ t_upperbound_str ^ ") /\\ (" ^ s1_upperbound_str ^ ")!" ) 
+																											in
+																											true
+																											)
+																										else
+																											(
+																											let ineq = make_CUB_inequality (op_s0, linear_term_s0) (op_s1, linear_term_s1) in
+																											print_message Verbose_standard (" Forming inequality: " ^ LinearConstraint.string_of_p_linear_inequality model.variable_names ineq ^ "!!!\n");
+																											let constr = make_CUB_constraint [ineq] in
+																											if LinearConstraint.p_is_true constr
+																											then 
+																												true
+																											else
+																												(
+																												if LinearConstraint.p_is_false constr
+																												then 
+																													false
+																												else
+																													(
+																													inequalities_need_to_solve := !inequalities_need_to_solve@[ineq];
+																													false;
+																													);
+																												);
+																											);
+																											
+
+			| _							, _							 , _							-> 	print_message Verbose_standard (" 	 Case 6 " );
+																										(*reset*)
+																										if List.mem clock_index clock_updates = true
+																										then
+																											(
+																											print_message Verbose_standard (" 	 Detected " 
+																																			^ (model.variable_names clock_index) 
+																																			^ " was a reset clock!\n 	 skipping the process: (" 
+																																			^ t_upperbound_str ^ ") /\\ (" ^ s1_upperbound_str ^ ")!" ); 
+																											
+																											let ineq = make_CUB_inequality (op_s0, linear_term_s0) (op_t, linear_term_t) in
+																											print_message Verbose_standard (" Forming inequality: " ^ LinearConstraint.string_of_p_linear_inequality model.variable_names ineq ^ "!!!\n");
+																											let constr = make_CUB_constraint [ineq] in
+																											if LinearConstraint.p_is_true constr
+																											then 
+																												true
+																												else
+																												(
+																												if LinearConstraint.p_is_false constr
+																												then 
+																													false
+																												else
+																													(
+																													inequalities_need_to_solve := !inequalities_need_to_solve@[ineq];
+																													false;
+																													);
+																												);
+																											)
+																										else
+																											(
+
+																											
+																											let ineq1 = make_CUB_inequality (op_s0, linear_term_s0) (op_t, linear_term_t) in
+																											print_message Verbose_standard (" Forming inequality: " ^ LinearConstraint.string_of_p_linear_inequality model.variable_names ineq1 ^ "!!!\n");
+																											let ineq2 = make_CUB_inequality (op_s0, linear_term_s0) (op_s1, linear_term_s1) in
+																											print_message Verbose_standard (" Forming inequality: " ^ LinearConstraint.string_of_p_linear_inequality model.variable_names ineq2 ^ "!!!\n");
+
+																											(*let constr = make_CUB_constraint [ineq1;ineq2] in*)
+																											let constr = LinearConstraint.make_pxd_constraint (inequalities_s0@inequalities_t@inequalities_s1) in
+																												print_message Verbose_standard ("\n constr:" ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names constr)); 
+																											
+																											(*testing ppl function*)
+																											let constr_inter = LinearConstraint.pxd_intersection [constr] in
+																												print_message Verbose_standard ("\n constr_inter:" ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names constr_inter)); 
+
+																											let constr1 = LinearConstraint.make_p_constraint ([ineq1]) in
+																												print_message Verbose_standard ("\n constr1:" ^ (LinearConstraint.string_of_p_linear_constraint model.variable_names constr1)); 
+
+																											let constr2 = LinearConstraint.make_p_constraint ([ineq2]) in
+																												print_message Verbose_standard ("\n constr2:" ^ (LinearConstraint.string_of_p_linear_constraint model.variable_names constr2)); 
+
+																											let abc = LinearConstraint.pxd_is_leq invariant_s0 guard_t in
+																												print_message Verbose_standard ("\n abc:" ^ string_of_bool abc ); 
+																											(*testing ppl function*)
+																											
+
+
+																											
+																											
+																											if LinearConstraint.pxd_is_true constr
+																											then 
+																												(
+																												print_message Verbose_standard (" true ");
+																												true
+																												)
+																											else
+																												(
+																												if LinearConstraint.pxd_is_false constr
+																												then 
+																													(
+																													print_message Verbose_standard (" false ");
+																													inequalities_need_to_solve := !inequalities_need_to_solve@[ineq2];
+																													false
+																													)
+																												else
+																													(
+																													print_message Verbose_standard (" false, not determined ");
+																													inequalities_need_to_solve := !inequalities_need_to_solve@[ineq1;ineq2];
+																													false;
+																													);
+																												);
+																											
+
+																											);
+
+																										
+																									
+
+																										
+
+
+
+
+			in
+			
+
+			inequalities := !inequalities@(!inequalities_need_to_solve);
+
+			if (result = false)
+			then
+				(
+			isCUB_PTA := false;
+				print_message Verbose_standard (" This is not satisfied CUB-PTA! ");
+				)
+			else 
+				print_message Verbose_standard (" This is satisfied CUB-PTA! ");
+
+
+
+	print_message Verbose_standard ("\n");
+	) model.clocks; 
+
+	print_message Verbose_standard ("\n");
+	print_message Verbose_standard (" CUB check, End!");
+	print_message Verbose_standard ("\n");
+
+	(!isCUB_PTA, !inequalities);
+	in
 *)
