@@ -899,6 +899,9 @@ let dot radical dot_source_file =
 	let options = Input.get_options () in
 
 	(* Do not write if no dot AND no log *)
+	
+	(*** WARNING! that's bad programming... it shouldn't be the role of this function to test options ***)
+	
 	if options#output_trace_set || options#with_log then (
 		(* Get the file names *)
 		let dot_file_name = (radical ^ "." ^ dot_file_extension) in

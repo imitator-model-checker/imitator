@@ -9,7 +9,7 @@
  * 
  * File contributors : Ulrich Kühne, Étienne André
  * Created           : 2009/09/07
- * Last modified     : 2016/09/06
+ * Last modified     : 2016/09/29
  *
  ************************************************************)
 
@@ -430,6 +430,8 @@ let algorithm : AlgoGeneric.algoGeneric = match options#imitator_mode with
 	| Parametric_NC_CUBtransform ->
 		(*** HACK: so far, call Gia's function (that itself raises an exception) and raise an exception to make compiler happy ***)
 		let cub_model = CUBchecker.cubpta_of_pta model in
+		(*** HACK: just in case, set the model in the input module too ***)
+		Input.set_model cub_model;
 		
 		
 		let translated_model = PTA2JPG.string_of_model cub_model in
@@ -437,7 +439,7 @@ let algorithm : AlgoGeneric.algoGeneric = match options#imitator_mode with
 			print_message Verbose_high ("\n" ^ translated_model ^ "\n");
 		);
 		
-		(* Graphics.dot (options#files_prefix ^ "-pta") translated_model; *)
+		Graphics.dot (options#files_prefix ^ "-cubpta") translated_model;
 		
 
 		print_message Verbose_standard ("File successfully created."); (*** TODO: add file name in a proper manner ***)

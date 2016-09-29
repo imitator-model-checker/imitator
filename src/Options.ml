@@ -9,7 +9,7 @@
  * 
  * File contributors : Ulrich Kühne, Étienne André
  * Created           : 2010
- * Last modified     : 2016/09/06
+ * Last modified     : 2016/09/29
  *
  ************************************************************)
 
@@ -385,8 +385,11 @@ class imitator_options =
 					imitator_mode <- Loop_synthesis
 				
 				(* Case: Parametric Büchi-emptiness checking with non-Zenoness (method: transformation into a CUB-PTA) *)
-				else if mode = "NZCUBtrans" then
-					imitator_mode <- Parametric_NC_CUBtransform
+				else if mode = "NZCUBtrans" then(
+					imitator_mode <- Parametric_NC_CUBtransform;
+					(*** HACK!!! otherwise Graphics won't generate the .jpg file to test...) ***)
+					output_trace_set := true;
+				)
 					
 				(* Case: Parametric deadlock checking *)
 				else if mode = "PDFC" then 

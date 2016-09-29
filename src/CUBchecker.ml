@@ -8,7 +8,7 @@
  * 
  * File contributors : Nguyen Hoang Gia, Étienne André
  * Created           : 2016/04/13
- * Last modified     : 2016/09/28
+ * Last modified     : 2016/09/29
  *
  ************************************************************)
 
@@ -1677,6 +1677,11 @@ let clocks_constraints_process model adding clocks_constraints loc_clocks_constr
 (************************************************************)
 (************************************************************)
 
+(* We create a new, silent action specifically for this automaton: its value is (nb of regular action) + automaton_index *)
+let local_silent_action_index_of_automaton_index model automaton_index =
+	model.nb_actions + automaton_index
+
+
 (** Takes an abstract model as input, and convert it into an equivalent CUB-PTA *)
 let cubpta_of_pta model : AbstractModel.abstract_model =
 
@@ -1734,9 +1739,11 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
 	(*covert input model into specific data stucture*)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
-	List.iter (fun automaton_index -> 
-	
+	List.iter (fun automaton_index ->
 		print_message Verbose_low ("\nConverting automaton " ^ (model.automata_names automaton_index) ^ "...");
+		
+		(* We create a new, silent action specifically for this automaton: its value is (nb of regular action) + automaton_index *)
+		let local_silent_action_index = local_silent_action_index_of_automaton_index model automaton_index in
 
 		(* print_message Verbose_standard ("Converting automaton: " 
 										^ (model.automata_names automaton_index) 
@@ -2474,6 +2481,57 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 	(*------------------------------------------------------------*)
 	(* Convert to the desired functional style *)
 	(*------------------------------------------------------------*)
+	
+	(* Number of actions: add the epsilon (1 per PTA) *)
+	let new_nb_actions = model.nb_actions + model.nb_automata in
+
+	(* New actions: *)
+	let new_actions = list_of_interval 0 (new_nb_actions - 1) in
+	
+	
+	(* Action names: identical to before transformation, with the exception of the new local epsilon action in each PTA *)
+	let new_action_names action_index =
+		(* Regular action: call old function *)
+		if action_index < model.nb_actions then model.action_names action_index
+		(* Too big: exception! *)
+		else if action_index > model.nb_actions + model.nb_automata then(
+			raise (InternalError("Value of action_index '" ^ (string_of_int action_index) ^ "' exceeds the number of special silent actions required in the CUB transformer!"))
+		)
+		(* Case local silent action: *)
+		else "epsilon_" ^ (string_of_int action_index)
+	in
+	
+	(* Action types: identical to before transformation, with the exception of the new local epsilon action in each PTA *)
+	let new_action_types action_index =
+		(* Regular action: call old function *)
+		if action_index < model.nb_actions then model.action_types action_index
+		(* Too big: exception! *)
+		else if action_index > model.nb_actions + model.nb_automata then(
+			raise (InternalError("Type of action_index '" ^ (string_of_int action_index) ^ "' exceeds the number of special silent actions required in the CUB transformer!"))
+		)
+		(* Case local silent action: *)
+		else Action_type_nosync
+	in
+	
+	
+	(* Actions per PTA: identical to before transformation, with the exception of the new local epsilon action in each PTA *)
+	let new_actions_per_automaton automaton_index =
+		(* Get the local epsilon action *)
+		let local_silent_action_index = local_silent_action_index_of_automaton_index model automaton_index in
+		(* Add it to the old list *)
+		local_silent_action_index :: (model.actions_per_automaton automaton_index)
+	in
+	
+	(* PTA per action: identical to before transformation, with the exception of the new local epsilon action in each PTA *)
+	let new_automata_per_action action_index =
+		(* Case new epsilon action *)
+		if action_index >= model.nb_actions && action_index < new_nb_actions then
+			let automaton_for_this_action = action_index - model.nb_actions in
+			(* Return singleton *)
+			[automaton_for_this_action]
+		else model.automata_per_action action_index
+	in
+	
 	let new_invariants_function automaton_index location_index = new_invariants_array.(automaton_index).(location_index) in
 	
 	
@@ -2540,7 +2598,7 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 	
 	
 		print_message Verbose_low ("\nAll actions:");
-		print_message Verbose_low (string_of_list_of_string_with_sep " - " (List.map model.action_names model.actions) );
+		print_message Verbose_low (string_of_list_of_string_with_sep " - " (List.map new_action_names model.actions) );
 
 		
 		print_message Verbose_low ("\nNew actions per location:");
@@ -2551,7 +2609,7 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 			Array.iteri(fun location_index location_name ->
 				print_message Verbose_low ("  Location l_" ^ (string_of_int location_index ) ^ " -> " ^ "");
 				let actions_for_this_location = new_actions_per_location_function automaton_index location_index in
-				print_message Verbose_low (string_of_list_of_string_with_sep " - " (List.map model.action_names actions_for_this_location) );
+				print_message Verbose_low (string_of_list_of_string_with_sep " - " (List.map new_action_names actions_for_this_location) );
 			) array_of_names;
 		) new_location_names_array;
 	
@@ -2595,7 +2653,7 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 		(** General information **)
 		(* Cardinality *)
 		nb_automata = model.nb_automata;
-		nb_actions = model.nb_actions;
+		nb_actions = new_nb_actions;
 		nb_clocks = model.nb_clocks;
 		nb_discrete = model.nb_discrete;
 		nb_parameters = model.nb_parameters;
@@ -2653,15 +2711,15 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 		(*** NOTE: all new initial locations shall be urgent! ***)
 
 		(* All action indexes *)
-		actions = model.actions;
+		actions = new_actions;
 		(* Action names *)
-		action_names = model.action_names;
+		action_names = new_action_names;
 		(* The type of actions *)
-		action_types = model.action_types;
+		action_types = new_action_types;
 		(* The list of actions for each automaton *)
-		actions_per_automaton = model.actions_per_automaton;
+		actions_per_automaton = new_actions_per_automaton;
 		(* The list of automatons for each action *)
-		automata_per_action = model.automata_per_action;
+		automata_per_action = new_automata_per_action;
 		(* The list of actions for each automaton for each location *)
 		actions_per_location = new_actions_per_location_function;
 
