@@ -1697,6 +1697,9 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 	(* Locations per PTA: Array : automaton_index : -> (List of location_index) *)
 	let new_locations_per_automaton_array = Array.make (model.nb_automata) [] in
 	
+	(* Initial location per PTA: Array : automaton_index : -> (location_index) option *)
+	let new_initial_locations_array = Array.make (model.nb_automata) None in
+	
 	(* Location names per PTA: Array : automaton_index : -> (Array : location_index -> location_name) *)
 	let new_location_names_array = Array.make (model.nb_automata) (Array.make 0 "UNINITIALIZED") in
 	
@@ -2263,15 +2266,19 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 
 
 	(* [CUB-PTA TRANSFORMATION] FINAL STAGE - MERGING SUB-MODELS *)
+	
+	(* Handle initial location *)
+	(*** BADPROG: give a string name to the new location (argh) ***)
+	let new_initial_location_name = "cub-init" in
+	
 	let submodel_index = ref 1 in
-	let s0 = "cub-init" in
 	let numberOfAction = List.length model.actions in 
 
 	(* Data structure: location_name -> invariant *)
 	let new_invariants_per_location_hashtbl =  Hashtbl.create 0 in
 	
 	(* Adding the initial state *)
-	Hashtbl.add new_invariants_per_location_hashtbl s0 (LinearConstraint.pxd_true_constraint ());
+	Hashtbl.add new_invariants_per_location_hashtbl new_initial_location_name (LinearConstraint.pxd_true_constraint ());
 
 	let newtransitions = DynArray.make 0 in
 	DynArray.iter (fun (locations, transitions, c_constraints, p_constraints, index, init_locs) ->
@@ -2294,7 +2301,9 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 			then 
 				(
 				List.iter (fun loc -> 
-					DynArray.add newtransitions (s0, (loc ^ "-m" ^ (string_of_int !submodel_index)), pxd_cons, [], (* local_silent_action_index_of_automaton_index model automaton_index *) 0, [] ) ;
+				
+					(* Add a transition from the initial location to all local initial locations into the dynamic array of locations *)
+					DynArray.add newtransitions (new_initial_location_name, loc ^ "-m" ^ (string_of_int !submodel_index), pxd_cons, [], (* local_silent_action_index_of_automaton_index model automaton_index *) 0, [] ) ;
 				) init_locs;
 				);
 		) listParaRelations;
@@ -2404,6 +2413,11 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 	
 	(* 3) Handle location names *)
 	new_location_names_array.(automaton_index) <- location_name_of_location_index;
+
+	(* 3b) Handle initial location *)
+	(* Update the array of new initial location *)
+	let initial_location_index = Hashtbl.find location_index_of_location_name new_initial_location_name in
+	new_initial_locations_array.(automaton_index) <- Some initial_location_index;
 	
 	
 	(* 4) Transitions *)
@@ -2554,14 +2568,22 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 	let new_location_names_function automaton_index location_index = new_location_names_array.(automaton_index).(location_index) in
 	
 
-	(*** WARNING! assume that initial locations always have location_index = 0, which is the case in the current code; but a better handling would be much better ***)
  	let new_initial_location =
 
 		(* Shortcut *)
 		let former_initial_location = model.initial_location in
 
 		(* First get the new initial locations *)
-		let initial_PTA_locations = List.map (fun automaton_index -> automaton_index, 0) model.automata in
+		let initial_PTA_locations = List.map (fun automaton_index ->
+			(* First get the new location index *)
+			let initial_location_index =
+			match new_initial_locations_array.(automaton_index) with
+				| None -> raise (InternalError "Initial location index not found in NZ CUB transformation")
+				| Some location_index -> location_index
+			in
+			
+			automaton_index, initial_location_index
+		) model.automata in
 
 		(* Second get the discrete values from the former initial location *)	
 		let discrete_values = List.map (fun discrete_index -> discrete_index , (Location.get_discrete_value former_initial_location discrete_index)) model.discrete in
