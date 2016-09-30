@@ -829,9 +829,11 @@ let check_problematic_transition model (invariant_s0, guard_t, invariant_s1, clo
 	let tuple_inequalities_t 	= convert_inequality_list_2_tuple_list model inequalities_t in
 	let tuple_inequalities_s1 	= convert_inequality_list_2_tuple_list model inequalities_s1 in
 	(* let isCUB = ref true in *)
-	let isCUB = ref false in
+	let result = ref true in
+	
 	let inequalities_need_to_solve = ref [] in
 	List.iter (	fun clock_index -> 
+		let isCUB = ref false in
 		let ls_tup_ineq_s0 	= (filter_upperbound_by_clock_3 clock_index tuple_inequalities_s0) in
 		let ls_tup_ineq_t 	= (filter_upperbound_by_clock_3 clock_index tuple_inequalities_t) in
 		let ls_tup_ineq_s1 	= (filter_upperbound_by_clock_3 clock_index tuple_inequalities_s1) in
@@ -1117,9 +1119,12 @@ let check_problematic_transition model (invariant_s0, guard_t, invariant_s1, clo
 				) ls_tup_ineq_s1;
 			) ls_tup_ineq_t;
 		) ls_tup_ineq_s0;
+
+		result := (!result && !isCUB);
+
 	) model.clocks; 
 	print_message Verbose_standard ("CHECKING FOR REMOVING PROBLEMATIC TRANSITIONS - END!!" ); 
-	!isCUB
+	!result
 
 
 
