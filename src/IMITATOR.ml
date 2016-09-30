@@ -9,7 +9,7 @@
  * 
  * File contributors : Ulrich Kühne, Étienne André
  * Created           : 2009/09/07
- * Last modified     : 2016/09/29
+ * Last modified     : 2016/09/30
  *
  ************************************************************)
 
@@ -428,11 +428,30 @@ let algorithm : AlgoGeneric.algoGeneric = match options#imitator_mode with
 	(* Parametric Büchi-emptiness checking with non-Zenoness (method: transformation into a CUB-PTA) *)
 	(************************************************************)
 	| Parametric_NC_CUBtransform ->
-		(*** HACK: so far, call Gia's function (that itself raises an exception) and raise an exception to make compiler happy ***)
+		print_message Verbose_standard ("Generating the transformed model...");
+
 		let cub_model = CUBchecker.cubpta_of_pta model in
 		(*** HACK: just in case, set the model in the input module too ***)
 		Input.set_model cub_model;
 		
+		print_message Verbose_standard ("Transformation completed");
+
+		
+		(* Export the model to a file *)
+		(*** TODO: not necessary? (but so far useful to test) ***)
+		
+		let translated_model = ModelPrinter.string_of_model cub_model in
+		let imi_file = options#files_prefix ^ "-cub.imi" in
+		if verbose_mode_greater Verbose_total then(
+			print_message Verbose_total ("\n" ^ translated_model ^ "\n");
+		);
+		(* Write *)
+		write_to_file imi_file translated_model;
+		print_message Verbose_standard ("File '" ^ imi_file ^ "' successfully created.");
+		
+		
+		(* Then transform to a graphics *)
+		(*** TODO: not necessary? (but so far useful to test) ***)
 		
 		let translated_model = PTA2JPG.string_of_model cub_model in
 		if verbose_mode_greater Verbose_high then(
@@ -442,10 +461,10 @@ let algorithm : AlgoGeneric.algoGeneric = match options#imitator_mode with
 		Graphics.dot (options#files_prefix ^ "-cubpta") translated_model;
 		
 
-		print_message Verbose_standard ("File successfully created."); (*** TODO: add file name in a proper manner ***)
+		print_message Verbose_standard ("Graphic export successfully created."); (*** TODO: add file name in a proper manner ***)
 		terminate_program();
 		
-		(*** TODO: the algorithm shall be NZ-Büchi ***)
+		(*** TODO: the algorithm to be called shall be NZ-Büchi ***)
 		raise (InternalError "not implemented")
 
 	

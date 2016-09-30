@@ -2661,7 +2661,7 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 			print_message Verbose_low ("Automaton #" ^ (string_of_int automaton_index ) ^ ":");
 			(* Iterate on locations for this automaton *)
 			Array.iteri(fun location_index invariant ->
-				print_message Verbose_low ("  Location l_" ^ (string_of_int location_index ) ^ " -> " ^ (LinearConstraint.string_of_pxd_linear_constraint (fun v -> "v_" ^ (string_of_int v)) invariant));
+				print_message Verbose_low ("  Location l_" ^ (string_of_int location_index ) ^ " -> " ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names invariant));
 			) array_of_invariants;
 		) new_invariants_array;
 	
