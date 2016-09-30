@@ -649,20 +649,20 @@ List.iter (fun automaton_index -> print_message Verbose_standard ("Automaton: " 
                 	(*Checking bounded clocked in guards (Transition)*)
                 	List.iter (fun action_index -> print_message Verbose_standard (" Transition/Action: " ^ (model.action_names action_index) );
             
-                    	List.iter (fun (guard, clock_updates, _, destination_location_index) 
+                    	List.iter (fun (guard, clock_updates, _, target_location_index) 
                     		-> print_message Verbose_standard ("   Guard: " ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names guard));		
 
                         	(** WORK HERE **)
 
-                        	let invariant2 = model.invariants automaton_index destination_location_index in
+                        	let invariant2 = model.invariants automaton_index target_location_index in
 
 							print_message Verbose_standard ("\n");
-                			print_message Verbose_standard (" State/Location(D): " ^ (model.location_names automaton_index destination_location_index) ) ;
+                			print_message Verbose_standard (" State/Location(D): " ^ (model.location_names automaton_index target_location_index) ) ;
                 			print_message Verbose_standard ("   Invariant(D): " ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names invariant2 ) ) ;
                 			print_message Verbose_standard ("	  ----Map:(" 
                 											^ (model.location_names automaton_index location_index) 
                 											^ ")--" ^ (model.action_names action_index) ^ "-->(" 
-                											^ (model.location_names automaton_index destination_location_index) 
+                											^ (model.location_names automaton_index target_location_index) 
                 											^ ") ----" );
                 			print_message Verbose_standard ("\n");
 
@@ -744,20 +744,20 @@ let check_cub model =
 	                	(*Checking bounded clocked in guards (Transition)*)
 	                	List.iter (fun action_index -> print_message Verbose_standard (" Transition/Action: " ^ (model.action_names action_index) );
 	            
-	                    	List.iter (fun (guard, clock_updates, _, destination_location_index) 
+	                    	List.iter (fun (guard, clock_updates, _, target_location_index) 
 	                    		-> print_message Verbose_standard ("   Guard: " ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names guard));		
 
 	                        	(** WORK HERE **)
 
-	                        	let invariant2 = model.invariants automaton_index destination_location_index in
+	                        	let invariant2 = model.invariants automaton_index target_location_index in
 
 								print_message Verbose_standard ("\n");
-	                			print_message Verbose_standard (" State/Location(D): " ^ (model.location_names automaton_index destination_location_index) ) ;
+	                			print_message Verbose_standard (" State/Location(D): " ^ (model.location_names automaton_index target_location_index) ) ;
 	                			print_message Verbose_standard ("   Invariant(D): " ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names invariant2 ) ) ;
 	                			print_message Verbose_standard ("	  ----Map:(" 
 	                											^ (model.location_names automaton_index location_index) 
 	                											^ ")--" ^ (model.action_names action_index) ^ "-->(" 
-	                											^ (model.location_names automaton_index destination_location_index) 
+	                											^ (model.location_names automaton_index target_location_index) 
 	                											^ ") ----" );
 	                			print_message Verbose_standard ("\n");
 
@@ -1562,14 +1562,17 @@ let cub_tran model submodels count_m
 						)
 					else
 						(
-						print_message Verbose_standard (" false, not determined ");
+						print_message Verbose_low (" false, not determined ");
 						(*submodel info*)
 						getInfoCurrentModel model submodel;
 						let check1 = isContraintConflictsParametersConstraints constr parameters_constraints in
 						let check3 = isConstraintContainedInParametersConstraints constr parameters_constraints in
-						print_message Verbose_standard ("\n Check 1 - CUB-Cons conflicted with parameters relation: " ^ string_of_bool check1
+						(* Print some information *)
+						if verbose_mode_greater Verbose_low then(
+							print_message Verbose_low ("\n Check 1 - CUB-Cons conflicted with parameters relation: " ^ string_of_bool check1
 														^ "\n Check 2 - Constraint Contained In Clocks Constraints: " ^ string_of_bool check2
 														^ "\n Check 3 - CUB-Cons Contained In parameters relation:: " ^ string_of_bool check3 );
+						);
 						if check1 = true
 						then
 							(
@@ -1784,17 +1787,17 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 				(*Checking bounded clocked in guards (Transition)*)
 				List.iter (fun action_index -> print_message Verbose_standard (" Transition/Action: " ^ (model.action_names action_index) );
 		
-					List.iter (fun (guard, clock_updates, discrete_update, destination_location_index) 
+					List.iter (fun (guard, clock_updates, discrete_update, target_location_index) 
 						-> (* print_message Verbose_standard ("   Guard: " ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names guard)); *)		
 						(** WORK HERE **)
-						let invariant2 = model.invariants automaton_index destination_location_index in
+						let invariant2 = model.invariants automaton_index target_location_index in
 						(* print_message Verbose_standard ("\n");
-						print_message Verbose_standard (" State/Location(D): " ^ (model.location_names automaton_index destination_location_index) ) ;
+						print_message Verbose_standard (" State/Location(D): " ^ (model.location_names automaton_index target_location_index) ) ;
 						print_message Verbose_standard ("   Invariant(D): " ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names invariant2 ) ) ;
 						print_message Verbose_standard ("	  ----Map:(" 
 														^ (model.location_names automaton_index location_index) 
 														^ ")--" ^ (model.action_names action_index) ^ "-->(" 
-														^ (model.location_names automaton_index destination_location_index) 
+														^ (model.location_names automaton_index target_location_index) 
 														^ ") ----" );
 						print_message Verbose_standard ("\n"); *)
 						let clock_updates = match clock_updates with
@@ -1804,7 +1807,7 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 						in
 
 						(*add transitions*)
-						DynArray.add transitions_ini ((model.location_names automaton_index location_index), (model.location_names automaton_index destination_location_index),
+						DynArray.add transitions_ini ((model.location_names automaton_index location_index), (model.location_names automaton_index target_location_index),
 														guard, clock_updates, action_index, discrete_update);
 						
 						()
@@ -1860,11 +1863,11 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 			let count_t = ref 1 in
 			DynArray.iter ( fun transition -> 
 				print_message Verbose_standard ("\n Transition No: " ^ (string_of_int !count_t) );
-				let (location_index, destination_location_index, guard, clock_updates, action_index, discrete_update) = transition in
+				let (location_index, target_location_index, guard, clock_updates, action_index, discrete_update) = transition in
 				(*work here*)
 				let invariant_s0 = Hashtbl.find locations location_index in
 				let guard_t = guard in
-				let invariant_s1 = Hashtbl.find locations destination_location_index in
+				let invariant_s1 = Hashtbl.find locations target_location_index in
 				(*ppl*)
 				let inequalities = ref [] in
 				print_message Verbose_standard (" CUB transformation, Start:");
@@ -1918,7 +1921,7 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 		let count_t = ref 1 in
 		DynArray.iter ( fun transition -> 
 			print_message Verbose_standard ("\n Transition No: " ^ (string_of_int !count_t) );
-			let (location_index, destination_location_index, guard, clock_updates, action_index, discrete_update) = transition in
+			let (location_index, target_location_index, guard, clock_updates, action_index, discrete_update) = transition in
 			let invariant_s0 = Hashtbl.find locations location_index in
 			let guard_t = guard in
 			print_message Verbose_standard (" CUB transformation, Start:");
@@ -1930,7 +1933,7 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 			let tuple_inequalities_s0 	= convert_inequality_list_2_tuple_list model inequalities_s0 in
 			let tuple_inequalities_t 	= convert_inequality_list_2_tuple_list model inequalities_t in
 			print_message Verbose_standard ("\n --------------------2nd check start---------------------- ");
-			let constraints_s1 = find_all_clocks_constraints clocks_constraints destination_location_index in
+			let constraints_s1 = find_all_clocks_constraints clocks_constraints target_location_index in
 			List.iter (fun c_s1 ->
 				if LinearConstraint.pxd_is_true c_s1 = false
 				then
@@ -2035,9 +2038,9 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 		) locations;
 
 		print_message Verbose_standard ("\nNUMBER OF TRANSITIONS :"^ string_of_int (DynArray.length transitions) );
-		DynArray.iter ( fun (source_location_index, destination_location_index, guard, clock_updates, action_index, discrete_update) ->
+		DynArray.iter ( fun (source_location_index, target_location_index, guard, clock_updates, action_index, discrete_update) ->
 			print_message Verbose_standard ("\n" 
-											^ source_location_index ^ " |-----> " ^ destination_location_index 
+											^ source_location_index ^ " |-----> " ^ target_location_index 
 											^ "\n GUARD: \n"
 											^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names guard)
 											);
@@ -2142,12 +2145,12 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 	(* [CUB-PTA TRANSFORMATION] STAGE 3 - ADDING TRANSITIONS *)
 	DynArray.iter (fun (_, transitions, _, _, index, init_locs) ->
 
-		DynArray.iter ( fun (source_location_index, destination_location_index, guard, clock_updates, action_index, discrete_update) ->
+		DynArray.iter ( fun (source_location_index, target_location_index, guard, clock_updates, action_index, discrete_update) ->
 			let listCubLoc1 = Hashtbl.find_all index source_location_index in
-			let listCubLoc2 = Hashtbl.find_all index destination_location_index in
+			let listCubLoc2 = Hashtbl.find_all index target_location_index in
 
 			List.iter (fun loc1 ->  
-				DynArray.add transitions (loc1, destination_location_index, guard, clock_updates, action_index, discrete_update);
+				DynArray.add transitions (loc1, target_location_index, guard, clock_updates, action_index, discrete_update);
 			) listCubLoc1;
 
 			List.iter (fun loc2 ->  
@@ -2176,9 +2179,9 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 		print_message Verbose_standard ("\n----------------SUB MODEL: "^ (string_of_int !model_count) ^"----------------" );
 
 		print_message Verbose_standard ("\nNUMBER OF TRANSITIONS :"^ string_of_int (DynArray.length transitions) );
-		DynArray.iter ( fun (source_location_index, destination_location_index, guard, clock_updates, action_index, discrete_update) ->
+		DynArray.iter ( fun (source_location_index, target_location_index, guard, clock_updates, action_index, discrete_update) ->
 			print_message Verbose_standard ("\n" 
-											^ source_location_index ^ " |-----> " ^ destination_location_index 
+											^ source_location_index ^ " |-----> " ^ target_location_index 
 											(* ^ "\n GUARD: \n"
 											^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names guard) *)
 											);
@@ -2202,9 +2205,9 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 	let new_transitions = DynArray.make 0 in
 	DynArray.iter (fun (locations, transitions, c_constraints, p_constraints, index, init_locs) ->
 		for i = 1 to (DynArray.length transitions) do
-			let (location_index, destination_location_index, guard, clock_updates, action_index, discrete_update) = DynArray.get transitions (i-1) in
+			let (location_index, target_location_index, guard, clock_updates, action_index, discrete_update) = DynArray.get transitions (i-1) in
 			let s0_cons = Hashtbl.find locations location_index in
-			let s1_cons = Hashtbl.find locations destination_location_index in
+			let s1_cons = Hashtbl.find locations target_location_index in
 			(* print_message Verbose_standard ("\nINV LOC 1: "
 									^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names s0_cons) 
 									^ "\nGUARD T: "
@@ -2243,9 +2246,9 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 		print_message Verbose_standard ("\n----------------SUB MODEL: "^ (string_of_int !model_count) ^"----------------" );
 
 		print_message Verbose_standard ("\nNUMBER OF TRANSITIONS :"^ string_of_int (DynArray.length transitions) );
-		DynArray.iter ( fun (source_location_index, destination_location_index, guard, clock_updates, action_index, discrete_update) ->
+		DynArray.iter ( fun (source_location_index, target_location_index, guard, clock_updates, action_index, discrete_update) ->
 			print_message Verbose_standard ("\n" 
-											^ source_location_index ^ " |-----> " ^ destination_location_index 
+											^ source_location_index ^ " |-----> " ^ target_location_index 
 											(* ^ "\n GUARD: \n"
 											^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names guard) *)
 											);
@@ -2267,6 +2270,12 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 
 	(* [CUB-PTA TRANSFORMATION] FINAL STAGE - MERGING SUB-MODELS *)
 	
+	(* First create a normalized location name *)
+	(*** BADPROG...... ***)
+	let location_name_of_location_index_and_submodel_index location_index submodel_index =
+		location_index ^ "-m" ^ (string_of_int submodel_index)
+	in
+	
 	(* Handle initial location *)
 	(*** BADPROG: give a string name to the new location (argh) ***)
 	let new_initial_location_name = "cub-init" in
@@ -2284,13 +2293,13 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 	DynArray.iter (fun (locations, transitions, c_constraints, p_constraints, index, init_locs) ->
 		
 		Hashtbl.iter (fun location_index cons -> 
-			let newloc = (location_index ^ "-m" ^ (string_of_int !submodel_index) ) in
+			let newloc = location_name_of_location_index_and_submodel_index location_index !submodel_index in
 			Hashtbl.add new_invariants_per_location_hashtbl newloc cons;
 		) locations;
 
-		DynArray.iter (fun (location_index, destination_location_index, guard, clock_updates, action_index, discrete_update) -> 
-			let newloc1 = (location_index ^ "-m" ^ (string_of_int !submodel_index) ) in
-			let newloc2 = (destination_location_index ^ "-m" ^ (string_of_int !submodel_index) ) in
+		DynArray.iter (fun (location_index, target_location_index, guard, clock_updates, action_index, discrete_update) -> 
+			let newloc1 = location_name_of_location_index_and_submodel_index location_index !submodel_index in
+			let newloc2 = location_name_of_location_index_and_submodel_index target_location_index !submodel_index in
 			DynArray.add newtransitions (newloc1, newloc2, guard, clock_updates, action_index, discrete_update);
 		) transitions;
 
@@ -2303,7 +2312,7 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 				List.iter (fun loc -> 
 				
 					(* Add a transition from the initial location to all local initial locations into the dynamic array of locations *)
-					DynArray.add newtransitions (new_initial_location_name, loc ^ "-m" ^ (string_of_int !submodel_index), pxd_cons, [], (* local_silent_action_index_of_automaton_index model automaton_index *) 0, [] ) ;
+					DynArray.add newtransitions (new_initial_location_name, location_name_of_location_index_and_submodel_index loc !submodel_index, pxd_cons, [], local_silent_action_index_of_automaton_index model automaton_index, [] ) ;
 				) init_locs;
 				);
 		) listParaRelations;
@@ -2330,9 +2339,9 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 		) new_invariants_per_location_hashtbl;
 
 		print_message Verbose_standard ("\nNUMBER OF TRANSITIONS :"^ string_of_int (DynArray.length newtransitions) );
-		DynArray.iter ( fun (source_location_index, destination_location_index, guard, clock_updates, action_index, discrete_update) ->
+		DynArray.iter ( fun (source_location_index, target_location_index, guard, clock_updates, action_index, discrete_update) ->
 			print_message Verbose_standard ("\n" 
-											^ source_location_index ^ " |-----> " ^ destination_location_index 
+											^ source_location_index ^ " |-----> " ^ target_location_index 
 											^ "\n GUARD: \n"
 											^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names guard)
 											^ "\n Action index: " 
