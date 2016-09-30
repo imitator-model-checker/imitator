@@ -1762,6 +1762,8 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 		DynArray.add parameters_constraints_ini (true,[true_constraint]); 
 
 		init_loc := (model.location_names automaton_index (List.nth (model.locations_per_automaton automaton_index) 0 ));
+		print_message Verbose_standard (" Initial location: " ^ !init_loc);
+		(* init_loc := model.location_names automaton_index model.initial_location; *)
 
 		(*Checking bounded clocked in invariant (Location)*)
 		List.iter (fun location_index -> 
@@ -2117,6 +2119,14 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 			print_message Verbose_standard ("\n CUB LOCATION: " ^ cub_loc ^ " COMES FROM: " ^ from_loc );		
 		) index;
 
+
+		print_message Verbose_standard ("\n INITIAL LOCATION:" );
+		List.iter (fun initial_loc ->
+			print_message Verbose_standard ("\n LOCATION: " ^ initial_loc );		
+		) init_locs;
+
+
+
 		print_message Verbose_standard ("\n----------------SUB MODEL "^ (string_of_int !model_count) ^" - END!----------------" );
 		model_count := !model_count+1;
 	) newSubModels;
@@ -2284,7 +2294,7 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 			then 
 				(
 				List.iter (fun loc -> 
-					DynArray.add newtransitions (s0, (loc ^ "-m" ^ (string_of_int !submodel_index)), pxd_cons, [], 0, [] ) ;
+					DynArray.add newtransitions (s0, (loc ^ "-m" ^ (string_of_int !submodel_index)), pxd_cons, [], (* local_silent_action_index_of_automaton_index model automaton_index *) 0, [] ) ;
 				) init_locs;
 				);
 		) listParaRelations;
