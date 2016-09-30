@@ -821,14 +821,15 @@ let check_cub model =
 
 (* [CUB-PTA TRANSFORMATION] THIS FUNCTION USED FOR REMOVING PROBLEMATIC TRANSITIONS *)
 let check_problematic_transition model (invariant_s0, guard_t, invariant_s1, clock_updates, parameters_constraints) = 	
-	(* print_message Verbose_standard ("\nCHECKING FOR REMOVING PROBLEMATIC TRANSITIONS!" ); *)
+	print_message Verbose_standard ("\nCHECKING FOR REMOVING PROBLEMATIC TRANSITIONS!" ); 
 	let inequalities_s0 = LinearConstraint.pxd_get_inequalities invariant_s0 in
 	let inequalities_t 	= LinearConstraint.pxd_get_inequalities guard_t in
 	let inequalities_s1 = LinearConstraint.pxd_get_inequalities invariant_s1 in
 	let tuple_inequalities_s0 	= convert_inequality_list_2_tuple_list model inequalities_s0 in
 	let tuple_inequalities_t 	= convert_inequality_list_2_tuple_list model inequalities_t in
 	let tuple_inequalities_s1 	= convert_inequality_list_2_tuple_list model inequalities_s1 in
-	let isCUB = ref true in
+	(* let isCUB = ref true in *)
+	let isCUB = ref false in
 	let inequalities_need_to_solve = ref [] in
 	List.iter (	fun clock_index -> 
 		let ls_tup_ineq_s0 	= (filter_upperbound_by_clock_3 clock_index tuple_inequalities_s0) in
@@ -840,92 +841,103 @@ let check_problematic_transition model (invariant_s0, guard_t, invariant_s1, clo
 					match (op_s0, linear_term_s0), (op_t, linear_term_t), (op_s1, linear_term_s1) with
 					|(LinearConstraint.Op_ge, _), (LinearConstraint.Op_ge, _), (LinearConstraint.Op_ge, _)	->	
 						(*Case 1*)
-						(* print_message Verbose_standard ("\nCASE 1 " );
-						print_message Verbose_standard ("SATISFIED CUB! " ); *)
-						();
+						print_message Verbose_standard ("\nCASE 1 " );
+						print_message Verbose_standard ("SATISFIED CUB! " );
+						isCUB := true;
+						(* (); *)
 						(*Case 1 - end*)
 					|(LinearConstraint.Op_ge, _), _							 , (LinearConstraint.Op_ge, _)	->	
 						(*Case 2*)
-						(* print_message Verbose_standard ("\nCASE 2 " );
-						print_message Verbose_standard ("NOT SATISFIED CUB! " ); *)
+						print_message Verbose_standard ("\nCASE 2 " );
+						print_message Verbose_standard ("NOT SATISFIED CUB! " );
 						(* none reset zone *)
-						isCUB := false;
+						(* isCUB := false; *)
+						();
 						(* none reset zone - end *)
 						(*Case 2 - end*)
 					|(LinearConstraint.Op_ge, _), (LinearConstraint.Op_ge, _), _							->	
 						(*Case 3*)
 						(*reset*)
-						(* print_message Verbose_standard ("\nCASE 3 " ); *)
+						print_message Verbose_standard ("\nCASE 3 " );
 						if List.mem clock_index clock_updates = true
 						then
 							(
 							(* reset zone *)
-							(* print_message Verbose_standard ("DETECTED RESET CLOCK! " );
-							print_message Verbose_standard ("SATISFIED CUB! " ); *)
-							();
+							print_message Verbose_standard ("DETECTED RESET CLOCK! " );
+							print_message Verbose_standard ("SATISFIED CUB! " );
+							isCUB := true;
+							(* (); *)
 							(* reset zone - end *)
 							)
 						else
 							(
 							(* none reset zone *)
-							(* print_message Verbose_standard ("NOT SATISFIED CUB! " ); *)
-							isCUB := false;
+							print_message Verbose_standard ("NOT SATISFIED CUB! " );
+							(* isCUB := false; *)
+							();
 							(* none reset zone - end *)
 							);
 						(*Case 3 - end*)
 					|(LinearConstraint.Op_ge, _), _							 , _							->
 						(*Case 4*)
 						(*reset but useless*)
-						(* print_message Verbose_standard ("\nCASE 4 " );
-						print_message Verbose_standard ("NOT SATISFIED CUB! " ); *)
-						isCUB := false;
+						print_message Verbose_standard ("\nCASE 4 " );
+						print_message Verbose_standard ("NOT SATISFIED CUB! " );
+						(* isCUB := false; *)
+						();
 						(*Case 4 - end*)
 					|_							, (LinearConstraint.Op_ge, _), (LinearConstraint.Op_ge, _)	->	
 						(*Case 5*)
-						(* print_message Verbose_standard ("\nCASE 5 " );
-						print_message Verbose_standard ("SATISFIED CUB! " ); *)
-						();
+						print_message Verbose_standard ("\nCASE 5 " );
+						print_message Verbose_standard ("SATISFIED CUB! " );
+						isCUB := true;
+						(* (); *)
 						(*Case 5 - end*)
 					|_							, _							 , (LinearConstraint.Op_ge, _)	->	
 						(*Case 6*)
 						(* none reset zone *)
-						(* print_message Verbose_standard ("\nCASE 6 " ); *)
+						print_message Verbose_standard ("\nCASE 6 " );
 						let ineq = make_CUB_inequality (op_s0, linear_term_s0) (op_t, linear_term_t) in
-						(* print_message Verbose_standard ("FORMING INEQUALITY: " 
+						print_message Verbose_standard ("FORMING INEQUALITY: " 
 														^ LinearConstraint.string_of_p_linear_inequality model.variable_names ineq 
-														^ "!!!\n"); *)
+														^ "!!!\n");
 						let constr = make_CUB_constraint [ineq] in
 			
 						if LinearConstraint.p_is_true constr
 						then
 							(
-							(* print_message Verbose_standard ("TRUE, COMPARABLE! "); 
-							print_message Verbose_standard ("SATISFIED CUB! " ); *)
-							();
+							print_message Verbose_standard ("TRUE, COMPARABLE! "); 
+							print_message Verbose_standard ("SATISFIED CUB! " );
+							isCUB := true;
+							(* (); *)
 							)
 						else
 							(
 							if LinearConstraint.p_is_false constr
 							then 
 								(
-								(* print_message Verbose_standard ("FALSE, COMPARABLE! ");
-								print_message Verbose_standard ("NOT SATISFIED CUB! " ); *)
-								isCUB := false;
+								print_message Verbose_standard ("FALSE, COMPARABLE! ");
+								print_message Verbose_standard ("NOT SATISFIED CUB! " );
+								(* isCUB := false; *)
+								();
 								)
 							else
 								(
-								(* print_message Verbose_standard ("NOT DETERMINED! "); *)
+								print_message Verbose_standard ("NOT DETERMINED! ");
 								if isContraintConflictsParametersConstraints constr parameters_constraints
 								then
 									(
-									(* print_message Verbose_standard ("ONE OF PARAMETER RELATIONS CONFLICTED! " );
-									print_message Verbose_standard ("NOT SATISFIED CUB! " ); *)
-									isCUB := false;
+									print_message Verbose_standard ("ONE OF PARAMETER RELATIONS CONFLICTED! " );
+									print_message Verbose_standard ("NOT SATISFIED CUB! " ); 
+									(* isCUB := false; *)
+									();
 									)
 								else
 									(
-									(* print_message Verbose_standard ("NOT CONFLICTED! " );
-									print_message Verbose_standard ("SATISFIED CUB! " ); *)
+									print_message Verbose_standard ("NOT CONFLICTED! " );
+									print_message Verbose_standard ("SATISFIED CUB! " );
+									isCUB := true;
+									(* (); *)
 									);
 								);
 							);
@@ -933,55 +945,61 @@ let check_problematic_transition model (invariant_s0, guard_t, invariant_s1, clo
 						(*Case 6 - end*)
 					|_							, (LinearConstraint.Op_ge, _), _							->	
 						(*Case 7*)
-						(* print_message Verbose_standard ("\nCASE 7 " ); *)
+						print_message Verbose_standard ("\nCASE 7 " );
 						(*reset*)
 						if List.mem clock_index clock_updates = true
 						then
 							(
 							(* reset zone *)
-							(* print_message Verbose_standard ("DETECTED RESET CLOCK! " );
-							print_message Verbose_standard ("SATISFIED CUB! " ); *)
-							();
+							print_message Verbose_standard ("DETECTED RESET CLOCK! " );
+							print_message Verbose_standard ("SATISFIED CUB! " );
+							isCUB := true;
+							(* (); *)
 							(* reset zone - end*)
 							)
 						else
 							(
 							(* none reset zone *)
 							let ineq = make_CUB_inequality (op_s0, linear_term_s0) (op_s1, linear_term_s1) in
-							(* print_message Verbose_standard ("FORMING INEQUALITY: " 
+							print_message Verbose_standard ("FORMING INEQUALITY: " 
 															^ LinearConstraint.string_of_p_linear_inequality model.variable_names ineq 
-															^ "!!!\n"); *)
+															^ "!!!\n");
 							let constr = make_CUB_constraint [ineq] in
 							if LinearConstraint.p_is_true constr
 							then 
 								(
-								(* print_message Verbose_standard ("TRUE, COMPARABLE! ");
-								print_message Verbose_standard ("SATISFIED CUB! " ); *)
-								();
+								print_message Verbose_standard ("TRUE, COMPARABLE! ");
+								print_message Verbose_standard ("SATISFIED CUB! " );
+								isCUB := true;
+								(* (); *)
 								)
 							else
 								(
 								if LinearConstraint.p_is_false constr
 								then 
 									(
-									(* print_message Verbose_standard ("FALSE, COMPARABLE! ");
-									print_message Verbose_standard ("NOT SATISFIED CUB! " ); *)
-									isCUB := false;
+									print_message Verbose_standard ("FALSE, COMPARABLE! ");
+									print_message Verbose_standard ("NOT SATISFIED CUB! " );
+									(* isCUB := false; *)
+									();
 									)
 								else
 									(
-									(* print_message Verbose_standard ("FALSE, NOT DETERMINED! "); *)
+									print_message Verbose_standard ("FALSE, NOT DETERMINED! ");
 									if isContraintConflictsParametersConstraints constr parameters_constraints
 									then
 										(
-										(* print_message Verbose_standard ("ONE OF PARAMETER RELATIONS CONFLICTED! " );
-										print_message Verbose_standard ("NOT SATISFIED CUB! " ); *)
-										isCUB := false;
+										print_message Verbose_standard ("ONE OF PARAMETER RELATIONS CONFLICTED! " );
+										print_message Verbose_standard ("NOT SATISFIED CUB! " ); 
+										(* isCUB := false; *)
+										();
 										)
 									else
 										(
-										(* print_message Verbose_standard ("NOT CONFLICTED! " );
-										print_message Verbose_standard ("SATISFIED CUB! " ); *)
+										print_message Verbose_standard ("NOT CONFLICTED! " );
+										print_message Verbose_standard ("SATISFIED CUB! " );
+										isCUB := true;
+										(* (); *)
 										);
 									);
 								);
@@ -990,24 +1008,25 @@ let check_problematic_transition model (invariant_s0, guard_t, invariant_s1, clo
 						(*Case 7 - end*)																						
 				| _							, _							 , _							-> 	
 					(*Case 8*)
-					(* print_message Verbose_standard ("\nCASE 8 " ); *)
+					print_message Verbose_standard ("\nCASE 8 " );
 					(*reset*)
 					if List.mem clock_index clock_updates = true
 					then
 						(
 						(* reset zone *)
-						(* print_message Verbose_standard ("DETECTED RESET CLOCK! " ); *)
+						print_message Verbose_standard ("DETECTED RESET CLOCK! " );
 						let ineq = make_CUB_inequality (op_s0, linear_term_s0) (op_t, linear_term_t) in
-						(* print_message Verbose_standard ("FORMING INEQUALITY: " 
+						print_message Verbose_standard ("FORMING INEQUALITY: " 
 														^ LinearConstraint.string_of_p_linear_inequality model.variable_names ineq 
-														^ "!!!\n"); *)
+														^ "!!!\n"); 
 						let constr = make_CUB_constraint [ineq] in
 						if LinearConstraint.p_is_true constr
 						then 
 							(
-							(* print_message Verbose_standard ("TRUE, COMPARABLE! ");
-							print_message Verbose_standard ("SATISFIED CUB! " ); *)
-							();
+							print_message Verbose_standard ("TRUE, COMPARABLE! ");
+							print_message Verbose_standard ("SATISFIED CUB! " );
+							isCUB := true;
+							(* (); *)
 							)
 						else
 							(
@@ -1015,24 +1034,28 @@ let check_problematic_transition model (invariant_s0, guard_t, invariant_s1, clo
 							if LinearConstraint.p_is_false constr
 							then 
 								(
-								(* print_message Verbose_standard ("FALSE, COMPARABLE! ");
-								print_message Verbose_standard ("NOT SATISFIED CUB! " ); *)
-								isCUB := false;
+								print_message Verbose_standard ("FALSE, COMPARABLE! ");
+								print_message Verbose_standard ("NOT SATISFIED CUB! " ); 
+								(* isCUB := false; *)
+								();
 								)
 							else
 								(
-								(* print_message Verbose_standard ("FALSE, NOT DETERMINED "); *)
+								print_message Verbose_standard ("FALSE, NOT DETERMINED ");
 								if isContraintConflictsParametersConstraints constr parameters_constraints
 								then
 									(
-									(* print_message Verbose_standard ("ONE OF PARAMETER RELATIONS CONFLICTED! " );
-									print_message Verbose_standard ("NOT SATISFIED CUB! " ); *)
-									isCUB := false;
+									print_message Verbose_standard ("ONE OF PARAMETER RELATIONS CONFLICTED! " );
+									print_message Verbose_standard ("NOT SATISFIED CUB! " ); 
+									(* isCUB := false; *)
+									();
 									)
 								else
 									(
-									(* print_message Verbose_standard ("NOT CONFLICTED! " );
-									print_message Verbose_standard ("SATISFIED CUB! " ); *)
+									print_message Verbose_standard ("NOT CONFLICTED! " );
+									print_message Verbose_standard ("SATISFIED CUB! " ); 
+									isCUB := true;
+									(* (); *)
 									);
 								);
 							);
@@ -1042,44 +1065,49 @@ let check_problematic_transition model (invariant_s0, guard_t, invariant_s1, clo
 						(
 						(* none reset zone *)
 						let ineq1 = make_CUB_inequality (op_s0, linear_term_s0) (op_t, linear_term_t) in
-						(* print_message Verbose_standard ("INEQUALITY S0 =< T: \n" 
+						print_message Verbose_standard ("INEQUALITY S0 =< T: \n" 
 														^ LinearConstraint.string_of_p_linear_inequality model.variable_names ineq1 
-														^ "!!!\n"); *)
+														^ "!!!\n"); 
 						let ineq2 = make_CUB_inequality (op_s0, linear_term_s0) (op_s1, linear_term_s1) in
-						(* print_message Verbose_standard ("INEQUALITY S0 =< S1: \n" 
+						print_message Verbose_standard ("INEQUALITY S0 =< S1: \n" 
 														^ LinearConstraint.string_of_p_linear_inequality model.variable_names ineq2 
-														^ "!!!\n"); *)
+														^ "!!!\n"); 
 						let constr = make_CUB_constraint [ineq1;ineq2] in
 						if LinearConstraint.p_is_true constr
 						then 
 							(
-							(* print_message Verbose_standard ("TRUE, COMPARABLE! ");
-							print_message Verbose_standard ("SATISFIED CUB! " ); *)
-							();
+							print_message Verbose_standard ("TRUE, COMPARABLE! ");
+							print_message Verbose_standard ("SATISFIED CUB! " ); 
+							isCUB := true;
+							(* (); *)
 							)
 						else
 							(
 							if LinearConstraint.p_is_false constr
 							then 
 								(
-								(* print_message Verbose_standard ("FALSE, COMPARABLE! ");
-								print_message Verbose_standard ("NOT SATISFIED CUB! " ); *)
-								isCUB := false;
+								print_message Verbose_standard ("FALSE, COMPARABLE! ");
+								print_message Verbose_standard ("NOT SATISFIED CUB! " );
+								(* isCUB := false; *)
+								();
 								)
 							else
 								(
-								(* print_message Verbose_standard ("FALSE, NOT DETERMINED! "); *)
+								print_message Verbose_standard ("FALSE, NOT DETERMINED! ");
 								if isContraintConflictsParametersConstraints constr parameters_constraints
 								then
 									(
-									(* print_message Verbose_standard ("ONE OF PARAMETER RELATIONS CONFLICTED! " );
-									print_message Verbose_standard ("NOT SATISFIED CUB! " ); *)
-									isCUB := false;
+									print_message Verbose_standard ("ONE OF PARAMETER RELATIONS CONFLICTED! " );
+									print_message Verbose_standard ("NOT SATISFIED CUB! " );
+									(* isCUB := false; *)
+									();
 									)
 								else
 									(
-									(* print_message Verbose_standard ("NOT CONFLICTED! " );
-									print_message Verbose_standard ("SATISFIED CUB! " ); *)
+									print_message Verbose_standard ("NOT CONFLICTED! " );
+									print_message Verbose_standard ("SATISFIED CUB! " ); 
+									isCUB := true;
+									(* (); *)
 									);
 								);
 							);
@@ -1090,7 +1118,7 @@ let check_problematic_transition model (invariant_s0, guard_t, invariant_s1, clo
 			) ls_tup_ineq_t;
 		) ls_tup_ineq_s0;
 	) model.clocks; 
-	(* print_message Verbose_standard ("CHECKING FOR REMOVING PROBLEMATIC TRANSITIONS - END!!" ); *)
+	print_message Verbose_standard ("CHECKING FOR REMOVING PROBLEMATIC TRANSITIONS - END!!" ); 
 	!isCUB
 
 
@@ -1889,7 +1917,7 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 				 	let inequalities_need_to_solve = ref [] in
 				 	print_message Verbose_standard ("   Checking CUB condtions at clock (" ^ (model.variable_names clock_index) ^ "):"); 	
 					let (clock_index_s0 , op_s0, linear_term_s0) = filter_upperbound_by_clock clock_index tuple_inequalities_s0 in
-					let (clock_index_t, op_t, linear_term_t) = filter_upperbound_by_clock clock_index tuple_inequalities_s0 in
+					let (clock_index_t, op_t, linear_term_t) = filter_upperbound_by_clock clock_index tuple_inequalities_t in
 					let (clock_index_s1, op_s1, linear_term_s1) = filter_upperbound_by_clock clock_index tuple_inequalities_s1 in
 
 					cub_tran model submodels count_m 
@@ -2202,35 +2230,49 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 
 
 	(* [CUB-PTA TRANSFORMATION] STAGE 4 - REMOVING PROBLEMATIC TRANSITIONS *)
+	print_message Verbose_standard ("\nSTAGE 4 - REMOVE PROBLEMATIC TRANSITIONS ");
 	let new_transitions = DynArray.make 0 in
 	DynArray.iter (fun (locations, transitions, c_constraints, p_constraints, index, init_locs) ->
 		for i = 1 to (DynArray.length transitions) do
 			let (location_index, target_location_index, guard, clock_updates, action_index, discrete_update) = DynArray.get transitions (i-1) in
 			let s0_cons = Hashtbl.find locations location_index in
 			let s1_cons = Hashtbl.find locations target_location_index in
-			(* print_message Verbose_standard ("\nINV LOC 1: "
+
+			print_message Verbose_standard ("\nPARAMETERS CONSTRAINTS: ");
+			DynArray.iter ( fun (is_and, constraint_list) ->
+				print_message Verbose_standard (" 	IS CONJUNCTION ?: " ^ string_of_bool is_and );
+				List.iter (fun cons1 -> 
+					print_message Verbose_standard (" 	FOLLOWED CONSTRAINTS: " 
+											^ (LinearConstraint.string_of_p_linear_constraint model.variable_names cons1) );
+				) constraint_list;
+			) p_constraints;
+
+			print_message Verbose_standard ("\nINV LOC 1: "
 									^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names s0_cons) 
 									^ "\nGUARD T: "
 									^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names guard) 
 									^ "\nINV LOC 2: "
 									^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names s1_cons) 
-									); *)
+									); 
+
 			let isCUB = check_problematic_transition model (s0_cons, guard, s1_cons, clock_updates, p_constraints) in 
 			if isCUB = true
 			then
 				(
 					DynArray.add new_transitions (DynArray.get transitions (i-1)); 
-					(* print_message Verbose_standard ("\nOK!! CUB "); *)
+					print_message Verbose_standard ("\nOK!! CUB ");
 				)
 			else
 				( 
-					(* print_message Verbose_standard ("\nCONFLICTED!! REMOVED! "); *)
+					print_message Verbose_standard ("\nCONFLICTED!! REMOVED! ");
 				);
+			print_message Verbose_standard ("\n-------------------------------------");
 		done;
 		DynArray.clear transitions;
 		DynArray.append new_transitions transitions;
 		DynArray.clear new_transitions;
 	) newSubModels;
+	print_message Verbose_standard ("\nSTAGE 4 - REMOVE PROBLEMATIC TRANSITIONS - END ");
 
 
 
