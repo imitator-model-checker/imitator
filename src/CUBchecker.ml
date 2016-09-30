@@ -2449,8 +2449,8 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 	(* Iterate on locations for this automaton *)
 	List.iter (fun location_index ->
 		(* Initialize the hashtbl for this PTA and this location *)
-		(*** NOTE: unnecessary, as done just above ***)
-(* 		new_transitions_array_hashtbl.(automaton_index).(location_index) <- Hashtbl.create 0; *)
+		(*** NOTE: VERY necessary!!! as the "Array.make new_nb_locations (Hashtbl.create 0)" above puts the SAME hashtable everywhere in the array!!! ***)
+		new_transitions_array_hashtbl.(automaton_index).(location_index) <- Hashtbl.create 0;
 		
 		(* Retrieve the transitions for this location *)
 		let transitions_for_this_location = transitions_per_location.(location_index) in
@@ -2461,7 +2461,7 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 			let actions_and_transitions_for_this_location_and_action = List.filter (fun (action_index', _) -> action_index' = action_index) transitions_for_this_location in
 
 			(* Then only keep the transitions (not the actions, as they are now all equal to action_index) *)
-			let _ , transitions_for_this_location_and_action = List.split actions_and_transitions_for_this_location_and_action in
+			let _ , (transitions_for_this_location_and_action : AbstractModel.transition list) = List.split actions_and_transitions_for_this_location_and_action in
 
 			Hashtbl.add new_transitions_array_hashtbl.(automaton_index).(location_index) action_index transitions_for_this_location_and_action;
 		) model.actions;
@@ -2635,8 +2635,31 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 		) new_invariants_array;
 	
 	
-		(*** TODO ***)
-		let string_of_transition transition = "TODO" in
+		(* Dummy pretty-printing of clock updates *)
+				(*** TODO ***)
+		let string_of_clock_updates clock_updates = 
+			"TODO"
+		in
+	
+		(* Dummy pretty-printing of transitions *)
+		let string_of_transition automaton_index (guard , clock_updates , discrete_update, target_location_index) = 
+			"["
+				^ "g=" ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names guard)
+				^
+				", Xupdates=" ^ (string_of_clock_updates clock_updates)
+				^
+				(*** TODO ***)
+				", Dupdates=TODO"
+				^
+				", target=" ^ (new_location_names_function automaton_index target_location_index)
+				^
+			"]"
+		in
+		
+		let string_of_transitions automaton_index transition_list =
+			string_of_list_of_string_with_sep "\n    "
+				(List.map (string_of_transition automaton_index) transition_list)
+		in
 		
 		print_message Verbose_low ("\nNew transitions:");
 		(* Iterate on automata *)
@@ -2646,8 +2669,8 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 			Array.iteri(fun location_index action_hashtable ->
 				print_message Verbose_low ("  Location l_" ^ (string_of_int location_index ) ^ ":");
 				(* Iterate on actions for this automaton *)
-				Hashtbl.iter(fun action_index transition ->
-					print_message Verbose_low ("    Transition via action " ^ (string_of_int action_index) ^ ":\n    " ^ (string_of_transition transition) ^ "");
+				Hashtbl.iter(fun action_index transitions ->
+					print_message Verbose_low ("    Transitions via action " ^ (string_of_int action_index) ^ ":\n    " ^ (string_of_transitions automaton_index transitions) ^ "");
 				)action_hashtable;
 			) array_of_hashtables;
 		) new_transitions_array_hashtbl;
