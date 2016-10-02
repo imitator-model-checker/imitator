@@ -439,26 +439,28 @@ let algorithm : AlgoGeneric.algoGeneric = match options#imitator_mode with
 		
 		(* Export the model to a file *)
 		(*** TODO: not necessary? (but so far useful to test) ***)
-		(*
+		
 		let translated_model = ModelPrinter.string_of_model cub_model in
+
 		let imi_file = options#files_prefix ^ "-cub.imi" in
 		if verbose_mode_greater Verbose_total then(
 			print_message Verbose_total ("\n" ^ translated_model ^ "\n");
 		);
+		
 		(* Write *)
 		write_to_file imi_file translated_model;
 		print_message Verbose_standard ("File '" ^ imi_file ^ "' successfully created.");
-		*)
 		
 		(* Then transform to a graphics *)
 		(*** TODO: not necessary? (but so far useful to test) ***)
-		
+
 		let translated_model = PTA2JPG.string_of_model cub_model in
 		if verbose_mode_greater Verbose_high then(
 			print_message Verbose_high ("\n" ^ translated_model ^ "\n");
 		);
 		
 		Graphics.dot (options#files_prefix ^ "-cubpta") translated_model;
+
 		
 
 		print_message Verbose_standard ("Graphic export successfully created."); (*** TODO: add file name in a proper manner ***)
