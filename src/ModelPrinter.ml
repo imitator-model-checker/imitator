@@ -120,6 +120,7 @@ let string_of_invariant model automaton_index location_index =
 	
 	
 	(* Handle stopwatches *)
+	(*
 	^
 	let stopped = model.stopwatches automaton_index location_index in 
 	(* Case 1: no stopwatches *)
@@ -128,6 +129,7 @@ let string_of_invariant model automaton_index location_index =
 	else
 	let stopped_str = string_of_list_of_string_with_sep "," (List.map model.variable_names stopped) in
 	" stop{" ^ stopped_str ^ "}" 
+	*)
 	in
 	print_message Verbose_high "Entering string_of_invariant...End";
 	result
