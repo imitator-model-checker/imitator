@@ -2837,7 +2837,8 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 
 		(* The cost for each automaton and each location *)
 		(*** TODO ***)
-		costs = model.costs;
+		(*** NOTE: dummy function ***)
+		costs = (fun _ _ -> None);
 		
 		(* The invariant for each automaton and each location *)
 		invariants = new_invariants_function;
@@ -2846,7 +2847,8 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 		transitions = new_transitions_function;
 		(* The list of clocks stopped for each automaton and each location *)
 		(*** TODO ***)
-		stopwatches = model.stopwatches;
+		(*** NOTE: dummy function ***)
+		stopwatches = (fun _ _-> []);
 
 		(* Initial location of the model *)
 			(*** TODO ***)

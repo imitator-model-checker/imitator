@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2009/12/02
- * Last modified     : 2016/08/15
+ * Last modified     : 2016/10/04
  *
  ************************************************************)
 
@@ -120,7 +120,6 @@ let string_of_invariant model automaton_index location_index =
 	
 	
 	(* Handle stopwatches *)
-	(*
 	^
 	let stopped = model.stopwatches automaton_index location_index in 
 	(* Case 1: no stopwatches *)
@@ -129,7 +128,6 @@ let string_of_invariant model automaton_index location_index =
 	else
 	let stopped_str = string_of_list_of_string_with_sep "," (List.map model.variable_names stopped) in
 	" stop{" ^ stopped_str ^ "}" 
-	*)
 	in
 	print_message Verbose_high "Entering string_of_invariant...End";
 	result
@@ -217,10 +215,10 @@ let string_of_location model automaton_index location_index =
 	"\n"
 	^ (if model.is_urgent automaton_index location_index then "urgent loc " else "loc ")
 	^ (model.location_names automaton_index location_index)
-	(* ^ (match model.costs automaton_index location_index with
+	 ^ (match model.costs automaton_index location_index with
 		| None -> ""
 		| Some cost -> "[" ^ (LinearConstraint.string_of_p_linear_term model.variable_names cost) ^ "]"
-	) *)
+	) 
 	^ ": "
 	^ (string_of_invariant model automaton_index location_index) (* bug here! *)
 	^ (string_of_transitions model automaton_index location_index)
