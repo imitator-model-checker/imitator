@@ -1739,6 +1739,12 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 	(* Location names per PTA: Array : automaton_index : -> (Array : location_index -> location_name) *)
 	let new_location_names_array = Array.make (model.nb_automata) (Array.make 0 "UNINITIALIZED") in
 	
+	(* Number of actions: add the epsilon (1 per PTA) *)
+	let new_nb_actions = model.nb_actions + model.nb_automata in
+
+	(* New actions: *)
+	let new_actions = list_of_interval 0 (new_nb_actions - 1) in
+	
 	(* Actions per location per PTA: Array : automaton_index : -> (Array : location_index -> action_index list) *)
 	let new_actions_per_location_array = Array.make (model.nb_automata) (Array.make 0 []) in
 	
@@ -2535,7 +2541,7 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 			let _ , (transitions_for_this_location_and_action : AbstractModel.transition list) = List.split actions_and_transitions_for_this_location_and_action in
 
 			Hashtbl.add new_transitions_array_hashtbl.(automaton_index).(location_index) action_index transitions_for_this_location_and_action;
-		) model.actions;
+		) new_actions;
 		
 		
 		(* Also find the set of actions available in this location *)
@@ -2562,12 +2568,6 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 	(*------------------------------------------------------------*)
 	(* Convert to the desired functional style *)
 	(*------------------------------------------------------------*)
-	
-	(* Number of actions: add the epsilon (1 per PTA) *)
-	let new_nb_actions = model.nb_actions + model.nb_automata in
-
-	(* New actions: *)
-	let new_actions = list_of_interval 0 (new_nb_actions - 1) in
 	
 	
 	(* Action names: identical to before transformation, with the exception of the new local epsilon action in each PTA *)
