@@ -2357,6 +2357,7 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 		) transitions;
 
 		let listParaRelations = disjunction_constraints p_constraints in
+
 		List.iter( fun cons ->
 			let pxd_cons = LinearConstraint.pxd_of_p_constraint cons in
 			if (LinearConstraint.pxd_is_false pxd_cons = false)
@@ -2365,8 +2366,8 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 				List.iter (fun loc -> 
 				
 					(* Add a transition from the initial location to all local initial locations into the dynamic array of locations *)
-					(* DynArray.add newtransitions (new_initial_location_name, location_name_of_location_index_and_submodel_index loc !submodel_index, pxd_cons, [], local_silent_action_index_of_automaton_index model automaton_index, [] ) ; *)
-					DynArray.add newtransitions (new_initial_location_name, location_name_of_location_index_and_submodel_index loc !submodel_index, pxd_cons, [], 0, [] ) ;
+					DynArray.add newtransitions (new_initial_location_name, location_name_of_location_index_and_submodel_index loc !submodel_index, pxd_cons, [], local_silent_action_index_of_automaton_index model automaton_index, [] ) ;
+					(* DynArray.add newtransitions (new_initial_location_name, location_name_of_location_index_and_submodel_index loc !submodel_index, pxd_cons, [], 0, [] ) ; *)
 				) init_locs;
 				);
 		) listParaRelations;
