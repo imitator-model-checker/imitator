@@ -9,7 +9,7 @@
  * 
  * File contributors : Ulrich Kühne, Étienne André
  * Created           : 2009/12/08
- * Last modified     : 2016/09/14
+ * Last modified     : 2016/10/05
  *
  ************************************************************)
 
@@ -880,11 +880,92 @@ let empty_states_for_comparison state_space =
 	Hashtbl.clear state_space.states_for_comparison
 
 
-(*(************************************************************)
-(** Loop detection *)
 (************************************************************)
-(* When a state is encountered for a second time, then a loop exists: 'reconstruct_cycle state_space state_index' reconstructs the cycle from state_index to state_index (using the actions); raises InternalError if no cycle found (which should not happen) *)
-let reconstruct_cycle state_space state_index =*)
+(** SCC detection *)
+(************************************************************)
+
+(*** NOTE: this part is heavily based on the Tarjan's strongly connected components algorithm, as presented on Wikipedia, with some mild modification:
+	- the top level algorithm is run once only (as we start from a state which we know belongs to the desired SCC)
+	- the other SCCs are discarded
+***)
+
+(* Data structure: node with index / lowlink / onStack *)
+type tarjan_node = {
+	mutable index	: state_index option;
+	mutable lowlink	: state_index option;
+	mutable onStack	: bool;
+}
+
+
+(* When a state is encountered for a second time, then a loop exists (or more generally an SCC): 'reconstruct_scc state_space state_index' reconstructs the SCC from state_index to state_index (using the actions); raises InternalError if no SCC found (which should not happen) *)
+let reconstruct_scc state_space state_index =
+	(* Variables used for Tarjan *)
+	let current_index = ref 0 in
+
+	(* Hashtable state_index -> tarjan_node *)
+	let tarjan_nodes = Hashtbl.create initial_size in
+	
+	(* tarjan_node stack *)
+	let stack = Stack.create () in
+	
+	(* Get the tarjan_node associated with a state_index; create it if not found in the Hashtable *)
+	let tarjan_node_of_state_index state_index =
+		(* If present in the hashtable already *)
+		if Hashtbl.mem tarjan_nodes state_index then(
+			Hashtbl.find tarjan_nodes state_index
+		)else(
+			(* Create an empty node *)
+			let tarjan_node = {
+				index	= None;
+				lowlink	= None;
+				onStack	= false;
+			} in
+			(* Add it *)
+			Hashtbl.add tarjan_nodes state_index tarjan_node;
+			(* Return it *)
+			tarjan_node
+		)
+	in
+	
+	(* Define a main local, recursive function *)
+	let strongconnect state_index =
+		(* Get the associated tarjan node *)
+		let v = tarjan_node_of_state_index state_index in
+		(* Set the depth index for v to the smallest unused index *)
+		(*v.index := index*)
+		v.index <- Some !current_index;
+		
+		(*v.lowlink := index*)
+		v.lowlink <- Some !current_index;
+		
+		(*index := index + 1*)
+		incr current_index;
+		
+		(* S.push(v) *)
+		Stack.push v stack;
+		
+		(* v.onStack := true *)
+		v.onStack <- true;
+	
+		(* Consider successors of v *)
+(*		for each (v, w) in E do
+		if (w.index is undefined) then
+			// Successor w has not yet been visited; recurse on it
+			strongconnect(w)
+			v.lowlink  := min(v.lowlink, w.lowlink)
+		else if (w.onStack) then
+			// Successor w is in stack S and hence in the current SCC
+			v.lowlink  := min(v.lowlink, w.index)
+		end if
+		end for*)
+	in
+
+	(*** TODO ***)
+	()
+
+
+
+
 
 
 (************************************************************)
