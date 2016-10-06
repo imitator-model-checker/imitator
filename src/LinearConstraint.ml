@@ -1257,12 +1257,12 @@ let clock_guard_of_linear_inequality linear_inequality =
 	(* Negate it if needed: if the clock is NEGATIVE, it will be naturally moved to the other side, hence no need to change the sign of the plterm *)
 	
 	(*check this small code again*)
-	(* 
+	
 	let parametric_linear_term = if !positive_clock_option = Some true
 		then Mi ((make_linear_term [] NumConst.zero) , parametric_linear_term)
 		else parametric_linear_term 
 	in
-	*)
+	
 	
 	(* Retrieve the operator *)
 	let operator =

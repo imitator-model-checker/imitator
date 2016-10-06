@@ -104,7 +104,12 @@ let filter_upperbound_by_clock clock_index tuple_inequalities_s0 =
 		( clock_index, LinearConstraint.Op_ge, LinearConstraint.make_p_linear_term [] NumConst.zero ) (* make_linear_term [] NumConst.zero) *)
 	else
 		(* result *)
-		List.nth tuple_inequalities_s0 !index
+		let (clock_index_2, operator, parametric_linear_term) = List.nth tuple_inequalities_s0 !index in
+		let tup = ref (clock_index_2, operator, parametric_linear_term) in
+		if ( operator = LinearConstraint.Op_eq )
+		then  tup := (clock_index_2, LinearConstraint.Op_le, parametric_linear_term);
+		!tup
+
 
 
 
@@ -608,6 +613,19 @@ let get_all_clocks_ge_zero_comstraint model =
 	cons
 
 
+let get_all_clocks_ge_zero_comstraint2 clock_index model = 
+	let ls = ref [] in
+	List.iter (fun clock_indx ->
+		if (clock_index != clock_indx)
+		then
+			(
+			ls := !ls@[tuple2pxd_constraint (create_x_ge_zero clock_index)];
+			);
+	) model.clocks;
+	let cons = LinearConstraint.pxd_intersection !ls in
+	cons
+
+
 
 	
 
@@ -823,11 +841,17 @@ let check_cub model =
 let check_problematic_transition model (invariant_s0, guard_t, invariant_s1, clock_updates, parameters_constraints) = 	
 	print_message Verbose_low ("\nCHECKING FOR REMOVING PROBLEMATIC TRANSITIONS!" ); 
 	let inequalities_s0 = LinearConstraint.pxd_get_inequalities invariant_s0 in
+	print_message Verbose_low ("\nDebug 1!" );
 	let inequalities_t 	= LinearConstraint.pxd_get_inequalities guard_t in
+	print_message Verbose_low ("\nDebug 2!" );
 	let inequalities_s1 = LinearConstraint.pxd_get_inequalities invariant_s1 in
+	print_message Verbose_low ("\nDebug 3!" );
 	let tuple_inequalities_s0 	= convert_inequality_list_2_tuple_list model inequalities_s0 in
+	print_message Verbose_low ("\nDebug 4!" );
 	let tuple_inequalities_t 	= convert_inequality_list_2_tuple_list model inequalities_t in
+	print_message Verbose_low ("\nDebug 5!" );
 	let tuple_inequalities_s1 	= convert_inequality_list_2_tuple_list model inequalities_s1 in
+	print_message Verbose_low ("\nDebug 6!" );
 	(* let isCUB = ref true in *)
 	let result = ref true in
 	
@@ -1172,7 +1196,7 @@ let cub_tran model submodels count_m
 			(*Case 2*)
 			print_message Verbose_low (" 	 Case 2 " );
 			(* none reset zone *)
-			let clock_cons = (LinearConstraint.pxd_intersection [constraint_t; (get_all_clocks_ge_zero_comstraint model)]) in
+			let clock_cons = (LinearConstraint.pxd_intersection [constraint_t; (get_all_clocks_ge_zero_comstraint2 clock_index model)]) in
 			let check2 = isConstraintContainedInClocksConstraints location_index clock_cons clocks_constraints in
 			if check2 = false 
 			then
@@ -1202,7 +1226,7 @@ let cub_tran model submodels count_m
 			else
 				(
 				(* none reset zone *)
-				let clock_cons = (LinearConstraint.pxd_intersection [constraint_s1; (get_all_clocks_ge_zero_comstraint model)]) in
+				let clock_cons = (LinearConstraint.pxd_intersection [constraint_s1; (get_all_clocks_ge_zero_comstraint2 clock_index model)]) in
 				let check2 = isConstraintContainedInClocksConstraints location_index clock_cons clocks_constraints in
 				if check2 = false 
 				then
@@ -1218,12 +1242,12 @@ let cub_tran model submodels count_m
 			(*reset but useless*)
 			print_message Verbose_low (" 	 Case 4 " );
 			(*reset*)
-			let clock_cons = ref (LinearConstraint.pxd_intersection [constraint_t; constraint_s1; (get_all_clocks_ge_zero_comstraint model)]) in
+			let clock_cons = ref (LinearConstraint.pxd_intersection [constraint_t; constraint_s1; (get_all_clocks_ge_zero_comstraint2 clock_index model)]) in
 			(* reset zone *)
 			if (List.mem clock_index clock_updates) = true
 			then
 				(
-				clock_cons := (LinearConstraint.pxd_intersection [constraint_t; (get_all_clocks_ge_zero_comstraint model)]);
+				clock_cons := (LinearConstraint.pxd_intersection [constraint_t; (get_all_clocks_ge_zero_comstraint2 clock_index model)]);
 				);
 			(* reset zone - end*)
 
@@ -1232,6 +1256,10 @@ let cub_tran model submodels count_m
 			then
 				(
 				DynArray.add clocks_constraints (location_index, !clock_cons);
+				print_message Verbose_low (" Added constraints: " 
+															^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names !clock_cons)  
+															^ "\n at state: " 
+															^ location_index );
 				);
 			()
 			(*Case 4 - end*)
@@ -1258,7 +1286,7 @@ let cub_tran model submodels count_m
 				)
 			else
 				(
-				let clock_cons = LinearConstraint.pxd_intersection ([constraint_s0; constraint_t; (get_all_clocks_ge_zero_comstraint model)]) in
+				let clock_cons = LinearConstraint.pxd_intersection ([constraint_s0; constraint_t; (get_all_clocks_ge_zero_comstraint2 clock_index model)]) in
 				let check2 = isConstraintContainedInClocksConstraints location_index clock_cons clocks_constraints in
 				if LinearConstraint.p_is_false constr
 				then 
@@ -1370,7 +1398,7 @@ let cub_tran model submodels count_m
 					)
 				else
 					(
-					let clock_cons = LinearConstraint.pxd_intersection ([constraint_s0; constraint_s1; (get_all_clocks_ge_zero_comstraint model)]) in
+					let clock_cons = LinearConstraint.pxd_intersection ([constraint_s0; constraint_s1; (get_all_clocks_ge_zero_comstraint2 clock_index model)]) in
 					let check2 = isConstraintContainedInClocksConstraints location_index clock_cons clocks_constraints in
 					if LinearConstraint.p_is_false constr
 					then 
@@ -1480,7 +1508,7 @@ let cub_tran model submodels count_m
 					)
 				else
 					(
-					let clock_cons = LinearConstraint.pxd_intersection ([constraint_s0; constraint_t; (get_all_clocks_ge_zero_comstraint model)]) in
+					let clock_cons = LinearConstraint.pxd_intersection ([constraint_s0; constraint_t; (get_all_clocks_ge_zero_comstraint2 clock_index model)]) in
 					let check2 = isConstraintContainedInClocksConstraints location_index clock_cons clocks_constraints in
 					if LinearConstraint.p_is_false constr
 					then 
@@ -1579,7 +1607,7 @@ let cub_tran model submodels count_m
 					)
 				else
 					(
-					let clock_cons = LinearConstraint.pxd_intersection ([constraint_s0; constraint_t; constraint_s1; (get_all_clocks_ge_zero_comstraint model)]) in
+					let clock_cons = LinearConstraint.pxd_intersection ([constraint_s0; constraint_t; constraint_s1; (get_all_clocks_ge_zero_comstraint2 clock_index model)]) in
 					let check2 = isConstraintContainedInClocksConstraints location_index clock_cons clocks_constraints in
 					if LinearConstraint.p_is_false constr
 					then 
@@ -1688,7 +1716,7 @@ let clocks_constraints_process model adding clocks_constraints loc_clocks_constr
 		 	match (check1, check2) with
 		 		| true,  true  -> ()
 		 		| true,  false -> ()
-		 		| false, true  -> con := LinearConstraint.pxd_intersection [!con; cons1; (get_all_clocks_ge_zero_comstraint model)];
+		 		| false, true  -> con := LinearConstraint.pxd_intersection [!con; cons1 (*; (get_all_clocks_ge_zero_comstraint2 clock_index model) *)];
 		 						  let check = isConstraintContainedInClocksConstraints loc_index1 !con loc_clocks_constraints in
 		 						  if LinearConstraint.pxd_is_true !con = false && check = false
 		 						  then
@@ -1776,9 +1804,9 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 
 
 	(*single clock bounded*)
-	if List.length model.automata > 1 then(
+(* 	if List.length model.automata > 1 then(
 		raise (InternalError(" Sorry, we only support for single model currently. Multi-clocks and multi-constraint will be implemented in next version! "))
-	);
+	); *)
 
 	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
@@ -1996,12 +2024,16 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 							);
 
 						List.iter (	fun (clock_index_s1, op_s1, linear_term_s1) -> 
+							
+							let new_op_s1 = ref op_s1 in
+							if ( op_s1 = LinearConstraint.Op_eq )
+								then  new_op_s1 := LinearConstraint.Op_le;
 
 							cub_tran model submodels count_m 
 									locations transitions
 									location_index clock_index clock_updates 
 									clocks_constraints parameters_constraints
-									(clock_index_s0 , op_s0, linear_term_s0) (clock_index_t, op_t, linear_term_t) (clock_index_s1, op_s1, linear_term_s1) 
+									(clock_index_s0 , op_s0, linear_term_s0) (clock_index_t, op_t, linear_term_t) (clock_index_s1, !new_op_s1, linear_term_s1) 
 									(*for printing - not important*) 
 									submodel;
 
