@@ -1762,7 +1762,7 @@ let local_silent_action_index_of_automaton_index model automaton_index =
 let cubpta_of_pta model : AbstractModel.abstract_model =
 
 	(*Array of models*)
-	let submodels = DynArray.make 0 in
+	(* let submodels = DynArray.make 0 in *)
 	
 	
 	
@@ -1903,7 +1903,7 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 
 
 
-
+	let submodels = DynArray.make 0 in
 	(*Adding the first sub-model*)
 	DynArray.add submodels (locations_ini, transitions_ini, clocks_constraints_ini, parameters_constraints_ini);
 	let submodels_length = DynArray.length submodels in
