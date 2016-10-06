@@ -619,7 +619,7 @@ let get_all_clocks_ge_zero_comstraint2 clock_index model =
 		if (clock_index != clock_indx)
 		then
 			(
-			ls := !ls@[tuple2pxd_constraint (create_x_ge_zero clock_index)];
+			ls := !ls@[tuple2pxd_constraint (create_x_ge_zero clock_indx)];
 			);
 	) model.clocks;
 	let cons = LinearConstraint.pxd_intersection !ls in
@@ -1432,6 +1432,18 @@ let cub_tran model submodels count_m
 								print_message Verbose_low ("\n Cub constraints conflicted with parameters constraints!!! " );
 								print_message Verbose_low (" Adding new clocks constraints" );
 								DynArray.add clocks_constraints (location_index, clock_cons);
+								print_message Verbose_low (" debug!! Added constraints: " 
+																^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names constraint_s0)  
+																^ "\n at state: " 
+																^ location_index );
+								print_message Verbose_low (" debug!! Added constraints: " 
+																^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names constraint_s1)  
+																^ "\n at state: " 
+																^ location_index );
+								print_message Verbose_low (" debug!! Added constraints: " 
+																^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names (get_all_clocks_ge_zero_comstraint2 clock_index model))  
+																^ "\n at state: " 
+																^ location_index );
 								print_message Verbose_low (" Added constraints: " 
 																^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names clock_cons)  
 																^ "\n at state: " 
