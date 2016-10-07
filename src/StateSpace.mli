@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2009/12/08
- * Last modified     : 2016/09/14
+ * Last modified     : 2016/10/07
  *
  ************************************************************)
 
@@ -141,6 +141,13 @@ val last_states: AbstractModel.abstract_model -> state_space -> state_index list
 (* val is_bad: abstract_model -> state_space -> bool *)
 
 
+
+(*------------------------------------------------------------*)
+(* When a state is encountered for a second time, then a loop exists (or more generally an SCC): 'reconstruct_scc state_space state_index' reconstructs the SCC from state_index to state_index (using the actions) using a variant of Tarjan's strongly connected components algorithm; raises InternalError if no SCC found (which should not happen) *)
+(*------------------------------------------------------------*)
+val reconstruct_scc : state_space -> state_index -> state_index list
+
+
 (************************************************************)
 (** Actions on a state space *)
 (************************************************************)
@@ -176,6 +183,7 @@ val empty_states_for_comparison : state_space -> unit
 
 (** Iterate over the reachable states (with possible side effects) *)
 val iterate_on_states : (state_index -> abstract_state -> unit) -> state_space -> unit
+
 
 
 
