@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/08/24
- * Last modified     : 2016/08/24
+ * Last modified     : 2016/10/07
  *
  ************************************************************)
 
@@ -140,7 +140,8 @@ class algoLoopSynth =
 				
 				self#print_algo_message Verbose_medium "The loop constraint is now:";
 				print_message Verbose_medium (LinearConstraint.string_of_p_nnconvex_constraint model.variable_names loop_constraint);
-			);		)
+			);		
+			)
 		;
 		
 		(*** TODO: move the rest to a higher level function? (post_from_one_state?) ***)
@@ -153,7 +154,21 @@ class algoLoopSynth =
 			print_message Verbose_high ("\n" ^ beginning_message ^ " reachable through action '" ^ (model.action_names action_index) ^ "': ");
 			print_message Verbose_high (ModelPrinter.string_of_state model new_state);
 		);
-	
+		
+		(* If found a loop *)
+		if not added then(
+			(* Compute the SCC (after the transitions were updated, of course) *)
+			if verbose_mode_greater Verbose_low then(
+				let scc = StateSpace.reconstruct_scc state_space new_state_index in
+				(* Print it *)
+				let verbose_string_of_state_index state_index =
+					let state = StateSpace.get_state state_space state_index in
+					"\n\ts_" ^ (string_of_int state_index) ^ "{" ^ (ModelPrinter.string_of_state model state) ^ "}"
+				in
+				print_message Verbose_low ("\nSCC: [" ^ (string_of_list_of_string_with_sep "\n\t- " (List.map verbose_string_of_state_index scc)) ^ "\n]");
+			);
+		); (* end if found a loop *)
+		
 		(* The state is kept in any case *)
 		true
 	
