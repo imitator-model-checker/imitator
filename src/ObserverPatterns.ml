@@ -10,7 +10,7 @@
  * Author:        Etienne Andre
  * 
  * Created:       2013/02/04
- * Last modified: 2015/10/23
+ * Last modified: 2016/10/07
  *
  ****************************************************************)
 
@@ -27,9 +27,9 @@ open AbstractModel
 (****************************************************************)
 (** Constants *)
 (****************************************************************)
-let automaton_name = "observer"
-let clock_name = "x_obs"
-let location_prefix = "locobs_"
+let automaton_name = "automatically_generated_observer"
+let clock_name = "automatically_generated_x_obs"
+let location_prefix = "loc_AutoGen_obs_"
 
 
 let location_name location_index =

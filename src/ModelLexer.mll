@@ -8,7 +8,7 @@
  * Author:        Etienne Andre
  * 
  * Created       : 2009/09/07
- * Last modified : 2015/07/31
+ * Last modified : 2016/10/07
 *****************************************************************)
 
 {
@@ -36,6 +36,9 @@ rule token = parse
 		{ comment_depth := 1;
 		comment_ocaml lexbuf;
 		token lexbuf }
+
+ 	| "automatically_generated_observer"       { CT_OBSERVER } (* to forbid this keyword, potentially used in the observer *)
+ 	| "automatically_generated_x_obs"       { CT_OBSERVER_CLOCK } (* to forbid this keyword, potentially used in the observer *)
 
  	| "always"         { CT_ALWAYS }
 	| "and"            { CT_AND }
@@ -81,6 +84,8 @@ rule token = parse
 	| "when"           { CT_WHEN }
 	| "while"          { CT_WHILE }
 	| "within"         { CT_WITHIN }
+	
+
 
 	| ['a'-'z''A'-'Z']['a'-'z''A'-'Z''_''0'-'9']* as lxm { NAME lxm }
 	| ['0'-'9']*'.'['0'-'9']+ as lxm { FLOAT lxm } 
