@@ -1714,8 +1714,49 @@ let cub_tran model submodels count_m
 	()
 
 
+let filter_inf model cons = 
+	let inequalities = LinearConstraint.pxd_get_inequalities cons in
+	let tuple_inequalities 	= (convert_inequality_list_2_tuple_list model inequalities) in
+	let zero_term = (LinearConstraint.make_p_linear_term [] NumConst.zero) in
+	let ls_temp = ref [] in
+	( 
+	match tuple_inequalities with
+	| [] -> raise (InternalError(" filter_inf: Input list is empty!!! "))
+	| _  -> 
+			(	
+			List.iter ( fun (clock_index, op, linear_term) -> 
+				if (op != LinearConstraint.Op_ge &&  linear_term != zero_term)
+				then
+					(
+					ls_temp := !ls_temp@[(clock_index, op, linear_term )];
+					);
+			) tuple_inequalities;
+			);
+	);
+
+	if !ls_temp = []
+	then
+		( 
+		(* ls := !ls@[( clock_index, LinearConstraint.Op_ge, LinearConstraint.make_p_linear_term [] NumConst.zero )]; *)
+		raise (InternalError(" filter_inf: Output list is empty!!! "));
+		);
+	
+	let result_cons = ref (LinearConstraint.pxd_true_constraint ()) in
+
+	List.iter(fun (clock_index_s0 , op_s0, linear_term_s0) ->
+		let con = tuple2pxd_constraint (clock_index_s0 , op_s0, linear_term_s0) in
+		result_cons := LinearConstraint.pxd_intersection [!result_cons; con];
+	) !ls_temp;
+	!result_cons
+	
+
+
+
 (* [CUB-PTA TRANSFORMATION] THIS IS A FUNCTION USED FOR CUB-PTA TRANSITIONS *)
 let clocks_constraints_process model adding clocks_constraints loc_clocks_constraints =
+
+	
+
 	let con = ref (LinearConstraint.pxd_true_constraint ()) in
 	for i = 1 to (DynArray.length clocks_constraints - 1) do
 		let (loc_index1, cons1) = DynArray.get clocks_constraints (i-1) in
@@ -2165,7 +2206,7 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 		let index = Hashtbl.create 0 in
 
 		DynArray.iter (fun (location, constr) ->
-			let locName = ("cub-l" ^ (string_of_int !count)) in
+			let locName = ("cub_l" ^ (string_of_int !count)) in
 			Hashtbl.add locations locName constr;
 			Hashtbl.add index location locName ;
 			count :=  !count + 1;
@@ -2370,12 +2411,12 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 	(* First create a normalized location name *)
 	(*** BADPROG...... ***)
 	let location_name_of_location_index_and_submodel_index location_index submodel_index =
-		location_index ^ "-m" ^ (string_of_int submodel_index)
+		location_index ^ "_m" ^ (string_of_int submodel_index)
 	in
 	
 	(* Handle initial location *)
 	(*** BADPROG: give a string name to the new location (argh) ***)
-	let new_initial_location_name = "cub-init" in
+	let new_initial_location_name = "cub_init" in
 	
 	let submodel_index = ref 1 in
 	let numberOfAction = List.length model.actions in 
