@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2009/09/11
- * Last modified     : 2016/02/11
+ * Last modified     : 2016/10/08
  *
  ************************************************************)
 
@@ -229,6 +229,10 @@ type abstract_model = {
 	clocks : clock_index list;
 	(* True for clocks, false otherwise *)
 	is_clock : variable_index -> bool;
+	(* Index of the special clock to be reset at each transition to measure time elapsing (only used in NZ checking) *)
+	special_reset_clock : clock_index option;
+	(* The list of clock indexes except the reset clock (used, e.g., to print the model *)
+	clocks_without_special_reset_clock : clock_index list;
 	(* The list of discrete indexes *)
 	discrete : discrete_index list;
 	(* True for discrete, false otherwise *)

@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2014/10/24
- * Last modified     : 2016/08/13
+ * Last modified     : 2016/10/08
  *
  ************************************************************)
 
@@ -54,3 +54,12 @@ let dot_image_extension = "jpg"
 let dot_file_extension = "dot"
 let states_file_extension = "states"
 let cartography_extension = "png"
+
+
+(************************************************************)
+(************************************************************)
+(* Internal cuisine *)
+(************************************************************)
+(************************************************************)
+(* Name of the special clock always reset (used for NZ model checking, and not to be printed in normal operations) *)
+let special_reset_clock_name = "special_0_clock"

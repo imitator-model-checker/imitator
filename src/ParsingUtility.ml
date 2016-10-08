@@ -9,7 +9,7 @@
  * 
  * File contributors : Ulrich Kühne, Étienne André
  * Created           : 2014/03/15
- * Last modified     : 2016/08/13
+ * Last modified     : 2016/10/08
  *
  ************************************************************)
 
@@ -183,7 +183,7 @@ let compile_model options =
 
 	let model = 
 	try (
-		ModelConverter.abstract_model_of_parsing_structure options parsing_structure
+		ModelConverter.abstract_model_of_parsing_structure options false parsing_structure
 	) with 
 		| InvalidModel -> (print_error ("The input model contains errors. Please check it again."); abort_program (); exit 1)
 		| InternalError e -> (print_error ("Internal error while parsing the input model: " ^ e ^ "\nPlease kindly insult the developers."); abort_program (); exit 1)

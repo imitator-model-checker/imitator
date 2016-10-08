@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2012/08/24
- * Last modified     : 2016/09/28
+ * Last modified     : 2016/10/08
  *
  ************************************************************)
 
@@ -308,7 +308,7 @@ let string_of_automata model =
 (* 	s_0[fillcolor=red, style=filled, shape=Mrecord, label="s_0|{InputInit|And111|Or111}"]; *)
 ^ "\nname[shape=none, style=bold, fontsize=24, label=\"" ^ options#model_input_file_name ^ "\"];"
 	^ "\ngeneral_info[shape=record, label=\"" (*Model|{*)
-	^ "{Clocks|" ^ (vertical_string_of_list_of_variables model.clocks) ^ "}"
+	^ "{Clocks|" ^ (vertical_string_of_list_of_variables model.clocks_without_special_reset_clock) ^ "}"
 	^ "|{Parameters|" ^ (vertical_string_of_list_of_variables model.parameters) ^ "}"
 	^ (if model.discrete != [] then
 		"|{Discrete|" ^ (vertical_string_of_list_of_variables model.discrete) ^ "}"

@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2009/09/09
- * Last modified     : 2016/08/04
+ * Last modified     : 2016/10/08
  *
  ************************************************************)
 
@@ -43,8 +43,6 @@ exception InvalidV0
 (* For constraint conversion *)
 exception False_exception
 
-(*(* When a particular string is not found *)
-exception String_not_found of string*)
 
 
 (************************************************************)
@@ -1786,7 +1784,7 @@ let get_clocks_in_updates : clock_updates -> clock_index list = function
 (*------------------------------------------------------------*)
 (* Convert the parsing structure into an abstract model *)
 (*------------------------------------------------------------*)
-let abstract_model_of_parsing_structure options (parsed_variable_declarations, parsed_automata, parsed_init_definition, parsed_property_definition, parsed_projection_definition, parsed_carto_definition) =
+let abstract_model_of_parsing_structure options (with_special_reset_clock : bool) (parsed_variable_declarations, parsed_automata, parsed_init_definition, parsed_property_definition, parsed_projection_definition, parsed_carto_definition) =
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Debug functions *) 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -1873,7 +1871,7 @@ let abstract_model_of_parsing_structure options (parsed_variable_declarations, p
 
  	
  	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Add clock and automaton for the observer *) 
+	(* Add clock and automaton for the observer *)
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Note that the observer has not been checked yet, but it doesn't matter *)
 	let observer_automaton, observer_clock_option = ObserverPatterns.new_elements parsed_property_definition in
@@ -1898,11 +1896,17 @@ let abstract_model_of_parsing_structure options (parsed_variable_declarations, p
 	(* Start building variable lists *) 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	
-	(* Keep every element only once in those 4 lists (and add the observer clock, if any) *)
-	let clock_names = match observer_clock_option with
-		| None -> list_only_once clock_names
-		| Some observer_clock_name -> list_append (list_only_once clock_names) [observer_clock_name]
+	(* Keep every element only once in those 4 lists *)
+	
+	(* First handle the observer clock if any *)
+	let observer_clock_list = match observer_clock_option with
+		| None -> []
+		| Some observer_clock_name -> [observer_clock_name]
 	in
+	(* Second handle the special_reset_clock *)
+	let special_reset_clock_list = if with_special_reset_clock then [Constants.special_reset_clock_name] else [] in
+	
+	let clock_names = list_append (list_append (list_only_once clock_names) observer_clock_list) special_reset_clock_list in
 	let discrete_names = list_only_once discrete_names in
 	let parameters_names = list_only_once parameters_names in
 	
@@ -2295,6 +2299,21 @@ let abstract_model_of_parsing_structure options (parsed_variable_declarations, p
 
 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(* Handling the special reset clock *)
+	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+
+	(*** NOTE: if it is defined, then it is the last clock in the list of clocks ***)
+	let special_reset_clock : clock_index option = if with_special_reset_clock then
+		Some (List.nth clocks (nb_clocks - 1))
+	else None
+	in
+	(* The list of clock indexes except the reset clock (used, e.g., to print the model *)
+	let clocks_without_special_reset_clock = match special_reset_clock with
+		| None -> clocks
+		| Some clock_index -> list_remove_first_occurence clock_index clocks
+	in
+
+	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Detect the L/U nature of the PTA *)
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	
@@ -2504,6 +2523,10 @@ let abstract_model_of_parsing_structure options (parsed_variable_declarations, p
 	clocks = clocks;
 	(* True for clocks, false otherwise *)
 	is_clock = is_clock;
+	(* Index of the special clock to be reset at each transition to measure time elapsing (only used in NZ checking) *)
+	special_reset_clock = special_reset_clock;
+	(* The list of clock indexes except the reset clock (used, e.g., to print the model *)
+	clocks_without_special_reset_clock = clocks_without_special_reset_clock;
 	(* The list of discrete indexes *)
 	discrete = discrete;
 	(* True for discrete, false otherwise *)

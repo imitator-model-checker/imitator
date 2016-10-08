@@ -11,7 +11,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/01/26
- * Last modified     : 2016/08/13
+ * Last modified     : 2016/10/08
  *
  ************************************************************)
 
@@ -487,7 +487,7 @@ let string_of_model model =
 	let stopwatches = find_stopwatches() in
 
 	(* Partition between real clocks and stopwatches *)
-	let stopwatches, clocks = List.partition (fun variable_index -> List.mem variable_index stopwatches) model.clocks in
+	let stopwatches, clocks = List.partition (fun variable_index -> List.mem variable_index stopwatches) model.clocks_without_special_reset_clock in
 
 	(* The header *)
 	string_of_header model

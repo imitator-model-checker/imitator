@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/12/02
- * Last modified     : 2016/05/03
+ * Last modified     : 2016/10/08
  *
  ************************************************************)
 
@@ -45,13 +45,6 @@ class virtual algoStateBased :
 		(************************************************************)
 		(* Class variables *)
 		(************************************************************)
-		
-		(* Start time for the algorithm *)
-		val mutable start_time : float
-
-		
-		(* Name of the algorithm (to be defined in subclasses) *)
-		method virtual algorithm_name : string
 		
 		(* Nature of the state space according to a property *)
 		val mutable statespace_nature : StateSpace.statespace_nature

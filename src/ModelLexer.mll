@@ -8,7 +8,7 @@
  * Author:        Etienne Andre
  * 
  * Created       : 2009/09/07
- * Last modified : 2016/10/07
+ * Last modified : 2016/10/08
 *****************************************************************)
 
 {
@@ -39,6 +39,7 @@ rule token = parse
 
  	| "automatically_generated_observer"       { CT_OBSERVER } (* to forbid this keyword, potentially used in the observer *)
  	| "automatically_generated_x_obs"       { CT_OBSERVER_CLOCK } (* to forbid this keyword, potentially used in the observer *)
+ 	| "special_0_clock" {CT_SPECIAL_RESET_CLOCK_NAME} (* to forbid this keyword, used when a special reset clock is defined *)
 
  	| "always"         { CT_ALWAYS }
 	| "and"            { CT_AND }

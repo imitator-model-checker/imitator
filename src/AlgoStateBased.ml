@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/12/02
- * Last modified     : 2016/08/24
+ * Last modified     : 2016/10/08
  *
  ************************************************************)
 
@@ -226,7 +226,7 @@ let rho_assign (linear_constraint : LinearConstraint.pxd_linear_constraint) cloc
 	if clock_updates != [] then(
 		(* Merge updates *)
 		
-		(** TO OPTIMIZE: only create the hash if there are indeed some resets/updates *)
+		(*** TO OPTIMIZE: only create the hash if there are indeed some resets/updates ***)
 		
 		let clocks_hash = Hashtbl.create model.nb_clocks in
 		(* Check wether there are some complex updates of the form clock' = linear_term *)
@@ -323,7 +323,7 @@ let rho_assign (linear_constraint : LinearConstraint.pxd_linear_constraint) cloc
 		)else(
 		
 		
-			(* TODO (not urgent) : add "update" function to LinearConstraint *)
+			(*** TODO (not urgent) : add "update" function to LinearConstraint ***)
 		
 		
 		
@@ -425,7 +425,7 @@ let rho_assign (linear_constraint : LinearConstraint.pxd_linear_constraint) cloc
 				print_constraint linear_constraint;
 			);
 			
-			(** TO CHECK: what about discrete variables ?!! *)
+			(*** TODO: check what about discrete variables ?!! ***)
 		)
 		)
 	)
@@ -854,7 +854,7 @@ let compute_new_location aut_table trans_table action_index original_location =
 (*** TODO: remove the model from the arguments, and retrieve it ***)
 let compute_new_constraint orig_constraint (discrete_constr_src : LinearConstraint.pxd_linear_constraint) orig_location dest_location guards clock_updates =
 	(* Retrieve the model *)
-	let model = Input.get_model() in	
+	let model = Input.get_model() in
 	(* Retrieve the input options *)
 	let options = Input.get_options () in
 	
@@ -1136,6 +1136,9 @@ class virtual algoStateBased =
 
 	(* Nature of the state space according to a property *)
 	val mutable statespace_nature = StateSpace.Unknown
+	
+(*	(* Clock that may be reset at each transition *)
+	val mutable reset_clock : Automaton.clock_index option = None*)
 	
 	
 	

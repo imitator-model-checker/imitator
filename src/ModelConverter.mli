@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2009/09/09
- * Last modified     : 2016/08/04
+ * Last modified     : 2016/10/08
  *
  ************************************************************)
  
@@ -34,7 +34,7 @@ exception InvalidV0
 (** Conversion functions *)
 (****************************************************************)
 (** Check and convert the parsing structure into an abstract model *)
-val abstract_model_of_parsing_structure : Options.imitator_options -> ParsingStructure.parsing_structure -> AbstractModel.abstract_model
+val abstract_model_of_parsing_structure : Options.imitator_options -> bool -> ParsingStructure.parsing_structure -> AbstractModel.abstract_model
 
 (** Check and convert the parsed reference parameter valuation into an abstract representation *)
 val check_and_make_pi0 : ParsingStructure.pi0 -> (*Options.imitator_options ->*) PVal.pval

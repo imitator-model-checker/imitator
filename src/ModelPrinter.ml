@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2009/12/02
- * Last modified     : 2016/10/04
+ * Last modified     : 2016/10/08
  *
  ************************************************************)
 
@@ -69,7 +69,7 @@ let string_of_declarations model =
 		"var "
 	^
 	(if model.nb_clocks > 0 then
-		("\n\t" ^ (string_of_variables model.clocks) ^ "\n\t\t: clock;\n") else "")
+		("\n\t" ^ (string_of_variables model.clocks_without_special_reset_clock) ^ "\n\t\t: clock;\n") else "")
 	^
 	(if model.nb_discrete > 0 then
 		("\n\t" ^ (string_of_variables model.discrete) ^ "\n\t\t: discrete;\n") else "")
