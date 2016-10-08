@@ -1737,7 +1737,8 @@ let filter_inf model cons =
 	if !ls_temp = []
 	then
 		( 
-		(* ls := !ls@[( clock_index, LinearConstraint.Op_ge, LinearConstraint.make_p_linear_term [] NumConst.zero )]; *)
+		(* ls := !ls@[( clock_index, LinearConstraint.Op_ge, LinearConstraint.make_p_linear_term [] NumConst.zero )];  *)
+
 		raise (InternalError(" filter_inf: Output list is empty!!! "));
 		);
 	
@@ -1750,7 +1751,7 @@ let filter_inf model cons =
 	!result_cons
 
 let add_missing_c_cons model cons = 
-	let con = ref (LinearConstraint.pxd_true_constraint ()) in
+	let con = ref cons in
 	List.iter (	fun clock_index -> 
 	 	if (LinearConstraint.pxd_is_constrained cons clock_index) = false
 	 	then
@@ -1790,7 +1791,9 @@ let clocks_constraints_process model adding clocks_constraints loc_clocks_constr
 		 						  	DynArray.add loc_clocks_constraints (loc_index1, !con);
 		 						  	adding := true;
 		 						  	);
+		 						  (*add gap*)
 		 						  DynArray.add loc_clocks_constraints (loc_index1, cons2);
+		 						  (*reset*)
 		 						  con := (LinearConstraint.pxd_true_constraint ())
 		 		| false, false -> con := LinearConstraint.pxd_intersection [!con; filter_inf model cons1; filter_inf model cons2];
 		 	);
@@ -2145,7 +2148,7 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 		if (LinearConstraint.pxd_is_true cons1) = false
 		then
 			(
-				DynArray.add loc_clocks_constraints (loc_index1, cons1);
+				DynArray.add loc_clocks_constraints (loc_index1, filter_inf model cons1);
 			);
 	done;
 	DynArray.clear c_constraints;
