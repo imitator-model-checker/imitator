@@ -1748,7 +1748,18 @@ let filter_inf model cons =
 		result_cons := LinearConstraint.pxd_intersection [!result_cons; con];
 	) !ls_temp;
 	!result_cons
-	
+
+let add_missing_c_cons model cons = 
+	let con = ref (LinearConstraint.pxd_true_constraint ()) in
+	List.iter (	fun clock_index -> 
+	 	if (LinearConstraint.pxd_is_constrained cons clock_index) = false
+	 	then
+	 		(
+	 		 let missing_con = tuple2pxd_constraint (create_x_ge_zero clock_index) in
+	 		 con := LinearConstraint.pxd_intersection [!con; missing_con];
+	 		); 
+	) model.clocks; 
+	!con
 
 
 
@@ -1769,7 +1780,8 @@ let clocks_constraints_process model adding clocks_constraints loc_clocks_constr
 		 	match (check1, check2) with
 		 		| true,  true  -> ()
 		 		| true,  false -> ()
-		 		| false, true  -> con := LinearConstraint.pxd_intersection [!con; cons1 (*; (get_all_clocks_ge_zero_comstraint2 clock_index model) *)];
+		 		| false, true  -> con := LinearConstraint.pxd_intersection [!con; filter_inf model cons1 (*; (get_all_clocks_ge_zero_comstraint2 clock_index model) *)];
+		 						  con := add_missing_c_cons model !con;
 		 						  let check = isConstraintContainedInClocksConstraints loc_index1 !con loc_clocks_constraints in
 		 						  if LinearConstraint.pxd_is_true !con = false && check = false
 		 						  then
@@ -1780,7 +1792,7 @@ let clocks_constraints_process model adding clocks_constraints loc_clocks_constr
 		 						  	);
 		 						  DynArray.add loc_clocks_constraints (loc_index1, cons2);
 		 						  con := (LinearConstraint.pxd_true_constraint ())
-		 		| false, false -> con := LinearConstraint.pxd_intersection [!con; cons1; cons2];
+		 		| false, false -> con := LinearConstraint.pxd_intersection [!con; filter_inf model cons1; filter_inf model cons2];
 		 	);
 	done;
 	DynArray.clear clocks_constraints; 
@@ -2206,7 +2218,7 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 		let index = Hashtbl.create 0 in
 
 		DynArray.iter (fun (location, constr) ->
-			let locName = ("cub_l" ^ (string_of_int !count)) in
+			let locName = (   "cub_" ^ location ^ "_l" ^ (string_of_int !count)) in 
 			Hashtbl.add locations locName constr;
 			Hashtbl.add index location locName ;
 			count :=  !count + 1;
@@ -2416,7 +2428,7 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 	
 	(* Handle initial location *)
 	(*** BADPROG: give a string name to the new location (argh) ***)
-	let new_initial_location_name = "cub_init" in
+	let new_initial_location_name  = ("cub_init_a" ^ string_of_int automaton_index) in
 	
 	let submodel_index = ref 1 in
 	let numberOfAction = List.length model.actions in 
