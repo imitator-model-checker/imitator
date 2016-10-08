@@ -1,0 +1,125 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% UNCOMMENT THE LINE BELOW TO VIEW COMMENTS
+% \def\DraftVersion {}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\input{commons.tex}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% META DATA
+\hypersetup{
+	pdftitle={IMITATOR Developer Manual},
+	pdfauthor={\'Etienne Andr\'e}%
+}
+\title{IMITATOR Developer Manual}
+\author{Étienne André}
+
+% TITLE TO BE PRINTED ON THE FIRST PAGE
+\newcommand{\titleOnFirstPage}{IMITATOR \emph{not} a Developer Manual}
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{document}
+% \maketitle
+
+\sloppy
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\input{title_and_toc.tex}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\chapter{Introduction}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\imitator{}~\cite{AFKS12} has no developer manual, for many (mainly bad) reasons:
+lack of time, small team of developers with strong interactions, little concurrent development.
+
+Nevertheless, this document tries (or will try) to summarize some of the important internal characteristics of \imitator{}.
+It will naturally evolve with time.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\chapter{Constraint Representation}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+Constraints are implemented using the Parma Polyhedra Library (PPL)~\cite{bhz08}.
+Constraints in PPL use integer-valued indexes for variables.
+
+In \imitator{}, the variables are numbered as follows in the constraint, starting from~0:
+\begin{itemize}
+	\item first the parameters
+	\item then the regular clocks in the model
+	\item then the observer clock (if any), automatically inferred from the property (if any)
+	\item then the extra reset clock (mainly used to measure time elapsing in non-Zeno checking)
+	\item then all discrete variables.
+\end{itemize}
+
+% TODO: dessin avec les variables et une accolade dessous montrant les indices
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\chapter{Licensing and Credits}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+\subsection*{Developer Manual}
+This developer manual is available under the Creative Commons CC-BY-SA license.
+
+\begin{center}
+	\includegraphics[width=.2\textwidth]{images/CC-BY-SA_500.png}
+\end{center}
+
+\bigskip
+
+\subsection*{Graphics Credits}
+	% TODO: nice tabular showing images
+
+\paragraph{\imitator{}'s logo} comes from \stylePath{Typing monkey.svg} by KaterBegemot on Wikimedia Commons
+	(License: Creative Commons Attribution-Share Alike 3.0 Unported).
+
+\url{https://commons.wikimedia.org/wiki/File:Typing_monkey.svg}
+
+
+\paragraph{\imitator{}'s 2.x version logo} comes from \stylePath{Stick\_of\_butter.jpg} by Renee Comet on Wikimedia Commons
+	(License: public domain).
+
+\url{https://commons.wikimedia.org/wiki/File:Stick_of_butter.jpg}
+
+
+\paragraph{\imitator{}'s 2.8 version logo} comes from \stylePath{Schinken-roh.jpg} by Rainer Zenz on Wikimedia Commons
+	(License: Creative Commons Attribution-Share Alike 3.0 Unported).
+
+\url{https://commons.wikimedia.org/wiki/File:Schinken-roh.jpg}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newpage
+\bibliographystyle{alpha}
+\addcontentsline{toc}{chapter}{References}
+\bibliography{biblio}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+\end{document}
+
