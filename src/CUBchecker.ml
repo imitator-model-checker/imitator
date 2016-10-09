@@ -8,7 +8,7 @@
  * 
  * File contributors : Nguyen Hoang Gia, Étienne André
  * Created           : 2016/04/13
- * Last modified     : 2016/10/08
+ * Last modified     : 2016/09/29
  *
  ************************************************************)
 
@@ -841,17 +841,12 @@ let check_cub model =
 let check_problematic_transition model (invariant_s0, guard_t, invariant_s1, clock_updates, parameters_constraints) = 	
 	print_message Verbose_low ("\nCHECKING FOR REMOVING PROBLEMATIC TRANSITIONS!" ); 
 	let inequalities_s0 = LinearConstraint.pxd_get_inequalities invariant_s0 in
-	print_message Verbose_low ("\nDebug 1!" );
 	let inequalities_t 	= LinearConstraint.pxd_get_inequalities guard_t in
-	print_message Verbose_low ("\nDebug 2!" );
 	let inequalities_s1 = LinearConstraint.pxd_get_inequalities invariant_s1 in
-	print_message Verbose_low ("\nDebug 3!" );
 	let tuple_inequalities_s0 	= convert_inequality_list_2_tuple_list model inequalities_s0 in
-	print_message Verbose_low ("\nDebug 4!" );
 	let tuple_inequalities_t 	= convert_inequality_list_2_tuple_list model inequalities_t in
-	print_message Verbose_low ("\nDebug 5!" );
 	let tuple_inequalities_s1 	= convert_inequality_list_2_tuple_list model inequalities_s1 in
-	print_message Verbose_low ("\nDebug 6!" );
+
 	(* let isCUB = ref true in *)
 	let result = ref true in
 	
@@ -1432,18 +1427,6 @@ let cub_tran model submodels count_m
 								print_message Verbose_low ("\n Cub constraints conflicted with parameters constraints!!! " );
 								print_message Verbose_low (" Adding new clocks constraints" );
 								DynArray.add clocks_constraints (location_index, clock_cons);
-								print_message Verbose_low (" debug!! Added constraints: " 
-																^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names constraint_s0)  
-																^ "\n at state: " 
-																^ location_index );
-								print_message Verbose_low (" debug!! Added constraints: " 
-																^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names constraint_s1)  
-																^ "\n at state: " 
-																^ location_index );
-								print_message Verbose_low (" debug!! Added constraints: " 
-																^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names (get_all_clocks_ge_zero_comstraint2 clock_index model))  
-																^ "\n at state: " 
-																^ location_index );
 								print_message Verbose_low (" Added constraints: " 
 																^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names clock_cons)  
 																^ "\n at state: " 
@@ -1714,6 +1697,7 @@ let cub_tran model submodels count_m
 	()
 
 
+(* [CUB-PTA Tranformation] This use for filtering infinities in constraint *)
 let filter_inf model cons = 
 	let inequalities = LinearConstraint.pxd_get_inequalities cons in
 	let tuple_inequalities 	= (convert_inequality_list_2_tuple_list model inequalities) in
@@ -1750,7 +1734,9 @@ let filter_inf model cons =
 	) !ls_temp;
 	!result_cons
 
-let add_missing_c_cons model cons = 
+
+(* [CUB-PTA Tranformation] this use for adding infinity for missing clock constraint *)
+let add_inf_2_missing_c_cons model cons = 
 	let con = ref cons in
 	List.iter (	fun clock_index -> 
 	 	if (LinearConstraint.pxd_is_constrained cons clock_index) = false
@@ -1782,7 +1768,7 @@ let clocks_constraints_process model adding clocks_constraints loc_clocks_constr
 		 		| true,  true  -> ()
 		 		| true,  false -> ()
 		 		| false, true  -> con := LinearConstraint.pxd_intersection [!con; filter_inf model cons1 (*; (get_all_clocks_ge_zero_comstraint2 clock_index model) *)];
-		 						  con := add_missing_c_cons model !con;
+		 						  con := add_inf_2_missing_c_cons model !con;
 		 						  let check = isConstraintContainedInClocksConstraints loc_index1 !con loc_clocks_constraints in
 		 						  if LinearConstraint.pxd_is_true !con = false && check = false
 		 						  then
@@ -1819,8 +1805,6 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 
 	(*Array of models*)
 	(* let submodels = DynArray.make 0 in *)
-	
-	
 	
 	(*------------------------------------------------------------*)
 	(* Create structures for the new abstract_model *)
@@ -1875,7 +1859,7 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 (* 	if List.length model.automata > 1 then(
 		raise (InternalError(" Sorry, we only support for single model currently. Multi-clocks and multi-constraint will be implemented in next version! "))
 	); *)
-
+	
 	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
 	(*covert input model into specific data stucture*)
@@ -2431,7 +2415,7 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 	
 	(* Handle initial location *)
 	(*** BADPROG: give a string name to the new location (argh) ***)
-	let new_initial_location_name  = ("cub_init_a" ^ string_of_int automaton_index) in
+	let new_initial_location_name  = ("cub_init_a" ^ string_of_int (automaton_index + 1)) in
 	
 	let submodel_index = ref 1 in
 	let numberOfAction = List.length model.actions in 
@@ -2890,12 +2874,6 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 		clocks = model.clocks;
 		(* True for clocks, false otherwise *)
 		is_clock = model.is_clock;
-		(* Index of the special clock to be reset at each transition to measure time elapsing (only used in NZ checking) *)
-			(*** TODO ***)
-		special_reset_clock = None;
-		(* The list of clock indexes except the reset clock (used, e.g., to print the model *)
-			(*** TODO ***)
-		clocks_without_special_reset_clock = model.clocks;
 		(* The list of discrete indexes *)
 		discrete = model.discrete;
 		(* True for discrete, false otherwise *)
