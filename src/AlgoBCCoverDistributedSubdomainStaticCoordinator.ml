@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/03/17
- * Last modified     : 2016/08/15
+ * Last modified     : 2016/10/10
  *
  ************************************************************)
 
@@ -141,7 +141,7 @@ class algoBCCoverDistributedSubdomainStaticCoordinator =
 		(* First create a manager *)
 		let tiles_manager = match self#get_tiles_manager_type with
 			| AlgoCartoGeneric.Tiles_list -> new TilesManagerList.tilesManagerList
-			| AlgoCartoGeneric.Tiles_good_bad_constraint -> raise (InternalError "not implemented yet")
+			| AlgoCartoGeneric.Tiles_good_bad_constraint -> raise (NotImplemented "not implemented yet")
 		in
 		(* Now initialize the tiles manager *)
 		tiles_manager#initialize;

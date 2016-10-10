@@ -1019,4 +1019,4 @@ let process_result result algorithm_name prefix_option =
 		()
 
 
-(* 	| _ -> raise (InternalError ("function process_result not implemented for all cases")) *)
+(* 	| _ -> raise (NotImplemented ("function process_result not implemented for all cases")) *)

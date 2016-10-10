@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André, Camille Coti
  * Created           : 2014/03/24
- * Last modified     : 2016/08/15
+ * Last modified     : 2016/10/10
  *
  ************************************************************)
  
@@ -974,7 +974,7 @@ let receive_pull_request () =
 		   
   | Slave_tiles_tag ->
 		print_error "Tag 'Slave_tiles_tag' not implemented in receive_pull_request";
-		raise (InternalError("Tag 'Slave_tiles_tag' not implemented in receive_pull_request"))
+		raise (NotImplemented("Tag 'Slave_tiles_tag' not implemented in receive_pull_request"))
   (*
       print_message Verbose_high ("[Master] Received Slave_tiles_tag from " ^ ( string_of_int source_rank) );
 

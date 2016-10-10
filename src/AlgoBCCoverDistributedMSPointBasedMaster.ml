@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/03/10
- * Last modified     : 2016/08/15
+ * Last modified     : 2016/10/10
  *
  ************************************************************)
 
@@ -191,7 +191,7 @@ class virtual algoBCCoverDistributedMSPointBasedMaster =
 		| OutOfBound worker_rank ->
 			self#print_algo_message Verbose_low ("Received OutOfBound request...");
 			(*** TODO: DO SOMETHING TO HANDLE THE CASE OF A POINT THAT WAS NOT SUCCESSFUL ***)
-			raise (InternalError("OutOfBound not implemented."))
+			raise (NotImplemented("OutOfBound not implemented."))
 
 		| Tile (worker_rank , abstract_point_based_result) -> 
 			self#print_algo_message Verbose_low ("Received Tile request...");
@@ -237,7 +237,7 @@ class virtual algoBCCoverDistributedMSPointBasedMaster =
 		| OutOfBound worker_rank ->
 			self#print_algo_message Verbose_low ("Received OutOfBound request...");
 			(*** TODO: DO SOMETHING TO HANDLE THE CASE OF A POINT THAT WAS NOT SUCCESSFUL ***)
-			raise (InternalError("OutOfBound not implemented."))
+			raise (NotImplemented("OutOfBound not implemented."))
 
 		| Tile (worker_rank , abstract_point_based_result) -> 
 			self#print_algo_message Verbose_low ("Received Tile request...");

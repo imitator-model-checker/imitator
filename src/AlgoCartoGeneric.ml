@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/01/19
- * Last modified     : 2016/08/26
+ * Last modified     : 2016/10/10
  *
  ************************************************************)
 
@@ -455,7 +455,7 @@ class virtual algoCartoGeneric =
 	
 	(*** WARNING! Does not work with step <> 1 !!!! ***)
 	if options#step <> NumConst.one then
-		raise (InternalError("Random pi0 not implemented with steps <> 1."));
+		raise (NotImplemented("Random pi0 not implemented with steps <> 1."));
 	
 	(* Create the pi0 *)
 	let random_pi0 = new PVal.pval in

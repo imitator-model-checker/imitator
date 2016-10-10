@@ -290,7 +290,7 @@ if options#pta2tikz then(
 );
 (* Direct cartography output *)
 if options#cartonly then(
-	raise (InternalError("Not implemented! "))
+	raise (NotImplemented("Direct cartography output (#cartonly) is disabled"))
 
 	(*** TODO ***)
 	
@@ -661,7 +661,7 @@ let algorithm : AlgoGeneric.algoGeneric = match options#imitator_mode with
 		myalgo
 	
 	| Border_cartography ->
-		raise (InternalError("Not implemented !!!"))
+		raise (NotImplemented("Border cartography is disabled"))
 		
 	(* BC with random coverage *)
 	| Random_cartography nb ->

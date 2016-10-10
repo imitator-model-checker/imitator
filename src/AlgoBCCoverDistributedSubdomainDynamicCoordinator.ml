@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/03/17
- * Last modified     : 2016/08/15
+ * Last modified     : 2016/10/10
  *
  ************************************************************)
 
@@ -272,7 +272,7 @@ class algoBCCoverDistributedSubdomainDynamicCoordinator =
 		begin
 		match self#get_tiles_manager_type with
 			| AlgoCartoGeneric.Tiles_list -> tiles_manager <- new TilesManagerList.tilesManagerList
-			| AlgoCartoGeneric.Tiles_good_bad_constraint -> raise (InternalError "not implemented yet")
+			| AlgoCartoGeneric.Tiles_good_bad_constraint -> raise (NotImplemented "not implemented yet")
 		end;
 		(* Now initialize the tiles manager *)
 		tiles_manager#initialize;
