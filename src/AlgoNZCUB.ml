@@ -88,6 +88,8 @@ class algoNZCUB =
 				| Some clock_index -> clock_index
 			in
 			
+			(* First check that time-elapsing is possible, i.e., the zero clock is non-necessarily bound to 0 *)
+			
 			(* Find transitions *)
 			
 			(* Measure time elapsing *)

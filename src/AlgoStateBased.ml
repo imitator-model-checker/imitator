@@ -219,7 +219,7 @@ let compute_invariant location =
 (* Compute the polyhedron p projected onto rho(X) *)
 (*------------------------------------------------------------*)
 (*** TO OPTIMIZE: use cache (?) *)
-let rho_assign (linear_constraint : LinearConstraint.pxd_linear_constraint) clock_updates =
+let rho_assign (linear_constraint : LinearConstraint.pxd_linear_constraint) (clock_updates : AbstractModel.clock_updates list) =
 	(* Retrieve the model *)
 	let model = Input.get_model() in
 
@@ -229,16 +229,6 @@ let rho_assign (linear_constraint : LinearConstraint.pxd_linear_constraint) cloc
 		(*** TO OPTIMIZE: only create the hash if there are indeed some resets/updates ***)
 		
 		let clocks_hash = Hashtbl.create model.nb_clocks in
-		
-		
-		(* If special clock to be reset at each transition: add it *)
-		begin
-		match model.special_reset_clock with
-			| None -> ()
-			| Some clock_index ->
-			(* Assign this clock to true in the table *)
-				Hashtbl.add clocks_hash clock_index (LinearConstraint.make_pxd_linear_term [] NumConst.zero);
-		end;
 		
 		(* Check wether there are some complex updates of the form clock' = linear_term *)
 		let arbitrary_updates = ref false in
@@ -883,6 +873,17 @@ let compute_new_constraint orig_constraint (discrete_constr_src : LinearConstrai
 
 		(* Alternative IMITATOR semantics for time-elapsing: apply time-elapsing NOW, and intersect with invariant *)
 		if options#no_time_elapsing then(
+		
+			(* If special clock to be reset at each transition: reset it now! *)
+			begin
+			match model.special_reset_clock with
+				| None -> ()
+				| Some clock_index ->
+				(* Reset it *)
+					print_message Verbose_medium "Resetting the special reset clock…";
+					rho_assign orig_constraint_with_maybe_time_elapsing [Resets [clock_index]];
+			end;
+			
 			print_message Verbose_total ("\nAlternative time elapsing: Applying time elapsing NOW");
 			apply_time_elapsing orig_location orig_constraint_with_maybe_time_elapsing;
 			
