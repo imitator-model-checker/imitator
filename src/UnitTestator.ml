@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/04/30
- * Last modified     : 2016/04/30
+ * Last modified     : 2016/10/10
  *
  ************************************************************)
 
@@ -90,6 +90,12 @@ let print_clock_guard linear_inequality =
 	) with Not_a_clock_guard -> print_message Verbose_standard ("No!");
 in
 
+let test_var_0 v c =
+	print_message Verbose_standard ("\nIn the following constraint, do we have " ^ (variable_names v)  ^ "=0...?");
+	print_message Verbose_standard (string_of_pxd_linear_constraint variable_names c);
+	print_message Verbose_standard (string_of_bool (pxd_is_zero_in v c));
+in
+
 
 (* Set dimensions *)
 set_dimensions nb_parameters nb_clocks nb_discrete;
@@ -110,6 +116,12 @@ let lt4 = make_pxd_linear_term [(NumConst.one, p1) ; (NumConst.numconst_of_int 3
 
 (* p1 + 3p2 - 8 p3 - x2 + 1 *)
 let lt5 = make_pxd_linear_term [(NumConst.one, p1) ; (NumConst.numconst_of_int 3, p2) ; (NumConst.numconst_of_int (-8), p3) ; (NumConst.minus_one, x2)] NumConst.one in
+
+(* p1 = 0 *)
+let lt6 = make_pxd_linear_term [(NumConst.one, p1) ] NumConst.zero in
+
+(* x1 = 0 *)
+let lt7 = make_pxd_linear_term [(NumConst.one, x1) ] NumConst.zero in
 
 print_message Verbose_standard ("\nLinear terms");
 
@@ -142,6 +154,12 @@ let li5 = make_pxd_linear_inequality lt5 Op_ge in
 (* p1 + 3p2 - 8 p3 + 1 < x2 *)
 let li6 = make_pxd_linear_inequality lt5 Op_l in
 
+(* p1 = 0 *)
+let li7 = make_pxd_linear_inequality lt6 Op_eq in
+
+(* x1 = 0 *)
+let li8 = make_pxd_linear_inequality lt7 Op_eq in
+
 print_message Verbose_standard ("\nLinear inequalities");
 
 
@@ -167,6 +185,8 @@ let lc3 = make_pxd_constraint [li3] in
 let lc4 = make_pxd_constraint [li4] in
 let lc5 = make_pxd_constraint [li5] in
 let lc6 = make_pxd_constraint [li6] in
+let lc7 = make_pxd_constraint [li6; li7] in
+let lc8 = make_pxd_constraint [li6; li7; li8] in
 
 print_message Verbose_standard ("\nLinear constraints");
 
@@ -175,6 +195,9 @@ print_message Verbose_standard (string_of_pxd_linear_constraint variable_names l
 print_message Verbose_standard (string_of_pxd_linear_constraint variable_names lc3);
 print_message Verbose_standard (string_of_pxd_linear_constraint variable_names lc4);
 print_message Verbose_standard (string_of_pxd_linear_constraint variable_names lc5);
+print_message Verbose_standard (string_of_pxd_linear_constraint variable_names lc6);
+print_message Verbose_standard (string_of_pxd_linear_constraint variable_names lc7);
+print_message Verbose_standard (string_of_pxd_linear_constraint variable_names lc8);
 
 (*(* Retrieve inequality *)
 let li1' = List.nth (pxd_get_inequalities lc1) 0 in
@@ -194,9 +217,36 @@ print_clock_guard (List.nth (pxd_get_inequalities lc5) 0);
 print_clock_guard (List.nth (pxd_get_inequalities lc6) 0);
 
 
+test_var_0 x1 lc1;
+test_var_0 x2 lc1;
+test_var_0 x3 lc1;
+test_var_0 p1 lc1;
+test_var_0 p2 lc1;
+test_var_0 p3 lc1;
+test_var_0 d1 lc1;
+test_var_0 d2 lc1;
+
+test_var_0 x1 lc7;
+test_var_0 x2 lc7;
+test_var_0 x3 lc7;
+test_var_0 p1 lc7;
+test_var_0 p2 lc7;
+test_var_0 p3 lc7;
+test_var_0 d1 lc7;
+test_var_0 d2 lc7;
+
+test_var_0 x1 lc8;
+test_var_0 x2 lc8;
+test_var_0 x3 lc8;
+test_var_0 p1 lc8;
+test_var_0 p2 lc8;
+test_var_0 p3 lc8;
+test_var_0 d1 lc8;
+test_var_0 d2 lc8;
+
 (************************************************************)
 (************************************************************)
-(* STARTING PROGRAM *)
+(* ENDING PROGRAM *)
 (************************************************************)
 (************************************************************)
 

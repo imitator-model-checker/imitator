@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2010/03/04
- * Last modified     : 2016/05/24
+ * Last modified     : 2016/10/10
  *
  ************************************************************)
 
@@ -280,8 +280,14 @@ val p_is_leq : p_linear_constraint -> p_linear_constraint -> bool
 val px_is_leq : px_linear_constraint -> px_linear_constraint -> bool
 val pxd_is_leq : pxd_linear_constraint -> pxd_linear_constraint -> bool
 
-(** Check if a variable v is bound to be >= 0 in a constraint c *)
+(** Check if a variable v is bound to be >= 0 in a constraint *)
 val px_is_positive_in : variable -> px_linear_constraint -> bool
+
+(** Check if a variable v is bound to be = 0 in a constraint *)
+val px_is_zero_in : variable -> px_linear_constraint -> bool
+
+(** Check if a variable v is bound to be = 0 in a constraint *)
+val pxd_is_zero_in : variable -> pxd_linear_constraint -> bool
 
 (** Check if a constraint contains an integer point *)
 val px_contains_integer_point : px_linear_constraint -> bool

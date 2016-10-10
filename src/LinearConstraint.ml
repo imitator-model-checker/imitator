@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2010/03/04
- * Last modified     : 2016/05/24
+ * Last modified     : 2016/10/10
  *
  ************************************************************)
 
@@ -2037,6 +2037,21 @@ let px_is_positive_in v c =
 					print_newline();*)
 	(* Check *)
 	not (is_satisfiable v_l_zero)
+
+
+(** Check if a variable v is bound to be = 0 in a constraint *)
+let px_is_zero_in v c =
+	(* Idea: perform equality check of (v = 0 & c) =?= c *)
+	(* Create v = 0 *)
+	let v_lt = make_px_linear_term [
+			NumConst.one, v;
+		] NumConst.zero in
+	let v_l_zero = make [make_px_linear_inequality v_lt Op_eq] in
+	px_intersection_assign v_l_zero [c];
+	(* Check *)
+	px_is_equal v_l_zero c
+
+let pxd_is_zero_in = px_is_zero_in
 
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
