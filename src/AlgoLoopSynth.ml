@@ -81,7 +81,7 @@ class algoLoopSynth =
 	(* Return true if the state is not discarded by the algorithm, i.e., if it is either added OR was already present before *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(*** WARNING/BADPROG: the following is partially copy/paste from AlgoEF.ml (though much modified) ***)
-	method add_a_new_state state_space orig_state_index new_states_indexes action_index location (current_constraint : LinearConstraint.px_linear_constraint) =
+	method add_a_new_state orig_state_index new_states_indexes action_index location (current_constraint : LinearConstraint.px_linear_constraint) =
 		(* Retrieve the model *)
 		let model = Input.get_model () in
 

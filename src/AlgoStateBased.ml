@@ -1192,7 +1192,7 @@ class virtual algoStateBased =
 	(* Return true if the state is not discarded by the algorithm, i.e., if it is either added OR was already present before *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(*** TODO: simplify signature by removing the orig_state_index and returning the list of actually added states ***)
-	method virtual add_a_new_state : StateSpace.state_space -> state_index -> state_index list ref -> Automaton.action_index -> Location.global_location -> LinearConstraint.px_linear_constraint -> bool
+	method virtual add_a_new_state : state_index -> state_index list ref -> Automaton.action_index -> Location.global_location -> LinearConstraint.px_linear_constraint -> bool
 
 		
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -1359,7 +1359,7 @@ class virtual algoStateBased =
 								self#print_algo_message Verbose_total ("Consider the state \n" ^ (ModelPrinter.string_of_state model new_state));
 							);
 
-							let added = self#add_a_new_state state_space orig_state_index new_states_indexes action_index location final_constraint in
+							let added = self#add_a_new_state orig_state_index new_states_indexes action_index location final_constraint in
 							
 							(* Update *)
 							has_successors := !has_successors || added;
@@ -1427,7 +1427,7 @@ class virtual algoStateBased =
 						self#print_algo_message Verbose_total ("Consider the state \n" ^ (ModelPrinter.string_of_state model new_state));
 					);
 
-					let added = self#add_a_new_state state_space orig_state_index new_states_indexes action_index location final_constraint in
+					let added = self#add_a_new_state orig_state_index new_states_indexes action_index location final_constraint in
 					(* Update flag for deadlock checking *)
 					has_successors := !has_successors || added;
 				) action_index_list;

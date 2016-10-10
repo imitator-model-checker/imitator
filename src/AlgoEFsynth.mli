@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/11/25
- * Last modified     : 2016/05/04
+ * Last modified     : 2016/10/10
  *
  ************************************************************)
 
@@ -46,7 +46,7 @@ class algoEFsynth :
 		(* Return true if the state is not discarded by the algorithm, i.e., if it is either added OR was already present before *)
 		(*------------------------------------------------------------*)
 		(*** TODO: simplify signature by removing the orig_state_index and returning the list of actually added states ***)
-		method add_a_new_state : StateSpace.state_space -> state_index -> state_index list ref -> Automaton.action_index -> Location.global_location -> LinearConstraint.px_linear_constraint -> bool
+		method add_a_new_state : state_index -> state_index list ref -> Automaton.action_index -> Location.global_location -> LinearConstraint.px_linear_constraint -> bool
 
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		(* Actions to perform when meeting a state with no successors: nothing to do for this algorithm *)

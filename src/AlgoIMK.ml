@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/12/04
- * Last modified     : 2016/08/24
+ * Last modified     : 2016/10/10
  *
  ************************************************************)
 
@@ -205,7 +205,7 @@ class algoIMK =
 	(*** TODO: move new_states_indexes to a variable of the class ***)
 	(* Return true if the state is not discarded by the algorithm, i.e., if it is either added OR was already present before *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method add_a_new_state state_space orig_state_index new_states_indexes action_index location (final_constraint : LinearConstraint.px_linear_constraint) =
+	method add_a_new_state orig_state_index new_states_indexes action_index location (final_constraint : LinearConstraint.px_linear_constraint) =
 		(* Retrieve the model *)
 		let model = Input.get_model () in
 

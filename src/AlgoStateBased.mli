@@ -75,8 +75,8 @@ class virtual algoStateBased :
 		(*** TODO: move new_states_indexes to a variable of the class ***)
 		(* Return true if the state is not discarded by the algorithm, i.e., if it is either added OR was already present before *)
 		(*------------------------------------------------------------*)
-		(*** TODO: simplify signature by removing the StateSpace, the state_index list ref and the action_index, and by returning the list of actually added states ***)
-		method virtual add_a_new_state : StateSpace.state_space -> state_index -> state_index list ref -> Automaton.action_index -> Location.global_location -> LinearConstraint.px_linear_constraint -> bool
+		(*** TODO: simplify signature by removing the state_index list ref and the action_index, and by returning the list of actually added states ***)
+		method virtual add_a_new_state : state_index -> state_index list ref -> Automaton.action_index -> Location.global_location -> LinearConstraint.px_linear_constraint -> bool
 		
 		(* Actions to perform when meeting a state with no successors: virtual method to be defined in subclasses *)
 		method virtual process_deadlock_state : state_index -> unit

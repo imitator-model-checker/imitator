@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/11/25
- * Last modified     : 2016/08/24
+ * Last modified     : 2016/10/10
  *
  ************************************************************)
 
@@ -60,12 +60,12 @@ class algoPostStar =
 	
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Add a new state to the reachability_graph (if indeed needed) *)
+	(* Add a new state to the state space (if indeed needed) *)
 	(* Side-effects: modify new_states_indexes *)
 	(*** TODO: move new_states_indexes to a variable of the class ***)
 	(* Return true if the state is not discarded by the algorithm, i.e., if it is either added OR was already present before *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method add_a_new_state reachability_graph orig_state_index new_states_indexes action_index location (final_constraint : LinearConstraint.px_linear_constraint) =
+	method add_a_new_state orig_state_index new_states_indexes action_index location (final_constraint : LinearConstraint.px_linear_constraint) =
 		(* Retrieve the model *)
 		let model = Input.get_model () in
 
@@ -73,7 +73,7 @@ class algoPostStar =
 		let new_state = location, final_constraint in
 
 		let new_state_index, added = (
-			StateSpace.add_state reachability_graph new_state
+			StateSpace.add_state state_space new_state
 		) in
 		
 		(* If this is really a new state *)
@@ -93,7 +93,7 @@ class algoPostStar =
 		(*** TODO: move the rest to a higher level function? (post_from_one_state?) ***)
 		
 		(* Update the transitions *)
-		StateSpace.add_transition reachability_graph (orig_state_index, action_index, new_state_index);
+		StateSpace.add_transition state_space (orig_state_index, action_index, new_state_index);
 		(* Print some information *)
 		if verbose_mode_greater Verbose_high then (
 			let beginning_message = (if added then "NEW STATE" else "Old state") in
