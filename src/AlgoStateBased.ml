@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/12/02
- * Last modified     : 2016/10/08
+ * Last modified     : 2016/10/10
  *
  ************************************************************)
 
@@ -1134,6 +1134,9 @@ class virtual algoStateBased =
 	(* Class variables *)
 	(************************************************************)
 
+	(*** TODO: better have some option, or better initialize it to the good value from now on ***)
+	val mutable state_space = StateSpace.make 0
+	
 	(* Nature of the state space according to a property *)
 	val mutable statespace_nature = StateSpace.Unknown
 	

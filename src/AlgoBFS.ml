@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/11/23
- * Last modified     : 2016/05/04
+ * Last modified     : 2016/10/10
  *
  ************************************************************)
 
@@ -80,9 +80,6 @@ class virtual algoBFS =
 	
 	(* Function to be called from the distributed IMITATOR *)
 	val mutable patator_termination_function = None
-	
-	(*** TODO: better have some option, or better initialize it to the good value from now on ***)
-	val mutable state_space = StateSpace.make 0
 	
 	(* Status of the analysis *)
 	val mutable termination_status = None

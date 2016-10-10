@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/12/02
- * Last modified     : 2016/10/08
+ * Last modified     : 2016/10/10
  *
  ************************************************************)
 
@@ -46,6 +46,9 @@ class virtual algoStateBased :
 		(* Class variables *)
 		(************************************************************)
 		
+		(*** TODO: make private (while accessible to subclasses ***)
+		val mutable state_space : StateSpace.state_space
+
 		(* Nature of the state space according to a property *)
 		val mutable statespace_nature : StateSpace.statespace_nature
 
