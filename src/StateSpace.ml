@@ -547,9 +547,9 @@ let get_resets state_space state_index action_index state_index' =
 	
 
 
-(*------------------------------------------------------------*)
+(************************************************************)
 (** SCC detection *)
-(*------------------------------------------------------------*)
+(************************************************************)
 
 (*** NOTE: this part is heavily based on the Tarjan's strongly connected components algorithm, as presented on Wikipedia, with some mild modification:
 	- the top level algorithm is run once only (as we start from a state which we know belongs to the desired SCC)
@@ -718,6 +718,23 @@ let reconstruct_scc state_space state_index : scc =
 	scc
 
 
+(*------------------------------------------------------------*)
+(** From a set of states, return all transitions within this set of states, in the form of a triple (state_index, action_index, state_index) *)
+(*------------------------------------------------------------*)
+let find_transitions_in state_space (scc : scc) : (state_index * action_index * state_index) list =
+	List.fold_left (fun current_list state_index ->
+		(* Compute the successors of state_index *)
+		let successors = get_successors_with_actions state_space state_index in
+		
+		(* Filter only those who belong to the scc *)
+		let successors_in_scc = List.filter (fun (state_index, _) -> List.mem state_index scc) successors in
+		
+		(* Convert into triple (state_index, action_index, state_index) *)
+		let triples = List.map (fun (target_state_index, action_index) -> (state_index, action_index, target_state_index) ) successors_in_scc in
+		
+		(* Add them to the current list *)
+		List.rev_append triples current_list
+	) [] scc
 
 
 

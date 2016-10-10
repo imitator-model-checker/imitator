@@ -61,7 +61,13 @@ class algoLoopSynth :
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		(* Actions to perform when found a loop, after updating the state space *)
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-		method process_loop_after_state_space_update : state_index -> unit
+		method process_loop_constraint_before_state_space_update : state_index -> LinearConstraint.px_linear_constraint -> unit
+		
+		
+		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+		(* Actions to perform when found a loop, after updating the state space *)
+		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+		method process_loop_constraint_after_state_space_update : state_index -> LinearConstraint.px_linear_constraint -> unit
 		
 		
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)

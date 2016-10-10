@@ -104,7 +104,7 @@ class algoLoopSynth =
 			(* Print some information *)
 			self#print_algo_message Verbose_standard "Found a loop.";
 			
-			self#update_loop_constraint current_constraint;
+			self#process_loop_constraint_before_state_space_update new_state_index current_constraint;
 
 			) (* end if loop *)
 		;
@@ -123,7 +123,7 @@ class algoLoopSynth =
 		(* If found a loop *)
 		if not added then(
 			(*** NOTE: this method is called AFTER the transition table was updated ***)
-			self#process_loop_after_state_space_update new_state_index;
+			self#process_loop_constraint_after_state_space_update new_state_index current_constraint;
 		); (* end if found a loop *)
 		
 		(* The state is kept in any case *)
@@ -131,7 +131,7 @@ class algoLoopSynth =
 	
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* When a loop is found, update the loop constraint; current_constraint is a PX constraint that will not be modified *)
+	(* When a loop is found, update the loop constraint; current_constraint is a PX constraint that will not be modified. It will be projected onto the parameters and unified with the current parameter loop_constraint *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method update_loop_constraint current_constraint =
 		(* Retrieve the model *)
@@ -179,10 +179,17 @@ class algoLoopSynth =
 		()
 
 	
+
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(* Actions to perform when found a loop, before updating the state space *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	method process_loop_constraint_before_state_space_update _ loop_px_constraint =
+		self#update_loop_constraint loop_px_constraint;
+
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Actions to perform when found a loop, after updating the state space *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method process_loop_after_state_space_update loop_starting_point_state_index =
+	method process_loop_constraint_after_state_space_update loop_starting_point_state_index loop_px_constraint =
 		(* Retrieve the model *)
 		let model = Input.get_model () in
 

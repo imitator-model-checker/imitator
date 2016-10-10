@@ -157,6 +157,11 @@ val get_resets : state_space -> state_index -> action_index -> state_index -> Au
 (*------------------------------------------------------------*)
 val reconstruct_scc : state_space -> state_index -> state_index list
 
+(*------------------------------------------------------------*)
+(** From a set of states, return all transitions within this set of states, in the form of a triple (state_index, action_index, state_index) *)
+(*------------------------------------------------------------*)
+val find_transitions_in : state_space -> state_index list -> (state_index * action_index * state_index) list
+
 
 (************************************************************)
 (** Actions on a state space *)
