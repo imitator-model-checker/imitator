@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/08/24
- * Last modified     : 2016/10/07
+ * Last modified     : 2016/10/10
  *
  ************************************************************)
 
@@ -157,21 +157,34 @@ class algoLoopSynth =
 		
 		(* If found a loop *)
 		if not added then(
-			(* Compute the SCC (after the transitions were updated, of course) *)
-			if verbose_mode_greater Verbose_low then(
-				let scc = StateSpace.reconstruct_scc state_space new_state_index in
-				(* Print it *)
-				let verbose_string_of_state_index state_index =
-					let state = StateSpace.get_state state_space state_index in
-					"\n\ts_" ^ (string_of_int state_index) ^ "{" ^ (ModelPrinter.string_of_state model state) ^ "}"
-				in
-				print_message Verbose_low ("\nSCC: [" ^ (string_of_list_of_string_with_sep "\n\t- " (List.map verbose_string_of_state_index scc)) ^ "\n]");
-			);
+			(*** NOTE: this method is called AFTER the transition table was updated ***)
+			self#process_loop new_state_index;
 		); (* end if found a loop *)
 		
 		(* The state is kept in any case *)
 		true
 	
+	
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(* Actions to perform when found a loop, after updating the state space *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	method process_loop loop_starting_point_state_index =
+		(* Retrieve the model *)
+		let model = Input.get_model () in
+
+		(* Compute the SCC (after the transitions were updated, of course) *)
+		if verbose_mode_greater Verbose_low then(
+			let scc = StateSpace.reconstruct_scc state_space loop_starting_point_state_index in
+			(* Print it *)
+			let verbose_string_of_state_index state_index =
+				let state = StateSpace.get_state state_space state_index in
+				"\n\ts_" ^ (string_of_int state_index) ^ "{" ^ (ModelPrinter.string_of_state model state) ^ "}"
+			in
+			print_message Verbose_low ("\nSCC: [" ^ (string_of_list_of_string_with_sep "\n\t- " (List.map verbose_string_of_state_index scc)) ^ "\n]");
+		);
+		(* The end *)
+		()
+
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Actions to perform when meeting a state with no successors: nothing to do for this algorithm *)
