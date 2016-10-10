@@ -229,6 +229,17 @@ let rho_assign (linear_constraint : LinearConstraint.pxd_linear_constraint) cloc
 		(*** TO OPTIMIZE: only create the hash if there are indeed some resets/updates ***)
 		
 		let clocks_hash = Hashtbl.create model.nb_clocks in
+		
+		
+		(* If special clock to be reset at each transition: add it *)
+		begin
+		match model.special_reset_clock with
+			| None -> ()
+			| Some clock_index ->
+			(* Assign this clock to true in the table *)
+				Hashtbl.add clocks_hash clock_index (LinearConstraint.make_pxd_linear_term [] NumConst.zero);
+		end;
+		
 		(* Check wether there are some complex updates of the form clock' = linear_term *)
 		let arbitrary_updates = ref false in
 		(* Iterate on the lists of clocks for all synchronized automaton *)
@@ -264,7 +275,7 @@ let rho_assign (linear_constraint : LinearConstraint.pxd_linear_constraint) cloc
 		
 		(* THREE CASES: no updates, only resets (to 0) or updates (to linear terms) *)
 		
-		(* CASE 1: no update *)
+		(* CASE 1: no update nor reset *)
 		if Hashtbl.length clocks_hash = 0 then (
 			
 			(* do nothing! *)
