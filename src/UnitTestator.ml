@@ -38,7 +38,7 @@ open LinearConstraint
 (************************************************************)
 (************************************************************)
 
-print_message Verbose_standard "Starting UnitTestator...";
+print_message Verbose_standard "Starting UnitTestator…";
 
 
 (************************************************************)
@@ -47,7 +47,7 @@ print_message Verbose_standard "Starting UnitTestator...";
 (************************************************************)
 (************************************************************)
 
-print_message Verbose_standard "Testing LinearConstraint...";
+print_message Verbose_standard "Testing LinearConstraint…";
 
 let nb_parameters = 3 in
 let nb_clocks = 3 in
@@ -82,7 +82,7 @@ in
 
 
 let print_clock_guard linear_inequality =
-	print_message Verbose_standard ("\nIs the following constraint a clock guard...?");
+	print_message Verbose_standard ("\nIs the following constraint a clock guard…?");
 	print_message Verbose_standard (string_of_pxd_linear_inequality variable_names linear_inequality);
 	try(
 		let x, op, plt = clock_guard_of_linear_inequality linear_inequality in
@@ -90,10 +90,16 @@ let print_clock_guard linear_inequality =
 	) with Not_a_clock_guard -> print_message Verbose_standard ("No!");
 in
 
-let test_var_0 v c =
-	print_message Verbose_standard ("\nIn the following constraint, do we have " ^ (variable_names v)  ^ "=0...?");
+let test_var_is_0 v c =
+	print_message Verbose_standard ("\nIn the following constraint, do we have " ^ (variable_names v)  ^ "=0…?");
 	print_message Verbose_standard (string_of_pxd_linear_constraint variable_names c);
 	print_message Verbose_standard (string_of_bool (pxd_is_zero_in v c));
+in
+
+let test_bounded_from_above v c =
+	print_message Verbose_standard ("\nIn the following constraint, is " ^ (variable_names v)  ^ " bounded from above…?");
+	print_message Verbose_standard (string_of_pxd_linear_constraint variable_names c);
+	print_message Verbose_standard (string_of_bool (pxd_is_bounded_from_above_in v c));
 in
 
 
@@ -117,11 +123,26 @@ let lt4 = make_pxd_linear_term [(NumConst.one, p1) ; (NumConst.numconst_of_int 3
 (* p1 + 3p2 - 8 p3 - x2 + 1 *)
 let lt5 = make_pxd_linear_term [(NumConst.one, p1) ; (NumConst.numconst_of_int 3, p2) ; (NumConst.numconst_of_int (-8), p3) ; (NumConst.minus_one, x2)] NumConst.one in
 
-(* p1 = 0 *)
+(* p1 *)
 let lt6 = make_pxd_linear_term [(NumConst.one, p1) ] NumConst.zero in
 
-(* x1 = 0 *)
+(* x1 *)
 let lt7 = make_pxd_linear_term [(NumConst.one, x1) ] NumConst.zero in
+
+(* d1 - 3*)
+let lt8 = make_pxd_linear_term [(NumConst.one, d1)  ] (NumConst.numconst_of_int (-3)) in
+
+(* x2 + d2 - 5*)
+let lt9 = make_pxd_linear_term [(NumConst.one, x2) ; (NumConst.one, d2)  ] (NumConst.numconst_of_int (-5)) in
+
+(* x1 - p1 *)
+let lt10 = make_pxd_linear_term [(NumConst.one, x1) ; (NumConst.minus_one, p1)  ] NumConst.zero in
+
+
+let linear_inequality_positive_var v =
+	let lt = make_pxd_linear_term [(NumConst.one, v) ] NumConst.zero in
+	make_pxd_linear_inequality lt Op_ge
+in
 
 print_message Verbose_standard ("\nLinear terms");
 
@@ -160,6 +181,14 @@ let li7 = make_pxd_linear_inequality lt6 Op_eq in
 (* x1 = 0 *)
 let li8 = make_pxd_linear_inequality lt7 Op_eq in
 
+(* d1 <= 3 *)
+let li9 = make_pxd_linear_inequality lt8 Op_le in
+
+(* x2 + d2 - 5 <=  0 *)
+(* x2 + d2 <= 5 *)
+let li10 = make_pxd_linear_inequality lt9 Op_le in
+
+
 print_message Verbose_standard ("\nLinear inequalities");
 
 
@@ -187,6 +216,8 @@ let lc5 = make_pxd_constraint [li5] in
 let lc6 = make_pxd_constraint [li6] in
 let lc7 = make_pxd_constraint [li6; li7] in
 let lc8 = make_pxd_constraint [li6; li7; li8] in
+let lc9 = make_pxd_constraint [li6; li7; li8 ; li9 ; li10 ; linear_inequality_positive_var x2 ; linear_inequality_positive_var d2] in
+let lc10 = make_pxd_constraint [make_pxd_linear_inequality lt10 Op_le ; linear_inequality_positive_var x1 ; linear_inequality_positive_var p1] in
 
 print_message Verbose_standard ("\nLinear constraints");
 
@@ -198,6 +229,7 @@ print_message Verbose_standard (string_of_pxd_linear_constraint variable_names l
 print_message Verbose_standard (string_of_pxd_linear_constraint variable_names lc6);
 print_message Verbose_standard (string_of_pxd_linear_constraint variable_names lc7);
 print_message Verbose_standard (string_of_pxd_linear_constraint variable_names lc8);
+print_message Verbose_standard (string_of_pxd_linear_constraint variable_names lc9);
 
 (*(* Retrieve inequality *)
 let li1' = List.nth (pxd_get_inequalities lc1) 0 in
@@ -217,32 +249,59 @@ print_clock_guard (List.nth (pxd_get_inequalities lc5) 0);
 print_clock_guard (List.nth (pxd_get_inequalities lc6) 0);
 
 
-test_var_0 x1 lc1;
-test_var_0 x2 lc1;
-test_var_0 x3 lc1;
-test_var_0 p1 lc1;
-test_var_0 p2 lc1;
-test_var_0 p3 lc1;
-test_var_0 d1 lc1;
-test_var_0 d2 lc1;
+test_var_is_0 x1 lc1;
+test_var_is_0 x2 lc1;
+test_var_is_0 x3 lc1;
+test_var_is_0 p1 lc1;
+test_var_is_0 p2 lc1;
+test_var_is_0 p3 lc1;
+test_var_is_0 d1 lc1;
+test_var_is_0 d2 lc1;
 
-test_var_0 x1 lc7;
-test_var_0 x2 lc7;
-test_var_0 x3 lc7;
-test_var_0 p1 lc7;
-test_var_0 p2 lc7;
-test_var_0 p3 lc7;
-test_var_0 d1 lc7;
-test_var_0 d2 lc7;
+test_var_is_0 x1 lc7;
+test_var_is_0 x2 lc7;
+test_var_is_0 x3 lc7;
+test_var_is_0 p1 lc7;
+test_var_is_0 p2 lc7;
+test_var_is_0 p3 lc7;
+test_var_is_0 d1 lc7;
+test_var_is_0 d2 lc7;
 
-test_var_0 x1 lc8;
-test_var_0 x2 lc8;
-test_var_0 x3 lc8;
-test_var_0 p1 lc8;
-test_var_0 p2 lc8;
-test_var_0 p3 lc8;
-test_var_0 d1 lc8;
-test_var_0 d2 lc8;
+test_var_is_0 x1 lc8;
+test_var_is_0 x2 lc8;
+test_var_is_0 x3 lc8;
+test_var_is_0 p1 lc8;
+test_var_is_0 p2 lc8;
+test_var_is_0 p3 lc8;
+test_var_is_0 d1 lc8;
+test_var_is_0 d2 lc8;
+
+
+
+
+test_bounded_from_above x1 lc8;
+test_bounded_from_above x2 lc8;
+test_bounded_from_above x3 lc8;
+test_bounded_from_above p1 lc8;
+test_bounded_from_above p2 lc8;
+test_bounded_from_above p3 lc8;
+test_bounded_from_above d1 lc8;
+test_bounded_from_above d2 lc8;
+
+
+test_bounded_from_above x1 lc9;
+test_bounded_from_above x2 lc9;
+test_bounded_from_above x3 lc9;
+test_bounded_from_above p1 lc9;
+test_bounded_from_above p2 lc9;
+test_bounded_from_above p3 lc9;
+test_bounded_from_above d1 lc9;
+test_bounded_from_above d2 lc9;
+
+(*** WARNING: shouldn't this be true…? ***)
+test_bounded_from_above x1 lc10;
+test_bounded_from_above x2 lc10;
+test_bounded_from_above p1 lc10;
 
 (************************************************************)
 (************************************************************)

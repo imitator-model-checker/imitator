@@ -112,6 +112,8 @@ let ppl_nb_add_constraints = ref 0
 
 	let ppl_tcounter_constrains = create_hybrid_counter_and_register "constrains" PPL_counter Verbose_low
 
+	let ppl_tcounter_bounds_from_above = create_hybrid_counter_and_register "bounds_from_above" PPL_counter Verbose_low
+	
 
 
 (*let ppl_nb_hull = ref 0
@@ -324,7 +326,7 @@ type pxd_linear_constraint = linear_constraint
 (* to the corresponding PPL data structure, it is normalized such *)
 (* that the only non-rational coefficient is outside the term:    *)
 (* p/q * ( ax + by + c ) *)
-let normalize_linear_term lt =
+let normalize_linear_term (lt : linear_term) : (Ppl.linear_expression * NumConst.t) =
 	(* Increment discrete counter *)
 	ppl_tcounter_normalize_linear_term#increment;
 	
@@ -505,6 +507,10 @@ let ippl_contains_integer_point c =
 (** Return true if the variable is constrained in a linear_constraint *)
 let ippl_is_constrained =
 	ippl_generic (fun () -> ppl_Polyhedron_constrains) ppl_tcounter_constrains
+	
+(** Return true if the variable is constrained from above by a linear_expression *)
+let ippl_bounds_from_above =
+	ippl_generic (fun () -> ppl_Polyhedron_bounds_from_above) ppl_tcounter_bounds_from_above
 	
 
 let ippl_copy_linear_constraint linear_constraint =
@@ -951,11 +957,15 @@ let rec string_of_linear_term_ppl names linear_term =
 (** {3 Creation} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
-(** Create a linear inequality using a linear term and an operator *)
-let make_linear_inequality linear_term op =
+let ppl_linear_expression_of_linear_term (linear_term : linear_term) : Ppl.linear_expression =
 	let ppl_term, r = normalize_linear_term linear_term in
 	let p = NumConst.get_num r in
-	let lin_term = Times (p, ppl_term) in
+	Times (p, ppl_term)
+
+
+(** Create a linear inequality using a linear term and an operator *)
+let make_linear_inequality linear_term op =
+	let lin_term = ppl_linear_expression_of_linear_term linear_term in
 	let zero_term = Coefficient Gmp.Z.zero in
 	match op with
 		| Op_g -> Greater_Than (lin_term, zero_term)
@@ -2052,6 +2062,19 @@ let px_is_zero_in v c =
 	px_is_equal v_l_zero c
 
 let pxd_is_zero_in = px_is_zero_in
+
+
+(** Check if a variable v is bounded from above in a constraint *)
+let px_is_bounded_from_above_in v c =
+	(* Idea: use ppl_Polyhedron_bounds_from_above with 'v' as the linear_expression *)
+	(* Create v *)
+	let v_lt = ppl_linear_expression_of_linear_term (make_px_linear_term [NumConst.one, v;] NumConst.zero) in
+
+	(* Apply *)
+(* val ppl_Polyhedron_bounds_from_above : polyhedron -> linear_expression -> bool *)
+	ippl_bounds_from_above c v_lt
+
+let pxd_is_bounded_from_above_in = px_is_bounded_from_above_in
 
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
