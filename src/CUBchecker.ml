@@ -8,7 +8,7 @@
  * 
  * File contributors : Nguyen Hoang Gia, Étienne André
  * Created           : 2016/04/13
- * Last modified     : 2016/09/29
+ * Last modified     : 2016/10/10
  *
  ************************************************************)
 
@@ -43,7 +43,7 @@ let convert_inequality_list_2_tuple_list model inequalities =
 	(*True constraints -> list of clocks >= 0*)
 		[] ->  List.iter 	(fun clock_index -> 
 						list_s0 := !list_s0@[(clock_index, LinearConstraint.Op_ge, LinearConstraint.make_p_linear_term [] NumConst.zero)] 
-						) model.clocks; 
+						) model.clocks_without_special_reset_clock; 
 			!list_s0
 
 	| _ ->	(* print_message Verbose_low (" Covert inequalities -> list(clock; operator; linear expression) Start:"); *)
@@ -584,7 +584,7 @@ let cub_check_2 model invariant_s0 guard_t invariant_s1 clock_updates =
 
 
 	print_message Verbose_low ("\n");
-	) model.clocks; (* end List.iter *)
+	) model.clocks_without_special_reset_clock; (* end List.iter *)
 
 	print_message Verbose_low ("\n");
 	print_message Verbose_low (" CUB check, End!");
@@ -608,7 +608,7 @@ let get_all_clocks_ge_zero_comstraint model =
 	let ls = ref [] in
 	List.iter (fun clock_index ->
 		ls := !ls@[tuple2pxd_constraint (create_x_ge_zero clock_index)];
-	) model.clocks;
+	) model.clocks_without_special_reset_clock;
 	let cons = LinearConstraint.pxd_intersection !ls in
 	cons
 
@@ -621,7 +621,7 @@ let get_all_clocks_ge_zero_comstraint2 clock_index model =
 			(
 			ls := !ls@[tuple2pxd_constraint (create_x_ge_zero clock_indx)];
 			);
-	) model.clocks;
+	) model.clocks_without_special_reset_clock;
 	let cons = LinearConstraint.pxd_intersection !ls in
 	cons
 
@@ -1141,7 +1141,7 @@ let check_problematic_transition model (invariant_s0, guard_t, invariant_s1, clo
 
 		result := (!result && !isCUB);
 
-	) model.clocks; 
+	) model.clocks_without_special_reset_clock; 
 	print_message Verbose_low ("CHECKING FOR REMOVING PROBLEMATIC TRANSITIONS - END!!" ); 
 	!result
 
@@ -1745,7 +1745,7 @@ let add_inf_2_missing_c_cons model cons =
 	 		 let missing_con = tuple2pxd_constraint (create_x_ge_zero clock_index) in
 	 		 con := LinearConstraint.pxd_intersection [!con; missing_con];
 	 		); 
-	) model.clocks; 
+	) model.clocks_without_special_reset_clock; 
 	!con
 
 
@@ -2019,7 +2019,7 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 							(*for printing - not important*) 
 							submodel;
 
-				) model.clocks; 
+				) model.clocks_without_special_reset_clock; 
 				print_message Verbose_low ("\n --------------------1st check end----------------------- ");
 
 				DynArray.add clocks_constraints (location_index, (LinearConstraint.pxd_true_constraint ()));
@@ -2090,7 +2090,7 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 									submodel;
 
 						) !list_s1_filtered; 
-					) model.clocks;  
+					) model.clocks_without_special_reset_clock;  
 					
 					DynArray.add clocks_constraints (location_index, (LinearConstraint.pxd_true_constraint ()));
 
@@ -2875,11 +2875,9 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 		(* True for clocks, false otherwise *)
 		is_clock = model.is_clock;
 		(* Index of the special clock to be reset at each transition to measure time elapsing (only used in NZ checking) *)
- 			(*** TODO ***)
- 		special_reset_clock = None;
+ 		special_reset_clock = model.special_reset_clock;
  		(* The list of clock indexes except the reset clock (used, e.g., to print the model *)
- 			(*** TODO ***)
- 		clocks_without_special_reset_clock = model.clocks;
+ 		clocks_without_special_reset_clock = model.clocks_without_special_reset_clock;
 		(* The list of discrete indexes *)
 		discrete = model.discrete;
 		(* True for discrete, false otherwise *)
