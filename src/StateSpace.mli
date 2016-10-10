@@ -147,6 +147,10 @@ val last_states: AbstractModel.abstract_model -> state_space -> state_index list
 (*------------------------------------------------------------*)
 val get_guard : state_space -> state_index -> action_index -> state_index -> LinearConstraint.pxd_linear_constraint
 
+(*** WARNING! big hack: due to the fact that StateSpace only maintains the action, then we have to hope that the PTA is deterministic to retrieve the edge, and hence the set of clocks to be reset along a transition ***)
+(*** NOTE: the function only works for regular resets (it raises an NotImplemented for other updates) ***)
+val get_resets : state_space -> state_index -> action_index -> state_index -> Automaton.clock_index list
+
 
 (*------------------------------------------------------------*)
 (* When a state is encountered for a second time, then a loop exists (or more generally an SCC): 'reconstruct_scc state_space state_index' reconstructs the SCC from state_index to state_index (using the actions) using a variant of Tarjan's strongly connected components algorithm; raises InternalError if no SCC found (which should not happen) *)
