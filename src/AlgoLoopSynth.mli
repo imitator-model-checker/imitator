@@ -30,6 +30,9 @@ class algoLoopSynth :
 		(************************************************************)
 
 		method algorithm_name : string
+		
+		(* Non-necessarily convex constraint allowing the presence of a loop *)
+		val mutable loop_constraint : LinearConstraint.p_nnconvex_constraint
 
 
 		(************************************************************)
@@ -50,9 +53,15 @@ class algoLoopSynth :
 
 		
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+		(* When a loop is found, update the loop constraint; current_constraint is a PX constraint that will not be modified *)
+		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+		method update_loop_constraint : LinearConstraint.px_linear_constraint -> unit
+		
+		
+		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		(* Actions to perform when found a loop, after updating the state space *)
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-		method process_loop : state_index -> unit
+		method process_loop_after_state_space_update : state_index -> unit
 		
 		
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)

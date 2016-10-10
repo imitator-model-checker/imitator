@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/07/22
- * Last modified     : 2016/08/13
+ * Last modified     : 2016/10/10
  *
  ************************************************************)
 
@@ -170,7 +170,7 @@ class algoBCCoverLearning =
 		options#set_files_prefix learning_based_model_filename_prefix;
 		
 		(*** TODO: counter ***)
-		let new_model = ParsingUtility.compile_model options in
+		let new_model = ParsingUtility.compile_model options false in
 		(*** TODO: counter ***)
 		
 		(* Set model *)

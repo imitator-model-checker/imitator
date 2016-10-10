@@ -9,7 +9,7 @@
  * 
  * File contributors : Ulrich Kühne, Étienne André
  * Created           : 2009/09/07
- * Last modified     : 2016/09/30
+ * Last modified     : 2016/10/10
  *
  ************************************************************)
 
@@ -124,7 +124,15 @@ parsing_counter#start;
 (*------------------------------------------------------------*)
 (* Parse the model *)
 (*------------------------------------------------------------*)
-let model = ParsingUtility.compile_model options in
+
+(* Should we add a special clock reset at each transition? *)
+let with_special_reset_clock =
+match options#imitator_mode with
+	| Parametric_NC_CUBtransform -> true
+	| _ -> false
+in
+
+let model = ParsingUtility.compile_model options with_special_reset_clock in
 
 Input.set_model model;
 
@@ -431,7 +439,7 @@ let algorithm : AlgoGeneric.algoGeneric = match options#imitator_mode with
 		print_message Verbose_standard ("Generating the transformed model...");
 
 		let cub_model = CUBchecker.cubpta_of_pta model in
-		(*** HACK: just in case, set the model in the input module too ***)
+		(*** HACK: set the model in the input module too ***)
 		Input.set_model cub_model;
 		
 		print_message Verbose_standard ("Transformation completed");
@@ -462,13 +470,11 @@ let algorithm : AlgoGeneric.algoGeneric = match options#imitator_mode with
 		
 		Graphics.dot (options#files_prefix ^ "-cubpta") translated_model;
 
-		
-
 		print_message Verbose_standard ("Graphic export successfully created."); (*** TODO: add file name in a proper manner ***)
-		terminate_program();
 		
-		(*** TODO: the algorithm to be called shall be NZ-Büchi ***)
-		raise (InternalError "not implemented")
+		
+		(* Now call the NZ emptiness check *)
+		let myalgo :> AlgoGeneric.algoGeneric = new AlgoNZCUB.algoNZCUB in myalgo
 
 	
 	(************************************************************)

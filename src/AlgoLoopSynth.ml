@@ -101,47 +101,12 @@ class algoLoopSynth =
 		else (
 			(* Not added: means this state was already present before, hence we found a loop! *)
 			
-			(* Project onto the parameters *)
-			let p_constraint = LinearConstraint.px_hide_nonparameters_and_collapse current_constraint in
-			
-			(* Projecting onto SOME parameters if required *)
-			(*** BADPROG: Duplicate code (AlgoEF / AlgoPRP) ***)
-			begin
-			match model.projection with
-			(* Unchanged *)
-			| None -> ()
-			(* Project *)
-			| Some parameters ->
-				(* Print some information *)
-				self#print_algo_message Verbose_medium "Projecting onto some of the parameters.";
-
-				(*** TODO! do only once for all... ***)
-				let all_but_projectparameters = list_diff model.parameters parameters in
-				
-				(* Eliminate other parameters *)
-				LinearConstraint.p_hide_assign all_but_projectparameters p_constraint;
-
-				(* Print some information *)
-				if verbose_mode_greater Verbose_medium then(
-					print_message Verbose_medium (LinearConstraint.string_of_p_linear_constraint model.variable_names p_constraint);
-				);
-			end;
-
 			(* Print some information *)
 			self#print_algo_message Verbose_standard "Found a loop.";
 			
-			(* Update the loop constraint using the current constraint *)
-			LinearConstraint.p_nnconvex_p_union loop_constraint p_constraint;
-			
-			(* Print some information *)
-			if verbose_mode_greater Verbose_medium then(
-				self#print_algo_message Verbose_medium "Adding the following constraint to loop constraint:";
-				print_message Verbose_medium (LinearConstraint.string_of_p_linear_constraint model.variable_names p_constraint);
-				
-				self#print_algo_message Verbose_medium "The loop constraint is now:";
-				print_message Verbose_medium (LinearConstraint.string_of_p_nnconvex_constraint model.variable_names loop_constraint);
-			);		
-			)
+			self#update_loop_constraint current_constraint;
+
+			) (* end if loop *)
 		;
 		
 		(*** TODO: move the rest to a higher level function? (post_from_one_state?) ***)
@@ -158,17 +123,66 @@ class algoLoopSynth =
 		(* If found a loop *)
 		if not added then(
 			(*** NOTE: this method is called AFTER the transition table was updated ***)
-			self#process_loop new_state_index;
+			self#process_loop_after_state_space_update new_state_index;
 		); (* end if found a loop *)
 		
 		(* The state is kept in any case *)
 		true
 	
+
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(* When a loop is found, update the loop constraint; current_constraint is a PX constraint that will not be modified *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	method update_loop_constraint current_constraint =
+		(* Retrieve the model *)
+		let model = Input.get_model () in
+
+		(* Project onto the parameters *)
+		let p_constraint = LinearConstraint.px_hide_nonparameters_and_collapse current_constraint in
+		
+		(* Projecting onto SOME parameters if required *)
+		(*** BADPROG: Duplicate code (AlgoEF / AlgoPRP) ***)
+		begin
+		match model.projection with
+		(* Unchanged *)
+		| None -> ()
+		(* Project *)
+		| Some parameters ->
+			(* Print some information *)
+			self#print_algo_message Verbose_medium "Projecting onto some of the parameters.";
+
+			(*** TODO! do only once for all... ***)
+			let all_but_projectparameters = list_diff model.parameters parameters in
+			
+			(* Eliminate other parameters *)
+			LinearConstraint.p_hide_assign all_but_projectparameters p_constraint;
+
+			(* Print some information *)
+			if verbose_mode_greater Verbose_medium then(
+				print_message Verbose_medium (LinearConstraint.string_of_p_linear_constraint model.variable_names p_constraint);
+			);
+		end;
+
+		(* Update the loop constraint using the current constraint *)
+		LinearConstraint.p_nnconvex_p_union loop_constraint p_constraint;
+		
+		(* Print some information *)
+		if verbose_mode_greater Verbose_medium then(
+			self#print_algo_message Verbose_medium "Adding the following constraint to loop constraint:";
+			print_message Verbose_medium (LinearConstraint.string_of_p_linear_constraint model.variable_names p_constraint);
+			
+			self#print_algo_message Verbose_medium "The loop constraint is now:";
+			print_message Verbose_medium (LinearConstraint.string_of_p_nnconvex_constraint model.variable_names loop_constraint);
+		);
+		
+		(* The end *)
+		()
+
 	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Actions to perform when found a loop, after updating the state space *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method process_loop loop_starting_point_state_index =
+	method process_loop_after_state_space_update loop_starting_point_state_index =
 		(* Retrieve the model *)
 		let model = Input.get_model () in
 

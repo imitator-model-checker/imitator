@@ -9,7 +9,7 @@
  * 
  * File contributors : Ulrich Kühne, Étienne André
  * Created           : 2014/03/15
- * Last modified     : 2016/10/08
+ * Last modified     : 2016/10/10
  *
  ************************************************************)
 
@@ -107,7 +107,7 @@ let parser_lexer_from_string the_parser the_lexer the_string =
 (************************************************************)
 (** Compile the concrete model and convert it into an abstract model *)
 (************************************************************)
-let compile_model options =
+let compile_model options (with_special_reset_clock : bool) =
 	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Parsing *)
@@ -183,7 +183,7 @@ let compile_model options =
 
 	let model = 
 	try (
-		ModelConverter.abstract_model_of_parsing_structure options false parsing_structure
+		ModelConverter.abstract_model_of_parsing_structure options with_special_reset_clock parsing_structure
 	) with 
 		| InvalidModel -> (print_error ("The input model contains errors. Please check it again."); abort_program (); exit 1)
 		| InternalError e -> (print_error ("Internal error while parsing the input model: " ^ e ^ "\nPlease kindly insult the developers."); abort_program (); exit 1)
