@@ -128,7 +128,7 @@ parsing_counter#start;
 (* Should we add a special clock reset at each transition? *)
 let with_special_reset_clock =
 match options#imitator_mode with
-	| Parametric_NC_CUBtransform -> true
+	| Parametric_NZ_CUB | Parametric_NZ_CUBtransform -> true
 	| _ -> false
 in
 
@@ -160,7 +160,8 @@ match options#imitator_mode with
 	| State_space_exploration
 	| EF_synthesis
 	| Loop_synthesis
-	| Parametric_NC_CUBtransform
+	| Parametric_NZ_CUBtransform
+	| Parametric_NZ_CUB
 	| Parametric_deadlock_checking
 	(* Case: no additional file *)
 	-> ()
@@ -435,43 +436,45 @@ let algorithm : AlgoGeneric.algoGeneric = match options#imitator_mode with
 	(************************************************************)
 	(* Parametric Büchi-emptiness checking with non-Zenoness (method: transformation into a CUB-PTA) *)
 	(************************************************************)
-	| Parametric_NC_CUBtransform ->
-		print_message Verbose_standard ("Generating the transformed model...");
+	| Parametric_NZ_CUBtransform | Parametric_NZ_CUB ->
+		(* Not transforming if in mode Parametric_NZ_CUB  *)
+		if options#imitator_mode = Parametric_NZ_CUBtransform then(
+			print_message Verbose_standard ("Generating the transformed model...");
 
-		let cub_model = CUBchecker.cubpta_of_pta model in
-		(*** HACK: set the model in the input module too ***)
-		Input.set_model cub_model;
-		
-		print_message Verbose_standard ("Transformation completed");
+			let cub_model = CUBchecker.cubpta_of_pta model in
+			(*** HACK: set the model in the input module too ***)
+			Input.set_model cub_model;
+			
+			print_message Verbose_standard ("Transformation completed");
 
-		
-		(* Export the model to a file *)
-		(*** TODO: not necessary? (but so far useful to test) ***)
-		
-		let translated_model = ModelPrinter.string_of_model cub_model in
+			
+			(* Export the model to a file *)
+			(*** TODO: not necessary? (but so far useful to test) ***)
+			
+			let translated_model = ModelPrinter.string_of_model cub_model in
 
-		let imi_file = options#files_prefix ^ "-cub.imi" in
-		if verbose_mode_greater Verbose_total then(
-			print_message Verbose_total ("\n" ^ translated_model ^ "\n");
+			let imi_file = options#files_prefix ^ "-cub.imi" in
+			if verbose_mode_greater Verbose_total then(
+				print_message Verbose_total ("\n" ^ translated_model ^ "\n");
+			);
+			
+			(* Write *)
+			write_to_file imi_file translated_model;
+			print_message Verbose_standard ("File '" ^ imi_file ^ "' successfully created.");
+			
+			
+			(* Then transform to a graphics *)
+			(*** TODO: not necessary? (but so far useful to test) ***)
+
+			let translated_model = PTA2JPG.string_of_model cub_model in
+			if verbose_mode_greater Verbose_high then(
+				print_message Verbose_high ("\n" ^ translated_model ^ "\n");
+			);
+			
+			Graphics.dot (options#files_prefix ^ "-cubpta") translated_model;
+
+			print_message Verbose_standard ("Graphic export successfully created."); (*** TODO: add file name in a proper manner ***)
 		);
-		
-		(* Write *)
-		write_to_file imi_file translated_model;
-		print_message Verbose_standard ("File '" ^ imi_file ^ "' successfully created.");
-		
-		
-		(* Then transform to a graphics *)
-		(*** TODO: not necessary? (but so far useful to test) ***)
-
-		let translated_model = PTA2JPG.string_of_model cub_model in
-		if verbose_mode_greater Verbose_high then(
-			print_message Verbose_high ("\n" ^ translated_model ^ "\n");
-		);
-		
-		Graphics.dot (options#files_prefix ^ "-cubpta") translated_model;
-
-		print_message Verbose_standard ("Graphic export successfully created."); (*** TODO: add file name in a proper manner ***)
-		
 		
 		(* Now call the NZ emptiness check *)
 		let myalgo :> AlgoGeneric.algoGeneric = new AlgoNZCUB.algoNZCUB in myalgo

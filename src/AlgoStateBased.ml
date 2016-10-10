@@ -176,9 +176,22 @@ let counter_nb_unsat1 = create_discrete_counter_and_register "early unsat (D ^ g
 (************************************************************)
 
 (*------------------------------------------------------------*)
+(* Create a PXD constraint of the form D_i = d_i for the discrete variables *)
+(*------------------------------------------------------------*)
+let discrete_constraint_of_global_location (global_location : Location.global_location) : LinearConstraint.pxd_linear_constraint = 
+	(* Retrieve the model *)
+	let model = Input.get_model() in
+
+	let discrete_values = List.map (fun discrete_index -> discrete_index, (Location.get_discrete_value global_location discrete_index)) model.discrete in
+	
+	(* Constraint of the form D_i = d_i *)
+	LinearConstraint.pxd_constraint_of_point discrete_values
+
+
+(*------------------------------------------------------------*)
 (* Compute the invariant associated to a location   *)
 (*------------------------------------------------------------*)
-let compute_plain_invariant location =
+let compute_plain_invariant (location : Location.global_location) : LinearConstraint.pxd_linear_constraint =
 	(* Retrieve the model *)
 	let model = Input.get_model() in
 	
@@ -214,6 +227,34 @@ let compute_invariant location =
 			Cache.store inv_cache locations invariant;
 			invariant
 		)
+
+
+(*------------------------------------------------------------*)
+(* Compute the invariant associated to a location and valuate the value of the discrete variables   *)
+(*------------------------------------------------------------*)
+let compute_valuated_invariant (location : Location.global_location) : LinearConstraint.px_linear_constraint =
+	(* Retrieve the model *)
+	let model = Input.get_model() in
+	
+	(* Compute the invariant with the discrete variables *)
+	let invariant = compute_plain_invariant location in
+	
+	(* Valuate the discrete variables *)
+	let discrete_constraint = discrete_constraint_of_global_location location in
+
+	(* Perform intersection of C(X) and I_l0(X) and D_i = d_i *)
+	print_message Verbose_high ("Performing intersection of I_l(X) and D_i = d_i");
+	let current_constraint = LinearConstraint.pxd_intersection [invariant ; discrete_constraint ] in
+	(* Print some information *)
+	if verbose_mode_greater Verbose_total then
+		print_message Verbose_total (LinearConstraint.string_of_pxd_linear_constraint model.variable_names current_constraint);
+	
+	(* Eliminate the discrete variables *)
+	print_message Verbose_high ("Hide discrete");
+	LinearConstraint.pxd_hide_discrete_and_collapse current_constraint
+	
+
+
 
 (*------------------------------------------------------------*)
 (* Compute the polyhedron p projected onto rho(X) *)
@@ -590,9 +631,7 @@ let create_initial_state () =
 	
 	(* Compute constraint for assigning a (constant) value to discrete variables *)
 	print_message Verbose_high ("Computing constraint for discrete variables");
-	let discrete_values = List.map (fun discrete_index -> discrete_index, (Location.get_discrete_value initial_location discrete_index)) model.discrete in
-	(* Constraint of the form D_i = d_i *)
-	let discrete_constraint = LinearConstraint.pxd_constraint_of_point discrete_values in
+	let discrete_constraint = discrete_constraint_of_global_location initial_location in
 	(* Print some information *)
 	if verbose_mode_greater Verbose_total then
 		print_message Verbose_total (LinearConstraint.string_of_pxd_linear_constraint model.variable_names discrete_constraint);
@@ -848,12 +887,12 @@ let compute_new_location aut_table trans_table action_index original_location =
 (* orig_constraint : contraint in source location   *)
 (* discrete_constr_src : contraint D_i = d_i in source location (discrete variables) *)
 (* orig_location   : source location                *)
-(* dest_location   : target location                *)
+(* target_location : target location                *)
 (* guards          : guard constraints per automaton*)
 (* clock_updates   : updated clock variables        *)
 (*------------------------------------------------------------*)
 (*** TODO: remove the model from the arguments, and retrieve it ***)
-let compute_new_constraint orig_constraint (discrete_constr_src : LinearConstraint.pxd_linear_constraint) orig_location dest_location guards clock_updates =
+let compute_new_constraint orig_constraint (discrete_constr_src : LinearConstraint.pxd_linear_constraint) orig_location target_location guards clock_updates =
 	(* Retrieve the model *)
 	let model = Input.get_model() in
 	(* Retrieve the input options *)
@@ -944,9 +983,9 @@ let compute_new_constraint orig_constraint (discrete_constr_src : LinearConstrai
 			print_message Verbose_total (LinearConstraint.string_of_pxd_linear_constraint model.variable_names current_constraint);
 		);
 
-		(* Compute the invariant in the destination location I_l'(X) *)
+		(* Compute the invariant in the target location I_l'(X) *)
 		print_message Verbose_total ("\nComputing invariant I_l'(X)");
-		let invariant = compute_invariant dest_location in
+		let invariant = compute_invariant target_location in
 		(* Print some information *)
 		if verbose_mode_greater Verbose_total then(
 			print_message Verbose_total (LinearConstraint.string_of_pxd_linear_constraint model.variable_names invariant);
@@ -968,23 +1007,22 @@ let compute_new_constraint orig_constraint (discrete_constr_src : LinearConstrai
 		(* Normal IMITATOR semantics for time-elapsing: apply time-elapsing now *)
 		if not options#no_time_elapsing then(
 			print_message Verbose_high ("Applying time elapsing to [C(X) and g(X)]rho and I_l'(X) ]");
-			apply_time_elapsing dest_location current_constraint;
+			apply_time_elapsing target_location current_constraint;
 		);
 	
 	
-		(* Compute the equalities for the discrete variables in destination location *)
-		let discrete_values_dest = List.map (fun discrete_index -> discrete_index, (Location.get_discrete_value dest_location discrete_index)) model.discrete in
-		(* Convert to a constraint *)
-		let discrete_constraint_dest = LinearConstraint.pxd_constraint_of_point discrete_values_dest in
+		(* Compute the equalities for the discrete variables in target location *)
+		let discrete_constraint_target = discrete_constraint_of_global_location target_location in
 		
 		(* Perform the intersection *)
 		print_message Verbose_total ("\nPerforming intersection of the constraint with D_i = d_i and I_l'(X) ");
 		LinearConstraint.pxd_intersection_assign current_constraint
 			[
-				discrete_constraint_dest;
+				discrete_constraint_target;
 				(*** NOTE: in principle, no need to intersect with invariant if time elapsing was NOT applied (alternating semantics). This could be improved (and tested) in the future. ***)
 				invariant;
 			];
+		
 		(* Print some information *)
 		if verbose_mode_greater Verbose_total then(
 			print_message Verbose_total (LinearConstraint.string_of_pxd_linear_constraint model.variable_names current_constraint);
@@ -1016,7 +1054,7 @@ let compute_new_constraint orig_constraint (discrete_constr_src : LinearConstrai
 		(* Remove useless clocks (if option activated) *)
 		(*** WARNING: code duplication!!! ***)
 		if options#dynamic_clock_elimination then(
-			ClocksElimination.dynamic_clock_elimination dest_location current_constraint;
+			ClocksElimination.dynamic_clock_elimination target_location current_constraint;
 		);
 		
 		
@@ -1259,14 +1297,12 @@ class virtual algoStateBased =
 		
 
 		(* Create a constraint D_i = d_i for the discrete variables *)
-		let discrete_values = List.map (fun discrete_index -> discrete_index, (Location.get_discrete_value original_location discrete_index)) model.discrete in
-		(* Convert to a constraint *)
-		let discrete_constr = LinearConstraint.pxd_constraint_of_point discrete_values in
+		let discrete_constr = discrete_constraint_of_global_location original_location in
 
 		(* FOR ALL ACTION DO: *)
 		List.iter (fun action_index ->
 
-			print_message Verbose_medium ("\nComputing destination states for action '" ^ (model.action_names action_index) ^ "'");
+			print_message Verbose_medium ("\nComputing target states for action '" ^ (model.action_names action_index) ^ "'");
 			(* Get the automata declaring the action *)
 			let automata_for_this_action = model.automata_per_action action_index in
 			let nb_automata_for_this_action = List.length automata_for_this_action in

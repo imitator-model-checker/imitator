@@ -25,6 +25,15 @@ open State
 (**************************************************************)
 val compute_initial_state_or_abort : unit -> State.state
 
+
+(* val compute_plain_invariant : Location.global_location -> LinearConstraint.pxd_linear_constraint *)
+
+(*------------------------------------------------------------*)
+(* Compute the invariant associated to a location and valuate the value of the discrete variables   *)
+(*------------------------------------------------------------*)
+val compute_valuated_invariant : Location.global_location -> LinearConstraint.px_linear_constraint
+
+
 (*------------------------------------------------------------*)
 (** Apply time elapsing in location to the_constraint (the location is needed to retrieve the stopwatches stopped in this location) *)
 (*------------------------------------------------------------*)

@@ -10,7 +10,7 @@
 # Laboratoire d'Informatique de Paris Nord
 # Universite Paris 13, Sorbonne Paris Cite, France
 # Created      : 2015/10/23
-# Last modified: 2016/10/07
+# Last modified: 2016/10/10
 #************************************************************
 
 
@@ -710,6 +710,119 @@ Constraint nature                       : good
 Number of states                        : 5
 Number of transitions                   : 6
 Number of computed states               : 7
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+	
+	,
+	
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test NZCUB: flip-flop (no loop)',
+		'input_files': ['flipflop.imi'],
+		'options'    : '-mode NZCUB -output-result',
+		'expectations' : [
+			{'file': 'flipflop.res' , 'content' : """
+BEGIN CONSTRAINT
+False
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+Number of states                        : 20
+Number of transitions                   : 19
+Number of computed states               : 20
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+	
+	,
+	
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test NZCUB: PDFC4 (loop but Zeno)',
+		'input_files': ['PDFC4.imi'],
+		'options'    : '-mode NZCUB -output-result',
+		'expectations' : [
+			{'file': 'PDFC4.res' , 'content' : """
+BEGIN CONSTRAINT
+False
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+Number of states                        : 4
+Number of transitions                   : 4
+Number of computed states               : 5
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+	
+	,
+	
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test NZCUB: CUBPTA1 (non-Zeno loop)',
+		'input_files': ['CUBPTA1.imi'],
+		'options'    : '-mode NZCUB -output-result',
+		'expectations' : [
+			{'file': 'CUBPTA1.res' , 'content' : """
+BEGIN CONSTRAINT
+ p2 >= 1
+& p1 >= 0
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+Number of states                        : 4
+Number of transitions                   : 4
+Number of computed states               : 5
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+	
+	,
+	
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test NZCUB: CUBPTA2 (2 non-Zeno loops)',
+		'input_files': ['CUBPTA2.imi'],
+		'options'    : '-mode NZCUB -output-result',
+		'expectations' : [
+			{'file': 'CUBPTA2.res' , 'content' : """
+BEGIN CONSTRAINT
+ p2 >= 0
+& p1 >= 5
+OR
+  p2 >= 1
+& p1 >= 0
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+Number of states                        : 9
+Number of transitions                   : 14
+Number of computed states               : 15
 """
 			} #end result file
 		] # end expectations

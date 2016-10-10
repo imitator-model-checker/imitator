@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2014/10/24
- * Last modified     : 2016/09/06
+ * Last modified     : 2016/10/10
  *
  ************************************************************)
 
@@ -90,7 +90,10 @@ type imitator_mode =
 	| Loop_synthesis
 	
 	(** Parametric Büchi-emptiness checking with non-Zenoness (method: transformation into a CUB-PTA) *)
-	| Parametric_NC_CUBtransform
+	| Parametric_NZ_CUBtransform
+	
+	(** Parametric Büchi-emptiness checking with non-Zenoness on a CUB-PTA: hidden option (mainly for testing) *)
+	| Parametric_NZ_CUB
 	
 	(** Parametric deadlock-checking *)
 	| Parametric_deadlock_checking
