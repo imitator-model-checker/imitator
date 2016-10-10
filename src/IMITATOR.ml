@@ -718,6 +718,7 @@ ResultProcessor.process_result result algorithm#algorithm_name None;
 	e ->(
 	let error_message = match e with
 		| InternalError msg -> "Fatal internal error: " ^ msg ^ ""
+		| NotImplemented msg -> "A non-implemented feature has been called: " ^ msg ^ ""
 		| Failure msg -> "'Failure' exception: '" ^ msg ^ "'"
 		| Invalid_argument msg -> "'Invalid_argument' exception: '" ^ msg ^ "'"
 		| SerializationError msg -> "Serialization error: " ^ msg ^ ""

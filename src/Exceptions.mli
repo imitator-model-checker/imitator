@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2014/10/24
- * Last modified     : 2016/03/29
+ * Last modified     : 2016/10/10
  *
  ************************************************************)
 
@@ -18,6 +18,7 @@
 (** Exceptions *)
 (****************************************************************)
 exception InternalError of string
+exception NotImplemented of string
 exception SerializationError of string
 exception Found
 exception InvalidModel
