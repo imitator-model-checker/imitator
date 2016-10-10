@@ -2874,6 +2874,12 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 		clocks = model.clocks;
 		(* True for clocks, false otherwise *)
 		is_clock = model.is_clock;
+		(* Index of the special clock to be reset at each transition to measure time elapsing (only used in NZ checking) *)
+ 			(*** TODO ***)
+ 		special_reset_clock = None;
+ 		(* The list of clock indexes except the reset clock (used, e.g., to print the model *)
+ 			(*** TODO ***)
+ 		clocks_without_special_reset_clock = model.clocks;
 		(* The list of discrete indexes *)
 		discrete = model.discrete;
 		(* True for discrete, false otherwise *)
