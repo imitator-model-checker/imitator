@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2009/12/08
- * Last modified     : 2016/10/07
+ * Last modified     : 2016/10/10
  *
  ************************************************************)
 
@@ -140,6 +140,12 @@ val last_states: AbstractModel.abstract_model -> state_space -> state_index list
 (** Check if bad states are reached *)
 (* val is_bad: abstract_model -> state_space -> bool *)
 
+
+
+(*------------------------------------------------------------*)
+(*** WARNING! big hack: due to the fact that StateSpace only maintains the action, then we have to hope that the PTA is deterministic to retrieve the edge, and hence the guard ***)
+(*------------------------------------------------------------*)
+val get_guard : state_space -> state_index -> action_index -> state_index -> LinearConstraint.pxd_linear_constraint
 
 
 (*------------------------------------------------------------*)

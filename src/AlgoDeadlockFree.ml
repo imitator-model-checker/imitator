@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/02/08
- * Last modified     : 2016/08/15
+ * Last modified     : 2016/10/10
  *
  ************************************************************)
 
@@ -32,86 +32,6 @@ open AlgoPostStar
 (* Class-independent functions *)
 (************************************************************)
 (************************************************************)
-
-(*** WARNING! big hack: due to the fact that StateSpace only maintains the action, then we have to hope that the PTA is deterministic to retrieve the edge, and hence the guard ***)
-let get_guard state_space state_index action_index state_index' =
-	(* Retrieve the model *)
-	let model = Input.get_model () in
-	
-	(* Retrieve source and destination locations *)
-	let (location : Location.global_location), _ = StateSpace.get_state state_space state_index in
-	let (location' : Location.global_location), _ = StateSpace.get_state state_space state_index' in
-	
-	(* Create the list of local guards *)
-	let local_guards = ref [] in
-	
-	(* For all PTA *)
-	List.iter (fun automaton_index ->
-		(* Retrieve source and destination location indexes *)
-		let l : Automaton.location_index = Location.get_location location automaton_index in
-		let l' : Automaton.location_index = Location.get_location location' automaton_index in
-		
-		(* Now, compute the local guard, i.e., the guard in the current PTA *)
-		let local_guard =
-		(* If source and destination are equal: either a self-loop (if there exists a self-loop with this action), or the current PTA is not concerned by the transition *)
-		if l = l' then (
-			(* Find the transitions l -> action_index -> l' *)
-			(*** NOTE: type transition = guard * clock_updates * discrete_update list * location_index ***)
-			let transitions = List.filter (fun (_,_,_, destination) -> destination = l') (model.transitions automaton_index l action_index) in
-			
-			(* If none: then not concerned -> true gard *)
-			if List.length transitions = 0 then LinearConstraint.pxd_true_constraint()
-			
-			(* If exactly one: good situation: return the guard *)
-			else if List.length transitions = 1 then let g,_,_,_ = List.nth transitions 0 in g
-			(* If more than one: take the first one (*** HACK ***) and warn *)
-			else(
-				(* Warning *)
-				print_warning ("Non-deterministic PTA! Selecting a guard arbitrarily among the " ^ (string_of_int (List.length transitions)) ^ " transitions from '" ^ (model.location_names automaton_index l) ^ "' via action '" ^ (model.action_names action_index) ^ "' to '" ^ (model.location_names automaton_index l') ^ "' in automaton '" ^ (model.automata_names automaton_index) ^ "'.");
-				
-				(* Take arbitrarily the first element *)
-				let g,_,_,_ = List.nth transitions 0 in g
-			
-			)
-
-		(* Otherwise, if the source and destination locations differ: necessarily a transition with this action *)
-		) else (
-			(* Find the transitions l -> action_index -> l' *)
-			let transitions = List.filter (fun (_,_,_, destination) -> destination = l') (model.transitions automaton_index l action_index) in
-			
-			(* There cannot be none *)
-			if List.length transitions = 0 then raise (raise (InternalError("There cannot be no transition from '" ^ (model.location_names automaton_index l) ^ "' to '" ^ (model.location_names automaton_index l') ^ "' with action to '" ^ (model.action_names action_index) ^ "' in automaton '" ^ (model.automata_names automaton_index) ^ ".")))
-			
-			(* If exactly one: good situation: return the guard *)
-			else if List.length transitions = 1 then let g,_,_,_ = List.nth transitions 0 in g
-			(* If more than one: take the first one (*** HACK ***) and warn *)
-			else(
-				(* Warning *)
-				print_warning ("Non-deterministic PTA! Selecting a guard arbitrarily among the " ^ (string_of_int (List.length transitions)) ^ " transitions from '" ^ (model.location_names automaton_index l) ^ "' via action '" ^ (model.action_names action_index) ^ "' to '" ^ (model.location_names automaton_index l') ^ "' in automaton '" ^ (model.automata_names automaton_index) ^ "'.");
-				
-				(* Take arbitrarily the first element *)
-				let g,_,_,_ = List.nth transitions 0 in g
-			)
-			
-		) in
-		
-		(* Add the guard *)
-		local_guards := local_guard :: !local_guards;
-	
-	) model.automata;
-	
-	(* Compute constraint for assigning a (constant) value to discrete variables *)
-	print_message Verbose_high ("Computing constraint for discrete variables");
-	let discrete_values = List.map (fun discrete_index -> discrete_index, (Location.get_discrete_value location discrete_index)) model.discrete in
-	(* Constraint of the form D_i = d_i *)
-	let discrete_constraint = LinearConstraint.pxd_constraint_of_point discrete_values in
-
-	(* Create the constraint guard ^ D_i = d_i *)
-	let guard = LinearConstraint.pxd_intersection (discrete_constraint :: !local_guards) in
-	
-	(* Finally! Return the guard *)
-	guard
-
 
 (* Convert a state_index for pretty-printing purpose *)
 let debug_string_of_state state_index =
@@ -210,7 +130,8 @@ class algoDeadlockFree =
 			
 			(* retrieve the guard *)
 			(*** WARNING! big hack: due to the fact that StateSpace only maintains the action, then we have to hope that the PTA is deterministic to retrieve the edge, and hence the guard ***)
-			let guard = get_guard state_space state_index action_index state_index' in
+			(*** WARNING: very expensive function (for now) ***)
+			let guard = StateSpace.get_guard state_space state_index action_index state_index' in
 			
 			(* Print some information *)
 			if verbose_mode_greater Verbose_high then(
