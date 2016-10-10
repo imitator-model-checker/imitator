@@ -2206,7 +2206,8 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 
 		DynArray.iter (fun (location, constr) ->
 			let locName = (   "cub_" ^ location ^ "_l" ^ (string_of_int !count)) in 
-			Hashtbl.add locations locName constr;
+			(* Hashtbl.add locations locName constr; *)
+			Hashtbl.add locations locName (LinearConstraint.pxd_intersection [(Hashtbl.find locations location); constr]);
 			Hashtbl.add index location locName ;
 			count :=  !count + 1;
 		) c_constraints;
