@@ -1882,6 +1882,8 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 		let parameters_constraints_ini = DynArray.make 0 in
 		(*initial - end*)
 
+
+
 		(*set true constraint*)
 		let true_constraint = LinearConstraint.p_true_constraint () in
 		DynArray.add parameters_constraints_ini (true,[true_constraint]); 
@@ -1889,6 +1891,8 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 		init_loc := (model.location_names automaton_index (List.nth (model.locations_per_automaton automaton_index) 0 ));
 		print_message Verbose_low (" Initial location: " ^ !init_loc);
 		(* init_loc := model.location_names automaton_index model.initial_location; *)
+
+		let loc_naming_tbl = Hashtbl.create 0 in
 
 		(*Checking bounded clocked in invariant (Location)*)
 		List.iter (fun location_index -> 
@@ -1900,6 +1904,8 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 			(*add locations*)
 			let location_index_string = (model.location_names automaton_index location_index) in
 			Hashtbl.add locations_ini location_index_string invariant1;
+
+			Hashtbl.add loc_naming_tbl location_index_string location_index;
 
 			(* print_message Verbose_low ("   Invariant(S): " ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names invariant1 ) )  ;
 			print_message Verbose_low ("\n"); *)
@@ -2199,21 +2205,30 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 
 
 	(* [CUB-PTA TRANSFORMATION] STAGE 2 - ADDING LOCATIONS *)
+	let submodel_index = ref 1 in
+
 	let newSubModels = DynArray.make 0 in
 	DynArray.iter (fun (locations, transitions, c_constraints, p_constraints) ->
 		let count = ref 1 in 
 		let index = Hashtbl.create 0 in
 
 		DynArray.iter (fun (location, constr) ->
-			let locName = (   "cub_" ^ location ^ "_l" ^ (string_of_int !count)) in 
+			let locName = ( "cub_" ^ location ^ "_l" ^ (string_of_int !count) ^ "_m" ^ (string_of_int !submodel_index) ) in 
 			(* Hashtbl.add locations locName constr; *)
 			Hashtbl.add locations locName (LinearConstraint.pxd_intersection [(Hashtbl.find locations location); constr]);
 			Hashtbl.add index location locName ;
 			count :=  !count + 1;
+
+			let index = Hashtbl.find loc_naming_tbl location in
+			Hashtbl.add loc_naming_tbl locName index;
+
 		) c_constraints;
 		
 		let init_locs = (Hashtbl.find_all index !init_loc) in
 		DynArray.add newSubModels (locations, transitions, c_constraints, p_constraints, index, init_locs@[!init_loc]);
+
+		incr submodel_index;
+
 	) submodels;
 
 
@@ -2410,15 +2425,18 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 	
 	(* First create a normalized location name *)
 	(*** BADPROG...... ***)
-	let location_name_of_location_index_and_submodel_index location_index submodel_index =
+
+	(* let location_name_of_location_index_and_submodel_index location_index submodel_index =
 		location_index ^ "_m" ^ (string_of_int submodel_index)
-	in
+	in *)
 	
 	(* Handle initial location *)
 	(*** BADPROG: give a string name to the new location (argh) ***)
 	let new_initial_location_name  = ("cub_init_a" ^ string_of_int (automaton_index + 1)) in
+
+	Hashtbl.add loc_naming_tbl new_initial_location_name (Hashtbl.length loc_naming_tbl);
 	
-	let submodel_index = ref 1 in
+	(* let submodel_index = ref 1 in *)
 	let numberOfAction = List.length model.actions in 
 
 	(* Data structure: location_name -> invariant *)
@@ -2428,17 +2446,20 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 	Hashtbl.add new_invariants_per_location_hashtbl new_initial_location_name (LinearConstraint.pxd_true_constraint ());
 
 	let newtransitions = DynArray.make 0 in
+
 	DynArray.iter (fun (locations, transitions, c_constraints, p_constraints, index, init_locs) ->
 		
 		Hashtbl.iter (fun location_index cons -> 
-			let newloc = location_name_of_location_index_and_submodel_index location_index !submodel_index in
-			Hashtbl.add new_invariants_per_location_hashtbl newloc cons;
+			(* let newloc = location_name_of_location_index_and_submodel_index location_index !submodel_index in
+			Hashtbl.add new_invariants_per_location_hashtbl newloc cons; *)
+			Hashtbl.add new_invariants_per_location_hashtbl location_index cons;
 		) locations;
 
 		DynArray.iter (fun (location_index, target_location_index, guard, clock_updates, action_index, discrete_update) -> 
-			let newloc1 = location_name_of_location_index_and_submodel_index location_index !submodel_index in
+			(* let newloc1 = location_name_of_location_index_and_submodel_index location_index !submodel_index in
 			let newloc2 = location_name_of_location_index_and_submodel_index target_location_index !submodel_index in
-			DynArray.add newtransitions (newloc1, newloc2, guard, clock_updates, action_index, discrete_update);
+			DynArray.add newtransitions (newloc1, newloc2, guard, clock_updates, action_index, discrete_update); *)
+			DynArray.add newtransitions (location_index, target_location_index, guard, clock_updates, action_index, discrete_update);
 		) transitions;
 
 		let listParaRelations = disjunction_constraints p_constraints in
@@ -2451,17 +2472,18 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 				List.iter (fun loc -> 
 				
 					(* Add a transition from the initial location to all local initial locations into the dynamic array of locations *)
-					DynArray.add newtransitions (new_initial_location_name, location_name_of_location_index_and_submodel_index loc !submodel_index, pxd_cons, [], local_silent_action_index_of_automaton_index model automaton_index, [] ) ;
+					(* DynArray.add newtransitions (new_initial_location_name, location_name_of_location_index_and_submodel_index loc !submodel_index, pxd_cons, [], local_silent_action_index_of_automaton_index model automaton_index, [] ) ; *)
 					(* DynArray.add newtransitions (new_initial_location_name, location_name_of_location_index_and_submodel_index loc !submodel_index, pxd_cons, [], 0, [] ) ; *)
+					DynArray.add newtransitions (new_initial_location_name, loc, pxd_cons, [], local_silent_action_index_of_automaton_index model automaton_index, [] ) ;
 				) init_locs;
 				);
 		) listParaRelations;
 
-		incr submodel_index;
+		(* incr submodel_index; *)
 
 	) newSubModels;
 
-	let finalModel = (new_invariants_per_location_hashtbl, newtransitions) in 
+	let finalModel = (new_invariants_per_location_hashtbl, newtransitions, loc_naming_tbl) in 
 	(* additional stage - end *)
 
 
@@ -2541,12 +2563,17 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 	(*** NOTE: would be better to first create to a dummy constraint, instead of creating a new p_true_constraint() for each cell, that will be overwritten anyway ***)
 	new_invariants_array.(automaton_index) <- Array.make new_nb_locations (LinearConstraint.pxd_true_constraint());
 	
+	let new_loc_index_tbl = Hashtbl.create 0 in
+
 	let current_location_index = ref 0 in
 
 	(* Fill location_index_of_location_name , location_name_of_location_index and new_invariants_array *)
 	Hashtbl.iter (fun location_name location_invariant ->
 		(* Add the binding location_name , location_index to the new structure *)
 		Hashtbl.add location_index_of_location_name location_name !current_location_index;
+
+		Hashtbl.add new_loc_index_tbl !current_location_index (Hashtbl.find loc_naming_tbl location_name);
+		print_message Verbose_low ("\n blabla test index tbl:" ^ string_of_int !current_location_index ^ "|" ^ location_name ^ "|" ^ string_of_int (Hashtbl.find loc_naming_tbl location_name));
 		
 		(* Add the binding location_index , location_name to the new structure *)
 		location_name_of_location_index.(!current_location_index) <- location_name;
