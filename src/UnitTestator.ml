@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/04/30
- * Last modified     : 2016/10/10
+ * Last modified     : 2016/10/11
  *
  ************************************************************)
 
@@ -100,6 +100,15 @@ let test_bounded_from_above v c =
 	print_message Verbose_standard ("\nIn the following constraint, is " ^ (variable_names v)  ^ " bounded from above…?");
 	print_message Verbose_standard (string_of_pxd_linear_constraint variable_names c);
 	print_message Verbose_standard (string_of_bool (pxd_is_bounded_from_above_in v c));
+in
+
+let find_upper_bound x px_linear_constraint =
+	let upper_bound = LinearConstraint.clock_upper_bound_in x px_linear_constraint in
+	print_message Verbose_standard ("\nIn the following constraint, the upper bound of " ^ (variable_names x)  ^ " is " ^ (match upper_bound with
+		| None -> "infinity"
+		| Some p_linear_term -> string_of_p_linear_term variable_names p_linear_term
+	) ^ ":");
+	print_message Verbose_standard (string_of_px_linear_constraint variable_names px_linear_constraint);
 in
 
 
@@ -302,6 +311,11 @@ test_bounded_from_above d2 lc9;
 test_bounded_from_above x1 lc10;
 test_bounded_from_above x2 lc10;
 test_bounded_from_above p1 lc10;
+
+(*** WARNING: need to remove discrete to be able to call the function ***)
+find_upper_bound x1 (pxd_hide_discrete_and_collapse lc10);
+find_upper_bound x2 (pxd_hide_discrete_and_collapse lc10);
+
 
 (************************************************************)
 (************************************************************)

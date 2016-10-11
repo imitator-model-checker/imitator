@@ -9,13 +9,9 @@
  * 
  * File contributors : Étienne André
  * Created           : 2010/03/04
- * Last modified     : 2016/10/10
+ * Last modified     : 2016/10/11
  *
  ************************************************************)
-
- 
-(*  module Ppl = Ppl_ocaml
-open Ppl *)
 
  
 
@@ -36,8 +32,8 @@ type variable = int
 type coef = NumConst.t
 
 
-(** Add on for TA2CLP *)
-val string_of_var : (variable -> string) -> variable -> string
+(*(** Add on for TA2CLP *)
+val string_of_var : (variable -> string) -> variable -> string*)
 
 
 (************************************************************)
@@ -153,7 +149,7 @@ val negate_wrt_pi0 : (variable -> coef) -> p_linear_inequality -> p_linear_inequ
 (*------------------------------------------------------------*)
 (** Convert a linear inequality into a clock guard (i.e. a triple clock, operator, parametric linear term); raises Not_a_clock_guard if the linear_inequality is not a proper clock guard x ~ plterm *)
 (*------------------------------------------------------------*)
-val clock_guard_of_linear_inequality : pxd_linear_inequality -> (variable * op * p_linear_term)
+val clock_guard_of_linear_inequality : pxd_linear_inequality -> (Automaton.clock_index * op * p_linear_term)
 
 
 (** Convert a linear inequality into a string *)
@@ -290,10 +286,18 @@ val px_is_zero_in : variable -> px_linear_constraint -> bool
 val pxd_is_zero_in : variable -> pxd_linear_constraint -> bool
 
 (** Check if a variable is bounded from above in a constraint *)
+(*** WARNING: in an equality x <= p, x is NOT considered to be bounded (when p is not itself) ***)
 val px_is_bounded_from_above_in : variable -> px_linear_constraint -> bool
 
 (** Check if a variable is bounded from above in a constraint *)
+(*** WARNING: in an equality x <= p, x is NOT considered to be bounded (when p is not itself) ***)
 val pxd_is_bounded_from_above_in : variable -> pxd_linear_constraint -> bool
+
+(*------------------------------------------------------------*)
+(** Return the parametric linear term which is the upper bound of the clock x in a px_linear_constraint; return None if no upper bound *)
+(*** NOTE: we asssume that all inequalities are of the form x \sim plt, and that a single inequality constrains x as an upper bound. Raises Not_a_clock_guard otherwise ***)
+(*------------------------------------------------------------*)
+val clock_upper_bound_in : Automaton.clock_index -> px_linear_constraint -> p_linear_term option
 
 
 (** Check if a constraint contains an integer point *)

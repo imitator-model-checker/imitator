@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2010/03/04
- * Last modified     : 2016/10/10
+ * Last modified     : 2016/10/11
  *
  ************************************************************)
 
@@ -1508,6 +1508,7 @@ let p_nb_inequalities = nb_inequalities
 
 (** Get the inequalities of a constraint *)
 let pxd_get_inequalities = ippl_get_inequalities
+let px_get_inequalities = ippl_get_inequalities
 
 
 (** Return true if the variable is constrained in a linear_constraint *)
@@ -1660,13 +1661,39 @@ let partition_lu variables linear_constraints =
 
 
 
-	
-	
-	
-	
-	
-	
-	
+(*------------------------------------------------------------*)
+(** Return the parametric linear term which is the upper bound of the clock x in a px_linear_constraint; return None if no upper bound *)
+(*** NOTE: we asssume that all inequalities are of the form x \sim plt, and that a single inequality constrains x as an upper bound. Raises Not_a_clock_guard otherwise ***)
+(*------------------------------------------------------------*)
+exception Found_upper_bound of p_linear_term
+let clock_upper_bound_in clock_index px_linear_constraint =
+	let inequalities = px_get_inequalities px_linear_constraint in
+	let p_linear_term_option =
+	try(
+		(* Iterate on all inequalities until x < plt is found *)
+		List.iter (fun inequality -> 
+			(* Transform to clock guard *)
+			let clock_index', operator, parametric_linear_term = clock_guard_of_linear_inequality inequality in
+			(* Only interested in our clock *)
+			if clock_index' = clock_index then(
+				(* Check the operator *)
+				match operator with
+					(* Case upper bound *)
+					| Op_l | Op_le | Op_eq -> raise (Found_upper_bound parametric_linear_term)
+					(* Otherwise not an upper bound *)
+					| _ -> ()
+			)
+		) inequalities;
+		(* If ending iterating without finding an upper bound: there is none *)
+		None
+	)
+	with 
+		Found_upper_bound parametric_linear_term -> Some parametric_linear_term
+	in
+	(* Return result *)
+	p_linear_term_option
+
+
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 (** {3 Conversion} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)

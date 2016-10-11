@@ -137,7 +137,7 @@ class algoNZCUB =
 			) all_transitions in
 			
 			(* Apply CUB-PTA Emptiness Check *)
-			(*** NOTE: we iterate on the clocks; while it may not be entirely optimal, we do not call px_is_bounded_from_above_in more than needed (which is by far the most expensive function here ***)
+			(*** NOTE: we iterate on the clocks; while it may not be entirely optimal, we do not call clock_upper_bound_in more than needed (which is by far the most expensive function here ***)
 			let check_violation = List.exists (fun clock_index ->
 				(* Let us check whether this clock violates the check *)
 				
@@ -149,8 +149,8 @@ class algoNZCUB =
 					(* Construct the invariant *)
 					let invariant = AlgoStateBased.compute_valuated_invariant global_location in
 					
-					(* Check if not unbounded, i.e., bounded *)
-					let is_bounded = LinearConstraint.px_is_bounded_from_above_in clock_index invariant in
+					(* Check if not unbounded, i.e., bounded, i.e., upper bound is not undefined *)
+					let is_bounded = (LinearConstraint.clock_upper_bound_in clock_index invariant <> None) in
 					
 					(* Print some information *)
 					if verbose_mode_greater Verbose_high then(
