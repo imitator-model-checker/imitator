@@ -3,7 +3,7 @@
  *
  * Very simple CUB-PTA to test CUB-PTA emptiness check
  *
- * Description     : Very simple CUB-PTA to test CUB-PTA emptiness check
+ * Description     : Very simple CUB-PTA to test CUB-PTA emptiness check. NOTE: Exhibited a bug in LoopSynth / NZCUB as a state already met before is not necessarily a loop (it can be a state belonging to another branch of a tree).
  * Correctness     : The system has a loop for p2 >= 1 OR p1 >= 5
  * Source          : Own work
  * Author          : Étienne André

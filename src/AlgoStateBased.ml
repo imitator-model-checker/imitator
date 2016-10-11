@@ -1517,7 +1517,7 @@ class virtual algoStateBased =
 			let new_target_state = StateSpace.get_state state_space target_state_index in
 		
 			let beginning_message = (if is_new_state then "NEW STATE" else "Old state") in
-			print_message Verbose_high ("\n" ^ beginning_message ^ " s_" ^ (string_of_int target_state_index) ^ " reachable through action '" ^ (model.action_names action_index) ^ "': ");
+			print_message Verbose_high ("\n" ^ beginning_message ^ " s_" ^ (string_of_int target_state_index) ^ " reachable from s_" ^ (string_of_int source_state_index) ^ " via action '" ^ (model.action_names action_index) ^ "': ");
 			print_message Verbose_high (ModelPrinter.string_of_state model new_target_state);
 		);
 		(* The end *)

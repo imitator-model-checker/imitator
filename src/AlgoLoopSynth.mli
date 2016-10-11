@@ -59,15 +59,15 @@ class algoLoopSynth :
 		
 		
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-		(* Actions to perform when found a loop, after updating the state space *)
+		(* Actions to perform when found a loop (after updating the state space) *)
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-		method process_loop_constraint_before_state_space_update : state_index -> LinearConstraint.px_linear_constraint -> unit
+		method process_loop_constraint : state_index -> StateSpace.scc -> LinearConstraint.px_linear_constraint -> unit
 		
 		
-		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+(*		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		(* Actions to perform when found a loop, after updating the state space *)
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-		method process_loop_constraint_after_state_space_update : state_index -> LinearConstraint.px_linear_constraint -> unit
+		method process_loop_constraint_after_state_space_update : state_index -> LinearConstraint.px_linear_constraint -> unit*)
 		
 		
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)

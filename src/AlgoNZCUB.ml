@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/10/10
- * Last modified     : 2016/10/10
+ * Last modified     : 2016/10/11
  *
  ************************************************************)
 
@@ -62,23 +62,24 @@ class algoNZCUB =
 		()
 	
 
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+(*	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Actions to perform when found a loop, before updating the state space *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method process_loop_constraint_before_state_space_update _ _ =
 		(* Nothing! because we will check non-Zenoness AFTER updating state space *)
-		()
+		()*)
 
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Actions to perform when found a loop, after updating the state space *)
+	(* Actions to perform when found a loop (after updating the state space) *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method process_loop_constraint_after_state_space_update loop_starting_point_state_index px_constraint =
+	method process_loop_constraint loop_starting_point_state_index scc loop_px_constraint =
 		(* Retrieve the model *)
 		let model = Input.get_model () in
 
-		(* Compute the SCC (after the transitions were updated, of course) *)
-		let scc = StateSpace.reconstruct_scc state_space loop_starting_point_state_index in
+(*		(* Compute the SCC (after the transitions were updated, of course) *)
+		self#print_algo_message Verbose_medium ("Computing SCC starting from s_" ^ (string_of_int loop_starting_point_state_index) ^ "…");
+		let scc = StateSpace.reconstruct_scc state_space loop_starting_point_state_index in*)
 
 		(* Print it *)
 		if verbose_mode_greater Verbose_medium then(
@@ -135,7 +136,19 @@ class algoNZCUB =
 				source_index, action_index, b, resets , target_index
 				
 			) all_transitions in
-			
+	
+			(* Print some information *)
+			if verbose_mode_greater Verbose_high then(
+				self#print_algo_message Verbose_high ("All transitions with flags: \n " ^ (string_of_list_of_string_with_sep "\n -- \n" (List.map (fun (source_index, action_index, b, resets , target_index) ->
+					(StateSpace.string_of_state_index source_index)
+					^ " --" ^ (model.action_names action_index)
+					^ "," ^ (string_of_bool b)
+					^ ",[" ^ (string_of_list_of_string_with_sep "," (List.map model.variable_names resets)) ^ "]"
+					^ "--> " 
+					^ (StateSpace.string_of_state_index target_index)
+				) transitions_with_resets_and_b)) ^ "");
+			);
+
 			(* Apply CUB-PTA Emptiness Check *)
 			(*** NOTE: we iterate on the clocks; while it may not be entirely optimal, we do not call clock_upper_bound_in more than needed (which is by far the most expensive function here ***)
 			let check_violation = List.exists (fun clock_index ->
@@ -154,31 +167,39 @@ class algoNZCUB =
 					
 					(* Print some information *)
 					if verbose_mode_greater Verbose_high then(
-						self#print_algo_message Verbose_high ("\nIs clock " ^ (model.variable_names clock_index)  ^ " bounded in the following invariant constraint? " ^ (string_of_bool is_bounded) ^ " \n" ^ (LinearConstraint.string_of_px_linear_constraint model.variable_names invariant) ^ "");
+						self#print_algo_message Verbose_high ("Is clock " ^ (model.variable_names clock_index)  ^ " bounded in the following invariant constraint? " ^ (string_of_bool is_bounded) ^ " \n" ^ (LinearConstraint.string_of_px_linear_constraint model.variable_names invariant) ^ "");
 					);
 					
 					is_bounded
 				) scc then(
 					(* 2. Since the clock is bounded somewhere, we look for a label (X, b) s.t. this clock belongs to X *)
-					not (List.exists (fun (_, _, _, resets , _) ->
+					let clock_never_reset = not (List.exists (fun (_, _, _, resets , _) ->
 						List.mem clock_index resets
-					) transitions_with_resets_and_b)
+					) transitions_with_resets_and_b) in
+					(* Print some information *)
+					self#print_algo_message Verbose_high ("Is clock " ^ (model.variable_names clock_index)  ^ " never reset in the SCC? " ^ (string_of_bool clock_never_reset) ^ "");
+					
+					(* Return *)
+					clock_never_reset
 				)else(
+					(* Print some information *)
+					self#print_algo_message Verbose_high ("Clock " ^ (model.variable_names clock_index)  ^ " has no upper bound along the SCC.");
+
 					(* Otherwise the clock is always unbounded: no problem, no violation *)
 					false
 				)
 			) model.clocks_without_special_reset_clock
 			in
 			
-			(*  *)
+			(* Print some information *)
 			if check_violation then(
-				self#print_algo_message Verbose_standard ("Cycle found! But does not respect the conditions for non-Zenoness");
+				self#print_algo_message Verbose_low ("Cycle found! But does not respect the conditions for non-Zenoness");
 			)else(
 				(* Print some information *)
 				self#print_algo_message Verbose_standard ("Non-Zeno cycle found!");
 				
 				(* Real non-Zeno loop: update constraint *)
-				self#update_loop_constraint px_constraint;
+				self#update_loop_constraint loop_px_constraint;
 			)
 			
 		);

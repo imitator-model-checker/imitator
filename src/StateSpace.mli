@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2009/12/08
- * Last modified     : 2016/10/10
+ * Last modified     : 2016/10/11
  *
  ************************************************************)
 
@@ -19,7 +19,6 @@
 (************************************************************)
 open Automaton
 open State
-(* open AbstractModel *)
 
 
 
@@ -37,6 +36,9 @@ type statespace_nature =
 (** State space structure *)
 (************************************************************)
 type state_space
+
+(** An SCC is just a list of states *)
+type scc = state_index list
 
 
 (************************************************************)
@@ -153,14 +155,14 @@ val get_resets : state_space -> state_index -> action_index -> state_index -> Au
 
 
 (*------------------------------------------------------------*)
-(* When a state is encountered for a second time, then a loop exists (or more generally an SCC): 'reconstruct_scc state_space state_index' reconstructs the SCC from state_index to state_index (using the actions) using a variant of Tarjan's strongly connected components algorithm; raises InternalError if no SCC found (which should not happen) *)
+(* When a state is encountered for a second time, then a loop exists (or more generally an SCC): 'reconstruct_scc state_space state_index' reconstructs the SCC from state_index to state_index (using the actions) using a variant of Tarjan's strongly connected components algorithm; returns None if no SCC found *)
 (*------------------------------------------------------------*)
-val reconstruct_scc : state_space -> state_index -> state_index list
+val reconstruct_scc : state_space -> state_index -> scc option
 
 (*------------------------------------------------------------*)
 (** From a set of states, return all transitions within this set of states, in the form of a triple (state_index, action_index, state_index) *)
 (*------------------------------------------------------------*)
-val find_transitions_in : state_space -> state_index list -> (state_index * action_index * state_index) list
+val find_transitions_in : state_space -> scc -> (state_index * action_index * state_index) list
 
 
 (************************************************************)
@@ -203,8 +205,10 @@ val iterate_on_states : (state_index -> abstract_state -> unit) -> state_space -
 
 
 (************************************************************)
-(** Misc: tile natures *)
+(** Misc: conversion to string *)
 (************************************************************)
+val string_of_state_index : state_index -> string
+
 val string_of_statespace_nature : statespace_nature -> string
 
 

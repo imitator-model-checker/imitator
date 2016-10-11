@@ -26,6 +26,15 @@ open Result
 open AlgoBFS
 
 
+(************************************************************)
+(************************************************************)
+(* Local type *)
+(************************************************************)
+(************************************************************)
+type has_loop =
+	| No_loop
+	| Loop of StateSpace.scc
+
 
 (************************************************************)
 (************************************************************)
@@ -83,7 +92,7 @@ class algoLoopSynth =
 	(*** WARNING/BADPROG: the following is partially copy/paste from AlgoEF.ml (though much modified) ***)
 	method add_a_new_state source_state_index new_states_indexes action_index location (current_constraint : LinearConstraint.px_linear_constraint) =
 		(* Retrieve the model *)
-		let model = Input.get_model () in
+(* 		let model = Input.get_model () in *)
 
 		(* Build the state *)
 		let new_state = location, current_constraint in
@@ -91,34 +100,49 @@ class algoLoopSynth =
 		let new_state_index, added = (
 			StateSpace.add_state state_space new_state
 		) in
+		
 		(* If this is really a new state *)
 		if added then (
 
 			(* Add the state_index to the list of new states (used to compute their successors at the next iteration) *)
 			new_states_indexes := new_state_index :: !new_states_indexes;
-			
 		) (* end if new state *)
 		else (
-			(* Not added: means this state was already present before, hence we found a loop! *)
-			
+			(* Not added: means this state was already present before *)
+			(* This state can either be a loop or just a state belonging to another branch of a tree *)
 			(* Print some information *)
-			self#print_algo_message Verbose_standard "Found a loop.";
-			
-			self#process_loop_constraint_before_state_space_update new_state_index current_constraint;
-
-			) (* end if loop *)
+			self#print_algo_message Verbose_medium ("State " ^ (StateSpace.string_of_state_index new_state_index) ^ "already met: potential loop found.");
+		) (* end if loop *)
 		;
-		
-		(*** TODO: move the rest to a higher level function? (post_from_one_state?) ***)
 		
 		(* Update the transitions *)
 		self#add_transition_to_state_space (source_state_index, action_index, new_state_index) added;
 		
+		let has_loop =
+			(* New state: cannot be a loop *)
+			if added then No_loop
+			else (
+				(* Now that the transitions were updated, try to look for a loop *)
+				self#print_algo_message Verbose_medium ("Computing SCC starting from s_" ^ (string_of_int source_state_index) ^ "…");
+				let scc_option = StateSpace.reconstruct_scc state_space source_state_index in
+		
+				match scc_option with
+					(* No loop *)
+					| None -> No_loop
+					(* Some loop *)
+					| Some scc -> Loop scc
+			)
+		in
+		
 		(* If found a loop *)
-		if not added then(
-			(*** NOTE: this method is called AFTER the transition table was updated ***)
-			self#process_loop_constraint_after_state_space_update new_state_index current_constraint;
-		); (* end if found a loop *)
+		begin
+		match has_loop with
+			| No_loop -> ()
+			| Loop scc ->
+				self#print_algo_message Verbose_standard "Found a loop.";
+				(*** NOTE: this method is called AFTER the transition table was updated ***)
+				self#process_loop_constraint new_state_index scc current_constraint;
+		end; (* end if found a loop *)
 		
 		(* The state is kept in any case *)
 		true
@@ -175,12 +199,15 @@ class algoLoopSynth =
 	
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Actions to perform when found a loop, before updating the state space *)
+	(* Actions to perform when found a loop (after updating the state space) *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method process_loop_constraint_before_state_space_update _ loop_px_constraint =
+	method process_loop_constraint _ _ loop_px_constraint =
+		(* Just update the loop constraint *)
 		self#update_loop_constraint loop_px_constraint;
+		(* The end *)
+		()
 
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+(*	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Actions to perform when found a loop, after updating the state space *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method process_loop_constraint_after_state_space_update loop_starting_point_state_index loop_px_constraint =
@@ -198,7 +225,7 @@ class algoLoopSynth =
 			print_message Verbose_low ("\nSCC: [" ^ (string_of_list_of_string_with_sep "\n\t- " (List.map verbose_string_of_state_index scc)) ^ "\n]");
 		);
 		(* The end *)
-		()
+		()*)
 
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)

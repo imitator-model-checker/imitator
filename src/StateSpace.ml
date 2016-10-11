@@ -9,7 +9,7 @@
  * 
  * File contributors : Ulrich Kühne, Étienne André
  * Created           : 2009/12/08
- * Last modified     : 2016/10/10
+ * Last modified     : 2016/10/11
  *
  ************************************************************)
 
@@ -38,6 +38,7 @@ type statespace_nature =
 	| Good
 	| Bad
 	| Unknown
+
 
 
 
@@ -87,6 +88,10 @@ type state_space = {
 }
 
 
+(** An SCC is just a list of states *)
+type scc = state_index list
+
+
 (************************************************************)
 (** Constant *)
 (************************************************************)
@@ -108,6 +113,12 @@ let statespace_dcounter_nb_constraint_comparisons = create_discrete_counter_and_
 (** Local exception *)
 (************************************************************)
 exception Found_cycle
+
+
+(************************************************************)
+(** Debug string function *)
+(************************************************************)
+let string_of_state_index state_index = "s_" ^ (string_of_int state_index)
 
 
 (************************************************************)
@@ -565,14 +576,16 @@ type tarjan_node = {
 	mutable onStack		: bool;
 }
 
-(* An SCC is just a list of states *)
-type scc = state_index list
 (* Exception raised when the SCC is found *)
 exception Found_scc of scc
 
 
-(* When a state is encountered for a second time, then a loop exists (or more generally an SCC): 'reconstruct_scc state_space state_index' reconstructs the SCC from state_index to state_index (using the actions) using a variant of Tarjan's strongly connected components algorithm; raises InternalError if no SCC found (which should not happen) *)
-let reconstruct_scc state_space state_index : scc =
+(* When a state is encountered for a second time, then a loop exists (or more generally an SCC): 'reconstruct_scc state_space source_state_index' reconstructs the SCC from source_state_index to source_state_index (using the actions) using a variant of Tarjan's strongly connected components algorithm; returns None if no SCC found *)
+(*** NOTE: added the requirement that a single node is not an SCC in our setting ***)
+let reconstruct_scc state_space source_state_index : scc option =
+	(* Print some information *)
+	print_message Verbose_high ("Entering reconstruct_scc " ^ (string_of_state_index source_state_index) ^ "…");
+
 	(* Variables used for Tarjan *)
 	let current_index = ref 0 in
 
@@ -619,6 +632,9 @@ let reconstruct_scc state_space state_index : scc =
 	
 	(* Define a main local, recursive function *)
 	let rec strongconnect state_index =
+		(* Print some information *)
+		print_message Verbose_high ("  Entering strongconnect " ^ (string_of_state_index state_index) ^ "…");
+		
 		(* Get the associated tarjan node *)
 		let v = tarjan_node_of_state_index state_index in
 		(* Set the depth index for v to the smallest unused index *)
@@ -633,14 +649,29 @@ let reconstruct_scc state_space state_index : scc =
 		
 		(* S.push(v) *)
 		Stack.push v stack;
+
+		(* Print some information *)
+		print_message Verbose_high ("  Push " ^ (string_of_state_index state_index) ^ "");
 		
 		(* v.onStack := true *)
 		v.onStack <- true;
 	
+		(* Print some information *)
+		print_message Verbose_high ("  Considering successors of " ^ (string_of_state_index state_index) ^ "…");
+		
 		(* Consider successors of v *)
 		(* for each (v, w) in E do *)
 		let successors = get_successors state_space state_index in
+
+		(* Print some information *)
+		if verbose_mode_greater Verbose_high then(
+			print_message Verbose_high (string_of_list_of_string_with_sep ", " (List.map string_of_state_index successors));
+		);
+		
 		List.iter (fun successor_index ->
+			(* Print some information *)
+			print_message Verbose_high ("    Considering successor " ^ (string_of_state_index successor_index) ^ "");
+			
 			let w = tarjan_node_of_state_index successor_index in
 			(* if (w.index is undefined) then *)
 			if w.index = None then (
@@ -649,9 +680,16 @@ let reconstruct_scc state_space state_index : scc =
 				strongconnect successor_index;
 				
 				(* v.lowlink  := min(v.lowlink, w.lowlink) *)
+
 				let vlowlink = get_lowlink v in
 				let wlowlink = get_lowlink w in
-				if wlowlink < vlowlink then v.lowlink <- Some wlowlink;
+				
+				(* Print some information *)
+				print_message Verbose_high ("    " ^ (string_of_state_index v.state_index) ^ ".lowlink  := min(" ^ (string_of_state_index v.state_index) ^ ".lowlink, " ^ (string_of_state_index w.state_index) ^ ".lowlink) = min(" ^ (string_of_int vlowlink) ^ ", " ^ (string_of_int wlowlink) ^ ")");
+
+				if wlowlink < vlowlink then(
+					v.lowlink <- Some wlowlink;
+				);
 			(* else if (w.onStack) then *)
 			) else if w.onStack then (
 				(* // Successor w is in stack S and hence in the current SCC
@@ -668,7 +706,11 @@ let reconstruct_scc state_space state_index : scc =
 		(* if (v.lowlink = v.index) then *)
 		let vlowlink = get_lowlink v in
 		let vindex = get_index v in
+		
 		if vlowlink = vindex then (
+			(* Print some information *)
+			print_message Verbose_high ("  Root node! Start SCC");
+			
 			(* start a new strongly connected component *)
 			let scc : scc ref = ref [] in
 			
@@ -678,6 +720,9 @@ let reconstruct_scc state_space state_index : scc =
 				(* w := S.pop() *)
 				let w = Stack.pop stack in
 
+				(* Print some information *)
+				print_message Verbose_high ("  Pop " ^ (string_of_state_index w.state_index) ^ "");
+				
 				(* w.onStack := false *)
 				w.onStack <- false;
 				
@@ -689,12 +734,47 @@ let reconstruct_scc state_space state_index : scc =
 			done;
 			
 			(* output the current strongly connected component *)
-			(* In fact, we differ from the traditional Tarjan here: if the original state_index belongs to the scc, we are done; otherwise we keep working and this scc is discarded *)
-			if List.mem state_index !scc then(
-				raise (Found_scc !scc)
+			(* In fact, we differ from the traditional Tarjan here: if the original source_state_index belongs to the scc, we are done; otherwise we keep working and this scc is discarded *)
+			if List.mem source_state_index !scc then(
+			
+				(* In addition, the SCC must not be reduced to a singleton without a loop *)
+				if List.length !scc > 1 then(
+					print_message Verbose_high ("  Found SCC of size > 1 containing " ^ (string_of_state_index source_state_index) ^ "!");
+
+					raise (Found_scc !scc)
+				)else(
+					(* If reduced to a state: must contain a self-loop, i.e., source_state_index must belong to its successors *)
+					let successors = get_successors state_space source_state_index in
+					
+					(* Print some information *)
+					if verbose_mode_greater Verbose_high then(
+						print_message Verbose_high ("  Successors of " ^ (string_of_state_index source_state_index) ^ ": " ^ (string_of_list_of_string_with_sep ", " (List.map string_of_state_index successors)) );
+					);
+					
+					let found_scc = List.mem source_state_index successors in
+					
+					if found_scc then(
+						(* Print some information *)
+						print_message Verbose_high ("  Found SCC containing exactly " ^ (string_of_state_index source_state_index) ^ "!");
+
+						raise (Found_scc !scc)
+					)else(
+						(* Print some information *)
+						print_message Verbose_high ("  Found SCC containing exactly " ^ (string_of_state_index source_state_index) ^ " but without a loop: discard.");
+					);
+				);
+			)else(
+				(* Print some information *)
+				print_message Verbose_high ("  SCC NOT containing " ^ (string_of_state_index source_state_index) ^ ": discard.");
 			);
 		(* end if *)
 		);
+		
+		(* Print some information *)
+		print_message Verbose_high ("  Exiting strongconnect " ^ (string_of_state_index state_index) ^ ".");
+		
+		(* end local function strongconnect *)
+		()
     
     
 	in
@@ -702,16 +782,16 @@ let reconstruct_scc state_space state_index : scc =
 	(* Call strongconnect from the desired starting node *)
 	let scc =
 	try
-		strongconnect state_index;
+		strongconnect source_state_index;
 		
 		(* If an exception was not raised, we reach this point *)
-		(* Since this must not happen, we raise an internal error *)
-		raise (InternalError "SCC not found in strongconnect!")
+		print_message Verbose_high ("SCC not found in strongconnect!");
+		None
 	with
 		(* if an exception was raised while looking for the SCC: we found the SCC! *)
 		Found_scc scc -> (
 			(* Return the scc *)
-			scc
+			Some scc
 		)
 	in
 	(* Return SCC *)
