@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/11/25
- * Last modified     : 2016/10/10
+ * Last modified     : 2016/10/11
  *
  ************************************************************)
 
@@ -157,13 +157,7 @@ class algoEFsynth =
 		(*** TODO: move the rest to a higher level function? (post_from_one_state?) ***)
 		
 		(* Update the transitions *)
-		StateSpace.add_transition state_space (orig_state_index, action_index, new_state_index);
-		(* Print some information *)
-		if verbose_mode_greater Verbose_high then (
-			let beginning_message = (if added then "NEW STATE" else "Old state") in
-			print_message Verbose_high ("\n" ^ beginning_message ^ " reachable through action '" ^ (model.action_names action_index) ^ "': ");
-			print_message Verbose_high (ModelPrinter.string_of_state model new_state);
-		);
+		self#add_transition_to_state_space (orig_state_index, action_index, new_state_index) added;
 	
 		(* The state is kept in any case *)
 		true

@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/12/02
- * Last modified     : 2016/10/10
+ * Last modified     : 2016/10/11
  *
  ************************************************************)
 
@@ -87,13 +87,22 @@ class virtual algoStateBased :
 		(*** TODO: simplify signature by removing the state_index list ref and the action_index, and by returning the list of actually added states ***)
 		method virtual add_a_new_state : state_index -> state_index list ref -> Automaton.action_index -> Location.global_location -> LinearConstraint.px_linear_constraint -> bool
 		
+		
+		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+		(* Add a transition to the state space (takes as a second argument a flag stating whether the state is new) *)
+		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+		method add_transition_to_state_space : (state_index * Automaton.action_index * state_index) -> bool -> unit
+
+		
 		(* Actions to perform when meeting a state with no successors: virtual method to be defined in subclasses *)
 		method virtual process_deadlock_state : state_index -> unit
+		
 		
 		(* Compute the list of successor states of a given state, and update the state space; returns the list of new states' indexes actually added *)
 		(** TODO: to get a more abstract method, should get rid of the state space, and update the state space from another function ***)
 		method post_from_one_state : StateSpace.state_space -> state_index -> state_index list
 
+		
 		(* Main method to run the algorithm: virtual method to be defined in subclasses *)
 		method virtual run : unit -> Result.imitator_result
 		

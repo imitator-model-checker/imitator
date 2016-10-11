@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/12/02
- * Last modified     : 2016/10/10
+ * Last modified     : 2016/10/11
  *
  ************************************************************)
 
@@ -1241,7 +1241,7 @@ class virtual algoStateBased =
 	(*** TODO: move new_states_indexes to a variable of the class ***)
 	(* Return true if the state is not discarded by the algorithm, i.e., if it is either added OR was already present before *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(*** TODO: simplify signature by removing the orig_state_index and returning the list of actually added states ***)
+	(*** TODO: simplify signature by removing the source_state_index and returning the list of actually added states ***)
 	method virtual add_a_new_state : state_index -> state_index list ref -> Automaton.action_index -> Location.global_location -> LinearConstraint.px_linear_constraint -> bool
 
 		
@@ -1249,7 +1249,7 @@ class virtual algoStateBased =
 	(* Compute the list of successor states of a given state, and update the state space; returns the list of new states' indexes actually added *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(** TODO: to get a more abstract method, should get rid of the state space, and update the state space from another function ***)
-	method post_from_one_state state_space orig_state_index =
+	method post_from_one_state state_space source_state_index =
 		(* Retrieve the model *)
 		let model = Input.get_model () in
 
@@ -1257,17 +1257,17 @@ class virtual algoStateBased =
 		let options = Input.get_options () in
 		
 		(* Original location: static *)
-		let original_location, _ = StateSpace.get_state state_space orig_state_index in
+		let original_location, _ = StateSpace.get_state state_space source_state_index in
 		(* Dynamic version of the original px_constraint (can change!) *)
 		(*** NOTE / TO OPTIMIZE: OK but not in all algorithms !! ***)
 		let orig_constraint () =
-			let _, orig_constraint = StateSpace.get_state state_space orig_state_index in
+			let _, orig_constraint = StateSpace.get_state state_space source_state_index in
 			orig_constraint
 		in
 
 		(* Print some information *)
 		if verbose_mode_greater Verbose_high then(
-			let orig_state = StateSpace.get_state state_space orig_state_index in
+			let orig_state = StateSpace.get_state state_space source_state_index in
 			let _, orig_constraint = orig_state in
 			let orig_constraint_projection = LinearConstraint.px_hide_nonparameters_and_collapse orig_constraint in
 			print_message Verbose_high ("Performing post from state:");
@@ -1407,7 +1407,7 @@ class virtual algoStateBased =
 								self#print_algo_message Verbose_total ("Consider the state \n" ^ (ModelPrinter.string_of_state model new_state));
 							);
 
-							let added = self#add_a_new_state orig_state_index new_states_indexes action_index location final_constraint in
+							let added = self#add_a_new_state source_state_index new_states_indexes action_index location final_constraint in
 							
 							(* Update *)
 							has_successors := !has_successors || added;
@@ -1439,7 +1439,7 @@ class virtual algoStateBased =
 		if options#union && !new_states_indexes = [] then (
 			print_message Verbose_low ("\nMode union: adding a state without successor to SLast.");
 			(* Adding the state *)
-			slast := orig_state_index :: !slast;
+			slast := source_state_index :: !slast;
 		);*)
 	(**********************************************************************************************************************)
 	(**********************************************************************************************************************)
@@ -1475,7 +1475,7 @@ class virtual algoStateBased =
 						self#print_algo_message Verbose_total ("Consider the state \n" ^ (ModelPrinter.string_of_state model new_state));
 					);
 
-					let added = self#add_a_new_state orig_state_index new_states_indexes action_index location final_constraint in
+					let added = self#add_a_new_state source_state_index new_states_indexes action_index location final_constraint in
 					(* Update flag for deadlock checking *)
 					has_successors := !has_successors || added;
 				) action_index_list;
@@ -1487,7 +1487,7 @@ class virtual algoStateBased =
 		(* Algorithm-specific handling of deadlock states, i.e., states without successors *)
 		if not !has_successors then (
 			(* Virtual function to be defined in subclasses *)
-			self#process_deadlock_state orig_state_index;
+			self#process_deadlock_state source_state_index;
 		);
 		
 
@@ -1498,6 +1498,32 @@ class virtual algoStateBased =
 
 	
 	
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(* Add a transition to the state space *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	method add_transition_to_state_space transition is_new_state =
+		(* Expand the transition *)
+		let source_state_index, action_index, target_state_index = transition in
+		
+		(* Update state space *)
+		StateSpace.add_transition state_space (source_state_index, action_index, target_state_index);
+		
+		(* Print some information *)
+		if verbose_mode_greater Verbose_high then (
+			(* Retrieve the model *)
+			let model = Input.get_model() in
+			
+			(* Retrieve the target state *)
+			let new_target_state = StateSpace.get_state state_space target_state_index in
+		
+			let beginning_message = (if is_new_state then "NEW STATE" else "Old state") in
+			print_message Verbose_high ("\n" ^ beginning_message ^ " s_" ^ (string_of_int target_state_index) ^ " reachable through action '" ^ (model.action_names action_index) ^ "': ");
+			print_message Verbose_high (ModelPrinter.string_of_state model new_target_state);
+		);
+		(* The end *)
+		()
+
+		
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Actions to perform when meeting a state with no successors: virtual method to be defined in subclasses *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)

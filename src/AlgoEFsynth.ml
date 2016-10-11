@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/11/25
- * Last modified     : 2016/10/10
+ * Last modified     : 2016/10/11
  *
  ************************************************************)
 
@@ -81,7 +81,7 @@ class algoEFsynth =
 	(* Return true if the state is not discarded by the algorithm, i.e., if it is either added OR was already present before *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(*** WARNING/BADPROG: the following is partially copy/paste to AlgoPRP.ml ***)
-	method add_a_new_state orig_state_index new_states_indexes action_index location (current_constraint : LinearConstraint.px_linear_constraint) =
+	method add_a_new_state source_state_index new_states_indexes action_index location (current_constraint : LinearConstraint.px_linear_constraint) =
 		(* Retrieve the model *)
 		let model = Input.get_model () in
 
@@ -191,14 +191,8 @@ class algoEFsynth =
 		
 		(*** TODO: move the rest to a higher level function? (post_from_one_state?) ***)
 		
-		(* Update the transitions *)
-		StateSpace.add_transition state_space (orig_state_index, action_index, new_state_index);
-		(* Print some information *)
-		if verbose_mode_greater Verbose_high then (
-			let beginning_message = (if added then "NEW STATE" else "Old state") in
-			print_message Verbose_high ("\n" ^ beginning_message ^ " reachable through action '" ^ (model.action_names action_index) ^ "': ");
-			print_message Verbose_high (ModelPrinter.string_of_state model new_state);
-		);
+		(* Add the transition to the state space *)
+		self#add_transition_to_state_space (source_state_index, action_index, new_state_index) added;
 	
 		(* The state is kept in any case *)
 		true
