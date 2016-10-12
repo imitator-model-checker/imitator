@@ -1888,6 +1888,8 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 		let true_constraint = LinearConstraint.p_true_constraint () in
 		DynArray.add parameters_constraints_ini (true,[true_constraint]); 
 
+
+		(* ALERT BUG!!!: GETTING THE FIRST LOCATION AS THE INITIAL LOCATION CAN BE WRONG IF THIS LOCATION IS NOT DECLARED AS THE FIRST IN .IMI FILE *)
 		init_loc := (model.location_names automaton_index (List.nth (model.locations_per_automaton automaton_index) 0 ));
 		print_message Verbose_low (" Initial location: " ^ !init_loc);
 		(* init_loc := model.location_names automaton_index model.initial_location; *)
@@ -2456,6 +2458,7 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 			Hashtbl.add new_invariants_per_location_hashtbl newloc cons; *)
 			Hashtbl.add new_invariants_per_location_hashtbl location_index cons;
 		) locations;
+
 		DynArray.iter (fun (location_index, target_location_index, guard, clock_updates, action_index, discrete_update) -> 
 			(* let newloc1 = location_name_of_location_index_and_submodel_index location_index !submodel_index in
 			let newloc2 = location_name_of_location_index_and_submodel_index target_location_index !submodel_index in
