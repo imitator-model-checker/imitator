@@ -1192,9 +1192,9 @@ let cub_tran model submodels count_m
 			print_message Verbose_low (" 	 Case 2 " );
 			(* none reset zone *)
 			let clock_cons = (LinearConstraint.pxd_intersection [constraint_t; (get_all_clocks_ge_zero_comstraint2 clock_index model)]) in
-			let check2 = isConstraintContainedInClocksConstraints location_index clock_cons clocks_constraints in
+			(* let check2 = isConstraintContainedInClocksConstraints location_index clock_cons clocks_constraints in
 			if check2 = false 
-			then
+			then *)
 				(
 				DynArray.add clocks_constraints (location_index, clock_cons);
 				);
@@ -1222,9 +1222,9 @@ let cub_tran model submodels count_m
 				(
 				(* none reset zone *)
 				let clock_cons = (LinearConstraint.pxd_intersection [constraint_s1; (get_all_clocks_ge_zero_comstraint2 clock_index model)]) in
-				let check2 = isConstraintContainedInClocksConstraints location_index clock_cons clocks_constraints in
+				(* let check2 = isConstraintContainedInClocksConstraints location_index clock_cons clocks_constraints in
 				if check2 = false 
-				then
+				then *)
 					(
 					DynArray.add clocks_constraints (location_index, clock_cons);
 					);
@@ -1246,9 +1246,9 @@ let cub_tran model submodels count_m
 				);
 			(* reset zone - end*)
 
-			let check2 = isConstraintContainedInClocksConstraints location_index !clock_cons clocks_constraints in
+			(* let check2 = isConstraintContainedInClocksConstraints location_index !clock_cons clocks_constraints in
 			if check2 = false 
-			then
+			then *)
 				(
 				DynArray.add clocks_constraints (location_index, !clock_cons);
 				print_message Verbose_low (" Added constraints: " 
@@ -1282,14 +1282,14 @@ let cub_tran model submodels count_m
 			else
 				(
 				let clock_cons = LinearConstraint.pxd_intersection ([constraint_s0; constraint_t; (get_all_clocks_ge_zero_comstraint2 clock_index model)]) in
-				let check2 = isConstraintContainedInClocksConstraints location_index clock_cons clocks_constraints in
+				(* let check2 = isConstraintContainedInClocksConstraints location_index clock_cons clocks_constraints in *)
 				if LinearConstraint.p_is_false constr
 				then 
 					(
 					print_message Verbose_low (" false, comparable ");
 
-					if check2 = false 
-					then
+					(* if check2 = false 
+					then *)
 						(
 						DynArray.add clocks_constraints (location_index, clock_cons);
 						);
@@ -1310,8 +1310,8 @@ let cub_tran model submodels count_m
 					if check1 = true
 					then
 						(
-						if check2 = false
-						then
+						(* if check2 = false
+						then *)
 							(
 							print_message Verbose_low ("\n Cub constraints conflicted with parameters constraints!!! " );
 							print_message Verbose_low (" Adding new clocks constraints" );
@@ -1394,14 +1394,14 @@ let cub_tran model submodels count_m
 				else
 					(
 					let clock_cons = LinearConstraint.pxd_intersection ([constraint_s0; constraint_s1; (get_all_clocks_ge_zero_comstraint2 clock_index model)]) in
-					let check2 = isConstraintContainedInClocksConstraints location_index clock_cons clocks_constraints in
+					(* let check2 = isConstraintContainedInClocksConstraints location_index clock_cons clocks_constraints in *)
 					if LinearConstraint.p_is_false constr
 					then 
 						(
 						print_message Verbose_low (" false, comparable ");
 
-						if check2 = false 
-						then
+						(* if check2 = false 
+						then *)
 							(
 							DynArray.add clocks_constraints (location_index, clock_cons);
 							);
@@ -1416,13 +1416,13 @@ let cub_tran model submodels count_m
 						let check1 = isContraintConflictsParametersConstraints constr parameters_constraints in
 						let check3 = isConstraintContainedInParametersConstraints constr parameters_constraints in
 						print_message Verbose_low ("\n Check 1 - CUB-Cons conflicted with parameters relation: " ^ string_of_bool check1
-														^ "\n Check 2 - Constraint Contained In Clocks Constraints: " ^ string_of_bool check2
+														(* ^ "\n Check 2 - Constraint Contained In Clocks Constraints: " ^ string_of_bool check2 *)
 														^ "\n Check 3 - CUB-Cons Contained In parameters relation:: " ^ string_of_bool check3 );
 						if check1 = true
 						then
 							(
-							if check2 = false
-							then
+							(* if check2 = false
+							then *)
 								(
 								print_message Verbose_low ("\n Cub constraints conflicted with parameters constraints!!! " );
 								print_message Verbose_low (" Adding new clocks constraints" );
@@ -1504,14 +1504,14 @@ let cub_tran model submodels count_m
 				else
 					(
 					let clock_cons = LinearConstraint.pxd_intersection ([constraint_s0; constraint_t; (get_all_clocks_ge_zero_comstraint2 clock_index model)]) in
-					let check2 = isConstraintContainedInClocksConstraints location_index clock_cons clocks_constraints in
+					(* let check2 = isConstraintContainedInClocksConstraints location_index clock_cons clocks_constraints in *)
 					if LinearConstraint.p_is_false constr
 					then 
 						(
 						print_message Verbose_low (" false, comparable ");
 
-						if check2 = false 
-						then
+						(* if check2 = false 
+						then *)
 						DynArray.add clocks_constraints (location_index, clock_cons);
 						()
 
@@ -1530,8 +1530,8 @@ let cub_tran model submodels count_m
 						if check1 = true
 						then
 							(
-							if check2 = false
-							then
+							(* if check2 = false
+							then *)
 								(
 								print_message Verbose_low ("\n Cub constraints conflicted with parameters constraints!!! " );
 								print_message Verbose_low (" Adding new clocks constraints" );
@@ -1603,14 +1603,14 @@ let cub_tran model submodels count_m
 				else
 					(
 					let clock_cons = LinearConstraint.pxd_intersection ([constraint_s0; constraint_t; constraint_s1; (get_all_clocks_ge_zero_comstraint2 clock_index model)]) in
-					let check2 = isConstraintContainedInClocksConstraints location_index clock_cons clocks_constraints in
+					(* let check2 = isConstraintContainedInClocksConstraints location_index clock_cons clocks_constraints in *)
 					if LinearConstraint.p_is_false constr
 					then 
 						(
 						print_message Verbose_low (" false, comparable ");
 
-						if check2 = false 
-						then
+						(* if check2 = false 
+						then *)
 							(
 							DynArray.add clocks_constraints (location_index, clock_cons);
 							);
@@ -1626,14 +1626,14 @@ let cub_tran model submodels count_m
 						(* Print some information *)
 						if verbose_mode_greater Verbose_low then(
 							print_message Verbose_low ("\n Check 1 - CUB-Cons conflicted with parameters relation: " ^ string_of_bool check1
-														^ "\n Check 2 - Constraint Contained In Clocks Constraints: " ^ string_of_bool check2
+														(* ^ "\n Check 2 - Constraint Contained In Clocks Constraints: " ^ string_of_bool check2 *)
 														^ "\n Check 3 - CUB-Cons Contained In parameters relation:: " ^ string_of_bool check3 );
 						);
 						if check1 = true
 						then
 							(
-							if check2 = false
-							then
+							(* if check2 = false
+							then *)
 								(
 								print_message Verbose_low ("\n Cub constraints conflicted with parameters constraints!!! " );
 								print_message Verbose_low (" Adding new clocks constraints" );
@@ -1718,6 +1718,7 @@ let filter_inf model cons =
 			);
 	);
 
+	(*)
 	if !ls_temp = []
 	then
 		( 
@@ -1725,6 +1726,7 @@ let filter_inf model cons =
 
 		raise (InternalError(" filter_inf: Output list is empty!!! "));
 		);
+	*)
 	
 	let result_cons = ref (LinearConstraint.pxd_true_constraint ()) in
 
@@ -1751,9 +1753,16 @@ let add_inf_2_missing_c_cons model cons =
 
 
 (* [CUB-PTA TRANSFORMATION] THIS IS A FUNCTION USED FOR CUB-PTA TRANSITIONS *)
-let clocks_constraints_process model adding clocks_constraints loc_clocks_constraints =
+let clocks_constraints_process model adding clocks_constraints loc_clocks_constraints location_index invariant_s0 =
 
-	
+	print_message Verbose_low ("\nCLOCKS CONSTRAINTS clocks_constraints_process 1: ");
+		DynArray.iter (fun (l_index, con) -> 
+			print_message Verbose_low ("\n (WILL BE A NEW STATE): \n" 
+											^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names con) 
+											^ "\n FROM LOCATION: " 
+											^ l_index
+											); 
+		) clocks_constraints;
 
 	let con = ref (LinearConstraint.pxd_true_constraint ()) in
 	for i = 1 to (DynArray.length clocks_constraints - 1) do
@@ -1767,7 +1776,17 @@ let clocks_constraints_process model adding clocks_constraints loc_clocks_constr
 		 	match (check1, check2) with
 		 		| true,  true  -> ()
 		 		| true,  false -> ()
-		 		| false, true  -> con := LinearConstraint.pxd_intersection [!con; filter_inf model cons1 (*; (get_all_clocks_ge_zero_comstraint2 clock_index model) *)];
+		 		| false, true  -> 	let a = if LinearConstraint.pxd_is_true invariant_s0 = false then filter_inf model invariant_s0 else invariant_s0 in
+		 							if loc_index1 = location_index 
+		 							then
+		 							   (
+		 							   	con := LinearConstraint.pxd_intersection [!con; filter_inf model cons1; a (*; (get_all_clocks_ge_zero_comstraint2 clock_index model) *)];
+		 							   )
+		 						   else
+		 						   	   (
+		 						   	   	con := LinearConstraint.pxd_intersection [!con; filter_inf model cons1 (*; (get_all_clocks_ge_zero_comstraint2 clock_index model) *)];
+		 						       );
+		 						  (* con := LinearConstraint.pxd_intersection [!con; filter_inf model cons1 (*; (get_all_clocks_ge_zero_comstraint2 clock_index model) *)]; *)
 		 						  con := add_inf_2_missing_c_cons model !con;
 		 						  let check = isConstraintContainedInClocksConstraints loc_index1 !con loc_clocks_constraints in
 		 						  if LinearConstraint.pxd_is_true !con = false && check = false
@@ -1787,6 +1806,8 @@ let clocks_constraints_process model adding clocks_constraints loc_clocks_constr
 	DynArray.clear clocks_constraints; 
 	DynArray.append (DynArray.copy loc_clocks_constraints) clocks_constraints; 
 	()
+
+
 
 
 (************************************************************)
@@ -2033,7 +2054,7 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 
 				DynArray.add clocks_constraints (location_index, (LinearConstraint.pxd_true_constraint ()));
 
-				clocks_constraints_process model adding clocks_constraints loc_clocks_constraints;
+				clocks_constraints_process model adding clocks_constraints loc_clocks_constraints location_index invariant_s0;
 
 				(* increase transition count *)
 				count_t := !count_t+1;
@@ -2109,7 +2130,7 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 
 			DynArray.add clocks_constraints (location_index, (LinearConstraint.pxd_true_constraint ()));
 			
-			clocks_constraints_process model adding clocks_constraints loc_clocks_constraints;
+			clocks_constraints_process model adding clocks_constraints loc_clocks_constraints location_index invariant_s0;
 			
 			(*work here - end*)
 			(* transiton count *)
