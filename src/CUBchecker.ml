@@ -2590,28 +2590,37 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 	(*** NOTE: would be better to first create to a dummy constraint, instead of creating a new p_true_constraint() for each cell, that will be overwritten anyway ***)
 	new_invariants_array.(automaton_index) <- Array.make new_nb_locations (LinearConstraint.pxd_true_constraint());
 	
+
+
 	(* THIS IS THE INDEX OF OLD LOCATION TO NEW LOCATION(S) *)
+	(* let new_loc_index_tbl = Hashtbl.create 0 in *)
+
 	old_locations_to_new_locations.(automaton_index) <- Array.make (List.length (model.locations_per_automaton automaton_index)) [];
 
 	let current_location_index = ref 0 in
+
+
 
 	(* Fill location_index_of_location_name , location_name_of_location_index and new_invariants_array *)
 	Hashtbl.iter (fun location_name location_invariant ->
 		(* Add the binding location_name , location_index to the new structure *)
 		Hashtbl.add location_index_of_location_name location_name !current_location_index;
 
+		print_message Verbose_low ("\nBugggggg!!!!!!!1223"); 
 		(* ADD new_loc_index_tbl, USED FOR TRACING NEW LOACTION FROM THE OLD LOCATION *)
 		let old_loc_index = Hashtbl.find loc_naming_tbl location_name in
 		(* ELIMINATE THE NEW CUB INITIAL LOCATION WHICH IS NOT IN OLD MODEL LOCATIONS *)
-		if old_loc_index != (Hashtbl.length loc_naming_tbl - 1)
+		if ( List.mem old_loc_index (model.locations_per_automaton automaton_index) )
 		then
 			( 
-(* 			Hashtbl.add new_loc_index_tbl old_loc_index !current_location_index; *)
+			print_message Verbose_low ("\nHashtbl.length: " ^string_of_int  (List.length (model.locations_per_automaton automaton_index)) ^ "\nNAME: " ^ location_name ^ "\n OLD LOCAION: " ^ string_of_int old_loc_index ^ " NEW LOCAION: " ^ string_of_int !current_location_index );
+			(* Hashtbl.add new_loc_index_tbl old_loc_index !current_location_index; *)
+			
 			old_locations_to_new_locations.(automaton_index).(old_loc_index) <- !current_location_index :: old_locations_to_new_locations.(automaton_index).(old_loc_index);
 			
 			(* TESTING INFORNATION IN new_loc_index_tbl *)
-			print_message Verbose_low ("\nNAME: " ^ location_name ^ "\n OLD LOCAION: " ^ string_of_int old_loc_index ^ " NEW LOCAION: " ^ string_of_int !current_location_index );
 			);
+			print_message Verbose_low ("\nBugggggg!!!!!!!1"); 
 		
 		(* Add the binding location_index , location_name to the new structure *)
 		location_name_of_location_index.(!current_location_index) <- location_name;
@@ -2623,6 +2632,11 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 		incr current_location_index;
 	
 	) new_invariants_per_location_hashtbl;
+
+
+	(* Hashtbl.iter (fun old_loc_index new_loc_index -> 
+		print_message Verbose_low ( "\n OLD LOCAION: " ^ string_of_int old_loc_index ^ " NEW LOCAION: " ^ string_of_int new_loc_index );
+	) new_loc_index_tbl; *)
 
 	
 	
