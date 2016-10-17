@@ -173,10 +173,10 @@ let string_of_transition model automaton_index action_index (guard, clock_update
 	(* Should we add a separating comma between clock updates and discrete updaes? *)
 	let separator_comma =
 		let no_clock_updates =
-			clock_updates = No_update or clock_updates = Resets [] or clock_updates = Updates []
+			clock_updates = No_update || clock_updates = Resets [] || clock_updates = Updates []
 		in
 		let no_discrete_updates = discrete_updates = [] in
-		if no_clock_updates or no_discrete_updates then "" else ", "
+		if no_clock_updates || no_discrete_updates then "" else ", "
 	in
 	
 	"\n\t" ^ "when "
