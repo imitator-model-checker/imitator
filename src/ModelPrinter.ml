@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2009/12/02
- * Last modified     : 2016/10/08
+ * Last modified     : 2016/10/17
  *
  ************************************************************)
 
@@ -170,6 +170,15 @@ let string_of_updates model updates =
 
 (* Convert a transition of a location into a string *)
 let string_of_transition model automaton_index action_index (guard, clock_updates, discrete_updates, destination_location) =
+	(* Should we add a separating comma between clock updates and discrete updaes? *)
+	let separator_comma =
+		let no_clock_updates =
+			clock_updates = No_update or clock_updates = Resets [] or clock_updates = Updates []
+		in
+		let no_discrete_updates = discrete_updates = [] in
+		if no_clock_updates or no_discrete_updates then "" else ", "
+	in
+	
 	"\n\t" ^ "when "
 	(* Convert the guard *)
 	^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names guard)
@@ -179,7 +188,7 @@ let string_of_transition model automaton_index action_index (guard, clock_update
 	(* Clock updates *)
 	^ (string_of_clock_updates model clock_updates)
 	(* Add a coma in case of both clocks and discrete *)
-	^ (if clock_updates != No_update && discrete_updates != [] then ", " else "")
+	^ separator_comma
 	(* Discrete updates *)
 	^ (string_of_updates model discrete_updates)
 	^ "} "
