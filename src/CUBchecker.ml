@@ -8,7 +8,7 @@
  * 
  * File contributors : Nguyen Hoang Gia, Étienne André
  * Created           : 2016/04/13
- * Last modified     : 2016/10/10
+ * Last modified     : 2016/10/17
  *
  ************************************************************)
 
@@ -1855,6 +1855,8 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 	(* Transitions : Array : automaton_index  -> (Array : location_index -> (Hashtbl : action_index -> transitions list)) *)
 	let new_transitions_array_hashtbl : ( (( (Automaton.action_index , AbstractModel.transition list) Hashtbl.t) array) array ) = Array.make (model.nb_automata) (Array.make 0 (Hashtbl.create 0)) in
 
+	(* Location names per PTA: Array : automaton_index : -> (Array : location_index -> location_index list) *)
+	let old_locations_to_new_locations = Array.make (model.nb_automata) (Array.make 0 []) in
 	
 	
 	
@@ -2589,7 +2591,7 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 	new_invariants_array.(automaton_index) <- Array.make new_nb_locations (LinearConstraint.pxd_true_constraint());
 	
 	(* THIS IS THE INDEX OF OLD LOCATION TO NEW LOCATION(S) *)
-	let new_loc_index_tbl = Hashtbl.create 0 in
+	old_locations_to_new_locations.(automaton_index) <- Array.make (List.length (model.locations_per_automaton automaton_index)) [];
 
 	let current_location_index = ref 0 in
 
@@ -2604,7 +2606,9 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 		if old_loc_index != (Hashtbl.length loc_naming_tbl - 1)
 		then
 			( 
-			Hashtbl.add new_loc_index_tbl old_loc_index !current_location_index;
+(* 			Hashtbl.add new_loc_index_tbl old_loc_index !current_location_index; *)
+			old_locations_to_new_locations.(automaton_index).(old_loc_index) <- !current_location_index :: old_locations_to_new_locations.(automaton_index).(old_loc_index);
+			
 			(* TESTING INFORNATION IN new_loc_index_tbl *)
 			print_message Verbose_low ("\nNAME: " ^ location_name ^ "\n OLD LOCAION: " ^ string_of_int old_loc_index ^ " NEW LOCAION: " ^ string_of_int !current_location_index );
 			);
@@ -2808,6 +2812,50 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 		) with
 			Not_found -> []
 	in
+	
+	(* Transform the property *)
+	(*** NOTE! only support reachability properties for now ***)
+	let new_correctness_condition =
+		match model.correctness_condition with
+		(* No property *)
+		| None -> None
+		
+		(* Some safety property *)
+		| Some (Unreachable unreachable_global_location_list) ->
+			Some (Unreachable (
+			List.map (fun unreachable_global_location ->
+
+				(* Retrieve the structure fields *)
+				let unreachable_locations = unreachable_global_location.unreachable_locations in
+				let discrete_constraints = unreachable_global_location.discrete_constraints in
+				
+				(* Convert the list of unreachable locations using the new indexes *)
+				let new_unreachable_locations = List.fold_left (fun current_list (automaton_index, location_index) -> 
+					(* Get the new location(s) in the transformed model *)
+					let new_locations = old_locations_to_new_locations.(automaton_index).(location_index) in
+					
+					(* Convert to pairs automaton_index, location_index *)
+					let new_locations_with_automaton_index = List.map (fun location_index -> automaton_index, location_index) new_locations in
+					
+					(* Add them to the other locations computer so far *)
+					List.rev_append current_list new_locations_with_automaton_index
+				) [] unreachable_locations in
+				
+				(* Recreate the structure unreachable_global_location *)
+				{
+					unreachable_locations	= new_unreachable_locations;
+					discrete_constraints	= discrete_constraints;
+				}
+			
+			) unreachable_global_location_list
+			)
+			)
+		
+		
+		(* Other cases not supported (in the entire tool) *)
+		| _ -> raise (NotImplemented "Properties different from reachability are not supported yet")
+	in
+		
 	
 	(*------------------------------------------------------------*)
 	(* Print some information *)
@@ -3015,8 +3063,7 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 		(*** WARNING: not changing this cannot work in the case of reachability properties! ***)
 		user_property = model.user_property;
 		(* Property defined by the model *)
-		(*** TODO ***)
-		correctness_condition = model.correctness_condition;
+		correctness_condition = new_correctness_condition;
 		(* List of parameters to project the result onto *)
 		projection = model.projection;
 	}
