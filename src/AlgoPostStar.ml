@@ -67,7 +67,7 @@ class algoPostStar =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method add_a_new_state source_state_index new_states_indexes action_index location (final_constraint : LinearConstraint.px_linear_constraint) =
 		(* Retrieve the model *)
-		let model = Input.get_model () in
+(* 		let model = Input.get_model () in *)
 
 		(* Build the state *)
 		let new_state = location, final_constraint in
