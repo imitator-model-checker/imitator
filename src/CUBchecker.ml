@@ -1911,7 +1911,7 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 
 
 		(* ALERT BUG!!!: GETTING THE FIRST LOCATION AS THE INITIAL LOCATION CAN BE WRONG IF THIS LOCATION IS NOT DECLARED AS THE FIRST IN .IMI FILE *)
-		init_loc := (model.location_names automaton_index (List.nth (model.locations_per_automaton automaton_index) 0 ));
+		init_loc := model.location_names automaton_index (Location.get_location model.initial_location automaton_index);
 		print_message Verbose_low (" Initial location: " ^ !init_loc);
 		(* init_loc := model.location_names automaton_index model.initial_location; *)
 
