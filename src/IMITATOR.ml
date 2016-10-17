@@ -9,7 +9,7 @@
  * 
  * File contributors : Ulrich Kühne, Étienne André
  * Created           : 2009/09/07
- * Last modified     : 2016/10/10
+ * Last modified     : 2016/10/17
  *
  ************************************************************)
 
@@ -128,7 +128,7 @@ parsing_counter#start;
 (* Should we add a special clock reset at each transition? *)
 let with_special_reset_clock =
 match options#imitator_mode with
-	| Parametric_NZ_CUB | Parametric_NZ_CUBtransform -> true
+	| Parametric_NZ_CUB | Parametric_NZ_CUBcheck | Parametric_NZ_CUBtransform -> true
 	| _ -> false
 in
 
@@ -160,6 +160,7 @@ match options#imitator_mode with
 	| State_space_exploration
 	| EF_synthesis
 	| Loop_synthesis
+	| Parametric_NZ_CUBcheck
 	| Parametric_NZ_CUBtransform
 	| Parametric_NZ_CUB
 	| Parametric_deadlock_checking
@@ -436,10 +437,24 @@ let algorithm : AlgoGeneric.algoGeneric = match options#imitator_mode with
 	(************************************************************)
 	(* Parametric Büchi-emptiness checking with non-Zenoness (method: transformation into a CUB-PTA) *)
 	(************************************************************)
-	| Parametric_NZ_CUBtransform | Parametric_NZ_CUB ->
-		(* Not transforming if in mode Parametric_NZ_CUB  *)
-		if options#imitator_mode = Parametric_NZ_CUBtransform then(
-			print_message Verbose_standard ("Generating the transformed model...");
+	| Parametric_NZ_CUBcheck | Parametric_NZ_CUBtransform | Parametric_NZ_CUB ->
+		(* Computing a constraint for which the PTA is CUB (only if in mode Parametric_NZ_CUBcheck) *)
+		if options#imitator_mode = Parametric_NZ_CUBcheck then(
+			print_message Verbose_standard ("Checking the PTA is CUB for some valuations…");
+			
+			let cub_constraint = CUBchecker.check_cub model in
+
+			print_message Verbose_standard ("The model is a CUB-PTA for the following valuations:");
+			print_message Verbose_standard (LinearConstraint.string_of_p_linear_constraint model.variable_names cub_constraint);
+
+			(* Update the model *)
+			LinearConstraint.px_intersection_assign_p model.initial_constraint [cub_constraint];
+			(* Update the initial p constraint too *)
+			LinearConstraint.p_intersection_assign model.initial_p_constraint [cub_constraint];
+		)
+		(* Only transform if in mode Parametric_NZ_CUBtransform *)
+		else if options#imitator_mode = Parametric_NZ_CUBtransform then(
+			print_message Verbose_standard ("Generating the transformed model…");
 
 			let cub_model = CUBchecker.cubpta_of_pta model in
 			(*** HACK: set the model in the input module too ***)

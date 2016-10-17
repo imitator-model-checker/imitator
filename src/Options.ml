@@ -9,7 +9,7 @@
  * 
  * File contributors : Ulrich Kühne, Étienne André
  * Created           : 2010
- * Last modified     : 2016/10/10
+ * Last modified     : 2016/10/17
  *
  ************************************************************)
 
@@ -384,6 +384,14 @@ class imitator_options =
 				else if mode = "LoopSynth" then 
 					imitator_mode <- Loop_synthesis
 				
+				(** Case: Parametric Büchi-emptiness checking with non-Zenoness (method: check whether the PTA is CUB) *)
+				else if mode = "NZCUBcheck" then(
+					imitator_mode <- Parametric_NZ_CUBcheck;
+					
+					(*** NOTE: very important! This algorithm requires the alternative definition of time-elapsing ***)
+					no_time_elapsing := true;
+				)
+					
 				(* Case: Parametric Büchi-emptiness checking with non-Zenoness (method: transformation into a CUB-PTA) *)
 				else if mode = "NZCUBtrans" then(
 					imitator_mode <- Parametric_NZ_CUBtransform;
@@ -676,7 +684,7 @@ class imitator_options =
 			);
 			
 			(* Case no pi0 file *)
-			if nb_args = 1 && (imitator_mode != State_space_exploration) && (imitator_mode != EF_synthesis) && (imitator_mode != Loop_synthesis) && (imitator_mode != Parametric_NZ_CUBtransform) && (imitator_mode != Parametric_NZ_CUB) && (imitator_mode != Parametric_deadlock_checking) && (imitator_mode != Translation) then(
+			if nb_args = 1 && (imitator_mode != State_space_exploration) && (imitator_mode != EF_synthesis) && (imitator_mode != Loop_synthesis) && (imitator_mode != Parametric_NZ_CUBtransform) && (imitator_mode != Parametric_NZ_CUBcheck) && (imitator_mode != Parametric_NZ_CUB) && (imitator_mode != Parametric_deadlock_checking) && (imitator_mode != Translation) then(
 				(*** HACK: print header now ***)
 				print_header_string();
 				print_error ("Please give a file name for the reference valuation.");
@@ -724,7 +732,8 @@ class imitator_options =
 				| State_space_exploration -> "parametric state space exploration"
 				| EF_synthesis -> "EF-synthesis"
 				| Loop_synthesis -> "loop-synthesis"
-				| Parametric_NZ_CUBtransform -> "parametric non-Zeno emptiness checking"
+				| Parametric_NZ_CUBcheck -> "parametric non-Zeno emptiness checking (CUB checking)"
+				| Parametric_NZ_CUBtransform -> "parametric non-Zeno emptiness checking (CUB transformation)"
 				| Parametric_NZ_CUB -> "parametric non-Zeno emptiness checking [testing mode without transformation]"
 				| Parametric_deadlock_checking -> "Parametric deadlock-checking"
 				| Inverse_method -> "inverse method"
@@ -748,7 +757,7 @@ class imitator_options =
 			(* Shortcut *)
 			let in_cartography_mode =
 				match imitator_mode with
-				| Translation | State_space_exploration | EF_synthesis| Loop_synthesis | Parametric_NZ_CUBtransform | Parametric_NZ_CUB | Parametric_deadlock_checking | Inverse_method | PRP -> false
+				| Translation | State_space_exploration | EF_synthesis| Loop_synthesis | Parametric_NZ_CUBtransform | Parametric_NZ_CUBcheck | Parametric_NZ_CUB | Parametric_deadlock_checking | Inverse_method | PRP -> false
 				| Cover_cartography | Learning_cartography | Shuffle_cartography | Border_cartography | Random_cartography _  | RandomSeq_cartography _ | PRPC -> true
 			in
 			
@@ -812,7 +821,7 @@ class imitator_options =
 				if imitator_mode = Loop_synthesis then
 					print_warning ("The second file " ^ second_file_name ^ " will be ignored since this is a loop synthesis.")
 				;
-				if imitator_mode = Parametric_NZ_CUBtransform then
+				if imitator_mode = Parametric_NZ_CUBcheck || imitator_mode = Parametric_NZ_CUBtransform then
 					print_warning ("The second file " ^ second_file_name ^ " will be ignored since this is a non-Zeno parametric model checking.")
 				;
 				if imitator_mode = Parametric_NZ_CUB then
@@ -843,7 +852,7 @@ class imitator_options =
 				print_warning (Constants.program_name ^ " is not run in cartography mode; the option regarding to the step of the cartography algorithm will thus be ignored.");
 			
 			(* Options for variants of IM, but not in IM mode *)
-			if (imitator_mode = State_space_exploration || imitator_mode = Translation || imitator_mode = EF_synthesis || imitator_mode = Loop_synthesis || imitator_mode = Parametric_NZ_CUBtransform || imitator_mode = Parametric_NZ_CUB || imitator_mode = Parametric_deadlock_checking) && (!union || !pi_compatible) then
+			if (imitator_mode = State_space_exploration || imitator_mode = Translation || imitator_mode = EF_synthesis || imitator_mode = Loop_synthesis || imitator_mode = Parametric_NZ_CUBcheck || imitator_mode = Parametric_NZ_CUBtransform || imitator_mode = Parametric_NZ_CUB || imitator_mode = Parametric_deadlock_checking) && (!union || !pi_compatible) then
 				print_warning (Constants.program_name ^ " is run in state space exploration mode; options regarding to the variant of the inverse method will thus be ignored.");
 
 			
