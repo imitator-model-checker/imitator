@@ -2606,7 +2606,6 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 		(* Add the binding location_name , location_index to the new structure *)
 		Hashtbl.add location_index_of_location_name location_name !current_location_index;
 
-		print_message Verbose_low ("\nBugggggg!!!!!!!1223"); 
 		(* ADD new_loc_index_tbl, USED FOR TRACING NEW LOACTION FROM THE OLD LOCATION *)
 		let old_loc_index = Hashtbl.find loc_naming_tbl location_name in
 		(* ELIMINATE THE NEW CUB INITIAL LOCATION WHICH IS NOT IN OLD MODEL LOCATIONS *)
@@ -2620,7 +2619,6 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 			
 			(* TESTING INFORNATION IN new_loc_index_tbl *)
 			);
-			print_message Verbose_low ("\nBugggggg!!!!!!!1"); 
 		
 		(* Add the binding location_index , location_name to the new structure *)
 		location_name_of_location_index.(!current_location_index) <- location_name;
