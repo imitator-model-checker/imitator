@@ -291,7 +291,7 @@ type abstract_model = {
 	(* Initial constraint of the model projected onto P *)
 	initial_p_constraint : LinearConstraint.p_linear_constraint;
 
-	(* Property defined by the user *)
+	(* Property defined by the user (not used in the analysis, only for printing purpose; at this stage, the user property is already transformed into the correctness_condition below) *)
 	user_property : property_definition;
 	(* Property defined by the model *)
 	correctness_condition : correctness_condition;
