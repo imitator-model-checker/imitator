@@ -297,7 +297,7 @@ class algoIMK =
 				
 			) (* end if new state *)
 			else (
-				(* This is a loop *)
+				(* This may be a loop *)
 				self#process_looping_state new_state_index;
 	
 	(*** TODO: add back ***)
@@ -323,6 +323,22 @@ class algoIMK =
 
 
 
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(** Actions to perform with the initial state; returns true unless the initial state cannot be kept (in which case the algorithm will stop immediately) *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	method process_initial_state initial_state =
+		(* Get the constraint *)
+		let _, initial_constraint = initial_state in
+		
+		(*** NOTE: the addition of neg J to all reached states is performed as a side effect inside the following function ***)
+		(*** BADPROG: same reason ***)
+		let pi0_compatible = self#check_pi0compatibility initial_constraint in
+		
+		(* Keep only if pi-compatible *)
+		pi0_compatible
+		
+
+	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Actions to perform when meeting a state with no successors: nothing to do for this algorithm *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)

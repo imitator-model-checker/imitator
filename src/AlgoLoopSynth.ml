@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/08/24
- * Last modified     : 2016/10/11
+ * Last modified     : 2016/10/18
  *
  ************************************************************)
 
@@ -198,6 +198,15 @@ class algoLoopSynth =
 
 	
 
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(** Actions to perform with the initial state; returns true unless the initial state cannot be kept (in which case the algorithm will stop immediately) *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	method process_initial_state _ =
+		(* Always keep the initial state *)
+		(*** NOTE: if the initial state is in a loop, this will be processed in later anyway ***)
+		true
+
+	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Actions to perform when found a loop (after updating the state space) *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)

@@ -90,7 +90,7 @@ class algoIMunion =
 	
 	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Actions to perform when meeting a state that is on a loop: nothing to do for this algorithm, but can be defined in subclasses *)
+	(* Actions to perform when meeting a state that is on a loop *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method process_looping_state state_index =
 		self#print_algo_message_newline Verbose_low ("found a state in a loop");

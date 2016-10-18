@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/02/08
- * Last modified     : 2016/10/10
+ * Last modified     : 2016/10/18
  *
  ************************************************************)
 
@@ -230,6 +230,15 @@ class algoDeadlockFree =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method process_deadlock_state state_index = ()*)
 	
+	
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(** Actions to perform with the initial state; returns true unless the initial state cannot be kept (in which case the algorithm will stop immediately) *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	method process_initial_state _ =
+		(* Always keep the initial state *)
+		(*** NOTE: if the initial state is deadlocked, this will be processed in process_post_n anyway ***)
+		true
+
 	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(** Actions to perform at the end of the computation of the *successors* of post^n (i.e., when this method is called, the successors were just computed). Nothing to do for this algorithm. *)

@@ -948,6 +948,11 @@ let dot radical dot_source_file =
 
 (** Draw the state space using dot *)
 let draw_statespace state_space algorithm_name radical =
+	(* Preliminary check: the state space shall not be empty *)
+	if (StateSpace.nb_states state_space) = 0 then (
+		print_warning "State space is empty: not drawing";
+	)else(
+	
 	(* Statistics *)
 	counter_graphics_statespace#start;
 
@@ -1004,8 +1009,11 @@ let draw_statespace state_space algorithm_name radical =
 	(* Statistics *)
 	counter_graphics_statespace#stop;
 	
+	); (* end if state space not empty *)
+	
 	(* The end *)
 	()
+
 
 
 

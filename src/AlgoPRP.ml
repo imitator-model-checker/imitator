@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/01/11
- * Last modified     : 2016/10/11
+ * Last modified     : 2016/10/18
  *
  ************************************************************)
 
@@ -84,6 +84,79 @@ class algoPRP =
 		
 	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(** Process a pi-compatible state *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	method private process_pi0_compatible_state state =
+		(* Retrieve the model *)
+		let model = Input.get_model () in
+		
+		let state_location, state_constraint = state in
+		
+		let to_be_added = match model.correctness_condition with
+		| None -> raise (InternalError("A correctness property must be defined to perform PRP. This should have been checked before."))
+		| Some (Unreachable unreachable_global_locations) ->
+			
+			(* Check whether the current location matches one of the unreachable global locations *)
+			if State.match_unreachable_global_locations unreachable_global_locations state_location then(
+			
+				(* Project onto the parameters *)
+				let p_constraint = LinearConstraint.px_hide_nonparameters_and_collapse state_constraint in
+				
+				(* Projecting onto SOME parameters if required *)
+				(*** BADPROG: Duplicate code (EFsynth / AlgoLoopSynth) ***)
+				begin
+				match model.projection with
+				(* Unchanged *)
+				| None -> ()
+				(* Project *)
+				| Some parameters ->
+					self#print_algo_message Verbose_medium "Projecting onto some of the parameters.";
+					(*** TODO! do only once for all... ***)
+					let all_but_projectparameters = list_diff model.parameters parameters in
+					(* Eliminate other parameters *)
+					LinearConstraint.p_hide_assign all_but_projectparameters p_constraint;
+				end;
+				
+				(* Print some information *)
+				self#print_algo_message Verbose_standard "Found a state violating the property.";
+				if verbose_mode_greater Verbose_medium then(
+					self#print_algo_message Verbose_medium "Adding the following constraint to the list of bad constraints:";
+					print_message Verbose_medium (LinearConstraint.string_of_p_linear_constraint model.variable_names p_constraint);
+				);
+				
+				(*** NOTE: not copy paste (actually, to copy when EFsynth will be improved with non-convex constraints) ***)
+				LinearConstraint.p_nnconvex_p_union bad_constraint p_constraint;
+				
+				if verbose_mode_greater Verbose_low then(
+					self#print_algo_message_newline Verbose_low ("Kbad now equal to:");
+					print_message Verbose_low (LinearConstraint.string_of_p_nnconvex_constraint model.variable_names bad_constraint);
+				);
+
+				(* PRP switches to bad-state algorithm *)
+				if not bad_state_found then(
+					(* Print some information *)
+					self#print_algo_message Verbose_standard "Switching to EFsynth-like algorithm";
+				);
+				bad_state_found <- true;
+			
+				(* Do NOT compute its successors *)
+				false
+				
+			)else(
+				self#print_algo_message Verbose_medium "State not corresponding to the one wanted.";
+				
+				(* Keep the state as it is not a bad state *)
+				true
+			)
+		| _ -> raise (InternalError("[PRP] IMITATOR currently ony implements the non-reachability-like properties. This should have been checked before."))
+
+		in
+		
+		(* Return result *)
+		to_be_added
+	
+	
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Add a new state to the state_space (if indeed needed) *)
 	(* Side-effects: modify new_states_indexes *)
 	(*** TODO: move new_states_indexes to a variable of the class ***)
@@ -126,74 +199,14 @@ class algoPRP =
 				self#update_statespace_nature new_state;
 				
 				(* Will the state be added to the list of new states (the successors of which will be computed)? *)
-				let to_be_added = ref true in
-				
-				(* If synthesis / EFIM: add the constraint to the list of successful constraints if this corresponds to a bad location *)
-				begin
-				match model.correctness_condition with
-				| None -> raise (InternalError("[EF-synthesis/EFIM] A correctness property must be defined to perform EF-synthesis or EFIM. This should have been checked before."))
-				| Some (Unreachable unreachable_global_locations) ->
-					
-					(* Check whether the current location matches one of the unreachable global locations *)
-					if State.match_unreachable_global_locations unreachable_global_locations location then(
-					
-						(* Project onto the parameters *)
-						let p_constraint = LinearConstraint.px_hide_nonparameters_and_collapse final_constraint in
-						
-						(* Projecting onto SOME parameters if required *)
-						(*** BADPROG: Duplicate code (EFsynth / AlgoLoopSynth) ***)
-						begin
-						match model.projection with
-						(* Unchanged *)
-						| None -> ()
-						(* Project *)
-						| Some parameters ->
-							self#print_algo_message Verbose_medium "Projecting onto some of the parameters.";
-							(*** TODO! do only once for all... ***)
-							let all_but_projectparameters = list_diff model.parameters parameters in
-							(* Eliminate other parameters *)
-							LinearConstraint.p_hide_assign all_but_projectparameters p_constraint;
-						end;
-						
-						(* Print some information *)
-						self#print_algo_message Verbose_standard "Found a state violating the property.";
-						if verbose_mode_greater Verbose_medium then(
-							self#print_algo_message Verbose_medium "Adding the following constraint to the list of bad constraints:";
-							print_message Verbose_medium (LinearConstraint.string_of_p_linear_constraint model.variable_names p_constraint);
-						);
-						
-						(*** NOTE: not copy paste (actually, to copy when EFsynth will be improved with non-convex constraints) ***)
-						LinearConstraint.p_nnconvex_p_union bad_constraint p_constraint;
-						
-						if verbose_mode_greater Verbose_low then(
-							self#print_algo_message_newline Verbose_low ("Kbad now equal to:");
-							print_message Verbose_low (LinearConstraint.string_of_p_nnconvex_constraint model.variable_names bad_constraint);
-						);
-
-						(* PRP switches to bad-state algorithm *)
-						if not bad_state_found then(
-							(* Print some information *)
-							self#print_algo_message Verbose_standard "Switching to EFsynth-like algorithm";
-						);
-						bad_state_found <- true;
-					
-						(* Do NOT compute its successors *)
-						to_be_added := false;
-						
-					)else(
-						self#print_algo_message Verbose_medium "State not corresponding to the one wanted.";
-					);
-				| _ -> raise (InternalError("[EFsynth/PRP] IMITATOR currently ony implements the non-reachability-like properties. This should have been checked before."))
-				end
-				;
+				let to_be_added = self#process_pi0_compatible_state new_state in
 
 				(* Add the state_index to the list of new states (used to compute their successors at the next iteration) *)
-				if !to_be_added then
+				if to_be_added then
 					new_states_indexes := new_state_index :: !new_states_indexes;
 				
 			) (* end if new state *)
 			;
-			
 			
 			(*** TODO: move the rest to a higher level function? (post_from_one_state?) ***)
 			
@@ -206,6 +219,26 @@ class algoPRP =
 		pi0compatible
 	(*** END WARNING/BADPROG: what preceedes is almost entirely copy/paste from AlgoEFsynth.ml ***)
 	
+	
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(** Actions to perform with the initial state; returns true unless the initial state cannot be kept (in which case the algorithm will stop immediately) *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	method process_initial_state initial_state =
+		(* Get the constraint *)
+		let _, initial_constraint = initial_state in
+		
+		(*** NOTE: the addition of neg J to all reached states is performed as a side effect inside the following function ***)
+		(*** BADPROG: same reason ***)
+		let pi0_compatible = self#check_pi0compatibility initial_constraint in
+		
+		if not pi0_compatible then(
+			(* Discard *)
+			false
+		)else(
+			(* Run analysis to check the property, and decide whether the state should be kept or not) *)
+			self#process_pi0_compatible_state initial_state
+		)
+		
 	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Actions to perform when meeting a state with no successors: nothing to do for this algorithm *)

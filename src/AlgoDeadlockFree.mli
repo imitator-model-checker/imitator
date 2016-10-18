@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/02/08
- * Last modified     : 2016/02/11
+ * Last modified     : 2016/10/18
  *
  ************************************************************)
 
@@ -42,6 +42,12 @@ class algoDeadlockFree :
 (* 		method process_deadlock_state : StateSpace.state_index -> unit *)
 		
 		
+		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+		(** Actions to perform with the initial state; returns true unless the initial state cannot be kept (in which case the algorithm will stop immediately) *)
+		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+		method process_initial_state : State.state -> bool
+		
+
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		(** Check whether the algorithm should terminate at the end of some post, independently of the number of states to be processed (e.g., if the constraint is already true or false) *)
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)

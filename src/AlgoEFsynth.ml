@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/11/25
- * Last modified     : 2016/10/11
+ * Last modified     : 2016/10/18
  *
  ************************************************************)
 
@@ -75,6 +75,86 @@ class algoEFsynth =
 	
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(** Process a symbolic state *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	method private process_state state =
+		(* Retrieve the model *)
+		let model = Input.get_model () in
+		
+		let state_location, state_constraint = state in
+		
+		let to_be_added = match model.correctness_condition with
+		| None -> raise (InternalError("A correctness property must be defined to perform EF-synthesis or PRP. This should have been checked before."))
+		| Some (Unreachable unreachable_global_locations) ->
+			
+			(* Check whether the current location matches one of the unreachable global locations *)
+			if State.match_unreachable_global_locations unreachable_global_locations state_location then(
+			
+				(* Project onto the parameters *)
+				let p_constraint = LinearConstraint.px_hide_nonparameters_and_collapse state_constraint in
+				
+				(* Projecting onto SOME parameters if required *)
+				(*** BADPROG: Duplicate code (AlgoLoopSynth / AlgoPRP) ***)
+				begin
+				match model.projection with
+				(* Unchanged *)
+				| None -> ()
+				(* Project *)
+				| Some parameters ->
+					(* Print some information *)
+					self#print_algo_message Verbose_medium "Projecting onto some of the parameters.";
+
+					(*** TODO! do only once for all... ***)
+					let all_but_projectparameters = list_diff model.parameters parameters in
+					
+					(* Eliminate other parameters *)
+					LinearConstraint.p_hide_assign all_but_projectparameters p_constraint;
+
+					(* Print some information *)
+					if verbose_mode_greater Verbose_medium then(
+						print_message Verbose_medium (LinearConstraint.string_of_p_linear_constraint model.variable_names p_constraint);
+					);
+				end;
+
+				(* Print some information *)
+				self#print_algo_message Verbose_standard "Found a state violating the property.";
+					
+				(* Update the bad constraint using the current constraint *)
+				(*** NOTE: perhaps try first whether p_constraint <= bad_constraint ? ***)
+				LinearConstraint.p_nnconvex_p_union bad_constraint p_constraint;
+				
+				(* Print some information *)
+				if verbose_mode_greater Verbose_low then(
+					self#print_algo_message Verbose_medium "Adding the following constraint to the bad constraint:";
+					print_message Verbose_low (LinearConstraint.string_of_p_linear_constraint model.variable_names p_constraint);
+					
+					self#print_algo_message Verbose_low "The bad constraint is now:";
+					print_message Verbose_low (LinearConstraint.string_of_p_nnconvex_constraint model.variable_names bad_constraint);
+				);
+				
+				(* Do NOT compute its successors; cut the branch *)
+				false
+				
+			)else(
+				self#print_algo_message Verbose_medium "State not corresponding to the one wanted.";
+				
+				(* Keep the state as it is not a bad state *)
+				true
+			)
+		| _ -> raise (InternalError("[EFsynth/PRP] IMITATOR currently ony implements the non-reachability-like properties. This should have been checked before."))
+		
+		in
+		(* Return result *)
+		to_be_added
+	
+	
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(** Actions to perform with the initial state; returns true unless the initial state cannot be kept (in which case the algorithm will stop immediately) *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	method process_initial_state initial_state = self#process_state initial_state
+
+	
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Add a new state to the state_space (if indeed needed) *)
 	(* Side-effects: modify new_states_indexes *)
 	(*** TODO: move new_states_indexes to a variable of the class ***)
@@ -83,7 +163,7 @@ class algoEFsynth =
 	(*** WARNING/BADPROG: the following is partially copy/paste to AlgoPRP.ml ***)
 	method add_a_new_state source_state_index new_states_indexes action_index location (current_constraint : LinearConstraint.px_linear_constraint) =
 		(* Retrieve the model *)
-		let model = Input.get_model () in
+(* 		let model = Input.get_model () in *)
 
 		(* Retrieve the input options *)
 (* 		let options = Input.get_options () in *)
@@ -101,68 +181,8 @@ class algoEFsynth =
 			self#update_statespace_nature new_state;
 			
 			(* Will the state be added to the list of new states (the successors of which will be computed)? *)
-			let to_be_added = ref true in
-			
-			(* If synthesis / PRP: add the constraint to the list of successful constraints if this corresponds to a bad location *)
-			begin
-			match model.correctness_condition with
-			| None -> raise (InternalError("A correctness property must be defined to perform EF-synthesis or PRP. This should have been checked before."))
-			| Some (Unreachable unreachable_global_locations) ->
-				
-				(* Check whether the current location matches one of the unreachable global locations *)
-				if State.match_unreachable_global_locations unreachable_global_locations location then(
-				
-					(* Project onto the parameters *)
-					let p_constraint = LinearConstraint.px_hide_nonparameters_and_collapse current_constraint in
-					
-					(* Projecting onto SOME parameters if required *)
-					(*** BADPROG: Duplicate code (AlgoLoopSynth / AlgoPRP) ***)
-					begin
-					match model.projection with
-					(* Unchanged *)
-					| None -> ()
-					(* Project *)
-					| Some parameters ->
-						(* Print some information *)
-						self#print_algo_message Verbose_medium "Projecting onto some of the parameters.";
-
-						(*** TODO! do only once for all... ***)
-						let all_but_projectparameters = list_diff model.parameters parameters in
-						
-						(* Eliminate other parameters *)
-						LinearConstraint.p_hide_assign all_but_projectparameters p_constraint;
-
-						(* Print some information *)
-						if verbose_mode_greater Verbose_medium then(
-							print_message Verbose_medium (LinearConstraint.string_of_p_linear_constraint model.variable_names p_constraint);
-						);
-					end;
-
-					(* Print some information *)
-					self#print_algo_message Verbose_standard "Found a state violating the property.";
-						
-					(* Update the bad constraint using the current constraint *)
-					(*** NOTE: perhaps try first whether p_constraint <= bad_constraint ? ***)
-					LinearConstraint.p_nnconvex_p_union bad_constraint p_constraint;
-					
-					(* Print some information *)
-					if verbose_mode_greater Verbose_low then(
-						self#print_algo_message Verbose_medium "Adding the following constraint to the bad constraint:";
-						print_message Verbose_low (LinearConstraint.string_of_p_linear_constraint model.variable_names p_constraint);
-						
-						self#print_algo_message Verbose_low "The bad constraint is now:";
-						print_message Verbose_low (LinearConstraint.string_of_p_nnconvex_constraint model.variable_names bad_constraint);
-					);
-					
-					(* Do NOT compute its successors; cut the branch *)
-					to_be_added := false;
-					
-				)else(
-					self#print_algo_message Verbose_medium "State not corresponding to the one wanted.";
-				);
-			| _ -> raise (InternalError("[EFsynth/PRP] IMITATOR currently ony implements the non-reachability-like properties. This should have been checked before."))
-			end
-			;
+			(*** BADPROG: ugly bool ref that may be updated in an IF condition below ***)
+			let to_be_added = ref (self#process_state new_state) in
 			
 			(* If to be added: if the state is included into the bad constraint, no need to explore further, and hence do not add *)
 			if !to_be_added then(

@@ -6,6 +6,9 @@ Major
 - EFsynth rewritten to output a single, disjunctive constraint (instead of a list of constraints as until version 2.8); Legacy written still usable using option -mode EFold
 - PRP and PRPC now disconnected from IM and BC: new syntax (-mode PRP and -mode PRPC), and result in the form of a single good and/or bad constraint.
 
+Bug fixing
+- Solved a bug for EF / PRP when the initial state is already bad
+
 Export
 - PDFC now outputs both an under-approximated good constraint and an under-approximated bad constraint (instead of an over-approximated good constraint for the latter); so presentation of the result changes compared to version 2.8
 - Field "State space nature" becomes "Constraint nature" in result (.res) files

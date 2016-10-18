@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/12/03
- * Last modified     : 2016/09/14
+ * Last modified     : 2016/10/18
  *
  ************************************************************)
 
@@ -786,6 +786,8 @@ let process_single_synthesis_or_point_based_result file_prefix algorithm_name re
 	print_state_space_statistics computation_time state_space;
 	print_memory_statistics ();
 	
+	print_message Verbose_high "Drawing state space…";
+	
 	(* Draw state space *)
 	let radical = file_prefix ^ "-statespace" in
 	Graphics.draw_statespace state_space algorithm_name radical;
@@ -831,6 +833,8 @@ let process_result result algorithm_name prefix_option =
 		print_state_space_statistics poststar_result.computation_time poststar_result.state_space;
 		print_memory_statistics ();
 		
+		print_message Verbose_high "Drawing state space…";
+	
 		(* Draw state space *)
 		let radical = file_prefix ^ "-statespace" in
 		Graphics.draw_statespace poststar_result.state_space algorithm_name radical;
@@ -885,6 +889,8 @@ let process_result result algorithm_name prefix_option =
 		print_state_space_statistics efsynth_result.computation_time efsynth_result.state_space;
 		print_memory_statistics ();
 		
+		print_message Verbose_high "Drawing state space…";
+	
 		(* Draw state space *)
 		let radical = file_prefix ^ "-statespace" in
 		Graphics.draw_statespace efsynth_result.state_space algorithm_name radical;

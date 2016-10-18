@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/12/04
- * Last modified     : 2016/10/10
+ * Last modified     : 2016/10/18
  *
  ************************************************************)
 
@@ -63,6 +63,12 @@ class algoIMK :
 		method add_a_new_state : state_index -> state_index list ref -> Automaton.action_index -> Location.global_location -> LinearConstraint.px_linear_constraint -> bool
 
 		
+		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+		(** Actions to perform with the initial state; returns true unless the initial state cannot be kept (in which case the algorithm will stop immediately) *)
+		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+		method process_initial_state : State.state -> bool
+		
+
 		(* Actions to perform when meeting a state with no successors: nothing to do for this algorithm *)
 		method process_deadlock_state : state_index -> unit
 		
