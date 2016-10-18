@@ -2832,7 +2832,40 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 		(* No property *)
 		| None -> []
 		
-		(* Some safety property *)
+		(*** NOTE: for now, we only support ONE automaton and ONE location per OR constraint, i.e., we allow disjunctions but not conjunctions of bad locations. Reason: since one location can be translated to many new locations, if there is more than one automaton in a disjunct, we need to explore all possible combinations, which is a bit cumbersome for now. ***)
+		| Some (Unreachable unreachable_global_location_list) ->
+			(* We iterate in the OR list *)
+			(*** NOTE: we use a fold_left instead of a map as one disjunct can be translated in several disjuncts ***)
+			List.fold_left (fun current_OR_list unreachable_global_location ->
+
+				(* Retrieve the structure fields *)
+				let unreachable_locations = unreachable_global_location.unreachable_locations in
+				let discrete_constraints = unreachable_global_location.discrete_constraints in
+				
+				(*** NOTE: here: we want a SINGLE pair ***)
+				let automaton_index, location_index = match unreachable_locations with
+				| [automaton_index, location_index] -> automaton_index, location_index
+				| _ -> raise (NotImplemented "So far we can only transform properties of the form loc[pta1] = loc1 OR loc[pta2] = loc2 OR … That is, conjunctions of locations are not allowed (discrete variables are ok).")
+				in
+				
+				(* Get the new location(s) in the transformed model *)
+				let new_locations = old_locations_to_new_locations.(automaton_index).(location_index) in
+				
+				(* Convert to structures *)
+				let new_unreachable_global_locations = List.map (fun new_location_index ->
+					(* Recreate the structure unreachable_global_location *)
+					{
+						unreachable_locations	= [automaton_index, new_location_index];
+						discrete_constraints	= discrete_constraints;
+					}
+				) new_locations
+				in
+				
+				(* Add them to the other locations computer so far *)
+				List.rev_append new_unreachable_global_locations current_OR_list
+			) [] unreachable_global_location_list
+			
+(*
 		| Some (Unreachable unreachable_global_location_list) ->
 			List.map (fun unreachable_global_location ->
 
@@ -2859,9 +2892,9 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 				}
 			
 			) unreachable_global_location_list
-		
+		*)
 		(* Other cases not supported (in the entire tool) *)
-		| _ -> raise (NotImplemented "Properties different from reachability are not supported yet")
+		| _ -> raise (NotImplemented "Properties different from reachability using a single automaton and a single location are not supported yet in the CUB transformation")
 	in
 		
 	

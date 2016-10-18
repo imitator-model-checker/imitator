@@ -71,7 +71,7 @@ init :=
 (* Property specification *)
 (************************************************************)
 
-(* property := unreachable loc[pta] = l1; *)
+property := unreachable loc[pta] = l1;
 
 
 (************************************************************)
