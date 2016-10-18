@@ -2490,7 +2490,9 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 			DynArray.add newtransitions (newloc1, newloc2, guard, clock_updates, action_index, discrete_update);
 
 		) transitions;
-		let listParaRelations = disjunction_constraints p_constraints in
+
+		(*adding parameter relation into the first transition*)
+		(* let listParaRelations = disjunction_constraints p_constraints in
 
 		List.iter( fun cons ->
 			let pxd_cons = LinearConstraint.pxd_of_p_constraint cons in
@@ -2505,9 +2507,21 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 
 				) init_locs;
 				);
-		) listParaRelations;
+		) listParaRelations; *)
+
+		List.iter (fun loc -> 
+				
+			(* Add a transition from the initial location to all local initial locations into the dynamic array of locations *)
+			DynArray.add newtransitions (new_initial_location_name, location_name_of_location_index_and_submodel_index loc !submodel_index, LinearConstraint.pxd_true_constraint (), [], local_silent_action_index_of_automaton_index model automaton_index, [] ) ;
+			(* DynArray.add newtransitions (new_initial_location_name, location_name_of_location_index_and_submodel_index loc !submodel_index, pxd_cons, [], 0, [] ) ; *)
+
+		) init_locs;
+
 		incr submodel_index;
 	) newSubModels;
+
+
+
 
 	(* FINAL OUTPUT MODEL *)
 	let finalModel = (new_invariants_per_location_hashtbl, newtransitions, loc_naming_tbl) in 
