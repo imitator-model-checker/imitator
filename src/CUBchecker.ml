@@ -8,7 +8,7 @@
  * 
  * File contributors : Nguyen Hoang Gia, Étienne André
  * Created           : 2016/04/13
- * Last modified     : 2016/10/17
+ * Last modified     : 2016/10/18
  *
  ************************************************************)
 
@@ -2827,14 +2827,13 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 	
 	(* Transform the property *)
 	(*** NOTE! only support reachability properties for now ***)
-	let new_correctness_condition =
+	let new_unreachable_locations =
 		match model.correctness_condition with
 		(* No property *)
-		| None -> None
+		| None -> []
 		
 		(* Some safety property *)
 		| Some (Unreachable unreachable_global_location_list) ->
-			Some (Unreachable (
 			List.map (fun unreachable_global_location ->
 
 				(* Retrieve the structure fields *)
@@ -2860,9 +2859,6 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 				}
 			
 			) unreachable_global_location_list
-			)
-			)
-		
 		
 		(* Other cases not supported (in the entire tool) *)
 		| _ -> raise (NotImplemented "Properties different from reachability are not supported yet")
@@ -3072,10 +3068,10 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 
 		(* Property defined by the user *)
 		(*** TODO ***)
-		(*** WARNING: not changing this cannot work in the case of reachability properties! ***)
-		user_property = model.user_property;
+		(*** WARNING: any property will be turned into an (equivalent) reachability property, i.e., the original user property is lost ***)
+		user_property = if new_unreachable_locations = [] then Noproperty else Unreachable_locations new_unreachable_locations;
 		(* Property defined by the model *)
-		correctness_condition = new_correctness_condition;
+		correctness_condition = if new_unreachable_locations = [] then None else Some (Unreachable new_unreachable_locations);
 		(* List of parameters to project the result onto *)
 		projection = model.projection;
 	}
