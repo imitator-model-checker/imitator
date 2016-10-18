@@ -10,7 +10,7 @@
 # Laboratoire d'Informatique de Paris Nord
 # Universite Paris 13, Sorbonne Paris Cite, France
 # Created      : 2015/10/23
-# Last modified: 2016/10/10
+# Last modified: 2016/10/18
 #************************************************************
 
 
@@ -450,7 +450,119 @@ tests = [
 		] # end expectations
 	} # end test case
 	#------------------------------------------------------------
+	
 	,
+	
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test EF (old version) with bad initial state',
+		'input_files': ['testEFdegenerate1.imi'],
+		'options'    : '-mode EFold -merge -incl -output-result',
+		'expectations' : [
+			{'file': 'testEFdegenerate1.res' , 'content' : """
+BEGIN CONSTRAINT
+ p1 >= 0
+& p2 >= 0
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+Number of states                        : 0
+Number of transitions                   : 0
+Number of computed states               : 0
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test EF with bad initial state',
+		'input_files': ['testEFdegenerate1.imi'],
+		'options'    : '-mode EF -merge -incl -output-result',
+		'expectations' : [
+			{'file': 'testEFdegenerate1.res' , 'content' : """
+BEGIN CONSTRAINT
+False
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+Number of states                        : 0
+Number of transitions                   : 0
+Number of computed states               : 0
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test EF (old version) with bad initial state and some constrained valuations',
+		'input_files': ['testEFdegenerate2.imi'],
+		'options'    : '-mode EFold -merge -incl -output-result',
+		'expectations' : [
+			{'file': 'testEFdegenerate2.res' , 'content' : """
+BEGIN CONSTRAINT
+ p2 >= 0
+& p1 >= p2
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+Number of states                        : 0
+Number of transitions                   : 0
+Number of computed states               : 0
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test EF with bad initial state and some constrained valuations',
+		'input_files': ['testEFdegenerate2.imi'],
+		'options'    : '-mode EF -merge -incl -output-result',
+		'expectations' : [
+			{'file': 'testEFdegenerate2.res' , 'content' : """
+BEGIN CONSTRAINT
+False
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+Number of states                        : 0
+Number of transitions                   : 0
+Number of computed states               : 0
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test EF (old version) with basic unreachability',
@@ -471,6 +583,7 @@ END CONSTRAINT
 	} # end test case
 	#------------------------------------------------------------
 	,
+	
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test EF with basic unreachability',
@@ -487,7 +600,9 @@ END CONSTRAINT
 		] # end expectations
 	} # end test case
 	#------------------------------------------------------------
+	
 	,
+	
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test EF (old version) with complex unreachability property',
