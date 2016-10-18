@@ -727,7 +727,7 @@ let compute_initial_state_or_abort () =
 
 
 	(* Check the satisfiability *)
-	let begin_message = "The initial constraint of the model after invariant " ^ (if not options#no_time_elapsing then " and time elapsing" else "") in
+	let begin_message = "The initial constraint of the model after invariant " ^ (if not options#no_time_elapsing then "and time elapsing " else "") in
 	if not (LinearConstraint.px_is_satisfiable initial_constraint_after_time_elapsing) then (
 		print_warning (begin_message ^ "is not satisfiable.");
 		terminate_program();
