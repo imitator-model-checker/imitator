@@ -34,20 +34,22 @@ var
 (************************************************************)
 synclabs: a, b, c, d, e;
 
-loc l1: while True wait {}
+loc l1: while x <= p wait {}
 	when True sync a goto l2;
 	when True sync b goto l3;
-	when 1 <= x & x <= 2 sync e goto lG1;
+	when 1 <= x & x <= 2 & x = p sync e goto lG1;
 
-loc l2: while True wait {}
+loc l2: while x <= p wait {}
 	when 5 <= x & x <= p sync c goto lG2;
 
-loc l3: while True wait {}
+loc l3: while x <= p wait {}
 	when 5 <= x & x <= p sync d goto lG2;
 
 loc lG1: while True wait {}
+	when True goto lG1;
 
 loc lG2: while True wait {}
+	when True goto lG2;
 
 end (* pta *)
 
