@@ -472,7 +472,8 @@ let cub_check_2 model invariant_s0 guard_t invariant_s1 clock_updates =
 					else
 						(
 						inequalities_need_to_solve := !inequalities_need_to_solve@[ineq];
-						false;
+						(* false; *)
+						true
 						);
 					);
 
@@ -505,7 +506,8 @@ let cub_check_2 model invariant_s0 guard_t invariant_s1 clock_updates =
 					else
 						(
 						inequalities_need_to_solve := !inequalities_need_to_solve@[ineq];
-						false;
+						(* false; *)
+						true
 						);
 					);
 				);
@@ -534,7 +536,8 @@ let cub_check_2 model invariant_s0 guard_t invariant_s1 clock_updates =
 					else
 						(
 						inequalities_need_to_solve := !inequalities_need_to_solve@[ineq];
-						false;
+						(* false; *)
+						true
 						);
 					);
 				)
@@ -553,11 +556,13 @@ let cub_check_2 model invariant_s0 guard_t invariant_s1 clock_updates =
 					if LinearConstraint.p_is_false constr
 					then 
 						let clock_linear_term = LinearConstraint.make_p_linear_term [NumConst.one,clock_index] NumConst.zero in
-						false
+						(* false *)
+						true
 					else
 						(
 						inequalities_need_to_solve := !inequalities_need_to_solve@[ineq1;ineq2];
-						false;
+						(* false; *)
+						true;
 						);
 					);
 				);
@@ -565,7 +570,7 @@ let cub_check_2 model invariant_s0 guard_t invariant_s1 clock_updates =
 
 		in
 
-		if (result = false && !inequalities_need_to_solve = [])
+		if (result = false (* && !inequalities_need_to_solve = [] *) )
 		then 	(
 				isCUB_PTA := false;
 				(*comment this line below for the CUB-PTA transformation*)
@@ -579,7 +584,7 @@ let cub_check_2 model invariant_s0 guard_t invariant_s1 clock_updates =
 
 			print_message Verbose_low (" This is not satisfied CUB-PTA! ")
 		else 
-			print_message Verbose_low (" This is satisfied CUB-PTA! ");
+			print_message Verbose_low (" This can be satisfied CUB-PTA! ");
 
 
 
@@ -810,17 +815,25 @@ let check_cub model =
 
 	let constraint_for_cub = ref (LinearConstraint.p_true_constraint ()) in
 	(
-	if (!isCUB_PTA && !inequalities_need_to_solve = []) = true 
+	if (!isCUB_PTA ) = true 
 	then
 		(
-	    print_message Verbose_low ("   The model is CUB-PTA! ");
+			if (!inequalities_need_to_solve = []) = true 
+			then
+			(
+	    		print_message Verbose_low ("   The model is CUB-PTA! ");
+	    	)
+			else
+			(	
+				constraint_for_cub := (LinearConstraint.make_p_constraint (!inequalities_need_to_solve) );
+	   			print_message Verbose_low ("   The model is possible CUB-PTA! \nbut you need to solve the inequalities below!!: "); 
+	   			print_message Verbose_low ("\n" ^ (LinearConstraint.string_of_p_linear_constraint model.variable_names !constraint_for_cub));
+			)
 		)
 	else 
 		(
-		constraint_for_cub := (LinearConstraint.make_p_constraint (!inequalities_need_to_solve) );
-
-	   	print_message Verbose_low ("   The model is possible CUB-PTA! \nbut you need to solve the inequalities below!!: "); 
-	   	print_message Verbose_low ("\n" ^ (LinearConstraint.string_of_p_linear_constraint model.variable_names !constraint_for_cub));
+			print_message Verbose_low (" This is not satisfied CUB-PTA! ");
+			constraint_for_cub := (LinearConstraint.p_false_constraint ()) ;
 	    );
 	 );
 	!constraint_for_cub
@@ -2490,6 +2503,8 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 			DynArray.add newtransitions (newloc1, newloc2, guard, clock_updates, action_index, discrete_update);
 
 		) transitions;
+
+		(*adding parameter relation into the first transition*)
 		let listParaRelations = disjunction_constraints p_constraints in
 
 		List.iter( fun cons ->
@@ -2506,8 +2521,20 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 				) init_locs;
 				);
 		) listParaRelations;
+
+		(* List.iter (fun loc -> 
+				
+			(* Add a transition from the initial location to all local initial locations into the dynamic array of locations *)
+			DynArray.add newtransitions (new_initial_location_name, location_name_of_location_index_and_submodel_index loc !submodel_index, LinearConstraint.pxd_true_constraint (), [], local_silent_action_index_of_automaton_index model automaton_index, [] ) ;
+			(* DynArray.add newtransitions (new_initial_location_name, location_name_of_location_index_and_submodel_index loc !submodel_index, pxd_cons, [], 0, [] ) ; *)
+
+		) init_locs *);
+
 		incr submodel_index;
 	) newSubModels;
+
+
+
 
 	(* FINAL OUTPUT MODEL *)
 	let finalModel = (new_invariants_per_location_hashtbl, newtransitions, loc_naming_tbl) in 
