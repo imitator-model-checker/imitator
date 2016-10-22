@@ -132,6 +132,8 @@ IN CASE THE EMPTY LIST RETURNED, THE RESULT WILL BE WRONG! (EX: LIST.ITER),
 (* 
 THE NEW UPDATED FUNCTION OF "filter_upperbound_by_clock_2", THE EQUAL "=" WILL BE FILTERED AS "<=" (NOTE: "=" <=> "<=" AND ">=")
  *)
+
+ 
 let filter_upperbound_by_clock_3 clock_index tuple_inequalities_s0 =
 	let ls = ref [] in
 	( 
@@ -158,18 +160,19 @@ let filter_upperbound_by_clock_3 clock_index tuple_inequalities_s0 =
 
 
 
-
+(* THIS WILL RETURN (NEGATIVE OPERATOR AND, CUB INEQUALITY) *)
 let make_CUB_inequality (op1, linear_term1) (op2, linear_term2) = 	
 	let linear_term = LinearConstraint.sub_p_linear_terms linear_term1 linear_term2 in
 	match op1, op2 with
 	(*linear_term1 < linear_term2*)
-	| LinearConstraint.Op_le, LinearConstraint.Op_l -> LinearConstraint.make_p_linear_inequality linear_term LinearConstraint.Op_l
+	| LinearConstraint.Op_le, LinearConstraint.Op_l -> (LinearConstraint.Op_ge, (LinearConstraint.make_p_linear_inequality linear_term LinearConstraint.Op_l))
 	(*linear_term1 <= linear_term2*)
-	| _, _ -> LinearConstraint.make_p_linear_inequality linear_term LinearConstraint.Op_le
+	| _, _ -> (LinearConstraint.Op_g, (LinearConstraint.make_p_linear_inequality linear_term LinearConstraint.Op_le))
 
 
 
 let make_CUB_constraint = LinearConstraint.make_p_constraint
+
 
 
 
@@ -368,16 +371,12 @@ let getInfoCurrentModel model submodel =
 (************************************************************)
 (************************************************************)
 
-
-
 (*attention: multi inequalities of the same clock in model*)
 
 (*let check_cub_condition *)
 
 (*check CUB condition function -> return boolean value*)
 
-
-(*** NOTE: this function is NEVER called ***)
 let cub_check_2 model invariant_s0 guard_t invariant_s1 clock_updates = 
 	(*ppl*)
 	(* let inequalities_need_to_solve : (LinearConstraint.op * LinearConstraint.p_linear_term) list ref = ref [] in *)
@@ -460,7 +459,7 @@ let cub_check_2 model invariant_s0 guard_t invariant_s1 clock_updates =
 																									true;
 
 		|_							, _							 , (LinearConstraint.Op_ge, _)	->	print_message Verbose_low (" 	 Case 5 " );
-				let ineq = make_CUB_inequality (op_s0, linear_term_s0) (op_t, linear_term_t) in
+				let (_, ineq) = make_CUB_inequality (op_s0, linear_term_s0) (op_t, linear_term_t) in
 				let constr = make_CUB_constraint [ineq] in
 				
 				if LinearConstraint.p_is_true constr
@@ -493,7 +492,7 @@ let cub_check_2 model invariant_s0 guard_t invariant_s1 clock_updates =
 				)
 			else
 				(
-				let ineq = make_CUB_inequality (op_s0, linear_term_s0) (op_s1, linear_term_s1) in
+				let (_, ineq) = make_CUB_inequality (op_s0, linear_term_s0) (op_s1, linear_term_s1) in
 				let constr = make_CUB_constraint [ineq] in
 				if LinearConstraint.p_is_true constr
 				then 
@@ -523,7 +522,7 @@ let cub_check_2 model invariant_s0 guard_t invariant_s1 clock_updates =
 												^ " was a reset clock!\n 	 skipping the process: (" 
 												^ t_upperbound_str ^ ") /\\ (" ^ s1_upperbound_str ^ ")!" ); 
 				
-				let ineq = make_CUB_inequality (op_s0, linear_term_s0) (op_t, linear_term_t) in
+				let (_, ineq) = make_CUB_inequality (op_s0, linear_term_s0) (op_t, linear_term_t) in
 				let constr = make_CUB_constraint [ineq] in
 				if LinearConstraint.p_is_true constr
 				then 
@@ -543,9 +542,9 @@ let cub_check_2 model invariant_s0 guard_t invariant_s1 clock_updates =
 				)
 			else
 				(
-				let ineq1 = make_CUB_inequality (op_s0, linear_term_s0) (op_t, linear_term_t) in
+				let (_, ineq1) = make_CUB_inequality (op_s0, linear_term_s0) (op_t, linear_term_t) in
 
-				let ineq2 = make_CUB_inequality (op_s0, linear_term_s0) (op_s1, linear_term_s1) in
+				let (_, ineq2) = make_CUB_inequality (op_s0, linear_term_s0) (op_s1, linear_term_s1) in
 
 				let constr = make_CUB_constraint [ineq1;ineq2] in
 				if LinearConstraint.p_is_true constr
@@ -631,112 +630,6 @@ let get_all_clocks_ge_zero_comstraint2 clock_index model =
 	cons
 
 
-
-	
-
-
-
-(* print_message Verbose_low ("\n const: \n" ^ (LinearConstraint.string_of_p_linear_constraint model.variable_names const) );
-
-print_message Verbose_low (" Inequality s0 <= t: \n" 
-								^ LinearConstraint.string_of_p_linear_inequality model.variable_names ineq1 ^ "!!!\n");
-
-print_message Verbose_low (" Inequality s0 <= s1: \n" 
-								^ LinearConstraint.string_of_p_linear_inequality model.variable_names ineq2 ^ "!!!\n");
-(* ^ "\n Constraint2: \n" ^ (LinearConstraint.string_of_p_linear_constraint model.variable_names con1) ); *) *)
-
-
-
-(*
-
-let isCUB_PTA = ref true in
-let inequalities_need_to_solve = ref [] in
-
-(*main function for CUB-PTA*)
-List.iter (fun automaton_index -> print_message Verbose_low ("Automaton: " ^ (model.automata_names automaton_index) );
-
-		(*Checking bounded clocked in invariant (Location)*)
-        List.iter (fun location_index -> print_message Verbose_low ("----------------Begin checking at " ^ (model.location_names automaton_index location_index) ^ "-------------------");
-
-        		print_message Verbose_low ("\n");
-
-        		print_message Verbose_low (" State/Location(S): " ^ (model.location_names automaton_index location_index) ) ;
-
-        		let invariant1 = model.invariants automaton_index location_index in
-        
-                print_message Verbose_low ("   Invariant(S): " ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names invariant1 ) )  ;
-						
-
-						print_message Verbose_low ("\n");
-
-                	(*Checking bounded clocked in guards (Transition)*)
-                	List.iter (fun action_index -> print_message Verbose_low (" Transition/Action: " ^ (model.action_names action_index) );
-            
-                    	List.iter (fun (guard, clock_updates, _, target_location_index) 
-                    		-> print_message Verbose_low ("   Guard: " ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names guard));		
-
-                        	(** WORK HERE **)
-
-                        	let invariant2 = model.invariants automaton_index target_location_index in
-
-							print_message Verbose_low ("\n");
-                			print_message Verbose_low (" State/Location(D): " ^ (model.location_names automaton_index target_location_index) ) ;
-                			print_message Verbose_low ("   Invariant(D): " ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names invariant2 ) ) ;
-                			print_message Verbose_low ("	  ----Map:(" 
-                											^ (model.location_names automaton_index location_index) 
-                											^ ")--" ^ (model.action_names action_index) ^ "-->(" 
-                											^ (model.location_names automaton_index target_location_index) 
-                											^ ") ----" );
-                			print_message Verbose_low ("\n");
-
-                        	let clock_updates = match clock_updates with
-                        						  No_update -> []
-												| Resets clock_update -> clock_update
-												| Updates clock_update_with_linear_expression -> raise (InternalError(" Clock_update are not supported currently! ")); in
-
-
-                			let (result, inequalities) = cub_check_2 model invariant1 guard invariant2 clock_updates in
-                			
-                			inequalities_need_to_solve := !inequalities_need_to_solve@inequalities;
-                			if result = false
-							then
-    							isCUB_PTA := false;
-                			()
-
-                    	) (model.transitions automaton_index location_index action_index); 
-
-                	) (model.actions_per_location automaton_index location_index); 
-
-            		 print_message Verbose_low ("----------------End checking " ^ (model.location_names automaton_index location_index) ^ "---------------------");
-
-            		 print_message Verbose_low ("\n");
-
-        ) (model.locations_per_automaton automaton_index);
-
-        print_message Verbose_low ("\n");
-
-) model.automata;
-
-
-
-if (!isCUB_PTA && !inequalities_need_to_solve = []) = true 
-then
-    print_message Verbose_low ("   The model is CUB-PTA! ")
-else 
-	(
-	let constraint_for_cub = LinearConstraint.make_p_constraint (*p_linear_inequality_list*) !inequalities_need_to_solve in 
-
-   	print_message Verbose_low ("   The model is possible CUB-PTA! \nbut you need to solve the inequalities below!!: ");
-   	print_message Verbose_low ("\n" ^ (LinearConstraint.string_of_p_linear_constraint model.variable_names constraint_for_cub)); 
-    );
-
-terminate_program();
-
-*)
-
-(**************************************************)
-(* PART 1 END *)
-(**************************************************)
 
 
 
@@ -931,7 +824,7 @@ let check_problematic_transition model (invariant_s0, guard_t, invariant_s1, clo
 						(*Case 6*)
 						(* none reset zone *)
 						print_message Verbose_low ("\nCASE 6 " );
-						let ineq = make_CUB_inequality (op_s0, linear_term_s0) (op_t, linear_term_t) in
+						let (_, ineq) = make_CUB_inequality (op_s0, linear_term_s0) (op_t, linear_term_t) in
 						print_message Verbose_low ("FORMING INEQUALITY: " 
 														^ LinearConstraint.string_of_p_linear_inequality model.variable_names ineq 
 														^ "!!!\n");
@@ -994,7 +887,7 @@ let check_problematic_transition model (invariant_s0, guard_t, invariant_s1, clo
 						else
 							(
 							(* none reset zone *)
-							let ineq = make_CUB_inequality (op_s0, linear_term_s0) (op_s1, linear_term_s1) in
+							let (_, ineq) = make_CUB_inequality (op_s0, linear_term_s0) (op_s1, linear_term_s1) in
 							print_message Verbose_low ("FORMING INEQUALITY: " 
 															^ LinearConstraint.string_of_p_linear_inequality model.variable_names ineq 
 															^ "!!!\n");
@@ -1049,7 +942,7 @@ let check_problematic_transition model (invariant_s0, guard_t, invariant_s1, clo
 						(
 						(* reset zone *)
 						print_message Verbose_low ("DETECTED RESET CLOCK! " );
-						let ineq = make_CUB_inequality (op_s0, linear_term_s0) (op_t, linear_term_t) in
+						let (_, ineq) = make_CUB_inequality (op_s0, linear_term_s0) (op_t, linear_term_t) in
 						print_message Verbose_low ("FORMING INEQUALITY: " 
 														^ LinearConstraint.string_of_p_linear_inequality model.variable_names ineq 
 														^ "!!!\n"); 
@@ -1098,11 +991,11 @@ let check_problematic_transition model (invariant_s0, guard_t, invariant_s1, clo
 					else
 						(
 						(* none reset zone *)
-						let ineq1 = make_CUB_inequality (op_s0, linear_term_s0) (op_t, linear_term_t) in
+						let (_, ineq1) = make_CUB_inequality (op_s0, linear_term_s0) (op_t, linear_term_t) in
 						print_message Verbose_low ("INEQUALITY S0 =< T: \n" 
 														^ LinearConstraint.string_of_p_linear_inequality model.variable_names ineq1 
 														^ "!!!\n"); 
-						let ineq2 = make_CUB_inequality (op_s0, linear_term_s0) (op_s1, linear_term_s1) in
+						let (_, ineq2) = make_CUB_inequality (op_s0, linear_term_s0) (op_s1, linear_term_s1) in
 						print_message Verbose_low ("INEQUALITY S0 =< S1: \n" 
 														^ LinearConstraint.string_of_p_linear_inequality model.variable_names ineq2 
 														^ "!!!\n"); 
@@ -1280,7 +1173,7 @@ let cub_tran model submodels count_m
 			(*Case 6*)
 			(* none reset zone *)
 			print_message Verbose_low (" 	 Case 6 " );
-			let ineq = make_CUB_inequality (op_s0, linear_term_s0) (op_t, linear_term_t) in
+			let (nop, ineq) = make_CUB_inequality (op_s0, linear_term_s0) (op_t, linear_term_t) in
 			print_message Verbose_low (" Forming inequality: " 
 											^ LinearConstraint.string_of_p_linear_inequality model.variable_names ineq 
 											^ "!!!\n");
@@ -1350,7 +1243,8 @@ let cub_tran model submodels count_m
 							DynArray.add parameters_constraints (true, [constr]);
 							(*Create new submodel with Second constraint*)
 							let linear_term_1 = LinearConstraint.sub_p_linear_terms linear_term_s0 linear_term_t in
-							let linear_inequality_1 = LinearConstraint.make_p_linear_inequality linear_term_1 LinearConstraint.Op_g in
+							(* let linear_inequality_1 = LinearConstraint.make_p_linear_inequality linear_term_1 LinearConstraint.Op_g in *)
+							let linear_inequality_1 = LinearConstraint.make_p_linear_inequality linear_term_1 nop in
 							let constr1 = LinearConstraint.make_p_constraint ([linear_inequality_1]) in
 							print_message Verbose_low ("\n Add constraint " 
 															^ (LinearConstraint.string_of_p_linear_constraint model.variable_names constr1) 
@@ -1395,7 +1289,7 @@ let cub_tran model submodels count_m
 			else
 				(
 				(* none reset zone *)
-				let ineq = make_CUB_inequality (op_s0, linear_term_s0) (op_s1, linear_term_s1) in
+				let (nop, ineq) = make_CUB_inequality (op_s0, linear_term_s0) (op_s1, linear_term_s1) in
 				print_message Verbose_low (" Forming inequality: " ^ LinearConstraint.string_of_p_linear_inequality model.variable_names ineq ^ "!!!\n");
 				let constr = make_CUB_constraint [ineq] in
 				if LinearConstraint.p_is_true constr
@@ -1462,7 +1356,8 @@ let cub_tran model submodels count_m
 
 								(*Create new submodel with Second constraint*)
 								let linear_term_2 = LinearConstraint.sub_p_linear_terms linear_term_s0 linear_term_s1 in
-								let linear_inequality_2 = LinearConstraint.make_p_linear_inequality linear_term_2 LinearConstraint.Op_g in
+								(* let linear_inequality_2 = LinearConstraint.make_p_linear_inequality linear_term_2 LinearConstraint.Op_g in *)
+								let linear_inequality_2 = LinearConstraint.make_p_linear_inequality linear_term_2 nop in
 								let constr2 = LinearConstraint.make_p_constraint ([linear_inequality_2]) in
 								print_message Verbose_low (" Add constraint " 
 																^ (LinearConstraint.string_of_p_linear_constraint model.variable_names constr2) 
@@ -1503,7 +1398,7 @@ let cub_tran model submodels count_m
 												^ " was a reset clock!\n 	 skipping the process: (" 
 												^ t_upperbound_str ^ ") /\\ (" ^ s1_upperbound_str ^ ")!" ); 
 				
-				let ineq = make_CUB_inequality (op_s0, linear_term_s0) (op_t, linear_term_t) in
+				let (nop, ineq) = make_CUB_inequality (op_s0, linear_term_s0) (op_t, linear_term_t) in
 				print_message Verbose_low (" Forming inequality: " 
 												^ LinearConstraint.string_of_p_linear_inequality model.variable_names ineq ^ "!!!\n");
 				let constr = make_CUB_constraint [ineq] in
@@ -1570,7 +1465,8 @@ let cub_tran model submodels count_m
 								DynArray.add parameters_constraints (true, [constr]);
 								(*Create new submodel with Second constraint*)
 								let linear_term_1 = LinearConstraint.sub_p_linear_terms linear_term_s0 linear_term_t in
-								let linear_inequality_1 = LinearConstraint.make_p_linear_inequality linear_term_1 LinearConstraint.Op_g in
+								(* let linear_inequality_1 = LinearConstraint.make_p_linear_inequality linear_term_1 LinearConstraint.Op_g in *)
+								let linear_inequality_1 = LinearConstraint.make_p_linear_inequality linear_term_1 nop in
 								let constr1 = LinearConstraint.make_p_constraint ([linear_inequality_1]) in
 								print_message Verbose_low ("\n Add constraint " 
 																^ (LinearConstraint.string_of_p_linear_constraint model.variable_names constr1) 
@@ -1599,10 +1495,10 @@ let cub_tran model submodels count_m
 			else
 				(
 				(* none reset zone *)
-				let ineq1 = make_CUB_inequality (op_s0, linear_term_s0) (op_t, linear_term_t) in
+				let (nop1, ineq1) = make_CUB_inequality (op_s0, linear_term_s0) (op_t, linear_term_t) in
 				print_message Verbose_low (" Inequality s0 <= t: \n" 
 												^ LinearConstraint.string_of_p_linear_inequality model.variable_names ineq1 ^ "!!!\n");
-				let ineq2 = make_CUB_inequality (op_s0, linear_term_s0) (op_s1, linear_term_s1) in
+				let (nop2, ineq2) = make_CUB_inequality (op_s0, linear_term_s0) (op_s1, linear_term_s1) in
 				print_message Verbose_low (" Inequality s0 <= s1: \n" 
 												^ LinearConstraint.string_of_p_linear_inequality model.variable_names ineq2 ^ "!!!\n");
 				let constr = make_CUB_constraint [ineq1;ineq2] in
@@ -1673,8 +1569,10 @@ let cub_tran model submodels count_m
 								(*Create new submodel with Second constraint*)
 								let linear_term_1 = LinearConstraint.sub_p_linear_terms linear_term_s0 linear_term_t in
 								let linear_term_2 = LinearConstraint.sub_p_linear_terms linear_term_s0 linear_term_s1 in
-								let linear_inequality_1 = LinearConstraint.make_p_linear_inequality linear_term_1 LinearConstraint.Op_g in
-								let linear_inequality_2 = LinearConstraint.make_p_linear_inequality linear_term_2 LinearConstraint.Op_g in
+								(* let linear_inequality_1 = LinearConstraint.make_p_linear_inequality linear_term_1 LinearConstraint.Op_g in *)
+								(* let linear_inequality_2 = LinearConstraint.make_p_linear_inequality linear_term_2 LinearConstraint.Op_g in *)
+								let linear_inequality_1 = LinearConstraint.make_p_linear_inequality linear_term_1 nop1 in
+								let linear_inequality_2 = LinearConstraint.make_p_linear_inequality linear_term_2 nop2 in
 								let constr1 = LinearConstraint.make_p_constraint ([linear_inequality_1]) in
 								let constr2 = LinearConstraint.make_p_constraint ([linear_inequality_2]) in
 								print_message Verbose_low ("\n Add constraint " 
@@ -1816,8 +1714,8 @@ let clocks_constraints_process model adding clocks_constraints loc_clocks_constr
 		 		| false, false -> con := LinearConstraint.pxd_intersection [!con; filter_inf model cons1; filter_inf model cons2];
 		 	);
 	done;
-	DynArray.clear clocks_constraints; 
-	DynArray.append (DynArray.copy loc_clocks_constraints) clocks_constraints; 
+	(* DynArray.clear clocks_constraints;  *)
+	(* DynArray.append (DynArray.copy loc_clocks_constraints) clocks_constraints; *)
 	()
 
 
@@ -2071,6 +1969,8 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 
 				clocks_constraints_process model adding clocks_constraints loc_clocks_constraints location_index invariant_s0;
 
+				DynArray.clear clocks_constraints;
+
 				(* increase transition count *)
 				count_t := !count_t+1;
 				();
@@ -2097,7 +1997,8 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 			let tuple_inequalities_s0 	= convert_inequality_list_2_tuple_list model inequalities_s0 in
 			let tuple_inequalities_t 	= convert_inequality_list_2_tuple_list model inequalities_t in
 			print_message Verbose_low ("\n --------------------2nd check start---------------------- ");
-			let constraints_s1 = find_all_clocks_constraints clocks_constraints target_location_index in
+			(* let constraints_s1 = find_all_clocks_constraints clocks_constraints target_location_index in *)
+			let constraints_s1 = find_all_clocks_constraints loc_clocks_constraints target_location_index in
 			List.iter (fun c_s1 ->
 				if LinearConstraint.pxd_is_true c_s1 = false
 				then
@@ -2139,13 +2040,14 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 					
 					DynArray.add clocks_constraints (location_index, (LinearConstraint.pxd_true_constraint ()));
 
+					clocks_constraints_process model adding clocks_constraints loc_clocks_constraints location_index invariant_s0;
+
+					DynArray.clear clocks_constraints;
+
 					);(* end if not true constraint *)
 			) constraints_s1;
 			print_message Verbose_low ("\n --------------------2nd check end----------------------- ");
 
-			DynArray.add clocks_constraints (location_index, (LinearConstraint.pxd_true_constraint ()));
-			
-			clocks_constraints_process model adding clocks_constraints loc_clocks_constraints location_index invariant_s0;
 			
 			(*work here - end*)
 			(* transiton count *)
@@ -2158,6 +2060,9 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 		(* end - while adding loop *)
 		done;
 
+		DynArray.append loc_clocks_constraints clocks_constraints;
+		(* DynArray.clear loc_clocks_constraints; *)
+
 		(* model count *)
 		print_message Verbose_low ("\n ----------------Sub-model No: " ^ (string_of_int !count_m) ^ " end-----------------------");
 		count_m := !count_m+1;
@@ -2169,7 +2074,7 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 
 
 
-	(* Delete true constraints *)
+	(* Delete true constraints and clone location *)
 	let loc_clocks_constraints = DynArray.make 0 in
 	DynArray.iter (fun (locations, transitions, c_constraints, parameters_constraints) ->
 	for i = 0 to (DynArray.length c_constraints - 1) do
@@ -2523,11 +2428,9 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 		) listParaRelations;
 
 		(* List.iter (fun loc -> 
-				
 			(* Add a transition from the initial location to all local initial locations into the dynamic array of locations *)
 			DynArray.add newtransitions (new_initial_location_name, location_name_of_location_index_and_submodel_index loc !submodel_index, LinearConstraint.pxd_true_constraint (), [], local_silent_action_index_of_automaton_index model automaton_index, [] ) ;
 			(* DynArray.add newtransitions (new_initial_location_name, location_name_of_location_index_and_submodel_index loc !submodel_index, pxd_cons, [], 0, [] ) ; *)
-
 		) init_locs *);
 
 		incr submodel_index;
@@ -2756,6 +2659,9 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
 	
 	
+
+
+
 	(*------------------------------------------------------------*)
 	(* Convert to the desired functional style *)
 	(*------------------------------------------------------------*)
@@ -3135,632 +3041,3 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 		(* List of parameters to project the result onto *)
 		projection = model.projection;
 	}
-
-
-(* terminate_program(); *)
-
-(**************************************************)
-(* PART 2 END *)
-(**************************************************)
-
-
-(**************************************************)
-(* GIA'S TESTING *)
-(**************************************************)
-
-
-(*
-let constr = LinearConstraint.make_pxd_constraint (inequalities_s0@inequalities_t@inequalities_s1) in
-	print_message Verbose_low ("\n constr:" ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names constr)); 
-(*testing ppl function*)
-let constr_inter = LinearConstraint.pxd_intersection [constr] in
-	print_message Verbose_low ("\n constr_inter:" ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names constr_inter)); 
-let constr1 = LinearConstraint.make_p_constraint ([ineq1]) in
-	print_message Verbose_low ("\n constr1:" ^ (LinearConstraint.string_of_p_linear_constraint model.variable_names constr1)); 
-let constr2 = LinearConstraint.make_p_constraint ([ineq2]) in
-	print_message Verbose_low ("\n constr2:" ^ (LinearConstraint.string_of_p_linear_constraint model.variable_names constr2)); 
-let abc = LinearConstraint.pxd_is_leq invariant_s0 guard_t in
-	print_message Verbose_low ("\n abc:" ^ string_of_bool abc ); 
-(*testing ppl function*)
-*)
-
-
-
-
-(*olde version code, maybe reuse in future*)
-
-
-
-(*
-let get_smaller_coeff coeff1 coeff2 =	let first_minus_second = Gmp.Z.compare (NumConst.get_num coeff1) (NumConst.get_num coeff2) in
-										if first_minus_second >= 0 
-										then coeff2 
-										else coeff1
-										in 
-*)
-
-
-(*
-let is_smaller_coeff coeff1 coeff2 =	let first_minus_second = Gmp.Z.compare (NumConst.get_num coeff1) (NumConst.get_num coeff2) in
-										if first_minus_second >= 0 
-										then false
-										else true
-										in 
-*)
-
-
-(*
-(*
-get lower upper-bound
-return a tupel (number, linear_term)
-number:
-1: u1 is smaller than u2
-2: u1 is smaller than u2
-3: u1 is equal u2
-4: u1, u2 are incomparable
-*)
-let get_lower_upperbound (op1, term1) (op2, term2) =	let (isComparable, linear_term_number ) = LinearConstraint.isComparable_linear_terms term1 term2 in
-														(*testing*)
-														let ineq = LinearConstraint.isComparable_linear_terms_2 term1 term2 in
-														print_message Verbose_low ("   Testing constraint!!: ");
-   														print_message Verbose_low ("\n" ^ (LinearConstraint.string_of_p_linear_constraint model.variable_names ineq));
-   														(*testing*)
-														print_message Verbose_low ("\n isComparable: " ^ string_of_bool isComparable );
-														(*check the input, start*)
-														match op1, op2 with
-														| LinearConstraint.Op_ge, LinearConstraint.Op_ge-> raise (InternalError("Detected lower bounded contraints in both inputs!!! "))
-														| LinearConstraint.Op_g , LinearConstraint.Op_ge-> raise (InternalError("Detected lower bounded contraints in both inputs!!! "))
-														| LinearConstraint.Op_ge, LinearConstraint.Op_g	-> raise (InternalError("Detected lower bounded contraints in both inputs!!! "))
-														| LinearConstraint.Op_g , LinearConstraint.Op_g -> raise (InternalError("Detected lower bounded contraints in both inputs!!! "))
-
-														| LinearConstraint.Op_ge, _						-> raise (InternalError("Detected lower bounded contraints in the first input!!! "))
-														| LinearConstraint.Op_g , _						-> raise (InternalError("Detected lower bounded contraints in the first input!!! "))
-														| _		  				, LinearConstraint.Op_ge-> raise (InternalError("Detected lower bounded contraints in the second input!!! "))
-														| _		  				, LinearConstraint.Op_g	-> raise (InternalError("Detected lower bounded contraints in the second input!!! "))
-														(*check the input, end*)
-														| _		  				, _						-> 
-																											match  (isComparable, linear_term_number ) with
-																											| true 	, LinearConstraint.First -> 	(
-																																					match (op1, op2) with
-																																					| (LinearConstraint.Op_le), (LinearConstraint.Op_l)	-> (LinearConstraint.Second, op2, term2)
-																																					| _						  , _						-> (LinearConstraint.First, op1, term1) 
-																																					);
-
-																											| true 	, LinearConstraint.Second -> 	(
-																																					match (op2, op1) with
-																																					| (LinearConstraint.Op_le), (LinearConstraint.Op_l)	-> (LinearConstraint.First, op1, term1)
-																																					| _						  , _						-> (LinearConstraint.Second, op2, term2) 
-																																					);
-
-																											| true 	, _ 							-> 	raise (InternalError("error!!! "))
-
-																											| false	, _ 							-> 	(LinearConstraint.NotDetermine, op1, term1);
-														in
-*)
-
-
-(*
-let cub_check invariant_s0 guard_t invariant_s1 clock_updates = 	
-																(*ppl*)
-																(* let inequalities_need_to_solve : (LinearConstraint.op * LinearConstraint.p_linear_term) list ref = ref [] in *)
-																let inequalities = ref [] in
-																print_message Verbose_low (" CUB check, Start:");
-																print_message Verbose_low ("\n");
-
-																let inequalities_s0 = LinearConstraint.pxd_get_inequalities invariant_s0 in
-																let inequalities_t 	= LinearConstraint.pxd_get_inequalities guard_t in
-																let inequalities_s1 = LinearConstraint.pxd_get_inequalities invariant_s1 in
-
-																(*testing*)
-																(*
-																let ineq = inequalities_s0@inequalities_t@inequalities_s1
-																let constraint_for_cub = LinearConstraint.make_pxd_constraint (*p_linear_inequality_list*) ineq in 
-   																print_message Verbose_low ("   inequalities sdfdsf!!: ");
-   																print_message Verbose_low ("\n" ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names constraint_for_cub));
-   																*)
-   																(*testing*)
-
-																print_message Verbose_low (" **Beginning state/location** :");
-																let tuple_inequalities_s0 	= convert_inequality_list_2_tuple_list model inequalities_s0 in
-																print_message Verbose_low (" **Transition** :");
-																let tuple_inequalities_t 	= convert_inequality_list_2_tuple_list model inequalities_t in
-																print_message Verbose_low (" **Destination state/location** :");
-																let tuple_inequalities_s1 	= convert_inequality_list_2_tuple_list model inequalities_s1 in
-																
-																let isCUB_PTA = ref true in
-
-																 List.iter (	fun clock_index -> 
-																 	let inequalities_need_to_solve = ref [] in
-																 	print_message Verbose_low ("   Checking CUB condtions at clock (" ^ (model.variable_names clock_index) ^ "):");
-
-																 	print_message Verbose_low ("\n 	**Beginning state/location** :");
-	             													let (_, op_s0, linear_term_s0) 	= filter_upperbound_by_clock clock_index tuple_inequalities_s0 in
-	             													print_message Verbose_low ("\n 	**Transition** :");
-                													let (_, op_t, linear_term_t) 	= filter_upperbound_by_clock clock_index tuple_inequalities_t in
-                													print_message Verbose_low ("\n 	**Destination state/location** :");
-                													let (_, op_s1, linear_term_s1) 	= filter_upperbound_by_clock clock_index tuple_inequalities_s1 in
-
-
-
-                													print_message Verbose_low ("\n");
-                													print_message Verbose_low ("Comparing: ");
-
-                													let s0_upperbound_str = (LinearConstraint.operator2string op_s0) ^ " " ^ (LinearConstraint.string_of_p_linear_term model.variable_names linear_term_s0) in
-                													let t_upperbound_str  = (LinearConstraint.operator2string op_t) ^ " " ^ (LinearConstraint.string_of_p_linear_term model.variable_names linear_term_t) in
-                													let s1_upperbound_str = (LinearConstraint.operator2string op_s1) ^ " " ^ (LinearConstraint.string_of_p_linear_term model.variable_names linear_term_s1) in
-
-                													print_message Verbose_low (" 	 get upper-bound s0: " ^ s0_upperbound_str );
-                													print_message Verbose_low (" 	 get upper-bound t: " ^ t_upperbound_str );
-                													print_message Verbose_low (" 	 get upper-bound s1: " ^ s1_upperbound_str );
-                													
-                													print_message Verbose_low (" 	 evaluating: (" ^ s0_upperbound_str ^ ") <= (" ^ t_upperbound_str ^ ") /\\ (" ^ s1_upperbound_str ^ ")!");
-
-                													(* if List.mem clock_index reset_clocks = true 
-                													then lower_inequality := linear_term_t; *)
-                
-                													(* let result = ref true in *)
-                													let result = match (op_s0, linear_term_s0), (op_t, linear_term_t), (op_s1, linear_term_s1) with
-
-														 			 (LinearConstraint.Op_ge, _), (LinearConstraint.Op_ge, _), (LinearConstraint.Op_ge, _)	->	print_message Verbose_low (" 	 Case 1 " );
-														 			 																							true;
-
-														 			|(LinearConstraint.Op_ge, _), _							 , (LinearConstraint.Op_ge, _)	->	print_message Verbose_low (" 	 Case 2 " );
-														 																										false;
-
-														 			|(LinearConstraint.Op_ge, _), (LinearConstraint.Op_ge, _), _							->	(*reset*)
-														 																										print_message Verbose_low (" 	 Case 3 " );
-														 																										if List.mem clock_index clock_updates = true
-														 																										then
-														 																											let _ = print_message Verbose_low (" 	 Detected " 
-														 																																			^ (model.variable_names clock_index) 
-														 																																			^ " was a reset clock!\n 	 skipping the process: (" 
-														 																																			^ t_upperbound_str ^ ") /\\ (" ^ s1_upperbound_str ^ ")!" ) 
-														 																											in
-														 																											true
-														 																									
-														 																										else
-														 																											(
-														 																											false;
-														 																											);
-
-														 			|(LinearConstraint.Op_ge, _), _							 , _							-> 	(*reset but useless*)
-														 																										false; 
-
- 																	|_							, (LinearConstraint.Op_ge, _), (LinearConstraint.Op_ge, _)	->	true;
-
- 																	|_							, _							 , (LinearConstraint.Op_ge, _)	->	let (typ, op, term) = get_lower_upperbound (op_s0, linear_term_s0) (op_t, linear_term_t) in
-														 																										(
-														 																										match typ with
-														 																										| LinearConstraint.NotDetermine -> 	(
-														 																																			inequalities_need_to_solve := !inequalities_need_to_solve@[make_CUB_inequality (op_s0, linear_term_s0) (op_t, linear_term_t)] ; 
-														 																																			false
-														 																																			);
-														 																										| LinearConstraint.First 		-> 	true
-														 																										| LinearConstraint.Second 		-> 	false;
-														 																										);
-
- 																	|_							, (LinearConstraint.Op_ge, _), _							->	(*reset*)
- 																																								if List.mem clock_index clock_updates = true
-														 																										then
-														 																											let _ = print_message Verbose_low (" 	 Detected " 
-														 																																			^ (model.variable_names clock_index) 
-														 																																			^ " was a reset clock!\n 	 skipping the process: (" 
-														 																																			^ t_upperbound_str ^ ") /\\ (" ^ s1_upperbound_str ^ ")!" ) 
-														 																											in
-														 																											true
-														 																										else
-														 																											(
- 																																									let (typ, op, term) = get_lower_upperbound (op_s0, linear_term_s0)  (op_s1, linear_term_s1) in
-														 																											(*let _ = get_intersec_upperbounds (op_s0, linear_term_s0)  (op_s1, linear_term_s1) in*)
-														 																											match typ with
-														 																											| LinearConstraint.NotDetermine -> 	(
-														 																																				inequalities_need_to_solve := !inequalities_need_to_solve@[make_CUB_inequality (op_s0, linear_term_s0) (op_s1, linear_term_s1)] ; 
-														 																																				false
-														 																																				);
-														 																											| LinearConstraint.First 		-> 	true
-														 																											| LinearConstraint.Second 		-> 	false;
-														 																											);
-														 																											
-
-														 			| _							, _							 , _							-> 	(*reset*)
-														 																										if List.mem clock_index clock_updates = true
-														 																										then
-														 																											let (typ2, op2, term2) = get_lower_upperbound (op_s0, linear_term_s0) (op_t, linear_term_t) in
-														 																											(*let _ = get_intersec_upperbounds (op_s0, linear_term_s0) (op_t, linear_term_t) in*)
-														 																											print_message Verbose_low (" 	 Detected " 
-														 																																			^ (model.variable_names clock_index) 
-														 																																			^ " was a reset clock!\n 	 skipping the process: (" 
-														 																																			^ t_upperbound_str ^ ") /\\ (" ^ s1_upperbound_str ^ ")!" ); 
-														 																											(
-														 																											match typ2 with
-														 																											| LinearConstraint.NotDetermine -> 	(
-														 																																				inequalities_need_to_solve := !inequalities_need_to_solve@[make_CUB_inequality (op_s0, linear_term_s0) (op_t, linear_term_t)] ; 
-														 																																				false
-														 																																				);
-														 																											| LinearConstraint.First 		-> 	true
-														 																											| LinearConstraint.Second 		-> 	false;
-														 																											);
-														 																										else
-														 																											(
-														 																											let (typ1, op1, term1) = get_lower_upperbound (op_t, linear_term_t)  (op_s1, linear_term_s1) in 
-														 																											(*let _ = get_intersec_upperbounds (op_t, linear_term_t)  (op_s1, linear_term_s1) in*)
-														 																											
-														 																											match typ1 with
-														 																											| LinearConstraint.NotDetermine -> 	(
-
-														 																																				inequalities_need_to_solve := !inequalities_need_to_solve@[make_CUB_inequality (op_s0, linear_term_s0) (op_t, linear_term_t)] ; 
-														 																																				inequalities_need_to_solve := !inequalities_need_to_solve@[make_CUB_inequality (op_s0, linear_term_s0) (op_s1, linear_term_s1)] ; 
-														 																																				false
-														 																																				);
-														 																											| LinearConstraint.First -> (
-														 																																		let (typ2, op2, term2) = get_lower_upperbound (op_s0, linear_term_s0) (op1, term1) in
-														 																																		match typ2 with
-														 																																		| LinearConstraint.NotDetermine -> 	(
-														 																																											inequalities_need_to_solve := !inequalities_need_to_solve@[make_CUB_inequality (op_s0, linear_term_s0) (op1, term1)] ; 
-														 																																											false
-														 																																											);
-														 																																		| LinearConstraint.First 		-> 	true
-														 																																		| LinearConstraint.Second 		-> 	false
-														 																																		);
-														 																											| LinearConstraint.Second -> 	(
-														 																																			let (typ2, op2, term2) = get_lower_upperbound (op_s0, linear_term_s0) (op1, term1) in
-														 																																			match typ2 with
-														 																																			| LinearConstraint.NotDetermine -> 	(
-														 																																												inequalities_need_to_solve := !inequalities_need_to_solve@[make_CUB_inequality (op_s0, linear_term_s0) (op1, term1)] ; 
-														 																																												false
-														 																																												);
-														 																																			| LinearConstraint.First 		-> 	true
-														 																																			| LinearConstraint.Second 		-> 	false
-														 																																			);
-														 																											
-														 																											);
-
-														 																										
-														 																									
-
-														 																										
-
-
-
-
-														 			in
-
-														 			if (result = false && !inequalities_need_to_solve = [])
-														 			then 	(
-														 					isCUB_PTA := false;
-														 					raise (InternalError("   The model is impossible CUB-PTA! "));
-														 					);
-														 			
-														 			inequalities := !inequalities@(!inequalities_need_to_solve);
-
-														 			if (result = false)
-														 			then
-			
-														 				print_message Verbose_low (" This is not satisfied CUB-PTA! ")
-														 			else 
-														 				print_message Verbose_low (" This is satisfied CUB-PTA! ");
-
-
-
-                												print_message Verbose_low ("\n");
-                												) model.clocks; 
-
-																print_message Verbose_low ("\n");
-																print_message Verbose_low (" CUB check, End!");
-																print_message Verbose_low ("\n");
-
-																(!isCUB_PTA, !inequalities);
-																in
-*)
-
-
-(*for testing*)
-(*
-
-
-
-let valuate1 var = NumConst.one in
-
-let abc = LinearConstraint.evaluate_p_linear_term valuate1 linear_term_s0 in 
-
-print_message Verbose_low ( NumConst.string_of_numconst abc );
-
-(*test included constraint*)
-
-if LinearConstraint.pxd_is_leq invariant_s0 guard_t 
-then print_message Verbose_low ("s0 is included in t")
-else  print_message Verbose_low ("s0 is not included in t");
-
-*)
-
-(**************************************************)
-(* GIA'S TESTING *)
-(**************************************************)
-
-
-
-
-(**************************************************)
-(* PART 2 - CUB-PTA Transformation*)
-(*
-This is the beta version (simple), allow one clock, one constraint for each clock.
-released version will be soon!!!!
-*)
-(**************************************************)
-(*
-let cub_check_3 model invariant_s0 guard_t invariant_s1 clock_updates = 	
-	(*ppl*)
-	(* let inequalities_need_to_solve : (LinearConstraint.op * LinearConstraint.p_linear_term) list ref = ref [] in *)
-	let inequalities = ref [] in
-	print_message Verbose_low (" CUB check, Start:");
-	print_message Verbose_low ("\n");
-
-	(*transform constraints into inequality lists*)
-	let inequalities_s0 = LinearConstraint.pxd_get_inequalities invariant_s0 in
-	let inequalities_t 	= LinearConstraint.pxd_get_inequalities guard_t in
-	let inequalities_s1 = LinearConstraint.pxd_get_inequalities invariant_s1 in
-
-	(*transform inequality list into tuple inequality list*)
-	print_message Verbose_low (" **Beginning state/location** :");
-	let tuple_inequalities_s0 	= convert_inequality_list_2_tuple_list model inequalities_s0 in
-	print_message Verbose_low (" **Transition** :");
-	let tuple_inequalities_t 	= convert_inequality_list_2_tuple_list model inequalities_t in
-	print_message Verbose_low (" **Destination state/location** :");
-	let tuple_inequalities_s1 	= convert_inequality_list_2_tuple_list model inequalities_s1 in
-
-
-	let isCUB_PTA = ref true in
-
-	(*check inequalities for each clock c on s0 -t-> s1*)
-	List.iter (	fun clock_index -> 
-	 	let inequalities_need_to_solve = ref [] in
-	 	print_message Verbose_low ("   Checking CUB condtions at clock (" ^ (model.variable_names clock_index) ^ "):");
-
-	 	(*get each element of tuple of each clock - NOTE: the input musts contain 1 upper-bounded*)
-	 	print_message Verbose_low ("\n 	**Beginning state/location** :");
-		let (_, op_s0, linear_term_s0) 	= filter_upperbound_by_clock clock_index tuple_inequalities_s0 in
-		print_message Verbose_low ("\n 	**Transition** :");
-		let (_, op_t, linear_term_t) 	= filter_upperbound_by_clock clock_index tuple_inequalities_t in
-		print_message Verbose_low ("\n 	**Destination state/location** :");
-		let (_, op_s1, linear_term_s1) 	= filter_upperbound_by_clock clock_index tuple_inequalities_s1 in
-
-		(*convert back to constraint for each inequality*)
-		let clock_term = LinearConstraint.make_p_linear_term [NumConst.one,clock_index] NumConst.zero in
-		print_message Verbose_low ("\n clock_term:" ^ (LinearConstraint.string_of_p_linear_term model.variable_names clock_term)); 
-		let linear_inequality_s0 = LinearConstraint.make_p_linear_inequality (LinearConstraint.sub_p_linear_terms clock_term linear_term_s0) op_s0 in
-		let constraint_s0 = LinearConstraint.make_p_constraint [linear_inequality_s0] in
-		let constraint_s0 = LinearConstraint.pxd_of_p_constraint constraint_s0 in
-		print_message Verbose_low ("\n constraint_s0:" ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names constraint_s0)); 
-		let linear_inequality_t = LinearConstraint.make_p_linear_inequality (LinearConstraint.sub_p_linear_terms clock_term linear_term_t) op_t in
-		let constraint_t = LinearConstraint.make_p_constraint [linear_inequality_t] in
-		let constraint_t = LinearConstraint.pxd_of_p_constraint constraint_t in
-		print_message Verbose_low ("\n constraint_t:" ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names constraint_t));
-		let linear_inequality_s1 = LinearConstraint.make_p_linear_inequality (LinearConstraint.sub_p_linear_terms clock_term linear_term_s1) op_s1 in
-		let constraint_s1 = LinearConstraint.make_p_constraint [linear_inequality_s1] in
-		let constraint_s1 = LinearConstraint.pxd_of_p_constraint constraint_s1 in
-		print_message Verbose_low ("\n constraint_s1:" ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names constraint_s1));  
-
-
-		print_message Verbose_low ("\n");
-		print_message Verbose_low ("Comparing: ");
-
-		(*just for printing*)
-		let s0_upperbound_str = (LinearConstraint.operator2string op_s0) ^ " " ^ (LinearConstraint.string_of_p_linear_term model.variable_names linear_term_s0) in
-		let t_upperbound_str  = (LinearConstraint.operator2string op_t) ^ " " ^ (LinearConstraint.string_of_p_linear_term model.variable_names linear_term_t) in
-		let s1_upperbound_str = (LinearConstraint.operator2string op_s1) ^ " " ^ (LinearConstraint.string_of_p_linear_term model.variable_names linear_term_s1) in
-		print_message Verbose_low (" 	 get upper-bound s0: " ^ s0_upperbound_str );
-		print_message Verbose_low (" 	 get upper-bound t: " ^ t_upperbound_str );
-		print_message Verbose_low (" 	 get upper-bound s1: " ^ s1_upperbound_str );
-		print_message Verbose_low (" 	 evaluating: (" ^ s0_upperbound_str ^ ") <= (" ^ t_upperbound_str ^ ") /\\ (" ^ s1_upperbound_str ^ ")!");
-		(*just for printing*)
-
-		(* if List.mem clock_index reset_clocks = true 
-		then lower_inequality := linear_term_t; *)
-
-		(* let result = ref true in *)
-		let result = match (op_s0, linear_term_s0), (op_t, linear_term_t), (op_s1, linear_term_s1) with
-
-			 (LinearConstraint.Op_ge, _), (LinearConstraint.Op_ge, _), (LinearConstraint.Op_ge, _)	->	print_message Verbose_low (" 	 Case 1 " );
-			 																							true;
-
-			|(LinearConstraint.Op_ge, _), _							 , (LinearConstraint.Op_ge, _)	->	print_message Verbose_low (" 	 Case 2 " );
-																										false;
-
-			|(LinearConstraint.Op_ge, _), (LinearConstraint.Op_ge, _), _							->	(*reset*)
-																										print_message Verbose_low (" 	 Case 3 " );
-																										if List.mem clock_index clock_updates = true
-																										then
-																											(
-																											let _ = print_message Verbose_low (" 	 Detected " 
-																																			^ (model.variable_names clock_index) 
-																																			^ " was a reset clock!\n 	 skipping the process: (" 
-																																			^ t_upperbound_str ^ ") /\\ (" ^ s1_upperbound_str ^ ")!" ) 
-																											in
-																											true
-																											)
-																										else
-																											(
-																											false;
-																											);
-
-			|(LinearConstraint.Op_ge, _), _							 , _							-> 	(*reset but useless*)
-																										false; 
-
-			|_							, (LinearConstraint.Op_ge, _), (LinearConstraint.Op_ge, _)	->	print_message Verbose_low (" 	 Case 4 " );
-																										true;
-
-			|_							, _							 , (LinearConstraint.Op_ge, _)	->	print_message Verbose_low (" 	 Case 5 " );
-																										let ineq = make_CUB_inequality (op_s0, linear_term_s0) (op_t, linear_term_t) in
-																										print_message Verbose_low (" Forming inequality: " ^ LinearConstraint.string_of_p_linear_inequality model.variable_names ineq ^ "!!!\n");
-																										let constr = make_CUB_constraint [ineq] in
-																										
-																										if LinearConstraint.p_is_true constr
-																										then true
-																										else
-																											(
-																											if LinearConstraint.p_is_false constr
-																											then 
-																												(*inequalities_need_to_solve := !inequalities_need_to_solve@[ineq];*)
-																												false
-																											else
-																												(
-																												inequalities_need_to_solve := !inequalities_need_to_solve@[ineq];
-																												false;
-																												);
-																											);
-
-
-
-			|_							, (LinearConstraint.Op_ge, _), _							->	print_message Verbose_low (" 	 Case 5 " );
-																										(*reset*)
-																										if List.mem clock_index clock_updates = true
-																										then
-																											(
-																											let _ = print_message Verbose_low (" 	 Detected " 
-																																			^ (model.variable_names clock_index) 
-																																			^ " was a reset clock!\n 	 skipping the process: (" 
-																																			^ t_upperbound_str ^ ") /\\ (" ^ s1_upperbound_str ^ ")!" ) 
-																											in
-																											true
-																											)
-																										else
-																											(
-																											let ineq = make_CUB_inequality (op_s0, linear_term_s0) (op_s1, linear_term_s1) in
-																											print_message Verbose_low (" Forming inequality: " ^ LinearConstraint.string_of_p_linear_inequality model.variable_names ineq ^ "!!!\n");
-																											let constr = make_CUB_constraint [ineq] in
-																											if LinearConstraint.p_is_true constr
-																											then 
-																												true
-																											else
-																												(
-																												if LinearConstraint.p_is_false constr
-																												then 
-																													false
-																												else
-																													(
-																													inequalities_need_to_solve := !inequalities_need_to_solve@[ineq];
-																													false;
-																													);
-																												);
-																											);
-																											
-
-			| _							, _							 , _							-> 	print_message Verbose_low (" 	 Case 6 " );
-																										(*reset*)
-																										if List.mem clock_index clock_updates = true
-																										then
-																											(
-																											print_message Verbose_low (" 	 Detected " 
-																																			^ (model.variable_names clock_index) 
-																																			^ " was a reset clock!\n 	 skipping the process: (" 
-																																			^ t_upperbound_str ^ ") /\\ (" ^ s1_upperbound_str ^ ")!" ); 
-																											
-																											let ineq = make_CUB_inequality (op_s0, linear_term_s0) (op_t, linear_term_t) in
-																											print_message Verbose_low (" Forming inequality: " ^ LinearConstraint.string_of_p_linear_inequality model.variable_names ineq ^ "!!!\n");
-																											let constr = make_CUB_constraint [ineq] in
-																											if LinearConstraint.p_is_true constr
-																											then 
-																												true
-																												else
-																												(
-																												if LinearConstraint.p_is_false constr
-																												then 
-																													false
-																												else
-																													(
-																													inequalities_need_to_solve := !inequalities_need_to_solve@[ineq];
-																													false;
-																													);
-																												);
-																											)
-																										else
-																											(
-
-																											
-																											let ineq1 = make_CUB_inequality (op_s0, linear_term_s0) (op_t, linear_term_t) in
-																											print_message Verbose_low (" Forming inequality: " ^ LinearConstraint.string_of_p_linear_inequality model.variable_names ineq1 ^ "!!!\n");
-																											let ineq2 = make_CUB_inequality (op_s0, linear_term_s0) (op_s1, linear_term_s1) in
-																											print_message Verbose_low (" Forming inequality: " ^ LinearConstraint.string_of_p_linear_inequality model.variable_names ineq2 ^ "!!!\n");
-
-																											(*let constr = make_CUB_constraint [ineq1;ineq2] in*)
-																											let constr = LinearConstraint.make_pxd_constraint (inequalities_s0@inequalities_t@inequalities_s1) in
-																												print_message Verbose_low ("\n constr:" ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names constr)); 
-																											
-																											(*testing ppl function*)
-																											let constr_inter = LinearConstraint.pxd_intersection [constr] in
-																												print_message Verbose_low ("\n constr_inter:" ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names constr_inter)); 
-
-																											let constr1 = LinearConstraint.make_p_constraint ([ineq1]) in
-																												print_message Verbose_low ("\n constr1:" ^ (LinearConstraint.string_of_p_linear_constraint model.variable_names constr1)); 
-
-																											let constr2 = LinearConstraint.make_p_constraint ([ineq2]) in
-																												print_message Verbose_low ("\n constr2:" ^ (LinearConstraint.string_of_p_linear_constraint model.variable_names constr2)); 
-
-																											let abc = LinearConstraint.pxd_is_leq invariant_s0 guard_t in
-																												print_message Verbose_low ("\n abc:" ^ string_of_bool abc ); 
-																											(*testing ppl function*)
-																											
-
-
-																											
-																											
-																											if LinearConstraint.pxd_is_true constr
-																											then 
-																												(
-																												print_message Verbose_low (" true ");
-																												true
-																												)
-																											else
-																												(
-																												if LinearConstraint.pxd_is_false constr
-																												then 
-																													(
-																													print_message Verbose_low (" false ");
-																													inequalities_need_to_solve := !inequalities_need_to_solve@[ineq2];
-																													false
-																													)
-																												else
-																													(
-																													print_message Verbose_low (" false, not determined ");
-																													inequalities_need_to_solve := !inequalities_need_to_solve@[ineq1;ineq2];
-																													false;
-																													);
-																												);
-																											
-
-																											);
-
-																										
-																									
-
-																										
-
-
-
-
-			in
-			
-
-			inequalities := !inequalities@(!inequalities_need_to_solve);
-
-			if (result = false)
-			then
-				(
-			isCUB_PTA := false;
-				print_message Verbose_low (" This is not satisfied CUB-PTA! ");
-				)
-			else 
-				print_message Verbose_low (" This is satisfied CUB-PTA! ");
-
-
-
-	print_message Verbose_low ("\n");
-	) model.clocks; 
-
-	print_message Verbose_low ("\n");
-	print_message Verbose_low (" CUB check, End!");
-	print_message Verbose_low ("\n");
-
-	(!isCUB_PTA, !inequalities);
-	in
-*)
