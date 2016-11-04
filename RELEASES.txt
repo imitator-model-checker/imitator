@@ -12,6 +12,7 @@ Bug fixing
 Export
 - PDFC now outputs both an under-approximated good constraint and an under-approximated bad constraint (instead of an over-approximated good constraint for the latter); so presentation of the result changes compared to version 2.8
 - Field "State space nature" becomes "Constraint nature" in result (.res) files
+- Add L/U status to result (.res) files
 - The file name for the graphical cartography becomes model_cart.png for any algorithm (instead of model_cart_ef.png, model_cart_im.png and so on).
 
 Install and compile

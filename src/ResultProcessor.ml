@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/12/03
- * Last modified     : 2016/10/18
+ * Last modified     : 2016/11/04
  *
  ************************************************************)
 
@@ -55,6 +55,18 @@ let zones_of_good_bad_constraint = function
 
 (*** NOTE: this part should be modified with care, as external tools calling IMITATOR may use this syntax ***)
 
+(** Subclass of the model *)
+let string_of_lu_status = function
+	(* General PTA *)
+	| PTA_notLU -> "not L/U"
+	(* L/U-PTA with parameters partitioned into L- and U-parameters *)
+	| PTA_LU _ -> "L/U-PTA"
+	(* L-PTA *)
+	| PTA_L -> "L-PTA"
+	(* U-PTA *)
+	| PTA_U -> "U-PTA"
+
+	
 
 let string_of_bfs_algorithm_termination = function
 	(* Fixpoint-like termination *)
@@ -237,6 +249,7 @@ let model_statistics () =
 	    "Number of IPTAs                         : " ^ (string_of_int model.nb_automata)
 	^ "\nNumber of clocks                        : " ^ (string_of_int model.nb_clocks)
 	^ "\nHas stopwatches?                        : " ^ (string_of_bool model.has_stopwatches)
+	^ "\nL/U subclass                            : " ^ (string_of_lu_status model.lu_status)
 	^ "\nNumber of parameters                    : " ^ (string_of_int model.nb_parameters)
 	^ "\nNumber of discrete variables            : " ^ (string_of_int model.nb_discrete)
 	^ "\nNumber of actions                       : " ^ (string_of_int model.nb_actions)

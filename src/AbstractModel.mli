@@ -186,7 +186,7 @@ type projection = (parameter_index list) option
 
 
 (************************************************************)
-(** Nature of the tiles *)
+(** Subclass of the model *)
 (************************************************************)
 type lu_status =
 	(* General PTA *)
