@@ -460,8 +460,13 @@ let cub_check_2 model invariant_s0 guard_t invariant_s1 clock_updates =
 
 		|_							, _							 , (LinearConstraint.Op_ge, _)	->	print_message Verbose_low (" 	 Case 5 " );
 				let (_, ineq) = make_CUB_inequality (op_s0, linear_term_s0) (op_t, linear_term_t) in
+				print_message Verbose_low ("INEQUALITY S0 =< T: \n" 
+											^ LinearConstraint.string_of_p_linear_inequality model.variable_names ineq 
+											^ "!!!\n"); 
 				let constr = make_CUB_constraint [ineq] in
-				
+				print_message Verbose_low ("CUB_CONSTRAINT: \n" 
+											^ LinearConstraint.string_of_p_linear_constraint model.variable_names constr
+											^ "!!!\n"); 
 				if LinearConstraint.p_is_true constr
 				then true
 				else
@@ -493,7 +498,13 @@ let cub_check_2 model invariant_s0 guard_t invariant_s1 clock_updates =
 			else
 				(
 				let (_, ineq) = make_CUB_inequality (op_s0, linear_term_s0) (op_s1, linear_term_s1) in
+				print_message Verbose_low (" INEQUALITY S0 <= S1: \n" 
+											^ LinearConstraint.string_of_p_linear_inequality model.variable_names ineq 
+											^ "!!!\n");
 				let constr = make_CUB_constraint [ineq] in
+				print_message Verbose_low ("CUB_CONSTRAINT: \n" 
+											^ LinearConstraint.string_of_p_linear_constraint model.variable_names constr
+											^ "!!!\n"); 
 				if LinearConstraint.p_is_true constr
 				then 
 					true
@@ -523,7 +534,13 @@ let cub_check_2 model invariant_s0 guard_t invariant_s1 clock_updates =
 												^ t_upperbound_str ^ ") /\\ (" ^ s1_upperbound_str ^ ")!" ); 
 				
 				let (_, ineq) = make_CUB_inequality (op_s0, linear_term_s0) (op_t, linear_term_t) in
+				print_message Verbose_low ("INEQUALITY S0 =< T: \n" 
+											^ LinearConstraint.string_of_p_linear_inequality model.variable_names ineq 
+											^ "!!!\n"); 
 				let constr = make_CUB_constraint [ineq] in
+				print_message Verbose_low ("CUB_CONSTRAINT: \n" 
+											^ LinearConstraint.string_of_p_linear_constraint model.variable_names constr
+											^ "!!!\n"); 
 				if LinearConstraint.p_is_true constr
 				then 
 					true
@@ -543,10 +560,20 @@ let cub_check_2 model invariant_s0 guard_t invariant_s1 clock_updates =
 			else
 				(
 				let (_, ineq1) = make_CUB_inequality (op_s0, linear_term_s0) (op_t, linear_term_t) in
+				print_message Verbose_low ("INEQUALITY S0 =< T: \n" 
+											^ LinearConstraint.string_of_p_linear_inequality model.variable_names ineq1 
+											^ "!!!\n"); 
 
 				let (_, ineq2) = make_CUB_inequality (op_s0, linear_term_s0) (op_s1, linear_term_s1) in
+				print_message Verbose_low (" INEQUALITY S0 <= S1: \n" 
+											^ LinearConstraint.string_of_p_linear_inequality model.variable_names ineq2 
+											^ "!!!\n");
 
 				let constr = make_CUB_constraint [ineq1;ineq2] in
+				print_message Verbose_low ("CUB_CONSTRAINT: \n" 
+											^ LinearConstraint.string_of_p_linear_constraint model.variable_names constr
+											^ "!!!\n"); 
+
 				if LinearConstraint.p_is_true constr
 				then 
 					true
@@ -555,8 +582,8 @@ let cub_check_2 model invariant_s0 guard_t invariant_s1 clock_updates =
 					if LinearConstraint.p_is_false constr
 					then 
 						let clock_linear_term = LinearConstraint.make_p_linear_term [NumConst.one,clock_index] NumConst.zero in
-						(* false *)
-						true
+						false
+						(* true *)
 					else
 						(
 						inequalities_need_to_solve := !inequalities_need_to_solve@[ineq1;ineq2];
