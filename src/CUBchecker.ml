@@ -242,6 +242,26 @@ let isContraintConflictsParametersConstraints con p_cons =
 (*Check cub_contraint conflict with parameters_constraints - end*)
 
 
+(*Check cub_contraint conflict with parameters_constraints*)
+let isContraintConflictsParametersConstraints2 con p_cons = 
+	let disjunction_cons = disjunction_constraints p_cons in
+	let check = ref false in
+	List.iter (fun con1 -> 
+		let con_intersection = LinearConstraint.pxd_intersection [con; LinearConstraint.pxd_of_p_constraint con1] in 
+		(* print_message Verbose_low ("\n Constraint1: \n" ^ (LinearConstraint.string_of_p_linear_constraint model.variable_names con)  
+										^ "\n Constraint2: \n" ^ (LinearConstraint.string_of_p_linear_constraint model.variable_names con1) ) ; *)
+		if LinearConstraint.pxd_is_false con_intersection
+		then
+			(
+			(* print_message Verbose_low ("\n Conflict!!! "); *)
+			check := true;
+			);
+	) disjunction_cons;
+	!check
+
+(*Check cub_contraint conflict with parameters_constraints - end*)
+
+
 
 (*Check cub_contraint all conflict with parameters_constraints - use for p and p*)
 let isContraintAllConflictsParametersConstraints con p_cons = 
@@ -855,9 +875,10 @@ let check_problematic_transition model (invariant_s0, guard_t, invariant_s1, clo
 						print_message Verbose_low ("FORMING INEQUALITY: " 
 														^ LinearConstraint.string_of_p_linear_inequality model.variable_names ineq 
 														^ "!!!\n");
-						let constr = make_CUB_constraint [ineq] in
+						let constrCUB = make_CUB_constraint [ineq] in
+						let constr = LinearConstraint.pxd_intersection [(LinearConstraint.pxd_of_p_constraint constrCUB); invariant_s0; guard_t] in
 			
-						if LinearConstraint.p_is_true constr
+						if LinearConstraint.pxd_is_true constr
 						then
 							(
 							print_message Verbose_low ("TRUE, COMPARABLE! "); 
@@ -867,7 +888,7 @@ let check_problematic_transition model (invariant_s0, guard_t, invariant_s1, clo
 							)
 						else
 							(
-							if LinearConstraint.p_is_false constr
+							if LinearConstraint.pxd_is_false constr
 							then 
 								(
 								print_message Verbose_low ("FALSE, COMPARABLE! ");
@@ -878,7 +899,7 @@ let check_problematic_transition model (invariant_s0, guard_t, invariant_s1, clo
 							else
 								(
 								print_message Verbose_low ("NOT DETERMINED! ");
-								if isContraintConflictsParametersConstraints constr parameters_constraints
+								if isContraintConflictsParametersConstraints2 constr parameters_constraints
 								then
 									(
 									print_message Verbose_low ("ONE OF PARAMETER RELATIONS CONFLICTED! " );
@@ -918,8 +939,9 @@ let check_problematic_transition model (invariant_s0, guard_t, invariant_s1, clo
 							print_message Verbose_low ("FORMING INEQUALITY: " 
 															^ LinearConstraint.string_of_p_linear_inequality model.variable_names ineq 
 															^ "!!!\n");
-							let constr = make_CUB_constraint [ineq] in
-							if LinearConstraint.p_is_true constr
+							let constrCUB = make_CUB_constraint [ineq] in
+							let constr = LinearConstraint.pxd_intersection [(LinearConstraint.pxd_of_p_constraint constrCUB); invariant_s0; invariant_s1] in
+							if LinearConstraint.pxd_is_true constr
 							then 
 								(
 								print_message Verbose_low ("TRUE, COMPARABLE! ");
@@ -929,7 +951,7 @@ let check_problematic_transition model (invariant_s0, guard_t, invariant_s1, clo
 								)
 							else
 								(
-								if LinearConstraint.p_is_false constr
+								if LinearConstraint.pxd_is_false constr
 								then 
 									(
 									print_message Verbose_low ("FALSE, COMPARABLE! ");
@@ -940,7 +962,7 @@ let check_problematic_transition model (invariant_s0, guard_t, invariant_s1, clo
 								else
 									(
 									print_message Verbose_low ("FALSE, NOT DETERMINED! ");
-									if isContraintConflictsParametersConstraints constr parameters_constraints
+									if isContraintConflictsParametersConstraints2 constr parameters_constraints
 									then
 										(
 										print_message Verbose_low ("ONE OF PARAMETER RELATIONS CONFLICTED! " );
@@ -973,8 +995,9 @@ let check_problematic_transition model (invariant_s0, guard_t, invariant_s1, clo
 						print_message Verbose_low ("FORMING INEQUALITY: " 
 														^ LinearConstraint.string_of_p_linear_inequality model.variable_names ineq 
 														^ "!!!\n"); 
-						let constr = make_CUB_constraint [ineq] in
-						if LinearConstraint.p_is_true constr
+						let constrCUB = make_CUB_constraint [ineq] in
+						let constr = LinearConstraint.pxd_intersection [(LinearConstraint.pxd_of_p_constraint constrCUB); invariant_s0; guard_t] in
+						if LinearConstraint.pxd_is_true constr
 						then 
 							(
 							print_message Verbose_low ("TRUE, COMPARABLE! ");
@@ -985,7 +1008,7 @@ let check_problematic_transition model (invariant_s0, guard_t, invariant_s1, clo
 						else
 							(
 
-							if LinearConstraint.p_is_false constr
+							if LinearConstraint.pxd_is_false constr
 							then 
 								(
 								print_message Verbose_low ("FALSE, COMPARABLE! ");
@@ -996,7 +1019,7 @@ let check_problematic_transition model (invariant_s0, guard_t, invariant_s1, clo
 							else
 								(
 								print_message Verbose_low ("FALSE, NOT DETERMINED ");
-								if isContraintConflictsParametersConstraints constr parameters_constraints
+								if isContraintConflictsParametersConstraints2 constr parameters_constraints
 								then
 									(
 									print_message Verbose_low ("ONE OF PARAMETER RELATIONS CONFLICTED! " );
@@ -1026,8 +1049,9 @@ let check_problematic_transition model (invariant_s0, guard_t, invariant_s1, clo
 						print_message Verbose_low ("INEQUALITY S0 =< S1: \n" 
 														^ LinearConstraint.string_of_p_linear_inequality model.variable_names ineq2 
 														^ "!!!\n"); 
-						let constr = make_CUB_constraint [ineq1;ineq2] in
-						if LinearConstraint.p_is_true constr
+						let constrCUB = make_CUB_constraint [ineq1; ineq2] in
+						let constr = LinearConstraint.pxd_intersection [(LinearConstraint.pxd_of_p_constraint constrCUB); invariant_s0; guard_t; invariant_s1] in
+						if LinearConstraint.pxd_is_true constr
 						then 
 							(
 							print_message Verbose_low ("TRUE, COMPARABLE! ");
@@ -1037,7 +1061,7 @@ let check_problematic_transition model (invariant_s0, guard_t, invariant_s1, clo
 							)
 						else
 							(
-							if LinearConstraint.p_is_false constr
+							if LinearConstraint.pxd_is_false constr
 							then 
 								(
 								print_message Verbose_low ("FALSE, COMPARABLE! ");
@@ -1048,7 +1072,7 @@ let check_problematic_transition model (invariant_s0, guard_t, invariant_s1, clo
 							else
 								(
 								print_message Verbose_low ("FALSE, NOT DETERMINED! ");
-								if isContraintConflictsParametersConstraints constr parameters_constraints
+								if isContraintConflictsParametersConstraints2 constr parameters_constraints
 								then
 									(
 									print_message Verbose_low ("ONE OF PARAMETER RELATIONS CONFLICTED! " );
