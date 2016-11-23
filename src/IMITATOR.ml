@@ -446,6 +446,8 @@ let algorithm : AlgoGeneric.algoGeneric = match options#imitator_mode with
 
 			print_message Verbose_standard ("The model is a CUB-PTA for the following valuations:");
 			print_message Verbose_standard (LinearConstraint.string_of_p_linear_constraint model.variable_names cub_constraint);
+			
+			(*** TODO: check if the constraint is stricter than the original constraint; if yes, the result can only be an under-approximation ***)
 
 			(* Update the model *)
 			LinearConstraint.px_intersection_assign_p model.initial_constraint [cub_constraint];

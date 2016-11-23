@@ -8,7 +8,7 @@
  * 
  * File contributors : Nguyen Hoang Gia, Étienne André
  * Created           : 2016/04/13
- * Last modified     : 2016/10/18
+ * Last modified     : 2016/11/23
  *
  ************************************************************)
 
@@ -22,6 +22,7 @@ open OCamlUtilities
 open ImitatorUtilities
 open Exceptions
 open AbstractModel
+open Statistics
 
 
 
@@ -275,7 +276,7 @@ let isContraintAllConflictsParametersConstraints con p_cons =
 			let model = Input.get_model() in
 	
 			print_message Verbose_low ("\n Constraint1: \n" ^ (LinearConstraint.string_of_p_linear_constraint model.variable_names con)  
-				^ "\n Constraint2: \n" ^ (LinearConstraint.string_of_p_linear_constraint model.variable_names con1) );
+			^ "\n Constraint2: \n" ^ (LinearConstraint.string_of_p_linear_constraint model.variable_names con1) );
 		);
 		if not (LinearConstraint.p_is_false con_intersection)
 		then
@@ -302,7 +303,7 @@ let isContraintAllConflictsParametersConstraints2 con p_cons =
 			let model = Input.get_model() in
 	
 			print_message Verbose_low ("\n Constraint1: \n" ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names con)  
-											^ "\n Constraint2: \n" ^ (LinearConstraint.string_of_p_linear_constraint model.variable_names con1) );
+										^ "\n Constraint2: \n" ^ (LinearConstraint.string_of_p_linear_constraint model.variable_names con1) );
 		);
 		if not (LinearConstraint.pxd_is_false con_intersection)
 		then
@@ -684,6 +685,10 @@ let get_all_clocks_ge_zero_comstraint2 clock_index model =
 (** Takes an abstract model as input, and infers a constraint on the parameters (possibly false) under which this PTA is a CUB-PTA *)
 let check_cub model =
 	(* raise (InternalError "not implemented") *)
+	
+	(* Create and start counter *)
+	let cub_detection_counter = create_time_counter_and_register "CUB detection" Algorithm_counter Verbose_standard in
+	cub_detection_counter#start;
 
 	let isCUB_PTA = ref true in
 	let inequalities_need_to_solve = ref [] in
@@ -776,6 +781,12 @@ let check_cub model =
 			constraint_for_cub := (LinearConstraint.p_false_constraint ()) ;
 	    );
 	 );
+	 
+	 
+	(* Stop counter *)
+	cub_detection_counter#stop;
+	
+	(* Return result *)
 	!constraint_for_cub
 
 
@@ -1785,6 +1796,10 @@ let local_silent_action_index_of_automaton_index model automaton_index =
 
 (** Takes an abstract model as input, and convert it into an equivalent CUB-PTA *)
 let cubpta_of_pta model : AbstractModel.abstract_model =
+	
+	(* Create and start counter *)
+	let cub_transformation_counter = create_time_counter_and_register "CUB transformation" Algorithm_counter Verbose_standard in
+	cub_transformation_counter#start;
 
 	(*Array of models*)
 	(* let submodels = DynArray.make 0 in *)
@@ -2980,8 +2995,9 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 	
 		
 	(************************************************************)
-	(** Return the abstract model *)
+	(** Build the abstract model *)
 	(************************************************************)
+	let transformed_abstract_model =
 	{
 		(** General information **)
 		(* Cardinality *)
@@ -3092,3 +3108,11 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 		(* List of parameters to project the result onto *)
 		projection = model.projection;
 	}
+	
+	in
+	
+	(* Stop counter *)
+	cub_transformation_counter#stop;
+	
+	(* Return *)
+	transformed_abstract_model
