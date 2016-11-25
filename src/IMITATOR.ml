@@ -9,7 +9,7 @@
  * 
  * File contributors : Ulrich Kühne, Étienne André
  * Created           : 2009/09/07
- * Last modified     : 2016/10/17
+ * Last modified     : 2016/11/25
  *
  ************************************************************)
 
@@ -437,34 +437,60 @@ let algorithm : AlgoGeneric.algoGeneric = match options#imitator_mode with
 	(************************************************************)
 	(* Parametric Büchi-emptiness checking with non-Zenoness (method: transformation into a CUB-PTA) *)
 	(************************************************************)
-	| Parametric_NZ_CUBcheck | Parametric_NZ_CUBtransform | Parametric_NZ_CUB ->
-		(* Computing a constraint for which the PTA is CUB (only if in mode Parametric_NZ_CUBcheck) *)
-		if options#imitator_mode = Parametric_NZ_CUBcheck then(
-			print_message Verbose_standard ("Checking the PTA is CUB for some valuations…");
+	| Parametric_NZ_CUBcheck ->
+		(* Computing a constraint for which the PTA is CUB *)
+		print_message Verbose_standard ("Checking whether the PTA is CUB for some parameter valuations…");
+		
+		let cub_constraint = CUBchecker.check_cub model in
+		
+		if verbose_mode_greater Verbose_low then(
+			(* Computing a constraint for which the PTA is CUB *)
+			print_message Verbose_low ("Computed CUB constraint");
+			print_message Verbose_low (LinearConstraint.string_of_p_linear_constraint model.variable_names cub_constraint);
+			print_message Verbose_low ("Comparing the computed constraint with the initial constraint:");
+			print_message Verbose_low (LinearConstraint.string_of_p_linear_constraint model.variable_names model.initial_p_constraint);
 			
-			let cub_constraint = CUBchecker.check_cub model in
+		);
+		
+		(* Compare if the model is CUB for *all* valuations *)
+		let is_universally_cub = LinearConstraint.p_is_equal cub_constraint model.initial_p_constraint in
 
-			print_message Verbose_standard ("The model is a CUB-PTA for the following valuations:");
-			print_message Verbose_standard (LinearConstraint.string_of_p_linear_constraint model.variable_names cub_constraint);
-			
-			(*** TODO: check if the constraint is stricter than the original constraint; if yes, the result can only be an under-approximation ***)
+		if is_universally_cub then(
+			print_message Verbose_standard ("The model is a CUB-PTA for all defined parameter valuations, i.e.:");
+		)else(
+			print_message Verbose_standard ("The model is a CUB-PTA for the following parameter valuations:");
+		);
+		print_message Verbose_standard (LinearConstraint.string_of_p_linear_constraint model.variable_names cub_constraint);
+		
+		(*** TODO: check if the constraint is stricter than the original constraint; if yes, the result can only be an under-approximation ***)
 
-			(* Update the model *)
-			LinearConstraint.px_intersection_assign_p model.initial_constraint [cub_constraint];
-			(* Update the initial p constraint too *)
-			LinearConstraint.p_intersection_assign model.initial_p_constraint [cub_constraint];
-		)
-		(* Only transform if in mode Parametric_NZ_CUBtransform *)
-		else if options#imitator_mode = Parametric_NZ_CUBtransform then(
-			print_message Verbose_standard ("Generating the transformed model…");
+		(* Update the model *)
+		LinearConstraint.px_intersection_assign_p model.initial_constraint [cub_constraint];
+		(* Update the initial p constraint too *)
+		LinearConstraint.p_intersection_assign model.initial_p_constraint [cub_constraint];
+		
+		(* Call the NZ emptiness check *)
+		let nz_algo = new AlgoNZCUB.algoNZCUB in
+		
+		(* Force under-approximation if not universally CUB *)
+		if not is_universally_cub then(
+			nz_algo#force_underapproximation;
+		);
 
-			let cub_model = CUBchecker.cubpta_of_pta model in
-			(*** HACK: set the model in the input module too ***)
-			Input.set_model cub_model;
-			
-			print_message Verbose_standard ("Transformation completed");
+		let myalgo :> AlgoGeneric.algoGeneric = nz_algo in myalgo
 
-			
+		
+	| Parametric_NZ_CUBtransform ->
+		print_message Verbose_standard ("Generating the transformed model…");
+
+		let cub_model = CUBchecker.cubpta_of_pta model in
+		(*** HACK: set the model in the input module too ***)
+		Input.set_model cub_model;
+		
+		print_message Verbose_standard ("Transformation completed");
+
+		(* Only export to file in graphics for >= Verbose_low *)
+		if verbose_mode_greater Verbose_low then(
 			(* Export the model to a file *)
 			(*** TODO: not necessary? (but so far useful to test) ***)
 			
@@ -477,7 +503,7 @@ let algorithm : AlgoGeneric.algoGeneric = match options#imitator_mode with
 			
 			(* Write *)
 			write_to_file imi_file translated_model;
-			print_message Verbose_standard ("File '" ^ imi_file ^ "' successfully created.");
+			print_message Verbose_low ("File '" ^ imi_file ^ "' successfully created.");
 			
 			
 			(* Then transform to a graphics *)
@@ -490,10 +516,15 @@ let algorithm : AlgoGeneric.algoGeneric = match options#imitator_mode with
 			
 			Graphics.dot (options#files_prefix ^ "-cubpta") translated_model;
 
-			print_message Verbose_standard ("Graphic export successfully created."); (*** TODO: add file name in a proper manner ***)
-		);
+			print_message Verbose_low ("Graphic export successfully created."); (*** TODO: add file name in a proper manner ***)
+		); (* end export *)
 		
-		(* Now call the NZ emptiness check *)
+		(* Call the NZ emptiness check *)
+		let myalgo :> AlgoGeneric.algoGeneric = new AlgoNZCUB.algoNZCUB in myalgo
+		
+		
+	| Parametric_NZ_CUB ->
+		(* Just call the NZ emptiness check *)
 		let myalgo :> AlgoGeneric.algoGeneric = new AlgoNZCUB.algoNZCUB in myalgo
 
 	

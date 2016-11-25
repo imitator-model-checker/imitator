@@ -111,7 +111,7 @@ class algoLoopSynth =
 			(* Not added: means this state was already present before *)
 			(* This state can either be a loop or just a state belonging to another branch of a tree *)
 			(* Print some information *)
-			self#print_algo_message Verbose_medium ("State " ^ (StateSpace.string_of_state_index new_state_index) ^ "already met: potential loop found.");
+			self#print_algo_message Verbose_medium ("State " ^ (StateSpace.string_of_state_index new_state_index) ^ "already met: potential cycle found.");
 		) (* end if loop *)
 		;
 		
@@ -139,7 +139,7 @@ class algoLoopSynth =
 		match has_loop with
 			| No_loop -> ()
 			| Loop scc ->
-				self#print_algo_message Verbose_standard "Found a loop.";
+				self#print_algo_message Verbose_standard "Found a cycle.";
 				(*** NOTE: this method is called AFTER the transition table was updated ***)
 				self#process_loop_constraint new_state_index scc current_constraint;
 		end; (* end if found a loop *)

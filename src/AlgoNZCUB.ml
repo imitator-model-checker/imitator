@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/10/10
- * Last modified     : 2016/10/11
+ * Last modified     : 2016/11/25
  *
  ************************************************************)
 
@@ -38,7 +38,9 @@ class algoNZCUB =
 	(************************************************************)
 	(* Class variables *)
 	(************************************************************)
-	
+	(* Flag to force under-approximation *)
+	val mutable force_underapproximation = false
+
 
 	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -62,7 +64,15 @@ class algoNZCUB =
 		()
 	
 
-(*	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(* When called, this method sets a flag that forces the algorithm to say that the returned constraint is an under-approximation *)
+	(*** NOTE: used when NZ CUB is called after a CUB-detection for which the constraint does not cover all parameter valuations ***)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	method force_underapproximation =
+		force_underapproximation <- true
+	
+
+	(*	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Actions to perform when found a loop, before updating the state space *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method process_loop_constraint_before_state_space_update _ _ =
@@ -228,7 +238,11 @@ class algoNZCUB =
 		in
 
 		(* Constraint is exact if termination is normal, possibly under-approximated otherwise *)
-		let soundness = if termination_status = Regular_termination then Constraint_exact else Constraint_maybe_under in
+		let soundness =
+			(* …unless flag is set, in which case we have an under-approximation *)
+			if force_underapproximation then Constraint_maybe_under else
+			(if termination_status = Regular_termination then Constraint_exact else Constraint_maybe_under)
+		in
 
 		(* Return the result *)
 		Single_synthesis_result

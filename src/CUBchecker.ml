@@ -8,7 +8,7 @@
  * 
  * File contributors : Nguyen Hoang Gia, Étienne André
  * Created           : 2016/04/13
- * Last modified     : 2016/11/23
+ * Last modified     : 2016/11/25
  *
  ************************************************************)
 
@@ -88,10 +88,12 @@ let filter_upperbound_by_clock clock_index tuple_inequalities_s0 =
 											^ " !"); *)
 			index := i; 
 			count := (!count + 1);
-			if !count > 1
-			then  raise (InternalError("Detected more than 1 different upperbounds of the same clock in same constraint!!! "))
-
+			if !count > 1 then(
+				(* Retrieve the model *)
+				let model = Input.get_model() in
+				raise (InternalError("Detected more than 1 different upper-bound of the same clock '" ^ (model.variable_names clock_index) ^ "' in a same constraint!"))
 			);
+		);
 	done;
 	(*just for printing, start*)
 	(* if !count = 0
