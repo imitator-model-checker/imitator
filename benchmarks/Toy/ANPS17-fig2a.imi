@@ -1,0 +1,84 @@
+(************************************************************
+ *                      IMITATOR MODEL                      
+ *
+ * Toy PTA which is CUB for only some valuations
+ *
+ * Description     : Toy PTA which is CUB for only some valuations
+ * Correctness     : CUB-PTA
+ * Source          : Own work
+ * Author          : Étienne André
+ * Modeling        : Étienne André
+ * Input by        : Étienne André
+ * License         : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ *
+ * Created         : 2016/12/07
+ * Last modified   : 2016/12/07
+ *
+ * IMITATOR version: 2.8
+ ************************************************************)
+
+var
+
+(* Clocks *)
+ 	x, y
+		: clock;
+
+(* Parameters *)
+	p, p1, p2
+		: parameter;
+
+
+
+(************************************************************)
+  automaton pta
+(************************************************************)
+synclabs: ;
+
+loc l0: while x <= 1 & y <= 1 wait {}
+	when x <= p & y <= 2 do {y' = 0} goto l1;
+
+loc l1: while x <= p1 & y <= p wait {}
+	when x <= p2 & y <= p goto l2;
+
+loc l2: while True wait {}
+
+end (* pta *)
+
+
+
+(************************************************************)
+(* Initial state *)
+(************************************************************)
+
+init :=
+	(*------------------------------------------------------------*)
+	(* Initial location *)
+	(*------------------------------------------------------------*)
+	& loc[pta] = l0
+
+	(*------------------------------------------------------------*)
+	(* Initial clock constraints *)
+	(*------------------------------------------------------------*)
+	& x = 0
+	& y = 0
+
+	(*------------------------------------------------------------*)
+	(* Parameter constraints *)
+	(*------------------------------------------------------------*)
+	& p >= 0
+	& p1 >= 0
+	& p2 >= 0
+;
+
+
+(************************************************************)
+(* Property specification *)
+(************************************************************)
+
+(* property := unreachable loc[pta] = l1; *)
+
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end
