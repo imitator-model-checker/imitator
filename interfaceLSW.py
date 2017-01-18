@@ -10,7 +10,7 @@
 # 
 # File contributors : Étienne André
 # Created           : 2016/11/07
-# Last modified     : 2017/01/16
+# Last modified     : 2017/01/18
 #************************************************************
 
 # ###
@@ -80,10 +80,16 @@ TAG_COMPONENT_B_END = '\\(\\* --- END COMPONENT B --- \\*\\)'
 TAG_SPECIFICATION_START = '\\(\\* --- BEGIN SPECIFICATION --- \\*\\)'
 TAG_SPECIFICATION_END = '\\(\\* --- END SPECIFICATION --- \\*\\)'
 
+# Tag to be put right after the name of an accepting location
+TAG_ACCEPTING_LOC = '\\(\\*-\\*- ACCEPTING -\\*-\\*\\)'
+
+
+
 # Tags for interfacing with IMITATOR
 # NOTE: needed by both this script and IMITATOR
 TAG_ABSTRACTION = "===ABSTRACTION==="
 TAG_COUNTEREXAMPLE = "===COUNTEREXAMPLE==="
+
 
 # Separators in the pi0
 SEPARATOR_PI0_PAIRS = ','
@@ -94,6 +100,7 @@ KEYWORD_AUTOMATON = 'automaton'
 KEYWORD_LOC = 'loc'
 
 # Keywords in LSW syntax
+KEYWORD_ACCEPTING = 'ACCEPTING'
 KEYWORD_INIT = 'INIT'
 
 # Expected extension for input model (if different, another extension will be appended)
@@ -115,6 +122,9 @@ def print_to_screen(content):
 	# Put back stdout to log file
 	#sys.stdout = logfile
 
+
+def print_warning(text) :
+	print_to_screen('Warning: ' + text)
 
 def fail_with(text) :
 	print_to_screen('Fatal error!')
@@ -244,7 +254,7 @@ def add_INIT_locations(component, component_automata, initial_locations):
 		
 		# Replace 'loc location' with 'loc location[INIT]'
 		
-		print 'Replace "loc ' + initial_location + '" with "loc ' + initial_location + '[INIT]"'
+		print 'Replace "loc ' + initial_location + '" with "loc ' + initial_location + '[' + KEYWORD_INIT + ']"'
 		
 		new_component = re.sub(KEYWORD_LOC + '\s+' + initial_location, KEYWORD_LOC + ' ' + initial_location + '[' + KEYWORD_INIT + ']', component)
 		#new_component = re.sub(initial_location, initial_location + '[' + KEYWORD_INIT + ']', component)
@@ -252,6 +262,31 @@ def add_INIT_locations(component, component_automata, initial_locations):
 		# Check
 		if new_component == component:
 			fail_with('Could not find pattern "loc ' + initial_location + '" in automaton "' + automaton_name + '"')
+		component = new_component
+	
+	return new_component
+
+
+#------------------------------------------------------------
+# Add the 'KEYWORD_ACCEPTING' tag to all accepting locations
+# WARNING: this is based on string replacing, so location names should not overlap each other
+#------------------------------------------------------------
+def add_ACCEPTING_locations(component, component_automata):
+	# Iterate on the component automata
+	for automaton_name in component_automata:
+		# Find the initial location for automaton
+		initial_location = initial_locations[automaton_name]
+		
+		# Replace 'loc location' with 'loc location[INIT]'
+		
+		print 'Replace "' + TAG_ACCEPTING_LOC + '" with "' + '[' + KEYWORD_ACCEPTING + ']"'
+		
+		new_component = re.sub(TAG_ACCEPTING_LOC, '[' + KEYWORD_ACCEPTING + ']', component)
+		
+		# Check
+		if new_component == component:
+			# NOTE: only a warning as not all component automata have an accepting location
+			print_warning('Could not find pattern "' + TAG_ACCEPTING_LOC + '" in automaton "' + automaton_name + '"')
 		component = new_component
 	
 	return new_component
@@ -404,8 +439,15 @@ if DEBUG_MODE:
 # Prepare the analysis line
 analysis_line = create_analysis_line(automata_names_in_A, automata_names_in_B, automata_names_in_specification)
 
-# Create v(A) + B + the analysis line; also add initial locations
-model_content = add_INIT_locations(component_vA, automata_names_in_A, initial_locations) + add_INIT_locations(component_B, automata_names_in_B, initial_locations) + add_INIT_locations(specification, automata_names_in_specification, initial_locations) + analysis_line
+# Create v(A) + B + the analysis line; also add initial locations and accepting locations
+modified_vA = add_INIT_locations(component_vA, automata_names_in_A, initial_locations)
+modified_vA = add_ACCEPTING_locations(modified_vA, automata_names_in_A)
+modified_B = add_INIT_locations(component_B, automata_names_in_B, initial_locations)
+modified_B = add_ACCEPTING_locations(modified_B, automata_names_in_B)
+modified_spec = add_INIT_locations(specification, automata_names_in_specification, initial_locations)
+modified_spec = add_ACCEPTING_locations(modified_spec, automata_names_in_specification)
+
+model_content = modified_vA + modified_B + modified_spec + analysis_line
 
 if DEBUG_MODE:
 	print "\nTransformed model:"
