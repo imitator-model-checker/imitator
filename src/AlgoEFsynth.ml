@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/11/25
- * Last modified     : 2016/10/18
+ * Last modified     : 2017/01/18
  *
  ************************************************************)
 
@@ -313,8 +313,8 @@ class algoEFsynth =
 			else statespace_nature
 		in*)
 		
-		(* Constraint is exact if termination is normal, possibly under-approximated otherwise *)
-		let soundness = if termination_status = Regular_termination then Constraint_exact else Constraint_maybe_under in
+		(* Constraint is exact if termination is normal, possibly over-approximated otherwise (as it is the negation of a possible under-approximation of the bad constraint) *)
+		let soundness = if termination_status = Regular_termination then Constraint_exact else Constraint_maybe_over in
 
 		(* Return the result *)
 		Single_synthesis_result
