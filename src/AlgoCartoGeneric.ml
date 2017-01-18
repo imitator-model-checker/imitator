@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/01/19
- * Last modified     : 2016/10/10
+ * Last modified     : 2017/01/18
  *
  ************************************************************)
 
@@ -683,9 +683,9 @@ class virtual algoCartoGeneric =
 		if (*List.exists (pi0_in_tiles tentative_pi0) im_results*) tiles_manager#pval_in_tiles tentative_pi0 then (
 			(* Update the number of unsuccessful points *)
 			nb_unsuccessful_points <- nb_unsuccessful_points + 1;
-			if verbose_mode_greater Verbose_medium then (
-				self#print_algo_message Verbose_medium "The following pi0 is already included in a constraint.";
-				print_message Verbose_medium (ModelPrinter.string_of_pi0 model tentative_pi0);
+			if verbose_mode_greater Verbose_low then (
+				self#print_algo_message Verbose_low "The following pi0 is already included in a constraint.";
+				print_message Verbose_low (ModelPrinter.string_of_pi0 model tentative_pi0);
 			);
 			(*** TODO: could be optimized by finding the nearest multiple of tile next to the border, and directly switching to that one ***)
 			false
@@ -694,9 +694,9 @@ class virtual algoCartoGeneric =
 		) else if not (LinearConstraint.is_pi0_compatible tentative_pi0#get_value init_p_constraint) then (
 			(* Update the number of unsuccessful points *)
 			nb_unsuccessful_points <- nb_unsuccessful_points + 1;
-			if verbose_mode_greater Verbose_medium then (
-				self#print_algo_message Verbose_medium "The following pi0 does not satisfy the initial constraint of the model.";
-				print_message Verbose_medium (ModelPrinter.string_of_pi0 model tentative_pi0);
+			if verbose_mode_greater Verbose_low then (
+				self#print_algo_message Verbose_low "The following pi0 does not satisfy the initial constraint of the model.";
+				print_message Verbose_low (ModelPrinter.string_of_pi0 model tentative_pi0);
 			);
 			false
 		(* If both checks passed, then pi0 found *)
@@ -717,11 +717,11 @@ class virtual algoCartoGeneric =
 		let v0 = Input.get_v0() in
 
 		(* Print some information *)
-		self#print_algo_message Verbose_standard ("Starting running cartography...\n"); (* " ^ self#algorithm_name ^ " *)
+		self#print_algo_message Verbose_standard ("Starting running cartography…\n"); (* " ^ self#algorithm_name ^ " *)
 		
 		(* Variable initialization *)
 		(*** NOTE: done before printing, since the number of points is needed just below ***)
-		self#print_algo_message Verbose_low ("Initializing the algorithm local variables...");
+		self#print_algo_message Verbose_low ("Initializing the algorithm local variables…");
 		self#initialize_variables;
 
 		(* Print some information *)
@@ -733,7 +733,7 @@ class virtual algoCartoGeneric =
 		print_message Verbose_standard (" Number of points inside V0: " ^ (NumConst.string_of_numconst nb_points));
 
 		(* Retrieve the first point *)
-		self#print_algo_message Verbose_low ("Retrieving initial point...");
+		self#print_algo_message Verbose_low ("Retrieving initial point…");
 		(* Count *)
 		find_next_point_counter#start;
 		current_point <- self#get_initial_point;
@@ -814,6 +814,12 @@ class virtual algoCartoGeneric =
 	(* Process one result of an abstract version of an instance of IM *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method process_result abstract_result =
+
+	
+		(*** TODO: check validity of result! ***)
+		(* may not be valid if early termination for PRP without bad state, for example *)
+		
+		
 		(* Retrieve the model *)
 		let model = Input.get_model () in
 
@@ -833,7 +839,7 @@ class virtual algoCartoGeneric =
 		
 		
 		(* Print some information *)
-		self#print_algo_message Verbose_low ("Processing the result by IM...");
+		self#print_algo_message Verbose_low ("Processing the result by IM…");
 
 (*		(* Get the point *)
 		let pi0 = self#get_current_point_instance in*)
@@ -843,9 +849,6 @@ class virtual algoCartoGeneric =
 		tiles_manager#process_tile abstract_result;
 	
 		
-		
-		(*** TODO: check validity of result! ***)
-		(* may not be valid if early termination for PRP without bad state, for example *)
 		
 		
 
@@ -871,7 +874,7 @@ class virtual algoCartoGeneric =
 		(* Only compute next point if limit not reached *)
 		if limit_reached = Keep_going then(
 			(* Print some information *)
-			self#print_algo_message Verbose_low ("Computing the next point...");
+			self#print_algo_message Verbose_low ("Computing the next point…");
 
 			(* Count! *)
 			find_next_point_counter#start;
@@ -994,7 +997,7 @@ class virtual algoCartoGeneric =
 			
 			
 			(* Print some information *)
-			self#print_algo_message Verbose_low ("Setting new pi0...");
+			self#print_algo_message Verbose_low ("Setting new pi0…");
 
 			(* Set the new pi0 *)
 			Input.set_pi0 (pi0);
