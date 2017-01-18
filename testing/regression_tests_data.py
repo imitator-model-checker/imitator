@@ -10,7 +10,7 @@
 # Laboratoire d'Informatique de Paris Nord
 # Universite Paris 13, Sorbonne Paris Cite, France
 # Created      : 2015/10/23
-# Last modified: 2016/10/18
+# Last modified: 2017/01/18
 #************************************************************
 
 
@@ -3445,134 +3445,146 @@ Average number of transitions : 4.0
 		'options'    : '-mode cover -depth-limit 5 -output-result',
 		'expectations' : [
 			# NOTE: no other way for now that checking separately the constraints (because the computation times may of course differ)
-			{'file': 'testBC-grid-plain.res' , 'content' : """
-(************************************************************)
- Tile #1
+			#{'file': 'testBC-grid-plain.res' , 'content' : """
+#(************************************************************)
+ #Tile #1
 
- Pi1:
-  p1 = 1
-& p2 = 1
+ #Pi1:
+  #p1 = 1
+#& p2 = 1
 
- K1:
- p2 >= 1
-& p1 >= 1
-& 2 > p2
-& 2 > p1
+ #K1:
+ #p2 >= 1
+#& p1 >= 1
+#& 2 > p2
+#& 2 > p1
 
-------------------------------------------------------------
-Constraint soundness          : possible over-approximation
-Termination                   : depth limit (1 successor unexplored)
-Constraint nature             : good
-------------------------------------------------------------
-Local number of states        : 5
-Local number of transitions   : 4
-"""
-			} # end BC file
-			, 
-			{'file': 'testBC-grid-plain.res' , 'content' : """
-(************************************************************)
- Tile #2
+#------------------------------------------------------------
+#Constraint soundness          : possible over-approximation
+#Termination                   : depth limit (1 successor unexplored)
+#Constraint nature             : good
+#------------------------------------------------------------
+#Local number of states        : 5
+#Local number of transitions   : 4
+#"""
+			#} # end BC file
+			#, 
+			#{'file': 'testBC-grid-plain.res' , 'content' : """
+#(************************************************************)
+ #Tile #2
 
- Pi2:
-  p1 = 2
-& p2 = 1
+ #Pi2:
+  #p1 = 2
+#& p2 = 1
 
- K2:
- p2 >= 1
-& p1 >= 2
-& 3 > p1
+ #K2:
+ #p2 >= 1
+#& p1 >= 2
+#& 3 > p1
 
-------------------------------------------------------------
-Constraint soundness          : possible over-approximation
-Termination                   : depth limit (1 successor unexplored)
-Constraint nature             : good
-------------------------------------------------------------
-Local number of states        : 5
-Local number of transitions   : 4
-"""
-			} # end BC file
-			, 
-			{'file': 'testBC-grid-plain.res' , 'content' : """
-(************************************************************)
- Tile #3
+#------------------------------------------------------------
+#Constraint soundness          : possible over-approximation
+#Termination                   : depth limit (1 successor unexplored)
+#Constraint nature             : good
+#------------------------------------------------------------
+#Local number of states        : 5
+#Local number of transitions   : 4
+#"""
+			#} # end BC file
+			#, 
+			#{'file': 'testBC-grid-plain.res' , 'content' : """
+#(************************************************************)
+ #Tile #3
 
- Pi3:
-  p1 = 3
-& p2 = 1
+ #Pi3:
+  #p1 = 3
+#& p2 = 1
 
- K3:
- p2 >= 0
-& p1 >= 3
-& 4 > p1
+ #K3:
+ #p2 >= 0
+#& p1 >= 3
+#& 4 > p1
 
-------------------------------------------------------------
-Constraint soundness          : possible over-approximation
-Termination                   : depth limit (1 successor unexplored)
-Constraint nature             : good
-------------------------------------------------------------
-Local number of states        : 5
-Local number of transitions   : 4
-"""
-			} # end BC file
-			, 
-			{'file': 'testBC-grid-plain.res' , 'content' : """
-(************************************************************)
- Tile #4
+#------------------------------------------------------------
+#Constraint soundness          : possible over-approximation
+#Termination                   : depth limit (1 successor unexplored)
+#Constraint nature             : good
+#------------------------------------------------------------
+#Local number of states        : 5
+#Local number of transitions   : 4
+#"""
+			#} # end BC file
+			#, 
+			#{'file': 'testBC-grid-plain.res' , 'content' : """
+#(************************************************************)
+ #Tile #4
 
- Pi4:
-  p1 = 4
-& p2 = 1
+ #Pi4:
+  #p1 = 4
+#& p2 = 1
 
- K4:
- p1 >= 4
-& p2 >= 0
+ #K4:
+ #p1 >= 4
+#& p2 >= 0
 
-------------------------------------------------------------
-Constraint soundness          : possible over-approximation
-Termination                   : depth limit (1 successor unexplored)
-Constraint nature             : good
-------------------------------------------------------------
-Local number of states        : 5
-Local number of transitions   : 4
-"""
-			} # end BC file
-			, 
-			{'file': 'testBC-grid-plain.res' , 'content' : """
-(************************************************************)
- Tile #5
+#------------------------------------------------------------
+#Constraint soundness          : possible over-approximation
+#Termination                   : depth limit (1 successor unexplored)
+#Constraint nature             : good
+#------------------------------------------------------------
+#Local number of states        : 5
+#Local number of transitions   : 4
+#"""
+			#} # end BC file
+			#, 
+			#{'file': 'testBC-grid-plain.res' , 'content' : """
+#(************************************************************)
+ #Tile #5
 
- Pi5:
-  p1 = 1
-& p2 = 2
+ #Pi5:
+  #p1 = 1
+#& p2 = 2
 
- K5:
- p2 >= 2
-& p1 >= 1
-& 2 > p1
+ #K5:
+ #p2 >= 2
+#& p1 >= 1
+#& 2 > p1
 
-------------------------------------------------------------
-Constraint soundness          : possible over-approximation
-Termination                   : depth limit (1 successor unexplored)
-Constraint nature             : good
-------------------------------------------------------------
-Local number of states        : 5
-Local number of transitions   : 4
-"""
-			} # end BC file
-			, 
+#------------------------------------------------------------
+#Constraint soundness          : possible over-approximation
+#Termination                   : depth limit (1 successor unexplored)
+#Constraint nature             : good
+#------------------------------------------------------------
+#Local number of states        : 5
+#Local number of transitions   : 4
+#"""
+			#} # end BC file
+			#, 
 			# NOTE: actual result
+			#{'file': 'testBC-grid-plain.res' , 'content' : """
+#(************************************************************)
+#GENERAL STATISTICS
+#(************************************************************)
+#------------------------------------------------------------
+#Number of integers in v0      : 16
+#Number of tiles computed      : 5
+#Coverage                      : unknown
+#Termination                   : regular termination
+#Number of unsuccessful points : 11
+#Average number of states      : 5.0
+#Average number of transitions : 4.0
+#"""
+			#} # end BC file
 			{'file': 'testBC-grid-plain.res' , 'content' : """
 (************************************************************)
 GENERAL STATISTICS
 (************************************************************)
 ------------------------------------------------------------
-Number of integers in v0      : 16
-Number of tiles computed      : 5
-Coverage                      : unknown
-Termination                   : regular termination
-Number of unsuccessful points : 11
-Average number of states      : 5.0
-Average number of transitions : 4.0
+Number of integers in v0                : 16
+Number of tiles computed                : 0
+Coverage                                : empty
+Termination                             : regular termination
+Number of unsuccessful points           : 16
 """
 			} # end BC file
 		] # end expectations
@@ -3593,22 +3605,22 @@ Average number of transitions : 4.0
  Tile #1
 
  Pi1:
-  a = 0
+  a = 1
 & b = 0
 
  K1:
- 1 > 4*b
-& 2 > 9*b
-& b >= a
-& a >= 0
+ a > b
+& b >= 0
+& 2 > b
+& 10 >= a
 
 ------------------------------------------------------------
-Constraint soundness          : possible over-approximation
-Termination                   : depth limit (1 successor unexplored)
-Constraint nature             : good
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
 ------------------------------------------------------------
-Local number of states        : 10
-Local number of transitions   : 9
+Local number of states                  : 1
+Local number of transitions             : 0
 """
 			} # end BC file
 			, 
@@ -3617,105 +3629,32 @@ Local number of transitions   : 9
  Tile #2
 
  Pi2:
-  a = 1
-& b = 0
-
- K2:
- a > b
-& b >= 0
-& 2 > b
-& 10 >= a
-
-------------------------------------------------------------
-Constraint soundness          : exact
-Termination                   : regular termination
-Constraint nature             : good
-------------------------------------------------------------
-Local number of states        : 1
-Local number of transitions   : 0
-"""
-			} # end BC file
-			, 
-			{'file': 'JLR-TACAS13.res' , 'content' : """
-(************************************************************)
- Tile #3
-
- Pi3:
-  a = 0
-& b = 1
-
- K3:
- b >= 1
-& 2 > b
-& b >= a
-& a >= 0
-
-------------------------------------------------------------
-Constraint soundness          : possible over-approximation
-Termination                   : depth limit (2 successors unexplored)
-Constraint nature             : bad
-------------------------------------------------------------
-Local number of states        : 18
-Local number of transitions   : 17
-"""
-			} # end BC file
-			, 
-			{'file': 'JLR-TACAS13.res' , 'content' : """
-(************************************************************)
- Tile #4
-
- Pi4:
-  a = 0
-& b = 2
-
- K4:
- b >= 2
-& 10 >= b
-& b >= a
-& a >= 0
-
-------------------------------------------------------------
-Constraint soundness          : possible over-approximation
-Termination                   : depth limit (2 successors unexplored)
-Constraint nature             : bad
-------------------------------------------------------------
-Local number of states        : 19
-Local number of transitions   : 18
-"""
-			} # end BC file
-			, 
-			{'file': 'JLR-TACAS13.res' , 'content' : """
-(************************************************************)
- Tile #5
-
- Pi5:
   a = 3
 & b = 2
 
- K5:
+ K2:
  a > b
 & b >= 2
 & 10 >= a
 
 ------------------------------------------------------------
-Constraint soundness          : exact
-Termination                   : regular termination
-Constraint nature             : bad
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : bad
 ------------------------------------------------------------
-Local number of states        : 2
-Local number of transitions   : 1
+Local number of states                  : 2
+Local number of transitions             : 1
 """
 			} # end BC file
-			, 
+			,
 			{'file': 'JLR-TACAS13.res' , 'content' : """
-------------------------------------------------------------
-Number of integers in v0      : 121
-Number of tiles computed      : 5
-Coverage                      : unknown
-Termination                   : regular termination
-Number of unsuccessful points : 116
-Average number of states      : 10.0
-Average number of transitions : 9.0
+    Number of integers in v0                : 121
+    Number of tiles computed                : 2
+    Coverage                                : unknown
+    Termination                             : regular termination
+    Number of unsuccessful points           : 119
+    Average number of states                : 1.5
+    Average number of transitions           : 0.5
 """
 			} # end BC file
 		] # end expectations
@@ -3732,24 +3671,26 @@ Average number of transitions : 9.0
 		'expectations' : [
 			# NOTE: no other way for now that checking separately the constraints (because the computation times may of course differ)
 			{'file': 'testBC-grid-plain-loop.res' , 'content' : """
- (************************************************************)
-Tile #1
+(************************************************************)
+ Tile #1
 
  Pi1:
-  p1 = 1
+  p1 = 2
 & p2 = 1
 
  K1:
- p1 = 1
-& p2 = 1
+ p2 >= 1
+& p1 >= 2
+& 2 > p2
+& 3 > p1
 
 ------------------------------------------------------------
-Constraint soundness          : possible over-approximation
-Termination                   : depth limit (1 successor unexplored)
-Constraint nature             : good
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
 ------------------------------------------------------------
-Local number of states        : 14
-Local number of transitions   : 13
+Local number of states                  : 6
+Local number of transitions             : 5
 """
 			} # end BC file
 			, 
@@ -3758,22 +3699,22 @@ Local number of transitions   : 13
  Tile #2
 
  Pi2:
-  p1 = 2
+  p1 = 3
 & p2 = 1
 
  K2:
  p2 >= 1
-& p1 >= 2
+& p1 >= 3
 & 2 > p2
-& 3 > p1
+& 4 > p1
 
 ------------------------------------------------------------
-Constraint soundness          : exact
-Termination                   : regular termination
-Constraint nature             : good
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
 ------------------------------------------------------------
-Local number of states        : 6
-Local number of transitions   : 5
+Local number of states                  : 7
+Local number of transitions             : 6
 """
 			} # end BC file
 			, 
@@ -3782,22 +3723,22 @@ Local number of transitions   : 5
  Tile #3
 
  Pi3:
-  p1 = 3
-& p2 = 1
+  p1 = 1
+& p2 = 2
 
  K3:
- p2 >= 1
-& p1 >= 3
-& 2 > p2
-& 4 > p1
+ p2 >= 2
+& p1 >= 1
+& 3 > p2
+& 2 > p1
 
 ------------------------------------------------------------
-Constraint soundness          : exact
-Termination                   : regular termination
-Constraint nature             : good
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
 ------------------------------------------------------------
-Local number of states        : 7
-Local number of transitions   : 6
+Local number of states                  : 6
+Local number of transitions             : 5
 """
 			} # end BC file
 			, 
@@ -3806,22 +3747,22 @@ Local number of transitions   : 6
  Tile #4
 
  Pi4:
-  p1 = 1
+  p1 = 2
 & p2 = 2
 
  K4:
  p2 >= 2
-& p1 >= 1
+& p1 >= 2
 & 3 > p2
-& 2 > p1
+& 3 > p1
 
 ------------------------------------------------------------
-Constraint soundness          : exact
-Termination                   : regular termination
-Constraint nature             : good
+Constraint soundness                    : possible under-approximation
+Termination                             : regular termination
+Constraint nature                       : good
 ------------------------------------------------------------
-Local number of states        : 6
-Local number of transitions   : 5
+Local number of states                  : 7
+Local number of transitions             : 6
 """
 			} # end BC file
 			, 
@@ -3830,22 +3771,22 @@ Local number of transitions   : 5
  Tile #5
 
  Pi5:
-  p1 = 2
+  p1 = 3
 & p2 = 2
 
  K5:
  p2 >= 2
-& p1 >= 2
+& p1 >= 3
 & 3 > p2
-& 3 > p1
+& 4 > p1
 
 ------------------------------------------------------------
-Constraint soundness          : possible under-approximation
-Termination                   : regular termination
-Constraint nature             : good
+Constraint soundness                    : possible under-approximation
+Termination                             : regular termination
+Constraint nature                       : good
 ------------------------------------------------------------
-Local number of states        : 7
-Local number of transitions   : 6
+Local number of states                  : 8
+Local number of transitions             : 7
 """
 			} # end BC file
 			, 
@@ -3854,22 +3795,22 @@ Local number of transitions   : 6
  Tile #6
 
  Pi6:
-  p1 = 3
-& p2 = 2
+  p1 = 1
+& p2 = 3
 
  K6:
- p2 >= 2
-& p1 >= 3
-& 3 > p2
-& 4 > p1
+ p2 >= 3
+& p1 >= 1
+& 4 > p2
+& 2 > p1
 
 ------------------------------------------------------------
-Constraint soundness          : possible under-approximation
-Termination                   : regular termination
-Constraint nature             : good
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
 ------------------------------------------------------------
-Local number of states        : 8
-Local number of transitions   : 7
+Local number of states                  : 7
+Local number of transitions             : 6
 """
 			} # end BC file
 			, 
@@ -3878,70 +3819,22 @@ Local number of transitions   : 7
  Tile #7
 
  Pi7:
-  p1 = 1
-& p2 = 3
-
- K7:
- p2 >= 3
-& p1 >= 1
-& 4 > p2
-& 2 > p1
-
-------------------------------------------------------------
-Constraint soundness          : exact
-Termination                   : regular termination
-Constraint nature             : good
-------------------------------------------------------------
-Local number of states        : 7
-Local number of transitions   : 6
-"""
-			} # end BC file
-			, 
-			{'file': 'testBC-grid-plain-loop.res' , 'content' : """
-(************************************************************)
- Tile #8
-
- Pi8:
   p1 = 2
 & p2 = 3
 
- K8:
+ K7:
  p2 >= 3
 & p1 >= 2
 & 4 > p2
 & 3 > p1
 
 ------------------------------------------------------------
-Constraint soundness          : possible under-approximation
-Termination                   : regular termination
-Constraint nature             : good
+Constraint soundness                    : possible under-approximation
+Termination                             : regular termination
+Constraint nature                       : good
 ------------------------------------------------------------
-Local number of states        : 8
-Local number of transitions   : 7
-"""
-			} # end BC file
-			, 
-			{'file': 'testBC-grid-plain-loop.res' , 'content' : """
-(************************************************************)
- Tile #9
-
- Pi9:
-  p1 = 3
-& p2 = 3
-
- K9:
- p2 >= 3
-& p1 >= 3
-& 4 > p2
-& 4 > p1
-
-------------------------------------------------------------
-Constraint soundness          : possibly invalid
-Termination                   : depth limit (0 successor unexplored)
-Constraint nature             : good
-------------------------------------------------------------
-Local number of states        : 9
-Local number of transitions   : 8
+Local number of states                  : 8
+Local number of transitions             : 7
 """
 			} # end BC file
 			, 
@@ -3951,13 +3844,13 @@ Local number of transitions   : 8
 GENERAL STATISTICS
 (************************************************************)
 ------------------------------------------------------------
-Number of integers in v0      : 9
-Number of tiles computed      : 9
-Coverage                      : unknown
-Termination                   : regular termination
-Number of unsuccessful points : 0
-Average number of states      : 8.0
-Average number of transitions : 7.0
+Number of integers in v0                : 9
+Number of tiles computed                : 7
+Coverage                                : unknown
+Termination                             : regular termination
+Number of unsuccessful points           : 2
+Average number of states                : 7.0
+Average number of transitions           : 6.0
 """
 			} # end BC file
 		] # end expectations
@@ -5982,23 +5875,22 @@ Constraint nature                       : good/bad
  Tile #1
 
  Pi1:
-  a = 0
+  a = 1
 & b = 0
 
  K1:
- a >= 0
+ 2 > b
 & b >= 0
-& 2 > 9*b
-& 1 > 4*b
+& a > b
 & 10 >= a
 
 ------------------------------------------------------------
-Constraint soundness          : possibly invalid
-Termination                   : depth limit (1 successor unexplored)
-Constraint nature             : good
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
 ------------------------------------------------------------
-Local number of states        : 10
-Local number of transitions   : 9
+Local number of states                  : 1
+Local number of transitions             : 0
 """
 			} # end BC file
 			, 
@@ -6017,12 +5909,12 @@ Local number of transitions   : 9
 & 10 >= b
 
 ------------------------------------------------------------
-Constraint soundness          : possible under-approximation
-Termination                   : depth limit (1 successor unexplored)
-Constraint nature             : bad
+Constraint soundness                    : possible under-approximation
+Termination                             : depth limit (1 successor unexplored)
+Constraint nature                       : bad
 ------------------------------------------------------------
-Local number of states        : 18
-Local number of transitions   : 17
+Local number of states                  : 18
+Local number of transitions             : 17
 """
 			} # end BC file
 			, 
@@ -6031,58 +5923,37 @@ Local number of transitions   : 17
  Tile #3
 
  Pi3:
-  a = 2
-& b = 1
-
- K3:
- 2 > b
-& b >= 0
-& a > b
-& 10 >= a
-
-------------------------------------------------------------
-Constraint soundness          : exact
-Termination                   : regular termination
-Constraint nature             : good
-------------------------------------------------------------
-Local number of states        : 1
-Local number of transitions   : 0
-"""
-			} # end BC file
-			, 
-			{'file': 'JLR-TACAS13.res' , 'content' : """
-(************************************************************)
- Tile #4
-
- Pi4:
   a = 3
 & b = 2
 
- K4:
+ K3:
  b >= 2
 & 10 >= b
 & 10 >= a
 & a >= 0
 
 ------------------------------------------------------------
-Constraint soundness          : exact
-Termination                   : regular termination
-Constraint nature             : bad
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : bad
 ------------------------------------------------------------
-Local number of states        : 2
-Local number of transitions   : 1
+Local number of states                  : 2
+Local number of transitions             : 1
 """
 			} # end BC file
-			,
+			, 
 			{'file': 'JLR-TACAS13.res' , 'content' : """
+(************************************************************)
+GENERAL STATISTICS
+(************************************************************)
 ------------------------------------------------------------
-Number of integers in v0      : 121
-Number of tiles computed      : 4
-Coverage                      : unknown
-Termination                   : regular termination
-Number of unsuccessful points : 117
-Average number of states      : 7.7
-Average number of transitions : 6.7
+Number of integers in v0                : 121
+Number of tiles computed                : 3
+Coverage                                : unknown
+Termination                             : regular termination
+Number of unsuccessful points           : 118
+Average number of states                : 7.0
+Average number of transitions           : 6.0
 """
 			} # end BC file
 		] # end expectations

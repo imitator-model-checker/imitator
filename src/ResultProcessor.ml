@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/12/03
- * Last modified     : 2016/11/04
+ * Last modified     : 2017/01/18
  *
  ************************************************************)
 
@@ -125,6 +125,9 @@ let string_of_coverage = function
 	(* Full coverage in all dimensions, including rational points *)
 	| Coverage_full -> "full"
 
+	(* No constraint computed at all *)
+	| Coverage_empty -> "empty"
+
 	(* At least all integers are covered, rationals perhaps not *)
 	| Coverage_integer_complete -> "integer-complete"
 
@@ -135,6 +138,9 @@ let string_of_coverage = function
 let verbose_string_of_coverage = function
 	(* Full coverage in all dimensions, including rational points *)
 	| Coverage_full -> "The entire input parameter domain has been covered by tiles."
+
+	(* No constraint computed at all *)
+	| Coverage_empty -> "None of the input parameter domain has been covered: no tiles could be computed."
 
 	(* At least all integers are covered, rationals perhaps not *)
 	| Coverage_integer_complete -> "All integer points of the input parameter domain have been covered by tiles; rational points may have been covered too (not evaluated)."

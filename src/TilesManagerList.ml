@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/08/15
- * Last modified     : 2016/08/26
+ * Last modified     : 2017/01/18
  *
  ************************************************************)
 
@@ -92,6 +92,13 @@ class tilesManagerList =
 			(* If not set: compute it in the standard manner *)
 			| None ->
 			(*** NOTE: this is only true for the original behavioral cartography; for variants this may not hold ***)
+			(* If no constraint: empty *)
+			if abstract_point_based_results = [] then Coverage_empty
+			else
+			(* If some points skipped: cannot say anything *)
+			if point_skipped
+				then Coverage_unknown
+			else
 			(* INTEGER COMPLETE if termination is regular and all tiles are exact or under-approximations *)
 			if termination_status = BC_Regular_termination &&
 (*				(List.for_all (fun abstract_point_based_result -> match abstract_point_based_result.soundness with
@@ -108,19 +115,6 @@ class tilesManagerList =
 			else Coverage_unknown
 		in
 
-		(*		(* Coverage is... *)
-		(*** NOTE: this is only true for the original behavioral cartography; for variants this may not hold ***)
-		let coverage =
-			(* INTEGER COMPLETE if termination is regular and all tiles are valid *)
-			if termination_status = BC_Regular_termination && (List.for_all (fun abstract_im_result -> match abstract_im_result.soundness with
-					| Constraint_maybe_under | Constraint_exact | Constraint_maybe_over -> true
-					| Constraint_maybe_invalid -> false
-				) abstract_point_based_results)
-				then Coverage_integer_complete
-			(* UNKNOWN otherwise *)
-			else Coverage_unknown
-		in*)
-		
 		(* Return result *)
 		Cartography_result {
 			(* Number of points in V0 *)

@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/11/23
- * Last modified     : 2016/08/26
+ * Last modified     : 2017/01/18
  *
  ************************************************************)
 
@@ -105,6 +105,9 @@ type good_or_bad_constraint =
 type bc_coverage =
 	(* Full coverage in all dimensions, including rational points *)
 	| Coverage_full
+
+	(* No constraint computed at all *)
+	| Coverage_empty
 
 	(* At least all integers are covered, rationals perhaps not *)
 	| Coverage_integer_complete

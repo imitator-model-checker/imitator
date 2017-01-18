@@ -169,6 +169,25 @@ let abstract_point_based_result_of_point_based_result (point_based_result : poin
 }
 
 
+
+(*------------------------------------------------------------*)
+(* Check if a good_or_bad_constraint is sound *)
+(*------------------------------------------------------------*)
+(*let is_good_or_bad_constraint_sound (good_or_bad_constraint : Result.good_or_bad_constraint) =
+	let is_soundness_valid soundness = soundness = Constraint_exact || soundness = Constraint_maybe_under in
+	match good_or_bad_constraint with
+	(* Only good valuations *)
+	| Good_constraint (_, soundness) -> is_soundness_valid soundness
+	(* Only bad valuations *)
+	| Bad_constraint (_, soundness) -> is_soundness_valid soundness
+	(* Both good and bad valuations *)
+	| Good_bad_constraint good_and_bad ->
+		let _, s_good = good_and_bad.good in
+		let _, s_bad = good_and_bad.bad in
+		is_soundness_valid s_good
+		&& is_soundness_valid s_bad*)
+
+
 (*------------------------------------------------------------*)
 (* Print warning(s) depending on a Result.bc_algorithm_termination *)
 (*------------------------------------------------------------*)
@@ -253,7 +272,8 @@ class virtual algoCartoGeneric =
 	(* Initial p-constraint (needed to check whether points satisfy it) *)
 	val mutable init_p_constraint = LinearConstraint.p_true_constraint ()
 
-	(* Counts the points actually member of an existing constraint for information purpose *)
+	(* Counts the points actually member of an existing constraint OR for which the constraint turned invalid (for statistics purpose) *)
+	(*** TODO: split between unsuccessful and uncovered??? ***)
 	val mutable nb_unsuccessful_points = 0
 	
 	(* Counter tracking the computation time to look for points *)
@@ -813,41 +833,44 @@ class virtual algoCartoGeneric =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Process one result of an abstract version of an instance of IM *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method process_result abstract_result =
+	method process_result (abstract_point_based_result : Result.abstract_point_based_result) =
 
-	
-		(*** TODO: check validity of result! ***)
-		(* may not be valid if early termination for PRP without bad state, for example *)
-		
-		
 		(* Retrieve the model *)
 		let model = Input.get_model () in
 
 		(* Print some information *)
-		let nb_states = abstract_result.abstract_state_space.nb_states (*StateSpace.nb_states im_result.state_space*) in
-		let nb_transitions = abstract_result.abstract_state_space.nb_transitions (*StateSpace.nb_transitions im_result.state_space*) in
+		let nb_states = abstract_point_based_result.abstract_state_space.nb_states (*StateSpace.nb_states im_result.state_space*) in
+		let nb_transitions = abstract_point_based_result.abstract_state_space.nb_transitions (*StateSpace.nb_transitions im_result.state_space*) in
 		print_message Verbose_standard (
 			"\nK" ^ (string_of_int current_iteration) ^ " computed by " ^ current_algo_instance#algorithm_name
 (* 					^ " after " ^ (string_of_int im_result.nb_iterations) ^ " iteration" ^ (s_of_int im_result.nb_iterations) ^ "" *)
-			^ " in " ^ (string_of_seconds abstract_result.computation_time) ^ ": "
+			^ " in " ^ (string_of_seconds abstract_point_based_result.computation_time) ^ ": "
 			^ (string_of_int nb_states) ^ " state" ^ (s_of_int nb_states)
 			^ " with "
 			^ (string_of_int nb_transitions) ^ " transition" ^ (s_of_int nb_transitions) ^ " explored.");
 
 		print_message Verbose_low ("Constraint K0 computed:");
-		print_message Verbose_standard (ResultProcessor.string_of_good_or_bad_constraint model.variable_names abstract_result.result);
+		print_message Verbose_standard (ResultProcessor.string_of_good_or_bad_constraint model.variable_names abstract_point_based_result.result);
 		
-		
-		(* Print some information *)
-		self#print_algo_message Verbose_low ("Processing the result by IM…");
 
-(*		(* Get the point *)
-		let pi0 = self#get_current_point_instance in*)
-		
-		(* Add to the list of tiles *)
-(* 		im_results <- abstract_result :: im_results; *)
-		tiles_manager#process_tile abstract_result;
-	
+		(*** TODO: check validity of result! ***)
+		(* may not be valid if early termination for PRP without bad state, for example *)
+		if TilesManager.is_good_or_bad_constraint_sound abstract_point_based_result.result then(
+			(* Print some information *)
+			self#print_algo_message Verbose_low ("Processing the result by IM…");
+
+			(* Add to the list of tiles *)
+			tiles_manager#process_tile abstract_point_based_result;
+		)else(
+			(* Print some information *)
+			print_message Verbose_standard ("\nK" ^ (string_of_int current_iteration) ^ " is not valid: discarded!");
+			
+			(* Inform the tiles manager, so that it is able to find out that the resulting cartography is not complete (and probably not even integer-complete) *)
+			tiles_manager#set_point_skipped;
+			
+			(* Found an unsuccessful point *)
+			nb_unsuccessful_points <- nb_unsuccessful_points + 1;
+		);
 		
 		
 		

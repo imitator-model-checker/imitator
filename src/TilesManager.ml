@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/08/15
- * Last modified     : 2016/08/30
+ * Last modified     : 2017/01/18
  *
  ************************************************************)
 
@@ -96,6 +96,26 @@ let is_good_or_bad_constraint_sound (good_or_bad_constraint : good_or_bad_constr
 
 
 (*------------------------------------------------------------*)
+(** Check if a good_or_bad_constraint is empty, i.e., contains no valuation *)
+(*------------------------------------------------------------*)
+let is_good_or_bad_constraint_empty (good_or_bad_constraint : good_or_bad_constraint) =
+	match good_or_bad_constraint with
+	(* Only good valuations *)
+	| Good_constraint (p_nnconvex_constraint, _)
+	(* Only bad valuations *)
+	| Bad_constraint (p_nnconvex_constraint, _)
+		-> LinearConstraint.p_nnconvex_constraint_is_false p_nnconvex_constraint
+		
+	(* Both good and bad valuations *)
+	| Good_bad_constraint good_and_bad_constraint ->
+		let good_p_nnconvex_constraint, _ = good_and_bad_constraint.good in
+		let bad_p_nnconvex_constraint, _ = good_and_bad_constraint.bad in
+		LinearConstraint.p_nnconvex_constraint_is_false good_p_nnconvex_constraint
+		&&
+		LinearConstraint.p_nnconvex_constraint_is_false bad_p_nnconvex_constraint
+
+
+(*------------------------------------------------------------*)
 (** Check if a parameter valuation belongs to a good_or_bad_constraint *)
 (*------------------------------------------------------------*)
 let pval_in_good_or_bad_constraint pval (good_or_bad_constraint : good_or_bad_constraint) =
@@ -133,7 +153,9 @@ class virtual tilesManager =
 	(************************************************************)
 	(* Class variables *)
 	(************************************************************)
-
+	(* Flag to remember whether a valuation was skipped *)
+	val mutable point_skipped = false
+	
 	
 	(************************************************************)
 	(* Class methods *)
@@ -153,6 +175,13 @@ class virtual tilesManager =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method virtual pval_in_tiles : PVal.pval -> bool
 
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(* Remembers the fact that at least one point was skipped, i.e., the resulting constraint is not valid *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	method set_point_skipped : unit =
+		point_skipped <- true
+	
+	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Process a new tile, i.e., add it to the tiles *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)

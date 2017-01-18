@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/08/26
- * Last modified     : 2016/09/06
+ * Last modified     : 2017/01/18
  *
  ************************************************************)
 
@@ -111,6 +111,14 @@ class tilesManagerConstraint =
 			(* If not set: compute it in the standard manner *)
 			| None ->
 			(*** NOTE: this is only true for the original behavioral cartography; for variants this may not hold ***)
+			
+			(* If no constraint: empty *)
+			if is_good_or_bad_constraint_empty result then Coverage_empty
+			else
+			(* If some points skipped: cannot say anything *)
+			if point_skipped
+				then Coverage_unknown
+			else
 			(* INTEGER COMPLETE if termination is regular and all tiles are exact or under-approximations *)
 			if termination_status = BC_Regular_termination && is_good_or_bad_constraint_sound result
 				then Coverage_integer_complete

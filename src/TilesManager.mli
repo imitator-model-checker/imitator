@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/08/15
- * Last modified     : 2016/08/30
+ * Last modified     : 2017/01/18
  *
  ************************************************************)
 
@@ -36,6 +36,12 @@ val is_good_or_bad_constraint_sound : Result.good_or_bad_constraint -> bool
 
 
 (*------------------------------------------------------------*)
+(** Check if a good_or_bad_constraint is empty, i.e., contains no valuation *)
+(*------------------------------------------------------------*)
+val is_good_or_bad_constraint_empty : Result.good_or_bad_constraint -> bool
+
+
+(*------------------------------------------------------------*)
 (** Check if a parameter valuation belongs to a good_or_bad_constraint *)
 (*------------------------------------------------------------*)
 val pval_in_good_or_bad_constraint : PVal.pval -> Result.good_or_bad_constraint -> bool
@@ -52,7 +58,9 @@ class virtual tilesManager:
 		(************************************************************)
 		(* Class variables *)
 		(************************************************************)
-
+		(* Flag to remember whether a valuation was skipped, i.e., the resulting constraint is not valid *)
+		val mutable point_skipped : bool
+		
 
 		(************************************************************)
 		(* Class methods *)
@@ -72,6 +80,11 @@ class virtual tilesManager:
 		(* Check if a parameter valuation belongs to the tiles *)
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		method virtual pval_in_tiles : PVal.pval -> bool
+
+		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+		(* Remembers the fact that at least one point was skipped, i.e., the resulting constraint is not valid *)
+		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+		method set_point_skipped : unit
 
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		(* Process a new tile, i.e., add it to the tiles *)
