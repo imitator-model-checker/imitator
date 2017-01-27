@@ -23,6 +23,7 @@ import datetime
 import os
 import sys
 import subprocess
+import webbrowser 
 
 
 
@@ -31,7 +32,9 @@ import subprocess
 #************************************************************
 
 # Root path to the main IMITATOR root directory
-IMITATOR_PATH = ''
+IMITATOR_PATH = os.path.dirname(os.path.realpath(__file__)) #ADDED
+IMITATOR_PATH = IMITATOR_PATH.replace(os.path.basename(IMITATOR_PATH),"") #ADDED
+
 # Path to the example directory
 BENCHMARKS_PATH = IMITATOR_PATH + 'benchmarks/'
 # Path to the binary directory
@@ -41,6 +44,14 @@ BINARY_PATH = IMITATOR_PATH + 'bin/'
 BINARY_NAME = 'imitator'
 # Result files prefix
 RESULT_FILES_PATH = IMITATOR_PATH + 'comparator/results/'
+
+#ADDED
+#Path to webgen directory
+WEBGEN_PATH= IMITATOR_PATH + 'comparator/webgen/'
+
+#Data file for HTML Generation
+HTML_DATA = 'comparator_data.txt'
+HTML_FILE = 'graph_result.html'
 
 orig_stdout = sys.stdout
 
@@ -138,26 +149,26 @@ versions = {
 			},
 		'files_suffix'			: '_2_6_1',
 	},
-	#------------------------------------------------------------
-	V_2_6_2_825 : {
-		'version_name'		: '2.6.2 build 825',
-		'binary'			: 'imitator262_825',
-		'binary_dist'		: 'patator262_825',
-		'syntax':
-			{
-			OPT_DISTR_SUBDOMAIN		: UNDEFINED_SYNTAX,
-			OPT_INCLUSION			: '-incl',
-			OPT_MERGING				: '-merge',
-			OPT_MODE_COVER			: '-mode cover',
-			OPT_MODE_EF				: '-mode EF',
-			OPT_OUTPUT_CART			: '-output-cart',
-			OPT_OUTPUT_PREFIX		: '-output-prefix',
-			OPT_OUTPUT_RES			: UNDEFINED_SYNTAX,
-			OPT_OUTPUT_TRACE_SET	: '-output-trace-set',
-			OPT_PRP					: '-EFIM',
-			},
-		'files_suffix'			: '_2_6_2_825',
-	},
+	#~ #------------------------------------------------------------
+	#~ V_2_6_2_825 : {
+		#~ 'version_name'		: '2.6.2 build 825',
+		#~ 'binary'			: 'imitator262_825',
+		#~ 'binary_dist'		: 'patator262_825',
+		#~ 'syntax':
+			#~ {
+			#~ OPT_DISTR_SUBDOMAIN		: UNDEFINED_SYNTAX,
+			#~ OPT_INCLUSION			: '-incl',
+			#~ OPT_MERGING				: '-merge',
+			#~ OPT_MODE_COVER			: '-mode cover',
+			#~ OPT_MODE_EF				: '-mode EF',
+			#~ OPT_OUTPUT_CART			: '-output-cart',
+			#~ OPT_OUTPUT_PREFIX		: '-output-prefix',
+			#~ OPT_OUTPUT_RES			: UNDEFINED_SYNTAX,
+			#~ OPT_OUTPUT_TRACE_SET	: '-output-trace-set',
+			#~ OPT_PRP					: '-EFIM',
+			#~ },
+		#~ 'files_suffix'			: '_2_6_2_825',
+	#~ },
 	#------------------------------------------------------------
 	V_2_7_3 : {
 		'version_name'		: '2.7.3',
@@ -252,6 +263,11 @@ def print_error(text) :
 def print_to_screen(content):
 	# Print
 	print content
+	
+def write_to_file(PATH_FILE, content):
+	wrote_file = open(PATH_FILE, "a")
+	wrote_file.write(content)
+	wrote_file.close()
 
 
 # Function to retrieve the computation time depending on the benchmark
@@ -431,6 +447,7 @@ def run(benchmark, versions_to_test):
 			# TODO: test whether the termination is ok
 	# Print the current benchmark
 	print_line(versions_to_test, benchmark['benchmark_name'], results[benchmark['log_prefix']])
+	write_line(WEBGEN_PATH + HTML_DATA, versions_to_test, benchmark['benchmark_name'], results[benchmark['log_prefix']])
 
 
 
@@ -471,18 +488,51 @@ def print_results(versions_to_test):
 	for benchmark_id, result in results.iteritems():
 		print_line(versions_to_test, benchmark_id, result)
 
-
+def write_line(PATH_FILE, versions_to_test, benchmark_name, result):
+	
+	header_line = 'version; '
+	
+	for version in versions_to_test:
+		# First line with all version names
+		header_line += versions[version]['version_name'] + "; "
+	
+	write_to_file(PATH_FILE, header_line + "\n")
+	
+	# Create text line
+	line = benchmark_name + "; "
+	
+	for version in versions_to_test:
+		# Normal case
+		result_str = str(result[version])
+		# Case: not run
+		if result[version] == ANALYSIS_NOT_RUN:
+			result_str = 'not run'
+		# Case: could not get the result (analys failed)
+		else:
+			if result[version] == ANALYSIS_FAILED:
+				result_str = 'failed'
+		line = line + result_str + "; "
+	
+	write_to_file(PATH_FILE, line + "\n")
+	
+def reset_data_file(PATH_FILE):
+	file2reset = open(PATH_FILE, "w")
+	file2reset.write("")
+	file2reset.close()
+	
 #************************************************************
 # RUN!
 #************************************************************
 
-all_versions = [V_2_5, V_2_6_1, V_2_6_2_825, V_2_7_3, V_2_8, V_current]
+all_versions = [V_2_5, V_2_6_1, V_2_7_3, V_2_8, V_current] #*V_2_6_2_825*
 
 # IMPORTING THE BENCHMARKS CONTENT
 import comparator_data
 tests = comparator_data.data
 
 print_to_screen('')
+
+reset_data_file(WEBGEN_PATH + HTML_DATA)
 
 for test in tests:
 	run(test, all_versions)
@@ -493,7 +543,12 @@ print_results(all_versions)
 # THE END
 #************************************************************
 
+# à adapter pour le write dans un fichier (pour le fichier de html/js ou bien trouver un moyen de rediriger le printf
+
 print_to_screen('')
+print_to_screen('Browser will open soon with result if not already opened')
 print_to_screen('...The end of COMPARATOR!')
+
+webbrowser.open(WEBGEN_PATH + HTML_FILE)
 
 sys.exit(0)
