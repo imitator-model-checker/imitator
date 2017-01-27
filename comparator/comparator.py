@@ -149,26 +149,26 @@ versions = {
 			},
 		'files_suffix'			: '_2_6_1',
 	},
-	#~ #------------------------------------------------------------
-	#~ V_2_6_2_825 : {
-		#~ 'version_name'		: '2.6.2 build 825',
-		#~ 'binary'			: 'imitator262_825',
-		#~ 'binary_dist'		: 'patator262_825',
-		#~ 'syntax':
-			#~ {
-			#~ OPT_DISTR_SUBDOMAIN		: UNDEFINED_SYNTAX,
-			#~ OPT_INCLUSION			: '-incl',
-			#~ OPT_MERGING				: '-merge',
-			#~ OPT_MODE_COVER			: '-mode cover',
-			#~ OPT_MODE_EF				: '-mode EF',
-			#~ OPT_OUTPUT_CART			: '-output-cart',
-			#~ OPT_OUTPUT_PREFIX		: '-output-prefix',
-			#~ OPT_OUTPUT_RES			: UNDEFINED_SYNTAX,
-			#~ OPT_OUTPUT_TRACE_SET	: '-output-trace-set',
-			#~ OPT_PRP					: '-EFIM',
-			#~ },
-		#~ 'files_suffix'			: '_2_6_2_825',
-	#~ },
+	#------------------------------------------------------------
+	V_2_6_2_825 : {
+		'version_name'		: '2.6.2 build 825',
+		'binary'			: 'imitator262_825',
+		'binary_dist'		: 'patator262_825',
+		'syntax':
+			{
+			OPT_DISTR_SUBDOMAIN		: UNDEFINED_SYNTAX,
+			OPT_INCLUSION			: '-incl',
+			OPT_MERGING				: '-merge',
+			OPT_MODE_COVER			: '-mode cover',
+			OPT_MODE_EF				: '-mode EF',
+			OPT_OUTPUT_CART			: '-output-cart',
+			OPT_OUTPUT_PREFIX		: '-output-prefix',
+			OPT_OUTPUT_RES			: UNDEFINED_SYNTAX,
+			OPT_OUTPUT_TRACE_SET	: '-output-trace-set',
+			OPT_PRP					: '-EFIM',
+			},
+		'files_suffix'			: '_2_6_2_825',
+	},
 	#------------------------------------------------------------
 	V_2_7_3 : {
 		'version_name'		: '2.7.3',
