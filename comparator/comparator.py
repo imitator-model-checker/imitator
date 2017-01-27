@@ -524,7 +524,7 @@ def reset_data_file(PATH_FILE):
 # RUN!
 #************************************************************
 
-all_versions = [V_2_5, V_2_6_1, V_2_7_3, V_2_8, V_current] #*V_2_6_2_825*
+all_versions = [V_2_5, V_2_6_1, V_2_6_2_825, V_2_7_3, V_2_8, V_current] #*V_2_6_2_825*
 
 # IMPORTING THE BENCHMARKS CONTENT
 import comparator_data
