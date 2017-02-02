@@ -10,7 +10,7 @@
 # 
 # File contributors : Étienne André
 # Created           : 2016/11/07
-# Last modified     : 2017/01/18
+# Last modified     : 2017/02/02
 #************************************************************
 
 # ###
@@ -436,15 +436,29 @@ if DEBUG_MODE:
 	print "\nv(A):"
 	print component_vA
 
+# HACK: we need to "valuate" B (although it is not parametric), because there may be some constants in the model, that need to be "valuated" too
+component_vB = valuate_component(component_B, pi0_pairs)
+
+if DEBUG_MODE:
+	print "\nv(B):"
+	print component_vB
+
+# HACK: we need to "valuate" the spec (although it is not parametric), because there may be some constants in the model, that need to be "valuated" too
+vspec = valuate_component(specification, pi0_pairs)
+
+if DEBUG_MODE:
+	print "\nv(B):"
+	print component_vB
+
 # Prepare the analysis line
 analysis_line = create_analysis_line(automata_names_in_A, automata_names_in_B, automata_names_in_specification)
 
 # Create v(A) + B + the analysis line; also add initial locations and accepting locations
 modified_vA = add_INIT_locations(component_vA, automata_names_in_A, initial_locations)
 modified_vA = add_ACCEPTING_locations(modified_vA, automata_names_in_A)
-modified_B = add_INIT_locations(component_B, automata_names_in_B, initial_locations)
+modified_B = add_INIT_locations(component_vB, automata_names_in_B, initial_locations)
 modified_B = add_ACCEPTING_locations(modified_B, automata_names_in_B)
-modified_spec = add_INIT_locations(specification, automata_names_in_specification, initial_locations)
+modified_spec = add_INIT_locations(vspec, automata_names_in_specification, initial_locations)
 modified_spec = add_ACCEPTING_locations(modified_spec, automata_names_in_specification)
 
 model_content = modified_vA + modified_B + modified_spec + analysis_line
