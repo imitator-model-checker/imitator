@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/07/22
- * Last modified     : 2017/02/02
+ * Last modified     : 2017/02/03
  *
  ************************************************************)
 
@@ -216,7 +216,7 @@ class algoBCCoverLearning =
 		(* Select the right algorithm according to the analysis type *)
 		let algo_instance = match analysis_type with
 			(* If counter-exemple: run EF on the parametric trace *)
-			| CounterExample -> let myalgo :> AlgoBFS.algoBFS = new AlgoEFsynth.algoEFsynth in myalgo
+			| CounterExample -> let myalgo :> AlgoBFS.algoBFS = new AlgoAGsafeSynth.algoAGsafeSynth in myalgo
 			
 			(* If abstraction: run PRP on this abstraction *)
 			(*** NOTE: the current valuation (current_point) is already set in Input ***)
@@ -226,7 +226,7 @@ class algoBCCoverLearning =
 		
 		(* Run! *)
 		let imitator_result : imitator_result = current_algo_instance#run() in
-
+		
 		(* Create auxiliary files with the proper file prefix, if requested *)
 		self#create_auxiliary_files imitator_result;
 
