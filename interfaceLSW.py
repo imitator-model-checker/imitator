@@ -64,7 +64,7 @@ LEARNING_OUTPUT_FILE_ASSUMPTION = LEARNING_TMP_DIR + 'assumption.imi'
 LEARNING_OUTPUT_FILE_COUNTEREXAMPLE = LEARNING_TMP_DIR + 'counterexample.imi'
 
 # Init definition for abstraction output by learning
-LEARNING_INIT_DEFINITION = 'loc[ERA_2] = s0'
+LEARNING_INIT_DEFINITION = 'loc[AbstractERA] = AbstractERA_init'
 
 DEBUG_MODE = True
 #DEBUG_MODE = False
@@ -371,8 +371,8 @@ if not binary_exists(LEARNING_BINARY_NAME) :
 	fail_with('Binary "' + LEARNING_BINARY_NAME + '" does not exist')
 
 
-if len(sys.argv) <> 3:
-	fail_with("Exactly 2 arguments are expected")
+if len(sys.argv) <> 4:
+	fail_with("Exactly 3 arguments are expected")
 
 
 #************************************************************
@@ -383,18 +383,18 @@ if len(sys.argv) <> 3:
 original_model_name = sys.argv[1]
 
 # Get the expected transformed model name
-#new_model_name = sys.argv[2]
+new_model_name = sys.argv[2]
 
 # Get pi0 (as a string)
-pi0_string = sys.argv[2]
+pi0_string = sys.argv[3]
 
 
 if DEBUG_MODE:
 	print "\nArgument 1 = original model name:"
 	print original_model_name
-	#print "\nArgument 2 = new model name:"
-	#print new_model_name
-	print "\nArgument 2 = pi0:"
+	print "\nArgument 2 = new model name:"
+	print new_model_name
+	print "\nArgument 3 = pi0:"
 	print pi0_string
 
 
@@ -556,7 +556,7 @@ write_file_content(exported_file_name, model_content)
 
 
 #------------------------------------------------------------
-# TODO: call the learning tool
+# Call the learning tool
 #------------------------------------------------------------
 # Prepare the command (using a list form)
 cmd = [LEARNING_BINARY_NAME] + [LEARNING_BINARY_OPTION] + [exported_file_name]
@@ -616,8 +616,8 @@ if is_assumption:
 		print init_definition
 	
 	
-	# Build header + A + Babs + updated init_definition
-	abstracted_model = header + component_A + abstraction + init_definition
+	## Build tag + header + A + Babs + specification + updated init_definition
+	abstracted_model = '(*' + TAG_ABSTRACTION + "*)\n" + header + component_A + abstraction + specification + init_definition
 	if DEBUG_MODE:
 		print "\nFull abstracted model:"
 		print abstracted_model
@@ -630,19 +630,23 @@ else:
 	print_to_screen('Counter-example detected')
 	# TODO: add "& loc[trace-automaton] = location_name"
 
-	# TODO: build header + A + B + trace-automaton + updated init_definition
+	# TODO: Build tag + header + A + B + trace-automaton + updated init_definition
 
 
 #------------------------------------------------------------
-# TODO: move the result file to an archive location
+# Move the result file to an archive location
 #------------------------------------------------------------
 # NOTE: otherwise, it will still be there at the next call
+new_location = new_model_name + '-output' + LSW_EXTENSION
+print_to_screen('Moving learning result from "' + output_file + '" to "' + new_location + '"…')
+os.rename(output_file, new_location)
 
 
 #------------------------------------------------------------
 # Create file for IMITATOR
 #------------------------------------------------------------
-# TODO
+print_to_screen('Copying abstract model into "' + new_model_name + '"…')
+write_file_content(new_model_name, abstracted_model)
 
 
 #************************************************************
