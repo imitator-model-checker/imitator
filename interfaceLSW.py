@@ -66,8 +66,8 @@ LEARNING_OUTPUT_FILE_COUNTEREXAMPLE = LEARNING_TMP_DIR + 'counterexample.imi'
 # Init definition for abstraction output by learning
 LEARNING_INIT_DEFINITION = 'loc[AbstractERA] = AbstractERA_init'
 
-#DEBUG_MODE = True
-DEBUG_MODE = False
+DEBUG_MODE = True
+#DEBUG_MODE = False
 
 
 #************************************************************
