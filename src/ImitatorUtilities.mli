@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2014/10/24
- * Last modified     : 2016/10/17
+ * Last modified     : 2017/02/03
  *
  ************************************************************)
 
@@ -85,6 +85,9 @@ type imitator_mode =
 	
 	(** EF-synthesis *)
 	| EF_synthesis
+	
+	(** EF-synthesis w.r.t. unsafe locations *)
+	| EFunsafe_synthesis
 	
 	(** Parametric loop synthesis *)
 	| Loop_synthesis

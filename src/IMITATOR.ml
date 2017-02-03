@@ -159,6 +159,7 @@ match options#imitator_mode with
 	| Translation
 	| State_space_exploration
 	| EF_synthesis
+	| EFunsafe_synthesis
 	| Loop_synthesis
 	| Parametric_NZ_CUBcheck
 	| Parametric_NZ_CUBtransform
@@ -417,14 +418,17 @@ let algorithm : AlgoGeneric.algoGeneric = match options#imitator_mode with
 	(************************************************************)
 	(* EF-synthesis *)
 	(************************************************************)
-	(* Experimental mode with PointSetPowerSet *)
+	(* New version with PointSetPowerSet *)
 	| EF_synthesis when options#new_ef_mode ->
 		let myalgo :> AlgoGeneric.algoGeneric = new AlgoAGsafeSynth.algoAGsafeSynth in myalgo
 	
-	(* Normal (and old) mode *)
+	(* Old version (with list of constraints) *)
 	| EF_synthesis (*when not options#new_ef_mode*) ->
 		let myalgo :> AlgoGeneric.algoGeneric = new AlgoEFsynthOld.algoEFsynth in myalgo
 	
+	(* EF-synthesis w.r.t. a set of bad states (unsafe result) *)
+	| EFunsafe_synthesis ->
+		let myalgo :> AlgoGeneric.algoGeneric = new AlgoEFunsafeSynth.algoEFunsafeSynth in myalgo
 	
 	
 	(************************************************************)

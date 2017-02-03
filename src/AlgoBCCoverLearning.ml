@@ -216,7 +216,7 @@ class algoBCCoverLearning =
 		(* Select the right algorithm according to the analysis type *)
 		let algo_instance = match analysis_type with
 			(* If counter-exemple: run EF on the parametric trace *)
-			| CounterExample -> let myalgo :> AlgoBFS.algoBFS = new AlgoAGsafeSynth.algoAGsafeSynth in myalgo
+			| CounterExample -> let myalgo :> AlgoBFS.algoBFS = new AlgoEFunsafeSynth.algoEFunsafeSynth in myalgo
 			
 			(* If abstraction: run PRP on this abstraction *)
 			(*** NOTE: the current valuation (current_point) is already set in Input ***)

@@ -8,7 +8,7 @@
  * Author:        Etienne Andre, Ulrich Kühne
  * 
  * Created:       2010/07/05
- * Last modified: 2016/11/04
+ * Last modified: 2017/02/03
  *
  ****************************************************************)
 
@@ -155,7 +155,7 @@ try(
 	begin
 	match options#imitator_mode with
 		(*** TODO: better use an option "is_cartography" ***)
-		| EF_synthesis | Loop_synthesis | Parametric_NZ_CUBcheck | Parametric_NZ_CUBtransform | Parametric_NZ_CUB | Parametric_deadlock_checking | Inverse_method | PRP ->
+		| EF_synthesis | EFunsafe_synthesis | Loop_synthesis | Parametric_NZ_CUBcheck | Parametric_NZ_CUBtransform | Parametric_NZ_CUB | Parametric_deadlock_checking | Inverse_method | PRP ->
 			print_message Verbose_low "Pick up the first 2 parameters to draw the cartography";
 			(* First check that there are at least 2 parameters *)
 			if model.nb_parameters < 2 then(
