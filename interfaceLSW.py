@@ -10,7 +10,7 @@
 # 
 # File contributors : Étienne André
 # Created           : 2016/11/07
-# Last modified     : 2017/02/02
+# Last modified     : 2017/02/03
 #************************************************************
 
 # ###
@@ -66,8 +66,8 @@ LEARNING_OUTPUT_FILE_COUNTEREXAMPLE = LEARNING_TMP_DIR + 'counterexample.imi'
 # Init definition for abstraction output by learning
 LEARNING_INIT_DEFINITION = 'loc[AbstractERA] = AbstractERA_init'
 
-DEBUG_MODE = True
-#DEBUG_MODE = False
+#DEBUG_MODE = True
+DEBUG_MODE = False
 
 
 #************************************************************
@@ -277,7 +277,8 @@ def add_INIT_locations(component, component_automata, initial_locations):
 		
 		# Replace 'loc location' with 'loc location[INIT]'
 		
-		print 'Replace "loc ' + initial_location + '" with "loc ' + initial_location + '[' + KEYWORD_INIT + ']"'
+		if DEBUG_MODE:
+			print 'Replace "loc ' + initial_location + '" with "loc ' + initial_location + '[' + KEYWORD_INIT + ']"'
 		
 		new_component = re.sub(KEYWORD_LOC + '\s+' + initial_location, KEYWORD_LOC + ' ' + initial_location + '[' + KEYWORD_INIT + ']', component)
 		#new_component = re.sub(initial_location, initial_location + '[' + KEYWORD_INIT + ']', component)
@@ -298,7 +299,8 @@ def add_ACCEPTING_locations(component, component_automata):
 	# Iterate on the component automata
 	for automaton_name in component_automata:
 		# Replace 'loc location' with 'loc location[INIT]'
-		print 'Replace "' + TAG_ACCEPTING_LOC + '" with "' + '[' + KEYWORD_ACCEPTING + ']"'
+		if DEBUG_MODE:
+			print 'Replace "' + TAG_ACCEPTING_LOC + '" with "' + '[' + KEYWORD_ACCEPTING + ']"'
 		
 		new_component = re.sub(TAG_ACCEPTING_LOC_RE, '[' + KEYWORD_ACCEPTING + ']', component)
 		
@@ -329,7 +331,8 @@ def remove_component_from_init_definition(component_automata, initial_locations,
 		
 		# Replace 'loc location' with 'loc location[INIT]'
 		
-		print 'Delete "' + KEYWORD_LOC + '[' + automaton_name + '] = ' + initial_location + '" in the init definition'
+		if DEBUG_MODE:
+			print 'Delete "' + KEYWORD_LOC + '[' + automaton_name + '] = ' + initial_location + '" in the init definition'
 		
 		# NOTE: we replace with 'true' to avoid handling the '&'
 		new_init_definition = re.sub('' + KEYWORD_LOC + '\[' + automaton_name + '\]\s+=\s+' + initial_location, 'True', init_definition)
@@ -363,6 +366,7 @@ def format_abstraction(abstraction):
 # PRELIMINARY CHECKS
 #************************************************************
 
+print_to_screen('*-**--***---****---***--**-*')
 print_to_screen('Hello, this is ' + THIS_SCRIPT_NAME + '!')
 
 
@@ -414,14 +418,18 @@ if DEBUG_MODE:
 #------------------------------------------------------------
 # Find components
 #------------------------------------------------------------
-print "Finding header…"
+if DEBUG_MODE:
+	print "Finding header…"
 header = get_header(model)
-print "Finding components A and B…"
+if DEBUG_MODE:
+	print "Finding components A and B…"
 component_A = get_component_A(model)
 component_B = get_component_B(model)
-print "Finding specification…"
+if DEBUG_MODE:
+	print "Finding specification…"
 specification = get_specification(model)
-print "Finding init definition…"
+if DEBUG_MODE:
+	print "Finding init definition…"
 init_definition = get_init_definition(model)
 
 if DEBUG_MODE:
@@ -437,18 +445,23 @@ if DEBUG_MODE:
 #------------------------------------------------------------
 # Find automata names
 #------------------------------------------------------------
-print "Finding automata names…"
+if DEBUG_MODE:
+	print "Finding automata names…"
 automata_names_in_A = get_automata_names(component_A)
-print '    In A: ' + str(automata_names_in_A)
+if DEBUG_MODE:
+	print '    In A: ' + str(automata_names_in_A)
 automata_names_in_B = get_automata_names(component_B)
-print '    In B: ' + str(automata_names_in_B)
+if DEBUG_MODE:
+	print '    In B: ' + str(automata_names_in_B)
 automata_names_in_specification = get_automata_names(specification)
-print '    In the specification: ' + str(automata_names_in_specification)
+if DEBUG_MODE:
+	print '    In the specification: ' + str(automata_names_in_specification)
 
 #------------------------------------------------------------
 # Find initial locations
 #------------------------------------------------------------
-print "Gathering initial locations…"
+if DEBUG_MODE:
+	print "Gathering initial locations…"
 # Compute dictionary automaton_name => initial location_name
 initial_locations = compute_initial_locations(init_definition)
 
@@ -560,8 +573,16 @@ write_file_content(exported_file_name, model_content)
 #------------------------------------------------------------
 # Prepare the command (using a list form)
 cmd = [LEARNING_BINARY_NAME] + [LEARNING_BINARY_OPTION] + [exported_file_name]
-print_to_screen('Command : "' + ' '.join(cmd) + '"')
-result = subprocess.call(cmd)
+
+print_to_screen('Executing "' + ' '.join(cmd) + '"…')
+
+# Call
+if DEBUG_MODE:
+	result = subprocess.call(cmd)
+else:
+	# Mute output of the call
+	result = subprocess.call(cmd, stdout=open(os.devnull, 'wb'))
+
 
 
 #------------------------------------------------------------
@@ -598,14 +619,16 @@ if is_assumption:
 	abstraction = format_abstraction(read_file_content(output_file))
 
 	# Remove all "& loc[automaton_name] = location_name" for automata in B
-	print_to_screen('Removing location names in the init definition…')
+	if DEBUG_MODE:
+		print_to_screen('Removing location names in the init definition…')
 	init_definition = remove_component_from_init_definition(automata_names_in_B, initial_locations, init_definition)
 	if DEBUG_MODE:
 		print "\nUpdated init definition:"
 		print init_definition
 	
 	# Add "& loc[Babs] = location_name"
-	print 'Adding the abstraction to the init definition…'
+	if DEBUG_MODE:
+		print 'Adding the abstraction to the init definition…'
 	new_init_definition = re.sub('init\s+:=', 'init := ' + LEARNING_INIT_DEFINITION, init_definition)
 	# Check
 	if new_init_definition == init_definition:
@@ -616,7 +639,7 @@ if is_assumption:
 		print init_definition
 	
 	
-	## Build tag + header + A + Babs + specification + updated init_definition
+	# Build tag + header + A + Babs + specification + specification + updated init_definition
 	abstracted_model = '(*' + TAG_ABSTRACTION + "*)\n" + header + component_A + abstraction + specification + init_definition
 	if DEBUG_MODE:
 		print "\nFull abstracted model:"
@@ -628,9 +651,28 @@ if is_assumption:
 #------------------------------------------------------------
 else:
 	print_to_screen('Counter-example detected')
-	# TODO: add "& loc[trace-automaton] = location_name"
 
-	# TODO: Build tag + header + A + B + trace-automaton + updated init_definition
+	# Get the abstraction and format it to IMITATOR input
+	abstraction = format_abstraction(read_file_content(output_file))
+
+	# Add "& loc[Babs] = location_name"
+	if DEBUG_MODE:
+		print 'Adding the abstraction to the init definition…'
+	new_init_definition = re.sub('init\s+:=', 'init := ' + LEARNING_INIT_DEFINITION, init_definition)
+	# Check
+	if new_init_definition == init_definition:
+		fail_with('Could not find pattern "init :=" in the init definition')
+	init_definition = new_init_definition
+	if DEBUG_MODE:
+		print "\nUpdated init definition:"
+		print init_definition
+	
+	# TODO: Build tag + header + A + B + trace-automaton + specification + updated init_definition
+	abstracted_model = '(*' + TAG_COUNTEREXAMPLE + "*)\n" + header + component_A + component_B + abstraction + specification + init_definition
+	if DEBUG_MODE:
+		print "\nModel to replay the counter-example trace:"
+		print abstracted_model
+
 
 
 #------------------------------------------------------------
@@ -655,6 +697,7 @@ write_file_content(new_model_name, abstracted_model)
 
 print_to_screen('')
 print_to_screen('…The end of ' + THIS_SCRIPT_NAME + '!')
+print_to_screen('*-**--***---****---***--**-*')
 
 # Happy end
 sys.exit(0)
