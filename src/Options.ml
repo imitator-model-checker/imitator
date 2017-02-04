@@ -583,6 +583,9 @@ class imitator_options =
         Use 'statespace' for the generation of the entire parametric state space (no pi0 needed).
         Use 'EF' for a parametric non-reachability analysis (no pi0 needed).
         Use 'PDFC' for parametric non-deadlock checking (no pi0 needed).
+        Use 'LoopSynth' for cycle-synthesis (without non-Zeno assumption).
+        Use 'NZCUBcheck' for cycle-synthesis (with non-Zeno assumption, using a CUB-detection). [EXPERIMENTAL]
+        Use 'NZCUBtrans' for cycle-synthesis (with non-Zeno assumption, using a transformation into a CUB-PTA). [EXPERIMENTAL]
         Use 'inversemethod' for the inverse method.
         For the behavioral cartography algorithm, use 'cover' to cover all the points within V0, 'border' to find the border between a small-valued good and a large-valued bad zone (experimental), or 'randomXX' where XX is a number to iterate random calls to IM (e.g., random5 or random10000). Default: 'inversemethod'.");
 				(*** NOTE: hidden option! 'shuffle' to cover all the points within v0 after shuffling the array. (Reason for hiding: only useful in the distributed cartography) ***)
