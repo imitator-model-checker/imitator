@@ -6,6 +6,9 @@ Major
 - EFsynth rewritten to output a single, disjunctive constraint (instead of a list of constraints as until version 2.8); Legacy written still usable using option -mode EFold
 - PRP and PRPC now disconnected from IM and BC: new syntax (-mode PRP and -mode PRPC), and result in the form of a single good and/or bad constraint.
 
+Minor features
+- Variables not used in a model apart from resets (or updates) are simply removed entirely, so as to speed up the execution. If that behavior is not the one intended by the user, this automatic removal can be disabled using the new option -no-var-autoremove.
+
 Bug fixing
 - Solved a bug for EF / PRP when the initial state is already bad
 

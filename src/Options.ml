@@ -9,7 +9,7 @@
  * 
  * File contributors : Ulrich Kühne, Étienne André
  * Created           : 2010
- * Last modified     : 2017/02/03
+ * Last modified     : 2017/02/04
  *
  ************************************************************)
 
@@ -205,6 +205,9 @@ class imitator_options =
 		(* no time elapsing in zones (in fact, time elapsing is performed before taking a transition, not after) *)
 		val mutable no_time_elapsing = ref false
 		
+		(* No automatic removal of variables declared but never used *)
+		val mutable no_variable_autoremove = ref false
+
 		(* Returns contraint K ("algo IMK") *)
 		val mutable pi_compatible = ref false 
 		
@@ -299,6 +302,7 @@ class imitator_options =
 		method nb_args = nb_args
 		method no_time_elapsing = !no_time_elapsing
 		method no_random = !no_random
+		method no_variable_autoremove = !no_variable_autoremove
 		method output_bc_cart = !output_bc_cart
 		method output_bc_result = !output_bc_result
 		method output_cart_x_min = !output_cart_x_min
@@ -587,6 +591,8 @@ class imitator_options =
 				("-no-random", Set no_random, " In IM, no random selection of the pi0-incompatible inequality (select the first found). Default: false.");
 
 				("-no-time-elapsing", Set no_time_elapsing, " No time elapsing in zone computation (i.e., time elapsing is performed before taking a transition, not after). Default: false.");
+
+				("-no-var-autoremove", Set no_variable_autoremove, " Prevent the automatic removal of variables (discrete, clocks, parameters) declared in the header but never used in the IPTAs. Default: false.");
 
 				(* 				("-PTA2CLP", Unit (fun _ -> pta2clp := true; imitator_mode <- Translation), "Translate PTA into a CLP program, and exit without performing any analysis. Work in progress! Defaut : 'false'"); *)
 				
@@ -1030,6 +1036,11 @@ class imitator_options =
 				print_message Verbose_standard ("No random selection for pi0-incompatible inequalities.")
 			else
 				print_message Verbose_medium ("Standard random selection for pi0-incompatible inequalities (default).");
+
+			if !no_variable_autoremove then
+				print_message Verbose_standard ("No automatic removal of variables declared but not used.")
+			else
+				print_message Verbose_medium ("Automatic removal of variables declared but not used (default).");
 
 			if !acyclic then
 				print_message Verbose_standard ("Acyclic mode: will only check inclusion or equality of a new state into a former state of the same iteration (graph depth).")

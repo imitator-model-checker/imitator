@@ -1157,6 +1157,15 @@ When computing a new symbolic state, compute the time elapsing before taking the
 
 
 %------------------------------------------------------------
+\paragraph{\styleOption{-no-var-autoremove} (default: false)}
+%------------------------------------------------------------
+Usually, \imitator{} automatically removes from the analysis the variables declared in the header, but used no where in the \IPTA{}s nor in the correctness property.
+Note that a variable reset (to~0 or to any other value) is \emph{not} considered used, as long as it is not used elsewhere (\ie{} in a guard, an invariant, a value to be updated to, a property…).
+Using \styleOption{-no-var-autoremove} prevents \imitator{} from automatically remove these variables.
+
+
+
+%------------------------------------------------------------
 \paragraph{\styleOption{-output-cart} (default: off)}
 %------------------------------------------------------------
 

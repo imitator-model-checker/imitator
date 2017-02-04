@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2012/05/10
- * Last modified: 2016/08/13
+ * Last modified: 2017/02/04
  *
  ****************************************************************)
  
@@ -77,6 +77,7 @@ class imitator_options :
 		method merge_before : bool
 		method model_input_file_name : string
 		method nb_args : int
+		method no_variable_autoremove : bool
 		method no_random : bool
 		method no_time_elapsing : bool
 		method output_bc_cart : bool

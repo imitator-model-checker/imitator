@@ -10,7 +10,7 @@
 # Laboratoire d'Informatique de Paris Nord
 # Universite Paris 13, Sorbonne Paris Cite, France
 # Created      : 2015/10/23
-# Last modified: 2017/01/18
+# Last modified: 2017/02/04
 #************************************************************
 
 
@@ -23,7 +23,7 @@ tests = [
 	{
 		'purpose'    : 'Test the state space',
 		'input_files': ['flipflop.imi'],
-		'options'    : '-mode statespace -output-states',
+		'options'    : '-mode statespace -output-states -no-var-autoremove', #TODO: re-do without '-no-var-autoremove'
 		'expectations' : [
 			{'file': 'flipflop-statespace.states' , 'content' : """
   DESCRIPTION OF THE STATES
@@ -1138,7 +1138,7 @@ Number of computed states     : 3
 	{
 		'purpose'    : 'Test PDFC: very basic example (false result)',
 		'input_files': ['PDFC6.imi'],
-		'options'    : '-mode PDFC -output-result  -output-states',
+		'options'    : '-mode PDFC -output-result  -output-states -no-var-autoremove', #TODO: re-do without '-no-var-autoremove'
 		'expectations' : [
 			{'file': 'PDFC6.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -1369,7 +1369,7 @@ Number of computed states     : 7
 	{
 		'purpose'    : 'Test PDFC: example with early termination due to false constraint',
 		'input_files': ['flipflop.imi'],
-		'options'    : '-mode PDFC -output-result  -output-states',
+		'options'    : '-mode PDFC -output-result  -output-states -no-var-autoremove', #TODO: re-do without '-no-var-autoremove'
 		'expectations' : [
 			{'file': 'flipflop.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -1758,7 +1758,7 @@ Number of computed states     : 20
 	{
 		'purpose'    : 'Test PDFC: example with basic backward under-approximation',
 		'input_files': ['PDFC8.imi'],
-		'options'    : '-mode PDFC -output-result -depth-limit 5',
+		'options'    : '-mode PDFC -output-result -depth-limit 5 -no-var-autoremove', #TODO: re-do without '-no-var-autoremove'
 		'expectations' : [
 			{'file': 'PDFC8.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -1792,7 +1792,7 @@ Number of computed states     : 8
 	{
 		'purpose'    : 'Test PDFC: example with basic backward under-approximation and exact result',
 		'input_files': ['PDFC8b.imi'],
-		'options'    : '-mode PDFC -output-result -depth-limit 5',
+		'options'    : '-mode PDFC -output-result -depth-limit 5 -no-var-autoremove', #TODO: re-do without '-no-var-autoremove'
 		'expectations' : [
 			{'file': 'PDFC8b.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -1820,7 +1820,7 @@ Number of computed states     : 8
 	{
 		'purpose'    : 'Test PDFC: another example with basic backward under-approximation',
 		'input_files': ['PDFC9.imi'],
-		'options'    : '-mode PDFC -output-result -depth-limit 5',
+		'options'    : '-mode PDFC -output-result -depth-limit 5 -no-var-autoremove', #TODO: re-do without '-no-var-autoremove'
 		'expectations' : [
 			{'file': 'PDFC9.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -1847,7 +1847,7 @@ Number of computed states     : 9
 	{
 		'purpose'    : 'Test PDFC: again another example with basic backward under-approximation',
 		'input_files': ['PDFC9b.imi'],
-		'options'    : '-mode PDFC -output-result -depth-limit 5',
+		'options'    : '-mode PDFC -output-result -depth-limit 5 -no-var-autoremove', #TODO: re-do without '-no-var-autoremove'
 		'expectations' : [
 			{'file': 'PDFC9b.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -6815,7 +6815,7 @@ end
 	{
 		'purpose'    : 'Test conversion to HyTech',
 		'input_files': ['flipflop.imi'],
-		'options'    : '-PTA2HyTech',
+		'options'    : '-PTA2HyTech -no-var-autoremove', #TODO: re-do without '-no-var-autoremove'
 		'expectations' : [
 			{'file': 'flipflop.hy' , 'content' : """
  -- Created to be compatible with 'hytech-v1.04f-Linux_static'
