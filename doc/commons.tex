@@ -258,6 +258,20 @@
 	\medskip
 }
 
+\newcommand{\warningbox}[2]{
+	\medskip
+	\noindent
+	\fcolorbox{red!50!black}{red!20}{
+		\begin{minipage}{0.95\textwidth}
+		\textbf{Warning: #1}
+		
+		#2
+		\end{minipage}
+	}
+	
+	\medskip
+}
+
 % \newcommand{\commentaire}[1]{\textcolor{red}{\textbf{$\Leftarrow$  #1 $\Rightarrow$}}} % commentaire dans un paragraphe
 % \newcommand{\commentaire}[1]{}
 

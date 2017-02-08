@@ -606,6 +606,41 @@ As usual, \imitator{} can also
 % 	output the result to a text file using a normalized syntax (option \styleOption{-output-result}).
 
 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Parametric non-Zeno cycle-freeness checking}\label{ss:mode:Zeno}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+Given an \NIPTA{}, \imitator{} synthesizes a parameter constraint such that, for any parameter valuation in that constraint, the system does not contain any cycle, under the non-Zeno assumption~\cite{ANPS17}.
+That is, only parameter valuations yielding the absence of non-Zeno cycles are synthesized.
+Parameter valuations yielding only Zeno-cycles are ignored.
+
+The method implemented in \imitator{} is based on CUB-\IPTA{}, a syntactic subclass of PTA based on the CUB-TA proposed in~\cite{WSWLSDYL15}.
+
+Two options are possible in \imitator{}:
+\begin{enumerate}
+	\item a partial method (but slightly faster) than first detects whether the input \NIPTA{} is already a CUB-PTA; if so, it applies non-Zeno checking on this CUB-PTA; otherwise, the returned constraint will be false.
+	
+	\styleCommand{\binimitator{} model.imi -mode NZCUBcheck -output-result}
+
+	
+	\item a complete method (though of course without guarantee of termination), that transforms the \NIPTA{} into a network of CUB-PTAs, and applies non-Zeno checking on the transformed CUB-PTA.
+	
+	\styleCommand{\binimitator{} model.imi -mode NZCUBtrans -output-result}
+
+\end{enumerate}
+
+
+\warningbox{restrictions}{%
+	In contrast to most other algorithms of \imitator{}, these two algorithms work on a slightly restricted syntax:
+	\begin{itemize}
+		\item in a guard or invariant, each clock must be used at most once;
+		\item discrete variables may not be supported.
+	\end{itemize}
+}
+
+
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Inverse Method: Trace Preservation}\label{ss:mode:IM}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
