@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/03/17
- * Last modified     : 2016/10/10
+ * Last modified     : 2017/02/08
  *
  ************************************************************)
 
@@ -175,6 +175,9 @@ class algoBCCoverDistributedSubdomainStaticCoordinator =
 			(* Update coverage to worst one *)
 			let new_coverage = match !coverage, cartography_result.coverage with
 				| Coverage_full, other -> other
+				| Coverage_empty, Coverage_empty -> Coverage_empty
+				| _, Coverage_empty -> Coverage_unknown
+				| Coverage_empty, _ -> Coverage_unknown
 				| Coverage_integer_complete, Coverage_full -> Coverage_integer_complete
 				| Coverage_integer_complete, other -> other
 				| Coverage_unknown, _ -> Coverage_unknown

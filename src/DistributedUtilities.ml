@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André, Camille Coti
  * Created           : 2014/03/24
- * Last modified     : 2016/10/10
+ * Last modified     : 2017/02/08
  *
  ************************************************************)
  
@@ -528,6 +528,8 @@ let unserialize_bc_termination  = function
 let serialize_bc_coverage = function
 	(* Full coverage in all dimensions, including rational points *)
 	| Coverage_full -> "F"
+	(* No constraint computed at all *)
+	| Coverage_empty -> "E"
 	(* At least all integers are covered, rationals perhaps not *)
 	| Coverage_integer_complete -> "I"
 	(* No indication of coverage *)
@@ -535,6 +537,7 @@ let serialize_bc_coverage = function
 
 let unserialize_bc_coverage = function
 	| "F" -> Coverage_full
+	| "E" -> Coverage_empty
 	| "I" -> Coverage_integer_complete
 	| "U" -> Coverage_unknown
 	| other -> raise (InternalError ("Impossible match '" ^ other ^ "' in unserialize_bc_coverage."))
