@@ -8,7 +8,7 @@
  * 
  * File contributors : Nguyen Hoang Gia, Étienne André
  * Created           : 2016/04/13
- * Last modified     : 2016/11/25
+ * Last modified     : 2017/02/08
  *
  ************************************************************)
 
@@ -665,7 +665,8 @@ let cub_check_2 model invariant_s0 guard_t invariant_s1 clock_updates =
 					(
 					if LinearConstraint.p_is_false constr
 					then 
-						let clock_linear_term = LinearConstraint.make_p_linear_term [NumConst.one,clock_index] NumConst.zero in
+						(*** NOTE: unused code written by Gia, removed by ÉA (2017/02/08) ***)
+(* 						let clock_linear_term = LinearConstraint.make_p_linear_term [NumConst.one,clock_index] NumConst.zero in *)
 						false
 						(* true *)
 					else
@@ -881,7 +882,9 @@ let check_problematic_transition model (invariant_s0, guard_t, invariant_s1, clo
 	(* let isCUB = ref true in *)
 	let result = ref true in
 	
-	let inequalities_need_to_solve = ref [] in
+	(*** NOTE: unused code written by Gia, removed by ÉA (2017/02/08) ***)
+(* 	let inequalities_need_to_solve = ref [] in *)
+
 	List.iter (	fun clock_index -> 
 		let isCUB = ref false in
 		let ls_tup_ineq_s0 	= (filter_upperbound_by_clock_3 clock_index tuple_inequalities_s0) in
@@ -1861,7 +1864,7 @@ let filter_inf model cons =
 			);
 	);
 
-	(*)
+	(* )
 	if !ls_temp = []
 	then
 		( 
@@ -2044,7 +2047,8 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 		print_message Verbose_low ("\nConverting automaton " ^ (model.automata_names automaton_index) ^ "...");
 		
 		(* We create a new, silent action specifically for this automaton: its value is (nb of regular action) + automaton_index *)
-		let local_silent_action_index = local_silent_action_index_of_automaton_index model automaton_index in
+		(*** NOTE: unused code written by Gia, removed by ÉA (2017/02/08) ***)
+(* 		let local_silent_action_index = local_silent_action_index_of_automaton_index model automaton_index in *)
 
 		(* print_message Verbose_low ("Converting automaton: " 
 										^ (model.automata_names automaton_index) 
@@ -2094,7 +2098,10 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 					List.iter (fun (guard, clock_updates, discrete_update, target_location_index) 
 						-> (* print_message Verbose_low ("   Guard: " ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names guard)); *)		
 						(** WORK HERE **)
-						let invariant2 = model.invariants automaton_index target_location_index in
+						
+						(*** NOTE: unused code written by Gia, removed by ÉA (2017/02/08) ***)
+(* 						let invariant2 = model.invariants automaton_index target_location_index in *)
+
 						(* print_message Verbose_low ("\n");
 						print_message Verbose_low (" State/Location(D): " ^ (model.location_names automaton_index target_location_index) ) ;
 						print_message Verbose_low ("   Invariant(D): " ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names invariant2 ) ) ;
@@ -2172,8 +2179,12 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 				let invariant_s0 = Hashtbl.find locations location_index in
 				let guard_t = guard in
 				let invariant_s1 = Hashtbl.find locations target_location_index in
+
 				(*ppl*)
-				let inequalities = ref [] in
+				
+				(*** NOTE: unused code written by Gia, removed by ÉA (2017/02/08) ***)
+(* 				let inequalities = ref [] in *)
+
 				print_message Verbose_low (" CUB transformation, Start:");
 				print_message Verbose_low ("\n");
 				(*transform constraints into inequality lists*)
@@ -2189,8 +2200,10 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 				let tuple_inequalities_s1 	= convert_inequality_list_2_tuple_list model inequalities_s1 in
 
 				print_message Verbose_low ("\n --------------------1st check start---------------------- ");
-				List.iter (	fun clock_index -> 
-				 	let inequalities_need_to_solve = ref [] in
+				List.iter (	fun clock_index ->
+					(*** NOTE: unused code written by Gia, removed by ÉA (2017/02/08) ***)
+(* 				 	let inequalities_need_to_solve = ref [] in *)
+
 				 	print_message Verbose_low ("   Checking CUB condtions at clock (" ^ (model.variable_names clock_index) ^ "):"); 	
 					let (clock_index_s0 , op_s0, linear_term_s0) = filter_upperbound_by_clock clock_index tuple_inequalities_s0 in
 					let (clock_index_t, op_t, linear_term_t) = filter_upperbound_by_clock clock_index tuple_inequalities_t in
@@ -2633,7 +2646,9 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 	Hashtbl.add loc_naming_tbl new_initial_location_name (Hashtbl.length loc_naming_tbl);
 	
 	let submodel_index = ref 1 in
-	let numberOfAction = List.length model.actions in 
+	
+	(*** NOTE: unused code written by Gia, removed by ÉA (2017/02/08) ***)
+(* 	let numberOfAction = List.length model.actions in  *)
 
 	(* FINAL MODEL LOCATIONS - Data structure: location_name -> invariant *)
 	let new_invariants_per_location_hashtbl =  Hashtbl.create 0 in
@@ -2692,7 +2707,8 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 
 
 	(* FINAL OUTPUT MODEL *)
-	let finalModel = (new_invariants_per_location_hashtbl, newtransitions, loc_naming_tbl) in 
+	(*** NOTE: unused code written by Gia, removed by ÉA (2017/02/08) ***)
+(* 	let finalModel = (new_invariants_per_location_hashtbl, newtransitions, loc_naming_tbl) in  *)
 	(* additional stage - end *)
 
 

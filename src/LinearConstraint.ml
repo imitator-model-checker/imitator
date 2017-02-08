@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2010/03/04
- * Last modified     : 2016/10/11
+ * Last modified     : 2017/02/08
  *
  ************************************************************)
 
@@ -3553,10 +3553,12 @@ let is_var_subset var_list1 var_list2 = let result = ref true in
 (*for linear term*)
 let rec isMinus linear_term =	(* let coef = ref NumConst.zero in *)
 								let b = ref false in
-								let _ = match linear_term with
+								begin
+								match linear_term with
 								| Coef c -> ()
 								| Var v -> ()
 								| Pl (lterm, rterm) -> 	(
+													(*** TODO: problem here?? (ÉA, 2017/02/08) ***)
 			  											isMinus lterm;
 														isMinus rterm;
 														()
@@ -3567,7 +3569,7 @@ let rec isMinus linear_term =	(* let coef = ref NumConst.zero in *)
 														)
 								| Ti (c1, rterm) -> ()
 								(*| _ -> raise (InternalError("Detection error 'get_coef' function"))*)
-								in
+								end;
 								!b
 
 
