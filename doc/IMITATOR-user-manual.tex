@@ -606,14 +606,30 @@ As usual, \imitator{} can also
 % 	output the result to a text file using a normalized syntax (option \styleOption{-output-result}).
 
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Parametric cycle synthesis}\label{ss:mode:LoopSynth}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+Given an \NIPTA{}, \imitator{} synthesizes a parameter constraint such that, for any parameter valuation in that constraint, the system contains at least one cycle, \ie{} an infinite run. % TODO: ~\cite{AL17}
+
+The command is:
+
+\styleCommand{\binimitator{} model.imi -mode LoopSynth -output-result}
+
+As usual, \imitator{} can also
+	output the trace set in a graphical form (option \styleOption{-output-trace-set})
+	or
+	output the constraint synthesized in a graphical form in two dimensions (option \styleOption{-output-cart}).
+
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Parametric non-Zeno cycle-freeness checking}\label{ss:mode:Zeno}
+\section{Parametric non-Zeno cycle synthesis}\label{ss:mode:Zeno}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-Given an \NIPTA{}, \imitator{} synthesizes a parameter constraint such that, for any parameter valuation in that constraint, the system does not contain any cycle, under the non-Zeno assumption~\cite{ANPS17}.
-That is, only parameter valuations yielding the absence of non-Zeno cycles are synthesized.
-Parameter valuations yielding only Zeno-cycles are ignored.
+Given an \NIPTA{}, \imitator{} synthesizes a parameter constraint such that, for any parameter valuation in that constraint, the system contains at least one cycle, under the non-Zeno assumption~\cite{ANPS17}.
+That is, only parameter valuations yielding at least one non-Zeno cycle are synthesized.
+Parameter valuations yielding only Zeno-cycles or no cycles are ignored.
 
 The method implemented in \imitator{} is based on CUB-\IPTA{}, a syntactic subclass of PTA based on the CUB-TA proposed in~\cite{WSWLSDYL15}.
 
@@ -635,9 +651,16 @@ Two options are possible in \imitator{}:
 	In contrast to most other algorithms of \imitator{}, these two algorithms work on a slightly restricted syntax:
 	\begin{itemize}
 		\item in a guard or invariant, each clock must be used at most once;
-		\item discrete variables may not be supported.
+		\item the use of discrete variables was not tested (and may not be always working);
+		\item the use of coefficients on parameters (different from 0 or~1) was not tested;
+		\item the use of stopwatches was not tested (but should be no problem).
 	\end{itemize}
 }
+
+As usual, \imitator{} can also
+	output the trace set in a graphical form (option \styleOption{-output-trace-set})
+	or
+	output the constraint synthesized in a graphical form in two dimensions (option \styleOption{-output-cart}).
 
 
 
@@ -1160,6 +1183,15 @@ The mode for \imitator{}.
 	
 	\styleOption{PDFC} & Parametric deadlock-freeness checking (\PDFC{} \cite{Andre16}) \\
 	& (see \cref{ss:mode:PDFC}) \\
+	
+	\styleOption{LoopSynth} & cycle synthesis \\
+	& (see \cref{ss:mode:LoopSynth}) \\
+	
+	\styleOption{NZCUBcheck} & non-Zeno cycle synthesis (with CUB-detection) \\
+	& (see \cref{ss:mode:Zeno}) \\
+	
+	\styleOption{NZCUBtrans} & non-Zeno cycle synthesis (with CUB-transformation) \\
+	& (see \cref{ss:mode:Zeno}) \\
 	
 	\styleOption{inversemethod} & Inverse method \\
 	& (see \cref{ss:mode:IM}) \\
@@ -2195,6 +2227,7 @@ Daphne~Dussaud implemented the graphical output of the behavioral cartography.
 Romain~Soulat implemented in part the merging technique~\cite{AFS13atva}, and brought several case studies.
 Giuseppe~Lipari and Sun~Youcheng provided examples from the real-time systems community, and collaborated on several algorithms.
 Camille~Coti, Sami~Evangelista and Nguy\~{ê}n~Hoàng~Gia worked on the distributed version of \imitator{}.
+Nguy\~{ê}n~Hoàng~Gia worked on the non-Zeno synthesis algorithms.
 
 % TODO: projects
 
