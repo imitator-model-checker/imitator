@@ -67,7 +67,7 @@ In this document, we present the input syntax, we formally define the input mode
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\chapter{A Brief Introduction to the Syntax}
+\chapter{A brief introduction to the syntax}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -240,7 +240,7 @@ That is, the system is safe if \styleIMI{O <= delta < gamma}, which is the well-
 This chapter formally introduces the input model of \imitator{}.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Formal Definition}\label{section:NIPTA}
+\section{Formal definition}\label{section:NIPTA}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \imitator{} performs parametric verification of models specified using networks of \imitator{} parametric timed automata (hereafter \NIPTA{}).
@@ -251,11 +251,11 @@ furthermore, \IPTA{} augment the expressiveness of PTA with several features suc
 
 
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-
-\subsection{Linear Constraints}
+\subsection{Linear constraints}
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-
 
 
-\paragraph{Clocks, Parameters, Discrete Variables}
+\paragraph{Clocks, parameters, discrete variables}
 \emph{Clocks} are real-valued variables all evolving at the same rate (unless they are stopped, which is allowed in \imitator{}).
 A set of clocks is $\Clock = \{ \clock_1, \dots, \clock_\ClockCard \}$;
 a clock valuation is
@@ -271,7 +271,7 @@ A set of discrete variables is $\DVar = \{ \dvar_1, \dots, \dvar_\DVarCard \} $;
 a discrete variable valuation is a function $\dval \colon \DVar \rightarrow \grandn$.
 
 
-\paragraph{Linear Constraints}
+\paragraph{Linear constraints}
 Let us formalize the set of linear constraints allowed in \imitator{}.
 Given a set of variables~$\Var = \{ \var_1, \dots, \var_\VarCard \}$ (in the following, this set will be instantiated with $\Clock$ and/or $\Param$ and/or $\DVar$), a \emph{linear term} over $\Var$ is an expression of the form
 $$
@@ -394,7 +394,7 @@ Finally, note that the number of \IPTA{}, locations, variables and actions that 
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Discrete Variables}\label{section:discrete}
+\section{Discrete variables}\label{section:discrete}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 Discrete variables\footnote{%
@@ -418,7 +418,7 @@ If two \IPTA{} in parallel update the same variable on the same synchronized tra
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Initial State and Initialization of Variables}\label{section:init}
+\section{Initial state and initialization of variables}\label{section:init}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 For each \IPTA{}, a unique initial location must be defined.
@@ -439,7 +439,7 @@ Given a discrete variable \styleIMI{i}, if the definition of the initial state d
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Synchronization Model}\label{sect:synchronization}
+\section{Synchronization model}\label{sect:synchronization}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 By default, all \IPTA{} of an \imitator{} model declare their set of actions.\footnote{%
@@ -485,7 +485,7 @@ Constants are (unbounded, exact) integers.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\chapter{Parameter Synthesis Using IMITATOR}
+\chapter{Parameter synthesis using \imitator{}}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -496,7 +496,7 @@ For more detailed commands, and a complete list of options, see \cref{chapter:op
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{State Space Computation}\label{ss:mode:statespace}
+\section{Symbolic state space computation}\label{ss:mode:statespace}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \imitator{} can compute the entire symbolic state space (``parametric zone graph'').
@@ -512,7 +512,7 @@ The option \styleOption{-output-states} generates a file with a textual descript
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{EF-Synthesis}\label{ss:mode:EFsynth}
+\section{EF-synthesis}\label{ss:mode:EFsynth}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 A main problem in parametric timed automata is to compute the set of parameter valuations for which some location (for instance, an error location) is reachable.
@@ -543,7 +543,7 @@ The option \styleOption{-dynamic-elimination} can also be used to reduce the sta
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Parametric Verification using Properties}\label{ss:mode:prop}
+\section{Parameter synthesis using properties}\label{ss:mode:prop}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \imitator{} basically only supports bad state reachability synthesis on the one hand, and algorithms such as the inverse method and the cartography on the other hand.
@@ -589,7 +589,7 @@ Once more, options \styleOption{-merge} and \styleOption{-incl} are optional, bu
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Parametric Deadlock-freeness checking}\label{ss:mode:PDFC}
+\section{Parametric deadlock-freeness checking}\label{ss:mode:PDFC}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 Given an \NIPTA{}, \PDFC{} synthesizes a parameter constraint such that, for any parameter valuation in that constraint, the system is deadlock-free~\cite{Andre16}.
@@ -665,7 +665,7 @@ As usual, \imitator{} can also
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Inverse Method: Trace Preservation}\label{ss:mode:IM}
+\section{Inverse method: Trace preservation and robustness}\label{ss:mode:IM}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 Given an \NIPTA{} and a reference parameter valuation, the inverse method~\IM{} synthesizes a parameter constraint such that, for any parameter valuation in that constraint, the set of traces is the same as for the reference valuation~\cite{ACEF09}.
@@ -692,7 +692,7 @@ Recall that the option \styleOption{-output-result} is not compulsory, but allow
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Behavioral Cartography}\label{ss:mode:BC}
+\section{Behavioral cartography}\label{ss:mode:BC}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 Given an \NIPTA{} and a bounded parameter domain, the behavioral cartography~\BC{} synthesizes tiles, \ie{} parameter domains such that for any parameter valuation in that domain, the set of traces is the same~\cite{AF10}.
@@ -721,7 +721,7 @@ Recall that the option \styleOption{-output-result} is not compulsory, but allow
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection*{Behavioral Cartography with Random Coverage}\label{sss:mode:BC:random}
+\subsection*{Behavioral cartography with random coverage}\label{sss:mode:BC:random}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 An alternative to the behavioral cartography is a random coverage; it can be seen as a kind of sampling.
@@ -736,7 +736,7 @@ Note that \styleOption{XX} represents the number of integer points randomly sele
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection*{Behavioral Cartography with Shuffle Enumeration}\label{sss:mode:BC:shuffle}
+\subsection*{Behavioral cartography with shuffle enumeration}\label{sss:mode:BC:shuffle}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 A second alternative to the behavioral cartography is an enumeration of all integer points in a random fashion.
@@ -750,7 +750,7 @@ The command is:
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Parametric Reachability Preservation}\label{ss:mode:PRP}
+\section{Parametric reachability preservation}\label{ss:mode:PRP}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \imitator{} implements an algorithm solving the following problem:
@@ -765,7 +765,7 @@ Note that a bad location (as in \cref{ss:mode:EFsynth}) or a property (as in \cr
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection*{Parametric Reachability Preservation Cartography}
+\subsection*{Parametric reachability preservation cartography}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 An extension of $\PRP$ to the cartography (named \PRPC{}) is also available: \PRPC{} synthesizes parameter constraints in which the (non-)reachability of $\loc$ is uniform.
@@ -783,7 +783,7 @@ Again, a bad location (as in \cref{ss:mode:EFsynth}) or a property (as in \cref{
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\chapter{Understanding the \imitator{} Result}\label{chapter:result}
+\chapter{Understanding the \imitator{} result}\label{chapter:result}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -804,7 +804,7 @@ Then, the header recalls global information on the model (number of \IPTA{}, of 
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{The Resulting Constraint}
+\section{The resulting constraint}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 The main result of a single synthesis (\ie{} \EFsynth{}, \PDFC{}, \IM{} and its variants, \PRP{}…) is a constraint.
@@ -837,7 +837,7 @@ Finally, the result also comes with an evaluation of the termination: the termin
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{The Cartography Result}
+\section{The cartography result}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 The behavioral cartography does not strictly speaking generate a result, but a list of tiles: each of them is made of the reference valuation that yielded that tile, the associated constraint again with its nature, its soundness, and the analysis termination.
@@ -846,7 +846,7 @@ In addition, each tile comes with its associated number of states and transition
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{General Statistics}
+\section{General statistics}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 The result file finally contains general statistics such as the global computation time (excluding the generation of graphics, or the result file), an estimation of the memory used, the number of states and transitions computed, etc.
@@ -856,7 +856,7 @@ More statistics are obtained with higher levels of verbosity, or with the \style
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\chapter{Graphical Output and Translation}
+\chapter{Graphical output and translation}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -865,7 +865,7 @@ Again, we only give the most useful options.
 For more detailed commands, and a complete list of options, see \cref{chapter:options}.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Trace Set}
+\section{Trace set}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 To generate the trace set (\ie{} the discretized state space) of a given computation in a graphical form, use:
@@ -883,7 +883,7 @@ This option is mostly suitable for small trace sets.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Constraints and Cartography}
+\section{Constraints and cartography}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 To visualize the constraint generated by \imitator{} using a 2-dimensional plot (thanks to the external plot utility), use:
@@ -952,13 +952,13 @@ The node positioning is not yet supported (locations are depicted vertically), s
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\chapter{Inside the Box}
+\chapter{Inside the box}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Language and Libraries}
+\section{Language and libraries}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 In short, \imitator{} is written in \ocaml{}, and contains about 26,000 lines of code.
@@ -973,7 +973,7 @@ In short, \imitator{} is written in \ocaml{}, and contains about 26,000 lines of
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Symbolic States}
+\section{Symbolic states}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 Verification of timed systems (and specially parametric timed systems) is necessarily done in a symbolic manner, in the sense that the timing information is abstracted by clock constraints.
@@ -1010,7 +1010,7 @@ Several standalone binaries are provided for Linux systems, that require no inst
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\chapter{List of Options}\label{chapter:options}
+\chapter{List of options}\label{chapter:options}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -1482,7 +1482,7 @@ Prints \imitator{} header including the version number and exits.
 We give in this chapter the complete grammar of input models for \imitator{}.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Variable Names}
+\section{Variable names}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 A variable name (represented by \styleIMI{<name>} in the grammar below) is a string starting with a letter (small or capital), and followed by a set of letters, digits and underscores (``\styleIMI{\_}'').
@@ -1496,7 +1496,7 @@ Furthermore, the names of the sets of locations of various \IPTA{} are not-neces
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Grammar of the Input File}
+\section{Grammar of the input file}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 The \imitator{} input model is described by the following grammar.
@@ -1522,7 +1522,7 @@ The text \npec{in green} is not taken into account by \imitator{}, but allows so
 We define each of those two components below.
 
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
-\subsection{Automata Descriptions}
+\subsection{Automata descriptions}
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
 
 %------------------------------------------------------------
@@ -1837,7 +1837,7 @@ We define each of those two components below.
 
 
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
-\subsection{Initial State}
+\subsection{Initial state}
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
 
 %------------------------------------------------------------
@@ -2013,7 +2013,7 @@ We define each of those two components below.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Grammar of the Reference Valuation File}
+\section{Grammar of the reference valuation file}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 The reference valuation file (usually named \stylePath{model.pi0}) gives a constant value to any parameter of the model;
@@ -2028,7 +2028,7 @@ Arithmetic expressions (using integers and rationals) can even be used instead o
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Grammar of the Reference Hyperrectangle File}
+\section{Grammar of the reference hyperrectangle file}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 The hyperrectangle file (usually named \stylePath{model.v0}) defines a bounded parameter domain, \ie{} a hyperrectangle having as dimensions the parameters of the model;
@@ -2043,7 +2043,7 @@ Again, arithmetic expressions (using integers and rationals) can even be used in
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Reserved Words}
+\section{Reserved words}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 The following words are reserved keywords and cannot be used as names for automata, variables, actions or locations. 
@@ -2106,7 +2106,7 @@ The following words are reserved keywords and cannot be used as names for automa
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\chapter{Missing Features}
+\chapter{Missing features}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -2128,19 +2128,19 @@ We enumerate in the following what seems to us to be the ``most missing'' featur
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{ASAP Transitions}
+\section{ASAP transitions}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 ASAP (as soon as possible) transitions are transitions that can be taken as soon as all \IPTA{} synchronizing with this transition can execute their local transition.
 This is different from urgent transitions, that must be taken in 0 time.
 Here, time can elapse, but not after all \IPTA{} are ready to execute their local transition.
 
-This is not supported by \imitator{}, and we do not see a way to simulate it easily in the current implementation.
+This is not supported by \imitator{}. %, and we do not see a way to simulate it easily in the current implementation.
 
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Parameterized Models}
+\section{Parameterized models}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 Parameterized models are understood here as models with an arbitrary number of components (\eg{} Fischer's mutual exclusion protocol with $n$ processes), that would be instantiated (\eg{} $n = 15$) before performing the analysis.
@@ -2151,7 +2151,7 @@ For complicated models with many processes, we usually write short scripts to ge
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Other Synchronization Models}
+\section{Other synchronization models}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 One-to-one synchronization could possibly be simulated by using as many transitions as pairs of \IPTA{} in the model, although this may make the model rather complex.
@@ -2172,7 +2172,7 @@ This can be easily simulated using dedicated discrete variables, that would be r
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Initial Intervals for Discrete Variables}
+\section{Initial intervals for discrete variables}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 Discrete variables must be set to a constant integer in the \styleIMI{init} definition (\eg{} \styleIMI{i = 0}).
@@ -2182,7 +2182,7 @@ This can be simulated using an initialization \IPTA{} that nondeterministically 
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Complex Updates for Discrete Variables}
+\section{Complex updates for discrete variables}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 So far, discrete variables can only be set to linear terms in $\LTermD$;
@@ -2234,7 +2234,7 @@ Nguy\~{ê}n~Hoàng~Gia worked on the non-Zeno synthesis algorithms.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\chapter{Licensing and Credits}
+\chapter{Licensing and credits}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -2275,7 +2275,7 @@ The following people contributed to the compiling and packaging facilities.
 
 \bigskip
 
-\subsection*{User Manual}
+\subsection*{User manual}
 This user manual is available under the Creative Commons CC-BY-SA license.
 
 \begin{center}
@@ -2284,7 +2284,7 @@ This user manual is available under the Creative Commons CC-BY-SA license.
 
 \bigskip
 
-\subsection*{Graphics Credits}
+\subsection*{Graphics credits}
 	% TODO: nice tabular showing images
 
 \paragraph{\imitator{}'s logo} comes from \stylePath{Typing monkey.svg} by KaterBegemot on Wikimedia Commons
