@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/12/03
- * Last modified     : 2017/01/18
+ * Last modified     : 2017/02/10
  *
  ************************************************************)
 
@@ -774,7 +774,7 @@ let print_single_synthesis_or_point_based_result result computation_time =
 		
 		(* Print some information *)
 		print_message Verbose_standard ("\n" ^ text ^ ":");
-		print_message Verbose_standard (result_str);
+		print_highlighted_message Shell_result Verbose_standard (result_str);
 	
 (*			let soundness = match single_synthesis_result.result with
 			| Single_constraint (_, soundness) -> soundness
@@ -782,7 +782,7 @@ let print_single_synthesis_or_point_based_result result computation_time =
 		in*)
 		
 		(* Give a comment on the validity of the result *)
-		print_message Verbose_standard (verbose_string_soundness_of_good_or_bad_constraint result);
+		print_highlighted_message Shell_soundness Verbose_standard (verbose_string_soundness_of_good_or_bad_constraint result);
 	
 		print_message Verbose_low (
 			"Computation time: "
@@ -874,10 +874,10 @@ let process_result result algorithm_name prefix_option =
 			let result_str = string_of_list_of_string_with_sep "\n OR \n" (List.map (LinearConstraint.string_of_p_linear_constraint model.variable_names) efsynth_result.constraints) in
 			
 			print_message Verbose_standard ("\nFinal constraint such that the property is *violated* (" ^ (string_of_int (List.length efsynth_result.constraints)) ^ " constraint" ^ (s_of_int (List.length efsynth_result.constraints)) ^ "): ");
-			print_message Verbose_standard (result_str);
+			print_highlighted_message Shell_result Verbose_standard (result_str);
 
 			(* Give a comment on the validity of the result *)
-			print_message Verbose_standard (verbose_string_of_soundness efsynth_result.soundness);
+			print_highlighted_message Shell_soundness Verbose_standard (verbose_string_of_soundness efsynth_result.soundness);
 		);
 		
 		print_message Verbose_low (
@@ -966,7 +966,7 @@ let process_result result algorithm_name prefix_option =
 			print_message Verbose_standard ("" ^ general_bc_statistics cartography_result);
 			print_message Verbose_standard ("**************************************************");
 		
-			print_message Verbose_standard ("\n" ^ (verbose_string_of_coverage cartography_result.coverage));
+			print_highlighted_message Shell_soundness Verbose_standard ("\n" ^ (verbose_string_of_coverage cartography_result.coverage));
 		);
 		
 		(* Print memory information *)

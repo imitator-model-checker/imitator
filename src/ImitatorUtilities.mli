@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2014/10/24
- * Last modified     : 2017/02/03
+ * Last modified     : 2017/02/10
  *
  ************************************************************)
 
@@ -179,8 +179,19 @@ val memory_used : unit -> string
 (** Messages *)
 (************************************************************)
 
+type shell_highlighting_type =
+	| Shell_bold
+	| Shell_error
+	| Shell_normal
+	| Shell_result
+	| Shell_soundness
+	| Shell_warning
+
 (* Print a message if global_verbose_mode >= message_verbose_mode *)
 val print_message : verbose_mode -> string -> unit
+
+(* Print a message with some highlighting *)
+val print_highlighted_message : shell_highlighting_type -> verbose_mode -> string -> unit
 
 (* Print a warning *)
 val print_warning : string -> unit
